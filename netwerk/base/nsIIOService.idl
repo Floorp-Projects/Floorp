@@ -54,17 +54,30 @@ interface nsIIOService : nsISupports
      * Returns the protocol flags for a given scheme.
      *
      * @param aScheme the URI scheme
-     * @return value of corresponding nsIProtocolHandler::protocolFlags
+     * @return protocol flags for the corresponding protocol
      */
     unsigned long getProtocolFlags(in string aScheme);
 
     /**
-     * This method constructs a new URI by determining the scheme of the
-     * URI spec, and then delegating the construction of the URI to the
-     * protocol handler for that scheme. QueryInterface can be used on
-     * the resulting URI object to obtain a more specific type of URI.
+     * Returns the dynamic protocol flags for a given URI.
      *
-     * @see nsIProtocolHandler::newURI
+     * @param aURI the URI to get all dynamic flags for
+     * @return protocol flags for that URI
+     */
+    unsigned long getDynamicProtocolFlags(in nsIURI aURI);
+
+    /**
+     * Returns the default port for a given scheme.
+     *
+     * @param aScheme the URI scheme
+     * @return default port for the corresponding protocol
+     */
+    long getDefaultPort(in string aScheme);
+
+    /**
+     * This method constructs a new URI based on the scheme of the URI spec.
+     * QueryInterface can be used on the resulting URI object to obtain a more
+     * specific type of URI.
      */
     nsIURI newURI(in AUTF8String aSpec,
                   [optional] in string aOriginCharset,
@@ -270,6 +283,35 @@ interface nsIIOService : nsISupports
      * The pid for socket process.
      */
     readonly attribute unsigned long long socketProcessId;
+
+    /**
+     * Register a protocol handler at runtime, given protocol flags and a
+     * default port.
+     *
+     * Statically registered protocol handlers cannot be overridden, and an
+     * error will be returned if that is attempted.
+     *
+     * Runtime registered protocol handlers are never QueryInterface-ed into
+     * `nsIProtocolHandlerWithDynamicFlags`, so that interface will be ignored.
+     *
+     * @param aScheme the scheme handled by the protocol handler.
+     * @param aHandler the protocol handler instance.
+     * @param aProtocolFlags protocol flags for this protocol, see
+     *                       nsIProtocolHandler for values.
+     * @param aDefaultPort default port for this scheme, or -1.
+     */
+    void registerProtocolHandler(in ACString aScheme,
+                                 in nsIProtocolHandler aHandler,
+                                 in unsigned long aProtocolFlags,
+                                 in long aDefaultPort);
+
+    /**
+     * Unregister a protocol handler which was previously registered using
+     * registerProtocolHandler.
+     *
+     * @param aScheme the scheme to unregister a handler for.
+     */
+    void unregisterProtocolHandler(in ACString aScheme);
 };
 
 %{C++

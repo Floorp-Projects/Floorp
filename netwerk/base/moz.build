@@ -166,6 +166,7 @@ EXPORTS.mozilla.net += [
     "NetworkConnectivityService.h",
     "Predictor.h",
     "PrivateBrowsingChannel.h",
+    "ProtocolHandlerInfo.h",
     "RedirectChannelRegistrar.h",
     "RequestContextService.h",
     "SimpleChannelParent.h",
@@ -231,6 +232,7 @@ UNIFIED_SOURCES += [
     "nsUDPSocket.cpp",
     "PollableEvent.cpp",
     "Predictor.cpp",
+    "ProtocolHandlerInfo.cpp",
     "ProxyAutoConfig.cpp",
     "RedirectChannelRegistrar.cpp",
     "RequestContextService.cpp",
@@ -310,6 +312,7 @@ include("/ipc/chromium/chromium-config.mozbuild")
 FINAL_LIBRARY = "xul"
 
 LOCAL_INCLUDES += [
+    "!/xpcom/components",
     "/docshell/base",
     "/dom/base",
     "/netwerk/dns",
@@ -318,6 +321,7 @@ LOCAL_INCLUDES += [
     "/netwerk/socket",
     "/netwerk/url-classifier",
     "/security/manager/ssl",
+    "/xpcom/components",
 ]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":

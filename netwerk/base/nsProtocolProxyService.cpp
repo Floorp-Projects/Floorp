@@ -2017,6 +2017,7 @@ void nsProtocolProxyService::LoadHostFilters(const nsACString& aFilters) {
 
 nsresult nsProtocolProxyService::GetProtocolInfo(nsIURI* uri,
                                                  nsProtocolInfo* info) {
+  AssertIsOnMainThread();
   MOZ_ASSERT(uri, "URI is null");
   MOZ_ASSERT(info, "info is null");
 
@@ -2028,14 +2029,10 @@ nsresult nsProtocolProxyService::GetProtocolInfo(nsIURI* uri,
   nsCOMPtr<nsIIOService> ios = do_GetIOService(&rv);
   if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIProtocolHandler> handler;
-  rv = ios->GetProtocolHandler(info->scheme.get(), getter_AddRefs(handler));
+  rv = ios->GetDynamicProtocolFlags(uri, &info->flags);
   if (NS_FAILED(rv)) return rv;
 
-  rv = handler->DoGetProtocolFlags(uri, &info->flags);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = handler->GetDefaultPort(&info->defaultPort);
+  rv = ios->GetDefaultPort(info->scheme.get(), &info->defaultPort);
   return rv;
 }
 
