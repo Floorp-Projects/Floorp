@@ -11,6 +11,7 @@
 #include "nsIBrowserChild.h"
 #include "nsIDialogParamBlock.h"
 #include "nsIDocShell.h"
+#include "nsIEmbeddingSiteWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPrintSettings.h"
 #include "nsIWebBrowserChrome.h"
@@ -154,10 +155,10 @@ HWND nsPrintDialogServiceWin::GetHWNDForDOMWindow(mozIDOMWindowProxy* aWindow) {
   }
 
   if (chrome) {
-    nsCOMPtr<nsIBaseWindow> site(do_QueryInterface(chrome));
+    nsCOMPtr<nsIEmbeddingSiteWindow> site(do_QueryInterface(chrome));
     if (site) {
       HWND w;
-      site->GetParentNativeWindow(reinterpret_cast<void**>(&w));
+      site->GetSiteWindow(reinterpret_cast<void**>(&w));
       return w;
     }
   }

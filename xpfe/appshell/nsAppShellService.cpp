@@ -17,6 +17,7 @@
 #include "nsWidgetInitData.h"
 #include "nsWidgetsCID.h"
 #include "nsIWidget.h"
+#include "nsIEmbeddingSiteWindow.h"
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsAppShellService.h"
@@ -194,11 +195,12 @@ nsAppShellService::CreateTopLevelWindow(nsIAppWindow* aParent, nsIURI* aUrl,
  * by nsAppShellService::CreateWindowlessBrowser
  */
 class WebBrowserChrome2Stub final : public nsIWebBrowserChrome,
+                                    public nsIEmbeddingSiteWindow,
                                     public nsIInterfaceRequestor,
                                     public nsSupportsWeakReference {
  protected:
   nsCOMPtr<nsIWebBrowser> mBrowser;
-  virtual ~WebBrowserChrome2Stub() = default;
+  virtual ~WebBrowserChrome2Stub() {}
 
  public:
   void SetBrowser(nsIWebBrowser* aBrowser) { mBrowser = aBrowser; }
@@ -206,6 +208,7 @@ class WebBrowserChrome2Stub final : public nsIWebBrowserChrome,
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWEBBROWSERCHROME
   NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSIEMBEDDINGSITEWINDOW
 };
 
 NS_INTERFACE_MAP_BEGIN(WebBrowserChrome2Stub)
@@ -213,6 +216,7 @@ NS_INTERFACE_MAP_BEGIN(WebBrowserChrome2Stub)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(WebBrowserChrome2Stub)
@@ -254,32 +258,59 @@ WebBrowserChrome2Stub::GetInterface(const nsIID& aIID, void** aSink) {
   return QueryInterface(aIID, aSink);
 }
 
+// nsIEmbeddingSiteWindow impl
 NS_IMETHODIMP
-WebBrowserChrome2Stub::GetDimensions(DimensionKind aDimensionKind, int32_t* aX,
-                                     int32_t* aY, int32_t* aCX, int32_t* aCY) {
-  if (aX) {
-    *aX = 0;
+WebBrowserChrome2Stub::GetDimensions(uint32_t flags, int32_t* x, int32_t* y,
+                                     int32_t* cx, int32_t* cy) {
+  if (x) {
+    *x = 0;
   }
-  if (aY) {
-    *aY = 0;
+
+  if (y) {
+    *y = 0;
   }
-  if (aCX) {
-    *aCX = 0;
+
+  if (cx) {
+    *cx = 0;
   }
-  if (aCY) {
-    *aCY = 0;
+
+  if (cy) {
+    *cy = 0;
   }
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
-WebBrowserChrome2Stub::SetDimensions(DimensionRequest&& aRequest) {
-  nsCOMPtr<nsIBaseWindow> window(do_QueryInterface(mBrowser));
-  NS_ENSURE_STATE(window);
-  // Inner and outer dimensions are equal.
-  aRequest.mDimensionKind = DimensionKind::Outer;
-  MOZ_TRY(aRequest.SupplementFrom(window));
-  return aRequest.ApplyOuterTo(window);
+WebBrowserChrome2Stub::SetDimensions(uint32_t flags, int32_t x, int32_t y,
+                                     int32_t cx, int32_t cy) {
+  nsCOMPtr<nsIBaseWindow> window = do_QueryInterface(mBrowser);
+  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
+  window->SetSize(cx, cy, true);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+WebBrowserChrome2Stub::GetVisibility(bool* aVisibility) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP
+WebBrowserChrome2Stub::SetVisibility(bool aVisibility) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+WebBrowserChrome2Stub::GetTitle(nsAString& aTitle) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP
+WebBrowserChrome2Stub::SetTitle(const nsAString& aTitle) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+WebBrowserChrome2Stub::GetSiteWindow(void** aSiteWindow) {
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

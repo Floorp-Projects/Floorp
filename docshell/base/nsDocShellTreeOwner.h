@@ -18,6 +18,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIDOMEventListener.h"
+#include "nsIEmbeddingSiteWindow.h"
 #include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
 #include "nsITimer.h"
@@ -81,7 +82,7 @@ class nsDocShellTreeOwner final : public nsIDocShellTreeOwner,
   // that object.  Otherwise, they return an addrefed pointer.  If the
   // WebBrowserChrome object doesn't exist, they return nullptr.
   already_AddRefed<nsIWebBrowserChrome> GetWebBrowserChrome();
-  already_AddRefed<nsIBaseWindow> GetOwnerWin();
+  already_AddRefed<nsIEmbeddingSiteWindow> GetOwnerWin();
   already_AddRefed<nsIInterfaceRequestor> GetOwnerRequestor();
 
  protected:
@@ -91,7 +92,7 @@ class nsDocShellTreeOwner final : public nsIDocShellTreeOwner,
   nsIDocShellTreeItem* mPrimaryContentShell;
 
   nsIWebBrowserChrome* mWebBrowserChrome;
-  nsIBaseWindow* mOwnerWin;
+  nsIEmbeddingSiteWindow* mOwnerWin;
   nsIInterfaceRequestor* mOwnerRequestor;
 
   nsWeakPtr mWebBrowserChromeWeak;  // nsIWebBrowserChrome

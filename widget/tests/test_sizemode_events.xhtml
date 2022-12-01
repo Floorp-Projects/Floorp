@@ -120,17 +120,6 @@ async function runTest() {
     gWindow.resizeTo(gWindow.outerWidth, gWindow.outerHeight + 10);
   });
 
-  // Resizing a maximized window should change to normal sizemode.
-  info("maximize() in preparation for resize");
-  await expectSizeModeChange(gWindow.STATE_MAXIMIZED, function () {
-    gWindow.maximize();
-  });
-
-  info("Testing resizeTo() from maximized");
-  await expectSizeModeChange(gWindow.STATE_NORMAL, function () {
-    gWindow.resizeTo(gWindow.outerWidth - 10, gWindow.outerHeight - 10);
-  });
-
   gWindow.removeEventListener("sizemodechange", sizemodeChanged);
   gWindow.close();
   SimpleTest.finish();

@@ -22,6 +22,7 @@
 namespace mozilla {
 class AppWindow;
 }
+class nsSiteWindow;
 
 class nsContentTreeOwner final : public nsIDocShellTreeOwner,
                                  public nsIBaseWindow,
@@ -29,6 +30,7 @@ class nsContentTreeOwner final : public nsIDocShellTreeOwner,
                                  public nsIWebBrowserChrome,
                                  public nsIWindowProvider {
   friend class mozilla::AppWindow;
+  friend class nsSiteWindow;
 
  public:
   NS_DECL_ISUPPORTS
@@ -36,25 +38,19 @@ class nsContentTreeOwner final : public nsIDocShellTreeOwner,
   NS_DECL_NSIBASEWINDOW
   NS_DECL_NSIDOCSHELLTREEOWNER
   NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSIWEBBROWSERCHROME
   NS_DECL_NSIWINDOWPROVIDER
-
-  /* nsIWebBrowserChrome (Get/SetDimensions overlap with nsIBaseWindow) */
-  NS_IMETHOD SetLinkStatus(const nsAString& status) override;
-  NS_IMETHOD GetChromeFlags(uint32_t* aChromeFlags) override;
-  NS_IMETHOD SetChromeFlags(uint32_t aChromeFlags) override;
-  NS_IMETHOD ShowAsModal() override;
-  NS_IMETHOD IsWindowModal(bool* _retval) override;
-  NS_IMETHOD Blur() override;
 
  protected:
   explicit nsContentTreeOwner(bool fPrimary);
-  virtual ~nsContentTreeOwner() = default;
+  virtual ~nsContentTreeOwner();
 
   void AppWindow(mozilla::AppWindow* aAppWindow);
   mozilla::AppWindow* AppWindow();
 
  protected:
   mozilla::AppWindow* mAppWindow;
+  nsSiteWindow* mSiteWindow;
   bool mPrimary;
 };
 
