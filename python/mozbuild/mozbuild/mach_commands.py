@@ -5,7 +5,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
-import errno
 import itertools
 import json
 import logging
@@ -18,20 +17,26 @@ import subprocess
 import sys
 import tempfile
 import time
-from pathlib import Path
+import errno
 
 import mozbuild.settings  # noqa need @SettingsProvider hook to execute
 import mozpack.path as mozpath
+
+from pathlib import Path
 from mach.decorators import (
-    Command,
     CommandArgument,
     CommandArgumentGroup,
+    Command,
     SettingsProvider,
     SubCommand,
 )
-from mozbuild.base import BinaryNotFoundException, BuildEnvironmentNotFoundException
-from mozbuild.base import MachCommandConditions as conditions
-from mozbuild.base import MozbuildObject
+
+from mozbuild.base import (
+    BinaryNotFoundException,
+    BuildEnvironmentNotFoundException,
+    MachCommandConditions as conditions,
+    MozbuildObject,
+)
 from mozbuild.util import MOZBUILD_METRICS_PATH
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -1197,9 +1202,8 @@ def gtest(
             pass_thru=True,
         )
 
-    import functools
-
     from mozprocess import ProcessHandlerMixin
+    import functools
 
     def handle_line(job_id, line):
         # Prepend the jobId
@@ -1253,7 +1257,7 @@ def android_gtest(
     setup_logging("mach-gtest", {}, {default_format: sys.stdout}, format_args)
 
     # ensure that a device is available and test app is installed
-    from mozrunner.devices.android_device import get_adb_path, verify_android_device
+    from mozrunner.devices.android_device import verify_android_device, get_adb_path
 
     verify_android_device(
         command_context, install=install, app=package, device_serial=device_serial
@@ -1353,8 +1357,8 @@ def install(command_context, **kwargs):
     """Install a package."""
     if conditions.is_android(command_context):
         from mozrunner.devices.android_device import (
-            InstallIntent,
             verify_android_device,
+            InstallIntent,
         )
 
         ret = (
@@ -1693,9 +1697,9 @@ def _run_android(
     use_existing_process=False,
 ):
     from mozrunner.devices.android_device import (
-        InstallIntent,
-        _get_device,
         verify_android_device,
+        _get_device,
+        InstallIntent,
     )
     from six.moves import shlex_quote
 
@@ -2089,7 +2093,7 @@ def _run_desktop(
     stacks,
     show_dump_stats,
 ):
-    from mozprofile import Preferences, Profile
+    from mozprofile import Profile, Preferences
 
     try:
         if packaged:
@@ -2422,6 +2426,13 @@ def repackage(command_context):
 def repackage_dmg(command_context, input, output):
     if not os.path.exists(input):
         print("Input file does not exist: %s" % input)
+        return 1
+
+    if not os.path.exists(os.path.join(command_context.topobjdir, "config.status")):
+        print(
+            "config.status not found.  Please run |mach configure| "
+            "prior to |mach repackage|."
+        )
         return 1
 
     from mozbuild.repackaging.dmg import repackage_dmg
