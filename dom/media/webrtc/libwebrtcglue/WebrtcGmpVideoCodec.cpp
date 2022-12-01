@@ -20,6 +20,7 @@
 #include "transport/runnable_utils.h"
 #include "api/video/video_frame_type.h"
 #include "common_video/include/video_frame_buffer.h"
+#include "media/base/media_constants.h"
 // #include "rtc_base/bind.h"
 
 namespace mozilla {
@@ -29,11 +30,13 @@ static const int kLowH264QpThreshold = 24;
 static const int kHighH264QpThreshold = 37;
 
 // Encoder.
-WebrtcGmpVideoEncoder::WebrtcGmpVideoEncoder(std::string aPCHandle)
+WebrtcGmpVideoEncoder::WebrtcGmpVideoEncoder(
+    const webrtc::SdpVideoFormat& aFormat, std::string aPCHandle)
     : mGMP(nullptr),
       mInitting(false),
       mHost(nullptr),
       mMaxPayloadSize(0),
+      mFormatParams(aFormat.parameters),
       mCallbackMutex("WebrtcGmpVideoEncoder encoded callback mutex"),
       mCallback(nullptr),
       mPCHandle(std::move(aPCHandle)),
@@ -148,7 +151,8 @@ int32_t WebrtcGmpVideoEncoder::InitEncode(
          sizeof(mCodecSpecificInfo.codecSpecific));
   mCodecSpecificInfo.codecType = webrtc::kVideoCodecH264;
   mCodecSpecificInfo.codecSpecific.H264.packetization_mode =
-      aCodecSettings->H264().packetizationMode == 1
+      mFormatParams.count(cricket::kH264FmtpPacketizationMode) == 1 &&
+              mFormatParams.at(cricket::kH264FmtpPacketizationMode) == "1"
           ? webrtc::H264PacketizationMode::NonInterleaved
           : webrtc::H264PacketizationMode::SingleNalUnit;
 
