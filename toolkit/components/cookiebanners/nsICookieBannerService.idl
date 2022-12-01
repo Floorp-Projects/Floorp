@@ -99,4 +99,11 @@ interface nsICookieBannerService : nsISupports {
    * Remove all domain preferences.
    */
   void removeAllDomainPrefs(in boolean aIsPrivate);
+
+  /**
+   * Clears the in-memory set that we use to maintain the domains that we have
+   * reported telemetry. This function will clear the entry for the given
+   * domain. If the domain was not given, it will clear all set.
+   */
+  void resetDomainTelemetryRecord([optional] in ACString aDomain);
 };
