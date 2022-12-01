@@ -772,7 +772,7 @@ bool ModuleCompiler<Unit>::compile(JSContext* cx, ErrorContext* ec) {
     return false;
   }
 
-  ModuleBuilder builder(cx, parser.ptr());
+  ModuleBuilder builder(cx, ec, parser.ptr());
 
   const auto& options = compilationState_.input.options;
 

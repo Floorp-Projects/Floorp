@@ -32,13 +32,13 @@ class ParseNode;
 // Process a module's parse tree to collate the import and export data used when
 // creating a ModuleObject.
 class MOZ_STACK_CLASS ModuleBuilder {
-  explicit ModuleBuilder(JSContext* cx,
+  explicit ModuleBuilder(JSContext* cx, ErrorContext* ec,
                          const frontend::EitherParser& eitherParser);
 
  public:
   template <class Parser>
-  explicit ModuleBuilder(JSContext* cx, Parser* parser)
-      : ModuleBuilder(cx, frontend::EitherParser(parser)) {}
+  explicit ModuleBuilder(JSContext* cx, ErrorContext* ec, Parser* parser)
+      : ModuleBuilder(cx, ec, frontend::EitherParser(parser)) {}
 
   bool processImport(frontend::BinaryNode* importNode);
   bool processExport(frontend::ParseNode* exportNode);
