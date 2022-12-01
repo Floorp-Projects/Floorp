@@ -4,13 +4,13 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=1479708
 -->
 <head>
-<title>Test required date/time input can't be reset</title>
+<title>Test required date/datetime-local input's Calendar button</title>
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 <script src="/tests/SimpleTest/EventUtils.js"></script>
 <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1479708">Mozilla Bug 1479708</a>
+Created for <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1479708">Mozilla Bug 1479708</a> and updated by <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1676068">Mozilla Bug 1676068</a>
 <p id="display"></p>
 <div id="content">
 <input type="date" id="id_date" value="2017-06-08">
@@ -39,19 +39,24 @@ function id_for_type(type, kind) {
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
   if (!isDesktop) {
-    ok(true, "Mobile and tablet don’t show reset button");
+    for (const input of document.querySelectorAll("input")) {
+      ok(
+        get_calendar_button(input.id).hidden,
+        `Calendar button is hidden on mobile/tablet (${input.id})`
+      );
+    }
     return SimpleTest.finish();
   }
 
   // Initial load.
-  assert_reset_visible_all("");
-  assert_reset_hidden_all("required");
+  assert_calendar_visible_all("");
+  assert_calendar_visible_all("required");
+  assert_calendar_hidden_all("readonly");
+  assert_calendar_hidden_all("disabled");
 
   // Dynamic toggling.
-  test_make_required("");
-  test_make_optional("required");
-
-  test_readonly_field_disabled();
+  test_make_readonly("");
+  test_make_editable("readonly");
   test_disabled_field_disabled();
 
   // Now toggle the inputs to the initial state, but while being
@@ -61,8 +66,8 @@ SimpleTest.waitForFocus(function() {
     is(input.getBoundingClientRect().width, 0, "Should be undisplayed");
   }
 
-  test_make_required("required");
-  test_make_optional("");
+  test_make_readonly("readonly");
+  test_make_editable("");
 
   // And test other toggling as well.
   test_readonly_field_disabled();
@@ -76,12 +81,22 @@ function test_disabled_field_disabled() {
     const id = id_for_type(type, "disabled");
     const input = document.getElementById(id);
 
-    ok(input.disabled, "Should be disabled");
-    ok(get_reset_button(id).disabled, `disabled's reset button is disabled (${id})`);
+    ok(input.disabled, `#${id} Should be disabled`);
+    ok(
+      get_calendar_button(id).hidden,
+      `disabled's Calendar button is hidden (${id})`
+    );
 
     input.disabled = false;
-    ok(!input.disabled, "Should not be disabled anymore");
-    ok(!get_reset_button(id).disabled, `enabled field's reset button is not disabled (${id})`);
+    ok(!input.disabled, `#${id} Should not be disabled anymore`);
+    if (type === "time") {
+      assert_calendar_hidden(id);
+    } else {
+      ok(
+        !get_calendar_button(id).hidden,
+        `enabled field's Calendar button is not hidden (${id})`
+      );
+    }
 
     input.disabled = true; // reset to the original state.
   }
@@ -92,64 +107,79 @@ function test_readonly_field_disabled() {
     const id = id_for_type(type, "readonly");
     const input = document.getElementById(id);
 
-    ok(input.readOnly, "Should be read-only");
-    ok(get_reset_button(id).disabled, `readonly field's reset button is disabled (${id})`);
+    ok(input.readOnly, `#${id} Should be read-only`);
+    ok(get_calendar_button(id).hidden, `readonly field's Calendar button is hidden (${id})`);
 
     input.readOnly = false;
-    ok(!input.readOnly, "Should not be read-only anymore");
-    ok(!get_reset_button(id).disabled, `non-readonly field's reset button is not disabled (${id})`);
+    ok(!input.readOnly, `#${id} Should not be read-only anymore`);
+    if (type === "time") {
+      assert_calendar_hidden(id);
+    } else {
+      ok(
+        !get_calendar_button(id).hidden,
+        `non-readonly field's Calendar button is not hidden (${id})`
+      );
+    }
 
     input.readOnly = true; // reset to the original state.
   }
 }
 
-function test_make_required(kind) {
+function test_make_readonly(kind) {
   for (let type of kTypes) {
     const id = id_for_type(type, kind);
     const input = document.getElementById(id);
-    is(input.required, false, `Precondition: input #${id} is optional`);
+    is(input.readOnly, false, `Precondition: input #${id} is editable`);
 
-    input.required = true;
-    assert_reset_hidden(id);
+    input.readOnly = true;
+    assert_calendar_hidden(id);
   }
 }
 
-function test_make_optional(kind) {
+function test_make_editable(kind) {
   for (let type of kTypes) {
     const id = id_for_type(type, kind);
     const input = document.getElementById(id);
-    is(input.required, true, `Precondition: input #${id} is required`);
+    is(input.readOnly, true, `Precondition: input #${id} is read-only`);
 
-    input.required = false;
-    assert_reset_visible(id);
+    input.readOnly = false;
+    if (type === "time") {
+      assert_calendar_hidden(id);
+    } else {
+      assert_calendar_visible(id);
+    }
   }
 }
 
-function assert_reset_visible_all(kind) {
+function assert_calendar_visible_all(kind) {
   for (let type of kTypes) {
-    assert_reset_visible(id_for_type(type, kind));
+    if (type === "time") {
+      assert_calendar_hidden(id_for_type(type, kind));
+    } else {
+      assert_calendar_visible(id_for_type(type, kind));
+    }
   }
 }
-function assert_reset_visible(id) {
-  const resetButton = get_reset_button(id);
-  is(resetButton.style.visibility, "", `Reset button is visible on #${id}`);
+function assert_calendar_visible(id) {
+  const calendarButton = get_calendar_button(id);
+  is(calendarButton.hidden, false, `Calendar button is not hidden on #${id}`);
 }
 
-function assert_reset_hidden_all(kind) {
+function assert_calendar_hidden_all(kind) {
   for (let type of kTypes) {
-    assert_reset_hidden(id_for_type(type, kind));
+    assert_calendar_hidden(id_for_type(type, kind));
   }
 }
 
-function assert_reset_hidden(id) {
-  const resetButton = get_reset_button(id);
-  is(resetButton.style.visibility, "hidden", `Reset button is hidden on #${id}`);
+function assert_calendar_hidden(id) {
+  const calendarButton = get_calendar_button(id);
+  is(calendarButton.hidden, true, `Calendar button is hidden on #${id}`);
 }
 
-function get_reset_button(id) {
+function get_calendar_button(id) {
   const input = document.getElementById(id);
   const shadowRoot = SpecialPowers.wrap(input).openOrClosedShadowRoot;
-  return shadowRoot.getElementById("reset-button");
+  return shadowRoot.getElementById("calendar-button");
 }
 
 </script>

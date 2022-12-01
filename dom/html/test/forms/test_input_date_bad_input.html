@@ -49,7 +49,7 @@ function checkValidity(aElement, aIsBadInput) {
 
   is(window.getComputedStyle(aElement).getPropertyValue('background-color'),
      aIsBadInput ? "rgb(255, 0, 0)" : "rgb(0, 255, 0)",
-     (aIsBadInput ? ":invalid" : "valid") + " pseudo-classs should apply");
+     (aIsBadInput ? ":invalid" : "valid") + " pseudo-class should apply");
 }
 
 function sendKeys(aKey) {
@@ -62,11 +62,6 @@ function sendKeys(aKey) {
 
 function test() {
   var elem = document.getElementById("input");
-  var inputRect = input.getBoundingClientRect();
-
-  // Points over the input's reset button
-  var resetButton_X = inputRect.width - 15;
-  var resetButton_Y = inputRect.height / 2;
 
   elem.focus();
   sendKeys("02312017");
@@ -102,13 +97,6 @@ function test() {
   sendKeys("02292017");
   elem.blur();
   checkValidity(elem, true);
-
-  // Reset button is desktop only.
-  if (isDesktop) {
-    // Clearing all fields should clear bad input validity state as well.
-    synthesizeMouse(input, resetButton_X, resetButton_Y, {});
-    checkValidity(elem, false);
-  }
 }
 
 </script>
