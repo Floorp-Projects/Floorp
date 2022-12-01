@@ -63,17 +63,15 @@ export class IdentityCredentialPromptService {
         true
       );
       let headerMessage = localization.formatValueSync(
-        "identity-credential-header-providers",
+        "credential-header-providers",
         {
           host: "<>",
         }
       );
-      let [cancel] = localization.formatMessagesSync([
-        { id: "identity-credential-cancel-button" },
-      ]);
-
-      let cancelLabel = cancel.attributes.find(x => x.name == "label").value;
-      let cancelKey = cancel.attributes.find(x => x.name == "accesskey").value;
+      let cancelLabel = localization.formatValueSync("credential-cancel-label");
+      let cancelKey = localization.formatValueSync(
+        "credential-cancel-accesskey"
+      );
 
       // Build the choices into the panel
       let listBox = browser.ownerDocument.getElementById(
@@ -126,9 +124,6 @@ export class IdentityCredentialPromptService {
         "identity-credential-provider"
       ).hidden = false;
       browser.ownerDocument.getElementById(
-        "identity-credential-policy"
-      ).hidden = true;
-      browser.ownerDocument.getElementById(
         "identity-credential-account"
       ).hidden = true;
       browser.ownerGlobal.PopupNotifications.show(
@@ -138,131 +133,6 @@ export class IdentityCredentialPromptService {
         "identity-credential-notification-icon",
         mainAction,
         null,
-        options
-      );
-    });
-  }
-
-  /**
-   * Ask the user, using a PopupNotification, to approve or disapprove of the policies of the Identity Provider.
-   * @param {BrowsingContext} browsingContext - The BrowsingContext of the document requesting an identity credential via navigator.credentials.get()
-   * @param {IdentityProvider} identityProvider - The Identity Provider that the user has selected to use
-   * @param {IdentityCredentialMetadata} identityCredentialMetadata - The metadata displayed to the user
-   * @returns {Promise<bool>} A boolean representing the user's acceptance of the metadata.
-   */
-  showPolicyPrompt(
-    browsingContext,
-    identityProvider,
-    identityCredentialMetadata
-  ) {
-    // For testing only.
-    if (lazy.SELECT_FIRST_IN_UI_LISTS) {
-      return Promise.resolve(true);
-    }
-    if (
-      !identityCredentialMetadata ||
-      (!identityCredentialMetadata.privacy_policy_url &&
-        !identityCredentialMetadata.terms_of_service_url)
-    ) {
-      return Promise.resolve(true);
-    }
-    return new Promise(function(resolve, reject) {
-      let browser = browsingContext.top.embedderElement;
-      if (!browser) {
-        reject();
-        return;
-      }
-
-      let providerURI = new URL(identityProvider.configURL);
-      let providerDisplayDomain = lazy.IDNService.convertToDisplayIDN(
-        providerURI.host,
-        {}
-      );
-      let currentBaseDomain =
-        browsingContext.currentWindowContext.documentPrincipal.baseDomain;
-      // Localize the description
-      // Bug 1797154 - Convert localization calls to use the async formatValues.
-      let localization = new Localization(
-        ["preview/identityCredentialNotification.ftl"],
-        true
-      );
-      let descriptionMessage = localization.formatValueSync(
-        "identity-credential-policy-description",
-        {
-          host: currentBaseDomain,
-          provider: providerDisplayDomain,
-        }
-      );
-      let [accept, cancel] = localization.formatMessagesSync([
-        { id: "identity-credential-accept-button" },
-        { id: "identity-credential-cancel-button" },
-      ]);
-
-      let cancelLabel = cancel.attributes.find(x => x.name == "label").value;
-      let cancelKey = cancel.attributes.find(x => x.name == "accesskey").value;
-      let acceptLabel = accept.attributes.find(x => x.name == "label").value;
-      let acceptKey = accept.attributes.find(x => x.name == "accesskey").value;
-      let title = localization.formatValueSync(
-        "identity-credential-policy-title"
-      );
-
-      // Populate the content of the policy panel
-      let description = browser.ownerDocument.getElementById(
-        "identity-credential-policy-explanation"
-      );
-      description.textContent = descriptionMessage;
-      let privacyPolicyAnchor = browser.ownerDocument.getElementById(
-        "identity-credential-privacy-policy"
-      );
-      privacyPolicyAnchor.hidden = true;
-      if (identityCredentialMetadata.privacy_policy_url) {
-        privacyPolicyAnchor.href =
-          identityCredentialMetadata.privacy_policy_url;
-        privacyPolicyAnchor.hidden = false;
-      }
-      let termsOfServiceAnchor = browser.ownerDocument.getElementById(
-        "identity-credential-terms-of-service"
-      );
-      termsOfServiceAnchor.hidden = true;
-      if (identityCredentialMetadata.terms_of_service_url) {
-        termsOfServiceAnchor.href =
-          identityCredentialMetadata.terms_of_service_url;
-        termsOfServiceAnchor.hidden = false;
-      }
-
-      // Construct the necessary arguments for notification behavior
-      let options = {};
-      let mainAction = {
-        label: acceptLabel,
-        accessKey: acceptKey,
-        callback(event) {
-          resolve(true);
-        },
-      };
-      let secondaryActions = [
-        {
-          label: cancelLabel,
-          accessKey: cancelKey,
-          callback(event) {
-            resolve(false);
-          },
-        },
-      ];
-
-      // Show the popup
-      let ownerDocument = browser.ownerDocument;
-      ownerDocument.getElementById(
-        "identity-credential-provider"
-      ).hidden = true;
-      ownerDocument.getElementById("identity-credential-policy").hidden = false;
-      ownerDocument.getElementById("identity-credential-account").hidden = true;
-      browser.ownerGlobal.PopupNotifications.show(
-        browser,
-        "identity-credential",
-        title,
-        "identity-credential-notification-icon",
-        mainAction,
-        secondaryActions,
         options
       );
     });
@@ -295,23 +165,21 @@ export class IdentityCredentialPromptService {
         true
       );
       let headerMessage = localization.formatValueSync(
-        "identity-credential-header-accounts",
+        "credential-header-accounts",
         {
           host: "<>",
         }
       );
       let descriptionMessage = localization.formatValueSync(
-        "identity-credential-description-account-explanation",
+        "credential-description-account-explanation",
         {
           host: currentOrigin,
         }
       );
-      let [cancel] = localization.formatMessagesSync([
-        { id: "identity-credential-cancel-button" },
-      ]);
-
-      let cancelLabel = cancel.attributes.find(x => x.name == "label").value;
-      let cancelKey = cancel.attributes.find(x => x.name == "accesskey").value;
+      let cancelLabel = localization.formatValueSync("credential-cancel-label");
+      let cancelKey = localization.formatValueSync(
+        "credential-cancel-accesskey"
+      );
 
       // Add the description text
       browser.ownerDocument.getElementById(
@@ -359,9 +227,6 @@ export class IdentityCredentialPromptService {
       // Show the popup
       browser.ownerDocument.getElementById(
         "identity-credential-provider"
-      ).hidden = true;
-      browser.ownerDocument.getElementById(
-        "identity-credential-policy"
       ).hidden = true;
       browser.ownerDocument.getElementById(
         "identity-credential-account"
