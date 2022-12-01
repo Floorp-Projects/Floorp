@@ -3,26 +3,39 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g., crates.io) dependencies
+# to registry (e.g., crates.io) dependencies.
 #
-# If you believe there's an error in this file please file an
-# issue against the rust-lang/cargo repository. If you're
-# editing this file be aware that the upstream Cargo.toml
-# will likely look very different (and much more reasonable)
+# If you are reading this file be aware that the original Cargo.toml
+# will likely look very different (and much more reasonable).
+# See Cargo.toml.orig for the original contents.
 
 [package]
 edition = "2018"
 name = "authenticator"
-version = "0.3.1"
-authors = ["J.C. Jones <jc@mozilla.com>", "Tim Taubert <ttaubert@mozilla.com>", "Kyle Machulis <kyle@nonpolynomial.com>"]
+version = "0.4.0-alpha.3"
+authors = [
+    "J.C. Jones <jc@mozilla.com>",
+    "Tim Taubert <ttaubert@mozilla.com>",
+    "Kyle Machulis <kyle@nonpolynomial.com>",
+]
 description = "Library for interacting with CTAP1/2 security keys for Web Authentication. Used by Firefox."
-keywords = ["ctap2", "u2f", "fido", "webauthn"]
-categories = ["cryptography", "hardware-support", "os"]
+readme = "README.md"
+keywords = [
+    "ctap2",
+    "u2f",
+    "fido",
+    "webauthn",
+]
+categories = [
+    "cryptography",
+    "hardware-support",
+    "os",
+]
 license = "MPL-2.0"
 repository = "https://github.com/mozilla/authenticator-rs/"
+
 [dependencies.base64]
-version = "^0.10"
-optional = true
+version = "^0.13"
 
 [dependencies.bitflags]
 version = "1.0"
@@ -32,14 +45,42 @@ version = "0.5"
 features = ["serde"]
 optional = true
 
+[dependencies.cfg-if]
+version = "1.0"
+
 [dependencies.libc]
 version = "0.2"
 
 [dependencies.log]
 version = "0.4"
 
+[dependencies.nom]
+version = "^7.1.1"
+features = ["std"]
+default-features = false
+
+[dependencies.nss-gk-api]
+version = "0.2.1"
+optional = true
+
+[dependencies.openssl]
+version = "0.10"
+optional = true
+
+[dependencies.openssl-sys]
+version = "0.9"
+optional = true
+
+[dependencies.pkcs11-bindings]
+version = "0.1.4"
+optional = true
+
 [dependencies.rand]
-version = "0.7"
+version = "0.8"
+
+[dependencies.ring]
+version = "0.16"
+optional = true
 
 [dependencies.runloop]
 version = "0.1.0"
@@ -47,25 +88,33 @@ version = "0.1.0"
 [dependencies.serde]
 version = "1.0"
 features = ["derive"]
-optional = true
+
+[dependencies.serde_bytes]
+version = "0.11"
+
+[dependencies.serde_cbor]
+version = "0.11"
 
 [dependencies.serde_json]
 version = "1.0"
-optional = true
+
+[dependencies.sha2]
+version = "^0.10.0"
 
 [dependencies.tokio]
-version = "0.2"
-features = ["macros"]
+version = "1.17"
+features = [
+    "macros",
+    "rt-multi-thread",
+]
 optional = true
 
 [dependencies.warp]
-version = "0.2.4"
+version = "0.3.2"
 optional = true
+
 [dev-dependencies.assert_matches]
 version = "1.2"
-
-[dev-dependencies.base64]
-version = "^0.10"
 
 [dev-dependencies.env_logger]
 version = "^0.6"
@@ -73,24 +122,55 @@ version = "^0.6"
 [dev-dependencies.getopts]
 version = "^0.2"
 
-[dev-dependencies.sha2]
-version = "^0.8.2"
+[dev-dependencies.rpassword]
+version = "5.0"
+
 [build-dependencies.bindgen]
-version = "^0.51"
+version = "^0.58.1"
 optional = true
 
 [features]
 binding-recompile = ["bindgen"]
-webdriver = ["base64", "bytes", "warp", "tokio", "serde", "serde_json"]
+crypto_dummy = []
+crypto_nss = [
+    "nss-gk-api",
+    "pkcs11-bindings",
+]
+crypto_openssl = [
+    "openssl",
+    "openssl-sys",
+]
+crypto_ring = ["ring"]
+default = ["crypto_nss"]
+gecko = ["nss-gk-api/gecko"]
+webdriver = [
+    "bytes",
+    "warp",
+    "tokio",
+]
+
 [target."cfg(target_os = \"freebsd\")".dependencies.devd-rs]
 version = "0.3"
+
 [target."cfg(target_os = \"linux\")".dependencies.libudev]
 version = "^0.2"
+
 [target."cfg(target_os = \"macos\")".dependencies.core-foundation]
 version = "0.9"
+
+[target."cfg(target_os = \"windows\")".dependencies.memoffset]
+version = "0.6"
+
 [target."cfg(target_os = \"windows\")".dependencies.winapi]
 version = "^0.3"
-features = ["handleapi", "hidclass", "hidpi", "hidusage", "setupapi"]
+features = [
+    "handleapi",
+    "hidclass",
+    "hidpi",
+    "hidusage",
+    "setupapi",
+]
+
 [badges.maintenance]
 status = "actively-developed"
 

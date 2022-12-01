@@ -2,7 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::authenticatorservice::AuthenticatorService;
+use crate::authenticatorservice::{
+    AuthenticatorService, CtapVersion, RegisterArgsCtap1, SignArgsCtap1,
+};
 use crate::errors;
 use crate::statecallback::StateCallback;
 use crate::{RegisterResult, SignResult};
@@ -46,7 +48,7 @@ unsafe fn from_raw(ptr: *const u8, len: usize) -> Vec<u8> {
 /// The handle returned by this method must be freed by the caller.
 #[no_mangle]
 pub extern "C" fn rust_u2f_mgr_new() -> *mut AuthenticatorService {
-    if let Ok(mut mgr) = AuthenticatorService::new() {
+    if let Ok(mut mgr) = AuthenticatorService::new(CtapVersion::CTAP1) {
         mgr.add_detected_transports();
         Box::into_raw(Box::new(mgr))
     } else {
@@ -61,7 +63,7 @@ pub extern "C" fn rust_u2f_mgr_new() -> *mut AuthenticatorService {
 #[no_mangle]
 pub unsafe extern "C" fn rust_u2f_mgr_free(mgr: *mut AuthenticatorService) {
     if !mgr.is_null() {
-        Box::from_raw(mgr);
+        drop(Box::from_raw(mgr));
     }
 }
 
@@ -92,7 +94,7 @@ pub unsafe extern "C" fn rust_u2f_app_ids_add(
 #[no_mangle]
 pub unsafe extern "C" fn rust_u2f_app_ids_free(ids: *mut U2FAppIds) {
     if !ids.is_null() {
-        Box::from_raw(ids);
+        drop(Box::from_raw(ids));
     }
 }
 
@@ -127,7 +129,7 @@ pub unsafe extern "C" fn rust_u2f_khs_add(
 #[no_mangle]
 pub unsafe extern "C" fn rust_u2f_khs_free(khs: *mut U2FKeyHandles) {
     if !khs.is_null() {
-        Box::from_raw(khs);
+        drop(Box::from_raw(khs));
     }
 }
 
@@ -145,6 +147,22 @@ pub unsafe extern "C" fn rust_u2f_result_error(res: *const U2FResult) -> u8 {
     }
 
     0 /* No error, the request succeeded. */
+}
+
+/// # Safety
+///
+/// This method must be used before rust_u2f_resbuf_copy
+#[no_mangle]
+pub unsafe extern "C" fn rust_u2f_resbuf_contains(res: *const U2FResult, bid: u8) -> bool {
+    if res.is_null() {
+        return false;
+    }
+
+    if let U2FResult::Success(ref bufs) = *res {
+        return bufs.contains_key(&bid);
+    }
+
+    false
 }
 
 /// # Safety
@@ -201,7 +219,7 @@ pub unsafe extern "C" fn rust_u2f_resbuf_copy(
 #[no_mangle]
 pub unsafe extern "C" fn rust_u2f_res_free(res: *mut U2FResult) {
     if !res.is_null() {
-        Box::from_raw(res);
+        drop(Box::from_raw(res));
     }
 }
 
@@ -249,7 +267,7 @@ pub unsafe extern "C" fn rust_u2f_mgr_register(
 
     let state_callback = StateCallback::<crate::Result<RegisterResult>>::new(Box::new(move |rv| {
         let result = match rv {
-            Ok((registration, dev_info)) => {
+            Ok(RegisterResult::CTAP1(registration, dev_info)) => {
                 let mut bufs = HashMap::new();
                 bufs.insert(RESBUF_ID_REGISTRATION, registration);
                 bufs.insert(RESBUF_ID_VENDOR_NAME, dev_info.vendor_name);
@@ -259,21 +277,22 @@ pub unsafe extern "C" fn rust_u2f_mgr_register(
                 bufs.insert(RESBUF_ID_FIRMWARE_BUILD, vec![dev_info.version_build]);
                 U2FResult::Success(bufs)
             }
+            Ok(RegisterResult::CTAP2(..)) => U2FResult::Error(
+                errors::AuthenticatorError::VersionMismatch("rust_u2f_mgr_register", 1),
+            ),
             Err(e) => U2FResult::Error(e),
         };
 
         callback(tid, Box::into_raw(Box::new(result)));
     }));
-
-    let res = (*mgr).register(
+    let ctap_args = RegisterArgsCtap1 {
         flags,
-        timeout,
         challenge,
         application,
         key_handles,
-        status_tx,
-        state_callback,
-    );
+    };
+
+    let res = (*mgr).register(timeout, ctap_args.into(), status_tx, state_callback);
 
     if res.is_ok() {
         tid
@@ -329,7 +348,7 @@ pub unsafe extern "C" fn rust_u2f_mgr_sign(
     let tid = new_tid();
     let state_callback = StateCallback::<crate::Result<SignResult>>::new(Box::new(move |rv| {
         let result = match rv {
-            Ok((app_id, key_handle, signature, dev_info)) => {
+            Ok(SignResult::CTAP1(app_id, key_handle, signature, dev_info)) => {
                 let mut bufs = HashMap::new();
                 bufs.insert(RESBUF_ID_KEYHANDLE, key_handle);
                 bufs.insert(RESBUF_ID_SIGNATURE, signature);
@@ -341,6 +360,9 @@ pub unsafe extern "C" fn rust_u2f_mgr_sign(
                 bufs.insert(RESBUF_ID_FIRMWARE_BUILD, vec![dev_info.version_build]);
                 U2FResult::Success(bufs)
             }
+            Ok(SignResult::CTAP2(..)) => U2FResult::Error(
+                errors::AuthenticatorError::VersionMismatch("rust_u2f_mgr_sign", 1),
+            ),
             Err(e) => U2FResult::Error(e),
         };
 
@@ -348,11 +370,14 @@ pub unsafe extern "C" fn rust_u2f_mgr_sign(
     }));
 
     let res = (*mgr).sign(
-        flags,
         timeout,
-        challenge,
-        app_ids,
-        key_handles,
+        SignArgsCtap1 {
+            flags,
+            challenge,
+            app_ids,
+            key_handles,
+        }
+        .into(),
         status_tx,
         state_callback,
     );
