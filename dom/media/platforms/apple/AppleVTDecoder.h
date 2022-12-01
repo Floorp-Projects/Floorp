@@ -12,6 +12,7 @@
 #include <VideoToolbox/VideoToolbox.h>    // For VTDecompressionSessionRef
 
 #include "AppleDecoderModule.h"
+#include "PerformanceRecorder.h"
 #include "PlatformDecoderModule.h"
 #include "ReorderQueue.h"
 #include "TimeUnits.h"
@@ -126,6 +127,7 @@ class AppleVTDecoder : public MediaDataDecoder,
   CMVideoFormatDescriptionRef mFormat;
   VTDecompressionSessionRef mSession;
   Atomic<bool> mIsHardwareAccelerated;
+  PerformanceRecorderMulti<DecodeStage> mPerformanceRecorder;
 };
 
 }  // namespace mozilla
