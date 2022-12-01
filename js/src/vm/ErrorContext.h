@@ -177,6 +177,13 @@ class MOZ_STACK_CLASS AutoReportFrontendContext : public OffThreadErrorContext {
   }
 };
 
+/*
+ * Explicitly report any pending exception before leaving the scope.
+ *
+ * Before an instance of this class leaves the scope, you must call either
+ * failure() (if there are exceptions to report) or ok() (if there are no
+ * exceptions to report).
+ */
 class ManualReportFrontendContext : public OffThreadErrorContext {
   JSContext* cx_;
 #ifdef DEBUG
