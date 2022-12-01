@@ -17,6 +17,7 @@
 #include "WebrtcGmpVideoCodec.h"
 
 #include "api/video/video_sink_interface.h"
+#include "media/base/media_constants.h"
 #include "media/base/video_adapter.h"
 
 #include "MockCall.h"
@@ -2233,6 +2234,59 @@ TEST_F(VideoConduitTest, TestExternalRemoteSsrcCollision) {
   EXPECT_TRUE(Call()->mVideoReceiveConfig);
   EXPECT_THAT(Call()->mVideoReceiveConfig->rtp.remote_ssrc,
               Not(testing::AnyOf(0U, 1U)));
+}
+
+TEST_F(VideoConduitTest, TestVideoConfigurationH264) {
+  const int profileLevelId1 = 0x42E00D;
+  const int profileLevelId2 = 0x64000C;
+  const char* sprop1 = "foo bar";
+  const char* sprop2 = "baz";
+
+  // Test that VideoConduit propagates H264 configuration data properly.
+  // We do two tests:
+  // - Test valid data in packetization mode 0 (SingleNALU)
+  // - Test different valid data in packetization mode 1 (NonInterleaved)
+
+  {
+    mControl.Update([&](auto& aControl) {
+      aControl.mTransmitting = true;
+      VideoCodecConfigH264 h264{};
+      h264.packetization_mode = 0;
+      h264.profile_level_id = profileLevelId1;
+      strncpy(h264.sprop_parameter_sets, sprop1,
+              sizeof(h264.sprop_parameter_sets) - 1);
+      VideoCodecConfig codecConfig(97, "H264", EncodingConstraints(), &h264);
+      codecConfig.mEncodings.emplace_back();
+      aControl.mVideoSendCodec = Some(codecConfig);
+      aControl.mVideoSendRtpRtcpConfig =
+          Some(RtpRtcpConfig(webrtc::RtcpMode::kCompound));
+    });
+
+    ASSERT_TRUE(Call()->mVideoSendEncoderConfig);
+    auto& params = Call()->mVideoSendEncoderConfig->video_format.parameters;
+    EXPECT_EQ(params[cricket::kH264FmtpPacketizationMode], "0");
+    EXPECT_EQ(params[cricket::kH264FmtpProfileLevelId], "42e00d");
+    EXPECT_EQ(params[cricket::kH264FmtpSpropParameterSets], sprop1);
+  }
+
+  {
+    mControl.Update([&](auto& aControl) {
+      VideoCodecConfigH264 h264{};
+      h264.packetization_mode = 1;
+      h264.profile_level_id = profileLevelId2;
+      strncpy(h264.sprop_parameter_sets, sprop2,
+              sizeof(h264.sprop_parameter_sets) - 1);
+      VideoCodecConfig codecConfig(126, "H264", EncodingConstraints(), &h264);
+      codecConfig.mEncodings.emplace_back();
+      aControl.mVideoSendCodec = Some(codecConfig);
+    });
+
+    ASSERT_TRUE(Call()->mVideoSendEncoderConfig);
+    auto& params = Call()->mVideoSendEncoderConfig->video_format.parameters;
+    EXPECT_EQ(params[cricket::kH264FmtpPacketizationMode], "1");
+    EXPECT_EQ(params[cricket::kH264FmtpProfileLevelId], "64000c");
+    EXPECT_EQ(params[cricket::kH264FmtpSpropParameterSets], sprop2);
+  }
 }
 
 }  // End namespace test.
