@@ -595,8 +595,7 @@ JSScript* FunctionScope::script() const {
 }
 
 /* static */
-bool FunctionScope::isSpecialName(JSContext* cx,
-                                  frontend::TaggedParserAtomIndex name) {
+bool FunctionScope::isSpecialName(frontend::TaggedParserAtomIndex name) {
   return name == frontend::TaggedParserAtomIndex::WellKnown::arguments() ||
          name == frontend::TaggedParserAtomIndex::WellKnown::dotThis() ||
          name == frontend::TaggedParserAtomIndex::WellKnown::dotNewTarget() ||
