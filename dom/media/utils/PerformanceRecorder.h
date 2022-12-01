@@ -12,6 +12,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/BaseProfilerMarkersPrerequisites.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TypedEnumBits.h"
 #include "nsStringFwd.h"
@@ -240,6 +241,7 @@ class PerformanceRecorderImpl : public PerformanceRecorderBase {
   template <typename... Args>
   void Start(int64_t aId, Args... aArgs) {
     if (IsMeasurementEnabled()) {
+      MutexAutoLock lock(mMutex);
       mStages.Push(MakeTuple(aId, GetCurrentTimeForMeasurement(),
                              StageType(std::move(aArgs)...)));
     }
@@ -250,19 +252,23 @@ class PerformanceRecorderImpl : public PerformanceRecorderBase {
   // discarded. Otherwise, return 0.
   template <typename F>
   float Record(int64_t aId, F&& aStageMutator) {
-    while (!mStages.IsEmpty() && Get<0>(mStages.Top()) < aId) {
-      mStages.Pop();
+    Maybe<Entry> entry;
+    {
+      MutexAutoLock lock(mMutex);
+      while (!mStages.IsEmpty() && Get<0>(mStages.Top()) < aId) {
+        mStages.Pop();
+      }
+      if (mStages.IsEmpty()) {
+        return 0.0;
+      }
+      if (Get<0>(mStages.Top()) != aId) {
+        return 0.0;
+      }
+      entry = Some(mStages.Pop());
     }
-    if (mStages.IsEmpty()) {
-      return 0.0;
-    }
-    if (Get<0>(mStages.Top()) != aId) {
-      return 0.0;
-    }
-    Entry entry = mStages.Pop();
-    const auto& startTime = Get<1>(entry);
-    auto& stage = Get<2>(entry);
-    MOZ_ASSERT(Get<0>(entry) == aId);
+    const auto& startTime = Get<1>(*entry);
+    auto& stage = Get<2>(*entry);
+    MOZ_ASSERT(Get<0>(*entry) == aId);
     double elapsedTimeUs = 0.0;
     if (!startTime.IsNull() && IsMeasurementEnabled()) {
       const auto now = TimeStamp::Now();
@@ -289,7 +295,8 @@ class PerformanceRecorderImpl : public PerformanceRecorderBase {
     }
   };
 
-  nsTPriorityQueue<Entry, IdComparator> mStages;
+  Mutex mMutex{"PerformanceRecorder::mMutex"};
+  nsTPriorityQueue<Entry, IdComparator> mStages MOZ_GUARDED_BY(mMutex);
 };
 
 /**
