@@ -58,13 +58,15 @@ linux64-cctools-port:
 
 linux64-hfsplus:
     description: "hfsplus toolchain build"
+    attributes:
+        local-toolchain: true
     treeherder:
         symbol: TL(hfs+)
     run:
         script: build-hfsplus-linux.sh
         resources:
             - 'build/unix/build-hfsplus/build-hfsplus.sh'
-        toolchain-artifact: public/build/hfsplus-tools.tar.zst
+        toolchain-artifact: public/build/hfsplus.tar.zst
     fetches:
         fetch:
             - hfsplus-tools
@@ -73,11 +75,14 @@ linux64-hfsplus:
 
 linux64-libdmg:
     description: "libdmg-hfsplus toolchain build"
+    attributes:
+        local-toolchain: true
     treeherder:
         symbol: TL(libdmg-hfs+)
     run:
-        script: build-libdmg-hfsplus.sh
+        script: build-dmg-hfsplus.sh
         toolchain-artifact: public/build/dmg.tar.zst
+        toolchain-alias: linux64-dmg
     fetches:
         fetch:
             - libdmg-hfsplus

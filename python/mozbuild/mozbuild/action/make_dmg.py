@@ -2,13 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function
-
-from mozbuild.repackaging.application_ini import get_application_ini_value
-from mozpack import dmg
-
 import argparse
 import sys
+from pathlib import Path
+
+import buildconfig
+from mozbuild.repackaging.application_ini import get_application_ini_value
+from mozpack import dmg
 
 
 def main(args):
@@ -41,7 +41,20 @@ def main(args):
             options.inpath, "App", "CodeName", fallback="Name"
         )
 
-    dmg.create_dmg(options.inpath, options.dmgfile, volume_name, extra_files)
+    # Resolve required tools
+    dmg_tool = buildconfig.substs["DMG_TOOL"]
+    hfs_tool = buildconfig.substs["HFS_TOOL"]
+    mkfshfs_tool = buildconfig.substs["MKFSHFS"]
+
+    dmg.create_dmg(
+        source_directory=Path(options.inpath),
+        output_dmg=Path(options.dmgfile),
+        volume_name=volume_name,
+        extra_files=extra_files,
+        dmg_tool=Path(dmg_tool),
+        hfs_tool=Path(hfs_tool),
+        mkfshfs_tool=Path(mkfshfs_tool),
+    )
 
     return 0
 

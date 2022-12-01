@@ -6,9 +6,6 @@
 set -x -e
 
 export LIPO=$MOZ_FETCHES_DIR/cctools/bin/x86_64-apple-darwin-lipo
-export MKFSHFS=$MOZ_FETCHES_DIR/hfsplus-tools/newfs_hfs
-export DMG_TOOL=$MOZ_FETCHES_DIR/dmg/dmg
-export HFS_TOOL=$MOZ_FETCHES_DIR/dmg/hfsplus
 
 for i in x64 aarch64; do
     $GECKO_PATH/mach python -m mozbuild.action.unpack_dmg $MOZ_FETCHES_DIR/$i/target.dmg $i
