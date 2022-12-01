@@ -21,7 +21,7 @@ add_task(async function engagement_type_click() {
     await openPopup("x");
     await doClick();
 
-    assertGleanTelemetry([{ engagement_type: "click" }]);
+    assertEngagementTelemetry([{ engagement_type: "click" }]);
   });
 });
 
@@ -30,7 +30,7 @@ add_task(async function engagement_type_enter() {
     await openPopup("x");
     await doEnter();
 
-    assertGleanTelemetry([{ engagement_type: "enter" }]);
+    assertEngagementTelemetry([{ engagement_type: "enter" }]);
   });
 });
 
@@ -38,7 +38,7 @@ add_task(async function engagement_type_drop_go() {
   await doTest(async browser => {
     await doDropAndGo("example.com");
 
-    assertGleanTelemetry([{ engagement_type: "drop_go" }]);
+    assertEngagementTelemetry([{ engagement_type: "drop_go" }]);
   });
 });
 
@@ -46,7 +46,7 @@ add_task(async function engagement_type_paste_go() {
   await doTest(async browser => {
     await doPasteAndGo("www.example.com");
 
-    assertGleanTelemetry([{ engagement_type: "paste_go" }]);
+    assertEngagementTelemetry([{ engagement_type: "paste_go" }]);
   });
 });
 
@@ -77,7 +77,7 @@ add_task(async function engagement_type_dismiss() {
         () => originalResultCount != UrlbarTestUtils.getResultCount(window)
       );
 
-      assertGleanTelemetry([{ engagement_type: "dismiss" }]);
+      assertEngagementTelemetry([{ engagement_type: "dismiss" }]);
     });
 
     await doTest(async browser => {
@@ -90,7 +90,7 @@ add_task(async function engagement_type_dismiss() {
         () => originalResultCount != UrlbarTestUtils.getResultCount(window)
       );
 
-      assertGleanTelemetry([{ engagement_type: "dismiss" }]);
+      assertEngagementTelemetry([{ engagement_type: "dismiss" }]);
     });
 
     await SpecialPowers.popPrefEnv();
@@ -115,7 +115,7 @@ add_task(async function engagement_type_help() {
       const tab = await onTabOpened;
       BrowserTestUtils.removeTab(tab);
 
-      assertGleanTelemetry([{ engagement_type: "help" }]);
+      assertEngagementTelemetry([{ engagement_type: "help" }]);
     });
 
     await SpecialPowers.popPrefEnv();

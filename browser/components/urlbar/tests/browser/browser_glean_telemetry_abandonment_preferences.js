@@ -18,9 +18,9 @@ add_task(async function enabled() {
 
   await doTest(async browser => {
     await openPopup("https://example.com");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([{ selected_result: "url" }]);
+    assertAbandonmentTelemetry([{ sap: "urlbar_newtab" }]);
   });
 
   await SpecialPowers.popPrefEnv();
@@ -33,9 +33,9 @@ add_task(async function disabled() {
 
   await doTest(async browser => {
     await openPopup("https://example.com");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([]);
+    assertAbandonmentTelemetry([]);
   });
 
   await SpecialPowers.popPrefEnv();

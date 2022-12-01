@@ -129,7 +129,7 @@ async function doTest({
     "End queryContext.isPrivate"
   );
 
-  let detailsDefaults = { searchString: "test" };
+  let detailsDefaults = { searchString: "test", searchSource: "urlbar" };
   if ("provider" in expectedEndDetails) {
     detailsDefaults.provider = provider.name;
     delete expectedEndDetails.provider;

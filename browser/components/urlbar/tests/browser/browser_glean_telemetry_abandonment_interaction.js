@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test for the following data of engagement telemetry.
+// Test for the following data of abandonment telemetry.
 // - interaction
 
 /* import-globals-from head-glean.js */
@@ -20,79 +20,50 @@ add_task(async function interaction_topsites() {
   await doTest(async browser => {
     await addTopSites("https://example.com/");
     await showResultByArrowDown();
-    await selectRowByURL("https://example.com/");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([{ interaction: "topsites" }]);
+    assertAbandonmentTelemetry([{ interaction: "topsites" }]);
   });
 });
 
 add_task(async function interaction_typed() {
   await doTest(async browser => {
     await openPopup("x");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([{ interaction: "typed" }]);
+    assertAbandonmentTelemetry([{ interaction: "typed" }]);
   });
 
   await doTest(async browser => {
     await showResultByArrowDown();
     EventUtils.synthesizeKey("x");
     await UrlbarTestUtils.promiseSearchComplete(window);
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([{ interaction: "typed" }]);
-  });
-});
-
-add_task(async function interaction_dropped() {
-  await doTest(async browser => {
-    await doDropAndGo("example.com");
-
-    assertEngagementTelemetry([{ interaction: "dropped" }]);
-  });
-
-  await doTest(async browser => {
-    await showResultByArrowDown();
-    await doDropAndGo("example.com");
-
-    assertEngagementTelemetry([{ interaction: "dropped" }]);
+    assertAbandonmentTelemetry([{ interaction: "typed" }]);
   });
 });
 
 add_task(async function interaction_pasted() {
   await doTest(async browser => {
     await doPaste("www.example.com");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([{ interaction: "pasted" }]);
-  });
-
-  await doTest(async browser => {
-    await doPasteAndGo("www.example.com");
-
-    assertEngagementTelemetry([{ interaction: "pasted" }]);
+    assertAbandonmentTelemetry([{ interaction: "pasted" }]);
   });
 
   await doTest(async browser => {
     await showResultByArrowDown();
     await doPaste("x");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([{ interaction: "pasted" }]);
-  });
-
-  await doTest(async browser => {
-    await showResultByArrowDown();
-    await doPasteAndGo("www.example.com");
-
-    assertEngagementTelemetry([{ interaction: "pasted" }]);
+    assertAbandonmentTelemetry([{ interaction: "pasted" }]);
   });
 });
 
 add_task(async function interaction_topsite_search() {
   // TODO
-  // assertEngagementTelemetry([{ interaction: "topsite_search" }]);
+  // assertAbandonmentTelemetry([{ interaction: "topsite_search" }]);
 });
 
 add_task(async function interaction_returned() {
@@ -105,9 +76,9 @@ add_task(async function interaction_returned() {
       document.getElementById("Browser:OpenLocation").doCommand();
     });
     await UrlbarTestUtils.promiseSearchComplete(window);
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([{ interaction: "returned" }]);
+    assertAbandonmentTelemetry([{ interaction: "returned" }]);
   });
 });
 
@@ -120,9 +91,12 @@ add_task(async function interaction_restarted() {
     });
     EventUtils.synthesizeKey("x");
     await UrlbarTestUtils.promiseSearchComplete(window);
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([{ interaction: "restarted" }]);
+    assertAbandonmentTelemetry([
+      { interaction: "typed" },
+      { interaction: "restarted" },
+    ]);
   });
 });
 
@@ -132,12 +106,9 @@ add_task(async function interaction_refined() {
     await doEnter();
 
     await openPopup("x y");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([
-      { interaction: "typed" },
-      { interaction: "refined" },
-    ]);
+    assertAbandonmentTelemetry([{ interaction: "refined" }]);
   });
 
   await doTest(async browser => {
@@ -145,12 +116,9 @@ add_task(async function interaction_refined() {
     await doEnter();
 
     await openPopup("x");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([
-      { interaction: "typed" },
-      { interaction: "refined" },
-    ]);
+    assertAbandonmentTelemetry([{ interaction: "refined" }]);
   });
 
   await doTest(async browser => {
@@ -158,12 +126,9 @@ add_task(async function interaction_refined() {
     await doEnter();
 
     await openPopup("y z");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([
-      { interaction: "typed" },
-      { interaction: "typed" },
-    ]);
+    assertAbandonmentTelemetry([{ interaction: "typed" }]);
   });
 
   await doTest(async browser => {
@@ -171,12 +136,9 @@ add_task(async function interaction_refined() {
     await doEnter();
 
     await openPopup("x y");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([
-      { interaction: "typed" },
-      { interaction: "typed" },
-    ]);
+    assertAbandonmentTelemetry([{ interaction: "typed" }]);
   });
 });
 
@@ -194,12 +156,9 @@ add_task(async function interaction_persisted_search_terms() {
     await doEnter();
 
     await openPopup("keyword");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([
-      { interaction: "typed" },
-      { interaction: "persisted_search_terms" },
-    ]);
+    assertAbandonmentTelemetry([{ interaction: "persisted_search_terms" }]);
   });
 
   await SpecialPowers.popPrefEnv();
