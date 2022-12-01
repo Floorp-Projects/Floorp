@@ -724,7 +724,8 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   [[nodiscard]] bool readArrayNew(uint32_t* typeIndex, Value* numElements,
                                   Value* argValue);
   [[nodiscard]] bool readArrayNewFixed(uint32_t* typeIndex,
-                                       uint32_t* numElements);
+                                       uint32_t* numElements,
+                                       ValueVector* values);
   [[nodiscard]] bool readArrayNewDefault(uint32_t* typeIndex,
                                          Value* numElements);
   [[nodiscard]] bool readArrayNewData(uint32_t* typeIndex, uint32_t* segIndex,
@@ -3167,8 +3168,10 @@ inline bool OpIter<Policy>::readArrayNew(uint32_t* typeIndex,
 
 template <typename Policy>
 inline bool OpIter<Policy>::readArrayNewFixed(uint32_t* typeIndex,
-                                              uint32_t* numElements) {
+                                              uint32_t* numElements,
+                                              ValueVector* values) {
   MOZ_ASSERT(Classify(op_) == OpKind::ArrayNewFixed);
+  MOZ_ASSERT(values->length() == 0);
 
   if (!readArrayTypeIndex(typeIndex)) {
     return false;
@@ -3180,13 +3183,18 @@ inline bool OpIter<Policy>::readArrayNewFixed(uint32_t* typeIndex,
   if (!readVarU32(numElements)) {
     return false;
   }
+  // Don't resize `values` so as to hold `numElements`.  If `numElements` is
+  // absurdly large, this will will take a large amount of time and memory,
+  // which will be wasted because `popWithType` in the loop below will soon
+  // start failing anyway.
 
-  // For use with Ion, it may be necessary to add a third parameter
-  // of type `Vector<Value>*` into which this loop copies values.
   ValType widenedElementType = arrayType.elementType_.widenToValType();
   for (uint32_t i = 0; i < *numElements; i++) {
     Value v;
     if (!popWithType(widenedElementType, &v)) {
+      return false;
+    }
+    if (!values->append(v)) {
       return false;
     }
   }
@@ -3244,10 +3252,10 @@ inline bool OpIter<Policy>::readArrayNewData(uint32_t* typeIndex,
     return fail("segment index is out of range");
   }
 
-  if (!popWithType(ValType::I32, offset)) {
+  if (!popWithType(ValType::I32, numElements)) {
     return false;
   }
-  if (!popWithType(ValType::I32, numElements)) {
+  if (!popWithType(ValType::I32, offset)) {
     return false;
   }
 
@@ -3285,10 +3293,10 @@ inline bool OpIter<Policy>::readArrayNewElem(uint32_t* typeIndex,
     return fail("incompatible element types");
   }
 
-  if (!popWithType(ValType::I32, offset)) {
+  if (!popWithType(ValType::I32, numElements)) {
     return false;
   }
-  if (!popWithType(ValType::I32, numElements)) {
+  if (!popWithType(ValType::I32, offset)) {
     return false;
   }
 

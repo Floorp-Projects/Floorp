@@ -509,6 +509,14 @@ enum class MIRType : uint8_t {
   Last = Shape
 };
 
+static inline MIRType TargetWordMIRType() {
+#ifdef JS_64BIT
+  return MIRType::Int64;
+#else
+  return MIRType::Int32;
+#endif
+}
+
 static inline MIRType MIRTypeFromValueType(JSValueType type) {
   // This function does not deal with magic types. Magic constants should be
   // filtered out in MIRTypeFromValue.

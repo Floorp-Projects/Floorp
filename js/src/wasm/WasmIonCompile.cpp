@@ -18,6 +18,7 @@
 
 #include "wasm/WasmIonCompile.h"
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
 
 #include <algorithm>
@@ -1231,7 +1232,7 @@ class FunctionCompiler {
 
     auto* ins =
         MWasmBoundsCheck::New(alloc(), actualBase, boundsCheckLimit,
-                              bytecodeOffset(), MWasmBoundsCheck::Memory);
+                              bytecodeOffset(), MWasmBoundsCheck::Memory0);
     curBlock_->add(ins);
     actualBase = ins;
 
@@ -1741,7 +1742,7 @@ class FunctionCompiler {
     // masking
     auto* length = loadTableLength(table);
     auto* check = MWasmBoundsCheck::New(
-        alloc(), index, length, bytecodeOffset(), MWasmBoundsCheck::Table);
+        alloc(), index, length, bytecodeOffset(), MWasmBoundsCheck::Unknown);
     curBlock_->add(check);
     if (JitOptions.spectreIndexMasking) {
       index = check;
@@ -1761,7 +1762,7 @@ class FunctionCompiler {
     // masking
     auto* length = loadTableLength(table);
     auto* check = MWasmBoundsCheck::New(
-        alloc(), index, length, bytecodeOffset(), MWasmBoundsCheck::Table);
+        alloc(), index, length, bytecodeOffset(), MWasmBoundsCheck::Unknown);
     curBlock_->add(check);
     if (JitOptions.spectreIndexMasking) {
       index = check;
@@ -3339,21 +3340,42 @@ class FunctionCompiler {
     return throwFrom(exception, tag);
   }
 
-  /***************************************************** Wasm GC helpers ***/
+  /*********************************************** Instance call helpers ***/
 
-  // Returns an MDefinition holding the runtime type denoted by `typeIndex`.
-  MDefinition* loadGcCanon(uint32_t typeIndex) {
-    uint32_t typeIdOffset = moduleEnv().offsetOfTypeId(typeIndex);
+  // Emit a call to the Instance function indicated by `callee`.  This is
+  // assumed to take an Instance pointer as its first argument.  The remaining
+  // args are taken from `args`, which must be null-terminated.  If `result`
+  // is non-null, the MDefinition* holding the return value is written to
+  // `*result`.
+  [[nodiscard]] bool emitInstanceCall(uint32_t lineOrBytecode,
+                                      const SymbolicAddressSignature& callee,
+                                      MDefinition** args,
+                                      MDefinition** result = nullptr) {
+    // Check that the first formal parameter is plausibly an Instance pointer.
+    MOZ_ASSERT(callee.numArgs > 0);
+    MOZ_ASSERT(callee.argTypes[0] == MIRType::Pointer);
+    // Check we agree on whether a value is returned.
+    MOZ_ASSERT((result == nullptr) == (callee.retType == MIRType::None));
 
-    auto* load =
-        MWasmLoadGlobalVar::New(alloc(), MIRType::RefOrNull, typeIdOffset,
-                                /*isConst=*/true, instancePointer_);
-    if (!load) {
-      return nullptr;
+    CallCompileState ccsArgs;
+    if (!passInstance(callee.argTypes[0], &ccsArgs)) {
+      return false;
     }
-    curBlock_->add(load);
-    return load;
+    size_t i;
+    for (i = 0; args[i]; i++) {
+      MOZ_ASSERT(i + 1 /* the instance pointer */ < callee.numArgs);
+      if (!passArg(args[i], callee.argTypes[i + 1], &ccsArgs)) {
+        return false;
+      }
+    }
+    MOZ_ASSERT(i + 1 == callee.numArgs);
+    if (!finishCall(&ccsArgs)) {
+      return false;
+    }
+    return builtinInstanceMethodCall(callee, lineOrBytecode, ccsArgs, result);
   }
+
+  /******************************** WasmGC: low level load/store helpers ***/
 
   // Given a (FieldType, FieldExtension) pair, produce the (MIRType,
   // MWideningOp) pair that will give the correct operation for reading the
@@ -3415,15 +3437,220 @@ class FunctionCompiler {
     }
   }
 
+  // Generate a write of `value` at address `address`.  If the written value
+  // is a reftype, the previous value at `address` will be retrieved and
+  // handed off to the post-write barrier.  `keepAlive` will be referenced by
+  // the instruction so as to hold it live (from the GC's point of view).
+  [[nodiscard]] bool writeGcValueAtAddress(
+      uint32_t lineOrBytecode, FieldType fieldType, MDefinition* keepAlive,
+      AliasSet::Flag aliasBitset, MDefinition* value, MDefinition* address) {
+    MOZ_ASSERT(aliasBitset != 0);
+    MOZ_ASSERT(keepAlive->type() == MIRType::RefOrNull);
+    MOZ_ASSERT(fieldType.widenToValType().toMIRType() == value->type());
+    MNarrowingOp narrowingOp = fieldStoreInfoToMIR(fieldType);
+
+    if (!fieldType.isRefRepr()) {
+      auto* store = MWasmStoreFieldKA::New(alloc(), keepAlive, address,
+                                           /*offset=*/0, value, narrowingOp,
+                                           AliasSet::Store(aliasBitset));
+      if (!store) {
+        return false;
+      }
+      curBlock_->add(store);
+      return true;
+    }
+
+    // Otherwise it's a ref store.  Load the previous value so we can show it
+    // to the post-write barrier.
+    //
+    // Optimisation opportunity: for the case where this field write results
+    // from struct.new, the old value is always zero.  So we should synthesise
+    // a suitable zero constant rather than reading it from the object.  See
+    // also bug 1799999.
+    auto* prevValue =
+        MWasmLoadFieldKA::New(alloc(), keepAlive, address, /*offset=*/0,
+                              fieldType.valType().toMIRType(),
+                              MWideningOp::None, AliasSet::Load(aliasBitset));
+    if (!prevValue) {
+      return false;
+    }
+    curBlock_->add(prevValue);
+
+    // Store the new value
+    auto* store =
+        MWasmStoreFieldRefKA::New(alloc(), instancePointer_, keepAlive, address,
+                                  value, AliasSet::Store(aliasBitset));
+    if (!store) {
+      return false;
+    }
+    curBlock_->add(store);
+
+    // Call the post-write barrier
+    return postBarrierPrecise(lineOrBytecode, address, prevValue);
+  }
+
+  // Generate a write of `value` at address `base + offset`, where `offset` is
+  // known at JIT time.  If the written value is a reftype, the previous value
+  // at `base + offset` will be retrieved and handed off to the post-write
+  // barrier.  `keepAlive` will be referenced by the instruction so as to hold
+  // it live (from the GC's point of view).
+  [[nodiscard]] bool writeGcValueAtBasePlusOffset(
+      uint32_t lineOrBytecode, FieldType fieldType, MDefinition* keepAlive,
+      AliasSet::Flag aliasBitset, MDefinition* value, MDefinition* base,
+      uint32_t offset) {
+    MOZ_ASSERT(aliasBitset != 0);
+    MOZ_ASSERT(keepAlive->type() == MIRType::RefOrNull);
+    MOZ_ASSERT(fieldType.widenToValType().toMIRType() == value->type());
+    MNarrowingOp narrowingOp = fieldStoreInfoToMIR(fieldType);
+
+    if (!fieldType.isRefRepr()) {
+      auto* store =
+          MWasmStoreFieldKA::New(alloc(), keepAlive, base, offset, value,
+                                 narrowingOp, AliasSet::Store(aliasBitset));
+      if (!store) {
+        return false;
+      }
+      curBlock_->add(store);
+      return true;
+    }
+
+    // Otherwise it's a ref store, for which we can't use a
+    // base-plus-constant-offset address form.  So roll the offset into the
+    // address at this point.
+    MOZ_ASSERT(narrowingOp == MNarrowingOp::None);
+    MOZ_ASSERT(fieldType.widenToValType() == fieldType.valType());
+    if (offset != 0) {
+      auto* derived = MWasmDerivedPointer::New(alloc(), base, offset);
+      if (!derived) {
+        return false;
+      }
+      curBlock_->add(derived);
+      base = derived;
+    }
+
+    return writeGcValueAtAddress(lineOrBytecode, fieldType, keepAlive,
+                                 aliasBitset, value, base);
+  }
+
+  // Generate a write of `value` at address `base + index * scale`, where
+  // `scale` is known at JIT-time.  If the written value is a reftype, the
+  // previous value at `base + index * scale` will be retrieved and handed off
+  // to the post-write barrier.  `keepAlive` will be referenced by the
+  // instruction so as to hold it live (from the GC's point of view).
+  [[nodiscard]] bool writeGcValueAtBasePlusScaledIndex(
+      uint32_t lineOrBytecode, FieldType fieldType, MDefinition* keepAlive,
+      AliasSet::Flag aliasBitset, MDefinition* value, MDefinition* base,
+      uint32_t scale, MDefinition* index) {
+    MOZ_ASSERT(aliasBitset != 0);
+    MOZ_ASSERT(keepAlive->type() == MIRType::RefOrNull);
+    MOZ_ASSERT(fieldType.widenToValType().toMIRType() == value->type());
+    MOZ_ASSERT(scale == 1 || scale == 2 || scale == 4 || scale == 8 ||
+               scale == 16);
+
+    // Currently there's no single MIR node that this can be translated into.
+    // So compute the final address "manually", then store directly to that
+    // address.  See bug 1802287.
+    MDefinition* scaleDef = constantTargetWord(scale);
+    if (!scaleDef) {
+      return false;
+    }
+    MDefinition* finalAddr = computeBasePlusScaledIndex(base, scaleDef, index);
+    if (!finalAddr) {
+      return false;
+    }
+
+    return writeGcValueAtAddress(lineOrBytecode, fieldType, keepAlive,
+                                 aliasBitset, value, finalAddr);
+  }
+
+  // Generate a read from address `base + offset`, where `offset` is known at
+  // JIT time.  The loaded value will be widened as described by `fieldType`
+  // and `fieldWideningOp`.  `keepAlive` will be referenced by the instruction
+  // so as to hold it live (from the GC's point of view).
+  [[nodiscard]] MDefinition* readGcValueAtBasePlusOffset(
+      FieldType fieldType, FieldWideningOp fieldWideningOp,
+      MDefinition* keepAlive, AliasSet::Flag aliasBitset, MDefinition* base,
+      uint32_t offset) {
+    MOZ_ASSERT(aliasBitset != 0);
+    MOZ_ASSERT(keepAlive->type() == MIRType::RefOrNull);
+    MIRType mirType;
+    MWideningOp mirWideningOp;
+    fieldLoadInfoToMIR(fieldType, fieldWideningOp, &mirType, &mirWideningOp);
+    auto* load =
+        MWasmLoadFieldKA::New(alloc(), keepAlive, base, offset, mirType,
+                              mirWideningOp, AliasSet::Load(aliasBitset));
+    if (!load) {
+      return nullptr;
+    }
+    curBlock_->add(load);
+    return load;
+  }
+
+  // Generate a read from address `base + index * scale`, where `scale` is
+  // known at JIT-time.  The loaded value will be widened as described by
+  // `fieldType` and `fieldWideningOp`.  `keepAlive` will be referenced by the
+  // instruction so as to hold it live (from the GC's point of view).
+  [[nodiscard]] MDefinition* readGcValueAtBasePlusScaledIndex(
+      FieldType fieldType, FieldWideningOp fieldWideningOp,
+      MDefinition* keepAlive, AliasSet::Flag aliasBitset, MDefinition* base,
+      uint32_t scale, MDefinition* index) {
+    MOZ_ASSERT(aliasBitset != 0);
+    MOZ_ASSERT(keepAlive->type() == MIRType::RefOrNull);
+    MOZ_ASSERT(scale == 1 || scale == 2 || scale == 4 || scale == 8 ||
+               scale == 16);
+
+    // Currently there's no single MIR node that this can be translated into.
+    // So compute the final address "manually", then store directly to that
+    // address.  See bug 1802287.
+    MDefinition* scaleDef = constantTargetWord(scale);
+    if (!scaleDef) {
+      return nullptr;
+    }
+    MDefinition* finalAddr = computeBasePlusScaledIndex(base, scaleDef, index);
+    if (!finalAddr) {
+      return nullptr;
+    }
+
+    MIRType mirType;
+    MWideningOp mirWideningOp;
+    fieldLoadInfoToMIR(fieldType, fieldWideningOp, &mirType, &mirWideningOp);
+    auto* load = MWasmLoadFieldKA::New(alloc(), keepAlive, finalAddr,
+                                       /*offset=*/0, mirType, mirWideningOp,
+                                       AliasSet::Load(aliasBitset));
+    if (!load) {
+      return nullptr;
+    }
+    curBlock_->add(load);
+    return load;
+  }
+
+  /************************************************ WasmGC: type helpers ***/
+
+  // Returns an MDefinition holding the runtime type denoted by `typeIndex`.
+  [[nodiscard]] MDefinition* loadGcCanon(uint32_t typeIndex) {
+    uint32_t typeIdOffset = moduleEnv().offsetOfTypeId(typeIndex);
+
+    auto* load =
+        MWasmLoadGlobalVar::New(alloc(), MIRType::RefOrNull, typeIdOffset,
+                                /*isConst=*/true, instancePointer_);
+    if (!load) {
+      return nullptr;
+    }
+    curBlock_->add(load);
+    return load;
+  }
+
+  /********************************************** WasmGC: struct helpers ***/
+
   // Helper function for EmitStruct{New,Set}: given a MIR pointer to a
   // WasmStructObject, a MIR pointer to a value, and a field descriptor,
   // generate MIR to write the value to the relevant field in the object.
-  bool writeValueToStructField(uint32_t lineOrBytecode,
-                               const StructField& field,
-                               MDefinition* structObject, MDefinition* value) {
+  [[nodiscard]] bool writeValueToStructField(uint32_t lineOrBytecode,
+                                             const StructField& field,
+                                             MDefinition* structObject,
+                                             MDefinition* value) {
     FieldType fieldType = field.type;
     uint32_t fieldOffset = field.offset;
-    MNarrowingOp fieldNarrowingOp = fieldStoreInfoToMIR(fieldType);
 
     bool areaIsOutline;
     uint32_t areaOffset;
@@ -3457,63 +3684,16 @@ class FunctionCompiler {
                                        ? AliasSet::WasmStructOutlineDataArea
                                        : AliasSet::WasmStructInlineDataArea;
 
-    if (!fieldType.isRefRepr()) {
-      auto* store = MWasmStoreFieldKA::New(alloc(), structObject, base,
-                                           areaOffset, value, fieldNarrowingOp,
-                                           AliasSet::Store(fieldAliasSet));
-      if (!store) {
-        return false;
-      }
-      curBlock_->add(store);
-      return true;
-    }
-
-    // Otherwise it's a ref store, for which we can't use a
-    // base-plus-constant-offset address form.  So roll the offset into the
-    // address at this point.
-    MOZ_ASSERT(fieldNarrowingOp == MNarrowingOp::None);
-    if (areaOffset != 0) {
-      auto* derived = MWasmDerivedPointer::New(alloc(), base, areaOffset);
-      if (!derived) {
-        return false;
-      }
-      curBlock_->add(derived);
-      base = derived;
-    }
-    // After this point we must ignore `areaOffset`.
-
-    // Load the previous value.
-    // FIXME optimisation opportunity: for the case where this field write
-    // results from struct.new, the old value is always zero.  So we should
-    // synthesise a suitable zero constant rather than reading it from the
-    // object.  See also bug 1799999.
-    auto* prevValue = MWasmLoadFieldKA::New(
-        alloc(), structObject, base, 0, fieldType.toMIRType(),
-        MWideningOp::None, AliasSet::Load(fieldAliasSet));
-    if (!prevValue) {
-      return false;
-    }
-    curBlock_->add(prevValue);
-
-    // Store the new value
-    auto* store =
-        MWasmStoreFieldRefKA::New(alloc(), instancePointer_, structObject, base,
-                                  value, AliasSet::Store(fieldAliasSet));
-    if (!store) {
-      return false;
-    }
-    curBlock_->add(store);
-
-    // Call the post-write barrier
-    return postBarrierPrecise(lineOrBytecode, base, prevValue);
+    return writeGcValueAtBasePlusOffset(lineOrBytecode, fieldType, structObject,
+                                        fieldAliasSet, value, base, areaOffset);
   }
 
   // Helper function for EmitStructGet: given a MIR pointer to a
   // WasmStructObject, a field descriptor and a field widening operation,
   // generate MIR to read the value from the relevant field in the object.
-  MWasmLoadFieldKA* readValueFromStructField(const StructField& field,
-                                             FieldWideningOp wideningOp,
-                                             MDefinition* structObject) {
+  [[nodiscard]] MDefinition* readValueFromStructField(
+      const StructField& field, FieldWideningOp wideningOp,
+      MDefinition* structObject) {
     FieldType fieldType = field.type;
     uint32_t fieldOffset = field.offset;
 
@@ -3549,23 +3729,360 @@ class FunctionCompiler {
                                        ? AliasSet::WasmStructOutlineDataArea
                                        : AliasSet::WasmStructInlineDataArea;
 
-    MIRType mirType;
-    MWideningOp mirWideningOp;
-    fieldLoadInfoToMIR(fieldType, wideningOp, &mirType, &mirWideningOp);
-    auto* load =
-        MWasmLoadFieldKA::New(alloc(), structObject, base, areaOffset, mirType,
-                              mirWideningOp, AliasSet::Load(fieldAliasSet));
-    if (!load) {
+    return readGcValueAtBasePlusOffset(fieldType, wideningOp, structObject,
+                                       fieldAliasSet, base, areaOffset);
+  }
+
+  /********************************* WasmGC: address-arithmetic helpers ***/
+
+  inline bool targetIs64Bit() const {
+#ifdef JS_64BIT
+    return true;
+#else
+    return false;
+#endif
+  }
+
+  // Produce an MConstant of the machine's target int type (Int32 or Int64),
+  // containing the lower 32 or 64 bits of `n` respectively.
+  [[nodiscard]] MDefinition* constantTargetWord(uint64_t n) {
+    if (targetIs64Bit()) {
+      MConstant* con = MConstant::NewInt64(alloc(), n);
+      if (!con) {
+        return nullptr;
+      }
+      curBlock_->add(con);
+      return con;
+    }
+    MOZ_RELEASE_ASSERT((n >> 32) == 0ULL);
+    return constant(Int32Value(uint32_t(n)), MIRType::Int32);
+  }
+
+  // Generate MIR to unsigned widen `val` out to the target word size.  If
+  // `val` is already at the target word size, this is a no-op.  The only
+  // other allowed case is where `val` is Int32 and we're compiling for a
+  // 64-bit target, in which case a widen is generated.
+  [[nodiscard]] MDefinition* unsignedWidenToTargetWord(MDefinition* val) {
+    if (targetIs64Bit()) {
+      if (val->type() == MIRType::Int32) {
+        auto* ext = MExtendInt32ToInt64::New(alloc(), val, /*isUnsigned=*/true);
+        if (!ext) {
+          return nullptr;
+        }
+        curBlock_->add(ext);
+        return ext;
+      }
+      MOZ_ASSERT(val->type() == MIRType::Int64);
+      return val;
+    }
+    MOZ_ASSERT(val->type() == MIRType::Int32);
+    return val;
+  }
+
+  // Compute `base + index * scale`, for both 32- and 64-bit targets.  For the
+  // convenience of callers, on a 64-bit target, `index` and `scale` can
+  // (independently) be either Int32 or Int64; in the former case they will be
+  // zero-extended before the multiplication, so that both the multiplication
+  // and addition are done at the target word size.
+  [[nodiscard]] MDefinition* computeBasePlusScaledIndex(MDefinition* base,
+                                                        MDefinition* scale,
+                                                        MDefinition* index) {
+    // On a 32-bit target, require:
+    //    base : Int32 (== TargetWordMIRType())
+    //    index, scale : Int32
+    // Calculate  base +32 (index *32 scale)
+    //
+    // On a 64-bit target, require:
+    //    base : Int64 (== TargetWordMIRType())
+    //    index, scale: either Int32 or Int64 (any combination is OK)
+    // Calculate  base +64 (u-widen to 64(index)) *64 (u-widen to 64(scale))
+    //
+    // Final result type is the same as that of `base`.
+
+    MOZ_ASSERT(base->type() == TargetWordMIRType());
+
+    // Widen `index` if necessary, producing `indexW`.
+    MDefinition* indexW = unsignedWidenToTargetWord(index);
+    if (!indexW) {
       return nullptr;
     }
-    curBlock_->add(load);
-    return load;
+    // Widen `scale` if necessary, producing `scaleW`.
+    MDefinition* scaleW = unsignedWidenToTargetWord(scale);
+    if (!scaleW) {
+      return nullptr;
+    }
+    // Compute `scaledIndex = indexW * scaleW`.
+    MIRType targetWordType = TargetWordMIRType();
+    bool targetIs64 = targetWordType == MIRType::Int64;
+    MMul* scaledIndex =
+        MMul::NewWasm(alloc(), indexW, scaleW, targetWordType,
+                      targetIs64 ? MMul::Mode::Normal : MMul::Mode::Integer,
+                      /*mustPreserveNan=*/false);
+    if (!scaledIndex) {
+      return nullptr;
+    }
+    // Compute `result = base + scaledIndex`.
+    curBlock_->add(scaledIndex);
+    MAdd* result = MAdd::NewWasm(alloc(), base, scaledIndex, targetWordType);
+    if (!result) {
+      return nullptr;
+    }
+    curBlock_->add(result);
+    return result;
   }
+
+  /********************************************** WasmGC: array helpers ***/
+
+  // Given `arrayObject`, the address of a WasmArrayObject, generate MIR to
+  // return the contents of the WasmArrayObject::numElements_ field.
+  [[nodiscard]] MDefinition* getWasmArrayObjectNumElements(
+      MDefinition* arrayObject) {
+    MOZ_ASSERT(arrayObject->type() == MIRType::RefOrNull);
+
+    auto* numElements = MWasmLoadField::New(
+        alloc(), arrayObject, WasmArrayObject::offsetOfNumElements(),
+        MIRType::Int32, MWideningOp::None,
+        AliasSet::Load(AliasSet::WasmArrayNumElements));
+    if (!numElements) {
+      return nullptr;
+    }
+    curBlock_->add(numElements);
+
+    return numElements;
+  }
+
+  // Given `arrayObject`, the address of a WasmArrayObject, generate MIR to
+  // return the contents of the WasmArrayObject::data_ field.
+  [[nodiscard]] MDefinition* getWasmArrayObjectData(MDefinition* arrayObject) {
+    MOZ_ASSERT(arrayObject->type() == MIRType::RefOrNull);
+
+    auto* data = MWasmLoadField::New(
+        alloc(), arrayObject, WasmArrayObject::offsetOfData(),
+        TargetWordMIRType(), MWideningOp::None,
+        AliasSet::Load(AliasSet::WasmArrayDataPointer));
+    if (!data) {
+      return nullptr;
+    }
+    curBlock_->add(data);
+
+    return data;
+  }
+
+  // Given a JIT-time-known type index `typeIndex` and a run-time known number
+  // of elements `numElements`, create MIR to call `Instance::arrayNew`,
+  // producing an array with the relevant type and size and initialized with
+  // `typeIndex`s default value.
+  [[nodiscard]] MDefinition* createDefaultInitializedArrayObject(
+      uint32_t lineOrBytecode, uint32_t typeIndex, MDefinition* numElements) {
+    // Get the rtt value for the array as a whole.
+    MDefinition* arrayRtt = loadGcCanon(typeIndex);
+    if (!arrayRtt) {
+      return nullptr;
+    }
+
+    // Create call: arrayObject = Instance::arrayNew(numElements, arrayRtt)
+    MDefinition* arrayObject;
+    MDefinition* callArgs[3] = {numElements, arrayRtt, nullptr};
+    if (!emitInstanceCall(lineOrBytecode, SASigArrayNew, callArgs,
+                          &arrayObject)) {
+      return nullptr;
+    }
+
+    return arrayObject;
+  }
+
+  // This emits MIR to perform several actions common to array loads and
+  // stores.  Given `arrayObject`, that points to a WasmArrayObject, and an
+  // index value `index`, it:
+  //
+  // * Generates a trap if the array pointer is null
+  // * Gets the size of the array
+  // * Emits a bounds check of `index` against the array size
+  // * Retrieves the OOL object pointer from the array
+  //
+  // The returned value is for the OOL object pointer.
+  [[nodiscard]] MDefinition* setupForArrayAccess(MDefinition* arrayObject,
+                                                 MDefinition* index) {
+    MOZ_ASSERT(arrayObject->type() == MIRType::RefOrNull);
+    MOZ_ASSERT(index->type() == MIRType::Int32);
+
+    // Check for null.
+    if (!refAsNonNull(arrayObject)) {
+      return nullptr;
+    }
+
+    // Get the size value for the array.
+    MDefinition* numElements = getWasmArrayObjectNumElements(arrayObject);
+    if (!numElements) {
+      return nullptr;
+    }
+
+    // Create a bounds check.
+    auto* boundsCheck =
+        MWasmBoundsCheck::New(alloc(), index, numElements, bytecodeOffset(),
+                              MWasmBoundsCheck::Target::Unknown);
+    if (!boundsCheck) {
+      return nullptr;
+    }
+    curBlock_->add(boundsCheck);
+
+    // Get the address of the first byte of the (OOL) data area.
+    return getWasmArrayObjectData(arrayObject);
+  }
+
+  // This routine generates all MIR required for `array.new`.  The returned
+  // value is for the newly created array.
+  [[nodiscard]] MDefinition* createArrayNewCallAndLoop(uint32_t lineOrBytecode,
+                                                       uint32_t typeIndex,
+                                                       MDefinition* numElements,
+                                                       MDefinition* fillValue) {
+    const ArrayType& arrayType = (*moduleEnv_.types)[typeIndex].arrayType();
+
+    // Create the array object, default-initialized.
+    MDefinition* arrayObject = createDefaultInitializedArrayObject(
+        lineOrBytecode, typeIndex, numElements);
+    if (!arrayObject) {
+      return nullptr;
+    }
+
+    mozilla::DebugOnly<MIRType> fillValueMIRType = fillValue->type();
+    FieldType fillValueFieldType = arrayType.elementType_;
+    MOZ_ASSERT(fillValueFieldType.widenToValType().toMIRType() ==
+               fillValueMIRType);
+
+    uint32_t elemSize = fillValueFieldType.size();
+    MOZ_ASSERT(elemSize >= 1 && elemSize <= 16);
+
+    // Make `base` point at the first byte of the (OOL) data area.
+    MDefinition* base = getWasmArrayObjectData(arrayObject);
+    if (!base) {
+      return nullptr;
+    }
+
+    // We have:
+    //   base        : TargetWord
+    //   numElements : Int32
+    //   fillValue   : <any FieldType>
+    //   $elemSize = arrayType.elementType_.size(); 1, 2, 4, 8 or 16
+    //
+    // Generate MIR:
+    //   <in current block>
+    //     limit : TargetWord = base + nElems * elemSize
+    //     if (limit == base) goto after; // skip loop if trip count == 0
+    //     // optimisation (not done): skip loop if fill value == 0
+    //   loop:
+    //     ptrPhi = phi(base, ptrNext)
+    //     *ptrPhi = fillValue
+    //     ptrNext = ptrPhi + $elemSize
+    //     if (ptrNext <u limit) goto loop;
+    //   after:
+    //
+    // We construct the loop "manually" rather than using
+    // FunctionCompiler::{startLoop,closeLoop} as the latter have awareness of
+    // the wasm view of loops, whereas the loop we're building here is not a
+    // wasm-level loop.
+    // ==== Create the "loop" and "after" blocks ====
+    MBasicBlock* loopBlock;
+    if (!newBlock(curBlock_, &loopBlock, MBasicBlock::LOOP_HEADER)) {
+      return nullptr;
+    }
+    MBasicBlock* afterBlock;
+    if (!newBlock(loopBlock, &afterBlock)) {
+      return nullptr;
+    }
+
+    // ==== Fill in the remainder of the block preceding the loop ====
+    MDefinition* elemSizeDef = constantTargetWord(elemSize);
+    if (!elemSizeDef) {
+      return nullptr;
+    }
+
+    MDefinition* limit =
+        computeBasePlusScaledIndex(base, elemSizeDef, numElements);
+    if (!limit) {
+      return nullptr;
+    }
+
+    // Use JSOp::StrictEq, not ::Eq, so that the comparison (and eventually
+    // the entire initialisation loop) will be folded out in the case where
+    // the number of elements is zero.  See MCompare::tryFoldEqualOperands.
+    MDefinition* limitEqualsBase = compare(
+        limit, base, JSOp::StrictEq,
+        targetIs64Bit() ? MCompare::Compare_UInt64 : MCompare::Compare_UInt32);
+    if (!limitEqualsBase) {
+      return nullptr;
+    }
+    MTest* skipIfLimitEqualsBase =
+        MTest::New(alloc(), limitEqualsBase, afterBlock, loopBlock);
+    if (!skipIfLimitEqualsBase) {
+      return nullptr;
+    }
+    curBlock_->end(skipIfLimitEqualsBase);
+    if (!afterBlock->addPredecessor(alloc(), curBlock_)) {
+      return nullptr;
+    }
+    // Optimisation opportunity: if the fill value is zero, maybe we should
+    // likewise skip over the initialisation loop entirely (and, if the zero
+    // value is visible at JIT time, the loop will be removed).  For the
+    // reftyped case, that would be a big win since each iteration requires a
+    // call to the post-write barrier routine.
+
+    // ==== Fill in the loop block as best we can ====
+    curBlock_ = loopBlock;
+    MPhi* ptrPhi = MPhi::New(alloc(), TargetWordMIRType());
+    if (!ptrPhi) {
+      return nullptr;
+    }
+    if (!ptrPhi->reserveLength(2)) {
+      return nullptr;
+    }
+    ptrPhi->addInput(base);
+    curBlock_->addPhi(ptrPhi);
+    curBlock_->setLoopDepth(loopDepth_ + 1);
+
+    // Because we have the exact address to hand, use `writeGcValueAtBase`
+    // rather than `writeGcValueAtBasePlusScaledIndex` to do the store.
+    if (!writeGcValueAtAddress(lineOrBytecode, fillValueFieldType, arrayObject,
+                               AliasSet::WasmArrayDataArea, fillValue,
+                               ptrPhi)) {
+      return nullptr;
+    }
+
+    auto* ptrNext =
+        MAdd::NewWasm(alloc(), ptrPhi, elemSizeDef, TargetWordMIRType());
+    if (!ptrNext) {
+      return nullptr;
+    }
+    curBlock_->add(ptrNext);
+    ptrPhi->addInput(ptrNext);
+
+    MDefinition* ptrNextLtuLimit = compare(
+        ptrNext, limit, JSOp::Lt,
+        targetIs64Bit() ? MCompare::Compare_UInt64 : MCompare::Compare_UInt32);
+    if (!ptrNextLtuLimit) {
+      return nullptr;
+    }
+    auto* continueIfPtrNextLtuLimit =
+        MTest::New(alloc(), ptrNextLtuLimit, loopBlock, afterBlock);
+    if (!continueIfPtrNextLtuLimit) {
+      return nullptr;
+    }
+    curBlock_->end(continueIfPtrNextLtuLimit);
+    if (!loopBlock->addPredecessor(alloc(), loopBlock)) {
+      return nullptr;
+    }
+    // ==== Loop block completed ====
+
+    curBlock_ = afterBlock;
+    return arrayObject;
+  }
+
+  /*********************************************** WasmGC: other helpers ***/
 
   // Generate MIR that causes a trap of kind `trapKind` if `arg` is zero.
   // Currently `arg` may only be a MIRType::Int32, but that requirement could
   // be relaxed if needed in future.
-  bool trapIfZero(wasm::Trap trapKind, MDefinition* arg) {
+  [[nodiscard]] bool trapIfZero(wasm::Trap trapKind, MDefinition* arg) {
     MOZ_ASSERT(arg->type() == MIRType::Int32);
 
     MBasicBlock* trapBlock = nullptr;
@@ -3597,28 +4114,13 @@ class FunctionCompiler {
   // downcast fails, we trap.  If it succeeds, then `ref` can be assumed to
   // have a type that is a subtype of (or the same as) `castToRTT` after this
   // point.
-  bool refCast(uint32_t lineOrBytecode, MDefinition* ref,
-               MDefinition* castToRTT) {
+  [[nodiscard]] bool refCast(uint32_t lineOrBytecode, MDefinition* ref,
+                             MDefinition* castToRTT) {
     // Create call: success = Instance::refTest(ref, castToRTT)
     MDefinition* success;
-    {
-      const SymbolicAddressSignature& callee = SASigRefTest;
-      CallCompileState args;
-      if (!passInstance(callee.argTypes[0], &args)) {
-        return false;
-      }
-      if (!passArg(ref, callee.argTypes[1], &args)) {
-        return false;
-      }
-      if (!passArg(castToRTT, callee.argTypes[2], &args)) {
-        return false;
-      }
-      if (!finishCall(&args)) {
-        return false;
-      }
-      if (!builtinInstanceMethodCall(callee, lineOrBytecode, args, &success)) {
-        return false;
-      }
+    MDefinition* callArgs[3] = {ref, castToRTT, nullptr};
+    if (!emitInstanceCall(lineOrBytecode, SASigRefTest, callArgs, &success)) {
+      return false;
     }
 
     // Trap if `success` is zero.  If it's nonzero, we have established that
@@ -3653,8 +4155,9 @@ class FunctionCompiler {
 
   /*************************************************************************/
  private:
-  bool newBlock(MBasicBlock* pred, MBasicBlock** block) {
-    *block = MBasicBlock::New(mirGraph(), info(), pred, MBasicBlock::NORMAL);
+  bool newBlock(MBasicBlock* pred, MBasicBlock** block,
+                MBasicBlock::Kind kind = MBasicBlock::NORMAL) {
+    *block = MBasicBlock::New(mirGraph(), info(), pred, kind);
     if (!*block) {
       return false;
     }
@@ -6117,22 +6620,10 @@ static bool EmitStructNew(FunctionCompiler& f) {
 
   // Create call: structObject = Instance::structNew(structRTT)
   MDefinition* structObject;
-  {
-    const SymbolicAddressSignature& callee = SASigStructNew;
-    CallCompileState args;
-    if (!f.passInstance(callee.argTypes[0], &args)) {
-      return false;
-    }
-    if (!f.passArg(structRTT, callee.argTypes[1], &args)) {
-      return false;
-    }
-    if (!f.finishCall(&args)) {
-      return false;
-    }
-    if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args,
-                                     &structObject)) {
-      return false;
-    }
+  MDefinition* callArgs[2] = {structRTT, nullptr};
+  if (!f.emitInstanceCall(lineOrBytecode, SASigStructNew, callArgs,
+                          &structObject)) {
+    return false;
   }
 
   // And fill in the fields.
@@ -6204,6 +6695,348 @@ static bool EmitStructGet(FunctionCompiler& f, FieldWideningOp wideningOp) {
 
   f.iter().setResult(load);
   return true;
+}
+
+static bool EmitArrayNew(FunctionCompiler& f) {
+  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+
+  uint32_t typeIndex;
+  MDefinition* numElements;
+  MDefinition* fillValue;
+  if (!f.iter().readArrayNew(&typeIndex, &numElements, &fillValue)) {
+    return false;
+  }
+
+  if (f.inDeadCode()) {
+    return true;
+  }
+
+  MDefinition* arrayObject = f.createArrayNewCallAndLoop(
+      lineOrBytecode, typeIndex, numElements, fillValue);
+  if (!arrayObject) {
+    return false;
+  }
+
+  f.iter().setResult(arrayObject);
+  return true;
+}
+
+static bool EmitArrayNewDefault(FunctionCompiler& f) {
+  // This is almost identical to EmitArrayNew, except we skip the
+  // initialisation loop.
+  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+
+  uint32_t typeIndex;
+  MDefinition* numElements;
+  if (!f.iter().readArrayNewDefault(&typeIndex, &numElements)) {
+    return false;
+  }
+
+  if (f.inDeadCode()) {
+    return true;
+  }
+
+  // Create the array object, default-initialized.
+  MDefinition* arrayObject = f.createDefaultInitializedArrayObject(
+      lineOrBytecode, typeIndex, numElements);
+  if (!arrayObject) {
+    return false;
+  }
+
+  f.iter().setResult(arrayObject);
+  return true;
+}
+
+static bool EmitArrayNewFixed(FunctionCompiler& f) {
+  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+
+  uint32_t typeIndex, numElements;
+  DefVector values;
+
+  if (!f.iter().readArrayNewFixed(&typeIndex, &numElements, &values)) {
+    return false;
+  }
+  MOZ_ASSERT(values.length() == numElements);
+
+  if (f.inDeadCode()) {
+    return true;
+  }
+
+  MDefinition* numElementsDef =
+      f.constant(Int32Value(numElements), MIRType::Int32);
+  if (!numElementsDef) {
+    return false;
+  }
+
+  // Create the array object, default-initialized.
+  MDefinition* arrayObject = f.createDefaultInitializedArrayObject(
+      lineOrBytecode, typeIndex, numElementsDef);
+  if (!arrayObject) {
+    return false;
+  }
+
+  // Make `base` point at the first byte of the (OOL) data area.
+  MDefinition* base = f.getWasmArrayObjectData(arrayObject);
+  if (!base) {
+    return false;
+  }
+
+  // Write each element in turn.
+  const ArrayType& arrayType = (*f.moduleEnv().types)[typeIndex].arrayType();
+  FieldType elemFieldType = arrayType.elementType_;
+  uint64_t elemSize = elemFieldType.size();
+
+  for (uint32_t i = 0; i < numElements; i++) {
+    if (!f.mirGen().ensureBallast()) {
+      return false;
+    }
+    // FIXME figure out what to do if `i * elemSize` becomes dangerously large
+    // (say, > 1 billion).  Then we could use `..AtBasePlusScaledIndex`
+    // instead?
+    if (!f.writeGcValueAtBasePlusOffset(
+            lineOrBytecode, elemFieldType, arrayObject,
+            AliasSet::WasmArrayDataArea, values[numElements - 1 - i], base,
+            i * elemSize)) {
+      return false;
+    }
+  }
+
+  f.iter().setResult(arrayObject);
+  return true;
+}
+
+static bool EmitArrayNewData(FunctionCompiler& f) {
+  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+
+  uint32_t typeIndex, segIndex;
+  MDefinition* segByteOffset;
+  MDefinition* numElements;
+  if (!f.iter().readArrayNewData(&typeIndex, &segIndex, &segByteOffset,
+                                 &numElements)) {
+    return false;
+  }
+
+  if (f.inDeadCode()) {
+    return true;
+  }
+
+  // Get the rtt value for the array as a whole.
+  MDefinition* arrayRtt = f.loadGcCanon(typeIndex);
+  if (!arrayRtt) {
+    return false;
+  }
+
+  // Other values we need to pass to the instance call:
+  MDefinition* segIndexM = f.constant(Int32Value(segIndex), MIRType::Int32);
+  if (!segIndexM) {
+    return false;
+  }
+
+  // Create call:
+  // arrayObject = Instance::arrayNewData(segByteOffset:u32, numElements:u32,
+  //                                      arrayRtt:word, segIndex:u32)
+  MDefinition* arrayObject;
+  MDefinition* callArgs[5] = {segByteOffset, numElements, arrayRtt, segIndexM,
+                              nullptr};
+  if (!f.emitInstanceCall(lineOrBytecode, SASigArrayNewData, callArgs,
+                          &arrayObject)) {
+    return false;
+  }
+
+  f.iter().setResult(arrayObject);
+  return true;
+}
+
+static bool EmitArrayNewElem(FunctionCompiler& f) {
+  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+
+  uint32_t typeIndex, segIndex;
+  MDefinition* segElemIndex;
+  MDefinition* numElements;
+  if (!f.iter().readArrayNewElem(&typeIndex, &segIndex, &segElemIndex,
+                                 &numElements)) {
+    return false;
+  }
+
+  if (f.inDeadCode()) {
+    return true;
+  }
+
+  // Get the rtt value for the array as a whole.
+  MDefinition* arrayRtt = f.loadGcCanon(typeIndex);
+  if (!arrayRtt) {
+    return false;
+  }
+
+  // Other values we need to pass to the instance call:
+  MDefinition* segIndexM = f.constant(Int32Value(segIndex), MIRType::Int32);
+  if (!segIndexM) {
+    return false;
+  }
+
+  // Create call:
+  // arrayObject = Instance::arrayNewElem(segElemIndex:u32, numElements:u32,
+  //                                      arrayRtt:word, segIndex:u32)
+  MDefinition* arrayObject;
+  MDefinition* callArgs[5] = {segElemIndex, numElements, arrayRtt, segIndexM,
+                              nullptr};
+  if (!f.emitInstanceCall(lineOrBytecode, SASigArrayNewElem, callArgs,
+                          &arrayObject)) {
+    return false;
+  }
+
+  f.iter().setResult(arrayObject);
+  return true;
+}
+
+static bool EmitArraySet(FunctionCompiler& f) {
+  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+
+  uint32_t typeIndex;
+  MDefinition* value;
+  MDefinition* index;
+  MDefinition* arrayObject;
+  if (!f.iter().readArraySet(&typeIndex, &value, &index, &arrayObject)) {
+    return false;
+  }
+
+  if (f.inDeadCode()) {
+    return true;
+  }
+
+  // Check for null
+  if (!f.refAsNonNull(arrayObject)) {
+    return false;
+  }
+
+  // Create the object null check and the array bounds check and get the OOL
+  // data pointer.
+  MDefinition* base = f.setupForArrayAccess(arrayObject, index);
+  if (!base) {
+    return false;
+  }
+
+  // And do the store.
+  const ArrayType& arrayType = (*f.moduleEnv().types)[typeIndex].arrayType();
+  FieldType elemFieldType = arrayType.elementType_;
+  uint32_t elemSize = elemFieldType.size();
+  MOZ_ASSERT(elemSize >= 1 && elemSize <= 16);
+
+  return f.writeGcValueAtBasePlusScaledIndex(
+      lineOrBytecode, elemFieldType, arrayObject, AliasSet::WasmArrayDataArea,
+      value, base, elemSize, index);
+}
+
+static bool EmitArrayGet(FunctionCompiler& f, FieldWideningOp wideningOp) {
+  uint32_t typeIndex;
+  MDefinition* index;
+  MDefinition* arrayObject;
+  if (!f.iter().readArrayGet(&typeIndex, wideningOp, &index, &arrayObject)) {
+    return false;
+  }
+
+  if (f.inDeadCode()) {
+    return true;
+  }
+
+  // Check for null
+  if (!f.refAsNonNull(arrayObject)) {
+    return false;
+  }
+
+  // Create the object null check and the array bounds check and get the OOL
+  // data pointer.
+  MDefinition* base = f.setupForArrayAccess(arrayObject, index);
+  if (!base) {
+    return false;
+  }
+
+  // And do the load.
+  const ArrayType& arrayType = (*f.moduleEnv().types)[typeIndex].arrayType();
+  FieldType elemFieldType = arrayType.elementType_;
+  uint32_t elemSize = elemFieldType.size();
+  MOZ_ASSERT(elemSize >= 1 && elemSize <= 16);
+
+  MDefinition* load = f.readGcValueAtBasePlusScaledIndex(
+      elemFieldType, wideningOp, arrayObject, AliasSet::WasmArrayDataArea, base,
+      elemSize, index);
+  if (!load) {
+    return false;
+  }
+
+  f.iter().setResult(load);
+  return true;
+}
+
+static bool EmitArrayLen(FunctionCompiler& f, bool decodeIgnoredTypeIndex) {
+  MDefinition* arrayObject;
+  if (!f.iter().readArrayLen(decodeIgnoredTypeIndex, &arrayObject)) {
+    return false;
+  }
+
+  if (f.inDeadCode()) {
+    return true;
+  }
+
+  // Check for null
+  if (!f.refAsNonNull(arrayObject)) {
+    return false;
+  }
+
+  // Get the size value for the array
+  MDefinition* numElements = f.getWasmArrayObjectNumElements(arrayObject);
+  if (!numElements) {
+    return false;
+  }
+
+  f.iter().setResult(numElements);
+  return true;
+}
+
+static bool EmitArrayCopy(FunctionCompiler& f) {
+  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+
+  int32_t elemSize;
+  bool elemsAreRefTyped;
+  MDefinition* dstArrayObject;
+  MDefinition* dstArrayIndex;
+  MDefinition* srcArrayObject;
+  MDefinition* srcArrayIndex;
+  MDefinition* numElements;
+  if (!f.iter().readArrayCopy(&elemSize, &elemsAreRefTyped, &dstArrayObject,
+                              &dstArrayIndex, &srcArrayObject, &srcArrayIndex,
+                              &numElements)) {
+    return false;
+  }
+
+  if (f.inDeadCode()) {
+    return true;
+  }
+
+  MOZ_ASSERT_IF(elemsAreRefTyped,
+                size_t(elemSize) == MIRTypeToSize(TargetWordMIRType()));
+  MOZ_ASSERT_IF(!elemsAreRefTyped, elemSize == 1 || elemSize == 2 ||
+                                       elemSize == 4 || elemSize == 8 ||
+                                       elemSize == 16);
+
+  // A negative element size is used to inform Instance::arrayCopy that the
+  // values are reftyped.  This avoids having to pass it an extra boolean
+  // argument.
+  MDefinition* elemSizeDef = f.constant(
+      Int32Value(elemsAreRefTyped ? -elemSize : elemSize), MIRType::Int32);
+  if (!elemSizeDef) {
+    return false;
+  }
+
+  // Create call:
+  // Instance::arrayCopy(dstArrayObject:word, dstArrayIndex:u32,
+  //                     srcArrayObject:word, srcArrayIndex:u32,
+  //                     numElements:u32,
+  //                     (elemsAreRefTyped ? -elemSize : elemSize):u32))
+  MDefinition* callArgs[7] = {dstArrayObject, dstArrayIndex, srcArrayObject,
+                              srcArrayIndex,  numElements,   elemSizeDef,
+                              nullptr};
+  return f.emitInstanceCall(lineOrBytecode, SASigArrayCopy, callArgs);
 }
 
 static bool EmitRefCast(FunctionCompiler& f) {
@@ -6805,6 +7638,30 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
             CHECK(EmitStructGet(f, FieldWideningOp::Signed));
           case uint32_t(GcOp::StructGetU):
             CHECK(EmitStructGet(f, FieldWideningOp::Unsigned));
+          case uint32_t(GcOp::ArrayNew):
+            CHECK(EmitArrayNew(f));
+          case uint32_t(GcOp::ArrayNewDefault):
+            CHECK(EmitArrayNewDefault(f));
+          case uint32_t(GcOp::ArrayNewFixed):
+            CHECK(EmitArrayNewFixed(f));
+          case uint32_t(GcOp::ArrayNewData):
+            CHECK(EmitArrayNewData(f));
+          case uint32_t(GcOp::ArrayNewElem):
+            CHECK(EmitArrayNewElem(f));
+          case uint32_t(GcOp::ArraySet):
+            CHECK(EmitArraySet(f));
+          case uint32_t(GcOp::ArrayGet):
+            CHECK(EmitArrayGet(f, FieldWideningOp::None));
+          case uint32_t(GcOp::ArrayGetS):
+            CHECK(EmitArrayGet(f, FieldWideningOp::Signed));
+          case uint32_t(GcOp::ArrayGetU):
+            CHECK(EmitArrayGet(f, FieldWideningOp::Unsigned));
+          case uint32_t(GcOp::ArrayLenWithTypeIndex):
+            CHECK(EmitArrayLen(f, /*decodeIgnoredTypeIndex=*/true));
+          case uint32_t(GcOp::ArrayLen):
+            CHECK(EmitArrayLen(f, /*decodeIgnoredTypeIndex=*/false));
+          case uint32_t(GcOp::ArrayCopy):
+            CHECK(EmitArrayCopy(f));
           case uint32_t(GcOp::RefCast):
             CHECK(EmitRefCast(f));
           default:
