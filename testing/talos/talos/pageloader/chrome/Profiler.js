@@ -161,7 +161,7 @@ var Profiler;
             });
           },
           error => {
-            Cu.reportError("Failed to gather profile: " + error);
+            console.error("Failed to gather profile: " + error);
             reject();
           }
         );

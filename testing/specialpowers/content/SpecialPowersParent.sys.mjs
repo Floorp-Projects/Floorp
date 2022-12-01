@@ -799,7 +799,7 @@ export class SpecialPowersParent extends JSWindowActorParent {
             await Promise.all(promises);
             return filePaths;
           })().catch(e => {
-            Cu.reportError(e);
+            console.error(e);
             return Promise.reject(String(e));
           });
 

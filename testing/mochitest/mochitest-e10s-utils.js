@@ -7,7 +7,7 @@ function e10s_init() {
     "oop-browser-crashed",
     event => {
       let uri = event.target.currentURI;
-      Cu.reportError(
+      console.error(
         "remote browser crashed while on " +
           (uri ? uri.spec : "<unknown>") +
           "\n"

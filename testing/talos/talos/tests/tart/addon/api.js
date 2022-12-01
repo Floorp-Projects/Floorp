@@ -102,7 +102,7 @@ this.tart = class extends ExtensionAPI {
         break;
 
       default:
-        Cu.reportError(`Unknown TART command ${command.name}\n`);
+        console.error(`Unknown TART command ${command.name}\n`);
         break;
     }
   }

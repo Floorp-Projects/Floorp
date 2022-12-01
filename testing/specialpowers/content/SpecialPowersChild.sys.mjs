@@ -224,7 +224,7 @@ export class SpecialPowersChild extends JSWindowActorChild {
             listener.receiveMessage(message);
           }
         } catch (e) {
-          Cu.reportError(e);
+          console.error(e);
         }
       }
     }
@@ -1673,7 +1673,7 @@ export class SpecialPowersChild extends JSWindowActorChild {
         : this;
       actor.sendAsyncMessage("SpecialPowers.Focus", {});
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
   }
 
@@ -1918,7 +1918,7 @@ export class SpecialPowersChild extends JSWindowActorChild {
           try {
             listener(msg);
           } catch (e) {
-            Cu.reportError(e);
+            console.error(e);
           }
         }
       });

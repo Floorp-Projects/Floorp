@@ -7,7 +7,7 @@
     TART_PREFIX + "chrome-exec-event",
     function(e) {
       if (!content.location.pathname.endsWith("tart.html")) {
-        Cu.reportError(
+        console.error(
           `Ignore chrome-exec-event on non-tart page ${content.location.href}`
         );
         return;

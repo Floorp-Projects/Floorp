@@ -157,7 +157,7 @@ TalosPowersService.prototype = {
             Services.obs.notifyObservers(null, "talos-profile-gathered");
           }),
         error => {
-          Cu.reportError("Failed to gather profile: " + error);
+          console.error("Failed to gather profile: " + error);
           // FIXME: We should probably send a message down to the
           // child which causes it to reject the waiting Promise.
           reject();
