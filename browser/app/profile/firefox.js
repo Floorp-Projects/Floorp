@@ -2145,6 +2145,7 @@ pref("browser.migrate.ie.enabled", true);
 pref("browser.migrate.safari.enabled", true);
 pref("browser.migrate.opera.enabled", false);
 pref("browser.migrate.vivaldi.enabled", false);
+pref("browser.migrate.opera-gx.enabled", false);
 
 pref("browser.migrate.content-modal.enabled", false);
 

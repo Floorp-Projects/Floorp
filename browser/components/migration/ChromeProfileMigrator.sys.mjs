@@ -750,6 +750,24 @@ OperaProfileMigrator.prototype.getSourceProfiles = function() {
   return null;
 };
 
+export function OperaGXProfileMigrator() {
+  this._chromeUserDataPathSuffix = "Opera GX";
+  this._keychainServiceName = "Opera Browser Safe Storage";
+  this._keychainAccountName = "Opera Browser";
+}
+OperaGXProfileMigrator.prototype = Object.create(
+  ChromeProfileMigrator.prototype
+);
+OperaGXProfileMigrator.prototype.classDescription = "Opera GX Browser Migrator";
+OperaGXProfileMigrator.prototype.contractID =
+  "@mozilla.org/profile/migrator;1?app=browser&type=opera-gx";
+OperaGXProfileMigrator.prototype.classID = Components.ID(
+  "{26F4E0A0-B533-4FDA-B344-6FF5DA45D6DC}"
+);
+OperaGXProfileMigrator.prototype.getSourceProfiles = function() {
+  return null;
+};
+
 export function VivaldiProfileMigrator() {
   this._chromeUserDataPathSuffix = "Vivaldi";
   this._keychainServiceName = "Vivaldi Safe Storage";

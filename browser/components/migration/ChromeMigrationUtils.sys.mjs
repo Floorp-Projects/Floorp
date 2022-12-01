@@ -268,6 +268,7 @@ export var ChromeMigrationUtils = {
         "Edge Beta": ["Microsoft", "Edge Beta"],
         "360 SE": ["360se6"],
         Opera: ["Opera Software", "Opera Stable"],
+        "Opera GX": ["Opera Software", "Opera GX Stable"],
         Vivaldi: ["Vivaldi"],
       },
       macosx: {
@@ -277,6 +278,7 @@ export var ChromeMigrationUtils = {
         Canary: ["Google", "Chrome Canary"],
         Edge: ["Microsoft Edge"],
         "Edge Beta": ["Microsoft Edge Beta"],
+        "Opera GX": ["com.operasoftware.OperaGX"],
         Opera: ["com.operasoftware.Opera"],
         Vivaldi: ["Vivaldi"],
       },
@@ -286,6 +288,7 @@ export var ChromeMigrationUtils = {
         "Chrome Beta": ["google-chrome-beta"],
         "Chrome Dev": ["google-chrome-unstable"],
         Chromium: ["chromium"],
+        "Opera GX": ["Opera-GX"],
         // Canary is not available on Linux.
         // Edge is not available on Linux.
         Opera: ["Opera"],
@@ -299,12 +302,16 @@ export var ChromeMigrationUtils = {
 
     let rootDir;
     if (AppConstants.platform == "win") {
-      if (chromeProjectName === "360 SE" || chromeProjectName === "Opera") {
+      if (
+        chromeProjectName === "360 SE" ||
+        chromeProjectName === "Opera" ||
+        chromeProjectName === "Opera GX"
+      ) {
         rootDir = "AppData";
       } else {
         rootDir = "LocalAppData";
       }
-      if (chromeProjectName != "Opera") {
+      if (chromeProjectName != "Opera" && chromeProjectName != "Opera GX") {
         subfolders = subfolders.concat(["User Data"]);
       }
     } else if (AppConstants.platform == "macosx") {
