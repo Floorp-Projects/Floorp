@@ -77,7 +77,7 @@ UNIFIED_SOURCES += [
     'src/google/protobuf/arena.cc',
     'src/google/protobuf/arenastring.cc',
     'src/google/protobuf/arenaz_sampler.cc',
-    'src/google/protobuf/io/strtod.cc',
+    # 'src/google/protobuf/io/strtod.cc', # Unused file
     'src/google/protobuf/io/zero_copy_stream.cc',
     'src/google/protobuf/stubs/stringpiece.cc',
     'src/google/protobuf/stubs/structurally_valid.cc',
