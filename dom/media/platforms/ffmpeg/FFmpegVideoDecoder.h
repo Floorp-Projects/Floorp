@@ -10,6 +10,7 @@
 #include "ImageContainer.h"
 #include "FFmpegDataDecoder.h"
 #include "FFmpegLibWrapper.h"
+#include "PerformanceRecorder.h"
 #include "SimpleMap.h"
 #include "mozilla/ScopeExit.h"
 #include "nsTHashSet.h"
@@ -176,6 +177,7 @@ class FFmpegVideoDecoder<LIBAV_VER>
   DurationMap mDurationMap;
   const bool mLowLatency;
   AVDiscard mFrameDrop = AVDISCARD_DEFAULT;
+  PerformanceRecorderMulti<DecodeStage> mPerformanceRecorder;
 
   // True if we're allocating shmem for ffmpeg decode buffer.
   Maybe<Atomic<bool>> mIsUsingShmemBufferForDecode;
