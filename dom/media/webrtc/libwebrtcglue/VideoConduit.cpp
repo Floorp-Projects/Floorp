@@ -665,6 +665,9 @@ void WebrtcVideoConduit::OnControlConfigChange() {
                 ? webrtc::VideoEncoderConfig::ContentType::kRealtimeVideo
                 : webrtc::VideoEncoderConfig::ContentType::kScreen;
 
+        mEncoderConfig.frame_drop_enabled =
+            mControl.mCodecMode.Ref() != webrtc::VideoCodecMode::kScreensharing;
+
         mEncoderConfig.min_transmit_bitrate_bps = mMinBitrate;
 
         // Set the max bitrate, defaulting to 10Mbps, checking:
