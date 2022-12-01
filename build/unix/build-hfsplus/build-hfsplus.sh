@@ -39,11 +39,11 @@ EOF
 make $make_flags || exit 1
 cd ..
 
-mkdir hfsplus-tools
-cp $dirname/newfs_hfs.tproj/newfs_hfs hfsplus-tools/newfs_hfs
+mkdir hfsplus
+cp $dirname/newfs_hfs.tproj/newfs_hfs hfsplus/newfs_hfs
 ## XXX fsck_hfs is unused, but is small and built from the package.
-cp $dirname/fsck_hfs.tproj/fsck_hfs hfsplus-tools/fsck_hfs
+cp $dirname/fsck_hfs.tproj/fsck_hfs hfsplus/fsck_hfs
 
 # Make a package of the built utils
 cd $root_dir
-tar caf $root_dir/hfsplus-tools.tar.zst hfsplus-tools
+tar caf $root_dir/hfsplus.tar.zst hfsplus
