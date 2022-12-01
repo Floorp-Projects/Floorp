@@ -2433,7 +2433,7 @@ public class GeckoViewActivity extends AppCompatActivity
       Intent intent = new Intent(mActivity, GeckoViewActivity.class);
       intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
       PendingIntent pendingIntent =
-          PendingIntent.getActivity(mActivity.getApplicationContext(), 0, intent, 0);
+          PendingIntent.getActivity(mActivity.getApplicationContext(), 0, intent, PendingIntent.FLAG_IMMUTABLE);
 
       NotificationCompat.Builder builder =
           new NotificationCompat.Builder(mActivity.getApplicationContext(), CHANNEL_ID)
