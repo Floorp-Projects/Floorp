@@ -9,30 +9,21 @@ way, and certainly anything using mozharness should use this approach.
 """
 
 import json
-
 from textwrap import dedent
 
-from taskgraph.util.schema import Schema
-from voluptuous import Required, Optional, Any
-from voluptuous.validators import Match
-
-from mozpack import path as mozpath
-
-from gecko_taskgraph.transforms.job import (
-    configure_taskdesc_for_run,
-    run_job_using,
-)
+from gecko_taskgraph.transforms.job import configure_taskdesc_for_run, run_job_using
 from gecko_taskgraph.transforms.job.common import (
-    setup_secrets,
     docker_worker_add_artifacts,
     generic_worker_add_artifacts,
     get_expiration,
+    setup_secrets,
 )
-from gecko_taskgraph.transforms.task import (
-    get_branch_repo,
-    get_branch_rev,
-)
+from gecko_taskgraph.transforms.task import get_branch_repo, get_branch_rev
 from gecko_taskgraph.util.attributes import is_try
+from mozpack import path as mozpath
+from taskgraph.util.schema import Schema
+from voluptuous import Any, Optional, Required
+from voluptuous.validators import Match
 
 mozharness_run_schema = Schema(
     {
@@ -97,6 +88,7 @@ mozharness_run_schema = Schema(
         Required("comm-checkout"): bool,
         # Base work directory used to set up the task.
         Optional("workdir"): str,
+        Optional("run-as-root"): bool,
     }
 )
 
@@ -110,6 +102,7 @@ mozharness_defaults = {
     "use-simple-package": True,
     "use-magic-mh-args": True,
     "comm-checkout": False,
+    "run-as-root": False,
 }
 
 

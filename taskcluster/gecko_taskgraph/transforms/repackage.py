@@ -88,6 +88,7 @@ packaging_description_schema = schema.extend(
             # if true, perform a checkout of a comm-central based branch inside the
             # gecko checkout
             Optional("comm-checkout"): bool,
+            Optional("run-as-root"): bool,
         },
     }
 )
@@ -230,6 +231,19 @@ PACKAGE_FORMATS = {
             "setupexe": "setup-stub.exe",
         },
         "output": "target.stub-installer.exe",
+    },
+    "deb": {
+        "args": [
+            "deb",
+            "--arch",
+            "{architecture}",
+            "--templates",
+            "browser/installer/linux/debian",
+        ],
+        "inputs": {
+            "input": "target{archive_format}",
+        },
+        "output": "target.deb",
     },
 }
 MOZHARNESS_EXPANSIONS = [
@@ -387,6 +401,16 @@ def make_job_description(config, jobs):
                     }
                 )
 
+        elif config.kind == "repackage-deb":
+            attributes["repackage_type"] = "repackage-deb"
+            description = (
+                "Repackaging the '{build_platform}/{build_type}' "
+                "build into a '.deb' package"
+            ).format(
+                build_platform=attributes.get("build_platform"),
+                build_type=attributes.get("build_type"),
+            )
+
         _fetch_subst_locale = "en-US"
         if locale:
             _fetch_subst_locale = locale
@@ -461,6 +485,7 @@ def make_job_description(config, jobs):
                 "extra-config": {
                     "repackage_config": repackage_config,
                 },
+                "run-as-root": run.get("run-as-root", False),
             }
         )
 
