@@ -39,7 +39,7 @@ class Feature {
 
   observe(subject, topic, data) {
     if (topic != "nsPref:changed" || data != this.prefName) {
-      Cu.reportError(`Unexpected event ${topic} with ${data}`);
+      console.error(`Unexpected event ${topic} with ${data}`);
       return;
     }
 

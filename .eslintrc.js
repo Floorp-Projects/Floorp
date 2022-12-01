@@ -232,8 +232,6 @@ module.exports = {
         "js/xpconnect/loader/XPCOMUtils.sys.mjs",
         "layout/base/tests/chrome/**",
         "mobile/android/**",
-        "netwerk/dns/PublicSuffixList.*",
-        "netwerk/url-classifier/UrlClassifierExceptionListService.*",
         "remote/cdp/Error.sys.mjs",
         "remote/cdp/domains/Domain.sys.mjs",
         "remote/shared/webdriver/Errors.sys.mjs",
