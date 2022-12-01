@@ -42,7 +42,7 @@ THIRDPARTY_USED_IN_FIREFOX = [
 ]
 
 
-LIBWEBRTC_DIR = os.path.normpath("../../../../third_party/libwebrtc")
+LIBWEBRTC_DIR = os.path.normpath("third_party/libwebrtc")
 
 
 def make_github_url(repo, commit):
