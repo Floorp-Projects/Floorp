@@ -895,7 +895,7 @@ bool ParserBase::noteUsedNameInternal(TaggedParserAtomIndex name,
     return true;
   }
 
-  return usedNames_.noteUse(cx_, name, visibility, pc_->scriptId(), scope->id(),
+  return usedNames_.noteUse(ec_, name, visibility, pc_->scriptId(), scope->id(),
                             tokenPosition);
 }
 
@@ -1668,7 +1668,7 @@ bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
     return true;
   }
 
-  Vector<UnboundPrivateName, 8> unboundPrivateNames(cx_);
+  Vector<UnboundPrivateName, 8> unboundPrivateNames(ec_);
   if (!usedNames_.getUnboundPrivateNames(unboundPrivateNames)) {
     return false;
   }
@@ -6392,8 +6392,8 @@ GeneralParser<ParseHandler, Unit>::consequentOrAlternative(
 template <class ParseHandler, typename Unit>
 typename ParseHandler::TernaryNodeType
 GeneralParser<ParseHandler, Unit>::ifStatement(YieldHandling yieldHandling) {
-  Vector<Node, 4> condList(cx_), thenList(cx_);
-  Vector<uint32_t, 4> posList(cx_);
+  Vector<Node, 4> condList(ec_), thenList(ec_);
+  Vector<uint32_t, 4> posList(ec_);
   Node elseBranch;
 
   ParseContext::Statement stmt(pc_, StatementKind::If);
@@ -8356,7 +8356,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
   // We're leaving a class definition that was not itself nested within a class
   if (!isInClass) {
     mozilla::Maybe<UnboundPrivateName> maybeUnboundName;
-    if (!usedNames_.hasUnboundPrivateNames(cx_, maybeUnboundName)) {
+    if (!usedNames_.hasUnboundPrivateNames(ec_, maybeUnboundName)) {
       return null();
     }
     if (maybeUnboundName) {

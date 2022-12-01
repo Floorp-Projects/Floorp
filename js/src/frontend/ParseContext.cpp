@@ -70,7 +70,7 @@ bool DeclarationKindIsParameter(DeclarationKind kind) {
          kind == DeclarationKind::FormalParameter;
 }
 
-bool UsedNameTracker::noteUse(JSContext* cx, TaggedParserAtomIndex name,
+bool UsedNameTracker::noteUse(ErrorContext* ec, TaggedParserAtomIndex name,
                               NameVisibility visibility, uint32_t scriptId,
                               uint32_t scopeId,
                               mozilla::Maybe<TokenPos> tokenPosition) {
@@ -90,7 +90,7 @@ bool UsedNameTracker::noteUse(JSContext* cx, TaggedParserAtomIndex name,
       hasPrivateNames_ = true;
     }
 
-    UsedNameInfo info(cx, visibility, tokenPosition);
+    UsedNameInfo info(ec, visibility, tokenPosition);
 
     if (!info.noteUsedInScope(scriptId, scopeId)) {
       return false;
@@ -138,13 +138,13 @@ bool UsedNameTracker::getUnboundPrivateNames(
 }
 
 bool UsedNameTracker::hasUnboundPrivateNames(
-    JSContext* cx, mozilla::Maybe<UnboundPrivateName>& maybeUnboundName) {
+    ErrorContext* ec, mozilla::Maybe<UnboundPrivateName>& maybeUnboundName) {
   // We never saw any private names, so can just return early
   if (!hasPrivateNames_) {
     return true;
   }
 
-  Vector<UnboundPrivateName, 8> unboundPrivateNames(cx);
+  Vector<UnboundPrivateName, 8> unboundPrivateNames(ec);
   if (!getUnboundPrivateNames(unboundPrivateNames)) {
     return false;
   }
