@@ -315,8 +315,7 @@ WebrtcVideoConduit::Control::Control(const RefPtr<AbstractThread>& aCallThread)
 
 WebrtcVideoConduit::WebrtcVideoConduit(
     RefPtr<WebrtcCallWrapper> aCall, nsCOMPtr<nsISerialEventTarget> aStsThread,
-    Options aOptions, std::string aPCHandle,
-    const TrackingId& aRecvTrackingId)
+    Options aOptions, std::string aPCHandle, const TrackingId& aRecvTrackingId)
     : mRendererMonitor("WebrtcVideoConduit::mRendererMonitor"),
       mCallThread(aCall->mCallThread),
       mStsThread(std::move(aStsThread)),
