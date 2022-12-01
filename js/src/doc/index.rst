@@ -22,6 +22,7 @@ Specific documentation on a few topics is available at:
    Debugger/index
    SavedFrame/index
    feature_checklist
+   bytecode_checklist
 
 
 Components of SpiderMonkey
