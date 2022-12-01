@@ -468,7 +468,8 @@ bool frontend::InstantiateStencils(JSContext* cx, CompilationInput& input,
   return true;
 }
 
-bool frontend::PrepareForInstantiate(JSContext* cx, CompilationInput& input,
+bool frontend::PrepareForInstantiate(JSContext* cx, ErrorContext* ec,
+                                     CompilationInput& input,
                                      const CompilationStencil& stencil,
                                      CompilationGCOutput& gcOutput) {
   Maybe<AutoGeckoProfilerEntry> pseudoFrame;
@@ -477,7 +478,7 @@ bool frontend::PrepareForInstantiate(JSContext* cx, CompilationInput& input,
                         JS::ProfilingCategoryPair::JS_Parsing);
   }
 
-  return CompilationStencil::prepareForInstantiate(cx, input.atomCache, stencil,
+  return CompilationStencil::prepareForInstantiate(ec, input.atomCache, stencil,
                                                    gcOutput);
 }
 
