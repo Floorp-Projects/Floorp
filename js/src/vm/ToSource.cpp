@@ -83,18 +83,27 @@ static JSString* SymbolToSource(JSContext* cx, JS::Symbol* symbol) {
   JSStringBuilder buf(cx);
   if (code == SymbolCode::InSymbolRegistry ? !buf.append("Symbol.for(")
                                            : !buf.append("Symbol(")) {
+    buf.failure();
     return nullptr;
   }
   if (desc) {
     UniqueChars quoted = QuoteString(cx, desc, '"');
     if (!quoted || !buf.append(quoted.get(), strlen(quoted.get()))) {
+      buf.failure();
       return nullptr;
     }
   }
   if (!buf.append(')')) {
+    buf.failure();
     return nullptr;
   }
-  return buf.finishString();
+  auto* result = buf.finishString();
+  if (!result) {
+    buf.failure();
+    return nullptr;
+  }
+  buf.ok();
+  return result;
 }
 
 static JSString* BoxedToSource(JSContext* cx, HandleObject obj,
@@ -113,10 +122,17 @@ static JSString* BoxedToSource(JSContext* cx, HandleObject obj,
   JSStringBuilder buf(cx);
   if (!buf.append("new ") || !buf.append(constructor, strlen(constructor)) ||
       !buf.append('(') || !buf.append(str) || !buf.append(')')) {
+    buf.failure();
     return nullptr;
   }
 
-  return buf.finishString();
+  auto* result = buf.finishString();
+  if (!result) {
+    buf.failure();
+    return nullptr;
+  }
+  buf.ok();
+  return result;
 }
 
 JSString* js::ValueToSource(JSContext* cx, HandleValue v) {

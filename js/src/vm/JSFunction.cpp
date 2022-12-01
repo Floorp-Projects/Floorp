@@ -41,7 +41,7 @@
 #include "util/Text.h"
 #include "vm/BooleanObject.h"
 #include "vm/Compartment.h"
-#include "vm/ErrorContext.h"           // AutoReportFrontendContext
+#include "vm/ErrorContext.h"  // AutoReportFrontendContext, ManualReportFrontendContext
 #include "vm/FunctionFlags.h"          // js::FunctionFlags
 #include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind
 #include "vm/GlobalObject.h"
@@ -764,12 +764,14 @@ JSString* js::FunctionToString(JSContext* cx, HandleFunction fun,
   JSStringBuilder out(cx);
   if (addParentheses) {
     if (!out.append('(')) {
+      out.failure();
       return nullptr;
     }
   }
 
   if (haveSource) {
     if (!fun->baseScript()->appendSourceDataForToString(cx, out)) {
+      out.failure();
       return nullptr;
     }
   } else if (!isToSource) {
@@ -799,6 +801,7 @@ JSString* js::FunctionToString(JSContext* cx, HandleFunction fun,
     };
 
     if (!out.append("function")) {
+      out.failure();
       return nullptr;
     }
 
@@ -810,6 +813,7 @@ JSString* js::FunctionToString(JSContext* cx, HandleFunction fun,
          fun->kind() == FunctionFlags::Wasm ||
          fun->kind() == FunctionFlags::ClassConstructor)) {
       if (!out.append(' ')) {
+        out.failure();
         return nullptr;
       }
 
@@ -818,27 +822,32 @@ JSString* js::FunctionToString(JSContext* cx, HandleFunction fun,
       JSAtom* name = fun->explicitName();
       size_t offset = hasGetterOrSetterPrefix(name) ? 4 : 0;
       if (!out.appendSubstring(name, offset, name->length() - offset)) {
+        out.failure();
         return nullptr;
       }
     }
 
     if (!out.append("() {\n    [native code]\n}")) {
+      out.failure();
       return nullptr;
     }
   } else {
     if (fun->isAsync()) {
       if (!out.append("async ")) {
+        out.failure();
         return nullptr;
       }
     }
 
     if (!fun->isArrow()) {
       if (!out.append("function")) {
+        out.failure();
         return nullptr;
       }
 
       if (fun->isGenerator()) {
         if (!out.append('*')) {
+          out.failure();
           return nullptr;
         }
       }
@@ -846,33 +855,44 @@ JSString* js::FunctionToString(JSContext* cx, HandleFunction fun,
 
     if (fun->explicitName()) {
       if (!out.append(' ')) {
+        out.failure();
         return nullptr;
       }
 
       if (fun->isBoundFunction()) {
         JSLinearString* boundName = JSFunction::getBoundFunctionName(cx, fun);
         if (!boundName || !out.append(boundName)) {
+          out.failure();
           return nullptr;
         }
       } else {
         if (!out.append(fun->explicitName())) {
+          out.failure();
           return nullptr;
         }
       }
     }
 
     if (!out.append("() {\n    [native code]\n}")) {
+      out.failure();
       return nullptr;
     }
   }
 
   if (addParentheses) {
     if (!out.append(')')) {
+      out.failure();
       return nullptr;
     }
   }
 
-  return out.finishString();
+  auto* result = out.finishString();
+  if (!result) {
+    out.failure();
+    return nullptr;
+  }
+  out.ok();
+  return result;
 }
 
 JSString* fun_toStringHelper(JSContext* cx, HandleObject obj, bool isToSource) {
@@ -1184,6 +1204,7 @@ JSLinearString* JSFunction::getBoundFunctionName(JSContext* cx,
 
   JSStringBuilder sb(cx);
   if (name->hasTwoByteChars() && !sb.ensureTwoByteChars()) {
+    sb.failure();
     return nullptr;
   }
 
@@ -1191,10 +1212,12 @@ JSLinearString* JSFunction::getBoundFunctionName(JSContext* cx,
   len *= boundWithSpaceCharsLength;
   len += name->length();
   if (!len.isValid()) {
+    sb.failure();
     ReportAllocationOverflow(cx);
     return nullptr;
   }
   if (!sb.reserve(len.value())) {
+    sb.failure();
     return nullptr;
   }
 
@@ -1203,7 +1226,13 @@ JSLinearString* JSFunction::getBoundFunctionName(JSContext* cx,
   }
   sb.infallibleAppendSubstring(name, 0, name->length());
 
-  return sb.finishString();
+  auto* result = sb.finishString();
+  if (!result) {
+    sb.failure();
+    return nullptr;
+  }
+  sb.ok();
+  return result;
 }
 
 static const js::Value& BoundFunctionEnvironmentSlotValue(const JSFunction* fun,
@@ -1245,10 +1274,13 @@ static JSAtom* AppendBoundFunctionPrefix(JSContext* cx, JSString* str) {
   MOZ_ASSERT(
       StringEqualsAscii(cx->names().boundWithSpace, boundWithSpaceChars));
 
-  StringBuffer sb(cx);
+  ManualReportFrontendContext fc(cx);
+  StringBuffer sb(cx, &fc);
   if (!sb.append(boundWithSpaceChars) || !sb.append(str)) {
+    fc.failure();
     return nullptr;
   }
+  fc.ok();
   return sb.finishAtom();
 }
 
@@ -1542,19 +1574,23 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
 
   if (isAsync) {
     if (!sb.append("async ")) {
+      sb.failure();
       return false;
     }
   }
   if (!sb.append("function")) {
+    sb.failure();
     return false;
   }
   if (isGenerator) {
     if (!sb.append('*')) {
+      sb.failure();
       return false;
     }
   }
 
   if (!sb.append(" anonymous(")) {
+    sb.failure();
     return false;
   }
 
@@ -1568,17 +1604,20 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
       // Steps 14.a-b, 14.d.i-ii.
       str = ToString<CanGC>(cx, args[i]);
       if (!str) {
+        sb.failure();
         return false;
       }
 
       // Steps 14.b, 14.d.iii.
       if (!sb.append(str)) {
+        sb.failure();
         return false;
       }
 
       if (i < args.length() - 2) {
         // Step 14.d.iii.
         if (!sb.append(',')) {
+          sb.failure();
           return false;
         }
       }
@@ -1586,6 +1625,7 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
   }
 
   if (!sb.append('\n')) {
+    sb.failure();
     return false;
   }
 
@@ -1595,6 +1635,7 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
 
   if (!sb.append(FunctionConstructorMedialSigils.data(),
                  FunctionConstructorMedialSigils.length())) {
+    sb.failure();
     return false;
   }
 
@@ -1602,24 +1643,29 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
     // Steps 13, 14.e, 15.
     RootedString body(cx, ToString<CanGC>(cx, args[args.length() - 1]));
     if (!body || !sb.append(body)) {
+      sb.failure();
       return false;
     }
   }
 
   if (!sb.append(FunctionConstructorFinalBrace.data(),
                  FunctionConstructorFinalBrace.length())) {
+    sb.failure();
     return false;
   }
 
   // The parser only accepts two byte strings.
   if (!sb.ensureTwoByteChars()) {
+    sb.failure();
     return false;
   }
 
   RootedString functionText(cx, sb.finishString());
   if (!functionText) {
+    sb.failure();
     return false;
   }
+  sb.ok();
 
   // Block this call if security callbacks forbid it.
   if (!cx->isRuntimeCodeGenEnabled(JS::RuntimeCode::JS, functionText)) {
@@ -2077,13 +2123,16 @@ static JSAtom* SymbolToFunctionName(JSContext* cx, JS::Symbol* symbol,
   }
 
   // Step 5 (reordered).
-  StringBuffer sb(cx);
+  ManualReportFrontendContext fc(cx);
+  StringBuffer sb(cx, &fc);
   if (prefixKind == FunctionPrefixKind::Get) {
     if (!sb.append("get ")) {
+      fc.failure();
       return nullptr;
     }
   } else if (prefixKind == FunctionPrefixKind::Set) {
     if (!sb.append("set ")) {
+      fc.failure();
       return nullptr;
     }
   }
@@ -2096,15 +2145,18 @@ static JSAtom* SymbolToFunctionName(JSContext* cx, JS::Symbol* symbol,
     // they don't use the symbol naming, but rather property naming.
     if (symbol->isPrivateName()) {
       if (!sb.append(desc)) {
+        fc.failure();
         return nullptr;
       }
     } else {
       // Step 4.c.
       if (!sb.append('[') || !sb.append(desc) || !sb.append(']')) {
+        fc.failure();
         return nullptr;
       }
     }
   }
+  fc.ok();
   return sb.finishAtom();
 }
 
@@ -2121,19 +2173,24 @@ static JSAtom* NameToFunctionName(JSContext* cx, HandleValue name,
     return nullptr;
   }
 
-  StringBuffer sb(cx);
+  ManualReportFrontendContext fc(cx);
+  StringBuffer sb(cx, &fc);
   if (prefixKind == FunctionPrefixKind::Get) {
     if (!sb.append("get ")) {
+      fc.failure();
       return nullptr;
     }
   } else {
     if (!sb.append("set ")) {
+      fc.failure();
       return nullptr;
     }
   }
   if (!sb.append(nameStr)) {
+    fc.failure();
     return nullptr;
   }
+  fc.ok();
   return sb.finishAtom();
 }
 

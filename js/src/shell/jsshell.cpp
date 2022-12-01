@@ -45,6 +45,7 @@ bool GenerateInterfaceHelp(JSContext* cx, HandleObject obj, const char* name) {
     RootedId id(cx, idv[i]);
     RootedValue v(cx);
     if (!JS_GetPropertyById(cx, obj, id, &v)) {
+      buf.failure();
       return false;
     }
     if (!v.isObject()) {
@@ -55,9 +56,11 @@ bool GenerateInterfaceHelp(JSContext* cx, HandleObject obj, const char* name) {
     RootedValue usage(cx);
     RootedValue help(cx);
     if (!JS_GetProperty(cx, prop, "usage", &usage)) {
+      buf.failure();
       return false;
     }
     if (!JS_GetProperty(cx, prop, "help", &help)) {
+      buf.failure();
       return false;
     }
     if (!usage.isString() && !help.isString()) {
@@ -65,40 +68,48 @@ bool GenerateInterfaceHelp(JSContext* cx, HandleObject obj, const char* name) {
     }
 
     if (numEntries && !buf.append("\n")) {
+      buf.failure();
       return false;
     }
     numEntries++;
 
     if (!buf.append("  ")) {
+      buf.failure();
       return false;
     }
 
     if (!buf.append(usage.isString() ? usage.toString() : id.toString())) {
+      buf.failure();
       return false;
     }
   }
 
   RootedString s(cx, buf.finishString());
   if (!s || !JS_DefineProperty(cx, obj, "help", s, 0)) {
+    buf.failure();
     return false;
   }
 
   buf.clear();
   if (!buf.append(name, strlen(name)) ||
       !buf.append(" - interface object with ")) {
+    buf.failure();
     return false;
   }
   char cbuf[100];
   SprintfLiteral(cbuf, "%d %s", numEntries,
                  numEntries == 1 ? "entry" : "entries");
   if (!buf.append(cbuf, strlen(cbuf))) {
+    buf.failure();
     return false;
   }
   s = buf.finishString();
   if (!s || !JS_DefineProperty(cx, obj, "usage", s, 0)) {
+    buf.failure();
     return false;
   }
 
+  buf.ok();
   return true;
 }
 
