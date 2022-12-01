@@ -12,7 +12,7 @@ transforms:
 job-defaults:
     name: bouncer-check
     description: bouncer check
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         max-run-time: 1200
         docker-image: {in-tree: "update-verify"}
