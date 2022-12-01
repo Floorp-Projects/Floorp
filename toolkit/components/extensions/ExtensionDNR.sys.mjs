@@ -1368,6 +1368,14 @@ function validateManifestEntry(extension) {
   }
 }
 
+async function updateEnabledStaticRulesets(extension, updateRulesetOptions) {
+  await ensureInitialized(extension);
+  await lazy.ExtensionDNRStore.updateEnabledStaticRulesets(
+    extension,
+    updateRulesetOptions
+  );
+}
+
 // exports used by the DNR API implementation.
 export const ExtensionDNR = {
   RuleValidator,
@@ -1375,6 +1383,7 @@ export const ExtensionDNR = {
   ensureInitialized,
   getMatchedRulesForRequest,
   getRuleManager,
+  updateEnabledStaticRulesets,
   validateManifestEntry,
   // TODO(Bug 1803370): consider allowing changing DNR limits through about:config prefs).
   limits: {
