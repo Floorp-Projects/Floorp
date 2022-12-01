@@ -2041,6 +2041,17 @@ bool WarpCacheIRTranspiler::emitLoadTypedArrayElementResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitLinearizeForCharAccess(
+    StringOperandId strId, Int32OperandId indexId, StringOperandId resultId) {
+  MDefinition* str = getOperand(strId);
+  MDefinition* index = getOperand(indexId);
+
+  auto* ins = MLinearizeForCharAccess::New(alloc(), str, index);
+  add(ins);
+
+  return defineOperand(resultId, ins);
+}
+
 bool WarpCacheIRTranspiler::emitLoadStringCharResult(StringOperandId strId,
                                                      Int32OperandId indexId) {
   MDefinition* str = getOperand(strId);

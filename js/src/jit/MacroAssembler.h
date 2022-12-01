@@ -4410,6 +4410,16 @@ class MacroAssembler : public MacroAssemblerSpecific {
                              CharEncoding encoding);
   void loadInlineStringCharsForStore(Register str, Register dest);
 
+ private:
+  void loadRopeChild(Register str, Register index, Register output,
+                     Label* isLinear);
+
+ public:
+  void branchIfCanLoadStringChar(Register str, Register index, Register scratch,
+                                 Label* label);
+  void branchIfNotCanLoadStringChar(Register str, Register index,
+                                    Register scratch, Label* label);
+
   void loadStringChar(Register str, Register index, Register output,
                       Register scratch1, Register scratch2, Label* fail);
 

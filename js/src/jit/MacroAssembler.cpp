@@ -1185,6 +1185,44 @@ void MacroAssembler::storeDependentStringBase(Register base, Register str) {
   storePtr(base, Address(str, JSDependentString::offsetOfBase()));
 }
 
+void MacroAssembler::loadRopeChild(Register str, Register index,
+                                   Register output, Label* isLinear) {
+  // This follows JSString::getChar.
+  branchIfNotRope(str, isLinear);
+
+  loadRopeLeftChild(str, output);
+
+  // Check if the index is contained in the leftChild.
+  Label loadedChild;
+  branch32(Assembler::Above, Address(output, JSString::offsetOfLength()), index,
+           &loadedChild);
+
+  // The index must be in the rightChild.
+  loadRopeRightChild(str, output);
+
+  bind(&loadedChild);
+}
+
+void MacroAssembler::branchIfCanLoadStringChar(Register str, Register index,
+                                               Register scratch, Label* label) {
+  loadRopeChild(str, index, scratch, label);
+
+  // Branch if the left resp. right side is linear.
+  branchIfNotRope(scratch, label);
+}
+
+void MacroAssembler::branchIfNotCanLoadStringChar(Register str, Register index,
+                                                  Register scratch,
+                                                  Label* label) {
+  Label done;
+  loadRopeChild(str, index, scratch, &done);
+
+  // Branch if the left or right side is another rope.
+  branchIfRope(scratch, label);
+
+  bind(&done);
+}
+
 void MacroAssembler::loadStringChar(Register str, Register index,
                                     Register output, Register scratch1,
                                     Register scratch2, Label* fail) {

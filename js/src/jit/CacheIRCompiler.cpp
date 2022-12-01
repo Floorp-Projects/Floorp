@@ -3546,6 +3546,49 @@ bool CacheIRCompiler::emitLoadFunctionNameResult(ObjOperandId objId) {
   return true;
 }
 
+bool CacheIRCompiler::emitLinearizeForCharAccess(StringOperandId strId,
+                                                 Int32OperandId indexId,
+                                                 StringOperandId resultId) {
+  Register str = allocator.useRegister(masm, strId);
+  Register index = allocator.useRegister(masm, indexId);
+  Register result = allocator.defineRegister(masm, resultId);
+  AutoScratchRegister scratch(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  Label done;
+  masm.movePtr(str, result);
+
+  // We can omit the bounds check, because we only compare the index against the
+  // string length. In the worst case we unnecessarily linearize the string
+  // when the index is out-of-bounds.
+
+  masm.branchIfCanLoadStringChar(str, index, scratch, &done);
+  {
+    LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(),
+                                 liveVolatileFloatRegs());
+    masm.PushRegsInMask(volatileRegs);
+
+    using Fn = JSLinearString* (*)(JSString*);
+    masm.setupUnalignedABICall(scratch);
+    masm.passABIArg(str);
+    masm.callWithABI<Fn, js::jit::LinearizeForCharAccessPure>();
+    masm.storeCallPointerResult(result);
+
+    LiveRegisterSet ignore;
+    ignore.add(result);
+    masm.PopRegsInMaskIgnore(volatileRegs, ignore);
+
+    masm.branchTestPtr(Assembler::Zero, result, result, failure->label());
+  }
+
+  masm.bind(&done);
+  return true;
+}
+
 bool CacheIRCompiler::emitLoadStringLengthResult(StringOperandId strId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
