@@ -137,9 +137,7 @@ export const error = {
   report(err) {
     let msg = "Marionette threw an error: " + error.stringify(err);
     dump(msg + "\n");
-    if (Cu.reportError) {
-      Cu.reportError(msg);
-    }
+    console.error(msg);
   },
 
   /**

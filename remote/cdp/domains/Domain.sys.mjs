@@ -22,7 +22,7 @@ export class Domain {
           listener.call(this, eventName, params);
         }
       } catch (e) {
-        Cu.reportError(e);
+        console.error(e);
       }
     }
   }

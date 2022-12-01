@@ -27,7 +27,7 @@ export class RemoteAgentError extends Error {
   }
 
   notify() {
-    Cu.reportError(this);
+    console.error(this);
     lazy.logger.error(this.toString({ stack: true }));
   }
 
