@@ -658,15 +658,14 @@ void ExternalEngineStateMachine::OnRequestAudio() {
   }
 
   LOGV("Start requesting audio");
-  PerformanceRecorder perfRecorder(PerformanceRecorder::Stage::RequestData);
-  perfRecorder.Start();
+  PerformanceRecorder<PlaybackStage> perfRecorder(MediaStage::RequestData);
   RefPtr<ExternalEngineStateMachine> self = this;
   mReader->RequestAudioData()
       ->Then(
           OwnerThread(), __func__,
           [this, self, perfRecorder(std::move(perfRecorder))](
               const RefPtr<AudioData>& aAudio) mutable {
-            perfRecorder.End();
+            perfRecorder.Record();
             mAudioDataRequest.Complete();
             LOGV("Completed requesting audio");
             AUTO_PROFILER_LABEL(
@@ -718,16 +717,15 @@ void ExternalEngineStateMachine::OnRequestVideo() {
   }
 
   LOGV("Start requesting video");
-  PerformanceRecorder perfRecorder(PerformanceRecorder::Stage::RequestData,
-                                   Info().mVideo.mImage.height);
-  perfRecorder.Start();
+  PerformanceRecorder<PlaybackStage> perfRecorder(MediaStage::RequestData,
+                                                  Info().mVideo.mImage.height);
   RefPtr<ExternalEngineStateMachine> self = this;
   mReader->RequestVideoData(GetVideoThreshold(), false)
       ->Then(
           OwnerThread(), __func__,
           [this, self, perfRecorder(std::move(perfRecorder))](
               const RefPtr<VideoData>& aVideo) mutable {
-            perfRecorder.End();
+            perfRecorder.Record();
             mVideoDataRequest.Complete();
             LOGV("Completed requesting video");
             AUTO_PROFILER_LABEL(

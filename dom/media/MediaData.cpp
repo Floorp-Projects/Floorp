@@ -326,9 +326,8 @@ already_AddRefed<VideoData> VideoData::CreateAndCopyData(
     return nullptr;
   }
 
-  PerformanceRecorder perfRecorder(PerformanceRecorder::Stage::CopyDecodedVideo,
-                                   aInfo.mImage.height);
-  perfRecorder.Start();
+  PerformanceRecorder<PlaybackStage> perfRecorder(MediaStage::CopyDecodedVideo,
+                                                  aInfo.mImage.height);
   RefPtr<VideoData> v(new VideoData(aOffset, aTime, aDuration, aKeyframe,
                                     aTimecode, aInfo.mDisplay, 0));
 
@@ -349,7 +348,7 @@ already_AddRefed<VideoData> VideoData::CreateAndCopyData(
                                 : aAllocator,
                             aContainer, data)) {
       v->mImage = d3d11Image;
-      perfRecorder.End();
+      perfRecorder.Record();
       return v.forget();
     }
   }
@@ -361,7 +360,7 @@ already_AddRefed<VideoData> VideoData::CreateAndCopyData(
     PlanarYCbCrData data = ConstructPlanarYCbCrData(aInfo, aBuffer, aPicture);
     if (ioImage->SetData(aContainer, data)) {
       v->mImage = ioImage;
-      perfRecorder.End();
+      perfRecorder.Record();
       return v.forget();
     }
   }
@@ -383,7 +382,7 @@ already_AddRefed<VideoData> VideoData::CreateAndCopyData(
     return nullptr;
   }
 
-  perfRecorder.End();
+  perfRecorder.Record();
   return v.forget();
 }
 
@@ -496,9 +495,8 @@ already_AddRefed<MediaRawData> MediaRawData::Clone() const {
   if (mTrackInfo && mTrackInfo->GetAsVideoInfo()) {
     sampleHeight = mTrackInfo->GetAsVideoInfo()->mImage.height;
   }
-  PerformanceRecorder perfRecorder(PerformanceRecorder::Stage::CopyDemuxedData,
-                                   sampleHeight);
-  perfRecorder.Start();
+  PerformanceRecorder<PlaybackStage> perfRecorder(MediaStage::CopyDemuxedData,
+                                                  sampleHeight);
   RefPtr<MediaRawData> s = new MediaRawData;
   s->mTimecode = mTimecode;
   s->mTime = mTime;
@@ -516,7 +514,7 @@ already_AddRefed<MediaRawData> MediaRawData::Clone() const {
   if (!s->mAlphaBuffer.Append(mAlphaBuffer.Data(), mAlphaBuffer.Length())) {
     return nullptr;
   }
-  perfRecorder.End();
+  perfRecorder.Record();
   return s.forget();
 }
 

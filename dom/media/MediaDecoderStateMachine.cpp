@@ -3786,15 +3786,14 @@ void MediaDecoderStateMachine::RequestAudioData() {
   LOGV("Queueing audio task - queued=%zu, decoder-queued=%zu",
        AudioQueue().GetSize(), mReader->SizeOfAudioQueueInFrames());
 
-  PerformanceRecorder perfRecorder(PerformanceRecorder::Stage::RequestData);
-  perfRecorder.Start();
+  PerformanceRecorder<PlaybackStage> perfRecorder(MediaStage::RequestData);
   RefPtr<MediaDecoderStateMachine> self = this;
   mReader->RequestAudioData()
       ->Then(
           OwnerThread(), __func__,
           [this, self, perfRecorder(std::move(perfRecorder))](
               const RefPtr<AudioData>& aAudio) mutable {
-            perfRecorder.End();
+            perfRecorder.Record();
             AUTO_PROFILER_LABEL(
                 "MediaDecoderStateMachine::RequestAudioData:Resolved",
                 MEDIA_PLAYBACK);
@@ -3847,9 +3846,8 @@ void MediaDecoderStateMachine::RequestVideoData(
       VideoQueue().GetSize(), mReader->SizeOfVideoQueueInFrames(),
       aCurrentTime.ToMicroseconds(), mBypassingSkipToNextKeyFrameCheck);
 
-  PerformanceRecorder perfRecorder(PerformanceRecorder::Stage::RequestData,
-                                   Info().mVideo.mImage.height);
-  perfRecorder.Start();
+  PerformanceRecorder<PlaybackStage> perfRecorder(MediaStage::RequestData,
+                                                  Info().mVideo.mImage.height);
   RefPtr<MediaDecoderStateMachine> self = this;
   mReader
       ->RequestVideoData(
@@ -3859,7 +3857,7 @@ void MediaDecoderStateMachine::RequestVideoData(
           OwnerThread(), __func__,
           [this, self, perfRecorder(std::move(perfRecorder))](
               const RefPtr<VideoData>& aVideo) mutable {
-            perfRecorder.End();
+            perfRecorder.Record();
             AUTO_PROFILER_LABEL(
                 "MediaDecoderStateMachine::RequestVideoData:Resolved",
                 MEDIA_PLAYBACK);

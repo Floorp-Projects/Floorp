@@ -149,9 +149,8 @@ bool ArrayOfRemoteMediaRawData::Fill(
         entry->mEOS, height, entry->mDiscardPadding,
         entry->mOriginalPresentationWindow});
   }
-  PerformanceRecorder perfRecorder(PerformanceRecorder::Stage::CopyDemuxedData,
-                                   height);
-  perfRecorder.Start();
+  PerformanceRecorder<PlaybackStage> perfRecorder(MediaStage::CopyDemuxedData,
+                                                  height);
   mBuffers = RemoteArrayOfByteBuffer(dataBuffers, aAllocator);
   if (!mBuffers.IsValid()) {
     return false;
@@ -164,7 +163,7 @@ bool ArrayOfRemoteMediaRawData::Fill(
   if (!mExtraDatas.IsValid()) {
     return false;
   }
-  perfRecorder.End();
+  perfRecorder.Record();
   return true;
 }
 
@@ -179,9 +178,8 @@ already_AddRefed<MediaRawData> ArrayOfRemoteMediaRawData::ElementAt(
                             mExtraDatas.Count() == Count(),
                         "Something ain't right here");
   const auto& sample = mSamples[aIndex];
-  PerformanceRecorder perfRecorder(PerformanceRecorder::Stage::CopyDemuxedData,
-                                   sample.mHeight);
-  perfRecorder.Start();
+  PerformanceRecorder<PlaybackStage> perfRecorder(MediaStage::CopyDemuxedData,
+                                                  sample.mHeight);
   AlignedByteBuffer data = mBuffers.AlignedBufferAt<uint8_t>(aIndex);
   if (mBuffers.SizeAt(aIndex) && !data) {
     // OOM
@@ -206,7 +204,7 @@ already_AddRefed<MediaRawData> ArrayOfRemoteMediaRawData::ElementAt(
   rawData->mEOS = sample.mEOS;
   rawData->mDiscardPadding = sample.mDiscardPadding;
   rawData->mExtraData = mExtraDatas.MediaByteBufferAt(aIndex);
-  perfRecorder.End();
+  perfRecorder.Record();
   return rawData.forget();
 }
 
