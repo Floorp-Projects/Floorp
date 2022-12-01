@@ -59,6 +59,11 @@ ChromeUtils.defineModuleGetter(
   "TelemetryHealthPing",
   "resource://gre/modules/HealthPing.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "NimbusFeatures",
+  "resource://nimbus/ExperimentAPI.jsm"
+);
 
 const Utils = TelemetryUtils;
 
@@ -1703,13 +1708,27 @@ var TelemetrySendImpl = {
       return;
     }
 
-    const exeName =
+    // By default, invoke `pingsender[.exe] URL path ...`.
+    let exeName =
       AppConstants.platform === "win" ? "pingsender.exe" : "pingsender";
+    let params = [];
+
+    if (lazy.NimbusFeatures.pingsender.getVariable("backgroundTaskEnabled")) {
+      // If using pingsender background task, invoke `firefox[.exe] --backgroundtask pingsender URL path ...`.
+      exeName =
+        AppConstants.MOZ_APP_NAME +
+        (AppConstants.platform === "win" ? ".exe" : "");
+      params = ["--backgroundtask", "pingsender"];
+    }
+
+    this._log.info(
+      `Invoking '${exeName}${params.length ? " " + params.join(" ") : ""} ...'`
+    );
 
     let exe = Services.dirsvc.get("GreBinD", Ci.nsIFile);
     exe.append(exeName);
 
-    let params = pings.flatMap(ping => [ping.url, ping.path]);
+    params.push(...pings.flatMap(ping => [ping.url, ping.path]));
     let process = Cc["@mozilla.org/process/util;1"].createInstance(
       Ci.nsIProcess
     );

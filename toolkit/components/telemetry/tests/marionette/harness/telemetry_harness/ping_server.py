@@ -34,6 +34,11 @@ class PingServer(object):
 
             ping_data = json.loads(request_data)
 
+            # We don't have another channel to hand, so stuff this in the ping payload.
+            ping_data["X-PingSender-Version"] = request.headers.get(
+                "X-PingSender-Version", b""
+            )
+
             # Store JSON data to self.pings to be used by wait_for_pings()
             self.pings.append(ping_data)
 

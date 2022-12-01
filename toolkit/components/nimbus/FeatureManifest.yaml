@@ -803,6 +803,16 @@ echPrefs:
       type: int
       setPref: "security.tls.ech.grease_probability"
 
+pingsender:
+  description: "In-product usage of the pingsender telemetry reporter."
+  owner: nalexander@mozilla.com
+  hasExposure: false
+  variables:
+    backgroundTaskEnabled:
+      type: "boolean"
+      fallbackPref: "toolkit.telemetry.shutdownPingSender.backgroundtask.enabled"
+      description: "Whether to use the `pingsender` background task to send shutdown telemetry"
+
 dapTelemetry:
   description: DAP Telemetry
   owner: simon@mozilla.com
