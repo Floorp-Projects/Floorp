@@ -123,6 +123,10 @@ extern JS_PUBLIC_API bool FinishIncrementalEncoding(JSContext* cx,
                                                     Handle<JSObject*> module,
                                                     TranscodeBuffer& buffer);
 
+// Abort incremental encoding started by JS::StartIncrementalEncoding.
+extern JS_PUBLIC_API void AbortIncrementalEncoding(Handle<JSScript*> script);
+extern JS_PUBLIC_API void AbortIncrementalEncoding(Handle<JSObject*> module);
+
 // Check if the compile options and script's flag matches.
 //
 // JS::DecodeScript* and JS::DecodeOffThreadScript internally check this.

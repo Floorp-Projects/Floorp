@@ -2653,20 +2653,14 @@ void ScriptLoader::GiveUpBytecodeEncoding() {
     MOZ_ASSERT(!IsWebExtensionRequest(request));
 
     if (aes.isSome()) {
-      bool result;
       if (request->IsModuleRequest()) {
         ModuleScript* moduleScript = request->AsModuleRequest()->mModuleScript;
         JS::Rooted<JSObject*> module(aes->cx(), moduleScript->ModuleRecord());
-        result = JS::FinishIncrementalEncoding(aes->cx(), module,
-                                               request->mScriptBytecode);
+        JS::AbortIncrementalEncoding(module);
       } else {
         JS::Rooted<JSScript*> script(aes->cx(),
                                      request->mScriptForBytecodeEncoding);
-        result = JS::FinishIncrementalEncoding(aes->cx(), script,
-                                               request->mScriptBytecode);
-      }
-      if (!result) {
-        JS_ClearPendingException(aes->cx());
+        JS::AbortIncrementalEncoding(script);
       }
     }
 

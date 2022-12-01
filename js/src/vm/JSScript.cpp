@@ -1805,6 +1805,8 @@ bool ScriptSource::xdrFinalizeEncoder(JSContext* cx,
   return true;
 }
 
+void ScriptSource::xdrAbortEncoder() { xdrEncoder_.reset(); }
+
 template <typename Unit>
 [[nodiscard]] bool ScriptSource::initializeUnretrievableUncompressedSource(
     JSContext* cx, EntryUnits<Unit>&& source, size_t length) {
