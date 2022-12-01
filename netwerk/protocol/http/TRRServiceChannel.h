@@ -142,7 +142,8 @@ class TRRServiceChannel : public HttpBaseChannel,
       nsIURI* aNewURI, nsIChannel* aNewChannel, bool aPreserveMethod,
       uint32_t aRedirectFlags) override;
   // Skip this check for TRRServiceChannel.
-  virtual bool ShouldTaintReplacementChannelOrigin(nsIURI* aNewURI) override {
+  virtual bool ShouldTaintReplacementChannelOrigin(
+      nsIChannel* aNewChannel, uint32_t aRedirectFlags) override {
     return false;
   }
   virtual bool SameOriginWithOriginalUri(nsIURI* aURI) override;

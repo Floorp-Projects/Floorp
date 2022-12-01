@@ -18,6 +18,12 @@ const { TestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TestUtils.sys.mjs"
 );
 
+const ReferrerInfo = Components.Constructor(
+  "@mozilla.org/referrer-info;1",
+  "nsIReferrerInfo",
+  "init"
+);
+
 add_setup(async function setup() {
   trr_test_setup();
 
@@ -306,4 +312,44 @@ add_task(async function testHttpRequestBlocked() {
   Assert.equal(request.status, Cr.NS_BINDING_ABORTED);
   dnsRequestObserver.unregister();
   await new Promise(resolve => httpserv.stop(resolve));
+});
+
+function createPrincipal(url) {
+  return Services.scriptSecurityManager.createContentPrincipal(
+    Services.io.newURI(url),
+    {}
+  );
+}
+
+// Test if the Origin header stays the same after an internal HTTPS upgrade
+// caused by HTTPS RR.
+add_task(async function testHTTPSRRUpgradeWithOriginHeader() {
+  dns.clearCache(true);
+
+  const url = "http://test.httpssvc.com:80/origin_header";
+  const originURL = "http://example.com";
+  let chan = Services.io
+    .newChannelFromURIWithProxyFlags(
+      Services.io.newURI(url),
+      null,
+      Ci.nsIProtocolProxyService.RESOLVE_ALWAYS_TUNNEL,
+      null,
+      createPrincipal(originURL),
+      createPrincipal(url),
+      Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
+      Ci.nsIContentPolicy.TYPE_DOCUMENT
+    )
+    .QueryInterface(Ci.nsIHttpChannel);
+  chan.referrerInfo = new ReferrerInfo(
+    Ci.nsIReferrerInfo.EMPTY,
+    true,
+    NetUtil.newURI(url)
+  );
+  chan.setRequestHeader("Origin", originURL, false);
+
+  let [req, buf] = await channelOpenPromise(chan);
+
+  req.QueryInterface(Ci.nsIHttpChannel);
+  Assert.equal(req.getResponseHeader("x-connection-http2"), "yes");
+  Assert.equal(buf, originURL);
 });

@@ -570,7 +570,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
       nsIURI*, nsIChannel*, bool preserveMethod, uint32_t redirectFlags);
 
   // WHATWG Fetch Standard 4.4. HTTP-redirect fetch, step 10
-  virtual bool ShouldTaintReplacementChannelOrigin(nsIURI* aNewURI);
+  virtual bool ShouldTaintReplacementChannelOrigin(nsIChannel* aNewChannel,
+                                                   uint32_t aRedirectFlags);
 
   // bundle calling OMR observers and marking flag into one function
   inline void CallOnModifyRequestObservers() {

@@ -257,10 +257,8 @@ add_task(async function upgradeScheme_declarativeNetRequestWithHostAccess() {
   // https://github.com/w3c/webappsec-upgrade-insecure-requests/issues/32
   Assert.equal(
     (await contentFetch("http://dummy/", "http://redir/never_reached")).url,
-    // TODO bug 1800990: despite the mirrored Origin in ACAO, the CORS check
-    // fails after a request is upgraded. Once fixed, update this expectation:
-    undefined, // Should be: "http://dummy/cors_202?from_https",
-    "TODO 1800990: upgradeScheme + host access should upgrade (cross-origin request)"
+    "http://dummy/cors_202?from_https",
+    "upgradeScheme + host access should upgrade (cross-origin request)"
   );
 
   // The DNR extension does not have example.net in host_permissions.
