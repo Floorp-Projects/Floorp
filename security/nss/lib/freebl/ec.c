@@ -16,8 +16,6 @@
 #include "ec.h"
 #include "ecl.h"
 
-#define EC_DOUBLECHECK PR_FALSE
-
 static const ECMethod kMethods[] = {
     { ECCurve25519,
       ec_Curve25519_pt_mul,
@@ -653,10 +651,9 @@ cleanup:
  * on the digest using the given key and the random value kb (used in
  * computing s).
  */
-
-static SECStatus
-ec_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
-                      const SECItem *digest, const unsigned char *kb, const int kblen)
+SECStatus
+ECDSA_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
+                         const SECItem *digest, const unsigned char *kb, const int kblen)
 {
     SECStatus rv = SECFailure;
     mp_int x1;
@@ -885,34 +882,6 @@ cleanup:
 #endif
 
     return rv;
-}
-
-SECStatus
-ECDSA_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
-                         const SECItem *digest, const unsigned char *kb, const int kblen)
-{
-#if EC_DEBUG || EC_DOUBLECHECK
-
-    SECItem *signature2 = SECITEM_AllocItem(NULL, NULL, signature->len);
-    SECStatus signSuccess = ec_SignDigestWithSeed(key, signature, digest, kb, kblen);
-    SECStatus signSuccessDouble = ec_SignDigestWithSeed(key, signature2, digest, kb, kblen);
-    int signaturesEqual = NSS_SecureMemcmp(signature, signature2, signature->len);
-    SECStatus rv;
-    if ((signaturesEqual == 0) && (signSuccess == SECSuccess) && (signSuccessDouble == SECSuccess)) {
-        rv = SECSuccess;
-    } else {
-        rv = SECFailure;
-    }
-
-#if EC_DEBUG
-    printf("ECDSA signing with seed %s after signing twice\n", (rv == SECSuccess) ? "succeeded" : "failed");
-#endif
-
-    SECITEM_FreeItem(signature2, PR_TRUE);
-    return rv;
-#else
-    return ec_SignDigestWithSeed(key, signature, digest, kb, kblen);
-#endif
 }
 
 /*

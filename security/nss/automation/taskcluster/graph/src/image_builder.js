@@ -9,7 +9,7 @@ import taskcluster from "taskcluster-client";
 async function taskHasImageArtifact(taskId) {
   let queue = new taskcluster.Queue(taskcluster.fromEnvVars());
   let {artifacts} = await queue.listLatestArtifacts(taskId);
-  return artifacts.some(artifact => artifact.name == "public/image.tar.zst");
+  return artifacts.some(artifact => artifact.name == "public/image.tar");
 }
 
 async function findTaskWithImageArtifact(ns) {
@@ -41,10 +41,10 @@ export async function buildTask({name, path}) {
       HASH: hash
     },
     artifacts: {
-      "public/image.tar.zst": {
+      "public/image.tar": {
         type: "file",
         expires: 24 * 90,
-        path: "/artifacts/image.tar.zst"
+        path: "/artifacts/image.tar"
       }
     },
     command: [

@@ -22,12 +22,6 @@
 #include "secitem.h"
 #include "blapii.h"
 
-/* The minimal required randomness is 64 bits */
-/* EXP_BLINDING_RANDOMNESS_LEN is the length of the randomness in mp_digits */
-/* for 32 bits platforts it is 2 mp_digits (= 2 * 32 bits), for 64 bits it is equal to 128 bits */
-#define EXP_BLINDING_RANDOMNESS_LEN ((128 + MP_DIGIT_BIT - 1) / MP_DIGIT_BIT)
-#define EXP_BLINDING_RANDOMNESS_LEN_BYTES (EXP_BLINDING_RANDOMNESS_LEN * sizeof(mp_digit))
-
 /*
 ** Number of times to attempt to generate a prime (p or q) from a random
 ** seed (the seed changes for each iteration).
@@ -1009,13 +1003,6 @@ static SECStatus
 rsa_PrivateKeyOpCRTNoCheck(RSAPrivateKey *key, mp_int *m, mp_int *c)
 {
     mp_int p, q, d_p, d_q, qInv;
-    /*
-            The length of the randomness comes from the papers: 
-            https://link.springer.com/chapter/10.1007/978-3-642-29912-4_7
-            https://link.springer.com/chapter/10.1007/978-3-642-21554-4_5. 
-        */
-    mp_int blinding_dp, blinding_dq, r1, r2;
-    unsigned char random_block[EXP_BLINDING_RANDOMNESS_LEN_BYTES];
     mp_int m1, m2, h, ctmp;
     mp_err err = MP_OKAY;
     SECStatus rv = SECSuccess;
@@ -1028,11 +1015,6 @@ rsa_PrivateKeyOpCRTNoCheck(RSAPrivateKey *key, mp_int *m, mp_int *c)
     MP_DIGITS(&m2) = 0;
     MP_DIGITS(&h) = 0;
     MP_DIGITS(&ctmp) = 0;
-    MP_DIGITS(&blinding_dp) = 0;
-    MP_DIGITS(&blinding_dq) = 0;
-    MP_DIGITS(&r1) = 0;
-    MP_DIGITS(&r2) = 0;
-
     CHECK_MPI_OK(mp_init(&p));
     CHECK_MPI_OK(mp_init(&q));
     CHECK_MPI_OK(mp_init(&d_p));
@@ -1042,44 +1024,12 @@ rsa_PrivateKeyOpCRTNoCheck(RSAPrivateKey *key, mp_int *m, mp_int *c)
     CHECK_MPI_OK(mp_init(&m2));
     CHECK_MPI_OK(mp_init(&h));
     CHECK_MPI_OK(mp_init(&ctmp));
-    CHECK_MPI_OK(mp_init(&blinding_dp));
-    CHECK_MPI_OK(mp_init(&blinding_dq));
-    CHECK_MPI_OK(mp_init_size(&r1, EXP_BLINDING_RANDOMNESS_LEN));
-    CHECK_MPI_OK(mp_init_size(&r2, EXP_BLINDING_RANDOMNESS_LEN));
-
     /* copy private key parameters into mp integers */
     SECITEM_TO_MPINT(key->prime1, &p);         /* p */
     SECITEM_TO_MPINT(key->prime2, &q);         /* q */
     SECITEM_TO_MPINT(key->exponent1, &d_p);    /* d_p  = d mod (p-1) */
     SECITEM_TO_MPINT(key->exponent2, &d_q);    /* d_q  = d mod (q-1) */
     SECITEM_TO_MPINT(key->coefficient, &qInv); /* qInv = q**-1 mod p */
-
-    // blinding_dp = 1
-    CHECK_MPI_OK(mp_set_int(&blinding_dp, 1));
-    // blinding_dp = p - 1
-    CHECK_MPI_OK(mp_sub(&p, &blinding_dp, &blinding_dp));
-    // generating a random value
-    RNG_GenerateGlobalRandomBytes(random_block, EXP_BLINDING_RANDOMNESS_LEN_BYTES);
-    MP_USED(&r1) = EXP_BLINDING_RANDOMNESS_LEN;
-    memcpy(MP_DIGITS(&r1), random_block, sizeof(random_block));
-    // blinding_dp = random * (p - 1)
-    CHECK_MPI_OK(mp_mul(&blinding_dp, &r1, &blinding_dp));
-    //d_p = d_p + random * (p - 1)
-    CHECK_MPI_OK(mp_add(&d_p, &blinding_dp, &d_p));
-
-    // blinding_dq = 1
-    CHECK_MPI_OK(mp_set_int(&blinding_dq, 1));
-    // blinding_dq = q - 1
-    CHECK_MPI_OK(mp_sub(&q, &blinding_dq, &blinding_dq));
-    // generating a random value
-    RNG_GenerateGlobalRandomBytes(random_block, EXP_BLINDING_RANDOMNESS_LEN_BYTES);
-    memcpy(MP_DIGITS(&r2), random_block, sizeof(random_block));
-    MP_USED(&r2) = EXP_BLINDING_RANDOMNESS_LEN;
-    // blinding_dq = random * (q - 1)
-    CHECK_MPI_OK(mp_mul(&blinding_dq, &r2, &blinding_dq));
-    //d_q = d_q + random * (q-1)
-    CHECK_MPI_OK(mp_add(&d_q, &blinding_dq, &d_q));
-
     /* 1. m1 = c**d_p mod p */
     CHECK_MPI_OK(mp_mod(c, &p, &ctmp));
     CHECK_MPI_OK(mp_exptmod(&ctmp, &d_p, &p, &m1));
@@ -1102,10 +1052,6 @@ cleanup:
     mp_clear(&m2);
     mp_clear(&h);
     mp_clear(&ctmp);
-    mp_clear(&blinding_dp);
-    mp_clear(&blinding_dq);
-    mp_clear(&r1);
-    mp_clear(&r2);
     if (err) {
         MP_TO_SEC_ERROR(err);
         rv = SECFailure;
