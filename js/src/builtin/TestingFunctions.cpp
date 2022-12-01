@@ -946,21 +946,27 @@ static bool WasmCompileMode(JSContext* cx, unsigned argc, Value* vp) {
 
   JSStringBuilder result(cx);
   if (none && !result.append("none")) {
+    result.failure();
     return false;
   }
   if (baseline && !result.append("baseline")) {
+    result.failure();
     return false;
   }
   if (tiered && !result.append("+")) {
+    result.failure();
     return false;
   }
   if (ion && !result.append("ion")) {
+    result.failure();
     return false;
   }
   if (JSString* str = result.finishString()) {
+    result.ok();
     args.rval().setString(str);
     return true;
   }
+  result.failure();
   return false;
 }
 
@@ -970,17 +976,21 @@ static bool WasmBaselineDisabledByFeatures(JSContext* cx, unsigned argc,
   bool isDisabled = false;
   JSStringBuilder reason(cx);
   if (!wasm::BaselineDisabledByFeatures(cx, &isDisabled, &reason)) {
+    reason.failure();
     return false;
   }
   if (isDisabled) {
     JSString* result = reason.finishString();
     if (!result) {
+      reason.failure();
       return false;
     }
     args.rval().setString(result);
   } else {
+    reason.failure();
     args.rval().setBoolean(false);
   }
+  reason.ok();
   return true;
 }
 
@@ -989,17 +999,21 @@ static bool WasmIonDisabledByFeatures(JSContext* cx, unsigned argc, Value* vp) {
   bool isDisabled = false;
   JSStringBuilder reason(cx);
   if (!wasm::IonDisabledByFeatures(cx, &isDisabled, &reason)) {
+    reason.failure();
     return false;
   }
   if (isDisabled) {
     JSString* result = reason.finishString();
     if (!result) {
+      reason.failure();
       return false;
     }
     args.rval().setString(result);
   } else {
+    reason.failure();
     args.rval().setBoolean(false);
   }
+  reason.ok();
   return true;
 }
 
@@ -1716,14 +1730,17 @@ static bool DisassembleNative(JSContext* cx, unsigned argc, Value* vp) {
   jit::Disassemble(jit_begin, jit_end - jit_begin, &captureDisasmText);
 
   if (buf.oom) {
+    buf.builder.failure();
     ReportOutOfMemory(cx);
     return false;
   }
   JSString* sresult = buf.builder.finishString();
   if (!sresult) {
+    buf.builder.failure();
     ReportOutOfMemory(cx);
     return false;
   }
+  buf.builder.ok();
   sprinter.putString(sresult);
 
   if (args.length() > 1 && args[1].isString()) {
@@ -1789,14 +1806,17 @@ static bool DisassembleIt(JSContext* cx, bool asString, MutableHandleValue rval,
     auto onFinish = mozilla::MakeScopeExit([&] { disasmBuf.set(nullptr); });
     disassembleIt(captureDisasmText);
     if (buf.oom) {
+      buf.builder.failure();
       ReportOutOfMemory(cx);
       return false;
     }
     JSString* sresult = buf.builder.finishString();
     if (!sresult) {
+      buf.builder.failure();
       ReportOutOfMemory(cx);
       return false;
     }
+    buf.builder.ok();
     rval.setString(sresult);
     return true;
   }
