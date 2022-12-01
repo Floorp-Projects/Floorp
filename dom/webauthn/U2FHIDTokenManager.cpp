@@ -103,7 +103,8 @@ void U2FHIDTokenManager::Drop() {
 // *      attestation signature
 //
 RefPtr<U2FRegisterPromise> U2FHIDTokenManager::Register(
-    const WebAuthnMakeCredentialInfo& aInfo, bool aForceNoneAttestation) {
+    const WebAuthnMakeCredentialInfo& aInfo, bool aForceNoneAttestation,
+    void _status_callback(rust_ctap2_status_update_res*)) {
   mozilla::ipc::AssertIsOnBackgroundThread();
 
   uint64_t registerFlags = 0;
@@ -209,7 +210,8 @@ RefPtr<U2FRegisterPromise> U2FHIDTokenManager::Register(
 //  *     Signature
 //
 RefPtr<U2FSignPromise> U2FHIDTokenManager::Sign(
-    const WebAuthnGetAssertionInfo& aInfo) {
+    const WebAuthnGetAssertionInfo& aInfo,
+    void _status_callback(rust_ctap2_status_update_res*)) {
   mozilla::ipc::AssertIsOnBackgroundThread();
 
   CryptoBuffer rpIdHash, clientDataHash;
@@ -411,7 +413,9 @@ void U2FHIDTokenManager::HandleSignResult(UniquePtr<U2FResult>&& aResult) {
   WebAuthnGetAssertionResult result(mTransaction.ref().mClientDataJSON,
                                     keyHandle, signatureBuf, authenticatorData,
                                     extensions, rawSignatureBuf, userHandle);
-  mSignPromise.Resolve(std::move(result), __func__);
+  nsTArray<WebAuthnGetAssertionResultWrapper> results = {
+      {result, mozilla::Nothing()}};
+  mSignPromise.Resolve(std::move(results), __func__);
 }
 
 }  // namespace mozilla::dom

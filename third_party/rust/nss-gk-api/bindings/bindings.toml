@@ -1,0 +1,280 @@
+# In this file, every section corresponds to a header file.
+# A corresponding binding file will be created in $OUT_DIR.
+#
+# This configuration is processed by build.rs to populate `exclude` for each
+# header with the types/variables/functions/enums declared for generation in
+# other headers.
+
+[nspr_types]
+types = [
+    "PRBool",
+    "PRIntn",
+    "PRInt16",
+    "PRInt32",
+    "PRInt64",
+    "PROffset32",
+    "PROffset64",
+    "PRSize",
+    "PRStatus",
+    "PRUintn",
+    "PRUint8",
+    "PRUint16",
+    "PRUint32",
+    "PRUint64",
+    "PRUword",
+]
+variables = [
+    "PR_FALSE",
+    "PR_TRUE",
+]
+
+[nss_prelude]
+types = [
+    "SECItem",
+    "SECItemArray",
+    "SECItemStr",
+    "SECStatus",
+]
+functions = [
+    "SECITEM_FreeItem",
+]
+enums = [
+    "_SECStatus",
+    "SECItemType",
+]
+
+[nss_ssl]
+types = [
+    "SSLAlertDescription",
+    "SSLExtensionType",
+    "SSLNamedGroup",
+    "SSLProtocolVariant",
+    "SSLSignatureScheme",
+]
+functions = [
+    "SSL_AlertSentCallback",
+    "SSL_AuthCertificateComplete",
+    "SSL_AuthCertificateHook",
+    "SSL_CipherPrefSet",
+    "SSL_ConfigServerCert",
+    "SSL_ConfigServerSessionIDCache",
+    "SSL_DestroyResumptionTokenInfo",
+    "SSL_GetChannelInfo",
+    "SSL_GetImplementedCiphers",
+    "SSL_GetNextProto",
+    "SSL_GetNumImplementedCiphers",
+    "SSL_GetPreliminaryChannelInfo",
+    "SSL_GetResumptionTokenInfo",
+    "SSL_ForceHandshake",
+    "SSL_ImportFD",
+    "SSL_NamedGroupConfig",
+    "SSL_OptionSet",
+    "SSL_OptionGetDefault",
+    "SSL_PeerCertificate",
+    "SSL_PeerCertificateChain",
+    "SSL_PeerSignedCertTimestamps",
+    "SSL_PeerStapledOCSPResponses",
+    "SSL_ResetHandshake",
+    "SSL_SetNextProtoNego",
+    "SSL_SetURL",
+    "SSL_VersionRangeSet",
+]
+enums = [
+    "SSLAuthType",
+    "SSLCipherAlgorithm",
+    "SSLCompressionMethod",
+    "SSLExtensionType",
+    "SSLKEAType",
+    "SSLMACAlgorithm",
+    "SSLNamedGroup",
+    "SSLNextProtoState",
+    "SSLProtocolVariant",
+    "SSLSignatureScheme",
+]
+variables = [
+    "SSL_LIBRARY_VERSION_TLS_\\d_\\d",
+    "SSL_NumImplementedCiphers",
+    "ssl_preinfo_.*",
+]
+opaque = [
+    "SSLExtraServerCertData",
+]
+
+[nss_sslopt]
+variables = [
+    "SSL_REQUEST_CERTIFICATE",
+    "SSL_REQUIRE_CERTIFICATE",
+    "SSL_NO_LOCKS",
+    "SSL_ENABLE_SESSION_TICKETS",
+    "SSL_ENABLE_OCSP_STAPLING",
+    "SSL_ENABLE_ALPN",
+    "SSL_ENABLE_EXTENDED_MASTER_SECRET",
+    "SSL_ENABLE_SIGNED_CERT_TIMESTAMPS",
+    "SSL_ENABLE_0RTT_DATA",
+    "SSL_RECORD_SIZE_LIMIT",
+    "SSL_ENABLE_TLS13_COMPAT_MODE",
+    "SSL_ENABLE_HELLO_DOWNGRADE_CHECK",
+    "SSL_SUPPRESS_END_OF_EARLY_DATA",
+]
+
+[nss_ciphers]
+variables = ["TLS_.*"]
+exclude = [
+    ".*_(?:EXPORT(?:1024)?|anon|DES|RC4)_.*",
+    ".*_(?:MD5|NULL_SHA)",
+]
+
+[nss_secerr]
+types = ["SECErrorCodes"]
+enums = ["SECErrorCodes"]
+
+[nss_sslerr]
+types = ["SSLErrorCodes"]
+enums = ["SSLErrorCodes"]
+
+[nss_init]
+functions = [
+    "NSS_Initialize",
+    "NSS_IsInitialized",
+    "NSS_NoDB_Init",
+    "NSS_SetDomesticPolicy",
+    "NSS_Shutdown",
+    "NSS_VersionCheck",
+]
+variables = [
+    "NSS_INIT_READONLY",
+    "SECMOD_DB",
+]
+
+[nss_p11]
+types = [
+    "CERTCertList",
+    "CERTCertListNode",
+    "HpkeAeadId",
+    "HpkeKdfId",
+    "HpkeKemId",
+]
+functions = [
+    "CERT_DestroyCertificate",
+    "CERT_DestroyCertList",
+    "CERT_GetCertificateDer",
+    "PK11_CipherOp",
+    "PK11_CreateContextBySymKey",
+    "PK11_Decrypt",
+    "PK11_DestroyContext",
+    "PK11_DigestOp",
+    "PK11_DigestFinal",
+    "PK11_Encrypt",
+    "PK11_ExtractKeyValue",
+    "PK11_FindCertFromNickname",
+    "PK11_FindKeyByAnyCert",
+    "PK11_FreeSlot",
+    "PK11_FreeSymKey",
+    "PK11_GenerateKeyPairWithOpFlags",
+    "PK11_GenerateRandom",
+    "PK11_GetBlockSize",
+    "PK11_GetInternalSlot",
+    "PK11_GetKeyData",
+    "PK11_GetMechanism",
+    "PK11_HashBuf",
+    "PK11_HPKE_Serialize",
+    "PK11_ImportDataKey",
+    "PK11_ImportDERPrivateKeyInfoAndReturnKey",
+    "PK11_ImportSymKey",
+    "PK11_PubDeriveWithKDF",
+    "PK11_ReadRawAttribute",
+    "PK11_ReferenceSymKey",
+    "SECKEY_CopyPrivateKey",
+    "SECKEY_CopyPublicKey",
+    "SECKEY_DecodeDERSubjectPublicKeyInfo",
+    "SECKEY_DestroyPrivateKey",
+    "SECKEY_DestroyPublicKey",
+    "SECKEY_DestroySubjectPublicKeyInfo",
+    "SECKEY_ExtractPublicKey",
+    "SECKEY_ConvertToPublicKey",
+    "SECOID_FindOIDByTag",
+]
+enums = [
+    "HpkeAeadId",
+    "HpkeKdfId",
+    "HpkeKemId",
+    "PK11ObjectType",
+    "PK11Origin",
+    "SECOidTag",
+]
+opaque = [
+    "CERTCertificateStr",
+    "PK11ContextStr",
+    "PK11SlotInfoStr",
+    "PK11SymKeyStr",
+    "SECKEYPrivateKeyStr",
+    "SECKEYPublicKeyStr",
+]
+variables = [
+    "AES_BLOCK_SIZE",
+    "PK11_ATTR_INSENSITIVE",
+    "PK11_ATTR_PRIVATE",
+    "PK11_ATTR_PUBLIC",
+    "PK11_ATTR_SENSITIVE",
+    "PK11_ATTR_SESSION",
+    "SEC_ASN1_OBJECT_ID",
+    "SHA256_LENGTH",
+]
+
+[nspr_err]
+variables = ["PR_.*_ERROR"]
+
+[nspr_error]
+types = [
+    "PRErrorCode",
+]
+functions = [
+    "PR_ErrorToName",
+    "PR_ErrorToString",
+    "PR_GetError",
+    "PR_SetError",
+]
+variables = [
+    "PR_LANGUAGE_I_DEFAULT",
+]
+
+[nspr_io]
+types = [
+    "PRFileDesc",
+    "PRFileInfo",
+    "PRFileInfo64",
+    "PRFilePrivate",
+    "PRIOMethods",
+    "PRIOVec",
+    "PRSeekFN",
+    "PRSeek64FN",
+]
+functions = [
+    "PR_Close",
+    "PR_CreateIOLayerStub",
+    "PR_GetUniqueIdentity",
+]
+variables = [
+    "PR_AF_INET",
+]
+# opaque is for the stuff we don't plan to use, but we need for function signatures.
+opaque = [
+    "PRFileDesc",
+    "PRFileInfo",
+    "PRFileInfo64",
+    "PRFilePrivate",
+    "PRIOVec",
+]
+enums = [
+    "PRDescType",
+    "PRSeekWhence",
+]
+
+[nspr_time]
+types = ["PRTime"]
+functions = ["PR_Now"]
+
+[mozpkix]
+cplusplus = true
+types = ["mozilla::pkix::ErrorCode"]
+enums = ["mozilla::pkix::ErrorCode"]

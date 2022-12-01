@@ -30,11 +30,16 @@ const uint8_t U2F_AUTHENTICATOR_TRANSPORT_NFC = 2;
 const uint8_t U2F_AUTHENTICATOR_TRANSPORT_BLE = 4;
 const uint8_t CTAP_AUTHENTICATOR_TRANSPORT_INTERNAL = 8;
 
+const uint8_t U2F_OK = 0;
 const uint8_t U2F_ERROR_UKNOWN = 1;
 const uint8_t U2F_ERROR_NOT_SUPPORTED = 2;
 const uint8_t U2F_ERROR_INVALID_STATE = 3;
 const uint8_t U2F_ERROR_CONSTRAINT = 4;
 const uint8_t U2F_ERROR_NOT_ALLOWED = 5;
+const uint8_t CTAP_ERROR_PIN_REQUIRED = 6;
+const uint8_t CTAP_ERROR_PIN_INVALID = 7;
+const uint8_t CTAP_ERROR_PIN_AUTH_BLOCKED = 8;
+const uint8_t CTAP_ERROR_PIN_BLOCKED = 9;
 
 // NOTE: Preconditions
 // * All rust_u2f_mgr* pointers must refer to pointers which are returned
@@ -45,7 +50,8 @@ const uint8_t U2F_ERROR_NOT_ALLOWED = 5;
 //   register() and sign() callbacks. They can be null on failure.
 
 // The `rust_u2f_mgr` opaque type is equivalent to the rust type `U2FManager`
-struct rust_u2f_manager;
+// TODO(MS): Once CTAP2 support is added, this should probably be renamed.
+struct rust_ctap_manager;
 
 // The `rust_u2f_app_ids` opaque type is equivalent to the rust type `U2FAppIds`
 struct rust_u2f_app_ids;
@@ -62,10 +68,10 @@ typedef void (*rust_u2f_callback)(uint64_t, rust_u2f_result*);
 
 /// U2FManager functions.
 
-rust_u2f_manager* rust_u2f_mgr_new();
-/* unsafe */ void rust_u2f_mgr_free(rust_u2f_manager* mgr);
+rust_ctap_manager* rust_u2f_mgr_new();
+/* unsafe */ void rust_u2f_mgr_free(rust_ctap_manager* mgr);
 
-uint64_t rust_u2f_mgr_register(rust_u2f_manager* mgr, uint64_t flags,
+uint64_t rust_u2f_mgr_register(rust_ctap_manager* mgr, uint64_t flags,
                                uint64_t timeout, rust_u2f_callback,
                                const uint8_t* challenge_ptr,
                                size_t challenge_len,
@@ -73,13 +79,13 @@ uint64_t rust_u2f_mgr_register(rust_u2f_manager* mgr, uint64_t flags,
                                size_t application_len,
                                const rust_u2f_key_handles* khs);
 
-uint64_t rust_u2f_mgr_sign(rust_u2f_manager* mgr, uint64_t flags,
+uint64_t rust_u2f_mgr_sign(rust_ctap_manager* mgr, uint64_t flags,
                            uint64_t timeout, rust_u2f_callback,
                            const uint8_t* challenge_ptr, size_t challenge_len,
                            const rust_u2f_app_ids* app_ids,
                            const rust_u2f_key_handles* khs);
 
-void rust_u2f_mgr_cancel(rust_u2f_manager* mgr);
+void rust_u2f_mgr_cancel(rust_ctap_manager* mgr);
 
 /// U2FAppIds functions.
 
@@ -103,9 +109,11 @@ uint8_t rust_u2f_result_error(const rust_u2f_result* res);
 // Call this before `[..]_copy()` to allocate enough space.
 bool rust_u2f_resbuf_length(const rust_u2f_result* res, uint8_t bid,
                             size_t* len);
+bool rust_u2f_resbuf_contains(const rust_u2f_result* res, uint8_t bid);
 bool rust_u2f_resbuf_copy(const rust_u2f_result* res, uint8_t bid,
                           uint8_t* dst);
 /* unsafe */ void rust_u2f_res_free(rust_u2f_result* res);
+
 }
 
 #endif  // __U2FHID_CAPI

@@ -106,6 +106,10 @@ void encoder::write_bytes(const unsigned char *data, unsigned int size) {
     _out->put_bytes(data, size);
 }
 
+void encoder::write_raw(const unsigned char *data, unsigned int size) {
+    _out->put_bytes(data, size);
+}
+
 void encoder::write_string(const char *data, unsigned int size) {
     write_type_value(3, size);
     _out->put_bytes((const unsigned char *) data, size);
