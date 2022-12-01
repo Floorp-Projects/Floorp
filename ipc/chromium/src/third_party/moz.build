@@ -24,7 +24,7 @@ UNIFIED_SOURCES += [
     'libevent/event_tagging.c',
     'libevent/evmap.c',
     'libevent/evthread.c',
-    'libevent/evthread_pthread.c',
+    # 'libevent/evthread_pthread.c', # Unused file.
     'libevent/evutil.c',
     'libevent/evutil_rand.c',
     'libevent/evutil_time.c',
