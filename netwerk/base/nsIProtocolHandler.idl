@@ -71,6 +71,16 @@ interface nsIProtocolHandler : nsISupports
       nsCOMPtr<nsIProtocolHandlerWithDynamicFlags> dh = do_QueryInterface(this);
       nsresult rv = dh ? dh->GetFlagsForURI(aURI, aFlags) : GetProtocolFlags(aFlags);
       if (NS_SUCCEEDED(rv)) {
+#ifdef DEBUG
+        if (dh) {
+          uint32_t staticFlags;
+          MOZ_ASSERT(NS_SUCCEEDED(GetProtocolFlags(&staticFlags)));
+          MOZ_ASSERT((staticFlags & ~nsIProtocolHandler::DYNAMIC_URI_FLAGS) ==
+                         (*aFlags & ~nsIProtocolHandler::DYNAMIC_URI_FLAGS),
+                     "only DYNAMIC_URI_FLAGS may be changed by a "
+                     "nsIProtocolHandlerWithDynamicFlags implementation");
+        }
+#endif
 #if !IS_ORIGIN_IS_FULL_SPEC_DEFINED
         MOZ_RELEASE_ASSERT(!(*aFlags & nsIProtocolHandler::ORIGIN_IS_FULL_SPEC),
                            "ORIGIN_IS_FULL_SPEC is unsupported but used");
@@ -316,4 +326,16 @@ interface nsIProtocolHandler : nsISupports
      * against an allowlist using ExtensionPolicyService::SourceMayLoadExtensionURI.
      */
     const unsigned long WEBEXT_URI_WEB_ACCESSIBLE = (1 << 24);
+
+    /**
+     * Flags which are allowed to be different from the static flags when
+     * returned from `nsIProtocolHandlerWithDynamicFlags::getFlagsForURI`.
+     *
+     * All other flags must match the `protocolFlags` attribute.
+     */
+    const unsigned long DYNAMIC_URI_FLAGS =
+        URI_LOADABLE_BY_ANYONE | URI_DANGEROUS_TO_LOAD |
+        URI_IS_POTENTIALLY_TRUSTWORTHY | URI_FETCHABLE_BY_ANYONE |
+        URI_LOADABLE_BY_EXTENSIONS | URI_DISALLOW_IN_PRIVATE_CONTEXT |
+        WEBEXT_URI_WEB_ACCESSIBLE;
 };
