@@ -466,6 +466,8 @@ endif
 endif
 endif
 
+SUGGEST_INSTALL_ON_FAILURE = (ret=$$?; if [ $$ret = 101 ]; then echo If $1 is not installed, install it using: cargo install $1; fi; exit $$ret)
+
 force-cargo-library-check:
 	$(call CARGO_CHECK) --lib $(cargo_target_flag) $(rust_features_flag)
 
@@ -473,10 +475,10 @@ force-cargo-library-clippy:
 	$(call CARGO_CLIPPY) --lib $(cargo_target_flag) $(rust_features_flag)
 
 force-cargo-library-audit:
-	$(call CARGO_AUDIT)
+	$(call CARGO_AUDIT) || $(call SUGGEST_INSTALL_ON_FAILURE,cargo-audit)
 
 force-cargo-library-udeps:
-	$(call CARGO_UDEPS) --lib $(cargo_target_flag) $(rust_features_flag)
+	$(call CARGO_UDEPS) --lib $(cargo_target_flag) $(rust_features_flag) || $(call SUGGEST_INSTALL_ON_FAILURE,cargo-udeps)
 else
 force-cargo-library-check:
 	@true
