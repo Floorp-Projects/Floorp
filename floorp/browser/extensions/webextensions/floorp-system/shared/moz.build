@@ -8,10 +8,18 @@ DEFINES["MOZ_APP_VERSION"] = CONFIG["MOZ_APP_VERSION"]
 DEFINES["MOZ_APP_MAXVERSION"] = CONFIG["MOZ_APP_MAXVERSION"]
 
 
+if CONFIG["OS_TARGET"] == "Darwin":
+    FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"] += [
+        "../macOS/manifest.json",
+    ]
+else:
+    FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"] += [
+        "manifest.json",
+    ]
+
 FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"] += [
     "browserAction-manage.js",
     "download-notification.js",
-    "manifest.json",
     "official-site-ua.js",
     "update.js",
     "webcompat.js",

@@ -9,16 +9,13 @@
     "notifications",
     "tabs",
     "storage",
-    "sessions",
-    "storage",
     "clipboardWrite",
-    "search",
-    "activeTab",
-    "browserSettings",
     "mozillaAddons",
     "about:*",
-    "about:reader*",
-    "downloads"
+    "downloads",
+    "webRequest",
+    "webRequestBlocking",
+    "<all_urls>"
   ],
   "experiment_apis": {
     "aboutConfigPrefs": {
@@ -36,7 +33,17 @@
         "script": "API/BrowserInfo.js",
         "paths": [["BrowserInfo"]]
       }
-   }
+    },
+    "webRequestExt": {
+      "schema": "API/webRequestExt.json",
+      "parent": {
+        "scopes": [
+          "addon_parent"
+        ],
+        "script": "API/webRequestExt.js",
+        "paths": [["webRequestExt"]]
+      }
+    }
   },
   "browser_action": {
 		"default_icon":  "icons/floorp.png",
@@ -52,7 +59,14 @@
     ]
   },
   "background": {
-    "scripts": ["background-script.js", "update.js"]
+    "scripts": [
+      "browserAction-manage.js",
+      "webcompat.js",
+      "official-site-ua.js",
+      "update.js",
+      "download-notification.js",
+      "webpanel-ua.js"
+    ]
   },
    "applications": {
      "gecko": {
