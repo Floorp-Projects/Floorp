@@ -366,6 +366,20 @@ class StringBuffer {
   char16_t* stealChars();
 };
 
+/*
+ * String builder that requires explicitly reporting any pending exception
+ * before leaving the scope.
+ *
+ * Before an instance of this class leaves the scope, you must call one of these
+ * 'completion' functions:
+ *
+ * - failure() if there are exceptions to report
+ * - ok() if there are no exceptions to report
+ *
+ * Additional errors from operating on the StringBuffer after calling these
+ * functions won't be reported unless you call one of the 'completion' functions
+ * again.
+ */
 class JSStringBuilder : public StringBuffer {
   OffThreadErrorContext ec_;
 #ifdef DEBUG
@@ -396,6 +410,8 @@ class JSStringBuilder : public StringBuffer {
   /*
    * Creates a string from the characters in this buffer, then (regardless
    * whether string creation succeeded or failed) empties the buffer.
+   *
+   * Returns nullptr if string creation failed.
    */
   JSLinearString* finishString();
 };
