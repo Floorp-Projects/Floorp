@@ -584,11 +584,9 @@ static sandbox::MitigationFlags DynamicCodeFlagForSystemMediaLibraries() {
     }
 #endif  // _M_X64
 
-#ifdef NIGHTLY_BUILD
     if (IsWin10AnniversaryUpdateOrLater()) {
       return sandbox::MITIGATION_DYNAMIC_CODE_DISABLE_WITH_OPT_OUT;
     }
-#endif  // NIGHTLY_BUILD
 
     return sandbox::MitigationFlags{};
   }();
@@ -1092,12 +1090,10 @@ bool SandboxBroker::SetSecurityLevelForRDDProcess() {
   mitigations = sandbox::MITIGATION_STRICT_HANDLE_CHECKS |
                 sandbox::MITIGATION_DLL_SEARCH_ORDER;
 
-// FIXME: When this goes to Release, add a preference that can disable the
-//        mitigation!
-#ifdef NIGHTLY_BUILD
-  // The RDD process depends on msmpeg2vdec.dll.
-  mitigations |= DynamicCodeFlagForSystemMediaLibraries();
-#endif  // NIGHTLY_BUILD
+  if (StaticPrefs::security_sandbox_rdd_acg_enabled()) {
+    // The RDD process depends on msmpeg2vdec.dll.
+    mitigations |= DynamicCodeFlagForSystemMediaLibraries();
+  }
 
   if (exceptionModules.isNothing()) {
     mitigations |= sandbox::MITIGATION_FORCE_MS_SIGNED_BINS;
@@ -1357,17 +1353,24 @@ bool SandboxBroker::SetSecurityLevelForUtilityProcess(
   mitigations = sandbox::MITIGATION_STRICT_HANDLE_CHECKS |
                 sandbox::MITIGATION_DLL_SEARCH_ORDER;
 
-  if (aSandbox == mozilla::ipc::SandboxingKind::UTILITY_AUDIO_DECODING_WMF) {
+  switch (aSandbox) {
+#ifdef MOZ_WMF
     // The audio decoder process depends on MsAudDecMFT.dll.
-    mitigations |= DynamicCodeFlagForSystemMediaLibraries();
-  }
+    case mozilla::ipc::SandboxingKind::UTILITY_AUDIO_DECODING_WMF:
+      if (StaticPrefs::security_sandbox_utility_wmf_acg_enabled()) {
+        mitigations |= DynamicCodeFlagForSystemMediaLibraries();
+      }
+      break;
+#endif  // MOZ_WMF
+
 #ifdef MOZ_WMF_MEDIA_ENGINE
-  // No ACG on CDM utility processes.
-  else if (aSandbox == mozilla::ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM) {
-  }
+    // No ACG on CDM utility processes.
+    case mozilla::ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM:
+      break;
 #endif  // MOZ_WMF_MEDIA_ENGINE
-  else {
-    mitigations |= sandbox::MITIGATION_DYNAMIC_CODE_DISABLE;
+
+    default:
+      mitigations |= sandbox::MITIGATION_DYNAMIC_CODE_DISABLE;
   }
 
   if (exceptionModules.isNothing()) {

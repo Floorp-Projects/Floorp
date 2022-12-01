@@ -12921,6 +12921,22 @@
     value: false
     mirror: always
 
+  # Whether Arbitrary Code Guard is enabled for the RDD process.
+-   name: security.sandbox.rdd.acg.enabled
+    type: RelaxedAtomicBool
+    value: true
+    mirror: always
+
+#  ifdef MOZ_WMF
+  # Whether Arbitrary Code Guard is enabled for the utility WMF audio decoder
+  # process.
+
+-   name: security.sandbox.utility-wmf.acg.enabled
+    type: RelaxedAtomicBool
+    value: true
+    mirror: always
+#  endif  // MOZ_WMF
+
   # This controls the depth of stack trace that is logged when Windows sandbox
   # logging is turned on. This is only currently available for the content
   # process because the only other sandbox (for GMP) has too strict a policy to
