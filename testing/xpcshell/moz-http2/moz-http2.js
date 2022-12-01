@@ -1851,6 +1851,14 @@ function handleRequest(req, res) {
     res.writeHead(200);
     res.end("");
     return;
+  } else if (u.pathname === "/origin_header") {
+    let originHeader = req.headers.origin;
+    res.setHeader("Content-Length", originHeader.length);
+    res.setHeader("Content-Type", "text/plain");
+    res.writeHead(200);
+    res.write(originHeader);
+    res.end();
+    return;
   }
 
   res.setHeader("Content-Type", "text/html");
