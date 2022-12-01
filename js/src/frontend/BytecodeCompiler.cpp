@@ -1140,7 +1140,8 @@ static GetCachedResult GetCachedLazyFunctionStencilMaybeInstantiate(
   }
 
   if (output.is<UniquePtr<ExtensibleCompilationStencil>>()) {
-    auto extensible = ec->getAllocator()->make_unique<ExtensibleCompilationStencil>(input);
+    auto extensible =
+        ec->getAllocator()->make_unique<ExtensibleCompilationStencil>(input);
     if (!extensible) {
       return GetCachedResult::Error;
     }
