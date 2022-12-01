@@ -17,6 +17,7 @@
 #include "nsError.h"
 #include "nsID.h"
 #include "nsIPrincipal.h"
+#include "PerformanceRecorder.h"
 
 namespace mozilla {
 
@@ -104,8 +105,12 @@ class MediaStreamTrackSource : public nsISupports {
     virtual ~Sink() = default;
   };
 
-  MediaStreamTrackSource(nsIPrincipal* aPrincipal, const nsString& aLabel)
-      : mPrincipal(aPrincipal), mLabel(aLabel), mStopped(false) {}
+  MediaStreamTrackSource(nsIPrincipal* aPrincipal, const nsString& aLabel,
+                         TrackingId aTrackingId)
+      : mPrincipal(aPrincipal),
+        mLabel(aLabel),
+        mTrackingId(std::move(aTrackingId)),
+        mStopped(false) {}
 
   /**
    * Use to clean up any resources that have to be cleaned before the
@@ -313,9 +318,15 @@ class MediaStreamTrackSource : public nsISupports {
   // Currently registered sinks.
   nsTArray<WeakPtr<Sink>> mSinks;
 
+ public:
   // The label of the track we are the source of per the MediaStreamTrack spec.
   const nsString mLabel;
 
+  // Set for all video sources; an id for tracking the source of the video
+  // frames for this track.
+  const TrackingId mTrackingId;
+
+ protected:
   // True if all MediaStreamTrack users have unregistered from this source and
   // Stop() has been called.
   bool mStopped;
@@ -329,7 +340,7 @@ class BasicTrackSource : public MediaStreamTrackSource {
   explicit BasicTrackSource(
       nsIPrincipal* aPrincipal,
       const MediaSourceEnum aMediaSource = MediaSourceEnum::Other)
-      : MediaStreamTrackSource(aPrincipal, nsString()),
+      : MediaStreamTrackSource(aPrincipal, nsString(), TrackingId()),
         mMediaSource(aMediaSource) {}
 
   MediaSourceEnum GetMediaSource() const override { return mMediaSource; }

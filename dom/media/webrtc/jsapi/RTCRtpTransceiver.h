@@ -185,7 +185,7 @@ class RTCRtpTransceiver : public nsISupports,
  private:
   virtual ~RTCRtpTransceiver();
   void InitAudio();
-  void InitVideo();
+  void InitVideo(const TrackingId& aRecvTrackingId);
   void InitConduitControl();
   void StopImpl();
 

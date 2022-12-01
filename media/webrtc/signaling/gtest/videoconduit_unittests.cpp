@@ -50,7 +50,7 @@ class VideoConduitTest : public Test {
       : mCallWrapper(MockCallWrapper::Create()),
         mVideoConduit(MakeRefPtr<WebrtcVideoConduit>(
             mCallWrapper, GetCurrentSerialEventTarget(), std::move(aOptions),
-            "")),
+            "", TrackingId(TrackingId::Source::Unimplemented, 0))),
         mControl(GetCurrentSerialEventTarget()) {
     NSS_NoDB_Init(nullptr);
 

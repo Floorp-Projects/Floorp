@@ -15,6 +15,7 @@
 #include "libwebrtcglue/RtpRtcpConfig.h"
 #include "nsTArray.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
+#include "PerformanceRecorder.h"
 #include "RTCStatsReport.h"
 #include <vector>
 
@@ -41,8 +42,8 @@ class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
                  PeerConnectionImpl* aPc,
                  MediaTransportHandler* aTransportHandler,
                  AbstractThread* aCallThread, nsISerialEventTarget* aStsThread,
-                 MediaSessionConduit* aConduit,
-                 RTCRtpTransceiver* aTransceiver);
+                 MediaSessionConduit* aConduit, RTCRtpTransceiver* aTransceiver,
+                 const TrackingId& aTrackingId);
 
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

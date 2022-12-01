@@ -136,7 +136,8 @@ class WebrtcVideoConduit
 
   WebrtcVideoConduit(RefPtr<WebrtcCallWrapper> aCall,
                      nsCOMPtr<nsISerialEventTarget> aStsThread,
-                     Options aOptions, std::string aPCHandle);
+                     Options aOptions, std::string aPCHandle,
+                     const TrackingId& aRecvTrackingId);
   virtual ~WebrtcVideoConduit();
 
   // Call thread.
@@ -286,6 +287,10 @@ class WebrtcVideoConduit
   // Socket transport service thread that runs stats queries against us. Any
   // thread.
   const nsCOMPtr<nsISerialEventTarget> mStsThread;
+
+  // Thread on which we are fed video frames. Set lazily on first call to
+  // SendVideoFrame().
+  nsCOMPtr<nsISerialEventTarget> mFrameSendingThread;
 
   struct Control {
     // Mirrors that map to VideoConduitControlInterface for control. Call thread

@@ -6,9 +6,61 @@
 
 #include "PerformanceRecorder.h"
 
+#include "base/process_util.h"
 #include "mozilla/Logging.h"
+#include "nsPrintfCString.h"
 
 namespace mozilla {
+
+static const char* SourceToStr(TrackingId::Source aSource) {
+  switch (aSource) {
+    case TrackingId::Source::Unimplemented:
+      MOZ_ASSERT_UNREACHABLE("Unimplemented TrackingId Source");
+      return "Unimplemented";
+    case TrackingId::Source::AudioDestinationNode:
+      return "AudioDestinationNode";
+    case TrackingId::Source::Camera:
+      return "CameraCapture";
+    case TrackingId::Source::Canvas:
+      return "CanvasCapture";
+    case TrackingId::Source::MediaElementDecoder:
+      return "MediaElementDecoderCapture";
+    case TrackingId::Source::MediaElementStream:
+      return "MediaElementStreamCapture";
+    case TrackingId::Source::RTCRtpReceiver:
+      return "RTCRtpReceiver";
+    case TrackingId::Source::Screen:
+      return "ScreenCapture";
+    case TrackingId::Source::Tab:
+      return "TabCapture";
+    case TrackingId::Source::Window:
+      return "WindowCapture";
+    case TrackingId::Source::LAST:
+      MOZ_ASSERT_UNREACHABLE("Invalid TrackingId Source");
+      return "Invalid";
+  }
+  MOZ_ASSERT_UNREACHABLE("Unexpected TrackingId Source");
+  return "Unexpected";
+}
+
+TrackingId::TrackingId() : mSource(Source::Unimplemented), mUniqueInProcId(0) {}
+
+TrackingId::TrackingId(
+    Source aSource, uint32_t aUniqueInProcId,
+    TrackAcrossProcesses aTrack /* = TrackAcrossProcesses::NO */)
+    : mSource(aSource),
+      mUniqueInProcId(aUniqueInProcId),
+      mProcId(aTrack == TrackAcrossProcesses::Yes
+                  ? Some(base::GetCurrentProcId())
+                  : Nothing()) {}
+
+nsCString TrackingId::ToString() const {
+  if (mProcId) {
+    return nsPrintfCString("%s-%u-%u", SourceToStr(mSource), *mProcId,
+                           mUniqueInProcId);
+  }
+  return nsPrintfCString("%s-%u", SourceToStr(mSource), mUniqueInProcId);
+}
 
 const char* StageToStr(MediaStage aStage) {
   switch (aStage) {
@@ -100,8 +152,9 @@ ProfilerString8View PlaybackStage::Name() const {
 
 ProfilerString8View CopyVideoStage::Name() const {
   if (!mName) {
-    mName = Some(nsPrintfCString("CopyVideoFrame %s %dx%d", mSource.Data(),
-                                 mWidth, mHeight));
+    mName =
+        Some(nsPrintfCString("CopyVideoFrame %s %dx%d %s", mSource.Data(),
+                             mWidth, mHeight, mTrackingId.ToString().get()));
   }
   return *mName;
 }

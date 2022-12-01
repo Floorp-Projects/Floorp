@@ -271,7 +271,8 @@ bool operator==(const webrtc::RtpConfig& aThis,
  */
 RefPtr<VideoSessionConduit> VideoSessionConduit::Create(
     RefPtr<WebrtcCallWrapper> aCall, nsCOMPtr<nsISerialEventTarget> aStsThread,
-    Options aOptions, std::string aPCHandle) {
+    Options aOptions, std::string aPCHandle,
+    const TrackingId& aRecvTrackingId) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aCall, "missing required parameter: aCall");
   CSFLogVerbose(LOGTAG, "%s", __FUNCTION__);
@@ -280,9 +281,9 @@ RefPtr<VideoSessionConduit> VideoSessionConduit::Create(
     return nullptr;
   }
 
-  auto obj =
-      MakeRefPtr<WebrtcVideoConduit>(std::move(aCall), std::move(aStsThread),
-                                     std::move(aOptions), std::move(aPCHandle));
+  auto obj = MakeRefPtr<WebrtcVideoConduit>(
+      std::move(aCall), std::move(aStsThread), std::move(aOptions),
+      std::move(aPCHandle), aRecvTrackingId);
   if (obj->Init() != kMediaConduitNoError) {
     CSFLogError(LOGTAG, "%s VideoConduit Init Failed ", __FUNCTION__);
     return nullptr;
@@ -314,7 +315,9 @@ WebrtcVideoConduit::Control::Control(const RefPtr<AbstractThread>& aCallThread)
 
 WebrtcVideoConduit::WebrtcVideoConduit(
     RefPtr<WebrtcCallWrapper> aCall, nsCOMPtr<nsISerialEventTarget> aStsThread,
-    Options aOptions, std::string aPCHandle)
+    Options aOptions, std::string aPCHandle,
+    // TODO(pehrsons): Use for decoders
+    const TrackingId& aRecvTrackingId)
     : mRendererMonitor("WebrtcVideoConduit::mRendererMonitor"),
       mCallThread(aCall->mCallThread),
       mStsThread(std::move(aStsThread)),

@@ -12,9 +12,10 @@ namespace mozilla {
 
 class RemoteTrackSource : public dom::MediaStreamTrackSource {
  public:
-  explicit RemoteTrackSource(SourceMediaTrack* aStream,
-                             nsIPrincipal* aPrincipal, const nsString& aLabel)
-      : dom::MediaStreamTrackSource(aPrincipal, aLabel), mStream(aStream) {}
+  RemoteTrackSource(SourceMediaTrack* aStream, nsIPrincipal* aPrincipal,
+                    const nsString& aLabel, TrackingId aTrackingId)
+      : dom::MediaStreamTrackSource(aPrincipal, aLabel, std::move(aTrackingId)),
+        mStream(aStream) {}
 
   dom::MediaSourceEnum GetMediaSource() const override {
     return dom::MediaSourceEnum::Other;

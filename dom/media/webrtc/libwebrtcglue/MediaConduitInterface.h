@@ -19,6 +19,7 @@
 #include "WebrtcVideoCodecFactory.h"
 #include "nsTArray.h"
 #include "mozilla/dom/RTCRtpSourcesBinding.h"
+#include "PerformanceRecorder.h"
 #include "transport/mediapacket.h"
 
 // libwebrtc includes
@@ -330,7 +331,7 @@ class VideoSessionConduit : public MediaSessionConduit {
   static RefPtr<VideoSessionConduit> Create(
       RefPtr<WebrtcCallWrapper> aCall,
       nsCOMPtr<nsISerialEventTarget> aStsThread, Options aOptions,
-      std::string aPCHandle);
+      std::string aPCHandle, const TrackingId& aRecvTrackingId);
 
   enum FrameRequestType {
     FrameRequestNone,

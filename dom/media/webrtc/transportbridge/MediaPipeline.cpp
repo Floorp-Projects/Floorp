@@ -923,6 +923,9 @@ void MediaPipelineTransmit::UpdateSendState() {
       mSendPortSource = mDomTrack.Ref()->GetTrack();
       mSendPort = mSendTrack->AllocateInputPort(mSendPortSource.get());
     }
+    if (mIsVideo) {
+      mConverter->SetTrackingId(mDomTrack.Ref()->GetSource().mTrackingId);
+    }
     mSendTrack->QueueSetAutoend(false);
     if (mIsVideo) {
       mSendTrack->AddDirectListener(mListener);
@@ -1172,6 +1175,7 @@ class GenericReceiveListener : public MediaTrackListener {
             "GenericReceiveListener::mTrackSource",
             &static_cast<RemoteTrackSource&>(aTrack->GetSource()))),
         mSource(mTrackSource->mStream),
+        mTrackingId(mTrackSource->mTrackingId),
         mIsAudio(aTrack->AsAudioStreamTrack()),
         mEnabled(false),
         mMaybeTrackNeedsUnmute(true) {
@@ -1228,6 +1232,7 @@ class GenericReceiveListener : public MediaTrackListener {
  protected:
   const nsMainThreadPtrHandle<RemoteTrackSource> mTrackSource;
   const RefPtr<SourceMediaTrack> mSource;
+  const TrackingId mTrackingId;
   const bool mIsAudio;
   // Main thread only.
   bool mEnabled;
@@ -1527,8 +1532,8 @@ class MediaPipelineReceiveVideo::PipelineListener
       MOZ_ASSERT(i420->DataY());
       // Create a video frame using |buffer|.
       PerformanceRecorder<CopyVideoStage> rec(
-          "MediaPipelineReceiveVideo::CopyToImage"_ns, i420->width(),
-          i420->height());
+          "MediaPipelineReceiveVideo::CopyToImage"_ns, mTrackingId,
+          i420->width(), i420->height());
 
       RefPtr<PlanarYCbCrImage> yuvImage =
           mImageContainer->CreatePlanarYCbCrImage();
