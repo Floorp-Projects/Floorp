@@ -15,9 +15,7 @@
 #include "mozilla/ExpandedPrincipal.h"
 #include "mozilla/NullPrincipal.h"
 #include "nsEffectiveTLDService.h"
-#include "nsIGlobalObject.h"
 #include "nsIIdentityCredentialPromptService.h"
-#include "nsIIdentityCredentialStorageService.h"
 #include "nsITimer.h"
 #include "nsIXPConnect.h"
 #include "nsNetUtil.h"
@@ -231,22 +229,6 @@ IdentityCredential::CreateCredential(nsIPrincipal* aPrincipal,
           })
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [argumentPrincipal, browsingContext,
-           aProvider](const Tuple<IdentityInternalManifest, IdentityAccount>&
-                          promiseResult) {
-            IdentityInternalManifest currentManifest;
-            IdentityAccount account;
-            Tie(currentManifest, account) = promiseResult;
-            return IdentityCredential::PromptUserWithPolicy(
-                browsingContext, argumentPrincipal, account, currentManifest,
-                aProvider);
-          },
-          [](nsresult error) {
-            return IdentityCredential::GetAccountPromise::CreateAndReject(
-                error, __func__);
-          })
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
           [argumentPrincipal,
            aProvider](const Tuple<IdentityInternalManifest, IdentityAccount>&
                           promiseResult) {
@@ -328,7 +310,7 @@ IdentityCredential::CheckRootManifest(nsIPrincipal* aPrincipal,
   }
 
   // Create a new request
-  constexpr auto fragment = ""_ns;
+  nsCString fragment = ""_ns;
   auto internalRequest =
       MakeSafeRefPtr<InternalRequest>(manifestURIString, fragment);
   internalRequest->SetCredentialsMode(RequestCredentials::Omit);
@@ -393,7 +375,7 @@ IdentityCredential::FetchInternalManifest(nsIPrincipal* aPrincipal,
   }
 
   // Create a new request
-  constexpr auto fragment = ""_ns;
+  nsCString fragment = ""_ns;
   auto internalRequest =
       MakeSafeRefPtr<InternalRequest>(configLocation, fragment);
   internalRequest->SetRedirectMode(RequestRedirect::Error);
@@ -460,7 +442,7 @@ IdentityCredential::FetchAccountList(
   }
 
   // Create a new request
-  constexpr auto fragment = ""_ns;
+  nsCString fragment = ""_ns;
   auto internalRequest =
       MakeSafeRefPtr<InternalRequest>(configLocation, fragment);
   internalRequest->SetRedirectMode(RequestRedirect::Error);
@@ -515,7 +497,7 @@ RefPtr<IdentityCredential::GetTokenPromise> IdentityCredential::FetchToken(
   }
 
   // Create a new request
-  constexpr auto fragment = ""_ns;
+  nsCString fragment = ""_ns;
   auto internalRequest =
       MakeSafeRefPtr<InternalRequest>(tokenLocation, fragment);
   internalRequest->SetMethod("POST"_ns);
@@ -566,53 +548,6 @@ RefPtr<IdentityCredential::GetTokenPromise> IdentityCredential::FetchToken(
         return IdentityCredential::GetTokenPromise::CreateAndReject(error,
                                                                     __func__);
       });
-}
-
-// static
-RefPtr<IdentityCredential::GetMetadataPromise>
-IdentityCredential::FetchMetadata(nsIPrincipal* aPrincipal,
-                                  const IdentityInternalManifest& aManifest) {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  MOZ_ASSERT(aPrincipal);
-  // Build the URL
-  nsCString configLocation =
-      NS_ConvertUTF16toUTF8(aManifest.mClient_metadata_endpoint);
-
-  // Create the global
-  nsIXPConnect* xpc = nsContentUtils::XPConnect();
-  MOZ_ASSERT(xpc, "This should never be null!");
-  nsCOMPtr<nsIGlobalObject> global;
-  AutoJSAPI jsapi;
-  jsapi.Init();
-  JSContext* cx = jsapi.cx();
-  JS::Rooted<JSObject*> sandbox(cx);
-  nsresult rv = xpc->CreateSandbox(cx, aPrincipal, sandbox.address());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return IdentityCredential::GetMetadataPromise::CreateAndReject(rv,
-                                                                   __func__);
-  }
-  MOZ_ASSERT(JS_IsGlobalObject(sandbox));
-  global = xpc::NativeGlobal(sandbox);
-  if (NS_WARN_IF(!global)) {
-    return IdentityCredential::GetMetadataPromise::CreateAndReject(
-        NS_ERROR_FAILURE, __func__);
-  }
-
-  // Create a new request
-  constexpr auto fragment = ""_ns;
-  auto internalRequest =
-      MakeSafeRefPtr<InternalRequest>(configLocation, fragment);
-  internalRequest->SetRedirectMode(RequestRedirect::Error);
-  internalRequest->SetCredentialsMode(RequestCredentials::Omit);
-  internalRequest->SetReferrerPolicy(ReferrerPolicy::No_referrer);
-  internalRequest->SetMode(RequestMode::Cors);
-  internalRequest->SetCacheMode(RequestCache::No_cache);
-  internalRequest->SetHeaders(new InternalHeaders(HeadersGuardEnum::Request));
-  internalRequest->OverrideContentPolicyType(
-      nsContentPolicyType::TYPE_WEB_IDENTITY);
-  RefPtr<Request> request =
-      new Request(global, std::move(internalRequest), nullptr);
-  return FetchJSONStructure<IdentityClientMetadata>(request);
 }
 
 // static
@@ -729,136 +664,6 @@ IdentityCredential::PromptUserToSelectAccount(
 }
 
 // static
-RefPtr<IdentityCredential::GetAccountPromise>
-IdentityCredential::PromptUserWithPolicy(
-    BrowsingContext* aBrowsingContext, nsIPrincipal* aPrincipal,
-    const IdentityAccount& aAccount, const IdentityInternalManifest& aManifest,
-    const IdentityProvider& aProvider) {
-  MOZ_ASSERT(aBrowsingContext);
-  MOZ_ASSERT(aPrincipal);
-
-  nsresult error;
-  nsCOMPtr<nsIIdentityCredentialStorageService> icStorageService =
-      mozilla::components::IdentityCredentialStorageService::Service(&error);
-  if (NS_WARN_IF(!icStorageService)) {
-    return IdentityCredential::GetAccountPromise::CreateAndReject(error,
-                                                                  __func__);
-  }
-
-  // Check the storage bit
-  nsCString configLocation =
-      NS_ConvertUTF16toUTF8(aManifest.mAccounts_endpoint);
-  nsCOMPtr<nsIURI> idpURI;
-  error = NS_NewURI(getter_AddRefs(idpURI), configLocation);
-  if (NS_WARN_IF(NS_FAILED(error))) {
-    return IdentityCredential::GetAccountPromise::CreateAndReject(error,
-                                                                  __func__);
-  }
-  bool registered = false;
-  bool allowLogout = false;
-  nsCOMPtr<nsIPrincipal> idpPrincipal = BasePrincipal::CreateContentPrincipal(
-      idpURI, aPrincipal->OriginAttributesRef());
-  error = icStorageService->GetState(aPrincipal, idpPrincipal,
-                                     NS_ConvertUTF16toUTF8(aAccount.mId),
-                                     &registered, &allowLogout);
-  if (NS_WARN_IF(NS_FAILED(error))) {
-    return IdentityCredential::GetAccountPromise::CreateAndReject(error,
-                                                                  __func__);
-  }
-
-  // if registered, mark as logged in and return
-  if (registered) {
-    icStorageService->SetState(aPrincipal, idpPrincipal,
-                               NS_ConvertUTF16toUTF8(aAccount.mId), true, true);
-    return IdentityCredential::GetAccountPromise::CreateAndResolve(
-        MakeTuple(aManifest, aAccount), __func__);
-  }
-
-  // otherwise, fetch ->Then display ->Then return ->Catch reject
-  RefPtr<BrowsingContext> browsingContext(aBrowsingContext);
-  nsCOMPtr<nsIPrincipal> argumentPrincipal(aPrincipal);
-  return FetchMetadata(aPrincipal, aManifest)
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [aAccount, aProvider, argumentPrincipal, browsingContext,
-           icStorageService,
-           idpPrincipal](const IdentityClientMetadata& metadata)
-              -> RefPtr<GenericPromise> {
-            nsresult error;
-            nsCOMPtr<nsIIdentityCredentialPromptService> icPromptService =
-                mozilla::components::IdentityCredentialPromptService::Service(
-                    &error);
-            if (NS_WARN_IF(!icPromptService)) {
-              return GenericPromise::CreateAndReject(error, __func__);
-            }
-            nsCOMPtr<nsIXPConnectWrappedJS> wrapped =
-                do_QueryInterface(icPromptService);
-            AutoJSAPI jsapi;
-            if (NS_WARN_IF(!jsapi.Init(wrapped->GetJSObjectGlobal()))) {
-              return GenericPromise::CreateAndReject(NS_ERROR_FAILURE,
-                                                     __func__);
-            }
-
-            JS::Rooted<JS::Value> providerJS(jsapi.cx());
-            bool success = ToJSValue(jsapi.cx(), aProvider, &providerJS);
-            if (NS_WARN_IF(!success)) {
-              return GenericPromise::CreateAndReject(NS_ERROR_FAILURE,
-                                                     __func__);
-            }
-            JS::Rooted<JS::Value> metadataJS(jsapi.cx());
-            success = ToJSValue(jsapi.cx(), metadata, &metadataJS);
-            if (NS_WARN_IF(!success)) {
-              return GenericPromise::CreateAndReject(NS_ERROR_FAILURE,
-                                                     __func__);
-            }
-
-            RefPtr<Promise> showPromptPromise;
-            icPromptService->ShowPolicyPrompt(
-                browsingContext, providerJS, metadataJS,
-                getter_AddRefs(showPromptPromise));
-
-            RefPtr<GenericPromise::Private> resultPromise =
-                new GenericPromise::Private(__func__);
-            RefPtr<DomPromiseListener> listener = new DomPromiseListener(
-                [aAccount, argumentPrincipal, idpPrincipal, resultPromise,
-                 icStorageService](JSContext* aCx,
-                                   JS::Handle<JS::Value> aValue) {
-                  bool isBool = aValue.isBoolean();
-                  if (!isBool) {
-                    resultPromise->Reject(NS_ERROR_FAILURE, __func__);
-                    return;
-                  }
-                  icStorageService->SetState(
-                      argumentPrincipal, idpPrincipal,
-                      NS_ConvertUTF16toUTF8(aAccount.mId), true, true);
-                  resultPromise->Resolve(aValue.toBoolean(), __func__);
-                },
-                [resultPromise](nsresult aRv) {
-                  resultPromise->Reject(aRv, __func__);
-                });
-            showPromptPromise->AppendNativeHandler(listener);
-            return resultPromise;
-          },
-          [](nsresult error) {
-            return GenericPromise::CreateAndReject(error, __func__);
-          })
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [aManifest, aAccount](bool success) {
-            if (success) {
-              return IdentityCredential::GetAccountPromise::CreateAndResolve(
-                  MakeTuple(aManifest, aAccount), __func__);
-            }
-            return IdentityCredential::GetAccountPromise::CreateAndReject(
-                NS_ERROR_FAILURE, __func__);
-          },
-          [](nsresult error) {
-            return IdentityCredential::GetAccountPromise::CreateAndReject(
-                error, __func__);
-          });
-}
-
-// static
 void IdentityCredential::CloseUserInterface(BrowsingContext* aBrowsingContext) {
   nsresult error;
   nsCOMPtr<nsIIdentityCredentialPromptService> icPromptService =
@@ -867,69 +672,6 @@ void IdentityCredential::CloseUserInterface(BrowsingContext* aBrowsingContext) {
     return;
   }
   icPromptService->Close(aBrowsingContext);
-}
-
-// static
-already_AddRefed<Promise> IdentityCredential::LogoutRPs(
-    GlobalObject& aGlobal,
-    const Sequence<IdentityCredentialLogoutRPsRequest>& aLogoutRequests,
-    ErrorResult& aRv) {
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  RefPtr<Promise> promise = Promise::CreateResolvedWithUndefined(global, aRv);
-  NS_ENSURE_FALSE(aRv.Failed(), nullptr);
-  nsresult rv;
-  nsCOMPtr<nsIIdentityCredentialStorageService> icStorageService =
-      components::IdentityCredentialStorageService::Service(&rv);
-  if (NS_WARN_IF(!icStorageService)) {
-    aRv.Throw(rv);
-    return nullptr;
-  }
-
-  RefPtr<nsIPrincipal> rpPrincipal = global->PrincipalOrNull();
-  for (const auto& request : aLogoutRequests) {
-    // Get the current state
-    nsCOMPtr<nsIURI> idpURI;
-    rv = NS_NewURI(getter_AddRefs(idpURI), request.mUrl);
-    if (NS_FAILED(rv)) {
-      aRv.ThrowTypeError<MSG_INVALID_URL>(request.mUrl);
-      return nullptr;
-    }
-    nsCOMPtr<nsIPrincipal> idpPrincipal = BasePrincipal::CreateContentPrincipal(
-        idpURI, rpPrincipal->OriginAttributesRef());
-    bool registered, allowLogout;
-    icStorageService->GetState(rpPrincipal, idpPrincipal, request.mAccountId,
-                               &registered, &allowLogout);
-
-    // Ignore this request if it isn't permitted
-    if (!(registered && allowLogout)) {
-      continue;
-    }
-
-    // Issue the logout request
-    constexpr auto fragment = ""_ns;
-    auto internalRequest =
-        MakeSafeRefPtr<InternalRequest>(request.mUrl, fragment);
-    internalRequest->SetRedirectMode(RequestRedirect::Error);
-    internalRequest->SetCredentialsMode(RequestCredentials::Include);
-    internalRequest->SetReferrerPolicy(ReferrerPolicy::Strict_origin);
-    internalRequest->SetMode(RequestMode::Cors);
-    internalRequest->SetCacheMode(RequestCache::No_cache);
-    internalRequest->OverrideContentPolicyType(
-        nsContentPolicyType::TYPE_WEB_IDENTITY);
-    RefPtr<Request> domRequest =
-        new Request(global, std::move(internalRequest), nullptr);
-    RequestOrUSVString fetchInput;
-    fetchInput.SetAsRequest() = domRequest;
-    RootedDictionary<RequestInit> requestInit(RootingCx());
-    IgnoredErrorResult error;
-    RefPtr<Promise> fetchPromise = FetchRequest(global, fetchInput, requestInit,
-                                                CallerType::System, error);
-
-    // Change state to disallow more logout requests
-    icStorageService->SetState(rpPrincipal, idpPrincipal, request.mAccountId,
-                               true, false);
-  }
-  return promise.forget();
 }
 
 }  // namespace mozilla::dom

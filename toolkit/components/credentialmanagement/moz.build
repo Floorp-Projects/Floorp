@@ -7,17 +7,8 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Credential Management")
 
-EXPORTS.mozilla += [
-    "IdentityCredentialStorageService.h",
-]
-
-UNIFIED_SOURCES += ["IdentityCredentialStorageService.cpp"]
-
-FINAL_LIBRARY = "xul"
-
 XPIDL_SOURCES += [
     "nsIIdentityCredentialPromptService.idl",
-    "nsIIdentityCredentialStorageService.idl",
 ]
 
 XPIDL_MODULE = "dom_identitycredential"
@@ -25,8 +16,6 @@ XPIDL_MODULE = "dom_identitycredential"
 EXTRA_JS_MODULES += [
     "IdentityCredentialPromptService.sys.mjs",
 ]
-
-XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
 
 XPCOM_MANIFESTS += [
     "components.conf",

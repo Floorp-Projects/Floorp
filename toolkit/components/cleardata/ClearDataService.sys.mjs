@@ -25,12 +25,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/tracking-db-service;1",
   "nsITrackingDBService"
 );
-XPCOMUtils.defineLazyServiceGetter(
-  lazy,
-  "IdentityCredentialStorageService",
-  "@mozilla.org/browser/identity-credential-storage-service;1",
-  "nsIIdentityCredentialStorageService"
-);
 
 /**
  * Test if host, OriginAttributes or principal belong to a baseDomain. Also
@@ -1384,49 +1378,6 @@ const PreflightCacheCleaner = {
   },
 };
 
-const IdentityCredentialStorageCleaner = {
-  async deleteAll() {
-    lazy.IdentityCredentialStorageService.clear();
-  },
-
-  async deleteByPrincipal(aPrincipal, aIsUserRequest) {
-    lazy.IdentityCredentialStorageService.deleteFromPrincipal(aPrincipal);
-  },
-
-  async deleteByBaseDomain(aBaseDomain, aIsUserRequest) {
-    if (!aIsUserRequest) {
-      return;
-    }
-    lazy.IdentityCredentialStorageService.deleteFromBaseDomain(aBaseDomain);
-  },
-
-  async deleteByRange(aFrom, aTo) {
-    lazy.IdentityCredentialStorageService.deleteFromRange(aFrom, aTo);
-  },
-
-  async deleteByHost(aHost, aOriginAttributes) {
-    // Delete data from both HTTP and HTTPS sites.
-    let httpURI = Services.io.newURI("http://" + aHost);
-    let httpsURI = Services.io.newURI("https://" + aHost);
-    let httpPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-      httpURI,
-      aOriginAttributes
-    );
-    let httpsPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-      httpsURI,
-      aOriginAttributes
-    );
-    lazy.IdentityCredentialStorageService.deleteFromPrincipal(httpPrincipal);
-    lazy.IdentityCredentialStorageService.deleteFromPrincipal(httpsPrincipal);
-  },
-
-  async deleteByOriginAttributes(aOriginAttributesString) {
-    lazy.IdentityCredentialStorageService.deleteDataFromOriginAttributesPattern(
-      aOriginAttributesString
-    );
-  },
-};
-
 // Here the map of Flags-Cleaners.
 const FLAGS_MAP = [
   {
@@ -1535,11 +1486,6 @@ const FLAGS_MAP = [
   {
     flag: Ci.nsIClearDataService.CLEAR_PREFLIGHT_CACHE,
     cleaners: [PreflightCacheCleaner],
-  },
-
-  {
-    flag: Ci.nsIClearDataService.CLEAR_CREDENTIAL_MANAGER_STATE,
-    cleaners: [IdentityCredentialStorageCleaner],
   },
 ];
 
