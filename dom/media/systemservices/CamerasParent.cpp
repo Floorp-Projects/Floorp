@@ -305,6 +305,15 @@ ShmemBuffer CamerasParent::GetBuffer(size_t aSize) {
 
 void CallbackHelper::OnFrame(const webrtc::VideoFrame& aVideoFrame) {
   LOG_VERBOSE("%s", __PRETTY_FUNCTION__);
+  if (profiler_thread_is_being_profiled_for_markers()) {
+    PROFILER_MARKER_UNTYPED(
+        nsPrintfCString("CaptureVideoFrame %dx%d %s %s", aVideoFrame.width(),
+                        aVideoFrame.height(),
+                        webrtc::VideoFrameBufferTypeToString(
+                            aVideoFrame.video_frame_buffer()->type()),
+                        mTrackingId.ToString().get()),
+        MEDIA_RT);
+  }
   RefPtr<DeliverFrameRunnable> runnable = nullptr;
   // Get frame properties
   camera::VideoFrameProperties properties;
