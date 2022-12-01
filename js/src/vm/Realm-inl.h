@@ -28,9 +28,14 @@ js::GlobalObject* JS::Realm::maybeGlobal() const {
 
 inline bool JS::Realm::hasLiveGlobal() const {
   // The global is swept by traceWeakGlobalEdge when we start sweeping a zone
-  // group.
+  // group. This frees the GlobalObjectData, so the realm must live at least as
+  // long as the global.
   MOZ_ASSERT_IF(global_, !js::gc::IsAboutToBeFinalized(global_));
-  return bool(global_) && !initializingGlobal_;
+  return bool(global_);
+}
+
+inline bool JS::Realm::hasInitializedGlobal() const {
+  return hasLiveGlobal() && !initializingGlobal_;
 }
 
 inline bool JS::Realm::marked() const {
