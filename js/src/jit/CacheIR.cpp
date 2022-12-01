@@ -6886,8 +6886,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStringCharAt() {
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachStringFromCharCode() {
-  // Need one int32 argument.
-  if (argc_ != 1 || !args_[0].isInt32()) {
+  // Need one number argument.
+  if (argc_ != 1 || !args_[0].isNumber()) {
     return AttachDecision::NoAction;
   }
 
@@ -6899,7 +6899,14 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStringFromCharCode() {
 
   // Guard int32 argument.
   ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
-  Int32OperandId codeId = writer.guardToInt32(argId);
+  Int32OperandId codeId;
+  if (args_[0].isInt32()) {
+    codeId = writer.guardToInt32(argId);
+  } else {
+    // 'fromCharCode' performs ToUint16 on its input. We can use Uint32
+    // semantics, because ToUint16(ToUint32(v)) == ToUint16(v).
+    codeId = writer.guardToInt32ModUint32(argId);
+  }
 
   // Return string created from code.
   writer.stringFromCharCodeResult(codeId);
