@@ -547,6 +547,30 @@ WMFVideoMFTManager::Input(MediaRawData* aSample) {
     return E_FAIL;
   }
 
+  MediaInfoFlag flag = MediaInfoFlag::None;
+  flag |= (aSample->mKeyframe ? MediaInfoFlag::KeyFrame
+                              : MediaInfoFlag::NonKeyFrame);
+  flag |= (mUseHwAccel ? MediaInfoFlag::HardwareDecoding
+                       : MediaInfoFlag::SoftwareDecoding);
+  switch (mStreamType) {
+    case WMFStreamType::H264:
+      flag |= MediaInfoFlag::VIDEO_H264;
+      break;
+    case WMFStreamType::VP8:
+      flag |= MediaInfoFlag::VIDEO_VP8;
+      break;
+    case WMFStreamType::VP9:
+      flag |= MediaInfoFlag::VIDEO_VP9;
+      break;
+    case WMFStreamType::AV1:
+      flag |= MediaInfoFlag::VIDEO_AV1;
+      break;
+    default:
+      break;
+  };
+  mPerformanceRecorder.Start(aSample->mTime.ToMicroseconds(),
+                             "WMFVideoDecoder"_ns, flag);
+
   RefPtr<IMFSample> inputSample;
   HRESULT hr = mDecoder->CreateInputSample(
       aSample->Data(), uint32_t(aSample->Size()),
@@ -750,6 +774,22 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
       mVideoInfo.mDisplay, aStreamOffset, pts, duration, image.forget(), false,
       TimeUnit::FromMicroseconds(-1));
 
+  mPerformanceRecorder.Record(pts.ToMicroseconds(), [&](DecodeStage& aStage) {
+    aStage.SetColorDepth(b.mColorDepth);
+    aStage.SetColorRange(b.mColorRange);
+    aStage.SetYUVColorSpace(b.mYUVColorSpace);
+    if (subType == MFVideoFormat_NV12) {
+      aStage.SetImageFormat(DecodeStage::NV12);
+    } else if (subType == MFVideoFormat_YV12) {
+      aStage.SetImageFormat(DecodeStage::YV12);
+    } else if (subType == MFVideoFormat_P010) {
+      aStage.SetImageFormat(DecodeStage::P010);
+    } else if (subType == MFVideoFormat_P016) {
+      aStage.SetImageFormat(DecodeStage::P016);
+    }
+    aStage.SetResolution(videoWidth, videoHeight);
+  });
+
   v.forget(aOutVideoData);
   return S_OK;
 }
@@ -779,6 +819,8 @@ WMFVideoMFTManager::CreateD3DVideoFrame(IMFSample* aSample,
   }
   NS_ENSURE_TRUE(image, E_FAIL);
 
+  gfx::IntSize size = image->GetSize();
+
   TimeUnit pts = GetSampleTime(aSample);
   NS_ENSURE_TRUE(pts.IsValid(), E_FAIL);
   TimeUnit duration = GetSampleDurationOrLastKnownDuration(aSample);
@@ -789,6 +831,24 @@ WMFVideoMFTManager::CreateD3DVideoFrame(IMFSample* aSample,
 
   NS_ENSURE_TRUE(v, E_FAIL);
   v.forget(aOutVideoData);
+
+  mPerformanceRecorder.Record(pts.ToMicroseconds(), [&](DecodeStage& aStage) {
+    aStage.SetColorDepth(mVideoInfo.mColorDepth);
+    aStage.SetColorRange(mColorRange);
+    aStage.SetYUVColorSpace(mColorSpace.refOr(
+        DefaultColorSpace({mImageSize.width, mImageSize.height})));
+    const GUID& subType = mDecoder->GetOutputMediaSubType();
+    if (subType == MFVideoFormat_NV12) {
+      aStage.SetImageFormat(DecodeStage::NV12);
+    } else if (subType == MFVideoFormat_YV12) {
+      aStage.SetImageFormat(DecodeStage::YV12);
+    } else if (subType == MFVideoFormat_P010) {
+      aStage.SetImageFormat(DecodeStage::P010);
+    } else if (subType == MFVideoFormat_P016) {
+      aStage.SetImageFormat(DecodeStage::P016);
+    }
+    aStage.SetResolution(size.width, size.height);
+  });
 
   return S_OK;
 }
@@ -946,6 +1006,11 @@ WMFVideoMFTManager::Output(int64_t aStreamOffset, RefPtr<MediaData>& aOutData) {
   }
 
   return S_OK;
+}
+
+void WMFVideoMFTManager::Flush() {
+  MFTManager::Flush();
+  mPerformanceRecorder.Record(std::numeric_limits<int64_t>::max());
 }
 
 void WMFVideoMFTManager::Shutdown() {
