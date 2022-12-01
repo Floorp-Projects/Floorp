@@ -1106,6 +1106,12 @@
     %1$s is a placeholder that will be replaced by the app name (Fenix). -->
     <string name="notification_default_browser_text">Đặt %1$s làm trình duyệt mặc định của bạn</string>
 
+    <!-- Title shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_title">Thử duyệt web riêng tư</string>
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">Duyệt mà không để lại lịch sử hoặc cookie trong %1$s</string>
+
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Đã xóa bộ sưu tập</string>
