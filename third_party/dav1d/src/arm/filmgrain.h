@@ -137,7 +137,7 @@ void BF(dav1d_fguv_32x32_##nm, neon)(pixel *const dst, \
 static void \
 fguv_32x32xn_##nm##_neon(pixel *const dst_row, const pixel *const src_row, \
                   const ptrdiff_t stride, const Dav1dFilmGrainData *const data, \
-                  const int pw, const uint8_t scaling[SCALING_SIZE], \
+                  const size_t pw, const uint8_t scaling[SCALING_SIZE], \
                   const entry grain_lut[][GRAIN_WIDTH], const int bh, \
                   const int row_num, const pixel *const luma_row, \
                   const ptrdiff_t luma_stride, const int uv, const int is_id \
@@ -156,7 +156,7 @@ fguv_32x32xn_##nm##_neon(pixel *const dst_row, const pixel *const src_row, \
     int offsets[2 /* col offset */][2 /* row offset */]; \
  \
     /* process this row in BLOCK_SIZE^2 blocks (subsampled) */ \
-    for (int bx = 0; bx < pw; bx += BLOCK_SIZE >> sx) { \
+    for (unsigned bx = 0; bx < pw; bx += BLOCK_SIZE >> sx) { \
         if (data->overlap_flag && bx) { \
             /* shift previous offsets left */ \
             for (int i = 0; i < rows; i++) \

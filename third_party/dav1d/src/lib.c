@@ -235,8 +235,18 @@ COLD int dav1d_open(Dav1dContext **const c_out, const Dav1dSettings *const s) {
     }
     for (unsigned n = 0; n < c->n_fc; n++) {
         Dav1dFrameContext *const f = &c->fc[n];
-        if (c->n_tc > 1)
-            if (pthread_cond_init(&f->task_thread.cond, NULL)) goto error;
+        if (c->n_tc > 1) {
+            if (pthread_mutex_init(&f->task_thread.lock, NULL)) goto error;
+            if (pthread_cond_init(&f->task_thread.cond, NULL)) {
+                pthread_mutex_destroy(&f->task_thread.lock);
+                goto error;
+            }
+            if (pthread_mutex_init(&f->task_thread.pending_tasks.lock, NULL)) {
+                pthread_cond_destroy(&f->task_thread.cond);
+                pthread_mutex_destroy(&f->task_thread.lock);
+                goto error;
+            }
+        }
         f->c = c;
         f->task_thread.ttd = &c->task_thread;
         f->lf.last_sharpness = -1;
@@ -335,7 +345,8 @@ static int has_grain(const Dav1dPicture *const pic)
 {
     const Dav1dFilmGrainData *fgdata = &pic->frame_hdr->film_grain.data;
     return fgdata->num_y_points || fgdata->num_uv_points[0] ||
-           fgdata->num_uv_points[1];
+           fgdata->num_uv_points[1] || (fgdata->clip_to_restricted_range &&
+                                        fgdata->chroma_scaling_from_luma);
 }
 
 static int output_image(Dav1dContext *const c, Dav1dPicture *const out)
@@ -392,10 +403,13 @@ static int drain_picture(Dav1dContext *const c, Dav1dPicture *const out) {
         Dav1dThreadPicture *const out_delayed =
             &c->frame_thread.out_delayed[next];
         if (out_delayed->p.data[0] || atomic_load(&f->task_thread.error)) {
-            if (atomic_load(&c->task_thread.first) + 1U < c->n_fc)
+            unsigned first = atomic_load(&c->task_thread.first);
+            if (first + 1U < c->n_fc)
                 atomic_fetch_add(&c->task_thread.first, 1U);
             else
                 atomic_store(&c->task_thread.first, 0);
+            atomic_compare_exchange_strong(&c->task_thread.reset_task_cur,
+                                           &first, UINT_MAX);
             if (c->task_thread.cur && c->task_thread.cur < c->n_fc)
                 c->task_thread.cur--;
         }
@@ -591,6 +605,9 @@ void dav1d_flush(Dav1dContext *const c) {
             c->fc[i].task_thread.task_head = NULL;
             c->fc[i].task_thread.task_tail = NULL;
             c->fc[i].task_thread.task_cur_prev = NULL;
+            c->fc[i].task_thread.pending_tasks.head = NULL;
+            c->fc[i].task_thread.pending_tasks.tail = NULL;
+            atomic_init(&c->fc[i].task_thread.pending_tasks.merge, 0);
         }
         atomic_init(&c->task_thread.first, 0);
         c->task_thread.cur = c->n_fc;
@@ -664,7 +681,9 @@ static COLD void close_internal(Dav1dContext **const c_out, int flush) {
             freep(&f->frame_thread.cbi);
         }
         if (c->n_tc > 1) {
+            pthread_mutex_destroy(&f->task_thread.pending_tasks.lock);
             pthread_cond_destroy(&f->task_thread.cond);
+            pthread_mutex_destroy(&f->task_thread.lock);
         }
         freep(&f->frame_thread.frame_progress);
         freep(&f->task_thread.tasks);

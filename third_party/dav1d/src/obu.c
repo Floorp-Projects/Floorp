@@ -1509,7 +1509,7 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, const int globa
 
             if (payload_size <= 0) {
                 dav1d_log(c, "Malformed ITU-T T.35 metadata message format\n");
-                goto error;
+                break;
             }
 
             Dav1dRef *ref = dav1d_ref_create(sizeof(Dav1dITUTT35) + payload_size * sizeof(uint8_t));
@@ -1581,10 +1581,13 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, const int globa
                 Dav1dThreadPicture *const out_delayed =
                     &c->frame_thread.out_delayed[next];
                 if (out_delayed->p.data[0] || atomic_load(&f->task_thread.error)) {
-                    if (atomic_load(&c->task_thread.first) + 1U < c->n_fc)
+                    unsigned first = atomic_load(&c->task_thread.first);
+                    if (first + 1U < c->n_fc)
                         atomic_fetch_add(&c->task_thread.first, 1U);
                     else
                         atomic_store(&c->task_thread.first, 0);
+                    atomic_compare_exchange_strong(&c->task_thread.reset_task_cur,
+                                                   &first, UINT_MAX);
                     if (c->task_thread.cur && c->task_thread.cur < c->n_fc)
                         c->task_thread.cur--;
                 }

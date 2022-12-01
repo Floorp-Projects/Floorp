@@ -29,7 +29,8 @@
 %if ARCH_X86_64
 
 SECTION_RODATA 64
-int8_permA:  db  0,  1, 16, 17, 32, 33, 48, 49,  2,  3, 18, 19, 34, 35, 50, 51
+const \
+int8_permA,  db  0,  1, 16, 17, 32, 33, 48, 49,  2,  3, 18, 19, 34, 35, 50, 51
              db  4,  5, 20, 21, 36, 37, 52, 53,  6,  7, 22, 23, 38, 39, 54, 55
              db  8,  9, 24, 25, 40, 41, 56, 57, 10, 11, 26, 27, 42, 43, 58, 59
              db 12, 13, 28, 29, 44, 45, 60, 61, 14, 15, 30, 31, 46, 47, 62, 63
@@ -845,7 +846,7 @@ cglobal iidentity_4x8_internal_8bpc, 0, 6, 0, dst, stride, c, eob, tx2
     punpcklwd            m3, m5     ; dct8  in3  in5
     punpckhwd            m5, m2     ; dct16 in11 in5
     punpcklwd            m6, m2     ; dct4  in3  in1
-.main2:
+cglobal_label .main2
     vpbroadcastd        m10, [o(pd_2048)]
 .main3:
     vpbroadcastq        m13, [o(int_mshift)]
@@ -1355,7 +1356,7 @@ cglobal idct_8x8_internal_8bpc, 0, 6, 0, dst, stride, c, eob, tx2
     vpermq               m3, m3, q2031
     jmp m(iadst_8x8_internal_8bpc).end2
 ALIGN function_align
-.main:
+cglobal_label .main
     IDCT8_1D_PACKED
     ret
 
@@ -1422,7 +1423,7 @@ ALIGN function_align
     punpckhqdq           m0, m4            ; out0 -out1
     ret
 ALIGN function_align
-.main_pass2:
+cglobal_label .main_pass2
     IADST8_1D_PACKED 2
     ret
 
@@ -1608,7 +1609,7 @@ cglobal idct_8x16_internal_8bpc, 0, 6, 0, dst, stride, c, eob, tx2
     vpscatterdq [r3+ym8]{k2}, m2
     RET
 ALIGN function_align
-.main:
+cglobal_label .main
     WRAP_YMM IDCT16_1D_PACKED
     ret
 
@@ -1685,13 +1686,14 @@ ALIGN function_align
     vpermi2q             m6, m0, m2  ; in4  in8  in6  in10
     vpermt2q             m1, m10, m3 ; in11 in7  in9  in5
 .main:
-    vpbroadcastd         m9, [o(pd_2048)]
-    vpbroadcastq        m13, [o(int_mshift)]
-    kxnorb               k1, k1, k1
     punpcklwd            m0, m4, m5  ; in0  in15 in2  in13
     punpckhwd            m4, m5      ; in12 in3  in14 in1
     punpcklwd            m5, m6, m1  ; in4  in11 in6  in9
     punpckhwd            m6, m1      ; in8  in7  in10 in5
+cglobal_label .main2
+    vpbroadcastd         m9, [o(pd_2048)]
+    vpbroadcastq        m13, [o(int_mshift)]
+    kxnorb               k1, k1, k1
     vpcmpub              k7, m13, m9, 6 ; 0x33...
     pxor                 m8, m8
     ITX_MUL4X_PACK        0, 1, 2, 3, 7, 9,  201, 4091,  995, 3973, 5
@@ -2114,7 +2116,7 @@ cglobal idct_16x8_internal_8bpc, 0, 6, 0, dst, stride, c, eob, tx2
     vextracti32x4 [r3  +r4       ], m1, 3
     RET
 ALIGN function_align
-.main:
+cglobal_label .main
     IDCT8_1D_PACKED
     ret
 
@@ -2168,6 +2170,7 @@ cglobal iadst_16x8_internal_8bpc, 0, 6, 0, dst, stride, c, eob, tx2
     pshufd               m4, m0, q1032     ; 1 0
     pshufd               m5, m1, q1032     ; 3 2
     call .main_pass2
+    movshdup             m4, [o(permC)]
     pmulhrsw             m0, m6
     pmulhrsw             m1, m6
     psrlq                m6, m4, 4
@@ -2194,9 +2197,8 @@ ALIGN function_align
     IADST8_1D_PACKED 1
     ret
 ALIGN function_align
-.main_pass2:
+cglobal_label .main_pass2
     IADST8_1D_PACKED 2
-    movshdup             m4, [o(permC)]
     pxor                 m5, m5
     psubd                m5, m6
     packssdw             m6, m5
@@ -2222,6 +2224,7 @@ cglobal iflipadst_16x8_internal_8bpc, 0, 6, 0, dst, stride, c, eob, tx2
     pshufd               m4, m0, q1032     ; 1 0
     pshufd               m5, m1, q1032     ; 3 2
     call m(iadst_16x8_internal_8bpc).main_pass2
+    movshdup             m4, [o(permC)]
     pmulhrsw             m5, m6, m0
     pmulhrsw             m0, m6, m1
     psrlq                m1, m4, 12
@@ -2456,7 +2459,7 @@ ALIGN function_align
     pmulhrsw             m3, m4  ; t5a  t6a
     jmp .main4
 ALIGN function_align
-.main:
+cglobal_label .main
     IDCT16_1D_PACKED
     ret
 
@@ -2562,6 +2565,7 @@ ALIGN function_align
     vshufi32x4           m1, m5, q2020     ;  2  3
     vshufi32x4           m5, m7, m9, q2020 ; 10 11
     vshufi32x4           m7, m9, q3131     ; 14 15
+cglobal_label .main_pass2b
     REPX {pshufd x, x, q1032}, m1, m3, m5, m7
     call .main
     vpbroadcastd         m8, [o(pw_2896x8)]

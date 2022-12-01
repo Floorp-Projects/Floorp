@@ -51,6 +51,11 @@ static void generate_scaling(const int bitdepth,
     const int scaling_size = 1 << bitdepth;
 #endif
 
+    if (num == 0) {
+        memset(scaling, 0, scaling_size);
+        return;
+    }
+
     // Fill up the preceding entries with the initial value
     memset(scaling, points[0][1], points[0][0] << shift_x);
 
@@ -113,7 +118,7 @@ void bitfn(dav1d_prep_grain)(const Dav1dFilmGrainDSPContext *const dsp,
                                                  data, 1 HIGHBD_TAIL_SUFFIX);
 
     // Generate scaling LUTs as needed
-    if (data->num_y_points)
+    if (data->num_y_points || data->chroma_scaling_from_luma)
         generate_scaling(in->p.bpc, data->y_points, data->num_y_points, scaling[0]);
     if (data->num_uv_points[0])
         generate_scaling(in->p.bpc, data->uv_points[0], data->num_uv_points[0], scaling[1]);

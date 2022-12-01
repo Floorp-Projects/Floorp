@@ -591,7 +591,7 @@ static int decode_coefs(Dav1dTaskContext *const t,
     const uint16_t *const dq_tbl = ts->dq[b->seg_id][plane];
     const uint8_t *const qm_tbl = *txtp < IDTX ? f->qm[tx][plane] : NULL;
     const int dq_shift = imax(0, t_dim->ctx - 2);
-    const unsigned cf_max = ~(~127U << (BITDEPTH == 8 ? 8 : f->cur.p.bpc));
+    const int cf_max = ~(~127U << (BITDEPTH == 8 ? 8 : f->cur.p.bpc));
     unsigned cul_level, dc_sign_level;
 
     if (!dc_tok) {
@@ -608,7 +608,7 @@ static int decode_coefs(Dav1dTaskContext *const t,
         printf("Post-dc_sign[%d][%d][%d]: r=%d\n",
                chroma, dc_sign_ctx, dc_sign, ts->msac.rng);
 
-    unsigned dc_dq = dq_tbl[0];
+    int dc_dq = dq_tbl[0];
     dc_sign_level = (dc_sign - 1) & (2 << 6);
 
     if (qm_tbl) {
@@ -628,7 +628,8 @@ static int decode_coefs(Dav1dTaskContext *const t,
         }
         cul_level = dc_tok;
         dc_dq >>= dq_shift;
-        cf[0] = (coef) (umin(dc_dq - dc_sign, cf_max) ^ -dc_sign);
+        dc_dq = umin(dc_dq, cf_max + dc_sign);
+        cf[0] = (coef) (dc_sign ? -dc_dq : dc_dq);
 
         if (rc) ac_qm: {
             const unsigned ac_dq = dq_tbl[1];
@@ -638,6 +639,7 @@ static int decode_coefs(Dav1dTaskContext *const t,
                     printf("Post-sign[%d=%d]: r=%d\n", rc, sign, ts->msac.rng);
                 const unsigned rc_tok = cf[rc];
                 unsigned tok, dq = (ac_dq * qm_tbl[rc] + 16) >> 5;
+                int dq_sat;
 
                 if (rc_tok >= (15 << 11)) {
                     tok = read_golomb(&ts->msac) + 15;
@@ -654,7 +656,8 @@ static int decode_coefs(Dav1dTaskContext *const t,
                 }
                 cul_level += tok;
                 dq >>= dq_shift;
-                cf[rc] = (coef) (umin(dq - sign, cf_max) ^ -sign);
+                dq_sat = umin(dq, cf_max + sign);
+                cf[rc] = (coef) (sign ? -dq_sat : dq_sat);
 
                 rc = rc_tok & 0x3ff;
             } while (rc);
@@ -669,13 +672,13 @@ static int decode_coefs(Dav1dTaskContext *const t,
 
             dc_tok &= 0xfffff;
             dc_dq = ((dc_dq * dc_tok) & 0xffffff) >> dq_shift;
-            dc_dq = umin(dc_dq - dc_sign, cf_max);
+            dc_dq = umin(dc_dq, cf_max + dc_sign);
         } else {
-            dc_dq = ((dc_dq * dc_tok) >> dq_shift) - dc_sign;
+            dc_dq = ((dc_dq * dc_tok) >> dq_shift);
             assert(dc_dq <= cf_max);
         }
         cul_level = dc_tok;
-        cf[0] = (coef) (dc_dq ^ -dc_sign);
+        cf[0] = (coef) (dc_sign ? -dc_dq : dc_dq);
 
         if (rc) ac_noqm: {
             const unsigned ac_dq = dq_tbl[1];
@@ -684,7 +687,8 @@ static int decode_coefs(Dav1dTaskContext *const t,
                 if (dbg)
                     printf("Post-sign[%d=%d]: r=%d\n", rc, sign, ts->msac.rng);
                 const unsigned rc_tok = cf[rc];
-                unsigned tok, dq;
+                unsigned tok;
+                int dq;
 
                 // residual
                 if (rc_tok >= (15 << 11)) {
@@ -698,15 +702,15 @@ static int decode_coefs(Dav1dTaskContext *const t,
 
                     // dequant, see 7.12.3
                     dq = ((ac_dq * tok) & 0xffffff) >> dq_shift;
-                    dq = umin(dq - sign, cf_max);
+                    dq = umin(dq, cf_max + sign);
                 } else {
                     // cannot exceed cf_max, so we can avoid the clipping
                     tok = rc_tok >> 11;
-                    dq = ((ac_dq * tok) >> dq_shift) - sign;
+                    dq = ((ac_dq * tok) >> dq_shift);
                     assert(dq <= cf_max);
                 }
                 cul_level += tok;
-                cf[rc] = (coef) (dq ^ -sign);
+                cf[rc] = (coef) (sign ? -dq : dq);
 
                 rc = rc_tok & 0x3ff; // next non-zero rc, zero if eob
             } while (rc);
@@ -1092,9 +1096,10 @@ static int obmc(Dav1dTaskContext *const t,
             // only odd blocks are considered for overlap handling, hence +1
             const refmvs_block *const a_r = &r[-1][t->bx + x + 1];
             const uint8_t *const a_b_dim = dav1d_block_dimensions[a_r->bs];
+            const int step4 = iclip(a_b_dim[0], 2, 16);
 
             if (a_r->ref.ref[0] > 0) {
-                const int ow4 = iclip(a_b_dim[0], 2, b_dim[0]);
+                const int ow4 = imin(step4, b_dim[0]);
                 const int oh4 = imin(b_dim[1], 16) >> 1;
                 res = mc(t, lap, NULL, ow4 * h_mul * sizeof(pixel), ow4, (oh4 * 3 + 3) >> 2,
                          t->bx + x, t->by, pl, a_r->mv.mv[0],
@@ -1105,7 +1110,7 @@ static int obmc(Dav1dTaskContext *const t,
                                    h_mul * ow4, v_mul * oh4);
                 i++;
             }
-            x += imax(a_b_dim[0], 2);
+            x += step4;
         }
     }
 
@@ -1114,10 +1119,11 @@ static int obmc(Dav1dTaskContext *const t,
             // only odd blocks are considered for overlap handling, hence +1
             const refmvs_block *const l_r = &r[y + 1][t->bx - 1];
             const uint8_t *const l_b_dim = dav1d_block_dimensions[l_r->bs];
+            const int step4 = iclip(l_b_dim[1], 2, 16);
 
             if (l_r->ref.ref[0] > 0) {
                 const int ow4 = imin(b_dim[0], 16) >> 1;
-                const int oh4 = iclip(l_b_dim[1], 2, b_dim[1]);
+                const int oh4 = imin(step4, b_dim[1]);
                 res = mc(t, lap, NULL, h_mul * ow4 * sizeof(pixel), ow4, oh4,
                          t->bx, t->by + y, pl, l_r->mv.mv[0],
                          &f->refp[l_r->ref.ref[0] - 1], l_r->ref.ref[0] - 1,
@@ -1127,7 +1133,7 @@ static int obmc(Dav1dTaskContext *const t,
                                    dst_stride, lap, h_mul * ow4, v_mul * oh4);
                 i++;
             }
-            y += imax(l_b_dim[1], 2);
+            y += step4;
         }
     return 0;
 }
