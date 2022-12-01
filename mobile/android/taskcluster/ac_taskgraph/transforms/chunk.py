@@ -10,14 +10,15 @@ from taskgraph.util.treeherder import add_suffix
 from taskgraph import MAX_DEPENDENCIES
 
 # XXX Docker images may be added after this transform, so we allow one more dep to be added
-MAX_REGULAR_DEPS = MAX_DEPENDENCIES - 1
+MAX_NUMBER_OF_DEPS = MAX_DEPENDENCIES - 1
 
 transforms = TransformSequence()
 
 
-def build_task_definition(orig_task, deps, count):
+def build_task_definition(orig_task, deps, soft_deps, count):
     task = deepcopy(orig_task)
-    task['dependencies'] = deps
+    task['dependencies'] = {label: label for label in deps}
+    task['soft-dependencies'] = list(soft_deps)
     task['name'] = "{}-{}".format(orig_task['name'], count)
     if 'treeherder' in task:
         task['treeherder']['symbol'] = add_suffix(
@@ -35,31 +36,37 @@ def get_chunked_label(config, chunked_task):
 def add_dependencies(config, tasks):
     for task in tasks:
         count = 1
-        deps = {}
-        chunked_labels = {}
+        soft_deps = set()
+        regular_deps = set()
+        chunked_labels = set()
 
+        soft_dep_labels = list(task.get('soft-dependencies', []))
+        regular_dep_labels = list(task.get('dependencies', {}).keys())
         # sort for deterministic chunking
-        dep_labels = task.pop('soft-dependencies', [])
-        dep_labels.extend(task.get('dependencies', {}).keys())
-        dep_labels = sorted(dep_labels)
+        all_dep_labels = sorted(set(soft_dep_labels + regular_dep_labels))
 
-        for dep_label in dep_labels:
-            deps[dep_label] = dep_label
-            if len(deps) == MAX_REGULAR_DEPS:
-                chunked_task = build_task_definition(task, deps, count)
+        for dep_label in all_dep_labels:
+            if dep_label in regular_dep_labels:
+                regular_deps.add(dep_label)
+            else:
+                soft_deps.add(dep_label)
+
+            if len(regular_deps) + len(soft_deps) == MAX_NUMBER_OF_DEPS:
+                chunked_task = build_task_definition(task, regular_deps, soft_deps, count)
                 chunked_label = get_chunked_label(config, chunked_task)
-                chunked_labels[chunked_label] = chunked_label
+                chunked_labels.add(chunked_label)
                 yield chunked_task
-                deps = {}
+                soft_deps.clear()
+                regular_deps.clear()
                 count += 1
-        if deps:
-            chunked_task = build_task_definition(task, deps, count)
-            chunked_label = get_chunked_label(config, chunked_task)
-            chunked_labels[chunked_label] = chunked_label
-            yield chunked_task
-            count += 1
 
-        task['dependencies'] = chunked_labels
+        if regular_deps or soft_deps:
+            chunked_task = build_task_definition(task, regular_deps, soft_deps, count)
+            chunked_label = get_chunked_label(config, chunked_task)
+            chunked_labels.add(chunked_label)
+            yield chunked_task
+
+        task['dependencies'] = {label: label for label in chunked_labels}
         # Chunk yields a last task that doesn't have a number appended to it.
         # It helps configuring Github which waits on a single label.
         # Setting this attribute also enables multi_dep to select the right
