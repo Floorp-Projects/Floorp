@@ -98,4 +98,12 @@ ProfilerString8View PlaybackStage::Name() const {
   return *mName;
 }
 
+ProfilerString8View CopyVideoStage::Name() const {
+  if (!mName) {
+    mName = Some(nsPrintfCString("CopyVideoFrame %s %dx%d", mSource.Data(),
+                                 mWidth, mHeight));
+  }
+  return *mName;
+}
+
 }  // namespace mozilla
