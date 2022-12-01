@@ -25,7 +25,6 @@ def build_commit_list(revset, env):
         capture_output=True,
         text=True,
         env=env,
-        cwd="../../../../",
     )
     return [line.strip() for line in res.stdout.strip().split("\n")]
 
