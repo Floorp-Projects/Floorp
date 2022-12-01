@@ -98,7 +98,7 @@ const PublicSuffixList = {
     try {
       fileURI = await this.CLIENT.attachments.downloadToDisk(changed[0]);
     } catch (err) {
-      Cu.reportError(err);
+      console.error(err);
       return;
     }
 
