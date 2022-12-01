@@ -12,6 +12,7 @@
 #include "MediaFormatReader.h"
 #include "BaseMediaResource.h"
 #include "MediaShutdownManager.h"
+#include "base/process_util.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "VideoUtils.h"
@@ -211,6 +212,10 @@ MediaDecoderStateMachineBase* ChannelMediaDecoder::CreateStateMachine(
   init.mFrameStats = mFrameStats;
   init.mResource = mResource;
   init.mMediaDecoderOwnerID = mOwner;
+  static Atomic<uint32_t> sTrackingIdCounter(0);
+  init.mTrackingId.emplace(TrackingId::Source::ChannelDecoder,
+                           sTrackingIdCounter++,
+                           TrackingId::TrackAcrossProcesses::Yes);
   mReader = DecoderTraits::CreateReader(ContainerType(), init);
 
 #ifdef MOZ_WMF_MEDIA_ENGINE

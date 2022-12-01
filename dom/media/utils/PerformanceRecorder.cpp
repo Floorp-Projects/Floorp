@@ -24,10 +24,18 @@ static const char* SourceToStr(TrackingId::Source aSource) {
       return "CameraCapture";
     case TrackingId::Source::Canvas:
       return "CanvasCapture";
+    case TrackingId::Source::ChannelDecoder:
+      return "ChannelDecoder";
+    case TrackingId::Source::HLSDecoder:
+      return "HLSDecoder";
+    case TrackingId::Source::MediaCapabilities:
+      return "MediaCapabilities";
     case TrackingId::Source::MediaElementDecoder:
       return "MediaElementDecoderCapture";
     case TrackingId::Source::MediaElementStream:
       return "MediaElementStreamCapture";
+    case TrackingId::Source::MSEDecoder:
+      return "MSEDecoder";
     case TrackingId::Source::RTCRtpReceiver:
       return "RTCRtpReceiver";
     case TrackingId::Source::Screen:
