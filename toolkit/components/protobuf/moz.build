@@ -73,7 +73,7 @@ EXPORTS.google.protobuf.stubs += [
 ]
 
 UNIFIED_SOURCES += [
-    'src/google/protobuf/any_lite.cc',
+    # 'src/google/protobuf/any_lite.cc', # Unused file
     'src/google/protobuf/arena.cc',
     'src/google/protobuf/arenastring.cc',
     'src/google/protobuf/arenaz_sampler.cc',
