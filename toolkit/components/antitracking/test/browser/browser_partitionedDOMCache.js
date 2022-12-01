@@ -32,10 +32,10 @@ PartitionedStorageHelper.runTest(
       );
     });
   },
-  [
-    ["dom.caches.testing.enabled", true],
-    [APS_PREF, false],
-  ]
+
+  [[APS_PREF, false]],
+
+  { runInSecureContext: true }
 );
 
 PartitionedStorageHelper.runTest(
@@ -70,8 +70,7 @@ PartitionedStorageHelper.runTest(
     });
   },
 
-  [
-    ["dom.caches.testing.enabled", true],
-    [APS_PREF, true],
-  ]
+  [[APS_PREF, true]],
+
+  { runInSecureContext: true }
 );
