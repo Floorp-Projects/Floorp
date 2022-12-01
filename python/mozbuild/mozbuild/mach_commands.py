@@ -397,7 +397,7 @@ def cargo_vet(command_context, arguments, stdout=None, env=os.environ):
 @CommandArgument(
     "--jobs",
     "-j",
-    default="1",
+    default="0",
     nargs="?",
     metavar="jobs",
     type=int,
