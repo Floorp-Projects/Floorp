@@ -1058,6 +1058,9 @@ class ScriptSource {
   // |xdrEncodeTopLevel|, and free the XDR encoder.  In case of errors, the
   // |buffer| is considered undefined.
   bool xdrFinalizeEncoder(JSContext* cx, JS::TranscodeBuffer& buffer);
+
+  // Discard the incremental encoding data and free the XDR encoder.
+  void xdrAbortEncoder();
 };
 
 // [SMDOC] ScriptSourceObject
