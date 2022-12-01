@@ -70,11 +70,51 @@ const gRuleManagers = [];
  */
 
 const lazy = {};
+
 ChromeUtils.defineModuleGetter(
   lazy,
   "WebRequest",
   "resource://gre/modules/WebRequest.jsm"
 );
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  ExtensionDNRStore: "resource://gre/modules/ExtensionDNRStore.sys.mjs",
+});
+
+/**
+ * The minimum number of static rules guaranteed to an extension across its
+ * enabled static rulesets. Any rules above this limit will count towards the
+ * global static rule limit.
+ */
+const GUARANTEED_MINIMUM_STATIC_RULES = 30000;
+
+/**
+ * The maximum number of static Rulesets an extension can specify as part of
+ * the "rule_resources" manifest key.
+ *
+ * NOTE: this limit may be increased in the future, see https://github.com/w3c/webextensions/issues/318
+ */
+const MAX_NUMBER_OF_STATIC_RULESETS = 50;
+
+/**
+ * The maximum number of static Rulesets an extension can enable at any one time.
+ *
+ * NOTE: this limit may be increased in the future, see https://github.com/w3c/webextensions/issues/318
+ */
+const MAX_NUMBER_OF_ENABLED_STATIC_RULESETS = 10;
+
+// TODO(Bug 1803370): allow extension to exceed the GUARANTEED_MINIMUM_STATIC_RULES limit.
+//
+// The maximum number of static rules exceeding the per-extension
+// GUARANTEED_MINIMUM_STATIC_RULES across every extensions.
+//
+// const MAX_GLOBAL_NUMBER_OF_STATIC_RULES = 300000;
+
+// As documented above:
+// Ruleset precedence: session > dynamic > static (order from manifest.json).
+const PRECEDENCE_SESSION_RULESET = 1;
+const PRECEDENCE_DYNAMIC_RULESET = 2;
+const PRECEDENCE_STATIC_RULESETS_BASE = 3;
 
 // The RuleCondition class represents a rule's "condition" type as described in
 // schemas/declarative_net_request.json. This class exists to allow the JS
@@ -1085,14 +1125,23 @@ const NetworkIntegration = {
 class RuleManager {
   constructor(extension) {
     this.extension = extension;
-    this.sessionRules = this.makeRuleset("_session", 1);
+    this.sessionRules = this.makeRuleset(
+      "_session",
+      PRECEDENCE_SESSION_RULESET
+    );
     // TODO bug 1745764: support registration of (persistent) dynamic rules.
-    this.dynamicRules = this.makeRuleset("_dynamic", 2);
-    // TODO bug 1745763: support registration of static rules.
+    this.dynamicRules = this.makeRuleset(
+      "_dynamic",
+      PRECEDENCE_DYNAMIC_RULESET
+    );
     this.enabledStaticRules = [];
 
     this.hasBlockPermission = extension.hasPermission("declarativeNetRequest");
     this.hasRulesWithTabIds = false;
+  }
+
+  get enabledStaticRulesetIds() {
+    return this.enabledStaticRules.map(ruleset => ruleset.id);
   }
 
   makeRuleset(rulesetId, rulesetPrecedence, rules = []) {
@@ -1107,6 +1156,24 @@ class RuleManager {
     NetworkIntegration.maybeUpdateTabIdChecker();
   }
 
+  /**
+   * Set the enabled static rulesets.
+   *
+   * @param {Array<{ id, rules }>} enabledStaticRulesets
+   *        Array of objects including the ruleset id and rules.
+   *        The order of the rulesets in the Array is expected to
+   *        match the order of the rulesets in the extension manifest.
+   */
+  setEnabledStaticRulesets(enabledStaticRulesets) {
+    const rulesets = [];
+    for (const [idx, { id, rules }] of enabledStaticRulesets.entries()) {
+      rulesets.push(
+        this.makeRuleset(id, idx + PRECEDENCE_STATIC_RULESETS_BASE, rules)
+      );
+    }
+    this.enabledStaticRules = rulesets;
+  }
+
   getSessionRules() {
     return this.sessionRules.rules;
   }
@@ -1115,6 +1182,11 @@ class RuleManager {
 function getRuleManager(extension, createIfMissing = true) {
   let ruleManager = gRuleManagers.find(rm => rm.extension === extension);
   if (!ruleManager && createIfMissing) {
+    if (extension.hasShutdown) {
+      throw new Error(
+        `Error on creating new DNR RuleManager after extension shutdown: ${extension.id}`
+      );
+    }
     ruleManager = new RuleManager(extension);
     // The most recently installed extension gets priority, i.e. appears at the
     // start of the gRuleManagers list. It is not yet possible to determine the
@@ -1202,11 +1274,114 @@ function handleRequest(channel, kind) {
   return false;
 }
 
+async function initExtension(extension) {
+  // These permissions are NOT an OptionalPermission, so their status can be
+  // assumed to be constant for the lifetime of the extension.
+  if (
+    extension.hasPermission("declarativeNetRequest") ||
+    extension.hasPermission("declarativeNetRequestWithHostAccess")
+  ) {
+    if (extension.hasShutdown) {
+      throw new Error(
+        `Aborted ExtensionDNR.initExtension call, extension "${extension.id}" is not active anymore`
+      );
+    }
+    await lazy.ExtensionDNRStore.initExtension(extension);
+  }
+}
+
+function ensureInitialized(extension) {
+  return (extension._dnrReady ??= initExtension(extension));
+}
+
+function validateManifestEntry(extension) {
+  const ruleResourcesArray =
+    extension.manifest.declarative_net_request.rule_resources;
+
+  const getWarningMessage = msg =>
+    `Warning processing declarative_net_request: ${msg}`;
+
+  if (ruleResourcesArray.length > MAX_NUMBER_OF_STATIC_RULESETS) {
+    extension.manifestWarning(
+      getWarningMessage(
+        `Static rulesets are exceeding the MAX_NUMBER_OF_STATIC_RULESETS limit (${MAX_NUMBER_OF_STATIC_RULESETS}).`
+      )
+    );
+  }
+
+  const seenRulesetIds = new Set();
+  const seenRulesetPaths = new Set();
+  const duplicatedRulesetIds = [];
+  const duplicatedRulesetPaths = [];
+  for (const [idx, { id, path }] of ruleResourcesArray.entries()) {
+    if (seenRulesetIds.has(id)) {
+      duplicatedRulesetIds.push({ idx, id });
+    }
+    if (seenRulesetPaths.has(path)) {
+      duplicatedRulesetPaths.push({ idx, path });
+    }
+    seenRulesetIds.add(id);
+    seenRulesetPaths.add(path);
+  }
+
+  if (duplicatedRulesetIds.length) {
+    const errorDetails = duplicatedRulesetIds
+      .map(({ idx, id }) => `"${id}" at index ${idx}`)
+      .join(", ");
+    extension.manifestWarning(
+      getWarningMessage(
+        `Static ruleset ids should be unique, duplicated ruleset ids: ${errorDetails}.`
+      )
+    );
+  }
+
+  if (duplicatedRulesetPaths.length) {
+    // NOTE: technically Chrome allows duplicated paths without any manifest
+    // validation warnings or errors, but if this happens it not unlikely to be
+    // actually a mistake in the manifest that may have been missed.
+    //
+    // In Firefox we decided to allow the same behavior to avoid introducing a chrome
+    // incompatibility, but we still warn about it to avoid extension developers
+    // to investigate more easily issue that may be due to duplicated rulesets
+    // paths.
+    const errorDetails = duplicatedRulesetPaths
+      .map(({ idx, path }) => `"${path}" at index ${idx}`)
+      .join(", ");
+    extension.manifestWarning(
+      getWarningMessage(
+        `Static rulesets paths are not unique, duplicated ruleset paths: ${errorDetails}.`
+      )
+    );
+  }
+
+  const enabledRulesets = ruleResourcesArray.filter(rs => rs.enabled);
+  if (enabledRulesets.length > MAX_NUMBER_OF_ENABLED_STATIC_RULESETS) {
+    const exceedingRulesetIds = enabledRulesets
+      .slice(MAX_NUMBER_OF_ENABLED_STATIC_RULESETS)
+      .map(ruleset => `"${ruleset.id}"`)
+      .join(", ");
+    extension.manifestWarning(
+      getWarningMessage(
+        `Enabled static rulesets are exceeding the MAX_NUMBER_OF_ENABLED_STATIC_RULESETS limit (${MAX_NUMBER_OF_ENABLED_STATIC_RULESETS}): ${exceedingRulesetIds}.`
+      )
+    );
+  }
+}
+
+// exports used by the DNR API implementation.
 export const ExtensionDNR = {
   RuleValidator,
-  getRuleManager,
   clearRuleManager,
+  ensureInitialized,
   getMatchedRulesForRequest,
+  getRuleManager,
+  validateManifestEntry,
+  // TODO(Bug 1803370): consider allowing changing DNR limits through about:config prefs).
+  limits: {
+    GUARANTEED_MINIMUM_STATIC_RULES,
+    MAX_NUMBER_OF_STATIC_RULESETS,
+    MAX_NUMBER_OF_ENABLED_STATIC_RULESETS,
+  },
 
   beforeWebRequestEvent,
   handleRequest,

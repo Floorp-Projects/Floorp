@@ -21,6 +21,42 @@
           "enum": ["declarativeNetRequestFeedback", "declarativeNetRequestWithHostAccess"],
           "min_manifest_version": 3
         }]
+      },
+      {
+        "$extend": "WebExtensionManifest",
+        "properties": {
+          "declarative_net_request": {
+            "type": "object",
+            "min_manifest_version": 3,
+            "optional": true,
+            "additionalProperties": { "$ref": "UnrecognizedProperty" },
+            "properties": {
+              "rule_resources": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": { "$ref": "UnrecognizedProperty" },
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[^_]",
+                      "description": "A non-empty string uniquely identifying the ruleset. IDs beginning with '_' are reserved for internal use."
+                    },
+                    "enabled": {
+                      "type": "boolean",
+                      "description": "Whether the ruleset is enabled by default."
+                    },
+                    "path": {
+                      "$ref": "manifest.ExtensionURL",
+                      "description": "The path of the JSON ruleset relative to the extension directory."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     ]
   },
@@ -417,6 +453,25 @@
             "type": "function",
             "description": "Called when the session rules have been updated",
             "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "getEnabledRulesets",
+        "type": "function",
+        "description": "Returns the ids for the current set of enabled static rulesets.",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "callback",
+            "type": "function",
+            "parameters": [
+              {
+                "type": "array",
+                "name": "rulesetIds",
+                "items": { "type": "string" }
+              }
+            ]
           }
         ]
       },
