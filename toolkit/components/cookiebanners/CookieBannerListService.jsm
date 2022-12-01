@@ -156,13 +156,7 @@ class CookieBannerListService {
         rule.domain = domain;
         return rule;
       })
-      .forEach(r => {
-        Services.cookieBanners.removeRule(r);
-
-        // Clear the fact if we have reported telemetry for the domain. So, we
-        // can collect again with the updated rules.
-        Services.cookieBanners.resetDomainTelemetryRecord(r.domain);
-      });
+      .forEach(r => Services.cookieBanners.removeRule(r));
   }
 
   #importRules(rules) {
@@ -182,12 +176,6 @@ class CookieBannerListService {
       this.#importClickRule(rule, click);
 
       Services.cookieBanners.insertRule(rule);
-
-      // Clear the fact if we have reported telemetry for the domain. Note that
-      // this function could handle rule update and the initial rule import. In
-      // both cases, we should clear to make sure we will collect with the
-      // latest rules.
-      Services.cookieBanners.resetDomainTelemetryRecord(domain);
     });
   }
 
