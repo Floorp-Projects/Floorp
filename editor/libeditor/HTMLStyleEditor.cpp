@@ -887,6 +887,20 @@ Result<CaretPoint, nsresult> HTMLEditor::AutoInlineStyleSetter::
     if (removeStyleResult.inspect().IsSet()) {
       pointToPutCaret = removeStyleResult.unwrap();
     }
+    if (nsStaticAtom* similarElementNameAtom = GetSimilarElementNameAtom()) {
+      Result<EditorDOMPoint, nsresult> removeStyleResult =
+          aHTMLEditor.RemoveStyleInside(
+              MOZ_KnownLive(*aContent.AsElement()),
+              EditorInlineStyle(*similarElementNameAtom),
+              SpecifiedStyle::Preserve);
+      if (MOZ_UNLIKELY(removeStyleResult.isErr())) {
+        NS_WARNING("HTMLEditor::RemoveStyleInside() failed");
+        return removeStyleResult.propagateErr();
+      }
+      if (removeStyleResult.inspect().IsSet()) {
+        pointToPutCaret = removeStyleResult.unwrap();
+      }
+    }
   }
 
   if (aContent.GetParentNode()) {
@@ -2176,20 +2190,11 @@ NS_IMETHODIMP HTMLEditor::RemoveInlineProperty(const nsAString& aProperty,
 void HTMLEditor::AppendInlineStyleAndRelatedStyle(
     const EditorInlineStyle& aStyleToRemove,
     nsTArray<EditorInlineStyle>& aStylesToRemove) const {
-  if (aStyleToRemove.mHTMLProperty == nsGkAtoms::b) {
-    EditorInlineStyle strong(*nsGkAtoms::strong);
-    if (!aStylesToRemove.Contains(strong)) {
-      aStylesToRemove.AppendElement(std::move(strong));
-    }
-  } else if (aStyleToRemove.mHTMLProperty == nsGkAtoms::i) {
-    EditorInlineStyle em(*nsGkAtoms::em);
-    if (!aStylesToRemove.Contains(em)) {
-      aStylesToRemove.AppendElement(std::move(em));
-    }
-  } else if (aStyleToRemove.mHTMLProperty == nsGkAtoms::strike) {
-    EditorInlineStyle s(*nsGkAtoms::s);
-    if (!aStylesToRemove.Contains(s)) {
-      aStylesToRemove.AppendElement(std::move(s));
+  if (nsStaticAtom* similarElementName =
+          aStyleToRemove.GetSimilarElementNameAtom()) {
+    EditorInlineStyle anotherStyle(*similarElementName);
+    if (!aStylesToRemove.Contains(anotherStyle)) {
+      aStylesToRemove.AppendElement(std::move(anotherStyle));
     }
   } else if (aStyleToRemove.mHTMLProperty == nsGkAtoms::font) {
     if (aStyleToRemove.mAttribute == nsGkAtoms::size) {
