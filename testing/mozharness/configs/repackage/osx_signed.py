@@ -9,5 +9,7 @@ config = {
     "locale": os.environ.get("LOCALE"),
     # ToolTool
     "tooltool_cache": os.environ.get("TOOLTOOL_CACHE"),
-    "run_configure": False,
+    # TODO: `create_pkg` doesn't require this.
+    #       We need to refactor `create_dmg` to remove this requirement
+    "run_configure": True,
 }
