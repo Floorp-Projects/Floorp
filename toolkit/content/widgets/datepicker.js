@@ -40,7 +40,6 @@ function DatePicker(context) {
       this._setDefaultState();
       this._createComponents();
       this._update();
-      this.components.calendar.focus();
       document.dispatchEvent(new CustomEvent("PickerReady"));
     },
 
@@ -99,11 +98,6 @@ function DatePicker(context) {
           this._dispatchState();
           this._closePopup();
         },
-        setMonthByOffset: offset => {
-          dateKeeper.setMonthByOffset(offset);
-          this._update();
-          this._dispatchState();
-        },
         setYear: year => {
           dateKeeper.setYear(year);
           dateKeeper.setSelection({
@@ -141,7 +135,6 @@ function DatePicker(context) {
             calViewSize: CAL_VIEW_SIZE,
             locale: this.state.locale,
             setSelection: this.state.setSelection,
-            setMonthByOffset: this.state.setMonthByOffset,
             getDayString: this.state.getDayString,
             getWeekHeaderString: this.state.getWeekHeaderString,
           },
@@ -172,26 +165,11 @@ function DatePicker(context) {
     _update(options = {}) {
       const { dateKeeper, isMonthPickerVisible } = this.state;
 
-      const calendarEls = [
-        this.context.buttonPrev,
-        this.context.buttonNext,
-        this.context.weekHeader.parentNode,
-      ];
-      // Update MonthYear state and toggle visibility for sighted users
-      // and for assistive technology:
       if (isMonthPickerVisible) {
         this.state.months = dateKeeper.getMonths();
         this.state.years = dateKeeper.getYears();
-        this.context.monthYearView.hidden = false;
-        for (let el of calendarEls) {
-          el.hidden = true;
-        }
       } else {
         this.state.days = dateKeeper.getDays();
-        this.context.monthYearView.hidden = true;
-        for (let el of calendarEls) {
-          el.hidden = false;
-        }
       }
 
       this.components.monthYear.setProps({
@@ -207,6 +185,10 @@ function DatePicker(context) {
         days: this.state.days,
         weekHeaders: dateKeeper.state.weekHeaders,
       });
+
+      isMonthPickerVisible
+        ? this.context.monthYearView.classList.remove("hidden")
+        : this.context.monthYearView.classList.add("hidden");
     },
 
     /**
@@ -226,7 +208,6 @@ function DatePicker(context) {
      */
     _dispatchState() {
       const { year, month, day } = this.state.dateKeeper.selection;
-
       // The panel is listening to window for postMessage event, so we
       // do postMessage to itself to send data to input boxes.
       window.postMessage(
@@ -249,7 +230,6 @@ function DatePicker(context) {
       window.addEventListener("message", this);
       document.addEventListener("mouseup", this, { passive: true });
       document.addEventListener("mousedown", this);
-      document.addEventListener("keydown", this);
     },
 
     /**
@@ -263,41 +243,10 @@ function DatePicker(context) {
           this.handleMessage(event);
           break;
         }
-        case "keydown": {
-          switch (event.key) {
-            case "Enter":
-            case " ": {
-              if (event.target == this.context.buttonPrev) {
-                event.target.classList.add("active");
-                this.state.dateKeeper.setMonthByOffset(-1);
-                this._update();
-              } else if (event.target == this.context.buttonNext) {
-                event.target.classList.add("active");
-                this.state.dateKeeper.setMonthByOffset(1);
-                this._update();
-              }
-              break;
-            }
-            case "Tab": {
-              // Manage tab order of a daysView to prevent keyboard trap
-              if (event.target.tagName === "td") {
-                if (event.shiftKey) {
-                  this.context.buttonNext.focus();
-                } else if (!event.shiftKey) {
-                  this.context.buttonPrev.focus();
-                }
-                event.stopPropagation();
-                event.preventDefault();
-              }
-              break;
-            }
-          }
-          break;
-        }
         case "mousedown": {
           // Use preventDefault to keep focus on input boxes
           event.preventDefault();
-          event.target.setPointerCapture(event.pointerId);
+          event.target.setCapture();
 
           if (event.target == this.context.buttonPrev) {
             event.target.classList.add("active");
@@ -311,15 +260,12 @@ function DatePicker(context) {
           break;
         }
         case "mouseup": {
-          event.target.releasePointerCapture(event.pointerId);
-
           if (
             event.target == this.context.buttonPrev ||
             event.target == this.context.buttonNext
           ) {
             event.target.classList.remove("active");
           }
-          break;
         }
       }
     },
@@ -435,7 +381,6 @@ function DatePicker(context) {
       ),
     };
 
-    this._updateButtonLabels();
     this._attachEventListeners();
   }
 
@@ -454,13 +399,9 @@ function DatePicker(context) {
      */
     setProps(props) {
       this.context.monthYear.textContent = this.state.dateFormat(props.dateObj);
-      const spinnerDialog = this.context.monthYearView.parentNode;
 
       if (props.isVisible) {
         this.context.monthYear.classList.add("active");
-        this.context.monthYear.setAttribute("aria-expanded", "true");
-        // To prevent redundancy, as spinners will announce their value on change
-        this.context.monthYear.setAttribute("aria-live", "off");
         this.components.month.setState({
           value: props.dateObj.getUTCMonth(),
           items: props.months,
@@ -476,21 +417,8 @@ function DatePicker(context) {
           smoothScroll: !(this.state.firstOpened || props.noSmoothScroll),
         });
         this.state.firstOpened = false;
-
-        // Set up spinner dialog container properties for assistive technology:
-        spinnerDialog.setAttribute("role", "dialog");
-        spinnerDialog.setAttribute("aria-modal", "true");
       } else {
         this.context.monthYear.classList.remove("active");
-        this.context.monthYear.setAttribute("aria-expanded", "false");
-        // To ensure calendar month's changes are announced:
-        this.context.monthYear.setAttribute("aria-live", "polite");
-        // Remove spinner dialog container properties to ensure this hidden
-        // modal will be ignored by assistive technology, because even though
-        // the dialog is hidden, the toggle button is a visible descendant,
-        // so we must not treat its container as a dialog:
-        spinnerDialog.removeAttribute("role");
-        spinnerDialog.removeAttribute("aria-modal");
         this.state.isMonthSet = false;
         this.state.isYearSet = false;
         this.state.firstOpened = true;
@@ -509,46 +437,7 @@ function DatePicker(context) {
           this.props.toggleMonthPicker();
           break;
         }
-        case "keydown": {
-          if (event.key === "Enter" || event.key === " ") {
-            event.stopPropagation();
-            event.preventDefault();
-            this.props.toggleMonthPicker();
-          }
-          break;
-        }
       }
-    },
-
-    /**
-     * Update localizable IDs of the spinner and its Prev/Next buttons
-     */
-    _updateButtonLabels() {
-      document.l10n.setAttributes(
-        this.components.month.elements.spinner,
-        "date-spinner-month"
-      );
-      document.l10n.setAttributes(
-        this.components.year.elements.spinner,
-        "date-spinner-year"
-      );
-      document.l10n.setAttributes(
-        this.components.month.elements.up,
-        "date-spinner-month-previous"
-      );
-      document.l10n.setAttributes(
-        this.components.month.elements.down,
-        "date-spinner-month-next"
-      );
-      document.l10n.setAttributes(
-        this.components.year.elements.up,
-        "date-spinner-year-previous"
-      );
-      document.l10n.setAttributes(
-        this.components.year.elements.down,
-        "date-spinner-year-next"
-      );
-      document.l10n.translateRoots();
     },
 
     /**
@@ -556,7 +445,6 @@ function DatePicker(context) {
      */
     _attachEventListeners() {
       this.context.monthYear.addEventListener("click", this);
-      this.context.monthYear.addEventListener("keydown", this);
     },
   };
 }

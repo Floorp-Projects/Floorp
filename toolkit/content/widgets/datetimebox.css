@@ -45,58 +45,23 @@
   user-select: none;
 }
 
-.datetime-calendar-button {
-  -moz-context-properties: fill;
+.datetime-reset-button {
   color: inherit;
   font-size: inherit;
   fill: currentColor;
-  opacity: .65;
+  opacity: .5;
   background-color: transparent;
   border: none;
-  border-radius: 0.2em;
   flex: none;
-  margin-block: 0;
-  margin-inline: 0.075em 0.15em;
-  padding: 0 0.15em;
+  padding-inline: 2px;
+  padding-block: 0;
   line-height: 1;
 }
 
-.datetime-calendar-button:focus-visible,
-.datetime-calendar-button:hover {
-  opacity: 1;
-  outline: 0.15em solid SelectedItem;
-}
-
-.datetime-calendar-button-svg {
+.datetime-reset-button-svg {
   pointer-events: none;
   /* When using a very small font-size, we don't want the button to take extra
    * space (which will affect the baseline of the form control) */
   max-width: 1em;
   max-height: 1em;
-}
-
-@media (prefers-contrast) {
-  .datetime-calendar-button {
-    opacity: 1;
-    background-color: ButtonFace;
-    color: ButtonText;
-  }
-
-  .datetime-calendar-button:focus-visible,
-  .datetime-calendar-button:hover {
-    background-color: SelectedItem;
-  }
-
-  .datetime-calendar-button:focus-visible > .datetime-calendar-button-svg,
-  .datetime-calendar-button:hover > .datetime-calendar-button-svg {
-    background-color: SelectedItem;
-    -moz-context-properties: fill;
-    fill: SelectedItemText;
-  }
-
-  .datetime-calendar-button-svg {
-    background-color: ButtonFace;
-    -moz-context-properties: fill;
-    fill: ButtonText;
-  }
 }
