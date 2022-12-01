@@ -429,7 +429,7 @@ class SourceCoords {
   }
 
  public:
-  SourceCoords(JSContext* cx, uint32_t initialLineNumber,
+  SourceCoords(ErrorContext* ec, uint32_t initialLineNumber,
                uint32_t initialOffset);
 
   [[nodiscard]] bool add(uint32_t lineNum, uint32_t lineStartOffset);
@@ -1584,7 +1584,7 @@ class TokenStreamCharsShared {
  protected:
   explicit TokenStreamCharsShared(JSContext* cx, ErrorContext* ec,
                                   ParserAtomsTable* parserAtoms)
-      : cx(cx), ec(ec), charBuffer(cx), parserAtoms(parserAtoms) {}
+      : cx(cx), ec(ec), charBuffer(ec), parserAtoms(parserAtoms) {}
 
   [[nodiscard]] bool copyCharBufferTo(
       JSContext* cx, UniquePtr<char16_t[], JS::FreePolicy>* destination);
