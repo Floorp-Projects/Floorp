@@ -44,6 +44,7 @@
 #include "mozIGeckoMediaPluginService.h"
 #include "MediaConduitInterface.h"
 #include "AudioConduit.h"
+#include "PerformanceRecorder.h"
 #include "VideoConduit.h"
 #include "api/video/video_frame_type.h"
 #include "modules/video_coding/include/video_codec_interface.h"
@@ -446,6 +447,7 @@ class WebrtcGmpVideoDecoder : public GMPVideoDecoderCallbackProxy {
   Maybe<uint64_t> mCachedPluginId;
   Atomic<GMPErr, ReleaseAcquire> mDecoderStatus;
   const std::string mPCHandle;
+  PerformanceRecorderMulti<DecodeStage> mPerformanceRecorder;
 
   MediaEventProducer<uint64_t> mInitPluginEvent;
   MediaEventProducer<uint64_t> mReleasePluginEvent;
