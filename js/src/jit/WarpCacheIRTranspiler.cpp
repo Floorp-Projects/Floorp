@@ -2053,9 +2053,18 @@ bool WarpCacheIRTranspiler::emitLinearizeForCharAccess(
 }
 
 bool WarpCacheIRTranspiler::emitLoadStringCharResult(StringOperandId strId,
-                                                     Int32OperandId indexId) {
+                                                     Int32OperandId indexId,
+                                                     bool handleOOB) {
   MDefinition* str = getOperand(strId);
   MDefinition* index = getOperand(indexId);
+
+  if (handleOOB) {
+    auto* ins = MCharAtMaybeOutOfBounds::New(alloc(), str, index);
+    add(ins);
+
+    pushResult(ins);
+    return true;
+  }
 
   auto* length = MStringLength::New(alloc(), str);
   add(length);
@@ -2072,10 +2081,19 @@ bool WarpCacheIRTranspiler::emitLoadStringCharResult(StringOperandId strId,
   return true;
 }
 
-bool WarpCacheIRTranspiler::emitLoadStringCharCodeResult(
-    StringOperandId strId, Int32OperandId indexId) {
+bool WarpCacheIRTranspiler::emitLoadStringCharCodeResult(StringOperandId strId,
+                                                         Int32OperandId indexId,
+                                                         bool handleOOB) {
   MDefinition* str = getOperand(strId);
   MDefinition* index = getOperand(indexId);
+
+  if (handleOOB) {
+    auto* ins = MCharCodeAtMaybeOutOfBounds::New(alloc(), str, index);
+    add(ins);
+
+    pushResult(ins);
+    return true;
+  }
 
   auto* length = MStringLength::New(alloc(), str);
   add(length);

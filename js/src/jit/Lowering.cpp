@@ -2322,6 +2322,33 @@ void LIRGenerator::visitCharCodeAt(MCharCodeAt* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitCharCodeAtMaybeOutOfBounds(
+    MCharCodeAtMaybeOutOfBounds* ins) {
+  MDefinition* str = ins->string();
+  MDefinition* idx = ins->index();
+
+  MOZ_ASSERT(str->type() == MIRType::String);
+  MOZ_ASSERT(idx->type() == MIRType::Int32);
+
+  auto* lir = new (alloc()) LCharCodeAtMaybeOutOfBounds(
+      useRegister(str), useRegister(idx), temp(), temp());
+  defineBox(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
+void LIRGenerator::visitCharAtMaybeOutOfBounds(MCharAtMaybeOutOfBounds* ins) {
+  MDefinition* str = ins->string();
+  MDefinition* idx = ins->index();
+
+  MOZ_ASSERT(str->type() == MIRType::String);
+  MOZ_ASSERT(idx->type() == MIRType::Int32);
+
+  auto* lir = new (alloc()) LCharAtMaybeOutOfBounds(
+      useRegister(str), useRegister(idx), temp(), temp());
+  define(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitFromCharCode(MFromCharCode* ins) {
   MDefinition* code = ins->getOperand(0);
 

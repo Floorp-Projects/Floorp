@@ -2382,7 +2382,7 @@ AttachDecision GetPropIRGenerator::tryAttachStringLength(ValOperandId valId,
   return AttachDecision::Attach;
 }
 
-enum class AttachStringChar { No, Yes, Linearize };
+enum class AttachStringChar { No, Yes, Linearize, OutOfBounds };
 
 static AttachStringChar CanAttachStringChar(const Value& val,
                                             const Value& idVal) {
@@ -2392,12 +2392,12 @@ static AttachStringChar CanAttachStringChar(const Value& val,
 
   int32_t index = idVal.toInt32();
   if (index < 0) {
-    return AttachStringChar::No;
+    return AttachStringChar::OutOfBounds;
   }
 
   JSString* str = val.toString();
   if (size_t(index) >= str->length()) {
-    return AttachStringChar::No;
+    return AttachStringChar::OutOfBounds;
   }
 
   // This follows JSString::getChar and MacroAssembler::loadStringChar.
@@ -2426,12 +2426,18 @@ AttachDecision GetPropIRGenerator::tryAttachStringChar(ValOperandId valId,
     return AttachDecision::NoAction;
   }
 
+  // Can't attach for out-of-bounds access without guarding that indexed
+  // properties aren't present along the prototype chain of |String.prototype|.
+  if (attach == AttachStringChar::OutOfBounds) {
+    return AttachDecision::NoAction;
+  }
+
   StringOperandId strId = writer.guardToString(valId);
   Int32OperandId int32IndexId = writer.guardToInt32Index(indexId);
   if (attach == AttachStringChar::Linearize) {
     strId = writer.linearizeForCharAccess(strId, int32IndexId);
   }
-  writer.loadStringCharResult(strId, int32IndexId);
+  writer.loadStringCharResult(strId, int32IndexId, /* handleOOB = */ false);
   writer.returnFromIC();
 
   trackAttached("StringChar");
@@ -6825,6 +6831,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStringChar(
     return AttachDecision::NoAction;
   }
 
+  bool handleOOB = attach == AttachStringChar::OutOfBounds;
+
   // Initialize the input operand.
   initializeInputOperand();
 
@@ -6842,15 +6850,20 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStringChar(
   Int32OperandId int32IndexId = writer.guardToInt32Index(indexId);
 
   // Linearize the string.
-  if (attach == AttachStringChar::Linearize) {
+  //
+  // AttachStringChar doesn't have a separate state when OOB access happens on
+  // a string which needs to be linearized, so just linearize unconditionally
+  // for out-of-bounds accesses.
+  if (attach == AttachStringChar::Linearize ||
+      attach == AttachStringChar::OutOfBounds) {
     strId = writer.linearizeForCharAccess(strId, int32IndexId);
   }
 
   // Load string char or code.
   if (kind == StringChar::CodeAt) {
-    writer.loadStringCharCodeResult(strId, int32IndexId);
+    writer.loadStringCharCodeResult(strId, int32IndexId, handleOOB);
   } else {
-    writer.loadStringCharResult(strId, int32IndexId);
+    writer.loadStringCharResult(strId, int32IndexId, handleOOB);
   }
 
   writer.returnFromIC();

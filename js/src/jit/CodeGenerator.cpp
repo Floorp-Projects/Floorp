@@ -11082,6 +11082,69 @@ void CodeGenerator::visitCharCodeAt(LCharCodeAt* lir) {
   masm.bind(ool->rejoin());
 }
 
+void CodeGenerator::visitCharCodeAtMaybeOutOfBounds(
+    LCharCodeAtMaybeOutOfBounds* lir) {
+  Register str = ToRegister(lir->str());
+  Register index = ToRegister(lir->index());
+  ValueOperand output = ToOutValue(lir);
+  Register temp0 = ToRegister(lir->temp0());
+  Register temp1 = ToRegister(lir->temp1());
+
+  using Fn = bool (*)(JSContext*, HandleString, int32_t, uint32_t*);
+  auto* ool = oolCallVM<Fn, jit::CharCodeAt>(
+      lir, ArgList(str, index), StoreRegisterTo(output.scratchReg()));
+
+  // Return NaN for out-of-bounds access.
+  Label done;
+  masm.moveValue(JS::NaNValue(), output);
+
+  masm.spectreBoundsCheck32(index, Address(str, JSString::offsetOfLength()),
+                            temp0, &done);
+
+  masm.loadStringChar(str, index, output.scratchReg(), temp0, temp1,
+                      ool->entry());
+  masm.bind(ool->rejoin());
+
+  masm.tagValue(JSVAL_TYPE_INT32, output.scratchReg(), output);
+
+  masm.bind(&done);
+}
+
+void CodeGenerator::visitCharAtMaybeOutOfBounds(LCharAtMaybeOutOfBounds* lir) {
+  Register str = ToRegister(lir->str());
+  Register index = ToRegister(lir->index());
+  Register output = ToRegister(lir->output());
+  Register temp0 = ToRegister(lir->temp0());
+  Register temp1 = ToRegister(lir->temp1());
+
+  using Fn1 = bool (*)(JSContext*, HandleString, int32_t, uint32_t*);
+  auto* oolLoadChar = oolCallVM<Fn1, jit::CharCodeAt>(lir, ArgList(str, index),
+                                                      StoreRegisterTo(output));
+
+  using Fn2 = JSLinearString* (*)(JSContext*, int32_t);
+  auto* oolFromCharCode = oolCallVM<Fn2, jit::StringFromCharCode>(
+      lir, ArgList(output), StoreRegisterTo(output));
+
+  // Return the empty string for out-of-bounds access.
+  const JSAtomState& names = gen->runtime->names();
+  masm.movePtr(ImmGCPtr(names.empty), output);
+
+  masm.spectreBoundsCheck32(index, Address(str, JSString::offsetOfLength()),
+                            temp0, oolFromCharCode->rejoin());
+
+  masm.loadStringChar(str, index, output, temp0, temp1, oolLoadChar->entry());
+  masm.bind(oolLoadChar->rejoin());
+
+  // OOL path if code >= UNIT_STATIC_LIMIT.
+  masm.boundsCheck32PowerOfTwo(output, StaticStrings::UNIT_STATIC_LIMIT,
+                               oolFromCharCode->entry());
+
+  masm.movePtr(ImmPtr(&gen->runtime->staticStrings().unitStaticTable), temp0);
+  masm.loadPtr(BaseIndex(temp0, output, ScalePointer), output);
+
+  masm.bind(oolFromCharCode->rejoin());
+}
+
 void CodeGenerator::visitFromCharCode(LFromCharCode* lir) {
   Register code = ToRegister(lir->code());
   Register output = ToRegister(lir->output());
