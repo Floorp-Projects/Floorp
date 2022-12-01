@@ -59,7 +59,7 @@ object Versions {
 
     const val google_play_review_version = "2.0.0"
 
-    const val protobuf = "3.21.7" // keep in sync with the version used in AS.
+    const val protobuf = "3.21.10" // keep in sync with the version used in AS.
 }
 
 @Suppress("unused")
