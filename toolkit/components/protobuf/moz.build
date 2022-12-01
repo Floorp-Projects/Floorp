@@ -64,7 +64,7 @@ EXPORTS.google.protobuf.stubs += [
     'src/google/protobuf/stubs/platform_macros.h',
     'src/google/protobuf/stubs/port.h',
     'src/google/protobuf/stubs/status.h',
-    'src/google/protobuf/stubs/statusor.h',
+    # 'src/google/protobuf/stubs/statusor.h', # Unused file
     'src/google/protobuf/stubs/stl_util.h',
     'src/google/protobuf/stubs/stringpiece.h',
     'src/google/protobuf/stubs/stringprintf.h',
@@ -105,7 +105,7 @@ SOURCES += [
     'src/google/protobuf/stubs/common.cc', # port_def conflicts
     'src/google/protobuf/stubs/int128.cc', # port_def conflicts
     'src/google/protobuf/stubs/status.cc', # port_def conflicts
-    'src/google/protobuf/stubs/statusor.cc', # port_def conflicts
+    # 'src/google/protobuf/stubs/statusor.cc', # Unused file. # port_def conflicts
     'src/google/protobuf/stubs/stringprintf.cc', # port_def conflicts
     'src/google/protobuf/stubs/time.cc',  # GetCurrentTime conflict in winbase.h
     'src/google/protobuf/wire_format_lite.cc', # port_def conflicts
