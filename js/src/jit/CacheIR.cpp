@@ -2382,19 +2382,22 @@ AttachDecision GetPropIRGenerator::tryAttachStringLength(ValOperandId valId,
   return AttachDecision::Attach;
 }
 
-static bool CanAttachStringChar(const Value& val, const Value& idVal) {
+enum class AttachStringChar { No, Yes, Linearize };
+
+static AttachStringChar CanAttachStringChar(const Value& val,
+                                            const Value& idVal) {
   if (!val.isString() || !idVal.isInt32()) {
-    return false;
+    return AttachStringChar::No;
   }
 
   int32_t index = idVal.toInt32();
   if (index < 0) {
-    return false;
+    return AttachStringChar::No;
   }
 
   JSString* str = val.toString();
   if (size_t(index) >= str->length()) {
-    return false;
+    return AttachStringChar::No;
   }
 
   // This follows JSString::getChar and MacroAssembler::loadStringChar.
@@ -2408,22 +2411,26 @@ static bool CanAttachStringChar(const Value& val, const Value& idVal) {
   }
 
   if (!str->isLinear()) {
-    return false;
+    return AttachStringChar::Linearize;
   }
 
-  return true;
+  return AttachStringChar::Yes;
 }
 
 AttachDecision GetPropIRGenerator::tryAttachStringChar(ValOperandId valId,
                                                        ValOperandId indexId) {
   MOZ_ASSERT(idVal_.isInt32());
 
-  if (!CanAttachStringChar(val_, idVal_)) {
+  auto attach = CanAttachStringChar(val_, idVal_);
+  if (attach == AttachStringChar::No) {
     return AttachDecision::NoAction;
   }
 
   StringOperandId strId = writer.guardToString(valId);
   Int32OperandId int32IndexId = writer.guardToInt32Index(indexId);
+  if (attach == AttachStringChar::Linearize) {
+    strId = writer.linearizeForCharAccess(strId, int32IndexId);
+  }
   writer.loadStringCharResult(strId, int32IndexId);
   writer.returnFromIC();
 
@@ -6813,7 +6820,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStringChar(
     return AttachDecision::NoAction;
   }
 
-  if (!CanAttachStringChar(thisval_, args_[0])) {
+  auto attach = CanAttachStringChar(thisval_, args_[0]);
+  if (attach == AttachStringChar::No) {
     return AttachDecision::NoAction;
   }
 
@@ -6832,6 +6840,11 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStringChar(
   ValOperandId indexId =
       writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
   Int32OperandId int32IndexId = writer.guardToInt32Index(indexId);
+
+  // Linearize the string.
+  if (attach == AttachStringChar::Linearize) {
+    strId = writer.linearizeForCharAccess(strId, int32IndexId);
+  }
 
   // Load string char or code.
   if (kind == StringChar::CodeAt) {

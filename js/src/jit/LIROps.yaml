@@ -1106,6 +1106,14 @@
     rhs: WordSized
   num_temps: 5
 
+# Linearize a string before a character access.
+- name: LinearizeForCharAccess
+  result_type: WordSized
+  operands:
+    str: WordSized
+    index: WordSized
+  mir_op: true
+
 # Get uint16 character code from a string.
 - name: CharCodeAt
   result_type: WordSized

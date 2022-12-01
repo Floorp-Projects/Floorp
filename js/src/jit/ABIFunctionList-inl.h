@@ -150,6 +150,7 @@ namespace jit {
   _(js::jit::InvalidationBailout)                                     \
   _(js::jit::InvokeFromInterpreterStub)                               \
   _(js::jit::LazyLinkTopActivation)                                   \
+  _(js::jit::LinearizeForCharAccessPure)                              \
   _(js::jit::ObjectHasGetterSetterPure)                               \
   _(js::jit::ObjectIsCallable)                                        \
   _(js::jit::ObjectIsConstructor)                                     \

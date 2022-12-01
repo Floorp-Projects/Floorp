@@ -813,6 +813,16 @@
 - name: Concat
   gen_boilerplate: false
 
+- name: LinearizeForCharAccess
+  operands:
+    string: String
+    index: Int32
+  result_type: String
+  movable: true
+  congruent_to: if_operands_equal
+  # Strings are immutable, so there is no implicit dependency.
+  alias_set: none
+
 - name: CharCodeAt
   operands:
     string: String
