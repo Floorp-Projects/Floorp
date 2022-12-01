@@ -2455,8 +2455,8 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
   return intoScriptStencil(CompilationStencil::TopLevelIndex);
 }
 
-js::UniquePtr<ImmutableScriptData> BytecodeEmitter::createImmutableScriptData(
-    JSContext* cx) {
+js::UniquePtr<ImmutableScriptData>
+BytecodeEmitter::createImmutableScriptData() {
   uint32_t nslots;
   if (!getNslots(&nslots)) {
     return nullptr;
@@ -7239,7 +7239,7 @@ bool BytecodeEmitter::emitSelfHostedResumeGenerator(CallNode* callNode) {
   ParseNode* kindNode = valNode->pn_next;
   MOZ_ASSERT(kindNode->isKind(ParseNodeKind::StringExpr));
   GeneratorResumeKind kind =
-      ParserAtomToResumeKind(cx, kindNode->as<NameNode>().atom());
+      ParserAtomToResumeKind(kindNode->as<NameNode>().atom());
   MOZ_ASSERT(!kindNode->pn_next);
 
   if (!emitPushResumeKind(kind)) {
@@ -9209,8 +9209,7 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj, JSOp op,
 #endif
         writer.setPropNameNoDuplicateCheck(parserAtoms(), propName);
       } else {
-        if (!writer.setPropName(cx, parserAtoms(),
-                                key->as<NameNode>().atom())) {
+        if (!writer.setPropName(parserAtoms(), key->as<NameNode>().atom())) {
           return false;
         }
       }
@@ -9289,7 +9288,7 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
       atom = key->as<NameNode>().atom();
     }
 
-    if (!writer.setPropName(cx, parserAtoms(), atom)) {
+    if (!writer.setPropName(parserAtoms(), atom)) {
       return false;
     }
 
@@ -10681,8 +10680,7 @@ bool BytecodeEmitter::emitLexicalInitialization(TaggedParserAtomIndex name) {
   return true;
 }
 
-static MOZ_ALWAYS_INLINE ParseNode* FindConstructor(JSContext* cx,
-                                                    ListNode* classMethods) {
+static MOZ_ALWAYS_INLINE ParseNode* FindConstructor(ListNode* classMethods) {
   for (ParseNode* classElement : classMethods->contents()) {
     ParseNode* unwrappedElement = classElement;
     if (unwrappedElement->is<LexicalScopeNode>()) {
@@ -10785,7 +10783,7 @@ bool BytecodeEmitter::emitClass(
 
   ParseNode* heritageExpression = classNode->heritage();
   ListNode* classMembers = classNode->memberList();
-  ParseNode* constructor = FindConstructor(cx, classMembers);
+  ParseNode* constructor = FindConstructor(classMembers);
 
   // If |nameKind != ClassNameKind::ComputedName|
   //                [stack]
@@ -11732,7 +11730,7 @@ bool BytecodeEmitter::newSrcNoteOperand(ptrdiff_t operand) {
 
 bool BytecodeEmitter::intoScriptStencil(ScriptIndex scriptIndex) {
   js::UniquePtr<ImmutableScriptData> immutableScriptData =
-      createImmutableScriptData(cx);
+      createImmutableScriptData();
   if (!immutableScriptData) {
     return false;
   }
@@ -11741,7 +11739,7 @@ bool BytecodeEmitter::intoScriptStencil(ScriptIndex scriptIndex) {
              sc->hasNonSyntacticScope());
 
   auto& things = perScriptData().gcThingList().objects();
-  if (!compilationState.appendGCThings(cx, ec, scriptIndex, things)) {
+  if (!compilationState.appendGCThings(ec, scriptIndex, things)) {
     return false;
   }
 
