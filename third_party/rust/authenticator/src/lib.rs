@@ -5,14 +5,52 @@
 #[macro_use]
 mod util;
 
+#[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "netbsd"))]
+pub mod hidproto;
+
 #[cfg(any(target_os = "linux"))]
 extern crate libudev;
+
+#[cfg(any(target_os = "linux"))]
+#[path = "linux/mod.rs"]
+pub mod platform;
 
 #[cfg(any(target_os = "freebsd"))]
 extern crate devd_rs;
 
+#[cfg(any(target_os = "freebsd"))]
+#[path = "freebsd/mod.rs"]
+pub mod platform;
+
+#[cfg(any(target_os = "netbsd"))]
+#[path = "netbsd/mod.rs"]
+pub mod platform;
+
+#[cfg(any(target_os = "openbsd"))]
+#[path = "openbsd/mod.rs"]
+pub mod platform;
+
 #[cfg(any(target_os = "macos"))]
 extern crate core_foundation;
+
+#[cfg(any(target_os = "macos"))]
+#[path = "macos/mod.rs"]
+pub mod platform;
+
+#[cfg(any(target_os = "windows"))]
+#[path = "windows/mod.rs"]
+pub mod platform;
+
+#[cfg(not(any(
+    target_os = "linux",
+    target_os = "freebsd",
+    target_os = "openbsd",
+    target_os = "netbsd",
+    target_os = "macos",
+    target_os = "windows"
+)))]
+#[path = "stub/mod.rs"]
+pub mod platform;
 
 extern crate libc;
 #[macro_use]
@@ -35,25 +73,9 @@ pub use crate::manager::U2FManager;
 mod capi;
 pub use crate::capi::*;
 
-pub mod ctap2;
-pub use ctap2::attestation::AttestationObject;
-pub use ctap2::client_data::{CollectedClientData, CollectedClientDataWrapper};
-pub use ctap2::commands::client_pin::{Pin, PinError};
-pub use ctap2::AssertionObject;
-
-mod ctap2_capi;
-pub use crate::ctap2_capi::*;
-
 pub mod errors;
 pub mod statecallback;
-mod transport;
 mod virtualdevices;
-
-mod status_update;
-pub use status_update::*;
-
-mod crypto;
-pub use crypto::COSEAlgorithm;
 
 // Keep this in sync with the constants in u2fhid-capi.h.
 bitflags! {
@@ -76,27 +98,24 @@ bitflags! {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct KeyHandle {
     pub credential: Vec<u8>,
     pub transports: AuthenticatorTransports,
 }
 
 pub type AppId = Vec<u8>;
-
-pub enum RegisterResult {
-    CTAP1(Vec<u8>, u2ftypes::U2FDeviceInfo),
-    CTAP2(AttestationObject, CollectedClientDataWrapper),
-}
-
-pub enum SignResult {
-    CTAP1(AppId, Vec<u8>, Vec<u8>, u2ftypes::U2FDeviceInfo),
-    CTAP2(AssertionObject, CollectedClientDataWrapper),
-}
-
-pub type ResetResult = ();
+pub type RegisterResult = (Vec<u8>, u2ftypes::U2FDeviceInfo);
+pub type SignResult = (AppId, Vec<u8>, Vec<u8>, u2ftypes::U2FDeviceInfo);
 
 pub type Result<T> = std::result::Result<T, errors::AuthenticatorError>;
+
+#[derive(Debug, Clone)]
+pub enum StatusUpdate {
+    DeviceAvailable { dev_info: u2ftypes::U2FDeviceInfo },
+    DeviceUnavailable { dev_info: u2ftypes::U2FDeviceInfo },
+    Success { dev_info: u2ftypes::U2FDeviceInfo },
+}
 
 #[cfg(test)]
 #[macro_use]

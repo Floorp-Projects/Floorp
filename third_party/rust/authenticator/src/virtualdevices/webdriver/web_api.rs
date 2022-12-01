@@ -511,6 +511,7 @@ mod tests {
     use super::testtoken::*;
     use super::*;
     use crate::virtualdevices::webdriver::virtualmanager::VirtualManagerState;
+    use bytes::Buf;
     use std::sync::{Arc, Mutex};
     use warp::http::StatusCode;
 
@@ -590,8 +591,8 @@ mod tests {
         state
     }
 
-    fn assert_success_rsp_blank(body: &warp::hyper::body::Bytes) {
-        assert_eq!(String::from_utf8_lossy(&body), r#"{}"#)
+    fn assert_success_rsp_blank(body: &bytes::Bytes) {
+        assert_eq!(String::from_utf8_lossy(body.bytes()), r#"{}"#)
     }
 
     fn assert_creds_equals_test_token_params(
@@ -652,7 +653,7 @@ mod tests {
                 .reply(&filter)
                 .await;
             assert!(res.status().is_client_error());
-            assert!(String::from_utf8_lossy(&res.body())
+            assert!(String::from_utf8_lossy(res.body().bytes())
                 .contains(&String::from("unknown protocol: unknown")));
         }
 
@@ -667,7 +668,7 @@ mod tests {
                 .await;
             assert!(res.status().is_success());
             assert_eq!(
-                String::from_utf8_lossy(&res.body()),
+                String::from_utf8_lossy(res.body().bytes()),
                 r#"{"authenticatorId":1}"#
             )
         }
@@ -681,7 +682,7 @@ mod tests {
                 .await;
             assert!(res.status().is_success());
             assert_eq!(
-                String::from_utf8_lossy(&res.body()),
+                String::from_utf8_lossy(res.body().bytes()),
                 r#"{"authenticatorId":2}"#
             )
         }

@@ -7888,11 +7888,7 @@ var WebAuthnPromptHelper = {
   // cancellation of an ongoing WebAuthhn request.
   _tid: 0,
 
-  // Translation object
-  _l10n: null,
-
   init() {
-    this._l10n = new Localization(["browser/webauthnDialog.ftl"], true);
     Services.obs.addObserver(this, this._topic);
   },
 
@@ -7924,93 +7920,6 @@ var WebAuthnPromptHelper = {
       this.registerDirect(mgr, data);
     } else if (data.action == "sign") {
       this.sign(mgr, data);
-    } else if (data.action == "pin-required") {
-      this.pin_required(mgr, data);
-    } else if (data.action == "select-sign-result") {
-      this.select_sign_result(mgr, data);
-    } else if (data.action == "select-device") {
-      this.show_info(
-        mgr,
-        data.origin,
-        data.tid,
-        "selectDevice",
-        "webauthn.selectDevicePrompt"
-      );
-    } else if (data.action == "pin-auth-blocked") {
-      this.show_info(
-        mgr,
-        data.origin,
-        data.tid,
-        "pinAuthBlocked",
-        "webauthn.pinAuthBlockedPrompt"
-      );
-    } else if (data.action == "device-blocked") {
-      this.show_info(
-        mgr,
-        data.origin,
-        data.tid,
-        "deviceBlocked",
-        "webauthn.deviceBlockedPrompt"
-      );
-    }
-  },
-
-  prompt_for_password(origin, wasInvalid, retriesLeft, aPassword) {
-    let dialogText;
-    if (wasInvalid) {
-      dialogText = this._l10n.formatValueSync("webauthn-pin-invalid-prompt", {
-        retriesLeft,
-      });
-    } else {
-      dialogText = this._l10n.formatValueSync("webauthn-pin-required-prompt");
-    }
-
-    let res = Services.prompt.promptPasswordBC(
-      gBrowser.selectedBrowser.browsingContext,
-      Services.prompt.MODAL_TYPE_TAB,
-      origin,
-      dialogText,
-      aPassword
-    );
-    return res;
-  },
-
-  select_sign_result(mgr, { origin, tid, usernames }) {
-    let secondaryActions = [];
-    for (let i = 0; i < usernames.length; i++) {
-      secondaryActions.push({
-        label: unescape(decodeURIComponent(usernames[i])),
-        accessKey: i.toString(),
-        callback(aState) {
-          mgr.resumeWithSelectedSignResult(tid, i);
-        },
-      });
-    }
-    let mainAction = this.buildCancelAction(mgr, tid);
-    let options = {};
-    this.show(
-      tid,
-      "select-sign-result",
-      "webauthn.selectSignResultPrompt",
-      origin,
-      mainAction,
-      secondaryActions,
-      options
-    );
-  },
-
-  pin_required(mgr, { origin, tid, wasInvalid, retriesLeft }) {
-    let aPassword = Object.create(null); // create a "null" object
-    let res = this.prompt_for_password(
-      origin,
-      wasInvalid,
-      retriesLeft,
-      aPassword
-    );
-    if (res) {
-      mgr.pinCallback(aPassword.value);
-    } else {
-      mgr.cancel(tid);
     }
   },
 
@@ -8048,11 +7957,6 @@ var WebAuthnPromptHelper = {
   sign(mgr, { origin, tid }) {
     let mainAction = this.buildCancelAction(mgr, tid);
     this.show(tid, "sign", "webauthn.signPrompt2", origin, mainAction);
-  },
-
-  show_info(mgr, origin, tid, id, stringId) {
-    let mainAction = this.buildCancelAction(mgr, tid);
-    this.show(tid, id, stringId, origin, mainAction);
   },
 
   show(
