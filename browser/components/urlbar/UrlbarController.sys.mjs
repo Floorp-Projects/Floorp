@@ -727,24 +727,37 @@ class TelemetryEvent {
    * @see {@link https://firefox-source-docs.mozilla.org/browser/urlbar/telemetry.html}
    */
   start(event, searchString = null) {
-    // In case of a "returned" interaction ongoing, the user may either
-    // continue the search, or restart with a new search string. In that case
-    // we want to change the interaction type to "restarted".
-    // Detecting all the possible ways of clearing the input would be tricky,
-    // thus this makes a guess by just checking the first char matches; even if
-    // the user backspaces a part of the string, we still count that as a
-    // "returned" interaction.
-    if (
-      this._startEventInfo &&
-      this._startEventInfo.interactionType == "returned" &&
-      (!searchString || this._startEventInfo.searchString[0] != searchString[0])
-    ) {
-      this._startEventInfo.interactionType = "restarted";
+    if (this._startEventInfo) {
+      if (this._startEventInfo.interactionType == "topsites") {
+        // If the most recent event came from opening the results pane with an
+        // empty string replace the interactionType (that would be "topsites")
+        // with one for the current event to better measure the user flow.
+        this._startEventInfo.interactionType = this._getStartInteractionType(
+          event,
+          searchString
+        );
+        this._startEventInfo.searchString = searchString;
+      } else if (
+        this._startEventInfo.interactionType == "returned" &&
+        (!searchString ||
+          this._startEventInfo.searchString[0] != searchString[0])
+      ) {
+        // In case of a "returned" interaction ongoing, the user may either
+        // continue the search, or restart with a new search string. In that case
+        // we want to change the interaction type to "restarted".
+        // Detecting all the possible ways of clearing the input would be tricky,
+        // thus this makes a guess by just checking the first char matches; even if
+        // the user backspaces a part of the string, we still count that as a
+        // "returned" interaction.
+        this._startEventInfo.interactionType = "restarted";
+      }
+
+      // start is invoked on a user-generated event, but we only count the first
+      // one.  Once an engagement or abandoment happens, we clear _startEventInfo.
+      return;
     }
 
-    // start is invoked on a user-generated event, but we only count the first
-    // one.  Once an engagement or abandoment happens, we clear _startEventInfo.
-    if (!this._category || this._startEventInfo) {
+    if (!this._category) {
       return;
     }
     if (!event) {
@@ -766,22 +779,9 @@ class TelemetryEvent {
       return;
     }
 
-    let interactionType = "topsites";
-    if (event.interactionType) {
-      interactionType = event.interactionType;
-    } else if (event.type == "input") {
-      interactionType = lazy.UrlbarUtils.isPasteEvent(event)
-        ? "pasted"
-        : "typed";
-    } else if (event.type == "drop") {
-      interactionType = "dropped";
-    } else if (searchString) {
-      interactionType = "typed";
-    }
-
     this._startEventInfo = {
       timeStamp: event.timeStamp || Cu.now(),
-      interactionType,
+      interactionType: this._getStartInteractionType(event, searchString),
       searchString,
     };
 
@@ -1064,6 +1064,19 @@ class TelemetryEvent {
     return (
       intersect(currentSet, previousSet) || intersect(previousSet, currentSet)
     );
+  }
+
+  _getStartInteractionType(event, searchString) {
+    if (event.interactionType) {
+      return event.interactionType;
+    } else if (event.type == "input") {
+      return lazy.UrlbarUtils.isPasteEvent(event) ? "pasted" : "typed";
+    } else if (event.type == "drop") {
+      return "dropped";
+    } else if (searchString) {
+      return "typed";
+    }
+    return "topsites";
   }
 
   /**

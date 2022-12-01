@@ -370,7 +370,6 @@ add_task(async function selected_result_tab_to_search() {
 add_task(async function selected_result_top_site() {
   await doTest(async browser => {
     await addTopSites("https://example.com/");
-
     await showResultByArrowDown();
     await selectRowByURL("https://example.com/");
     await doEnter();
