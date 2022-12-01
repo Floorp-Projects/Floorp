@@ -14,7 +14,11 @@ queue = taskcluster.Queue({
 })
 
 
-def check_all_dependencies_are_completed(dependencies_task_ids):
+def check_all_dependencies_are_completed(current_task_id):
+    print(f'Fetching task definition of {current_task_id}...')
+    task = queue.task(current_task_id)
+    dependencies_task_ids = task['dependencies']
+
     print(f'Fetching status of {len(dependencies_task_ids)} dependencies...')
     # TODO Make this dict-comprehension async once we go Python 3
     state_per_task_ids = {
@@ -38,12 +42,12 @@ def main():
     )
 
     parser.add_argument(
-        'dependencies_task_ids', metavar='DEPENDENCY_TASK_ID', nargs='+',
-        help="The task ID of a dependency"
+        'current_task_id', metavar='CURRENT_TASK_ID',
+        help="The task ID of the current running task"
     )
 
     result = parser.parse_args()
-    check_all_dependencies_are_completed(result.dependencies_task_ids)
+    check_all_dependencies_are_completed(result.current_task_id)
     print('All dependencies are completed. Reporting a green task!')
     exit(0)
 

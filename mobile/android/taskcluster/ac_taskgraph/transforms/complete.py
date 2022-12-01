@@ -11,17 +11,6 @@ transforms = TransformSequence()
 
 
 @transforms.add
-def fill_dependencies(config, tasks):
-    for task in tasks:
-        dependencies = (f"<{dep}>" for dep in task["dependencies"].keys())
-        task["run"]["command"]["task-reference"] = task["run"]["command"][
-            "task-reference"
-        ].format(dependencies=" ".join(dependencies))
-
-        yield task
-
-
-@transforms.add
 def resolve_keys(config, tasks):
     for task in tasks:
         for key in ("notifications",):
