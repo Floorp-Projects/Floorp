@@ -24,7 +24,8 @@ const { parse, pemToDER } = globalThis.certDecoderInitializer(
 
 const formatter = new Intl.DateTimeFormat();
 
-const HOST_NAME = new URL(RPMGetInnerMostURI(document.location.href)).hostname;
+const HOST_NAME =
+  new URL(RPMGetInnerMostURI(document.location.href)).hostname ?? "";
 
 // Used to check if we have a specific localized message for an error.
 const KNOWN_ERROR_TITLE_IDS = new Set([

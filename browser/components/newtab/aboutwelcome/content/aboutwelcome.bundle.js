@@ -910,7 +910,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     // by checking if screen order is even or odd.
 
     const screenClassName = isCenterPosition ? this.getScreenClassName(isFirstCenteredScreen, isLastCenteredScreen, includeNoodles, content === null || content === void 0 ? void 0 : content.video_container) : "";
-    const currentStep = this.props.order + 1;
+    const currentStep = (this.props.order ?? 0) + 1;
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("main", {
       className: `screen ${this.props.id || ""} ${screenClassName} ${textColorClass}`,
       role: "alertdialog",
@@ -968,7 +968,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       "data-l10n-id": "onboarding-welcome-steps-indicator2",
       "data-l10n-args": JSON.stringify({
         current: currentStep,
-        total
+        total: total ?? 0
       }),
       "data-l10n-attrs": "aria-valuetext",
       role: "meter",
@@ -1365,7 +1365,21 @@ function useLanguageSwitcher(appAndSystemLocaleInfo, screens, screenIndex, setSc
   const languageMismatchScreenIndex = screens.findIndex(({
     id
   }) => id === "AW_LANGUAGE_MISMATCH");
-  const screen = screens[languageMismatchScreenIndex]; // If there is a mismatch, then Firefox can negotiate a better langpack to offer
+  const screen = screens[languageMismatchScreenIndex]; // Ensure fluent messages have the negotiatedLanguage args set, as they are rendered
+  // before the negotiatedLanguage is known. If the arg isn't present then Firefox will
+  // crash in development mode.
+
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    var _screen$content;
+
+    if (screen !== null && screen !== void 0 && (_screen$content = screen.content) !== null && _screen$content !== void 0 && _screen$content.languageSwitcher) {
+      for (const text of Object.values(screen.content.languageSwitcher)) {
+        if (text !== null && text !== void 0 && text.args && text.args.negotiatedLanguage === undefined) {
+          text.args.negotiatedLanguage = "";
+        }
+      }
+    }
+  }, [screen]); // If there is a mismatch, then Firefox can negotiate a better langpack to offer
   // the user.
 
   const [negotiatedLanguage, setNegotiatedLanguage] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);

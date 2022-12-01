@@ -323,7 +323,7 @@ export class ProtonScreen extends React.PureComponent {
         )
       : "";
 
-    const currentStep = this.props.order + 1;
+    const currentStep = (this.props.order ?? 0) + 1;
 
     return (
       <main
@@ -412,7 +412,7 @@ export class ProtonScreen extends React.PureComponent {
                 data-l10n-id={"onboarding-welcome-steps-indicator2"}
                 data-l10n-args={JSON.stringify({
                   current: currentStep,
-                  total,
+                  total: total ?? 0,
                 })}
                 data-l10n-attrs="aria-valuetext"
                 role="meter"
