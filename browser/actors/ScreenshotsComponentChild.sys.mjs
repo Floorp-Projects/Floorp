@@ -59,7 +59,7 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
           event.target.visibilityState === "hidden" &&
           this._overlay?.stateHandler.getState() === "crosshairs"
         ) {
-          this.endScreenshotsOverlay();
+          this.requestCancelScreenshot();
         }
         break;
     }
