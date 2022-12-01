@@ -831,7 +831,7 @@ export class UrlbarInput {
     }
 
     if (element?.classList.contains("urlbarView-button-block")) {
-      this.controller.handleDeleteEntry(result);
+      this.controller.handleDeleteEntry(event, result);
       return;
     }
 
@@ -870,6 +870,14 @@ export class UrlbarInput {
     }
 
     this.controller.recordSelectedResult(event, result);
+
+    if (result.providerName === "TabToSearch") {
+      this.controller.engagementEvent.record(event, {
+        searchString: this._lastSearchString,
+        selIndex: result.rowIndex,
+        provider: result.providerName,
+      });
+    }
 
     if (isCanonized) {
       this.controller.engagementEvent.record(event, {
@@ -1075,6 +1083,11 @@ export class UrlbarInput {
             Cu.reportError(`Provider not found: ${result.providerName}`);
             return;
           }
+
+          // Keep startEventInfo since the startEventInfo state might be changed
+          // if the URL Bar loses focus on pickResult.
+          const startEventInfo = this.controller.engagementEvent
+            ._startEventInfo;
           provider.tryMethod("pickResult", result, element);
 
           // If we won't be navigating, this is the end of the engagement.
@@ -1084,6 +1097,8 @@ export class UrlbarInput {
               searchString: this._lastSearchString,
               selType: this.controller.engagementEvent.typeFromElement(element),
               provider: result.providerName,
+              element,
+              startEventInfo,
             });
             return;
           }
@@ -1141,6 +1156,7 @@ export class UrlbarInput {
       selIndex,
       selType: this.controller.engagementEvent.typeFromElement(element),
       provider: result.providerName,
+      searchSource: this._getSearchSource(event),
     });
 
     if (result.payload.sendAttributionRequest) {
@@ -2428,33 +2444,46 @@ export class UrlbarInput {
   _recordSearch(engine, event, searchActionDetails = {}) {
     const isOneOff = this.view.oneOffSearchButtons.eventTargetIsAOneOff(event);
 
-    let source = "urlbar";
-    if (this._handoffSession) {
-      source = "urlbar-handoff";
-    } else if (this.searchMode && !isOneOff) {
-      // Without checking !isOneOff, we might record the string
-      // oneoff_urlbar-searchmode in the SEARCH_COUNTS probe (in addition to
-      // oneoff_urlbar and oneoff_searchbar). The extra information is not
-      // necessary; the intent is the same regardless of whether the user is
-      // in search mode when they do a key-modified click/enter on a one-off.
-      source = "urlbar-searchmode";
-    } else if (
-      this.window.gBrowser.selectedBrowser.showingSearchTerms &&
-      !isOneOff
-    ) {
-      source = "urlbar-persisted";
-    }
-
     lazy.BrowserSearchTelemetry.recordSearch(
       this.window.gBrowser.selectedBrowser,
       engine,
-      source,
+      this._getSearchSource(event),
       {
         ...searchActionDetails,
         isOneOff,
         newtabSessionId: this._handoffSession,
       }
     );
+  }
+
+  /**
+   * Get search source.
+   *
+   * @param {Event} event
+   *   The event that triggered this query.
+   * @returns {string}
+   *   The source name.
+   */
+  _getSearchSource(event) {
+    if (this._handoffSession) {
+      return "urlbar-handoff";
+    }
+
+    const isOneOff = this.view.oneOffSearchButtons.eventTargetIsAOneOff(event);
+    if (this.searchMode && !isOneOff) {
+      // Without checking !isOneOff, we might record the string
+      // oneoff_urlbar-searchmode in the SEARCH_COUNTS probe (in addition to
+      // oneoff_urlbar and oneoff_searchbar). The extra information is not
+      // necessary; the intent is the same regardless of whether the user is
+      // in search mode when they do a key-modified click/enter on a one-off.
+      return "urlbar-searchmode";
+    }
+
+    if (this.window.gBrowser.selectedBrowser.showingSearchTerms && !isOneOff) {
+      return "urlbar-persisted";
+    }
+
+    return "urlbar";
   }
 
   /**

@@ -28,6 +28,7 @@ add_task(async function engagement() {
         selIndex: 0,
         selType: "history",
         provider: "",
+        searchSource: "urlbar",
       },
     });
   });
@@ -62,6 +63,7 @@ add_task(async function privateWindow_engagement() {
       selIndex: 0,
       selType: "history",
       provider: "",
+      searchSource: "urlbar",
     },
   });
   await BrowserTestUtils.closeWindow(win);

@@ -991,6 +991,8 @@ class TestProvider extends UrlbarProvider {
    * @param {Function} [options.onSelection]
    *   If given, a function that will be called when
    *   {@link UrlbarView.#selectElement} method is called.
+   * @param {Function} [options.onEngagement]
+   *   If given, a function that will be called when engagement.
    */
   constructor({
     results,
@@ -1000,6 +1002,7 @@ class TestProvider extends UrlbarProvider {
     addTimeout = 0,
     onCancel = null,
     onSelection = null,
+    onEngagement = null,
   } = {}) {
     super();
     this._results = results;
@@ -1009,6 +1012,7 @@ class TestProvider extends UrlbarProvider {
     this._addTimeout = addTimeout;
     this._onCancel = onCancel;
     this._onSelection = onSelection;
+    this._onEngagement = onEngagement;
   }
   get name() {
     return this._name;
@@ -1045,6 +1049,12 @@ class TestProvider extends UrlbarProvider {
   onSelection(result, element) {
     if (this._onSelection) {
       this._onSelection(result, element);
+    }
+  }
+
+  onEngagement(isPrivate, state, queryContext, details) {
+    if (this._onEngagement) {
+      this._onEngagement(isPrivate, state, queryContext, details);
     }
   }
 }
