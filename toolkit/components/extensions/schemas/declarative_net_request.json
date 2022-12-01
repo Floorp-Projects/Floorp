@@ -476,6 +476,37 @@
         ]
       },
       {
+        "name": "updateEnabledRulesets",
+        "type": "function",
+        "description": "Returns the ids for the current set of enabled static rulesets.",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "updateRulesetOptions",
+            "type": "object",
+            "properties": {
+              "disableRulesetIds": {
+                "type": "array",
+                "items": { "type": "string" },
+                "optional": true,
+                "default": []
+              },
+              "enableRulesetIds": {
+                "type": "array",
+                "items": { "type": "string" },
+                "optional": true,
+                "default": []
+              }
+            }
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "parameters": []
+          }
+        ]
+      },
+      {
         "name": "getSessionRules",
         "type": "function",
         "description": "Returns the current set of session scoped rules for the extension.",
