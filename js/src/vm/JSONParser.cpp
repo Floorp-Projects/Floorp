@@ -154,7 +154,6 @@ JSONParserBase::Token JSONParser<CharT>::readString() {
   JSStringBuilder buffer(cx);
   do {
     if (start < current && !buffer.append(start.get(), current.get())) {
-      buffer.failure();
       return token(OOM);
     }
 
@@ -168,17 +167,14 @@ JSONParserBase::Token JSONParser<CharT>::readString() {
                                 ? buffer.finishAtom()
                                 : buffer.finishString();
       if (!str) {
-        buffer.failure();
         return token(OOM);
       }
-      buffer.ok();
       return stringToken(str);
     }
 
     if (c != '\\') {
       --current;
       error("bad character in string literal");
-      buffer.failure();
       return token(Error);
     }
 
@@ -231,7 +227,6 @@ JSONParserBase::Token JSONParser<CharT>::readString() {
           }
 
           error("bad Unicode escape");
-          buffer.failure();
           return token(Error);
         }
         c = (AsciiAlphanumericToNumber(current[0]) << 12) |
@@ -244,11 +239,9 @@ JSONParserBase::Token JSONParser<CharT>::readString() {
       default:
         current--;
         error("bad escaped character");
-        buffer.failure();
         return token(Error);
     }
     if (!buffer.append(c)) {
-      buffer.failure();
       return token(OOM);
     }
 
@@ -261,7 +254,6 @@ JSONParserBase::Token JSONParser<CharT>::readString() {
   } while (current < end);
 
   error("unterminated string");
-  buffer.failure();
   return token(Error);
 }
 

@@ -482,7 +482,7 @@ bool JSObject::is<js::AbstractGeneratorObject>() const {
 }
 
 GeneratorResumeKind js::ParserAtomToResumeKind(
-    frontend::TaggedParserAtomIndex atom) {
+    JSContext* cx, frontend::TaggedParserAtomIndex atom) {
   if (atom == frontend::TaggedParserAtomIndex::WellKnown::next()) {
     return GeneratorResumeKind::Next;
   }

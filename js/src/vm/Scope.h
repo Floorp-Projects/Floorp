@@ -750,7 +750,8 @@ class FunctionScope : public Scope {
     return data().slotInfo.nonPositionalFormalStart;
   }
 
-  static bool isSpecialName(frontend::TaggedParserAtomIndex name);
+  static bool isSpecialName(JSContext* cx,
+                            frontend::TaggedParserAtomIndex name);
 };
 
 //

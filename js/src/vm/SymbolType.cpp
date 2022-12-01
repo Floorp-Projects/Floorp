@@ -117,27 +117,22 @@ bool js::SymbolDescriptiveString(JSContext* cx, Symbol* sym,
   // steps 2-5
   JSStringBuilder sb(cx);
   if (!sb.append("Symbol(")) {
-    sb.failure();
     return false;
   }
   if (JSAtom* desc = sym->description()) {
     if (!sb.append(desc)) {
-      sb.failure();
       return false;
     }
   }
   if (!sb.append(')')) {
-    sb.failure();
     return false;
   }
 
   // step 6
   JSString* str = sb.finishString();
   if (!str) {
-    sb.failure();
     return false;
   }
-  sb.ok();
   result.setString(str);
   return true;
 }
