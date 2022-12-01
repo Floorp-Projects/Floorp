@@ -51,13 +51,6 @@ var numberInputEvents = 0;
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
-  if (isDesktopUserAgent(navigator)) {
-    test_reset_in_ui_triggers_change_and_input_event(
-      "time", numberChangeEvents, numberInputEvents);
-    test_reset_in_ui_triggers_change_and_input_event(
-      "date", numberChangeEvents, numberInputEvents);
-  }
-
   test_reset_in_script_does_not_trigger_change_and_input_event(
     "time2", numberChangeEvents, numberInputEvents);
   test_reset_in_script_does_not_trigger_change_and_input_event(
@@ -70,30 +63,6 @@ SimpleTest.waitForFocus(function() {
 
   SimpleTest.finish();
 });
-
-function test_reset_in_ui_triggers_change_and_input_event(
-  inputFieldIdSuffix, oldNumberChangeEvents, oldNumberInputEvents) {
-  const inputFieldName = INPUT_FIELD_ID_PREFIX + inputFieldIdSuffix;
-  var input = document.getElementById(inputFieldName);
-
-  is(input.value, input.defaultValue,
-    "Check " + inputFieldName + "'s default value is initialized correctly.");
-  is(numberChangeEvents, oldNumberChangeEvents,
-    "Check numberChangeEvents is initialized correctly for " + inputFieldName +
-  ".");
-  is(numberInputEvents, oldNumberInputEvents,
-    "Check numberInputEvents is initialized correctly for " + inputFieldName +
-    ".");
-
-  simulateUserClicksResetButton(input);
-
-  is(input.value, "",
-    "Check " + inputFieldName + "'s value was set correctly.");
-  is(numberChangeEvents, oldNumberChangeEvents + 1,
-    "Change event should be dispatched for " + inputFieldName + ".");
-  is(numberInputEvents, oldNumberInputEvents + 1,
-    "Input event should be dispatched for " + inputFieldName + ".");
-}
 
 function test_reset_in_script_does_not_trigger_change_and_input_event(
   inputFieldIdSuffix, oldNumberChangeEvents, oldNumberInputEvents) {
