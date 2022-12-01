@@ -208,6 +208,8 @@ class WebSocketChannel : public BaseWebSocketChannel,
     }
   }
 
+  void NotifyOnStart();
+
   nsCOMPtr<nsIEventTarget> mIOThread;
   // Set in AsyncOpenNative and AsyncOnChannelRedirect, modified in
   // DoStopSession on IO thread (.forget()).   Probably ok...

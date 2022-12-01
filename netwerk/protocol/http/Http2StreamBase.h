@@ -39,7 +39,6 @@ class Http2StreamBase : public nsAHttpSegmentReader,
                         public SupportsWeakPtr {
  public:
   NS_DECL_NSAHTTPSEGMENTREADER
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Http2StreamBase, override)
 
   enum stateType {
     IDLE,

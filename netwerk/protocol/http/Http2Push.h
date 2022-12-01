@@ -27,6 +27,8 @@ class Http2PushTransactionBuffer;
 
 class Http2PushedStream final : public Http2StreamBase {
  public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Http2PushedStream, override)
+
   Http2PushedStream(Http2PushTransactionBuffer* aTransaction,
                     Http2Session* aSession, Http2StreamBase* aAssociatedStream,
                     uint32_t aID,

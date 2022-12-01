@@ -187,7 +187,6 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
       const nsHttpConnectionInfo* ci);
 
  public:
-  static nsAHttpConnection* MakeConnectionHandle(HttpConnectionBase* aWrapped);
   void RegisterOriginCoalescingKey(HttpConnectionBase*, const nsACString& host,
                                    int32_t port);
   // A test if be-conservative should be used when proxy is setup for the

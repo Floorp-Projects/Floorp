@@ -29,15 +29,12 @@ class Http2StreamTunnel : public Http2StreamBase,
                           public nsSupportsWeakReference {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_HTTP2STREAMTUNNEL_IID)
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITRANSPORT
   NS_DECL_NSISOCKETTRANSPORT
 
   Http2StreamTunnel(Http2Session* session, int32_t priority, uint64_t bcId,
-                    nsHttpConnectionInfo* aConnectionInfo)
-      : Http2StreamBase(0, session, priority, bcId),
-        mConnectionInfo(aConnectionInfo) {}
-
+                    nsHttpConnectionInfo* aConnectionInfo);
   bool IsTunnel() override { return true; }
 
   already_AddRefed<nsHttpConnection> CreateHttpConnection(
@@ -69,15 +66,14 @@ class Http2StreamTunnel : public Http2StreamBase,
                            uint8_t& firstFrameFlags) override;
   bool CloseSendStreamWhenDone() override { return mSendClosed; }
 
- private:
+  RefPtr<nsAHttpTransaction> mTransaction;
+
   void ClearTransactionsBlockedOnTunnel();
   bool DispatchRelease();
 
   RefPtr<OutputStreamTunnel> mOutput;
   RefPtr<InputStreamTunnel> mInput;
-  nsCOMPtr<nsIInterfaceRequestor> mSecurityCallbacks;
   RefPtr<nsHttpConnectionInfo> mConnectionInfo;
-  RefPtr<nsAHttpTransaction> mTransaction;
   bool mSendClosed{false};
   nsresult mCondition{NS_OK};
 };
@@ -137,6 +133,18 @@ class InputStreamTunnel : public nsIAsyncInputStream {
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Http2StreamTunnel, NS_HTTP2STREAMTUNNEL_IID)
 NS_DEFINE_STATIC_IID_ACCESSOR(OutputStreamTunnel, NS_OUTPUTSTREAMTUNNEL_IID)
+
+class Http2StreamWebSocket : public Http2StreamTunnel {
+ public:
+  Http2StreamWebSocket(Http2Session* session, int32_t priority, uint64_t bcId,
+                       nsHttpConnectionInfo* aConnectionInfo);
+  void CloseStream(nsresult reason) override;
+
+ protected:
+  virtual ~Http2StreamWebSocket();
+  nsresult GenerateHeaders(nsCString& aCompressedData,
+                           uint8_t& firstFrameFlags) override;
+};
 
 }  // namespace mozilla::net
 

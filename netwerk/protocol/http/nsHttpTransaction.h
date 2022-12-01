@@ -86,6 +86,11 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   void EnableKeepAlive() { mCaps |= NS_HTTP_ALLOW_KEEPALIVE; }
   void MakeSticky() { mCaps |= NS_HTTP_STICKY_CONNECTION; }
   void MakeNonSticky() override { mCaps &= ~NS_HTTP_STICKY_CONNECTION; }
+  void MakeRestartable() override { mCaps |= NS_HTTP_CONNECTION_RESTARTABLE; }
+  void MakeNonRestartable() { mCaps &= ~NS_HTTP_CONNECTION_RESTARTABLE; }
+
+  void SetIsHttp2Websocket(bool h2ws) override { mIsHttp2Websocket = h2ws; }
+  bool IsHttp2Websocket() override { return mIsHttp2Websocket; }
 
   bool WaitingForHTTPSRR() const { return mCaps & NS_HTTP_FORCE_WAIT_HTTP_RR; }
   void MakeDontWaitHTTPSRR() { mCaps &= ~NS_HTTP_FORCE_WAIT_HTTP_RR; }
@@ -161,7 +166,6 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   void SetHttpTrailers(nsCString& aTrailers);
 
   bool IsWebsocketUpgrade();
-  void SetH2WSTransaction(Http2ConnectTransaction*);
 
   void OnProxyConnectComplete(int32_t aResponseCode) override;
   void SetFlat407Headers(const nsACString& aHeaders);
@@ -433,6 +437,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   bool mDeferredSendProgress{false};
   bool mWaitingOnPipeOut{false};
   bool mDoNotRemoveAltSvc{false};
+  bool mIsHttp2Websocket{false};
 
   // mClosed           := transaction has been explicitly closed
   // mTransactionDone  := transaction ran to completion or was interrupted
@@ -522,9 +527,6 @@ class nsHttpTransaction final : public nsAHttpTransaction,
     EARLY_ACCEPTED,
     EARLY_425
   } mEarlyDataDisposition{EARLY_NONE};
-
-  // H2 websocket support
-  RefPtr<Http2ConnectTransaction> mH2WSTransaction;
 
   HttpTrafficCategory mTrafficCategory{HttpTrafficCategory::eInvalid};
   bool mThroughCaptivePortal;

@@ -2925,8 +2925,6 @@ nsresult WebSocketChannel::CallStartWebsocketData() {
 }
 
 nsresult WebSocketChannel::StartWebsocketData() {
-  nsresult rv;
-
   {
     MutexAutoLock lock(mMutex);
     LOG(("WebSocketChannel::StartWebsocketData() %p", this));
@@ -2938,51 +2936,53 @@ nsresult WebSocketChannel::StartWebsocketData() {
            "starting data"));
       return NS_ERROR_NOT_AVAILABLE;
     }
-
-    mDataStarted = true;
   }
 
-  rv = mConnection ? mConnection->StartReading()
-                   : mSocketIn->AsyncWait(this, 0, 0, mIOThread);
-  if (NS_FAILED(rv)) {
-    LOG(
-        ("WebSocketChannel::StartWebsocketData mSocketIn->AsyncWait() failed "
-         "with error 0x%08" PRIx32,
-         static_cast<uint32_t>(rv)));
-    return mIOThread->Dispatch(
-        NewRunnableMethod<nsresult>("net::WebSocketChannel::AbortSession", this,
-                                    &WebSocketChannel::AbortSession, rv),
-        NS_DISPATCH_NORMAL);
-  }
+  RefPtr<WebSocketChannel> self = this;
+  mIOThread->Dispatch(NS_NewRunnableFunction(
+      "WebSocketChannel::StartWebsocketData", [self{std::move(self)}] {
+        LOG(("WebSocketChannel::DoStartWebsocketData() %p", self.get()));
 
-  if (mPingInterval) {
-    rv = mIOThread->Dispatch(
-        NewRunnableMethod("net::WebSocketChannel::StartPinging", this,
-                          &WebSocketChannel::StartPinging),
-        NS_DISPATCH_NORMAL);
-    if (NS_FAILED(rv)) {
-      LOG(
-          ("WebSocketChannel::StartWebsocketData Could not start pinging, "
-           "rv=0x%08" PRIx32,
-           static_cast<uint32_t>(rv)));
-      return rv;
-    }
-  }
+        NS_DispatchToMainThread(
+            NewRunnableMethod("net::WebSocketChannel::NotifyOnStart", self,
+                              &WebSocketChannel::NotifyOnStart),
+            NS_DISPATCH_NORMAL);
 
-  LOG(("WebSocketChannel::StartWebsocketData Notifying Listener %p",
+        nsresult rv = self->mConnection
+                          ? self->mConnection->StartReading()
+                          : self->mSocketIn->AsyncWait(self, 0, 0, nullptr);
+        if (NS_FAILED(rv)) {
+          self->AbortSession(rv);
+        }
+
+        if (self->mPingInterval) {
+          rv = self->StartPinging();
+          if (NS_FAILED(rv)) {
+            LOG((
+                "WebSocketChannel::StartWebsocketData Could not start pinging, "
+                "rv=0x%08" PRIx32,
+                static_cast<uint32_t>(rv)));
+            self->AbortSession(rv);
+          }
+        }
+      }));
+
+  return NS_OK;
+}
+
+void WebSocketChannel::NotifyOnStart() {
+  LOG(("WebSocketChannel::NotifyOnStart Notifying Listener %p",
        mListenerMT ? mListenerMT->mListener.get() : nullptr));
-
+  mDataStarted = true;
   if (mListenerMT) {
-    rv = mListenerMT->mListener->OnStart(mListenerMT->mContext);
+    nsresult rv = mListenerMT->mListener->OnStart(mListenerMT->mContext);
     if (NS_FAILED(rv)) {
       LOG(
-          ("WebSocketChannel::StartWebsocketData "
+          ("WebSocketChannel::NotifyOnStart "
            "mListenerMT->mListener->OnStart() failed with error 0x%08" PRIx32,
            static_cast<uint32_t>(rv)));
     }
   }
-
-  return NS_OK;
 }
 
 nsresult WebSocketChannel::StartPinging() {
@@ -2996,7 +2996,7 @@ nsresult WebSocketChannel::StartPinging() {
                                nsITimer::TYPE_ONE_SHOT);
   if (NS_SUCCEEDED(rv)) {
     LOG(("WebSocketChannel will generate ping after %d ms of receive silence\n",
-         mPingInterval));
+         (uint32_t)mPingInterval));
   } else {
     NS_WARNING("unable to create ping timer. Carrying on.");
   }
@@ -3105,6 +3105,22 @@ WebSocketChannel::OnProxyAvailable(nsICancelable* aRequest,
       LOG(("WebSocket OnProxyAvailable [%p] DNS lookup failed\n", this));
       // call DNS callback directly without DNS resolver
       OnLookupComplete(nullptr, nullptr, NS_ERROR_FAILURE);
+    }
+  }
+
+  // notify listener of OnProxyAvailable
+  LOG(("WebSocketChannel::OnProxyAvailable Notifying Listener %p",
+       mListenerMT ? mListenerMT->mListener.get() : nullptr));
+  nsresult rv;
+  nsCOMPtr<nsIProtocolProxyCallback> ppc(
+      do_QueryInterface(mListenerMT->mListener, &rv));
+  if (NS_SUCCEEDED(rv)) {
+    rv = ppc->OnProxyAvailable(aRequest, aChannel, pi, status);
+    if (NS_FAILED(rv)) {
+      LOG(
+          ("WebSocketChannel::OnProxyAvailable notify"
+           " failed with error 0x%08" PRIx32,
+           static_cast<uint32_t>(rv)));
     }
   }
 

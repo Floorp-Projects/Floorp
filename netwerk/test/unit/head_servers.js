@@ -787,12 +787,20 @@ class WebSocketConnection {
     this._msgPromise = new Promise(resolve => {
       this._msgCallback = resolve;
     });
+
+    this._proxyAvailablePromise = new Promise(resolve => {
+      this._proxyAvailCallback = resolve;
+    });
+
     this._messages = [];
     this._ws = null;
   }
 
   get QueryInterface() {
-    return ChromeUtils.generateQI(["nsIWebSocketListener"]);
+    return ChromeUtils.generateQI([
+      "nsIWebSocketListener",
+      "nsIProtocolProxyCallback",
+    ]);
   }
 
   onAcknowledge(aContext, aSize) {}
@@ -811,6 +819,14 @@ class WebSocketConnection {
     this._stopCallback({ status: aStatusCode });
     this._ws = null;
   }
+  onProxyAvailable(req, chan, proxyInfo, status) {
+    if (proxyInfo) {
+      this._proxyAvailCallback({ type: proxyInfo.type });
+    } else {
+      this._proxyAvailCallback({});
+    }
+  }
+
   static makeWebSocketChan() {
     let chan = Cc["@mozilla.org/network/protocol;1?name=wss"].createInstance(
       Ci.nsIWebSocketChannel
@@ -844,6 +860,9 @@ class WebSocketConnection {
   // result passed to onStop.
   finished() {
     return this._stopPromise;
+  }
+  getProxyInfo() {
+    return this._proxyAvailablePromise;
   }
 
   // Returned promise resolves with an array of received messages
