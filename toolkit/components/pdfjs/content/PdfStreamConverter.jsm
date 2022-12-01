@@ -377,6 +377,10 @@ class ChromeActions {
     return !!prefBrowser && prefGfx;
   }
 
+  supportsPinchToZoom() {
+    return getBoolPref("apz.allow_zooming", true);
+  }
+
   supportedMouseWheelZoomModifierKeys() {
     return {
       ctrlKey: getIntPref("mousewheel.with_control.action", 3) === 3,
