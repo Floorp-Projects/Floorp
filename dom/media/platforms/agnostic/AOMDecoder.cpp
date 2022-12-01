@@ -117,7 +117,8 @@ RefPtr<MediaDataDecoder::InitPromise> AOMDecoder::Init() {
 }
 
 RefPtr<MediaDataDecoder::FlushPromise> AOMDecoder::Flush() {
-  return InvokeAsync(mTaskQueue, __func__, []() {
+  return InvokeAsync(mTaskQueue, __func__, [this, self = RefPtr(this)]() {
+    mPerformanceRecorder.Record(std::numeric_limits<int64_t>::max());
     return FlushPromise::CreateAndResolve(true, __func__);
   });
 }
@@ -136,6 +137,15 @@ RefPtr<MediaDataDecoder::DecodePromise> AOMDecoder::ProcessDecode(
       IsKeyframe(*aSample) == aSample->mKeyframe,
       "AOM Decode Keyframe error sample->mKeyframe and si.si_kf out of sync");
 #endif
+
+  MediaInfoFlag flag = MediaInfoFlag::None;
+  flag |= (aSample->mKeyframe ? MediaInfoFlag::KeyFrame
+                              : MediaInfoFlag::NonKeyFrame);
+  flag |= MediaInfoFlag::SoftwareDecoding;
+  flag |= MediaInfoFlag::VIDEO_AV1;
+
+  mPerformanceRecorder.Start(aSample->mTimecode.ToMicroseconds(),
+                             "AOMDecoder"_ns, flag);
 
   if (aom_codec_err_t r = aom_codec_decode(&mCodec, aSample->Data(),
                                            aSample->Size(), nullptr)) {
@@ -245,6 +255,26 @@ RefPtr<MediaDataDecoder::DecodePromise> AOMDecoder::ProcessDecode(
       return DecodePromise::CreateAndReject(
           MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__), __func__);
     }
+    mPerformanceRecorder.Record(
+        aSample->mTimecode.ToMicroseconds(), [&](DecodeStage& aStage) {
+          aStage.SetResolution(mInfo.mImage.width, mInfo.mImage.height);
+          auto format = [&]() -> Maybe<DecodeStage::ImageFormat> {
+            switch (img->fmt) {
+              case AOM_IMG_FMT_I420:
+              case AOM_IMG_FMT_I42016:
+                return Some(DecodeStage::YUV420P);
+              case AOM_IMG_FMT_I444:
+              case AOM_IMG_FMT_I44416:
+                return Some(DecodeStage::YUV444P);
+              default:
+                return Nothing();
+            }
+          }();
+          format.apply([&](auto& aFmt) { aStage.SetImageFormat(aFmt); });
+          aStage.SetYUVColorSpace(b.mYUVColorSpace);
+          aStage.SetColorRange(b.mColorRange);
+          aStage.SetColorDepth(b.mColorDepth);
+        });
     results.AppendElement(std::move(v));
   }
   return DecodePromise::CreateAndResolve(std::move(results), __func__);
