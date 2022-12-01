@@ -21,11 +21,10 @@ if [[ "Darwin" = `uname` ]]; then
   pip install --user requests
 fi
 
-(cd dom/media/webrtc/third_party_build && \
- python3 vendor-libwebrtc.py \
+python3 dom/media/webrtc/third_party_build/vendor-libwebrtc.py \
         --from-local $MOZ_LIBWEBRTC_SRC \
         --commit $MOZ_LIBWEBRTC_COMMIT \
-        libwebrtc)
+        libwebrtc
 
 hg revert -q \
    --include "third_party/libwebrtc/**moz.build" \
@@ -39,9 +38,8 @@ if [ "x$FILE_CHANGE_CNT" != "x0" ]; then
   echo "is recommended.  First, find the mercurial commit after the"
   echo "previous fast-forward landing.  The commands you want will look"
   echo "something like:"
-  echo "  (cd dom/media/webrtc/third_party_build && \\"
-  echo "   python3 extract-for-git.py {after-ff-commit}::{tip-of-central})"
-  echo "  mv dom/media/webrtc/third_party_build/mailbox.patch $MOZ_LIBWEBRTC_SRC"
+  echo "  python3 dom/media/webrtc/third_party_build/extract-for-git.py {after-ff-commit}::{tip-of-central}"
+  echo "  mv mailbox.patch $MOZ_LIBWEBRTC_SRC"
   echo "  (cd $MOZ_LIBWEBRTC_SRC && \\"
   echo "   git am mailbox.patch)"
   echo ""

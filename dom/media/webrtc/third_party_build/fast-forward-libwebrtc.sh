@@ -122,12 +122,10 @@ function vendor_off_next_commit {
   echo "-------"
   echo "------- Vendor $MOZ_LIBWEBRTC_COMMIT from $MOZ_LIBWEBRTC_SRC"
   echo "-------"
-  ( cd dom/media/webrtc/third_party_build && \
-    python3 vendor-libwebrtc.py \
+  python3 dom/media/webrtc/third_party_build/vendor-libwebrtc.py \
             --from-local $MOZ_LIBWEBRTC_SRC \
             --commit $MOZ_LIBWEBRTC_COMMIT \
-            libwebrtc \
-  )
+            libwebrtc
 }
 
 # The vendoring script (called above in vendor_off_next_commit) replaces
