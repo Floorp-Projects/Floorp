@@ -3193,13 +3193,16 @@ static bool date_toSource(JSContext* cx, unsigned argc, Value* vp) {
   if (!sb.append("(new Date(") ||
       !NumberValueToStringBuffer(unwrapped->UTCTime(), sb) ||
       !sb.append("))")) {
+    sb.failure();
     return false;
   }
 
   JSString* str = sb.finishString();
   if (!str) {
+    sb.failure();
     return false;
   }
+  sb.ok();
   args.rval().setString(str);
   return true;
 }

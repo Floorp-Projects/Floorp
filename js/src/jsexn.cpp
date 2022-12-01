@@ -425,10 +425,17 @@ static JSString* FormatErrorMessage(JSContext* cx, HandleString name,
 
     // Prefix the message with the error type, if it exists.
     if (!sb.append(name) || !sb.append(": ") || !sb.append(message)) {
+      sb.failure();
       return nullptr;
     }
 
-    return sb.finishString();
+    auto* result = sb.finishString();
+    if (!result) {
+      sb.failure();
+      return nullptr;
+    }
+    sb.ok();
+    return result;
   }
 
   return name ? name : message;
@@ -792,6 +799,7 @@ const char* js::ValueToSourceForError(JSContext* cx, HandleValue val,
     RootedObject valObj(cx, &val.getObjectPayload());
     ESClass cls;
     if (!JS::GetBuiltinClass(cx, valObj, &cls)) {
+      sb.failure();
       return "<<error determining class of value>>";
     }
     const char* s;
@@ -811,32 +819,40 @@ const char* js::ValueToSourceForError(JSContext* cx, HandleValue val,
       s = "the object ";
     }
     if (!sb.append(s, strlen(s))) {
+      sb.failure();
       return "<<error converting value to string>>";
     }
   } else if (val.isNumber()) {
     if (!sb.append("the number ")) {
+      sb.failure();
       return "<<error converting value to string>>";
     }
   } else if (val.isString()) {
     if (!sb.append("the string ")) {
+      sb.failure();
       return "<<error converting value to string>>";
     }
   } else if (val.isBigInt()) {
     if (!sb.append("the BigInt ")) {
+      sb.failure();
       return "<<error converting value to string>>";
     }
   } else {
     MOZ_ASSERT(val.isBoolean() || val.isSymbol());
     bytes = StringToNewUTF8CharsZ(cx, *str);
+    sb.failure();
     return bytes.get();
   }
   if (!sb.append(str)) {
+    sb.failure();
     return "<<error converting value to string>>";
   }
   str = sb.finishString();
   if (!str) {
+    sb.failure();
     return "<<error converting value to string>>";
   }
+  sb.ok();
   bytes = StringToNewUTF8CharsZ(cx, *str);
   return bytes.get();
 }

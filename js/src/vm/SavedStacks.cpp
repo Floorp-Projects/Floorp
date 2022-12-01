@@ -1039,6 +1039,7 @@ JS_PUBLIC_API bool BuildStackString(JSContext* cx, JSPrincipals* principals,
                              SavedFrameSelfHosted::Exclude, skippedAsync));
     if (!frame) {
       stringp.set(cx->runtime()->emptyString);
+      sb.failure();
       return true;
     }
 
@@ -1058,11 +1059,13 @@ JS_PUBLIC_API bool BuildStackString(JSContext* cx, JSPrincipals* principals,
         case js::StackFormat::SpiderMonkey:
           if (!FormatSpiderMonkeyStackFrame(cx, sb, frame, indent,
                                             skippedAsync)) {
+            sb.failure();
             return false;
           }
           break;
         case js::StackFormat::V8:
           if (!FormatV8StackFrame(cx, sb, frame, indent, !nextFrame)) {
+            sb.failure();
             return false;
           }
           break;
@@ -1078,8 +1081,10 @@ JS_PUBLIC_API bool BuildStackString(JSContext* cx, JSPrincipals* principals,
 
   JSString* str = sb.finishString();
   if (!str) {
+    sb.failure();
     return false;
   }
+  sb.ok();
   cx->check(str);
   stringp.set(str);
   return true;

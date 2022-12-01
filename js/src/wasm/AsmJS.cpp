@@ -7291,40 +7291,54 @@ JSString* js::AsmJSModuleToString(JSContext* cx, HandleFunction fun,
   JSStringBuilder out(cx);
 
   if (isToSource && fun->isLambda() && !out.append("(")) {
+    out.failure();
     return nullptr;
   }
 
   bool haveSource;
   if (!ScriptSource::loadSource(cx, source, &haveSource)) {
+    out.failure();
     return nullptr;
   }
 
   if (!haveSource) {
     if (!out.append("function ")) {
+      out.failure();
       return nullptr;
     }
     if (fun->explicitName() && !out.append(fun->explicitName())) {
+      out.failure();
       return nullptr;
     }
     if (!out.append("() {\n    [native code]\n}")) {
+      out.failure();
       return nullptr;
     }
   } else {
     Rooted<JSLinearString*> src(cx, source->substring(cx, begin, end));
     if (!src) {
+      out.failure();
       return nullptr;
     }
 
     if (!out.append(src)) {
+      out.failure();
       return nullptr;
     }
   }
 
   if (isToSource && fun->isLambda() && !out.append(")")) {
+    out.failure();
     return nullptr;
   }
 
-  return out.finishString();
+  auto* result = out.finishString();
+  if (!result) {
+    out.failure();
+    return nullptr;
+  }
+  out.ok();
+  return result;
 }
 
 JSString* js::AsmJSFunctionToString(JSContext* cx, HandleFunction fun) {
@@ -7342,11 +7356,13 @@ JSString* js::AsmJSFunctionToString(JSContext* cx, HandleFunction fun) {
   JSStringBuilder out(cx);
 
   if (!out.append("function ")) {
+    out.failure();
     return nullptr;
   }
 
   bool haveSource;
   if (!ScriptSource::loadSource(cx, source, &haveSource)) {
+    out.failure();
     return nullptr;
   }
 
@@ -7354,22 +7370,32 @@ JSString* js::AsmJSFunctionToString(JSContext* cx, HandleFunction fun) {
     // asm.js functions can't be anonymous
     MOZ_ASSERT(fun->explicitName());
     if (!out.append(fun->explicitName())) {
+      out.failure();
       return nullptr;
     }
     if (!out.append("() {\n    [native code]\n}")) {
+      out.failure();
       return nullptr;
     }
   } else {
     Rooted<JSLinearString*> src(cx, source->substring(cx, begin, end));
     if (!src) {
+      out.failure();
       return nullptr;
     }
     if (!out.append(src)) {
+      out.failure();
       return nullptr;
     }
   }
 
-  return out.finishString();
+  auto* result = out.finishString();
+  if (!result) {
+    out.failure();
+    return nullptr;
+  }
+  out.ok();
+  return result;
 }
 
 bool js::IsValidAsmJSHeapLength(size_t length) {

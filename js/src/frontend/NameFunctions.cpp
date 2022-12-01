@@ -491,7 +491,7 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
         cx_(cx),
         parserAtoms_(parserAtoms),
         nparents_(0),
-        buf_(cx) {}
+        buf_(cx, ec) {}
 
   /*
    * Resolve names for all anonymous functions in the given ParseNode tree.

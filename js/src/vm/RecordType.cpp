@@ -477,6 +477,7 @@ JSString* js::RecordToSource(JSContext* cx, RecordType* rec) {
   JSStringBuilder sb(cx);
 
   if (!sb.append("#{")) {
+    sb.failure();
     return nullptr;
   }
 
@@ -497,18 +498,22 @@ JSString* js::RecordToSource(JSContext* cx, RecordType* rec) {
 
     str = ValueToSource(cx, value);
     if (!str) {
+      sb.failure();
       return nullptr;
     }
     if (!sb.append(str)) {
+      sb.failure();
       return nullptr;
     }
 
     if (!sb.append(": ")) {
+      sb.failure();
       return nullptr;
     }
 
     keyStr.set(value.toString());
     if (!JS_StringToId(cx, keyStr, &key)) {
+      sb.failure();
       return nullptr;
     }
 
@@ -516,14 +521,17 @@ JSString* js::RecordToSource(JSContext* cx, RecordType* rec) {
 
     str = ValueToSource(cx, value);
     if (!str) {
+      sb.failure();
       return nullptr;
     }
     if (!sb.append(str)) {
+      sb.failure();
       return nullptr;
     }
 
     if (index + 1 != length) {
       if (!sb.append(", ")) {
+        sb.failure();
         return nullptr;
       }
     }
@@ -531,8 +539,15 @@ JSString* js::RecordToSource(JSContext* cx, RecordType* rec) {
 
   /* Finalize the buffer. */
   if (!sb.append('}')) {
+    sb.failure();
     return nullptr;
   }
 
-  return sb.finishString();
+  auto* result = sb.finishString();
+  if (!result) {
+    sb.failure();
+    return nullptr;
+  }
+  sb.ok();
+  return result;
 }
