@@ -1097,12 +1097,20 @@ struct nsFlexContainerFrame::StrutInfo {
 // Flex data shared by the flex container frames in a continuation chain, owned
 // by the first-in-flow. The data is initialized at the end of the
 // first-in-flow's Reflow().
-struct nsFlexContainerFrame::SharedFlexData {
+struct nsFlexContainerFrame::SharedFlexData final {
+  // The flex lines generated in DoFlexLayout() by our first-in-flow.
   nsTArray<FlexLine> mLines;
 
   // The final content main/cross size computed by DoFlexLayout.
   nscoord mContentBoxMainSize = NS_UNCONSTRAINEDSIZE;
   nscoord mContentBoxCrossSize = NS_UNCONSTRAINEDSIZE;
+
+  // Update this struct. Called by the first-in-flow.
+  void Update(FlexLayoutResult&& aFlr) {
+    mLines = std::move(aFlr.mLines);
+    mContentBoxMainSize = aFlr.mContentBoxMainSize;
+    mContentBoxCrossSize = aFlr.mContentBoxCrossSize;
+  }
 
   // The frame property under which this struct is stored. Set only on the
   // first-in-flow.
@@ -4646,18 +4654,16 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
     // If we are the first-in-flow, we want to store data for our next-in-flows,
     // or clear the existing data if it is not needed.
     if (!prevInFlow) {
-      SharedFlexData* data = GetProperty(SharedFlexData::Prop());
+      SharedFlexData* sharedData = GetProperty(SharedFlexData::Prop());
       if (!aStatus.IsFullyComplete()) {
-        if (!data) {
-          data = new SharedFlexData;
-          SetProperty(SharedFlexData::Prop(), data);
+        if (!sharedData) {
+          sharedData = new SharedFlexData;
+          SetProperty(SharedFlexData::Prop(), sharedData);
         }
-        data->mLines = std::move(flr.mLines);
-        data->mContentBoxMainSize = flr.mContentBoxMainSize;
-        data->mContentBoxCrossSize = flr.mContentBoxCrossSize;
+        sharedData->Update(std::move(flr));
 
         SetProperty(SumOfChildrenBlockSizeProperty(), sumOfChildrenBlockSize);
-      } else if (data && !GetNextInFlow()) {
+      } else if (sharedData && !GetNextInFlow()) {
         // We are fully-complete, so no next-in-flow is needed. However, if we
         // report SetInlineLineBreakBeforeAndReset() in an incremental reflow,
         // our next-in-flow might still exist. It can be reflowed again before
