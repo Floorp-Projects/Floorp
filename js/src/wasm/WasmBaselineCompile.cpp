@@ -6887,6 +6887,13 @@ bool BaseCompiler::emitArrayNewFixed() {
     freePtr(RegPtr(PreBarrierReg));
   }
 
+  // These together ensure that the max value of `index` in the loop below
+  // remains comfortably below the 2^31 boundary.  See comments on equivalent
+  // assertions in EmitArrayNewFixed in WasmIonCompile.cpp for explanation.
+  static_assert(16 /* sizeof v128 */ * MaxFunctionBytes <=
+                MaxArrayPayloadBytes);
+  MOZ_RELEASE_ASSERT(numElements <= MaxFunctionBytes);
+
   // Generate straight-line initialization code.  We could do better here if
   // there was a version of ::emitGcArraySet that took `index` as a `uint32_t`
   // rather than a general value-in-a-reg.

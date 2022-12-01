@@ -528,10 +528,12 @@ WasmArrayObject* WasmArrayObject::createArray(JSContext* cx,
   MOZ_ASSERT(rtt->kind() == wasm::TypeDefKind::Array);
 
   // Calculate the byte length of the outline storage, being careful to check
-  // for overflow. We stick to uint32_t as an implicit implementation limit.
+  // for overflow.  Note this logic assumes that MaxArrayPayloadBytes is
+  // within uint32_t range.
   CheckedUint32 outlineBytes = rtt->typeDef().arrayType().elementType_.size();
   outlineBytes *= numElements;
-  if (!outlineBytes.isValid()) {
+  if (!outlineBytes.isValid() ||
+      outlineBytes.value() > uint32_t(MaxArrayPayloadBytes)) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_ARRAY_IMP_LIMIT);
     return nullptr;
