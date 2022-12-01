@@ -337,18 +337,17 @@ static bool str_unescape(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Steps 2, 4-5.
+  bool unescapeFailed = false;
   if (str->hasLatin1Chars()) {
     AutoCheckCannotGC nogc;
-    if (!Unescape(sb, str->latin1Range(nogc))) {
-      sb.failure();
-      return false;
-    }
+    unescapeFailed = !Unescape(sb, str->latin1Range(nogc));
   } else {
     AutoCheckCannotGC nogc;
-    if (!Unescape(sb, str->twoByteRange(nogc))) {
-      sb.failure();
-      return false;
-    }
+    unescapeFailed = !Unescape(sb, str->twoByteRange(nogc));
+  }
+  if (unescapeFailed) {
+    sb.failure();
+    return false;
   }
 
   // Step 6.
@@ -3070,6 +3069,74 @@ JSString* js::str_replace_string_raw(JSContext* cx, HandleString string,
   return BuildFlatReplacement(cx, string, repl, match, patternLength);
 }
 
+template <typename StrChar, typename RepChar>
+static bool ReplaceAllInternal(const AutoCheckCannotGC& nogc,
+                               JSLinearString* string,
+                               JSLinearString* searchString,
+                               JSLinearString* replaceString,
+                               const int32_t startPosition,
+                               JSStringBuilder& result) {
+  // Step 7.
+  const size_t stringLength = string->length();
+  const size_t searchLength = searchString->length();
+  const size_t replaceLength = replaceString->length();
+
+  MOZ_ASSERT(stringLength > 0);
+  MOZ_ASSERT(searchLength > 0);
+  MOZ_ASSERT(stringLength >= searchLength);
+
+  // Step 12.
+  uint32_t endOfLastMatch = 0;
+
+  const StrChar* strChars = string->chars<StrChar>(nogc);
+  const RepChar* repChars = replaceString->chars<RepChar>(nogc);
+
+  uint32_t dollarIndex = FindDollarIndex(repChars, replaceLength);
+
+  // If it's true, we are sure that the result's length is, at least, the same
+  // length as |str->length()|.
+  if (replaceLength >= searchLength) {
+    if (!result.reserve(stringLength)) {
+      return false;
+    }
+  }
+
+  int32_t position = startPosition;
+  do {
+    // Step 14.c.
+    // Append the substring before the current match.
+    if (!result.append(strChars + endOfLastMatch, position - endOfLastMatch)) {
+      return false;
+    }
+
+    // Steps 14.a-b and 14.d.
+    // Append the replacement.
+    if (dollarIndex != UINT32_MAX) {
+      size_t matchLimit = position + searchLength;
+      if (!AppendDollarReplacement(result, dollarIndex, position, matchLimit,
+                                   string, repChars, replaceLength)) {
+        return false;
+      }
+    } else {
+      if (!result.append(repChars, replaceLength)) {
+        return false;
+      }
+    }
+
+    // Step 14.e.
+    endOfLastMatch = position + searchLength;
+
+    // Step 11.
+    // Find the next match.
+    position = StringMatch(string, searchString, endOfLastMatch);
+  } while (position >= 0);
+
+  // Step 15.
+  // Append the substring after the last match.
+  return result.append(strChars + endOfLastMatch,
+                       stringLength - endOfLastMatch);
+}
+
 // https://tc39.es/proposal-string-replaceall/#sec-string.prototype.replaceall
 // Steps 7-16 when functionalReplace is false and searchString is not empty.
 //
@@ -3079,14 +3146,7 @@ template <typename StrChar, typename RepChar>
 static JSString* ReplaceAll(JSContext* cx, JSLinearString* string,
                             JSLinearString* searchString,
                             JSLinearString* replaceString) {
-  // Step 7.
-  const size_t stringLength = string->length();
-  const size_t searchLength = searchString->length();
-  const size_t replaceLength = replaceString->length();
-
-  MOZ_ASSERT(stringLength > 0);
-  MOZ_ASSERT(searchLength > 0);
-  MOZ_ASSERT(stringLength >= searchLength);
+  // Step 7 moved into ReplaceAll_internal.
 
   // Step 8 (advanceBy is equal to searchLength when searchLength > 0).
 
@@ -3101,10 +3161,7 @@ static JSString* ReplaceAll(JSContext* cx, JSLinearString* string,
     return string;
   }
 
-  // Step 11 (moved below).
-
-  // Step 12.
-  uint32_t endOfLastMatch = 0;
+  // Steps 11, 12 moved into ReplaceAll_internal.
 
   // Step 13.
   JSStringBuilder result(cx);
@@ -3116,62 +3173,15 @@ static JSString* ReplaceAll(JSContext* cx, JSLinearString* string,
     }
   }
 
+  bool internalFailure = false;
   {
     AutoCheckCannotGC nogc;
-    const StrChar* strChars = string->chars<StrChar>(nogc);
-    const RepChar* repChars = replaceString->chars<RepChar>(nogc);
-
-    uint32_t dollarIndex = FindDollarIndex(repChars, replaceLength);
-
-    // If it's true, we are sure that the result's length is, at least, the same
-    // length as |str->length()|.
-    if (replaceLength >= searchLength) {
-      if (!result.reserve(stringLength)) {
-        result.failure();
-        return nullptr;
-      }
-    }
-
-    do {
-      // Step 14.c.
-      // Append the substring before the current match.
-      if (!result.append(strChars + endOfLastMatch,
-                         position - endOfLastMatch)) {
-        result.failure();
-        return nullptr;
-      }
-
-      // Steps 14.a-b and 14.d.
-      // Append the replacement.
-      if (dollarIndex != UINT32_MAX) {
-        size_t matchLimit = position + searchLength;
-        if (!AppendDollarReplacement(result, dollarIndex, position, matchLimit,
-                                     string, repChars, replaceLength)) {
-          result.failure();
-          return nullptr;
-        }
-      } else {
-        if (!result.append(repChars, replaceLength)) {
-          result.failure();
-          return nullptr;
-        }
-      }
-
-      // Step 14.e.
-      endOfLastMatch = position + searchLength;
-
-      // Step 11.
-      // Find the next match.
-      position = StringMatch(string, searchString, endOfLastMatch);
-    } while (position >= 0);
-
-    // Step 15.
-    // Append the substring after the last match.
-    if (!result.append(strChars + endOfLastMatch,
-                       stringLength - endOfLastMatch)) {
-      result.failure();
-      return nullptr;
-    }
+    internalFailure = !ReplaceAllInternal<StrChar, RepChar>(
+        nogc, string, searchString, replaceString, position, result);
+  }
+  if (internalFailure) {
+    result.failure();
+    return nullptr;
   }
 
   // Step 16.
@@ -3184,6 +3194,67 @@ static JSString* ReplaceAll(JSContext* cx, JSLinearString* string,
   return resultString;
 }
 
+template <typename StrChar, typename RepChar>
+static bool ReplaceAllInterleaveInternal(const AutoCheckCannotGC& nogc,
+                                         JSContext* cx, JSLinearString* string,
+                                         JSLinearString* replaceString,
+                                         JSStringBuilder& result) {
+  // Step 7.
+  const size_t stringLength = string->length();
+  const size_t replaceLength = replaceString->length();
+
+  const StrChar* strChars = string->chars<StrChar>(nogc);
+  const RepChar* repChars = replaceString->chars<RepChar>(nogc);
+
+  uint32_t dollarIndex = FindDollarIndex(repChars, replaceLength);
+
+  if (dollarIndex != UINT32_MAX) {
+    if (!result.reserve(stringLength)) {
+      return false;
+    }
+  } else {
+    // Compute the exact result length when no substitutions take place.
+    CheckedInt<uint32_t> strLength(stringLength);
+    CheckedInt<uint32_t> repLength(replaceLength);
+    CheckedInt<uint32_t> length = strLength + (strLength + 1) * repLength;
+    if (!length.isValid()) {
+      ReportAllocationOverflow(cx);
+      return false;
+    }
+
+    if (!result.reserve(length.value())) {
+      return false;
+    }
+  }
+
+  auto appendReplacement = [&](size_t match) {
+    if (dollarIndex != UINT32_MAX) {
+      return AppendDollarReplacement(result, dollarIndex, match, match, string,
+                                     repChars, replaceLength);
+    }
+    return result.append(repChars, replaceLength);
+  };
+
+  for (size_t index = 0; index < stringLength; index++) {
+    // Steps 11, 14.a-b and 14.d.
+    // The empty string matches before each character.
+    if (!appendReplacement(index)) {
+      return false;
+    }
+
+    // Step 14.c.
+    if (!result.append(strChars[index])) {
+      return false;
+    }
+  }
+
+  // Steps 11, 14.a-b and 14.d.
+  // The empty string also matches at the end of the string.
+  return appendReplacement(stringLength);
+
+  // Step 15 (not applicable when searchString is the empty string).
+}
+
 // https://tc39.es/proposal-string-replaceall/#sec-string.prototype.replaceall
 // Steps 7-16 when functionalReplace is false and searchString is the empty
 // string.
@@ -3193,9 +3264,7 @@ static JSString* ReplaceAll(JSContext* cx, JSLinearString* string,
 template <typename StrChar, typename RepChar>
 static JSString* ReplaceAllInterleave(JSContext* cx, JSLinearString* string,
                                       JSLinearString* replaceString) {
-  // Step 7.
-  const size_t stringLength = string->length();
-  const size_t replaceLength = replaceString->length();
+  // Step 7 moved into ReplaceAllInterleavedInternal.
 
   // Step 8 (advanceBy is 1 when searchString is the empty string).
 
@@ -3211,67 +3280,15 @@ static JSString* ReplaceAllInterleave(JSContext* cx, JSLinearString* string,
     }
   }
 
+  bool internalFailure = false;
   {
     AutoCheckCannotGC nogc;
-    const StrChar* strChars = string->chars<StrChar>(nogc);
-    const RepChar* repChars = replaceString->chars<RepChar>(nogc);
-
-    uint32_t dollarIndex = FindDollarIndex(repChars, replaceLength);
-
-    if (dollarIndex != UINT32_MAX) {
-      if (!result.reserve(stringLength)) {
-        result.failure();
-        return nullptr;
-      }
-    } else {
-      // Compute the exact result length when no substitutions take place.
-      CheckedInt<uint32_t> strLength(stringLength);
-      CheckedInt<uint32_t> repLength(replaceLength);
-      CheckedInt<uint32_t> length = strLength + (strLength + 1) * repLength;
-      if (!length.isValid()) {
-        ReportAllocationOverflow(cx);
-        result.failure();
-        return nullptr;
-      }
-
-      if (!result.reserve(length.value())) {
-        result.failure();
-        return nullptr;
-      }
-    }
-
-    auto appendReplacement = [&](size_t match) {
-      if (dollarIndex != UINT32_MAX) {
-        return AppendDollarReplacement(result, dollarIndex, match, match,
-                                       string, repChars, replaceLength);
-      }
-      result.failure();
-      return result.append(repChars, replaceLength);
-    };
-
-    for (size_t index = 0; index < stringLength; index++) {
-      // Steps 11, 14.a-b and 14.d.
-      // The empty string matches before each character.
-      if (!appendReplacement(index)) {
-        result.failure();
-        return nullptr;
-      }
-
-      // Step 14.c.
-      if (!result.append(strChars[index])) {
-        result.failure();
-        return nullptr;
-      }
-    }
-
-    // Steps 11, 14.a-b and 14.d.
-    // The empty string also matches at the end of the string.
-    if (!appendReplacement(stringLength)) {
-      result.failure();
-      return nullptr;
-    }
-
-    // Step 15 (not applicable when searchString is the empty string).
+    internalFailure = !ReplaceAllInterleaveInternal<StrChar, RepChar>(
+        nogc, cx, string, replaceString, result);
+  }
+  if (internalFailure) {
+    result.failure();
+    return nullptr;
   }
 
   // Step 16.
