@@ -1,6 +1,186 @@
 {
   "data": [
     {
+      "schema": 1669870099271,
+      "derHash": "f0MlzCQQejlEFVLyf9w0GFgCSC4WTReUqkFe8eQga6c=",
+      "subject": "CN=Entrust Certification Authority - L1K,OU=See www.entrust.net/legal-terms+OU=(c) 2012 Entrust\\, Inc. - for authorized use only,O=Entrust\\, Inc.,C=US",
+      "subjectDN": "MIG6MQswCQYDVQQGEwJVUzEWMBQGA1UEChMNRW50cnVzdCwgSW5jLjEoMCYGA1UECxMfU2VlIHd3dy5lbnRydXN0Lm5ldC9sZWdhbC10ZXJtczE5MDcGA1UECxMwKGMpIDIwMTIgRW50cnVzdCwgSW5jLiAtIGZvciBhdXRob3JpemVkIHVzZSBvbmx5MS4wLAYDVQQDEyVFbnRydXN0IENlcnRpZmljYXRpb24gQXV0aG9yaXR5IC0gTDFL",
+      "whitelist": false,
+      "attachment": {
+        "hash": "63de4667ecc52b8c03324efb20d2d3bba8bf5d65f33fe9d75bfeb4b0fe70c3f7",
+        "size": 1849,
+        "filename": "980Ionqp3wkYtN9SZVgMzuWQzJta1nfxNPwTem1X0uc=.pem",
+        "location": "security-state-staging/intermediates/469a331b-ff21-4a17-9718-0553715c4ec5.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "980Ionqp3wkYtN9SZVgMzuWQzJta1nfxNPwTem1X0uc=",
+      "crlite_enrolled": false,
+      "id": "d359e000-3422-4d3d-8d45-096408e95930",
+      "last_modified": 1669870624944
+    },
+    {
+      "schema": 1669668499137,
+      "derHash": "jVPipHelLDjQe6/9+3F5WSo0TcuOy3Xhr4ljyaL+nIM=",
+      "subject": "CN=GeoSSL RSA Extended Validation Secure Server CA,O=GeoSSL,C=CN",
+      "subjectDN": "MFgxCzAJBgNVBAYTAkNOMQ8wDQYDVQQKEwZHZW9TU0wxODA2BgNVBAMTL0dlb1NTTCBSU0EgRXh0ZW5kZWQgVmFsaWRhdGlvbiBTZWN1cmUgU2VydmVyIENB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "362e44cc1be38d034d48d013358849c7dcbaa96f2d0edf1bf7ec5b3033a816c4",
+        "size": 2255,
+        "filename": "ddQlhc5XifO6R-WuMtb7cM6ZbG6W0Q5mXmmhlTXiRFs=.pem",
+        "location": "security-state-staging/intermediates/e0735db7-bb34-4323-9b8f-081433bd0fd3.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "ddQlhc5XifO6R+WuMtb7cM6ZbG6W0Q5mXmmhlTXiRFs=",
+      "crlite_enrolled": false,
+      "id": "2e9187ce-4bdc-49e6-a5ab-8b541d7a79fe",
+      "last_modified": 1669669023713
+    },
+    {
+      "schema": 1669668498274,
+      "derHash": "2gC1Rrp74isUa3S8I9rKOWBGSoR3mwEWWDv9i3kdQf0=",
+      "subject": "CN=GeoSSL RSA Organization Validation Secure Server CA,O=GeoSSL,C=CN",
+      "subjectDN": "MFwxCzAJBgNVBAYTAkNOMQ8wDQYDVQQKEwZHZW9TU0wxPDA6BgNVBAMTM0dlb1NTTCBSU0EgT3JnYW5pemF0aW9uIFZhbGlkYXRpb24gU2VjdXJlIFNlcnZlciBDQQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "2c14ef3c5c0fbdfa9a9242de8c0c98f3166aeb1e68d03d4f96876bffcb051206",
+        "size": 2272,
+        "filename": "RafzbiIbXcWhJv01Vws7hbCUu7Ob10WNi-q9yUxtkwo=.pem",
+        "location": "security-state-staging/intermediates/5a10e7b1-dd0c-4576-b009-e5dd34a527d8.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "RafzbiIbXcWhJv01Vws7hbCUu7Ob10WNi+q9yUxtkwo=",
+      "crlite_enrolled": false,
+      "id": "07f623d4-3aab-44c3-b605-4c3012f68505",
+      "last_modified": 1669669023706
+    },
+    {
+      "schema": 1669668497390,
+      "derHash": "/cHiV085fYuwvENusC+cwH7rCL2QODqcMhc8iJvdjpY=",
+      "subject": "CN=GeoSSL RSA Domain Validation Secure Server CA,O=GeoSSL,C=CN",
+      "subjectDN": "MFYxCzAJBgNVBAYTAkNOMQ8wDQYDVQQKEwZHZW9TU0wxNjA0BgNVBAMTLUdlb1NTTCBSU0EgRG9tYWluIFZhbGlkYXRpb24gU2VjdXJlIFNlcnZlciBDQQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "56169197b112f9eb1bcf28ded2643c28e5d4510b70349503b76f0c26956cc0e7",
+        "size": 2263,
+        "filename": "6od8LbsRZ70mucCJmlXZL66jtDof8GjuIP3z_M3XTvY=.pem",
+        "location": "security-state-staging/intermediates/64a6bfb6-19c9-4c2e-8a37-5f5bab5a2bde.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "6od8LbsRZ70mucCJmlXZL66jtDof8GjuIP3z/M3XTvY=",
+      "crlite_enrolled": false,
+      "id": "0f5281c0-74db-47b3-b081-775cbe600d7c",
+      "last_modified": 1669669023698
+    },
+    {
+      "schema": 1669668496514,
+      "derHash": "r/j0d1shXMXzVLh7AA3vdosY2o+PMS09f+AceeyIIKU=",
+      "subject": "CN=InCommon RSA IGTF Server CA 2,O=Internet2,C=US",
+      "subjectDN": "MEkxCzAJBgNVBAYTAlVTMRIwEAYDVQQKEwlJbnRlcm5ldDIxJjAkBgNVBAMTHUluQ29tbW9uIFJTQSBJR1RGIFNlcnZlciBDQSAy",
+      "whitelist": false,
+      "attachment": {
+        "hash": "14384bb9410dc2b39095f97f6c6c4c2125783bd77983fe7629f19c8d422fdb5b",
+        "size": 2263,
+        "filename": "61zhBAEXtJMcKuCk0kOoYENOt_iXEB-vTTnrezeFhtE=.pem",
+        "location": "security-state-staging/intermediates/42580e0c-abd4-4f8d-a88f-f7cbd167e898.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "61zhBAEXtJMcKuCk0kOoYENOt/iXEB+vTTnrezeFhtE=",
+      "crlite_enrolled": false,
+      "id": "59fcf8a4-56b9-4841-9195-79a77910be5c",
+      "last_modified": 1669669023690
+    },
+    {
+      "schema": 1669668494795,
+      "derHash": "t42Os0f4pnd+v5/SO4OACryIzbPPG0BwaxGwXx+gb7w=",
+      "subject": "CN=InCommon ECC Server CA 2,O=Internet2,C=US",
+      "subjectDN": "MEQxCzAJBgNVBAYTAlVTMRIwEAYDVQQKEwlJbnRlcm5ldDIxITAfBgNVBAMTGEluQ29tbW9uIEVDQyBTZXJ2ZXIgQ0EgMg==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "bfead90e57e7a127a44c053789beeae99d48c7c7ea910aff44caa548ce4d4cb0",
+        "size": 1228,
+        "filename": "UJd7EKNaKP0I5AOmPVjTsmFeym78buyJ_UWoURYuvQA=.pem",
+        "location": "security-state-staging/intermediates/b46b3137-3b00-4aea-beb6-c0aae11f0db2.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "UJd7EKNaKP0I5AOmPVjTsmFeym78buyJ/UWoURYuvQA=",
+      "crlite_enrolled": false,
+      "id": "50ab7885-78eb-456e-a407-3f4b39c36ba4",
+      "last_modified": 1669669023682
+    },
+    {
+      "schema": 1669668495677,
+      "derHash": "N53iqm70sX4ebA2WJlMfeS5llZF/stKKnnXquezp50M=",
+      "subject": "CN=GeoSSL ECC Extended Validation Secure Server CA,O=GeoSSL,C=CN",
+      "subjectDN": "MFgxCzAJBgNVBAYTAkNOMQ8wDQYDVQQKEwZHZW9TU0wxODA2BgNVBAMTL0dlb1NTTCBFQ0MgRXh0ZW5kZWQgVmFsaWRhdGlvbiBTZWN1cmUgU2VydmVyIENB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "8835b8bf4becd4b3a5647d717c97879d42b4a2f498c272f1192b9fd78dbdd119",
+        "size": 1244,
+        "filename": "dWFnLHXuYjRMKQ9l9oYZaLE_FVNqQpqWS-WNxUo8yZQ=.pem",
+        "location": "security-state-staging/intermediates/73b48642-48c6-4e2b-8618-80c484befb9e.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "dWFnLHXuYjRMKQ9l9oYZaLE/FVNqQpqWS+WNxUo8yZQ=",
+      "crlite_enrolled": false,
+      "id": "5b379d75-a415-481c-b3a1-f0f504f9fded",
+      "last_modified": 1669669023674
+    },
+    {
+      "schema": 1669668493911,
+      "derHash": "JSm6MGTKmky94uREoch9BG9pFaHv40FN9b22p33GIKc=",
+      "subject": "CN=GeoSSL ECC Organization Validation Secure Server CA,O=GeoSSL,C=CN",
+      "subjectDN": "MFwxCzAJBgNVBAYTAkNOMQ8wDQYDVQQKEwZHZW9TU0wxPDA6BgNVBAMTM0dlb1NTTCBFQ0MgT3JnYW5pemF0aW9uIFZhbGlkYXRpb24gU2VjdXJlIFNlcnZlciBDQQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "4eab674f0368219ed00f909dffb732ca61faeaef0bb29330dda822f461eee9f9",
+        "size": 1256,
+        "filename": "s2MUPnrFQWqodG9MAwrEqGZip-I0MUwxn8ap-jQjfUM=.pem",
+        "location": "security-state-staging/intermediates/0d2326ab-8cce-4ae2-9610-1bc4cb2cb474.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "s2MUPnrFQWqodG9MAwrEqGZip+I0MUwxn8ap+jQjfUM=",
+      "crlite_enrolled": false,
+      "id": "d8a74877-2eb5-45b9-9a1c-ad7f0dba0785",
+      "last_modified": 1669669023666
+    },
+    {
+      "schema": 1669668492998,
+      "derHash": "h+AcxN0MnZKj29SQkv8T+c04dEXNxX5bmE4bdyG1sCk=",
+      "subject": "CN=InCommon RSA Server CA 2,O=Internet2,C=US",
+      "subjectDN": "MEQxCzAJBgNVBAYTAlVTMRIwEAYDVQQKEwlJbnRlcm5ldDIxITAfBgNVBAMTGEluQ29tbW9uIFJTQSBTZXJ2ZXIgQ0EgMg==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "71d4c087fe91778af395f778b86b825ce955d146490ab94540d3fcdf1ec74ee2",
+        "size": 2239,
+        "filename": "nIUvrOVzCyKOqY-U4sofEeIMk94Dt_WuMgaesi8NITk=.pem",
+        "location": "security-state-staging/intermediates/8d2e464a-9995-4b44-ac8b-55f3656ad646.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "nIUvrOVzCyKOqY+U4sofEeIMk94Dt/WuMgaesi8NITk=",
+      "crlite_enrolled": false,
+      "id": "53e44ea8-81c7-4e30-8262-90b1e227e875",
+      "last_modified": 1669669023658
+    },
+    {
+      "schema": 1669668492093,
+      "derHash": "gqWKnkiWBsMBVi/FnaKxNmA44zw+c1FvroS48X+l5PU=",
+      "subject": "CN=GeoSSL ECC Domain Validation Secure Server CA,O=GeoSSL,C=CN",
+      "subjectDN": "MFYxCzAJBgNVBAYTAkNOMQ8wDQYDVQQKEwZHZW9TU0wxNjA0BgNVBAMTLUdlb1NTTCBFQ0MgRG9tYWluIFZhbGlkYXRpb24gU2VjdXJlIFNlcnZlciBDQQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "af362825be8a508c9d869d98b310db008dfd11676462921211d4ad9241dc7031",
+        "size": 1252,
+        "filename": "FVfl1r7A_nbUaPI8gp_6mC1lvxpub3NNCfyJOg0q9oA=.pem",
+        "location": "security-state-staging/intermediates/beb9c58d-fd8a-41b9-bb23-1a8e57cdf630.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "FVfl1r7A/nbUaPI8gp/6mC1lvxpub3NNCfyJOg0q9oA=",
+      "crlite_enrolled": false,
+      "id": "96db0a85-59b3-4892-aca4-6aa83b0b0b3e",
+      "last_modified": 1669669023650
+    },
+    {
       "schema": 1668674893607,
       "derHash": "AEgjQbEEoN5uDx1QjbhMtRT3SU/gSYITOlx1ATbFXcg=",
       "subject": "CN=Hongkong Post Root CA 3,O=Hongkong Post,L=Hong Kong,ST=Hong Kong,C=HK",
@@ -26821,5 +27001,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1669366623074
+  "timestamp": 1669870624944
 }
