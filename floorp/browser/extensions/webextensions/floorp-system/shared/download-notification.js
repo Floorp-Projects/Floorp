@@ -37,8 +37,8 @@ browser.downloads.onChanged.addListener(
 const DOWNLOAD_NOTIFICATION_PREF = "floorp.download.notification";
 
 browser.downloads.onCreated.addListener(async(file) => {
-    let pref = await browser.aboutConfigPrefs.getPref(DOWNLOAD_NOTIFICATION_PREF);
-    if (pref === 1 || pref === 3) {
+    let pref = String(await browser.aboutConfigPrefs.getPref(DOWNLOAD_NOTIFICATION_PREF));
+    if (pref === "1" || pref === "3") {
         browser.notifications.create({
           "type": "basic",
           "iconUrl": "chrome://branding/content/about-logo.png",
@@ -49,13 +49,14 @@ browser.downloads.onCreated.addListener(async(file) => {
 });
 
 browser.downloads.onChanged.addListener(async(file) => {
-      let pref = await browser.aboutConfigPrefs.getPref(DOWNLOAD_NOTIFICATION_PREF);
-      if (file.state.current == "complete" && (pref === 2 || pref === 3)) {
+      let pref = String(await browser.aboutConfigPrefs.getPref(DOWNLOAD_NOTIFICATION_PREF));
+      if (file.state.current == "complete" && (pref === "2" || pref === "3")) {
+        let download = await browser.downloads.search({ id: file.id });
         browser.notifications.create({
           "type": "basic",
           "iconUrl": "chrome://branding/content/about-logo.png",
           "title": chrome.i18n.getMessage("finish"),
-          "message": file.filename
+          "message": download[0].filename
         });
     }
 });
