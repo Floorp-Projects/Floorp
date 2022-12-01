@@ -16,7 +16,6 @@ import mozilla.appservices.places.PlacesReaderConnection
 import mozilla.appservices.places.PlacesWriterConnection
 import mozilla.appservices.places.uniffi.PlacesApiException
 import mozilla.appservices.places.uniffi.VisitObservation
-import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.DocumentType
 import mozilla.components.concept.storage.FrecencyThresholdOption
 import mozilla.components.concept.storage.HistoryMetadata
@@ -33,7 +32,6 @@ import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
 import org.hamcrest.core.Is.`is`
-import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -688,21 +686,6 @@ class PlacesHistoryStorageTest {
                 fail()
             }
 
-            override fun importVisitsFromFennec(dbPath: String): JSONObject {
-                fail()
-                return JSONObject()
-            }
-
-            override fun importBookmarksFromFennec(dbPath: String): JSONObject {
-                fail()
-                return JSONObject()
-            }
-
-            override fun readPinnedSitesFromFennec(dbPath: String): List<BookmarkNode> {
-                fail()
-                return emptyList()
-            }
-
             override fun close() {
                 fail()
             }
@@ -744,21 +727,6 @@ class PlacesHistoryStorageTest {
 
             override fun syncBookmarks(syncInfo: SyncAuthInfo) {}
 
-            override fun importVisitsFromFennec(dbPath: String): JSONObject {
-                fail()
-                return JSONObject()
-            }
-
-            override fun importBookmarksFromFennec(dbPath: String): JSONObject {
-                fail()
-                return JSONObject()
-            }
-
-            override fun readPinnedSitesFromFennec(dbPath: String): List<BookmarkNode> {
-                fail()
-                return emptyList()
-            }
-
             override fun close() {
                 fail()
             }
@@ -799,21 +767,6 @@ class PlacesHistoryStorageTest {
 
             override fun syncBookmarks(syncInfo: SyncAuthInfo) {
                 fail()
-            }
-
-            override fun importVisitsFromFennec(dbPath: String): JSONObject {
-                fail()
-                return JSONObject()
-            }
-
-            override fun importBookmarksFromFennec(dbPath: String): JSONObject {
-                fail()
-                return JSONObject()
-            }
-
-            override fun readPinnedSitesFromFennec(dbPath: String): List<BookmarkNode> {
-                fail()
-                return emptyList()
             }
 
             override fun close() {
@@ -858,21 +811,6 @@ class PlacesHistoryStorageTest {
                 fail()
             }
 
-            override fun importVisitsFromFennec(dbPath: String): JSONObject {
-                fail()
-                return JSONObject()
-            }
-
-            override fun importBookmarksFromFennec(dbPath: String): JSONObject {
-                fail()
-                return JSONObject()
-            }
-
-            override fun readPinnedSitesFromFennec(dbPath: String): List<BookmarkNode> {
-                fail()
-                return emptyList()
-            }
-
             override fun close() {
                 fail()
             }
@@ -884,183 +822,6 @@ class PlacesHistoryStorageTest {
         val storage = MockingPlacesHistoryStorage(conn)
         storage.sync(SyncAuthInfo("kid", "token", 123L, "key", "serverUrl"))
         fail()
-    }
-
-    @Test
-    fun `history import v0 empty`() {
-        // Doesn't have a schema or a set user_version pragma.
-        val path = getTestPath("databases/empty-v0.db").absolutePath
-        try {
-            history.importFromFennec(path)
-            fail("Expected v0 database to be unsupported")
-        } catch (e: PlacesApiException) {
-        }
-    }
-
-    @Test
-    fun `history import v23 populated`() {
-        // Fennec v38 schema populated with data.
-        val path = getTestPath("databases/bookmarks-v23.db").absolutePath
-        try {
-            history.importFromFennec(path)
-            fail("Expected v23 database to be unsupported")
-        } catch (e: PlacesApiException) {
-        }
-    }
-
-    @Test
-    fun `history import v38 populated`() = runTestOnMain {
-        val path = getTestPath("databases/populated-v38.db").absolutePath
-        var visits = history.getDetailedVisits(0, Long.MAX_VALUE)
-        assertEquals(0, visits.size)
-        history.importFromFennec(path)
-
-        visits = history.getDetailedVisits(0, Long.MAX_VALUE)
-        assertEquals(152, visits.size)
-
-        assertEquals(
-            listOf(false, false, true, true, false),
-            history.reader.getVisited(
-                listOf(
-                    "files:///",
-                    "https://news.ycombinator.com/",
-                    "https://www.theguardian.com/film/2017/jul/24/stranger-things-thor-ragnarok-comic-con-2017",
-                    "http://www.bbc.com/news/world-us-canada-40662772",
-                    "https://mobile.reuters.com/",
-                ),
-            ),
-        )
-
-        with(visits[0]) {
-            assertEquals("Apple", this.title)
-            assertEquals("http://www.apple.com/", this.url)
-            assertEquals(1472685165382, this.visitTime)
-            assertEquals(VisitType.REDIRECT_PERMANENT, this.visitType)
-        }
-    }
-
-    @Test
-    fun `history import v39 populated`() = runTestOnMain {
-        val path = getTestPath("databases/populated-v39.db").absolutePath
-        var visits = history.getDetailedVisits(0, Long.MAX_VALUE)
-        assertEquals(0, visits.size)
-        history.importFromFennec(path)
-
-        visits = history.getDetailedVisits(0, Long.MAX_VALUE)
-        assertEquals(6, visits.size)
-
-        assertEquals(
-            listOf(false, true, true, true, true, true, true),
-            history.reader.getVisited(
-                listOf(
-                    "files:///",
-                    "https://news.ycombinator.com/",
-                    "https://news.ycombinator.com/item?id=21224209",
-                    "https://mobile.twitter.com/random_walker/status/1182635589604171776",
-                    "https://www.mozilla.org/en-US/",
-                    "https://www.mozilla.org/en-US/firefox/accounts/",
-                    "https://mobile.reuters.com/",
-                ),
-            ),
-        )
-
-        with(visits[0]) {
-            assertEquals("Hacker News", this.title)
-            assertEquals("https://news.ycombinator.com/", this.url)
-            assertEquals(1570822280639, this.visitTime)
-            assertEquals(VisitType.LINK, this.visitType)
-        }
-        with(visits[1]) {
-            assertEquals("Why Enterprise Software Sucks | Hacker News", this.title)
-            assertEquals("https://news.ycombinator.com/item?id=21224209", this.url)
-            assertEquals(1570822283117, this.visitTime)
-            assertEquals(VisitType.LINK, this.visitType)
-        }
-        with(visits[2]) {
-            assertEquals("Arvind Narayanan on Twitter: \"My university just announced that it’s dumping Blackboard, and there was much rejoicing. Why is Blackboard universally reviled? There’s a standard story of why \"enterprise software\" sucks. If you’ll bear with me, I think this is best appreciated by talking about… baby clothes!\" / Twitter", this.title)
-            assertEquals("https://mobile.twitter.com/random_walker/status/1182635589604171776", this.url)
-            assertEquals(1570822287349, this.visitTime)
-            assertEquals(VisitType.LINK, this.visitType)
-        }
-        with(visits[3]) {
-            assertEquals("Internet for people, not profit — Mozilla", this.title)
-            assertEquals("https://www.mozilla.org/en-US/", this.url)
-            assertEquals(1570830201733, this.visitTime)
-            assertEquals(VisitType.LINK, this.visitType)
-        }
-        with(visits[4]) {
-            assertEquals("There is a way to protect your privacy. Join Firefox.", this.title)
-            assertEquals("https://www.mozilla.org/en-US/firefox/accounts/", this.url)
-            assertEquals(1570830207742, this.visitTime)
-            assertEquals(VisitType.LINK, this.visitType)
-        }
-        with(visits[5]) {
-            assertEquals("", this.title)
-            assertEquals("https://mobile.reuters.com/", this.url)
-            assertEquals(1570830217562, this.visitTime)
-            assertEquals(VisitType.LINK, this.visitType)
-        }
-    }
-
-    @Test
-    fun `history import v34 populated`() = runTestOnMain {
-        val path = getTestPath("databases/history-v34.db").absolutePath
-        var visits = history.getDetailedVisits(0, Long.MAX_VALUE)
-        assertEquals(0, visits.size)
-        history.importFromFennec(path)
-
-        visits = history.getDetailedVisits(0, Long.MAX_VALUE)
-        assertEquals(6, visits.size)
-
-        assertEquals(
-            listOf(true, true, true, true, true),
-            history.reader.getVisited(
-                listOf(
-                    "https://www.newegg.com/",
-                    "https://news.ycombinator.com/",
-                    "https://terrytao.wordpress.com/2020/04/12/john-conway/",
-                    "https://news.ycombinator.com/item?id=22862053",
-                    "https://malleable.systems/",
-                ),
-            ),
-        )
-
-        with(visits[0]) {
-            assertEquals("Computer Parts, PC Components, Laptop Computers, LED LCD TV, Digital Cameras and more - Newegg.com", this.title)
-            assertEquals("https://www.newegg.com/", this.url)
-            assertEquals(1586838104188, this.visitTime)
-            assertEquals(VisitType.LINK, this.visitType)
-        }
-        with(visits[1]) {
-            assertEquals("Hacker News", this.title)
-            assertEquals("https://news.ycombinator.com/", this.url)
-            assertEquals(1586838109506, this.visitTime)
-            assertEquals(VisitType.LINK, this.visitType)
-        }
-        with(visits[2]) {
-            assertEquals("https://terrytao.wordpress.com/2020/04/12/john-conway/", this.title)
-            assertEquals("https://terrytao.wordpress.com/2020/04/12/john-conway/", this.url)
-            assertEquals(1586838113212, this.visitTime)
-            assertEquals(VisitType.LINK, this.visitType)
-        }
-        with(visits[3]) {
-            assertEquals("John Conway | Hacker News", this.title)
-            assertEquals("https://news.ycombinator.com/item?id=22862053", this.url)
-            assertEquals(1586838123314, this.visitTime)
-            assertEquals(VisitType.LINK, this.visitType)
-        }
-        with(visits[4]) {
-            assertEquals("John Conway | Hacker News", this.title)
-            assertEquals("https://news.ycombinator.com/item?id=22862053", this.url)
-            assertEquals(1586838126671, this.visitTime)
-            assertEquals(VisitType.LINK, this.visitType)
-        }
-        with(visits[5]) {
-            assertEquals("https://malleable.systems/", this.title)
-            assertEquals("https://malleable.systems/", this.url)
-            assertEquals(1586838164613, this.visitTime)
-            assertEquals(VisitType.LINK, this.visitType)
-        }
     }
 
     @Test

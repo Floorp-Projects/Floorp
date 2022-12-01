@@ -8,10 +8,8 @@ import androidx.annotation.GuardedBy
 import mozilla.appservices.places.PlacesApi
 import mozilla.appservices.places.PlacesReaderConnection
 import mozilla.appservices.places.PlacesWriterConnection
-import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.support.sync.telemetry.SyncTelemetry
-import org.json.JSONObject
 import java.io.Closeable
 import java.io.File
 
@@ -55,21 +53,6 @@ internal interface Connection : Closeable {
     // strange split that doesn't quite map all that well to our internal storage model.
     fun syncHistory(syncInfo: SyncAuthInfo)
     fun syncBookmarks(syncInfo: SyncAuthInfo)
-
-    /**
-     * @return Migration metrics wrapped in a JSON object. See libplaces for schema details.
-     */
-    fun importVisitsFromFennec(dbPath: String): JSONObject
-
-    /**
-     * @return Migration metrics wrapped in a JSON object. See libplaces for schema details.
-     */
-    fun importBookmarksFromFennec(dbPath: String): JSONObject
-
-    /**
-     * @return A list of [BookmarkNode] which represent pinned sites.
-     */
-    fun readPinnedSitesFromFennec(dbPath: String): List<BookmarkNode>
 }
 
 /**
@@ -130,24 +113,6 @@ internal object RustPlacesConnection : Connection {
         check(api != null) { "must call init first" }
         val ping = api.syncBookmarks(syncInfo.into())
         SyncTelemetry.processBookmarksPing(ping)
-    }
-
-    override fun importVisitsFromFennec(dbPath: String): JSONObject {
-        val api = safeGetApi()
-        check(api != null) { "must call init first" }
-        return api.importVisitsFromFennec(dbPath)
-    }
-
-    override fun importBookmarksFromFennec(dbPath: String): JSONObject {
-        val api = safeGetApi()
-        check(api != null) { "must call init first" }
-        return api.importBookmarksFromFennec(dbPath)
-    }
-
-    override fun readPinnedSitesFromFennec(dbPath: String): List<BookmarkNode> {
-        val api = safeGetApi()
-        check(api != null) { "must call init first" }
-        return api.importPinnedSitesFromFennec(dbPath).map { it.asBookmarkNode() }
     }
 
     override fun close() = synchronized(this) {

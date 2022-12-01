@@ -210,18 +210,6 @@ interface LoginsStorage : AutoCloseable {
     suspend fun addOrUpdate(entry: LoginEntry): EncryptedLogin
 
     /**
-     * Bulk-import of a list of [Login].
-     * Storage must be empty; implementations expected to throw otherwise.
-     *
-     * This method exists to support the Fennic -> Fenix migration.  It needs
-     * to input [Login] instances in order to ensure the imported logins get
-     * the same GUID.
-     *
-     * @param logins A list of [Login] records to be imported.
-     */
-    suspend fun importLoginsAsync(logins: List<Login>)
-
-    /**
      * Fetch the list of logins for some origin from the underlying storage layer.
      *
      * @param origin A host name used to look up logins

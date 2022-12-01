@@ -37,6 +37,12 @@ permalink: /changelog/
 * **concept-engine**
   * 🚒 Bug fixed [bug #1801648](https://bugzilla.mozilla.org/show_bug.cgi?id=1801648). Fix autoplay settings are not getting updated in private mode.
 
+* **browser-storage-sync**
+  * Removed Fennec to Fenix migration code. Deleted the `importVisitsFromFennec`, `importBookmarksFromFennec` and `readPinnedSitesFromFennec` functions. [bug #1803632](https://bugzilla.mozilla.org/show_bug.cgi?id=1803632)
+
+* **service-sync-logins**
+  * Removed Fennec to Fenix migration code. Deleted `importLoginsAsync` function. [bug #1803632](https://bugzilla.mozilla.org/show_bug.cgi?id=1803632)
+
 # 108.0.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/v107.0.0...v108.0.0)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/v108.0.0/android-components/buildSrc/src/main/java/Dependencies.kt)

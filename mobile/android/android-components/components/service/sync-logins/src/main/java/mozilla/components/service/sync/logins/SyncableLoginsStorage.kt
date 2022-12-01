@@ -221,16 +221,6 @@ class SyncableLoginsStorage(
     }
 
     /**
-     * @throws [IncorrectKey] if the encryption key can't decrypt the login
-     * @throws [LoginsApiException] If DB isn't empty during an import; also, on unexpected errors
-     * (IO failure, rust panics, etc).
-     */
-    @Throws(IncorrectKey::class, LoginsApiException::class)
-    override suspend fun importLoginsAsync(logins: List<Login>): Unit = withContext(coroutineContext) {
-        conn.getStorage().importMultiple(logins.map { it.toLogin() }, crypto.getOrGenerateKey().key)
-    }
-
-    /**
      * @throws [LoginsApiException] On unexpected errors (IO failure, rust panics, etc)
      */
     @Throws(LoginsApiException::class)
