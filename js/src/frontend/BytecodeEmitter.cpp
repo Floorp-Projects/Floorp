@@ -142,8 +142,8 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, ErrorContext* ec,
       ec(ec),
       stackLimit(stackLimit),
       parent(parent),
-      bytecodeSection_(ec, sc->extent().lineno, sc->extent().column),
-      perScriptData_(ec, cx->frontendCollectionPool(), compilationState),
+      bytecodeSection_(cx, sc->extent().lineno, sc->extent().column),
+      perScriptData_(cx, compilationState),
       errorReporter_(errorReporter),
       compilationState(compilationState),
       suppressBreakpointsAndSourceNotes(
@@ -2455,8 +2455,8 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
   return intoScriptStencil(CompilationStencil::TopLevelIndex);
 }
 
-js::UniquePtr<ImmutableScriptData>
-BytecodeEmitter::createImmutableScriptData() {
+js::UniquePtr<ImmutableScriptData> BytecodeEmitter::createImmutableScriptData(
+    JSContext* cx) {
   uint32_t nslots;
   if (!getNslots(&nslots)) {
     return nullptr;
@@ -7239,7 +7239,7 @@ bool BytecodeEmitter::emitSelfHostedResumeGenerator(CallNode* callNode) {
   ParseNode* kindNode = valNode->pn_next;
   MOZ_ASSERT(kindNode->isKind(ParseNodeKind::StringExpr));
   GeneratorResumeKind kind =
-      ParserAtomToResumeKind(kindNode->as<NameNode>().atom());
+      ParserAtomToResumeKind(cx, kindNode->as<NameNode>().atom());
   MOZ_ASSERT(!kindNode->pn_next);
 
   if (!emitPushResumeKind(kind)) {
@@ -9209,7 +9209,8 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj, JSOp op,
 #endif
         writer.setPropNameNoDuplicateCheck(parserAtoms(), propName);
       } else {
-        if (!writer.setPropName(parserAtoms(), key->as<NameNode>().atom())) {
+        if (!writer.setPropName(cx, parserAtoms(),
+                                key->as<NameNode>().atom())) {
           return false;
         }
       }
@@ -9288,7 +9289,7 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
       atom = key->as<NameNode>().atom();
     }
 
-    if (!writer.setPropName(parserAtoms(), atom)) {
+    if (!writer.setPropName(cx, parserAtoms(), atom)) {
       return false;
     }
 
@@ -9615,7 +9616,7 @@ bool BytecodeEmitter::emitPrivateMethodInitializers(ClassEmitter& ce,
     // private method body.
     TaggedParserAtomIndex name = classMethod->name().as<NameNode>().atom();
     AccessorType accessorType = classMethod->accessorType();
-    StringBuffer storedMethodName(cx, ec);
+    StringBuffer storedMethodName(cx);
     if (!storedMethodName.append(parserAtoms(), name)) {
       return false;
     }
@@ -10680,7 +10681,8 @@ bool BytecodeEmitter::emitLexicalInitialization(TaggedParserAtomIndex name) {
   return true;
 }
 
-static MOZ_ALWAYS_INLINE ParseNode* FindConstructor(ListNode* classMethods) {
+static MOZ_ALWAYS_INLINE ParseNode* FindConstructor(JSContext* cx,
+                                                    ListNode* classMethods) {
   for (ParseNode* classElement : classMethods->contents()) {
     ParseNode* unwrappedElement = classElement;
     if (unwrappedElement->is<LexicalScopeNode>()) {
@@ -10783,7 +10785,7 @@ bool BytecodeEmitter::emitClass(
 
   ParseNode* heritageExpression = classNode->heritage();
   ListNode* classMembers = classNode->memberList();
-  ParseNode* constructor = FindConstructor(classMembers);
+  ParseNode* constructor = FindConstructor(cx, classMembers);
 
   // If |nameKind != ClassNameKind::ComputedName|
   //                [stack]
@@ -11730,7 +11732,7 @@ bool BytecodeEmitter::newSrcNoteOperand(ptrdiff_t operand) {
 
 bool BytecodeEmitter::intoScriptStencil(ScriptIndex scriptIndex) {
   js::UniquePtr<ImmutableScriptData> immutableScriptData =
-      createImmutableScriptData();
+      createImmutableScriptData(cx);
   if (!immutableScriptData) {
     return false;
   }
@@ -11739,7 +11741,7 @@ bool BytecodeEmitter::intoScriptStencil(ScriptIndex scriptIndex) {
              sc->hasNonSyntacticScope());
 
   auto& things = perScriptData().gcThingList().objects();
-  if (!compilationState.appendGCThings(ec, scriptIndex, things)) {
+  if (!compilationState.appendGCThings(cx, ec, scriptIndex, things)) {
     return false;
   }
 

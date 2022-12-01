@@ -106,25 +106,7 @@ MOZ_COLD JS_PUBLIC_API void ReportOutOfMemory(ErrorContext* ec);
  * not the system ones.
  */
 class JS_PUBLIC_API TempAllocPolicy : public AllocPolicyBase {
-  // Type tag for context_bits_
-  static constexpr uintptr_t JsContextTag = 0x1;
-
-  // Either a JSContext* (if JsContextTag is set), or ErrorContext*
-  uintptr_t const context_bits_;
-
-  MOZ_ALWAYS_INLINE bool hasJSContext() const {
-    return (context_bits_ & JsContextTag) == JsContextTag;
-  }
-
-  MOZ_ALWAYS_INLINE JSContext* cx() const {
-    MOZ_ASSERT(hasJSContext());
-    return reinterpret_cast<JSContext*>(context_bits_ ^ JsContextTag);
-  }
-
-  MOZ_ALWAYS_INLINE ErrorContext* ec() const {
-    MOZ_ASSERT(!hasJSContext());
-    return reinterpret_cast<ErrorContext*>(context_bits_);
-  }
+  JSContext* const cx_;
 
   /*
    * Non-inline helper to call JSRuntime::onOutOfMemory with minimal
@@ -144,25 +126,11 @@ class JS_PUBLIC_API TempAllocPolicy : public AllocPolicyBase {
         onOutOfMemory(arenaId, allocFunc, bytes, reallocPtr));
   }
 
-#ifdef DEBUG
-  void assertNotJSContextOnHelperThread() const;
-#else
-  MOZ_ALWAYS_INLINE void assertIfJSContextOnHelperThread() const {}
-#endif /* DEBUG */
-
  public:
-  MOZ_IMPLICIT TempAllocPolicy(JSContext* cx)
-      : context_bits_(uintptr_t(cx) | JsContextTag) {
-    MOZ_ASSERT((uintptr_t(cx) & JsContextTag) == 0);
-  }
-  MOZ_IMPLICIT TempAllocPolicy(ErrorContext* ec)
-      : context_bits_(uintptr_t(ec)) {
-    MOZ_ASSERT((uintptr_t(ec) & JsContextTag) == 0);
-  }
+  MOZ_IMPLICIT TempAllocPolicy(JSContext* cx) : cx_(cx) {}
 
   template <typename T>
   T* pod_arena_malloc(arena_id_t arenaId, size_t numElems) {
-    assertNotJSContextOnHelperThread();
     T* p = this->maybe_pod_arena_malloc<T>(arenaId, numElems);
     if (MOZ_UNLIKELY(!p)) {
       p = onOutOfMemoryTyped<T>(arenaId, AllocFunction::Malloc, numElems);
@@ -172,7 +140,6 @@ class JS_PUBLIC_API TempAllocPolicy : public AllocPolicyBase {
 
   template <typename T>
   T* pod_arena_calloc(arena_id_t arenaId, size_t numElems) {
-    assertNotJSContextOnHelperThread();
     T* p = this->maybe_pod_arena_calloc<T>(arenaId, numElems);
     if (MOZ_UNLIKELY(!p)) {
       p = onOutOfMemoryTyped<T>(arenaId, AllocFunction::Calloc, numElems);
@@ -183,7 +150,6 @@ class JS_PUBLIC_API TempAllocPolicy : public AllocPolicyBase {
   template <typename T>
   T* pod_arena_realloc(arena_id_t arenaId, T* prior, size_t oldSize,
                        size_t newSize) {
-    assertNotJSContextOnHelperThread();
     T* p2 = this->maybe_pod_arena_realloc<T>(arenaId, prior, oldSize, newSize);
     if (MOZ_UNLIKELY(!p2)) {
       p2 = onOutOfMemoryTyped<T>(arenaId, AllocFunction::Realloc, newSize,
@@ -216,11 +182,7 @@ class JS_PUBLIC_API TempAllocPolicy : public AllocPolicyBase {
 
   bool checkSimulatedOOM() const {
     if (js::oom::ShouldFailWithOOM()) {
-      if (hasJSContext()) {
-        ReportOutOfMemory(cx());
-      } else {
-        ReportOutOfMemory(ec());
-      }
+      ReportOutOfMemory(cx_);
       return false;
     }
 

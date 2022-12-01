@@ -6,7 +6,6 @@
 
 #include "js/AllocPolicy.h"
 
-#include "vm/ErrorContext.h"
 #include "vm/JSContext.h"
 
 using namespace js;
@@ -14,25 +13,9 @@ using namespace js;
 void* TempAllocPolicy::onOutOfMemory(arena_id_t arenaId,
                                      AllocFunction allocFunc, size_t nbytes,
                                      void* reallocPtr) {
-  void* result;
-  if (hasJSContext()) {
-    result = cx()->onOutOfMemory(allocFunc, arenaId, nbytes, reallocPtr);
-  } else {
-    result = ec()->onOutOfMemory(allocFunc, arenaId, nbytes, reallocPtr);
-  }
-  return result;
+  return cx_->onOutOfMemory(allocFunc, arenaId, nbytes, reallocPtr);
 }
-
-#ifdef DEBUG
-void TempAllocPolicy::assertNotJSContextOnHelperThread() const {
-  MOZ_ASSERT(!(hasJSContext() && cx() && cx()->isHelperThreadContext()));
-}
-#endif /* DEBUG */
 
 void TempAllocPolicy::reportAllocOverflow() const {
-  if (hasJSContext()) {
-    ReportAllocationOverflow(cx());
-  } else {
-    ReportAllocationOverflow(ec());
-  }
+  ReportAllocationOverflow(cx_);
 }

@@ -1807,13 +1807,11 @@ bool js::RegExpGetSubstitution(JSContext* cx, Handle<ArrayObject*> matchResult,
   JSStringBuilder result(cx);
   if (NeedTwoBytes(string, replacement, matched, captures, namedCaptures)) {
     if (!result.ensureTwoByteChars()) {
-      result.failure();
       return false;
     }
   }
 
   if (!result.reserve(reserveLength)) {
-    result.failure();
     return false;
   }
 
@@ -1828,11 +1826,9 @@ bool js::RegExpGetSubstitution(JSContext* cx, Handle<ArrayObject*> matchResult,
   // Step 12.
   JSString* resultString = result.finishString();
   if (!resultString) {
-    result.failure();
     return false;
   }
 
-  result.ok();
   rval.setString(resultString);
   return true;
 }

@@ -12,7 +12,6 @@
 #include "frontend/CompilationStencil.h"  // CompilationStencil
 #include "frontend/SharedContext.h"       // FunctionBox
 #include "vm/BytecodeUtil.h"              // INDEX_LIMIT, StackUses, StackDefs
-#include "vm/ErrorContext.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"     // JSContext
 #include "vm/RegExpObject.h"  // RegexpObject
@@ -159,14 +158,14 @@ void CGScopeNoteList::recordEndImpl(uint32_t index, uint32_t offset) {
   list[index].length = offset - list[index].start;
 }
 
-BytecodeSection::BytecodeSection(ErrorContext* ec, uint32_t lineNum,
+BytecodeSection::BytecodeSection(JSContext* cx, uint32_t lineNum,
                                  uint32_t column)
-    : code_(ec),
-      notes_(ec),
+    : code_(cx),
+      notes_(cx),
       lastNoteOffset_(0),
-      tryNoteList_(ec),
-      scopeNoteList_(ec),
-      resumeOffsetList_(ec),
+      tryNoteList_(cx),
+      scopeNoteList_(cx),
+      resumeOffsetList_(cx),
       currentLine_(lineNum),
       lastColumn_(column) {}
 
@@ -185,8 +184,9 @@ void BytecodeSection::updateDepth(BytecodeOffset target) {
   }
 }
 
-PerScriptData::PerScriptData(ErrorContext* ec, NameCollectionPool& ncp,
+PerScriptData::PerScriptData(JSContext* cx,
                              frontend::CompilationState& compilationState)
-    : gcThingList_(ec, compilationState), atomIndices_(ncp) {}
+    : gcThingList_(cx, compilationState),
+      atomIndices_(cx->frontendCollectionPool()) {}
 
 bool PerScriptData::init(ErrorContext* ec) { return atomIndices_.acquire(ec); }

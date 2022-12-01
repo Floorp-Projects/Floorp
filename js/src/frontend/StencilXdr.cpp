@@ -1201,7 +1201,7 @@ XDRResult StencilXDR::codeSource(XDRState<mode>* xdr,
 
   if (mode == XDR_DECODE) {
     // Allocate a new ScriptSource and root it with the holder.
-    source = do_AddRef(ec->getAllocator()->new_<ScriptSource>());
+    source = do_AddRef(cx->new_<ScriptSource>());
     if (!source) {
       return xdr->fail(JS::TranscodeResult::Throw);
     }
@@ -1428,12 +1428,12 @@ void StencilIncrementalEncoderPtr::reset() {
 bool StencilIncrementalEncoderPtr::setInitial(
     JSContext* cx,
     UniquePtr<frontend::ExtensibleCompilationStencil>&& initial) {
-  AutoReportFrontendContext ec(cx);
-  merger_ = ec.getAllocator()->new_<frontend::CompilationStencilMerger>();
+  merger_ = cx->new_<frontend::CompilationStencilMerger>();
   if (!merger_) {
     return false;
   }
 
+  AutoReportFrontendContext ec(cx);
   return merger_->setInitial(
       &ec,
       std::forward<UniquePtr<frontend::ExtensibleCompilationStencil>>(initial));

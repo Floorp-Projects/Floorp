@@ -423,33 +423,21 @@ JSLinearString* js::EscapeRegExpPattern(JSContext* cx, Handle<JSAtom*> src) {
 
   // We may never need to use |sb|. Start using it lazily.
   JSStringBuilder sb(cx);
-  bool escapeFailed = false;
+
   if (src->hasLatin1Chars()) {
     JS::AutoCheckCannotGC nogc;
-    escapeFailed =
-        !::EscapeRegExpPattern(sb, src->latin1Chars(nogc), src->length());
+    if (!::EscapeRegExpPattern(sb, src->latin1Chars(nogc), src->length())) {
+      return nullptr;
+    }
   } else {
     JS::AutoCheckCannotGC nogc;
-    escapeFailed =
-        !::EscapeRegExpPattern(sb, src->twoByteChars(nogc), src->length());
-  }
-  if (escapeFailed) {
-    sb.failure();
-    return nullptr;
+    if (!::EscapeRegExpPattern(sb, src->twoByteChars(nogc), src->length())) {
+      return nullptr;
+    }
   }
 
   // Step 3.
-  if (sb.empty()) {
-    sb.ok();
-    return src;
-  }
-  auto* result = sb.finishString();
-  if (!result) {
-    sb.failure();
-    return nullptr;
-  }
-  sb.ok();
-  return result;
+  return sb.empty() ? src : sb.finishString();
 }
 
 // ES6 draft rev32 21.2.5.14. Optimized for RegExpObject.
@@ -466,53 +454,38 @@ JSLinearString* RegExpObject::toString(JSContext* cx,
   JSStringBuilder sb(cx);
   size_t len = escapedSrc->length();
   if (!sb.reserve(len + 2)) {
-    sb.failure();
     return nullptr;
   }
   sb.infallibleAppend('/');
   if (!sb.append(escapedSrc)) {
-    sb.failure();
     return nullptr;
   }
   sb.infallibleAppend('/');
 
   // Steps 5-7.
   if (obj->hasIndices() && !sb.append('d')) {
-    sb.failure();
     return nullptr;
   }
   if (obj->global() && !sb.append('g')) {
-    sb.failure();
     return nullptr;
   }
   if (obj->ignoreCase() && !sb.append('i')) {
-    sb.failure();
     return nullptr;
   }
   if (obj->multiline() && !sb.append('m')) {
-    sb.failure();
     return nullptr;
   }
   if (obj->dotAll() && !sb.append('s')) {
-    sb.failure();
     return nullptr;
   }
   if (obj->unicode() && !sb.append('u')) {
-    sb.failure();
     return nullptr;
   }
   if (obj->sticky() && !sb.append('y')) {
-    sb.failure();
     return nullptr;
   }
 
-  auto* result = sb.finishString();
-  if (!result) {
-    sb.failure();
-    return nullptr;
-  }
-  sb.ok();
-  return result;
+  return sb.finishString();
 }
 
 template <typename CharT>
