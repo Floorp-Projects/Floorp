@@ -235,7 +235,7 @@ const CreditCardTelemetry = {
           if (record.untouchedFields?.includes(fieldName)) {
             this._ccFormV2SetExtra(ccFormV2Extra, fieldName, "autofilled");
           } else {
-            this._ccFormV2SetExtra(ccFormV2Extra, fieldName, "user filled");
+            this._ccFormV2SetExtra(ccFormV2Extra, fieldName, "user_filled");
           }
         }
         ccFormExtra.fields_not_auto = (totalCount - autofilledCount).toString();
@@ -250,6 +250,10 @@ const CreditCardTelemetry = {
         ccFormExtra.fields_not_auto = Array.from(elements)
           .filter(element => !!element.value?.trim().length)
           .length.toString();
+
+        Object.keys(record.record).forEach(fieldName =>
+          this._ccFormV2SetExtra(ccFormV2Extra, fieldName, "user_filled")
+        );
       }
 
       this._recordCCFormEvent(
