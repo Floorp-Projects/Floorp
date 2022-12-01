@@ -526,6 +526,8 @@ this.DateTimeBoxWidget = class {
         break;
       }
       case "MozSetDateTimePickerState": {
+        // To handle cases when an input is within a shadow DOM:
+        this.oldFocus = this.window.document.activeElement;
         this.setPickerState(aEvent.detail);
         break;
       }
@@ -585,6 +587,13 @@ this.DateTimeBoxWidget = class {
         " rt: " +
         aEvent.relatedTarget
     );
+
+    // Ignore when the focus moves to the datepicker panel
+    // while the input remains focused (even in another shadow DOM)
+    if (this.document.activeElement === this.oldFocus) {
+      return;
+    }
+    this.oldFocus = null;
 
     let target = aEvent.originalTarget;
     target.setAttribute("typeBuffer", "");
