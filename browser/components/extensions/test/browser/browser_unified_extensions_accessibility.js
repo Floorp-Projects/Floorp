@@ -116,7 +116,7 @@ add_task(async function test_keyboard_navigation_opens_menu() {
   const extension1 = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "1",
-      // `activeTab` is needed to enable the action button.
+      // activeTab and browser_action needed to enable the action button in mv2.
       permissions: ["activeTab"],
       browser_action: {},
     },
@@ -130,8 +130,9 @@ add_task(async function test_keyboard_navigation_opens_menu() {
   });
   const extension3 = ExtensionTestUtils.loadExtension({
     manifest: {
+      manifest_version: 3,
       name: "3",
-      // `activeTab` is needed to enable the action button.
+      // activeTab enables the action button without a browser action in mv3.
       permissions: ["activeTab"],
     },
     useAddonManager: "temporary",

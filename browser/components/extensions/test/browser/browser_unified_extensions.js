@@ -698,10 +698,32 @@ add_task(async function test_messages_origin_controls() {
       expectedActionButtonDisabled: true,
     },
     {
-      title: "MV2 - when clicked",
+      title: "MV2 - activeTab without browser action",
       manifest: {
         manifest_version: 2,
         permissions: ["activeTab"],
+      },
+      expectedDefaultMessage: NO_ACCESS,
+      expectedHoverMessage: NO_ACCESS,
+      expectedActionButtonDisabled: true,
+    },
+    {
+      title: "MV2 - when clicked: activeTab with browser action",
+      manifest: {
+        manifest_version: 2,
+        permissions: ["activeTab"],
+        browser_action: {},
+      },
+      expectedDefaultMessage: WHEN_CLICKED,
+      expectedHoverMessage: HOVER_RUN_VISIT_ONLY,
+      expectedActionButtonDisabled: false,
+    },
+    {
+      title: "MV3 - when clicked: activeTab with action",
+      manifest: {
+        manifest_version: 3,
+        permissions: ["activeTab"],
+        action: {},
       },
       expectedDefaultMessage: WHEN_CLICKED,
       expectedHoverMessage: HOVER_RUN_VISIT_ONLY,

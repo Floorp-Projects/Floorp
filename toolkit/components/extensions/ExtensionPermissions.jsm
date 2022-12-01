@@ -444,7 +444,13 @@ var OriginControls = {
    */
   getState(policy, uri) {
     let allDomains = new MatchPattern("*://*/*");
-    let activeTab = policy.permissions.includes("activeTab");
+
+    // activeTab and the resulting whenClicked state is only applicable for MV2
+    // extensions with a browser action and MV3 extensions (with or without).
+    let activeTab =
+      policy.permissions.includes("activeTab") &&
+      (policy.manifestVersion >= 3 || policy.extension?.hasBrowserActionUI);
+
     let couldRequest = policy.extension.optionalOrigins.matches(uri);
     let hasAccess = policy.canAccessURI(uri);
 
