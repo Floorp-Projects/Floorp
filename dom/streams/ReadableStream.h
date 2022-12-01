@@ -12,7 +12,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/IterableIterator.h"
 #include "mozilla/dom/QueuingStrategyBinding.h"
 #include "mozilla/dom/ReadableStreamController.h"
 #include "mozilla/dom/ReadableStreamDefaultController.h"
@@ -27,7 +26,6 @@ class ReadableStreamGenericReader;
 class ReadableStreamDefaultReader;
 class ReadableStreamGenericReader;
 struct ReadableStreamGetReaderOptions;
-struct ReadableStreamIteratorOptions;
 struct ReadIntoRequest;
 class WritableStream;
 struct ReadableWritablePair;
@@ -144,25 +142,6 @@ class ReadableStream : public nsISupports, public nsWrapperCache {
   MOZ_CAN_RUN_SCRIPT void Tee(JSContext* aCx,
                               nsTArray<RefPtr<ReadableStream>>& aResult,
                               ErrorResult& aRv);
-
-  struct IteratorData {
-    void Traverse(nsCycleCollectionTraversalCallback& cb);
-    void Unlink();
-
-    RefPtr<ReadableStreamDefaultReader> mReader;
-    bool mPreventCancel;
-  };
-
-  using Iterator = AsyncIterableIterator<ReadableStream>;
-
-  void InitAsyncIteratorData(IteratorData& aData, Iterator::IteratorType aType,
-                             const ReadableStreamIteratorOptions& aOptions,
-                             ErrorResult& aRv);
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> GetNextIterationResult(
-      Iterator* aIterator, ErrorResult& aRv);
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> IteratorReturn(
-      JSContext* aCx, Iterator* aIterator, JS::Handle<JS::Value> aValue,
-      ErrorResult& aRv);
 
   // Internal Slots:
  private:
