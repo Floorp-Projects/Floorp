@@ -108,7 +108,6 @@ add_task(async function block_request_with_dnr() {
     browser.test.sendMessage("tested_dnr_block");
   }
   let extension = ExtensionTestUtils.loadExtension({
-    allowInsecureRequests: true,
     background,
     manifest: {
       manifest_version: 3,
@@ -157,7 +156,6 @@ add_task(async function block_with_declarativeNetRequestWithHostAccess() {
       browser.test.sendMessage("dnr_registered");
     },
     temporarilyInstalled: true, // Needed for granted_host_permissions
-    allowInsecureRequests: true,
     manifest: {
       manifest_version: 3,
       granted_host_permissions: true,
@@ -235,7 +233,6 @@ add_task(async function upgradeScheme_declarativeNetRequestWithHostAccess() {
       browser.test.sendMessage("tested_dnr_upgradeScheme");
     },
     temporarilyInstalled: true, // Needed for granted_host_permissions.
-    allowInsecureRequests: true,
     manifest: {
       manifest_version: 3,
       granted_host_permissions: true,
@@ -339,7 +336,6 @@ add_task(async function redirect_request_with_dnr() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     temporarilyInstalled: true, // Needed for granted_host_permissions
-    allowInsecureRequests: true,
     manifest: {
       manifest_version: 3,
       granted_host_permissions: true,
@@ -424,7 +420,6 @@ add_task(async function redirect_request_with_dnr_cors_preflight() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     temporarilyInstalled: true, // Needed for granted_host_permissions
-    allowInsecureRequests: true,
     manifest: {
       manifest_version: 3,
       granted_host_permissions: true,
@@ -530,7 +525,6 @@ add_task(async function redirect_request_with_dnr_multiple_hops() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     temporarilyInstalled: true, // Needed for granted_host_permissions
-    allowInsecureRequests: true,
     manifest: {
       manifest_version: 3,
       granted_host_permissions: true,
@@ -588,7 +582,6 @@ add_task(async function redirect_request_with_dnr_with_redirect_loop() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     temporarilyInstalled: true, // Needed for granted_host_permissions
-    allowInsecureRequests: true,
     manifest: {
       manifest_version: 3,
       granted_host_permissions: true,
@@ -670,7 +663,6 @@ add_task(async function redirect_request_with_dnr_to_extensionPath() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     temporarilyInstalled: true, // Needed for granted_host_permissions
-    allowInsecureRequests: true,
     manifest: {
       manifest_version: 3,
       granted_host_permissions: true,
