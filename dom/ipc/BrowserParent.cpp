@@ -809,6 +809,37 @@ mozilla::ipc::IPCResult BrowserParent::RecvMoveFocus(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult BrowserParent::RecvSizeShellTo(
+    const uint32_t& aFlags, const int32_t& aWidth, const int32_t& aHeight,
+    const int32_t& aShellItemWidth, const int32_t& aShellItemHeight) {
+  NS_ENSURE_TRUE(mFrameElement, IPC_OK());
+
+  nsCOMPtr<nsIDocShell> docShell = mFrameElement->OwnerDoc()->GetDocShell();
+  NS_ENSURE_TRUE(docShell, IPC_OK());
+
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+  nsresult rv = docShell->GetTreeOwner(getter_AddRefs(treeOwner));
+  NS_ENSURE_SUCCESS(rv, IPC_OK());
+
+  int32_t width = aWidth;
+  int32_t height = aHeight;
+
+  if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_IGNORE_CX) {
+    width = mDimensions.width;
+  }
+
+  if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_IGNORE_CY) {
+    height = mDimensions.height;
+  }
+
+  nsCOMPtr<nsIAppWindow> appWin(do_GetInterface(treeOwner));
+  NS_ENSURE_TRUE(appWin, IPC_OK());
+  appWin->SizeShellToWithLimit(width, height, aShellItemWidth,
+                               aShellItemHeight);
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult BrowserParent::RecvDropLinks(
     nsTArray<nsString>&& aLinks) {
   nsCOMPtr<nsIBrowser> browser =
@@ -946,7 +977,11 @@ bool BrowserParent::Show(const OwnerShowInfo& aOwnerInfo) {
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvSetDimensions(
-    mozilla::DimensionRequest aRequest, const double& aScale) {
+    const uint32_t& aFlags, const int32_t& aX, const int32_t& aY,
+    const int32_t& aCx, const int32_t& aCy, const double& aScale) {
+  MOZ_ASSERT(!(aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER),
+             "We should never see DIM_FLAGS_SIZE_INNER here!");
+
   NS_ENSURE_TRUE(mFrameElement, IPC_OK());
   nsCOMPtr<nsIDocShell> docShell = mFrameElement->OwnerDoc()->GetDocShell();
   NS_ENSURE_TRUE(docShell, IPC_OK());
@@ -955,8 +990,8 @@ mozilla::ipc::IPCResult BrowserParent::RecvSetDimensions(
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin = do_QueryInterface(treeOwner);
   NS_ENSURE_TRUE(treeOwnerAsWin, IPC_OK());
 
-  // `BrowserChild` only sends the values to actually be changed, see more
-  // details in `BrowserChild::SetDimensions()`.
+  // We only care about the parameters that actually changed, see more details
+  // in `BrowserChild::SetDimensions()`.
   // Note that `BrowserChild::SetDimensions()` may be called before receiving
   // our `SendUIResolutionChanged()` call.  Therefore, if given each coordinate
   // shouldn't be ignored, we need to recompute it if DPI has been changed.
@@ -965,26 +1000,64 @@ mozilla::ipc::IPCResult BrowserParent::RecvSetDimensions(
   // NOTE(emilio): We use GetWidgetCSSToDeviceScale() because the old scale is a
   // widget scale, and we only use the current scale to scale up/down the
   // relevant values.
+  double currentScale = treeOwnerAsWin->GetWidgetCSSToDeviceScale();
 
-  CSSToLayoutDeviceScale oldScale((float)aScale);
-  CSSToLayoutDeviceScale currentScale(
-      (float)treeOwnerAsWin->GetWidgetCSSToDeviceScale());
+  int32_t x = aX;
+  int32_t y = aY;
+  if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION) {
+    if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_IGNORE_X) {
+      int32_t unused;
+      treeOwnerAsWin->GetPosition(&x, &unused);
+    } else if (aScale != currentScale) {
+      x = x * currentScale / aScale;
+    }
 
-  if (oldScale != currentScale) {
-    auto rescaleFunc = [&oldScale, &currentScale](LayoutDeviceIntCoord& aVal) {
-      aVal = (LayoutDeviceCoord(aVal) / oldScale * currentScale).Rounded();
-    };
-    aRequest.mX.apply(rescaleFunc);
-    aRequest.mY.apply(rescaleFunc);
-    aRequest.mWidth.apply(rescaleFunc);
-    aRequest.mHeight.apply(rescaleFunc);
+    if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_IGNORE_Y) {
+      int32_t unused;
+      treeOwnerAsWin->GetPosition(&unused, &y);
+    } else if (aScale != currentScale) {
+      y = y * currentScale / aScale;
+    }
   }
 
-  // treeOwner is the chrome tree owner, but we wan't the content tree owner.
-  nsCOMPtr<nsIWebBrowserChrome> webBrowserChrome = do_GetInterface(treeOwner);
-  NS_ENSURE_TRUE(webBrowserChrome, IPC_OK());
-  webBrowserChrome->SetDimensions(std::move(aRequest));
-  return IPC_OK();
+  int32_t cx = aCx;
+  int32_t cy = aCy;
+  if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER) {
+    if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_IGNORE_CX) {
+      int32_t unused;
+      treeOwnerAsWin->GetSize(&cx, &unused);
+    } else if (aScale != currentScale) {
+      cx = cx * currentScale / aScale;
+    }
+
+    if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_IGNORE_CY) {
+      int32_t unused;
+      treeOwnerAsWin->GetSize(&unused, &cy);
+    } else if (aScale != currentScale) {
+      cy = cy * currentScale / aScale;
+    }
+  }
+
+  if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION &&
+      aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER) {
+    treeOwnerAsWin->SetPositionAndSize(x, y, cx, cy, nsIBaseWindow::eRepaint);
+    return IPC_OK();
+  }
+
+  if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION) {
+    treeOwnerAsWin->SetPosition(x, y);
+    mUpdatedDimensions = false;
+    UpdatePosition();
+    return IPC_OK();
+  }
+
+  if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER) {
+    treeOwnerAsWin->SetSize(cx, cy, true);
+    return IPC_OK();
+  }
+
+  MOZ_ASSERT(false, "Unknown flags!");
+  return IPC_FAIL_NO_REASON(this);
 }
 
 nsresult BrowserParent::UpdatePosition() {

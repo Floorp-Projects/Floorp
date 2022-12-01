@@ -453,20 +453,16 @@ nsDocShellTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem, int32_t aCX,
         do_QueryInterface(webBrowserChrome);
     if (browserChild) {
       // The XUL window to resize is in the parent process, but there we
-      // won't be able to get the size of aShellItem. We can ask the parent
-      // process to change our size instead.
+      // won't be able to get aShellItem to do the hack in
+      // AppWindow::SizeShellTo, so let's send the width and height of
+      // aShellItem too.
       nsCOMPtr<nsIBaseWindow> shellAsWin(do_QueryInterface(aShellItem));
       NS_ENSURE_TRUE(shellAsWin, NS_ERROR_FAILURE);
 
-      LayoutDeviceIntSize shellSize;
-      shellAsWin->GetSize(&shellSize.width, &shellSize.height);
-      LayoutDeviceIntSize deltaSize = LayoutDeviceIntSize(aCX, aCY) - shellSize;
-
-      LayoutDeviceIntSize currentSize;
-      GetSize(&currentSize.width, &currentSize.height);
-
-      LayoutDeviceIntSize newSize = currentSize + deltaSize;
-      return SetSize(newSize.width, newSize.height, true);
+      int32_t width = 0;
+      int32_t height = 0;
+      shellAsWin->GetSize(&width, &height);
+      return browserChild->RemoteSizeShellTo(aCX, aCY, width, height);
     }
     // XXX: this is weird, but we used to call a method here
     // (webBrowserChrome->SizeBrowserTo()) whose implementations all failed
@@ -558,62 +554,68 @@ nsDocShellTreeOwner::SetPositionDesktopPix(int32_t aX, int32_t aY) {
 
 NS_IMETHODIMP
 nsDocShellTreeOwner::SetPosition(int32_t aX, int32_t aY) {
-  return SetDimensions(
-      {DimensionKind::Outer, Some(aX), Some(aY), Nothing(), Nothing()});
+  nsCOMPtr<nsIEmbeddingSiteWindow> ownerWin = GetOwnerWin();
+  if (ownerWin) {
+    return ownerWin->SetDimensions(nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION,
+                                   aX, aY, 0, 0);
+  }
+  return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP
 nsDocShellTreeOwner::GetPosition(int32_t* aX, int32_t* aY) {
-  return GetDimensions(DimensionKind::Outer, aX, aY, nullptr, nullptr);
+  nsCOMPtr<nsIEmbeddingSiteWindow> ownerWin = GetOwnerWin();
+  if (ownerWin) {
+    return ownerWin->GetDimensions(nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION,
+                                   aX, aY, nullptr, nullptr);
+  }
+  return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP
 nsDocShellTreeOwner::SetSize(int32_t aCX, int32_t aCY, bool aRepaint) {
-  return SetDimensions(
-      {DimensionKind::Outer, Nothing(), Nothing(), Some(aCX), Some(aCY)});
+  nsCOMPtr<nsIEmbeddingSiteWindow> ownerWin = GetOwnerWin();
+  if (ownerWin) {
+    return ownerWin->SetDimensions(nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER,
+                                   0, 0, aCX, aCY);
+  }
+  return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP
 nsDocShellTreeOwner::GetSize(int32_t* aCX, int32_t* aCY) {
-  return GetDimensions(DimensionKind::Outer, nullptr, nullptr, aCX, aCY);
+  nsCOMPtr<nsIEmbeddingSiteWindow> ownerWin = GetOwnerWin();
+  if (ownerWin) {
+    return ownerWin->GetDimensions(nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER,
+                                   nullptr, nullptr, aCX, aCY);
+  }
+  return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP
 nsDocShellTreeOwner::SetPositionAndSize(int32_t aX, int32_t aY, int32_t aCX,
                                         int32_t aCY, uint32_t aFlags) {
-  return SetDimensions(
-      {DimensionKind::Outer, Some(aX), Some(aY), Some(aCX), Some(aCY)});
+  nsCOMPtr<nsIEmbeddingSiteWindow> ownerWin = GetOwnerWin();
+  if (ownerWin) {
+    return ownerWin->SetDimensions(
+        nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER |
+            nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION,
+        aX, aY, aCX, aCY);
+  }
+  return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP
 nsDocShellTreeOwner::GetPositionAndSize(int32_t* aX, int32_t* aY, int32_t* aCX,
                                         int32_t* aCY) {
-  return GetDimensions(DimensionKind::Outer, aX, aY, aCX, aCY);
-}
-
-NS_IMETHODIMP
-nsDocShellTreeOwner::SetDimensions(DimensionRequest&& aRequest) {
-  nsCOMPtr<nsIBaseWindow> ownerWin = GetOwnerWin();
+  nsCOMPtr<nsIEmbeddingSiteWindow> ownerWin = GetOwnerWin();
   if (ownerWin) {
-    return ownerWin->SetDimensions(std::move(aRequest));
+    return ownerWin->GetDimensions(
+        nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER |
+            nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION,
+        aX, aY, aCX, aCY);
   }
-
-  nsCOMPtr<nsIWebBrowserChrome> webBrowserChrome = GetWebBrowserChrome();
-  NS_ENSURE_STATE(webBrowserChrome);
-  return webBrowserChrome->SetDimensions(std::move(aRequest));
-}
-
-NS_IMETHODIMP
-nsDocShellTreeOwner::GetDimensions(DimensionKind aDimensionKind, int32_t* aX,
-                                   int32_t* aY, int32_t* aCX, int32_t* aCY) {
-  nsCOMPtr<nsIBaseWindow> ownerWin = GetOwnerWin();
-  if (ownerWin) {
-    return ownerWin->GetDimensions(aDimensionKind, aX, aY, aCX, aCY);
-  }
-
-  nsCOMPtr<nsIWebBrowserChrome> webBrowserChrome = GetWebBrowserChrome();
-  NS_ENSURE_STATE(webBrowserChrome);
-  return webBrowserChrome->GetDimensions(aDimensionKind, aX, aY, aCX, aCY);
+  return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP
@@ -631,9 +633,9 @@ nsDocShellTreeOwner::SetParentWidget(nsIWidget* aParentWidget) {
 
 NS_IMETHODIMP
 nsDocShellTreeOwner::GetParentNativeWindow(nativeWindow* aParentNativeWindow) {
-  nsCOMPtr<nsIBaseWindow> ownerWin = GetOwnerWin();
+  nsCOMPtr<nsIEmbeddingSiteWindow> ownerWin = GetOwnerWin();
   if (ownerWin) {
-    return ownerWin->GetParentNativeWindow(aParentNativeWindow);
+    return ownerWin->GetSiteWindow(aParentNativeWindow);
   }
   return NS_ERROR_NULL_POINTER;
 }
@@ -651,17 +653,16 @@ nsDocShellTreeOwner::GetNativeHandle(nsAString& aNativeHandle) {
 
 NS_IMETHODIMP
 nsDocShellTreeOwner::GetVisibility(bool* aVisibility) {
-  nsCOMPtr<nsIBaseWindow> ownerWin = GetOwnerWin();
+  nsCOMPtr<nsIEmbeddingSiteWindow> ownerWin = GetOwnerWin();
   if (ownerWin) {
     return ownerWin->GetVisibility(aVisibility);
   }
-
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP
 nsDocShellTreeOwner::SetVisibility(bool aVisibility) {
-  nsCOMPtr<nsIBaseWindow> ownerWin = GetOwnerWin();
+  nsCOMPtr<nsIEmbeddingSiteWindow> ownerWin = GetOwnerWin();
   if (ownerWin) {
     return ownerWin->SetVisibility(aVisibility);
   }
@@ -687,7 +688,7 @@ nsDocShellTreeOwner::GetMainWidget(nsIWidget** aMainWidget) {
 
 NS_IMETHODIMP
 nsDocShellTreeOwner::GetTitle(nsAString& aTitle) {
-  nsCOMPtr<nsIBaseWindow> ownerWin = GetOwnerWin();
+  nsCOMPtr<nsIEmbeddingSiteWindow> ownerWin = GetOwnerWin();
   if (ownerWin) {
     return ownerWin->GetTitle(aTitle);
   }
@@ -696,7 +697,7 @@ nsDocShellTreeOwner::GetTitle(nsAString& aTitle) {
 
 NS_IMETHODIMP
 nsDocShellTreeOwner::SetTitle(const nsAString& aTitle) {
-  nsCOMPtr<nsIBaseWindow> ownerWin = GetOwnerWin();
+  nsCOMPtr<nsIEmbeddingSiteWindow> ownerWin = GetOwnerWin();
   if (ownerWin) {
     return ownerWin->SetTitle(aTitle);
   }
@@ -818,7 +819,8 @@ nsDocShellTreeOwner::SetWebBrowserChrome(
     if (supportsweak) {
       supportsweak->GetWeakReference(getter_AddRefs(mWebBrowserChromeWeak));
     } else {
-      nsCOMPtr<nsIBaseWindow> ownerWin(do_QueryInterface(aWebBrowserChrome));
+      nsCOMPtr<nsIEmbeddingSiteWindow> ownerWin(
+          do_QueryInterface(aWebBrowserChrome));
       nsCOMPtr<nsIInterfaceRequestor> requestor(
           do_QueryInterface(aWebBrowserChrome));
 
@@ -990,8 +992,8 @@ nsDocShellTreeOwner::GetWebBrowserChrome() {
   return chrome.forget();
 }
 
-already_AddRefed<nsIBaseWindow> nsDocShellTreeOwner::GetOwnerWin() {
-  nsCOMPtr<nsIBaseWindow> win;
+already_AddRefed<nsIEmbeddingSiteWindow> nsDocShellTreeOwner::GetOwnerWin() {
+  nsCOMPtr<nsIEmbeddingSiteWindow> win;
   if (mWebBrowserChromeWeak) {
     win = do_QueryReferent(mWebBrowserChromeWeak);
   } else if (mOwnerWin) {
