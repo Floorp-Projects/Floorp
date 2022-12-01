@@ -68,7 +68,6 @@ impl<K: 'static + ExtraKeys + Send + Sync> EventMetric<K> {
     /// Record a new event with the raw `extra key ID -> String` map.
     ///
     /// Should only be used when taking in data over FFI, where extra keys only exists as IDs.
-    #[cfg(not(feature = "cargo-clippy"))]
     pub(crate) fn record_raw(&self, extra: HashMap<String, String>) {
         let now = glean::get_timestamp_ms();
         self.record_with_time(now, extra);
