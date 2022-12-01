@@ -1649,10 +1649,13 @@ uint32_t VideoFrame::CodedHeight() const {
 already_AddRefed<DOMRectReadOnly> VideoFrame::GetCodedRect() const {
   AssertIsOnOwningThread();
 
-  // TODO: Return nullptr if this is _detached_ (bug 1774306).
-  return MakeAndAddRef<DOMRectReadOnly>(
-      mParent, 0.0f, 0.0f, static_cast<double>(mCodedSize.Width()),
-      static_cast<double>(mCodedSize.Height()));
+  // TODO: Return nullptr if this is _detached_ instead of checking resource
+  // (bug 1774306).
+  return mResource
+             ? MakeAndAddRef<DOMRectReadOnly>(
+                   mParent, 0.0f, 0.0f, static_cast<double>(mCodedSize.Width()),
+                   static_cast<double>(mCodedSize.Height()))
+             : nullptr;
 }
 
 // https://w3c.github.io/webcodecs/#dom-videoframe-visiblerect
