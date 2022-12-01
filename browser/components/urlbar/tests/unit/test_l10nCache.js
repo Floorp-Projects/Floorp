@@ -176,16 +176,6 @@ add_task(async function comprehensive() {
     },
     {
       id: "attrs2",
-      expected: {
-        value: null,
-        attributes: {
-          label: "attrs2 label has zero args",
-          tooltiptext: "attrs2 tooltiptext arg value is {$arg1}",
-        },
-      },
-    },
-    {
-      id: "attrs2",
       args: {
         arg1: "arg A",
       },
@@ -194,20 +184,6 @@ add_task(async function comprehensive() {
         attributes: {
           label: "attrs2 label has zero args",
           tooltiptext: "attrs2 tooltiptext arg value is arg A",
-        },
-      },
-    },
-    {
-      id: "attrs3",
-      args: {
-        arg1: "arg A",
-      },
-      expected: {
-        value: null,
-        attributes: {
-          label: "attrs3 label has zero args",
-          tooltiptext: "attrs3 tooltiptext arg value is arg A",
-          alt: "attrs3 alt arg values are arg A and {$arg2}",
         },
       },
     },
