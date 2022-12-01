@@ -19,8 +19,10 @@
 #include "mozilla/TaskQueue.h"
 #include "mozilla/Unused.h"
 #include "nsError.h"
+#include "PerformanceRecorder.h"
 #include "prsystem.h"
 #include "VideoUtils.h"
+#include "vpx/vpx_image.h"
 
 #undef LOG
 #define LOG(arg, ...)                                                  \
@@ -117,6 +119,23 @@ RefPtr<MediaDataDecoder::FlushPromise> VPXDecoder::Flush() {
 RefPtr<MediaDataDecoder::DecodePromise> VPXDecoder::ProcessDecode(
     MediaRawData* aSample) {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
+
+  MediaInfoFlag flag = MediaInfoFlag::None;
+  flag |= (aSample->mKeyframe ? MediaInfoFlag::KeyFrame
+                              : MediaInfoFlag::NonKeyFrame);
+  flag |= MediaInfoFlag::SoftwareDecoding;
+  switch (mCodec) {
+    case Codec::VP8:
+      flag |= MediaInfoFlag::VIDEO_VP8;
+      break;
+    case Codec::VP9:
+      flag |= MediaInfoFlag::VIDEO_VP9;
+      break;
+    default:
+      break;
+  }
+  flag |= MediaInfoFlag::VIDEO_THEORA;
+  PerformanceRecorder<DecodeStage> rec("VPXDecoder"_ns, flag);
 
   if (vpx_codec_err_t r = vpx_codec_decode(&mVPX, aSample->Data(),
                                            aSample->Size(), nullptr, 0)) {
@@ -228,6 +247,26 @@ RefPtr<MediaDataDecoder::DecodePromise> VPXDecoder::ProcessDecode(
       return DecodePromise::CreateAndReject(
           MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__), __func__);
     }
+
+    rec.Record([&](DecodeStage& aStage) {
+      aStage.SetResolution(static_cast<int>(img->d_w),
+                           static_cast<int>(img->d_h));
+      auto format = [&]() -> Maybe<DecodeStage::ImageFormat> {
+        switch (img->fmt) {
+          case VPX_IMG_FMT_I420:
+            return Some(DecodeStage::YUV420P);
+          case VPX_IMG_FMT_I444:
+            return Some(DecodeStage::YUV444P);
+          default:
+            return Nothing();
+        }
+      }();
+      format.apply([&](auto& aFmt) { aStage.SetImageFormat(aFmt); });
+      aStage.SetYUVColorSpace(b.mYUVColorSpace);
+      aStage.SetColorRange(b.mColorRange);
+      aStage.SetColorDepth(b.mColorDepth);
+    });
+
     results.AppendElement(std::move(v));
   }
   return DecodePromise::CreateAndResolve(std::move(results), __func__);
