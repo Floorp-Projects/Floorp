@@ -519,9 +519,6 @@ repackage-l10n
 --------------
 Repackage-L10n is a ```Repackage``` task split up to be suitable for use after l10n repacks.
 
-repackage-deb
-----------------
-These repackage tasks take signed Firefox Linux binaries and puts them in Debian packages.
 
 repackage-signing
 -----------------

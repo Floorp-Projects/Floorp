@@ -1,5 +1,0 @@
-${DEB_PKG_NAME} (${DEB_PKG_VERSION}) UNRELEASED; urgency=medium
-
-  * N/A
-
- -- Mozilla Releng <release@mozilla.com>  ${DEB_CHANGELOG_DATE}

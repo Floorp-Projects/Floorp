@@ -1,7 +1,0 @@
-#!/usr/bin/make -f
-
-%:
-	dh $@
-
-override_dh_strip_nondeterminism:
-	dh_strip_nondeterminism -Xxpi
