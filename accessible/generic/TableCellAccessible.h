@@ -24,6 +24,12 @@ class TableCellAccessible : public TableCellAccessibleBase {
   virtual void ColHeaderCells(nsTArray<Accessible*>* aCells) override;
   virtual void RowHeaderCells(nsTArray<Accessible*>* aCells) override;
 
+ protected:
+  // Get the proper role for the given header cell accessible. The given acc
+  // must be either an ARIA grid cell accessible for a th element or a true
+  // table header cell accessible for the result to be valid.
+  a11y::role GetHeaderCellRole(const LocalAccessible* aAcc) const;
+
  private:
   LocalAccessible* PrevColHeader();
 };

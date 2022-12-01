@@ -294,17 +294,31 @@
         testAccessibleTree("table_with_focusable_block_tbody", accTree);
 
       // ///////////////////////////////////////////////////////////////////////
-      // A table with a display:absolute th
-      // The th should get a generic cell accessible.
+      // Test that the CSS position property doesn't stop th elements from
+      // reporting the proper columnheader, rowheader roles.
       accTree =
         { TABLE: [
           { ROW: [
-            { CELL: [
-              { TEXT_LEAF: [ ] },
-            ] },
+            { COLUMNHEADER: [ { TEXT_LEAF: [ ] } ] },
+            { COLUMNHEADER: [ { TEXT_LEAF: [ ] } ] },
+            { COLUMNHEADER: [ { TEXT_LEAF: [ ] } ] },
+            { COLUMNHEADER: [ { TEXT_LEAF: [ ] } ] },
+            { COLUMNHEADER: [ { TEXT_LEAF: [ ] } ] },
+          ] },
+          { ROW: [
+            { ROWHEADER: [ { TEXT_LEAF: [ ] } ] },
+            { CELL: [ ] },
+            { ROWHEADER: [ { TEXT_LEAF: [ ] } ] },
+            { CELL: [ ] },
+            { ROWHEADER: [ { TEXT_LEAF: [ ] } ] },
+            { CELL: [ ] },
+            { ROWHEADER: [ { TEXT_LEAF: [ ] } ] },
+            { CELL: [ ] },
+            { ROWHEADER: [ { TEXT_LEAF: [ ] } ] },
+            { CELL: [ ] },
           ] },
         ] };
-      testAccessibleTree("table_containing_absolute_pos_th", accTree);
+      testAccessibleTree("table_containing_pos_styled_th", accTree);
 
       SimpleTest.finish();
     }
@@ -468,9 +482,25 @@
     </tbody>
   </table>
 
-  <table id="table_containing_absolute_pos_th">
+  <table id="table_containing_pos_styled_th">
     <tr>
-      <th style="position: absolute">text</th>
+      <th style="position: static">static colheader</th>
+      <th style="position: relative">relative colheader</th>
+      <th style="position: absolute">absolute colheader</th>
+      <th style="position: fixed">fixed colheader</th>
+      <th style="position: sticky">sticky colheader</th>
+    </tr>
+    <tr>
+      <th style="position: static">static rowheader</th>
+      <td/>
+      <th style="position: relative">relative rowheader</th>
+      <td/>
+      <th style="position: absolute">absolute rowheader</th>
+      <td/>
+      <th style="position: fixed">fixed rowheader</th>
+      <td/>
+      <th style="position: sticky">sticky rowheader</th>
+      <td/>
     </tr>
   </table>
 </body>

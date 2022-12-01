@@ -519,8 +519,17 @@ ARIAGridCellAccessible::ARIAGridCellAccessible(nsIContent* aContent,
 }
 
 role ARIAGridCellAccessible::NativeRole() const {
-  a11y::role r = GetAccService()->MarkupRole(mContent);
-  return r != roles::NOTHING ? r : roles::CELL;
+  const a11y::role r = GetAccService()->MarkupRole(mContent);
+  if (r != role::NOTHING) {
+    return r;
+  }
+
+  // Special case to handle th elements mapped to ARIA grid cells.
+  if (GetContent() && GetContent()->IsHTMLElement(nsGkAtoms::th)) {
+    return GetHeaderCellRole(this);
+  }
+
+  return role::CELL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
