@@ -31,6 +31,8 @@ FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["API"] += [
     "API/aboutConfigPrefs.json",
     "API/BrowserInfo.js",
     "API/BrowserInfo.json",
+    "API/webRequestExt.js",
+    "API/webRequestExt.json",
 ]
 
 FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["icons"] += [
