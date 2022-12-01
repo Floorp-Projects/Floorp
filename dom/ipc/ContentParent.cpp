@@ -3773,7 +3773,7 @@ ContentParent::BlockShutdown(nsIAsyncShutdownClient* aClient) {
     // to the child and then just wait for ActorDestroy which will
     // cleanup everything and remove our blockers.
     if (!ShutDownProcess(SEND_SHUTDOWN_MESSAGE)) {
-      RemoveShutdownBlockers();
+      KillHard("Failed to send Shutdown message. Destroying the process...");
       return NS_OK;
     }
   } else if (IsLaunching()) {
