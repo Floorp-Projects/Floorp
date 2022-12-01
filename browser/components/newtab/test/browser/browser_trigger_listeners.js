@@ -2,6 +2,25 @@ const { ASRouterTriggerListeners } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouterTriggerListeners.jsm"
 );
 
+const mockIdleService = {
+  _observers: new Set(),
+  _fireObservers(state) {
+    for (let observer of this._observers.values()) {
+      observer.observe(this, state, null);
+    }
+  },
+  QueryInterface: ChromeUtils.generateQI(["nsIUserIdleService"]),
+  idleTime: 1200000,
+  addIdleObserver(observer, time) {
+    this._observers.add(observer);
+  },
+  removeIdleObserver(observer, time) {
+    this._observers.delete(observer);
+  },
+};
+
+const sleepMs = ms => new Promise(resolve => setTimeout(resolve, ms)); // eslint-disable-line mozilla/no-arbitrary-setTimeout
+
 add_setup(async function() {
   registerCleanupFunction(() => {
     const trigger = ASRouterTriggerListeners.get("openURL");
@@ -136,36 +155,29 @@ add_task(async function test_nthTabClosed() {
   Assert.ok(handlerStub.notCalled, "Not called after uninit");
 });
 
-add_task(async function test_activityAfterIdle() {
-  const mockIdleService = {
-    _observers: new Set(),
-    _fireObservers(state) {
-      for (let observer of this._observers.values()) {
-        observer.observe(this, state, null);
-      }
-    },
-    QueryInterface: ChromeUtils.generateQI(["nsIUserIdleService"]),
-    idleTime: 1200000,
-    addIdleObserver(observer, time) {
-      this._observers.add(observer);
-    },
-    removeIdleObserver(observer, time) {
-      this._observers.delete(observer);
-    },
-  };
-
+function getIdleTriggerMock() {
   const idleTrigger = ASRouterTriggerListeners.get("activityAfterIdle");
   idleTrigger.uninit();
-
   const sandbox = sinon.createSandbox();
   const handlerStub = sandbox.stub();
   sandbox.stub(idleTrigger, "_triggerDelay").value(0);
+  sandbox.stub(idleTrigger, "_wakeDelay").value(30);
   sandbox.stub(idleTrigger, "_idleService").value(mockIdleService);
-  registerCleanupFunction(() => sandbox.restore());
-
+  let restored = false;
+  const restore = () => {
+    if (restored) return;
+    restored = true;
+    idleTrigger.uninit();
+    sandbox.restore();
+  };
+  registerCleanupFunction(restore);
   idleTrigger.init(handlerStub);
+  return { idleTrigger, handlerStub, restore };
+}
 
-  // Test that the trigger fires under normal conditions.
+// Test that the trigger fires under normal conditions.
+add_task(async function test_activityAfterIdle() {
+  const { handlerStub, restore } = getIdleTriggerMock();
   let firedOnActive = new Promise(resolve =>
     handlerStub.callsFake(() => resolve(true))
   );
@@ -174,9 +186,12 @@ add_task(async function test_activityAfterIdle() {
   ok(handlerStub.notCalled, "Not called when idle");
   mockIdleService._fireObservers("active");
   ok(await firedOnActive, "Called once when active after idle");
-  handlerStub.reset();
+  restore();
+});
 
-  // Test that the trigger does not fire when the active window is private.
+// Test that the trigger does not fire when the active window is private.
+add_task(async function test_activityAfterIdlePrivateWindow() {
+  const { handlerStub, restore } = getIdleTriggerMock();
   let privateWin = await BrowserTestUtils.openNewBrowserWindow({
     private: true,
   });
@@ -188,10 +203,13 @@ add_task(async function test_activityAfterIdle() {
   await TestUtils.waitForTick();
   ok(handlerStub.notCalled, "Not called when active window is private");
   await BrowserTestUtils.closeWindow(privateWin);
-  handlerStub.reset();
+  restore();
+});
 
-  // Test that the trigger does not fire when the window is minimized, but does
-  // fire after the window is restored.
+// Test that the trigger does not fire when the window is minimized, but does
+// fire after the window is restored.
+add_task(async function test_activityAfterIdleHiddenWindow() {
+  const { handlerStub, restore } = getIdleTriggerMock();
   let firedOnRestore = new Promise(resolve =>
     handlerStub.callsFake(() => resolve(true))
   );
@@ -207,7 +225,28 @@ add_task(async function test_activityAfterIdle() {
   ok(handlerStub.notCalled, "Not called when window is minimized");
   window.restore();
   ok(await firedOnRestore, "Called once after restoring minimized window");
+  restore();
+});
 
-  idleTrigger.uninit();
-  sandbox.restore();
+// Test that the trigger does not fire immediately after waking from sleep.
+add_task(async function test_activityAfterIdleWake() {
+  const { handlerStub, restore } = getIdleTriggerMock();
+  let firedAfterWake = new Promise(resolve =>
+    handlerStub.callsFake(() => resolve(true))
+  );
+  mockIdleService._fireObservers("wake_notification");
+  mockIdleService._fireObservers("idle");
+  await TestUtils.waitForTick();
+  mockIdleService._fireObservers("active");
+  await sleepMs(31);
+  ok(handlerStub.notCalled, "Not called immediately after waking from sleep");
+
+  mockIdleService._fireObservers("idle");
+  await TestUtils.waitForTick();
+  mockIdleService._fireObservers("active");
+  ok(
+    await firedAfterWake,
+    "Called once after waiting for wake delay before firing idle"
+  );
+  restore();
 });
