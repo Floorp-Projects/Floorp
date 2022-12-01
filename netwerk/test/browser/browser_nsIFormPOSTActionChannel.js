@@ -23,6 +23,15 @@ CustomProtocolHandler.prototype = {
   get scheme() {
     return SCHEME;
   },
+  get defaultPort() {
+    return -1;
+  },
+  get protocolFlags() {
+    return (
+      Ci.nsIProtocolHandler.URI_NORELATIVE |
+      Ci.nsIProtocolHandler.URI_IS_LOCAL_RESOURCE
+    );
+  },
   newChannel(aURI, aLoadInfo) {
     return new CustomChannel(aURI, aLoadInfo);
   },
@@ -30,8 +39,14 @@ CustomProtocolHandler.prototype = {
     return port != -1;
   },
 
+  /** nsIFactory */
+  createInstance(aIID) {
+    return this.QueryInterface(aIID);
+  },
+
   /** nsISupports */
-  QueryInterface: ChromeUtils.generateQI(["nsIProtocolHandler"]),
+  QueryInterface: ChromeUtils.generateQI(["nsIProtocolHandler", "nsIFactory"]),
+  classID: Components.ID("{16d594bc-d9d8-47ae-a139-ea714dc0c35c}"),
 };
 
 function CustomChannel(aURI, aLoadInfo) {
@@ -235,15 +250,15 @@ function loadTestTab(uri) {
 
 add_task(async function() {
   var handler = new CustomProtocolHandler();
-  Services.io.registerProtocolHandler(
-    SCHEME,
-    handler,
-    Ci.nsIProtocolHandler.URI_NORELATIVE |
-      Ci.nsIProtocolHandler.URI_IS_LOCAL_RESOURCE,
-    -1
+  var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+  registrar.registerFactory(
+    handler.classID,
+    "",
+    "@mozilla.org/network/protocol;1?name=" + handler.scheme,
+    handler
   );
   registerCleanupFunction(function() {
-    Services.io.unregisterProtocolHandler(SCHEME);
+    registrar.unregisterFactory(handler.classID, handler);
   });
 });
 

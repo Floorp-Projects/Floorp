@@ -25,10 +25,6 @@ class TestGenStaticComponents(unittest.TestCase):
             "categories": {
                 "dummy1": ["m-dummy1", "m-dummy2"],
             },
-            "protocol_config": {
-                "scheme": "dummy",
-                "flags": [],
-            },
         }
 
         substs = gen_static_components.gen_substs([{"Classes": [clas]}])
@@ -68,10 +64,6 @@ class TestGenStaticComponents(unittest.TestCase):
                 "dummy1": {
                     "name": ["m-dummy1", "m-dummy2"],
                 },
-            },
-            "protocol_config": {
-                "scheme": "dummy",
-                "flags": [],
             },
         }
 
@@ -113,10 +105,6 @@ class TestGenStaticComponents(unittest.TestCase):
                     "name": ["m-dummy1", "m-dummy2"],
                     "backgroundtasks": BackgroundTasksSelector.ALL_TASKS,
                 },
-            },
-            "protocol_config": {
-                "scheme": "dummy",
-                "flags": [],
             },
         }
 

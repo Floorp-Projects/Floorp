@@ -74,10 +74,22 @@ nsAboutProtocolHandler::GetScheme(nsACString& result) {
 }
 
 NS_IMETHODIMP
+nsAboutProtocolHandler::GetDefaultPort(int32_t* result) {
+  *result = -1;  // no port for about: URLs
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAboutProtocolHandler::GetProtocolFlags(uint32_t* result) {
+  *result = URI_NORELATIVE | URI_NOAUTH | URI_DANGEROUS_TO_LOAD |
+            URI_SCHEME_NOT_SELF_LINKABLE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsAboutProtocolHandler::GetFlagsForURI(nsIURI* aURI, uint32_t* aFlags) {
   // First use the default (which is "unsafe for content"):
-  *aFlags = URI_NORELATIVE | URI_NOAUTH | URI_DANGEROUS_TO_LOAD |
-            URI_SCHEME_NOT_SELF_LINKABLE;
+  GetProtocolFlags(aFlags);
 
   // Now try to see if this URI overrides the default:
   nsCOMPtr<nsIAboutModule> aboutMod;
@@ -244,6 +256,19 @@ NS_IMPL_ISUPPORTS(nsSafeAboutProtocolHandler, nsIProtocolHandler,
 NS_IMETHODIMP
 nsSafeAboutProtocolHandler::GetScheme(nsACString& result) {
   result.AssignLiteral("moz-safe-about");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSafeAboutProtocolHandler::GetDefaultPort(int32_t* result) {
+  *result = -1;  // no port for moz-safe-about: URLs
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSafeAboutProtocolHandler::GetProtocolFlags(uint32_t* result) {
+  *result = URI_NORELATIVE | URI_NOAUTH | URI_LOADABLE_BY_ANYONE |
+            URI_IS_POTENTIALLY_TRUSTWORTHY;
   return NS_OK;
 }
 

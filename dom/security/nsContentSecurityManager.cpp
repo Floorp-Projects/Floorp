@@ -1261,11 +1261,19 @@ nsresult nsContentSecurityManager::CheckChannelHasProtocolSecurityFlag(
   nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsAutoCString scheme;
+  rv = uri->GetScheme(scheme);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsIIOService> ios = do_GetIOService(&rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIProtocolHandler> handler;
+  rv = ios->GetProtocolHandler(scheme.get(), getter_AddRefs(handler));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   uint32_t flags;
-  rv = ios->GetDynamicProtocolFlags(uri, &flags);
+  rv = handler->DoGetProtocolFlags(uri, &flags);
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint32_t securityFlagsSet = 0;
