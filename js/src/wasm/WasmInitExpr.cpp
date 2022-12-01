@@ -209,7 +209,7 @@ static bool ValidateInitExpr(Decoder& d, ModuleEnvironment* env,
           }
           case uint32_t(GcOp::ArrayNewFixed): {
             uint32_t typeIndex, len;
-            if (!iter.readArrayNewFixed(&typeIndex, &len)) {
+            if (!iter.readArrayNewFixed(&typeIndex, &len, &nothings)) {
               return false;
             }
             break;
