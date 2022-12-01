@@ -79,7 +79,7 @@ class WhatsNewTest {
 
         PreferenceManager.getDefaultSharedPreferences(ApplicationProvider.getApplicationContext())
             .edit()
-            .putString(WhatsNewStorage.PREFERENCE_KEY_APP_NAME, "2.0")
+            .putString(WhatsNewStorage.PREFERENCE_KEY_APP_NAME, "0.0")
             .apply()
 
         for (i in 1..3) {
@@ -99,7 +99,7 @@ class WhatsNewTest {
 
         PreferenceManager.getDefaultSharedPreferences(ApplicationProvider.getApplicationContext())
             .edit()
-            .putString(WhatsNewStorage.PREFERENCE_KEY_APP_NAME, "2.0")
+            .putString(WhatsNewStorage.PREFERENCE_KEY_APP_NAME, "0.0")
             .apply()
 
         // Reset cached value

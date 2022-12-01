@@ -3,8 +3,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import org.gradle.api.Project
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 object Config {
+
+    @JvmStatic
+    private fun generateDebugVersionName(): String {
+        val today = Date()
+        // Append the year (2 digits) and week in year (2 digits). This will make it easier to distinguish versions and
+        // identify ancient versions when debugging issues. However this will still keep the same version number during
+        // the week so that we do not end up with a lot of versions in tools like Sentry. As an extra this matches the
+        // sections we use in the changelog (weeks).
+        return SimpleDateFormat("1.0.yyww", Locale.US).format(today)
+    }
+
     @JvmStatic
     fun releaseVersionName(project: Project): String? {
         // Note: release builds must have the `versionName` set. However, the gradle ecosystem makes this hard to

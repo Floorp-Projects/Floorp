@@ -26,7 +26,8 @@ android {
         targetSdkVersion 32
         versionCode 11 // This versionCode is "frozen" for local builds. For "release" builds we
                        // override this with a generated versionCode at build time.
-        versionName "106.0"
+        // The versionName is dynamically overridden for all the build variants at build time.
+        versionName Config.generateDebugVersionName()
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArguments clearPackageData: 'true'
 
