@@ -48,24 +48,18 @@
  * cserialize.
  */
 
-var gSystemFont = {
-  "caption": true,
-  "icon": true,
-  "menu": true,
-  "message-box": true,
-  "small-caption": true,
-  "status-bar": true,
-  "-moz-window": true,
-  "-moz-document": true,
-  "-moz-desktop": true,
-  "-moz-info": true,
-  "-moz-dialog": true,
-  "-moz-button": true,
-  "-moz-pull-down-menu": true,
-  "-moz-list": true,
-  "-moz-field": true,
-  "-moz-workspace": true,
-};
+var gSystemFont = [
+  "caption",
+  "icon",
+  "menu",
+  "message-box",
+  "small-caption",
+  "status-bar",
+  "-moz-button",
+  "-moz-pull-down-menu",
+  "-moz-list",
+  "-moz-field",
+];
 
 var gBadCompute = {
   // output wrapped around to positive, in exponential notation
@@ -154,7 +148,7 @@ function test_property(property)
 
   function test_value(value, resolved_value) {
     var value_has_variable_reference = resolved_value != null;
-    var is_system_font = property == "font" && value in gSystemFont;
+    var is_system_font = property == "font" && gSystemFont.includes(value);
 
     var colon = ": ";
     gDeclaration.setProperty(property, value, "");

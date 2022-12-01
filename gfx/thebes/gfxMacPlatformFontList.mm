@@ -1866,9 +1866,6 @@ void gfxMacPlatformFontList::LookupSystemFont(LookAndFeel::FontID aSystemFontID,
       break;
 
     case LookAndFeel::FontID::Icon:  // used in urlbar; tried labelFont, but too small
-    case LookAndFeel::FontID::MozWorkspace:
-    case LookAndFeel::FontID::MozDesktop:
-    case LookAndFeel::FontID::MozInfo:
       font = [NSFont controlContentFontOfSize:0.0];
       systemFontName = (char*)kSystemFont_system;
       break;
@@ -1880,7 +1877,6 @@ void gfxMacPlatformFontList::LookupSystemFont(LookAndFeel::FontID aSystemFontID,
 
     case LookAndFeel::FontID::Caption:
     case LookAndFeel::FontID::Menu:
-    case LookAndFeel::FontID::MozDialog:
     default:
       font = [NSFont systemFontOfSize:0.0];
       systemFontName = (char*)kSystemFont_system;

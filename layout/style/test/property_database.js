@@ -5544,17 +5544,6 @@ var gCSSProperties = {
       "message-box",
       "small-caption",
       "status-bar",
-      // Gecko-specific system fonts
-      "-moz-window",
-      "-moz-document",
-      "-moz-desktop",
-      "-moz-info",
-      "-moz-dialog",
-      "-moz-button",
-      "-moz-pull-down-menu",
-      "-moz-list",
-      "-moz-field",
-      "-moz-workspace",
       // line-height with calc()
       "condensed bold italic small-caps 24px/calc(2px) Times New Roman, serif",
       "condensed bold italic small-caps 24px/calc(50%) Times New Roman, serif",
