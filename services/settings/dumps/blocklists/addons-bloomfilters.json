@@ -3,6 +3,20 @@
     {
       "stash": {
         "blocked": [
+          "{2f8bb310-f718-4cae-8344-9fbca4ee933e}:1.0.6",
+          "{2f8bb310-f718-4cae-8344-9fbca4ee933e}:1.0.5"
+        ],
+        "unblocked": []
+      },
+      "schema": 1669739803394,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1669811706761,
+      "id": "aa8e831d-e6ff-4370-8979-3b473d4503a5",
+      "last_modified": 1669811837825
+    },
+    {
+      "stash": {
+        "blocked": [
           "addon@programmer.org:1.0.0",
           "programmer@gmail.com:1.0.0",
           "programmer2@gmail.com:1.0.0",
@@ -2531,5 +2545,5 @@
       "last_modified": 1656333551168
     }
   ],
-  "timestamp": 1669055838363
+  "timestamp": 1669811837825
 }
