@@ -12,6 +12,7 @@
 #  include "MediaInfo.h"
 #  include "OMX_Component.h"
 #  include "OmxPromiseLayer.h"
+#  include "PerformanceRecorder.h"
 #  include "PlatformDecoderModule.h"
 #  include "mozilla/Monitor.h"
 #  include "mozilla/StateWatching.h"
@@ -199,6 +200,9 @@ class OmxDataDecoder : public MediaDataDecoder,
   BUFFERLIST mOutPortBuffers;
 
   RefPtr<MediaDataHelper> mMediaDataHelper;
+
+  // Accessed on Omx TaskQueue
+  PerformanceRecorderMulti<DecodeStage> mPerformanceRecorder;
 };
 
 template <class T>
