@@ -75,6 +75,11 @@ export var ScreenshotsUtils = {
       this.initialized = false;
     }
   },
+  handleEvent(event) {
+    if (event.type === "keydown" && event.key === "Escape") {
+      this.closePanel(event.view.gBrowser.selectedBrowser, true);
+    }
+  },
   observe(subj, topic, data) {
     let { gBrowser } = subj;
     let browser = gBrowser.selectedBrowser;
@@ -160,6 +165,7 @@ export var ScreenshotsUtils = {
     if (buttonsPanel && buttonsPanel.state !== "closed") {
       buttonsPanel.hidePopup();
     }
+    buttonsPanel?.ownerDocument.removeEventListener("keydown", this);
     if (closeOverlay) {
       let actor = this.getActor(browser);
       await actor.sendQuery("Screenshots:HideOverlay");
@@ -241,6 +247,8 @@ export var ScreenshotsUtils = {
       template.replaceWith(clone);
       buttonsPanel = doc.querySelector("#screenshotsPagePanel");
     }
+
+    buttonsPanel.ownerDocument.addEventListener("keydown", this);
 
     let anchor = doc.querySelector("#navigator-toolbox");
     buttonsPanel.openPopup(anchor, PanelPosition, PanelOffsetX, PanelOffsetY);
