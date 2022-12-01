@@ -2779,12 +2779,12 @@ ExtensibleCompilationStencil::ExtensibleCompilationStencil(
       source(std::move(source)),
       parserAtoms(alloc) {}
 
-CompilationState::CompilationState(JSContext* cx,
+CompilationState::CompilationState(JSContext* cx, ErrorContext* ec,
                                    LifoAllocScope& parserAllocScope,
                                    CompilationInput& input)
     : ExtensibleCompilationStencil(input),
       directives(input.options.forceStrictMode()),
-      usedNames(cx),
+      usedNames(ec),
       parserAllocScope(parserAllocScope),
       input(input) {}
 

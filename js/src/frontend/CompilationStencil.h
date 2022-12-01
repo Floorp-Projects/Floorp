@@ -1408,8 +1408,8 @@ struct MOZ_RAII CompilationState : public ExtensibleCompilationStencil {
 
   // End of fields.
 
-  CompilationState(JSContext* cx, LifoAllocScope& parserAllocScope,
-                   CompilationInput& input);
+  CompilationState(JSContext* cx, ErrorContext* ec,
+                   LifoAllocScope& parserAllocScope, CompilationInput& input);
 
   bool init(JSContext* cx, ErrorContext* ec, ScopeBindingCache* scopeCache,
             InheritThis inheritThis = InheritThis::No,
