@@ -12,17 +12,11 @@ DIRS += [
     "multirow-tabs",
 ]
 
-if CONFIG["OS_TARGET"] == "Linux":
- DIRS += ["floorp-system/linux"]
-elif CONFIG["OS_TARGET"] == "WINNT":
-  DIRS += ["floorp-system/windows"]
-elif CONFIG["OS_TARGET"] == "Darwin":
-    DIRS += ["floorp-system/macOS"]
+DIRS += ["floorp-system/shared"]
 
 # multirow-tabs = Paxmod
 # fake-gesturefy = Fake Gesturefy 
 # translate = Translate Web Pages (TWP)
 # treestyletab = Tree Style Tab by Piro (aka:TST)
 # undo-closed-tab = Ablaze
-# official-site-ua = on Ablaze site UserAgent
 # floorp-system = Floorp System Addon (Webcompat, Notificaiton, etc)

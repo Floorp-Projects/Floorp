@@ -46,14 +46,6 @@
 
         let APP_ID = await browser.aboutConfigPrefs.getPref("update.id.floorp");
 
-        /*
-        var displayVersion = await new Promise(resolve => {
-            browser.BrowserInfo.getDisplayVersion()
-            .then(data => {
-                resolve(data);
-            })
-        });
-        */
         let displayVersion = await browser.BrowserInfo.getDisplayVersion();
 
         console.log("Floorp Display version: "+ displayVersion);
