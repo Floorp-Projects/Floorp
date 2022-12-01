@@ -45,11 +45,6 @@ SimpleTest.waitForFocus(function() {
 function test() {
   for (var i = 0; i < inputTypes.length; i++) {
     var input = document.getElementById("input_" + inputTypes[i]);
-    var inputRect = input.getBoundingClientRect();
-
-    // Points over the input's reset button
-    var resetButton_X = inputRect.width - 15;
-    var resetButton_Y = inputRect.height / 2;
 
     is(changeEvents[i], 0, "Number of change events should be 0 at start.");
     is(inputEvents[i], 0, "Number of input events should be 0 at start.");
@@ -76,16 +71,6 @@ function test() {
     is(input.value, expectedValues[i][1], "Check that value was set correctly (2).");
     is(changeEvents[i], 3, "Change event should be dispatched (2).");
     is(inputEvents[i], 3, "Input event should be dispatched (2).");
-
-    // Reset button is desktop only.
-    if (isDesktop) {
-      // Test that change and input events are fired when clearing the value using
-      // the reset button.
-      synthesizeMouse(input, resetButton_X, resetButton_Y, {});
-      is(input.value, "", "Check that value was set correctly (3).");
-      is(changeEvents[i], 4, "Change event should be dispatched (3).");
-      is(inputEvents[i], 4, "Input event should be dispatched (3).");
-    }
   }
 }
 
