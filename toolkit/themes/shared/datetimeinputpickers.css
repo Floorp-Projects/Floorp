@@ -91,14 +91,14 @@ button {
   fill-opacity: 1;
 }
 
-.month-year-nav > button.prev,
-.month-year-nav > button.next {
+.month-year-nav > button.prev:dir(ltr),
+.month-year-nav > button.next:dir(rtl) {
   background: url("chrome://global/skin/icons/arrow-left.svg") no-repeat center;
 }
 
 .month-year-nav > button.prev:dir(rtl),
 .month-year-nav > button.next:dir(ltr) {
-  transform: scaleX(-1);
+  background: url("chrome://global/skin/icons/arrow-right.svg") no-repeat center;
 }
 
 .month-year-container {
