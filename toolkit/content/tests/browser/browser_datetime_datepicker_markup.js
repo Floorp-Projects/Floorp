@@ -50,6 +50,16 @@ add_task(async function test_datepicker_markup() {
     "button",
     "Month picker view toggle is a button"
   );
+  Assert.equal(
+    helper.getElement(MONTH_YEAR).getAttribute("aria-expanded"),
+    "false",
+    "Month picker view toggle is collapsed when the dialog is hidden"
+  );
+  Assert.equal(
+    helper.getElement(MONTH_YEAR).getAttribute("aria-live"),
+    "polite",
+    "Month picker view toggle is a live region when it's not expanded"
+  );
   Assert.ok(
     BrowserTestUtils.is_hidden(helper.getElement(MONTH_YEAR_VIEW)),
     "Month-year selection spinner is not visible"
@@ -146,6 +156,7 @@ add_task(async function test_datepicker_l10n() {
     },
   ];
 
+  // Check "aria-label" attributes
   for (let { selector, id, args } of testcases) {
     const el = helper.getElement(selector);
     const l10nAttrs = document.l10n.getAttributes(el);

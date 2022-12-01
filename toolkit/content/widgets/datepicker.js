@@ -392,6 +392,7 @@ function DatePicker(context) {
       ),
     };
 
+    this._updateButtonLabels();
     this._attachEventListeners();
   }
 
@@ -410,9 +411,13 @@ function DatePicker(context) {
      */
     setProps(props) {
       this.context.monthYear.textContent = this.state.dateFormat(props.dateObj);
+      const spinnerDialog = this.context.monthYearView.parentNode;
 
       if (props.isVisible) {
         this.context.monthYear.classList.add("active");
+        this.context.monthYear.setAttribute("aria-expanded", "true");
+        // To prevent redundancy, as spinners will announce their value on change
+        this.context.monthYear.setAttribute("aria-live", "off");
         this.components.month.setState({
           value: props.dateObj.getUTCMonth(),
           items: props.months,
@@ -428,8 +433,21 @@ function DatePicker(context) {
           smoothScroll: !(this.state.firstOpened || props.noSmoothScroll),
         });
         this.state.firstOpened = false;
+
+        // Set up spinner dialog container properties for assistive technology:
+        spinnerDialog.setAttribute("role", "dialog");
+        spinnerDialog.setAttribute("aria-modal", "true");
       } else {
         this.context.monthYear.classList.remove("active");
+        this.context.monthYear.setAttribute("aria-expanded", "false");
+        // To ensure calendar month's changes are announced:
+        this.context.monthYear.setAttribute("aria-live", "polite");
+        // Remove spinner dialog container properties to ensure this hidden
+        // modal will be ignored by assistive technology, because even though
+        // the dialog is hidden, the toggle button is a visible descendant,
+        // so we must not treat its container as a dialog:
+        spinnerDialog.removeAttribute("role");
+        spinnerDialog.removeAttribute("aria-modal");
         this.state.isMonthSet = false;
         this.state.isYearSet = false;
         this.state.firstOpened = true;
@@ -449,6 +467,37 @@ function DatePicker(context) {
           break;
         }
       }
+    },
+
+    /**
+     * Update localizable IDs of the spinner and its Prev/Next buttons
+     */
+    _updateButtonLabels() {
+      document.l10n.setAttributes(
+        this.components.month.elements.spinner,
+        "date-spinner-month"
+      );
+      document.l10n.setAttributes(
+        this.components.year.elements.spinner,
+        "date-spinner-year"
+      );
+      document.l10n.setAttributes(
+        this.components.month.elements.up,
+        "date-spinner-month-previous"
+      );
+      document.l10n.setAttributes(
+        this.components.month.elements.down,
+        "date-spinner-month-next"
+      );
+      document.l10n.setAttributes(
+        this.components.year.elements.up,
+        "date-spinner-year-previous"
+      );
+      document.l10n.setAttributes(
+        this.components.year.elements.down,
+        "date-spinner-year-next"
+      );
+      document.l10n.translateRoots();
     },
 
     /**
