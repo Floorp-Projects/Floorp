@@ -55,7 +55,6 @@
   },
   "background": {
     "scripts": [
-      "browserAction-manage.js",
       "webcompat.js",
       "official-site-ua.js",
       "update.js",

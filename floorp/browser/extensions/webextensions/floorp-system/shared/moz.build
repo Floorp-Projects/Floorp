@@ -18,7 +18,6 @@ else:
     ]
 
 FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"] += [
-    "browserAction-manage.js",
     "download-notification.js",
     "official-site-ua.js",
     "update.js",
