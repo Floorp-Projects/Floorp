@@ -19,6 +19,11 @@
 #include "mozilla/ProfilerMarkers.h"
 
 namespace mozilla {
+namespace gfx {
+enum class YUVColorSpace : uint8_t;
+enum class ColorDepth : uint8_t;
+enum class ColorRange : uint8_t;
+}  // namespace gfx
 
 struct TrackingId {
   enum class Source : uint8_t {
@@ -150,6 +155,56 @@ class CopyVideoStage {
   int32_t mHeight;
 
  private:
+  mutable Maybe<nsCString> mName;
+};
+
+class DecodeStage {
+ public:
+  enum ImageFormat : uint8_t {
+    YUV420P,
+    YUV422P,
+    YUV444P,
+    NV12,
+    YV12,
+    NV21,
+    P010,
+    P016,
+    RGBA32,
+    RGB24,
+    GBRP,
+  };
+
+  DecodeStage(nsCString aSource, MediaInfoFlag aFlag)
+      : mSource(std::move(aSource)), mFlag(aFlag) {}
+  ProfilerString8View Name() const;
+  const MarkerCategory& Category() const {
+    return baseprofiler::category::MEDIA_PLAYBACK;
+  }
+
+  void SetResolution(int aWidth, int aHeight) {
+    mWidth = Some(aWidth);
+    mHeight = Some(aHeight);
+  }
+  void SetImageFormat(ImageFormat aFormat) { mImageFormat = Some(aFormat); }
+  void SetYUVColorSpace(gfx::YUVColorSpace aColorSpace) {
+    mYUVColorSpace = Some(aColorSpace);
+  }
+  void SetColorRange(gfx::ColorRange aColorRange) {
+    mColorRange = Some(aColorRange);
+  }
+  void SetColorDepth(gfx::ColorDepth aColorDepth) {
+    mColorDepth = Some(aColorDepth);
+  }
+
+  // The name of the source that performs this stage.
+  nsCString mSource;
+  MediaInfoFlag mFlag;
+  Maybe<int> mWidth;
+  Maybe<int> mHeight;
+  Maybe<ImageFormat> mImageFormat;
+  Maybe<gfx::YUVColorSpace> mYUVColorSpace;
+  Maybe<gfx::ColorRange> mColorRange;
+  Maybe<gfx::ColorDepth> mColorDepth;
   mutable Maybe<nsCString> mName;
 };
 
