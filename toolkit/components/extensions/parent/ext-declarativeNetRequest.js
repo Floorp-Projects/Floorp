@@ -52,6 +52,12 @@ this.declarativeNetRequest = class extends ExtensionAPI {
           return ruleManager.enabledStaticRulesetIds;
         },
 
+        async getAvailableStaticRuleCount() {
+          await ExtensionDNR.ensureInitialized(extension);
+          const ruleManager = ExtensionDNR.getRuleManager(extension);
+          return ruleManager.availableStaticRuleCount;
+        },
+
         updateEnabledRulesets({ disableRulesetIds, enableRulesetIds }) {
           return ExtensionDNR.updateEnabledStaticRulesets(extension, {
             disableRulesetIds,

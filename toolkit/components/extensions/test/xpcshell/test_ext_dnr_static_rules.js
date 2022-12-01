@@ -18,6 +18,9 @@ function backgroundWithDNRAPICallHandlers() {
       case "getEnabledRulesets":
         result = await browser.declarativeNetRequest.getEnabledRulesets();
         break;
+      case "getAvailableStaticRuleCount":
+        result = await browser.declarativeNetRequest.getAvailableStaticRuleCount();
+        break;
       case "testMatchOutcome":
         result = await browser.declarativeNetRequest
           .testMatchOutcome(...args)
@@ -155,6 +158,20 @@ const assertDNRTestMatchOutcome = async (
   );
 };
 
+const assertDNRGetAvailableStaticRuleCount = async (
+  extensionTestWrapper,
+  expectedCount,
+  assertMessage
+) => {
+  extensionTestWrapper.sendMessage("getAvailableStaticRuleCount");
+  Assert.deepEqual(
+    await extensionTestWrapper.awaitMessage("getAvailableStaticRuleCount:done"),
+    expectedCount,
+    assertMessage ??
+      "Got the expected count value from dnr.getAvailableStaticRuleCount API method"
+  );
+};
+
 const assertDNRGetEnabledRulesets = async (
   extensionTestWrapper,
   expectedRulesetIds
@@ -170,7 +187,8 @@ const assertDNRGetEnabledRulesets = async (
 const assertDNRStoreData = async (
   dnrStore,
   extensionTestWrapper,
-  expectedRulesets
+  expectedRulesets,
+  { assertIndividualRules = true } = {}
 ) => {
   const extUUID = extensionTestWrapper.uuid;
   const rule_resources =
@@ -213,16 +231,65 @@ const assertDNRStoreData = async (
   );
 
   for (const rulesetId of expectedRulesetIds) {
-    Assert.deepEqual(
-      dnrExtData.staticRulesets.get(rulesetId),
-      {
-        idx: expectedRulesetIndexesMap.get(rulesetId),
-        rules: getSchemaNormalizedRules(
-          extensionTestWrapper,
-          expectedRulesets[rulesetId]
-        ),
-      },
-      `Got the expected rules for the enabled ruleset ${rulesetId}`
+    const expectedRulesetIdx = expectedRulesetIndexesMap.get(rulesetId);
+    const expectedRulesetRules = getSchemaNormalizedRules(
+      extensionTestWrapper,
+      expectedRulesets[rulesetId]
+    );
+    const actualData = dnrExtData.staticRulesets.get(rulesetId);
+    equal(
+      actualData.idx,
+      expectedRulesetIdx,
+      `Got the expected ruleset index for ruleset id ${rulesetId}`
+    );
+
+    // Asserting an entire array of rules all at once will produce
+    // a big enough output to don't be immediately useful to investigate
+    // failures, asserting each rule individually would produce more
+    // readable assertion failure logs.
+    const assertRuleAtIdx = ruleIdx =>
+      Assert.deepEqual(
+        actualData.rules[ruleIdx],
+        expectedRulesetRules[ruleIdx],
+        `Got the expected rule at index ${ruleIdx} for ruleset id "${rulesetId}"`
+      );
+
+    // Some tests may be using a big enough number of rules that
+    // the assertiongs would be producing a huge amount of log spam,
+    // and so for those tests we only explicitly assert the first
+    // and last rule and that the total amount of rules matches the
+    // expected number of rules (there are still other tests explicitly
+    // asserting all loaded rules).
+    if (assertIndividualRules) {
+      info(
+        `Verify the each individual rule loaded for ruleset id "${rulesetId}"`
+      );
+      for (let ruleIdx = 0; ruleIdx < expectedRulesetRules.length; ruleIdx++) {
+        assertRuleAtIdx(ruleIdx);
+      }
+    } else {
+      // NOTE: Only asserting the first and last rule also helps to speed up
+      // the test is some slower builds when the number of expected rules is
+      // big enough (e.g. the test task verifying the enforced rule count limits
+      // was timing out in tsan build because asserting all indidual rules was
+      // taking long enough and the event page was being suspended on the idle
+      // timeout by the time we did run all these assertion and proceeding with
+      // the rest of the test task assertions), we still confirm that the total
+      // number of expected vs actual rules also matches right after these
+      // assertions.
+      info(
+        `Verify the first and last rules loaded for ruleset id "${rulesetId}"`
+      );
+      const lastExpectedRuleIdx = expectedRulesetRules.length - 1;
+      for (const ruleIdx of [0, lastExpectedRuleIdx]) {
+        assertRuleAtIdx(ruleIdx);
+      }
+    }
+
+    equal(
+      actualData.rules.length,
+      expectedRulesetRules.length,
+      `Got the expected number of rules loaded for ruleset id "${rulesetId}"`
     );
   }
 };
@@ -824,6 +891,211 @@ add_task(async function test_updateEnabledRuleset_id_validation() {
   await assertDNRStoreData(dnrStore, extension, {
     ruleset_2: getSchemaNormalizedRules(extension, ruleset2Data),
   });
+
+  await extension.unload();
+});
+
+add_task(async function test_getAvailableStaticRulesCountAndLimits() {
+  const dnrStore = ExtensionDNRStore._getStoreForTesting();
+  const { GUARANTEED_MINIMUM_STATIC_RULES } = ExtensionDNR.limits;
+  equal(
+    typeof GUARANTEED_MINIMUM_STATIC_RULES,
+    "number",
+    "Expect GUARANTEED_MINIMUM_STATIC_RULES to be a number"
+  );
+
+  const availableStaticRulesCount = GUARANTEED_MINIMUM_STATIC_RULES;
+
+  const rule_resources = [
+    {
+      id: "ruleset_0",
+      path: "/ruleset_0.json",
+      enabled: true,
+    },
+    {
+      id: "ruleset_1",
+      path: "/ruleset_1.json",
+      enabled: true,
+    },
+    // A ruleset initially disabled (to make sure it doesn't count for the
+    // rules count limit).
+    {
+      id: "ruleset_disabled",
+      path: "/ruleset_disabled.json",
+      enabled: false,
+    },
+    // A ruleset including an invalid rule and valid rule.
+    {
+      id: "ruleset_withInvalid",
+      path: "/ruleset_withInvalid.json",
+      enabled: false,
+    },
+    // An empty ruleset (to make sure it can still be enabled/disabled just fine,
+    // e.g. in case on some browser version all rules are technically invalid).
+    {
+      id: "ruleset_empty",
+      path: "/ruleset_empty.json",
+      enabled: false,
+    },
+  ];
+
+  const files = {};
+  const rules = {};
+
+  const rulesetDisabledData = [getDNRRule({ id: 1 })];
+  const ruleValid = getDNRRule({ id: 2, action: { type: "allow" } });
+  const rulesetWithInvalidData = [
+    getDNRRule({ id: 1, action: { type: "invalid_action" } }),
+    ruleValid,
+  ];
+
+  rules.ruleset_0 = [getDNRRule({ id: 1 }), getDNRRule({ id: 2 })];
+
+  rules.ruleset_1 = [];
+  for (let i = 0; i < availableStaticRulesCount; i++) {
+    rules.ruleset_1.push(getDNRRule({ id: i + 1 }));
+  }
+
+  for (const [k, v] of Object.entries(rules)) {
+    files[`${k}.json`] = JSON.stringify(v);
+  }
+  files[`ruleset_disabled.json`] = JSON.stringify(rulesetDisabledData);
+  files[`ruleset_withInvalid.json`] = JSON.stringify(rulesetWithInvalidData);
+  files[`ruleset_empty.json`] = JSON.stringify([]);
+
+  const extension = ExtensionTestUtils.loadExtension(
+    getDNRExtension({
+      id: "dnr-getAvailable-count-@mochitest",
+      rule_resources,
+      files,
+    })
+  );
+
+  await extension.startup();
+  await extension.awaitMessage("bgpage:ready");
+
+  const expectedEnabledRulesets = {};
+  expectedEnabledRulesets.ruleset_0 = getSchemaNormalizedRules(
+    extension,
+    rules.ruleset_0
+  );
+
+  info(
+    "Expect ruleset_1 to not be enabled because along with ruleset_0 exceeded the static rules count limit"
+  );
+  await assertDNRStoreData(dnrStore, extension, expectedEnabledRulesets);
+
+  await assertDNRGetAvailableStaticRuleCount(
+    extension,
+    availableStaticRulesCount - rules.ruleset_0.length,
+    "Got the available static rule count on ruleset_0 initially enabled"
+  );
+
+  // Try to enable ruleset_1 again from the API method.
+  extension.sendMessage("updateEnabledRulesets", {
+    enableRulesetIds: ["ruleset_1"],
+  });
+  await extension.awaitMessage("updateEnabledRulesets:done");
+
+  info(
+    "Expect ruleset_1 to not be enabled because still exceeded the static rules count limit"
+  );
+  await assertDNRGetEnabledRulesets(extension, ["ruleset_0"]);
+  await assertDNRStoreData(dnrStore, extension, expectedEnabledRulesets);
+
+  await assertDNRGetAvailableStaticRuleCount(
+    extension,
+    availableStaticRulesCount - rules.ruleset_0.length,
+    "Got the available static rule count on ruleset_0 still the only one enabled"
+  );
+
+  extension.sendMessage("updateEnabledRulesets", {
+    disableRulesetIds: ["ruleset_0"],
+    enableRulesetIds: ["ruleset_1"],
+  });
+  await extension.awaitMessage("updateEnabledRulesets:done");
+
+  info("Expect ruleset_1 to be enabled along with disabling ruleset_0");
+  await assertDNRGetEnabledRulesets(extension, ["ruleset_1"]);
+  delete expectedEnabledRulesets.ruleset_0;
+  expectedEnabledRulesets.ruleset_1 = getSchemaNormalizedRules(
+    extension,
+    rules.ruleset_1
+  );
+  await assertDNRStoreData(dnrStore, extension, expectedEnabledRulesets, {
+    // Assert total amount of expected rules and only the first and last rule
+    // individually, to avoid generating a huge amount of logs and potential
+    // timeout failures on slower builds.
+    assertIndividualRules: false,
+  });
+
+  await assertDNRGetAvailableStaticRuleCount(
+    extension,
+    0,
+    "Expect no additional static rules count available when ruleset_1 is enabled"
+  );
+
+  info(
+    "Expect ruleset_disabled to stay disabled because along with ruleset_1 exceeeds the limits"
+  );
+  extension.sendMessage("updateEnabledRulesets", {
+    enableRulesetIds: ["ruleset_disabled"],
+  });
+  await extension.awaitMessage("updateEnabledRulesets:done");
+  await assertDNRGetEnabledRulesets(extension, ["ruleset_1"]);
+  await assertDNRStoreData(dnrStore, extension, expectedEnabledRulesets, {
+    // Assert total amount of expected rules and only the first and last rule
+    // individually, to avoid generating a huge amount of logs and potential
+    // timeout failures on slower builds.
+    assertIndividualRules: false,
+  });
+  await assertDNRGetAvailableStaticRuleCount(
+    extension,
+    0,
+    "Expect no additional static rules count available"
+  );
+
+  info("Expect ruleset_empty to be enabled despite having reached the limit");
+  extension.sendMessage("updateEnabledRulesets", {
+    enableRulesetIds: ["ruleset_empty"],
+  });
+  await extension.awaitMessage("updateEnabledRulesets:done");
+  await assertDNRGetEnabledRulesets(extension, ["ruleset_1", "ruleset_empty"]);
+  await assertDNRStoreData(
+    dnrStore,
+    extension,
+    {
+      ...expectedEnabledRulesets,
+      ruleset_empty: [],
+    },
+    // Assert total amount of expected rules and only the first and last rule
+    // individually, to avoid generating a huge amount of logs and potential
+    // timeout failures on slower builds.
+    { assertIndividualRules: false }
+  );
+  await assertDNRGetAvailableStaticRuleCount(
+    extension,
+    0,
+    "Expect no additional static rules count available"
+  );
+
+  info("Expect invalid rules to not be counted towards the limits");
+  extension.sendMessage("updateEnabledRulesets", {
+    disableRulesetIds: ["ruleset_1", "ruleset_empty"],
+    enableRulesetIds: ["ruleset_withInvalid"],
+  });
+  await extension.awaitMessage("updateEnabledRulesets:done");
+  await assertDNRGetEnabledRulesets(extension, ["ruleset_withInvalid"]);
+  await assertDNRStoreData(dnrStore, extension, {
+    // Only the valid rule has been actually loaded, and the invalid one
+    // ignored.
+    ruleset_withInvalid: [ruleValid],
+  });
+  await assertDNRGetAvailableStaticRuleCount(
+    extension,
+    availableStaticRulesCount - 1,
+    "Expect only valid rules to be counted"
+  );
 
   await extension.unload();
 });
