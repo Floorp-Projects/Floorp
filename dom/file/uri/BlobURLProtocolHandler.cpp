@@ -837,16 +837,6 @@ BlobURLProtocolHandler::GetProtocolFlags(uint32_t* result) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-BlobURLProtocolHandler::GetFlagsForURI(nsIURI* aURI, uint32_t* aResult) {
-  Unused << BlobURLProtocolHandler::GetProtocolFlags(aResult);
-  if (IsBlobURI(aURI)) {
-    *aResult |= URI_IS_LOCAL_RESOURCE;
-  }
-
-  return NS_OK;
-}
-
 /* static */ nsresult BlobURLProtocolHandler::CreateNewURI(
     const nsACString& aSpec, const char* aCharset, nsIURI* aBaseURI,
     nsIURI** aResult) {
