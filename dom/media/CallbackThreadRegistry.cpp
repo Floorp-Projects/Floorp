@@ -8,9 +8,6 @@
 #include "mozilla/ClearOnShutdown.h"
 
 namespace mozilla {
-CallbackThreadRegistry::CallbackThreadRegistry()
-    : mThreadIds("CallbackThreadRegistry::mThreadIds") {}
-
 struct CallbackThreadRegistrySingleton {
   CallbackThreadRegistrySingleton()
       : mRegistry(MakeUnique<CallbackThreadRegistry>()) {
@@ -25,10 +22,56 @@ struct CallbackThreadRegistrySingleton {
   UniquePtr<CallbackThreadRegistry> mRegistry;
 };
 
+CallbackThreadRegistry::CallbackThreadRegistry()
+    : mThreadIds("CallbackThreadRegistry::mThreadIds") {}
+
 /* static */
 CallbackThreadRegistry* CallbackThreadRegistry::Get() {
   static CallbackThreadRegistrySingleton sSingleton;
   return sSingleton.mRegistry.get();
+}
+
+void CallbackThreadRegistry::Register(ProfilerThreadId aThreadId,
+                                      const char* aName) {
+  if (!aThreadId.IsSpecified()) {
+    // profiler_current_thread_id is unspecified on unsupported platforms.
+    return;
+  }
+
+  auto threadIds = mThreadIds.Lock();
+  for (uint32_t i = 0; i < threadIds->Length(); i++) {
+    if ((*threadIds)[i].mId == aThreadId) {
+      (*threadIds)[i].mUserCount++;
+      return;
+    }
+  }
+  ThreadUserCount tuc;
+  tuc.mId = aThreadId;
+  tuc.mUserCount = 1;
+  threadIds->AppendElement(tuc);
+  PROFILER_REGISTER_THREAD(aName);
+}
+
+void CallbackThreadRegistry::Unregister(ProfilerThreadId aThreadId) {
+  if (!aThreadId.IsSpecified()) {
+    // profiler_current_thread_id is unspedified on unsupported platforms.
+    return;
+  }
+
+  auto threadIds = mThreadIds.Lock();
+  for (uint32_t i = 0; i < threadIds->Length(); i++) {
+    if ((*threadIds)[i].mId == aThreadId) {
+      MOZ_ASSERT((*threadIds)[i].mUserCount > 0);
+      (*threadIds)[i].mUserCount--;
+
+      if ((*threadIds)[i].mUserCount == 0) {
+        PROFILER_UNREGISTER_THREAD();
+        threadIds->RemoveElementAt(i);
+      }
+      return;
+    }
+  }
+  MOZ_ASSERT_UNREACHABLE("Current thread was not registered");
 }
 
 }  // namespace mozilla
