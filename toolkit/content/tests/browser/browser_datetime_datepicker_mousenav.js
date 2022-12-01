@@ -186,7 +186,7 @@ add_task(async function test_datepicker_clicked() {
 
   // Click the first item (top-left corner) of the calendar
   let promise = BrowserTestUtils.waitForContentEvent(browser, "input");
-  helper.click(helper.getElement(DAYS_VIEW).firstChild.firstChild);
+  helper.click(helper.getElement(DAYS_VIEW).querySelector("td"));
   await promise;
 
   let value = await SpecialPowers.spawn(browser, [], () => {

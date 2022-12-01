@@ -605,7 +605,7 @@ add_task(async function test_datepicker_abs_max() {
 });
 
 /**
- * Ensure datetime-local picker closes when focus moves to a time input.
+ * Ensure datetime-local picker closes when selection is made.
  */
 add_task(async function test_datetime_focus_to_input() {
   info("Ensure datetime-local picker closes when focus moves to a time input");
@@ -618,28 +618,14 @@ add_task(async function test_datetime_focus_to_input() {
 
   Assert.equal(helper.panel.state, "open", "Panel should be visible");
 
-  // Ensure focus is on the input field
-  await SpecialPowers.spawn(browser, [], () => {
-    content.document.querySelector("#datetime").focus();
-  });
+  // Make selection to close the date dialog
+  await EventUtils.synthesizeKey(" ", {});
 
   let closed = helper.promisePickerClosed();
-
-  // Move to the time section by pressing tab.
-  for (let i = 0; i < 3; ++i) {
-    await BrowserTestUtils.synthesizeKey("KEY_Tab", {}, browser);
-  }
 
   await closed;
 
   Assert.equal(helper.panel.state, "closed", "Panel should be closed now");
-
-  // The input should still be focused.
-  let isFocused = await SpecialPowers.spawn(browser, [], () => {
-    return content.document.querySelector("#datetime").matches(":focus");
-  });
-
-  Assert.ok(isFocused, "<input> should still be focused");
 
   await helper.tearDown();
 });
