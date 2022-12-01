@@ -12,6 +12,7 @@
 
 #include "AppleDecoderModule.h"
 #include "AppleUtils.h"
+#include "CallbackThreadRegistry.h"
 #include "H264.h"
 #include "MP4Decoder.h"
 #include "MacIOSurfaceImage.h"
@@ -79,6 +80,7 @@ AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig,
       ,
       mTrackingId(aTrackingId),
       mIsFlushing(false),
+      mCallbackThreadId(),
       mMonitor("AppleVTDecoder"),
       mPromise(&mMonitor),  // To ensure our PromiseHolder is only ever accessed
                             // with the monitor held.
@@ -360,9 +362,21 @@ void AppleVTDecoder::MaybeResolveBufferedFrames() {
   mPromise.Resolve(std::move(results), __func__);
 }
 
+void AppleVTDecoder::MaybeRegisterCallbackThread() {
+  ProfilerThreadId id = profiler_current_thread_id();
+  if (MOZ_LIKELY(id == mCallbackThreadId)) {
+    return;
+  }
+  mCallbackThreadId = id;
+  CallbackThreadRegistry::Get()->Register(mCallbackThreadId,
+                                          "AppleVTDecoderCallback");
+}
+
 // Copy and return a decoded frame.
 void AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
                                  AppleVTDecoder::AppleFrameRef aFrameRef) {
+  MaybeRegisterCallbackThread();
+
   if (mIsFlushing) {
     // We are in the process of flushing or shutting down; ignore frame.
     return;

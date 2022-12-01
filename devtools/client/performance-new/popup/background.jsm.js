@@ -202,6 +202,7 @@ const presets = {
       "camera",
       "capture",
       "Compositor",
+      "decoder",
       "GeckoMain",
       "gmp",
       "graph",
