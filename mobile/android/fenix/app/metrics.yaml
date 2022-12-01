@@ -1935,12 +1935,14 @@ customize_home:
       An indication of whether Contile is enabled to be displayed
     send_in_pings:
       - metrics
+      - topsites-impression
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/24467
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/24468
     data_sensitivity:
       - interaction
+    lifetime: application
     notification_emails:
       - android-probes@mozilla.com
     expires: 112
