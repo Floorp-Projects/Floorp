@@ -67,15 +67,15 @@ button {
   border: none;
 }
 
-.nav {
+.month-year-nav {
   display: flex;
   width: var(--calendar-width);
   height: 2.4rem;
   margin-bottom: 0.8rem;
-  justify-content: space-between;
+  justify-content: space-evenly;
 }
 
-.nav > button {
+.month-year-nav > button {
   width: 3rem;
   height: var(--date-picker-item-height);
   -moz-context-properties: fill, fill-opacity;
@@ -83,34 +83,35 @@ button {
   fill-opacity: .5;
 }
 
-.nav > button:hover {
+.month-year-nav > button:hover {
   fill-opacity: .8;
 }
 
-.nav > button.active {
+.month-year-nav > button.active {
   fill-opacity: 1;
 }
 
-.nav > button.prev,
-.nav > button.next {
+.month-year-nav > button.prev,
+.month-year-nav > button.next {
   background: url("chrome://global/skin/icons/arrow-left.svg") no-repeat center;
 }
 
-.nav > button.prev:dir(rtl),
-.nav > button.next:dir(ltr) {
+.month-year-nav > button.prev:dir(rtl),
+.month-year-nav > button.next:dir(ltr) {
   transform: scaleX(-1);
 }
 
 .month-year-container {
-  position: absolute;
   display: flex;
   justify-content: center;
   align-items: center;
-  top: 0;
-  inset-inline: 3rem;
   width: 17.1rem;
   height: var(--date-picker-item-height);
   z-index: 10;
+}
+
+.month-year-container {
+  margin-block: 0;
 }
 
 button.month-year {
@@ -160,35 +161,9 @@ button.month-year.active::after {
   transition: opacity 0.15s;
 }
 
-.month-year-view.hidden {
-  visibility: hidden;
-  opacity: 0;
-}
-
 .month-year-view > .spinner-container {
   width: 5.5rem;
   margin: 0 0.5rem;
-}
-
-.month-year-view .spinner {
-  transform: scaleY(1);
-  transform-origin: top;
-  transition: transform 0.15s;
-}
-
-.month-year-view.hidden .spinner {
-  transform: scaleY(0);
-  transition: none;
-}
-
-.month-year-view .spinner > div {
-  transform: scaleY(1);
-  transition: transform 0.15s;
-}
-
-.month-year-view.hidden .spinner > div {
-  transform: scaleY(2.5);
-  transition: none;
 }
 
 .order-month-year > #spinner-month,
@@ -203,34 +178,39 @@ button.month-year.active::after {
 
 .calendar-container {
   cursor: default;
+}
+
+.calendar-container > table:not([hidden]) {
   display: flex;
   flex-direction: column;
   width: var(--calendar-width);
+  border-spacing: inherit;
 }
 
-.week-header {
+.week-header > tr,
+.days-view > tr {
   display: flex;
+  flex-direction: row;
 }
 
-.week-header > div {
+.week-header > tr > th {
   opacity: .5;
 }
 
-.days-viewport {
-  height: 15rem;
+.days-view {
+  min-height: 15rem;
   overflow: hidden;
   position: relative;
 }
 
-.days-view {
-  position: absolute;
-  display: flex;
-  flex-wrap: wrap;
-  flex-direction: row;
+.week-header > tr > th,
+.days-view > tr > td {
+  padding: 0;
+  font-weight: inherit;
 }
 
-.week-header > div,
-.days-view > div {
+.week-header > tr > th,
+.days-view > tr > td {
   align-items: center;
   display: flex;
   height: var(--date-picker-item-height);
@@ -239,7 +219,11 @@ button.month-year.active::after {
   width: var(--date-picker-item-width);
 }
 
-.days-view > .outside {
+.days-view > tr > td:focus-visible {
+  z-index: 1;
+}
+
+.days-view > tr > td.outside {
   opacity: .5;
 }
 
@@ -247,32 +231,35 @@ button.month-year.active::after {
   color: var(--weekend-font-color);
 }
 
-.days-view > .weekend.outside {
+.days-view > tr > td.weekend.outside {
   opacity: .5;
 }
 
-.days-view > .out-of-range,
-.days-view > .off-step {
+.days-view > tr > td.out-of-range,
+.days-view > tr > td.off-step {
   background: var(--disabled-fill-color);
 }
 
-.days-view > .today {
+.days-view > tr > td.today {
   font-weight: bold;
 }
 
-.days-view > .out-of-range::before,
-.days-view > .off-step::before {
+.days-view > tr > td.out-of-range::before,
+.days-view > tr > td.off-step::before {
   display: none;
 }
 
-.days-view > div:hover::before,
-.days-view > .select::before,
-.days-view > .today::before {
+.days-view > tr > td:hover::before,
+.days-view > tr > td.select::before,
+.days-view > tr > td.today::before {
+  position: absolute;
   inset: 5%;
+  z-index: -10;
+  border-radius: var(--border-radius);
 }
 
 #time-picker,
-.month-year-view {
+.month-year-view:not([hidden]) {
   display: flex;
   flex-direction: row;
   justify-content: center;
@@ -332,39 +319,39 @@ button.month-year.active::after {
 }
 
 .spinner-container > .spinner > div::before,
-.calendar-container .days-view > div::before {
+.calendar-container .days-view > tr > td::before {
   position: absolute;
   inset: 5%;
-  z-index: -10;
+  z-index: -1;
   border-radius: var(--border-radius);
 }
 
 .spinner-container > .spinner > div:hover::before,
-.calendar-container .days-view > div:hover::before {
+.calendar-container .days-view > tr > td:hover::before {
   background: var(--fill-color);
   border: var(--border);
   content: "";
 }
 
-.calendar-container .days-view > div.today::before {
+.calendar-container .days-view > tr > td.today::before {
   background: var(--today-fill-color);
   border: var(--border);
   content: "";
 }
 
 @media not (prefers-contrast) {
-  .calendar-container .days-view > div.today::before {
+  .calendar-container .days-view > tr > td.today::before {
     border-width: 0;
   }
 }
 
 .spinner-container > .spinner:not(.scrolling) > div.selection,
-.calendar-container .days-view > div.selection {
+.calendar-container .days-view > tr > td.selection {
   color: var(--selected-font-color);
 }
 
 .spinner-container > .spinner > div.selection::before,
-.calendar-container .days-view > div.selection::before {
+.calendar-container .days-view > tr > td.selection::before {
   background: var(--selected-fill-color);
   border: none;
   content: "";
