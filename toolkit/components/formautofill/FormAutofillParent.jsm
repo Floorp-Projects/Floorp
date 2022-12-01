@@ -654,11 +654,6 @@ class FormAutofillParent extends JSWindowActorParent {
 
       if (recordUnchanged) {
         lazy.gFormAutofillStorage.creditCards.notifyUsed(creditCard.guid);
-        // Add probe to record credit card autofill(without modification).
-        Services.telemetry.scalarAdd(
-          "formautofill.creditCards.fill_type_autofill",
-          1
-        );
         this._recordFormFillingTime(
           "creditCard",
           "autofill",
@@ -666,22 +661,12 @@ class FormAutofillParent extends JSWindowActorParent {
         );
         return false;
       }
-      // Add the probe to record credit card autofill with modification.
-      Services.telemetry.scalarAdd(
-        "formautofill.creditCards.fill_type_autofill_modified",
-        1
-      );
       this._recordFormFillingTime(
         "creditCard",
         "autofill-update",
         timeStartedFillingMS
       );
     } else {
-      // Add the probe to record credit card manual filling.
-      Services.telemetry.scalarAdd(
-        "formautofill.creditCards.fill_type_manual",
-        1
-      );
       this._recordFormFillingTime("creditCard", "manual", timeStartedFillingMS);
 
       let existingGuid = await lazy.gFormAutofillStorage.creditCards.getDuplicateGuid(
