@@ -13,16 +13,9 @@ ChromeUtils.defineESModuleGetters(this, {
 var { ExtensionError } = ExtensionUtils;
 
 this.declarativeNetRequest = class extends ExtensionAPI {
-  onManifestEntry(entryName) {
-    if (entryName === "declarative_net_request") {
-      ExtensionDNR.validateManifestEntry(this.extension);
-    }
-  }
-
   onShutdown() {
     ExtensionDNR.clearRuleManager(this.extension);
   }
-
   getAPI(context) {
     const { extension } = this;
 
@@ -44,25 +37,6 @@ this.declarativeNetRequest = class extends ExtensionAPI {
             throw new ExtensionError(failures[0].message);
           }
           ruleManager.setSessionRules(ruleValidator.getValidatedRules());
-        },
-
-        async getEnabledRulesets() {
-          await ExtensionDNR.ensureInitialized(extension);
-          const ruleManager = ExtensionDNR.getRuleManager(extension);
-          return ruleManager.enabledStaticRulesetIds;
-        },
-
-        async getAvailableStaticRuleCount() {
-          await ExtensionDNR.ensureInitialized(extension);
-          const ruleManager = ExtensionDNR.getRuleManager(extension);
-          return ruleManager.availableStaticRuleCount;
-        },
-
-        updateEnabledRulesets({ disableRulesetIds, enableRulesetIds }) {
-          return ExtensionDNR.updateEnabledStaticRulesets(extension, {
-            disableRulesetIds,
-            enableRulesetIds,
-          });
         },
 
         getSessionRules() {

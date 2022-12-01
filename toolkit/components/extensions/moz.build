@@ -19,7 +19,6 @@ EXTRA_JS_MODULES += [
     "ExtensionCommon.jsm",
     "ExtensionContent.jsm",
     "ExtensionDNR.sys.mjs",
-    "ExtensionDNRStore.sys.mjs",
     "ExtensionPageChild.jsm",
     "ExtensionParent.jsm",
     "ExtensionPermissions.jsm",
