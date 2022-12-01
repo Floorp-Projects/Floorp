@@ -47,7 +47,7 @@
   },
   "browser_action": {
 		"default_icon":  "icons/floorp.png",
-		"default_title": "Check for Updates",
+		"default_title": "__MSG_browserActionTitle__",
 		"browser_style":  true
 	},
   "page_action": {
