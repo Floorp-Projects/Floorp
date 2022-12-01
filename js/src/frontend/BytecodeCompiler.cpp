@@ -265,7 +265,7 @@ template <typename Unit>
             std::move(extensibleStencil);
       } else if (output.is<RefPtr<CompilationStencil>>()) {
         RefPtr<CompilationStencil> stencil =
-            cx->new_<frontend::CompilationStencil>(
+            ec->getAllocator()->new_<frontend::CompilationStencil>(
                 std::move(extensibleStencil));
         if (!stencil) {
           return false;
@@ -328,8 +328,9 @@ template <typename Unit>
   }
 
   if (output.is<UniquePtr<ExtensibleCompilationStencil>>()) {
-    auto stencil = cx->make_unique<ExtensibleCompilationStencil>(
-        std::move(compiler.stencil()));
+    auto stencil =
+        ec->getAllocator()->make_unique<ExtensibleCompilationStencil>(
+            std::move(compiler.stencil()));
     if (!stencil) {
       return false;
     }
@@ -342,14 +343,15 @@ template <typename Unit>
     }
 
     auto extensibleStencil =
-        cx->make_unique<frontend::ExtensibleCompilationStencil>(
+        ec->getAllocator()->make_unique<frontend::ExtensibleCompilationStencil>(
             std::move(compiler.stencil()));
     if (!extensibleStencil) {
       return false;
     }
 
     RefPtr<CompilationStencil> stencil =
-        cx->new_<CompilationStencil>(std::move(extensibleStencil));
+        ec->getAllocator()->new_<CompilationStencil>(
+            std::move(extensibleStencil));
     if (!stencil) {
       return false;
     }
@@ -913,8 +915,9 @@ template <typename Unit>
   }
 
   if (output.is<UniquePtr<ExtensibleCompilationStencil>>()) {
-    auto stencil = cx->make_unique<ExtensibleCompilationStencil>(
-        std::move(compiler.stencil()));
+    auto stencil =
+        ec->getAllocator()->make_unique<ExtensibleCompilationStencil>(
+            std::move(compiler.stencil()));
     if (!stencil) {
       return false;
     }
@@ -927,14 +930,15 @@ template <typename Unit>
     }
 
     auto extensibleStencil =
-        cx->make_unique<frontend::ExtensibleCompilationStencil>(
+        ec->getAllocator()->make_unique<frontend::ExtensibleCompilationStencil>(
             std::move(compiler.stencil()));
     if (!extensibleStencil) {
       return false;
     }
 
     RefPtr<CompilationStencil> stencil =
-        cx->new_<CompilationStencil>(std::move(extensibleStencil));
+        ec->getAllocator()->new_<CompilationStencil>(
+            std::move(extensibleStencil));
     if (!stencil) {
       return false;
     }
@@ -1132,7 +1136,7 @@ static GetCachedResult GetCachedLazyFunctionStencilMaybeInstantiate(
   }
 
   if (output.is<UniquePtr<ExtensibleCompilationStencil>>()) {
-    auto extensible = cx->make_unique<ExtensibleCompilationStencil>(input);
+    auto extensible = ec->getAllocator()->make_unique<ExtensibleCompilationStencil>(input);
     if (!extensible) {
       return GetCachedResult::Error;
     }
@@ -1249,8 +1253,9 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
   }
 
   if (output.is<UniquePtr<ExtensibleCompilationStencil>>()) {
-    auto stencil = cx->make_unique<ExtensibleCompilationStencil>(
-        std::move(compilationState));
+    auto stencil =
+        ec->getAllocator()->make_unique<ExtensibleCompilationStencil>(
+            std::move(compilationState));
     if (!stencil) {
       return false;
     }
@@ -1263,14 +1268,15 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
     }
 
     auto extensibleStencil =
-        cx->make_unique<frontend::ExtensibleCompilationStencil>(
+        ec->getAllocator()->make_unique<frontend::ExtensibleCompilationStencil>(
             std::move(compilationState));
     if (!extensibleStencil) {
       return false;
     }
 
     RefPtr<CompilationStencil> stencil =
-        cx->new_<CompilationStencil>(std::move(extensibleStencil));
+        ec->getAllocator()->new_<CompilationStencil>(
+            std::move(extensibleStencil));
     if (!stencil) {
       return false;
     }
