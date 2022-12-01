@@ -37,9 +37,6 @@ interface nsIProtocolHandlerWithDynamicFlags : nsISupports
     /*
      * Returns protocol flags for the given URI, which may be different from the
      * flags for another URI of the same scheme.
-     *
-     * Only DYNAMIC_URI_FLAGS may be different from the registered flags for the
-     * protocol handler.
      */
     unsigned long getFlagsForURI(in nsIURI aURI);
 };
@@ -54,6 +51,34 @@ interface nsIProtocolHandler : nsISupports
      * The scheme of this protocol (e.g., "file").
      */
     readonly attribute ACString scheme;
+
+    /**
+     * The default port is the port that this protocol normally uses.
+     * If a port does not make sense for the protocol (e.g., "about:")
+     * then -1 will be returned.
+     */
+    readonly attribute long defaultPort;
+
+    /**
+     * Returns the protocol specific flags (see flag definitions below).
+     */
+    readonly attribute unsigned long protocolFlags;
+
+%{C++
+  // Helper method to get the protocol flags in the right way.
+  nsresult DoGetProtocolFlags(nsIURI* aURI, uint32_t* aFlags)
+  {
+      nsCOMPtr<nsIProtocolHandlerWithDynamicFlags> dh = do_QueryInterface(this);
+      nsresult rv = dh ? dh->GetFlagsForURI(aURI, aFlags) : GetProtocolFlags(aFlags);
+      if (NS_SUCCEEDED(rv)) {
+#if !IS_ORIGIN_IS_FULL_SPEC_DEFINED
+        MOZ_RELEASE_ASSERT(!(*aFlags & nsIProtocolHandler::ORIGIN_IS_FULL_SPEC),
+                           "ORIGIN_IS_FULL_SPEC is unsupported but used");
+#endif
+      }
+      return rv;
+  }
+%}
 
     /**
      * Constructs a new channel from the given URI for this protocol handler and
@@ -76,10 +101,6 @@ interface nsIProtocolHandler : nsISupports
     /**************************************************************************
      * Constants for the protocol flags (the first is the default mask, the
      * others are deviations):
-     *
-     * NOTE: Protocol flags are provided when the protocol handler is
-     * registered, either through a static component or dynamically with
-     * `nsIIOService.registerProtocolHandler`.
      *
      * NOTE: Implementation must ignore any flags they do not understand.
      */
@@ -295,17 +316,4 @@ interface nsIProtocolHandler : nsISupports
      * against an allowlist using ExtensionPolicyService::SourceMayLoadExtensionURI.
      */
     const unsigned long WEBEXT_URI_WEB_ACCESSIBLE = (1 << 24);
-
-    /**
-     * Flags which are allowed to be different from the static flags when
-     * returned from `nsIProtocolHandlerWithDynamicFlags::getFlagsForURI`.
-     *
-     * All other flags must match the flags provided when the protocol handler
-     * was registered.
-     */
-    const unsigned long DYNAMIC_URI_FLAGS =
-        URI_LOADABLE_BY_ANYONE | URI_DANGEROUS_TO_LOAD |
-        URI_IS_POTENTIALLY_TRUSTWORTHY | URI_FETCHABLE_BY_ANYONE |
-        URI_LOADABLE_BY_EXTENSIONS | URI_DISALLOW_IN_PRIVATE_CONTEXT |
-        WEBEXT_URI_WEB_ACCESSIBLE;
 };

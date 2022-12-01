@@ -99,6 +99,14 @@ CustomProtocol.prototype = {
   get scheme() {
     return PROTOCOL_SCHEME;
   },
+  get protocolFlags() {
+    return (Ci.nsIProtocolHandler.URI_NORELATIVE |
+            Ci.nsIProtocolHandler.URI_IS_LOCAL_RESOURCE |
+            Ci.nsIProtocolHandler.URI_DANGEROUS_TO_LOAD);
+  },
+  get defaultPort() {
+    return -1;
+  },
   allowPort: function allowPort() {
     return false;
   },
@@ -110,17 +118,17 @@ CustomProtocol.prototype = {
 
 var gFactory = {
   register() {
-    Services.io.registerProtocolHandler(
-      PROTOCOL_SCHEME,
-      new CustomProtocol(),
-      Ci.nsIProtocolHandler.URI_NORELATIVE |
-        Ci.nsIProtocolHandler.URI_IS_LOCAL_RESOURCE |
-        Ci.nsIProtocolHandler.URI_DANGEROUS_TO_LOAD,
-      -1
-    );
+    var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+
+    var classID = Components.ID("{ed064287-1e76-49ba-a28d-dc74394a8334}");
+    var description = PROTOCOL_SCHEME + ": protocol";
+    var contractID = "@mozilla.org/network/protocol;1?name=" + PROTOCOL_SCHEME;
+    var factory = ComponentUtils.generateSingletonFactory(CustomProtocol);
+
+    registrar.registerFactory(classID, description, contractID, factory);
 
     this.unregister = function() {
-      Services.io.unregisterProtocolHandler(PROTOCOL_SCHEME);
+      registrar.unregisterFactory(classID, factory);
       delete this.unregister;
     };
   },

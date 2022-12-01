@@ -824,6 +824,29 @@ void BlobURLProtocolHandler::Traverse(
 NS_IMPL_ISUPPORTS(BlobURLProtocolHandler, nsIProtocolHandler,
                   nsISupportsWeakReference)
 
+NS_IMETHODIMP
+BlobURLProtocolHandler::GetDefaultPort(int32_t* result) {
+  *result = -1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BlobURLProtocolHandler::GetProtocolFlags(uint32_t* result) {
+  *result = URI_NORELATIVE | URI_NOAUTH | URI_LOADABLE_BY_SUBSUMERS |
+            URI_NON_PERSISTABLE | URI_IS_LOCAL_RESOURCE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BlobURLProtocolHandler::GetFlagsForURI(nsIURI* aURI, uint32_t* aResult) {
+  Unused << BlobURLProtocolHandler::GetProtocolFlags(aResult);
+  if (IsBlobURI(aURI)) {
+    *aResult |= URI_IS_LOCAL_RESOURCE;
+  }
+
+  return NS_OK;
+}
+
 /* static */ nsresult BlobURLProtocolHandler::CreateNewURI(
     const nsACString& aSpec, const char* aCharset, nsIURI* aBaseURI,
     nsIURI** aResult) {

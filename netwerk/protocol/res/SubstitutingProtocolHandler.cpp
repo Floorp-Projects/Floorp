@@ -204,11 +204,21 @@ NS_IMPL_CI_INTERFACE_GETTER(SubstitutingJARURI, nsIURI, nsIJARURI, nsIURL,
                             nsIStandardURL, nsISerializable)
 
 SubstitutingProtocolHandler::SubstitutingProtocolHandler(const char* aScheme,
+                                                         uint32_t aFlags,
                                                          bool aEnforceFileOrJar)
     : mScheme(aScheme),
       mSubstitutionsLock("SubstitutingProtocolHandler::mSubstitutions"),
       mSubstitutions(16),
       mEnforceFileOrJar(aEnforceFileOrJar) {
+  mFlags.emplace(aFlags);
+  ConstructInternal();
+}
+
+SubstitutingProtocolHandler::SubstitutingProtocolHandler(const char* aScheme)
+    : mScheme(aScheme),
+      mSubstitutionsLock("SubstitutingProtocolHandler::mSubstitutions"),
+      mSubstitutions(16),
+      mEnforceFileOrJar(true) {
   ConstructInternal();
 }
 
@@ -277,6 +287,23 @@ nsresult SubstitutingProtocolHandler::SendSubstitution(const nsACString& aRoot,
 
 nsresult SubstitutingProtocolHandler::GetScheme(nsACString& result) {
   result = mScheme;
+  return NS_OK;
+}
+
+nsresult SubstitutingProtocolHandler::GetDefaultPort(int32_t* result) {
+  *result = -1;
+  return NS_OK;
+}
+
+nsresult SubstitutingProtocolHandler::GetProtocolFlags(uint32_t* result) {
+  if (mFlags.isNothing()) {
+    NS_WARNING(
+        "Trying to get protocol flags the wrong way - use "
+        "nsIProtocolHandlerWithDynamicFlags instead");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  *result = mFlags.ref();
   return NS_OK;
 }
 
