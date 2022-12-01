@@ -3413,9 +3413,6 @@ main.has-snippet {
   font-size: 13px;
   color: var(--newtab-text-secondary-color);
 }
-.ds-card .meta .source span {
-  display: inline-block;
-}
 .ds-card .meta .new-sponsored-label {
   font-size: 13px;
   margin-bottom: 2px;
@@ -3466,9 +3463,6 @@ main.has-snippet {
   inset-inline-start: 0;
   margin-top: 12px;
   position: relative;
-}
-.story-footer .story-sponsored-label span {
-  display: inline-block;
 }
 .story-footer .story-sponsored-label,
 .story-footer .status-message {
