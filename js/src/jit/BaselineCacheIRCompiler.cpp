@@ -1140,7 +1140,8 @@ bool BaselineCacheIRCompiler::emitIsTypedArrayResult(ObjOperandId objId,
 }
 
 bool BaselineCacheIRCompiler::emitLoadStringCharResult(StringOperandId strId,
-                                                       Int32OperandId indexId) {
+                                                       Int32OperandId indexId,
+                                                       bool handleOOB) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
   Register str = allocator.useRegister(masm, strId);
@@ -1149,18 +1150,34 @@ bool BaselineCacheIRCompiler::emitLoadStringCharResult(StringOperandId strId,
   AutoScratchRegisterMaybeOutputType scratch2(allocator, masm, output);
   AutoScratchRegister scratch3(allocator, masm);
 
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
   // Bounds check, load string char.
-  masm.spectreBoundsCheck32(index, Address(str, JSString::offsetOfLength()),
-                            scratch1, failure->label());
-  masm.loadStringChar(str, index, scratch1, scratch2, scratch3,
-                      failure->label());
+  Label done;
+  Label loadFailed;
+  if (!handleOOB) {
+    FailurePath* failure;
+    if (!addFailurePath(&failure)) {
+      return false;
+    }
 
-  allocator.discardStack(masm);
+    masm.spectreBoundsCheck32(index, Address(str, JSString::offsetOfLength()),
+                              scratch1, failure->label());
+    masm.loadStringChar(str, index, scratch1, scratch2, scratch3,
+                        failure->label());
+
+    allocator.discardStack(masm);
+  } else {
+    // Discard the stack before jumping to |done|.
+    allocator.discardStack(masm);
+
+    // Return the empty string for out-of-bounds access.
+    masm.movePtr(ImmGCPtr(cx_->names().empty), scratch2);
+
+    // This CacheIR op is always preceded by |LinearizeForCharAccess|, so we're
+    // guaranteed to see no nested ropes.
+    masm.spectreBoundsCheck32(index, Address(str, JSString::offsetOfLength()),
+                              scratch1, &done);
+    masm.loadStringChar(str, index, scratch1, scratch2, scratch3, &loadFailed);
+  }
 
   // Load StaticString for this char. For larger code units perform a VM call.
   Label vmCall;
@@ -1169,8 +1186,12 @@ bool BaselineCacheIRCompiler::emitLoadStringCharResult(StringOperandId strId,
   masm.movePtr(ImmPtr(&cx_->staticStrings().unitStaticTable), scratch2);
   masm.loadPtr(BaseIndex(scratch2, scratch1, ScalePointer), scratch2);
 
-  Label done;
   masm.jump(&done);
+
+  if (handleOOB) {
+    masm.bind(&loadFailed);
+    masm.assumeUnreachable("loadStringChar can't fail for linear strings");
+  }
 
   {
     masm.bind(&vmCall);

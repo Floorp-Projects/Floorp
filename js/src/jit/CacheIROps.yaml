@@ -2007,6 +2007,7 @@
   args:
     str: StringId
     index: Int32Id
+    handleOOB: BoolImm
 
 - name: LoadStringCharCodeResult
   shared: true
@@ -2015,6 +2016,7 @@
   args:
     str: StringId
     index: Int32Id
+    handleOOB: BoolImm
 
 - name: LoadStringLengthResult
   shared: true

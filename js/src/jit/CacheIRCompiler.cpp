@@ -3601,7 +3601,8 @@ bool CacheIRCompiler::emitLoadStringLengthResult(StringOperandId strId) {
 }
 
 bool CacheIRCompiler::emitLoadStringCharCodeResult(StringOperandId strId,
-                                                   Int32OperandId indexId) {
+                                                   Int32OperandId indexId,
+                                                   bool handleOOB) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
   Register str = allocator.useRegister(masm, strId);
@@ -3610,18 +3611,41 @@ bool CacheIRCompiler::emitLoadStringCharCodeResult(StringOperandId strId,
   AutoScratchRegisterMaybeOutputType scratch2(allocator, masm, output);
   AutoScratchRegister scratch3(allocator, masm);
 
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
+  // Bounds check, load string char.
+  Label done;
+  if (!handleOOB) {
+    FailurePath* failure;
+    if (!addFailurePath(&failure)) {
+      return false;
+    }
+
+    masm.spectreBoundsCheck32(index, Address(str, JSString::offsetOfLength()),
+                              scratch1, failure->label());
+    masm.loadStringChar(str, index, scratch1, scratch2, scratch3,
+                        failure->label());
+  } else {
+    // Return NaN for out-of-bounds access.
+    masm.moveValue(JS::NaNValue(), output.valueReg());
+
+    // The bounds check mustn't use a scratch register which aliases the output.
+    MOZ_ASSERT(!output.valueReg().aliases(scratch3));
+
+    // This CacheIR op is always preceded by |LinearizeForCharAccess|, so we're
+    // guaranteed to see no nested ropes.
+    Label loadFailed;
+    masm.spectreBoundsCheck32(index, Address(str, JSString::offsetOfLength()),
+                              scratch3, &done);
+    masm.loadStringChar(str, index, scratch1, scratch2, scratch3, &loadFailed);
+
+    Label loadedChar;
+    masm.jump(&loadedChar);
+    masm.bind(&loadFailed);
+    masm.assumeUnreachable("loadStringChar can't fail for linear strings");
+    masm.bind(&loadedChar);
   }
 
-  // Bounds check, load string char.
-  masm.spectreBoundsCheck32(index, Address(str, JSString::offsetOfLength()),
-                            scratch1, failure->label());
-  masm.loadStringChar(str, index, scratch1, scratch2, scratch3,
-                      failure->label());
-
   masm.tagValue(JSVAL_TYPE_INT32, scratch1, output.valueReg());
+  masm.bind(&done);
   return true;
 }
 
