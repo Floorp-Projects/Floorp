@@ -78,7 +78,19 @@ export class _TopSites extends React.PureComponent {
       pos: promoPosition,
     };
 
-    topSites.splice(promoPosition, 1, link);
+    // Remove first contile or regular topsite, then insert new spoc into position.
+    const replaceIndex = topSites.findIndex(
+      (topSite, index) =>
+        index >= promoPosition &&
+        (!topSite ||
+          topSite.show_sponsored_label ||
+          !(topSite.isPinned || topSite.searchTopSite))
+    );
+    // If we found something to replace, first remove it.
+    if (replaceIndex !== -1) {
+      topSites.splice(replaceIndex, 1);
+    }
+    topSites.splice(promoPosition, 0, link);
 
     return { ...TopSites, rows: topSites };
   }

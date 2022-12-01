@@ -207,7 +207,12 @@ describe("Discovery Stream <TopSites>", () => {
       const result = insertSpocContent({ rows: topSiteRowsWithPins }, data, 0);
 
       assert.deepEqual(result, {
-        rows: [resultSpocFirst, pinnedSite, ...defaultTopSiteRows],
+        rows: [
+          resultSpocFirst,
+          pinnedSite,
+          pinnedSite,
+          ...defaultTopSiteRows.slice(1),
+        ],
       });
     });
   });
