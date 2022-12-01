@@ -114,6 +114,13 @@ RenderTextureHostWrapper::AsRenderDcompSurfaceTextureHost() {
   return mTextureHost->AsRenderDcompSurfaceTextureHost();
 }
 
+RenderTextureHostSWGL* RenderTextureHostWrapper::AsRenderTextureHostSWGL() {
+  if (!mTextureHost) {
+    return nullptr;
+  }
+  return mTextureHost->AsRenderTextureHostSWGL();
+}
+
 RenderTextureHostSWGL* RenderTextureHostWrapper::EnsureRenderTextureHostSWGL()
     const {
   if (!mTextureHost) {
