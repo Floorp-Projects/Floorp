@@ -1271,7 +1271,7 @@ mozilla::Maybe<NameLocation> ScopeContext::getPrivateFieldLocation(
 }
 
 bool CompilationInput::initScriptSource(JSContext* cx, ErrorContext* ec) {
-  source = do_AddRef(ec->getAllocator()->new_<ScriptSource>());
+  source = do_AddRef(cx->new_<ScriptSource>());
   if (!source) {
     return false;
   }
@@ -2400,8 +2400,7 @@ bool CompilationStencil::instantiateStencils(JSContext* cx,
                                              CompilationInput& input,
                                              const CompilationStencil& stencil,
                                              CompilationGCOutput& gcOutput) {
-  AutoReportFrontendContext ec(cx);
-  if (!prepareForInstantiate(&ec, input.atomCache, stencil, gcOutput)) {
+  if (!prepareForInstantiate(cx, input.atomCache, stencil, gcOutput)) {
     return false;
   }
 
@@ -2695,15 +2694,16 @@ bool CompilationStencil::delazifySelfHostedFunction(
 
 /* static */
 bool CompilationStencil::prepareForInstantiate(
-    ErrorContext* ec, CompilationAtomCache& atomCache,
+    JSContext* cx, CompilationAtomCache& atomCache,
     const CompilationStencil& stencil, CompilationGCOutput& gcOutput) {
   // Reserve the `gcOutput` vectors.
-  if (!gcOutput.ensureReserved(ec, stencil.scriptData.size(),
+  AutoReportFrontendContext ec(cx);
+  if (!gcOutput.ensureReserved(&ec, stencil.scriptData.size(),
                                stencil.scopeData.size())) {
     return false;
   }
 
-  return atomCache.allocate(ec, stencil.parserAtomData.size());
+  return atomCache.allocate(&ec, stencil.parserAtomData.size());
 }
 
 bool CompilationStencil::serializeStencils(JSContext* cx,
@@ -2779,12 +2779,12 @@ ExtensibleCompilationStencil::ExtensibleCompilationStencil(
       source(std::move(source)),
       parserAtoms(alloc) {}
 
-CompilationState::CompilationState(JSContext* cx, ErrorContext* ec,
+CompilationState::CompilationState(JSContext* cx,
                                    LifoAllocScope& parserAllocScope,
                                    CompilationInput& input)
     : ExtensibleCompilationStencil(input),
       directives(input.options.forceStrictMode()),
-      usedNames(ec),
+      usedNames(cx),
       parserAllocScope(parserAllocScope),
       input(input) {}
 
@@ -4715,7 +4715,7 @@ bool CompilationState::appendScriptStencilAndData(ErrorContext* ec) {
 }
 
 bool CompilationState::appendGCThings(
-    ErrorContext* ec, ScriptIndex scriptIndex,
+    JSContext* cx, ErrorContext* ec, ScriptIndex scriptIndex,
     mozilla::Span<const TaggedScriptThingIndex> things) {
   MOZ_ASSERT(gcThingData.length() <= UINT32_MAX);
 
@@ -5298,16 +5298,15 @@ JS::TranscodeResult JS::DecodeStencil(JSContext* cx,
                                       const JS::DecodeOptions& options,
                                       const JS::TranscodeRange& range,
                                       JS::Stencil** stencilOut) {
-  AutoReportFrontendContext ec(cx);
-  RefPtr<ScriptSource> source = ec.getAllocator()->new_<ScriptSource>();
+  RefPtr<ScriptSource> source = cx->new_<ScriptSource>();
   if (!source) {
     return TranscodeResult::Throw;
   }
-  RefPtr<JS::Stencil> stencil(
-      ec.getAllocator()->new_<CompilationStencil>(source));
+  RefPtr<JS::Stencil> stencil(cx->new_<CompilationStencil>(source));
   if (!stencil) {
     return TranscodeResult::Throw;
   }
+  AutoReportFrontendContext ec(cx);
   XDRStencilDecoder decoder(cx, &ec, range);
   XDRResult res = decoder.codeStencil(options, *stencil);
   if (res.isErr()) {

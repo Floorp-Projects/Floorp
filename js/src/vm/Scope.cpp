@@ -595,7 +595,8 @@ JSScript* FunctionScope::script() const {
 }
 
 /* static */
-bool FunctionScope::isSpecialName(frontend::TaggedParserAtomIndex name) {
+bool FunctionScope::isSpecialName(JSContext* cx,
+                                  frontend::TaggedParserAtomIndex name) {
   return name == frontend::TaggedParserAtomIndex::WellKnown::arguments() ||
          name == frontend::TaggedParserAtomIndex::WellKnown::dotThis() ||
          name == frontend::TaggedParserAtomIndex::WellKnown::dotNewTarget() ||
@@ -696,18 +697,14 @@ template <size_t ArrayLength>
 static JSAtom* GenerateWasmName(JSContext* cx,
                                 const char (&prefix)[ArrayLength],
                                 uint32_t index) {
-  ManualReportFrontendContext fc(cx);
-  StringBuffer sb(cx, &fc);
+  StringBuffer sb(cx);
   if (!sb.append(prefix)) {
-    fc.failure();
     return nullptr;
   }
   if (!NumberValueToStringBuffer(NumberValue(index), sb)) {
-    fc.failure();
     return nullptr;
   }
 
-  fc.ok();
   return sb.finishAtom();
 }
 
@@ -746,7 +743,6 @@ WasmInstanceScope* WasmInstanceScope::create(JSContext* cx,
     return nullptr;
   }
 
-  Rooted<WasmInstanceObject*> rootedInstance(cx, instance);
   if (instance->instance().memory()) {
     JSAtom* wasmName = GenerateWasmName(cx, "memory", /* index = */ 0);
     if (!wasmName) {
@@ -767,7 +763,7 @@ WasmInstanceScope* WasmInstanceScope::create(JSContext* cx,
 
   MOZ_ASSERT(data->length == namesCount);
 
-  data->instance.init(rootedInstance);
+  data->instance.init(instance);
   data->slotInfo.globalsStart = globalsStart;
 
   Rooted<Scope*> enclosing(cx, &cx->global()->emptyGlobalScope());

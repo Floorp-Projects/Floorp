@@ -70,7 +70,7 @@ bool DeclarationKindIsParameter(DeclarationKind kind) {
          kind == DeclarationKind::FormalParameter;
 }
 
-bool UsedNameTracker::noteUse(ErrorContext* ec, TaggedParserAtomIndex name,
+bool UsedNameTracker::noteUse(JSContext* cx, TaggedParserAtomIndex name,
                               NameVisibility visibility, uint32_t scriptId,
                               uint32_t scopeId,
                               mozilla::Maybe<TokenPos> tokenPosition) {
@@ -90,7 +90,7 @@ bool UsedNameTracker::noteUse(ErrorContext* ec, TaggedParserAtomIndex name,
       hasPrivateNames_ = true;
     }
 
-    UsedNameInfo info(ec, visibility, tokenPosition);
+    UsedNameInfo info(cx, visibility, tokenPosition);
 
     if (!info.noteUsedInScope(scriptId, scopeId)) {
       return false;
@@ -138,13 +138,13 @@ bool UsedNameTracker::getUnboundPrivateNames(
 }
 
 bool UsedNameTracker::hasUnboundPrivateNames(
-    ErrorContext* ec, mozilla::Maybe<UnboundPrivateName>& maybeUnboundName) {
+    JSContext* cx, mozilla::Maybe<UnboundPrivateName>& maybeUnboundName) {
   // We never saw any private names, so can just return early
   if (!hasPrivateNames_) {
     return true;
   }
 
-  Vector<UnboundPrivateName, 8> unboundPrivateNames(ec);
+  Vector<UnboundPrivateName, 8> unboundPrivateNames(cx);
   if (!getUnboundPrivateNames(unboundPrivateNames)) {
     return false;
   }
@@ -320,7 +320,7 @@ ParseContext::ParseContext(JSContext* cx, ParseContext*& parent,
       varScope_(nullptr),
       positionalFormalParameterNames_(cx->frontendCollectionPool()),
       closedOverBindingsForLazy_(cx->frontendCollectionPool()),
-      innerFunctionIndexesForLazy(sc->ec_),
+      innerFunctionIndexesForLazy(cx),
       newDirectives(newDirectives),
       lastYieldOffset(NoYieldOffset),
       lastAwaitOffset(NoAwaitOffset),
@@ -402,7 +402,7 @@ bool ParseContext::computeAnnexBAppliesToLexicalFunctionInInnermostScope(
         if (DeclarationKindIsParameter(declaredKind)) {
           redeclaredKind = Some(declaredKind);
         } else {
-          MOZ_ASSERT(FunctionScope::isSpecialName(name));
+          MOZ_ASSERT(FunctionScope::isSpecialName(sc()->cx_, name));
         }
       }
     }

@@ -4132,7 +4132,7 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   frontend::NoScopeBindingCache scopeCache;
-  frontend::CompilationState compilationState(cx, &ec, allocScope, input.get());
+  frontend::CompilationState compilationState(cx, allocScope, input.get());
   if (!compilationState.init(cx, &ec, &scopeCache)) {
     return false;
   }
@@ -4155,7 +4155,7 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
       return false;
     }
   } else {
-    ModuleBuilder builder(cx, &ec, &parser);
+    ModuleBuilder builder(cx, &parser);
 
     uint32_t len = chars.length();
     SourceExtent extent =

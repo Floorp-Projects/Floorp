@@ -293,7 +293,9 @@ void JSContext::onOutOfMemory() {
 JS_PUBLIC_API void js::ReportOutOfMemory(JSContext* cx) {
   MaybeReportOutOfMemoryForDifferentialTesting();
 
-  MOZ_ASSERT(cx->isMainThreadContext());
+  if (cx->isHelperThreadContext()) {
+    return cx->addPendingOutOfMemory();
+  }
 
   cx->onOutOfMemory();
 }
@@ -343,7 +345,6 @@ JS_PUBLIC_API void js::ReportOverRecursed(JSContext* maybecx) {
   if (!maybecx) {
     return;
   }
-  MOZ_ASSERT(maybecx->isMainThreadContext());
 
   maybecx->onOverRecursed();
 }

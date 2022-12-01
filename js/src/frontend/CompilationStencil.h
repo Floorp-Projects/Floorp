@@ -1155,7 +1155,7 @@ struct CompilationStencil {
       CompilationGCOutput& gcOutput);
 
   [[nodiscard]] static bool prepareForInstantiate(
-      ErrorContext* ec, CompilationAtomCache& atomCache,
+      JSContext* cx, CompilationAtomCache& atomCache,
       const CompilationStencil& stencil, CompilationGCOutput& gcOutput);
 
   [[nodiscard]] static bool instantiateStencils(
@@ -1408,8 +1408,8 @@ struct MOZ_RAII CompilationState : public ExtensibleCompilationStencil {
 
   // End of fields.
 
-  CompilationState(JSContext* cx, ErrorContext* ec,
-                   LifoAllocScope& parserAllocScope, CompilationInput& input);
+  CompilationState(JSContext* cx, LifoAllocScope& parserAllocScope,
+                   CompilationInput& input);
 
   bool init(JSContext* cx, ErrorContext* ec, ScopeBindingCache* scopeCache,
             InheritThis inheritThis = InheritThis::No,
@@ -1464,7 +1464,7 @@ struct MOZ_RAII CompilationState : public ExtensibleCompilationStencil {
 
   bool appendScriptStencilAndData(ErrorContext* ec);
 
-  bool appendGCThings(ErrorContext* ec, ScriptIndex scriptIndex,
+  bool appendGCThings(JSContext* cx, ErrorContext* ec, ScriptIndex scriptIndex,
                       mozilla::Span<const TaggedScriptThingIndex> things);
 };
 

@@ -12,7 +12,6 @@
 #include "mozilla/Utf8.h"
 
 #include "js/Vector.h"
-#include "vm/ErrorContext.h"
 #include "vm/StringType.h"
 
 namespace js {
@@ -57,8 +56,8 @@ class StringBufferAllocPolicy {
   const arena_id_t& arenaId_;
 
  public:
-  StringBufferAllocPolicy(ErrorContext* ec, const arena_id_t& arenaId)
-      : impl_(ec), arenaId_(arenaId) {}
+  StringBufferAllocPolicy(JSContext* cx, const arena_id_t& arenaId)
+      : impl_(cx), arenaId_(arenaId) {}
 
   template <typename T>
   T* maybe_pod_malloc(size_t numElems) {
@@ -122,7 +121,6 @@ class StringBuffer {
   using TwoByteCharBuffer = BufferType<char16_t>;
 
   JSContext* cx_;
-  ErrorContext* ec_;
   const arena_id_t& arenaId_;
 
   /*
@@ -181,10 +179,10 @@ class StringBuffer {
   JSLinearString* finishStringInternal(JSContext* cx);
 
  public:
-  explicit StringBuffer(JSContext* cx, ErrorContext* ec,
+  explicit StringBuffer(JSContext* cx,
                         const arena_id_t& arenaId = js::MallocArena)
-      : cx_(cx), ec_(ec), arenaId_(arenaId), reserved_(0) {
-    cb.construct<Latin1CharBuffer>(StringBufferAllocPolicy{ec_, arenaId_});
+      : cx_(cx), arenaId_(arenaId), reserved_(0) {
+    cb.construct<Latin1CharBuffer>(StringBufferAllocPolicy{cx_, arenaId_});
   }
 
   void clear() {
@@ -366,52 +364,14 @@ class StringBuffer {
   char16_t* stealChars();
 };
 
-/*
- * String builder that requires explicitly reporting any pending exception
- * before leaving the scope.
- *
- * Before an instance of this class leaves the scope, you must call one of these
- * 'completion' functions:
- *
- * - failure() if there are exceptions to report
- * - ok() if there are no exceptions to report
- *
- * Additional errors from operating on the StringBuffer after calling these
- * functions won't be reported unless you call one of the 'completion' functions
- * again.
- */
 class JSStringBuilder : public StringBuffer {
-  OffThreadErrorContext ec_;
-#ifdef DEBUG
-  bool handled_ = false;
-#endif
-
  public:
   explicit JSStringBuilder(JSContext* cx)
-      : StringBuffer(cx, &ec_, js::StringBufferArena) {
-    ec_.setCurrentJSContext(cx);
-  }
-
-  ~JSStringBuilder() { MOZ_ASSERT(handled_); }
-
-  void failure() {
-#ifdef DEBUG
-    handled_ = true;
-#endif /* DEBUG */
-    ec_.convertToRuntimeError(cx_);
-  }
-
-  void ok() {
-#ifdef DEBUG
-    handled_ = true;
-#endif /* DEBUG */
-  }
+      : StringBuffer(cx, js::StringBufferArena) {}
 
   /*
    * Creates a string from the characters in this buffer, then (regardless
    * whether string creation succeeded or failed) empties the buffer.
-   *
-   * Returns nullptr if string creation failed.
    */
   JSLinearString* finishString();
 };
