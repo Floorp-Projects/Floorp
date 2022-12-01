@@ -717,20 +717,28 @@ export class FeatureCallout {
    * @param {Event} event Triggering event
    */
   _handlePageEventAction(action, event) {
+    const page = this.doc.location.href;
+    const message_id = this.config?.id.toUpperCase();
+    const source = this._getUniqueElementIdentifier(event.target);
     this.win.AWSendEventTelemetry?.({
       event: "PAGE_EVENT",
       event_context: {
         action: action.type ?? (action.dismiss ? "DISMISS" : ""),
         reason: event.type?.toUpperCase(),
-        source: this._getUniqueElementIdentifier(event.target),
-        page: this.doc.location.href,
+        source,
+        page,
       },
-      message_id: this.config?.id.toUpperCase(),
+      message_id,
     });
     if (action.type) {
       this.win.AWSendToParent("SPECIAL_ACTION", action);
     }
     if (action.dismiss) {
+      this.win.AWSendEventTelemetry?.({
+        event: "DISMISS",
+        event_context: { source: `PAGE_EVENT:${source}`, page },
+        message_id,
+      });
       this._endTour();
     }
   }

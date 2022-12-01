@@ -311,11 +311,14 @@ export class WelcomeScreen extends React.PureComponent {
       return;
     }
     // Send telemetry before waiting on actions
-    AboutWelcomeUtils.sendActionTelemetry(
-      props.messageId,
-      event.currentTarget.value,
-      event.name
-    );
+    AboutWelcomeUtils.sendActionTelemetry(props.messageId, value, event.name);
+
+    // Send additional telemetry if a messaging surface like feature callout is
+    // dismissed via the dismiss button. Other causes of dismissal will be
+    // handled separately by the messaging surface's own code.
+    if (value === "dismiss_button" && !event.name) {
+      AboutWelcomeUtils.sendDismissTelemetry(props.messageId, value);
+    }
 
     let { action } = targetContent;
 

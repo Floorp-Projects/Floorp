@@ -1213,7 +1213,7 @@ These record the telemetry metrics during the Firefox onboarding experience.
 
 ## Feature Callout pings
 
-Most interactions and impressions in Feature Callouts are handled by the Onboarding pings above, but there is one interaction unique to Feature Callouts.
+Most interactions and impressions in Feature Callouts are handled by the Onboarding pings above, but since Feature Callouts are inserted into other content, they have some additional capabilities.
 
 ### Page event ping for Feature Callouts
 
@@ -1229,10 +1229,32 @@ Feature Callout messages can include properties to listen for specific events on
   "event_context": {
     "action": "DISMISS",
     "reason": "CLICK",
-    "source": "button.primary#colorways-button",
+    "source": "button.primary#some-button",
     "page": "about:firefoxview"
   },
-  "message_id": "FIREFOX_VIEW_COLORWAYS_REMINDER",
+  "message_id": "FIREFOX_VIEW_TAB_PICKUP_REMINDER",
+  "addon_version": "20221013100028",
+  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
+  "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
+}
+```
+
+### Feature Callout dismissal
+
+A Feature Callout can be dismissed by clicking its dismiss button directly. With a page event listener, it can also be configured to dismiss the callout when an event in the page happens, such as clicking the target of the callout (see the page event ping above).
+
+```js
+{
+  "experiments": {},
+  "locale": "en-US",
+  "version": "108.0a1",
+  "release_channel": "default",
+  "event": "DISMISS",
+  "event_context": {
+    "source": ["dismiss_button", "PAGE_EVENT:button.primary#some-button"],
+    "page": ["about:firefoxview", "chrome://browser/content/browser.xhtml"]
+  },
+  "message_id": "some_feature_callout_id",
   "addon_version": "20221013100028",
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
