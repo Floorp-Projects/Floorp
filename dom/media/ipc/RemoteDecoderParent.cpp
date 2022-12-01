@@ -14,11 +14,12 @@ RemoteDecoderParent::RemoteDecoderParent(
     RemoteDecoderManagerParent* aParent,
     const CreateDecoderParams::OptionSet& aOptions,
     nsISerialEventTarget* aManagerThread, TaskQueue* aDecodeTaskQueue,
-    Maybe<uint64_t> aMediaEngineId)
+    const Maybe<uint64_t>& aMediaEngineId, Maybe<TrackingId> aTrackingId)
     : ShmemRecycleAllocator(this),
       mParent(aParent),
       mOptions(aOptions),
       mDecodeTaskQueue(aDecodeTaskQueue),
+      mTrackingId(aTrackingId),
       mMediaEngineId(aMediaEngineId),
       mManagerThread(aManagerThread) {
   MOZ_COUNT_CTOR(RemoteDecoderParent);

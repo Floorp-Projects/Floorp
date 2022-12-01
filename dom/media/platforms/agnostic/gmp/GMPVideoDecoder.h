@@ -25,6 +25,7 @@ struct MOZ_STACK_CLASS GMPVideoDecoderParams {
   layers::ImageContainer* mImageContainer;
   GMPCrashHelper* mCrashHelper;
   layers::KnowsCompositor* mKnowsCompositor;
+  const Maybe<TrackingId> mTrackingId;
 };
 
 DDLoggedTypeDeclNameAndBase(GMPVideoDecoder, MediaDataDecoder);
@@ -92,6 +93,7 @@ class GMPVideoDecoder : public MediaDataDecoder,
   RefPtr<layers::ImageContainer> mImageContainer;
   RefPtr<layers::KnowsCompositor> mKnowsCompositor;
   PerformanceRecorderMulti<DecodeStage> mPerformanceRecorder;
+  const Maybe<TrackingId> mTrackingId;
 
   MozPromiseHolder<DecodePromise> mDecodePromise;
   MozPromiseHolder<DecodePromise> mDrainPromise;

@@ -7,7 +7,10 @@
 #ifndef mozilla_dom_media_MediaIPCUtils_h
 #define mozilla_dom_media_MediaIPCUtils_h
 
+#include <type_traits>
+
 #include "DecoderDoctorDiagnostics.h"
+#include "PerformanceRecorder.h"
 #include "PlatformDecoderModule.h"
 #include "ipc/EnumSerializer.h"
 #include "mozilla/EnumSet.h"
@@ -316,6 +319,30 @@ struct ParamTraits<mozilla::DecoderDoctorEvent> {
     }
     return false;
   };
+};
+
+template <>
+struct ParamTraits<mozilla::TrackingId::Source>
+    : public ContiguousEnumSerializer<
+          mozilla::TrackingId::Source,
+          mozilla::TrackingId::Source::Unimplemented,
+          mozilla::TrackingId::Source::LAST> {};
+
+template <>
+struct ParamTraits<mozilla::TrackingId> {
+  typedef mozilla::TrackingId paramType;
+
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mSource);
+    WriteParam(aWriter, aParam.mProcId);
+    WriteParam(aWriter, aParam.mUniqueInProcId);
+  }
+
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->mSource) &&
+           ReadParam(aReader, &aResult->mProcId) &&
+           ReadParam(aReader, &aResult->mUniqueInProcId);
+  }
 };
 
 }  // namespace IPC

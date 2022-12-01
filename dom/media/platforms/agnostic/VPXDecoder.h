@@ -197,6 +197,7 @@ class VPXDecoder : public MediaDataDecoder,
 
   const Codec mCodec;
   const bool mLowLatency;
+  const Maybe<TrackingId> mTrackingId;
 };
 
 }  // namespace mozilla

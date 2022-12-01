@@ -56,8 +56,8 @@ MediaResult RemoteAudioDecoderChild::InitIPDL(
   }
 
   mIPDLSelfRef = this;
-  Unused << manager->SendPRemoteDecoderConstructor(this, aAudioInfo, aOptions,
-                                                   Nothing(), aMediaEngineId);
+  Unused << manager->SendPRemoteDecoderConstructor(
+      this, aAudioInfo, aOptions, Nothing(), aMediaEngineId, Nothing());
   return NS_OK;
 }
 
@@ -67,14 +67,14 @@ RemoteAudioDecoderParent::RemoteAudioDecoderParent(
     nsISerialEventTarget* aManagerThread, TaskQueue* aDecodeTaskQueue,
     Maybe<uint64_t> aMediaEngineId)
     : RemoteDecoderParent(aParent, aOptions, aManagerThread, aDecodeTaskQueue,
-                          aMediaEngineId),
+                          aMediaEngineId, Nothing()),
       mAudioInfo(aAudioInfo) {}
 
 IPCResult RemoteAudioDecoderParent::RecvConstruct(
     ConstructResolver&& aResolver) {
-  auto params =
-      CreateDecoderParams{mAudioInfo, mOptions,
-                          CreateDecoderParams::NoWrapper(true), mMediaEngineId};
+  auto params = CreateDecoderParams{mAudioInfo, mOptions,
+                                    CreateDecoderParams::NoWrapper(true),
+                                    mMediaEngineId, mTrackingId};
 
   mParent->EnsurePDMFactory().CreateDecoder(params)->Then(
       GetCurrentSerialEventTarget(), __func__,

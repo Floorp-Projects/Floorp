@@ -28,7 +28,7 @@ WebrtcVideoEncoder* MediaDataCodec::CreateEncoder(
 
 /* static */
 WebrtcVideoDecoder* MediaDataCodec::CreateDecoder(
-    webrtc::VideoCodecType aCodecType) {
+    webrtc::VideoCodecType aCodecType, TrackingId aTrackingId) {
   switch (aCodecType) {
     case webrtc::VideoCodecType::kVideoCodecVP8:
     case webrtc::VideoCodecType::kVideoCodecVP9:
@@ -64,7 +64,7 @@ WebrtcVideoDecoder* MediaDataCodec::CreateDecoder(
     return nullptr;
   }
 
-  return new WebrtcMediaDataDecoder(codec);
+  return new WebrtcMediaDataDecoder(codec, aTrackingId);
 }
 
 }  // namespace mozilla

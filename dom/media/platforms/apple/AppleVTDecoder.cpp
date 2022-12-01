@@ -37,7 +37,8 @@ using namespace layers;
 AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig,
                                layers::ImageContainer* aImageContainer,
                                CreateDecoderParams::OptionSet aOptions,
-                               layers::KnowsCompositor* aKnowsCompositor)
+                               layers::KnowsCompositor* aKnowsCompositor,
+                               Maybe<TrackingId> aTrackingId)
     : mExtraData(aConfig.mExtraData),
       mPictureWidth(aConfig.mImage.width),
       mPictureHeight(aConfig.mImage.height),
@@ -76,6 +77,7 @@ AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig,
                              layers::WebRenderCompositor::SOFTWARE)
 #endif
       ,
+      mTrackingId(aTrackingId),
       mIsFlushing(false),
       mMonitor("AppleVTDecoder"),
       mPromise(&mMonitor),  // To ensure our PromiseHolder is only ever accessed
@@ -162,23 +164,25 @@ void AppleVTDecoder::ProcessDecode(MediaRawData* aSample) {
     return;
   }
 
-  MediaInfoFlag flag = MediaInfoFlag::None;
-  flag |= (aSample->mKeyframe ? MediaInfoFlag::KeyFrame
-                              : MediaInfoFlag::NonKeyFrame);
-  flag |= (mIsHardwareAccelerated ? MediaInfoFlag::HardwareDecoding
-                                  : MediaInfoFlag::SoftwareDecoding);
-  switch (mStreamType) {
-    case StreamType::H264:
-      flag |= MediaInfoFlag::VIDEO_H264;
-      break;
-    case StreamType::VP9:
-      flag |= MediaInfoFlag::VIDEO_VP9;
-      break;
-    default:
-      break;
-  }
-  mPerformanceRecorder.Start(aSample->mTimecode.ToMicroseconds(),
-                             "AppleVTDecoder"_ns, flag);
+  mTrackingId.apply([&](const auto& aId) {
+    MediaInfoFlag flag = MediaInfoFlag::None;
+    flag |= (aSample->mKeyframe ? MediaInfoFlag::KeyFrame
+                                : MediaInfoFlag::NonKeyFrame);
+    flag |= (mIsHardwareAccelerated ? MediaInfoFlag::HardwareDecoding
+                                    : MediaInfoFlag::SoftwareDecoding);
+    switch (mStreamType) {
+      case StreamType::H264:
+        flag |= MediaInfoFlag::VIDEO_H264;
+        break;
+      case StreamType::VP9:
+        flag |= MediaInfoFlag::VIDEO_VP9;
+        break;
+      default:
+        break;
+    }
+    mPerformanceRecorder.Start(aSample->mTimecode.ToMicroseconds(),
+                               "AppleVTDecoder"_ns, aId, flag);
+  });
 
   AutoCFRelease<CMBlockBufferRef> block = nullptr;
   AutoCFRelease<CMSampleBufferRef> sample = nullptr;

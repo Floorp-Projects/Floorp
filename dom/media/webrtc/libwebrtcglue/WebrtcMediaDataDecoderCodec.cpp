@@ -13,7 +13,8 @@
 
 namespace mozilla {
 
-WebrtcMediaDataDecoder::WebrtcMediaDataDecoder(nsACString& aCodecMimeType)
+WebrtcMediaDataDecoder::WebrtcMediaDataDecoder(nsACString& aCodecMimeType,
+                                               TrackingId aTrackingId)
     : mThreadPool(GetMediaThreadPool(MediaThreadType::SUPERVISOR)),
       mTaskQueue(TaskQueue::Create(do_AddRef(mThreadPool),
                                    "WebrtcMediaDataDecoder::mTaskQueue")),
@@ -21,7 +22,8 @@ WebrtcMediaDataDecoder::WebrtcMediaDataDecoder(nsACString& aCodecMimeType)
           layers::ImageContainer::ASYNCHRONOUS)),
       mFactory(new PDMFactory()),
       mTrackType(TrackInfo::kUndefinedTrack),
-      mCodecType(aCodecMimeType) {}
+      mCodecType(aCodecMimeType),
+      mTrackingId(std::move(aTrackingId)) {}
 
 WebrtcMediaDataDecoder::~WebrtcMediaDataDecoder() {}
 
@@ -163,7 +165,8 @@ int32_t WebrtcMediaDataDecoder::CreateDecoder() {
                                       ? CreateDecoderParams::Option::
                                             HardwareDecoderNotAllowed
                                       : CreateDecoderParams::Option::Default),
-                              mTrackType, mImageContainer, knowsCompositor})
+                              mTrackType, mImageContainer, knowsCompositor,
+                              Some(mTrackingId)})
                          ->Then(
                              tq, __func__,
                              [&](RefPtr<MediaDataDecoder>&& aDecoder) {

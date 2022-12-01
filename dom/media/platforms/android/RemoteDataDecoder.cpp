@@ -26,6 +26,7 @@
 #include "mozilla/java/SampleBufferWrappers.h"
 #include "mozilla/java/SampleWrappers.h"
 #include "mozilla/java/SurfaceAllocatorWrappers.h"
+#include "mozilla/Maybe.h"
 #include "nsPromiseFlatString.h"
 #include "nsThreadUtils.h"
 #include "prlog.h"
@@ -156,10 +157,11 @@ class RemoteVideoDecoder : public RemoteDataDecoder {
 
   RemoteVideoDecoder(const VideoInfo& aConfig,
                      java::sdk::MediaFormat::Param aFormat,
-                     const nsString& aDrmStubId)
+                     const nsString& aDrmStubId, Maybe<TrackingId> aTrackingId)
       : RemoteDataDecoder(MediaData::Type::VIDEO_DATA, aConfig.mMimeType,
                           aFormat, aDrmStubId),
-        mConfig(aConfig) {}
+        mConfig(aConfig),
+        mTrackingId(std::move(aTrackingId)) {}
 
   ~RemoteVideoDecoder() {
     if (mSurface) {
@@ -253,11 +255,13 @@ class RemoteVideoDecoder : public RemoteDataDecoder {
         aSample->mTrackInfo ? aSample->mTrackInfo->GetAsVideoInfo() : &mConfig;
     MOZ_ASSERT(config);
 
-    MediaInfoFlag flag = mMediaInfoFlag;
-    flag |= (aSample->mKeyframe ? MediaInfoFlag::KeyFrame
-                                : MediaInfoFlag::NonKeyFrame);
-    mPerformanceRecorder.Start(aSample->mTime.ToMicroseconds(),
-                               "AndroidDecoder"_ns, flag);
+    mTrackingId.apply([&](const auto& aId) {
+      MediaInfoFlag flag = mMediaInfoFlag;
+      flag |= (aSample->mKeyframe ? MediaInfoFlag::KeyFrame
+                                  : MediaInfoFlag::NonKeyFrame);
+      mPerformanceRecorder.Start(aSample->mTime.ToMicroseconds(),
+                                 "AndroidDecoder"_ns, aId, flag);
+    });
 
     InputInfo info(aSample->mDuration.ToMicroseconds(), config->mImage,
                    config->mDisplay);
@@ -535,6 +539,9 @@ class RemoteVideoDecoder : public RemoteDataDecoder {
   Maybe<int32_t> mColorFormat;
   Maybe<int32_t> mColorRange;
   Maybe<int32_t> mColorSpace;
+  // Only accessed on mThread.
+  // Tracking id for the performance recorder.
+  const Maybe<TrackingId> mTrackingId;
   // Can be accessed on any thread, but only written during init.
   // Pre-filled decode info used by the performance recorder.
   MediaInfoFlag mMediaInfoFlag;
@@ -802,7 +809,7 @@ already_AddRefed<MediaDataDecoder> RemoteDataDecoder::CreateVideoDecoder(
                     nullptr);
 
   RefPtr<MediaDataDecoder> decoder =
-      new RemoteVideoDecoder(config, format, aDrmStubId);
+      new RemoteVideoDecoder(config, format, aDrmStubId, aParams.mTrackingId);
   if (aProxy) {
     decoder = new EMEMediaDataDecoderProxy(aParams, decoder.forget(), aProxy);
   }

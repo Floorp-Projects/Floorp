@@ -359,7 +359,7 @@ class WebrtcVideoEncoderProxy : public WebrtcVideoEncoder {
 
 class WebrtcGmpVideoDecoder : public GMPVideoDecoderCallbackProxy {
  public:
-  explicit WebrtcGmpVideoDecoder(std::string aPCHandle);
+  WebrtcGmpVideoDecoder(std::string aPCHandle, TrackingId aTrackingId);
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebrtcGmpVideoDecoder);
 
   // Implement VideoEncoder interface, sort of.
@@ -447,6 +447,7 @@ class WebrtcGmpVideoDecoder : public GMPVideoDecoderCallbackProxy {
   Maybe<uint64_t> mCachedPluginId;
   Atomic<GMPErr, ReleaseAcquire> mDecoderStatus;
   const std::string mPCHandle;
+  const TrackingId mTrackingId;
   PerformanceRecorderMulti<DecodeStage> mPerformanceRecorder;
 
   MediaEventProducer<uint64_t> mInitPluginEvent;
@@ -460,8 +461,10 @@ class WebrtcGmpVideoDecoder : public GMPVideoDecoderCallbackProxy {
 // the "real" encoder.
 class WebrtcVideoDecoderProxy : public WebrtcVideoDecoder {
  public:
-  explicit WebrtcVideoDecoderProxy(std::string aPCHandle)
-      : mDecoderImpl(new WebrtcGmpVideoDecoder(std::move(aPCHandle))) {}
+  explicit WebrtcVideoDecoderProxy(std::string aPCHandle,
+                                   TrackingId aTrackingId)
+      : mDecoderImpl(new WebrtcGmpVideoDecoder(std::move(aPCHandle),
+                                               std::move(aTrackingId))) {}
 
   virtual ~WebrtcVideoDecoderProxy() {
     RegisterDecodeCompleteCallback(nullptr);

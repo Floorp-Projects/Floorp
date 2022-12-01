@@ -11,6 +11,7 @@
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TaskQueue.h"
 #include "nsThreadUtils.h"
+#include "PerformanceRecorder.h"
 #include "VideoUtils.h"
 
 #undef LOG
@@ -63,7 +64,8 @@ DAV1DDecoder::DAV1DDecoder(const CreateDecoderParams& aParams)
           GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
           "Dav1dDecoder")),
       mImageContainer(aParams.mImageContainer),
-      mImageAllocator(aParams.mKnowsCompositor) {}
+      mImageAllocator(aParams.mKnowsCompositor),
+      mTrackingId(aParams.mTrackingId) {}
 
 RefPtr<MediaDataDecoder::InitPromise> DAV1DDecoder::Init() {
   Dav1dSettings settings;
@@ -140,8 +142,10 @@ RefPtr<MediaDataDecoder::DecodePromise> DAV1DDecoder::InvokeDecode(
                               : MediaInfoFlag::NonKeyFrame);
   flag |= MediaInfoFlag::SoftwareDecoding;
   flag |= MediaInfoFlag::VIDEO_AV1;
-  mPerformanceRecorder.Start(aSample->mTimecode.ToMicroseconds(),
-                             "DAV1DDecoder"_ns, flag);
+  mTrackingId.apply([&](const auto& aId) {
+    mPerformanceRecorder.Start(aSample->mTimecode.ToMicroseconds(),
+                               "DAV1DDecoder"_ns, aId, flag);
+  });
 
   // Add the buffer to the hashtable in order to increase
   // the ref counter and keep it alive. When dav1d does not

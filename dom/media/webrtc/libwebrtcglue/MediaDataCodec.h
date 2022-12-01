@@ -24,7 +24,8 @@ class MediaDataCodec {
    * Create decoder object for codec type |aCodecType|. Return |nullptr| when
    * failed.
    */
-  static WebrtcVideoDecoder* CreateDecoder(webrtc::VideoCodecType aCodecType);
+  static WebrtcVideoDecoder* CreateDecoder(webrtc::VideoCodecType aCodecType,
+                                           TrackingId aTrackingId);
 };
 }  // namespace mozilla
 

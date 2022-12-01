@@ -52,6 +52,7 @@ class TheoraDecoder : public MediaDataDecoder,
   int mPacketCount;
 
   const VideoInfo mInfo;
+  const Maybe<TrackingId> mTrackingId;
 };
 
 }  // namespace mozilla

@@ -12,8 +12,10 @@ WebrtcVideoEncoder* GmpVideoCodec::CreateEncoder(std::string aPCHandle) {
       new WebrtcGmpVideoEncoder(std::move(aPCHandle)));
 }
 
-WebrtcVideoDecoder* GmpVideoCodec::CreateDecoder(std::string aPCHandle) {
-  return new WebrtcVideoDecoderProxy(std::move(aPCHandle));
+WebrtcVideoDecoder* GmpVideoCodec::CreateDecoder(std::string aPCHandle,
+                                                 TrackingId aTrackingId) {
+  return new WebrtcVideoDecoderProxy(std::move(aPCHandle),
+                                     std::move(aTrackingId));
 }
 
 }  // namespace mozilla

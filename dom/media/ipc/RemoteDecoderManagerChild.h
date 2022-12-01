@@ -116,7 +116,8 @@ class RemoteDecoderManagerChild final
       const RemoteDecoderInfoIPDL& aRemoteDecoderInfo,
       const CreateDecoderParams::OptionSet& aOptions,
       const Maybe<layers::TextureFactoryIdentifier>& aIdentifier,
-      const Maybe<uint64_t>& aMediaEngineId);
+      const Maybe<uint64_t>& aMediaEngineId,
+      const Maybe<TrackingId>& aTrackingId);
   bool DeallocPRemoteDecoderChild(PRemoteDecoderChild* actor);
 
   PMFMediaEngineChild* AllocPMFMediaEngineChild();

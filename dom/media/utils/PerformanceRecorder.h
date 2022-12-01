@@ -177,8 +177,10 @@ class DecodeStage {
     ANDROID_SURFACE,
   };
 
-  DecodeStage(nsCString aSource, MediaInfoFlag aFlag)
-      : mSource(std::move(aSource)), mFlag(aFlag) {}
+  DecodeStage(nsCString aSource, TrackingId aTrackingId, MediaInfoFlag aFlag)
+      : mSource(std::move(aSource)),
+        mTrackingId(std::move(aTrackingId)),
+        mFlag(aFlag) {}
   ProfilerString8View Name() const;
   const MarkerCategory& Category() const {
     return baseprofiler::category::MEDIA_PLAYBACK;
@@ -201,6 +203,9 @@ class DecodeStage {
 
   // The name of the source that performs this stage.
   nsCString mSource;
+  // A unique id identifying the source of the video frame this stage is
+  // performed for.
+  TrackingId mTrackingId;
   MediaInfoFlag mFlag;
   Maybe<int> mWidth;
   Maybe<int> mHeight;

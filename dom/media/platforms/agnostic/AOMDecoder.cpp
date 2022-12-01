@@ -90,7 +90,8 @@ AOMDecoder::AOMDecoder(const CreateDecoderParams& aParams)
     : mImageContainer(aParams.mImageContainer),
       mTaskQueue(TaskQueue::Create(
           GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER), "AOMDecoder")),
-      mInfo(aParams.VideoConfig()) {
+      mInfo(aParams.VideoConfig()),
+      mTrackingId(aParams.mTrackingId) {
   PodZero(&mCodec);
 }
 
@@ -144,8 +145,10 @@ RefPtr<MediaDataDecoder::DecodePromise> AOMDecoder::ProcessDecode(
   flag |= MediaInfoFlag::SoftwareDecoding;
   flag |= MediaInfoFlag::VIDEO_AV1;
 
-  mPerformanceRecorder.Start(aSample->mTimecode.ToMicroseconds(),
-                             "AOMDecoder"_ns, flag);
+  mTrackingId.apply([&](const auto& aId) {
+    mPerformanceRecorder.Start(aSample->mTimecode.ToMicroseconds(),
+                               "AOMDecoder"_ns, aId, flag);
+  });
 
   if (aom_codec_err_t r = aom_codec_decode(&mCodec, aSample->Data(),
                                            aSample->Size(), nullptr)) {

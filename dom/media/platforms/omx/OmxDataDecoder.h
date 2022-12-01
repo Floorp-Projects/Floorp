@@ -63,7 +63,8 @@ class OmxDataDecoder : public MediaDataDecoder,
 
  public:
   OmxDataDecoder(const TrackInfo& aTrackInfo,
-                 layers::ImageContainer* aImageContainer);
+                 layers::ImageContainer* aImageContainer,
+                 Maybe<TrackingId> aTrackingId);
 
   RefPtr<InitPromise> Init() override;
   RefPtr<DecodePromise> Decode(MediaRawData* aSample) override;
@@ -200,6 +201,8 @@ class OmxDataDecoder : public MediaDataDecoder,
   BUFFERLIST mOutPortBuffers;
 
   RefPtr<MediaDataHelper> mMediaDataHelper;
+
+  const Maybe<TrackingId> mTrackingId;
 
   // Accessed on Omx TaskQueue
   PerformanceRecorderMulti<DecodeStage> mPerformanceRecorder;

@@ -34,14 +34,15 @@ OmxDecoderModule* OmxDecoderModule::Create() {
 
 already_AddRefed<MediaDataDecoder> OmxDecoderModule::CreateVideoDecoder(
     const CreateDecoderParams& aParams) {
-  RefPtr<OmxDataDecoder> decoder =
-      new OmxDataDecoder(aParams.mConfig, aParams.mImageContainer);
+  RefPtr<OmxDataDecoder> decoder = new OmxDataDecoder(
+      aParams.mConfig, aParams.mImageContainer, aParams.mTrackingId);
   return decoder.forget();
 }
 
 already_AddRefed<MediaDataDecoder> OmxDecoderModule::CreateAudioDecoder(
     const CreateDecoderParams& aParams) {
-  RefPtr<OmxDataDecoder> decoder = new OmxDataDecoder(aParams.mConfig, nullptr);
+  RefPtr<OmxDataDecoder> decoder =
+      new OmxDataDecoder(aParams.mConfig, nullptr, aParams.mTrackingId);
   return decoder.forget();
 }
 

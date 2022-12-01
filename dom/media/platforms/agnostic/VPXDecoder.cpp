@@ -78,7 +78,8 @@ VPXDecoder::VPXDecoder(const CreateDecoderParams& aParams)
       mInfo(aParams.VideoConfig()),
       mCodec(MimeTypeToCodec(aParams.VideoConfig().mMimeType)),
       mLowLatency(
-          aParams.mOptions.contains(CreateDecoderParams::Option::LowLatency)) {
+          aParams.mOptions.contains(CreateDecoderParams::Option::LowLatency)),
+      mTrackingId(aParams.mTrackingId) {
   MOZ_COUNT_CTOR(VPXDecoder);
   PodZero(&mVPX);
   PodZero(&mVPXAlpha);
@@ -135,7 +136,9 @@ RefPtr<MediaDataDecoder::DecodePromise> VPXDecoder::ProcessDecode(
       break;
   }
   flag |= MediaInfoFlag::VIDEO_THEORA;
-  PerformanceRecorder<DecodeStage> rec("VPXDecoder"_ns, flag);
+  auto rec = mTrackingId.map([&](const auto& aId) {
+    return PerformanceRecorder<DecodeStage>("VPXDecoder"_ns, aId, flag);
+  });
 
   if (vpx_codec_err_t r = vpx_codec_decode(&mVPX, aSample->Data(),
                                            aSample->Size(), nullptr, 0)) {
@@ -248,23 +251,25 @@ RefPtr<MediaDataDecoder::DecodePromise> VPXDecoder::ProcessDecode(
           MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__), __func__);
     }
 
-    rec.Record([&](DecodeStage& aStage) {
-      aStage.SetResolution(static_cast<int>(img->d_w),
-                           static_cast<int>(img->d_h));
-      auto format = [&]() -> Maybe<DecodeStage::ImageFormat> {
-        switch (img->fmt) {
-          case VPX_IMG_FMT_I420:
-            return Some(DecodeStage::YUV420P);
-          case VPX_IMG_FMT_I444:
-            return Some(DecodeStage::YUV444P);
-          default:
-            return Nothing();
-        }
-      }();
-      format.apply([&](auto& aFmt) { aStage.SetImageFormat(aFmt); });
-      aStage.SetYUVColorSpace(b.mYUVColorSpace);
-      aStage.SetColorRange(b.mColorRange);
-      aStage.SetColorDepth(b.mColorDepth);
+    rec.apply([&](auto& aRec) {
+      return aRec.Record([&](DecodeStage& aStage) {
+        aStage.SetResolution(static_cast<int>(img->d_w),
+                             static_cast<int>(img->d_h));
+        auto format = [&]() -> Maybe<DecodeStage::ImageFormat> {
+          switch (img->fmt) {
+            case VPX_IMG_FMT_I420:
+              return Some(DecodeStage::YUV420P);
+            case VPX_IMG_FMT_I444:
+              return Some(DecodeStage::YUV444P);
+            default:
+              return Nothing();
+          }
+        }();
+        format.apply([&](auto& aFmt) { aStage.SetImageFormat(aFmt); });
+        aStage.SetYUVColorSpace(b.mYUVColorSpace);
+        aStage.SetColorRange(b.mColorRange);
+        aStage.SetColorDepth(b.mColorDepth);
+      });
     });
 
     results.AppendElement(std::move(v));

@@ -66,6 +66,7 @@ struct MOZ_STACK_CLASS MediaFormatReaderInit {
   already_AddRefed<GMPCrashHelper> mCrashHelper;
   // Used in bug 1393399 for temporary telemetry.
   MediaDecoderOwnerID mMediaDecoderOwnerID = nullptr;
+  Maybe<TrackingId> mTrackingId;
 };
 
 DDLoggedTypeDeclName(MediaFormatReader);
@@ -866,6 +867,8 @@ class MediaFormatReader final
 
   // Only be used on Windows when the media engine playback is enabled.
   Maybe<uint64_t> mMediaEngineId;
+
+  const Maybe<TrackingId> mTrackingId;
 };
 
 }  // namespace mozilla

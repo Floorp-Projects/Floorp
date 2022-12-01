@@ -35,7 +35,8 @@ GMPVideoDecoderParams::GMPVideoDecoderParams(const CreateDecoderParams& aParams)
     : mConfig(aParams.VideoConfig()),
       mImageContainer(aParams.mImageContainer),
       mCrashHelper(aParams.mCrashHelper),
-      mKnowsCompositor(aParams.mKnowsCompositor) {}
+      mKnowsCompositor(aParams.mKnowsCompositor),
+      mTrackingId(aParams.mTrackingId) {}
 
 void GMPVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame) {
   GMPUniquePtr<GMPVideoi420Frame> decodedFrame(aDecodedFrame);
@@ -137,7 +138,8 @@ GMPVideoDecoder::GMPVideoDecoder(const GMPVideoDecoderParams& aParams)
       mConvertNALUnitLengths(false),
       mCrashHelper(aParams.mCrashHelper),
       mImageContainer(aParams.mImageContainer),
-      mKnowsCompositor(aParams.mKnowsCompositor) {}
+      mKnowsCompositor(aParams.mKnowsCompositor),
+      mTrackingId(aParams.mTrackingId) {}
 
 void GMPVideoDecoder::InitTags(nsTArray<nsCString>& aTags) {
   if (MP4Decoder::IsH264(mConfig.mMimeType)) {
@@ -294,21 +296,23 @@ RefPtr<MediaDataDecoder::DecodePromise> GMPVideoDecoder::Decode(
         __func__);
   }
 
-  MediaInfoFlag flag = MediaInfoFlag::None;
-  flag |= (aSample->mKeyframe ? MediaInfoFlag::KeyFrame
-                              : MediaInfoFlag::NonKeyFrame);
-  if (mGMP->GetDisplayName().EqualsLiteral("gmpopenh264")) {
-    flag |= MediaInfoFlag::SoftwareDecoding;
+  if (mTrackingId) {
+    MediaInfoFlag flag = MediaInfoFlag::None;
+    flag |= (aSample->mKeyframe ? MediaInfoFlag::KeyFrame
+                                : MediaInfoFlag::NonKeyFrame);
+    if (mGMP->GetDisplayName().EqualsLiteral("gmpopenh264")) {
+      flag |= MediaInfoFlag::SoftwareDecoding;
+    }
+    if (MP4Decoder::IsH264(mConfig.mMimeType)) {
+      flag |= MediaInfoFlag::VIDEO_H264;
+    } else if (VPXDecoder::IsVP8(mConfig.mMimeType)) {
+      flag |= MediaInfoFlag::VIDEO_VP8;
+    } else if (VPXDecoder::IsVP9(mConfig.mMimeType)) {
+      flag |= MediaInfoFlag::VIDEO_VP9;
+    }
+    mPerformanceRecorder.Start(aSample->mTime.ToMicroseconds(),
+                               "GMPVideoDecoder"_ns, *mTrackingId, flag);
   }
-  if (MP4Decoder::IsH264(mConfig.mMimeType)) {
-    flag |= MediaInfoFlag::VIDEO_H264;
-  } else if (VPXDecoder::IsVP8(mConfig.mMimeType)) {
-    flag |= MediaInfoFlag::VIDEO_VP8;
-  } else if (VPXDecoder::IsVP9(mConfig.mMimeType)) {
-    flag |= MediaInfoFlag::VIDEO_VP9;
-  }
-  mPerformanceRecorder.Start(aSample->mTime.ToMicroseconds(),
-                             "GMPVideoDecoder"_ns, flag);
 
   mLastStreamOffset = sample->mOffset;
 
