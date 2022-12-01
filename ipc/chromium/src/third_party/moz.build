@@ -38,8 +38,8 @@ UNIFIED_SOURCES += [
 ]
 
 SOURCES += [
-    'libevent/bufferevent_pair.c', # conflicting types errors
-    'libevent/evrpc.c',            # conflicting TAILQ_ENTRY definition
+    'libevent/bufferevent_pair.c',       # conflicting types errors
+    # 'libevent/evrpc.c', # Unused file. # conflicting TAILQ_ENTRY definition
 ]
 
 if os_macosx or os_bsd:
