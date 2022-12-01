@@ -41,7 +41,7 @@ add_task(async function getOrCreate() {
   // Test creating a database with a non-normalized but fully-qualified path.
   let nonNormalizedDir = await makeDatabaseDir("non-normalized");
   nonNormalizedDir = [nonNormalizedDir, "..", ".", "non-normalized"].join(
-    Services.appinfo.os === "WINNT" ? "\\" : "/"
+    Services.appinfo.OS === "WINNT" ? "\\" : "/"
   );
   Assert.ok(await KeyValueService.getOrCreate(nonNormalizedDir, "db"));
 });
