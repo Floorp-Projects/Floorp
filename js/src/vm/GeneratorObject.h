@@ -244,7 +244,7 @@ AbstractGeneratorObject* GetGeneratorObjectForEnvironment(JSContext* cx,
                                                           HandleObject env);
 
 GeneratorResumeKind ParserAtomToResumeKind(
-    JSContext* cx, frontend::TaggedParserAtomIndex atom);
+    frontend::TaggedParserAtomIndex atom);
 JSAtom* ResumeKindToAtom(JSContext* cx, GeneratorResumeKind kind);
 
 }  // namespace js
