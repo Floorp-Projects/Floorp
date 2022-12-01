@@ -489,11 +489,6 @@ NS_IMETHODIMP nsExternalProtocolHandler::GetScheme(nsACString& aScheme) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsExternalProtocolHandler::GetDefaultPort(int32_t* aDefaultPort) {
-  *aDefaultPort = 0;
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsExternalProtocolHandler::AllowPort(int32_t port, const char* scheme,
                                      bool* _retval) {
@@ -516,13 +511,6 @@ bool nsExternalProtocolHandler::HaveExternalProtocolHandler(nsIURI* aURI) {
   bool haveHandler = false;
   extProtSvc->ExternalProtocolHandlerExists(scheme.get(), &haveHandler);
   return haveHandler;
-}
-
-NS_IMETHODIMP nsExternalProtocolHandler::GetProtocolFlags(uint32_t* aUritype) {
-  // Make it norelative since it is a simple uri
-  *aUritype = URI_NORELATIVE | URI_NOAUTH | URI_LOADABLE_BY_ANYONE |
-              URI_NON_PERSISTABLE | URI_DOES_NOT_RETURN_DATA;
-  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -68,23 +68,6 @@ nsJARProtocolHandler::GetScheme(nsACString& result) {
 }
 
 NS_IMETHODIMP
-nsJARProtocolHandler::GetDefaultPort(int32_t* result) {
-  *result = -1;  // no port for JAR: URLs
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJARProtocolHandler::GetProtocolFlags(uint32_t* result) {
-  // URI_LOADABLE_BY_ANYONE, since it's our inner URI that will matter
-  // anyway.
-  *result = URI_NORELATIVE | URI_NOAUTH | URI_LOADABLE_BY_ANYONE;
-  /* Although jar uris have their own concept of relative urls
-     it is very different from the standard behaviour, so we
-     have to say norelative here! */
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsJARProtocolHandler::NewChannel(nsIURI* uri, nsILoadInfo* aLoadInfo,
                                  nsIChannel** result) {
   nsJARChannel* chan = new nsJARChannel();

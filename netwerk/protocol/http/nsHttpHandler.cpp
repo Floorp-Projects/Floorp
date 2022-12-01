@@ -1895,18 +1895,6 @@ nsHttpHandler::GetScheme(nsACString& aScheme) {
 }
 
 NS_IMETHODIMP
-nsHttpHandler::GetDefaultPort(int32_t* result) {
-  *result = NS_HTTP_DEFAULT_PORT;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpHandler::GetProtocolFlags(uint32_t* result) {
-  *result = NS_HTTP_PROTOCOL_FLAGS;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsHttpHandler::NewChannel(nsIURI* uri, nsILoadInfo* aLoadInfo,
                           nsIChannel** result) {
   LOG(("nsHttpHandler::NewChannel\n"));
@@ -2413,18 +2401,6 @@ nsresult nsHttpsHandler::Init() {
 NS_IMETHODIMP
 nsHttpsHandler::GetScheme(nsACString& aScheme) {
   aScheme.AssignLiteral("https");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpsHandler::GetDefaultPort(int32_t* aPort) {
-  *aPort = NS_HTTPS_DEFAULT_PORT;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpsHandler::GetProtocolFlags(uint32_t* aProtocolFlags) {
-  *aProtocolFlags = NS_HTTP_PROTOCOL_FLAGS | URI_IS_POTENTIALLY_TRUSTWORTHY;
   return NS_OK;
 }
 

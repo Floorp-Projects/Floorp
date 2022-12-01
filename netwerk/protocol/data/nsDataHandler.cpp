@@ -34,21 +34,6 @@ nsDataHandler::GetScheme(nsACString& result) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDataHandler::GetDefaultPort(int32_t* result) {
-  // no ports for data protocol
-  *result = -1;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDataHandler::GetProtocolFlags(uint32_t* result) {
-  *result = URI_NORELATIVE | URI_NOAUTH | URI_INHERITS_SECURITY_CONTEXT |
-            URI_LOADABLE_BY_ANYONE | URI_NON_PERSISTABLE |
-            URI_IS_LOCAL_RESOURCE | URI_SYNC_LOAD_IS_OK;
-  return NS_OK;
-}
-
 /* static */ nsresult nsDataHandler::CreateNewURI(const nsACString& aSpec,
                                                   const char* aCharset,
                                                   nsIURI* aBaseURI,

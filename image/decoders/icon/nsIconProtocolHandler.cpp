@@ -31,23 +31,10 @@ nsIconProtocolHandler::GetScheme(nsACString& result) {
 }
 
 NS_IMETHODIMP
-nsIconProtocolHandler::GetDefaultPort(int32_t* result) {
-  *result = 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsIconProtocolHandler::AllowPort(int32_t port, const char* scheme,
                                  bool* _retval) {
   // don't override anything.
   *_retval = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIconProtocolHandler::GetProtocolFlags(uint32_t* result) {
-  *result =
-      URI_NORELATIVE | URI_NOAUTH | URI_IS_UI_RESOURCE | URI_IS_LOCAL_RESOURCE;
   return NS_OK;
 }
 
