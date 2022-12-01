@@ -12,6 +12,7 @@
 #include "mozilla/ErrorNames.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/RefPtr.h"
+#include "PerformanceRecorder.h"
 #include "Tracing.h"
 #include "VideoFrameUtils.h"
 #include "VideoUtils.h"
@@ -480,6 +481,8 @@ int MediaEngineRemoteVideoSource::DeliverFrame(
 
   if ((dst_width != aProps.width() || dst_height != aProps.height()) &&
       dst_width <= aProps.width() && dst_height <= aProps.height()) {
+    PerformanceRecorder<CopyVideoStage> rec("MERVS::CropAndScale"_ns, dst_width,
+                                            dst_height);
     // Destination resolution is smaller than source buffer. We'll rescale.
     rtc::scoped_refptr<webrtc::I420Buffer> scaledBuffer =
         mRescalingBufferPool.CreateI420Buffer(dst_width, dst_height);
@@ -491,6 +494,7 @@ int MediaEngineRemoteVideoSource::DeliverFrame(
     }
     scaledBuffer->CropAndScaleFrom(*buffer);
     buffer = scaledBuffer;
+    rec.Record();
   }
 
   layers::PlanarYCbCrData data;
@@ -504,13 +508,18 @@ int MediaEngineRemoteVideoSource::DeliverFrame(
   data.mYUVColorSpace = gfx::YUVColorSpace::BT601;
   data.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
 
-  RefPtr<layers::PlanarYCbCrImage> image =
-      mImageContainer->CreatePlanarYCbCrImage();
-  if (!image->CopyData(data)) {
-    MOZ_ASSERT_UNREACHABLE(
-        "We might fail to allocate a buffer, but with this "
-        "being a recycling container that shouldn't happen");
-    return 0;
+  RefPtr<layers::PlanarYCbCrImage> image;
+  {
+    PerformanceRecorder<CopyVideoStage> rec("MERVS::Copy"_ns, dst_width,
+                                            dst_height);
+    image = mImageContainer->CreatePlanarYCbCrImage();
+    if (!image->CopyData(data)) {
+      MOZ_ASSERT_UNREACHABLE(
+          "We might fail to allocate a buffer, but with this "
+          "being a recycling container that shouldn't happen");
+      return 0;
+    }
+    rec.Record();
   }
 
 #ifdef DEBUG

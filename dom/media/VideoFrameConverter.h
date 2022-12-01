@@ -9,6 +9,7 @@
 #include "ImageContainer.h"
 #include "ImageToI420.h"
 #include "Pacer.h"
+#include "PerformanceRecorder.h"
 #include "VideoSegment.h"
 #include "VideoUtils.h"
 #include "nsISupportsImpl.h"
@@ -378,7 +379,9 @@ class VideoFrameConverter {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     mFramesDropped = 0;
 #endif
-
+    PerformanceRecorder<CopyVideoStage> rec(
+        "VideoFrameConverter::ConvertToI420"_ns, buffer->width(),
+        buffer->height());
     nsresult rv =
         ConvertToI420(aFrame.mImage, buffer->MutableDataY(), buffer->StrideY(),
                       buffer->MutableDataU(), buffer->StrideU(),
@@ -389,6 +392,7 @@ class VideoFrameConverter {
               ("VideoFrameConverter %p: Image conversion failed", this));
       return;
     }
+    rec.Record();
 
     VideoFrameConverted(webrtc::VideoFrame::Builder()
                             .set_video_frame_buffer(buffer)
