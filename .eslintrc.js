@@ -233,7 +233,6 @@ module.exports = {
         "layout/base/tests/chrome/**",
         "mobile/android/**",
         "security/manager/ssl/tests/mochitest/mixedcontent/test_bug383369.html",
-        "testing/**",
         "toolkit/**",
         "uriloader/exthandler/**",
       ],
