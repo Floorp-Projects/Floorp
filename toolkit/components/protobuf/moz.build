@@ -101,7 +101,7 @@ SOURCES += [
     'src/google/protobuf/parse_context.cc', # port_def conflicts
     'src/google/protobuf/repeated_field.cc', # port_def conflicts
     'src/google/protobuf/repeated_ptr_field.cc', # port_def conflicts
-    'src/google/protobuf/stubs/bytestream.cc', # port_def conflicts
+    # 'src/google/protobuf/stubs/bytestream.cc', # Unused file # port_def conflicts
     'src/google/protobuf/stubs/common.cc', # port_def conflicts
     'src/google/protobuf/stubs/int128.cc', # port_def conflicts
     'src/google/protobuf/stubs/status.cc', # port_def conflicts
