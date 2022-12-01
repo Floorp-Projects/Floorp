@@ -165,11 +165,26 @@ function DatePicker(context) {
     _update(options = {}) {
       const { dateKeeper, isMonthPickerVisible } = this.state;
 
+      const calendarEls = [
+        this.context.buttonPrev,
+        this.context.buttonNext,
+        this.context.weekHeader.parentNode,
+      ];
+      // Update MonthYear state and toggle visibility for sighted users
+      // and for assistive technology:
       if (isMonthPickerVisible) {
         this.state.months = dateKeeper.getMonths();
         this.state.years = dateKeeper.getYears();
+        this.context.monthYearView.hidden = false;
+        for (let el of calendarEls) {
+          el.hidden = true;
+        }
       } else {
         this.state.days = dateKeeper.getDays();
+        this.context.monthYearView.hidden = true;
+        for (let el of calendarEls) {
+          el.hidden = false;
+        }
       }
 
       this.components.monthYear.setProps({
@@ -185,10 +200,6 @@ function DatePicker(context) {
         days: this.state.days,
         weekHeaders: dateKeeper.state.weekHeaders,
       });
-
-      isMonthPickerVisible
-        ? this.context.monthYearView.classList.remove("hidden")
-        : this.context.monthYearView.classList.add("hidden");
     },
 
     /**
