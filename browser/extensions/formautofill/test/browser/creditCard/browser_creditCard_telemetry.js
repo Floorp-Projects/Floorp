@@ -144,6 +144,13 @@ async function openTabAndUseCreditCard(
   return null;
 }
 
+add_setup(async function() {
+  Services.telemetry.setEventRecordingEnabled("creditcard", true);
+  registerCleanupFunction(async function() {
+    Services.telemetry.setEventRecordingEnabled("creditcard", false);
+  });
+});
+
 add_task(async function test_popup_opened() {
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -154,7 +161,6 @@ add_task(async function test_popup_opened() {
 
   Services.telemetry.clearEvents();
   Services.telemetry.clearScalars();
-  Services.telemetry.setEventRecordingEnabled("creditcard", true);
 
   await setStorage(TEST_CREDIT_CARD_1);
 
@@ -206,7 +212,6 @@ add_task(async function test_popup_opened_form_without_autocomplete() {
 
   Services.telemetry.clearEvents();
   Services.telemetry.clearScalars();
-  Services.telemetry.setEventRecordingEnabled("creditcard", true);
 
   await setStorage(TEST_CREDIT_CARD_1);
 
@@ -262,7 +267,6 @@ add_task(
 
     Services.telemetry.clearEvents();
     Services.telemetry.clearScalars();
-    Services.telemetry.setEventRecordingEnabled("creditcard", true);
 
     await setStorage(TEST_CREDIT_CARD_1);
 
@@ -375,7 +379,6 @@ add_task(async function test_submit_creditCard_new() {
   Services.telemetry.clearEvents();
   Services.telemetry.clearScalars();
   Services.telemetry.getHistogramById(CC_NUM_USES_HISTOGRAM).clear();
-  Services.telemetry.setEventRecordingEnabled("creditcard", true);
 
   let expected_content = [
     ccFormArgsv1("detected"),
@@ -386,7 +389,10 @@ add_task(async function test_submit_creditCard_new() {
       fields_auto: "0",
       fields_modified: "0",
     }),
-    ccFormArgsv2("submitted", buildccFormv2Extra({}, "unavailable")),
+    ccFormArgsv2(
+      "submitted",
+      buildccFormv2Extra({ cc_exp: "unavailable" }, "user_filled")
+    ),
   ];
   await test_per_command(MAIN_BUTTON, undefined, { 1: 1 }, 1);
   await assertTelemetry(expected_content, [
@@ -431,7 +437,6 @@ add_task(async function test_submit_creditCard_autofill() {
 
   Services.telemetry.clearEvents();
   Services.telemetry.getHistogramById(CC_NUM_USES_HISTOGRAM).clear();
-  Services.telemetry.setEventRecordingEnabled("creditcard", true);
 
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -549,7 +554,6 @@ add_task(async function test_submit_creditCard_update() {
   }
   Services.telemetry.clearEvents();
   Services.telemetry.getHistogramById(CC_NUM_USES_HISTOGRAM).clear();
-  Services.telemetry.setEventRecordingEnabled("creditcard", true);
 
   let expected_content = [
     ccFormArgsv1("detected"),
@@ -571,7 +575,7 @@ add_task(async function test_submit_creditCard_update() {
     ccFormArgsv2(
       "submitted",
       buildccFormv2Extra(
-        { cc_exp: "unavailable", cc_exp_year: "user filled" },
+        { cc_exp: "unavailable", cc_exp_year: "user_filled" },
         "autofilled"
       )
     ),
@@ -601,7 +605,6 @@ const DIALOG_SIZE = "width=600,height=400";
 
 add_task(async function test_removingCreditCardsViaKeyboardDelete() {
   Services.telemetry.clearEvents();
-  Services.telemetry.setEventRecordingEnabled("creditcard", true);
 
   await SpecialPowers.pushPrefEnv({
     set: [[ENABLED_AUTOFILL_CREDITCARDS_PREF, true]],
@@ -637,7 +640,6 @@ add_task(async function test_removingCreditCardsViaKeyboardDelete() {
 
 add_task(async function test_saveCreditCard() {
   Services.telemetry.clearEvents();
-  Services.telemetry.setEventRecordingEnabled("creditcard", true);
 
   await SpecialPowers.pushPrefEnv({
     set: [[ENABLED_AUTOFILL_CREDITCARDS_PREF, true]],
@@ -676,7 +678,6 @@ add_task(async function test_saveCreditCard() {
 
 add_task(async function test_editCreditCard() {
   Services.telemetry.clearEvents();
-  Services.telemetry.setEventRecordingEnabled("creditcard", true);
 
   await SpecialPowers.pushPrefEnv({
     set: [[ENABLED_AUTOFILL_CREDITCARDS_PREF, true]],
@@ -725,7 +726,6 @@ add_task(async function test_histogram() {
   });
 
   Services.telemetry.getHistogramById(CC_NUM_USES_HISTOGRAM).clear();
-  Services.telemetry.setEventRecordingEnabled("creditcard", true);
 
   await setStorage(TEST_CREDIT_CARD_1, TEST_CREDIT_CARD_2, TEST_CREDIT_CARD_5);
   let creditCards = await getCreditCards();
@@ -778,7 +778,6 @@ add_task(async function test_submit_creditCard_new_with_hidden_ui() {
   Services.telemetry.clearEvents();
   Services.telemetry.clearScalars();
   Services.telemetry.getHistogramById(CC_NUM_USES_HISTOGRAM).clear();
-  Services.telemetry.setEventRecordingEnabled("creditcard", true);
 
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -839,7 +838,10 @@ add_task(async function test_submit_creditCard_new_with_hidden_ui() {
       fields_auto: "0",
       fields_modified: "0",
     }),
-    ccFormArgsv2("submitted", buildccFormv2Extra({}, "unavailable")),
+    ccFormArgsv2(
+      "submitted",
+      buildccFormv2Extra({ cc_exp: "unavailable" }, "user_filled")
+    ),
   ];
   await assertTelemetry(expected_content, []);
 
@@ -871,7 +873,6 @@ add_task(async function test_clear_creditCard_autofill() {
 
   Services.telemetry.clearEvents();
   Services.telemetry.getHistogramById(CC_NUM_USES_HISTOGRAM).clear();
-  Services.telemetry.setEventRecordingEnabled("creditcard", true);
 
   await SpecialPowers.pushPrefEnv({
     set: [
