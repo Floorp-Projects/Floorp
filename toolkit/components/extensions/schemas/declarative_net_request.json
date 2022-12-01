@@ -507,6 +507,24 @@
         ]
       },
       {
+        "name": "getAvailableStaticRuleCount",
+        "type": "function",
+        "description": "Returns the remaining number of static rules an extension can enable",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "callback",
+            "type": "function",
+            "parameters": [
+              {
+                "name": "count",
+                "type": "integer"
+              }
+            ]
+          }
+        ]
+      },
+      {
         "name": "getSessionRules",
         "type": "function",
         "description": "Returns the current set of session scoped rules for the extension.",

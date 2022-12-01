@@ -1140,6 +1140,17 @@ class RuleManager {
     this.hasRulesWithTabIds = false;
   }
 
+  get availableStaticRuleCount() {
+    return Math.max(
+      GUARANTEED_MINIMUM_STATIC_RULES -
+        this.enabledStaticRules.reduce(
+          (acc, ruleset) => acc + ruleset.rules.length,
+          0
+        ),
+      0
+    );
+  }
+
   get enabledStaticRulesetIds() {
     return this.enabledStaticRules.map(ruleset => ruleset.id);
   }
