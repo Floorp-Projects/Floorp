@@ -161,12 +161,15 @@ class CookieBannerParent extends JSWindowActorParent {
       return [];
     }
 
-    let modeIsRejectOrAccept =
-      mode == Ci.nsICookieBannerService.MODE_REJECT_OR_ACCEPT;
+    // Determine whether we can fall back to opt-in rules. This includes the
+    // detect-only mode where don't interact with the banner.
+    let modeAllowsOptIn =
+      mode == Ci.nsICookieBannerService.MODE_REJECT_OR_ACCEPT ||
+      mode == Ci.nsICookieBannerService.MODE_DETECT_ONLY;
     return rules.map(rule => {
       let target = rule.optOut;
 
-      if (modeIsRejectOrAccept && !target) {
+      if (modeAllowsOptIn && !target) {
         target = rule.optIn;
       }
       return {
