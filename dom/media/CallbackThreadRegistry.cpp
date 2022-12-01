@@ -31,10 +31,30 @@ CallbackThreadRegistry* CallbackThreadRegistry::Get() {
   return sSingleton.mRegistry.get();
 }
 
+static bool CanLeak() {
+#ifdef NS_BUILD_REFCNT_LOGGING
+  static const bool logging =
+      getenv("XPCOM_MEM_LEAK_LOG") || getenv("XPCOM_MEM_BLOAT_LOG") ||
+      getenv("XPCOM_MEM_REFCNT_LOG") || getenv("XPCOM_MEM_ALLOC_LOG") ||
+      getenv("XPCOM_MEM_COMPTR_LOG");
+  return logging;
+#else
+  return false;
+#endif
+}
+
 void CallbackThreadRegistry::Register(ProfilerThreadId aThreadId,
                                       const char* aName) {
   if (!aThreadId.IsSpecified()) {
     // profiler_current_thread_id is unspecified on unsupported platforms.
+    return;
+  }
+
+  if (CanLeak()) {
+    NS_WARNING(
+        "Not registering callback thread due to refcount logging; it may show "
+        "up as a leak of the TLS-backed nsThread wrapper if the thread "
+        "outlives xpcom shutdown.");
     return;
   }
 
@@ -55,6 +75,10 @@ void CallbackThreadRegistry::Register(ProfilerThreadId aThreadId,
 void CallbackThreadRegistry::Unregister(ProfilerThreadId aThreadId) {
   if (!aThreadId.IsSpecified()) {
     // profiler_current_thread_id is unspedified on unsupported platforms.
+    return;
+  }
+
+  if (CanLeak()) {
     return;
   }
 
