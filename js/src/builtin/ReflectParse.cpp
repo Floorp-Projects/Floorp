@@ -4155,7 +4155,7 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
       return false;
     }
   } else {
-    ModuleBuilder builder(cx, &parser);
+    ModuleBuilder builder(cx, &ec, &parser);
 
     uint32_t len = chars.length();
     SourceExtent extent =
