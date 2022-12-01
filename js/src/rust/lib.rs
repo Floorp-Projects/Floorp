@@ -14,6 +14,7 @@
  */
 
 extern crate jsrust_shared;
+extern crate wasmparser;
 extern crate wast;
 
 mod wasm;

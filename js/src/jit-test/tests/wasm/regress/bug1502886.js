@@ -6,10 +6,13 @@ function f(x, initFunc) {
     newGlobal({newCompartment: true});
     g.eval(`
         var binary = wasmTextToBinary('${x}');
+        var offsets = wasmCodeOffsets(binary);
         new WebAssembly.Instance(new WebAssembly.Module(binary));
     `);
+    var {
+        offsets
+    } = g;
     var wasmScript = dbg.findScripts().filter(s => s.format == 'wasm')[0];
-    var offsets = wasmScript.getPossibleBreakpointOffsets();
     initFunc({
         wasmScript,
         breakpoints: offsets
