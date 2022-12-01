@@ -195,8 +195,10 @@ class AddLoginFragment : Fragment(R.layout.fragment_add_login), MenuProvider {
 
         binding.usernameText.addTextChangedListener(
             object : TextWatcher {
-                override fun afterTextChanged(u: Editable?) {
-                    usernameChanged = true
+                override fun afterTextChanged(editable: Editable?) {
+                    // update usernameChanged to true when the text is not empty,
+                    // otherwise it is not changed, as this screen starts with an empty username.
+                    usernameChanged = editable.toString().isNotEmpty()
                     updateUsernameField()
                     setSaveButtonState()
                     findDuplicate()
