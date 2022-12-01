@@ -18,10 +18,7 @@ CONTEXT_PATH="/home/worker/nss/$CONTEXT_PATH"
 test -d "$CONTEXT_PATH" || raise_error "Context Path $CONTEXT_PATH does not exist."
 test -f "$CONTEXT_PATH/Dockerfile" || raise_error "Dockerfile must be present in $CONTEXT_PATH."
 
-apt-get update
-apt-get -y install zstd
-
 docker build -t "$PROJECT:$HASH" "$CONTEXT_PATH"
 
 mkdir /artifacts
-docker save "$PROJECT:$HASH" | zstd > /artifacts/image.tar.zst
+docker save "$PROJECT:$HASH" > /artifacts/image.tar
