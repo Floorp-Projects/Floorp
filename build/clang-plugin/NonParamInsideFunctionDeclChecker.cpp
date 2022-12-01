@@ -16,7 +16,11 @@ protected:
   // if it exceeds pointer alignment, and 0 otherwise.
   static unsigned checkExplicitAlignment(const Decl *D) {
     ASTContext &Context = D->getASTContext();
+#if CLANG_VERSION_FULL >= 1600
+    unsigned PointerAlign = Context.getTargetInfo().getPointerAlign(LangAS::Default);
+#else
     unsigned PointerAlign = Context.getTargetInfo().getPointerAlign(0);
+#endif
 
     // getMaxAlignment gets the largest alignment, in bits, specified by an
     // alignment attribute directly on the declaration. If no alignment
