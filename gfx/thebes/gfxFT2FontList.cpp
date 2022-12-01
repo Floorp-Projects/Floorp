@@ -746,7 +746,7 @@ class FontNameCache {
 
     LOG(("putting FontNameCache to " CACHE_KEY ", length %zu",
          buf.Length() + 1));
-    mCache->PutBuffer(CACHE_KEY, UniquePtr<char[]>(ToNewCString(buf)),
+    mCache->PutBuffer(CACHE_KEY, UniqueFreePtr<char[]>(ToNewCString(buf)),
                       buf.Length() + 1);
     mWriteNeeded = false;
   }
@@ -1563,7 +1563,8 @@ void gfxFT2FontList::WriteCache() {
       mozilla::scache::StartupCache::GetSingleton();
   if (cache && mJarModifiedTime > 0) {
     const size_t bufSize = sizeof(mJarModifiedTime);
-    auto buf = MakeUnique<char[]>(bufSize);
+    auto buf = UniqueFreePtr<char[]>(
+        reinterpret_cast<char*>(malloc(sizeof(char) * bufSize)));
     LittleEndian::writeInt64(buf.get(), mJarModifiedTime);
 
     LOG(("WriteCache: putting Jar, length %zu", bufSize));

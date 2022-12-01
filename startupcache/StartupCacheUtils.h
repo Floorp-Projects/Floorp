@@ -10,6 +10,7 @@
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/UniquePtrExtensions.h"
 
 class nsIURI;
 
@@ -33,7 +34,8 @@ nsresult NewObjectOutputWrappedStorageStream(
 // allocated with 'new []'.  After calling this function, the caller would
 // typically call StartupCache::PutBuffer with the returned buffer.
 nsresult NewBufferFromStorageStream(nsIStorageStream* storageStream,
-                                    UniquePtr<char[]>* buffer, uint32_t* len);
+                                    UniqueFreePtr<char[]>* buffer,
+                                    uint32_t* len);
 
 nsresult ResolveURI(nsIURI* in, nsIURI** out);
 

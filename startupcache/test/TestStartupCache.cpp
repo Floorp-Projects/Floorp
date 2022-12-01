@@ -23,6 +23,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Printf.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "nsNetCID.h"
 #include "nsIURIMutator.h"
 
@@ -83,7 +84,8 @@ TEST_F(TestStartupCache, StartupWriteRead) {
   const char* outbuf;
   uint32_t len;
 
-  rv = sc->PutBuffer(id, UniquePtr<char[]>(strdup(buf)), strlen(buf) + 1);
+  rv = sc->PutBuffer(id, mozilla::UniqueFreePtr<char[]>(strdup(buf)),
+                     strlen(buf) + 1);
   EXPECT_NS_SUCCEEDED(rv);
 
   rv = sc->GetBuffer(id, &outbuf, &len);
@@ -108,7 +110,8 @@ TEST_F(TestStartupCache, WriteInvalidateRead) {
   StartupCache* sc = StartupCache::GetSingleton();
   ASSERT_TRUE(sc);
 
-  rv = sc->PutBuffer(id, UniquePtr<char[]>(strdup(buf)), strlen(buf) + 1);
+  rv = sc->PutBuffer(id, mozilla::UniqueFreePtr<char[]>(strdup(buf)),
+                     strlen(buf) + 1);
   EXPECT_NS_SUCCEEDED(rv);
 
   sc->InvalidateCache();
@@ -153,7 +156,7 @@ TEST_F(TestStartupCache, WriteObject) {
   rv = objectOutput->WriteObject(objQI, true);
   EXPECT_NS_SUCCEEDED(rv);
 
-  UniquePtr<char[]> buf;
+  mozilla::UniqueFreePtr<char[]> buf;
   uint32_t len;
   NewBufferFromStorageStream(storageStream, &buf, &len);
 
