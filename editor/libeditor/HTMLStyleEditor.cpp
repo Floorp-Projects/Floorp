@@ -394,17 +394,6 @@ HTMLEditor::AutoInlineStyleSetter::ElementIsGoodContainerForTheStyle(
     return true;
   }
 
-  // Special cases for various equivalencies: <strong>, <em>, <s>
-  if (!aElement.GetAttrCount() &&
-      ((&HTMLPropertyRef() == nsGkAtoms::b &&
-        aElement.IsHTMLElement(nsGkAtoms::strong)) ||
-       (&HTMLPropertyRef() == nsGkAtoms::i &&
-        aElement.IsHTMLElement(nsGkAtoms::em)) ||
-       (&HTMLPropertyRef() == nsGkAtoms::strike &&
-        aElement.IsHTMLElement(nsGkAtoms::s)))) {
-    return true;
-  }
-
   // Now look for things like <font>
   if (mAttribute) {
     nsString attrValue;
