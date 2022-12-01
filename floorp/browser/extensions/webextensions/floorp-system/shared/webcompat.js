@@ -14,7 +14,9 @@ async function regist_webcompat_contentScripts() {
   let platform = (await browser.runtime.getPlatformInfo()).os;
   for (let WEBCOMPAT of WEBCOMPATS) {
     if (WEBCOMPAT.platforms.includes(platform)) {
-      let registeredContentScript = await browser.contentScripts.register(WEBCOMPAT);
+      let WEBCOMPAT_cloned = Object.assign({}, WEBCOMPAT);
+      delete WEBCOMPAT_cloned.platforms;
+      let registeredContentScript = await browser.contentScripts.register(WEBCOMPAT_cloned);
       REGISTED_CONTENT_SCRIPTS.push(registeredContentScript);
     }
   }
