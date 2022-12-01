@@ -62,8 +62,7 @@ interface nsICookieBannerService : nsISupports {
   /**
    * Look up the click rules for a given domain.
    */
-  Array<nsIClickRule> getClickRulesForDomain(in ACString aDomain,
-                                             in bool aIsTopLevel);
+  Array<nsIClickRule> getClickRulesForDomain(in ACString aDomain, in bool aIsTopLevel);
 
   /**
    * Insert a cookie banner rule for a domain. If there was previously a rule
@@ -100,11 +99,4 @@ interface nsICookieBannerService : nsISupports {
    * Remove all domain preferences.
    */
   void removeAllDomainPrefs(in boolean aIsPrivate);
-
-  /**
-   * Clears the in-memory set that we use to maintain the domains that we have
-   * reported telemetry. This function will clear the entry for the given
-   * domain. If the domain was not given, it will clear all set.
-   */
-  void resetDomainTelemetryRecord([optional] in ACString aDomain);
 };
