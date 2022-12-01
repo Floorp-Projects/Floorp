@@ -17,7 +17,6 @@ EXPORTS.mozilla.dom += [
     "AuthenticatorAssertionResponse.h",
     "AuthenticatorAttestationResponse.h",
     "AuthenticatorResponse.h",
-    "CTAPHIDTokenManager.h",
     "PublicKeyCredential.h",
     "U2FHIDTokenManager.h",
     "U2FSoftTokenManager.h",
@@ -38,7 +37,6 @@ UNIFIED_SOURCES += [
     "AuthenticatorResponse.cpp",
     "cbor-cpp/src/encoder.cpp",
     "cbor-cpp/src/output_dynamic.cpp",
-    "CTAPHIDTokenManager.cpp",
     "PublicKeyCredential.cpp",
     "U2FHIDTokenManager.cpp",
     "U2FSoftTokenManager.cpp",
@@ -60,11 +58,6 @@ LOCAL_INCLUDES += [
     "/dom/crypto",
     "/security/manager/ssl",
     "/third_party/rust",
-    "/toolkit/components/jsoncpp/include",
-]
-
-USE_LIBS += [
-    "jsoncpp",
 ]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":

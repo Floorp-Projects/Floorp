@@ -6,9 +6,6 @@
 #include "nsISupports.idl"
 
 /**
- * TODO: U2FTokenManager needs to be renamed to CTAPTokenManager or similar,
- *       because it now contains also CTAP2 functionality (e.g. pinCallback)
- *       See bug 1801643
  * nsIU2FTokenManager
  *
  * An interface to the U2FTokenManager singleton.
@@ -29,29 +26,6 @@ interface nsIU2FTokenManager : nsISupports
      */
     void resumeRegister(in uint64_t aTransactionID,
                         in bool aForceNoneAttestation);
-
-    /**
-     * Resumes the current WebAuthn transaction.
-     * This is used only when the hardware token requires
-     * user-verification and is thus protected by a PIN.
-     *
-     * @param aPin : PIN the user entered after being prompted.
-     */
-    void pinCallback(in ACString aPin);
-
-    /**
-     * Resumes the current WebAuthn transaction if that matches the given
-     * transaction ID. This is used only when the hardware token returned
-     * multiple results for signin in and the user needs to select with which
-     * to log in.
-     * TODO(MS): This is a CTAP2 operation, so U2FTokenManager is probably
-     *           not the ideal place for this function. It is a shortcut for now.
-     *
-     * @param aTransactionID : The ID of the transaction to resume.
-     * @param idx : The index of the selected result
-     */
-    void resumeWithSelectedSignResult(in uint64_t aTransactionID,
-                           in uint64_t idx);
 
     /**
      * Cancels the current WebAuthn/U2F transaction if that matches the given

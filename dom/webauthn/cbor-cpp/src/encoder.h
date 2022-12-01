@@ -42,8 +42,6 @@ namespace cbor {
 
         void write_bytes(const unsigned char *data, unsigned int size);
 
-        void write_raw(const unsigned char *data, unsigned int size);
-
         void write_string(const char *data, unsigned int size);
 
         void write_string(const std::string str);

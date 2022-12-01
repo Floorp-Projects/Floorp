@@ -10,7 +10,7 @@ use std::sync::{Arc, Mutex};
 use std::vec;
 use std::{io, string, thread};
 
-use crate::authenticatorservice::{AuthenticatorTransport, RegisterArgs, SignArgs};
+use crate::authenticatorservice::AuthenticatorTransport;
 use crate::errors;
 use crate::statecallback::StateCallback;
 use crate::virtualdevices::webdriver::{testtoken, web_api};
@@ -61,8 +61,11 @@ impl VirtualManager {
 impl AuthenticatorTransport for VirtualManager {
     fn register(
         &mut self,
+        _flags: crate::RegisterFlags,
         timeout: u64,
-        _ctap_args: RegisterArgs,
+        _challenge: Vec<u8>,
+        _application: crate::AppId,
+        _key_handles: Vec<crate::KeyHandle>,
         _status: Sender<crate::StatusUpdate>,
         callback: StateCallback<crate::Result<crate::RegisterResult>>,
     ) -> crate::Result<()> {
@@ -102,8 +105,11 @@ impl AuthenticatorTransport for VirtualManager {
 
     fn sign(
         &mut self,
+        _flags: crate::SignFlags,
         timeout: u64,
-        _ctap_args: SignArgs,
+        _challenge: Vec<u8>,
+        _app_ids: Vec<crate::AppId>,
+        _key_handles: Vec<crate::KeyHandle>,
         _status: Sender<crate::StatusUpdate>,
         callback: StateCallback<crate::Result<crate::SignResult>>,
     ) -> crate::Result<()> {
