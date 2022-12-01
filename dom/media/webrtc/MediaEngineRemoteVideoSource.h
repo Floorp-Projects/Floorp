@@ -128,6 +128,8 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
     return mFirstFramePromise;
   }
 
+  const TrackingId& GetTrackingId() const override;
+
   static camera::CaptureEngine CaptureEngine(dom::MediaSourceEnum aMediaSource);
 
  private:
@@ -149,6 +151,13 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
 
   int mCaptureId = -1;
   const camera::CaptureEngine mCapEngine;  // source of media (cam, screen etc)
+
+  // A tracking id used to uniquely identify the source of video frames.
+  // Set under mMutex on the owning thread. Accessed under one of the two.
+  TrackingId mTrackingId;
+
+  // Mirror of mTrackingId on the frame-delivering thread (Cameras IPC).
+  Maybe<TrackingId> mFrameDeliveringTrackingId;
 
   // mMutex protects certain members on 3 threads:
   // MediaManager, Cameras IPC and MediaTrackGraph.

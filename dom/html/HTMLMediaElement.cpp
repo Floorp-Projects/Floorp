@@ -977,6 +977,8 @@ class HTMLMediaElement::MediaStreamRenderer
   RefPtr<FirstFrameVideoOutput> mFirstFrameVideoOutput;
 };
 
+static uint32_t sDecoderCaptureSourceId = 0;
+static uint32_t sStreamCaptureSourceId = 0;
 class HTMLMediaElement::MediaElementTrackSource
     : public MediaStreamTrackSource,
       public MediaStreamTrackSource::Sink,
@@ -990,7 +992,11 @@ class HTMLMediaElement::MediaElementTrackSource
   MediaElementTrackSource(nsISerialEventTarget* aMainThreadEventTarget,
                           ProcessedMediaTrack* aTrack, nsIPrincipal* aPrincipal,
                           OutputMuteState aMuteState, bool aHasAlpha)
-      : MediaStreamTrackSource(aPrincipal, nsString()),
+      : MediaStreamTrackSource(
+            aPrincipal, nsString(),
+            TrackingId(TrackingId::Source::MediaElementDecoder,
+                       sDecoderCaptureSourceId++,
+                       TrackingId::TrackAcrossProcesses::Yes)),
         mMainThreadEventTarget(aMainThreadEventTarget),
         mTrack(aTrack),
         mIntendedElementMuteState(aMuteState),
@@ -1005,8 +1011,11 @@ class HTMLMediaElement::MediaElementTrackSource
                           MediaStreamTrackSource* aCapturedTrackSource,
                           ProcessedMediaTrack* aTrack, MediaInputPort* aPort,
                           OutputMuteState aMuteState)
-      : MediaStreamTrackSource(aCapturedTrackSource->GetPrincipal(),
-                               nsString()),
+      : MediaStreamTrackSource(
+            aCapturedTrackSource->GetPrincipal(), nsString(),
+            TrackingId(TrackingId::Source::MediaElementStream,
+                       sStreamCaptureSourceId++,
+                       TrackingId::TrackAcrossProcesses::Yes)),
         mMainThreadEventTarget(aMainThreadEventTarget),
         mCapturedTrack(aCapturedTrack),
         mCapturedTrackSource(aCapturedTrackSource),

@@ -31,6 +31,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/UniquePtr.h"
 #include "DOMMediaStream.h"
+#include "PerformanceRecorder.h"
 
 #ifdef MOZ_WEBRTC
 #  include "transport/runnable_utils.h"
@@ -139,6 +140,7 @@ class LocalMediaDevice final : public nsIMediaDevice {
 
   void GetSettings(dom::MediaTrackSettings& aOutSettings);
   MediaEngineSource* Source();
+  const TrackingId& GetTrackingId() const;
   // Returns null if not a physical audio device.
   AudioDeviceInfo* GetAudioDeviceInfo() const {
     return mRawDevice->mAudioDeviceInfo;

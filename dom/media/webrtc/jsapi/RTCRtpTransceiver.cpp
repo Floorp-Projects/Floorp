@@ -33,6 +33,7 @@
 #include "systemservices/MediaUtils.h"
 #include "libwebrtcglue/WebrtcCallWrapper.h"
 #include "libwebrtcglue/WebrtcGmpVideoCodec.h"
+#include "utils/PerformanceRecorder.h"
 
 namespace mozilla {
 
@@ -193,12 +194,16 @@ SdpDirectionAttribute::Direction ToSdpDirection(
   MOZ_CRASH("Invalid transceiver direction!");
 }
 
+static uint32_t sRemoteSourceId = 0;
+
 // TODO(bug 1401592): Once we implement the sendEncodings stuff, there will
 // need to be validation code in here.
 void RTCRtpTransceiver::Init(const RTCRtpTransceiverInit& aInit,
                              ErrorResult& aRv) {
+  TrackingId trackingId(TrackingId::Source::RTCRtpReceiver, sRemoteSourceId++,
+                        TrackingId::TrackAcrossProcesses::Yes);
   if (IsVideo()) {
-    InitVideo();
+    InitVideo(trackingId);
   } else {
     InitAudio();
   }
@@ -208,9 +213,9 @@ void RTCRtpTransceiver::Init(const RTCRtpTransceiverInit& aInit,
     return;
   }
 
-  mReceiver =
-      new RTCRtpReceiver(mWindow, mPrivacyNeeded, mPc, mTransportHandler,
-                         mCallWrapper->mCallThread, mStsThread, mConduit, this);
+  mReceiver = new RTCRtpReceiver(mWindow, mPrivacyNeeded, mPc,
+                                 mTransportHandler, mCallWrapper->mCallThread,
+                                 mStsThread, mConduit, this, trackingId);
 
   mSender = new RTCRtpSender(mWindow, mPc, mTransportHandler,
                              mCallWrapper->mCallThread, mStsThread, mConduit,
@@ -277,7 +282,7 @@ void RTCRtpTransceiver::InitAudio() {
   }
 }
 
-void RTCRtpTransceiver::InitVideo() {
+void RTCRtpTransceiver::InitVideo(const TrackingId& aRecvTrackingId) {
   VideoSessionConduit::Options options;
   options.mVideoLatencyTestEnable =
       Preferences::GetBool("media.video.test_latency", false);
@@ -316,8 +321,9 @@ void RTCRtpTransceiver::InitVideo() {
   options.mLockScaling =
       Preferences::GetBool("media.peerconnection.video.lock_scaling", false);
 
-  mConduit = VideoSessionConduit::Create(mCallWrapper, mStsThread,
-                                         std::move(options), mPc->GetHandle());
+  mConduit =
+      VideoSessionConduit::Create(mCallWrapper, mStsThread, std::move(options),
+                                  mPc->GetHandle(), aRecvTrackingId);
 
   if (!mConduit) {
     MOZ_MTLOG(ML_ERROR, mPc->GetHandle()

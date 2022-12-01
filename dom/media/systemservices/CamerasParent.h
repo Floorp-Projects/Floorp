@@ -29,7 +29,10 @@ class CallbackHelper : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
  public:
   CallbackHelper(CaptureEngine aCapEng, uint32_t aStreamId,
                  CamerasParent* aParent)
-      : mCapEngine(aCapEng), mStreamId(aStreamId), mParent(aParent){};
+      : mCapEngine(aCapEng),
+        mStreamId(aStreamId),
+        mTrackingId(CaptureEngineToTrackingSourceStr(aCapEng), aStreamId),
+        mParent(aParent){};
 
   // These callbacks end up running on the VideoCapture thread.
   // From  VideoCaptureCallback
@@ -38,9 +41,10 @@ class CallbackHelper : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
   friend CamerasParent;
 
  private:
-  CaptureEngine mCapEngine;
-  uint32_t mStreamId;
-  CamerasParent* mParent;
+  const CaptureEngine mCapEngine;
+  const uint32_t mStreamId;
+  const TrackingId mTrackingId;
+  CamerasParent* const mParent;
 };
 
 class InputObserver : public webrtc::VideoInputFeedBack {
@@ -108,8 +112,9 @@ class CamerasParent final : public PCamerasParent,
 
   // helper to forward to the PBackground thread
   int DeliverFrameOverIPC(CaptureEngine capEng, uint32_t aStreamId,
-                          ShmemBuffer buffer, unsigned char* altbuffer,
-                          VideoFrameProperties& aProps);
+                          const TrackingId& aTrackingId, ShmemBuffer buffer,
+                          unsigned char* altbuffer,
+                          const VideoFrameProperties& aProps);
 
   CamerasParent();
 

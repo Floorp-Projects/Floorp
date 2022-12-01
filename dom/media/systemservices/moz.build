@@ -79,6 +79,7 @@ EXPORTS.mozilla.media += [
     "MediaUtils.h",
 ]
 UNIFIED_SOURCES += [
+    "CamerasTypes.cpp",
     "MediaChild.cpp",
     "MediaParent.cpp",
     "MediaSystemResourceClient.cpp",

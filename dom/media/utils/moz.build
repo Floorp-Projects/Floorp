@@ -18,6 +18,8 @@ UNIFIED_SOURCES += [
     "TelemetryProbesReporter.cpp",
 ]
 
+include("/ipc/chromium/chromium-config.mozbuild")
+
 if CONFIG["ENABLE_TESTS"]:
     DIRS += ["gtest"]
 

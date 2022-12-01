@@ -15,6 +15,7 @@
 #include "mozilla/AppShutdown.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Services.h"
 #include "mozilla/Logging.h"
@@ -28,6 +29,7 @@
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
 
+#include "api/video/video_frame_buffer.h"
 #include "common_video/libyuv/include/webrtc_libyuv.h"
 
 #if defined(_WIN32)
@@ -132,12 +134,14 @@ void InputObserver::OnDeviceChange() {
 class DeliverFrameRunnable : public mozilla::Runnable {
  public:
   DeliverFrameRunnable(CamerasParent* aParent, CaptureEngine aEngine,
-                       uint32_t aStreamId, const webrtc::VideoFrame& aFrame,
+                       uint32_t aStreamId, const TrackingId& aTrackingId,
+                       const webrtc::VideoFrame& aFrame,
                        const VideoFrameProperties& aProperties)
       : Runnable("camera::DeliverFrameRunnable"),
         mParent(aParent),
         mCapEngine(aEngine),
         mStreamId(aStreamId),
+        mTrackingId(aTrackingId),
         mProperties(aProperties),
         mResult(0) {
     // No ShmemBuffer (of the right size) was available, so make an
@@ -147,7 +151,7 @@ class DeliverFrameRunnable : public mozilla::Runnable {
     // We will need to copy this back into a Shmem later on so we prefer
     // using ShmemBuffers to avoid the extra copy.
     PerformanceRecorder<CopyVideoStage> rec(
-        "CamerasParent::VideoFrameToAltBuffer"_ns, aFrame.width(),
+        "CamerasParent::VideoFrameToAltBuffer"_ns, aTrackingId, aFrame.width(),
         aFrame.height());
     mAlternateBuffer.reset(new unsigned char[aProperties.bufferSize()]);
     VideoFrameUtils::CopyVideoFrameBuffers(mAlternateBuffer.get(),
@@ -156,12 +160,13 @@ class DeliverFrameRunnable : public mozilla::Runnable {
   }
 
   DeliverFrameRunnable(CamerasParent* aParent, CaptureEngine aEngine,
-                       uint32_t aStreamId, ShmemBuffer aBuffer,
-                       VideoFrameProperties& aProperties)
+                       uint32_t aStreamId, const TrackingId& aTrackingId,
+                       ShmemBuffer aBuffer, VideoFrameProperties& aProperties)
       : Runnable("camera::DeliverFrameRunnable"),
         mParent(aParent),
         mCapEngine(aEngine),
         mStreamId(aStreamId),
+        mTrackingId(aTrackingId),
         mBuffer(std::move(aBuffer)),
         mProperties(aProperties),
         mResult(0){};
@@ -175,7 +180,8 @@ class DeliverFrameRunnable : public mozilla::Runnable {
       mResult = 0;
       return NS_OK;
     }
-    if (!mParent->DeliverFrameOverIPC(mCapEngine, mStreamId, std::move(mBuffer),
+    if (!mParent->DeliverFrameOverIPC(mCapEngine, mStreamId, mTrackingId,
+                                      std::move(mBuffer),
                                       mAlternateBuffer.get(), mProperties)) {
       mResult = -1;
     } else {
@@ -187,12 +193,13 @@ class DeliverFrameRunnable : public mozilla::Runnable {
   int GetResult() { return mResult; }
 
  private:
-  RefPtr<CamerasParent> mParent;
-  CaptureEngine mCapEngine;
-  uint32_t mStreamId;
+  const RefPtr<CamerasParent> mParent;
+  const CaptureEngine mCapEngine;
+  const uint32_t mStreamId;
+  const TrackingId mTrackingId;
   ShmemBuffer mBuffer;
   UniquePtr<unsigned char[]> mAlternateBuffer;
-  VideoFrameProperties mProperties;
+  const VideoFrameProperties mProperties;
   int mResult;
 };
 
@@ -251,9 +258,10 @@ void CamerasParent::StopVideoCapture() {
 }
 
 int CamerasParent::DeliverFrameOverIPC(CaptureEngine capEng, uint32_t aStreamId,
+                                       const TrackingId& aTrackingId,
                                        ShmemBuffer buffer,
                                        unsigned char* altbuffer,
-                                       VideoFrameProperties& aProps) {
+                                       const VideoFrameProperties& aProps) {
   // No ShmemBuffers were available, so construct one now of the right size
   // and copy into it. That is an extra copy, but we expect this to be
   // the exceptional case, because we just assured the next call *will* have a
@@ -269,7 +277,8 @@ int CamerasParent::DeliverFrameOverIPC(CaptureEngine capEng, uint32_t aStreamId,
     }
 
     PerformanceRecorder<CopyVideoStage> rec(
-        "CamerasParent::AltBufferToShmem"_ns, aProps.width(), aProps.height());
+        "CamerasParent::AltBufferToShmem"_ns, aTrackingId, aProps.width(),
+        aProps.height());
     // get() and Size() check for proper alignment of the segment
     memcpy(shMemBuff.GetBytes(), altbuffer, aProps.bufferSize());
     rec.Record();
@@ -310,17 +319,18 @@ void CallbackHelper::OnFrame(const webrtc::VideoFrame& aVideoFrame) {
   } else {
     // Shared memory buffers of the right size are available, do the copy here.
     PerformanceRecorder<CopyVideoStage> rec(
-        "CamerasParent::VideoFrameToShmem"_ns, aVideoFrame.width(),
+        "CamerasParent::VideoFrameToShmem"_ns, mTrackingId, aVideoFrame.width(),
         aVideoFrame.height());
     VideoFrameUtils::CopyVideoFrameBuffers(
         shMemBuffer.GetBytes(), properties.bufferSize(), aVideoFrame);
     rec.Record();
-    runnable = new DeliverFrameRunnable(mParent, mCapEngine, mStreamId,
-                                        std::move(shMemBuffer), properties);
+    runnable =
+        new DeliverFrameRunnable(mParent, mCapEngine, mStreamId, mTrackingId,
+                                 std::move(shMemBuffer), properties);
   }
   if (!runnable) {
     runnable = new DeliverFrameRunnable(mParent, mCapEngine, mStreamId,
-                                        aVideoFrame, properties);
+                                        mTrackingId, aVideoFrame, properties);
   }
   MOZ_ASSERT(mParent);
   nsIEventTarget* target = mParent->GetBackgroundEventTarget();

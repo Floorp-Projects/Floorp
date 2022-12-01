@@ -14,6 +14,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/ThreadSafeWeakPtr.h"
 #include "nsStringFwd.h"
+#include "PerformanceRecorder.h"
 
 namespace mozilla {
 
@@ -79,6 +80,13 @@ class MediaEngineSourceInterface {
   virtual RefPtr<GenericNonExclusivePromise> GetFirstFramePromise() const {
     return nullptr;
   }
+
+  /**
+   * Get an id uniquely identifying the source of video frames that this
+   * MediaEngineSource represents. This can be used in profiler markers to
+   * separate markers from different sources into different lanes.
+   */
+  virtual const TrackingId& GetTrackingId() const = 0;
 
   /**
    * Called by MediaEngine to allocate an instance of this source.
@@ -214,6 +222,11 @@ class MediaEngineSource : public MediaEngineSourceInterface {
 
   void AssertIsOnOwningThread() const {
     NS_ASSERT_OWNINGTHREAD(MediaEngineSource);
+  }
+
+  const TrackingId& GetTrackingId() const override {
+    static auto notImplementedId = TrackingId();
+    return notImplementedId;
   }
 
   // Not fake by default.

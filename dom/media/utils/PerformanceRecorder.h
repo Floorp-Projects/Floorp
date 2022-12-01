@@ -14,12 +14,40 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TypedEnumBits.h"
-#include "nsPrintfCString.h"
 #include "nsStringFwd.h"
 #include "nsTPriorityQueue.h"
 #include "mozilla/ProfilerMarkers.h"
 
 namespace mozilla {
+
+struct TrackingId {
+  enum class Source : uint8_t {
+    Unimplemented,
+    AudioDestinationNode,
+    Camera,
+    Canvas,
+    MediaElementDecoder,
+    MediaElementStream,
+    RTCRtpReceiver,
+    Screen,
+    Tab,
+    Window,
+    LAST
+  };
+  enum class TrackAcrossProcesses : uint8_t {
+    Yes,
+    No,
+  };
+  TrackingId();
+  TrackingId(Source aSource, uint32_t aUniqueInProcId,
+             TrackAcrossProcesses aTrack = TrackAcrossProcesses::No);
+
+  nsCString ToString() const;
+
+  Source mSource;
+  uint32_t mUniqueInProcId;
+  Maybe<uint32_t> mProcId;
+};
 
 enum class MediaInfoFlag : uint16_t {
   None = (0 << 0),
@@ -101,8 +129,12 @@ class PlaybackStage {
 
 class CopyVideoStage {
  public:
-  CopyVideoStage(nsCString aSource, int32_t aWidth, int32_t aHeight)
-      : mSource(std::move(aSource)), mWidth(aWidth), mHeight(aHeight) {}
+  CopyVideoStage(nsCString aSource, TrackingId aTrackingId, int32_t aWidth,
+                 int32_t aHeight)
+      : mSource(std::move(aSource)),
+        mTrackingId(std::move(aTrackingId)),
+        mWidth(aWidth),
+        mHeight(aHeight) {}
 
   ProfilerString8View Name() const;
   const MarkerCategory& Category() const {
@@ -111,6 +143,9 @@ class CopyVideoStage {
 
   // The name of the source that performs this stage.
   nsCString mSource;
+  // A unique id identifying the source of the video frame this stage is
+  // performed for.
+  TrackingId mTrackingId;
   int32_t mWidth;
   int32_t mHeight;
 

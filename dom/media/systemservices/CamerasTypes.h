@@ -8,10 +8,9 @@
 #define mozilla_CamerasTypes_h
 
 #include "ipc/EnumSerializer.h"
+#include "PerformanceRecorder.h"
 
-namespace mozilla {
-
-namespace camera {
+namespace mozilla::camera {
 
 enum CaptureEngine : int {
   InvalidEngine = 0,
@@ -22,8 +21,10 @@ enum CaptureEngine : int {
   MaxEngine
 };
 
-}  // namespace camera
-}  // namespace mozilla
+TrackingId::Source CaptureEngineToTrackingSourceStr(
+    const CaptureEngine& aEngine);
+
+}  // namespace mozilla::camera
 
 namespace IPC {
 template <>
