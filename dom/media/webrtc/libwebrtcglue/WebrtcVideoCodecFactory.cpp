@@ -106,7 +106,8 @@ WebrtcVideoEncoderFactory::InternalFactory::CreateVideoEncoder(
   switch (webrtc::PayloadStringToCodecType(aFormat.name)) {
     case webrtc::VideoCodecType::kVideoCodecH264: {
       // get an external encoder
-      auto gmpEncoder = WrapUnique(GmpVideoCodec::CreateEncoder(mPCHandle));
+      auto gmpEncoder =
+          WrapUnique(GmpVideoCodec::CreateEncoder(aFormat, mPCHandle));
       mCreatedGmpPluginEvent.Forward(*gmpEncoder->InitPluginEvent());
       mReleasedGmpPluginEvent.Forward(*gmpEncoder->ReleasePluginEvent());
       encoder.reset(gmpEncoder.release());

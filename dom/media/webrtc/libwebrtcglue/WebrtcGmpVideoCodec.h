@@ -158,7 +158,8 @@ class RefCountedWebrtcVideoEncoder {
 class WebrtcGmpVideoEncoder : public GMPVideoEncoderCallbackProxy,
                               public RefCountedWebrtcVideoEncoder {
  public:
-  explicit WebrtcGmpVideoEncoder(std::string aPCHandle);
+  WebrtcGmpVideoEncoder(const webrtc::SdpVideoFormat& aFormat,
+                        std::string aPCHandle);
 
   // Implement VideoEncoder interface, sort of.
   // (We cannot use |Release|, since that's needed for nsRefPtr)
@@ -286,6 +287,7 @@ class WebrtcGmpVideoEncoder : public GMPVideoEncoderCallbackProxy,
   GMPVideoHost* mHost;
   GMPVideoCodec mCodecParams;
   uint32_t mMaxPayloadSize;
+  const webrtc::SdpVideoFormat::Parameters mFormatParams;
   webrtc::CodecSpecificInfo mCodecSpecificInfo;
   webrtc::H264BitstreamParser mH264BitstreamParser;
   // Protects mCallback

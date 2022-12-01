@@ -16,7 +16,8 @@ class WebrtcVideoEncoder;
 
 class GmpVideoCodec {
  public:
-  static WebrtcVideoEncoder* CreateEncoder(std::string aPCHandle);
+  static WebrtcVideoEncoder* CreateEncoder(
+      const webrtc::SdpVideoFormat& aFormat, std::string aPCHandle);
   static WebrtcVideoDecoder* CreateDecoder(std::string aPCHandle,
                                            TrackingId aTrackingId);
 };
