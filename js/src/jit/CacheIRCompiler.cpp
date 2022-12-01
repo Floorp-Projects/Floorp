@@ -3196,16 +3196,11 @@ bool CacheIRCompiler::emitInt32NotResult(Int32OperandId inputId) {
 bool CacheIRCompiler::emitDoubleNegationResult(NumberOperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  ValueOperand val = allocator.useValueRegister(masm, inputId);
 
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
+  AutoScratchFloatRegister floatReg(this);
 
-  AutoScratchFloatRegister floatReg(this, failure);
+  allocator.ensureDoubleRegister(masm, inputId, floatReg);
 
-  masm.ensureDouble(val, floatReg, floatReg.failure());
   masm.negateDouble(floatReg);
   masm.boxDouble(floatReg, output.valueReg(), floatReg);
 
@@ -3215,16 +3210,11 @@ bool CacheIRCompiler::emitDoubleNegationResult(NumberOperandId inputId) {
 bool CacheIRCompiler::emitDoubleIncDecResult(bool isInc,
                                              NumberOperandId inputId) {
   AutoOutputRegister output(*this);
-  ValueOperand val = allocator.useValueRegister(masm, inputId);
 
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
+  AutoScratchFloatRegister floatReg(this);
 
-  AutoScratchFloatRegister floatReg(this, failure);
+  allocator.ensureDoubleRegister(masm, inputId, floatReg);
 
-  masm.ensureDouble(val, floatReg, floatReg.failure());
   {
     ScratchDoubleScope fpscratch(masm);
     masm.loadConstantDouble(1.0, fpscratch);
