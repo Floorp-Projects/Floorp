@@ -101,6 +101,7 @@ class DateTimePickerParent extends JSWindowActorParent {
       debug("aBrowser.dateTimePicker not found, exiting now.");
       return;
     }
+    this.oldFocus = window.document.activeElement;
     this._picker = new lazy.DateTimePickerPanel(panel);
     this._picker.openPicker(type, rect, detail);
 
@@ -109,6 +110,11 @@ class DateTimePickerParent extends JSWindowActorParent {
 
   // Picker is closed, do some cleanup.
   close() {
+    if (this.oldFocus) {
+      // Restore focus to where it was before the picker opened.
+      this.oldFocus.focus();
+      this.oldFocus = null;
+    }
     this.removePickerListeners();
     this._picker = null;
   }
