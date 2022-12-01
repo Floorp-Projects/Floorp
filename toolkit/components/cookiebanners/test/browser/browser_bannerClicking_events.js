@@ -7,10 +7,11 @@ add_setup(clickTestSetup);
 
 /**
  * Triggers the cookie banner clicking feature and tests the events dispatched.
- * @param {*} options
- * @param {nsICookieBannerService::Modes} - The cookie banner service mode to test with.
+ * @param {*} options - Test options.
+ * @param {nsICookieBannerService::Modes} options.mode - The cookie banner service mode to test with.
+ * @param {*} options.openPageOptions - Options to overwrite for the openPageAndVerify call.
  */
-async function runEventTest({ mode }) {
+async function runEventTest({ mode, openPageOptions = {} }) {
   await SpecialPowers.pushPrefEnv({
     set: [["cookiebanners.service.mode", mode]],
   });
@@ -59,14 +60,16 @@ async function runEventTest({ mode }) {
   }
 
   let shouldHandleBanner = mode == Ci.nsICookieBannerService.MODE_REJECT;
+  let testURL = openPageOptions.testURL || TEST_PAGE_A;
 
   await openPageAndVerify({
     win: window,
     domain: TEST_DOMAIN_A,
-    testURL: TEST_PAGE_A,
+    testURL,
     visible: !shouldHandleBanner,
     expected: shouldHandleBanner ? "OptOut" : "NoClick",
     keepTabOpen: true,
+    ...openPageOptions, // Allow test callers to override any options for this method.
   });
 
   // It's safe to evaluate the event state at this point, because
@@ -130,7 +133,7 @@ async function runEventTest({ mode }) {
     );
     is(
       browser.currentURI.spec,
-      TEST_PAGE_A,
+      testURL,
       "The browser's URI spec should match the cookie banner test page."
     );
   }
@@ -195,6 +198,24 @@ add_task(async function test_events_mode_reject() {
  */
 add_task(async function test_events_mode_detect_only() {
   await runEventTest({ mode: Ci.nsICookieBannerService.MODE_DETECT_ONLY });
+});
+
+/**
+ * Test the banner clicking events with MODE_DETECT_ONLY with a click rule that
+ * only supports opt-in..
+ */
+add_task(async function test_events_mode_detect_only_opt_in_rule() {
+  await runEventTest({
+    mode: Ci.nsICookieBannerService.MODE_DETECT_ONLY,
+    openPageOptions: {
+      // We only have an opt-in rule for DOMAIN_B. This ensures we still fire
+      // detection events for that case.
+      domain: TEST_DOMAIN_B,
+      testURL: TEST_PAGE_B,
+      shouldHandleBanner: true,
+      expected: "NoClick",
+    },
+  });
 });
 
 /**
