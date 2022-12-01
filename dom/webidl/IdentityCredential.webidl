@@ -12,6 +12,8 @@
  Pref="dom.security.credentialmanagement.identity.enabled"]
 interface IdentityCredential : Credential {
  readonly attribute USVString? token;
+ [Throws]
+ static Promise<undefined> logoutRPs(sequence<IdentityCredentialLogoutRPsRequest> logoutRequests);
 };
 
 dictionary IdentityCredentialRequestOptions {
@@ -79,4 +81,10 @@ dictionary IdentityClientMetadata {
 [GenerateInit]
 dictionary IdentityToken {
   required USVString token;
+};
+
+// https://fedidcg.github.io/FedCM/#browser-api-idp-sign-out
+dictionary IdentityCredentialLogoutRPsRequest {
+  required UTF8String url;
+  required UTF8String accountId;
 };

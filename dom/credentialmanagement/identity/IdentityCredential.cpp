@@ -15,7 +15,9 @@
 #include "mozilla/ExpandedPrincipal.h"
 #include "mozilla/NullPrincipal.h"
 #include "nsEffectiveTLDService.h"
+#include "nsIGlobalObject.h"
 #include "nsIIdentityCredentialPromptService.h"
+#include "nsIIdentityCredentialStorageService.h"
 #include "nsITimer.h"
 #include "nsIXPConnect.h"
 #include "nsNetUtil.h"
@@ -310,7 +312,7 @@ IdentityCredential::CheckRootManifest(nsIPrincipal* aPrincipal,
   }
 
   // Create a new request
-  nsCString fragment = ""_ns;
+  constexpr auto fragment = ""_ns;
   auto internalRequest =
       MakeSafeRefPtr<InternalRequest>(manifestURIString, fragment);
   internalRequest->SetCredentialsMode(RequestCredentials::Omit);
@@ -375,7 +377,7 @@ IdentityCredential::FetchInternalManifest(nsIPrincipal* aPrincipal,
   }
 
   // Create a new request
-  nsCString fragment = ""_ns;
+  constexpr auto fragment = ""_ns;
   auto internalRequest =
       MakeSafeRefPtr<InternalRequest>(configLocation, fragment);
   internalRequest->SetRedirectMode(RequestRedirect::Error);
@@ -442,7 +444,7 @@ IdentityCredential::FetchAccountList(
   }
 
   // Create a new request
-  nsCString fragment = ""_ns;
+  constexpr auto fragment = ""_ns;
   auto internalRequest =
       MakeSafeRefPtr<InternalRequest>(configLocation, fragment);
   internalRequest->SetRedirectMode(RequestRedirect::Error);
@@ -497,7 +499,7 @@ RefPtr<IdentityCredential::GetTokenPromise> IdentityCredential::FetchToken(
   }
 
   // Create a new request
-  nsCString fragment = ""_ns;
+  constexpr auto fragment = ""_ns;
   auto internalRequest =
       MakeSafeRefPtr<InternalRequest>(tokenLocation, fragment);
   internalRequest->SetMethod("POST"_ns);
@@ -672,6 +674,69 @@ void IdentityCredential::CloseUserInterface(BrowsingContext* aBrowsingContext) {
     return;
   }
   icPromptService->Close(aBrowsingContext);
+}
+
+// static
+already_AddRefed<Promise> IdentityCredential::LogoutRPs(
+    GlobalObject& aGlobal,
+    const Sequence<IdentityCredentialLogoutRPsRequest>& aLogoutRequests,
+    ErrorResult& aRv) {
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  RefPtr<Promise> promise = Promise::CreateResolvedWithUndefined(global, aRv);
+  NS_ENSURE_FALSE(aRv.Failed(), nullptr);
+  nsresult rv;
+  nsCOMPtr<nsIIdentityCredentialStorageService> icStorageService =
+      components::IdentityCredentialStorageService::Service(&rv);
+  if (NS_WARN_IF(!icStorageService)) {
+    aRv.Throw(rv);
+    return nullptr;
+  }
+
+  RefPtr<nsIPrincipal> rpPrincipal = global->PrincipalOrNull();
+  for (const auto& request : aLogoutRequests) {
+    // Get the current state
+    nsCOMPtr<nsIURI> idpURI;
+    rv = NS_NewURI(getter_AddRefs(idpURI), request.mUrl);
+    if (NS_FAILED(rv)) {
+      aRv.ThrowTypeError<MSG_INVALID_URL>(request.mUrl);
+      return nullptr;
+    }
+    nsCOMPtr<nsIPrincipal> idpPrincipal = BasePrincipal::CreateContentPrincipal(
+        idpURI, rpPrincipal->OriginAttributesRef());
+    bool registered, allowLogout;
+    icStorageService->GetState(rpPrincipal, idpPrincipal, request.mAccountId,
+                               &registered, &allowLogout);
+
+    // Ignore this request if it isn't permitted
+    if (!(registered && allowLogout)) {
+      continue;
+    }
+
+    // Issue the logout request
+    constexpr auto fragment = ""_ns;
+    auto internalRequest =
+        MakeSafeRefPtr<InternalRequest>(request.mUrl, fragment);
+    internalRequest->SetRedirectMode(RequestRedirect::Error);
+    internalRequest->SetCredentialsMode(RequestCredentials::Include);
+    internalRequest->SetReferrerPolicy(ReferrerPolicy::Strict_origin);
+    internalRequest->SetMode(RequestMode::Cors);
+    internalRequest->SetCacheMode(RequestCache::No_cache);
+    internalRequest->OverrideContentPolicyType(
+        nsContentPolicyType::TYPE_WEB_IDENTITY);
+    RefPtr<Request> domRequest =
+        new Request(global, std::move(internalRequest), nullptr);
+    RequestOrUSVString fetchInput;
+    fetchInput.SetAsRequest() = domRequest;
+    RootedDictionary<RequestInit> requestInit(RootingCx());
+    IgnoredErrorResult error;
+    RefPtr<Promise> fetchPromise = FetchRequest(global, fetchInput, requestInit,
+                                                CallerType::System, error);
+
+    // Change state to disallow more logout requests
+    icStorageService->SetState(rpPrincipal, idpPrincipal, request.mAccountId,
+                               true, false);
+  }
+  return promise.forget();
 }
 
 }  // namespace mozilla::dom
