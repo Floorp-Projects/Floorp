@@ -126,7 +126,7 @@ const tests = [
       category: "urlbar",
       method: "abandonment",
       object: "blur",
-      value: "topsites",
+      value: "typed",
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "0",

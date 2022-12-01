@@ -34,10 +34,26 @@ add_task(async function interaction_typed() {
 
     assertGleanTelemetry([{ interaction: "typed" }]);
   });
+
+  await doTest(async browser => {
+    await showResultByArrowDown();
+    EventUtils.synthesizeKey("x");
+    await UrlbarTestUtils.promiseSearchComplete(window);
+    await doEnter();
+
+    assertGleanTelemetry([{ interaction: "typed" }]);
+  });
 });
 
 add_task(async function interaction_dropped() {
   await doTest(async browser => {
+    await doDropAndGo("example.com");
+
+    assertGleanTelemetry([{ interaction: "dropped" }]);
+  });
+
+  await doTest(async browser => {
+    await showResultByArrowDown();
     await doDropAndGo("example.com");
 
     assertGleanTelemetry([{ interaction: "dropped" }]);
@@ -53,6 +69,21 @@ add_task(async function interaction_pasted() {
   });
 
   await doTest(async browser => {
+    await doPasteAndGo("www.example.com");
+
+    assertGleanTelemetry([{ interaction: "pasted" }]);
+  });
+
+  await doTest(async browser => {
+    await showResultByArrowDown();
+    await doPaste("x");
+    await doEnter();
+
+    assertGleanTelemetry([{ interaction: "pasted" }]);
+  });
+
+  await doTest(async browser => {
+    await showResultByArrowDown();
     await doPasteAndGo("www.example.com");
 
     assertGleanTelemetry([{ interaction: "pasted" }]);
