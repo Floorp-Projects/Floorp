@@ -130,6 +130,8 @@ static void AppendImageFormatToName(nsCString& aName,
         return "rgb24,";
       case DecodeStage::GBRP:
         return "gbrp,";
+      case DecodeStage::ANDROID_SURFACE:
+        return "android.Surface,";
     }
     MOZ_ASSERT_UNREACHABLE("Unhandled DecodeStage::ImageFormat");
     return "";

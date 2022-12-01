@@ -174,6 +174,7 @@ class DecodeStage {
     RGBA32,
     RGB24,
     GBRP,
+    ANDROID_SURFACE,
   };
 
   DecodeStage(nsCString aSource, MediaInfoFlag aFlag)
