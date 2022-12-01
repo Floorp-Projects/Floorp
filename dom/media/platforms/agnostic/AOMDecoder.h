@@ -8,6 +8,7 @@
 
 #  include <stdint.h>
 
+#  include "PerformanceRecorder.h"
 #  include "PlatformDecoderModule.h"
 #  include "aom/aom_decoder.h"
 #  include "mozilla/Span.h"
@@ -274,6 +275,7 @@ class AOMDecoder : public MediaDataDecoder,
   aom_codec_ctx_t mCodec;
 
   const VideoInfo mInfo;
+  PerformanceRecorderMulti<DecodeStage> mPerformanceRecorder;
 };
 
 }  // namespace mozilla
