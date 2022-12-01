@@ -412,7 +412,8 @@ nsresult StartupCache::GetBuffer(const char* id, const char** outbuf,
     Span<const char> compressed = Span(
         mCacheData.get<char>().get() + mCacheEntriesBaseOffset + value.mOffset,
         value.mCompressedSize);
-    value.mData = MakeUnique<char[]>(value.mUncompressedSize);
+    value.mData = UniqueFreePtr<char[]>(reinterpret_cast<char*>(
+        malloc(sizeof(char) * value.mUncompressedSize)));
     Span<char> uncompressed = Span(value.mData.get(), value.mUncompressedSize);
     MMAP_FAULT_HANDLER_BEGIN_BUFFER(uncompressed.Elements(),
                                     uncompressed.Length())
@@ -453,7 +454,7 @@ nsresult StartupCache::GetBuffer(const char* id, const char** outbuf,
 }
 
 // Makes a copy of the buffer, client retains ownership of inbuf.
-nsresult StartupCache::PutBuffer(const char* id, UniquePtr<char[]>&& inbuf,
+nsresult StartupCache::PutBuffer(const char* id, UniqueFreePtr<char[]>&& inbuf,
                                  uint32_t len) MOZ_NO_THREAD_SAFETY_ANALYSIS {
   NS_ASSERTION(NS_IsMainThread(),
                "Startup cache only available on main thread");
