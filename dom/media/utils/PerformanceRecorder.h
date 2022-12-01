@@ -99,6 +99,25 @@ class PlaybackStage {
   mutable Maybe<nsCString> mName;
 };
 
+class CopyVideoStage {
+ public:
+  CopyVideoStage(nsCString aSource, int32_t aWidth, int32_t aHeight)
+      : mSource(std::move(aSource)), mWidth(aWidth), mHeight(aHeight) {}
+
+  ProfilerString8View Name() const;
+  const MarkerCategory& Category() const {
+    return baseprofiler::category::MEDIA_RT;
+  }
+
+  // The name of the source that performs this stage.
+  nsCString mSource;
+  int32_t mWidth;
+  int32_t mHeight;
+
+ private:
+  mutable Maybe<nsCString> mName;
+};
+
 class PerformanceRecorderBase {
  public:
   static bool IsMeasurementEnabled();
