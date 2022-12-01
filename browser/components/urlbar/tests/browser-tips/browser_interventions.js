@@ -9,6 +9,8 @@ ChromeUtils.defineESModuleGetters(this, {
 });
 
 add_setup(async function() {
+  Services.telemetry.clearEvents();
+  Services.telemetry.clearScalars();
   makeProfileResettable();
 });
 

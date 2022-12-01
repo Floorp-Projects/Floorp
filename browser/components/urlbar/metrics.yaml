@@ -1,0 +1,71 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - "Firefox :: Address Bar"
+
+urlbar:
+  engagement:
+    type: event
+    description: Recorded when the user executes an action on a result.
+    extra_keys:
+      sap:
+        description: Where the user action started.
+        type: string
+      interaction:
+        description: How the user started the search.
+        type: string
+      n_chars:
+        description: Number of typed characters.
+        type: quantity
+      n_words:
+        description: Number of typed words (doesn’t support CJK languages).
+        type: quantity
+      n_results:
+        description: >
+          Number of results, if this is high the results list below may be
+          incomplete due to size limits. This limit is defined in
+          `browser.urlbar.maxRichResults` preference that specifies the maximum
+          number of results in the urlbar popup.
+        type: quantity
+      selected_result:
+        description: Type of the selected result.
+        type: string
+      selected_result_subtype:
+        description: >
+          Set when a result provides multiple choices, like quick actions.
+        type: string
+      provider:
+        description: >
+          Name of the `UrlbarProvider` that returned the selected result.
+        type: string
+      engagement_type:
+        description: Which action was executed on the result.
+        type: string
+      groups:
+        description: >
+          Comma separated list of result groups in order, groups may be
+          repeated, since the list will match 1:1 the results list, so we
+          can link each result to a group.
+        type: string
+      results:
+        description: >
+          Comma separated list of result types in the order they were
+          shown to the user.
+        type: string
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1797265
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1797265
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1797265#c3
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    expires: never

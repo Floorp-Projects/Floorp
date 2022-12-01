@@ -21,7 +21,11 @@ ChromeUtils.defineESModuleGetters(lazy, {
   SearchSuggestionController:
     "resource://gre/modules/SearchSuggestionController.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
+  UrlbarProviderInterventions:
+    "resource:///modules/UrlbarProviderInterventions.sys.mjs",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
+  UrlbarProviderSearchTips:
+    "resource:///modules/UrlbarProviderSearchTips.sys.mjs",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
 });
@@ -1240,6 +1244,177 @@ export var UrlbarUtils = {
     return uri.length > UrlbarUtils.MAX_TEXT_LENGTH
       ? uri
       : Services.textToSubURI.unEscapeURIForUI(uri);
+  },
+
+  /**
+   * Extracts a group for search engagement telemetry from a result.
+   *
+   * @param {UrlbarResult} result The result to analyze.
+   * @returns {string} Group name as string.
+   */
+  searchEngagementTelemetryGroup(result) {
+    if (!result) {
+      return "unknown";
+    }
+    if (result.isBestMatch) {
+      return "top_pick";
+    }
+    if (result.providerName === "UrlbarProviderTopSites") {
+      return "top_site";
+    }
+
+    switch (this.getResultGroup(result)) {
+      case UrlbarUtils.RESULT_GROUP.INPUT_HISTORY: {
+        return "adaptive_history";
+      }
+      case UrlbarUtils.RESULT_GROUP.FORM_HISTORY: {
+        return "search_history";
+      }
+      case UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION: {
+        return "search_suggest";
+      }
+      case UrlbarUtils.RESULT_GROUP.REMOTE_TAB: {
+        return "remote_tab";
+      }
+      case UrlbarUtils.RESULT_GROUP.HEURISTIC_EXTENSION:
+      case UrlbarUtils.RESULT_GROUP.HEURISTIC_OMNIBOX:
+      case UrlbarUtils.RESULT_GROUP.OMNIBOX: {
+        return "addon";
+      }
+      case UrlbarUtils.RESULT_GROUP.GENERAL: {
+        return "general";
+      }
+      // Group of UrlbarProviderQuickSuggest is GENERAL_PARENT.
+      case UrlbarUtils.RESULT_GROUP.GENERAL_PARENT:
+      case UrlbarUtils.RESULT_GROUP.TAIL_SUGGESTION: {
+        return "suggest";
+      }
+      case UrlbarUtils.RESULT_GROUP.ABOUT_PAGES: {
+        return "about_page";
+      }
+      case UrlbarUtils.RESULT_GROUP.SUGGESTED_INDEX: {
+        return "suggested_index";
+      }
+    }
+
+    return result.heuristic ? "heuristic" : "unknown";
+  },
+
+  /**
+   * Extracts a type for search engagement telemetry from a result.
+   *
+   * @param {UrlbarResult} result The result to analyze.
+   * @returns {string} Type as string.
+   */
+  searchEngagementTelemetryType(result) {
+    if (!result) {
+      return "unknown";
+    }
+
+    switch (result.type) {
+      case UrlbarUtils.RESULT_TYPE.DYNAMIC:
+        switch (result.providerName) {
+          case "calculator":
+            return "calc";
+          case "quickactions":
+            return "action";
+          case "TabToSearch":
+            return "tab_to_search";
+          case "UnitConversion":
+            return "unit";
+        }
+        break;
+      case UrlbarUtils.RESULT_TYPE.KEYWORD:
+        return "keyword";
+      case UrlbarUtils.RESULT_TYPE.OMNIBOX:
+        return "addon";
+      case UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
+        return "remote_tab";
+      case UrlbarUtils.RESULT_TYPE.SEARCH:
+        if (result.providerName === "TabToSearch") {
+          return "tab_to_search";
+        }
+        if (result.source == UrlbarUtils.RESULT_SOURCE.HISTORY) {
+          return "search_history";
+        }
+        if (result.payload.suggestion) {
+          return "search_suggest";
+        }
+        return "search_engine";
+      case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
+        return "tab";
+      case UrlbarUtils.RESULT_TYPE.TIP:
+        if (result.providerName === "UrlbarProviderInterventions") {
+          switch (result.payload.type) {
+            case lazy.UrlbarProviderInterventions.TIP_TYPE.CLEAR:
+              return "intervention_clear";
+            case lazy.UrlbarProviderInterventions.TIP_TYPE.REFRESH:
+              return "intervention_refresh";
+            case lazy.UrlbarProviderInterventions.TIP_TYPE.UPDATE_ASK:
+            case lazy.UrlbarProviderInterventions.TIP_TYPE.UPDATE_CHECKING:
+            case lazy.UrlbarProviderInterventions.TIP_TYPE.UPDATE_REFRESH:
+            case lazy.UrlbarProviderInterventions.TIP_TYPE.UPDATE_RESTART:
+            case lazy.UrlbarProviderInterventions.TIP_TYPE.UPDATE_WEB:
+              return "intervention_update";
+            default:
+              return "intervention_unknown";
+          }
+        }
+
+        switch (result.payload.type) {
+          case lazy.UrlbarProviderSearchTips.TIP_TYPE.ONBOARD:
+            return "tip_onboard";
+          case lazy.UrlbarProviderSearchTips.TIP_TYPE.REDIRECT:
+            return "tip_redirect";
+          default:
+            return "tip_unknown";
+        }
+      case UrlbarUtils.RESULT_TYPE.URL:
+        if (
+          result.source === UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL &&
+          result.heuristic
+        ) {
+          return "url";
+        }
+        if (result.autofill) {
+          return `autofill_${result.autofill.type ?? "unknown"}`;
+        }
+        if (result.providerName === "UrlbarProviderQuickSuggest") {
+          return result.payload.isSponsored
+            ? "suggest_sponsor"
+            : "suggest_non_sponsor";
+        }
+        if (result.providerName === "UrlbarProviderTopSites") {
+          return "top_site";
+        }
+        return result.source === UrlbarUtils.RESULT_SOURCE.BOOKMARKS
+          ? "bookmark"
+          : "history";
+    }
+
+    return "unknown";
+  },
+
+  /**
+   * Extracts a subtype for search engagement telemetry from a result and the picked element.
+   *
+   * @param {UrlbarResult} result The result to analyze.
+   * @param {DOMElement} element The picked view element. Nullable.
+   * @returns {string} Subtype as string.
+   */
+  searchEngagementTelemetrySubtype(result, element) {
+    if (!result) {
+      return "";
+    }
+
+    if (
+      result.providerName === "quickactions" &&
+      element?.classList.contains("urlbarView-quickaction-row")
+    ) {
+      return element.dataset.key;
+    }
+
+    return "";
   },
 };
 

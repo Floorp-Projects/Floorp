@@ -419,7 +419,7 @@ export class UrlbarController {
           break;
         }
         if (event.shiftKey) {
-          if (!executeAction || this.handleDeleteEntry()) {
+          if (!executeAction || this.handleDeleteEntry(event)) {
             event.preventDefault();
           }
         } else if (executeAction) {
@@ -580,6 +580,7 @@ export class UrlbarController {
    *
    * No other results can be deleted and this method will ignore them.
    *
+   * @param {Event} event The event that triggered deletion.
    * @param {UrlbarResult} [result]
    *   The result to delete. If given, it must be present in the controller's
    *   most recent query context. If not given, the currently selected result
@@ -587,7 +588,7 @@ export class UrlbarController {
    * @returns {boolean}
    *   Returns true if the result was deleted and false if not.
    */
-  handleDeleteEntry(result = undefined) {
+  handleDeleteEntry(event, result = undefined) {
     if (!this._lastQueryContextWrapper) {
       Cu.reportError("Cannot delete - the latest query is not present");
       return false;
@@ -603,6 +604,15 @@ export class UrlbarController {
         return false;
       }
       result = this.input.view.selectedResult;
+    }
+
+    if (result && event) {
+      this.engagementEvent.record(event, {
+        searchString: queryContext.searchString,
+        selIndex: result.rowIndex,
+        selType: "dismiss",
+        provider: result.providerName,
+      });
     }
 
     if (!result || result.heuristic) {
@@ -795,18 +805,21 @@ class TelemetryEvent {
    *        Note: event can be null, that usually happens for paste&go or drop&go.
    *        If there's no _startEventInfo this is a no-op.
    * @param {object} details An object describing action details.
-   * @param {string} details.searchString The user's search string. Note that
+   * @param {string} [details.searchString] The user's search string. Note that
    *        this string is not sent with telemetry data. It is only used
    *        locally to discern other data, such as the number of characters and
    *        words in the string.
-   * @param {string} details.selIndex Index of the selected result, undefined
+   * @param {string} [details.selIndex] Index of the selected result, undefined
    *        for "blur".
-   * @param {string} details.selType type of the selected element, undefined
+   * @param {string} [details.selType] type of the selected element, undefined
    *        for "blur". One of "unknown", "autofill", "visiturl", "bookmark",
    *        "history", "keyword", "searchengine", "searchsuggestion",
-   *        "switchtab", "remotetab", "extension", "oneoff".
-   * @param {string} details.provider The name of the provider for the selected
+   *        "switchtab", "remotetab", "extension", "oneoff", "dismiss".
+   * @param {string} [details.provider] The name of the provider for the selected
    *        result.
+   * @param {DOMElement} [details.element] The picked view element.
+   * @param {object} [details.startEventInfo] Additional info about the start
+   *        event.
    */
   record(event, details) {
     // This should never throw, or it may break the urlbar.
@@ -821,8 +834,10 @@ class TelemetryEvent {
   }
 
   _internalRecord(event, details) {
-    if (!this._category || !this._startEventInfo) {
-      if (this._discarded && this._category) {
+    const startEventInfo = details.startEventInfo ?? this._startEventInfo;
+
+    if (!this._category || !startEventInfo) {
+      if (this._discarded && this._category && details?.selType !== "dismiss") {
         let { queryContext } = this._controller._lastQueryContextWrapper || {};
         this._controller.manager.notifyEngagementChange(
           this._isPrivate,
@@ -834,8 +849,8 @@ class TelemetryEvent {
     }
     if (
       !event &&
-      this._startEventInfo.interactionType != "pasted" &&
-      this._startEventInfo.interactionType != "dropped"
+      startEventInfo.interactionType != "pasted" &&
+      startEventInfo.interactionType != "dropped"
     ) {
       // If no event is passed, we must be executing either paste&go or drop&go.
       throw new Error("Event must be defined, unless input was pasted/dropped");
@@ -844,26 +859,59 @@ class TelemetryEvent {
       throw new Error("Invalid event details: " + details);
     }
 
-    let endTime = (event && event.timeStamp) || Cu.now();
-    let startTime = this._startEventInfo.timeStamp || endTime;
-    // Synthesized events in tests may have a bogus timeStamp, causing a
-    // subtraction between monotonic and non-monotonic timestamps; that's why
-    // abs is necessary here. It should only happen in tests, anyway.
-    let elapsed = Math.abs(Math.round(endTime - startTime));
-
     let action;
     if (!event) {
       action =
-        this._startEventInfo.interactionType == "dropped"
-          ? "drop_go"
-          : "paste_go";
+        startEventInfo.interactionType == "dropped" ? "drop_go" : "paste_go";
     } else if (event.type == "blur") {
       action = "blur";
     } else {
       action = MouseEvent.isInstance(event) ? "click" : "enter";
     }
+
     let method = action == "blur" ? "abandonment" : "engagement";
-    let value = this._startEventInfo.interactionType;
+
+    // numWords is not a perfect measurement, since it will return an incorrect
+    // value for languages that do not use spaces or URLs containing spaces in
+    // its query parameters, for example.
+    let searchString = details.searchString.substring(
+      0,
+      lazy.UrlbarUtils.MAX_TEXT_LENGTH
+    );
+    let numChars = details.searchString.length.toString();
+    let searchWords = searchString
+      .trim()
+      .split(lazy.UrlbarTokenizer.REGEXP_SPACES)
+      .filter(t => t);
+    let numWords = searchWords.length.toString();
+
+    let { queryContext } = this._controller._lastQueryContextWrapper || {};
+
+    if (lazy.UrlbarPrefs.get("searchEngagementTelemetry.enabled")) {
+      this._recordSearchEngagementTelemetry({
+        queryContext,
+        startEventInfo,
+        action,
+        method,
+        numChars,
+        numWords,
+        searchWords,
+        details,
+      });
+    }
+
+    if (details.selType === "dismiss") {
+      // The conventional telemetry dones't support "dismiss" event.
+      return;
+    }
+
+    let endTime = (event && event.timeStamp) || Cu.now();
+    let startTime = startEventInfo.timeStamp || endTime;
+    // Synthesized events in tests may have a bogus timeStamp, causing a
+    // subtraction between monotonic and non-monotonic timestamps; that's why
+    // abs is necessary here. It should only happen in tests, anyway.
+    let elapsed = Math.abs(Math.round(endTime - startTime));
+    let value = startEventInfo.interactionType;
 
     // Rather than listening to the pref, just update status when we record an
     // event, if the pref changed from the last time.
@@ -873,18 +921,12 @@ class TelemetryEvent {
       Services.telemetry.setEventRecordingEnabled("urlbar", recordingEnabled);
     }
 
-    // numWords is not a perfect measurement, since it will return an incorrect
-    // value for languages that do not use spaces or URLs containing spaces in
-    // its query parameters, for example.
     let extra = {
       elapsed: elapsed.toString(),
-      numChars: details.searchString.length.toString(),
-      numWords: details.searchString
-        .trim()
-        .split(lazy.UrlbarTokenizer.REGEXP_SPACES)
-        .filter(t => t)
-        .length.toString(),
+      numChars,
+      numWords,
     };
+
     if (method == "engagement") {
       extra.selIndex = details.selIndex.toString();
       extra.selType = details.selType;
@@ -908,8 +950,6 @@ class TelemetryEvent {
       1
     );
 
-    let { queryContext } = this._controller._lastQueryContextWrapper || {};
-
     if (method === "engagement" && queryContext.results?.[0].autofill) {
       // Record autofill impressions upon engagement.
       const type = lazy.UrlbarUtils.telemetryTypeFromResult(
@@ -926,12 +966,113 @@ class TelemetryEvent {
     );
   }
 
+  _recordSearchEngagementTelemetry({
+    queryContext,
+    startEventInfo,
+    action,
+    method,
+    searchWords,
+    numWords,
+    numChars,
+    details,
+  }) {
+    if (method !== "engagement") {
+      return;
+    }
+
+    const browserWindow = this._controller.browserWindow;
+    let sap = "urlbar";
+    if (details.searchSource === "urlbar-handoff") {
+      sap = "handoff";
+    } else if (
+      browserWindow.isBlankPageURL(browserWindow.gBrowser.currentURI.spec)
+    ) {
+      sap = "urlbar_newtab";
+    } else if (browserWindow.gBrowser.currentURI.schemeIs("moz-extension")) {
+      sap = "urlbar_addonpage";
+    }
+
+    const searchWordsSet = new Set(searchWords);
+    let interaction =
+      this._controller.input.searchMode?.entry === "topsites_newtab"
+        ? "topsite_search"
+        : startEventInfo.interactionType;
+    if (interaction === "typed") {
+      if (details.searchSource === "urlbar-persisted") {
+        interaction = "persisted_search_terms";
+      } else if (
+        this._isRefined(searchWordsSet, this._previousSearchWordsSet)
+      ) {
+        interaction = "refined";
+      }
+    }
+    this._previousSearchWordsSet = searchWordsSet;
+
+    const results = queryContext ? queryContext.results : [];
+    const result = results[details.selIndex];
+
+    Glean.urlbar.engagement.record({
+      sap,
+      interaction,
+      n_chars: numChars,
+      n_words: numWords,
+      n_results: results.length,
+      selected_result: lazy.UrlbarUtils.searchEngagementTelemetryType(result),
+      selected_result_subtype: lazy.UrlbarUtils.searchEngagementTelemetrySubtype(
+        result,
+        details.element
+      ),
+      provider: details.provider,
+      engagement_type:
+        details.selType === "help" || details.selType === "dismiss"
+          ? details.selType
+          : action,
+      groups: results
+        .map(r => lazy.UrlbarUtils.searchEngagementTelemetryGroup(r))
+        .join(","),
+      results: results
+        .map(r => lazy.UrlbarUtils.searchEngagementTelemetryType(r))
+        .join(","),
+    });
+  }
+
+  /**
+   * Checks whether re-searched by modifying some of the keywords from the
+   * previous search. Concretely, returns true if there is intersects between
+   * both keywords, otherwise returns false. Also, returns false even if both
+   * are the same.
+   *
+   * @param {Set} currentSet The current keywords.
+   * @param {Set} [previousSet] The previous keywords.
+   * @returns {boolean} true if current searching are refined.
+   */
+  _isRefined(currentSet, previousSet = null) {
+    if (!previousSet) {
+      return false;
+    }
+
+    const intersect = (setA, setB) => {
+      let count = 0;
+      for (const word of setA.values()) {
+        if (setB.has(word)) {
+          count += 1;
+        }
+      }
+      return count > 0 && count != setA.size;
+    };
+
+    return (
+      intersect(currentSet, previousSet) || intersect(previousSet, currentSet)
+    );
+  }
+
   /**
    * Resets the currently tracked user-generated event that was registered via
    * start(), so it won't be recorded.  If there's no tracked event, this is a
    * no-op.
    */
   discard() {
+    this._previousSearchWordsSet = null;
     if (this._startEventInfo) {
       this._startEventInfo = null;
       this._discarded = true;
