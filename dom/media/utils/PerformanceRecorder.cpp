@@ -8,6 +8,7 @@
 
 #include "base/process_util.h"
 #include "mozilla/Logging.h"
+#include "mozilla/gfx/Types.h"
 #include "nsPrintfCString.h"
 
 namespace mozilla {
@@ -62,7 +63,7 @@ nsCString TrackingId::ToString() const {
   return nsPrintfCString("%s-%u", SourceToStr(mSource), mUniqueInProcId);
 }
 
-const char* StageToStr(MediaStage aStage) {
+static const char* StageToStr(MediaStage aStage) {
   switch (aStage) {
     case MediaStage::RequestData:
       return "RequestData";
@@ -79,7 +80,7 @@ const char* StageToStr(MediaStage aStage) {
   }
 }
 
-void AppendMediaInfoFlagToName(nsCString& aName, MediaInfoFlag aFlag) {
+static void AppendMediaInfoFlagToName(nsCString& aName, MediaInfoFlag aFlag) {
   if (aFlag & MediaInfoFlag::KeyFrame) {
     aName.Append("kf,");
   }
@@ -99,6 +100,86 @@ void AppendMediaInfoFlagToName(nsCString& aName, MediaInfoFlag aFlag) {
   } else if (aFlag & MediaInfoFlag::VIDEO_VP9) {
     aName.Append("vp9,");
   }
+}
+
+static void AppendImageFormatToName(nsCString& aName,
+                                    DecodeStage::ImageFormat aFormat) {
+  aName.Append([&] {
+    switch (aFormat) {
+      case DecodeStage::YUV420P:
+        return "yuv420p,";
+      case DecodeStage::YUV422P:
+        return "yuv422p,";
+      case DecodeStage::YUV444P:
+        return "yuv444p,";
+      case DecodeStage::NV12:
+        return "nv12,";
+      case DecodeStage::YV12:
+        return "yv12,";
+      case DecodeStage::NV21:
+        return "nv21,";
+      case DecodeStage::P010:
+        return "p010,";
+      case DecodeStage::P016:
+        return "p016,";
+      case DecodeStage::RGBA32:
+        return "rgba32,";
+      case DecodeStage::RGB24:
+        return "rgb24,";
+      case DecodeStage::GBRP:
+        return "gbrp,";
+    }
+    MOZ_ASSERT_UNREACHABLE("Unhandled DecodeStage::ImageFormat");
+    return "";
+  }());
+}
+
+static void AppendYUVColorSpaceToName(nsCString& aName,
+                                      gfx::YUVColorSpace aSpace) {
+  aName.Append([&] {
+    switch (aSpace) {
+      case gfx::YUVColorSpace::BT601:
+        return "space=BT.601,";
+      case gfx::YUVColorSpace::BT709:
+        return "space=BT.709,";
+      case gfx::YUVColorSpace::BT2020:
+        return "space=BT.2020,";
+      case gfx::YUVColorSpace::Identity:
+        return "space=Identity,";
+    }
+    MOZ_ASSERT_UNREACHABLE("Unhandled gfx::YUVColorSpace");
+    return "";
+  }());
+}
+
+static void AppendColorRangeToName(nsCString& aName, gfx::ColorRange aRange) {
+  aName.Append([&] {
+    switch (aRange) {
+      case gfx::ColorRange::LIMITED:
+        return "range=Limited,";
+      case gfx::ColorRange::FULL:
+        return "range=Full,";
+    }
+    MOZ_ASSERT_UNREACHABLE("Unhandled gfx::ColorRange");
+    return "";
+  }());
+}
+
+static void AppendColorDepthToName(nsCString& aName, gfx::ColorDepth aDepth) {
+  aName.Append([&] {
+    switch (aDepth) {
+      case gfx::ColorDepth::COLOR_8:
+        return "depth=8,";
+      case gfx::ColorDepth::COLOR_10:
+        return "depth=10,";
+      case gfx::ColorDepth::COLOR_12:
+        return "depth=12,";
+      case gfx::ColorDepth::COLOR_16:
+        return "depth=16,";
+    }
+    MOZ_ASSERT_UNREACHABLE("Unhandled gfx::ColorDepth");
+    return "";
+  }());
 }
 
 /* static */
@@ -155,6 +236,28 @@ ProfilerString8View CopyVideoStage::Name() const {
     mName =
         Some(nsPrintfCString("CopyVideoFrame %s %dx%d %s", mSource.Data(),
                              mWidth, mHeight, mTrackingId.ToString().get()));
+  }
+  return *mName;
+}
+
+ProfilerString8View DecodeStage::Name() const {
+  if (!mName) {
+    nsCString extras;
+    AppendMediaInfoFlagToName(extras, mFlag);
+    mImageFormat.apply(
+        [&](ImageFormat aFormat) { AppendImageFormatToName(extras, aFormat); });
+    mColorDepth.apply([&](gfx::ColorDepth aDepth) {
+      AppendColorDepthToName(extras, aDepth);
+    });
+    mColorRange.apply([&](gfx::ColorRange aRange) {
+      AppendColorRangeToName(extras, aRange);
+    });
+    mYUVColorSpace.apply([&](gfx::YUVColorSpace aColorSpace) {
+      AppendYUVColorSpaceToName(extras, aColorSpace);
+    });
+    mName = Some(nsPrintfCString("DecodeFrame %s %dx%d %s", mSource.Data(),
+                                 mWidth.valueOr(-1), mHeight.valueOr(-1),
+                                 extras.get()));
   }
   return *mName;
 }
