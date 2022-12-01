@@ -12,6 +12,7 @@
 #  include "ImageContainer.h"
 #  include "MediaDataDecoderProxy.h"
 #  include "MediaInfo.h"
+#  include "PerformanceRecorder.h"
 #  include "PlatformDecoderModule.h"
 #  include "mozIGeckoMediaPluginService.h"
 
@@ -90,6 +91,7 @@ class GMPVideoDecoder : public MediaDataDecoder,
   int64_t mLastStreamOffset = 0;
   RefPtr<layers::ImageContainer> mImageContainer;
   RefPtr<layers::KnowsCompositor> mKnowsCompositor;
+  PerformanceRecorderMulti<DecodeStage> mPerformanceRecorder;
 
   MozPromiseHolder<DecodePromise> mDecodePromise;
   MozPromiseHolder<DecodePromise> mDrainPromise;
