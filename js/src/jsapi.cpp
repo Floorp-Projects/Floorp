@@ -3425,8 +3425,7 @@ JS_PUBLIC_API bool JS_Stringify(JSContext* cx, MutableHandleValue vp,
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->check(replacer, space);
-  AutoReportFrontendContext ec(cx);
-  StringBuffer sb(cx, &ec);
+  StringBuffer sb(cx);
   if (!sb.ensureTwoByteChars()) {
     return false;
   }
@@ -3446,8 +3445,7 @@ JS_PUBLIC_API bool JS::ToJSONMaybeSafely(JSContext* cx, JS::HandleObject input,
   CHECK_THREAD(cx);
   cx->check(input);
 
-  AutoReportFrontendContext ec(cx);
-  StringBuffer sb(cx, &ec);
+  StringBuffer sb(cx);
   if (!sb.ensureTwoByteChars()) {
     return false;
   }

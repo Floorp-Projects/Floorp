@@ -729,7 +729,7 @@ void CompileToStencilTask<Unit>::parse(JSContext* cx, ErrorContext* ec) {
   }
 
   if (options.allocateInstantiationStorage) {
-    if (!frontend::PrepareForInstantiate(cx, ec, *stencilInput_, *stencil_,
+    if (!frontend::PrepareForInstantiate(cx, *stencilInput_, *stencil_,
                                          *gcOutput_)) {
       stencil_ = nullptr;
     }
@@ -761,7 +761,7 @@ void CompileModuleToStencilTask<Unit>::parse(JSContext* cx, ErrorContext* ec) {
   }
 
   if (options.allocateInstantiationStorage) {
-    if (!frontend::PrepareForInstantiate(cx, ec, *stencilInput_, *stencil_,
+    if (!frontend::PrepareForInstantiate(cx, *stencilInput_, *stencil_,
                                          *gcOutput_)) {
       stencil_ = nullptr;
     }
@@ -804,7 +804,7 @@ void DecodeStencilTask::parse(JSContext* cx, ErrorContext* ec) {
   }
 
   if (options.allocateInstantiationStorage) {
-    if (!frontend::PrepareForInstantiate(cx, ec, *stencilInput_, *stencil_,
+    if (!frontend::PrepareForInstantiate(cx, *stencilInput_, *stencil_,
                                          *gcOutput_)) {
       stencil_ = nullptr;
     }

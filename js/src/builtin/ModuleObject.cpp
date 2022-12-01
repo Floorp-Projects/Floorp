@@ -1389,15 +1389,14 @@ bool ModuleObject::createEnvironment(JSContext* cx,
 ///////////////////////////////////////////////////////////////////////////
 // ModuleBuilder
 
-ModuleBuilder::ModuleBuilder(JSContext* cx, ErrorContext* ec,
+ModuleBuilder::ModuleBuilder(JSContext* cx,
                              const frontend::EitherParser& eitherParser)
-    : cx_(cx),  // TODO bug 1782573 this can happen off main, so need to cover
-                // calls to ReportOutOfMemory
+    : cx_(cx),
       eitherParser_(eitherParser),
-      requestedModuleSpecifiers_(ec),
-      importEntries_(ec),
-      exportEntries_(ec),
-      exportNames_(ec) {}
+      requestedModuleSpecifiers_(cx),
+      importEntries_(cx),
+      exportEntries_(cx),
+      exportNames_(cx) {}
 
 bool ModuleBuilder::noteFunctionDeclaration(JSContext* cx, uint32_t funIndex) {
   if (!functionDecls_.emplaceBack(funIndex)) {

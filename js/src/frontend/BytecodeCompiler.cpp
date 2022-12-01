@@ -105,13 +105,12 @@ class MOZ_STACK_CLASS SourceAwareCompiler {
   using TokenStreamPosition = frontend::TokenStreamPosition<Unit>;
 
  protected:
-  explicit SourceAwareCompiler(JSContext* cx, ErrorContext* ec,
-                               JS::NativeStackLimit stackLimit,
+  explicit SourceAwareCompiler(JSContext* cx, JS::NativeStackLimit stackLimit,
                                LifoAllocScope& parserAllocScope,
                                CompilationInput& input,
                                SourceText<Unit>& sourceBuffer)
       : sourceBuffer_(sourceBuffer),
-        compilationState_(cx, ec, parserAllocScope, input),
+        compilationState_(cx, parserAllocScope, input),
         stackLimit(stackLimit) {
     MOZ_ASSERT(sourceBuffer_.get() != nullptr);
   }
@@ -173,12 +172,11 @@ class MOZ_STACK_CLASS ScriptCompiler : public SourceAwareCompiler<Unit> {
   using typename Base::TokenStreamPosition;
 
  public:
-  explicit ScriptCompiler(JSContext* cx, ErrorContext* ec,
-                          JS::NativeStackLimit stackLimit,
+  explicit ScriptCompiler(JSContext* cx, JS::NativeStackLimit stackLimit,
                           LifoAllocScope& parserAllocScope,
                           CompilationInput& input,
                           SourceText<Unit>& sourceBuffer)
-      : Base(cx, ec, stackLimit, parserAllocScope, input, sourceBuffer) {}
+      : Base(cx, stackLimit, parserAllocScope, input, sourceBuffer) {}
 
   using Base::init;
   using Base::stencil;
@@ -267,7 +265,7 @@ template <typename Unit>
             std::move(extensibleStencil);
       } else if (output.is<RefPtr<CompilationStencil>>()) {
         RefPtr<CompilationStencil> stencil =
-            ec->getAllocator()->new_<frontend::CompilationStencil>(
+            cx->new_<frontend::CompilationStencil>(
                 std::move(extensibleStencil));
         if (!stencil) {
           return false;
@@ -299,7 +297,7 @@ template <typename Unit>
   AutoAssertReportedException assertException(cx, ec);
 
   LifoAllocScope parserAllocScope(&tempLifoAlloc);
-  ScriptCompiler<Unit> compiler(cx, ec, stackLimit, parserAllocScope, input,
+  ScriptCompiler<Unit> compiler(cx, stackLimit, parserAllocScope, input,
                                 srcBuf);
   if (!compiler.init(cx, ec, scopeCache)) {
     return false;
@@ -330,9 +328,8 @@ template <typename Unit>
   }
 
   if (output.is<UniquePtr<ExtensibleCompilationStencil>>()) {
-    auto stencil =
-        ec->getAllocator()->make_unique<ExtensibleCompilationStencil>(
-            std::move(compiler.stencil()));
+    auto stencil = cx->make_unique<ExtensibleCompilationStencil>(
+        std::move(compiler.stencil()));
     if (!stencil) {
       return false;
     }
@@ -345,15 +342,14 @@ template <typename Unit>
     }
 
     auto extensibleStencil =
-        ec->getAllocator()->make_unique<frontend::ExtensibleCompilationStencil>(
+        cx->make_unique<frontend::ExtensibleCompilationStencil>(
             std::move(compiler.stencil()));
     if (!extensibleStencil) {
       return false;
     }
 
     RefPtr<CompilationStencil> stencil =
-        ec->getAllocator()->new_<CompilationStencil>(
-            std::move(extensibleStencil));
+        cx->new_<CompilationStencil>(std::move(extensibleStencil));
     if (!stencil) {
       return false;
     }
@@ -468,8 +464,7 @@ bool frontend::InstantiateStencils(JSContext* cx, CompilationInput& input,
   return true;
 }
 
-bool frontend::PrepareForInstantiate(JSContext* cx, ErrorContext* ec,
-                                     CompilationInput& input,
+bool frontend::PrepareForInstantiate(JSContext* cx, CompilationInput& input,
                                      const CompilationStencil& stencil,
                                      CompilationGCOutput& gcOutput) {
   Maybe<AutoGeckoProfilerEntry> pseudoFrame;
@@ -478,7 +473,7 @@ bool frontend::PrepareForInstantiate(JSContext* cx, ErrorContext* ec,
                         JS::ProfilingCategoryPair::JS_Parsing);
   }
 
-  return CompilationStencil::prepareForInstantiate(ec, input.atomCache, stencil,
+  return CompilationStencil::prepareForInstantiate(cx, input.atomCache, stencil,
                                                    gcOutput);
 }
 
@@ -534,8 +529,8 @@ static JSScript* CompileEvalScriptImpl(
 
     JS::NativeStackLimit stackLimit = cx->stackLimitForCurrentPrincipal();
     ScopeBindingCache* scopeCache = &cx->caches().scopeCache;
-    ScriptCompiler<Unit> compiler(cx, &ec, stackLimit, parserAllocScope,
-                                  input.get(), srcBuf);
+    ScriptCompiler<Unit> compiler(cx, stackLimit, parserAllocScope, input.get(),
+                                  srcBuf);
     if (!compiler.init(cx, &ec, scopeCache, InheritThis::Yes, enclosingEnv)) {
       return nullptr;
     }
@@ -582,12 +577,11 @@ class MOZ_STACK_CLASS ModuleCompiler final : public SourceAwareCompiler<Unit> {
   using Base::parser;
 
  public:
-  explicit ModuleCompiler(JSContext* cx, ErrorContext* ec,
-                          JS::NativeStackLimit stackLimit,
+  explicit ModuleCompiler(JSContext* cx, JS::NativeStackLimit stackLimit,
                           LifoAllocScope& parserAllocScope,
                           CompilationInput& input,
                           SourceText<Unit>& sourceBuffer)
-      : Base(cx, ec, stackLimit, parserAllocScope, input, sourceBuffer) {}
+      : Base(cx, stackLimit, parserAllocScope, input, sourceBuffer) {}
 
   using Base::init;
   using Base::stencil;
@@ -611,12 +605,12 @@ class MOZ_STACK_CLASS StandaloneFunctionCompiler final
   using typename Base::TokenStreamPosition;
 
  public:
-  explicit StandaloneFunctionCompiler(JSContext* cx, ErrorContext* ec,
+  explicit StandaloneFunctionCompiler(JSContext* cx,
                                       JS::NativeStackLimit stackLimit,
                                       LifoAllocScope& parserAllocScope,
                                       CompilationInput& input,
                                       SourceText<Unit>& sourceBuffer)
-      : Base(cx, ec, stackLimit, parserAllocScope, input, sourceBuffer) {}
+      : Base(cx, stackLimit, parserAllocScope, input, sourceBuffer) {}
 
   using Base::init;
   using Base::stencil;
@@ -773,7 +767,7 @@ bool ModuleCompiler<Unit>::compile(JSContext* cx, ErrorContext* ec) {
     return false;
   }
 
-  ModuleBuilder builder(cx, ec, parser.ptr());
+  ModuleBuilder builder(cx, parser.ptr());
 
   const auto& options = compilationState_.input.options;
 
@@ -908,7 +902,7 @@ template <typename Unit>
   AutoAssertReportedException assertException(cx, ec);
 
   LifoAllocScope parserAllocScope(&cx->tempLifoAlloc());
-  ModuleCompiler<Unit> compiler(cx, ec, stackLimit, parserAllocScope, input,
+  ModuleCompiler<Unit> compiler(cx, stackLimit, parserAllocScope, input,
                                 srcBuf);
   if (!compiler.init(cx, ec, scopeCache)) {
     return false;
@@ -919,9 +913,8 @@ template <typename Unit>
   }
 
   if (output.is<UniquePtr<ExtensibleCompilationStencil>>()) {
-    auto stencil =
-        ec->getAllocator()->make_unique<ExtensibleCompilationStencil>(
-            std::move(compiler.stencil()));
+    auto stencil = cx->make_unique<ExtensibleCompilationStencil>(
+        std::move(compiler.stencil()));
     if (!stencil) {
       return false;
     }
@@ -934,15 +927,14 @@ template <typename Unit>
     }
 
     auto extensibleStencil =
-        ec->getAllocator()->make_unique<frontend::ExtensibleCompilationStencil>(
+        cx->make_unique<frontend::ExtensibleCompilationStencil>(
             std::move(compiler.stencil()));
     if (!extensibleStencil) {
       return false;
     }
 
     RefPtr<CompilationStencil> stencil =
-        ec->getAllocator()->new_<CompilationStencil>(
-            std::move(extensibleStencil));
+        cx->new_<CompilationStencil>(std::move(extensibleStencil));
     if (!stencil) {
       return false;
     }
@@ -1140,8 +1132,7 @@ static GetCachedResult GetCachedLazyFunctionStencilMaybeInstantiate(
   }
 
   if (output.is<UniquePtr<ExtensibleCompilationStencil>>()) {
-    auto extensible =
-        ec->getAllocator()->make_unique<ExtensibleCompilationStencil>(input);
+    auto extensible = cx->make_unique<ExtensibleCompilationStencil>(input);
     if (!extensible) {
       return GetCachedResult::Error;
     }
@@ -1187,7 +1178,7 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
       input.functionFlags().isArrow() ? InheritThis::Yes : InheritThis::No;
 
   LifoAllocScope parserAllocScope(&cx->tempLifoAlloc());
-  CompilationState compilationState(cx, ec, parserAllocScope, input);
+  CompilationState compilationState(cx, parserAllocScope, input);
   compilationState.setFunctionKey(input.extent());
   MOZ_ASSERT(!compilationState.isInitialStencil());
   if (!compilationState.init(cx, ec, scopeCache, inheritThis)) {
@@ -1258,9 +1249,8 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
   }
 
   if (output.is<UniquePtr<ExtensibleCompilationStencil>>()) {
-    auto stencil =
-        ec->getAllocator()->make_unique<ExtensibleCompilationStencil>(
-            std::move(compilationState));
+    auto stencil = cx->make_unique<ExtensibleCompilationStencil>(
+        std::move(compilationState));
     if (!stencil) {
       return false;
     }
@@ -1273,15 +1263,14 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
     }
 
     auto extensibleStencil =
-        ec->getAllocator()->make_unique<frontend::ExtensibleCompilationStencil>(
+        cx->make_unique<frontend::ExtensibleCompilationStencil>(
             std::move(compilationState));
     if (!extensibleStencil) {
       return false;
     }
 
     RefPtr<CompilationStencil> stencil =
-        ec->getAllocator()->new_<CompilationStencil>(
-            std::move(extensibleStencil));
+        cx->new_<CompilationStencil>(std::move(extensibleStencil));
     if (!stencil) {
       return false;
     }
@@ -1484,7 +1473,7 @@ static JSFunction* CompileStandaloneFunction(
     JS::NativeStackLimit stackLimit = cx->stackLimitForCurrentPrincipal();
     ScopeBindingCache* scopeCache = &cx->caches().scopeCache;
     StandaloneFunctionCompiler<char16_t> compiler(
-        cx, &ec, stackLimit, parserAllocScope, input.get(), srcBuf);
+        cx, stackLimit, parserAllocScope, input.get(), srcBuf);
     if (!compiler.init(cx, &ec, scopeCache, inheritThis)) {
       return nullptr;
     }

@@ -20,7 +20,6 @@ struct SimpleInterceptor : JSErrorInterceptor {
     if (!gLatestMessage) {
       MOZ_CRASH("Could not convert to string");
     }
-    buffer.ok();
   }
 };
 
@@ -108,7 +107,6 @@ BEGIN_TEST(testErrorInterceptor) {
     CHECK(equalStrings(cx, linear, gLatestMessage));
 
     // Cleanup.
-    buffer.ok();
     gLatestMessage = nullptr;
   }
 
@@ -134,7 +132,6 @@ BEGIN_TEST(testErrorInterceptor) {
     CHECK(js::StringEqualsAscii(linear, TO_STRING[i]));
 
     // Cleanup.
-    buffer.ok();
     gLatestMessage = nullptr;
   }
 

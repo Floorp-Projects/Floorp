@@ -600,8 +600,8 @@ bool Smoosh::tryCompileGlobalScriptToExtensibleStencil(
 
   LifoAllocScope parserAllocScope(&cx->tempLifoAlloc());
 
-  Vector<TaggedParserAtomIndex> allAtoms(ec);
-  CompilationState compilationState(cx, ec, parserAllocScope, input);
+  Vector<TaggedParserAtomIndex> allAtoms(cx);
+  CompilationState compilationState(cx, parserAllocScope, input);
   if (!ConvertAtoms(cx, ec, result, compilationState, allAtoms)) {
     return false;
   }
@@ -658,9 +658,8 @@ bool Smoosh::tryCompileGlobalScriptToExtensibleStencil(
     }
   }
 
-  auto stencil =
-      ec->getAllocator()->make_unique<frontend::ExtensibleCompilationStencil>(
-          std::move(compilationState));
+  auto stencil = cx->make_unique<frontend::ExtensibleCompilationStencil>(
+      std::move(compilationState));
   if (!stencil) {
     return false;
   }
