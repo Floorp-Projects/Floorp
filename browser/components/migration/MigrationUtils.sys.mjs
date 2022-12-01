@@ -44,6 +44,7 @@ const gAvailableMigratorKeys = (function() {
       "edge",
       "ie",
       "opera",
+      "opera-gx",
       "vivaldi",
       "brave",
       "chrome",
@@ -60,6 +61,7 @@ const gAvailableMigratorKeys = (function() {
       "firefox",
       "safari",
       "opera",
+      "opera-gx",
       "vivaldi",
       "brave",
       "chrome",
@@ -79,6 +81,7 @@ const gAvailableMigratorKeys = (function() {
       "chrome-beta",
       "chrome-dev",
       "chromium",
+      "opera-gx",
     ];
   }
   return [];
@@ -746,6 +749,7 @@ export var MigrationUtils = Object.seal({
       Nightly: "firefox",
       Opera: "opera",
       Vivaldi: "vivaldi",
+      "Opera GX": "opera-gx",
       "Brave Web Browser": "brave", // Windows, Linux
       Brave: "brave", // OS X
       "Google Chrome": "chrome", // Windows, Linux
@@ -1294,6 +1298,7 @@ export var MigrationUtils = Object.seal({
     "chromium-edge-beta": 10,
     brave: 11,
     opera: 12,
+    "opera-gx": 14,
     vivaldi: 13,
   },
   getSourceIdForTelemetry(sourceName) {
