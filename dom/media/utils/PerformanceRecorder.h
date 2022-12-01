@@ -65,6 +65,7 @@ enum class MediaInfoFlag : uint16_t {
   VIDEO_H264 = (1 << 5),
   VIDEO_VP8 = (1 << 6),
   VIDEO_VP9 = (1 << 7),
+  VIDEO_THEORA = (1 << 8),
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(MediaInfoFlag)
 

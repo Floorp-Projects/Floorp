@@ -99,6 +99,8 @@ static void AppendMediaInfoFlagToName(nsCString& aName, MediaInfoFlag aFlag) {
     aName.Append("vp8,");
   } else if (aFlag & MediaInfoFlag::VIDEO_VP9) {
     aName.Append("vp9,");
+  } else if (aFlag & MediaInfoFlag::VIDEO_THEORA) {
+    aName.Append("theora,");
   }
 }
 
