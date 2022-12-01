@@ -139,7 +139,7 @@ eslint-build:
             cp -r /build/node_modules_eslint-plugin-mozilla/ tools/lint/eslint/eslint-plugin-mozilla/node_modules &&
             ln -s ../tools/lint/eslint/eslint-plugin-mozilla node_modules &&
             ln -s ../tools/lint/eslint/eslint-plugin-spidermonkey-js node_modules &&
-            ./mach lint -v -l eslint -f treeherder -f json:/builds/worker/mozlint.json * --rule "mozilla/valid-services-property: error" --rule "mozilla/valid-ci-uses: error"
+            ./mach lint -v -l eslint -f treeherder --quiet -f json:/builds/worker/mozlint.json * --rule "mozilla/valid-services-property: error" --rule "mozilla/valid-ci-uses: error"
     worker:
         env:
             MOZ_XPT_ARTIFACTS_DIRNAME: xpt_artifacts
