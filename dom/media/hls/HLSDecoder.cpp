@@ -6,6 +6,7 @@
 
 #include "HLSDecoder.h"
 #include "AndroidBridge.h"
+#include "base/process_util.h"
 #include "DecoderTraits.h"
 #include "HLSDemuxer.h"
 #include "HLSUtils.h"
@@ -141,6 +142,10 @@ MediaDecoderStateMachineBase* HLSDecoder::CreateStateMachine(
   init.mCrashHelper = GetOwner()->CreateGMPCrashHelper();
   init.mFrameStats = mFrameStats;
   init.mMediaDecoderOwnerID = mOwner;
+  static Atomic<uint32_t> sTrackingIdCounter(0);
+  init.mTrackingId =
+      Some(TrackingId(TrackingId::Source::HLSDecoder, sTrackingIdCounter++,
+                      TrackingId::TrackAcrossProcesses::Yes));
   mReader = new MediaFormatReader(
       init, new HLSDemuxer(mHLSResourceWrapper->GetPlayerId()));
 

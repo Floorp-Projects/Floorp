@@ -281,10 +281,14 @@ already_AddRefed<Promise> MediaCapabilities::DecodingInfo(
          config = std::move(config)]() mutable -> RefPtr<CapabilitiesPromise> {
           // MediaDataDecoder keeps a reference to the config object, so we must
           // keep it alive until the decoder has been shutdown.
+          static Atomic<uint32_t> sTrackingIdCounter(0);
+          TrackingId trackingId(TrackingId::Source::MediaCapabilities,
+                                sTrackingIdCounter++,
+                                TrackingId::TrackAcrossProcesses::Yes);
           CreateDecoderParams params{
               *config, compositor,
               CreateDecoderParams::VideoFrameRate(frameRate),
-              TrackInfo::kVideoTrack};
+              TrackInfo::kVideoTrack, Some(std::move(trackingId))};
           // We want to ensure that all decoder's queries are occurring only
           // once at a time as it can quickly exhaust the system resources
           // otherwise.
