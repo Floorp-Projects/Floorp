@@ -17,7 +17,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.plus
 import mozilla.components.browser.state.selector.findTabOrCustomTab
@@ -35,6 +34,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.settings.PhoneFeature
+import org.mozilla.fenix.settings.quicksettings.protections.ProtectionsView
 
 /**
  * Dialog that presents the user with information about
@@ -52,7 +52,7 @@ class QuickSettingsSheetDialogFragment : FenixDialogFragment() {
     private lateinit var clearSiteDataView: ClearSiteDataView
 
     @VisibleForTesting
-    internal lateinit var trackingProtectionView: TrackingProtectionView
+    internal lateinit var protectionsView: ProtectionsView
 
     private lateinit var interactor: QuickSettingsInteractor
 
@@ -91,6 +91,7 @@ class QuickSettingsSheetDialogFragment : FenixDialogFragment() {
             permissionHighlights = args.permissionHighlights,
             sessionId = args.sessionId,
             isTrackingProtectionEnabled = args.isTrackingProtectionEnabled,
+            isCookieHandlingEnabled = args.isCookieHandlingEnabled,
         )
 
         quickSettingsController = DefaultQuickSettingsController(
@@ -115,8 +116,8 @@ class QuickSettingsSheetDialogFragment : FenixDialogFragment() {
         websiteInfoView = WebsiteInfoView(binding.websiteInfoLayout, interactor = interactor)
         websitePermissionsView =
             WebsitePermissionsView(binding.websitePermissionsLayout, interactor)
-        trackingProtectionView =
-            TrackingProtectionView(binding.trackingProtectionLayout, interactor, context.settings())
+        protectionsView =
+            ProtectionsView(binding.trackingProtectionLayout, interactor, context.settings())
         clearSiteDataView = ClearSiteDataView(
             context = context,
             ioScope = viewLifecycleOwner.lifecycleScope + Dispatchers.IO,
@@ -135,7 +136,7 @@ class QuickSettingsSheetDialogFragment : FenixDialogFragment() {
         consumeFrom(quickSettingsStore) {
             websiteInfoView.update(it.webInfoState)
             websitePermissionsView.update(it.websitePermissionsState)
-            trackingProtectionView.update(it.trackingProtectionState)
+            protectionsView.update(it.protectionsState)
             clearSiteDataView.update(it.webInfoState)
         }
     }
@@ -210,7 +211,7 @@ class QuickSettingsSheetDialogFragment : FenixDialogFragment() {
         provideTrackingProtectionUseCases().fetchTrackingLogs(
             tab.id,
             onSuccess = { trackers ->
-                trackingProtectionView.updateDetailsSection(trackers.isNotEmpty())
+                protectionsView.updateDetailsSection(trackers.isNotEmpty())
             },
             onError = {
                 Logger.error("QuickSettingsSheetDialogFragment - fetchTrackingLogs onError", it)

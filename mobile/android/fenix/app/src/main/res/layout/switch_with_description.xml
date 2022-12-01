@@ -10,7 +10,7 @@
 
     <TextView
         android:layout_marginTop="4dp"
-        android:id="@+id/trackingProtectionCategoryTitle"
+        android:id="@+id/switch_with_description_title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="48dp"
@@ -20,7 +20,7 @@
         android:importantForAccessibility="no"
         android:textAppearance="@style/ListItemTextStyle"
         android:textSize="16sp"
-        app:layout_constraintBottom_toTopOf="@id/trackingProtectionCategoryItemDescription"
+        app:layout_constraintBottom_toTopOf="@id/switch_with_description_description"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0"
         app:layout_constraintStart_toStartOf="parent"
@@ -29,7 +29,7 @@
         tools:text="@tools:sample/lorem" />
 
     <TextView
-        android:id="@+id/trackingProtectionCategoryItemDescription"
+        android:id="@+id/switch_with_description_description"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:clickable="false"
@@ -38,10 +38,10 @@
         android:textColor="?attr/textSecondary"
         android:layout_marginBottom="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@id/trackingProtectionCategoryTitle"
+        app:layout_constraintEnd_toEndOf="@id/switch_with_description_title"
         app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="@id/trackingProtectionCategoryTitle"
-        app:layout_constraintTop_toBottomOf="@id/trackingProtectionCategoryTitle"
+        app:layout_constraintStart_toStartOf="@id/switch_with_description_title"
+        app:layout_constraintTop_toBottomOf="@id/switch_with_description_title"
         app:layout_constraintVertical_chainStyle="packed"
         tools:text="@tools:sample/lorem" />
 
@@ -51,10 +51,7 @@
         android:minHeight="@dimen/tracking_protection_item_height"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:textOff="@string/etp_panel_off"
-        android:textOn="@string/etp_panel_on"
-        app:drawableStartCompat="@drawable/ic_tracking_protection"
-        app:layout_constraintBottom_toBottomOf="@id/trackingProtectionCategoryItemDescription"
+        app:layout_constraintBottom_toBottomOf="@id/switch_with_description_description"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

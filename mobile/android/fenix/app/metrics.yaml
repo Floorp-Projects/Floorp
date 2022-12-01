@@ -6883,7 +6883,55 @@ cookie_banners:
     metadata:
       tags:
         - Privacy&Security
-
+  exception_added:
+    type: event
+    description: |
+      A user added a cookie banner handling exception through
+      the toggle in the protections panel.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1797577
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/28044#issuecomment-1334548056
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 118
+    metadata:
+      tags:
+        - Privacy&Security
+  exception_removed:
+    type: event
+    description: |
+      A user removed a cookie banner handling
+      exception through the toggle in the protections panel.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1797577
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/28044#issuecomment-1334548056
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 118
+    metadata:
+      tags:
+        - Privacy&Security
+  visited_panel:
+    type: event
+    description: A user visited the cookie banner toolbar panel
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1797577
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/28044#issuecomment-1334548056
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 118
+    metadata:
+      tags:
+        - Privacy&Security
 site_permissions:
   prompt_shown:
     type: event

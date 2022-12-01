@@ -17,6 +17,7 @@ import mozilla.components.feature.session.SessionUseCases.ReloadUrlUseCase
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.ktx.kotlin.getOrigin
 import mozilla.telemetry.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.CookieBanners
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.components.PermissionStorage
@@ -60,14 +61,19 @@ interface QuickSettingsController {
     fun handleAndroidPermissionGranted(feature: PhoneFeature)
 
     /**
-     * @see [TrackingProtectionInteractor.onTrackingProtectionToggled]
+     * @see [ProtectionsInteractor.onTrackingProtectionToggled]
      */
     fun handleTrackingProtectionToggled(isEnabled: Boolean)
 
     /**
-     * @see [TrackingProtectionInteractor.onDetailsClicked]
+     * Navigates to the cookie banners details panel.
      */
-    fun handleDetailsClicked()
+    fun handleCookieBannerHandlingDetailsClicked()
+
+    /**
+     * Navigates to the tracking protection details panel.
+     */
+    fun handleTrackingProtectionDetailsClicked()
 
     /**
      * Navigates to the connection details. Called when a user clicks on the
@@ -201,15 +207,34 @@ class DefaultQuickSettingsController(
         )
     }
 
-    override fun handleDetailsClicked() {
+    override fun handleCookieBannerHandlingDetailsClicked() {
+        CookieBanners.visitedPanel.record(NoExtras())
+
         navController.popBackStack()
 
-        val state = quickSettingsStore.state.trackingProtectionState
+        val state = quickSettingsStore.state.protectionsState
+        val directions = NavGraphDirections
+            .actionGlobalCookieBannerProtectionPanelDialogFragment(
+                sessionId = sessionId,
+                url = state.url,
+                trackingProtectionEnabled = state.isTrackingProtectionEnabled,
+                cookieBannerHandlingEnabled = state.isCookieBannerHandlingEnabled,
+                gravity = context.components.settings.toolbarPosition.androidGravity,
+                sitePermissions = sitePermissions,
+            )
+        navController.navigate(directions)
+    }
+
+    override fun handleTrackingProtectionDetailsClicked() {
+        navController.popBackStack()
+
+        val state = quickSettingsStore.state.protectionsState
         val directions = NavGraphDirections
             .actionGlobalTrackingProtectionPanelDialogFragment(
                 sessionId = sessionId,
                 url = state.url,
                 trackingProtectionEnabled = state.isTrackingProtectionEnabled,
+                cookieBannerHandlingEnabled = state.isCookieBannerHandlingEnabled,
                 gravity = context.components.settings.toolbarPosition.androidGravity,
                 sitePermissions = sitePermissions,
             )

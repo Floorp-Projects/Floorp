@@ -19,7 +19,7 @@ import org.mozilla.fenix.settings.quicksettings.QuickSettingsFragmentStore.Compa
 import org.mozilla.fenix.settings.quicksettings.WebsiteInfoState.Companion.createWebsiteInfoState
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeEnabled
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeVisible
-import org.mozilla.fenix.trackingprotection.TrackingProtectionState
+import org.mozilla.fenix.trackingprotection.ProtectionsState
 import org.mozilla.fenix.utils.Settings
 import java.util.EnumMap
 
@@ -69,6 +69,7 @@ class QuickSettingsFragmentStore(
             settings: Settings,
             sessionId: String,
             isTrackingProtectionEnabled: Boolean,
+            isCookieHandlingEnabled: Boolean,
         ) = QuickSettingsFragmentStore(
             QuickSettingsFragmentState(
                 webInfoState = createWebsiteInfoState(
@@ -83,11 +84,12 @@ class QuickSettingsFragmentStore(
                     permissionHighlights,
                     settings,
                 ),
-                trackingProtectionState = createTrackingProtectionState(
+                protectionsState = createTrackingProtectionState(
                     context,
                     sessionId,
                     websiteUrl,
                     isTrackingProtectionEnabled,
+                    isCookieHandlingEnabled,
                 ),
             ),
         )
@@ -123,13 +125,15 @@ class QuickSettingsFragmentStore(
         }
 
         /**
-         * Construct an initial [TrackingProtectionState] to be rendered by
-         * [TrackingProtectionView].
+         * Construct an initial [ProtectionsState] to be rendered by
+         * [ProtectionsView].
          *
          * @param context [Context] used for various Android interactions.
          * @param sessionId [String] The current session ID.
          * @param websiteUrl [String] the URL of the current web page.
          * @param isTrackingProtectionEnabled [Boolean] Current status of tracking protection
+         * for this session.
+         * @param isCookieHandlingEnabled [Boolean] Current status of cookie banner handling
          * for this session.
          */
         @VisibleForTesting
@@ -138,13 +142,15 @@ class QuickSettingsFragmentStore(
             sessionId: String,
             websiteUrl: String,
             isTrackingProtectionEnabled: Boolean,
-        ): TrackingProtectionState {
-            return TrackingProtectionState(
+            isCookieHandlingEnabled: Boolean,
+        ): ProtectionsState {
+            return ProtectionsState(
                 tab = context.components.core.store.state.findTabOrCustomTab(sessionId),
                 url = websiteUrl,
                 isTrackingProtectionEnabled = isTrackingProtectionEnabled,
+                isCookieBannerHandlingEnabled = isCookieHandlingEnabled,
                 listTrackers = listOf(),
-                mode = TrackingProtectionState.Mode.Normal,
+                mode = ProtectionsState.Mode.Normal,
                 lastAccessedCategory = "",
             )
         }

@@ -10,19 +10,20 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.content.blocking.TrackerLog
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class TrackingProtectionStoreTest {
+class ProtectionsStoreTest {
 
     val tab: SessionState = mockk(relaxed = true)
 
     @Test
     fun enterDetailsMode() = runTest {
         val initialState = defaultState()
-        val store = TrackingProtectionStore(initialState)
+        val store = ProtectionsStore(initialState)
 
         store.dispatch(
-            TrackingProtectionAction.EnterDetailsMode(
+            ProtectionsAction.EnterDetailsMode(
                 TrackingProtectionCategory.FINGERPRINTERS,
                 true,
             ),
@@ -31,7 +32,7 @@ class TrackingProtectionStoreTest {
         assertNotSame(initialState, store.state)
         assertEquals(
             store.state.mode,
-            TrackingProtectionState.Mode.Details(TrackingProtectionCategory.FINGERPRINTERS, true),
+            ProtectionsState.Mode.Details(TrackingProtectionCategory.FINGERPRINTERS, true),
         )
         assertEquals(store.state.lastAccessedCategory, TrackingProtectionCategory.FINGERPRINTERS.name)
     }
@@ -39,13 +40,13 @@ class TrackingProtectionStoreTest {
     @Test
     fun exitDetailsMode() = runTest {
         val initialState = detailsState()
-        val store = TrackingProtectionStore(initialState)
+        val store = ProtectionsStore(initialState)
 
-        store.dispatch(TrackingProtectionAction.ExitDetailsMode).join()
+        store.dispatch(ProtectionsAction.ExitDetailsMode).join()
         assertNotSame(initialState, store.state)
         assertEquals(
             store.state.mode,
-            TrackingProtectionState.Mode.Normal,
+            ProtectionsState.Mode.Normal,
         )
         assertEquals(store.state.lastAccessedCategory, initialState.lastAccessedCategory)
     }
@@ -53,10 +54,10 @@ class TrackingProtectionStoreTest {
     @Test
     fun trackerListChanged() = runTest {
         val initialState = defaultState()
-        val store = TrackingProtectionStore(initialState)
+        val store = ProtectionsStore(initialState)
         val tracker = TrackerLog("url", listOf())
 
-        store.dispatch(TrackingProtectionAction.TrackerLogChange(listOf(tracker))).join()
+        store.dispatch(ProtectionsAction.TrackerLogChange(listOf(tracker))).join()
         assertNotSame(initialState, store.state)
         assertEquals(
             listOf(tracker),
@@ -67,9 +68,9 @@ class TrackingProtectionStoreTest {
     @Test
     fun urlChanged() = runTest {
         val initialState = defaultState()
-        val store = TrackingProtectionStore(initialState)
+        val store = ProtectionsStore(initialState)
 
-        store.dispatch(TrackingProtectionAction.UrlChange("newURL")).join()
+        store.dispatch(ProtectionsAction.UrlChange("newURL")).join()
         assertNotSame(initialState, store.state)
         assertEquals(
             "newURL",
@@ -80,15 +81,16 @@ class TrackingProtectionStoreTest {
     @Test
     fun onChange() = runTest {
         val initialState = defaultState()
-        val store = TrackingProtectionStore(initialState)
+        val store = ProtectionsStore(initialState)
         val tracker = TrackerLog("url", listOf(), listOf(), cookiesHasBeenBlocked = false)
 
         store.dispatch(
-            TrackingProtectionAction.Change(
+            ProtectionsAction.Change(
                 "newURL",
-                false,
-                listOf(tracker),
-                TrackingProtectionState.Mode.Details(
+                isTrackingProtectionEnabled = false,
+                isCookieBannerHandlingEnabled = false,
+                listTrackers = listOf(tracker),
+                mode = ProtectionsState.Mode.Details(
                     TrackingProtectionCategory.FINGERPRINTERS,
                     true,
                 ),
@@ -104,30 +106,50 @@ class TrackingProtectionStoreTest {
             store.state.isTrackingProtectionEnabled,
         )
         assertEquals(
+            false,
+            store.state.isCookieBannerHandlingEnabled,
+        )
+        assertEquals(
             listOf(tracker),
             store.state.listTrackers,
         )
         assertEquals(
-            TrackingProtectionState.Mode.Details(TrackingProtectionCategory.FINGERPRINTERS, true),
+            ProtectionsState.Mode.Details(TrackingProtectionCategory.FINGERPRINTERS, true),
             store.state.mode,
         )
     }
 
-    private fun defaultState(): TrackingProtectionState = TrackingProtectionState(
+    @Test
+    fun `ProtectionsAction - ToggleCookieBannerHandlingProtectionEnabled`() = runTest {
+        val initialState = defaultState()
+        val store = ProtectionsStore(initialState)
+
+        store.dispatch(
+            ProtectionsAction.ToggleCookieBannerHandlingProtectionEnabled(
+                isEnabled = true,
+            ),
+        ).join()
+
+        assertTrue(store.state.isCookieBannerHandlingEnabled)
+    }
+
+    private fun defaultState(): ProtectionsState = ProtectionsState(
         tab = tab,
         url = "www.mozilla.org",
         isTrackingProtectionEnabled = true,
+        isCookieBannerHandlingEnabled = false,
         listTrackers = listOf(),
-        mode = TrackingProtectionState.Mode.Normal,
+        mode = ProtectionsState.Mode.Normal,
         lastAccessedCategory = "",
     )
 
-    private fun detailsState(): TrackingProtectionState = TrackingProtectionState(
+    private fun detailsState(): ProtectionsState = ProtectionsState(
         tab = tab,
         url = "www.mozilla.org",
         isTrackingProtectionEnabled = true,
+        isCookieBannerHandlingEnabled = false,
         listTrackers = listOf(),
-        mode = TrackingProtectionState.Mode.Details(TrackingProtectionCategory.CRYPTOMINERS, true),
+        mode = ProtectionsState.Mode.Details(TrackingProtectionCategory.CRYPTOMINERS, true),
         lastAccessedCategory = TrackingProtectionCategory.CRYPTOMINERS.name,
     )
 }

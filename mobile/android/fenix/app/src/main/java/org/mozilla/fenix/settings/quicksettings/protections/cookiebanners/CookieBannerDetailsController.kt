@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.trackingprotection
+package org.mozilla.fenix.settings.quicksettings.protections.cookiebanners
 
 import android.content.Context
 import androidx.fragment.app.Fragment
@@ -11,45 +11,58 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.SessionState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.cookiehandling.CookieBannersStorage
 import mozilla.components.concept.engine.permission.SitePermissions
+import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.service.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.CookieBanners
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
+import org.mozilla.fenix.trackingprotection.ProtectionsAction
+import org.mozilla.fenix.trackingprotection.ProtectionsStore
 
 /**
- * Interactor for the tracking protection panel
- * Provides implementations for the TrackingProtectionPanelViewInteractor
+ * [CookieBannerDetailsController] controller.
+ *
+ * Delegated by View Interactors, handles container business logic and operates changes on it,
+ * complex Android interactions or communication with other features.
+ */
+interface CookieBannerDetailsController {
+    /**
+     * @see [CookieBannerDetailsInteractor.onBackPressed]
+     */
+    fun handleBackPressed()
+
+    /**
+     * @see [CookieBannerDetailsInteractor.onTogglePressed]
+     */
+    fun handleTogglePressed(isEnabled: Boolean)
+}
+
+/**
+ * Default behavior of [CookieBannerDetailsController].
  */
 @Suppress("LongParameterList")
-class TrackingProtectionPanelInteractor(
+class DefaultCookieBannerDetailsController(
     private val context: Context,
     private val fragment: Fragment,
-    private val store: ProtectionsStore,
     private val ioScope: CoroutineScope,
+    internal val sessionId: String,
+    private val browserStore: BrowserStore,
+    internal val protectionsStore: ProtectionsStore,
     private val cookieBannersStorage: CookieBannersStorage,
     private val navController: () -> NavController,
-    private val openTrackingProtectionSettings: () -> Unit,
-    private val openLearnMoreLink: () -> Unit,
     internal var sitePermissions: SitePermissions?,
     private val gravity: Int,
     private val getCurrentTab: () -> SessionState?,
-) : TrackingProtectionPanelViewInteractor {
+    private val reload: SessionUseCases.ReloadUrlUseCase,
+) : CookieBannerDetailsController {
 
-    override fun openDetails(category: TrackingProtectionCategory, categoryBlocked: Boolean) {
-        store.dispatch(ProtectionsAction.EnterDetailsMode(category, categoryBlocked))
-    }
-
-    override fun onLearnMoreClicked() {
-        openLearnMoreLink()
-    }
-
-    override fun selectTrackingProtectionSettings() {
-        openTrackingProtectionSettings.invoke()
-    }
-
-    override fun onBackPressed() {
+    override fun handleBackPressed() {
         getCurrentTab()?.let { tab ->
             context.components.useCases.trackingProtectionUseCases.containsException(tab.id) { contains ->
                 ioScope.launch {
@@ -58,8 +71,7 @@ class TrackingProtectionPanelInteractor(
                     withContext(Dispatchers.Main) {
                         fragment.runIfFragmentIsAttached {
                             navController().popBackStack()
-                            val isTrackingProtectionEnabled =
-                                tab.trackingProtection.enabled && !contains
+                            val isTrackingProtectionEnabled = tab.trackingProtection.enabled && !contains
                             val directions =
                                 BrowserFragmentDirections.actionGlobalQuickSettingsSheetDialogFragment(
                                     sessionId = tab.id,
@@ -81,7 +93,27 @@ class TrackingProtectionPanelInteractor(
         }
     }
 
-    override fun onExitDetailMode() {
-        store.dispatch(ProtectionsAction.ExitDetailsMode)
+    override fun handleTogglePressed(isEnabled: Boolean) {
+        val tab = requireNotNull(browserStore.state.findTabOrCustomTab(sessionId)) {
+            "A session is required to update the cookie banner mode"
+        }
+        ioScope.launch {
+            if (isEnabled) {
+                cookieBannersStorage.removeException(
+                    uri = tab.content.url,
+                    privateBrowsing = tab.content.private,
+                )
+                CookieBanners.exceptionRemoved.record(NoExtras())
+            } else {
+                cookieBannersStorage.addException(uri = tab.content.url, privateBrowsing = tab.content.private)
+                CookieBanners.exceptionAdded.record(NoExtras())
+            }
+            protectionsStore.dispatch(
+                ProtectionsAction.ToggleCookieBannerHandlingProtectionEnabled(
+                    isEnabled,
+                ),
+            )
+            reload(tab.id)
+        }
     }
 }

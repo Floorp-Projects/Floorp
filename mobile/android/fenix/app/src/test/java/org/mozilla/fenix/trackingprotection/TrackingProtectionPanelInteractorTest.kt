@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import io.mockk.MockKAnnotations
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
@@ -17,11 +18,15 @@ import io.mockk.spyk
 import io.mockk.verify
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
+import mozilla.components.concept.engine.cookiehandling.CookieBannersStorage
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.ext.components
@@ -42,11 +47,15 @@ class TrackingProtectionPanelInteractorTest {
     private lateinit var sitePermissions: SitePermissions
 
     @MockK(relaxed = true)
-    private lateinit var store: TrackingProtectionStore
+    private lateinit var store: ProtectionsStore
 
     private lateinit var interactor: TrackingProtectionPanelInteractor
 
     private lateinit var tab: TabSessionState
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val scope = coroutinesTestRule.scope
 
     private var learnMoreClicked = false
     private var openSettings = false
@@ -59,11 +68,14 @@ class TrackingProtectionPanelInteractorTest {
 
         context = spyk(testContext)
         tab = createTab("https://mozilla.org")
+        val cookieBannersStorage: CookieBannersStorage = mockk(relaxed = true)
 
         interactor = TrackingProtectionPanelInteractor(
             context = context,
             fragment = fragment,
             store = store,
+            ioScope = scope,
+            cookieBannersStorage = cookieBannersStorage,
             navController = { navController },
             openTrackingProtectionSettings = { openSettings = true },
             openLearnMoreLink = { learnMoreClicked = true },
@@ -92,7 +104,7 @@ class TrackingProtectionPanelInteractorTest {
 
         verify {
             store.dispatch(
-                TrackingProtectionAction.EnterDetailsMode(
+                ProtectionsAction.EnterDetailsMode(
                     TrackingProtectionCategory.FINGERPRINTERS,
                     true,
                 ),
@@ -103,7 +115,7 @@ class TrackingProtectionPanelInteractorTest {
 
         verify {
             store.dispatch(
-                TrackingProtectionAction.EnterDetailsMode(
+                ProtectionsAction.EnterDetailsMode(
                     TrackingProtectionCategory.REDIRECT_TRACKERS,
                     true,
                 ),
@@ -126,10 +138,10 @@ class TrackingProtectionPanelInteractorTest {
     }
 
     @Test
-    fun `WHEN onBackPressed is called THEN call popBackStack and navigate`() {
+    fun `WHEN onBackPressed is called THEN call popBackStack and navigate`() = runTestOnMain {
         interactor.onBackPressed()
 
-        verify {
+        coVerify {
             navController.popBackStack()
 
             navController.navigate(any<NavDirections>())
@@ -140,6 +152,6 @@ class TrackingProtectionPanelInteractorTest {
     fun `WHEN onExitDetailMode is called THEN store should dispatch ExitDetailsMode action`() {
         interactor.onExitDetailMode()
 
-        verify { store.dispatch(TrackingProtectionAction.ExitDetailsMode) }
+        verify { store.dispatch(ProtectionsAction.ExitDetailsMode) }
     }
 }

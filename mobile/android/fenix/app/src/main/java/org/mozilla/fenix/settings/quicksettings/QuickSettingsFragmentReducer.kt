@@ -4,7 +4,7 @@
 
 package org.mozilla.fenix.settings.quicksettings
 
-import org.mozilla.fenix.trackingprotection.TrackingProtectionState
+import org.mozilla.fenix.trackingprotection.ProtectionsState
 
 /**
  * Parent Reducer for all [QuickSettingsFragmentState]s of all Views shown in this Fragment.
@@ -27,8 +27,8 @@ internal fun quickSettingsFragmentReducer(
             ),
         )
         is TrackingProtectionAction -> state.copy(
-            trackingProtectionState = TrackingProtectionStateReducer.reduce(
-                state = state.trackingProtectionState,
+            protectionsState = ProtectionsStateReducer.reduce(
+                state = state.protectionsState,
                 action = action,
             ),
         )
@@ -67,15 +67,18 @@ object WebsitePermissionsStateReducer {
     }
 }
 
-object TrackingProtectionStateReducer {
+/**
+ * A reduce for [TrackingProtectionAction]s.
+ */
+object ProtectionsStateReducer {
     /**
-     * Handles creating a new [TrackingProtectionState] based on the specific
+     * Handles creating a new [ProtectionsState] based on the specific
      * [TrackingProtectionAction].
      */
     fun reduce(
-        state: TrackingProtectionState,
+        state: ProtectionsState,
         action: TrackingProtectionAction,
-    ): TrackingProtectionState {
+    ): ProtectionsState {
         return when (action) {
             is TrackingProtectionAction.ToggleTrackingProtectionEnabled ->
                 state.copy(isTrackingProtectionEnabled = action.isTrackingProtectionEnabled)

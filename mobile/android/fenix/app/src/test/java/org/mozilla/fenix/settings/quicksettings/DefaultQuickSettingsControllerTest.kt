@@ -39,6 +39,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.CookieBanners
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.components.PermissionStorage
 import org.mozilla.fenix.ext.components
@@ -304,6 +305,23 @@ class DefaultQuickSettingsControllerTest {
         }
 
     @Test
+    fun `handleCookieBannerHandlingDetailsClicked should call popBackStack and navigate to details page`() {
+        every { context.components.core.store } returns browserStore
+        every { store.state.protectionsState } returns mockk(relaxed = true)
+        every { context.components.settings } returns appSettings
+        every { context.components.settings.toolbarPosition.androidGravity } returns mockk(relaxed = true)
+
+        controller.handleCookieBannerHandlingDetailsClicked()
+
+        verify {
+            navController.popBackStack()
+
+            navController.navigate(any<NavDirections>())
+        }
+        assertNotNull(CookieBanners.visitedPanel.testGetValue())
+    }
+
+    @Test
     fun `handleTrackingProtectionToggled should call the right use cases`() = runTestOnMain {
         val trackingProtectionUseCases: TrackingProtectionUseCases = mockk(relaxed = true)
         val sessionUseCases: SessionUseCases = mockk(relaxed = true)
@@ -348,11 +366,12 @@ class DefaultQuickSettingsControllerTest {
             websiteUrl = tab.content.url,
             sessionId = tab.id,
             isTrackingProtectionEnabled = isTrackingProtectionEnabled,
+            isCookieHandlingEnabled = isTrackingProtectionEnabled,
         )
 
-        every { store.state.trackingProtectionState } returns state
+        every { store.state.protectionsState } returns state
 
-        controller.handleDetailsClicked()
+        controller.handleTrackingProtectionDetailsClicked()
 
         verify {
             navController.popBackStack()

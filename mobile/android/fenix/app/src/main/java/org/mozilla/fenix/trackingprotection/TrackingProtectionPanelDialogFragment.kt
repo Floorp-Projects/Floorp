@@ -23,9 +23,10 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
@@ -65,7 +66,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
     }
 
     @VisibleForTesting
-    internal lateinit var trackingProtectionStore: TrackingProtectionStore
+    internal lateinit var protectionsStore: ProtectionsStore
     private lateinit var trackingProtectionView: TrackingProtectionPanelView
     private lateinit var trackingProtectionInteractor: TrackingProtectionPanelInteractor
     private lateinit var trackingProtectionUseCases: TrackingProtectionUseCases
@@ -84,14 +85,15 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
         val view = inflateRootView(container)
         val tab = store.state.findTabOrCustomTab(provideCurrentTabId())
 
-        trackingProtectionStore = StoreProvider.get(this) {
-            TrackingProtectionStore(
-                TrackingProtectionState(
+        protectionsStore = StoreProvider.get(this) {
+            ProtectionsStore(
+                ProtectionsState(
                     tab = tab,
                     url = args.url,
                     isTrackingProtectionEnabled = args.trackingProtectionEnabled,
+                    isCookieBannerHandlingEnabled = args.cookieBannerHandlingEnabled,
                     listTrackers = listOf(),
-                    mode = TrackingProtectionState.Mode.Normal,
+                    mode = ProtectionsState.Mode.Normal,
                     lastAccessedCategory = "",
                 ),
             )
@@ -99,7 +101,9 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
         trackingProtectionInteractor = TrackingProtectionPanelInteractor(
             context = requireContext(),
             fragment = this,
-            store = trackingProtectionStore,
+            store = protectionsStore,
+            ioScope = viewLifecycleOwner.lifecycleScope + Dispatchers.IO,
+            cookieBannersStorage = requireComponents.core.cookieBannersStorage,
             navController = { findNavController() },
             openTrackingProtectionSettings = ::openTrackingProtectionSettings,
             openLearnMoreLink = ::handleLearnMoreClicked,
@@ -119,7 +123,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
         trackingProtectionUseCases.fetchTrackingLogs(
             tab.id,
             onSuccess = {
-                trackingProtectionStore.dispatch(TrackingProtectionAction.TrackerLogChange(it))
+                protectionsStore.dispatch(ProtectionsAction.TrackerLogChange(it))
             },
             onError = {
                 Logger.error("TrackingProtectionUseCases - fetchTrackingLogs onError", it)
@@ -133,7 +137,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
 
         observeUrlChange(store)
         observeTrackersChange(store)
-        trackingProtectionStore.observe(view) {
+        protectionsStore.observe(view) {
             viewLifecycleOwner.lifecycleScope.launch {
                 whenStarted {
                     trackingProtectionView.update(it)
@@ -217,7 +221,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
                 state.findTabOrCustomTab(provideCurrentTabId())
             }.ifChanged { tab -> tab.content.url }
                 .collect {
-                    trackingProtectionStore.dispatch(TrackingProtectionAction.UrlChange(it.content.url))
+                    protectionsStore.dispatch(ProtectionsAction.UrlChange(it.content.url))
                 }
         }
     }

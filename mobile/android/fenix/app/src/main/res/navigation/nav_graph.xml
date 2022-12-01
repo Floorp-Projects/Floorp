@@ -131,6 +131,9 @@
         android:id="@+id/action_global_trackingProtectionPanelDialogFragment"
         app:destination="@id/trackingProtectionPanelDialogFragment" />
     <action
+        android:id="@+id/action_global_cookieBannerProtectionPanelDialogFragment"
+        app:destination="@id/cookieBannerPanelDialogFragment" />
+    <action
         android:id="@+id/action_global_quickSettingsSheetDialogFragment"
         app:destination="@id/quickSettingsSheetDialogFragment" />
     <action
@@ -953,6 +956,9 @@
         <argument
             android:name="isTrackingProtectionEnabled"
             app:argType="boolean" />
+        <argument
+            android:name="isCookieHandlingEnabled"
+            app:argType="boolean" />
     </dialog>
     <fragment
         android:id="@+id/accountProblemFragment"
@@ -977,6 +983,9 @@
             app:argType="string" />
         <argument
             android:name="trackingProtectionEnabled"
+            app:argType="boolean" />
+        <argument
+            android:name="cookieBannerHandlingEnabled"
             app:argType="boolean" />
         <argument
             android:name="gravity"
@@ -1015,6 +1024,33 @@
             android:name="gravity"
             android:defaultValue="80"
             app:argType="integer" />
+    </dialog>
+
+    <dialog
+        android:id="@+id/cookieBannerPanelDialogFragment"
+        android:name="org.mozilla.fenix.settings.quicksettings.protections.cookiebanners.CookieBannerPanelDialogFragment"
+        tools:layout="@layout/quicksettings_website_info">
+        <argument
+            android:name="sessionId"
+            app:argType="string" />
+        <argument
+            android:name="url"
+            app:argType="string" />
+        <argument
+            android:name="trackingProtectionEnabled"
+            app:argType="boolean" />
+        <argument
+            android:name="cookieBannerHandlingEnabled"
+            app:argType="boolean" />
+        <argument
+            android:name="gravity"
+            android:defaultValue="80"
+            app:argType="integer" />
+        <argument
+            android:name="sitePermissions"
+            app:argType="mozilla.components.concept.engine.permission.SitePermissions"
+            app:nullable="true" />
+
     </dialog>
     <fragment
         android:id="@+id/trackingProtectionBlockingFragment"

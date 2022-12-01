@@ -9,7 +9,11 @@ import android.content.Intent
 import android.view.View
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.engine.manifest.WebAppManifestParser
@@ -29,6 +33,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BaseBrowserFragment
 import org.mozilla.fenix.browser.CustomTabContextMenuCandidate
 import org.mozilla.fenix.browser.FenixSnackbarDelegate
+import org.mozilla.fenix.components.components
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
@@ -159,21 +164,29 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
     }
 
     override fun navToQuickSettingsSheet(tab: SessionState, sitePermissions: SitePermissions?) {
+        val cookieBannersStorage = requireComponents.core.cookieBannersStorage
         requireComponents.useCases.trackingProtectionUseCases.containsException(tab.id) { contains ->
-            runIfFragmentIsAttached {
-                val directions = ExternalAppBrowserFragmentDirections
-                    .actionGlobalQuickSettingsSheetDialogFragment(
-                        sessionId = tab.id,
-                        url = tab.content.url,
-                        title = tab.content.title,
-                        isSecured = tab.content.securityInfo.secure,
-                        sitePermissions = sitePermissions,
-                        gravity = getAppropriateLayoutGravity(),
-                        certificateName = tab.content.securityInfo.issuer,
-                        permissionHighlights = tab.content.permissionHighlights,
-                        isTrackingProtectionEnabled = tab.trackingProtection.enabled && !contains,
-                    )
-                nav(R.id.externalAppBrowserFragment, directions)
+            lifecycleScope.launch(Dispatchers.IO) {
+                val hasException =
+                    cookieBannersStorage.hasException(tab.content.url, tab.content.private)
+                withContext(Dispatchers.Main) {
+                    runIfFragmentIsAttached {
+                        val directions = ExternalAppBrowserFragmentDirections
+                            .actionGlobalQuickSettingsSheetDialogFragment(
+                                sessionId = tab.id,
+                                url = tab.content.url,
+                                title = tab.content.title,
+                                isSecured = tab.content.securityInfo.secure,
+                                sitePermissions = sitePermissions,
+                                gravity = getAppropriateLayoutGravity(),
+                                certificateName = tab.content.securityInfo.issuer,
+                                permissionHighlights = tab.content.permissionHighlights,
+                                isTrackingProtectionEnabled = tab.trackingProtection.enabled && !contains,
+                                isCookieHandlingEnabled = !hasException,
+                            )
+                        nav(R.id.externalAppBrowserFragment, directions)
+                    }
+                }
             }
         }
     }

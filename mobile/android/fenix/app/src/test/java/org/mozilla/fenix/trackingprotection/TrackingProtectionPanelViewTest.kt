@@ -37,12 +37,13 @@ class TrackingProtectionPanelViewTest {
     private lateinit var container: ViewGroup
     private lateinit var interactor: TrackingProtectionPanelInteractor
     private lateinit var view: TrackingProtectionPanelView
-    private val baseState = TrackingProtectionState(
+    private val baseState = ProtectionsState(
         tab = null,
         url = "",
         isTrackingProtectionEnabled = false,
+        isCookieBannerHandlingEnabled = false,
         listTrackers = emptyList(),
-        mode = TrackingProtectionState.Mode.Normal,
+        mode = ProtectionsState.Mode.Normal,
         lastAccessedCategory = "",
     )
 
@@ -61,7 +62,7 @@ class TrackingProtectionPanelViewTest {
         mockkStatic("org.mozilla.fenix.ext.ContextKt") {
             every { any<Context>().settings() } returns mockk(relaxed = true)
 
-            view.update(baseState.copy(mode = TrackingProtectionState.Mode.Normal))
+            view.update(baseState.copy(mode = ProtectionsState.Mode.Normal))
             assertFalse(view.binding.detailsMode.isVisible)
             assertTrue(view.binding.normalMode.isVisible)
             assertTrue(view.binding.protectionSettings.isVisible)
@@ -78,7 +79,7 @@ class TrackingProtectionPanelViewTest {
             }
             val expectedTitle = testContext.getString(R.string.etp_cookies_title_2)
 
-            view.update(baseState.copy(mode = TrackingProtectionState.Mode.Normal))
+            view.update(baseState.copy(mode = ProtectionsState.Mode.Normal))
 
             assertEquals(expectedTitle, view.binding.crossSiteTracking.text)
             assertEquals(expectedTitle, view.binding.crossSiteTrackingLoaded.text)
@@ -93,7 +94,7 @@ class TrackingProtectionPanelViewTest {
             }
             val expectedTitle = testContext.getString(R.string.etp_cookies_title)
 
-            view.update(baseState.copy(mode = TrackingProtectionState.Mode.Normal))
+            view.update(baseState.copy(mode = ProtectionsState.Mode.Normal))
 
             assertEquals(expectedTitle, view.binding.crossSiteTracking.text)
             assertEquals(expectedTitle, view.binding.crossSiteTrackingLoaded.text)
@@ -104,7 +105,7 @@ class TrackingProtectionPanelViewTest {
     fun testPrivateModeUi() {
         view.update(
             baseState.copy(
-                mode = TrackingProtectionState.Mode.Details(
+                mode = ProtectionsState.Mode.Details(
                     selectedCategory = TrackingProtectionCategory.TRACKING_CONTENT,
                     categoryBlocked = false,
                 ),
@@ -137,7 +138,7 @@ class TrackingProtectionPanelViewTest {
 
             view.update(
                 baseState.copy(
-                    mode = TrackingProtectionState.Mode.Details(
+                    mode = ProtectionsState.Mode.Details(
                         selectedCategory = CROSS_SITE_TRACKING_COOKIES,
                         categoryBlocked = false,
                     ),
@@ -160,7 +161,7 @@ class TrackingProtectionPanelViewTest {
 
             view.update(
                 baseState.copy(
-                    mode = TrackingProtectionState.Mode.Details(
+                    mode = ProtectionsState.Mode.Details(
                         selectedCategory = CROSS_SITE_TRACKING_COOKIES,
                         categoryBlocked = false,
                     ),

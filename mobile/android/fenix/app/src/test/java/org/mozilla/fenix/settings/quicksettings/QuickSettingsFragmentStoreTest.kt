@@ -39,7 +39,7 @@ import org.mozilla.fenix.settings.quicksettings.WebsiteInfoState.Companion.creat
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeEnabled
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeVisible
 import org.mozilla.fenix.settings.sitepermissions.AUTOPLAY_BLOCK_ALL
-import org.mozilla.fenix.trackingprotection.TrackingProtectionState
+import org.mozilla.fenix.trackingprotection.ProtectionsState
 import org.mozilla.fenix.utils.Settings
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -83,13 +83,14 @@ class QuickSettingsFragmentStoreTest {
             settings = appSettings,
             sessionId = tab.id,
             isTrackingProtectionEnabled = true,
+            isCookieHandlingEnabled = true,
         )
 
         assertNotNull(store)
         assertNotNull(store.state)
         assertNotNull(store.state.webInfoState)
         assertNotNull(store.state.websitePermissionsState)
-        assertNotNull(store.state.trackingProtectionState)
+        assertNotNull(store.state.protectionsState)
     }
 
     @Test
@@ -286,7 +287,7 @@ class QuickSettingsFragmentStoreTest {
             val initialState = QuickSettingsFragmentState(
                 webInfoState = websiteInfoState,
                 websitePermissionsState = initialWebsitePermissionsState,
-                trackingProtectionState = mockk(),
+                protectionsState = mockk(),
             )
             val store = QuickSettingsFragmentStore(initialState)
 
@@ -340,6 +341,7 @@ class QuickSettingsFragmentStoreTest {
         val tab = createTab("https://www.firefox.com")
         val browserStore = BrowserStore(BrowserState(tabs = listOf(tab)))
         val isTrackingProtectionEnabled = true
+        val isCookieHandlingEnabled = true
 
         every { context.components.core.store } returns browserStore
 
@@ -348,14 +350,16 @@ class QuickSettingsFragmentStoreTest {
             websiteUrl = tab.content.url,
             sessionId = tab.id,
             isTrackingProtectionEnabled = isTrackingProtectionEnabled,
+            isCookieHandlingEnabled = isCookieHandlingEnabled,
         )
 
         assertNotNull(state)
         assertEquals(tab, state.tab)
         assertEquals(tab.content.url, state.url)
         assertEquals(isTrackingProtectionEnabled, state.isTrackingProtectionEnabled)
+        assertEquals(isCookieHandlingEnabled, state.isCookieBannerHandlingEnabled)
         assertEquals(0, state.listTrackers.size)
-        assertEquals(TrackingProtectionState.Mode.Normal, state.mode)
+        assertEquals(ProtectionsState.Mode.Normal, state.mode)
         assertEquals("", state.lastAccessedCategory)
     }
 

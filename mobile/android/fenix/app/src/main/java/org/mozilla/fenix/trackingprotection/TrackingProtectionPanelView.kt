@@ -84,7 +84,7 @@ class TrackingProtectionPanelView(
 
     val view: ConstraintLayout = binding.panelWrapper
 
-    private var mode: TrackingProtectionState.Mode = TrackingProtectionState.Mode.Normal
+    private var mode: ProtectionsState.Mode = ProtectionsState.Mode.Normal
 
     private var bucketedTrackers = TrackerBuckets()
 
@@ -106,13 +106,16 @@ class TrackingProtectionPanelView(
         setCategoryClickListeners()
     }
 
-    fun update(state: TrackingProtectionState) {
+    /**
+     * Updates the display mode of the Protection view.
+     */
+    fun update(state: ProtectionsState) {
         mode = state.mode
         bucketedTrackers.updateIfNeeded(state.listTrackers)
 
         when (val mode = state.mode) {
-            is TrackingProtectionState.Mode.Normal -> setUIForNormalMode(state)
-            is TrackingProtectionState.Mode.Details -> setUIForDetailsMode(
+            is ProtectionsState.Mode.Normal -> setUIForNormalMode(state)
+            is ProtectionsState.Mode.Details -> setUIForDetailsMode(
                 mode.selectedCategory,
                 mode.categoryBlocked,
             )
@@ -121,7 +124,7 @@ class TrackingProtectionPanelView(
         setAccessibilityViewHierarchy(binding.detailsBack, binding.categoryTitle)
     }
 
-    private fun setUIForNormalMode(state: TrackingProtectionState) {
+    private fun setUIForNormalMode(state: ProtectionsState) {
         binding.detailsMode.visibility = View.GONE
         binding.normalMode.visibility = View.VISIBLE
 
@@ -280,8 +283,8 @@ class TrackingProtectionPanelView(
 
     fun onBackPressed(): Boolean {
         return when (mode) {
-            is TrackingProtectionState.Mode.Details -> {
-                mode = TrackingProtectionState.Mode.Normal
+            is ProtectionsState.Mode.Details -> {
+                mode = ProtectionsState.Mode.Normal
                 interactor.onBackPressed()
                 true
             }

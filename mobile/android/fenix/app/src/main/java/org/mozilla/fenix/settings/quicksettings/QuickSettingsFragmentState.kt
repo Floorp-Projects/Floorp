@@ -14,18 +14,18 @@ import mozilla.components.feature.sitepermissions.SitePermissionsRules.AutoplayA
 import mozilla.components.lib.state.State
 import org.mozilla.fenix.R
 import org.mozilla.fenix.settings.PhoneFeature
-import org.mozilla.fenix.trackingprotection.TrackingProtectionState
+import org.mozilla.fenix.trackingprotection.ProtectionsState
 import org.mozilla.fenix.utils.Settings
 
 /**
  * [State] containing all data displayed to the user by this Fragment.
  *
- * Partitioned further to contain mutiple states for each standalone View this Fragment holds.
+ * Partitioned further to contain multiple states for each standalone View this Fragment holds.
  */
 data class QuickSettingsFragmentState(
     val webInfoState: WebsiteInfoState,
     val websitePermissionsState: WebsitePermissionsState,
-    val trackingProtectionState: TrackingProtectionState,
+    val protectionsState: ProtectionsState,
 ) : State
 
 /**

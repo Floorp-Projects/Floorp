@@ -6,7 +6,7 @@ package org.mozilla.fenix.settings.quicksettings
 
 import mozilla.components.lib.state.Action
 import org.mozilla.fenix.settings.PhoneFeature
-import org.mozilla.fenix.trackingprotection.TrackingProtectionState
+import org.mozilla.fenix.trackingprotection.ProtectionsState
 
 /**
  * Parent [Action] for all the [QuickSettingsFragmentState] changes.
@@ -49,7 +49,7 @@ sealed class WebsitePermissionAction(open val updatedFeature: PhoneFeature) : Qu
 }
 
 /**
- * All possible [TrackingProtectionState] changes as a result oof user / system interactions.
+ * All possible [ProtectionsState] changes in the quick setting panel.
  */
 sealed class TrackingProtectionAction : QuickSettingsFragmentAction() {
     /**

@@ -281,6 +281,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 SettingsFragmentDirections.actionSettingsFragmentToHttpsOnlyFragment()
             }
             resources.getString(R.string.pref_key_cookie_banner_settings) -> {
+                FxNimbus.features.cookieBanners.recordExposure()
                 CookieBanners.visitedSetting.record(mozilla.components.service.glean.private.NoExtras())
                 SettingsFragmentDirections.actionSettingsFragmentToCookieBannerFragment()
             }

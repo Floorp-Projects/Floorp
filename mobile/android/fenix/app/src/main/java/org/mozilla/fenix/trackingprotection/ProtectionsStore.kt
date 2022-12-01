@@ -13,57 +13,95 @@ import mozilla.components.lib.state.Store
 import org.mozilla.fenix.R
 
 /**
- * The [Store] for holding the [TrackingProtectionState] and applying [TrackingProtectionAction]s.
+ * The [Store] for holding the [ProtectionsState] and applying [ProtectionsAction]s.
  */
-class TrackingProtectionStore(initialState: TrackingProtectionState) :
-    Store<TrackingProtectionState, TrackingProtectionAction>(
+class ProtectionsStore(initialState: ProtectionsState) :
+    Store<ProtectionsState, ProtectionsAction>(
         initialState,
-        ::trackingProtectionStateReducer,
+        ::protectionsStateReducer,
     )
 
 /**
- * Actions to dispatch through the `TrackingProtectionStore` to modify `TrackingProtectionState` through the reducer.
+ * Actions to dispatch through the `TrackingProtectionStore` to modify `ProtectionsState` through the reducer.
  */
-sealed class TrackingProtectionAction : Action {
+sealed class ProtectionsAction : Action {
+    /**
+     * The values of the tracking protection view has been changed.
+     */
     data class Change(
         val url: String,
         val isTrackingProtectionEnabled: Boolean,
+        val isCookieBannerHandlingEnabled: Boolean,
         val listTrackers: List<TrackerLog>,
-        val mode: TrackingProtectionState.Mode,
-    ) : TrackingProtectionAction()
+        val mode: ProtectionsState.Mode,
+    ) : ProtectionsAction()
 
-    data class UrlChange(val url: String) : TrackingProtectionAction()
-    data class TrackerLogChange(val listTrackers: List<TrackerLog>) : TrackingProtectionAction()
+    /**
+     * Toggles the enabled state of cookie banner handling protection.
+     *
+     * @param isEnabled Whether or not cookie banner protection is enabled.
+     */
+    data class ToggleCookieBannerHandlingProtectionEnabled(val isEnabled: Boolean) :
+        ProtectionsAction()
 
-    object ExitDetailsMode : TrackingProtectionAction()
+    /**
+     * Indicates the url has changed.
+     */
+    data class UrlChange(val url: String) : ProtectionsAction()
+
+    /**
+     * Indicates the url has the list of trackers has been updated.
+     */
+    data class TrackerLogChange(val listTrackers: List<TrackerLog>) : ProtectionsAction()
+
+    /**
+     * Indicates the user is leaving the detailed view.
+     */
+    object ExitDetailsMode : ProtectionsAction()
+
+    /**
+     * Holds the data to show a detailed tracking protection view.
+     */
     data class EnterDetailsMode(
         val category: TrackingProtectionCategory,
         val categoryBlocked: Boolean,
-    ) :
-        TrackingProtectionAction()
+    ) : ProtectionsAction()
 }
 
 /**
- * The state for the Tracking Protection Panel
+ * The state for the Protections Panel
  * @property tab Current session to display
  * @property url Current URL to display
  * @property isTrackingProtectionEnabled Current status of tracking protection for this session
  * (ie is an exception)
+ * @property isCookieBannerHandlingEnabled Current status of cookie banner handling protection
+ * for this session (ie is an exception).
  * @property listTrackers Current Tracker Log list of blocked and loaded tracker categories
  * @property mode Current Mode of TrackingProtection
  * @property lastAccessedCategory Remembers the last accessed details category, used to move
  * accessibly focus after returning from details_mode
  */
-data class TrackingProtectionState(
+data class ProtectionsState(
     val tab: SessionState?,
     val url: String,
     val isTrackingProtectionEnabled: Boolean,
+    val isCookieBannerHandlingEnabled: Boolean,
     val listTrackers: List<TrackerLog>,
     val mode: Mode,
     val lastAccessedCategory: String,
 ) : State {
+    /**
+     * Indicates the modes in which a tracking protection view could be in.
+     */
     sealed class Mode {
+        /**
+         * Indicates that tracking protection view should not be in detail mode.
+         */
         object Normal : Mode()
+
+        /**
+         * Indicates that tracking protection view in detailed mode.
+         */
         data class Details(
             val selectedCategory: TrackingProtectionCategory,
             val categoryBlocked: Boolean,
@@ -105,32 +143,36 @@ enum class TrackingProtectionCategory(
 }
 
 /**
- * The TrackingProtectionState Reducer.
+ * The [ProtectionsState] reducer.
  */
-fun trackingProtectionStateReducer(
-    state: TrackingProtectionState,
-    action: TrackingProtectionAction,
-): TrackingProtectionState {
+fun protectionsStateReducer(
+    state: ProtectionsState,
+    action: ProtectionsAction,
+): ProtectionsState {
     return when (action) {
-        is TrackingProtectionAction.Change -> state.copy(
+        is ProtectionsAction.Change -> state.copy(
             url = action.url,
             isTrackingProtectionEnabled = action.isTrackingProtectionEnabled,
+            isCookieBannerHandlingEnabled = action.isCookieBannerHandlingEnabled,
             listTrackers = action.listTrackers,
             mode = action.mode,
         )
-        is TrackingProtectionAction.UrlChange -> state.copy(
+        is ProtectionsAction.UrlChange -> state.copy(
             url = action.url,
         )
-        is TrackingProtectionAction.TrackerLogChange -> state.copy(listTrackers = action.listTrackers)
-        TrackingProtectionAction.ExitDetailsMode -> state.copy(
-            mode = TrackingProtectionState.Mode.Normal,
+        is ProtectionsAction.TrackerLogChange -> state.copy(listTrackers = action.listTrackers)
+        ProtectionsAction.ExitDetailsMode -> state.copy(
+            mode = ProtectionsState.Mode.Normal,
         )
-        is TrackingProtectionAction.EnterDetailsMode -> state.copy(
-            mode = TrackingProtectionState.Mode.Details(
+        is ProtectionsAction.EnterDetailsMode -> state.copy(
+            mode = ProtectionsState.Mode.Details(
                 action.category,
                 action.categoryBlocked,
             ),
             lastAccessedCategory = action.category.name,
+        )
+        is ProtectionsAction.ToggleCookieBannerHandlingProtectionEnabled -> state.copy(
+            isCookieBannerHandlingEnabled = action.isEnabled,
         )
     }
 }

@@ -50,32 +50,32 @@ class TrackingProtectionPanelDialogFragmentTest {
 
     @Test
     fun `WHEN the url is updated THEN the url view is updated`() {
-        val trackingProtectionStore: TrackingProtectionStore = mockk(relaxed = true)
+        val protectionsStore: ProtectionsStore = mockk(relaxed = true)
         val tab = createTab("mozilla.org")
 
-        every { fragment.trackingProtectionStore } returns trackingProtectionStore
+        every { fragment.protectionsStore } returns protectionsStore
         every { fragment.provideCurrentTabId() } returns tab.id
 
         fragment.observeUrlChange(store)
         addAndSelectTab(tab)
 
         verify(exactly = 1) {
-            trackingProtectionStore.dispatch(TrackingProtectionAction.UrlChange("mozilla.org"))
+            protectionsStore.dispatch(ProtectionsAction.UrlChange("mozilla.org"))
         }
 
         store.dispatch(ContentAction.UpdateUrlAction(tab.id, "wikipedia.org")).joinBlocking()
 
         verify(exactly = 1) {
-            trackingProtectionStore.dispatch(TrackingProtectionAction.UrlChange("wikipedia.org"))
+            protectionsStore.dispatch(ProtectionsAction.UrlChange("wikipedia.org"))
         }
     }
 
     @Test
     fun `WHEN a tracker is loaded THEN trackers view is updated`() {
-        val trackingProtectionStore: TrackingProtectionStore = mockk(relaxed = true)
+        val protectionsStore: ProtectionsStore = mockk(relaxed = true)
         val tab = createTab("mozilla.org")
 
-        every { fragment.trackingProtectionStore } returns trackingProtectionStore
+        every { fragment.protectionsStore } returns protectionsStore
         every { fragment.provideCurrentTabId() } returns tab.id
         every { fragment.updateTrackers(any()) } returns Unit
 
@@ -99,10 +99,10 @@ class TrackingProtectionPanelDialogFragmentTest {
 
     @Test
     fun `WHEN a tracker is blocked THEN trackers view is updated`() {
-        val trackingProtectionStore: TrackingProtectionStore = mockk(relaxed = true)
+        val protectionsStore: ProtectionsStore = mockk(relaxed = true)
         val tab = createTab("mozilla.org")
 
-        every { fragment.trackingProtectionStore } returns trackingProtectionStore
+        every { fragment.protectionsStore } returns protectionsStore
         every { fragment.provideCurrentTabId() } returns tab.id
         every { fragment.updateTrackers(any()) } returns Unit
 

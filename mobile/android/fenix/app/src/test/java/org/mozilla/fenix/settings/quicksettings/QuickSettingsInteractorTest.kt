@@ -66,11 +66,20 @@ class QuickSettingsInteractorTest {
     }
 
     @Test
-    fun `onBlockedItemsClicked should delegate the controller`() {
-        interactor.onDetailsClicked()
+    fun `onCookieBannerHandlingClicked should delegate the controller`() {
+        interactor.onCookieBannerHandlingDetailsClicked()
 
         verify {
-            controller.handleDetailsClicked()
+            controller.handleCookieBannerHandlingDetailsClicked()
+        }
+    }
+
+    @Test
+    fun `onBlockedItemsClicked should delegate the controller`() {
+        interactor.onTrackingProtectionDetailsClicked()
+
+        verify {
+            controller.handleTrackingProtectionDetailsClicked()
         }
     }
 
