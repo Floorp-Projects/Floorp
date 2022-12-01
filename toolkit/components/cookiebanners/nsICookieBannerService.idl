@@ -62,7 +62,8 @@ interface nsICookieBannerService : nsISupports {
   /**
    * Look up the click rules for a given domain.
    */
-  Array<nsIClickRule> getClickRulesForDomain(in ACString aDomain, in bool aIsTopLevel);
+  Array<nsIClickRule> getClickRulesForDomain(in ACString aDomain,
+                                             in bool aIsTopLevel);
 
   /**
    * Insert a cookie banner rule for a domain. If there was previously a rule

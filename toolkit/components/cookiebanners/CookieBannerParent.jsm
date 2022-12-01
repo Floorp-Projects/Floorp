@@ -151,7 +151,7 @@ class CookieBannerParent extends JSWindowActorParent {
       return [];
     }
 
-    let isTopLevel = this.browsingContext == this.browsingContext?.top;
+    let isTopLevel = !this.manager.browsingContext.parent;
     let rules = Services.cookieBanners.getClickRulesForDomain(
       domain,
       isTopLevel
