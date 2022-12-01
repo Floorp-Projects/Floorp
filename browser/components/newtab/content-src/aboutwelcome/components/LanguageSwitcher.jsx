@@ -22,6 +22,19 @@ export function useLanguageSwitcher(
   );
   const screen = screens[languageMismatchScreenIndex];
 
+  // Ensure fluent messages have the negotiatedLanguage args set, as they are rendered
+  // before the negotiatedLanguage is known. If the arg isn't present then Firefox will
+  // crash in development mode.
+  useEffect(() => {
+    if (screen?.content?.languageSwitcher) {
+      for (const text of Object.values(screen.content.languageSwitcher)) {
+        if (text?.args && text.args.negotiatedLanguage === undefined) {
+          text.args.negotiatedLanguage = "";
+        }
+      }
+    }
+  }, [screen]);
+
   // If there is a mismatch, then Firefox can negotiate a better langpack to offer
   // the user.
   const [negotiatedLanguage, setNegotiatedLanguage] = useState(null);
