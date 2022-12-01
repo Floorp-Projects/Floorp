@@ -578,7 +578,7 @@ void Compartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
 
 GlobalObject& Compartment::firstGlobal() const {
   for (Realm* realm : realms_) {
-    if (!realm->hasLiveGlobal()) {
+    if (!realm->hasInitializedGlobal()) {
       continue;
     }
     GlobalObject* global = realm->maybeGlobal();

@@ -510,6 +510,9 @@ class JS::Realm : public JS::shadow::Realm {
   /* True if a global exists and it's not being collected. */
   inline bool hasLiveGlobal() const;
 
+  /* True if a global exists and has been successfully initialized. */
+  inline bool hasInitializedGlobal() const;
+
   inline void initGlobal(js::GlobalObject& global);
   void clearInitializingGlobal() { initializingGlobal_ = false; }
 
