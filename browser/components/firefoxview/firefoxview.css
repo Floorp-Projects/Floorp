@@ -1033,6 +1033,7 @@ details[open] > .page-section-header > .twisty {
 @media (prefers-contrast) {
   .last-active-badge {
     border: 1px solid CanvasText;
+    background-color: Canvas;
   }
   .dot {
     background-color: FieldText;
