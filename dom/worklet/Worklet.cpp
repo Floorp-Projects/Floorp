@@ -108,6 +108,11 @@ class WorkletFetchHandler final : public PromiseNativeHandler,
     nsresult rv = NS_NewURI(getter_AddRefs(resolvedURI), aModuleURL, nullptr,
                             doc->GetBaseURI());
     if (NS_WARN_IF(NS_FAILED(rv))) {
+      // https://html.spec.whatwg.org/multipage/worklets.html#dom-worklet-addmodule
+      // Step 3. If this fails, then return a promise rejected with a
+      // "SyntaxError" DOMException.
+      rv = NS_ERROR_DOM_SYNTAX_ERR;
+
       promise->MaybeReject(rv);
       return promise.forget();
     }
@@ -115,6 +120,8 @@ class WorkletFetchHandler final : public PromiseNativeHandler,
     nsAutoCString spec;
     rv = resolvedURI->GetSpec(spec);
     if (NS_WARN_IF(NS_FAILED(rv))) {
+      rv = NS_ERROR_DOM_SYNTAX_ERR;
+
       promise->MaybeReject(rv);
       return promise.forget();
     }
