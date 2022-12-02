@@ -355,3 +355,34 @@ TEST(WebMWriter, bug970774_aspect_ratio)
     nestegg_destroy(context);
   }
 }
+
+/**
+ * Test that we don't crash when writing two video frames that are too far apart
+ * to fit in the same cluster (>32767ms).
+ */
+TEST(WebMWriter, LongVideoGap)
+{
+  TestWebMWriter writer;
+  nsTArray<RefPtr<TrackMetadataBase>> meta;
+  TrackRate trackRate = 44100;
+  // Set vp8 metadata
+  int32_t width = 640;
+  int32_t height = 480;
+  int32_t displayWidth = 640;
+  int32_t displayHeight = 480;
+  GetVP8Metadata(width, height, displayWidth, displayHeight, trackRate, meta);
+  writer.SetMetadata(meta);
+
+  // write the first I-Frame.
+  writer.AppendDummyFrame(EncodedFrame::VP8_I_FRAME,
+                          media::TimeUnit::FromSeconds(33).ToMicroseconds());
+
+  // write the second I-Frame.
+  writer.AppendDummyFrame(EncodedFrame::VP8_I_FRAME,
+                          media::TimeUnit::FromSeconds(0.33).ToMicroseconds());
+
+  nsTArray<nsTArray<uint8_t>> encodedBuf;
+  writer.GetContainerData(&encodedBuf, ContainerWriter::GET_HEADER);
+  // metadata + 2 frames
+  EXPECT_EQ(encodedBuf.Length(), 3U);
+}
