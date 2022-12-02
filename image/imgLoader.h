@@ -259,7 +259,7 @@ class imgLoader final : public imgILoader,
       nsLoadFlags aLoadFlags, nsISupports* aCacheKey,
       nsContentPolicyType aContentPolicyType, const nsAString& initiatorType,
       bool aUseUrgentStartForChannel, bool aLinkPreload,
-      imgRequestProxy** _retval);
+      uint64_t aEarlyHintPreloaderId, imgRequestProxy** _retval);
 
   [[nodiscard]] nsresult LoadImageWithChannel(
       nsIChannel* channel, imgINotificationObserver* aObserver,

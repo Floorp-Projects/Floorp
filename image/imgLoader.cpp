@@ -6,6 +6,7 @@
 
 // Undefine windows version of LoadImage because our code uses that name.
 #include "mozilla/ScopeExit.h"
+#include "nsIChildChannel.h"
 #undef LoadImage
 
 #include "imgLoader.h"
@@ -2235,11 +2236,12 @@ imgLoader::LoadImageXPCOM(
     aContentPolicyType = nsIContentPolicy::TYPE_INTERNAL_IMAGE;
   }
   imgRequestProxy* proxy;
-  nsresult rv = LoadImage(
-      aURI, aInitialDocumentURI, aReferrerInfo, aTriggeringPrincipal, 0,
-      aLoadGroup, aObserver, aLoadingDocument, aLoadingDocument, aLoadFlags,
-      aCacheKey, aContentPolicyType, u""_ns,
-      /* aUseUrgentStartForChannel */ false, /* aListPreload */ false, &proxy);
+  nsresult rv =
+      LoadImage(aURI, aInitialDocumentURI, aReferrerInfo, aTriggeringPrincipal,
+                0, aLoadGroup, aObserver, aLoadingDocument, aLoadingDocument,
+                aLoadFlags, aCacheKey, aContentPolicyType, u""_ns,
+                /* aUseUrgentStartForChannel */ false, /* aListPreload */ false,
+                0, &proxy);
   *_retval = proxy;
   return rv;
 }
@@ -2290,7 +2292,8 @@ nsresult imgLoader::LoadImage(
     nsINode* aContext, Document* aLoadingDocument, nsLoadFlags aLoadFlags,
     nsISupports* aCacheKey, nsContentPolicyType aContentPolicyType,
     const nsAString& initiatorType, bool aUseUrgentStartForChannel,
-    bool aLinkPreload, imgRequestProxy** _retval) {
+    bool aLinkPreload, uint64_t aEarlyHintPreloaderId,
+    imgRequestProxy** _retval) {
   VerifyCacheSizes();
 
   NS_ASSERTION(aURI, "imgLoader::LoadImage -- NULL URI pointer");
@@ -2551,7 +2554,16 @@ nsresult imgLoader::LoadImage(
                                  nsINetworkPredictor::LEARN_LOAD_SUBRESOURCE,
                                  aLoadGroup);
 
-    nsresult openRes = newChannel->AsyncOpen(listener);
+    nsresult openRes;
+    if (aEarlyHintPreloaderId) {
+      nsCOMPtr<nsIHttpChannelInternal> channelInternal =
+          do_QueryInterface(newChannel);
+      NS_ENSURE_TRUE(channelInternal != nullptr, NS_ERROR_FAILURE);
+
+      rv = channelInternal->SetEarlyHintPreloaderId(aEarlyHintPreloaderId);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    openRes = newChannel->AsyncOpen(listener);
 
     if (NS_FAILED(openRes)) {
       MOZ_LOG(
