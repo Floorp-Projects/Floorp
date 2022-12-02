@@ -22,7 +22,6 @@ import uuid
 from datetime import datetime
 
 import six
-import yaml
 from mozharness.base.config import DEFAULT_CONFIG_PATH, BaseConfig, parse_config_file
 from mozharness.base.errors import MakefileErrorList
 from mozharness.base.log import ERROR, FATAL, OutputParser
@@ -39,7 +38,6 @@ from mozharness.mozilla.automation import (
     AutomationMixin,
 )
 from mozharness.mozilla.secrets import SecretsMixin
-from yaml import YAMLError
 
 AUTOMATION_EXIT_CODES = sorted(EXIT_STATUS_DICT.values())
 
@@ -1436,92 +1434,3 @@ items from that key's value."
             os.path.join("testing", "parse_build_tests_ccov.py"),
         ]
         self.run_command(command=cmd, cwd=topsrcdir, env=env, halt_on_failure=True)
-
-    @PostScriptRun
-    def _relocate_artifacts(self):
-        """Move certain artifacts out of the default upload directory.
-
-        These artifacts will be moved to a secondary directory called `cidata`.
-        Then they will be uploaded with different expiration values."""
-        dirs = self.query_abs_dirs()
-        topsrcdir = dirs["abs_src_dir"]
-        base_work_dir = dirs["base_work_dir"]
-
-        build_platform = os.environ.get("MOZ_ARTIFACT_PLATFORM")
-        if build_platform is not None:
-            build_platform = build_platform.lower()
-        else:
-            err = "The MOZ_ARTIFACT_PLATFORM env var is not set.\n"
-            err += "That means this build was not modified by the artifact transform. Exiting."
-            self.error(err)
-            return
-        try:
-            upload_dir = os.environ["UPLOAD_DIR"]
-        except KeyError:
-            self.fatal("The env. var. UPLOAD_DIR is not set.")
-
-        artifact_yml_path = os.path.join(
-            topsrcdir, "taskcluster/gecko_taskgraph/transforms/artifacts.yml"
-        )
-
-        upload_short_dir = os.path.join(base_work_dir, "cidata")
-
-        # Choose artifacts based on build platform
-        if build_platform.startswith("win"):
-            main_platform = "win"
-        elif build_platform.startswith("linux"):
-            main_platform = "linux"
-        elif build_platform.startswith("mac"):
-            main_platform = "macos"
-        elif build_platform.startswith("android"):
-            if build_platform == "android-geckoview-docs":
-                return
-            main_platform = "android"
-        else:
-            err = "Build platform {} didn't start with 'mac', 'linux', 'win', or 'android'".format(
-                build_platform
-            )
-            self.fatal(err)
-        try:
-            with open(artifact_yml_path) as artfile:
-                arts = []
-                platforms = yaml.safe_load(artfile.read())
-                for artifact in platforms[main_platform]:
-                    arts.append(artifact)
-        except FileNotFoundError:
-            self.fatal("Could not read artifacts.yml; file not found. Exiting.")
-        except PermissionError:
-            self.fatal("Could not read artifacts.yml; permission error.")
-        except YAMLError as ye:
-            self.fatal(f"Failed to parse artifacts.yml with error:\n{ye}")
-
-        try:
-            os.makedirs(upload_short_dir)
-        except FileExistsError:
-            pass
-        except PermissionError:
-            self.fatal(f'Failed to create dir. "{upload_short_dir}"; permission error.')
-
-        for art in arts:
-            source_file = os.path.join(upload_dir, art)
-            if not os.path.exists(source_file):
-                self.info(
-                    f"The artifact {source_file} is not present in this build. Skipping"
-                )
-                continue
-            dest_file = os.path.join(upload_short_dir, art)
-            try:
-                os.rename(source_file, dest_file)
-                if os.path.exists(dest_file):
-                    self.info(
-                        f"Successfully moved artifact {source_file} to {dest_file}"
-                    )
-                else:
-                    self.fatal(
-                        f"Move of {source_file} to {dest_file} was not successful."
-                    )
-            except (PermissionError, FileNotFoundError) as err:
-                self.fatal(
-                    f'Failed to move file "{art}" from {source_file} to {dest_file}:\n{err}'
-                )
-                continue
