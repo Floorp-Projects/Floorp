@@ -445,13 +445,14 @@ class Field extends _pdf_object.PDFObject {
     this._page = data.page || 0;
     this._strokeColor = data.strokeColor || ["G", 0];
     this._textColor = data.textColor || ["G", 0];
-    this._value = data.value || "";
+    this._value = null;
     this._kidIds = data.kidIds || null;
     this._fieldType = (0, _common.getFieldType)(this._actions);
     this._siblings = data.siblings || null;
     this._rotation = data.rotation || 0;
     this._globalEval = data.globalEval;
     this._appObjects = data.appObjects;
+    this.value = data.value || "";
   }
   get currentValueIndices() {
     if (!this._isChoice) {
@@ -576,12 +577,13 @@ class Field extends _pdf_object.PDFObject {
       this._value = "";
     } else if (typeof value === "string") {
       switch (this._fieldType) {
+        case _common.FieldType.none:
+          this._value = !isNaN(value) ? parseFloat(value) : value;
+          break;
         case _common.FieldType.number:
         case _common.FieldType.percent:
-          value = parseFloat(value);
-          if (!isNaN(value)) {
-            this._value = value;
-          }
+          const number = parseFloat(value);
+          this._value = !isNaN(number) ? number : 0;
           break;
         default:
           this._value = value;
@@ -862,11 +864,16 @@ class RadioButtonField extends Field {
         this._id = radioData.id;
       }
     }
+    this._hasBeenInitialized = true;
+    this._value = data.value || "";
   }
   get value() {
     return this._value;
   }
   set value(value) {
+    if (!this._hasBeenInitialized) {
+      return;
+    }
     if (value === null || value === undefined) {
       this._value = "";
     }
@@ -3786,10 +3793,11 @@ class Util extends _pdf_object.PDFObject {
         }
         if (decPart.length > 2) {
           decPart = `${decimalSep}${decPart.substring(2)}`;
-        } else if (cFlags & HASH) {
-          decPart = ".";
         } else {
-          decPart = "";
+          if (decPart === "1") {
+            intPart += Math.sign(arg);
+          }
+          decPart = cFlags & HASH ? "." : "";
         }
       }
       let sign = "";
@@ -3912,6 +3920,7 @@ class Util extends _pdf_object.PDFObject {
     });
   }
   printx(cFormat, cSource) {
+    cSource = (cSource ?? "").toString();
     const handlers = [x => x, x => x.toUpperCase(), x => x.toLowerCase()];
     const buf = [];
     let i = 0;
@@ -4205,8 +4214,8 @@ Object.defineProperty(exports, "initSandbox", ({
   }
 }));
 var _initialization = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.1.73';
-const pdfjsBuild = '823723121';
+const pdfjsVersion = '3.2.31';
+const pdfjsBuild = '6e4968225';
 })();
 
 /******/ 	return __webpack_exports__;
