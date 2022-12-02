@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="apz_test_utils.js"></script>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+  html {
+    overflow: hidden;
+  }
+  #spacer {
+    height: 200vh;
+    width: 200vw;
+    position: absolute;
+    background: linear-gradient(green, blue);
+  }
+  </style>
+</head>
+<body>
+<div id="spacer"></div>
+</body>
+<script>
+async function test() {
+  let scrollendCount = 0;
+
+  window.addEventListener("scrollend", e => {
+    scrollendCount += 1;
+  });
+
+  window.scrollTo({ top: window.scrollY, behavior: 'smooth' });
+
+  await promiseFrame();
+
+  is(scrollendCount, 0, "Scrollend is not fired for a main thread no-op smooth scroll");
+
+  window.scrollTo({ top: window.scrollY + 200, behavior: 'smooth' });
+
+  await promiseOneEvent(window, "scrollend");
+
+  is(scrollendCount, 1, "Scrollend is fired for a main thread smooth scroll");
+}
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+</script>

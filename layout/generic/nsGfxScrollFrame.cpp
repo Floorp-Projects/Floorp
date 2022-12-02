@@ -2020,6 +2020,7 @@ class ScrollFrameHelper::AsyncSmoothMSDScroll final
                     StaticPrefs::layout_css_scroll_behavior_spring_constant(),
                     StaticPrefs::layout_css_scroll_behavior_damping_ratio()),
         mRange(aRange),
+        mStartPosition(aInitialPosition),
         mLastRefreshTime(aStartTime),
         mCallee(nullptr),
         mOneDevicePixelInAppUnits(aPresContext->DevPixelsToAppUnits(1)),
@@ -2052,6 +2053,8 @@ class ScrollFrameHelper::AsyncSmoothMSDScroll final
   void SetRange(const nsRect& aRange) { mRange = aRange; }
 
   nsRect GetRange() { return mRange; }
+
+  nsPoint GetStartPosition() { return mStartPosition; }
 
   void Simulate(const TimeDuration& aDeltaTime) {
     mXAxisModel.Simulate(aDeltaTime);
@@ -2137,6 +2140,7 @@ class ScrollFrameHelper::AsyncSmoothMSDScroll final
 
   mozilla::layers::AxisPhysicsMSDModel mXAxisModel, mYAxisModel;
   nsRect mRange;
+  nsPoint mStartPosition;
   mozilla::TimeStamp mLastRefreshTime;
   ScrollFrameHelper* mCallee;
   nscoord mOneDevicePixelInAppUnits;
@@ -2172,9 +2176,10 @@ class ScrollFrameHelper::AsyncScroll final : public nsARefreshObserver {
   void InitSmoothScroll(TimeStamp aTime, nsPoint aInitialPosition,
                         nsPoint aDestination, ScrollOrigin aOrigin,
                         const nsRect& aRange, const nsSize& aCurrentVelocity);
-  void Init(const nsRect& aRange) {
+  void Init(nsPoint aInitialPosition, const nsRect& aRange) {
     mAnimationPhysics = nullptr;
     mRange = aRange;
+    mStartPosition = aInitialPosition;
   }
 
   bool IsSmoothScroll() { return mAnimationPhysics != nullptr; }
@@ -2194,11 +2199,16 @@ class ScrollFrameHelper::AsyncScroll final : public nsARefreshObserver {
     return mAnimationPhysics->VelocityAt(aTime);
   }
 
+  nsPoint GetStartPosition() const { return mStartPosition; }
+
   // Most recent scroll origin.
   ScrollOrigin mOrigin;
 
   // Allowed destination positions around mDestination
   nsRect mRange;
+
+  // Initial position where the async scroll was triggered.
+  nsPoint mStartPosition;
 
  private:
   void InitPreferences(TimeStamp aTime, nsAtom* aOrigin);
@@ -2303,6 +2313,7 @@ void ScrollFrameHelper::AsyncScroll::InitSmoothScroll(
     }
   }
 
+  mStartPosition = aInitialPosition;
   mRange = aRange;
 
   mAnimationPhysics->Update(aTime, aDestination, aCurrentVelocity);
@@ -2438,7 +2449,8 @@ void ScrollFrameHelper::AsyncSmoothMSDScrollCallback(
   }
 
   aInstance->CompleteAsyncScroll(
-      range, aInstance->mAsyncSmoothMSDScroll->TakeSnapTargetIds());
+      aInstance->mAsyncSmoothMSDScroll->GetStartPosition(), range,
+      aInstance->mAsyncSmoothMSDScroll->TakeSnapTargetIds());
 }
 
 /*
@@ -2470,7 +2482,8 @@ void ScrollFrameHelper::AsyncScrollCallback(ScrollFrameHelper* aInstance,
     }
   }
 
-  aInstance->CompleteAsyncScroll(range,
+  aInstance->CompleteAsyncScroll(aInstance->mAsyncScroll->GetStartPosition(),
+                                 range,
                                  aInstance->mAsyncScroll->TakeSnapTargetIds());
 }
 
@@ -2488,11 +2501,11 @@ void ScrollFrameHelper::SetTransformingByAPZ(bool aTransforming) {
 }
 
 void ScrollFrameHelper::CompleteAsyncScroll(
-    const nsRect& aRange, UniquePtr<ScrollSnapTargetIds> aSnapTargetIds,
-    ScrollOrigin aOrigin) {
+    const nsPoint& aStartPosition, const nsRect& aRange,
+    UniquePtr<ScrollSnapTargetIds> aSnapTargetIds, ScrollOrigin aOrigin) {
   SetLastSnapTargetIds(std::move(aSnapTargetIds));
 
-  bool scrollPositionChanged = mDestination != GetScrollPosition();
+  bool scrollPositionChanged = mDestination != aStartPosition;
   bool isNotHandledByApz =
       nsLayoutUtils::CanScrollOriginClobberApz(aOrigin) ||
       ScrollAnimationState().contains(AnimationState::MainThread);
@@ -2660,7 +2673,8 @@ void ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
   if (aParams.IsInstant()) {
     // Asynchronous scrolling is not allowed, so we'll kill any existing
     // async-scrolling process and do an instant scroll.
-    CompleteAsyncScroll(range, std::move(snapTargetIds), aParams.mOrigin);
+    CompleteAsyncScroll(GetScrollPosition(), range, std::move(snapTargetIds),
+                        aParams.mOrigin);
     mApzSmoothScrollDestination = Nothing();
     return;
   }
@@ -2731,7 +2745,7 @@ void ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
     mAsyncScroll->InitSmoothScroll(now, GetScrollPosition(), mDestination,
                                    aParams.mOrigin, range, currentVelocity);
   } else {
-    mAsyncScroll->Init(range);
+    mAsyncScroll->Init(GetScrollPosition(), range);
   }
 }
 
