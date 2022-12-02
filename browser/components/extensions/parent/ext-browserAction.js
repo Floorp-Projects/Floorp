@@ -841,7 +841,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
   updateButton(node, tabData, sync = false, attention = false) {
     // This is the primary/action button in the custom widget.
     let button = node.querySelector(".unified-extensions-item-action-button");
-    let title = tabData.title || this.extension.name;
+    let extensionTitle = tabData.title || this.extension.name;
 
     let messages;
     if (gUnifiedExtensionsEnabled) {
@@ -855,8 +855,6 @@ this.browserAction = class extends ExtensionAPIPersistent {
     }
 
     let callback = () => {
-      button.setAttribute("label", title);
-
       // This is set on the node so that it looks good in the toolbar.
       node.toggleAttribute("attention", attention);
 
@@ -865,7 +863,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
         attention
           ? "origin-controls-toolbar-button-permission-needed"
           : "origin-controls-toolbar-button",
-        { extensionTitle: title }
+        { extensionTitle }
       );
 
       if (gUnifiedExtensionsEnabled) {
