@@ -42,10 +42,13 @@ enum class ResizeReflowOptions : uint32_t {
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ResizeReflowOptions)
 
 enum class IntrinsicDirty {
-  // XXXldb eResize should be renamed
-  Resize,       // don't mark any intrinsic widths dirty
-  TreeChange,   // mark intrinsic widths dirty on aFrame and its ancestors
-  StyleChange,  // Do eTreeChange, plus all of aFrame's descendants
+  // Don't mark any intrinsic inline sizes dirty.
+  None,
+  // Mark intrinsic inline sizes dirty on aFrame and its ancestors.
+  FrameAndAncestors,
+  // Mark intrinsic inline sizes dirty on aFrame, its ancestors, and its
+  // descendants.
+  FrameAncestorsAndDescendants,
 };
 
 enum class ReflowRootHandling {
@@ -53,8 +56,8 @@ enum class ReflowRootHandling {
   NoPositionOrSizeChange,  // ... NOT changing ...
   InferFromBitToAdd,       // is changing iff (aBitToAdd == NS_FRAME_IS_DIRTY)
 
-  // Note:  With eStyleChange, these can also apply to out-of-flows
-  // in addition to aFrame.
+  // Note:  With IntrinsicDirty::FrameAncestorsAndDescendants, these can also
+  // apply to out-of-flows in addition to aFrame.
 };
 
 // Indicates where to scroll on a given axis.

@@ -9865,7 +9865,7 @@ nsGridContainerFrame* nsGridContainerFrame::GetGridFrameWithComputedInfo(
 
   RefPtr<mozilla::PresShell> presShell = gridFrame->PresShell();
   gridFrame->SetShouldGenerateComputedInfo(true);
-  presShell->FrameNeedsReflow(gridFrame, IntrinsicDirty::Resize,
+  presShell->FrameNeedsReflow(gridFrame, IntrinsicDirty::None,
                               NS_FRAME_IS_DIRTY);
   presShell->FlushPendingNotifications(FlushType::Layout);
 

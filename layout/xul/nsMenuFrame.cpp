@@ -996,7 +996,7 @@ void nsMenuFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
     popupList->RemoveFirstChild();
     aOldFrame->Destroy();
     DestroyPopupList();
-    PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,
+    PresShell()->FrameNeedsReflow(this, IntrinsicDirty::FrameAndAncestors,
                                   NS_FRAME_HAS_DIRTY_CHILDREN);
     return;
   }
@@ -1010,7 +1010,7 @@ void nsMenuFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                       aListID == FrameChildListID::Popup)) {
     SetPopupFrame(aFrameList);
     if (HasPopup()) {
-      PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,
+      PresShell()->FrameNeedsReflow(this, IntrinsicDirty::FrameAndAncestors,
                                     NS_FRAME_HAS_DIRTY_CHILDREN);
     }
   }
@@ -1030,7 +1030,7 @@ void nsMenuFrame::AppendFrames(ChildListID aListID, nsFrameList&& aFrameList) {
                       aListID == FrameChildListID::Popup)) {
     SetPopupFrame(aFrameList);
     if (HasPopup()) {
-      PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,
+      PresShell()->FrameNeedsReflow(this, IntrinsicDirty::FrameAndAncestors,
                                     NS_FRAME_HAS_DIRTY_CHILDREN);
     }
   }

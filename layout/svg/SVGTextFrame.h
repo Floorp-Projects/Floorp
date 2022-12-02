@@ -297,10 +297,11 @@ class SVGTextFrame final : public SVGDisplayContainerFrame {
    * it.
    *
    * We have to do this in two cases: in response to a style change on a
-   * non-display <text>, where aReason will be eStyleChange (the common case),
-   * and also in response to glyphs changes on non-display <text> (i.e.,
-   * animated SVG-in-OpenType glyphs), in which case aReason will be eResize,
-   * since layout doesn't need to be recomputed.
+   * non-display <text>, where aReason will be
+   * IntrinsicDirty::FrameAncestorsAndDescendants (the common case), and also in
+   * response to glyphs changes on non-display <text> (i.e., animated
+   * SVG-in-OpenType glyphs), in which case aReason will be None, since layout
+   * doesn't need to be recomputed.
    */
   void ScheduleReflowSVGNonDisplayText(IntrinsicDirty aReason);
 

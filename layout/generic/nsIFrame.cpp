@@ -601,7 +601,8 @@ static void MaybeScheduleReflowSVGNonDisplayText(nsIFrame* aFrame) {
     return;
   }
 
-  svgTextFrame->ScheduleReflowSVGNonDisplayText(IntrinsicDirty::StyleChange);
+  svgTextFrame->ScheduleReflowSVGNonDisplayText(
+      IntrinsicDirty::FrameAncestorsAndDescendants);
 }
 
 bool nsIFrame::IsPrimaryFrameOfRootOrBodyElement() const {
@@ -7035,8 +7036,8 @@ void nsIFrame::UpdateIsRelevantContent(
 
   if (overallRelevancyChanged) {
     HandleLastRememberedSize();
-    PresShell()->FrameNeedsReflow(this, IntrinsicDirty::StyleChange,
-                                  NS_FRAME_IS_DIRTY);
+    PresShell()->FrameNeedsReflow(
+        this, IntrinsicDirty::FrameAncestorsAndDescendants, NS_FRAME_IS_DIRTY);
     InvalidateFrame();
   }
 }

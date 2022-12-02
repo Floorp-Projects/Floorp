@@ -4354,7 +4354,7 @@ void HTMLMediaElement::SetPlayedOrSeeked(bool aValue) {
   if (!frame) {
     return;
   }
-  frame->PresShell()->FrameNeedsReflow(frame, IntrinsicDirty::TreeChange,
+  frame->PresShell()->FrameNeedsReflow(frame, IntrinsicDirty::FrameAndAncestors,
                                        NS_FRAME_IS_DIRTY);
 }
 
@@ -6333,7 +6333,8 @@ void HTMLMediaElement::Invalidate(bool aImageSizeChanged,
     if (frame) {
       nsPresContext* presContext = frame->PresContext();
       PresShell* presShell = presContext->PresShell();
-      presShell->FrameNeedsReflow(frame, IntrinsicDirty::StyleChange,
+      presShell->FrameNeedsReflow(frame,
+                                  IntrinsicDirty::FrameAncestorsAndDescendants,
                                   NS_FRAME_IS_DIRTY);
     }
   }

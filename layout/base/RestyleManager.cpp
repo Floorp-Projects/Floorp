@@ -1250,20 +1250,20 @@ static void StyleChangeReflow(nsIFrame* aFrame, nsChangeHint aHint) {
                  "Please read the comments in nsChangeHint.h");
     NS_ASSERTION(aHint & nsChangeHint_NeedDirtyReflow,
                  "ClearDescendantIntrinsics requires NeedDirtyReflow");
-    dirtyType = IntrinsicDirty::StyleChange;
+    dirtyType = IntrinsicDirty::FrameAncestorsAndDescendants;
   } else if ((aHint & nsChangeHint_UpdateComputedBSize) &&
              aFrame->HasAnyStateBits(
                  NS_FRAME_DESCENDANT_INTRINSIC_ISIZE_DEPENDS_ON_BSIZE)) {
-    dirtyType = IntrinsicDirty::StyleChange;
+    dirtyType = IntrinsicDirty::FrameAncestorsAndDescendants;
   } else if (aHint & nsChangeHint_ClearAncestorIntrinsics) {
-    dirtyType = IntrinsicDirty::TreeChange;
+    dirtyType = IntrinsicDirty::FrameAndAncestors;
   } else if ((aHint & nsChangeHint_UpdateComputedBSize) &&
              HasBoxAncestor(aFrame)) {
     // The frame's computed BSize is changing, and we have a box ancestor
     // whose cached intrinsic height may need to be updated.
-    dirtyType = IntrinsicDirty::TreeChange;
+    dirtyType = IntrinsicDirty::FrameAndAncestors;
   } else {
-    dirtyType = IntrinsicDirty::Resize;
+    dirtyType = IntrinsicDirty::None;
   }
 
   if (aHint & nsChangeHint_UpdateComputedBSize) {
@@ -1274,7 +1274,7 @@ static void StyleChangeReflow(nsIFrame* aFrame, nsChangeHint aHint) {
   if (aFrame->HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
     dirtyBits = nsFrameState(0);
   } else if ((aHint & nsChangeHint_NeedDirtyReflow) ||
-             dirtyType == IntrinsicDirty::StyleChange) {
+             dirtyType == IntrinsicDirty::FrameAncestorsAndDescendants) {
     dirtyBits = NS_FRAME_IS_DIRTY;
   } else {
     dirtyBits = NS_FRAME_HAS_DIRTY_CHILDREN;
@@ -1282,7 +1282,7 @@ static void StyleChangeReflow(nsIFrame* aFrame, nsChangeHint aHint) {
 
   // If we're not going to clear any intrinsic sizes on the frames, and
   // there are no dirty bits to set, then there's nothing to do.
-  if (dirtyType == IntrinsicDirty::Resize && !dirtyBits) return;
+  if (dirtyType == IntrinsicDirty::None && !dirtyBits) return;
 
   ReflowRootHandling rootHandling;
   if (aHint & nsChangeHint_ReflowChangesSizeOrPosition) {
