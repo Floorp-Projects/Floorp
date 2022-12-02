@@ -8,7 +8,6 @@ browser.jar:
         content/browser/screenshots/copy.svg                           (content/copy.svg)
         content/browser/screenshots/download-white.svg                 (content/download-white.svg)
         content/browser/screenshots/download.svg                       (content/download.svg)
-        content/browser/screenshots/fileHelpers.mjs
         content/browser/screenshots/icon-welcome-face-without-eyes.svg (content/icon-welcome-face-without-eyes.svg)
         content/browser/screenshots/menu-fullpage.svg                  (content/menu-fullpage.svg)
         content/browser/screenshots/menu-visible.svg                   (content/menu-visible.svg)
