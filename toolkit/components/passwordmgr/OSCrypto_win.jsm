@@ -75,7 +75,7 @@ function OSCrypto() {
         .declare("LocalFree", ctypes.winapi_abi, wintypes.DWORD, wintypes.PVOID)
     );
   } catch (ex) {
-    Cu.reportError(ex);
+    console.error(ex);
     this.finalize();
     throw ex;
   }
@@ -279,7 +279,7 @@ OSCrypto.prototype = {
       try {
         lib.close();
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
       }
     }
     this._libs.clear();

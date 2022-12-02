@@ -390,7 +390,7 @@ class ManageCreditCards extends ManageRecords {
         // Recover from encryption error so the user gets a chance to re-enter
         // unencrypted credit card number.
         decryptedCCNumObj["cc-number"] = "";
-        Cu.reportError(ex);
+        console.error(ex);
       }
     }
     let decryptedCreditCard = Object.assign({}, creditCard, decryptedCCNumObj);

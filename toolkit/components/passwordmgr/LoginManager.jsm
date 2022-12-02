@@ -332,7 +332,7 @@ LoginManager.prototype = {
       try {
         this._checkLogin(logins[i]);
       } catch (e) {
-        Cu.reportError(e);
+        console.error(e);
         continue;
       }
 
@@ -613,7 +613,7 @@ LoginManager.prototype = {
       );
     } catch (ex) {
       if (!origin.startsWith("chrome:")) {
-        Cu.reportError(ex);
+        console.error(ex);
       }
       return false;
     }

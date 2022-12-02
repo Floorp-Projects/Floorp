@@ -144,7 +144,7 @@ class LoginCSVImport {
       try {
         csvString = await IOUtils.readUTF8(filePath, { encoding: "utf-8" });
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
         throw new ImportFailedException(
           ImportFailedErrorType.FILE_PERMISSIONS_ERROR
         );
@@ -221,7 +221,7 @@ class LoginCSVImport {
           .add(accumulatedDelay);
         TelemetryStopwatch.finish("PWMGR_IMPORT_LOGINS_FROM_FILE_MS");
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
       }
       LoginCSVImport.lastImportReport = report;
       return report;

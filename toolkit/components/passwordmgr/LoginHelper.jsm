@@ -226,7 +226,7 @@ class ImportRowProcessor {
       LoginHelper.checkLoginValues(login);
     } catch (e) {
       this.addLoginToSummary({ ...loginData }, "error");
-      Cu.reportError(e);
+      console.error(e);
       return true;
     }
     return false;
@@ -348,7 +348,7 @@ class ImportRowProcessor {
           Services.logins.modifyLogin(summaryRow.login, summaryRow.propBag);
         }
       } catch (e) {
-        Cu.reportError(e);
+        console.error(e);
         summaryRow.result = "error";
       }
     }

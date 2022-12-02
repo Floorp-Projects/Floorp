@@ -239,7 +239,7 @@ LoginManagerAuthPromptFactory.prototype = {
         // Prompts throw NS_ERROR_NOT_AVAILABLE if they're aborted.
         promptAborted = true;
       } else {
-        Cu.reportError("LoginManagerAuthPrompter: _doAsyncPrompt " + e + "\n");
+        console.error("LoginManagerAuthPrompter: _doAsyncPrompt " + e + "\n");
       }
     }
 
@@ -666,7 +666,7 @@ LoginManagerAuthPrompter.prototype = {
     } catch (e) {
       // Ignore any errors and display the prompt anyway.
       epicfail = true;
-      Cu.reportError(
+      console.error(
         "LoginManagerAuthPrompter: Epic fail in promptAuth: " + e + "\n"
       );
     }
@@ -768,7 +768,7 @@ LoginManagerAuthPrompter.prototype = {
         );
       }
     } catch (e) {
-      Cu.reportError("LoginManagerAuthPrompter: Fail2 in promptAuth: " + e);
+      console.error("LoginManagerAuthPrompter: Fail2 in promptAuth: " + e);
     }
 
     return ok;
@@ -833,7 +833,7 @@ LoginManagerAuthPrompter.prototype = {
 
       this._factory._doAsyncPrompt(asyncPrompt, hashKey);
     } catch (e) {
-      Cu.reportError(
+      console.error(
         "LoginManagerAuthPrompter: " +
           "asyncPromptAuth: " +
           e +

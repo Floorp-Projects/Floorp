@@ -40,7 +40,7 @@ function recordTelemetryEvent(event) {
       extra
     );
   } catch (ex) {
-    Cu.reportError(
+    console.error(
       "AboutLoginsChild: error recording telemetry event: " + ex.message
     );
   }
