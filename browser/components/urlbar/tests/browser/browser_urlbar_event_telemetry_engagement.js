@@ -881,12 +881,6 @@ const tests = [
 
   async function(win) {
     info("Open search mode with a keyboard shortcut.");
-    // Bug 1797801: If the search mode used is the same as the default engine and
-    // showSearchTerms is enabled, the chiclet will remain in the urlbar on the search.
-    // Subsequent tests rely on search mode not already been selected.
-    await SpecialPowers.pushPrefEnv({
-      set: [["browser.urlbar.showSearchTerms.featureGate", false]],
-    });
     let defaultEngine = await Services.search.getDefault();
     win.gURLBar.select();
     EventUtils.synthesizeKey("k", { accelKey: true }, win);
@@ -905,8 +899,6 @@ const tests = [
     });
     EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
-
-    await SpecialPowers.popPrefEnv();
 
     return {
       category: "urlbar",
