@@ -6,7 +6,7 @@
 
 Services.prefs.setBoolPref("network.early-hints.enabled", true);
 
-const { test_hint_preload } = ChromeUtils.import(
+const { test_hint_preload, request_count_checking } = ChromeUtils.import(
   "resource://testing-common/early_hint_preload_test_helper.jsm"
 );
 
@@ -26,7 +26,7 @@ add_task(async function test_103_redirect_cross_origin() {
     "test_103_redirect_cross_origin",
     "https://example.com",
     "https://example.com/browser/netwerk/test/browser/early_hint_redirect.sjs?https://example.net/browser/netwerk/test/browser/early_hint_pixel.sjs",
-    { hinted: 2, normal: 0 } // successful load of redirect in preload, but image loaded via normal load
+    { hinted: 2, normal: 0 }
   );
 });
 
