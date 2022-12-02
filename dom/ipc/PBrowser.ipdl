@@ -243,21 +243,6 @@ parent:
     async MoveFocus(bool forward, bool forDocumentNavigation);
 
     /**
-     * SizeShellTo request propagation to parent.
-     *
-     * aFlag            Can indicate if one of the dimensions should be ignored.
-     *                  If only one dimension has changed it has to be indicated
-     *                  by the nsIEmbeddingSiteWindow::DIM_FLAGS_IGNORE_* flags.
-     * aShellItemWidth,
-     * aShellItemHeight On parent side we won't be able to decide the dimensions
-     *                  of the shell item parameter in the original SizeShellTo
-     *                  call so we send over its dimensions that will be used
-     *                  for the actual resize.
-     **/
-    async SizeShellTo(uint32_t aFlag, int32_t aWidth, int32_t aHeight,
-                      int32_t aShellItemWidth, int32_t aShellItemHeight);
-
-    /**
      * Called by the child to inform the parent that links are dropped into
      * content area.
      *
