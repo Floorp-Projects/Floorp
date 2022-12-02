@@ -189,7 +189,7 @@ class FakePreloader : public mozilla::FetchPreloader {
       nsIChannel** aChannel, nsIURI* aURI, const mozilla::CORSMode aCORSMode,
       const mozilla::dom::ReferrerPolicy& aReferrerPolicy,
       mozilla::dom::Document* aDocument, nsILoadGroup* aLoadGroup,
-      nsIInterfaceRequestor* aCallbacks) override {
+      nsIInterfaceRequestor* aCallbacks, uint64_t aHttpChannelId) override {
     mDrivingChannel.forget(aChannel);
     return NS_OK;
   }
@@ -287,7 +287,7 @@ TEST(TestFetchPreloader, CacheNoneBeforeConsume)
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
-                             mozilla::dom::ReferrerPolicy::_empty, doc)));
+                             mozilla::dom::ReferrerPolicy::_empty, doc, 0)));
 
   RefPtr<FakeListener> listener = new FakeListener();
   EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));
@@ -325,7 +325,7 @@ TEST(TestFetchPreloader, CacheStartBeforeConsume)
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
-                             mozilla::dom::ReferrerPolicy::_empty, doc)));
+                             mozilla::dom::ReferrerPolicy::_empty, doc, 0)));
 
   EXPECT_NS_SUCCEEDED(channel->Start());
 
@@ -365,7 +365,7 @@ TEST(TestFetchPreloader, CachePartOfDataBeforeConsume)
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
-                             mozilla::dom::ReferrerPolicy::_empty, doc)));
+                             mozilla::dom::ReferrerPolicy::_empty, doc, 0)));
 
   EXPECT_NS_SUCCEEDED(channel->Start());
   EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
@@ -405,7 +405,7 @@ TEST(TestFetchPreloader, CacheAllDataBeforeConsume)
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
-                             mozilla::dom::ReferrerPolicy::_empty, doc)));
+                             mozilla::dom::ReferrerPolicy::_empty, doc, 0)));
 
   EXPECT_NS_SUCCEEDED(channel->Start());
   EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
@@ -445,7 +445,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsume)
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
-                             mozilla::dom::ReferrerPolicy::_empty, doc)));
+                             mozilla::dom::ReferrerPolicy::_empty, doc, 0)));
 
   EXPECT_NS_SUCCEEDED(channel->Start());
   EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
@@ -484,7 +484,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeWithChannelError)
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
-                             mozilla::dom::ReferrerPolicy::_empty, doc)));
+                             mozilla::dom::ReferrerPolicy::_empty, doc, 0)));
 
   EXPECT_NS_SUCCEEDED(channel->Start());
   EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
@@ -523,7 +523,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeWithChannelCancel)
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
-                             mozilla::dom::ReferrerPolicy::_empty, doc)));
+                             mozilla::dom::ReferrerPolicy::_empty, doc, 0)));
 
   EXPECT_NS_SUCCEEDED(channel->Start());
   EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
@@ -566,7 +566,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeThrowFromOnStartRequest)
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
-                             mozilla::dom::ReferrerPolicy::_empty, doc)));
+                             mozilla::dom::ReferrerPolicy::_empty, doc, 0)));
 
   EXPECT_NS_SUCCEEDED(channel->Start());
   EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
@@ -606,7 +606,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeThrowFromOnDataAvailable)
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
-                             mozilla::dom::ReferrerPolicy::_empty, doc)));
+                             mozilla::dom::ReferrerPolicy::_empty, doc, 0)));
 
   EXPECT_NS_SUCCEEDED(channel->Start());
   EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
@@ -646,7 +646,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeThrowFromOnStopRequest)
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
-                             mozilla::dom::ReferrerPolicy::_empty, doc)));
+                             mozilla::dom::ReferrerPolicy::_empty, doc, 0)));
 
   EXPECT_NS_SUCCEEDED(channel->Start());
   EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
@@ -688,7 +688,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeCancelInOnStartRequest)
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
-                             mozilla::dom::ReferrerPolicy::_empty, doc)));
+                             mozilla::dom::ReferrerPolicy::_empty, doc, 0)));
 
   EXPECT_NS_SUCCEEDED(channel->Start());
   EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
@@ -731,7 +731,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeCancelInOnDataAvailable)
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
-                             mozilla::dom::ReferrerPolicy::_empty, doc)));
+                             mozilla::dom::ReferrerPolicy::_empty, doc, 0)));
 
   EXPECT_NS_SUCCEEDED(channel->Start());
   EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
@@ -775,7 +775,7 @@ TEST(TestFetchPreloader, CachePartlyBeforeConsumeCancelInOnDataAvailable)
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
-                             mozilla::dom::ReferrerPolicy::_empty, doc)));
+                             mozilla::dom::ReferrerPolicy::_empty, doc, 0)));
 
   EXPECT_NS_SUCCEEDED(channel->Start());
   EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
@@ -816,7 +816,7 @@ TEST(TestFetchPreloader, CachePartlyBeforeConsumeCancelInOnStartRequestAndRace)
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
-                             mozilla::dom::ReferrerPolicy::_empty, doc)));
+                             mozilla::dom::ReferrerPolicy::_empty, doc, 0)));
 
   EXPECT_NS_SUCCEEDED(channel->Start());
   EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
@@ -865,7 +865,7 @@ TEST(TestFetchPreloader, CachePartlyBeforeConsumeCancelInOnDataAvailableAndRace)
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
-                             mozilla::dom::ReferrerPolicy::_empty, doc)));
+                             mozilla::dom::ReferrerPolicy::_empty, doc, 0)));
 
   EXPECT_NS_SUCCEEDED(channel->Start());
   EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
@@ -914,7 +914,7 @@ TEST(TestFetchPreloader, CachePartlyBeforeConsumeThrowFromOnStartRequestAndRace)
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
-                             mozilla::dom::ReferrerPolicy::_empty, doc)));
+                             mozilla::dom::ReferrerPolicy::_empty, doc, 0)));
 
   EXPECT_NS_SUCCEEDED(channel->Start());
   EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
