@@ -70,12 +70,17 @@ export class FeatureCallout {
       return this.win.pageEventManager;
     });
 
+    const inChrome =
+      this.win.location.toString() === "chrome://browser/content/browser.xhtml";
     // When the window is focused, ensure tour is synced with tours in
-    // any other instances of the parent page
-    this.win.addEventListener(
-      "visibilitychange",
-      this._handlePrefChange.bind(this)
-    );
+    // any other instances of the parent page. This does not apply when
+    // the Callout is shown in the browser chrome.
+    if (!inChrome) {
+      this.win.addEventListener(
+        "visibilitychange",
+        this._handlePrefChange.bind(this)
+      );
+    }
 
     const positionCallout = this._positionCallout.bind(this);
 
@@ -111,10 +116,7 @@ export class FeatureCallout {
     // displaying a feature tour, and transitions are handled
     // based on the value of a tour progress pref. Otherwise,
     // just show the feature callout.
-    // Bug 1797364 adds supports for feature tours in the browser chrome
-    const inChrome =
-      this.win.location.toString() === "chrome://browser/content/browser.xhtml";
-    if (inChrome || this.config?.screens.length === 1) {
+    if (this.config?.screens.length === 1) {
       this.showFeatureCallout();
       return;
     }
