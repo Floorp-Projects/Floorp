@@ -621,7 +621,7 @@ workers:
                     default: '{trust-domain}-t'
             implementation: docker-worker
             os: linux
-            worker-type: 't-linux-xlarge-gcp'
+            worker-type: 't-linux-xlarge'
         b-osx-1015:
             provisioner: releng-hardware
             implementation: generic-worker
