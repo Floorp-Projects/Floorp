@@ -7,6 +7,7 @@
 
 #include "nscore.h"
 #include "SystemPrincipal.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
@@ -29,9 +30,31 @@ SystemPrincipal::SystemPrincipal()
     : BasePrincipal(eSystemPrincipal, kSystemPrincipalSpec,
                     OriginAttributes()) {}
 
-already_AddRefed<SystemPrincipal> SystemPrincipal::Create() {
-  RefPtr<SystemPrincipal> sp = new SystemPrincipal();
-  return sp.forget();
+static StaticMutex sSystemPrincipalMutex;
+static StaticRefPtr<SystemPrincipal> sSystemPrincipal
+    MOZ_GUARDED_BY(sSystemPrincipalMutex);
+
+already_AddRefed<SystemPrincipal> SystemPrincipal::Get() {
+  StaticMutexAutoLock lock(sSystemPrincipalMutex);
+  return do_AddRef(sSystemPrincipal);
+}
+
+already_AddRefed<SystemPrincipal> SystemPrincipal::Init() {
+  AssertIsOnMainThread();
+  StaticMutexAutoLock lock(sSystemPrincipalMutex);
+  if (MOZ_UNLIKELY(sSystemPrincipal)) {
+    MOZ_ASSERT_UNREACHABLE("SystemPrincipal::Init() may only be called once");
+  } else {
+    sSystemPrincipal = new SystemPrincipal();
+  }
+  return do_AddRef(sSystemPrincipal);
+}
+
+void SystemPrincipal::Shutdown() {
+  AssertIsOnMainThread();
+  StaticMutexAutoLock lock(sSystemPrincipalMutex);
+  MOZ_ASSERT(sSystemPrincipal);
+  sSystemPrincipal = nullptr;
 }
 
 nsresult SystemPrincipal::GetScriptLocation(nsACString& aStr) {
