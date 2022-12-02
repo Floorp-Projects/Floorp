@@ -4784,17 +4784,6 @@ void nsDocShell::DoGetPositionAndSize(int32_t* aX, int32_t* aY, int32_t* aWidth,
 }
 
 NS_IMETHODIMP
-nsDocShell::SetDimensions(DimensionRequest&& aRequest) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetDimensions(DimensionKind aDimensionKind, int32_t* aX,
-                          int32_t* aY, int32_t* aCX, int32_t* aCY) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsDocShell::Repaint(bool aForce) {
   PresShell* presShell = GetPresShell();
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
@@ -4919,13 +4908,7 @@ nsDocShell::GetVisibility(bool* aVisibility) {
 
   // Check with the tree owner as well to give embedders a chance to
   // expose visibility as well.
-  nsresult rv = treeOwnerAsWin->GetVisibility(aVisibility);
-  if (rv == NS_ERROR_NOT_IMPLEMENTED) {
-    // The tree owner had no opinion on our visibility.
-    *aVisibility = true;
-    return NS_OK;
-  }
-  return rv;
+  return treeOwnerAsWin->GetVisibility(aVisibility);
 }
 
 void nsDocShell::ActivenessMaybeChanged() {
