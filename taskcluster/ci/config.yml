@@ -691,14 +691,17 @@ expiration-policy:
     by-project:
         try:
             default: 1 month
+            short: 14 days
             medium: 1 month
             long: 1 month
         autoland:
             default: 1 year
+            short: 3 months
             medium: 1 year
             # To avoid keeping shippable builds for over a year
             long: 1 year
         default:
             default: 3 months
+            short: 1 month
             medium: 1 year
             long: 1 year
