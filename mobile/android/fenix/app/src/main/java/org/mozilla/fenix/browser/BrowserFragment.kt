@@ -5,6 +5,7 @@
 package org.mozilla.fenix.browser
 
 import android.content.Context
+import android.content.res.Configuration
 import android.os.StrictMode
 import android.view.View
 import android.view.ViewGroup
@@ -52,6 +53,11 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     private var readerModeAvailable = false
     private var pwaOnboardingObserver: PwaOnboardingObserver? = null
 
+    private var forwardAction: BrowserToolbar.TwoStateButton? = null
+    private var backAction: BrowserToolbar.TwoStateButton? = null
+    private var refreshAction: BrowserToolbar.TwoStateButton? = null
+    private var isTablet: Boolean = false
+
     @Suppress("LongMethod")
     override fun initializeUI(view: View, tab: SessionState) {
         super.initializeUI(view, tab)
@@ -84,86 +90,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
         browserToolbarView.view.addNavigationAction(homeAction)
 
-        if (resources.getBoolean(R.bool.tablet)) {
-            val enableTint = ThemeManager.resolveAttribute(R.attr.textPrimary, context)
-            val disableTint = ThemeManager.resolveAttribute(R.attr.textDisabled, context)
-            val backAction = BrowserToolbar.TwoStateButton(
-                primaryImage = AppCompatResources.getDrawable(
-                    context,
-                    R.drawable.mozac_ic_back,
-                )!!,
-                primaryContentDescription = context.getString(R.string.browser_menu_back),
-                primaryImageTintResource = enableTint,
-                isInPrimaryState = { getCurrentTab()?.content?.canGoBack ?: false },
-                secondaryImageTintResource = disableTint,
-                disableInSecondaryState = true,
-                longClickListener = {
-                    browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
-                        ToolbarMenu.Item.Back(viewHistory = true),
-                    )
-                },
-                listener = {
-                    browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
-                        ToolbarMenu.Item.Back(viewHistory = false),
-                    )
-                },
-            )
-            browserToolbarView.view.addNavigationAction(backAction)
-            val forwardAction = BrowserToolbar.TwoStateButton(
-                primaryImage = AppCompatResources.getDrawable(
-                    context,
-                    R.drawable.mozac_ic_forward,
-                )!!,
-                primaryContentDescription = context.getString(R.string.browser_menu_forward),
-                primaryImageTintResource = enableTint,
-                isInPrimaryState = { getCurrentTab()?.content?.canGoForward ?: false },
-                secondaryImageTintResource = disableTint,
-                disableInSecondaryState = true,
-                longClickListener = {
-                    browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
-                        ToolbarMenu.Item.Forward(viewHistory = true),
-                    )
-                },
-                listener = {
-                    browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
-                        ToolbarMenu.Item.Forward(viewHistory = false),
-                    )
-                },
-            )
-            browserToolbarView.view.addNavigationAction(forwardAction)
-            val refreshAction = BrowserToolbar.TwoStateButton(
-                primaryImage = AppCompatResources.getDrawable(
-                    context,
-                    R.drawable.mozac_ic_refresh,
-                )!!,
-                primaryContentDescription = context.getString(R.string.browser_menu_refresh),
-                primaryImageTintResource = enableTint,
-                isInPrimaryState = {
-                    getCurrentTab()?.content?.loading == false
-                },
-                secondaryImage = AppCompatResources.getDrawable(
-                    context,
-                    R.drawable.mozac_ic_stop,
-                )!!,
-                secondaryContentDescription = context.getString(R.string.browser_menu_stop),
-                disableInSecondaryState = false,
-                longClickListener = {
-                    browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
-                        ToolbarMenu.Item.Reload(bypassCache = true),
-                    )
-                },
-                listener = {
-                    if (getCurrentTab()?.content?.loading == true) {
-                        browserToolbarInteractor.onBrowserToolbarMenuItemTapped(ToolbarMenu.Item.Stop)
-                    } else {
-                        browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
-                            ToolbarMenu.Item.Reload(bypassCache = false),
-                        )
-                    }
-                },
-            )
-            browserToolbarView.view.addNavigationAction(refreshAction)
-        }
+        setScreenSize(isTablet = resources.getBoolean(R.bool.tablet))
 
         val readerModeAction =
             BrowserToolbar.ToggleButton(
@@ -240,6 +167,130 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 owner = this,
                 view = view,
             )
+        }
+    }
+
+    private fun setScreenSize(isTablet: Boolean) {
+        if (isTablet == this.isTablet) return
+
+        if (isTablet) {
+            addTabletActions(requireContext())
+        } else {
+            removeTabletActions()
+        }
+
+        this.isTablet = isTablet
+    }
+
+    @Suppress("LongMethod")
+    private fun addTabletActions(context: Context) {
+        val enableTint = ThemeManager.resolveAttribute(R.attr.textPrimary, context)
+        val disableTint = ThemeManager.resolveAttribute(R.attr.textDisabled, context)
+
+        if (backAction == null) {
+            backAction = BrowserToolbar.TwoStateButton(
+                primaryImage = AppCompatResources.getDrawable(
+                    context,
+                    R.drawable.mozac_ic_back,
+                )!!,
+                primaryContentDescription = context.getString(R.string.browser_menu_back),
+                primaryImageTintResource = enableTint,
+                isInPrimaryState = { getCurrentTab()?.content?.canGoBack ?: false },
+                secondaryImageTintResource = disableTint,
+                disableInSecondaryState = true,
+                longClickListener = {
+                    browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
+                        ToolbarMenu.Item.Back(viewHistory = true),
+                    )
+                },
+                listener = {
+                    browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
+                        ToolbarMenu.Item.Back(viewHistory = false),
+                    )
+                },
+            )
+        }
+
+        backAction?.let {
+            browserToolbarView.view.addNavigationAction(it)
+        }
+
+        if (forwardAction == null) {
+            forwardAction = BrowserToolbar.TwoStateButton(
+                primaryImage = AppCompatResources.getDrawable(
+                    context,
+                    R.drawable.mozac_ic_forward,
+                )!!,
+                primaryContentDescription = context.getString(R.string.browser_menu_forward),
+                primaryImageTintResource = enableTint,
+                isInPrimaryState = { getCurrentTab()?.content?.canGoForward ?: false },
+                secondaryImageTintResource = disableTint,
+                disableInSecondaryState = true,
+                longClickListener = {
+                    browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
+                        ToolbarMenu.Item.Forward(viewHistory = true),
+                    )
+                },
+                listener = {
+                    browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
+                        ToolbarMenu.Item.Forward(viewHistory = false),
+                    )
+                },
+            )
+        }
+
+        forwardAction?.let {
+            browserToolbarView.view.addNavigationAction(it)
+        }
+
+        if (refreshAction == null) {
+            refreshAction = BrowserToolbar.TwoStateButton(
+                primaryImage = AppCompatResources.getDrawable(
+                    context,
+                    R.drawable.mozac_ic_refresh,
+                )!!,
+                primaryContentDescription = context.getString(R.string.browser_menu_refresh),
+                primaryImageTintResource = enableTint,
+                isInPrimaryState = {
+                    getCurrentTab()?.content?.loading == false
+                },
+                secondaryImage = AppCompatResources.getDrawable(
+                    context,
+                    R.drawable.mozac_ic_stop,
+                )!!,
+                secondaryContentDescription = context.getString(R.string.browser_menu_stop),
+                disableInSecondaryState = false,
+                longClickListener = {
+                    browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
+                        ToolbarMenu.Item.Reload(bypassCache = true),
+                    )
+                },
+                listener = {
+                    if (getCurrentTab()?.content?.loading == true) {
+                        browserToolbarInteractor.onBrowserToolbarMenuItemTapped(ToolbarMenu.Item.Stop)
+                    } else {
+                        browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
+                            ToolbarMenu.Item.Reload(bypassCache = false),
+                        )
+                    }
+                },
+            )
+        }
+
+        refreshAction?.let {
+            browserToolbarView.view.addNavigationAction(it)
+        }
+    }
+
+    private fun removeTabletActions() {
+        forwardAction?.let {
+            browserToolbarView.view.removeNavigationAction(it)
+        }
+        backAction?.let {
+            browserToolbarView.view.removeNavigationAction(it)
+        }
+        refreshAction?.let {
+            browserToolbarView.view.removeNavigationAction(it)
         }
     }
 
@@ -395,5 +446,10 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     @VisibleForTesting
     internal fun updateLastBrowseActivity() {
         requireContext().settings().lastBrowseActivity = System.currentTimeMillis()
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        setScreenSize(isTablet = resources.getBoolean(R.bool.tablet))
     }
 }
