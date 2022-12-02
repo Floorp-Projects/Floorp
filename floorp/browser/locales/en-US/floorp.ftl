@@ -532,6 +532,9 @@ test-content-css =
 
 not-found-editor-path = Path to the editor was not found
 set-pref-description = This operation requires a path to the editor. Set "view_source.editor.path" in "about:config"
+rebuild-complete = Rebuild has been completed.
+please-enter-filename = Please enter a file name.
+confirmed-update = Confirmed the update of "{ $leafName }".
 
 
 ################################################################### about:addons ###############################################################

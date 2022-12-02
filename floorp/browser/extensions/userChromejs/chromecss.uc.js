@@ -233,9 +233,9 @@ window.UCL = {
 		}
 		if (this.initialized) {
 			if (typeof(StatusPanel) !== "undefined")
-				StatusPanel._label = "Rebuild しました";
+				StatusPanel._label = l10n.formatValueSync("rebuild-complete");
 			else
-				XULBrowserWindow.statusTextField.label = "Rebuild しました";
+				XULBrowserWindow.statusTextField.label = l10n.formatValueSync("rebuild-complete");
 		}
 	},
 	loadCSS: function(aFile) {
@@ -338,7 +338,7 @@ window.UCL = {
 		} catch (e) {}
 	},
 	create: function(aLeafName) {
-		if (!aLeafName) aLeafName = prompt("ファイル名を入力してください", dateFormat(new Date(), "%Y_%m%d_%H%M%S"));
+		if (!aLeafName) aLeafName = prompt(l10n.formatValueSync("please-enter-filename"), dateFormat(new Date(), "%Y_%m%d_%H%M%S"));
 		if (aLeafName) aLeafName = aLeafName.replace(/\s+/g, " ").replace(/[\\/:*?\"<>|]/g, "");
 		if (!aLeafName || !/\S/.test(aLeafName)) return;
 		if (!/\.css$/.test(aLeafName)) aLeafName += ".css";
@@ -449,7 +449,7 @@ CSSEntry.prototype = {
 			}
 		}
 		if (this.lastModifiedTime !== 1 && isEnable && isForced) {
-			log(this.leafName + " の更新を確認しました。");
+			log(l10n.formatValueSync("confirmed-update", { leafName: this.leafName }));
 		}
 		this.lastModifiedTime = lastModifiedTime;
 		return this._enabled = isEnable;
