@@ -218,12 +218,14 @@ const startupPhases = {
       // bug 1541226
       path: "ProfD:",
       condition: WIN,
+      ignoreIfUnused: true, // Sometimes happens in the next phase
       stat: 1,
     },
     {
       // bug 1534745
       path: "ProfD:cookies.sqlite-journal",
       condition: !LINUX,
+      ignoreIfUnused: true, // Sometimes happens in the next phase
       stat: 3,
       write: 4,
     },
@@ -231,6 +233,7 @@ const startupPhases = {
       // bug 1534745
       path: "ProfD:cookies.sqlite",
       condition: !LINUX,
+      ignoreIfUnused: true, // Sometimes happens in the next phase
       stat: 2,
       read: 3,
       write: 1,
@@ -238,6 +241,7 @@ const startupPhases = {
     {
       // bug 1534745
       path: "ProfD:cookies.sqlite-wal",
+      ignoreIfUnused: true, // Sometimes happens in the next phase
       condition: WIN,
       stat: 2,
     },
@@ -295,6 +299,12 @@ const startupPhases = {
       close: 1,
     },
     {
+      path: "XREAppFeat:webcompat@mozilla.org.xpi",
+      condition: LINUX,
+      ignoreIfUnused: true, // Sometimes happens in the previous phase
+      close: 1,
+    },
+    {
       // We only hit this for new profiles.
       path: "XREAppDist:distribution.ini",
       condition: WIN,
@@ -339,6 +349,37 @@ const startupPhases = {
       path: "GreD:EventArtifactDefinitions.json",
       condition: WIN && !AppConstants.MOZILLA_OFFICIAL,
       stat: 1,
+    },
+    {
+      // bug 1541226
+      path: "ProfD:",
+      condition: WIN,
+      ignoreIfUnused: true, // Usually happens in the previous phase
+      stat: 1,
+    },
+    {
+      // bug 1534745
+      path: "ProfD:cookies.sqlite-journal",
+      condition: WIN,
+      ignoreIfUnused: true, // Usually happens in the previous phase
+      stat: 3,
+      write: 4,
+    },
+    {
+      // bug 1534745
+      path: "ProfD:cookies.sqlite",
+      condition: WIN,
+      ignoreIfUnused: true, // Usually happens in the previous phase
+      stat: 2,
+      read: 3,
+      write: 1,
+    },
+    {
+      // bug 1534745
+      path: "ProfD:cookies.sqlite-wal",
+      condition: WIN,
+      ignoreIfUnused: true, // Usually happens in the previous phase
+      stat: 2,
     },
   ],
 
