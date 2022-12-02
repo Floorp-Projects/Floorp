@@ -5,7 +5,6 @@
 
 import logging
 import re
-import subprocess
 
 from collections import defaultdict
 from taskgraph.files_changed import get_changed_files
@@ -13,16 +12,11 @@ from taskgraph.loader.transform import loader as base_loader
 from taskgraph.util.templates import merge
 
 from ..build_config import get_components, ANDROID_COMPONENTS_DIR
+from ..gradle import get_upstream_deps_for_gradle_projects
 
 
 logger = logging.getLogger(__name__)
 
-CONFIGURATIONS_WITH_DEPENDENCIES = (
-    "api",
-    "compileOnly",
-    "implementation",
-    "testImplementation"
-)
 ALL_COMPONENTS = object()
 
 def get_components_changed(files_changed):
@@ -35,35 +29,6 @@ def get_components_changed(files_changed):
         {service-sync-logins}
     """
     return {"-".join(f.split("/")[2:4]) for f in files_changed if f.startswith("android-components")}
-
-
-def get_upstream_deps_for_components(components):
-    """Return the full list of local upstream dependencies of a component."""
-    component_dependencies = defaultdict(set)
-
-    for configuration in CONFIGURATIONS_WITH_DEPENDENCIES:
-        logger.info("Looking for dependencies in '%s' configuration" % configuration)
-
-        cmd = ["./gradlew", "--console=plain", "--parallel"]
-        # This is eventually going to fail if there's ever enough components to make the command line
-        # too long. If that happens, we'll need to split this list up and run gradle more than once.
-        for c in sorted(components):
-            cmd.extend(["%s:dependencies" % c, "--configuration", configuration])
-        # Parsing output like this is not ideal but bhearsum couldn't find a way
-        # to get the dependencies printed in a better format. If we could convince
-        # gradle to spit out JSON that would be much better.
-        # This is filed as https://github.com/mozilla-mobile/android-components/issues/7814
-        current_component = None
-        for line in subprocess.check_output(cmd, universal_newlines=True, cwd=ANDROID_COMPONENTS_DIR).splitlines():
-            # If we find the start of a new component section, update our tracking variable
-            if line.startswith("Project"):
-                current_component = line.split(":")[1].strip("'")
-
-            # If we find a new local dependency, add it.
-            if line.startswith("+--- project") or line.startswith(r"\--- project"):
-                component_dependencies[current_component].add(line.split(" ")[2])
-
-    return [(k, sorted(component_dependencies[k])) for k in sorted(component_dependencies)]
 
 
 def get_affected_components(files_changed, files_affecting_components, upstream_component_dependencies, downstream_component_dependencies):
@@ -103,7 +68,9 @@ def loader(kind, path, config, params, loaded_tasks):
     upstream_component_dependencies = defaultdict(set)
     downstream_component_dependencies = defaultdict(set)
 
-    for component, deps in get_upstream_deps_for_components([c["name"] for c in get_components()]):
+    deps_per_component = get_upstream_deps_for_gradle_projects([c["name"] for c in get_components()], gradle_root=ANDROID_COMPONENTS_DIR)
+
+    for component, deps in deps_per_component.items():
         if deps:
             logger.info(f"Found direct upstream dependencies for component '{component}': {deps}")
         else:
