@@ -40,23 +40,19 @@ function after_crash(mdump, extra) {
   Assert.equal(data.conditions[0].filename, "-e");
 }
 
-// Test that AsyncShutdown + OS.File reports errors correctly, in a case in which
-// the latest operation succeeded
+// Test that AsyncShutdown + IOUtils reports errors correctly.,
 
-function setup_osfile_crash_noerror() {
-  const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+function setup_ioutils_crash() {
   const { PromiseUtils } = ChromeUtils.importESModule(
     "resource://gre/modules/PromiseUtils.sys.mjs"
   );
 
   Services.prefs.setIntPref("toolkit.asyncshutdown.crash_timeout", 1);
-  Services.prefs.setBoolPref("toolkit.osfile.native", false);
 
-  OS.File.profileBeforeChange.addBlocker(
+  IOUtils.profileBeforeChange.addBlocker(
     "Adding a blocker that will never be resolved",
     () => PromiseUtils.defer().promise
   );
-  OS.File.getCurrentDirectory();
 
   Services.startup.advanceShutdownPhase(
     Services.startup.SHUTDOWN_PHASE_APPSHUTDOWN
@@ -64,57 +60,16 @@ function setup_osfile_crash_noerror() {
   dump("Waiting for crash\n");
 }
 
-function after_osfile_crash_noerror(mdump, extra) {
-  info("after OS.File crash: " + extra.AsyncShutdownTimeout);
+function after_ioutils_crash(mdump, extra) {
+  info("after IOUtils crash: " + extra.AsyncShutdownTimeout);
   let data = JSON.parse(extra.AsyncShutdownTimeout);
-  let state = data.conditions[0].state;
-  info("Keys: " + Object.keys(state).join(", "));
-  Assert.equal(data.phase, "profile-before-change");
-  Assert.ok(state.launched);
-  Assert.ok(!state.shutdown);
-  Assert.ok(state.worker);
-  Assert.ok(!!state.latestSent);
-  Assert.equal(state.latestSent[1], "getCurrentDirectory");
-}
-
-// Test that AsyncShutdown + OS.File reports errors correctly, in a case in which
-// the latest operation failed
-
-function setup_osfile_crash_exn() {
-  const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-  const { PromiseUtils } = ChromeUtils.importESModule(
-    "resource://gre/modules/PromiseUtils.sys.mjs"
+  Assert.equal(
+    data.phase,
+    "IOUtils: waiting for profileBeforeChange IO to complete"
   );
-
-  Services.prefs.setIntPref("toolkit.asyncshutdown.crash_timeout", 1);
-  Services.prefs.setBoolPref("toolkit.osfile.native", false);
-
-  OS.File.profileBeforeChange.addBlocker(
-    "Adding a blocker that will never be resolved",
-    () => PromiseUtils.defer().promise
-  );
-  OS.File.read("I do not exist");
-
-  Services.startup.advanceShutdownPhase(
-    Services.startup.SHUTDOWN_PHASE_APPSHUTDOWN
-  );
-  dump("Waiting for crash\n");
-}
-
-function after_osfile_crash_exn(mdump, extra) {
-  info("after OS.File crash: " + extra.AsyncShutdownTimeout);
-  let data = JSON.parse(extra.AsyncShutdownTimeout);
-  let state = data.conditions[0].state;
-  info("Keys: " + Object.keys(state).join(", "));
-  Assert.equal(data.phase, "profile-before-change");
-  Assert.ok(!state.shutdown);
-  Assert.ok(state.worker);
-  Assert.ok(!!state.latestSent);
-  Assert.equal(state.latestSent[1], "read");
 }
 
 add_task(async function run_test() {
   await do_crash(setup_crash, after_crash);
-  await do_crash(setup_osfile_crash_noerror, after_osfile_crash_noerror);
-  await do_crash(setup_osfile_crash_exn, after_osfile_crash_exn);
+  await do_crash(setup_ioutils_crash, after_ioutils_crash);
 });
