@@ -19,7 +19,7 @@ add_task(async function test_PanelTestProvider() {
   const messages = await PanelTestProvider.getMessages();
 
   const EXPECTED_MESSAGE_COUNTS = {
-    cfr_doorhanger: 2,
+    cfr_doorhanger: 1,
     milestone_message: 0,
     update_action: 1,
     whatsnew_panel_message: 7,
