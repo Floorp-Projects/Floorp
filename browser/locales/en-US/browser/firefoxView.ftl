@@ -75,11 +75,7 @@ firefoxview-closed-tabs-title = Recently closed
 firefoxview-closed-tabs-description2 = Reopen pages you’ve closed in this window.
 firefoxview-closed-tabs-placeholder-header = No recently closed tabs
 firefoxview-closed-tabs-placeholder-body = When you close a tab in this window, you can fetch it from here.
-
-# Variables:
-#   $tabTitle (string) - Title of tab being dismissed
-firefoxview-closed-tabs-dismiss-tab =
-  .title = Dismiss { $tabTitle }
+firefoxview-closed-tabs-dismiss = Dismiss
 
 # refers to the last tab that was used
 firefoxview-pickup-tabs-badge = Last active
