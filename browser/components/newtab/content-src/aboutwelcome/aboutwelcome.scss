@@ -112,6 +112,8 @@ html {
     --translate: 30px;
     --rotate: 20deg;
     --scale: 0.4;
+    --wipe-scale: 0 1;
+    --wipe-opacity: 1;
 
     // Scale is used for noodles that can be flipped.
     &:dir(rtl) {
@@ -124,6 +126,9 @@ html {
     --translate: 0;
     --rotate: 0deg;
     --scale: 1;
+    // To reduce motion, progress bar fades in instead of wiping in.
+    --wipe-scale: 1;
+    --wipe-opacity: 0;
 
     &:dir(rtl) {
       --scale: -1 1;
@@ -500,11 +505,37 @@ html {
             &.progress-bar {
               width: $split-section-width;
               margin-inline: -35px;
+              background-color: color-mix(in srgb, var(--in-content-button-text-color) 25%, transparent);
+              transition: none;
+              opacity: 1;
+              // Prevent subpixel rendering differences between transitioning
+              // and static states that would otherwise occur in RTL layout due
+              // to the container and screen's `transform: rotateY(180deg)`
+              scale: 1;
 
               .indicator {
-                border-radius: 0;
                 width: -moz-available;
+                height: 100%;
                 margin-inline: 0;
+                scale: 1;
+                background: transparent;
+                border: 0;
+                border-radius: 0;
+                opacity: 1;
+
+                &.current,
+                &.complete {
+                  background-color: var(--checkbox-checked-bgcolor);
+                }
+
+                &.current {
+                  transition: var(--transition);
+                  transform-origin: left;
+
+                  &:dir(rtl) {
+                    transform-origin: right;
+                  }
+                }
               }
             }
           }
@@ -1883,6 +1914,15 @@ html {
     .screen:not(.dialog-initial):not([pos='corner']) {
       .steps {
         opacity: 0.2;
+      }
+    }
+
+    .screen {
+      &[pos='split'] {
+        .steps.progress-bar .indicator.current {
+          scale: var(--wipe-scale);
+          opacity: var(--wipe-opacity);
+        }
       }
     }
 

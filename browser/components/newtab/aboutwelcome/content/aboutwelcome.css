@@ -311,6 +311,8 @@ html {
     --translate: 30px;
     --rotate: 20deg;
     --scale: 0.4;
+    --wipe-scale: 0 1;
+    --wipe-opacity: 1;
   }
   .onboardingContainer:dir(rtl) {
     --scale: -0.4 0.4;
@@ -321,6 +323,8 @@ html {
     --translate: 0;
     --rotate: 0deg;
     --scale: 1;
+    --wipe-scale: 1;
+    --wipe-opacity: 0;
   }
   .onboardingContainer:dir(rtl) {
     --scale: -1 1;
@@ -641,11 +645,30 @@ html {
 .onboardingContainer .screen[pos=split] .section-main .main-content .steps.progress-bar {
   width: 400px;
   margin-inline: -35px;
+  background-color: color-mix(in srgb, var(--in-content-button-text-color) 25%, transparent);
+  transition: none;
+  opacity: 1;
+  scale: 1;
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .steps.progress-bar .indicator {
-  border-radius: 0;
   width: -moz-available;
+  height: 100%;
   margin-inline: 0;
+  scale: 1;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  opacity: 1;
+}
+.onboardingContainer .screen[pos=split] .section-main .main-content .steps.progress-bar .indicator.current, .onboardingContainer .screen[pos=split] .section-main .main-content .steps.progress-bar .indicator.complete {
+  background-color: var(--checkbox-checked-bgcolor);
+}
+.onboardingContainer .screen[pos=split] .section-main .main-content .steps.progress-bar .indicator.current {
+  transition: var(--transition);
+  transform-origin: left;
+}
+.onboardingContainer .screen[pos=split] .section-main .main-content .steps.progress-bar .indicator.current:dir(rtl) {
+  transform-origin: right;
 }
 @media (prefers-contrast) {
   .onboardingContainer .screen[pos=split] .section-main .main-content {
@@ -1745,6 +1768,10 @@ html {
 }
 .onboardingContainer.transition-in .screen:not(.dialog-initial):not([pos=corner]) .steps {
   opacity: 0.2;
+}
+.onboardingContainer.transition-in .screen[pos=split] .steps.progress-bar .indicator.current {
+  scale: var(--wipe-scale);
+  opacity: var(--wipe-opacity);
 }
 .onboardingContainer.transition-in .screen:not([pos=corner]) .welcome-text,
 .onboardingContainer.transition-in .screen:not([pos=corner]) .multi-select-container,
