@@ -24,6 +24,9 @@ glob:**/docs/**.jpg
 glob:**/docs/**.png
 glob:**/docs/**.svg
 
+# Include everything found in the perfdocs generated folder
+glob:testing/perfdocs/generated/**
+
 # Python API docs.
 glob:**/*.py
 
