@@ -110,6 +110,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
         mStreamFilterEndpoints;
     uint32_t mRedirectFlags;
     uint32_t mLoadFlags;
+    nsTArray<EarlyHintConnectArgs> mEarlyHints;
     RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise::Private>
         mPromise;
   };
@@ -278,10 +279,10 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
 
   // Serializes all data needed to setup the new replacement channel
   // in the content process into the RedirectToRealChannelArgs struct.
-  void SerializeRedirectData(RedirectToRealChannelArgs& aArgs,
-                             bool aIsCrossProcess, uint32_t aRedirectFlags,
-                             uint32_t aLoadFlags,
-                             dom::ContentParent* aParent) const;
+  void SerializeRedirectData(
+      RedirectToRealChannelArgs& aArgs, bool aIsCrossProcess,
+      uint32_t aRedirectFlags, uint32_t aLoadFlags, dom::ContentParent* aParent,
+      nsTArray<EarlyHintConnectArgs>&& aEarlyHints) const;
 
   uint64_t GetLoadIdentifier() const { return mLoadIdentifier; }
   uint32_t GetLoadType() const { return mLoadStateLoadType; }
@@ -512,6 +513,8 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // This will be passed back to the new content process should a process
   // switch occurs.
   RefPtr<nsDOMNavigationTiming> mTiming;
+
+  net::EarlyHintsService mEarlyHintsService;
 
   // An optional ObjectUpgradeHandler which can be used to upgrade an <object>
   // or <embed> element to contain a nsFrameLoader, allowing us to switch them

@@ -16,6 +16,8 @@
 namespace mozilla {
 namespace net {
 
+class EarlyHintConnectArgs;
+
 class ParentProcessDocumentChannel : public DocumentChannel,
                                      public nsIAsyncVerifyRedirectCallback,
                                      public nsIObserver {
@@ -38,7 +40,8 @@ class ParentProcessDocumentChannel : public DocumentChannel,
   RedirectToRealChannel(
       nsTArray<ipc::Endpoint<extensions::PStreamFilterParent>>&&
           aStreamFilterEndpoints,
-      uint32_t aRedirectFlags, uint32_t aLoadFlags);
+      uint32_t aRedirectFlags, uint32_t aLoadFlags,
+      const nsTArray<EarlyHintConnectArgs>& aEarlyHints);
 
  private:
   virtual ~ParentProcessDocumentChannel();
