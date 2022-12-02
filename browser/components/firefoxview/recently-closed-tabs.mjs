@@ -309,10 +309,14 @@ class RecentlyClosedTabsList extends HTMLElement {
     mainContent.append(favicon, title, urlElement, time);
 
     const dismissButton = document.createElement("button");
-    let dismissLabel = this.fluentStrings.formatValueSync(
-      "firefoxview-closed-tabs-dismiss"
+    let tabTitle = tab.title ?? "";
+    document.l10n.setAttributes(
+      dismissButton,
+      "firefoxview-closed-tabs-dismiss-tab",
+      {
+        tabTitle,
+      }
     );
-    dismissButton.setAttribute("aria-label", `${dismissLabel} ${tab.title}`);
     dismissButton.classList.add("closed-tab-li-dismiss");
 
     li.append(mainContent, dismissButton);
