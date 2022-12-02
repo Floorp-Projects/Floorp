@@ -1144,6 +1144,9 @@
     %1$s is a placeholder that will be replaced by the app name (Fenix). -->
     <string name="notification_default_browser_text">Rende %1$s tu navigator predefinite</string>
 
+    <!-- Title shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_title">Essaya le navigation private</string>
+
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Collection delite</string>

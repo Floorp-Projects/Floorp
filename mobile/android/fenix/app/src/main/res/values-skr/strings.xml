@@ -1121,6 +1121,9 @@
     %1$s is a placeholder that will be replaced by the app name (Fenix). -->
     <string name="notification_default_browser_text">%1$s کوں آپݨاں پہلوں مقرر براؤز بݨاؤ</string>
 
+    <!-- Title shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_title">نجی براؤزنگ ازماؤ</string>
+
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">مجموعہ مٹ ڳیا</string>

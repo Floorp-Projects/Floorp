@@ -338,6 +338,14 @@
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Modu solu HTTPS</string>
 
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Riduzzione di e striscie di cannistrelli</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Riduce e striscie di canistrelli</string>
+
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Firefox prova autumaticamente di righjittà e dumande di canistrelli quandu ci hè striscie di canistrelli. S’è alcuna ozzione di righjettu ùn hè micca dispunibule, Firefox pò accettà tutti i canistrelli per chjode a striscia.</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Tentativu autumaticu di cunnessione à i siti impieghendu u protocollu di cifratura HTTPS per aumentà a sicurità.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -1114,6 +1122,12 @@
     <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
     %1$s is a placeholder that will be replaced by the app name (Fenix). -->
     <string name="notification_default_browser_text">Impiegate %1$s cum’è navigatore predefinitu</string>
+
+    <!-- Title shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_title">Pruvà a navigazione privata</string>
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">Navigate senza arregistrà nè canistrelli nè cronolugia in %1$s</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
