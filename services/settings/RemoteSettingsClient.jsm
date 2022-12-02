@@ -165,8 +165,13 @@ class StorageError extends Error {
 }
 
 class InvalidSignatureError extends Error {
-  constructor(cid) {
-    super(`Invalid content signature (${cid})`);
+  constructor(cid, x5u) {
+    let message = `Invalid content signature (${cid})`;
+    if (x5u) {
+      const chain = x5u.split("/").pop();
+      message += ` using '${chain}'`;
+    }
+    super(message);
     this.name = "InvalidSignatureError";
   }
 }
@@ -974,6 +979,8 @@ class RemoteSettingsClient extends EventEmitter {
       records,
       timestamp
     );
+
+    lazy.console.debug(`${this.identifier} verify signature using ${x5u}`);
     if (
       !(await this._verifier.asyncVerifyContentSignature(
         serialized,
@@ -983,7 +990,7 @@ class RemoteSettingsClient extends EventEmitter {
         lazy.Utils.CERT_CHAIN_ROOT_IDENTIFIER
       ))
     ) {
-      throw new InvalidSignatureError(this.identifier);
+      throw new InvalidSignatureError(this.identifier, x5u);
     }
   }
 
