@@ -98,7 +98,7 @@ using namespace mozilla::dom;
 #ifdef DEBUG
 // PR_LOGGING is force to always be on (even in release builds)
 // but we only want some of it on,
-//#define EXTENDED_DEBUG_PRINTING
+// #define EXTENDED_DEBUG_PRINTING
 #endif
 
 // this log level turns on the dumping of each document's layout info
