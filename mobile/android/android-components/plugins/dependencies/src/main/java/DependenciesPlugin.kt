@@ -49,7 +49,7 @@ object Versions {
 
     // see https://android-developers.googleblog.com/2022/06/independent-versioning-of-Jetpack-Compose-libraries.html
     // for Jetpack Compose libraries versioning
-    const val compose_version = "1.2.1"
+    const val compose_version = "1.3.1"
     const val compose_compiler = "1.3.2"
 
     object AndroidX {
