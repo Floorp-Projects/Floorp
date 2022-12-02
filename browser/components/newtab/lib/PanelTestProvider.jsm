@@ -261,6 +261,43 @@ const MESSAGES = () => [
     trigger: { id: "defaultBrowserCheck" },
   },
   {
+    id: "TCP_CFR_MESSAGE_103",
+    groups: ["cfr"],
+    template: "cfr_doorhanger",
+    content: {
+      bucket_id: "TCP_CFR",
+      layout: "icon_and_message",
+      icon: "chrome://branding/content/about-logo@2x.png",
+      icon_class: "cfr-doorhanger-large-icon",
+      heading_text: {
+        string_id: "cfr-total-cookie-protection-header",
+      },
+      text: {
+        string_id: "cfr-total-cookie-protection-body",
+      },
+      buttons: {
+        primary: {
+          label: {
+            string_id: "cfr-doorhanger-milestone-close-button",
+          },
+          action: {
+            type: "CANCEL",
+          },
+        },
+        secondary: [],
+      },
+      anchor_id: "tracking-protection-icon-container",
+      skip_address_bar_notifier: true,
+    },
+    frequency: { lifetime: 1 },
+    trigger: {
+      id: "openURL",
+      patterns: ["*://*/*"],
+    },
+    targeting:
+      "firefoxVersion >= 103 && 'privacy.restrict3rdpartystorage.rollout.enabledByDefault'|preferenceValue",
+  },
+  {
     id: "BETTER_INTERNET_GLOBAL_ROLLOUT",
     groups: ["eco"],
     content: {
