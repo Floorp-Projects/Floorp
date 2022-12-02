@@ -265,12 +265,6 @@ class BrowserParent final : public PBrowserParent,
   mozilla::ipc::IPCResult RecvMoveFocus(const bool& aForward,
                                         const bool& aForDocumentNavigation);
 
-  mozilla::ipc::IPCResult RecvSizeShellTo(const uint32_t& aFlags,
-                                          const int32_t& aWidth,
-                                          const int32_t& aHeight,
-                                          const int32_t& aShellItemWidth,
-                                          const int32_t& aShellItemHeight);
-
   mozilla::ipc::IPCResult RecvDropLinks(nsTArray<nsString>&& aLinks);
 
   // TODO: Use MOZ_CAN_RUN_SCRIPT when it gains IPDL support (bug 1539864)
