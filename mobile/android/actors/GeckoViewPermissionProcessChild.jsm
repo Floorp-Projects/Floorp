@@ -147,13 +147,13 @@ class GeckoViewPermissionProcessChild extends JSProcessActorChild {
       constraints.video &&
       !sources.some(source => source.type === "videoinput")
     ) {
-      Cu.reportError("Media device error: no video source");
+      console.error("Media device error: no video source");
       return null;
     } else if (
       constraints.audio &&
       !sources.some(source => source.type === "audioinput")
     ) {
-      Cu.reportError("Media device error: no audio source");
+      console.error("Media device error: no audio source");
       return null;
     }
 
@@ -178,7 +178,7 @@ class GeckoViewPermissionProcessChild extends JSProcessActorChild {
     if (constraints.video) {
       const video = devices.find(device => response.video === device.rawId);
       if (!video) {
-        Cu.reportError("Media device error: invalid video id");
+        console.error("Media device error: invalid video id");
         return null;
       }
       await this.getActor(window).addCameraPermission();
@@ -187,7 +187,7 @@ class GeckoViewPermissionProcessChild extends JSProcessActorChild {
     if (constraints.audio) {
       const audio = devices.find(device => response.audio === device.rawId);
       if (!audio) {
-        Cu.reportError("Media device error: invalid audio id");
+        console.error("Media device error: invalid audio id");
         return null;
       }
       allowedDevices.appendElement(audio);

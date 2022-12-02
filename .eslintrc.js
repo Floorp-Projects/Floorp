@@ -230,7 +230,6 @@ module.exports = {
         "intl/locale/LangPackMatcher.sys.mjs",
         "js/xpconnect/loader/XPCOMUtils.sys.mjs",
         "layout/base/tests/chrome/**",
-        "mobile/android/**",
         "security/manager/ssl/tests/mochitest/mixedcontent/test_bug383369.html",
         "toolkit/**",
         "uriloader/exthandler/**",
