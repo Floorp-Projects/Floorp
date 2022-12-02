@@ -31,7 +31,6 @@ VALID_ANDROID_FORMATTERS = {"android-format"}
 # task's JSON artifact but do not fail if only warnings are found.
 REPORT_WARNINGS = os.environ.get("GECKO_HEAD_REPOSITORY", "").rstrip("/") in (
     "https://hg.mozilla.org/mozilla-central",
-    "https://hg.mozilla.org/integration/autoland",
     "https://hg.mozilla.org/try",
 )
 
