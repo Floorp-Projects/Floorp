@@ -72,6 +72,7 @@ dictionary IdentityAccountList {
 };
 
 // https://fedidcg.github.io/FedCM/#idp-api-client-id-metadata-endpoint
+[GenerateInit, GenerateConversionToJS]
 dictionary IdentityClientMetadata {
   USVString privacy_policy_url;
   USVString terms_of_service_url;
