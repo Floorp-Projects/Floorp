@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_CanonicalBrowsingContext_h
 #define mozilla_dom_CanonicalBrowsingContext_h
 
-#include "mozilla/net/EarlyHintsService.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/MediaControlKeySource.h"
 #include "mozilla/dom/BrowsingContextWebProgress.h"
@@ -363,8 +362,6 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   void AddFinalDiscardListener(std::function<void(uint64_t)>&& aListener);
 
-  net::EarlyHintsService* GetEarlyHintsService();
-
  protected:
   // Called when the browsing context is being discarded.
   void CanonicalDiscard();
@@ -568,8 +565,6 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   bool mFullyDiscarded = false;
 
   nsTArray<std::function<void(uint64_t)>> mFullyDiscardedListeners;
-
-  net::EarlyHintsService mEarlyHintsService;
 };
 
 }  // namespace dom

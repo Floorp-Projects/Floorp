@@ -1203,8 +1203,8 @@ void DocumentLoadListener::Disconnect(bool aContinueNavigating) {
   // Don't cancel ongoing early hints when continuing to load the web page.
   // Early hints are loaded earlier in the code and shouldn't get cancelled
   // here. See also: Bug 1765652
-  if (GetLoadingBrowsingContext() && !aContinueNavigating) {
-    GetLoadingBrowsingContext()->mEarlyHintsService.Cancel();
+  if (!aContinueNavigating) {
+    mEarlyHintsService.Cancel();
   }
 
   if (auto* ctx = GetDocumentBrowsingContext()) {
@@ -1486,10 +1486,11 @@ bool DocumentLoadListener::ResumeSuspendedChannel(
 
 void DocumentLoadListener::SerializeRedirectData(
     RedirectToRealChannelArgs& aArgs, bool aIsCrossProcess,
-    uint32_t aRedirectFlags, uint32_t aLoadFlags,
-    ContentParent* aParent) const {
+    uint32_t aRedirectFlags, uint32_t aLoadFlags, ContentParent* aParent,
+    nsTArray<EarlyHintConnectArgs>&& aEarlyHints) const {
   aArgs.uri() = GetChannelCreationURI();
   aArgs.loadIdentifier() = mLoadIdentifier;
+  aArgs.earlyHints() = std::move(aEarlyHints);
 
   // I previously used HttpBaseChannel::CloneLoadInfoForRedirect, but that
   // clears the principal to inherit, which fails tests (probably because this
@@ -2120,9 +2121,12 @@ DocumentLoadListener::RedirectToRealChannel(
           CreateAndReject(ipc::ResponseRejectReason::SendError, __func__);
     }
 
+    nsTArray<EarlyHintConnectArgs> ehArgs;
+    mEarlyHintsService.RegisterLinksAndGetConnectArgs(ehArgs);
+
     RedirectToRealChannelArgs args;
     SerializeRedirectData(args, /* aIsCrossProcess */ true, aRedirectFlags,
-                          aLoadFlags, cp);
+                          aLoadFlags, cp, std::move(ehArgs));
     if (mTiming) {
       mTiming->Anonymize(args.uri());
       args.timing() = Some(std::move(mTiming));
@@ -2158,10 +2162,14 @@ DocumentLoadListener::RedirectToRealChannel(
   auto promise =
       MakeRefPtr<PDocumentChannelParent::RedirectToRealChannelPromise::Private>(
           __func__);
-  mOpenPromise->Resolve(
-      OpenPromiseSucceededType({std::move(aStreamFilterEndpoints),
-                                aRedirectFlags, aLoadFlags, promise}),
-      __func__);
+
+  nsTArray<EarlyHintConnectArgs> ehArgs;
+  mEarlyHintsService.RegisterLinksAndGetConnectArgs(ehArgs);
+
+  mOpenPromise->Resolve(OpenPromiseSucceededType(
+                            {std::move(aStreamFilterEndpoints), aRedirectFlags,
+                             aLoadFlags, std::move(ehArgs), promise}),
+                        __func__);
 
   // There is no way we could come back here if the promise had been resolved
   // previously. But for clarity and to avoid all doubt, we set this boolean to
@@ -2576,15 +2584,12 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
     }
   }
 
-  if (GetLoadingBrowsingContext()) {
-    if (httpChannel) {
-      uint32_t responseStatus;
-      Unused << httpChannel->GetResponseStatus(&responseStatus);
-      GetLoadingBrowsingContext()->mEarlyHintsService.FinalResponse(
-          responseStatus);
-    } else {
-      GetLoadingBrowsingContext()->mEarlyHintsService.Cancel();
-    }
+  if (httpChannel) {
+    uint32_t responseStatus = 0;
+    Unused << httpChannel->GetResponseStatus(&responseStatus);
+    mEarlyHintsService.FinalResponse(responseStatus);
+  } else {
+    mEarlyHintsService.Cancel();
   }
 
   // If we're going to be delivering this channel to a remote content
@@ -2804,20 +2809,22 @@ DocumentLoadListener::AsyncOnChannelRedirect(
     return NS_OK;
   }
 
-  if (GetDocumentBrowsingContext()) {
-    nsCOMPtr<nsIURI> oldURI;
-    aOldChannel->GetURI(getter_AddRefs(oldURI));
-    if (!net::ChannelIsPost(aOldChannel)) {
-      AddURIVisit(aOldChannel, 0);
-      nsDocShell::SaveLastVisit(aNewChannel, oldURI, aFlags);
-    }
-
-    nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-    nsresult rv = ssm->CheckSameOriginURI(oldURI, uri, false, false);
-    if (NS_FAILED(rv)) {
-      GetLoadingBrowsingContext()->mEarlyHintsService.Cancel();
-    }
+  // Cancel cross origin redirects as described by whatwg:
+  // > Note: [The early hint reponse] is discarded if it is succeeded by a
+  // > cross-origin redirect.
+  // https://html.spec.whatwg.org/multipage/semantics.html#early-hints
+  nsCOMPtr<nsIURI> oldURI;
+  aOldChannel->GetURI(getter_AddRefs(oldURI));
+  if (!net::ChannelIsPost(aOldChannel)) {
+    AddURIVisit(aOldChannel, 0);
+    nsDocShell::SaveLastVisit(aNewChannel, oldURI, aFlags);
   }
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  nsresult rv = ssm->CheckSameOriginURI(oldURI, uri, false, false);
+  if (NS_FAILED(rv)) {
+    mEarlyHintsService.Cancel();
+  }
+
   mHaveVisibleRedirect |= true;
 
   LOG(
@@ -2949,10 +2956,7 @@ NS_IMETHODIMP DocumentLoadListener::OnStatus(nsIRequest* aRequest,
 
 NS_IMETHODIMP DocumentLoadListener::EarlyHint(const nsACString& linkHeader) {
   LOG(("DocumentLoadListener::EarlyHint.\n"));
-  if (GetLoadingBrowsingContext()) {
-    GetLoadingBrowsingContext()->mEarlyHintsService.EarlyHint(
-        linkHeader, GetChannelCreationURI(), mChannel);
-  }
+  mEarlyHintsService.EarlyHint(linkHeader, GetChannelCreationURI(), mChannel);
   return NS_OK;
 }
 

@@ -9,15 +9,17 @@
 #define mozilla_net_EarlyHintsService_h
 
 #include "mozilla/Maybe.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "nsStringFwd.h"
-#include "mozilla/RefPtr.h"
+#include "nsTArray.h"
 
 class nsIChannel;
 class nsIURI;
 
 namespace mozilla::net {
 
+class EarlyHintConnectArgs;
 class OngoingEarlyHints;
 
 class EarlyHintsService {
@@ -28,6 +30,9 @@ class EarlyHintsService {
                  nsIChannel* aChannel);
   void FinalResponse(uint32_t aResponseStatus);
   void Cancel();
+
+  void RegisterLinksAndGetConnectArgs(
+      nsTArray<EarlyHintConnectArgs>& aOutLinks);
 
  private:
   void CollectTelemetry(Maybe<uint32_t> aResponseStatus);

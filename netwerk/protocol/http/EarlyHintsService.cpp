@@ -100,6 +100,11 @@ void EarlyHintsService::Cancel() {
   }
 }
 
+void EarlyHintsService::RegisterLinksAndGetConnectArgs(
+    nsTArray<EarlyHintConnectArgs>& aOutLinks) {
+  mOngoingEarlyHints->RegisterLinksAndGetConnectArgs(aOutLinks);
+}
+
 void EarlyHintsService::CollectTelemetry(Maybe<uint32_t> aResponseStatus) {
   // EH_NUM_OF_HINTS_PER_PAGE is only collected for the 2xx responses,
   // regardless of the number of received mEarlyHintsCount.
