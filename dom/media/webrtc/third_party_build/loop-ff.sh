@@ -74,7 +74,7 @@ It appears that initial vendoring verification has failed.
 - If you have previously run loop-ff.sh successfully, there may be a new
   change to third_party/libwebrtc that should be extracted and added to
   the patch stack in github.  It may be as easy as running:
-      python3 dom/media/webrtc/third_party_build/extract-for-git.py tip::tip
+      ./mach python dom/media/webrtc/third_party_build/extract-for-git.py tip::tip
       mv mailbox.patch $MOZ_LIBWEBRTC_SRC
       (cd $MOZ_LIBWEBRTC_SRC && \\
        git am mailbox.patch)

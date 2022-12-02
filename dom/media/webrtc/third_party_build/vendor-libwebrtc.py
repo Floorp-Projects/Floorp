@@ -82,7 +82,7 @@ def fetch(target, url):
         sys.exit(1)
     with open(os.path.join(LIBWEBRTC_DIR, "README.mozilla"), "a") as f:
         # write the the command line used
-        f.write("# python3 {}\n".format(" ".join(sys.argv[0:])))
+        f.write("# ./mach python {}\n".format(" ".join(sys.argv[0:])))
         f.write(
             "{} updated from commit {} on {}.\n".format(
                 target, url, datetime.datetime.utcnow().isoformat()
@@ -102,7 +102,7 @@ def fetch_local(target, path, commit):
 
     with open(os.path.join(LIBWEBRTC_DIR, "README.mozilla"), "a") as f:
         # write the the command line used
-        f.write("# python3 {}\n".format(" ".join(sys.argv[0:])))
+        f.write("# ./mach python {}\n".format(" ".join(sys.argv[0:])))
         f.write(
             "{} updated from {} commit {} on {}.\n".format(
                 target, path, commit, datetime.datetime.utcnow().isoformat()
