@@ -22,6 +22,7 @@ class nsIReferrerInfo;
 namespace mozilla::net {
 
 class EarlyHintPreloader;
+class EarlyHintConnectArgs;
 struct LinkHeader;
 
 // class keeping track of all ongoing early hints
@@ -38,9 +39,17 @@ class OngoingEarlyHints final {
 
   void CancelAllOngoingPreloads();
 
+  // registers all channels and returns the ids
+  void RegisterLinksAndGetConnectArgs(
+      nsTArray<EarlyHintConnectArgs>& aOutLinks);
+
  private:
   ~OngoingEarlyHints() = default;
   nsRefPtrHashtable<PreloadHashKey, EarlyHintPreloader> mOngoingPreloads;
+
+  // keep track of all preloads in the order they were specified in the early
+  // hint header
+  nsTArray<EarlyHintConnectArgs> mLinks;
 };
 
 class EarlyHintPreloader final : public nsIStreamListener,

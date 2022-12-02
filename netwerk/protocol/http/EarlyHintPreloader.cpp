@@ -66,6 +66,11 @@ bool OngoingEarlyHints::Add(const PreloadHashKey& aKey,
   return mOngoingPreloads.InsertOrUpdate(aKey, aPreloader);
 }
 
+void OngoingEarlyHints::RegisterLinksAndGetConnectArgs(
+    nsTArray<EarlyHintConnectArgs>& aOutLinks) {
+  // register all channels before returning
+}
+
 //=============================================================================
 // EarlyHintPreloader
 //=============================================================================
