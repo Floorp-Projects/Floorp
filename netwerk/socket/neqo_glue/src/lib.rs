@@ -264,7 +264,7 @@ pub extern "C" fn neqo_http3conn_new(
  * packet holds packet data.
  */
 #[no_mangle]
-pub unsafe extern "C" fn neqo_http3conn_process_input(
+pub extern "C" fn neqo_http3conn_process_input(
     conn: &mut NeqoHttp3Conn,
     remote_addr: *const NetAddr,
     packet: *const ThinVec<u8>,
@@ -460,7 +460,7 @@ pub extern "C" fn neqo_http3conn_priority_update(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn neqo_htttp3conn_send_request_body(
+pub extern "C" fn neqo_htttp3conn_send_request_body(
     conn: &mut NeqoHttp3Conn,
     stream_id: u64,
     buf: *const u8,
@@ -990,7 +990,7 @@ pub extern "C" fn neqo_http3conn_event(
 
 // Read response data into buf.
 #[no_mangle]
-pub unsafe extern "C" fn neqo_http3conn_read_response_data(
+pub extern "C" fn neqo_http3conn_read_response_data(
     conn: &mut NeqoHttp3Conn,
     stream_id: u64,
     buf: *mut u8,
