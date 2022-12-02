@@ -522,7 +522,10 @@ add_task(async function test_get_can_verify_signature() {
   } catch (e) {
     error = e;
   }
-  equal(error.message, "Invalid content signature (main/password-fields)");
+  equal(
+    error.message,
+    "Invalid content signature (main/password-fields) using 'fake-x5u'"
+  );
 });
 add_task(clear_state);
 
