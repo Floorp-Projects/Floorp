@@ -77,11 +77,5 @@ tasks:
     android-feature-logins: {}
     android-feature-prompts: {}
     android-support-ktx: {}
-    android-feature-downloads:
-        run:
-            post-gradlew:
-                - ['automation/taskcluster/androidTest/ui-test.sh', 'support-ktx', 'arm', '1']
-
-overriden-tasks:
-    # names too long to fit in 25 chars
+    android-feature-downloads: {}
     android-feature-recentlyclosed: {}
