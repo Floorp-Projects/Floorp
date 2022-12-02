@@ -813,7 +813,6 @@ class FunctionCompiler {
     curBlock_->setSlot(info().localSlot(slot), def);
   }
 
-#ifdef ENABLE_WASM_FUNCTION_REFERENCES
   MDefinition* compareIsNull(MDefinition* value, JSOp compareOp) {
     MDefinition* nullVal = nullRefConstant();
     if (!nullVal) {
@@ -850,6 +849,7 @@ class FunctionCompiler {
     return true;
   }
 
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
   bool brOnNull(uint32_t relativeDepth, const DefVector& values,
                 const ResultType& type, MDefinition* condition) {
     if (inDeadCode()) {
