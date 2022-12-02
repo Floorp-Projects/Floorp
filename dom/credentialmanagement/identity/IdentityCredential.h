@@ -34,6 +34,7 @@ class IdentityCredential final : public Credential {
   typedef MozPromise<Tuple<IdentityInternalManifest, IdentityAccount>, nsresult,
                      true>
       GetAccountPromise;
+  typedef MozPromise<IdentityClientMetadata, nsresult, true> GetMetadataPromise;
 
   explicit IdentityCredential(nsPIDOMWindowInner* aParent);
 
@@ -159,6 +160,9 @@ class IdentityCredential final : public Credential {
       const IdentityInternalManifest& aManifest,
       const IdentityAccount& aAccount);
 
+  static RefPtr<GetMetadataPromise> FetchMetadata(
+      nsIPrincipal* aPrincipal, const IdentityInternalManifest& aManifest);
+
   static RefPtr<GetIdentityProviderPromise> PromptUserToSelectProvider(
       BrowsingContext* aBrowsingContext,
       const Sequence<IdentityProvider>& aProviders);
@@ -166,6 +170,12 @@ class IdentityCredential final : public Credential {
   static RefPtr<GetAccountPromise> PromptUserToSelectAccount(
       BrowsingContext* aBrowsingContext, const IdentityAccountList& aAccounts,
       const IdentityInternalManifest& aManifest);
+
+  static RefPtr<GetAccountPromise> PromptUserWithPolicy(
+      BrowsingContext* aBrowsingContext, nsIPrincipal* aPrincipal,
+      const IdentityAccount& aAccount,
+      const IdentityInternalManifest& aManifest,
+      const IdentityProvider& aProvider);
 
   static void CloseUserInterface(BrowsingContext* aBrowsingContext);
 
