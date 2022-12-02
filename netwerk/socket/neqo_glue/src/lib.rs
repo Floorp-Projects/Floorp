@@ -264,7 +264,7 @@ pub extern "C" fn neqo_http3conn_new(
  * packet holds packet data.
  */
 #[no_mangle]
-pub extern "C" fn neqo_http3conn_process_input(
+pub unsafe extern "C" fn neqo_http3conn_process_input(
     conn: &mut NeqoHttp3Conn,
     remote_addr: *const NetAddr,
     packet: *const ThinVec<u8>,
@@ -274,7 +274,7 @@ pub extern "C" fn neqo_http3conn_process_input(
         Err(result) => return result,
     };
     conn.conn.process_input(
-        Datagram::new(remote, conn.local_addr, unsafe { (*packet).to_vec() }),
+        Datagram::new(remote, conn.local_addr, (*packet).to_vec()),
         Instant::now(),
     );
     return NS_OK;
@@ -460,14 +460,14 @@ pub extern "C" fn neqo_http3conn_priority_update(
 }
 
 #[no_mangle]
-pub extern "C" fn neqo_htttp3conn_send_request_body(
+pub unsafe extern "C" fn neqo_htttp3conn_send_request_body(
     conn: &mut NeqoHttp3Conn,
     stream_id: u64,
     buf: *const u8,
     len: u32,
     read: &mut u32,
 ) -> nsresult {
-    let array = unsafe { slice::from_raw_parts(buf, len as usize) };
+    let array = slice::from_raw_parts(buf, len as usize);
     match conn.conn.send_data(StreamId::from(stream_id), array) {
         Ok(amount) => {
             *read = u32::try_from(amount).unwrap();
@@ -990,7 +990,7 @@ pub extern "C" fn neqo_http3conn_event(
 
 // Read response data into buf.
 #[no_mangle]
-pub extern "C" fn neqo_http3conn_read_response_data(
+pub unsafe extern "C" fn neqo_http3conn_read_response_data(
     conn: &mut NeqoHttp3Conn,
     stream_id: u64,
     buf: *mut u8,
@@ -998,7 +998,7 @@ pub extern "C" fn neqo_http3conn_read_response_data(
     read: &mut u32,
     fin: &mut bool,
 ) -> nsresult {
-    let array = unsafe { slice::from_raw_parts_mut(buf, len as usize) };
+    let array = slice::from_raw_parts_mut(buf, len as usize);
     match conn
         .conn
         .read_data(Instant::now(), StreamId::from(stream_id), &mut array[..])

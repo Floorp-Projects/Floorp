@@ -136,7 +136,7 @@ type ErrorFn = unsafe extern "C" fn(msg: *const c_char);
 /// Keep this in sync with the prefs_parser_parse() declaration in
 /// Preferences.cpp.
 #[no_mangle]
-pub extern "C" fn prefs_parser_parse(
+pub unsafe extern "C" fn prefs_parser_parse(
     path: *const c_char,
     kind: PrefValueKind,
     buf: *const c_char,
@@ -144,15 +144,13 @@ pub extern "C" fn prefs_parser_parse(
     pref_fn: PrefFn,
     error_fn: ErrorFn,
 ) -> bool {
-    let path = unsafe {
-        std::ffi::CStr::from_ptr(path)
-            .to_string_lossy()
-            .into_owned()
-    };
+    let path = std::ffi::CStr::from_ptr(path)
+        .to_string_lossy()
+        .into_owned();
 
     // Make sure `buf` ends in a '\0', and include that in the length, because
     // it represents EOF.
-    let buf = unsafe { std::slice::from_raw_parts(buf as *const c_uchar, len + 1) };
+    let buf = std::slice::from_raw_parts(buf as *const c_uchar, len + 1);
     assert!(buf.last() == Some(&EOF));
 
     let mut parser = Parser::new(&path, kind, &buf, pref_fn, error_fn);
