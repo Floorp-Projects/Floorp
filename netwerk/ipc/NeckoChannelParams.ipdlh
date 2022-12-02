@@ -36,6 +36,7 @@ using nsILoadInfo::CrossOriginEmbedderPolicy from "nsILoadInfo.h";
 using nsILoadInfo::StoragePermissionState from "nsILoadInfo.h";
 using struct mozilla::dom::LoadingSessionHistoryInfo from "mozilla/dom/SessionHistoryEntry.h";
 using mozilla::dom::RequestMode from "mozilla/dom/RequestBinding.h";
+using mozilla::net::LinkHeader from "nsNetUtil.h";
 
 namespace mozilla {
 namespace net {
@@ -458,6 +459,11 @@ struct DocumentChannelCreationArgs {
   uint64_t parentInitiatedNavigationEpoch;
 };
 
+struct EarlyHintConnectArgs {
+  LinkHeader link;
+  uint64_t earlyHintPreloaderId;
+};
+
 struct RedirectToRealChannelArgs {
   uint32_t registrarId;
   nsIURI uri;
@@ -480,6 +486,7 @@ struct RedirectToRealChannelArgs {
   LoadingSessionHistoryInfo? loadingSessionHistoryInfo;
   uint64_t loadIdentifier;
   nsCString? originalUriString;
+  EarlyHintConnectArgs[] earlyHints;
 };
 
 struct TimingStructArgs {
