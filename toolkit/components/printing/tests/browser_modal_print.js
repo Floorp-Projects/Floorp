@@ -247,9 +247,6 @@ add_task(async function testPrintProgressIndicator() {
 });
 
 add_task(async function testPageSizePortrait() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["layout.css.page-size.enabled", true]],
-  });
   await PrintHelper.withTestPageHTTPS(async helper => {
     await helper.startPrint();
 
@@ -265,9 +262,6 @@ add_task(async function testPageSizePortrait() {
 });
 
 add_task(async function testPageSizeLandscape() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["layout.css.page-size.enabled", true]],
-  });
   await PrintHelper.withTestPageHTTPS(async helper => {
     await helper.startPrint();
 
@@ -280,4 +274,40 @@ add_task(async function testPageSizeLandscape() {
       "Orientation set to landscape"
     );
   }, "file_landscape.html");
+});
+
+add_task(async function testFirstPageSizePortrait() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["layout.css.named-pages.enabled", true]],
+  });
+  await PrintHelper.withTestPageHTTPS(async helper => {
+    await helper.startPrint();
+
+    let orientation = helper.get("orientation");
+    ok(orientation.hidden, "Orientation selector is hidden");
+
+    is(
+      helper.settings.orientation,
+      Ci.nsIPrintSettings.kPortraitOrientation,
+      "Orientation set to portrait"
+    );
+  }, "file_first_portrait.html");
+});
+
+add_task(async function testFirstPageSizeLandscape() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["layout.css.named-pages.enabled", true]],
+  });
+  await PrintHelper.withTestPageHTTPS(async helper => {
+    await helper.startPrint();
+
+    let orientation = helper.get("orientation");
+    ok(orientation.hidden, "Orientation selector is hidden");
+
+    is(
+      helper.settings.orientation,
+      Ci.nsIPrintSettings.kLandscapeOrientation,
+      "Orientation set to landscape"
+    );
+  }, "file_first_landscape.html");
 });
