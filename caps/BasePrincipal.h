@@ -314,6 +314,7 @@ class BasePrincipal : public nsJSPrincipals {
                               bool aReport, uint64_t aInnerWindowID);
 
   void SetHasExplicitDomain() { mHasExplicitDomain = true; }
+  bool GetHasExplicitDomain() { return mHasExplicitDomain; }
 
   // KeyValT holds a principal subtype-specific key value and the associated
   // parsed value after JSON parsing.
@@ -352,7 +353,7 @@ class BasePrincipal : public nsJSPrincipals {
 
   const OriginAttributes mOriginAttributes;
   const PrincipalKind mKind;
-  bool mHasExplicitDomain;
+  std::atomic<bool> mHasExplicitDomain;
 };
 
 inline bool BasePrincipal::FastEquals(nsIPrincipal* aOther) {

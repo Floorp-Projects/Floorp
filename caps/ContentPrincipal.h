@@ -12,6 +12,7 @@
 #include "nsNetUtil.h"
 #include "nsScriptSecurityManager.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/extensions/WebExtensionPolicy.h"
 
 namespace Json {
@@ -75,8 +76,10 @@ class ContentPrincipal final : public BasePrincipal {
 
  private:
   const nsCOMPtr<nsIURI> mURI;
-  nsCOMPtr<nsIURI> mDomain;
-  Maybe<RefPtr<extensions::WebExtensionPolicyCore>> mAddon;
+  mozilla::Mutex mMutex{"ContentPrincipal::mMutex"};
+  nsCOMPtr<nsIURI> mDomain MOZ_GUARDED_BY(mMutex);
+  Maybe<RefPtr<extensions::WebExtensionPolicyCore>> mAddon
+      MOZ_GUARDED_BY(mMutex);
 };
 
 }  // namespace mozilla
