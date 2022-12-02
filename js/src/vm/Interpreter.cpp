@@ -3572,10 +3572,9 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(Object)
 
     CASE(CallSiteObj) {
-      JSObject* cso = ProcessCallSiteObjOperation(cx, script, REGS.pc);
-      if (!cso) {
-        goto error;
-      }
+      JSObject* cso = script->getObject(REGS.pc);
+      MOZ_ASSERT(!cso->as<ArrayObject>().isExtensible());
+      MOZ_ASSERT(cso->as<ArrayObject>().containsPure(cx->names().raw));
       PUSH_OBJECT(*cso);
     }
     END_CASE(CallSiteObj)

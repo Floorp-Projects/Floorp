@@ -753,12 +753,6 @@ bool BytecodeEmitter::emitInternedObjectOp(GCThingIndex index, JSOp op) {
   return emitGCIndexOp(op, index);
 }
 
-bool BytecodeEmitter::emitObjectPairOp(GCThingIndex index1, GCThingIndex index2,
-                                       JSOp op) {
-  MOZ_ASSERT(index1 + 1 == index2, "object pair indices must be adjacent");
-  return emitInternedObjectOp(index1, op);
-}
-
 bool BytecodeEmitter::emitRegExp(GCThingIndex index) {
   return emitGCIndexOp(JSOp::RegExp, index);
 }
@@ -4625,25 +4619,9 @@ bool BytecodeEmitter::emitShortCircuitAssignment(AssignmentNode* node) {
   return true;
 }
 
-bool BytecodeEmitter::emitCallSiteObjectArray(JSOp op, ListNode* cookedOrRaw,
-                                              GCThingIndex* outArrayIndex) {
-  DebugOnly<uint32_t> count = cookedOrRaw->count();
-  ParseNode* head = cookedOrRaw->head();
-
-  // The first element of a call-site node is the raw-values list. Skip over it.
-  if (cookedOrRaw->isKind(ParseNodeKind::CallSiteObj)) {
-    MOZ_ASSERT(head->isKind(ParseNodeKind::ArrayExpr));
-    head = head->pn_next;
-    count--;
-  } else {
-    MOZ_ASSERT(cookedOrRaw->isKind(ParseNodeKind::ArrayExpr));
-  }
-
-  ObjLiteralWriter writer;
-
-  writer.beginArray(op);
-  writer.beginDenseArrayElements();
-
+bool BytecodeEmitter::emitCallSiteObjectArray(ObjLiteralWriter& writer,
+                                              ListNode* cookedOrRaw,
+                                              ParseNode* head, uint32_t count) {
   DebugOnly<size_t> idx = 0;
   for (ParseNode* pn : cookedOrRaw->contentsFrom(head)) {
     MOZ_ASSERT(pn->isKind(ParseNodeKind::TemplateStringExpr) ||
@@ -4656,25 +4634,43 @@ bool BytecodeEmitter::emitCallSiteObjectArray(JSOp op, ListNode* cookedOrRaw,
   }
   MOZ_ASSERT(idx == count);
 
-  return addObjLiteralData(writer, outArrayIndex);
+  return true;
 }
 
 bool BytecodeEmitter::emitCallSiteObject(CallSiteNode* callSiteObj) {
   constexpr JSOp op = JSOp::CallSiteObj;
 
-  GCThingIndex cookedIndex;
-  if (!emitCallSiteObjectArray(op, callSiteObj, &cookedIndex)) {
+  // The first element of a call-site node is the raw-values list. Skip over it.
+  ListNode* raw = callSiteObj->rawNodes();
+  MOZ_ASSERT(raw->isKind(ParseNodeKind::ArrayExpr));
+  ParseNode* head = callSiteObj->head()->pn_next;
+
+  uint32_t count = callSiteObj->count() - 1;
+  MOZ_ASSERT(count == raw->count());
+
+  ObjLiteralWriter writer;
+  writer.beginCallSiteObj(op);
+  writer.beginDenseArrayElements();
+
+  // Write elements of the two arrays: the 'cooked' values followed by the
+  // 'raw' values.
+  MOZ_RELEASE_ASSERT(count < UINT32_MAX / 2,
+                     "Number of elements for both arrays must fit in uint32_t");
+  if (!emitCallSiteObjectArray(writer, callSiteObj, head, count)) {
+    return false;
+  }
+  if (!emitCallSiteObjectArray(writer, raw, raw->head(), count)) {
     return false;
   }
 
-  GCThingIndex rawIndex;
-  if (!emitCallSiteObjectArray(op, callSiteObj->rawNodes(), &rawIndex)) {
+  GCThingIndex cookedIndex;
+  if (!addObjLiteralData(writer, &cookedIndex)) {
     return false;
   }
 
   MOZ_ASSERT(sc->hasCallSiteObj());
 
-  return emitObjectPairOp(cookedIndex, rawIndex, op);
+  return emitInternedObjectOp(cookedIndex, op);
 }
 
 bool BytecodeEmitter::emitCatch(BinaryNode* catchClause) {

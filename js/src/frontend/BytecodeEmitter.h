@@ -620,8 +620,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   [[nodiscard]] bool emitInternedScopeOp(GCThingIndex index, JSOp op);
   [[nodiscard]] bool emitInternedObjectOp(GCThingIndex index, JSOp op);
-  [[nodiscard]] bool emitObjectPairOp(GCThingIndex index1, GCThingIndex index2,
-                                      JSOp op);
   [[nodiscard]] bool emitRegExp(GCThingIndex index);
 
   [[nodiscard]] MOZ_NEVER_INLINE bool emitFunction(FunctionNode* funNode,
@@ -863,8 +861,9 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   [[nodiscard]] bool emitInitializer(ParseNode* initializer,
                                      ParseNode* pattern);
 
-  [[nodiscard]] bool emitCallSiteObjectArray(JSOp op, ListNode* cookedOrRaw,
-                                             GCThingIndex* outArrayIndex);
+  [[nodiscard]] bool emitCallSiteObjectArray(ObjLiteralWriter& writer,
+                                             ListNode* cookedOrRaw,
+                                             ParseNode* head, uint32_t count);
   [[nodiscard]] bool emitCallSiteObject(CallSiteNode* callSiteObj);
   [[nodiscard]] bool emitTemplateString(ListNode* templateString);
   [[nodiscard]] bool emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,

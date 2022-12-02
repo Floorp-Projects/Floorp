@@ -2416,34 +2416,9 @@ bool BaselineInterpreterCodeGen::emit_Object() {
   return true;
 }
 
-template <>
-bool BaselineCompilerCodeGen::emit_CallSiteObj() {
-  RootedScript script(cx, handler.script());
-  JSObject* cso = ProcessCallSiteObjOperation(cx, script, handler.pc());
-  if (!cso) {
-    return false;
-  }
-
-  frame.push(ObjectValue(*cso));
-  return true;
-}
-
-template <>
-bool BaselineInterpreterCodeGen::emit_CallSiteObj() {
-  prepareVMCall();
-
-  pushBytecodePCArg();
-  pushScriptArg();
-
-  using Fn = ArrayObject* (*)(JSContext*, HandleScript, const jsbytecode*);
-  if (!callVM<Fn, ProcessCallSiteObjOperation>()) {
-    return false;
-  }
-
-  // Box and push return value.
-  masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
-  frame.push(R0);
-  return true;
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_CallSiteObj() {
+  return emit_Object();
 }
 
 template <typename Handler>
