@@ -33,7 +33,8 @@ class FetchPreloader : public PreloaderBase, public nsIStreamListener {
   nsresult OpenChannel(const PreloadHashKey& aKey, nsIURI* aURI,
                        const CORSMode aCORSMode,
                        const dom::ReferrerPolicy& aReferrerPolicy,
-                       dom::Document* aDocument);
+                       dom::Document* aDocument,
+                       uint64_t aEarlyHintPreloaderId);
 
   // PreloaderBase
   nsresult AsyncConsume(nsIStreamListener* aListener) override;
@@ -51,7 +52,8 @@ class FetchPreloader : public PreloaderBase, public nsIStreamListener {
                                  const dom::ReferrerPolicy& aReferrerPolicy,
                                  dom::Document* aDocument,
                                  nsILoadGroup* aLoadGroup,
-                                 nsIInterfaceRequestor* aCallbacks);
+                                 nsIInterfaceRequestor* aCallbacks,
+                                 uint64_t aEarlyHintPreloaderId);
 
  private:
   nsresult CheckContentPolicy(nsIURI* aURI, dom::Document* aDocument);
