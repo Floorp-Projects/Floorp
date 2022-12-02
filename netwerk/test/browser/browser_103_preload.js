@@ -33,7 +33,7 @@ add_task(async function test_103_two_preload_responses() {
         Services.uuid.generateUUID().toString(),
       ],
     ],
-    { hinted: 2, normal: 0 }
+    { hinted: 1, normal: 1 }
   );
 });
 
@@ -145,7 +145,7 @@ add_task(async function test_103_preload_insecure_cor() {
     "test_103_preload_insecure_cor",
     "https://example.com",
     "http://mochi.test:8888/browser/netwerk/test/browser/early_hint_pixel.sjs",
-    { hinted: 1, normal: 0 }
+    { hinted: 0, normal: 1 }
   );
 });
 

@@ -40,7 +40,6 @@ class EarlyHintsService {
 
   Maybe<TimeStamp> mFirstEarlyHint;
   uint32_t mEarlyHintsCount{0};
-  bool mCanceled{false};
 
   RefPtr<OngoingEarlyHints> mOngoingEarlyHints;
 };
