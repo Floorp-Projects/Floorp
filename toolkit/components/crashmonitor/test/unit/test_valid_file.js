@@ -8,10 +8,13 @@
  */
 add_task(async function test_valid_file() {
   // Write valid data to checkpoint file
-  let data = JSON.stringify({ "final-ui-startup": true });
-  await OS.File.writeAtomic(sessionCheckpointsPath, data, {
-    tmpPath: sessionCheckpointsPath + ".tmp",
-  });
+  await IOUtils.writeJSON(
+    sessionCheckpointsPath,
+    { "final-ui-startup": true },
+    {
+      tmpPath: sessionCheckpointsPath + ".tmp",
+    }
+  );
 
   CrashMonitor.init();
   let checkpoints = await CrashMonitor.previousCheckpoints;
