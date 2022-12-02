@@ -639,7 +639,7 @@ nsresult BasePrincipal::CheckMayLoadHelper(nsIURI* aURI,
 
 NS_IMETHODIMP
 BasePrincipal::IsThirdPartyURI(nsIURI* aURI, bool* aRes) {
-  if (IsSystemPrincipal() || (AddonPolicy() && AddonAllowsLoad(aURI))) {
+  if (IsSystemPrincipal() || (AddonPolicyCore() && AddonAllowsLoad(aURI))) {
     *aRes = false;
     return NS_OK;
   }
@@ -732,7 +732,7 @@ BasePrincipal::IsL10nAllowed(nsIURI* aURI, bool* aRes) {
     return NS_OK;
   }
 
-  auto policy = AddonPolicy();
+  auto policy = AddonPolicyCore();
   *aRes = (policy && policy->IsPrivileged());
   return NS_OK;
 }
@@ -915,7 +915,7 @@ BasePrincipal::GetIsSystemPrincipal(bool* aResult) {
 
 NS_IMETHODIMP
 BasePrincipal::GetIsAddonOrExpandedAddonPrincipal(bool* aResult) {
-  *aResult = AddonPolicy() || ContentScriptAddonPolicy();
+  *aResult = AddonPolicyCore() || ContentScriptAddonPolicyCore();
   return NS_OK;
 }
 
@@ -1116,20 +1116,27 @@ BasePrincipal::GetIsInIsolatedMozBrowserElement(
 
 nsresult BasePrincipal::GetAddonPolicy(
     extensions::WebExtensionPolicy** aResult) {
+  AssertIsOnMainThread();
   RefPtr<extensions::WebExtensionPolicy> policy(AddonPolicy());
   policy.forget(aResult);
   return NS_OK;
 }
 
 extensions::WebExtensionPolicy* BasePrincipal::AddonPolicy() {
+  AssertIsOnMainThread();
+  RefPtr<extensions::WebExtensionPolicyCore> core = AddonPolicyCore();
+  return core ? core->GetMainThreadPolicy() : nullptr;
+}
+
+RefPtr<extensions::WebExtensionPolicyCore> BasePrincipal::AddonPolicyCore() {
   if (Is<ContentPrincipal>()) {
-    return As<ContentPrincipal>()->AddonPolicy();
+    return As<ContentPrincipal>()->AddonPolicyCore();
   }
   return nullptr;
 }
 
 bool BasePrincipal::AddonHasPermission(const nsAtom* aPerm) {
-  if (auto policy = AddonPolicy()) {
+  if (auto policy = AddonPolicyCore()) {
     return policy->HasPermission(aPerm);
   }
   return false;
@@ -1140,6 +1147,21 @@ nsIPrincipal* BasePrincipal::PrincipalToInherit(nsIURI* aRequestedURI) {
     return As<ExpandedPrincipal>()->PrincipalToInherit(aRequestedURI);
   }
   return this;
+}
+
+bool BasePrincipal::OverridesCSP(nsIPrincipal* aDocumentPrincipal) {
+  MOZ_ASSERT(aDocumentPrincipal);
+
+  // Expanded principals override CSP if and only if they subsume the document
+  // principal.
+  if (mKind == eExpandedPrincipal) {
+    return FastSubsumes(aDocumentPrincipal);
+  }
+  // Extension principals always override the CSP of non-extension principals.
+  // This is primarily for the sake of their stylesheets, which are usually
+  // loaded from channels and cannot have expanded principals.
+  return (AddonPolicyCore() &&
+          !BasePrincipal::Cast(aDocumentPrincipal)->AddonPolicyCore());
 }
 
 already_AddRefed<BasePrincipal> BasePrincipal::CreateContentPrincipal(
@@ -1251,13 +1273,22 @@ already_AddRefed<BasePrincipal> BasePrincipal::CloneForcingOriginAttributes(
 }
 
 extensions::WebExtensionPolicy* BasePrincipal::ContentScriptAddonPolicy() {
+  AssertIsOnMainThread();
+  RefPtr<extensions::WebExtensionPolicyCore> core =
+      ContentScriptAddonPolicyCore();
+  return core ? core->GetMainThreadPolicy() : nullptr;
+}
+
+RefPtr<extensions::WebExtensionPolicyCore>
+BasePrincipal::ContentScriptAddonPolicyCore() {
   if (!Is<ExpandedPrincipal>()) {
     return nullptr;
   }
 
-  auto expanded = As<ExpandedPrincipal>();
-  for (auto& prin : expanded->AllowList()) {
-    if (auto policy = BasePrincipal::Cast(prin)->AddonPolicy()) {
+  auto* expanded = As<ExpandedPrincipal>();
+  for (const auto& prin : expanded->AllowList()) {
+    if (RefPtr<extensions::WebExtensionPolicyCore> policy =
+            BasePrincipal::Cast(prin)->AddonPolicyCore()) {
       return policy;
     }
   }
@@ -1270,7 +1301,7 @@ bool BasePrincipal::AddonAllowsLoad(nsIURI* aURI,
   if (Is<ExpandedPrincipal>()) {
     return As<ExpandedPrincipal>()->AddonAllowsLoad(aURI, aExplicit);
   }
-  if (auto policy = AddonPolicy()) {
+  if (auto policy = AddonPolicyCore()) {
     return policy->CanAccessURI(aURI, aExplicit);
   }
   return false;

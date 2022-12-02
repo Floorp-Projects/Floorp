@@ -9,6 +9,7 @@
 #include "nsIObjectInputStream.h"
 #include "nsReadableUtils.h"
 #include "mozilla/Base64.h"
+#include "mozilla/extensions/WebExtensionPolicy.h"
 #include "json/json.h"
 
 using namespace mozilla;
@@ -373,7 +374,7 @@ ExpandedPrincipal::IsThirdPartyURI(nsIURI* aURI, bool* aRes) {
   // the content script is running, ignore the extension's principal.
 
   for (const auto& principal : mPrincipals) {
-    if (!Cast(principal)->AddonPolicy()) {
+    if (!Cast(principal)->AddonPolicyCore()) {
       return Cast(principal)->IsThirdPartyURI(aURI, aRes);
     }
   }

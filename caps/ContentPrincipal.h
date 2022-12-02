@@ -47,7 +47,7 @@ class ContentPrincipal final : public BasePrincipal {
   static nsresult GenerateOriginNoSuffixFromURI(nsIURI* aURI,
                                                 nsACString& aOrigin);
 
-  extensions::WebExtensionPolicy* AddonPolicy();
+  RefPtr<extensions::WebExtensionPolicyCore> AddonPolicyCore();
 
   virtual nsresult PopulateJSONObject(Json::Value& aObject) override;
   // Serializable keys are the valid enum fields the serialization supports
