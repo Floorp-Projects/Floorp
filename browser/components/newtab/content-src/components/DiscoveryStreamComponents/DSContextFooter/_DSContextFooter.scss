@@ -4,6 +4,10 @@
   margin-top: 12px;
   position: relative;
 
+  .story-sponsored-label span {
+    display: inline-block;
+  }
+
   .story-sponsored-label,
   .status-message {
     -webkit-line-clamp: 1;
