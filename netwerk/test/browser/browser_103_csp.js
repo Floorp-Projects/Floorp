@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { lax_request_count_checking } = ChromeUtils.import(
+const { request_count_checking } = ChromeUtils.import(
   "resource://testing-common/early_hint_preload_test_helper.jsm"
 );
 
@@ -46,19 +46,11 @@ add_task(async function test_preload_csp_imgsrc_none() {
   ).then(response => response.json());
   let expectedRequestCount = { hinted: 1, normal: 0 };
 
-  // TODO: Switch to stricter counting method after fixing https://bugzilla.mozilla.org/show_bug.cgi?id=1753730#c11
-  await lax_request_count_checking(
+  await request_count_checking(
     "test_preload_csp_imgsrc_none",
     gotRequestCount,
     expectedRequestCount
   );
-  /* stricter counting method:
-    await Assert.deepEqual(
-      gotRequestCount,
-      { hinted: 1, normal: 0 },
-      "test_preload_csp_imgsrc_none: Unexpected amount of requests made"
-    );
-    */
 
   Services.cache2.clear();
 });

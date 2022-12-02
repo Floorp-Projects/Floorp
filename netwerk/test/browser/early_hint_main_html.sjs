@@ -22,6 +22,8 @@ function handleRequest(request, response) {
       if (uuid === "new_response") {
         new_hint = true;
         response.write("\r\n");
+      } else if (uuid === "non_link_header") {
+        response.write("Content-Length: 25\r\n");
       }
       response.write("\r\n");
     } else {

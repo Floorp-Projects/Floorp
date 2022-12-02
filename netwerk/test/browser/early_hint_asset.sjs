@@ -10,7 +10,7 @@ function handleRequest(request, response) {
     count.normal += 1;
   }
   setSharedState("earlyHintCount", JSON.stringify(count));
-  response.setHeader("Cache-Control", "max-age=604800", false);
+  response.setHeader("Cache-Control", "no-cache", false);
 
   let content = "";
   Cu.importGlobalProperties(["URLSearchParams"]);
