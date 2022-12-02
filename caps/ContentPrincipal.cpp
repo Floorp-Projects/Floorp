@@ -42,10 +42,6 @@
 
 using namespace mozilla;
 
-static inline ExtensionPolicyService& EPS() {
-  return ExtensionPolicyService::GetSingleton();
-}
-
 NS_IMPL_CLASSINFO(ContentPrincipal, nullptr, nsIClassInfo::MAIN_THREAD_ONLY,
                   NS_PRINCIPAL_CID)
 NS_IMPL_QUERY_INTERFACE_CI(ContentPrincipal, nsIPrincipal)
@@ -524,29 +520,27 @@ nsresult ContentPrincipal::GetSiteIdentifier(SiteIdentifier& aSite) {
   return NS_OK;
 }
 
-WebExtensionPolicy* ContentPrincipal::AddonPolicy() {
-  AssertIsOnMainThread();
-
+RefPtr<extensions::WebExtensionPolicyCore> ContentPrincipal::AddonPolicyCore() {
   mozilla::MutexAutoLock lock(mMutex);
   if (!mAddon.isSome()) {
     NS_ENSURE_TRUE(mURI, nullptr);
 
-    WebExtensionPolicy* policy =
-        mURI->SchemeIs("moz-extension") ? EPS().GetByURL(mURI.get()) : nullptr;
-    mAddon.emplace(policy ? policy->Core() : nullptr);
-  }
+    RefPtr<extensions::WebExtensionPolicyCore> core;
+    if (mURI->SchemeIs("moz-extension")) {
+      nsCString host;
+      NS_ENSURE_SUCCESS(mURI->GetHost(host), nullptr);
+      core = ExtensionPolicyService::GetCoreByHost(host);
+    }
 
-  if (extensions::WebExtensionPolicyCore* policy = mAddon.ref()) {
-    return policy->GetMainThreadPolicy();
+    mAddon.emplace(core);
   }
-  return nullptr;
+  return *mAddon;
 }
 
 NS_IMETHODIMP
 ContentPrincipal::GetAddonId(nsAString& aAddonId) {
-  auto* policy = AddonPolicy();
-  if (policy) {
-    policy->GetId(aAddonId);
+  if (RefPtr<extensions::WebExtensionPolicyCore> policy = AddonPolicyCore()) {
+    policy->Id()->ToString(aAddonId);
   } else {
     aAddonId.Truncate();
   }

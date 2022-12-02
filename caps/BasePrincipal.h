@@ -39,7 +39,8 @@ enum class ReferrerPolicy : uint8_t;
 
 namespace extensions {
 class WebExtensionPolicy;
-}
+class WebExtensionPolicyCore;
+}  // namespace extensions
 
 class BasePrincipal;
 
@@ -229,6 +230,7 @@ class BasePrincipal : public nsJSPrincipals {
     return mOriginAttributes;
   }
   extensions::WebExtensionPolicy* AddonPolicy();
+  RefPtr<extensions::WebExtensionPolicyCore> AddonPolicyCore();
   uint32_t UserContextId() const { return mOriginAttributes.mUserContextId; }
   uint32_t PrivateBrowsingId() const {
     return mOriginAttributes.mPrivateBrowsingId;
@@ -245,6 +247,7 @@ class BasePrincipal : public nsJSPrincipals {
   // If this is an add-on content script principal, returns its AddonPolicy.
   // Otherwise returns null.
   extensions::WebExtensionPolicy* ContentScriptAddonPolicy();
+  RefPtr<extensions::WebExtensionPolicyCore> ContentScriptAddonPolicyCore();
 
   // Helper to check whether this principal is associated with an addon that
   // allows unprivileged code to load aURI.  aExplicit == true will prevent
@@ -275,20 +278,7 @@ class BasePrincipal : public nsJSPrincipals {
    * subsume the document principal, and add-on content principals regardless
    * of whether they subsume the document principal.
    */
-  bool OverridesCSP(nsIPrincipal* aDocumentPrincipal) {
-    MOZ_ASSERT(aDocumentPrincipal);
-
-    // Expanded principals override CSP if and only if they subsume the document
-    // principal.
-    if (mKind == eExpandedPrincipal) {
-      return FastSubsumes(aDocumentPrincipal);
-    }
-    // Extension principals always override the CSP non-extension principals.
-    // This is primarily for the sake of their stylesheets, which are usually
-    // loaded from channels and cannot have expanded principals.
-    return (AddonPolicy() &&
-            !BasePrincipal::Cast(aDocumentPrincipal)->AddonPolicy());
-  }
+  bool OverridesCSP(nsIPrincipal* aDocumentPrincipal);
 
   uint32_t GetOriginNoSuffixHash() const { return mOriginNoSuffix->hash(); }
   uint32_t GetOriginSuffixHash() const { return mOriginSuffix->hash(); }
