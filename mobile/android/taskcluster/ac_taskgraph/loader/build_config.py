@@ -4,15 +4,12 @@
 
 
 import logging
-import os
 import re
 import subprocess
 
 from collections import defaultdict
-from copy import deepcopy
 from taskgraph.files_changed import get_changed_files
 from taskgraph.loader.transform import loader as base_loader
-from taskgraph.util.taskcluster import get_session
 from taskgraph.util.templates import merge
 
 from ..build_config import get_components, ANDROID_COMPONENTS_DIR
@@ -39,8 +36,6 @@ def get_components_changed(files_changed):
     """
     return {"-".join(f.split("/")[2:4]) for f in files_changed if f.startswith("android-components")}
 
-
-cached_deps = {}
 
 def get_upstream_deps_for_components(components):
     """Return the full list of local upstream dependencies of a component."""
