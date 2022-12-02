@@ -181,6 +181,10 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 1);
       margin-bottom: 2px;
       font-size: 13px;
       color: var(--newtab-text-secondary-color);
+
+      span {
+        display: inline-block;
+      }
     }
 
     .new-sponsored-label {
