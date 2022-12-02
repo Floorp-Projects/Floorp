@@ -15,6 +15,7 @@ class TimeStamp;
 namespace net {
 class nsHttpConnectionInfo;
 class WebSocketConnectionBase;
+class EarlyHintConnectArgs;
 }
 namespace dom {
 enum class RequestMode : uint8_t;

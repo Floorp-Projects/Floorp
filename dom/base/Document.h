@@ -322,6 +322,7 @@ enum BFCacheStatus {
 
 namespace mozilla::net {
 class ChannelEventQueue;
+class EarlyHintConnectArgs;
 }  // namespace mozilla::net
 
 // Must be kept in sync with xpcom/rust/xpcom/src/interfaces/nonidl.rs
@@ -1167,6 +1168,15 @@ class Document : public nsINode,
    */
   void GetHeaderData(nsAtom* aHeaderField, nsAString& aData) const;
   void SetHeaderData(nsAtom* aheaderField, const nsAString& aData);
+
+  /**
+   * Set Early Hint data, moves the arrays into the function, leaving the
+   * passed variables empty
+   */
+  void SetEarlyHints(nsTArray<net::EarlyHintConnectArgs>&& aEarlyHints);
+  const nsTArray<net::EarlyHintConnectArgs>& GetEarlyHints() const {
+    return mEarlyHints;
+  }
 
   /**
    * Create a new presentation shell that will use aContext for its
@@ -5116,6 +5126,8 @@ class Document : public nsINode,
 
   class HeaderData;
   UniquePtr<HeaderData> mHeaderData;
+
+  nsTArray<net::EarlyHintConnectArgs> mEarlyHints;
 
   nsRevocableEventPtr<nsRunnableMethod<Document, void, false>>
       mPendingTitleChangeEvent;
