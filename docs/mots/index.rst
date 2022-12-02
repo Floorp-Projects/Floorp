@@ -3497,7 +3497,7 @@ Frontend for selecting jobs on the try server.
       -
         | `tools/tryselect/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=tools/tryselect/\*\*/\*>`__
     * - Bugzilla Components
-      - Firefox Build System :: Try
+      - Developer Infrastructure :: Try
 
 web-platform-tests infrastructure
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

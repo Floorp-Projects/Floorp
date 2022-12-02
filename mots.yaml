@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-12-02T16:07:39.709784'
+updated_at: '2022-12-02T16:09:26.715246'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -3537,7 +3537,7 @@ modules:
       - *jgraham
     meta:
       components:
-        - 'Firefox Build System :: Try'
+        - 'Developer Infrastructure :: Try'
   - machine_name: testing_web_platform_tests_infrastructure
     name: web-platform-tests infrastructure
     description: Infrastructure for running the cross-browser web-platform-tests
@@ -3655,5 +3655,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: 0968dafcdfe8f19176dbcb8f45d1f3bb645559ca
-  export: 98b98532e7ee4cb785d406748ed546a017554ef2
+  config: b51d48aec06d6ff5df29f3fa17e9b0e1dde6cda8
+  export: 3ed7b9844d6e00949a5da796a9afea725ffbb9cd
