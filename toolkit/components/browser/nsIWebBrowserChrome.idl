@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "nsIBaseWindow.idl"
 
 interface nsIWebBrowser;
 interface nsIDocShellTreeItem;
@@ -114,29 +113,4 @@ interface nsIWebBrowserChrome : nsISupports
      * @return true if it's a modal window
      */
     boolean isWindowModal();
-
-    /**
-     * Allows to request the change of individual dimensions of a window
-     * without specifying all dimensions.
-     *
-     * Gets called as fallback when no nsIBaseWindow is available.
-     *
-     * @see nsIBaseWindow
-     */
-    void setDimensions(in DimensionRequest aRequest);
-
-    /**
-     * Gets the dimensions of the window. The caller may pass
-     * <CODE>nullptr</CODE> for any value it is uninterested in receiving.
-     *
-     * Gets called as fallback when no nsIBaseWindow is available.
-     *
-     * @see nsIBaseWindow
-     */
-    void getDimensions(in DimensionKind aDimensionKind, out long aX, out long aY, out long aCX, out long aCY);
-
-    /**
-     * Blur the window. This should unfocus the window and send an onblur event.
-     */
-    void blur();
 };

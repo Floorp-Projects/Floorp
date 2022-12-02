@@ -83,7 +83,6 @@ using nsIWidget::TouchPointerState from "nsIWidget.h";
 using nsIWidget::TouchpadGesturePhase from "nsIWidget.h";
 using nsCursor from "nsIWidget.h";
 using struct LookAndFeelInt from "mozilla/widget/WidgetMessageUtils.h";
-using struct mozilla::DimensionRequest from "mozilla/widget/WidgetMessageUtils.h";
 using class mozilla::dom::MessagePort from "mozilla/dom/MessagePort.h";
 using class mozilla::dom::ipc::StructuredCloneData from "mozilla/dom/ipc/StructuredCloneData.h";
 using mozilla::dom::MaybeDiscardedWindowContext from "mozilla/dom/WindowContext.h";
@@ -241,6 +240,21 @@ parent:
      * the next or previous focusable element or document.
      */
     async MoveFocus(bool forward, bool forDocumentNavigation);
+
+    /**
+     * SizeShellTo request propagation to parent.
+     *
+     * aFlag            Can indicate if one of the dimensions should be ignored.
+     *                  If only one dimension has changed it has to be indicated
+     *                  by the nsIEmbeddingSiteWindow::DIM_FLAGS_IGNORE_* flags.
+     * aShellItemWidth,
+     * aShellItemHeight On parent side we won't be able to decide the dimensions
+     *                  of the shell item parameter in the original SizeShellTo
+     *                  call so we send over its dimensions that will be used
+     *                  for the actual resize.
+     **/
+    async SizeShellTo(uint32_t aFlag, int32_t aWidth, int32_t aHeight,
+                      int32_t aShellItemWidth, int32_t aShellItemHeight);
 
     /**
      * Called by the child to inform the parent that links are dropped into
@@ -608,14 +622,10 @@ parent:
 
     /**
      * Sent by the child to the parent to inform it that an update to the
-     * dimensions has been requested.
-     *
-     * @param aRequest  The requested change of inner or outer dimensions.
-     * @param aScale    The scale at the time of the request. This is to allow
-     *                  the parent to recompute the dimensions in case of an
-     *                  ongoing scale change.
+     * dimensions has been requested, likely through win.moveTo or resizeTo
      */
-    async SetDimensions(DimensionRequest aRequest, double aScale);
+    async SetDimensions(uint32_t aFlags, int32_t aX, int32_t aY,
+                        int32_t aCx, int32_t aCy, double aScale);
 
     [Nested=inside_sync] sync DispatchWheelEvent(WidgetWheelEvent event);
     [Nested=inside_sync] sync DispatchMouseEvent(WidgetMouseEvent event);

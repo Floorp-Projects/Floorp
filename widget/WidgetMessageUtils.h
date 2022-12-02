@@ -7,7 +7,6 @@
 
 #include "ipc/EnumSerializer.h"
 #include "ipc/IPCMessageUtils.h"
-#include "mozilla/DimensionRequest.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/widget/ThemeChangeKind.h"
 #include "nsIWidget.h"
@@ -57,16 +56,6 @@ template <>
 struct ParamTraits<nsIWidget::TouchPointerState>
     : public BitFlagsEnumSerializer<nsIWidget::TouchPointerState,
                                     nsIWidget::TouchPointerState::ALL_BITS> {};
-
-template <>
-struct ParamTraits<mozilla::DimensionKind>
-    : public ContiguousEnumSerializerInclusive<mozilla::DimensionKind,
-                                               mozilla::DimensionKind::Inner,
-                                               mozilla::DimensionKind::Outer> {
-};
-
-DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::DimensionRequest, mDimensionKind, mX,
-                                  mY, mWidth, mHeight);
 
 }  // namespace IPC
 

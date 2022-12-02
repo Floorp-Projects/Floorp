@@ -385,8 +385,6 @@ class AppWindow final : public nsIBaseWindow,
   GetPrimaryRemoteTabSize(int32_t* aWidth, int32_t* aHeight);
   nsresult GetPrimaryContentShellSize(int32_t* aWidth, int32_t* aHeight);
   nsresult SetPrimaryRemoteTabSize(int32_t aWidth, int32_t aHeight);
-  void SizeShellToWithLimit(int32_t aDesiredWidth, int32_t aDesiredHeight,
-                            int32_t shellItemWidth, int32_t shellItemHeight);
 #ifndef MOZ_NEW_XULSTORE
   nsCOMPtr<nsIXULStore> mLocalStore;
 #endif
