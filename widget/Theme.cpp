@@ -834,7 +834,7 @@ void Theme::PaintRange(nsIFrame* aFrame, PaintBackendData& aPaintData,
     return;
   }
 
-  nsTArray<double> tickMarks = rangeFrame->TickMarks();
+  auto tickMarks = rangeFrame->TickMarks();
   double progress = rangeFrame->GetValueAsFractionOfRange();
   auto rect = aRect;
   LayoutDeviceRect thumbRect(0, 0, kMinimumRangeThumbSize * aDpiRatio,
@@ -922,8 +922,8 @@ void Theme::PaintRange(nsIFrame* aFrame, PaintBackendData& aPaintData,
   auto tickMarkRect = LayoutDeviceRect(tickMarkOrigin, tickMarkSize);
   for (auto tickMark : tickMarks) {
     auto tickMarkOffset =
-        tickMarkDirection * float(rangeFrame->GetDoubleAsFractionOfRange(
-                                Decimal::fromDouble(tickMark)));
+        tickMarkDirection *
+        float(rangeFrame->GetDoubleAsFractionOfRange(tickMark));
     ThemeDrawing::FillRect(aPaintData, tickMarkRect + tickMarkOffset,
                            tickMarkColor);
   }
