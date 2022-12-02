@@ -94,7 +94,9 @@ XPCOMUtils.defineLazyGetter(
     // system. This makes a simple nsIFile.createUnique call unreliable, and we
     // have to use a random number to make a collision unlikely.
     let randomNumber = Math.floor(Math.random() * 1000000);
-    let dir = FileUtils.getFile("TmpD", ["testdir-" + randomNumber]);
+    let dir = new FileUtils.File(
+      PathUtils.join(PathUtils.tempDir, `testdir-${randomNumber}`)
+    );
     dir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 
     // We need to run this *after* the profile-before-change phase because
@@ -106,7 +108,7 @@ XPCOMUtils.defineLazyGetter(
     IOUtils.sendTelemetry.addBlocker("Removing test files", async () => {
       // Remove the files we know about first.
       for (let path of gPathsToRemove) {
-        await this.tolerantRemove(path);
+        await FileTestUtils.tolerantRemove(path);
       }
 
       if (!(await IOUtils.exists(dir.path))) {
@@ -115,7 +117,7 @@ XPCOMUtils.defineLazyGetter(
 
       // Detect any extra files, like the ".part" files of downloads.
       for (const child of await IOUtils.getChildren(dir.path)) {
-        await this.tolerantRemove(child);
+        await FileTestUtils.tolerantRemove(child);
       }
       // This will fail if any test leaves inaccessible files behind.
       await IOUtils.remove(dir.path, { recursive: false });
