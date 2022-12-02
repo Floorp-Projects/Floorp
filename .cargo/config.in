@@ -107,6 +107,11 @@ git = "https://github.com/FirefoxGraphics/wpf-gpu-raster"
 replace-with = "vendored-sources"
 rev = "f0d95ce14af8a8de74f469dbad715c4064fca2e1"
 
+[source."https://github.com/FirefoxGraphics/aa-stroke"]
+git = "https://github.com/FirefoxGraphics/aa-stroke"
+replace-with = "vendored-sources"
+rev = "d5cb0fa467e66fdd2deab3211be2284ed1be5da7"
+
 [source.crates-io]
 replace-with = "vendored-sources"
 
