@@ -5,6 +5,7 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
+    - ac_taskgraph.transforms.ui_tests:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
@@ -54,96 +55,33 @@ task-defaults:
 
 tasks:
     unit-browser-engine-gecko-nightly:
+        component: browser
         description: 'Run unit tests on device for browser component'
-        run:
-            post-gradlew:
-                - ['automation/taskcluster/androidTest/ui-test.sh', 'browser', 'arm', '1']
         treeherder:
             symbol: 'ui-components'
     ui-browser:
+        component: samples-browser
         description: 'Run ui tests for browser sample'
-        run:
-            post-gradlew:
-                - ['automation/taskcluster/androidTest/ui-test.sh', 'samples-browser', 'arm', '1']
         treeherder:
             symbol: 'ui-samples-browser'
     ui-glean:
+        component: samples-glean
         description: 'Run ui tests for glean sample'
-        run:
-            post-gradlew:
-                - ['automation/taskcluster/androidTest/ui-test.sh', 'samples-glean', 'arm', '1']
         treeherder:
             symbol: 'ui-samples-glean'
-    android-feature-containers:
-        description: 'Run unit tests on device for feature containers'
-        run:
-            post-gradlew:
-                - ['automation/taskcluster/androidTest/ui-test.sh', 'feature-containers', 'arm', '1']
-        treeherder:
-            symbol: 'unit-feature-containers'
-    android-feature-pwa:
-        description: 'Run unit tests on device for feature pwa'
-        run:
-            post-gradlew:
-                - ['automation/taskcluster/androidTest/ui-test.sh', 'feature-pwa', 'arm', '1']
-        treeherder:
-            symbol: 'unit-feature-pwa'
-    android-feature-share:
-        description: 'Run unit tests on device for feature share'
-        run:
-            post-gradlew:
-                - ['automation/taskcluster/androidTest/ui-test.sh', 'feature-share', 'arm', '1']
-        treeherder:
-            symbol: 'unit-share'
-    android-feature-sitepermissions:
-        description: 'Run unit tests on device for feature site permissions'
-        run:
-            post-gradlew:
-                - ['automation/taskcluster/androidTest/ui-test.sh', 'feature-sitepermissions', 'arm', '1']
-        treeherder:
-            symbol: 'unit-sitepermissions'
-    android-feature-top-sites:
-        description: 'Run unit tests on device for feature top sites'
-        run:
-            post-gradlew:
-                - ['automation/taskcluster/androidTest/ui-test.sh', 'feature-top-sites', 'arm', '1']
-        treeherder:
-            symbol: 'unit-feature-top-sites'
-    android-feature-logins:
-        description: 'Run unit tests on device for feature logins'
-        run:
-            post-gradlew:
-                - ['automation/taskcluster/androidTest/ui-test.sh', 'feature-logins', 'arm', '1']
-        treeherder:
-            symbol: 'unit-logins'
-    android-feature-prompts:
-        description: 'Run unit tests on device for feature prompts'
-        run:
-            post-gradlew:
-                - ['automation/taskcluster/androidTest/ui-test.sh', 'feature-prompts', 'arm', '1']
-        treeherder:
-            symbol: 'unit-feature-prompts'
-    android-support-ktx:
-        description: 'Run unit tests on device for support ktx'
-        run:
-            post-gradlew:
-                - ['automation/taskcluster/androidTest/ui-test.sh', 'support-ktx', 'arm', '1']
-        treeherder:
-            symbol: 'unit-support-ktx'
+    android-feature-containers: {}
+    android-feature-pwa: {}
+    android-feature-share: {}
+    android-feature-sitepermissions: {}
+    android-feature-top-sites: {}
+    android-feature-logins: {}
+    android-feature-prompts: {}
+    android-support-ktx: {}
     android-feature-downloads:
-        description: 'Run unit tests on device for feature downloads'
         run:
             post-gradlew:
                 - ['automation/taskcluster/androidTest/ui-test.sh', 'support-ktx', 'arm', '1']
-        treeherder:
-            symbol: 'unit-feature-downloads'
 
 overriden-tasks:
     # names too long to fit in 25 chars
-    android-feature-recentlyclosed:
-        description: 'Run unit tests on device for feature recentlyclosed'
-        run:
-            post-gradlew:
-                - ['automation/taskcluster/androidTest/ui-test.sh', 'feature-recentlyclosed', 'arm', '1']
-        treeherder:
-            symbol: 'unit-feature-recentlyclosed'
+    android-feature-recentlyclosed: {}
