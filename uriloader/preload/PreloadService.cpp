@@ -209,7 +209,7 @@ void PreloadService::PreloadImage(nsIURI* aURI, const nsAString& aCrossOrigin,
                                   uint64_t aEarlyHintPreloaderId) {
   mDocument->PreLoadImage(aURI, aCrossOrigin,
                           PreloadReferrerPolicy(aImageReferrerPolicy),
-                          aIsImgSet, true);
+                          aIsImgSet, true, aEarlyHintPreloaderId);
 }
 
 void PreloadService::PreloadFont(nsIURI* aURI, const nsAString& aCrossOrigin,
