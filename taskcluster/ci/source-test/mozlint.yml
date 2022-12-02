@@ -270,7 +270,7 @@ py-black:
             - '**/*.configure'
             - '**/*.mozbuild'
             - 'pyproject.toml'
-            - 'tools/lint/flake8.yml'
+            - 'tools/lint/black.yml'
 
 py-pylint:
     description: pylint run over the gecko codebase
