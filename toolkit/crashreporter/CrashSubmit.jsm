@@ -6,6 +6,10 @@ const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs"
 );
 
+const lazy = {};
+
+ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
+
 var EXPORTED_SYMBOLS = ["CrashSubmit"];
 
 const SUCCESS = "success";
@@ -32,16 +36,16 @@ function parseINIStrings(path) {
 // Since we're basically re-implementing (with async) part of the crashreporter
 // client here, we'll just steal the strings we need from crashreporter.ini
 async function getL10nStrings() {
-  let path = PathUtils.join(
+  let path = lazy.OS.Path.join(
     Services.dirsvc.get("GreD", Ci.nsIFile).path,
     "crashreporter.ini"
   );
-  let pathExists = await IOUtils.exists(path);
+  let pathExists = await lazy.OS.File.exists(path);
 
   if (!pathExists) {
     // we if we're on a mac
-    let parentDir = PathUtils.parent(path);
-    path = PathUtils.join(
+    let parentDir = lazy.OS.Path.dirname(path);
+    path = lazy.OS.Path.join(
       parentDir,
       "MacOS",
       "crashreporter.app",
@@ -50,7 +54,7 @@ async function getL10nStrings() {
       "crashreporter.ini"
     );
 
-    let pathExists = await IOUtils.exists(path);
+    let pathExists = await lazy.OS.File.exists(path);
 
     if (!pathExists) {
       // This happens on Android where everything is in an APK.
@@ -69,11 +73,11 @@ async function getL10nStrings() {
     reporturl: crstrings.CrashDetailsURL,
   };
 
-  path = PathUtils.join(
+  path = lazy.OS.Path.join(
     Services.dirsvc.get("XCurProcD", Ci.nsIFile).path,
     "crashreporter-override.ini"
   );
-  pathExists = await IOUtils.exists(path);
+  pathExists = await lazy.OS.File.exists(path);
 
   if (pathExists) {
     crstrings = parseINIStrings(path);
@@ -92,21 +96,24 @@ async function getL10nStrings() {
 
 function getDir(name) {
   let uAppDataPath = Services.dirsvc.get("UAppData", Ci.nsIFile).path;
-  return PathUtils.join(uAppDataPath, "Crash Reports", name);
+  return lazy.OS.Path.join(uAppDataPath, "Crash Reports", name);
 }
 
 async function writeFileAsync(dirName, fileName, data) {
   let dirPath = getDir(dirName);
-  let filePath = PathUtils.join(dirPath, fileName);
-  await IOUtils.makeDirectory(dirPath, { permissions: 0o700 });
-  await IOUtils.writeUTF8(filePath, data);
+  let filePath = lazy.OS.Path.join(dirPath, fileName);
+  // succeeds even with existing path, permissions 700
+  await lazy.OS.File.makeDir(dirPath, {
+    unixFlags: lazy.OS.Constants.libc.S_IRWXU,
+  });
+  await lazy.OS.File.writeAtomic(filePath, data, { encoding: "utf-8" });
 }
 
 function getPendingMinidump(id) {
   let pendingDir = getDir("pending");
 
   return [".dmp", ".extra", ".memory.json.gz"].map(suffix => {
-    return PathUtils.join(pendingDir, `${id}${suffix}`);
+    return lazy.OS.Path.join(pendingDir, `${id}${suffix}`);
   });
 }
 
@@ -153,7 +160,7 @@ Submitter.prototype = {
 
       await Promise.all(
         toDelete.map(path => {
-          return IOUtils.remove(path, { ignoreAbsent: true });
+          return lazy.OS.File.remove(path, { ignoreAbsent: true });
         })
       );
     } catch (ex) {
@@ -348,7 +355,9 @@ Submitter.prototype = {
       "TelemetrySessionId",
       "TelemetryServerURL",
     ];
-    let extraKeyVals = await IOUtils.readJSON(extra);
+    let decoder = new TextDecoder();
+    let extraData = await lazy.OS.File.read(extra);
+    let extraKeyVals = JSON.parse(decoder.decode(extraData));
 
     this.extraKeyVals = { ...extraKeyVals, ...this.extraKeyVals };
     strippedAnnotations.forEach(key => delete this.extraKeyVals[key]);
@@ -361,9 +370,9 @@ Submitter.prototype = {
 
     let [dump, extra, memory] = getPendingMinidump(this.id);
     let [dumpExists, extraExists, memoryExists] = await Promise.all([
-      IOUtils.exists(dump),
-      IOUtils.exists(extra),
-      IOUtils.exists(memory),
+      lazy.OS.File.exists(dump),
+      lazy.OS.File.exists(extra),
+      lazy.OS.File.exists(memory),
     ]);
 
     if (!dumpExists || !extraExists) {
@@ -388,7 +397,7 @@ Submitter.prototype = {
           this.id + "-" + name
         );
 
-        dumpsExistsPromises.push(IOUtils.exists(dump));
+        dumpsExistsPromises.push(lazy.OS.File.exists(dump));
         additionalDumps.push({ name, dump });
       }
 
@@ -492,7 +501,7 @@ var CrashSubmit = {
   delete: async function CrashSubmit_delete(id) {
     await Promise.all(
       getPendingMinidump(id).map(path => {
-        return IOUtils.remove(path);
+        return lazy.OS.File.remove(path, { ignoreAbsent: true });
       })
     );
   },
@@ -509,8 +518,12 @@ var CrashSubmit = {
    */
   ignore: async function CrashSubmit_ignore(id) {
     let [dump /* , extra, memory */] = getPendingMinidump(id);
-    const ignorePath = `${dump}.ignore`;
-    await IOUtils.writeUTF8(ignorePath, "", { mode: "create" });
+    let file = await lazy.OS.File.open(
+      `${dump}.ignore`,
+      { create: true },
+      { unixFlags: lazy.OS.Constants.libc.O_CREAT }
+    );
+    await file.close();
   },
 
   /**
@@ -523,41 +536,41 @@ var CrashSubmit = {
    */
   pendingIDs: async function CrashSubmit_pendingIDs(minFileDate) {
     let ids = [];
+    let dirIter = null;
     let pendingDir = getDir("pending");
 
-    if (!(await IOUtils.exists(pendingDir))) {
-      return ids;
-    }
-
-    let children;
     try {
-      children = await IOUtils.getChildren(pendingDir);
+      dirIter = new lazy.OS.File.DirectoryIterator(pendingDir);
     } catch (ex) {
       Cu.reportError(ex);
       throw ex;
     }
 
+    if (!(await dirIter.exists())) {
+      return ids;
+    }
+
     try {
-      const entries = Object.create(null);
-      const ignored = Object.create(null);
+      let entries = Object.create(null);
+      let ignored = Object.create(null);
 
-      for (const child of children) {
-        const info = await IOUtils.stat(child);
+      // `await` in order to ensure all callbacks are called
+      await dirIter.forEach(entry => {
+        if (!entry.isDir /* is file */) {
+          let matches = entry.name.match(/(.+)\.dmp$/);
 
-        if (info.type !== "directory") {
-          const name = PathUtils.filename(child);
-          const matches = name.match(/(.+)\.dmp$/);
           if (matches) {
-            const id = matches[1];
+            let id = matches[1];
 
             if (UUID_REGEX.test(id)) {
-              entries[id] = info;
+              entries[id] = lazy.OS.File.stat(entry.path);
             }
           } else {
             // maybe it's a .ignore file
-            const matchesIgnore = name.match(/(.+)\.dmp.ignore$/);
+            let matchesIgnore = entry.name.match(/(.+)\.dmp.ignore$/);
+
             if (matchesIgnore) {
-              const id = matchesIgnore[1];
+              let id = matchesIgnore[1];
 
               if (UUID_REGEX.test(id)) {
                 ignored[id] = true;
@@ -565,17 +578,20 @@ var CrashSubmit = {
             }
           }
         }
-      }
+      });
 
-      for (const [id, info] of Object.entries(entries)) {
-        const accessDate = new Date(info.lastAccessed);
-        if (!(id in ignored) && accessDate > minFileDate) {
-          ids.push(id);
+      for (let entry in entries) {
+        let entryInfo = await entries[entry];
+
+        if (!(entry in ignored) && entryInfo.lastAccessDate > minFileDate) {
+          ids.push(entry);
         }
       }
     } catch (ex) {
       Cu.reportError(ex);
       throw ex;
+    } finally {
+      dirIter.close();
     }
 
     return ids;
@@ -590,43 +606,45 @@ var CrashSubmit = {
   pruneSavedDumps: async function CrashSubmit_pruneSavedDumps() {
     const KEEP = 10;
 
+    let dirIter = null;
     let dirEntries = [];
     let pendingDir = getDir("pending");
 
-    let children;
     try {
-      children = await IOUtils.getChildren(pendingDir);
+      dirIter = new lazy.OS.File.DirectoryIterator(pendingDir);
     } catch (ex) {
-      if (DOMException.isInstance(ex) && ex.name === "NotFoundError") {
+      if (ex instanceof lazy.OS.File.Error && ex.becauseNoSuchFile) {
         return [];
       }
 
       throw ex;
     }
 
-    for (const path of children) {
-      let info;
-      try {
-        info = await IOUtils.stat(path);
-      } catch (ex) {
-        Cu.reportError(ex);
-        throw ex;
-      }
+    try {
+      await dirIter.forEach(entry => {
+        if (!entry.isDir /* is file */) {
+          let matches = entry.name.match(/(.+)\.extra$/);
 
-      const name = PathUtils.filename(path);
-
-      if (name.match(/(.+)\.extra$/)) {
-        dirEntries.push({
-          name,
-          path,
-          info,
-        });
-      }
+          if (matches) {
+            dirEntries.push({
+              name: entry.name,
+              path: entry.path,
+              // dispatch promise instead of blocking iteration on `await`
+              infoPromise: lazy.OS.File.stat(entry.path),
+            });
+          }
+        }
+      });
+    } catch (ex) {
+      Cu.reportError(ex);
+      throw ex;
+    } finally {
+      dirIter.close();
     }
 
     dirEntries.sort(async (a, b) => {
-      let dateA = a.info.lastModified;
-      let dateB = b.info.lastModified;
+      let dateA = (await a.infoPromise).lastModificationDate;
+      let dateB = (await b.infoPromise).lastModificationDate;
 
       if (dateA < dateB) {
         return -1;
@@ -647,9 +665,9 @@ var CrashSubmit = {
         let matches = extra.leafName.match(/(.+)\.extra$/);
 
         if (matches) {
-          let pathComponents = PathUtils.split(extra.path);
+          let pathComponents = lazy.OS.Path.split(extra.path);
           pathComponents[pathComponents.length - 1] = matches[1];
-          let path = PathUtils.join(...pathComponents);
+          let path = lazy.OS.Path.join(...pathComponents);
 
           toDelete.push(extra.path, `${path}.dmp`, `${path}.memory.json.gz`);
         }
@@ -657,7 +675,7 @@ var CrashSubmit = {
 
       await Promise.all(
         toDelete.map(path => {
-          return IOUtils.remove(path, { ignoreAbsent: true });
+          return lazy.OS.File.remove(path, { ignoreAbsent: true });
         })
       );
     }
