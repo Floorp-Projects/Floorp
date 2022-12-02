@@ -6,6 +6,7 @@ loader: taskgraph.loader.transform:loader
 
 transforms:
     - ac_taskgraph.transforms.ui_tests:transforms
+    - ac_taskgraph.transforms.gradle_optimization:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
@@ -51,6 +52,16 @@ task-defaults:
             GOOGLE_APPLICATION_CREDENTIALS: '.firebase_token.json'
             GOOGLE_PROJECT: moz-android-components-230120
         max-run-time: 2400
+    optimization:
+        skip-unless-changed:
+            - android-components/build.gradle
+            - android-components/settings.gradle
+            - android-components/buildSrc.*
+            - android-components/gradle.properties
+            - android-components/gradle/wrapper/gradle-wrapper.properties
+            - android-components/plugins/dependencies/**
+            - android-components/automation/taskcluster/androidTest/ui-test.sh
+            # More paths are dynamically added by transforms
 
 
 tasks:

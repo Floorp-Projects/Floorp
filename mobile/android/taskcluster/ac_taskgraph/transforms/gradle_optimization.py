@@ -17,6 +17,10 @@ def extend_optimization_if_one_already_exists(config, tasks):
             skip_unless_changed = optimization["skip-unless-changed"]
 
             component = task["attributes"]["component"]
+            # TODO Remove this special case when ui-test.sh is able to accept "browser-engine-gecko"
+            if component == "browser":
+                component = "browser-engine-gecko"
+
             dependencies = deps_per_component[component]
             component_and_deps = [component] + dependencies
 
