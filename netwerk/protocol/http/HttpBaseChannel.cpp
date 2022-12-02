@@ -5954,6 +5954,19 @@ nsTArray<EarlyHintConnectArgs>&& HttpBaseChannel::TakeEarlyHints() {
   return std::move(mEarlyHints);
 }
 
+NS_IMETHODIMP
+HttpBaseChannel::SetEarlyHintPreloaderId(uint64_t aEarlyHintPreloaderId) {
+  mEarlyHintPreloaderId = aEarlyHintPreloaderId;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetEarlyHintPreloaderId(uint64_t* aEarlyHintPreloaderId) {
+  NS_ENSURE_ARG_POINTER(aEarlyHintPreloaderId);
+  *aEarlyHintPreloaderId = mEarlyHintPreloaderId;
+  return NS_OK;
+}
+
 void HttpBaseChannel::SetConnectionInfo(nsHttpConnectionInfo* aCI) {
   mConnectionInfo = aCI ? aCI->Clone() : nullptr;
 }

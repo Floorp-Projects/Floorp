@@ -345,6 +345,9 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   NS_IMETHOD SetWaitForHTTPSSVCRecord() override;
 
+  NS_IMETHOD SetEarlyHintPreloaderId(uint64_t aEarlyHintPreloaderId) override;
+  NS_IMETHOD GetEarlyHintPreloaderId(uint64_t* aEarlyHintPreloaderId) override;
+
   virtual void SetConnectionInfo(
       mozilla::net::nsHttpConnectionInfo* aCI) override;
 
@@ -797,6 +800,9 @@ class HttpBaseChannel : public nsHashPropertyBag,
   // them up. They are sent via IPC and stored in this variable. This is set on
   // main document channel
   nsTArray<EarlyHintConnectArgs> mEarlyHints;
+  // EarlyHintRegistrar id to connect back to the preload. Set on preload
+  // channels started from the above list
+  uint64_t mEarlyHintPreloaderId = 0;
 
   // clang-format off
   MOZ_ATOMIC_BITFIELDS(mAtomicBitfields1, 32, (
