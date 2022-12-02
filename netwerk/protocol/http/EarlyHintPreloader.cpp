@@ -4,6 +4,7 @@
 
 #include "EarlyHintPreloader.h"
 
+#include "EarlyHintRegistrar.h"
 #include "EarlyHintsService.h"
 #include "ErrorList.h"
 #include "mozilla/CORSMode.h"
@@ -263,6 +264,13 @@ nsresult EarlyHintPreloader::CancelChannel(nsresult aStatus) {
     mChannel = nullptr;
   }
   return NS_OK;
+}
+
+void EarlyHintPreloader::OnParentReady(nsIParentChannel* aParent,
+                                       uint64_t aChannelId) {
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aParent);
+  LOG(("EarlyHintPreloader::OnParentReady [this=%p]\n", this));
 }
 
 //-----------------------------------------------------------------------------

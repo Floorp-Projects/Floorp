@@ -67,6 +67,8 @@ class EarlyHintPreloader final : public nsIStreamListener,
   // after all, because the final response returns a non-2xx status code.
   nsresult CancelChannel(nsresult aStatus);
 
+  void OnParentReady(nsIParentChannel* aParent, uint64_t aChannelId);
+
  private:
   explicit EarlyHintPreloader(nsIURI* aURI);
   ~EarlyHintPreloader() = default;
