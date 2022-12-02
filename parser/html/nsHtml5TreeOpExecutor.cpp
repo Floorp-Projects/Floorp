@@ -1218,7 +1218,7 @@ void nsHtml5TreeOpExecutor::PreloadScript(
   mDocument->ScriptLoader()->PreloadURI(
       uri, aCharset, aType, aCrossOrigin, aIntegrity, aScriptFromHead, aAsync,
       aDefer, aNoModule, aLinkPreload,
-      GetPreloadReferrerPolicy(aReferrerPolicy));
+      GetPreloadReferrerPolicy(aReferrerPolicy), 0);
 }
 
 void nsHtml5TreeOpExecutor::PreloadStyle(const nsAString& aURL,
