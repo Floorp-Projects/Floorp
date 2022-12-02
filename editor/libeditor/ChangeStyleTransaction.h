@@ -79,31 +79,22 @@ class ChangeStyleTransaction final : public EditTransactionBase {
  private:
   virtual ~ChangeStyleTransaction() = default;
 
-  /*
-   * Adds the value aNewValue to list of white-space separated values aValues.
-   *
-   * @param aValues         [IN/OUT] a list of wite-space separated values
-   * @param aNewValue       [IN] a value this code adds to aValues if it is not
-   *                        already in
+  /**
+   * Build new text-decoration value to set/remove specific values to/from the
+   * rule which already has aCurrentValues.
    */
-  void AddValueToMultivalueProperty(nsACString& aValues,
-                                    const nsACString& aNewValue);
+  void BuildTextDecorationValueToSet(const nsACString& aCurrentValues,
+                                     const nsACString& aAddingValues,
+                                     nsACString& aOutValues);
+  void BuildTextDecorationValueToRemove(const nsACString& aCurrentValues,
+                                        const nsACString& aRemovingValues,
+                                        nsACString& aOutValues);
 
   /**
-   * Returns true if the property accepts more than one value.
-   *
-   * @param aCSSProperty    [IN] the CSS property
-   * @return                true if the property accepts more than one value
+   * Helper method for above methods.
    */
-  bool AcceptsMoreThanOneValue(nsAtom& aCSSProperty);
-
-  /**
-   * Remove a value from a list of white-space separated values.
-   * @param aValues         [IN] a list of white-space separated values
-   * @param aRemoveValue    [IN] the value to remove from the list
-   */
-  void RemoveValueFromListOfValues(nsACString& aValues,
-                                   const nsACString& aRemoveValue);
+  void BuildTextDecorationValue(bool aUnderline, bool aOverline,
+                                bool aLineThrough, nsACString& aOutValues);
 
   /**
    * If the boolean is true and if the value is not the empty string,

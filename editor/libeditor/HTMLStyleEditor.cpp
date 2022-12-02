@@ -799,6 +799,15 @@ Result<CaretPoint, nsresult> HTMLEditor::AutoInlineStyleSetter::ApplyStyle(
   };
 
   if (ShouldUseCSS()) {
+    // We need special handlings for text-decoration.
+    if (IsStyleOfTextDecoration(IgnoreSElement::No)) {
+      Result<CaretPoint, nsresult> result =
+          ApplyCSSTextDecoration(aHTMLEditor, aContent);
+      NS_WARNING_ASSERTION(
+          result.isOk(),
+          "AutoInlineStyleSetter::ApplyCSSTextDecoration() failed");
+      return result;
+    }
     RefPtr<Element> spanElement;
     EditorDOMPoint pointToPutCaret;
     // We only add style="" to <span>s with no attributes (bug 746515).  If we
@@ -873,6 +882,126 @@ Result<CaretPoint, nsresult> HTMLEditor::AutoInlineStyleSetter::ApplyStyle(
   MOZ_ASSERT(wrapWithNewElementToFormatResult.inspect().GetNewNode());
   return CaretPoint(
       wrapWithNewElementToFormatResult.unwrap().UnwrapCaretPoint());
+}
+
+Result<CaretPoint, nsresult>
+HTMLEditor::AutoInlineStyleSetter::ApplyCSSTextDecoration(
+    HTMLEditor& aHTMLEditor, nsIContent& aContent) const {
+  MOZ_ASSERT(IsStyleOfTextDecoration(IgnoreSElement::No));
+
+  EditorDOMPoint pointToPutCaret;
+  RefPtr<nsStyledElement> styledElement = nsStyledElement::FromNode(aContent);
+  nsAutoString textDecorationValue;
+  if (styledElement) {
+    nsresult rv = CSSEditUtils::GetSpecifiedProperty(
+        *styledElement, *nsGkAtoms::text_decoration, textDecorationValue);
+    if (NS_FAILED(rv)) {
+      NS_WARNING(
+          "CSSEditUtils::GetSpecifiedProperty(nsGkAtoms::text_decoration) "
+          "failed");
+      return Err(rv);
+    }
+  }
+  nsAutoString newTextDecorationValue;
+  if (&HTMLPropertyRef() == nsGkAtoms::u) {
+    newTextDecorationValue.AssignLiteral(u"underline");
+  } else if (&HTMLPropertyRef() == nsGkAtoms::s ||
+             &HTMLPropertyRef() == nsGkAtoms::strike) {
+    newTextDecorationValue.AssignLiteral(u"line-through");
+  } else {
+    MOZ_ASSERT_UNREACHABLE(
+        "Was new value added in "
+        "IsStyleOfTextDecoration(IgnoreSElement::No))?");
+  }
+  if (styledElement && IsCSSEditable(*styledElement) &&
+      (
+          // If the element has `text-decoration` by default, use it.
+          (styledElement->IsAnyOfHTMLElements(nsGkAtoms::u, nsGkAtoms::s,
+                                              nsGkAtoms::strike, nsGkAtoms::ins,
+                                              nsGkAtoms::del)) ||
+          // If the element has a text-decoration rule, use it.
+          !textDecorationValue.IsEmpty())) {
+    // However, if the element is an element to style the text-decoration,
+    // replace it with new <span>.
+    if (styledElement && styledElement->IsAnyOfHTMLElements(
+                             nsGkAtoms::u, nsGkAtoms::s, nsGkAtoms::strike)) {
+      Result<CreateElementResult, nsresult> replaceResult =
+          aHTMLEditor.ReplaceContainerAndCloneAttributesWithTransaction(
+              *styledElement, *nsGkAtoms::span);
+      if (MOZ_UNLIKELY(replaceResult.isErr())) {
+        NS_WARNING(
+            "HTMLEditor::ReplaceContainerAndCloneAttributesWithTransaction() "
+            "failed");
+        return replaceResult.propagateErr();
+      }
+      CreateElementResult unwrappedReplaceResult = replaceResult.unwrap();
+      MOZ_ASSERT(unwrappedReplaceResult.GetNewNode());
+      unwrappedReplaceResult.MoveCaretPointTo(
+          pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
+      // The new <span> needs to specify the original element's text-decoration
+      // style unless it's specified explicitly.
+      if (textDecorationValue.IsEmpty()) {
+        if (!newTextDecorationValue.IsEmpty()) {
+          newTextDecorationValue.Append(HTMLEditUtils::kSpace);
+        }
+        if (styledElement->IsHTMLElement(nsGkAtoms::u)) {
+          newTextDecorationValue.AppendLiteral(u"underline");
+        } else {
+          newTextDecorationValue.AppendLiteral(u"line-through");
+        }
+      }
+      styledElement =
+          nsStyledElement::FromNode(unwrappedReplaceResult.GetNewNode());
+      if (NS_WARN_IF(!styledElement)) {
+        return CaretPoint(pointToPutCaret);
+      }
+    }
+    // If the element has default style, we need to keep it after specifying
+    // text-decoration.
+    else if (textDecorationValue.IsEmpty() &&
+             styledElement->IsAnyOfHTMLElements(nsGkAtoms::u, nsGkAtoms::ins)) {
+      if (!newTextDecorationValue.IsEmpty()) {
+        newTextDecorationValue.Append(HTMLEditUtils::kSpace);
+      }
+      newTextDecorationValue.AppendLiteral(u"underline");
+    } else if (textDecorationValue.IsEmpty() &&
+               styledElement->IsAnyOfHTMLElements(
+                   nsGkAtoms::s, nsGkAtoms::strike, nsGkAtoms::del)) {
+      if (!newTextDecorationValue.IsEmpty()) {
+        newTextDecorationValue.Append(HTMLEditUtils::kSpace);
+      }
+      newTextDecorationValue.AppendLiteral(u"line-through");
+    }
+  }
+  // Otherwise, use new <span> element.
+  else {
+    Result<CreateElementResult, nsresult> wrapInSpanElementResult =
+        aHTMLEditor.InsertContainerWithTransaction(aContent, *nsGkAtoms::span);
+    if (MOZ_UNLIKELY(wrapInSpanElementResult.isErr())) {
+      NS_WARNING(
+          "HTMLEditor::InsertContainerWithTransaction(nsGkAtoms::span) failed");
+      return wrapInSpanElementResult.propagateErr();
+    }
+    CreateElementResult unwrappedWrapInSpanElementResult =
+        wrapInSpanElementResult.unwrap();
+    MOZ_ASSERT(unwrappedWrapInSpanElementResult.GetNewNode());
+    unwrappedWrapInSpanElementResult.MoveCaretPointTo(
+        pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
+    styledElement = nsStyledElement::FromNode(
+        unwrappedWrapInSpanElementResult.GetNewNode());
+    if (NS_WARN_IF(!styledElement)) {
+      return CaretPoint(pointToPutCaret);
+    }
+  }
+
+  nsresult rv = CSSEditUtils::SetCSSPropertyWithTransaction(
+      aHTMLEditor, *styledElement, *nsGkAtoms::text_decoration,
+      newTextDecorationValue);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("CSSEditUtils::SetCSSPropertyWithTransaction() failed");
+    return Err(rv);
+  }
+  return CaretPoint(pointToPutCaret);
 }
 
 Result<CaretPoint, nsresult> HTMLEditor::AutoInlineStyleSetter::
