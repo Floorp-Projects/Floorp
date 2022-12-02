@@ -4952,6 +4952,20 @@
   value: false
   mirror: always
 
+# Whether to allow acccess to AddonManager to developer sites for testing
+# NOTE: We'd like this to be a "hidden" pref once StaticPrefs supports it.
+- name: extensions.webapi.testing
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# Automation-only pref to allow AddonManager over insecure protocols.
+# NOTE: We'd like this to be a "hidden" pref once StaticPrefs supports it.
+- name: extensions.webapi.testing.http
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "fission."
 #---------------------------------------------------------------------------
@@ -12453,6 +12467,14 @@
 - name: privacy.resistFingerprinting.autoDeclineNoUserInputCanvasPrompts
   type: bool
   value: true
+  mirror: always
+
+# This pref can be used to disable mozAddonManager entirely for fingerprinting
+# reasons. Someone like Tor browser will use this pref.
+# NOTE: We'd like this to be a "hidden" pref once StaticPrefs supports it.
+- name: privacy.resistFingerprinting.block_mozAddonManager
+  type: RelaxedAtomicBool
+  value: false
   mirror: always
 
 # Whether canvas extraction should result in random data. If false, canvas

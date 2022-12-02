@@ -11,6 +11,7 @@
 #include "mozilla/dom/NavigatorBinding.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_extensions.h"
 #include "nsGlobalWindow.h"
 #include "xpcpublic.h"
 
@@ -34,8 +35,7 @@ static bool IsValidHost(const nsACString& host) {
   // This hidden pref allows users to disable mozAddonManager entirely if they
   // want for fingerprinting resistance. Someone like Tor browser will use this
   // pref.
-  if (Preferences::GetBool(
-          "privacy.resistFingerprinting.block_mozAddonManager")) {
+  if (StaticPrefs::privacy_resistFingerprinting_block_mozAddonManager()) {
     return false;
   }
 
@@ -44,7 +44,7 @@ static bool IsValidHost(const nsACString& host) {
   }
 
   // When testing allow access to the developer sites.
-  if (Preferences::GetBool("extensions.webapi.testing", false)) {
+  if (StaticPrefs::extensions_webapi_testing()) {
     if (host.LowerCaseEqualsLiteral(MOZ_AMO_STAGE_HOSTNAME) ||
 #ifdef MOZ_AMO_DEV_HOSTNAME
         host.LowerCaseEqualsLiteral(MOZ_AMO_DEV_HOSTNAME) ||
@@ -66,7 +66,7 @@ bool AddonManagerWebAPI::IsValidSite(nsIURI* uri) {
 
   if (!uri->SchemeIs("https")) {
     if (!(xpc::IsInAutomation() &&
-          Preferences::GetBool("extensions.webapi.testing.http", false))) {
+          StaticPrefs::extensions_webapi_testing_http())) {
       return false;
     }
   }
