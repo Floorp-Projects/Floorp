@@ -348,7 +348,7 @@ window.UCL = {
 	UCrebuild: function() {
 		let re = /^file:.*\.uc\.css(?:\?\d+)?$/i;
 		let query = "?" + new Date().getTime();
-		Array.slice(document.styleSheets).forEach(function(css){
+		Array.prototype.slice.call(document.styleSheets).forEach(function(css){
 			if (!re.test(css.href)) return;
 			if (css.ownerNode) {
 				css.ownerNode.parentNode.removeChild(css.ownerNode);
@@ -370,7 +370,7 @@ window.UCL = {
 		}
 
 		let re = /^file:.*\.uc\.css(?:\?\d+)?$/i;
-		Array.slice(document.styleSheets).forEach(function(css) {
+		Array.prototype.slice.call(document.styleSheets).forEach(function(css) {
 			if (!re.test(css.href)) return;
 			let fileURL = decodeURIComponent(css.href).split("?")[0];
 			let aLeafName = fileURL.split("/").pop();
@@ -596,7 +596,7 @@ UCL.init();
 })()
 
 function $(id) { return document.getElementById(id); }
-function $A(arr) { return Array.slice(arr); }
+function $A(arr) { return Array.prototype.slice.call(arr); }
 function $C(name, attr) {
 	const el = document.createElementNS(XULNS, name);
 	if (attr) Object.keys(attr).forEach(function(n) { el.setAttribute(n, attr[n]) });
