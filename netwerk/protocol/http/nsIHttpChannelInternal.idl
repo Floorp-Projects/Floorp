@@ -469,6 +469,12 @@ interface nsIHttpChannelInternal : nsISupports
      */
     [must_use] void setEarlyHintObserver(in nsIEarlyHintObserver aObserver);
 
+    /*
+     * id of the EarlyHintPreloader to connect back from PreloadService to
+     * EarlyHintPreloader.
+     */
+    [must_use] attribute unsigned long long earlyHintPreloaderId;
+
     [notxpcom, nostdcall] void setConnectionInfo(in nsHttpConnectionInfo aInfo);
 
 };

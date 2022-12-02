@@ -344,6 +344,7 @@ struct HttpChannelOpenArgs
   TimeStamp                   handleFetchEventEnd;
   bool                        forceMainDocumentChannel;
   TimeStamp                   navigationStartTimeStamp;
+  uint64_t                    earlyHintPreloaderId;
 };
 
 struct HttpChannelConnectArgs
