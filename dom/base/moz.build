@@ -569,7 +569,6 @@ LOCAL_INCLUDES += [
     "/layout/style",
     "/layout/xul",
     "/netwerk/base",
-    "/netwerk/protocol/http",
     "/netwerk/url-classifier",
     "/parser/htmlparser",
     "/security/manager/ssl",

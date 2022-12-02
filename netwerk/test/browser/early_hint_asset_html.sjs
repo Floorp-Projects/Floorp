@@ -18,22 +18,10 @@ function handleRequest(request, response) {
 
   // write to raw socket
   response.seizePower();
-  let link = "";
+
   if (hinted) {
     response.write("HTTP/1.1 103 Early Hint\r\n");
-    if (asset === "fetch" || asset === "font") {
-      // fetch and font has to specify the crossorigin attribute
-      // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link#attr-as
-      link = `Link: <${url}>; rel=preload; as=${asset}; crossorigin=anonymous\r\n`;
-      response.write(link);
-    } else if (asset === "module") {
-      // module preloads are handled differently
-      link = `Link: <${url}>; rel=modulepreload\r\n`;
-      response.write(link);
-    } else {
-      link = `Link: <${url}>; rel=preload; as=${asset}\r\n`;
-      response.write(link);
-    }
+    response.write(`Link: <${url}>; rel=preload; as=${asset}\r\n`);
     response.write("\r\n");
   }
 
@@ -69,24 +57,6 @@ function handleRequest(request, response) {
       </body>
       </html>
     `;
-  } else if (asset === "module") {
-    // this code assumes that the .sjs for the module is in the same directory
-    var file_name = url.split("/");
-    file_name = file_name[file_name.length - 1];
-    body = `<!DOCTYPE html>
-      <html>
-      <head>
-      </head>
-      <body>
-      <h1>Test preload module<h1>
-      <div id="square" style="width:100px;height:100px;">
-      <script type="module">
-        import { draw } from "./${file_name}";
-        draw();
-      </script>
-      </body>
-      </html>
-    `;
   } else if (asset === "fetch") {
     body = `<!DOCTYPE html>
       <html>
@@ -105,23 +75,23 @@ function handleRequest(request, response) {
     `;
   } else if (asset === "font") {
     body = `<!DOCTYPE html>
-      <html>
-      <head>
-      <style>
-      @font-face {
-        font-family: "preloadFont";
-        src: url("${url}");
-      }
-      body {
-        font-family: "preloadFont";
-      }
-      </style>
-      </head>
-      <body>
-      <h1>Test preload font<h1>
-      </body>
-      </html>
-    `;
+    <html>
+    <head>
+    <style>
+    @font-face {
+      font-family: "preloadFont";
+      src: url("${url}") format("woff");
+    }
+    body {
+      font-family: "preloadFont";
+    }
+    </style>
+    </head>
+    <body>
+    <h1>Test preload font<h1>
+    </body>
+    </html>
+  `;
   }
 
   if (redirect) {
@@ -138,7 +108,6 @@ function handleRequest(request, response) {
     } else {
       response.write(`HTTP/1.1 ${httpCode} Error\r\n`);
     }
-    response.write(link);
     response.write("Content-Type: text/html;charset=utf-8\r\n");
     response.write("Cache-Control: no-cache\r\n");
     response.write(`Content-Length: ${body.length}\r\n`);

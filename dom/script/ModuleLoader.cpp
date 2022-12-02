@@ -107,8 +107,7 @@ nsresult ModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
   securityFlags |= nsILoadInfo::SEC_ALLOW_CHROME;
 
   // Delegate Shared Behavior to base ScriptLoader
-  nsresult rv =
-      GetScriptLoader()->StartLoadInternal(aRequest, securityFlags, 0);
+  nsresult rv = GetScriptLoader()->StartLoadInternal(aRequest, securityFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-an-import()-module-script-graph

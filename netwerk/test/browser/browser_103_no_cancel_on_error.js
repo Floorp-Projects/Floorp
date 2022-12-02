@@ -8,7 +8,7 @@
 
 Services.prefs.setBoolPref("network.early-hints.enabled", true);
 
-const { request_count_checking } = ChromeUtils.import(
+const { lax_request_count_checking } = ChromeUtils.import(
   "resource://testing-common/early_hint_preload_test_helper.jsm"
 );
 
@@ -37,10 +37,22 @@ async function test_hint_completion_on_error(httpCode) {
     "https://example.com/browser/netwerk/test/browser/early_hint_pixel_count.sjs"
   ).then(response => response.json());
 
-  await request_count_checking(`test_103_error_${httpCode}`, gotRequestCount, {
-    hinted: 1,
-    normal: 0,
-  });
+  // TODO: Switch to stricter counting method after fixing https://bugzilla.mozilla.org/show_bug.cgi?id=1753730#c11
+  await lax_request_count_checking(
+    `test_103_error_${httpCode}`,
+    gotRequestCount,
+    {
+      hinted: 1,
+      normal: 0,
+    }
+  );
+  /*
+   await Assert.deepEqual(
+     gotRequestCount,
+     hinted ? { hinted: 1, normal: 0 } : { hinted: 0, normal: 1 },
+     `${testName} (${asset}): Unexpected amount of requests made`
+   );
+   */
 }
 
 // 400 Bad Request

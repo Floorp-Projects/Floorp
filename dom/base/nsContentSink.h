@@ -115,6 +115,7 @@ class nsContentSink : public nsICSSLoaderObserver,
   virtual void UpdateChildCounts() = 0;
 
   bool IsTimeToNotify();
+  bool LinkContextIsOurDocument(const nsAString& aAnchor);
 
  protected:
   nsContentSink();
@@ -124,9 +125,7 @@ class nsContentSink : public nsICSSLoaderObserver,
                 nsIChannel* aChannel);
 
   nsresult ProcessHTTPHeaders(nsIChannel* aChannel);
-  // aEarlyHintPreloaderId zero means no early hint channel to connect back
-  nsresult ProcessLinkFromHeader(const mozilla::net::LinkHeader& aHeader,
-                                 uint64_t aEarlyHintPreloaderId);
+  nsresult ProcessLinkFromHeader(const mozilla::net::LinkHeader& aHeader);
 
   virtual nsresult ProcessStyleLinkFromHeader(
       const nsAString& aHref, bool aAlternate, const nsAString& aTitle,
@@ -139,8 +138,7 @@ class nsContentSink : public nsICSSLoaderObserver,
                    const nsAString& aType, const nsAString& aMedia,
                    const nsAString& aIntegrity, const nsAString& aSrcset,
                    const nsAString& aSizes, const nsAString& aCORS,
-                   const nsAString& aReferrerPolicy,
-                   uint64_t aEarlyHintPreloaderId);
+                   const nsAString& aReferrerPolicy);
 
   // For PrefetchDNS() aHref can either be the usual
   // URI format or of the form "//www.hostname.com" without a scheme.

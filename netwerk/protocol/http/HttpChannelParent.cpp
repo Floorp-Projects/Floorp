@@ -5,12 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // HttpLog.h should generally be included first
-#include "ErrorList.h"
 #include "HttpLog.h"
 
 #include "mozilla/ConsoleReportCollector.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
-#include "mozilla/net/EarlyHintRegistrar.h"
 #include "mozilla/net/HttpChannelParent.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentProcessManager.h"
@@ -26,7 +24,6 @@
 #include "mozilla/Unused.h"
 #include "HttpBackgroundChannelParent.h"
 #include "ParentChannelListener.h"
-#include "nsDebug.h"
 #include "nsICacheInfoChannel.h"
 #include "nsHttpHandler.h"
 #include "nsNetCID.h"
@@ -141,7 +138,7 @@ bool HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs) {
           a.launchServiceWorkerEnd(), a.dispatchFetchEventStart(),
           a.dispatchFetchEventEnd(), a.handleFetchEventStart(),
           a.handleFetchEventEnd(), a.forceMainDocumentChannel(),
-          a.navigationStartTimeStamp(), a.earlyHintPreloaderId());
+          a.navigationStartTimeStamp());
     }
     case HttpChannelCreationArgs::THttpChannelConnectArgs: {
       const HttpChannelConnectArgs& cArgs = aArgs.get_HttpChannelConnectArgs();
@@ -354,26 +351,6 @@ void HttpChannelParent::InvokeAsyncOpen(nsresult rv) {
   }
 }
 
-void HttpChannelParent::InvokeEarlyHintPreloader(nsresult rv,
-                                                 uint64_t aEarlyHintPreloaderId,
-                                                 uint64_t aChannelId) {
-  LOG(("HttpChannelParent::InvokeEarlyHintPreloader [this=%p rv=%" PRIx32 "]\n",
-       this, static_cast<uint32_t>(rv)));
-  MOZ_ASSERT(NS_IsMainThread());
-
-  RefPtr<EarlyHintRegistrar> ehr = EarlyHintRegistrar::GetOrCreate();
-  if (NS_SUCCEEDED(rv)) {
-    rv = ehr->LinkParentChannel(aEarlyHintPreloaderId, this, aChannelId)
-             ? NS_OK
-             : NS_ERROR_FAILURE;
-  }
-
-  if (NS_FAILED(rv)) {
-    ehr->DeleteEntry(aEarlyHintPreloaderId);
-    AsyncOpenFailed(NS_ERROR_FAILURE);
-  }
-}
-
 bool HttpChannelParent::DoAsyncOpen(
     nsIURI* aURI, nsIURI* aOriginalURI, nsIURI* aDocURI,
     nsIReferrerInfo* aReferrerInfo, nsIURI* aAPIRedirectToURI,
@@ -404,30 +381,8 @@ bool HttpChannelParent::DoAsyncOpen(
     const TimeStamp& aHandleFetchEventStart,
     const TimeStamp& aHandleFetchEventEnd,
     const bool& aForceMainDocumentChannel,
-    const TimeStamp& aNavigationStartTimeStamp,
-    const uint64_t& aEarlyHintPreloaderId) {
+    const TimeStamp& aNavigationStartTimeStamp) {
   MOZ_ASSERT(aURI, "aURI should not be NULL");
-
-  if (aEarlyHintPreloaderId) {
-    // Wait for HttpBackgrounChannel to continue the async open procedure.
-    mEarlyHintPreloaderId = aEarlyHintPreloaderId;
-    RefPtr<HttpChannelParent> self = this;
-    WaitForBgParent(aChannelId)
-        ->Then(
-            GetMainThreadSerialEventTarget(), __func__,
-            [self, aEarlyHintPreloaderId, aChannelId]() {
-              self->mRequest.Complete();
-              self->InvokeEarlyHintPreloader(NS_OK, aEarlyHintPreloaderId,
-                                             aChannelId);
-            },
-            [self, aEarlyHintPreloaderId, aChannelId](nsresult aStatus) {
-              self->mRequest.Complete();
-              self->InvokeEarlyHintPreloader(aStatus, aEarlyHintPreloaderId,
-                                             aChannelId);
-            })
-        ->Track(mRequest);
-    return true;
-  }
 
   if (!aURI) {
     // this check is neccessary to prevent null deref
@@ -615,7 +570,7 @@ bool HttpChannelParent::DoAsyncOpen(
   // Wait for HttpBackgrounChannel to continue the async open procedure.
   ++mAsyncOpenBarrier;
   RefPtr<HttpChannelParent> self = this;
-  WaitForBgParent(mChannel->ChannelId())
+  WaitForBgParent()
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
           [self]() {
@@ -630,12 +585,11 @@ bool HttpChannelParent::DoAsyncOpen(
   return true;
 }
 
-RefPtr<GenericNonExclusivePromise> HttpChannelParent::WaitForBgParent(
-    uint64_t aChannelId) {
+RefPtr<GenericNonExclusivePromise> HttpChannelParent::WaitForBgParent() {
   LOG(("HttpChannelParent::WaitForBgParent [this=%p]\n", this));
   MOZ_ASSERT(!mBgParent);
 
-  if (!mChannel && !mEarlyHintPreloaderId) {
+  if (!mChannel) {
     return GenericNonExclusivePromise::CreateAndReject(NS_ERROR_FAILURE,
                                                        __func__);
   }
@@ -643,7 +597,7 @@ RefPtr<GenericNonExclusivePromise> HttpChannelParent::WaitForBgParent(
   nsCOMPtr<nsIBackgroundChannelRegistrar> registrar =
       BackgroundChannelRegistrar::GetOrCreate();
   MOZ_ASSERT(registrar);
-  registrar->LinkHttpChannel(aChannelId, this);
+  registrar->LinkHttpChannel(mChannel->ChannelId(), this);
 
   if (mBgParent) {
     return GenericNonExclusivePromise::CreateAndResolve(true, __func__);
@@ -698,7 +652,7 @@ bool HttpChannelParent::ConnectChannel(const uint32_t& registrarId) {
   MOZ_ASSERT(mPromise.IsEmpty());
   // Waiting for background channel
   RefPtr<HttpChannelParent> self = this;
-  WaitForBgParent(mChannel->ChannelId())
+  WaitForBgParent()
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
           [self]() { self->mRequest.Complete(); },
@@ -943,14 +897,13 @@ HttpChannelParent::ContinueVerification(
 
   // Otherwise, wait for the background channel.
   nsCOMPtr<nsIAsyncVerifyRedirectReadyCallback> callback = aCallback;
-  WaitForBgParent(mChannel->ChannelId())
-      ->Then(
-          GetMainThreadSerialEventTarget(), __func__,
-          [callback]() { callback->ReadyToVerify(NS_OK); },
-          [callback](const nsresult& aResult) {
-            NS_ERROR("failed to establish the background channel");
-            callback->ReadyToVerify(aResult);
-          });
+  WaitForBgParent()->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [callback]() { callback->ReadyToVerify(NS_OK); },
+      [callback](const nsresult& aResult) {
+        NS_ERROR("failed to establish the background channel");
+        callback->ReadyToVerify(aResult);
+      });
   return NS_OK;
 }
 
@@ -2076,17 +2029,6 @@ auto HttpChannelParent::DetachStreamFilters() -> RefPtr<GenericPromise> {
   return InvokeAsync(mBgParent->GetBackgroundTarget(), mBgParent.get(),
                      __func__,
                      &HttpBackgroundChannelParent::DetachStreamFilters);
-}
-
-void HttpChannelParent::SetHttpChannelFromEarlyHintPreloader(
-    HttpBaseChannel* aChannel) {
-  MOZ_ASSERT(aChannel);
-  if (mChannel) {
-    MOZ_ASSERT(false, "SetHttpChannel called with mChannel aready set");
-    return;
-  }
-
-  mChannel = aChannel;
 }
 
 void HttpChannelParent::SetCookie(nsCString&& aCookie) {

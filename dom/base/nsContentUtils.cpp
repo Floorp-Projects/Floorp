@@ -3815,8 +3815,7 @@ nsresult nsContentUtils::LoadImage(
     nsIReferrerInfo* aReferrerInfo, imgINotificationObserver* aObserver,
     int32_t aLoadFlags, const nsAString& initiatorType,
     imgRequestProxy** aRequest, nsContentPolicyType aContentPolicyType,
-    bool aUseUrgentStartForChannel, bool aLinkPreload,
-    uint64_t aEarlyHintPreloaderId) {
+    bool aUseUrgentStartForChannel, bool aLinkPreload) {
   MOZ_ASSERT(aURI, "Must have a URI");
   MOZ_ASSERT(aContext, "Must have a context");
   MOZ_ASSERT(aLoadingDocument, "Must have a document");
@@ -3853,7 +3852,7 @@ nsresult nsContentUtils::LoadImage(
                               initiatorType,      /* the load initiator */
                               aUseUrgentStartForChannel, /* urgent-start flag */
                               aLinkPreload, /* <link preload> initiator */
-                              aEarlyHintPreloaderId, aRequest);
+                              aRequest);
 }
 
 // static
@@ -8526,44 +8525,6 @@ already_AddRefed<nsPIWindowRoot> nsContentUtils::GetWindowRoot(Document* aDoc) {
     }
   }
   return nullptr;
-}
-
-/* static */
-bool nsContentUtils::LinkContextIsURI(const nsAString& aAnchor,
-                                      nsIURI* aDocURI) {
-  if (aAnchor.IsEmpty()) {
-    // anchor parameter not present or empty -> same document reference
-    return true;
-  }
-
-  // the document URI might contain a fragment identifier ("#...')
-  // we want to ignore that because it's invisible to the server
-  // and just affects the local interpretation in the recipient
-  nsCOMPtr<nsIURI> contextUri;
-  nsresult rv = NS_GetURIWithoutRef(aDocURI, getter_AddRefs(contextUri));
-
-  if (NS_FAILED(rv)) {
-    // copying failed
-    return false;
-  }
-
-  // resolve anchor against context
-  nsCOMPtr<nsIURI> resolvedUri;
-  rv = NS_NewURI(getter_AddRefs(resolvedUri), aAnchor, nullptr, contextUri);
-
-  if (NS_FAILED(rv)) {
-    // resolving failed
-    return false;
-  }
-
-  bool same;
-  rv = contextUri->Equals(resolvedUri, &same);
-  if (NS_FAILED(rv)) {
-    // comparison failed
-    return false;
-  }
-
-  return same;
 }
 
 /* static */

@@ -62,7 +62,7 @@ nsresult IconLoader::LoadIcon(nsIURI* aIconURI, nsINode* aNode,
         aIconURI, nullptr, nullptr, nullptr, 0, loadGroup, this, nullptr,
         nullptr, nsIRequest::LOAD_NORMAL, nullptr,
         nsIContentPolicy::TYPE_INTERNAL_IMAGE, u""_ns,
-        /* aUseUrgentStartForChannel */ false, /* aLinkPreload */ false, 0,
+        /* aUseUrgentStartForChannel */ false, /* aLinkPreload */ false,
         getter_AddRefs(mIconRequest));
   } else {
     // TODO: nsIContentPolicy::TYPE_INTERNAL_IMAGE may not be the correct
@@ -72,7 +72,7 @@ nsresult IconLoader::LoadIcon(nsIURI* aIconURI, nsINode* aNode,
         aNode, document, nsIRequest::LOAD_NORMAL, nullptr,
         nsIContentPolicy::TYPE_INTERNAL_IMAGE, u""_ns,
         /* aUseUrgentStartForChannel */ false,
-        /* aLinkPreload */ false, 0, getter_AddRefs(mIconRequest));
+        /* aLinkPreload */ false, getter_AddRefs(mIconRequest));
   }
   if (NS_FAILED(rv)) {
     return rv;
