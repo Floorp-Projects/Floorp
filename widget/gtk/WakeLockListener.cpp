@@ -524,7 +524,12 @@ nsresult WakeLockListener::Callback(const nsAString& topic,
     return NS_ERROR_FAILURE;
   }
 
-  if (!topic.Equals(u"screen"_ns) && !topic.Equals(u"video-playing"_ns))
+  WAKE_LOCK_LOG("WakeLockListener %s state %s",
+                NS_ConvertUTF16toUTF8(topic).get(),
+                NS_ConvertUTF16toUTF8(state).get());
+
+  if (!topic.Equals(u"screen"_ns) && !topic.Equals(u"video-playing"_ns) &&
+      !topic.Equals(u"autoscroll"_ns))
     return NS_OK;
 
   WakeLockTopic* const topicLock =
@@ -532,8 +537,7 @@ nsresult WakeLockListener::Callback(const nsAString& topic,
 
   // Treat "locked-background" the same as "unlocked" on desktop linux.
   bool shouldLock = state.EqualsLiteral("locked-foreground");
-  WAKE_LOCK_LOG("topic=%s, shouldLock=%d", NS_ConvertUTF16toUTF8(topic).get(),
-                shouldLock);
+  WAKE_LOCK_LOG("shouldLock %d", shouldLock);
 
   return shouldLock ? topicLock->InhibitScreensaver()
                     : topicLock->UninhibitScreensaver();
