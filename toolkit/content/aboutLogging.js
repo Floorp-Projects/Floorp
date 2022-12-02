@@ -53,7 +53,8 @@ function init() {
 
   // If we can't set the file and the modules at runtime,
   // the start and stop buttons wouldn't really do anything.
-  if (setLogButton.disabled && setModulesButton.disabled) {
+  if (setLogButton.disabled || setModulesButton.disabled) {
+    document.querySelector("#buttons-disabled").hidden = false;
     startLoggingButton.disabled = true;
     stopLoggingButton.disabled = true;
   }
