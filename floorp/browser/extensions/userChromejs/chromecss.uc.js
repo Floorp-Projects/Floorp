@@ -590,7 +590,7 @@ CSSTester.prototype = {
 };
 (async () => {
 if (!UCL.FOLDER.exists() || !UCL.FOLDER.isDirectory()) {
-await IOUtils.makeDirectory(OS.Path.join(OS.Path.join(OS.Constants.Path.profileDir, "chrome"), 'CSS'))
+await IOUtils.makeDirectory(OS.Path.join(OS.Constants.Path.profileDir, "chrome", "CSS"))
 }
 UCL.init();
 })()
