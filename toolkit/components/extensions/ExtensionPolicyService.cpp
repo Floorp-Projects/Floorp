@@ -54,6 +54,8 @@ using dom::Promise;
   "extensions.webextensions.default-content-security-policy.v3"
 #define DEFAULT_DEFAULT_CSP_V3 "script-src 'self';"
 
+#define RESTRICTED_DOMAINS_PREF "extensions.webextensions.restrictedDomains"
+
 #define OBS_TOPIC_PRELOAD_SCRIPT "web-extension-preload-content-script"
 #define OBS_TOPIC_LOAD_SCRIPT "web-extension-load-content-script"
 
@@ -66,8 +68,9 @@ static const char kDocElementInserted[] = "initial-document-element-inserted";
 using CoreByHostMap = nsTHashMap<nsCStringASCIICaseInsensitiveHashKey,
                                  RefPtr<extensions::WebExtensionPolicyCore>>;
 
-static StaticRWLock sCoreByHostLock;
-static StaticAutoPtr<CoreByHostMap> sCoreByHost MOZ_GUARDED_BY(sCoreByHostLock);
+static StaticRWLock sEPSLock;
+static StaticAutoPtr<CoreByHostMap> sCoreByHost MOZ_GUARDED_BY(sEPSLock);
+static StaticRefPtr<AtomSet> sRestrictedDomains MOZ_GUARDED_BY(sEPSLock);
 
 /* static */
 mozIExtensionProcessScript& ExtensionPolicyService::ProcessScript() {
@@ -100,7 +103,7 @@ mozIExtensionProcessScript& ExtensionPolicyService::ProcessScript() {
 /* static */
 RefPtr<extensions::WebExtensionPolicyCore>
 ExtensionPolicyService::GetCoreByHost(const nsACString& aHost) {
-  StaticAutoReadLock lock(sCoreByHostLock);
+  StaticAutoReadLock lock(sEPSLock);
   return sCoreByHost ? sCoreByHost->Get(aHost) : nullptr;
 }
 
@@ -114,19 +117,22 @@ ExtensionPolicyService::ExtensionPolicyService() {
   RegisterObservers();
 
   {
-    StaticAutoWriteLock lock(sCoreByHostLock);
+    StaticAutoWriteLock lock(sEPSLock);
     MOZ_DIAGNOSTIC_ASSERT(!sCoreByHost,
                           "ExtensionPolicyService created twice?");
     sCoreByHost = new CoreByHostMap();
   }
+
+  UpdateRestrictedDomains();
 }
 
 ExtensionPolicyService::~ExtensionPolicyService() {
   UnregisterWeakMemoryReporter(this);
 
   {
-    StaticAutoWriteLock lock(sCoreByHostLock);
+    StaticAutoWriteLock lock(sEPSLock);
     sCoreByHost = nullptr;
+    sRestrictedDomains = nullptr;
   }
 }
 
@@ -179,7 +185,7 @@ bool ExtensionPolicyService::RegisterExtension(WebExtensionPolicy& aPolicy) {
   mExtensions.InsertOrUpdate(aPolicy.Id(), RefPtr{&aPolicy});
 
   {
-    StaticAutoWriteLock lock(sCoreByHostLock);
+    StaticAutoWriteLock lock(sEPSLock);
     sCoreByHost->InsertOrUpdate(aPolicy.MozExtensionHostname(), aPolicy.Core());
   }
   return true;
@@ -197,7 +203,7 @@ bool ExtensionPolicyService::UnregisterExtension(WebExtensionPolicy& aPolicy) {
   mExtensions.Remove(aPolicy.Id());
 
   {
-    StaticAutoWriteLock lock(sCoreByHostLock);
+    StaticAutoWriteLock lock(sEPSLock);
     sCoreByHost->Remove(aPolicy.MozExtensionHostname());
   }
   return true;
@@ -261,6 +267,7 @@ void ExtensionPolicyService::RegisterObservers() {
 
   Preferences::AddStrongObserver(this, DEFAULT_CSP_PREF);
   Preferences::AddStrongObserver(this, DEFAULT_CSP_PREF_V3);
+  Preferences::AddStrongObserver(this, RESTRICTED_DOMAINS_PREF);
 }
 
 void ExtensionPolicyService::UnregisterObservers() {
@@ -272,6 +279,7 @@ void ExtensionPolicyService::UnregisterObservers() {
 
   Preferences::RemoveObserver(this, DEFAULT_CSP_PREF);
   Preferences::RemoveObserver(this, DEFAULT_CSP_PREF_V3);
+  Preferences::RemoveObserver(this, RESTRICTED_DOMAINS_PREF);
 }
 
 nsresult ExtensionPolicyService::Observe(nsISupports* aSubject,
@@ -295,6 +303,8 @@ nsresult ExtensionPolicyService::Observe(nsISupports* aSubject,
       mDefaultCSP.SetIsVoid(true);
     } else if (!strcmp(pref, DEFAULT_CSP_PREF_V3)) {
       mDefaultCSPV3.SetIsVoid(true);
+    } else if (!strcmp(pref, RESTRICTED_DOMAINS_PREF)) {
+      UpdateRestrictedDomains();
     }
   }
   return NS_OK;
@@ -553,6 +563,27 @@ void ExtensionPolicyService::CheckContentScripts(const DocInfo& aDocInfo,
       }
     }
   }
+}
+
+/* static */
+RefPtr<AtomSet> ExtensionPolicyService::RestrictedDomains() {
+  StaticAutoReadLock lock(sEPSLock);
+  return sRestrictedDomains;
+}
+
+void ExtensionPolicyService::UpdateRestrictedDomains() {
+  nsAutoCString eltsString;
+  Unused << Preferences::GetCString(RESTRICTED_DOMAINS_PREF, eltsString);
+
+  AutoTArray<nsString, 32> elts;
+  for (const nsACString& elt : eltsString.Split(',')) {
+    elts.AppendElement(NS_ConvertUTF8toUTF16(elt));
+    elts.LastElement().StripWhitespace();
+  }
+  RefPtr<AtomSet> atomSet = new AtomSet(elts);
+
+  StaticAutoWriteLock lock(sEPSLock);
+  sRestrictedDomains = atomSet;
 }
 
 /*****************************************************************************
