@@ -625,6 +625,10 @@ void DOMLocalization::ReportL10nOverlaysErrors(
 void DOMLocalization::ConvertStringToL10nArgs(const nsString& aInput,
                                               intl::L10nArgs& aRetVal,
                                               ErrorResult& aRv) {
+  if (aInput.IsEmpty()) {
+    // There are no properties.
+    return;
+  }
   // This method uses a temporary dictionary to automate
   // converting a JSON string into an IDL Record via a dictionary.
   //
