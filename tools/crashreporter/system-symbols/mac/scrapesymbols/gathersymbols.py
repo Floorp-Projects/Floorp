@@ -10,9 +10,9 @@ import datetime
 import os
 import subprocess
 import sys
+import traceback
 import urllib
 import zipfile
-import traceback
 
 import requests
 
