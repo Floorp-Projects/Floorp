@@ -301,6 +301,8 @@ class BasePrincipal : public nsJSPrincipals {
   // Internal, side-effect-free check to determine whether the concrete
   // principal would allow the load ignoring any common behavior implemented in
   // BasePrincipal::CheckMayLoad.
+  //
+  // Safe to call from any thread, unlike CheckMayLoad.
   virtual bool MayLoadInternal(nsIURI* aURI) = 0;
   friend class ::ExpandedPrincipal;
 
