@@ -1285,7 +1285,7 @@ void nsHtml5TreeOpExecutor::PreloadFont(const nsAString& aURL,
     return;
   }
 
-  mDocument->Preloads().PreloadFont(uri, aCrossOrigin, aReferrerPolicy);
+  mDocument->Preloads().PreloadFont(uri, aCrossOrigin, aReferrerPolicy, 0);
 }
 
 void nsHtml5TreeOpExecutor::PreloadFetch(const nsAString& aURL,
@@ -1297,7 +1297,7 @@ void nsHtml5TreeOpExecutor::PreloadFetch(const nsAString& aURL,
     return;
   }
 
-  mDocument->Preloads().PreloadFetch(uri, aCrossOrigin, aReferrerPolicy);
+  mDocument->Preloads().PreloadFetch(uri, aCrossOrigin, aReferrerPolicy, 0);
 }
 
 void nsHtml5TreeOpExecutor::PreloadOpenPicture() {
