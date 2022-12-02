@@ -7,6 +7,7 @@
 #define mozilla_extensions_WebExtensionPolicy_h
 
 #include "MainThreadUtils.h"
+#include "mozilla/RWLock.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/Nullable.h"
@@ -111,6 +112,27 @@ class WebExtensionPolicyCore final {
 
   bool SourceMayAccessPath(const URLInfo& aURI, const nsACString& aPath) const;
 
+  bool HasPermission(const nsAtom* aPermission) const {
+    AutoReadLock lock(mLock);
+    return mPermissions->Contains(aPermission);
+  }
+
+  void GetPermissions(nsTArray<nsString>& aResult) const MOZ_EXCLUDES(mLock) {
+    AutoReadLock lock(mLock);
+    return mPermissions->Get(aResult);
+  }
+
+  void SetPermissions(const nsTArray<nsString>& aPermissions)
+      MOZ_EXCLUDES(mLock) {
+    RefPtr<AtomSet> newPermissions = new AtomSet(aPermissions);
+    AutoWriteLock lock(mLock);
+    mPermissions = std::move(newPermissions);
+  }
+
+  bool CanAccessURI(const URLInfo& aURI, bool aExplicit = false,
+                    bool aCheckRestricted = true,
+                    bool aAllowFilePermission = false) const;
+
   // Try to get a reference to the cycle-collected main-thread-only
   // WebExtensionPolicy instance.
   //
@@ -155,6 +177,10 @@ class WebExtensionPolicyCore final {
   const nsString mBackgroundWorkerScript;
 
   /* const */ nsTArray<RefPtr<WebAccessibleResource>> mWebAccessibleResources;
+
+  mutable RWLock mLock{"WebExtensionPolicyCore"};
+  RefPtr<AtomSet> mPermissions MOZ_GUARDED_BY(mLock);
+  RefPtr<MatchPatternSetCore> mHostPermissions MOZ_GUARDED_BY(mLock);
 };
 
 class WebExtensionPolicy final : public nsISupports, public nsWrapperCache {
@@ -203,7 +229,10 @@ class WebExtensionPolicy final : public nsISupports, public nsWrapperCache {
 
   bool CanAccessURI(const URLInfo& aURI, bool aExplicit = false,
                     bool aCheckRestricted = true,
-                    bool aAllowFilePermission = false) const;
+                    bool aAllowFilePermission = false) const {
+    return mCore->CanAccessURI(aURI, aExplicit, aCheckRestricted,
+                               aAllowFilePermission);
+  }
 
   bool IsWebAccessiblePath(const nsACString& aPath) const {
     return mCore->IsWebAccessiblePath(aPath);
@@ -214,10 +243,11 @@ class WebExtensionPolicy final : public nsISupports, public nsWrapperCache {
   }
 
   bool HasPermission(const nsAtom* aPermission) const {
-    return mPermissions->Contains(aPermission);
+    return mCore->HasPermission(aPermission);
   }
   bool HasPermission(const nsAString& aPermission) const {
-    return mPermissions->Contains(aPermission);
+    RefPtr<nsAtom> atom = NS_AtomizeMainThread(aPermission);
+    return HasPermission(atom);
   }
 
   static bool IsRestrictedDoc(const DocInfo& aDoc);
@@ -247,15 +277,13 @@ class WebExtensionPolicy final : public nsISupports, public nsWrapperCache {
   already_AddRefed<MatchPatternSet> AllowedOrigins() {
     return do_AddRef(mHostPermissions);
   }
-  void SetAllowedOrigins(MatchPatternSet& aAllowedOrigins) {
-    mHostPermissions = &aAllowedOrigins;
-  }
+  void SetAllowedOrigins(MatchPatternSet& aAllowedOrigins);
 
   void GetPermissions(nsTArray<nsString>& aResult) const {
-    mPermissions->Get(aResult);
+    mCore->GetPermissions(aResult);
   }
   void SetPermissions(const nsTArray<nsString>& aPermissions) {
-    mPermissions = new AtomSet(aPermissions);
+    mCore->SetPermissions(aPermissions);
   }
 
   void GetContentScripts(ScriptArray& aScripts) const;
@@ -334,7 +362,8 @@ class WebExtensionPolicy final : public nsISupports, public nsWrapperCache {
 
   RefPtr<WebExtensionLocalizeCallback> mLocalizeCallback;
 
-  RefPtr<AtomSet> mPermissions;
+  // NOTE: This is a mirror of the object in `mCore`, except with the
+  // non-threadsafe wrapper.
   RefPtr<MatchPatternSet> mHostPermissions;
 
   dom::Nullable<nsTArray<nsString>> mBackgroundScripts;
