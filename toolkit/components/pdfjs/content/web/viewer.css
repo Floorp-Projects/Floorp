@@ -25,6 +25,7 @@
   line-height: 1;
   text-size-adjust: none;
   forced-color-adjust: none;
+  transform-origin: 0 0;
 }
 
 .textLayer span,
@@ -740,6 +741,13 @@
   --freetext-padding: 2px;
   --editorFreeText-editing-cursor: text;
   --editorInk-editing-cursor: url(images/cursor-editorInk.svg) 0 16, pointer;
+}
+
+@media (min-resolution: 1.1dppx) {
+  :root {
+    --editorFreeText-editing-cursor: url(images/cursor-editorFreeText.svg) 0 16,
+      text;
+  }
 }
 
 @media (forced-colors: active) {

@@ -5870,7 +5870,8 @@ void nsCSSFrameConstructor::AppendFramesToParent(
       // Make sure to trigger reflow of the inline that used to be our
       // last one and now isn't anymore, since its GetSkipSides() has
       // changed.
-      mPresShell->FrameNeedsReflow(aParentFrame, IntrinsicDirty::TreeChange,
+      mPresShell->FrameNeedsReflow(aParentFrame,
+                                   IntrinsicDirty::FrameAndAncestors,
                                    NS_FRAME_HAS_DIRTY_CHILDREN);
 
       // Recurse so we create new ib siblings as needed for aParentFrame's

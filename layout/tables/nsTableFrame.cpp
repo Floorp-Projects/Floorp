@@ -357,9 +357,9 @@ void nsTableFrame::RowOrColSpanChanged(nsTableCellFrame* aCellFrame) {
       cells.AppendElement(aCellFrame);
       InsertCells(cells, rowIndex, colIndex - 1);
 
-      // XXX Should this use eStyleChange?  It currently doesn't need
-      // to, but it might given more optimization.
-      PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,
+      // XXX Should this use IntrinsicDirty::FrameAncestorsAndDescendants? It
+      // currently doesn't need to, but it might given more optimization.
+      PresShell()->FrameNeedsReflow(this, IntrinsicDirty::FrameAndAncestors,
                                     NS_FRAME_IS_DIRTY);
     }
   }
@@ -2151,7 +2151,7 @@ void nsTableFrame::AppendFrames(ChildListID aListID, nsFrameList&& aFrameList) {
   printf("=== TableFrame::AppendFrames\n");
   Dump(true, true, true);
 #endif
-  PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,
+  PresShell()->FrameNeedsReflow(this, IntrinsicDirty::FrameAndAncestors,
                                 NS_FRAME_HAS_DIRTY_CHILDREN);
   SetGeometryDirty();
 }
@@ -2319,7 +2319,7 @@ void nsTableFrame::HomogenousInsertFrames(ChildListID aListID,
     return;
   }
 
-  PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,
+  PresShell()->FrameNeedsReflow(this, IntrinsicDirty::FrameAndAncestors,
                                 NS_FRAME_HAS_DIRTY_CHILDREN);
   SetGeometryDirty();
 #ifdef DEBUG_TABLE_CELLMAP
@@ -2422,7 +2422,7 @@ void nsTableFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
         parent->SetFullBCDamageArea();
       }
       parent->SetGeometryDirty();
-      presShell->FrameNeedsReflow(parent, IntrinsicDirty::TreeChange,
+      presShell->FrameNeedsReflow(parent, IntrinsicDirty::FrameAndAncestors,
                                   NS_FRAME_HAS_DIRTY_CHILDREN);
       lastParent = parent;
     }

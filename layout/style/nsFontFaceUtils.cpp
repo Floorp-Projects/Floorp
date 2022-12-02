@@ -153,7 +153,7 @@ static void ScheduleReflow(PresShell* aPresShell, nsIFrame* aFrame) {
     }
   }
 
-  aPresShell->FrameNeedsReflow(f, IntrinsicDirty::StyleChange,
+  aPresShell->FrameNeedsReflow(f, IntrinsicDirty::FrameAncestorsAndDescendants,
                                NS_FRAME_IS_DIRTY);
 }
 

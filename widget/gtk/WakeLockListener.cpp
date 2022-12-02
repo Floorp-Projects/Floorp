@@ -304,20 +304,25 @@ bool WakeLockTopic::SendInhibit() {
 
   switch (mDesktopEnvironment) {
     case FreeDesktopScreensaver:
+      WAKE_LOCK_LOG("SendInhibit(): FreeDesktopScreensaver");
       sendOk = SendFreeDesktopScreensaverInhibitMessage();
       break;
     case FreeDesktopPower:
+      WAKE_LOCK_LOG("SendInhibit(): FreeDesktopPower");
       sendOk = SendFreeDesktopPowerInhibitMessage();
       break;
     case GNOME:
+      WAKE_LOCK_LOG("SendInhibit(): GNOME");
       sendOk = SendGNOMEInhibitMessage();
       break;
 #  if defined(MOZ_X11)
     case XScreenSaver:
+      WAKE_LOCK_LOG("SendInhibit(): InhibitXScreenSaver");
       return InhibitXScreenSaver(true);
 #  endif
 #  if defined(MOZ_WAYLAND)
     case WaylandIdleInhibit:
+      WAKE_LOCK_LOG("SendInhibit(): WaylandIdleInhibit");
       return InhibitWaylandIdle();
 #  endif
     case Unsupported:
@@ -335,25 +340,30 @@ bool WakeLockTopic::SendUninhibit() {
   RefPtr<DBusMessage> message;
 
   if (mDesktopEnvironment == FreeDesktopScreensaver) {
+    WAKE_LOCK_LOG("SendUninhibit(): FreeDesktopScreensaver");
     message = already_AddRefed<DBusMessage>(dbus_message_new_method_call(
         FREEDESKTOP_SCREENSAVER_TARGET, FREEDESKTOP_SCREENSAVER_OBJECT,
         FREEDESKTOP_SCREENSAVER_INTERFACE, "UnInhibit"));
   } else if (mDesktopEnvironment == FreeDesktopPower) {
+    WAKE_LOCK_LOG("SendUninhibit(): FreeDesktopPower");
     message = already_AddRefed<DBusMessage>(dbus_message_new_method_call(
         FREEDESKTOP_POWER_TARGET, FREEDESKTOP_POWER_OBJECT,
         FREEDESKTOP_POWER_INTERFACE, "UnInhibit"));
   } else if (mDesktopEnvironment == GNOME) {
+    WAKE_LOCK_LOG("SendUninhibit(): GNOME");
     message = already_AddRefed<DBusMessage>(dbus_message_new_method_call(
         SESSION_MANAGER_TARGET, SESSION_MANAGER_OBJECT,
         SESSION_MANAGER_INTERFACE, "Uninhibit"));
   }
 #  if defined(MOZ_X11)
   else if (mDesktopEnvironment == XScreenSaver) {
+    WAKE_LOCK_LOG("SendUninhibit(): XScreenSaver");
     return InhibitXScreenSaver(false);
   }
 #  endif
 #  if defined(MOZ_WAYLAND)
   else if (mDesktopEnvironment == WaylandIdleInhibit) {
+    WAKE_LOCK_LOG("SendUninhibit(): Wayland");
     return UninhibitWaylandIdle();
   }
 #  endif
@@ -514,7 +524,12 @@ nsresult WakeLockListener::Callback(const nsAString& topic,
     return NS_ERROR_FAILURE;
   }
 
-  if (!topic.Equals(u"screen"_ns) && !topic.Equals(u"video-playing"_ns))
+  WAKE_LOCK_LOG("WakeLockListener %s state %s",
+                NS_ConvertUTF16toUTF8(topic).get(),
+                NS_ConvertUTF16toUTF8(state).get());
+
+  if (!topic.Equals(u"screen"_ns) && !topic.Equals(u"video-playing"_ns) &&
+      !topic.Equals(u"autoscroll"_ns))
     return NS_OK;
 
   WakeLockTopic* const topicLock =
@@ -522,8 +537,7 @@ nsresult WakeLockListener::Callback(const nsAString& topic,
 
   // Treat "locked-background" the same as "unlocked" on desktop linux.
   bool shouldLock = state.EqualsLiteral("locked-foreground");
-  WAKE_LOCK_LOG("topic=%s, shouldLock=%d", NS_ConvertUTF16toUTF8(topic).get(),
-                shouldLock);
+  WAKE_LOCK_LOG("shouldLock %d", shouldLock);
 
   return shouldLock ? topicLock->InhibitScreensaver()
                     : topicLock->UninhibitScreensaver();

@@ -88,36 +88,45 @@ static bool IsOpaqueBlockListedNeverSniffedMIMEType(
 }
 
 OpaqueResponseBlockedReason GetOpaqueResponseBlockedReason(
-    const nsHttpResponseHead& aResponseHead) {
-  nsAutoCString contentType;
-  aResponseHead.ContentType(contentType);
-  if (contentType.IsEmpty()) {
+    const nsACString& aContentType, uint16_t aStatus, bool aNoSniff) {
+  if (aContentType.IsEmpty()) {
     return OpaqueResponseBlockedReason::BLOCKED_SHOULD_SNIFF;
   }
 
-  if (IsOpaqueSafeListedMIMEType(contentType)) {
+  if (IsOpaqueSafeListedMIMEType(aContentType)) {
     return OpaqueResponseBlockedReason::ALLOWED_SAFE_LISTED;
   }
 
-  if (IsOpaqueBlockListedNeverSniffedMIMEType(contentType)) {
+  if (IsOpaqueBlockListedNeverSniffedMIMEType(aContentType)) {
     return OpaqueResponseBlockedReason::BLOCKED_BLOCKLISTED_NEVER_SNIFFED;
   }
 
-  if (aResponseHead.Status() == 206 &&
-      IsOpaqueBlockListedMIMEType(contentType)) {
+  if (aStatus == 206 && IsOpaqueBlockListedMIMEType(aContentType)) {
     return OpaqueResponseBlockedReason::BLOCKED_206_AND_BLOCKLISTED;
   }
 
   nsAutoCString contentTypeOptionsHeader;
-  if (aResponseHead.GetContentTypeOptionsHeader(contentTypeOptionsHeader) &&
-      contentTypeOptionsHeader.EqualsIgnoreCase("nosniff") &&
-      (IsOpaqueBlockListedMIMEType(contentType) ||
-       contentType.EqualsLiteral(TEXT_PLAIN))) {
+  if (aNoSniff && (IsOpaqueBlockListedMIMEType(aContentType) ||
+                   aContentType.EqualsLiteral(TEXT_PLAIN))) {
     return OpaqueResponseBlockedReason::
         BLOCKED_NOSNIFF_AND_EITHER_BLOCKLISTED_OR_TEXTPLAIN;
   }
 
   return OpaqueResponseBlockedReason::BLOCKED_SHOULD_SNIFF;
+}
+
+OpaqueResponseBlockedReason GetOpaqueResponseBlockedReason(
+    const nsHttpResponseHead& aResponseHead) {
+  nsAutoCString contentType;
+  aResponseHead.ContentType(contentType);
+
+  nsAutoCString contentTypeOptionsHeader;
+  bool nosniff =
+      aResponseHead.GetContentTypeOptionsHeader(contentTypeOptionsHeader) &&
+      contentTypeOptionsHeader.EqualsIgnoreCase("nosniff");
+
+  return GetOpaqueResponseBlockedReason(contentType, aResponseHead.Status(),
+                                        nosniff);
 }
 
 Result<std::tuple<int64_t, int64_t, int64_t>, nsresult>
@@ -202,8 +211,10 @@ void LogORBError(nsILoadInfo* aLoadInfo, nsIURI* aURI) {
 }
 
 OpaqueResponseBlocker::OpaqueResponseBlocker(nsIStreamListener* aNext,
-                                             HttpBaseChannel* aChannel)
-    : mNext(aNext) {
+                                             HttpBaseChannel* aChannel,
+                                             const nsCString& aContentType,
+                                             bool aNoSniff)
+    : mNext(aNext), mContentType(aContentType), mNoSniff(aNoSniff) {
   // Storing aChannel as a member is tricky as aChannel owns us and it's
   // hard to ensure aChannel is alive when we about to use it without
   // creating a cycle. This is all doable but need some extra efforts.
@@ -226,11 +237,7 @@ NS_IMETHODIMP
 OpaqueResponseBlocker::OnStartRequest(nsIRequest* aRequest) {
   LOGORB();
 
-  // When OnStartRequest is called, the UnknownDecoder has determined
-  // its type already, so we should be able to make a decision
-  if (mState == State::Sniffing) {
-    MaybeORBSniff(aRequest);
-  }
+  Unused << EnsureOpaqueResponseIsAllowedAfterSniff(aRequest);
 
   MOZ_ASSERT(mState != State::Sniffing);
 
@@ -269,24 +276,24 @@ OpaqueResponseBlocker::OnDataAvailable(nsIRequest* aRequest,
 
   return NS_OK;
 }
-void OpaqueResponseBlocker::MaybeORBSniff(nsIRequest* aRequest) {
-  if (!mCheckIsOpaqueResponseAllowedAfterSniff) {
-    LOGORB("(doesn't check)");
-    return;
-  }
-  LOGORB("(checks)");
 
-  mCheckIsOpaqueResponseAllowedAfterSniff = false;
-
-  nsCOMPtr<nsILoadInfo> loadInfo;
+nsresult OpaqueResponseBlocker::EnsureOpaqueResponseIsAllowedAfterSniff(
+    nsIRequest* aRequest) {
   nsCOMPtr<HttpBaseChannel> httpBaseChannel = do_QueryInterface(aRequest);
   MOZ_ASSERT(httpBaseChannel);
+
+  if (mState != State::Sniffing) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsILoadInfo> loadInfo;
 
   nsresult rv =
       httpBaseChannel->GetLoadInfo(getter_AddRefs<nsILoadInfo>(loadInfo));
   if (NS_FAILED(rv)) {
+    LOGORB("Failed to get LoadInfo");
     BlockResponse(httpBaseChannel, rv);
-    return;
+    return rv;
   }
 
   nsCOMPtr<nsIURI> uri;
@@ -294,68 +301,54 @@ void OpaqueResponseBlocker::MaybeORBSniff(nsIRequest* aRequest) {
   if (NS_FAILED(rv)) {
     LOGORB("Failed to get uri");
     BlockResponse(httpBaseChannel, rv);
-    return;
+    return rv;
   }
 
-  bool isMediaRequest;
-  loadInfo->GetIsMediaRequest(&isMediaRequest);
-  if (isMediaRequest) {
-    LogORBError(loadInfo, uri);
-    BlockResponse(httpBaseChannel, NS_ERROR_FAILURE);
-    return;
+  switch (httpBaseChannel->PerformOpaqueResponseSafelistCheckAfterSniff(
+      mContentType, mNoSniff)) {
+    case OpaqueResponse::Block:
+      BlockResponse(httpBaseChannel, NS_ERROR_FAILURE);
+      return NS_ERROR_FAILURE;
+    case OpaqueResponse::Alllow:
+      AllowResponse();
+      return NS_OK;
+    case OpaqueResponse::Sniff:
+      break;
   }
 
-  nsAutoCString contentType;
-  rv = httpBaseChannel->GetContentType(contentType);
-  if (NS_FAILED(rv)) {
-    LogORBError(loadInfo, uri);
-    BlockResponse(httpBaseChannel, rv);
-    return;
-  }
+  return ValidateJavaScript(httpBaseChannel);
+}
 
-  nsHttpResponseHead* responseHead = httpBaseChannel->GetResponseHead();
-  if (!responseHead) {
-    AllowResponse();
-    return;
-  }
-
-  nsAutoCString contentTypeOptionsHeader;
-  if (responseHead->GetContentTypeOptionsHeader(contentTypeOptionsHeader) &&
-      contentTypeOptionsHeader.EqualsIgnoreCase("nosniff")) {
-    LOGORB("Blocked (After Sniff): nosniff");
-    LogORBError(loadInfo, uri);
-    BlockResponse(httpBaseChannel, NS_ERROR_FAILURE);
-    return;
-  }
-
-  if (responseHead->Status() < 200 || responseHead->Status() > 299) {
-    LOGORB("Blocked (After Sniff): status code (%d) is not allowed.",
-           responseHead->Status());
-    LogORBError(loadInfo, uri);
-    BlockResponse(httpBaseChannel, NS_ERROR_FAILURE);
-    return;
-  }
-
-  if (StringBeginsWith(contentType, "image/"_ns) ||
-      StringBeginsWith(contentType, "video/"_ns) ||
-      StringBeginsWith(contentType, "audio/"_ns)) {
-    LOGORB("Blocked (After Sniff): content type image/video/audio");
-    LogORBError(loadInfo, uri);
-    BlockResponse(httpBaseChannel, NS_ERROR_FAILURE);
-    return;
-  }
-
+// The specification for ORB is currently being written:
+// https://whatpr.org/fetch/1442.html#orb-algorithm
+// The `opaque-response-safelist check` is implemented in:
+// * `HttpBaseChannel::OpaqueResponseSafelistCheckBeforeSniff`
+// * `nsHttpChannel::DisableIsOpaqueResponseAllowedAfterSniffCheck`
+// * `HttpBaseChannel::OpaqueResponseSafelistCheckAfterSniff`
+// * `OpaqueResponseBlocker::ValidateJavaScript`
+nsresult OpaqueResponseBlocker::ValidateJavaScript(HttpBaseChannel* aChannel) {
+  MOZ_DIAGNOSTIC_ASSERT(aChannel);
   int64_t contentLength;
-  rv = httpBaseChannel->GetContentLength(&contentLength);
+  nsresult rv = aChannel->GetContentLength(&contentLength);
   if (NS_FAILED(rv)) {
-    LOGORB("Blocked (After Sniff): failed to get content length");
-    LogORBError(loadInfo, uri);
-    BlockResponse(httpBaseChannel, NS_ERROR_FAILURE);
-    return;
+    LOGORB("Blocked: No Content Length");
+    BlockResponse(aChannel, rv);
+    return rv;
   }
 
+  // XXX(farre): this intentionally allowing responses, because we don't know
+  // how to block the correct ones until bug 1532644 is completed.
   LOGORB("Allowed (After Sniff): passes all checks");
   AllowResponse();
+
+  // https://whatpr.org/fetch/1442.html#orb-algorithm, step 15
+  // XXX(farre): Start JavaScript validation.
+
+  return NS_OK;
+}
+
+bool OpaqueResponseBlocker::IsSniffing() const {
+  return mState == State::Sniffing;
 }
 
 void OpaqueResponseBlocker::AllowResponse() {

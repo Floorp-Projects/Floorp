@@ -1023,7 +1023,7 @@ void nsMenuPopupFrame::ShowPopup(bool aIsContextMenu) {
 
     // do we need an actual reflow here?
     // is SetPopupPosition all that is needed?
-    PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,
+    PresShell()->FrameNeedsReflow(this, IntrinsicDirty::FrameAndAncestors,
                                   NS_FRAME_IS_DIRTY);
 
     if (mPopupType == ePopupTypeMenu) {
@@ -2376,8 +2376,8 @@ void nsMenuPopupFrame::MoveToAttributePosition() {
 
   if (NS_SUCCEEDED(err1) && NS_SUCCEEDED(err2)) MoveTo(pos, false);
 
-  PresShell()->FrameNeedsReflow(this, IntrinsicDirty::StyleChange,
-                                NS_FRAME_IS_DIRTY);
+  PresShell()->FrameNeedsReflow(
+      this, IntrinsicDirty::FrameAncestorsAndDescendants, NS_FRAME_IS_DIRTY);
 }
 
 void nsMenuPopupFrame::DestroyFrom(nsIFrame* aDestructRoot,

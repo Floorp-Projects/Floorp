@@ -42,6 +42,11 @@ job-defaults:
 marionette:
     description: "Marionette unittest run"
     treeherder-symbol: Mn
-    max-run-time: 5400
+    max-run-time:
+        by-test-platform:
+            .*asan.*: 3600
+            .*ccov.*: 3600
+            .*debug.*: 3600
+            default: 2700
     instance-size: default
     chunks: 1

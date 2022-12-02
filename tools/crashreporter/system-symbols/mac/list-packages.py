@@ -31,18 +31,31 @@ reposadocommon.get_main_dir = lambda: "/usr/local/bin/"
 
 products = reposadocommon.get_product_info()
 args = []
-for product_id, p in products.items():
+for product_id, product in products.items():
     try:
-        t = p["title"]
+        title = product["title"]
     except KeyError:
-        print("Missing title in {}, skipping".format(p), file=sys.stderr)
+        print("Missing title in {}, skipping".format(product), file=sys.stderr)
         continue
-    # p['CatalogEntry']['Packages']
-    if t.startswith("OS X") or t.startswith("Mac OS X") or t.startswith("macOS"):
-        args.append("--product-id=" + product_id)
+
+    try:
+        major_version = int(product["version"].split(".")[0])
+    except Exception:
+        print(
+            "Cannot extract the major version number in {}, skipping".format(product),
+            file=sys.stderr,
+        )
+        continue
+
+    if (
+        title.startswith("OS X")
+        or title.startswith("Mac OS X")
+        or title.startswith("macOS")
+    ) and major_version <= 10:
+        args.append(product_id)
     else:
-        print("Skipping %r for repo_sync" % t, file=sys.stderr)
+        print("Skipping %r for repo_sync" % title, file=sys.stderr)
 if "JUST_ONE_PACKAGE" in os.environ:
     args = args[:1]
 
-print(" ".join(args))
+print("\n".join(args))

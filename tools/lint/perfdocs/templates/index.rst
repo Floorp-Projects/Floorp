@@ -13,7 +13,7 @@ Performance tests are designed to catch performance regressions before they reac
 end users. At this time, there is no unified approach for these types of tests,
 but `mozperftest </testing/perfdocs/mozperftest.html>`_ aims to provide this in the future.
 
-For more detailed information about each test suite, see each projects' documentation:
+For more detailed information about each test suite and project, see their documentation:
 
 {test_documentation}
 
