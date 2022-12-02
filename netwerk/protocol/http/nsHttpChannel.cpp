@@ -1535,9 +1535,8 @@ nsresult nsHttpChannel::CallOnStartRequest() {
   // are the checks for Opaque Response Blocking to ensure that we block as many
   // cross-origin responses with CORS headers as possible that are not either
   // Javascript or media to avoid leaking their contents through side channels.
-  bool compressedMediaAndImageDetectorStarted = false;
-  OpaqueResponse opaqueResponse = PerformOpaqueResponseSafelistCheckBeforeSniff(
-      compressedMediaAndImageDetectorStarted);
+  OpaqueResponse opaqueResponse =
+      PerformOpaqueResponseSafelistCheckBeforeSniff();
   if (opaqueResponse == OpaqueResponse::Block) {
     SetChannelBlockedByOpaqueResponse();
     CancelWithReason(NS_ERROR_FAILURE,
@@ -1595,14 +1594,18 @@ nsresult nsHttpChannel::CallOnStartRequest() {
 
   // If unknownDecoder is not going to be launched, call
   // EnsureOpaqueResponseIsAllowedAfterSniff immediately.
-  if (!unknownDecoderStarted && !compressedMediaAndImageDetectorStarted &&
-      opaqueResponse == OpaqueResponse::Sniff) {
-    MOZ_DIAGNOSTIC_ASSERT(mORB);
-    nsresult rv = mORB->EnsureOpaqueResponseIsAllowedAfterSniff(this);
-    MOZ_DIAGNOSTIC_ASSERT(!mORB->IsSniffing());
+  if (!unknownDecoderStarted) {
+    if (opaqueResponse == OpaqueResponse::SniffCompressed) {
+      mListener = new nsCompressedAudioVideoImageDetector(
+          mListener, &HttpBaseChannel::CallTypeSniffers);
+    } else if (opaqueResponse == OpaqueResponse::Sniff) {
+      MOZ_DIAGNOSTIC_ASSERT(mORB);
+      nsresult rv = mORB->EnsureOpaqueResponseIsAllowedAfterSniff(this);
+      MOZ_DIAGNOSTIC_ASSERT(!mORB->IsSniffing());
 
-    if (NS_FAILED(rv)) {
-      return rv;
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
     }
   }
 

@@ -3085,8 +3085,8 @@ bool HttpBaseChannel::ShouldBlockOpaqueResponse() const {
 // * `nsHttpChannel::DisableIsOpaqueResponseAllowedAfterSniffCheck`
 // * `HttpBaseChannel::PerformOpaqueResponseSafelistCheckAfterSniff`
 // * `OpaqueResponseBlocker::ValidateJavaScript`
-OpaqueResponse HttpBaseChannel::PerformOpaqueResponseSafelistCheckBeforeSniff(
-    bool& aCompressedMediaAndImageDetectorStarted) {
+OpaqueResponse
+HttpBaseChannel::PerformOpaqueResponseSafelistCheckBeforeSniff() {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   if (!mCachedOpaqueResponseBlockingPref) {
@@ -3181,15 +3181,11 @@ OpaqueResponse HttpBaseChannel::PerformOpaqueResponseSafelistCheckBeforeSniff(
   nsresult rv =
       mResponseHead->GetHeader(nsHttp::Content_Encoding, contentEncoding);
 
-  if (NS_FAILED(rv) || contentEncoding.IsEmpty()) {
-    mLoadFlags |= (nsIChannel::LOAD_CALL_CONTENT_SNIFFERS |
-                   nsIChannel::LOAD_MEDIA_SNIFFER_OVERRIDES_CONTENT_TYPE);
-  } else {
-    mListener = new nsCompressedAudioVideoImageDetector(
-        mListener, &HttpBaseChannel::CallTypeSniffers);
-    aCompressedMediaAndImageDetectorStarted = true;
+  if (NS_SUCCEEDED(rv) && !contentEncoding.IsEmpty()) {
+    return OpaqueResponse::SniffCompressed;
   }
-
+  mLoadFlags |= (nsIChannel::LOAD_CALL_CONTENT_SNIFFERS |
+                 nsIChannel::LOAD_MEDIA_SNIFFER_OVERRIDES_CONTENT_TYPE);
   return OpaqueResponse::Sniff;
 }
 

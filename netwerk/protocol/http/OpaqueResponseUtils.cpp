@@ -313,6 +313,7 @@ nsresult OpaqueResponseBlocker::EnsureOpaqueResponseIsAllowedAfterSniff(
       AllowResponse();
       return NS_OK;
     case OpaqueResponse::Sniff:
+    case OpaqueResponse::SniffCompressed:
       break;
   }
 
