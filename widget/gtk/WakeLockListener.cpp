@@ -304,20 +304,25 @@ bool WakeLockTopic::SendInhibit() {
 
   switch (mDesktopEnvironment) {
     case FreeDesktopScreensaver:
+      WAKE_LOCK_LOG("SendInhibit(): FreeDesktopScreensaver");
       sendOk = SendFreeDesktopScreensaverInhibitMessage();
       break;
     case FreeDesktopPower:
+      WAKE_LOCK_LOG("SendInhibit(): FreeDesktopPower");
       sendOk = SendFreeDesktopPowerInhibitMessage();
       break;
     case GNOME:
+      WAKE_LOCK_LOG("SendInhibit(): GNOME");
       sendOk = SendGNOMEInhibitMessage();
       break;
 #  if defined(MOZ_X11)
     case XScreenSaver:
+      WAKE_LOCK_LOG("SendInhibit(): InhibitXScreenSaver");
       return InhibitXScreenSaver(true);
 #  endif
 #  if defined(MOZ_WAYLAND)
     case WaylandIdleInhibit:
+      WAKE_LOCK_LOG("SendInhibit(): WaylandIdleInhibit");
       return InhibitWaylandIdle();
 #  endif
     case Unsupported:
@@ -335,25 +340,30 @@ bool WakeLockTopic::SendUninhibit() {
   RefPtr<DBusMessage> message;
 
   if (mDesktopEnvironment == FreeDesktopScreensaver) {
+    WAKE_LOCK_LOG("SendUninhibit(): FreeDesktopScreensaver");
     message = already_AddRefed<DBusMessage>(dbus_message_new_method_call(
         FREEDESKTOP_SCREENSAVER_TARGET, FREEDESKTOP_SCREENSAVER_OBJECT,
         FREEDESKTOP_SCREENSAVER_INTERFACE, "UnInhibit"));
   } else if (mDesktopEnvironment == FreeDesktopPower) {
+    WAKE_LOCK_LOG("SendUninhibit(): FreeDesktopPower");
     message = already_AddRefed<DBusMessage>(dbus_message_new_method_call(
         FREEDESKTOP_POWER_TARGET, FREEDESKTOP_POWER_OBJECT,
         FREEDESKTOP_POWER_INTERFACE, "UnInhibit"));
   } else if (mDesktopEnvironment == GNOME) {
+    WAKE_LOCK_LOG("SendUninhibit(): GNOME");
     message = already_AddRefed<DBusMessage>(dbus_message_new_method_call(
         SESSION_MANAGER_TARGET, SESSION_MANAGER_OBJECT,
         SESSION_MANAGER_INTERFACE, "Uninhibit"));
   }
 #  if defined(MOZ_X11)
   else if (mDesktopEnvironment == XScreenSaver) {
+    WAKE_LOCK_LOG("SendUninhibit(): XScreenSaver");
     return InhibitXScreenSaver(false);
   }
 #  endif
 #  if defined(MOZ_WAYLAND)
   else if (mDesktopEnvironment == WaylandIdleInhibit) {
+    WAKE_LOCK_LOG("SendUninhibit(): Wayland");
     return UninhibitWaylandIdle();
   }
 #  endif
