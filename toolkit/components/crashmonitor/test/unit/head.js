@@ -6,6 +6,7 @@
 var { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
 var sessionCheckpointsPath;
 var CrashMonitor;
@@ -15,8 +16,8 @@ var CrashMonitor;
  */
 function run_test() {
   do_get_profile();
-  sessionCheckpointsPath = PathUtils.join(
-    PathUtils.profileDir,
+  sessionCheckpointsPath = OS.Path.join(
+    OS.Constants.Path.profileDir,
     "sessionCheckpoints.json"
   );
   ({ CrashMonitor } = ChromeUtils.import(
