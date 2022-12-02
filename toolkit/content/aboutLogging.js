@@ -405,6 +405,8 @@ function updateLogFile() {
       };
     }
   }
+  $("#no-log-file").hidden = !!currentLogFile.innerText.length;
+  $("#current-log-file").hidden = !currentLogFile.innerText.length;
 }
 
 function updateLogModules() {
