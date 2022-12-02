@@ -653,9 +653,9 @@ StyleSheet* ServoStyleSet::SheetAt(Origin aOrigin, size_t aIndex) const {
       Servo_StyleSet_GetSheetAt(mRawSet.get(), aOrigin, aIndex));
 }
 
-Maybe<StylePageSizeOrientation> ServoStyleSet::GetDefaultPageSizeOrientation() {
-  const RefPtr<ComputedStyle> style =
-      ResolveNonInheritingAnonymousBoxStyle(PseudoStyleType::pageContent);
+Maybe<StylePageSizeOrientation> ServoStyleSet::GetDefaultPageSizeOrientation(
+    const nsAtom* aFirstPageName) {
+  const RefPtr<ComputedStyle> style = ResolvePageContentStyle(aFirstPageName);
   const StylePageSize& pageSize = style->StylePage()->mSize;
   if (pageSize.IsOrientation()) {
     return Some(pageSize.AsOrientation());

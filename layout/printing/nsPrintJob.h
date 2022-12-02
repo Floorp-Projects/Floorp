@@ -8,6 +8,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/layout/RemotePrintJobChild.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 
 #include "nsCOMPtr.h"
@@ -282,6 +283,11 @@ class nsPrintJob final : public nsIWebProgressListener,
   float mScreenDPI = 115.0f;
 
   int32_t mNumPrintablePages = 0;
+
+  // Indicates if the page has a specific orientation from @page { size }.
+  // Stores true if this is landscape, false if this is portrait, or nothing
+  // if there is no page-size-orientation.
+  mozilla::Maybe<bool> mMaybeCSSPageLandscape;
 
   // If true, indicates that we have started Printing but have not gone to the
   // timer to start printing the pages. It gets turned off right before we go
