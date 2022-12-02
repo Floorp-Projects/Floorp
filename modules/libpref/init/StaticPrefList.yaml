@@ -4625,7 +4625,7 @@
 
 - name: dom.webidl.crosscontext_hasinstance.enabled
   type: RelaxedAtomicBool
-  value: @IS_NOT_EARLY_BETA_OR_EARLIER@
+  value: false
   mirror: always
 
 # WebShare API - exposes navigator.share()
