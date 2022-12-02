@@ -956,12 +956,22 @@ nsWebBrowser::GetPositionAndSize(int32_t* aX, int32_t* aY, int32_t* aCX,
       *aCY = bounds.Height();
     }
     return NS_OK;
-  } else {
-    // Can directly return this as it is the
-    // same interface, thus same returns.
-    return mDocShell->GetPositionAndSize(aX, aY, aCX, aCY);
   }
-  return NS_OK;
+
+  // Can directly return this as it is the
+  // same interface, thus same returns.
+  return mDocShell->GetPositionAndSize(aX, aY, aCX, aCY);
+}
+
+NS_IMETHODIMP
+nsWebBrowser::SetDimensions(DimensionRequest&& aRequest) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsWebBrowser::GetDimensions(DimensionKind aDimensionKind, int32_t* aX,
+                            int32_t* aY, int32_t* aCX, int32_t* aCY) {
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
