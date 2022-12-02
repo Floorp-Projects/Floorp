@@ -6,7 +6,6 @@ from __future__ import absolute_import, division, print_function
 
 import io
 import os
-import sys
 import pipes
 import posixpath
 import re
@@ -14,17 +13,17 @@ import shlex
 import shutil
 import signal
 import subprocess
+import sys
 import tempfile
 import time
 import traceback
+from distutils import dir_util
 from threading import Thread
 
-from distutils import dir_util
 import six
 from six.moves import range
 
 from . import version_codes
-
 
 _TEST_ROOT = None
 
@@ -3906,13 +3905,16 @@ class ADBDevice(ADBCommand):
         """
         if self.version >= version_codes.M:
             permissions = [
-                "android.permission.WRITE_EXTERNAL_STORAGE",
                 "android.permission.READ_EXTERNAL_STORAGE",
                 "android.permission.ACCESS_COARSE_LOCATION",
                 "android.permission.ACCESS_FINE_LOCATION",
                 "android.permission.CAMERA",
                 "android.permission.RECORD_AUDIO",
             ]
+            if self.version < version_codes.R:
+                # WRITE_EXTERNAL_STORAGE is no longer available
+                # in Android 11+
+                permissions.append("android.permission.WRITE_EXTERNAL_STORAGE")
             self._logger.info("Granting important runtime permissions to %s" % app_name)
             for permission in permissions:
                 try:
