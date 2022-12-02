@@ -38,8 +38,8 @@ module.exports = {
     // Maximum depth callbacks can be nested.
     "max-nested-callbacks": ["error", 4],
 
-    // Disallow using the console API.
-    "no-console": "error",
+    // Disallow using the console API, except for error statments.
+    "no-console": ["error", { allow: ["error"] }],
 
     // Disallow fallthrough of case statements, except if there is a comment.
     "no-fallthrough": "error",

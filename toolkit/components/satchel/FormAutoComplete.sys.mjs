@@ -115,7 +115,7 @@ FormHistoryClient.prototype = {
     }
 
     if (!callback) {
-      Cu.reportError("FormHistoryClient received response with no callback");
+      console.error("FormHistoryClient received response with no callback");
       return;
     }
 
@@ -286,7 +286,7 @@ FormAutoComplete.prototype = {
           params[name] = value;
         }
       } catch (ex) {
-        Cu.reportError("Invalid options object: " + ex);
+        console.error("Invalid options object: " + ex);
       }
     }
 

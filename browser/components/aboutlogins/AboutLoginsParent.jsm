@@ -196,7 +196,7 @@ class AboutLoginsParent extends JSWindowActorParent {
     // Remove the path from the origin, if it was provided.
     let origin = lazy.LoginHelper.getLoginOrigin(newLogin.origin);
     if (!origin) {
-      Cu.reportError(
+      console.error(
         "AboutLogins:CreateLogin: Unable to get an origin from the login details."
       );
       return;
@@ -238,7 +238,7 @@ class AboutLoginsParent extends JSWindowActorParent {
         lazy.MigrationUtils.MIGRATION_ENTRYPOINT_PASSWORDS,
       ]);
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
     }
   }
 
@@ -492,7 +492,7 @@ class AboutLoginsParent extends JSWindowActorParent {
       try {
         summary = await lazy.LoginCSVImport.importFromCSV(path);
       } catch (e) {
-        Cu.reportError(e);
+        console.error(e);
         this.sendAsyncMessage(
           "AboutLogins:ImportPasswordsErrorDialog",
           e.errorType

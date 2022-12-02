@@ -128,7 +128,7 @@ LoginStore.prototype._backupHandler = async function() {
       // This notification is specifically sent out for a test.
       Services.obs.notifyObservers(null, "logins-backup-updated");
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
     }
   } else if (!logins.length) {
     // If no logins are stored anymore, delete backup.

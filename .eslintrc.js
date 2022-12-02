@@ -212,7 +212,6 @@ module.exports = {
         "browser/base/content/**",
         "browser/components/Browser*.*",
         "browser/components/**",
-        "browser/extensions/formautofill/**",
         "browser/extensions/report-site-issue/**",
         "browser/extensions/search-detection/**",
         "browser/modules/**",

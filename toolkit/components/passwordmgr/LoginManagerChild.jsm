@@ -2543,7 +2543,7 @@ class LoginManagerChild extends JSWindowActorChild {
       }
       this.sendAsyncMessage(messageName, detail);
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
       throw ex;
     } finally {
       detail.form = form;
@@ -3067,7 +3067,7 @@ class LoginManagerChild extends JSWindowActorChild {
         autofillResult = AUTOFILL_RESULT.FILLED_USERNAME_ONLY_FORM;
       }
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
       throw ex;
     } finally {
       if (autofillResult == -1) {

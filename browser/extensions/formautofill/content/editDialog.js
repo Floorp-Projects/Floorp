@@ -220,7 +220,7 @@ class EditCreditCardDialog extends AutofillEditDialog {
 
       window.close();
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
     }
   }
 }

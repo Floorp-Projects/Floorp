@@ -161,7 +161,7 @@ this.formautofill = class extends ExtensionAPI {
     if (this.autofillManifest) {
       Components.manager.addBootstrappedManifestLocation(this.autofillManifest);
     } else {
-      Cu.reportError(
+      console.error(
         "Cannot find formautofill chrome.manifest for registring translated strings"
       );
     }

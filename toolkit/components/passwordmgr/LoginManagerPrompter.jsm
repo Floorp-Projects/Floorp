@@ -271,7 +271,7 @@ class LoginManagerPrompter {
 
     let updateButtonLabel = () => {
       if (!currentNotification) {
-        Cu.reportError("updateButtonLabel, no currentNotification");
+        console.error("updateButtonLabel, no currentNotification");
       }
       let foundLogins = lazy.LoginHelper.searchLoginsWithObject({
         formActionOrigin: login.formActionOrigin,
