@@ -1894,16 +1894,10 @@
     /*
      * Push the call site object for a tagged template call.
      *
-     * `script->getObject(objectIndex)` is the call site object;
-     * `script->getObject(objectIndex + 1)` is the raw object.
+     * `script->getObject(objectIndex)` is the call site object.
      *
-     * The first time this instruction runs for a given template, it assembles
-     * the final value, defining the `.raw` property on the call site object
-     * and freezing both objects.
-     *
-     * Implements: [GetTemplateObject][1], steps 4 and 12-16.
-     *
-     * [1]: https://tc39.es/ecma262/#sec-gettemplateobject
+     * The call site object will already have the `.raw` property defined on it
+     * and will be frozen.
      *
      *   Category: Functions
      *   Type: Calls

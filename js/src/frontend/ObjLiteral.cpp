@@ -212,6 +212,76 @@ static JSObject* InterpretObjLiteralArray(
                              NewObjectKind::TenuredObject);
 }
 
+// ES2023 draft rev ee74c9cb74dbfa23e62b486f5226102c345c678e
+//
+// GetTemplateObject ( templateLiteral )
+// https://tc39.es/ecma262/#sec-gettemplateobject
+//
+// Steps 8-16.
+static JSObject* InterpretObjLiteralCallSiteObj(
+    JSContext* cx, const frontend::CompilationAtomCache& atomCache,
+    const mozilla::Span<const uint8_t> literalInsns, uint32_t propertyCount) {
+  ObjLiteralReader reader(literalInsns);
+  ObjLiteralInsn insn;
+
+  // We have to read elements for two arrays. The 'cooked' values are followed
+  // by the 'raw' values. Both arrays have the same length.
+  MOZ_ASSERT((propertyCount % 2) == 0);
+  uint32_t count = propertyCount / 2;
+
+  Rooted<ValueVector> elements(cx, ValueVector(cx));
+  if (!elements.reserve(count)) {
+    return nullptr;
+  }
+
+  RootedValue propVal(cx);
+  auto readElements = [&](uint32_t count) {
+    MOZ_ASSERT(elements.empty());
+
+    for (size_t i = 0; i < count; i++) {
+      MOZ_ALWAYS_TRUE(reader.readInsn(&insn));
+      MOZ_ASSERT(insn.isValid());
+
+      InterpretObjLiteralValue(cx, atomCache, insn, &propVal);
+      MOZ_ASSERT(propVal.isString() || propVal.isUndefined());
+      elements.infallibleAppend(propVal);
+    }
+  };
+
+  // Create cooked array.
+  readElements(count);
+  Rooted<ArrayObject*> cso(
+      cx, NewDenseCopiedArray(cx, elements.length(), elements.begin(),
+                              NewObjectKind::TenuredObject));
+  if (!cso) {
+    return nullptr;
+  }
+  elements.clear();
+
+  // Create raw array.
+  readElements(count);
+  Rooted<ArrayObject*> raw(
+      cx, NewDenseCopiedArray(cx, elements.length(), elements.begin(),
+                              NewObjectKind::TenuredObject));
+  if (!raw) {
+    return nullptr;
+  }
+
+  // Define .raw property and freeze both arrays.
+  RootedValue rawValue(cx, ObjectValue(*raw));
+  if (!DefineDataProperty(cx, cso, cx->names().raw, rawValue, 0)) {
+    return nullptr;
+  }
+  if (!FreezeObject(cx, raw)) {
+    return nullptr;
+  }
+  if (!FreezeObject(cx, cso)) {
+    return nullptr;
+  }
+
+  return cso;
+}
+
 template <PropertySetKind kind>
 Shape* InterpretObjLiteralShape(JSContext* cx,
                                 const frontend::CompilationAtomCache& atomCache,
@@ -294,6 +364,14 @@ JS::GCCellPtr ObjLiteralStencil::create(
       }
       return JS::GCCellPtr(obj);
     }
+    case ObjLiteralKind::CallSiteObj: {
+      JSObject* obj =
+          InterpretObjLiteralCallSiteObj(cx, atomCache, code_, propertyCount_);
+      if (!obj) {
+        return JS::GCCellPtr();
+      }
+      return JS::GCCellPtr(obj);
+    }
     case ObjLiteralKind::Object: {
       JSObject* obj =
           InterpretObjLiteralObj(cx, atomCache, code_, flags(), propertyCount_);
@@ -342,6 +420,8 @@ static const char* ObjLiteralKindToString(ObjLiteralKind kind) {
       return "Object";
     case ObjLiteralKind::Array:
       return "Array";
+    case ObjLiteralKind::CallSiteObj:
+      return "CallSiteObj";
     case ObjLiteralKind::Shape:
       return "Shape";
     case ObjLiteralKind::Invalid:

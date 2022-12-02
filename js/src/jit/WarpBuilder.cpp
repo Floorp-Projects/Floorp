@@ -2598,11 +2598,7 @@ bool WarpBuilder::build_ImportMeta(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_CallSiteObj(BytecodeLocation loc) {
-  // WarpOracle already called ProcessCallSiteObjOperation to prepare the
-  // object.
-  JSObject* obj = loc.getObject(script_);
-  pushConstant(ObjectValue(*obj));
-  return true;
+  return build_Object(loc);
 }
 
 bool WarpBuilder::build_NewArray(BytecodeLocation loc) {
