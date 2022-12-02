@@ -1046,8 +1046,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvSetDimensions(
 
   if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION) {
     treeOwnerAsWin->SetPosition(x, y);
-    mUpdatedDimensions = false;
-    UpdatePosition();
     return IPC_OK();
   }
 

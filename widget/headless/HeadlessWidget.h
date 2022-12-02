@@ -160,6 +160,10 @@ class HeadlessWidget : public nsBaseWidget {
   // across size mode changes, so we must track it to emulate.
   LayoutDeviceIntRect mRestoreBounds;
   void ApplySizeModeSideEffects();
+  // Move while maintaining size mode.
+  void MoveInternal(int32_t aX, int32_t aY);
+  // Resize while maintaining size mode.
+  void ResizeInternal(int32_t aWidth, int32_t aHeight, bool aRepaint);
   // Similarly, we must track the active window ourselves in order
   // to dispatch (de)activation events properly.
   void RaiseWindow();
