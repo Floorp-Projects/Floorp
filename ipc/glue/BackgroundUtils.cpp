@@ -11,6 +11,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ContentPrincipal.h"
 #include "mozilla/NullPrincipal.h"
+#include "mozilla/SystemPrincipal.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/CookieJarSettings.h"
@@ -42,23 +43,16 @@ namespace ipc {
 
 Result<nsCOMPtr<nsIPrincipal>, nsresult> PrincipalInfoToPrincipal(
     const PrincipalInfo& aPrincipalInfo) {
-  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipalInfo.type() != PrincipalInfo::T__None);
-
-  nsCOMPtr<nsIScriptSecurityManager> secMan =
-      nsContentUtils::GetSecurityManager();
-  if (!secMan) {
-    return Err(NS_ERROR_NULL_POINTER);
-  }
 
   nsCOMPtr<nsIPrincipal> principal;
   nsresult rv;
 
   switch (aPrincipalInfo.type()) {
     case PrincipalInfo::TSystemPrincipalInfo: {
-      rv = secMan->GetSystemPrincipal(getter_AddRefs(principal));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err(rv);
+      principal = SystemPrincipal::Get();
+      if (NS_WARN_IF(!principal)) {
+        return Err(NS_ERROR_NOT_INITIALIZED);
       }
 
       return principal;
@@ -91,7 +85,16 @@ Result<nsCOMPtr<nsIPrincipal>, nsresult> PrincipalInfoToPrincipal(
         return Err(rv);
       }
 
-      principal = BasePrincipal::CreateContentPrincipal(uri, info.attrs());
+      nsCOMPtr<nsIURI> domain;
+      if (info.domain()) {
+        rv = NS_NewURI(getter_AddRefs(domain), *info.domain());
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return Err(rv);
+        }
+      }
+
+      principal =
+          BasePrincipal::CreateContentPrincipal(uri, info.attrs(), domain);
       if (NS_WARN_IF(!principal)) {
         return Err(NS_ERROR_NULL_POINTER);
       }
@@ -105,19 +108,6 @@ Result<nsCOMPtr<nsIPrincipal>, nsresult> PrincipalInfoToPrincipal(
 
       if (NS_WARN_IF(!info.originNoSuffix().Equals(originNoSuffix))) {
         return Err(NS_ERROR_FAILURE);
-      }
-
-      if (info.domain()) {
-        nsCOMPtr<nsIURI> domain;
-        rv = NS_NewURI(getter_AddRefs(domain), *info.domain());
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return Err(rv);
-        }
-
-        rv = principal->SetDomain(domain);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return Err(rv);
-        }
       }
 
       if (!info.baseDomain().IsVoid()) {
@@ -276,7 +266,6 @@ nsresult CSPToCSPInfo(nsIContentSecurityPolicy* aCSP, CSPInfo* aCSPInfo) {
 nsresult PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
                                   PrincipalInfo* aPrincipalInfo,
                                   bool aSkipBaseDomain) {
-  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aPrincipalInfo);
 

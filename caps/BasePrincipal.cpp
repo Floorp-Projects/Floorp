@@ -1143,7 +1143,7 @@ nsIPrincipal* BasePrincipal::PrincipalToInherit(nsIURI* aRequestedURI) {
 }
 
 already_AddRefed<BasePrincipal> BasePrincipal::CreateContentPrincipal(
-    nsIURI* aURI, const OriginAttributes& aAttrs) {
+    nsIURI* aURI, const OriginAttributes& aAttrs, nsIURI* aInitialDomain) {
   MOZ_ASSERT(aURI);
 
   nsAutoCString originNoSuffix;
@@ -1155,12 +1155,12 @@ already_AddRefed<BasePrincipal> BasePrincipal::CreateContentPrincipal(
     return NullPrincipal::Create(aAttrs);
   }
 
-  return CreateContentPrincipal(aURI, aAttrs, originNoSuffix);
+  return CreateContentPrincipal(aURI, aAttrs, originNoSuffix, aInitialDomain);
 }
 
 already_AddRefed<BasePrincipal> BasePrincipal::CreateContentPrincipal(
     nsIURI* aURI, const OriginAttributes& aAttrs,
-    const nsACString& aOriginNoSuffix) {
+    const nsACString& aOriginNoSuffix, nsIURI* aInitialDomain) {
   MOZ_ASSERT(aURI);
   MOZ_ASSERT(!aOriginNoSuffix.IsEmpty());
 
@@ -1186,7 +1186,8 @@ already_AddRefed<BasePrincipal> BasePrincipal::CreateContentPrincipal(
     }
     MOZ_ASSERT(origin);
     OriginAttributes attrs;
-    RefPtr<BasePrincipal> principal = CreateContentPrincipal(origin, attrs);
+    RefPtr<BasePrincipal> principal =
+        CreateContentPrincipal(origin, attrs, aInitialDomain);
     return principal.forget();
   }
 #endif
@@ -1195,13 +1196,15 @@ already_AddRefed<BasePrincipal> BasePrincipal::CreateContentPrincipal(
   if (dom::BlobURLProtocolHandler::GetBlobURLPrincipal(
           aURI, getter_AddRefs(blobPrincipal))) {
     MOZ_ASSERT(blobPrincipal);
+    MOZ_ASSERT(!aInitialDomain,
+               "an initial domain for a blob URI makes no sense");
     RefPtr<BasePrincipal> principal = Cast(blobPrincipal);
     return principal.forget();
   }
 
   // Mint a content principal.
   RefPtr<ContentPrincipal> principal =
-      new ContentPrincipal(aURI, aAttrs, aOriginNoSuffix);
+      new ContentPrincipal(aURI, aAttrs, aOriginNoSuffix, aInitialDomain);
   return principal.forget();
 }
 
@@ -1241,8 +1244,9 @@ already_AddRefed<BasePrincipal> BasePrincipal::CloneForcingOriginAttributes(
   nsCOMPtr<nsIURI> uri;
   MOZ_ALWAYS_SUCCEEDS(GetURI(getter_AddRefs(uri)));
 
+  // XXX: This does not copy over the domain. Should it?
   RefPtr<ContentPrincipal> copy =
-      new ContentPrincipal(uri, aOriginAttributes, originNoSuffix);
+      new ContentPrincipal(uri, aOriginAttributes, originNoSuffix, nullptr);
   return copy.forget();
 }
 

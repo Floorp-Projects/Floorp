@@ -34,7 +34,7 @@ class ContentPrincipal final : public BasePrincipal {
   bool IsContentPrincipal() const override { return true; }
 
   ContentPrincipal(nsIURI* aURI, const OriginAttributes& aOriginAttributes,
-                   const nsACString& aOriginNoSuffix);
+                   const nsACString& aOriginNoSuffix, nsIURI* aInitialDomain);
   ContentPrincipal(ContentPrincipal* aOther,
                    const OriginAttributes& aOriginAttributes);
 

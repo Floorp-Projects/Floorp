@@ -213,12 +213,17 @@ class BasePrincipal : public nsJSPrincipals {
   static already_AddRefed<BasePrincipal> CreateContentPrincipal(
       const nsACString& aOrigin);
 
-  // These following method may not create a content principal in case it's
-  // not possible to generate a correct origin from the passed URI. If this
-  // happens, a NullPrincipal is returned.
+  // This method may not create a content principal in case it's not possible to
+  // generate a correct origin from the passed URI. If this happens, a
+  // NullPrincipal is returned.
+  //
+  // If `aInitialDomain` is specified, and a ContentPrincipal is set, it will
+  // initially have its domain set to the given value, without re-computing js
+  // wrappers. Unlike `SetDomain()` this is safe to do off-main-thread.
 
   static already_AddRefed<BasePrincipal> CreateContentPrincipal(
-      nsIURI* aURI, const OriginAttributes& aAttrs);
+      nsIURI* aURI, const OriginAttributes& aAttrs,
+      nsIURI* aInitialDomain = nullptr);
 
   const OriginAttributes& OriginAttributesRef() final {
     return mOriginAttributes;
@@ -343,7 +348,7 @@ class BasePrincipal : public nsJSPrincipals {
  private:
   static already_AddRefed<BasePrincipal> CreateContentPrincipal(
       nsIURI* aURI, const OriginAttributes& aAttrs,
-      const nsACString& aOriginNoSuffix);
+      const nsACString& aOriginNoSuffix, nsIURI* aInitialDomain);
 
   bool FastSubsumesIgnoringFPD(nsIPrincipal* aOther,
                                DocumentDomainConsideration aConsideration);
