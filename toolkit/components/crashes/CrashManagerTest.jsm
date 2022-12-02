@@ -16,11 +16,13 @@ var EXPORTED_SYMBOLS = [
   "TestingCrashManager",
 ];
 
+/* global OS */
+Cc["@mozilla.org/net/osfileconstantsservice;1"]
+  .getService(Ci.nsIOSFileConstantsService)
+  .init();
+
 const { CrashManager } = ChromeUtils.import(
   "resource://gre/modules/CrashManager.jsm"
-);
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 const lazy = {};
@@ -28,10 +30,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   Log: "resource://gre/modules/Log.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  OS: "resource://gre/modules/osfile.jsm",
 });
 
 var loggingConfigured = false;
@@ -72,35 +70,29 @@ TestingCrashManager.prototype = {
     let mode;
     if (submitted) {
       if (hr) {
-        path = lazy.OS.Path.join(
+        path = PathUtils.join(
           this._submittedDumpsDir,
           "bp-hr-" + uuid + ".txt"
         );
       } else {
-        path = lazy.OS.Path.join(
-          this._submittedDumpsDir,
-          "bp-" + uuid + ".txt"
-        );
+        path = PathUtils.join(this._submittedDumpsDir, "bp-" + uuid + ".txt");
       }
       mode =
-        lazy.OS.Constants.libc.S_IRUSR |
-        lazy.OS.Constants.libc.S_IWUSR |
-        lazy.OS.Constants.libc.S_IRGRP |
-        lazy.OS.Constants.libc.S_IROTH;
+        OS.Constants.libc.S_IRUSR |
+        OS.Constants.libc.S_IWUSR |
+        OS.Constants.libc.S_IRGRP |
+        OS.Constants.libc.S_IROTH;
     } else {
-      path = lazy.OS.Path.join(this._pendingDumpsDir, uuid + ".dmp");
-      mode = lazy.OS.Constants.libc.S_IRUSR | lazy.OS.Constants.libc.S_IWUSR;
+      path = PathUtils.join(this._pendingDumpsDir, uuid + ".dmp");
+      mode = OS.Constants.libc.S_IRUSR | OS.Constants.libc.S_IWUSR;
     }
 
     return (async function() {
-      let f = await lazy.OS.File.open(
-        path,
-        { create: true },
-        { unixMode: mode }
-      );
-      await f.setDates(date, date);
-      await f.close();
-      dump("Created fake crash: " + path + "\n");
+      await IOUtils.writeUTF8(path, "");
+      await IOUtils.setPermissions(path, mode);
+      await IOUtils.setModificationTime(path, date.valueOf());
+      await IOUtils.setAccessTime(path, date.valueOf());
+      dump(`Created fake crash: ${path}\n`);
 
       return uuid;
     })();
@@ -109,29 +101,28 @@ TestingCrashManager.prototype = {
   createIgnoredDumpFile(filename, submitted = false) {
     let path;
     if (submitted) {
-      path = lazy.OS.Path.join(this._submittedDumpsDir, filename);
+      path = PathUtils.join(this._submittedDumpsDir, filename);
     } else {
-      path = lazy.OS.Path.join(this._pendingDumpsDir, filename);
+      path = PathUtils.join(this._pendingDumpsDir, filename);
     }
 
     return (async function() {
-      let mode =
-        lazy.OS.Constants.libc.S_IRUSR | lazy.OS.Constants.libc.S_IWUSR;
-      await lazy.OS.File.open(path, { create: true }, { unixMode: mode });
-      dump("Create ignored dump file: " + path + "\n");
+      let mode = OS.Constants.libc.S_IRUSR | OS.Constants.libc.S_IWUSR;
+      await IOUtils.writeUTF8(path, "");
+      await IOUtils.setPermissions(path, mode);
+      dump(`Create ignored dump file: ${path}\n`);
     })();
   },
 
   createEventsFile(filename, type, date, id, content, index = 0) {
-    let path = lazy.OS.Path.join(this._eventsDirs[index], filename);
+    let path = PathUtils.join(this._eventsDirs[index], filename);
     let dateInSecs = Math.floor(date.getTime() / 1000);
     let data = type + "\n" + dateInSecs + "\n" + id + "\n" + content;
-    let encoder = new TextEncoder();
-    let array = encoder.encode(data);
 
     return (async function() {
-      await lazy.OS.File.writeAtomic(path, array);
-      await lazy.OS.File.setDates(path, date, date);
+      await IOUtils.writeUTF8(path, data);
+      await IOUtils.setModificationTime(path, date.valueOf());
+      await IOUtils.setAccessTime(path, date.valueOf());
     })();
   },
 
@@ -140,7 +131,7 @@ TestingCrashManager.prototype = {
 
     return (async function() {
       for (let dir of dirs) {
-        await lazy.OS.File.removeDir(dir);
+        await IOUtils.remove(dir, { recursive: true });
       }
     })();
   },
@@ -175,22 +166,19 @@ var DUMMY_DIR_COUNT = 0;
 
 var getManager = function() {
   return (async function() {
-    const dirMode = lazy.OS.Constants.libc.S_IRWXU;
-    let baseFile = lazy.OS.Constants.Path.profileDir;
+    const dirMode = OS.Constants.libc.S_IRWXU;
+    let baseFile = PathUtils.profileDir;
 
     function makeDir(create = true) {
       return (async function() {
-        let path = lazy.OS.Path.join(
-          baseFile,
-          "dummy-dir-" + DUMMY_DIR_COUNT++
-        );
+        let path = PathUtils.join(baseFile, "dummy-dir-" + DUMMY_DIR_COUNT++);
 
         if (!create) {
           return path;
         }
 
         dump("Creating directory: " + path + "\n");
-        await lazy.OS.File.makeDir(path, { unixMode: dirMode });
+        await IOUtils.makeDirectory(path, { permissions: dirMode });
 
         return path;
       })();
