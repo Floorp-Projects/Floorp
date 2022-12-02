@@ -7,7 +7,7 @@
 Services.prefs.setBoolPref("network.early-hints.enabled", true);
 
 const {
-  lax_request_count_checking,
+  request_count_checking,
   test_hint_preload_internal,
   test_hint_preload,
 } = ChromeUtils.import(
@@ -27,7 +27,7 @@ add_task(async function test_103_two_preload_responses() {
         "https://example.com/browser/netwerk/test/browser/early_hint_pixel.sjs",
         Services.uuid.generateUUID().toString(),
       ],
-      ["", "new_response"], // empty string to indicate new early hint response
+      ["", "new_response"], // indicate new early hint response
       [
         "https://example.com/browser/netwerk/test/browser/early_hint_pixel.sjs",
         Services.uuid.generateUUID().toString(),
@@ -47,7 +47,7 @@ add_task(async function test_103_two_link_header() {
         "https://example.com/browser/netwerk/test/browser/early_hint_pixel.sjs",
         Services.uuid.generateUUID().toString(),
       ],
-      ["", ""], // empty string to indicate new early hint response
+      ["", ""], // indicate new link header in same reponse
       [
         "https://example.com/browser/netwerk/test/browser/early_hint_pixel.sjs",
         Services.uuid.generateUUID().toString(),
@@ -73,6 +73,23 @@ add_task(async function test_103_two_links() {
       ],
     ],
     { hinted: 2, normal: 0 }
+  );
+});
+
+// two early hint responses, only second one has a link header
+add_task(async function test_103_two_links() {
+  await test_hint_preload_internal(
+    "103_two_links",
+    "https://example.com",
+    [
+      ["", "non_link_header"], // indicate non-link related header
+      ["", "new_response"], // indicate new early hint response
+      [
+        "https://example.com/browser/netwerk/test/browser/early_hint_pixel.sjs",
+        Services.uuid.generateUUID().toString(),
+      ],
+    ],
+    { hinted: 1, normal: 0 }
   );
 });
 
@@ -216,19 +233,11 @@ add_task(async function test_103_iframe() {
   ).then(response => response.json());
   let expectedRequestCount = { hinted: 0, normal: 1 };
 
-  // TODO: Switch to stricter counting method after fixing https://bugzilla.mozilla.org/show_bug.cgi?id=1753730#c11
-  await lax_request_count_checking(
+  await request_count_checking(
     "test_103_iframe",
     gotRequestCount,
     expectedRequestCount
   );
-  /* stricter counting method:
-  await Assert.deepEqual(
-    gotRequestCount,
-    { hinted: 0, normal: 1 },
-    "test_103_iframe: Unexpected amount of requests made"
-  );
-  */
 
   Services.cache2.clear();
 });
@@ -259,16 +268,8 @@ add_task(async function test_103_anchor() {
     "https://example.com/browser/netwerk/test/browser/early_hint_pixel_count.sjs"
   ).then(response => response.json());
 
-  // TODO: Switch to stricter counting method after fixing Bug 1771867
-  await lax_request_count_checking("test_103_anchor", gotRequestCount, {
+  await request_count_checking("test_103_anchor", gotRequestCount, {
     hinted: 0,
     normal: 1,
   });
-  /* stricter counting method:
-  await Assert.deepEqual(
-    gotRequestCount,
-    { hinted: 0, normal: 1 },
-    "test_103_anchor: Unexpected amount of requests made"
-  );
-  */
 });

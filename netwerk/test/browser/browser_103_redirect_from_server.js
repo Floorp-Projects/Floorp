@@ -1,6 +1,6 @@
 Services.prefs.setBoolPref("network.early-hints.enabled", true);
 
-const { lax_request_count_checking } = ChromeUtils.import(
+const { request_count_checking } = ChromeUtils.import(
   "resource://testing-common/early_hint_preload_test_helper.jsm"
 );
 
@@ -36,8 +36,8 @@ async function test_hint_completion_on_redirect(
     "https://example.com/browser/netwerk/test/browser/early_hint_pixel_count.sjs"
   ).then(response => response.json());
 
-  // TODO: Switch to stricter counting method after fixing https://bugzilla.mozilla.org/show_bug.cgi?id=1753730#c11
-  await lax_request_count_checking(testName, gotRequestCount, expectedCount);
+  await request_count_checking(testName, gotRequestCount, expectedCount);
+  Services.cache2.clear();
 }
 
 /**
