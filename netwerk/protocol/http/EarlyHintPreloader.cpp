@@ -177,8 +177,15 @@ void EarlyHintPreloader::MaybeCreateAndInsertPreload(
   }
 
   nsCOMPtr<nsIURI> uri;
-  // use the base uri
-  NS_ENSURE_SUCCESS_VOID(aHeader.NewResolveHref(getter_AddRefs(uri), aBaseURI));
+  NS_ENSURE_SUCCESS_VOID(
+      NS_NewURI(getter_AddRefs(uri), aHeader.mHref, nullptr, aBaseURI));
+  // The link relation may apply to a different resource, specified
+  // in the anchor parameter. For the link relations supported so far,
+  // we simply abort if the link applies to a resource different to the
+  // one we've loaded
+  if (!nsContentUtils::LinkContextIsURI(aHeader.mAnchor, uri)) {
+    return;
+  }
 
   // only preload secure context urls
   if (!uri->SchemeIs("https")) {
