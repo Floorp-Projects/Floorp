@@ -766,18 +766,23 @@ IdentityCredential::PromptUserWithPolicy(
                                                                   __func__);
   }
 
-  // if registered, return
+  // if registered, mark as logged in and return
   if (registered) {
+    icStorageService->SetState(aPrincipal, idpPrincipal,
+                               NS_ConvertUTF16toUTF8(aAccount.mId), true, true);
     return IdentityCredential::GetAccountPromise::CreateAndResolve(
         MakeTuple(aManifest, aAccount), __func__);
   }
 
   // otherwise, fetch ->Then display ->Then return ->Catch reject
   RefPtr<BrowsingContext> browsingContext(aBrowsingContext);
+  nsCOMPtr<nsIPrincipal> argumentPrincipal(aPrincipal);
   return FetchMetadata(aPrincipal, aManifest)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [aProvider, browsingContext](const IdentityClientMetadata& metadata)
+          [aAccount, aProvider, argumentPrincipal, browsingContext,
+           icStorageService,
+           idpPrincipal](const IdentityClientMetadata& metadata)
               -> RefPtr<GenericPromise> {
             nsresult error;
             nsCOMPtr<nsIIdentityCredentialPromptService> icPromptService =
@@ -815,12 +820,17 @@ IdentityCredential::PromptUserWithPolicy(
             RefPtr<GenericPromise::Private> resultPromise =
                 new GenericPromise::Private(__func__);
             RefPtr<DomPromiseListener> listener = new DomPromiseListener(
-                [resultPromise](JSContext* aCx, JS::Handle<JS::Value> aValue) {
+                [aAccount, argumentPrincipal, idpPrincipal, resultPromise,
+                 icStorageService](JSContext* aCx,
+                                   JS::Handle<JS::Value> aValue) {
                   bool isBool = aValue.isBoolean();
                   if (!isBool) {
                     resultPromise->Reject(NS_ERROR_FAILURE, __func__);
                     return;
                   }
+                  icStorageService->SetState(
+                      argumentPrincipal, idpPrincipal,
+                      NS_ConvertUTF16toUTF8(aAccount.mId), true, true);
                   resultPromise->Resolve(aValue.toBoolean(), __func__);
                 },
                 [resultPromise](nsresult aRv) {
