@@ -4294,19 +4294,6 @@ void nsWindow::OnEnterNotifyEvent(GdkEventCrossing* aEvent) {
   DispatchInputEvent(&event);
 }
 
-// XXX Is this the right test for embedding cases?
-static bool is_top_level_mouse_exit(GdkWindow* aWindow,
-                                    GdkEventCrossing* aEvent) {
-  auto x = gint(aEvent->x_root);
-  auto y = gint(aEvent->y_root);
-  GdkDevice* pointer = GdkGetPointer();
-  GdkWindow* winAtPt = gdk_device_get_window_at_position(pointer, &x, &y);
-  if (!winAtPt) return true;
-  GdkWindow* topLevelAtPt = gdk_window_get_toplevel(winAtPt);
-  GdkWindow* topLevelWidget = gdk_window_get_toplevel(aWindow);
-  return topLevelAtPt != topLevelWidget;
-}
-
 void nsWindow::OnLeaveNotifyEvent(GdkEventCrossing* aEvent) {
   // This ignores NotifyVirtual and NotifyNonlinearVirtual leave notify
   // events when the pointer leaves a child window.  If the destination
@@ -4316,7 +4303,7 @@ void nsWindow::OnLeaveNotifyEvent(GdkEventCrossing* aEvent) {
   // XXXkt However, we will miss toplevel exits when the pointer directly
   // leaves a foreign (plugin) child window without passing over a visible
   // portion of a Gecko window.
-  if (!mGdkWindow || aEvent->subwindow != nullptr) {
+  if (!mGdkWindow || aEvent->subwindow) {
     return;
   }
 
@@ -4326,9 +4313,13 @@ void nsWindow::OnLeaveNotifyEvent(GdkEventCrossing* aEvent) {
   event.mRefPoint = GdkEventCoordsToDevicePixels(aEvent->x, aEvent->y);
   event.AssignEventTime(GetWidgetEventTime(aEvent->time));
 
-  event.mExitFrom = Some(is_top_level_mouse_exit(mGdkWindow, aEvent)
-                             ? WidgetMouseEvent::ePlatformTopLevel
-                             : WidgetMouseEvent::ePlatformChild);
+  // The filter out for subwindows should make sure that this is targeted to
+  // this nsWindow.
+  const bool leavingTopLevel =
+      mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog;
+
+  event.mExitFrom = Some(leavingTopLevel ? WidgetMouseEvent::ePlatformTopLevel
+                                         : WidgetMouseEvent::ePlatformChild);
 
   LOG("OnLeaveNotify");
 
@@ -8060,16 +8051,6 @@ static gboolean enter_notify_event_cb(GtkWidget* widget,
 static gboolean leave_notify_event_cb(GtkWidget* widget,
                                       GdkEventCrossing* event) {
   if (is_parent_grab_leave(event)) {
-    return TRUE;
-  }
-
-  // bug 369599: Suppress LeaveNotify events caused by pointer grabs to
-  // avoid generating spurious mouse exit events.
-  auto x = gint(event->x_root);
-  auto y = gint(event->y_root);
-  GdkDevice* pointer = GdkGetPointer();
-  GdkWindow* winAtPt = gdk_device_get_window_at_position(pointer, &x, &y);
-  if (winAtPt == event->window) {
     return TRUE;
   }
 
