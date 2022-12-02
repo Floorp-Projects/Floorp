@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-11-30T12:24:52.251425'
+updated_at: '2022-12-02T16:07:39.709784'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -694,10 +694,10 @@ people:
     bmo_id: 489889
     name: Andreas Pehrson
     nick: pehrsons
-  - &perrym
+  - &perrymcmanis
     bmo_id: 697076
     name: Perry McManis
-    nick: perrym
+    nick: perry.mcmanis
   - &peterv
     bmo_id: 24295
     name: Peter Van der Beken
@@ -3620,7 +3620,7 @@ modules:
         peers:
           - *aplacitelli
           - *janerik
-          - *perrym
+          - *perrymcmanis
           - *travis
         machine_name: telemetry
 
@@ -3655,5 +3655,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: 426b6ba19d817c9605570db5f5dac05d36d435b9
-  export: 2433164179899f1b2b2e051ef36d27744b9e1f6e
+  config: 0968dafcdfe8f19176dbcb8f45d1f3bb645559ca
+  export: 98b98532e7ee4cb785d406748ed546a017554ef2
