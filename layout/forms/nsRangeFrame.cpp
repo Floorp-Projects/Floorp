@@ -459,15 +459,15 @@ void nsRangeFrame::UpdateForValueChange() {
   SchedulePaint();
 }
 
-nsTArray<double> nsRangeFrame::TickMarks() {
-  nsTArray<double> tickMarks;
+nsTArray<Decimal> nsRangeFrame::TickMarks() {
+  nsTArray<Decimal> tickMarks;
   auto& input = InputElement();
   auto* list = input.GetList();
   if (!list) {
     return tickMarks;
   }
-  auto min = input.GetMinimumAsDouble();
-  auto max = input.GetMaximumAsDouble();
+  auto min = input.GetMinimum();
+  auto max = input.GetMaximum();
   auto* options = list->Options();
   nsAutoString label;
   for (uint32_t i = 0; i < options->Length(); ++i) {
@@ -479,9 +479,9 @@ nsTArray<double> nsRangeFrame::TickMarks() {
     }
     nsAutoString str;
     option->GetValue(str);
-    nsresult rv;
-    double tickMark = str.ToDouble(&rv);
-    if (NS_FAILED(rv) || tickMark < min || tickMark > max) {
+    auto tickMark = HTMLInputElement::StringToDecimal(str);
+    if (tickMark.isNaN() || tickMark < min || tickMark > max ||
+        input.ValueIsStepMismatch(tickMark)) {
       continue;
     }
     tickMarks.AppendElement(tickMark);

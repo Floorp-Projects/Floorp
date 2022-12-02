@@ -123,8 +123,6 @@ nsresult InputType::SetValueInternal(const nsAString& aValue,
   return inputElement->SetValueInternal(aValue, aOptions);
 }
 
-Decimal InputType::GetStepBase() const { return mInputElement->GetStepBase(); }
-
 nsIFrame* InputType::GetPrimaryFrame() const {
   return mInputElement->GetPrimaryFrame();
 }

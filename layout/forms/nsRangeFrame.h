@@ -147,7 +147,7 @@ class nsRangeFrame final : public nsContainerFrame,
    */
   void UpdateForValueChange();
 
-  nsTArray<double> TickMarks();
+  nsTArray<mozilla::Decimal> TickMarks();
 
  protected:
   mozilla::dom::HTMLInputElement& InputElement() const;
