@@ -6,6 +6,7 @@ loader: taskgraph.loader.transform:loader
 
 transforms:
     - ac_taskgraph.transforms.build:transforms
+    - ac_taskgraph.transforms.gradle_optimization:transforms
     - taskgraph.transforms.code_review:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
