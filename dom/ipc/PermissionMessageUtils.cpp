@@ -15,8 +15,6 @@ namespace mozilla::ipc {
 void IPDLParamTraits<nsIPrincipal*>::Write(IPC::MessageWriter* aWriter,
                                            IProtocol* aActor,
                                            nsIPrincipal* aParam) {
-  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
-
   Maybe<PrincipalInfo> info;
   if (aParam) {
     info.emplace();

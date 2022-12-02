@@ -1554,9 +1554,7 @@ nsresult nsScriptSecurityManager::Init() {
   InitPrefs();
 
   // Create our system principal singleton
-  RefPtr<SystemPrincipal> system = SystemPrincipal::Create();
-
-  mSystemPrincipal = system;
+  mSystemPrincipal = SystemPrincipal::Init();
 
   return NS_OK;
 }
@@ -1600,6 +1598,7 @@ nsScriptSecurityManager::~nsScriptSecurityManager(void) {
 void nsScriptSecurityManager::Shutdown() {
   NS_IF_RELEASE(sIOService);
   BundleHelper::Shutdown();
+  SystemPrincipal::Shutdown();
 }
 
 nsScriptSecurityManager* nsScriptSecurityManager::GetScriptSecurityManager() {
