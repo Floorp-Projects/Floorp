@@ -301,7 +301,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
       idx = COLOR_3DHIGHLIGHT;
       break;
     case ColorID::Threedlightshadow:
-    case ColorID::Buttonborder:
     case ColorID::MozDisabledfield:
       idx = COLOR_3DLIGHT;
       break;
@@ -372,10 +371,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
     case ColorID::MozNativehyperlinktext:
       idx = COLOR_HOTLIGHT;
       break;
-    case ColorID::Marktext:
-    case ColorID::Mark:
-      aColor = GetStandinForNativeColor(aID, aScheme);
-      return NS_OK;
     default:
       idx = COLOR_WINDOW;
       res = NS_ERROR_FAILURE;
