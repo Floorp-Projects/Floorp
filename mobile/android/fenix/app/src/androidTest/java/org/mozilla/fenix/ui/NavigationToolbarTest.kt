@@ -12,11 +12,14 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestHelper.runWithSystemLocaleChanged
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
+import java.util.Locale
 
 /**
  *  Tests for verifying basic functionality of browser navigation and page related interactions
@@ -92,6 +95,46 @@ class NavigationToolbarTest {
             verifyThreeDotMenuExists()
         }.goForward {
             verifyUrl(nextWebPage.url.toString())
+        }
+    }
+
+    // Swipes the nav bar left/right to switch between tabs
+    @SmokeTest
+    @Test
+    fun swipeToSwitchTabTest() {
+        val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(firstWebPage.url) {
+        }.openTabDrawer {
+        }.openNewTab {
+        }.submitQuery(secondWebPage.url.toString()) {
+            swipeNavBarRight(secondWebPage.url.toString())
+            verifyUrl(firstWebPage.url.toString())
+            swipeNavBarLeft(firstWebPage.url.toString())
+            verifyUrl(secondWebPage.url.toString())
+        }
+    }
+
+    // Because it requires changing system prefs, this test will run only on Debug builds
+    @Test
+    fun swipeToSwitchTabInRTLTest() {
+        val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
+        val arabicLocale = Locale("ar", "AR")
+
+        runWithSystemLocaleChanged(arabicLocale, activityTestRule) {
+            navigationToolbar {
+            }.enterURLAndEnterToBrowser(firstWebPage.url) {
+            }.openTabDrawer {
+            }.openNewTab {
+            }.submitQuery(secondWebPage.url.toString()) {
+                swipeNavBarLeft(secondWebPage.url.toString())
+                verifyUrl(firstWebPage.url.toString())
+                swipeNavBarRight(firstWebPage.url.toString())
+                verifyUrl(secondWebPage.url.toString())
+            }
         }
     }
 

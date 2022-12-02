@@ -302,6 +302,7 @@ class SettingsBasicsTest {
         }
     }
 
+    // Because it requires changing system prefs, this test will run only on Debug builds
     @Ignore("Failing due to app translation bug, see: https://github.com/mozilla-mobile/fenix/issues/26729")
     @Test
     fun frenchSystemLocaleTest() {

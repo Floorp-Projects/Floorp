@@ -6,6 +6,7 @@
 
 package org.mozilla.fenix.helpers
 
+import android.Manifest
 import android.app.ActivityManager
 import android.app.PendingIntent
 import android.content.ActivityNotFoundException
@@ -42,6 +43,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
+import androidx.test.runner.permission.PermissionRequester
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject
@@ -57,6 +59,7 @@ import org.hamcrest.Matcher
 import org.junit.Assert
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
@@ -389,20 +392,31 @@ object TestHelper {
 
     /**
      * Changes the default language of the entire device, not just the app.
+     * Runs on Debug variant as we don't want to adjust Release permission manifests
      * Runs the test in its testBlock.
-     * Cleans up and sets the default locale after it's are done.
+     * Cleans up and sets the default locale after it's done.
      */
     fun runWithSystemLocaleChanged(locale: Locale, testRule: ActivityTestRule<HomeActivity>, testBlock: () -> Unit) {
-        val defaultLocale = Locale.getDefault()
+        if (Config.channel.isDebug) {
+            /* Sets permission to change device language */
+            PermissionRequester().apply {
+                addPermissions(
+                    Manifest.permission.CHANGE_CONFIGURATION,
+                )
+                requestPermissions()
+            }
 
-        try {
-            setSystemLocale(locale)
-            testBlock()
-            ThreadUtils.runOnUiThread { testRule.activity.recreate() }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        } finally {
-            setSystemLocale(defaultLocale)
+            val defaultLocale = Locale.getDefault()
+
+            try {
+                setSystemLocale(locale)
+                testBlock()
+                ThreadUtils.runOnUiThread { testRule.activity.recreate() }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                setSystemLocale(defaultLocale)
+            }
         }
     }
 

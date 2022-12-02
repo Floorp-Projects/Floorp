@@ -421,24 +421,6 @@ class SmokeTest {
         }
     }
 
-    // Swipes the nav bar left/right to switch between tabs
-    @Test
-    fun swipeToSwitchTabTest() {
-        val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-        val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(firstWebPage.url) {
-        }.openTabDrawer {
-        }.openNewTab {
-        }.submitQuery(secondWebPage.url.toString()) {
-            swipeNavBarRight(secondWebPage.url.toString())
-            verifyUrl(firstWebPage.url.toString())
-            swipeNavBarLeft(firstWebPage.url.toString())
-            verifyUrl(secondWebPage.url.toString())
-        }
-    }
-
     // Saves a login, then changes it and verifies the update
     @Test
     fun updateSavedLoginTest() {
