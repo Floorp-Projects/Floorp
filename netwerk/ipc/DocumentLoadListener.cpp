@@ -7,6 +7,7 @@
 
 #include "DocumentLoadListener.h"
 
+#include "NeckoCommon.h"
 #include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/LoadInfo.h"
@@ -1423,54 +1424,9 @@ bool DocumentLoadListener::ResumeSuspendedChannel(
   if (!aListener) {
     streamListenerFunctions.Clear();
   }
-  nsresult rv = NS_OK;
-  for (auto& variant : streamListenerFunctions) {
-    variant.match(
-        [&](const OnStartRequestParams& aParams) {
-          rv = aListener->OnStartRequest(aParams.request);
-          if (NS_FAILED(rv)) {
-            aParams.request->Cancel(rv);
-          }
-        },
-        [&](const OnDataAvailableParams& aParams) {
-          // Don't deliver OnDataAvailable if we've
-          // already failed.
-          if (NS_FAILED(rv)) {
-            return;
-          }
-          nsCOMPtr<nsIInputStream> stringStream;
-          rv = NS_NewByteInputStream(
-              getter_AddRefs(stringStream),
-              Span<const char>(aParams.data.get(), aParams.count),
-              NS_ASSIGNMENT_DEPEND);
-          if (NS_SUCCEEDED(rv)) {
-            rv = aListener->OnDataAvailable(aParams.request, stringStream,
-                                            aParams.offset, aParams.count);
-          }
-          if (NS_FAILED(rv)) {
-            aParams.request->Cancel(rv);
-          }
-        },
-        [&](const OnStopRequestParams& aParams) {
-          if (NS_SUCCEEDED(rv)) {
-            aListener->OnStopRequest(aParams.request, aParams.status);
-          } else {
-            aListener->OnStopRequest(aParams.request, rv);
-          }
-          rv = NS_OK;
-        },
-        [&](const OnAfterLastPartParams& aParams) {
-          nsCOMPtr<nsIMultiPartChannelListener> multiListener =
-              do_QueryInterface(aListener);
-          if (multiListener) {
-            if (NS_SUCCEEDED(rv)) {
-              multiListener->OnAfterLastPart(aParams.status);
-            } else {
-              multiListener->OnAfterLastPart(rv);
-            }
-          }
-        });
-  }
+
+  ForwardStreamListenerFunctions(streamListenerFunctions, aListener);
+
   // We don't expect to get new stream listener functions added
   // via re-entrancy. If this ever happens, we should understand
   // exactly why before allowing it.
