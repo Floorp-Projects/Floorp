@@ -83,9 +83,6 @@ window.UCL = {
 			aFolder = Services.dirsvc.get("UChrm", Ci.nsIFile);
 			aFolder.appendRelativePath("CSS");
 		}
-		if (!aFolder.exists() || !aFolder.isDirectory()) {
-			aFolder.create(Ci.nsIFile.DIRECTORY_TYPE, 0664);
-		}
 		delete this.FOLDER;
 		return this.FOLDER = aFolder;
 	},
@@ -591,8 +588,12 @@ CSSTester.prototype = {
 		this.logField.textContent = dateFormat(new Date(), "%H:%M:%S") + ": " + $A(arguments);
 	}
 };
-
+(async () => {
+if (!UCL.FOLDER.exists() || !UCL.FOLDER.isDirectory()) {
+await IOUtils.makeDirectory(OS.Path.join(OS.Constants.Path.profileDir, "chrome", "CSS"))
+}
 UCL.init();
+})()
 
 function $(id) { return document.getElementById(id); }
 function $A(arr) { return Array.slice(arr); }
