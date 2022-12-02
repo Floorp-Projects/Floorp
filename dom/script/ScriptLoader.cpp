@@ -9,6 +9,7 @@
 #include "ScriptTrace.h"
 #include "ModuleLoader.h"
 
+#include "nsIChildChannel.h"
 #include "zlib.h"
 
 #include "prsystem.h"
@@ -519,7 +520,7 @@ nsresult ScriptLoader::RestartLoad(ScriptLoadRequest* aRequest) {
   if (aRequest->IsModuleRequest()) {
     rv = aRequest->AsModuleRequest()->RestartModuleLoad();
   } else {
-    rv = StartLoad(aRequest);
+    rv = StartLoad(aRequest, 0);
   }
   if (NS_FAILED(rv)) {
     return rv;
@@ -530,15 +531,17 @@ nsresult ScriptLoader::RestartLoad(ScriptLoadRequest* aRequest) {
   return NS_BINDING_RETARGETED;
 }
 
-nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
+nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest,
+                                 uint64_t aEarlyHintPreloaderId) {
   if (aRequest->IsModuleRequest()) {
     return aRequest->AsModuleRequest()->StartModuleLoad();
   }
 
-  return StartClassicLoad(aRequest);
+  return StartClassicLoad(aRequest, aEarlyHintPreloaderId);
 }
 
-nsresult ScriptLoader::StartClassicLoad(ScriptLoadRequest* aRequest) {
+nsresult ScriptLoader::StartClassicLoad(ScriptLoadRequest* aRequest,
+                                        uint64_t aEarlyHintPreloaderId) {
   MOZ_ASSERT(aRequest->IsFetching());
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NULL_POINTER);
   aRequest->SetUnknownDataType();
@@ -562,7 +565,8 @@ nsresult ScriptLoader::StartClassicLoad(ScriptLoadRequest* aRequest) {
 
   securityFlags |= nsILoadInfo::SEC_ALLOW_CHROME;
 
-  nsresult rv = StartLoadInternal(aRequest, securityFlags);
+  nsresult rv =
+      StartLoadInternal(aRequest, securityFlags, aEarlyHintPreloaderId);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -580,7 +584,8 @@ static bool IsWebExtensionRequest(ScriptLoadRequest* aRequest) {
 }
 
 nsresult ScriptLoader::StartLoadInternal(ScriptLoadRequest* aRequest,
-                                         nsSecurityFlags securityFlags) {
+                                         nsSecurityFlags securityFlags,
+                                         uint64_t aEarlyHintPreloaderId) {
   nsContentPolicyType contentPolicyType =
       ScriptLoadRequestToContentPolicyType(aRequest);
   nsCOMPtr<nsINode> context;
@@ -605,6 +610,15 @@ nsresult ScriptLoader::StartLoadInternal(ScriptLoadRequest* aRequest,
       loadGroup, prompter);
 
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aEarlyHintPreloaderId) {
+    nsCOMPtr<nsIHttpChannelInternal> channelInternal =
+        do_QueryInterface(channel);
+    NS_ENSURE_TRUE(channelInternal != nullptr, NS_ERROR_FAILURE);
+
+    rv = channelInternal->SetEarlyHintPreloaderId(aEarlyHintPreloaderId);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   // snapshot the nonce at load start time for performing CSP checks
   if (contentPolicyType == nsIContentPolicy::TYPE_INTERNAL_SCRIPT ||
@@ -727,7 +741,9 @@ nsresult ScriptLoader::StartLoadInternal(ScriptLoadRequest* aRequest,
   // Set the initiator type
   nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(httpChannel));
   if (timedChannel) {
-    if (aRequest->GetScriptLoadContext()->IsLinkPreloadScript()) {
+    if (aEarlyHintPreloaderId) {
+      timedChannel->SetInitiatorType(u"early-hints"_ns);
+    } else if (aRequest->GetScriptLoadContext()->IsLinkPreloadScript()) {
       timedChannel->SetInitiatorType(u"link"_ns);
     } else {
       timedChannel->SetInitiatorType(u"script"_ns);
@@ -757,6 +773,14 @@ nsresult ScriptLoader::StartLoadInternal(ScriptLoadRequest* aRequest,
       key, channel, mDocument,
       aRequest->GetScriptLoadContext()->IsLinkPreloadScript());
 
+  if (aEarlyHintPreloaderId) {
+    nsCOMPtr<nsIHttpChannelInternal> channelInternal =
+        do_QueryInterface(channel);
+    NS_ENSURE_TRUE(channelInternal != nullptr, NS_ERROR_FAILURE);
+
+    rv = channelInternal->SetEarlyHintPreloaderId(aEarlyHintPreloaderId);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   rv = channel->AsyncOpen(loader);
 
   if (NS_FAILED(rv)) {
@@ -1002,7 +1026,7 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
     LOG(("ScriptLoadRequest (%p): Created request for external script",
          request.get()));
 
-    nsresult rv = StartLoad(request);
+    nsresult rv = StartLoad(request, 0);
     if (NS_FAILED(rv)) {
       ReportErrorToConsole(request, rv);
 
@@ -3536,7 +3560,8 @@ void ScriptLoader::PreloadURI(nsIURI* aURI, const nsAString& aCharset,
                               const nsAString& aIntegrity, bool aScriptFromHead,
                               bool aAsync, bool aDefer, bool aNoModule,
                               bool aLinkPreload,
-                              const ReferrerPolicy aReferrerPolicy) {
+                              const ReferrerPolicy aReferrerPolicy,
+                              uint64_t aEarlyHintPreloaderId) {
   NS_ENSURE_TRUE_VOID(mDocument);
   // Check to see if scripts has been turned off.
   if (!mEnabled || !mDocument->IsScriptEnabled()) {
@@ -3584,7 +3609,7 @@ void ScriptLoader::PreloadURI(nsIURI* aURI, const nsAString& aCharset,
          request.get(), url.get()));
   }
 
-  nsresult rv = StartLoad(request);
+  nsresult rv = StartLoad(request, aEarlyHintPreloaderId);
   if (NS_FAILED(rv)) {
     return;
   }

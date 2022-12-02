@@ -198,7 +198,8 @@ void PreloadService::PreloadScript(nsIURI* aURI, const nsAString& aType,
                                    uint64_t aEarlyHintPreloaderId) {
   mDocument->ScriptLoader()->PreloadURI(
       aURI, aCharset, aType, aCrossOrigin, aIntegrity, aScriptFromHead, false,
-      false, false, true, PreloadReferrerPolicy(aReferrerPolicy));
+      false, false, true, PreloadReferrerPolicy(aReferrerPolicy),
+      aEarlyHintPreloaderId);
 }
 
 void PreloadService::PreloadImage(nsIURI* aURI, const nsAString& aCrossOrigin,
