@@ -15,6 +15,8 @@
 #include "nsXULAppAPI.h"
 #include "prenv.h"
 
+class nsIStreamListener;
+
 namespace mozilla {
 namespace dom {
 class BrowserChild;
@@ -131,6 +133,9 @@ struct OnAfterLastPartParams {
 using StreamListenerFunction =
     mozilla::Variant<OnStartRequestParams, OnDataAvailableParams,
                      OnStopRequestParams, OnAfterLastPartParams>;
+
+nsresult ForwardStreamListenerFunctions(
+    nsTArray<StreamListenerFunction>& aCalls, nsIStreamListener* aParent);
 
 }  // namespace net
 }  // namespace mozilla

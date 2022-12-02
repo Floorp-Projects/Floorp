@@ -41,6 +41,7 @@ UNIFIED_SOURCES += [
     "InputChannelThrottleQueueChild.cpp",
     "InputChannelThrottleQueueParent.cpp",
     "NeckoChild.cpp",
+    "NeckoCommon.cpp",
     "NeckoParent.cpp",
     "NeckoTargetHolder.cpp",
     "ParentChannelWrapper.cpp",
