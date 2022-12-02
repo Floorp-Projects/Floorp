@@ -79,7 +79,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 nsIIOService* nsScriptSecurityManager::sIOService = nullptr;
-bool nsScriptSecurityManager::sStrictFileOriginPolicy = true;
+std::atomic<bool> nsScriptSecurityManager::sStrictFileOriginPolicy = true;
 
 namespace {
 
