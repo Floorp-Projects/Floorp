@@ -286,18 +286,6 @@ static const struct EVInfo kEVInfos[] = {
     "BQk=",
   },
   {
-    // CN=Network Solutions Certificate Authority,O=Network Solutions L.L.C.,C=US
-    "1.3.6.1.4.1.782.1.2.1.8.1",
-    "Network Solutions EV OID",
-    { 0x15, 0xF0, 0xBA, 0x00, 0xA3, 0xAC, 0x7A, 0xF3, 0xAC, 0x88, 0x4C,
-      0x07, 0x2B, 0x10, 0x11, 0xA0, 0x77, 0xBD, 0x77, 0xC0, 0x97, 0xF4,
-      0x01, 0x64, 0xB2, 0xF8, 0x59, 0x8A, 0xBD, 0x83, 0x86, 0x0C },
-    "MGIxCzAJBgNVBAYTAlVTMSEwHwYDVQQKExhOZXR3b3JrIFNvbHV0aW9ucyBMLkwu"
-    "Qy4xMDAuBgNVBAMTJ05ldHdvcmsgU29sdXRpb25zIENlcnRpZmljYXRlIEF1dGhv"
-    "cml0eQ==",
-    "V8szb8JcFuZHFhfjkDFo4A==",
-  },
-  {
     // CN=Entrust Root Certification Authority,OU="(c) 2006 Entrust, Inc.",OU=www.entrust.net/CPS is incorporated by reference,O="Entrust, Inc.",C=US
     "2.16.840.1.114028.10.1.2",
     "Entrust EV OID",
