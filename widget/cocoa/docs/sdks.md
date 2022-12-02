@@ -11,30 +11,17 @@ Compiling Firefox for macOS requires a macOS SDK. The build system uses the SDK 
 default, and you can select a different SDK using the `mozconfig` option `--with-macos-sdk`:
 
 ```text
-ac_add_options --with-macos-sdk=/Users/username/SDKs/MacOSX10.12.sdk
+ac_add_options --with-macos-sdk=/Users/username/SDKs/MacOSX11.3.sdk
 ```
 
 ## Supported SDKs
 
-First off, Firefox runs on 10.9 and above. This is called the "minimum deployment target" and is
+First off, Firefox runs on 10.12 and above. This is called the "minimum deployment target" and is
 independent of the SDK version.
 
-Our official Firefox builds compiled in CI (continuous integration) currently use the 10.12 SDK.
-[Bug 1475652](https://bugzilla.mozilla.org/show_bug.cgi?id=1475652) tracks updating this SDK.
+Our official Firefox builds compiled in CI (continuous integration) currently use the 11.3 SDK (last updated in [bug 1788854](https://bugzilla.mozilla.org/show_bug.cgi?id=1788854)). This is also the minimum supported SDK version for local builds.
 
-For local builds, all SDKs from 10.12 to 10.15 are supported. Firefox should compile successfully
-with all of those SDKs, but minor differences in runtime behavior can occur.
-
-However, since only the 10.12 SDK is used in CI, compiling with different SDKs breaks from time to time.
-Such breakages should be [reported in Bugzilla](https://bugzilla.mozilla.org/enter_bug.cgi?blocked=mach-busted&bug_type=defect&cc=:spohl,:mstange&component=General&form_name=enter_bug&keywords=regression&op_sys=macOS&product=Firefox%20Build%20System&rep_platform=All) and fixed quickly.
-
-Aside: Firefox seems to be a bit of a special snowflake with its ability to build with an arbitrary SDK.
-For example, at the time of this writing (June 2020),
-[building Chrome requires the 10.15 SDK](https://chromium.googlesource.com/chromium/src/+/master/docs/mac_build_instructions.md#system-requirements).
-Some apps even require a certain version of Xcode and only support building with the SDK of that Xcode version.
-
-Why are we using such an old SDK in CI, you ask? It basically comes down to the fact that macOS
-hardware is expensive, and the fact that the compilers and linkers supplied by Xcode don't run on Linux.
+Compiling with different SDKs breaks from time to time. Such breakages should be [reported in Bugzilla](https://bugzilla.mozilla.org/enter_bug.cgi?blocked=mach-busted&bug_type=defect&cc=:spohl,:mstange&component=General&form_name=enter_bug&keywords=regression&op_sys=macOS&product=Firefox%20Build%20System&rep_platform=All) and fixed quickly.
 
 ## Obtaining SDKs
 
