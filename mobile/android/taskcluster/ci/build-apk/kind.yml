@@ -6,6 +6,7 @@ loader: taskgraph.loader.transform:loader
 
 transforms:
     - android_taskgraph.transforms.build_apk:transforms
+    - android_taskgraph.transforms.gradle_optimization:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
@@ -22,6 +23,11 @@ task-defaults:
         toolchain:
             - android-sdk-linux
             - android-gradle-dependencies
+    optimization:
+        by-tasks-for:
+            github-pu(sh|ll-request.*):
+                skip-unless-changed: [] # Paths are dynamically added by transforms
+            default: {}
     run:
         using: gradlew
         use-caches: false

@@ -7,9 +7,8 @@ kind.
 """
 
 
-import datetime
-
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.schema import resolve_keyed_by
 from android_taskgraph.gradle import get_variant
 
 
@@ -22,6 +21,22 @@ def add_variant_config(config, tasks):
         attributes = task.setdefault("attributes", {})
         if not attributes.get("build-type"):
             attributes["build-type"] = task["name"]
+        yield task
+
+
+@transforms.add
+def resolve_keys(config, tasks):
+    for task in tasks:
+        for field in (
+            'optimization',
+        ):
+            resolve_keyed_by(
+                task, field, item_name=task["name"],
+                **{
+                    'tasks-for': config.params["tasks_for"],
+                }
+            )
+
         yield task
 
 
