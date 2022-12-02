@@ -59,6 +59,8 @@ interface nsIPrincipal : nsISupports
      * Returns whether the other principal is equivalent to this principal.
      * Principals are considered equal if they are the same principal, or
      * they have the same origin.
+     *
+     * May be called from any thread.
      */
     boolean equals(in nsIPrincipal other);
 
@@ -66,12 +68,17 @@ interface nsIPrincipal : nsISupports
      * Returns whether the other principal is equivalent to this principal
      * for permission purposes
      * Matches {originAttributes ,equalsURIForPermission}
+     *
+     * May be called from any thread.
      */
 
     boolean equalsForPermission(in nsIPrincipal other, in bool aExactHost);
 
     /**
      * Like equals, but takes document.domain changes into account.
+     *
+     * May be called from any thread, though document.domain may racily change
+     * during the comparison when called from off-main-thread.
      */
     boolean equalsConsideringDomain(in nsIPrincipal other);
 
@@ -81,18 +88,24 @@ interface nsIPrincipal : nsISupports
     %}
 
     /*
-    * Returns whether the Principals URI is equal to the other URI
-    */
+     * Returns whether the Principals URI is equal to the other URI
+     *
+     * May be called from any thread.
+     */
     boolean equalsURI(in nsIURI aOtherURI);
 
     /**
      * Returns a hash value for the principal.
+     *
+     * May be called from any thread.
      */
     [notxpcom, nostdcall] readonly attribute unsigned long hashValue;
 
     /**
      * The principal URI to which this principal pertains.  This is
      * generally the document URI.
+     *
+     * May be called from any thread.
      */
     [infallible] readonly attribute nsIURI URI;
 
@@ -102,6 +115,8 @@ interface nsIPrincipal : nsISupports
      * or a superdomain of our URI.
      * Setting this has no effect on the URI.
      * See https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy#Changing_origin
+     *
+     * The getter may be called from any thread, but may only be set on the main thread.
      */
     [noscript] attribute nsIURI domain;
 
@@ -118,18 +133,26 @@ interface nsIPrincipal : nsISupports
      * privileged, security context) is not equal to any other principal
      * (including other null principals), and therefore does not subsume
      * anything but itself.
+     *
+     * May be called from any thread.
      */
     boolean subsumes(in nsIPrincipal other);
 
     /**
      * Same as the previous method, subsumes(), but takes document.domain into
      * account.
+     *
+     * May be called from any thread, though document.domain may racily change
+     * during the comparison when called from off-main-thread.
      */
     boolean subsumesConsideringDomain(in nsIPrincipal other);
 
     /**
      * Same as the subsumesConsideringDomain(), but ignores the first party
      * domain in its originAttributes.
+     *
+     * May be called from any thread, though document.domain may racily change
+     * during the comparison when called from off-main-thread.
      */
     boolean subsumesConsideringDomainIgnoringFPD(in nsIPrincipal other);
 
@@ -156,6 +179,7 @@ interface nsIPrincipal : nsISupports
      *       specification.
      * NOTE: The 'domain' attribute has no effect on the behaviour of this
      *       function.
+     * NOTE: Main-Thread Only.
      *
      *
      * @param uri    The URI about to be loaded.
@@ -171,37 +195,45 @@ interface nsIPrincipal : nsISupports
      * Like checkMayLoad, but if returning an error will also report that error
      * to the console, using the provided window id.  The window id may be 0 to
      * report to just the browser console, not web consoles.
+     *
+     * NOTE: Main-Thread Only.
      */
     void checkMayLoadWithReporting(in nsIURI uri,
                                    in boolean allowIfInheritsPrincipal,
                                    in unsigned long long innerWindowID);
 
     /**
-    * Checks if the provided URI is considered third-party to the
-    * URI of the principal.
-    * Returns true if the URI is third-party.
-    *
-    * @param uri - The URI to check
-    */
+     * Checks if the provided URI is considered third-party to the
+     * URI of the principal.
+     * Returns true if the URI is third-party.
+     *
+     * May be called from any thread.
+     *
+     * @param uri - The URI to check
+     */
     boolean isThirdPartyURI(in nsIURI uri);
 
     /**
-    * Checks if the provided principal is considered third-party to the
-    * URI of the Principal.
-    * Returns true if the principal is third-party.
-    *
-    * @param principal - The principal to check
-    */
+     * Checks if the provided principal is considered third-party to the
+     * URI of the Principal.
+     * Returns true if the principal is third-party.
+     *
+     * May be called from any thread.
+     *
+     * @param principal - The principal to check
+     */
     boolean isThirdPartyPrincipal(in nsIPrincipal principal);
 
     /**
-    * Checks if the provided channel is considered third-party to the
-    * URI of the principal. 
-    * Returns true if the channel is third-party.
-    * Returns false if the Principal is a System Principal
-    *
-    * @param channel - The Channel to check
-    */
+     * Checks if the provided channel is considered third-party to the
+     * URI of the principal.
+     * Returns true if the channel is third-party.
+     * Returns false if the Principal is a System Principal
+     *
+     * NOTE: Main-Thread Only.
+     *
+     * @param channel - The Channel to check
+     */
     boolean isThirdPartyChannel(in nsIChannel channel);
 
     /**
@@ -221,6 +253,7 @@ interface nsIPrincipal : nsISupports
     [implicit_jscontext]
     readonly attribute jsval originAttributes;
 
+    // May be called from any thread.
     [noscript, notxpcom, nostdcall, binaryname(OriginAttributesRef)]
     const_OriginAttributes OriginAttributesRef();
 
@@ -232,30 +265,40 @@ interface nsIPrincipal : nsISupports
      *
      * We maintain the invariant that principalA.equals(principalB) if and only
      * if principalA.origin == principalB.origin.
+     *
+     * May be called from any thread.
      */
     readonly attribute ACString origin;
 
     /**
      * Returns an ASCII compatible representation
      * of the principals Origin
+     *
+     * May be called from any thread.
      */
     [noscript] readonly attribute ACString asciiOrigin;
 
     /**
-     * Returns the "host:port" portion of the 
+     * Returns the "host:port" portion of the
      * Principals URI, if any.
+     *
+     * May be called from any thread.
      */
     readonly attribute ACString hostPort;
 
     /**
-     * Returns the "host:port" portion of the 
+     * Returns the "host:port" portion of the
      * Principals URI, if any.
+     *
+     * May be called from any thread.
      */
     readonly attribute ACString asciiHost;
 
     /**
-     * Returns the "host" portion of the 
+     * Returns the "host" portion of the
      * Principals URI, if any.
+     *
+     * May be called from any thread.
      */
     readonly attribute ACString host;
 
@@ -263,58 +306,79 @@ interface nsIPrincipal : nsISupports
      * Returns the prePath of the principals uri
      * follows the format scheme:
      * "scheme://username:password@hostname:portnumber/"
+     *
+     * May be called from any thread.
      */
     readonly attribute ACString prePath;
 
     /**
      * Returns the filePath of the principals uri. See nsIURI.
+     *
+     * May be called from any thread.
      */
     readonly attribute ACString filePath;
 
     /**
-      * Returns the ASCII Spec from the Principals URI.
-      * Might return the empty string, e.g. for the case of
-      * a SystemPrincipal or an EpxandedPrincipal.
-      *
-      * WARNING: DO NOT USE FOR SECURITY CHECKS.
-      * just for logging purposes!
+     * Returns the ASCII Spec from the Principals URI.
+     * Might return the empty string, e.g. for the case of
+     * a SystemPrincipal or an EpxandedPrincipal.
+     *
+     * May be called from any thread.
+     *
+     * WARNING: DO NOT USE FOR SECURITY CHECKS.
+     * just for logging purposes!
      */
     readonly attribute ACString asciiSpec;
 
     /**
-      * Returns the Spec from the Principals URI.
-      * Might return the empty string, e.g. for the case of
-      * a SystemPrincipal or an EpxandedPrincipal.
-      *
-      * WARNING: Do not land new Code using, as this will be removed soon
+     * Returns the Spec from the Principals URI.
+     * Might return the empty string, e.g. for the case of
+     * a SystemPrincipal or an EpxandedPrincipal.
+     *
+     * May be called from any thread.
+     *
+     * WARNING: Do not land new Code using, as this will be removed soon
      */
     readonly attribute ACString spec;
 
-    /* Returns the Pre Path of the Principals URI with
-    * user:pass stripped for privacy and spoof prevention
-    */
+    /**
+     * Returns the Pre Path of the Principals URI with
+     * user:pass stripped for privacy and spoof prevention
+     *
+     * May be called from any thread.
+     */
     readonly attribute ACString exposablePrePath;
 
-    /* Returns the Spec of the Principals URI with
-    * user/pass/ref/query stripped for privacy and spoof prevention
-    */
+    /**
+     * Returns the Spec of the Principals URI with
+     * user/pass/ref/query stripped for privacy and spoof prevention
+     *
+     * May be called from any thread.
+     */
     readonly attribute ACString exposableSpec;
 
     /**
      * Return the scheme of the principals URI
+     *
+     * May be called from any thread.
      */
     readonly attribute ACString scheme;
 
     /**
-    * Checks if the Principal's URI Scheme matches with the parameter
-    *
-    * @param scheme    The scheme to be checked
-    */
+     * Checks if the Principal's URI Scheme matches with the parameter
+     *
+     * May be called from any thread.
+     *
+     * @param scheme    The scheme to be checked
+     */
     [infallible]
     boolean schemeIs(in string scheme);
 
     /*
      * Checks if the Principal's URI is contained in the given Pref
+     *
+     * NOTE: Main-Thread Only.
+     *
      * @param pref    The pref to be checked
      */
     [infallible]
@@ -322,45 +386,58 @@ interface nsIPrincipal : nsISupports
 
     /**
      * Check if the Principal's URI is contained in the given list
+     *
+     * May be called from any thread.
+     *
      * @param list The list to be checked
      */
     [infallible]
     boolean isURIInList(in ACString list);
 
-    /*
-    * Uses NS_Security Compare to determine if the
-    * other URI is same-origin as the uri of the Principal
-    */
+    /**
+     * Uses NS_Security Compare to determine if the
+     * other URI is same-origin as the uri of the Principal
+     *
+     * May be called from any thread.
+     */
     [infallible]
     boolean isSameOrigin(in nsIURI otherURI);
 
     /*
-    * Checks if the Principal is allowed to load the Provided file:// URI
-    * using NS_RelaxStrictFileOriginPolicy
-    */
+     * Checks if the Principal is allowed to load the Provided file:// URI
+     * using NS_RelaxStrictFileOriginPolicy
+     *
+     * May be called from any thread.
+     */
     bool allowsRelaxStrictFileOriginPolicy(in nsIURI aURI);
 
 
     /*
-    *  Generates a Cache-Key for the Cors-Preflight Cache
-    */
+     * Generates a Cache-Key for the Cors-Preflight Cache
+     *
+     * May be called from any thread.
+     */
     [noscript]
     ACString getPrefLightCacheKey(in nsIURI aURI ,in bool aWithCredentials,
                                   in const_OriginAttributes aOriginAttributes);
 
 
     /*
-    *  Checks if the Principals URI has first party storage access
-    *  when loaded inside the provided 3rd party resource window.
-    *  See also: ContentBlocking::ShouldAllowAccessFor
-    */
+     * Checks if the Principals URI has first party storage access
+     * when loaded inside the provided 3rd party resource window.
+     * See also: ContentBlocking::ShouldAllowAccessFor
+     *
+     * NOTE: Main-Thread Only.
+     */
     bool hasFirstpartyStorageAccess(in mozIDOMWindow aWindow, out uint32_t rejectedReason);
 
 
     /*
-    * Returns a Key for the LocalStorage Manager, used to
-    * check the Principals Origin Storage usage.
-    */
+     * Returns a Key for the LocalStorage Manager, used to
+     * check the Principals Origin Storage usage.
+     *
+     * May be called from any thread.
+     */
     readonly attribute ACString localStorageQuotaKey;
 
     /**
@@ -372,28 +449,39 @@ interface nsIPrincipal : nsISupports
      * WorkerGlobalScope.isSecureContext.
      *
      * This method returns false instead of throwing upon errors.
-     */ 
+     *
+     * NOTE: Main-Thread Only.
+     */
     [infallible]
     readonly attribute boolean isOriginPotentiallyTrustworthy;
 
+    /**
+     * NOTE: Main-Thread Only.
+     */
     [infallible]
     readonly attribute boolean isLoopbackHost;
 
     /**
-     * Returns the Flags of the Principals 
+     * Returns the Flags of the Principals
      * associated AboutModule, in case there is one.
+     *
+     * NOTE: Main-Thread Only.
      */
     uint32_t getAboutModuleFlags();
 
-    /*
-    * Returns the Key to access the Principals 
-    * Origin Local/Session Storage
-    */
+    /**
+     * Returns the Key to access the Principals
+     * Origin Local/Session Storage
+     *
+     * May be called from any thread.
+     */
     readonly attribute ACString storageOriginKey;
 
     /**
      * Creates and Returns a new ReferrerInfo with the 
      * Principals URI
+     *
+     * May be called from any thread.
      */
     nsIReferrerInfo createReferrerInfo(in ReferrerPolicy aReferrerPolicy);
 
@@ -401,6 +489,8 @@ interface nsIPrincipal : nsISupports
      * The base part of |origin| without the concatenation with |originSuffix|.
      * This doesn't have the important invariants described above with |origin|,
      * and as such should only be used for legacy situations.
+     *
+     * May be called from any thread.
      */
     readonly attribute ACString originNoSuffix;
 
@@ -412,6 +502,8 @@ interface nsIPrincipal : nsISupports
      * The value of .originSuffix is automatically serialized into .origin, so any
      * consumers using that are automatically origin-attribute-aware. Consumers with
      * special requirements must inspect and compare .originSuffix manually.
+     *
+     * May be called from any thread.
      */
     readonly attribute AUTF8String originSuffix;
 
@@ -424,12 +516,16 @@ interface nsIPrincipal : nsISupports
      * For most principals, |siteOrigin| matches |origin| precisely. Only
      * principals which allow mutating |domain|, such as ContentPrincipal,
      * override the default implementation in BasePrincipal.
+     *
+     * May be called from any thread.
      */
     readonly attribute ACString siteOrigin;
 
     /**
      * The base part of |siteOrigin| without the concatenation with
      * |originSuffix|.
+     *
+     * May be called from any thread.
      */
     readonly attribute ACString siteOriginNoSuffix;
 
@@ -437,20 +533,31 @@ interface nsIPrincipal : nsISupports
      * The base domain of the principal URI to which this principal pertains
      * (generally the document URI), handling null principals and
      * non-hierarchical schemes correctly.
+     *
+     * May be called from any thread.
      */
     readonly attribute ACString baseDomain;
 
     /**
      * Gets the ID of the add-on this principal belongs to.
+     *
+     * May be called from any thread.
      */
     readonly attribute AString addonId;
 
+    /**
+     * Gets the WebExtensionPolicy of the add-on this principal belongs to.
+     *
+     * NOTE: Main-Thread Only.
+     */
     readonly attribute WebExtensionPolicy addonPolicy;
 
     /**
      * Gets the id of the user context this principal is inside.  If this
      * principal is inside the default userContext, this returns
      * nsIScriptSecurityManager::DEFAULT_USER_CONTEXT_ID.
+     *
+     * May be called from any thread.
      */
     [infallible] readonly attribute unsigned long userContextId;
 
@@ -458,6 +565,8 @@ interface nsIPrincipal : nsISupports
      * Gets the id of the private browsing state of the context containing
      * this principal. If the principal has a private browsing value of 0, it
      * is not in private browsing.
+     *
+     * May be called from any thread.
      */
     [infallible] readonly attribute unsigned long privateBrowsingId;
 
@@ -467,34 +576,46 @@ interface nsIPrincipal : nsISupports
      * <iframe mozbrowser noisolation> does not count as isolated since
      * isolation is disabled.  Isolation can only be disabled if the
      * containing document is chrome.
+     *
+     * May be called from any thread.
      */
     [infallible] readonly attribute boolean isInIsolatedMozBrowserElement;
 
     /**
      * Returns true iff this is a null principal (corresponding to an
      * unknown, hence assumed minimally privileged, security context).
+     *
+     * May be called from any thread.
      */
     [infallible] readonly attribute boolean isNullPrincipal;
 
     /**
      * Returns true iff this principal corresponds to a principal origin.
+     *
+     * May be called from any thread.
      */
     [infallible] readonly attribute boolean isContentPrincipal;
 
     /**
      * Returns true iff this is an expanded principal.
+     *
+     * May be called from any thread.
      */
     [infallible] readonly attribute boolean isExpandedPrincipal;
 
     /**
      * Returns true iff this is the system principal.  C++ callers should use
      * IsSystemPrincipal() instead of this scriptable accessor.
+     *
+     * May be called from any thread.
      */
     readonly attribute boolean isSystemPrincipal;
 
     /**
      * Faster and nicer version callable from C++.  Callers must include
      * BasePrincipal.h, where it's implemented.
+     *
+     * May be called from any thread.
      */
     %{C++
       inline bool IsSystemPrincipal() const;
@@ -503,11 +624,13 @@ interface nsIPrincipal : nsISupports
     /**
      * Returns true iff the principal is either an addon principal or
      * an expanded principal, which contains at least one addon principal.
+     *
+     * May be called from any thread.
      */
     [infallible] readonly attribute boolean isAddonOrExpandedAddonPrincipal;
 
     %{C++
-    // MOZ_DBG support
+    // MOZ_DBG support (threadsafe)
     friend std::ostream& operator<<(std::ostream& aOut, const nsIPrincipal& aPrincipal) {
       nsIPrincipal* principal = const_cast<nsIPrincipal*>(&aPrincipal);
       nsAutoCString origin;
@@ -516,38 +639,50 @@ interface nsIPrincipal : nsISupports
       return aOut << "nsIPrincipal { " << origin << " }";
     }
     %}
-    /*
-    * Returns true if the URI is an Onion URI
-    */
+
+    /**
+     * Returns true if the URI is an Onion URI.
+     *
+     * May be called from any thread.
+     */
     [infallible] readonly attribute boolean isOnion;
 
-    /*
+    /**
      * Returns true if the Domain Policy allows js execution
-     * for the Principals URI
+     * for the Principal's URI
+     *
+     * NOTE: Main-Thread Only.
      */
     readonly attribute boolean isScriptAllowedByPolicy;
 
 
-     /*
-     * Returns true if the Principal can acess l10n 
+    /**
+     * Returns true if the Principal can acess l10n
      * features for the Provided DocumentURI
+     *
+     * NOTE: Main-Thread Only.
      */
     boolean isL10nAllowed(in nsIURI aDocumentURI);
-    
-    /**
-    * Returns a nsIPrincipal, with one less Subdomain Segment
-    * Returns `nullptr` if there are no more segments to remove.
-    */
 
+    /**
+     * Returns a nsIPrincipal, with one less Subdomain Segment
+     * Returns `nullptr` if there are no more segments to remove.
+     *
+     * May be called from any thread.
+     */
     [infallible] readonly attribute nsIPrincipal nextSubDomainPrincipal;
 
     /**
      * Returns if the principal is for an IP address.
+     *
+     * May be called from any thread.
      */
     [infallible] readonly attribute boolean isIpAddress;
 
     /**
      * Returns if the principal is for a local IP address.
+     *
+     * May be called from any thread.
      */
     [infallible] readonly attribute boolean isLocalIpAddress;
 
@@ -557,6 +692,8 @@ interface nsIPrincipal : nsISupports
      * in which case this is not a null principal, there is no known precursor
      * to this null principal, it was created by a privileged context, or there
      * was a bugged origin in the precursor string.
+     *
+     * May be called from any thread.
      *
      * WARNING: Be careful when using this principal, as it is not part of the
      * security properties of the null principal, and should NOT be used to
@@ -591,6 +728,8 @@ interface nsIExpandedPrincipal : nsISupports
    *
    * Note: this list is not reference counted, it is shared, so
    * should not be changed and should only be used ephemerally.
+   *
+   * May be called from any thread.
    */
   [noscript, notxpcom, nostdcall]
   PrincipalArray AllowList();
@@ -601,6 +740,8 @@ interface nsIExpandedPrincipal : nsISupports
    *
    * A Content Security Policy associated with this principal. Use this function
    * to query the associated CSP with this principal.
+   *
+   * NOTE: Main-Thread Only.
    */
   readonly attribute nsIContentSecurityPolicy csp;
 

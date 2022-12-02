@@ -558,6 +558,7 @@ BasePrincipal::SubsumesConsideringDomainIgnoringFPD(nsIPrincipal* aOther,
 
 NS_IMETHODIMP
 BasePrincipal::CheckMayLoad(nsIURI* aURI, bool aAllowIfInheritsPrincipal) {
+  AssertIsOnMainThread();
   return CheckMayLoadHelper(aURI, aAllowIfInheritsPrincipal, false, 0);
 }
 
@@ -565,6 +566,7 @@ NS_IMETHODIMP
 BasePrincipal::CheckMayLoadWithReporting(nsIURI* aURI,
                                          bool aAllowIfInheritsPrincipal,
                                          uint64_t aInnerWindowID) {
+  AssertIsOnMainThread();
   return CheckMayLoadHelper(aURI, aAllowIfInheritsPrincipal, true,
                             aInnerWindowID);
 }
@@ -573,6 +575,8 @@ nsresult BasePrincipal::CheckMayLoadHelper(nsIURI* aURI,
                                            bool aAllowIfInheritsPrincipal,
                                            bool aReport,
                                            uint64_t aInnerWindowID) {
+  AssertIsOnMainThread();  // Accesses non-threadsafe URI flags and the
+                           // non-threadsafe ExtensionPolicyService
   NS_ENSURE_ARG_POINTER(aURI);
   MOZ_ASSERT(
       aReport || aInnerWindowID == 0,
@@ -665,8 +669,10 @@ BasePrincipal::IsThirdPartyPrincipal(nsIPrincipal* aPrin, bool* aRes) {
   }
   return aPrin->IsThirdPartyURI(prinURI, aRes);
 }
+
 NS_IMETHODIMP
 BasePrincipal::IsThirdPartyChannel(nsIChannel* aChan, bool* aRes) {
+  AssertIsOnMainThread();
   if (IsSystemPrincipal()) {
     // Nothing is 3rd party to the system principal.
     *aRes = false;
@@ -695,6 +701,7 @@ BasePrincipal::IsSameOrigin(nsIURI* aURI, bool* aRes) {
 
 NS_IMETHODIMP
 BasePrincipal::IsL10nAllowed(nsIURI* aURI, bool* aRes) {
+  AssertIsOnMainThread();  // URI_DANGEROUS_TO_LOAD is not threadsafe to query.
   *aRes = false;
 
   if (nsContentUtils::IsErrorPage(aURI)) {
@@ -790,6 +797,7 @@ NS_IMETHODIMP
 BasePrincipal::HasFirstpartyStorageAccess(mozIDOMWindow* aCheckWindow,
                                           uint32_t* aRejectedReason,
                                           bool* aOutAllowed) {
+  AssertIsOnMainThread();
   *aRejectedReason = 0;
   *aOutAllowed = false;
 
@@ -1008,6 +1016,7 @@ BasePrincipal::SchemeIs(const char* aScheme, bool* aResult) {
 
 NS_IMETHODIMP
 BasePrincipal::IsURIInPrefList(const char* aPref, bool* aResult) {
+  AssertIsOnMainThread();
   *aResult = false;
   nsCOMPtr<nsIURI> prinURI;
   nsresult rv = GetURI(getter_AddRefs(prinURI));
@@ -1034,7 +1043,7 @@ BasePrincipal::IsURIInList(const nsACString& aList, bool* aResult) {
 
 NS_IMETHODIMP
 BasePrincipal::GetIsOriginPotentiallyTrustworthy(bool* aResult) {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnMainThread();
   *aResult = false;
 
   nsCOMPtr<nsIURI> uri;
@@ -1049,6 +1058,7 @@ BasePrincipal::GetIsOriginPotentiallyTrustworthy(bool* aResult) {
 
 NS_IMETHODIMP
 BasePrincipal::GetIsLoopbackHost(bool* aRes) {
+  AssertIsOnMainThread();
   *aRes = false;
   nsAutoCString host;
   nsresult rv = GetHost(host);
@@ -1061,6 +1071,7 @@ BasePrincipal::GetIsLoopbackHost(bool* aRes) {
 
 NS_IMETHODIMP
 BasePrincipal::GetAboutModuleFlags(uint32_t* flags) {
+  AssertIsOnMainThread();
   *flags = 0;
   nsCOMPtr<nsIURI> prinURI;
   nsresult rv = GetURI(getter_AddRefs(prinURI));
@@ -1453,6 +1464,7 @@ BasePrincipal::GetStorageOriginKey(nsACString& aOriginKey) {
 
 NS_IMETHODIMP
 BasePrincipal::GetIsScriptAllowedByPolicy(bool* aIsScriptAllowedByPolicy) {
+  AssertIsOnMainThread();
   *aIsScriptAllowedByPolicy = false;
   nsCOMPtr<nsIURI> prinURI;
   nsresult rv = GetURI(getter_AddRefs(prinURI));
