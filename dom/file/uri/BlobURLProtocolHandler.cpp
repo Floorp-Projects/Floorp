@@ -881,8 +881,7 @@ bool BlobURLProtocolHandler::GetBlobURLPrincipal(nsIURI* aURI,
     return false;
   }
 
-  MOZ_ASSERT(NS_IsMainThread(),
-             "without locking gDataTable is main-thread only");
+  StaticMutexAutoLock lock(sMutex);
   mozilla::dom::DataInfo* info =
       GetDataInfoFromURI(aURI, true /*aAlsoIfRevoked */);
   if (!info || info->mObjectType != mozilla::dom::DataInfo::eBlobImpl ||
