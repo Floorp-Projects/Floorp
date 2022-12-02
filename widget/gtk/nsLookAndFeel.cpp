@@ -678,7 +678,6 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
       break;
 
     case ColorID::Threedlightshadow:
-    case ColorID::Buttonborder:
     case ColorID::MozDisabledfield:
       aColor = mIsDark ? *GenericDarkColor(aID) : NS_RGB(0xE0, 0xE0, 0xE0);
       break;
@@ -739,11 +738,6 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
       break;
     case ColorID::MozColheaderhovertext:
       aColor = mMozColHeaderHoverText;
-      break;
-    case ColorID::Mark:
-    case ColorID::Marktext:
-      aColor = GetStandinForNativeColor(
-          aID, mIsDark ? ColorScheme::Dark : ColorScheme::Light);
       break;
     default:
       /* default color is BLACK */
