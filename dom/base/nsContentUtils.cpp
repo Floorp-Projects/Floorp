@@ -8529,6 +8529,44 @@ already_AddRefed<nsPIWindowRoot> nsContentUtils::GetWindowRoot(Document* aDoc) {
 }
 
 /* static */
+bool nsContentUtils::LinkContextIsURI(const nsAString& aAnchor,
+                                      nsIURI* aDocURI) {
+  if (aAnchor.IsEmpty()) {
+    // anchor parameter not present or empty -> same document reference
+    return true;
+  }
+
+  // the document URI might contain a fragment identifier ("#...')
+  // we want to ignore that because it's invisible to the server
+  // and just affects the local interpretation in the recipient
+  nsCOMPtr<nsIURI> contextUri;
+  nsresult rv = NS_GetURIWithoutRef(aDocURI, getter_AddRefs(contextUri));
+
+  if (NS_FAILED(rv)) {
+    // copying failed
+    return false;
+  }
+
+  // resolve anchor against context
+  nsCOMPtr<nsIURI> resolvedUri;
+  rv = NS_NewURI(getter_AddRefs(resolvedUri), aAnchor, nullptr, contextUri);
+
+  if (NS_FAILED(rv)) {
+    // resolving failed
+    return false;
+  }
+
+  bool same;
+  rv = contextUri->Equals(resolvedUri, &same);
+  if (NS_FAILED(rv)) {
+    // comparison failed
+    return false;
+  }
+
+  return same;
+}
+
+/* static */
 bool nsContentUtils::IsPreloadType(nsContentPolicyType aType) {
   return (aType == nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD ||
           aType == nsIContentPolicy::TYPE_INTERNAL_MODULE_PRELOAD ||
