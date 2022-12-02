@@ -669,8 +669,9 @@ nsresult SVGOuterSVGFrame::AttributeChanged(int32_t aNameSpaceID,
         // We are not embedded by reference, so our 'width' and 'height'
         // attributes are not overridden (and viewBox may influence our
         // intrinsic aspect ratio).  We need to reflow.
-        PresShell()->FrameNeedsReflow(this, IntrinsicDirty::StyleChange,
-                                      NS_FRAME_IS_DIRTY);
+        PresShell()->FrameNeedsReflow(
+            this, IntrinsicDirty::FrameAncestorsAndDescendants,
+            NS_FRAME_IS_DIRTY);
       }
     }
   }

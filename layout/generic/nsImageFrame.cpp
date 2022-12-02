@@ -1111,8 +1111,8 @@ void nsImageFrame::UpdateIntrinsicSizeAndRatio() {
   // Now we need to reflow if we have an unconstrained size and have
   // already gotten the initial reflow.
   if (!HasAnyStateBits(IMAGE_SIZECONSTRAINED)) {
-    PresShell()->FrameNeedsReflow(this, IntrinsicDirty::StyleChange,
-                                  NS_FRAME_IS_DIRTY);
+    PresShell()->FrameNeedsReflow(
+        this, IntrinsicDirty::FrameAncestorsAndDescendants, NS_FRAME_IS_DIRTY);
   } else if (PresShell()->IsActive()) {
     // We've already gotten the initial reflow, and our size hasn't changed,
     // so we're ready to request a decode.
@@ -2604,8 +2604,8 @@ nsresult nsImageFrame::AttributeChanged(int32_t aNameSpaceID,
     return rv;
   }
   if (nsGkAtoms::alt == aAttribute) {
-    PresShell()->FrameNeedsReflow(this, IntrinsicDirty::StyleChange,
-                                  NS_FRAME_IS_DIRTY);
+    PresShell()->FrameNeedsReflow(
+        this, IntrinsicDirty::FrameAncestorsAndDescendants, NS_FRAME_IS_DIRTY);
   }
 
   return NS_OK;

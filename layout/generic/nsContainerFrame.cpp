@@ -126,7 +126,7 @@ void nsContainerFrame::AppendFrames(ChildListID aListID,
   mFrames.AppendFrames(this, std::move(aFrameList));
 
   if (aListID != FrameChildListID::NoReflowPrincipal) {
-    PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,
+    PresShell()->FrameNeedsReflow(this, IntrinsicDirty::FrameAndAncestors,
                                   NS_FRAME_HAS_DIRTY_CHILDREN);
   }
 }
@@ -148,7 +148,7 @@ void nsContainerFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
   mFrames.InsertFrames(this, aPrevFrame, std::move(aFrameList));
 
   if (aListID != FrameChildListID::NoReflowPrincipal) {
-    PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,
+    PresShell()->FrameNeedsReflow(this, IntrinsicDirty::FrameAndAncestors,
                                   NS_FRAME_HAS_DIRTY_CHILDREN);
   }
 }
@@ -185,7 +185,7 @@ void nsContainerFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
     parent->StealFrame(continuation);
     continuation->Destroy();
     if (generateReflowCommand && parent != lastParent) {
-      presShell->FrameNeedsReflow(parent, IntrinsicDirty::TreeChange,
+      presShell->FrameNeedsReflow(parent, IntrinsicDirty::FrameAndAncestors,
                                   NS_FRAME_HAS_DIRTY_CHILDREN);
       lastParent = parent;
     }
@@ -1921,7 +1921,7 @@ void nsContainerFrame::NoteNewChildren(ChildListID aListID,
                                    : NS_STATE_GRID_DID_PUSH_ITEMS;
   for (auto* pif = GetPrevInFlow(); pif; pif = pif->GetPrevInFlow()) {
     pif->AddStateBits(didPushItemsBit);
-    presShell->FrameNeedsReflow(pif, IntrinsicDirty::TreeChange,
+    presShell->FrameNeedsReflow(pif, IntrinsicDirty::FrameAndAncestors,
                                 NS_FRAME_IS_DIRTY);
   }
 }
