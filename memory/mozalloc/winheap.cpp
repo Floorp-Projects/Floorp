@@ -8,14 +8,6 @@
 #include "mozilla/mozalloc.h"
 #include <windows.h>
 
-#if !defined(MOZ_MEMORY)
-#  include <malloc.h>
-#  define malloc_impl malloc
-#  define calloc_impl calloc
-#  define realloc_impl realloc
-#  define free_impl free
-#endif
-
 // Warning: C4273: 'HeapAlloc': inconsistent dll linkage
 // The Windows headers define HeapAlloc as dllimport, but we define it as
 // dllexport, which is a voluntary inconsistency.
