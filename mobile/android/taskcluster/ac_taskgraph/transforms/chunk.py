@@ -40,7 +40,7 @@ def add_dependencies(config, tasks):
         regular_deps = set()
         chunked_labels = set()
 
-        soft_dep_labels = list(task.get('soft-dependencies', []))
+        soft_dep_labels = list(task.pop('soft-dependencies', []))
         regular_dep_labels = list(task.get('dependencies', {}).keys())
         # sort for deterministic chunking
         all_dep_labels = sorted(set(soft_dep_labels + regular_dep_labels))
