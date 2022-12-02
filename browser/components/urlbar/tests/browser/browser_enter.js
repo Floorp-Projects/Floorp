@@ -93,12 +93,6 @@ add_task(async function altGrReturnKeypress() {
 
 add_task(async function searchOnEnterNoPick() {
   info("Search on Enter without picking a urlbar result");
-  await SpecialPowers.pushPrefEnv({
-    // The test checks that the untrimmed value is equal to the spec.
-    // When using showSearchTerms, the untrimmed value becomes
-    // the search terms.
-    set: [["browser.urlbar.showSearchTerms.featureGate", false]],
-  });
 
   // Why is BrowserTestUtils.openNewForegroundTab not causing the bug?
   let promiseTabOpened = BrowserTestUtils.waitForEvent(
@@ -132,7 +126,6 @@ add_task(async function searchOnEnterNoPick() {
 
   // Cleanup.
   BrowserTestUtils.removeTab(tab);
-  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function searchOnEnterSoon() {

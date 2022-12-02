@@ -23,9 +23,6 @@ const PREF_FEATUREGATE = "browser.urlbar.showSearchTerms.featureGate";
   If Nimbus experiment is enabled, check option visibility.
 */
 add_task(async function showSearchTermsVisibility_experiment_beforeOpen() {
-  await SpecialPowers.pushPrefEnv({
-    set: [[PREF_FEATUREGATE, false]],
-  });
   await QuickSuggestTestUtils.withExperiment({
     valueOverrides: {
       showSearchTermsFeatureGate: true,
@@ -43,7 +40,6 @@ add_task(async function showSearchTermsVisibility_experiment_beforeOpen() {
       gBrowser.removeCurrentTab();
     },
   });
-  await SpecialPowers.popPrefEnv();
 });
 
 /*
@@ -51,9 +47,6 @@ add_task(async function showSearchTermsVisibility_experiment_beforeOpen() {
   check option visibility on Preferences page.
 */
 add_task(async function showSearchTermsVisibility_experiment_afterOpen() {
-  await SpecialPowers.pushPrefEnv({
-    set: [[PREF_FEATUREGATE, false]],
-  });
   await openPreferencesViaOpenPreferencesAPI("search", { leaveOpen: true });
   let doc = gBrowser.selectedBrowser.contentDocument;
   let container = doc.getElementById(CHECKBOX_ID);
@@ -81,7 +74,6 @@ add_task(async function showSearchTermsVisibility_experiment_afterOpen() {
   );
 
   gBrowser.removeCurrentTab();
-  await SpecialPowers.popPrefEnv();
 });
 
 /*
