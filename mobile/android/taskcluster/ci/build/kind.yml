@@ -6,6 +6,7 @@ loader: ac_taskgraph.loader.build_config:loader
 
 transforms:
     - ac_taskgraph.transforms.build:transforms
+    - ac_taskgraph.transforms.gradle_optimization:transforms
     - taskgraph.transforms.code_review:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
@@ -15,17 +16,6 @@ not-for-components:
 
 kind-dependencies:
     - toolchain
-
-# We always build components that have changed files or dependencies, but we also need
-# to rebuild some or all components when other files change. This structure
-# maintains the latter mapping. The value may either be a list of specific components,
-# or the special sentinel value `all-components`.
-files-affecting-components:
-    ^android-components/build.gradle$: all-components
-    ^android-components/settings.gradle$: all-components
-    ^android-components/buildSrc.*$: all-components
-    ^android-components/gradle.properties$: all-components
-    ^android-components/gradle/wrapper/gradle-wrapper.properties$: all-components
 
 task-defaults:
     artifact-template:
@@ -69,6 +59,18 @@ task-defaults:
             release: false
             nightly: false
             default: true
+    optimization:
+        by-build-type:
+            (nightly|release): {}
+            default:
+                skip-unless-changed:
+                    - android-components/build.gradle
+                    - android-components/settings.gradle
+                    - android-components/buildSrc.*
+                    - android-components/gradle.properties
+                    - android-components/gradle/wrapper/gradle-wrapper.properties
+                    - android-components/plugins/dependencies/**
+                    # More paths are dynamically added by transforms
     run:
         gradlew:
             by-build-type:

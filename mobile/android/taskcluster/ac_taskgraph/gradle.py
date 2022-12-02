@@ -2,6 +2,9 @@ import logging
 import subprocess
 
 from collections import defaultdict
+from taskgraph.util.memoize import memoize
+
+from .build_config import get_components
 
 logger = logging.getLogger(__name__)
 
@@ -13,9 +16,11 @@ CONFIGURATIONS_WITH_DEPENDENCIES = (
 )
 
 
-def get_upstream_deps_for_gradle_projects(gradle_projects, gradle_root):
+@memoize
+def get_upstream_deps_for_gradle_projects(gradle_root):
     """Return the full list of local upstream dependencies of a component."""
     project_dependencies = defaultdict(set)
+    gradle_projects = _get_gradle_projects(gradle_root)
 
     for configuration in CONFIGURATIONS_WITH_DEPENDENCIES:
         logger.info(f"Looking for dependencies in {configuration} configuration in {gradle_root}")
@@ -41,5 +46,12 @@ def get_upstream_deps_for_gradle_projects(gradle_projects, gradle_root):
                 project_dependencies[current_project_name].add(line.split(" ")[2])
 
     return {
-        project_name: sorted(project_dependencies[project_name]) for project_name in project_dependencies
+        project_name: sorted(project_dependencies[project_name]) for project_name in gradle_projects
     }
+
+
+def _get_gradle_projects(gradle_root):
+    if gradle_root.endswith("android-components"):
+        return [c["name"] for c in get_components()]
+    # TODO: Support focus and fenix
+    raise NotImplementedError(f"Cannot find gradle projects for {gradle_root}")

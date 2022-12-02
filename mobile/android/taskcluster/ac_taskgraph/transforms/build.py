@@ -4,7 +4,6 @@
 
 
 import datetime
-import re
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
@@ -24,6 +23,7 @@ def resolve_keys(config, tasks):
             'attributes.code-review',
             'expose-artifacts',
             'include-coverage',
+            'optimization',
             'run-on-tasks-for',
             'run.gradlew',
             'treeherder.symbol',
