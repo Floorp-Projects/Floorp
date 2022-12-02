@@ -66,26 +66,35 @@ class PreloadService {
   already_AddRefed<PreloaderBase> PreloadLinkElement(
       dom::HTMLLinkElement* aLink, nsContentPolicyType aPolicyType);
 
+  // a non-zero aEarlyHintPreloaderId tells this service that a preload for this
+  // link was started by the EarlyHintPreloader and the preloaders should
+  // connect back by setting earlyHintPreloaderId in nsIChannelInternal before
+  // AsyncOpen.
   void PreloadLinkHeader(nsIURI* aURI, const nsAString& aURL,
                          nsContentPolicyType aPolicyType, const nsAString& aAs,
                          const nsAString& aType, const nsAString& aIntegrity,
                          const nsAString& aSrcset, const nsAString& aSizes,
                          const nsAString& aCORS,
-                         const nsAString& aReferrerPolicy);
+                         const nsAString& aReferrerPolicy,
+                         uint64_t aEarlyHintPreloaderId);
 
   void PreloadScript(nsIURI* aURI, const nsAString& aType,
                      const nsAString& aCharset, const nsAString& aCrossOrigin,
                      const nsAString& aReferrerPolicy,
-                     const nsAString& aIntegrity, bool aScriptFromHead);
+                     const nsAString& aIntegrity, bool aScriptFromHead,
+                     uint64_t aEarlyHintPreloaderId);
 
   void PreloadImage(nsIURI* aURI, const nsAString& aCrossOrigin,
-                    const nsAString& aImageReferrerPolicy, bool aIsImgSet);
+                    const nsAString& aImageReferrerPolicy, bool aIsImgSet,
+                    uint64_t aEarlyHintPreloaderId);
 
   void PreloadFont(nsIURI* aURI, const nsAString& aCrossOrigin,
-                   const nsAString& aReferrerPolicy);
+                   const nsAString& aReferrerPolicy,
+                   uint64_t aEarlyHintPreloaderId);
 
   void PreloadFetch(nsIURI* aURI, const nsAString& aCrossOrigin,
-                    const nsAString& aReferrerPolicy);
+                    const nsAString& aReferrerPolicy,
+                    uint64_t aEarlyHintPreloaderId);
 
   static void NotifyNodeEvent(nsINode* aNode, bool aSuccess);
 
@@ -103,7 +112,8 @@ class PreloadService {
       const nsAString& aAs, const nsAString& aType, const nsAString& aCharset,
       const nsAString& aSrcset, const nsAString& aSizes,
       const nsAString& aIntegrity, const nsAString& aCORS,
-      const nsAString& aReferrerPolicy, bool aFromHeader);
+      const nsAString& aReferrerPolicy, bool aFromHeader,
+      uint64_t aEarlyHintPreloaderId);
 
  private:
   nsRefPtrHashtable<PreloadHashKey, PreloaderBase> mPreloads;

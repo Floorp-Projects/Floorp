@@ -5945,6 +5945,15 @@ void HttpBaseChannel::SetDummyChannelForImageCache() {
   mResponseHead = MakeUnique<nsHttpResponseHead>();
 }
 
+void HttpBaseChannel::SetEarlyHints(
+    nsTArray<EarlyHintConnectArgs>&& aEarlyHints) {
+  mEarlyHints = std::move(aEarlyHints);
+}
+
+nsTArray<EarlyHintConnectArgs>&& HttpBaseChannel::TakeEarlyHints() {
+  return std::move(mEarlyHints);
+}
+
 void HttpBaseChannel::SetConnectionInfo(nsHttpConnectionInfo* aCI) {
   mConnectionInfo = aCI ? aCI->Clone() : nullptr;
 }
