@@ -4,6 +4,7 @@
 
 package mozilla.components.compose.browser.awesomebar
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -92,6 +93,9 @@ fun AwesomeBar(
             .background(colors.background),
     ) {
         val fetcher = remember(groups) { SuggestionFetcher(groups, profiler) }
+
+        // This state does not need to be remembered, because it can change if the providers list changes.
+        @SuppressLint("UnrememberedMutableState")
         val suggestions = derivedStateOf { fetcher.state.value }.value.toSortedMap(compareBy { it.title })
 
         LaunchedEffect(text, fetcher) {
