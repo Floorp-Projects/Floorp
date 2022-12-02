@@ -452,6 +452,7 @@ function getPrefPostfix(pageContext) {
   switch (pageContext) {
     case "devtools":
     case "aboutprofiling":
+    case "aboutlogging":
       // Don't use any postfix on the prefs.
       return "";
     case "devtools-remote":
