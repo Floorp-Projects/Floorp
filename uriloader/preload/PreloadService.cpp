@@ -221,7 +221,8 @@ void PreloadService::PreloadFont(nsIURI* aURI, const nsAString& aCrossOrigin,
 
   RefPtr<FontPreloader> preloader = new FontPreloader();
   dom::ReferrerPolicy referrerPolicy = PreloadReferrerPolicy(aReferrerPolicy);
-  preloader->OpenChannel(key, aURI, cors, referrerPolicy, mDocument);
+  preloader->OpenChannel(key, aURI, cors, referrerPolicy, mDocument,
+                         aEarlyHintPreloaderId);
 }
 
 void PreloadService::PreloadFetch(nsIURI* aURI, const nsAString& aCrossOrigin,
@@ -235,7 +236,8 @@ void PreloadService::PreloadFetch(nsIURI* aURI, const nsAString& aCrossOrigin,
 
   RefPtr<FetchPreloader> preloader = new FetchPreloader();
   dom::ReferrerPolicy referrerPolicy = PreloadReferrerPolicy(aReferrerPolicy);
-  preloader->OpenChannel(key, aURI, cors, referrerPolicy, mDocument);
+  preloader->OpenChannel(key, aURI, cors, referrerPolicy, mDocument,
+                         aEarlyHintPreloaderId);
 }
 
 // static

@@ -49,7 +49,8 @@ class FontPreloader final : public FetchPreloader {
                          const CORSMode aCORSMode,
                          const dom::ReferrerPolicy& aReferrerPolicy,
                          dom::Document* aDocument, nsILoadGroup* aLoadGroup,
-                         nsIInterfaceRequestor* aCallbacks) override;
+                         nsIInterfaceRequestor* aCallbacks,
+                         uint64_t aEarlyHintPreloaderId) override;
 
   static void BuildChannelFlags(
       nsIURI* aURI, bool aIsPreload,
