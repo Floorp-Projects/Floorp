@@ -170,7 +170,8 @@ PreloadService::PreloadOrCoalesceResult PreloadService::PreloadOrCoalesce(
         aURI, Encoding::ForLabel(aCharset), aCORS,
         PreloadReferrerPolicy(aReferrerPolicy), aIntegrity,
         aFromHeader ? css::StylePreloadKind::FromLinkRelPreloadHeader
-                    : css::StylePreloadKind::FromLinkRelPreloadElement);
+                    : css::StylePreloadKind::FromLinkRelPreloadElement,
+        aEarlyHintPreloaderId);
     switch (status) {
       case dom::SheetPreloadStatus::AlreadyComplete:
         return {nullptr, /* already_complete = */ true};
