@@ -212,6 +212,7 @@ window.UCL = {
 		}
 	},
 	rebuild: function() {
+		let l10n = new Localization(["browser/floorp.ftl"], true);
 		let ext = /\.css$/i;
 		let not = /\.uc\.css/i;
 		let files = this.FOLDER.directoryEntries.QueryInterface(Ci.nsISimpleEnumerator);
@@ -338,6 +339,7 @@ window.UCL = {
 		} catch (e) {}
 	},
 	create: function(aLeafName) {
+		let l10n = new Localization(["browser/floorp.ftl"], true);
 		if (!aLeafName) aLeafName = prompt(l10n.formatValueSync("please-enter-filename"), dateFormat(new Date(), "%Y_%m%d_%H%M%S"));
 		if (aLeafName) aLeafName = aLeafName.replace(/\s+/g, " ").replace(/[\\/:*?\"<>|]/g, "");
 		if (!aLeafName || !/\S/.test(aLeafName)) return;
@@ -422,6 +424,7 @@ CSSEntry.prototype = {
 		return this._enabled;
 	},
 	set enabled(isEnable) {
+		let l10n = new Localization(["browser/floorp.ftl"], true);
 		var aFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile)
 		aFile.initWithPath(this.path);
 
