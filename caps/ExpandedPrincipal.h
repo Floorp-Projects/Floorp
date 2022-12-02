@@ -8,6 +8,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsJSPrincipals.h"
+#include "nsProxyRelease.h"
 #include "nsTArray.h"
 #include "nsNetUtil.h"
 #include "mozilla/BasePrincipal.h"
@@ -83,7 +84,8 @@ class ExpandedPrincipal : public nsIExpandedPrincipal,
 
  private:
   const nsTArray<nsCOMPtr<nsIPrincipal>> mPrincipals;
-  nsCOMPtr<nsIContentSecurityPolicy> mCSP;
+  nsMainThreadPtrHandle<nsIContentSecurityPolicy> mCSP
+      MOZ_GUARDED_BY(mozilla::sMainThreadCapability);
 };
 
 #define NS_EXPANDEDPRINCIPAL_CID                     \

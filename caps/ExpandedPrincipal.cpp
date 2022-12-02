@@ -171,10 +171,15 @@ bool ExpandedPrincipal::AddonAllowsLoad(nsIURI* aURI,
   return false;
 }
 
-void ExpandedPrincipal::SetCsp(nsIContentSecurityPolicy* aCSP) { mCSP = aCSP; }
+void ExpandedPrincipal::SetCsp(nsIContentSecurityPolicy* aCSP) {
+  AssertIsOnMainThread();
+  mCSP = new nsMainThreadPtrHolder<nsIContentSecurityPolicy>(
+      "ExpandedPrincipal::mCSP", aCSP);
+}
 
 NS_IMETHODIMP
 ExpandedPrincipal::GetCsp(nsIContentSecurityPolicy** aCsp) {
+  AssertIsOnMainThread();
   NS_IF_ADDREF(*aCsp = mCSP);
   return NS_OK;
 }

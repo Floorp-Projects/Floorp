@@ -325,21 +325,26 @@ uint32_t ContentPrincipal::GetHashValue() {
 
 NS_IMETHODIMP
 ContentPrincipal::GetDomain(nsIURI** aDomain) {
-  if (!mDomain) {
+  if (!GetHasExplicitDomain()) {
     *aDomain = nullptr;
     return NS_OK;
   }
 
+  mozilla::MutexAutoLock lock(mMutex);
   NS_ADDREF(*aDomain = mDomain);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 ContentPrincipal::SetDomain(nsIURI* aDomain) {
+  AssertIsOnMainThread();
   MOZ_ASSERT(aDomain);
 
-  mDomain = aDomain;
-  SetHasExplicitDomain();
+  {
+    mozilla::MutexAutoLock lock(mMutex);
+    mDomain = aDomain;
+    SetHasExplicitDomain();
+  }
 
   // Set the changed-document-domain flag on compartments containing realms
   // using this principal.
@@ -515,6 +520,7 @@ nsresult ContentPrincipal::GetSiteIdentifier(SiteIdentifier& aSite) {
 WebExtensionPolicy* ContentPrincipal::AddonPolicy() {
   AssertIsOnMainThread();
 
+  mozilla::MutexAutoLock lock(mMutex);
   if (!mAddon.isSome()) {
     NS_ENSURE_TRUE(mURI, nullptr);
 
@@ -600,6 +606,7 @@ ContentPrincipal::Deserializer::Read(nsIObjectInputStream* aStream) {
   // Note: we don't call SetDomain here because we don't need the wrapper
   // recomputation code there (we just created this principal).
   if (domain) {
+    MutexAutoLock lock(principal->mMutex);
     principal->mDomain = domain;
     principal->SetHasExplicitDomain();
   }
@@ -628,10 +635,13 @@ nsresult ContentPrincipal::PopulateJSONObject(Json::Value& aObject) {
   //                              Value
   aObject[std::to_string(eURI)] = principalURI.get();
 
-  if (mDomain) {
+  if (GetHasExplicitDomain()) {
     nsAutoCString domainStr;
-    rv = mDomain->GetSpec(domainStr);
-    NS_ENSURE_SUCCESS(rv, rv);
+    {
+      MutexAutoLock lock(mMutex);
+      rv = mDomain->GetSpec(domainStr);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
     aObject[std::to_string(eDomain)] = domainStr.get();
   }
 
@@ -705,8 +715,9 @@ already_AddRefed<BasePrincipal> ContentPrincipal::FromProperties(
   RefPtr<ContentPrincipal> principal =
       new ContentPrincipal(principalURI, attrs, originNoSuffix);
 
-  principal->mDomain = domain;
-  if (principal->mDomain) {
+  if (domain) {
+    MutexAutoLock lock(principal->mMutex);
+    principal->mDomain = domain;
     principal->SetHasExplicitDomain();
   }
 

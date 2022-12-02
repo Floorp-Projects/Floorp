@@ -62,7 +62,7 @@ BasePrincipal::BasePrincipal(BasePrincipal* aOther,
       mOriginSuffix(aOriginAttributes.CreateSuffixAtom()),
       mOriginAttributes(aOriginAttributes),
       mKind(aOther->mKind),
-      mHasExplicitDomain(aOther->mHasExplicitDomain) {}
+      mHasExplicitDomain(aOther->mHasExplicitDomain.load()) {}
 
 BasePrincipal::~BasePrincipal() = default;
 
