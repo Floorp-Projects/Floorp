@@ -5971,5 +5971,15 @@ void HttpBaseChannel::SetConnectionInfo(nsHttpConnectionInfo* aCI) {
   mConnectionInfo = aCI ? aCI->Clone() : nullptr;
 }
 
+NS_IMETHODIMP
+HttpBaseChannel::GetIsProxyUsed(bool* aIsProxyUsed) {
+  if (mProxyInfo) {
+    if (!static_cast<nsProxyInfo*>(mProxyInfo.get())->IsDirect()) {
+      StoreIsProxyUsed(true);
+    }
+  }
+  *aIsProxyUsed = LoadIsProxyUsed();
+  return NS_OK;
+}
 }  // namespace net
 }  // namespace mozilla

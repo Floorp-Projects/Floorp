@@ -54,6 +54,7 @@ struct HttpChannelOnStartRequestArgs
   nsCString cookie;
   bool dataFromSocketProcess;
   bool hasHTTPSRR;
+  bool isProxyUsed;
 };
 
 struct HttpChannelAltDataStream
