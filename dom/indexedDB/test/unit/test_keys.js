@@ -292,11 +292,19 @@ function* testSteps() {
     "[1, [null]]",
     "[1, [/x/]]",
     "[1, [{}]]",
+    // ATTENTION, the following key allocates 2GB of memory and might cause
+    // subtle failures in some environments, see bug 1796753. We might
+    // want to have some common way between IndexeDB mochitests and
+    // xpcshell tests how to access AppConstants in order to dynamically
+    // exclude this key from some environments, rather than disabling the
+    // entire xpcshell variant of this test for ASAN/TSAN.
     "new Uint8Array(2147483647)",
   ];
 
   function checkInvalidKeyException(ex, i, callText) {
     let suffix = ` during ${callText} with invalid key ${i}: ${invalidKeys[i]}`;
+    // isInstance() is not available in mochitest, and we use this JS also as mochitest.
+    // eslint-disable-next-line mozilla/use-isInstance
     ok(ex instanceof DOMException, "Threw DOMException" + suffix);
     is(ex.name, "DataError", "Threw right DOMException" + suffix);
     is(ex.code, 0, "Threw with right code" + suffix);
