@@ -44,7 +44,8 @@ namespace gfx {
   _(VP9_HW_DECODE, Feature, "VP9 hardware decoding")                         \
   _(DMABUF_SURFACE_EXPORT, Feature, "WebGL DMABuf surface export")           \
   _(REUSE_DECODER_DEVICE, Feature, "Reuse decoder device")                   \
-  _(BACKDROP_FILTER, Feature, "Backdrop filter")
+  _(BACKDROP_FILTER, Feature, "Backdrop filter")                             \
+  _(CANVAS_RENDERER_THREAD, Feature, "canvas renderer thread")
 /* Add new entries above this comment */
 
 enum class Feature : uint32_t {

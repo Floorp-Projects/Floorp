@@ -2910,9 +2910,18 @@ void gfxPlatform::InitWebGLConfig() {
   threadsafeGL &= !StaticPrefs::webgl_threadsafe_gl_force_disabled_AtStartup();
   gfxVars::SetSupportsThreadsafeGL(threadsafeGL);
 
-  bool useCanvasRenderThread =
-      threadsafeGL && StaticPrefs::webgl_use_canvas_render_thread_AtStartup();
-  gfxVars::SetUseCanvasRenderThread(useCanvasRenderThread);
+  FeatureState& feature =
+      gfxConfig::GetFeature(Feature::CANVAS_RENDERER_THREAD);
+  if (!threadsafeGL) {
+    feature.DisableByDefault(FeatureStatus::Blocked, "Thread unsafe GL",
+                             "FEATURE_FAILURE_THREAD_UNSAFE_GL"_ns);
+  } else if (!StaticPrefs::webgl_use_canvas_render_thread_AtStartup()) {
+    feature.DisableByDefault(FeatureStatus::Blocked, "Disabled by pref",
+                             "FEATURE_FAILURE_DISABLED_BY_PREF"_ns);
+  } else {
+    feature.EnableByDefault();
+  }
+  gfxVars::SetUseCanvasRenderThread(feature.IsEnabled());
 
   if (kIsAndroid) {
     // Don't enable robust buffer access on Adreno 630 devices.
