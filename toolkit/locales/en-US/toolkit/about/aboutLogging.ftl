@@ -2,6 +2,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+## The following feature name must be treated as a brand.
+##
+## They cannot be:
+## - Transliterated.
+## - Translated.
+##
+## Declension should be avoided where possible, leaving the original
+## brand unaltered in prominent UI positions.
+##
+## For further details, consult:
+## https://mozilla-l10n.github.io/styleguides/mozilla_general/#brands-copyright-and-trademark
+
+-profiler-brand-name = Firefox Profiler
+
 # This is the title of the page
 about-logging-title = About Logging
 about-logging-page-title = Logging manager
@@ -22,6 +36,7 @@ about-logging-log-modules-selection = Log module selection
 about-logging-new-log-modules = New log modules:
 about-logging-logging-output-selection = Logging output
 about-logging-logging-to-file = Logging to a file
+about-logging-logging-to-profiler = Logging to the { -profiler-brand-name }
 about-logging-no-log-modules = None
 about-logging-logging-preset-selector-text = Logging preset:
 
