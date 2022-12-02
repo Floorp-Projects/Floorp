@@ -580,7 +580,7 @@ struct DOMIfaceAndProtoJSClass {
 class ProtoAndIfaceCache;
 
 inline bool DOMGlobalHasProtoAndIFaceCache(JSObject* global) {
-  MOZ_ASSERT(JS::GetClass(global)->flags & JSCLASS_DOM_GLOBAL);
+  MOZ_DIAGNOSTIC_ASSERT(JS::GetClass(global)->flags & JSCLASS_DOM_GLOBAL);
   // This can be undefined if we GC while creating the global
   return !JS::GetReservedSlot(global, DOM_PROTOTYPE_SLOT).isUndefined();
 }
@@ -593,7 +593,7 @@ inline bool HasProtoAndIfaceCache(JSObject* global) {
 }
 
 inline ProtoAndIfaceCache* GetProtoAndIfaceCache(JSObject* global) {
-  MOZ_ASSERT(JS::GetClass(global)->flags & JSCLASS_DOM_GLOBAL);
+  MOZ_DIAGNOSTIC_ASSERT(JS::GetClass(global)->flags & JSCLASS_DOM_GLOBAL);
   return static_cast<ProtoAndIfaceCache*>(
       JS::GetReservedSlot(global, DOM_PROTOTYPE_SLOT).toPrivate());
 }
