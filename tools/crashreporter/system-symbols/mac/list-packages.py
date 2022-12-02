@@ -39,10 +39,10 @@ for product_id, p in products.items():
         continue
     # p['CatalogEntry']['Packages']
     if t.startswith("OS X") or t.startswith("Mac OS X") or t.startswith("macOS"):
-        args.append("--product-id=" + product_id)
+        args.append(product_id)
     else:
         print("Skipping %r for repo_sync" % t, file=sys.stderr)
 if "JUST_ONE_PACKAGE" in os.environ:
     args = args[:1]
 
-print(" ".join(args))
+print("\n".join(args))
