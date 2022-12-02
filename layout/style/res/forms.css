@@ -87,7 +87,7 @@ input {
      must be the same here, for buttons, and for <select> (including its
      internal padding magic) */
   padding: 1px;
-  border: 2px inset ThreeDLightShadow;
+  border: 2px inset ButtonBorder;
   background-color: Field;
   color: FieldText;
   font: -moz-field;
@@ -107,7 +107,7 @@ textarea {
   appearance: auto;
   -moz-default-appearance: textarea;
   margin-block: 1px;
-  border: 2px inset ThreeDLightShadow;
+  border: 2px inset ButtonBorder;
   padding: 2px;
   background-color: Field;
   color: FieldText;
@@ -220,7 +220,7 @@ textarea:read-write {
 
 select {
   margin: 0;
-  border-color: ThreeDLightShadow;
+  border-color: ButtonBorder;
   font: -moz-list;
   white-space: nowrap !important;
   word-wrap: normal !important;
@@ -503,7 +503,7 @@ input:is([type=color], [type=reset], [type=button], [type=submit]) {
      Note -moz-focus-inner padding does not affect button size. */
   padding-block: 1px;
   padding-inline: 8px;
-  border: 2px outset ThreeDLightShadow;
+  border: 2px outset ButtonBorder;
   background-color: ButtonFace;
   cursor: default;
   box-sizing: border-box;
