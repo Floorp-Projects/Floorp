@@ -20,8 +20,6 @@
 #include "mozilla/dom/MutationObservers.h"
 #include "mozilla/dom/SRILogHelper.h"
 #include "mozilla/StoragePrincipalHelper.h"
-#include "mozilla/net/HttpBaseChannel.h"
-#include "mozilla/net/NeckoChannelParams.h"
 #include "nsIDocShell.h"
 #include "nsILoadContext.h"
 #include "nsIPrefetchService.h"
@@ -224,27 +222,16 @@ nsresult nsContentSink::ProcessHTTPHeaders(nsIChannel* aChannel) {
     return NS_OK;
   }
 
-  bool gotEarlyHints = false;
-  if (nsCOMPtr<mozilla::net::HttpBaseChannel> baseChannel =
-          do_QueryInterface(aChannel)) {
-    nsTArray<mozilla::net::EarlyHintConnectArgs> earlyHints =
-        baseChannel->TakeEarlyHints();
-    gotEarlyHints = !earlyHints.IsEmpty();
-    mDocument->SetEarlyHints(std::move(earlyHints));
-  }
-
   // Note that the only header we care about is the "link" header, since we
   // have all the infrastructure for kicking off stylesheet loads.
 
   nsAutoCString linkHeader;
 
   nsresult rv = httpchannel->GetResponseHeader("link"_ns, linkHeader);
-  bool gotLinkHeader = NS_SUCCEEDED(rv) && !linkHeader.IsEmpty();
-  if (gotLinkHeader) {
+  if (NS_SUCCEEDED(rv) && !linkHeader.IsEmpty()) {
     mDocument->SetHeaderData(nsGkAtoms::link,
                              NS_ConvertASCIItoUTF16(linkHeader));
-  }
-  if (gotLinkHeader || gotEarlyHints) {
+
     NS_ASSERTION(!mProcessLinkHeaderEvent.get(),
                  "Already dispatched an event?");
 
@@ -261,28 +248,63 @@ nsresult nsContentSink::ProcessHTTPHeaders(nsIChannel* aChannel) {
 }
 
 void nsContentSink::DoProcessLinkHeader() {
-  for (const auto& earlyHint : mDocument->GetEarlyHints()) {
-    ProcessLinkFromHeader(earlyHint.link(), earlyHint.earlyHintPreloaderId());
-  }
-
   nsAutoString value;
   mDocument->GetHeaderData(nsGkAtoms::link, value);
   auto linkHeaders = net::ParseLinkHeader(value);
   for (const auto& linkHeader : linkHeaders) {
-    ProcessLinkFromHeader(linkHeader, 0);
+    ProcessLinkFromHeader(linkHeader);
   }
 }
 
-nsresult nsContentSink::ProcessLinkFromHeader(const net::LinkHeader& aHeader,
-                                              uint64_t aEarlyHintPreloaderId) {
+// check whether the Link header field applies to the context resource
+// see <http://tools.ietf.org/html/rfc5988#section-5.2>
+
+bool nsContentSink::LinkContextIsOurDocument(const nsAString& aAnchor) {
+  if (aAnchor.IsEmpty()) {
+    // anchor parameter not present or empty -> same document reference
+    return true;
+  }
+
+  nsIURI* docUri = mDocument->GetDocumentURI();
+
+  // the document URI might contain a fragment identifier ("#...')
+  // we want to ignore that because it's invisible to the server
+  // and just affects the local interpretation in the recipient
+  nsCOMPtr<nsIURI> contextUri;
+  nsresult rv = NS_GetURIWithoutRef(docUri, getter_AddRefs(contextUri));
+
+  if (NS_FAILED(rv)) {
+    // copying failed
+    return false;
+  }
+
+  // resolve anchor against context
+  nsCOMPtr<nsIURI> resolvedUri;
+  rv = NS_NewURI(getter_AddRefs(resolvedUri), aAnchor, nullptr, contextUri);
+
+  if (NS_FAILED(rv)) {
+    // resolving failed
+    return false;
+  }
+
+  bool same;
+  rv = contextUri->Equals(resolvedUri, &same);
+  if (NS_FAILED(rv)) {
+    // comparison failed
+    return false;
+  }
+
+  return same;
+}
+
+nsresult nsContentSink::ProcessLinkFromHeader(const net::LinkHeader& aHeader) {
   uint32_t linkTypes = LinkStyle::ParseLinkTypes(aHeader.mRel);
 
   // The link relation may apply to a different resource, specified
   // in the anchor parameter. For the link relations supported so far,
   // we simply abort if the link applies to a resource different to the
   // one we've loaded
-  if (!nsContentUtils::LinkContextIsURI(aHeader.mAnchor,
-                                        mDocument->GetDocumentURI())) {
+  if (!LinkContextIsOurDocument(aHeader.mAnchor)) {
     return NS_OK;
   }
 
@@ -303,8 +325,7 @@ nsresult nsContentSink::ProcessLinkFromHeader(const net::LinkHeader& aHeader,
     if (linkTypes & LinkStyle::ePRELOAD) {
       PreloadHref(aHeader.mHref, aHeader.mAs, aHeader.mType, aHeader.mMedia,
                   aHeader.mIntegrity, aHeader.mSrcset, aHeader.mSizes,
-                  aHeader.mCrossOrigin, aHeader.mReferrerPolicy,
-                  aEarlyHintPreloaderId);
+                  aHeader.mCrossOrigin, aHeader.mReferrerPolicy);
     }
 
     if ((linkTypes & LinkStyle::eMODULE_PRELOAD) &&
@@ -414,8 +435,7 @@ void nsContentSink::PreloadHref(const nsAString& aHref, const nsAString& aAs,
                                 const nsAString& aIntegrity,
                                 const nsAString& aSrcset,
                                 const nsAString& aSizes, const nsAString& aCORS,
-                                const nsAString& aReferrerPolicy,
-                                uint64_t aEarlyHintPreloaderId) {
+                                const nsAString& aReferrerPolicy) {
   auto encoding = mDocument->GetDocumentCharacterSet();
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), aHref, encoding, mDocument->GetDocBaseURI());
@@ -439,9 +459,9 @@ void nsContentSink::PreloadHref(const nsAString& aHref, const nsAString& aAs,
     return;
   }
 
-  mDocument->Preloads().PreloadLinkHeader(
-      uri, aHref, policyType, aAs, aType, aIntegrity, aSrcset, aSizes, aCORS,
-      aReferrerPolicy, aEarlyHintPreloaderId);
+  mDocument->Preloads().PreloadLinkHeader(uri, aHref, policyType, aAs, aType,
+                                          aIntegrity, aSrcset, aSizes, aCORS,
+                                          aReferrerPolicy);
 }
 
 void nsContentSink::PrefetchDNS(const nsAString& aHref) {

@@ -8,7 +8,6 @@
 #ifndef mozilla_net_HttpChannelParent_h
 #define mozilla_net_HttpChannelParent_h
 
-#include "HttpBaseChannel.h"
 #include "nsHttp.h"
 #include "mozilla/net/PHttpChannelParent.h"
 #include "mozilla/net/NeckoCommon.h"
@@ -95,9 +94,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
 
   void InvokeAsyncOpen(nsresult rv);
 
-  void InvokeEarlyHintPreloader(nsresult rv, uint64_t aEarlyHintPreloaderId,
-                                uint64_t aChannelId);
-
   // Calls SendSetPriority if mIPCClosed is false.
   void DoSendSetPriority(int16_t aValue);
 
@@ -127,12 +123,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
       Endpoint<extensions::PStreamFilterParent>&& aParentEndpoint,
       Endpoint<extensions::PStreamFilterChild>&& aChildEndpoint);
   [[nodiscard]] RefPtr<GenericPromise> DetachStreamFilters();
-
-  // Should only be called from EarlyHintPreloader. mChannel should be null at
-  // the point of calling. Sets mChannel to aChannel. Used by the
-  // EarlyHintPreloader to redirect the channel to this parent as soon as the
-  // final channel becomes available after all http redirects.
-  void SetHttpChannelFromEarlyHintPreloader(HttpBaseChannel* aChannel);
 
  protected:
   // used to connect redirected-to channel in parent with just created
@@ -170,8 +160,7 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
       const TimeStamp& aHandleFetchEventStart,
       const TimeStamp& aHandleFetchEventEnd,
       const bool& aForceMainDocumentChannel,
-      const TimeStamp& aNavigationStartTimeStamp,
-      const uint64_t& aEarlyHintPreloaderId);
+      const TimeStamp& aNavigationStartTimeStamp);
 
   virtual mozilla::ipc::IPCResult RecvSetPriority(
       const int16_t& priority) override;
@@ -231,8 +220,7 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   // id, a promise will be returned so the caller can append callbacks on it.
   // If called multiple times before mBgParent is available, the same promise
   // will be returned and the callbacks will be invoked in order.
-  [[nodiscard]] RefPtr<GenericNonExclusivePromise> WaitForBgParent(
-      uint64_t aChannelId);
+  [[nodiscard]] RefPtr<GenericNonExclusivePromise> WaitForBgParent();
 
   // Remove the association with background channel after main-thread IPC
   // is about to be destroyed or no further event is going to be sent, i.e.,
@@ -246,8 +234,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   int32_t mSendWindowSize;
 
   friend class HttpBackgroundChannelParent;
-
-  uint64_t mEarlyHintPreloaderId;
 
   RefPtr<HttpBaseChannel> mChannel;
   nsCOMPtr<nsICacheEntry> mCacheEntry;

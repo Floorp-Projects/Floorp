@@ -16,8 +16,6 @@ class CanonicalBrowsingContext;
 }
 namespace net {
 
-class EarlyHintConnectArgs;
-
 /**
  * An actor that forwards all changes across to DocumentChannelChild, the
  * nsIChannel implementation owned by a content process docshell.
@@ -54,8 +52,7 @@ class DocumentChannelParent final
   RedirectToRealChannel(
       nsTArray<ipc::Endpoint<extensions::PStreamFilterParent>>&&
           aStreamFilterEndpoints,
-      uint32_t aRedirectFlags, uint32_t aLoadFlags,
-      nsTArray<EarlyHintConnectArgs>&& aEarlyHints);
+      uint32_t aRedirectFlags, uint32_t aLoadFlags);
 
   virtual ~DocumentChannelParent();
 

@@ -812,18 +812,6 @@ ClassifierDummyChannel::SetEarlyHintObserver(nsIEarlyHintObserver* aObserver) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-ClassifierDummyChannel::SetEarlyHintPreloaderId(
-    uint64_t aEarlyHintPreloaderId) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-ClassifierDummyChannel::GetEarlyHintPreloaderId(
-    uint64_t* aEarlyHintPreloaderId) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 void ClassifierDummyChannel::SetConnectionInfo(
     mozilla::net::nsHttpConnectionInfo* aInfo) {}
 

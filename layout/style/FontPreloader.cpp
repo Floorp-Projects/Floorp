@@ -25,8 +25,7 @@ void FontPreloader::PrioritizeAsPreload() { PrioritizeAsPreload(Channel()); }
 nsresult FontPreloader::CreateChannel(
     nsIChannel** aChannel, nsIURI* aURI, const CORSMode aCORSMode,
     const dom::ReferrerPolicy& aReferrerPolicy, dom::Document* aDocument,
-    nsILoadGroup* aLoadGroup, nsIInterfaceRequestor* aCallbacks,
-    uint64_t aEarlyHintPreloaderId) {
+    nsILoadGroup* aLoadGroup, nsIInterfaceRequestor* aCallbacks) {
   return BuildChannel(aChannel, aURI, aCORSMode, aReferrerPolicy, nullptr,
                       nullptr, aDocument, aLoadGroup, aCallbacks, true);
 }

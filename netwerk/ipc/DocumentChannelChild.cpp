@@ -267,10 +267,6 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
     newChannel->SetLoadGroup(mLoadGroup);
   }
 
-  if (RefPtr<HttpBaseChannel> httpChannel = do_QueryObject(newChannel)) {
-    httpChannel->SetEarlyHints(std::move(aArgs.earlyHints()));
-  }
-
   // This is used to report any errors back to the parent by calling
   // CrossProcessRedirectFinished.
   auto scopeExit = MakeScopeExit([&]() {

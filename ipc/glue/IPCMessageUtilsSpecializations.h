@@ -41,7 +41,6 @@
 #include "nsILoadInfo.h"
 #include "nsIThread.h"
 #include "nsLiteralString.h"
-#include "nsNetUtil.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsTHashSet.h"
@@ -703,57 +702,6 @@ struct ParamTraits<mozilla::Tuple<Ts...>> {
                            std::index_sequence<Is...>) {
     return ReadParams(aReader, mozilla::Get<Is>(aResult)...);
   }
-};
-
-template <>
-struct ParamTraits<mozilla::net::LinkHeader> {
-  typedef mozilla::net::LinkHeader paramType;
-  static void Write(MessageWriter* aWriter, const paramType& aParam) {
-    WriteParam(aWriter, aParam.mHref);
-    WriteParam(aWriter, aParam.mRel);
-    WriteParam(aWriter, aParam.mTitle);
-    WriteParam(aWriter, aParam.mIntegrity);
-    WriteParam(aWriter, aParam.mSrcset);
-    WriteParam(aWriter, aParam.mSizes);
-    WriteParam(aWriter, aParam.mType);
-    WriteParam(aWriter, aParam.mMedia);
-    WriteParam(aWriter, aParam.mCrossOrigin);
-    WriteParam(aWriter, aParam.mReferrerPolicy);
-    WriteParam(aWriter, aParam.mAs);
-  }
-  static bool Read(MessageReader* aReader, paramType* aResult) {
-    if (!ReadParam(aReader, &aResult->mHref)) {
-      return false;
-    }
-    if (!ReadParam(aReader, &aResult->mRel)) {
-      return false;
-    }
-    if (!ReadParam(aReader, &aResult->mTitle)) {
-      return false;
-    }
-    if (!ReadParam(aReader, &aResult->mIntegrity)) {
-      return false;
-    }
-    if (!ReadParam(aReader, &aResult->mSrcset)) {
-      return false;
-    }
-    if (!ReadParam(aReader, &aResult->mSizes)) {
-      return false;
-    }
-    if (!ReadParam(aReader, &aResult->mType)) {
-      return false;
-    }
-    if (!ReadParam(aReader, &aResult->mMedia)) {
-      return false;
-    }
-    if (!ReadParam(aReader, &aResult->mCrossOrigin)) {
-      return false;
-    }
-    if (!ReadParam(aReader, &aResult->mReferrerPolicy)) {
-      return false;
-    }
-    return ReadParam(aReader, &aResult->mAs);
-  };
 };
 
 } /* namespace IPC */

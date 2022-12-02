@@ -17,10 +17,8 @@
 #include "nsContentSecurityManager.h"
 #include "nsContentUtils.h"
 #include "nsIChannel.h"
-#include "nsIChildChannel.h"
 #include "nsIClassOfService.h"
 #include "nsIHttpChannel.h"
-#include "nsIHttpChannelInternal.h"
 #include "nsITimedChannel.h"
 #include "nsNetUtil.h"
 #include "nsStringStream.h"
@@ -39,8 +37,7 @@ FetchPreloader::FetchPreloader(nsContentPolicyType aContentPolicyType)
 nsresult FetchPreloader::OpenChannel(const PreloadHashKey& aKey, nsIURI* aURI,
                                      const CORSMode aCORSMode,
                                      const dom::ReferrerPolicy& aReferrerPolicy,
-                                     dom::Document* aDocument,
-                                     uint64_t aEarlyHintPreloaderId) {
+                                     dom::Document* aDocument) {
   nsresult rv;
   nsCOMPtr<nsIChannel> channel;
 
@@ -65,7 +62,7 @@ nsresult FetchPreloader::OpenChannel(const PreloadHashKey& aKey, nsIURI* aURI,
   }
 
   rv = CreateChannel(getter_AddRefs(channel), aURI, aCORSMode, aReferrerPolicy,
-                     aDocument, loadGroup, prompter, aEarlyHintPreloaderId);
+                     aDocument, loadGroup, prompter);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Doing this now so that we have the channel and tainting set on it properly
@@ -81,22 +78,13 @@ nsresult FetchPreloader::OpenChannel(const PreloadHashKey& aKey, nsIURI* aURI,
 
   NotifyOpen(aKey, channel, aDocument, true);
 
-  if (aEarlyHintPreloaderId) {
-    nsCOMPtr<nsIHttpChannelInternal> channelInternal =
-        do_QueryInterface(channel);
-    NS_ENSURE_TRUE(channelInternal != nullptr, NS_ERROR_FAILURE);
-
-    rv = channelInternal->SetEarlyHintPreloaderId(aEarlyHintPreloaderId);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
   return mAsyncConsumeResult = rv = channel->AsyncOpen(this);
 }
 
 nsresult FetchPreloader::CreateChannel(
     nsIChannel** aChannel, nsIURI* aURI, const CORSMode aCORSMode,
     const dom::ReferrerPolicy& aReferrerPolicy, dom::Document* aDocument,
-    nsILoadGroup* aLoadGroup, nsIInterfaceRequestor* aCallbacks,
-    uint64_t aEarlyHintPreloaderId) {
+    nsILoadGroup* aLoadGroup, nsIInterfaceRequestor* aCallbacks) {
   nsresult rv;
 
   nsSecurityFlags securityFlags =
@@ -121,11 +109,7 @@ nsresult FetchPreloader::CreateChannel(
   }
 
   if (nsCOMPtr<nsITimedChannel> timedChannel = do_QueryInterface(channel)) {
-    if (aEarlyHintPreloaderId) {
-      timedChannel->SetInitiatorType(u"early-hints"_ns);
-    } else {
-      timedChannel->SetInitiatorType(u"link"_ns);
-    }
+    timedChannel->SetInitiatorType(u"link"_ns);
   }
 
   channel.forget(aChannel);

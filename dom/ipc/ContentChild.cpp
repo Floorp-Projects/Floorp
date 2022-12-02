@@ -3550,10 +3550,6 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
       getter_AddRefs(newChannel), aArgs.uri(), loadInfo, nullptr,
       aArgs.newLoadFlags(), aArgs.srcdocData(), aArgs.baseUri());
 
-  if (RefPtr<HttpBaseChannel> httpChannel = do_QueryObject(newChannel)) {
-    httpChannel->SetEarlyHints(std::move(aArgs.earlyHints()));
-  }
-
   // This is used to report any errors back to the parent by calling
   // CrossProcessRedirectFinished.
   RefPtr<HttpChannelChild> httpChild = do_QueryObject(newChannel);

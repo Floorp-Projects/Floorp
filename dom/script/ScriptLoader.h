@@ -392,8 +392,7 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
                           const nsAString& aIntegrity, bool aScriptFromHead,
                           bool aAsync, bool aDefer, bool aNoModule,
                           bool aLinkPreload,
-                          const ReferrerPolicy aReferrerPolicy,
-                          uint64_t aEarlyHintPreloaderId);
+                          const ReferrerPolicy aReferrerPolicy);
 
   /**
    * Process a request that was deferred so that the script could be compiled
@@ -491,21 +490,18 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   /**
    * Start a load for aRequest's URI.
    */
-  nsresult StartLoad(ScriptLoadRequest* aRequest,
-                     uint64_t aEarlyHintPreloaderId);
+  nsresult StartLoad(ScriptLoadRequest* aRequest);
   /**
    * Start a load for a classic script URI.
    * Sets up the necessary security flags before calling StartLoadInternal.
    */
-  nsresult StartClassicLoad(ScriptLoadRequest* aRequest,
-                            uint64_t aEarlyHintPreloaderId);
+  nsresult StartClassicLoad(ScriptLoadRequest* aRequest);
 
   /**
    * Start a load for a module script URI.
    */
   nsresult StartLoadInternal(ScriptLoadRequest* aRequest,
-                             nsSecurityFlags securityFlags,
-                             uint64_t aEarlyHintPreloaderId);
+                             nsSecurityFlags securityFlags);
 
   /**
    * Abort the current stream, and re-start with a new load request from scratch

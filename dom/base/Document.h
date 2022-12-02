@@ -322,7 +322,6 @@ enum BFCacheStatus {
 
 namespace mozilla::net {
 class ChannelEventQueue;
-class EarlyHintConnectArgs;
 }  // namespace mozilla::net
 
 // Must be kept in sync with xpcom/rust/xpcom/src/interfaces/nonidl.rs
@@ -1168,15 +1167,6 @@ class Document : public nsINode,
    */
   void GetHeaderData(nsAtom* aHeaderField, nsAString& aData) const;
   void SetHeaderData(nsAtom* aheaderField, const nsAString& aData);
-
-  /**
-   * Set Early Hint data, moves the arrays into the function, leaving the
-   * passed variables empty
-   */
-  void SetEarlyHints(nsTArray<net::EarlyHintConnectArgs>&& aEarlyHints);
-  const nsTArray<net::EarlyHintConnectArgs>& GetEarlyHints() const {
-    return mEarlyHints;
-  }
 
   /**
    * Create a new presentation shell that will use aContext for its
@@ -3014,7 +3004,7 @@ class Document : public nsINode,
                          bool aLinkPreload, const TimeStamp& aInitTimestamp);
   void PreLoadImage(nsIURI* uri, const nsAString& aCrossOriginAttr,
                     ReferrerPolicyEnum aReferrerPolicy, bool aIsImgSet,
-                    bool aLinkPreload, uint64_t aEarlyHintPreloaderId);
+                    bool aLinkPreload);
 
   /**
    * Called by images to forget an image preload when they start doing
@@ -3030,8 +3020,7 @@ class Document : public nsINode,
                                   const nsAString& aCrossOriginAttr,
                                   ReferrerPolicyEnum aReferrerPolicy,
                                   const nsAString& aIntegrity,
-                                  css::StylePreloadKind,
-                                  uint64_t aEarlyHintPreloaderId);
+                                  css::StylePreloadKind);
 
   /**
    * Called by the chrome registry to load style sheets.
@@ -5127,8 +5116,6 @@ class Document : public nsINode,
 
   class HeaderData;
   UniquePtr<HeaderData> mHeaderData;
-
-  nsTArray<net::EarlyHintConnectArgs> mEarlyHints;
 
   nsRevocableEventPtr<nsRunnableMethod<Document, void, false>>
       mPendingTitleChangeEvent;
