@@ -392,7 +392,7 @@ const MESSAGES = () => {
       trigger: { id: "featureCalloutCheck" },
     },
     {
-      id: "PDFJS_FEATURE_TOUR_1",
+      id: "PDFJS_FEATURE_TOUR_1_A",
       template: "feature_callout",
       content: {
         id: "PDFJS_FEATURE_TOUR",
@@ -402,10 +402,14 @@ const MESSAGES = () => {
         disableHistoryUpdates: true,
         screens: [
           {
-            id: "FEATURE_CALLOUT_1",
+            id: "FEATURE_CALLOUT_1_A",
             parent_selector: "#editorFreeText",
             content: {
               position: "callout",
+              callout_position_override: {
+                top: "130px",
+                right: "55px",
+              },
               arrow_position: "top-end",
               title: {
                 string_id: "callout-pdfjs-edit-title",
@@ -423,7 +427,7 @@ const MESSAGES = () => {
                     pref: {
                       name: PDFJS_PREF,
                       value: JSON.stringify({
-                        screen: "FEATURE_CALLOUT_2",
+                        screen: "FEATURE_CALLOUT_2_A",
                         complete: false,
                       }),
                     },
@@ -447,16 +451,17 @@ const MESSAGES = () => {
             },
           },
           EMPTY_SCREEN,
-          EMPTY_SCREEN,
         ],
       },
       priority: 1,
-      // Targeting to be updated in Bug 1797368
-      targeting: "false",
+      targeting: `${matchCurrentScreenTargeting(
+        PDFJS_PREF,
+        "FEATURE_CALLOUT_1_A"
+      )}`,
       trigger: { id: "featureCalloutCheck" },
     },
     {
-      id: "PDFJS_FEATURE_TOUR_2",
+      id: "PDFJS_FEATURE_TOUR_2_A",
       template: "feature_callout",
       content: {
         id: "PDFJS_FEATURE_TOUR",
@@ -468,10 +473,14 @@ const MESSAGES = () => {
         screens: [
           EMPTY_SCREEN,
           {
-            id: "FEATURE_CALLOUT_2",
+            id: "FEATURE_CALLOUT_2_A",
             parent_selector: "#editorInk",
             content: {
               position: "callout",
+              callout_position_override: {
+                top: "130px",
+                right: "25px",
+              },
               arrow_position: "top-end",
               title: {
                 string_id: "callout-pdfjs-draw-title",
@@ -512,12 +521,152 @@ const MESSAGES = () => {
               },
             },
           },
+        ],
+      },
+      priority: 1,
+      targeting: `${matchCurrentScreenTargeting(
+        PDFJS_PREF,
+        "FEATURE_CALLOUT_2_A"
+      )}`,
+      trigger: { id: "featureCalloutCheck" },
+    },
+    {
+      id: "PDFJS_FEATURE_TOUR_1_B",
+      template: "feature_callout",
+      content: {
+        id: "PDFJS_FEATURE_TOUR",
+        template: "multistage",
+        backdrop: "transparent",
+        transitions: false,
+        disableHistoryUpdates: true,
+        screens: [
+          {
+            id: "FEATURE_CALLOUT_1_B",
+            parent_selector: "#editorFreeText",
+            content: {
+              position: "callout",
+              callout_position_override: {
+                top: "130px",
+                right: "55px",
+              },
+              arrow_position: "top-end",
+              title: {
+                string_id: "callout-pdfjs-edit-title",
+              },
+              subtitle: {
+                string_id: "callout-pdfjs-edit-body-b",
+              },
+              primary_button: {
+                label: {
+                  string_id: "callout-pdfjs-edit-button",
+                },
+                action: {
+                  type: "SET_PREF",
+                  data: {
+                    pref: {
+                      name: PDFJS_PREF,
+                      value: JSON.stringify({
+                        screen: "FEATURE_CALLOUT_2_B",
+                        complete: false,
+                      }),
+                    },
+                  },
+                },
+              },
+              dismiss_button: {
+                action: {
+                  type: "SET_PREF",
+                  data: {
+                    pref: {
+                      name: PDFJS_PREF,
+                      value: JSON.stringify({
+                        screen: "",
+                        complete: true,
+                      }),
+                    },
+                  },
+                },
+              },
+            },
+          },
           EMPTY_SCREEN,
         ],
       },
       priority: 1,
-      // Targeting to be updated in Bug 1797368 https://bugzilla.mozilla.org/show_bug.cgi?id=1797368
-      targeting: "false",
+      targeting: `${matchCurrentScreenTargeting(
+        PDFJS_PREF,
+        "FEATURE_CALLOUT_1_B"
+      )}`,
+      trigger: { id: "featureCalloutCheck" },
+    },
+    {
+      id: "PDFJS_FEATURE_TOUR_2_B",
+      template: "feature_callout",
+      content: {
+        id: "PDFJS_FEATURE_TOUR",
+        startScreen: 1,
+        template: "multistage",
+        backdrop: "transparent",
+        transitions: false,
+        disableHistoryUpdates: true,
+        screens: [
+          EMPTY_SCREEN,
+          {
+            id: "FEATURE_CALLOUT_2_B",
+            parent_selector: "#editorInk",
+            content: {
+              position: "callout",
+              callout_position_override: {
+                top: "130px",
+                right: "25px",
+              },
+              arrow_position: "top-end",
+              title: {
+                string_id: "callout-pdfjs-draw-title",
+              },
+              subtitle: {
+                string_id: "callout-pdfjs-draw-body-b",
+              },
+              primary_button: {
+                label: {
+                  string_id: "callout-pdfjs-draw-button",
+                },
+                action: {
+                  type: "SET_PREF",
+                  data: {
+                    pref: {
+                      name: PDFJS_PREF,
+                      value: JSON.stringify({
+                        screen: "",
+                        complete: true,
+                      }),
+                    },
+                  },
+                },
+              },
+              dismiss_button: {
+                action: {
+                  type: "SET_PREF",
+                  data: {
+                    pref: {
+                      name: PDFJS_PREF,
+                      value: JSON.stringify({
+                        screen: "",
+                        complete: true,
+                      }),
+                    },
+                  },
+                },
+              },
+            },
+          },
+        ],
+      },
+      priority: 1,
+      targeting: `${matchCurrentScreenTargeting(
+        PDFJS_PREF,
+        "FEATURE_CALLOUT_2_B"
+      )}`,
       trigger: { id: "featureCalloutCheck" },
     },
   ];
