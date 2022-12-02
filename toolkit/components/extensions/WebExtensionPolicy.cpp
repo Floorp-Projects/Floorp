@@ -184,7 +184,8 @@ WebExtensionPolicyCore::WebExtensionPolicyCore(GlobalObject& aGlobal,
       mExtensionPageCSP(aInit.mExtensionPageCSP),
       mIsPrivileged(aInit.mIsPrivileged),
       mTemporarilyInstalled(aInit.mTemporarilyInstalled),
-      mBackgroundWorkerScript(aInit.mBackgroundWorkerScript) {
+      mBackgroundWorkerScript(aInit.mBackgroundWorkerScript),
+      mPermissions(new AtomSet(aInit.mPermissions)) {
   // In practice this is not necessary, but in tests where the uuid
   // passed in is not lowercased various tests can fail.
   ToLowerCase(aInit.mMozExtensionHostname, mHostname);
@@ -251,6 +252,20 @@ bool WebExtensionPolicyCore::SourceMayAccessPath(
   return false;
 }
 
+bool WebExtensionPolicyCore::CanAccessURI(const URLInfo& aURI, bool aExplicit,
+                                          bool aCheckRestricted,
+                                          bool aAllowFilePermission) const {
+  if (aCheckRestricted && WebExtensionPolicy::IsRestrictedURI(aURI)) {
+    return false;
+  }
+  if (!aAllowFilePermission && aURI.Scheme() == nsGkAtoms::file) {
+    return false;
+  }
+
+  AutoReadLock lock(mLock);
+  return mHostPermissions && mHostPermissions->Matches(aURI, aExplicit);
+}
+
 /*****************************************************************************
  * WebExtensionPolicy
  *****************************************************************************/
@@ -259,8 +274,7 @@ WebExtensionPolicy::WebExtensionPolicy(GlobalObject& aGlobal,
                                        const WebExtensionInit& aInit,
                                        ErrorResult& aRv)
     : mCore(new WebExtensionPolicyCore(aGlobal, this, aInit, aRv)),
-      mLocalizeCallback(aInit.mLocalizeCallback),
-      mPermissions(new AtomSet(aInit.mPermissions)) {
+      mLocalizeCallback(aInit.mLocalizeCallback) {
   if (aRv.Failed()) {
     return;
   }
@@ -268,11 +282,15 @@ WebExtensionPolicy::WebExtensionPolicy(GlobalObject& aGlobal,
   MatchPatternOptions options;
   options.mRestrictSchemes = !HasPermission(nsGkAtoms::mozillaAddons);
 
-  mHostPermissions = ParseMatches(aGlobal, aInit.mAllowedOrigins, options,
-                                  ErrorBehavior::CreateEmptyPattern, aRv);
+  // Set host permissions with SetAllowedOrigins to make sure the copy in core
+  // and WebExtensionPolicy stay in sync.
+  RefPtr<MatchPatternSet> hostPermissions =
+      ParseMatches(aGlobal, aInit.mAllowedOrigins, options,
+                   ErrorBehavior::CreateEmptyPattern, aRv);
   if (aRv.Failed()) {
     return;
   }
+  SetAllowedOrigins(*hostPermissions);
 
   if (!aInit.mBackgroundScripts.IsNull()) {
     mBackgroundScripts.SetValue().AppendElements(
@@ -438,12 +456,13 @@ void WebExtensionPolicy::UnregisterContentScript(
   WebExtensionPolicy_Binding::ClearCachedContentScriptsValue(this);
 }
 
-bool WebExtensionPolicy::CanAccessURI(const URLInfo& aURI, bool aExplicit,
-                                      bool aCheckRestricted,
-                                      bool aAllowFilePermission) const {
-  return (!aCheckRestricted || !IsRestrictedURI(aURI)) && mHostPermissions &&
-         mHostPermissions->Matches(aURI, aExplicit) &&
-         (aURI.Scheme() != nsGkAtoms::file || aAllowFilePermission);
+void WebExtensionPolicy::SetAllowedOrigins(MatchPatternSet& aAllowedOrigins) {
+  // Make sure to keep the version in `WebExtensionPolicy` (which can be exposed
+  // back to script using AllowedOrigins()), and the version in
+  // `WebExtensionPolicyCore` (which is threadsafe) in sync.
+  AutoWriteLock lock(mCore->mLock);
+  mHostPermissions = &aAllowedOrigins;
+  mCore->mHostPermissions = aAllowedOrigins.Core();
 }
 
 void WebExtensionPolicy::InjectContentScripts(ErrorResult& aRv) {
