@@ -8510,12 +8510,6 @@
   mirror: always
   rust: true
 
-# Enables support for different CSS page sizes on each page when printing.
-- name: layout.css.allow-mixed-page-sizes
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # Dictates whether or not the prefers contrast media query will be
 # usable.
 #   true: prefers-contrast will toggle based on OS and browser settings.

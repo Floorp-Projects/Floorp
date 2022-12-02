@@ -402,8 +402,6 @@ void nsPageContentFrame::AppendDirectlyOwnedAnonBoxes(
 }
 
 void nsPageContentFrame::EnsurePageName() {
-  MOZ_ASSERT(HasAnyStateBits(NS_FRAME_FIRST_REFLOW),
-             "Should only have been called on first reflow");
   if (mPageName) {
     return;
   }
