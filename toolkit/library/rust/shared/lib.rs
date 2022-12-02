@@ -143,13 +143,15 @@ pub extern "C" fn GkRust_Shutdown() {}
 
 /// Used to implement `nsIDebug2::RustPanic` for testing purposes.
 #[no_mangle]
-pub unsafe extern "C" fn intentional_panic(message: *const c_char) {
+pub extern "C" fn intentional_panic(message: *const c_char) {
     panic!("{}", unsafe { CStr::from_ptr(message) }.to_string_lossy());
 }
 
 /// Used to implement `nsIDebug2::rustLog` for testing purposes.
 #[no_mangle]
-pub unsafe extern "C" fn debug_log(target: *const c_char, message: *const c_char) {
-    // NOTE: The `info!` log macro is used here because we have the `release_max_level_info` feature set.
-    info!(target: CStr::from_ptr(target).to_str().unwrap(), "{}", CStr::from_ptr(message).to_str().unwrap());
+pub extern "C" fn debug_log(target: *const c_char, message: *const c_char) {
+    unsafe {
+        // NOTE: The `info!` log macro is used here because we have the `release_max_level_info` feature set.
+        info!(target: CStr::from_ptr(target).to_str().unwrap(), "{}", CStr::from_ptr(message).to_str().unwrap());
+    }
 }

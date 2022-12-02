@@ -46,7 +46,7 @@ pub fn get_compact_symbol_table_from_file(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn profiler_get_symbol_table(
+pub extern "C" fn profiler_get_symbol_table(
     debug_path: *const c_char,
     breakpad_id: *const c_char,
     symbol_table: &mut CompactSymbolTable,
@@ -71,7 +71,7 @@ pub unsafe extern "C" fn profiler_get_symbol_table(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn profiler_demangle_rust(
+pub extern "C" fn profiler_demangle_rust(
     mangled: *const c_char,
     buffer: *mut c_char,
     buffer_len: usize,

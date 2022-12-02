@@ -117,7 +117,7 @@ pub fn log_to_gecko(record: &log::Record) -> bool {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn set_rust_log_level(module: *const c_char, level: u8) {
+pub extern "C" fn set_rust_log_level(module: *const c_char, level: u8) {
     // Convert the Gecko level to a rust LevelFilter.
     let rust_level = match level {
         1 => LevelFilter::Error,
