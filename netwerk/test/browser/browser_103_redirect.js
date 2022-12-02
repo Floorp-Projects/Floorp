@@ -36,7 +36,7 @@ add_task(async function test_103_redirect_insecure_cross_origin() {
     "test_103_redirect_insecure_cross_origin",
     "https://example.com",
     "https://example.com/browser/netwerk/test/browser/early_hint_redirect.sjs?http://mochi.test:8888/browser/netwerk/test/browser/early_hint_pixel.sjs",
-    { hinted: 1, normal: 1 }
+    { hinted: 2, normal: 0 }
   );
 });
 
@@ -46,6 +46,6 @@ add_task(async function test_103_preload_redirect_mixed_content() {
     "test_103_preload_redirect_mixed_content",
     "https://example.org",
     "https://example.org/browser/netwerk/test/browser/early_hint_redirect.sjs?http://example.org/browser/netwerk/test/browser/early_hint_pixel.sjs",
-    { hinted: 1, normal: 1 }
+    { hinted: 2, normal: 0 }
   );
 });
