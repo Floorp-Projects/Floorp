@@ -172,17 +172,12 @@
       <popupnotificationcontent id="identity-credential-provider" orient="vertical">
         <html:div id="identity-credential-provider-selector-container">
         </html:div>
-        <description class="popup-notification-description" id="credential-provider-explanation" data-l10n-id="identity-credential-description-provider-explanation"/>
+        <description class="popup-notification-description" id="credential-provider-explanation" data-l10n-id="credential-description-provider-explanation"/>
         <html:template id="template-credential-provider-list-item">
           <toolbarbutton class="credential-provider-list-item subviewbutton-nav subviewbutton" align="center" wrap="true">
             <label flex="1" class="credential-provider-list-item-label"></label>
           </toolbarbutton>
         </html:template>
-      </popupnotificationcontent>
-      <popupnotificationcontent id="identity-credential-policy" orient="vertical">
-        <description id="identity-credential-policy-explanation"/>
-        <label class="text-link" is="text-link" data-l10n-id="identity-credential-privacy-policy" id="identity-credential-privacy-policy"></label>
-        <label class="text-link" is="text-link" data-l10n-id="identity-credential-terms-of-service" id="identity-credential-terms-of-service"></label>
       </popupnotificationcontent>
       <popupnotificationcontent id="identity-credential-account" orient="vertical" hidden="true">
         <html:div id="identity-credential-account-selector-container">
