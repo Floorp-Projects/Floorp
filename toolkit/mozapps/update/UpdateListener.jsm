@@ -264,7 +264,7 @@ var UpdateListener = {
 
   showUnsupportedUpdateNotification(update, dismissed) {
     if (!update || !update.detailsURL) {
-      Cu.reportError(
+      console.error(
         "The update for an unsupported notification must have a " +
           "detailsURL attribute."
       );

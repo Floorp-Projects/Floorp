@@ -135,7 +135,7 @@ var AUSTLMY = {
         Services.telemetry.getHistogramById(id).add(aCode);
       }
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
   },
 
@@ -159,7 +159,7 @@ var AUSTLMY = {
       // keyed count type histogram
       Services.telemetry.getKeyedHistogramById(id).add(val);
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
   },
 
@@ -224,7 +224,7 @@ var AUSTLMY = {
       // enumerated type histogram
       Services.telemetry.getHistogramById(id).add(aCode);
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
   },
 
@@ -253,7 +253,7 @@ var AUSTLMY = {
       // enumerated type histogram
       Services.telemetry.getHistogramById(id).add(aCode);
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
   },
 
@@ -278,7 +278,7 @@ var AUSTLMY = {
       // enumerated type histogram
       Services.telemetry.getHistogramById(id).add(aCode);
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
   },
 
@@ -302,7 +302,7 @@ var AUSTLMY = {
       let key = aSuffix.toLowerCase().replace("_", "-");
       Services.telemetry.keyedScalarSet(id, key, aCode);
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
   },
 
@@ -324,26 +324,26 @@ var AUSTLMY = {
    */
   pingBitsError: function UT_pingBitsError(aIsComplete, aError) {
     if (AppConstants.platform != "win") {
-      Cu.reportError(
+      console.error(
         "Warning: Attempted to submit BITS telemetry on a " +
           "non-Windows platform"
       );
       return;
     }
     if (!(aError instanceof BitsError)) {
-      Cu.reportError("Error sending BITS Error ping: Error is not a BitsError");
+      console.error("Error sending BITS Error ping: Error is not a BitsError");
       aError = new BitsUnknownError();
     }
     // Coerce the error to integer
     let type = +aError.type;
     if (isNaN(type)) {
-      Cu.reportError(
+      console.error(
         "Error sending BITS Error ping: Either error is not a " +
           "BitsError, or error type is not an integer."
       );
       type = Ci.nsIBits.ERROR_TYPE_UNKNOWN;
     } else if (type == Ci.nsIBits.ERROR_TYPE_SUCCESS) {
-      Cu.reportError(
+      console.error(
         "Error sending BITS Error ping: The error type must not " +
           "be the success type."
       );
@@ -365,7 +365,7 @@ var AUSTLMY = {
           aError.code
         );
       } catch (e) {
-        Cu.reportError(e);
+        console.error(e);
       }
     }
   },
@@ -382,7 +382,7 @@ var AUSTLMY = {
    */
   pingBitsSuccess: function UT_pingBitsSuccess(aIsComplete) {
     if (AppConstants.platform != "win") {
-      Cu.reportError(
+      console.error(
         "Warning: Attempted to submit BITS telemetry on a " +
           "non-Windows platform"
       );
@@ -417,7 +417,7 @@ var AUSTLMY = {
       let id = "UPDATE_BITS_RESULT_" + patchType;
       Services.telemetry.getHistogramById(id).add(aResultType);
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
   },
 
@@ -449,7 +449,7 @@ var AUSTLMY = {
             // count type histogram
             Services.telemetry.getHistogramById(id).add();
           } catch (e) {
-            Cu.reportError(e);
+            console.error(e);
           }
         } else {
           let intervalDays =
@@ -459,7 +459,7 @@ var AUSTLMY = {
             // exponential type histogram
             Services.telemetry.getHistogramById(id).add(intervalDays);
           } catch (e) {
-            Cu.reportError(e);
+            console.error(e);
           }
         }
       }
@@ -487,7 +487,7 @@ var AUSTLMY = {
     // Report the error but don't throw since it is more important to
     // successfully update than to throw.
     if (!("@mozilla.org/windows-registry-key;1" in Cc)) {
-      Cu.reportError(Cr.NS_ERROR_NOT_AVAILABLE);
+      console.error(Cr.NS_ERROR_NOT_AVAILABLE);
       return;
     }
 
@@ -496,7 +496,7 @@ var AUSTLMY = {
       // boolean type histogram
       Services.telemetry.getHistogramById(id).add(aInstalled);
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
 
     let attempted = 0;
@@ -524,7 +524,7 @@ var AUSTLMY = {
         Services.telemetry.getHistogramById(id).add();
       }
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
   },
 
@@ -555,7 +555,7 @@ var AUSTLMY = {
         Services.telemetry.getHistogramById(aID).add();
       }
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
   },
 
@@ -586,7 +586,7 @@ var AUSTLMY = {
         Services.telemetry.getHistogramById(aID).add(val);
       }
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
   },
 
@@ -615,7 +615,7 @@ var AUSTLMY = {
         Services.telemetry.getHistogramById(aID).add();
       }
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
   },
 
@@ -640,7 +640,7 @@ var AUSTLMY = {
         Services.telemetry.scalarSet("update.suppress_prompts", true);
       }
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
   },
 
@@ -648,7 +648,7 @@ var AUSTLMY = {
     try {
       Services.telemetry.scalarSet("update.version_pin", updatePin);
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
   },
 };
