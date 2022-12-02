@@ -71,6 +71,7 @@ add_task(async function test_http() {
   equal(req.status, Cr.NS_OK);
   equal(req.QueryInterface(Ci.nsIHttpChannel).responseStatus, 200);
   equal(req.QueryInterface(Ci.nsIHttpChannel).protocolVersion, "http/1.1");
+  equal(req.QueryInterface(Ci.nsIHttpChannelInternal).isProxyUsed, false);
 
   await server.stop();
 });
@@ -181,6 +182,8 @@ add_task(async function test_http1_proxy() {
       equal(req.status, Cr.NS_OK);
       equal(req.QueryInterface(Ci.nsIHttpChannel).responseStatus, 200);
       equal(buff, server.constructor.name);
+      //Bug 1792187: Check if proxy is set to true when a proxy is used.
+      equal(req.QueryInterface(Ci.nsIHttpChannelInternal).isProxyUsed, true);
       equal(
         req.QueryInterface(Ci.nsIHttpChannel).protocolVersion,
         server.constructor.name == "NodeHTTP2Server" ? "h2" : "http/1.1"

@@ -824,6 +824,11 @@ ClassifierDummyChannel::GetEarlyHintPreloaderId(
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+ClassifierDummyChannel::GetIsProxyUsed(bool*) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 void ClassifierDummyChannel::SetConnectionInfo(
     mozilla::net::nsHttpConnectionInfo* aInfo) {}
 

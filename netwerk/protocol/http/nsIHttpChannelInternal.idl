@@ -477,4 +477,8 @@ interface nsIHttpChannelInternal : nsISupports
 
     [notxpcom, nostdcall] void setConnectionInfo(in nsHttpConnectionInfo aInfo);
 
+    /*
+    * This attribute indicates if the channel was loaded via Proxy.
+    */
+    [must_use] readonly attribute boolean isProxyUsed;
 };
