@@ -232,7 +232,7 @@ class GeckoViewNavigation extends GeckoViewModule {
           additionalHeaders = "";
           for (const [key, value] of Object.entries(headers)) {
             if (!this.validateHeader(key, value, headerFilter)) {
-              Cu.reportError(`Ignoring invalid header '${key}'='${value}'.`);
+              console.error(`Ignoring invalid header '${key}'='${value}'.`);
               continue;
             }
 
