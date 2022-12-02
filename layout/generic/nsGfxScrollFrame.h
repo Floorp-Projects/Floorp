@@ -873,7 +873,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
   void ScrollToWithOrigin(nsPoint aScrollPosition, const nsRect* aRange,
                           ScrollOperationParams&& aParams);
 
-  void CompleteAsyncScroll(const nsRect& aRange,
+  void CompleteAsyncScroll(const nsPoint& aScrollPosition, const nsRect& aRange,
                            UniquePtr<ScrollSnapTargetIds> aSnapTargetIds,
                            ScrollOrigin aOrigin = ScrollOrigin::NotSpecified);
 
