@@ -273,47 +273,6 @@ void nsContentSink::DoProcessLinkHeader() {
   }
 }
 
-// check whether the Link header field applies to the context resource
-// see <http://tools.ietf.org/html/rfc5988#section-5.2>
-
-bool nsContentSink::LinkContextIsOurDocument(const nsAString& aAnchor) {
-  if (aAnchor.IsEmpty()) {
-    // anchor parameter not present or empty -> same document reference
-    return true;
-  }
-
-  nsIURI* docUri = mDocument->GetDocumentURI();
-
-  // the document URI might contain a fragment identifier ("#...')
-  // we want to ignore that because it's invisible to the server
-  // and just affects the local interpretation in the recipient
-  nsCOMPtr<nsIURI> contextUri;
-  nsresult rv = NS_GetURIWithoutRef(docUri, getter_AddRefs(contextUri));
-
-  if (NS_FAILED(rv)) {
-    // copying failed
-    return false;
-  }
-
-  // resolve anchor against context
-  nsCOMPtr<nsIURI> resolvedUri;
-  rv = NS_NewURI(getter_AddRefs(resolvedUri), aAnchor, nullptr, contextUri);
-
-  if (NS_FAILED(rv)) {
-    // resolving failed
-    return false;
-  }
-
-  bool same;
-  rv = contextUri->Equals(resolvedUri, &same);
-  if (NS_FAILED(rv)) {
-    // comparison failed
-    return false;
-  }
-
-  return same;
-}
-
 nsresult nsContentSink::ProcessLinkFromHeader(const net::LinkHeader& aHeader,
                                               uint64_t aEarlyHintPreloaderId) {
   uint32_t linkTypes = LinkStyle::ParseLinkTypes(aHeader.mRel);
@@ -322,7 +281,8 @@ nsresult nsContentSink::ProcessLinkFromHeader(const net::LinkHeader& aHeader,
   // in the anchor parameter. For the link relations supported so far,
   // we simply abort if the link applies to a resource different to the
   // one we've loaded
-  if (!LinkContextIsOurDocument(aHeader.mAnchor)) {
+  if (!nsContentUtils::LinkContextIsURI(aHeader.mAnchor,
+                                        mDocument->GetDocumentURI())) {
     return NS_OK;
   }
 

@@ -115,7 +115,6 @@ class nsContentSink : public nsICSSLoaderObserver,
   virtual void UpdateChildCounts() = 0;
 
   bool IsTimeToNotify();
-  bool LinkContextIsOurDocument(const nsAString& aAnchor);
 
  protected:
   nsContentSink();
