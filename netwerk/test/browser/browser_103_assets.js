@@ -4,7 +4,7 @@
 
 Services.prefs.setBoolPref("network.early-hints.enabled", true);
 
-const { lax_request_count_checking } = ChromeUtils.import(
+const { request_count_checking } = ChromeUtils.import(
   "resource://testing-common/early_hint_preload_test_helper.jsm"
 );
 
@@ -38,43 +38,43 @@ async function test_hint_asset(testName, asset, hinted) {
     "http://example.com/browser/netwerk/test/browser/early_hint_pixel_count.sjs"
   ).then(response => response.json());
 
-  // TODO: Switch to stricter counting method after fixing https://bugzilla.mozilla.org/show_bug.cgi?id=1753730#c11
-  await lax_request_count_checking(
+  await request_count_checking(
     `${testName} (${asset})`,
     gotRequestCount,
     hinted ? { hinted: 1, normal: 0 } : { hinted: 0, normal: 1 }
   );
-  /*
-  await Assert.deepEqual(
-    gotRequestCount,
-    hinted ? { hinted: 1, normal: 0 } : { hinted: 0, normal: 1 },
-    `${testName} (${asset}): Unexpected amount of requests made`
-  );
-  */
 }
 
 // preload image
-add_task(async function test_103_asset_style() {
-  await test_hint_asset("test_103_asset_hinted", "image", true);
+add_task(async function test_103_asset_image() {
   await test_hint_asset("test_103_asset_normal", "image", false);
+  await test_hint_asset("test_103_asset_hinted", "image", true);
 });
 
 // preload css
 add_task(async function test_103_asset_style() {
-  await test_hint_asset("test_103_asset_hinted", "style", true);
   await test_hint_asset("test_103_asset_normal", "style", false);
+  await test_hint_asset("test_103_asset_hinted", "style", true);
 });
 
 // preload javascript
 add_task(async function test_103_asset_javascript() {
-  await test_hint_asset("test_103_asset_hinted", "script", true);
   await test_hint_asset("test_103_asset_normal", "script", false);
+  await test_hint_asset("test_103_asset_hinted", "script", true);
 });
+
+// preload javascript module
+/* TODO(Bug 1798319): enable this test case
+add_task(async function test_103_asset_module() {
+  await test_hint_asset("test_103_asset_normal", "module", false);
+  await test_hint_asset("test_103_asset_hinted", "module", true);
+});
+*/
 
 // preload font
 add_task(async function test_103_asset_font() {
-  await test_hint_asset("test_103_asset_hinted", "font", true);
   await test_hint_asset("test_103_asset_normal", "font", false);
+  await test_hint_asset("test_103_asset_hinted", "font", true);
 });
 
 // - testName is just there to be printed during Asserts when failing
@@ -117,23 +117,15 @@ async function test_hint_fetch(testName, hinted) {
     "http://example.com/browser/netwerk/test/browser/early_hint_pixel_count.sjs"
   ).then(response => response.json());
 
-  // TODO: Switch to stricter counting method after fixing https://bugzilla.mozilla.org/show_bug.cgi?id=1753730#c11
-  await lax_request_count_checking(
+  await request_count_checking(
     `${testName} (fetch)`,
     gotRequestCount,
     hinted ? { hinted: 1, normal: 0 } : { hinted: 0, normal: 1 }
   );
-  /*
-  await Assert.deepEqual(
-    gotRequestCount,
-    hinted ? { hinted: 1, normal: 0 } : { hinted: 0, normal: 1 },
-    `${testName} (fetch): Unexpected amount of requests made`
-  );
-  */
 }
 
 // preload fetch
 add_task(async function test_103_asset_fetch() {
-  await test_hint_fetch("test_103_asset_hinted", true);
   await test_hint_fetch("test_103_asset_normal", false);
+  await test_hint_fetch("test_103_asset_hinted", true);
 });
