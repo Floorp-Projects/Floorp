@@ -46,16 +46,16 @@ pub fn get_compact_symbol_table_from_file(
 }
 
 #[no_mangle]
-pub extern "C" fn profiler_get_symbol_table(
+pub unsafe extern "C" fn profiler_get_symbol_table(
     debug_path: *const c_char,
     breakpad_id: *const c_char,
     symbol_table: &mut CompactSymbolTable,
 ) -> bool {
-    let debug_path = unsafe { CStr::from_ptr(debug_path).to_string_lossy() };
+    let debug_path = CStr::from_ptr(debug_path).to_string_lossy();
     let breakpad_id = if breakpad_id.is_null() {
         None
     } else {
-        match unsafe { CStr::from_ptr(breakpad_id).to_str() } {
+        match CStr::from_ptr(breakpad_id).to_str() {
             Ok(s) => Some(s),
             Err(_) => return false,
         }
@@ -71,7 +71,7 @@ pub extern "C" fn profiler_get_symbol_table(
 }
 
 #[no_mangle]
-pub extern "C" fn profiler_demangle_rust(
+pub unsafe extern "C" fn profiler_demangle_rust(
     mangled: *const c_char,
     buffer: *mut c_char,
     buffer_len: usize,
@@ -83,8 +83,8 @@ pub extern "C" fn profiler_demangle_rust(
         return false;
     }
 
-    let buffer: *mut u8 = unsafe { mem::transmute(buffer) };
-    let mangled = match unsafe { CStr::from_ptr(mangled).to_str() } {
+    let buffer: *mut u8 = mem::transmute(buffer);
+    let mangled = match CStr::from_ptr(mangled).to_str() {
         Ok(s) => s,
         Err(_) => return false,
     };
@@ -98,10 +98,8 @@ pub extern "C" fn profiler_demangle_rust(
             demangled.truncate(buffer_len - 1);
 
             let bytes = demangled.as_bytes();
-            unsafe {
-                ptr::copy(bytes.as_ptr(), buffer, bytes.len());
-                ptr::write(buffer.offset(bytes.len() as isize), 0);
-            }
+            ptr::copy(bytes.as_ptr(), buffer, bytes.len());
+            ptr::write(buffer.offset(bytes.len() as isize), 0);
             true
         }
         Err(_) => false,
