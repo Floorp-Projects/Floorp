@@ -2790,7 +2790,8 @@ void SVGTextFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   if (mState & NS_FRAME_IS_NONDISPLAY) {
     // We're inserting a new <text> element into a non-display context.
     // Ensure that we get reflowed.
-    ScheduleReflowSVGNonDisplayText(IntrinsicDirty::StyleChange);
+    ScheduleReflowSVGNonDisplayText(
+        IntrinsicDirty::FrameAncestorsAndDescendants);
   }
 }
 
@@ -5009,7 +5010,8 @@ bool SVGTextFrame::ShouldRenderAsPath(nsTextFrame* aFrame,
 
 void SVGTextFrame::ScheduleReflowSVG() {
   if (mState & NS_FRAME_IS_NONDISPLAY) {
-    ScheduleReflowSVGNonDisplayText(IntrinsicDirty::StyleChange);
+    ScheduleReflowSVGNonDisplayText(
+        IntrinsicDirty::FrameAncestorsAndDescendants);
   } else {
     SVGUtils::ScheduleReflowSVG(this);
   }

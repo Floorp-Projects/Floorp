@@ -548,8 +548,9 @@ void nsComboboxControlFrame::HandleRedisplayTextEvent() {
     return;
   }
 
-  // XXXbz This should perhaps be eResize.  Check.
-  PresShell()->FrameNeedsReflow(mDisplayFrame, IntrinsicDirty::StyleChange,
+  // XXXbz This should perhaps be IntrinsicDirty::None. Check.
+  PresShell()->FrameNeedsReflow(mDisplayFrame,
+                                IntrinsicDirty::FrameAncestorsAndDescendants,
                                 NS_FRAME_IS_DIRTY);
 
   mInRedisplayText = false;

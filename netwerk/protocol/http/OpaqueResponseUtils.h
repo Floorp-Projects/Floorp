@@ -38,6 +38,9 @@ enum class OpaqueResponseBlockedReason : uint32_t {
 };
 
 OpaqueResponseBlockedReason GetOpaqueResponseBlockedReason(
+    const nsACString& aContentType, uint16_t aStatus, bool aNoSniff);
+
+OpaqueResponseBlockedReason GetOpaqueResponseBlockedReason(
     const nsHttpResponseHead& aResponseHead);
 
 // Returns a tuple of (rangeStart, rangeEnd, rangeTotal) from the input range
@@ -57,24 +60,27 @@ class OpaqueResponseBlocker final : public nsIStreamListener {
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER;
 
-  OpaqueResponseBlocker(nsIStreamListener* aNext, HttpBaseChannel* aChannel);
+  OpaqueResponseBlocker(nsIStreamListener* aNext, HttpBaseChannel* aChannel,
+                        const nsCString& aContentType, bool aNoSniff);
 
+  bool IsSniffing() const;
   void AllowResponse();
   void BlockResponse(HttpBaseChannel* aChannel, nsresult aReason);
+
+  nsresult EnsureOpaqueResponseIsAllowedAfterSniff(nsIRequest* aRequest);
 
  private:
   virtual ~OpaqueResponseBlocker() = default;
 
-  void MaybeORBSniff(nsIRequest* aRequest);
-
-  void ResolveAndSendPending(HttpBaseChannel* aChannel, State aState,
-                             nsresult aStatus);
+  nsresult ValidateJavaScript(HttpBaseChannel* aChannel);
 
   nsCOMPtr<nsIStreamListener> mNext;
 
+  const nsCString mContentType;
+  const bool mNoSniff;
+
   State mState = State::Sniffing;
   nsresult mStatus = NS_OK;
-  bool mCheckIsOpaqueResponseAllowedAfterSniff = true;
 };
 
 class nsCompressedAudioVideoImageDetector : public nsUnknownDecoder {

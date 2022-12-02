@@ -208,7 +208,7 @@ nsresult nsMathMLmactionFrame::AttributeChanged(int32_t aNameSpaceID,
   }
 
   if (needsReflow) {
-    PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,
+    PresShell()->FrameNeedsReflow(this, IntrinsicDirty::FrameAndAncestors,
                                   NS_FRAME_IS_DIRTY);
   }
 
@@ -302,8 +302,8 @@ void nsMathMLmactionFrame::MouseClick() {
                                      value, notify);
 
       // Now trigger a content-changed reflow...
-      PresShell()->FrameNeedsReflow(mSelectedFrame, IntrinsicDirty::TreeChange,
-                                    NS_FRAME_IS_DIRTY);
+      PresShell()->FrameNeedsReflow(
+          mSelectedFrame, IntrinsicDirty::FrameAndAncestors, NS_FRAME_IS_DIRTY);
     }
   }
 }

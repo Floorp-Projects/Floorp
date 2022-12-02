@@ -1223,7 +1223,7 @@ void nsSubDocumentFrame::EndSwapDocShells(nsIFrame* aOther) {
   // And repaint them, for good measure, in case there's nothing
   // interesting that happens during reflow.
   if (weakThis.IsAlive()) {
-    PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,
+    PresShell()->FrameNeedsReflow(this, IntrinsicDirty::FrameAndAncestors,
                                   NS_FRAME_IS_DIRTY);
     InvalidateFrameSubtree();
     PropagateIsUnderHiddenEmbedderElementToSubView(
@@ -1231,8 +1231,8 @@ void nsSubDocumentFrame::EndSwapDocShells(nsIFrame* aOther) {
         !StyleVisibility()->IsVisible());
   }
   if (weakOther.IsAlive()) {
-    other->PresShell()->FrameNeedsReflow(other, IntrinsicDirty::TreeChange,
-                                         NS_FRAME_IS_DIRTY);
+    other->PresShell()->FrameNeedsReflow(
+        other, IntrinsicDirty::FrameAndAncestors, NS_FRAME_IS_DIRTY);
     other->InvalidateFrameSubtree();
     other->PropagateIsUnderHiddenEmbedderElementToSubView(
         other->PresShell()->IsUnderHiddenEmbedderElement() ||
@@ -1280,8 +1280,9 @@ void nsSubDocumentFrame::SubdocumentIntrinsicSizeOrRatioChanged() {
       !pos->mWidth.ConvertsToLength() || !pos->mHeight.ConvertsToLength();
 
   if (dependsOnIntrinsics || pos->mObjectFit != StyleObjectFit::Fill) {
-    auto dirtyHint = dependsOnIntrinsics ? IntrinsicDirty::StyleChange
-                                         : IntrinsicDirty::Resize;
+    auto dirtyHint = dependsOnIntrinsics
+                         ? IntrinsicDirty::FrameAncestorsAndDescendants
+                         : IntrinsicDirty::None;
     PresShell()->FrameNeedsReflow(this, dirtyHint, NS_FRAME_IS_DIRTY);
     InvalidateFrame();
   }

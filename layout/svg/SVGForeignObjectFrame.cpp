@@ -430,7 +430,7 @@ void SVGForeignObjectFrame::NotifySVGChanged(uint32_t aFlags) {
   // that, SVGOuterSVGFrame::DidReflow will take care of reflowing us
   // synchronously, so there's no need.
   if (needReflow && !PresShell()->IsReflowLocked()) {
-    RequestReflow(IntrinsicDirty::Resize);
+    RequestReflow(IntrinsicDirty::None);
   }
 
   if (needNewCanvasTM) {

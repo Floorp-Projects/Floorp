@@ -624,32 +624,6 @@ inline bool InitElemIncOperation(JSContext* cx, Handle<ArrayObject*> arr,
   return DefineDataElement(cx, arr, index, val, JSPROP_ENUMERATE);
 }
 
-static inline ArrayObject* ProcessCallSiteObjOperation(JSContext* cx,
-                                                       HandleScript script,
-                                                       const jsbytecode* pc) {
-  MOZ_ASSERT(JSOp(*pc) == JSOp::CallSiteObj);
-
-  Rooted<ArrayObject*> cso(cx, &script->getObject(pc)->as<ArrayObject>());
-
-  if (cso->isExtensible()) {
-    RootedObject raw(cx, script->getObject(GET_GCTHING_INDEX(pc).next()));
-    MOZ_ASSERT(raw->is<ArrayObject>());
-
-    RootedValue rawValue(cx, ObjectValue(*raw));
-    if (!DefineDataProperty(cx, cso, cx->names().raw, rawValue, 0)) {
-      return nullptr;
-    }
-    if (!FreezeObject(cx, raw)) {
-      return nullptr;
-    }
-    if (!FreezeObject(cx, cso)) {
-      return nullptr;
-    }
-  }
-
-  return cso;
-}
-
 inline JSFunction* ReportIfNotFunction(
     JSContext* cx, HandleValue v, MaybeConstruct construct = NO_CONSTRUCT) {
   if (v.isObject() && v.toObject().is<JSFunction>()) {

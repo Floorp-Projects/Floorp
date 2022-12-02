@@ -1551,7 +1551,7 @@ void nsXULPopupManager::BeginShowingPopup(const PendingPopup& aPendingPopup,
 
   RefPtr<nsPresContext> presContext = popupFrame->PresContext();
   RefPtr<PresShell> presShell = presContext->PresShell();
-  presShell->FrameNeedsReflow(popupFrame, IntrinsicDirty::TreeChange,
+  presShell->FrameNeedsReflow(popupFrame, IntrinsicDirty::FrameAndAncestors,
                               NS_FRAME_IS_DIRTY);
 
   nsPopupType popupType = popupFrame->PopupType();
@@ -1603,7 +1603,8 @@ void nsXULPopupManager::BeginShowingPopup(const PendingPopup& aPendingPopup,
       if (popup->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                                           nsGkAtoms::arrow, eCaseMatters)) {
         popupFrame->ShowWithPositionedEvent();
-        presShell->FrameNeedsReflow(popupFrame, IntrinsicDirty::TreeChange,
+        presShell->FrameNeedsReflow(popupFrame,
+                                    IntrinsicDirty::FrameAndAncestors,
                                     NS_FRAME_HAS_DIRTY_CHILDREN);
       } else {
         ShowPopupCallback(popup, popupFrame, aIsContextMenu, aSelectFirstItem);

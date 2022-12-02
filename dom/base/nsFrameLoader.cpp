@@ -991,7 +991,7 @@ bool nsFrameLoader::Show(nsSubDocumentFrame* frame) {
     // Ensure root scroll frame is reflowed in case margins have changed
     if (marginsChanged) {
       if (nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame()) {
-        presShell->FrameNeedsReflow(rootScrollFrame, IntrinsicDirty::Resize,
+        presShell->FrameNeedsReflow(rootScrollFrame, IntrinsicDirty::None,
                                     NS_FRAME_IS_DIRTY);
       }
     }

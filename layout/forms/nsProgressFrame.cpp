@@ -185,7 +185,7 @@ nsresult nsProgressFrame::AttributeChanged(int32_t aNameSpaceID,
       (aAttribute == nsGkAtoms::value || aAttribute == nsGkAtoms::max)) {
     auto presShell = PresShell();
     for (auto childFrame : PrincipalChildList()) {
-      presShell->FrameNeedsReflow(childFrame, IntrinsicDirty::Resize,
+      presShell->FrameNeedsReflow(childFrame, IntrinsicDirty::None,
                                   NS_FRAME_IS_DIRTY);
     }
     InvalidateFrame();

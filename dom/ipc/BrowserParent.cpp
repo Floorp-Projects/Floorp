@@ -1200,9 +1200,6 @@ a11y::PDocAccessibleParent* BrowserParent::AllocPDocAccessibleParent(
 }
 
 bool BrowserParent::DeallocPDocAccessibleParent(PDocAccessibleParent* aParent) {
-#  if defined(ANDROID)
-  MonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());
-#  endif
   // Free reference from AllocPDocAccessibleParent.
   static_cast<a11y::DocAccessibleParent*>(aParent)->Release();
   return true;

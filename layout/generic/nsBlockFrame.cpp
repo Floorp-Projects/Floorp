@@ -5746,7 +5746,7 @@ void nsBlockFrame::AppendFrames(ChildListID aListID, nsFrameList&& aFrameList) {
   AddFrames(std::move(aFrameList), lastKid, nullptr);
   if (aListID != FrameChildListID::NoReflowPrincipal) {
     PresShell()->FrameNeedsReflow(
-        this, IntrinsicDirty::TreeChange,
+        this, IntrinsicDirty::FrameAndAncestors,
         NS_FRAME_HAS_DIRTY_CHILDREN);  // XXX sufficient?
   }
 }
@@ -5783,7 +5783,7 @@ void nsBlockFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
   AddFrames(std::move(aFrameList), aPrevFrame, aPrevFrameLine);
   if (aListID != FrameChildListID::NoReflowPrincipal) {
     PresShell()->FrameNeedsReflow(
-        this, IntrinsicDirty::TreeChange,
+        this, IntrinsicDirty::FrameAndAncestors,
         NS_FRAME_HAS_DIRTY_CHILDREN);  // XXX sufficient?
   }
 }
@@ -5824,7 +5824,7 @@ void nsBlockFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
   }
 
   PresShell()->FrameNeedsReflow(
-      this, IntrinsicDirty::TreeChange,
+      this, IntrinsicDirty::FrameAndAncestors,
       NS_FRAME_HAS_DIRTY_CHILDREN);  // XXX sufficient?
 }
 

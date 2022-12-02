@@ -4463,8 +4463,8 @@ nsDOMWindowUtils::EnsureDirtyRootFrame() {
     return NS_ERROR_FAILURE;
   }
 
-  presShell->FrameNeedsReflow(frame, IntrinsicDirty::StyleChange,
-                              NS_FRAME_IS_DIRTY);
+  presShell->FrameNeedsReflow(
+      frame, IntrinsicDirty::FrameAncestorsAndDescendants, NS_FRAME_IS_DIRTY);
   return NS_OK;
 }
 

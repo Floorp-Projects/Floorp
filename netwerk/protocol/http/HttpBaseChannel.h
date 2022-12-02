@@ -79,7 +79,7 @@ enum CacheDisposition : uint8_t {
   kCacheUnknown = 5
 };
 
-enum class OpaqueResponseAllowed { No, Yes };
+enum class OpaqueResponse { Block, Alllow, Sniff };
 
 /*
  * This class is a partial implementation of nsIHttpChannel.  It contains code
@@ -625,12 +625,15 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   nsresult ValidateMIMEType();
 
-  OpaqueResponseAllowed EnsureOpaqueResponseIsAllowed(
+  bool ShouldBlockOpaqueResponse() const;
+
+  OpaqueResponse PerformOpaqueResponseSafelistCheckBeforeSniff(
       bool& aCompressedMediaAndImageDetectorStarted);
 
-  Result<OpaqueResponseAllowed, nsresult>
-  EnsureOpaqueResponseIsAllowedAfterSniff();
+  OpaqueResponse PerformOpaqueResponseSafelistCheckAfterSniff(
+      const nsACString& aContentType, bool aNoSniff);
 
+  bool NeedOpaqueResponseAllowedCheckAfterSniff() const;
   void BlockOpaqueResponseAfterSniff();
   void AllowOpaqueResponseAfterSniff();
   void SetChannelBlockedByOpaqueResponse() {
@@ -918,8 +921,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
   // Used to ensure the same pref value is being used across the
   // lifetime of this http channel.
   const bool mCachedOpaqueResponseBlockingPref;
-  bool mBlockOpaqueResponseAfterSniff;
-  bool mCheckIsOpaqueResponseAllowedAfterSniff;
   bool mChannelBlockedByOpaqueResponse;
 
   bool mDummyChannelForImageCache;
