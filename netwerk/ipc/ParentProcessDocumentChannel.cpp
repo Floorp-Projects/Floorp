@@ -48,7 +48,8 @@ RefPtr<RedirectToRealChannelPromise>
 ParentProcessDocumentChannel::RedirectToRealChannel(
     nsTArray<ipc::Endpoint<extensions::PStreamFilterParent>>&&
         aStreamFilterEndpoints,
-    uint32_t aRedirectFlags, uint32_t aLoadFlags) {
+    uint32_t aRedirectFlags, uint32_t aLoadFlags,
+    const nsTArray<EarlyHintConnectArgs>& aEarlyHints) {
   LOG(("ParentProcessDocumentChannel RedirectToRealChannel [this=%p]", this));
   nsCOMPtr<nsIChannel> channel = mDocumentLoadListener->GetChannel();
   channel->SetLoadFlags(aLoadFlags);
@@ -207,7 +208,8 @@ NS_IMETHODIMP ParentProcessDocumentChannel::AsyncOpen(
         RefPtr<RedirectToRealChannelPromise> p =
             self->RedirectToRealChannel(
                     std::move(aResolveValue.mStreamFilterEndpoints),
-                    aResolveValue.mRedirectFlags, aResolveValue.mLoadFlags)
+                    aResolveValue.mRedirectFlags, aResolveValue.mLoadFlags,
+                    aResolveValue.mEarlyHints)
                 ->Then(
                     GetCurrentSerialEventTarget(), __func__,
                     [self](RedirectToRealChannelPromise::ResolveOrRejectValue&&
