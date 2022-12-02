@@ -43,7 +43,7 @@ def extract_dmg(dmg_path, dest):
     logging.info("extract_dmg({}, {})".format(dmg_path, dest))
     with tempfile.NamedTemporaryFile() as f:
         subprocess.check_call(
-            ["dmg", "extract", dmg_path, f.name], stdout=open(os.devnull, "wb")
+            ["dmg", "extract", dmg_path, f.name], stdout=subprocess.DEVNULL
         )
         subprocess.check_call(["hfsplus", f.name, "extractall"], cwd=dest)
 

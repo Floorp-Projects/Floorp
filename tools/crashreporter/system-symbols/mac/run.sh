@@ -3,9 +3,7 @@
 set -v -e -x
 
 base="$(realpath "$(dirname "$0")")"
-export PATH="$PATH:/builds/worker/bin:$base"
-
-DUMP_SYMS_PATH="${MOZ_FETCHES_DIR}/dump_syms/dump_syms"
+export PATH="$PATH:/builds/worker/bin:$base:${MOZ_FETCHES_DIR}/dmg"
 
 cd /builds/worker
 
@@ -43,8 +41,8 @@ python3 /usr/local/bin/repo_sync $packages
 du -sh /opt/data-reposado
 
 # Now scrape symbols out of anything that was downloaded.
-mkdir -p symbols artifacts
-python3 "${base}/PackageSymbolDumper.py" --tracking-file=/builds/worker/processed-packages --dump_syms="${DUMP_SYMS_PATH}" /opt/data-reposado/html/content/downloads /builds/worker/symbols
+mkdir -p symbols artifacts tmp
+env TMP=tmp python3 "${base}/PackageSymbolDumper.py" --tracking-file=/builds/worker/processed-packages --dump_syms=$MOZ_FETCHES_DIR/dump_syms/dump_syms /opt/data-reposado/html/content/downloads /builds/worker/symbols
 
 # Hand out artifacts
 gzip -c processed-packages > artifacts/processed-packages.gz
