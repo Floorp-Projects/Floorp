@@ -41,12 +41,13 @@ class SMILCSSProperty : public SMILAttr {
                   const ComputedStyle* aBaseComputedStyle);
 
   // SMILAttr methods
-  virtual nsresult ValueFromString(
-      const nsAString& aStr, const dom::SVGAnimationElement* aSrcElement,
-      SMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
-  virtual SMILValue GetBaseValue() const override;
-  virtual nsresult SetAnimValue(const SMILValue& aValue) override;
-  virtual void ClearAnimValue() override;
+  nsresult ValueFromString(const nsAString& aStr,
+                           const dom::SVGAnimationElement* aSrcElement,
+                           SMILValue& aValue,
+                           bool& aPreventCachingOfSandwich) const override;
+  SMILValue GetBaseValue() const override;
+  nsresult SetAnimValue(const SMILValue& aValue) override;
+  void ClearAnimValue() override;
 
   /**
    * Utility method - returns true if the given property is supported for
