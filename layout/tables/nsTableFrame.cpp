@@ -1849,10 +1849,10 @@ void nsTableFrame::FixupPositionedTableParts(nsPresContext* aPresContext,
 
     // As we've already finished reflow, positionedParts's size and overflow
     // areas have already been assigned, so we just pull them back out.
-    nsSize size(positionedPart->GetSize());
+    const WritingMode wm = positionedPart->GetWritingMode();
+    const LogicalSize size = positionedPart->GetLogicalSize(wm);
     ReflowOutput desiredSize(aReflowInput.GetWritingMode());
-    desiredSize.Width() = size.width;
-    desiredSize.Height() = size.height;
+    desiredSize.SetSize(wm, size);
     desiredSize.mOverflowAreas =
         positionedPart->GetOverflowAreasRelativeToSelf();
 
@@ -1860,8 +1860,7 @@ void nsTableFrame::FixupPositionedTableParts(nsPresContext* aPresContext,
     // XXX(seth): Note that the dummy reflow input doesn't have a correct
     // chain of parent reflow inputs. It also doesn't necessarily have a
     // correct containing block.
-    WritingMode wm = positionedPart->GetWritingMode();
-    LogicalSize availSize(wm, size);
+    LogicalSize availSize = size;
     availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
     ReflowInput reflowInput(aPresContext, positionedPart,
                             aReflowInput.mRenderingContext, availSize,
@@ -2675,7 +2674,6 @@ nscoord nsTableFrame::SetupHeaderFooterChild(
   InitChildReflowInput(kidReflowInput);
   kidReflowInput.mFlags.mIsTopOfPage = true;
   ReflowOutput desiredSize(aReflowInput.mReflowInput);
-  desiredSize.ClearSize();
   nsReflowStatus status;
   ReflowChild(aFrame, presContext, desiredSize, kidReflowInput, wm,
               LogicalPoint(wm, aReflowInput.mICoord, aReflowInput.mBCoord),
@@ -2708,7 +2706,6 @@ void nsTableFrame::PlaceRepeatedFooter(TableReflowInput& aReflowInput,
 
   nsReflowStatus footerStatus;
   ReflowOutput desiredSize(aReflowInput.mReflowInput);
-  desiredSize.ClearSize();
   LogicalPoint kidPosition(wm, aReflowInput.mICoord, aReflowInput.mBCoord);
   ReflowChild(aTfoot, presContext, desiredSize, footerReflowInput, wm,
               kidPosition, containerSize, ReflowChildFlags::Default,
@@ -2842,7 +2839,6 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
       nsRect oldKidInkOverflow = kidFrame->InkOverflowRect();
 
       ReflowOutput desiredSize(aReflowInput.mReflowInput);
-      desiredSize.ClearSize();
 
       // Reflow the child into the available space
       ReflowInput kidReflowInput(presContext, aReflowInput.mReflowInput,
