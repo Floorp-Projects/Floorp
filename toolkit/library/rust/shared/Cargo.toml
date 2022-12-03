@@ -82,7 +82,6 @@ uniffi-example-sprites = { git = "https://github.com/mozilla/uniffi-rs.git", rev
 uniffi-example-todolist = { git = "https://github.com/mozilla/uniffi-rs.git", rev = "bb2039f077a29dba0879372a67e764e6ace8e33f", optional = true }
 uniffi-example-custom-types = { path = "../../../components/uniffi-example-custom-types/", optional = true }
 uniffi-fixture-external-types = { path = "../../../components/uniffi-fixture-external-types/", optional = true }
-oblivious_http = { path = "../../../../netwerk/protocol/http/oblivious_http" }
 
 # Note: `modern_sqlite` means rusqlite's bindings file be for a sqlite with
 # version less than or equal to what we link to. This isn't a problem because we
