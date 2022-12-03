@@ -31,12 +31,13 @@ class SVGImageFrame final : public SVGGeometryFrame, public nsIReflowCallback {
   friend nsIFrame* ::NS_NewSVGImageFrame(mozilla::PresShell* aPresShell,
                                          ComputedStyle* aStyle);
 
-  virtual bool CreateWebRenderCommands(
-      wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
-      const layers::StackingContextHelper& aSc,
-      layers::RenderRootStateManager* aManager,
-      nsDisplayListBuilder* aDisplayListBuilder, DisplaySVGGeometry* aItem,
-      bool aDryRun) override;
+  bool CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
+                               wr::IpcResourceUpdateQueue& aResources,
+                               const layers::StackingContextHelper& aSc,
+                               layers::RenderRootStateManager* aManager,
+                               nsDisplayListBuilder* aDisplayListBuilder,
+                               DisplaySVGGeometry* aItem,
+                               bool aDryRun) override;
 
  protected:
   explicit SVGImageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
@@ -53,41 +54,41 @@ class SVGImageFrame final : public SVGGeometryFrame, public nsIReflowCallback {
   NS_DECL_FRAMEARENA_HELPERS(SVGImageFrame)
 
   // ISVGDisplayableFrame interface:
-  virtual void PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
-                        imgDrawingParams& aImgParams,
-                        const nsIntRect* aDirtyRect = nullptr) override;
-  virtual nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) override;
-  virtual void ReflowSVG() override;
+  void PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
+                imgDrawingParams& aImgParams,
+                const nsIntRect* aDirtyRect = nullptr) override;
+  nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) override;
+  void ReflowSVG() override;
 
   // SVGGeometryFrame methods:
-  virtual uint16_t GetHitTestFlags() override;
+  uint16_t GetHitTestFlags() override;
 
   // nsIFrame interface:
-  virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
-                                    int32_t aModType) override;
+  nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                            int32_t aModType) override;
 
   void OnVisibilityChange(
       Visibility aNewVisibility,
       const Maybe<OnNonvisible>& aNonvisibleAction = Nothing()) override;
 
-  virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
-                    nsIFrame* aPrevInFlow) override;
-  virtual void DestroyFrom(nsIFrame* aDestructRoot,
-                           PostDestroyData& aPostDestroyData) override;
+  void Init(nsIContent* aContent, nsContainerFrame* aParent,
+            nsIFrame* aPrevInFlow) override;
+  void DestroyFrom(nsIFrame* aDestructRoot,
+                   PostDestroyData& aPostDestroyData) override;
   void DidSetComputedStyle(ComputedStyle* aOldStyle) final;
 
   bool GetIntrinsicImageDimensions(gfx::Size& aSize,
                                    AspectRatio& aAspectRatio) const;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override {
+  nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(u"SVGImage"_ns, aResult);
   }
 #endif
 
   // nsIReflowCallback
-  virtual bool ReflowFinished() override;
-  virtual void ReflowCallbackCanceled() override;
+  bool ReflowFinished() override;
+  void ReflowCallbackCanceled() override;
 
   /// Always sync decode our image when painting if @aForce is true.
   void SetForceSyncDecoding(bool aForce) { mForceSyncDecoding = aForce; }

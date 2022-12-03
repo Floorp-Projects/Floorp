@@ -27,24 +27,24 @@ class SVGViewportFrame : public SVGDisplayContainerFrame, public ISVGSVGFrame {
  public:
   NS_DECL_ABSTRACT_FRAME(SVGViewportFrame)
 
-  virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
-                                    int32_t aModType) override;
+  nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                            int32_t aModType) override;
 
   // ISVGDisplayableFrame interface:
-  virtual void PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
-                        imgDrawingParams& aImgParams,
-                        const nsIntRect* aDirtyRect = nullptr) override;
-  virtual void ReflowSVG() override;
-  virtual void NotifySVGChanged(uint32_t aFlags) override;
+  void PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
+                imgDrawingParams& aImgParams,
+                const nsIntRect* aDirtyRect = nullptr) override;
+  void ReflowSVG() override;
+  void NotifySVGChanged(uint32_t aFlags) override;
   SVGBBox GetBBoxContribution(const Matrix& aToBBoxUserspace,
                               uint32_t aFlags) override;
-  virtual nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) override;
+  nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) override;
 
   // SVGContainerFrame methods:
-  virtual bool HasChildrenOnlyTransform(Matrix* aTransform) const override;
+  bool HasChildrenOnlyTransform(Matrix* aTransform) const override;
 
   // ISVGSVGFrame interface:
-  virtual void NotifyViewportOrTransformChanged(uint32_t aFlags) override;
+  void NotifyViewportOrTransformChanged(uint32_t aFlags) override;
 };
 
 }  // namespace mozilla

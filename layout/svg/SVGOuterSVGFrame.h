@@ -57,10 +57,10 @@ class SVGOuterSVGFrame final : public SVGDisplayContainerFrame,
 #endif
 
   // nsIFrame:
-  virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
-  virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
+  nscoord GetMinISize(gfxContext* aRenderingContext) override;
+  nscoord GetPrefISize(gfxContext* aRenderingContext) override;
 
-  virtual IntrinsicSize GetIntrinsicSize() override;
+  IntrinsicSize GetIntrinsicSize() override;
   AspectRatio GetIntrinsicRatio() const override;
 
   SizeComputationResult ComputeSize(
@@ -70,20 +70,20 @@ class SVGOuterSVGFrame final : public SVGDisplayContainerFrame,
       const mozilla::StyleSizeOverrides& aSizeOverrides,
       ComputeSizeFlags aFlags) override;
 
-  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
-                      const ReflowInput& aReflowInput,
-                      nsReflowStatus& aStatus) override;
+  void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
+              const ReflowInput& aReflowInput,
+              nsReflowStatus& aStatus) override;
 
-  virtual void DidReflow(nsPresContext* aPresContext,
-                         const ReflowInput* aReflowInput) override;
+  void DidReflow(nsPresContext* aPresContext,
+                 const ReflowInput* aReflowInput) override;
 
   void UnionChildOverflow(mozilla::OverflowAreas& aOverflowAreas) override;
 
-  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                                const nsDisplayListSet& aLists) override;
+  void BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                        const nsDisplayListSet& aLists) override;
 
-  virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
-                    nsIFrame* aPrevInFlow) override;
+  void Init(nsIContent* aContent, nsContainerFrame* aParent,
+            nsIFrame* aPrevInFlow) override;
 
   bool IsFrameOfType(uint32_t aFlags) const override {
     return SVGDisplayContainerFrame::IsFrameOfType(
@@ -92,7 +92,7 @@ class SVGOuterSVGFrame final : public SVGDisplayContainerFrame,
   }
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override {
+  nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(u"SVGOuterSVG"_ns, aResult);
   }
 #endif
@@ -102,10 +102,10 @@ class SVGOuterSVGFrame final : public SVGDisplayContainerFrame,
   void DestroyFrom(nsIFrame* aDestructRoot,
                    PostDestroyData& aPostDestroyData) override;
 
-  virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
-                                    int32_t aModType) override;
+  nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                            int32_t aModType) override;
 
-  virtual nsContainerFrame* GetContentInsertionFrame() override {
+  nsContainerFrame* GetContentInsertionFrame() override {
     // Any children must be added to our single anonymous inner frame kid.
     MOZ_ASSERT(
         PrincipalChildList().FirstChild() &&
@@ -121,17 +121,17 @@ class SVGOuterSVGFrame final : public SVGDisplayContainerFrame,
   void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
 
   // ISVGSVGFrame interface:
-  virtual void NotifyViewportOrTransformChanged(uint32_t aFlags) override;
+  void NotifyViewportOrTransformChanged(uint32_t aFlags) override;
 
   // ISVGDisplayableFrame methods:
-  virtual void PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
-                        imgDrawingParams& aImgParams,
-                        const nsIntRect* aDirtyRect = nullptr) override;
-  virtual SVGBBox GetBBoxContribution(const Matrix& aToBBoxUserspace,
-                                      uint32_t aFlags) override;
+  void PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
+                imgDrawingParams& aImgParams,
+                const nsIntRect* aDirtyRect = nullptr) override;
+  SVGBBox GetBBoxContribution(const Matrix& aToBBoxUserspace,
+                              uint32_t aFlags) override;
 
   // SVGContainerFrame methods:
-  virtual gfxMatrix GetCanvasTM() override;
+  gfxMatrix GetCanvasTM() override;
 
   /* Methods to allow descendant SVGForeignObjectFrame frames to register and
    * unregister themselves with their nearest SVGOuterSVGFrame ancestor. This
@@ -145,7 +145,7 @@ class SVGOuterSVGFrame final : public SVGDisplayContainerFrame,
   void RegisterForeignObject(SVGForeignObjectFrame* aFrame);
   void UnregisterForeignObject(SVGForeignObjectFrame* aFrame);
 
-  virtual bool HasChildrenOnlyTransform(Matrix* aTransform) const override {
+  bool HasChildrenOnlyTransform(Matrix* aTransform) const override {
     // Our anonymous wrapper child must claim our children-only transforms as
     // its own so that our real children (the frames it wraps) are transformed
     // by them, and we must pretend we don't have any children-only transforms
@@ -247,15 +247,15 @@ class SVGOuterSVGAnonChildFrame final : public SVGDisplayContainerFrame {
   NS_DECL_FRAMEARENA_HELPERS(SVGOuterSVGAnonChildFrame)
 
 #ifdef DEBUG
-  virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
-                    nsIFrame* aPrevInFlow) override;
+  void Init(nsIContent* aContent, nsContainerFrame* aParent,
+            nsIFrame* aPrevInFlow) override;
 #endif
 
-  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                                const nsDisplayListSet& aLists) override;
+  void BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                        const nsDisplayListSet& aLists) override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override {
+  nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(u"SVGOuterSVGAnonChild"_ns, aResult);
   }
 #endif
@@ -264,7 +264,7 @@ class SVGOuterSVGAnonChildFrame final : public SVGDisplayContainerFrame {
                         Matrix* aFromParentTransform) const override;
 
   // SVGContainerFrame methods:
-  virtual gfxMatrix GetCanvasTM() override {
+  gfxMatrix GetCanvasTM() override {
     // GetCanvasTM returns the transform from an SVG frame to the frame's
     // SVGOuterSVGFrame's content box, so we do not include any x/y offset
     // set on us for any CSS border or padding on our SVGOuterSVGFrame.

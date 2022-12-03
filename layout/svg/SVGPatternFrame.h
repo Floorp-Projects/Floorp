@@ -43,7 +43,7 @@ class SVGPatternFrame final : public SVGPaintServerFrame {
   explicit SVGPatternFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
 
   // SVGPaintServerFrame methods:
-  virtual already_AddRefed<gfxPattern> GetPaintServerPattern(
+  already_AddRefed<gfxPattern> GetPaintServerPattern(
       nsIFrame* aSource, const DrawTarget* aDrawTarget,
       const gfxMatrix& aContextMatrix, StyleSVGPaint nsStyleSVG::*aFillOrStroke,
       float aGraphicOpacity, imgDrawingParams& aImgParams,
@@ -51,19 +51,19 @@ class SVGPatternFrame final : public SVGPaintServerFrame {
 
  public:
   // SVGContainerFrame methods:
-  virtual gfxMatrix GetCanvasTM() override;
+  gfxMatrix GetCanvasTM() override;
 
   // nsIFrame interface:
-  virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
-                                    int32_t aModType) override;
+  nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                            int32_t aModType) override;
 
 #ifdef DEBUG
-  virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
-                    nsIFrame* aPrevInFlow) override;
+  void Init(nsIContent* aContent, nsContainerFrame* aParent,
+            nsIFrame* aPrevInFlow) override;
 #endif
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override {
+  nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(u"SVGPattern"_ns, aResult);
   }
 #endif  // DEBUG
