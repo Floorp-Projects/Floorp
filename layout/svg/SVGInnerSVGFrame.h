@@ -31,12 +31,12 @@ class SVGInnerSVGFrame final : public SVGViewportFrame {
   NS_DECL_FRAMEARENA_HELPERS(SVGInnerSVGFrame)
 
 #ifdef DEBUG
-  virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
-                    nsIFrame* aPrevInFlow) override;
+  void Init(nsIContent* aContent, nsContainerFrame* aParent,
+            nsIFrame* aPrevInFlow) override;
 #endif
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override {
+  nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(u"SVGInnerSVG"_ns, aResult);
   }
 #endif

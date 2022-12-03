@@ -49,18 +49,18 @@ class SVGGradientFrame : public SVGPaintServerFrame {
   NS_DECL_QUERYFRAME_TARGET(SVGGradientFrame)
 
   // SVGPaintServerFrame methods:
-  virtual already_AddRefed<gfxPattern> GetPaintServerPattern(
+  already_AddRefed<gfxPattern> GetPaintServerPattern(
       nsIFrame* aSource, const DrawTarget* aDrawTarget,
       const gfxMatrix& aContextMatrix, StyleSVGPaint nsStyleSVG::*aFillOrStroke,
       float aGraphicOpacity, imgDrawingParams& aImgParams,
       const gfxRect* aOverrideBounds) override;
 
   // nsIFrame interface:
-  virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
-                                    int32_t aModType) override;
+  nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                            int32_t aModType) override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override {
+  nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(u"SVGGradient"_ns, aResult);
   }
 #endif  // DEBUG
@@ -132,26 +132,26 @@ class SVGLinearGradientFrame final : public SVGGradientFrame {
 
   // nsIFrame interface:
 #ifdef DEBUG
-  virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
-                    nsIFrame* aPrevInFlow) override;
+  void Init(nsIContent* aContent, nsContainerFrame* aParent,
+            nsIFrame* aPrevInFlow) override;
 #endif
 
-  virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
-                                    int32_t aModType) override;
+  nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                            int32_t aModType) override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override {
+  nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(u"SVGLinearGradient"_ns, aResult);
   }
 #endif  // DEBUG
 
  protected:
   float GetLengthValue(uint32_t aIndex);
-  virtual mozilla::dom::SVGLinearGradientElement* GetLinearGradientWithLength(
+  mozilla::dom::SVGLinearGradientElement* GetLinearGradientWithLength(
       uint32_t aIndex,
       mozilla::dom::SVGLinearGradientElement* aDefault) override;
-  virtual bool GradientVectorLengthIsZero() override;
-  virtual already_AddRefed<gfxPattern> CreateGradient() override;
+  bool GradientVectorLengthIsZero() override;
+  already_AddRefed<gfxPattern> CreateGradient() override;
 };
 
 // -------------------------------------------------------------------------
@@ -173,15 +173,15 @@ class SVGRadialGradientFrame final : public SVGGradientFrame {
 
   // nsIFrame interface:
 #ifdef DEBUG
-  virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
-                    nsIFrame* aPrevInFlow) override;
+  void Init(nsIContent* aContent, nsContainerFrame* aParent,
+            nsIFrame* aPrevInFlow) override;
 #endif
 
-  virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
-                                    int32_t aModType) override;
+  nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                            int32_t aModType) override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override {
+  nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(u"SVGRadialGradient"_ns, aResult);
   }
 #endif  // DEBUG
@@ -191,11 +191,11 @@ class SVGRadialGradientFrame final : public SVGGradientFrame {
   float GetLengthValue(uint32_t aIndex, float aDefaultValue);
   float GetLengthValueFromElement(
       uint32_t aIndex, mozilla::dom::SVGRadialGradientElement& aElement);
-  virtual mozilla::dom::SVGRadialGradientElement* GetRadialGradientWithLength(
+  mozilla::dom::SVGRadialGradientElement* GetRadialGradientWithLength(
       uint32_t aIndex,
       mozilla::dom::SVGRadialGradientElement* aDefault) override;
-  virtual bool GradientVectorLengthIsZero() override;
-  virtual already_AddRefed<gfxPattern> CreateGradient() override;
+  bool GradientVectorLengthIsZero() override;
+  already_AddRefed<gfxPattern> CreateGradient() override;
 };
 
 }  // namespace mozilla
