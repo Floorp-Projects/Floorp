@@ -208,6 +208,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aColorScheme,
     case ColorID::MozButtondisabledface:
     case ColorID::Threedface:
     case ColorID::Threedlightshadow:
+    case ColorID::Buttonborder:
     case ColorID::MozDisabledfield:
       aColor = NS_RGB(0xec, 0xe7, 0xe2);
       break;
@@ -260,6 +261,10 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aColorScheme,
       break;
     case ColorID::MozNativehyperlinktext:
       aColor = NS_RGB(0, 0, 0xee);
+      break;
+    case ColorID::Marktext:
+    case ColorID::Mark:
+      aColor = GetStandinForNativeColor(aID, aColorScheme);
       break;
     default:
       /* default color is BLACK */

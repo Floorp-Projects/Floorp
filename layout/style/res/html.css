@@ -567,8 +567,8 @@ nobr {
 }
 
 mark {
-  background: yellow;
-  color: black;
+  background: Mark;
+  color: MarkText;
 }
 
 /* titles */
