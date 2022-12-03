@@ -581,11 +581,11 @@ class nsTableFrame : public nsContainerFrame {
 
  protected:
   // A helper function to reflow a header or footer with unconstrained height
-  // to see if it should be made repeatable and also to determine its desired
-  // height.
-  nsresult SetupHeaderFooterChild(const TableReflowInput& aReflowInput,
-                                  nsTableRowGroupFrame* aFrame,
-                                  nscoord* aDesiredHeight);
+  // to see if it should be made repeatable.
+  // @return the desired height for a header or footer.
+  // XXX: This helper should be converted to logic coordinates.
+  nscoord SetupHeaderFooterChild(const TableReflowInput& aReflowInput,
+                                 nsTableRowGroupFrame* aFrame);
 
   void ReflowChildren(TableReflowInput& aReflowInput, nsReflowStatus& aStatus,
                       nsIFrame*& aLastChildReflowed,

@@ -2656,9 +2656,8 @@ static bool IsRepeatable(nscoord aFrameHeight, nscoord aPageHeight) {
   return aFrameHeight < (aPageHeight / 4);
 }
 
-nsresult nsTableFrame::SetupHeaderFooterChild(
-    const TableReflowInput& aReflowInput, nsTableRowGroupFrame* aFrame,
-    nscoord* aDesiredHeight) {
+nscoord nsTableFrame::SetupHeaderFooterChild(
+    const TableReflowInput& aReflowInput, nsTableRowGroupFrame* aFrame) {
   nsPresContext* presContext = PresContext();
   nscoord pageHeight = presContext->GetPageSize().height;
 
@@ -2684,8 +2683,7 @@ nsresult nsTableFrame::SetupHeaderFooterChild(
   // The child will be reflowed again "for real" so no need to place it now
 
   aFrame->SetRepeatable(IsRepeatable(desiredSize.Height(), pageHeight));
-  *aDesiredHeight = desiredSize.Height();
-  return NS_OK;
+  return desiredSize.Height();
 }
 
 void nsTableFrame::PlaceRepeatedFooter(TableReflowInput& aReflowInput,
@@ -2785,14 +2783,11 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
     bool reorder = false;
     if (thead && !GetPrevInFlow()) {
       reorder = thead->GetNextInFlow();
-      nscoord desiredHeight;
-      nsresult rv = SetupHeaderFooterChild(aReflowInput, thead, &desiredHeight);
-      if (NS_FAILED(rv)) return;
+      SetupHeaderFooterChild(aReflowInput, thead);
     }
     if (tfoot) {
       reorder = reorder || tfoot->GetNextInFlow();
-      nsresult rv = SetupHeaderFooterChild(aReflowInput, tfoot, &footerHeight);
-      if (NS_FAILED(rv)) return;
+      footerHeight = SetupHeaderFooterChild(aReflowInput, tfoot);
     }
     if (reorder) {
       // Reorder row groups - the reflow may have changed the nextinflows.
