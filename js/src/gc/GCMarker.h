@@ -377,7 +377,6 @@ class GCMarker {
     markAndTraverseEdge(source, target);
   }
 
-  // Calls traverse on target after making additional assertions.
   template <typename S, typename T>
   void markAndTraverseEdge(S source, T* target);
   template <typename S, typename T>
@@ -394,8 +393,9 @@ class GCMarker {
   // Traverse a GC thing's children, using a strategy depending on the type.
   // This can either processing them immediately or push them onto the mark
   // stack for later.
-  template <typename T>
-  void traverse(T* thing);
+#define DEFINE_TRAVERSE_METHOD(_1, Type, _2, _3) void traverse(Type* thing);
+  JS_FOR_EACH_TRACEKIND(DEFINE_TRAVERSE_METHOD)
+#undef DEFINE_TRAVERSE_METHOD
 
   // Process a marked thing's children by calling T::traceChildren().
   template <typename T>

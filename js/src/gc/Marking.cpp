@@ -1059,11 +1059,45 @@ void js::GCMarker::markAndTraverse(T* thing) {
   }
 }
 
-// The simplest traversal calls out to the fully generic traceChildren function
-// to visit the child edges. In the absence of other traversal mechanisms, this
-// function will rapidly grow the stack past its bounds and crash the process.
-// Thus, this generic tracing should only be used in cases where subsequent
-// tracing will not recurse.
+// The |traverse| method overloads select the traversal strategy for each kind.
+//
+// There are three possible strategies:
+//
+// 1. traceChildren
+//
+//    The simplest traversal calls out to the fully generic traceChildren
+//    function to visit the child edges. In the absence of other traversal
+//    mechanisms, this function will rapidly grow the stack past its bounds and
+//    crash the process. Thus, this generic tracing should only be used in cases
+//    where subsequent tracing will not recurse.
+//
+// 2. scanChildren
+//
+//    Strings, Shapes, and Scopes are extremely common, but have simple patterns
+//    of recursion. We traverse trees of these edges immediately, with
+//    aggressive, manual inlining, implemented by eagerlyTraceChildren.
+//
+// 3. pushThing
+//
+//    Objects are extremely common and can contain arbitrarily nested graphs, so
+//    are not trivially inlined. In this case we use the mark stack to control
+//    recursion. JitCode shares none of these properties, but is included for
+//    historical reasons. JSScript normally cannot recurse, but may be used as a
+//    weakmap key and thereby recurse into weakmapped values.
+
+void GCMarker::traverse(BaseShape* thing) { traceChildren(thing); }
+void GCMarker::traverse(GetterSetter* thing) { traceChildren(thing); }
+void GCMarker::traverse(JS::Symbol* thing) { traceChildren(thing); }
+void GCMarker::traverse(JS::BigInt* thing) { traceChildren(thing); }
+void GCMarker::traverse(RegExpShared* thing) { traceChildren(thing); }
+void GCMarker::traverse(JSString* thing) { scanChildren(thing); }
+void GCMarker::traverse(Shape* thing) { scanChildren(thing); }
+void GCMarker::traverse(PropMap* thing) { scanChildren(thing); }
+void GCMarker::traverse(js::Scope* thing) { scanChildren(thing); }
+void GCMarker::traverse(JSObject* thing) { pushThing(thing); }
+void GCMarker::traverse(jit::JitCode* thing) { pushThing(thing); }
+void GCMarker::traverse(BaseScript* thing) { pushThing(thing); }
+
 template <typename T>
 void js::GCMarker::traceChildren(T* thing) {
   MOZ_ASSERT(!thing->isPermanentAndMayBeShared());
@@ -1071,82 +1105,20 @@ void js::GCMarker::traceChildren(T* thing) {
   AutoSetTracingSource asts(tracer(), thing);
   thing->traceChildren(tracer());
 }
-namespace js {
-template <>
-void GCMarker::traverse(BaseShape* thing) {
-  traceChildren(thing);
-}
-template <>
-void GCMarker::traverse(GetterSetter* thing) {
-  traceChildren(thing);
-}
-template <>
-void GCMarker::traverse(JS::Symbol* thing) {
-  traceChildren(thing);
-}
-template <>
-void GCMarker::traverse(JS::BigInt* thing) {
-  traceChildren(thing);
-}
-template <>
-void GCMarker::traverse(RegExpShared* thing) {
-  traceChildren(thing);
-}
-}  // namespace js
 
-// Strings, Shapes, and Scopes are extremely common, but have simple patterns of
-// recursion. We traverse trees of these edges immediately, with aggressive,
-// manual inlining, implemented by eagerlyTraceChildren.
 template <typename T>
 void js::GCMarker::scanChildren(T* thing) {
   MOZ_ASSERT(!thing->isPermanentAndMayBeShared());
   MOZ_ASSERT(thing->isMarkedAny());
   eagerlyMarkChildren(thing);
 }
-namespace js {
-template <>
-void GCMarker::traverse(JSString* thing) {
-  scanChildren(thing);
-}
-template <>
-void GCMarker::traverse(Shape* thing) {
-  scanChildren(thing);
-}
-template <>
-void GCMarker::traverse(PropMap* thing) {
-  scanChildren(thing);
-}
-template <>
-void GCMarker::traverse(js::Scope* thing) {
-  scanChildren(thing);
-}
-}  // namespace js
 
-// Object and ObjectGroup are extremely common and can contain arbitrarily
-// nested graphs, so are not trivially inlined. In this case we use a mark
-// stack to control recursion. JitCode shares none of these properties, but is
-// included for historical reasons. JSScript normally cannot recurse, but may
-// be used as a weakmap key and thereby recurse into weakmapped values.
 template <typename T>
 void js::GCMarker::pushThing(T* thing) {
   MOZ_ASSERT(!thing->isPermanentAndMayBeShared());
   MOZ_ASSERT(thing->isMarkedAny());
   pushTaggedPtr(thing);
 }
-namespace js {
-template <>
-void GCMarker::traverse(JSObject* thing) {
-  pushThing(thing);
-}
-template <>
-void GCMarker::traverse(jit::JitCode* thing) {
-  pushThing(thing);
-}
-template <>
-void GCMarker::traverse(BaseScript* thing) {
-  pushThing(thing);
-}
-}  // namespace js
 
 template void js::GCMarker::markAndTraverse<MarkingOptions::None, JSObject>(
     JSObject* thing);
