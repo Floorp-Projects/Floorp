@@ -1124,6 +1124,10 @@
     <!-- Title shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_title">نجی براؤزنگ ازماؤ</string>
 
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">%1$s وچ محفوظ تھیاں کوکیاں یا تاریخ ٻاجھوں براؤز کرو</string>
+
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">مجموعہ مٹ ڳیا</string>

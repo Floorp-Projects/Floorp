@@ -257,6 +257,9 @@
     <!-- Header text for the search selector menu -->
     <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Овај пут претражујте са:</string>
 
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">Овај пут претражујте:</string>
+
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">Упознајте своју персонализовану почетну страницу. Овде се приказују недавни језичци, обележивачи и резултати претраге.</string>
@@ -334,6 +337,13 @@
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Строги HTTPS режим</string>
 
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Смањење банера колачића</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Смањи банере колачића</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Firefox аутоматски покушава да одбије захтеве за складиштење колачића када се прикаже банер колачића. Ако опција за одбијање није доступна, Firefox може прихватити све колачиће да би сакрио банер.</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Самостално се повезујемо на странице користећи HTTPS протокол за шифровање података у преносу зарад боље безбедности.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -397,7 +407,7 @@
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
     <string name="preferences_show_clipboard_suggestions">Прикажи предлоге из оставе</string>
     <!-- Preference title for switch preference to suggest browsing history when searching -->
-    <string name="preferences_search_browsing_history">Претражи историјат прегледања</string>
+    <string name="preferences_search_browsing_history">Претражи историју прегледања</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Претражи забелешке</string>
     <!-- Preference title for switch preference to suggest synced tabs when searching -->
@@ -496,7 +506,7 @@
     <!-- Preference category for sync -->
     <string name="preferences_sync_category">Изаберите шта синхронизовати</string>
     <!-- Preference for syncing history -->
-    <string name="preferences_sync_history">Историјат</string>
+    <string name="preferences_sync_history">Историја</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Забелешке</string>
     <!-- Preference for syncing logins -->
@@ -619,7 +629,7 @@
     <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
     <string name="library_desktop_bookmarks_unfiled">Остале забелешке</string>
     <!-- Option in Library to open History page -->
-    <string name="library_history">Историјат</string>
+    <string name="library_history">Историја</string>
     <!-- Option in Library to open a new tab -->
     <string name="library_new_tab">Нови језичак</string>
     <!-- Settings Page Title -->
@@ -794,7 +804,7 @@
     <!-- Text for the button to search all history -->
     <string name="history_search_1">Унеси појмове за претрагу</string>
     <!-- Text for the button to clear all history -->
-    <string name="history_delete_all">Обриши историјат</string>
+    <string name="history_delete_all">Обриши историју</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
     <string name="history_delete_multiple_items_snackbar">Историја је избрисана</string>
     <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
@@ -815,7 +825,7 @@
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">Старије</string>
     <!-- Text shown when no history exists -->
-    <string name="history_empty_message">Овде нема историјата</string>
+    <string name="history_empty_message">Овде нема историје</string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1104,6 +1114,12 @@
     %1$s is a placeholder that will be replaced by the app name (Fenix). -->
     <string name="notification_default_browser_text">Поставите %1$s као подразумевани прегледач</string>
 
+    <!-- Title shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_title">Испробајте приватно прегледање</string>
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">Прегледајте без чувања колачића и историје уз %1$s</string>
+
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Збирка обрисана</string>
@@ -1167,7 +1183,7 @@
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d језичака</string>
     <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">Историјат прегледања и подаци страница</string>
+    <string name="preferences_delete_browsing_data_browsing_data_title">Историја прегледања и подаци страница</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d  адреса</string>

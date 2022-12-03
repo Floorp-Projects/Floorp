@@ -343,6 +343,9 @@
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">Reducer banners pro le cookie</string>
 
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Firefox automaticamente proba a rejectar requestas de cookies sur banners pro cookies. Si un option pro rejectar non es disponibile, Firefox pote acceptar tote le cookies pro dimitter le banner.</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Automaticamente tenta de connecter se al sitos per le protocollo de cryptation HTTPS pro major securitate.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -1146,6 +1149,10 @@
 
     <!-- Title shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_title">Essaya le navigation private</string>
+
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">Navigar sin cookies o chronologia salvate in %1$s</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->

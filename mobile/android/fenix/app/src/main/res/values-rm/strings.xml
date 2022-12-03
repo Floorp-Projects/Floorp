@@ -252,7 +252,10 @@
     <string name="search_settings_menu_item">Parameters da tschertga</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">Tschertgar questa giada:</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Tschertgar questa giada:</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">Questa giada tschertgar cun/en:</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
@@ -326,6 +329,14 @@
     <string name="preferences_add_private_browsing_shortcut">Agiuntar ina scursanida al modus privat</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Modus mo HTTPS</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Reducziun da bandieras da cookies</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Reducir las bandieras da cookies</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Firefox emprova da refusar automaticamain dumondas da cookies sin bandieras da cookies. Sche l\'opziun da refusar na stat betg a disposiziun, accepta Firefox eventualmain tut ils cookies per serrar la bandiera.</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Empruvar da connectar automaticamain cun websites cun agid dal protocol da criptadi HTTPS per dapli segirezza.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -1090,6 +1101,12 @@
     <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
     %1$s is a placeholder that will be replaced by the app name (Fenix). -->
     <string name="notification_default_browser_text">Fa da %1$s tes navigatur da standard</string>
+
+    <!-- Title shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_title">Emprova il modus privat</string>
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">Navighescha senza memorisar ni cookies ni la cronologia en %1$s</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->

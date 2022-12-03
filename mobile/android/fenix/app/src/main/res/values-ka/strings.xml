@@ -45,8 +45,6 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">ბოლოს ჩანიშნული</string>
-    <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recently_saved_title">ბოლოს შენახული</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">ყველა ჩანიშნულის ჩვენება</string>
@@ -252,41 +250,19 @@
     <string name="search_settings_menu_item">ძიების პარამეტრები</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">საძიებოდ გამოიყენეთ:</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">საძიებოდ გამოიყენეთ:</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">საძიებოდ გამოიყენეთ:</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">რა სიახლეებითაა %1$s</string>
-    <!-- Onboarding home screen dialog description text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">მარტივად განაგრძეთ იქიდან, სადაც შეჩერდით.</string>
-    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">მორგებული %1$s-გვერდი საწყისად</string>
-    <!-- Onboarding home screen dialog description text for the home section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">გადადით გახსნილ ჩანართებზე, სანიშნებსა და მონახულებულ გვერდებზე.</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">სუფთა, მოწესრიგებული ჩანართები</string>
-
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">აირიდეთ ჩანართების არეულობა, დახვეწილი განლაგებითა და თვითდახურვით.</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">ბოლოს მოძიებული</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">კვლავ მოინახულეთ ბოლოს მოძიებულები, საწყისი გვერდიდან და ჩანართებიდან.</string>
-
-    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Firefox-ის მორგებული საწყისი გვერდით შეძლებთ, მარტივად განაგრძოთ იქიდან, სადაც შეჩერდით. იპოვეთ ბოლოს გახსნილი ჩანართები, სანიშნები და მოძიებული გვერდები.</string>
-
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">გაეცანით მორგებულ საწყის გვერდს. ბოლოდროინდელი ჩანართები, სანიშნები და მოძიებული გვერდები გამოჩნდება აქ.</string>
-    <!-- Home onboarding dialog welcome screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">კეთილი იყოს თქვენი ფეხი დამოუკიდებელ ინტერნეტსივრცეში</string>
 
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title_2">კეთილი იყოს თქვენი ფეხი მეტად პირად ინტერნეტსივრცეში</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">მეტი ფერი. გაუმჯობესებული პირადულობა. ხალხის მოგებაზე წინ დაყენება მუდამ.</string>
-    <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">მოქნილად გადაერთეთ ტელეფონიდან ლეპტოპზე და უკან</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_3">ეკრანებს შორის გადართვა ჯერ არნახული სიმარტივით</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
@@ -354,6 +330,14 @@
     <string name="preferences_add_private_browsing_shortcut">პირადი თვალიერების მალსახმობის დამატება</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">მხოლოდ-HTTPS-რეჟიმი</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">ფუნთუშის მოთხოვნების შემცირება</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">შეამცირეთ ფუნთუშის მოთხოვნები</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Firefox თავადვე შეეცდება უარყოს ფუნთუშის მოთხოვნები საიტზე ამომხტარ აბრებზე. თუ უარყოფა ვერ მოხერხდება, Firefox შეიძლება ყველა ფუნთუშის მიღებას დათანხმდეს ამომხტომი აბრის მოსაცილებლად.</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">თავადვე შეეცდება დაუკავშირდეს საიტებს დაშიფრული HTTPS-ოქმით, მეტი უსაფრთხოებისთვის.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -1123,6 +1107,12 @@
     %1$s is a placeholder that will be replaced by the app name (Fenix). -->
     <string name="notification_default_browser_text">გახადეთ %1$s ნაგულისხმევი ბრაუზერი</string>
 
+    <!-- Title shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_title">გამოცადეთ პირადი რეჟიმი</string>
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">გვერდების მონახულებისას %1$s არ შეინახავს ისტორიასა და ფუნთუშებს</string>
+
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">კრებული წაიშალა</string>
@@ -1244,34 +1234,21 @@
     <string name="delete_history_group_snackbar">ჯგუფი წაიშალა</string>
 
     <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">მოგესალმებათ %s!</string>
     <!-- Text for onboarding welcome header. -->
     <string name="onboarding_header_2">მოგესალმებით უკეთეს ინტერნეტში</string>
     <!-- Text for the onboarding welcome message. -->
     <string name="onboarding_message">ბრაუზერი შექმნილი ხალხისთვის, და არა მოგებისთვის</string>
-    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">დაასინქრონეთ Firefox მოწყობილობებს შორის</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
     <string name="onboarding_account_sign_in_header">განაგრძეთ იქიდან, სადაც გაჩერდით.</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">გადმოიტანს სანიშნებს, ისტორიასა და პაროლებს, ამ მოწყობილობის %1$s-ზე.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
     <string name="onboarding_manual_sign_in_description">დაასინქრონეთ ჩანართები და პაროლები მოწყობილობებს შორის შეუფერხებლად გადასვლისთვის.</string>
-    <!-- text for the button to manually sign into Firefox account. -->
-    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">ანგარიშის შექმნა</string>
     <!-- Text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in">შესვლა</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">სინქრონიზაცია ჩართულია</string>
 
-    <!-- text for the tracking protection onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">ყოველთვის პირადული</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">პირადულობის ნაგულისხმევი დაცვა</string>
-    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s ავტომატურად უზღუდავს კომპანიებს თქვენს მოქმედებებზე ფარულად თვალის მიდევნების საშუალებას ვებსივრცეში.</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">ფუნთუშებისგან ყოველმხრივი დაცვით მეთვალყურეებს არ ექნებათ საშუალება, თვალი გადევნონ ვებსივრცეში ფუნთუშების გამოყენებით.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1284,17 +1261,10 @@
     <string name="onboarding_tracking_protection_strict_button_description_3">ზღუდავს მეტ მეთვალყურეს, გვერდის ჩატვირთვა ასწრაფდება, თუმცა გამართულად შეიძლება ვერ იმუშაოს.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">აირჩიეთ ხელსაწყოთა ზოლის მდებარეობა</string>
-    <!-- text for the toolbar position card description -->
-    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">განათავსეთ ხელსაწყოები მოხერხებულ ადგილას. დატოვეთ ქვემოთ ან გადაიტანეთ ზემოთ.</string>
     <!-- Text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description">დატოვეთ ქვემოთ ან გადაიტანეთ ზემოთ.</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">თქვენი პირადულობა</string>
     <!-- Text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header_1">თქვენი მონაცემები თქვენს ხელშია</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">%s შექმნილია ისე, რომ თავად წყვეტდეთ რას გააზიარებთ ინტერნეტში და რას გაგვიზიარებთ ჩვენ.</string>
     <!-- Text for the privacy notice onboarding card description. -->
     <string name="onboarding_privacy_notice_description">%s საშუალებას იძლევა, რომ თავად წყვეტდეთ, რას გააზიარებთ ინტერნეტში და რას გაგვიზიარებთ ჩვენ.</string>
     <!-- Text for the button to read the privacy notice -->

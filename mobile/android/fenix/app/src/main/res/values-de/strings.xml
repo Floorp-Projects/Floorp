@@ -1144,7 +1144,7 @@
     <string name="notification_re_engagement_title">Probieren Sie den Privaten Modus aus</string>
     <!-- Text shown in the notification that pops up to re-engage the user.
     %1$s is a placeholder that will be replaced by the app name. -->
-    <string name="notification_re_engagement_text">Surfen Sie mit %1$s ohne Cookies oder Chronik zu speichern</string>
+    <string name="notification_re_engagement_text">Surfen Sie mit %1$s ohne Cookies oder eine Chronik zu speichern</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
