@@ -6509,16 +6509,11 @@ bool HTMLInputElement::IsRangeUnderflow() const {
   return mInputType->IsRangeUnderflow();
 }
 
-bool HTMLInputElement::ValueIsStepMismatch(Decimal& aValue,
-                                           bool aUseZeroIfValueNaN) const {
+bool HTMLInputElement::ValueIsStepMismatch(const Decimal& aValue) const {
   if (aValue.isNaN()) {
-    if (aUseZeroIfValueNaN) {
-      aValue = Decimal(0);
-    } else {
-      // The element can't suffer from step mismatch if its value isn't a
-      // number.
-      return false;
-    }
+    // The element can't suffer from step mismatch if its value isn't a
+    // number.
+    return false;
   }
 
   Decimal step = GetStep();
@@ -6530,8 +6525,8 @@ bool HTMLInputElement::ValueIsStepMismatch(Decimal& aValue,
   return NS_floorModulo(aValue - GetStepBase(), step) != Decimal(0);
 }
 
-bool HTMLInputElement::HasStepMismatch(bool aUseZeroIfValueNaN) const {
-  return mInputType->HasStepMismatch(aUseZeroIfValueNaN);
+bool HTMLInputElement::HasStepMismatch() const {
+  return mInputType->HasStepMismatch();
 }
 
 bool HTMLInputElement::HasBadInput() const { return mInputType->HasBadInput(); }
