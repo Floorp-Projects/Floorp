@@ -315,9 +315,8 @@ class HTMLInputElement final : public TextControlElement,
   Maybe<bool> HasPatternMismatch() const;
   bool IsRangeOverflow() const;
   bool IsRangeUnderflow() const;
-  bool ValueIsStepMismatch(Decimal& aValue,
-                           bool aUseZeroIfValueNaN = false) const;
-  bool HasStepMismatch(bool aUseZeroIfValueNaN = false) const;
+  bool ValueIsStepMismatch(const Decimal& aValue) const;
+  bool HasStepMismatch() const;
   bool HasBadInput() const;
   void UpdateTooLongValidityState();
   void UpdateTooShortValidityState();

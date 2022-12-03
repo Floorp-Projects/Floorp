@@ -41,9 +41,9 @@ bool NumericInputTypeBase::IsRangeUnderflow() const {
   return value < minimum;
 }
 
-bool NumericInputTypeBase::HasStepMismatch(bool aUseZeroIfValueNaN) const {
+bool NumericInputTypeBase::HasStepMismatch() const {
   Decimal value = mInputElement->GetValueAsDecimal();
-  return mInputElement->ValueIsStepMismatch(value, aUseZeroIfValueNaN);
+  return mInputElement->ValueIsStepMismatch(value);
 }
 
 nsresult NumericInputTypeBase::GetRangeOverflowMessage(nsAString& aMessage) {

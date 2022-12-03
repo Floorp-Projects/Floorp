@@ -17,7 +17,7 @@ class NumericInputTypeBase : public InputType {
 
   bool IsRangeOverflow() const override;
   bool IsRangeUnderflow() const override;
-  bool HasStepMismatch(bool aUseZeroIfValueNaN) const override;
+  bool HasStepMismatch() const override;
 
   nsresult GetRangeOverflowMessage(nsAString& aMessage) override;
   nsresult GetRangeUnderflowMessage(nsAString& aMessage) override;

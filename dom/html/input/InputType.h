@@ -64,7 +64,7 @@ class InputType {
   virtual Maybe<bool> HasPatternMismatch() const;
   virtual bool IsRangeOverflow() const;
   virtual bool IsRangeUnderflow() const;
-  virtual bool HasStepMismatch(bool aUseZeroIfValueNaN) const;
+  virtual bool HasStepMismatch() const;
   virtual bool HasBadInput() const;
 
   nsresult GetValidationMessage(

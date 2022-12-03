@@ -66,9 +66,9 @@ bool DateTimeInputTypeBase::IsRangeUnderflow() const {
   return value < minimum;
 }
 
-bool DateTimeInputTypeBase::HasStepMismatch(bool aUseZeroIfValueNaN) const {
+bool DateTimeInputTypeBase::HasStepMismatch() const {
   Decimal value = mInputElement->GetValueAsDecimal();
-  return mInputElement->ValueIsStepMismatch(value, aUseZeroIfValueNaN);
+  return mInputElement->ValueIsStepMismatch(value);
 }
 
 bool DateTimeInputTypeBase::HasBadInput() const {

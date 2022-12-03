@@ -18,7 +18,7 @@ class DateTimeInputTypeBase : public InputType {
   bool IsValueMissing() const override;
   bool IsRangeOverflow() const override;
   bool IsRangeUnderflow() const override;
-  bool HasStepMismatch(bool aUseZeroIfValueNaN) const override;
+  bool HasStepMismatch() const override;
   bool HasBadInput() const override;
 
   nsresult GetRangeOverflowMessage(nsAString& aMessage) override;
