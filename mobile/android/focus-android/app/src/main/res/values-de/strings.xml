@@ -119,8 +119,21 @@
 
 
     <!-- This is the label of an action we offer when the user selects text in other third-party apps.
-         Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">Privat Suchen</string>
+         Focus is hard coded since we can't use variables in this context.
+         Do not translate or transliterate Focus.-->
+    <string name="text_selection_search_action_focus">In Focus suchen</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+             Klar is hard coded since we can't use variables in this context.
+             Do not translate or transliterate Klar.-->
+    <string name="text_selection_search_action_klar">In Klar suchen</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+            Focus Beta is hard coded since we can't use variables in this context.
+            Do not translate or transliterate Focus Beta.-->
+    <string name="text_selection_search_action_focus_beta">In Focus Beta suchen</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+          Focus Nightly is hard coded since we can't use variables in this context.
+          Do not translate or transliterate Focus Nightly.-->
+    <string name="text_selection_search_action_focus_nightly">In Focus Nightly suchen</string>
 
     <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
          Argument 2 is the url for the learn-more link. -->
@@ -363,10 +376,6 @@
     <!-- Explanation text above the list of search engines-->
     <string name="preference_select_preferred_engine">Wählen Sie Ihre bevorzugte Suchmaschine:</string>
 
-    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
-     a user first launches the app. -->
-    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">Tipps im Startbildschirm anzeigen</string>
-
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Suchmaschine hinzufügen</string>
 
@@ -493,11 +502,7 @@
 
 
 
-  <!-- Onboarding: Title -->
-    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string moz:removedIn="106" name="onboarding_title">Willkommen bei %1$s!</string>
-
-    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+  <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
     <string name="onboarding_close_button_content_description">Schließen</string>
 
     <!-- New Onboarding flow first screen title -->
@@ -527,31 +532,6 @@
     <!-- New Onboarding flow second screen skip onboarding button label-->
     <string name="onboarding_second_screen_skip_button_text">Überspringen</string>
 
-
-    <!-- Onboarding: Description -->
-    <string moz:removedIn="106" name="onboarding_description">Privates Surfen der nächsten Stufe, wann immer Sie es wünschen</string>
-
-    <!-- Onboarding: Incognito Title -->
-    <string moz:removedIn="106" name="onboarding_incognito_title">Wo Inkognito auf Unsichtbar trifft</string>
-
-    <!-- Onboarding: Incognito Description -->
-    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string moz:removedIn="106" name="onboarding_incognito_description">%s ist ein datenschutzfreundlicher Browser mit integriertem, extra starken Tracking- und Cookie-Schutz.</string>
-
-    <!-- Onboarding: History Title -->
-    <string moz:removedIn="106" name="onboarding_history_title">Surfen, als wäre es nie passiert</string>
-
-    <!-- Onboarding: History Description -->
-    <string moz:removedIn="106" name="onboarding_history_description2">Ein Fingertipp löscht Ihre Surf-Chronik und Ihre Cookies – und verhindert, dass Werbung Sie verfolgt.</string>
-
-    <!-- Onboarding: Protection Title -->
-    <string moz:removedIn="106" name="onboarding_protection_title">Privatsphäre, die zu jeder Situation passt</string>
-
-    <!-- Onboarding: Protection Description -->
-    <string moz:removedIn="106" name="onboarding_protection_description">Wenn sich Ihre Surf-Anforderungen ändern, können Sie Ihre Datenschutzeinstellungen ganz einfach nach oben oder unten anpassen.</string>
-
-    <!-- Onboarding: Start browsing -->
-    <string moz:removedIn="106" name="onboarding_start_browsing">Lossurfen</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Stärken Sie Ihre Privatsphäre</string>
@@ -706,6 +686,27 @@
     <!-- Preference for site permissions -->
     <string name="preference_site_permissions">Website-Berechtigungen</string>
 
+    <!--  Preference for cookie banner. The name of the item from settings screen and the title of the cookie banner screen. -->
+    <string name="preferences_cookie_banner">Reduzierung von Cookie-Bannern</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is not disabled. -->
+    <string name="preferences_cookie_banner_summary_on">Ein</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is disabled. -->
+    <string name="preferences_cookie_banner_summary_off">Aus</string>
+
+    <!--  Title preference inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_title">Reduzierung von Cookie-Bannern</string>
+
+    <!--  Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_summary">Sehen Sie weniger Banner, indem Cookie-Anfragen automatisch abgelehnt werden, wann immer möglich.</string>
+
+    <!--  Checkbox Preference title inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
+    <string name="cookie_banner_further_reduce_option_title">Cookie-Banner weiter reduzieren</string>
+
+    <!--  Checkbox Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
+    <string name="cookie_banner_further_reduce_option_summary">Cookie-Banner-Anfragen werden akzeptiert, um mehr Banner zu schließen.</string>
+
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Automatische Wiedergabe</string>
 
@@ -787,10 +788,6 @@
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Externes Debugging über USB/WLAN</string>
 
-    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     %1$s is replaced with the app name -->
-    <string moz:removedIn="103" name="biometric_auth_title">%1$s entsperren</string>
-
     <!-- Text Button for show biometric prompt -->
     <string name="show_biometric_button_text">Entsperren</string>
 
@@ -799,13 +796,6 @@
 
     <!-- Subtitle text for biometric prompt pop-up -->
     <string name="biometric_prompt_subtitle">Sie können Ihren Fingerabdruck verwenden, um Ihre aktuelle App-Sitzung fortzusetzen.</string>
-
-    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string moz:removedIn="103" name="biometric_auth_description">Berühren Sie den Fingerabdrucksensor, um fortzufahren.</string>
-
-    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string moz:removedIn="103" name="biometric_auth_new_session">Neue Sitzung</string>
 
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
@@ -847,11 +837,6 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">Verhält sich die Website ungewohnt?\n Deaktivieren Sie den Schutz vor Aktivitätenverfolgung</string>
 
-    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
-The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string moz:removedIn="105" name="tip_disable_tracking_protection3" tools:ignore="UnusedResources">Verhält sich die Website ungewohnt?\n
-Deaktivieren Sie den verbesserten Schutz vor Aktivitätenverfolgung</string>
-
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[Zugriff auf die meistbesuchten Websites mit einer Berührung%1$s Menü → Zum Startbildschirm hinzufügen]]></string>
@@ -869,28 +854,8 @@ Deaktivieren Sie den verbesserten Schutz vor Aktivitätenverfolgung</string>
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">Einen Link in einem neuen Tab öffnen\n Drücken Sie lange auf einen Link in einer Seite</string>
 
-    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
-      %1$s is a placeholder for the app name. -->
-    <string moz:removedIn="105" name="tip_request_desktop2" tools:ignore="UnusedResources">Möchten Sie die vollständige Version einer Website sehen?\n
-        Wechseln Sie im %1$s-Menü auf die Desktop-Website</string>
-
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Tipps im Startbildschirm abschalten</string>
-
-    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
-     "Allowlist" is a replacement for the word whitelist. -->
-    <string moz:removedIn="105" name="tip_explain_allowlist3" tools:ignore="UnusedResources">Möchten Sie den verbesserten Schutz vor Aktivitätenverfolgung für eine vertrauenswürdige Website deaktivieren?\n
-        Fügen Sie die Website in die Positivliste in den Einstellungen ein
-    </string>
-
-    <!-- Tip displayed on the home view about the changes in the new release.
-    %1$s is a placeholder for the app name -->
-    <string moz:removedIn="105" name="tip_fresh_look" tools:ignore="UnusedResources">Ja, wir sehen jetzt moderner aus!\n Lesen Sie mehr über diese und andere Neuerungen von %1$s.</string>
-
-    <!-- Tip displayed on the home view about shortcuts
-    %1$s is a placeholder for the app name -->
-    <string moz:removedIn="105" name="tip_about_shortcuts" tools:ignore="UnusedResources">Erstellen Sie Verknüpfungen zu den meistbesuchten Websites:\n
-Wählen Sie aus dem %1$s-Menü die Option „Zu Verknüpfungen hinzufügen“</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Neuer Tab geöffnet</string>
@@ -1010,7 +975,6 @@ Wählen Sie aus dem %1$s-Menü die Option „Zu Verknüpfungen hinzufügen“</s
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">Anscheinend hat diese Website versucht, Sie zu verfolgen. Klicken Sie auf den Schild, um die Website-Einstellungen und Tracker-Blockierungsstatistiken aufzurufen.</string>
     <string name="cfr_for_toolbar_shield_icon2">Erwischt! Wir haben diese Seite daran gehindert, Sie auszuspionieren. Tippen Sie jederzeit auf den Schild, um Informationen darüber zu erhalten, was wir blockieren.</string>
 
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
@@ -1025,7 +989,6 @@ Wählen Sie aus dem %1$s-Menü die Option „Zu Verknüpfungen hinzufügen“</s
     <string name="tool_tip_dismiss_button_content_description">Schließen</string>
 
     <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
-    <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Löschen Sie Ihre persönlichen Daten, die Surf-Chronik und mehr aus dieser Sitzung, indem Sie auf die Schaltfläche „Papierkorb“ tippen. Probieren Sie es aus!</string>
     <string name="cfr_for_toolbar_delete_icon2">Tippen Sie hier, um alles zu löschen – Chronik, Cookies, einfach alles – und in einem neuen Tab neu zu beginnen.</string>
 
     <!-- Promote SearchWidget Dialog -->
@@ -1040,6 +1003,11 @@ Wählen Sie aus dem %1$s-Menü die Option „Zu Verknüpfungen hinzufügen“</s
 
     !-- This is the title of promote search widget dialog. --&gt;
     <string name="promote_search_widget_dialog_title">Surf-Chronik gelöscht! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <!-- Banner Info Message than will appear when user first enters in the app. The location is at the toolbar. -->
+    <string name="cfr_for_start_browsing">Starten Sie Ihre private Surf-Sitzung, und wir blockieren Tracker und bei der Gelegenheit auch noch andere schädliche Elemente.</string>
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. &quot;Focus&quot;) --&gt;

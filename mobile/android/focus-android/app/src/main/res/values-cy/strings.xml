@@ -119,8 +119,17 @@
 
 
     <!-- This is the label of an action we offer when the user selects text in other third-party apps.
-         Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">Chwilio\'n Breifat</string>
+         Focus is hard coded since we can't use variables in this context.
+         Do not translate or transliterate Focus.-->
+    <string name="text_selection_search_action_focus">Chwilio o fewn Ffocws</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+             Klar is hard coded since we can't use variables in this context.
+             Do not translate or transliterate Klar.-->
+    <string name="text_selection_search_action_klar">Chwilio o fewn Klar</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+            Focus Beta is hard coded since we can't use variables in this context.
+            Do not translate or transliterate Focus Beta.-->
+    <string name="text_selection_search_action_focus_beta">Chwilio o fewn Focus Beta</string>
 
     <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
          Argument 2 is the url for the learn-more link. -->
@@ -363,10 +372,6 @@
     <!-- Explanation text above the list of search engines-->
     <string name="preference_select_preferred_engine">Dewis eich hoff beiriant:</string>
 
-    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
-     a user first launches the app. -->
-    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">Dangos cynghorion sgrin cartref</string>
-
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Ychwanegu peiriant chwilio</string>
 
@@ -493,11 +498,7 @@
 
 
 
-  <!-- Onboarding: Title -->
-    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string moz:removedIn="106" name="onboarding_title">Croeso i %1$s!</string>
-
-    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+  <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
     <string name="onboarding_close_button_content_description">Cau</string>
 
     <!-- New Onboarding flow first screen title -->
@@ -528,31 +529,6 @@
     <!-- New Onboarding flow second screen skip onboarding button label-->
     <string name="onboarding_second_screen_skip_button_text">Hepgor</string>
 
-
-    <!-- Onboarding: Description -->
-    <string moz:removedIn="106" name="onboarding_description">Pori preifat y lefel nesaf pan fyddwch ei eisiau</string>
-
-    <!-- Onboarding: Incognito Title -->
-    <string moz:removedIn="106" name="onboarding_incognito_title">Lle mae cuddio yn cyfarfod anweledig</string>
-
-    <!-- Onboarding: Incognito Description -->
-    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string moz:removedIn="106" name="onboarding_incognito_description">Mae %s yn borwr preifatrwydd-yn-gyntaf gyda diogelwch cryf iawn rhag tracio a chwcis yn rhan annatod ohono.</string>
-
-    <!-- Onboarding: History Title -->
-    <string moz:removedIn="106" name="onboarding_history_title">Pori fel nad yw wedi digwydd erioed</string>
-
-    <!-- Onboarding: History Description -->
-    <string moz:removedIn="106" name="onboarding_history_description2">Mae un tap yn dileu eich hanes pori a’ch cwcis - ac yn atal hysbysebion rhag eich dilyn o le i le.</string>
-
-    <!-- Onboarding: Protection Title -->
-    <string moz:removedIn="106" name="onboarding_protection_title">Preifatrwydd sy’n gweddu i bob sefyllfa</string>
-
-    <!-- Onboarding: Protection Description -->
-    <string moz:removedIn="106" name="onboarding_protection_description">Os bydd eich anghenion pori yn newid, mae’n hawdd codi neu ostwng eich gosodiadau preifatrwydd.</string>
-
-    <!-- Onboarding: Start browsing -->
-    <string moz:removedIn="106" name="onboarding_start_browsing">Cychwyn pori</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Cryfhewch eich preifatrwydd</string>
@@ -788,10 +764,6 @@
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Dadfygio pell drwy\'r USB/Diwifr</string>
 
-    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     %1$s is replaced with the app name -->
-    <string moz:removedIn="103" name="biometric_auth_title">Datgloi %1$s</string>
-
     <!-- Text Button for show biometric prompt -->
     <string name="show_biometric_button_text">Datgloi</string>
 
@@ -800,13 +772,6 @@
 
     <!-- Subtitle text for biometric prompt pop-up -->
     <string name="biometric_prompt_subtitle">Gallwch ddefnyddio’ch bysbrint i barhau â’ch sesiwn ap gyfredol.</string>
-
-    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string moz:removedIn="103" name="biometric_auth_description">Cyffwrdd a\'r synhwyrydd ôl bys i barhau.</string>
-
-    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string moz:removedIn="103" name="biometric_auth_new_session">Sesiwn Newydd</string>
 
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
@@ -848,11 +813,6 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">Gwefan yn ymddwyn yn anisgwyl?\n Ceisiwch ddiffodd Diogelwch rhag Tracio</string>
 
-    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
-The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string moz:removedIn="105" name="tip_disable_tracking_protection3" tools:ignore="UnusedResources">Gwefan yn brin o gynnwys neu’n ymddwyn yn rhyfedd?
-    Ceisiwch ddiffodd Diogelwch Uwch rhag Tracio</string>
-
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[Mynediad un tap i\'r gwefannau rydych yn eu defnyddio amlaf%1$s Dewislen > Ychwanegu i\'r Dudalen Cartref]]></string>
@@ -870,29 +830,8 @@ The new line here must be kept as the second half of the string is clickable for
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">Agor dolen mewn tab newydd\n Pwyso\'n hir ar unrhyw ddolen ar dudalen</string>
 
-    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
-      %1$s is a placeholder for the app name. -->
-    <string moz:removedIn="105" name="tip_request_desktop2" tools:ignore="UnusedResources">Eisiau gweld fersiwn lawn gwefan?
-    Defnyddiwch Gwefan Bwrdd Gwaith o ddewislen %1$s</string>
-
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Diffodd awgrymiadau ar y sgrin cychwyn</string>
-
-    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
-     "Allowlist" is a replacement for the word whitelist. -->
-    <string moz:removedIn="105" name="tip_explain_allowlist3" tools:ignore="UnusedResources">Eisiau diffodd Diogelwch Uwch rhag Tracio ar wefan rydych chi’n ymddiried ynddi?\n
-        Ychwanegwch hi i’r Rhestr Caniatáu yn y Gosodiadau
-    
-    </string>
-
-    <!-- Tip displayed on the home view about the changes in the new release.
-    %1$s is a placeholder for the app name -->
-    <string moz:removedIn="105" name="tip_fresh_look" tools:ignore="UnusedResources">Oes, mae gennym wedd newydd a ffres!\n Darllenwch ragor am hyn a diweddariadau eraill i %1$s.</string>
-
-    <!-- Tip displayed on the home view about shortcuts
-    %1$s is a placeholder for the app name -->
-    <string moz:removedIn="105" name="tip_about_shortcuts" tools:ignore="UnusedResources">Crëwch lwybrau byr i’r gwefannau rydych chi’n ymweld â nhw amlaf:\n
-    Dewiswch Ychwanegu at y Llwybrau Byr o ddewislen %1$s</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Tab newydd wedi\'i agor</string>
@@ -1012,8 +951,6 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">Mae’n ymddangos fod y wefan hon yn ceisio’ch tracio chi. Cliciwch ar y darian i weld gosodiadau’r wefan ac ystadegau rhwystro tracwyr.</string>
-
     <string name="cfr_for_toolbar_shield_icon2">Wedi’u dal! Rydym wedi rhwystro’r wefan hon rhag ysbïo arnoch chi. Tapiwch y darian i gael gwybodaeth am yr hyn rydyn ni’n eu rhwystro.</string>
 
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
@@ -1028,7 +965,6 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="tool_tip_dismiss_button_content_description">Cau</string>
 
     <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
-    <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Cewch wared ar eich data personol, hanes pori a mwy o’r sesiwn hon drwy dapio’r botwm sbwriel. Rhowch gynnig arni!</string>
     <string name="cfr_for_toolbar_delete_icon2">Tapiwch yma i roi’r cyfan yn y bin sbwriel - hanes, cwcis, popeth - a dechrau’n ffres ar dab newydd.</string>
 
     <!-- Promote SearchWidget Dialog -->

@@ -120,8 +120,21 @@
 
 
     <!-- This is the label of an action we offer when the user selects text in other third-party apps.
-         Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">ਨਿੱਜੀ ਤੌਰ ਉੱਤੇ ਖੋਜੋ</string>
+         Focus is hard coded since we can't use variables in this context.
+         Do not translate or transliterate Focus.-->
+    <string name="text_selection_search_action_focus">Focus ਵਿੱਚ ਲੱਭੋ</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+             Klar is hard coded since we can't use variables in this context.
+             Do not translate or transliterate Klar.-->
+    <string name="text_selection_search_action_klar">Klar ਵਿੱਚ ਲੱਭੋ</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+            Focus Beta is hard coded since we can't use variables in this context.
+            Do not translate or transliterate Focus Beta.-->
+    <string name="text_selection_search_action_focus_beta">Focus Beta ਵਿੱਚ ਲੱਭੋ</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+          Focus Nightly is hard coded since we can't use variables in this context.
+          Do not translate or transliterate Focus Nightly.-->
+    <string name="text_selection_search_action_focus_nightly">Focus Nightly ਵਿੱਚ ਲੱਭੋ</string>
 
     <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
          Argument 2 is the url for the learn-more link. -->
@@ -364,10 +377,6 @@
     <!-- Explanation text above the list of search engines-->
     <string name="preference_select_preferred_engine">ਤੁਹਾਡਾ ਪਸੰਦੀਦਾ ਇੰਜਣ ਚੁਣੋ:</string>
 
-    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
-     a user first launches the app. -->
-    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">ਮੁੱਖ ਸਕਰੀਨ ਦੇ ਗੁਰ ਵੇਖਾਓ</string>
-
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">ਖੋਜ ਇੰਜਣ ਨੂੰ ਜੋੜੋ</string>
 
@@ -488,11 +497,7 @@
 
 
 
-  <!-- Onboarding: Title -->
-    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string moz:removedIn="106" name="onboarding_title">%1$s ਵਲੋਂ ਜੀ ਆਇਆਂ ਨੂੰ!</string>
-
-    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+  <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
     <string name="onboarding_close_button_content_description">ਬੰਦ ਕਰੋ</string>
 
     <!-- New Onboarding flow first screen title -->
@@ -522,31 +527,6 @@
     <!-- New Onboarding flow second screen skip onboarding button label-->
     <string name="onboarding_second_screen_skip_button_text">ਛੱਡੋ</string>
 
-
-    <!-- Onboarding: Description -->
-    <string moz:removedIn="106" name="onboarding_description">ਨਿੱਜੀ ਬਰਾਊਜ਼ਿੰਗ ਦਾ ਨਵਾਂ ਪੜਾਅ, ਜਿਸ ਦੀ ਤੁਸੀਂ ਆਸ ਕਰਦੇ ਹੋ</string>
-
-    <!-- Onboarding: Incognito Title -->
-    <string moz:removedIn="106" name="onboarding_incognito_title">ਜਿੱਥੇ ਅਣਪਛਾਤਾ ਅਦਿੱਖ ਬਣ ਜਾਂਦਾ ਹੈ</string>
-
-    <!-- Onboarding: Incognito Description -->
-    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string moz:removedIn="106" name="onboarding_incognito_description">%s ਬਹੁਤ ਮਜ਼ਬੂਤ ਟਰੈਕਿੰਗ ਤੇ ਕੂਕੀਜ਼ ਸੁਰੱਖਿਆ ਨਾਲ ਲੈੱਸ ਪਰਦੇਦਾਰੀ ਪ੍ਰਧਾਨ ਬਰਾਊਜ਼ਰ ਹੈ।</string>
-
-    <!-- Onboarding: History Title -->
-    <string moz:removedIn="106" name="onboarding_history_title">ਇੰਝ ਬਰਾਊਜ਼ ਕਰੋ, ਜਿਵੇਂ ਕਦੇ ਕੀਤੀ ਹੀ ਨਾ ਹੋਵੇ</string>
-
-    <!-- Onboarding: History Description -->
-    <string moz:removedIn="106" name="onboarding_history_description2">ਆਪਣੇ ਬਰਾਊਜ਼ ਕਰਨ ਦੇ ਅਤੀਤ ਤੇ ਕੂਕੀਜ਼ ਨੂੰ ਇੱਕ ਛੋਹ ਨਾਲ ਮਿਟਾਓ — ਤੇ ਇਹ ਤੁਹਾਡਾ ਪਿੱਛਾ ਕਰਨ ਰਹੇ ਇਸ਼ਤਿਹਾਰਾਂ ਨੂੰ ਰੋਕ ਦਿੰਦੀ ਹੈ।</string>
-
-    <!-- Onboarding: Protection Title -->
-    <string moz:removedIn="106" name="onboarding_protection_title">ਕਿਸੇ ਵੀ ਹਾਲਤ ਵਿੱਚ ਫਿੱਟ ਆਉਣ ਵਾਲੀ ਪਰਦੇਦਾਦਰੀ</string>
-
-    <!-- Onboarding: Protection Description -->
-    <string moz:removedIn="106" name="onboarding_protection_description">ਜੇ ਤੁਹਾਡੀਆਂ ਬਰਾਊਜ਼ ਕਰਨ ਦੀਆਂ ਲੋੜ ਬਦਲ ਜਾਣ ਤਾਂ ਤੁਹਾਡੀਆਂ ਪਰਦੇਦਾਰੀ ਸੈਟਿੰਗਾਂ ਨੂੰ ਵਧਾਉਣਾ ਜਾਂ ਘਟਾਉਣਾ ਸੌਖਾ ਹੈ।</string>
-
-    <!-- Onboarding: Start browsing -->
-    <string moz:removedIn="106" name="onboarding_start_browsing">ਬਰਾਊਜ਼ ਕਰਨਾ ਸ਼ੁਰੂ ਕਰੋ</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">ਆਪਣੀ ਪਰਦੇਦਾਰੀ ਨੂੰ ਕੰਟਰੋਲ ਕਰੋ</string>
@@ -700,6 +680,27 @@
     <!-- Preference for site permissions -->
     <string name="preference_site_permissions">ਸਾਈਟ ਇਜਾਜ਼ਤਾਂ</string>
 
+    <!--  Preference for cookie banner. The name of the item from settings screen and the title of the cookie banner screen. -->
+    <string name="preferences_cookie_banner">ਕੂਕੀਜ਼ ਬੈਨਰ ਘਟਾਉਣਾ</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is not disabled. -->
+    <string name="preferences_cookie_banner_summary_on">ਚਾਲੂ</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is disabled. -->
+    <string name="preferences_cookie_banner_summary_off">ਬੰਦ</string>
+
+    <!--  Title preference inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_title">ਕੂਕੀ ਬੈਨਰ ਘਟਾਉਣਾ</string>
+
+    <!--  Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_summary">ਜਦ ਵੀ ਸੰਭਵ ਹੋਵੇ ਤਾਂ ਕੂਕੀ ਬੇਨਤੀਆਂ ਨੂੰ ਆਪਣੇ-ਆਪ ਖਾਰਜ ਘੱਟ ਬੈਨਰ ਵੇਖੋ।</string>
+
+    <!--  Checkbox Preference title inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
+    <string name="cookie_banner_further_reduce_option_title">ਹੋਰ ਕੂਕੀ ਬੈਨਰਾਂ ਨੂੰ ਘਟਾਓ</string>
+
+    <!--  Checkbox Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
+    <string name="cookie_banner_further_reduce_option_summary">ਕੂਕੀ ਬੈਨਰ ਬੇਨਤੀਆਂ ਹੋਰ ਬੈਨਰ ਖਾਰਜ ਕਰਨ ਲਈ ਮਨਜ਼ੂਰ ਕੀਤਾ ਜਾਵੇਗਾ।</string>
+
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">ਆਪੇ-ਚਲਾਓ</string>
 
@@ -781,10 +782,6 @@
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">USB//Wi-Fi ਰਾਹੀਂ ਰਿਮੋਟ ਡੀਬੱਗ ਕਰਨਾ</string>
 
-    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     %1$s is replaced with the app name -->
-    <string moz:removedIn="103" name="biometric_auth_title">%1$s ਅਣ-ਲਾਕ ਕਰੋ</string>
-
     <!-- Text Button for show biometric prompt -->
     <string name="show_biometric_button_text">ਅਣ-ਲਾਕ ਕਰੋ</string>
 
@@ -793,13 +790,6 @@
 
     <!-- Subtitle text for biometric prompt pop-up -->
     <string name="biometric_prompt_subtitle">ਹੁਣ ਤੁਸੀ ਆਪਣੇ ਮੌਜੂਦਾ ਐਪ ਸ਼ੈਸ਼ਨ ਲਈ ਆਪਣੇ ਫਿੰਗਰਪਰਿੰਟ ਨੂੰ ਵਰਤ ਸਕਦੇ ਹੋ।</string>
-
-    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string moz:removedIn="103" name="biometric_auth_description">ਜਾਰੀ ਰੱਖਣ ਲਈ ਫਿੰਗਰਪਰਿੰਟ ਸੈਂਸਰ ਨੂੰ ਛੂਹੋ।</string>
-
-    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string moz:removedIn="103" name="biometric_auth_new_session">ਨਵਾਂ ਸ਼ੈਸ਼ਨ</string>
 
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
@@ -841,11 +831,6 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">ਸਾਈਟ ਅਜੀਬ ਵਿਹਾਰ ਕਰ ਰਹੀ ਹੈ?\n ਟਰੈਕਿੰਗ ਸੁਰੱਖਿਆ ਨੂੰ ਬੰਦ ਕਰਕੇ ਕੋਸ਼ਿਸ਼ ਕਰੋ</string>
 
-    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
-The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string moz:removedIn="105" name="tip_disable_tracking_protection3" tools:ignore="UnusedResources">ਕੀ ਸਾਈਟ ਲਈ ਸਮੱਗਰੀ ਮੌਜੂਦ ਨਹੀਂ ਜਾਂ ਗਲਤ ਢੰਗ ਨਾਲ ਕੰਮ ਕਰ ਰਹੀ ?\n
- ਵਾਧਾ ਕੀਤੀ ਟਰੈਕਿੰਗ ਸੁਰੱਖਿਆ ਬੰਦ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰੋ</string>
-
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[ਤੁਹਾਡੇ ਵਲੋਂ ਅਕਸਰ ਵਰਤੀਆਂ ਸਾਈਟਾਂ ਲਈ ਫ਼ੌਰੀ ਪਹੁੰਚ ਲਈ %1$s ਮੇਨੂ > ਮੁੱਖ ਸਕਰੀਨ ਉੱਤੇ ਜੋੜੋ]]></string>
@@ -867,28 +852,8 @@ The new line here must be kept as the second half of the string is clickable for
  ਸਫ਼ੇ ਉੱਤੇ ਕਿਸੇ ਵੀ ਲਿੰਕ ਨੂੰ ਲੰਮਾ ਸਮਾਂ ਦਬਾ ਕੇ ਰੱਖੋ
     </string>
 
-    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
-      %1$s is a placeholder for the app name. -->
-    <string moz:removedIn="105" name="tip_request_desktop2" tools:ignore="UnusedResources">ਸਾਈਟ ਦਾ ਪੂਰਾ ਵਰਜ਼ਨ ਵੇਖਣਾ ਚਾਹੁੰਦੇ ਹੋ?\n
-         %1$s ਮੇਨੂ ਤੋਂ ਡੈਸਕਟਾਪ ਸਾਈਟ ਲਈ ਬਦਲੋ</string>
-
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">ਸ਼ੁਰੂਆਤੀ ਸਕਰੀਨ ਉੱਤੇ ਗੁਰ ਬੰਦ ਕਰੋ</string>
-
-    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
-     "Allowlist" is a replacement for the word whitelist. -->
-    <string moz:removedIn="105" name="tip_explain_allowlist3" tools:ignore="UnusedResources">ਕੀ ਤੁਸੀਂ ਭਰੋਸੇਯੋਗ ਸਾਈਟ ਲਈ ਵਾਧਾ ਕੀਤੀ ਟਰੈਕਿੰਗ ਸੁਰੱਖਿਆ ਨੂੰ ਬੰਦ ਰੱਖਣਾ ਚਾਹੁੰਦੇ ਹੋ?\n
-        ਇਸ ਨੂੰ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਮਨਜ਼ੂਰ-ਸੂਚੀ ਵਿੱਚ ਜੋੜੋ
-</string>
-
-    <!-- Tip displayed on the home view about the changes in the new release.
-    %1$s is a placeholder for the app name -->
-    <string moz:removedIn="105" name="tip_fresh_look" tools:ignore="UnusedResources">ਹਾਂ ਕਿਉ ਨਹੀਂ, ਅਸੀਂ ਦਿੱਖ ਨਵੀਂ ਨਕੋਰ ਹੈ!\n %1$s ਲਈ ਇਸ ਅਤੇ ਹੋਰ ਅੱਪਡੇਟਾਂ ਬਾਰੇ ਹੋਰ ਪੜ੍ਹੋ।</string>
-
-    <!-- Tip displayed on the home view about shortcuts
-    %1$s is a placeholder for the app name -->
-    <string moz:removedIn="105" name="tip_about_shortcuts" tools:ignore="UnusedResources">ਤੁਹਾਡੇ ਵਲੋਂ ਅਕਸਰ ਖੋਲ੍ਹੀਆਂ ਸਾਈਟਾਂ ਲਈ ਸ਼ਾਰਟਕੱਟ ਬਣਾਓ:\n
- %1$s ਮੇਨੂ ਤੋਂ ਸ਼ਾਰਟਕੱਟ ਵਿੱੱਚ ਜੋੜੋ ਨੂੰ ਚੁਣੋ</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">ਨਵੀਂ ਟੈਬ ਖੋਲ੍ਹੀ ਗਈ</string>
@@ -1008,7 +973,6 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">ਜਾਪਦਾ ਹੈ ਕਿ ਇਹ ਸਾਈਟ ਤੁਹਾਡਾ ਪਿੱਛਾ ਕਰ ਰਹੀ ਹੈ। ਸਾਈਟ ਸੈਟਿੰਗਾਂ ਲਈ ਢਾਲ ਉੱਤੇ ਕਲਿੱਕ ਕਰੋ ਤੇ ਪਾਬੰਦੀ ਲਾਣ ਅੰਕੜਿਆਂ ਨੂੰ ਟਰੈਕ ਕਰੋ।</string>
     <string name="cfr_for_toolbar_shield_icon2">ਫੜੇ ਗਏ! ਅਸੀਂ ਇਹ ਸਾਈਟ ਨੂੰ ਤੁਹਾਡੀ ਜਾਸੂਸੀ ਕਰਨ ਤੋਂ ਰੋਕਿਆ ਹੈ। ਕਿਸੇ ਵੀ ਵੇੇਲੇ ਢਾਲ ਨੂੰ ਛੂਹ ਕੇ ਵੇਖੋ ਕਿ ਅਸੀਂ ਕਿਸੇ ਉੱਤੇ ਰੋਕ ਲਾਈ ਹੈ।</string>
 
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
@@ -1023,7 +987,6 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="tool_tip_dismiss_button_content_description">ਖ਼ਾਰਜ ਕਰੋ</string>
 
     <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
-    <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">ਰੱਦੀ ਦੇ ਬਟਨ ਨੂੰ ਛੂਹ ਕੇ ਇਸ ਸ਼ੈਸ਼ਨ ਤੋਂ ਆਪਣੇ ਨਿੱਜੀ ਅਤੀਤ, ਬਰਾਊਜ਼ ਕਰਨ ਦੇ ਅਤੀਤ ਅਤੇ ਹੋਰ ਚੀਜ਼ਾਂ ਨੂੰ ਖਿਹੜਾ ਛਡਾਓ। ਕੋਸ਼ਿਸ਼ ਕਰਕੇ ਵੇਖੋ!</string>
     <string name="cfr_for_toolbar_delete_icon2">ਸਾਰੇ — ਅਤੀਤ, ਕੂਕੀਜ਼, ਹਰ ਚੀਜ਼ — ਨੂੰ ਰੱਦੀ ਵਿੱਚ ਭੇਜ ਕੇ ਨਵੀਂ ਟੈਬ ਨਾਲ ਸੱਜਰੀ ਸ਼ੁਰੂਆਤ ਲਈ ਇੱਥੇ ਛੂਹੋ।</string>
 
     <!-- Promote SearchWidget Dialog -->
@@ -1038,6 +1001,11 @@ The new line here must be kept as the second half of the string is clickable for
 
     !-- This is the title of promote search widget dialog. --&gt;
     <string name="promote_search_widget_dialog_title">ਬਰਾਊਜ਼ਿੰਗ ਅਤੀਤ ਮਿਟਾਇਆ ਗਿਆ! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <!-- Banner Info Message than will appear when user first enters in the app. The location is at the toolbar. -->
+    <string name="cfr_for_start_browsing">ਆਪਣਾ ਨਿੱਜੀ ਬਰਾਊਜ਼ਿੰਗ ਸ਼ੈਸ਼ਨ ਸ਼ੁਰੂ ਕਰੋ ਅਤੇ ਅਸੀਂ ਤੁਹਾਡੇ ਵਾਸਤੇ ਟਰੈਕਰਾਂ ਤੇ ਹੋਰ ਬੁਰੀਆਂ ਚੀਜ਼ਾਂ ਉੱਤੇ ਰੋਕ ਲਾਵਾਂਗੇ।</string>
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. &quot;Focus&quot;) --&gt;

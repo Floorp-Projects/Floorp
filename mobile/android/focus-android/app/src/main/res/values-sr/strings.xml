@@ -18,7 +18,7 @@
     <string name="teaser">Аутоматско приватно сурфовање.\nСурфуј. Обриши. Понови.</string>
 
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
-    <string name="feedback_erase">Ваш историјат прегледања је обрисан.</string>
+    <string name="feedback_erase">Ваша историја прегледања је обрисана.</string>
     <string name="feedback_erase2">Историја прегледања је обрисана</string>
 
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
@@ -119,8 +119,21 @@
 
 
     <!-- This is the label of an action we offer when the user selects text in other third-party apps.
-         Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">Претражујте приватно</string>
+         Focus is hard coded since we can't use variables in this context.
+         Do not translate or transliterate Focus.-->
+    <string name="text_selection_search_action_focus">Тражи у Focus-у</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+             Klar is hard coded since we can't use variables in this context.
+             Do not translate or transliterate Klar.-->
+    <string name="text_selection_search_action_klar">Тражи у Klar-у</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+            Focus Beta is hard coded since we can't use variables in this context.
+            Do not translate or transliterate Focus Beta.-->
+    <string name="text_selection_search_action_focus_beta">Тражи у Focus Beta-и</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+          Focus Nightly is hard coded since we can't use variables in this context.
+          Do not translate or transliterate Focus Nightly.-->
+    <string name="text_selection_search_action_focus_nightly">Тражи у Focus Nightly-ју</string>
 
     <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
          Argument 2 is the url for the learn-more link. -->
@@ -128,8 +141,8 @@
 <p>Користите га као приватни прегледач:
   <ul>
     <li>Претражујте и сурфујте директно у апликацији</li>
-    <li>Блокирајте пратиоце (или их омогућите у поставкама)</li>
-    <li>Избришите све колачиће као и историјат прегледања и претраге</li>
+    <li>Блокирајте елементе за праћење (или их омогућите у подешавањима)</li>
+    <li>Избришите све колачиће као и историју прегледања и претраге</li>
   </ul>
 </p>
 <p>%1$s је створила Mozilla. Наша мисија је неговање здравог и отвореног интернета.<br/>
@@ -392,7 +405,7 @@
 
     <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
      history and go back to the home screen. -->
-    <string name="content_description_erase">Избриши историјат прегледања</string>
+    <string name="content_description_erase">Обриши историју прегледања</string>
 
     <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
      This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
@@ -488,11 +501,7 @@
 
 
 
-  <!-- Onboarding: Title -->
-    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string moz:removedIn="106" name="onboarding_title">Добродошли у %1$s!</string>
-
-    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+  <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
     <string name="onboarding_close_button_content_description">Затвори</string>
 
     <!-- New Onboarding flow first screen title -->
@@ -523,31 +532,6 @@
     <!-- New Onboarding flow second screen skip onboarding button label-->
     <string name="onboarding_second_screen_skip_button_text">Прескочи</string>
 
-
-    <!-- Onboarding: Description -->
-    <string moz:removedIn="106" name="onboarding_description">Приватно прегледање високог нивоа кад год желите</string>
-
-    <!-- Onboarding: Incognito Title -->
-    <string moz:removedIn="106" name="onboarding_incognito_title">Где инкогнито сусреће невидљиво</string>
-
-    <!-- Onboarding: Incognito Description -->
-    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string moz:removedIn="106" name="onboarding_incognito_description">%s је прегледач фокусиран на приватност, са уграђеном моћном заштитом од праћења и колачића.</string>
-
-    <!-- Onboarding: History Title -->
-    <string moz:removedIn="106" name="onboarding_history_title">Прегледајте безбрижно</string>
-
-    <!-- Onboarding: History Description -->
-    <string moz:removedIn="106" name="onboarding_history_description2">Једним додиром обрисаћете своју историју прегледања и колачиће и спречићете да вас огласи прате.</string>
-
-    <!-- Onboarding: Protection Title -->
-    <string moz:removedIn="106" name="onboarding_protection_title">Приватност за сваку ситуацију</string>
-
-    <!-- Onboarding: Protection Description -->
-    <string moz:removedIn="106" name="onboarding_protection_description">Лако је подесити подешавања приватности ако су потребне промене вашем начину прегледања.</string>
-
-    <!-- Onboarding: Start browsing -->
-    <string moz:removedIn="106" name="onboarding_start_browsing">Започните прегледање</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Ојачајте вашу приватност</string>
@@ -609,7 +593,7 @@
     <string name="notification_browsing_session_channel_description">Обавештења вам омогућавају да обришете вашу %1$s сесију једним притиском. Не морате да отворите апликацију или да проверите шта се извршава у вашем прегледачу.</string>
 
     <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
-    <string name="tabs_tray_action_erase">Обриши историјат прегледања</string>
+    <string name="tabs_tray_action_erase">Обриши историју прегледања</string>
 
     <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
       item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
@@ -701,6 +685,27 @@
 
     <!-- Preference for site permissions -->
     <string name="preference_site_permissions">Дозволе на страници</string>
+
+    <!--  Preference for cookie banner. The name of the item from settings screen and the title of the cookie banner screen. -->
+    <string name="preferences_cookie_banner">Смањење банера колачића</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is not disabled. -->
+    <string name="preferences_cookie_banner_summary_on">Укључено</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is disabled. -->
+    <string name="preferences_cookie_banner_summary_off">Искључено</string>
+
+    <!--  Title preference inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_title">Смањење банера колачића</string>
+
+    <!--  Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_summary">За мање банера аутоматским одбијањем захтева за колачиће, када год је то могуће.</string>
+
+    <!--  Checkbox Preference title inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
+    <string name="cookie_banner_further_reduce_option_title">Даље смањење банера колачића</string>
+
+    <!--  Checkbox Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
+    <string name="cookie_banner_further_reduce_option_summary">Захтеви за банере колачића ће бити прихваћени ради одбијања још више банера.</string>
 
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Самостално покретање</string>
@@ -996,6 +1001,11 @@
 
     !-- This is the title of promote search widget dialog. --&gt;
     <string name="promote_search_widget_dialog_title">Историја прегледања обрисана! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <!-- Banner Info Message than will appear when user first enters in the app. The location is at the toolbar. -->
+    <string name="cfr_for_start_browsing">Започните са приватним прегледањем, а ми ћемо да блокирамо елементе за праћење и друге лоше ствари.</string>
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. &quot;Focus&quot;) --&gt;
