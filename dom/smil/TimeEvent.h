@@ -26,8 +26,8 @@ class TimeEvent final : public Event {
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TimeEvent, Event)
 
-  virtual JSObject* WrapObjectInternal(
-      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override {
+  JSObject* WrapObjectInternal(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override {
     return TimeEvent_Binding::Wrap(aCx, this, aGivenProto);
   }
 

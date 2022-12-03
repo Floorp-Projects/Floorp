@@ -50,15 +50,15 @@ class SMILAnimationController final : public SMILTimeContainer,
   void Disconnect();
 
   // SMILContainer
-  virtual void Pause(uint32_t aType) override;
-  virtual void Resume(uint32_t aType) override;
-  virtual SMILTime GetParentTime() const override;
+  void Pause(uint32_t aType) override;
+  void Resume(uint32_t aType) override;
+  SMILTime GetParentTime() const override;
 
   // nsARefreshObserver
   NS_IMETHOD_(MozExternalRefCountType) AddRef() override;
   NS_IMETHOD_(MozExternalRefCountType) Release() override;
 
-  virtual void WillRefresh(mozilla::TimeStamp aTime) override;
+  void WillRefresh(mozilla::TimeStamp aTime) override;
 
   // Methods for registering and enumerating animation elements
   void RegisterAnimationElement(
@@ -130,7 +130,7 @@ class SMILAnimationController final : public SMILTimeContainer,
   void MaybeStartSampling(nsRefreshDriver* aRefreshDriver);
 
   // Sample-related callbacks and implementation helpers
-  virtual void DoSample() override;
+  void DoSample() override;
   void DoSample(bool aSkipUnchangedContainers);
 
   void RewindElements();
@@ -149,8 +149,8 @@ class SMILAnimationController final : public SMILTimeContainer,
       SMILTargetIdentifier& aResult);
 
   // Methods for adding/removing time containers
-  virtual nsresult AddChild(SMILTimeContainer& aChild) override;
-  virtual void RemoveChild(SMILTimeContainer& aChild) override;
+  nsresult AddChild(SMILTimeContainer& aChild) override;
+  void RemoveChild(SMILTimeContainer& aChild) override;
 
   void FlagDocumentNeedsFlush();
 

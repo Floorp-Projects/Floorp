@@ -110,11 +110,11 @@ class SMILTimeValueSpec {
     }
 
    protected:
-    virtual void ElementChanged(Element* aFrom, Element* aTo) override {
+    void ElementChanged(Element* aFrom, Element* aTo) override {
       IDTracker::ElementChanged(aFrom, aTo);
       mSpec->UpdateReferencedElement(aFrom, aTo);
     }
-    virtual bool IsPersistent() override { return true; }
+    bool IsPersistent() override { return true; }
 
    private:
     SMILTimeValueSpec* mSpec;
