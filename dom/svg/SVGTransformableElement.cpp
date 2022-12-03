@@ -259,22 +259,6 @@ already_AddRefed<SVGMatrix> SVGTransformableElement::GetScreenCTM() {
   return mat.forget();
 }
 
-already_AddRefed<SVGMatrix> SVGTransformableElement::GetTransformToElement(
-    SVGGraphicsElement& aElement, ErrorResult& rv) {
-  // the easiest way to do this (if likely to increase rounding error):
-  RefPtr<SVGMatrix> ourScreenCTM = GetScreenCTM();
-  RefPtr<SVGMatrix> targetScreenCTM = aElement.GetScreenCTM();
-  if (!ourScreenCTM || !targetScreenCTM) {
-    rv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
-  RefPtr<SVGMatrix> tmp = targetScreenCTM->Inverse(rv);
-  if (rv.Failed()) return nullptr;
-
-  RefPtr<SVGMatrix> mat = tmp->Multiply(*ourScreenCTM);
-  return mat.forget();
-}
-
 /* static */
 gfxMatrix SVGTransformableElement::GetUserToParentTransform(
     const gfx::Matrix* aAnimateMotionTransform,
