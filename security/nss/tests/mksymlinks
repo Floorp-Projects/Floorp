@@ -66,28 +66,6 @@ fi
 if [  ! -h SunOS5.9_OPT.OBJ  -a ! -d  SunOS5.9_OPT.OBJ ] ; then 
     ln -s SunOS5.8_OPT.OBJ SunOS5.9_OPT.OBJ || ErrorFlag=1
 fi
-#sonmi - still leaving the section in there so 3.3 and 3.2 will not break
-#since 5.8 is the masterbuild it should never be executed
-#additionally: only creat link if the slave build is present, but 
-#master is not
-#if [  ! -h SunOS5.8_DBG.OBJ -a ! -d  SunOS5.8_DBG.OBJ ]  ; then 
-    #if [ -d SunOS5.6_DBG.OBJ ] ; then
-        #ln -s SunOS5.6_DBG.OBJ SunOS5.8_DBG.OBJ || ErrorFlag=1
-    #fi
-#fi
-#if [  ! -h SunOS5.8_OPT.OBJ -a ! -d  SunOS5.8_OPT.OBJ ] ; then 
-    #if [ -d SunOS5.6_OPT.OBJ ] ; then
-        #ln -s SunOS5.6_OPT.OBJ SunOS5.8_OPT.OBJ || ErrorFlag=1
-    #fi
-#fi
-#if [ ! -h Linux2.4_x86_glibc_PTH_DBG.OBJ -a ! -d Linux2.4_x86_glibc_PTH_DBG.OBJ]
-#then
-    #ln -s Linux2.2_x86_glibc_PTH_DBG.OBJ Linux2.4_x86_glibc_PTH_DBG.OBJ || ErrorFlag=1
-#fi
-#if [ ! -h Linux2.4_x86_glibc_PTH_OPT.OBJ -a ! -d Linux2.4_x86_glibc_PTH_OPT.OBJ]
-#then
-    #ln -s Linux2.2_x86_glibc_PTH_OPT.OBJ Linux2.4_x86_glibc_PTH_OPT.OBJ || ErrorFlag=1
-#fi
 
 if [  ! -h SunOS5.9_i86pc_DBG.OBJ  -a ! -d SunOS5.9_i86pc_DBG.OBJ ] ; then 
     ln -s SunOS5.8_i86pc_DBG.OBJ SunOS5.9_i86pc_DBG.OBJ || ErrorFlag=1

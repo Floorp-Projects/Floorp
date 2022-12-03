@@ -41,11 +41,6 @@ const FUZZ_IMAGE_32 = {
   path: "automation/taskcluster/docker-fuzz32"
 };
 
-const SAW_IMAGE = {
-  name: "saw",
-  path: "automation/taskcluster/docker-saw"
-};
-
 const WINDOWS_CHECKOUT_CMD =
   "bash -c \"hg clone -r $NSS_HEAD_REVISION $NSS_HEAD_REPOSITORY nss || " +
     "(sleep 2; hg clone -r $NSS_HEAD_REVISION $NSS_HEAD_REPOSITORY nss) || " +
@@ -262,6 +257,11 @@ export default async function main() {
     collection: "debug"
   }, "build_gyp.sh");
 
+  await scheduleWindows("Windows 2012 64 Static (opt)", {
+    platform: "windows2012-64",
+    collection: "opt-static"
+  }, "build_gyp.sh --opt --static");
+
   await scheduleWindows("Windows 2012 32 (opt)", {
     platform: "windows2012-32",
   }, "build_gyp.sh --opt -t ia32");
@@ -319,6 +319,7 @@ export default async function main() {
   );
 
   await scheduleMac("Mac (opt)", {collection: "opt"}, "--opt");
+  await scheduleMac("Mac Static (opt)", {collection: "opt-static"}, "--opt --static");
   await scheduleMac("Mac (debug)", {collection: "debug"});
 
   // Must be executed after all other tasks are scheduled
@@ -1186,74 +1187,6 @@ async function scheduleTools() {
       "/bin/bash",
       "-c",
       "bin/checkout.sh && nss/automation/taskcluster/scripts/run_hacl.sh"
-    ]
-  }));
-
-  let task_saw = queue.scheduleTask(merge(base, {
-    symbol: "B",
-    group: "SAW",
-    name: "LLVM bitcode build (32 bit)",
-    image: SAW_IMAGE,
-    kind: "build",
-    env: {
-      AR: "llvm-ar-3.8",
-      CC: "clang-3.8",
-      CCC: "clang++-3.8"
-    },
-    artifacts: {
-      public: {
-        expires: 24 * 7,
-        type: "directory",
-        path: "/home/worker/artifacts"
-      }
-    },
-    command: [
-      "/bin/bash",
-      "-c",
-      "bin/checkout.sh && nss/automation/taskcluster/scripts/build_gyp.sh --disable-tests --emit-llvm -t ia32"
-    ]
-  }));
-
-  queue.scheduleTask(merge(base, {
-    parent: task_saw,
-    symbol: "bmul",
-    group: "SAW",
-    name: "bmul.saw",
-    image: SAW_IMAGE,
-    command: [
-      "/bin/bash",
-      "-c",
-      "bin/checkout.sh && nss/automation/taskcluster/scripts/run_saw.sh bmul"
-    ]
-  }));
-
-  // TODO: The ChaCha20 saw verification is currently disabled because the new
-  //       HACL 32-bit code can't be verified by saw right now to the best of
-  //       my knowledge.
-  //       Bug 1604130
-  // queue.scheduleTask(merge(base, {
-  //   parent: task_saw,
-  //   symbol: "ChaCha20",
-  //   group: "SAW",
-  //   name: "chacha20.saw",
-  //   image: SAW_IMAGE,
-  //   command: [
-  //     "/bin/bash",
-  //     "-c",
-  //     "bin/checkout.sh && nss/automation/taskcluster/scripts/run_saw.sh chacha20"
-  //   ]
-  // }));
-
-  queue.scheduleTask(merge(base, {
-    parent: task_saw,
-    symbol: "Poly1305",
-    group: "SAW",
-    name: "poly1305.saw",
-    image: SAW_IMAGE,
-    command: [
-      "/bin/bash",
-      "-c",
-      "bin/checkout.sh && nss/automation/taskcluster/scripts/run_saw.sh poly1305"
     ]
   }));
 

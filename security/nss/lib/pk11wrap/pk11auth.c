@@ -575,7 +575,7 @@ PK11_DoPassword(PK11SlotInfo *slot, CK_SESSION_HANDLE session,
 
     /*
      * Central server type applications which control access to multiple
-     * slave applications to single crypto devices need to virtuallize the
+     * client applications to single crypto devices need to virtuallize the
      * login state. This is done by a callback out of PK11_IsLoggedIn and
      * here. If we are actually logged in, then we got here because the
      * higher level code told us that the particular client application may

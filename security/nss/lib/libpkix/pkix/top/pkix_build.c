@@ -2363,7 +2363,7 @@ pkix_BuildForwardDepthFirstSearch(
                     if (isIssuerCertAllowedAtCertIssuanceTime(
                           state->candidateCert->nssCert, targetCert->nssCert)
                             != SECSuccess) {
-                        PKIX_ERROR(PKIX_CERTISBLACKLISTEDATISSUANCETIME);
+                        PKIX_ERROR(PKIX_CERTISBLOCKLISTEDATISSUANCETIME);
                     }
 
                     if ((state->verifyNode) != NULL) {
