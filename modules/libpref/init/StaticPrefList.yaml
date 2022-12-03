@@ -3713,12 +3713,6 @@
   value: false
   mirror: always
 
-# pref controls `identity` credentials timeout for testing
-- name: dom.security.credentialmanagement.identity.wait_for_timeout
-  type: bool
-  value: true
-  mirror: always
-
 # pref controls `identity` credential UI for testing. When true, UI is not shown and
 # the first option in the account and provider lists are chosen
 - name: dom.security.credentialmanagement.identity.select_first_in_ui_lists
