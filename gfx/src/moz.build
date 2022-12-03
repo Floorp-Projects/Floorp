@@ -49,7 +49,6 @@ EXPORTS.mozilla += [
 ]
 
 EXPORTS.mozilla.gfx += [
-    "AAStroke.h",
     "CompositorHitTestInfo.h",
     "WPFGpuRaster.h",
 ]

@@ -5636,16 +5636,10 @@
   value: 4000
   mirror: always
 
-# Whether to accelerate stroked paths by converting them to fill paths.
-- name: gfx.canvas.accelerated.stroke-to-fill-path
+# Whether to accelerate stroked paths.
+- name: gfx.canvas.accelerated.gpu-path-stroke
   type: RelaxedAtomicBool
   value: false
-  mirror: always
-
-# Whether to use aa-stroke to accelerate accelerate stroked paths.
-- name: gfx.canvas.accelerated.aa-stroke.enabled
-  type: RelaxedAtomicBool
-  value: true
   mirror: always
 
 # 0x7fff is the maximum supported xlib surface size and is more than enough for canvases.
