@@ -3,6 +3,14 @@
 version = 3
 
 [[package]]
+name = "aa-stroke"
+version = "0.1.0"
+source = "git+https://github.com/FirefoxGraphics/aa-stroke?rev=5289b0ff5736a6a6b916ef007fcf07ac14a663d5#5289b0ff5736a6a6b916ef007fcf07ac14a663d5"
+dependencies = [
+ "euclid",
+]
+
+[[package]]
 name = "adler"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2127,6 +2135,7 @@ dependencies = [
 name = "gkrust-shared"
 version = "0.1.0"
 dependencies = [
+ "aa-stroke",
  "app_services_logger",
  "audio_thread_priority",
  "audioipc-client",

@@ -1,0 +1,17 @@
+[package]
+name = "aa-stroke"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+euclid = "0.22.7"
+
+[dev-dependencies]
+png = "0.17.7"
+
+[features]
+default = ["c_bindings"]
+c_bindings = []

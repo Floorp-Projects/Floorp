@@ -18,6 +18,11 @@ struct Point {
   int32_t x;
   int32_t y;
 };
+constexpr uint8_t PathPointTypeStart = 0;
+constexpr uint8_t PathPointTypeLine = 1;
+constexpr uint8_t PathPointTypeBezier = 3;
+constexpr uint8_t PathPointTypePathTypeMask = 0x07;
+constexpr uint8_t PathPointTypeCloseSubpath = 0x80;
 struct Path {
   FillMode fill_mode;
   const Point* points;
