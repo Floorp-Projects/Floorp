@@ -95,6 +95,7 @@ import org.mozilla.fenix.databinding.FragmentHomeBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.containsQueryParameters
 import org.mozilla.fenix.ext.hideToolbar
+import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
@@ -899,6 +900,8 @@ class HomeFragment : Fragment() {
                     true,
                 )
             layout.findViewById<Button>(R.id.cfr_pos_button).apply {
+                this.increaseTapArea(CFR_TAP_INCREASE_DPS)
+
                 setOnClickListener {
                     PrivateShortcutCreateManager.createPrivateShortcut(context)
                     privateBrowsingRecommend.dismiss()
@@ -1080,6 +1083,8 @@ class HomeFragment : Fragment() {
 
         private const val CFR_WIDTH_DIVIDER = 1.7
         private const val CFR_Y_OFFSET = -20
+
+        private const val CFR_TAP_INCREASE_DPS = 6
 
         // Sponsored top sites titles and search engine names used for filtering
         const val AMAZON_SPONSORED_TITLE = "Amazon"
