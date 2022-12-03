@@ -1,8 +1,0 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-bmul : {n,m} (fin n, n >= 1, m == n*2 - 1) => [n] -> [n] -> ([n], [n])
-bmul a b = (take`{n} prod, drop`{n} prod)
-    where prod = pad (pmult a b : [m])
-          pad x = zero # x
