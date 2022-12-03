@@ -6,6 +6,10 @@
     list-style-image: url("chrome://browser/skin/sidebars.svg");
     fill: rgb(0, 192, 209) !important;
   }
+
+  #browser {
+    background: -moz-Dialog !important;
+  }
   
   .browser-sidebar2 {
     -moz-box-ordinal-group: 1 !important;
