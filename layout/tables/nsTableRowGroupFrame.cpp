@@ -378,7 +378,6 @@ void nsTableRowGroupFrame::ReflowChildren(
       nsRect oldKidInkOverflow = kidFrame->InkOverflowRect();
 
       ReflowOutput desiredSize(aReflowInput.reflowInput);
-      desiredSize.ClearSize();
 
       // Reflow the child into the available space, giving it as much bsize as
       // it wants. We'll deal with splitting later after we've computed the row
