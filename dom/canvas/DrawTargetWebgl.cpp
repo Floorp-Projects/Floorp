@@ -2421,7 +2421,7 @@ bool QuantizedPath::operator==(const QuantizedPath& aOther) const {
 // transform will be applied to the path. The path is stored relative to its
 // bounds origin to support translation later.
 static Maybe<QuantizedPath> GenerateQuantizedPath(const SkPath& aPath,
-                                                  const IntRect& aBounds,
+                                                  const Rect& aBounds,
                                                   const Matrix& aTransform) {
   WGR::PathBuilder* pb = WGR::wgr_new_builder();
   if (!pb) {
@@ -2709,11 +2709,21 @@ bool DrawTargetWebgl::SharedContext::DrawPathAccel(
     bounds.Inflate(blurRadius);
     viewport.Inflate(blurRadius);
   }
+  Point realOrigin = bounds.TopLeft();
+  if (aCacheable) {
+    // Quantize the path origin to increase the reuse of cache entries.
+    bounds.Scale(4.0f);
+    bounds.Round();
+    bounds.Scale(0.25f);
+  }
+  Point quantizedOrigin = bounds.TopLeft();
   // If the path doesn't intersect the viewport, then there is nothing to draw.
   IntRect intBounds = RoundedOut(bounds).Intersect(viewport);
   if (intBounds.IsEmpty()) {
     return true;
   }
+  // Nudge the bounds to account for the quantization rounding.
+  Rect quantBounds = Rect(intBounds) + (realOrigin - quantizedOrigin);
   // If a stroke path covers too much screen area, it is likely that most is
   // empty space in the interior. This usually imposes too high a cost versus
   // just rasterizing without acceleration.
@@ -2739,14 +2749,14 @@ bool DrawTargetWebgl::SharedContext::DrawPathAccel(
     }
     // Use a quantized, relative (to its bounds origin) version of the path as
     // a cache key to help limit cache bloat.
-    Maybe<QuantizedPath> qp =
-        GenerateQuantizedPath(pathSkia->GetPath(), intBounds, currentTransform);
+    Maybe<QuantizedPath> qp = GenerateQuantizedPath(
+        pathSkia->GetPath(), quantBounds, currentTransform);
     if (!qp) {
       return false;
     }
     entry = mPathCache->FindOrInsertEntry(
         std::move(*qp), color ? nullptr : &aPattern, aStrokeOptions,
-        currentTransform, intBounds, bounds.TopLeft(),
+        currentTransform, intBounds, quantizedOrigin,
         aShadow ? aShadow->mSigma : -1.0f);
     if (!entry) {
       return false;
@@ -2773,10 +2783,10 @@ bool DrawTargetWebgl::SharedContext::DrawPathAccel(
     // draw a rectangle at the expected new bounds, it will overlap the portion
     // of the old entry texture we actually need to sample from.
     Point offset =
-        (bounds.TopLeft() - entry->GetOrigin()) + entry->GetBounds().TopLeft();
+        (realOrigin - entry->GetOrigin()) + entry->GetBounds().TopLeft();
     SurfacePattern pathPattern(nullptr, ExtendMode::CLAMP,
                                Matrix::Translation(offset), filter);
-    return DrawRectAccel(Rect(intBounds), pathPattern, aOptions, shadowColor,
+    return DrawRectAccel(quantBounds, pathPattern, aOptions, shadowColor,
                          &handle, false, true, true);
   }
 
@@ -2786,7 +2796,9 @@ bool DrawTargetWebgl::SharedContext::DrawPathAccel(
       entry->GetPath().mPath.num_types <= mPathMaxComplexity) {
     if (entry->GetVertexRange().IsValid()) {
       // If there is a valid cached vertex data in the path vertex buffer, then
-      // just draw that.
+      // just draw that. We must draw at integer pixel boundaries (using
+      // intBounds instead of quantBounds) due to WGR's reliance on pixel center
+      // location.
       mCurrentTarget->mProfile.OnCacheHit();
       return DrawRectAccel(Rect(intBounds.TopLeft(), Size(1, 1)), aPattern,
                            aOptions, Nothing(), nullptr, false, true, true,
@@ -2834,7 +2846,7 @@ bool DrawTargetWebgl::SharedContext::DrawPathAccel(
             //     int(fillPath.countVerbs()),
             //     int(fillPath.countPoints()));
             if (Maybe<QuantizedPath> qp = GenerateQuantizedPath(
-                    fillPath, intBounds, currentTransform)) {
+                    fillPath, quantBounds, currentTransform)) {
               wgrVB = GeneratePathVertexBuffer(
                   *qp, IntRect(-intBounds.TopLeft(), mViewportSize));
             }
@@ -2905,7 +2917,7 @@ bool DrawTargetWebgl::SharedContext::DrawPathAccel(
   if (pathDT->Init(intBounds.Size(), color || aShadow
                                          ? SurfaceFormat::A8
                                          : SurfaceFormat::B8G8R8A8)) {
-    Point offset = -intBounds.TopLeft();
+    Point offset = -quantBounds.TopLeft();
     if (aShadow) {
       // Ensure the the shadow is drawn at the requested offset
       offset += aShadow->mOffset;
@@ -2943,13 +2955,13 @@ bool DrawTargetWebgl::SharedContext::DrawPathAccel(
         return false;
       }
       SurfacePattern pathPattern(pathSurface, ExtendMode::CLAMP,
-                                 Matrix::Translation(intBounds.TopLeft()),
+                                 Matrix::Translation(quantBounds.TopLeft()),
                                  filter);
       // Try and upload the rasterized path to a texture. If there is a
       // valid texture handle after this, then link it to the entry.
       // Otherwise, we might have to fall back to software drawing the
       // path, so unlink it from the entry.
-      if (DrawRectAccel(Rect(intBounds), pathPattern, aOptions, shadowColor,
+      if (DrawRectAccel(quantBounds, pathPattern, aOptions, shadowColor,
                         &handle, false, true) &&
           handle) {
         if (entry) {
