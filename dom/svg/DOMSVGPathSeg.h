@@ -39,16 +39,16 @@ class SVGElement;
     CHECK_ARG_COUNT_IN_SYNC(segType);                                         \
   }                                                                           \
   /* From DOMSVGPathSeg: */                                                   \
-  virtual uint32_t Type() const override { return segType; }                  \
-  virtual DOMSVGPathSeg* Clone() override {                                   \
+  uint32_t Type() const override { return segType; }                          \
+  DOMSVGPathSeg* Clone() override {                                           \
     /* InternalItem() + 1, because we're skipping the encoded seg type */     \
     float* args = IsInList() ? InternalItem() + 1 : mArgs;                    \
     return new DOMSVGPathSeg##segName(args);                                  \
   }                                                                           \
-  virtual float* PtrToMemberArgs() override { return mArgs; }                 \
+  float* PtrToMemberArgs() override { return mArgs; }                         \
                                                                               \
-  virtual JSObject* WrapObject(JSContext* aCx,                                \
-                               JS::Handle<JSObject*> aGivenProto) override {  \
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)     \
+      override {                                                              \
     return dom::SVGPathSeg##segName##_Binding::Wrap(aCx, this, aGivenProto);  \
   }
 

@@ -29,11 +29,10 @@ class SVGClipPathElement final : public SVGClipPathElementBase {
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
   explicit SVGClipPathElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext* cx,
-                             JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
 
  public:
-  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // WebIDL
   already_AddRefed<DOMSVGAnimatedEnumeration> ClipPathUnits();
@@ -47,7 +46,7 @@ class SVGClipPathElement final : public SVGClipPathElementBase {
   SVGAnimatedEnumeration mEnumAttributes[1];
   static EnumInfo sEnumInfo[1];
 
-  virtual EnumAttributesInfo GetEnumInfo() override;
+  EnumAttributesInfo GetEnumInfo() override;
 };
 
 }  // namespace dom

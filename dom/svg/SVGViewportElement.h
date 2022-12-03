@@ -57,11 +57,11 @@ class SVGViewportElement : public SVGGraphicsElement {
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
   // SVGElement specializations:
-  virtual gfxMatrix PrependLocalTransformsTo(
+  gfxMatrix PrependLocalTransformsTo(
       const gfxMatrix& aMatrix,
       SVGTransformTypes aWhich = eAllTransforms) const override;
 
-  virtual bool HasValidDimensions() const override;
+  bool HasValidDimensions() const override;
 
   // SVGViewportElement methods:
 
@@ -139,7 +139,7 @@ class SVGViewportElement : public SVGGraphicsElement {
   // WebIDL
   already_AddRefed<SVGAnimatedRect> ViewBox();
   already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();
-  virtual SVGAnimatedViewBox* GetAnimatedViewBox() override;
+  SVGAnimatedViewBox* GetAnimatedViewBox() override;
 
  protected:
   // implementation helpers:
@@ -170,10 +170,9 @@ class SVGViewportElement : public SVGGraphicsElement {
   enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT };
   SVGAnimatedLength mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
-  virtual LengthAttributesInfo GetLengthInfo() override;
+  LengthAttributesInfo GetLengthInfo() override;
 
-  virtual SVGAnimatedPreserveAspectRatio* GetAnimatedPreserveAspectRatio()
-      override;
+  SVGAnimatedPreserveAspectRatio* GetAnimatedPreserveAspectRatio() override;
 
   virtual const SVGAnimatedViewBox& GetViewBoxInternal() const {
     return mViewBox;

@@ -23,28 +23,23 @@ class SVGTSpanElement final : public SVGTSpanElementBase {
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
   explicit SVGTSpanElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext* cx,
-                             JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
 
  public:
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
-  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
  protected:
-  virtual EnumAttributesInfo GetEnumInfo() override;
-  virtual LengthAttributesInfo GetLengthInfo() override;
+  EnumAttributesInfo GetEnumInfo() override;
+  LengthAttributesInfo GetLengthInfo() override;
 
   SVGAnimatedEnumeration mEnumAttributes[1];
-  virtual SVGAnimatedEnumeration* EnumAttributes() override {
-    return mEnumAttributes;
-  }
+  SVGAnimatedEnumeration* EnumAttributes() override { return mEnumAttributes; }
 
   SVGAnimatedLength mLengthAttributes[1];
-  virtual SVGAnimatedLength* LengthAttributes() override {
-    return mLengthAttributes;
-  }
+  SVGAnimatedLength* LengthAttributes() override { return mLengthAttributes; }
 };
 
 }  // namespace mozilla::dom

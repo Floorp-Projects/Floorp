@@ -123,8 +123,8 @@ class DOMSVGNumber final : public nsWrapperCache {
 
   nsISupports* GetParentObject() { return mParent; }
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   float Value();
 

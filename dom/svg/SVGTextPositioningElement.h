@@ -33,8 +33,8 @@ class SVGTextPositioningElement : public SVGTextPositioningElementBase {
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
       : SVGTextPositioningElementBase(std::move(aNodeInfo)) {}
 
-  virtual LengthListAttributesInfo GetLengthListInfo() override;
-  virtual NumberListAttributesInfo GetNumberListInfo() override;
+  LengthListAttributesInfo GetLengthListInfo() override;
+  NumberListAttributesInfo GetNumberListInfo() override;
 
   enum { ATTR_X, ATTR_Y, ATTR_DX, ATTR_DY };
   SVGAnimatedLengthList mLengthListAttributes[4];

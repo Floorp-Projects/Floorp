@@ -81,14 +81,14 @@ class SVGAnimatedIntegerPair {
     SVGAnimatedIntegerPair* mVal;  // kept alive because it belongs to content
     PairIndex mIndex;              // are we the first or second integer
 
-    virtual int32_t BaseVal() override { return mVal->GetBaseValue(mIndex); }
-    virtual void SetBaseVal(int32_t aValue) override {
+    int32_t BaseVal() override { return mVal->GetBaseValue(mIndex); }
+    void SetBaseVal(int32_t aValue) override {
       mVal->SetBaseValue(aValue, mIndex, mSVGElement);
     }
 
     // Script may have modified animation parameters or timeline -- DOM getters
     // need to flush any resample requests to reflect these modifications.
-    virtual int32_t AnimVal() override {
+    int32_t AnimVal() override {
       mSVGElement->FlushAnimations();
       return mVal->GetAnimValue(mIndex);
     }
@@ -106,12 +106,13 @@ class SVGAnimatedIntegerPair {
     SVGElement* mSVGElement;
 
     // SMILAttr methods
-    virtual nsresult ValueFromString(
-        const nsAString& aStr, const dom::SVGAnimationElement* aSrcElement,
-        SMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
-    virtual SMILValue GetBaseValue() const override;
-    virtual void ClearAnimValue() override;
-    virtual nsresult SetAnimValue(const SMILValue& aValue) override;
+    nsresult ValueFromString(const nsAString& aStr,
+                             const dom::SVGAnimationElement* aSrcElement,
+                             SMILValue& aValue,
+                             bool& aPreventCachingOfSandwich) const override;
+    SMILValue GetBaseValue() const override;
+    void ClearAnimValue() override;
+    nsresult SetAnimValue(const SMILValue& aValue) override;
   };
 };
 

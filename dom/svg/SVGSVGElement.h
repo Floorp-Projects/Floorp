@@ -61,8 +61,8 @@ class SVGSVGElement final : public SVGSVGElementBase {
  protected:
   SVGSVGElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                 FromParser aFromParser);
-  virtual JSObject* WrapNode(JSContext* aCx,
-                             JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext* aCx,
+                     JS::Handle<JSObject*> aGivenProto) override;
 
   friend nsresult(::NS_NewSVGSVGElement(
       nsIContent** aResult,
@@ -86,10 +86,10 @@ class SVGSVGElement final : public SVGSVGElementBase {
 
   // nsIContent interface
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
-  virtual bool IsEventAttributeNameInternal(nsAtom* aName) override;
+  bool IsEventAttributeNameInternal(nsAtom* aName) override;
 
   // nsINode methods:
-  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // WebIDL
   already_AddRefed<DOMSVGAnimatedLength> X();
@@ -125,9 +125,9 @@ class SVGSVGElement final : public SVGSVGElementBase {
 
   // SVGElement overrides
 
-  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  virtual void UnbindFromTree(bool aNullParent) override;
-  virtual SVGAnimatedTransformList* GetAnimatedTransformList(
+  nsresult BindToTree(BindContext&, nsINode& aParent) override;
+  void UnbindFromTree(bool aNullParent) override;
+  SVGAnimatedTransformList* GetAnimatedTransformList(
       uint32_t aFlags = 0) override;
 
   // SVGSVGElement methods:
@@ -165,8 +165,7 @@ class SVGSVGElement final : public SVGSVGElementBase {
   // SVGViewportElement methods:
 
   virtual SVGViewElement* GetCurrentViewElement() const;
-  virtual SVGPreserveAspectRatio GetPreserveAspectRatioWithOverride()
-      const override;
+  SVGPreserveAspectRatio GetPreserveAspectRatioWithOverride() const override;
 
   // implementation helpers:
 
@@ -199,10 +198,10 @@ class SVGSVGElement final : public SVGSVGElementBase {
   const SVGPreserveAspectRatio* GetPreserveAspectRatioProperty() const;
   bool ClearPreserveAspectRatioProperty();
 
-  virtual const SVGAnimatedViewBox& GetViewBoxInternal() const override;
-  virtual SVGAnimatedTransformList* GetTransformInternal() const override;
+  const SVGAnimatedViewBox& GetViewBoxInternal() const override;
+  SVGAnimatedTransformList* GetTransformInternal() const override;
 
-  virtual EnumAttributesInfo GetEnumInfo() override;
+  EnumAttributesInfo GetEnumInfo() override;
 
   enum { ZOOMANDPAN };
   SVGAnimatedEnumeration mEnumAttributes[1];

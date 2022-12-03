@@ -29,8 +29,8 @@ class DOMSVGAnimatedAngle final : public nsWrapperCache {
 
   // WebIDL
   SVGElement* GetParentObject() { return mSVGElement; }
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
   already_AddRefed<DOMSVGAngle> BaseVal();
   already_AddRefed<DOMSVGAngle> AnimVal();
 

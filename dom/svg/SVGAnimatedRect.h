@@ -32,8 +32,8 @@ class SVGAnimatedRect final : public nsWrapperCache {
 
   SVGElement* GetParentObject() const { return mSVGElement; }
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   already_AddRefed<SVGRect> GetBaseVal();
 

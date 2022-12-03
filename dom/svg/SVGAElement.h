@@ -32,8 +32,7 @@ class SVGAElement final : public SVGAElementBase, public Link {
   friend nsresult(::NS_NewSVGAElement(
       nsIContent** aResult,
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  virtual JSObject* WrapNode(JSContext* cx,
-                             JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
 
  public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -44,11 +43,11 @@ class SVGAElement final : public SVGAElementBase, public Link {
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
   MOZ_CAN_RUN_SCRIPT
   nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
-  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // nsIContent
-  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  virtual void UnbindFromTree(bool aNullParent = true) override;
+  nsresult BindToTree(BindContext&, nsINode& aParent) override;
+  void UnbindFromTree(bool aNullParent = true) override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
   int32_t TabIndexDefault() override;
@@ -58,7 +57,7 @@ class SVGAElement final : public SVGAElementBase, public Link {
   already_AddRefed<nsIURI> GetHrefURI() const override;
   bool HasHref() const;
 
-  virtual ElementState IntrinsicState() const override;
+  ElementState IntrinsicState() const override;
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
                                 const nsAttrValue* aOldValue,
@@ -94,7 +93,7 @@ class SVGAElement final : public SVGAElementBase, public Link {
  protected:
   virtual ~SVGAElement() = default;
 
-  virtual StringAttributesInfo GetStringInfo() override;
+  StringAttributesInfo GetStringInfo() override;
 
   enum { HREF, XLINK_HREF, TARGET };
   SVGAnimatedString mStringAttributes[3];
