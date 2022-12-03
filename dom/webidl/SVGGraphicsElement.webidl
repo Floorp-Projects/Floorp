@@ -29,12 +29,8 @@ interface SVGGraphicsElement : SVGElement {
 
   [NewObject]
   SVGRect getBBox(optional SVGBoundingBoxOptions aOptions = {});
-  // Not implemented
-  // SVGRect getStrokeBBox();
   SVGMatrix? getCTM();
   SVGMatrix? getScreenCTM();
-  [Throws]
-  SVGMatrix getTransformToElement(SVGGraphicsElement element);
 };
 
 SVGGraphicsElement includes SVGTests;

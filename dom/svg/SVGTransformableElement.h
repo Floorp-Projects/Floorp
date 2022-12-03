@@ -38,8 +38,6 @@ class SVGTransformableElement : public SVGElement {
   already_AddRefed<SVGRect> GetBBox(const SVGBoundingBoxOptions&);
   already_AddRefed<SVGMatrix> GetCTM();
   already_AddRefed<SVGMatrix> GetScreenCTM();
-  already_AddRefed<SVGMatrix> GetTransformToElement(
-      SVGGraphicsElement& aElement, ErrorResult& rv);
 
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
