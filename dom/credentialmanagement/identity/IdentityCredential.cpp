@@ -84,29 +84,6 @@ IdentityCredential::DiscoverFromExternalSource(
   RefPtr<IdentityCredential::GetIdentityCredentialPromise::Private> result =
       new IdentityCredential::GetIdentityCredentialPromise::Private(__func__);
 
-  nsCOMPtr<nsITimer> timeout;
-  RefPtr<IdentityCredential::GetIdentityCredentialPromise::Private> promise =
-      result;
-  nsresult rv = NS_NewTimerWithFuncCallback(
-      getter_AddRefs(timeout),
-      [](nsITimer* aTimer, void* aClosure) -> void {
-        auto* promise = static_cast<
-            IdentityCredential::GetIdentityCredentialPromise::Private*>(
-            aClosure);
-        if (!promise->IsResolved()) {
-          promise->Reject(NS_ERROR_DOM_NETWORK_ERR, __func__);
-        }
-        // This releases the promise we forgot when we returned from
-        // this function.
-        NS_RELEASE(promise);
-      },
-      promise, 120000, nsITimer::TYPE_ONE_SHOT,
-      "IdentityCredentialTimeoutCallback");
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    result->Reject(NS_ERROR_FAILURE, __func__);
-    return result.forget();
-  }
-
   // Kick the request off to the main process and translate the result to the
   // expected type when we get a result.
   MOZ_ASSERT(aOptions.mIdentity.WasPassed());
@@ -117,24 +94,21 @@ IdentityCredential::DiscoverFromExternalSource(
          aOptions.mIdentity.Value())
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [result, timeout,
+          [result,
            credential](const WindowGlobalChild::
                            DiscoverIdentityCredentialFromExternalSourcePromise::
                                ResolveValueType& aResult) {
             if (aResult.isSome()) {
               credential->CopyValuesFrom(aResult.value());
               result->Resolve(credential, __func__);
-            } else if (
-                !StaticPrefs::
-                    dom_security_credentialmanagement_identity_wait_for_timeout()) {
+            } else {
               result->Reject(NS_ERROR_DOM_UNKNOWN_ERR, __func__);
             }
           },
           [result](const WindowGlobalChild::
                        DiscoverIdentityCredentialFromExternalSourcePromise::
                            RejectValueType& aResult) { return; });
-
-  return result;
+  return result.forget();
 }
 
 // static
