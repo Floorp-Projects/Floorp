@@ -176,8 +176,10 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     uint32_t mPathVertexCapacity = 0;
     // The maximum supported type complexity of a GPU path.
     uint32_t mPathMaxComplexity = 0;
-    // Whether to accelerate stroked paths.
-    bool mPathAccelStroke = false;
+    // Whether to accelerate stroked paths with AAStroke.
+    bool mPathAAStroke = true;
+    // Whether to accelerate stroked paths with WGR.
+    bool mPathWGRStroke = false;
     RefPtr<WebGLProgramJS> mSolidProgram;
     RefPtr<WebGLUniformLocationJS> mSolidProgramViewport;
     RefPtr<WebGLUniformLocationJS> mSolidProgramAA;
