@@ -1,12 +1,6 @@
 
 # cargo-vet audits file
 
-[[audits.aa-stroke]]
-who = "Lee Salzman <lsalzman@mozilla.com>"
-criteria = "safe-to-deploy"
-version = "0.1.0"
-notes = "Written and maintained by Gfx team at Mozilla."
-
 [[audits.android_logger]]
 who = "Jan-Erik Rediger <jrediger@mozilla.com>"
 criteria = "safe-to-deploy"
