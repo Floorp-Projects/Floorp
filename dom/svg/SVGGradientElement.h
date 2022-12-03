@@ -38,18 +38,18 @@ class SVGGradientElement : public SVGGradientElementBase {
  protected:
   explicit SVGGradientElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext* aCx,
-                             JS::Handle<JSObject*> aGivenProto) override = 0;
+  JSObject* WrapNode(JSContext* aCx,
+                     JS::Handle<JSObject*> aGivenProto) override = 0;
 
  public:
-  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override = 0;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override = 0;
 
   // nsIContent
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
   virtual SVGAnimatedTransformList* GetAnimatedTransformList(
       uint32_t aFlags = 0) override;
-  virtual nsStaticAtom* GetTransformListAttrName() const override {
+  nsStaticAtom* GetTransformListAttrName() const override {
     return nsGkAtoms::gradientTransform;
   }
 
@@ -60,8 +60,8 @@ class SVGGradientElement : public SVGGradientElementBase {
   already_AddRefed<DOMSVGAnimatedString> Href();
 
  protected:
-  virtual EnumAttributesInfo GetEnumInfo() override;
-  virtual StringAttributesInfo GetStringInfo() override;
+  EnumAttributesInfo GetEnumInfo() override;
+  StringAttributesInfo GetStringInfo() override;
 
   enum { GRADIENTUNITS, SPREADMETHOD };
   SVGAnimatedEnumeration mEnumAttributes[2];
@@ -93,7 +93,7 @@ class SVGLinearGradientElement : public SVGLinearGradientElementBase {
                              JS::Handle<JSObject*> aGivenProto) override;
 
  public:
-  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // WebIDL
   already_AddRefed<DOMSVGAnimatedLength> X1();
@@ -102,7 +102,7 @@ class SVGLinearGradientElement : public SVGLinearGradientElementBase {
   already_AddRefed<DOMSVGAnimatedLength> Y2();
 
  protected:
-  virtual LengthAttributesInfo GetLengthInfo() override;
+  LengthAttributesInfo GetLengthInfo() override;
 
   enum { ATTR_X1, ATTR_Y1, ATTR_X2, ATTR_Y2 };
   SVGAnimatedLength mLengthAttributes[4];
@@ -126,7 +126,7 @@ class SVGRadialGradientElement : public SVGRadialGradientElementBase {
                              JS::Handle<JSObject*> aGivenProto) override;
 
  public:
-  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // WebIDL
   already_AddRefed<DOMSVGAnimatedLength> Cx();
@@ -137,7 +137,7 @@ class SVGRadialGradientElement : public SVGRadialGradientElementBase {
   already_AddRefed<DOMSVGAnimatedLength> Fr();
 
  protected:
-  virtual LengthAttributesInfo GetLengthInfo() override;
+  LengthAttributesInfo GetLengthInfo() override;
 
   enum { ATTR_CX, ATTR_CY, ATTR_R, ATTR_FX, ATTR_FY, ATTR_FR };
   SVGAnimatedLength mLengthAttributes[6];

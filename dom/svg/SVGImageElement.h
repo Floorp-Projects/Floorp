@@ -32,8 +32,8 @@ class SVGImageElement : public SVGImageElementBase,
   explicit SVGImageElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
   virtual ~SVGImageElement();
-  virtual JSObject* WrapNode(JSContext* aCx,
-                             JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext* aCx,
+                     JS::Handle<JSObject*> aGivenProto) override;
   friend nsresult(::NS_NewSVGImageElement(
       nsIContent** aResult,
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
@@ -44,44 +44,42 @@ class SVGImageElement : public SVGImageElementBase,
   NS_DECL_ISUPPORTS_INHERITED
 
   // EventTarget
-  virtual void AsyncEventRunning(AsyncEventDispatcher* aEvent) override;
+  void AsyncEventRunning(AsyncEventDispatcher* aEvent) override;
 
   // nsIContent interface
   bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                       const nsAString& aValue,
                       nsIPrincipal* aMaybeScriptedPrincipal,
                       nsAttrValue& aResult) override;
-  virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                const nsAttrValue* aValue,
-                                const nsAttrValue* aOldValue,
-                                nsIPrincipal* aSubjectPrincipal,
-                                bool aNotify) override;
+  nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                        const nsAttrValue* aValue, const nsAttrValue* aOldValue,
+                        nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
   bool IsNodeOfType(uint32_t aFlags) const override {
     // <image> is not really a SVGGeometryElement, we should
     // ignore eSHAPE flag accepted by SVGGeometryElement.
     return !(aFlags & ~eUSE_TARGET);
   }
 
-  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  virtual void UnbindFromTree(bool aNullParent) override;
+  nsresult BindToTree(BindContext&, nsINode& aParent) override;
+  void UnbindFromTree(bool aNullParent) override;
 
-  virtual ElementState IntrinsicState() const override;
+  ElementState IntrinsicState() const override;
 
-  virtual void DestroyContent() override;
+  void DestroyContent() override;
 
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* name) const override;
 
   // SVGGeometryElement methods:
-  virtual bool GetGeometryBounds(
+  bool GetGeometryBounds(
       Rect* aBounds, const StrokeOptions& aStrokeOptions,
       const Matrix& aToBoundsSpace,
       const Matrix* aToNonScalingStrokeSpace = nullptr) override;
-  virtual already_AddRefed<Path> BuildPath(PathBuilder* aBuilder) override;
+  already_AddRefed<Path> BuildPath(PathBuilder* aBuilder) override;
 
   // SVGSVGElement methods:
-  virtual bool HasValidDimensions() const override;
+  bool HasValidDimensions() const override;
 
-  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   void MaybeLoadSVGImage();
 
@@ -106,10 +104,9 @@ class SVGImageElement : public SVGImageElementBase,
   nsresult LoadSVGImage(bool aForce, bool aNotify);
   bool ShouldLoadImage() const;
 
-  virtual LengthAttributesInfo GetLengthInfo() override;
-  virtual SVGAnimatedPreserveAspectRatio* GetAnimatedPreserveAspectRatio()
-      override;
-  virtual StringAttributesInfo GetStringInfo() override;
+  LengthAttributesInfo GetLengthInfo() override;
+  SVGAnimatedPreserveAspectRatio* GetAnimatedPreserveAspectRatio() override;
+  StringAttributesInfo GetStringInfo() override;
 
   // Override for nsImageLoadingContent.
   nsIContent* AsContent() override { return this; }

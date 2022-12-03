@@ -52,11 +52,9 @@ class SVGGeometryElement : public SVGGeometryElementBase {
   explicit SVGGeometryElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-  virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                const nsAttrValue* aValue,
-                                const nsAttrValue* aOldValue,
-                                nsIPrincipal* aSubjectPrincipal,
-                                bool aNotify) override;
+  nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                        const nsAttrValue* aValue, const nsAttrValue* aOldValue,
+                        nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
   bool IsNodeOfType(uint32_t aFlags) const override;
 
   /**
@@ -235,7 +233,7 @@ class SVGGeometryElement : public SVGGeometryElementBase {
 
  protected:
   // SVGElement method
-  virtual NumberAttributesInfo GetNumberInfo() override;
+  NumberAttributesInfo GetNumberInfo() override;
 
   // d is a presentation attribute, so we would like to make sure style is
   // up-to-date. This function flushes the style if the path attribute is d.

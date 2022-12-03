@@ -27,11 +27,10 @@ class SVGPathElement final : public SVGPathElementBase {
   friend nsresult(::NS_NewSVGPathElement(
       nsIContent** aResult,
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  virtual JSObject* WrapNode(JSContext* cx,
-                             JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
   explicit SVGPathElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-  virtual void GetAsSimplePath(SimplePath* aSimplePath) override;
+  void GetAsSimplePath(SimplePath* aSimplePath) override;
 
  public:
   NS_DECL_ADDSIZEOFEXCLUDINGTHIS
@@ -40,19 +39,19 @@ class SVGPathElement final : public SVGPathElementBase {
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* name) const override;
 
   // SVGSVGElement methods:
-  virtual bool HasValidDimensions() const override;
+  bool HasValidDimensions() const override;
 
   // SVGGeometryElement methods:
-  virtual bool AttributeDefinesGeometry(const nsAtom* aName) override;
-  virtual bool IsMarkable() override;
-  virtual void GetMarkPoints(nsTArray<SVGMark>* aMarks) override;
+  bool AttributeDefinesGeometry(const nsAtom* aName) override;
+  bool IsMarkable() override;
+  void GetMarkPoints(nsTArray<SVGMark>* aMarks) override;
   /*
    * Note: This function maps d attribute to CSS d property, and we don't flush
    * style in this function because some callers don't need it, so if the caller
    * needs style to be flushed (e.g. DOM APIs), the caller should flush style
    * before calling this.
    */
-  virtual already_AddRefed<Path> BuildPath(PathBuilder* aBuilder) override;
+  already_AddRefed<Path> BuildPath(PathBuilder* aBuilder) override;
 
   /**
    * This returns a path without the extra little line segments that
@@ -64,19 +63,17 @@ class SVGPathElement final : public SVGPathElementBase {
    * needs style to be flushed (e.g. DOM APIs), the caller should flush style
    * before calling this.
    */
-  virtual already_AddRefed<Path> GetOrBuildPathForMeasuring() override;
+  already_AddRefed<Path> GetOrBuildPathForMeasuring() override;
 
   bool GetDistancesFromOriginToEndsOfVisibleSegments(
       FallibleTArray<double>* aOutput) override;
 
   // nsIContent interface
-  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-  virtual SVGAnimatedPathSegList* GetAnimPathSegList() override { return &mD; }
+  SVGAnimatedPathSegList* GetAnimPathSegList() override { return &mD; }
 
-  virtual nsStaticAtom* GetPathDataAttrName() const override {
-    return nsGkAtoms::d;
-  }
+  nsStaticAtom* GetPathDataAttrName() const override { return nsGkAtoms::d; }
 
   // WebIDL
   MOZ_CAN_RUN_SCRIPT uint32_t GetPathSegAtLength(float distance);

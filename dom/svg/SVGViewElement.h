@@ -35,11 +35,10 @@ class SVGViewElement : public SVGViewElementBase {
   friend nsresult(::NS_NewSVGViewElement(
       nsIContent** aResult,
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  virtual JSObject* WrapNode(JSContext* cx,
-                             JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
 
  public:
-  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // WebIDL
   uint16_t ZoomAndPan() { return mEnumAttributes[ZOOMANDPAN].GetAnimValue(); }
@@ -50,14 +49,14 @@ class SVGViewElement : public SVGViewElementBase {
  private:
   // SVGElement overrides
 
-  virtual EnumAttributesInfo GetEnumInfo() override;
+  EnumAttributesInfo GetEnumInfo() override;
 
   enum { ZOOMANDPAN };
   SVGAnimatedEnumeration mEnumAttributes[1];
   static SVGEnumMapping sZoomAndPanMap[];
   static EnumInfo sEnumInfo[1];
 
-  virtual SVGAnimatedViewBox* GetAnimatedViewBox() override;
+  SVGAnimatedViewBox* GetAnimatedViewBox() override;
   virtual SVGAnimatedPreserveAspectRatio* GetAnimatedPreserveAspectRatio()
       override;
 

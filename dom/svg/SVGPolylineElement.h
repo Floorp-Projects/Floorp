@@ -20,18 +20,17 @@ class SVGPolylineElement final : public SVGPolylineElementBase {
  protected:
   explicit SVGPolylineElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext* cx,
-                             JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
   friend nsresult(::NS_NewSVGPolylineElement(
       nsIContent** aResult,
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 
   // SVGGeometryElement methods:
-  virtual already_AddRefed<Path> BuildPath(PathBuilder* aBuilder) override;
+  already_AddRefed<Path> BuildPath(PathBuilder* aBuilder) override;
 
  public:
   // nsIContent interface
-  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 };
 
 }  // namespace mozilla::dom

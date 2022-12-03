@@ -73,15 +73,15 @@ class SVGAnimatedNumber {
 
     SVGAnimatedNumber* mVal;  // kept alive because it belongs to content
 
-    virtual float BaseVal() override { return mVal->GetBaseValue(); }
-    virtual void SetBaseVal(float aValue) override {
+    float BaseVal() override { return mVal->GetBaseValue(); }
+    void SetBaseVal(float aValue) override {
       MOZ_ASSERT(IsFinite(aValue));
       mVal->SetBaseValue(aValue, mSVGElement);
     }
 
     // Script may have modified animation parameters or timeline -- DOM getters
     // need to flush any resample requests to reflect these modifications.
-    virtual float AnimVal() override {
+    float AnimVal() override {
       mSVGElement->FlushAnimations();
       return mVal->GetAnimValue();
     }
@@ -102,9 +102,9 @@ class SVGAnimatedNumber {
     virtual nsresult ValueFromString(
         const nsAString& aStr, const dom::SVGAnimationElement* aSrcElement,
         SMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
-    virtual SMILValue GetBaseValue() const override;
-    virtual void ClearAnimValue() override;
-    virtual nsresult SetAnimValue(const SMILValue& aValue) override;
+    SMILValue GetBaseValue() const override;
+    void ClearAnimValue() override;
+    nsresult SetAnimValue(const SMILValue& aValue) override;
   };
 };
 

@@ -23,7 +23,7 @@ class SVGDocument final : public XMLDocument {
  public:
   SVGDocument() : XMLDocument("image/svg+xml") { mType = eSVG; }
 
-  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   void SetCurrentContextPaint(const SVGContextPaint* aContextPaint) {
     mCurrentContextPaint = aContextPaint;

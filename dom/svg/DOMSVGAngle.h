@@ -39,8 +39,8 @@ class DOMSVGAngle final : public nsWrapperCache {
 
   // WebIDL
   SVGElement* GetParentObject() { return mSVGElement; }
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
   uint16_t UnitType() const;
   float Value() const;
   void GetValueAsString(nsAString& aValue);

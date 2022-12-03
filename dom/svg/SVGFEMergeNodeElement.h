@@ -25,14 +25,14 @@ class SVGFEMergeNodeElement : public SVGFEMergeNodeElementBase {
   explicit SVGFEMergeNodeElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
       : SVGFEMergeNodeElementBase(std::move(aNodeInfo)) {}
-  virtual JSObject* WrapNode(JSContext* aCx,
-                             JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext* aCx,
+                     JS::Handle<JSObject*> aGivenProto) override;
 
  public:
-  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-  virtual bool AttributeAffectsRendering(int32_t aNameSpaceID,
-                                         nsAtom* aAttribute) const override;
+  bool AttributeAffectsRendering(int32_t aNameSpaceID,
+                                 nsAtom* aAttribute) const override;
 
   const SVGAnimatedString* GetIn1() { return &mStringAttributes[IN1]; }
 
@@ -40,7 +40,7 @@ class SVGFEMergeNodeElement : public SVGFEMergeNodeElementBase {
   already_AddRefed<DOMSVGAnimatedString> In1();
 
  protected:
-  virtual StringAttributesInfo GetStringInfo() override;
+  StringAttributesInfo GetStringInfo() override;
 
   enum { IN1 };
   SVGAnimatedString mStringAttributes[1];

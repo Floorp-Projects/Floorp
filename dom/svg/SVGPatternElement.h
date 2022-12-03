@@ -36,21 +36,20 @@ class SVGPatternElement final : public SVGPatternElementBase {
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
   explicit SVGPatternElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext* cx,
-                             JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
 
  public:
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* name) const override;
 
-  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // SVGSVGElement methods:
-  virtual bool HasValidDimensions() const override;
+  bool HasValidDimensions() const override;
 
   virtual mozilla::SVGAnimatedTransformList* GetAnimatedTransformList(
       uint32_t aFlags = 0) override;
-  virtual nsStaticAtom* GetTransformListAttrName() const override {
+  nsStaticAtom* GetTransformListAttrName() const override {
     return nsGkAtoms::patternTransform;
   }
 
@@ -67,12 +66,12 @@ class SVGPatternElement final : public SVGPatternElementBase {
   already_AddRefed<DOMSVGAnimatedString> Href();
 
  protected:
-  virtual LengthAttributesInfo GetLengthInfo() override;
-  virtual EnumAttributesInfo GetEnumInfo() override;
-  virtual StringAttributesInfo GetStringInfo() override;
+  LengthAttributesInfo GetLengthInfo() override;
+  EnumAttributesInfo GetEnumInfo() override;
+  StringAttributesInfo GetStringInfo() override;
   virtual SVGAnimatedPreserveAspectRatio* GetAnimatedPreserveAspectRatio()
       override;
-  virtual SVGAnimatedViewBox* GetAnimatedViewBox() override;
+  SVGAnimatedViewBox* GetAnimatedViewBox() override;
 
   enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT };
   SVGAnimatedLength mLengthAttributes[4];

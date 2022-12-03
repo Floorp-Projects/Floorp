@@ -37,10 +37,9 @@ class SVGMotionSMILAnimationFunction final : public SMILAnimationFunction {
 
  public:
   SVGMotionSMILAnimationFunction();
-  virtual bool SetAttr(nsAtom* aAttribute, const nsAString& aValue,
-                       nsAttrValue& aResult,
-                       nsresult* aParseResult = nullptr) override;
-  virtual bool UnsetAttr(nsAtom* aAttribute) override;
+  bool SetAttr(nsAtom* aAttribute, const nsAString& aValue,
+               nsAttrValue& aResult, nsresult* aParseResult = nullptr) override;
+  bool UnsetAttr(nsAtom* aAttribute) override;
 
   // Method to allow our owner-element to signal us when our <mpath>
   // has changed or been added/removed.  When that happens, we need to
@@ -61,12 +60,12 @@ class SVGMotionSMILAnimationFunction final : public SMILAnimationFunction {
     ePathSourceType_Mpath
   };
 
-  virtual SMILCalcMode GetCalcMode() const override;
+  SMILCalcMode GetCalcMode() const override;
   virtual nsresult GetValues(const SMILAttr& aSMILAttr,
                              SMILValueArray& aResult) override;
-  virtual void CheckValueListDependentAttrs(uint32_t aNumValues) override;
+  void CheckValueListDependentAttrs(uint32_t aNumValues) override;
 
-  virtual bool IsToAnimation() const override;
+  bool IsToAnimation() const override;
 
   void CheckKeyPoints();
   nsresult SetKeyPoints(const nsAString& aKeyPoints, nsAttrValue& aResult);

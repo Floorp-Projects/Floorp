@@ -97,8 +97,8 @@ class DOMSVGNumberList final : public nsISupports, public nsWrapperCache {
     InternalListLengthWillChange(aInternalList.Length());  // Sync mItems
   }
 
-  virtual JSObject* WrapObject(JSContext* cx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* cx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   nsISupports* GetParentObject() { return static_cast<nsIContent*>(Element()); }
 

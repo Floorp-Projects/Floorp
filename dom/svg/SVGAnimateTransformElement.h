@@ -26,12 +26,12 @@ class SVGAnimateTransformElement final : public SVGAnimationElement {
       nsIContent** aResult,
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 
-  virtual JSObject* WrapNode(JSContext* aCx,
-                             JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext* aCx,
+                     JS::Handle<JSObject*> aGivenProto) override;
 
  public:
   // nsINode specializations
-  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // Element specializations
   virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
@@ -40,7 +40,7 @@ class SVGAnimateTransformElement final : public SVGAnimationElement {
                               nsAttrValue& aResult) override;
 
   // SVGAnimationElement
-  virtual SMILAnimationFunction& AnimationFunction() override;
+  SMILAnimationFunction& AnimationFunction() override;
 };
 
 }  // namespace mozilla::dom

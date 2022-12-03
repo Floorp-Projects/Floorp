@@ -113,8 +113,8 @@ class DOMSVGTransform final : public nsWrapperCache {
 
   // WebIDL
   DOMSVGTransformList* GetParentObject() const { return mList; }
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
   uint16_t Type() const;
   dom::SVGMatrix* GetMatrix();
   float Angle() const;

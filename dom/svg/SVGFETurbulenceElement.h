@@ -29,25 +29,25 @@ class SVGFETurbulenceElement : public SVGFETurbulenceElementBase {
   explicit SVGFETurbulenceElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
       : SVGFETurbulenceElementBase(std::move(aNodeInfo)) {}
-  virtual JSObject* WrapNode(JSContext* aCx,
-                             JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext* aCx,
+                     JS::Handle<JSObject*> aGivenProto) override;
 
  public:
-  virtual bool SubregionIsUnionOfRegions() override { return false; }
+  bool SubregionIsUnionOfRegions() override { return false; }
 
-  virtual FilterPrimitiveDescription GetPrimitiveDescription(
+  FilterPrimitiveDescription GetPrimitiveDescription(
       SVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
       const nsTArray<bool>& aInputsAreTainted,
       nsTArray<RefPtr<SourceSurface>>& aInputImages) override;
-  virtual bool AttributeAffectsRendering(int32_t aNameSpaceID,
-                                         nsAtom* aAttribute) const override;
-  virtual SVGAnimatedString& GetResultImageName() override {
+  bool AttributeAffectsRendering(int32_t aNameSpaceID,
+                                 nsAtom* aAttribute) const override;
+  SVGAnimatedString& GetResultImageName() override {
     return mStringAttributes[RESULT];
   }
 
-  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
+  nsresult BindToTree(BindContext&, nsINode& aParent) override;
 
   // WebIDL
   already_AddRefed<DOMSVGAnimatedNumber> BaseFrequencyX();
@@ -58,11 +58,11 @@ class SVGFETurbulenceElement : public SVGFETurbulenceElementBase {
   already_AddRefed<DOMSVGAnimatedEnumeration> Type();
 
  protected:
-  virtual NumberAttributesInfo GetNumberInfo() override;
-  virtual NumberPairAttributesInfo GetNumberPairInfo() override;
-  virtual IntegerAttributesInfo GetIntegerInfo() override;
-  virtual EnumAttributesInfo GetEnumInfo() override;
-  virtual StringAttributesInfo GetStringInfo() override;
+  NumberAttributesInfo GetNumberInfo() override;
+  NumberPairAttributesInfo GetNumberPairInfo() override;
+  IntegerAttributesInfo GetIntegerInfo() override;
+  EnumAttributesInfo GetEnumInfo() override;
+  StringAttributesInfo GetStringInfo() override;
 
   enum { SEED };  // floating point seed?!
   SVGAnimatedNumber mNumberAttributes[1];

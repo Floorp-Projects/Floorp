@@ -30,8 +30,8 @@ class SVGMPathElement final : public SVGMPathElementBase,
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
   ~SVGMPathElement();
 
-  virtual JSObject* WrapNode(JSContext* aCx,
-                             JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext* aCx,
+                     JS::Handle<JSObject*> aGivenProto) override;
 
  public:
   // interfaces:
@@ -42,20 +42,19 @@ class SVGMPathElement final : public SVGMPathElementBase,
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
 
   // nsIContent interface
-  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
-  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  virtual void UnbindFromTree(bool aNullParent) override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  nsresult BindToTree(BindContext&, nsINode& aParent) override;
+  void UnbindFromTree(bool aNullParent) override;
 
   // Element specializations
-  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
-                              const nsAString& aValue,
-                              nsIPrincipal* aMaybeScriptedPrincipal,
-                              nsAttrValue& aResult) override;
-  virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                const nsAttrValue* aValue,
-                                const nsAttrValue* aOldValue,
-                                nsIPrincipal* aMaybeScriptedPrincipal,
-                                bool aNotify) override;
+  bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                      const nsAString& aValue,
+                      nsIPrincipal* aMaybeScriptedPrincipal,
+                      nsAttrValue& aResult) override;
+  nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                        const nsAttrValue* aValue, const nsAttrValue* aOldValue,
+                        nsIPrincipal* aMaybeScriptedPrincipal,
+                        bool aNotify) override;
 
   // Public helper method: If our xlink:href attribute links to a Shape
   // element, this method returns a pointer to that element. Otherwise,
@@ -82,7 +81,7 @@ class SVGMPathElement final : public SVGMPathElementBase,
     // We need to be notified when target changes, in order to request a sample
     // (which will clear animation effects that used the old target-path
     // and recompute the animation effects using the new target-path).
-    virtual void ElementChanged(Element* aFrom, Element* aTo) override {
+    void ElementChanged(Element* aFrom, Element* aTo) override {
       IDTracker::ElementChanged(aFrom, aTo);
       if (aFrom) {
         aFrom->RemoveMutationObserver(mMpathElement);
@@ -95,13 +94,13 @@ class SVGMPathElement final : public SVGMPathElementBase,
 
     // We need to override IsPersistent to get persistent tracking (beyond the
     // first time the target changes)
-    virtual bool IsPersistent() override { return true; }
+    bool IsPersistent() override { return true; }
 
    private:
     SVGMPathElement* const mMpathElement;
   };
 
-  virtual StringAttributesInfo GetStringInfo() override;
+  StringAttributesInfo GetStringInfo() override;
 
   void UpdateHrefTarget(nsIContent* aParent, const nsAString& aHrefStr);
   void UnlinkHrefTarget(bool aNotifyParent);

@@ -46,7 +46,7 @@ class UserSpaceMetrics {
 class UserSpaceMetricsWithSize : public UserSpaceMetrics {
  public:
   virtual gfx::Size GetSize() const = 0;
-  virtual float GetAxisLength(uint8_t aCtxType) const override;
+  float GetAxisLength(uint8_t aCtxType) const override;
 };
 
 class SVGElementMetrics : public UserSpaceMetrics {
@@ -54,9 +54,9 @@ class SVGElementMetrics : public UserSpaceMetrics {
   explicit SVGElementMetrics(SVGElement* aSVGElement,
                              SVGViewportElement* aCtx = nullptr);
 
-  virtual float GetEmLength() const override;
-  virtual float GetExLength() const override;
-  virtual float GetAxisLength(uint8_t aCtxType) const override;
+  float GetEmLength() const override;
+  float GetExLength() const override;
+  float GetAxisLength(uint8_t aCtxType) const override;
 
  private:
   bool EnsureCtx() const;
@@ -69,9 +69,9 @@ class NonSVGFrameUserSpaceMetrics : public UserSpaceMetricsWithSize {
  public:
   explicit NonSVGFrameUserSpaceMetrics(nsIFrame* aFrame);
 
-  virtual float GetEmLength() const override;
-  virtual float GetExLength() const override;
-  virtual gfx::Size GetSize() const override;
+  float GetEmLength() const override;
+  float GetExLength() const override;
+  gfx::Size GetSize() const override;
 
  private:
   nsIFrame* mFrame;
@@ -206,12 +206,13 @@ class SVGAnimatedLength {
     SVGElement* mSVGElement;
 
     // SMILAttr methods
-    virtual nsresult ValueFromString(
-        const nsAString& aStr, const dom::SVGAnimationElement* aSrcElement,
-        SMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
-    virtual SMILValue GetBaseValue() const override;
-    virtual void ClearAnimValue() override;
-    virtual nsresult SetAnimValue(const SMILValue& aValue) override;
+    nsresult ValueFromString(const nsAString& aStr,
+                             const dom::SVGAnimationElement* aSrcElement,
+                             SMILValue& aValue,
+                             bool& aPreventCachingOfSandwich) const override;
+    SMILValue GetBaseValue() const override;
+    void ClearAnimValue() override;
+    nsresult SetAnimValue(const SMILValue& aValue) override;
   };
 };
 
