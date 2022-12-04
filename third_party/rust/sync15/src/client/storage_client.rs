@@ -6,11 +6,11 @@ use super::request::{
     BatchPoster, InfoCollections, InfoConfiguration, PostQueue, PostResponse, PostResponseHandler,
 };
 use super::token;
+use crate::bso::{IncomingBso, IncomingEncryptedBso, OutgoingBso, OutgoingEncryptedBso};
 use crate::engine::CollectionRequest;
 use crate::error::{self, Error, ErrorResponse};
 use crate::record_types::MetaGlobalRecord;
-use crate::ServerTimestamp;
-use crate::{BsoRecord, EncryptedBso};
+use crate::{Guid, ServerTimestamp};
 use serde_json::Value;
 use std::str::FromStr;
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -133,14 +133,18 @@ pub trait SetupStorageClient {
     fn fetch_info_configuration(&self) -> error::Result<Sync15ClientResponse<InfoConfiguration>>;
     fn fetch_info_collections(&self) -> error::Result<Sync15ClientResponse<InfoCollections>>;
     fn fetch_meta_global(&self) -> error::Result<Sync15ClientResponse<MetaGlobalRecord>>;
-    fn fetch_crypto_keys(&self) -> error::Result<Sync15ClientResponse<EncryptedBso>>;
+    fn fetch_crypto_keys(&self) -> error::Result<Sync15ClientResponse<IncomingEncryptedBso>>;
 
     fn put_meta_global(
         &self,
         xius: ServerTimestamp,
         global: &MetaGlobalRecord,
     ) -> error::Result<ServerTimestamp>;
-    fn put_crypto_keys(&self, xius: ServerTimestamp, keys: &EncryptedBso) -> error::Result<()>;
+    fn put_crypto_keys(
+        &self,
+        xius: ServerTimestamp,
+        keys: &OutgoingEncryptedBso,
+    ) -> error::Result<()>;
     fn wipe_all_remote(&self) -> error::Result<()>;
 }
 
@@ -190,6 +194,12 @@ impl BackoffState {
     }
 }
 
+// meta/global is a clear-text Bso (ie, there's a String `payload` which has a MetaGlobalRecord)
+// We don't use the 'content' helpers here because we want json errors to be fatal here
+// (ie, we don't need tombstones and can't just skip a malformed record)
+type IncMetaGlobalBso = IncomingBso;
+type OutMetaGlobalBso = OutgoingBso;
+
 #[derive(Debug)]
 pub struct Sync15StorageClient {
     tsc: token::TokenProvider,
@@ -206,8 +216,7 @@ impl SetupStorageClient for Sync15StorageClient {
     }
 
     fn fetch_meta_global(&self) -> error::Result<Sync15ClientResponse<MetaGlobalRecord>> {
-        // meta/global is a Bso, so there's an extra dance to do.
-        let got: Sync15ClientResponse<BsoRecord<MetaGlobalRecord>> =
+        let got: Sync15ClientResponse<IncMetaGlobalBso> =
             self.relative_storage_request(Method::Get, "storage/meta/global")?;
         Ok(match got {
             Sync15ClientResponse::Success {
@@ -218,11 +227,11 @@ impl SetupStorageClient for Sync15StorageClient {
             } => {
                 log::debug!(
                     "Got meta global with modified = {}; last-modified = {}",
-                    record.modified,
+                    record.envelope.modified,
                     last_modified
                 );
                 Sync15ClientResponse::Success {
-                    record: record.payload,
+                    record: serde_json::from_str(&record.payload)?,
                     last_modified,
                     route,
                     status,
@@ -232,7 +241,7 @@ impl SetupStorageClient for Sync15StorageClient {
         })
     }
 
-    fn fetch_crypto_keys(&self) -> error::Result<Sync15ClientResponse<EncryptedBso>> {
+    fn fetch_crypto_keys(&self) -> error::Result<Sync15ClientResponse<IncomingEncryptedBso>> {
         self.relative_storage_request(Method::Get, "storage/crypto/keys")
     }
 
@@ -241,11 +250,15 @@ impl SetupStorageClient for Sync15StorageClient {
         xius: ServerTimestamp,
         global: &MetaGlobalRecord,
     ) -> error::Result<ServerTimestamp> {
-        let bso = BsoRecord::new_record("global".into(), "meta".into(), global);
+        let bso = OutMetaGlobalBso::new(Guid::new("global").into(), global)?;
         self.put("storage/meta/global", xius, &bso)
     }
 
-    fn put_crypto_keys(&self, xius: ServerTimestamp, keys: &EncryptedBso) -> error::Result<()> {
+    fn put_crypto_keys(
+        &self,
+        xius: ServerTimestamp,
+        keys: &OutgoingEncryptedBso,
+    ) -> error::Result<()> {
         self.put("storage/crypto/keys", xius, keys)?;
         Ok(())
     }
@@ -281,7 +294,7 @@ impl Sync15StorageClient {
     pub fn get_encrypted_records(
         &self,
         collection_request: &CollectionRequest,
-    ) -> error::Result<Sync15ClientResponse<Vec<EncryptedBso>>> {
+    ) -> error::Result<Sync15ClientResponse<Vec<IncomingEncryptedBso>>> {
         self.collection_request(Method::Get, collection_request)
     }
 

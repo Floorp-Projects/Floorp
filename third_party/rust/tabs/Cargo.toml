@@ -38,8 +38,9 @@ uniffi_macros = "^0.21"
 url = "2.1" # mozilla-central can't yet take 2.2 (see bug 1734538)
 
 [dev-dependencies]
-tempfile = "3.1"
 env_logger = { version = "0.8.0", default-features = false, features = ["termcolor", "atty", "humantime"] }
+sync15 = { path = "../sync15", features = ["test-utils"] }
+tempfile = "3.1"
 
 [build-dependencies]
 uniffi_build = { version = "^0.21", features = [ "builtin-bindgen" ]}

@@ -25,11 +25,19 @@ impl KeyBundle {
     /// Panics (asserts) if they aren't both 32 bytes.
     pub fn new(enc: Vec<u8>, mac: Vec<u8>) -> Result<KeyBundle> {
         if enc.len() != 32 {
-            log::error!("Bad key length (enc_key): {} != 32", enc.len());
+            error_support::report_error!(
+                "sync15-key-bundle",
+                "Bad key length (enc_key): {} != 32",
+                enc.len()
+            );
             return Err(Error::BadKeyLength("enc_key", enc.len(), 32));
         }
         if mac.len() != 32 {
-            log::error!("Bad key length (mac_key): {} != 32", mac.len());
+            error_support::report_error!(
+                "sync15-key-bundle",
+                "Bad key length (mac_key): {} != 32",
+                mac.len()
+            );
             return Err(Error::BadKeyLength("mac_key", mac.len(), 32));
         }
         Ok(KeyBundle {
@@ -46,7 +54,11 @@ impl KeyBundle {
 
     pub fn from_ksync_bytes(ksync: &[u8]) -> Result<KeyBundle> {
         if ksync.len() != 64 {
-            log::error!("Bad key length (kSync): {} != 64", ksync.len());
+            error_support::report_error!(
+                "sync15-key-bundle",
+                "Bad key length (kSync): {} != 64",
+                ksync.len()
+            );
             return Err(Error::BadKeyLength("kSync", ksync.len(), 64));
         }
         Ok(KeyBundle {

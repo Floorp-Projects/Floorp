@@ -50,7 +50,7 @@ rev = "fb7a2b12ced3b43e6a268621989c6191d1ed7e39"
 [source."https://github.com/mozilla/application-services"]
 git = "https://github.com/mozilla/application-services"
 replace-with = "vendored-sources"
-rev = "b09ffe23ee60a066176e5d7f9f2c6cd95c528ceb"
+rev = "4d858e4266c6d06d86d361279e6e04dbe5583cb9"
 
 [source."https://github.com/mozilla-spidermonkey/jsparagus"]
 git = "https://github.com/mozilla-spidermonkey/jsparagus"

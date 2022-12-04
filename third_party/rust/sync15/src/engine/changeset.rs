@@ -2,11 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::{Payload, ServerTimestamp};
+use crate::bso::{IncomingBso, OutgoingBso};
+use crate::ServerTimestamp;
 
 #[derive(Debug, Clone)]
-pub struct RecordChangeset<P> {
-    pub changes: Vec<P>,
+pub struct RecordChangeset<T> {
+    pub changes: Vec<T>,
     /// For GETs, the last sync timestamp that should be persisted after
     /// applying the records.
     /// For POSTs, this is the XIUS timestamp.
@@ -14,18 +15,26 @@ pub struct RecordChangeset<P> {
     pub collection: std::borrow::Cow<'static, str>,
 }
 
-pub type IncomingChangeset = RecordChangeset<(Payload, ServerTimestamp)>;
-pub type OutgoingChangeset = RecordChangeset<Payload>;
+pub type IncomingChangeset = RecordChangeset<IncomingBso>;
+pub type OutgoingChangeset = RecordChangeset<OutgoingBso>;
 
-// TODO: use a trait to unify this with the non-json versions
 impl<T> RecordChangeset<T> {
     #[inline]
     pub fn new(
         collection: impl Into<std::borrow::Cow<'static, str>>,
         timestamp: ServerTimestamp,
     ) -> RecordChangeset<T> {
+        Self::new_with_changes(collection, timestamp, Vec::new())
+    }
+
+    #[inline]
+    pub fn new_with_changes(
+        collection: impl Into<std::borrow::Cow<'static, str>>,
+        timestamp: ServerTimestamp,
+        changes: Vec<T>,
+    ) -> RecordChangeset<T> {
         RecordChangeset {
-            changes: vec![],
+            changes,
             timestamp,
             collection: collection.into(),
         }

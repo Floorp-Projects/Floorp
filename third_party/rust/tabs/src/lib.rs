@@ -30,7 +30,7 @@ impl UniffiCustomTypeConverter for TabsGuid {
 
 pub use crate::storage::{ClientRemoteTabs, RemoteTabRecord, TabsDeviceType};
 pub use crate::store::TabsStore;
-use error::TabsError;
+pub use error::{ApiResult, Error, Result, TabsApiError};
 use sync15::DeviceType;
 
 pub use crate::sync::engine::get_registered_sync_engine;

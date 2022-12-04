@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use crate::GLOBAL_SETTINGS;
 use ffi::FfiBackend;
 use once_cell::sync::OnceCell;
 mod ffi;
@@ -50,6 +51,14 @@ pub fn validate_request(request: &crate::Request) -> Result<(), crate::Error> {
             Some(url::Host::Ipv6(addr)) => !addr.is_loopback(),
             None => true,
         }
+        && {
+            let settings = GLOBAL_SETTINGS.read();
+            settings
+                .addn_allowed_insecure_url
+                .as_ref()
+                .map(|url| url.host() != request.url.host() || url.scheme() != request.url.scheme())
+                .unwrap_or(true)
+        }
     {
         return Err(crate::Error::NonTlsUrl);
     }
@@ -58,7 +67,8 @@ pub fn validate_request(request: &crate::Request) -> Result<(), crate::Error> {
 
 #[cfg(test)]
 mod tests {
-    use super::validate_request;
+    use super::*;
+
     #[test]
     fn test_validate_request() {
         let _https_request = crate::Request::new(
@@ -106,5 +116,39 @@ mod tests {
             url::Url::parse("http://[0:0:0:0:0:0:0:1]").unwrap(),
         );
         assert!(validate_request(&localhost_request_ipv6).is_ok());
+    }
+
+    #[test]
+    fn test_validate_request_addn_allowed_insecure_url() {
+        let request_root = crate::Request::new(
+            crate::Method::Get,
+            url::Url::parse("http://anything").unwrap(),
+        );
+        let request = crate::Request::new(
+            crate::Method::Get,
+            url::Url::parse("http://anything/path").unwrap(),
+        );
+        // This should never be accepted.
+        let request_ftp = crate::Request::new(
+            crate::Method::Get,
+            url::Url::parse("ftp://anything/path").unwrap(),
+        );
+        assert!(validate_request(&request_root).is_err());
+        assert!(validate_request(&request).is_err());
+        {
+            let mut settings = GLOBAL_SETTINGS.write();
+            settings.addn_allowed_insecure_url =
+                Some(url::Url::parse("http://something-else").unwrap());
+        }
+        assert!(validate_request(&request_root).is_err());
+        assert!(validate_request(&request).is_err());
+
+        {
+            let mut settings = GLOBAL_SETTINGS.write();
+            settings.addn_allowed_insecure_url = Some(url::Url::parse("http://anything").unwrap());
+        }
+        assert!(validate_request(&request_root).is_ok());
+        assert!(validate_request(&request).is_ok());
+        assert!(validate_request(&request_ftp).is_err());
     }
 }

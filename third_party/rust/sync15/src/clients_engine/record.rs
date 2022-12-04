@@ -55,14 +55,6 @@ pub struct ClientRecord {
     /// (`fxa_device_id`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub device: Option<String>,
-
-    // This field is somewhat magic - it's moved to and from the
-    // BSO record, so is  not expected to be on the unencrypted payload
-    // when incoming and are not put on the unencrypted payload when outgoing.
-    // There are hysterical raisens for this, which we should fix.
-    // https://github.com/mozilla/application-services/issues/2712
-    #[serde(default)]
-    pub ttl: u32,
 }
 
 impl From<&ClientRecord> for crate::RemoteClient {
@@ -128,35 +120,5 @@ impl From<Command> for CommandRecord {
                 flow_id: None,
             },
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::Payload;
-
-    #[test]
-    fn test_ttl() {
-        // The ttl hacks in place mean that magically the ttl field from the
-        // client record should make it down to a BSO.
-        let record = ClientRecord {
-            id: "id".into(),
-            name: "my device".into(),
-            typ: Some(crate::DeviceType::VR),
-            commands: Vec::new(),
-            fxa_device_id: Some("12345".into()),
-            version: None,
-            protocols: vec!["1.5".into()],
-            form_factor: None,
-            os: None,
-            app_package: None,
-            application: None,
-            device: None,
-            ttl: 123,
-        };
-        let p = Payload::from_record(record).unwrap();
-        let bso = crate::CleartextBso::from_payload(p, "clients");
-        assert_eq!(bso.ttl, Some(123));
     }
 }

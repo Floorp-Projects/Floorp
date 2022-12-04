@@ -10,6 +10,7 @@ ffi_support::implement_into_ffi_by_protobuf!(msg_types::Request);
 
 impl From<crate::Request> for msg_types::Request {
     fn from(request: crate::Request) -> Self {
+        let settings = GLOBAL_SETTINGS.read();
         msg_types::Request {
             url: request.url.to_string(),
             body: request.body,
@@ -17,14 +18,10 @@ impl From<crate::Request> for msg_types::Request {
             // it certainly makes it convenient for us...
             method: request.method as i32,
             headers: request.headers.into(),
-            follow_redirects: GLOBAL_SETTINGS.follow_redirects,
-            use_caches: GLOBAL_SETTINGS.use_caches,
-            connect_timeout_secs: GLOBAL_SETTINGS
-                .connect_timeout
-                .map_or(0, |d| d.as_secs() as i32),
-            read_timeout_secs: GLOBAL_SETTINGS
-                .read_timeout
-                .map_or(0, |d| d.as_secs() as i32),
+            follow_redirects: settings.follow_redirects,
+            use_caches: settings.use_caches,
+            connect_timeout_secs: settings.connect_timeout.map_or(0, |d| d.as_secs() as i32),
+            read_timeout_secs: settings.read_timeout.map_or(0, |d| d.as_secs() as i32),
         }
     }
 }
@@ -191,6 +188,22 @@ pub extern "C" fn viaduct_log_error(s: FfiStr<'_>) {
 #[no_mangle]
 pub extern "C" fn viaduct_initialize(callback: FetchCallback) -> u8 {
     ffi_support::abort_on_panic::call_with_output(|| callback_holder::set_callback(callback))
+}
+
+/// Allows connections to the hard-coded address the Android Emulator uses for
+/// localhost. It would be easy to support allowing the address to be passed in,
+/// but we've made a decision to avoid that possible footgun. The expectation is
+/// that this will only be called in debug builds or if the app can determine it
+/// is in the emulator, but the Rust code doesn't know that, so we can't check.
+#[no_mangle]
+pub extern "C" fn viaduct_allow_android_emulator_loopback() {
+    let mut error = ffi_support::ExternError::default();
+    ffi_support::call_with_output(&mut error, || {
+        let url = url::Url::parse("http://10.0.2.2").unwrap();
+        let mut settings = GLOBAL_SETTINGS.write();
+        settings.addn_allowed_insecure_url = Some(url);
+    });
+    error.consume_and_log_if_error();
 }
 
 ffi_support::define_bytebuffer_destructor!(viaduct_destroy_bytebuffer);

@@ -2,7 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use once_cell::sync::Lazy;
+use parking_lot::RwLock;
 use std::time::Duration;
+use url::Url;
 
 /// Note: reqwest allows these only to be specified per-Client. concept-fetch
 /// allows these to be specified on each call to fetch. I think it's worth
@@ -20,6 +23,9 @@ pub struct Settings {
     pub connect_timeout: Option<Duration>,
     pub follow_redirects: bool,
     pub use_caches: bool,
+    // For testing purposes, we allow exactly one additional Url which is
+    // allowed to not be https.
+    pub addn_allowed_insecure_url: Option<Url>,
 }
 
 #[cfg(target_os = "ios")]
@@ -29,9 +35,12 @@ const TIMEOUT_DURATION: Duration = Duration::from_secs(7);
 const TIMEOUT_DURATION: Duration = Duration::from_secs(10);
 
 // The singleton instance of our settings.
-pub static GLOBAL_SETTINGS: &Settings = &Settings {
-    read_timeout: Some(TIMEOUT_DURATION),
-    connect_timeout: Some(TIMEOUT_DURATION),
-    follow_redirects: true,
-    use_caches: false,
-};
+pub static GLOBAL_SETTINGS: Lazy<RwLock<Settings>> = Lazy::new(|| {
+    RwLock::new(Settings {
+        read_timeout: Some(TIMEOUT_DURATION),
+        connect_timeout: Some(TIMEOUT_DURATION),
+        follow_redirects: true,
+        use_caches: false,
+        addn_allowed_insecure_url: None,
+    })
+});

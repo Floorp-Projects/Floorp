@@ -36,6 +36,7 @@ pub struct ClientRemoteTabs {
         skip_serializing_if = "devicetype_is_unknown"
     )]
     pub device_type: DeviceType,
+    pub last_modified: i64,
     pub remote_tabs: Vec<RemoteTab>,
 }
 
@@ -162,7 +163,11 @@ impl TabsStorage {
     pub fn get_remote_tabs(&mut self) -> Option<Vec<ClientRemoteTabs>> {
         match self.open_if_exists() {
             Err(e) => {
-                log::error!("Failed to read remote tabs: {}", e);
+                error_support::report_error!(
+                    "tabs-read-remote",
+                    "Failed to read remote tabs: {}",
+                    e
+                );
                 None
             }
             Ok(None) => None,
@@ -174,7 +179,11 @@ impl TabsStorage {
                 ) {
                     Ok(crts) => Some(crts),
                     Err(e) => {
-                        log::error!("Failed to read database: {}", e);
+                        error_support::report_error!(
+                            "tabs-read-remote",
+                            "Failed to read database: {}",
+                            e
+                        );
                         None
                     }
                 }

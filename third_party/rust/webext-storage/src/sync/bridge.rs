@@ -3,7 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use rusqlite::Transaction;
-use sync15::engine::{ApplyResults, IncomingEnvelope, OutgoingEnvelope};
+use sync15::bso::IncomingBso;
+use sync15::engine::ApplyResults;
 use sync_guid::Guid as SyncGuid;
 
 use crate::db::{delete_meta, get_meta, put_meta, StorageDb};
@@ -84,17 +85,14 @@ impl<'a> sync15::engine::BridgedEngine for BridgedEngine<'a> {
         Ok(())
     }
 
-    fn store_incoming(&self, incoming_envelopes: &[IncomingEnvelope]) -> Result<()> {
+    fn store_incoming(&self, incoming_bsos: Vec<IncomingBso>) -> Result<()> {
         let signal = self.db.begin_interrupt_scope()?;
-
-        let mut incoming_payloads = Vec::with_capacity(incoming_envelopes.len());
-        for envelope in incoming_envelopes {
-            signal.err_if_interrupted()?;
-            incoming_payloads.push(envelope.payload()?);
-        }
-
         let tx = self.db.unchecked_transaction()?;
-        stage_incoming(&tx, incoming_payloads, &signal)?;
+        let incoming_content: Vec<_> = incoming_bsos
+            .into_iter()
+            .map(IncomingBso::into_content::<super::WebextRecord>)
+            .collect();
+        stage_incoming(&tx, &incoming_content, &signal)?;
         tx.commit()?;
         Ok(())
     }
@@ -112,11 +110,7 @@ impl<'a> sync15::engine::BridgedEngine for BridgedEngine<'a> {
         stage_outgoing(&tx)?;
         tx.commit()?;
 
-        let outgoing = get_outgoing(self.db, &signal)?
-            .into_iter()
-            .map(OutgoingEnvelope::from)
-            .collect::<Vec<_>>();
-        Ok(outgoing.into())
+        Ok(get_outgoing(self.db, &signal)?.into())
     }
 
     fn set_uploaded(&self, _server_modified_millis: i64, ids: &[SyncGuid]) -> Result<()> {
