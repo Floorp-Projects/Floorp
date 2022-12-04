@@ -2311,6 +2311,13 @@
 - name: ObjectStaticProto
   gen_boilerplate: false
 
+# This is basically just a limited case of Constant, for objects which are
+# the prototype of another object and will be used for a GuardShape. It
+# includes a reference to the receiver object so we can eliminate redundant
+# shape guards.
+- name: ConstantProto
+  gen_boilerplate: false
+
 - name: BuiltinObject
   arguments:
     builtinObjectKind: BuiltinObjectKind

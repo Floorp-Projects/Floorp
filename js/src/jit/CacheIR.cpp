@@ -766,6 +766,7 @@ static void ShapeGuardProtoChain(CacheIRWriter& writer, NativeObject* obj,
                                  ObjOperandId objId) {
   uint32_t depth = 0;
   static const uint32_t MAX_CACHED_LOADS = 4;
+  ObjOperandId receiverObjId = objId;
 
   while (true) {
     JSObject* proto = obj->staticPrototype();
@@ -783,7 +784,7 @@ static void ShapeGuardProtoChain(CacheIRWriter& writer, NativeObject* obj,
     // in the cross-compartment case.
     if (depth < MAX_CACHED_LOADS &&
         MaybeCrossCompartment == IsCrossCompartment::No) {
-      objId = writer.loadObject(obj);
+      objId = writer.loadProtoObject(obj, receiverObjId);
     } else {
       objId = writer.loadProto(objId);
     }

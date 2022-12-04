@@ -429,6 +429,30 @@ HashNumber MQuaternaryInstruction::valueHash() const {
   return hash;
 }
 
+const MDefinition* MDefinition::skipObjectGuards() const {
+  const MDefinition* result = this;
+  // These instructions don't modify the object and just guard specific
+  // properties.
+  while (true) {
+    if (result->isGuardShape()) {
+      result = result->toGuardShape()->object();
+      continue;
+    }
+    if (result->isGuardNullProto()) {
+      result = result->toGuardNullProto()->object();
+      continue;
+    }
+    if (result->isGuardProto()) {
+      result = result->toGuardProto()->object();
+      continue;
+    }
+
+    break;
+  }
+
+  return result;
+}
+
 bool MDefinition::congruentIfOperandsEqual(const MDefinition* ins) const {
   if (op() != ins->op()) {
     return false;
@@ -1143,6 +1167,12 @@ HashNumber MConstant::valueHash() const {
 
   assertInitializedPayload();
   return ConstantValueHash(type(), payload_.asBits);
+}
+
+// We will in theory get some extra collisions here, but dealing with those
+// should be cheaper than doing the skipObjectGuards for the receiver object.
+HashNumber MConstantProto::valueHash() const {
+  return protoObject()->valueHash();
 }
 
 bool MConstant::congruentTo(const MDefinition* ins) const {
@@ -6269,6 +6299,47 @@ MDefinition::AliasType MGuardShape::mightAlias(const MDefinition* store) const {
   // These instructions only modify object elements, but not the shape.
   if (store->isStoreElementHole() || store->isArrayPush()) {
     return AliasType::NoAlias;
+  }
+  if (object()->isConstantProto()) {
+    const MDefinition* receiverObject =
+        object()->toConstantProto()->receiverObject()->skipObjectGuards();
+    switch (store->op()) {
+      case MDefinition::Opcode::StoreFixedSlot:
+        if (store->toStoreFixedSlot()->object()->skipObjectGuards() ==
+            receiverObject) {
+          return AliasType::NoAlias;
+        }
+        break;
+      case MDefinition::Opcode::StoreDynamicSlot:
+        if (store->toStoreDynamicSlot()
+                ->slots()
+                ->toSlots()
+                ->object()
+                ->skipObjectGuards() == receiverObject) {
+          return AliasType::NoAlias;
+        }
+        break;
+      case MDefinition::Opcode::AddAndStoreSlot:
+        if (store->toAddAndStoreSlot()->object()->skipObjectGuards() ==
+            receiverObject) {
+          return AliasType::NoAlias;
+        }
+        break;
+      case MDefinition::Opcode::AllocateAndStoreSlot:
+        if (store->toAllocateAndStoreSlot()->object()->skipObjectGuards() ==
+            receiverObject) {
+          return AliasType::NoAlias;
+        }
+        break;
+      case MDefinition::Opcode::MegamorphicStoreSlot:
+        if (store->toMegamorphicStoreSlot()->object()->skipObjectGuards() ==
+            receiverObject) {
+          return AliasType::NoAlias;
+        }
+        break;
+      default:
+        break;
+    }
   }
   return MInstruction::mightAlias(store);
 }
