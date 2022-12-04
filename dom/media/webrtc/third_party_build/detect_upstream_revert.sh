@@ -60,7 +60,7 @@ fi
 
 if [ "x$AUTO_FIX_REVERT_AS_NOOP" = "x1" ]; then
   echo "AUTO_FIX_REVERT_AS_NOOP detected, fixing land/revert pair automatically"
-  bash dom/media/webrtc/third_party_build/make_upstream_revert_noop.sh
+  bash $SCRIPT_DIR/make_upstream_revert_noop.sh
   exit
 fi
 
@@ -70,7 +70,7 @@ The next upstream commit has a corresponding future \"Revert\" commit.
 There are 2 common ways forward in this situation:
 1. If you're relatively certain there will not be rebase conflicts in the
    github repo ($MOZ_LIBWEBRTC_SRC), simply run:
-       SKIP_NEXT_REVERT_CHK=1 bash dom/media/webrtc/third_party_build/loop-ff.sh
+       SKIP_NEXT_REVERT_CHK=1 bash $SCRIPT_DIR/loop-ff.sh
 
 2. The surer method for no rebase conflicts is to cherry-pick both the
    next commit, and the commit that reverts the next commit onto the
@@ -84,8 +84,8 @@ There are 2 common ways forward in this situation:
        MOZ_LIBWEBRTC_BASE=$MOZ_LIBWEBRTC_BASE \\
        MOZ_LIBWEBRTC_NEXT_BASE=$MOZ_LIBWEBRTC_NEXT_BASE \\
        MOZ_LIBWEBRTC_REVERT_SHA=$MOZ_LIBWEBRTC_REVERT_SHA \\
-       bash dom/media/webrtc/third_party_build/make_upstream_revert_noop.sh
+       bash $SCRIPT_DIR/make_upstream_revert_noop.sh
 
-       SKIP_NEXT_REVERT_CHK=1 bash dom/media/webrtc/third_party_build/loop-ff.sh
+       SKIP_NEXT_REVERT_CHK=1 bash $SCRIPT_DIR/loop-ff.sh
 "
 exit 1
