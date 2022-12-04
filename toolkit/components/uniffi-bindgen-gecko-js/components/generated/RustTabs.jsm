@@ -325,10 +325,10 @@ class TabsBridgedEngine {
     }
     lastSync() {
     const liftResult = (result) => FfiConverterI64.lift(result);
-    const liftError = (data) => FfiConverterTypeTabsError.lift(data);
+    const liftError = (data) => FfiConverterTypeTabsApiError.lift(data);
     const functionCall = () => {
         return UniFFIScaffolding.callAsync(
-            7, // tabs:tabs_4d51_TabsBridgedEngine_last_sync
+            7, // tabs:tabs_edc9_TabsBridgedEngine_last_sync
             FfiConverterTypeTabsBridgedEngine.lower(this),
         )
     }
@@ -339,11 +339,11 @@ class TabsBridgedEngine {
     }}
     setLastSync(lastSync) {
     const liftResult = (result) => undefined;
-    const liftError = (data) => FfiConverterTypeTabsError.lift(data);
+    const liftError = (data) => FfiConverterTypeTabsApiError.lift(data);
     const functionCall = () => {
         FfiConverterI64.checkType("lastSync", lastSync);
         return UniFFIScaffolding.callAsync(
-            8, // tabs:tabs_4d51_TabsBridgedEngine_set_last_sync
+            8, // tabs:tabs_edc9_TabsBridgedEngine_set_last_sync
             FfiConverterTypeTabsBridgedEngine.lower(this),
             FfiConverterI64.lower(lastSync),
         )
@@ -355,10 +355,10 @@ class TabsBridgedEngine {
     }}
     syncId() {
     const liftResult = (result) => FfiConverterOptionalstring.lift(result);
-    const liftError = (data) => FfiConverterTypeTabsError.lift(data);
+    const liftError = (data) => FfiConverterTypeTabsApiError.lift(data);
     const functionCall = () => {
         return UniFFIScaffolding.callAsync(
-            9, // tabs:tabs_4d51_TabsBridgedEngine_sync_id
+            9, // tabs:tabs_edc9_TabsBridgedEngine_sync_id
             FfiConverterTypeTabsBridgedEngine.lower(this),
         )
     }
@@ -369,10 +369,10 @@ class TabsBridgedEngine {
     }}
     resetSyncId() {
     const liftResult = (result) => FfiConverterString.lift(result);
-    const liftError = (data) => FfiConverterTypeTabsError.lift(data);
+    const liftError = (data) => FfiConverterTypeTabsApiError.lift(data);
     const functionCall = () => {
         return UniFFIScaffolding.callAsync(
-            10, // tabs:tabs_4d51_TabsBridgedEngine_reset_sync_id
+            10, // tabs:tabs_edc9_TabsBridgedEngine_reset_sync_id
             FfiConverterTypeTabsBridgedEngine.lower(this),
         )
     }
@@ -383,11 +383,11 @@ class TabsBridgedEngine {
     }}
     ensureCurrentSyncId(newSyncId) {
     const liftResult = (result) => FfiConverterString.lift(result);
-    const liftError = (data) => FfiConverterTypeTabsError.lift(data);
+    const liftError = (data) => FfiConverterTypeTabsApiError.lift(data);
     const functionCall = () => {
         FfiConverterString.checkType("newSyncId", newSyncId);
         return UniFFIScaffolding.callAsync(
-            11, // tabs:tabs_4d51_TabsBridgedEngine_ensure_current_sync_id
+            11, // tabs:tabs_edc9_TabsBridgedEngine_ensure_current_sync_id
             FfiConverterTypeTabsBridgedEngine.lower(this),
             FfiConverterString.lower(newSyncId),
         )
@@ -399,11 +399,11 @@ class TabsBridgedEngine {
     }}
     prepareForSync(clientData) {
     const liftResult = (result) => undefined;
-    const liftError = (data) => FfiConverterTypeTabsError.lift(data);
+    const liftError = (data) => FfiConverterTypeTabsApiError.lift(data);
     const functionCall = () => {
         FfiConverterString.checkType("clientData", clientData);
         return UniFFIScaffolding.callAsync(
-            12, // tabs:tabs_4d51_TabsBridgedEngine_prepare_for_sync
+            12, // tabs:tabs_edc9_TabsBridgedEngine_prepare_for_sync
             FfiConverterTypeTabsBridgedEngine.lower(this),
             FfiConverterString.lower(clientData),
         )
@@ -415,10 +415,10 @@ class TabsBridgedEngine {
     }}
     syncStarted() {
     const liftResult = (result) => undefined;
-    const liftError = (data) => FfiConverterTypeTabsError.lift(data);
+    const liftError = (data) => FfiConverterTypeTabsApiError.lift(data);
     const functionCall = () => {
         return UniFFIScaffolding.callAsync(
-            13, // tabs:tabs_4d51_TabsBridgedEngine_sync_started
+            13, // tabs:tabs_edc9_TabsBridgedEngine_sync_started
             FfiConverterTypeTabsBridgedEngine.lower(this),
         )
     }
@@ -429,11 +429,11 @@ class TabsBridgedEngine {
     }}
     storeIncoming(incomingEnvelopesAsJson) {
     const liftResult = (result) => undefined;
-    const liftError = (data) => FfiConverterTypeTabsError.lift(data);
+    const liftError = (data) => FfiConverterTypeTabsApiError.lift(data);
     const functionCall = () => {
         FfiConverterSequencestring.checkType("incomingEnvelopesAsJson", incomingEnvelopesAsJson);
         return UniFFIScaffolding.callAsync(
-            14, // tabs:tabs_4d51_TabsBridgedEngine_store_incoming
+            14, // tabs:tabs_edc9_TabsBridgedEngine_store_incoming
             FfiConverterTypeTabsBridgedEngine.lower(this),
             FfiConverterSequencestring.lower(incomingEnvelopesAsJson),
         )
@@ -445,10 +445,10 @@ class TabsBridgedEngine {
     }}
     apply() {
     const liftResult = (result) => FfiConverterSequencestring.lift(result);
-    const liftError = (data) => FfiConverterTypeTabsError.lift(data);
+    const liftError = (data) => FfiConverterTypeTabsApiError.lift(data);
     const functionCall = () => {
         return UniFFIScaffolding.callAsync(
-            15, // tabs:tabs_4d51_TabsBridgedEngine_apply
+            15, // tabs:tabs_edc9_TabsBridgedEngine_apply
             FfiConverterTypeTabsBridgedEngine.lower(this),
         )
     }
@@ -459,12 +459,12 @@ class TabsBridgedEngine {
     }}
     setUploaded(newTimestamp,uploadedIds) {
     const liftResult = (result) => undefined;
-    const liftError = (data) => FfiConverterTypeTabsError.lift(data);
+    const liftError = (data) => FfiConverterTypeTabsApiError.lift(data);
     const functionCall = () => {
         FfiConverterI64.checkType("newTimestamp", newTimestamp);
         FfiConverterSequenceTypeTabsGuid.checkType("uploadedIds", uploadedIds);
         return UniFFIScaffolding.callAsync(
-            16, // tabs:tabs_4d51_TabsBridgedEngine_set_uploaded
+            16, // tabs:tabs_edc9_TabsBridgedEngine_set_uploaded
             FfiConverterTypeTabsBridgedEngine.lower(this),
             FfiConverterI64.lower(newTimestamp),
             FfiConverterSequenceTypeTabsGuid.lower(uploadedIds),
@@ -477,10 +477,10 @@ class TabsBridgedEngine {
     }}
     syncFinished() {
     const liftResult = (result) => undefined;
-    const liftError = (data) => FfiConverterTypeTabsError.lift(data);
+    const liftError = (data) => FfiConverterTypeTabsApiError.lift(data);
     const functionCall = () => {
         return UniFFIScaffolding.callAsync(
-            17, // tabs:tabs_4d51_TabsBridgedEngine_sync_finished
+            17, // tabs:tabs_edc9_TabsBridgedEngine_sync_finished
             FfiConverterTypeTabsBridgedEngine.lower(this),
         )
     }
@@ -491,10 +491,10 @@ class TabsBridgedEngine {
     }}
     reset() {
     const liftResult = (result) => undefined;
-    const liftError = (data) => FfiConverterTypeTabsError.lift(data);
+    const liftError = (data) => FfiConverterTypeTabsApiError.lift(data);
     const functionCall = () => {
         return UniFFIScaffolding.callAsync(
-            18, // tabs:tabs_4d51_TabsBridgedEngine_reset
+            18, // tabs:tabs_edc9_TabsBridgedEngine_reset
             FfiConverterTypeTabsBridgedEngine.lower(this),
         )
     }
@@ -505,10 +505,10 @@ class TabsBridgedEngine {
     }}
     wipe() {
     const liftResult = (result) => undefined;
-    const liftError = (data) => FfiConverterTypeTabsError.lift(data);
+    const liftError = (data) => FfiConverterTypeTabsApiError.lift(data);
     const functionCall = () => {
         return UniFFIScaffolding.callAsync(
-            19, // tabs:tabs_4d51_TabsBridgedEngine_wipe
+            19, // tabs:tabs_edc9_TabsBridgedEngine_wipe
             FfiConverterTypeTabsBridgedEngine.lower(this),
         )
     }
@@ -574,7 +574,7 @@ class TabsStore {
     const functionCall = () => {
         FfiConverterString.checkType("path", path);
         return UniFFIScaffolding.callAsync(
-            0, // tabs:tabs_4d51_TabsStore_new
+            0, // tabs:tabs_edc9_TabsStore_new
             FfiConverterString.lower(path),
         )
     }
@@ -588,7 +588,7 @@ class TabsStore {
     const liftError = null;
     const functionCall = () => {
         return UniFFIScaffolding.callAsync(
-            1, // tabs:tabs_4d51_TabsStore_get_all
+            1, // tabs:tabs_edc9_TabsStore_get_all
             FfiConverterTypeTabsStore.lower(this),
         )
     }
@@ -603,7 +603,7 @@ class TabsStore {
     const functionCall = () => {
         FfiConverterSequenceTypeRemoteTabRecord.checkType("remoteTabs", remoteTabs);
         return UniFFIScaffolding.callAsync(
-            2, // tabs:tabs_4d51_TabsStore_set_local_tabs
+            2, // tabs:tabs_edc9_TabsStore_set_local_tabs
             FfiConverterTypeTabsStore.lower(this),
             FfiConverterSequenceTypeRemoteTabRecord.lower(remoteTabs),
         )
@@ -618,7 +618,7 @@ class TabsStore {
     const liftError = null;
     const functionCall = () => {
         return UniFFIScaffolding.callAsync(
-            3, // tabs:tabs_4d51_TabsStore_register_with_sync_manager
+            3, // tabs:tabs_edc9_TabsStore_register_with_sync_manager
             FfiConverterTypeTabsStore.lower(this),
         )
     }
@@ -629,10 +629,10 @@ class TabsStore {
     }}
     reset() {
     const liftResult = (result) => undefined;
-    const liftError = (data) => FfiConverterTypeTabsError.lift(data);
+    const liftError = (data) => FfiConverterTypeTabsApiError.lift(data);
     const functionCall = () => {
         return UniFFIScaffolding.callAsync(
-            4, // tabs:tabs_4d51_TabsStore_reset
+            4, // tabs:tabs_edc9_TabsStore_reset
             FfiConverterTypeTabsStore.lower(this),
         )
     }
@@ -643,7 +643,7 @@ class TabsStore {
     }}
     sync(keyId,accessToken,syncKey,tokenserverUrl,localId) {
     const liftResult = (result) => FfiConverterString.lift(result);
-    const liftError = (data) => FfiConverterTypeTabsError.lift(data);
+    const liftError = (data) => FfiConverterTypeTabsApiError.lift(data);
     const functionCall = () => {
         FfiConverterString.checkType("keyId", keyId);
         FfiConverterString.checkType("accessToken", accessToken);
@@ -651,7 +651,7 @@ class TabsStore {
         FfiConverterString.checkType("tokenserverUrl", tokenserverUrl);
         FfiConverterString.checkType("localId", localId);
         return UniFFIScaffolding.callAsync(
-            5, // tabs:tabs_4d51_TabsStore_sync
+            5, // tabs:tabs_edc9_TabsStore_sync
             FfiConverterTypeTabsStore.lower(this),
             FfiConverterString.lower(keyId),
             FfiConverterString.lower(accessToken),
@@ -670,7 +670,7 @@ class TabsStore {
     const liftError = null;
     const functionCall = () => {
         return UniFFIScaffolding.callAsync(
-            6, // tabs:tabs_4d51_TabsStore_bridged_engine
+            6, // tabs:tabs_edc9_TabsStore_bridged_engine
             FfiConverterTypeTabsStore.lower(this),
         )
     }
@@ -712,14 +712,16 @@ EXPORTED_SYMBOLS.push("TabsStore");
 EXPORTED_SYMBOLS.push("FfiConverterTypeTabsStore");
 
 class ClientRemoteTabs {
-    constructor(clientId,clientName,deviceType,remoteTabs) {
+    constructor(clientId,clientName,deviceType,lastModified,remoteTabs) {
         FfiConverterString.checkType("clientId", clientId);
         FfiConverterString.checkType("clientName", clientName);
         FfiConverterTypeTabsDeviceType.checkType("deviceType", deviceType);
+        FfiConverterI64.checkType("lastModified", lastModified);
         FfiConverterSequenceTypeRemoteTabRecord.checkType("remoteTabs", remoteTabs);
         this.clientId = clientId;
         this.clientName = clientName;
         this.deviceType = deviceType;
+        this.lastModified = lastModified;
         this.remoteTabs = remoteTabs;
     }
     equals(other) {
@@ -727,6 +729,7 @@ class ClientRemoteTabs {
             this.clientId == other.clientId &&
             this.clientName == other.clientName &&
             this.deviceType == other.deviceType &&
+            this.lastModified == other.lastModified &&
             this.remoteTabs == other.remoteTabs
         )
     }
@@ -747,6 +750,7 @@ class FfiConverterTypeClientRemoteTabs extends FfiConverter {
             FfiConverterString.read(dataStream), 
             FfiConverterString.read(dataStream), 
             FfiConverterTypeTabsDeviceType.read(dataStream), 
+            FfiConverterI64.read(dataStream), 
             FfiConverterSequenceTypeRemoteTabRecord.read(dataStream)
         );
     }
@@ -754,6 +758,7 @@ class FfiConverterTypeClientRemoteTabs extends FfiConverter {
         FfiConverterString.write(dataStream, value.clientId);
         FfiConverterString.write(dataStream, value.clientName);
         FfiConverterTypeTabsDeviceType.write(dataStream, value.deviceType);
+        FfiConverterI64.write(dataStream, value.lastModified);
         FfiConverterSequenceTypeRemoteTabRecord.write(dataStream, value.remoteTabs);
     }
 
@@ -762,6 +767,7 @@ class FfiConverterTypeClientRemoteTabs extends FfiConverter {
         totalSize += FfiConverterString.computeSize(value.clientId);
         totalSize += FfiConverterString.computeSize(value.clientName);
         totalSize += FfiConverterTypeTabsDeviceType.computeSize(value.deviceType);
+        totalSize += FfiConverterI64.computeSize(value.lastModified);
         totalSize += FfiConverterSequenceTypeRemoteTabRecord.computeSize(value.remoteTabs);
         return totalSize
     }
@@ -903,92 +909,67 @@ EXPORTED_SYMBOLS.push("FfiConverterTypeTabsDeviceType");
 
 
 
-class TabsError extends Error {}
-EXPORTED_SYMBOLS.push("TabsError");
+class TabsApiError extends Error {}
+EXPORTED_SYMBOLS.push("TabsApiError");
 
 
-class SyncAdapterError extends TabsError {
+class SyncError extends TabsApiError {
     
-    constructor(message, ...params) {
-        super(...params);
-        this.message = message;
-    }
+    constructor(
+        reason,
+        ...params
+        ) {
+            super(...params);
+            this.reason = reason;
+        }
 }
-EXPORTED_SYMBOLS.push("SyncAdapterError");
-class SyncResetError extends TabsError {
+EXPORTED_SYMBOLS.push("SyncError");
+class SqlError extends TabsApiError {
     
-    constructor(message, ...params) {
-        super(...params);
-        this.message = message;
-    }
-}
-EXPORTED_SYMBOLS.push("SyncResetError");
-class JsonError extends TabsError {
-    
-    constructor(message, ...params) {
-        super(...params);
-        this.message = message;
-    }
-}
-EXPORTED_SYMBOLS.push("JsonError");
-class MissingLocalIdError extends TabsError {
-    
-    constructor(message, ...params) {
-        super(...params);
-        this.message = message;
-    }
-}
-EXPORTED_SYMBOLS.push("MissingLocalIdError");
-class UrlParseError extends TabsError {
-    
-    constructor(message, ...params) {
-        super(...params);
-        this.message = message;
-    }
-}
-EXPORTED_SYMBOLS.push("UrlParseError");
-class SqlError extends TabsError {
-    
-    constructor(message, ...params) {
-        super(...params);
-        this.message = message;
-    }
+    constructor(
+        reason,
+        ...params
+        ) {
+            super(...params);
+            this.reason = reason;
+        }
 }
 EXPORTED_SYMBOLS.push("SqlError");
-class OpenDatabaseError extends TabsError {
+class UnexpectedTabsError extends TabsApiError {
     
-    constructor(message, ...params) {
-        super(...params);
-        this.message = message;
-    }
+    constructor(
+        reason,
+        ...params
+        ) {
+            super(...params);
+            this.reason = reason;
+        }
 }
-EXPORTED_SYMBOLS.push("OpenDatabaseError");
+EXPORTED_SYMBOLS.push("UnexpectedTabsError");
 
-class FfiConverterTypeTabsError extends FfiConverterArrayBuffer {
+class FfiConverterTypeTabsApiError extends FfiConverterArrayBuffer {
     static read(dataStream) {
         switch (dataStream.readInt32()) {
             case 1:
-                return new SyncAdapterError(FfiConverterString.read(dataStream));
+                return new SyncError(
+                    FfiConverterString.read(dataStream)
+                    );
             case 2:
-                return new SyncResetError(FfiConverterString.read(dataStream));
+                return new SqlError(
+                    FfiConverterString.read(dataStream)
+                    );
             case 3:
-                return new JsonError(FfiConverterString.read(dataStream));
-            case 4:
-                return new MissingLocalIdError(FfiConverterString.read(dataStream));
-            case 5:
-                return new UrlParseError(FfiConverterString.read(dataStream));
-            case 6:
-                return new SqlError(FfiConverterString.read(dataStream));
-            case 7:
-                return new OpenDatabaseError(FfiConverterString.read(dataStream));
+                return new UnexpectedTabsError(
+                    FfiConverterString.read(dataStream)
+                    );
             default:
-                return new Error("Unknown TabsError variant");
+                return new Error("Unknown TabsApiError variant");
         }
     }
 }
 
 // Export the FFIConverter object to make external types work.
-EXPORTED_SYMBOLS.push("FfiConverterTypeTabsError");
+EXPORTED_SYMBOLS.push("FfiConverterTypeTabsApiError");
 
 class FfiConverterOptionalstring extends FfiConverterArrayBuffer {
     static checkType(name, value) {
