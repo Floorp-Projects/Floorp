@@ -1791,7 +1791,7 @@ const NativePanHandlerForLinux = {
   updatePhase: SpecialPowers.DOMWindowUtils.PHASE_UPDATE,
   endPhase: SpecialPowers.DOMWindowUtils.PHASE_END,
   promiseNativePanEvent: promiseNativeTouchpadPanEventAndWaitForObserver,
-  deltaOnRTL: -50,
+  delta: -50,
 };
 
 const NativePanHandlerForWindows = {
@@ -1799,7 +1799,7 @@ const NativePanHandlerForWindows = {
   updatePhase: SpecialPowers.DOMWindowUtils.PHASE_UPDATE,
   endPhase: SpecialPowers.DOMWindowUtils.PHASE_END,
   promiseNativePanEvent: promiseNativeTouchpadPanEventAndWaitForObserver,
-  deltaOnRTL: 50,
+  delta: 50,
 };
 
 const NativePanHandlerForMac = {
@@ -1808,7 +1808,7 @@ const NativePanHandlerForMac = {
   updatePhase: 2, // kCGScrollPhaseChanged
   endPhase: 4, // kCGScrollPhaseEnded
   promiseNativePanEvent: promiseNativePanGestureEventAndWaitForObserver,
-  deltaOnRTL: -50,
+  delta: -50,
 };
 
 function getPanHandler() {
@@ -1841,7 +1841,7 @@ async function panRightToLeft(aElement, aX, aY, aMultiplier) {
     aElement,
     aX,
     aY,
-    NativePanHandler.deltaOnRTL * aMultiplier,
+    NativePanHandler.delta * aMultiplier,
     0,
     NativePanHandler.beginPhase
   );
@@ -1849,7 +1849,7 @@ async function panRightToLeft(aElement, aX, aY, aMultiplier) {
     aElement,
     aX,
     aY,
-    NativePanHandler.deltaOnRTL,
+    NativePanHandler.delta * aMultiplier,
     0,
     NativePanHandler.updatePhase
   );
@@ -1857,7 +1857,7 @@ async function panRightToLeft(aElement, aX, aY, aMultiplier) {
     aElement,
     aX,
     aY,
-    NativePanHandler.deltaOnRTL * aMultiplier,
+    NativePanHandler.delta * aMultiplier,
     0,
     NativePanHandler.updatePhase
   );
@@ -1882,7 +1882,7 @@ async function panLeftToRightBegin(aElement, aX, aY, aMultiplier) {
     aElement,
     aX,
     aY,
-    -NativePanHandler.deltaOnRTL * aMultiplier,
+    -NativePanHandler.delta * aMultiplier,
     0,
     NativePanHandler.beginPhase
   );
@@ -1893,7 +1893,7 @@ async function panLeftToRightUpdate(aElement, aX, aY, aMultiplier) {
     aElement,
     aX,
     aY,
-    -NativePanHandler.deltaOnRTL * aMultiplier,
+    -NativePanHandler.delta * aMultiplier,
     0,
     NativePanHandler.updatePhase
   );
@@ -1901,7 +1901,7 @@ async function panLeftToRightUpdate(aElement, aX, aY, aMultiplier) {
     aElement,
     aX,
     aY,
-    -NativePanHandler.deltaOnRTL * aMultiplier,
+    -NativePanHandler.delta * aMultiplier,
     0,
     NativePanHandler.updatePhase
   );
