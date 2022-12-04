@@ -1857,14 +1857,6 @@ async function panRightToLeft(aElement, aX, aY, aMultiplier) {
     aElement,
     aX,
     aY,
-    NativePanHandler.delta * aMultiplier,
-    0,
-    NativePanHandler.updatePhase
-  );
-  await NativePanHandler.promiseNativePanEvent(
-    aElement,
-    aX,
-    aY,
     0,
     0,
     NativePanHandler.endPhase
