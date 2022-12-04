@@ -310,15 +310,27 @@ function xdbLibrary()
     return api;
 }
 
-function cLibrary()
-{
-    var libPossibilities = ['libc.so.6', 'libc.so', 'libc.dylib'];
-    var lib;
-    for (const name of libPossibilities) {
+function openLibrary(names) {
+    for (const name of names) {
         try {
-            lib = ctypes.open("libc.so.6");
+            return ctypes.open(name);
         } catch(e) {
         }
+    }
+    return undefined;
+}
+
+function cLibrary()
+{
+    const lib = openLibrary(['libc.so.6', 'libc.so', 'libc.dylib']);
+    if (!lib) {
+        throw new Error("Unable to open libc");
+    }
+
+    if (getBuildConfiguration()["moz-memory"]) {
+        throw new Error("cannot use libc functions with --enable-jemalloc, since they will be routed " +
+                        "through jemalloc, but calling libc.free() directly will bypass it and the " +
+                        "malloc/free will be mismatched");
     }
 
     return {
@@ -336,7 +348,7 @@ function* readFileLines_gen(filename)
     var bufsize = ctypes.size_t(0);
     var fp = libc.fopen(filename, "r");
     if (fp.isNull())
-        throw "Unable to open '" + filename + "'"
+        throw new Error("Unable to open '" + filename + "'");
 
     while (libc.getline(linebuf.address(), bufsize.address(), fp) > 0)
         yield linebuf.readString();
