@@ -45,7 +45,7 @@ class SVGFEImageFrame final : public nsIFrame {
   virtual void DestroyFrom(nsIFrame* aDestructRoot,
                            PostDestroyData& aPostDestroyData) override;
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const override {
+  bool IsFrameOfType(uint32_t aFlags) const override {
     if (aFlags & eSupportsContainLayoutAndPaint) {
       return false;
     }
@@ -54,7 +54,7 @@ class SVGFEImageFrame final : public nsIFrame {
   }
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override {
+  nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(u"SVGFEImage"_ns, aResult);
   }
 #endif
@@ -66,7 +66,7 @@ class SVGFEImageFrame final : public nsIFrame {
       Visibility aNewVisibility,
       const Maybe<OnNonvisible>& aNonvisibleAction = Nothing()) override;
 
-  virtual bool ComputeCustomOverflow(OverflowAreas& aOverflowAreas) override {
+  bool ComputeCustomOverflow(OverflowAreas& aOverflowAreas) override {
     // We don't maintain a ink overflow rect
     return false;
   }

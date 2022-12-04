@@ -62,7 +62,7 @@ class PreEffectsInkOverflowCollector : public nsLayoutUtils::BoxCallback {
                  "We want the first continuation here");
   }
 
-  virtual void AddBox(nsIFrame* aFrame) override {
+  void AddBox(nsIFrame* aFrame) override {
     nsRect overflow = (aFrame == mCurrentFrame)
                           ? mCurrentFrameOverflowArea
                           : PreEffectsInkOverflowRect(aFrame, mInReflow);

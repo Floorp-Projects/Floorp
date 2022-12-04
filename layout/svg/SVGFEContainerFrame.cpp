@@ -38,7 +38,7 @@ class SVGFEContainerFrame final : public nsContainerFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(SVGFEContainerFrame)
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const override {
+  bool IsFrameOfType(uint32_t aFlags) const override {
     if (aFlags & eSupportsContainLayoutAndPaint) {
       return false;
     }
@@ -48,7 +48,7 @@ class SVGFEContainerFrame final : public nsContainerFrame {
   }
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override {
+  nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(u"SVGFEContainer"_ns, aResult);
   }
 #endif
@@ -61,7 +61,7 @@ class SVGFEContainerFrame final : public nsContainerFrame {
   virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
                                     int32_t aModType) override;
 
-  virtual bool ComputeCustomOverflow(OverflowAreas& aOverflowAreas) override {
+  bool ComputeCustomOverflow(OverflowAreas& aOverflowAreas) override {
     // We don't maintain a ink overflow rect
     return false;
   }
