@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<script src="apz_test_utils.js"></script>
+<script src="apz_test_native_event_utils.js"></script>
+<style>
+html { overflow-y: scroll; }
+body { margin: 0; }
+div { height: 1000vh; }
+</style>
+<div id='target'></div>
+<script>
+window.addEventListener('wheel', (e) => {
+ const timeAtStart = window.performance.now();
+ while (window.performance.now() - timeAtStart < 200) {
+  // Make a 200ms busy state.
+ }
+}, { passive: false});
+// Silence SimpleTest warning about missing assertions by having it wait
+// indefinitely. We don't need to give it an explicit finish because the
+// entire window this test runs in will be closed after subtestDone is called.
+SimpleTest.waitForExplicitFinish();
+</script>
+</script>
+</html>
