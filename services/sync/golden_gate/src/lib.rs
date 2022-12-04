@@ -113,6 +113,7 @@ pub use error::{Error, Result};
 // Re-export items from `interrupt-support` and `sync15`, so that
 // consumers of `golden_gate` don't have to depend on them.
 pub use interrupt_support::{Interrupted, Interruptee};
-pub use sync15::engine::{ApplyResults, BridgedEngine, IncomingEnvelope, OutgoingEnvelope};
+pub use sync15::bso::{IncomingBso, OutgoingBso};
+pub use sync15::engine::{ApplyResults, BridgedEngine};
 pub use sync15::Guid;
 pub use task::{ApplyTask, FerryTask};

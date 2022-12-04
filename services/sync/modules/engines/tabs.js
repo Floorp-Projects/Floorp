@@ -310,12 +310,9 @@ TabEngine.prototype = {
       let outgoing = await this._bridge.apply();
       // We know we always have exactly 1 record.
       let mine = outgoing[0];
-      this._log.trace("outgoing envelope", mine);
+      this._log.trace("outgoing bso", mine);
       // `this._recordObj` is a `BridgedRecord`, which isn't exported.
-      let record = this._recordObj.fromOutgoingEnvelope(
-        this.name,
-        JSON.parse(mine)
-      );
+      let record = this._recordObj.fromOutgoingBso(this.name, JSON.parse(mine));
       let changeset = {};
       changeset[record.id] = { synced: false, record };
       this._modified.replace(changeset);
@@ -325,6 +322,7 @@ TabEngine.prototype = {
       telemetryRecord.onEngineApplied(name, 1);
       telemetryRecord.onEngineStop(name, null);
     } catch (ex) {
+      this._log.warn("quicksync sync failed", ex);
       telemetryRecord.onEngineStop(name, ex);
     } finally {
       // The top-level sync is never considered to fail here, just the engine

@@ -60,7 +60,7 @@ class BridgedStore {
       this._batchChunkSize
     )) {
       let incomingEnvelopesAsJSON = chunk.map(record =>
-        JSON.stringify(record.toIncomingEnvelope())
+        JSON.stringify(record.toIncomingBso())
       );
       this._log.trace("incoming envelopes", incomingEnvelopesAsJSON);
       await this.engine._bridge.storeIncoming(incomingEnvelopesAsJSON);
@@ -84,23 +84,24 @@ class BridgedStore {
  */
 class BridgedRecord extends RawCryptoWrapper {
   /**
-   * Creates an outgoing record from an envelope returned by a bridged engine.
-   * This must be kept in sync with `sync15_traits::OutgoingEnvelope`.
+   * Creates an outgoing record from a BSO returned by a bridged engine.
    *
    * @param  {String} collection The collection name.
-   * @param  {Object} envelope   The outgoing envelope, returned from
-   *                             `mozIBridgedSyncEngine::apply`.
+   * @param  {Object} bso   The outgoing bso (ie, a sync15::bso::OutgoingBso) returned from
+   *                        `mozIBridgedSyncEngine::apply`.
    * @return {BridgedRecord}     A Sync record ready to encrypt and upload.
    */
-  static fromOutgoingEnvelope(collection, envelope) {
-    if (typeof envelope.id != "string") {
-      throw new TypeError("Outgoing envelope missing ID");
+  static fromOutgoingBso(collection, bso) {
+    // The BSO has already been JSON serialized coming out of Rust, so the
+    // envelope has been flattened.
+    if (typeof bso.id != "string") {
+      throw new TypeError("Outgoing BSO missing ID");
     }
-    if (typeof envelope.payload != "string") {
-      throw new TypeError("Outgoing envelope missing payload");
+    if (typeof bso.payload != "string") {
+      throw new TypeError("Outgoing BSO missing payload");
     }
-    let record = new BridgedRecord(collection, envelope.id);
-    record.cleartext = envelope.payload;
+    let record = new BridgedRecord(collection, bso.id);
+    record.cleartext = bso.payload;
     return record;
   }
 
@@ -120,12 +121,12 @@ class BridgedRecord extends RawCryptoWrapper {
 
   /*
    * Converts this incoming record into an envelope to pass to a bridged engine.
-   * This object must be kept in sync with `sync15_traits::IncomingEnvelope`.
+   * This object must be kept in sync with `sync15::IncomingBso`.
    *
    * @return {Object} The incoming envelope, to pass to
    *                  `mozIBridgedSyncEngine::storeIncoming`.
    */
-  toIncomingEnvelope() {
+  toIncomingBso() {
     return {
       id: this.data.id,
       modified: this.data.modified,
@@ -453,13 +454,13 @@ BridgedEngine.prototype = {
   async _processIncoming(newitems) {
     await super._processIncoming(newitems);
 
-    let outgoingEnvelopesAsJSON = await this._bridge.apply();
+    let outgoingBsosAsJSON = await this._bridge.apply();
     let changeset = {};
-    for (let envelopeAsJSON of outgoingEnvelopesAsJSON) {
-      this._log.trace("outgoing envelope", envelopeAsJSON);
-      let record = BridgedRecord.fromOutgoingEnvelope(
+    for (let bsoAsJSON of outgoingBsosAsJSON) {
+      this._log.trace("outgoing bso", bsoAsJSON);
+      let record = BridgedRecord.fromOutgoingBso(
         this.name,
-        JSON.parse(envelopeAsJSON)
+        JSON.parse(bsoAsJSON)
       );
       changeset[record.id] = {
         synced: false,

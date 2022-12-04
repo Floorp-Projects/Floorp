@@ -137,7 +137,6 @@ add_task(async function test_storage_sync_bridged_engine() {
       id: "guidAAA",
       modified: 0.1,
       payload: JSON.stringify({
-        id: "guidAAA",
         extId: "ext-2",
         data: JSON.stringify({
           c: 1234,
@@ -148,7 +147,6 @@ add_task(async function test_storage_sync_bridged_engine() {
       id: "guidBBB",
       modified: 0.1,
       payload: JSON.stringify({
-        id: "guidBBB",
         extId: "ext-3",
         data: JSON.stringify({
           d: "new! ✨",
@@ -201,22 +199,12 @@ add_task(async function test_storage_sync_bridged_engine() {
   greater(ext2Index, -1, "Should find envelope for ext-2");
 
   equal(outgoingEnvelopes.length, 2, "Should upload ext-1 and ext-2");
-  equal(
-    ext1Guid,
-    parsedCleartexts[ext1Index].id,
-    "ext-1 ID in envelope should match cleartext"
-  );
   deepEqual(
     parsedData[ext1Index],
     {
       a: "abc",
     },
     "Should upload new data for ext-1"
-  );
-  equal(
-    outgoingEnvelopes[ext2Index].id,
-    parsedCleartexts[ext2Index].id,
-    "ext-2 ID in envelope should match cleartext"
   );
   deepEqual(
     parsedData[ext2Index],
