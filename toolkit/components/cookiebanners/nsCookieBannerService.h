@@ -9,6 +9,7 @@
 #include "nsICookieBannerListService.h"
 #include "nsCOMPtr.h"
 #include "nsTHashMap.h"
+#include "nsTHashSet.h"
 #include "nsIObserver.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
@@ -58,12 +59,21 @@ class nsCookieBannerService final : public nsIObserver,
    */
   [[nodiscard]] nsresult Shutdown();
 
-  nsresult GetRuleForDomain(const nsACString& aDomain,
-                            nsICookieBannerRule** aRule);
+  nsresult GetRuleForDomain(const nsACString& aDomain, bool aIsTopLevel,
+                            nsICookieBannerRule** aRule,
+                            bool aReportTelemetry = false);
 
   nsresult GetRuleForURI(nsIURI* aURI, nsICookieBannerRule** aRule);
 
   void DailyReportTelemetry();
+
+  // The hash sets of the domains that we have submitted telemetry. We use them
+  // to report once for each domain.
+  nsTHashSet<nsCStringHashKey> mTelemetryReportedTopDomains;
+  nsTHashSet<nsCStringHashKey> mTelemetryReportedIFrameDomains;
+
+  void ReportRuleLookupTelemetry(const nsACString& aDomain,
+                                 nsICookieBannerRule* aRule, bool aIsTopLevel);
 };
 
 }  // namespace mozilla
