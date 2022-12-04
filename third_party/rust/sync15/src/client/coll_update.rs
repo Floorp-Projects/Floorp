@@ -6,16 +6,19 @@ use super::{
     request::{NormalResponseHandler, UploadInfo},
     CollState, Sync15ClientResponse, Sync15StorageClient,
 };
+use crate::bso::OutgoingEncryptedBso;
 use crate::engine::{CollectionRequest, IncomingChangeset, OutgoingChangeset};
 use crate::error::{self, Error, ErrorResponse, Result};
-use crate::{CleartextBso, EncryptedBso, KeyBundle, ServerTimestamp};
+use crate::{KeyBundle, ServerTimestamp};
 use std::borrow::Cow;
 
-pub fn encrypt_outgoing(o: OutgoingChangeset, key: &KeyBundle) -> Result<Vec<EncryptedBso>> {
-    let collection = o.collection;
+pub fn encrypt_outgoing(
+    o: OutgoingChangeset,
+    key: &KeyBundle,
+) -> Result<Vec<OutgoingEncryptedBso>> {
     o.changes
         .into_iter()
-        .map(|change| CleartextBso::from_payload(change, collection.clone()).encrypt(key))
+        .map(|change| change.into_encrypted(key))
         .collect()
 }
 
@@ -43,19 +46,17 @@ pub fn fetch_incoming(
         // That should cause us to re-read crypto/keys and things should
         // work (although if for some reason crypto/keys was updated but
         // not all storage was wiped we are probably screwed.)
-        let decrypted = record.decrypt(&state.key)?;
-        result.changes.push(decrypted.into_timestamped_payload());
+        result.changes.push(record.into_decrypted(&state.key)?);
     }
     Ok(result)
 }
 
-#[derive(Debug, Clone)]
 pub struct CollectionUpdate<'a> {
     client: &'a Sync15StorageClient,
     state: &'a CollState,
     collection: Cow<'static, str>,
     xius: ServerTimestamp,
-    to_update: Vec<EncryptedBso>,
+    to_update: Vec<OutgoingEncryptedBso>,
     fully_atomic: bool,
 }
 
@@ -65,7 +66,7 @@ impl<'a> CollectionUpdate<'a> {
         state: &'a CollState,
         collection: Cow<'static, str>,
         xius: ServerTimestamp,
-        records: Vec<EncryptedBso>,
+        records: Vec<OutgoingEncryptedBso>,
         fully_atomic: bool,
     ) -> CollectionUpdate<'a> {
         CollectionUpdate {

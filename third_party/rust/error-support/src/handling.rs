@@ -106,10 +106,7 @@ where
         // XXX - should we arrange for the `report_class` to have the
         // original crate calling this as a prefix, or will we still be
         // able to identify that?
-        #[cfg(feature = "reporting")]
-        crate::report_error(report_class, e.to_string());
-        #[cfg(not(feature = "reporting"))]
-        let _ = report_class; // avoid clippy warning when feature's not enabled.
+        crate::report_error_to_app(report_class, e.to_string());
     }
     handling.err
 }

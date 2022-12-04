@@ -7,13 +7,13 @@ use std::collections::{HashMap, HashSet};
 use super::request::{InfoCollections, InfoConfiguration};
 use super::storage_client::{SetupStorageClient, Sync15ClientResponse};
 use super::CollectionKeys;
+use crate::bso::OutgoingEncryptedBso;
 use crate::error::{self, Error as ErrorKind, ErrorResponse};
 use crate::record_types::{MetaGlobalEngine, MetaGlobalRecord};
-use crate::ServerTimestamp;
-use crate::{EncryptedBso, EncryptedPayload, KeyBundle};
+use crate::EncryptedPayload;
+use crate::{Guid, KeyBundle, ServerTimestamp};
 use interrupt_support::Interruptee;
 use serde_derive::*;
-use sync_guid::Guid;
 
 use self::SetupState::*;
 
@@ -435,7 +435,7 @@ impl<'a> SetupStateMachine<'a> {
                         // Note that collection/keys is itself a bso, so the
                         // json body also carries the timestamp. If they aren't
                         // identical something has screwed up and we should die.
-                        assert_eq!(last_modified, record.modified);
+                        assert_eq!(last_modified, record.envelope.modified);
                         let state = GlobalState {
                             config,
                             collections,
@@ -510,7 +510,7 @@ impl<'a> SetupStateMachine<'a> {
 
                 // ...And a fresh `crypto/keys`.
                 let new_keys = CollectionKeys::new_random()?.to_encrypted_payload(self.root_key)?;
-                let bso = EncryptedBso::new_record("keys".into(), "crypto".into(), new_keys);
+                let bso = OutgoingEncryptedBso::new(Guid::new("keys").into(), new_keys);
                 self.client
                     .put_crypto_keys(ServerTimestamp::default(), &bso)?;
 
@@ -616,14 +616,14 @@ fn is_same_timestamp(local: ServerTimestamp, collections: &InfoCollections, key:
 mod tests {
     use super::*;
 
-    use crate::EncryptedBso;
+    use crate::bso::{IncomingEncryptedBso, IncomingEnvelope};
     use interrupt_support::NeverInterrupts;
 
     struct InMemoryClient {
         info_configuration: error::Result<Sync15ClientResponse<InfoConfiguration>>,
         info_collections: error::Result<Sync15ClientResponse<InfoCollections>>,
         meta_global: error::Result<Sync15ClientResponse<MetaGlobalRecord>>,
-        crypto_keys: error::Result<Sync15ClientResponse<EncryptedBso>>,
+        crypto_keys: error::Result<Sync15ClientResponse<IncomingEncryptedBso>>,
     }
 
     impl SetupStorageClient for InMemoryClient {
@@ -677,11 +677,24 @@ mod tests {
             Ok(ServerTimestamp(xius.0 + 1))
         }
 
-        fn fetch_crypto_keys(&self) -> error::Result<Sync15ClientResponse<EncryptedBso>> {
+        fn fetch_crypto_keys(&self) -> error::Result<Sync15ClientResponse<IncomingEncryptedBso>> {
             match &self.crypto_keys {
-                Ok(keys) => Ok(keys.clone()),
+                Ok(Sync15ClientResponse::Success {
+                    status,
+                    record,
+                    last_modified,
+                    route,
+                }) => Ok(Sync15ClientResponse::Success {
+                    status: *status,
+                    record: IncomingEncryptedBso::new(
+                        record.envelope.clone(),
+                        record.payload.clone(),
+                    ),
+                    last_modified: *last_modified,
+                    route: route.clone(),
+                }),
                 // TODO(lina): Same as above, for 404s.
-                Err(_) => Ok(Sync15ClientResponse::Error(ErrorResponse::ServerError {
+                _ => Ok(Sync15ClientResponse::Error(ErrorResponse::ServerError {
                     status: 500,
                     route: "test/path".into(),
                 })),
@@ -691,7 +704,7 @@ mod tests {
         fn put_crypto_keys(
             &self,
             xius: ServerTimestamp,
-            _keys: &EncryptedBso,
+            _keys: &OutgoingEncryptedBso,
         ) -> error::Result<()> {
             assert_eq!(xius, ServerTimestamp(888_800));
             Err(ErrorKind::StorageHttpError(ErrorResponse::ServerError {
@@ -722,11 +735,18 @@ mod tests {
     fn mocked_success_keys(
         keys: CollectionKeys,
         root_key: &KeyBundle,
-    ) -> error::Result<Sync15ClientResponse<EncryptedBso>> {
+    ) -> error::Result<Sync15ClientResponse<IncomingEncryptedBso>> {
         let timestamp = keys.timestamp;
         let payload = keys.to_encrypted_payload(root_key).unwrap();
-        let mut bso = EncryptedBso::new_record("keys".into(), "crypto".into(), payload);
-        bso.modified = timestamp;
+        let bso = IncomingEncryptedBso::new(
+            IncomingEnvelope {
+                id: Guid::new("keys"),
+                modified: timestamp,
+                sortindex: None,
+                ttl: None,
+            },
+            payload,
+        );
         Ok(Sync15ClientResponse::Success {
             status: 200,
             record: bso,

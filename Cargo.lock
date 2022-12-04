@@ -1549,9 +1549,14 @@ dependencies = [
 [[package]]
 name = "error-support"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=b09ffe23ee60a066176e5d7f9f2c6cd95c528ceb#b09ffe23ee60a066176e5d7f9f2c6cd95c528ceb"
+source = "git+https://github.com/mozilla/application-services?rev=4d858e4266c6d06d86d361279e6e04dbe5583cb9#4d858e4266c6d06d86d361279e6e04dbe5583cb9"
 dependencies = [
+ "lazy_static",
  "log",
+ "parking_lot 0.12.999",
+ "uniffi",
+ "uniffi_build",
+ "uniffi_macros",
 ]
 
 [[package]]
@@ -2683,7 +2688,7 @@ dependencies = [
 [[package]]
 name = "interrupt-support"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=b09ffe23ee60a066176e5d7f9f2c6cd95c528ceb#b09ffe23ee60a066176e5d7f9f2c6cd95c528ceb"
+source = "git+https://github.com/mozilla/application-services?rev=4d858e4266c6d06d86d361279e6e04dbe5583cb9#4d858e4266c6d06d86d361279e6e04dbe5583cb9"
 dependencies = [
  "lazy_static",
  "parking_lot 0.12.999",
@@ -3767,7 +3772,7 @@ dependencies = [
 [[package]]
 name = "nss_build_common"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=b09ffe23ee60a066176e5d7f9f2c6cd95c528ceb#b09ffe23ee60a066176e5d7f9f2c6cd95c528ceb"
+source = "git+https://github.com/mozilla/application-services?rev=4d858e4266c6d06d86d361279e6e04dbe5583cb9#4d858e4266c6d06d86d361279e6e04dbe5583cb9"
 
 [[package]]
 name = "nsstring"
@@ -4945,7 +4950,7 @@ dependencies = [
 [[package]]
 name = "sql-support"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=b09ffe23ee60a066176e5d7f9f2c6cd95c528ceb#b09ffe23ee60a066176e5d7f9f2c6cd95c528ceb"
+source = "git+https://github.com/mozilla/application-services?rev=4d858e4266c6d06d86d361279e6e04dbe5583cb9#4d858e4266c6d06d86d361279e6e04dbe5583cb9"
 dependencies = [
  "ffi-support",
  "interrupt-support",
@@ -5127,7 +5132,7 @@ dependencies = [
 [[package]]
 name = "sync-guid"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=b09ffe23ee60a066176e5d7f9f2c6cd95c528ceb#b09ffe23ee60a066176e5d7f9f2c6cd95c528ceb"
+source = "git+https://github.com/mozilla/application-services?rev=4d858e4266c6d06d86d361279e6e04dbe5583cb9#4d858e4266c6d06d86d361279e6e04dbe5583cb9"
 dependencies = [
  "base64",
  "rand 0.8.5",
@@ -5138,7 +5143,7 @@ dependencies = [
 [[package]]
 name = "sync15"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=b09ffe23ee60a066176e5d7f9f2c6cd95c528ceb#b09ffe23ee60a066176e5d7f9f2c6cd95c528ceb"
+source = "git+https://github.com/mozilla/application-services?rev=4d858e4266c6d06d86d361279e6e04dbe5583cb9#4d858e4266c6d06d86d361279e6e04dbe5583cb9"
 dependencies = [
  "anyhow",
  "error-support",
@@ -5168,7 +5173,7 @@ dependencies = [
 [[package]]
 name = "tabs"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=b09ffe23ee60a066176e5d7f9f2c6cd95c528ceb#b09ffe23ee60a066176e5d7f9f2c6cd95c528ceb"
+source = "git+https://github.com/mozilla/application-services?rev=4d858e4266c6d06d86d361279e6e04dbe5583cb9#4d858e4266c6d06d86d361279e6e04dbe5583cb9"
 dependencies = [
  "anyhow",
  "error-support",
@@ -5912,11 +5917,12 @@ checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 [[package]]
 name = "viaduct"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=b09ffe23ee60a066176e5d7f9f2c6cd95c528ceb#b09ffe23ee60a066176e5d7f9f2c6cd95c528ceb"
+source = "git+https://github.com/mozilla/application-services?rev=4d858e4266c6d06d86d361279e6e04dbe5583cb9#4d858e4266c6d06d86d361279e6e04dbe5583cb9"
 dependencies = [
  "ffi-support",
  "log",
  "once_cell",
+ "parking_lot 0.12.999",
  "prost",
  "prost-derive",
  "serde",
@@ -6068,7 +6074,7 @@ dependencies = [
 [[package]]
 name = "webext-storage"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=b09ffe23ee60a066176e5d7f9f2c6cd95c528ceb#b09ffe23ee60a066176e5d7f9f2c6cd95c528ceb"
+source = "git+https://github.com/mozilla/application-services?rev=4d858e4266c6d06d86d361279e6e04dbe5583cb9#4d858e4266c6d06d86d361279e6e04dbe5583cb9"
 dependencies = [
  "error-support",
  "ffi-support",

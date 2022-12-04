@@ -6,14 +6,10 @@ namespace tabs {
 };
 
 [Error]
-enum TabsError {
-    "SyncAdapterError",
-    "SyncResetError",
-    "JsonError",
-    "MissingLocalIdError",
-    "UrlParseError",
-    "SqlError",
-    "OpenDatabaseError",
+interface TabsApiError {
+    SyncError(string reason);
+    SqlError(string reason);
+    UnexpectedTabsError(string reason);
 };
 
 
@@ -27,10 +23,10 @@ interface TabsStore {
     [Self=ByArc]
     void register_with_sync_manager();
 
-    [Throws=TabsError, Self=ByArc]
+    [Throws=TabsApiError, Self=ByArc]
     void reset();
 
-    [Throws=TabsError, Self=ByArc]
+    [Throws=TabsApiError, Self=ByArc]
     string sync(string key_id, string access_token, string sync_key, string tokenserver_url, string local_id);
 
     [Self=ByArc]
@@ -48,6 +44,7 @@ dictionary RemoteTabRecord {
     string title;
     sequence<string> url_history;
     string? icon;
+    // Number of ms since the unix epoch (as reported by the client's clock)
     i64 last_used;
 };
 
@@ -55,11 +52,14 @@ dictionary ClientRemoteTabs {
     string client_id;
     string client_name;
     TabsDeviceType device_type;
+    // Number of ms since the unix epoch (as reported by the server's clock)
+    i64 last_modified;
     sequence<RemoteTabRecord> remote_tabs;
 };
 
 // Note the canonical docs for this are in https://searchfox.org/mozilla-central/source/services/interfaces/mozIBridgedSyncEngine.idl
 // It's only actually used in desktop, but it's fine to expose this everywhere.
+// NOTE: all timestamps here are milliseconds.
 interface TabsBridgedEngine {
     //readonly attribute long storageVersion;
     // readonly attribute boolean allowSkippedRecord;
@@ -67,42 +67,42 @@ interface TabsBridgedEngine {
     // XXX - better logging story than this?
     // attribute mozIServicesLogSink logger;
 
-    [Throws=TabsError]
+    [Throws=TabsApiError]
     i64 last_sync();
 
-    [Throws=TabsError]
+    [Throws=TabsApiError]
     void set_last_sync(i64 last_sync);
 
-    [Throws=TabsError]
+    [Throws=TabsApiError]
     string? sync_id();
 
-    [Throws=TabsError]
+    [Throws=TabsApiError]
     string reset_sync_id();
 
-    [Throws=TabsError]
+    [Throws=TabsApiError]
     string ensure_current_sync_id([ByRef]string new_sync_id);
 
-    [Throws=TabsError]
+    [Throws=TabsApiError]
     void prepare_for_sync([ByRef]string client_data);
 
-    [Throws=TabsError]
+    [Throws=TabsApiError]
     void sync_started();
 
-    [Throws=TabsError]
+    [Throws=TabsApiError]
     void store_incoming(sequence<string> incoming_envelopes_as_json);
 
-    [Throws=TabsError]
+    [Throws=TabsApiError]
     sequence<string> apply();
 
-    [Throws=TabsError]
+    [Throws=TabsApiError]
     void set_uploaded(i64 new_timestamp, sequence<TabsGuid> uploaded_ids);
 
-    [Throws=TabsError]
+    [Throws=TabsApiError]
     void sync_finished();
 
-    [Throws=TabsError]
+    [Throws=TabsApiError]
     void reset();
 
-    [Throws=TabsError]
+    [Throws=TabsApiError]
     void wipe();
 };

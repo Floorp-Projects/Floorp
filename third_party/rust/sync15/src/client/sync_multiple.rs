@@ -471,7 +471,8 @@ impl<'info, 'res, 'pgs, 'mcs> SyncMultipleDriver<'info, 'res, 'pgs, 'mcs> {
                     _ => {
                         // Don't log the error since it might contain sensitive
                         // info (although currently it only contains the declined engines list)
-                        log::error!(
+                        error_support::report_error!(
+                            "sync15-prepare-persisted-state",
                             "Failed to parse PersistedGlobalState from JSON! Falling back to default"
                         );
                         *self.mem_cached_state = MemoryCachedState::default();

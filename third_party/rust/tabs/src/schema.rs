@@ -29,7 +29,7 @@ impl MigrationLogic for TabsMigrationLogin {
     const NAME: &'static str = "tabs storage db";
     const END_VERSION: u32 = 1;
 
-    fn prepare(&self, conn: &Connection) -> MigrationResult<()> {
+    fn prepare(&self, conn: &Connection, _db_empty: bool) -> MigrationResult<()> {
         let initial_pragmas = "
             -- We don't care about temp tables being persisted to disk.
             PRAGMA temp_store = 2;

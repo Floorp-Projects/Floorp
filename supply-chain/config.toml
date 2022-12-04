@@ -1438,4 +1438,3 @@ criteria = "safe-to-deploy"
 [[exemptions.zip]]
 version = "0.6.2"
 criteria = "safe-to-run"
-

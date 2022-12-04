@@ -2,11 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use std::{error::Error, fmt};
+use crate::bso::{IncomingBso, OutgoingBso};
 
-use serde::{Deserialize, Serialize};
-
-use crate::{Guid, Payload, ServerTimestamp};
+use crate::Guid;
 
 /// A BridgedEngine acts as a bridge between application-services, rust
 /// implemented sync engines and sync engines as defined by Desktop Firefox.
@@ -64,7 +62,7 @@ pub trait BridgedEngine {
     /// times per sync, once for each batch. Implementations can use the
     /// signal to check if the operation was aborted, and cancel any
     /// pending work.
-    fn store_incoming(&self, incoming_payloads: &[IncomingEnvelope]) -> Result<(), Self::Error>;
+    fn store_incoming(&self, incoming_records: Vec<IncomingBso>) -> Result<(), Self::Error>;
 
     /// Applies all staged records, reconciling changes on both sides and
     /// resolving conflicts. Returns a list of records to upload.
@@ -91,10 +89,12 @@ pub trait BridgedEngine {
     fn wipe(&self) -> Result<(), Self::Error>;
 }
 
-#[derive(Clone, Debug, Default)]
+// TODO: We should replace this with OutgoingChangeset to reduce the number
+// of types engines need to deal with.
+#[derive(Debug, Default)]
 pub struct ApplyResults {
     /// List of records
-    pub envelopes: Vec<OutgoingEnvelope>,
+    pub records: Vec<OutgoingBso>,
     /// The number of incoming records whose contents were merged because they
     /// changed on both sides. None indicates we aren't reporting this
     /// information.
@@ -102,125 +102,20 @@ pub struct ApplyResults {
 }
 
 impl ApplyResults {
-    pub fn new(envelopes: Vec<OutgoingEnvelope>, num_reconciled: impl Into<Option<usize>>) -> Self {
+    pub fn new(records: Vec<OutgoingBso>, num_reconciled: impl Into<Option<usize>>) -> Self {
         Self {
-            envelopes,
+            records,
             num_reconciled: num_reconciled.into(),
         }
     }
 }
 
 // Shorthand for engines that don't care.
-impl From<Vec<OutgoingEnvelope>> for ApplyResults {
-    fn from(envelopes: Vec<OutgoingEnvelope>) -> Self {
+impl From<Vec<OutgoingBso>> for ApplyResults {
+    fn from(records: Vec<OutgoingBso>) -> Self {
         Self {
-            envelopes,
+            records,
             num_reconciled: None,
-        }
-    }
-}
-
-/// An envelope for an incoming item, passed to `BridgedEngine::store_incoming`.
-/// Envelopes are a halfway point between BSOs, the format used for all items on
-/// the Sync server, and records, which are specific to each engine.
-///
-/// Specifically, the "envelope" has all the metadata plus the JSON payload
-/// as clear-text - the analogy is that it's got all the info needed to get the
-/// data from the server to the engine without knowing what the contents holds,
-/// and without the engine needing to know how to decrypt.
-///
-/// A BSO is a JSON object with metadata fields (`id`, `modifed`, `sortindex`),
-/// and a BSO payload that is itself a JSON string. For encrypted records, the
-/// BSO payload has a ciphertext, which must be decrypted to yield a cleartext.
-/// The payload is a cleartext JSON string (that's three levels of JSON wrapping, if
-/// you're keeping score: the BSO itself, BSO payload, and our sub-payload) with the
-/// actual content payload.
-///
-/// An envelope combines the metadata fields from the BSO, and the cleartext
-/// BSO payload.
-#[derive(Clone, Debug, Deserialize)]
-pub struct IncomingEnvelope {
-    pub id: Guid,
-    pub modified: ServerTimestamp,
-    #[serde(default)]
-    pub sortindex: Option<i32>,
-    #[serde(default)]
-    pub ttl: Option<u32>,
-    // Don't provide access to the cleartext payload directly. We want all
-    // callers to use `payload()` to convert/validate the string.
-    payload: String,
-}
-
-impl IncomingEnvelope {
-    /// Parses and returns the record payload from this envelope. Returns an
-    /// error if the envelope's payload isn't valid.
-    pub fn payload(&self) -> Result<Payload, PayloadError> {
-        let payload: Payload = serde_json::from_str(&self.payload)?;
-        if payload.id != self.id {
-            return Err(PayloadError::MismatchedId {
-                envelope: self.id.clone(),
-                payload: payload.id,
-            });
-        }
-        // Remove auto field data from payload and replace with real data
-        Ok(payload
-            .with_auto_field("ttl", self.ttl)
-            .with_auto_field("sortindex", self.sortindex))
-    }
-}
-
-/// An envelope for an outgoing item, returned from `BridgedEngine::apply`. This
-/// is conceptually identical to [IncomingEnvelope], but omits fields that are
-/// only set by the server, like `modified`.
-#[derive(Clone, Debug, Serialize)]
-pub struct OutgoingEnvelope {
-    id: Guid,
-    payload: String,
-    sortindex: Option<i32>,
-    ttl: Option<u32>,
-}
-
-impl From<Payload> for OutgoingEnvelope {
-    fn from(mut payload: Payload) -> Self {
-        let id = payload.id.clone();
-        // Remove auto field data from OutgoingEnvelope payload
-        let ttl = payload.take_auto_field("ttl");
-        let sortindex = payload.take_auto_field("sortindex");
-        OutgoingEnvelope {
-            id,
-            payload: payload.into_json_string(),
-            sortindex,
-            ttl,
-        }
-    }
-}
-
-/// An error that indicates a payload is invalid.
-#[derive(Debug)]
-pub enum PayloadError {
-    /// The payload contains invalid JSON.
-    Invalid(serde_json::Error),
-    /// The ID of the BSO in the envelope doesn't match the ID in the payload.
-    MismatchedId { envelope: Guid, payload: Guid },
-}
-
-impl Error for PayloadError {}
-
-impl From<serde_json::Error> for PayloadError {
-    fn from(err: serde_json::Error) -> PayloadError {
-        PayloadError::Invalid(err)
-    }
-}
-
-impl fmt::Display for PayloadError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            PayloadError::Invalid(err) => err.fmt(f),
-            PayloadError::MismatchedId { envelope, payload } => write!(
-                f,
-                "ID `{}` in envelope doesn't match `{}` in payload",
-                envelope, payload
-            ),
         }
     }
 }

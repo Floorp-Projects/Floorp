@@ -12,7 +12,7 @@ impl ServerTimestamp {
     pub fn from_float_seconds(ts: f64) -> Self {
         let rf = (ts * 1000.0).round();
         if !rf.is_finite() || rf < 0.0 || rf >= i64::max_value() as f64 {
-            log::error!("Illegal timestamp: {}", ts);
+            error_support::report_error!("sync15-illegal-timestamp", "Illegal timestamp: {}", ts);
             ServerTimestamp(0)
         } else {
             ServerTimestamp(rf as i64)
@@ -25,7 +25,11 @@ impl ServerTimestamp {
         if ts >= 0 {
             Self(ts)
         } else {
-            log::error!("Illegal timestamp, substituting 0: {}", ts);
+            error_support::report_error!(
+                "sync15-illegal-timestamp",
+                "Illegal timestamp, substituting 0: {}",
+                ts
+            );
             Self(0)
         }
     }

@@ -49,8 +49,8 @@ pub enum ErrorKind {
     #[error("Error opening database: {0}")]
     OpenDatabaseError(#[from] sql_support::open_database::Error),
 
-    #[error("{0}")]
-    IncomingPayloadError(#[from] sync15::engine::PayloadError),
+    #[error("Sync Payload Error: {0}")]
+    IncomingPayloadError(#[from] sync15::Error),
 }
 
 error_support::define_error! {
@@ -60,7 +60,7 @@ error_support::define_error! {
         (IoError, std::io::Error),
         (InterruptedError, Interrupted),
         (Utf8Error, std::str::Utf8Error),
-        (IncomingPayloadError, sync15::engine::PayloadError),
+        (IncomingPayloadError, sync15::Error),
         (OpenDatabaseError, sql_support::open_database::Error),
     }
 }

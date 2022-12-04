@@ -24,11 +24,13 @@ pub mod backtrace {
     }
 }
 
-#[cfg(feature = "reporting")]
+mod redact;
+pub use redact::*;
+
 mod reporting;
-#[cfg(feature = "reporting")]
 pub use reporting::{
-    report_breadcrumb, report_error, set_application_error_reporter, ApplicationErrorReporter,
+    report_breadcrumb, report_error_to_app, set_application_error_reporter,
+    unset_application_error_reporter, ApplicationErrorReporter,
 };
 
 mod handling;
@@ -155,5 +157,4 @@ macro_rules! define_error {
     };
 }
 
-#[cfg(feature = "reporting")]
 uniffi_macros::include_scaffolding!("errorsupport");

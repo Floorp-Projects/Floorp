@@ -18,7 +18,7 @@ impl MigrationLogic for WebExtMigrationLogin {
     const NAME: &'static str = "webext storage db";
     const END_VERSION: u32 = 2;
 
-    fn prepare(&self, conn: &Connection) -> MigrationResult<()> {
+    fn prepare(&self, conn: &Connection, _db_empty: bool) -> MigrationResult<()> {
         let initial_pragmas = "
             -- We don't care about temp tables being persisted to disk.
             PRAGMA temp_store = 2;

@@ -6,18 +6,15 @@
 // working out a plan for them, updating the local data and mirror, etc.
 
 use interrupt_support::Interruptee;
-use rusqlite::{
-    types::{Null, ToSql},
-    Connection, Row, Transaction,
-};
+use rusqlite::{Connection, Row, Transaction};
 use sql_support::ConnExt;
-use sync15::Payload;
+use sync15::bso::{IncomingContent, IncomingKind};
 use sync_guid::Guid as SyncGuid;
 
 use crate::api::{StorageChanges, StorageValueChange};
 use crate::error::*;
 
-use super::{merge, remove_matching_keys, JsonMap, Record, RecordData};
+use super::{merge, remove_matching_keys, JsonMap, WebextRecord};
 
 /// The state data can be in. Could be represented as Option<JsonMap>, but this
 /// is clearer and independent of how the data is stored.
@@ -69,43 +66,44 @@ fn json_map_from_row(row: &Row<'_>, col: &str) -> Result<DataState> {
 /// The actual processing is done via this table.
 pub fn stage_incoming(
     tx: &Transaction<'_>,
-    incoming_payloads: Vec<Payload>,
+    incoming_records: &[IncomingContent<WebextRecord>],
     signal: &dyn Interruptee,
 ) -> Result<()> {
-    let mut incoming_records = Vec::with_capacity(incoming_payloads.len());
-    for payload in incoming_payloads {
-        incoming_records.push(payload.into_record::<Record>()?);
-    }
     sql_support::each_sized_chunk(
-        &incoming_records,
+        incoming_records,
         // We bind 3 params per chunk.
         sql_support::default_max_variable_number() / 3,
         |chunk, _| -> Result<()> {
-            let sql = format!(
-                "INSERT OR REPLACE INTO temp.storage_sync_staging
-                (guid, ext_id, data)
-                VALUES {}",
-                sql_support::repeat_multi_values(chunk.len(), 3)
-            );
             let mut params = Vec::with_capacity(chunk.len() * 3);
             for record in chunk {
                 signal.err_if_interrupted()?;
-                params.push(&record.guid as &dyn ToSql);
-                match &record.data {
-                    RecordData::Data {
-                        ref ext_id,
-                        ref data,
-                    } => {
-                        params.push(ext_id);
-                        params.push(data);
+                match &record.kind {
+                    IncomingKind::Content(r) => {
+                        params.push(Some(record.envelope.id.to_string()));
+                        params.push(Some(r.ext_id.to_string()));
+                        params.push(Some(r.data.clone()));
                     }
-                    RecordData::Tombstone => {
-                        params.push(&Null);
-                        params.push(&Null);
+                    IncomingKind::Tombstone => {
+                        params.push(Some(record.envelope.id.to_string()));
+                        params.push(None);
+                        params.push(None);
+                    }
+                    IncomingKind::Malformed => {
+                        log::error!("Ignoring incoming malformed record: {}", record.envelope.id);
                     }
                 }
             }
-            tx.execute(&sql, rusqlite::params_from_iter(params))?;
+            // we might have skipped records
+            let actual_len = params.len() / 3;
+            if actual_len != 0 {
+                let sql = format!(
+                    "INSERT OR REPLACE INTO temp.storage_sync_staging
+                    (guid, ext_id, data)
+                    VALUES {}",
+                    sql_support::repeat_multi_values(actual_len, 3)
+                );
+                tx.execute(&sql, rusqlite::params_from_iter(params))?;
+            }
             Ok(())
         },
     )?;
@@ -482,7 +480,7 @@ mod tests {
     use crate::api;
     use interrupt_support::NeverInterrupts;
     use serde_json::{json, Value};
-    use sync15::Payload;
+    use sync15::bso::IncomingBso;
 
     // select simple int
     fn ssi(conn: &Connection, stmt: &str) -> u32 {
@@ -491,11 +489,11 @@ mod tests {
             .unwrap_or_default()
     }
 
-    fn array_to_incoming(mut array: Value) -> Vec<Payload> {
+    fn array_to_incoming(mut array: Value) -> Vec<IncomingContent<WebextRecord>> {
         let jv = array.as_array_mut().expect("you must pass a json array");
         let mut result = Vec::with_capacity(jv.len());
         for elt in jv {
-            result.push(Payload::from_json(elt.take()).expect("must be valid"));
+            result.push(IncomingBso::from_test_content(elt.take()).into_content());
         }
         result
     }
@@ -561,7 +559,7 @@ mod tests {
             }
         ]};
 
-        stage_incoming(&tx, array_to_incoming(incoming), &NeverInterrupts)?;
+        stage_incoming(&tx, &array_to_incoming(incoming), &NeverInterrupts)?;
         // check staging table
         assert_eq!(
             ssi(&tx, "SELECT count(*) FROM temp.storage_sync_staging"),

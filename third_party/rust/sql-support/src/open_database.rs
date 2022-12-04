@@ -63,7 +63,7 @@ pub trait ConnectionInitializer {
 
     // Runs immediately after creation for all types of connections. If writable,
     // will *not* be in the transaction created for the "only writable" functions above.
-    fn prepare(&self, _conn: &Connection) -> Result<()> {
+    fn prepare(&self, _conn: &Connection, _db_empty: bool) -> Result<()> {
         Ok(())
     }
 
@@ -109,14 +109,14 @@ fn do_open_database_with_flags<CI: ConnectionInitializer, P: AsRef<Path>>(
     log::debug!("{}: opening database", CI::NAME);
     let mut conn = Connection::open_with_flags(path, open_flags)?;
     log::debug!("{}: checking if initialization is necessary", CI::NAME);
-    let run_init = should_init(&conn)?;
+    let db_empty = is_db_empty(&conn)?;
 
     log::debug!("{}: preparing", CI::NAME);
-    connection_initializer.prepare(&conn)?;
+    connection_initializer.prepare(&conn, db_empty)?;
 
     if open_flags.contains(OpenFlags::SQLITE_OPEN_READ_WRITE) {
         let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate)?;
-        if run_init {
+        if db_empty {
             log::debug!("{}: initializing new database", CI::NAME);
             connection_initializer.init(&tx)?;
         } else {
@@ -141,7 +141,7 @@ fn do_open_database_with_flags<CI: ConnectionInitializer, P: AsRef<Path>>(
     } else {
         // There's an implied requirement that the first connection to a DB is
         // writable, so read-only connections do much less, but panic if stuff is wrong
-        assert!(!run_init, "existing writer must have initialized");
+        assert!(!db_empty, "existing writer must have initialized");
         assert!(
             get_schema_version(&conn)? == CI::END_VERSION,
             "existing writer must have migrated"
@@ -212,7 +212,7 @@ fn try_handle_db_failure<CI: ConnectionInitializer, P: AsRef<Path>>(
     }
 }
 
-fn should_init(conn: &Connection) -> Result<bool> {
+fn is_db_empty(conn: &Connection) -> Result<bool> {
     Ok(conn.query_one::<u32>("SELECT COUNT(*) FROM sqlite_master")? == 0)
 }
 
@@ -340,7 +340,7 @@ mod test {
         const NAME: &'static str = "test db";
         const END_VERSION: u32 = 4;
 
-        fn prepare(&self, conn: &Connection) -> Result<()> {
+        fn prepare(&self, conn: &Connection, _: bool) -> Result<()> {
             self.push_call("prep");
             conn.execute_batch(
                 "

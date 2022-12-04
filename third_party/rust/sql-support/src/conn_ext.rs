@@ -58,6 +58,11 @@ pub trait ConnExt {
         Ok(())
     }
 
+    /// Execute a single statement.
+    fn execute_one(&self, stmt: &str) -> SqlResult<()> {
+        self.execute_all(&[stmt])
+    }
+
     /// Equivalent to `Connection::execute` but caches the statement so that subsequent
     /// calls to `execute_cached` will have improved performance.
     fn execute_cached<P: Params>(&self, sql: &str, params: P) -> SqlResult<usize> {

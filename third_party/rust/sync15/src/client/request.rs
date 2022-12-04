@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use super::storage_client::Sync15ClientResponse;
+use crate::bso::OutgoingEncryptedBso;
 use crate::error::{self, Error as ErrorKind, Result};
-use crate::EncryptedBso;
 use crate::ServerTimestamp;
 use serde_derive::*;
 use std::collections::HashMap;
@@ -255,8 +255,8 @@ where
         !matches!(&self.batch, BatchState::Unsupported | BatchState::NoBatch)
     }
 
-    pub fn enqueue(&mut self, record: &EncryptedBso) -> Result<bool> {
-        let payload_length = record.payload.serialized_len();
+    pub fn enqueue(&mut self, record: &OutgoingEncryptedBso) -> Result<bool> {
+        let payload_length = record.serialized_payload_len();
 
         if self.post_limits.can_never_add(payload_length)
             || self.batch_limits.can_never_add(payload_length)
@@ -488,7 +488,8 @@ impl<Poster> PostQueue<Poster, NormalResponseHandler> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{BsoRecord, EncryptedPayload};
+    use crate::bso::{IncomingEncryptedBso, OutgoingEncryptedBso, OutgoingEnvelope};
+    use crate::EncryptedPayload;
     use lazy_static::lazy_static;
     use std::cell::RefCell;
     use std::collections::VecDeque;
@@ -509,7 +510,8 @@ mod test {
             let values =
                 serde_json::from_str::<serde_json::Value>(&self.body).expect("Posted invalid json");
             // Check that they actually deserialize as what we want
-            let records_or_err = serde_json::from_value::<Vec<EncryptedBso>>(values.clone());
+            let records_or_err =
+                serde_json::from_value::<Vec<IncomingEncryptedBso>>(values.clone());
             records_or_err.expect("Failed to deserialize data");
             serde_json::from_value(values).unwrap()
         }
@@ -703,18 +705,17 @@ mod test {
         };
         // ~80b
         static ref TOTAL_RECORD_OVERHEAD: usize = {
-            let val = serde_json::to_value(BsoRecord {
-                id: "".into(),
-                collection: "".into(),
-                modified: ServerTimestamp(0),
-                sortindex: None,
-                ttl: None,
-                payload: EncryptedPayload {
+            let val = serde_json::to_value(OutgoingEncryptedBso::new(OutgoingEnvelope {
+                    id: "".into(),
+                    sortindex: None,
+                    ttl: None,
+                },
+                EncryptedPayload {
                     iv: "".into(),
                     hmac: "".into(),
                     ciphertext: "".into()
                 },
-            }).unwrap();
+            )).unwrap();
             serde_json::to_string(&val).unwrap().len()
         };
         // There's some subtlety in how we calulate this having to do with the fact that
@@ -727,21 +728,21 @@ mod test {
     }
 
     // Actual record size (for max_request_len) will be larger by some amount
-    fn make_record(payload_size: usize) -> EncryptedBso {
+    fn make_record(payload_size: usize) -> OutgoingEncryptedBso {
         assert!(payload_size > *PAYLOAD_OVERHEAD);
         let ciphertext_len = payload_size - *PAYLOAD_OVERHEAD;
-        BsoRecord {
-            id: "".into(),
-            collection: "".into(),
-            modified: ServerTimestamp(0),
-            sortindex: None,
-            ttl: None,
-            payload: EncryptedPayload {
+        OutgoingEncryptedBso::new(
+            OutgoingEnvelope {
+                id: "".into(),
+                sortindex: None,
+                ttl: None,
+            },
+            EncryptedPayload {
                 iv: "".into(),
                 hmac: "".into(),
                 ciphertext: "x".repeat(ciphertext_len),
             },
-        }
+        )
     }
 
     fn request_bytes_for_payloads(payloads: &[usize]) -> usize {

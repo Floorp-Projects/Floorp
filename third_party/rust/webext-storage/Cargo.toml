@@ -30,6 +30,7 @@ features = ["functions", "bundled", "serde_json", "unlock_notify", "column_declt
 [dev-dependencies]
 env_logger = { version = "0.7", default-features = false }
 prettytable-rs = "0.8"
+sync15 = {path = "../../components/sync15", features=["test-utils"]}
 tempfile = "3"
 # A *direct* dep on the -sys crate is required for our build.rs
 # to see the DEP_SQLITE3_LINK_TARGET env var that cargo sets

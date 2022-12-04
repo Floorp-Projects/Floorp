@@ -3,7 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 namespace errorsupport {
+    // Set the global error reporter.  This is typically done early in startup.
     void set_application_error_reporter(ApplicationErrorReporter error_reporter);
+    // Unset the global error reporter.  This is typically done at shutdown for
+    // platforms that want to cleanup references like Desktop.
+    void unset_application_error_reporter();
 };
 
 callback interface ApplicationErrorReporter {

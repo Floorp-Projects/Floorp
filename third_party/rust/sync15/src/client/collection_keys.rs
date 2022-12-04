@@ -4,8 +4,7 @@
 
 use crate::error::Result;
 use crate::record_types::CryptoKeysRecord;
-use crate::ServerTimestamp;
-use crate::{EncryptedPayload, KeyBundle};
+use crate::{EncryptedPayload, KeyBundle, ServerTimestamp};
 use std::collections::HashMap;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -30,7 +29,7 @@ impl CollectionKeys {
         timestamp: ServerTimestamp,
         root_key: &KeyBundle,
     ) -> Result<CollectionKeys> {
-        let keys: CryptoKeysRecord = record.decrypt_and_parse_payload(root_key)?;
+        let keys: CryptoKeysRecord = record.decrypt_into(root_key)?;
         Ok(CollectionKeys {
             timestamp,
             default: KeyBundle::from_base64(&keys.default[0], &keys.default[1])?,

@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use serde_derive::{Deserialize, Serialize};
-use sync15::Payload;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
@@ -22,16 +21,6 @@ pub struct TabsRecord {
     pub id: String,
     pub client_name: String,
     pub tabs: Vec<TabsRecordTab>,
-    #[serde(default)]
-    pub ttl: u32,
-}
-
-impl TabsRecord {
-    #[inline]
-    pub fn from_payload(payload: Payload) -> crate::error::Result<Self> {
-        let record: TabsRecord = payload.into_record()?;
-        Ok(record)
-    }
 }
 
 #[cfg(test)]
@@ -40,8 +29,8 @@ pub mod test {
     use serde_json::json;
 
     #[test]
-    fn test_simple() {
-        let payload = Payload::from_json(json!({
+    fn test_payload() {
+        let payload = json!({
             "id": "JkeBPC50ZI0m",
             "clientName": "client name",
             "tabs": [{
@@ -52,9 +41,8 @@ pub mod test {
                 "icon": "https://mozilla.org/icon",
                 "lastUsed": 1643764207
             }]
-        }))
-        .expect("json is valid");
-        let record = TabsRecord::from_payload(payload).expect("payload is valid");
+        });
+        let record: TabsRecord = serde_json::from_value(payload).expect("should work");
         assert_eq!(record.id, "JkeBPC50ZI0m");
         assert_eq!(record.client_name, "client name");
         assert_eq!(record.tabs.len(), 1);
@@ -65,17 +53,44 @@ pub mod test {
     }
 
     #[test]
+    fn test_roundtrip() {
+        let tab = TabsRecord {
+            id: "JkeBPC50ZI0m".into(),
+            client_name: "client name".into(),
+            tabs: vec![TabsRecordTab {
+                title: "the title".into(),
+                url_history: vec!["https://mozilla.org/".into()],
+                icon: Some("https://mozilla.org/icon".into()),
+                last_used: 1643764207,
+            }],
+        };
+        let round_tripped =
+            serde_json::from_value(serde_json::to_value(tab.clone()).unwrap()).unwrap();
+        assert_eq!(tab, round_tripped);
+    }
+
+    #[test]
     fn test_extra_fields() {
-        let payload = Payload::from_json(json!({
+        let payload = json!({
             "id": "JkeBPC50ZI0m",
-            "clientName": "client name",
-            "tabs": [],
             // Let's say we agree on new tabs to record, we want old versions to
             // ignore them!
-            "recentlyClosed": [],
-        }))
-        .expect("json is valid");
-        let record = TabsRecord::from_payload(payload).expect("payload is valid");
+            "ignoredField": "??",
+            "clientName": "client name",
+            "tabs": [{
+                "title": "the title",
+                "urlHistory": [
+                    "https://mozilla.org/"
+                ],
+                "icon": "https://mozilla.org/icon",
+                "lastUsed": 1643764207,
+                // Ditto - make sure we ignore unexpected fields in each tab.
+                "ignoredField": "??",
+            }]
+        });
+        let record: TabsRecord = serde_json::from_value(payload).unwrap();
+        // The point of this test is really just to ensure the deser worked, so
+        // just check the ID.
         assert_eq!(record.id, "JkeBPC50ZI0m");
     }
 }
