@@ -170,7 +170,12 @@ add_setup(async () => {
   });
 
   let oldCookieBanners = Services.cookieBanners;
-  Services.cookieBanners = { insertRule, removeRule, resetRules() {} };
+  Services.cookieBanners = {
+    insertRule,
+    removeRule,
+    resetRules() {},
+    resetDomainTelemetryRecord() {},
+  };
 
   // Remove stubs on test end.
   registerCleanupFunction(() => {
