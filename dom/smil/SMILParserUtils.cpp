@@ -500,7 +500,7 @@ class MOZ_STACK_CLASS SMILValueParser
         mValuesArray(aValuesArray),
         mPreventCachingOfSandwich(aPreventCachingOfSandwich) {}
 
-  virtual bool Parse(const nsAString& aValueStr) override {
+  bool Parse(const nsAString& aValueStr) override {
     SMILValue newValue;
     bool tmpPreventCachingOfSandwich = false;
     if (NS_FAILED(mSMILAttr->ValueFromString(aValueStr, mSrcElement, newValue,

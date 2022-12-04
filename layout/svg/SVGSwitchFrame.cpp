@@ -40,7 +40,7 @@ class SVGSwitchFrame final : public SVGGFrame {
 #endif
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override {
+  nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(u"SVGSwitch"_ns, aResult);
   }
 #endif
@@ -53,7 +53,7 @@ class SVGSwitchFrame final : public SVGGFrame {
                         imgDrawingParams& aImgParams,
                         const nsIntRect* aDirtyRect = nullptr) override;
   nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) override;
-  virtual void ReflowSVG() override;
+  void ReflowSVG() override;
   virtual SVGBBox GetBBoxContribution(const Matrix& aToBBoxUserspace,
                                       uint32_t aFlags) override;
 

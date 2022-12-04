@@ -38,7 +38,7 @@ class SVGAFrame final : public SVGDisplayContainerFrame {
                                     int32_t aModType) override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override {
+  nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(u"SVGA"_ns, aResult);
   }
 #endif
