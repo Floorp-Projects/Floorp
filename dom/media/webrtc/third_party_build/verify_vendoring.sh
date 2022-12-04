@@ -16,7 +16,7 @@ echo "MOZ_PRIOR_GIT_BRANCH: $MOZ_PRIOR_GIT_BRANCH"
 # * o pipefail: All stages of all pipes should succeed.
 set -eEuo pipefail
 
-./mach python dom/media/webrtc/third_party_build/vendor-libwebrtc.py \
+./mach python $SCRIPT_DIR/vendor-libwebrtc.py \
         --from-local $MOZ_LIBWEBRTC_SRC \
         --commit $MOZ_LIBWEBRTC_COMMIT \
         libwebrtc
@@ -33,14 +33,14 @@ if [ "x$FILE_CHANGE_CNT" != "x0" ]; then
   echo "is recommended.  First, find the mercurial commit after the"
   echo "previous fast-forward landing.  The commands you want will look"
   echo "something like:"
-  echo "  ./mach python dom/media/webrtc/third_party_build/extract-for-git.py {after-ff-commit}::{tip-of-central}"
+  echo "  ./mach python $SCRIPT_DIR/extract-for-git.py {after-ff-commit}::{tip-of-central}"
   echo "  mv mailbox.patch $MOZ_LIBWEBRTC_SRC"
   echo "  (cd $MOZ_LIBWEBRTC_SRC && \\"
   echo "   git am mailbox.patch)"
   echo ""
   echo "After adding the new changes from moz-central to the moz-libwebrtc"
   echo "patch stack, you may re-run this command to verify vendoring:"
-  echo "  $0"
+  echo "  bash $0"
 
   exit 1
 fi

@@ -74,7 +74,7 @@ It appears that initial vendoring verification has failed.
 - If you have previously run loop-ff.sh successfully, there may be a new
   change to third_party/libwebrtc that should be extracted and added to
   the patch stack in github.  It may be as easy as running:
-      ./mach python dom/media/webrtc/third_party_build/extract-for-git.py tip::tip
+      ./mach python $SCRIPT_DIR/extract-for-git.py tip::tip
       mv mailbox.patch $MOZ_LIBWEBRTC_SRC
       (cd $MOZ_LIBWEBRTC_SRC && \\
        git am mailbox.patch)
@@ -83,7 +83,7 @@ It appears that initial vendoring verification has failed.
 if [ "x$RESUME" = "x" ]; then
   # start off by verifying the vendoring process to make sure no changes have
   # been added to elm to fix bugs.
-  bash dom/media/webrtc/third_party_build/verify_vendoring.sh
+  bash $SCRIPT_DIR/verify_vendoring.sh
 fi
 ERROR_HELP=""
 
@@ -97,11 +97,11 @@ echo "============ loop ff ============" 2>&1| tee -a $LOOP_OUTPUT_LOG
 ERROR_HELP=$"Some portion of the detection and/or fixing of upstream revert commits
 has failed.  Please fix the state of the git hub repo at: $MOZ_LIBWEBRTC_SRC.
 When fixed, please resume this script with the following command:
-    SKIP_NEXT_REVERT_CHK=1 bash dom/media/webrtc/third_party_build/loop-ff.sh
+    SKIP_NEXT_REVERT_CHK=1 bash $SCRIPT_DIR/loop-ff.sh
 "
 if [ "x$SKIP_NEXT_REVERT_CHK" == "x0" ]; then
   echo "===loop-ff=== Check for upcoming revert commit" 2>&1| tee -a $LOOP_OUTPUT_LOG
-  AUTO_FIX_REVERT_AS_NOOP=1 bash dom/media/webrtc/third_party_build/detect_upstream_revert.sh 2>&1| tee -a $LOOP_OUTPUT_LOG
+  AUTO_FIX_REVERT_AS_NOOP=1 bash $SCRIPT_DIR/detect_upstream_revert.sh 2>&1| tee -a $LOOP_OUTPUT_LOG
 fi
 SKIP_NEXT_REVERT_CHK="0"
 ERROR_HELP=""
@@ -113,7 +113,7 @@ if [ -f ~/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg ]; then
 fi
 
 echo "===loop-ff=== Moving from moz-libwebrtc commit $MOZ_LIBWEBRTC_BASE to $MOZ_LIBWEBRTC_NEXT_BASE" 2>&1| tee -a $LOOP_OUTPUT_LOG
-bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh 2>&1| tee -a $LOOP_OUTPUT_LOG
+bash $SCRIPT_DIR/fast-forward-libwebrtc.sh 2>&1| tee -a $LOOP_OUTPUT_LOG
 
 MOZ_CHANGED=`hg diff -c tip --stat \
    | egrep -ve "README.moz-ff-commit|README.mozilla|files changed," \
@@ -132,9 +132,9 @@ processing.  Once the issue has been resolved, the following steps
 remain for this commit:
   # generate moz.build files (may not be necessary)
   ./mach python python/mozbuild/mozbuild/gn_processor.py \\
-      dom/media/webrtc/third_party_build/gn-configs/webrtc.json
+      $SCRIPT_DIR/gn-configs/webrtc.json
   # commit the updated moz.build files with the appropriate commit msg
-  bash dom/media/webrtc/third_party_build/commit-build-file-changes.sh
+  bash $SCRIPT_DIR/commit-build-file-changes.sh
   # do a (hopefully) quick test build
   ./mach build
 "
@@ -157,7 +157,7 @@ echo "===loop-ff=== Modified BUILD.gn (or webrtc.gni) files: $MODIFIED_BUILD_REL
 if [ "x$MODIFIED_BUILD_RELATED_FILE_CNT" != "x0" ]; then
   echo "===loop-ff=== Regenerate build files" 2>&1| tee -a $LOOP_OUTPUT_LOG
   ./mach python python/mozbuild/mozbuild/gn_processor.py \
-      dom/media/webrtc/third_party_build/gn-configs/webrtc.json 2>&1| tee -a $LOOP_OUTPUT_LOG
+      $SCRIPT_DIR/gn-configs/webrtc.json 2>&1| tee -a $LOOP_OUTPUT_LOG
 
   MOZ_BUILD_CHANGE_CNT=`hg status third_party/libwebrtc \
       --include 'third_party/libwebrtc/**moz.build' | wc -l | tr -d " "`
@@ -165,7 +165,7 @@ if [ "x$MODIFIED_BUILD_RELATED_FILE_CNT" != "x0" ]; then
     echo "===loop-ff=== Detected modified moz.build files, commiting" 2>&1| tee -a $LOOP_OUTPUT_LOG
   fi
 
-  bash dom/media/webrtc/third_party_build/commit-build-file-changes.sh 2>&1| tee -a $LOOP_OUTPUT_LOG
+  bash $SCRIPT_DIR/commit-build-file-changes.sh 2>&1| tee -a $LOOP_OUTPUT_LOG
 fi
 
 ERROR_HELP=$"

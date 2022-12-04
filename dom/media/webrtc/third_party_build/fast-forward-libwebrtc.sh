@@ -122,7 +122,7 @@ function vendor_off_next_commit {
   echo "-------"
   echo "------- Vendor $MOZ_LIBWEBRTC_COMMIT from $MOZ_LIBWEBRTC_SRC"
   echo "-------"
-  ./mach python dom/media/webrtc/third_party_build/vendor-libwebrtc.py \
+  ./mach python $SCRIPT_DIR/vendor-libwebrtc.py \
             --from-local $MOZ_LIBWEBRTC_SRC \
             --commit $MOZ_LIBWEBRTC_COMMIT \
             libwebrtc

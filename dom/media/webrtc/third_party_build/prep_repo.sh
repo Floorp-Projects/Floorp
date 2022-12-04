@@ -73,4 +73,4 @@ rm *.patch
 
 cd $CURRENT_DIR
 
-bash dom/media/webrtc/third_party_build/verify_vendoring.sh || true
+bash $SCRIPT_DIR/verify_vendoring.sh || true
