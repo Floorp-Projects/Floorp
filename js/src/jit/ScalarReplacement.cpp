@@ -386,6 +386,12 @@ static bool IsObjectEscaped(MDefinition* ins, MInstruction* newObject,
       case MDefinition::Opcode::AssertRecoveredOnBailout:
         break;
 
+      // This is just a special flavor of constant which lets us optimize
+      // out some guards in certain circumstances. We'll turn this into a
+      // regular constant later.
+      case MDefinition::Opcode::ConstantProto:
+        break;
+
       default:
         JitSpewDef(JitSpew_Escape, "is escaped by\n", def);
         return true;
@@ -453,6 +459,7 @@ class ObjectMemoryView : public MDefinitionVisitorDefaultNoop {
   void visitFunctionWithProto(MFunctionWithProto* ins);
   void visitPhi(MPhi* ins);
   void visitCompare(MCompare* ins);
+  void visitConstantProto(MConstantProto* ins);
   void visitIsObject(MIsObject* ins);
 };
 
@@ -921,6 +928,16 @@ void ObjectMemoryView::visitCompare(MCompare* ins) {
   ins->replaceAllUsesWith(cst);
 
   // Remove original instruction.
+  ins->block()->discard(ins);
+}
+
+void ObjectMemoryView::visitConstantProto(MConstantProto* ins) {
+  if (ins->receiverObject() != obj_) {
+    return;
+  }
+
+  auto* cst = ins->protoObject();
+  ins->replaceAllUsesWith(cst);
   ins->block()->discard(ins);
 }
 

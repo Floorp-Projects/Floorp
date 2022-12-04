@@ -6501,6 +6501,11 @@ void LIRGenerator::visitConstant(MConstant* ins) {
   }
 }
 
+void LIRGenerator::visitConstantProto(MConstantProto* ins) {
+  JSObject* obj = &ins->protoObject()->toConstant()->toObject();
+  define(new (alloc()) LPointer(obj), ins);
+}
+
 void LIRGenerator::visitWasmNullConstant(MWasmNullConstant* ins) {
   define(new (alloc()) LWasmNullConstant(), ins);
 }

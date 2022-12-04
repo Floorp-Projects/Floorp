@@ -3879,32 +3879,10 @@ bool jit::EliminateRedundantChecks(MIRGraph& graph) {
   return true;
 }
 
-static MDefinition* SkipObjectGuards(MDefinition* ins) {
-  // These instructions don't modify the object and just guard specific
-  // properties.
-  while (true) {
-    if (ins->isGuardShape()) {
-      ins = ins->toGuardShape()->object();
-      continue;
-    }
-    if (ins->isGuardNullProto()) {
-      ins = ins->toGuardNullProto()->object();
-      continue;
-    }
-    if (ins->isGuardProto()) {
-      ins = ins->toGuardProto()->object();
-      continue;
-    }
-
-    break;
-  }
-
-  return ins;
-}
-
-static bool ShapeGuardIsRedundant(MGuardShape* guard, MDefinition* storeObject,
+static bool ShapeGuardIsRedundant(MGuardShape* guard,
+                                  const MDefinition* storeObject,
                                   const Shape* storeShape) {
-  MDefinition* guardObject = SkipObjectGuards(guard->object());
+  const MDefinition* guardObject = guard->object()->skipObjectGuards();
   if (guardObject != storeObject) {
     JitSpew(JitSpew_RedundantShapeGuards, "SKIP: different objects (%d vs %d)",
             guardObject->id(), storeObject->id());
@@ -3966,20 +3944,20 @@ bool jit::EliminateRedundantShapeGuards(MIRGraph& graph) {
 
       if (lastStore->isAddAndStoreSlot()) {
         auto* add = lastStore->toAddAndStoreSlot();
-        auto* addObject = SkipObjectGuards(add->object());
+        auto* addObject = add->object()->skipObjectGuards();
         if (!ShapeGuardIsRedundant(guard, addObject, add->shape())) {
           continue;
         }
       } else if (lastStore->isAllocateAndStoreSlot()) {
         auto* allocate = lastStore->toAllocateAndStoreSlot();
-        auto* allocateObject = SkipObjectGuards(allocate->object());
+        auto* allocateObject = allocate->object()->skipObjectGuards();
         if (!ShapeGuardIsRedundant(guard, allocateObject, allocate->shape())) {
           continue;
         }
       } else if (lastStore->isStart()) {
         // The guard doesn't depend on any other instruction that is modifying
         // the object operand, so we check the object operand directly.
-        auto* obj = SkipObjectGuards(guard->object());
+        auto* obj = guard->object()->skipObjectGuards();
 
         const Shape* initialShape = nullptr;
         if (obj->isNewObject()) {

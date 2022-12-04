@@ -7667,6 +7667,16 @@ bool CacheIRCompiler::emitLoadObject(ObjOperandId resultId,
   return true;
 }
 
+bool CacheIRCompiler::emitLoadProtoObject(ObjOperandId resultId,
+                                          uint32_t objOffset,
+                                          ObjOperandId receiverObjId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  Register reg = allocator.defineRegister(masm, resultId);
+  StubFieldOffset obj(objOffset, StubField::Type::JSObject);
+  emitLoadStubField(obj, reg);
+  return true;
+}
+
 bool CacheIRCompiler::emitLoadInt32Constant(uint32_t valOffset,
                                             Int32OperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);

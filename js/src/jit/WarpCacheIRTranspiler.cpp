@@ -1513,6 +1513,19 @@ bool WarpCacheIRTranspiler::emitLoadObject(ObjOperandId resultId,
   return defineOperand(resultId, ins);
 }
 
+bool WarpCacheIRTranspiler::emitLoadProtoObject(ObjOperandId resultId,
+                                                uint32_t objOffset,
+                                                ObjOperandId receiverObjId) {
+  MInstruction* ins = objectStubField(objOffset);
+  if (ins->isConstant()) {
+    MDefinition* receiverObj = getOperand(receiverObjId);
+
+    ins = MConstantProto::New(alloc(), ins, receiverObj);
+    add(ins);
+  }
+  return defineOperand(resultId, ins);
+}
+
 bool WarpCacheIRTranspiler::emitLoadProto(ObjOperandId objId,
                                           ObjOperandId resultId) {
   MDefinition* obj = getOperand(objId);
