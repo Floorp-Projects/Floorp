@@ -115,11 +115,7 @@ where
         incoming_envelopes_json: &[nsCString],
         callback: &mozIBridgedSyncEngineCallback,
     ) -> Result<FerryTask<N>> {
-        let incoming_envelopes = incoming_envelopes_json
-            .iter()
-            .map(|envelope| Ok(serde_json::from_slice(&*envelope)?))
-            .collect::<Result<_>>()?;
-        Self::with_ferry(engine, Ferry::StoreIncoming(incoming_envelopes), callback)
+        Self::with_ferry(engine, Ferry::StoreIncoming(incoming_envelopes_json.to_vec()), callback)
     }
 
     /// Creates a task to mark a subset of outgoing records as uploaded. This
@@ -233,8 +229,13 @@ where
                 engine.sync_started()?;
                 FerryResult::default()
             }
-            Ferry::StoreIncoming(incoming_envelopes) => {
-                engine.store_incoming(incoming_envelopes.as_slice())?;
+            Ferry::StoreIncoming(incoming_envelopes_json) => {
+                let incoming_envelopes = incoming_envelopes_json
+                    .iter()
+                    .map(|envelope| Ok(serde_json::from_slice(&*envelope)?))
+                    .collect::<Result<_>>()?;
+
+                engine.store_incoming(incoming_envelopes)?;
                 FerryResult::default()
             }
             Ferry::SetUploaded(server_modified_millis, uploaded_ids) => {
@@ -309,14 +310,14 @@ where
             None => return Err(Error::DidNotRun(Self::name()).into()),
         };
         let ApplyResults {
-            envelopes: outgoing_envelopes,
+            records: outgoing_records,
             ..
         } = engine.apply()?;
-        let outgoing_envelopes_json = outgoing_envelopes
+        let outgoing_records_json = outgoing_records
             .iter()
-            .map(|envelope| Ok(serde_json::to_string(envelope)?))
+            .map(|record| Ok(serde_json::to_string(record)?))
             .collect::<Result<_>>()?;
-        Ok(outgoing_envelopes_json)
+        Ok(outgoing_records_json)
     }
 }
 

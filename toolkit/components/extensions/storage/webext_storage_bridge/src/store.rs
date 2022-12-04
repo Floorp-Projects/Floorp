@@ -9,7 +9,7 @@ use std::{
     sync::{Arc, Mutex, MutexGuard},
 };
 
-use golden_gate::{ApplyResults, BridgedEngine, Guid, IncomingEnvelope};
+use golden_gate::{ApplyResults, BridgedEngine, Guid, IncomingBso};
 use interrupt_support::SqlInterruptHandle;
 use once_cell::sync::OnceCell;
 use webext_storage::store::Store;
@@ -168,7 +168,7 @@ impl BridgedEngine for LazyStore {
         Ok(self.get()?.bridged_engine().sync_started()?)
     }
 
-    fn store_incoming(&self, envelopes: &[IncomingEnvelope]) -> Result<()> {
+    fn store_incoming(&self, envelopes: Vec<IncomingBso>) -> Result<()> {
         Ok(self.get()?.bridged_engine().store_incoming(envelopes)?)
     }
 
