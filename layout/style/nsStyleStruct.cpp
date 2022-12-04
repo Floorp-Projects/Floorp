@@ -2207,11 +2207,10 @@ bool StyleAnimation::operator==(const StyleAnimation& aOther) const {
 nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
     : mDisplay(StyleDisplay::Inline),
       mOriginalDisplay(StyleDisplay::Inline),
+      mContain(StyleContain::NONE),
       mContentVisibility(StyleContentVisibility::Visible),
       mContainerType(StyleContainerType::Normal),
       mAppearance(StyleAppearance::None),
-      mContain(StyleContain::NONE),
-      mEffectiveContainment(StyleContain::NONE),
       mDefaultAppearance(StyleAppearance::None),
       mPosition(StylePositionProperty::Static),
       mFloat(StyleFloat::None),
@@ -2264,11 +2263,10 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
 nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
     : mDisplay(aSource.mDisplay),
       mOriginalDisplay(aSource.mOriginalDisplay),
+      mContain(aSource.mContain),
       mContentVisibility(aSource.mContentVisibility),
       mContainerType(aSource.mContainerType),
       mAppearance(aSource.mAppearance),
-      mContain(aSource.mContain),
-      mEffectiveContainment(aSource.mEffectiveContainment),
       mDefaultAppearance(aSource.mDefaultAppearance),
       mPosition(aSource.mPosition),
       mFloat(aSource.mFloat),
@@ -3712,34 +3710,6 @@ template <>
 nscoord StyleCalcNode::Resolve(nscoord aBasis,
                                CoordPercentageRounder aRounder) const {
   return ResolveInternal(aBasis, aRounder);
-}
-
-ContainSizeAxes nsStyleDisplay::GetContainSizeAxes(
-    const nsIFrame& aFrame) const {
-  // Short circuit for no containment whatsoever
-  if (MOZ_LIKELY(!mEffectiveContainment)) {
-    return ContainSizeAxes(false, false);
-  }
-
-  // Note: The spec for size containment says it should have no effect on
-  // non-atomic, inline-level boxes.
-  bool isNonReplacedInline = aFrame.IsFrameOfType(nsIFrame::eLineParticipant) &&
-                             !aFrame.IsFrameOfType(nsIFrame::eReplaced);
-  if (isNonReplacedInline || PrecludesSizeContainment()) {
-    return ContainSizeAxes(false, false);
-  }
-
-  // https://drafts.csswg.org/css-contain-2/#content-visibility
-  // If this content skips its content via content-visibility, it always has
-  // size containment.
-  if (MOZ_LIKELY(!(mEffectiveContainment & StyleContain::SIZE)) &&
-      MOZ_UNLIKELY(aFrame.HidesContent())) {
-    return ContainSizeAxes(true, true);
-  }
-
-  return ContainSizeAxes(
-      static_cast<bool>(mEffectiveContainment & StyleContain::INLINE_SIZE),
-      static_cast<bool>(mEffectiveContainment & StyleContain::BLOCK_SIZE));
 }
 
 static nscoord Resolve(const StyleContainIntrinsicSize& aSize,
