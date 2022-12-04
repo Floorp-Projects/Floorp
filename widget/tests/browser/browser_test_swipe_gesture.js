@@ -935,7 +935,7 @@ add_task(async () => {
   await panRightToLeft(tab.linkedBrowser, 100, 100, 1);
   // NOTE: The last endPhase shouldn't fire a wheel event since
   // its delta is zero.
-  is(wheelEventCount, 3, "Received 3 wheel events");
+  is(wheelEventCount, 2, "Received 2 wheel events");
 
   await waitForWhile();
   // Make sure any navigation didn't happen.
