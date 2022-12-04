@@ -1287,20 +1287,17 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
       const nsStyleDisplay& aNewData) const;
 
   mozilla::StyleDisplay mDisplay;
-  // Saved mDisplay for position:absolute/fixed and float:left/right; otherwise
-  // equal to mDisplay.
-  mozilla::StyleDisplay mOriginalDisplay;
-  // Equal to mContain plus any implicit containment from mContentVisibility and
-  // mContainerType.
+  mozilla::StyleDisplay mOriginalDisplay;  // saved mDisplay for
+                                           //         position:absolute/fixed
+                                           //         and float:left/right;
+                                           //         otherwise equal to
+                                           //         mDisplay
+  mozilla::StyleContain mContain;
   mozilla::StyleContentVisibility mContentVisibility;
   mozilla::StyleContainerType mContainerType;
 
  private:
   mozilla::StyleAppearance mAppearance;
-  mozilla::StyleContain mContain;
-  // Equal to mContain plus any implicit containment from mContentVisibility and
-  // mContainerType.
-  mozilla::StyleContain mEffectiveContainment;
 
  public:
   mozilla::StyleAppearance mDefaultAppearance;
@@ -1569,17 +1566,19 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   }
 
   bool IsContainPaint() const {
+    const auto contain = EffectiveContainment();
     // Short circuit for no containment whatsoever
-    if (!mEffectiveContainment) {
+    if (!contain) {
       return false;
     }
-    return (mEffectiveContainment & StyleContain::PAINT) &&
-           !IsInternalRubyDisplayType() && !IsInternalTableStyleExceptCell();
+    return (contain & StyleContain::PAINT) && !IsInternalRubyDisplayType() &&
+           !IsInternalTableStyleExceptCell();
   }
 
   bool IsContainLayout() const {
+    const auto contain = EffectiveContainment();
     // Short circuit for no containment whatsoever
-    if (!mEffectiveContainment) {
+    if (!contain) {
       return false;
     }
     // Note: The spec for layout containment says it should
@@ -1589,15 +1588,15 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
     // responsible for checking if the box in question is
     // non-atomic and inline-level, and creating an
     // exemption as necessary.
-    return (mEffectiveContainment & StyleContain::LAYOUT) &&
-           !IsInternalRubyDisplayType() && !IsInternalTableStyleExceptCell();
+    return (contain & StyleContain::LAYOUT) && !IsInternalRubyDisplayType() &&
+           !IsInternalTableStyleExceptCell();
   }
 
   bool IsContainStyle() const {
-    return !!(mEffectiveContainment & StyleContain::STYLE);
+    return !!(EffectiveContainment() && StyleContain::STYLE);
   }
 
-  bool IsContainAny() const { return !!mEffectiveContainment; }
+  bool IsContainAny() const { return !!EffectiveContainment(); }
 
   bool PrecludesSizeContainment() const {
     return IsInternalRubyDisplayType() ||
@@ -1728,7 +1727,53 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames() const;
   inline bool IsFixedPosContainingBlockForTransformSupportingFrames() const;
 
-  mozilla::ContainSizeAxes GetContainSizeAxes(const nsIFrame& aFrame) const;
+  StyleContain EffectiveContainment() const {
+    auto contain = mContain;
+    // content-visibility and container-type implicitly enable some containment
+    // flags.
+    if (MOZ_LIKELY(mContainerType == mozilla::StyleContainerType::Normal) &&
+        MOZ_LIKELY(mContentVisibility == StyleContentVisibility::Visible)) {
+      return contain;
+    }
+
+    switch (mContentVisibility) {
+      case StyleContentVisibility::Visible:
+        break;
+      case StyleContentVisibility::Auto:
+        // `content-visibility:auto` also applies size containment when content
+        // is not relevant (and therefore skipped). This is checked in
+        // nsIFrame::GetContainSizeAxes.
+        contain |=
+            StyleContain::LAYOUT | StyleContain::PAINT | StyleContain::STYLE;
+        break;
+      case StyleContentVisibility::Hidden:
+        contain |= StyleContain::LAYOUT | StyleContain::PAINT |
+                   StyleContain::SIZE | StyleContain::STYLE;
+        break;
+    }
+
+    switch (mContainerType) {
+      case mozilla::StyleContainerType::Normal:
+        break;
+      case mozilla::StyleContainerType::InlineSize:
+        // https://drafts.csswg.org/css-contain-3/#valdef-container-type-inline-size:
+        //     Applies layout containment, style containment, and inline-size
+        //     containment to the principal box.
+        contain |= mozilla::StyleContain::LAYOUT |
+                   mozilla::StyleContain::STYLE |
+                   mozilla::StyleContain::INLINE_SIZE;
+        break;
+      case mozilla::StyleContainerType::Size:
+        // https://drafts.csswg.org/css-contain-3/#valdef-container-type-size:
+        //     Applies layout containment, style containment, and size
+        //     containment to the principal box.
+        contain |= mozilla::StyleContain::LAYOUT |
+                   mozilla::StyleContain::STYLE | mozilla::StyleContain::SIZE;
+        break;
+    }
+
+    return contain;
+  }
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleTable {
