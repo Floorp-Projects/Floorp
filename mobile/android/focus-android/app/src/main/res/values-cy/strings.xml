@@ -121,7 +121,7 @@
     <!-- This is the label of an action we offer when the user selects text in other third-party apps.
          Focus is hard coded since we can't use variables in this context.
          Do not translate or transliterate Focus.-->
-    <string name="text_selection_search_action_focus">Chwilio o fewn Ffocws</string>
+    <string name="text_selection_search_action_focus">Chwilio o fewn Focus</string>
     <!-- This is the label of an action we offer when the user selects text in other third-party apps.
              Klar is hard coded since we can't use variables in this context.
              Do not translate or transliterate Klar.-->
@@ -130,6 +130,11 @@
             Focus Beta is hard coded since we can't use variables in this context.
             Do not translate or transliterate Focus Beta.-->
     <string name="text_selection_search_action_focus_beta">Chwilio o fewn Focus Beta</string>
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+          Focus Nightly is hard coded since we can't use variables in this context.
+          Do not translate or transliterate Focus Nightly.-->
+    <string name="text_selection_search_action_focus_nightly">Chwilio o fewn Focus Nightly</string>
 
     <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
          Argument 2 is the url for the learn-more link. -->
@@ -683,6 +688,27 @@
     <!-- Preference for site permissions -->
     <string name="preference_site_permissions">Caniatâd gwefan</string>
 
+    <!--  Preference for cookie banner. The name of the item from settings screen and the title of the cookie banner screen. -->
+    <string name="preferences_cookie_banner">Llai o Faneri Cwcis</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is not disabled. -->
+    <string name="preferences_cookie_banner_summary_on">Ymlaen</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is disabled. -->
+    <string name="preferences_cookie_banner_summary_off">Diffodd</string>
+
+    <!--  Title preference inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_title">Llai o Faneri Cwcis</string>
+
+    <!--  Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_summary">Gweld llai o faneri trwy wrthod ceisiadau cwcis yn awtomatig, pan fo modd.</string>
+
+    <!--  Checkbox Preference title inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
+    <string name="cookie_banner_further_reduce_option_title">Llai fyth o faneri cwcis</string>
+
+    <!--  Checkbox Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
+    <string name="cookie_banner_further_reduce_option_summary">Bydd ceisiadau baneri cwci yn cael eu derbyn er mwyn cau rhagor o faneri.</string>
+
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Awtochwarae</string>
 
@@ -979,6 +1005,11 @@
 
     !-- This is the title of promote search widget dialog. --&gt;
     <string name="promote_search_widget_dialog_title">Hanes pori wedi’i glirio! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <!-- Banner Info Message than will appear when user first enters in the app. The location is at the toolbar. -->
+    <string name="cfr_for_start_browsing">Cychwynnwch eich sesiwn bori breifat, a byddwn yn rhwystro tracwyr a phethau drwg eraill wrth i chi fynd ymlaen.</string>
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. &quot;Focus&quot;) --&gt;
