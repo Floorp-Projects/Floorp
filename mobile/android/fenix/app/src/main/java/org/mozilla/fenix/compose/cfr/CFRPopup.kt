@@ -72,6 +72,19 @@ class CFRPopup(
      */
     fun show() {
         anchor.post {
+            // When we're in this Runnable, the 'show' method might have been called right before
+            // the activity is no longer attached to the WindowManager. When we get to calling
+            // the CFRPopupFullscreenLayout#show method below, we are now trying to attach the View
+            // with the WindowManager that has an unusable Activity.
+            //
+            // To protect against this, within this same Runnable, we check if the anchor view is
+            // safe to use before continuing.
+            //
+            // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1799996
+            if (anchor.context == null || !anchor.isAttachedToWindow) {
+                return@post
+            }
+
             CFRPopupFullscreenLayout(text, anchor, properties, onDismiss, action).apply {
                 this.show()
                 popup = WeakReference(this)
