@@ -21,21 +21,26 @@
 
 - (id)init {
   self = [super init];
-
   if (nil != self) {
-    [self configureObservers];
+    _lock = [[NSLock alloc] init];
   }
-
   return self;
 }
 
 - (void)dealloc {
-  NSNotificationCenter* notificationCenter = [NSNotificationCenter defaultCenter];
-  for (id observer in _observers) [notificationCenter removeObserver:observer];
 }
 
 - (void)registerOwner:(DeviceInfoIos*)owner {
   [_lock lock];
+  if (!_owner && owner) {
+    [self configureObservers];
+  } else if (_owner && !owner) {
+    NSNotificationCenter* notificationCenter = [NSNotificationCenter defaultCenter];
+    for (id observer in _observers) {
+      [notificationCenter removeObserver:observer];
+    }
+    _observers = nil;
+  }
   _owner = owner;
   [_lock unlock];
 }
@@ -50,7 +55,7 @@
       cnt++;
     }
   } @catch (NSException* exception) {
-    cnt = 0 ;
+    cnt = 0;
   }
   return cnt;
 }
@@ -68,7 +73,7 @@
       cnt++;
     }
   } @catch (NSException* exception) {
-    cnt = 0 ;
+    cnt = 0;
   }
 
   return nil;
@@ -129,8 +134,6 @@
 
 - (void)configureObservers {
   // register device connected / disconnected event
-  _lock = [[NSLock alloc] init];
-
   NSNotificationCenter* notificationCenter = [NSNotificationCenter defaultCenter];
 
   id deviceWasConnectedObserver =
