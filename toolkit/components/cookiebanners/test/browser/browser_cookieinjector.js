@@ -9,10 +9,12 @@ const { SiteDataTestUtils } = ChromeUtils.import(
 
 const DOMAIN_A = "example.com";
 const DOMAIN_B = "example.org";
+const DOMAIN_C = "example.net";
 
 const ORIGIN_A = "https://" + DOMAIN_A;
 const ORIGIN_A_SUB = `https://test1.${DOMAIN_A}`;
 const ORIGIN_B = "https://" + DOMAIN_B;
+const ORIGIN_C = "https://" + DOMAIN_C;
 
 const TEST_COOKIE_HEADER_URL =
   getRootDirectory(gTestPath).replace(
@@ -32,14 +34,14 @@ function insertTestRules() {
   let ruleA = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
     Ci.nsICookieBannerRule
   );
-  ruleA.domain = DOMAIN_A;
+  ruleA.domains = [DOMAIN_A, DOMAIN_C];
 
   Services.cookieBanners.insertRule(ruleA);
   ruleA.addCookie(
     true,
     `cookieConsent_${DOMAIN_A}_1`,
     "optOut1",
-    "." + DOMAIN_A,
+    null, // empty host to fall back to .<domain>
     "/",
     3600,
     "",
@@ -53,7 +55,7 @@ function insertTestRules() {
     true,
     `cookieConsent_${DOMAIN_A}_2`,
     "optOut2",
-    DOMAIN_A,
+    null,
     "/",
     3600,
     "",
@@ -68,7 +70,7 @@ function insertTestRules() {
   let ruleB = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
     Ci.nsICookieBannerRule
   );
-  ruleB.domain = DOMAIN_B;
+  ruleB.domains = [DOMAIN_B];
 
   Services.cookieBanners.insertRule(ruleB);
   ruleB.addCookie(
@@ -98,13 +100,17 @@ function assertNoCookies() {
     !SiteDataTestUtils.hasCookies(ORIGIN_B),
     "Should not set any cookies for ORIGIN_B"
   );
+  ok(
+    !SiteDataTestUtils.hasCookies(ORIGIN_C),
+    "Should not set any cookies for ORIGIN_C"
+  );
 }
 
 /**
  * Loads a list of urls consecutively from the same tab.
  * @param {string[]} urls - List of urls to load.
  */
-async function visitTestSites(urls = [ORIGIN_A, ORIGIN_B]) {
+async function visitTestSites(urls = [ORIGIN_A, ORIGIN_B, ORIGIN_C]) {
   let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
 
   for (let url of urls) {
@@ -226,6 +232,20 @@ add_task(async function test_mode_reject() {
     !SiteDataTestUtils.hasCookies(ORIGIN_B),
     "Should not set any cookies for ORIGIN_B"
   );
+  // RULE_A also includes DOMAIN_C.
+  ok(
+    SiteDataTestUtils.hasCookies(ORIGIN_C, [
+      {
+        key: `cookieConsent_${DOMAIN_A}_1`,
+        value: "optOut1",
+      },
+      {
+        key: `cookieConsent_${DOMAIN_A}_2`,
+        value: "optOut2",
+      },
+    ]),
+    "Should set opt-out cookies for ORIGIN_C"
+  );
 
   await SiteDataTestUtils.clear();
 });
@@ -270,6 +290,20 @@ add_task(async function test_mode_reject_or_accept() {
       },
     ]),
     "Should set opt-in cookies for ORIGIN_B"
+  );
+  // Rule a also includes DOMAIN_C
+  ok(
+    SiteDataTestUtils.hasCookies(ORIGIN_C, [
+      {
+        key: `cookieConsent_${DOMAIN_A}_1`,
+        value: "optOut1",
+      },
+      {
+        key: `cookieConsent_${DOMAIN_A}_2`,
+        value: "optOut2",
+      },
+    ]),
+    "Should set opt-out cookies for ORIGIN_C"
   );
 
   await SiteDataTestUtils.clear();

@@ -29,7 +29,7 @@ const RULE_A_ORIGINAL = {
     optOut: "#fooOut",
     presence: "#foobar",
   },
-  domain: "example.com",
+  domains: ["example.com"],
   cookies: {
     optOut: [
       {
@@ -48,7 +48,7 @@ const RULE_B = {
     optOut: "#fooOutB",
     presence: "#foobarB",
   },
-  domain: "example.org",
+  domains: ["example.org"],
   cookies: {
     optOut: [
       {
@@ -66,7 +66,7 @@ const RULE_C = {
     optOut: "#fooOutC",
     presence: "#foobarC",
   },
-  domain: "example.net",
+  domains: ["example.net"],
   cookies: {
     optIn: [
       {
@@ -80,13 +80,13 @@ const RULE_C = {
 };
 
 const RULE_A_UPDATED = {
-  id: RULE_A_ORIGINAL,
+  id: RULE_A_ORIGINAL.id,
   click: {
     optOut: "#fooOut",
     optIn: "#barIn",
     presence: "#foobar",
   },
-  domain: "example.com",
+  domains: ["example.com"],
   cookies: {
     optOut: [
       {
@@ -104,7 +104,7 @@ const RULE_A_UPDATED = {
 
 const INVALID_RULE_CLICK = {
   id: genUUID(),
-  domain: "foobar.com",
+  domains: ["foobar.com"],
   click: {
     presence: 1,
     optIn: "#foo",
@@ -119,7 +119,7 @@ const RULE_D_GLOBAL = {
     optOut: "#globalOptOutD",
     presence: "#globalBannerD",
   },
-  domain: "*",
+  domains: [],
   cookies: {},
 };
 
@@ -129,14 +129,14 @@ const RULE_E_GLOBAL = {
     optOut: "#globalOptOutE",
     presence: "#globalBannerE",
   },
-  domain: "*",
+  domains: [],
   cookies: {},
 };
 
 const RULE_F_EMPTY_CLICK = {
   id: genUUID(),
   click: {},
-  domain: "example.com",
+  domains: ["example.com"],
   cookies: {
     optOut: [
       {
@@ -233,12 +233,17 @@ add_task(async function test_initial_import() {
   Assert.equal(rulesInserted.length, 2, "Two inserted rules after init.");
   Assert.equal(rulesRemoved.length, 0, "No removed rules after init.");
 
-  let ruleA = rulesInserted.find(rule => rule.domain == RULE_A_UPDATED.domain);
+  let ruleA = rulesInserted.find(rule => rule.id == RULE_A_UPDATED.id);
   let cookieRuleA = ruleA.cookiesOptOut[0].cookie;
-  let ruleC = rulesInserted.find(rule => rule.domain == RULE_C.domain);
+  let ruleC = rulesInserted.find(rule => rule.id == RULE_C.id);
   let cookieRuleC = ruleC.cookiesOptIn[0].cookie;
 
   Assert.ok(ruleA, "Has rule A.");
+  Assert.deepEqual(
+    ruleA.domains,
+    RULE_A_UPDATED.domains,
+    "Domains for ruleA should match."
+  );
   // Test the defaults which CookieBannerListService sets when the rule does
   // not.
   Assert.equal(
@@ -248,7 +253,7 @@ add_task(async function test_initial_import() {
   );
   Assert.equal(
     cookieRuleA.host,
-    ".example.com",
+    null,
     "Cookie host for rule A should be default."
   );
   Assert.equal(
@@ -258,6 +263,11 @@ add_task(async function test_initial_import() {
   );
 
   Assert.ok(ruleC, "Has rule C.");
+  Assert.deepEqual(
+    ruleC.domains,
+    RULE_C.domains,
+    "Domains for ruleA should match."
+  );
   Assert.equal(
     ruleC.cookiesOptIn[0].cookie.isSession,
     true,
@@ -316,10 +326,10 @@ add_task(async function test_remotesettings_sync() {
   let ruleC = rulesRemoved[0];
 
   info("Testing that service inserted updated version of RULE_A.");
-  Assert.equal(
-    ruleA.domain,
-    RULE_A_UPDATED.domain,
-    "Domain should match RULE_A."
+  Assert.deepEqual(
+    ruleA.domains,
+    RULE_A_UPDATED.domains,
+    "Domains should match RULE_A."
   );
   Assert.equal(
     ruleA.cookiesOptOut.length,
@@ -386,11 +396,11 @@ add_task(async function test_rule_test_pref() {
   Assert.equal(rulesRemoved.length, 0, "Should not have removed any rules.");
 
   Assert.ok(
-    rulesInserted.some(rule => rule.domain == RULE_A_ORIGINAL.domain),
+    rulesInserted.some(rule => rule.id == RULE_A_ORIGINAL.id),
     "Should have inserted RULE_A"
   );
   Assert.ok(
-    rulesInserted.some(rule => rule.domain == RULE_B.domain),
+    rulesInserted.some(rule => rule.id == RULE_B.id),
     "Should have inserted RULE_B"
   );
 
@@ -421,15 +431,15 @@ add_task(async function test_rule_test_pref() {
   Assert.equal(rulesRemoved.length, 0, "Should not have removed any rules.");
 
   Assert.ok(
-    rulesInserted.some(rule => rule.domain == RULE_A_ORIGINAL.domain),
+    rulesInserted.some(rule => rule.id == RULE_A_ORIGINAL.id),
     "Should have inserted RULE_A"
   );
   Assert.ok(
-    rulesInserted.some(rule => rule.domain == RULE_B.domain),
+    rulesInserted.some(rule => rule.id == RULE_B.id),
     "Should have inserted RULE_B"
   );
   Assert.ok(
-    rulesInserted.some(rule => rule.domain == RULE_C.domain),
+    rulesInserted.some(rule => rule.id == RULE_C.id),
     "Should have inserted RULE_C"
   );
 
@@ -453,14 +463,14 @@ add_task(async function test_runContext_conversion() {
       presence: "#foobar",
       runContext: "child",
     },
-    domain: "a.com",
+    domains: ["a.com"],
   };
   let ruleB = {
     id: genUUID(),
     click: {
       presence: "#foobar",
     },
-    domain: "b.com",
+    domains: ["b.com"],
   };
   let ruleC = {
     id: genUUID(),
@@ -468,7 +478,7 @@ add_task(async function test_runContext_conversion() {
       presence: "#foobar",
       runContext: "all",
     },
-    domain: "c.com",
+    domains: ["c.com"],
   };
   let ruleD = {
     id: genUUID(),
@@ -476,7 +486,7 @@ add_task(async function test_runContext_conversion() {
       presence: "#foobar",
       runContext: "top",
     },
-    domain: "d.com",
+    domains: ["d.com"],
   };
   let ruleE = {
     id: genUUID(),
@@ -484,7 +494,7 @@ add_task(async function test_runContext_conversion() {
       presence: "#foobar",
       runContext: "thisIsNotValid",
     },
-    domain: "e.com",
+    domains: ["e.com"],
   };
 
   let db = RemoteSettings(COLLECTION_NAME).db;
@@ -508,11 +518,16 @@ add_task(async function test_runContext_conversion() {
 
   await insertPromise;
 
-  let resultA = rulesInserted.find(rule => rule.domain == "a.com").clickRule;
-  let resultB = rulesInserted.find(rule => rule.domain == "b.com").clickRule;
-  let resultC = rulesInserted.find(rule => rule.domain == "c.com").clickRule;
-  let resultD = rulesInserted.find(rule => rule.domain == "d.com").clickRule;
-  let resultE = rulesInserted.find(rule => rule.domain == "e.com").clickRule;
+  let resultA = rulesInserted.find(rule => rule.domains.includes("a.com"))
+    .clickRule;
+  let resultB = rulesInserted.find(rule => rule.domains.includes("b.com"))
+    .clickRule;
+  let resultC = rulesInserted.find(rule => rule.domains.includes("c.com"))
+    .clickRule;
+  let resultD = rulesInserted.find(rule => rule.domains.includes("d.com"))
+    .clickRule;
+  let resultE = rulesInserted.find(rule => rule.domains.includes("e.com"))
+    .clickRule;
 
   Assert.equal(
     resultA.runContext,
@@ -572,9 +587,7 @@ add_task(async function test_empty_click_rule() {
 
   await insertPromise;
 
-  let ruleF = rulesInserted.find(
-    rule => rule.domain == RULE_F_EMPTY_CLICK.domain
-  );
+  let ruleF = rulesInserted.find(rule => rule.id == RULE_F_EMPTY_CLICK.id);
 
   Assert.ok(ruleF, "Has rule F.");
   Assert.ok(ruleF.cookiesOptOut?.length, "Should have imported a cookie rule.");
