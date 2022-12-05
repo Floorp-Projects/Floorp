@@ -1084,12 +1084,12 @@ this.tabs = class extends ExtensionAPIPersistent {
           }
 
           /*
-             Indexes are maintained on a per window basis so that a call to
-               move([tabA, tabB], {index: 0})
-                 -> tabA to 0, tabB to 1 if tabA and tabB are in the same window
-               move([tabA, tabB], {index: 0})
-                 -> tabA to 0, tabB to 0 if tabA and tabB are in different windows
-           */
+            Indexes are maintained on a per window basis so that a call to
+              move([tabA, tabB], {index: 0})
+                -> tabA to 0, tabB to 1 if tabA and tabB are in the same window
+              move([tabA, tabB], {index: 0})
+                -> tabA to 0, tabB to 0 if tabA and tabB are in different windows
+          */
           let indexMap = new Map();
           let lastInsertion = new Map();
 
@@ -1214,24 +1214,26 @@ this.tabs = class extends ExtensionAPIPersistent {
           return Promise.resolve();
         },
 
-        async getZoomSettings(tabId) {
+        _getZoomSettings(tabId) {
           let nativeTab = getTabOrActive(tabId);
 
-          let { FullZoom, ZoomUI } = nativeTab.ownerGlobal;
-
-          let defaultZoomFactor = await ZoomUI.getGlobalValue();
+          let { FullZoom } = nativeTab.ownerGlobal;
 
           return {
             mode: "automatic",
             scope: FullZoom.siteSpecific ? "per-origin" : "per-tab",
-            defaultZoomFactor,
+            defaultZoomFactor: 1,
           };
         },
 
-        async setZoomSettings(tabId, settings) {
+        getZoomSettings(tabId) {
+          return Promise.resolve(this._getZoomSettings(tabId));
+        },
+
+        setZoomSettings(tabId, settings) {
           let nativeTab = getTabOrActive(tabId);
 
-          let currentSettings = await this.getZoomSettings(
+          let currentSettings = this._getZoomSettings(
             tabTracker.getId(nativeTab)
           );
 
@@ -1240,11 +1242,11 @@ this.tabs = class extends ExtensionAPIPersistent {
               key => settings[key] === currentSettings[key]
             )
           ) {
-            throw new Error(
+            return Promise.reject(
               `Unsupported zoom settings: ${JSON.stringify(settings)}`
             );
           }
-          return undefined;
+          return Promise.resolve();
         },
 
         onZoomChange: new EventManager({
@@ -1279,7 +1281,7 @@ this.tabs = class extends ExtensionAPIPersistent {
               }
             };
 
-            let zoomListener = async event => {
+            let zoomListener = event => {
               let browser = event.originalTarget;
 
               // For non-remote browsers, this event is dispatched on the document
@@ -1310,7 +1312,7 @@ this.tabs = class extends ExtensionAPIPersistent {
                   tabId,
                   oldZoomFactor,
                   newZoomFactor,
-                  zoomSettings: await tabsApi.tabs.getZoomSettings(tabId),
+                  zoomSettings: tabsApi.tabs._getZoomSettings(tabId),
                 });
               }
             };

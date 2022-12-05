@@ -3,11 +3,6 @@
 "use strict";
 
 const SITE_SPECIFIC_PREF = "browser.zoom.siteSpecific";
-const FULL_ZOOM_PREF = "browser.content.full-zoom";
-
-let gContentPrefs = Cc["@mozilla.org/content-pref/service;1"].getService(
-  Ci.nsIContentPrefService2
-);
 
 // A single monitor for the tests.  If it receives any
 // incognito data in event listeners it will fail.
@@ -234,18 +229,12 @@ add_task(async function test_zoom_api() {
 
       browser.test.log("Disable site-specific zoom, expect correct scope");
       await msg("site-specific", false);
-      await msg("set-global-zoom");
       zoomSettings = await browser.tabs.getZoomSettings(tabIds[0]);
 
       browser.test.assertEq(
         "per-tab",
         zoomSettings.scope,
         `Scope should be "per-tab"`
-      );
-      browser.test.assertEq(
-        5,
-        zoomSettings.defaultZoomFactor,
-        `Default zoom should be 5 after being changed`
       );
       await msg("site-specific", null);
 
@@ -264,7 +253,7 @@ add_task(async function test_zoom_api() {
     background,
   });
 
-  extension.onMessage("msg", async (id, msg, ...args) => {
+  extension.onMessage("msg", (id, msg, ...args) => {
     const {
       Management: {
         global: { tabTracker },
@@ -278,14 +267,6 @@ add_task(async function test_zoom_api() {
     } else if (msg == "set-zoom") {
       let tab = tabTracker.getTab(args[0]);
       ZoomManager.setZoomForBrowser(tab.linkedBrowser);
-    } else if (msg == "set-global-zoom") {
-      resp = await new Promise(resolve => {
-        gContentPrefs.setGlobal(FULL_ZOOM_PREF, 5, Cu.createLoadContext(), {
-          handleCompletion() {
-            resolve();
-          },
-        });
-      });
     } else if (msg == "enlarge") {
       FullZoom.enlarge();
     } else if (msg == "site-specific") {
