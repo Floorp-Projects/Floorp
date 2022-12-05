@@ -63,7 +63,7 @@ browser.tabs.onUpdated.addListener(function(tabId, changeInfo) {
 });
 
 (async () => {
-  let isTestMode = await browser.aboutConfigPrefs.getBoolPref("floorp.tabsleep.testmode.enabled");
+  let isTestMode = await browser.aboutConfigPrefs.getPref("floorp.tabsleep.testmode.enabled");
 
   let sysMemGB = await browser.memoryInfo.getSystemMemorySize() / 1024 / 1024 / 1024;
   if (sysMemGB <= 3) {
