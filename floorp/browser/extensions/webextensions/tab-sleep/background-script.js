@@ -60,6 +60,8 @@ browser.tabs.onUpdated.addListener(function(tabId, changeInfo) {
 });
 
 (async () => {
+  let isTestMode = await browser.aboutConfigPrefs.getBoolPref("floorp.tabsleep.testmode.enabled");
+
   let sysMemGB = await browser.memoryInfo.getSystemMemorySize() / 1024 / 1024 / 1024;
   if (sysMemGB <= 3) {
     await browser.aboutConfigPrefs.setBoolPref(BROWSER_CACHE_MEMORY_ENABLE_PREF, false);
@@ -77,6 +79,9 @@ browser.tabs.onUpdated.addListener(function(tabId, changeInfo) {
     TAB_TIMEOUT_MILISEC = 60 * 1000 * 3;
   } else {
     TAB_TIMEOUT_MILISEC = 60 * 1000 * (sysMemGB * 3);
+  }
+  if (isTestMode) {
+    TAB_TIMEOUT_MILISEC = 60 * 1000 * 2;
   }
 
   /*
@@ -125,6 +130,9 @@ browser.tabs.onUpdated.addListener(function(tabId, changeInfo) {
       ) {
         try {
           await browser.tabs.discard(tab.id);
+          if (isTestMode) {
+            console.log(`${tab.title} (${tab.id}): discarded`);
+          }
         } catch (e) { console.error(e) }
       }
     }
