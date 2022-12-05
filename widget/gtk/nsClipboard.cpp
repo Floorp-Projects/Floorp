@@ -587,6 +587,10 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
 
 RefPtr<GenericPromise> nsClipboard::AsyncGetData(nsITransferable* aTransferable,
                                                  int32_t aWhichClipboard) {
+  LOGCLIP("nsClipboard::AsyncGetData (%s)",
+          aWhichClipboard == nsClipboard::kSelectionClipboard ? "primary"
+                                                              : "clipboard");
+
   // XXX we should read the clipboard data asynchronously instead, bug 1778201.
   nsresult rv = GetData(aTransferable, aWhichClipboard);
   if (NS_FAILED(rv)) {
@@ -631,6 +635,31 @@ void nsClipboard::ClearTransferable(int32_t aWhichClipboard) {
   }
 }
 
+static bool FlavorMatchesTarget(const nsACString& aFlavor, GdkAtom aTarget) {
+  GUniquePtr<gchar> atom_name(gdk_atom_name(aTarget));
+  if (!atom_name) {
+    return false;
+  }
+  if (aFlavor.Equals(atom_name.get())) {
+    LOGCLIP("    has %s\n", atom_name.get());
+    return true;
+  }
+  // X clipboard supports image/jpeg, but we want to emulate support
+  // for image/jpg as well
+  if (aFlavor.EqualsLiteral(kJPGImageMime) &&
+      !strcmp(atom_name.get(), kJPEGImageMime)) {
+    LOGCLIP("    has image/jpg\n");
+    return true;
+  }
+  // application/x-moz-file should be treated like text/uri-list
+  if (aFlavor.EqualsLiteral(kFileMime) &&
+      !strcmp(atom_name.get(), kURIListMime)) {
+    LOGCLIP("    has text/uri-list treating as application/x-moz-file");
+    return true;
+  }
+  return false;
+}
+
 NS_IMETHODIMP
 nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
                                     int32_t aWhichClipboard, bool* _retval) {
@@ -655,6 +684,10 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
 
 #ifdef MOZ_LOGGING
   if (LOGCLIP_ENABLED()) {
+    LOGCLIP("    Asking for content:\n");
+    for (auto& flavor : aFlavorList) {
+      LOGCLIP("        MIME %s\n", flavor.get());
+    }
     LOGCLIP("    Clipboard content (target nums %zu):\n",
             targets.AsSpan().Length());
     for (const auto& target : targets.AsSpan()) {
@@ -664,10 +697,6 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
         continue;
       }
       LOGCLIP("        MIME %s\n", atom_name.get());
-    }
-    LOGCLIP("    Asking for content:\n");
-    for (auto& flavor : aFlavorList) {
-      LOGCLIP("        MIME %s\n", flavor.get());
     }
   }
 #endif
@@ -681,67 +710,76 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
                                  targets.AsSpan().Length())) {
       *_retval = true;
       LOGCLIP("    has kUnicodeMime\n");
-      break;
+      return NS_OK;
     }
-
     for (const auto& target : targets.AsSpan()) {
-      GUniquePtr<gchar> atom_name(gdk_atom_name(target));
-      if (!atom_name) {
-        continue;
-      }
-
-      if (flavor.Equals(atom_name.get())) {
-        LOGCLIP("    has %s\n", atom_name.get());
+      if (FlavorMatchesTarget(flavor, target)) {
         *_retval = true;
-        break;
+        return NS_OK;
       }
-      // X clipboard supports image/jpeg, but we want to emulate support
-      // for image/jpg as well
-      if (flavor.EqualsLiteral(kJPGImageMime) &&
-          !strcmp(atom_name.get(), kJPEGImageMime)) {
-        LOGCLIP("    has image/jpg\n");
-        *_retval = true;
-        break;
-      }
-      // application/x-moz-file should be treated like text/uri-list
-      if (flavor.EqualsLiteral(kFileMime) &&
-          !strcmp(atom_name.get(), kURIListMime)) {
-        LOGCLIP("    has text/uri-list treating as application/x-moz-file");
-        *_retval = true;
-        break;
-      }
-    }
-
-    if (*_retval) {
-      break;
     }
   }
 
-#ifdef MOZ_LOGGING
-  if (!(*_retval)) {
-    LOGCLIP("    no targes at clipboard (bad match)\n");
-  }
-#endif
-
+  LOGCLIP("    no targes at clipboard (bad match)\n");
   return NS_OK;
 }
 
+struct TragetPromiseHandler {
+  TragetPromiseHandler(const nsTArray<nsCString>& aAcceptedFlavorList,
+                       RefPtr<DataFlavorsPromise::Private> aTargetsPromise)
+      : mAcceptedFlavorList(aAcceptedFlavorList.Clone()),
+        mTargetsPromise(aTargetsPromise) {
+    LOGCLIP("TragetPromiseHandler(%p) created", this);
+  }
+  ~TragetPromiseHandler() { LOGCLIP("TragetPromiseHandler(%p) deleted", this); }
+  nsTArray<nsCString> mAcceptedFlavorList;
+  RefPtr<DataFlavorsPromise::Private> mTargetsPromise;
+};
+
 RefPtr<DataFlavorsPromise> nsClipboard::AsyncHasDataMatchingFlavors(
     const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard) {
-  LOGCLIP("nsClipboard::AsyncHasDataMatchingFlavors (%s)\n",
+  LOGCLIP("nsClipboard::AsyncHasDataMatchingFlavors() type %s",
           aWhichClipboard == kSelectionClipboard ? "primary" : "clipboard");
 
-  nsTArray<nsCString> results;
-  for (const auto& flavor : aFlavorList) {
-    bool hasMatchingFlavor = false;
-    nsresult rv = HasDataMatchingFlavors(AutoTArray<nsCString, 1>{flavor},
-                                         aWhichClipboard, &hasMatchingFlavor);
-    if (NS_SUCCEEDED(rv) && hasMatchingFlavor) {
-      results.AppendElement(flavor);
-    }
-  }
+  RefPtr<DataFlavorsPromise::Private> flavorPromise =
+      new DataFlavorsPromise::Private(__func__);
+  gtk_clipboard_request_contents(
+      gtk_clipboard_get(GetSelectionAtom(aWhichClipboard)),
+      gdk_atom_intern("TARGETS", FALSE),
+      [](GtkClipboard* aClipboard, GtkSelectionData* aSelection,
+         gpointer aData) -> void {
+        LOGCLIP("gtk_clipboard_request_contents async handler (%p)", aData);
+        UniquePtr<TragetPromiseHandler> handler(
+            static_cast<TragetPromiseHandler*>(aData));
 
-  return DataFlavorsPromise::CreateAndResolve(std::move(results), __func__);
+        GdkAtom* targets = nullptr;
+        gint targetsNum = 0;
+        if (gtk_selection_data_get_length(aSelection) > 0) {
+          gtk_selection_data_get_targets(aSelection, &targets, &targetsNum);
+        }
+        nsTArray<nsCString> results;
+        if (targetsNum) {
+          for (auto& flavor : handler->mAcceptedFlavorList) {
+            LOGCLIP("  looking for %s", flavor.get());
+            // We can convert any text to unicode.
+            if (flavor.EqualsLiteral(kUnicodeMime) &&
+                gtk_targets_include_text(targets, targetsNum)) {
+              results.AppendElement(flavor);
+              LOGCLIP("    has kUnicodeMime\n");
+              continue;
+            }
+            for (int i = 0; i < targetsNum; i++) {
+              if (FlavorMatchesTarget(flavor, targets[i])) {
+                results.AppendElement(flavor);
+              }
+            }
+          }
+        }
+        handler->mTargetsPromise->Resolve(std::move(results), __func__);
+      },
+      new TragetPromiseHandler(aFlavorList, flavorPromise));
+
+  return flavorPromise.forget();
 }
 
 NS_IMETHODIMP
