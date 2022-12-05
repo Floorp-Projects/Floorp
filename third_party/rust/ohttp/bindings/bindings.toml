@@ -1,0 +1,130 @@
+# In this file, every section corresponds to a header file.
+# A corresponding binding file will be created in $OUT_DIR.
+
+[nspr_err]
+# NSPR doesn't use an enum for errors, so we have to pull in everything in the header file.
+# Specifying no types, functions, or variables does that, but then exclude some.
+exclude = [
+    "nspr_.*",
+    "PR_MAX_ERROR",
+    "ERROR_TABLE_BASE_nspr"
+]
+
+[nspr_error]
+functions = [
+    "PR_ErrorToName",
+    "PR_ErrorToString",
+    "PR_GetError",
+    "PR_SetError",
+]
+variables = [
+    "PR_LANGUAGE_I_DEFAULT",
+]
+
+[nss_secerr]
+types = ["SECErrorCodes"]
+enums = ["SECErrorCodes"]
+
+[nss_init]
+functions = [
+    "NSS_IsInitialized",
+    "NSS_NoDB_Init",
+    "NSS_Shutdown",
+]
+
+[nss_p11]
+types = [
+    "CK_ATTRIBUTE_TYPE",
+    "CK_BBOOL",
+    "CK_FLAGS",
+    "CK_GENERATOR_FUNCTION",
+    "CK_HKDF_PARAMS",
+    "CK_MECHANISM_TYPE",
+    "CK_OBJECT_HANDLE",
+    "CK_ULONG",
+    "SECItem",
+    "SECItemArray",
+    "SECOidData",
+]
+functions = [
+    "PK11_AEADOp",
+    "PK11_CreateContextBySymKey",
+    "PK11_Derive",
+    "PK11_DestroyContext",
+    "PK11_Encrypt",
+    "PK11_ExtractKeyValue",
+    "PK11_FreeSlot",
+    "PK11_FreeSymKey",
+    "PK11_GenerateKeyPairWithOpFlags",
+    "PK11_GenerateRandom",
+    "PK11_GetBlockSize",
+    "PK11_GetInternalSlot",
+    "PK11_GetKeyData",
+    "PK11_GetMechanism",
+    "PK11_HPKE_Deserialize",
+    "PK11_HPKE_DestroyContext",
+    "PK11_HPKE_ExportSecret",
+    "PK11_HPKE_GetEncapPubKey",
+    "PK11_HPKE_NewContext",
+    "PK11_HPKE_Open",
+    "PK11_HPKE_Seal",
+    "PK11_HPKE_Serialize",
+    "PK11_HPKE_SetupR",
+    "PK11_HPKE_SetupS",
+    "PK11_HPKE_ValidateParameters",
+    "PK11_ImportSymKey",
+    "PK11_ReadRawAttribute",
+    "PK11_ReferenceSymKey",
+    "SECITEM_FreeItem",
+    "SECKEY_CopyPrivateKey",
+    "SECKEY_CopyPublicKey",
+    "SECKEY_DestroyPrivateKey",
+    "SECKEY_DestroyPublicKey",
+    "SECOID_FindOIDByTag",
+]
+enums = [
+    "HpkeAeadId",
+    "HpkeKdfId",
+    "HpkeKemId",
+    "PK11ObjectType",
+    "PK11Origin",
+    "SECItemType",
+    "SECOidTag",
+]
+opaque = [
+    "HpkeContext",
+    "PK11Context",
+    "PK11SlotInfo",
+    "PK11SymKey",
+    "SECKEYPrivateKey",
+    "SECKEYPublicKey",
+]
+variables = [
+    "CK_INVALID_HANDLE",
+    "CKA_DECRYPT",
+    "CKA_DERIVE",
+    "CKA_ENCRYPT",
+    "CKA_NSS_MESSAGE",
+    "CKA_SIGN",
+    "CKA_VALUE",
+    "CKF_HKDF_SALT_DATA",
+    "CKF_HKDF_SALT_NULL",
+    "CKF_DERIVE",
+    "CKG_GENERATE_COUNTER_XOR",
+    "CKG_NO_GENERATE",
+    "CKM_AES_GCM",
+    "CKM_CHACHA20_POLY1305",
+    "CKM_EC_KEY_PAIR_GEN",
+    "CKM_HKDF_DATA",
+    "CKM_HKDF_DERIVE",
+    "CKM_HKDF_KEY_GEN",
+    "CKM_INVALID_MECHANISM",
+    "CKM_SHA256",
+    "HPKE_DRAFT_VERSION",
+    "PK11_ATTR_INSENSITIVE",
+    "PK11_ATTR_PRIVATE",
+    "PK11_ATTR_PUBLIC",
+    "PK11_ATTR_SENSITIVE",
+    "PK11_ATTR_SESSION",
+    "SEC_ASN1_OBJECT_ID",
+]
