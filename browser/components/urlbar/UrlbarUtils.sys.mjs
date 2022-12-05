@@ -1619,6 +1619,9 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       content: {
         type: "string",
       },
+      deletable: {
+        type: "boolean",
+      },
       icon: {
         type: "string",
       },

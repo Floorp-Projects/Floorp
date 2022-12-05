@@ -54,6 +54,27 @@ class ProviderOmnibox extends UrlbarProvider {
   }
 
   /**
+   * Called when the result's block button is picked. If the provider can block
+   * the result, it should do so and return true. If the provider cannot block
+   * the result, it should return false. The meaning of "blocked" depends on the
+   * provider and the type of result.
+   *
+   * @param {UrlbarQueryContext} queryContext
+   *   The query context.
+   * @param {UrlbarResult} result
+   *   The result that should be blocked.
+   * @returns {boolean}
+   *   Whether the result was blocked.
+   */
+  blockResult(queryContext, result) {
+    if (result.payload.deletable) {
+      lazy.ExtensionSearchHandler.handleInputDeleted(result.payload.title);
+    }
+
+    return result.payload.deletable;
+  }
+
+  /**
    * Whether the provider should be invoked for the given context.  If this
    * method returns false, the providers manager won't start a query with this
    * provider, to save on resources.
@@ -158,10 +179,12 @@ class ProviderOmnibox extends UrlbarProvider {
                   queryContext.tokens[0].value,
                   UrlbarUtils.HIGHLIGHT.TYPED,
                 ],
+                deletable: suggestion.deletable,
                 icon: UrlbarUtils.ICON.EXTENSION,
               }
             )
           );
+
           addCallback(this, result);
         }
       }

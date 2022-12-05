@@ -47,6 +47,10 @@ add_task(async function() {
         });
       });
 
+      browser.omnibox.onDeleteSuggestion.addListener(text => {
+        browser.test.sendMessage("on-delete-suggestion-fired", { text });
+      });
+
       browser.test.onMessage.addListener((msg, data) => {
         switch (msg) {
           case "set-suggestions":
@@ -197,6 +201,28 @@ add_task(async function() {
     await expectEvent("on-input-cancelled-fired");
   }
 
+  async function testSuggestionDeletion() {
+    extension.sendMessage("set-suggestions", {
+      suggestions: [{ content: "a", description: "select a", deletable: true }],
+    });
+    await extension.awaitMessage("suggestions-set");
+
+    gURLBar.focus();
+
+    EventUtils.sendString(keyword);
+    EventUtils.sendString(" select a");
+
+    await expectEvent("on-input-changed-fired");
+
+    // Select the suggestion
+    await EventUtils.synthesizeKey("KEY_ArrowDown");
+
+    // Delete the suggestion
+    await EventUtils.synthesizeKey("KEY_Delete", { shiftKey: true });
+
+    await expectEvent("on-delete-suggestion-fired", { text: "select a" });
+  }
+
   async function testHeuristicResult(expectedText, setDefaultSuggestion) {
     if (setDefaultSuggestion) {
       extension.sendMessage("set-default-suggestion", {
@@ -300,6 +326,8 @@ add_task(async function() {
 
   await testInputEvents();
 
+  await testSuggestionDeletion();
+
   // Test the heuristic result with default suggestions.
   await testHeuristicResult(
     "Generated extension",
@@ -390,6 +418,7 @@ add_task(async function test_omnibox_event_page() {
       browser.omnibox.onInputEntered.addListener(() => {});
       browser.omnibox.onInputChanged.addListener(() => {});
       browser.omnibox.onInputCancelled.addListener(() => {});
+      browser.omnibox.onDeleteSuggestion.addListener(() => {});
       browser.test.sendMessage("ready");
     },
   });
@@ -399,6 +428,7 @@ add_task(async function test_omnibox_event_page() {
     "onInputEntered",
     "onInputChanged",
     "onInputCancelled",
+    "onDeleteSuggestion",
   ];
 
   await extension.startup();
