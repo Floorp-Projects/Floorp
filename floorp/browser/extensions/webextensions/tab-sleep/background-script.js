@@ -30,19 +30,9 @@ function handleRemoveActivity(tabId) {
 browser.tabs.onActivated.addListener(function(activeInfo) {
   handleUpdateActivity(activeInfo.tabId);
 });
-//browser.tabs.onAttached.addListener(handleUpdateActivity);
 browser.tabs.onCreated.addListener(function(tab) {
   handleUpdateActivity(tab.id);
 });
-//browser.tabs.onDetached.addListener(handleUpdateActivity);
-/*
-browser.tabs.onHighlighted.addListener(function(highlightInfo) {
-  for (let tabId of highlightInfo.tabIds) {
-    handleUpdateActivity(tabId);
-  }
-});
-*/
-//browser.tabs.onMoved.addListener(handleUpdateActivity);
 browser.tabs.onRemoved.addListener(handleRemoveActivity);
 browser.tabs.onReplaced.addListener(function(addedTabId, removedTabId) {
   handleRemoveActivity(removedTabId);
@@ -87,23 +77,6 @@ browser.tabs.onUpdated.addListener(function(tabId, changeInfo) {
   if (isTestMode) {
     TAB_TIMEOUT_MILISEC = 60 * 1000 * 2;
   }
-
-  /*
-  await new Promise(resolve => {
-    setTimeout(resolve, 30000);
-  });
-  */
-  /*
-  let getBrowserUsageMemoryStart = new Date();
-  let memory = await browser.memoryInfo.getBrowserUsageMemorySize();
-  let getBrowserUsageMemoryEnd = new Date();
-
-  let enabledGetBrowserUsageMemory = true;
-  if ((getBrowserUsageMemoryEnd.getTime() - getBrowserUsageMemoryStart.getTime()) > 800) {
-    console.log("Disable getBrowserUsageMemory");
-    enabledGetBrowserUsageMemory = false;
-  }
-  */
 
   //Check tab lastAccessed
   setInterval(async function () {
