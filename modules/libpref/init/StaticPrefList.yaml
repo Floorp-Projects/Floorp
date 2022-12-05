@@ -1672,7 +1672,7 @@
 # synthetic documents when the resource type they're loading is an image.
 - name: browser.opaqueResponseBlocking.syntheticBrowsingContext
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: once
 
 # When this pref is enabled, <object> and <embed> elements will filter the
@@ -1681,7 +1681,7 @@
 # is enabled from `Window.frames`, `Window.length` and named targeting.
 - name: browser.opaqueResponseBlocking.syntheticBrowsingContext.filter
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: once
   do_not_use_directly: true
 
