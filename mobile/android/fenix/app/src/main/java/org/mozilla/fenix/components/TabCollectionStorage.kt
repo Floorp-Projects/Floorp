@@ -19,8 +19,8 @@ import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tab.collections.TabCollectionStorage
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
+import mozilla.components.support.ktx.kotlin.toShortUrl
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.perf.StrictModeManager
 
 private const val COLLECTION_MAX_TITLE_LENGTH = 20
