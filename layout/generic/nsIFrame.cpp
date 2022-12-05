@@ -11416,7 +11416,7 @@ gfx::Matrix nsIFrame::ComputeWidgetTransform() {
 }
 
 ContainSizeAxes nsIFrame::GetContainSizeAxes() const {
-  auto contain = StyleDisplay()->EffectiveContainment();
+  auto contain = StyleDisplay()->mEffectiveContainment;
   // Short circuit for no containment whatsoever
   if (MOZ_LIKELY(!contain)) {
     return ContainSizeAxes(false, false);
