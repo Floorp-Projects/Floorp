@@ -172,6 +172,7 @@ TEST_CATEGORIES = {
                         "!live",
                         "!profil",
                         "!chrom",
+                        "!safari",
                     ]
                 },
                 "Pageload (live) macosx": {
@@ -181,6 +182,7 @@ TEST_CATEGORIES = {
                         "!live",
                         "!profil",
                         "!chrom",
+                        "!safari",
                     ]
                 },
                 "Resource Usage linux": {
@@ -191,6 +193,7 @@ TEST_CATEGORIES = {
                         "!live",
                         "!profil",
                         "!chrom",
+                        "!safari",
                     ],
                     "talos": ["'talos 'xperf | 'tp5", "!clang 'linux 'shippable"],
                 },
@@ -210,6 +213,7 @@ TEST_CATEGORIES = {
                         "!android 'shippable !-32 !clang",
                         "!profil",
                         "!chrom",
+                        "!safari",
                     ],
                 },
                 "Pageload (live) macosx": {
@@ -218,6 +222,7 @@ TEST_CATEGORIES = {
                         "'osx 'shippable",
                         "!profil",
                         "!chrom",
+                        "!safari",
                     ],
                 },
                 "Benchmarks desktop firefox live-sites+profiling": {
@@ -225,7 +230,8 @@ TEST_CATEGORIES = {
                         "'browsertime 'benchmark",
                         "!android 'shippable !-32 !clang",
                         "!chrom",
-                        "!chrom !geckoview !fenix",
+                        "!safari",
+                        "!chrom !geckoview !fenix !safari",
                         "'live",
                         "'profil",
                     ],
@@ -235,6 +241,7 @@ TEST_CATEGORIES = {
                         "'browsertime 'youtube-playback",
                         "!android 'shippable !-32 !clang",
                         "!chrom",
+                        "!safari",
                         "'live",
                         "'profil",
                     ],
@@ -263,6 +270,7 @@ TEST_CATEGORIES = {
                         "'browsertime 'benchmark",
                         "!android 'shippable !-32 !clang",
                         "!profil",
+                        "!safari",
                     ],
                 },
                 "Pageload (live) macosx": {
@@ -270,6 +278,7 @@ TEST_CATEGORIES = {
                         "'browsertime 'tp6 'live",
                         "'osx 'shippable",
                         "!profil",
+                        "!safari",
                     ],
                 },
                 "Benchmarks desktop chromium": {
@@ -277,6 +286,7 @@ TEST_CATEGORIES = {
                         "'browsertime 'benchmark",
                         "!android 'shippable !-32 !clang",
                         "!profil",
+                        "!safari",
                         "'chromium",
                     ],
                 },
@@ -298,6 +308,7 @@ TEST_CATEGORIES = {
                         "!live",
                         "!profil",
                         "!chrom",
+                        "!safari",
                     ],
                 },
                 "Responsiveness android-a51 geckoview": {
@@ -307,6 +318,7 @@ TEST_CATEGORIES = {
                         "!live",
                         "!profil",
                         "!chrom",
+                        "!safari",
                         "'geckoview",
                     ],
                 },
@@ -326,6 +338,7 @@ TEST_CATEGORIES = {
                         "!android 'shippable !-32 !clang",
                         "!live",
                         "!profil",
+                        "!safari",
                     ],
                 },
                 "Responsiveness android-a51 chrome-m": {
@@ -334,6 +347,7 @@ TEST_CATEGORIES = {
                         "'android 'a51 'shippable 'aarch64",
                         "!live",
                         "!profil",
+                        "!safari",
                         "'chrome-m",
                     ],
                 },
@@ -349,6 +363,7 @@ TEST_CATEGORIES = {
                         "'browsertime 'benchmark",
                         "!android 'shippable !-32 !clang",
                         "!live",
+                        "!safari",
                     ]
                 },
                 "Talos PerfTests desktop profiling+swr": {
@@ -379,7 +394,8 @@ TEST_CATEGORIES = {
                         "!-32 'windows 'shippable",
                         "!live",
                         "!chrom",
-                        "!chrom !geckoview !fenix",
+                        "!safari",
+                        "!chrom !geckoview !fenix !safari",
                         "'bytecode",
                         "'profil",
                     ]
@@ -419,6 +435,7 @@ TEST_CATEGORIES = {
                         "'browsertime 'bytecode",
                         "'android 'a51 'shippable 'aarch64",
                         "!chrom",
+                        "!safari",
                         "'fenix",
                         "'nofis",
                         "'live",
@@ -442,6 +459,7 @@ TEST_CATEGORIES = {
                         "'browsertime 'benchmark",
                         "'android 'a51 'shippable 'aarch64",
                         "!chrom",
+                        "!safari",
                         "'geckoview",
                         "'live",
                         "'profil",
@@ -452,6 +470,7 @@ TEST_CATEGORIES = {
                         "'browsertime 'bytecode",
                         "'android 'a51 'shippable 'aarch64",
                         "!chrom",
+                        "!safari",
                         "'fenix",
                         "'nofis",
                         "'live",
@@ -482,6 +501,7 @@ TEST_CATEGORIES = {
                         "!live",
                         "!profil",
                         "!chrom",
+                        "!safari",
                         "'fenix",
                     ],
                 },
@@ -492,6 +512,7 @@ TEST_CATEGORIES = {
                         "!live",
                         "!profil",
                         "!chrom",
+                        "!safari",
                         "'fenix",
                         "'nofis",
                     ],
@@ -502,6 +523,7 @@ TEST_CATEGORIES = {
                         "'android 'a51 'shippable 'aarch64",
                         "!profil",
                         "!chrom",
+                        "!safari",
                         "'fenix",
                         "'nofis",
                         "'live",
@@ -531,6 +553,7 @@ TEST_CATEGORIES = {
                         "!live",
                         "!profil",
                         "!chrom",
+                        "!safari",
                         "'fenix",
                     ],
                 },
@@ -541,6 +564,7 @@ TEST_CATEGORIES = {
                         "!live",
                         "!profil",
                         "!chrom",
+                        "!safari",
                         "'fenix",
                         "'nofis",
                     ],
@@ -551,6 +575,7 @@ TEST_CATEGORIES = {
                         "'android 'a51 'shippable 'aarch64",
                         "!profil",
                         "!chrom",
+                        "!safari",
                         "'fenix",
                         "'live",
                     ],
@@ -561,6 +586,7 @@ TEST_CATEGORIES = {
                         "'android 'a51 'shippable 'aarch64",
                         "!profil",
                         "!chrom",
+                        "!safari",
                         "'fenix",
                         "'nofis",
                         "'live",
@@ -589,7 +615,8 @@ TEST_CATEGORIES = {
                         "!live",
                         "!profil",
                         "!chrom",
-                        "!chrom !geckoview !fenix",
+                        "!safari",
+                        "!chrom !geckoview !fenix !safari",
                     ],
                 },
             },
@@ -611,7 +638,8 @@ TEST_CATEGORIES = {
                         "!live",
                         "!profil",
                         "!chrom",
-                        "!chrom !geckoview !fenix",
+                        "!safari",
+                        "!chrom !geckoview !fenix !safari",
                     ],
                 },
                 "Responsiveness windows firefox live-sites": {
@@ -620,7 +648,8 @@ TEST_CATEGORIES = {
                         "!-32 'windows 'shippable",
                         "!profil",
                         "!chrom",
-                        "!chrom !geckoview !fenix",
+                        "!safari",
+                        "!chrom !geckoview !fenix !safari",
                         "'live",
                     ],
                 },
@@ -629,6 +658,7 @@ TEST_CATEGORIES = {
                         "'browsertime 'youtube-playback",
                         "!-32 'windows 'shippable",
                         "!chrom",
+                        "!safari",
                         "'live",
                         "'profil",
                     ],
@@ -678,7 +708,7 @@ def test_category_expansion(
     [
         (
             {},
-            [6, 2, 2, 5],
+            [7, 2, 2, 5],
             2,
             (
                 "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
@@ -689,7 +719,7 @@ def test_category_expansion(
         ),
         (
             {"dry_run": True},
-            [6, 1, 1, 5],
+            [7, 1, 1, 5],
             2,
             (
                 "\n!!!NOTE!!!\n You'll be able to find a performance comparison "

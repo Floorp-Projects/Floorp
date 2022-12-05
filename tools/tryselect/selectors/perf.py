@@ -116,7 +116,7 @@ class PerfParser(CompareParser):
 
     apps = {
         "firefox": {
-            "query": "!chrom !geckoview !fenix",
+            "query": "!chrom !geckoview !fenix !safari",
             "platforms": ["desktop"],
         },
         "chrome": {
@@ -126,6 +126,10 @@ class PerfParser(CompareParser):
         "chromium": {
             "query": "'chromium",
             "platforms": ["desktop"],
+        },
+        "safari": {
+            "query": "'safari",
+            "platforms": ["macosx"],
         },
         "geckoview": {
             "query": "'geckoview",
@@ -323,6 +327,14 @@ class PerfParser(CompareParser):
                 "default": False,
                 "help": "Show tests available for Chrome-based browsers "
                 "(disabled by default).",
+            },
+        ],
+        [
+            ["--safari"],
+            {
+                "action": "store_true",
+                "default": False,
+                "help": "Show tests available for Safari (disabled by default).",
             },
         ],
         [
@@ -542,6 +554,7 @@ class PerfParser(CompareParser):
     def expand_categories(
         android=False,
         chrome=False,
+        safari=False,
         live_sites=False,
         profile=False,
         requested_variants=[],
@@ -591,6 +604,9 @@ class PerfParser(CompareParser):
 
         if not chrome:
             global_queries["raptor"].append("!chrom")
+
+        if not safari:
+            global_queries["raptor"].append("!safari")
 
         # Start by expanding the variants the variants to include combinatorial
         # options, searching for these tasks is "best-effort" and we can't
@@ -675,7 +691,13 @@ class PerfParser(CompareParser):
                     if app.lower() in ("chrome", "chromium", "chrome-m") and not chrome:
                         # Skip chrome tests if not requested
                         continue
-                    if platform_type not in app_info["platforms"]:
+                    if app.lower() in ("safari",) and not safari:
+                        # Skip Safari tests if not requested
+                        continue
+                    if (
+                        platform_type not in app_info["platforms"]
+                        and platform not in app_info["platforms"]
+                    ):
                         # Ensure this app can run on this platform
                         continue
                     if not any(
@@ -870,6 +892,7 @@ class PerfParser(CompareParser):
         show_all=False,
         android=False,
         chrome=False,
+        safari=False,
         live_sites=False,
         parameters=None,
         profile=False,
@@ -903,6 +926,7 @@ class PerfParser(CompareParser):
             expanded_categories = PerfParser.expand_categories(
                 android=android,
                 chrome=chrome,
+                safari=safari,
                 live_sites=live_sites,
                 profile=profile,
                 requested_variants=requested_variants,
