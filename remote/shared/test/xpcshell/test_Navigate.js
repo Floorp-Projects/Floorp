@@ -785,3 +785,66 @@ add_test(async function test_ProgressListener_navigationRejectedOnStopState() {
 
   run_next_test();
 });
+
+add_test(async function test_ProgressListener_stopIfStarted() {
+  const browsingContext = new MockTopContext();
+  const webProgress = browsingContext.webProgress;
+
+  const progressListener = new ProgressListener(webProgress);
+  const navigated = progressListener.start();
+
+  progressListener.stopIfStarted();
+  ok(!(await hasPromiseResolved(navigated)), "Listener has not resolved");
+
+  await webProgress.sendStartState();
+  progressListener.stopIfStarted();
+  ok(await hasPromiseResolved(navigated), "Listener has resolved");
+
+  run_next_test();
+});
+
+add_test(async function test_ProgressListener_stopIfStarted_alreadyStarted() {
+  // Create an already navigating browsing context.
+  const browsingContext = new MockTopContext();
+  const webProgress = browsingContext.webProgress;
+  await webProgress.sendStartState();
+
+  // Create a progress listener which accepts already ongoing navigations.
+  const progressListener = new ProgressListener(webProgress, {
+    waitForExplicitStart: false,
+  });
+  const navigated = progressListener.start();
+
+  // stopIfStarted should stop the listener because of the ongoing navigation.
+  progressListener.stopIfStarted();
+  ok(await hasPromiseResolved(navigated), "Listener has resolved");
+
+  run_next_test();
+});
+
+add_test(
+  async function test_ProgressListener_stopIfStarted_alreadyStarted_waitForExplicitStart() {
+    // Create an already navigating browsing context.
+    const browsingContext = new MockTopContext();
+    const webProgress = browsingContext.webProgress;
+    await webProgress.sendStartState();
+
+    // Create a progress listener which rejects already ongoing navigations.
+    const progressListener = new ProgressListener(webProgress, {
+      waitForExplicitStart: true,
+    });
+    const navigated = progressListener.start();
+
+    // stopIfStarted will not stop the listener for the existing navigation.
+    progressListener.stopIfStarted();
+    ok(!(await hasPromiseResolved(navigated)), "Listener has not resolved");
+
+    // stopIfStarted will stop the listener when called after starting a new
+    // navigation.
+    await webProgress.sendStartState();
+    progressListener.stopIfStarted();
+    ok(await hasPromiseResolved(navigated), "Listener has resolved");
+
+    run_next_test();
+  }
+);

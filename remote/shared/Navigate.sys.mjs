@@ -397,6 +397,21 @@ export class ProgressListener {
     this.#deferredNavigation = null;
   }
 
+  /**
+   * Stop the progress listener if and only if we already detected a navigation
+   * start.
+   *
+   * @param {Object=} options
+   * @param {Error=} options.error
+   *     If specified the navigation promise will be rejected with this error.
+   */
+  stopIfStarted(options) {
+    this.#trace(`Stop if started: seenStartFlag=${this.#seenStartFlag}`);
+    if (this.#seenStartFlag) {
+      this.stop(options);
+    }
+  }
+
   toString() {
     return `[object ${this.constructor.name}]`;
   }
