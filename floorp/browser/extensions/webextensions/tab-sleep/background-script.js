@@ -84,6 +84,7 @@ browser.tabs.onUpdated.addListener(function(tabId, changeInfo) {
     setTimeout(resolve, 30000);
   });
   */
+  /*
   let getBrowserUsageMemoryStart = new Date();
   let memory = await browser.memoryInfo.getBrowserUsageMemorySize();
   let getBrowserUsageMemoryEnd = new Date();
@@ -93,6 +94,7 @@ browser.tabs.onUpdated.addListener(function(tabId, changeInfo) {
     console.log("Disable getBrowserUsageMemory");
     enabledGetBrowserUsageMemory = false;
   }
+  */
 
   //Check tab lastAccessed
   setInterval(async function () {
