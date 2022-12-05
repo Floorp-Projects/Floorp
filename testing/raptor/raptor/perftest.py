@@ -22,7 +22,6 @@ import mozprocess
 import mozproxy.utils as mpu
 import mozversion
 import six
-
 from mozprofile import create_profile
 from mozproxy import get_playback
 
@@ -39,10 +38,10 @@ for path in paths:
     sys.path.insert(0, path)
 
 from cmdline import FIREFOX_ANDROID_APPS
-from condprof.client import get_profile, ProfileNotFoundError
+from condprof.client import ProfileNotFoundError, get_profile
 from condprof.util import get_current_platform
-from logger.logger import RaptorLogger
 from gecko_profile import GeckoProfile
+from logger.logger import RaptorLogger
 from results import RaptorResultsHandler
 
 LOG = RaptorLogger(component="raptor-perftest")
@@ -250,11 +249,11 @@ class Perftest(object):
     def build_conditioned_profile(self):
         # Late import so python-test doesn't import it
         import asyncio
-        from condprof.runner import Runner
 
         # The following import patchs an issue with invalid
         # content-type, see bug 1655869
         from condprof import patch  # noqa
+        from condprof.runner import Runner
 
         if not getattr(self, "browsertime"):
             raise Exception(
@@ -385,7 +384,10 @@ class Perftest(object):
         return self.conditioned_profile_copy
 
     def build_browser_profile(self):
-        if (
+        if self.config["app"] in ["safari"]:
+            self.profile = None
+            return
+        elif (
             self.config["app"] in ["chrome", "chromium", "chrome-m"]
             or self.config.get("conditioned_profile") is None
         ):
@@ -448,7 +450,7 @@ class Perftest(object):
         if test.get("playback") is not None and self.playback is None:
             self.start_playback(test)
 
-        if test.get("preferences") is not None:
+        if test.get("preferences") is not None and self.config["app"] not in "safari":
             self.set_browser_test_prefs(test["preferences"])
 
     @abstractmethod
@@ -808,10 +810,20 @@ class PerftestDesktop(Perftest):
 
             # Fall-back method to get browser version on desktop
             try:
-                if (
-                    "linux" in self.config["platform"]
-                    or "mac" in self.config["platform"]
-                ):
+                if "mac" in self.config["platform"]:
+                    import plistlib
+
+                    for plist_file in ("version.plist", "Info.plist"):
+                        try:
+                            binary_path = pathlib.Path(self.config["binary"])
+                            plist_path = binary_path.parent.parent.joinpath(plist_file)
+                            with plist_path.open("rb") as plist:
+                                plist = plistlib.load(plist)
+                        except FileNotFoundError:
+                            pass
+                    browser_name = self.config["app"]
+                    browser_version = plist.get("CFBundleShortVersionString")
+                elif "linux" in self.config["platform"]:
                     command = [self.config["binary"], "--version"]
                     proc = mozprocess.ProcessHandler(command)
                     proc.run(timeout=10, outputTimeout=10)

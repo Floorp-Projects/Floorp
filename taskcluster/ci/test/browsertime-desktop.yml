@@ -18,6 +18,8 @@ job-defaults:
                 - .*shippable.*
             chromium:
                 - .*shippable.*
+            safari:
+                - .*macos.*shippable.*
             default: []
     test-manifest-loader: null  # don't load tests in the taskgraph
     tier: 3
@@ -44,6 +46,8 @@ browsertime-tp6:
                     - .*shippable.*
                 chromium:
                     - .*shippable.*
+                safari:
+                    - .*macos.*shippable.*
                 default: []
         max-run-time:
             by-subtest:
@@ -244,7 +248,7 @@ browsertime-tp6-bytecode:
 browsertime-benchmark:
     description: Raptor (browsertime) Benchmark tests
     raptor:
-        apps: [firefox, chrome, chromium]
+        apps: [firefox, chrome, chromium, safari]
         subtests:
             by-app:
                 firefox:
@@ -260,6 +264,18 @@ browsertime-benchmark:
                     - [twitch-animation, tw-a]
                     - [unity-webgl, ugl]
                     - [webaudio, wa]
+                safari:
+                    - ares6
+                    - [assorted-dom, dom]
+                    - [jetstream2, js2]
+                    # - [matrix-react-bench, mrb] (Bug 1802922)
+                    - [motionmark-animometer, mm-a]
+                    - [motionmark-htmlsuite, mm-h]
+                    - [speedometer, sp]
+                    - [stylebench, sb]
+                    - [sunspider, ss]
+                    - [unity-webgl, ugl]
+                    # - [webaudio, wa] (Bug 1802922)
                 default:
                     - ares6
                     - [assorted-dom, dom]
@@ -335,7 +351,7 @@ browsertime-benchmark:
 browsertime-benchmark-wasm:
     description: Raptor (browsertime) WASM benchmarks
     raptor:
-        apps: [firefox, chrome, chromium]
+        apps: [firefox, chrome, chromium]  # Safari depends on Bug 1802922
         subtests:
             by-app:
                 firefox:
@@ -415,36 +431,65 @@ browsertime-tp6-live:
             - --live-sites
             - --extra-profiler-run
     raptor:
-        apps: [firefox, chrome, chromium]
+        apps: [firefox, chrome, chromium, safari]
         test: tp6
         run-visual-metrics: true
         subtests:
-            - amazon
-            - [bing-search, bing]
-            - ebay
-            - [facebook, fb]
-            - fandom
-            - [google-docs, gdocs]
-            - [google-mail, gmail]
-            - [google-search, gsearch]
-            - [google-slides, gslides]
-            - imdb
-            - imgur
-            # - instagram (see bug 1736999)
-            - linkedin
-            - microsoft
-            - netflix
-            # - office (site loads blank page if not signed in)
-            - outlook
-            - paypal
-            - pinterest
-            - reddit
-            - tumblr
-            - twitch
-            - twitter
-            - wikipedia
-            - yahoo-mail
-            - youtube
+            by-app:
+                safari:
+                    - amazon
+                    - [bing-search, bing]
+                    - ebay
+                    - [facebook, fb]
+                    # - fandom (Bug 1802922)
+                    - [google-docs, gdocs]
+                    # - [google-mail, gmail] (Bug 1802922)
+                    - [google-search, gsearch]
+                    - [google-slides, gslides]
+                    - imdb
+                    # - imgur (Bug 1802922)
+                    # - instagram (see bug 1736999)
+                    - linkedin
+                    - microsoft
+                    # - netflix (Bug 1802922)
+                    # - office (site loads blank page if not signed in)
+                    - outlook
+                    - paypal
+                    - pinterest
+                    - reddit
+                    - tumblr
+                    - twitch
+                    - twitter
+                    - wikipedia
+                    # - yahoo-mail (Bug 1802922)
+                    - youtube
+                default:
+                    - amazon
+                    - [bing-search, bing]
+                    - ebay
+                    - [facebook, fb]
+                    - fandom
+                    - [google-docs, gdocs]
+                    - [google-mail, gmail]
+                    - [google-search, gsearch]
+                    - [google-slides, gslides]
+                    - imdb
+                    - imgur
+                    # - instagram (see bug 1736999)
+                    - linkedin
+                    - microsoft
+                    - netflix
+                    # - office (site loads blank page if not signed in)
+                    - outlook
+                    - paypal
+                    - pinterest
+                    - reddit
+                    - tumblr
+                    - twitch
+                    - twitter
+                    - wikipedia
+                    - yahoo-mail
+                    - youtube
     run-on-projects: []
     tier: 3
     treeherder-symbol: Btime-live(tp6)

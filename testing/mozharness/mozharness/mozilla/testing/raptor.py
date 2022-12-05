@@ -12,33 +12,30 @@ import glob
 import multiprocessing
 import os
 import re
-import sys
 import subprocess
+import sys
 import tempfile
-
 from shutil import copyfile, rmtree
 
-from six import string_types
-
 import mozharness
-
 from mozharness.base.errors import PythonErrorList
-from mozharness.base.log import OutputParser, DEBUG, ERROR, CRITICAL, INFO
+from mozharness.base.log import CRITICAL, DEBUG, ERROR, INFO, OutputParser
+from mozharness.base.python import Python3Virtualenv
+from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.automation import (
     EXIT_STATUS_DICT,
-    TBPL_SUCCESS,
     TBPL_RETRY,
+    TBPL_SUCCESS,
     TBPL_WORST_LEVEL_TUPLE,
 )
-from mozharness.base.python import Python3Virtualenv
 from mozharness.mozilla.testing.android import AndroidMixin
-from mozharness.mozilla.testing.errors import HarnessErrorList, TinderBoxPrintRe
-from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
-from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.testing.codecoverage import (
     CodeCoverageMixin,
     code_coverage_config_options,
 )
+from mozharness.mozilla.testing.errors import HarnessErrorList, TinderBoxPrintRe
+from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
+from six import string_types
 
 scripts_path = os.path.abspath(os.path.dirname(os.path.dirname(mozharness.__file__)))
 external_tools_path = os.path.join(scripts_path, "external_tools")
@@ -197,6 +194,7 @@ class Raptor(
                         "geckoview",
                         "refbrow",
                         "fenix",
+                        "safari",
                     ],
                     "dest": "app",
                     "help": "Name of the application we are testing (default: firefox).",
@@ -944,6 +942,9 @@ class Raptor(
                     "Set binary to %s instead of %s"
                     % (kw_options["binary"], binary_path)
                 )
+        elif self.app == "safari" and not self.run_local:
+            binary_path = "/Applications/Safari.app/Contents/MacOS/Safari"
+            kw_options["binary"] = binary_path
         else:  # Running on Chromium
             if not self.run_local:
                 # When running locally we already set the Chromium binary above, in init.

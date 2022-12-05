@@ -15,7 +15,7 @@ from io import open
 
 import six
 from logger.logger import RaptorLogger
-from output import RaptorOutput, BrowsertimeOutput
+from output import BrowsertimeOutput, RaptorOutput
 
 LOG = RaptorLogger(component="perftest-results-handler")
 KNOWN_TEST_MODIFIERS = [
@@ -628,14 +628,15 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                 for bt, raptor in conversion:
                     if measure is not None and bt not in measure:
                         continue
-                    # chrome we just measure fcp and loadtime; skip fnbpaint and dcf
+                    # chrome and safari we just measure fcp and loadtime; skip fnbpaint and dcf
                     if (
                         self.app
-                        and (
-                            "chrome" in self.app.lower()
-                            or "chromium" in self.app.lower()
+                        and self.app.lower() in ["chrome", "chromium", "safari"]
+                        and bt
+                        in (
+                            "fnbpaint",
+                            "dcf",
                         )
-                        and bt in ("fnbpaint", "dcf")
                     ):
                         continue
 

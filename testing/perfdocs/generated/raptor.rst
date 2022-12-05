@@ -47,7 +47,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    **Owner**: :jandem and SpiderMonkey Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
@@ -143,6 +143,11 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ✅
         - ✅
         - ✅
+      * - **browsertime-benchmark-safari-ares6**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -236,7 +241,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    **Owner**: PerfTest Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
    * **fetch task**: assorted-dom
    * **gecko profile entries**: 2000000
@@ -332,6 +337,11 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ✅
         - ✅
         - ✅
+      * - **browsertime-benchmark-safari-assorted-dom**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -425,7 +435,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    **Owner**: :jandem and SpiderMonkey Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
    * **fetch task**: jetstream2
    * **gecko profile entries**: 14000000
@@ -522,6 +532,11 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ✅
         - ✅
         - ✅
+      * - **browsertime-benchmark-safari-jetstream2**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -805,7 +820,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    **Owner**: :jgilbert and Graphics(gfx) Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
    * **gecko profile entries**: 8000000
    * **gecko profile interval**: 1
@@ -899,6 +914,11 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ✅
         - ✅
         - ✅
+      * - **browsertime-benchmark-safari-motionmark-animometer**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -992,7 +1012,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    **Owner**: :jgilbert and Graphics(gfx) Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
    * **gecko profile entries**: 8000000
    * **gecko profile interval**: 1
@@ -1086,6 +1106,11 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ✅
         - ✅
         - ✅
+      * - **browsertime-benchmark-safari-motionmark-htmlsuite**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -1350,7 +1375,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    **Owner**: SpiderMonkey Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
@@ -1669,6 +1694,11 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ✅
         - ✅
         - ✅
+      * - **browsertime-benchmark-safari-speedometer**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -2077,6 +2107,11 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ✅
         - ✅
         - ✅
+      * - **browsertime-benchmark-safari-speedometer**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -2170,7 +2205,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    **Owner**: :emelio and Layout Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
    * **gecko profile entries**: 8000000
    * **gecko profile interval**: 1
@@ -2266,6 +2301,11 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ✅
         - ✅
         - ✅
+      * - **browsertime-benchmark-safari-stylebench**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -2359,7 +2399,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    **Owner**: :jandem and SpiderMonkey Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
    * **gecko profile entries**: 8000000
    * **gecko profile interval**: 1
@@ -2453,6 +2493,11 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ✅
         - ✅
         - ✅
+      * - **browsertime-benchmark-safari-sunspider**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -2933,6 +2978,11 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ✅
         - ✅
         - ❌
+      * - **browsertime-benchmark-safari-unity-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -3022,7 +3072,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    **Owner**: :jgilbert and Graphics(gfx) Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
    * **fetch task**: unity-webgl
    * **gecko profile entries**: 8000000
@@ -3257,6 +3307,11 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ✅
         - ✅
         - ✅
+        - ❌
+      * - **browsertime-benchmark-safari-unity-webgl**
+        - ❌
+        - ❌
+        - ❌
         - ❌
 
 
@@ -6345,7 +6400,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -6836,6 +6891,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-safari-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-profiling-firefox-amazon**
         - ✅
         - ❌
@@ -6995,7 +7055,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -7154,6 +7214,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-safari-bing-search**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -7308,7 +7373,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -7502,7 +7567,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -8097,7 +8162,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -8237,6 +8302,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-safari-ebay**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -8371,7 +8441,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -8886,7 +8956,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -9221,7 +9291,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -9682,6 +9752,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-safari-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -9816,7 +9891,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -10129,7 +10204,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -10270,6 +10345,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-safari-google-docs**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -10404,7 +10484,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -10677,7 +10757,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -10816,6 +10896,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-safari-google-search**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -10950,7 +11035,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -11110,6 +11195,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-safari-google-slides**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -11264,7 +11354,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -11725,6 +11815,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-safari-imdb**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -11859,7 +11954,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -12134,7 +12229,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -12689,7 +12784,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -12829,6 +12924,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-safari-linkedin**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -12963,7 +13063,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -13103,6 +13203,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-safari-microsoft**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -13237,7 +13342,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -13511,7 +13616,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -13846,7 +13951,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -14040,7 +14145,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -14179,6 +14284,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-safari-outlook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -14313,7 +14423,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -14452,6 +14562,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-safari-paypal**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -14586,7 +14701,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -14726,6 +14841,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-safari-pinterest**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -14860,7 +14980,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -15321,6 +15441,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-safari-reddit**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -15455,7 +15580,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -15595,6 +15720,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-safari-tumblr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -15729,7 +15859,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -15870,6 +16000,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-safari-twitch**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -16004,7 +16139,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -16163,6 +16298,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-safari-twitter**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -16317,7 +16457,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -16511,7 +16651,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -16992,6 +17132,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-safari-wikipedia**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -17146,7 +17291,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -17459,7 +17604,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -17925,6 +18070,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-safari-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -18065,7 +18215,7 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **accept zero vismet**: true
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 10
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -18261,7 +18411,7 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **accept zero vismet**: true
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 10
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -18457,7 +18607,7 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **accept zero vismet**: true
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 10
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -18653,7 +18803,7 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **accept zero vismet**: true
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 10
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -18849,7 +18999,7 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **accept zero vismet**: true
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 10
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -23406,6 +23556,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-safari-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-profiling-firefox-amazon**
         - ✅
         - ❌
@@ -27880,6 +28035,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-safari-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -29850,6 +30010,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-safari-imdb**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -31335,6 +31500,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6-live-firefox-reddit**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-safari-reddit**
         - ❌
         - ❌
         - ❌
@@ -32908,6 +33078,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6-live-safari-wikipedia**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -33521,6 +33696,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6-live-firefox-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-safari-youtube**
         - ❌
         - ❌
         - ❌
