@@ -1,0 +1,171 @@
+base_ref: releases_v107
+base_repository: https://github.com/mozilla-mobile/firefox-android
+base_rev: ed304a0910c87b952925961b783282751c1b83dd
+build_date: 1667234607
+build_number: 2
+do_not_optimize: []
+existing_tasks:
+  build-browser-domains: IBu9VsboTpOJQn5OlNKCRA
+  build-browser-engine-gecko: RrDLUWakSXmq3uSLJXEY6A
+  build-browser-engine-system: I7fQihCsS7GxEa7xa46R8A
+  build-browser-errorpages: EkNtEgtASu2ONH4s0oOMcA
+  build-browser-icons: EiSBCHEVSWunj77ASRh9Zw
+  build-browser-menu: StMF1StKQ4u9BcGf5T4RJA
+  build-browser-menu2: ZFdCD2sITa2UQLqit4Axgg
+  build-browser-session-storage: SoTCwEK4RJ-R8g6RghiGWw
+  build-browser-state: GFm0xwTjSKqlrND1W6v7tg
+  build-browser-storage-sync: ZchzMGZxTOaKrHbV-PxtTg
+  build-browser-tabstray: F5r6tiQRSLeN9cdoPofSdg
+  build-browser-thumbnails: XbMj43L4QJ-VLSe3wck4Rg
+  build-browser-toolbar: O6UBzEReQ86WWom_tKSSPg
+  build-compose-awesomebar: Vpcn9uF7QRytGBOdWf_qeQ
+  build-compose-browser-toolbar: d8HrEobmQVSJX0CW8R3Jpw
+  build-compose-cfr: TWrdaMsOQpqNgAvDL4Z94A
+  build-compose-engine: Gz89OJjCTYqU8fFaFGjATg
+  build-compose-tabstray: BSrZ9-OPRmaO_2lxZ9iNgQ
+  build-concept-awesomebar: WJWjU0HxT8u5rPKfFJhu-w
+  build-concept-base: Plfnk-V1REW-DrT8iLCOug
+  build-concept-engine: P_RaS91tTtGZY_efsPxYgQ
+  build-concept-fetch: Ndr7d_smSOySgXakxV9K3A
+  build-concept-menu: FDLPiosIRh2fdm2sjXvbXQ
+  build-concept-push: VDb4RAKCTyC__hJ3S-GViA
+  build-concept-storage: ON84X3X5Qg699tsbY1hpeg
+  build-concept-sync: dtSJhIzbT--by_V3wPFf0Q
+  build-concept-tabstray: MBY0QR0nTtS2O1BVvmfv_g
+  build-concept-toolbar: LHOBqWxiTLeUMn7qzUNcoQ
+  build-docker-image-android-build: GzFBBeiHRSmeFjcxRlM5fg
+  build-docker-image-base: GteyAHqvQWSlARBndvUL0A
+  build-docker-image-ui-tests: MoexgXc6QrCWiBJhiORv0w
+  build-feature-accounts: P27bG0IBR2iYr0E58bm0Yw
+  build-feature-accounts-push: P30VLqKNQqmdNz8W033aqA
+  build-feature-addons: E_BAKiYrRf6tXkMaGQ_n8w
+  build-feature-app-links: J32la5RTRZqop-h5ShkJgg
+  build-feature-autofill: YWCzuwMnR_ekPnFtGNY0CQ
+  build-feature-awesomebar: T-PN7Yq1TcyQXeFxfnBlHQ
+  build-feature-containers: VHI-0H9tRBewdKz5vFnnDw
+  build-feature-contextmenu: TRbSUz2QQhOQzehGGH8KzA
+  build-feature-customtabs: ElgnOxyJRFel_x1Yd81QZg
+  build-feature-downloads: ap6TnrnGQrisTdj2fHbbrQ
+  build-feature-findinpage: Cg68LQK3SAe5_8ekQy_GVg
+  build-feature-intent: aCxyDIFCTUatWGKPGJ6Pkg
+  build-feature-logins: UuZuGJ2NSMm4erZR9FLpHg
+  build-feature-media: J4hzJYTRTW2iNLcoyULKRg
+  build-feature-privatemode: acNLdIb5RhCIa9C0a9RgrQ
+  build-feature-prompts: ZpNmM8LET2Kh-nJn7Rl7xg
+  build-feature-push: T78GhCjaRXyAmOBwguTyqw
+  build-feature-pwa: LqyA3ttqQxyLe28wEcQdkw
+  build-feature-qr: FtUkDR8_Sk6v09lhlQyyug
+  build-feature-readerview: RrammWLvQyuUwin9Rbf_Ow
+  build-feature-recentlyclosed: AhjYNuitTda2wYkiDQ1TXg
+  build-feature-search: H0Y4mqz2Qk60_RV71IXouQ
+  build-feature-serviceworker: K_EQCFCGStyrZ9KDtwGoew
+  build-feature-session: dvHEEMykQl6j8RuasU0cCw
+  build-feature-share: ML8E_voRRJGkHbQKCeu5Ig
+  build-feature-sitepermissions: PcKXN-qgRhi6r6CEzIulFQ
+  build-feature-syncedtabs: aSEeCj3HQaaHNCJq8jPmHg
+  build-feature-tab-collections: bG6ecOIIQtu4TXhUGLfpWg
+  build-feature-tabs: eWSSvE8tR4qZXgIUnejnOw
+  build-feature-toolbar: XeYQ4mYbTiaw1DEpOYidvw
+  build-feature-top-sites: H_X7RHHKSOuJS9trbVCMFw
+  build-feature-webauthn: Usbz7NbkQ6G_Eudxag-a1g
+  build-feature-webcompat: IPxTtiCtTQuhS1C-6PPBJw
+  build-feature-webcompat-reporter: S9MBwP9JRRK4gNl2vfXwQA
+  build-feature-webnotifications: ErhAkml3T2W_gSJbZ_XRJQ
+  build-lib-auth: SnSfjLV3RySwtV1zMcw_rw
+  build-lib-crash: FmvX_iRSR-iHHB7mxN9Y9Q
+  build-lib-crash-sentry: d9kyFS8ORYC01LldDSgOkQ
+  build-lib-crash-sentry-legacy: Uv7ag6jfSKmO4x1BfLlDrg
+  build-lib-dataprotect: cUY2I3c8RkyFzNytu5uYkw
+  build-lib-fetch-httpurlconnection: aLKnvrdxRHSenMAf-rx1Gg
+  build-lib-fetch-okhttp: BykQE5cDQsKBq-zRzji4FA
+  build-lib-jexl: cy0luhtZS5SvHiCTqa-yGA
+  build-lib-publicsuffixlist: D71j7Z0vQC2xOl7iioJXRg
+  build-lib-push-firebase: V0_LdykOS_aYp4IJ_VpkCw
+  build-lib-state: ZWO2eSPcQFeyuMi1R6OK7w
+  build-samples-browser-gecko: YZa18zGvQXGNMjr4RDYpLw
+  build-samples-browser-system: PBwSBjGbRCO3ca7r9LcTAA
+  build-samples-compose-browser: ZFaBUyjRQBaAO1_YcxDqgQ
+  build-samples-crash: XfQ-ZyXFQJyYt_huVVSpeQ
+  build-samples-dataprotect: FudXHxNKQ1-GzxW9onZ2aw
+  build-samples-firefox-accounts: O60tjZXgQqO6rRW-ykrA-Q
+  build-samples-glean: d8A79kyxToWkuCIN6rCvEg
+  build-samples-glean-library: Nd_AsUJESpyLvnUlw4X2IA
+  build-samples-sync: csXh1BL7R6CqSuqN_VfHyA
+  build-samples-sync-logins: MjFFwLJuTBiedyuG0wrxQQ
+  build-samples-toolbar: MU-wYwxzS3yiJ377ZYVbgA
+  build-service-contile: WpP2CkrtT3ydgU_wAgz-Rw
+  build-service-digitalassetlinks: TZCdggBnTdmEKwGTMZxE_Q
+  build-service-firefox-accounts: bnO7wICCRh-FTCHTEMCMYg
+  build-service-glean: fswZdL6AQd-349SbcY1Jew
+  build-service-location: PlglGiR4SruMf6hy9vM5hQ
+  build-service-nimbus: CLxozM6oRgaGwgCrP1a8Mw
+  build-service-pocket: H-Ac6-TKS5yyzHhI1QW38Q
+  build-service-sync-autofill: Clmmn7RyQDCvtoJ56du30Q
+  build-service-sync-logins: Rz0RnBi4Ra2HTS43V-ohfQ
+  build-support-android-test: M6dlMxH8SC61QOi59ZxRRg
+  build-support-base: PJLECCE7QSqNDnIEMmJyNw
+  build-support-images: aIXMO_HmRW6m0trM4F2low
+  build-support-ktx: KKtsjaeNT0a6OrbZvoJbUw
+  build-support-locale: FduPBlctT9O2BNZIocOYog
+  build-support-rusterrors: eb2rMJ4QSk2iBjcPXoOT0Q
+  build-support-rusthttp: CtxEW3TMR6Ozo00nVLaQcw
+  build-support-rustlog: V8NdY_0rT0yMrbYv6WKQ6w
+  build-support-sync-telemetry: IuZ47WuSSo2svm3sq0NSzg
+  build-support-test: ETn7y1oATTyOGD4yjXJYnw
+  build-support-test-appservices: LCSiIpeOSSmOaAnx5rxQxw
+  build-support-test-fakes: VDK_kAYEQLyk5Rvd681YHA
+  build-support-test-libstate: MWmTXKxATUuNMe7u73Ob4A
+  build-support-utils: fv1p0bUwR3uavdXUGEfMzg
+  build-support-webextensions: S-owqT6UTc-Xdke_6_elzw
+  build-tooling-detekt: XBap4BnKRhCtxrt8Bb2yOQ
+  build-tooling-fetch-tests: BslAUi-wT3SaQlZAWKdlxw
+  build-tooling-glean-gradle: Mqt1bfbVTfqZ_qK4RcAZRg
+  build-tooling-lint: dMMTerOlRvmmidhlZG3oQw
+  build-tooling-nimbus-gradle: LNQfRBB2QUqSP-5GFA9GRQ
+  build-ui-autocomplete: Z_vloJiNTTuJA_oYVqENeA
+  build-ui-colors: SClBTbQESU-HJ-bg2V6osg
+  build-ui-fonts: BkvzMpDxQbWq6WhxAyOwQA
+  build-ui-icons: NAFy_W37S3mW_1O310u_8w
+  build-ui-tabcounter: HZohn-vEREWekiAHbMGfIQ
+  build-ui-widgets: O5Bt32lVQqemAt3Uu4Q79Q
+  complete-push: dwJBKO-OSdWN3Ry3WyDj-Q
+  complete-push-1: e2AndXNcQPKOq9XJ9ED4pg
+  complete-push-2: C5tTg48RS6qOn2MKbia5Eg
+  fetch-android-sdk-3859397: Lj3hxU_ySkiwE7frox6ruQ
+  lint-compare-locales: NN68PNMoTWqRep2MFuVSYQ
+  lint-detektAndKtlint: CehipzvDTuq93Zw8YBkG3A
+  test-android-feature-containers: T8oZyWt8S5-uhPMKoxIHnA
+  test-android-feature-downloads: GUr2gQvzQlmyYY3gYUTH4Q
+  test-android-feature-logins: D7UAeOHmRyuClOhbKD_4mw
+  test-android-feature-prompts: Ii43m8rSTmykP0jDLIHAKw
+  test-android-feature-pwa: MkRwz7I-TBmrOjqcmPtkpg
+  test-android-feature-share: CvA2dY-lTH6qV-9Sznijog
+  test-android-feature-sitepermissions: V1ofm4NRSvSV62XhuzfiUQ
+  test-android-feature-top-sites: b0VQTE2cS6uj6dPUqeAnkg
+  test-android-support-ktx: RLqJyIM1RkqUVSE6U5ctzA
+  test-ui-browser: Iln06cwzQHycHD97yS7KiA
+  test-ui-glean: ZBZ6kKhTQCOG3gefUWC6VA
+  test-unit-browser-engine-gecko-nightly: JH3dcJVuTBuJSaF5VFi68A
+  toolchain-linux64-android-gradle-dependencies: T847o9QYSPuj8b4BA170gQ
+  toolchain-linux64-android-sdk-linux-repack: Q5dP-ntmQ-61FFp9y-fTSw
+filters:
+- target_tasks_method
+head_ref: releases_v107
+head_repository: https://github.com/mozilla-mobile/firefox-android
+head_rev: 382516387821e0dc28bdc4699efe46554ebaef8b
+head_tag: v107.0.4
+level: '3'
+moz_build_date: '20221031164327'
+next_version: 107.0.5
+optimize_target_tasks: true
+owner: jlorenzo@mozilla.com
+project: firefox-android
+pull_request_number: null
+pushdate: 0
+pushlog_id: '0'
+release_type: release
+repository_type: git
+shipping_phase: promote
+target_tasks_method: promote
+tasks_for: action
+version: 107.0.4
