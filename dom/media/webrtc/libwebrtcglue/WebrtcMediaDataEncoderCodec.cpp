@@ -275,6 +275,14 @@ WebrtcVideoEncoder::EncoderInfo WebrtcMediaDataEncoder::GetEncoderInfo() const {
   info.implementation_name = "MediaDataEncoder";
   info.is_hardware_accelerated = false;
   info.supports_simulcast = false;
+
+#ifdef MOZ_WIDGET_ANDROID
+  // Assume MediaDataEncoder is used mainly for hardware encoding. 16-alignment
+  // seems required on Android. This could be improved by querying the
+  // underlying encoder.
+  info.requested_resolution_alignment = 16;
+  info.apply_alignment_to_all_simulcast_layers = true;
+#endif
   return info;
 }
 
