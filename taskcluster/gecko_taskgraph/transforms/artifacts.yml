@@ -1,0 +1,12 @@
+---
+win:
+    target.crashreporter-symbols-full.tar.zst: short
+
+linux:
+    target.crashreporter-symbols-full.tar.zst: short
+
+macos:
+    target.crashreporter-symbols-full.tar.zst: short
+
+android:
+    target.crashreporter-symbols-full.tar.zst: short
