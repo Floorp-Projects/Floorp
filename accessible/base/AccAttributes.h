@@ -145,6 +145,20 @@ class AccAttributes {
     return nullptr;
   }
 
+  template <typename T>
+  Maybe<T&> GetMutableAttribute(nsAtom* aAttrName) const {
+    static_assert(std::is_same_v<nsTArray<int32_t>, T> ||
+                      std::is_same_v<nsTArray<uint64_t>, T>,
+                  "Only arrays should be mutable attributes");
+    if (auto value = mData.Lookup(aAttrName)) {
+      if (value->is<T>()) {
+        T& val = value->as<T>();
+        return SomeRef(val);
+      }
+    }
+    return Nothing();
+  }
+
   // Get stringified value
   bool GetAttribute(nsAtom* aAttrName, nsAString& aAttrValue) const;
 
