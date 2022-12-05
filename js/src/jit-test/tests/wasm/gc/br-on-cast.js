@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmGcEnabled() || wasmCompileMode().includes("ion")
+// |jit-test| skip-if: !wasmGcEnabled()
 
 function typingModule(types, castToTypeIndex, brParams, blockResults) {
   return `(module
@@ -163,4 +163,23 @@ invalidTyping('(type $a (struct))', '$a', ['i32', 'f32', 'eqref'], ['f32', 'i32'
   // random sundry of valtypes
   testExtra(['i32', 'f32', 'i64', 'f64']);
   testExtra(['i32', 'f32', 'i64', 'f64', 'i32', 'f32', 'i64', 'f64']);
+}
+
+// This test causes the `values` vector returned by
+// `OpIter<Policy>::readBrOnCast` to contain three entries, the last of which
+// is the argument, hence is reftyped.  This is used to verify an assertion to
+// that effect in FunctionCompiler::brOnCastCommon.
+{
+    let tOnCast =
+    `(module
+       (type $a (struct))
+       (func (export "onCast") (param f32 i32 eqref) (result f32 i32 (ref $a))
+         local.get 0
+         local.get 1
+         local.get 2
+         br_on_cast 0 $a
+         unreachable
+       )
+     )`;
+    let { onCast } = wasmEvalText(tOnCast).exports;
 }

@@ -3497,6 +3497,9 @@ inline bool OpIter<Policy>::readRefCast(uint32_t* typeIndex, Value* ref) {
 // Currently unhandled:
 //   (3) partial check, and not really right
 //   (4) neither checked nor implemented
+//
+// `values` will be nonempty after the call, and its last entry will be that
+// of the argument.
 
 template <typename Policy>
 inline bool OpIter<Policy>::readBrOnCast(uint32_t* labelRelativeDepth,
@@ -3581,6 +3584,9 @@ inline bool OpIter<Policy>::readBrOnCast(uint32_t* labelRelativeDepth,
 // Currently unhandled:
 //   (3) partial check, and not really right
 //   (4) neither checked nor implemented
+//
+// `values` will be nonempty after the call, and its last entry will be that
+// of the argument.
 
 template <typename Policy>
 inline bool OpIter<Policy>::readBrOnCastFail(uint32_t* labelRelativeDepth,

@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmGcEnabled() || wasmCompileMode().includes("ion")
+// |jit-test| skip-if: !wasmGcEnabled()
 
 // We'll be running some binary-format tests shortly.
 
