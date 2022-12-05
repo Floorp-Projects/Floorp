@@ -1,0 +1,20 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIPrincipal.idl"
+/**
+ * This file contains an interface to the ContentBlockingAllowList.
+ */
+[scriptable, uuid(00ed5d73-9de5-42cf-868c-e739a94f6b37)]
+interface nsIContentBlockingAllowList : nsISupports {
+
+  /**
+   * Computes a contentBlockingAllowList principal for a given content principal.
+   *
+   * @param aPrincipal the content principal for which the contentBlockingAllowList principal is computed.
+   * @return a contentBlockingAllowList principal.
+   */
+  nsIPrincipal computeContentBlockingAllowListPrincipal(in nsIPrincipal aPrincipal);
+};

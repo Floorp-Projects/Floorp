@@ -1827,6 +1827,8 @@ var gPrivacyPane = {
   showTrackingProtectionExceptions() {
     let params = {
       permissionType: "trackingprotection",
+      disableETPVisible: true,
+      prefilledHost: "",
       hideStatusColumn: true,
     };
     gSubDialog.open(
