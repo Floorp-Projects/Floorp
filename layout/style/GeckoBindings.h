@@ -89,6 +89,9 @@ void Gecko_DestroyAnonymousContentList(nsTArray<nsIContent*>* anon_content);
 const nsTArray<RefPtr<nsINode>>* Gecko_GetAssignedNodes(
     const mozilla::dom::Element*);
 
+void Gecko_ContentSize(const nsIFrame*, nscoord* aOutWidth,
+                       nscoord* aOutHeight);
+
 void Gecko_ComputedStyle_Init(mozilla::ComputedStyle* context,
                               const ServoComputedData* values,
                               mozilla::PseudoStyleType pseudo_type);
