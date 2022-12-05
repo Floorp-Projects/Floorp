@@ -7,6 +7,7 @@
 #include "CookieBannerDomainPrefService.h"
 #include "ErrorList.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/EventQueue.h"
 #include "mozilla/glean/GleanMetrics.h"
@@ -24,7 +25,9 @@
 #include "nsIEffectiveTLDService.h"
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
+#include "nsStringFwd.h"
 #include "nsThreadUtils.h"
+#include "Cookie.h"
 
 namespace mozilla {
 
@@ -270,6 +273,7 @@ nsresult nsCookieBannerService::GetRuleForDomain(const nsACString& aDomain,
 
 nsresult nsCookieBannerService::GetRuleForURI(nsIURI* aURI, bool aIsTopLevel,
                                               nsICookieBannerRule** aRule,
+                                              nsACString& aDomain,
                                               bool aReportTelemetry) {
   NS_ENSURE_ARG_POINTER(aURI);
   NS_ENSURE_ARG_POINTER(aRule);
@@ -289,6 +293,10 @@ nsresult nsCookieBannerService::GetRuleForURI(nsIURI* aURI, bool aIsTopLevel,
   rv = eTLDService->GetBaseDomain(aURI, 0, baseDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Return the base domain we computed.
+  aDomain.Assign(baseDomain);
+
+  // Return the cookie banner rule.
   return GetRuleForDomain(baseDomain, aIsTopLevel, aRule, aReportTelemetry);
 }
 
@@ -356,7 +364,8 @@ nsCookieBannerService::GetCookiesForURI(
   }
 
   nsCOMPtr<nsICookieBannerRule> rule;
-  nsresult rv = GetRuleForURI(aURI, true, getter_AddRefs(rule));
+  nsCString domain;
+  nsresult rv = GetRuleForURI(aURI, true, getter_AddRefs(rule), domain);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!rule) {
@@ -368,7 +377,7 @@ nsCookieBannerService::GetCookiesForURI(
 
   // MODE_REJECT: In this mode we only handle the banner if we can reject. We
   // don't care about the opt-in cookies.
-  rv = rule->GetCookiesOptOut(aCookies);
+  rv = rule->GetCookies(true, domain, aCookies);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // MODE_REJECT_OR_ACCEPT: In this mode we will try to opt-out, but if we don't
@@ -378,12 +387,11 @@ nsCookieBannerService::GetCookiesForURI(
     MOZ_LOG(gCookieBannerLog, LogLevel::Debug,
             ("%s. Returning opt-in cookies.", __FUNCTION__));
 
-    return rule->GetCookiesOptIn(aCookies);
+    return rule->GetCookies(false, domain, aCookies);
   }
 
   MOZ_LOG(gCookieBannerLog, LogLevel::Debug,
           ("%s. Returning opt-out cookies.", __FUNCTION__));
-
   return NS_OK;
 }
 
@@ -466,18 +474,17 @@ nsCookieBannerService::InsertRule(nsICookieBannerRule* aRule) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsAutoCString domain;
-  nsresult rv = aRule->GetDomain(domain);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(!domain.IsEmpty(), NS_ERROR_FAILURE);
+  nsCookieBannerRule::LogRule(gCookieBannerLog, "InsertRule:", aRule,
+                              LogLevel::Debug);
 
-  MOZ_LOG(gCookieBannerLog, LogLevel::Debug,
-          ("%s. domain: %s", __FUNCTION__, domain.get()));
+  nsTArray<nsCString> domains;
+  nsresult rv = aRule->GetDomains(domains);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Global rules are stored in a separate map mGlobalRules.
-  // They are identified by a "*" in the domain field.
+  // They are identified by having an empty domains array.
   // They are keyed by the unique ID field.
-  if (domain.EqualsLiteral("*")) {
+  if (domains.IsEmpty()) {
     nsAutoCString id;
     rv = aRule->GetId(id);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -497,8 +504,11 @@ nsCookieBannerService::InsertRule(nsICookieBannerRule* aRule) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsICookieBannerRule> result = mRules.InsertOrUpdate(domain, aRule);
-  NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
+  // Multiple domains can be mapped to the same rule.
+  for (auto& domain : domains) {
+    nsCOMPtr<nsICookieBannerRule> result = mRules.InsertOrUpdate(domain, aRule);
+    NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
+  }
 
   return NS_OK;
 }
@@ -512,32 +522,29 @@ nsCookieBannerService::RemoveRule(nsICookieBannerRule* aRule) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsAutoCString domain;
-  nsresult rv = aRule->GetDomain(domain);
+  nsCookieBannerRule::LogRule(gCookieBannerLog, "RemoveRule:", aRule,
+                              LogLevel::Debug);
+
+  nsTArray<nsCString> domains;
+  nsresult rv = aRule->GetDomains(domains);
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(!domain.IsEmpty(), NS_ERROR_FAILURE);
 
   // Remove global rule by ID.
-  if (domain.EqualsLiteral("*")) {
+  if (domains.IsEmpty()) {
     nsAutoCString id;
     rv = aRule->GetId(id);
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_TRUE(!id.IsEmpty(), NS_ERROR_FAILURE);
 
-    MOZ_LOG(gCookieBannerLog, LogLevel::Debug,
-            ("%s. Global Rule, id: %s", __FUNCTION__,
-             PromiseFlatCString(id).get()));
-
     mGlobalRules.Remove(id);
     return NS_OK;
   }
 
-  MOZ_LOG(gCookieBannerLog, LogLevel::Debug,
-          ("%s. Domain rule, aDomain: %s", __FUNCTION__,
-           PromiseFlatCString(domain).get()));
+  // Remove all entries pointing to the rule.
+  for (auto& domain : domains) {
+    mRules.Remove(domain);
+  }
 
-  // Remove site specific rule by domain.
-  mRules.Remove(domain);
   return NS_OK;
 }
 
