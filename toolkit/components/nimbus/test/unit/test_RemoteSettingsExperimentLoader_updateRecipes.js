@@ -877,3 +877,53 @@ add_task(async function test_updateRecipes_featureValidationOptOut() {
     );
   }
 });
+
+add_task(async function test_updateRecipes_invalidFeature_mismatch() {
+  info(
+    "Testing that we do not submit validation telemetry when the targeting does not match"
+  );
+  const recipe = ExperimentFakes.recipe("recipe", {
+    branches: [
+      {
+        slug: "control",
+        ratio: 1,
+        features: [
+          {
+            featureId: "bogus",
+            value: {
+              bogus: "bogus",
+            },
+          },
+        ],
+      },
+    ],
+    targeting: "false",
+  });
+
+  const loader = ExperimentFakes.rsLoader();
+  const manager = loader.manager;
+
+  sinon.stub(loader, "setTimer");
+  sinon.stub(loader.remoteSettingsClient, "get").resolves([recipe]);
+
+  sinon.stub(manager, "onRecipe");
+  sinon.stub(manager, "onFinalize");
+  sinon.stub(manager.store, "ready").resolves();
+  sinon.stub(manager.store, "getAllActive").returns([]);
+  sinon.stub(manager.store, "getAllRollouts").returns([]);
+
+  const telemetrySpy = sinon.stub(manager, "sendValidationFailedTelemetry");
+  const targetingSpy = sinon.spy(loader, "checkTargeting");
+
+  await loader.init();
+  ok(targetingSpy.calledOnce, "Should have checked targeting for recipe");
+  ok(
+    !(await targetingSpy.returnValues[0]),
+    "Targeting should not have matched"
+  );
+  ok(manager.onRecipe.notCalled, "should not call .onRecipe for the recipe");
+  ok(
+    telemetrySpy.notCalled,
+    "Should not have submitted validation failed telemetry"
+  );
+});
