@@ -4043,7 +4043,9 @@ class nsIFrame : public nsQueryFrame {
     }
   }
 
-  mozilla::ContainSizeAxes GetContainSizeAxes() const;
+  mozilla::ContainSizeAxes GetContainSizeAxes() const {
+    return StyleDisplay()->GetContainSizeAxes(*this);
+  }
 
   Maybe<nscoord> ContainIntrinsicBSize(nscoord aNoneValue = 0) const {
     return GetContainSizeAxes().ContainIntrinsicBSize(*this, aNoneValue);

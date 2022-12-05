@@ -11415,33 +11415,6 @@ gfx::Matrix nsIFrame::ComputeWidgetTransform() {
   return result2d;
 }
 
-ContainSizeAxes nsIFrame::GetContainSizeAxes() const {
-  auto contain = StyleDisplay()->mEffectiveContainment;
-  // Short circuit for no containment whatsoever
-  if (MOZ_LIKELY(!contain)) {
-    return ContainSizeAxes(false, false);
-  }
-
-  // Note: The spec for size containment says it should have no effect on
-  // non-atomic, inline-level boxes.
-  bool isNonReplacedInline = IsFrameOfType(nsIFrame::eLineParticipant) &&
-                             !IsFrameOfType(nsIFrame::eReplaced);
-  if (isNonReplacedInline || StyleDisplay()->PrecludesSizeContainment()) {
-    return ContainSizeAxes(false, false);
-  }
-
-  // https://drafts.csswg.org/css-contain-2/#content-visibility
-  // If this content skips its content via content-visibility, it always has
-  // size containment.
-  if (MOZ_LIKELY(!(contain & StyleContain::SIZE)) &&
-      MOZ_UNLIKELY(HidesContent())) {
-    contain |= StyleContain::SIZE;
-  }
-
-  return ContainSizeAxes(static_cast<bool>(contain & StyleContain::INLINE_SIZE),
-                         static_cast<bool>(contain & StyleContain::BLOCK_SIZE));
-}
-
 void nsIFrame::DoUpdateStyleOfOwnedAnonBoxes(ServoRestyleState& aRestyleState) {
   // As a special case, we check for {ib}-split block frames here, rather
   // than have an nsInlineFrame::AppendDirectlyOwnedAnonBoxes implementation
