@@ -34,5 +34,13 @@ interface nsICookieRule : nsISupports {
      * cookie banner is still pending.
      */
     readonly attribute AUTF8String unsetValue;
+
+    /**
+     * Create a copy of this rule for a domain. If the cookie host is unset it
+     * is set to ".<domain>".
+     * Non-empty host fields will be preserved.
+     */
+    [noscript]
+    nsICookieRule copyForDomain(in ACString aDomain);
 };
 

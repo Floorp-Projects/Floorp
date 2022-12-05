@@ -19,13 +19,15 @@ class nsCookieBannerRule final : public nsICookieBannerRule {
 
  public:
   nsCookieBannerRule() = default;
-  explicit nsCookieBannerRule(const nsACString& aDomain) : mDomain(aDomain) {}
+
+  static void LogRule(LazyLogModule& aLogger, const char* aMessage,
+                      nsICookieBannerRule* aRule, LogLevel aLogLevel);
 
  private:
   ~nsCookieBannerRule() = default;
 
   nsCString mId;
-  nsCString mDomain;
+  nsTArray<nsCString> mDomains;
   nsTArray<nsCOMPtr<nsICookieRule>> mCookiesOptOut;
   nsTArray<nsCOMPtr<nsICookieRule>> mCookiesOptIn;
 
