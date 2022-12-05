@@ -468,3 +468,84 @@ add_task(async function originControls_in_unifiedExtensions_contextMenu() {
     contextMenuId: "unified-extensions-context-menu",
   });
 });
+
+add_task(async function test_attention_dot_when_pinning_extension() {
+  const extension = await makeExtension({ permissions: ["activeTab"] });
+  await extension.startup();
+
+  const unifiedButton = win.document.querySelector(
+    "#unified-extensions-button"
+  );
+  const extensionWidgetID = AppUiTestInternals.getBrowserActionWidgetId(
+    extension.id
+  );
+  const extensionWidget = CustomizableUI.getWidget(extensionWidgetID).forWindow(
+    win
+  ).node;
+
+  await BrowserTestUtils.withNewTab("http://mochi.test:8888/", async () => {
+    // The extensions should be placed in the navbar by default so we do not
+    // expect an attention dot on the Unifed Extensions Button (UEB), only on
+    // the extension (widget) itself.
+    ok(
+      !unifiedButton.hasAttribute("attention"),
+      "expected no attention attribute on the UEB"
+    );
+    ok(
+      extensionWidget.hasAttribute("attention"),
+      "expected attention attribute on the extension widget"
+    );
+
+    // Open the context menu of the extension and unpin the extension.
+    let contextMenu = await openChromeContextMenu(
+      "toolbar-context-menu",
+      `#${CSS.escape(extensionWidgetID)}`,
+      win
+    );
+    let pinToToolbar = contextMenu.querySelector(
+      ".customize-context-pinToToolbar"
+    );
+    ok(pinToToolbar, "expected a 'Pin to Toolbar' menu item");
+    // Passing the `pinToToolbar` item to `closeChromeContextMenu()` will
+    // activate it before closing the context menu.
+    await closeChromeContextMenu(contextMenu.id, pinToToolbar, win);
+
+    ok(
+      unifiedButton.hasAttribute("attention"),
+      "expected attention attribute on the UEB"
+    );
+    // We still expect the attention dot on the extension.
+    ok(
+      extensionWidget.hasAttribute("attention"),
+      "expected attention attribute on the extension widget"
+    );
+
+    // Now let's open the unified extensions panel, and pin the same extension
+    // to the toolbar, which should hide the attention dot on the UEB again.
+    await openExtensionsPanel(win);
+    contextMenu = await openUnifiedExtensionsContextMenu(win, extension.id);
+    pinToToolbar = contextMenu.querySelector(
+      ".unified-extensions-context-menu-pin-to-toolbar"
+    );
+    ok(pinToToolbar, "expected a 'Pin to Toolbar' menu item");
+    const hidden = BrowserTestUtils.waitForEvent(
+      win.gUnifiedExtensions.panel,
+      "popuphidden",
+      true
+    );
+    contextMenu.activateItem(pinToToolbar);
+    await hidden;
+
+    ok(
+      !unifiedButton.hasAttribute("attention"),
+      "expected no attention attribute on the UEB"
+    );
+    // We still expect the attention dot on the extension.
+    ok(
+      extensionWidget.hasAttribute("attention"),
+      "expected attention attribute on the extension widget"
+    );
+  });
+
+  await extension.unload();
+});
