@@ -645,6 +645,10 @@ const availableLocaleDisplayNames = {
   ]),
 };
 
+/**
+ * Notice: If you're updating these names, you should also update the data
+ *         in python/mozbuild/mozbuild/action/langpack_localeNames.json.
+ */
 const nativeLocaleNames = new Map(
   Object.entries({
     ach: "Acholi",

@@ -26,7 +26,6 @@ def migrate(ctx):
     """Bug 1802128 - Convert langpack defines.inc to Fluent, part {index}."""
 
     browser = "browser/defines.inc"
-    toolkit = "toolkit/defines.inc"
     target = "browser/langpack-metadata.ftl"
     ctx.add_transforms(
         target,
@@ -39,10 +38,6 @@ def migrate(ctx):
             FTL.Message(
                 id=FTL.Identifier("langpack-contributors"),
                 value=CONTRIB(browser, "MOZ_LANGPACK_CONTRIBUTORS"),
-            ),
-            FTL.Message(
-                id=FTL.Identifier("langpack-title"),
-                value=COPY(toolkit, "MOZ_LANG_TITLE"),
             ),
         ],
     )
