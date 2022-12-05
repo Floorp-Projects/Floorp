@@ -3357,6 +3357,19 @@ class FunctionCompiler {
     // Check we agree on whether a value is returned.
     MOZ_ASSERT((result == nullptr) == (callee.retType == MIRType::None));
 
+    // If we are in dead code, it can happen that some of the `args` entries
+    // are nullptr.  In that case the assertions below relating to the number
+    // of args will fail, because they under-count the number of arguments
+    // provided.  So exit at this point.  `passInstance`, `passArg`,
+    // `finishCall` and `builtinInstanceMethodCall` all do nothing in dead
+    // code, so it's valid to exit here.
+    if (inDeadCode()) {
+      if (result) {
+        *result = nullptr;
+      }
+      return true;
+    }
+
     CallCompileState ccsArgs;
     if (!passInstance(callee.argTypes[0], &ccsArgs)) {
       return false;
