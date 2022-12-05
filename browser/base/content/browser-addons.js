@@ -1610,6 +1610,9 @@ var gUnifiedExtensions = {
       ? CustomizableUI.AREA_NAVBAR
       : CustomizableUI.AREA_ADDONS;
     let newPosition = shouldPinToToolbar ? undefined : 0;
+
     CustomizableUI.addWidgetToArea(widgetId, newArea, newPosition);
+
+    this.updateAttention();
   },
 };
