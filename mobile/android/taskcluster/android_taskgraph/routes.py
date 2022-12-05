@@ -8,10 +8,10 @@ import time
 from taskgraph.transforms.task import index_builder
 
 SIGNING_ROUTE_TEMPLATES = [
-    "index.{trust-domain}.v2.{project}.{variant}.latest.{component}",
-    "index.{trust-domain}.v2.{project}.{variant}.{build_date}.revision.{head_rev}.{component}",
-    "index.{trust-domain}.v2.{project}.{variant}.{build_date}.latest.{component}",
-    "index.{trust-domain}.v2.{project}.{variant}.revision.{head_rev}.{component}",
+    "index.{trust_domain}.v3.{project}.{variant}.{artifact_type}.latest.{artifact_name}",
+    "index.{trust_domain}.v3.{project}.{variant}.{artifact_type}.{build_date}.revision.{head_rev}.{artifact_name}",
+    "index.{trust_domain}.v3.{project}.{variant}.{artifact_type}.{build_date}.latest.{artifact_name}",
+    "index.{trust_domain}.v3.{project}.{variant}.{artifact_type}.revision.{head_rev}.{artifact_name}",
 ]
 
 
@@ -26,10 +26,28 @@ def add_signing_indexes(config, task):
     subs["build_date"] = time.strftime(
         "%Y.%m.%d", time.gmtime(config.params["build_date"])
     )
-    subs["trust-domain"] = config.graph_config["trust-domain"]
+    subs["trust_domain"] = config.graph_config["trust-domain"]
     subs["variant"] = task["attributes"]["build-type"]
-    subs["component"] = task["attributes"]["component"]
 
-    for tpl in SIGNING_ROUTE_TEMPLATES:
-        routes.append(tpl.format(**subs))
+    if task["attributes"].get("component"):
+        subs["artifact_type"] = "components"
+        subs["artifact_name"] = task["attributes"]["component"]
+        new_signing_routes = [
+            template.format(**subs)
+            for template in SIGNING_ROUTE_TEMPLATES
+        ]
+
+    elif task["attributes"].get("apks"):
+        subs["artifact_type"] = "apks"
+        new_signing_routes = []
+        for abi in task["attributes"]["apks"].keys():
+            subs["artifact_name"] = abi
+            new_signing_routes.extend([
+                template.format(**subs)
+                for template in SIGNING_ROUTE_TEMPLATES
+            ])
+    else:
+        raise NotImplementedError(f"Unsupported artifact_type. Task: {task}")
+
+    routes.extend(new_signing_routes)
     return task
