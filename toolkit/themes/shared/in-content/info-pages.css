@@ -29,6 +29,13 @@ body.wide-container {
   max-width: var(--in-content-container-max-width);
 }
 
+.container.restore-chosen {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  margin: 10vh 0;
+}
+
 /* Typography */
 .title {
   background-position: left 0;
@@ -39,6 +46,10 @@ body.wide-container {
   font-size: 2.2em;
   -moz-context-properties: fill;
   fill: currentColor;
+}
+
+.container.restore-chosen {
+  margin: 25vh 0;
 }
 
 .title:-moz-locale-dir(rtl),
