@@ -219,6 +219,29 @@ addAccessibleTask(
 );
 
 /**
+ * Test retrieval of text offsets when an invalid offset is given.
+ */
+addAccessibleTask(
+  `<p id="p">test</p>`,
+  async function(browser, docAcc) {
+    const p = findAccessibleChildByID(docAcc, "p");
+    testTextAtOffset(p, BOUNDARY_LINE_START, [[5, 5, "", 0, 0]]);
+    testTextBeforeOffset(p, BOUNDARY_LINE_START, [[5, 5, "", 0, 0]]);
+    testTextAfterOffset(p, BOUNDARY_LINE_START, [[5, 5, "", 0, 0]]);
+  },
+  {
+    // The old HyperTextAccessible implementation doesn't crash, but it returns
+    // different offsets. This doesn't matter because they're invalid either
+    // way. Since the new HyperTextAccessibleBase implementation is all we will
+    // have soon, just test that.
+    chrome: isCacheEnabled,
+    topLevel: isCacheEnabled,
+    iframe: isCacheEnabled,
+    remoteIframe: isCacheEnabled,
+  }
+);
+
+/**
  * Test HyperText embedded object methods.
  */
 addAccessibleTask(
