@@ -164,8 +164,6 @@ class HyperTextAccessible : public AccessibleWrap,
 
   virtual already_AddRefed<AccAttributes> DefaultTextAttributes() override;
 
-  virtual void InvalidateCachedHyperTextOffsets() override { mOffsets.Clear(); }
-
   // HyperTextAccessibleBase provides an overload which takes an Accessible.
   using HyperTextAccessibleBase::GetChildOffset;
 
@@ -429,10 +427,7 @@ class HyperTextAccessible : public AccessibleWrap,
   // HyperTextAccessibleBase
   virtual const Accessible* Acc() const override { return this; }
 
-  virtual const nsTArray<int32_t>& GetCachedHyperTextOffsets() const override {
-    if (mOffsets.IsEmpty()) {
-      BuildCachedHyperTextOffsets(mOffsets);
-    }
+  virtual nsTArray<int32_t>& GetCachedHyperTextOffsets() override {
     return mOffsets;
   }
 
