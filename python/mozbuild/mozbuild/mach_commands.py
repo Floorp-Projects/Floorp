@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
+import errno
 import itertools
 import json
 import logging
@@ -17,26 +18,20 @@ import subprocess
 import sys
 import tempfile
 import time
-import errno
+from pathlib import Path
 
 import mozbuild.settings  # noqa need @SettingsProvider hook to execute
 import mozpack.path as mozpath
-
-from pathlib import Path
 from mach.decorators import (
+    Command,
     CommandArgument,
     CommandArgumentGroup,
-    Command,
     SettingsProvider,
     SubCommand,
 )
-
-from mozbuild.base import (
-    BinaryNotFoundException,
-    BuildEnvironmentNotFoundException,
-    MachCommandConditions as conditions,
-    MozbuildObject,
-)
+from mozbuild.base import BinaryNotFoundException, BuildEnvironmentNotFoundException
+from mozbuild.base import MachCommandConditions as conditions
+from mozbuild.base import MozbuildObject
 from mozbuild.util import MOZBUILD_METRICS_PATH
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -1202,8 +1197,9 @@ def gtest(
             pass_thru=True,
         )
 
-    from mozprocess import ProcessHandlerMixin
     import functools
+
+    from mozprocess import ProcessHandlerMixin
 
     def handle_line(job_id, line):
         # Prepend the jobId
@@ -1257,7 +1253,7 @@ def android_gtest(
     setup_logging("mach-gtest", {}, {default_format: sys.stdout}, format_args)
 
     # ensure that a device is available and test app is installed
-    from mozrunner.devices.android_device import verify_android_device, get_adb_path
+    from mozrunner.devices.android_device import get_adb_path, verify_android_device
 
     verify_android_device(
         command_context, install=install, app=package, device_serial=device_serial
@@ -1357,8 +1353,8 @@ def install(command_context, **kwargs):
     """Install a package."""
     if conditions.is_android(command_context):
         from mozrunner.devices.android_device import (
-            verify_android_device,
             InstallIntent,
+            verify_android_device,
         )
 
         ret = (
@@ -1697,9 +1693,9 @@ def _run_android(
     use_existing_process=False,
 ):
     from mozrunner.devices.android_device import (
-        verify_android_device,
-        _get_device,
         InstallIntent,
+        _get_device,
+        verify_android_device,
     )
     from six.moves import shlex_quote
 
@@ -2093,7 +2089,7 @@ def _run_desktop(
     stacks,
     show_dump_stats,
 ):
-    from mozprofile import Profile, Preferences
+    from mozprofile import Preferences, Profile
 
     try:
         if packaged:
@@ -2418,6 +2414,33 @@ def repackage(command_context):
     .dmg on OSX or an installer exe on Windows.
     """
     print("Usage: ./mach repackage [dmg|pkg|installer|mar] [args...]")
+
+
+@SubCommand(
+    "repackage", "deb", description="Repackage a tar file into a .deb for Linux"
+)
+@CommandArgument("--input", "-i", type=str, required=True, help="Input filename")
+@CommandArgument("--output", "-o", type=str, required=True, help="Output filename")
+@CommandArgument("--arch", type=str, required=True, help="One of ['x86', 'x86_64']")
+@CommandArgument(
+    "--templates",
+    type=str,
+    required=True,
+    help="Location of the templates used to generate the debian/ directory files",
+)
+def repackage_deb(command_context, input, output, arch, templates):
+    if not os.path.exists(input):
+        print("Input file does not exist: %s" % input)
+        return 1
+
+    template_dir = os.path.join(
+        command_context.topsrcdir,
+        templates,
+    )
+
+    from mozbuild.repackaging.deb import repackage_deb
+
+    repackage_deb(input, output, template_dir, arch)
 
 
 @SubCommand("repackage", "dmg", description="Repackage a tar file into a .dmg for OSX")
