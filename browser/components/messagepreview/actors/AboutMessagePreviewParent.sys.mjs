@@ -11,13 +11,21 @@ const lazy = {};
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   InfoBar: "resource://activity-stream/lib/InfoBar.jsm",
   Spotlight: "resource://activity-stream/lib/Spotlight.jsm",
+  SpecialMessageActions:
+    "resource://messaging-system/lib/SpecialMessageActions.jsm",
 });
+
+function dispatchCFRAction({ type, data }, browser) {
+  if (type === "USER_ACTION") {
+    lazy.SpecialMessageActions.handleAction(data, browser);
+  }
+}
 
 export class AboutMessagePreviewParent extends JSWindowActorParent {
   showInfoBar(message) {
     const browser = this.browsingContext.topChromeWindow.gBrowser
       .selectedBrowser;
-    lazy.InfoBar.showInfoBarMessage(browser, message, () => {});
+    lazy.InfoBar.showInfoBarMessage(browser, message, dispatchCFRAction);
   }
 
   showSpotlight(message) {
