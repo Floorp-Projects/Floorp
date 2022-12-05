@@ -17,6 +17,26 @@
 
 using namespace mozilla;
 
+NS_IMPL_ISUPPORTS(ContentBlockingAllowList, nsIContentBlockingAllowList)
+
+NS_IMETHODIMP
+// Wrapper for the static ContentBlockingAllowList::ComputePrincipal method
+ContentBlockingAllowList::ComputeContentBlockingAllowListPrincipal(
+    nsIPrincipal* aDocumentPrincipal, nsIPrincipal** aPrincipal) {
+  NS_ENSURE_ARG_POINTER(aDocumentPrincipal);
+  NS_ENSURE_ARG_POINTER(aPrincipal);
+
+  nsCOMPtr<nsIPrincipal> principal;
+  ContentBlockingAllowList::ComputePrincipal(aDocumentPrincipal,
+                                             getter_AddRefs(principal));
+
+  NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
+
+  principal.forget(aPrincipal);
+
+  return NS_OK;
+}
+
 /* static */ bool ContentBlockingAllowList::Check(
     nsIPrincipal* aTopWinPrincipal, bool aIsPrivateBrowsing) {
   bool isAllowed = false;

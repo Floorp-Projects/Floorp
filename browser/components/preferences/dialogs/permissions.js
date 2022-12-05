@@ -6,10 +6,23 @@ var { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
 
+var { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
+
+const lazy = {};
+
+XPCOMUtils.defineLazyServiceGetter(
+  lazy,
+  "contentBlockingAllowList",
+  "@mozilla.org/content-blocking-allow-list;1",
+  "nsIContentBlockingAllowList"
+);
+
 const permissionExceptionsL10n = {
   trackingprotection: {
     window: "permissions-exceptions-etp-window2",
-    description: "permissions-exceptions-etp-desc",
+    description: "permissions-exceptions-manage-etp-desc",
   },
   cookie: {
     window: "permissions-exceptions-cookie-window2",
@@ -71,6 +84,7 @@ var gPermissionManager = {
 
     this._btnCookieSession = document.getElementById("btnCookieSession");
     this._btnBlock = document.getElementById("btnBlock");
+    this._btnDisableETP = document.getElementById("btnDisableETP");
     this._btnAllow = document.getElementById("btnAllow");
     this._btnHttpsOnlyOff = document.getElementById("btnHttpsOnlyOff");
     this._btnHttpsOnlyOffTmp = document.getElementById("btnHttpsOnlyOffTmp");
@@ -82,7 +96,10 @@ var gPermissionManager = {
     document.l10n.setAttributes(document.documentElement, l10n.window);
 
     let urlFieldVisible =
-      params.blockVisible || params.sessionVisible || params.allowVisible;
+      params.blockVisible ||
+      params.sessionVisible ||
+      params.allowVisible ||
+      params.disableETPVisible;
 
     this._urlField = document.getElementById("url");
     this._urlField.value = params.prefilledHost;
@@ -93,6 +110,7 @@ var gPermissionManager = {
       document.documentElement,
     ]);
 
+    document.getElementById("btnDisableETP").hidden = !params.disableETPVisible;
     document.getElementById("btnBlock").hidden = !params.blockVisible;
     document.getElementById("btnCookieSession").hidden = !(
       params.sessionVisible && this._type == "cookie"
@@ -304,7 +322,13 @@ var gPermissionManager = {
         });
       return;
     }
-
+    // In case of an ETP exception we compute the contentBlockingAllowList principal
+    // to align with the allow list behavior triggered by the protections panel
+    if (this._type == "trackingprotection") {
+      principals = principals.map(
+        lazy.contentBlockingAllowList.computeContentBlockingAllowListPrincipal
+      );
+    }
     for (let principal of principals) {
       this._addOrModifyPermission(principal, capability);
     }
@@ -419,6 +443,8 @@ var gPermissionManager = {
         document.getElementById("btnBlock").click();
       } else if (!document.getElementById("btnHttpsOnlyOff").hidden) {
         document.getElementById("btnHttpsOnlyOff").click();
+      } else if (!document.getElementById("btnDisableETP").hidden) {
+        document.getElementById("btnDisableETP").click();
       }
     }
   },
@@ -431,6 +457,8 @@ var gPermissionManager = {
     this._btnHttpsOnlyOffTmp.disabled =
       this._btnHttpsOnlyOffTmp.hidden || !siteField.value;
     this._btnBlock.disabled = this._btnBlock.hidden || !siteField.value;
+    this._btnDisableETP.disabled =
+      this._btnDisableETP.hidden || !siteField.value;
     this._btnAllow.disabled = this._btnAllow.hidden || !siteField.value;
   },
 
