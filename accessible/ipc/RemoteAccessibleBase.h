@@ -369,7 +369,17 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   // HyperTextAccessibleBase
   virtual already_AddRefed<AccAttributes> DefaultTextAttributes() override;
 
-  virtual void InvalidateCachedHyperTextOffsets() override {
+  /**
+   * Invalidate cached HyperText offsets. This should be called whenever a
+   * child is added or removed or the text of a text leaf child is changed.
+   * Although GetChildOffset can either fully or partially invalidate the
+   * offsets cache, calculating which offset to invalidate is not worthwhile
+   * because a client might not even query offsets. This is in contrast to
+   * LocalAccessible, where the offsets are always needed to fire text change
+   * events. For RemoteAccessible, it's cheaper overall to just rebuild the
+   * offsets cache when a client next needs it.
+   */
+  void InvalidateCachedHyperTextOffsets() {
     if (mCachedFields) {
       mCachedFields->Remove(nsGkAtoms::offset);
     }
@@ -423,7 +433,7 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
 
   nsAtom* GetPrimaryAction() const;
 
-  virtual const nsTArray<int32_t>& GetCachedHyperTextOffsets() const override;
+  virtual nsTArray<int32_t>& GetCachedHyperTextOffsets() override;
 
  private:
   uintptr_t mParent;

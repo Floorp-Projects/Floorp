@@ -1731,22 +1731,20 @@ bool RemoteAccessibleBase<Derived>::TableIsProbablyForLayout() {
 }
 
 template <class Derived>
-const nsTArray<int32_t>&
-RemoteAccessibleBase<Derived>::GetCachedHyperTextOffsets() const {
+nsTArray<int32_t>& RemoteAccessibleBase<Derived>::GetCachedHyperTextOffsets() {
   if (mCachedFields) {
-    if (auto offsets =
-            mCachedFields->GetAttribute<nsTArray<int32_t>>(nsGkAtoms::offset)) {
+    if (auto offsets = mCachedFields->GetMutableAttribute<nsTArray<int32_t>>(
+            nsGkAtoms::offset)) {
       return *offsets;
     }
   }
   nsTArray<int32_t> newOffsets;
-  BuildCachedHyperTextOffsets(newOffsets);
   if (!mCachedFields) {
-    const_cast<RemoteAccessibleBase<Derived>*>(this)->mCachedFields =
-        new AccAttributes();
+    mCachedFields = new AccAttributes();
   }
   mCachedFields->SetAttribute(nsGkAtoms::offset, std::move(newOffsets));
-  return *mCachedFields->GetAttribute<nsTArray<int32_t>>(nsGkAtoms::offset);
+  return *mCachedFields->GetMutableAttribute<nsTArray<int32_t>>(
+      nsGkAtoms::offset);
 }
 
 template <class Derived>

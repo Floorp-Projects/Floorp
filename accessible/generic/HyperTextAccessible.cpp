@@ -2100,13 +2100,20 @@ void HyperTextAccessible::Shutdown() {
 }
 
 bool HyperTextAccessible::RemoveChild(LocalAccessible* aAccessible) {
-  InvalidateCachedHyperTextOffsets();
+  const int32_t childIndex = aAccessible->IndexInParent();
+  if (childIndex < static_cast<int32_t>(mOffsets.Length())) {
+    mOffsets.RemoveLastElements(mOffsets.Length() - childIndex);
+  }
+
   return AccessibleWrap::RemoveChild(aAccessible);
 }
 
 bool HyperTextAccessible::InsertChildAt(uint32_t aIndex,
                                         LocalAccessible* aChild) {
-  InvalidateCachedHyperTextOffsets();
+  if (aIndex < mOffsets.Length()) {
+    mOffsets.RemoveLastElements(mOffsets.Length() - aIndex);
+  }
+
   return AccessibleWrap::InsertChildAt(aIndex, aChild);
 }
 
