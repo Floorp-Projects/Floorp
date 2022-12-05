@@ -41,7 +41,7 @@
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">Блокирај садржај на било којој страници</string>
     <!-- Description for downloads permission. -->
-    <string name="mozac_feature_addons_permissions_downloads_description">Преузмите датотеке и прочитајте и измените историјат преузимања прегледача</string>
+    <string name="mozac_feature_addons_permissions_downloads_description">Преузмите датотеке и прочитајте и измените историју преузимања</string>
     <!-- Description for downloads_open permission. -->
     <string name="mozac_feature_addons_permissions_downloads_open_description">Отворите датотеке преузете на ваш уређај</string>
     <!-- Description for find permission. -->
