@@ -2,19 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.container.restore-chosen {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  justify-content: center;
-  margin: 5vh 0;
-}
-
 #tabsToggle {
   cursor: pointer;
   /* Override button background-color and color from common.css */
   background-color: transparent;
-  color: var(--in-content-link-color);
+  color: var(--in-content-link-color) !important;
   -moz-context-properties: fill;
   fill: currentColor;
   border: none;
@@ -24,7 +16,7 @@
   position: relative;
 }
 
-#tabsToggle::after {
+#tabsToggle:after {
   content: "";
   position: absolute;
   width: 100%;
@@ -37,11 +29,11 @@
   background-position: right center;
 }
 
-#tabsToggle:dir(rtl)::after {
+#tabsToggle:dir(rtl):after {
   background-position-x: left;
 }
 
-#tabsToggle:not(.show-tabs)::after {
+#tabsToggle:not(.show-tabs):after {
   background-image: url("chrome://global/skin/icons/arrow-up.svg");
 }
 
