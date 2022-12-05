@@ -73,6 +73,21 @@ this.omnibox = class extends ExtensionAPIPersistent {
         },
       };
     },
+    onDeleteSuggestion({ fire }) {
+      let { extension } = this;
+      let listener = (eventName, text) => {
+        fire.sync(text);
+      };
+      extension.on(ExtensionSearchHandler.MSG_INPUT_DELETED, listener);
+      return {
+        unregister() {
+          extension.off(ExtensionSearchHandler.MSG_INPUT_DELETED, listener);
+        },
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
+    },
   };
 
   onManifestEntry(entryName) {
@@ -133,6 +148,13 @@ this.omnibox = class extends ExtensionAPIPersistent {
           context,
           module: "omnibox",
           event: "onInputChanged",
+          extensionApi: this,
+        }).api(),
+
+        onDeleteSuggestion: new EventManager({
+          context,
+          module: "omnibox",
+          event: "onDeleteSuggestion",
           extensionApi: this,
         }).api(),
 
