@@ -5,16 +5,11 @@
 
 from copy import deepcopy
 
-from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by, Schema
-from taskgraph.util.treeherder import join_symbol, split_symbol
-from voluptuous import (
-    Optional,
-    Required,
-    Extra,
-)
-
 from gecko_taskgraph.transforms.test import test_description_schema
+from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.schema import Schema, optionally_keyed_by, resolve_keyed_by
+from taskgraph.util.treeherder import join_symbol, split_symbol
+from voluptuous import Extra, Optional, Required
 
 transforms = TransformSequence()
 task_transforms = TransformSequence()
@@ -81,6 +76,7 @@ def split_apps(config, tests):
         "chromium": "Cr",
         "fenix": "fenix",
         "refbrow": "refbrow",
+        "safari": "Saf",
     }
 
     for test in tests:

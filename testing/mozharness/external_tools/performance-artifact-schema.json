@@ -12,7 +12,8 @@
                         "fennec",
                         "geckoview",
                         "refbrow",
-                        "fenix"
+                        "fenix",
+                        "safari"
                     ],
                     "maxLength": 10,
                     "type": "string"
@@ -23,7 +24,9 @@
                     "type": "string"
                 }
             },
-            "required": ["name"],
+            "required": [
+                "name"
+            ],
             "type": "object"
         },
         "framework_schema": {
@@ -206,7 +209,7 @@
     "description": "Structure for submitting performance data as part of a job",
     "id": "https://treeherder.mozilla.org/schemas/v1/performance-artifact.json#",
     "properties": {
-        "application":{
+        "application": {
             "$ref": "#/definitions/application_schema"
         },
         "framework": {

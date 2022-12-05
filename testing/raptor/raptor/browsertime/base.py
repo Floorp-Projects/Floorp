@@ -84,7 +84,8 @@ class Browsertime(Perftest):
 
     def build_browser_profile(self):
         super(Browsertime, self).build_browser_profile()
-        self.remove_mozprofile_delimiters_from_profile()
+        if self.profile is not None:
+            self.remove_mozprofile_delimiters_from_profile()
 
     def remove_mozprofile_delimiters_from_profile(self):
         # Perftest.build_browser_profile uses mozprofile to create the profile and merge in prefs;
@@ -370,9 +371,10 @@ class Browsertime(Perftest):
                     self.results_handler.result_dir_for_test_profiling(test),
                 ]
             )
-        priority1_options.extend(
-            ["--firefox.profileTemplate", str(self.profile.profile)]
-        )
+        if self.profile is not None:
+            priority1_options.extend(
+                ["--firefox.profileTemplate", str(self.profile.profile)]
+            )
 
         # This argument can have duplicates of the value "--firefox.env" so we do not need
         # to check if it conflicts

@@ -24,19 +24,18 @@ try:
 except ImportError:
     build = None
 
-from mozlog import commandline
-from mozprofile.cli import parse_preferences, parse_key_value
-
-from browsertime import BrowsertimeDesktop, BrowsertimeAndroid
-from cmdline import parse_args, CHROMIUM_DISTROS
+from browsertime import BrowsertimeAndroid, BrowsertimeDesktop
+from cmdline import CHROMIUM_DISTROS, DESKTOP_APPS, parse_args
 from logger.logger import RaptorLogger
 from manifest import get_raptor_test_list
+from mozlog import commandline
+from mozprofile.cli import parse_key_value, parse_preferences
 from signal_handler import SignalHandler
 from utils import view_gecko_profile_from_raptor
 from webextension import (
-    WebExtensionFirefox,
-    WebExtensionDesktopChrome,
     WebExtensionAndroid,
+    WebExtensionDesktopChrome,
+    WebExtensionFirefox,
 )
 
 LOG = RaptorLogger(component="raptor-main")
@@ -95,7 +94,7 @@ def main(args=sys.argv[1:]):
                 if key.startswith("browsertime_"):
                     inner_kwargs[key] = outer_kwargs.get(key)
 
-            if args.app == "firefox" or args.app in CHROMIUM_DISTROS:
+            if args.app in DESKTOP_APPS:
                 klass = BrowsertimeDesktop
             else:
                 klass = BrowsertimeAndroid

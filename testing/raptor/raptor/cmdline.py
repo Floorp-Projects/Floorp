@@ -3,14 +3,19 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 from __future__ import absolute_import, print_function
 
-import six
 import argparse
 import os
 import platform
 
+import six
 from mozlog.commandline import add_logging_group
 
-(FIREFOX, CHROME, CHROMIUM) = DESKTOP_APPS = ["firefox", "chrome", "chromium"]
+(FIREFOX, CHROME, CHROMIUM, SAFARI) = DESKTOP_APPS = [
+    "firefox",
+    "chrome",
+    "chromium",
+    "safari",
+]
 (GECKOVIEW, REFBROW, FENIX, CHROME_ANDROID) = FIREFOX_ANDROID_APPS = [
     "geckoview",
     "refbrow",
@@ -23,6 +28,7 @@ APPS = {
     FIREFOX: {"long_name": "Firefox Desktop"},
     CHROME: {"long_name": "Google Chrome Desktop"},
     CHROMIUM: {"long_name": "Google Chromium Desktop"},
+    SAFARI: {"long_name": "Safari Desktop"},
     GECKOVIEW: {
         "long_name": "Firefox GeckoView on Android",
         "default_activity": "org.mozilla.geckoview_example.GeckoViewActivity",
