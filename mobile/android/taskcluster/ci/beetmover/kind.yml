@@ -28,6 +28,8 @@ task-template:
     description: Publish component
     maven-destination: 'maven2/org/mozilla/components/{component}/{version}/{artifact_file_name}'
     run-on-tasks-for: []
+    # TODO: Publish components during the shipping phase once Fenix is migrated to the monorepo
+    shipping-phase: promote
     treeherder:
         job-symbol:
             by-build-type:

@@ -12,6 +12,8 @@ from taskgraph.target_tasks import _target_task, target_tasks_default
 from taskgraph.util.taskcluster import find_task_id
 from taskgraph.util.vcs import get_repository
 
+from android_taskgraph.release_type import does_task_match_release_type
+
 
 def index_exists(index_path, reason=""):
     print(f"Looking for existing index {index_path} {reason}...")
@@ -50,8 +52,8 @@ def target_tasks_nightly(full_task_graph, parameters, graph_config):
 def target_tasks_promote(full_task_graph, parameters, graph_config):
     def filter(task, parameters):
         if (
-            task.attributes.get("build-type") == parameters["release_type"]
-            and task.attributes.get("shipping_phase") == "promote"
+            task.attributes.get("shipping_phase") == "promote"
+            and does_task_match_release_type(task, parameters["release_type"])
         ):
             return True
 
@@ -72,8 +74,8 @@ def target_tasks_ship(full_task_graph, parameters, graph_config):
             return True
 
         if (
-            task.attributes.get("build-type") == parameters["release_type"]
-            and task.attributes.get("shipping_phase") == "ship"
+            task.attributes.get("shipping_phase") == "ship"
+            and does_task_match_release_type(task, parameters["release_type"])
         ):
             return True
 

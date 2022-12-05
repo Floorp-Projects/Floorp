@@ -119,6 +119,10 @@ task-defaults:
                 - github-pull-request
                 - github-pull-request-untrusted
                 - github-push
+    shipping-phase:
+        by-build-type:
+            (nightly|release): promote
+            default: build
     treeherder:
         kind: build
         symbol:
