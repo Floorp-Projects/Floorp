@@ -8,10 +8,12 @@ const { AppUiTestDelegate } = ChromeUtils.import(
   "resource://testing-common/AppUiTestDelegate.jsm"
 );
 
-async function run_test_disableResetIdleForTest(options) {
-  // Ignore error "Actor 'Conduits' destroyed before query 'RunListener' was resolved"
-  PromiseTestUtils.expectUncaughtRejection(/Actor/);
+// Ignore error "Actor 'Conduits' destroyed before query 'RunListener' was resolved"
+PromiseTestUtils.allowMatchingRejectionsGlobally(
+  /Actor 'Conduits' destroyed before query 'RunListener'/
+);
 
+async function run_test_disableResetIdleForTest(options) {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       manifest_version: 3,
@@ -22,9 +24,7 @@ async function run_test_disableResetIdleForTest(options) {
         browser.test.notifyPass("action-clicked");
         // Deliberately keep this listener active to simulate a still active listener
         // callback, while calling extension.terminateBackground().
-
-        // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-        await new Promise(resolve => window.setTimeout(resolve, 1000));
+        await new Promise(() => {});
       });
 
       browser.test.sendMessage("background-ready");
