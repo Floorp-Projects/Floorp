@@ -177,6 +177,12 @@ extern pid_t glxtest_pid;
 }  // namespace widget
 }  // namespace mozilla
 
+// bits to use decoding childvaapitest() return values.
+constexpr int CODEC_HW_H264 = 1 << 4;
+constexpr int CODEC_HW_VP8 = 1 << 5;
+constexpr int CODEC_HW_VP9 = 1 << 6;
+constexpr int CODEC_HW_AV1 = 1 << 7;
+
 // the write end of the pipe, which we're going to write to
 static int write_end_of_the_pipe = -1;
 
@@ -1055,6 +1061,8 @@ int childvaapitest() {
   numProfiles = std::min(numProfiles, maxProfiles);
 
   entryPoints = new VAEntrypoint[maxEntryPoints];
+  int codecs = 0;
+  bool foundProfile = false;
   for (int p = 0; p < numProfiles; p++) {
     VAProfile profile = profiles[p];
 
@@ -1079,10 +1087,28 @@ int childvaapitest() {
       status = vaCreateConfig(display, profile, entryPoints[entry], nullptr, 0,
                               &config);
       if (status == VA_STATUS_SUCCESS) {
+        const char* profstr = VAProfileName(profile);
+        // VAProfileName returns null on failure, making the below calls safe
+        if (!strncmp(profstr, "H264", 4)) {
+          codecs |= CODEC_HW_H264;
+        } else if (!strncmp(profstr, "VP8", 3)) {
+          codecs |= CODEC_HW_VP8;
+        } else if (!strncmp(profstr, "VP9", 3)) {
+          codecs |= CODEC_HW_VP9;
+        } else if (!strncmp(profstr, "AV1", 3)) {
+          codecs |= CODEC_HW_AV1;
+        } else {
+          char warnbuf[128];
+          SprintfBuf(warnbuf, 128, "VA-API test unknown profile: %s", profstr);
+          record_warning(warnbuf);
+        }
         vaDestroyConfig(display, config);
-        return 0;
+        foundProfile = true;
       }
     }
+  }
+  if (foundProfile) {
+    return codecs;
   }
   return 10;
 }
@@ -1116,9 +1142,19 @@ static void vaapitest() {
     }
 
     if (WIFEXITED(vaapitest_status)) {
-      switch (WEXITSTATUS(vaapitest_status)) {
+      // Note that WEXITSTATUS only returns least significant 8 bits
+      // of the exit code, despite returning type int.
+      int exitcode = WEXITSTATUS(vaapitest_status);
+      int codecs = exitcode & 0b1111'0000;
+      exitcode &= 0b0000'1111;
+      switch (exitcode) {
         case 0:
+          char codecstr[80];
           record_value("VAAPI_SUPPORTED\nTRUE\n");
+          SprintfBuf(codecstr, 80, "%d", codecs);
+          record_value("VAAPI_HWCODECS\n");
+          record_value(codecstr);
+          record_value("\n");
           break;
         case 3:
           record_warning(

@@ -1100,8 +1100,7 @@ var snapshotFormatters = {
     insertEnumerateDatabase();
 
     // Codec decode/encode support information (inc. HW accel)
-    // Currently supported on Windows with Linux/OS X support under development
-    if (AppConstants.platform == "win" || AppConstants.platform == "macosx") {
+    if (["win", "macosx", "linux"].includes(AppConstants.platform)) {
       insertBasicInfo("media-codec-support-info", data.codecSupportInfo);
     }
   },

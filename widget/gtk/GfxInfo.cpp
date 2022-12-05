@@ -25,6 +25,7 @@
 #include "nsWhitespaceTokenizer.h"
 #include "prenv.h"
 #include "WidgetUtilsGtk.h"
+#include "MediaCodecsSupport.h"
 
 #define EXIT_STATUS_BUFFER_TOO_SMALL 2
 #ifdef DEBUG
@@ -40,6 +41,12 @@ NS_IMPL_ISUPPORTS_INHERITED(GfxInfo, GfxInfoBase, nsIGfxInfoDebug)
 // these global variables will be set when firing the glxtest process
 int glxtest_pipe = -1;
 pid_t glxtest_pid = 0;
+
+// bits to use decoding codec information returned from glxtest
+constexpr int CODEC_HW_H264 = 1 << 4;
+constexpr int CODEC_HW_VP8 = 1 << 5;
+constexpr int CODEC_HW_VP9 = 1 << 6;
+constexpr int CODEC_HW_AV1 = 1 << 7;
 
 nsresult GfxInfo::Init() {
   mGLMajorVersion = 0;
@@ -211,6 +218,27 @@ void GfxInfo::GetData() {
       stringToFill = &drmRenderDevice;
     } else if (!strcmp(line, "VAAPI_SUPPORTED")) {
       stringToFill = &isVAAPISupported;
+    } else if (!strcmp(line, "VAAPI_HWCODECS")) {
+      line = NS_strtok("\n", &bufptr);
+      if (!line) break;
+      int codecs = 0;
+      std::istringstream(line) >> codecs;
+      if (codecs & CODEC_HW_H264) {
+        media::MCSInfo::AddSupport(
+            media::MediaCodecsSupport::H264HardwareDecode);
+      }
+      if (codecs & CODEC_HW_VP8) {
+        media::MCSInfo::AddSupport(
+            media::MediaCodecsSupport::VP8HardwareDecode);
+      }
+      if (codecs & CODEC_HW_VP9) {
+        media::MCSInfo::AddSupport(
+            media::MediaCodecsSupport::VP9HardwareDecode);
+      }
+      if (codecs & CODEC_HW_AV1) {
+        media::MCSInfo::AddSupport(
+            media::MediaCodecsSupport::AV1HardwareDecode);
+      }
     } else if (!strcmp(line, "TEST_TYPE")) {
       stringToFill = &testType;
     } else if (!strcmp(line, "WARNING")) {
