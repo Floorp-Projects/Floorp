@@ -9,6 +9,9 @@ const EXCLUDE_URL_PATTEANS = [
   "cart",
   "watch",
   "upload",
+  "^about:",
+  "^chrome:\/\/",
+  "^resource:\/\/",
 ];
 
 const BROWSER_CACHE_MEMORY_ENABLE_PREF = "browser.cache.memory.enable";
