@@ -178,6 +178,9 @@ public:*/
 
     m_pIntervalEndMinus4:  Cell<Ref<'a, CCoverageInterval<'a>>>,
 
+    // Cache the next-to-last added interval to accelerate insertion.
+    m_pIntervalLast: Cell<Ref<'a, CCoverageInterval<'a>>>,
+
     m_pIntervalBufferBuiltin: CCoverageIntervalBuffer<'a>,
     m_pIntervalBufferCurrent: Cell<Ref<'a, CCoverageIntervalBuffer<'a>>>,
 
@@ -193,6 +196,7 @@ impl<'a> Default for CCoverageBuffer<'a> {
             m_pIntervalStart: Cell::new(unsafe { Ref::null() }),
             m_pIntervalNew: Cell::new(unsafe { Ref::null() }),
             m_pIntervalEndMinus4: Cell::new(unsafe { Ref::null() }),
+            m_pIntervalLast: Cell::new(unsafe { Ref::null() }),
             m_pIntervalBufferBuiltin: Default::default(),
             m_pIntervalBufferCurrent: unsafe { Cell::new(Ref::null()) },
             arena: Arena::new(),
@@ -242,14 +246,23 @@ pub fn AddInterval(&'a self, nSubpixelXLeft: INT, nSubpixelXRight: INT) -> HRESU
     nPixelXLeft = nSubpixelXLeft >> c_nShift;
     nPixelXRight = nSubpixelXRight >> c_nShift; 
 
+    // Try to resume searching from the last searched interval.
+    if self.m_pIntervalLast.get().m_nPixelX.get() < nPixelXLeft {
+        pInterval = self.m_pIntervalLast.get();
+    }
+
     // Skip any intervals less than 'nPixelLeft':
 
     loop {
-        nPixelXNext = pInterval.m_pNext.get().m_nPixelX.get();
+        let nextInterval = pInterval.m_pNext.get();
+        nPixelXNext = nextInterval.m_nPixelX.get();
         if !(nPixelXNext < nPixelXLeft) { break }
 
-        pInterval = pInterval.m_pNext.get();
+        pInterval = nextInterval;
     }
+
+    // Remember the found interval.
+    self.m_pIntervalLast.set(pInterval);
 
     // Insert a new interval if necessary:
 
@@ -329,15 +342,19 @@ pub fn AddInterval(&'a self, nSubpixelXLeft: INT, nSubpixelXRight: INT) -> HRESU
     // and 'nPixelXRight':
 
     loop {
-        (nPixelXNext = pInterval.m_pNext.get().m_nPixelX.get());
+        let nextInterval = pInterval.m_pNext.get();
+        (nPixelXNext = nextInterval.m_nPixelX.get());
     
         if !(nPixelXNext < nPixelXRight) {
             break;
         }
-        pInterval = pInterval.m_pNext.get();
+        pInterval = nextInterval;
         pInterval.m_nCoverage.set(pInterval.m_nCoverage.get() + c_nShiftSize);
         debug_assert!(pInterval.m_nCoverage.get() <= c_nShiftSize*c_nShiftSize);
     }
+
+    // Remember the found interval.
+    self.m_pIntervalLast.set(pInterval);
 
     // Insert another new interval if necessary:
 
@@ -391,7 +408,6 @@ pub fn AddInterval(&'a self, nSubpixelXLeft: INT, nSubpixelXRight: INT) -> HRESU
     // Update the coverage buffer new interval
     self.interval_new_index.set(interval_new_index);
     self.m_pIntervalNew.set(pIntervalNew);
-    
 
     return hr;
 }
@@ -543,6 +559,7 @@ pub fn Initialize(&'a self)
     self.m_pIntervalNew.set(Ref::new(&self.m_pIntervalBufferBuiltin.m_interval[2]));
     self.interval_new_index.set(2);
     self.m_pIntervalEndMinus4.set(Ref::new(&self.m_pIntervalBufferBuiltin.m_interval[INTERVAL_BUFFER_NUMBER - 4]));
+    self.m_pIntervalLast.set(Ref::new(&self.m_pIntervalBufferBuiltin.m_interval[1]));
 }
 
 //-------------------------------------------------------------------------
@@ -579,6 +596,7 @@ pub fn Reset(&'a self)
     self.m_pIntervalNew.set(Ref::new(&self.m_pIntervalBufferBuiltin.m_interval[2]));
     self.interval_new_index.set(2);
     self.m_pIntervalEndMinus4.set(Ref::new(&self.m_pIntervalBufferBuiltin.m_interval[INTERVAL_BUFFER_NUMBER - 4]));
+    self.m_pIntervalLast.set(Ref::new(&self.m_pIntervalBufferBuiltin.m_interval[1]));
 }
 
 //-------------------------------------------------------------------------

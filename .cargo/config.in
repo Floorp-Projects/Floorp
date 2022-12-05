@@ -105,7 +105,7 @@ rev = "fc68464b5445caf111e41f643a2e69ccce0b4f83"
 [source."https://github.com/FirefoxGraphics/wpf-gpu-raster"]
 git = "https://github.com/FirefoxGraphics/wpf-gpu-raster"
 replace-with = "vendored-sources"
-rev = "f0d95ce14af8a8de74f469dbad715c4064fca2e1"
+rev = "b6ca51395c56648b50f21f68a1586f94f8b966c4"
 
 [source."https://github.com/FirefoxGraphics/aa-stroke"]
 git = "https://github.com/FirefoxGraphics/aa-stroke"
