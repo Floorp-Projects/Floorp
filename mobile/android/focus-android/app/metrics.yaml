@@ -253,24 +253,42 @@ browser.search:
     type: labeled_counter
     description: |
       Records counts of SERP pages with adverts displayed.
-      The key format is `<provider-name>`.
+      The key format is
+      `<provider-name>.in-content.[sap|sap-follow-on|organic].[code|none](.[channel])?`,
+      where:
+
+      * `provider-name` is the name of the provider,
+      * `sap|sap-follow-on|organic` is the search access point,
+      * `code` is set when the url matches any of the provider's code prefixes,
+      * `channel` is set to the url "channel" query parameter.
     send_in_pings:
       - metrics
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/4967
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1804057
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1799049
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/4968#issuecomment-879256443
       - https://github.com/mozilla-mobile/focus-android/pull/7418#issuecomment-1195518264
+      - https://github.com/mozilla-mobile/focus-android/pull/8109#issuecomment-1337394286
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
+      - rtestard@mozilla.com
     expires: 119
   ad_clicks:
     type: labeled_counter
     description: |
       Records clicks of adverts on SERP pages.
-      The key format is `<provider-name>`.
+      The key format is
+      `<provider-name>.in-content.[sap|sap-follow-on|organic].[code|none](.[channel])?`,
+      where:
+
+      * `provider-name` is the name of the provider,
+      * `sap|sap-follow-on|organic` is the search access point,
+      * `code` is set when the url matches any of the provider's code prefixes,
+      * `channel` is set to the url "channel" query parameter.
     send_in_pings:
       - metrics
       - baseline
@@ -278,13 +296,16 @@ browser.search:
       - BASELINE_PING
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/4967
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1804057
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/4968#issuecomment-879256443
       - https://github.com/mozilla-mobile/focus-android/pull/7418#issuecomment-1195518264
+      - https://github.com/mozilla-mobile/focus-android/pull/8109#issuecomment-1337394286
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
+      - rtestard@mozilla.com
     expires: 119
   in_content:
     type: labeled_counter
