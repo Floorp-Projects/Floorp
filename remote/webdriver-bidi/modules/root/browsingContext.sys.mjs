@@ -397,7 +397,7 @@ class BrowsingContextModule extends Module {
       }
 
       if (wrappedEvt.readyState === "interactive") {
-        listener.stop();
+        listener.stopIfStarted();
       }
     };
 
