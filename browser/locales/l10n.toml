@@ -162,13 +162,7 @@ locales = [
 # key: the key/id of the entity
 # If key isn't specified, the complete file can be missing.
 [[filters]]
-    path = "{l}browser/defines.inc"
-    key = "MOZ_LANGPACK_CONTRIBUTORS"
-    action = "ignore"
-
-[[filters]]
     path = [
-        "{l}browser/defines.inc",
         "{l}browser/firefox-l10n.js",
     ]
     action = "ignore"

@@ -4,28 +4,30 @@
 
 ###
 # This script generates a web manifest JSON file based on the xpi-stage
-# directory structure. It extracts the data from defines.inc files from
-# the locale directory, chrome registry entries and other information
-# necessary to produce the complete manifest file for a language pack.
+# directory structure. It extracts data necessary to produce the complete
+# manifest file for a language pack:
+# from the `langpack-manifest.ftl` file in the locale directory;
+# from chrome registry entries;
+# and from other information in the `xpi-stage` directory.
 ###
+
 from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
-import sys
-import os
-import json
-import io
 import datetime
-import requests
-import mozversioncontrol
+import io
+import json
+import logging
+import os
+import sys
+
+import fluent.syntax.ast as FTL
 import mozpack.path as mozpath
-from mozpack.chrome.manifest import (
-    Manifest,
-    ManifestLocale,
-    parse_manifest,
-)
+import mozversioncontrol
+import requests
+from fluent.syntax.parser import FluentParser
 from mozbuild.configure.util import Version
-from mozbuild.preprocessor import Preprocessor
+from mozpack.chrome.manifest import Manifest, ManifestLocale, parse_manifest
 
 
 def write_file(path, content):
@@ -112,53 +114,48 @@ def get_timestamp_for_locale(path):
 
 
 ###
-# Parses multiple defines files into a single key-value pair object.
+# Parses an FTL file into a key-value pair object.
+# Does not support attributes, terms, variables, functions or selectors;
+# only messages with values consisting of text elements and literals.
 #
 # Args:
-#    paths (str) - a comma separated list of paths to defines files
+#    path (str) - a path to an FTL file
 #
 # Returns:
-#    (dict) - a key-value dict with defines
+#    (dict) - A mapping of message keys to formatted string values.
+#             Empty if the file at `path` was not found.
 #
 # Example:
-#    res = parse_defines('./toolkit/defines.inc,./browser/defines.inc')
+#    res = parse_flat_ftl('./browser/langpack-metadata.ftl')
 #    res == {
-#        'MOZ_LANG_TITLE': 'Polski',
-#        'MOZ_LANGPACK_CREATOR': 'Aviary.pl',
-#        'MOZ_LANGPACK_CONTRIBUTORS': 'Marek Stepien, Marek Wawoczny'
+#        'langpack-title': 'Polski',
+#        'langpack-creator': 'mozilla.org',
+#        'langpack-contributors': 'Joe Solon, Suzy Solon'
 #    }
 ###
-def parse_defines(paths):
-    pp = Preprocessor()
-    for path in paths:
-        pp.do_include(path)
+def parse_flat_ftl(path):
+    parser = FluentParser(with_spans=False)
+    try:
+        with open(path, encoding="utf-8") as file:
+            res = parser.parse(file.read())
+    except FileNotFoundError as err:
+        logging.warning(err)
+        return {}
 
-    return pp.context
-
-
-###
-# Converts the list of contributors from the old RDF based list
-# of entries, into a comma separated list.
-#
-# Args:
-#    str (str) - a string with an RDF list of contributors entries
-#
-# Returns:
-#    (str) - a comma separated list of contributors
-#
-# Example:
-#    s = convert_contributors('
-#        <em:contributor>Marek Wawoczny</em:contributor>
-#        <em:contributor>Marek Stepien</em:contributor>
-#    ')
-#    s == 'Marek Wawoczny, Marek Stepien'
-###
-def convert_contributors(str):
-    str = str.replace("<em:contributor>", "")
-    tokens = str.split("</em:contributor>")
-    tokens = map(lambda t: t.strip(), tokens)
-    tokens = filter(lambda t: t != "", tokens)
-    return ", ".join(tokens)
+    result = {}
+    for entry in res.body:
+        if isinstance(entry, FTL.Message) and isinstance(entry.value, FTL.Pattern):
+            flat = ""
+            for elem in entry.value.elements:
+                if isinstance(elem, FTL.TextElement):
+                    flat += elem.value
+                elif isinstance(elem.expression, FTL.Literal):
+                    flat += elem.expression.parse()["value"]
+                else:
+                    name = type(elem.expression).__name__
+                    raise Exception(f"Unsupported {name} for {entry.id.name} in {path}")
+            result[entry.id.name] = flat.strip()
+    return result
 
 
 ###
@@ -166,26 +163,25 @@ def convert_contributors(str):
 # and optionally adding the list of contributors, if provided.
 #
 # Args:
-#    author (str)       - a string with the name of the author
-#    contributors (str) - RDF based list of contributors from a chrome manifest
+#    ftl (dict) - a key-value mapping of locale-specific strings
 #
 # Returns:
 #    (str) - a string to be placed in the author field of the manifest.json
 #
 # Example:
-#    s = build_author_string(
-#    'Aviary.pl',
-#    '
-#        <em:contributor>Marek Wawoczny</em:contributor>
-#        <em:contributor>Marek Stepien</em:contributor>
-#    ')
-#    s == 'Aviary.pl (contributors: Marek Wawoczny, Marek Stepien)'
+#    s = get_author({
+#      'langpack-creator': 'mozilla.org',
+#      'langpack-contributors': 'Joe Solon, Suzy Solon'
+#    })
+#    s == 'mozilla.org (contributors: Joe Solon, Suzy Solon)'
 ###
-def build_author_string(author, contributors):
-    contrib = convert_contributors(contributors)
-    if len(contrib) == 0:
+def get_author(ftl):
+    author = ftl["langpack-creator"] if "langpack-creator" in ftl else "mozilla.org"
+    contrib = ftl["langpack-contributors"] if "langpack-contributors" in ftl else ""
+    if contrib:
+        return f"{author} (contributors: {contrib})"
+    else:
         return author
-    return "{0} (contributors: {1})".format(author, contrib)
 
 
 ##
@@ -333,7 +329,7 @@ def get_version_maybe_buildid(version):
 #                            resources are for
 #    app_name       (str)  - The name of the application the language
 #                            resources are for
-#    defines        (dict) - A dictionary of defines entries
+#    ftl            (dict) - A dictionary of locale-specific strings
 #    chrome_entries (dict) - A dictionary of chrome registry entries
 #
 # Returns:
@@ -346,7 +342,7 @@ def get_version_maybe_buildid(version):
 #      '57.0.*',
 #      'Firefox',
 #      '/var/vcs/l10n-central',
-#      {'MOZ_LANG_TITLE': 'Polski'},
+#      {'langpack-title': 'Polski'},
 #      chrome_entries
 #    )
 #    manifest == {
@@ -392,18 +388,12 @@ def create_webmanifest(
     app_name,
     l10n_basedir,
     langpack_eid,
-    defines,
+    ftl,
     chrome_entries,
 ):
     locales = list(map(lambda loc: loc.strip(), locstr.split(",")))
     main_locale = locales[0]
-
-    author = build_author_string(
-        defines["MOZ_LANGPACK_CREATOR"],
-        defines["MOZ_LANGPACK_CONTRIBUTORS"]
-        if "MOZ_LANGPACK_CONTRIBUTORS" in defines
-        else "",
-    )
+    author = get_author(ftl)
 
     manifest = {
         "langpack_id": main_locale,
@@ -415,7 +405,7 @@ def create_webmanifest(
                 "strict_max_version": max_app_ver,
             }
         },
-        "name": "{0} Language Pack".format(defines["MOZ_LANG_TITLE"]),
+        "name": "{0} Language Pack".format(ftl["langpack-title"] or main_locale),
         "description": "Language pack for {0} for {1}".format(app_name, main_locale),
         "version": get_version_maybe_buildid(version),
         "languages": {},
@@ -466,10 +456,8 @@ def main(args):
         "--langpack-eid", help="Language pack id to use for this locale"
     )
     parser.add_argument(
-        "--defines",
-        default=[],
-        nargs="+",
-        help="List of defines files to load data from",
+        "--metadata",
+        help="FTL file defining langpack metadata",
     )
     parser.add_argument("--input", help="Langpack directory.")
 
@@ -480,7 +468,7 @@ def main(args):
         os.path.join(args.input, "chrome.manifest"), args.input, chrome_entries
     )
 
-    defines = parse_defines(args.defines)
+    ftl = parse_flat_ftl(args.metadata)
 
     # Mangle the app version to set min version (remove patch level)
     min_app_version = args.app_version
@@ -502,7 +490,7 @@ def main(args):
         args.app_name,
         args.l10n_basedir,
         args.langpack_eid,
-        defines,
+        ftl,
         chrome_entries,
     )
     write_file(os.path.join(args.input, "manifest.json"), res)
