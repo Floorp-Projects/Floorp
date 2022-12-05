@@ -1,0 +1,1027 @@
+From cb411520cb7cd5e6e25966911ca55feb5de779e0 Mon Sep 17 00:00:00 2001
+From: Mike Hommey <mh@glandium.org>
+Date: Fri, 4 Nov 2022 14:51:38 +0900
+Subject: [PATCH] Revert "[symbolizer] Parse DW_TAG_variable DIs to show line
+ info for globals"
+
+This reverts commit cead4eceb01b935fae07bf4a7e91911b344d2fec for causing
+yet unidentified problems on some webrtc tests under TSan (bug 1798613).
+---
+ llvm/include/llvm/DebugInfo/DIContext.h       |   4 -
+ .../llvm/DebugInfo/DWARF/DWARFContext.h       |   2 -
+ llvm/include/llvm/DebugInfo/DWARF/DWARFDie.h  |   7 -
+ llvm/include/llvm/DebugInfo/DWARF/DWARFUnit.h |  14 -
+ llvm/include/llvm/DebugInfo/PDB/PDBContext.h  |   2 -
+ llvm/lib/DebugInfo/DWARF/DWARFContext.cpp     |  97 ++--
+ llvm/lib/DebugInfo/DWARF/DWARFDie.cpp         |  60 ---
+ llvm/lib/DebugInfo/DWARF/DWARFUnit.cpp        |  97 ----
+ llvm/lib/DebugInfo/PDB/PDBContext.cpp         |   7 -
+ llvm/lib/DebugInfo/Symbolize/DIPrinter.cpp    |   4 -
+ .../Symbolize/SymbolizableObjectFile.cpp      |   8 -
+ .../Symbolize/ELF/data-command-symtab.yaml    |   3 -
+ .../tools/llvm-symbolizer/data-location.yaml  | 450 ------------------
+ llvm/test/tools/llvm-symbolizer/data.s        |   3 -
+ 14 files changed, 61 insertions(+), 697 deletions(-)
+ delete mode 100644 llvm/test/tools/llvm-symbolizer/data-location.yaml
+
+diff --git a/llvm/include/llvm/DebugInfo/DIContext.h b/llvm/include/llvm/DebugInfo/DIContext.h
+index 9b278b696073..a9f98588cf2d 100644
+--- a/llvm/include/llvm/DebugInfo/DIContext.h
++++ b/llvm/include/llvm/DebugInfo/DIContext.h
+@@ -114,8 +114,6 @@ struct DIGlobal {
+   std::string Name;
+   uint64_t Start = 0;
+   uint64_t Size = 0;
+-  std::string DeclFile;
+-  uint64_t DeclLine = 0;
+ 
+   DIGlobal() : Name(DILineInfo::BadString) {}
+ };
+@@ -241,8 +239,6 @@ public:
+   virtual DILineInfo getLineInfoForAddress(
+       object::SectionedAddress Address,
+       DILineInfoSpecifier Specifier = DILineInfoSpecifier()) = 0;
+-  virtual DILineInfo
+-  getLineInfoForDataAddress(object::SectionedAddress Address) = 0;
+   virtual DILineInfoTable getLineInfoForAddressRange(
+       object::SectionedAddress Address, uint64_t Size,
+       DILineInfoSpecifier Specifier = DILineInfoSpecifier()) = 0;
+diff --git a/llvm/include/llvm/DebugInfo/DWARF/DWARFContext.h b/llvm/include/llvm/DebugInfo/DWARF/DWARFContext.h
+index bf591ed554c6..3365ef8d8ee3 100644
+--- a/llvm/include/llvm/DebugInfo/DWARF/DWARFContext.h
++++ b/llvm/include/llvm/DebugInfo/DWARF/DWARFContext.h
+@@ -364,8 +364,6 @@ public:
+   DILineInfo getLineInfoForAddress(
+       object::SectionedAddress Address,
+       DILineInfoSpecifier Specifier = DILineInfoSpecifier()) override;
+-  DILineInfo
+-  getLineInfoForDataAddress(object::SectionedAddress Address) override;
+   DILineInfoTable getLineInfoForAddressRange(
+       object::SectionedAddress Address, uint64_t Size,
+       DILineInfoSpecifier Specifier = DILineInfoSpecifier()) override;
+diff --git a/llvm/include/llvm/DebugInfo/DWARF/DWARFDie.h b/llvm/include/llvm/DebugInfo/DWARF/DWARFDie.h
+index 149c5ef4e493..4a4d105a2b23 100644
+--- a/llvm/include/llvm/DebugInfo/DWARF/DWARFDie.h
++++ b/llvm/include/llvm/DebugInfo/DWARF/DWARFDie.h
+@@ -280,13 +280,6 @@ public:
+   /// \returns an iterator range for the attributes of the current DIE.
+   iterator_range<attribute_iterator> attributes() const;
+ 
+-  /// Gets the type size (in bytes) for this DIE.
+-  ///
+-  /// \param PointerSize the pointer size of the containing CU.
+-  /// \returns if this is a type DIE, or this DIE contains a DW_AT_type, returns
+-  /// the size of the type.
+-  std::optional<uint64_t> getTypeSize(uint64_t PointerSize);
+-
+   class iterator;
+ 
+   iterator begin() const;
+diff --git a/llvm/include/llvm/DebugInfo/DWARF/DWARFUnit.h b/llvm/include/llvm/DebugInfo/DWARF/DWARFUnit.h
+index 9188865b4d77..0341344bc7b8 100644
+--- a/llvm/include/llvm/DebugInfo/DWARF/DWARFUnit.h
++++ b/llvm/include/llvm/DebugInfo/DWARF/DWARFUnit.h
+@@ -9,7 +9,6 @@
+ #ifndef LLVM_DEBUGINFO_DWARF_DWARFUNIT_H
+ #define LLVM_DEBUGINFO_DWARF_DWARFUNIT_H
+ 
+-#include "llvm/ADT/DenseSet.h"
+ #include "llvm/ADT/STLExtras.h"
+ #include "llvm/ADT/SmallVector.h"
+ #include "llvm/ADT/StringRef.h"
+@@ -28,7 +27,6 @@
+ #include <cstdint>
+ #include <map>
+ #include <memory>
+-#include <set>
+ #include <utility>
+ #include <vector>
+ 
+@@ -242,11 +240,6 @@ class DWARFUnit {
+   /// std::map::upper_bound for address range lookup.
+   std::map<uint64_t, std::pair<uint64_t, DWARFDie>> AddrDieMap;
+ 
+-  /// Map from the location (interpreted DW_AT_location) of a DW_TAG_variable,
+-  /// to the end address and the corresponding DIE.
+-  std::map<uint64_t, std::pair<uint64_t, DWARFDie>> VariableDieMap;
+-  DenseSet<uint64_t> RootsParsedForVariables;
+-
+   using die_iterator_range =
+       iterator_range<std::vector<DWARFDebugInfoEntry>::iterator>;
+ 
+@@ -329,9 +322,6 @@ public:
+   /// Recursively update address to Die map.
+   void updateAddressDieMap(DWARFDie Die);
+ 
+-  /// Recursively update address to variable Die map.
+-  void updateVariableDieMap(DWARFDie Die);
+-
+   void setRangesSection(const DWARFSection *RS, uint64_t Base) {
+     RangeSection = RS;
+     RangeSectionBase = Base;
+@@ -446,10 +436,6 @@ public:
+   /// cleared.
+   DWARFDie getSubroutineForAddress(uint64_t Address);
+ 
+-  /// Returns variable DIE for the address provided. The pointer is alive as
+-  /// long as parsed compile unit DIEs are not cleared.
+-  DWARFDie getVariableForAddress(uint64_t Address);
+-
+   /// getInlinedChainForAddress - fetches inlined chain for a given address.
+   /// Returns empty chain if there is no subprogram containing address. The
+   /// chain is valid as long as parsed compile unit DIEs are not cleared.
+diff --git a/llvm/include/llvm/DebugInfo/PDB/PDBContext.h b/llvm/include/llvm/DebugInfo/PDB/PDBContext.h
+index 3163c0a1dae0..7b6793f0a639 100644
+--- a/llvm/include/llvm/DebugInfo/PDB/PDBContext.h
++++ b/llvm/include/llvm/DebugInfo/PDB/PDBContext.h
+@@ -45,8 +45,6 @@ namespace pdb {
+     DILineInfo getLineInfoForAddress(
+         object::SectionedAddress Address,
+         DILineInfoSpecifier Specifier = DILineInfoSpecifier()) override;
+-    DILineInfo
+-    getLineInfoForDataAddress(object::SectionedAddress Address) override;
+     DILineInfoTable getLineInfoForAddressRange(
+         object::SectionedAddress Address, uint64_t Size,
+         DILineInfoSpecifier Specifier = DILineInfoSpecifier()) override;
+diff --git a/llvm/lib/DebugInfo/DWARF/DWARFContext.cpp b/llvm/lib/DebugInfo/DWARF/DWARFContext.cpp
+index 19d7d659a86a..1bcfdecfd588 100644
+--- a/llvm/lib/DebugInfo/DWARF/DWARFContext.cpp
++++ b/llvm/lib/DebugInfo/DWARF/DWARFContext.cpp
+@@ -1053,25 +1053,7 @@ DWARFCompileUnit *DWARFContext::getCompileUnitForAddress(uint64_t Address) {
+   // First, get the offset of the compile unit.
+   uint64_t CUOffset = getDebugAranges()->findAddress(Address);
+   // Retrieve the compile unit.
+-  if (DWARFCompileUnit *OffsetCU = getCompileUnitForOffset(CUOffset))
+-    return OffsetCU;
+-
+-  // Global variables are often not found by the above search, for one of two
+-  // reasons:
+-  //   1. .debug_aranges may not include global variables. On clang, it seems we
+-  //      put the globals in the aranges, but this isn't true for gcc.
+-  //   2. Even if the global variable is in a .debug_arange, global variables
+-  //      may not be captured in the [start, end) addresses described by the
+-  //      parent compile unit.
+-  //
+-  // So, we walk the CU's and their child DI's manually, looking for the
+-  // specific global variable.
+-  for (std::unique_ptr<DWARFUnit> &CU : compile_units()) {
+-    if (DWARFDie Die = CU->getVariableForAddress(Address)) {
+-      return static_cast<DWARFCompileUnit *>(CU.get());
+-    }
+-  }
+-  return nullptr;
++  return getCompileUnitForOffset(CUOffset);
+ }
+ 
+ DWARFContext::DIEsForAddress DWARFContext::getDIEsForAddress(uint64_t Address) {
+@@ -1141,6 +1123,64 @@ static bool getFunctionNameAndStartLineForAddress(
+   return FoundResult;
+ }
+ 
++static std::optional<uint64_t> getTypeSize(DWARFDie Type, uint64_t PointerSize) {
++  if (auto SizeAttr = Type.find(DW_AT_byte_size))
++    if (std::optional<uint64_t> Size = SizeAttr->getAsUnsignedConstant())
++      return Size;
++
++  switch (Type.getTag()) {
++  case DW_TAG_pointer_type:
++  case DW_TAG_reference_type:
++  case DW_TAG_rvalue_reference_type:
++    return PointerSize;
++  case DW_TAG_ptr_to_member_type: {
++    if (DWARFDie BaseType = Type.getAttributeValueAsReferencedDie(DW_AT_type))
++      if (BaseType.getTag() == DW_TAG_subroutine_type)
++        return 2 * PointerSize;
++    return PointerSize;
++  }
++  case DW_TAG_const_type:
++  case DW_TAG_immutable_type:
++  case DW_TAG_volatile_type:
++  case DW_TAG_restrict_type:
++  case DW_TAG_typedef: {
++    if (DWARFDie BaseType = Type.getAttributeValueAsReferencedDie(DW_AT_type))
++      return getTypeSize(BaseType, PointerSize);
++    break;
++  }
++  case DW_TAG_array_type: {
++    DWARFDie BaseType = Type.getAttributeValueAsReferencedDie(DW_AT_type);
++    if (!BaseType)
++      return std::optional<uint64_t>();
++    std::optional<uint64_t> BaseSize = getTypeSize(BaseType, PointerSize);
++    if (!BaseSize)
++      return std::optional<uint64_t>();
++    uint64_t Size = *BaseSize;
++    for (DWARFDie Child : Type) {
++      if (Child.getTag() != DW_TAG_subrange_type)
++        continue;
++
++      if (auto ElemCountAttr = Child.find(DW_AT_count))
++        if (std::optional<uint64_t> ElemCount =
++                ElemCountAttr->getAsUnsignedConstant())
++          Size *= *ElemCount;
++      if (auto UpperBoundAttr = Child.find(DW_AT_upper_bound))
++        if (std::optional<int64_t> UpperBound =
++                UpperBoundAttr->getAsSignedConstant()) {
++          int64_t LowerBound = 0;
++          if (auto LowerBoundAttr = Child.find(DW_AT_lower_bound))
++            LowerBound = LowerBoundAttr->getAsSignedConstant().value_or(0);
++          Size *= *UpperBound - LowerBound + 1;
++        }
++    }
++    return Size;
++  }
++  default:
++    break;
++  }
++  return std::optional<uint64_t>();
++}
++
+ static std::optional<int64_t>
+ getExpressionFrameOffset(ArrayRef<uint8_t> Expr,
+                          std::optional<unsigned> FrameBaseReg) {
+@@ -1201,7 +1241,7 @@ void DWARFContext::addLocalsForDie(DWARFCompileUnit *CU, DWARFDie Subprogram,
+       if (std::optional<const char *> Name = dwarf::toString(*NameAttr))
+         Local.Name = *Name;
+     if (auto Type = Die.getAttributeValueAsReferencedDie(DW_AT_type))
+-      Local.Size = Type.getTypeSize(getCUAddrSize());
++      Local.Size = getTypeSize(Type, getCUAddrSize());
+     if (auto DeclFileAttr = Die.find(DW_AT_decl_file)) {
+       if (const auto *LT = CU->getContext().getLineTableForUnit(CU))
+         LT->getFileNameByIndex(
+@@ -1242,6 +1282,7 @@ DWARFContext::getLocalsForAddress(object::SectionedAddress Address) {
+ DILineInfo DWARFContext::getLineInfoForAddress(object::SectionedAddress Address,
+                                                DILineInfoSpecifier Spec) {
+   DILineInfo Result;
++
+   DWARFCompileUnit *CU = getCompileUnitForAddress(Address.Address);
+   if (!CU)
+     return Result;
+@@ -1256,22 +1297,6 @@ DILineInfo DWARFContext::getLineInfoForAddress(object::SectionedAddress Address,
+           Spec.FLIKind, Result);
+     }
+   }
+-
+-  return Result;
+-}
+-
+-DILineInfo
+-DWARFContext::getLineInfoForDataAddress(object::SectionedAddress Address) {
+-  DILineInfo Result;
+-  DWARFCompileUnit *CU = getCompileUnitForAddress(Address.Address);
+-  if (!CU)
+-    return Result;
+-
+-  if (DWARFDie Die = CU->getVariableForAddress(Address.Address)) {
+-    Result.FileName = Die.getDeclFile(FileLineInfoKind::AbsoluteFilePath);
+-    Result.Line = Die.getDeclLine();
+-  }
+-
+   return Result;
+ }
+ 
+diff --git a/llvm/lib/DebugInfo/DWARF/DWARFDie.cpp b/llvm/lib/DebugInfo/DWARF/DWARFDie.cpp
+index 15a2d23c4fd2..9bf15c30f714 100644
+--- a/llvm/lib/DebugInfo/DWARF/DWARFDie.cpp
++++ b/llvm/lib/DebugInfo/DWARF/DWARFDie.cpp
+@@ -492,66 +492,6 @@ void DWARFDie::getCallerFrame(uint32_t &CallFile, uint32_t &CallLine,
+   CallDiscriminator = toUnsigned(find(DW_AT_GNU_discriminator), 0);
+ }
+ 
+-std::optional<uint64_t> DWARFDie::getTypeSize(uint64_t PointerSize) {
+-  if (auto SizeAttr = find(DW_AT_byte_size))
+-    if (std::optional<uint64_t> Size = SizeAttr->getAsUnsignedConstant())
+-      return Size;
+-
+-  switch (getTag()) {
+-  case DW_TAG_pointer_type:
+-  case DW_TAG_reference_type:
+-  case DW_TAG_rvalue_reference_type:
+-    return PointerSize;
+-  case DW_TAG_ptr_to_member_type: {
+-    if (DWARFDie BaseType = getAttributeValueAsReferencedDie(DW_AT_type))
+-      if (BaseType.getTag() == DW_TAG_subroutine_type)
+-        return 2 * PointerSize;
+-    return PointerSize;
+-  }
+-  case DW_TAG_const_type:
+-  case DW_TAG_immutable_type:
+-  case DW_TAG_volatile_type:
+-  case DW_TAG_restrict_type:
+-  case DW_TAG_typedef: {
+-    if (DWARFDie BaseType = getAttributeValueAsReferencedDie(DW_AT_type))
+-      return BaseType.getTypeSize(PointerSize);
+-    break;
+-  }
+-  case DW_TAG_array_type: {
+-    DWARFDie BaseType = getAttributeValueAsReferencedDie(DW_AT_type);
+-    if (!BaseType)
+-      return std::nullopt;
+-    std::optional<uint64_t> BaseSize = BaseType.getTypeSize(PointerSize);
+-    if (!BaseSize)
+-      return std::nullopt;
+-    uint64_t Size = *BaseSize;
+-    for (DWARFDie Child : *this) {
+-      if (Child.getTag() != DW_TAG_subrange_type)
+-        continue;
+-
+-      if (auto ElemCountAttr = Child.find(DW_AT_count))
+-        if (std::optional<uint64_t> ElemCount =
+-                ElemCountAttr->getAsUnsignedConstant())
+-          Size *= *ElemCount;
+-      if (auto UpperBoundAttr = Child.find(DW_AT_upper_bound))
+-        if (std::optional<int64_t> UpperBound =
+-                UpperBoundAttr->getAsSignedConstant()) {
+-          int64_t LowerBound = 0;
+-          if (auto LowerBoundAttr = Child.find(DW_AT_lower_bound))
+-            LowerBound = LowerBoundAttr->getAsSignedConstant().value_or(0);
+-          Size *= *UpperBound - LowerBound + 1;
+-        }
+-    }
+-    return Size;
+-  }
+-  default:
+-    if (DWARFDie BaseType = getAttributeValueAsReferencedDie(DW_AT_type))
+-      return BaseType.getTypeSize(PointerSize);
+-    break;
+-  }
+-  return std::nullopt;
+-}
+-
+ /// Helper to dump a DIE with all of its parents, but no siblings.
+ static unsigned dumpParentChain(DWARFDie Die, raw_ostream &OS, unsigned Indent,
+                                 DIDumpOptions DumpOpts, unsigned Depth = 0) {
+diff --git a/llvm/lib/DebugInfo/DWARF/DWARFUnit.cpp b/llvm/lib/DebugInfo/DWARF/DWARFUnit.cpp
+index 74667fcb92bc..148711f0246f 100644
+--- a/llvm/lib/DebugInfo/DWARF/DWARFUnit.cpp
++++ b/llvm/lib/DebugInfo/DWARF/DWARFUnit.cpp
+@@ -9,7 +9,6 @@
+ #include "llvm/DebugInfo/DWARF/DWARFUnit.h"
+ #include "llvm/ADT/SmallString.h"
+ #include "llvm/ADT/StringRef.h"
+-#include "llvm/BinaryFormat/Dwarf.h"
+ #include "llvm/DebugInfo/DWARF/DWARFAbbreviationDeclaration.h"
+ #include "llvm/DebugInfo/DWARF/DWARFCompileUnit.h"
+ #include "llvm/DebugInfo/DWARF/DWARFContext.h"
+@@ -19,13 +18,11 @@
+ #include "llvm/DebugInfo/DWARF/DWARFDebugRangeList.h"
+ #include "llvm/DebugInfo/DWARF/DWARFDebugRnglists.h"
+ #include "llvm/DebugInfo/DWARF/DWARFDie.h"
+-#include "llvm/DebugInfo/DWARF/DWARFExpression.h"
+ #include "llvm/DebugInfo/DWARF/DWARFFormValue.h"
+ #include "llvm/DebugInfo/DWARF/DWARFListTable.h"
+ #include "llvm/DebugInfo/DWARF/DWARFObject.h"
+ #include "llvm/DebugInfo/DWARF/DWARFSection.h"
+ #include "llvm/DebugInfo/DWARF/DWARFTypeUnit.h"
+-#include "llvm/Object/ObjectFile.h"
+ #include "llvm/Support/DataExtractor.h"
+ #include "llvm/Support/Errc.h"
+ #include "llvm/Support/Path.h"
+@@ -752,100 +749,6 @@ DWARFDie DWARFUnit::getSubroutineForAddress(uint64_t Address) {
+   return R->second.second;
+ }
+ 
+-void DWARFUnit::updateVariableDieMap(DWARFDie Die) {
+-  for (DWARFDie Child : Die) {
+-    if (isType(Child.getTag()))
+-      continue;
+-    updateVariableDieMap(Child);
+-  }
+-
+-  if (Die.getTag() != DW_TAG_variable)
+-    return;
+-
+-  Expected<DWARFLocationExpressionsVector> Locations =
+-      Die.getLocations(DW_AT_location);
+-  if (!Locations) {
+-    // Missing DW_AT_location is fine here.
+-    consumeError(Locations.takeError());
+-    return;
+-  }
+-
+-  uint64_t Address = UINT64_MAX;
+-
+-  for (const DWARFLocationExpression &Location : *Locations) {
+-    uint8_t AddressSize = getAddressByteSize();
+-    DataExtractor Data(Location.Expr, /*IsLittleEndian=*/true, AddressSize);
+-    DWARFExpression Expr(Data, AddressSize);
+-    auto It = Expr.begin();
+-    if (It == Expr.end())
+-      continue;
+-
+-    // Match exactly the main sequence used to describe global variables:
+-    // `DW_OP_addr[x] [+ DW_OP_plus_uconst]`. Currently, this is the sequence
+-    // that LLVM produces for DILocalVariables and DIGlobalVariables. If, in
+-    // future, the DWARF producer (`DwarfCompileUnit::addLocationAttribute()` is
+-    // a good starting point) is extended to use further expressions, this code
+-    // needs to be updated.
+-    uint64_t LocationAddr;
+-    if (It->getCode() == dwarf::DW_OP_addr) {
+-      LocationAddr = It->getRawOperand(0);
+-    } else if (It->getCode() == dwarf::DW_OP_addrx) {
+-      uint64_t DebugAddrOffset = It->getRawOperand(0);
+-      if (auto Pointer = getAddrOffsetSectionItem(DebugAddrOffset)) {
+-        LocationAddr = Pointer->Address;
+-      }
+-    } else {
+-      continue;
+-    }
+-
+-    // Read the optional 2nd operand, a DW_OP_plus_uconst.
+-    if (++It != Expr.end()) {
+-      if (It->getCode() != dwarf::DW_OP_plus_uconst)
+-        continue;
+-
+-      LocationAddr += It->getRawOperand(0);
+-
+-      // Probe for a 3rd operand, if it exists, bail.
+-      if (++It != Expr.end())
+-        continue;
+-    }
+-
+-    Address = LocationAddr;
+-    break;
+-  }
+-
+-  // Get the size of the global variable. If all else fails (i.e. the global has
+-  // no type), then we use a size of one to still allow symbolization of the
+-  // exact address.
+-  uint64_t GVSize = 1;
+-  if (DWARFDie BaseType = Die.getAttributeValueAsReferencedDie(DW_AT_type))
+-    if (std::optional<uint64_t> Size = Die.getTypeSize(getAddressByteSize()))
+-      GVSize = *Size;
+-
+-  if (Address != UINT64_MAX)
+-    VariableDieMap[Address] = {Address + GVSize, Die};
+-}
+-
+-DWARFDie DWARFUnit::getVariableForAddress(uint64_t Address) {
+-  extractDIEsIfNeeded(false);
+-
+-  auto RootDie = getUnitDIE();
+-
+-  auto RootLookup = RootsParsedForVariables.insert(RootDie.getOffset());
+-  if (RootLookup.second)
+-    updateVariableDieMap(RootDie);
+-
+-  auto R = VariableDieMap.upper_bound(Address);
+-  if (R == VariableDieMap.begin())
+-    return DWARFDie();
+-
+-  // upper_bound's previous item contains Address.
+-  --R;
+-  if (Address >= R->second.first)
+-    return DWARFDie();
+-  return R->second.second;
+-}
+-
+ void
+ DWARFUnit::getInlinedChainForAddress(uint64_t Address,
+                                      SmallVectorImpl<DWARFDie> &InlinedChain) {
+diff --git a/llvm/lib/DebugInfo/PDB/PDBContext.cpp b/llvm/lib/DebugInfo/PDB/PDBContext.cpp
+index e600fb7385f1..0444093d7622 100644
+--- a/llvm/lib/DebugInfo/PDB/PDBContext.cpp
++++ b/llvm/lib/DebugInfo/PDB/PDBContext.cpp
+@@ -64,13 +64,6 @@ DILineInfo PDBContext::getLineInfoForAddress(object::SectionedAddress Address,
+   return Result;
+ }
+ 
+-DILineInfo
+-PDBContext::getLineInfoForDataAddress(object::SectionedAddress Address) {
+-  // Unimplemented. S_GDATA and S_LDATA in CodeView (used to describe global
+-  // variables) aren't capable of carrying line information.
+-  return DILineInfo();
+-}
+-
+ DILineInfoTable
+ PDBContext::getLineInfoForAddressRange(object::SectionedAddress Address,
+                                        uint64_t Size,
+diff --git a/llvm/lib/DebugInfo/Symbolize/DIPrinter.cpp b/llvm/lib/DebugInfo/Symbolize/DIPrinter.cpp
+index 877380213f21..496c8149782e 100644
+--- a/llvm/lib/DebugInfo/Symbolize/DIPrinter.cpp
++++ b/llvm/lib/DebugInfo/Symbolize/DIPrinter.cpp
+@@ -206,10 +206,6 @@ void PlainPrinterBase::print(const Request &Request, const DIGlobal &Global) {
+     Name = DILineInfo::Addr2LineBadString;
+   OS << Name << "\n";
+   OS << Global.Start << " " << Global.Size << "\n";
+-  if (Global.DeclFile.empty())
+-    OS << "??:?\n";
+-  else
+-    OS << Global.DeclFile << ":" << Global.DeclLine << "\n";
+   printFooter();
+ }
+ 
+diff --git a/llvm/lib/DebugInfo/Symbolize/SymbolizableObjectFile.cpp b/llvm/lib/DebugInfo/Symbolize/SymbolizableObjectFile.cpp
+index d8ee9264b64f..fcff531895a2 100644
+--- a/llvm/lib/DebugInfo/Symbolize/SymbolizableObjectFile.cpp
++++ b/llvm/lib/DebugInfo/Symbolize/SymbolizableObjectFile.cpp
+@@ -327,14 +327,6 @@ DIGlobal SymbolizableObjectFile::symbolizeData(
+   std::string FileName;
+   getNameFromSymbolTable(ModuleOffset.Address, Res.Name, Res.Start, Res.Size,
+                          FileName);
+-  Res.DeclFile = FileName;
+-
+-  // Try and get a better filename:lineno pair from the debuginfo, if present.
+-  DILineInfo DL = DebugInfoContext->getLineInfoForDataAddress(ModuleOffset);
+-  if (DL.Line != 0) {
+-    Res.DeclFile = DL.FileName;
+-    Res.DeclLine = DL.Line;
+-  }
+   return Res;
+ }
+ 
+diff --git a/llvm/test/DebugInfo/Symbolize/ELF/data-command-symtab.yaml b/llvm/test/DebugInfo/Symbolize/ELF/data-command-symtab.yaml
+index 83af3111c5dd..984e444b2fda 100644
+--- a/llvm/test/DebugInfo/Symbolize/ELF/data-command-symtab.yaml
++++ b/llvm/test/DebugInfo/Symbolize/ELF/data-command-symtab.yaml
+@@ -7,15 +7,12 @@
+ 
+ # CHECK:       func
+ # CHECK-NEXT:  4096 1
+-# CHECK-NEXT:  ??:?
+ # CHECK-EMPTY:
+ # CHECK-NEXT:  data
+ # CHECK-NEXT:  8192 2
+-# CHECK-NEXT:  ??:?
+ # CHECK-EMPTY:
+ # CHECK-NEXT:  notype
+ # CHECK-NEXT:  8194 3
+-# CHECK-NEXT:  ??:?
+ # CHECK-EMPTY:
+ 
+ --- !ELF
+diff --git a/llvm/test/tools/llvm-symbolizer/data-location.yaml b/llvm/test/tools/llvm-symbolizer/data-location.yaml
+deleted file mode 100644
+index 54f7d9be44a1..000000000000
+--- a/llvm/test/tools/llvm-symbolizer/data-location.yaml
++++ /dev/null
+@@ -1,450 +0,0 @@
+-## Show that when "DATA" is used with an address, it forces the found location
+-## to be symbolized as data, including the source information.
+-
+-# RUN: yaml2obj %s -o %t.so
+-
+-# RUN: llvm-symbolizer 'DATA 0x304d0' 'DATA 0x304d1' 'DATA 0x304d3' \
+-# RUN:   'DATA 0x304c0' 'DATA 0x304c8' 'DATA 0x304d4' 'DATA 0x304dc' \
+-# RUN:   'DATA 0x304d8' --obj=%t.so | FileCheck %s
+-
+-# CHECK:      bss_global
+-# CHECK-NEXT: {{[0-9]+}} 4
+-# CHECK-NEXT: /tmp/file.cpp:1
+-# CHECK-EMPTY:
+-
+-## Check that lookups in the middle of the symbol are also resolved correctly.
+-# CHECK:      bss_global
+-# CHECK-NEXT: {{[0-9]+}} 4
+-# CHECK-NEXT: /tmp/file.cpp:1
+-# CHECK-EMPTY:
+-# CHECK:      bss_global
+-# CHECK-NEXT: {{[0-9]+}} 4
+-# CHECK-NEXT: /tmp/file.cpp:1
+-# CHECK-EMPTY:
+-
+-## Now, the remainder of the symbols.
+-# CHECK-NEXT: data_global
+-# CHECK-NEXT: {{[0-9]+}} 4
+-# CHECK-NEXT: /tmp/file.cpp:2
+-# CHECK-EMPTY:
+-# CHECK-NEXT: str
+-# CHECK-NEXT: {{[0-9]+}} 8
+-# CHECK-NEXT: /tmp/file.cpp:4
+-# CHECK-EMPTY:
+-# CHECK-NEXT: f()::function_global
+-# CHECK-NEXT: {{[0-9]+}} 4
+-# CHECK-NEXT: /tmp/file.cpp:8
+-# CHECK-EMPTY:
+-
+-## Including the one that includes an addend.
+-# CHECK-NEXT: alpha
+-# CHECK-NEXT: {{[0-9]+}} 4
+-# CHECK-NEXT: /tmp/file.cpp:12
+-# CHECK-EMPTY:
+-# CHECK-NEXT: beta
+-# CHECK-NEXT: {{[0-9]+}} 4
+-# CHECK-NEXT: /tmp/file.cpp:13
+-# CHECK-EMPTY:
+-
+-## Ensure there's still a global that's offset-based.
+-# RUN: llvm-dwarfdump --debug-info %t.so | FileCheck %s --check-prefix=OFFSET
+-
+-# OFFSET: DW_AT_location (DW_OP_addrx 0x4, DW_OP_plus_uconst 0x4)
+-
+-################################################################################
+-## File below was generated using:
+-##
+-##   $ clang++ -g -O3 /tmp/file.cpp -shared -fuse-ld=lld -nostdlib \
+-##     -target aarch64-linux-gnuabi -mllvm -global-merge-ignore-single-use \
+-##     -o /tmp/file.so
+-##
+-##  With /tmp/file.cpp as:
+-##    1: int bss_global;
+-##    2: int data_global = 2;
+-##    3:
+-##    4: const char* str =
+-##    5:     "12345678";
+-##    6:
+-##    7: int* f() {
+-##    8:   static int function_global;
+-##    9:   return &function_global;
+-##   10: }
+-##   11:
+-##   12: static int alpha;
+-##   13: static int beta;
+-##   14: int *f(bool b) { return beta ? &alpha : &beta; }
+-##   15:
+-##
+-## ... then, one can get the offsets using `nm`, like:
+-##   $ nm out.so | grep bss_global
+-##     00000000000038fc B bss_global
+-##
+-## Note the use of the aarch64 target (with -nostdlib in order to allow linkage
+-## without libraries for cross-compilation) as well as -O3 and
+-## -global-merge-ignore-single-use. This is a specific combination that makes
+-## the compiler emit the `alpha` global variable with a more complex
+-## DW_AT_location than just a DW_OP_addr/DW_OP_addrx. In this instance, it
+-## outputs a `DW_AT_location  (DW_OP_addrx 0x4, DW_OP_plus_uconst 0x4)`.
+-##
+-## Ideally, this would be tested by invoking clang directly on a C source file,
+-## but unfortunately there's no way to do that for LLVM tests. The other option
+-## is to compile IR to an objfile, but llvm-symbolizer doesn't understand that
+-## two symbols can have the same address in different sections. In the code
+-## above, for example, we'd have bss_global at .bss+0x0, and data_global at
+-## .data+0x0, and so the symbolizer would only print one of them. Hence, we have
+-## the ugly dso-to-yaml blob below.
+-##
+-## For now, constant strings don't have a debuginfo entry, and so can't be
+-## symbolized correctly. In future (if D123534 gets merged), this can be updated
+-## to include a check that llvm-symbolizer can also symbolize constant strings,
+-## like `str` above (basically that &"12345678" should be symbolizable)
+-## to the specific line. Then, you can find the address of the constant string
+-## from the relocation:
+-##
+-##   $ nm out.so | grep str
+-##     00000000000038c0 D str
+-##   $ llvm-objdump -R out.so | grep 38c0
+-##     00000000000038c0 R_X86_64_RELATIVE *ABS*+0x4f8 # <-- 0x4f8
+-################################################################################
+-
+---- !ELF
+-FileHeader:
+-  Class:           ELFCLASS64
+-  Data:            ELFDATA2LSB
+-  Type:            ET_DYN
+-  Machine:         EM_AARCH64
+-ProgramHeaders:
+-  - Type:            PT_PHDR
+-    Flags:           [ PF_R ]
+-    VAddr:           0x40
+-    Align:           0x8
+-  - Type:            PT_LOAD
+-    Flags:           [ PF_R ]
+-    FirstSec:        .dynsym
+-    LastSec:         .eh_frame
+-    Align:           0x10000
+-  - Type:            PT_LOAD
+-    Flags:           [ PF_X, PF_R ]
+-    FirstSec:        .text
+-    LastSec:         .text
+-    VAddr:           0x103E4
+-    Align:           0x10000
+-  - Type:            PT_LOAD
+-    Flags:           [ PF_W, PF_R ]
+-    FirstSec:        .dynamic
+-    LastSec:         .dynamic
+-    VAddr:           0x20410
+-    Align:           0x10000
+-  - Type:            PT_LOAD
+-    Flags:           [ PF_W, PF_R ]
+-    FirstSec:        .data
+-    LastSec:         .bss
+-    VAddr:           0x304C0
+-    Align:           0x10000
+-  - Type:            PT_DYNAMIC
+-    Flags:           [ PF_W, PF_R ]
+-    FirstSec:        .dynamic
+-    LastSec:         .dynamic
+-    VAddr:           0x20410
+-    Align:           0x8
+-  - Type:            PT_GNU_RELRO
+-    Flags:           [ PF_R ]
+-    FirstSec:        .dynamic
+-    LastSec:         .dynamic
+-    VAddr:           0x20410
+-  - Type:            PT_GNU_EH_FRAME
+-    Flags:           [ PF_R ]
+-    FirstSec:        .eh_frame_hdr
+-    LastSec:         .eh_frame_hdr
+-    VAddr:           0x37C
+-    Align:           0x4
+-  - Type:            PT_GNU_STACK
+-    Flags:           [ PF_W, PF_R ]
+-    Align:           0x0
+-Sections:
+-  - Name:            .dynsym
+-    Type:            SHT_DYNSYM
+-    Flags:           [ SHF_ALLOC ]
+-    Address:         0x238
+-    Link:            .dynstr
+-    AddressAlign:    0x8
+-  - Name:            .gnu.hash
+-    Type:            SHT_GNU_HASH
+-    Flags:           [ SHF_ALLOC ]
+-    Address:         0x2C8
+-    Link:            .dynsym
+-    AddressAlign:    0x8
+-    Header:
+-      SymNdx:          0x1
+-      Shift2:          0x1A
+-    BloomFilter:     [ 0x400188002180000C ]
+-    HashBuckets:     [ 0x1 ]
+-    HashValues:      [ 0xEE8502A, 0xEE85016, 0xC033991C, 0x61F7372E, 0xB88AB7F ]
+-  - Name:            .hash
+-    Type:            SHT_HASH
+-    Flags:           [ SHF_ALLOC ]
+-    Address:         0x2F8
+-    Link:            .dynsym
+-    AddressAlign:    0x4
+-    Bucket:          [ 5, 0, 4, 0, 3, 0 ]
+-    Chain:           [ 0, 0, 0, 1, 2, 0 ]
+-  - Name:            .dynstr
+-    Type:            SHT_STRTAB
+-    Flags:           [ SHF_ALLOC ]
+-    Address:         0x330
+-    AddressAlign:    0x1
+-  - Name:            .rela.dyn
+-    Type:            SHT_RELA
+-    Flags:           [ SHF_ALLOC ]
+-    Address:         0x358
+-    Link:            .dynsym
+-    AddressAlign:    0x8
+-    Relocations:
+-      - Offset:          0x304C8
+-        Type:            R_AARCH64_RELATIVE
+-        Addend:          880
+-  - Name:            .rodata
+-    Type:            SHT_PROGBITS
+-    Flags:           [ SHF_ALLOC, SHF_MERGE, SHF_STRINGS ]
+-    Address:         0x370
+-    AddressAlign:    0x1
+-    EntSize:         0x1
+-    Content:         '313233343536373800'
+-  - Name:            .eh_frame_hdr
+-    Type:            SHT_PROGBITS
+-    Flags:           [ SHF_ALLOC ]
+-    Address:         0x37C
+-    AddressAlign:    0x4
+-    Content:         011B033B18000000020000006800010034000000740001004C000000
+-  - Name:            .eh_frame
+-    Type:            SHT_PROGBITS
+-    Flags:           [ SHF_ALLOC ]
+-    Address:         0x398
+-    AddressAlign:    0x8
+-    Content:         1400000000000000017A5200017C1E011B0C1F0000000000140000001C0000002C0001000C00000000000000000000001400000034000000200001001C000000000000000000000000000000
+-  - Name:            .text
+-    Type:            SHT_PROGBITS
+-    Flags:           [ SHF_ALLOC, SHF_EXECINSTR ]
+-    Address:         0x103E4
+-    AddressAlign:    0x4
+-    Content:         0001009000501391C0035FD60801009008611391E90308AA2A4540B85F0100710001899AC0035FD6
+-  - Name:            .dynamic
+-    Type:            SHT_DYNAMIC
+-    Flags:           [ SHF_WRITE, SHF_ALLOC ]
+-    Address:         0x20410
+-    Link:            .dynstr
+-    AddressAlign:    0x8
+-    Entries:
+-      - Tag:             DT_RELA
+-        Value:           0x358
+-      - Tag:             DT_RELASZ
+-        Value:           0x18
+-      - Tag:             DT_RELAENT
+-        Value:           0x18
+-      - Tag:             DT_RELACOUNT
+-        Value:           0x1
+-      - Tag:             DT_SYMTAB
+-        Value:           0x238
+-      - Tag:             DT_SYMENT
+-        Value:           0x18
+-      - Tag:             DT_STRTAB
+-        Value:           0x330
+-      - Tag:             DT_STRSZ
+-        Value:           0x28
+-      - Tag:             DT_GNU_HASH
+-        Value:           0x2C8
+-      - Tag:             DT_HASH
+-        Value:           0x2F8
+-      - Tag:             DT_NULL
+-        Value:           0x0
+-  - Name:            .data
+-    Type:            SHT_PROGBITS
+-    Flags:           [ SHF_WRITE, SHF_ALLOC ]
+-    Address:         0x304C0
+-    AddressAlign:    0x8
+-    Content:         '02000000000000000000000000000000'
+-  - Name:            .bss
+-    Type:            SHT_NOBITS
+-    Flags:           [ SHF_WRITE, SHF_ALLOC ]
+-    Address:         0x304D0
+-    AddressAlign:    0x4
+-    Size:            0x10
+-  - Name:            .debug_abbrev
+-    Type:            SHT_PROGBITS
+-    AddressAlign:    0x1
+-    Content:         011101252513050325721710171B25111B120673170000023400032549133F193A0B3B0B0218000003240003253E0B0B0B0000040F004913000005260049130000062E01111B120640187A196E2503253A0B3B0B49133F190000073400032549133A0B3B0B02180000083400032549133A0B3B0B02186E25000009050003253A0B3B0B4913000000
+-  - Name:            .debug_info
+-    Type:            SHT_PROGBITS
+-    AddressAlign:    0x1
+-    Content:         AB0000000500010800000000010021000108000000000000000205280000000800000002032E000000000102A1000304050402052E000000000202A101020648000000000402A102044D00000005520000000307080106050C000000016F0D0E0007A500000007082E000000000802A1030008092E000000000D02A1040A080B2E000000000C04A10423040C06061C000000016F0F0E000EA50000000910000EAA00000000042E0000000311020100
+-  - Name:            .debug_str_offsets
+-    Type:            SHT_PROGBITS
+-    AddressAlign:    0x1
+-    Content:         4C00000005000000A2000000000000002C00000059000000280000001C00000072000000640000008C0000008700000069000000140000007B0000009C0000001A0000000E0000008500000076000000
+-  - Name:            .comment
+-    Type:            SHT_PROGBITS
+-    Flags:           [ SHF_MERGE, SHF_STRINGS ]
+-    AddressAlign:    0x1
+-    EntSize:         0x1
+-    Content:         4C696E6B65723A204C4C442031352E302E300000636C616E672076657273696F6E2031352E302E30202868747470733A2F2F6769746875622E636F6D2F6C6C766D2F6C6C766D2D70726F6A6563742E67697420306462616566363162353666306566306162306366333865613932666663316633356265653366662900
+-  - Name:            .debug_line
+-    Type:            SHT_PROGBITS
+-    AddressAlign:    0x1
+-    Content:         620000000500080037000000010101FB0E0D00010101010000000100000101011F010E00000003011F020F051E0100000000006C97BBE59F7DC6A9EA956633431DA63E0400000902E4030100000000001805030A140500BF05190A0105120608740204000101
+-  - Name:            .debug_line_str
+-    Type:            SHT_PROGBITS
+-    Flags:           [ SHF_MERGE, SHF_STRINGS ]
+-    AddressAlign:    0x1
+-    EntSize:         0x1
+-    Content:         2F746D702F66696C652E637070002F7573722F6C6F63616C2F676F6F676C652F686F6D652F6D69746368702F6C6C766D2D6275696C642F6F707400
+-Symbols:
+-  - Name:            file.cpp
+-    Type:            STT_FILE
+-    Index:           SHN_ABS
+-  - Name:            '$x.0'
+-    Section:         .text
+-    Value:           0x103E4
+-  - Name:            _ZZ1fvE15function_global
+-    Type:            STT_OBJECT
+-    Section:         .bss
+-    Value:           0x304D4
+-    Size:            0x4
+-  - Name:            '$d.1'
+-    Section:         .bss
+-    Value:           0x304D0
+-  - Name:            '$d.2'
+-    Section:         .data
+-    Value:           0x304C0
+-  - Name:            '$d.3'
+-    Section:         .rodata
+-    Value:           0x370
+-  - Name:            '$d.4'
+-    Section:         .debug_abbrev
+-  - Name:            '$d.5'
+-    Section:         .debug_info
+-  - Name:            '$d.6'
+-    Section:         .debug_str_offsets
+-  - Name:            '$d.7'
+-    Section:         .debug_str
+-    Value:           0xA2
+-  - Name:            '$d.8'
+-    Section:         .debug_addr
+-  - Name:            _ZL4beta
+-    Type:            STT_OBJECT
+-    Section:         .bss
+-    Value:           0x304D8
+-    Size:            0x4
+-  - Name:            _ZL5alpha
+-    Type:            STT_OBJECT
+-    Section:         .bss
+-    Value:           0x304DC
+-    Size:            0x4
+-  - Name:            '$d.9'
+-    Section:         .comment
+-    Value:           0x13
+-  - Name:            '$d.10'
+-    Section:         .eh_frame
+-    Value:           0x398
+-  - Name:            '$d.11'
+-    Section:         .debug_line
+-  - Name:            '$d.12'
+-    Section:         .debug_line_str
+-    Value:           0xE
+-  - Name:            _DYNAMIC
+-    Section:         .dynamic
+-    Value:           0x20410
+-    Other:           [ STV_HIDDEN ]
+-  - Name:            _Z1fv
+-    Type:            STT_FUNC
+-    Section:         .text
+-    Binding:         STB_GLOBAL
+-    Value:           0x103E4
+-    Size:            0xC
+-  - Name:            _Z1fb
+-    Type:            STT_FUNC
+-    Section:         .text
+-    Binding:         STB_GLOBAL
+-    Value:           0x103F0
+-    Size:            0x1C
+-  - Name:            bss_global
+-    Type:            STT_OBJECT
+-    Section:         .bss
+-    Binding:         STB_GLOBAL
+-    Value:           0x304D0
+-    Size:            0x4
+-  - Name:            data_global
+-    Type:            STT_OBJECT
+-    Section:         .data
+-    Binding:         STB_GLOBAL
+-    Value:           0x304C0
+-    Size:            0x4
+-  - Name:            str
+-    Type:            STT_OBJECT
+-    Section:         .data
+-    Binding:         STB_GLOBAL
+-    Value:           0x304C8
+-    Size:            0x8
+-DynamicSymbols:
+-  - Name:            _Z1fv
+-    Type:            STT_FUNC
+-    Section:         .text
+-    Binding:         STB_GLOBAL
+-    Value:           0x103E4
+-    Size:            0xC
+-  - Name:            _Z1fb
+-    Type:            STT_FUNC
+-    Section:         .text
+-    Binding:         STB_GLOBAL
+-    Value:           0x103F0
+-    Size:            0x1C
+-  - Name:            bss_global
+-    Type:            STT_OBJECT
+-    Section:         .bss
+-    Binding:         STB_GLOBAL
+-    Value:           0x304D0
+-    Size:            0x4
+-  - Name:            data_global
+-    Type:            STT_OBJECT
+-    Section:         .data
+-    Binding:         STB_GLOBAL
+-    Value:           0x304C0
+-    Size:            0x4
+-  - Name:            str
+-    Type:            STT_OBJECT
+-    Section:         .data
+-    Binding:         STB_GLOBAL
+-    Value:           0x304C8
+-    Size:            0x8
+-DWARF:
+-  debug_str:
+-    - '/tmp/file.cpp'
+-    - _Z1fb
+-    - alpha
+-    - f
+-    - data_global
+-    - int
+-    - '/usr/local/google/home/mitchp/llvm-build/opt'
+-    - bss_global
+-    - char
+-    - _ZL4beta
+-    - str
+-    - bool
+-    - _ZL5alpha
+-    - b
+-    - beta
+-    - function_global
+-    - _Z1fv
+-    - 'clang version 15.0.0 (https://github.com/llvm/llvm-project.git 0dbaef61b56f0ef0ab0cf38ea92ffc1f35bee3ff)'
+-  debug_addr:
+-    - Length:          0x3C
+-      Version:         0x5
+-      AddressSize:     0x8
+-      Entries:
+-        - Address:         0x304D0
+-        - Address:         0x304C0
+-        - Address:         0x304C8
+-        - Address:         0x304D4
+-        - Address:         0x304D8
+-        - Address:         0x103E4
+-        - Address:         0x103F0
+-...
+diff --git a/llvm/test/tools/llvm-symbolizer/data.s b/llvm/test/tools/llvm-symbolizer/data.s
+index cc9503c59141..e8039f146dbd 100644
+--- a/llvm/test/tools/llvm-symbolizer/data.s
++++ b/llvm/test/tools/llvm-symbolizer/data.s
+@@ -7,12 +7,9 @@
+ 
+ # CHECK:      d1
+ # CHECK-NEXT: 0 8
+-# CHECK-NEXT: ??:?
+ # CHECK-EMPTY:
+ # CHECK-NEXT: d2
+ # CHECK-NEXT: 8 4
+-# CHECK-NEXT: ??:?
+-# CHECK-EMPTY:
+ 
+ d1:
+     .quad 0x1122334455667788
+-- 
+2.38.1.1.g6d9df9d320
+
