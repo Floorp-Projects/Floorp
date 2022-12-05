@@ -72,56 +72,78 @@ async function getIncognitoWindow() {
   };
 }
 
-add_task(async function test_browserAction_openPopup_incognito_window() {
+async function testWithIncognitoOverride(incognitoOverride) {
+  let extension = ExtensionTestUtils.loadExtension({
+    ...extensionData,
+
+    incognitoOverride,
+
+    background: async function() {
+      browser.test.onMessage.addListener(async ({ windowId, incognitoOverride }) => {
+        const openPromise = browser.browserAction.openPopup({ windowId });
+
+        if (incognitoOverride === "not_allowed") {
+          await browser.test.assertRejects(
+            openPromise,
+            /Invalid window ID/,
+            "Should prevent open popup call for incognito window"
+          );
+        } else {
+          try {
+            browser.test.assertEq(await openPromise, undefined, "openPopup resolved");
+          } catch (e) {
+            browser.test.fail(`Unexpected error: ${e}`);
+          }
+        }
+
+        browser.test.sendMessage("incognitoWindow");
+      });
+    },
+
+    files: {
+      "popup.html": `<!DOCTYPE html><meta charset="utf-8"><script src="popup.js"><\/script>`,
+      "popup.js"() {
+        browser.test.sendMessage("popup");
+      },
+    },
+  });
+
+  await extension.startup();
+
+  let incognitoWindow = await getIncognitoWindow();
+  await extension.sendMessage({ windowId: incognitoWindow.windowId, incognitoOverride });
+
+  await extension.awaitMessage("incognitoWindow");
+
+  // Wait for the popup to open - bug 1800100
+  if (incognitoOverride === "spanning") {
+    await extension.awaitMessage("popup");
+  }
+
+  await extension.unload();
+
+  await incognitoWindow.close();
+}
+
+add_task(async function test_browserAction_openPopup_incognito_window_spanning() {
   if (AppConstants.platform == "android") {
     // TODO bug 1372178: Cannot open private windows from an extension.
     todo(false, "Cannot open private windows on Android");
     return;
   }
 
-  async function testWithIncognitoOverride(incognitoOverride) {
-    let extension = ExtensionTestUtils.loadExtension({
-      ...extensionData,
+  await testWithIncognitoOverride("spanning");
+});
 
-      incognitoOverride,
-
-      background: async function() {
-        browser.test.onMessage.addListener(async ({ windowId, incognitoOverride }) => {
-          const openPromise = browser.browserAction.openPopup({ windowId });
-
-          if (incognitoOverride === "not_allowed") {
-            await browser.test.assertRejects(
-              openPromise,
-              /Invalid window ID/,
-              "Should prevent open popup call for incognito window"
-            );
-          } else {
-            try {
-              browser.test.assertEq(await openPromise, undefined, "openPopup resolved");
-            } catch (e) {
-              browser.test.fail(`Unexpected error: ${e}`);
-            }
-          }
-
-          browser.test.sendMessage("incognitoWindow");
-        });
-      },
-    });
-
-    await extension.startup();
-
-    let incognitoWindow = await getIncognitoWindow();
-    await extension.sendMessage({ windowId: incognitoWindow.windowId, incognitoOverride });
-
-    await extension.awaitMessage("incognitoWindow");
-    await extension.unload();
-
-    await incognitoWindow.close();
+add_task(async function test_browserAction_openPopup_incognito_window_not_allowed() {
+  if (AppConstants.platform == "android") {
+    // TODO bug 1372178: Cannot open private windows from an extension.
+    todo(false, "Cannot open private windows on Android");
+    return;
   }
 
-  for (const override of ["spanning", "not_allowed"]) {
-    await testWithIncognitoOverride(override);
-  }
+
+  await testWithIncognitoOverride("not_allowed");
 });
 </script>
 
