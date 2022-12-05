@@ -42,12 +42,18 @@ function updateIndicatorState() {
       ? "webrtc-indicator-sharing-microphone"
       : "";
   }
-  document.l10n.setAttributes(audioVideoButton, avL10nId);
+  if (avL10nId) {
+    document.l10n.setAttributes(audioVideoButton, avL10nId);
+  } else {
+    audioVideoButton.removeAttribute("data-l10n-id");
+    audioVideoButton.removeAttribute("tooltiptext");
+  }
 
   // Screen sharing button tooltip.
   const screenShareButton = document.getElementById("screenShareButton");
   let ssL10nId;
-  switch (webrtcUI.showScreenSharingIndicator) {
+  const ssi = webrtcUI.showScreenSharingIndicator;
+  switch (ssi) {
     case "Application":
       ssL10nId = "webrtc-indicator-sharing-application";
       break;
@@ -61,12 +67,17 @@ function updateIndicatorState() {
       ssL10nId = "webrtc-indicator-sharing-window";
       break;
     default:
-      Cu.reportError(
-        `Unknown showScreenSharingIndicator: ${webrtcUI.showScreenSharingIndicator}`
-      );
+      if (ssi) {
+        Cu.reportError(`Unknown showScreenSharingIndicator: ${ssi}`);
+      }
       ssL10nId = "";
   }
-  document.l10n.setAttributes(screenShareButton, ssL10nId);
+  if (ssL10nId) {
+    document.l10n.setAttributes(screenShareButton, ssL10nId);
+  } else {
+    screenShareButton.removeAttribute("data-l10n-id");
+    screenShareButton.removeAttribute("tooltiptext");
+  }
 
   // Resize and ensure the window position is correct
   // (sizeToContent messes with our position).
