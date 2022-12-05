@@ -234,4 +234,4 @@ release-promotion:
         promote:
             target-tasks-method: promote
         ship:
-            target-tasks-method: release    # TODO: Bug 1799696 - Rename into ship
+            target-tasks-method: ship

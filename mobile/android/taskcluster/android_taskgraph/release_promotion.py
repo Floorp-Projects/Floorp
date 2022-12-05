@@ -5,7 +5,7 @@
 
 import os
 
-from mozilla_version.maven import MavenVersion
+from mozilla_version.mobile import MobileVersion
 from taskgraph.actions.registry import register_callback_action
 
 from taskgraph.util.taskcluster import get_artifact
@@ -26,9 +26,9 @@ def is_release_promotion_available(parameters):
 
 @register_callback_action(
     name='release-promotion',
-    title='Ship Android Components',
+    title='Release Promotion',
     symbol='${input.release_promotion_flavor}',
-    description="Ship Android Components",
+    description="Release Promotion",
     generic=False,
     order=500,
     context=[],
@@ -61,7 +61,7 @@ def is_release_promotion_available(parameters):
             'release_promotion_flavor': {
                 'type': 'string',
                 'description': 'The flavor of release promotion to perform.',
-                'default': 'ship',
+                'default': 'build',
                 'enum': sorted(graph_config['release-promotion']['flavors'].keys()),
             },
             'rebuild_kinds': {
@@ -140,18 +140,27 @@ def release_promotion_action(parameters, graph_config, input, task_group_id, tas
     parameters['shipping_phase'] = input['release_promotion_flavor']
 
     version_in_file = read_version_file()
-    parameters['version'] = input['version'] if input.get('version') else read_version_file()
-    version_string = parameters['version']
-    if version_string != version_in_file:
-        raise ValueError(f"Version given in tag ({version_string}) does not match the one in version.txt ({version_in_file})")
-    parameters['head_tag'] = f'v{version_string}'
+    version_string = input.get('version', None)
 
+    # shipit uses the version in version.txt to determine next version number; check that its passed in
+    # in the payload
+    if not version_string:
+        version_string = version_in_file
+    elif version_string != version_in_file:
+        raise ValueError("Version given in tag ({}) does not match the one in version.txt ({})".format(version_string, version_in_file))
+
+    parameters['version'] = version_string
+    parameters['head_tag'] = 'v{}'.format(version_string)
     parameters['next_version'] = input['next_version']
 
-    parameters['release_type'] = "release"
+    release_type = "release"
+    version = MobileVersion.parse(version_string)
+    if version.is_beta:
+        release_type = "beta"
 
-    parameters['pull_request_number'] = None
+    parameters['release_type'] = release_type
     parameters['tasks_for'] = 'action'
+    parameters['pull_request_number'] = None
 
     # make parameters read-only
     parameters = Parameters(**parameters)
