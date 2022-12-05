@@ -52,6 +52,13 @@ async function testWithWindowState(state) {
 
     newWindowPromise = browser.windows.create({ url: "tab.html" });
 
+    browser.test.onMessage.addListener(async (msg) => {
+      if (msg === "close-window") {
+        await browser.windows.remove((await newWindowPromise).id);
+        browser.test.sendMessage("window-closed");
+      }
+    });
+
     tabLoadedPromise.then(async () => {
       const windowId = (await newWindowPromise).id;
 
@@ -97,15 +104,16 @@ async function testWithWindowState(state) {
 
           browser.test.assertEq(true, highestWindowIdIsFocused, "new window is focused");
 
-          browser.windows.remove(windows[windows.length - 1].id);
-          browser.test.sendMessage("window");
+          browser.test.sendMessage("popup-open");
         }, 1000);
       },
     },
   });
 
   await extension.startup();
-  await extension.awaitMessage("window");
+  await extension.awaitMessage("popup-open");
+  await extension.sendMessage("close-window");
+  await extension.awaitMessage("window-closed");
   await extension.unload();
 }
 
