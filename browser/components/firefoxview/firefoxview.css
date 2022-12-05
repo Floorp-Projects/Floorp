@@ -366,7 +366,6 @@ button.close {
       "twisty head"
       "none desc";
   list-style-type: none;
-  padding-inline-start: 8px;
   position: relative;
   z-index: 1;
 }
@@ -782,10 +781,13 @@ details[open] > .page-section-header > .twisty {
 .synced-tab-li-placeholder {
   box-sizing: border-box;
   border-radius: 4px;
-  padding: 10px;
+  padding: 7px;
   display: grid;
+  column-gap: 8px;
+  row-gap: 2px;
+  align-items: center;
   grid-template-columns: min-content repeat(2, 1fr) minmax(min-content, auto);
-  grid-template-rows: auto;
+  grid-template-rows: auto 1fr auto;
   grid-template-areas:
     "favicon title title title"
     "favicon domain domain domain"
@@ -806,7 +808,7 @@ details[open] > .page-section-header > .twisty {
     grid-template-areas:
       "favicon title title title"
       "favicon domain domain domain"
-      "favicon device device device"
+      "favicon device device device";
   }
   .synced-tab-li:not(:first-child) > .synced-tab-a > .synced-tab-li-time {
     display: none;
@@ -814,26 +816,31 @@ details[open] > .page-section-header > .twisty {
 }
 
 .synced-tab-li-placeholder {
-  padding-top: 15px;
+  row-gap: 1em;
+  grid-template-areas:
+    "favicon title title title"
+    "favicon domain domain domain";
+  grid-template-rows: auto auto;
 }
 
 .li-placeholder-favicon {
   grid-area: favicon;
+  align-self: start;
   width: 16px;
   height: 16px;
-  margin-inline-end: 10px;
 }
 
 .li-placeholder-title {
   grid-area: title;
-  height: 12px;
+  height: .8em;
+  margin-block: .1em; /* simulate line-height */
   width: 100%;
-  margin-bottom: 12px;
 }
 
 .li-placeholder-domain {
   grid-area: domain;
-  height: 8px;
+  height: .6em;
+  margin-block: .1em; /* simulate line-height */
   width: 100%;
 }
 
@@ -850,14 +857,15 @@ details[open] > .page-section-header > .twisty {
 }
 
 .synced-tab-li:first-child > .synced-tab-a {
-  padding-top: 20px;
+  padding: 15px;
   grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: auto;
+  grid-template-rows: auto auto 1fr auto;
   grid-template-areas:
     "favicon badge badge badge"
     "title title title title"
     "domain domain domain domain"
     "device device device time";
+  row-gap: 4px;
 }
 
 .synced-tab-li:nth-child(2) {
@@ -881,11 +889,7 @@ details[open] > .page-section-header > .twisty {
 .synced-tab-li-url {
   text-decoration-line: underline;
   grid-area: domain;
-  align-self: end;
-}
-
-.synced-tab-li:not(:first-child) > .synced-tab-a > .synced-tab-li-url {
-  margin-top: 4px;
+  align-self: start;
 }
 
 .synced-tab-li-title {
@@ -895,7 +899,6 @@ details[open] > .page-section-header > .twisty {
 
 .synced-tab-li:first-child > .synced-tab-a > .synced-tab-li-title {
   color: inherit;
-  padding-top: 5px;
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -905,7 +908,6 @@ details[open] > .page-section-header > .twisty {
 
 .synced-tab-li-device {
   grid-area: device;
-  margin-top: 5px;
 }
 
 .synced-tab-li-time {
@@ -921,7 +923,7 @@ details[open] > .page-section-header > .twisty {
 
 .synced-tab-li .favicon {
   grid-area: favicon;
-  margin-inline-end: 10px;
+  align-self: start;
 }
 
 @media (prefers-contrast) {
