@@ -10,14 +10,15 @@ add_setup(async function setup() {
   let originalHeight = window.outerHeight;
   registerCleanupFunction(async () => {
     await BrowserTestUtils.withNewTab(
-      {
-        gBrowser,
-        url: "about:firefoxview",
-      },
+      { gBrowser, url: "about:firefoxview" },
       async browser => window.FullZoom.reset(browser)
     );
     window.resizeTo(originalWidth, originalHeight);
   });
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "about:firefoxview" },
+    async browser => window.FullZoom.setZoom(0.5, browser)
+  );
 });
 
 add_task(async function feature_callout_is_repositioned_if_it_does_not_fit() {
@@ -30,10 +31,7 @@ add_task(async function feature_callout_is_repositioned_if_it_does_not_fit() {
   const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
 
   await BrowserTestUtils.withNewTab(
-    {
-      gBrowser,
-      url: "about:firefoxview",
-    },
+    { gBrowser, url: "about:firefoxview" },
     async browser => {
       const { document } = browser.contentWindow;
 
@@ -45,7 +43,7 @@ add_task(async function feature_callout_is_repositioned_if_it_does_not_fit() {
       );
 
       let startingTop = document.querySelector(calloutSelector).style.top;
-      browser.contentWindow.resizeTo(1550, 600);
+      browser.contentWindow.resizeTo(1600, 400);
       // Wait for callout to be repositioned
       await BrowserTestUtils.waitForMutationCondition(
         document.querySelector(calloutSelector),
@@ -54,7 +52,7 @@ add_task(async function feature_callout_is_repositioned_if_it_does_not_fit() {
       );
       ok(
         document.querySelector(`${calloutSelector}.arrow-inline-start`),
-        "On first screen at 1550x600, the callout is positioned to the right of the parent element"
+        "On first screen at 1600x400, the callout is positioned to the right of the parent element"
       );
 
       startingTop = document.querySelector(calloutSelector).style.top;
@@ -88,10 +86,7 @@ add_task(async function feature_callout_is_repositioned_rtl() {
   const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
 
   await BrowserTestUtils.withNewTab(
-    {
-      gBrowser,
-      url: "about:firefoxview",
-    },
+    { gBrowser, url: "about:firefoxview" },
     async browser => {
       const { document } = browser.contentWindow;
 
@@ -103,7 +98,7 @@ add_task(async function feature_callout_is_repositioned_rtl() {
       );
 
       let startingTop = document.querySelector(calloutSelector).style.top;
-      browser.contentWindow.resizeTo(1550, 600);
+      browser.contentWindow.resizeTo(1600, 400);
       // Wait for callout to be repositioned
       await BrowserTestUtils.waitForMutationCondition(
         document.querySelector(calloutSelector),
@@ -112,7 +107,7 @@ add_task(async function feature_callout_is_repositioned_rtl() {
       );
       ok(
         document.querySelector(`${calloutSelector}.arrow-inline-end`),
-        "On first screen at 1550x600, the callout is positioned to the right of the parent element"
+        "On first screen at 1600x400, the callout is positioned to the right of the parent element"
       );
 
       startingTop = document.querySelector(calloutSelector).style.top;
