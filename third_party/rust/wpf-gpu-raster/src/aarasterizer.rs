@@ -112,10 +112,10 @@ macro_rules! ASSERTACTIVELISTORDER {
 *
 \**************************************************************************/
 pub fn AdvanceDDAAndUpdateActiveEdgeList(nSubpixelYCurrent: INT, pEdgeActiveList: Ref<CEdge>) {
-
-        let mut nOutOfOrderCount: INT = 0;
+        let mut outOfOrder = false;
         let mut pEdgePrevious: Ref<CEdge> = pEdgeActiveList;
         let mut pEdgeCurrent: Ref<CEdge> = pEdgeActiveList.Next.get();
+        let mut prevX = pEdgePrevious.X.get();
 
         // Advance DDA and update edge list
 
@@ -135,21 +135,23 @@ pub fn AdvanceDDAAndUpdateActiveEdgeList(nSubpixelYCurrent: INT, pEdgeActiveList
 
             // Advance the DDA:
 
-            pEdgeCurrent.X.set(pEdgeCurrent.X.get() + pEdgeCurrent.Dx);
-            pEdgeCurrent.Error.set(pEdgeCurrent.Error.get()+ pEdgeCurrent.ErrorUp);
-            if (pEdgeCurrent.Error.get() >= 0) {
-                pEdgeCurrent.Error.set(pEdgeCurrent.Error.get() - pEdgeCurrent.ErrorDown);
-                pEdgeCurrent.X.set(pEdgeCurrent.X.get() + 1);
+            let mut x = pEdgeCurrent.X.get() + pEdgeCurrent.Dx;
+            let mut error = pEdgeCurrent.Error.get() + pEdgeCurrent.ErrorUp;
+            if (error >= 0) {
+                error -= pEdgeCurrent.ErrorDown;
+                x += 1;
             }
+            pEdgeCurrent.X.set(x);
+            pEdgeCurrent.Error.set(error);
 
             // Is this entry out-of-order with respect to the previous one?
-
-            nOutOfOrderCount += (pEdgePrevious.X > pEdgeCurrent.X) as i32;
+            outOfOrder |= (prevX > x);
 
             // Advance:
 
             pEdgePrevious = pEdgeCurrent;
             pEdgeCurrent = pEdgeCurrent.Next.get();
+            prevX = x;
         }
 
         // It turns out that having any out-of-order edges at this point
@@ -162,7 +164,7 @@ pub fn AdvanceDDAAndUpdateActiveEdgeList(nSubpixelYCurrent: INT, pEdgeActiveList
         //       Instead, figure out what caused our 'outOfOrder' logic
         //       above to get messed up.
 
-        if (nOutOfOrderCount != 0) {
+        if (outOfOrder) {
             SortActiveEdges(pEdgeActiveList);
         }
         ASSERTACTIVELISTORDER!(pEdgeActiveList);

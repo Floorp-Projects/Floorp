@@ -1311,7 +1311,7 @@ impl<TVertex: Default> CHwTVertexBuffer<TVertex> {
 fn AddTriListVertices(
     &mut self,
     uCount: UINT,
-    ) -> &mut [TVertex]
+    ) -> &mut DynArray<TVertex>
 {
     #[cfg(debug_assertions)]
     if (uCount != 6)
@@ -1321,10 +1321,7 @@ fn AddTriListVertices(
         self.m_fDbgNonLineSegmentTriangleStrip = true;
     }
 
-    let Count = (self.m_rgVerticesTriList.GetCount() as UINT);
-    let newCount = Count + uCount;
-
-    self.m_rgVerticesTriList.resize_with(newCount as usize, Default::default);
+    self.m_rgVerticesTriList.reserve(uCount as usize);
 /* 
     if (newCount > self.m_rgVerticesTriStrip.GetCapacity())
     {
@@ -1332,7 +1329,7 @@ fn AddTriListVertices(
     }
 
     self.m_rgVerticesTriStrip.SetCount(newCount);*/
-    return &mut self.m_rgVerticesTriList[Count as usize..];
+    return &mut self.m_rgVerticesTriList;
 
 //Cleanup:
     //RRETURN!(hr);
@@ -2303,15 +2300,9 @@ impl CHwVertexBuffer {
     let pVertex = self.AddTriListVertices(3);
 
     // Use a single triangle to cover the entire line
-    pVertex[0].x = x0;
-    pVertex[0].y = y  - 0.5;
-    pVertex[0].coverage = dwDiffuse;
-    pVertex[1].x = x0;
-    pVertex[1].y = y  + 0.5;
-    pVertex[1].coverage = dwDiffuse;
-    pVertex[2].x = x1;
-    pVertex[2].y = y;
-    pVertex[2].coverage = dwDiffuse;
+    pVertex.push(OutputVertex{ x: x0, y: y - 0.5, coverage: dwDiffuse });
+    pVertex.push(OutputVertex{ x: x0, y: y + 0.5, coverage: dwDiffuse });
+    pVertex.push(OutputVertex{ x: x1, y, coverage: dwDiffuse });
 
   //Cleanup:
     RRETURN!(hr);
@@ -2571,109 +2562,123 @@ fn AddTrapezoidStandard(&mut self,
 
     let pVertex = self.m_pVB.AddTriListVertices(18);
 
-    let mut i = 0;
     //
     // Fill in the vertices
     //
 
-    pVertex[i].x = rPixelXTopLeft - rPixelXLeftDelta;
-    pVertex[i].y = rPixelYTop;
-    pVertex[i].coverage = FLOAT_ZERO;
-    i += 1;
+    pVertex.push(OutputVertex{
+        x: rPixelXTopLeft - rPixelXLeftDelta,
+        y: rPixelYTop,
+        coverage: FLOAT_ZERO,
+    });
 
-    pVertex[i].x = rPixelXBottomLeft - rPixelXLeftDelta;
-    pVertex[i].y = rPixelYBottom;
-    pVertex[i].coverage = FLOAT_ZERO;
-    i += 1;
+    pVertex.push(OutputVertex{
+        x: rPixelXBottomLeft - rPixelXLeftDelta,
+        y: rPixelYBottom,
+        coverage: FLOAT_ZERO,
+    });
 
-    pVertex[i].x = rPixelXTopLeft + rPixelXLeftDelta;
-    pVertex[i].y = rPixelYTop;
-    pVertex[i].coverage = FLOAT_ONE;
-    i += 1;
+    pVertex.push(OutputVertex{
+        x: rPixelXTopLeft + rPixelXLeftDelta,
+        y: rPixelYTop,
+        coverage: FLOAT_ONE,
+    });
 
 
+    pVertex.push(OutputVertex{
+        x: rPixelXBottomLeft - rPixelXLeftDelta,
+        y: rPixelYBottom,
+        coverage: FLOAT_ZERO,
+    });
 
-    pVertex[i].x = rPixelXBottomLeft - rPixelXLeftDelta;
-    pVertex[i].y = rPixelYBottom;
-    pVertex[i].coverage = FLOAT_ZERO;
-    i += 1;
+    pVertex.push(OutputVertex{
+        x: rPixelXTopLeft + rPixelXLeftDelta,
+        y: rPixelYTop,
+        coverage: FLOAT_ONE,
+    });
 
-    pVertex[i].x = rPixelXTopLeft + rPixelXLeftDelta;
-    pVertex[i].y = rPixelYTop;
-    pVertex[i].coverage = FLOAT_ONE;
-    i += 1;
-
-    pVertex[i].x = rPixelXBottomLeft + rPixelXLeftDelta;
-    pVertex[i].y = rPixelYBottom;
-    pVertex[i].coverage = FLOAT_ONE;
-    i += 1;
+    pVertex.push(OutputVertex{
+        x: rPixelXBottomLeft + rPixelXLeftDelta,
+        y: rPixelYBottom,
+        coverage: FLOAT_ONE,
+    });
 
      
     if (fNeedInsideGeometry)
     {
-        pVertex[i].x = rPixelXTopLeft + rPixelXLeftDelta;
-        pVertex[i].y = rPixelYTop;
-        pVertex[i].coverage = FLOAT_ONE;
-        i += 1;
+        pVertex.push(OutputVertex{
+            x: rPixelXTopLeft + rPixelXLeftDelta,
+            y: rPixelYTop,
+            coverage: FLOAT_ONE,
+        });
 
-        pVertex[i].x = rPixelXBottomLeft + rPixelXLeftDelta;
-        pVertex[i].y = rPixelYBottom;
-        pVertex[i].coverage = FLOAT_ONE;
-        i += 1;
+        pVertex.push(OutputVertex{
+            x: rPixelXBottomLeft + rPixelXLeftDelta,
+            y: rPixelYBottom,
+            coverage: FLOAT_ONE,
+        });
 
-        pVertex[i].x = rPixelXTopRight - rPixelXRightDelta;
-        pVertex[i].y = rPixelYTop;
-        pVertex[i].coverage = FLOAT_ONE;
-        i += 1;
+        pVertex.push(OutputVertex{
+            x: rPixelXTopRight - rPixelXRightDelta,
+            y: rPixelYTop,
+            coverage: FLOAT_ONE,
+        });
 
 
+        pVertex.push(OutputVertex{
+            x: rPixelXBottomLeft + rPixelXLeftDelta,
+            y: rPixelYBottom,
+            coverage: FLOAT_ONE,
+        });
 
-        pVertex[i].x = rPixelXBottomLeft + rPixelXLeftDelta;
-        pVertex[i].y = rPixelYBottom;
-        pVertex[i].coverage = FLOAT_ONE;
-        i += 1;
+        pVertex.push(OutputVertex{
+            x: rPixelXTopRight - rPixelXRightDelta,
+            y: rPixelYTop,
+            coverage: FLOAT_ONE,
+        });
 
-        pVertex[i].x = rPixelXTopRight - rPixelXRightDelta;
-        pVertex[i].y = rPixelYTop;
-        pVertex[i].coverage = FLOAT_ONE;
-        i += 1;
-
-        pVertex[i].x = rPixelXBottomRight - rPixelXRightDelta;
-        pVertex[i].y = rPixelYBottom;
-        pVertex[i].coverage = FLOAT_ONE;
-        i += 1;
+        pVertex.push(OutputVertex{
+            x: rPixelXBottomRight - rPixelXRightDelta,
+            y: rPixelYBottom,
+            coverage: FLOAT_ONE,
+        });
     }
 
-    pVertex[i].x = rPixelXTopRight - rPixelXRightDelta;
-    pVertex[i].y = rPixelYTop;
-    pVertex[i].coverage = FLOAT_ONE;
-    i += 1;
+    pVertex.push(OutputVertex{
+        x: rPixelXTopRight - rPixelXRightDelta,
+        y: rPixelYTop,
+        coverage: FLOAT_ONE,
+    });
 
-    pVertex[i].x = rPixelXBottomRight - rPixelXRightDelta;
-    pVertex[i].y = rPixelYBottom;
-    pVertex[i].coverage = FLOAT_ONE;
-    i += 1;
+    pVertex.push(OutputVertex{
+        x: rPixelXBottomRight - rPixelXRightDelta,
+        y: rPixelYBottom,
+        coverage: FLOAT_ONE,
+    });
 
-    pVertex[i].x = rPixelXTopRight + rPixelXRightDelta;
-    pVertex[i].y = rPixelYTop;
-    pVertex[i].coverage = FLOAT_ZERO;
-    i += 1;
+    pVertex.push(OutputVertex{
+        x: rPixelXTopRight + rPixelXRightDelta,
+        y: rPixelYTop,
+        coverage: FLOAT_ZERO,
+    });
 
+    pVertex.push(OutputVertex{
+        x: rPixelXBottomRight - rPixelXRightDelta,
+        y: rPixelYBottom,
+        coverage: FLOAT_ONE,
+    });
 
-    pVertex[i].x = rPixelXBottomRight - rPixelXRightDelta;
-    pVertex[i].y = rPixelYBottom;
-    pVertex[i].coverage = FLOAT_ONE;
-    i += 1;
+    pVertex.push(OutputVertex{
+        x: rPixelXTopRight + rPixelXRightDelta,
+        y: rPixelYTop,
+        coverage: FLOAT_ZERO,
+    });
 
-    pVertex[i].x = rPixelXTopRight + rPixelXRightDelta;
-    pVertex[i].y = rPixelYTop;
-    pVertex[i].coverage = FLOAT_ZERO;
-    i += 1;
-
-    pVertex[i].x = rPixelXBottomRight + rPixelXRightDelta;
-    pVertex[i].y = rPixelYBottom;
-    pVertex[i].coverage = FLOAT_ZERO;
-    // i += 1;
+    pVertex.push(OutputVertex{
+        x: rPixelXBottomRight + rPixelXRightDelta,
+        y: rPixelYBottom,
+        coverage: FLOAT_ZERO,
+    });
 
     if (!fNeedOutsideGeometry)
     {
@@ -2683,10 +2688,11 @@ fn AddTrapezoidStandard(&mut self,
         // next one.
         //
 
-        //pVertex[i].X = rPixelXBottomRight + rPixelXRightDelta;
-        //pVertex[i].Y = rPixelYBottom;
-        //pVertex[i].Diffuse = FLOAT_ZERO;
-        // i += 1;
+        //pVertex.push(OutputVertex{
+        //  x: rPixelXBottomRight + rPixelXRightDelta,
+        //  y: rPixelYBottom,
+        //  coverage: FLOAT_ZERO,
+        //});
     }
 
 //Cleanup:
@@ -2927,32 +2933,44 @@ fn PrepareStratumSlow(&mut self,
 
             // End current trapezoid stratum.
 
-            let pVertex: &mut [OutputVertex] = self.m_pVB.AddTriListVertices(6);
+            let pVertex = self.m_pVB.AddTriListVertices(6);
 
-            pVertex[0].x = self.m_rLastTrapezoidTopRight;
-            pVertex[0].y = self.m_rCurStratumTop;
-            pVertex[0].coverage = FLOAT_ZERO;
-        
-            pVertex[1].x = self.m_rLastTrapezoidBottomRight;
-            pVertex[1].y = self.m_rCurStratumBottom;
-            pVertex[1].coverage = FLOAT_ZERO;
+            pVertex.push(OutputVertex{
+                x: self.m_rLastTrapezoidTopRight,
+                y: self.m_rCurStratumTop,
+                coverage: FLOAT_ZERO,
+            });
 
-            pVertex[2].x = rOutsideRight;
-            pVertex[2].y = self.m_rCurStratumTop;
-            pVertex[2].coverage = FLOAT_ZERO;
+            pVertex.push(OutputVertex{
+                x: self.m_rLastTrapezoidBottomRight,
+                y: self.m_rCurStratumBottom,
+                coverage: FLOAT_ZERO,
+            });
+
+            pVertex.push(OutputVertex{
+                x: rOutsideRight,
+                y: self.m_rCurStratumTop,
+                coverage: FLOAT_ZERO,
+            });
 
 
-            pVertex[3].x = self.m_rLastTrapezoidBottomRight;
-            pVertex[3].y = self.m_rCurStratumBottom;
-            pVertex[3].coverage = FLOAT_ZERO;
+            pVertex.push(OutputVertex{
+                x: self.m_rLastTrapezoidBottomRight,
+                y: self.m_rCurStratumBottom,
+                coverage: FLOAT_ZERO,
+            });
 
-            pVertex[4].x = rOutsideRight;
-            pVertex[4].y = self.m_rCurStratumTop;
-            pVertex[4].coverage = FLOAT_ZERO;
+            pVertex.push(OutputVertex{
+                x: rOutsideRight,
+                y: self.m_rCurStratumTop,
+                coverage: FLOAT_ZERO,
+            });
 
-            pVertex[5].x = rOutsideRight;
-            pVertex[5].y = self.m_rCurStratumBottom;
-            pVertex[5].coverage = FLOAT_ZERO;
+            pVertex.push(OutputVertex{
+                x: rOutsideRight,
+                y: self.m_rCurStratumBottom,
+                coverage: FLOAT_ZERO,
+            });
         }
         // Compute the gap between where the last stratum ended and where
         // this one begins.
@@ -2977,30 +2995,42 @@ fn PrepareStratumSlow(&mut self,
             let pVertex = self.m_pVB.AddTriListVertices(6);
             
             // Duplicate first vertex.
-            pVertex[0].x = outside_left;
-            pVertex[0].y = flRectTop;
-            pVertex[0].coverage = FLOAT_ZERO;
+            pVertex.push(OutputVertex{
+                x: outside_left,
+                y: flRectTop,
+                coverage: FLOAT_ZERO,
+            });
 
-            pVertex[1].x = outside_left;
-            pVertex[1].y = flRectBot;
-            pVertex[1].coverage = FLOAT_ZERO;
+            pVertex.push(OutputVertex{
+                x: outside_left,
+                y: flRectBot,
+                coverage: FLOAT_ZERO,
+            });
 
-            pVertex[2].x = outside_right;
-            pVertex[2].y = flRectTop;
-            pVertex[2].coverage = FLOAT_ZERO;
+            pVertex.push(OutputVertex{
+                x: outside_right,
+                y: flRectTop,
+                coverage: FLOAT_ZERO,
+            });
 
 
-            pVertex[3].x = outside_left;
-            pVertex[3].y = flRectBot;
-            pVertex[3].coverage = FLOAT_ZERO;
+            pVertex.push(OutputVertex{
+                x: outside_left,
+                y: flRectBot,
+                coverage: FLOAT_ZERO,
+            });
 
-            pVertex[4].x = outside_right;
-            pVertex[4].y = flRectTop;
-            pVertex[4].coverage = FLOAT_ZERO;
+            pVertex.push(OutputVertex{
+                x: outside_right,
+                y: flRectTop,
+                coverage: FLOAT_ZERO,
+            });
 
-            pVertex[5].x = outside_right;
-            pVertex[5].y = flRectBot;
-            pVertex[5].coverage = FLOAT_ZERO;
+            pVertex.push(OutputVertex{
+                x: outside_right,
+                y: flRectBot,
+                coverage: FLOAT_ZERO,
+            });
         }
 
         if (fTrapezoid)
@@ -3013,32 +3043,44 @@ fn PrepareStratumSlow(&mut self,
 
             // Begin new trapezoid stratum.
 
-            let mut pVertex: &mut [TVertex] = self.m_pVB.AddTriListVertices(6);
+            let pVertex = self.m_pVB.AddTriListVertices(6);
 
-            pVertex[0].x = rOutsideLeft;
-            pVertex[0].y = rStratumTop;
-            pVertex[0].coverage = FLOAT_ZERO;
+            pVertex.push(OutputVertex{
+                x: rOutsideLeft,
+                y: rStratumTop,
+                coverage: FLOAT_ZERO,
+            });
 
-            pVertex[1].x = rOutsideLeft;
-            pVertex[1].y = rStratumBottom;
-            pVertex[1].coverage = FLOAT_ZERO;
+            pVertex.push(OutputVertex{
+                x: rOutsideLeft,
+                y: rStratumBottom,
+                coverage: FLOAT_ZERO,
+            });
 
-            pVertex[2].x = rTrapezoidTopLeft;
-            pVertex[2].y = rStratumTop;
-            pVertex[2].coverage = FLOAT_ZERO;
+            pVertex.push(OutputVertex{
+                x: rTrapezoidTopLeft,
+                y: rStratumTop,
+                coverage: FLOAT_ZERO,
+            });
 
 
-            pVertex[3].x = rOutsideLeft;
-            pVertex[3].y = rStratumBottom;
-            pVertex[3].coverage = FLOAT_ZERO;
+            pVertex.push(OutputVertex{
+                x: rOutsideLeft,
+                y: rStratumBottom,
+                coverage: FLOAT_ZERO,
+            });
 
-            pVertex[4].x = rTrapezoidTopLeft;
-            pVertex[4].y = rStratumTop;
-            pVertex[4].coverage = FLOAT_ZERO;
-        
-            pVertex[5].x = rTrapezoidBottomLeft;
-            pVertex[5].y = rStratumBottom;
-            pVertex[5].coverage = FLOAT_ZERO;
+            pVertex.push(OutputVertex{
+                x: rTrapezoidTopLeft,
+                y: rStratumTop,
+                coverage: FLOAT_ZERO,
+            });
+
+            pVertex.push(OutputVertex{
+                x: rTrapezoidBottomLeft,
+                y: rStratumBottom,
+                coverage: FLOAT_ZERO,
+            });
         }
     }
     

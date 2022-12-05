@@ -6,10 +6,6 @@ Target Independent Rasterization.
 Design
 ======
 
-Bezier flattening is done using an approach that uses forward differencing
-of the error metric to compute a flattened version that would match a traditional
-adaptive recursive flattening.
-
 The general algorithm used for rasterization is a vertical sweep of
 the shape that maintains an active edge list.  The sweep is done
 at a sub-scanline resolution and results in either:
@@ -18,3 +14,9 @@ at a sub-scanline resolution and results in either:
       of triangle strips.
    2. Simple trapezoids being recognized in the active edge list
       and output using a faster simple trapezoid path.
+
+Bezier flattening is done using an approach that uses forward differencing
+of the error metric to compute a flattened version that would match a traditional
+adaptive recursive flattening.
+
+
