@@ -20,6 +20,7 @@ XPIDL_SOURCES += [
     "nsIHttpChannelInternal.idl",
     "nsIHttpHeaderVisitor.idl",
     "nsIHttpProtocolHandler.idl",
+    "nsIObliviousHttp.idl",
     "nsIRaceCacheWithNetwork.idl",
     "nsITlsHandshakeListener.idl",
     "nsIWellKnownOpportunisticUtils.idl",
