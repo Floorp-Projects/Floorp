@@ -667,6 +667,10 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                         raw_result["statistics"]["timings"], raptor, retval={}
                     )
 
+                cpu_vals = raw_result.get("cpu", None)
+                if cpu_vals:
+                    bt_result["measurements"].setdefault("cpuTime", []).extend(cpu_vals)
+
                 if self.perfstats:
                     for cycle in raw_result["geckoPerfStats"]:
                         for metric in cycle:

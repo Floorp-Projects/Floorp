@@ -7,14 +7,13 @@
 """output raptor test results"""
 from __future__ import absolute_import, division, print_function
 
-import six
-import filters
-
 import copy
 import json
 import os
-
 from abc import ABCMeta, abstractmethod
+
+import filters
+import six
 from logger.logger import RaptorLogger
 
 LOG = RaptorLogger(component="perftest-output")
@@ -1560,8 +1559,10 @@ class BrowsertimeOutput(PerftestOutput):
         def _process(subtest, alternative_method=""):
             if test["type"] == "power":
                 subtest["value"] = filters.mean(subtest["replicates"])
-            elif subtest["name"] in VISUAL_METRICS or subtest["name"].startswith(
-                "perfstat"
+            elif (
+                subtest["name"] in VISUAL_METRICS
+                or subtest["name"].startswith("perfstat")
+                or subtest["name"] == "cpuTime"
             ):
                 if alternative_method in ("geomean", "mean"):
                     _process_alt_method(subtest, alternative_method)
