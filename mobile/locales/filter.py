@@ -66,10 +66,7 @@ def test(mod, path, entity=None):
         return "error"
     if mod == "mobile/android":
         if entity is None:
-            if re.match(r"mobile-l10n.js", path) or re.match(r"defines.inc", path):
-                return "ignore"
-        if path == "defines.inc":
-            if entity == "MOZ_LANGPACK_CONTRIBUTORS":
+            if re.match(r"mobile-l10n.js", path):
                 return "ignore"
         return "error"
 
