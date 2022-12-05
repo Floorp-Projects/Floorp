@@ -120,8 +120,21 @@
 
 
     <!-- This is the label of an action we offer when the user selects text in other third-party apps.
-         Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">Súkromné vyhľadávanie</string>
+         Focus is hard coded since we can't use variables in this context.
+         Do not translate or transliterate Focus.-->
+    <string name="text_selection_search_action_focus">Hľadať vo Focuse</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+             Klar is hard coded since we can't use variables in this context.
+             Do not translate or transliterate Klar.-->
+    <string name="text_selection_search_action_klar">Hľadať v Klare</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+            Focus Beta is hard coded since we can't use variables in this context.
+            Do not translate or transliterate Focus Beta.-->
+    <string name="text_selection_search_action_focus_beta">Hľadať vo Focuse Beta</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+          Focus Nightly is hard coded since we can't use variables in this context.
+          Do not translate or transliterate Focus Nightly.-->
+    <string name="text_selection_search_action_focus_nightly">Hľadať vo Focuse Nightly</string>
 
     <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
          Argument 2 is the url for the learn-more link. -->
@@ -364,10 +377,6 @@
     <!-- Explanation text above the list of search engines-->
     <string name="preference_select_preferred_engine">Vyberte si vami požadovaný modul:</string>
 
-    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
-     a user first launches the app. -->
-    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">Zobraziť tipy na domovskej obrazovke</string>
-
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Pridať vyhľadávací modul</string>
 
@@ -494,11 +503,7 @@
 
 
 
-  <!-- Onboarding: Title -->
-    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string moz:removedIn="106" name="onboarding_title">Víta vás %1$s!</string>
-
-    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+  <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
     <string name="onboarding_close_button_content_description">Zavrieť</string>
 
     <!-- New Onboarding flow first screen title -->
@@ -528,31 +533,6 @@
     <!-- New Onboarding flow second screen skip onboarding button label-->
     <string name="onboarding_second_screen_skip_button_text">Preskočiť</string>
 
-
-    <!-- Onboarding: Description -->
-    <string moz:removedIn="106" name="onboarding_description">Súkromné prehliadanie ďalšej úrovne, kedykoľvek ho potrebujete</string>
-
-    <!-- Onboarding: Incognito Title -->
-    <string moz:removedIn="106" name="onboarding_incognito_title">Kde sa inkognito stretáva s neviditeľným</string>
-
-    <!-- Onboarding: Incognito Description -->
-    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string moz:removedIn="106" name="onboarding_incognito_description">%s je prehliadač, ktorý dáva súkromie na prvé miesto a preto má zabudovanú mimoriadne silnú ochranu pred sledovaním.</string>
-
-    <!-- Onboarding: History Title -->
-    <string moz:removedIn="106" name="onboarding_history_title">Prehliadajte bez stôp</string>
-
-    <!-- Onboarding: History Description -->
-    <string moz:removedIn="106" name="onboarding_history_description2">Jedným ťuknutím vymažete históriu prehliadania a súbory cookie – a zastavíte sledovanie pre reklamné účely všade kam sa pohnete.</string>
-
-    <!-- Onboarding: Protection Title -->
-    <string moz:removedIn="106" name="onboarding_protection_title">Súkromie, ktoré sa hodí do každej situácie</string>
-
-    <!-- Onboarding: Protection Description -->
-    <string moz:removedIn="106" name="onboarding_protection_description">Ak vaše prehliadanie potrebuje zmenu, je ľahké zvýšiť alebo znížiť nastavenia ochrany súkromia.</string>
-
-    <!-- Onboarding: Start browsing -->
-    <string moz:removedIn="106" name="onboarding_start_browsing">Začať prehliadanie</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Posuňte svoje súkromie na vyššiu úroveň</string>
@@ -707,6 +687,27 @@
     <!-- Preference for site permissions -->
     <string name="preference_site_permissions">Oprávnenia stránok</string>
 
+    <!--  Preference for cookie banner. The name of the item from settings screen and the title of the cookie banner screen. -->
+    <string name="preferences_cookie_banner">Zníženie počtu bannerov súborov cookie</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is not disabled. -->
+    <string name="preferences_cookie_banner_summary_on">Zapnuté</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is disabled. -->
+    <string name="preferences_cookie_banner_summary_off">Vypnuté</string>
+
+    <!--  Title preference inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_title">Zníženie počtu bannerov súborov cookie</string>
+
+    <!--  Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_summary">Zobrazuje menej bannerov automatickým odmietnutím žiadostí o použitie súborov cookie (kde je to možné).</string>
+
+    <!--  Checkbox Preference title inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
+    <string name="cookie_banner_further_reduce_option_title">Znížiť počet bannerov súborov cookie ešte viac</string>
+
+    <!--  Checkbox Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
+    <string name="cookie_banner_further_reduce_option_summary">Žiadosti o bannery cookie budú automaticky akceptované, čím sa eliminujú ďalšie bannery.</string>
+
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Automatické prehrávanie</string>
 
@@ -788,10 +789,6 @@
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Vzdialené ladenie cez USB/Wi-Fi</string>
 
-    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     %1$s is replaced with the app name -->
-    <string moz:removedIn="103" name="biometric_auth_title">Odomknite %1$s</string>
-
     <!-- Text Button for show biometric prompt -->
     <string name="show_biometric_button_text">Odomknúť</string>
 
@@ -800,13 +797,6 @@
 
     <!-- Subtitle text for biometric prompt pop-up -->
     <string name="biometric_prompt_subtitle">Na pokračovanie aktuálnej relácie aplikácie môžete použiť odtlačok prsta.</string>
-
-    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string moz:removedIn="103" name="biometric_auth_description">Pre pokračovanie sa dotknite snímača odtlačkov prstov.</string>
-
-    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string moz:removedIn="103" name="biometric_auth_new_session">Nová relácia</string>
 
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
@@ -848,11 +838,6 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">Správa sa stránka neočakávane?\n Skúste vypnúť Ochranu pred sledovaním</string>
 
-    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
-The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string moz:removedIn="105" name="tip_disable_tracking_protection3" tools:ignore="UnusedResources">Chýba na webe obsah alebo sa správa divne?\n
-    Skúste vypnúť Rozšírenú ochranu pred sledovaním</string>
-
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[Získajte jednoduchý prístup ku svojim obľúbeným stránkam%1$s Ponuka > Pridať na úvodnú obrazovku]]></string>
@@ -870,28 +855,8 @@ The new line here must be kept as the second half of the string is clickable for
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">Otvorte odkaz na novej karte\n Podržte prst na akomkoľvek odkaze na stránke</string>
 
-    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
-      %1$s is a placeholder for the app name. -->
-    <string moz:removedIn="105" name="tip_request_desktop2" tools:ignore="UnusedResources">Chcete vidieť plnú verziu stránky?\n
-        Prepnite na verziu pre počítače z ponuky %1$s</string>
-
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Vypnúť tipy na úvodnej obrazovke aplikácie</string>
-
-    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
-     "Allowlist" is a replacement for the word whitelist. -->
-    <string moz:removedIn="105" name="tip_explain_allowlist3" tools:ignore="UnusedResources">Chcete na stránkach, ktorým dôverujete, vypnúť Rozšírenú ochranu pred sledovaním?\n
-        Pridajte ju do zoznamu povolených v Nastaveniach
-    </string>
-
-    <!-- Tip displayed on the home view about the changes in the new release.
-    %1$s is a placeholder for the app name -->
-    <string moz:removedIn="105" name="tip_fresh_look" tools:ignore="UnusedResources">Áno, máme úplne nový vzhľad!\n Prečítajte si viac o tejto a ďalších novinkách aplikácie %1$s.</string>
-
-    <!-- Tip displayed on the home view about shortcuts
-    %1$s is a placeholder for the app name -->
-    <string moz:removedIn="105" name="tip_about_shortcuts" tools:ignore="UnusedResources">Vytvorte si skratky k stránkam, ktoré navštevujete najčastejšie:\n
-    V ponuke %1$s vyberte položku Pridať medzi Skratky</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Bola otvorená nová karta</string>
@@ -1012,7 +977,6 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">Zdá sa, že táto stránka sa vás pokúšala sledovať. Kliknutím na štít zobrazíte nastavenia pre túto stránku a štatistiky blokovania sledovania.</string>
     <string name="cfr_for_toolbar_shield_icon2">Máme ich! Zabránili sme tejto stránke špehovať vás. Kedykoľvek ťuknite na štít, aby ste videli, čo všetko blokujeme.</string>
 
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
@@ -1027,7 +991,6 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="tool_tip_dismiss_button_content_description">Zavrieť</string>
 
     <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
-    <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Zbavte sa svojich osobných údajov, histórie prehliadania a ďalších vecí z tejto relácie ťuknutím na tlačidlo koša. Skúste to!</string>
     <string name="cfr_for_toolbar_delete_icon2">Ťuknutím sem všetko vyhodíte do koša – históriu, súbory cookie, všetko – a začnete odznova na novej karte.</string>
 
     <!-- Promote SearchWidget Dialog -->
@@ -1042,6 +1005,11 @@ The new line here must be kept as the second half of the string is clickable for
 
     !-- This is the title of promote search widget dialog. --&gt;
     <string name="promote_search_widget_dialog_title">História prehliadania bola vymazaná! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <!-- Banner Info Message than will appear when user first enters in the app. The location is at the toolbar. -->
+    <string name="cfr_for_start_browsing">Začnite svoju reláciu súkromného prehliadania a my zablokujeme sledovacie prvky a iné zlé veci.</string>
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. &quot;Focus&quot;) --&gt;

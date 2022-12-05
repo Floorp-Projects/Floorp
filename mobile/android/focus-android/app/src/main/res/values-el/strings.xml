@@ -121,8 +121,21 @@
 
 
     <!-- This is the label of an action we offer when the user selects text in other third-party apps.
-         Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">Ιδιωτική αναζήτηση</string>
+         Focus is hard coded since we can't use variables in this context.
+         Do not translate or transliterate Focus.-->
+    <string name="text_selection_search_action_focus">Αναζήτηση στο Focus</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+             Klar is hard coded since we can't use variables in this context.
+             Do not translate or transliterate Klar.-->
+    <string name="text_selection_search_action_klar">Αναζήτηση στο Klar</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+            Focus Beta is hard coded since we can't use variables in this context.
+            Do not translate or transliterate Focus Beta.-->
+    <string name="text_selection_search_action_focus_beta">Αναζήτηση στο Focus Beta</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+          Focus Nightly is hard coded since we can't use variables in this context.
+          Do not translate or transliterate Focus Nightly.-->
+    <string name="text_selection_search_action_focus_nightly">Αναζήτηση στο Focus Nightly</string>
 
     <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
          Argument 2 is the url for the learn-more link. -->
@@ -365,10 +378,6 @@
     <!-- Explanation text above the list of search engines-->
     <string name="preference_select_preferred_engine">Επιλέξτε την προτιμώμενη μηχανή σας:</string>
 
-    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
-     a user first launches the app. -->
-    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">Εμφάνιση συμβουλών αρχικής οθόνης</string>
-
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Προσθήκη μηχανής αναζήτησης</string>
 
@@ -495,11 +504,7 @@
 
 
 
-  <!-- Onboarding: Title -->
-    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string moz:removedIn="106" name="onboarding_title">Καλώς ορίσατε στο %1$s!</string>
-
-    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+  <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
     <string name="onboarding_close_button_content_description">Κλείσιμο</string>
 
     <!-- New Onboarding flow first screen title -->
@@ -529,31 +534,6 @@
     <!-- New Onboarding flow second screen skip onboarding button label-->
     <string name="onboarding_second_screen_skip_button_text">Παράλειψη</string>
 
-
-    <!-- Onboarding: Description -->
-    <string moz:removedIn="106" name="onboarding_description">Προηγμένο επίπεδο ιδιωτικής περιήγησης όταν το θέλετε</string>
-
-    <!-- Onboarding: Incognito Title -->
-    <string moz:removedIn="106" name="onboarding_incognito_title">Πιο «αόρατο» και πιο ιδιωτικό</string>
-
-    <!-- Onboarding: Incognito Description -->
-    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string moz:removedIn="106" name="onboarding_incognito_description">Το %s είναι ένα πρόγραμμα περιήγησης με έμφαση στο απόρρητο και πανίσχυρη προστασία από καταγραφή και cookies.</string>
-
-    <!-- Onboarding: History Title -->
-    <string moz:removedIn="106" name="onboarding_history_title">Περιηγηθείτε σαν να μην συνέβη ποτέ</string>
-
-    <!-- Onboarding: History Description -->
-    <string moz:removedIn="106" name="onboarding_history_description2">Ένα πάτημα διαγράφει το ιστορικό περιήγησης και τα cookies σας — εμποδίζει την καταγραφή σας από διαφημίσεις.</string>
-
-    <!-- Onboarding: Protection Title -->
-    <string moz:removedIn="106" name="onboarding_protection_title">Απόρρητο σε κάθε περίσταση</string>
-
-    <!-- Onboarding: Protection Description -->
-    <string moz:removedIn="106" name="onboarding_protection_description">Εάν αλλάξουν οι ανάγκες περιήγησής σας, μπορείτε εύκολα να επιλέξετε πιο αυστηρές ή πιο ελαστικές ρυθμίσεις απορρήτου.</string>
-
-    <!-- Onboarding: Start browsing -->
-    <string moz:removedIn="106" name="onboarding_start_browsing">Έναρξη περιήγησης</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Ενισχύστε το απόρρητό σας</string>
@@ -708,6 +688,27 @@
     <!-- Preference for site permissions -->
     <string name="preference_site_permissions">Άδειες ιστοτόπων</string>
 
+    <!--  Preference for cookie banner. The name of the item from settings screen and the title of the cookie banner screen. -->
+    <string name="preferences_cookie_banner">Μείωση μπάνερ cookie</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is not disabled. -->
+    <string name="preferences_cookie_banner_summary_on">Ενεργή</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is disabled. -->
+    <string name="preferences_cookie_banner_summary_off">Ανενεργή</string>
+
+    <!--  Title preference inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_title">Μείωση μπάνερ cookie</string>
+
+    <!--  Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_summary">Δείτε λιγότερα μπάνερ με αυτόματη απόρριψη αιτημάτων cookie, όταν είναι δυνατό.</string>
+
+    <!--  Checkbox Preference title inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
+    <string name="cookie_banner_further_reduce_option_title">Περαιτέρω μείωση των μπάνερ cookie</string>
+
+    <!--  Checkbox Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
+    <string name="cookie_banner_further_reduce_option_summary">Τα αιτήματα για μπάνερ cookie θα γίνονται δεκτά για την απόρριψη περισσότερων μπάνερ.</string>
+
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Αυτόματη αναπαραγωγή</string>
 
@@ -789,10 +790,6 @@
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Απομακρυσμένος έλεγχος σφαλμάτων μέσω USB/Wi-Fi</string>
 
-    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     %1$s is replaced with the app name -->
-    <string moz:removedIn="103" name="biometric_auth_title">Άρση φραγής %1$s</string>
-
     <!-- Text Button for show biometric prompt -->
     <string name="show_biometric_button_text">Ξεκλείδωμα</string>
 
@@ -801,13 +798,6 @@
 
     <!-- Subtitle text for biometric prompt pop-up -->
     <string name="biometric_prompt_subtitle">Μπορείτε να χρησιμοποιήσετε το αποτύπωμά σας για να συνεχίσετε την τρέχουσα συνεδρία της εφαρμογής σας.</string>
-
-    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string moz:removedIn="103" name="biometric_auth_description">Αγγίξτε τον αισθητήρα αποτυπωμάτων για να συνεχίσετε.</string>
-
-    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string moz:removedIn="103" name="biometric_auth_new_session">Νέα συνεδρία</string>
 
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
@@ -850,11 +840,6 @@
     <string name="tip_disable_tracking_protection">Απρόσμενη συμπεριφορά σε ιστότοπο;\n
     Απενεργοποιήστε την προστασία από καταγραφή</string>
 
-    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
-The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string moz:removedIn="105" name="tip_disable_tracking_protection3" tools:ignore="UnusedResources">Απουσία περιεχόμενου ή περίεργη συμπεριφορά ιστοτόπου;\n
-    Απενεργοποιήστε την Ενισχυμένη προστασία από καταγραφή</string>
-
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[Πρόσβαση με ένα πάτημα σε συχνούς ιστοτόπους%1$s Μενού > Προσθήκη στην αρχική οθόνη]]></string>
@@ -878,28 +863,8 @@ The new line here must be kept as the second half of the string is clickable for
         Πατήστε παρατεταμένο σε οποιονδήποτε σύνδεσμο μιας σελίδας
     </string>
 
-    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
-      %1$s is a placeholder for the app name. -->
-    <string moz:removedIn="105" name="tip_request_desktop2" tools:ignore="UnusedResources">Θέλετε την πλήρη έκδοση ενός ιστοτόπου;\n
-        Επιλέξτε «Έκδοση υπολογιστή» από το μενού του %1$s</string>
-
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Απενεργοποίηση συμβουλών αρχικής οθόνης</string>
-
-    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
-     "Allowlist" is a replacement for the word whitelist. -->
-    <string moz:removedIn="105" name="tip_explain_allowlist3" tools:ignore="UnusedResources">Δεν θέλετε την Ενισχυμένη προστασία από καταγραφή σε αξιόπιστους ιστοτόπους;\n
-        Προσθέστε τους στη λίστα αποδοχής στις ρυθμίσεις
-    </string>
-
-    <!-- Tip displayed on the home view about the changes in the new release.
-    %1$s is a placeholder for the app name -->
-    <string moz:removedIn="105" name="tip_fresh_look" tools:ignore="UnusedResources">Πράγματι, διαθέτουμε μια νέα εμφάνιση!\n Διαβάστε περισσότερα νέα σχετικά με το %1$s.</string>
-
-    <!-- Tip displayed on the home view about shortcuts
-    %1$s is a placeholder for the app name -->
-    <string moz:removedIn="105" name="tip_about_shortcuts" tools:ignore="UnusedResources">Δημιουργία συντομεύσεων για συχνούς ιστοτόπους:\n
-    Επιλέξτε «Προσθήκη συντόμευσης» από το μενού του %1$s</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Άνοιξε νέα καρτέλα</string>
@@ -1018,8 +983,6 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">Φαίνεται ότι αυτός ο ιστότοπος προσπαθούσε να σας καταγράψει. Πατήστε την ασπίδα για να δείτε τις ρυθμίσεις ιστοτόπου και τα στατιστικά αποκλεισμού καταγραφής.</string>
-
     <string name="cfr_for_toolbar_shield_icon2">Εμποδίσαμε την παρακολούθησή σας από αυτόν τον ιστότοπο. Πατήστε την ασπίδα ανά πάσα στιγμή για να δείτε τι αποκλείουμε.</string>
 
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
@@ -1034,7 +997,6 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="tool_tip_dismiss_button_content_description">Απόρριψη</string>
 
     <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
-    <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Απαλλαγείτε από τα προσωπικά σας δεδομένα, το ιστορικό περιήγησης και πολλά άλλα από αυτήν τη συνεδρία πατώντας το κουμπί απορριμμάτων. Δοκιμάστε το!</string>
     <string name="cfr_for_toolbar_delete_icon2">Πατήστε εδώ για να τα διαγράψετε όλα — ιστορικό, cookies, τα πάντα — και ξεκινήστε από την αρχή σε μια νέα καρτέλα.</string>
 
     <!-- Promote SearchWidget Dialog -->
@@ -1049,6 +1011,11 @@ The new line here must be kept as the second half of the string is clickable for
 
     !-- This is the title of promote search widget dialog. --&gt;
     <string name="promote_search_widget_dialog_title">Το ιστορικό περιήγησης διαγράφηκε! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <!-- Banner Info Message than will appear when user first enters in the app. The location is at the toolbar. -->
+    <string name="cfr_for_start_browsing">Ξεκινήστε τη συνεδρία ιδιωτικής περιήγησής σας και θα αποκλείσουμε τους ιχνηλάτες και άλλα επιβλαβή στοιχεία.</string>
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. &quot;Focus&quot;) --&gt;

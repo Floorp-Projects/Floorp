@@ -118,10 +118,6 @@
     <string name="shortcut_erase_and_open_long_label">清除并打开 %1$s</string>
 
 
-    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
-         Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">隐私搜索</string>
-
     <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
          Argument 2 is the url for the learn-more link. -->
     <string name="about_content"><![CDATA[<p>%1$s 让您掌控线上生活。</p>
@@ -363,10 +359,6 @@
     <!-- Explanation text above the list of search engines-->
     <string name="preference_select_preferred_engine">选择想使用的搜索引擎：</string>
 
-    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
-     a user first launches the app. -->
-    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">在主屏幕显示使用技巧</string>
-
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">添加搜索引擎</string>
 
@@ -493,11 +485,7 @@
 
 
 
-  <!-- Onboarding: Title -->
-    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string moz:removedIn="106" name="onboarding_title">欢迎使用 %1$s！</string>
-
-    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+  <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
     <string name="onboarding_close_button_content_description">关闭</string>
 
     <!-- New Onboarding flow first screen title -->
@@ -527,31 +515,6 @@
     <!-- New Onboarding flow second screen skip onboarding button label-->
     <string name="onboarding_second_screen_skip_button_text">跳过</string>
 
-
-    <!-- Onboarding: Description -->
-    <string moz:removedIn="106" name="onboarding_description">符合您需求的下一代隐私浏览体验</string>
-
-    <!-- Onboarding: Incognito Title -->
-    <string moz:removedIn="106" name="onboarding_incognito_title">无痕模式遇上隐形模式</string>
-
-    <!-- Onboarding: Incognito Description -->
-    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string moz:removedIn="106" name="onboarding_incognito_description">%s 是一款隐私优先的浏览器，内置超强的跟踪和 Cookie 保护功能。</string>
-
-    <!-- Onboarding: History Title -->
-    <string moz:removedIn="106" name="onboarding_history_title">浏览无痕迹</string>
-
-    <!-- Onboarding: History Description -->
-    <string moz:removedIn="106" name="onboarding_history_description2">点一下即可清除浏览历史和 Cookie，防止被广告跟踪。</string>
-
-    <!-- Onboarding: Protection Title -->
-    <string moz:removedIn="106" name="onboarding_protection_title">适合任何场景的隐私保护机制</string>
-
-    <!-- Onboarding: Protection Description -->
-    <string moz:removedIn="106" name="onboarding_protection_description">若您的浏览需求有变，也可很容易地收紧或放松隐私设置。</string>
-
-    <!-- Onboarding: Start browsing -->
-    <string moz:removedIn="106" name="onboarding_start_browsing">开始浏览</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">强化您的隐私</string>
@@ -706,6 +669,21 @@
     <!-- Preference for site permissions -->
     <string name="preference_site_permissions">网站权限</string>
 
+    <!--  Preference for cookie banner. The name of the item from settings screen and the title of the cookie banner screen. -->
+    <string name="preferences_cookie_banner">减少 Cookie 横幅</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is not disabled. -->
+    <string name="preferences_cookie_banner_summary_on">开启</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is disabled. -->
+    <string name="preferences_cookie_banner_summary_off">关闭</string>
+
+    <!--  Title preference inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_title">减少 Cookie 横幅</string>
+
+    <!--  Checkbox Preference title inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
+    <string name="cookie_banner_further_reduce_option_title">进一步减少 Cookie 横幅</string>
+
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">自动播放</string>
 
@@ -787,10 +765,6 @@
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">通过 USB/Wi-Fi 远程调试</string>
 
-    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     %1$s is replaced with the app name -->
-    <string moz:removedIn="103" name="biometric_auth_title">解锁 %1$s</string>
-
     <!-- Text Button for show biometric prompt -->
     <string name="show_biometric_button_text">解锁</string>
 
@@ -799,13 +773,6 @@
 
     <!-- Subtitle text for biometric prompt pop-up -->
     <string name="biometric_prompt_subtitle">你可以验证指纹以继续当前应用会话。</string>
-
-    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string moz:removedIn="103" name="biometric_auth_description">触摸指纹传感器以继续。</string>
-
-    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string moz:removedIn="103" name="biometric_auth_new_session">新会话</string>
 
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
@@ -848,11 +815,6 @@
     <string name="tip_disable_tracking_protection">网站表现异常？？\n
     尝试关闭跟踪保护</string>
 
-    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
-The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string moz:removedIn="105" name="tip_disable_tracking_protection3" tools:ignore="UnusedResources">网站内容缺失，或表现异常？\n
-    尝试关闭跟踪保护</string>
-
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[一键访问您的常用网站%1$s菜单 > 添加到主屏幕]]></string>
@@ -875,28 +837,8 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="tip_open_in_new_tab">新建标签页打开链接\n
         长按页面上的任一链接</string>
 
-    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
-      %1$s is a placeholder for the app name. -->
-    <string moz:removedIn="105" name="tip_request_desktop2" tools:ignore="UnusedResources">需浏览网站的完整版本？\n
-        到 %1$s 菜单切换为桌面版</string>
-
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">关闭启动页上的小提示</string>
-
-    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
-     "Allowlist" is a replacement for the word whitelist. -->
-    <string moz:removedIn="105" name="tip_explain_allowlist3" tools:ignore="UnusedResources">想要对您信任的网站关闭增强型跟踪保护吗？\n
-        到设置中加入允许列表
-    </string>
-
-    <!-- Tip displayed on the home view about the changes in the new release.
-    %1$s is a placeholder for the app name -->
-    <string moz:removedIn="105" name="tip_fresh_look" tools:ignore="UnusedResources">是的，我们的外观已焕然一新！\n 了解更多 %1$s 的新变化。</string>
-
-    <!-- Tip displayed on the home view about shortcuts
-    %1$s is a placeholder for the app name -->
-    <string moz:removedIn="105" name="tip_about_shortcuts" tools:ignore="UnusedResources">为您最常访问的网站创建快捷方式：\n
-选择 %1$s 菜单的“添加快捷方式”</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">已打开新标签页</string>
@@ -1018,8 +960,6 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">看起来这个网站正在试图跟踪您，点击盾牌即可查看网站设置和跟踪器拦截状态。</string>
-
     <string name="cfr_for_toolbar_shield_icon2">抓到了！我们已阻止此网站的跟踪，您可随时点按盾牌了解已拦截哪些内容。</string>
 
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
@@ -1034,7 +974,6 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="tool_tip_dismiss_button_content_description">知道了</string>
 
     <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
-    <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">点击垃圾桶图标，即可删除该会话中的个人数据、浏览历史等。试试吧！</string>
     <string name="cfr_for_toolbar_delete_icon2">点按此处即可删除浏览记录、Cookie 等所有数据，并新建一个全新标签页。</string>
 
     <!-- Promote SearchWidget Dialog -->
@@ -1049,6 +988,11 @@ The new line here must be kept as the second half of the string is clickable for
 
     !-- This is the title of promote search widget dialog. --&gt;
     <string name="promote_search_widget_dialog_title">浏览历史已清除！🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <!-- Banner Info Message than will appear when user first enters in the app. The location is at the toolbar. -->
+    <string name="cfr_for_start_browsing">进入隐私浏览模式，我们会在您上网时拦截跟踪器和其他脏东西。</string>
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. &quot;Focus&quot;) --&gt;

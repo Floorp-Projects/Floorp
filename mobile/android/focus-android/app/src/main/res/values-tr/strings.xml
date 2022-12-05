@@ -698,6 +698,15 @@
     <!--  Title preference inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
     <string name="cookie_banner_reject_all_option_title">Çerez duyurularını azalt</string>
 
+    <!--  Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_summary">Mümkün olduğunda çerez isteklerini otomatik olarak reddederek daha az çerez duyurusu görün.</string>
+
+    <!--  Checkbox Preference title inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
+    <string name="cookie_banner_further_reduce_option_title">Çerez duyurularını daha da azalt</string>
+
+    <!--  Checkbox Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
+    <string name="cookie_banner_further_reduce_option_summary">Daha fazla duyuruyu kapatmak için çerez duyurusu istekleri kabul edilecektir.</string>
+
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Otomatik oynatma</string>
 
