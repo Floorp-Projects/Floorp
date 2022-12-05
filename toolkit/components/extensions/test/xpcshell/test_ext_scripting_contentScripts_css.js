@@ -20,6 +20,7 @@ const makeExtension = ({ manifest: manifestProps, ...otherProps }) => {
       granted_host_permissions: true,
       ...manifestProps,
     },
+    allowInsecureRequests: true,
     temporarilyInstalled: true,
     ...otherProps,
   });

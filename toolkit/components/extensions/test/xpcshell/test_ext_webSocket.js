@@ -24,7 +24,12 @@ async function testWebSocketInFrameUpgraded() {
 
 // testIframe = true: open WebSocket from iframe (original test case).
 // testIframe = false: open WebSocket from content script.
-async function test_webSocket({ manifest_version, useIframe }) {
+async function test_webSocket({
+  manifest_version,
+  useIframe,
+  content_security_policy,
+  expectUpgrade,
+}) {
   let web_accessible_resources =
     manifest_version == 2
       ? ["frame.html"]
@@ -37,6 +42,7 @@ async function test_webSocket({ manifest_version, useIframe }) {
       host_permissions: ["<all_urls>"],
       granted_host_permissions: true,
       web_accessible_resources,
+      content_security_policy,
       content_scripts: [
         {
           matches: ["http://*/plain.html"],
@@ -81,10 +87,11 @@ async function test_webSocket({ manifest_version, useIframe }) {
 
   let contentPage = await ExtensionTestUtils.loadContentPage(pageURL);
   let { ws_scheme, originHeader } = await extension.awaitMessage("ws_request");
-  if (useIframe || manifest_version == 2) {
-    Assert.equal(ws_scheme, "ws:", "ws:-request should not have been upgraded");
+
+  if (expectUpgrade) {
+    Assert.equal(ws_scheme, "wss:", "ws:-request should have been upgraded");
   } else {
-    Assert.equal(ws_scheme, "wss:", "WebSocket affected by page CSP in MV3");
+    Assert.equal(ws_scheme, "ws:", "ws:-request should not have been upgraded");
   }
 
   if (useIframe) {
@@ -104,18 +111,52 @@ async function test_webSocket({ manifest_version, useIframe }) {
   await extension.unload();
 }
 
+// Page CSP does not affect extension iframes.
 add_task(async function test_webSocket_upgrade_iframe_mv2() {
-  await test_webSocket({ manifest_version: 2, useIframe: true });
+  await test_webSocket({
+    manifest_version: 2,
+    useIframe: true,
+    expectUpgrade: false,
+  });
 });
 
+// Page CSP does not affect extension iframes, however upgrade-insecure-requests causes this
+// request to be upgraded in the iframe.
 add_task(async function test_webSocket_upgrade_iframe_mv3() {
-  await test_webSocket({ manifest_version: 3, useIframe: true });
+  await test_webSocket({
+    manifest_version: 3,
+    useIframe: true,
+    expectUpgrade: true,
+  });
 });
 
+// Test that removing upgrade-insecure-requests allows http request in the iframe.
+add_task(async function test_webSocket_noupgrade_iframe_mv3() {
+  let content_security_policy = {
+    extension_pages: `script-src 'self'`,
+  };
+  await test_webSocket({
+    manifest_version: 3,
+    content_security_policy,
+    useIframe: true,
+    expectUpgrade: false,
+  });
+});
+
+// Page CSP does not affect MV2 in the content script.
 add_task(async function test_webSocket_upgrade_in_contentscript_mv2() {
-  await test_webSocket({ manifest_version: 2, useIframe: false });
+  await test_webSocket({
+    manifest_version: 2,
+    useIframe: false,
+    expectUpgrade: false,
+  });
 });
 
+// Page CSP affects MV3 in the content script.
 add_task(async function test_webSocket_upgrade_in_contentscript_mv3() {
-  await test_webSocket({ manifest_version: 3, useIframe: false });
+  await test_webSocket({
+    manifest_version: 3,
+    useIframe: false,
+    expectUpgrade: true,
+  });
 });

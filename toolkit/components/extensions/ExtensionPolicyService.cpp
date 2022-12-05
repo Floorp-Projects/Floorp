@@ -52,7 +52,7 @@ using dom::Promise;
 
 #define DEFAULT_CSP_PREF_V3 \
   "extensions.webextensions.default-content-security-policy.v3"
-#define DEFAULT_DEFAULT_CSP_V3 "script-src 'self';"
+#define DEFAULT_DEFAULT_CSP_V3 "script-src 'self'; upgrade-insecure-requests;"
 
 #define RESTRICTED_DOMAINS_PREF "extensions.webextensions.restrictedDomains"
 
