@@ -205,7 +205,8 @@ bool operator==(const rtc::VideoSinkWants& aThis,
   // This would have to be expanded should we make use of more members of
   // rtc::VideoSinkWants.
   return aThis.max_pixel_count == aOther.max_pixel_count &&
-         aThis.max_framerate_fps == aOther.max_framerate_fps;
+         aThis.max_framerate_fps == aOther.max_framerate_fps &&
+         aThis.resolution_alignment == aOther.resolution_alignment;
 }
 
 // TODO: Make this a defaulted operator when we have c++20 (bug 1731036).
