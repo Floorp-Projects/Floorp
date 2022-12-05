@@ -12,6 +12,14 @@
     visible: true
   });
 
+  async function checkForH264Support() {
+    const pc = new RTCPeerConnection();
+    const offer = await pc.createOffer({offerToReceiveVideo: true});
+    return offer.sdp.match(/a=rtpmap:[1-9][0-9]* H264/);
+  }
+
+  let resolutionAlignment = 1;
+
   var mustRejectWith = (msg, reason, f) =>
     f().then(() => ok(false, msg),
              e => is(e.name, reason, msg));
@@ -69,8 +77,14 @@
 
     ok(v1.videoWidth > 0, "source width is positive");
     ok(v1.videoHeight > 0, "source height is positive");
-    is(v2.videoWidth, v1.videoWidth / 2, "sink is half the width of source");
-    is(v2.videoHeight, v1.videoHeight / 2, "sink is half the height of source");
+    const expectedWidth =
+      v1.videoWidth / 2 - (v1.videoWidth / 2 % resolutionAlignment);
+    const expectedHeight =
+      v1.videoHeight / 2 - (v1.videoHeight / 2 % resolutionAlignment);
+    is(v2.videoWidth, expectedWidth,
+       "sink is half the width of the source");
+    is(v2.videoHeight, expectedHeight,
+       "sink is half the height of the source");
     stream.getTracks().forEach(track => track.stop());
     v1.srcObject = v2.srcObject = null;
     pc1.close()
@@ -79,9 +93,16 @@
 
   runNetworkTest(async () => {
     await matchPlatformH264CodecPrefs();
+    const hasH264 = await checkForH264Support();
+    if (hasH264 && navigator.userAgent.includes("Android")) {
+      // Android only has a hw encoder for h264
+      resolutionAlignment = 16;
+    }
     await pushPrefs(['media.peerconnection.video.lock_scaling', true]);
     await testScale("VP8");
-    await testScale("H264");
+    if (hasH264) {
+      await testScale("H264");
+    }
   });
 </script>
 </pre>
