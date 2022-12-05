@@ -46,9 +46,6 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Ĵusaj legosignoj</string>
-
-    <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recently_saved_title">Ĵuse konservitaj</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Montri ĉiujn konservitajn legosignojn</string>
@@ -255,40 +252,18 @@
     <string name="search_settings_menu_item">Agordoj de serĉo</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">Ĉi foje serĉi:</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Ĉi foje serĉi:</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">Ĉi foje serĉi:</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">Novaĵoj en %1$s</string>
-    <!-- Onboarding home screen dialog description text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Nun estas pli facile repreni vian retumon tie, kie vi ĝin interrompis.</string>
-    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">Personecigita eka paĝo de %1$s</string>
-    <!-- Onboarding home screen dialog description text for the home section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Iru al viaj malfermitaj langetoj, legosignoj aŭ al retuma historio.</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Klaraj kaj organizitaj langetoj</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Evitu havi malordon en viaj langetoj danke al plibonigita aranĝo kaj aŭtomate fermiĝantaj langetoj.</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Ĵusaj serĉoj</string>
-
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Remalfermu viajn lastajn serĉojn de via eka paĝo aŭ langetoj.</string>
-
-    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Via personecigita eka paĝo de Firefox igas pli facila la taskon repreni vian retumon kie vi ĝin interrompis. Trovu viajn ĵusajn langetojn, legosignojn kaj serĉajn rezultojn.</string>
-
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">Malkovru vian personecigitan ekan paĝon. Ĵusaj langetoj, legosignoj, kaj serĉaj rezultoj aperos ĉi tie.</string>
-    <!-- Home onboarding dialog welcome screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">Bonvenon al sendependa interreto</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title_2">Bonvenon al pli persona interreto</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Pli da koloroj. Pli bona privateco. Sama dediĉo al personoj pli ol al profitoj.</string>
-    <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">Iru tien kaj reen inter la telefono kaj la komputilo</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_3">Iri de unu ekrano al la alia estas pli facile ol iam ajn antaŭe</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
@@ -355,6 +330,14 @@
     <string name="preferences_add_private_browsing_shortcut">Aldoni privatan retuman ŝparvojon</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">HTTPS-nura reĝimo</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Redukto de kuketaj anoncoj</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Redukti kuketajn anoncojn</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Firefox aŭtomate klopodas rifuzi kuketajn petojn en kuketaj anoncoj. Se ne disponeblas eblo rifuzi ilin, Firefox povus akcepti ĉiujn kuketojn por ignori la anoncon.</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Aŭtomate provi konekti al retejoj per la ĉifrita protokolo HTTPS por pliigi sekurecon.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -1131,6 +1114,12 @@
     %1$s is a placeholder that will be replaced by the app name (Fenix). -->
     <string name="notification_default_browser_text">Igu %1$s via norma retumilo</string>
 
+    <!-- Title shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_title">Provu la privatan retumon</string>
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">Retumu per %1$s sen konservitaj kuketoj kaj sen historio</string>
+
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Kolekto forigita</string>
@@ -1255,33 +1244,20 @@
     <string name="delete_history_group_snackbar">Grupo forigita</string>
 
     <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">Bonvenon al %s!</string>
     <!-- Text for onboarding welcome header. -->
     <string name="onboarding_header_2">Bonvenon al pli bona interreto</string>
     <!-- Text for the onboarding welcome message. -->
     <string name="onboarding_message">Retumilo farita homcele, ne profitcele.</string>
-    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Speguli Firefox inter aparatoj</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
     <string name="onboarding_account_sign_in_header">Rekomencu kie vi haltis</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Porti legosignojn, historion kaj pasvortojn al %1$s en tiu ĉi aparato.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
     <string name="onboarding_manual_sign_in_description">Spegulu langetojn kaj pasvortojn por senĝena irado tien kaj reen inter aparatoj.</string>
-    <!-- text for the button to manually sign into Firefox account. -->
-    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Registriĝi</string>
     <!-- Text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in">Komenci seancon</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Spegulado estas ŝaltita</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">Privateco ĉiam aktiva</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Norma protekto de privateco</string>
-    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s aŭtomate evitas ke entreprenoj sekrete sekvu vin tra la teksaĵo.</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">La totala protekto kontraŭ kuketoj evitas ke spuriloj uzu kuketojn por sekvi vin tra la reto.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1294,18 +1270,11 @@
     <string name="onboarding_tracking_protection_strict_button_description_3">Pli da spuriloj blokitaj signifas ke paĝoj ŝargiĝos pli rapide, sed kelkaj misfunkcioj povus okazi.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Elektu lokon por la ilaro</string>
-    <!-- text for the toolbar position card description -->
-    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Metu la ilaron ĉemanen. Lasu ĝin malsupre aŭ movu ĝin supren.</string>
 
     <!-- Text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description">Lasu ĝin malsupre, aŭ movu ĝin al la supro.</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Via privateco</string>
     <!-- Text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header_1">Vi regas viajn datumojn</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">Ni kreis %s por doni al vi la eblon plene regi kion vi dividas en la reto kaj kion vi dividas kun ni.</string>
     <!-- Text for the privacy notice onboarding card description. -->
     <string name="onboarding_privacy_notice_description">Firefox donas  al vi la eblon plene regi kion vi dividas en la reto kaj kion vi dividas kun ni.</string>
     <!-- Text for the button to read the privacy notice -->

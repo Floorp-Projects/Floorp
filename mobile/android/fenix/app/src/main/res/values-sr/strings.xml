@@ -1257,7 +1257,7 @@
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Подразумевана заштита приватности</string>
     <!-- Text for the tracking protection card description. -->
-    <string name="onboarding_tracking_protection_description">Свеобухватна заштита колачића спречава трагаче да вас прате по интернету путем колачића.</string>
+    <string name="onboarding_tracking_protection_description">Свеобухватна заштита колачића спречава елементе за праћење да вас прате по интернету путем колачића.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Стандардно (подразумевано)</string>
     <!-- text for standard blocking option button description -->
@@ -1399,7 +1399,7 @@
     <string name="etp_cookies_description">Блокира колачиће које оглашавачке мреже и аналитичке фирме користе за састављање профила прегледања о вама, на више страница.</string>
 
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_description_2">Свеобухватна заштита од колачића изолује колачиће на тренутној страници тако да трагачи попут огласних мрежа не могу њима да се служе и прате вас.</string>
+    <string name="etp_cookies_description_2">Свеобухватна заштита од колачића изолује колачиће на тренутној страници тако да елементи за праћење попут огласних мрежа не могу њима да се служе и прате вас.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Крипто-рудари</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->

@@ -255,7 +255,10 @@
     <string name="search_settings_menu_item">Որոնման կարգավորում</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">Այս անգամվա որոնում.</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Այս անգամվա որոնում.</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">Այս անգամվա որոնումը՝</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
@@ -329,6 +332,14 @@
     <string name="preferences_add_private_browsing_shortcut">Ավելացնել գաղտնի դիտարկման դյուրանցում</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">HTTPS կերպ միայն</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Թխուկների դրոշակի կրճատում</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Նվազեցնել թխուկների պաստառները</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Firefox-ը ինքնաբար կերպով փորձում է մերժել թխուկների խնդրանքները թխուկների պաստառների վրա: Եթե մերժման տարբերակն անհասանելի է, Firefox-ը կարող է ընդունել բոլոր թխուկները՝ դրոշակը հեռացնելու համար:</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Ինքնաշխատ կերպով փորձում է միանալ կայքերին՝ օգտագործելով HTTPS գաղտնագրման արձանագրությունը՝ անվտանգության բարձրացման համար:</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -1097,6 +1108,12 @@
     <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
     %1$s is a placeholder that will be replaced by the app name (Fenix). -->
     <string name="notification_default_browser_text">Դարձրեք %1$s-ը ձեր սկզբնադիր զննիչը</string>
+
+    <!-- Title shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_title">Փորձեք Գաղտնի դիտարկումը</string>
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">Զննեք առանց պահված թխուկների կամ պատմության %1$s-ում</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->

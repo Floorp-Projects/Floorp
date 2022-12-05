@@ -258,7 +258,10 @@
     <string name="search_settings_menu_item">Ustawienia wyszukiwania</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">Tym razem szukaj:</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Tym razem szukaj:</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">Tym razem szukaj w:</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
@@ -332,6 +335,14 @@
     <string name="preferences_add_private_browsing_shortcut">Dodaj skrót do trybu prywatnego</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Tryb używania wyłącznie protokołu HTTPS</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Ograniczanie informacji o ciasteczkach</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Ogranicz informacje o ciasteczkach</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Firefox automatycznie próbuje odrzucać prośby o akceptację ciasteczek. Jeśli nie ma możliwości odrzucenia, Firefox może zaakceptować wszystkie ciasteczka, aby zamknąć prośbę.</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Automatycznie próbuje łączyć się ze stronami za pomocą protokołu szyfrowania HTTPS w celu zwiększenia bezpieczeństwa.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -1104,6 +1115,12 @@
     <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
     %1$s is a placeholder that will be replaced by the app name (Fenix). -->
     <string name="notification_default_browser_text">Ustaw przeglądarkę %1$s jako domyślną</string>
+
+    <!-- Title shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_title">Wypróbuj tryb prywatny</string>
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">Używaj przeglądarki %1$s bez zachowywania ciasteczek ani historii</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
