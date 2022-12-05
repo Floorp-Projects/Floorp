@@ -493,7 +493,7 @@ bool LookAndFeel::WindowsNonNativeMenusEnabled() {
       return true;
     default:
 #ifdef XP_WIN
-      return GetInt(IntID::WindowsDefaultTheme) && IsWin10OrLater();
+      return IsWin10OrLater();
 #else
       return false;
 #endif
