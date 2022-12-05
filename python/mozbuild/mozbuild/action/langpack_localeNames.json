@@ -1,0 +1,414 @@
+{
+  "ach": {
+    "english": "Acoli",
+    "native": "Acholi"
+  },
+  "af": {
+    "native": "Afrikaans"
+  },
+  "an": {
+    "english": "Aragonese",
+    "native": "Aragonés"
+  },
+  "ar": {
+    "english": "Arabic",
+    "native": "العربية"
+  },
+  "ast": {
+    "english": "Asturian",
+    "native": "Asturianu"
+  },
+  "az": {
+    "english": "Azerbaijani",
+    "native": "Azərbaycanca"
+  },
+  "be": {
+    "english": "Belarusian",
+    "native": "Беларуская"
+  },
+  "bg": {
+    "english": "Bulgarian",
+    "native": "Български"
+  },
+  "bn": {
+    "english": "Bangla",
+    "native": "বাংলা"
+  },
+  "bo": {
+    "english": "Tibetan",
+    "native": "བོད་སྐད"
+  },
+  "br": {
+    "english": "Breton",
+    "native": "Brezhoneg"
+  },
+  "brx": {
+    "english": "Bodo",
+    "native": "बड़ो"
+  },
+  "bs": {
+    "english": "Bosnian",
+    "native": "Bosanski"
+  },
+  "ca": {
+    "english": "Catalan",
+    "native": "Català"
+  },
+  "ca-valencia": {
+    "english": "Catalan, Valencian",
+    "native": "Català (Valencià)"
+  },
+  "cak": {
+    "native": "Kaqchikel"
+  },
+  "cs": {
+    "english": "Czech",
+    "native": "Čeština"
+  },
+  "cy": {
+    "english": "Welsh",
+    "native": "Cymraeg"
+  },
+  "da": {
+    "english": "Danish",
+    "native": "Dansk"
+  },
+  "de": {
+    "english": "German",
+    "native": "Deutsch"
+  },
+  "dsb": {
+    "english": "Lower Sorbian",
+    "native": "Dolnoserbšćina"
+  },
+  "el": {
+    "english": "Greek",
+    "native": "Ελληνικά"
+  },
+  "en-CA": {
+    "native": "English (CA)"
+  },
+  "en-GB": {
+    "native": "English (GB)"
+  },
+  "en-US": {
+    "native": "English (US)"
+  },
+  "eo": {
+    "native": "Esperanto"
+  },
+  "es-AR": {
+    "english": "Spanish, Argentina",
+    "native": "Español (AR)"
+  },
+  "es-CL": {
+    "english": "Spanish, Chile",
+    "native": "Español (CL)"
+  },
+  "es-ES": {
+    "english": "Spanish, Spain",
+    "native": "Español (ES)"
+  },
+  "es-MX": {
+    "english": "Spanish, Mexico",
+    "native": "Español (MX)"
+  },
+  "et": {
+    "english": "Estonian",
+    "native": "Eesti"
+  },
+  "eu": {
+    "english": "Basque",
+    "native": "Euskara"
+  },
+  "fa": {
+    "english": "Persian",
+    "native": "فارسی"
+  },
+  "ff": {
+    "english": "Fulah",
+    "native": "Pulaar"
+  },
+  "fi": {
+    "english": "Finnish",
+    "native": "Suomi"
+  },
+  "fr": {
+    "english": "French",
+    "native": "Français"
+  },
+  "fy-NL": {
+    "english": "Frisian",
+    "native": "Frysk"
+  },
+  "ga-IE": {
+    "english": "Irish",
+    "native": "Gaeilge"
+  },
+  "gd": {
+    "english": "Scottish Gaelic",
+    "native": "Gàidhlig"
+  },
+  "gl": {
+    "english": "Galician",
+    "native": "Galego"
+  },
+  "gn": {
+    "native": "Guarani"
+  },
+  "gu-IN": {
+    "english": "Gujarati",
+    "native": "ગુજરાતી"
+  },
+  "he": {
+    "english": "Hebrew",
+    "native": "עברית"
+  },
+  "hi-IN": {
+    "english": "Hindi",
+    "native": "हिन्दी"
+  },
+  "hr": {
+    "english": "Croatian",
+    "native": "Hrvatski"
+  },
+  "hsb": {
+    "english": "Upper Sorbian",
+    "native": "Hornjoserbšćina"
+  },
+  "hu": {
+    "english": "Hungarian",
+    "native": "Magyar"
+  },
+  "hy-AM": {
+    "english": "Armenian",
+    "native": "հայերեն"
+  },
+  "ia": {
+    "native": "Interlingua"
+  },
+  "id": {
+    "english": "Indonesian",
+    "native": "Indonesia"
+  },
+  "is": {
+    "english": "Icelandic",
+    "native": "Islenska"
+  },
+  "it": {
+    "english": "Italian",
+    "native": "Italiano"
+  },
+  "ja": {
+    "english": "Japanese",
+    "native": "日本語"
+  },
+  "ja-JP-mac": {
+    "english": "Japanese",
+    "native": "日本語"
+  },
+  "ka": {
+    "english": "Georgian",
+    "native": "ქართული"
+  },
+  "kab": {
+    "english": "Kabyle",
+    "native": "Taqbaylit"
+  },
+  "kk": {
+    "english": "Kazakh",
+    "native": "қазақ тілі"
+  },
+  "km": {
+    "english": "Khmer",
+    "native": "ខ្មែរ"
+  },
+  "kn": {
+    "english": "Kannada",
+    "native": "ಕನ್ನಡ"
+  },
+  "ko": {
+    "english": "Korean",
+    "native": "한국어"
+  },
+  "lij": {
+    "english": "Ligurian",
+    "native": "Ligure"
+  },
+  "lo": {
+    "english": "Lao",
+    "native": "ລາວ"
+  },
+  "lt": {
+    "english": "Lithuanian",
+    "native": "Lietuvių"
+  },
+  "ltg": {
+    "english": "Latgalian",
+    "native": "Latgalīšu"
+  },
+  "lv": {
+    "english": "Latvian",
+    "native": "Latviešu"
+  },
+  "mk": {
+    "english": "Macedonian",
+    "native": "македонски"
+  },
+  "ml": {
+    "english": "Malayalam",
+    "native": "മലയാളം"
+  },
+  "mr": {
+    "english": "Marathi",
+    "native": "मराठी"
+  },
+  "ms": {
+    "english": "Malay",
+    "native": "Melayu"
+  },
+  "my": {
+    "english": "Burmese",
+    "native": "မြန်မာ"
+  },
+  "nb-NO": {
+    "english": "Norwegian Bokmål",
+    "native": "Norsk Bokmål"
+  },
+  "ne-NP": {
+    "english": "Nepali",
+    "native": "नेपाली"
+  },
+  "nl": {
+    "english": "Dutch",
+    "native": "Nederlands"
+  },
+  "nn-NO": {
+    "english": "Norwegian Nynorsk",
+    "native": "Nynorsk"
+  },
+  "oc": {
+    "native": "Occitan"
+  },
+  "or": {
+    "english": "Odia",
+    "native": "ଓଡ଼ିଆ"
+  },
+  "pa-IN": {
+    "english": "Punjabi",
+    "native": "ਪੰਜਾਬੀ"
+  },
+  "pl": {
+    "english": "Polish",
+    "native": "Polski"
+  },
+  "pt-BR": {
+    "english": "Brazilian Portuguese",
+    "native": "Português (BR)"
+  },
+  "pt-PT": {
+    "english": "Portuguese",
+    "native": "Português (PT)"
+  },
+  "rm": {
+    "english": "Romansh",
+    "native": "Rumantsch"
+  },
+  "ro": {
+    "english": "Romanian",
+    "native": "Română"
+  },
+  "ru": {
+    "english": "Russian",
+    "native": "Русский"
+  },
+  "sco": {
+    "native": "Scots"
+  },
+  "si": {
+    "english": "Sinhala",
+    "native": "සිංහල"
+  },
+  "sk": {
+    "english": "Slovak",
+    "native": "Slovenčina"
+  },
+  "sl": {
+    "english": "Slovenian",
+    "native": "Slovenščina"
+  },
+  "son": {
+    "english": "Songhai",
+    "native": "Soŋay"
+  },
+  "sq": {
+    "english": "Albanian",
+    "native": "Shqip"
+  },
+  "sr": {
+    "english": "Serbian",
+    "native": "Cрпски"
+  },
+  "sv-SE": {
+    "english": "Swedish",
+    "native": "Svenska"
+  },
+  "szl": {
+    "english": "Silesian",
+    "native": "Ślōnsko"
+  },
+  "ta": {
+    "english": "Tamil",
+    "native": "தமிழ்"
+  },
+  "te": {
+    "english": "Telugu",
+    "native": "తెలుగు"
+  },
+  "th": {
+    "english": "Thai",
+    "native": "ไทย"
+  },
+  "tl": {
+    "english": "Filipino",
+    "native": "Tagalog"
+  },
+  "tr": {
+    "english": "Turkish",
+    "native": "Türkçe"
+  },
+  "trs": {
+    "native": "Triqui"
+  },
+  "uk": {
+    "english": "Ukrainian",
+    "native": "Українська"
+  },
+  "ur": {
+    "english": "Urdu",
+    "native": "اردو"
+  },
+  "uz": {
+    "english": "Uzbek",
+    "native": "O‘zbek"
+  },
+  "vi": {
+    "english": "Vietnamese",
+    "native": "Tiếng Việt"
+  },
+  "wo": {
+    "native": "Wolof"
+  },
+  "xh": {
+    "english": "Xhosa",
+    "native": "IsiXhosa"
+  },
+  "zh-CN": {
+    "english": "Simplified Chinese",
+    "native": "简体中文"
+  },
+  "zh-TW": {
+    "english": "Traditional Chinese",
+    "native": "正體中文"
+  }
+}

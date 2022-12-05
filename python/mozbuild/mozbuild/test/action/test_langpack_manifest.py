@@ -21,7 +21,6 @@ class TestGenerateManifest(unittest.TestCase):
 
     def test_parse_flat_ftl(self):
         src = """
-langpack-title = foo
 langpack-creator = bar {"bar"}
 langpack-contributors = { "" }
 """
@@ -30,7 +29,6 @@ langpack-contributors = { "" }
             tmp.write(src)
             tmp.close()
             ftl = langpack_manifest.parse_flat_ftl(tmp.name)
-            self.assertEqual(ftl["langpack-title"], "foo")
             self.assertEqual(ftl["langpack-creator"], "bar bar")
             self.assertEqual(ftl["langpack-contributors"], "")
         finally:
@@ -42,7 +40,6 @@ langpack-contributors = { "" }
 
     def test_manifest(self):
         ctx = {
-            "langpack-title": "Finnish",
             "langpack-creator": "Suomennosprojekti",
             "langpack-contributors": "Joe Smith, Mary White",
         }
@@ -60,7 +57,7 @@ langpack-contributors = { "" }
         )
 
         data = json.loads(manifest)
-        self.assertEqual(data["name"], "Finnish Language Pack")
+        self.assertEqual(data["name"], "Language Pack: Suomi (Finnish)")
         self.assertEqual(
             data["author"], "Suomennosprojekti (contributors: Joe Smith, Mary White)"
         )
@@ -68,7 +65,6 @@ langpack-contributors = { "" }
 
     def test_manifest_without_contributors(self):
         ctx = {
-            "langpack-title": "Finnish",
             "langpack-creator": "Suomennosprojekti",
             "langpack-contributors": "",
         }
@@ -85,7 +81,7 @@ langpack-contributors = { "" }
         )
 
         data = json.loads(manifest)
-        self.assertEqual(data["name"], "Finnish Language Pack")
+        self.assertEqual(data["name"], "Language Pack: Suomi (Finnish)")
         self.assertEqual(data["author"], "Suomennosprojekti")
 
 
