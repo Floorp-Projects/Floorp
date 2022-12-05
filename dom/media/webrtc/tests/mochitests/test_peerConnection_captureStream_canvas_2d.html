@@ -26,7 +26,7 @@ runNetworkTest(async () => {
   var canvas = document.createElement('canvas');
   var stream;
   canvas.id = 'source_canvas';
-  canvas.width = canvas.height = 10;
+  canvas.width = canvas.height = 16;
   document.getElementById('content').appendChild(canvas);
 
   test.setMediaConstraints([{video: true}], []);

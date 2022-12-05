@@ -11,17 +11,26 @@ createHTML({
   title: "Live-updating scaleResolutionDownBy"
 });
 
+async function checkForH264Support() {
+  const pc = new RTCPeerConnection();
+  const offer = await pc.createOffer({offerToReceiveVideo: true});
+  return offer.sdp.match(/a=rtpmap:[1-9][0-9]* H264/);
+}
+
 let sender, localElem, remoteElem;
 let originalWidth, originalHeight;
+let resolutionAlignment = 1;
 
 async function checkScaleDownBy(scale) {
   sender.setParameters({ encodings: [{ scaleResolutionDownBy: scale }] });
   await haveEvent(remoteElem, "resize", wait(5000, new Error("Timeout")));
 
-  // Find the expected resolution. Internally we pick the closest lower
-  // resolution with an identical aspect ratio.
-  let expectedWidth = Math.floor(originalWidth / scale);
-  let expectedHeight = Math.floor(originalHeight / scale);
+  // Find the expected resolution. Internally we floor the exact scaling, then
+  // shrink each dimension to the alignment requested by the encoder.
+  let expectedWidth =
+    originalWidth / scale - (originalWidth / scale % resolutionAlignment);
+  let expectedHeight =
+    originalHeight / scale - (originalHeight / scale % resolutionAlignment);
 
   is(remoteElem.videoWidth, expectedWidth,
     `Width should have scaled down by ${scale}`);
@@ -33,6 +42,10 @@ runNetworkTest(async function (options) {
   await pushPrefs(['media.peerconnection.video.lock_scaling', true]);
   // [TODO] re-enable HW decoder after bug 1526207 is fixed.
   if (navigator.userAgent.includes("Android")) {
+    if (await checkForH264Support()) {
+      // Android only has h264 in hw, so now we know it will use vp8 in hw too.
+      resolutionAlignment = 16;
+    }
     await pushPrefs(["media.navigator.mediadatadecoder_vpx_enabled", false],
                     ["media.webrtc.hw.h264.enabled", false]);
   }
