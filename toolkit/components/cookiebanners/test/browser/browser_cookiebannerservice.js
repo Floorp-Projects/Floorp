@@ -59,7 +59,7 @@ add_task(async function test_enabled_pref() {
     Ci.nsICookieBannerRule
   );
   rule.id = genUUID();
-  rule.domain = "example.com";
+  rule.domains = ["example.com"];
 
   Assert.throws(
     () => {
@@ -255,7 +255,7 @@ add_task(async function test_insertAndGetRule() {
   let rule = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
     Ci.nsICookieBannerRule
   );
-  rule.domain = "example.com";
+  rule.domains = ["example.com"];
 
   Services.cookieBanners.insertRule(rule);
 
@@ -339,7 +339,7 @@ add_task(async function test_insertAndGetRule() {
   let rule2 = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
     Ci.nsICookieBannerRule
   );
-  rule2.domain = "example.org";
+  rule2.domains = ["example.org"];
 
   Services.cookieBanners.insertRule(rule2);
   info("Clearing preexisting cookies rules for example.org.");
@@ -517,7 +517,7 @@ add_task(async function test_removeRule() {
     Ci.nsICookieBannerRule
   );
   rule.id = genUUID();
-  rule.domain = "example.com";
+  rule.domains = ["example.com"];
 
   Services.cookieBanners.insertRule(rule);
 
@@ -525,7 +525,7 @@ add_task(async function test_removeRule() {
     Ci.nsICookieBannerRule
   );
   rule2.id = genUUID();
-  rule2.domain = "example.org";
+  rule2.domains = ["example.org"];
 
   Services.cookieBanners.insertRule(rule2);
 
@@ -540,7 +540,7 @@ add_task(async function test_removeRule() {
     Ci.nsICookieBannerRule
   );
   ruleExampleNet.id = genUUID();
-  ruleExampleNet.domain = "example.net";
+  ruleExampleNet.domains = ["example.net"];
   Services.cookieBanners.removeRule(ruleExampleNet);
 
   is(
@@ -554,7 +554,7 @@ add_task(async function test_removeRule() {
     Ci.nsICookieBannerRule
   );
   ruleGlobal.id = genUUID();
-  ruleGlobal.domain = "*";
+  ruleGlobal.domains = [];
   Services.cookieBanners.removeRule(ruleGlobal);
 
   is(
@@ -573,7 +573,7 @@ add_task(async function test_removeRule() {
   );
 
   is(
-    Services.cookieBanners.rules[0].domain,
+    Services.cookieBanners.rules[0].domains[0],
     "example.org",
     "It should be the example.org rule."
   );
@@ -602,7 +602,7 @@ add_task(async function test_overwriteRule() {
   let rule = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
     Ci.nsICookieBannerRule
   );
-  rule.domain = "example.com";
+  rule.domains = ["example.com"];
 
   info("Adding a cookie so we can detect if the rule updates.");
   rule.addCookie(
@@ -635,7 +635,7 @@ add_task(async function test_overwriteRule() {
   let ruleNew = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
     Ci.nsICookieBannerRule
   );
-  ruleNew.domain = "example.com";
+  ruleNew.domains = ["example.com"];
 
   ruleNew.addCookie(
     true,
@@ -690,7 +690,7 @@ add_task(async function test_globalRules() {
     Ci.nsICookieBannerRule
   );
   rule.id = genUUID();
-  rule.domain = "example.com";
+  rule.domains = ["example.com"];
   rule.addCookie(
     true,
     "foo",
@@ -721,7 +721,7 @@ add_task(async function test_globalRules() {
     Ci.nsICookieBannerRule
   );
   ruleGlobalA.id = genUUID();
-  ruleGlobalA.domain = "*";
+  ruleGlobalA.domains = [];
   ruleGlobalA.addCookie(
     true,
     "foo",
@@ -750,7 +750,7 @@ add_task(async function test_globalRules() {
     Ci.nsICookieBannerRule
   );
   ruleGlobalB.id = genUUID();
-  ruleGlobalB.domain = "*";
+  ruleGlobalB.domains = [];
   ruleGlobalB.addClickRule(
     "#globalCookieBannerB",
     false,
