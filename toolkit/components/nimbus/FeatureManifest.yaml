@@ -758,6 +758,21 @@ majorRelease2022:
       fallbackPref: "browser.majorrelease.onboarding"
       description: "Whether or not to use the MR2022 onboarding settings."
 
+featureCallout:
+  description: "Prefs that control users' progress through Feature Callout tours"
+  owner: omc@mozilla.com
+  hasExposure: false
+  isEarlyStartup: false
+  variables:
+    pdfJsTourProgress:
+      description: A JSON blob capturing a user's progress in the PDF.js feature tour
+      type: string
+      setPref: "browser.pdfjs.feature-tour"
+    firefoxViewTourProgress:
+      description: A JSON blob capturing a user's progress in the Firefox View feature tour
+      type: string
+      setPref: "browser.firefox-view.feature-tour"
+
 browserLowMemoryPrefs:
   description: Prefs which control the browser's behaviour under low memory.
   owner: haftandilian@mozilla.com
