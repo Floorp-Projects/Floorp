@@ -7202,9 +7202,9 @@ bool BaseCompiler::emitBrOnCastCommon(bool onSuccess) {
   MOZ_ASSERT(!hasLatentOp());
 
   uint32_t labelRelativeDepth;
-  BaseNothingVector unused_values{};
   uint32_t castTypeIndex;
   ResultType labelType;
+  BaseNothingVector unused_values{};
   if (onSuccess ? !iter_.readBrOnCast(&labelRelativeDepth, &castTypeIndex,
                                       &labelType, &unused_values)
                 : !iter_.readBrOnCastFail(&labelRelativeDepth, &castTypeIndex,

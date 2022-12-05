@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmGcEnabled() || wasmCompileMode().includes("ion")
+// |jit-test| skip-if: !wasmGcEnabled()
 
 // We can read the object fields from JS
 

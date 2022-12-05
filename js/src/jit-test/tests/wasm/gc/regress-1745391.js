@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmGcEnabled() || wasmCompileMode().includes("ion")
+// |jit-test| skip-if: !wasmGcEnabled()
 
 let { createDefault } = wasmEvalText(`
   (module (type $a (array (mut i32)))
