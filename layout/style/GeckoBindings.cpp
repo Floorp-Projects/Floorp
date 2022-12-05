@@ -170,6 +170,14 @@ const nsTArray<RefPtr<nsINode>>* Gecko_GetAssignedNodes(
   return &static_cast<const HTMLSlotElement*>(aElement)->AssignedNodes();
 }
 
+void Gecko_ContentSize(const nsIFrame* aFrame, nscoord* aOutWidth,
+                       nscoord* aOutHeight) {
+  MOZ_ASSERT(aFrame);
+  nsSize size = aFrame->GetContentRectRelativeToSelf().Size();
+  *aOutWidth = size.width;
+  *aOutHeight = size.height;
+}
+
 void Gecko_ComputedStyle_Init(ComputedStyle* aStyle,
                               const ServoComputedData* aValues,
                               PseudoStyleType aPseudoType) {
