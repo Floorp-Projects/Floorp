@@ -2049,6 +2049,50 @@ TEST_F(VideoConduitTest, TestVideoEncodeLargeScaleResolutionByStreamCreation) {
   }
 }
 
+TEST_F(VideoConduitTest, TestVideoEncodeResolutionAlignment) {
+  UniquePtr<MockVideoSink> sink(new MockVideoSink());
+
+  for (const auto& scales : {std::vector{1U}, std::vector{1U, 9U}}) {
+    mControl.Update([&](auto& aControl) {
+      aControl.mTransmitting = true;
+      VideoCodecConfig codecConfig(120, "VP8", EncodingConstraints());
+      for (const auto& scale : scales) {
+        auto& encoding = codecConfig.mEncodings.emplace_back();
+        encoding.constraints.scaleDownBy = scale;
+      }
+      aControl.mVideoSendCodec = Some(codecConfig);
+      aControl.mVideoSendRtpRtcpConfig =
+          Some(RtpRtcpConfig(webrtc::RtcpMode::kCompound));
+      aControl.mLocalSsrcs = scales;
+    });
+    ASSERT_TRUE(Call()->mVideoSendEncoderConfig);
+
+    for (const auto& alignment : {2, 16, 39, 400, 1000}) {
+      // Test that requesting specific alignment always results in the expected
+      // number of layers and valid alignment.
+      rtc::VideoSinkWants wants;
+      wants.resolution_alignment = alignment;
+      mVideoConduit->AddOrUpdateSink(sink.get(), wants);
+
+      const std::vector<webrtc::VideoStream> videoStreams =
+          Call()->CreateEncoderStreams(640, 480);
+      ASSERT_EQ(videoStreams.size(), scales.size());
+      for (size_t i = 0; i < videoStreams.size(); ++i) {
+        // videoStreams is backwards
+        const auto& stream = videoStreams[videoStreams.size() - 1 - i];
+        const auto& scale = scales[i];
+        uint32_t expectation =
+            480 / scale < static_cast<uint32_t>(alignment) ? 1 : 0;
+        EXPECT_EQ(stream.width % alignment, expectation)
+            << " for scale " << scale << " and alignment " << alignment;
+        EXPECT_EQ(stream.height % alignment, expectation);
+      }
+    }
+  }
+
+  mVideoConduit->RemoveSink(sink.get());
+}
+
 TEST_F(VideoConduitTest, TestSettingRtpRtcpRsize) {
   mControl.Update([&](auto& aControl) {
     VideoCodecConfig codecConfig(120, "VP8", EncodingConstraints());

@@ -281,6 +281,10 @@ gfx::IntSize VideoStreamFactory::CalculateScaledResolution(
     }
   }
 
+  // Simplest possible adaptation to resolution alignment.
+  width -= width % mWants.resolution_alignment;
+  height -= height % mWants.resolution_alignment;
+
   // Dont scale below our minimum value to prevent problems.
   const int minSize = 1;
   if (width < minSize || height < minSize) {
