@@ -12,6 +12,7 @@ import androidx.test.uiautomator.Until
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
@@ -258,6 +259,7 @@ class HomeScreenTest {
         }
     }
 
+    @Ignore("Failed, see: https://github.com/mozilla-mobile/fenix/issues/28069")
     @Test
     fun openPocketStoryItemTest() {
         activityTestRule.activityRule.applySettingsExceptions {
