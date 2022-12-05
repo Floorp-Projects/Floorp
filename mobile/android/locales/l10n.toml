@@ -180,11 +180,5 @@ exclude-multi-locale = [
 [[filters]]
     path = [
         "{l}mobile/android/mobile-l10n.js",
-        "{l}mobile/android/defines.inc",
     ]
-    action = "ignore"
-
-[[filters]]
-    path = "{l}mobile/android/defines.inc"
-    key = "MOZ_LANGPACK_CONTRIBUTORS"
     action = "ignore"
