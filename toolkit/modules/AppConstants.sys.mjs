@@ -33,27 +33,6 @@ export var AppConstants = Object.freeze({
   false,
 #endif
 
-  /**
-   * @returns {boolean}
-   *   Returns whether the build is a release candidate on the Beta channel.
-   *   For non-RC builds on the Beta channel, `MOZ_UPDATE_CHANNEL` is "beta",
-   *   but for RC build's it's "release". See bug 1435753 for more.
-   *
-   *   WARNING: Do not use this value to change Firefox behavior without a
-   *   strong reason to do so. Any divergence in behavior between Beta and
-   *   Release, between non-RC Beta and RC Beta, or between RC and Release puts
-   *   us in a position where we have very limited time to test Release behavior
-   *   before shipping it. When possible, please use the usual flags for
-   *   preventing features from riding past pre-release such as `NIGHTLY_BUILD`
-   *   and `EARLY_BETA_OR_EARLIER`.
-   */
-  get isReleaseCandidateOnBeta() {
-    return (
-      AppConstants.MOZ_UPDATE_CHANNEL === "release" &&
-      Services.prefs.getCharPref("app.update.channel", null) === "beta"
-    );
-  },
-
   IS_ESR:
 #ifdef MOZ_ESR
   true,
