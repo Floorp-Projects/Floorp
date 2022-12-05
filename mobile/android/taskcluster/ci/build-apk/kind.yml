@@ -77,7 +77,6 @@ tasks:
             # inherit this attribute via the multi_dep loader
         attributes:
             release-type: release
-            shipping_phase: promote
         run-on-tasks-for: []
         include-shippable-secrets: true
         include-release-version: true
@@ -85,6 +84,7 @@ tasks:
             gradle-build-type: release
             gradle-build-name: focusRelease
             gradle-build: focus
+        shipping-phase: promote
         treeherder:
             symbol: focus-release(Bf)
 
@@ -92,7 +92,6 @@ tasks:
         description: 'Release Klar build'
         attributes:
             release-type: release
-            shipping_phase: promote
         run-on-tasks-for: []
         include-shippable-secrets: true
         include-release-version: true
@@ -100,6 +99,7 @@ tasks:
             gradle-build-type: release
             gradle-build-name: klarRelease
             gradle-build: klar
+        shipping-phase: promote
         treeherder:
             symbol: focus-release(Bkl)
 
@@ -122,7 +122,6 @@ tasks:
         description: 'Beta focus build'
         attributes:
             release-type: beta
-            shipping_phase: promote
         run-on-tasks-for: []
         include-shippable-secrets: true
         include-release-version: true
@@ -130,6 +129,7 @@ tasks:
             gradle-build-type: beta
             gradle-build-name: focusBeta
             gradle-build: focus
+        shipping-phase: promote
         treeherder:
             symbol: focus-beta(B)
 

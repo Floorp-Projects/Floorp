@@ -25,8 +25,6 @@ only-for-build-types:
     - focus-beta
 
 task-template:
-    attributes:
-        shipping_phase: promote     # APKs are sent to testing tracks
     description: Publish Focus
     worker-type: push-apk
     run-on-tasks-for: []
@@ -44,6 +42,7 @@ task-template:
                 '3': false
                 default: true
         product: focus-android
+    shipping-phase: promote     # APKs are sent to testing tracks
     treeherder:
         job-symbol:
             by-build-type:

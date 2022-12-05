@@ -24,10 +24,9 @@ only-for-build-types:
     - release
 
 task-defaults:
-    attributes:
-        shipping_phase: ship
     name: notify-release-drivers-ship
     description: Sends email to release-drivers telling release was shipped.
+    shipping-phase: ship
     worker-type: succeed
     worker:
         implementation: succeed

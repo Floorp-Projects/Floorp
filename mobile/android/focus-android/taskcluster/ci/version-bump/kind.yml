@@ -21,9 +21,8 @@ only-for-build-types:
     - focus-release
 
 job-template:
-    attributes:
-        shipping_phase: ship
     description: Focus version bump/tag for use by shipit
+    shipping-phase: ship
     worker-type: tree
     worker:
         bump: true

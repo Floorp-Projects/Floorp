@@ -21,8 +21,6 @@ only-for-build-types:
     - focus-release
 
 job-template:
-    attributes:
-        shipping_phase: ship
     description: Mark Focus as shipped in ship-it
     worker-type: ship-it
     scopes:
@@ -33,6 +31,7 @@ job-template:
             default:
                 - project:releng:ship-it:action:mark-as-shipped
                 - project:releng:ship-it:server:staging
+    shipping-phase: ship
     worker: {}
 
     treeherder:

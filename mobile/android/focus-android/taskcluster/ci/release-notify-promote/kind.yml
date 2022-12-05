@@ -21,10 +21,9 @@ only-for-build-types:
     - release
 
 task-defaults:
-    attributes:
-        shipping_phase: promote
     name: notify-release-drivers-promote
     description: Sends email to release-drivers telling release was promoted.
+    shipping-phase: promote
     worker-type: succeed
     worker:
         implementation: succeed
