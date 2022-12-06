@@ -34,6 +34,7 @@ enum IncrementalProgress { NotFinished = 0, Finished };
 class AutoSetMarkColor;
 struct Cell;
 class ParallelMarker;
+class UnmarkGrayTracer;
 
 struct EphemeronEdgeTableHashPolicy {
   using Lookup = Cell*;
@@ -515,6 +516,9 @@ class GCMarker {
   MainThreadOrGCTaskData<MarkingState> state;
 
   MainThreadOrGCTaskData<gc::ParallelMarker*> parallelMarker_;
+
+  Vector<JS::GCCellPtr, 0, SystemAllocPolicy> unmarkGrayStack;
+  friend class gc::UnmarkGrayTracer;
 
  public:
   /*
