@@ -1123,7 +1123,7 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   }
   const workerId = await worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '3.2.31',
+    apiVersion: '3.2.47',
     data: source.data,
     password: source.password,
     disableAutoFetch: source.disableAutoFetch,
@@ -1591,7 +1591,7 @@ class PDFPageProxy {
     });
   }
   getStructTree() {
-    return this._structTreePromise ||= this._transport.getStructTree(this._pageIndex);
+    return this._transport.getStructTree(this._pageIndex);
   }
   _destroy() {
     this.destroyed = true;
@@ -1617,7 +1617,6 @@ class PDFPageProxy {
     this._bitmaps.clear();
     this._annotationPromises.clear();
     this._jsActionsPromise = null;
-    this._structTreePromise = null;
     this.pendingCleanup = false;
     return Promise.all(waitOn);
   }
@@ -1641,7 +1640,6 @@ class PDFPageProxy {
     this.objs.clear();
     this._annotationPromises.clear();
     this._jsActionsPromise = null;
-    this._structTreePromise = null;
     if (resetStats && this._stats) {
       this._stats = new _display_utils.StatTimer();
     }
@@ -2752,9 +2750,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.2.31';
+const version = '3.2.47';
 exports.version = version;
-const build = '6e4968225';
+const build = 'feb6f5951';
 exports.build = build;
 
 /***/ }),
@@ -2927,9 +2925,14 @@ class AnnotationEditor {
     this.y = parameters.y / height;
     this.rotation = this.parent.viewport.rotation;
     this.isAttachedToDOM = false;
+    this._serialized = undefined;
   }
   static get _defaultLineColor() {
     return (0, _util.shadow)(this, "_defaultLineColor", this._colorManager.getHexCode("CanvasText"));
+  }
+  setParent(parent) {
+    this._serialized = !parent ? this.serialize() : undefined;
+    this.parent = parent;
   }
   setInBackground() {
     this.div.style.zIndex = 0;
@@ -3947,13 +3950,13 @@ class PageViewport {
     if (rotateA === 0) {
       offsetCanvasX = Math.abs(centerY - viewBox[1]) * scale + offsetX;
       offsetCanvasY = Math.abs(centerX - viewBox[0]) * scale + offsetY;
-      width = Math.abs(viewBox[3] - viewBox[1]) * scale;
-      height = Math.abs(viewBox[2] - viewBox[0]) * scale;
+      width = (viewBox[3] - viewBox[1]) * scale;
+      height = (viewBox[2] - viewBox[0]) * scale;
     } else {
       offsetCanvasX = Math.abs(centerX - viewBox[0]) * scale + offsetX;
       offsetCanvasY = Math.abs(centerY - viewBox[1]) * scale + offsetY;
-      width = Math.abs(viewBox[2] - viewBox[0]) * scale;
-      height = Math.abs(viewBox[3] - viewBox[1]) * scale;
+      width = (viewBox[2] - viewBox[0]) * scale;
+      height = (viewBox[3] - viewBox[1]) * scale;
     }
     this.transform = [rotateA * scale, rotateB * scale, rotateC * scale, rotateD * scale, offsetCanvasX - rotateA * scale * centerX - rotateC * scale * centerY, offsetCanvasY - rotateB * scale * centerX - rotateD * scale * centerY];
     this.width = width;
@@ -5890,8 +5893,7 @@ class CanvasGraphics {
   closePath() {
     this.ctx.closePath();
   }
-  stroke(consumePath) {
-    consumePath = typeof consumePath !== "undefined" ? consumePath : true;
+  stroke(consumePath = true) {
     const ctx = this.ctx;
     const strokeColor = this.current.strokeColor;
     ctx.globalAlpha = this.current.strokeAlpha;
@@ -5914,8 +5916,7 @@ class CanvasGraphics {
     this.closePath();
     this.stroke();
   }
-  fill(consumePath) {
-    consumePath = typeof consumePath !== "undefined" ? consumePath : true;
+  fill(consumePath = true) {
     const ctx = this.ctx;
     const fillColor = this.current.fillColor;
     const isPatternFill = this.current.patternFill;
@@ -8405,6 +8406,7 @@ exports.TextLayerRenderTask = void 0;
 exports.renderTextLayer = renderTextLayer;
 exports.updateTextLayer = updateTextLayer;
 var _util = __w_pdfjs_require__(1);
+var _display_utils = __w_pdfjs_require__(6);
 const MAX_TEXT_DIVS_TO_RENDER = 100000;
 const DEFAULT_FONT_SIZE = 30;
 const DEFAULT_FONT_ASCENT = 0.8;
@@ -8531,7 +8533,7 @@ function appendText(task, geom, styles) {
     textDivProperties.canvasWidth = style.vertical ? geom.height : geom.width;
   }
   task._textDivProperties.set(textDiv, textDivProperties);
-  if (task._textContentStream) {
+  if (task._isReadableStream) {
     task._layoutText(textDiv);
   }
 }
@@ -8583,22 +8585,19 @@ function render(task) {
   const capability = task._capability;
   const textDivsLength = textDivs.length;
   if (textDivsLength > MAX_TEXT_DIVS_TO_RENDER) {
-    task._renderingDone = true;
     capability.resolve();
     return;
   }
-  if (!task._textContentStream) {
+  if (!task._isReadableStream) {
     for (const textDiv of textDivs) {
       task._layoutText(textDiv);
     }
   }
-  task._renderingDone = true;
   capability.resolve();
 }
 class TextLayerRenderTask {
   constructor({
-    textContent,
-    textContentStream,
+    textContentSource,
     container,
     viewport,
     textDivs,
@@ -8606,15 +8605,14 @@ class TextLayerRenderTask {
     textContentItemsStr,
     isOffscreenCanvasSupported
   }) {
-    this._textContent = textContent;
-    this._textContentStream = textContentStream;
+    this._textContentSource = textContentSource;
+    this._isReadableStream = textContentSource instanceof ReadableStream;
     this._container = this._rootContainer = container;
     this._textDivs = textDivs || [];
     this._textContentItemsStr = textContentItemsStr || [];
     this._fontInspectorEnabled = !!globalThis.FontInspector?.enabled;
     this._reader = null;
     this._textDivProperties = textDivProperties || new WeakMap();
-    this._renderingDone = false;
     this._canceled = false;
     this._capability = (0, _util.createPromiseCapability)();
     this._layoutTextParams = {
@@ -8681,12 +8679,7 @@ class TextLayerRenderTask {
   _render() {
     const capability = (0, _util.createPromiseCapability)();
     let styleCache = Object.create(null);
-    if (this._textContent) {
-      const textItems = this._textContent.items;
-      const textStyles = this._textContent.styles;
-      this._processItems(textItems, textStyles);
-      capability.resolve();
-    } else if (this._textContentStream) {
+    if (this._isReadableStream) {
       const pump = () => {
         this._reader.read().then(({
           value,
@@ -8701,10 +8694,17 @@ class TextLayerRenderTask {
           pump();
         }, capability.reject);
       };
-      this._reader = this._textContentStream.getReader();
+      this._reader = this._textContentSource.getReader();
       pump();
+    } else if (this._textContentSource) {
+      const {
+        items,
+        styles
+      } = this._textContentSource;
+      this._processItems(items, styles);
+      capability.resolve();
     } else {
-      throw new Error('Neither "textContent" nor "textContentStream" parameters specified.');
+      throw new Error('No "textContentSource" parameter specified.');
     }
     capability.promise.then(() => {
       styleCache = null;
@@ -8713,17 +8713,8 @@ class TextLayerRenderTask {
   }
 }
 exports.TextLayerRenderTask = TextLayerRenderTask;
-function renderTextLayer(renderParameters) {
-  const task = new TextLayerRenderTask({
-    textContent: renderParameters.textContent,
-    textContentStream: renderParameters.textContentStream,
-    container: renderParameters.container,
-    viewport: renderParameters.viewport,
-    textDivs: renderParameters.textDivs,
-    textContentItemsStr: renderParameters.textContentItemsStr,
-    textDivProperties: renderParameters.textDivProperties,
-    isOffscreenCanvasSupported: renderParameters.isOffscreenCanvasSupported
-  });
+function renderTextLayer(params) {
+  const task = new TextLayerRenderTask(params);
   task._render();
   return task;
 }
@@ -8910,7 +8901,7 @@ class AnnotationEditorLayer {
     this.attach(editor);
     editor.pageIndex = this.pageIndex;
     editor.parent?.detach(editor);
-    editor.parent = this;
+    editor.setParent(this);
     if (editor.div && editor.isAttachedToDOM) {
       editor.div.remove();
       this.div.append(editor.div);
@@ -9076,8 +9067,8 @@ class AnnotationEditorLayer {
     for (const editor of this.#editors.values()) {
       this.#accessibilityManager?.removePointerInTextLayer(editor.contentDiv);
       editor.isAttachedToDOM = false;
+      editor.setParent(null);
       editor.div.remove();
-      editor.parent = null;
     }
     this.div = null;
     this.#editors.clear();
@@ -9429,6 +9420,9 @@ class FreeTextEditor extends _editor.AnnotationEditor {
     return editor;
   }
   serialize() {
+    if (this._serialized !== undefined) {
+      return this._serialized;
+    }
     if (this.isEmpty()) {
       return null;
     }
@@ -10104,6 +10098,9 @@ class InkEditor extends _editor.AnnotationEditor {
     return editor;
   }
   serialize() {
+    if (this._serialized !== undefined) {
+      return this._serialized;
+    }
     if (this.isEmpty()) {
       return null;
     }
@@ -13016,8 +13013,8 @@ var _worker_options = __w_pdfjs_require__(14);
 var _is_node = __w_pdfjs_require__(10);
 var _svg = __w_pdfjs_require__(29);
 var _xfa_layer = __w_pdfjs_require__(28);
-const pdfjsVersion = '3.2.31';
-const pdfjsBuild = '6e4968225';
+const pdfjsVersion = '3.2.47';
+const pdfjsBuild = 'feb6f5951';
 ;
 })();
 

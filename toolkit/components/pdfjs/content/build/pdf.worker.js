@@ -101,7 +101,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = '3.2.31';
+    const workerVersion = '3.2.47';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -3100,12 +3100,13 @@ class Page {
     if (this.xfaData) {
       return this.xfaData.bbox;
     }
-    const box = this._getInheritableProperty(name, true);
+    let box = this._getInheritableProperty(name, true);
     if (Array.isArray(box) && box.length === 4) {
-      if (box[2] - box[0] !== 0 && box[3] - box[1] !== 0) {
+      box = _util.Util.normalizeRect(box);
+      if (box[2] - box[0] > 0 && box[3] - box[1] > 0) {
         return box;
       }
-      (0, _util.warn)(`Empty /${name} entry.`);
+      (0, _util.warn)(`Empty, or invalid, /${name} entry.`);
     }
     return null;
   }
@@ -3127,18 +3128,14 @@ class Page {
       cropBox,
       mediaBox
     } = this;
-    let view;
-    if (cropBox === mediaBox || (0, _util.isArrayEqual)(cropBox, mediaBox)) {
-      view = mediaBox;
-    } else {
+    if (cropBox !== mediaBox && !(0, _util.isArrayEqual)(cropBox, mediaBox)) {
       const box = _util.Util.intersect(cropBox, mediaBox);
-      if (box && box[2] - box[0] !== 0 && box[3] - box[1] !== 0) {
-        view = box;
-      } else {
-        (0, _util.warn)("Empty /CropBox and /MediaBox intersection.");
+      if (box && box[2] - box[0] > 0 && box[3] - box[1] > 0) {
+        return (0, _util.shadow)(this, "view", box);
       }
+      (0, _util.warn)("Empty /CropBox and /MediaBox intersection.");
     }
-    return (0, _util.shadow)(this, "view", view || mediaBox);
+    return (0, _util.shadow)(this, "view", mediaBox);
   }
   get rotate() {
     let rotate = this._getInheritableProperty("Rotate") || 0;
@@ -52499,8 +52496,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
   }
 }));
 var _worker = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.2.31';
-const pdfjsBuild = '6e4968225';
+const pdfjsVersion = '3.2.47';
+const pdfjsBuild = 'feb6f5951';
 })();
 
 /******/ 	return __webpack_exports__;
