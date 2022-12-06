@@ -704,6 +704,9 @@
     <!--  Checkbox Preference title inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
     <string name="cookie_banner_further_reduce_option_title">Reduser ytterligere infoskapselbannere</string>
 
+    <!--  Checkbox Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
+    <string name="cookie_banner_further_reduce_option_summary">Infoskapselbannerforespørsler vil bli akseptert for å avvise flere bannere.</string>
+
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Automatisk avspilling</string>
 
@@ -998,6 +1001,11 @@
 
     !-- This is the title of promote search widget dialog. --&gt;
     <string name="promote_search_widget_dialog_title">Nettleserhistorikk er slettet! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <!-- Banner Info Message than will appear when user first enters in the app. The location is at the toolbar. -->
+    <string name="cfr_for_start_browsing">Start din private nettlesingsøkt, så blokkerer vi sporere og andre dårlige ting mens du surfer.</string>
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. &quot;Focus&quot;) --&gt;
