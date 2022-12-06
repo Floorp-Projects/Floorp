@@ -512,4 +512,6 @@ void HTMLTrackElement::DispatchTestEvent(const nsAString& aName) {
   DispatchTrustedEvent(aName);
 }
 
+#undef LOG
+
 }  // namespace mozilla::dom

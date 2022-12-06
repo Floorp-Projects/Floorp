@@ -132,6 +132,8 @@ class HTMLVideoElement final : public HTMLMediaElement {
 
   void OnSecondaryVideoOutputFirstFrameRendered();
 
+  void OnVisibilityChange(Visibility aNewVisibility) override;
+
  protected:
   virtual ~HTMLVideoElement();
 
