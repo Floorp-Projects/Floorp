@@ -36,7 +36,7 @@ const { SyncRecord, SyncTelemetry } = ChromeUtils.import(
   "resource://services-sync/telemetry.js"
 );
 
-const { BridgedEngine, BridgedStore, LogAdapter } = ChromeUtils.import(
+const { BridgedEngine, LogAdapter } = ChromeUtils.import(
   "resource://services-sync/bridged_engine.js"
 );
 
@@ -81,10 +81,6 @@ TabEngine.prototype = {
   __proto__: BridgedEngine.prototype,
   _trackerObj: TabTracker,
   syncPriority: 3,
-
-  get _storeObj() {
-    return TabsBridgedStore;
-  },
 
   async prepareTheBridge(isQuickWrite) {
     let clientsEngine = this.service.clientsEngine;
@@ -180,8 +176,8 @@ TabEngine.prototype = {
     let remoteTabs = await this._rustStore.getAll();
     let remoteClientTabs = [];
     for (let remoteClient of this.service.clientsEngine.remoteClients) {
-      // Se get the tabs from the tabs engine in rust
-      // and the client info from the clients engine in js
+      // We get the some client info from the rust tabs engine and some from
+      // the clients engine.
       let rustClient = remoteTabs.find(
         x => x.clientId === remoteClient.fxaDeviceId
       );
@@ -189,12 +185,12 @@ TabEngine.prototype = {
         continue;
       }
       let client = {
+        // rust gives us ms but js uses seconds, so fix them up.
         tabs: rustClient.remoteTabs.map(tab => {
-          // rust gives us ms but js uses seconds
           tab.lastUsed = tab.lastUsed / 1000;
           return tab;
         }),
-        lastModified: this._store.clientsLastSync[remoteClient.id] || 0,
+        lastModified: rustClient.lastModified / 1000,
         ...remoteClient,
       };
       remoteClientTabs.push(client);
@@ -346,27 +342,6 @@ TabEngine.prototype = {
     }
   },
 };
-
-// Callers of getAllClients() use a lastModified field that our rustClient
-// doesn't currently have -- we need to override the store and set it ourselves
-// for now. https://github.com/mozilla/application-services/issues/5230
-class TabsBridgedStore extends BridgedStore {
-  constructor(name, engine) {
-    super(name, engine);
-    // A map that is responsible for keeping track of the last time
-    // we've fetched a record for a client
-    this.clientsLastSync = {};
-  }
-
-  async applyIncomingBatch(records) {
-    // reset this every sync to keep the list fresh
-    this.clientsLastSync = {};
-    for (let record of records) {
-      this.clientsLastSync[record.id] = record.modified;
-    }
-    return super.applyIncomingBatch(records);
-  }
-}
 
 const TabProvider = {
   getWindowEnumerator() {
