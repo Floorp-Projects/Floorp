@@ -745,15 +745,6 @@ add_task(async function validate_actions() {
         /operation: Invalid enumeration value "REMOVE"/,
         /* isSchemaError */ true
       );
-      await testInvalidAction(
-        {
-          type: "modifyHeaders",
-          // "append" is documented to be disallowed.
-          requestHeaders: [{ header: "x", operation: "append", value: "x" }],
-        },
-        /operation: Invalid enumeration value "append"/,
-        /* isSchemaError */ true
-      );
 
       // modifyHeaders actions, valid cases
       await testValidAction({
@@ -773,8 +764,9 @@ add_task(async function validate_actions() {
         type: "modifyHeaders",
         requestHeaders: [
           { header: "reqh", operation: "set", value: "b" },
-          // "append" is documented to be disallowed.
-          // { header: "reqh", operation: "append", value: "b" },
+          // Note: contrary to Chrome, we support "append" for requestHeaders:
+          // https://bugzilla.mozilla.org/show_bug.cgi?id=1797404#c1
+          { header: "reqh", operation: "append", value: "b" },
           { header: "reqh", operation: "remove" },
         ],
         responseHeaders: [

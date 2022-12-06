@@ -690,6 +690,20 @@ class ModifyRequestHeaders extends ModifyHeadersBase {
     if (this.isHeaderNameEqual(name, "host")) {
       this.#checkHostHeader(matchedRule, value);
     }
+    if (merge && value && this.isHeaderNameEqual(name, "cookie")) {
+      // By default, headers are merged with ",". But Cookie should use "; ".
+      // HTTP/1.1 allowed only one Cookie header, but HTTP/2.0 allows multiple,
+      // but recommends concatenation on one line. Relevant RFCs:
+      // - https://www.rfc-editor.org/rfc/rfc6265#section-5.4
+      // - https://www.rfc-editor.org/rfc/rfc7540#section-8.1.2.5
+      // Consistent with Firefox internals, we ensure that there is at most one
+      // Cookie header, by overwriting the previous one, if any.
+      let existingCookie = this.channel.getRequestHeader("cookie");
+      if (existingCookie) {
+        value = existingCookie + "; " + value;
+        merge = false;
+      }
+    }
     this.channel.setRequestHeader(name, value, merge);
   }
 
