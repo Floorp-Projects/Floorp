@@ -21,9 +21,11 @@ function setup() {
   Services.prefs.setBoolPref("network.dns.echconfig.enabled", true);
 
   // An arbitrary, non-ECH server.
-  add_tls_server_setup(
-    "DelegatedCredentialsServer",
-    "../../../security/manager/ssl/tests/unit/test_delegated_credentials"
+  add_setup(
+    asyncStartTLSTestServer(
+      "DelegatedCredentialsServer",
+      "../../../security/manager/ssl/tests/unit/test_delegated_credentials"
+    )
   );
 
   let nssComponent = Cc["@mozilla.org/psm;1"].getService(Ci.nsINSSComponent);
