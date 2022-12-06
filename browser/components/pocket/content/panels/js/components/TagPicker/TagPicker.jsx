@@ -138,9 +138,11 @@ function TagPicker(props) {
                 maxlength="25"
               />
               <datalist id="tag-list">
-                {usedTags.map(item => (
-                  <option key={item} value={item} />
-                ))}
+                {usedTags
+                  .sort((a, b) => a.search(inputValue) - b.search(inputValue))
+                  .map(item => (
+                    <option key={item} value={item} />
+                  ))}
               </datalist>
               <button
                 className="stp_tag_picker_button"
