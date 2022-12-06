@@ -586,6 +586,149 @@ class RequestDataForUrlFilter {
   }
 }
 
+class ModifyHeadersBase {
+  // Map<string,MatchedRule> - The first MatchedRule that modified the header.
+  // After modifying a header, it cannot be modified further, with the exception
+  // of the "append" operation, provided that they are from the same extension.
+  #alreadyModifiedMap = new Map();
+  // Set<string> - The list of headers allowed to be modified with "append",
+  // despite having been modified. Allowed for "set"/"append", not for "remove".
+  #appendStillAllowed = new Set();
+
+  /**
+   * @param {ChannelWrapper} channel
+   */
+  constructor(channel) {
+    this.channel = channel;
+  }
+
+  applyModifyHeaders(matchedRules) {
+    for (const matchedRule of matchedRules) {
+      for (const headerAction of this.headerActionsFor(matchedRule)) {
+        const { header: name, operation, value } = headerAction;
+        if (!this.#isOperationAllowed(name, operation, matchedRule)) {
+          continue;
+        }
+        let ok;
+        switch (operation) {
+          case "set":
+            ok = this.setHeader(matchedRule, name, value, /* merge */ false);
+            if (ok) {
+              this.#appendStillAllowed.add(name);
+            }
+            break;
+          case "append":
+            ok = this.setHeader(matchedRule, name, value, /* merge */ true);
+            if (ok) {
+              this.#appendStillAllowed.add(name);
+            }
+            break;
+          case "remove":
+            ok = this.setHeader(matchedRule, name, "", /* merge */ false);
+            // Note: removal is final, so we don't add to #appendStillAllowed.
+            break;
+        }
+        if (ok) {
+          this.#alreadyModifiedMap.set(name, matchedRule);
+        }
+      }
+    }
+  }
+
+  #isOperationAllowed(name, operation, matchedRule) {
+    const modifiedBy = this.#alreadyModifiedMap.get(name);
+    if (!modifiedBy) {
+      return true;
+    }
+    if (
+      operation === "append" &&
+      this.#appendStillAllowed.has(name) &&
+      matchedRule.ruleManager === modifiedBy.ruleManager
+    ) {
+      return true;
+    }
+    // TODO bug 1803369: dev experience improvement: consider logging when
+    // a header modification was rejected.
+    return false;
+  }
+
+  setHeader(matchedRule, name, value, merge) {
+    try {
+      this.setHeaderImpl(matchedRule, name, value, merge);
+      return true;
+    } catch (e) {
+      const extension = matchedRule.ruleManager.extension;
+      extension.logger.error(
+        `Failed to apply modifyHeaders action to header "${name}" (DNR rule id ${matchedRule.rule.id} from ruleset "${matchedRule.ruleset.id}"): ${e}`
+      );
+    }
+    return false;
+  }
+
+  // kName should already be in lower case.
+  isHeaderNameEqual(name, kName) {
+    return name.length === kName.length && name.toLowerCase() === kName;
+  }
+}
+
+class ModifyRequestHeaders extends ModifyHeadersBase {
+  static maybeApplyModifyHeaders(channel, matchedRules) {
+    matchedRules = matchedRules.filter(mr => {
+      const action = mr.rule.action;
+      return action.type === "modifyHeaders" && action.requestHeaders?.length;
+    });
+    if (matchedRules.length) {
+      new ModifyRequestHeaders(channel).applyModifyHeaders(matchedRules);
+    }
+  }
+
+  headerActionsFor(matchedRule) {
+    return matchedRule.rule.action.requestHeaders;
+  }
+
+  setHeaderImpl(matchedRule, name, value, merge) {
+    if (this.isHeaderNameEqual(name, "host")) {
+      this.#checkHostHeader(matchedRule, value);
+    }
+    this.channel.setRequestHeader(name, value, merge);
+  }
+
+  #checkHostHeader(matchedRule, value) {
+    let uri = Services.io.newURI(`https://${value}/`);
+    let { policy } = matchedRule.ruleManager.extension;
+
+    if (!policy.allowedOrigins.matches(uri)) {
+      throw new Error(
+        `Unable to set host header, url missing from permissions.`
+      );
+    }
+
+    if (WebExtensionPolicy.isRestrictedURI(uri)) {
+      throw new Error(`Unable to set host header to restricted url.`);
+    }
+  }
+}
+
+class ModifyResponseHeaders extends ModifyHeadersBase {
+  static maybeApplyModifyHeaders(channel, matchedRules) {
+    matchedRules = matchedRules.filter(mr => {
+      const action = mr.rule.action;
+      return action.type === "modifyHeaders" && action.responseHeaders?.length;
+    });
+    if (matchedRules.length) {
+      new ModifyResponseHeaders(channel).applyModifyHeaders(matchedRules);
+    }
+  }
+
+  headerActionsFor(matchedRule) {
+    return matchedRule.rule.action.responseHeaders;
+  }
+
+  setHeaderImpl(matchedRule, name, value, merge) {
+    this.channel.setResponseHeader(name, value, merge);
+  }
+}
+
 class RuleValidator {
   constructor(alreadyValidatedRules) {
     this.rulesMap = new Map(alreadyValidatedRules.map(r => [r.id, r]));
@@ -892,6 +1035,7 @@ class RuleValidator {
       (requestHeaders && !requestHeaders.every(isValidModifyHeadersOp)) ||
       (responseHeaders && !responseHeaders.every(isValidModifyHeadersOp))
     ) {
+      // #collectInvalidRule already called by isValidModifyHeadersOp.
       return false;
     }
     return true;
@@ -1380,11 +1524,19 @@ const NetworkIntegration = {
   },
 
   onBeforeSendHeaders(channel) {
-    // TODO bug 1797404: apply modifyHeaders actions (requestHeaders).
+    let matchedRules = channel._dnrMatchedRules;
+    if (!matchedRules?.length) {
+      return;
+    }
+    ModifyRequestHeaders.maybeApplyModifyHeaders(channel, matchedRules);
   },
 
   onHeadersReceived(channel) {
-    // TODO bug 1797404: apply modifyHeaders actions (responseHeaders).
+    let matchedRules = channel._dnrMatchedRules;
+    if (!matchedRules?.length) {
+      return;
+    }
+    ModifyResponseHeaders.maybeApplyModifyHeaders(channel, matchedRules);
   },
 
   applyBlock(channel, matchedRule) {
