@@ -214,6 +214,8 @@
 #include "gc/GCLock.h"
 #include "gc/GCProbes.h"
 #include "gc/Memory.h"
+#include "gc/ParallelMarking.h"
+#include "gc/ParallelWork.h"
 #include "gc/WeakMap.h"
 #include "jit/ExecutableAllocator.h"
 #include "jit/JitCode.h"
@@ -2909,18 +2911,32 @@ void GCRuntime::updateSchedulingStateOnGCStart() {
 }
 
 IncrementalProgress GCRuntime::markUntilBudgetExhausted(
-    SliceBudget& sliceBudget, ShouldReportMarkTime reportTime) {
+    SliceBudget& sliceBudget, ParallelMarking allowParallelMarking,
+    ShouldReportMarkTime reportTime) {
   // Run a marking slice and return whether the stack is now empty.
 
   AutoMajorGCProfilerEntry s(this);
 
-#ifdef DEBUG
-  AutoSetThreadIsMarking threadIsMarking;
-#endif  // DEBUG
-
   if (processTestMarkQueue() == QueueYielded) {
     return NotFinished;
   }
+
+  if (allowParallelMarking && parallelMarkingEnabled) {
+    MOZ_ASSERT(reportTime);
+    MOZ_ASSERT(!isBackgroundMarking());
+
+    ParallelMarker pm(this);
+    if (!pm.mark(sliceBudget)) {
+      return NotFinished;
+    }
+
+    assertNoMarkingWork();
+    return Finished;
+  }
+
+#ifdef DEBUG
+  AutoSetThreadIsMarking threadIsMarking;
+#endif  // DEBUG
 
   return marker().markUntilBudgetExhausted(sliceBudget, reportTime)
              ? Finished
@@ -3535,7 +3551,8 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
 
       {
         gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::MARK);
-        if (markUntilBudgetExhausted(budget) == NotFinished) {
+        if (markUntilBudgetExhausted(budget, AllowParallelMarking) ==
+            NotFinished) {
           break;
         }
       }
