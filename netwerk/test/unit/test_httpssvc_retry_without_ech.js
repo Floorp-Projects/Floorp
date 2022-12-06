@@ -12,7 +12,7 @@ const certOverrideService = Cc[
   "@mozilla.org/security/certoverride;1"
 ].getService(Ci.nsICertOverrideService);
 
-function setup() {
+add_setup(async function setup() {
   trr_test_setup();
 
   Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRFIRST);
@@ -21,18 +21,15 @@ function setup() {
   Services.prefs.setBoolPref("network.dns.echconfig.enabled", true);
 
   // An arbitrary, non-ECH server.
-  add_setup(
-    asyncStartTLSTestServer(
-      "DelegatedCredentialsServer",
-      "../../../security/manager/ssl/tests/unit/test_delegated_credentials"
-    )
+  await asyncStartTLSTestServer(
+    "DelegatedCredentialsServer",
+    "../../../security/manager/ssl/tests/unit/test_delegated_credentials"
   );
 
   let nssComponent = Cc["@mozilla.org/psm;1"].getService(Ci.nsINSSComponent);
-  nssComponent.clearSSLExternalAndInternalSessionCache();
-}
+  await nssComponent.asyncClearSSLExternalAndInternalSessionCache();
+});
 
-setup();
 registerCleanupFunction(async () => {
   trr_clear_prefs();
   Services.prefs.clearUserPref("network.dns.upgrade_with_https_rr");

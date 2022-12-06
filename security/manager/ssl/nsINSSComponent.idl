@@ -103,6 +103,13 @@ interface nsINSSComponent : nsISupports {
 
   /**
    * For clearing both SSL internal and external session cache from JS.
+   * WARNING: May be racy when using the socket process.
    */
   void clearSSLExternalAndInternalSessionCache();
+
+  /**
+   * For clearing both SSL internal and external session cache from JS.
+   */
+  [implicit_jscontext]
+  Promise asyncClearSSLExternalAndInternalSessionCache();
 };
