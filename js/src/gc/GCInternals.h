@@ -321,7 +321,8 @@ struct MinorSweepingTracer final
   friend class GenericTracerImpl<MinorSweepingTracer>;
 };
 
-extern void DelayCrossCompartmentGrayMarking(GCMarker* maybeMarker, JSObject* src);
+extern void DelayCrossCompartmentGrayMarking(GCMarker* maybeMarker,
+                                             JSObject* src);
 
 inline bool IsOOMReason(JS::GCReason reason) {
   return reason == JS::GCReason::LAST_DITCH ||
