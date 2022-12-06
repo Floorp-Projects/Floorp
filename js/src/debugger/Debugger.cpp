@@ -3853,6 +3853,13 @@ void DebugAPI::slowPathTraceGeneratorFrame(JSTracer* tracer,
     return;
   }
 
+  mozilla::Maybe<AutoLockGC> lock;
+  GCMarker* marker = GCMarker::fromTracer(tracer);
+  if (marker->isParallelMarking()) {
+    // Synchronise access to generatorFrames.
+    lock.emplace(marker->runtime());
+  }
+
   for (Realm::DebuggerVectorEntry& entry : generator->realm()->getDebuggers()) {
     Debugger* dbg = entry.dbg.unbarrieredGet();
 
