@@ -298,7 +298,7 @@
 
 - name: apz.scrollend-event.content.enabled
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 # After a user has executed a pan gesture, we may receive momentum phase pan
