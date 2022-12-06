@@ -5,6 +5,7 @@
 
 import os
 import sys
+from pathlib import PurePath
 
 from gecko_taskgraph.target_tasks import filter_by_uncommon_try_tasks
 from mach.util import get_state_dir
@@ -187,7 +188,7 @@ def run(
             [
                 "--preview",
                 '{} {} -g {} -s -c {} -t "{{+f}}"'.format(
-                    sys.executable, PREVIEW_SCRIPT, dep_cache, cache_dir
+                    str(PurePath(sys.executable)), PREVIEW_SCRIPT, dep_cache, cache_dir
                 ),
             ]
         )
@@ -195,7 +196,9 @@ def run(
         base_cmd.extend(
             [
                 "--preview",
-                '{} {} -t "{{+f}}"'.format(sys.executable, PREVIEW_SCRIPT),
+                '{} {} -t "{{+f}}"'.format(
+                    str(PurePath(sys.executable)), PREVIEW_SCRIPT
+                ),
             ]
         )
 
