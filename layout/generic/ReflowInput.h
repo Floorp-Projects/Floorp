@@ -76,7 +76,8 @@ struct StyleSizeOverrides {
  * @return aValue clamped to [aMinValue, aMaxValue].
  *
  * @note This function needs to handle aMinValue > aMaxValue. In that case,
- *       aMinValue is returned.
+ *       aMinValue is returned. That's why we cannot use std::clamp() and
+ *       mozilla::clamped() since they both assert max >= min.
  * @see http://www.w3.org/TR/CSS21/visudet.html#min-max-widths
  * @see http://www.w3.org/TR/CSS21/visudet.html#min-max-heights
  */
