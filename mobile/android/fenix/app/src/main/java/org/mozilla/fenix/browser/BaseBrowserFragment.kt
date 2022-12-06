@@ -33,7 +33,6 @@ import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
@@ -1400,6 +1399,11 @@ abstract class BaseBrowserFragment :
         binding.swipeRefresh.isEnabled = shouldPullToRefreshBeEnabled(inFullScreen)
     }
 
+    @CallSuper
+    internal open fun onUpdateToolbarForConfigurationChange(toolbar: BrowserToolbarView) {
+        toolbar.dismissMenu()
+    }
+
     /*
      * Dereference these views when the fragment view is destroyed to prevent memory leaks
      */
@@ -1472,7 +1476,9 @@ abstract class BaseBrowserFragment :
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
-        _browserToolbarView?.dismissMenu()
+        _browserToolbarView?.let {
+            onUpdateToolbarForConfigurationChange(it)
+        }
     }
 
     // This method is called in response to native web extension messages from

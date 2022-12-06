@@ -313,6 +313,21 @@ class BrowserFragmentTest {
     }
 
     @Test
+    fun `WHEN toolbar is initialized THEN onConfigurationChanged sets toolbar actions for size in fragment`() {
+        val browserToolbarView: BrowserToolbarView = mockk(relaxed = true)
+
+        browserFragment._browserToolbarView = null
+        browserFragment.onConfigurationChanged(mockk(relaxed = true))
+        verify(exactly = 0) { browserFragment.onUpdateToolbarForConfigurationChange(any()) }
+        verify(exactly = 0) { browserFragment.updateToolbarActions(any()) }
+
+        browserFragment._browserToolbarView = browserToolbarView
+        browserFragment.onConfigurationChanged(mockk(relaxed = true))
+        verify(exactly = 1) { browserFragment.onUpdateToolbarForConfigurationChange(any()) }
+        verify(exactly = 1) { browserFragment.updateToolbarActions(any()) }
+    }
+
+    @Test
     fun `WHEN fragment configuration changed THEN menu is dismissed`() {
         val browserToolbarView: BrowserToolbarView = mockk(relaxed = true)
         every { browserFragment.context } returns null
@@ -325,7 +340,9 @@ class BrowserFragmentTest {
 
     @Test
     fun `WHEN fragment configuration screen size changes between tablet and mobile size THEN tablet action items added and removed`() {
+        val browserToolbarView: BrowserToolbarView = mockk(relaxed = true)
         val browserToolbar: BrowserToolbar = mockk(relaxed = true)
+        browserFragment._browserToolbarView = browserToolbarView
         every { browserFragment.browserToolbarView.view } returns browserToolbar
 
         mockkObject(ThemeManager.Companion)
@@ -348,7 +365,9 @@ class BrowserFragmentTest {
 
     @Test
     fun `WHEN fragment configuration change enables tablet size twice THEN tablet action items are only added once`() {
+        val browserToolbarView: BrowserToolbarView = mockk(relaxed = true)
         val browserToolbar: BrowserToolbar = mockk(relaxed = true)
+        browserFragment._browserToolbarView = browserToolbarView
         every { browserFragment.browserToolbarView.view } returns browserToolbar
 
         mockkObject(ThemeManager.Companion)
@@ -370,7 +389,9 @@ class BrowserFragmentTest {
 
     @Test
     fun `WHEN fragment configuration change sets mobile size twice THEN tablet action items are not added or removed`() {
+        val browserToolbarView: BrowserToolbarView = mockk(relaxed = true)
         val browserToolbar: BrowserToolbar = mockk(relaxed = true)
+        browserFragment._browserToolbarView = browserToolbarView
         every { browserFragment.browserToolbarView.view } returns browserToolbar
 
         mockkObject(ThemeManager.Companion)

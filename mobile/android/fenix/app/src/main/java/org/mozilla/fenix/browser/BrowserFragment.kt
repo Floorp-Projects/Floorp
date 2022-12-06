@@ -5,7 +5,6 @@
 package org.mozilla.fenix.browser
 
 import android.content.Context
-import android.content.res.Configuration
 import android.os.StrictMode
 import android.view.View
 import android.view.ViewGroup
@@ -32,6 +31,7 @@ import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.TabCollectionStorage
+import org.mozilla.fenix.components.toolbar.BrowserToolbarView
 import org.mozilla.fenix.components.toolbar.ToolbarMenu
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
@@ -90,7 +90,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
         browserToolbarView.view.addNavigationAction(homeAction)
 
-        setScreenSize(isTablet = resources.getBoolean(R.bool.tablet))
+        updateToolbarActions(isTablet = resources.getBoolean(R.bool.tablet))
 
         val readerModeAction =
             BrowserToolbar.ToggleButton(
@@ -170,7 +170,14 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         }
     }
 
-    private fun setScreenSize(isTablet: Boolean) {
+    override fun onUpdateToolbarForConfigurationChange(toolbar: BrowserToolbarView) {
+        super.onUpdateToolbarForConfigurationChange(toolbar)
+
+        updateToolbarActions(isTablet = resources.getBoolean(R.bool.tablet))
+    }
+
+    @VisibleForTesting
+    internal fun updateToolbarActions(isTablet: Boolean) {
         if (isTablet == this.isTablet) return
 
         if (isTablet) {
@@ -280,6 +287,8 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         refreshAction?.let {
             browserToolbarView.view.addNavigationAction(it)
         }
+
+        browserToolbarView.view.invalidateActions()
     }
 
     private fun removeTabletActions() {
@@ -292,6 +301,8 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         refreshAction?.let {
             browserToolbarView.view.removeNavigationAction(it)
         }
+
+        browserToolbarView.view.invalidateActions()
     }
 
     override fun onStart() {
@@ -446,10 +457,5 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     @VisibleForTesting
     internal fun updateLastBrowseActivity() {
         requireContext().settings().lastBrowseActivity = System.currentTimeMillis()
-    }
-
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        setScreenSize(isTablet = resources.getBoolean(R.bool.tablet))
     }
 }
