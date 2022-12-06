@@ -1336,7 +1336,7 @@ var gMainPane = {
       try {
         shellSvc.setDefaultBrowser(true, false);
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
         return;
       }
 
@@ -1900,7 +1900,7 @@ var gMainPane = {
         await _disableTimeOverPromise;
         radiogroup.disabled = false;
       } catch (error) {
-        Cu.reportError(error);
+        console.error(error);
         await Promise.all([
           this.readUpdateAutoPref(),
           this.reportUpdatePrefWriteError(),
@@ -1983,7 +1983,7 @@ var gMainPane = {
           backgroundUpdateEnabled
         );
       } catch (error) {
-        Cu.reportError(error);
+        console.error(error);
         await this.readBackgroundUpdatePref();
         await this.reportUpdatePrefWriteError();
         return;
@@ -2554,7 +2554,7 @@ var gMainPane = {
           if (internalMenuItem) {
             menu.selectedItem = internalMenuItem;
           } else {
-            Cu.reportError("No menu item defined to set!");
+            console.error("No menu item defined to set!");
           }
           break;
         case Ci.nsIHandlerInfo.useSystemDefault:
@@ -2575,7 +2575,7 @@ var gMainPane = {
               let possible = possibleAppMenuItems
                 .map(v => v.handlerApp && v.handlerApp.name)
                 .join(", ");
-              Cu.reportError(
+              console.error(
                 new Error(
                   `Preferred handler for ${handlerInfo.type} not in list of possible handlers!? (List: ${possible})`
                 )
@@ -3308,7 +3308,7 @@ class HandlerListItem {
     ]);
     const selectedItem = this.node.querySelector("[selected=true]");
     if (!selectedItem) {
-      Cu.reportError("No selected item for " + this.handlerInfoWrapper.type);
+      console.error("No selected item for " + this.handlerInfoWrapper.type);
       return;
     }
     const { id, args } = document.l10n.getAttributes(selectedItem);

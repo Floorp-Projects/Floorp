@@ -127,7 +127,7 @@ function setPassword() {
         createAlert("pw-change-failed-title", "incorrect-pp");
       }
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
       createAlert("pw-change-failed-title", "failed-pp-change");
     }
   } else {

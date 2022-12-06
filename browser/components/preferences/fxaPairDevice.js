@@ -110,7 +110,7 @@ var gFxaPairDeviceDialog = {
   },
 
   onError(err) {
-    Cu.reportError(err);
+    console.error(err);
     this.teardownListeners();
     document
       .getElementById("qrWrapper")

@@ -693,7 +693,7 @@ var gBrowserLanguagesDialog = {
         addonInfos.map(info => installFromUrl(info.sourceURI.spec))
       );
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
   },
 
