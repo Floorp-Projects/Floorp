@@ -8,6 +8,7 @@
 #define gc_GCRuntime_h
 
 #include "mozilla/Atomics.h"
+#include "mozilla/DoublyLinkedList.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
@@ -50,6 +51,7 @@ class AutoTraceSession;
 struct FinalizePhase;
 class MarkingValidator;
 struct MovingTracer;
+class ParallelMarkTask;
 enum class ShouldCheckThresholds;
 class SweepGroupsIter;
 
@@ -621,7 +623,8 @@ class GCRuntime {
   static TenuredCell* refillFreeListInGC(Zone* zone, AllocKind thingKind);
 
   // Delayed marking.
-  void delayMarkingChildren(gc::Cell* cell, MarkColor color);
+  void delayMarkingChildren(gc::Cell* cell, MarkColor color,
+                            const AutoLockGC& lock);
   bool hasDelayedMarking() const;
   void markAllDelayedChildren(ShouldReportMarkTime reportTime);
 
@@ -780,9 +783,17 @@ class GCRuntime {
   void findDeadCompartments();
 
   friend class BackgroundMarkTask;
+  enum ParallelMarking : bool {
+    SingleThreadedMarking = false,
+    AllowParallelMarking = true
+  };
   IncrementalProgress markUntilBudgetExhausted(
       SliceBudget& sliceBudget,
+      ParallelMarking allowParallelMarking = SingleThreadedMarking,
       ShouldReportMarkTime reportTime = ReportMarkTime);
+
+  bool hasMarkingWork(MarkColor color) const;
+
   void drainMarkStack();
 
 #ifdef DEBUG
@@ -1003,7 +1014,7 @@ class GCRuntime {
   // Helper thread configuration.
   MainThreadData<double> helperThreadRatio;
   MainThreadData<size_t> maxHelperThreads;
-  MainThreadData<size_t> helperThreadCount;
+  MainThreadOrGCTaskData<size_t> helperThreadCount;
 
   // State used for managing atom mark bitmaps in each zone.
   AtomMarkingRuntime atomMarking;

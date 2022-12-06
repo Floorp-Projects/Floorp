@@ -15,6 +15,7 @@
 #include <type_traits>
 
 #include "gc/GCInternals.h"
+#include "gc/ParallelMarking.h"
 #include "gc/TraceKind.h"
 #include "jit/JitCode.h"
 #include "js/GCTypeMacros.h"  // JS_FOR_EACH_PUBLIC_{,TAGGED_}GC_POINTER_TYPE
@@ -735,8 +736,10 @@ struct ImplicitEdgeHolderType<BaseScript*> {
 
 void GCMarker::markEphemeronEdges(EphemeronEdgeVector& edges,
                                   gc::CellColor srcColor) {
+  // This is called as part of GC weak marking or by barriers outside of GC.
   MOZ_ASSERT_IF(CurrentThreadIsPerformingGC(),
                 state == MarkingState::WeakMarking);
+
   DebugOnly<size_t> initialLength = edges.length();
 
   for (auto& edge : edges) {
@@ -765,6 +768,8 @@ void GCMarker::markEphemeronEdges(EphemeronEdgeVector& edges,
 
 // 'delegate' is no longer the delegate of 'key'.
 void GCMarker::severWeakDelegate(JSObject* key, JSObject* delegate) {
+  MOZ_ASSERT(CurrentThreadIsMainThread());
+
   JS::Zone* zone = delegate->zone();
   if (!zone->needsIncrementalBarrier()) {
     MOZ_ASSERT(
@@ -809,6 +814,8 @@ void GCMarker::severWeakDelegate(JSObject* key, JSObject* delegate) {
 
 // 'delegate' is now the delegate of 'key'. Update weakmap marking state.
 void GCMarker::restoreWeakDelegate(JSObject* key, JSObject* delegate) {
+  MOZ_ASSERT(CurrentThreadIsMainThread());
+
   if (!key->zone()->needsIncrementalBarrier()) {
     // Temporary diagnostic printouts for when this would have asserted.
     if (key->zone()->gcEphemeronEdges(key).has(key)) {
@@ -1275,6 +1282,10 @@ static gcstats::PhaseKind GrayMarkingPhaseForCurrentPhase(
   }
 }
 
+void GCMarker::stealWorkFrom(GCMarker* other) {
+  stack.stealWorkFrom(other->stack);
+}
+
 bool GCMarker::markUntilBudgetExhausted(SliceBudget& budget,
                                         ShouldReportMarkTime reportTime) {
 #ifdef DEBUG
@@ -1295,15 +1306,10 @@ bool GCMarker::doMarking(SliceBudget& budget, ShouldReportMarkTime reportTime) {
   GCRuntime& gc = runtime()->gc;
 
   // This method leaves the mark color as it found it.
-  AutoSetMarkColor autoSetBlack(*this, MarkColor::Black);
 
   while (!isDrained()) {
-    while (hasBlackEntries()) {
-      MOZ_ASSERT(markColor() == MarkColor::Black);
-      processMarkStackTop<opts>(budget);
-      if (budget.isOverBudget()) {
-        return false;
-      }
+    if (hasBlackEntries() && !markOneColor<opts, MarkColor::Black>(budget)) {
+      return false;
     }
 
     if (hasGrayEntries()) {
@@ -1313,14 +1319,9 @@ bool GCMarker::doMarking(SliceBudget& budget, ShouldReportMarkTime reportTime) {
         ap.emplace(stats, GrayMarkingPhaseForCurrentPhase(stats));
       }
 
-      AutoSetMarkColor autoSetGray(*this, MarkColor::Gray);
-      do {
-        processMarkStackTop<opts>(budget);
-        MOZ_ASSERT(!hasBlackEntries());
-        if (budget.isOverBudget()) {
-          return false;
-        }
-      } while (hasGrayEntries());
+      if (!markOneColor<opts, MarkColor::Gray>(budget)) {
+        return false;
+      }
     }
 
     // All normal marking happens before any delayed marking.
@@ -1335,6 +1336,43 @@ bool GCMarker::doMarking(SliceBudget& budget, ShouldReportMarkTime reportTime) {
 
   MOZ_ASSERT(!gc.hasDelayedMarking());
   MOZ_ASSERT(isDrained());
+
+  return true;
+}
+
+void GCMarker::markCurrentColorInParallel(SliceBudget& budget) {
+  if (markColor() == MarkColor::Black) {
+    markOneColor<MarkingOptions::ParallelMarking, MarkColor::Black>(budget);
+    return;
+  }
+
+  markOneColor<MarkingOptions::ParallelMarking, MarkColor::Gray>(budget);
+}
+
+template <uint32_t opts, MarkColor color>
+bool GCMarker::markOneColor(SliceBudget& budget) {
+  MOZ_ASSERT(hasEntries(color));
+
+  AutoSetMarkColor setColor(*this, color);
+
+  do {
+    if constexpr (opts & MarkingOptions::ParallelMarking) {
+      // TODO: It might be better to only check this occasionally, possibly
+      // combined with the slice budget check. Experiments with giving this its
+      // own counter resulted in worse performance.
+      if (parallelMarker_->hasWaitingTasks() && stack.hasStealableWork()) {
+        parallelMarker_->stealWorkFrom(this);
+        MOZ_ASSERT(hasEntries(color));
+      }
+    }
+
+    processMarkStackTop<opts>(budget);
+    MOZ_ASSERT_IF(color == MarkColor::Gray, !hasBlackEntries());
+
+    if (budget.isOverBudget()) {
+      return false;
+    }
+  } while (hasEntries(color));
 
   return true;
 }
@@ -1714,6 +1752,58 @@ bool MarkStack::hasEntries(MarkColor color) const {
   return color == MarkColor::Black ? hasBlackEntries() : hasGrayEntries();
 }
 
+MOZ_ALWAYS_INLINE bool MarkStack::hasStealableWork() const {
+  // Always leave ourselves with at least one stack entry.
+  return wordCountForCurrentColor() > ValueRangeWords;
+}
+
+void MarkStack::stealWorkFrom(MarkStack& other) {
+  // When this method runs during parallel marking, we are on the thread that
+  // owns |other|, and the thread that owns |this| is blocked waiting on the
+  // ParallelMarkTask::resumed condition variable.
+
+  MOZ_ASSERT(markColor() == other.markColor());
+  MOZ_ASSERT(!hasEntries(markColor()));
+  MOZ_ASSERT(other.hasEntries(markColor()));
+
+  size_t base = other.basePositionForCurrentColor();
+  size_t totalWords = other.position() - base;
+  size_t wordsToSteal = totalWords / 2;
+
+  size_t targetPos = other.position() - wordsToSteal;
+  MOZ_ASSERT(other.position() >= base);
+
+  if (!ensureSpace(wordsToSteal + 1)) {
+    return;
+  }
+
+  // TODO: This could be optimised to use memcpy if we could tell the difference
+  // between a single tagged pointer and a word that's part of a value range
+  // entry. This could be done by changing the way the entries are tagged.
+  //
+  // TODO: This doesn't have good cache behaviour when moving work between
+  // threads. It might be better if the original thread ended up with the top
+  // part of the stack, in other words if this method stole from the bottom of
+  // the stack rather than the top.
+  while (other.position() > targetPos) {
+    if (other.peekTag() == MarkStack::SlotsOrElementsRangeTag) {
+      infalliblePush(other.popSlotsOrElementsRange());
+    } else {
+      infalliblePush(other.popPtr());
+    }
+  }
+}
+
+MOZ_ALWAYS_INLINE size_t MarkStack::basePositionForCurrentColor() const {
+  return markColor() == MarkColor::Black ? grayPosition_ : 0;
+}
+
+MOZ_ALWAYS_INLINE size_t MarkStack::wordCountForCurrentColor() const {
+  size_t base = basePositionForCurrentColor();
+  MOZ_ASSERT(position() >= base);
+  return position() - base;
+}
+
 void MarkStack::clear() {
   // Fall back to the smaller initial capacity so we don't hold on to excess
   // memory between GCs.
@@ -1724,25 +1814,30 @@ void MarkStack::clear() {
 
 inline MarkStack::TaggedPtr* MarkStack::topPtr() { return &stack()[topIndex_]; }
 
-inline bool MarkStack::pushTaggedPtr(Tag tag, Cell* ptr) {
+template <typename T>
+inline bool MarkStack::push(T* ptr) {
   assertGrayPositionValid();
 
+  return push(TaggedPtr(MapTypeToMarkStackTag<T*>::value, ptr));
+}
+
+inline bool MarkStack::pushTempRope(JSRope* rope) {
+  return push(TaggedPtr(TempRopeTag, rope));
+}
+
+inline bool MarkStack::push(const TaggedPtr& ptr) {
   if (!ensureSpace(1)) {
     return false;
   }
 
-  *topPtr() = TaggedPtr(tag, ptr);
-  topIndex_++;
+  infalliblePush(ptr);
   return true;
 }
 
-template <typename T>
-inline bool MarkStack::push(T* ptr) {
-  return pushTaggedPtr(MapTypeToMarkStackTag<T*>::value, ptr);
-}
-
-inline bool MarkStack::pushTempRope(JSRope* rope) {
-  return pushTaggedPtr(TempRopeTag, rope);
+inline void MarkStack::infalliblePush(const TaggedPtr& ptr) {
+  *topPtr() = ptr;
+  topIndex_++;
+  MOZ_ASSERT(position() <= capacity());
 }
 
 inline bool MarkStack::push(JSObject* obj, SlotsOrElementsKind kind,
@@ -1758,11 +1853,15 @@ inline bool MarkStack::push(const SlotsOrElementsRange& array) {
     return false;
   }
 
+  infalliblePush(array);
+  return true;
+}
+
+inline void MarkStack::infalliblePush(const SlotsOrElementsRange& array) {
   *reinterpret_cast<SlotsOrElementsRange*>(topPtr()) = array;
   topIndex_ += ValueRangeWords;
   MOZ_ASSERT(position() <= capacity());
   MOZ_ASSERT(TagIsRangeTag(peekTag()));
-  return true;
 }
 
 inline const MarkStack::TaggedPtr& MarkStack::peekPtr() const {
@@ -1917,8 +2016,8 @@ inline void GCMarker::pushTaggedPtr(T* ptr) {
   }
 }
 
-void GCMarker::pushValueRange(JSObject* obj, SlotsOrElementsKind kind,
-                              size_t start, size_t end) {
+inline void GCMarker::pushValueRange(JSObject* obj, SlotsOrElementsKind kind,
+                                     size_t start, size_t end) {
   checkZone(obj);
   MOZ_ASSERT(obj->is<NativeObject>());
   MOZ_ASSERT(start <= end);
@@ -1927,7 +2026,7 @@ void GCMarker::pushValueRange(JSObject* obj, SlotsOrElementsKind kind,
     return;
   }
 
-  if (!stack.push(obj, kind, start)) {
+  if (MOZ_UNLIKELY(!stack.push(obj, kind, start))) {
     delayMarkingChildrenOnOOM(obj);
   }
 }
@@ -1939,14 +2038,31 @@ void GCMarker::repush(JSObject* obj) {
 
 void GCMarker::setRootMarkingMode(bool newState) {
   if (newState) {
-    MOZ_ASSERT(state == RegularMarking);
-    state = RootMarking;
-    tracer_.emplace<RootMarkingTracer>(runtime(), this);
+    setMarkingStateAndTracer<RootMarkingTracer>(RegularMarking, RootMarking);
   } else {
-    MOZ_ASSERT(state == RootMarking);
-    state = RegularMarking;
-    tracer_.emplace<MarkingTracer>(runtime(), this);
+    setMarkingStateAndTracer<MarkingTracer>(RootMarking, RegularMarking);
   }
+}
+
+void GCMarker::enterParallelMarkingMode(ParallelMarker* pm) {
+  MOZ_ASSERT(pm);
+  MOZ_ASSERT(!parallelMarker_);
+  setMarkingStateAndTracer<ParallelMarkingTracer>(RegularMarking,
+                                                  ParallelMarking);
+  parallelMarker_ = pm;
+}
+
+void GCMarker::leaveParallelMarkingMode() {
+  MOZ_ASSERT(parallelMarker_);
+  setMarkingStateAndTracer<MarkingTracer>(ParallelMarking, RegularMarking);
+  parallelMarker_ = nullptr;
+}
+
+template <typename Tracer>
+void GCMarker::setMarkingStateAndTracer(MarkingState prev, MarkingState next) {
+  MOZ_ASSERT(state == prev);
+  state = next;
+  tracer_.emplace<Tracer>(runtime(), this);
 }
 
 bool GCMarker::enterWeakMarkingMode() {
@@ -2037,7 +2153,8 @@ void GCMarker::abortLinearWeakMarking() {
 }
 
 MOZ_NEVER_INLINE void GCMarker::delayMarkingChildrenOnOOM(Cell* cell) {
-  runtime()->gc.delayMarkingChildren(cell, markColor());
+  AutoLockGC lock(runtime());
+  runtime()->gc.delayMarkingChildren(cell, markColor(), lock);
 }
 
 bool GCRuntime::hasDelayedMarking() const {
@@ -2046,7 +2163,8 @@ bool GCRuntime::hasDelayedMarking() const {
   return result;
 }
 
-void GCRuntime::delayMarkingChildren(Cell* cell, MarkColor color) {
+void GCRuntime::delayMarkingChildren(Cell* cell, MarkColor color,
+                                     const AutoLockGC& lock) {
   Arena* arena = cell->asTenured().arena();
   if (!arena->onDelayedMarkingList()) {
     arena->setNextDelayedMarkingArena(delayedMarkingList);
