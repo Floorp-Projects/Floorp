@@ -4,6 +4,13 @@ function handleRequest(request, response) {
   response.setHeader("Content-Type", "image/png", false);
   response.setHeader("Cache-Control", "max-age=604800", false);
 
+  // the typo in "Referer" is part of the http spec
+  if (request.hasHeader("Referer")) {
+    setSharedState("requestReferrer", request.getHeader("Referer"));
+  } else {
+    setSharedState("requestReferrer", "");
+  }
+
   let count = JSON.parse(getSharedState("earlyHintCount"));
   let image;
   // send different sized images depending whether this is an early hint request

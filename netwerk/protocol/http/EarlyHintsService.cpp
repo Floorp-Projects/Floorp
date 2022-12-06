@@ -29,7 +29,8 @@ EarlyHintsService::EarlyHintsService()
 EarlyHintsService::~EarlyHintsService() = default;
 
 void EarlyHintsService::EarlyHint(const nsACString& aLinkHeader,
-                                  nsIURI* aBaseURI, nsIChannel* aChannel) {
+                                  nsIURI* aBaseURI, nsIChannel* aChannel,
+                                  const nsACString& aReferrerPolicy) {
   mEarlyHintsCount++;
   if (mFirstEarlyHint.isNothing()) {
     mFirstEarlyHint.emplace(TimeStamp::NowLoRes());
@@ -85,7 +86,8 @@ void EarlyHintsService::EarlyHint(const nsACString& aLinkHeader,
   for (auto& linkHeader : linkHeaders) {
     CollectLinkTypeTelemetry(linkHeader.mRel);
     EarlyHintPreloader::MaybeCreateAndInsertPreload(
-        mOngoingEarlyHints, linkHeader, aBaseURI, principal, cookieJarSettings);
+        mOngoingEarlyHints, linkHeader, aBaseURI, principal, cookieJarSettings,
+        aReferrerPolicy);
   }
 }
 

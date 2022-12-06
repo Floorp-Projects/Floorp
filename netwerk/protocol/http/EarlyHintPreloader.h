@@ -80,7 +80,8 @@ class EarlyHintPreloader final : public nsIStreamListener,
   static void MaybeCreateAndInsertPreload(
       OngoingEarlyHints* aOngoingEarlyHints, const LinkHeader& aHeader,
       nsIURI* aBaseURI, nsIPrincipal* aPrincipal,
-      nsICookieJarSettings* aCookieJarSettings);
+      nsICookieJarSettings* aCookieJarSettings,
+      const nsACString& aReferrerPolicy);
 
   // register Channel to EarlyHintRegistrar returns connect arguments
   EarlyHintConnectArgs Register();

@@ -1965,6 +1965,11 @@ nsresult nsHttpTransaction::ParseLineSegment(char* segment, uint32_t len) {
     if (status == 103) {
       nsCString linkHeader;
       nsresult rv = mResponseHead->GetHeader(nsHttp::Link, linkHeader);
+
+      nsCString referrerPolicy;
+      Unused << mResponseHead->GetHeader(nsHttp::Referrer_Policy,
+                                         referrerPolicy);
+
       if (NS_SUCCEEDED(rv) && !linkHeader.IsEmpty()) {
         nsCOMPtr<nsIEarlyHintObserver> earlyHint;
         {
@@ -1975,8 +1980,9 @@ nsresult nsHttpTransaction::ParseLineSegment(char* segment, uint32_t len) {
           DebugOnly<nsresult> rv = NS_DispatchToMainThread(
               NS_NewRunnableFunction(
                   "nsIEarlyHintObserver->EarlyHint",
-                  [obs{std::move(earlyHint)}, header{std::move(linkHeader)}]() {
-                    obs->EarlyHint(header);
+                  [obs{std::move(earlyHint)}, header{std::move(linkHeader)},
+                   referrerPolicy{std::move(referrerPolicy)}]() {
+                    obs->EarlyHint(header, referrerPolicy);
                   }),
               NS_DISPATCH_NORMAL);
           MOZ_ASSERT(NS_SUCCEEDED(rv));
