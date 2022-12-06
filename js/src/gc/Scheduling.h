@@ -407,6 +407,9 @@ static const bool PerZoneGCEnabled = false;
 /* JSGC_COMPACTING_ENABLED */
 static const bool CompactingEnabled = true;
 
+/* JSGC_PARALLEL_MARKING_ENABLED */
+static const bool ParallelMarkingEnabled = false;
+
 /* JSGC_BALANCED_HEAP_LIMITS_ENABLED */
 static const bool BalancedHeapLimitsEnabled = false;
 

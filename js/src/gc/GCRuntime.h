@@ -1213,6 +1213,14 @@ class GCRuntime {
    */
   MainThreadData<bool> compactingEnabled;
 
+  /*
+   * Whether parallel marking is enabled globally.
+   *
+   * JSGC_PARALLEL_MARKING_ENABLED
+   * pref: javascript.options.mem.gc_parallel_marking
+   */
+  MainThreadData<bool> parallelMarkingEnabled;
+
   MainThreadData<bool> rootsRemoved;
 
   /*
