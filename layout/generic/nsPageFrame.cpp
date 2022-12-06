@@ -594,18 +594,20 @@ nsPageContentFrame* nsPageFrame::PageContentFrame() const {
 }
 
 nsSize nsPageFrame::ComputePageSize() const {
-  const nsPageContentFrame* const pcf = PageContentFrame();
-  nsSize size = PresContext()->GetPageSize();
-
   // Compute the expected page-size.
-  const nsStylePage* const stylePage = pcf->StylePage();
-  const StylePageSize& pageSize = stylePage->mSize;
+  const nsPageFrame* const frame =
+      StaticPrefs::layout_css_allow_mixed_page_sizes()
+          ? this
+          : static_cast<nsPageFrame*>(FirstContinuation());
+  const StylePageSize& pageSize = frame->PageContentFrame()->StylePage()->mSize;
 
   if (pageSize.IsSize()) {
     // Use the specified size
     return nsSize{pageSize.AsSize().width.ToAppUnits(),
                   pageSize.AsSize().height.ToAppUnits()};
   }
+
+  nsSize size = PresContext()->GetPageSize();
   if (pageSize.IsOrientation()) {
     // Ensure the correct orientation is applied.
     if (pageSize.AsOrientation() == StylePageSizeOrientation::Portrait) {
@@ -631,8 +633,16 @@ float nsPageFrame::ComputePageSizeScale(const nsSize aContentPageSize) const {
 
   // Check for the simplest case first, an auto page-size which requires no
   // scaling at all.
-  if (PageContentFrame()->StylePage()->mSize.IsAuto()) {
-    return 1.0f;
+  {
+    const nsPageFrame* const frame =
+        StaticPrefs::layout_css_allow_mixed_page_sizes()
+            ? this
+            : static_cast<nsPageFrame*>(FirstContinuation());
+    const StylePageSize& pageSize =
+        frame->PageContentFrame()->StylePage()->mSize;
+    if (pageSize.IsAuto()) {
+      return 1.0f;
+    }
   }
 
   // Compute scaling due to a possible mismatch in the paper size we are
