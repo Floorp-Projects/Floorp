@@ -1956,7 +1956,7 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::getDirectives(
     JSContext* cx, UniquePtr<char16_t[], JS::FreePolicy>* destination) {
   size_t length = charBuffer.length();
 
-  *destination = cx->make_pod_array<char16_t>(length + 1);
+  *destination = ec->getAllocator()->make_pod_array<char16_t>(length + 1);
   if (!*destination) {
     return false;
   }

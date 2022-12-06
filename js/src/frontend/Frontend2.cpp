@@ -658,8 +658,9 @@ bool Smoosh::tryCompileGlobalScriptToExtensibleStencil(
     }
   }
 
-  auto stencil = cx->make_unique<frontend::ExtensibleCompilationStencil>(
-      std::move(compilationState));
+  auto stencil =
+      ec->getAllocator()->make_unique<frontend::ExtensibleCompilationStencil>(
+          std::move(compilationState));
   if (!stencil) {
     return false;
   }
