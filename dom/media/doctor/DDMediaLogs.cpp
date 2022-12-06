@@ -17,7 +17,7 @@ namespace mozilla {
   nsCOMPtr<nsIThread> mThread;
   nsresult rv =
       NS_NewNamedThread("DDMediaLogs", getter_AddRefs(mThread), nullptr,
-                        nsIThreadManager::kThreadPoolStackSize);
+                        {.stackSize = nsIThreadManager::kThreadPoolStackSize});
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return {rv, nullptr};
   }

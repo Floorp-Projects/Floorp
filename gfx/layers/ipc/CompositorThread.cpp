@@ -83,7 +83,7 @@ CompositorThreadHolder::CreateCompositorThread() {
             nsCOMPtr<nsIThread> thread = NS_GetCurrentThread();
             static_cast<nsThread*>(thread.get())->SetUseHangMonitor(true);
           }),
-      stackSize);
+      {.stackSize = stackSize});
 
   if (NS_FAILED(rv)) {
     return nullptr;
