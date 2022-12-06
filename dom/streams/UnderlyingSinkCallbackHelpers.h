@@ -43,6 +43,10 @@ class UnderlyingSinkAlgorithmsBase : public nsISupports {
       JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
       ErrorResult& aRv) = 0;
 
+  // Implement this when you need to release underlying resources immediately
+  // from closed/errored(aborted) streams, without waiting for GC.
+  virtual void ReleaseObjects() {}
+
  protected:
   virtual ~UnderlyingSinkAlgorithmsBase() = default;
 };
