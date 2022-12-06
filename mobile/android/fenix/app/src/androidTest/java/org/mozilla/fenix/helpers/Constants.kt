@@ -18,6 +18,7 @@ object Constants {
     }
 
     const val SPEECH_RECOGNITION = "android.speech.action.RECOGNIZE_SPEECH"
+    const val POCKET_RECOMMENDED_STORIES_UTM_PARAM = "utm_source=pocket-newtab-android"
     const val LONG_CLICK_DURATION: Long = 5000
     const val LISTS_MAXSWIPES: Int = 3
     const val RETRY_COUNT = 3
