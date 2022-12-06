@@ -256,6 +256,9 @@
     <!-- Header text for the search selector menu -->
     <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">ครั้งนี้ค้นหา:</string>
 
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">ครั้งนี้ค้นหาใน:</string>
+
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">พบกับโฮมเพจส่วนบุคคลของคุณ แท็บล่าสุด ที่คั่นหน้า และผลการค้นหาจะปรากฏที่นี่</string>
@@ -330,6 +333,13 @@
     <string name="preferences_add_private_browsing_shortcut">เพิ่มทางลัดการเรียกดูแบบส่วนตัว</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">โหมด HTTPS-Only</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">การลดคุกกี้แบนเนอร์</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">ลดคุกกี้แบนเนอร์</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Firefox จะพยายามปฏิเสธคำขอคุกกี้บนแบนเนอร์คุกกี้โดยอัตโนมัติ หากไม่มีตัวเลือกปฏิเสธ Firefox อาจยอมรับคุกกี้ทั้งหมดเพื่อปิดแบนเนอร์</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">พยายามเชื่อมต่อกับเว็บไซต์โดยใช้โปรโตคอลการเข้ารหัส HTTPS โดยอัตโนมัติเพื่อเพิ่มความปลอดภัย</string>
@@ -1098,6 +1108,12 @@
     <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
     %1$s is a placeholder that will be replaced by the app name (Fenix). -->
     <string name="notification_default_browser_text">ทำให้ %1$s เป็นเบราว์เซอร์เริ่มต้นของคุณ</string>
+
+    <!-- Title shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_title">ลองการท่องเว็บแบบส่วนตัว</string>
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">เรียกดูโดยไม่มีคุกกี้หรือประวัติที่บันทึกไว้ใน %1$s</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->

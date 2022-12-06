@@ -338,6 +338,9 @@
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">Reducer cookie-bannere</string>
 
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Firefox forsøger automatisk at afvise cookie-anmodninger på cookie-bannere. Hvis ingen afvisningsmulighed er tilgængelig, kan Firefox acceptere alle cookies for at lukke banneret.</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Forsøger automatisk at oprette forbindelse til websteder ved hjælp af krypteringsprotokollen HTTPS for øget sikkerhed.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -1100,6 +1103,12 @@
     <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
     %1$s is a placeholder that will be replaced by the app name (Fenix). -->
     <string name="notification_default_browser_text">Gør %1$s til din standard-browser </string>
+
+    <!-- Title shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_title">Prøv privat browsing</string>
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">Surf på nettet uden at cookies eller historik gemmes i %1$s</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
