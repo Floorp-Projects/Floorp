@@ -875,19 +875,18 @@ class TelemetryEvent {
       let { numChars, numWords, searchWords } = this._parseSearchString(
         queryContext.searchString
       );
-      this._recordSearchEngagementTelemetry({
+      this._recordSearchEngagementTelemetry(
         queryContext,
-        startEventInfo: this._startEventInfo,
-        method: "impression",
-        searchWords,
-        numWords,
-        numChars,
-        details: {
+        "impression",
+        this._startEventInfo,
+        {
           reason: "pause",
-          searchString: queryContext.searchString,
+          numChars,
+          numWords,
+          searchWords,
           searchSource,
-        },
-      });
+        }
+      );
 
       this._impressionStartEventInfo = this._startEventInfo;
     }, lazy.UrlbarPrefs.get("searchEngagementTelemetry.pauseImpressionIntervalMs"));
@@ -940,16 +939,22 @@ class TelemetryEvent {
 
     let { queryContext } = this._controller._lastQueryContextWrapper || {};
 
-    this._recordSearchEngagementTelemetry({
+    this._recordSearchEngagementTelemetry(
       queryContext,
-      startEventInfo,
-      action,
       method,
-      numChars,
-      numWords,
-      searchWords,
-      details,
-    });
+      startEventInfo,
+      {
+        action,
+        numChars,
+        numWords,
+        searchWords,
+        provider: details.provider,
+        searchSource: details.searchSource,
+        selectedElement: details.element,
+        selIndex: details.selIndex,
+        selType: details.selType,
+      }
+    );
 
     if (details.selType === "dismiss") {
       // The conventional telemetry dones't support "dismiss" event.
@@ -1016,23 +1021,30 @@ class TelemetryEvent {
     );
   }
 
-  _recordSearchEngagementTelemetry({
+  _recordSearchEngagementTelemetry(
     queryContext,
-    startEventInfo,
-    action,
     method,
-    searchWords,
-    numWords,
-    numChars,
-    details,
-  }) {
+    startEventInfo,
+    {
+      action,
+      numWords,
+      numChars,
+      provider,
+      reason,
+      searchWords,
+      searchSource,
+      selectedElement,
+      selIndex,
+      selType,
+    }
+  ) {
     if (!lazy.UrlbarPrefs.get("searchEngagementTelemetry.enabled")) {
       return;
     }
 
     const browserWindow = this._controller.browserWindow;
     let sap = "urlbar";
-    if (details.searchSource === "urlbar-handoff") {
+    if (searchSource === "urlbar-handoff") {
       sap = "handoff";
     } else if (
       browserWindow.isBlankPageURL(browserWindow.gBrowser.currentURI.spec)
@@ -1048,7 +1060,7 @@ class TelemetryEvent {
         ? "topsite_search"
         : startEventInfo.interactionType;
     if (interaction === "typed") {
-      if (details.searchSource === "urlbar-persisted") {
+      if (searchSource === "urlbar-persisted") {
         interaction = "persisted_search_terms";
       } else if (
         this._isRefined(searchWordsSet, this._previousSearchWordsSet)
@@ -1068,7 +1080,7 @@ class TelemetryEvent {
       .join(",");
 
     if (method === "engagement") {
-      const selectedResult = currentResults[details.selIndex];
+      const selectedResult = currentResults[selIndex];
       Glean.urlbar.engagement.record({
         sap,
         interaction,
@@ -1080,13 +1092,11 @@ class TelemetryEvent {
         ),
         selected_result_subtype: lazy.UrlbarUtils.searchEngagementTelemetrySubtype(
           selectedResult,
-          details.element
+          selectedElement
         ),
-        provider: details.provider,
+        provider,
         engagement_type:
-          details.selType === "help" || details.selType === "dismiss"
-            ? details.selType
-            : action,
+          selType === "help" || selType === "dismiss" ? selType : action,
         groups,
         results,
       });
@@ -1102,7 +1112,7 @@ class TelemetryEvent {
       });
     } else if (method === "impression") {
       Glean.urlbar.impression.record({
-        reason: details.reason,
+        reason,
         sap,
         interaction,
         n_chars: numChars,
