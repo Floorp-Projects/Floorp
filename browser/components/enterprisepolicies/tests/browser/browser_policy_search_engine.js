@@ -89,17 +89,14 @@ add_task(async function test_prevent_install_ui() {
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     let linkContainer = content.document.getElementById("addEnginesBox");
     if (!linkContainer.hidden) {
-      await new Promise(resolve => {
-        let mut = new linkContainer.ownerGlobal.MutationObserver(mutations => {
-          mut.disconnect();
-          resolve();
-        });
-        mut.observe(linkContainer, { attributeFilter: ["hidden"] });
-      });
+      await ContentTaskUtils.waitForMutationCondition(
+        linkContainer,
+        { attributeFilter: ["hidden"] },
+        () => linkContainer.hidden
+      );
     }
-    is(
+    ok(
       linkContainer.hidden,
-      true,
       '"Find more search engines" link should be hidden'
     );
   });
