@@ -15,7 +15,9 @@ root:
                 image: solid-color(255, 0, 0, 255, 24, 24)
                 rect: [0, 0, 24, 24]
                 repeat: false
-            - type: rect
-              color: red
-              bounds: [0, 0, 24, 24]
+            - type: stacking-context
               clip-chain: [2]
+              items:
+              - type: rect
+                color: red
+                bounds: [0, 0, 24, 24]

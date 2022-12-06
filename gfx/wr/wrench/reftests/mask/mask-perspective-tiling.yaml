@@ -17,7 +17,9 @@ root:
                 rect: [0, 0, 35, 35]
                 repeat: false
                 tile-size: 5
-            - type: rect
-              bounds: [0, 0, 95, 88]
-              color: blue
+            - type: stacking-context
               clip-chain: [2]
+              items:
+              - type: rect
+                bounds: [0, 0, 95, 88]
+                color: blue
