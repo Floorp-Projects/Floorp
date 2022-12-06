@@ -61,10 +61,10 @@ Bookmarks.prototype = {
   /**
    * Recursively migrate a Safari collection of bookmarks.
    *
-   * @param aEntries
-   *        the collection's children
-   * @param aCollection
-   *        one of the values above.
+   * @param {object[]} aEntries
+   *   The collection's children
+   * @param {number} aCollection
+   *   One of the _COLLECTION values above.
    */
   async _migrateCollection(aEntries, aCollection) {
     // A collection of bookmarks in Safari resembles places roots.  In the
@@ -285,6 +285,9 @@ History.prototype = {
  * (c) retrieving the home page.
  *
  * So, rather than reading it three times, it's cached and managed here.
+ *
+ * @param {nsIFile} aPreferencesFile
+ *   The .plist file to be read.
  */
 function MainPreferencesPropertyList(aPreferencesFile) {
   this._file = aPreferencesFile;
@@ -293,6 +296,9 @@ function MainPreferencesPropertyList(aPreferencesFile) {
 MainPreferencesPropertyList.prototype = {
   /**
    * @see PropertyListUtils.read
+   * @param {Function} aCallback
+   *   A callback called with an Object representing the key-value pairs
+   *   read out of the .plist file.
    */
   read: function MPPL_read(aCallback) {
     if ("_dict" in this) {

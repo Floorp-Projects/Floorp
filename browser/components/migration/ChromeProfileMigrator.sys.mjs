@@ -35,10 +35,10 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
  * Converts an array of chrome bookmark objects into one our own places code
  * understands.
  *
- * @param   items
- *          bookmark items to be inserted on this parent
- * @param   errorAccumulator
- *          function that gets called with any errors thrown so we don't drop them on the floor.
+ * @param {object[]} items Chrome Bookmark items to be inserted on this parent
+ * @param {Function} errorAccumulator function that gets called with any errors
+ *   thrown so we don't drop them on the floor.
+ * @returns {object[]}
  */
 function convertBookmarks(items, errorAccumulator) {
   let itemsToInsert = [];
@@ -614,8 +614,8 @@ ChromeProfileMigrator.prototype.classID = Components.ID(
 );
 
 /**
- *  Chromium migration
- **/
+ * Chromium migration
+ */
 export function ChromiumProfileMigrator() {
   this._chromeUserDataPathSuffix = "Chromium";
   this._keychainServiceName = "Chromium Safe Storage";
@@ -636,7 +636,7 @@ ChromiumProfileMigrator.prototype.classID = Components.ID(
 /**
  * Chrome Canary
  * Not available on Linux
- **/
+ */
 export function CanaryProfileMigrator() {
   this._chromeUserDataPathSuffix = "Canary";
 }

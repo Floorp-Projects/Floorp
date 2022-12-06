@@ -5,6 +5,7 @@
 "use strict";
 
 module.exports = {
+  extends: ["plugin:mozilla/require-jsdoc", "plugin:mozilla/valid-jsdoc"],
   rules: {
     "block-scoped-var": "error",
     complexity: ["error", { max: 22 }],

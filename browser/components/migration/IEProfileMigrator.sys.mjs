@@ -151,6 +151,7 @@ IE7FormPasswords.prototype = {
 
   /**
    * Migrate the logins that were saved for the uris arguments.
+   *
    * @param {nsIURI[]} uris - the uris that are going to be migrated.
    */
   async _migrateURIs(uris) {
@@ -251,9 +252,10 @@ IE7FormPasswords.prototype = {
 
   /**
    * Extract the details of one or more logins from the raw decrypted data.
+   *
    * @param {string} data - the decrypted data containing raw information.
    * @param {nsURI} uri - the nsURI of page where the login has occur.
-   * @returns {Object[]} array of objects where each of them contains the username, password, URL,
+   * @returns {object[]} array of objects where each of them contains the username, password, URL,
    * and creation time representing all the logins found in the data arguments.
    */
   _extractDetails(data, uri) {
