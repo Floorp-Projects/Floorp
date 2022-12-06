@@ -43,7 +43,7 @@ namespace mozilla::dom {
 NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableByteStreamController)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ReadableByteStreamController,
                                                 ReadableStreamController)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mByobRequest, mAlgorithms, mStream)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mByobRequest, mStream)
   tmp->ClearPendingPullIntos();
   tmp->ClearQueue();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
@@ -51,7 +51,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ReadableByteStreamController,
                                                   ReadableStreamController)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mByobRequest, mAlgorithms, mStream)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mByobRequest, mStream)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ReadableByteStreamController,
@@ -228,7 +228,7 @@ void ReadableByteStreamControllerClearAlgorithms(
     ReadableByteStreamController* aController) {
   // Step 1. Set controller.[[pullAlgorithm]] to undefined.
   // Step 2. Set controller.[[cancelAlgorithm]] to undefined.
-  aController->SetAlgorithms(nullptr);
+  aController->ClearAlgorithms();
 }
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-error
@@ -1874,7 +1874,7 @@ void SetUpReadableByteStreamController(
 
   // Step 9. Set controller.[[pullAlgorithm]] to pullAlgorithm.
   // Step 10. Set controller.[[cancelAlgorithm]] to cancelAlgorithm.
-  aController->SetAlgorithms(aAlgorithms);
+  aController->SetAlgorithms(*aAlgorithms);
 
   // Step 11. Set controller.[[autoAllocateChunkSize]] to autoAllocateChunkSize.
   aController->SetAutoAllocateChunkSize(aAutoAllocateChunkSize);
