@@ -811,7 +811,10 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     }
 
     private fun updateQrButton(searchFragmentState: SearchFragmentState) {
-        when (searchFragmentState.searchEngineSource.searchEngine == searchFragmentState.defaultEngine) {
+        val searchEngine = searchFragmentState.searchEngineSource.searchEngine
+        when (
+            searchEngine?.isGeneral == true || searchEngine?.type == SearchEngine.Type.CUSTOM
+        ) {
             true -> {
                 if (qrButtonAction == null) {
                     qrButtonAction = IncreasedTapAreaActionDecorator(
