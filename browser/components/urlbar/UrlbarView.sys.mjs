@@ -2804,11 +2804,12 @@ class QueryContextCache {
     if (!searchString) {
       // Cache the context if it's the top-sites context. An empty search string
       // doesn't necessarily imply top sites since there are other queries that
-      // use it too, like search mode. If the first result is from the top-sites
+      // use it too, like search mode. If any result is from the top-sites
       // provider, assume the context is top sites.
       if (
-        queryContext.results?.[0]?.providerName ==
-        lazy.UrlbarProviderTopSites.name
+        queryContext.results?.some(
+          r => r.providerName == lazy.UrlbarProviderTopSites.name
+        )
       ) {
         this.#topSitesContext = queryContext;
       }

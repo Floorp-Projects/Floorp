@@ -6,6 +6,12 @@
 
 "use strict";
 
+const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.sys.mjs",
+});
+
 const TEST_URLS = [];
 const TEST_URLS_COUNT = 5;
 const TOP_SITES_VISIT_COUNT = 5;
@@ -174,6 +180,68 @@ add_task(async function topSites_changed() {
   });
 });
 
+add_task(async function topSites_nonTopSitesResults() {
+  await withNewBrowserWindow(async win => {
+    // Open the view to show top sites and then close it.
+    await openViewAndAssertCached({ win, cached: false });
+
+    // Add a provider that returns a result with a suggested index of zero so
+    // that the first result in the view is not from the top-sites provider.
+    let suggestedIndexURL = "https://example.com/suggested-index-0";
+    let provider = new UrlbarTestUtils.TestProvider({
+      priority: lazy.UrlbarProviderTopSites.PRIORITY,
+      results: [
+        Object.assign(
+          new UrlbarResult(
+            UrlbarUtils.RESULT_TYPE.URL,
+            UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+            {
+              url: suggestedIndexURL,
+            }
+          ),
+          { suggestedIndex: 0 }
+        ),
+      ],
+    });
+    UrlbarProvidersManager.registerProvider(provider);
+
+    // Open the view. It should open synchronously and the cached top-sites
+    // context should be used. The suggested-index result should not be
+    // immediately present in the view since it's not in the cached context.
+    await openViewAndAssertCached({ win, cached: true, keepOpen: true });
+
+    // After the search has finished, the suggested-index result should be in
+    // the first row. The search's context should become the newly cached
+    // top-sites context and it should include the suggested-index result.
+    Assert.equal(
+      UrlbarTestUtils.getResultCount(win),
+      TEST_URLS.length + 1,
+      "Should be one more result after search finishes"
+    );
+    let details = await UrlbarTestUtils.getDetailsOfResultAt(win, 0);
+    Assert.equal(
+      details.url,
+      suggestedIndexURL,
+      "First result after search finishes should be the suggested index result"
+    );
+
+    // At this point, the search's context should have become the newly cached
+    // top-sites context and it should include the suggested-index result.
+
+    await UrlbarTestUtils.promisePopupClose(win);
+
+    // Open the view again. It should open synchronously and the new cached
+    // top-sites context with the suggested-index URL should be used.
+    await openViewAndAssertCached({
+      win,
+      cached: true,
+      urls: [suggestedIndexURL, ...TEST_URLS],
+    });
+
+    UrlbarProvidersManager.unregisterProvider(provider);
+  });
+});
+
 add_task(async function topSites_disabled_1() {
   await withNewBrowserWindow(async win => {
     // Open the view to show top sites and then close it.
@@ -294,6 +362,8 @@ add_task(async function evict() {
  * @param {boolean} [options.ignoreOrder]
  *   Whether to treat `urls` as an unordered set instead of an array. When true,
  *   the order of results is ignored.
+ * @param {boolean} [options.keepOpen]
+ *   Whether to keep the view open when the function returns.
  */
 async function openViewAndAssertCached({
   win,
@@ -302,6 +372,7 @@ async function openViewAndAssertCached({
   searchString = "",
   urls = TEST_URLS,
   ignoreOrder = false,
+  keepOpen = false,
 }) {
   let cache = win.gURLBar.view.queryContextCache;
   let getContext = () =>
@@ -345,36 +416,46 @@ async function openViewAndAssertCached({
       startIndex++;
       resultCount++;
     }
-    Assert.equal(
-      UrlbarTestUtils.getResultCount(win),
-      resultCount,
-      "View has expected result count"
-    );
-    for (let i = 0; i < urls.length; i++) {
-      let details = await UrlbarTestUtils.getDetailsOfResultAt(
-        win,
-        i + startIndex
+
+    // In all the checks below, check the rows container directly instead of
+    // relying on `UrlbarTestUtils` functions that wait for the search to
+    // finish. Here we're specifically checking cached results that should be
+    // used before the search finishes.
+    let rows = UrlbarTestUtils.getResultsContainer(win).children;
+    Assert.equal(rows.length, resultCount, "View has expected row count");
+
+    // Check the search heuristic row.
+    if (searchString) {
+      let result = rows[0].result;
+      Assert.ok(result.heuristic, "First row should be a heuristic");
+      Assert.equal(
+        result.payload.query,
+        searchString,
+        "First row's query should be the search string"
       );
-      if (!ignoreOrder) {
-        Assert.equal(
-          details.url,
-          urls[i],
-          `Result at index ${i} has expected URL`
-        );
-      } else {
-        Assert.ok(
-          urls.includes(details.url),
-          `Result URL at index ${i} is in expected URLs: ` + details.url
-        );
-      }
     }
+
+    // Check the URL rows.
+    let actualURLs = [];
+    let urlRows = Array.from(rows).slice(startIndex);
+    for (let row of urlRows) {
+      actualURLs.push(row.result.payload.url);
+    }
+    if (ignoreOrder) {
+      urls.sort();
+      actualURLs.sort();
+    }
+    Assert.deepEqual(actualURLs, urls, "View should contain the expected URLs");
   }
 
-  // We await `lastQueryContextPromise` instead of the promise returned from
+  // Now wait for the search to finish before returning. We await
+  // `lastQueryContextPromise` instead of the promise returned from
   // `UrlbarTestUtils.promiseSearchComplete()` because the latter assumes the
   // view will open, which isn't the case for every task here.
   await win.gURLBar.lastQueryContextPromise;
-  await UrlbarTestUtils.promisePopupClose(win);
+  if (!keepOpen) {
+    await UrlbarTestUtils.promisePopupClose(win);
+  }
 }
 
 /**
