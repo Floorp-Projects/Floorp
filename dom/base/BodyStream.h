@@ -140,7 +140,7 @@ class BodyStream final : public nsIInputStreamCallback,
 
   void ErrorPropagation(JSContext* aCx,
                         const MutexSingleWriterAutoLock& aProofOfLock,
-                        ReadableStream* aStream, nsresult aRv)
+                        ReadableStream* aStream, nsresult aError)
       MOZ_REQUIRES(mMutex);
 
   // TODO: convert this to MOZ_CAN_RUN_SCRIPT (bug 1750605)

@@ -24,6 +24,7 @@
 #include "nsStreamUtils.h"
 
 #include <cstdint>
+#include <utility>
 
 namespace mozilla::dom {
 
@@ -64,7 +65,7 @@ class BodyStream::WorkerShutdown final : public WorkerControlRunnable {
  public:
   WorkerShutdown(WorkerPrivate* aWorkerPrivate, RefPtr<BodyStream> aStream)
       : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
-        mStream(aStream) {}
+        mStream(std::move(aStream)) {}
 
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
     mStream->ReleaseObjects();
@@ -223,10 +224,10 @@ already_AddRefed<Promise> BodyStream::PullCallback(
 
 void BodyStream::WriteIntoReadRequestBuffer(JSContext* aCx,
                                             ReadableStream* aStream,
-                                            JS::Handle<JSObject*> aChunk,
+                                            JS::Handle<JSObject*> aBuffer,
                                             uint32_t aLength,
                                             uint32_t* aByteWritten) {
-  MOZ_DIAGNOSTIC_ASSERT(aChunk);
+  MOZ_DIAGNOSTIC_ASSERT(aBuffer);
   MOZ_DIAGNOSTIC_ASSERT(aByteWritten);
 
   AssertIsOnOwningThread();
@@ -251,7 +252,7 @@ void BodyStream::WriteIntoReadRequestBuffer(JSContext* aCx,
     JS::AutoCheckCannotGC noGC;
     bool isSharedMemory;
 
-    buffer = JS_GetArrayBufferViewData(aChunk, &isSharedMemory, noGC);
+    buffer = JS_GetArrayBufferViewData(aBuffer, &isSharedMemory, noGC);
     MOZ_ASSERT(!isSharedMemory);
 
     rv = mInputStream->Read(static_cast<char*>(buffer), aLength, &written);
