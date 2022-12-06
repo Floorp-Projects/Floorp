@@ -189,10 +189,9 @@ export const TabsSetupFlowManager = new (class {
       "network-offline": !this.networkIsOnline,
       "fxa-admin-disabled": Services.prefs.prefIsLocked(FXA_ENABLED),
       "password-locked": this.isPrimaryPasswordLocked,
-      "sync-disconnected":
-        !this.syncIsConnected ||
-        (this.syncIsConnected &&
-          lazy.UIState.get().status === lazy.UIState.STATUS_LOGIN_FAILED),
+      "signed-out":
+        lazy.UIState.get().status === lazy.UIState.STATUS_LOGIN_FAILED,
+      "sync-disconnected": !this.syncIsConnected,
       "sync-error": !this.syncIsWorking && !this.syncHasWorked,
     };
 

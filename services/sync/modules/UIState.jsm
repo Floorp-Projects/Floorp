@@ -196,7 +196,7 @@ const UIStateInternal = {
   },
 
   _setLastSyncTime(state) {
-    if (state.status == UIState.STATUS_SIGNED_IN) {
+    if (state?.status == UIState.STATUS_SIGNED_IN) {
       const lastSync = Services.prefs.getCharPref(
         "services.sync.lastSync",
         null

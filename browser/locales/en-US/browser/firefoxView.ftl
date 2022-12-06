@@ -61,6 +61,10 @@ firefoxview-tabpickup-password-locked-description = To grab your tabs, you’ll 
 firefoxview-tabpickup-password-locked-link = Learn more
 firefoxview-tabpickup-password-locked-primarybutton = Enter Primary Password
 
+firefoxview-tabpickup-signed-out-header = Sign in to reconnect
+firefoxview-tabpickup-signed-out-description = To reconnect and grab your tabs, sign in to your { -fxaccount-brand-name }.
+firefoxview-tabpickup-signed-out-primarybutton = Sign in
+
 firefoxview-tabpickup-syncing = Sit tight while your tabs sync. It’ll be just a moment.
 
 firefoxview-mobile-promo-header = Grab tabs from your phone or tablet

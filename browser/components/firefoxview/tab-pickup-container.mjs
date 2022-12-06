@@ -62,6 +62,7 @@ class TabPickupContainer extends HTMLDetailsElement {
           TabsSetupFlowManager.tryToClearError();
           break;
         }
+        case "view0-signed-out-action":
         case "view1-primary-action": {
           TabsSetupFlowManager.openFxASignup(event.target.ownerGlobal);
           break;
@@ -217,6 +218,11 @@ class TabPickupContainer extends HTMLDetailsElement {
             Services.urlFormatter.formatURLPref("app.support.baseURL") +
             "primary-password-stored-logins",
         },
+      },
+      "signed-out": {
+        header: "firefoxview-tabpickup-signed-out-header",
+        description: "firefoxview-tabpickup-signed-out-description",
+        buttonLabel: "firefoxview-tabpickup-signed-out-primarybutton",
       },
     };
 
