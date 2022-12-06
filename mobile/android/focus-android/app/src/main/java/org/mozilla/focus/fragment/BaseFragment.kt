@@ -9,8 +9,11 @@ import android.view.animation.Animation
 import android.view.animation.AnimationSet
 import android.view.animation.AnimationUtils
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.view.isInvisible
 import androidx.fragment.app.Fragment
 import org.mozilla.focus.ext.hideToolbar
+import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.state.Screen
 
 abstract class BaseFragment : Fragment() {
     private var animationSet: AnimationSet? = null
@@ -18,6 +21,7 @@ abstract class BaseFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         hideToolbar()
+        view?.isInvisible = requireComponents.appStore.state.screen == Screen.Locked()
     }
 
     fun cancelAnimation() {
@@ -25,6 +29,11 @@ abstract class BaseFragment : Fragment() {
             animationSet!!.duration = 0
             animationSet!!.cancel()
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        view?.isInvisible = requireComponents.appStore.state.screen == Screen.Locked()
     }
 
     @Suppress("SwallowedException")
