@@ -81,6 +81,13 @@ MARKUPMAP(
 MARKUPMAP(
     mtd_,
     [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
+      // If the mtd element in a MathML table has a display style other than
+      // 'table', create a generic table cell accessible, since there's no
+      // underlying table layout.
+      if (!aContext->IsHTMLTableRow() || !aElement->GetPrimaryFrame() ||
+          aElement->GetPrimaryFrame()->AccessibleType() != eHTMLTableCellType) {
+        return new ARIAGridCellAccessible(aElement, aContext->Document());
+      }
       return new HTMLTableCellAccessible(aElement, aContext->Document());
     },
     roles::MATHML_CELL)
