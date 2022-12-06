@@ -65,7 +65,7 @@ class NavigationToolbarRobot {
         readerViewToggle().click()
     }
 
-    fun verifyClipboardSuggestionsAreDisplayed(link: String, shouldBeDisplayed: Boolean) {
+    fun verifyClipboardSuggestionsAreDisplayed(link: String = "", shouldBeDisplayed: Boolean) {
         when (shouldBeDisplayed) {
             true -> {
                 assertTrue(

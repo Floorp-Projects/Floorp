@@ -187,7 +187,6 @@ class SearchRobot {
         onView(withContentDescription(expectedText))
     }
     fun verifyDefaultSearchEngine(expectedText: String) = assertDefaultSearchEngine(expectedText)
-    fun verifyFillLinkButton() = assertFillLinkButton()
 
     fun verifyEnginesListShortcutContains(rule: ComposeTestRule, searchEngineName: String) = assertEngineListShortcutContains(rule, searchEngineName)
 
@@ -533,12 +532,6 @@ private fun assertTranslatedFocusedNavigationToolbar(toolbarHintString: String) 
                 .textContains(toolbarHintString),
         ).waitForExists(waitingTime),
     )
-
-private fun assertFillLinkButton() {
-    mDevice.waitForIdle()
-    onView(withId(R.id.fill_link_from_clipboard))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.GONE)))
-}
 
 private val awesomeBar =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_edit_url_view"))

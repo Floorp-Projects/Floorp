@@ -135,7 +135,6 @@ class ContextMenusTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(pageLinks.url) {
-            mDevice.waitForIdle()
             longClickMatchingText("Link 3")
             verifyLinkContextMenuItems(genericURL.url)
             clickContextCopyLink()
@@ -145,7 +144,9 @@ class ContextMenusTest {
             verifyUrl(genericURL.url.toString())
         }.openTabDrawer {
         }.openNewTab {
-            verifyFillLinkButton()
+        }
+        navigationToolbar {
+            verifyClipboardSuggestionsAreDisplayed(shouldBeDisplayed = false)
         }
     }
 
