@@ -53,7 +53,7 @@ const uint32_t max_chunks = 30; /* ms */
 const uint32_t chunk_increment = 10;
 #endif
 
-// #define DUMP_ARRAYS
+#define DUMP_ARRAYS
 #ifdef DUMP_ARRAYS
 /**
  * Files produced by dump(...) can be converted to .wave files using:
@@ -1084,6 +1084,3 @@ TEST(cubeb, individual_methods) {
   ASSERT_EQ(frames_needed2, 0u);
 }
 
-
-#undef NOMINMAX
-#undef DUMP_ARRAYS
