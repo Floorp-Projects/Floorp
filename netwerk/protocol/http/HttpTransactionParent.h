@@ -74,7 +74,8 @@ class HttpTransactionParent final : public PHttpTransactionParent,
   mozilla::ipc::IPCResult RecvOnH2PushStream(const uint32_t& aPushedStreamId,
                                              const nsCString& aResourceUrl,
                                              const nsCString& aRequestString);
-  mozilla::ipc::IPCResult RecvEarlyHint(const nsCString& aValue);
+  mozilla::ipc::IPCResult RecvEarlyHint(const nsCString& aValue,
+                                        const nsACString& aReferrerPolicy);
 
   virtual mozilla::TimeStamp GetPendingTime() override;
 

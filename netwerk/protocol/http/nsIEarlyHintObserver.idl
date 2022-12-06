@@ -5,6 +5,8 @@
 
 #include "nsISupports.idl"
 
+native ReferrerPolicy(mozilla::dom::ReferrerPolicy);
+
 [scriptable, uuid(97b6be6f-283c-45dd-81a7-4bb2d87d42f8)]
 interface nsIEarlyHintObserver : nsISupports
 {
@@ -12,5 +14,5 @@ interface nsIEarlyHintObserver : nsISupports
    * This method is called when the transaction has early hint (i.e. the
    * '103 Early Hint' informational response) headers.
    */
-  void earlyHint(in ACString linkHeader);
+  void earlyHint(in ACString linkHeader, in ACString referrerPolicy);
 };

@@ -2912,9 +2912,11 @@ NS_IMETHODIMP DocumentLoadListener::OnStatus(nsIRequest* aRequest,
   return NS_OK;
 }
 
-NS_IMETHODIMP DocumentLoadListener::EarlyHint(const nsACString& linkHeader) {
+NS_IMETHODIMP DocumentLoadListener::EarlyHint(
+    const nsACString& aLinkHeader, const nsACString& aReferrerPolicy) {
   LOG(("DocumentLoadListener::EarlyHint.\n"));
-  mEarlyHintsService.EarlyHint(linkHeader, GetChannelCreationURI(), mChannel);
+  mEarlyHintsService.EarlyHint(aLinkHeader, GetChannelCreationURI(), mChannel,
+                               aReferrerPolicy);
   return NS_OK;
 }
 
