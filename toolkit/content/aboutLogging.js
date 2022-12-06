@@ -97,6 +97,14 @@ const gLoggingSettings = {
   profilerThreads: null,
 };
 
+function presets() {
+  return gLoggingPresets;
+}
+
+function settings() {
+  return gLoggingSettings;
+}
+
 function populatePresets() {
   let dropdown = $("#logging-preset-dropdown");
   for (let presetName in gLoggingPresets) {
