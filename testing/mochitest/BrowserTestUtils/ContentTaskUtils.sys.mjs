@@ -159,6 +159,36 @@ export var ContentTaskUtils = {
   },
 
   /**
+   * Wait until DOM mutations cause the condition expressed in checkFn to pass.
+   * Intended as an easy-to-use alternative to waitForCondition.
+   *
+   * @param {Element} subject
+   *        The element on which to observe mutations.
+   * @param {Object} options
+   *        The options to pass to MutationObserver.observe();
+   * @param {function} checkFn [optional]
+   *        Function that returns true when it wants the promise to be resolved.
+   *        If not specified, the first mutation will resolve the promise.
+   *
+   * @returns {Promise<void>}
+   */
+  waitForMutationCondition(subject, options, checkFn) {
+    if (checkFn?.()) {
+      return Promise.resolve();
+    }
+    return new Promise(resolve => {
+      let obs = new subject.ownerGlobal.MutationObserver(function() {
+        if (checkFn && !checkFn()) {
+          return;
+        }
+        obs.disconnect();
+        resolve();
+      });
+      obs.observe(subject, options);
+    });
+  },
+
+  /**
    * Gets an instance of the `EventUtils` helper module for usage in
    * content tasks. See https://searchfox.org/mozilla-central/source/testing/mochitest/tests/SimpleTest/EventUtils.js
    *

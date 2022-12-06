@@ -52,19 +52,12 @@ add_task(async function() {
           "#newtab-search-text",
         ]);
 
-        await new Promise(resolve => {
-          let observer = new content.MutationObserver(() => {
-            if (input.getAttribute("aria-expanded") == "true") {
-              observer.disconnect();
-              ok(!table.hidden, "Search suggestion table unhidden");
-              resolve();
-            }
-          });
-          observer.observe(input, {
-            attributes: true,
-            attributeFilter: ["aria-expanded"],
-          });
-        });
+        await ContentTaskUtils.waitForMutationCondition(
+          input,
+          { attributeFilter: ["aria-expanded"] },
+          () => input.getAttribute("aria-expanded") == "true"
+        );
+        ok(!table.hidden, "Search suggestion table unhidden");
 
         let row = table.children[1];
         row.setAttribute("id", "TEMPID");
