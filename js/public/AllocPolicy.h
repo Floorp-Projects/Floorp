@@ -106,7 +106,25 @@ MOZ_COLD JS_PUBLIC_API void ReportOutOfMemory(ErrorContext* ec);
  * not the system ones.
  */
 class JS_PUBLIC_API TempAllocPolicy : public AllocPolicyBase {
-  JSContext* const cx_;
+  // Type tag for context_bits_
+  static constexpr uintptr_t JsContextTag = 0x1;
+
+  // Either a JSContext* (if JsContextTag is set), or ErrorContext*
+  uintptr_t const context_bits_;
+
+  MOZ_ALWAYS_INLINE bool hasJSContext() const {
+    return (context_bits_ & JsContextTag) == JsContextTag;
+  }
+
+  MOZ_ALWAYS_INLINE JSContext* cx() const {
+    MOZ_ASSERT(hasJSContext());
+    return reinterpret_cast<JSContext*>(context_bits_ ^ JsContextTag);
+  }
+
+  MOZ_ALWAYS_INLINE ErrorContext* ec() const {
+    MOZ_ASSERT(!hasJSContext());
+    return reinterpret_cast<ErrorContext*>(context_bits_);
+  }
 
   /*
    * Non-inline helper to call JSRuntime::onOutOfMemory with minimal
@@ -127,7 +145,14 @@ class JS_PUBLIC_API TempAllocPolicy : public AllocPolicyBase {
   }
 
  public:
-  MOZ_IMPLICIT TempAllocPolicy(JSContext* cx) : cx_(cx) {}
+  MOZ_IMPLICIT TempAllocPolicy(JSContext* cx)
+      : context_bits_(uintptr_t(cx) | JsContextTag) {
+    MOZ_ASSERT((uintptr_t(cx) & JsContextTag) == 0);
+  }
+  MOZ_IMPLICIT TempAllocPolicy(ErrorContext* ec)
+      : context_bits_(uintptr_t(ec)) {
+    MOZ_ASSERT((uintptr_t(ec) & JsContextTag) == 0);
+  }
 
   template <typename T>
   T* pod_arena_malloc(arena_id_t arenaId, size_t numElems) {
@@ -182,7 +207,11 @@ class JS_PUBLIC_API TempAllocPolicy : public AllocPolicyBase {
 
   bool checkSimulatedOOM() const {
     if (js::oom::ShouldFailWithOOM()) {
-      ReportOutOfMemory(cx_);
+      if (hasJSContext()) {
+        ReportOutOfMemory(cx());
+      } else {
+        ReportOutOfMemory(ec());
+      }
       return false;
     }
 
