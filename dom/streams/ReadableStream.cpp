@@ -70,11 +70,9 @@ inline void ImplCycleCollectionUnlink(
 namespace mozilla::dom {
 
 // Only needed for refcounted objects.
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WITH_JS_MEMBERS(ReadableStream,
-                                                      (mGlobal, mController,
-                                                       mReader, mAlgorithms,
-                                                       mNativeUnderlyingSource),
-                                                      (mStoredError))
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WITH_JS_MEMBERS(
+    ReadableStream, (mGlobal, mController, mReader, mNativeUnderlyingSource),
+    (mStoredError))
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ReadableStream)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ReadableStream)
@@ -145,8 +143,6 @@ void ReadableStream::SetNativeUnderlyingSource(
 
 void ReadableStream::ReleaseObjects() {
   SetNativeUnderlyingSource(nullptr);
-
-  SetErrorAlgorithm(nullptr);
 
   if (mController->IsByte()) {
     ReadableByteStreamControllerClearAlgorithms(mController->AsByte());
@@ -609,12 +605,6 @@ void ReadableStreamError(JSContext* aCx, ReadableStream* aStream,
     if (aRv.Failed()) {
       return;
     }
-  }
-
-  // Not in Specification: Allow notifying native underlying sources that a
-  // stream has been errored.
-  if (UnderlyingSourceAlgorithmsBase* algorithms = aStream->GetAlgorithms()) {
-    algorithms->ErrorCallback();
   }
 }
 
