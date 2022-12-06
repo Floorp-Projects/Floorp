@@ -108,10 +108,13 @@ class AndroidWebAuthnTokenManager final : public U2FTokenTransport {
   explicit AndroidWebAuthnTokenManager();
   ~AndroidWebAuthnTokenManager() {}
 
-  RefPtr<U2FRegisterPromise> Register(const WebAuthnMakeCredentialInfo& aInfo,
-                                      bool aForceNoneAttestation) override;
+  virtual RefPtr<U2FRegisterPromise> Register(
+      const WebAuthnMakeCredentialInfo& aInfo, bool aForceNoneAttestation,
+      void status_callback(rust_ctap2_status_update_res*)) override;
 
-  RefPtr<U2FSignPromise> Sign(const WebAuthnGetAssertionInfo& aInfo) override;
+  virtual RefPtr<U2FSignPromise> Sign(
+      const WebAuthnGetAssertionInfo& aInfo,
+      void status_callback(rust_ctap2_status_update_res*)) override;
 
   void Cancel() override;
 

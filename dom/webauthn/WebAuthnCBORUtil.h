@@ -27,5 +27,4 @@ nsresult CBOREncodeNoneAttestationObj(const CryptoBuffer& aAuthDataBuf,
                                       /* out */ CryptoBuffer& aAttestationObj);
 
 }  // namespace mozilla::dom
-
 #endif  // mozilla_dom_WebAuthnCBORUtil_h
