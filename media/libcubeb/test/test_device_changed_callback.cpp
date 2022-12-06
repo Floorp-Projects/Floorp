@@ -107,3 +107,10 @@ TEST(cubeb, device_changed_callbacks)
 
   cubeb_stream_destroy(stream);
 }
+
+#undef SAMPLE_FREQUENCY
+#undef STREAM_FORMAT
+#undef INPUT_CHANNELS
+#undef INPUT_LAYOUT
+#undef OUTPUT_CHANNELS
+#undef OUTPUT_LAYOUT

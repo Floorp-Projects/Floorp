@@ -225,3 +225,5 @@ TEST(cubeb, ring_buffer)
 
   test_reset_api();
 }
+
+#undef NOMINMAX
