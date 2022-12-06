@@ -72,7 +72,6 @@ pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", fal
 //新しいタブの背景の設定
 pref("browser.newtabpage.activity-stream.floorp.background.type", 1);
 
-pref("floorp.entable.deepl.translate", false);
 pref("floorp.multitab.bottommode", false);
 
 pref("browser.display.statusbar", false);
