@@ -15,7 +15,18 @@ add_task(async function tipIsSecondResult() {
       UrlbarUtils.RESULT_SOURCE.HISTORY,
       { url: "http://mozilla.org/a" }
     ),
-    makeTipResult({ buttonUrl: TIP_URL, helpUrl: HELP_URL }),
+    new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.TIP,
+      UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+      {
+        icon: "",
+        text: "This is a test intervention.",
+        buttonText: "Done",
+        type: "test",
+        helpUrl: HELP_URL,
+        buttonUrl: TIP_URL,
+      }
+    ),
   ];
 
   let provider = new UrlbarTestUtils.TestProvider({ results, priority: 1 });
@@ -48,7 +59,7 @@ add_task(async function tipIsSecondResult() {
   EventUtils.synthesizeKey("KEY_ArrowDown");
   Assert.ok(
     UrlbarTestUtils.getSelectedElement(window).classList.contains(
-      "urlbarView-button-0"
+      "urlbarView-tip-button"
     ),
     "The selected element should be the tip button."
   );
@@ -111,7 +122,20 @@ add_task(async function tipIsSecondResult() {
 });
 
 add_task(async function tipIsOnlyResult() {
-  let results = [makeTipResult({ buttonUrl: TIP_URL, helpUrl: HELP_URL })];
+  let results = [
+    new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.TIP,
+      UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+      {
+        icon: "",
+        text: "This is a test intervention.",
+        buttonText: "Done",
+        type: "test",
+        helpUrl:
+          "https://support.mozilla.org/en-US/kb/delete-browsing-search-download-history-firefox",
+      }
+    ),
+  ];
 
   let provider = new UrlbarTestUtils.TestProvider({ results, priority: 1 });
   UrlbarProvidersManager.registerProvider(provider);
@@ -136,7 +160,7 @@ add_task(async function tipIsOnlyResult() {
   EventUtils.synthesizeKey("KEY_ArrowDown");
   Assert.ok(
     UrlbarTestUtils.getSelectedElement(window).classList.contains(
-      "urlbarView-button-0"
+      "urlbarView-tip-button"
     ),
     "The selected element should be the tip button."
   );
@@ -185,7 +209,16 @@ add_task(async function tipHasNoHelpButton() {
       UrlbarUtils.RESULT_SOURCE.HISTORY,
       { url: "http://mozilla.org/a" }
     ),
-    makeTipResult({ buttonUrl: TIP_URL }),
+    new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.TIP,
+      UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+      {
+        icon: "",
+        text: "This is a test intervention.",
+        buttonText: "Done",
+        type: "test",
+      }
+    ),
   ];
 
   let provider = new UrlbarTestUtils.TestProvider({ results, priority: 1 });
@@ -218,7 +251,7 @@ add_task(async function tipHasNoHelpButton() {
   EventUtils.synthesizeKey("KEY_ArrowDown");
   Assert.ok(
     UrlbarTestUtils.getSelectedElement(window).classList.contains(
-      "urlbarView-button-0"
+      "urlbarView-tip-button"
     ),
     "The selected element should be the tip button."
   );
@@ -241,7 +274,7 @@ add_task(async function tipHasNoHelpButton() {
   EventUtils.synthesizeKey("KEY_ArrowUp");
   Assert.ok(
     UrlbarTestUtils.getSelectedElement(window).classList.contains(
-      "urlbarView-button-0"
+      "urlbarView-tip-button"
     ),
     "The selected element should be the tip button."
   );

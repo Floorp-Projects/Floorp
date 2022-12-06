@@ -383,48 +383,48 @@ export class QueryScorer {
 }
 
 /**
- * Gets appropriate values for each tip's payload.
+ * Gets appropriate l10n values for each tip's payload.
  *
  * @param {string} tip a value from the TIPS enum
- * @returns {object} Properties to include in the payload
+ * @returns {object} an Object shaped as { textData, buttonTextData, helpUrl }
  */
-function getPayloadForTip(tip) {
-  const baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
+function getL10nPropertiesForTip(tip) {
+  const baseURL = "https://support.mozilla.org/kb/";
   switch (tip) {
     case TIPS.CLEAR:
       return {
-        titleL10n: { id: "intervention-clear-data" },
-        buttons: [{ l10n: { id: "intervention-clear-data-confirm" } }],
+        textData: { id: "intervention-clear-data" },
+        buttonTextData: { id: "intervention-clear-data-confirm" },
         helpUrl: baseURL + "delete-browsing-search-download-history-firefox",
       };
     case TIPS.REFRESH:
       return {
-        titleL10n: { id: "intervention-refresh-profile" },
-        buttons: [{ l10n: { id: "intervention-refresh-profile-confirm" } }],
+        textData: { id: "intervention-refresh-profile" },
+        buttonTextData: { id: "intervention-refresh-profile-confirm" },
         helpUrl: baseURL + "refresh-firefox-reset-add-ons-and-settings",
       };
     case TIPS.UPDATE_ASK:
       return {
-        titleL10n: { id: "intervention-update-ask" },
-        buttons: [{ l10n: { id: "intervention-update-ask-confirm" } }],
+        textData: { id: "intervention-update-ask" },
+        buttonTextData: { id: "intervention-update-ask-confirm" },
         helpUrl: baseURL + "update-firefox-latest-release",
       };
     case TIPS.UPDATE_REFRESH:
       return {
-        titleL10n: { id: "intervention-update-refresh" },
-        buttons: [{ l10n: { id: "intervention-update-refresh-confirm" } }],
+        textData: { id: "intervention-update-refresh" },
+        buttonTextData: { id: "intervention-update-refresh-confirm" },
         helpUrl: baseURL + "refresh-firefox-reset-add-ons-and-settings",
       };
     case TIPS.UPDATE_RESTART:
       return {
-        titleL10n: { id: "intervention-update-restart" },
-        buttons: [{ l10n: { id: "intervention-update-restart-confirm" } }],
+        textData: { id: "intervention-update-restart" },
+        buttonTextData: { id: "intervention-update-restart-confirm" },
         helpUrl: baseURL + "update-firefox-latest-release",
       };
     case TIPS.UPDATE_WEB:
       return {
-        titleL10n: { id: "intervention-update-web" },
-        buttons: [{ l10n: { id: "intervention-update-web-confirm" } }],
+        textData: { id: "intervention-update-web" },
+        buttonTextData: { id: "intervention-update-web-confirm" },
         helpUrl: baseURL + "update-firefox-latest-release",
       };
     default:
@@ -657,14 +657,20 @@ class ProviderInterventions extends UrlbarProvider {
       UrlbarUtils.RESULT_TYPE.TIP,
       UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
       {
-        ...getPayloadForTip(this.currentTip),
         type: this.currentTip,
-        icon: UrlbarUtils.ICON.TIP,
-        helpL10n: { id: "urlbar-tip-help-icon" },
       }
     );
+
     result.suggestedIndex = 1;
+
+    Object.assign(result.payload, getL10nPropertiesForTip(this.currentTip));
+
+    if (instance != this.queryInstance) {
+      return;
+    }
+
     this.tipsShownInCurrentEngagement.add(this.currentTip);
+
     addCallback(this, result);
   }
 

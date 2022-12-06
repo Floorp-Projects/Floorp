@@ -197,16 +197,13 @@ class ProviderSearchTips extends UrlbarProvider {
     this.currentTip = TIPS.NONE;
 
     let defaultEngine = await Services.search.getDefault();
-    if (instance != this.queryInstance) {
-      return;
-    }
 
     let result = new lazy.UrlbarResult(
       UrlbarUtils.RESULT_TYPE.TIP,
       UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
       {
         type: tip,
-        buttons: [{ l10n: { id: "urlbar-search-tips-confirm" } }],
+        buttonTextData: { id: "urlbar-search-tips-confirm" },
         icon: defaultEngine.iconURI?.spec,
       }
     );
@@ -214,7 +211,7 @@ class ProviderSearchTips extends UrlbarProvider {
     switch (tip) {
       case TIPS.ONBOARD:
         result.heuristic = true;
-        result.payload.titleL10n = {
+        result.payload.textData = {
           id: "urlbar-search-tips-onboard",
           args: {
             engineName: defaultEngine.name,
@@ -223,7 +220,7 @@ class ProviderSearchTips extends UrlbarProvider {
         break;
       case TIPS.REDIRECT:
         result.heuristic = false;
-        result.payload.titleL10n = {
+        result.payload.textData = {
           id: "urlbar-search-tips-redirect-2",
           args: {
             engineName: defaultEngine.name,
@@ -232,14 +229,18 @@ class ProviderSearchTips extends UrlbarProvider {
         break;
       case TIPS.PERSIST:
         result.heuristic = true;
-        result.payload.titleL10n = {
+        result.payload.textData = {
           id: "urlbar-search-tips-persist",
         };
         result.payload.icon = UrlbarUtils.ICON.TIP;
-        result.payload.buttons = [
-          { l10n: { id: "urlbar-search-tips-confirm-short" } },
-        ];
+        result.payload.buttonTextData = {
+          id: "urlbar-search-tips-confirm-short",
+        };
         break;
+    }
+
+    if (instance != this.queryInstance) {
+      return;
     }
 
     Services.telemetry.keyedScalarAdd("urlbar.tips", `${tip}-shown`, 1);
