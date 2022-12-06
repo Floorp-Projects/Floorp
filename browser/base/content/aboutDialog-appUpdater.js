@@ -147,6 +147,9 @@ appUpdater.prototype = {
         }
         break;
       }
+      case AppUpdater.STATUS.CHECKING_FAILED:
+        this.selectPanel("checkingFailed");
+        break;
       case AppUpdater.STATUS.NO_UPDATES_FOUND:
         this.checkingForUpdatesDelayPromise.then(() => {
           if (Services.policies.isAllowed("appUpdate")) {
