@@ -84,11 +84,6 @@ class ReadableStream : public nsISupports, public nsWrapperCache {
     mStoredError = aStoredError;
   }
 
-  UnderlyingSourceAlgorithmsBase* GetAlgorithms() const { return mAlgorithms; }
-  void SetErrorAlgorithm(UnderlyingSourceAlgorithmsBase* aAlgorithms) {
-    mAlgorithms = aAlgorithms;
-  }
-
   void SetNativeUnderlyingSource(BodyStreamHolder* aUnderlyingSource);
   BodyStreamHolder* GetNativeUnderlyingSource() {
     return mNativeUnderlyingSource;
@@ -150,9 +145,6 @@ class ReadableStream : public nsISupports, public nsWrapperCache {
   RefPtr<ReadableStreamGenericReader> mReader;
   ReaderState mState = ReaderState::Readable;
   JS::Heap<JS::Value> mStoredError;
-
-  // Optional Callback for erroring a stream.
-  RefPtr<UnderlyingSourceAlgorithmsBase> mAlgorithms;
 
   // Optional strong reference to an Underlying Source; This
   // exists because NativeUnderlyingSource callbacks don't hold
