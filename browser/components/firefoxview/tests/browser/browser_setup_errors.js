@@ -299,13 +299,11 @@ add_task(async function test_password_change_disconnect_error() {
     await BrowserTestUtils.waitForMutationCondition(
       errorStateHeader,
       { childList: true },
-      () => errorStateHeader.textContent.includes("Turn on syncing to continue")
+      () => errorStateHeader.textContent.includes("Sign in to reconnect")
     );
 
     ok(
-      errorStateHeader
-        .getAttribute("data-l10n-id")
-        .includes("sync-disconnected"),
+      errorStateHeader.getAttribute("data-l10n-id").includes("signed-out"),
       "Correct message should show when user has been logged out due to external password change."
     );
   });
