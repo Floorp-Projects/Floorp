@@ -46,6 +46,9 @@ using mozilla::BlackBox;
 using mozilla::fallible;
 using mozilla::IsAscii;
 using mozilla::IsUtf8;
+using mozilla::Maybe;
+using mozilla::Nothing;
+using mozilla::Some;
 using mozilla::Span;
 
 #define TestExample1                                                           \
@@ -1539,102 +1542,134 @@ TEST_F(Strings, huge_capacity) {
   }
 }
 
-static void test_tofloat_helper(const nsString& aStr, float aExpected,
-                                bool aSuccess) {
+static void test_tofloat_helper(const nsString& aStr,
+                                mozilla::Maybe<float> aExpected) {
   nsresult result;
-  EXPECT_EQ(aStr.ToFloat(&result), aExpected);
-  if (aSuccess) {
-    EXPECT_EQ(result, NS_OK);
+  float value = aStr.ToFloat(&result);
+  if (aExpected) {
+    EXPECT_TRUE(NS_SUCCEEDED(result));
+    EXPECT_EQ(value, *aExpected);
   } else {
-    EXPECT_NE(result, NS_OK);
+    EXPECT_TRUE(NS_FAILED(result));
   }
 }
 
 TEST_F(Strings, tofloat) {
-  test_tofloat_helper(u"42"_ns, 42.f, true);
-  test_tofloat_helper(u"42.0"_ns, 42.f, true);
-  test_tofloat_helper(u"-42"_ns, -42.f, true);
-  test_tofloat_helper(u"+42"_ns, 42, true);
-  test_tofloat_helper(u"13.37"_ns, 13.37f, true);
-  test_tofloat_helper(u"1.23456789"_ns, 1.23456789f, true);
-  test_tofloat_helper(u"1.98765432123456"_ns, 1.98765432123456f, true);
-  test_tofloat_helper(u"0"_ns, 0.f, true);
-  test_tofloat_helper(u"1.e5"_ns, 100000, true);
-  test_tofloat_helper(u""_ns, 0.f, false);
-  test_tofloat_helper(u"42foo"_ns, 42.f, false);
-  test_tofloat_helper(u"foo"_ns, 0.f, false);
-  test_tofloat_helper(u"1.5e-"_ns, 1.5f, false);
+  test_tofloat_helper(u"42"_ns, Some(42.f));
+  test_tofloat_helper(u"42.0"_ns, Some(42.f));
+  test_tofloat_helper(u"-42"_ns, Some(-42.f));
+  test_tofloat_helper(u"+42"_ns, Some(42));
+  test_tofloat_helper(u"13.37"_ns, Some(13.37f));
+  test_tofloat_helper(u"1.23456789"_ns, Some(1.23456789f));
+  test_tofloat_helper(u"1.98765432123456"_ns, Some(1.98765432123456f));
+  test_tofloat_helper(u"0"_ns, Some(0.f));
+  test_tofloat_helper(u"1.e5"_ns, Some(100000));
+  test_tofloat_helper(u""_ns, Nothing());
+  test_tofloat_helper(u"42foo"_ns, Nothing());
+  test_tofloat_helper(u"foo"_ns, Nothing());
+  test_tofloat_helper(u"1.5e-"_ns, Nothing());
+
+  // Leading spaces are ignored
+  test_tofloat_helper(u"  \t5"_ns, Some(5.f));
+
+  // Values which are too large generate an error
+  test_tofloat_helper(u"3.402823e38"_ns, Some(3.402823e+38));
+  test_tofloat_helper(u"1e39"_ns, Nothing());
+  test_tofloat_helper(u"-3.402823e38"_ns, Some(-3.402823e+38));
+  test_tofloat_helper(u"-1e39"_ns, Nothing());
+
+  // Values which are too small round to zero
+  test_tofloat_helper(u"1.4013e-45"_ns, Some(1.4013e-45f));
+  test_tofloat_helper(u"1e-46"_ns, Some(0.f));
+  test_tofloat_helper(u"-1.4013e-45"_ns, Some(-1.4013e-45f));
+  test_tofloat_helper(u"-1e-46"_ns, Some(-0.f));
 }
 
 static void test_tofloat_allow_trailing_chars_helper(const nsString& aStr,
-                                                     float aExpected,
-                                                     bool aSuccess) {
+                                                     Maybe<float> aExpected) {
   nsresult result;
-  EXPECT_EQ(aStr.ToFloatAllowTrailingChars(&result), aExpected);
-  if (aSuccess) {
-    EXPECT_EQ(result, NS_OK);
+  float value = aStr.ToFloatAllowTrailingChars(&result);
+  if (aExpected) {
+    EXPECT_TRUE(NS_SUCCEEDED(result));
+    EXPECT_EQ(value, *aExpected);
   } else {
-    EXPECT_NE(result, NS_OK);
+    EXPECT_TRUE(NS_FAILED(result));
   }
 }
 
 TEST_F(Strings, ToFloatAllowTrailingChars) {
-  test_tofloat_allow_trailing_chars_helper(u""_ns, 0.f, false);
-  test_tofloat_allow_trailing_chars_helper(u"foo"_ns, 0.f, false);
-  test_tofloat_allow_trailing_chars_helper(u"42foo"_ns, 42.f, true);
-  test_tofloat_allow_trailing_chars_helper(u"42-5"_ns, 42.f, true);
-  test_tofloat_allow_trailing_chars_helper(u"13.37.8"_ns, 13.37f, true);
-  test_tofloat_allow_trailing_chars_helper(u"1.5e-"_ns, 1.5f, true);
+  test_tofloat_allow_trailing_chars_helper(u""_ns, Nothing());
+  test_tofloat_allow_trailing_chars_helper(u"foo"_ns, Nothing());
+  test_tofloat_allow_trailing_chars_helper(u"42foo"_ns, Some(42.f));
+  test_tofloat_allow_trailing_chars_helper(u"42-5"_ns, Some(42.f));
+  test_tofloat_allow_trailing_chars_helper(u"13.37.8"_ns, Some(13.37f));
+  test_tofloat_allow_trailing_chars_helper(u"1.5e-"_ns, Some(1.5f));
 }
 
-static void test_todouble_helper(const nsString& aStr, double aExpected,
-                                 bool aSuccess) {
+static void test_todouble_helper(const nsString& aStr,
+                                 Maybe<double> aExpected) {
   nsresult result;
-  EXPECT_EQ(aStr.ToDouble(&result), aExpected);
-  if (aSuccess) {
-    EXPECT_EQ(result, NS_OK);
+  double value = aStr.ToDouble(&result);
+  if (aExpected) {
+    EXPECT_TRUE(NS_SUCCEEDED(result));
+    EXPECT_EQ(value, *aExpected);
   } else {
-    EXPECT_NE(result, NS_OK);
+    EXPECT_TRUE(NS_FAILED(result));
   }
 }
 
 TEST_F(Strings, todouble) {
-  test_todouble_helper(u"42"_ns, 42, true);
-  test_todouble_helper(u"42.0"_ns, 42, true);
-  test_todouble_helper(u"-42"_ns, -42, true);
-  test_todouble_helper(u"+42"_ns, 42, true);
-  test_todouble_helper(u"13.37"_ns, 13.37, true);
-  test_todouble_helper(u"1.23456789"_ns, 1.23456789, true);
-  test_todouble_helper(u"1.98765432123456"_ns, 1.98765432123456, true);
-  test_todouble_helper(u"123456789.98765432123456"_ns, 123456789.98765432123456,
-                       true);
-  test_todouble_helper(u"0"_ns, 0, true);
-  test_todouble_helper(u"1.e5"_ns, 100000, true);
-  test_todouble_helper(u""_ns, 0, false);
-  test_todouble_helper(u"42foo"_ns, 42, false);
-  test_todouble_helper(u"foo"_ns, 0, false);
-  test_todouble_helper(u"1.5e-"_ns, 1.5, false);
+  test_todouble_helper(u"42"_ns, Some(42));
+  test_todouble_helper(u"42.0"_ns, Some(42));
+  test_todouble_helper(u"-42"_ns, Some(-42));
+  test_todouble_helper(u"+42"_ns, Some(42));
+  test_todouble_helper(u"13.37"_ns, Some(13.37));
+  test_todouble_helper(u"1.23456789"_ns, Some(1.23456789));
+  test_todouble_helper(u"1.98765432123456"_ns, Some(1.98765432123456));
+  test_todouble_helper(u"123456789.98765432123456"_ns,
+                       Some(123456789.98765432123456));
+  test_todouble_helper(u"0"_ns, Some(0));
+  test_todouble_helper(u"1.e5"_ns, Some(100000));
+  test_todouble_helper(u""_ns, Nothing());
+  test_todouble_helper(u"42foo"_ns, Nothing());
+  test_todouble_helper(u"foo"_ns, Nothing());
+  test_todouble_helper(u"1.5e-"_ns, Nothing());
+
+  // Leading spaces are ignored
+  test_todouble_helper(u"  \t5"_ns, Some(5.));
+
+  // Values which are too large generate an error
+  test_todouble_helper(u"1.797693e+308"_ns, Some(1.797693e+308));
+  test_todouble_helper(u"1e309"_ns, Nothing());
+  test_todouble_helper(u"-1.797693e+308"_ns, Some(-1.797693e+308));
+  test_todouble_helper(u"-1e309"_ns, Nothing());
+
+  // Values which are too small round to zero
+  test_todouble_helper(u"4.940656e-324"_ns, Some(4.940656e-324));
+  test_todouble_helper(u"1e-325"_ns, Some(0.));
+  test_todouble_helper(u"-4.940656e-324"_ns, Some(-4.940656e-324));
+  test_todouble_helper(u"-1e-325"_ns, Some(-0.));
 }
 
 static void test_todouble_allow_trailing_chars_helper(const nsString& aStr,
-                                                      double aExpected,
-                                                      bool aSuccess) {
+                                                      Maybe<double> aExpected) {
   nsresult result;
-  EXPECT_EQ(aStr.ToDoubleAllowTrailingChars(&result), aExpected);
-  if (aSuccess) {
-    EXPECT_EQ(result, NS_OK);
+  double value = aStr.ToDoubleAllowTrailingChars(&result);
+  if (aExpected) {
+    EXPECT_TRUE(NS_SUCCEEDED(result));
+    EXPECT_EQ(value, *aExpected);
   } else {
-    EXPECT_NE(result, NS_OK);
+    EXPECT_TRUE(NS_FAILED(result));
   }
 }
 
 TEST_F(Strings, ToDoubleAllowTrailingChars) {
-  test_todouble_allow_trailing_chars_helper(u""_ns, 0, false);
-  test_todouble_allow_trailing_chars_helper(u"foo"_ns, 0, false);
-  test_todouble_allow_trailing_chars_helper(u"42foo"_ns, 42, true);
-  test_todouble_allow_trailing_chars_helper(u"42-5"_ns, 42, true);
-  test_todouble_allow_trailing_chars_helper(u"13.37.8"_ns, 13.37, true);
-  test_todouble_allow_trailing_chars_helper(u"1.5e-"_ns, 1.5, true);
+  test_todouble_allow_trailing_chars_helper(u""_ns, Nothing());
+  test_todouble_allow_trailing_chars_helper(u"foo"_ns, Nothing());
+  test_todouble_allow_trailing_chars_helper(u"42foo"_ns, Some(42));
+  test_todouble_allow_trailing_chars_helper(u"42-5"_ns, Some(42));
+  test_todouble_allow_trailing_chars_helper(u"13.37.8"_ns, Some(13.37));
+  test_todouble_allow_trailing_chars_helper(u"1.5e-"_ns, Some(1.5));
 }
 
 TEST_F(Strings, Split) {
