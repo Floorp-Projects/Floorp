@@ -170,6 +170,8 @@ add_task(async function modifyHeaders_requestHeaders() {
                 { operation: "remove", header: "c" },
                 // set should be ignored after remove.
                 { operation: "set", header: "c", value: "c-value" },
+                // append should be ignored after remove.
+                { operation: "append", header: "c", value: "c-appended" },
               ],
             },
           },
@@ -179,6 +181,28 @@ add_task(async function modifyHeaders_requestHeaders() {
             action: {
               type: "modifyHeaders",
               requestHeaders: [{ operation: "remove", header: "d" }],
+            },
+          },
+          {
+            id: 5,
+            condition: { urlFilter: "append_twice" },
+            action: {
+              type: "modifyHeaders",
+              requestHeaders: [
+                { operation: "append", header: "e", value: "e-first" },
+                { operation: "append", header: "e", value: "e-second" },
+              ],
+            },
+          },
+          {
+            id: 6,
+            condition: { urlFilter: "set_and_append" },
+            action: {
+              type: "modifyHeaders",
+              requestHeaders: [
+                { operation: "set", header: "f", value: "f-first" },
+                { operation: "append", header: "f", value: "f-second" },
+              ],
             },
           },
         ],
@@ -248,13 +272,54 @@ add_task(async function modifyHeaders_requestHeaders() {
         "should remove header"
       );
 
+      // Tests append_twice rule:
+
+      browser.test.assertDeepEq(
+        { e: "original, e-first, e-second" },
+        await fetchAsJson("http://dummy/echoheaders?append_twice", {
+          headers: { e: "original" },
+        }),
+        "should append headers"
+      );
+      browser.test.assertDeepEq(
+        { e: "e-first, e-second" },
+        await fetchAsJson("http://dummy/echoheaders?append_twice"),
+        "should append headers if there are no existing ones yet"
+      );
+
+      // Tests set_and_append rule:
+
+      browser.test.assertDeepEq(
+        { f: "f-first, f-second" },
+        await fetchAsJson("http://dummy/echoheaders?set_and_append", {
+          headers: { f: "original" },
+        }),
+        "should overwrite and append headers"
+      );
+
       // All rules together:
 
       browser.test.assertDeepEq(
-        { a: "a-first", b: "b-value", extra: "" },
+        {
+          a: "a-first",
+          b: "b-value",
+          e: "olde, e-first, e-second",
+          f: "f-first, f-second",
+          extra: "",
+        },
         await fetchAsJson(
-          "http://dummy/echoheaders?set_twice,set_and_remove,remove_and_set,remove_only",
-          { headers: { a: "olda", b: "oldb", c: "oldc", d: "oldd", extra: "" } }
+          "http://dummy/echoheaders?set_twice,set_and_remove,remove_and_set,remove_only,append_twice,set_and_append",
+          {
+            headers: {
+              a: "olda",
+              b: "oldb",
+              c: "oldc",
+              d: "oldd",
+              e: "olde",
+              f: "oldf",
+              extra: "",
+            },
+          }
         ),
         "modifyHeaders actions from multiple rules should all apply"
       );
@@ -704,6 +769,16 @@ add_task(async function requestHeaders_and_responseHeaders_cookies() {
           },
           {
             id: 3,
+            condition: { resourceTypes, urlFilter: "dnr_set_cookie_to_req" },
+            action: {
+              type: "modifyHeaders",
+              requestHeaders: [
+                { operation: "set", header: "cookie", value: "dnr_req=1" },
+              ],
+            },
+          },
+          {
+            id: 4,
             condition: {
               resourceTypes,
               urlFilter: "dnr_append_cookie_to_req_and_res",
@@ -711,10 +786,9 @@ add_task(async function requestHeaders_and_responseHeaders_cookies() {
             action: {
               type: "modifyHeaders",
               requestHeaders: [
-                // TODO: change "set" to "append" once we explicitly allow
-                // "set" in declarative_net_request.json (we initially omitted
-                // it because Chrome did too).
-                { operation: "set", header: "cookie", value: "dnr_req=1" },
+                // Just for extra coverage, mix upper/lower case.
+                { operation: "append", header: "Cookie", value: "DNR_APP=1" },
+                { operation: "append", header: "cookie", value: "DNR_app=2" },
               ],
               responseHeaders: [
                 {
@@ -726,7 +800,7 @@ add_task(async function requestHeaders_and_responseHeaders_cookies() {
             },
           },
           {
-            id: 4,
+            id: 5,
             condition: {
               resourceTypes,
               urlFilter: "dnr_set_server_cookies_expired",
@@ -748,7 +822,7 @@ add_task(async function requestHeaders_and_responseHeaders_cookies() {
             },
           },
           {
-            id: 5,
+            id: 6,
             condition: {
               resourceTypes,
               urlFilter: "dnr_resp_append_expired_cookie",
@@ -812,10 +886,22 @@ add_task(async function requestHeaders_and_responseHeaders_cookies() {
       // Notably, "dnr_req=1" should be missing from clientSeenCookies, because
       // it is added in the request, so only seen by the server. Only cookies
       // set by Set-Cookie are persisted/seen by the client.
+      clientSeenCookies: "dnr_res=set; food=yummy; second=serving",
+    },
+    await loadPageAndGetCookies("/setcookie?dnr_set_cookie_to_req"),
+    "Cookie req header from DNR, shadows existing client-generated Cookie header"
+  );
+  Assert.deepEqual(
+    {
+      // Cookies from previous request + request-specific cookies from DNR.
+      serverSeenCookies:
+        "DNR_APP=1; DNR_app=2; dnr_res=set; food=yummy; second=serving",
+      // NDR_APP and DNR_app are notably missing. dnr_res was modified by DNR,
+      // because an appended cookie with the same name overwrites existing one.
       clientSeenCookies: "dnr_res=appended; food=yummy; second=serving",
     },
     await loadPageAndGetCookies("/setcookie?dnr_append_cookie_to_req_and_res"),
-    "Cookie req header from DNR; Set-Cookie from server merged with DNR (append Set-Cookie)"
+    "Cookie req header from DNR, merged with existing client cookies; Set-Cookie from server merged with DNR (append Set-Cookie)"
   );
   Assert.deepEqual(
     {

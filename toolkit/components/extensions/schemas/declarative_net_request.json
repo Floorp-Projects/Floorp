@@ -378,13 +378,13 @@
                     },
                     "operation": {
                       "type": "string",
-                      "description": "The operation to be performed on a header. The 'append' operation is not supported for request headers.",
-                      "enum": ["set", "remove"]
+                      "description": "The operation to be performed on a header.",
+                      "enum": ["append", "set", "remove"]
                     },
                     "value": {
                       "type": "string",
                       "optional": true,
-                      "description": "The new value for the header. Must be specified for the 'set' operation."
+                      "description": "The new value for the header. Must be specified for the 'append' and 'set' operations."
                     }
                   }
                 }
