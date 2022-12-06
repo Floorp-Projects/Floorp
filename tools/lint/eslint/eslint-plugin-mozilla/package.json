@@ -20,17 +20,17 @@
   "author": "Mike Ratcliffe",
   "main": "lib/index.js",
   "dependencies": {
-    "@babel/core": "^7.19.1",
+    "@babel/core": "^7.20.5",
     "@babel/eslint-parser": "^7.19.1",
     "eslint-scope": "^7.1.1",
     "eslint-visitor-keys": "^3.3.0",
     "estraverse": "^5.3.0",
     "htmlparser2": "^8.0.1",
-    "multi-ini": "^2.2.0"
+    "multi-ini": "^2.3.2"
   },
   "devDependencies": {
-    "eslint": "8.24.0",
-    "mocha": "10.0.0"
+    "eslint": "8.29.0",
+    "mocha": "10.1.0"
   },
   "peerDependencies": {
     "@microsoft/eslint-plugin-sdl": "github:mozfreddyb/eslint-plugin-sdl#17b22cd527682108af7a1a4edacf69cb7a9b4a06",
