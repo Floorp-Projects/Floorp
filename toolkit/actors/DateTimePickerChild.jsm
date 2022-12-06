@@ -89,6 +89,10 @@ class DateTimePickerChild extends JSWindowActorChild {
   receiveMessage(aMessage) {
     switch (aMessage.name) {
       case "FormDateTime:PickerClosed": {
+        if (!this._inputElement) {
+          return;
+        }
+
         this.close();
         break;
       }

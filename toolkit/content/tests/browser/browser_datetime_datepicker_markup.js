@@ -17,6 +17,40 @@ const MONTH_YEAR = ".month-year",
   SPINNER_MONTH = "#spinner-month",
   SPINNER_YEAR = "#spinner-year";
 
+/**
+ * Helper function to check the value of a Calendar button's specific attribute
+ *
+ * @param {String} attr: The name of the attribute to be tested
+ * @param {String} val: Value that is expected to be assigned to the attribute.
+ * @param {Boolean} presenceOnly: If "true", test only the presence of the attribute
+ */
+async function testCalendarBtnAttribute(attr, val, presenceOnly = false) {
+  let browser = helper.tab.linkedBrowser;
+
+  await SpecialPowers.spawn(
+    browser,
+    [attr, val, presenceOnly],
+    (attr, val, presenceOnly) => {
+      const input = content.document.querySelector("input");
+      const shadowRoot = SpecialPowers.wrap(input).openOrClosedShadowRoot;
+      const calendarBtn = shadowRoot.getElementById("calendar-button");
+
+      if (presenceOnly) {
+        Assert.ok(
+          calendarBtn.hasAttribute(attr),
+          `Calendar button has ${attr} attribute`
+        );
+      } else {
+        Assert.equal(
+          calendarBtn.getAttribute(attr),
+          val,
+          `Calendar button has ${attr} attribute set to ${val}`
+        );
+      }
+    }
+  );
+}
+
 let helper = new DateTimeTestHelper();
 
 registerCleanupFunction(() => {
@@ -325,4 +359,122 @@ add_task(async function test_datepicker_markup_refresh() {
   }
 
   await helper.tearDown();
+});
+
+/**
+ * Test that date input field has a Calendar button with an accessible markup
+ */
+add_task(async function test_calendar_button_markup_date() {
+  info(
+    "Test that type=date input field has a Calendar button with an accessible markup"
+  );
+
+  await helper.openPicker("data:text/html, <input type='date'>");
+  let browser = helper.tab.linkedBrowser;
+
+  Assert.equal(helper.panel.state, "open", "Panel is visible");
+
+  let closed = helper.promisePickerClosed();
+
+  await testCalendarBtnAttribute("aria-expanded", "true");
+  await testCalendarBtnAttribute("aria-label", null, true);
+  await testCalendarBtnAttribute("data-l10n-id", "datetime-calendar");
+
+  await SpecialPowers.spawn(browser, [], () => {
+    const input = content.document.querySelector("input");
+    const shadowRoot = SpecialPowers.wrap(input).openOrClosedShadowRoot;
+    const calendarBtn = shadowRoot.getElementById("calendar-button");
+
+    Assert.equal(calendarBtn.tagName, "BUTTON", "Calendar control is a button");
+    Assert.ok(
+      ContentTaskUtils.is_visible(calendarBtn),
+      "The Calendar button is visible"
+    );
+
+    calendarBtn.click();
+  });
+
+  await closed;
+
+  Assert.equal(
+    helper.panel.state,
+    "closed",
+    "Panel should be closed on click on the Calendar button"
+  );
+
+  await testCalendarBtnAttribute("aria-expanded", "false");
+
+  await helper.tearDown();
+});
+
+/**
+ * Test that datetime-local input field has a Calendar button
+ * with an accessible markup
+ */
+add_task(async function test_calendar_button_markup_datetime() {
+  info(
+    "Test that type=datetime-local input field has a Calendar button with an accessible markup"
+  );
+
+  await helper.openPicker("data:text/html, <input type='datetime-local'>");
+  let browser = helper.tab.linkedBrowser;
+
+  Assert.equal(helper.panel.state, "open", "Panel is visible");
+
+  let closed = helper.promisePickerClosed();
+
+  await testCalendarBtnAttribute("aria-expanded", "true");
+  await testCalendarBtnAttribute("aria-label", null, true);
+  await testCalendarBtnAttribute("data-l10n-id", "datetime-calendar");
+
+  await SpecialPowers.spawn(browser, [], () => {
+    const input = content.document.querySelector("input");
+    const shadowRoot = SpecialPowers.wrap(input).openOrClosedShadowRoot;
+    const calendarBtn = shadowRoot.getElementById("calendar-button");
+
+    Assert.equal(calendarBtn.tagName, "BUTTON", "Calendar control is a button");
+    Assert.ok(
+      ContentTaskUtils.is_visible(calendarBtn),
+      "The Calendar button is visible"
+    );
+
+    calendarBtn.click();
+  });
+
+  await closed;
+
+  Assert.equal(
+    helper.panel.state,
+    "closed",
+    "Panel should be closed on click on the Calendar button"
+  );
+
+  await testCalendarBtnAttribute("aria-expanded", "false");
+
+  await helper.tearDown();
+});
+
+/**
+ * Test that time input field does not include a Calendar button
+ */
+add_task(async function test_calendar_button_markup_time() {
+  info("Test that type=time input field does not include a Calendar button");
+
+  let testTab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "data:text/html, <input type='time'>"
+  );
+
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    const input = content.document.querySelector("input");
+    const shadowRoot = SpecialPowers.wrap(input).openOrClosedShadowRoot;
+    const calendarBtn = shadowRoot.getElementById("calendar-button");
+
+    Assert.ok(
+      ContentTaskUtils.is_hidden(calendarBtn),
+      "The Calendar control within a type=time input field is programmatically hidden"
+    );
+  });
+
+  BrowserTestUtils.removeTab(testTab);
 });
