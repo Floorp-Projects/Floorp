@@ -206,11 +206,7 @@ class DateTimeTestHelper {
     });
 
     if (openMethod === "click") {
-      await SpecialPowers.spawn(bc, [], () => {
-        const input = content.document.querySelector("input");
-        const shadowRoot = SpecialPowers.wrap(input).openOrClosedShadowRoot;
-        shadowRoot.getElementById("calendar-button").click();
-      });
+      await BrowserTestUtils.synthesizeMouseAtCenter("input", {}, bc);
     } else if (openMethod === "showPicker") {
       await SpecialPowers.spawn(bc, [], function() {
         content.document.notifyUserGestureActivation();
