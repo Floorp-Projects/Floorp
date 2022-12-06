@@ -30,53 +30,57 @@ async function openURLInWindow(window, url) {
   await BrowserTestUtils.browserLoaded(selectedBrowser, false, url);
 }
 
+async function openURLInNewTab(window, url) {
+  return BrowserTestUtils.openNewForegroundTab(window.gBrowser, url);
+}
+
 const pdfMatch = sinon.match(val => {
   return (
     val?.id === "featureCalloutCheck" && val?.context?.source === PDF_TEST_URL
   );
 });
 
-add_task(async function feature_callout_renders_in_browser_chrome_for_pdf() {
-  const testMessage = {
-    message: {
+const testMessage = {
+  message: {
+    id: "TEST_MESSAGE",
+    template: "feature_callout",
+    content: {
       id: "TEST_MESSAGE",
-      template: "feature_callout",
-      content: {
-        id: "TEST_MESSAGE",
-        template: "multistage",
-        backdrop: "transparent",
-        transitions: false,
-        screens: [
-          {
-            id: "TEST_MESSAGE_1",
-            parent_selector: "#urlbar-container",
-            content: {
-              position: "callout",
-              arrow_position: "top-end",
-              title: {
-                raw: "Test title",
+      template: "multistage",
+      backdrop: "transparent",
+      transitions: false,
+      screens: [
+        {
+          id: "TEST_MESSAGE_1",
+          parent_selector: "#urlbar-container",
+          content: {
+            position: "callout",
+            arrow_position: "top-end",
+            title: {
+              raw: "Test title",
+            },
+            subtitle: {
+              raw: "Test subtitle",
+            },
+            primary_button: {
+              label: {
+                raw: "Done",
               },
-              subtitle: {
-                raw: "Test subtitle",
-              },
-              primary_button: {
-                label: {
-                  raw: "Done",
-                },
-                action: {
-                  navigate: true,
-                },
+              action: {
+                navigate: true,
               },
             },
           },
-        ],
-      },
-      priority: 1,
-      targeting: "true",
-      trigger: { id: "featureCalloutCheck" },
+        },
+      ],
     },
-  };
+    priority: 1,
+    targeting: "true",
+    trigger: { id: "featureCalloutCheck" },
+  },
+};
 
+add_task(async function feature_callout_renders_in_browser_chrome_for_pdf() {
   const sandbox = sinon.createSandbox();
   const sendTriggerStub = sandbox.stub(ASRouter, "sendTriggerMessage");
   sendTriggerStub.withArgs(pdfMatch).resolves(testMessage);
@@ -103,3 +107,60 @@ add_task(async function feature_callout_renders_in_browser_chrome_for_pdf() {
   await BrowserTestUtils.closeWindow(win);
   sandbox.restore();
 });
+
+add_task(
+  async function feature_callout_renders_and_hides_in_chrome_when_switching_tabs() {
+    const sandbox = sinon.createSandbox();
+    const sendTriggerStub = sandbox.stub(ASRouter, "sendTriggerMessage");
+    sendTriggerStub.withArgs(pdfMatch).resolves(testMessage);
+    sendTriggerStub.callThrough();
+
+    let win = await BrowserTestUtils.openNewBrowserWindow();
+
+    // Test that callout shows up on first PDF tab
+    let doc = win.document;
+    let tab1 = await BrowserTestUtils.openNewForegroundTab(
+      win.gBrowser,
+      PDF_TEST_URL
+    );
+    tab1.focus();
+    await waitForCalloutScreen(doc, testMessage.message.content.screens[0].id);
+    ok(
+      doc.querySelector(`.${testMessage.message.content.screens[0].id}`),
+      "Feature callout rendered when opening a new tab with PDF url"
+    );
+
+    // Test that callout is removed when swapping tabs
+    let tab2 = await openURLInNewTab(win, "about:preferences");
+    tab2.focus();
+    // We hang up on newtab around here
+    await BrowserTestUtils.waitForCondition(() => {
+      return !doc.body.querySelector("#root.featureCallout");
+    });
+
+    ok(
+      !doc.querySelector(`.${testMessage.message.content.screens[0].id}`),
+      "Feature callout removed when tab without PDF URL is navigated to"
+    );
+
+    // Test that callout shows up when tabbing back to pdf
+    let tab3 = await openURLInNewTab(win, PDF_TEST_URL);
+    tab3.focus();
+    await waitForCalloutScreen(doc, testMessage.message.content.screens[0].id);
+    ok(
+      doc.querySelector(`.${testMessage.message.content.screens[0].id}`),
+      "Feature callout still renders when opening a new tab with PDF url after being initially rendered on another tab"
+    );
+
+    // Test that callout remains when tabbing from one pdf tab to another
+    tab1.focus();
+    await waitForCalloutScreen(doc, testMessage.message.content.screens[0].id);
+    ok(
+      doc.querySelector(`.${testMessage.message.content.screens[0].id}`),
+      "Feature callout rendered on original tab after switching tabs multiple times"
+    );
+
+    await BrowserTestUtils.closeWindow(win);
+    sandbox.restore();
+  }
+);
