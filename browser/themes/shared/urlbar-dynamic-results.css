@@ -9,7 +9,6 @@
 .urlbarView-row[dynamicType=onboardTabToSearch] > .urlbarView-row-inner {
   min-height: 64px !important; /* Overriding :root:not([uidensity=compact]) .urlbarView-row-inner { min-height } in urlbarView.inc.css */
   align-items: center;
-  width: 100%;
 }
 
 .urlbarView-row[dynamicType=onboardTabToSearch] > .urlbarView-row-inner > .urlbarView-no-wrap {
@@ -152,8 +151,7 @@
   display: flex;
   flex-grow: 1;
   gap: 0.9em 1.8em;
-  /** parent width - help button width - gap to help button */
-  max-width: calc(100% - 28px - 1.8em);
+  max-width: 100%;
 }
 
 #urlbar[searchmodesource=actions] .urlbarView-row[dynamicType=quickactions] .urlbarView-dynamic-quickactions-buttons {

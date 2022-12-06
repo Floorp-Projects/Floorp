@@ -19,10 +19,15 @@ add_task(async function test() {
       UrlbarUtils.RESULT_TYPE.TIP,
       UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
       {
-        text: "This is a test tip.",
-        buttonText: "Done",
+        helpUrl: "http://example.com/",
         type: "test",
-        helpUrl: "about:about",
+        titleL10n: { id: "urlbar-search-tips-confirm" },
+        buttons: [
+          {
+            url: "http://example.com/",
+            l10n: { id: "urlbar-search-tips-confirm" },
+          },
+        ],
       }
     ),
   ];
