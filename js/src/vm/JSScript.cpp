@@ -2913,21 +2913,15 @@ void ScriptWarmUpData::trace(JSTracer* trc) {
   switch (tag) {
     case EnclosingScriptTag: {
       BaseScript* enclosingScript = toEnclosingScript();
-      BaseScript* prior = enclosingScript;
       TraceManuallyBarrieredEdge(trc, &enclosingScript, "enclosingScript");
-      if (enclosingScript != prior) {
-        setTaggedPtr<EnclosingScriptTag>(enclosingScript);
-      }
+      setTaggedPtr<EnclosingScriptTag>(enclosingScript);
       break;
     }
 
     case EnclosingScopeTag: {
       Scope* enclosingScope = toEnclosingScope();
-      Scope* prior = enclosingScope;
       TraceManuallyBarrieredEdge(trc, &enclosingScope, "enclosingScope");
-      if (enclosingScope != prior) {
-        setTaggedPtr<EnclosingScopeTag>(enclosingScope);
-      }
+      setTaggedPtr<EnclosingScopeTag>(enclosingScope);
       break;
     }
 

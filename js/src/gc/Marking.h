@@ -85,7 +85,7 @@ inline Cell* ToMarkable(const Value& v) {
 
 inline Cell* ToMarkable(Cell* cell) { return cell; }
 
-bool UnmarkGrayGCThingUnchecked(GCMarker* marker, JS::GCCellPtr thing);
+bool UnmarkGrayGCThingUnchecked(JSRuntime* rt, JS::GCCellPtr thing);
 
 } /* namespace gc */
 

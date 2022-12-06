@@ -37,7 +37,6 @@ UNIFIED_SOURCES += [
     "Marking.cpp",
     "Memory.cpp",
     "Nursery.cpp",
-    "ParallelMarking.cpp",
     "Pretenuring.cpp",
     "PublicIterators.cpp",
     "RootMarking.cpp",

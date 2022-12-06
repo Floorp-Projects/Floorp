@@ -278,14 +278,6 @@ typedef enum JSGCParamKey {
   JSGC_COMPACTING_ENABLED = 23,
 
   /**
-   * Whether parallel marking is enabled.
-   *
-   * Pref: javascript.options.mem.gc_parallel_marking
-   * Default: ParallelMarkingEnabled
-   */
-  JSGC_PARALLEL_MARKING_ENABLED = 24,
-
-  /**
    * Limit of how far over the incremental trigger threshold we allow the heap
    * to grow before finishing a collection non-incrementally, for small heaps.
    *

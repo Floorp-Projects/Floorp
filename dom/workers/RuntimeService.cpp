@@ -363,7 +363,6 @@ void LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */) {
       PREF("gc_min_empty_chunk_count", JSGC_MIN_EMPTY_CHUNK_COUNT),
       PREF("gc_max_empty_chunk_count", JSGC_MAX_EMPTY_CHUNK_COUNT),
       PREF("gc_compacting", JSGC_COMPACTING_ENABLED),
-      PREF("gc_parallel_marking", JSGC_PARALLEL_MARKING_ENABLED),
   };
 #undef PREF
 
@@ -412,7 +411,6 @@ void LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */) {
         break;
       }
       case JSGC_COMPACTING_ENABLED:
-      case JSGC_PARALLEL_MARKING_ENABLED:
       case JSGC_BALANCED_HEAP_LIMITS_ENABLED: {
         bool present;
         bool prefValue = GetPref(pref->fullName, false, &present);

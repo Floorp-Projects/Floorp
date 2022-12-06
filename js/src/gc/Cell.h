@@ -290,9 +290,7 @@ class TenuredCell : public Cell {
   // The return value indicates if the cell went from unmarked to marked.
   MOZ_ALWAYS_INLINE bool markIfUnmarked(
       MarkColor color = MarkColor::Black) const;
-  MOZ_ALWAYS_INLINE bool markIfUnmarkedAtomic(MarkColor color) const;
   MOZ_ALWAYS_INLINE void markBlack() const;
-  MOZ_ALWAYS_INLINE void markBlackAtomic() const;
   MOZ_ALWAYS_INLINE void copyMarkBitsFrom(const TenuredCell* src);
   MOZ_ALWAYS_INLINE void unmark();
 
@@ -468,9 +466,6 @@ MOZ_ALWAYS_INLINE CellColor TenuredCell::color() const {
 /* static */
 inline CellColor TenuredCell::getColor(MarkBitmap* bitmap,
                                        const TenuredCell* cell) {
-  // Note that this method isn't synchronised so may give surprising results if
-  // the mark bitmap is being modified concurrently.
-
   if (bitmap->isMarkedBlack(cell)) {
     return CellColor::Black;
   }
@@ -479,6 +474,7 @@ inline CellColor TenuredCell::getColor(MarkBitmap* bitmap,
     return CellColor::Gray;
   }
 
+  MOZ_ASSERT(!bitmap->isMarkedAny(cell));
   return CellColor::White;
 }
 
@@ -486,14 +482,7 @@ bool TenuredCell::markIfUnmarked(MarkColor color /* = Black */) const {
   return chunk()->markBits.markIfUnmarked(this, color);
 }
 
-bool TenuredCell::markIfUnmarkedAtomic(MarkColor color) const {
-  return chunk()->markBits.markIfUnmarkedAtomic(this, color);
-}
-
 void TenuredCell::markBlack() const { chunk()->markBits.markBlack(this); }
-void TenuredCell::markBlackAtomic() const {
-  chunk()->markBits.markBlackAtomic(this);
-}
 
 void TenuredCell::copyMarkBitsFrom(const TenuredCell* src) {
   MarkBitmap& markBits = chunk()->markBits;
