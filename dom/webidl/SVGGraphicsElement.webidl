@@ -24,7 +24,11 @@ interface SVGGraphicsElement : SVGElement {
 
   readonly attribute SVGAnimatedTransformList transform;
 
+  [Deprecated="SVGNearestViewportElement",
+   Pref="svg.nearestAndFarthestViewportElement.enabled"]
   readonly attribute SVGElement? nearestViewportElement;
+  [Deprecated="SVGFarthestViewportElement",
+   Pref="svg.nearestAndFarthestViewportElement.enabled"]
   readonly attribute SVGElement? farthestViewportElement;
 
   [NewObject]

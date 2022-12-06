@@ -49,24 +49,6 @@ function runTest() {
   is(g3.viewportElement, null, "g3.viewportElement");
   is(symbolRect.viewportElement, sym, "symbolRect.viewportElement");
 
-  <!-- nearestViewportElement -->
-  is(root.nearestViewportElement, null, "root.nearestViewportElement");
-  is(inner.nearestViewportElement, root, "inner.nearestViewportElement");
-  is(g1.nearestViewportElement, inner, "g1.nearestViewportElement");
-  is(outer.nearestViewportElement, null, "outer.nearestViewportElement");
-  is(g2.nearestViewportElement, outer, "g2.nearestViewportElement");
-  is(g3.nearestViewportElement, null, "g3.nearestViewportElement");
-  is(symbolRect.nearestViewportElement, sym, "symbolRect.nearestViewportElement");
-
-  <!-- farthestViewportElement -->
-  is(root.farthestViewportElement, null, "root.farthestViewportElement");
-  is(inner.farthestViewportElement, root, "inner.farthestViewportElement");
-  is(g1.farthestViewportElement, root, "g1.farthestViewportElement");
-  is(outer.farthestViewportElement, null, "outer.farthestViewportElement");
-  is(g2.farthestViewportElement, outer, "g2.farthestViewportElement");
-  is(g3.farthestViewportElement, null, "g3.farthestViewportElement");
-  is(symbolRect.farthestViewportElement, root, "symbolRect.farthestViewportElement");
-
   SimpleTest.finish();
 }
 
