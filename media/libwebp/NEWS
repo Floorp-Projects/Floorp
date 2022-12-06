@@ -1,3 +1,17 @@
+- 8/4/2022: version 1.2.4
+  This is a binary compatible release.
+  * restore CMake libwebpmux target name for compatibility with 1.2.2 (#575)
+  * fix lossless crunch mode encoding with WEBP_REDUCE_SIZE
+    (chromium: #1345547, #1345595, #1345772, #1345804)
+
+- 6/30/2022: version 1.2.3
+  This is a binary compatible release.
+  * security fix for lossless encoder (#565, chromium:1313709)
+  * improved progress granularity in WebPReportProgress() when using lossless
+  * improved precision in Sharp YUV (-sharp_yuv) conversion
+  * many corrections to webp-lossless-bitstream-spec.txt (#551)
+  * crash/leak fixes on error/OOM and other bug fixes (#558, #563, #569, #573)
+
 - 1/11/2022: version 1.2.2
   This is a binary compatible release.
   * webpmux: add "-set bgcolor A,R,G,B"

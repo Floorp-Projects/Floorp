@@ -11,9 +11,9 @@ origin:
   url: "https://chromium.googlesource.com/webm/libwebp"
   license: BSD-3-Clause
 
-  release: commit b0a860891dcd4c0c2d7c6149e5cccb6eb881cc21 (2022-01-19T23:35:26.000Z).
+  release: v1.2.4 (2022-08-05T16:49:26-07:00).
 
-  revision: "v1.2.2"
+  revision: "v1.2.4"
 
   license-file: COPYING
 
@@ -38,8 +38,9 @@ vendoring:
     - COPYING
     - NEWS
     - PATENTS
-    - README
-    - README.mux
+    - README.md
+    - sharpyuv/*.h
+    - sharpyuv/*.c
     - src/webp/*.h
     - src/dec/*.h
     - src/dec/*.c
