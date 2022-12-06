@@ -289,13 +289,10 @@ class GCRuntime {
   [[nodiscard]] bool addRoot(Value* vp, const char* name);
   void removeRoot(Value* vp);
 
-  [[nodiscard]] bool setParameter(JSGCParamKey key, uint32_t value);
-  [[nodiscard]] bool setParameter(JSGCParamKey key, uint32_t value,
-                                  AutoLockGC& lock);
-  void resetParameter(JSGCParamKey key);
-  void resetParameter(JSGCParamKey key, AutoLockGC& lock);
+  [[nodiscard]] bool setParameter(JSContext* cx, JSGCParamKey key,
+                                  uint32_t value);
+  void resetParameter(JSContext* cx, JSGCParamKey key);
   uint32_t getParameter(JSGCParamKey key);
-  uint32_t getParameter(JSGCParamKey key, const AutoLockGC& lock);
 
   void setPerformanceHint(PerformanceHint hint);
   bool isInPageLoad() const { return inPageLoadCount != 0; }
@@ -629,7 +626,9 @@ class GCRuntime {
   void startTask(GCParallelTask& task, AutoLockHelperThreadState& lock);
   void joinTask(GCParallelTask& task, AutoLockHelperThreadState& lock);
   void updateHelperThreadCount();
+  bool updateMarkersVector();
   size_t parallelWorkerCount() const;
+  size_t markingWorkerCount() const;
 
   // WeakRefs
   bool registerWeakRef(HandleObject target, HandleObject weakRef);
@@ -649,6 +648,11 @@ class GCRuntime {
 
  private:
   enum IncrementalResult { ResetIncremental = 0, Ok };
+
+  [[nodiscard]] bool setParameter(JSGCParamKey key, uint32_t value,
+                                  AutoLockGC& lock);
+  void resetParameter(JSGCParamKey key, AutoLockGC& lock);
+  uint32_t getParameter(JSGCParamKey key, const AutoLockGC& lock);
 
   JS::GCOptions gcOptions() const { return maybeGcOptions.ref().ref(); }
 
@@ -1259,6 +1263,7 @@ class GCRuntime {
   MainThreadData<int> nextScheduled;
   MainThreadData<bool> deterministicOnly;
   MainThreadData<int> zealSliceBudget;
+  MainThreadData<size_t> maybeMarkStackLimit;
 
   MainThreadData<PersistentRooted<GCVector<JSObject*, 0, SystemAllocPolicy>>>
       selectedForMarking;
