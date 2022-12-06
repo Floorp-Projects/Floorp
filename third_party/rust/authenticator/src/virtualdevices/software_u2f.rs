@@ -1,6 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+use crate::consts::Capability;
+use crate::{RegisterResult, SignResult};
 
 pub struct SoftwareU2FToken {}
 
@@ -21,7 +23,7 @@ impl SoftwareU2FToken {
         _application: crate::AppId,
         _key_handles: Vec<crate::KeyHandle>,
     ) -> crate::Result<crate::RegisterResult> {
-        Ok((vec![0u8; 16], self.dev_info()))
+        Ok(RegisterResult::CTAP1(vec![0u8; 16], self.dev_info()))
     }
 
     /// The implementation of this method must return quickly and should
@@ -34,7 +36,12 @@ impl SoftwareU2FToken {
         _app_ids: Vec<crate::AppId>,
         _key_handles: Vec<crate::KeyHandle>,
     ) -> crate::Result<crate::SignResult> {
-        Ok((vec![0u8; 0], vec![0u8; 0], vec![0u8; 0], self.dev_info()))
+        Ok(SignResult::CTAP1(
+            vec![0u8; 0],
+            vec![0u8; 0],
+            vec![0u8; 0],
+            self.dev_info(),
+        ))
     }
 
     pub fn dev_info(&self) -> crate::u2ftypes::U2FDeviceInfo {
@@ -45,7 +52,7 @@ impl SoftwareU2FToken {
             version_major: 1,
             version_minor: 2,
             version_build: 3,
-            cap_flags: 0,
+            cap_flags: Capability::empty(),
         }
     }
 }
