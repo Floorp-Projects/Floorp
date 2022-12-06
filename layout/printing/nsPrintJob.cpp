@@ -1391,8 +1391,8 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
           }
           break;
       }
-      mMaybeCSSPageLandscape.emplace(maybeOrientation.value() ==
-                                     StylePageSizeOrientation::Landscape);
+      mMaybeCSSPageLandscape =
+          Some(maybeOrientation.value() == StylePageSizeOrientation::Landscape);
       aPO->mPresContext->SetPageSize(pageSize);
     }
   }
