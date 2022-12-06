@@ -16,10 +16,10 @@ job-template:
     description: Upload Symbols
     attributes:
         cron: true
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         docker-image: {in-tree: "lint"}
-        max-run-time: 900
+        max-run-time: 1200
         env:
             # {level} gets replaced in the upload_symbols transform
             SYMBOL_SECRET: "project/releng/gecko/build/level-{level}/gecko-symbol-upload"
