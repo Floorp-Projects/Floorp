@@ -13521,6 +13521,12 @@
   value: false
   mirror: always
 
+# Whether SVGGraphicsElement.nearestViewportElement and SVGGraphicsElement.farthestViewportElement are enabled.
+- name: svg.nearestAndFarthestViewportElement.enabled
+  type: bool
+  value: @IS_NOT_EARLY_BETA_OR_EARLIER@
+  mirror: always
+
 # Tweak which elements are allowed in <svg:use> subtrees, and in which
 # circumstances. See RemoveForbiddenNodes in SVGUseElement.cpp for the spec
 # text.
