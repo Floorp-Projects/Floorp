@@ -126,7 +126,7 @@ add_task(async function pickButton_onboard() {
 
   // Click the tip button.
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
-  let button = result.element.row._buttons.get("0");
+  let button = result.element.row._elements.get("tipButton");
   await UrlbarTestUtils.promisePopupClose(window, () => {
     EventUtils.synthesizeMouseAtCenter(button, {});
   });
@@ -184,7 +184,7 @@ add_task(async function pickButton_redirect() {
 
       // Click the tip button.
       let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
-      let button = result.element.row._buttons.get("0");
+      let button = result.element.row._elements.get("tipButton");
       await UrlbarTestUtils.promisePopupClose(window, () => {
         EventUtils.synthesizeMouseAtCenter(button, {});
       });
@@ -250,7 +250,7 @@ add_task(async function pickButton_persist() {
     await checkTip(window, UrlbarProviderSearchTips.TIP_TYPE.PERSIST, false);
 
     let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
-    let button = result.element.row._buttons.get("0");
+    let button = result.element.row._elements.get("tipButton");
 
     await UrlbarTestUtils.promisePopupClose(window, () => {
       EventUtils.synthesizeMouseAtCenter(button, {});
@@ -679,7 +679,7 @@ add_task(async function pickingTipDoesNotDisableOtherKinds() {
 
   // Click the tip button.
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
-  let button = result.element.row._buttons.get("0");
+  let button = result.element.row._elements.get("tipButton");
   await UrlbarTestUtils.promisePopupClose(window, () => {
     EventUtils.synthesizeMouseAtCenter(button, {});
   });

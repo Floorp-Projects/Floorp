@@ -46,7 +46,19 @@ add_task(async function mouse_helpButton() {
 
 // Clicks inside a tip but not on any button.
 add_task(async function mouse_insideTipButNotOnButtons() {
-  let results = [makeTipResult({ buttonUrl: TIP_URL, helpUrl: HELP_URL })];
+  let results = [
+    new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.TIP,
+      UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+      {
+        type: "test",
+        text: "This is a test tip.",
+        buttonText: "Done",
+        helpUrl: HELP_URL,
+        buttonUrl: TIP_URL,
+      }
+    ),
+  ];
   let provider = new UrlbarTestUtils.TestProvider({ results, priority: 1 });
   UrlbarProvidersManager.registerProvider(provider);
 
@@ -67,7 +79,7 @@ add_task(async function mouse_insideTipButNotOnButtons() {
   );
   Assert.equal(
     UrlbarTestUtils.getSelectedElement(window),
-    row._buttons.get("0"),
+    row._elements.get("tipButton"),
     "The main button element should be selected initially"
   );
   EventUtils.synthesizeMouseAtCenter(row, {});
@@ -81,7 +93,7 @@ add_task(async function mouse_insideTipButNotOnButtons() {
   );
   Assert.equal(
     UrlbarTestUtils.getSelectedElement(window),
-    row._buttons.get("0"),
+    row._elements.get("tipButton"),
     "The main button element should remain selected"
   );
 
@@ -116,7 +128,19 @@ async function doTest({ click, buttonUrl = undefined, helpUrl = undefined }) {
 
   // Add our test provider.
   let provider = new UrlbarTestUtils.TestProvider({
-    results: [makeTipResult({ buttonUrl, helpUrl })],
+    results: [
+      new UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.TIP,
+        UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        {
+          type: "test",
+          text: "This is a test tip.",
+          buttonText: "Done",
+          buttonUrl,
+          helpUrl,
+        }
+      ),
+    ],
     priority: 1,
   });
   UrlbarProvidersManager.registerProvider(provider);
@@ -135,8 +159,8 @@ async function doTest({ click, buttonUrl = undefined, helpUrl = undefined }) {
     fireInputEvent: true,
   });
   let row = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
-  let mainButton = row._buttons.get("0");
-  let helpButton = row._buttons.get("help");
+  let mainButton = row._elements.get("tipButton");
+  let helpButton = row._elements.get("helpButton");
   let target = helpUrl ? helpButton : mainButton;
 
   // If we're picking the tip with the keyboard, arrow down to select the proper
@@ -188,23 +212,4 @@ async function doTest({ click, buttonUrl = undefined, helpUrl = undefined }) {
   if (tab) {
     BrowserTestUtils.removeTab(tab);
   }
-}
-
-function makeTipResult({ buttonUrl, helpUrl }) {
-  return new UrlbarResult(
-    UrlbarUtils.RESULT_TYPE.TIP,
-    UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-    {
-      type: "test",
-      titleL10n: { id: "urlbar-search-tips-confirm" },
-      buttons: [
-        {
-          url: buttonUrl,
-          l10n: { id: "urlbar-search-tips-confirm" },
-        },
-      ],
-      helpUrl,
-      helpL10n: { id: "urlbar-search-tips-confirm" },
-    }
-  );
 }

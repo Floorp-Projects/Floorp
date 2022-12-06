@@ -835,7 +835,11 @@ export class UrlbarInput {
       return;
     }
 
-    let urlOverride = element?.dataset.url;
+    let urlOverride;
+    if (element?.classList.contains("urlbarView-button-help")) {
+      urlOverride = result.payload.helpUrl;
+    }
+
     let originalUntrimmedValue = this.untrimmedValue;
     let isCanonized = this.setValueFromResult({ result, event, urlOverride });
     let where = this._whereToOpen(event);
@@ -1030,57 +1034,74 @@ export class UrlbarInput {
         break;
       }
       case lazy.UrlbarUtils.RESULT_TYPE.TIP: {
-        let scalarName =
-          element.dataset.name == "help"
-            ? `${result.payload.type}-help`
-            : `${result.payload.type}-picked`;
-        Services.telemetry.keyedScalarAdd("urlbar.tips", scalarName, 1);
-        if (url) {
-          break;
+        let scalarName;
+        if (element.classList.contains("urlbarView-button-help")) {
+          url = result.payload.helpUrl;
+          if (!url) {
+            Cu.reportError("helpUrl not specified");
+            return;
+          }
+          scalarName = `${result.payload.type}-help`;
+        } else {
+          scalarName = `${result.payload.type}-picked`;
         }
-        this.handleRevert();
-        this.controller.engagementEvent.record(event, {
-          searchString: this._lastSearchString,
-          selIndex,
-          selType: "tip",
-          provider: result.providerName,
-        });
-        let provider = lazy.UrlbarProvidersManager.getProvider(
-          result.providerName
-        );
-        provider?.tryMethod("pickResult", result, element);
-        return;
+        Services.telemetry.keyedScalarAdd("urlbar.tips", scalarName, 1);
+        if (!url) {
+          this.handleRevert();
+          this.controller.engagementEvent.record(event, {
+            searchString: this._lastSearchString,
+            selIndex,
+            selType: "tip",
+            provider: result.providerName,
+          });
+          let provider = lazy.UrlbarProvidersManager.getProvider(
+            result.providerName
+          );
+          if (!provider) {
+            Cu.reportError(`Provider not found: ${result.providerName}`);
+            return;
+          }
+          provider.tryMethod("pickResult", result, element);
+          return;
+        }
+        break;
       }
       case lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC: {
-        if (url) {
-          break;
-        }
-        url = result.payload.url;
-        // Do not revert the Urlbar if we're going to navigate. We want the URL
-        // populated so we can navigate to it.
-        if (!url || !result.payload.shouldNavigate) {
-          this.handleRevert();
-        }
-        let provider = lazy.UrlbarProvidersManager.getProvider(
-          result.providerName
-        );
+        if (element.classList.contains("urlbarView-button-help")) {
+          url = result.payload.helpUrl;
+        } else {
+          url = result.payload.url;
+          // Do not revert the Urlbar if we're going to navigate. We want the URL
+          // populated so we can navigate to it.
+          if (!url || !result.payload.shouldNavigate) {
+            this.handleRevert();
+          }
+          let provider = lazy.UrlbarProvidersManager.getProvider(
+            result.providerName
+          );
+          if (!provider) {
+            Cu.reportError(`Provider not found: ${result.providerName}`);
+            return;
+          }
 
-        // Keep startEventInfo since the startEventInfo state might be changed
-        // if the URL Bar loses focus on pickResult.
-        const startEventInfo = this.controller.engagementEvent._startEventInfo;
-        provider?.tryMethod("pickResult", result, element);
+          // Keep startEventInfo since the startEventInfo state might be changed
+          // if the URL Bar loses focus on pickResult.
+          const startEventInfo = this.controller.engagementEvent
+            ._startEventInfo;
+          provider.tryMethod("pickResult", result, element);
 
-        // If we won't be navigating, this is the end of the engagement.
-        if (!url || !result.payload.shouldNavigate) {
-          this.controller.engagementEvent.record(event, {
-            selIndex,
-            searchString: this._lastSearchString,
-            selType: this.controller.engagementEvent.typeFromElement(element),
-            provider: result.providerName,
-            element,
-            startEventInfo,
-          });
-          return;
+          // If we won't be navigating, this is the end of the engagement.
+          if (!url || !result.payload.shouldNavigate) {
+            this.controller.engagementEvent.record(event, {
+              selIndex,
+              searchString: this._lastSearchString,
+              selType: this.controller.engagementEvent.typeFromElement(element),
+              provider: result.providerName,
+              element,
+              startEventInfo,
+            });
+            return;
+          }
         }
         break;
       }
