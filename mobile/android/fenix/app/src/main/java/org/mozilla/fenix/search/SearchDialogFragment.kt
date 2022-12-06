@@ -452,7 +452,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 updateQrButton(it)
             }
 
-            updateVoiceSearchButton(it)
+            updateVoiceSearchButton()
         }
     }
 
@@ -765,15 +765,8 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         searchSelectorAlreadyAdded = true
     }
 
-    private fun updateVoiceSearchButton(searchFragmentState: SearchFragmentState) {
-        val searchEngine = searchFragmentState.searchEngineSource.searchEngine
-
-        val isVisible =
-            searchEngine?.id?.contains("google") == true &&
-                isSpeechAvailable() &&
-                requireContext().settings().shouldShowVoiceSearch
-
-        when (isVisible) {
+    private fun updateVoiceSearchButton() {
+        when (isSpeechAvailable() && requireContext().settings().shouldShowVoiceSearch) {
             true -> {
                 if (voiceSearchButtonAction == null) {
                     voiceSearchButtonAction = IncreasedTapAreaActionDecorator(
