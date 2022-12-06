@@ -108,7 +108,7 @@ export class FeatureCallout {
   }
 
   async _handlePrefChange() {
-    if (this.doc.visibilityState === "hidden" || !this.featureTourProgress) {
+    if (this.doc.visibilityState === "hidden") {
       return;
     }
 
@@ -573,7 +573,7 @@ export class FeatureCallout {
     windowFuncs.forEach(func => delete this.win[func]);
   }
 
-  _endTour(skipFadeOut = false) {
+  _endTour() {
     // We don't want focus events that happen during teardown to effect
     // this.savedActiveElement
     this.win.removeEventListener("focus", this.focusHandler, {
@@ -581,31 +581,23 @@ export class FeatureCallout {
     });
     this.win.pageEventManager?.clear();
 
-    // We're deleting featureTourProgress here to ensure that the
-    // reference is freed for garbage collection. This prevents errors
-    // caused by lingering instances when instantiating and removing
-    // multiple feature tour instances in succession.
-    delete this.featureTourProgress;
     this.ready = false;
     // wait for fade out transition
     let container = this.doc.getElementById(CONTAINER_ID);
     container?.classList.add("hidden");
     this._clearWindowFunctions();
-    this.win.setTimeout(
-      () => {
-        container?.remove();
-        this.renderObserver?.disconnect();
-        // Put the focus back to the last place the user focused outside of the
-        // featureCallout windows.
-        if (this.savedActiveElement) {
-          this.savedActiveElement.focus({ focusVisible: true });
-        }
-      },
-      skipFadeOut ? 0 : TRANSITION_MS
-    );
+    this.win.setTimeout(() => {
+      container?.remove();
+      this.renderObserver?.disconnect();
+      // Put the focus back to the last place the user focused outside of the
+      // featureCallout windows.
+      if (this.savedActiveElement) {
+        this.savedActiveElement.focus({ focusVisible: true });
+      }
+    }, TRANSITION_MS);
   }
 
-  async _addScriptsAndRender() {
+  async _addScriptsAndRender(container) {
     const reactSrc = "resource://activity-stream/vendor/react.js";
     const domSrc = "resource://activity-stream/vendor/react-dom.js";
     // Add React script
@@ -613,7 +605,7 @@ export class FeatureCallout {
       return new Promise(resolve => {
         let reactScript = this.doc.createElement("script");
         reactScript.src = reactSrc;
-        this.doc.head.appendChild(reactScript);
+        container.appendChild(reactScript);
         reactScript.addEventListener("load", resolve);
       });
     };
@@ -622,7 +614,7 @@ export class FeatureCallout {
       return new Promise(resolve => {
         let domScript = this.doc.createElement("script");
         domScript.src = domSrc;
-        this.doc.head.appendChild(domScript);
+        container.appendChild(domScript);
         domScript.addEventListener("load", resolve);
       });
     };
@@ -637,7 +629,7 @@ export class FeatureCallout {
     let bundleScript = this.doc.createElement("script");
     bundleScript.src =
       "resource://activity-stream/aboutwelcome/aboutwelcome.bundle.js";
-    this.doc.head.appendChild(bundleScript);
+    container.appendChild(bundleScript);
   }
 
   _observeRender(container) {
@@ -683,7 +675,7 @@ export class FeatureCallout {
     let container = this._createContainer();
     if (container) {
       // This results in rendering the Feature Callout
-      await this._addScriptsAndRender();
+      await this._addScriptsAndRender(container);
       this._observeRender(container);
       this._addPositionListeners();
     }
