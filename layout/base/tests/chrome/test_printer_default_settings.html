@@ -53,7 +53,7 @@ async function run() {
     }
   } catch (e) {
     ok(false, `Shouldn't throw: ${e}`);
-    Cu.reportError(e);
+    console.error(e);
   }
   SimpleTest.finish();
 }

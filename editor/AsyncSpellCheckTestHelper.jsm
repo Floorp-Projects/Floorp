@@ -65,7 +65,7 @@ function maybeOnSpellCheck(editableElement, callback) {
       ? SPELL_CHECK_ENDED_TOPIC
       : SPELL_CHECK_STARTED_TOPIC;
     if (topic != expectedTopic) {
-      Cu.reportError("Expected " + expectedTopic + " but got " + topic + "!");
+      console.error("Expected " + expectedTopic + " but got " + topic + "!");
     }
     waitingForEnded = !waitingForEnded;
   }

@@ -40,7 +40,7 @@ async function run() {
     ok(true, "Finished traversing printers.");
   } catch (e) {
     ok(false, `Error thrown while retrieving printer info: ${e}.`);
-    Cu.reportError(e);
+    console.error(e);
   }
   SimpleTest.finish();
 }
