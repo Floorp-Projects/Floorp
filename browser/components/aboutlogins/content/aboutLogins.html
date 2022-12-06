@@ -34,6 +34,7 @@
   </head>
   <body>
     <header>
+      <login-filter></login-filter>
       <fxaccounts-button hidden></fxaccounts-button>
       <menu-button></menu-button>
     </header>
@@ -178,12 +179,6 @@
       <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-list.css">
-      <div class="listHeader">
-        <login-filter></login-filter>
-        <div class="create-login-button-container">
-          <button class="create-login-button" data-l10n-id="create-new-login-button"></button>
-        </div>
-      </div>
       <div class="meta">
         <label for="login-sort">
           <span data-l10n-id="login-list-sort-label-text"></span>
@@ -210,6 +205,9 @@
           <p data-l10n-id="about-logins-login-list-empty-search-title"></p>
           <span data-l10n-id="about-logins-login-list-empty-search-description"></span>
         </div>
+      </div>
+      <div class="create-login-button-container">
+        <button class="create-login-button" data-l10n-id="create-login-button"></button>
       </div>
     </template>
 
