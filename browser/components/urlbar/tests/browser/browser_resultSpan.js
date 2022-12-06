@@ -12,16 +12,7 @@ const TEST_RESULTS = [
     UrlbarUtils.RESULT_SOURCE.HISTORY,
     { url: "http://mozilla.org/1" }
   ),
-  new UrlbarResult(
-    UrlbarUtils.RESULT_TYPE.TIP,
-    UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-    {
-      text: "This is a test tip.",
-      buttonText: "Done",
-      type: "test",
-      helpUrl: "about:about",
-    }
-  ),
+  makeTipResult(),
 ];
 
 const MAX_RESULTS = UrlbarPrefs.get("maxRichResults");
@@ -73,18 +64,7 @@ add_task(async function oneTip() {
 add_task(async function threeTips() {
   let results = Array.from(TEST_RESULTS);
   for (let i = 1; i < 3; i++) {
-    results.push(
-      new UrlbarResult(
-        UrlbarUtils.RESULT_TYPE.TIP,
-        UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-        {
-          text: "This is a test tip.",
-          buttonText: "Done",
-          type: "test",
-          helpUrl: `about:about#${i}`,
-        }
-      )
-    );
+    results.push(makeTipResult());
   }
   for (let i = 2; i < 15; i++) {
     results.push(
@@ -160,18 +140,7 @@ add_task(async function oneTip_nonRestricting() {
 add_task(async function threeTips_nonRestricting() {
   let results = Array.from(TEST_RESULTS);
   for (let i = 1; i < 3; i++) {
-    results.push(
-      new UrlbarResult(
-        UrlbarUtils.RESULT_TYPE.TIP,
-        UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-        {
-          text: "This is a test tip.",
-          buttonText: "Done",
-          type: "test",
-          helpUrl: `about:about#${i}`,
-        }
-      )
-    );
+    results.push(makeTipResult());
   }
   for (let i = 2; i < 15; i++) {
     results.push(
@@ -264,4 +233,22 @@ function collectExpectedProperties(actualObj, expectedObj) {
     }
   }
   return newActualObj;
+}
+
+function makeTipResult() {
+  return new UrlbarResult(
+    UrlbarUtils.RESULT_TYPE.TIP,
+    UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+    {
+      helpUrl: "http://example.com/",
+      type: "test",
+      titleL10n: { id: "urlbar-search-tips-confirm" },
+      buttons: [
+        {
+          url: "http://example.com/",
+          l10n: { id: "urlbar-search-tips-confirm" },
+        },
+      ],
+    }
+  );
 }
