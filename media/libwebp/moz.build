@@ -17,6 +17,7 @@ EXPORTS.webp += [
 ]
 
 DIRS += [
+    'sharpyuv',
     'src/dec',
     'src/demux',
     'src/dsp',
