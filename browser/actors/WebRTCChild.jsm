@@ -321,7 +321,7 @@ function prompt(
     let deviceObject = {
       name: device.rawName, // unfiltered device name to show to the user
       deviceIndex: devices.length,
-      id: device.rawId,
+      rawId: device.rawId,
       mediaSource: device.mediaSource,
     };
     switch (device.type) {

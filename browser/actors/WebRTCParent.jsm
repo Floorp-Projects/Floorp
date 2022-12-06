@@ -411,14 +411,14 @@ class WebRTCParent extends JSWindowActorParent {
 
     // We consider a camera or mic active if it is active or was active within a
     // grace period of milliseconds ago.
-    const isAllowed = ({ mediaSource, id }, permissionID) =>
-      map?.get(windowID + mediaSource + id) ||
+    const isAllowed = ({ mediaSource, rawId }, permissionID) =>
+      map?.get(windowID + mediaSource + rawId) ||
       (!limited &&
         (lazy.SitePermissions.getForPrincipal(aPrincipal, permissionID).state ==
           lazy.SitePermissions.ALLOW ||
           lazy.SitePermissions.getForPrincipal(
             aPrincipal,
-            [mediaSource, id].join("^"),
+            [mediaSource, rawId].join("^"),
             this.getBrowser()
           ).state == lazy.SitePermissions.ALLOW));
 
@@ -471,11 +471,15 @@ class WebRTCParent extends JSWindowActorParent {
         perms.EXPIRE_SESSION
       );
       devices.push(camera.deviceIndex);
-      this.activateDevicePerm(windowID, camera.mediaSource, camera.id);
+      this.activateDevicePerm(windowID, camera.mediaSource, camera.rawId);
     }
     if (microphone) {
       devices.push(microphone.deviceIndex);
-      this.activateDevicePerm(windowID, microphone.mediaSource, microphone.id);
+      this.activateDevicePerm(
+        windowID,
+        microphone.mediaSource,
+        microphone.rawId
+      );
     }
     this.checkOSPermission(!!camera, !!microphone, false).then(
       havePermission => {
@@ -854,7 +858,7 @@ function prompt(aActor, aBrowser, aRequest) {
             // user confirms actual window/screen sharing there.
             // Don't mark it as scary as there's an extra confirmation step by
             // PipeWire portal dialog.
-            if (name == PIPEWIRE_PORTAL_NAME && device.id == PIPEWIRE_ID) {
+            if (name == PIPEWIRE_PORTAL_NAME && device.rawId == PIPEWIRE_ID) {
               isPipeWire = true;
               let item = addDeviceToList(
                 menupopup,
@@ -862,7 +866,7 @@ function prompt(aActor, aBrowser, aRequest) {
                 i,
                 type
               );
-              item.deviceId = device.id;
+              item.deviceId = device.rawId;
               item.mediaSource = type;
 
               // In this case the OS sharing dialog will be the only option and
@@ -882,7 +886,7 @@ function prompt(aActor, aBrowser, aRequest) {
             }
           }
           let item = addDeviceToList(menupopup, name, i, type);
-          item.deviceId = device.id;
+          item.deviceId = device.rawId;
           item.mediaSource = type;
           if (device.scary) {
             item.scary = true;
@@ -1092,10 +1096,10 @@ function prompt(aActor, aBrowser, aRequest) {
               perms.ALLOW_ACTION,
               perms.EXPIRE_SESSION
             );
-            let { mediaSource, id } = videoInputDevices.find(
+            let { mediaSource, rawId } = videoInputDevices.find(
               ({ deviceIndex }) => deviceIndex == videoDeviceIndex
             );
-            aActor.activateDevicePerm(aRequest.windowID, mediaSource, id);
+            aActor.activateDevicePerm(aRequest.windowID, mediaSource, rawId);
             if (remember) {
               lazy.SitePermissions.setForPrincipal(
                 principal,
@@ -1113,10 +1117,10 @@ function prompt(aActor, aBrowser, aRequest) {
           let allowMic = audioDeviceIndex != "-1";
           if (allowMic) {
             allowedDevices.push(audioDeviceIndex);
-            let { mediaSource, id } = audioInputDevices.find(
+            let { mediaSource, rawId } = audioInputDevices.find(
               ({ deviceIndex }) => deviceIndex == audioDeviceIndex
             );
-            aActor.activateDevicePerm(aRequest.windowID, mediaSource, id);
+            aActor.activateDevicePerm(aRequest.windowID, mediaSource, rawId);
             if (remember) {
               lazy.SitePermissions.setForPrincipal(
                 principal,
