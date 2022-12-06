@@ -9,8 +9,10 @@ root:
         image: "firefox.png"
         rect: [0, 0, 350, 90]
         repeat: false
-    - type: rect
-      bounds: [0, 0, 350, 90]
-      color: blue
+    - type: stacking-context
       clip-chain: [2]
+      items:
+      - type: rect
+        bounds: [0, 0, 350, 90]
+        color: blue
 
