@@ -4715,7 +4715,7 @@ bool CompilationState::appendScriptStencilAndData(ErrorContext* ec) {
 }
 
 bool CompilationState::appendGCThings(
-    JSContext* cx, ErrorContext* ec, ScriptIndex scriptIndex,
+    ErrorContext* ec, ScriptIndex scriptIndex,
     mozilla::Span<const TaggedScriptThingIndex> things) {
   MOZ_ASSERT(gcThingData.length() <= UINT32_MAX);
 
