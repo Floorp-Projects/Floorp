@@ -315,8 +315,8 @@ CryptoWrapper.prototype = {
       );
     }
 
-    // Verify that the encrypted id matches the requested record's id.
-    if (json_result.id != this.id) {
+    // If the payload has an encrypted id ensure it matches the requested record's id.
+    if (json_result.id && json_result.id != this.id) {
       throw new Error(`Record id mismatch: ${json_result.id} != ${this.id}`);
     }
 
