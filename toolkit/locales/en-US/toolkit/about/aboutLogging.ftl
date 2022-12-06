@@ -15,3 +15,4 @@ about-logging-set-log-file = Set Log File
 about-logging-set-log-modules = Set Log Modules
 about-logging-start-logging = Start Logging
 about-logging-stop-logging = Stop Logging
+about-logging-buttons-disabled = Logging configured via environment variables, dynamic configuration unavailable.
