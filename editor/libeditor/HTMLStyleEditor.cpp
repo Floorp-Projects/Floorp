@@ -2608,10 +2608,11 @@ nsresult HTMLEditor::RemoveInlinePropertiesAsSubAction(
                   "AutoInlineStyleSetter::"
                   "ApplyStyleToNodeOrChildrenAndRemoveNestedSameStyle() "
                   "failed, but ignored");
+            } else {
+              // There is AutoTransactionsConserveSelection, so we don't need to
+              // update selection here.
+              pointToPutCaretOrError.unwrap().IgnoreCaretPointSuggestion();
             }
-            // There is AutoTransactionsConserveSelection, so we don't need to
-            // update selection here.
-            pointToPutCaretOrError.unwrap().IgnoreCaretPointSuggestion();
             continue;
           }
 
