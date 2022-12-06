@@ -7,6 +7,8 @@ Add dependencies to release tasks.
 
 from taskgraph.transforms.base import TransformSequence
 
+from android_taskgraph.release_type import does_task_match_release_type
+
 PHASES = ["build", "promote", "push", "ship"]
 
 transforms = TransformSequence()
@@ -18,7 +20,7 @@ def add_dependencies(config, tasks):
         dependencies = {}
         # Add any kind_dependencies_tasks with matching release_type as dependencies
         release_type = task["attributes"].get("release-type")
-        phase = task["attributes"].get("shipping_phase")
+        phase = task.get("shipping-phase")
         if release_type is None:
             continue
 
@@ -33,11 +35,7 @@ def add_dependencies(config, tasks):
             if dep_phase and PHASES.index(dep_phase) > PHASES.index(phase):
                 continue
 
-            # Add matching release_type tasks to deps
-            if (
-                dep_task.task.get("release-type") == release_type
-                or dep_task.attributes.get("release-type") == release_type
-            ):
+            if does_task_match_release_type(dep_task, release_type):
                 dependencies[dep_task.label] = dep_task.label
 
         task.setdefault("dependencies", {}).update(dependencies)
