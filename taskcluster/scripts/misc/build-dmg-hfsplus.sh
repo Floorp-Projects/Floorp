@@ -31,6 +31,6 @@ queue_base="$TASKCLUSTER_ROOT_URL/api/queue/v1"
 
 cat >$STAGE/README<<EOF
 Source is available as a taskcluster artifact:
-$queue_base/task/$(python -c 'import json, os; print "{task}/artifacts/{artifact}".format(**next(f for f in json.loads(os.environ["MOZ_FETCHES"]) if "libdmg-hfsplus" in f["artifact"]))')
+$queue_base/task/$(python3 -c 'import json, os; print("{task}/artifacts/{artifact}".format(**next(f for f in json.loads(os.environ["MOZ_FETCHES"]) if "dmg-hfsplus" in f["artifact"])))')
 EOF
 tar caf $UPLOAD_DIR/dmg.tar.zst -C $WORKSPACE `basename $STAGE`

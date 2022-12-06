@@ -2451,13 +2451,6 @@ def repackage_dmg(command_context, input, output):
         print("Input file does not exist: %s" % input)
         return 1
 
-    if not os.path.exists(os.path.join(command_context.topobjdir, "config.status")):
-        print(
-            "config.status not found.  Please run |mach configure| "
-            "prior to |mach repackage|."
-        )
-        return 1
-
     from mozbuild.repackaging.dmg import repackage_dmg
 
     repackage_dmg(input, output)

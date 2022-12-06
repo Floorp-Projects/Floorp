@@ -2,12 +2,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function
-
-from mozpack import dmg
-
 import argparse
 import sys
+from pathlib import Path
+
+from mozbuild.bootstrap import bootstrap_toolchain
+from mozpack import dmg
+
+
+def _path_or_none(input: str):
+    if not input:
+        return None
+    return Path(input)
 
 
 def main(args):
@@ -26,12 +32,17 @@ def main(args):
 
     options = parser.parse_args(args)
 
+    dmg_tool = bootstrap_toolchain("dmg/dmg")
+    hfs_tool = bootstrap_toolchain("dmg/hfsplus")
+
     dmg.extract_dmg(
-        dmgfile=options.dmgfile,
-        output=options.outpath,
-        dsstore=options.dsstore,
-        background=options.background,
-        icon=options.icon,
+        dmgfile=Path(options.dmgfile),
+        output=Path(options.outpath),
+        dmg_tool=Path(dmg_tool),
+        hfs_tool=Path(hfs_tool),
+        dsstore=_path_or_none(options.dsstore),
+        background=_path_or_none(options.background),
+        icon=_path_or_none(options.icon),
     )
     return 0
 
