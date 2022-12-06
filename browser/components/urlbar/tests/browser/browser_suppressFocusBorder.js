@@ -213,7 +213,7 @@ add_task(async function searchTip() {
 
   info("Click the tip button.");
   const result = await UrlbarTestUtils.getDetailsOfResultAt(win, 0);
-  const button = result.element.row._elements.get("tipButton");
+  const button = result.element.row._buttons.get("0");
   await UrlbarTestUtils.promisePopupClose(win, () => {
     EventUtils.synthesizeMouseAtCenter(button, {}, win);
   });
