@@ -81,6 +81,13 @@ class nsPageFrame final : public nsContainerFrame {
     return ComputePageSizeScale(ComputePageSize());
   }
 
+  // The default implementation of FirstContinuation in nsSplittableFrame is
+  // implemented in linear time, walking back through the linked list of
+  // continuations via mPrevContinuation.
+  // For nsPageFrames, we can find the first continuation through the frame
+  // tree structure in constant time.
+  nsIFrame* FirstContinuation() const final;
+
  protected:
   explicit nsPageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
   virtual ~nsPageFrame();
