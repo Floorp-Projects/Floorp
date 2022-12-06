@@ -119,9 +119,8 @@ nsresult nsThreadPool::PutEvent(already_AddRefed<nsIRunnable> aEvent,
   }
 
   nsCOMPtr<nsIThread> thread;
-  nsresult rv = NS_NewNamedThread(
-      mThreadNaming.GetNextThreadName(name), getter_AddRefs(thread), nullptr,
-      {.stackSize = stackSize, .blockDispatch = true});
+  nsresult rv = NS_NewNamedThread(mThreadNaming.GetNextThreadName(name),
+                                  getter_AddRefs(thread), nullptr, stackSize);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -147,7 +146,7 @@ nsresult nsThreadPool::PutEvent(already_AddRefed<nsIRunnable> aEvent,
     // asynchronously without worrying about anything.
     ShutdownThread(thread);
   } else {
-    thread->Dispatch(this, NS_DISPATCH_IGNORE_BLOCK_DISPATCH);
+    thread->Dispatch(this, NS_DISPATCH_NORMAL);
   }
 
   return NS_OK;

@@ -13,7 +13,6 @@
 #include "mozilla/TimeStamp.h"
 #include "nsComponentManagerUtils.h"
 #include "nsExceptionHandler.h"
-#include "nsIEventTarget.h"
 #include "nsITimer.h"
 #include "nsTimerImpl.h"
 #include "prsystem.h"
@@ -158,25 +157,24 @@ PrioritizableCancelableRunnable::GetPriority(uint32_t* aPriority) {
 //-----------------------------------------------------------------------------
 
 nsresult NS_NewNamedThread(const nsACString& aName, nsIThread** aResult,
-                           nsIRunnable* aInitialEvent,
-                           nsIThreadManager::ThreadCreationOptions aOptions) {
+                           nsIRunnable* aInitialEvent, uint32_t aStackSize) {
   nsCOMPtr<nsIRunnable> event = aInitialEvent;
-  return NS_NewNamedThread(aName, aResult, event.forget(), aOptions);
+  return NS_NewNamedThread(aName, aResult, event.forget(), aStackSize);
 }
 
 nsresult NS_NewNamedThread(const nsACString& aName, nsIThread** aResult,
                            already_AddRefed<nsIRunnable> aInitialEvent,
-                           nsIThreadManager::ThreadCreationOptions aOptions) {
+                           uint32_t aStackSize) {
   nsCOMPtr<nsIRunnable> event = std::move(aInitialEvent);
   nsCOMPtr<nsIThread> thread;
   nsresult rv = nsThreadManager::get().nsThreadManager::NewNamedThread(
-      aName, aOptions, getter_AddRefs(thread));
+      aName, aStackSize, getter_AddRefs(thread));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   if (event) {
-    rv = thread->Dispatch(event.forget(), NS_DISPATCH_IGNORE_BLOCK_DISPATCH);
+    rv = thread->Dispatch(event.forget(), NS_DISPATCH_NORMAL);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
