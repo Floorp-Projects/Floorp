@@ -5,7 +5,6 @@
 package org.mozilla.focus.biometrics
 
 import android.content.Context
-import android.os.Build
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -50,8 +49,7 @@ class LockObserver(
             if (tabCount == 0L && topSitesList.isEmpty()) {
                 return@launch
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-                context.settings.shouldUseBiometrics() &&
+            if (context.settings.shouldUseBiometrics() &&
                 context.canUseBiometricFeature()
             ) {
                 appStore.dispatch(AppAction.Lock())
