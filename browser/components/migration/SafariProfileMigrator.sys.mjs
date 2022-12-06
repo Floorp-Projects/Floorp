@@ -20,7 +20,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 function Bookmarks(aBookmarksFile) {
   this._file = aBookmarksFile;
-  this._histogramBookmarkRoots = 0;
 }
 Bookmarks.prototype = {
   type: MigrationUtils.resourceTypes.BOOKMARKS,
@@ -113,20 +112,14 @@ Bookmarks.prototype = {
         // Because the former is only an implementation detail in our UI,
         // the unfiled root seems to be the best choice.
         folderGuid = lazy.PlacesUtils.bookmarks.unfiledGuid;
-        this._histogramBookmarkRoots |=
-          MigrationUtils.SOURCE_BOOKMARK_ROOTS_UNFILED;
         break;
       }
       case this.MENU_COLLECTION: {
         folderGuid = lazy.PlacesUtils.bookmarks.menuGuid;
-        this._histogramBookmarkRoots |=
-          MigrationUtils.SOURCE_BOOKMARK_ROOTS_BOOKMARKS_MENU;
         break;
       }
       case this.TOOLBAR_COLLECTION: {
         folderGuid = lazy.PlacesUtils.bookmarks.toolbarGuid;
-        this._histogramBookmarkRoots |=
-          MigrationUtils.SOURCE_BOOKMARK_ROOTS_BOOKMARKS_TOOLBAR;
         break;
       }
       case this.READING_LIST_COLLECTION: {
@@ -143,8 +136,6 @@ Bookmarks.prototype = {
             title: readingListTitle,
           })
         ).guid;
-        this._histogramBookmarkRoots |=
-          MigrationUtils.SOURCE_BOOKMARK_ROOTS_READING_LIST;
         break;
       }
       default:
