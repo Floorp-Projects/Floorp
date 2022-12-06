@@ -60,6 +60,15 @@
       testTableStruct("simple_label", cellsArray, kNoColumnHeader,
                       "", "", kMathTable, rowsArray);
 
+      // Test that a non-table display style still generates the proper
+      // roles in the accessibility tree.
+      const table_tree = {
+        MATHML_TABLE: [{
+            MATHML_TABLE_ROW: [{ MATHML_CELL: [{ TEXT_LEAF: [] }] }]
+        }],
+      };
+      testAccessibleTree("table_with_display_block_mtd", table_tree);
+
       SimpleTest.finish();
     }
 
@@ -119,6 +128,12 @@
         <mtd><mtext>1</mtext></mtd>
         <mtd><mtext>label</mtext></mtd>
       </mlabeledtr>
+    </mtable>
+
+    <mtable id="table_with_display_block_mtd">
+      <mtr>
+        <mtd style="display: block">test</mtd>
+      </mtr>
     </mtable>
   </math>
 
