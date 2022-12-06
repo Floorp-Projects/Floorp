@@ -406,9 +406,7 @@ The following RESULT_TYPEs are supported:
     // Payload: { icon, url, device, title }
     REMOTE_TAB: 6,
     // An actionable message to help the user with their query.
-    // textData and buttonTextData are objects containing an l10n id and args.
-    // If a tip is untranslated it's possible to provide text and buttonText.
-    // Payload: { icon, textData, buttonTextData, [buttonUrl], [helpUrl] }
+    // Payload: { buttons, helpL10n, helpUrl, icon, titleL10n, type }
     TIP: 7,
     // A type of result created at runtime, for example by an extension.
     // Payload: { dynamicType }
