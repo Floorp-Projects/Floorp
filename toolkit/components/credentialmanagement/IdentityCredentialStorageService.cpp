@@ -15,6 +15,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPtr.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsCRT.h"
@@ -127,6 +128,10 @@ nsresult getDiskDatabaseConnection(mozIStorageConnection** aDatabase) {
 
 nsresult IdentityCredentialStorageService::Init() {
   AssertIsOnMainThread();
+  if (!StaticPrefs::dom_security_credentialmanagement_identity_enabled()) {
+    return NS_OK;
+  }
+
   nsresult rv;
   RefPtr<mozIStorageConnection> database;
   rv = getDiskDatabaseConnection(getter_AddRefs(database));
@@ -158,6 +163,9 @@ NS_IMETHODIMP IdentityCredentialStorageService::SetState(
     nsIPrincipal* aRPPrincipal, nsIPrincipal* aIDPPrincipal,
     nsACString const& aCredentialID, bool aRegistered, bool aAllowLogout) {
   AssertIsOnMainThread();
+  if (!StaticPrefs::dom_security_credentialmanagement_identity_enabled()) {
+    return NS_OK;
+  }
   MOZ_ASSERT(XRE_IsParentProcess());
   NS_ENSURE_ARG_POINTER(aRPPrincipal);
   NS_ENSURE_ARG_POINTER(aIDPPrincipal);
@@ -228,6 +236,11 @@ NS_IMETHODIMP IdentityCredentialStorageService::GetState(
     nsIPrincipal* aRPPrincipal, nsIPrincipal* aIDPPrincipal,
     nsACString const& aCredentialID, bool* aRegistered, bool* aAllowLogout) {
   AssertIsOnMainThread();
+  if (!StaticPrefs::dom_security_credentialmanagement_identity_enabled()) {
+    *aRegistered = false;
+    *aAllowLogout = false;
+    return NS_OK;
+  }
   nsresult rv;
   rv = IdentityCredentialStorageService::ValidatePrincipal(aRPPrincipal);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -291,6 +304,9 @@ NS_IMETHODIMP IdentityCredentialStorageService::Delete(
     nsIPrincipal* aRPPrincipal, nsIPrincipal* aIDPPrincipal,
     nsACString const& aCredentialID) {
   AssertIsOnMainThread();
+  if (!StaticPrefs::dom_security_credentialmanagement_identity_enabled()) {
+    return NS_OK;
+  }
   nsresult rv;
   rv = IdentityCredentialStorageService::ValidatePrincipal(aRPPrincipal);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -338,6 +354,9 @@ NS_IMETHODIMP IdentityCredentialStorageService::Delete(
 
 NS_IMETHODIMP IdentityCredentialStorageService::Clear() {
   AssertIsOnMainThread();
+  if (!StaticPrefs::dom_security_credentialmanagement_identity_enabled()) {
+    return NS_OK;
+  }
   RefPtr<mozIStorageConnection> database;
   nsresult rv = getDiskDatabaseConnection(getter_AddRefs(database));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -357,6 +376,9 @@ NS_IMETHODIMP IdentityCredentialStorageService::Clear() {
 NS_IMETHODIMP
 IdentityCredentialStorageService::DeleteFromOriginAttributesPattern(
     nsAString const& aOriginAttributesPattern) {
+  if (!StaticPrefs::dom_security_credentialmanagement_identity_enabled()) {
+    return NS_OK;
+  }
   nsresult rv;
   NS_ENSURE_FALSE(aOriginAttributesPattern.IsEmpty(), NS_ERROR_FAILURE);
 
@@ -431,6 +453,9 @@ IdentityCredentialStorageService::DeleteFromOriginAttributesPattern(
 
 NS_IMETHODIMP IdentityCredentialStorageService::DeleteFromTimeRange(
     int64_t aStart, int64_t aEnd) {
+  if (!StaticPrefs::dom_security_credentialmanagement_identity_enabled()) {
+    return NS_OK;
+  }
   nsresult rv;
 
   RefPtr<mozIStorageConnection> database;
@@ -471,6 +496,9 @@ NS_IMETHODIMP IdentityCredentialStorageService::DeleteFromTimeRange(
 NS_IMETHODIMP IdentityCredentialStorageService::
     IdentityCredentialStorageService::DeleteFromPrincipal(
         nsIPrincipal* aRPPrincipal) {
+  if (!StaticPrefs::dom_security_credentialmanagement_identity_enabled()) {
+    return NS_OK;
+  }
   nsresult rv =
       IdentityCredentialStorageService::ValidatePrincipal(aRPPrincipal);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -509,6 +537,9 @@ NS_IMETHODIMP IdentityCredentialStorageService::
 
 NS_IMETHODIMP IdentityCredentialStorageService::DeleteFromBaseDomain(
     nsACString const& aBaseDomain) {
+  if (!StaticPrefs::dom_security_credentialmanagement_identity_enabled()) {
+    return NS_OK;
+  }
   nsresult rv;
 
   RefPtr<mozIStorageConnection> database;
