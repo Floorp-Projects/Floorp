@@ -88,6 +88,7 @@
 #include "plbase64.h"
 #include "PLDHashTable.h"
 #include "plstr.h"
+#include "prdtoa.h"
 #include "prlink.h"
 #include "xpcpublic.h"
 #include "js/RootingAPI.h"
@@ -421,6 +422,35 @@ static void StrEscape(const char* aOriginal, nsCString& aResult) {
   }
 
   aResult.Append('"');
+}
+
+// Mimic the behaviour of nsTStringRepr::ToFloat before bug 840706 to preserve
+// error case handling for parsing pref strings. Many callers do not check error
+// codes, so the returned values may be used even if an error is set.
+//
+// This method should never return NaN, but may return +-inf if the provided
+// number is too large to fit in a float.
+static float ParsePrefFloat(const nsCString& aString, nsresult* aError) {
+  if (aString.IsEmpty()) {
+    *aError = NS_ERROR_ILLEGAL_VALUE;
+    return 0.f;
+  }
+
+  // PR_strtod does a locale-independent conversion.
+  char* stopped = nullptr;
+  float result = PR_strtod(aString.get(), &stopped);
+
+  // Defensively avoid potential breakage caused by returning NaN into
+  // unsuspecting code. AFAIK this should never happen as PR_strtod cannot
+  // return NaN as currently configured.
+  if (mozilla::IsNaN(result)) {
+    MOZ_ASSERT_UNREACHABLE("PR_strtod shouldn't return NaN");
+    *aError = NS_ERROR_ILLEGAL_VALUE;
+    return 0.f;
+  }
+
+  *aError = (stopped == aString.EndReading()) ? NS_OK : NS_ERROR_ILLEGAL_VALUE;
+  return result;
 }
 
 namespace mozilla {
@@ -1152,8 +1182,9 @@ class MOZ_STACK_CLASS PrefWrapper : public PrefWrapperBase {
     nsAutoCString result;
     nsresult rv = GetValue(aKind, result);
     if (NS_SUCCEEDED(rv)) {
-      // ToFloat() does a locale-independent conversion.
-      *aResult = result.ToFloat(&rv);
+      // ParsePrefFloat() does a locale-independent conversion.
+      // FIXME: Other `GetValue` overloads don't clobber `aResult` on error.
+      *aResult = ParsePrefFloat(result, &rv);
     }
     return rv;
   }
@@ -2258,8 +2289,8 @@ nsPrefBranch::GetFloatPref(const char* aPrefName, float* aRetVal) {
   nsAutoCString stringVal;
   nsresult rv = GetCharPref(aPrefName, stringVal);
   if (NS_SUCCEEDED(rv)) {
-    // ToFloat() does a locale-independent conversion.
-    *aRetVal = stringVal.ToFloat(&rv);
+    // ParsePrefFloat() does a locale-independent conversion.
+    *aRetVal = ParsePrefFloat(stringVal, &rv);
   }
 
   return rv;
