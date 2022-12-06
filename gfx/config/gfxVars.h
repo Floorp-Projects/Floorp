@@ -93,8 +93,7 @@ class gfxVarReceiver;
   _(UseDMABufSurfaceExport, bool, true)                            \
   _(ReuseDecoderDevice, bool, false)                               \
   _(UseCanvasRenderThread, bool, false)                            \
-  _(AllowBackdropFilter, bool, true)                               \
-  _(WebglOopAsyncPresentForceSync, bool, true)
+  _(AllowBackdropFilter, bool, true)
 
 /* Add new entries above this line. */
 

@@ -2923,11 +2923,6 @@ void gfxPlatform::InitWebGLConfig() {
   }
   gfxVars::SetUseCanvasRenderThread(feature.IsEnabled());
 
-  bool webglOopAsyncPresentForceSync =
-      !gfxVars::UseCanvasRenderThread() ||
-      StaticPrefs::webgl_out_of_process_async_present_force_sync();
-  gfxVars::SetWebglOopAsyncPresentForceSync(webglOopAsyncPresentForceSync);
-
   if (kIsAndroid) {
     // Don't enable robust buffer access on Adreno 630 devices.
     // It causes the linking of some shaders to fail. See bug 1485441.
