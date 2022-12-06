@@ -1271,7 +1271,7 @@ mozilla::Maybe<NameLocation> ScopeContext::getPrivateFieldLocation(
 }
 
 bool CompilationInput::initScriptSource(JSContext* cx, ErrorContext* ec) {
-  source = do_AddRef(cx->new_<ScriptSource>());
+  source = do_AddRef(ec->getAllocator()->new_<ScriptSource>());
   if (!source) {
     return false;
   }
@@ -5298,15 +5298,16 @@ JS::TranscodeResult JS::DecodeStencil(JSContext* cx,
                                       const JS::DecodeOptions& options,
                                       const JS::TranscodeRange& range,
                                       JS::Stencil** stencilOut) {
-  RefPtr<ScriptSource> source = cx->new_<ScriptSource>();
+  AutoReportFrontendContext ec(cx);
+  RefPtr<ScriptSource> source = ec.getAllocator()->new_<ScriptSource>();
   if (!source) {
     return TranscodeResult::Throw;
   }
-  RefPtr<JS::Stencil> stencil(cx->new_<CompilationStencil>(source));
+  RefPtr<JS::Stencil> stencil(
+      ec.getAllocator()->new_<CompilationStencil>(source));
   if (!stencil) {
     return TranscodeResult::Throw;
   }
-  AutoReportFrontendContext ec(cx);
   XDRStencilDecoder decoder(cx, &ec, range);
   XDRResult res = decoder.codeStencil(options, *stencil);
   if (res.isErr()) {
