@@ -435,6 +435,7 @@ int ScreenGetterWayland::GetMonitorForWindow(nsWindow* aWindow) {
 
   GdkRectangle workArea;
   if (!GdkMonitorGetWorkarea(monitor, &workArea)) {
+    LOG_SCREEN("  failed, can't get work area");
     return -1;
   }
 
@@ -442,8 +443,9 @@ int ScreenGetterWayland::GetMonitorForWindow(nsWindow* aWindow) {
     // Although Gtk/Mutter is very creative in reporting various screens sizes
     // we can rely on Gtk work area start position to match wl_output.
     if (mMonitors[i]->x == workArea.x && mMonitors[i]->y == workArea.y) {
-      LOG_SCREEN(" monitor %d values %d %d -> %d x %d", i, mMonitors[i]->x,
-                 mMonitors[i]->y, mMonitors[i]->width, mMonitors[i]->height);
+      LOG_SCREEN(" monitor %d work area [%d, %d] -> (%d x %d) scale %d", i,
+                 mMonitors[i]->x, mMonitors[i]->y, mMonitors[i]->width,
+                 mMonitors[i]->height, mMonitors[i]->scale);
       return i;
     }
   }
