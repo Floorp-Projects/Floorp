@@ -161,7 +161,7 @@ void SetUpWritableStreamDefaultController(
   // Step 10. Set controller.[[writeAlgorithm]] to writeAlgorithm.
   // Step 11. Set controller.[[closeAlgorithm]] to closeAlgorithm.
   // Step 12. Set controller.[[abortAlgorithm]] to abortAlgorithm.
-  aController->SetAlgorithms(aAlgorithms);
+  aController->SetAlgorithms(*aAlgorithms);
 
   // Step 13. Let backpressure be !
   // WritableStreamDefaultControllerGetBackpressure(controller).
