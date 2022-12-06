@@ -504,6 +504,109 @@ add_task(async function validate_domains() {
   });
 });
 
+add_task(async function validate_urlFilter() {
+  await runAsDNRExtension({
+    background: async dnrTestUtils => {
+      const { testInvalidCondition, testValidCondition } = dnrTestUtils;
+
+      await testInvalidCondition(
+        { urlFilter: "", regexFilter: "" },
+        "urlFilter and regexFilter are mutually exclusive"
+      );
+
+      await testInvalidCondition(
+        { urlFilter: 0 },
+        /urlFilter: Expected string instead of 0/,
+        /* isSchemaError */ true
+      );
+      await testInvalidCondition(
+        { urlFilter: "" },
+        "urlFilter should not be an empty string"
+      );
+      await testInvalidCondition(
+        { urlFilter: "||*" },
+        "urlFilter should not start with '||*'" // should use '*' instead.
+      );
+      await testInvalidCondition(
+        { urlFilter: "||*/" },
+        "urlFilter should not start with '||*'" // should use '*' instead.
+      );
+      await testInvalidCondition(
+        { urlFilter: "straß.de" },
+        "urlFilter should not contain non-ASCII characters"
+      );
+      await testValidCondition({ urlFilter: "xn--stra-yna.de" });
+      await testValidCondition({ urlFilter: "||xn--stra-yna.de/" });
+
+      // The following are all logically equivalent to "||*" (and ""), but are
+      // considered valid in the DNR API implemented/documented by Chrome.
+      await testValidCondition({ urlFilter: "*" });
+      await testValidCondition({ urlFilter: "****************" });
+      await testValidCondition({ urlFilter: "||" });
+      await testValidCondition({ urlFilter: "|" });
+      await testValidCondition({ urlFilter: "|*|" });
+      await testValidCondition({ urlFilter: "^" });
+      await testValidCondition({ urlFilter: null });
+
+      await testValidCondition({ urlFilter: "||example^" });
+      await testValidCondition({ urlFilter: "||example.com" });
+      await testValidCondition({ urlFilter: "||example.com/index^" });
+      await testValidCondition({ urlFilter: ".gif|" });
+      await testValidCondition({ urlFilter: "|https:" });
+      await testValidCondition({ urlFilter: "|https:*" });
+      await testValidCondition({ urlFilter: "e" });
+      await testValidCondition({ urlFilter: "%80" });
+      await testValidCondition({ urlFilter: "*e*" }); // FYI: same as just "e".
+      await testValidCondition({ urlFilter: "*e*|" }); // FYI: same as just "e".
+
+      let validchars = "";
+      for (let i = 0; i < 0x80; ++i) {
+        validchars += String.fromCharCode(i);
+      }
+      await testValidCondition({ urlFilter: validchars });
+      // Confirming that 0x80 and up is invalid.
+      await testInvalidCondition(
+        { urlFilter: "\x80" },
+        "urlFilter should not contain non-ASCII characters"
+      );
+
+      browser.test.notifyPass();
+    },
+  });
+});
+
+add_task(async function validate_regexFilter() {
+  await runAsDNRExtension({
+    background: async dnrTestUtils => {
+      const { testInvalidCondition } = dnrTestUtils;
+
+      // This check is duplicated in validate_urlFilter.
+      await testInvalidCondition(
+        { urlFilter: "", regexFilter: "" },
+        "urlFilter and regexFilter are mutually exclusive"
+      );
+
+      await testInvalidCondition(
+        { regexFilter: /regex/ },
+        /regexFilter: Expected string instead of \{\}/,
+        /* isSchemaError */ true
+      );
+
+      await testInvalidCondition(
+        { regexFilter: "" },
+        "regexFilter should not be an empty string"
+      );
+      // TODO bug 1745760: implement regexFilter support
+      await testInvalidCondition(
+        { regexFilter: "^https://example\\.com\\/" },
+        "regexFilter is not supported yet"
+      );
+
+      browser.test.notifyPass();
+    },
+  });
+});
+
 add_task(async function validate_actions() {
   await runAsDNRExtension({
     background: async dnrTestUtils => {

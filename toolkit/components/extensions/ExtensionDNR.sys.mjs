@@ -120,6 +120,8 @@ const PRECEDENCE_STATIC_RULESETS_BASE = 3;
 // schemas/declarative_net_request.json. This class exists to allow the JS
 // engine to use one Shape for all Rule instances.
 class RuleCondition {
+  #compiledUrlFilter;
+
   constructor(cond) {
     this.urlFilter = cond.urlFilter;
     this.regexFilter = cond.regexFilter;
@@ -135,6 +137,25 @@ class RuleCondition {
     this.domainType = cond.domainType;
     this.tabIds = cond.tabIds;
     this.excludedTabIds = cond.excludedTabIds;
+  }
+
+  // See CompiledUrlFilter for documentation.
+  urlFilterMatches(requestDataForUrlFilter) {
+    if (!this.#compiledUrlFilter) {
+      // eslint-disable-next-line no-use-before-define
+      this.#compiledUrlFilter = new CompiledUrlFilter(
+        this.urlFilter,
+        this.isUrlFilterCaseSensitive
+      );
+    }
+    return this.#compiledUrlFilter.matchesRequest(requestDataForUrlFilter);
+  }
+
+  getCompiledUrlFilter() {
+    return this.#compiledUrlFilter;
+  }
+  setCompiledUrlFilter(compiledUrlFilter) {
+    this.#compiledUrlFilter = compiledUrlFilter;
   }
 }
 
@@ -296,6 +317,275 @@ function applyURLTransform(uri, transform) {
   return mut.finalize();
 }
 
+/**
+ * An urlFilter is a string pattern to match a canonical http(s) URL.
+ * urlFilter matches anywhere in the string, unless an anchor is present:
+ * - ||... ("Domain name anchor") - domain or subdomain starts with ...
+ * - |... ("Left anchor") - URL starts with ...
+ * - ...| ("Right anchor") - URL ends with ...
+ *
+ * Other than the anchors, the following special characters exist:
+ * - ^ = end of URL, or any char except: alphanum _ - . % ("Separator")
+ * - * = any number of characters ("Wildcard")
+ *
+ * Ambiguous cases (undocumented but actual Chrome behavior):
+ * - Plain "||" is a domain name anchor, not left + empty + right anchor.
+ * - "^" repeated at end of pattern: "^" matches end of URL only once.
+ * - "^|" at end of pattern: "^" is allowed to match end of URL.
+ *
+ * Implementation details:
+ * - CompiledUrlFilter's constructor (+#initializeUrlFilter) extracts the
+ *   actual urlFilter and anchors, for matching against URLs later.
+ * - RequestDataForUrlFilter class precomputes the URL / domain anchors to
+ *   support matching more efficiently.
+ * - CompiledUrlFilter's matchesRequest(request) checks whether the request is
+ *   actually matched, using the precomputed information.
+ *
+ * The class was designed to minimize the number of string allocations during
+ * request evaluation, because the matchesRequest method may be called very
+ * often for every network request.
+ */
+class CompiledUrlFilter {
+  #isUrlFilterCaseSensitive;
+  #urlFilterParts; // = parts of urlFilter, minus anchors, split at "*".
+  // isAnchorLeft and isAnchorDomain are mutually exclusive.
+  #isAnchorLeft = false;
+  #isAnchorDomain = false;
+  #isAnchorRight = false;
+  #isTrailingSeparator = false; // Whether urlFilter ends with "^".
+
+  /**
+   * @param {string} urlFilter - non-empty urlFilter
+   * @param {boolean} [isUrlFilterCaseSensitive]
+   */
+  constructor(urlFilter, isUrlFilterCaseSensitive) {
+    this.#isUrlFilterCaseSensitive = isUrlFilterCaseSensitive;
+    this.#initializeUrlFilter(urlFilter, isUrlFilterCaseSensitive);
+  }
+
+  #initializeUrlFilter(urlFilter, isUrlFilterCaseSensitive) {
+    let start = 0;
+    let end = urlFilter.length;
+
+    // First, trim the anchors off urlFilter.
+    if (urlFilter[0] === "|") {
+      if (urlFilter[1] === "|") {
+        start = 2;
+        this.#isAnchorDomain = true;
+        // ^ will not revert to false below, because "||*" is already rejected
+        // by RuleValidator's #checkCondUrlFilterAndRegexFilter method.
+      } else {
+        start = 1;
+        this.#isAnchorLeft = true; // may revert to false below.
+      }
+    }
+    if (end > start && urlFilter[end - 1] === "|") {
+      --end;
+      this.#isAnchorRight = true; // may revert to false below.
+    }
+
+    // Skip unnecessary wildcards, and adjust meaningless anchors accordingly:
+    // "|*" and "*|" are not effective anchors, they could have been omitted.
+    while (start < end && urlFilter[start] === "*") {
+      ++start;
+      this.#isAnchorLeft = false;
+    }
+    while (end > start && urlFilter[end - 1] === "*") {
+      --end;
+      this.#isAnchorRight = false;
+    }
+
+    // Special-case the last "^", so that the matching algorithm can rely on
+    // the simple assumption that a "^" in the filter matches exactly one char:
+    // The "^" at the end of the pattern is specified to match either one char
+    // as usual, or as an anchor for the end of the URL (i.e. zero characters).
+    this.#isTrailingSeparator = urlFilter[end - 1] === "^";
+
+    let urlFilterWithoutAnchors = urlFilter.slice(start, end);
+    if (!isUrlFilterCaseSensitive) {
+      urlFilterWithoutAnchors = urlFilterWithoutAnchors.toLowerCase();
+    }
+    this.#urlFilterParts = urlFilterWithoutAnchors.split("*");
+  }
+
+  /**
+   * Tests whether |request| matches the urlFilter.
+   *
+   * @param {RequestDataForUrlFilter} requestDataForUrlFilter
+   * @returns {boolean} Whether the condition matches the URL.
+   */
+  matchesRequest(requestDataForUrlFilter) {
+    const url = requestDataForUrlFilter.getUrl(this.#isUrlFilterCaseSensitive);
+    const domainAnchors = requestDataForUrlFilter.domainAnchors;
+
+    const urlFilterParts = this.#urlFilterParts;
+
+    const REAL_END_OF_URL = url.length - 1; // minus trailing "^"
+
+    // atUrlIndex is the position after the most recently matched part.
+    // If a match is not found, it is -1 and we should return false.
+    let atUrlIndex = 0;
+
+    // The head always exists, potentially even an empty string.
+    const head = urlFilterParts[0];
+    if (this.#isAnchorLeft) {
+      if (!this.#startsWithPart(head, url, 0)) {
+        return false;
+      }
+      atUrlIndex = head.length;
+    } else if (this.#isAnchorDomain) {
+      atUrlIndex = this.#indexAfterDomainPart(head, url, domainAnchors);
+    } else {
+      atUrlIndex = this.#indexAfterPart(head, url, 0);
+    }
+
+    let previouslyAtUrlIndex = 0;
+    for (let i = 1; i < urlFilterParts.length && atUrlIndex !== -1; ++i) {
+      previouslyAtUrlIndex = atUrlIndex;
+      atUrlIndex = this.#indexAfterPart(urlFilterParts[i], url, atUrlIndex);
+    }
+    if (atUrlIndex === -1) {
+      return false;
+    }
+    if (atUrlIndex === url.length) {
+      // We always append a "^" to the URL, so if the match is at the end of the
+      // URL (REAL_END_OF_URL), only accept if the pattern ended with a "^".
+      return this.#isTrailingSeparator;
+    }
+    if (!this.#isAnchorRight || atUrlIndex === REAL_END_OF_URL) {
+      // Either not interested in the end, or already at the end of the URL.
+      return true;
+    }
+
+    // #isAnchorRight is true but we are not at the end of the URL.
+    // Backtrack once, to retry the last pattern (tail) with the end of the URL.
+
+    const tail = urlFilterParts[urlFilterParts.length - 1];
+    // The expected offset where the tail should be located.
+    const expectedTailIndex = REAL_END_OF_URL - tail.length;
+    // If #isTrailingSeparator is true, then accept the URL's trailing "^".
+    const expectedTailIndexPlus1 = expectedTailIndex + 1;
+    if (urlFilterParts.length === 1) {
+      if (this.#isAnchorLeft) {
+        // If matched, we would have returned at the REAL_END_OF_URL checks.
+        return false;
+      }
+      if (this.#isAnchorDomain) {
+        // The tail must be exactly at one of the domain anchors.
+        return (
+          (domainAnchors.includes(expectedTailIndex) &&
+            this.#startsWithPart(tail, url, expectedTailIndex)) ||
+          (this.#isTrailingSeparator &&
+            domainAnchors.includes(expectedTailIndexPlus1) &&
+            this.#startsWithPart(tail, url, expectedTailIndexPlus1))
+        );
+      }
+      // head has no left/domain anchor, fall through.
+    }
+    // The tail is not left/domain anchored, accept it as long as it did not
+    // overlap with an already-matched part of the URL.
+    return (
+      (expectedTailIndex > previouslyAtUrlIndex &&
+        this.#startsWithPart(tail, url, expectedTailIndex)) ||
+      (this.#isTrailingSeparator &&
+        expectedTailIndexPlus1 > previouslyAtUrlIndex &&
+        this.#startsWithPart(tail, url, expectedTailIndexPlus1))
+    );
+  }
+
+  // Whether a character should match "^" in an urlFilter.
+  // The "match end of URL" meaning of "^" is covered by #isTrailingSeparator.
+  static #regexIsSep = /[^A-Za-z0-9_\-.%]/;
+
+  #matchPartAt(part, url, urlIndex, sepStart) {
+    if (sepStart === -1) {
+      // Fast path.
+      return url.startsWith(part, urlIndex);
+    }
+    if (urlIndex + part.length > url.length) {
+      return false;
+    }
+    for (let i = 0; i < part.length; ++i) {
+      let partChar = part[i];
+      let urlChar = url[urlIndex + i];
+      if (
+        partChar !== urlChar &&
+        (partChar !== "^" || !CompiledUrlFilter.#regexIsSep.test(urlChar))
+      ) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  #startsWithPart(part, url, urlIndex) {
+    const sepStart = part.indexOf("^");
+    return this.#matchPartAt(part, url, urlIndex, sepStart);
+  }
+
+  #indexAfterPart(part, url, urlIndex) {
+    let sepStart = part.indexOf("^");
+    if (sepStart === -1) {
+      // Fast path.
+      let i = url.indexOf(part, urlIndex);
+      return i === -1 ? i : i + part.length;
+    }
+    let maxUrlIndex = url.length - part.length;
+    for (let i = urlIndex; i <= maxUrlIndex; ++i) {
+      if (this.#matchPartAt(part, url, i, sepStart)) {
+        return i + part.length;
+      }
+    }
+    return -1;
+  }
+
+  #indexAfterDomainPart(part, url, domainAnchors) {
+    const sepStart = part.indexOf("^");
+    for (let offset of domainAnchors) {
+      if (this.#matchPartAt(part, url, offset, sepStart)) {
+        return offset + part.length;
+      }
+    }
+    return -1;
+  }
+}
+
+// See CompiledUrlFilter for documentation of RequestDataForUrlFilter.
+class RequestDataForUrlFilter {
+  /**
+   * @param {nsIURI} requestURI - The URL to match against.
+   * @returns {object} An object to p
+   */
+  constructor(requestURI) {
+    // "^" is appended, see CompiledUrlFilter's #initializeUrlFilter.
+    this.urlAnyCase = requestURI.spec + "^";
+    this.urlLowerCase = this.urlAnyCase.toLowerCase();
+    // For "||..." (Domain name anchor): where (sub)domains start in the URL.
+    this.domainAnchors = this.#getDomainAnchors(this.urlAnyCase);
+  }
+
+  getUrl(isUrlFilterCaseSensitive) {
+    return isUrlFilterCaseSensitive ? this.urlAnyCase : this.urlLowerCase;
+  }
+
+  #getDomainAnchors(url) {
+    let hostStart = url.indexOf("://") + 3;
+    let hostEnd = url.indexOf("/", hostStart);
+    let userpassEnd = url.lastIndexOf("@", hostEnd) + 1;
+    if (userpassEnd) {
+      hostStart = userpassEnd;
+    }
+    let host = url.slice(hostStart, hostEnd);
+    let domainAnchors = [hostStart];
+    let offset = 0;
+    // Find all offsets after ".". If not found, -1 + 1 = 0, and the loop ends.
+    while ((offset = host.indexOf(".", offset) + 1)) {
+      domainAnchors.push(hostStart + offset);
+    }
+    return domainAnchors;
+  }
+}
+
 class RuleValidator {
   constructor(alreadyValidatedRules) {
     this.rulesMap = new Map(alreadyValidatedRules.map(r => [r.id, r]));
@@ -329,12 +619,11 @@ class RuleValidator {
       // - domainType (enum string)
       // - initiatorDomains & excludedInitiatorDomains & requestDomains &
       //   excludedRequestDomains (array of string in canonicalDomain format)
-      // TODO bug 1745759: urlFilter validation
-      // TODO bug 1745760: regexFilter validation
       if (
         !this.#checkCondResourceTypes(rule) ||
         !this.#checkCondRequestMethods(rule) ||
         !this.#checkCondTabIds(rule) ||
+        !this.#checkCondUrlFilterAndRegexFilter(rule) ||
         !this.#checkAction(rule)
       ) {
         continue;
@@ -408,6 +697,55 @@ class RuleValidator {
     }
     // TODO bug 1745764 / bug 1745763: after adding support for dynamic/static
     // rules, validate that we only have a session ruleset here.
+    return true;
+  }
+
+  static #regexNonASCII = /[^\x00-\x7F]/; // eslint-disable-line no-control-regex
+
+  // Checks: urlFilter & regexFilter
+  #checkCondUrlFilterAndRegexFilter(rule) {
+    const { urlFilter, regexFilter } = rule.condition;
+    const checkEmptyOrNonASCII = (str, prop) => {
+      if (!str) {
+        this.#collectInvalidRule(rule, `${prop} should not be an empty string`);
+        return false;
+      }
+      // Non-ASCII in URLs are always encoded in % (or punycode in domains).
+      if (RuleValidator.#regexNonASCII.test(str)) {
+        this.#collectInvalidRule(
+          rule,
+          `${prop} should not contain non-ASCII characters`
+        );
+        return false;
+      }
+      return true;
+    };
+    if (urlFilter != null) {
+      if (regexFilter != null) {
+        this.#collectInvalidRule(
+          rule,
+          "urlFilter and regexFilter are mutually exclusive"
+        );
+        return false;
+      }
+      if (!checkEmptyOrNonASCII(urlFilter, "urlFilter")) {
+        // #collectInvalidRule already called by checkEmptyOrNonASCII.
+        return false;
+      }
+      if (urlFilter.startsWith("||*")) {
+        // Rejected because Chrome does too. '||*' is equivalent to '*'.
+        this.#collectInvalidRule(rule, "urlFilter should not start with '||*'");
+        return false;
+      }
+    } else if (regexFilter != null) {
+      if (!checkEmptyOrNonASCII(regexFilter, "regexFilter")) {
+        // #collectInvalidRule already called by checkEmptyOrNonASCII.
+        return false;
+      }
+      // TODO bug 1745760: accept when regexFilter is a valid regexp.
+      this.#collectInvalidRule(rule, "regexFilter is not supported yet");
+      return false;
+    }
     return true;
   }
 
@@ -651,6 +989,8 @@ class RequestDetails {
     this.initiatorDomain = initiatorURI
       ? this.#domainFromURI(initiatorURI)
       : null;
+
+    this.requestDataForUrlFilter = new RequestDataForUrlFilter(requestURI);
   }
 
   static fromChannelWrapper(channel) {
@@ -872,13 +1212,7 @@ class RequestEvaluator {
 
     // Check this.req.requestURI:
     if (cond.urlFilter) {
-      if (
-        !this.#matchesUrlFilter(
-          this.req.requestURI,
-          cond.urlFilter,
-          cond.isUrlFilterCaseSensitive
-        )
-      ) {
+      if (!cond.urlFilterMatches(this.req.requestDataForUrlFilter)) {
         return false;
       }
     } else if (cond.regexFilter) {
@@ -935,22 +1269,6 @@ class RequestEvaluator {
     }
 
     return true;
-  }
-
-  /**
-   * @param {nsIURI} uri - The request URI.
-   * @param {string} urlFilter
-   * @param {boolean} [isUrlFilterCaseSensitive]
-   * @returns {boolean} Whether urlFilter matches the given uri.
-   */
-  #matchesUrlFilter(uri, urlFilter, isUrlFilterCaseSensitive) {
-    // TODO bug 1745759: Check cond.urlFilter + isUrlFilterCaseSensitive
-    // Placeholder for unit test until we have a complete implementation.
-    if (urlFilter === "|https:*") {
-      return uri.schemeIs("https");
-    }
-    throw new Error(`urlFilter not implemented yet: ${urlFilter}`);
-    // return true; after all other checks passed.
   }
 
   /**
