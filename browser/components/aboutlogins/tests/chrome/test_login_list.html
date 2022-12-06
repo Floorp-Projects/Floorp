@@ -156,7 +156,7 @@ add_task(async function test_keyboard_navigation() {
     sendKey("TAB");
     await new Promise(resolve => requestAnimationFrame(resolve));
   }
-
+  sendKey("TAB");
   let loginSort = gLoginList.shadowRoot.querySelector("#login-sort");
   await SimpleTest.promiseWaitForCondition(() => loginSort == gLoginList.shadowRoot.activeElement,
     "waiting for login-sort to get focus");
