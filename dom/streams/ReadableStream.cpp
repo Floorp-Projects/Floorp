@@ -833,6 +833,174 @@ void ReadableStream::Tee(JSContext* aCx,
   ReadableStreamTee(aCx, this, false, aResult, aRv);
 }
 
+void ReadableStream::IteratorData::Traverse(
+    nsCycleCollectionTraversalCallback& cb) {
+  ReadableStream::IteratorData* tmp = this;
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReader);
+}
+void ReadableStream::IteratorData::Unlink() {
+  ReadableStream::IteratorData* tmp = this;
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mReader);
+}
+
+// https://streams.spec.whatwg.org/#rs-get-iterator
+void ReadableStream::InitAsyncIteratorData(
+    IteratorData& aData, Iterator::IteratorType aType,
+    const ReadableStreamIteratorOptions& aOptions, ErrorResult& aRv) {
+  // Step 1. Let reader be ? AcquireReadableStreamDefaultReader(stream).
+  RefPtr<ReadableStreamDefaultReader> reader =
+      AcquireReadableStreamDefaultReader(this, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  // Step 2. Set iterator’s reader to reader.
+  aData.mReader = reader;
+
+  // Step 3. Let preventCancel be args[0]["preventCancel"].
+  // Step 4. Set iterator’s prevent cancel to preventCancel.
+  aData.mPreventCancel = aOptions.mPreventCancel;
+}
+
+// https://streams.spec.whatwg.org/#rs-asynciterator-prototype-next
+// Step 4.
+struct IteratorReadRequest : public ReadRequest {
+ public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IteratorReadRequest, ReadRequest)
+
+  RefPtr<Promise> mPromise;
+  RefPtr<ReadableStreamDefaultReader> mReader;
+
+  explicit IteratorReadRequest(Promise* aPromise,
+                               ReadableStreamDefaultReader* aReader)
+      : mPromise(aPromise), mReader(aReader) {}
+
+  // chunk steps, given chunk
+  void ChunkSteps(JSContext* aCx, JS::Handle<JS::Value> aChunk,
+                  ErrorResult& aRv) override {
+    // Step 1. Resolve promise with chunk.
+    mPromise->MaybeResolve(aChunk);
+  }
+
+  // close steps
+  void CloseSteps(JSContext* aCx, ErrorResult& aRv) override {
+    // Step 1. Perform ! ReadableStreamDefaultReaderRelease(reader).
+    ReadableStreamDefaultReaderRelease(aCx, mReader, aRv);
+    if (aRv.Failed()) {
+      mPromise->MaybeRejectWithUndefined();
+      return;
+    }
+
+    // Step 2. Resolve promise with end of iteration.
+    iterator_utils::ResolvePromiseForFinished(mPromise);
+  }
+
+  // error steps, given e
+  void ErrorSteps(JSContext* aCx, JS::Handle<JS::Value> aError,
+                  ErrorResult& aRv) override {
+    // Step 1. Perform ! ReadableStreamDefaultReaderRelease(reader).
+    ReadableStreamDefaultReaderRelease(aCx, mReader, aRv);
+    if (aRv.Failed()) {
+      mPromise->MaybeRejectWithUndefined();
+      return;
+    }
+
+    // Step 2. Reject promise with e.
+    mPromise->MaybeReject(aError);
+  }
+
+ protected:
+  virtual ~IteratorReadRequest() = default;
+};
+
+NS_IMPL_CYCLE_COLLECTION_INHERITED(IteratorReadRequest, ReadRequest, mPromise,
+                                   mReader)
+
+NS_IMPL_ADDREF_INHERITED(IteratorReadRequest, ReadRequest)
+NS_IMPL_RELEASE_INHERITED(IteratorReadRequest, ReadRequest)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IteratorReadRequest)
+NS_INTERFACE_MAP_END_INHERITING(ReadRequest)
+
+// https://streams.spec.whatwg.org/#rs-asynciterator-prototype-next
+already_AddRefed<Promise> ReadableStream::GetNextIterationResult(
+    Iterator* aIterator, ErrorResult& aRv) {
+  // Step 1. Let reader be iterator’s reader.
+  RefPtr<ReadableStreamDefaultReader> reader = aIterator->Data().mReader;
+
+  // Step 2. Assert: reader.[[stream]] is not undefined.
+  MOZ_ASSERT(reader->GetStream());
+
+  // Step 3. Let promise be a new promise.
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  // Step 4. Let readRequest be a new read request with the following items:
+  RefPtr<ReadRequest> request = new IteratorReadRequest(promise, reader);
+
+  // Step 5. Perform ! ReadableStreamDefaultReaderRead(this, readRequest).
+  AutoJSAPI jsapi;
+  if (!jsapi.Init(mGlobal)) {
+    aRv.ThrowUnknownError("Internal error");
+    return nullptr;
+  }
+
+  ReadableStreamDefaultReaderRead(jsapi.cx(), reader, request, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  // Step 6. Return promise.
+  return promise.forget();
+}
+
+// https://streams.spec.whatwg.org/#rs-asynciterator-prototype-return
+already_AddRefed<Promise> ReadableStream::IteratorReturn(
+    JSContext* aCx, Iterator* aIterator, JS::Handle<JS::Value> aValue,
+    ErrorResult& aRv) {
+  // Step 1. Let reader be iterator’s reader.
+  RefPtr<ReadableStreamDefaultReader> reader = aIterator->Data().mReader;
+
+  // Step 2. Assert: reader.[[stream]] is not undefined.
+  MOZ_ASSERT(reader->GetStream());
+
+  // Step 3. Assert: reader.[[readRequests]] is empty, as the async iterator
+  // machinery guarantees that any previous calls to next() have settled before
+  // this is called.
+  MOZ_ASSERT(reader->ReadRequests().isEmpty());
+
+  // Step 4. If iterator’s prevent cancel is false:
+  if (!aIterator->Data().mPreventCancel) {
+    // Step 4.1. Let result be ! ReadableStreamReaderGenericCancel(reader, arg).
+    RefPtr<ReadableStream> stream(reader->GetStream());
+    RefPtr<Promise> result = ReadableStreamCancel(aCx, stream, aValue, aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
+
+    // Step 4.2. Perform ! ReadableStreamDefaultReaderRelease(reader).
+    ReadableStreamDefaultReaderRelease(aCx, reader, aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
+
+    // Step 4.3. Return result.
+    return result.forget();
+  }
+
+  // Step 5. Perform ! ReadableStreamDefaultReaderRelease(reader).
+  ReadableStreamDefaultReaderRelease(aCx, reader, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  // Step 6. Return a promise resolved with undefined.
+  return Promise::CreateResolvedWithUndefined(GetParentObject(), aRv);
+}
+
 // https://streams.spec.whatwg.org/#readable-stream-add-read-into-request
 void ReadableStreamAddReadIntoRequest(ReadableStream* aStream,
                                       ReadIntoRequest* aReadIntoRequest) {
