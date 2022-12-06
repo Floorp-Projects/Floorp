@@ -33,6 +33,10 @@ function assertEngagementTelemetry(expectedExtraList) {
   _assertGleanTelemetry("engagement", expectedExtraList);
 }
 
+function assertImpressionTelemetry(expectedExtraList) {
+  _assertGleanTelemetry("impression", expectedExtraList);
+}
+
 function _assertGleanTelemetry(telemetryName, expectedExtraList) {
   const telemetries = Glean.urlbar[telemetryName].testGetValue() ?? [];
   Assert.equal(telemetries.length, expectedExtraList.length);
@@ -140,6 +144,7 @@ async function doPaste(data) {
   document.commandDispatcher
     .getControllerForCommand("cmd_paste")
     .doCommand("cmd_paste");
+  await UrlbarTestUtils.promiseSearchComplete(window);
 }
 
 async function doPasteAndGo(data) {
@@ -306,4 +311,14 @@ async function showResultByArrowDown() {
     EventUtils.synthesizeKey("KEY_ArrowDown");
   });
   await UrlbarTestUtils.promiseSearchComplete(window);
+}
+
+async function waitForPauseImpression() {
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(r =>
+    setTimeout(
+      r,
+      UrlbarPrefs.get("searchEngagementTelemetry.pauseImpressionIntervalMs")
+    )
+  );
 }
