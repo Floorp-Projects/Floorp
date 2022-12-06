@@ -2,16 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = [
-  "PartnerLinkAttribution",
-  "CONTEXTUAL_SERVICES_PING_TYPES",
-];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -48,7 +39,7 @@ XPCOMUtils.defineLazyGetter(lazy, "contextId", () => {
   return _contextId;
 });
 
-const CONTEXTUAL_SERVICES_PING_TYPES = {
+export const CONTEXTUAL_SERVICES_PING_TYPES = {
   TOPSITES_IMPRESSION: "topsites-impression",
   TOPSITES_SELECTION: "topsites-click",
   QS_BLOCK: "quicksuggest-block",
@@ -56,7 +47,7 @@ const CONTEXTUAL_SERVICES_PING_TYPES = {
   QS_SELECTION: "quicksuggest-click",
 };
 
-var PartnerLinkAttribution = {
+export var PartnerLinkAttribution = {
   /**
    * Sends an attribution request to an anonymizing proxy.
    *

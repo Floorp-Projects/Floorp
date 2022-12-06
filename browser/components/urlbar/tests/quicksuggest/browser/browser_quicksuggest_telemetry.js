@@ -9,12 +9,12 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
+  CONTEXTUAL_SERVICES_PING_TYPES:
+    "resource:///modules/PartnerLinkAttribution.sys.mjs",
   UrlbarView: "resource:///modules/UrlbarView.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  CONTEXTUAL_SERVICES_PING_TYPES:
-    "resource:///modules/PartnerLinkAttribution.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   sinon: "resource://testing-common/Sinon.jsm",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",

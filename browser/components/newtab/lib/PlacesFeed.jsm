@@ -23,14 +23,10 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
+  PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PartnerLinkAttribution",
-  "resource:///modules/PartnerLinkAttribution.jsm"
-);
 ChromeUtils.defineModuleGetter(
   lazy,
   "pktApi",
