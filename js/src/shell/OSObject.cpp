@@ -820,6 +820,7 @@ static bool ospath_join(JSContext* cx, unsigned argc, Value* vp) {
 
   for (unsigned i = 0; i < args.length(); i++) {
     if (!args[i].isString()) {
+      buffer.failure();
       JS_ReportErrorASCII(cx, "join expects string arguments only");
       return false;
     }
@@ -827,6 +828,7 @@ static bool ospath_join(JSContext* cx, unsigned argc, Value* vp) {
     Rooted<JSLinearString*> str(cx,
                                 JS_EnsureLinearString(cx, args[i].toString()));
     if (!str) {
+      buffer.failure();
       return false;
     }
 
@@ -835,24 +837,29 @@ static bool ospath_join(JSContext* cx, unsigned argc, Value* vp) {
     } else if (i != 0) {
       UniqueChars path = JS_EncodeStringToLatin1(cx, str);
       if (!path) {
+        buffer.failure();
         return false;
       }
 
       if (!buffer.append(PathSeparator)) {
+        buffer.failure();
         return false;
       }
     }
 
     if (!buffer.append(args[i].toString())) {
+      buffer.failure();
       return false;
     }
   }
 
   JSString* result = buffer.finishString();
   if (!result) {
+    buffer.failure();
     return false;
   }
 
+  buffer.ok();
   args.rval().setString(result);
   return true;
 }

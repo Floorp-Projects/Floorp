@@ -427,17 +427,29 @@ JSLinearString* js::EscapeRegExpPattern(JSContext* cx, Handle<JSAtom*> src) {
   if (src->hasLatin1Chars()) {
     JS::AutoCheckCannotGC nogc;
     if (!::EscapeRegExpPattern(sb, src->latin1Chars(nogc), src->length())) {
+      sb.failure();
       return nullptr;
     }
   } else {
     JS::AutoCheckCannotGC nogc;
     if (!::EscapeRegExpPattern(sb, src->twoByteChars(nogc), src->length())) {
+      sb.failure();
       return nullptr;
     }
   }
 
   // Step 3.
-  return sb.empty() ? src : sb.finishString();
+  if (sb.empty()) {
+    sb.ok();
+    return src;
+  }
+  auto* result = sb.finishString();
+  if (!result) {
+    sb.failure();
+    return nullptr;
+  }
+  sb.ok();
+  return result;
 }
 
 // ES6 draft rev32 21.2.5.14. Optimized for RegExpObject.
@@ -454,38 +466,53 @@ JSLinearString* RegExpObject::toString(JSContext* cx,
   JSStringBuilder sb(cx);
   size_t len = escapedSrc->length();
   if (!sb.reserve(len + 2)) {
+    sb.failure();
     return nullptr;
   }
   sb.infallibleAppend('/');
   if (!sb.append(escapedSrc)) {
+    sb.failure();
     return nullptr;
   }
   sb.infallibleAppend('/');
 
   // Steps 5-7.
   if (obj->hasIndices() && !sb.append('d')) {
+    sb.failure();
     return nullptr;
   }
   if (obj->global() && !sb.append('g')) {
+    sb.failure();
     return nullptr;
   }
   if (obj->ignoreCase() && !sb.append('i')) {
+    sb.failure();
     return nullptr;
   }
   if (obj->multiline() && !sb.append('m')) {
+    sb.failure();
     return nullptr;
   }
   if (obj->dotAll() && !sb.append('s')) {
+    sb.failure();
     return nullptr;
   }
   if (obj->unicode() && !sb.append('u')) {
+    sb.failure();
     return nullptr;
   }
   if (obj->sticky() && !sb.append('y')) {
+    sb.failure();
     return nullptr;
   }
 
-  return sb.finishString();
+  auto* result = sb.finishString();
+  if (!result) {
+    sb.failure();
+    return nullptr;
+  }
+  sb.ok();
+  return result;
 }
 
 template <typename CharT>

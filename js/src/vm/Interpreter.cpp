@@ -1930,15 +1930,19 @@ void js::ReportInNotObjectError(JSContext* cx, HandleValue lref,
     if (str->length() > MaxStringLength) {
       JSStringBuilder buf(cx);
       if (!buf.appendSubstring(str, 0, MaxStringLength)) {
+        buf.failure();
         return nullptr;
       }
       if (!buf.append("...")) {
+        buf.failure();
         return nullptr;
       }
       str = buf.finishString();
       if (!str) {
+        buf.failure();
         return nullptr;
       }
+      buf.ok();
     }
     return QuoteString(cx, str, '"');
   };

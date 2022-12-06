@@ -457,6 +457,7 @@ JSString* js::TupleToSource(JSContext* cx, Handle<TupleType*> tup) {
   JSStringBuilder sb(cx);
 
   if (!sb.append("#[")) {
+    sb.failure();
     return nullptr;
   }
 
@@ -469,15 +470,18 @@ JSString* js::TupleToSource(JSContext* cx, Handle<TupleType*> tup) {
     /* Get element's character string. */
     JSString* str = ValueToSource(cx, elt);
     if (!str) {
+      sb.failure();
       return nullptr;
     }
 
     /* Append element to buffer. */
     if (!sb.append(str)) {
+      sb.failure();
       return nullptr;
     }
     if (index + 1 != length) {
       if (!sb.append(", ")) {
+        sb.failure();
         return nullptr;
       }
     }
@@ -485,10 +489,17 @@ JSString* js::TupleToSource(JSContext* cx, Handle<TupleType*> tup) {
 
   /* Finalize the buffer. */
   if (!sb.append(']')) {
+    sb.failure();
     return nullptr;
   }
 
-  return sb.finishString();
+  auto* result = sb.finishString();
+  if (!result) {
+    sb.failure();
+    return nullptr;
+  }
+  sb.ok();
+  return result;
 }
 
 // Record and Tuple proposal section 9.2.1
