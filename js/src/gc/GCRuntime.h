@@ -1001,8 +1001,6 @@ class GCRuntime {
 
   SweepingTracer sweepingTracer;
 
-  Vector<JS::GCCellPtr, 0, SystemAllocPolicy> unmarkGrayStack;
-
   /* Track total GC heap size for this runtime. */
   HeapSize heapSize;
 
