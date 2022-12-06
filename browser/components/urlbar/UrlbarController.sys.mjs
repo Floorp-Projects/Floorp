@@ -14,8 +14,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
-  clearTimeout: "resource://gre/modules/Timer.sys.mjs",
-  setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 const TELEMETRY_1ST_RESULT = "PLACES_AUTOCOMPLETE_1ST_RESULT_TIME_MS";
@@ -152,10 +150,6 @@ export class UrlbarController {
    * can't be cancelled.
    */
   cancelQuery() {
-    // We must clear the pause impression timer in any case, even if the query
-    // already finished.
-    this.engagementEvent.clearPauseImpressionTimer();
-
     // If the query finished already, don't handle cancel.
     if (!this._lastQueryContextWrapper || this._lastQueryContextWrapper.done) {
       return;
@@ -183,11 +177,6 @@ export class UrlbarController {
     if (queryContext.lastResultCount < 6 && queryContext.results.length >= 6) {
       TelemetryStopwatch.finish(TELEMETRY_6_FIRST_RESULTS, queryContext);
     }
-
-    this.engagementEvent.startPauseImpressionTimer(
-      queryContext,
-      this.input.getSearchSource()
-    );
 
     if (queryContext.firstResultChanged) {
       // Notify the input so it can make adjustments based on the first result.
@@ -833,8 +822,6 @@ class TelemetryEvent {
    *        event.
    */
   record(event, details) {
-    this.clearPauseImpressionTimer();
-
     // This should never throw, or it may break the urlbar.
     try {
       this._internalRecord(event, details);
@@ -844,52 +831,6 @@ class TelemetryEvent {
       this._startEventInfo = null;
       this._discarded = false;
     }
-  }
-
-  /**
-   * Clear the pause impression timer started by startPauseImpressionTimer().
-   */
-  clearPauseImpressionTimer() {
-    lazy.clearTimeout(this._pauseImpressionTimer);
-  }
-
-  /**
-   * Start a timer that records the pause impression telemetry for given context.
-   * The telemetry will be recorded after
-   * "browser.urlbar.searchEngagementTelemetry.pauseImpressionIntervalMs" ms.
-   * If want to clear this timer, please use clearPauseImpressionTimer().
-   *
-   * @param {UrlbarQueryContext} queryContext
-   *        The query details that will be recorded as pause impression telemetry.
-   * @param {string} searchSource
-   *        The seach source that will be recorded as pause impression telemetry.
-   */
-  startPauseImpressionTimer(queryContext, searchSource) {
-    if (this._impressionStartEventInfo === this._startEventInfo) {
-      // Already took an impression telemetry for this session.
-      return;
-    }
-
-    this.clearPauseImpressionTimer();
-    this._pauseImpressionTimer = lazy.setTimeout(() => {
-      let { numChars, numWords, searchWords } = this._parseSearchString(
-        queryContext.searchString
-      );
-      this._recordSearchEngagementTelemetry(
-        queryContext,
-        "impression",
-        this._startEventInfo,
-        {
-          reason: "pause",
-          numChars,
-          numWords,
-          searchWords,
-          searchSource,
-        }
-      );
-
-      this._impressionStartEventInfo = this._startEventInfo;
-    }, lazy.UrlbarPrefs.get("searchEngagementTelemetry.pauseImpressionIntervalMs"));
   }
 
   _internalRecord(event, details) {
@@ -933,28 +874,31 @@ class TelemetryEvent {
     // numWords is not a perfect measurement, since it will return an incorrect
     // value for languages that do not use spaces or URLs containing spaces in
     // its query parameters, for example.
-    let { numChars, numWords, searchWords } = this._parseSearchString(
-      details.searchString
+    let searchString = details.searchString.substring(
+      0,
+      lazy.UrlbarUtils.MAX_TEXT_LENGTH
     );
+    let numChars = details.searchString.length.toString();
+    let searchWords = searchString
+      .trim()
+      .split(lazy.UrlbarTokenizer.REGEXP_SPACES)
+      .filter(t => t);
+    let numWords = searchWords.length.toString();
 
     let { queryContext } = this._controller._lastQueryContextWrapper || {};
 
-    this._recordSearchEngagementTelemetry(
-      queryContext,
-      method,
-      startEventInfo,
-      {
+    if (lazy.UrlbarPrefs.get("searchEngagementTelemetry.enabled")) {
+      this._recordSearchEngagementTelemetry({
+        queryContext,
+        startEventInfo,
         action,
+        method,
         numChars,
         numWords,
         searchWords,
-        provider: details.provider,
-        searchSource: details.searchSource,
-        selectedElement: details.element,
-        selIndex: details.selIndex,
-        selType: details.selType,
-      }
-    );
+        details,
+      });
+    }
 
     if (details.selType === "dismiss") {
       // The conventional telemetry dones't support "dismiss" event.
@@ -967,6 +911,7 @@ class TelemetryEvent {
     // subtraction between monotonic and non-monotonic timestamps; that's why
     // abs is necessary here. It should only happen in tests, anyway.
     let elapsed = Math.abs(Math.round(endTime - startTime));
+    let value = startEventInfo.interactionType;
 
     // Rather than listening to the pref, just update status when we record an
     // event, if the pref changed from the last time.
@@ -994,7 +939,7 @@ class TelemetryEvent {
       this._category,
       method,
       action,
-      startEventInfo.interactionType,
+      value,
       extra
     );
 
@@ -1021,30 +966,19 @@ class TelemetryEvent {
     );
   }
 
-  _recordSearchEngagementTelemetry(
+  _recordSearchEngagementTelemetry({
     queryContext,
-    method,
     startEventInfo,
-    {
-      action,
-      numWords,
-      numChars,
-      provider,
-      reason,
-      searchWords,
-      searchSource,
-      selectedElement,
-      selIndex,
-      selType,
-    }
-  ) {
-    if (!lazy.UrlbarPrefs.get("searchEngagementTelemetry.enabled")) {
-      return;
-    }
-
+    action,
+    method,
+    searchWords,
+    numWords,
+    numChars,
+    details,
+  }) {
     const browserWindow = this._controller.browserWindow;
     let sap = "urlbar";
-    if (searchSource === "urlbar-handoff") {
+    if (details.searchSource === "urlbar-handoff") {
       sap = "handoff";
     } else if (
       browserWindow.isBlankPageURL(browserWindow.gBrowser.currentURI.spec)
@@ -1060,7 +994,7 @@ class TelemetryEvent {
         ? "topsite_search"
         : startEventInfo.interactionType;
     if (interaction === "typed") {
-      if (searchSource === "urlbar-persisted") {
+      if (details.searchSource === "urlbar-persisted") {
         interaction = "persisted_search_terms";
       } else if (
         this._isRefined(searchWordsSet, this._previousSearchWordsSet)
@@ -1080,7 +1014,7 @@ class TelemetryEvent {
       .join(",");
 
     if (method === "engagement") {
-      const selectedResult = currentResults[selIndex];
+      const selectedResult = currentResults[details.selIndex];
       Glean.urlbar.engagement.record({
         sap,
         interaction,
@@ -1092,11 +1026,13 @@ class TelemetryEvent {
         ),
         selected_result_subtype: lazy.UrlbarUtils.searchEngagementTelemetrySubtype(
           selectedResult,
-          selectedElement
+          details.element
         ),
-        provider,
+        provider: details.provider,
         engagement_type:
-          selType === "help" || selType === "dismiss" ? selType : action,
+          details.selType === "help" || details.selType === "dismiss"
+            ? details.selType
+            : action,
         groups,
         results,
       });
@@ -1110,36 +1046,9 @@ class TelemetryEvent {
         groups,
         results,
       });
-    } else if (method === "impression") {
-      Glean.urlbar.impression.record({
-        reason,
-        sap,
-        interaction,
-        n_chars: numChars,
-        n_words: numWords,
-        n_results: numResults,
-        groups,
-        results,
-      });
     } else {
       Cu.reportError(`Unknown telemetry event method: ${method}`);
     }
-  }
-
-  _parseSearchString(searchString) {
-    let numChars = searchString.length.toString();
-    let searchWords = searchString
-      .substring(0, lazy.UrlbarUtils.MAX_TEXT_LENGTH)
-      .trim()
-      .split(lazy.UrlbarTokenizer.REGEXP_SPACES)
-      .filter(t => t);
-    let numWords = searchWords.length.toString();
-
-    return {
-      numChars,
-      numWords,
-      searchWords,
-    };
   }
 
   /**
@@ -1191,7 +1100,6 @@ class TelemetryEvent {
    * no-op.
    */
   discard() {
-    this.clearPauseImpressionTimer();
     this._previousSearchWordsSet = null;
     if (this._startEventInfo) {
       this._startEventInfo = null;

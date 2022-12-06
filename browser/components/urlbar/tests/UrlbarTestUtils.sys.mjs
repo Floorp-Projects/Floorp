@@ -841,9 +841,6 @@ export var UrlbarTestUtils = {
             onFirstResult() {
               return false;
             },
-            getSearchSource() {
-              return "dummy-search-source";
-            },
             window: {
               location: {
                 href: AppConstants.BROWSER_CHROME_URL,
