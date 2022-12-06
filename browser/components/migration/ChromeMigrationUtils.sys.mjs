@@ -43,7 +43,8 @@ export var ChromeMigrationUtils = {
 
   /**
    * Get all extensions installed in a specific profile.
-   * @param {String} profileId - A Chrome user profile ID. For example, "Profile 1".
+   *
+   * @param {string} profileId - A Chrome user profile ID. For example, "Profile 1".
    * @returns {Array} All installed Chrome extensions information.
    */
   async getExtensionList(profileId) {
@@ -74,9 +75,10 @@ export var ChromeMigrationUtils = {
 
   /**
    * Get information of a specific Chrome extension.
-   * @param {String} extensionId - The extension ID.
-   * @param {String} profileId - The user profile's ID.
-   * @retruns {Object} The Chrome extension information.
+   *
+   * @param {string} extensionId - The extension ID.
+   * @param {string} profileId - The user profile's ID.
+   * @returns {object} The Chrome extension information.
    */
   async getExtensionInformation(extensionId, profileId) {
     if (profileId === undefined) {
@@ -134,11 +136,12 @@ export var ChromeMigrationUtils = {
 
   /**
    * Get the manifest's locale string.
-   * @param {String} key - The key of a locale string, for example __MSG_name__.
-   * @param {String} locale - The specific language of locale string.
-   * @param {String} extensionId - The extension ID.
-   * @param {String} profileId - The user profile's ID.
-   * @retruns {String} The locale string.
+   *
+   * @param {string} key - The key of a locale string, for example __MSG_name__.
+   * @param {string} locale - The specific language of locale string.
+   * @param {string} extensionId - The extension ID.
+   * @param {string} profileId - The user profile's ID.
+   * @returns {string} The locale string.
    */
   async _getLocaleString(key, locale, extensionId, profileId) {
     // Return the key string if it is not a locale key.
@@ -194,9 +197,10 @@ export var ChromeMigrationUtils = {
 
   /**
    * Check that a specific extension is installed or not.
-   * @param {String} extensionId - The extension ID.
-   * @param {String} profileId - The user profile's ID.
-   * @returns {Boolean} Return true if the extension is installed otherwise return false.
+   *
+   * @param {string} extensionId - The extension ID.
+   * @param {string} profileId - The user profile's ID.
+   * @returns {boolean} Return true if the extension is installed otherwise return false.
    */
   async isExtensionInstalled(extensionId, profileId) {
     if (profileId === undefined) {
@@ -211,7 +215,8 @@ export var ChromeMigrationUtils = {
 
   /**
    * Get the last used user profile's ID.
-   * @returns {String} The last used user profile's ID.
+   *
+   * @returns {string} The last used user profile's ID.
    */
   async getLastUsedProfileId() {
     let localState = await this.getLocalState();
@@ -220,8 +225,9 @@ export var ChromeMigrationUtils = {
 
   /**
    * Get the local state file content.
-   * @param {String} dataPath the type of Chrome data we're looking for (Chromium, Canary, etc.)
-   * @returns {Object} The JSON-based content.
+   *
+   * @param {string} dataPath the type of Chrome data we're looking for (Chromium, Canary, etc.)
+   * @returns {object} The JSON-based content.
    */
   async getLocalState(dataPath = "Chrome") {
     let localState = null;
@@ -243,8 +249,9 @@ export var ChromeMigrationUtils = {
 
   /**
    * Get the path of Chrome extension directory.
-   * @param {String} profileId - The user profile's ID.
-   * @returns {String} The path of Chrome extension directory.
+   *
+   * @param {string} profileId - The user profile's ID.
+   * @returns {string} The path of Chrome extension directory.
    */
   getExtensionPath(profileId) {
     return PathUtils.join(this.getDataPath(), profileId, "Extensions");
@@ -252,9 +259,10 @@ export var ChromeMigrationUtils = {
 
   /**
    * Get the path of an application data directory.
-   * @param {String} chromeProjectName - The Chrome project name, e.g. "Chrome", "Canary", etc.
+   *
+   * @param {string} chromeProjectName - The Chrome project name, e.g. "Chrome", "Canary", etc.
    *                                     Defaults to "Chrome".
-   * @returns {String} The path of application data directory.
+   * @returns {string} The path of application data directory.
    */
   getDataPath(chromeProjectName = "Chrome") {
     const SUB_DIRECTORIES = {
@@ -336,7 +344,8 @@ export var ChromeMigrationUtils = {
 
   /**
    * Get the directory objects sorted by version number.
-   * @param {String} path - The path to the extension directory.
+   *
+   * @param {string} path - The path to the extension directory.
    * otherwise return all file/directory object.
    * @returns {Array} The file/directory object array.
    */
@@ -370,16 +379,14 @@ export var ChromeMigrationUtils = {
   },
 
   /**
-   * Convert Chrome time format to Date object
+   * Convert Chrome time format to Date object. Google Chrome uses FILETIME / 10 as time.
+   * FILETIME is based on the same structure of Windows.
    *
-   * @param   aTime
-   *          Chrome time
-   * @param   aFallbackValue
-   *          a date or timestamp (valid argument for the Date constructor)
-   *          that will be used if the chrometime value passed is invalid.
-   * @return  converted Date object
-   * @note    Google Chrome uses FILETIME / 10 as time.
-   *          FILETIME is based on same structure of Windows.
+   * @param {number} aTime Chrome time
+   * @param {string|number|Date} aFallbackValue a date or timestamp (valid argument
+   *   for the Date constructor) that will be used if the chrometime value passed is
+   *   invalid.
+   * @returns {Date} converted Date object
    */
   chromeTimeToDate(aTime, aFallbackValue) {
     // The date value may be 0 in some cases. Because of the subtraction below,
@@ -392,12 +399,11 @@ export var ChromeMigrationUtils = {
   },
 
   /**
-   * Convert Date object to Chrome time format
+   * Convert Date object to Chrome time format. For details on Chrome time, see
+   * chromeTimeToDate.
    *
-   * @param   aDate
-   *          Date object or integer equivalent
-   * @return  Chrome time
-   * @note    For details on Chrome time, see chromeTimeToDate.
+   * @param {Date|number} aDate Date object or integer equivalent
+   * @returns {number} Chrome time
    */
   dateToChromeTime(aDate) {
     return (aDate * 10000 + S100NS_FROM1601TO1970) / S100NS_PER_MS;
