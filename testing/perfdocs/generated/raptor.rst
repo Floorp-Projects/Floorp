@@ -20315,7 +20315,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm6-android-fenix-allrecipes.manifest
-   * **playback version**: 6.0.2
+   * **playback version**: 8.1.1
    * **test url**: `<https://www.allrecipes.com/>`__
    * **type**: pageload
    * **unit**: ms
@@ -20552,7 +20552,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm6-android-fenix-amazon.manifest
-   * **playback version**: 6.0.2
+   * **playback version**: 8.1.1
    * **test url**: `<https://www.amazon.com>`__
    * **type**: pageload
    * **unit**: ms
@@ -21092,7 +21092,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm6-android-fenix-amazon-search.manifest
-   * **playback version**: 6.0.2
+   * **playback version**: 8.1.1
    * **test url**: `<https://www.amazon.com/s/ref=nb_sb_noss_2/139-6317191-5622045?url=search-alias%3Daps&field-keywords=mobile+phone>`__
    * **type**: pageload
    * **unit**: ms
@@ -21329,7 +21329,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm6-android-fenix-bing.manifest
-   * **playback version**: 6.0.2
+   * **playback version**: 8.1.1
    * **test url**: `<https://www.bing.com/>`__
    * **type**: pageload
    * **unit**: ms
@@ -21566,7 +21566,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm6-android-fenix-bing-search-restaurants.manifest
-   * **playback version**: 6.0.2
+   * **playback version**: 8.1.1
    * **test url**: `<https://www.bing.com/search?q=restaurants+in+exton+pa+19341>`__
    * **type**: pageload
    * **unit**: ms
@@ -21803,7 +21803,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm6-android-fenix-booking.manifest
-   * **playback version**: 6.0.2
+   * **playback version**: 8.1.1
    * **test url**: `<https://www.booking.com/>`__
    * **type**: pageload
    * **unit**: ms
@@ -22040,7 +22040,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm6-android-fenix-cnn.manifest
-   * **playback version**: 6.0.2
+   * **playback version**: 8.1.1
    * **test url**: `<https://cnn.com>`__
    * **type**: pageload
    * **unit**: ms
@@ -22525,7 +22525,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm6-android-fenix-cnn-ampstories.manifest
-   * **playback version**: 6.0.2
+   * **playback version**: 8.1.1
    * **test url**: `<https://cnn.com/ampstories/us/why-hurricane-michael-is-a-monster-unlike-any-other>`__
    * **type**: pageload
    * **unit**: ms
@@ -22762,7 +22762,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm6-android-fenix-dailymail.manifest
-   * **playback version**: 6.0.2
+   * **playback version**: 8.1.1
    * **test url**: `<https://www.dailymail.co.uk/sciencetech/article-9749081/Experts-say-Hubble-repair-despite-NASA-insisting-multiple-options-fix.html>`__
    * **type**: pageload
    * **unit**: ms
@@ -22999,7 +22999,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm6-android-fenix-ebay-kleinanzeigen.manifest
-   * **playback version**: 6.0.2
+   * **playback version**: 8.1.1
    * **test url**: `<https://m.ebay-kleinanzeigen.de>`__
    * **type**: pageload
    * **unit**: ms
@@ -23236,7 +23236,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm6-android-fenix-ebay-kleinanzeigen-search.manifest
-   * **playback version**: 6.0.2
+   * **playback version**: 8.1.1
    * **test url**: `<https://m.ebay-kleinanzeigen.de/s-anzeigen/auf-zeit-wg-berlin/zimmer/c199-l3331>`__
    * **type**: pageload
    * **unit**: ms
@@ -23473,7 +23473,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm6-android-fenix-espn.manifest
-   * **playback version**: 6.0.2
+   * **playback version**: 8.1.1
    * **test url**: `<http://www.espn.com/nba/story/_/page/allstarweekend25788027/the-comparison-lebron-james-michael-jordan-their-own-words>`__
    * **type**: pageload
    * **unit**: ms
@@ -23879,7 +23879,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm6-g5-fenix-facebook.manifest
-   * **playback version**: 6.0.2
+   * **playback version**: 8.1.1
    * **test url**: `<https://m.facebook.com>`__
    * **type**: pageload
    * **unit**: ms
@@ -24369,7 +24369,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm6-android-fenix-facebook-cristiano.manifest
-   * **playback version**: 6.0.2
+   * **playback version**: 8.1.1
    * **test url**: `<https://m.facebook.com/Cristiano>`__
    * **type**: pageload
    * **unit**: ms
@@ -24607,7 +24607,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm6-g5-fenix-google.manifest
-   * **playback version**: 6.0.2
+   * **playback version**: 8.1.1
    * **test url**: `<https://www.google.com>`__
    * **type**: pageload
    * **unit**: ms
@@ -24844,7 +24844,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm6-android-fenix-google-maps.manifest
-   * **playback version**: 6.0.2
+   * **playback version**: 8.1.1
    * **test url**: `<https://www.google.com/maps?force=pwa>`__
    * **type**: pageload
    * **unit**: ms
@@ -25082,7 +25082,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm6-g5-fenix-google-search-restaurants.manifest
-   * **playback version**: 6.0.2
+   * **playback version**: 8.1.1
    * **test url**: `<https://www.google.com/search?q=restaurants+near+me>`__
    * **type**: pageload
    * **unit**: ms
@@ -25319,7 +25319,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm6-android-fenix-imdb.manifest
-   * **playback version**: 6.0.2
+   * **playback version**: 8.1.1
    * **test url**: `<https://m.imdb.com/>`__
    * **type**: pageload
    * **unit**: ms
@@ -25810,7 +25810,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm6-g5-fenix-instagram.manifest
-   * **playback version**: 6.0.2
+   * **playback version**: 8.1.1
    * **test url**: `<https://www.instagram.com>`__
    * **type**: pageload
    * **unit**: ms
@@ -26255,7 +26255,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm6-android-fenix-microsoft-support.manifest
-   * **playback version**: 6.0.2
+   * **playback version**: 8.1.1
    * **test url**: `<https://support.microsoft.com/en-us>`__
    * **type**: pageload
    * **unit**: ms
@@ -26492,7 +26492,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm6-android-fenix-reddit.manifest
-   * **playback version**: 6.0.2
+   * **playback version**: 8.1.1
    * **test url**: `<https://www.reddit.com>`__
    * **type**: pageload
    * **unit**: ms
@@ -26982,7 +26982,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm6-android-fenix-sina.manifest
-   * **playback version**: 6.0.2
+   * **playback version**: 8.1.1
    * **test url**: `<https://www.sina.com.cn/>`__
    * **type**: pageload
    * **unit**: ms
@@ -27169,7 +27169,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm6-android-fenix-stackoverflow.manifest
-   * **playback version**: 6.0.2
+   * **playback version**: 8.1.1
    * **test url**: `<https://stackoverflow.com/>`__
    * **type**: pageload
    * **unit**: ms
@@ -27643,7 +27643,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm6-android-fenix-wikipedia.manifest
-   * **playback version**: 6.0.2
+   * **playback version**: 8.1.1
    * **test url**: `<https://en.m.wikipedia.org/wiki/Main_Page>`__
    * **type**: pageload
    * **unit**: ms
@@ -28173,7 +28173,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm6-android-fenix-youtube.manifest
-   * **playback version**: 6.0.2
+   * **playback version**: 8.1.1
    * **test url**: `<https://m.youtube.com>`__
    * **type**: pageload
    * **unit**: ms
@@ -28663,7 +28663,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm6-android-fenix-youtube-watch.manifest
-   * **playback version**: 6.0.2
+   * **playback version**: 8.1.1
    * **test url**: `<https://www.youtube.com/watch?v=COU5T-Wafa4>`__
    * **type**: pageload
    * **unit**: ms
