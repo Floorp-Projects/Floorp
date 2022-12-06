@@ -9611,7 +9611,7 @@ bool BytecodeEmitter::emitPrivateMethodInitializers(ClassEmitter& ce,
     // private method body.
     TaggedParserAtomIndex name = classMethod->name().as<NameNode>().atom();
     AccessorType accessorType = classMethod->accessorType();
-    StringBuffer storedMethodName(cx);
+    StringBuffer storedMethodName(cx, ec);
     if (!storedMethodName.append(parserAtoms(), name)) {
       return false;
     }
