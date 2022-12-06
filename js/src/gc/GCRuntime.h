@@ -620,6 +620,11 @@ class GCRuntime {
                                   AllocKind kind);
   static TenuredCell* refillFreeListInGC(Zone* zone, AllocKind thingKind);
 
+  // Delayed marking.
+  void delayMarkingChildren(gc::Cell* cell, MarkColor color);
+  bool hasDelayedMarking() const;
+  void markAllDelayedChildren(ShouldReportMarkTime reportTime);
+
   /*
    * Concurrent sweep infrastructure.
    */
@@ -777,8 +782,23 @@ class GCRuntime {
   friend class BackgroundMarkTask;
   IncrementalProgress markUntilBudgetExhausted(
       SliceBudget& sliceBudget,
-      GCMarker::ShouldReportMarkTime reportTime = GCMarker::ReportMarkTime);
+      ShouldReportMarkTime reportTime = ReportMarkTime);
   void drainMarkStack();
+
+#ifdef DEBUG
+  void assertNoMarkingWork() const;
+#else
+  void assertNoMarkingWork() const {}
+#endif
+
+  void markDelayedChildren(gc::Arena* arena, MarkColor color);
+  void processDelayedMarkingList(gc::MarkColor color);
+  void rebuildDelayedMarkingList();
+  void appendToDelayedMarkingList(gc::Arena** listTail, gc::Arena* arena);
+  void resetDelayedMarking();
+  template <typename F>
+  void forEachDelayedMarkingArena(F&& f);
+
   template <class ZoneIterT>
   IncrementalProgress markWeakReferences(SliceBudget& budget);
   IncrementalProgress markWeakReferencesInCurrentGroup(SliceBudget& budget);
@@ -959,6 +979,15 @@ class GCRuntime {
   js::StringStats stringStats;
 
   Vector<UniquePtr<GCMarker>, 1, SystemAllocPolicy> markers;
+
+  // Delayed marking support in case we OOM pushing work onto the mark stack.
+  MainThreadOrGCTaskData<js::gc::Arena*> delayedMarkingList;
+  MainThreadOrGCTaskData<bool> delayedMarkingWorkAdded;
+#ifdef DEBUG
+  /* Count of arenas that are currently in the stack. */
+  MainThreadOrGCTaskData<size_t> markLaterArenas;
+#endif
+
   SweepingTracer sweepingTracer;
 
   Vector<JS::GCCellPtr, 0, SystemAllocPolicy> unmarkGrayStack;

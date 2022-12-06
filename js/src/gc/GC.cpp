@@ -1304,15 +1304,20 @@ size_t GCRuntime::markingWorkerCount() const {
   return std::min(parallelWorkerCount(), size_t(2));
 }
 
-bool GCRuntime::updateMarkersVector() {
-  MOZ_ASSERT(helperThreadCount >= 1,
-             "There must always be at least one mark task");
-
 #ifdef DEBUG
+void GCRuntime::assertNoMarkingWork() const {
   for (auto& marker : markers) {
     MOZ_ASSERT(marker->isDrained());
   }
+  MOZ_ASSERT(!hasDelayedMarking());
+}
 #endif
+
+bool GCRuntime::updateMarkersVector() {
+  MOZ_ASSERT(helperThreadCount >= 1,
+             "There must always be at least one mark task");
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
+  assertNoMarkingWork();
 
   size_t targetCount = markingWorkerCount();
 
@@ -2787,9 +2792,9 @@ void GCRuntime::beginMarkPhase(AutoGCSession& session) {
   // get here.
   incMajorGcNumber();
 
+  MOZ_ASSERT(!hasDelayedMarking());
   for (auto& marker : markers) {
     marker->start();
-    MOZ_ASSERT(marker->isDrained());
   }
 
 #ifdef DEBUG
@@ -2904,7 +2909,7 @@ void GCRuntime::updateSchedulingStateOnGCStart() {
 }
 
 IncrementalProgress GCRuntime::markUntilBudgetExhausted(
-    SliceBudget& sliceBudget, GCMarker::ShouldReportMarkTime reportTime) {
+    SliceBudget& sliceBudget, ShouldReportMarkTime reportTime) {
   // Run a marking slice and return whether the stack is now empty.
 
   AutoMajorGCProfilerEntry s(this);
@@ -3052,8 +3057,8 @@ GCRuntime::MarkQueueProgress GCRuntime::processTestMarkQueue() {
         }
       } else if (js::StringEqualsLiteral(str, "drain")) {
         auto unlimited = SliceBudget::unlimited();
-        MOZ_RELEASE_ASSERT(marker().markUntilBudgetExhausted(
-            unlimited, GCMarker::DontReportMarkTime));
+        MOZ_RELEASE_ASSERT(
+            marker().markUntilBudgetExhausted(unlimited, DontReportMarkTime));
       } else if (js::StringEqualsLiteral(str, "set-color-gray")) {
         queueMarkColor = mozilla::Some(MarkColor::Gray);
         if (state() != State::Sweep || marker().hasBlackEntries()) {
@@ -3078,8 +3083,8 @@ GCRuntime::MarkQueueProgress GCRuntime::processTestMarkQueue() {
 void GCRuntime::finishCollection() {
   assertBackgroundSweepingFinished();
 
+  MOZ_ASSERT(!hasDelayedMarking());
   for (auto& marker : markers) {
-    MOZ_ASSERT(marker->isDrained());
     marker->stop();
   }
 
@@ -3111,6 +3116,7 @@ void GCRuntime::checkGCStateNotInUse() {
     MOZ_ASSERT(!marker->isActive());
     MOZ_ASSERT(marker->isDrained());
   }
+  MOZ_ASSERT(!hasDelayedMarking());
 
   MOZ_ASSERT(!lastMarkSlice);
 
@@ -3326,6 +3332,7 @@ GCRuntime::IncrementalResult GCRuntime::resetIncrementalGC(
       for (auto& marker : markers) {
         marker->reset();
       }
+      resetDelayedMarking();
 
       for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
         resetGrayList(c);
@@ -3533,11 +3540,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
         }
       }
 
-#ifdef DEBUG
-      for (auto& marker : markers) {
-        MOZ_ASSERT(marker->isDrained());
-      }
-#endif
+      assertNoMarkingWork();
 
       /*
        * There are a number of reasons why we break out of collection here,
