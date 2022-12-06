@@ -196,12 +196,12 @@ class StringToDoubleConverter {
   // Same as StringToDouble but reads a float.
   // Note that this is not equivalent to static_cast<float>(StringToDouble(...))
   // due to potential double-rounding.
-  float StringToFloat(const char* buffer,
+  MFBT_API float StringToFloat(const char* buffer,
                       int length,
                       int* processed_characters_count) const;
 
   // Same as StringToFloat above but for 16 bit characters.
-  float StringToFloat(const uc16* buffer,
+  MFBT_API float StringToFloat(const uc16* buffer,
                       int length,
                       int* processed_characters_count) const;
 
