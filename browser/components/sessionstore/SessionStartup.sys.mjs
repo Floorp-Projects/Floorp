@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /**
  * Session Storage and Restoration
  *
@@ -29,30 +27,21 @@
  * browser.startup.page is set to 3.
  */
 
-var EXPORTED_SYMBOLS = ["SessionStartup"];
-
 /* :::::::: Constants and Helpers ::::::::::::::: */
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "SessionFile",
-  "resource:///modules/sessionstore/SessionFile.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "StartupPerformance",
-  "resource:///modules/sessionstore/StartupPerformance.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  SessionFile: "resource:///modules/sessionstore/SessionFile.sys.mjs",
+  StartupPerformance:
+    "resource:///modules/sessionstore/StartupPerformance.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "CrashMonitor",
   "resource://gre/modules/CrashMonitor.jsm"
 );
-ChromeUtils.defineESModuleGetters(lazy, {
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-});
 
 const STATE_RUNNING_STR = "running";
 
@@ -93,7 +82,7 @@ var gOnceInitializedDeferred = (function() {
 
 /* :::::::: The Service ::::::::::::::: */
 
-var SessionStartup = {
+export var SessionStartup = {
   NO_SESSION: TYPE_NO_SESSION,
   RECOVER_SESSION: TYPE_RECOVER_SESSION,
   RESUME_SESSION: TYPE_RESUME_SESSION,

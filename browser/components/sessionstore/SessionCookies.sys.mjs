@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["SessionCookies"];
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -17,7 +13,7 @@ const MAX_EXPIRY = Number.MAX_SAFE_INTEGER;
 /**
  * The external API implemented by the SessionCookies module.
  */
-var SessionCookies = Object.freeze({
+export var SessionCookies = Object.freeze({
   collect() {
     return SessionCookiesInternal.collect();
   },

@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["SessionMigration"];
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -78,7 +74,7 @@ var SessionMigrationInternal = {
   },
 };
 
-var SessionMigration = {
+export var SessionMigration = {
   /**
    * Migrate a limited set of session data from one path to another.
    */

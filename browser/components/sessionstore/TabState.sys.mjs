@@ -2,30 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["TabState"];
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.sys.mjs",
+  TabAttributes: "resource:///modules/sessionstore/TabAttributes.sys.mjs",
+  TabStateCache: "resource:///modules/sessionstore/TabStateCache.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TabStateCache",
-  "resource:///modules/sessionstore/TabStateCache.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TabAttributes",
-  "resource:///modules/sessionstore/TabAttributes.jsm"
-);
 
 /**
  * Module that contains tab state collection methods.
  */
-var TabState = Object.freeze({
+export var TabState = Object.freeze({
   update(permanentKey, data) {
     TabStateInternal.update(permanentKey, data);
   },

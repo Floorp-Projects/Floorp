@@ -1,18 +1,7 @@
-ChromeUtils.defineModuleGetter(
-  this,
-  "SessionStore",
-  "resource:///modules/sessionstore/SessionStore.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "TabStateCache",
-  "resource:///modules/sessionstore/TabStateCache.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "TabStateFlusher",
-  "resource:///modules/sessionstore/TabStateFlusher.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
+  TabStateCache: "resource:///modules/sessionstore/TabStateCache.sys.mjs",
+});
 
 add_task(async function() {
   await BrowserTestUtils.withNewTab("http://example.com", async function(

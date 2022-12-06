@@ -2,16 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["ContentRestore"];
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   SessionHistory: "resource://gre/modules/sessionstore/SessionHistory.sys.mjs",
   Utils: "resource://gre/modules/sessionstore/Utils.sys.mjs",
 });
+
 /**
  * This module implements the content side of session restoration. The chrome
  * side is handled by SessionStore.jsm. The functions in this module are called
@@ -41,7 +38,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * reset message, which causes resetRestore to be called. At that point it's
  * legal to begin another restore.
  */
-function ContentRestore(chromeGlobal) {
+export function ContentRestore(chromeGlobal) {
   let internal = new ContentRestoreInternal(chromeGlobal);
   let external = {};
 

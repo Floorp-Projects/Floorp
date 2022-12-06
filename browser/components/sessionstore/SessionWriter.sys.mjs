@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["SessionWriter"];
-
 /**
  * We just started (we haven't written anything to disk yet) from
  * `Paths.clean`. The backup directory may not exist.
@@ -53,7 +49,7 @@ function lockIOWithMutex() {
 /**
  * Interface dedicated to handling I/O for Session Store.
  */
-const SessionWriter = {
+export const SessionWriter = {
   init(origin, useOldExtension, paths, prefs = {}) {
     return SessionWriterInternal.init(origin, useOldExtension, paths, prefs);
   },

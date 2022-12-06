@@ -2,30 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["RecentlyClosedTabsAndWindowsMenuUtils"];
-
 const lazy = {};
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PluralForm",
-  "resource://gre/modules/PluralForm.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "SessionStore",
-  "resource:///modules/sessionstore/SessionStore.jsm"
-);
 
 ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
+  PluralForm: "resource://gre/modules/PluralForm.sys.mjs",
+  SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
 });
 
 var navigatorBundle = Services.strings.createBundle(
   "chrome://browser/locale/browser.properties"
 );
 
-var RecentlyClosedTabsAndWindowsMenuUtils = {
+export var RecentlyClosedTabsAndWindowsMenuUtils = {
   /**
    * Builds up a document fragment of UI items for the recently closed tabs.
    * @param   aWindow

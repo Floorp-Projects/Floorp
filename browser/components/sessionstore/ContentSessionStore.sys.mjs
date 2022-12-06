@@ -2,16 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["ContentSessionStore"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { clearTimeout, setTimeoutWithTarget } = ChromeUtils.importESModule(
-  "resource://gre/modules/Timer.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import {
+  clearTimeout,
+  setTimeoutWithTarget,
+} from "resource://gre/modules/Timer.sys.mjs";
 
 function debug(msg) {
   Services.console.logStringMessage("SessionStoreContent: " + msg);
@@ -19,12 +14,8 @@ function debug(msg) {
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ContentRestore",
-  "resource:///modules/sessionstore/ContentRestore.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  ContentRestore: "resource:///modules/sessionstore/ContentRestore.sys.mjs",
   SessionHistory: "resource://gre/modules/sessionstore/SessionHistory.sys.mjs",
 });
 
@@ -512,7 +503,7 @@ const MESSAGES = [
   "SessionStore:prepareForProcessChange",
 ];
 
-class ContentSessionStore {
+export class ContentSessionStore {
   constructor(mm) {
     if (Services.appinfo.sessionHistoryInParent) {
       throw new Error("This frame script should not be loaded for SHIP");

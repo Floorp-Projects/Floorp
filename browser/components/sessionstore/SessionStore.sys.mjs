@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["SessionStore", "_LastSession"];
-
 // Current version of the format used by Session Restore.
 const FORMAT_VERSION = 1;
 
@@ -217,21 +213,14 @@ const BROWSER_STARTUP_RESUME_SESSION = 3;
 const kNoIndex = Number.MAX_SAFE_INTEGER;
 const kLastIndex = Number.MAX_SAFE_INTEGER - 1;
 
-const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PrivateBrowsingUtils.sys.mjs"
-);
+import { PrivateBrowsingUtils } from "resource://gre/modules/PrivateBrowsingUtils.sys.mjs";
+
 const { TelemetryTimestamps } = ChromeUtils.import(
   "resource://gre/modules/TelemetryTimestamps.jsm"
 );
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-const { GlobalState } = ChromeUtils.import(
-  "resource:///modules/sessionstore/GlobalState.jsm"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { GlobalState } from "resource:///modules/sessionstore/GlobalState.sys.mjs";
 
 const lazy = {};
 
@@ -244,7 +233,16 @@ ChromeUtils.defineESModuleGetters(lazy, {
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+  RunState: "resource:///modules/sessionstore/RunState.sys.mjs",
+  SessionCookies: "resource:///modules/sessionstore/SessionCookies.sys.mjs",
+  SessionFile: "resource:///modules/sessionstore/SessionFile.sys.mjs",
   SessionHistory: "resource://gre/modules/sessionstore/SessionHistory.sys.mjs",
+  SessionSaver: "resource:///modules/sessionstore/SessionSaver.sys.mjs",
+  SessionStartup: "resource:///modules/sessionstore/SessionStartup.sys.mjs",
+  TabAttributes: "resource:///modules/sessionstore/TabAttributes.sys.mjs",
+  TabState: "resource:///modules/sessionstore/TabState.sys.mjs",
+  TabStateCache: "resource:///modules/sessionstore/TabStateCache.sys.mjs",
+  TabStateFlusher: "resource:///modules/sessionstore/TabStateFlusher.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
@@ -252,16 +250,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   HomePage: "resource:///modules/HomePage.jsm",
-  RunState: "resource:///modules/sessionstore/RunState.jsm",
-  SessionCookies: "resource:///modules/sessionstore/SessionCookies.jsm",
-  SessionFile: "resource:///modules/sessionstore/SessionFile.jsm",
-  SessionSaver: "resource:///modules/sessionstore/SessionSaver.jsm",
-  SessionStartup: "resource:///modules/sessionstore/SessionStartup.jsm",
-  TabAttributes: "resource:///modules/sessionstore/TabAttributes.jsm",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
-  TabState: "resource:///modules/sessionstore/TabState.jsm",
-  TabStateCache: "resource:///modules/sessionstore/TabStateCache.jsm",
-  TabStateFlusher: "resource:///modules/sessionstore/TabStateFlusher.jsm",
 });
 
 /**
@@ -278,7 +267,7 @@ var gDebuggingEnabled = false;
  */
 var gResistFingerprintingEnabled = false;
 
-var SessionStore = {
+export var SessionStore = {
   get promiseInitialized() {
     return SessionStoreInternal.promiseInitialized;
   },
@@ -6865,4 +6854,4 @@ var LastSession = {
 };
 
 // Exposed for tests
-const _LastSession = LastSession;
+export const _LastSession = LastSession;

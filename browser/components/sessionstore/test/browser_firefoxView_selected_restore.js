@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { _LastSession } = ChromeUtils.import(
-  "resource:///modules/sessionstore/SessionStore.jsm"
+const { _LastSession } = ChromeUtils.importESModule(
+  "resource:///modules/sessionstore/SessionStore.sys.mjs"
 );
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 

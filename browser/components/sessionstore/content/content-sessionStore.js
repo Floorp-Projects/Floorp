@@ -6,8 +6,8 @@
 
 "use strict";
 
-const { ContentSessionStore } = ChromeUtils.import(
-  "resource:///modules/sessionstore/ContentSessionStore.jsm"
+const { ContentSessionStore } = ChromeUtils.importESModule(
+  "resource:///modules/sessionstore/ContentSessionStore.sys.mjs"
 );
 
 void new ContentSessionStore(this);

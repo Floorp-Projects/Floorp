@@ -60,7 +60,7 @@ const known_scripts = {
 
 if (!gFissionBrowser) {
   known_scripts.modules.add(
-    "resource:///modules/sessionstore/ContentSessionStore.jsm"
+    "resource:///modules/sessionstore/ContentSessionStore.sys.mjs"
   );
 }
 
