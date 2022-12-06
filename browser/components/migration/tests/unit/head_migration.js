@@ -1,6 +1,6 @@
 "use strict";
 
-var { MigrationUtils } = ChromeUtils.importESModule(
+var { MigrationUtils, MigratorPrototype } = ChromeUtils.importESModule(
   "resource:///modules/MigrationUtils.sys.mjs"
 );
 var { LoginHelper } = ChromeUtils.import(
@@ -41,21 +41,6 @@ updateAppInfo();
 
 /**
  * Migrates the requested resource and waits for the migration to be complete.
- *
- * @param {MigratorBase} migrator
- *   The migrator being used to migrate the data.
- * @param {number} resourceType
- *   This is a bitfield with bits from nsIBrowserProfileMigrator flipped to indicate what
- *   resources should be migrated.
- * @param {object|string|null} [aProfile=null]
- *   The profile to be migrated. If set to null, the default profile will be
- *   migrated.
- * @param {boolean} succeeds
- *   True if this migration is expected to succeed.
- * @returns {Promise<Array<string[]>>}
- *   An array of the results from each nsIObserver topics being observed to
- *   verify if the migration succeeded or failed. Those results are 2-element
- *   arrays of [subject, data].
  */
 async function promiseMigration(
   migrator,
@@ -89,15 +74,6 @@ async function promiseMigration(
 
 /**
  * Replaces a directory service entry with a given nsIFile.
- *
- * @param {string} key
- *   The nsIDirectoryService directory key to register a fake path for.
- *   For example: "AppData", "ULibDir".
- * @param {nsIFile} file
- *   The nsIFile to map the key to. Note that this nsIFile should represent
- *   a directory and not an individual file.
- * @see nsDirectoryServiceDefs.h for the list of directories that can be
- *   overridden.
  */
 function registerFakePath(key, file) {
   let dirsvc = Services.dirsvc.QueryInterface(Ci.nsIProperties);

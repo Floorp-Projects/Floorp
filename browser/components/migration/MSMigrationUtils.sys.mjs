@@ -103,11 +103,11 @@ CtypesKernelHelpers.prototype = {
    * and then deduces the number of seconds since the epoch (which
    * is the data we want for the cookie expiry date).
    *
-   * @param {number} aTimeHi
+   * @param aTimeHi
    *        Least significant DWORD.
-   * @param {number} aTimeLo
+   * @param aTimeLo
    *        Most significant DWORD.
-   * @returns {number} the number of seconds since the epoch
+   * @return the number of seconds since the epoch
    */
   fileTimeToSecondsSinceEpoch(aTimeHi, aTimeLo) {
     let fileTime = this._structs.FILETIME();
@@ -272,9 +272,9 @@ CtypesVaultHelpers.prototype = {
 /**
  * Checks whether an host is an IP (v4 or v6) address.
  *
- * @param {string} aHost
+ * @param aHost
  *        The host to check.
- * @returns {boolean} whether aHost is an IP address.
+ * @return whether aHost is an IP address.
  */
 function hostIsIPAddress(aHost) {
   try {
@@ -411,9 +411,9 @@ Bookmarks.prototype = {
 
   /**
    * Iterates through a bookmark folder to obtain whatever information from each bookmark is needed elsewhere. This function also recurses into child folders.
-   *
    * @param {nsIFile} aSourceFolder the folder to search for bookmarks and subfolders.
-   * @returns {Promise<object>} An object with the following properties:
+   * @returns {Promise}
+   * @resolves {Object} An object with the following properties:
    * {Object[]} bookmarks:
    *   An array of Objects with these properties:
    *     {number} type: A type mapping to one of the types in nsINavBookmarksService
@@ -657,9 +657,7 @@ Cookies.prototype = {
    * Unfortunately, "*" can also occur inside the value of the cookie, so we
    * can't rely exclusively on it as a record separator.
    *
-   * All the times are in FILETIME format.
-   *
-   * @param {string} aTextBuffer The text buffer to be parsed.
+   * @note All the times are in FILETIME format.
    */
   _parseCookieBuffer(aTextBuffer) {
     // Note the last record is an empty string...
@@ -841,11 +839,10 @@ WindowsVaultFormPasswords.prototype = {
    * If aOnlyCheckExists is false, import the form passwords on Windows 8 and higher from the vault
    * and then call the aCallback.
    * Otherwise, check if there are passwords in the vault.
-   *
-   * @param {Function} aCallback - a callback called when the migration is done.
+   * @param {function} aCallback - a callback called when the migration is done.
    * @param {boolean} [aOnlyCheckExists=false] - if aOnlyCheckExists is true, just check if there are some
    * passwords to migrate. Import the passwords from the vault and call aCallback otherwise.
-   * @returns {boolean} true if there are passwords in the vault and aOnlyCheckExists is set to true,
+   * @return true if there are passwords in the vault and aOnlyCheckExists is set to true,
    * false if there is no password in the vault and aOnlyCheckExists is set to true, undefined if
    * aOnlyCheckExists is set to false.
    */

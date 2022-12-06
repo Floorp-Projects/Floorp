@@ -21,8 +21,8 @@ window.MozXULElement = {
       return;
     }
 
-    // This should be browser, locales-preview or toolkit.
-    let [root, ...rest] = name.split("/");
+    // This should be browser or toolkit.
+    let root = name.split("/")[0];
     let ftlContents;
     //
     // TODO(mstriemer): These seem like they could be combined but I don't want
@@ -41,13 +41,6 @@ window.MozXULElement = {
         `browser/locales/en-US/${name}`
       );
       ftlContents = imported.default;
-    } else if (root == "locales-preview") {
-      // eslint-disable-next-line no-unsanitized/method
-      let imported = await import(
-        /* webpackInclude: /\.ftl$/ */
-        `browser/locales-preview/${rest}`
-      );
-      ftlContents = imported.default;
     }
 
     if (loadedResources.has(name)) {
@@ -60,16 +53,5 @@ window.MozXULElement = {
     storybookBundle.addResource(ftlResource);
     loadedResources.add(name);
     document.l10n.translateRoots();
-  },
-
-  // For some reason Storybook doesn't watch the static folder. By creating a
-  // method with a dynamic import we can pull the desired files into the bundle.
-  async importCss(name) {
-    // eslint-disable-next-line no-unsanitized/method
-    let file = await import(
-      /* webpackInclude: /.*[\/\\].*\.css$/ */
-      `browser/themes/shared/${name}`
-    );
-    return file;
   },
 };

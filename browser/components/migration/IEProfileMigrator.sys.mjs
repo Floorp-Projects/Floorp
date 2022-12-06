@@ -8,8 +8,10 @@ const kLoginsKey =
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-import { MigrationUtils } from "resource:///modules/MigrationUtils.sys.mjs";
-import { MigratorBase } from "resource:///modules/MigratorBase.sys.mjs";
+import {
+  MigrationUtils,
+  MigratorPrototype,
+} from "resource:///modules/MigrationUtils.sys.mjs";
 import { MSMigrationUtils } from "resource:///modules/MSMigrationUtils.sys.mjs";
 
 const lazy = {};
@@ -149,7 +151,6 @@ IE7FormPasswords.prototype = {
 
   /**
    * Migrate the logins that were saved for the uris arguments.
-   *
    * @param {nsIURI[]} uris - the uris that are going to be migrated.
    */
   async _migrateURIs(uris) {
@@ -250,10 +251,9 @@ IE7FormPasswords.prototype = {
 
   /**
    * Extract the details of one or more logins from the raw decrypted data.
-   *
    * @param {string} data - the decrypted data containing raw information.
    * @param {nsURI} uri - the nsURI of page where the login has occur.
-   * @returns {object[]} array of objects where each of them contains the username, password, URL,
+   * @returns {Object[]} array of objects where each of them contains the username, password, URL,
    * and creation time representing all the logins found in the data arguments.
    */
   _extractDetails(data, uri) {
@@ -349,67 +349,58 @@ IE7FormPasswords.prototype = {
   },
 };
 
-/**
- * Internet Explorer profile migrator
- */
-export class IEProfileMigrator extends MigratorBase {
-  constructor() {
-    super();
-    this.wrappedJSObject = this; // export this to be able to use it in the unittest.
-  }
-
-  get classDescription() {
-    return "IE Profile Migrator";
-  }
-
-  get contractID() {
-    return "@mozilla.org/profile/migrator;1?app=browser&type=ie";
-  }
-
-  get classID() {
-    return Components.ID("{3d2532e3-4932-4774-b7ba-968f5899d3a4}");
-  }
-
-  getResources() {
-    let resources = [
-      MSMigrationUtils.getBookmarksMigrator(),
-      new History(),
-      MSMigrationUtils.getCookiesMigrator(),
-    ];
-    // Only support the form password migrator for Windows XP to 7.
-    if (AppConstants.isPlatformAndVersionAtMost("win", "6.1")) {
-      resources.push(new IE7FormPasswords());
-    }
-    let windowsVaultFormPasswordsMigrator = MSMigrationUtils.getWindowsVaultFormPasswordsMigrator();
-    windowsVaultFormPasswordsMigrator.name = "IEVaultFormPasswords";
-    resources.push(windowsVaultFormPasswordsMigrator);
-    return resources.filter(r => r.exists);
-  }
-
-  getLastUsedDate() {
-    let datePromises = ["Favs", "CookD"].map(dirId => {
-      let { path } = Services.dirsvc.get(dirId, Ci.nsIFile);
-      return OS.File.stat(path)
-        .catch(() => null)
-        .then(info => {
-          return info ? info.lastModificationDate : 0;
-        });
-    });
-    datePromises.push(
-      new Promise(resolve => {
-        let typedURLs = new Map();
-        try {
-          typedURLs = MSMigrationUtils.getTypedURLs(
-            "Software\\Microsoft\\Internet Explorer"
-          );
-        } catch (ex) {}
-        let dates = [0, ...typedURLs.values()];
-        // dates is an array of PRTimes, which are in microseconds - convert to milliseconds
-        resolve(Math.max.apply(Math, dates) / 1000);
-      })
-    );
-    return Promise.all(datePromises).then(dates => {
-      return new Date(Math.max.apply(Math, dates));
-    });
-  }
+export function IEProfileMigrator() {
+  this.wrappedJSObject = this; // export this to be able to use it in the unittest.
 }
+
+IEProfileMigrator.prototype = Object.create(MigratorPrototype);
+
+IEProfileMigrator.prototype.getResources = function IE_getResources() {
+  let resources = [
+    MSMigrationUtils.getBookmarksMigrator(),
+    new History(),
+    MSMigrationUtils.getCookiesMigrator(),
+  ];
+  // Only support the form password migrator for Windows XP to 7.
+  if (AppConstants.isPlatformAndVersionAtMost("win", "6.1")) {
+    resources.push(new IE7FormPasswords());
+  }
+  let windowsVaultFormPasswordsMigrator = MSMigrationUtils.getWindowsVaultFormPasswordsMigrator();
+  windowsVaultFormPasswordsMigrator.name = "IEVaultFormPasswords";
+  resources.push(windowsVaultFormPasswordsMigrator);
+  return resources.filter(r => r.exists);
+};
+
+IEProfileMigrator.prototype.getLastUsedDate = function IE_getLastUsedDate() {
+  let datePromises = ["Favs", "CookD"].map(dirId => {
+    let { path } = Services.dirsvc.get(dirId, Ci.nsIFile);
+    return OS.File.stat(path)
+      .catch(() => null)
+      .then(info => {
+        return info ? info.lastModificationDate : 0;
+      });
+  });
+  datePromises.push(
+    new Promise(resolve => {
+      let typedURLs = new Map();
+      try {
+        typedURLs = MSMigrationUtils.getTypedURLs(
+          "Software\\Microsoft\\Internet Explorer"
+        );
+      } catch (ex) {}
+      let dates = [0, ...typedURLs.values()];
+      // dates is an array of PRTimes, which are in microseconds - convert to milliseconds
+      resolve(Math.max.apply(Math, dates) / 1000);
+    })
+  );
+  return Promise.all(datePromises).then(dates => {
+    return new Date(Math.max.apply(Math, dates));
+  });
+};
+
+IEProfileMigrator.prototype.classDescription = "IE Profile Migrator";
+IEProfileMigrator.prototype.contractID =
+  "@mozilla.org/profile/migrator;1?app=browser&type=ie";
+IEProfileMigrator.prototype.classID = Components.ID(
+  "{3d2532e3-4932-4774-b7ba-968f5899d3a4}"
+);

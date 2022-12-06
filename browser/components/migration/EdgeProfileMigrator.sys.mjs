@@ -6,8 +6,10 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-import { MigrationUtils } from "resource:///modules/MigrationUtils.sys.mjs";
-import { MigratorBase } from "resource:///modules/MigratorBase.sys.mjs";
+import {
+  MigrationUtils,
+  MigratorPrototype,
+} from "resource:///modules/MigrationUtils.sys.mjs";
 import { MSMigrationUtils } from "resource:///modules/MSMigrationUtils.sys.mjs";
 
 const lazy = {};
@@ -53,14 +55,14 @@ XPCOMUtils.defineLazyGetter(lazy, "gEdgeDatabase", function() {
 /**
  * Get rows from a table in the Edge DB as an array of JS objects.
  *
- * @param {string}            tableName the name of the table to read.
- * @param {string[]|Function} columns   a list of column specifiers
+ * @param {String}            tableName the name of the table to read.
+ * @param {String[]|function} columns   a list of column specifiers
  *                                      (see ESEDBReader.jsm) or a function that
  *                                      generates them based on the database
  *                                      reference once opened.
  * @param {nsIFile}           dbFile    the database file to use. Defaults to
  *                                      the main Edge database.
- * @param {Function}          filterFn  Optional. A function that is called for each row.
+ * @param {function}          filterFn  Optional. A function that is called for each row.
  *                                      Only rows for which it returns a truthy
  *                                      value are included in the result.
  * @returns {Array} An array of row objects.
@@ -464,97 +466,89 @@ EdgeBookmarksMigrator.prototype = {
   },
 };
 
-/**
- * Edge (EdgeHTML) profile migrator
- */
-export class EdgeProfileMigrator extends MigratorBase {
-  constructor() {
-    super();
-    this.wrappedJSObject = this;
-  }
-
-  get classDescription() {
-    return "Edge Profile Migrator";
-  }
-
-  get contractID() {
-    return "@mozilla.org/profile/migrator;1?app=browser&type=edge";
-  }
-
-  get classID() {
-    return Components.ID("{62e8834b-2d17-49f5-96ff-56344903a2ae}");
-  }
-
-  getBookmarksMigratorForTesting(dbOverride) {
-    return new EdgeBookmarksMigrator(dbOverride);
-  }
-
-  getReadingListMigratorForTesting(dbOverride) {
-    return new EdgeReadingListMigrator(dbOverride);
-  }
-
-  getResources() {
-    let resources = [
-      new EdgeBookmarksMigrator(),
-      MSMigrationUtils.getCookiesMigrator(MSMigrationUtils.MIGRATION_TYPE_EDGE),
-      new EdgeTypedURLMigrator(),
-      new EdgeTypedURLDBMigrator(),
-      new EdgeReadingListMigrator(),
-    ];
-    let windowsVaultFormPasswordsMigrator = MSMigrationUtils.getWindowsVaultFormPasswordsMigrator();
-    windowsVaultFormPasswordsMigrator.name = "EdgeVaultFormPasswords";
-    resources.push(windowsVaultFormPasswordsMigrator);
-    return resources.filter(r => r.exists);
-  }
-
-  async getLastUsedDate() {
-    // Don't do this if we don't have a single profile (see the comment for
-    // sourceProfiles) or if we can't find the database file:
-    let sourceProfiles = await this.getSourceProfiles();
-    if (sourceProfiles !== null || !lazy.gEdgeDatabase) {
-      return Promise.resolve(new Date(0));
-    }
-    let logFilePath = PathUtils.join(
-      lazy.gEdgeDatabase.parent.path,
-      "LogFiles",
-      "edb.log"
-    );
-    let dbPath = lazy.gEdgeDatabase.path;
-    let cookieMigrator = MSMigrationUtils.getCookiesMigrator(
-      MSMigrationUtils.MIGRATION_TYPE_EDGE
-    );
-    let cookiePaths = cookieMigrator._cookiesFolders.map(f => f.path);
-    let datePromises = [logFilePath, dbPath, ...cookiePaths].map(path => {
-      return IOUtils.stat(path)
-        .then(info => info.lastModified)
-        .catch(() => 0);
-    });
-    datePromises.push(
-      new Promise(resolve => {
-        let typedURLs = new Map();
-        try {
-          typedURLs = MSMigrationUtils.getTypedURLs(kEdgeRegistryRoot);
-        } catch (ex) {}
-        let times = [0, ...typedURLs.values()];
-        // dates is an array of PRTimes, which are in microseconds - convert to milliseconds
-        resolve(Math.max.apply(Math, times) / 1000);
-      })
-    );
-    return Promise.all(datePromises).then(dates => {
-      return new Date(Math.max.apply(Math, dates));
-    });
-  }
-
-  /**
-   * @returns {Array|null}
-   *   Somewhat counterintuitively, this returns:
-   *   - |null| to indicate "There is only 1 (default) profile" (on win10+)
-   *   - |[]| to indicate "There are no profiles" (on <=win8.1) which will avoid
-   *     using this migrator.
-   *   See MigrationUtils.sys.mjs for slightly more info on how sourceProfiles is used.
-   */
-  getSourceProfiles() {
-    let isWin10OrHigher = AppConstants.isPlatformAndVersionAtLeast("win", "10");
-    return isWin10OrHigher ? null : [];
-  }
+export function EdgeProfileMigrator() {
+  this.wrappedJSObject = this;
 }
+
+EdgeProfileMigrator.prototype = Object.create(MigratorPrototype);
+
+EdgeProfileMigrator.prototype.getBookmarksMigratorForTesting = function(
+  dbOverride
+) {
+  return new EdgeBookmarksMigrator(dbOverride);
+};
+
+EdgeProfileMigrator.prototype.getReadingListMigratorForTesting = function(
+  dbOverride
+) {
+  return new EdgeReadingListMigrator(dbOverride);
+};
+
+EdgeProfileMigrator.prototype.getResources = function() {
+  let resources = [
+    new EdgeBookmarksMigrator(),
+    MSMigrationUtils.getCookiesMigrator(MSMigrationUtils.MIGRATION_TYPE_EDGE),
+    new EdgeTypedURLMigrator(),
+    new EdgeTypedURLDBMigrator(),
+    new EdgeReadingListMigrator(),
+  ];
+  let windowsVaultFormPasswordsMigrator = MSMigrationUtils.getWindowsVaultFormPasswordsMigrator();
+  windowsVaultFormPasswordsMigrator.name = "EdgeVaultFormPasswords";
+  resources.push(windowsVaultFormPasswordsMigrator);
+  return resources.filter(r => r.exists);
+};
+
+EdgeProfileMigrator.prototype.getLastUsedDate = async function() {
+  // Don't do this if we don't have a single profile (see the comment for
+  // sourceProfiles) or if we can't find the database file:
+  let sourceProfiles = await this.getSourceProfiles();
+  if (sourceProfiles !== null || !lazy.gEdgeDatabase) {
+    return Promise.resolve(new Date(0));
+  }
+  let logFilePath = PathUtils.join(
+    lazy.gEdgeDatabase.parent.path,
+    "LogFiles",
+    "edb.log"
+  );
+  let dbPath = lazy.gEdgeDatabase.path;
+  let cookieMigrator = MSMigrationUtils.getCookiesMigrator(
+    MSMigrationUtils.MIGRATION_TYPE_EDGE
+  );
+  let cookiePaths = cookieMigrator._cookiesFolders.map(f => f.path);
+  let datePromises = [logFilePath, dbPath, ...cookiePaths].map(path => {
+    return IOUtils.stat(path)
+      .then(info => info.lastModified)
+      .catch(() => 0);
+  });
+  datePromises.push(
+    new Promise(resolve => {
+      let typedURLs = new Map();
+      try {
+        typedURLs = MSMigrationUtils.getTypedURLs(kEdgeRegistryRoot);
+      } catch (ex) {}
+      let times = [0, ...typedURLs.values()];
+      // dates is an array of PRTimes, which are in microseconds - convert to milliseconds
+      resolve(Math.max.apply(Math, times) / 1000);
+    })
+  );
+  return Promise.all(datePromises).then(dates => {
+    return new Date(Math.max.apply(Math, dates));
+  });
+};
+
+/* Somewhat counterintuitively, this returns:
+ * - |null| to indicate "There is only 1 (default) profile" (on win10+)
+ * - |[]| to indicate "There are no profiles" (on <=win8.1) which will avoid using this migrator.
+ * See MigrationUtils.jsm for slightly more info on how sourceProfiles is used.
+ */
+EdgeProfileMigrator.prototype.getSourceProfiles = function() {
+  let isWin10OrHigher = AppConstants.isPlatformAndVersionAtLeast("win", "10");
+  return isWin10OrHigher ? null : [];
+};
+
+EdgeProfileMigrator.prototype.classDescription = "Edge Profile Migrator";
+EdgeProfileMigrator.prototype.contractID =
+  "@mozilla.org/profile/migrator;1?app=browser&type=edge";
+EdgeProfileMigrator.prototype.classID = Components.ID(
+  "{62e8834b-2d17-49f5-96ff-56344903a2ae}"
+);
