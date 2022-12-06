@@ -30,35 +30,30 @@ const kCCBlockSizeAES128 = 16;
 
 /**
  * kSalt from Chromium.
- *
  * @see https://cs.chromium.org/chromium/src/components/os_crypt/os_crypt_mac.mm?l=43&rcl=1771751f87e3e99bb6cd67b5d0e159ae487f8db0
  */
 const SALT = "saltysalt";
 
 /**
  * kDerivedKeySizeInBits from Chromium.
- *
  * @see https://cs.chromium.org/chromium/src/components/os_crypt/os_crypt_mac.mm?l=46&rcl=1771751f87e3e99bb6cd67b5d0e159ae487f8db0
  */
 const DERIVED_KEY_SIZE_BITS = 128;
 
 /**
  * kEncryptionIterations from Chromium.
- *
  * @see https://cs.chromium.org/chromium/src/components/os_crypt/os_crypt_mac.mm?l=49&rcl=1771751f87e3e99bb6cd67b5d0e159ae487f8db0
  */
 const ITERATIONS = 1003;
 
 /**
  * kEncryptionVersionPrefix from Chromium.
- *
  * @see https://cs.chromium.org/chromium/src/components/os_crypt/os_crypt_mac.mm?l=61&rcl=1771751f87e3e99bb6cd67b5d0e159ae487f8db0
  */
 const ENCRYPTION_VERSION_PREFIX = "v10";
 
 /**
  * The initialization vector is 16 space characters (character code 32 in decimal).
- *
  * @see https://cs.chromium.org/chromium/src/components/os_crypt/os_crypt_mac.mm?l=220&rcl=1771751f87e3e99bb6cd67b5d0e159ae487f8db0
  */
 const IV = new Uint8Array(kCCBlockSizeAES128).fill(32);
@@ -118,7 +113,6 @@ export class ChromeMacOSLoginCrypto {
 
   /**
    * Convert an array containing only two bytes unsigned numbers to a string.
-   *
    * @param {number[]} arr - the array that needs to be converted.
    * @returns {string} the string representation of the array.
    */
@@ -140,7 +134,7 @@ export class ChromeMacOSLoginCrypto {
   }
 
   /**
-   * @param {Array} ciphertextArray ciphertext prefixed by the encryption version
+   * @param {array} ciphertextArray ciphertext prefixed by the encryption version
    *                            (see ENCRYPTION_VERSION_PREFIX).
    * @returns {string} plaintext password
    */

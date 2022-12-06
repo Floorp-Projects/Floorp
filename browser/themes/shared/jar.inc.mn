@@ -68,8 +68,6 @@
   skin/classic/browser/drm-icon.svg                            (../shared/drm-icon.svg)
   skin/classic/browser/identity-block/identity-block.css       (../shared/identity-block/identity-block.css)
   skin/classic/browser/permissions.svg                         (../shared/identity-block/permissions.svg)
-  skin/classic/browser/migration/migration-dialog.css          (../shared/migration/migration-dialog.css)
-  skin/classic/browser/migration/migration-wizard.css          (../shared/migration/migration-wizard.css)
   skin/classic/browser/notification-icons/autoplay-media.svg                (../shared/notification-icons/autoplay-media.svg)
   skin/classic/browser/notification-icons/autoplay-media-blocked.svg        (../shared/notification-icons/autoplay-media-blocked.svg)
   skin/classic/browser/notification-icons/camera-blocked.svg                (../shared/notification-icons/camera-blocked.svg)

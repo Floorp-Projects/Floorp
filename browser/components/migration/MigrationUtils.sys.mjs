@@ -2,13 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const TOPIC_WILL_IMPORT_BOOKMARKS =
+  "initial-migration-will-import-default-bookmarks";
+const TOPIC_DID_IMPORT_BOOKMARKS =
+  "initial-migration-did-import-default-bookmarks";
+const TOPIC_PLACES_DEFAULTS_FINISHED = "places-browser-init-complete";
+
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  BookmarkHTMLUtils: "resource://gre/modules/BookmarkHTMLUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+  ResponsivenessMonitor: "resource://gre/modules/ResponsivenessMonitor.sys.mjs",
   Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.sys.mjs",
@@ -28,6 +37,56 @@ let gForceExitSpinResolve = false;
 let gKeepUndoData = false;
 let gUndoData = null;
 
+const gAvailableMigratorKeys = (function() {
+  if (AppConstants.platform == "win") {
+    return [
+      "firefox",
+      "edge",
+      "ie",
+      "opera",
+      "opera-gx",
+      "vivaldi",
+      "brave",
+      "chrome",
+      "chromium-edge",
+      "chromium-edge-beta",
+      "chrome-beta",
+      "chromium",
+      "chromium-360se",
+      "canary",
+    ];
+  }
+  if (AppConstants.platform == "macosx") {
+    return [
+      "firefox",
+      "safari",
+      "opera",
+      "opera-gx",
+      "vivaldi",
+      "brave",
+      "chrome",
+      "chromium-edge",
+      "chromium-edge-beta",
+      "chromium",
+      "canary",
+    ];
+  }
+  if (AppConstants.XP_UNIX) {
+    return [
+      "firefox",
+      "opera",
+      "vivaldi",
+      "brave",
+      "chrome",
+      "chrome-beta",
+      "chrome-dev",
+      "chromium",
+      "opera-gx",
+    ];
+  }
+  return [];
+})();
+
 function getL10n() {
   if (!gL10n) {
     gL10n = new Localization(["browser/migration.ftl"]);
@@ -36,12 +95,424 @@ function getL10n() {
 }
 
 /**
- * The singleton MigrationUtils service. This service is the primary mechanism
- * by which migrations from other browsers to this browser occur. The singleton
- * instance of this class is exported from this module as `MigrationUtils`.
+ * Shared prototype for migrators, implementing nsIBrowserProfileMigrator.
+ *
+ * To implement a migrator:
+ * 1. Import this module.
+ * 2. Create the prototype for the migrator, extending MigratorPrototype.
+ *    Namely: MosaicMigrator.prototype = Object.create(MigratorPrototype);
+ * 3. Set classDescription, contractID and classID for your migrator, and set
+ *    NSGetFactory appropriately.
+ * 4. If the migrator supports multiple profiles, override the sourceProfiles
+ *    Here we default for single-profile migrator.
+ * 5. Implement getResources(aProfile) (see below).
+ * 6. For startup-only migrators, override |startupOnlyMigrator|.
  */
-class MigrationUtils {
-  resourceTypes = Object.freeze({
+export var MigratorPrototype = {
+  QueryInterface: ChromeUtils.generateQI(["nsIBrowserProfileMigrator"]),
+
+  /**
+   * OVERRIDE IF AND ONLY IF the source supports multiple profiles.
+   *
+   * Returns array of profile objects from which data may be imported. The object
+   * should have the following keys:
+   *   id - a unique string identifier for the profile
+   *   name - a pretty name to display to the user in the UI
+   *
+   * Only profiles from which data can be imported should be listed.  Otherwise
+   * the behavior of the migration wizard isn't well-defined.
+   *
+   * For a single-profile source (e.g. safari, ie), this returns null,
+   * and not an empty array.  That is the default implementation.
+   */
+  getSourceProfiles() {
+    return null;
+  },
+
+  /**
+   * MUST BE OVERRIDDEN.
+   *
+   * Returns an array of "migration resources" objects for the given profile,
+   * or for the "default" profile, if the migrator does not support multiple
+   * profiles.
+   *
+   * Each migration resource should provide:
+   * - a |type| getter, returning any of the migration types (see
+   *   nsIBrowserProfileMigrator).
+   *
+   * - a |migrate| method, taking a single argument, aCallback(bool success),
+   *   for migrating the data for this resource.  It may do its job
+   *   synchronously or asynchronously.  Either way, it must call
+   *   aCallback(bool aSuccess) when it's done.  In the case of an exception
+   *   thrown from |migrate|, it's taken as if aCallback(false) is called.
+   *
+   *   Note: In the case of a simple asynchronous implementation, you may find
+   *   MigrationUtils.wrapMigrateFunction handy for handling aCallback easily.
+   *
+   * For each migration type listed in nsIBrowserProfileMigrator, multiple
+   * migration resources may be provided.  This practice is useful when the
+   * data for a certain migration type is independently stored in few
+   * locations.  For example, the mac version of Safari stores its "reading list"
+   * bookmarks in a separate property list.
+   *
+   * Note that the importation of a particular migration type is reported as
+   * successful if _any_ of its resources succeeded to import (that is, called,
+   * |aCallback(true)|).  However, completion-status for a particular migration
+   * type is reported to the UI only once all of its migrators have called
+   * aCallback.
+   *
+   * @note  The returned array should only include resources from which data
+   *        can be imported.  So, for example, before adding a resource for the
+   *        BOOKMARKS migration type, you should check if you should check that the
+   *        bookmarks file exists.
+   *
+   * @param aProfile
+   *        The profile from which data may be imported, or an empty string
+   *        in the case of a single-profile migrator.
+   *        In the case of multiple-profiles migrator, it is guaranteed that
+   *        aProfile is a value returned by the sourceProfiles getter (see
+   *        above).
+   */
+  getResources: function MP_getResources(/* aProfile */) {
+    throw new Error("getResources must be overridden");
+  },
+
+  /**
+   * OVERRIDE in order to provide an estimate of when the last time was
+   * that somebody used the browser. It is OK that this is somewhat fuzzy -
+   * history may not be available (or be wiped or not present due to e.g.
+   * incognito mode).
+   *
+   * @return a Promise that resolves to the last used date.
+   *
+   * @note If not overridden, the promise will resolve to the unix epoch.
+   */
+  getLastUsedDate() {
+    return Promise.resolve(new Date(0));
+  },
+
+  /**
+   * OVERRIDE IF AND ONLY IF the migrator is a startup-only migrator (For now,
+   * that is just the Firefox migrator, see bug 737381).  Default: false.
+   *
+   * Startup-only migrators are different in two ways:
+   * - they may only be used during startup.
+   * - the user-profile is half baked during migration.  The folder exists,
+   *   but it's only accessible through MigrationUtils.profileStartup.
+   *   The migrator can call MigrationUtils.profileStartup.doStartup
+   *   at any point in order to initialize the profile.
+   */
+  get startupOnlyMigrator() {
+    return false;
+  },
+  /**
+   * Returns true if the migrator is configured to be enabled. This is
+   * controlled by the `browser.migrate.<BROWSER_KEY>.enabled` boolean
+   * preference.
+   */
+  get enabled() {
+    let key = this.getBrowserKey();
+    return Services.prefs.getBoolPref(`browser.migrate.${key}.enabled`, false);
+  },
+
+  /**
+   * DO NOT OVERRIDE - After deCOMing migration, the UI will just call
+   * getResources.
+   *
+   * @see nsIBrowserProfileMigrator
+   */
+  getMigrateData: async function MP_getMigrateData(aProfile) {
+    let resources = await this._getMaybeCachedResources(aProfile);
+    if (!resources) {
+      return 0;
+    }
+    let types = resources.map(r => r.type);
+    return types.reduce((a, b) => {
+      a |= b;
+      return a;
+    }, 0);
+  },
+
+  getBrowserKey: function MP_getBrowserKey() {
+    return this.contractID.match(/\=([^\=]+)$/)[1];
+  },
+
+  /**
+   * DO NOT OVERRIDE - After deCOMing migration, the UI will just call
+   * migrate for each resource.
+   *
+   * @see nsIBrowserProfileMigrator
+   */
+  migrate: async function MP_migrate(aItems, aStartup, aProfile) {
+    let resources = await this._getMaybeCachedResources(aProfile);
+    if (!resources.length) {
+      throw new Error("migrate called for a non-existent source");
+    }
+
+    if (aItems != Ci.nsIBrowserProfileMigrator.ALL) {
+      resources = resources.filter(r => aItems & r.type);
+    }
+
+    // Used to periodically give back control to the main-thread loop.
+    let unblockMainThread = function() {
+      return new Promise(resolve => {
+        Services.tm.dispatchToMainThread(resolve);
+      });
+    };
+
+    let getHistogramIdForResourceType = (resourceType, template) => {
+      if (resourceType == MigrationUtils.resourceTypes.HISTORY) {
+        return template.replace("*", "HISTORY");
+      }
+      if (resourceType == MigrationUtils.resourceTypes.BOOKMARKS) {
+        return template.replace("*", "BOOKMARKS");
+      }
+      if (resourceType == MigrationUtils.resourceTypes.PASSWORDS) {
+        return template.replace("*", "LOGINS");
+      }
+      return null;
+    };
+
+    let browserKey = this.getBrowserKey();
+
+    let maybeStartTelemetryStopwatch = resourceType => {
+      let histogramId = getHistogramIdForResourceType(
+        resourceType,
+        "FX_MIGRATION_*_IMPORT_MS"
+      );
+      if (histogramId) {
+        TelemetryStopwatch.startKeyed(histogramId, browserKey);
+      }
+      return histogramId;
+    };
+
+    let maybeStartResponsivenessMonitor = resourceType => {
+      let responsivenessMonitor;
+      let responsivenessHistogramId = getHistogramIdForResourceType(
+        resourceType,
+        "FX_MIGRATION_*_JANK_MS"
+      );
+      if (responsivenessHistogramId) {
+        responsivenessMonitor = new lazy.ResponsivenessMonitor();
+      }
+      return { responsivenessMonitor, responsivenessHistogramId };
+    };
+
+    let maybeFinishResponsivenessMonitor = (
+      responsivenessMonitor,
+      histogramId
+    ) => {
+      if (responsivenessMonitor) {
+        let accumulatedDelay = responsivenessMonitor.finish();
+        if (histogramId) {
+          try {
+            Services.telemetry
+              .getKeyedHistogramById(histogramId)
+              .add(browserKey, accumulatedDelay);
+          } catch (ex) {
+            Cu.reportError(histogramId + ": " + ex);
+          }
+        }
+      }
+    };
+
+    let collectQuantityTelemetry = () => {
+      for (let resourceType of Object.keys(MigrationUtils._importQuantities)) {
+        let histogramId =
+          "FX_MIGRATION_" + resourceType.toUpperCase() + "_QUANTITY";
+        try {
+          Services.telemetry
+            .getKeyedHistogramById(histogramId)
+            .add(browserKey, MigrationUtils._importQuantities[resourceType]);
+        } catch (ex) {
+          Cu.reportError(histogramId + ": " + ex);
+        }
+      }
+    };
+
+    // Called either directly or through the bookmarks import callback.
+    let doMigrate = async function() {
+      let resourcesGroupedByItems = new Map();
+      resources.forEach(function(resource) {
+        if (!resourcesGroupedByItems.has(resource.type)) {
+          resourcesGroupedByItems.set(resource.type, new Set());
+        }
+        resourcesGroupedByItems.get(resource.type).add(resource);
+      });
+
+      if (resourcesGroupedByItems.size == 0) {
+        throw new Error("No items to import");
+      }
+
+      let notify = function(aMsg, aItemType) {
+        Services.obs.notifyObservers(null, aMsg, aItemType);
+      };
+
+      for (let resourceType of Object.keys(MigrationUtils._importQuantities)) {
+        MigrationUtils._importQuantities[resourceType] = 0;
+      }
+      notify("Migration:Started");
+      for (let [migrationType, itemResources] of resourcesGroupedByItems) {
+        notify("Migration:ItemBeforeMigrate", migrationType);
+
+        let stopwatchHistogramId = maybeStartTelemetryStopwatch(migrationType);
+
+        let {
+          responsivenessMonitor,
+          responsivenessHistogramId,
+        } = maybeStartResponsivenessMonitor(migrationType);
+
+        let itemSuccess = false;
+        for (let res of itemResources) {
+          let completeDeferred = lazy.PromiseUtils.defer();
+          let resourceDone = function(aSuccess) {
+            itemResources.delete(res);
+            itemSuccess |= aSuccess;
+            if (itemResources.size == 0) {
+              notify(
+                itemSuccess
+                  ? "Migration:ItemAfterMigrate"
+                  : "Migration:ItemError",
+                migrationType
+              );
+              resourcesGroupedByItems.delete(migrationType);
+
+              if (stopwatchHistogramId) {
+                TelemetryStopwatch.finishKeyed(
+                  stopwatchHistogramId,
+                  browserKey
+                );
+              }
+
+              maybeFinishResponsivenessMonitor(
+                responsivenessMonitor,
+                responsivenessHistogramId
+              );
+
+              if (resourcesGroupedByItems.size == 0) {
+                collectQuantityTelemetry();
+                notify("Migration:Ended");
+              }
+            }
+            completeDeferred.resolve();
+          };
+
+          // If migrate throws, an error occurred, and the callback
+          // (itemMayBeDone) might haven't been called.
+          try {
+            res.migrate(resourceDone);
+          } catch (ex) {
+            Cu.reportError(ex);
+            resourceDone(false);
+          }
+
+          await completeDeferred.promise;
+          await unblockMainThread();
+        }
+      }
+    };
+
+    if (
+      MigrationUtils.isStartupMigration &&
+      !this.startupOnlyMigrator &&
+      Services.policies.isAllowed("defaultBookmarks")
+    ) {
+      MigrationUtils.profileStartup.doStartup();
+      // First import the default bookmarks.
+      // Note: We do not need to do so for the Firefox migrator
+      // (=startupOnlyMigrator), as it just copies over the places database
+      // from another profile.
+      (async function() {
+        // Tell nsBrowserGlue we're importing default bookmarks.
+        let browserGlue = Cc["@mozilla.org/browser/browserglue;1"].getService(
+          Ci.nsIObserver
+        );
+        browserGlue.observe(null, TOPIC_WILL_IMPORT_BOOKMARKS, "");
+
+        // Import the default bookmarks. We ignore whether or not we succeed.
+        await lazy.BookmarkHTMLUtils.importFromURL(
+          "chrome://browser/content/default-bookmarks.html",
+          {
+            replace: true,
+            source: lazy.PlacesUtils.bookmarks.SOURCES.RESTORE_ON_STARTUP,
+          }
+        ).catch(Cu.reportError);
+
+        // We'll tell nsBrowserGlue we've imported bookmarks, but before that
+        // we need to make sure we're going to know when it's finished
+        // initializing places:
+        let placesInitedPromise = new Promise(resolve => {
+          let onPlacesInited = function() {
+            Services.obs.removeObserver(
+              onPlacesInited,
+              TOPIC_PLACES_DEFAULTS_FINISHED
+            );
+            resolve();
+          };
+          Services.obs.addObserver(
+            onPlacesInited,
+            TOPIC_PLACES_DEFAULTS_FINISHED
+          );
+        });
+        browserGlue.observe(null, TOPIC_DID_IMPORT_BOOKMARKS, "");
+        await placesInitedPromise;
+        doMigrate();
+      })();
+      return;
+    }
+    doMigrate();
+  },
+
+  /**
+   * DO NOT OVERRIDE - After deCOMing migration, this code
+   * won't be part of the migrator itself.
+   *
+   * @see nsIBrowserProfileMigrator
+   */
+  async isSourceAvailable() {
+    if (this.startupOnlyMigrator && !MigrationUtils.isStartupMigration) {
+      return false;
+    }
+
+    // For a single-profile source, check if any data is available.
+    // For multiple-profiles source, make sure that at least one
+    // profile is available.
+    let exists = false;
+    try {
+      let profiles = await this.getSourceProfiles();
+      if (!profiles) {
+        let resources = await this._getMaybeCachedResources("");
+        if (resources && resources.length) {
+          exists = true;
+        }
+      } else {
+        exists = !!profiles.length;
+      }
+    } catch (ex) {
+      Cu.reportError(ex);
+    }
+    return exists;
+  },
+
+  /** * PRIVATE STUFF - DO NOT OVERRIDE ***/
+  _getMaybeCachedResources: async function PMB__getMaybeCachedResources(
+    aProfile
+  ) {
+    let profileKey = aProfile ? aProfile.id : "";
+    if (this._resourcesByProfile) {
+      if (profileKey in this._resourcesByProfile) {
+        return this._resourcesByProfile[profileKey];
+      }
+    } else {
+      this._resourcesByProfile = {};
+    }
+    this._resourcesByProfile[profileKey] = await this.getResources(aProfile);
+    return this._resourcesByProfile[profileKey];
+  },
+};
+
+export var MigrationUtils = Object.seal({
+  resourceTypes: {
     COOKIES: Ci.nsIBrowserProfileMigrator.COOKIES,
     HISTORY: Ci.nsIBrowserProfileMigrator.HISTORY,
     FORMDATA: Ci.nsIBrowserProfileMigrator.FORMDATA,
@@ -49,17 +520,16 @@ class MigrationUtils {
     BOOKMARKS: Ci.nsIBrowserProfileMigrator.BOOKMARKS,
     OTHERDATA: Ci.nsIBrowserProfileMigrator.OTHERDATA,
     SESSION: Ci.nsIBrowserProfileMigrator.SESSION,
-  });
+  },
 
   /**
    * Helper for implementing simple asynchronous cases of migration resources'
-   * |migrate(aCallback)| (see MigratorBase).  If your |migrate| method
+   * |migrate(aCallback)| (see MigratorPrototype).  If your |migrate| method
    * just waits for some file to be read, for example, and then migrates
    * everything right away, you can wrap the async-function with this helper
    * and not worry about notifying the callback.
    *
-   * @example
-   * // For example, instead of writing:
+   * For example, instead of writing:
    * setTimeout(function() {
    *   try {
    *     ....
@@ -70,25 +540,24 @@ class MigrationUtils {
    *   }
    * }, 0);
    *
-   * // You may write:
+   * You may write:
    * setTimeout(MigrationUtils.wrapMigrateFunction(function() {
    *   if (importingFromMosaic)
    *     throw Cr.NS_ERROR_UNEXPECTED;
    * }, aCallback), 0);
    *
-   * // ... and aCallback will be called with aSuccess=false when importing
-   * // from Mosaic, or with aSuccess=true otherwise.
+   * ... and aCallback will be called with aSuccess=false when importing
+   * from Mosaic, or with aSuccess=true otherwise.
    *
-   * @param {Function} aFunction
-   *   the function that will be called sometime later.  If aFunction
-   *   throws when it's called, aCallback(false) is called, otherwise
-   *   aCallback(true) is called.
-   * @param {Function} aCallback
-   *   the callback function passed to |migrate|.
-   * @returns {Function}
-   *   the wrapped function.
+   * @param aFunction
+   *        the function that will be called sometime later.  If aFunction
+   *        throws when it's called, aCallback(false) is called, otherwise
+   *        aCallback(true) is called.
+   * @param aCallback
+   *        the callback function passed to |migrate|.
+   * @return the wrapped function.
    */
-  wrapMigrateFunction(aFunction, aCallback) {
+  wrapMigrateFunction: function MU_wrapMigrateFunction(aFunction, aCallback) {
     return function() {
       let success = false;
       try {
@@ -102,22 +571,21 @@ class MigrationUtils {
       // twice.
       aCallback(success);
     };
-  }
+  },
 
   /**
    * Gets localized string corresponding to l10n-id
    *
-   * @param {string} aKey
-   *   The key of the id of the localization to retrieve.
-   * @param {object} [aArgs=undefined]
-   *   An optional map of arguments to the id.
-   * @returns {Promise<string>}
-   *   A promise that resolves to the retrieved localization.
+   * @param aKey
+   *        The key of the id of the localization to retrieve.
+   * @param aArgs
+   *        [optional] map of arguments to the id.
+   * @return A promise that resolves to the retrieved localization.
    */
-  getLocalizedString(aKey, aArgs) {
+  getLocalizedString: function MU_getLocalizedString(aKey, aArgs) {
     let l10n = getL10n();
     return l10n.formatValue(aKey, aArgs);
-  }
+  },
 
   /**
    * Get all the rows corresponding to a select query from a database, without
@@ -125,17 +593,16 @@ class MigrationUtils {
    * else tried to write to the DB at the same time, for example), we will
    * retry the fetch after a 100ms timeout, up to 10 times.
    *
-   * @param {string} path
-   *   The file path to the database we want to open.
-   * @param {string} description
-   *   A developer-readable string identifying what kind of database we're
-   *   trying to open.
-   * @param {string} selectQuery
-   *   The SELECT query to use to fetch the rows.
+   * @param path
+   *        the file path to the database we want to open.
+   * @param description
+   *        a developer-readable string identifying what kind of database we're
+   *        trying to open.
+   * @param selectQuery
+   *        the SELECT query to use to fetch the rows.
    *
-   * @returns {Promise<object[]|Error>}
-   *   A promise that resolves to an array of rows. The promise will be
-   *   rejected if the read/fetch failed even after retrying.
+   * @return a promise that resolves to an array of rows. The promise will be
+   *         rejected if the read/fetch failed even after retrying.
    */
   getRowsFromDBWithoutLocks(path, description, selectQuery) {
     let dbOptions = {
@@ -183,20 +650,20 @@ class MigrationUtils {
       }
       return rows;
     })();
-  }
+  },
 
-  get #migrators() {
+  get _migrators() {
     if (!gMigrators) {
       gMigrators = new Map();
     }
     return gMigrators;
-  }
+  },
 
-  forceExitSpinResolve() {
+  forceExitSpinResolve: function MU_forceExitSpinResolve() {
     gForceExitSpinResolve = true;
-  }
+  },
 
-  spinResolve(promise) {
+  spinResolve: function MU_spinResolve(promise) {
     if (!(promise instanceof Promise)) {
       return promise;
     }
@@ -224,29 +691,27 @@ class MigrationUtils {
     } else {
       return result;
     }
-  }
+  },
 
-  /**
+  /*
    * Returns the migrator for the given source, if any data is available
    * for this source, or null otherwise.
    *
-   * If null is returned,  either no data can be imported for the given migrator,
-   * or aMigratorKey is invalid  (e.g. ie on mac, or mosaic everywhere).  This
-   * method should be used rather than direct getService for future compatibility
-   * (see bug 718280).
+   * @param aKey internal name of the migration source.
+   *             See `gAvailableMigratorKeys` for supported values by OS.
    *
-   * @param {string} aKey
-   *   Internal name of the migration source. See `availableMigratorKeys`
-   *   for supported values by OS.
+   * If null is returned,  either no data can be imported
+   * for the given migrator, or aMigratorKey is invalid  (e.g. ie on mac,
+   * or mosaic everywhere).  This method should be used rather than direct
+   * getService for future compatibility (see bug 718280).
    *
-   * @returns {MigratorBase}
-   *   A profile migrator implementing nsIBrowserProfileMigrator, if it can
-   *   import any data, null otherwise.
+   * @return profile migrator implementing nsIBrowserProfileMigrator, if it can
+   *         import any data, null otherwise.
    */
-  async getMigrator(aKey) {
+  getMigrator: async function MU_getMigrator(aKey) {
     let migrator = null;
-    if (this.#migrators.has(aKey)) {
-      migrator = this.#migrators.get(aKey);
+    if (this._migrators.has(aKey)) {
+      migrator = this._migrators.get(aKey);
     } else {
       try {
         migrator = Cc[
@@ -255,7 +720,7 @@ class MigrationUtils {
       } catch (ex) {
         Cu.reportError(ex);
       }
-      this.#migrators.set(aKey, migrator);
+      this._migrators.set(aKey, migrator);
     }
 
     try {
@@ -264,17 +729,14 @@ class MigrationUtils {
       Cu.reportError(ex);
       return null;
     }
-  }
+  },
 
   /**
    * Figure out what is the default browser, and if there is a migrator
    * for it, return that migrator's internal name.
-   *
    * For the time being, the "internal name" of a migrator is its contract-id
    * trailer (e.g. ie for @mozilla.org/profile/migrator;1?app=browser&type=ie),
    * but it will soon be exposed properly.
-   *
-   * @returns {string}
    */
   getMigratorKeyForDefaultBrowser() {
     // Canary uses the same description as Chrome so we can't distinguish them.
@@ -357,50 +819,45 @@ class MigrationUtils {
       }
     }
     return key;
-  }
+  },
 
-  /**
-   * True if we're in the process of a startup migration.
-   *
-   * @type {boolean}
-   */
+  // Whether or not we're in the process of startup migration
   get isStartupMigration() {
     return gProfileStartup != null;
-  }
+  },
 
   /**
    * In the case of startup migration, this is set to the nsIProfileStartup
    * instance passed to ProfileMigrator's migrate.
    *
    * @see showMigrationWizard
-   * @type {nsIProfileStartup|null}
    */
   get profileStartup() {
     return gProfileStartup;
-  }
+  },
 
   /**
    * Show the migration wizard.  On mac, this may just focus the wizard if it's
    * already running, in which case aOpener and aParams are ignored.
    *
-   * @param {Window} [aOpener=null]
-   *   optional; the window that asks to open the wizard.
-   * @param {Array} [aParams=null]
-   *   optional arguments for the migration wizard, in the form of an array
-   *   This is passed as-is for the params argument of
-   *   nsIWindowWatcher.openWindow. The array elements we expect are, in
-   *   order:
-   *   - {Number} migration entry point constant (see below)
-   *   - {String} source browser identifier
-   *   - {nsIBrowserProfileMigrator} actual migrator object
-   *   - {Boolean} whether this is a startup migration
-   *   - {Boolean} whether to skip the 'source' page
-   *   - {String} an identifier for the profile to use when migrating
-   *   NB: If you add new consumers, please add a migration entry point
-   *   constant below, and specify at least the first element of the array
-   *   (the migration entry point for purposes of telemetry).
+   * @param {Window} [aOpener]
+   *        optional; the window that asks to open the wizard.
+   * @param {Array} [aParams]
+   *        optional arguments for the migration wizard, in the form of an array
+   *        This is passed as-is for the params argument of
+   *        nsIWindowWatcher.openWindow. The array elements we expect are, in
+   *        order:
+   *        - {Number} migration entry point constant (see below)
+   *        - {String} source browser identifier
+   *        - {nsIBrowserProfileMigrator} actual migrator object
+   *        - {Boolean} whether this is a startup migration
+   *        - {Boolean} whether to skip the 'source' page
+   *        - {String} an identifier for the profile to use when migrating
+   *        NB: If you add new consumers, please add a migration entry point
+   *        constant below, and specify at least the first element of the array
+   *        (the migration entry point for purposes of telemetry).
    */
-  showMigrationWizard(aOpener, aParams) {
+  showMigrationWizard: function MU_showMigrationWizard(aOpener, aParams) {
     const DIALOG_URL = "chrome://browser/content/migration/migration.xhtml";
     let features = "chrome,dialog,modal,centerscreen,titlebar,resizable=no";
     if (AppConstants.platform == "macosx" && !this.isStartupMigration) {
@@ -477,7 +934,7 @@ class MigrationUtils {
     } else {
       Services.ww.openWindow(aOpener, DIALOG_URL, "_blank", features, params);
     }
-  }
+  },
 
   /**
    * Show the migration wizard for startup-migration.  This should only be
@@ -485,23 +942,26 @@ class MigrationUtils {
    * nsIProfileMigrator. This runs asynchronously if we are running an
    * automigration.
    *
-   * @param {nsIProfileStartup} aProfileStartup
-   *   the nsIProfileStartup instance provided to ProfileMigrator.migrate.
-   * @param {string|null} [aMigratorKey=null]
-   *   If set, the migration wizard will import from the corresponding
-   *   migrator, bypassing the source-selection page.  Otherwise, the
-   *   source-selection page will be displayed, either with the default
-   *   browser selected, if it could be detected and if there is a
-   *   migrator for it, or with the first option selected as a fallback
-   *   (The first option is hardcoded to be the most common browser for
-   *    the OS we run on.  See migration.xhtml).
-   * @param {string|null} [aProfileToMigrate=null]
-   *   If set, the migration wizard will import from the profile indicated.
-   * @throws
-   *   if aMigratorKey is invalid or if it points to a non-existent
-   *   source.
+   * @param aProfileStartup
+   *        the nsIProfileStartup instance provided to ProfileMigrator.migrate.
+   * @param [optional] aMigratorKey
+   *        If set, the migration wizard will import from the corresponding
+   *        migrator, bypassing the source-selection page.  Otherwise, the
+   *        source-selection page will be displayed, either with the default
+   *        browser selected, if it could be detected and if there is a
+   *        migrator for it, or with the first option selected as a fallback
+   *        (The first option is hardcoded to be the most common browser for
+   *         the OS we run on.  See migration.xhtml).
+   * @param [optional] aProfileToMigrate
+   *        If set, the migration wizard will import from the profile indicated.
+   * @throws if aMigratorKey is invalid or if it points to a non-existent
+   *         source.
    */
-  startupMigration(aProfileStartup, aMigratorKey, aProfileToMigrate) {
+  startupMigration: function MU_startupMigrator(
+    aProfileStartup,
+    aMigratorKey,
+    aProfileToMigrate
+  ) {
     this.spinResolve(
       this.asyncStartupMigration(
         aProfileStartup,
@@ -509,9 +969,9 @@ class MigrationUtils {
         aProfileToMigrate
       )
     );
-  }
+  },
 
-  async asyncStartupMigration(
+  asyncStartupMigration: async function MU_asyncStartupMigrator(
     aProfileStartup,
     aMigratorKey,
     aProfileToMigrate
@@ -552,7 +1012,7 @@ class MigrationUtils {
 
     if (!migrator) {
       let migrators = await Promise.all(
-        this.availableMigratorKeys.map(key => this.getMigrator(key))
+        gAvailableMigratorKeys.map(key => this.getMigrator(key))
       );
       // If there's no migrator set so far, ensure that there is at least one
       // migrator available before opening the wizard.
@@ -568,9 +1028,9 @@ class MigrationUtils {
     let isRefresh =
       migrator && skipSourcePage && migratorKey == AppConstants.MOZ_APP_NAME;
 
-    let migrationEntryPoint = this.MIGRATION_ENTRYPOINTS.FIRSTRUN;
+    let migrationEntryPoint = this.MIGRATION_ENTRYPOINT_FIRSTRUN;
     if (isRefresh) {
-      migrationEntryPoint = this.MIGRATION_ENTRYPOINTS.FXREFRESH;
+      migrationEntryPoint = this.MIGRATION_ENTRYPOINT_FXREFRESH;
     }
 
     let params = [
@@ -582,17 +1042,13 @@ class MigrationUtils {
       aProfileToMigrate,
     ];
     this.showMigrationWizard(null, params);
-  }
+  },
 
-  /**
-   * This is only pseudo-private because some tests and helper functions
-   * still expect to be able to directly access it.
-   */
-  _importQuantities = {
+  _importQuantities: {
     bookmarks: 0,
     logins: 0,
     history: 0,
-  };
+  },
 
   getImportedCount(type) {
     if (!this._importQuantities.hasOwnProperty(type)) {
@@ -601,7 +1057,7 @@ class MigrationUtils {
       );
     }
     return this._importQuantities[type];
-  }
+  },
 
   insertBookmarkWrapper(bookmark) {
     this._importQuantities.bookmarks++;
@@ -622,7 +1078,7 @@ class MigrationUtils {
       });
       return bm;
     });
-  }
+  },
 
   insertManyBookmarksWrapper(bookmarks, parent) {
     let insertionPromise = lazy.PlacesUtils.bookmarks.insertTree({
@@ -647,7 +1103,7 @@ class MigrationUtils {
       },
       ex => Cu.reportError(ex)
     );
-  }
+  },
 
   insertVisitsWrapper(pageInfos) {
     let now = new Date();
@@ -663,10 +1119,10 @@ class MigrationUtils {
     }
     this._importQuantities.history += pageInfos.length;
     if (gKeepUndoData) {
-      this.#updateHistoryUndo(pageInfos);
+      this._updateHistoryUndo(pageInfos);
     }
     return lazy.PlacesUtils.history.insertMany(pageInfos);
-  }
+  },
 
   async insertLoginsWrapper(logins) {
     this._importQuantities.logins += logins.length;
@@ -680,13 +1136,12 @@ class MigrationUtils {
         gUndoData.get("logins").push({ guid, timePasswordChanged });
       }
     }
-  }
+  },
 
   /**
    * Iterates through the favicons, sniffs for a mime type,
    * and uses the mime type to properly import the favicon.
-   *
-   * @param {object[]} favicons
+   * @param {Object[]} favicons
    *   An array of Objects with these properties:
    *     {Uint8Array} faviconData: The binary data of a favicon
    *     {nsIURI} uri: The URI of the associated page
@@ -718,7 +1173,7 @@ class MigrationUtils {
         Services.scriptSecurityManager.getSystemPrincipal()
       );
     }
-  }
+  },
 
   initializeUndoData() {
     gKeepUndoData = true;
@@ -727,9 +1182,9 @@ class MigrationUtils {
       ["visits", []],
       ["logins", []],
     ]);
-  }
+  },
 
-  async #postProcessUndoData(state) {
+  async _postProcessUndoData(state) {
     if (!state) {
       return state;
     }
@@ -759,16 +1214,16 @@ class MigrationUtils {
       }
     }
     return state;
-  }
+  },
 
   stopAndRetrieveUndoData() {
     let undoData = gUndoData;
     gUndoData = null;
     gKeepUndoData = false;
-    return this.#postProcessUndoData(undoData);
-  }
+    return this._postProcessUndoData(undoData);
+  },
 
-  #updateHistoryUndo(pageInfos) {
+  _updateHistoryUndo(pageInfos) {
     let visits = gUndoData.get("visits");
     let visitMap = new Map(visits.map(v => [v.url, v]));
     for (let pageInfo of pageInfos) {
@@ -804,126 +1259,30 @@ class MigrationUtils {
       }
     }
     gUndoData.set("visits", Array.from(visitMap.values()));
-  }
+  },
 
   /**
    * Cleans up references to migrators and nsIProfileInstance instances.
    */
-  finishMigration() {
+  finishMigration: function MU_finishMigration() {
     gMigrators = null;
     gProfileStartup = null;
     gL10n = null;
-  }
+  },
 
-  get availableMigratorKeys() {
-    if (AppConstants.platform == "win") {
-      return [
-        "firefox",
-        "edge",
-        "ie",
-        "opera",
-        "opera-gx",
-        "vivaldi",
-        "brave",
-        "chrome",
-        "chromium-edge",
-        "chromium-edge-beta",
-        "chrome-beta",
-        "chromium",
-        "chromium-360se",
-        "canary",
-      ];
-    }
-    if (AppConstants.platform == "macosx") {
-      return [
-        "firefox",
-        "safari",
-        "opera",
-        "opera-gx",
-        "vivaldi",
-        "brave",
-        "chrome",
-        "chromium-edge",
-        "chromium-edge-beta",
-        "chromium",
-        "canary",
-      ];
-    }
-    if (AppConstants.XP_UNIX) {
-      return [
-        "firefox",
-        "opera",
-        "vivaldi",
-        "brave",
-        "chrome",
-        "chrome-beta",
-        "chrome-dev",
-        "chromium",
-        "opera-gx",
-      ];
-    }
-    return [];
-  }
+  gAvailableMigratorKeys,
 
-  /**
-   * Enum for the entrypoint that is being used to start migration.
-   * Callers can use the MIGRATION_ENTRYPOINTS getter to use these.
-   *
-   * These values are what's written into the FX_MIGRATION_ENTRY_POINT
-   * histogram after a migration.
-   *
-   * @see MIGRATION_ENTRYPOINTS
-   * @readonly
-   * @enum {number}
-   */
-  #MIGRATION_ENTRYPOINTS_ENUM = Object.freeze({
-    /** The entrypoint was not supplied */
-    UNKNOWN: 0,
+  MIGRATION_ENTRYPOINT_UNKNOWN: 0,
+  MIGRATION_ENTRYPOINT_FIRSTRUN: 1,
+  MIGRATION_ENTRYPOINT_FXREFRESH: 2,
+  MIGRATION_ENTRYPOINT_PLACES: 3,
+  MIGRATION_ENTRYPOINT_PASSWORDS: 4,
+  MIGRATION_ENTRYPOINT_NEWTAB: 5,
+  MIGRATION_ENTRYPOINT_FILE_MENU: 6,
+  MIGRATION_ENTRYPOINT_HELP_MENU: 7,
+  MIGRATION_ENTRYPOINT_BOOKMARKS_TOOLBAR: 8,
 
-    /** Migration is occurring at startup */
-    FIRSTRUN: 1,
-
-    /** Migration is occurring at after a profile refresh */
-    FXREFRESH: 2,
-
-    /** Migration is being started from the Library window */
-    PLACES: 3,
-
-    /** Migration is being started from our password management UI */
-    PASSWORDS: 4,
-
-    /** Migration is being started from the default about:home/about:newtab */
-    NEWTAB: 5,
-
-    /** Migration is being started from the File menu */
-    FILE_MENU: 6,
-
-    /** Migration is being started from the Help menu */
-    HELP_MENU: 7,
-
-    /** Migration is being started from the Bookmarks Toolbar */
-    BOOKMARKS_TOOLBAR: 8,
-  });
-
-  /**
-   * Returns an enum that should be used to record the entrypoint for
-   * starting a migration.
-   *
-   * @returns {number}
-   */
-  get MIGRATION_ENTRYPOINTS() {
-    return this.#MIGRATION_ENTRYPOINTS_ENUM;
-  }
-
-  /**
-   * Enum for the numeric value written to the FX_MIGRATION_SOURCE_BROWSER,
-   * and FX_STARTUP_MIGRATION_EXISTING_DEFAULT_BROWSER histograms.
-   *
-   * @see getSourceIdForTelemetry
-   * @readonly
-   * @enum {number}
-   */
-  #SOURCE_NAME_TO_ID_MAPPING_ENUM = Object.freeze({
+  _sourceNameToIdMapping: {
     nothing: 1,
     firefox: 2,
     edge: 3,
@@ -941,13 +1300,15 @@ class MigrationUtils {
     opera: 12,
     "opera-gx": 14,
     vivaldi: 13,
-  });
-
+  },
   getSourceIdForTelemetry(sourceName) {
-    return this.#SOURCE_NAME_TO_ID_MAPPING_ENUM[sourceName] || 0;
-  }
-}
+    return this._sourceNameToIdMapping[sourceName] || 0;
+  },
 
-const MigrationUtilsSingleton = new MigrationUtils();
-
-export { MigrationUtilsSingleton as MigrationUtils };
+  /* Enum of locations where bookmarks were found in the
+     source browser that we import from */
+  SOURCE_BOOKMARK_ROOTS_BOOKMARKS_TOOLBAR: 1,
+  SOURCE_BOOKMARK_ROOTS_BOOKMARKS_MENU: 2,
+  SOURCE_BOOKMARK_ROOTS_READING_LIST: 4,
+  SOURCE_BOOKMARK_ROOTS_UNFILED: 8,
+});

@@ -52,12 +52,12 @@ var MigrationWizard = {
     this._wiz = document.querySelector("wizard");
 
     let args = window.arguments;
-    let entryPointId = args[0] || MigrationUtils.MIGRATION_ENTRYPOINTS.UNKNOWN;
+    let entryPointId = args[0] || MigrationUtils.MIGRATION_ENTRYPOINT_UNKNOWN;
     Services.telemetry
       .getHistogramById("FX_MIGRATION_ENTRY_POINT")
       .add(entryPointId);
     this.isInitialMigration =
-      entryPointId == MigrationUtils.MIGRATION_ENTRYPOINTS.FIRSTRUN;
+      entryPointId == MigrationUtils.MIGRATION_ENTRYPOINT_FIRSTRUN;
 
     // Record that the uninstaller requested a profile refresh
     if (Services.env.get("MOZ_UNINSTALLER_PROFILE_REFRESH")) {
