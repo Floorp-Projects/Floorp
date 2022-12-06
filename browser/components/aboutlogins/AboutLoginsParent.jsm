@@ -235,7 +235,7 @@ class AboutLoginsParent extends JSWindowActorParent {
   #importFromBrowser() {
     try {
       lazy.MigrationUtils.showMigrationWizard(this.#ownerGlobal, [
-        lazy.MigrationUtils.MIGRATION_ENTRYPOINT_PASSWORDS,
+        lazy.MigrationUtils.MIGRATION_ENTRYPOINTS.PASSWORDS,
       ]);
     } catch (ex) {
       console.error(ex);

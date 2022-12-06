@@ -36,7 +36,7 @@ export class MigrationWizardParent extends JSWindowActorParent {
 
     if (message.name == "GetAvailableMigrators") {
       let availableMigrators = new Map();
-      for (const key of MigrationUtils.gAvailableMigratorKeys) {
+      for (const key of MigrationUtils.availableMigratorKeys) {
         try {
           let migratorPromise = MigrationUtils.getMigrator(key).catch(
             console.error

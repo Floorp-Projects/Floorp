@@ -233,7 +233,7 @@ const SpecialMessageActions = {
       case "SHOW_MIGRATION_WIZARD":
         Services.tm.dispatchToMainThread(() =>
           lazy.MigrationUtils.showMigrationWizard(window, [
-            lazy.MigrationUtils.MIGRATION_ENTRYPOINT_NEWTAB,
+            lazy.MigrationUtils.MIGRATION_ENTRYPOINTS.NEWTAB,
             action.data?.source,
           ])
         );
