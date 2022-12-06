@@ -3,10 +3,6 @@
 
 "use strict";
 
-const { TabState } = ChromeUtils.import(
-  "resource:///modules/sessionstore/TabState.jsm"
-);
-
 async function checkLoginDisplayed(browser, testGuid) {
   await SpecialPowers.spawn(browser, [testGuid], async function(guid) {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));

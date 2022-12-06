@@ -40,6 +40,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   JsonSchema: "resource://gre/modules/JsonSchema.sys.mjs",
   Log: "resource://gre/modules/Log.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -50,35 +51,27 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   CommonUtils: "resource://services-common/utils.js",
   extensionStorageSync: "resource://gre/modules/ExtensionStorageSync.jsm",
   Logger: "resource://tps/logger.jsm",
-  SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
   Svc: "resource://services-sync/util.js",
   SyncTelemetry: "resource://services-sync/telemetry.js",
   Weave: "resource://services-sync/main.js",
   WEAVE_VERSION: "resource://services-sync/constants.js",
-
   Addon: "resource://tps/modules/addons.jsm",
   AddonValidator: "resource://services-sync/engines/addons.js",
-
   FormData: "resource://tps/modules/forms.jsm",
   FormValidator: "resource://services-sync/engines/forms.js",
-
   Bookmark: "resource://tps/modules/bookmarks.jsm",
   DumpBookmarks: "resource://tps/modules/bookmarks.jsm",
   BookmarkFolder: "resource://tps/modules/bookmarks.jsm",
   Livemark: "resource://tps/modules/bookmarks.jsm",
   Separator: "resource://tps/modules/bookmarks.jsm",
   BookmarkValidator: "resource://tps/modules/bookmarkValidator.jsm",
-
   Address: "resource://tps/modules/formautofill.jsm",
   DumpAddresses: "resource://tps/modules/formautofill.jsm",
   CreditCard: "resource://tps/modules/formautofill.jsm",
   DumpCreditCards: "resource://tps/modules/formautofill.jsm",
-
   DumpHistory: "resource://tps/modules/history.jsm",
   HistoryEntry: "resource://tps/modules/history.jsm",
-
   Preference: "resource://tps/modules/prefs.jsm",
-
   DumpPasswords: "resource://tps/modules/passwords.jsm",
   Password: "resource://tps/modules/passwords.jsm",
   PasswordValidator: "resource://services-sync/engines/passwords.js",

@@ -180,7 +180,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
           const COMPLETE_STATE = Ci.nsIWebProgressListener.STATE_STOP +
                                  Ci.nsIWebProgressListener.STATE_IS_NETWORK;
           let { TabStateFlusher } = ChromeUtils.import(
-            "resource:///modules/sessionstore/TabStateFlusher.jsm"
+            "resource:///modules/sessionstore/TabStateFlusher.sys.mjs"
           );
           let expectedURLs = Array.from(arguments[0])
           gBrowser.addTabsProgressListener({

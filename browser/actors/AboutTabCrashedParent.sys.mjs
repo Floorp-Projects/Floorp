@@ -5,8 +5,12 @@
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
 });
 

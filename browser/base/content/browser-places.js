@@ -610,11 +610,10 @@ var PlacesCommandHook = {
   },
 };
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "RecentlyClosedTabsAndWindowsMenuUtils",
-  "resource:///modules/sessionstore/RecentlyClosedTabsAndWindowsMenuUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  RecentlyClosedTabsAndWindowsMenuUtils:
+    "resource:///modules/sessionstore/RecentlyClosedTabsAndWindowsMenuUtils.sys.mjs",
+});
 
 // View for the history menu.
 function HistoryMenu(aPopupShowingEvent) {

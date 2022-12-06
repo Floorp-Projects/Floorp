@@ -22,8 +22,8 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/BrowserUsageTelemetry.jsm"
 );
 
-const { SessionStore } = ChromeUtils.import(
-  "resource:///modules/sessionstore/SessionStore.jsm"
+const { SessionStore } = ChromeUtils.importESModule(
+  "resource:///modules/sessionstore/SessionStore.sys.mjs"
 );
 
 // Reset internal URI counter in case URIs were opened by other tests.

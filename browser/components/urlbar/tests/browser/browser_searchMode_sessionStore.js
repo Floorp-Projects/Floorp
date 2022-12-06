@@ -9,9 +9,9 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
-  TabStateFlusher: "resource:///modules/sessionstore/TabStateFlusher.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
+  TabStateFlusher: "resource:///modules/sessionstore/TabStateFlusher.sys.mjs",
 });
 
 // This test takes a long time on the OS X 10.14 machines, so request a longer

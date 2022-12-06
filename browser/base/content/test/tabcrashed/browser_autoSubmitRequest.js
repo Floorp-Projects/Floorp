@@ -4,8 +4,8 @@ const PAGE =
   "data:text/html,<html><body>A%20regular,%20everyday,%20normal%20page.";
 const AUTOSUBMIT_PREF = "browser.crashReports.unsubmittedCheck.autoSubmit2";
 
-const { TabStateFlusher } = ChromeUtils.import(
-  "resource:///modules/sessionstore/TabStateFlusher.jsm"
+const { TabStateFlusher } = ChromeUtils.importESModule(
+  "resource:///modules/sessionstore/TabStateFlusher.sys.mjs"
 );
 
 // On debug builds, crashing tabs results in much thinking, which

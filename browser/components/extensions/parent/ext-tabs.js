@@ -15,16 +15,12 @@ ChromeUtils.defineESModuleGetters(this, {
   DownloadPaths: "resource://gre/modules/DownloadPaths.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+  SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(
   this,
   "ExtensionControlledPopup",
   "resource:///modules/ExtensionControlledPopup.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "SessionStore",
-  "resource:///modules/sessionstore/SessionStore.jsm"
 );
 
 XPCOMUtils.defineLazyGetter(this, "strBundle", function() {
