@@ -378,18 +378,29 @@ dependencies = [
 
 [[package]]
 name = "authenticator"
-version = "0.3.1"
+version = "0.4.0-alpha.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08cee7a0952628fde958e149507c2bb321ab4fccfafd225da0b20adc956ef88a"
+checksum = "671c5d49eab8c93b8aea310cef8a7fd0846eb9417e3c31e4f4d6ec7012aae842"
 dependencies = [
+ "base64",
  "bitflags",
+ "cfg-if 1.0.0",
  "core-foundation",
  "devd-rs",
  "libc",
  "libudev",
  "log",
- "rand 0.7.999",
+ "memoffset 0.6.5",
+ "nom 7.1.1",
+ "nss-gk-api",
+ "pkcs11-bindings",
+ "rand 0.8.5",
  "runloop",
+ "serde",
+ "serde_bytes",
+ "serde_cbor",
+ "serde_json",
+ "sha2",
  "winapi",
 ]
 
@@ -2462,6 +2473,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "half"
+version = "1.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eabb4a44450da02c90444cf74558da904edde8fb4e9035a9a6a4e15445af0bd7"
+
+[[package]]
 name = "hashbrown"
 version = "0.11.999"
 dependencies = [
@@ -3771,6 +3788,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "nss-gk-api"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1a689b62ba71fda80458a77b6ace9371d6e6a5473300901383ebd101659b3352"
+dependencies = [
+ "bindgen 0.63.0",
+ "mozbuild",
+ "once_cell",
+ "pkcs11-bindings",
+ "serde",
+ "serde_derive",
+ "toml",
+]
+
+[[package]]
 name = "nss_build_common"
 version = "0.1.0"
 source = "git+https://github.com/mozilla/application-services?rev=4d858e4266c6d06d86d361279e6e04dbe5583cb9#4d858e4266c6d06d86d361279e6e04dbe5583cb9"
@@ -4760,6 +4792,16 @@ version = "0.11.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cfc50e8183eeeb6178dcb167ae34a8051d63535023ae38b5d8d12beae193d37b"
 dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "serde_cbor"
+version = "0.11.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2bef2ebfde456fb76bbcf9f59315333decc4fda0b2b44b420243c11e0f5ec1f5"
+dependencies = [
+ "half",
  "serde",
 ]
 
