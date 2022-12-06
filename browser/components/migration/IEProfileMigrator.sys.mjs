@@ -8,10 +8,8 @@ const kLoginsKey =
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-import {
-  MigrationUtils,
-  MigratorPrototype,
-} from "resource:///modules/MigrationUtils.sys.mjs";
+import { MigrationUtils } from "resource:///modules/MigrationUtils.sys.mjs";
+import { MigratorBase } from "resource:///modules/MigratorBase.sys.mjs";
 import { MSMigrationUtils } from "resource:///modules/MSMigrationUtils.sys.mjs";
 
 const lazy = {};
@@ -351,58 +349,67 @@ IE7FormPasswords.prototype = {
   },
 };
 
-export function IEProfileMigrator() {
-  this.wrappedJSObject = this; // export this to be able to use it in the unittest.
-}
-
-IEProfileMigrator.prototype = Object.create(MigratorPrototype);
-
-IEProfileMigrator.prototype.getResources = function IE_getResources() {
-  let resources = [
-    MSMigrationUtils.getBookmarksMigrator(),
-    new History(),
-    MSMigrationUtils.getCookiesMigrator(),
-  ];
-  // Only support the form password migrator for Windows XP to 7.
-  if (AppConstants.isPlatformAndVersionAtMost("win", "6.1")) {
-    resources.push(new IE7FormPasswords());
+/**
+ * Internet Explorer profile migrator
+ */
+export class IEProfileMigrator extends MigratorBase {
+  constructor() {
+    super();
+    this.wrappedJSObject = this; // export this to be able to use it in the unittest.
   }
-  let windowsVaultFormPasswordsMigrator = MSMigrationUtils.getWindowsVaultFormPasswordsMigrator();
-  windowsVaultFormPasswordsMigrator.name = "IEVaultFormPasswords";
-  resources.push(windowsVaultFormPasswordsMigrator);
-  return resources.filter(r => r.exists);
-};
 
-IEProfileMigrator.prototype.getLastUsedDate = function IE_getLastUsedDate() {
-  let datePromises = ["Favs", "CookD"].map(dirId => {
-    let { path } = Services.dirsvc.get(dirId, Ci.nsIFile);
-    return OS.File.stat(path)
-      .catch(() => null)
-      .then(info => {
-        return info ? info.lastModificationDate : 0;
-      });
-  });
-  datePromises.push(
-    new Promise(resolve => {
-      let typedURLs = new Map();
-      try {
-        typedURLs = MSMigrationUtils.getTypedURLs(
-          "Software\\Microsoft\\Internet Explorer"
-        );
-      } catch (ex) {}
-      let dates = [0, ...typedURLs.values()];
-      // dates is an array of PRTimes, which are in microseconds - convert to milliseconds
-      resolve(Math.max.apply(Math, dates) / 1000);
-    })
-  );
-  return Promise.all(datePromises).then(dates => {
-    return new Date(Math.max.apply(Math, dates));
-  });
-};
+  get classDescription() {
+    return "IE Profile Migrator";
+  }
 
-IEProfileMigrator.prototype.classDescription = "IE Profile Migrator";
-IEProfileMigrator.prototype.contractID =
-  "@mozilla.org/profile/migrator;1?app=browser&type=ie";
-IEProfileMigrator.prototype.classID = Components.ID(
-  "{3d2532e3-4932-4774-b7ba-968f5899d3a4}"
-);
+  get contractID() {
+    return "@mozilla.org/profile/migrator;1?app=browser&type=ie";
+  }
+
+  get classID() {
+    return Components.ID("{3d2532e3-4932-4774-b7ba-968f5899d3a4}");
+  }
+
+  getResources() {
+    let resources = [
+      MSMigrationUtils.getBookmarksMigrator(),
+      new History(),
+      MSMigrationUtils.getCookiesMigrator(),
+    ];
+    // Only support the form password migrator for Windows XP to 7.
+    if (AppConstants.isPlatformAndVersionAtMost("win", "6.1")) {
+      resources.push(new IE7FormPasswords());
+    }
+    let windowsVaultFormPasswordsMigrator = MSMigrationUtils.getWindowsVaultFormPasswordsMigrator();
+    windowsVaultFormPasswordsMigrator.name = "IEVaultFormPasswords";
+    resources.push(windowsVaultFormPasswordsMigrator);
+    return resources.filter(r => r.exists);
+  }
+
+  getLastUsedDate() {
+    let datePromises = ["Favs", "CookD"].map(dirId => {
+      let { path } = Services.dirsvc.get(dirId, Ci.nsIFile);
+      return OS.File.stat(path)
+        .catch(() => null)
+        .then(info => {
+          return info ? info.lastModificationDate : 0;
+        });
+    });
+    datePromises.push(
+      new Promise(resolve => {
+        let typedURLs = new Map();
+        try {
+          typedURLs = MSMigrationUtils.getTypedURLs(
+            "Software\\Microsoft\\Internet Explorer"
+          );
+        } catch (ex) {}
+        let dates = [0, ...typedURLs.values()];
+        // dates is an array of PRTimes, which are in microseconds - convert to milliseconds
+        resolve(Math.max.apply(Math, dates) / 1000);
+      })
+    );
+    return Promise.all(datePromises).then(dates => {
+      return new Date(Math.max.apply(Math, dates));
+    });
+  }
+}
