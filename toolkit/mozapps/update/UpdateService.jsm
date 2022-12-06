@@ -5266,7 +5266,7 @@ class CheckerService {
             ];
         }
         if (rootCert) {
-          Services.prefs.setStringPref(
+          Services.prefs.setBoolPref(
             "security.pki.mitm_detected",
             !rootCert.isBuiltInRoot
           );
