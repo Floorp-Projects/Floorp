@@ -115,7 +115,7 @@ async function verifyPickerPosition(browsingContext, inputId) {
   function is_close(got, exp, msg) {
     // on some platforms we see differences of a fraction of a pixel - so
     // allow any difference of < 1 pixels as being OK.
-    ok(
+    Assert.ok(
       Math.abs(got - exp) < 1,
       msg + ": " + got + " should be equal(-ish) to " + exp
     );
@@ -635,7 +635,7 @@ add_task(async function test_datetime_focus_to_input() {
     return content.document.querySelector("#datetime").matches(":focus");
   });
 
-  ok(isFocused, "<input> should still be focused");
+  Assert.ok(isFocused, "<input> should still be focused");
 
   await helper.tearDown();
 });
@@ -731,7 +731,7 @@ add_task(async function test_datetime_local_min_select_invalid() {
   );
 
   Assert.equal(value, "2016-12-05T05:00", "Value should've changed");
-  ok(invalid, "input should be now invalid");
+  Assert.ok(invalid, "input should be now invalid");
 
   await helper.tearDown();
 });

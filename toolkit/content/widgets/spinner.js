@@ -80,6 +80,11 @@ function Spinner(props, context) {
 
       this.elements.spinner.style.height = ITEM_HEIGHT * viewportSize + "rem";
 
+      // Prepares the spinner container to function as a spinbutton and expose
+      // its properties to assistive technology
+      this.elements.spinner.setAttribute("role", "spinbutton");
+      this.elements.spinner.setAttribute("tabindex", "0");
+
       if (id) {
         this.elements.container.id = id;
       }
@@ -128,7 +133,24 @@ function Spinner(props, context) {
         }
       }
 
-      if (isValueSet && !isInvalid) {
+      this.elements.spinner.setAttribute(
+        "aria-valuemin",
+        this.state.items[0].value
+      );
+      this.elements.spinner.setAttribute(
+        "aria-valuemax",
+        this.state.items.at(-1).value
+      );
+      this.elements.spinner.setAttribute("aria-valuenow", this.state.value);
+      if (!this.elements.spinner.getAttribute("aria-valuetext")) {
+        this.elements.spinner.setAttribute(
+          "aria-valuetext",
+          this.props.getDisplayString(this.state.value)
+        );
+      }
+
+      // Show selection even if it's passed down from the parent
+      if ((isValueSet && !isInvalid) || this.state.index) {
         this._updateSelection();
       } else {
         this._removeSelection();
@@ -177,6 +199,10 @@ function Spinner(props, context) {
      */
     _onScrollend() {
       this.elements.spinner.classList.remove("scrolling");
+      this.elements.spinner.setAttribute(
+        "aria-valuetext",
+        this.props.getDisplayString(this.state.value)
+      );
     },
 
     /**
@@ -240,6 +266,8 @@ function Spinner(props, context) {
 
         for (let i = 0; i < diff; i++) {
           let el = document.createElement("div");
+          // Spinbutton elements should be hidden from assistive technology:
+          el.setAttribute("aria-hidden", "true");
           frag.appendChild(el);
           this.elements.itemsViewElements.push(el);
         }
@@ -502,6 +530,7 @@ function Spinner(props, context) {
      */
     _removeSelection() {
       const { selected } = this.elements;
+
       if (selected) {
         selected.classList.remove("selection");
       }
