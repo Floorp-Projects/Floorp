@@ -375,6 +375,16 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
     }
 
     switch (event.type) {
+      case "touchstart": {
+        // Even if this is a touch event, there may be subsequent click events.
+        // Suppress those events after selecting the toggle to prevent playback changes
+        // when opening the Picture-in-Picture window.
+        if (this.docState.isClickingToggle) {
+          event.stopImmediatePropagation();
+          event.preventDefault();
+        }
+        break;
+      }
       case "change": {
         const { changedKeys } = event;
         if (changedKeys.includes("PictureInPicture:SiteOverrides")) {
@@ -570,6 +580,9 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
     this.contentWindow.windowRoot.addEventListener("mouseout", this, {
       capture: true,
     });
+    this.contentWindow.windowRoot.addEventListener("touchstart", this, {
+      capture: true,
+    });
   }
 
   removeMouseButtonListeners() {
@@ -595,6 +608,9 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
       capture: true,
     });
     this.contentWindow.windowRoot.removeEventListener("mouseout", this, {
+      capture: true,
+    });
+    this.contentWindow.windowRoot.removeEventListener("touchstart", this, {
       capture: true,
     });
   }
