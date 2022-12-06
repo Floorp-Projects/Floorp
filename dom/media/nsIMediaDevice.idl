@@ -11,6 +11,7 @@ interface nsIMediaDevice : nsISupports
   readonly attribute AString type;
   readonly attribute AString mediaSource;
   readonly attribute AString rawId;
+  readonly attribute AString id; // anonymized and localized to the origin
   readonly attribute boolean scary;
   readonly attribute AString rawName; // unfiltered device name, from 1616661
 };

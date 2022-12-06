@@ -784,7 +784,14 @@ function prompt(aActor, aBrowser, aRequest) {
         menulist.selectedItem = null;
 
         for (let device of devices) {
-          addDeviceToList(menupopup, device.name, device.deviceIndex);
+          let item = addDeviceToList(
+            menupopup,
+            device.name,
+            device.deviceIndex
+          );
+          if (device.id == aRequest.audioOutputId) {
+            menulist.selectedItem = item;
+          }
         }
 
         let label = doc.getElementById(labelID);

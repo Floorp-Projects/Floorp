@@ -274,6 +274,7 @@ function handleGUMRequest(aSubject, aTopic, aData) {
     aSubject.windowID,
     aSubject.callID,
     constraints,
+    aSubject.getAudioOutputOptions(),
     aSubject.devices,
     aSubject.isSecure,
     aSubject.isHandlingUserInput
@@ -286,6 +287,7 @@ function prompt(
   aWindowID,
   aCallID,
   aConstraints,
+  aAudioOutputOptions,
   aDevices,
   aSecure,
   aIsHandlingUserInput
@@ -322,6 +324,7 @@ function prompt(
       name: device.rawName, // unfiltered device name to show to the user
       deviceIndex: devices.length,
       rawId: device.rawId,
+      id: device.id,
       mediaSource: device.mediaSource,
     };
     switch (device.type) {
@@ -423,6 +426,7 @@ function prompt(
     audioOutputDevices,
     hasInherentAudioConstraints,
     hasInherentVideoConstraints,
+    audioOutputId: aAudioOutputOptions.deviceId,
   };
 
   let actor = getActorForWindow(aContentWindow);
