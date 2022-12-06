@@ -95,6 +95,19 @@ function getL10n() {
 }
 
 /**
+ * @typedef {object} MigratorResource
+ *   A resource returned by a subclass of MigratorPrototype that can migrate
+ *   data to this browser.
+ * @property {number} type
+ *   A bitfield with bits from nsIBrowserProfileMigrator flipped to indicate
+ *   what this resource represents. A resource can represent one or more types
+ *   of data, for example HISTORY and FORMDATA.
+ * @property {Function} migrate
+ *   A function that will actually perform the migration of this resource's
+ *   data into this browser.
+ */
+
+/**
  * Shared prototype for migrators, implementing nsIBrowserProfileMigrator.
  *
  * To implement a migrator:
@@ -124,6 +137,9 @@ export var MigratorPrototype = {
    *
    * For a single-profile source (e.g. safari, ie), this returns null,
    * and not an empty array.  That is the default implementation.
+   *
+   * @abstract
+   * @returns {object[]|null}
    */
   getSourceProfiles() {
     return null;
@@ -161,19 +177,21 @@ export var MigratorPrototype = {
    * type is reported to the UI only once all of its migrators have called
    * aCallback.
    *
-   * @note  The returned array should only include resources from which data
-   *        can be imported.  So, for example, before adding a resource for the
-   *        BOOKMARKS migration type, you should check if you should check that the
-   *        bookmarks file exists.
+   * NOTE: The returned array should only include resources from which data
+   * can be imported.  So, for example, before adding a resource for the
+   * BOOKMARKS migration type, you should check if you should check that the
+   * bookmarks file exists.
    *
-   * @param aProfile
-   *        The profile from which data may be imported, or an empty string
-   *        in the case of a single-profile migrator.
-   *        In the case of multiple-profiles migrator, it is guaranteed that
-   *        aProfile is a value returned by the sourceProfiles getter (see
-   *        above).
+   * @abstract
+   * @param {object|string} aProfile
+   *  The profile from which data may be imported, or an empty string
+   *  in the case of a single-profile migrator.
+   *  In the case of multiple-profiles migrator, it is guaranteed that
+   *  aProfile is a value returned by the sourceProfiles getter (see
+   *  above).
    */
-  getResources: function MP_getResources(/* aProfile */) {
+  // eslint-disable-next-line no-unused-vars
+  getResources: function MP_getResources(aProfile) {
     throw new Error("getResources must be overridden");
   },
 
@@ -183,9 +201,10 @@ export var MigratorPrototype = {
    * history may not be available (or be wiped or not present due to e.g.
    * incognito mode).
    *
-   * @return a Promise that resolves to the last used date.
+   * If not overridden, the promise will resolve to the Unix epoch.
    *
-   * @note If not overridden, the promise will resolve to the unix epoch.
+   * @returns {Promise<Date>}
+   *   A Promise that resolves to the last used date.
    */
   getLastUsedDate() {
     return Promise.resolve(new Date(0));
@@ -201,14 +220,21 @@ export var MigratorPrototype = {
    *   but it's only accessible through MigrationUtils.profileStartup.
    *   The migrator can call MigrationUtils.profileStartup.doStartup
    *   at any point in order to initialize the profile.
+   *
+   * @returns {boolean}
+   *   true if the migrator is start-up only.
    */
   get startupOnlyMigrator() {
     return false;
   },
+
   /**
    * Returns true if the migrator is configured to be enabled. This is
    * controlled by the `browser.migrate.<BROWSER_KEY>.enabled` boolean
    * preference.
+   *
+   * @returns {boolean}
+   *   true if the migrator should be shown in the migration wizard.
    */
   get enabled() {
     let key = this.getBrowserKey();
@@ -220,6 +246,10 @@ export var MigratorPrototype = {
    * getResources.
    *
    * @see nsIBrowserProfileMigrator
+   * @param {object|string} aProfile
+   *   The profile from which data may be imported, or an empty string
+   *   in the case of a single-profile migrator.
+   * @returns {MigratorResource[]}
    */
   getMigrateData: async function MP_getMigrateData(aProfile) {
     let resources = await this._getMaybeCachedResources(aProfile);
@@ -242,6 +272,13 @@ export var MigratorPrototype = {
    * migrate for each resource.
    *
    * @see nsIBrowserProfileMigrator
+   * @param {number} aItems
+   *   A bitfield with bits from nsIBrowserProfileMigrator flipped to indicate
+   *   what types of resources should be migrated.
+   * @param {boolean} aStartup
+   *   True if this migration is occurring during startup.
+   * @param {object|string} aProfile
+   *   The other browser profile that is being migrated from.
    */
   migrate: async function MP_migrate(aItems, aStartup, aProfile) {
     let resources = await this._getMaybeCachedResources(aProfile);
@@ -494,7 +531,16 @@ export var MigratorPrototype = {
     return exists;
   },
 
-  /** * PRIVATE STUFF - DO NOT OVERRIDE ***/
+  /*** PRIVATE STUFF - DO NOT OVERRIDE ***/
+
+  /**
+   * Returns resources for a particular profile and then caches them for later
+   * lookups.
+   *
+   * @param {object|string} aProfile
+   *   The profile that resources are being imported from.
+   * @returns {Promise<MigrationResource[]>}
+   */
   _getMaybeCachedResources: async function PMB__getMaybeCachedResources(
     aProfile
   ) {
@@ -549,13 +595,14 @@ export var MigrationUtils = Object.seal({
    * ... and aCallback will be called with aSuccess=false when importing
    * from Mosaic, or with aSuccess=true otherwise.
    *
-   * @param aFunction
-   *        the function that will be called sometime later.  If aFunction
-   *        throws when it's called, aCallback(false) is called, otherwise
-   *        aCallback(true) is called.
-   * @param aCallback
-   *        the callback function passed to |migrate|.
-   * @return the wrapped function.
+   * @param {Function} aFunction
+   *   the function that will be called sometime later.  If aFunction
+   *   throws when it's called, aCallback(false) is called, otherwise
+   *   aCallback(true) is called.
+   * @param {Function} aCallback
+   *   the callback function passed to |migrate|.
+   * @returns {Function}
+   *   the wrapped function.
    */
   wrapMigrateFunction: function MU_wrapMigrateFunction(aFunction, aCallback) {
     return function() {
@@ -576,11 +623,12 @@ export var MigrationUtils = Object.seal({
   /**
    * Gets localized string corresponding to l10n-id
    *
-   * @param aKey
-   *        The key of the id of the localization to retrieve.
-   * @param aArgs
-   *        [optional] map of arguments to the id.
-   * @return A promise that resolves to the retrieved localization.
+   * @param {string} aKey
+   *   The key of the id of the localization to retrieve.
+   * @param {object} [aArgs=undefined]
+   *   An optional map of arguments to the id.
+   * @returns {Promise<string>}
+   *   A promise that resolves to the retrieved localization.
    */
   getLocalizedString: function MU_getLocalizedString(aKey, aArgs) {
     let l10n = getL10n();
@@ -593,16 +641,17 @@ export var MigrationUtils = Object.seal({
    * else tried to write to the DB at the same time, for example), we will
    * retry the fetch after a 100ms timeout, up to 10 times.
    *
-   * @param path
-   *        the file path to the database we want to open.
-   * @param description
-   *        a developer-readable string identifying what kind of database we're
-   *        trying to open.
-   * @param selectQuery
-   *        the SELECT query to use to fetch the rows.
+   * @param {string} path
+   *   The file path to the database we want to open.
+   * @param {string} description
+   *   A developer-readable string identifying what kind of database we're
+   *   trying to open.
+   * @param {string} selectQuery
+   *   The SELECT query to use to fetch the rows.
    *
-   * @return a promise that resolves to an array of rows. The promise will be
-   *         rejected if the read/fetch failed even after retrying.
+   * @returns {Promise<object[]|Error>}
+   *   A promise that resolves to an array of rows. The promise will be
+   *   rejected if the read/fetch failed even after retrying.
    */
   getRowsFromDBWithoutLocks(path, description, selectQuery) {
     let dbOptions = {
@@ -693,20 +742,22 @@ export var MigrationUtils = Object.seal({
     }
   },
 
-  /*
+  /**
    * Returns the migrator for the given source, if any data is available
    * for this source, or null otherwise.
    *
-   * @param aKey internal name of the migration source.
-   *             See `gAvailableMigratorKeys` for supported values by OS.
+   * If null is returned,  either no data can be imported for the given migrator,
+   * or aMigratorKey is invalid  (e.g. ie on mac, or mosaic everywhere).  This
+   * method should be used rather than direct getService for future compatibility
+   * (see bug 718280).
    *
-   * If null is returned,  either no data can be imported
-   * for the given migrator, or aMigratorKey is invalid  (e.g. ie on mac,
-   * or mosaic everywhere).  This method should be used rather than direct
-   * getService for future compatibility (see bug 718280).
+   * @param {string} aKey
+   *   Internal name of the migration source. See `gAvailableMigratorKeys`
+   *   for supported values by OS.
    *
-   * @return profile migrator implementing nsIBrowserProfileMigrator, if it can
-   *         import any data, null otherwise.
+   * @returns {MigratorPrototype}
+   *   A profile migrator implementing nsIBrowserProfileMigrator, if it can
+   *   import any data, null otherwise.
    */
   getMigrator: async function MU_getMigrator(aKey) {
     let migrator = null;
@@ -734,9 +785,12 @@ export var MigrationUtils = Object.seal({
   /**
    * Figure out what is the default browser, and if there is a migrator
    * for it, return that migrator's internal name.
+   *
    * For the time being, the "internal name" of a migrator is its contract-id
    * trailer (e.g. ie for @mozilla.org/profile/migrator;1?app=browser&type=ie),
    * but it will soon be exposed properly.
+   *
+   * @returns {string}
    */
   getMigratorKeyForDefaultBrowser() {
     // Canary uses the same description as Chrome so we can't distinguish them.
@@ -821,7 +875,11 @@ export var MigrationUtils = Object.seal({
     return key;
   },
 
-  // Whether or not we're in the process of startup migration
+  /**
+   * True if we're in the process of a startup migration.
+   *
+   * @type {boolean}
+   */
   get isStartupMigration() {
     return gProfileStartup != null;
   },
@@ -831,6 +889,7 @@ export var MigrationUtils = Object.seal({
    * instance passed to ProfileMigrator's migrate.
    *
    * @see showMigrationWizard
+   * @type {nsIProfileStartup|null}
    */
   get profileStartup() {
     return gProfileStartup;
@@ -840,22 +899,22 @@ export var MigrationUtils = Object.seal({
    * Show the migration wizard.  On mac, this may just focus the wizard if it's
    * already running, in which case aOpener and aParams are ignored.
    *
-   * @param {Window} [aOpener]
-   *        optional; the window that asks to open the wizard.
-   * @param {Array} [aParams]
-   *        optional arguments for the migration wizard, in the form of an array
-   *        This is passed as-is for the params argument of
-   *        nsIWindowWatcher.openWindow. The array elements we expect are, in
-   *        order:
-   *        - {Number} migration entry point constant (see below)
-   *        - {String} source browser identifier
-   *        - {nsIBrowserProfileMigrator} actual migrator object
-   *        - {Boolean} whether this is a startup migration
-   *        - {Boolean} whether to skip the 'source' page
-   *        - {String} an identifier for the profile to use when migrating
-   *        NB: If you add new consumers, please add a migration entry point
-   *        constant below, and specify at least the first element of the array
-   *        (the migration entry point for purposes of telemetry).
+   * @param {Window} [aOpener=null]
+   *   optional; the window that asks to open the wizard.
+   * @param {Array} [aParams=null]
+   *   optional arguments for the migration wizard, in the form of an array
+   *   This is passed as-is for the params argument of
+   *   nsIWindowWatcher.openWindow. The array elements we expect are, in
+   *   order:
+   *   - {Number} migration entry point constant (see below)
+   *   - {String} source browser identifier
+   *   - {nsIBrowserProfileMigrator} actual migrator object
+   *   - {Boolean} whether this is a startup migration
+   *   - {Boolean} whether to skip the 'source' page
+   *   - {String} an identifier for the profile to use when migrating
+   *   NB: If you add new consumers, please add a migration entry point
+   *   constant below, and specify at least the first element of the array
+   *   (the migration entry point for purposes of telemetry).
    */
   showMigrationWizard: function MU_showMigrationWizard(aOpener, aParams) {
     const DIALOG_URL = "chrome://browser/content/migration/migration.xhtml";
@@ -942,20 +1001,21 @@ export var MigrationUtils = Object.seal({
    * nsIProfileMigrator. This runs asynchronously if we are running an
    * automigration.
    *
-   * @param aProfileStartup
-   *        the nsIProfileStartup instance provided to ProfileMigrator.migrate.
-   * @param [optional] aMigratorKey
-   *        If set, the migration wizard will import from the corresponding
-   *        migrator, bypassing the source-selection page.  Otherwise, the
-   *        source-selection page will be displayed, either with the default
-   *        browser selected, if it could be detected and if there is a
-   *        migrator for it, or with the first option selected as a fallback
-   *        (The first option is hardcoded to be the most common browser for
-   *         the OS we run on.  See migration.xhtml).
-   * @param [optional] aProfileToMigrate
-   *        If set, the migration wizard will import from the profile indicated.
-   * @throws if aMigratorKey is invalid or if it points to a non-existent
-   *         source.
+   * @param {nsIProfileStartup} aProfileStartup
+   *   the nsIProfileStartup instance provided to ProfileMigrator.migrate.
+   * @param {string|null} [aMigratorKey=null]
+   *   If set, the migration wizard will import from the corresponding
+   *   migrator, bypassing the source-selection page.  Otherwise, the
+   *   source-selection page will be displayed, either with the default
+   *   browser selected, if it could be detected and if there is a
+   *   migrator for it, or with the first option selected as a fallback
+   *   (The first option is hardcoded to be the most common browser for
+   *    the OS we run on.  See migration.xhtml).
+   * @param {string|null} [aProfileToMigrate=null]
+   *   If set, the migration wizard will import from the profile indicated.
+   * @throws
+   *   if aMigratorKey is invalid or if it points to a non-existent
+   *   source.
    */
   startupMigration: function MU_startupMigrator(
     aProfileStartup,
@@ -1141,7 +1201,8 @@ export var MigrationUtils = Object.seal({
   /**
    * Iterates through the favicons, sniffs for a mime type,
    * and uses the mime type to properly import the favicon.
-   * @param {Object[]} favicons
+   *
+   * @param {object[]} favicons
    *   An array of Objects with these properties:
    *     {Uint8Array} faviconData: The binary data of a favicon
    *     {nsIURI} uri: The URI of the associated page

@@ -55,14 +55,14 @@ XPCOMUtils.defineLazyGetter(lazy, "gEdgeDatabase", function() {
 /**
  * Get rows from a table in the Edge DB as an array of JS objects.
  *
- * @param {String}            tableName the name of the table to read.
- * @param {String[]|function} columns   a list of column specifiers
+ * @param {string}            tableName the name of the table to read.
+ * @param {string[]|Function} columns   a list of column specifiers
  *                                      (see ESEDBReader.jsm) or a function that
  *                                      generates them based on the database
  *                                      reference once opened.
  * @param {nsIFile}           dbFile    the database file to use. Defaults to
  *                                      the main Edge database.
- * @param {function}          filterFn  Optional. A function that is called for each row.
+ * @param {Function}          filterFn  Optional. A function that is called for each row.
  *                                      Only rows for which it returns a truthy
  *                                      value are included in the result.
  * @returns {Array} An array of row objects.

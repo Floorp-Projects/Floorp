@@ -14,6 +14,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 /**
  * These constants should match those from Chromium.
+ *
  * @see https://source.chromium.org/chromium/chromium/src/+/master:components/os_crypt/os_crypt_win.cc
  */
 const AEAD_KEY_LENGTH = 256 / 8;
@@ -32,7 +33,9 @@ const gTextEncoder = new TextEncoder();
  */
 export class ChromeWindowsLoginCrypto {
   /**
-   * @param {string} userDataPathSuffix
+   * @param {string} userDataPathSuffix The unique identifier for the variant of
+   *   Chrome that is having its logins imported. These are the keys in the
+   *   SUB_DIRECTORIES object in ChromeMigrationUtils.getDataPath.
    */
   constructor(userDataPathSuffix) {
     this.osCrypto = new OSCrypto();
@@ -78,6 +81,7 @@ export class ChromeWindowsLoginCrypto {
 
   /**
    * Convert an array containing only two bytes unsigned numbers to a string.
+   *
    * @param {number[]} arr - the array that needs to be converted.
    * @returns {string} the string representation of the array.
    */
