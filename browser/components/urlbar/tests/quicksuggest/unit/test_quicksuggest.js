@@ -825,9 +825,6 @@ add_task(async function timestamps() {
       onFirstResult() {
         return false;
       },
-      getSearchSource() {
-        return "dummy-search-source";
-      },
       window: {
         location: {
           href: AppConstants.BROWSER_CHROME_URL,
@@ -956,9 +953,6 @@ add_task(async function dedupeAgainstURL_timestamps() {
       isPrivate: false,
       onFirstResult() {
         return false;
-      },
-      getSearchSource() {
-        return "dummy-search-source";
       },
       window: {
         location: {

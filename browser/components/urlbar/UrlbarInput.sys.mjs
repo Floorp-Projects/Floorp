@@ -1156,7 +1156,7 @@ export class UrlbarInput {
       selIndex,
       selType: this.controller.engagementEvent.typeFromElement(element),
       provider: result.providerName,
-      searchSource: this.getSearchSource(event),
+      searchSource: this._getSearchSource(event),
     });
 
     if (result.payload.sendAttributionRequest) {
@@ -2015,36 +2015,6 @@ export class UrlbarInput {
     }
   }
 
-  /**
-   * Get search source.
-   *
-   * @param {Event} event
-   *   The event that triggered this query.
-   * @returns {string}
-   *   The source name.
-   */
-  getSearchSource(event) {
-    if (this._handoffSession) {
-      return "urlbar-handoff";
-    }
-
-    const isOneOff = this.view.oneOffSearchButtons.eventTargetIsAOneOff(event);
-    if (this.searchMode && !isOneOff) {
-      // Without checking !isOneOff, we might record the string
-      // oneoff_urlbar-searchmode in the SEARCH_COUNTS probe (in addition to
-      // oneoff_urlbar and oneoff_searchbar). The extra information is not
-      // necessary; the intent is the same regardless of whether the user is
-      // in search mode when they do a key-modified click/enter on a one-off.
-      return "urlbar-searchmode";
-    }
-
-    if (this.window.gBrowser.selectedBrowser.showingSearchTerms && !isOneOff) {
-      return "urlbar-persisted";
-    }
-
-    return "urlbar";
-  }
-
   // Private methods below.
 
   _addObservers() {
@@ -2477,13 +2447,43 @@ export class UrlbarInput {
     lazy.BrowserSearchTelemetry.recordSearch(
       this.window.gBrowser.selectedBrowser,
       engine,
-      this.getSearchSource(event),
+      this._getSearchSource(event),
       {
         ...searchActionDetails,
         isOneOff,
         newtabSessionId: this._handoffSession,
       }
     );
+  }
+
+  /**
+   * Get search source.
+   *
+   * @param {Event} event
+   *   The event that triggered this query.
+   * @returns {string}
+   *   The source name.
+   */
+  _getSearchSource(event) {
+    if (this._handoffSession) {
+      return "urlbar-handoff";
+    }
+
+    const isOneOff = this.view.oneOffSearchButtons.eventTargetIsAOneOff(event);
+    if (this.searchMode && !isOneOff) {
+      // Without checking !isOneOff, we might record the string
+      // oneoff_urlbar-searchmode in the SEARCH_COUNTS probe (in addition to
+      // oneoff_urlbar and oneoff_searchbar). The extra information is not
+      // necessary; the intent is the same regardless of whether the user is
+      // in search mode when they do a key-modified click/enter on a one-off.
+      return "urlbar-searchmode";
+    }
+
+    if (this.window.gBrowser.selectedBrowser.showingSearchTerms && !isOneOff) {
+      return "urlbar-persisted";
+    }
+
+    return "urlbar";
   }
 
   /**
@@ -3023,7 +3023,7 @@ export class UrlbarInput {
     // may want to figure out a more robust way to detect abandonment.
     this.controller.engagementEvent.record(event, {
       searchString: this._lastSearchString,
-      searchSource: this.getSearchSource(event),
+      searchSource: this._getSearchSource(event),
     });
 
     this.focusedViaMousedown = false;
