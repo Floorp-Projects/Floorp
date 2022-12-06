@@ -37,56 +37,6 @@ let gForceExitSpinResolve = false;
 let gKeepUndoData = false;
 let gUndoData = null;
 
-const gAvailableMigratorKeys = (function() {
-  if (AppConstants.platform == "win") {
-    return [
-      "firefox",
-      "edge",
-      "ie",
-      "opera",
-      "opera-gx",
-      "vivaldi",
-      "brave",
-      "chrome",
-      "chromium-edge",
-      "chromium-edge-beta",
-      "chrome-beta",
-      "chromium",
-      "chromium-360se",
-      "canary",
-    ];
-  }
-  if (AppConstants.platform == "macosx") {
-    return [
-      "firefox",
-      "safari",
-      "opera",
-      "opera-gx",
-      "vivaldi",
-      "brave",
-      "chrome",
-      "chromium-edge",
-      "chromium-edge-beta",
-      "chromium",
-      "canary",
-    ];
-  }
-  if (AppConstants.XP_UNIX) {
-    return [
-      "firefox",
-      "opera",
-      "vivaldi",
-      "brave",
-      "chrome",
-      "chrome-beta",
-      "chrome-dev",
-      "chromium",
-      "opera-gx",
-    ];
-  }
-  return [];
-})();
-
 function getL10n() {
   if (!gL10n) {
     gL10n = new Localization(["browser/migration.ftl"]);
@@ -557,8 +507,13 @@ export var MigratorPrototype = {
   },
 };
 
-export var MigrationUtils = Object.seal({
-  resourceTypes: {
+/**
+ * The singleton MigrationUtils service. This service is the primary mechanism
+ * by which migrations from other browsers to this browser occur. The singleton
+ * instance of this class is exported from this module as `MigrationUtils`.
+ */
+class MigrationUtilsSingleton {
+  resourceTypes = Object.freeze({
     COOKIES: Ci.nsIBrowserProfileMigrator.COOKIES,
     HISTORY: Ci.nsIBrowserProfileMigrator.HISTORY,
     FORMDATA: Ci.nsIBrowserProfileMigrator.FORMDATA,
@@ -566,7 +521,7 @@ export var MigrationUtils = Object.seal({
     BOOKMARKS: Ci.nsIBrowserProfileMigrator.BOOKMARKS,
     OTHERDATA: Ci.nsIBrowserProfileMigrator.OTHERDATA,
     SESSION: Ci.nsIBrowserProfileMigrator.SESSION,
-  },
+  });
 
   /**
    * Helper for implementing simple asynchronous cases of migration resources'
@@ -575,7 +530,8 @@ export var MigrationUtils = Object.seal({
    * everything right away, you can wrap the async-function with this helper
    * and not worry about notifying the callback.
    *
-   * For example, instead of writing:
+   * @example
+   * // For example, instead of writing:
    * setTimeout(function() {
    *   try {
    *     ....
@@ -586,14 +542,14 @@ export var MigrationUtils = Object.seal({
    *   }
    * }, 0);
    *
-   * You may write:
+   * // You may write:
    * setTimeout(MigrationUtils.wrapMigrateFunction(function() {
    *   if (importingFromMosaic)
    *     throw Cr.NS_ERROR_UNEXPECTED;
    * }, aCallback), 0);
    *
-   * ... and aCallback will be called with aSuccess=false when importing
-   * from Mosaic, or with aSuccess=true otherwise.
+   * // ... and aCallback will be called with aSuccess=false when importing
+   * // from Mosaic, or with aSuccess=true otherwise.
    *
    * @param {Function} aFunction
    *   the function that will be called sometime later.  If aFunction
@@ -604,7 +560,7 @@ export var MigrationUtils = Object.seal({
    * @returns {Function}
    *   the wrapped function.
    */
-  wrapMigrateFunction: function MU_wrapMigrateFunction(aFunction, aCallback) {
+  wrapMigrateFunction(aFunction, aCallback) {
     return function() {
       let success = false;
       try {
@@ -618,7 +574,7 @@ export var MigrationUtils = Object.seal({
       // twice.
       aCallback(success);
     };
-  },
+  }
 
   /**
    * Gets localized string corresponding to l10n-id
@@ -630,10 +586,10 @@ export var MigrationUtils = Object.seal({
    * @returns {Promise<string>}
    *   A promise that resolves to the retrieved localization.
    */
-  getLocalizedString: function MU_getLocalizedString(aKey, aArgs) {
+  getLocalizedString(aKey, aArgs) {
     let l10n = getL10n();
     return l10n.formatValue(aKey, aArgs);
-  },
+  }
 
   /**
    * Get all the rows corresponding to a select query from a database, without
@@ -699,20 +655,20 @@ export var MigrationUtils = Object.seal({
       }
       return rows;
     })();
-  },
+  }
 
-  get _migrators() {
+  get #migrators() {
     if (!gMigrators) {
       gMigrators = new Map();
     }
     return gMigrators;
-  },
+  }
 
-  forceExitSpinResolve: function MU_forceExitSpinResolve() {
+  forceExitSpinResolve() {
     gForceExitSpinResolve = true;
-  },
+  }
 
-  spinResolve: function MU_spinResolve(promise) {
+  spinResolve(promise) {
     if (!(promise instanceof Promise)) {
       return promise;
     }
@@ -740,7 +696,7 @@ export var MigrationUtils = Object.seal({
     } else {
       return result;
     }
-  },
+  }
 
   /**
    * Returns the migrator for the given source, if any data is available
@@ -752,17 +708,17 @@ export var MigrationUtils = Object.seal({
    * (see bug 718280).
    *
    * @param {string} aKey
-   *   Internal name of the migration source. See `gAvailableMigratorKeys`
+   *   Internal name of the migration source. See `availableMigratorKeys`
    *   for supported values by OS.
    *
    * @returns {MigratorPrototype}
    *   A profile migrator implementing nsIBrowserProfileMigrator, if it can
    *   import any data, null otherwise.
    */
-  getMigrator: async function MU_getMigrator(aKey) {
+  async getMigrator(aKey) {
     let migrator = null;
-    if (this._migrators.has(aKey)) {
-      migrator = this._migrators.get(aKey);
+    if (this.#migrators.has(aKey)) {
+      migrator = this.#migrators.get(aKey);
     } else {
       try {
         migrator = Cc[
@@ -771,7 +727,7 @@ export var MigrationUtils = Object.seal({
       } catch (ex) {
         Cu.reportError(ex);
       }
-      this._migrators.set(aKey, migrator);
+      this.#migrators.set(aKey, migrator);
     }
 
     try {
@@ -780,7 +736,7 @@ export var MigrationUtils = Object.seal({
       Cu.reportError(ex);
       return null;
     }
-  },
+  }
 
   /**
    * Figure out what is the default browser, and if there is a migrator
@@ -873,7 +829,7 @@ export var MigrationUtils = Object.seal({
       }
     }
     return key;
-  },
+  }
 
   /**
    * True if we're in the process of a startup migration.
@@ -882,7 +838,7 @@ export var MigrationUtils = Object.seal({
    */
   get isStartupMigration() {
     return gProfileStartup != null;
-  },
+  }
 
   /**
    * In the case of startup migration, this is set to the nsIProfileStartup
@@ -893,7 +849,7 @@ export var MigrationUtils = Object.seal({
    */
   get profileStartup() {
     return gProfileStartup;
-  },
+  }
 
   /**
    * Show the migration wizard.  On mac, this may just focus the wizard if it's
@@ -916,7 +872,7 @@ export var MigrationUtils = Object.seal({
    *   constant below, and specify at least the first element of the array
    *   (the migration entry point for purposes of telemetry).
    */
-  showMigrationWizard: function MU_showMigrationWizard(aOpener, aParams) {
+  showMigrationWizard(aOpener, aParams) {
     const DIALOG_URL = "chrome://browser/content/migration/migration.xhtml";
     let features = "chrome,dialog,modal,centerscreen,titlebar,resizable=no";
     if (AppConstants.platform == "macosx" && !this.isStartupMigration) {
@@ -993,7 +949,7 @@ export var MigrationUtils = Object.seal({
     } else {
       Services.ww.openWindow(aOpener, DIALOG_URL, "_blank", features, params);
     }
-  },
+  }
 
   /**
    * Show the migration wizard for startup-migration.  This should only be
@@ -1017,11 +973,7 @@ export var MigrationUtils = Object.seal({
    *   if aMigratorKey is invalid or if it points to a non-existent
    *   source.
    */
-  startupMigration: function MU_startupMigrator(
-    aProfileStartup,
-    aMigratorKey,
-    aProfileToMigrate
-  ) {
+  startupMigration(aProfileStartup, aMigratorKey, aProfileToMigrate) {
     this.spinResolve(
       this.asyncStartupMigration(
         aProfileStartup,
@@ -1029,9 +981,9 @@ export var MigrationUtils = Object.seal({
         aProfileToMigrate
       )
     );
-  },
+  }
 
-  asyncStartupMigration: async function MU_asyncStartupMigrator(
+  async asyncStartupMigration(
     aProfileStartup,
     aMigratorKey,
     aProfileToMigrate
@@ -1072,7 +1024,7 @@ export var MigrationUtils = Object.seal({
 
     if (!migrator) {
       let migrators = await Promise.all(
-        gAvailableMigratorKeys.map(key => this.getMigrator(key))
+        this.availableMigratorKeys.map(key => this.getMigrator(key))
       );
       // If there's no migrator set so far, ensure that there is at least one
       // migrator available before opening the wizard.
@@ -1088,9 +1040,9 @@ export var MigrationUtils = Object.seal({
     let isRefresh =
       migrator && skipSourcePage && migratorKey == AppConstants.MOZ_APP_NAME;
 
-    let migrationEntryPoint = this.MIGRATION_ENTRYPOINT_FIRSTRUN;
+    let migrationEntryPoint = this.MIGRATION_ENTRYPOINTS.FIRSTRUN;
     if (isRefresh) {
-      migrationEntryPoint = this.MIGRATION_ENTRYPOINT_FXREFRESH;
+      migrationEntryPoint = this.MIGRATION_ENTRYPOINTS.FXREFRESH;
     }
 
     let params = [
@@ -1102,13 +1054,17 @@ export var MigrationUtils = Object.seal({
       aProfileToMigrate,
     ];
     this.showMigrationWizard(null, params);
-  },
+  }
 
-  _importQuantities: {
+  /**
+   * This is only pseudo-private because some tests and helper functions
+   * still expect to be able to directly access it.
+   */
+  _importQuantities = {
     bookmarks: 0,
     logins: 0,
     history: 0,
-  },
+  };
 
   getImportedCount(type) {
     if (!this._importQuantities.hasOwnProperty(type)) {
@@ -1117,7 +1073,7 @@ export var MigrationUtils = Object.seal({
       );
     }
     return this._importQuantities[type];
-  },
+  }
 
   insertBookmarkWrapper(bookmark) {
     this._importQuantities.bookmarks++;
@@ -1138,7 +1094,7 @@ export var MigrationUtils = Object.seal({
       });
       return bm;
     });
-  },
+  }
 
   insertManyBookmarksWrapper(bookmarks, parent) {
     let insertionPromise = lazy.PlacesUtils.bookmarks.insertTree({
@@ -1163,7 +1119,7 @@ export var MigrationUtils = Object.seal({
       },
       ex => Cu.reportError(ex)
     );
-  },
+  }
 
   insertVisitsWrapper(pageInfos) {
     let now = new Date();
@@ -1179,10 +1135,10 @@ export var MigrationUtils = Object.seal({
     }
     this._importQuantities.history += pageInfos.length;
     if (gKeepUndoData) {
-      this._updateHistoryUndo(pageInfos);
+      this.#updateHistoryUndo(pageInfos);
     }
     return lazy.PlacesUtils.history.insertMany(pageInfos);
-  },
+  }
 
   async insertLoginsWrapper(logins) {
     this._importQuantities.logins += logins.length;
@@ -1196,7 +1152,7 @@ export var MigrationUtils = Object.seal({
         gUndoData.get("logins").push({ guid, timePasswordChanged });
       }
     }
-  },
+  }
 
   /**
    * Iterates through the favicons, sniffs for a mime type,
@@ -1234,7 +1190,7 @@ export var MigrationUtils = Object.seal({
         Services.scriptSecurityManager.getSystemPrincipal()
       );
     }
-  },
+  }
 
   initializeUndoData() {
     gKeepUndoData = true;
@@ -1243,9 +1199,9 @@ export var MigrationUtils = Object.seal({
       ["visits", []],
       ["logins", []],
     ]);
-  },
+  }
 
-  async _postProcessUndoData(state) {
+  async #postProcessUndoData(state) {
     if (!state) {
       return state;
     }
@@ -1275,16 +1231,16 @@ export var MigrationUtils = Object.seal({
       }
     }
     return state;
-  },
+  }
 
   stopAndRetrieveUndoData() {
     let undoData = gUndoData;
     gUndoData = null;
     gKeepUndoData = false;
-    return this._postProcessUndoData(undoData);
-  },
+    return this.#postProcessUndoData(undoData);
+  }
 
-  _updateHistoryUndo(pageInfos) {
+  #updateHistoryUndo(pageInfos) {
     let visits = gUndoData.get("visits");
     let visitMap = new Map(visits.map(v => [v.url, v]));
     for (let pageInfo of pageInfos) {
@@ -1320,30 +1276,126 @@ export var MigrationUtils = Object.seal({
       }
     }
     gUndoData.set("visits", Array.from(visitMap.values()));
-  },
+  }
 
   /**
    * Cleans up references to migrators and nsIProfileInstance instances.
    */
-  finishMigration: function MU_finishMigration() {
+  finishMigration() {
     gMigrators = null;
     gProfileStartup = null;
     gL10n = null;
-  },
+  }
 
-  gAvailableMigratorKeys,
+  get availableMigratorKeys() {
+    if (AppConstants.platform == "win") {
+      return [
+        "firefox",
+        "edge",
+        "ie",
+        "opera",
+        "opera-gx",
+        "vivaldi",
+        "brave",
+        "chrome",
+        "chromium-edge",
+        "chromium-edge-beta",
+        "chrome-beta",
+        "chromium",
+        "chromium-360se",
+        "canary",
+      ];
+    }
+    if (AppConstants.platform == "macosx") {
+      return [
+        "firefox",
+        "safari",
+        "opera",
+        "opera-gx",
+        "vivaldi",
+        "brave",
+        "chrome",
+        "chromium-edge",
+        "chromium-edge-beta",
+        "chromium",
+        "canary",
+      ];
+    }
+    if (AppConstants.XP_UNIX) {
+      return [
+        "firefox",
+        "opera",
+        "vivaldi",
+        "brave",
+        "chrome",
+        "chrome-beta",
+        "chrome-dev",
+        "chromium",
+        "opera-gx",
+      ];
+    }
+    return [];
+  }
 
-  MIGRATION_ENTRYPOINT_UNKNOWN: 0,
-  MIGRATION_ENTRYPOINT_FIRSTRUN: 1,
-  MIGRATION_ENTRYPOINT_FXREFRESH: 2,
-  MIGRATION_ENTRYPOINT_PLACES: 3,
-  MIGRATION_ENTRYPOINT_PASSWORDS: 4,
-  MIGRATION_ENTRYPOINT_NEWTAB: 5,
-  MIGRATION_ENTRYPOINT_FILE_MENU: 6,
-  MIGRATION_ENTRYPOINT_HELP_MENU: 7,
-  MIGRATION_ENTRYPOINT_BOOKMARKS_TOOLBAR: 8,
+  /**
+   * Enum for the entrypoint that is being used to start migration.
+   * Callers can use the MIGRATION_ENTRYPOINTS getter to use these.
+   *
+   * These values are what's written into the FX_MIGRATION_ENTRY_POINT
+   * histogram after a migration.
+   *
+   * @see MIGRATION_ENTRYPOINTS
+   * @readonly
+   * @enum {number}
+   */
+  #MIGRATION_ENTRYPOINTS_ENUM = Object.freeze({
+    /** The entrypoint was not supplied */
+    UNKNOWN: 0,
 
-  _sourceNameToIdMapping: {
+    /** Migration is occurring at startup */
+    FIRSTRUN: 1,
+
+    /** Migration is occurring at after a profile refresh */
+    FXREFRESH: 2,
+
+    /** Migration is being started from the Library window */
+    PLACES: 3,
+
+    /** Migration is being started from our password management UI */
+    PASSWORDS: 4,
+
+    /** Migration is being started from the default about:home/about:newtab */
+    NEWTAB: 5,
+
+    /** Migration is being started from the File menu */
+    FILE_MENU: 6,
+
+    /** Migration is being started from the Help menu */
+    HELP_MENU: 7,
+
+    /** Migration is being started from the Bookmarks Toolbar */
+    BOOKMARKS_TOOLBAR: 8,
+  });
+
+  /**
+   * Returns an enum that should be used to record the entrypoint for
+   * starting a migration.
+   *
+   * @returns {number}
+   */
+  get MIGRATION_ENTRYPOINTS() {
+    return this.#MIGRATION_ENTRYPOINTS_ENUM;
+  }
+
+  /**
+   * Enum for the numeric value written to the FX_MIGRATION_SOURCE_BROWSER,
+   * and FX_STARTUP_MIGRATION_EXISTING_DEFAULT_BROWSER histograms.
+   *
+   * @see getSourceIdForTelemetry
+   * @readonly
+   * @enum {number}
+   */
+  #SOURCE_NAME_TO_ID_MAPPING_ENUM = Object.freeze({
     nothing: 1,
     firefox: 2,
     edge: 3,
@@ -1361,15 +1413,11 @@ export var MigrationUtils = Object.seal({
     opera: 12,
     "opera-gx": 14,
     vivaldi: 13,
-  },
-  getSourceIdForTelemetry(sourceName) {
-    return this._sourceNameToIdMapping[sourceName] || 0;
-  },
+  });
 
-  /* Enum of locations where bookmarks were found in the
-     source browser that we import from */
-  SOURCE_BOOKMARK_ROOTS_BOOKMARKS_TOOLBAR: 1,
-  SOURCE_BOOKMARK_ROOTS_BOOKMARKS_MENU: 2,
-  SOURCE_BOOKMARK_ROOTS_READING_LIST: 4,
-  SOURCE_BOOKMARK_ROOTS_UNFILED: 8,
-});
+  getSourceIdForTelemetry(sourceName) {
+    return this.#SOURCE_NAME_TO_ID_MAPPING_ENUM[sourceName] || 0;
+  }
+}
+
+export const MigrationUtils = new MigrationUtilsSingleton();
