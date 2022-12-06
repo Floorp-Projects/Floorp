@@ -39,6 +39,11 @@
 #include <algorithm>
 #include <limits>
 
+extern mozilla::LazyLogModule gMediaElementLog;
+#define LOG(msg, ...)                        \
+  MOZ_LOG(gMediaElementLog, LogLevel::Debug, \
+          ("HTMLVideoElement=%p, " msg, this, ##__VA_ARGS__))
+
 nsGenericHTMLElement* NS_NewHTMLVideoElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
     mozilla::dom::FromParser aFromParser) {
@@ -637,4 +642,37 @@ void HTMLVideoElement::OnSecondaryVideoOutputFirstFrameRendered() {
       mVisualCloneTarget->GetVideoFrameContainer());
 }
 
+void HTMLVideoElement::OnVisibilityChange(Visibility aNewVisibility) {
+  HTMLMediaElement::OnVisibilityChange(aNewVisibility);
+
+  // See the alternative part after step 4, but we only pause/resume invisible
+  // autoplay for non-audible video, which is different from the spec. This
+  // behavior seems aiming to reduce the power consumption without interering
+  // users, and Chrome and Safari also chose to do that only for non-audible
+  // video, so we want to match them in order to reduce webcompat issue.
+  // https://html.spec.whatwg.org/multipage/media.html#ready-states:eligible-for-autoplay-2
+  if (!HasAttr(nsGkAtoms::autoplay) || IsAudible()) {
+    return;
+  }
+
+  if (aNewVisibility == Visibility::ApproximatelyVisible && mPaused &&
+      IsEligibleForAutoplay() && AllowedToPlay()) {
+    LOG("resume invisible paused autoplay video");
+    RunAutoplay();
+  }
+
+  // We need to consider the Pip window as well, which won't reflect in the
+  // visibility event.
+  if ((aNewVisibility == Visibility::ApproximatelyNonVisible &&
+       !IsCloningElementVisually()) &&
+      mCanAutoplayFlag) {
+    LOG("pause non-audible autoplay video when it's invisible");
+    PauseInternal();
+    mCanAutoplayFlag = true;
+    return;
+  }
+}
+
 }  // namespace mozilla::dom
+
+#undef LOG
