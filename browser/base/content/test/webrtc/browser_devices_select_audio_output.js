@@ -24,6 +24,31 @@ async function requestAudioOutputExpectingPrompt() {
   checkDeviceSelectors(["speaker"]);
 }
 
+async function simulateAudioOutputRequest() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function simPrompt() {
+    const req = {
+      type: "selectaudiooutput",
+      windowID: content.windowGlobalChild.outerWindowId,
+      devices: [
+        {
+          type: "audiooutput",
+          rawName: "name 1",
+          deviceIndex: 1,
+          rawId: "id 1",
+          QueryInterface: ChromeUtils.generateQI([Ci.nsIMediaDevice]),
+        },
+      ],
+      getConstraints: () => ({}),
+      isSecure: true,
+      isHandlingUserInput: true,
+    };
+    const { WebRTCChild } = SpecialPowers.ChromeUtils.import(
+      "resource:///actors/WebRTCChild.jsm"
+    );
+    WebRTCChild.observe(req, "getUserMedia:request");
+  });
+}
+
 async function allow() {
   const observerPromise = expectObserverCalled("getUserMedia:response:allow");
   await promiseMessage("ok", () => {
@@ -40,12 +65,14 @@ async function deny() {
   await observerPromise;
 }
 
-async function escape() {
+async function escapePrompt() {
   const observerPromise = expectObserverCalled("getUserMedia:response:deny");
-  await promiseMessage(permissionError, () => {
-    EventUtils.synthesizeKey("KEY_Escape");
-  });
+  EventUtils.synthesizeKey("KEY_Escape");
   await observerPromise;
+}
+
+async function escape() {
+  await Promise.all([promiseMessage(permissionError), escapePrompt()]);
 }
 
 var gTests = [
@@ -68,12 +95,23 @@ var gTests = [
   },
   {
     desc: 'User presses "Esc"',
-    run: async function checkBlock() {
+    run: async function checkEsc() {
       await requestAudioOutputExpectingPrompt();
       await escape();
       info("selectAudioOutput() after Esc should prompt again.");
       await requestAudioOutputExpectingPrompt();
       await allow();
+    },
+  },
+  {
+    desc: "Single Device",
+    run: async function checkSingle() {
+      await Promise.all([
+        promisePopupNotificationShown("webRTC-shareDevices"),
+        simulateAudioOutputRequest(),
+      ]);
+      checkDeviceSelectors(["speaker"]);
+      await escapePrompt();
     },
   },
 ];

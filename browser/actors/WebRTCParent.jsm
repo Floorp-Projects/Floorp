@@ -1053,7 +1053,7 @@ function prompt(aActor, aBrowser, aRequest) {
 
       let labelID = "webRTC-selectSpeaker-single-device-label";
       listDevices(speakerMenupopup, audioOutputDevices, labelID);
-      if (audioInputDevices.length == 1) {
+      if (audioOutputDevices.length == 1) {
         describedByIDs.push("webRTC-selectSpeaker-icon", labelID);
       }
 

@@ -861,7 +861,8 @@ function checkDeviceSelectors(aExpectedTypes, aWindow = window) {
   }
   let document = aWindow.document;
 
-  for (let type of ["Microphone", "Camera", "Speaker"]) {
+  let expectedDescribedBy = "webRTC-shareDevices-notification-description";
+  for (let type of ["Camera", "Microphone", "Speaker"]) {
     let selector = document.getElementById(`webRTC-select${type}`);
     if (!aExpectedTypes.includes(type.toLowerCase())) {
       ok(selector.hidden, `${type} selector hidden`);
@@ -882,11 +883,17 @@ function checkDeviceSelectors(aExpectedTypes, aWindow = window) {
         selectorList.selectedItem.getAttribute("label"),
         `${type} label should be showing the lone device label.`
       );
+      expectedDescribedBy += ` webRTC-select${type}-icon webRTC-select${type}-single-device-label`;
     } else {
       ok(!selectorList.hidden, `${type} selector list should not be hidden.`);
       ok(label.hidden, `${type} selector label should be hidden.`);
     }
   }
+  let ariaDescribedby = aWindow.PopupNotifications.panel.getAttribute(
+    "aria-describedby"
+  );
+  is(ariaDescribedby, expectedDescribedBy, "aria-describedby");
+
   let screenSelector = document.getElementById("webRTC-selectWindowOrScreen");
   if (aExpectedTypes.includes("screen")) {
     ok(!screenSelector.hidden, "screen selector visible");
