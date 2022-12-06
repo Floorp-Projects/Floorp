@@ -24,7 +24,7 @@
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION(ReadableStreamController, mGlobal)
+NS_IMPL_CYCLE_COLLECTION(ReadableStreamController, mGlobal, mAlgorithms)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ReadableStreamController)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ReadableStreamController)
 
@@ -38,15 +38,14 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableStreamDefaultController)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ReadableStreamDefaultController)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAlgorithms, mStrategySizeAlgorithm, mStream)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mStrategySizeAlgorithm, mStream)
   tmp->mQueue.clear();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(
     ReadableStreamDefaultController, ReadableStreamController)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAlgorithms, mStrategySizeAlgorithm,
-                                    mStream)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStrategySizeAlgorithm, mStream)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ReadableStreamDefaultController,
@@ -186,7 +185,7 @@ void ReadableStreamDefaultControllerClearAlgorithms(
     ReadableStreamDefaultController* aController) {
   // Step 1.
   // Step 2.
-  aController->SetAlgorithms(nullptr);
+  aController->ClearAlgorithms();
 
   // Step 3.
   aController->setStrategySizeAlgorithm(nullptr);
@@ -487,7 +486,7 @@ void SetUpReadableStreamDefaultController(
 
   // Step 6.
   // Step 7.
-  aController->SetAlgorithms(aAlgorithms);
+  aController->SetAlgorithms(*aAlgorithms);
 
   // Step 8.
   aStream->SetController(*aController);

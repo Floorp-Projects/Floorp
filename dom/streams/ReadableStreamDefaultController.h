@@ -29,7 +29,6 @@ namespace mozilla::dom {
 class ReadableStream;
 class ReadableStreamDefaultReader;
 struct UnderlyingSource;
-class UnderlyingSourceAlgorithms;
 class ReadableStreamGenericReader;
 
 class ReadableStreamDefaultController final : public ReadableStreamController,
@@ -71,11 +70,6 @@ class ReadableStreamDefaultController final : public ReadableStreamController,
   void ReleaseSteps() override;
 
   // Internal Slot Accessors
-  UnderlyingSourceAlgorithmsBase* GetAlgorithms() { return mAlgorithms; }
-  void SetAlgorithms(UnderlyingSourceAlgorithmsBase* aAlgorithms) {
-    mAlgorithms = aAlgorithms;
-  }
-
   bool CloseRequested() const { return mCloseRequested; }
   void SetCloseRequested(bool aCloseRequested) {
     mCloseRequested = aCloseRequested;
@@ -112,7 +106,6 @@ class ReadableStreamDefaultController final : public ReadableStreamController,
 
  private:
   // Internal Slots:
-  RefPtr<UnderlyingSourceAlgorithmsBase> mAlgorithms;
   bool mCloseRequested = false;
   bool mPullAgain = false;
   bool mPulling = false;
@@ -152,9 +145,6 @@ MOZ_CAN_RUN_SCRIPT void ReadableStreamDefaultReaderRead(
 void ReadableStreamDefaultControllerError(
     JSContext* aCx, ReadableStreamDefaultController* aController,
     JS::Handle<JS::Value> aValue, ErrorResult& aRv);
-
-void ReadableStreamDefaultControllerClearAlgorithms(
-    ReadableStreamDefaultController* aController);
 
 Nullable<double> ReadableStreamDefaultControllerGetDesiredSize(
     ReadableStreamDefaultController* aController);

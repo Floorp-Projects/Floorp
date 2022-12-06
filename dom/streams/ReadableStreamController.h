@@ -11,6 +11,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsIGlobalObject.h"
 #include "nsISupports.h"
+#include "UnderlyingSourceCallbackHelpers.h"
 
 namespace mozilla::dom {
 struct ReadRequest;
@@ -42,8 +43,18 @@ class ReadableStreamController : public nsISupports {
   // No JS implementable UnderlyingSource callback exists for this.
   virtual void ReleaseSteps() = 0;
 
+  UnderlyingSourceAlgorithmsBase* GetAlgorithms() { return mAlgorithms; }
+  void SetAlgorithms(UnderlyingSourceAlgorithmsBase& aAlgorithms) {
+    mAlgorithms = &aAlgorithms;
+  }
+  void ClearAlgorithms() { mAlgorithms = nullptr; }
+
  protected:
   nsCOMPtr<nsIGlobalObject> mGlobal;
+
+  // The algorithms for the underlying source
+  RefPtr<UnderlyingSourceAlgorithmsBase> mAlgorithms;
+
   virtual ~ReadableStreamController() = default;
 };
 
