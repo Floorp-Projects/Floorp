@@ -819,8 +819,16 @@ bool GCRuntime::init(uint32_t maxbytes) {
   }
   TlsGCContext.set(&mainThreadContext.ref());
 
-  auto marker = MakeUnique<GCMarker>(rt);
-  if (!marker || !markers.emplaceBack(std::move(marker))) {
+  updateHelperThreadCount();
+
+#ifdef JS_GC_ZEAL
+  const char* size = getenv("JSGC_MARK_STACK_LIMIT");
+  if (size) {
+    maybeMarkStackLimit = atoi(size);
+  }
+#endif
+
+  if (!updateMarkersVector()) {
     return false;
   }
 
@@ -828,13 +836,6 @@ bool GCRuntime::init(uint32_t maxbytes) {
     AutoLockGCBgAlloc lock(this);
 
     MOZ_ALWAYS_TRUE(tunables.setParameter(JSGC_MAX_BYTES, maxbytes));
-
-#ifdef JS_GC_ZEAL
-    const char* size = getenv("JSGC_MARK_STACK_LIMIT");
-    if (size) {
-      setMarkStackLimit(atoi(size), lock);
-    }
-#endif
 
     if (!nursery().init(lock)) {
       return false;
@@ -868,8 +869,6 @@ bool GCRuntime::init(uint32_t maxbytes) {
   if (!initSweepActions()) {
     return false;
   }
-
-  updateHelperThreadCount();
 
   UniquePtr<Zone> zone = MakeUnique<Zone>(rt, Zone::AtomsZone);
   if (!zone || !zone->init()) {
@@ -1008,8 +1007,9 @@ void GCRuntime::restoreSharedAtomsZone() {
   sharedAtomsZone_ = nullptr;
 }
 
-bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value) {
+bool GCRuntime::setParameter(JSContext* cx, JSGCParamKey key, uint32_t value) {
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
+  FinishGC(cx);
   waitBackgroundSweepEnd();
   AutoLockGC lock(this);
   return setParameter(key, value, lock);
@@ -1029,6 +1029,7 @@ bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value,
       break;
     case JSGC_COMPACTING_ENABLED:
       compactingEnabled = value != 0;
+      updateMarkersVector();
       break;
     case JSGC_PARALLEL_MARKING_ENABLED:
       parallelMarkingEnabled = value != 0;
@@ -1048,6 +1049,7 @@ bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value,
       }
       helperThreadRatio = double(value) / 100.0;
       updateHelperThreadCount();
+      updateMarkersVector();
       break;
     case JSGC_MAX_HELPER_THREADS:
       if (rt->parentRuntime) {
@@ -1059,6 +1061,7 @@ bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value,
       }
       maxHelperThreads = value;
       updateHelperThreadCount();
+      updateMarkersVector();
       break;
     case JSGC_MIN_EMPTY_CHUNK_COUNT:
       setMinEmptyChunkCount(value, lock);
@@ -1076,9 +1079,9 @@ bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value,
   return true;
 }
 
-void GCRuntime::resetParameter(JSGCParamKey key) {
+void GCRuntime::resetParameter(JSContext* cx, JSGCParamKey key) {
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-  waitBackgroundSweepEnd();
+  FinishGC(cx);
   AutoLockGC lock(this);
   resetParameter(key, lock);
 }
@@ -1096,6 +1099,7 @@ void GCRuntime::resetParameter(JSGCParamKey key, AutoLockGC& lock) {
       break;
     case JSGC_COMPACTING_ENABLED:
       compactingEnabled = TuningDefaults::CompactingEnabled;
+      updateMarkersVector();
       break;
     case JSGC_PARALLEL_MARKING_ENABLED:
       parallelMarkingEnabled = TuningDefaults::ParallelMarkingEnabled;
@@ -1112,6 +1116,7 @@ void GCRuntime::resetParameter(JSGCParamKey key, AutoLockGC& lock) {
       }
       helperThreadRatio = TuningDefaults::HelperThreadRatio;
       updateHelperThreadCount();
+      updateMarkersVector();
       break;
     case JSGC_MAX_HELPER_THREADS:
       if (rt->parentRuntime) {
@@ -1119,6 +1124,7 @@ void GCRuntime::resetParameter(JSGCParamKey key, AutoLockGC& lock) {
       }
       maxHelperThreads = TuningDefaults::MaxHelperThreads;
       updateHelperThreadCount();
+      updateMarkersVector();
       break;
     case JSGC_MIN_EMPTY_CHUNK_COUNT:
       setMinEmptyChunkCount(TuningDefaults::MinEmptyChunkCount, lock);
@@ -1246,6 +1252,9 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
 #ifdef JS_GC_ZEAL
 void GCRuntime::setMarkStackLimit(size_t limit, AutoLockGC& lock) {
   MOZ_ASSERT(!JS::RuntimeHeapIsBusy());
+
+  maybeMarkStackLimit = limit;
+
   AutoUnlockGC unlock(lock);
   AutoStopVerifyingBarriers pauseVerification(rt, false);
   for (auto& marker : markers) {
@@ -1284,6 +1293,55 @@ void GCRuntime::updateHelperThreadCount() {
 
   helperThreadCount = std::min(target, GetHelperThreadCount());
   HelperThreadState().setGCParallelThreadCount(helperThreadCount, lock);
+}
+
+size_t GCRuntime::markingWorkerCount() const {
+  if (!parallelMarkingEnabled) {
+    return 1;
+  }
+
+  // Limit parallel marking to use at most two threads initially.
+  return std::min(parallelWorkerCount(), size_t(2));
+}
+
+bool GCRuntime::updateMarkersVector() {
+  MOZ_ASSERT(helperThreadCount >= 1,
+             "There must always be at least one mark task");
+
+#ifdef DEBUG
+  for (auto& marker : markers) {
+    MOZ_ASSERT(marker->isDrained());
+  }
+#endif
+
+  size_t targetCount = markingWorkerCount();
+
+  if (markers.length() > targetCount) {
+    return markers.resize(targetCount);
+  }
+
+  while (markers.length() < targetCount) {
+    auto marker = MakeUnique<GCMarker>(rt);
+    if (!marker) {
+      return false;
+    }
+
+#ifdef JS_GC_ZEAL
+    if (maybeMarkStackLimit) {
+      marker->setMaxCapacity(maybeMarkStackLimit);
+    }
+#endif
+
+    if (!marker->init()) {
+      return false;
+    }
+
+    if (!markers.emplaceBack(std::move(marker))) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 bool GCRuntime::addBlackRootsTracer(JSTraceDataOp traceOp, void* data) {
