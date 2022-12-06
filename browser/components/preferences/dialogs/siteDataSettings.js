@@ -275,7 +275,7 @@ let gSiteDataSettings = {
           await SiteDataManager.remove(removals);
         }
       } catch (e) {
-        Cu.reportError(e);
+        console.error(e);
       }
     }
   },

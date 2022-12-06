@@ -377,7 +377,7 @@ async function gotoPref(
   try {
     await init_category_if_required(category);
   } catch (ex) {
-    Cu.reportError(
+    console.error(
       new Error(
         "Error initializing preference category " + category + ": " + ex
       )
