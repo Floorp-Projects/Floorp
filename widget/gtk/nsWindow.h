@@ -488,10 +488,6 @@ class nsWindow final : public nsBaseWidget {
   void SetHasMappedToplevel(bool aState);
   LayoutDeviceIntSize GetSafeWindowSize(LayoutDeviceIntSize aSize);
 
-  void EnsureGrabs(void);
-  void GrabPointer(guint32 aTime);
-  void ReleaseGrabs(void);
-
   void DispatchContextMenuEventFromMouseEvent(uint16_t domButton,
                                               GdkEventButton* aEvent);
 
