@@ -19,6 +19,7 @@ RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAG
       bzip2 \
       git \
       openssh-client \
+      python3-pip \
       python3-requests \
       python3-zstandard \
       unzip
@@ -31,3 +32,5 @@ ADD topsrcdir/taskcluster/scripts/misc/fetch-content /builds/worker/bin/fetch-co
 
 # %include taskcluster/scripts/misc/fetch-chromium.py
 ADD topsrcdir/taskcluster/scripts/misc/fetch-chromium.py /builds/worker/bin/fetch-chromium.py
+
+RUN pip3 install redo==2.0.4
