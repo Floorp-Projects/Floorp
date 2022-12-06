@@ -315,7 +315,10 @@ void JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
   rtSizes->object += mallocSizeOf(this);
 
   rtSizes->atomsTable += atoms().sizeOfIncludingThis(mallocSizeOf);
-  rtSizes->gc.marker += gc.marker.sizeOfExcludingThis(mallocSizeOf);
+  rtSizes->gc.marker += gc.markers.sizeOfExcludingThis(mallocSizeOf);
+  for (auto& marker : gc.markers) {
+    rtSizes->gc.marker += marker->sizeOfIncludingThis(mallocSizeOf);
+  }
 
   if (!parentRuntime) {
     rtSizes->atomsTable += mallocSizeOf(staticStrings);
