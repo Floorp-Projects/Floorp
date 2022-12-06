@@ -235,7 +235,7 @@ export var XPCOMUtils = {
           aPostLambda.apply(proxy);
         }
       } catch (ex) {
-        Cu.reportError("Failed to load module " + aResource + ".");
+        console.error("Failed to load module " + aResource + ".");
         throw ex;
       }
       return temp[aSymbol || aName];

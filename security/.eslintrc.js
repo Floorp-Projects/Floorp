@@ -25,7 +25,7 @@ module.exports = {
     "no-case-declarations": "error",
 
     // Disallow use of the console API.
-    "no-console": "error",
+    "no-console": ["error", { allow: ["error"] }],
 
     // Disallow constant expressions in conditions (except for loops).
     "no-constant-condition": ["error", { checkLoops: false }],

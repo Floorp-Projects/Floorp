@@ -26,7 +26,7 @@ async function run() {
     ok(true, "Retrieved printer basic attributes successfully.");
   } catch (e) {
     ok(false, `Error thrown while retrieving printer basic attributes: ${e}.`);
-    Cu.reportError(e);
+    console.error(e);
   }
   SimpleTest.finish();
 }

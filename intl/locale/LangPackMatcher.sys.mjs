@@ -148,7 +148,7 @@ const mockable = {
     try {
       return lazy.AddonRepository.getAvailableLangpacks();
     } catch (error) {
-      Cu.reportError(
+      console.error(
         `Failed to get the list of available language packs: ${error?.message}`
       );
       return null;
@@ -169,14 +169,14 @@ const mockable = {
         },
       });
     } catch (error) {
-      Cu.reportError(error);
+      console.error(error);
       return false;
     }
 
     try {
       await install.install();
     } catch (error) {
-      Cu.reportError(error);
+      console.error(error);
       return false;
     }
     return true;
