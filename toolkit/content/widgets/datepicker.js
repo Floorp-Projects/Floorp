@@ -40,6 +40,7 @@ function DatePicker(context) {
       this._setDefaultState();
       this._createComponents();
       this._update();
+      this.components.calendar.focus();
       document.dispatchEvent(new CustomEvent("PickerReady"));
     },
 
@@ -98,6 +99,11 @@ function DatePicker(context) {
           this._dispatchState();
           this._closePopup();
         },
+        setMonthByOffset: offset => {
+          dateKeeper.setMonthByOffset(offset);
+          this._update();
+          this._dispatchState();
+        },
         setYear: year => {
           dateKeeper.setYear(year);
           dateKeeper.setSelection({
@@ -135,6 +141,7 @@ function DatePicker(context) {
             calViewSize: CAL_VIEW_SIZE,
             locale: this.state.locale,
             setSelection: this.state.setSelection,
+            setMonthByOffset: this.state.setMonthByOffset,
             getDayString: this.state.getDayString,
             getWeekHeaderString: this.state.getWeekHeaderString,
           },
@@ -219,6 +226,7 @@ function DatePicker(context) {
      */
     _dispatchState() {
       const { year, month, day } = this.state.dateKeeper.selection;
+
       // The panel is listening to window for postMessage event, so we
       // do postMessage to itself to send data to input boxes.
       window.postMessage(
@@ -241,6 +249,7 @@ function DatePicker(context) {
       window.addEventListener("message", this);
       document.addEventListener("mouseup", this, { passive: true });
       document.addEventListener("mousedown", this);
+      document.addEventListener("keydown", this);
     },
 
     /**
@@ -254,10 +263,41 @@ function DatePicker(context) {
           this.handleMessage(event);
           break;
         }
+        case "keydown": {
+          switch (event.key) {
+            case "Enter":
+            case " ": {
+              if (event.target == this.context.buttonPrev) {
+                event.target.classList.add("active");
+                this.state.dateKeeper.setMonthByOffset(-1);
+                this._update();
+              } else if (event.target == this.context.buttonNext) {
+                event.target.classList.add("active");
+                this.state.dateKeeper.setMonthByOffset(1);
+                this._update();
+              }
+              break;
+            }
+            case "Tab": {
+              // Manage tab order of a daysView to prevent keyboard trap
+              if (event.target.tagName === "td") {
+                if (event.shiftKey) {
+                  this.context.buttonNext.focus();
+                } else if (!event.shiftKey) {
+                  this.context.buttonPrev.focus();
+                }
+                event.stopPropagation();
+                event.preventDefault();
+              }
+              break;
+            }
+          }
+          break;
+        }
         case "mousedown": {
           // Use preventDefault to keep focus on input boxes
           event.preventDefault();
-          event.target.setCapture();
+          event.target.setPointerCapture(event.pointerId);
 
           if (event.target == this.context.buttonPrev) {
             event.target.classList.add("active");
@@ -271,12 +311,15 @@ function DatePicker(context) {
           break;
         }
         case "mouseup": {
+          event.target.releasePointerCapture(event.pointerId);
+
           if (
             event.target == this.context.buttonPrev ||
             event.target == this.context.buttonNext
           ) {
             event.target.classList.remove("active");
           }
+          break;
         }
       }
     },
@@ -466,6 +509,14 @@ function DatePicker(context) {
           this.props.toggleMonthPicker();
           break;
         }
+        case "keydown": {
+          if (event.key === "Enter" || event.key === " ") {
+            event.stopPropagation();
+            event.preventDefault();
+            this.props.toggleMonthPicker();
+          }
+          break;
+        }
       }
     },
 
@@ -505,6 +556,7 @@ function DatePicker(context) {
      */
     _attachEventListeners() {
       this.context.monthYear.addEventListener("click", this);
+      this.context.monthYear.addEventListener("keydown", this);
     },
   };
 }
