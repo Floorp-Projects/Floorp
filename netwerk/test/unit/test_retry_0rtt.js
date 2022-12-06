@@ -37,7 +37,7 @@ add_setup(async () => {
     "../../../security/manager/ssl/tests/unit/test_faulty_server"
   );
   let nssComponent = Cc["@mozilla.org/psm;1"].getService(Ci.nsINSSComponent);
-  nssComponent.clearSSLExternalAndInternalSessionCache();
+  await nssComponent.asyncClearSSLExternalAndInternalSessionCache();
 });
 
 async function sleep(time) {
