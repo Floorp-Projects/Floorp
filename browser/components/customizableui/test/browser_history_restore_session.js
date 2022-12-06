@@ -34,8 +34,8 @@ add_task(async function testRestoreSession() {
 
   win = await BrowserTestUtils.openNewBrowserWindow();
 
-  let lastSession = ChromeUtils.import(
-    "resource:///modules/sessionstore/SessionStore.jsm"
+  let lastSession = ChromeUtils.importESModule(
+    "resource:///modules/sessionstore/SessionStore.sys.mjs"
   )._LastSession;
   lastSession.setState(true);
 

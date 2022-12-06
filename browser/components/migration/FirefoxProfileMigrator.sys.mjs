@@ -22,12 +22,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   PlacesBackups: "resource://gre/modules/PlacesBackups.sys.mjs",
   ProfileAge: "resource://gre/modules/ProfileAge.sys.mjs",
+  SessionMigration: "resource:///modules/sessionstore/SessionMigration.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "SessionMigration",
-  "resource:///modules/sessionstore/SessionMigration.jsm"
-);
 
 export function FirefoxProfileMigrator() {
   this.wrappedJSObject = this; // for testing...

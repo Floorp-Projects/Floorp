@@ -10,13 +10,14 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+  SessionStartup: "resource:///modules/sessionstore/SessionStartup.sys.mjs",
+  StartupPerformance:
+    "resource:///modules/sessionstore/StartupPerformance.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  SessionStartup: "resource:///modules/sessionstore/SessionStartup.jsm",
-  StartupPerformance: "resource:///modules/sessionstore/StartupPerformance.jsm",
 });
 
 /* globals ExtensionAPI */

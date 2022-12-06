@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { TabStateFlusher } = ChromeUtils.import(
-  "resource:///modules/sessionstore/TabStateFlusher.jsm"
+const { TabStateFlusher } = ChromeUtils.importESModule(
+  "resource:///modules/sessionstore/TabStateFlusher.sys.mjs"
 );
 
 // Move a tab to a new window the reload it.  In Bug 1691135 it would not
