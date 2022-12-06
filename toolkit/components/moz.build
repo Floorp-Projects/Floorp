@@ -140,3 +140,8 @@ if CONFIG["MOZ_BUILD_APP"] == "browser":
 
 if CONFIG["MOZ_UNIFFI_FIXTURES"]:
     DIRS += ["uniffi-bindgen-gecko-js/fixtures"]
+
+
+UNIFIED_SOURCES += [
+    "/toolkit/components/antitracking/ContentBlockingAllowList.cpp",
+]

@@ -2194,6 +2194,7 @@ dependencies = [
  "netwerk_helper",
  "nserror",
  "nsstring",
+ "oblivious_http",
  "origin-trials-ffi",
  "prefs_parser",
  "processtools",
@@ -3873,6 +3874,35 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e42c982f2d955fac81dd7e1d0e1426a7d702acd9c98d19ab01083a6a0328c424"
 dependencies = [
  "memchr",
+]
+
+[[package]]
+name = "oblivious_http"
+version = "0.1.0"
+dependencies = [
+ "nserror",
+ "ohttp",
+ "rand 0.8.5",
+ "thin-vec",
+ "xpcom",
+]
+
+[[package]]
+name = "ohttp"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3b2c6a2f1b2f840a52ea235d568701369274f6ca08d98e7d9ca4acadd1fe94c5"
+dependencies = [
+ "bindgen 0.59.999",
+ "byteorder",
+ "env_logger 0.8.999",
+ "hex",
+ "lazy_static",
+ "log",
+ "mozbuild",
+ "serde",
+ "serde_derive",
+ "toml",
 ]
 
 [[package]]

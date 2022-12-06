@@ -47,7 +47,8 @@ void TextUpdater::DoUpdate(const nsAString& aNewText, const nsAString& aOldText,
     return;
   }
 
-  mTextOffset = mHyperText->GetChildOffset(mTextLeaf);
+  // Get the text leaf accessible offset and invalidate cached offsets after it.
+  mTextOffset = mHyperText->GetChildOffset(mTextLeaf, true);
   NS_ASSERTION(mTextOffset != -1, "Text leaf hasn't offset within hyper text!");
 
   // Don't bother diffing if the hypertext isn't editable. Diffing non-editable
@@ -71,7 +72,6 @@ void TextUpdater::DoUpdate(const nsAString& aNewText, const nsAString& aOldText,
 
     // Update the text.
     mTextLeaf->SetText(aNewText);
-    mHyperText->InvalidateCachedHyperTextOffsets();
     return;
   }
 
@@ -117,7 +117,6 @@ void TextUpdater::DoUpdate(const nsAString& aNewText, const nsAString& aOldText,
 
     // Update the text.
     mTextLeaf->SetText(aNewText);
-    mHyperText->InvalidateCachedHyperTextOffsets();
     return;
   }
 
@@ -163,7 +162,6 @@ void TextUpdater::DoUpdate(const nsAString& aNewText, const nsAString& aOldText,
 
   // Update the text.
   mTextLeaf->SetText(aNewText);
-  mHyperText->InvalidateCachedHyperTextOffsets();
 }
 
 void TextUpdater::ComputeTextChangeEvents(

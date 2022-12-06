@@ -148,3 +148,43 @@ add_task(async function test_policy_temporarilyInstalled() {
   await runTest("temporary");
   await runTest("permanent");
 });
+
+add_task(async function test_manifest_allowInsecureRequests() {
+  Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
+  let extensionData = {
+    allowInsecureRequests: true,
+    manifest: {
+      manifest_version: 3,
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+  equal(
+    extension.extension.manifest.content_security_policy.extension_pages,
+    `script-src 'self'`,
+    "insecure allowed"
+  );
+  await extension.unload();
+  Services.prefs.clearUserPref("extensions.manifestV3.enabled");
+});
+
+add_task(async function test_manifest_allowInsecureRequests_throws() {
+  Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
+  let extensionData = {
+    allowInsecureRequests: true,
+    manifest: {
+      manifest_version: 3,
+      content_security_policy: {
+        extension_pages: `script-src 'self'`,
+      },
+    },
+  };
+
+  await Assert.throws(
+    () => ExtensionTestUtils.loadExtension(extensionData),
+    /allowInsecureRequests cannot be used with manifest.content_security_policy/,
+    "allowInsecureRequests with content_security_policy cannot be loaded"
+  );
+  Services.prefs.clearUserPref("extensions.manifestV3.enabled");
+});

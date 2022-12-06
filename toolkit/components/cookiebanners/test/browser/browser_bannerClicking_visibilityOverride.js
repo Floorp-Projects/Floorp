@@ -27,7 +27,7 @@ function insertVisibilityTestRules(skipPresenceVisibilityCheck) {
     Ci.nsICookieBannerRule
   );
   ruleA.id = genUUID();
-  ruleA.domain = TEST_DOMAIN_A;
+  ruleA.domains = [TEST_DOMAIN_A];
 
   ruleA.addClickRule(
     "div#banner",

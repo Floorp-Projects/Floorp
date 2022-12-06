@@ -63,8 +63,19 @@ class nsCookieBannerService final : public nsIObserver,
                             nsICookieBannerRule** aRule,
                             bool aReportTelemetry = false);
 
+  /**
+   * Get the rule matching the provided URI.
+   * @param aURI - The URI to match the rule for.
+   * @param aIsTopLevel - Whether this rule is requested for the top level frame
+   * (true) or a child frame (false).
+   * @param aRule - Rule to be populated
+   * @param aDomain - Domain that matches the rule, computed from the URI.
+   * @param aReportTelemetry - Whether telemetry should be recorded for this
+   * call.
+   * @returns The matching rule or nullptr if no matching rule is found.
+   */
   nsresult GetRuleForURI(nsIURI* aURI, bool aIsTopLevel,
-                         nsICookieBannerRule** aRule,
+                         nsICookieBannerRule** aRule, nsACString& aDomain,
                          bool aReportTelemetry = false);
 
   void DailyReportTelemetry();

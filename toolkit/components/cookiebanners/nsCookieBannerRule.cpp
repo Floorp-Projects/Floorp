@@ -31,10 +31,11 @@ nsCookieBannerRule::AddCookie(bool aIsOptOut, const nsACString& aName,
                               bool aIsHttpOnly, bool aIsSession,
                               int32_t aSameSite,
                               nsICookie::schemeType aSchemeMap) {
-  MOZ_LOG(gCookieRuleLog, LogLevel::Debug,
-          ("%s: mDomain: %s, aIsOptOut: %d, aHost: %s, aName: %s", __FUNCTION__,
-           mDomain.get(), aIsOptOut, nsPromiseFlatCString(aHost).get(),
-           nsPromiseFlatCString(aName).get()));
+  LogRule(gCookieRuleLog, "AddCookie:", this, LogLevel::Debug);
+  MOZ_LOG(
+      gCookieRuleLog, LogLevel::Debug,
+      ("%s: aIsOptOut: %d, aHost: %s, aName: %s", __FUNCTION__, aIsOptOut,
+       nsPromiseFlatCString(aHost).get(), nsPromiseFlatCString(aName).get()));
 
   // Create and insert cookie rule.
   nsCOMPtr<nsICookieRule> cookieRule = new nsCookieRule(
@@ -58,14 +59,18 @@ nsCookieBannerRule::SetId(const nsACString& aId) {
 }
 
 NS_IMETHODIMP
-nsCookieBannerRule::GetDomain(nsACString& aDomain) {
-  aDomain.Assign(mDomain);
+nsCookieBannerRule::GetDomains(nsTArray<nsCString>& aDomains) {
+  aDomains.Clear();
+
+  AppendToArray(aDomains, mDomains);
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCookieBannerRule::SetDomain(const nsACString& aDomain) {
-  mDomain.Assign(aDomain);
+nsCookieBannerRule::SetDomains(const nsTArray<nsCString>& aDomains) {
+  AppendToArray(mDomains, aDomains);
+
   return NS_OK;
 }
 
@@ -77,22 +82,33 @@ nsTArray<nsCOMPtr<nsICookieRule>>& nsCookieBannerRule::Cookies(bool isOptOut) {
 }
 
 NS_IMETHODIMP
-nsCookieBannerRule::GetCookiesOptOut(
-    nsTArray<RefPtr<nsICookieRule>>& aCookies) {
-  nsTArray<nsCOMPtr<nsICookieRule>>& cookies = Cookies(true);
+nsCookieBannerRule::GetCookies(bool aIsOptOut, const nsACString& aDomain,
+                               nsTArray<RefPtr<nsICookieRule>>& aCookies) {
+  nsTArray<nsCOMPtr<nsICookieRule>>& cookies = Cookies(aIsOptOut);
   for (nsICookieRule* cookie : cookies) {
-    aCookies.AppendElement(cookie);
+    // If we don't need to set a domain we can simply return the existing rule.
+    if (aDomain.IsEmpty()) {
+      aCookies.AppendElement(cookie);
+      continue;
+    }
+    // Otherwise get a copy.
+    nsCOMPtr<nsICookieRule> ruleForDomain;
+    nsresult rv = cookie->CopyForDomain(aDomain, getter_AddRefs(ruleForDomain));
+    NS_ENSURE_SUCCESS(rv, rv);
+    aCookies.AppendElement(ruleForDomain.forget());
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
+nsCookieBannerRule::GetCookiesOptOut(
+    nsTArray<RefPtr<nsICookieRule>>& aCookies) {
+  return GetCookies(true, ""_ns, aCookies);
+}
+
+NS_IMETHODIMP
 nsCookieBannerRule::GetCookiesOptIn(nsTArray<RefPtr<nsICookieRule>>& aCookies) {
-  nsTArray<nsCOMPtr<nsICookieRule>>& cookies = Cookies(false);
-  for (nsICookieRule* cookie : cookies) {
-    aCookies.AppendElement(cookie);
-  }
-  return NS_OK;
+  return GetCookies(false, ""_ns, aCookies);
 }
 
 NS_IMETHODIMP
@@ -118,6 +134,42 @@ nsCookieBannerRule::ClearClickRule() {
   mClickRule = nullptr;
 
   return NS_OK;
+}
+
+// Static
+void nsCookieBannerRule::LogRule(LazyLogModule& aLogger, const char* aMessage,
+                                 nsICookieBannerRule* aRule,
+                                 LogLevel aLogLevel) {
+  NS_ENSURE_TRUE_VOID(aMessage);
+  NS_ENSURE_TRUE_VOID(aRule);
+
+  // Exit early if logging is disabled for the given log-level.
+  if (!MOZ_LOG_TEST(aLogger, aLogLevel)) {
+    return;
+  }
+
+  nsAutoCString id;
+  nsresult rv = aRule->GetId(id);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  nsTArray<nsCString> domains;
+  rv = aRule->GetDomains(domains);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  // Create a comma delimited string of domains this rule supports.
+  nsAutoCString domainsStr("*");
+  for (const nsCString& domain : domains) {
+    if (domainsStr.EqualsLiteral("*")) {
+      domainsStr.Truncate();
+    } else {
+      domainsStr.AppendLiteral(",");
+    }
+    domainsStr.Append(domain);
+  }
+
+  MOZ_LOG(aLogger, aLogLevel,
+          ("%s Rule: id=%s; domains=[%s]; isGlobal: %d", aMessage, id.get(),
+           PromiseFlatCString(domainsStr).get(), domains.IsEmpty()));
 }
 
 }  // namespace mozilla

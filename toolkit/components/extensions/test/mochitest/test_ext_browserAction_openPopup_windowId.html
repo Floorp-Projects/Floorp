@@ -104,7 +104,10 @@ async function testWithWindowState(state) {
 
           browser.test.assertEq(true, highestWindowIdIsFocused, "new window is focused");
 
-          browser.test.sendMessage("popup-open");
+          await browser.test.sendMessage("popup-open");
+
+          // Bug 1800100: Window leaks if not explicitly closed
+          window.close();
         }, 1000);
       },
     },

@@ -28,7 +28,7 @@ add_task(async function test_clicking_global_rules() {
     Ci.nsICookieBannerRule
   );
   ruleA.id = genUUID();
-  ruleA.domain = "*";
+  ruleA.domains = [];
   ruleA.addClickRule(
     "div#banner",
     false,
@@ -46,7 +46,7 @@ add_task(async function test_clicking_global_rules() {
     Ci.nsICookieBannerRule
   );
   ruleC.id = genUUID();
-  ruleC.domain = "*";
+  ruleC.domains = [];
   ruleC.addClickRule(
     "div#banner",
     false,
@@ -62,7 +62,7 @@ add_task(async function test_clicking_global_rules() {
     Ci.nsICookieBannerRule
   );
   ruleD.id = genUUID();
-  ruleD.domain = "*";
+  ruleD.domains = [];
   ruleD.addClickRule(
     "div#nonExistingBanner",
     false,
@@ -170,7 +170,7 @@ add_task(async function test_clicking_global_rules_precedence() {
     Ci.nsICookieBannerRule
   );
   ruleGlobal.id = genUUID();
-  ruleGlobal.domain = "*";
+  ruleGlobal.domains = [];
   ruleGlobal.addClickRule(
     "div#banner",
     false,
@@ -186,7 +186,7 @@ add_task(async function test_clicking_global_rules_precedence() {
     Ci.nsICookieBannerRule
   );
   ruleDomain.id = genUUID();
-  ruleDomain.domain = TEST_DOMAIN_A;
+  ruleDomain.domains = [TEST_DOMAIN_A];
   ruleDomain.addClickRule(
     "div#banner",
     false,

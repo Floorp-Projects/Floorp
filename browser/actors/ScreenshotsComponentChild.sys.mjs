@@ -24,6 +24,8 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
         return this.getFullPageBounds();
       case "Screenshots:getVisibleBounds":
         return this.getVisibleBounds();
+      case "Screenshots:getDocumentTitle":
+        return this.getTitle();
     }
     return null;
   }
@@ -76,11 +78,13 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
   }
 
   requestCopyScreenshot(box) {
+    box.devicePixelRatio = this.contentWindow.devicePixelRatio;
     this.sendAsyncMessage("Screenshots:CopyScreenshot", box);
     this.endScreenshotsOverlay();
   }
 
   requestDownloadScreenshot(box) {
+    box.devicePixelRatio = this.contentWindow.devicePixelRatio;
     this.sendAsyncMessage("Screenshots:DownloadScreenshot", {
       title: this.getTitle(),
       downloadBox: box,
@@ -212,14 +216,14 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
    */
   getFullPageBounds() {
     let doc = this.document.documentElement;
-    let rect = new DOMRect(
-      doc.clientLeft,
-      doc.clientTop,
-      doc.scrollWidth,
-      doc.scrollHeight
-    );
-    let devicePixelRatio = this.document.ownerGlobal.devicePixelRatio;
-    return { devicePixelRatio, rect };
+    let rect = {
+      x1: doc.clientLeft,
+      y1: doc.clientTop,
+      width: doc.scrollWidth,
+      height: doc.scrollHeight,
+      devicePixelRatio: this.contentWindow.devicePixelRatio,
+    };
+    return rect;
   }
 
   /**
@@ -247,13 +251,13 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
    */
   getVisibleBounds() {
     let doc = this.document.documentElement;
-    let rect = new DOMRect(
-      doc.scrollLeft,
-      doc.scrollTop,
-      doc.clientWidth,
-      doc.clientHeight
-    );
-    let devicePixelRatio = this.document.ownerGlobal.devicePixelRatio;
-    return { devicePixelRatio, rect };
+    let rect = {
+      x1: doc.scrollLeft,
+      y1: doc.scrollTop,
+      width: doc.clientWidth,
+      height: doc.clientHeight,
+      devicePixelRatio: this.contentWindow.devicePixelRatio,
+    };
+    return rect;
   }
 }
