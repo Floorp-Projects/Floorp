@@ -3,10 +3,10 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const {
+import {
   CONTEXTUAL_SERVICES_PING_TYPES,
   PartnerLinkAttribution,
-} = ChromeUtils.import("resource:///modules/PartnerLinkAttribution.jsm");
+} from "resource:///modules/PartnerLinkAttribution.sys.mjs";
 
 const lazy = {};
 

@@ -7,7 +7,9 @@
 const {
   PartnerLinkAttribution,
   CONTEXTUAL_SERVICES_PING_TYPES,
-} = ChromeUtils.import("resource:///modules/PartnerLinkAttribution.jsm");
+} = ChromeUtils.importESModule(
+  "resource:///modules/PartnerLinkAttribution.sys.mjs"
+);
 
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
