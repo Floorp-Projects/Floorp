@@ -773,6 +773,57 @@ add_task(async function match_initiator_domains() {
   });
 });
 
+// Tests: urlFilter. For more comprehensive tests, see
+// toolkit/components/extensions/test/xpcshell/test_ext_dnr_urlFilter.js
+add_task(async function match_urlFilter() {
+  await runAsDNRExtension({
+    background: async dnrTestUtils => {
+      const dnr = browser.declarativeNetRequest;
+      const { makeDummyAction, testMatchesRequest } = dnrTestUtils;
+
+      // "modifyHeaders" is the only action that allows multiple rule matches.
+      const action = makeDummyAction("modifyHeaders");
+
+      await dnr.updateSessionRules({
+        addRules: [
+          // Some patterns that match literally everything:
+          { id: 1, condition: { urlFilter: "*" }, action },
+          { id: 2, condition: { urlFilter: "^" }, action },
+          { id: 3, condition: { urlFilter: "|" }, action },
+          // Patterns that match the test URLs
+          { id: 4, condition: { urlFilter: "https://example.com" }, action },
+          {
+            // urlFilter matches, requestDomains matches.
+            id: 5,
+            condition: { urlFilter: "*", requestDomains: ["example.com"] },
+            action,
+          },
+          {
+            // urlFilter matches, requestDomains does not match.
+            id: 6,
+            condition: { urlFilter: "*", requestDomains: ["notexample.com"] },
+            action,
+          },
+          {
+            // urlFilter does not match, requestDomains matches.
+            id: 7,
+            condition: { urlFilter: "notm", requestDomains: ["example.com"] },
+            action,
+          },
+        ],
+      });
+
+      await testMatchesRequest(
+        { url: "https://example.com/file.txt", type: "font" },
+        [1, 2, 3, 4, 5],
+        "urlFilter should match when needed, and correctly with requestDomains"
+      );
+
+      browser.test.notifyPass();
+    },
+  });
+});
+
 // Tests: tabIds, excludedTabIds
 add_task(async function match_tabIds() {
   await runAsDNRExtension({
