@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "name": "Tab sleep",
+  "name": "Memory Manager",
   "description": "",
   "version": "1.0",
   "permissions": [
@@ -30,7 +30,7 @@
   },
    "applications": {
      "gecko": {
-      "id": "tab-sleep@floorp.ablaze.one"
+      "id": "memory-manager@floorp.ablaze.one"
     }
   }
 }

@@ -14,15 +14,6 @@ const EXCLUDE_URL_PATTEANS = [
   "^resource:\/\/",
 ];
 
-//デフォルトを用意してあとは手動設定できるようにするのもあり
-const PRESETS = {
-  "positive": {
-    "tabTimeoutMiliseconds": 60 * 1000 * 2,
-    "memoryCache": false,
-    "diskCache": false,
-  }
-}
-
 const BROWSER_CACHE_MEMORY_ENABLE_PREF = "browser.cache.memory.enable";
 const BROWSER_CACHE_DISK_ENABLE_PREF = "browser.cache.disk.enable";
 
