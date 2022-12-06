@@ -6610,21 +6610,26 @@ Result<CreateElementResult, nsresult> HTMLEditor::AlignNodesAndDescendants(
     if (HTMLEditUtils::IsListItem(content) ||
         HTMLEditUtils::IsAnyListElement(content)) {
       Element* listOrListItemElement = content->AsElement();
-      AutoEditorDOMPointOffsetInvalidator lockChild(atContent);
-      // MOZ_KnownLive(*listOrListItemElement): An element of aArrayOfContents
-      // which is array of OwningNonNull.
-      Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
-          RemoveAlignFromDescendants(MOZ_KnownLive(*listOrListItemElement),
-                                     aAlignType,
-                                     EditTarget::OnlyDescendantsExceptTable);
-      if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
-        NS_WARNING(
-            "HTMLEditor::RemoveAlignFromDescendants(EditTarget::"
-            "OnlyDescendantsExceptTable) failed");
-        return pointToPutCaretOrError.propagateErr();
+      {
+        AutoEditorDOMPointOffsetInvalidator lockChild(atContent);
+        // MOZ_KnownLive(*listOrListItemElement): An element of aArrayOfContents
+        // which is array of OwningNonNull.
+        Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
+            RemoveAlignFromDescendants(MOZ_KnownLive(*listOrListItemElement),
+                                       aAlignType,
+                                       EditTarget::OnlyDescendantsExceptTable);
+        if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
+          NS_WARNING(
+              "HTMLEditor::RemoveAlignFromDescendants(EditTarget::"
+              "OnlyDescendantsExceptTable) failed");
+          return pointToPutCaretOrError.propagateErr();
+        }
+        if (pointToPutCaretOrError.inspect().IsSet()) {
+          pointToPutCaret = pointToPutCaretOrError.unwrap();
+        }
       }
-      if (pointToPutCaretOrError.inspect().IsSet()) {
-        pointToPutCaret = pointToPutCaretOrError.unwrap();
+      if (NS_WARN_IF(!atContent.IsSetAndValid())) {
+        return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
       }
 
       if (useCSS) {
