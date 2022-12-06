@@ -1,0 +1,162 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+/**
+ * Tests that Picture-in-Picture intializes without changes to playback
+ * when opened via the toggle using a touch event.
+ */
+add_task(async () => {
+  let videoID = "with-controls";
+
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.videocontrols.picture-in-picture.video-toggle.position", "right"],
+    ],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    {
+      url: TEST_PAGE,
+      gBrowser,
+    },
+    async browser => {
+      await ensureVideosReady(browser);
+      let toggleStyles = DEFAULT_TOGGLE_STYLES;
+      let stage = "hoverVideo";
+      let toggleStylesForStage = toggleStyles.stages[stage];
+      let toggleClientRect = await getToggleClientRect(browser, videoID);
+
+      await SpecialPowers.spawn(
+        browser,
+        [{ videoID, toggleClientRect, toggleStylesForStage }],
+        async args => {
+          // waitForToggleOpacity is based on toggleOpacityReachesThreshold.
+          // Waits for toggle to reach target opacity.
+          async function waitForToggleOpacity(
+            shadowRoot,
+            toggleStylesForStage
+          ) {
+            for (let hiddenElement of toggleStylesForStage.hidden) {
+              let el = shadowRoot.querySelector(hiddenElement);
+              ok(
+                ContentTaskUtils.is_hidden(el),
+                `Expected ${hiddenElement} to be hidden.`
+              );
+            }
+
+            for (let opacityElement in toggleStylesForStage.opacities) {
+              let opacityThreshold =
+                toggleStylesForStage.opacities[opacityElement];
+              let el = shadowRoot.querySelector(opacityElement);
+
+              await ContentTaskUtils.waitForCondition(
+                () => {
+                  let opacity = parseFloat(
+                    this.content.getComputedStyle(el).opacity
+                  );
+                  return opacity >= opacityThreshold;
+                },
+                `Toggle element ${opacityElement} should have eventually reached ` +
+                  `target opacity ${opacityThreshold}`,
+                100,
+                100
+              );
+
+              ok(true, "Toggle reached target opacity.");
+            }
+          }
+          let { videoID, toggleClientRect, toggleStylesForStage } = args;
+          let video = content.document.getElementById(videoID);
+          let shadowRoot = video.openOrClosedShadowRoot;
+
+          await video.play();
+
+          info("Hover over the video to show the Picture-in-Picture toggle");
+          await EventUtils.synthesizeMouseAtCenter(
+            video,
+            { type: "mousemove" },
+            this.content.window
+          );
+          await EventUtils.synthesizeMouseAtCenter(
+            video,
+            { type: "mouseover" },
+            this.content.window
+          );
+
+          let toggleCenterX =
+            toggleClientRect.left + toggleClientRect.width / 2;
+          let toggleCenterY =
+            toggleClientRect.top + toggleClientRect.height / 2;
+
+          // We want to wait for the toggle to reach opacity so that we can select it.
+          info("Waiting for toggle to become fully visible");
+          await waitForToggleOpacity(shadowRoot, toggleStylesForStage);
+
+          info("Simulating touch event");
+          let utils = EventUtils._getDOMWindowUtils(this.content.window);
+          let id = utils.DEFAULT_TOUCH_POINTER_ID;
+          let rx = 1;
+          let ry = 1;
+          let angle = 0;
+          let force = 1;
+          let tiltX = 0;
+          let tiltY = 0;
+          let twist = 0;
+
+          let defaultPrevented = utils.sendTouchEvent(
+            "touchstart",
+            [id],
+            [toggleCenterX],
+            [toggleCenterY],
+            [rx],
+            [ry],
+            [angle],
+            [force],
+            [tiltX],
+            [tiltY],
+            [twist],
+            false /* modifiers */
+          );
+          utils.sendTouchEvent(
+            "touchend",
+            [id],
+            [toggleCenterX],
+            [toggleCenterY],
+            [rx],
+            [ry],
+            [angle],
+            [force],
+            [tiltX],
+            [tiltY],
+            [twist],
+            false /* modifiers */
+          );
+
+          ok(
+            defaultPrevented,
+            "Touchstart event's default actions should be prevented"
+          );
+          ok(!video.paused, "Video should still be playing");
+        }
+      );
+
+      try {
+        info("Picture-in-Picture window should open");
+        await BrowserTestUtils.waitForCondition(
+          () => Services.wm.getEnumerator(WINDOW_TYPE).hasMoreElements(),
+          "Found a Picture-in-Picture"
+        );
+        for (let win of Services.wm.getEnumerator(WINDOW_TYPE)) {
+          if (!win.closed) {
+            ok(true, "Found a Picture-in-Picture window as expected");
+            win.close();
+          }
+        }
+      } catch {
+        ok(false, "No Picture-in-Picture window found, which is unexpected");
+      }
+    }
+  );
+});
