@@ -1464,7 +1464,7 @@ struct MOZ_RAII CompilationState : public ExtensibleCompilationStencil {
 
   bool appendScriptStencilAndData(ErrorContext* ec);
 
-  bool appendGCThings(JSContext* cx, ErrorContext* ec, ScriptIndex scriptIndex,
+  bool appendGCThings(ErrorContext* ec, ScriptIndex scriptIndex,
                       mozilla::Span<const TaggedScriptThingIndex> things);
 };
 
