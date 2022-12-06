@@ -896,6 +896,13 @@ add_task(async function test_updateEnabledRuleset_id_validation() {
 });
 
 add_task(async function test_getAvailableStaticRulesCountAndLimits() {
+  // NOTE: this test is going to load and validate the maximum amount of static rules
+  // that an extension can enable, which on slower builds (in particular in tsan builds,
+  // e.g. see Bug 1803801) have a higher chance that the test extension may have hit the
+  // idle timeout and being suspended by the time the test is going to trigger API method
+  // calls through test API events (which do not expect the lifetime of the event page).
+  Services.prefs.setBoolPref("extensions.background.idle.enabled", false);
+
   const dnrStore = ExtensionDNRStore._getStoreForTesting();
   const { GUARANTEED_MINIMUM_STATIC_RULES } = ExtensionDNR.limits;
   equal(
@@ -1098,6 +1105,8 @@ add_task(async function test_getAvailableStaticRulesCountAndLimits() {
   );
 
   await extension.unload();
+
+  Services.prefs.clearUserPref("extensions.background.idle.enabled");
 });
 
 add_task(async function test_static_rulesets_limits() {
