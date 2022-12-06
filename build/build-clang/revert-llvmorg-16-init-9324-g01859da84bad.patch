@@ -698,7 +698,7 @@ index c4efd0301711..9acfa612bc27 100644
 +  // ahead and replace the value with the global, this lets the caller quickly
 +  // eliminate the markers.
  
-   SmallVector<std::pair<Value *, bool>, 35> ValuesToInspect;
+   SmallVector<PointerIntPair<Value *, 1, bool>, 35> ValuesToInspect;
    ValuesToInspect.emplace_back(V, false);
 @@ -131,8 +131,8 @@ isOnlyCopiedFromConstantMemory(AAResults *AA, AllocaInst *V,
        // If the memintrinsic isn't using the alloca as the dest, reject it.
