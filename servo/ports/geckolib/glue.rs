@@ -3321,7 +3321,7 @@ pub unsafe extern "C" fn Servo_FontFaceRule_GetSources(
             Some(ref s) => s,
             None => return,
         };
-        let len = sources.iter().fold(0, |acc, src| {
+        let len = sources.0.iter().fold(0, |acc, src| {
             acc + match *src {
                 Source::Url(ref url) => {
                     (if url.format_hint.is_some() { 2 } else { 1 }) +
@@ -3340,7 +3340,7 @@ pub unsafe extern "C" fn Servo_FontFaceRule_GetSources(
                 *iter.next().expect("miscalculated length") = component;
             };
 
-            for source in sources.iter() {
+            for source in sources.0.iter() {
                 match *source {
                     Source::Url(ref url) => {
                         set_next(FontFaceSourceListComponent::Url(&url.url));
