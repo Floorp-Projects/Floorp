@@ -6,6 +6,9 @@
 
 #include "nsTStringRepr.h"
 
+#include "double-conversion/string-to-double.h"
+#include "mozilla/FloatingPoint.h"
+#include "nsError.h"
 #include "nsString.h"
 
 namespace mozilla::detail {
@@ -179,6 +182,89 @@ bool nsTStringRepr<T>::EqualsIgnoreCase(const std::string_view& aString) const {
                       return char_traits::ASCIIToLower(l) ==
                              char_traits::ASCIIToLower(char_type(r));
                     });
+}
+
+// We can't use the method `StringToDoubleConverter::ToDouble` due to linking
+// issues on Windows as it's in mozglue. Instead, implement the selection logic
+// using an overload set.
+//
+// StringToFloat is used instead of StringToDouble for floats due to differences
+// in rounding behaviour.
+static void StringToFP(
+    const double_conversion::StringToDoubleConverter& aConverter,
+    const char* aData, size_t aLength, int* aProcessed, float* aResult) {
+  *aResult = aConverter.StringToFloat(aData, aLength, aProcessed);
+}
+
+static void StringToFP(
+    const double_conversion::StringToDoubleConverter& aConverter,
+    const char* aData, size_t aLength, int* aProcessed, double* aResult) {
+  *aResult = aConverter.StringToDouble(aData, aLength, aProcessed);
+}
+
+static void StringToFP(
+    const double_conversion::StringToDoubleConverter& aConverter,
+    const char16_t* aData, size_t aLength, int* aProcessed, float* aResult) {
+  *aResult = aConverter.StringToFloat(reinterpret_cast<const uc16*>(aData),
+                                      aLength, aProcessed);
+}
+
+static void StringToFP(
+    const double_conversion::StringToDoubleConverter& aConverter,
+    const char16_t* aData, size_t aLength, int* aProcessed, double* aResult) {
+  *aResult = aConverter.StringToDouble(reinterpret_cast<const uc16*>(aData),
+                                       aLength, aProcessed);
+}
+
+template <typename FloatT, typename CharT>
+static FloatT ParseFloatingPoint(const nsTStringRepr<CharT>& aString,
+                                 bool aAllowTrailingChars,
+                                 nsresult* aErrorCode) {
+  // Performs conversion to double following the "rules for parsing
+  // floating-point number values" from the HTML standard.
+  // https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#rules-for-parsing-floating-point-number-values
+  //
+  // This behaviour allows for leading spaces, and will not generate infinity or
+  // NaN values except in error conditions.
+  int flags = double_conversion::StringToDoubleConverter::ALLOW_LEADING_SPACES;
+  if (aAllowTrailingChars) {
+    flags |= double_conversion::StringToDoubleConverter::ALLOW_TRAILING_JUNK;
+  }
+  double_conversion::StringToDoubleConverter converter(
+      flags, mozilla::UnspecifiedNaN<double>(),
+      mozilla::UnspecifiedNaN<double>(), nullptr, nullptr);
+
+  FloatT result;
+  int processed;
+  StringToFP(converter, aString.Data(), aString.Length(), &processed, &result);
+
+  *aErrorCode = mozilla::IsFinite(result) ? NS_OK : NS_ERROR_ILLEGAL_VALUE;
+  return result;
+}
+
+template <typename T>
+double nsTStringRepr<T>::ToDouble(nsresult* aErrorCode) const {
+  return ParseFloatingPoint<double, T>(*this, /* aAllowTrailingChars */ false,
+                                       aErrorCode);
+}
+
+template <typename T>
+double nsTStringRepr<T>::ToDoubleAllowTrailingChars(
+    nsresult* aErrorCode) const {
+  return ParseFloatingPoint<double, T>(*this, /* aAllowTrailingChars */ true,
+                                       aErrorCode);
+}
+
+template <typename T>
+float nsTStringRepr<T>::ToFloat(nsresult* aErrorCode) const {
+  return ParseFloatingPoint<float, T>(*this, /* aAllowTrailingChars */ false,
+                                      aErrorCode);
+}
+
+template <typename T>
+float nsTStringRepr<T>::ToFloatAllowTrailingChars(nsresult* aErrorCode) const {
+  return ParseFloatingPoint<float, T>(*this, /* aAllowTrailingChars */ true,
+                                      aErrorCode);
 }
 
 }  // namespace mozilla::detail

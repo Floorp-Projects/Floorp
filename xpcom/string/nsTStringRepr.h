@@ -420,6 +420,35 @@ class nsTStringRepr {
 
   int32_t RFindCharInSet(const string_view& aSet, int32_t aOffset = -1) const;
 
+  /**
+   * Perform locale-independent string to double-precision float conversion.
+   *
+   * Leading spaces in the string will be ignored. The returned value will be
+   * finite unless aErrorCode is set to a failed status.
+   *
+   * @param   aErrorCode will contain error if one occurs
+   * @return  double-precision float rep of string value
+   */
+  double ToDouble(nsresult* aErrorCode) const;
+
+  /**
+   * Perform locale-independent string to single-precision float conversion.
+   *
+   * Leading spaces in the string will be ignored. The returned value will be
+   * finite unless aErrorCode is set to a failed status.
+   *
+   * @param   aErrorCode will contain error if one occurs
+   * @return  single-precision float rep of string value
+   */
+  float ToFloat(nsresult* aErrorCode) const;
+
+  /**
+   * Similar to above ToDouble and ToFloat but allows trailing characters that
+   * are not converted.
+   */
+  double ToDoubleAllowTrailingChars(nsresult* aErrorCode) const;
+  float ToFloatAllowTrailingChars(nsresult* aErrorCode) const;
+
  protected:
   nsTStringRepr() = delete;  // Never instantiate directly
 
