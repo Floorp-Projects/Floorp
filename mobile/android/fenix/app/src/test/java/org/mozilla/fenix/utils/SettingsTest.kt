@@ -793,37 +793,17 @@ class SettingsTest {
 
         every { localSetting.isDefaultBrowserBlocking() } returns false
 
-        every { localSetting.reEngagementNotificationEnabled } returns false
-        localSetting.reEngagementNotificationShown = false
-        assertFalse(localSetting.shouldShowReEngagementNotification())
-
-        every { localSetting.reEngagementNotificationEnabled } returns true
         localSetting.reEngagementNotificationShown = false
         assert(localSetting.shouldShowReEngagementNotification())
 
-        every { localSetting.reEngagementNotificationEnabled } returns false
-        localSetting.reEngagementNotificationShown = true
-        assertFalse(localSetting.shouldShowReEngagementNotification())
-
-        every { localSetting.reEngagementNotificationEnabled } returns true
         localSetting.reEngagementNotificationShown = true
         assertFalse(localSetting.shouldShowReEngagementNotification())
 
         every { localSetting.isDefaultBrowserBlocking() } returns true
 
-        every { localSetting.reEngagementNotificationEnabled } returns false
         localSetting.reEngagementNotificationShown = false
         assertFalse(localSetting.shouldShowReEngagementNotification())
 
-        every { localSetting.reEngagementNotificationEnabled } returns true
-        localSetting.reEngagementNotificationShown = false
-        assertFalse(localSetting.shouldShowReEngagementNotification())
-
-        every { localSetting.reEngagementNotificationEnabled } returns false
-        localSetting.reEngagementNotificationShown = true
-        assertFalse(localSetting.shouldShowReEngagementNotification())
-
-        every { localSetting.reEngagementNotificationEnabled } returns true
         localSetting.reEngagementNotificationShown = true
         assertFalse(localSetting.shouldShowReEngagementNotification())
     }

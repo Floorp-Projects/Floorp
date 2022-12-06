@@ -23,6 +23,7 @@ import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.utils.IntentUtils
 import org.mozilla.fenix.utils.Settings
 import java.util.concurrent.TimeUnit
@@ -39,6 +40,14 @@ class ReEngagementNotificationWorker(
         val settings = applicationContext.settings()
 
         if (isActiveUser(settings) || !settings.shouldShowReEngagementNotification()) {
+            return Result.success()
+        }
+
+        // Recording the exposure event here to capture all users who met all criteria to receive
+        // the re-engagement notification
+        FxNimbus.features.reEngagementNotification.recordExposure()
+
+        if (!settings.reEngagementNotificationEnabled) {
             return Result.success()
         }
 

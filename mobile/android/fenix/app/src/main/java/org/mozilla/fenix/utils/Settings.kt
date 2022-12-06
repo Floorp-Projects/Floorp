@@ -599,7 +599,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      * Check if we should show the re-engagement notification.
      */
     fun shouldShowReEngagementNotification(): Boolean {
-        return !reEngagementNotificationShown && reEngagementNotificationEnabled && !isDefaultBrowserBlocking()
+        return !reEngagementNotificationShown && !isDefaultBrowserBlocking()
     }
 
     /**
