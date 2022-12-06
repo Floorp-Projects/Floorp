@@ -43,7 +43,17 @@ add_task(async function selected_result_tip() {
         new UrlbarResult(
           UrlbarUtils.RESULT_TYPE.TIP,
           UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-          { type }
+          {
+            type,
+            helpUrl: "https://example.com/",
+            titleL10n: { id: "urlbar-search-tips-confirm" },
+            buttons: [
+              {
+                url: "https://example.com/",
+                l10n: { id: "urlbar-search-tips-confirm" },
+              },
+            ],
+          }
         ),
       ],
       priority: 1,

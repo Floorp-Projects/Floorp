@@ -325,7 +325,7 @@ async function doUpdateTest({
     Assert.ok(title.test(actualTitle), "Title regexp");
   }
 
-  let actualButton = element._elements.get("tipButton").textContent;
+  let actualButton = element._buttons.get("0").textContent;
   if (typeof button == "string") {
     Assert.equal(actualButton, button, "Button string");
   } else {
@@ -333,10 +333,7 @@ async function doUpdateTest({
     Assert.ok(button.test(actualButton), "Button regexp");
   }
 
-  Assert.ok(
-    BrowserTestUtils.is_visible(element._elements.get("helpButton")),
-    "Help button visible"
-  );
+  Assert.ok(element._buttons.has("help"), "Tip has a help button");
 
   // Pick the tip and wait for the action.
   let values = await Promise.all([awaitCallback(), pickTip()]);
@@ -389,7 +386,7 @@ async function awaitTip(searchString, win = window) {
  */
 async function pickTip() {
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
-  let button = result.element.row._elements.get("tipButton");
+  let button = result.element.row._buttons.get("0");
   await UrlbarTestUtils.promisePopupClose(window, () => {
     EventUtils.synthesizeMouseAtCenter(button, {});
   });
@@ -483,7 +480,7 @@ function checkIntervention({
       Assert.ok(title.test(actualTitle), "Title regexp");
     }
 
-    let actualButton = element._elements.get("tipButton").textContent;
+    let actualButton = element._buttons.get("0").textContent;
     if (typeof button == "string") {
       Assert.equal(actualButton, button, "Button string");
     } else {
@@ -491,7 +488,12 @@ function checkIntervention({
       Assert.ok(button.test(actualButton), "Button regexp");
     }
 
-    Assert.ok(BrowserTestUtils.is_visible(element._elements.get("helpButton")));
+    let helpButton = element._buttons.get("help");
+    Assert.ok(helpButton, "Help button exists");
+    Assert.ok(
+      BrowserTestUtils.is_visible(helpButton),
+      "Help button is visible"
+    );
 
     let values = await Promise.all([awaitCallback(), pickTip()]);
     Assert.ok(true, "Refresh dialog opened");
@@ -590,14 +592,12 @@ async function checkTip(win, expectedTip, closeView = true) {
   Assert.equal(result.heuristic, heuristic);
   Assert.equal(result.displayed.title, title);
   Assert.equal(
-    result.element.row._elements.get("tipButton").textContent,
+    result.element.row._buttons.get("0").textContent,
     expectedTip == UrlbarProviderSearchTips.TIP_TYPE.PERSIST
       ? `Got it`
       : `Okay, Got It`
   );
-  Assert.ok(
-    BrowserTestUtils.is_hidden(result.element.row._elements.get("helpButton"))
-  );
+  Assert.ok(!result.element.row._buttons.has("help"));
 
   const scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
   TelemetryTestUtils.assertKeyedScalar(
@@ -615,6 +615,24 @@ async function checkTip(win, expectedTip, closeView = true) {
   if (closeView) {
     await UrlbarTestUtils.promisePopupClose(win);
   }
+}
+
+function makeTipResult({ buttonUrl, helpUrl = undefined }) {
+  return new UrlbarResult(
+    UrlbarUtils.RESULT_TYPE.TIP,
+    UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+    {
+      helpUrl,
+      type: "test",
+      titleL10n: { id: "urlbar-search-tips-confirm" },
+      buttons: [
+        {
+          url: buttonUrl,
+          l10n: { id: "urlbar-search-tips-confirm" },
+        },
+      ],
+    }
+  );
 }
 
 /**
