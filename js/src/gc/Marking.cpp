@@ -735,6 +735,8 @@ struct ImplicitEdgeHolderType<BaseScript*> {
 
 void GCMarker::markEphemeronEdges(EphemeronEdgeVector& edges,
                                   gc::CellColor srcColor) {
+  MOZ_ASSERT_IF(CurrentThreadIsPerformingGC(),
+                state == MarkingState::WeakMarking);
   DebugOnly<size_t> initialLength = edges.length();
 
   for (auto& edge : edges) {
@@ -743,7 +745,7 @@ void GCMarker::markEphemeronEdges(EphemeronEdgeVector& edges,
     if (targetColor == markColor()) {
       ApplyGCThingTyped(
           edge.target, edge.target->getTraceKind(),
-          [this](auto t) { markAndTraverse<MarkingOptions::None>(t); });
+          [this](auto t) { markAndTraverse<NormalMarkingOptions>(t); });
     }
   }
 
@@ -945,7 +947,7 @@ void MarkingTracerT<opts>::onEdge(T** thingp, const char* name) {
 }
 
 #define INSTANTIATE_ONEDGE_METHOD(name, type, _1, _2)                 \
-  template void MarkingTracerT<MarkingOptions::None>::onEdge<type>(   \
+  template void MarkingTracerT<NormalMarkingOptions>::onEdge<type>(   \
       type * *thingp, const char* name);                              \
   template void                                                       \
   MarkingTracerT<MarkingOptions::MarkRootCompartments>::onEdge<type>( \
@@ -960,7 +962,7 @@ static void TraceEdgeForBarrier(GCMarker* gcmarker, TenuredCell* thing,
     MOZ_ASSERT(ShouldMark(gcmarker, thing));
     CheckTracedThing(gcmarker->tracer(), thing);
     AutoClearTracingSource acts(gcmarker->tracer());
-    gcmarker->markAndTraverse<MarkingOptions::None>(thing);
+    gcmarker->markAndTraverse<NormalMarkingOptions>(thing);
   });
 }
 
@@ -1162,7 +1164,7 @@ void js::GCMarker::pushThing(T* thing) {
   pushTaggedPtr(thing);
 }
 
-template void js::GCMarker::markAndTraverse<MarkingOptions::None, JSObject>(
+template void js::GCMarker::markAndTraverse<NormalMarkingOptions, JSObject>(
     JSObject* thing);
 template void js::GCMarker::markAndTraverse<
     MarkingOptions::MarkRootCompartments, JSObject>(JSObject* thing);
@@ -1285,7 +1287,7 @@ bool GCMarker::markUntilBudgetExhausted(SliceBudget& budget,
     return false;
   }
 
-  return doMarking<MarkingOptions::None>(budget, reportTime);
+  return doMarking<NormalMarkingOptions>(budget, reportTime);
 }
 
 template <uint32_t opts>
@@ -1431,6 +1433,9 @@ inline void GCMarker::processMarkStackTop(SliceBudget& budget) {
 
     case MarkStack::ScriptTag: {
       auto script = stack.popPtr().as<BaseScript>();
+      if constexpr (opts & MarkingOptions::MarkImplicitEdges) {
+        markImplicitEdges(script);
+      }
       AutoSetTracingSource asts(tracer(), script);
       return script->traceChildren(tracer());
     }
@@ -1493,7 +1498,9 @@ scan_obj : {
     return;
   }
 
-  markImplicitEdges(obj);
+  if constexpr (opts & MarkingOptions::MarkImplicitEdges) {
+    markImplicitEdges(obj);
+  }
   markAndTraverseEdge<opts>(obj, obj->shape());
 
   CallTraceHook(tracer(), obj);
@@ -2063,7 +2070,10 @@ void GCRuntime::markDelayedChildren(Arena* arena, MarkColor color) {
 
   for (ArenaCellIterUnderGC cell(arena); !cell.done(); cell.next()) {
     if (cell->isMarked(colorToCheck)) {
-      JS::TraceChildren(trc, JS::GCCellPtr(cell, kind));
+      ApplyGCThingTyped(cell, kind, [trc, this](auto t) {
+        t->traceChildren(trc);
+        marker().markImplicitEdges(t);
+      });
     }
   }
 }
@@ -2095,7 +2105,7 @@ void GCRuntime::processDelayedMarkingList(MarkColor color) {
     }
     while (marker().hasEntries(color)) {
       SliceBudget budget = SliceBudget::unlimited();
-      marker().processMarkStackTop<MarkingOptions::None>(budget);
+      marker().processMarkStackTop<NormalMarkingOptions>(budget);
     }
   } while (delayedMarkingWorkAdded);
 
