@@ -34,7 +34,7 @@ function checkSecurityInfo(chan, expectPrivateDNS, expectAcceptedECH) {
   );
 }
 
-function setup() {
+add_setup(async function setup() {
   // Allow telemetry probes which may otherwise be disabled for some
   // applications (e.g. Thunderbird).
   Services.prefs.setBoolPref(
@@ -51,7 +51,7 @@ function setup() {
   Services.prefs.setIntPref("network.http.speculative-parallel-limit", 0);
   Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRONLY);
 
-  add_tls_server_setup(
+  await asyncStartTLSTestServer(
     "EncryptedClientHelloServer",
     "../../../security/manager/ssl/tests/unit/test_encrypted_client_hello"
   );
@@ -63,9 +63,8 @@ function setup() {
   h3EchConfig = Services.env.get("MOZHTTP3_ECH");
   Assert.notEqual(h3EchConfig, null);
   Assert.notEqual(h3EchConfig, "");
-}
+});
 
-setup();
 registerCleanupFunction(async () => {
   trr_clear_prefs();
   Services.prefs.clearUserPref("network.trr.mode");
