@@ -10,6 +10,8 @@ MARIONETTE_UNIT_MANIFESTS += ["tests/marionette/manifest.ini"]
 
 MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.ini"]
 
+SPHINX_TREES["docs"] = "docs"
+
 JAR_MANIFESTS += ["jar.mn"]
 
 XPIDL_SOURCES += [

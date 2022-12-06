@@ -17,6 +17,7 @@ This is the nascent documentation of the Firefox front-end code.
    installer/windows/installer/index
    components/attribution/docs/index
    /toolkit/mozapps/defaultagent/default-browser-agent/index
+   components/migration/docs/index
    components/pagedata/docs/index
    places/index
    components/newtab/content-src/asrouter/docs/index
