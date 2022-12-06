@@ -11,7 +11,6 @@
 #include <functional>
 #include <map>
 #include <memory>
-#include <queue>
 #include <stack>
 #include <unordered_set>
 #include <utility>
@@ -21,7 +20,7 @@
 #include "mozilla/layers/CompositorTypes.h"  // for TextureFlags, etc
 #include "mozilla/layers/LayersSurfaces.h"   // for SurfaceDescriptor
 #include "mozilla/layers/TextureHost.h"
-#include "mozilla/Mutex.h"
+#include "mozilla/Monitor.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ThreadSafeWeakPtr.h"
 #include "mozilla/UniquePtr.h"
@@ -105,9 +104,21 @@ class RemoteTextureMap {
                                RemoteTextureOwnerId::HashFn>& aOwnerIds,
       const base::ProcessId aForPid);
 
-  void GetRemoteTextureHost(RemoteTextureHostWrapper* aTextureHostWrapper);
+  // Get TextureHost that is used for building wr display list.
+  // In sync mode, mRemoteTextureForDisplayList holds TextureHost of mTextureId.
+  // In async mode, it could be previous remote texture's TextureHost that is
+  // compatible to the mTextureId's TextureHost.
+  void GetRemoteTextureForDisplayList(
+      RemoteTextureHostWrapper* aTextureHostWrapper);
 
-  void ReleaseRemoteTextureHost(RemoteTextureHostWrapper* aTextureHostWrapper);
+  // Get ExternalImageId of remote texture for WebRender rendering.
+  // This synchronously waits until remote texture becomes ready.
+  wr::MaybeExternalImageId GetExternalImageIdOfRemoteTextureSync(
+      const RemoteTextureId aTextureId, const RemoteTextureOwnerId aOwnerId,
+      const base::ProcessId aForPid);
+
+  void ReleaseRemoteTextureHostForDisplayList(
+      RemoteTextureHostWrapper* aTextureHostWrapper);
 
   RefPtr<TextureHost> GetOrCreateRemoteTextureHostWrapper(
       const RemoteTextureId aTextureId, const RemoteTextureOwnerId aOwnerId,
@@ -135,7 +146,7 @@ class RemoteTextureMap {
 
     const RemoteTextureId mTextureId;
     // TextureHost of remote texture
-    // Compositable ref of the mTextureHost should be updated within mMutex.
+    // Compositable ref of the mTextureHost should be updated within mMonitor.
     // The compositable ref is used to check if TextureHost(remote texture) is
     // still in use by WebRender.
     RefPtr<TextureHost> mTextureHost;
@@ -146,9 +157,10 @@ class RemoteTextureMap {
   };
 
   struct TextureOwner {
-    // Holds TextureDataHolders that wait to be used by WebRender.
-    std::queue<UniquePtr<TextureDataHolder>> mWaitingTextureDataHolders;
-    // Holds TextureDataHolders that are used by WebRender
+    // Holds TextureDataHolders that wait to be used for building wr display
+    // list.
+    std::deque<UniquePtr<TextureDataHolder>> mWaitingTextureDataHolders;
+    // Holds TextureDataHolders that are used for building wr display list.
     std::deque<UniquePtr<TextureDataHolder>> mUsingTextureDataHolders;
     RemoteTextureId mLatestTextureId = {0};
     CompositableTextureHostRef mLatestTextureHost;
@@ -156,28 +168,41 @@ class RemoteTextureMap {
     std::stack<std::shared_ptr<gl::SharedSurface>> mRecycledSharedSurfaces;
   };
 
-  void UpdateTexture(const MutexAutoLock& aProofOfLock,
+  // Holds data related to remote texture wrapper
+  struct RemoteTextureHostWrapperHolder {
+    explicit RemoteTextureHostWrapperHolder(
+        RefPtr<TextureHost> aRemoteTextureHostWrapper);
+
+    const RefPtr<TextureHost> mRemoteTextureHostWrapper;
+    // Hold compositable ref of remote texture of the RemoteTextureId in async
+    // mode. It is for keeping the texture alive during its rendering by
+    // WebRender.
+    CompositableTextureHostRef mAsyncRemoteTextureHost;
+  };
+
+  void UpdateTexture(const MonitorAutoLock& aProofOfLock,
                      RemoteTextureMap::TextureOwner* aOwner,
                      const RemoteTextureId aTextureId);
 
   void KeepTextureDataAliveForTextureHostIfNecessary(
-      const MutexAutoLock& aProofOfLock,
+      const MonitorAutoLock& aProofOfLock,
       std::deque<UniquePtr<TextureDataHolder>>& aHolders);
 
   RemoteTextureMap::TextureOwner* GetTextureOwner(
-      const MutexAutoLock& aProofOfLock, const RemoteTextureOwnerId aOwnerId,
+      const MonitorAutoLock& aProofOfLock, const RemoteTextureOwnerId aOwnerId,
       const base::ProcessId aForPid);
 
   static RefPtr<TextureHost> CreateRemoteTexture(TextureData* aTextureData);
 
-  Mutex mMutex MOZ_UNANNOTATED;
+  Monitor mMonitor MOZ_UNANNOTATED;
 
   std::map<std::pair<base::ProcessId, RemoteTextureOwnerId>,
            UniquePtr<TextureOwner>>
       mTextureOwners;
 
-  std::map<std::pair<base::ProcessId, RemoteTextureId>, RefPtr<TextureHost>>
-      mRemoteTextureHostWrappers;
+  std::map<std::pair<base::ProcessId, RemoteTextureId>,
+           UniquePtr<RemoteTextureHostWrapperHolder>>
+      mRemoteTextureHostWrapperHolders;
 
   static StaticAutoPtr<RemoteTextureMap> sInstance;
 };

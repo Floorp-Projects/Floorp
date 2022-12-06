@@ -197,7 +197,7 @@ void ShareableCanvasRenderer::UpdateCompositableClient() {
       if (!mData.mIsAlphaPremult) {
         flags |= TextureFlags::NON_PREMULTIPLIED;
       }
-      EnsurePipeline(/* aIsAsync */ true);
+      EnsurePipeline();
       forwarder->UseRemoteTexture(mCanvasClient, textureDesc.textureId(),
                                   textureDesc.ownerId(), mData.mSize, flags);
 
@@ -205,7 +205,7 @@ void ShareableCanvasRenderer::UpdateCompositableClient() {
       return;
     }
 
-    EnsurePipeline(/* aIsAsync */ false);
+    EnsurePipeline();
 
     // Let's see if we can get a no-copy TextureClient from the canvas.
     auto tc = fnGetExistingTc(desc);

@@ -8,17 +8,14 @@
 #define MOZILLA_GFX_RemoteTextureHostWrapper_H
 
 #include "mozilla/layers/TextureHost.h"
-#include "mozilla/Mutex.h"
+#include "mozilla/Monitor.h"
 
 namespace mozilla::layers {
 
-// Current implementation expects the folowing prefs.
-// - gfx.canvas.accelerated.async-present = true or
-//   webgl.out-of-process.async-present = true
-// - webgl.out-of-process.async-present.force-sync = true
-//
 // This class wraps TextureHost of remote texture.
-// It notifies end of WebRender usage to the wrapped remote texture.
+// In sync mode, mRemoteTextureForDisplayList holds TextureHost of mTextureId.
+// In async mode, it could be previous remote texture's TextureHost that is
+// compatible to the mTextureId's TextureHost.
 class RemoteTextureHostWrapper : public TextureHost {
  public:
   static RefPtr<TextureHost> Create(const RemoteTextureId aTextureId,
@@ -94,13 +91,19 @@ class RemoteTextureHostWrapper : public TextureHost {
   virtual ~RemoteTextureHostWrapper();
 
   // Called only by RemoteTextureMap
-  TextureHost* GetRemoteTextureHost(const MutexAutoLock& aProofOfLock);
+  TextureHost* GetRemoteTextureHostForDisplayList(
+      const MonitorAutoLock& aProofOfLock);
   // Called only by RemoteTextureMap
-  void SetRemoteTextureHost(const MutexAutoLock& aProofOfLock,
-                            TextureHost* aTextureHost);
+  void SetRemoteTextureHostForDisplayList(const MonitorAutoLock& aProofOfLock,
+                                          TextureHost* aTextureHost);
 
   // Updated by RemoteTextureMap
-  CompositableTextureHostRef mRemoteTextureHost;
+  //
+  // Hold compositable ref of remote texture's TextureHost that is used for
+  // building WebRender display list. In sync mode, it is TextureHost of
+  // mTextureId. In async mode, it could be previous TextureHost that is
+  // compatible to the mTextureId's TextureHost.
+  CompositableTextureHostRef mRemoteTextureForDisplayList;
 
   friend class RemoteTextureMap;
 };
