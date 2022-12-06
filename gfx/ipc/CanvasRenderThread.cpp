@@ -69,7 +69,7 @@ void CanvasRenderThread::Start() {
             nsthread->SetUseHangMonitor(true);
             nsthread->SetPriority(nsISupportsPriority::PRIORITY_HIGH);
           }),
-      stackSize);
+      {.stackSize = stackSize});
 
   if (NS_FAILED(rv)) {
     return;

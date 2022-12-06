@@ -544,15 +544,16 @@ int sCanaryOutputFD = -1;
 #endif
 
 nsThread::nsThread(NotNull<SynchronizedEventQueue*> aQueue,
-                   MainThreadFlag aMainThread, uint32_t aStackSize)
+                   MainThreadFlag aMainThread,
+                   nsIThreadManager::ThreadCreationOptions aOptions)
     : mEvents(aQueue.get()),
-      mEventTarget(
-          new ThreadEventTarget(mEvents.get(), aMainThread == MAIN_THREAD)),
+      mEventTarget(new ThreadEventTarget(
+          mEvents.get(), aMainThread == MAIN_THREAD, aOptions.blockDispatch)),
       mOutstandingShutdownContexts(0),
       mShutdownContext(nullptr),
       mScriptObserver(nullptr),
       mThreadName("<uninitialized>"),
-      mStackSize(aStackSize),
+      mStackSize(aOptions.stackSize),
       mNestedEventLoopDepth(0),
       mShutdownRequired(false),
       mPriority(PRIORITY_NORMAL),

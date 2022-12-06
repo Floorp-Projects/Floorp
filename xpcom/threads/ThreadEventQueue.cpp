@@ -209,7 +209,7 @@ already_AddRefed<nsISerialEventTarget> ThreadEventQueue::PushEventQueue() {
   auto queue = MakeUnique<EventQueue>();
   RefPtr<NestedSink> sink = new NestedSink(queue.get(), this);
   RefPtr<ThreadEventTarget> eventTarget =
-      new ThreadEventTarget(sink, NS_IsMainThread());
+      new ThreadEventTarget(sink, NS_IsMainThread(), false);
 
   MutexAutoLock lock(mLock);
 
