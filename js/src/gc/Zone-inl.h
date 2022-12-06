@@ -26,11 +26,10 @@ inline bool JS::Zone::getHashCode(js::gc::Cell* cell, js::HashNumber* hashp) {
 
 inline bool JS::Zone::maybeGetUniqueId(js::gc::Cell* cell, uint64_t* uidp) {
   MOZ_ASSERT(uidp);
-  MOZ_ASSERT(js::CurrentThreadCanAccessZone(this) ||
-             js::CurrentThreadIsPerformingGC());
+  MOZ_ASSERT(js::CurrentThreadCanAccessZone(this));
 
   // Get an existing uid, if one has been set.
-  auto p = uniqueIds().readonlyThreadsafeLookup(cell);
+  auto p = uniqueIds().lookup(cell);
   if (p) {
     *uidp = p->value();
   }

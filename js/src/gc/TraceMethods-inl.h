@@ -39,6 +39,10 @@ inline void js::BaseScript::traceChildren(JSTracer* trc) {
   if (data_) {
     data_->trace(trc);
   }
+
+  if (trc->isMarkingTracer()) {
+    GCMarker::fromTracer(trc)->markImplicitEdges(this);
+  }
 }
 
 inline void js::Shape::traceChildren(JSTracer* trc) {
@@ -149,7 +153,7 @@ void js::GCMarker::eagerlyMarkChildren(JSRope* rope) {
         // When both children are ropes, set aside the right one to
         // scan it later.
         if (next && !stack.pushTempRope(next)) {
-          delayMarkingChildrenOnOOM(next);
+          delayMarkingChildren(next);
         }
         next = &left->asRope();
       }

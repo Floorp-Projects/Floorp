@@ -765,7 +765,7 @@ static bool GCParameter(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   uint32_t value = floor(d);
-  bool ok = cx->runtime()->gc.setParameter(cx, param, value);
+  bool ok = cx->runtime()->gc.setParameter(param, value);
   if (!ok) {
     JS_ReportErrorASCII(cx, "Parameter value out of range");
     return false;

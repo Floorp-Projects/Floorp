@@ -2041,18 +2041,13 @@ void nsJSContext::EnsureStatics() {
                                        "javascript.options.mem.gc_incremental",
                                        (void*)JSGC_INCREMENTAL_GC_ENABLED);
 
-  Preferences::RegisterCallbackAndCall(SetMemoryPrefChangedCallbackBool,
-                                       "javascript.options.mem.gc_compacting",
-                                       (void*)JSGC_COMPACTING_ENABLED);
-
-  Preferences::RegisterCallbackAndCall(
-      SetMemoryPrefChangedCallbackBool,
-      "javascript.options.mem.gc_parallel_marking",
-      (void*)JSGC_PARALLEL_MARKING_ENABLED);
-
   Preferences::RegisterCallbackAndCall(
       SetMemoryGCSliceTimePrefChangedCallback,
       "javascript.options.mem.gc_incremental_slice_ms");
+
+  Preferences::RegisterCallbackAndCall(SetMemoryPrefChangedCallbackBool,
+                                       "javascript.options.mem.gc_compacting",
+                                       (void*)JSGC_COMPACTING_ENABLED);
 
   Preferences::RegisterCallbackAndCall(
       SetMemoryPrefChangedCallbackBool,

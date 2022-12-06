@@ -993,7 +993,7 @@ bool LinkedPropMap::canSkipMarkingTable() {
     for (uint32_t i = 0; i < Capacity; i++) {
       if (map->hasKey(i)) {
         PropertyKey key = map->getKey(i);
-        PropMapTable::Ptr p = table->readonlyThreadsafeLookup(key);
+        PropMapTable::Ptr p = table->lookupRaw(key);
         MOZ_ASSERT(*p == PropMapAndIndex(map, i));
         count++;
       }

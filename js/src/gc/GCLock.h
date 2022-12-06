@@ -32,8 +32,6 @@ class MOZ_RAII AutoLockGC {
 
   ~AutoLockGC() { lockGuard_.reset(); }
 
-  js::LockGuard<js::Mutex>& guard() { return lockGuard_.ref(); }
-
  protected:
   void lock() {
     MOZ_ASSERT(lockGuard_.isNothing());
@@ -44,6 +42,8 @@ class MOZ_RAII AutoLockGC {
     MOZ_ASSERT(lockGuard_.isSome());
     lockGuard_.reset();
   }
+
+  js::LockGuard<js::Mutex>& guard() { return lockGuard_.ref(); }
 
   gc::GCRuntime* const gc;
 

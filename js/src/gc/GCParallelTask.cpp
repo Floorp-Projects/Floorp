@@ -153,9 +153,7 @@ void js::GCParallelTask::runFromMainThread() {
   assertIdle();
   MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(gc->rt));
   AutoLockHelperThreadState lock;
-  state_ = State::Running;
   runTask(gc->rt->gcContext(), lock);
-  state_ = State::Idle;
 }
 
 class MOZ_RAII AutoGCContext {

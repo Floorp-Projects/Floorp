@@ -104,9 +104,7 @@ void DebuggerObject::trace(JSTracer* trc) {
   if (JSObject* referent = maybeReferent()) {
     TraceManuallyBarrieredCrossCompartmentEdge(trc, this, &referent,
                                                "Debugger.Object referent");
-    if (referent != maybeReferent()) {
-      setReservedSlotGCThingAsPrivateUnbarriered(OBJECT_SLOT, referent);
-    }
+    setReservedSlotGCThingAsPrivateUnbarriered(OBJECT_SLOT, referent);
   }
 }
 
