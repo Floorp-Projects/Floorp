@@ -1,6 +1,6 @@
 "use strict";
 
-var { MigrationUtils, MigratorPrototype } = ChromeUtils.importESModule(
+var { MigrationUtils } = ChromeUtils.importESModule(
   "resource:///modules/MigrationUtils.sys.mjs"
 );
 var { LoginHelper } = ChromeUtils.import(
@@ -42,7 +42,7 @@ updateAppInfo();
 /**
  * Migrates the requested resource and waits for the migration to be complete.
  *
- * @param {MigratorPrototype} migrator
+ * @param {MigratorBase} migrator
  *   The migrator being used to migrate the data.
  * @param {number} resourceType
  *   This is a bitfield with bits from nsIBrowserProfileMigrator flipped to indicate what
