@@ -25,8 +25,9 @@
 #include "frontend/Stencil.h"      // Stencils
 #include "js/TypeDecls.h"          // jsbytecode, JSContext
 #include "js/Vector.h"             // Vector
-#include "vm/SharedStencil.h"      // TryNote, ScopeNote, GCThingIndex
-#include "vm/StencilEnums.h"       // TryNoteKind
+#include "vm/ErrorContext.h"
+#include "vm/SharedStencil.h"  // TryNote, ScopeNote, GCThingIndex
+#include "vm/StencilEnums.h"   // TryNoteKind
 
 namespace js {
 namespace frontend {
@@ -44,8 +45,8 @@ struct MOZ_STACK_CLASS GCThingList {
   // Index of the first scope in the vector.
   mozilla::Maybe<GCThingIndex> firstScopeIndex;
 
-  explicit GCThingList(JSContext* cx, CompilationState& compilationState)
-      : compilationState(compilationState), vector(cx) {}
+  explicit GCThingList(ErrorContext* ec, CompilationState& compilationState)
+      : compilationState(compilationState), vector(ec) {}
 
   [[nodiscard]] bool append(TaggedParserAtomIndex atom,
                             ParserAtom::Atomize atomize, GCThingIndex* index) {
@@ -127,7 +128,7 @@ struct MOZ_STACK_CLASS GCThingList {
 
 struct CGTryNoteList {
   Vector<TryNote, 0> list;
-  explicit CGTryNoteList(JSContext* cx) : list(cx) {}
+  explicit CGTryNoteList(ErrorContext* ec) : list(ec) {}
 
   [[nodiscard]] bool append(TryNoteKind kind, uint32_t stackDepth,
                             BytecodeOffset start, BytecodeOffset end);
@@ -139,7 +140,7 @@ struct CGTryNoteList {
 
 struct CGScopeNoteList {
   Vector<ScopeNote, 0> list;
-  explicit CGScopeNoteList(JSContext* cx) : list(cx) {}
+  explicit CGScopeNoteList(ErrorContext* ec) : list(ec) {}
 
   [[nodiscard]] bool append(GCThingIndex scopeIndex, BytecodeOffset offset,
                             uint32_t parent);
@@ -156,7 +157,7 @@ struct CGScopeNoteList {
 
 struct CGResumeOffsetList {
   Vector<uint32_t, 0> list;
-  explicit CGResumeOffsetList(JSContext* cx) : list(cx) {}
+  explicit CGResumeOffsetList(ErrorContext* ec) : list(ec) {}
 
   [[nodiscard]] bool append(uint32_t offset) { return list.append(offset); }
   mozilla::Span<const uint32_t> span() const {
@@ -177,7 +178,7 @@ typedef Vector<js::SrcNote, 64> SrcNotesVector;
 // bytecode is stored in this class.
 class BytecodeSection {
  public:
-  BytecodeSection(JSContext* cx, uint32_t lineNum, uint32_t column);
+  BytecodeSection(ErrorContext* ec, uint32_t lineNum, uint32_t column);
 
   // ---- Bytecode ----
 
@@ -367,7 +368,7 @@ class BytecodeSection {
 // bytecode, but referred from bytecode is stored in this class.
 class PerScriptData {
  public:
-  explicit PerScriptData(JSContext* cx,
+  explicit PerScriptData(ErrorContext* ec, NameCollectionPool& ncp,
                          frontend::CompilationState& compilationState);
 
   [[nodiscard]] bool init(ErrorContext* ec);

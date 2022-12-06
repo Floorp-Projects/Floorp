@@ -246,7 +246,7 @@ bool NonLocalExitControl::emitNonLocalJump(NestableControl* target,
   // trynotes must be appropriately nested. Each FOR_OF_ITERCLOSE starts when
   // we close the corresponding for-of iterator, and continues until the
   // actual jump.
-  Vector<BytecodeOffset, 4> forOfIterCloseScopeStarts(bce_->cx);
+  Vector<BytecodeOffset, 4> forOfIterCloseScopeStarts(bce_->ec);
 
   // If we have to execute a finally block, then we will jump there now and
   // continue the non-local jump from the end of the finally block.
