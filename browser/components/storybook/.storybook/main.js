@@ -15,7 +15,12 @@ module.exports = {
     "../stories/**/*.stories.@(js|jsx|mjs|ts|tsx)",
     `${projectRoot}/toolkit/**/*.stories.@(js|jsx|mjs|ts|tsx)`,
   ],
-  staticDirs: ["../../../../toolkit/content/widgets/"],
+  // Additions to the staticDirs might also need to get added to
+  // MozXULElement.importCss in preview.mjs to enable auto-reloading.
+  staticDirs: [
+    `${projectRoot}/toolkit/content/widgets/`,
+    `${projectRoot}/browser/themes/shared/`,
+  ],
   addons: ["@storybook/addon-links", "@storybook/addon-essentials"],
   framework: "@storybook/web-components",
   webpackFinal: async (config, { configType }) => {

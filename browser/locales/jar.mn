@@ -14,6 +14,7 @@
   preview/firefoxSuggest.ftl                       (../components/urlbar/content/firefoxSuggest.ftl)
   preview/identityCredentialNotification.ftl       (../components/credentialmanager/identityCredentialNotification.ftl)
   preview/protectionsPanel.ftl                     (../base/content/protectionsPanel.ftl)
+  locales-preview/migrationWizard.ftl              (../locales-preview/migrationWizard.ftl)
   browser                                          (%browser/**/*.ftl)
 
 @AB_CD@.jar:
