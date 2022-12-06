@@ -111,3 +111,11 @@
 .titlebar-buttonbox-container > .titlebar-buttonbox{ height: 100%; }
 
 :root[inFullscreen] body > #titlebar{visibility:collapse;}
+
+#titlebar {
+  background: -moz-Dialog !important;
+}
+
+#TabsToolbar {
+  background-color: var(--lwt-tab-line-color) !important;
+}
