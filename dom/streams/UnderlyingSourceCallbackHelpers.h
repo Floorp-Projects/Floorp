@@ -48,8 +48,9 @@ class UnderlyingSourceAlgorithmsBase : public nsISupports {
       JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
       ErrorResult& aRv) = 0;
 
-  // (Not in the spec) Callback called when erroring a stream.
-  virtual void ErrorCallback() = 0;
+  // Implement this when you need to release underlying resources immediately
+  // from closed(canceled)/errored streams, without waiting for GC.
+  virtual void ReleaseObjects() {}
 
  protected:
   virtual ~UnderlyingSourceAlgorithmsBase() = default;
@@ -95,8 +96,6 @@ class UnderlyingSourceAlgorithms final : public UnderlyingSourceAlgorithmsBase {
   MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> CancelCallback(
       JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
       ErrorResult& aRv) override;
-
-  void ErrorCallback() override {}
 
  protected:
   ~UnderlyingSourceAlgorithms() override { mozilla::DropJSObjects(this); };

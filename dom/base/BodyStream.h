@@ -124,7 +124,7 @@ class BodyStream final : public nsIInputStreamCallback,
                                          ReadableStreamController& aController,
                                          ErrorResult& aRv);
 
-  void ErrorCallback();
+  void CloseInputAndReleaseObjects();
 
  private:
   // Fills a buffer with bytes from the stream.

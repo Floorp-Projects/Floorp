@@ -748,8 +748,6 @@ class CrossRealmReadableUnderlyingSourceAlgorithms final
     return Promise::CreateResolvedWithUndefined(mPort->GetParentObject(), aRv);
   }
 
-  void ErrorCallback() override {}
-
  protected:
   ~CrossRealmReadableUnderlyingSourceAlgorithms() override = default;
 
