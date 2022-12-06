@@ -352,11 +352,8 @@ class AppUpdater {
       }
 
       if (!result.succeeded) {
-        // Errors in the update check are treated as no updates found. If the
-        // update check fails repeatedly without a success the user will be
-        // notified with the normal app update user interface so this is safe.
-        LOG("AppUpdater:check - Update check failed; NO_UPDATES_FOUND");
-        this.#setStatus(AppUpdater.STATUS.NO_UPDATES_FOUND);
+        LOG("AppUpdater:check - Update check failed; CHECKING_FAILED");
+        this.#setStatus(AppUpdater.STATUS.CHECKING_FAILED);
         return;
       }
 
@@ -874,6 +871,9 @@ AppUpdater.STATUS = {
   // Essential components of the updater are failing and preventing us from
   // updating.
   INTERNAL_ERROR: 13,
+
+  // Failed to check for updates, network timeout, dns errors could cause this
+  CHECKING_FAILED: 14,
 
   /**
    * Is the given `status` a terminal state in the update state machine?

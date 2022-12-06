@@ -625,15 +625,18 @@ function runDoorhangerUpdateTest(params, steps) {
 
     await setupTestUpdater();
 
+    let baseURL = URL_HTTP_UPDATE_SJS;
+    if (params.baseURL) {
+      baseURL = params.baseURL;
+    }
     let queryString = params.queryString ? params.queryString : "";
     let updateURL =
-      URL_HTTP_UPDATE_SJS +
+      baseURL +
       "?detailsURL=" +
       gDetailsURL +
       queryString +
       getVersionParams(params.version);
     setUpdateURL(updateURL);
-
     if (params.checkAttempts) {
       // Perform a background check doorhanger test.
       executeSoon(() => {
@@ -866,9 +869,13 @@ function runAboutDialogUpdateTest(params, steps) {
 
     await setupTestUpdater();
 
+    let baseURL = URL_HTTP_UPDATE_SJS;
+    if (params.baseURL) {
+      baseURL = params.baseURL;
+    }
     let queryString = params.queryString ? params.queryString : "";
     let updateURL =
-      URL_HTTP_UPDATE_SJS +
+      baseURL +
       "?detailsURL=" +
       gDetailsURL +
       queryString +
@@ -1034,6 +1041,9 @@ function runAboutPrefsUpdateTest(params, steps) {
       }
 
       if (panelId == "downloading") {
+        if (!downloadInfo) {
+          logTestInfo("no downloadinfo, possible error?");
+        }
         for (let i = 0; i < downloadInfo.length; ++i) {
           let data = downloadInfo[i];
           // The About Dialog tests always specify a continue file.
@@ -1155,9 +1165,13 @@ function runAboutPrefsUpdateTest(params, steps) {
 
     await setupTestUpdater();
 
+    let baseURL = URL_HTTP_UPDATE_SJS;
+    if (params.baseURL) {
+      baseURL = params.baseURL;
+    }
     let queryString = params.queryString ? params.queryString : "";
     let updateURL =
-      URL_HTTP_UPDATE_SJS +
+      baseURL +
       "?detailsURL=" +
       gDetailsURL +
       queryString +
