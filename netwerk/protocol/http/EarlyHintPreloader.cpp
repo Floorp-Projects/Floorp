@@ -118,13 +118,10 @@ Maybe<PreloadHashKey> EarlyHintPreloader::GenerateHashKey(
   if (aAs == ASDestination::DESTINATION_IMAGE) {
     return Some(PreloadHashKey::CreateAsImage(aURI, aPrincipal, aCorsMode));
   }
-  if (aAs == ASDestination::DESTINATION_SCRIPT) {
-    JS::loader::ScriptKind scriptKind = JS::loader::ScriptKind::eClassic;
-    if (aType.LowerCaseEqualsASCII("module")) {
-      scriptKind = JS::loader::ScriptKind::eModule;
-    }
-
-    return Some(PreloadHashKey::CreateAsScript(aURI, aCorsMode, scriptKind));
+  if (aAs == ASDestination::DESTINATION_SCRIPT &&
+      !aType.LowerCaseEqualsASCII("module")) {
+    return Some(PreloadHashKey::CreateAsScript(
+        aURI, aCorsMode, JS::loader::ScriptKind::eClassic));
   }
   if (aAs == ASDestination::DESTINATION_STYLE) {
     return Some(PreloadHashKey::CreateAsStyle(
