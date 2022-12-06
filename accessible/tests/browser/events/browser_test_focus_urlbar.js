@@ -50,9 +50,7 @@ function isEventForTipButton(event) {
   let parent = event.accessible.parent;
   return (
     event.accessible.role == ROLE_PUSHBUTTON &&
-    parent &&
-    parent.role == ROLE_GROUPING &&
-    parent.name
+    parent?.role == ROLE_COMBOBOX_LIST
   );
 }
 
@@ -333,12 +331,15 @@ async function runTipTests() {
       UrlbarUtils.RESULT_TYPE.TIP,
       UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
       {
-        icon: "",
-        text: "This is a test intervention.",
-        buttonText: "Done",
+        helpUrl: "http://example.com/",
         type: "test",
-        helpUrl: "about:blank",
-        buttonUrl: "about:mozilla",
+        titleL10n: { id: "urlbar-search-tips-confirm" },
+        buttons: [
+          {
+            url: "http://example.com/",
+            l10n: { id: "urlbar-search-tips-confirm" },
+          },
+        ],
       }
     ),
     new UrlbarResult(

@@ -77,6 +77,8 @@
 }
 
 .urlbarView-row {
+  display: flex;
+  align-items: center;
   fill: currentColor;
   fill-opacity: var(--urlbar-icon-fill-opacity);
   padding-block: 2px;
@@ -91,7 +93,8 @@
 }
 
 .urlbarView-row-inner {
-  display: flex;
+  display: inline-flex;
+  flex: 1 1;
   flex-wrap: nowrap;
   overflow: hidden;
   border-radius: var(--toolbarbutton-border-radius);
@@ -103,33 +106,15 @@
   min-height: 20px; /* row min-height 32px - (2 * padding-block 6px) */
 }
 
-.urlbarView-row[has-buttons] > .urlbarView-row-inner {
-  display: inline-flex;
-  vertical-align: middle;
-  /* For rows with buttons, row-inner is the main selectable part of the row,
-     and it takes up the entire row width except for the buttons.
-     28px = 24px button width + 4px margin-inline between buttons
-     12px = row-inner padding
-      2px = horizontally align last button with the one-off settings button */
-  width: calc(100% - (var(--button-count, 0) * 28px) - 12px - 2px);
-}
-
-.urlbarView-row[type=tip] {
-  padding-block-start: 18px;
-  /* Compensating for the 16px bottom margin on the tip elements. */
-  padding-block-end: calc(18px - 16px);
-  padding-inline-end: var(--urlbarView-icon-margin-end);
-}
-
 .urlbarView-row-inner,
 .urlbarView-no-wrap {
-  display: flex;
   flex-wrap: nowrap;
   align-items: center;
   justify-content: start;
 }
 
 .urlbarView-no-wrap {
+  display: inline-flex;
   max-width: 100%;
   flex-grow: 0;
   flex-shrink: 0;
@@ -195,13 +180,6 @@
   }
 }
 
-/* We should always wrap tip results at narrow widths regardless of screen
-   height. Unlike regular results, unwrapped tips are taller than wrapped
-   tips. */
-.urlbarView-results[wrap] > .urlbarView-row[type=tip] > .urlbarView-row-inner {
-  flex-wrap: wrap;
-}
-
 .urlbarView-row:not([type=tip], [type=dynamic]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title[overflow],
 .urlbarView-row[type=bestmatch] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap > .urlbarView-title[overflow],
 .urlbarView-tags[overflow],
@@ -228,13 +206,13 @@
   text-align: right;
 }
 
-.urlbarView-row:not([type=tip], [type=dynamic], [has-buttons]):hover > .urlbarView-row-inner,
-.urlbarView-row[has-buttons] > .urlbarView-row-inner:not([selected]):hover {
+.urlbarView-row[selectable]:hover > .urlbarView-row-inner,
+.urlbarView-row-inner[selectable]:hover {
   background-color: var(--autocomplete-popup-hover-background);
 }
 
-.urlbarView-row:not([type=tip], [type=dynamic])[selected] > .urlbarView-row-inner,
-.urlbarView-row-inner[selected] {
+.urlbarView-row[selectable][selected] > .urlbarView-row-inner,
+.urlbarView-row-inner[selectable][selected] {
   background-color: var(--autocomplete-popup-highlight-background);
   color: var(--autocomplete-popup-highlight-color);
 }
@@ -253,7 +231,7 @@
 }
 
 
-.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-favicon {
+.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon {
   width: 24px;
   height: 24px;
   margin-inline-end: 12px;
@@ -343,45 +321,14 @@
   background-image: url("chrome://global/skin/icons/more.svg");
 }
 
-/* Tip rows */
-
-.urlbarView-row[type=tip]:not(:last-child) {
-  border-bottom: 1px solid var(--panel-separator-color);
-  margin-bottom: 4px;
-}
-
-.urlbarView-row[type=tip]:not(:first-child) {
-  border-top: 1px solid var(--panel-separator-color);
-  margin-top: 4px;
-}
-
-.urlbarView-row[type=tip] > .urlbarView-row-inner {
-  display: flex;
-  align-items: center;
-  min-height: 32px;
-  width: 100%;
-}
-
-/* For tips, give the title some bottom margin so that when the window is narrow
-   and the buttons wrap below it, there's space between it and the buttons.  We
-   then need to give the same bottom margin to the other tip elements so that
-   they all remain vertically aligned. */
-.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-favicon,
-.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-title,
-.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-button-help,
-.urlbarView-tip-button {
-  margin-block-end: 16px;
-}
-
-.urlbarView-tip-button,
-.urlbarView-row:is([type=tip], [dynamicType="quickactions"]) > .urlbarView-row-inner > .urlbarView-button-help {
+.urlbarView-button:not(:empty) {
   min-height: 16px;
   padding: 7px;
 }
 
 /* The tip button is a Photon default button when unfocused and a
    primary button in all other states. */
-.urlbarView-tip-button {
+.urlbarView-button:not(:empty) {
   border-radius: var(--toolbarbutton-border-radius);
   font-size: 0.93em;
   background-color: var(--button-bgcolor);
@@ -394,57 +341,79 @@
   margin-inline-end: 4px;
 }
 
-.urlbarView-tip-button:hover {
+.urlbarView-button:not(:empty):hover {
   background-color: var(--button-hover-bgcolor);
 }
 
-.urlbarView-tip-button:hover:active {
+.urlbarView-button:not(:empty):hover:active {
   background-color: var(--button-active-bgcolor);
 }
 
-.urlbarView-tip-button[selected] {
+.urlbarView-button:not(:empty)[selected] {
   color: var(--button-primary-color);
   background-color: var(--button-primary-bgcolor);
   outline: var(--focus-outline);
   outline-offset: 2px;
 }
 
-.urlbarView-tip-button[selected]:hover {
+.urlbarView-button:not(:empty)[selected]:hover {
   background-color: var(--button-primary-hover-bgcolor);
 }
 
-.urlbarView-tip-button[selected]:hover:active {
+.urlbarView-button:not(:empty)[selected]:hover:active {
   background-color: var(--button-primary-active-bgcolor);
 }
 
-.urlbarView-tip-button-spacer {
-  flex-basis: 48px;
-  flex-grow: 1;
-  flex-shrink: 1;
+.urlbarView-button:not(:empty) + .urlbarView-button:empty {
+  /* Add space between a labeled button followed by an unlabeled button. */
+  margin-inline-start: 1.8em;
 }
 
-.urlbarView-row:is([type=tip], [dynamicType="quickactions"]) > .urlbarView-row-inner > .urlbarView-button-help {
-  min-width: 16px;
-  min-height: 16px;
-  margin-block-start: 2px;
-  margin-inline: 1.8em 0;
+.urlbarView-button:not(:empty):last-child {
+  /* Add space between a labeled button and the trailing edge of the panel. */
+  margin-inline-end: 1.8em;
 }
 
-.urlbarView-row:is([dynamicType="quickactions"]) > .urlbarView-row-inner > .urlbarView-button-help {
+/* When the last button is unlabeled, vertically align it with the settings icon
+   in the search shortcuts. */
+.urlbarView-button:empty:last-child {
+  margin-inline-end: 2px;
+}
+
+/* Tip rows */
+
+.urlbarView-row[type=tip] {
+  padding-block: 18px;
+}
+
+.urlbarView-row[type=tip]:not(:last-child) {
+  border-bottom: 1px solid var(--panel-separator-color);
+  margin-bottom: 4px;
+}
+
+.urlbarView-row[type=tip]:not(:first-child) {
+  border-top: 1px solid var(--panel-separator-color);
+  margin-top: 4px;
+}
+
+.urlbarView-row[type=tip] > .urlbarView-row-inner {
+  min-height: 32px;
+
+  /* Add space between the tip title (and the rest of row-inner) and its
+     button. */
+  margin-inline-end: 1.8em;
+}
+
+.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
+.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-url {
   display: none;
 }
 
-.urlbarView-row:is([type=tip], [dynamicType="quickactions"]) > .urlbarView-row-inner > .urlbarView-button-help[selected] {
-  outline-offset: var(--focus-outline-offset);
+.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title {
+  white-space: normal;
 }
 
-.urlbarView-row:is([type=tip], [dynamicType="quickactions"]) > .urlbarView-row-inner > .urlbarView-button-help:hover {
-  background-color: var(--button-hover-bgcolor);
-}
-
-.urlbarView-row:is([type=tip], [dynamicType="quickactions"]) > .urlbarView-row-inner > .urlbarView-button-help:hover:active {
-  background-color: var(--button-active-bgcolor);
-}
+/* Row label (a.k.a. group label) */
 
 .urlbarView-row[label]::before {
   content: attr(label);
@@ -482,17 +451,6 @@
   /* Explicitly set line-height to avoid excessively tall rows if the title triggers use of
      fallback fonts with extreme metrics. */
   line-height: 1.4;
-}
-
-.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-title {
-  white-space: normal;
-  /* Give the tip title appropriate flex so that when the window is narrow, the
-     tip buttons wrap around under it.  We want the icon and title to remain on
-     one line.  So make the title's flex-basis the width of the parent minus the
-     width of the icon. */
-  flex-basis: calc(100% - /* .urlbarView-row-inner padding-inline-start */ 6px - /* .urlbarView-favicon width */ 24px - /* .urlbarView-favicon margin-inline-end */ 12px);
-  flex-grow: 1;
-  flex-shrink: 1;
 }
 
 /* Tail suggestions */

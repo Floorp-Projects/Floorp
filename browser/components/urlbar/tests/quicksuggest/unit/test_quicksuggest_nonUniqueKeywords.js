@@ -190,7 +190,9 @@ add_task(async function() {
         sponsoredIabCategory: qsResult.iab_category,
         icon: null,
         helpUrl: QuickSuggest.HELP_URL,
-        helpL10nId: "firefox-suggest-urlbar-learn-more",
+        helpL10n: { id: "firefox-suggest-urlbar-learn-more" },
+        isBlockable: false,
+        blockL10n: { id: "firefox-suggest-urlbar-block" },
         source: "remote-settings",
       },
     });

@@ -446,7 +446,7 @@ function makeExpectedResult(temperatureUnit) {
       url: MERINO_SUGGESTION.url,
       icon: "chrome://global/skin/icons/highlights.svg",
       helpUrl: QuickSuggest.HELP_URL,
-      helpL10nId: "firefox-suggest-urlbar-learn-more",
+      helpL10n: { id: "firefox-suggest-urlbar-learn-more" },
       requestId: MerinoTestUtils.server.response.body.request_id,
       source: "merino",
     },
