@@ -65,67 +65,47 @@ public:
   void push(char const str[CUBEB_LOG_MESSAGE_MAX_SIZE])
   {
     cubeb_log_message msg(str);
-    msg_queue->enqueue(msg);
+    msg_queue.enqueue(msg);
   }
   void run()
   {
-    assert(logging_thread.get_id() == std::thread::id());
-    assert(msg_queue);
-    logging_thread = std::thread([this]() {
+    std::thread([this]() {
       CUBEB_REGISTER_THREAD("cubeb_log");
-      while (!shutdown_thread) {
+      while (true) {
         cubeb_log_message msg;
-        while (msg_queue->dequeue(&msg, 1)) {
+        while (msg_queue.dequeue(&msg, 1)) {
           cubeb_log_internal_no_format(msg.get());
         }
-        std::this_thread::sleep_for(
-            std::chrono::milliseconds(CUBEB_LOG_BATCH_PRINT_INTERVAL_MS));
+#ifdef _WIN32
+        Sleep(CUBEB_LOG_BATCH_PRINT_INTERVAL_MS);
+#else
+        timespec sleep_duration = sleep_for;
+        timespec remainder;
+        do {
+          if (nanosleep(&sleep_duration, &remainder) == 0 || errno != EINTR) {
+            break;
+          }
+          sleep_duration = remainder;
+        } while (remainder.tv_sec || remainder.tv_nsec);
+#endif
       }
       CUBEB_UNREGISTER_THREAD();
-    });
+    }).detach();
   }
   // Tell the underlying queue the producer thread has changed, so it does not
   // assert in debug. This should be called with the thread stopped.
-  void reset_producer_thread() { msg_queue->reset_thread_ids(); }
-  void start()
-  {
-    msg_queue.reset(
-        new lock_free_queue<cubeb_log_message>(CUBEB_LOG_MESSAGE_QUEUE_DEPTH));
-    shutdown_thread = false;
-    run();
-  }
-  void stop()
-  {
-    shutdown_thread = true;
-    if (logging_thread.get_id() != std::thread::id()) {
-      logging_thread.join();
-      logging_thread = std::thread();
-      // This is OK, because at this point, we know the consumer has stopped
-      // consuming.
-      msg_queue->reset_thread_ids();
-      purge_queue();
-      msg_queue.reset(nullptr);
-    }
-  }
-  void purge_queue()
-  {
-    assert(logging_thread.get_id() == std::thread::id() &&
-           "Only purge the async logger queue when the thread is stopped");
-    if (!msg_queue) {
-      return;
-    }
-    cubeb_log_message msg;
-    while (msg_queue->dequeue(&msg, 1)) { /* nothing */
-    }
-  }
+  void reset_producer_thread() { msg_queue.reset_thread_ids(); }
 
 private:
-  cubeb_async_logger() {}
+#ifndef _WIN32
+  const struct timespec sleep_for = {
+      CUBEB_LOG_BATCH_PRINT_INTERVAL_MS / 1000,
+      (CUBEB_LOG_BATCH_PRINT_INTERVAL_MS % 1000) * 1000 * 1000};
+#endif
+  cubeb_async_logger() : msg_queue(CUBEB_LOG_MESSAGE_QUEUE_DEPTH) { run(); }
   /** This is quite a big data structure, but is only instantiated if the
    * asynchronous logger is used.*/
-  std::unique_ptr<lock_free_queue<cubeb_log_message>> msg_queue;
-  std::atomic<bool> shutdown_thread = {false};
-  std::thread logging_thread;
+  lock_free_queue<cubeb_log_message> msg_queue;
 };
 
 void
@@ -135,8 +115,8 @@ cubeb_log_internal(char const * file, uint32_t line, char const * fmt, ...)
   va_start(args, fmt);
   char msg[CUBEB_LOG_MESSAGE_MAX_SIZE];
   vsnprintf(msg, CUBEB_LOG_MESSAGE_MAX_SIZE, fmt, args);
-  va_end(args);
   g_cubeb_log_callback.load()("%s:%d:%s", file, line, msg);
+  va_end(args);
 }
 
 void
@@ -169,27 +149,10 @@ cubeb_async_log_reset_threads(void)
 }
 
 void
-cubeb_noop_log_callback(char const * /* fmt */, ...)
-{
-}
-
-void
 cubeb_log_set(cubeb_log_level log_level, cubeb_log_callback log_callback)
 {
   g_cubeb_log_level = log_level;
-  // Once a callback has a been set, `g_cubeb_log_callback` is never set back to
-  // nullptr, to prevent a TOCTOU race between checking the pointer
-  if (log_callback && log_level != CUBEB_LOG_DISABLED) {
-    g_cubeb_log_callback = log_callback;
-    cubeb_async_logger::get().start();
-  } else if (!log_callback || CUBEB_LOG_DISABLED) {
-    // This returns once the thread has joined.
-    cubeb_async_logger::get().stop();
-    g_cubeb_log_callback = cubeb_noop_log_callback;
-    cubeb_async_logger::get().purge_queue();
-  } else {
-    assert(false && "Incorrect parameters passed to cubeb_log_set");
-  }
+  g_cubeb_log_callback = log_callback;
 }
 
 cubeb_log_level
@@ -201,8 +164,5 @@ cubeb_log_get_level()
 cubeb_log_callback
 cubeb_log_get_callback()
 {
-  if (g_cubeb_log_callback == cubeb_noop_log_callback) {
-    return nullptr;
-  }
   return g_cubeb_log_callback;
 }
