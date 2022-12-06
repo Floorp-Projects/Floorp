@@ -371,6 +371,11 @@ class PropMapTable {
                                     PropertyKey key, uint32_t* index);
 
   Set::Ptr lookupRaw(PropertyKey key) const { return set_.lookup(key); }
+#ifdef DEBUG
+  Set::Ptr readonlyThreadsafeLookup(PropertyKey key) const {
+    return set_.readonlyThreadsafeLookup(key);
+  }
+#endif
 
   bool add(JSContext* cx, PropertyKey key, PropMapAndIndex entry) {
     if (!set_.putNew(key, entry)) {
