@@ -947,4 +947,18 @@ class BrowserToolbarTest {
         toolbar.setSearchTerms("")
         verify(toolbar.edit.editListener)?.onTextChanged("")
     }
+
+    @Test
+    fun `WHEN switching to edit mode AND the cursor placement parameter is specified THEN call the correct method to place the cursor`() {
+        val toolbar = BrowserToolbar(testContext)
+        toolbar.edit = spy(toolbar.edit)
+
+        toolbar.editMode(Toolbar.CursorPlacement.ALL)
+
+        verify(toolbar.edit).selectAll()
+
+        toolbar.editMode(Toolbar.CursorPlacement.END)
+
+        verify(toolbar.edit).selectEnd()
+    }
 }

@@ -274,6 +274,13 @@ class EditToolbar internal constructor(
     }
 
     /**
+     * Places the cursor at the end of the URL input field.
+     */
+    internal fun selectEnd() {
+        views.url.setSelection(views.url.text.length)
+    }
+
+    /**
      * Applies the given search terms for further editing, requesting new suggestions along the way.
      */
     internal fun editSuggestion(searchTerms: String) {

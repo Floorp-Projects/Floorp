@@ -100,7 +100,7 @@ class ToolbarAutocompleteFeatureTest {
             fail()
         }
 
-        override fun editMode() {
+        override fun editMode(cursorPlacement: Toolbar.CursorPlacement) {
             fail()
         }
 
