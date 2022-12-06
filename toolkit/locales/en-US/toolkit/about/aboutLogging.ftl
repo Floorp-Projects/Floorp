@@ -23,3 +23,13 @@ about-logging-new-log-modules = New log modules:
 about-logging-logging-output-selection = Logging output
 about-logging-logging-to-file = Logging to a file
 about-logging-no-log-modules = None
+about-logging-logging-preset-selector-text = Logging preset:
+
+## Logging presets
+
+about-logging-preset-networking-label = Networking
+about-logging-preset-networking-description = Log modules to diagnose networking issues
+about-logging-preset-media-playback-label = Media playback
+about-logging-preset-media-playback-description = Log modules to diagnose media playback issues (not video-conferencing issues)
+about-logging-preset-custom-label = Custom
+about-logging-preset-custom-description = Log modules manually selected
