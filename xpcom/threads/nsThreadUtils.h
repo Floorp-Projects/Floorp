@@ -58,32 +58,32 @@ class nsIThread;
 extern nsresult NS_NewNamedThread(
     const nsACString& aName, nsIThread** aResult,
     nsIRunnable* aInitialEvent = nullptr,
-    nsIThreadManager::ThreadCreationOptions aOptions = {});
+    uint32_t aStackSize = nsIThreadManager::DEFAULT_STACK_SIZE);
 
 extern nsresult NS_NewNamedThread(
     const nsACString& aName, nsIThread** aResult,
     already_AddRefed<nsIRunnable> aInitialEvent,
-    nsIThreadManager::ThreadCreationOptions aOptions = {});
+    uint32_t aStackSize = nsIThreadManager::DEFAULT_STACK_SIZE);
 
 template <size_t LEN>
 inline nsresult NS_NewNamedThread(
     const char (&aName)[LEN], nsIThread** aResult,
     already_AddRefed<nsIRunnable> aInitialEvent,
-    nsIThreadManager::ThreadCreationOptions aOptions = {}) {
+    uint32_t aStackSize = nsIThreadManager::DEFAULT_STACK_SIZE) {
   static_assert(LEN <= 16, "Thread name must be no more than 16 characters");
   return NS_NewNamedThread(nsDependentCString(aName, LEN - 1), aResult,
-                           std::move(aInitialEvent), aOptions);
+                           std::move(aInitialEvent), aStackSize);
 }
 
 template <size_t LEN>
 inline nsresult NS_NewNamedThread(
     const char (&aName)[LEN], nsIThread** aResult,
     nsIRunnable* aInitialEvent = nullptr,
-    nsIThreadManager::ThreadCreationOptions aOptions = {}) {
+    uint32_t aStackSize = nsIThreadManager::DEFAULT_STACK_SIZE) {
   nsCOMPtr<nsIRunnable> event = aInitialEvent;
   static_assert(LEN <= 16, "Thread name must be no more than 16 characters");
   return NS_NewNamedThread(nsDependentCString(aName, LEN - 1), aResult,
-                           event.forget(), aOptions);
+                           event.forget(), aStackSize);
 }
 
 /**

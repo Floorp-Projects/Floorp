@@ -43,7 +43,7 @@ class nsThreadSyncDispatch : public mozilla::Runnable {
       mIsPending = false;
 
       // unblock the origin thread
-      mOrigin->Dispatch(this, NS_DISPATCH_IGNORE_BLOCK_DISPATCH);
+      mOrigin->Dispatch(this, NS_DISPATCH_NORMAL);
     }
 
     return NS_OK;

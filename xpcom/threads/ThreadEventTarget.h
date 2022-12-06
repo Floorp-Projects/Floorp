@@ -19,8 +19,7 @@ class DelayedRunnable;
 // be used with any ThreadTargetSink implementation.
 class ThreadEventTarget final : public nsISerialEventTarget {
  public:
-  ThreadEventTarget(ThreadTargetSink* aSink, bool aIsMainThread,
-                    bool aBlockDispatch);
+  ThreadEventTarget(ThreadTargetSink* aSink, bool aIsMainThread);
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIEVENTTARGET_FULL
@@ -53,9 +52,8 @@ class ThreadEventTarget final : public nsISerialEventTarget {
 
   RefPtr<ThreadTargetSink> mSink;
 #ifdef DEBUG
-  const bool mIsMainThread;
+  bool mIsMainThread;
 #endif
-  const bool mBlockDispatch;
 };
 
 }  // namespace mozilla

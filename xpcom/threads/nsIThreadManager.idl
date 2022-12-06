@@ -7,7 +7,6 @@
 #include "nsISupports.idl"
 
 [ptr] native PRThread(PRThread);
-      native ThreadCreationOptions(nsIThreadManager::ThreadCreationOptions);
 
 interface nsIEventTarget;
 interface nsIRunnable;
@@ -54,21 +53,6 @@ interface nsIThreadManager : nsISupports
 #endif
 
   static const uint32_t kThreadPoolStackSize = DEFAULT_STACK_SIZE;
-
-  struct ThreadCreationOptions {
-    // The size in bytes to reserve for the thread's stack. A value of `0` means
-    // to use the platform default.
-    uint32_t stackSize = nsIThreadManager::DEFAULT_STACK_SIZE;
-
-    // If set to `true`, any attempts to dispatch runnables to this thread
-    // without `DISPATCH_IGNORE_BLOCK_DISPATCH` will fail.
-    //
-    // This is intended to be used for threads which are expected to generally
-    // only service a single runnable (other than thread lifecycle runnables),
-    // and perform their own event dispatching internaly, such as thread pool
-    // threads or the timer thread.
-    bool blockDispatch = false;
-  };
 %}
 
   /**
@@ -76,13 +60,14 @@ interface nsIThreadManager : nsISupports
    *
    * @param name
    *   The name of the thread. If it is empty the thread will not be named.
-   * @param options
-   *   Configuration options for the newly created thread.
+   * @param stackSize
+   *   Number of bytes to reserve for the thread's stack. 0 means use platform
+   *   default.
    *
    * @returns
    *   The newly created nsIThread object.
    */
-  [noscript] nsIThread newNamedThread(in ACString name, in ThreadCreationOptions options);
+  [noscript] nsIThread newNamedThread(in ACString name, [optional] in unsigned long stackSize);
 
   /**
    * Get the main thread.

@@ -66,15 +66,6 @@ interface nsIEventTarget : nsISupports
   const unsigned long DISPATCH_EVENT_MAY_BLOCK = 4;
 
   /**
-   * This flag specifies that the dispatched event should be delivered to the
-   * target thread even if the thread has been configured to block dispatching
-   * of runnables. This is generally done for threads which have their own
-   * internal event loop, such as thread pools or the timer thread, and will not
-   * service runnables dispatched to them until shutdown.
-   */
-  const unsigned long DISPATCH_IGNORE_BLOCK_DISPATCH = 8;
-
-  /**
    * IsOnCurrentThread() should return true if events dispatched to this target
    * can possibly run on the current thread, and false otherwise. In the case
    * of an nsIEventTarget for a thread pool, it should return true on all
@@ -225,7 +216,6 @@ public:
 #define NS_DISPATCH_SYNC   nsIEventTarget::DISPATCH_SYNC
 #define NS_DISPATCH_AT_END nsIEventTarget::DISPATCH_AT_END
 #define NS_DISPATCH_EVENT_MAY_BLOCK nsIEventTarget::DISPATCH_EVENT_MAY_BLOCK
-#define NS_DISPATCH_IGNORE_BLOCK_DISPATCH nsIEventTarget::DISPATCH_IGNORE_BLOCK_DISPATCH
 
 // Convenient NS_DECL variant that includes some C++-only methods.
 #define NS_DECL_NSIEVENTTARGET_FULL                                   \

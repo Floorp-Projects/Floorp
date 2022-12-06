@@ -25,7 +25,7 @@
 using namespace mozilla;
 
 // Uncomment the following line to enable runtime stats during development.
-// #define TIMERS_RUNTIME_STATS
+//#define TIMERS_RUNTIME_STATS
 
 #ifdef TIMERS_RUNTIME_STATS
 // This class gathers durations and displays some basic stats when destroyed.
@@ -376,8 +376,7 @@ nsresult TimerThread::Init() {
     nsTimerEvent::Init();
 
     // We hold on to mThread to keep the thread alive.
-    nsresult rv = NS_NewNamedThread("Timer", getter_AddRefs(mThread), this,
-                                    {.blockDispatch = true});
+    nsresult rv = NS_NewNamedThread("Timer", getter_AddRefs(mThread), this);
     if (NS_FAILED(rv)) {
       mThread = nullptr;
     } else {
