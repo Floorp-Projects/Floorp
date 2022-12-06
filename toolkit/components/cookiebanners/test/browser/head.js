@@ -206,7 +206,7 @@ function insertTestClickRules() {
     Ci.nsICookieBannerRule
   );
   ruleA.id = genUUID();
-  ruleA.domain = TEST_DOMAIN_A;
+  ruleA.domains = [TEST_DOMAIN_A];
 
   ruleA.addClickRule(
     "div#banner",
@@ -223,7 +223,7 @@ function insertTestClickRules() {
     Ci.nsICookieBannerRule
   );
   ruleB.id = genUUID();
-  ruleB.domain = TEST_DOMAIN_B;
+  ruleB.domains = [TEST_DOMAIN_B];
 
   ruleB.addClickRule(
     "div#banner",
@@ -240,7 +240,7 @@ function insertTestClickRules() {
     Ci.nsICookieBannerRule
   );
   ruleC.id = genUUID();
-  ruleC.domain = "*";
+  ruleC.domains = [];
   ruleC.addClickRule(
     "div#nonExistingBanner",
     false,
@@ -256,7 +256,7 @@ function insertTestClickRules() {
     Ci.nsICookieBannerRule
   );
   ruleD.id = genUUID();
-  ruleD.domain = "*";
+  ruleD.domains = [];
   ruleD.addClickRule(
     "div#nonExistingBanner2",
     false,

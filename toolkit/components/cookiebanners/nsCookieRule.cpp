@@ -34,6 +34,12 @@ nsCookieRule::nsCookieRule(bool aIsOptOut, const nsACString& aName,
   mCookie = net::Cookie::Create(cookieData, attrs);
 }
 
+nsCookieRule::nsCookieRule(const nsCookieRule& aRule) {
+  mCookie = aRule.mCookie->AsCookie().Clone();
+  mExpiryRelative = aRule.mExpiryRelative;
+  mUnsetValue = aRule.mUnsetValue;
+}
+
 /* readonly attribute int64_t expiryRelative; */
 NS_IMETHODIMP nsCookieRule::GetExpiryRelative(int64_t* aExpiryRelative) {
   NS_ENSURE_ARG_POINTER(aExpiryRelative);
@@ -50,13 +56,36 @@ NS_IMETHODIMP nsCookieRule::GetUnsetValue(nsACString& aUnsetValue) {
   return NS_OK;
 }
 
+NS_IMETHODIMP nsCookieRule::CopyForDomain(const nsACString& aDomain,
+                                          nsICookieRule** aRule) {
+  NS_ENSURE_TRUE(mCookie, NS_ERROR_FAILURE);
+  NS_ENSURE_ARG_POINTER(aRule);
+  NS_ENSURE_TRUE(!aDomain.IsEmpty(), NS_ERROR_FAILURE);
+
+  // Create a copy of the rule + cookie so we can modify the host.
+  RefPtr<nsCookieRule> ruleCopy = new nsCookieRule(*this);
+  RefPtr<net::Cookie> cookie = ruleCopy->mCookie;
+
+  // Only set the host if it's unset.
+  if (!cookie->Host().IsEmpty()) {
+    ruleCopy.forget(aRule);
+    return NS_OK;
+  }
+
+  nsAutoCString host(".");
+  host.Append(aDomain);
+  cookie->SetHost(host);
+
+  ruleCopy.forget(aRule);
+  return NS_OK;
+}
+
 /* readonly attribute nsICookie cookie; */
 NS_IMETHODIMP nsCookieRule::GetCookie(nsICookie** aCookie) {
   NS_ENSURE_ARG_POINTER(aCookie);
 
   // Copy cookie and update expiry, creation and last accessed time.
-  nsICookie* cookie = mCookie;
-  RefPtr<net::Cookie> cookieNative = static_cast<net::Cookie*>(cookie)->Clone();
+  RefPtr<net::Cookie> cookieNative = mCookie->Clone();
 
   int64_t currentTimeInUsec = PR_Now();
   cookieNative->SetCreationTime(

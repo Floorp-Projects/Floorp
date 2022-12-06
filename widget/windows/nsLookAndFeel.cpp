@@ -85,6 +85,13 @@ void nsLookAndFeel::RefreshImpl() {
   nsXPLookAndFeel::RefreshImpl();
 }
 
+static bool UseNonNativeMenuColors() {
+  if (!LookAndFeel::WindowsNonNativeMenusEnabled()) {
+    return false;
+  }
+  return LookAndFeel::GetInt(LookAndFeel::IntID::WindowsDefaultTheme);
+}
+
 nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
                                        nscolor& aColor) {
   EnsureInit();
@@ -92,7 +99,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
   auto IsHighlightColor = [&] {
     switch (aID) {
       case ColorID::MozMenuhover:
-        return !LookAndFeel::WindowsNonNativeMenusEnabled();
+        return !UseNonNativeMenuColors();
       case ColorID::Highlight:
       case ColorID::Selecteditem:
         // We prefer the generic dark selection color if we don't have an
@@ -109,7 +116,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
   auto IsHighlightTextColor = [&] {
     switch (aID) {
       case ColorID::MozMenubarhovertext:
-        if (LookAndFeel::WindowsNonNativeMenusEnabled()) {
+        if (UseNonNativeMenuColors()) {
           return false;
         }
         if (!nsUXThemeData::IsAppThemed()) {
@@ -117,7 +124,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
         }
         [[fallthrough]];
       case ColorID::MozMenuhovertext:
-        if (LookAndFeel::WindowsNonNativeMenusEnabled()) {
+        if (UseNonNativeMenuColors()) {
           return false;
         }
         return !mColorMenuHoverText;
@@ -227,7 +234,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
       idx = COLOR_GRAYTEXT;
       break;
     case ColorID::MozMenubarhovertext:
-      if (LookAndFeel::WindowsNonNativeMenusEnabled()) {
+      if (UseNonNativeMenuColors()) {
         aColor = kNonNativeMenuText;
         return NS_OK;
       }
@@ -237,7 +244,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
       }
       [[fallthrough]];
     case ColorID::MozMenuhovertext:
-      if (LookAndFeel::WindowsNonNativeMenusEnabled()) {
+      if (UseNonNativeMenuColors()) {
         aColor = kNonNativeMenuText;
         return NS_OK;
       }
@@ -248,11 +255,11 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
       idx = COLOR_HIGHLIGHTTEXT;
       break;
     case ColorID::MozMenuhover:
-      MOZ_ASSERT(LookAndFeel::WindowsNonNativeMenusEnabled());
+      MOZ_ASSERT(UseNonNativeMenuColors());
       aColor = NS_RGB(0xe0, 0xe0, 0xe6);
       return NS_OK;
     case ColorID::MozMenuhoverdisabled:
-      if (LookAndFeel::WindowsNonNativeMenusEnabled()) {
+      if (UseNonNativeMenuColors()) {
         aColor = NS_RGB(0xf0, 0xf0, 0xf3);
         return NS_OK;
       }
@@ -274,7 +281,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
       idx = COLOR_INFOTEXT;
       break;
     case ColorID::Menu:
-      if (LookAndFeel::WindowsNonNativeMenusEnabled()) {
+      if (UseNonNativeMenuColors()) {
         aColor = NS_RGB(0xf9, 0xf9, 0xfb);
         return NS_OK;
       }
@@ -282,7 +289,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
       break;
     case ColorID::Menutext:
     case ColorID::MozMenubartext:
-      if (LookAndFeel::WindowsNonNativeMenusEnabled()) {
+      if (UseNonNativeMenuColors()) {
         aColor = kNonNativeMenuText;
         return NS_OK;
       }

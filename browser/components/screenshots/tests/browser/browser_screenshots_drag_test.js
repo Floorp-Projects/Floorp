@@ -34,15 +34,19 @@ add_task(async function() {
 
       info("result: " + JSON.stringify(result, null, 2));
 
+      let expected = Math.floor(
+        490 * (await getContentDevicePixelRatio(browser))
+      );
+
       Assert.equal(
         result.width,
-        490,
-        "The copied image from the overlay is 490px in width"
+        expected,
+        `The copied image from the overlay is ${expected}px in width`
       );
       Assert.equal(
         result.height,
-        490,
-        "The copied image from the overlay is 490px in height"
+        expected,
+        `The copied image from the overlay is ${expected}px in height`
       );
     }
   );
@@ -79,18 +83,27 @@ add_task(async function() {
       await clipboardChanged;
 
       let result = await helper.getImageSizeAndColorFromClipboard();
+      result.zoom = zoom;
+      result.devicePixelRatio = window.devicePixelRatio;
+      result.contentDevicePixelRatio = await getContentDevicePixelRatio(
+        browser
+      );
 
       info("result: " + JSON.stringify(result, null, 2));
 
+      let expected = Math.floor(
+        490 * (await getContentDevicePixelRatio(browser))
+      );
+
       Assert.equal(
         result.width,
-        490 * zoom,
-        "The copied image from the overlay is 490px in width"
+        expected,
+        `The copied image from the overlay is ${expected}px in width`
       );
       Assert.equal(
         result.height,
-        490 * zoom,
-        "The copied image from the overlay is 490px in height"
+        expected,
+        `The copied image from the overlay is ${expected}px in height`
       );
     }
   );
@@ -215,15 +228,19 @@ add_task(async function() {
 
       info("result: " + JSON.stringify(result, null, 2));
 
+      let expected = Math.floor(
+        490 * (await getContentDevicePixelRatio(browser))
+      );
+
       Assert.equal(
         result.width,
-        490,
-        "The copied image from the overlay is 490px in width"
+        expected,
+        `The copied image from the overlay is ${expected}px in width`
       );
       Assert.equal(
         result.height,
-        490,
-        "The copied image from the overlay is 490px in height"
+        expected,
+        `The copied image from the overlay is ${expected}px in height`
       );
     }
   );
@@ -329,15 +346,19 @@ add_task(async function() {
 
       info("result: " + JSON.stringify(result, null, 2));
 
+      let expected = Math.floor(
+        300 * (await getContentDevicePixelRatio(browser))
+      );
+
       Assert.equal(
         result.width,
-        300,
-        "The copied image from the overlay is 490px in width"
+        expected,
+        `The copied image from the overlay is ${expected}px in width`
       );
       Assert.equal(
         result.height,
-        300,
-        "The copied image from the overlay is 490px in height"
+        expected,
+        `The copied image from the overlay is ${expected}px in height`
       );
     }
   );
@@ -435,15 +456,19 @@ add_task(async function() {
 
       info("result: " + JSON.stringify(result, null, 2));
 
+      let expected = Math.floor(
+        300 * (await getContentDevicePixelRatio(browser))
+      );
+
       Assert.equal(
         result.width,
-        300,
-        "The copied image from the overlay is 490px in width"
+        expected,
+        `The copied image from the overlay is ${expected}px in width`
       );
       Assert.equal(
         result.height,
-        300,
-        "The copied image from the overlay is 490px in height"
+        expected,
+        `The copied image from the overlay is ${expected}px in height`
       );
     }
   );

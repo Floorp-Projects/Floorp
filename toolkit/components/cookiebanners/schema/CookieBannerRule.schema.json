@@ -75,7 +75,7 @@
   "title": "Cookie Banner Rule",
   "required": [
     "id",
-    "domain"
+    "domains"
   ],
   "additionalProperties": false,
   "properties": {
@@ -84,10 +84,14 @@
       "type": "string",
       "description": "Unique identifier of the rule."
     },
-    "domain": {
-      "title": "Domain",
-      "type": "string",
-      "description": "Domain of the site the rule describes."
+    "domains": {
+      "title": "Domains",
+      "type": ["array"],
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true,
+      "description": "List of domains of the sites the rule describes. Leave empty for global rules which should apply to every site."
     },
     "cookies": {
       "title": "Cookies",

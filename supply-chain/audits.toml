@@ -922,6 +922,16 @@ criteria = "safe-to-deploy"
 version = "0.2.15"
 notes = "All code written or reviewed by Josh Stone."
 
+[[audits.ohttp]]
+who = "Dana Keeler <dkeeler@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.2.2"
+notes = """
+Developed and maintained  by Mozilla.
+When configured to use NSS (as we do), this crate uses unsafe blocks to call
+NSS functions. These calls have been audited.
+"""
+
 [[audits.once_cell]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"

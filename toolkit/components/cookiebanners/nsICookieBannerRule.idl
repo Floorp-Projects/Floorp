@@ -18,13 +18,24 @@ interface nsICookieBannerRule : nsISupports {
     // Unique identifier for the rule. This is usually a UUID.
     attribute ACString id;
 
-    // Domain of the site to handle the cookie banner for.
-    attribute ACString domain;
+    // Domains of sites to handle the cookie banner for.
+    // An empty array means this is a global rule that should apply to every site.
+    attribute Array<ACString> domains;
 
     // Cookies that reflect the opt-out or "reject all" state for the cookie baner.
     readonly attribute Array<nsICookieRule> cookiesOptOut;
     // Cookies that reflect the opt-in or "accept all" state for the cookie banner.
     readonly attribute Array<nsICookieRule> cookiesOptIn;
+
+    /**
+     * Get the list of cookies associated with this rule.
+     * aIsOptOut - Whether to return opt-out cookies (true) or opt-in cookies
+     * (false).
+     * aDomain - Optional, when passed returns a copy of each rule with cookie
+     * host set to .<domain>. See nsICookieRule::copyForDomain.
+     */
+    [noscript]
+    Array<nsICookieRule> getCookies(in boolean aIsOptOut, [optional] in ACString aDomain);
 
     /**
      * Clear both lists of opt-in and opt-out cookies.

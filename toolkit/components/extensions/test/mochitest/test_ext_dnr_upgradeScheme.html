@@ -32,8 +32,19 @@ add_task(async function upgradeScheme_with_dnr() {
   let extension = ExtensionTestUtils.loadExtension({
     async background() {
       await browser.declarativeNetRequest.updateSessionRules({
-        addRules: [{ id: 1, condition: {}, action: { type: "upgradeScheme" } }],
+        addRules: [{ id: 1, condition: { requestDomains: ["example.com"] }, action: { type: "upgradeScheme" } }],
       });
+
+      let sanityCheckResponse = await fetch(
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+        "http://example.net/tests/toolkit/components/extensions/test/mochitest/file_sample.txt"
+      );
+      browser.test.assertEq(
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+        "http://example.net/tests/toolkit/components/extensions/test/mochitest/file_sample.txt",
+        sanityCheckResponse.url,
+        "non-matching request should not be upgraded"
+      );
 
       let res = await fetch(
         // eslint-disable-next-line @microsoft/sdl/no-insecure-url
@@ -55,6 +66,7 @@ add_task(async function upgradeScheme_with_dnr() {
       // Note: host_permissions missing. upgradeScheme should not need it.
       permissions: ["declarativeNetRequest"],
     },
+    allowInsecureRequests: true,
   });
   await extension.startup();
   await extension.awaitMessage("dnr_registered");

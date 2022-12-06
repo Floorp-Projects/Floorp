@@ -10,6 +10,13 @@ SNAPSHOT=20210208T213147Z
 sysroot=$(basename $TOOLCHAIN_ARTIFACT)
 sysroot=${sysroot%%.*}
 
+# To repackage Firefox as a .deb package
+# we bootstrap jessie systems on a bullseye image.
+# To keep the build and repackage environments
+# consistent the build baseline used here (jessie) should be
+# synchronized with the packaging baseline used in
+# taskcluster/docker/debian-repackage/Dockerfile
+# and python/mozbuild/mozbuild/repackaging/deb.py
 case "$arch" in
 i386|amd64)
   dist=jessie

@@ -255,7 +255,7 @@ add_task(async function test_rule_lookup_telemetry() {
       let ruleA = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
         Ci.nsICookieBannerRule
       );
-      ruleA.domain = TEST_DOMAIN_A;
+      ruleA.domains = [TEST_DOMAIN_A];
 
       Services.cookieBanners.insertRule(ruleA);
       ruleA.addCookie(
@@ -290,7 +290,7 @@ add_task(async function test_rule_lookup_telemetry() {
       let ruleB = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
         Ci.nsICookieBannerRule
       );
-      ruleB.domain = TEST_DOMAIN_B;
+      ruleB.domains = [TEST_DOMAIN_B];
 
       Services.cookieBanners.insertRule(ruleB);
       ruleB.addCookie(

@@ -45,6 +45,8 @@
                   onkeypress="gPermissionManager.onHostKeyPress(event);"/>
     </hbox>
     <hbox pack="end">
+      <button id="btnDisableETP" disabled="true" data-l10n-id="permissions-disable-etp"
+              oncommand="gPermissionManager.addPermission(Ci.nsIPermissionManager.ALLOW_ACTION);"/>
       <button id="btnBlock" disabled="true" data-l10n-id="permissions-block"
               oncommand="gPermissionManager.addPermission(Ci.nsIPermissionManager.DENY_ACTION);"/>
       <button id="btnCookieSession" disabled="true" data-l10n-id="permissions-session"

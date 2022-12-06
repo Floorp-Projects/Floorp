@@ -30,17 +30,12 @@ XPCOMUtils.defineLazyPreferenceGetter(lazy, "testRulesPref", PREF_TEST_RULES);
 // Name of the RemoteSettings collection containing the rules.
 const COLLECTION_NAME = "cookie-banner-rules-list";
 
-let logConsole;
-function log(...args) {
-  if (!logConsole) {
-    logConsole = console.createInstance({
-      prefix: "** CookieBannerListService.jsm",
-      maxLogLevelPref: "cookiebanners.listService.logLevel",
-    });
-  }
-
-  logConsole.log(...args);
-}
+XPCOMUtils.defineLazyGetter(lazy, "logConsole", () => {
+  return console.createInstance({
+    prefix: "CookieBannerListService",
+    maxLogLevelPref: "cookiebanners.listService.logLevel",
+  });
+});
 
 // Lazy getter for the JSON schema of cookie banner rules. It is used for
 // validation of rules defined by pref.
@@ -49,7 +44,7 @@ XPCOMUtils.defineLazyGetter(lazy, "CookieBannerRuleSchema", async () => {
     "chrome://global/content/cookiebanners/CookieBannerRule.schema.json"
   );
   if (!response.ok) {
-    log("Fetch for CookieBannerRuleSchema failed", response);
+    lazy.logConsole.error("Fetch for CookieBannerRuleSchema failed", response);
     throw new Error("Failed to fetch CookieBannerRuleSchema.");
   }
   return response.json();
@@ -73,7 +68,7 @@ class CookieBannerListService {
   }
 
   async init() {
-    log("init");
+    lazy.logConsole.debug("init");
 
     await this.importAllRules();
 
@@ -93,15 +88,24 @@ class CookieBannerListService {
   }
 
   async importAllRules() {
-    log("importAllRules");
+    lazy.logConsole.debug("importAllRules");
 
-    let rules = await this.#rs.get();
-    this.#importRules(rules);
+    try {
+      let rules = await this.#rs.get();
+      this.#importRules(rules);
+    } catch (error) {
+      lazy.logConsole.error(
+        "Error while importing cookie banner rules from RemoteSettings",
+        error
+      );
+    }
+
+    // We import test rules, even if fetching rules from RemoteSettings failed.
     await this.#importTestRules();
   }
 
   shutdown() {
-    log("shutdown");
+    lazy.logConsole.debug("shutdown");
 
     // Unregister callback for collection changes.
     if (this.#onSyncCallback) {
@@ -116,7 +120,7 @@ class CookieBannerListService {
    * Called for remote settings "sync" events.
    */
   onSync({ data: { created, updated, deleted } }) {
-    log("onSync", { created, updated, deleted });
+    lazy.logConsole.debug("onSync", { created, updated, deleted });
 
     // Remove deleted rules.
     this.#removeRules(deleted);
@@ -142,18 +146,23 @@ class CookieBannerListService {
   }
 
   #removeRules(rules = []) {
-    log("removeRules", rules);
+    lazy.logConsole.debug("removeRules", rules);
 
     // For each js rule, construct a temporary nsICookieBannerRule to pass into
     // Services.cookieBanners.removeRule. For removal only domain and id are
     // relevant.
     rules
-      .map(({ id, domain }) => {
+      .map(({ id, domain, domains }) => {
+        // Provide backwards-compatibility with single-domain rules.
+        if (domain) {
+          domains = [domain];
+        }
+
         let rule = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
           Ci.nsICookieBannerRule
         );
         rule.id = id;
-        rule.domain = domain;
+        rule.domains = domains;
         return rule;
       })
       .forEach(r => {
@@ -166,14 +175,19 @@ class CookieBannerListService {
   }
 
   #importRules(rules) {
-    log("importRules", rules);
+    lazy.logConsole.debug("importRules", rules);
 
-    rules.forEach(({ id, domain, cookies, click }) => {
+    rules.forEach(({ id, domain, domains, cookies, click }) => {
+      // Provide backwards-compatibility with single-domain rules.
+      if (domain) {
+        domains = [domain];
+      }
+
       let rule = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
         Ci.nsICookieBannerRule
       );
       rule.id = id;
-      rule.domain = domain;
+      rule.domains = domains;
 
       // Import the cookie rule.
       this.#importCookieRule(rule, cookies);
@@ -192,10 +206,12 @@ class CookieBannerListService {
   }
 
   async #importTestRules() {
-    log("importTestRules");
+    lazy.logConsole.debug("importTestRules");
 
     if (!Services.prefs.prefHasUserValue(PREF_TEST_RULES)) {
-      log("Skip importing test rules: Pref has default value.");
+      lazy.logConsole.debug(
+        "Skip importing test rules: Pref has default value."
+      );
       return;
     }
 
@@ -204,16 +220,18 @@ class CookieBannerListService {
     try {
       testRules = JSON.parse(lazy.testRulesPref);
     } catch (error) {
-      log("Failed to parse test rules JSON string.", error);
-      Cu.reportError(
-        `Failed to parse test rules JSON string. Make sure ${PREF_TEST_RULES} contains valid JSON. ${error?.name}`
+      lazy.logConsole.error(
+        `Failed to parse test rules JSON string. Make sure ${PREF_TEST_RULES} contains valid JSON. ${error?.name}`,
+        error
       );
       return;
     }
 
     // Ensure we have an array we can iterate over and not an object.
     if (!Array.isArray(testRules)) {
-      Cu.reportError("Failed to parse test rules JSON String: Not an array.");
+      lazy.logConsole.error(
+        "Failed to parse test rules JSON String: Not an array."
+      );
       return;
     }
 
@@ -228,14 +246,14 @@ class CookieBannerListService {
       let { valid, errors } = validator.validate(rule);
 
       if (!valid) {
-        Cu.reportError(
+        lazy.logConsole.error(
           `Skipping invalid test rule at index ${i}. Errors: ${JSON.stringify(
             errors,
             null,
             2
           )}`
         );
-        log("Test rule validation error", rule, errors);
+        lazy.logConsole.debug("Test rule validation error", rule, errors);
 
         i += 1;
         continue;
@@ -275,12 +293,14 @@ class CookieBannerListService {
           c.value,
           // The following fields are optional and may not be defined by the
           // rule.
-          c.host || `.${rule.domain}`,
+          // If unset, host falls back to ".<domain>" internally.
+          c.host,
           c.path || "/",
           expiryRelative,
           c.unsetValue,
           c.isSecure,
           c.isHTTPOnly,
+          // Default injected cookies to session expiry.
           c.isSession ?? true,
           c.sameSite,
           c.schemeMap

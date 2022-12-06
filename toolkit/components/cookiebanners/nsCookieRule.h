@@ -27,9 +27,11 @@ class nsCookieRule final : public nsICookieRule {
                         nsICookie::schemeType aSchemeMap);
 
  private:
+  explicit nsCookieRule(const nsCookieRule& aRule);
+
   ~nsCookieRule() = default;
 
-  nsCOMPtr<nsICookie> mCookie;
+  RefPtr<net::Cookie> mCookie;
   int64_t mExpiryRelative{};
   nsCString mUnsetValue;
 };
