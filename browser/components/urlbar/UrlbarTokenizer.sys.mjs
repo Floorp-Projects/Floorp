@@ -238,7 +238,10 @@ export var UrlbarTokenizer = {
    *          tokens property.
    */
   tokenize(queryContext) {
-    lazy.logger.info("Tokenizing", queryContext);
+    lazy.logger.info(
+      "Tokenizing search string",
+      JSON.stringify(queryContext.searchString)
+    );
     if (!queryContext.trimmedSearchString) {
       queryContext.tokens = [];
       return queryContext;
