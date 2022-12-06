@@ -11,4 +11,4 @@ build/unix/build-hfsplus/build-hfsplus.sh $MOZ_FETCHES_DIR
 
 # Put a tarball in the artifacts dir
 mkdir -p $UPLOAD_DIR
-cp $MOZ_FETCHES_DIR/hfsplus-tools.tar.* $UPLOAD_DIR
+cp $MOZ_FETCHES_DIR/hfsplus.tar.* $UPLOAD_DIR

@@ -19,23 +19,6 @@ TEMPLATE_DIRECTORY = Path(__file__).parent / "apple_pkg"
 PBZX_CHUNK_SIZE = 16 * 1024 * 1024  # 16MB chunks
 
 
-def check_tools(*tools: List[Path]):
-    """
-    Check that each tool named in tools exists and is executable.
-
-    Args:
-        tools: List<str>, list of tools to check
-
-    Raises:
-        Exception: if tool not found from env, not a file, or not executable.
-    """
-    for tool in tools:
-        if not tool.is_file():
-            raise Exception('Required tool "%s" not found.' % (tool))
-        if not os.access(tool, os.X_OK):
-            raise Exception('Required tool "%s" is not executable' % (tool))
-
-
 def get_apple_template(name: str) -> Template:
     """
     Given <name>, open file at <TEMPLATE_DIRECTORY>/<name>, read contents and
@@ -95,13 +78,14 @@ def get_app_info_plist(app_path: Path) -> dict:
     return data
 
 
-def create_payload(destination: Path, root_path: Path):
+def create_payload(destination: Path, root_path: Path, cpio_tool: str):
     """
     Creates a payload at <destination> based on <root_path>
 
     Args:
         destination: Path, the destination Path
         root_path: Path, the root directory Path
+        cpio_tool: str,
     """
     # Files to be cpio'd are root folder + contents
     file_list = ["./"] + get_relative_glob_list(root_path, "**/*")
@@ -113,7 +97,7 @@ def create_payload(destination: Path, root_path: Path):
         with tmp_payload_path.open("wb") as tmp_payload:
             process = subprocess.run(
                 [
-                    "cpio",
+                    cpio_tool,
                     "-o",  # copy-out mode
                     "--format",
                     "odc",  # old POSIX .1 portable format
@@ -257,7 +241,6 @@ def create_pkg(
         xar_tool: Path, xar tool Path
         cpio: Path, cpio tool Path
     """
-    check_tools(mkbom_tool, xar_tool, cpio_tool)
 
     app_name = source_app.name.rsplit(".", maxsplit=1)[0]
 
@@ -308,7 +291,7 @@ def create_pkg(
         save_text_file(distribution, flat_path / "Distribution")
 
         payload_path = flat_path / f"{app_name}.pkg/Payload"
-        create_payload(payload_path, root_path)
+        create_payload(payload_path, root_path, cpio_tool)
 
         bom_path = flat_path / f"{app_name}.pkg/Bom"
         create_bom(bom_path, root_path, mkbom_tool)

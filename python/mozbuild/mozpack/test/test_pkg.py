@@ -2,16 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import platform
 from pathlib import Path
 from string import Template
-from unittest import skipUnless
 from unittest.mock import patch
 
 import mozpack.pkg
 import mozunit
 from mozpack.pkg import (
-    check_tools,
     create_bom,
     create_payload,
     create_pkg,
@@ -40,23 +37,6 @@ class TestPkg(TestWithTmpDir):
         tool.touch()
         tool.chmod(mode)
         return tool
-
-    def test_check_tools(self):
-        check_tools(self._mk_test_file("tool-ok"))
-
-    @skipUnless(
-        platform.system() in ["Darwin", "Linux"],
-        "Testing file executability outside of Unix-like systems is not supported",
-    )
-    def test_check_tools_except_not_executable(self):
-        read_only_tool = self._mk_test_file("tool-notexecutable", 0o444)
-        with self.assertRaises(Exception):
-            check_tools(read_only_tool)
-
-    def test_check_tools_except_not_file(self):
-        doesnotexist = Path(self.tmpdir) / "tool-thisshouldnotexist"
-        with self.assertRaises(Exception):
-            check_tools(doesnotexist)
 
     def test_get_apple_template(self):
         tmpl = get_apple_template("Distribution.template")
@@ -95,7 +75,7 @@ class TestPkg(TestWithTmpDir):
     def test_create_payload(self):
         destination = Path(self.tmpdir) / "mockPayload"
         with patch.object(mozpack.pkg.subprocess, "run", self._mock_payload(0)):
-            create_payload(destination, Path(self.tmpdir))
+            create_payload(destination, Path(self.tmpdir), "cpio")
 
     def test_create_bom(self):
         bom_path = Path(self.tmpdir) / "Bom"
@@ -143,7 +123,6 @@ class TestPkg(TestWithTmpDir):
         fake_tool = Path(self.tmpdir) / "faketool"
         with patch.multiple(
             mozpack.pkg,
-            check_tools=noop,
             get_app_info_plist=mock_get_app_info_plist,
             get_apple_template=mock_get_apple_template,
             save_text_file=noop,
