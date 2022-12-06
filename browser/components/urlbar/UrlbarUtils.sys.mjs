@@ -601,6 +601,11 @@ export var UrlbarUtils = {
         }
         break;
       }
+      case UrlbarUtils.RESULT_TYPE.TIP: {
+        // Return the button URL. Consumers must check payload.helpUrl
+        // themselves if they need the tip's help link.
+        return { url: result.payload.buttonUrl, postData: null };
+      }
     }
     return { url: null, postData: null };
   },
@@ -1512,43 +1517,17 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
     type: "object",
     required: ["url"],
     properties: {
-      // l10n { id, args }
-      blockL10n: {
-        type: "object",
-        required: ["id"],
-        properties: {
-          id: {
-            type: "string",
-          },
-          args: {
-            type: "array",
-          },
-        },
-      },
       displayUrl: {
         type: "string",
       },
-      // l10n { id, args }
-      helpL10n: {
-        type: "object",
-        required: ["id"],
-        properties: {
-          id: {
-            type: "string",
-          },
-          args: {
-            type: "array",
-          },
-        },
+      helpL10nId: {
+        type: "string",
       },
       helpUrl: {
         type: "string",
       },
       icon: {
         type: "string",
-      },
-      isBlockable: {
-        type: "boolean",
       },
       isPinned: {
         type: "boolean",
@@ -1682,42 +1661,13 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
     type: "object",
     required: ["type"],
     properties: {
-      buttons: {
-        type: "array",
-        items: {
-          type: "object",
-          required: ["l10n"],
-          properties: {
-            l10n: {
-              type: "object",
-              required: ["id"],
-              properties: {
-                id: {
-                  type: "string",
-                },
-                args: {
-                  type: "array",
-                },
-              },
-            },
-            url: {
-              type: "string",
-            },
-          },
-        },
-      },
-      // TODO: This is intended only for WebExtensions. We should remove it and
-      // the WebExtensions urlbar API since we're no longer using it.
+      // Prefer `buttonTextData` if your string is translated.  This is for
+      // untranslated strings.
       buttonText: {
         type: "string",
       },
-      // TODO: This is intended only for WebExtensions. We should remove it and
-      // the WebExtensions urlbar API since we're no longer using it.
-      buttonUrl: {
-        type: "string",
-      },
       // l10n { id, args }
-      helpL10n: {
+      buttonTextData: {
         type: "object",
         required: ["id"],
         properties: {
@@ -1729,19 +1679,22 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
           },
         },
       },
+      buttonUrl: {
+        type: "string",
+      },
       helpUrl: {
         type: "string",
       },
       icon: {
         type: "string",
       },
-      // TODO: This is intended only for WebExtensions. We should remove it and
-      // the WebExtensions urlbar API since we're no longer using it.
+      // Prefer `text` if your string is translated.  This is for untranslated
+      // strings.
       text: {
         type: "string",
       },
       // l10n { id, args }
-      titleL10n: {
+      textData: {
         type: "object",
         required: ["id"],
         properties: {

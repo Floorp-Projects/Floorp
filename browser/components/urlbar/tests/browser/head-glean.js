@@ -108,7 +108,7 @@ async function doClick() {
 
 async function doClickSubButton(selector) {
   const selected = UrlbarTestUtils.getSelectedElement(window);
-  const button = selected.closest(".urlbarView-row").querySelector(selector);
+  const button = selected.querySelector(selector);
   EventUtils.synthesizeMouseAtCenter(button, {});
 }
 

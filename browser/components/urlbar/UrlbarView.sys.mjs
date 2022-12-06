@@ -31,6 +31,9 @@ XPCOMUtils.defineLazyServiceGetter(
 // Query selector for selectable elements in tip and dynamic results.
 const SELECTABLE_ELEMENT_SELECTOR = "[role=button], [selectable=true]";
 
+// Query selector that prevents rows from being selectable.
+const UNSELECTABLE_ELEMENT_SELECTOR = "[selectable=false]";
+
 const getBoundsWithoutFlushing = element =>
   element.ownerGlobal.windowUtils.getBoundsWithoutFlushing(element);
 
@@ -149,16 +152,7 @@ export class UrlbarView {
     if (val >= items.length) {
       throw new Error(`UrlbarView: Index ${val} is out of bounds.`);
     }
-
-    // If the row itself isn't selectable, select the first element inside it
-    // that is. If it doesn't contain a selectable element, clear the selection.
-    let element = items[val];
-    if (!this.#isSelectableElement(element)) {
-      let next = this.#getNextSelectableElement(element);
-      element = this.#getRowFromElement(next) == element ? next : null;
-    }
-
-    this.#selectElement(element);
+    this.#selectElement(items[val]);
   }
 
   get selectedElementIndex() {
@@ -264,7 +258,17 @@ export class UrlbarView {
    *   The result of the element's row.
    */
   getResultFromElement(element) {
-    return this.#getRowFromElement(element)?.result;
+    if (!this.isOpen) {
+      return null;
+    }
+
+    let row = this.#getRowFromElement(element);
+
+    if (!row) {
+      return null;
+    }
+
+    return row.result;
   }
 
   /**
@@ -1155,6 +1159,66 @@ export class UrlbarView {
     url.className = "urlbarView-url";
     item._content.appendChild(url);
     item._elements.set("url", url);
+
+    // Usually we create all child elements for the row regardless of whether
+    // the specific result will use them, but we don't expect the vast majority
+    // of rows to need help or block buttons, so as an optimization, create them
+    // only when necessary.
+    if (
+      result.providerName == "UrlbarProviderQuickSuggest" &&
+      lazy.UrlbarPrefs.get("quickSuggestBlockingEnabled")
+    ) {
+      this.#addRowButton(item, "block", "firefox-suggest-urlbar-block");
+    }
+    if (result.payload.helpUrl) {
+      this.#addRowButton(item, "help", result.payload.helpL10nId);
+    }
+    if (lazy.UrlbarPrefs.get("resultMenu")) {
+      this.#addRowButton(item, "menu", "urlbar-result-menu-button");
+    }
+  }
+
+  #createRowContentForTip(item) {
+    // We use role="group" so screen readers will read the group's label when a
+    // button inside it gets focus. (Screen readers don't do this for
+    // role="option".) We set aria-labelledby for the group in #updateRowForTip.
+    item._content.setAttribute("role", "group");
+
+    let favicon = this.#createElement("img");
+    favicon.className = "urlbarView-favicon";
+    favicon.setAttribute("data-l10n-id", "urlbar-tip-icon-description");
+    item._content.appendChild(favicon);
+    item._elements.set("favicon", favicon);
+
+    let title = this.#createElement("span");
+    title.className = "urlbarView-title";
+    item._content.appendChild(title);
+    item._elements.set("title", title);
+
+    let buttonSpacer = this.#createElement("span");
+    buttonSpacer.className = "urlbarView-tip-button-spacer";
+    item._content.appendChild(buttonSpacer);
+
+    let tipButton = this.#createElement("span");
+    tipButton.className = "urlbarView-tip-button";
+    tipButton.setAttribute("role", "button");
+    item._content.appendChild(tipButton);
+    item._elements.set("tipButton", tipButton);
+
+    let helpIcon = this.#createElement("span");
+    helpIcon.classList.add("urlbarView-button", "urlbarView-button-help");
+    helpIcon.setAttribute("role", "button");
+    helpIcon.setAttribute("data-l10n-id", "urlbar-tip-help-icon");
+    item._elements.set("helpButton", helpIcon);
+    item._content.appendChild(helpIcon);
+
+    // Due to role=button, the button and help icon can sometimes become
+    // focused.  We want to prevent that because the input should always be
+    // focused instead.  (This happens when input.search("", { focus: false })
+    // is called, a tip is the first result but not heuristic, and the user tabs
+    // the into the button from the navbar buttons.  The input is skipped and
+    // the focus goes straight to the tip button.)
+    item.addEventListener("focus", () => this.input.focus(), true);
   }
 
   #createRowContentForDynamicType(item, result) {
@@ -1246,48 +1310,16 @@ export class UrlbarView {
     bottom.className = "urlbarView-row-body-bottom";
     body.appendChild(bottom);
     item._elements.set("bottom", bottom);
-  }
 
-  #addRowButtons(item, result) {
-    for (let i = 0; i < result.payload.buttons?.length; i++) {
-      this.#addRowButton(item, {
-        name: i.toString(),
-        ...result.payload.buttons[i],
-      });
-    }
-
-    // TODO: `buttonText` is intended only for WebExtensions. We should remove
-    // it and the WebExtensions urlbar API since we're no longer using it.
-    if (result.payload.buttonText) {
-      this.#addRowButton(item, {
-        name: "tip",
-        url: result.payload.buttonUrl,
-      });
-      item._buttons.get("tip").textContent = result.payload.buttonText;
-    }
-
-    if (result.payload.isBlockable) {
-      this.#addRowButton(item, {
-        name: "block",
-        l10n: result.payload.blockL10n,
-      });
+    if (lazy.UrlbarPrefs.get("bestMatchBlockingEnabled")) {
+      this.#addRowButton(item, "block", "firefox-suggest-urlbar-block");
     }
     if (result.payload.helpUrl) {
-      this.#addRowButton(item, {
-        name: "help",
-        url: result.payload.helpUrl,
-        l10n: result.payload.helpL10n,
-      });
-    }
-    if (lazy.UrlbarPrefs.get("resultMenu")) {
-      this.#addRowButton(item, {
-        name: "menu",
-        l10n: { id: "urlbar-result-menu-button" },
-      });
+      this.#addRowButton(item, "help", result.payload.helpL10nId);
     }
   }
 
-  #addRowButton(item, { name, l10n, url }) {
+  #addRowButton(item, name, l10nID) {
     if (!item._buttons.size) {
       // If the content is marked as selectable, the screen reader will not be
       // able to read the text directly child of the "urlbarView-row". As the
@@ -1299,26 +1331,15 @@ export class UrlbarView {
       item._content.insertBefore(groupAriaLabel, item._content.firstChild);
       item._elements.set("groupAriaLabel", groupAriaLabel);
 
-      // When the row has buttons we set role=option on row-inner since the
-      // latter is the selectable logical row element when buttons are present.
-      // Since row-inner is not a child of the role=listbox element (the row
-      // container, this.#rows), screen readers will not automatically recognize
-      // it as a listbox option. To compensate, set role=presentation on the row
-      // so that screen readers ignore it.
-      item.setAttribute("role", "presentation");
       item._content.setAttribute("role", "option");
+      item._content.setAttribute("selectable", "true");
     }
 
     let button = this.#createElement("span");
-    button.id = `${item.id}-button-${name}`;
     button.classList.add("urlbarView-button", "urlbarView-button-" + name);
     button.setAttribute("role", "button");
-    button.dataset.name = name;
-    if (l10n) {
-      this.#setElementL10n(button, l10n);
-    }
-    if (url) {
-      button.dataset.url = url;
+    if (l10nID) {
+      button.setAttribute("data-l10n-id", l10nID);
     }
     item._buttons.set(name, button);
     item.appendChild(button);
@@ -1335,6 +1356,8 @@ export class UrlbarView {
 
     let needsNewContent =
       oldResultType === undefined ||
+      (oldResultType == lazy.UrlbarUtils.RESULT_TYPE.TIP) !=
+        (result.type == lazy.UrlbarUtils.RESULT_TYPE.TIP) ||
       (oldResultType == lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC) !=
         (result.type == lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC) ||
       (oldResultType == lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC &&
@@ -1345,11 +1368,13 @@ export class UrlbarView {
       provider.getViewTemplate ||
       oldResult.isBestMatch != result.isBestMatch ||
       !!result.payload.helpUrl != item._buttons.has("help") ||
-      !!result.payload.isBlockable != item._buttons.has("block") ||
-      !lazy.ObjectUtils.deepEqual(
-        oldResult.payload.buttons,
-        result.payload.buttons
-      );
+      (result.isBestMatch &&
+        lazy.UrlbarPrefs.get("bestMatchBlockingEnabled") !=
+          item._buttons.has("block")) ||
+      (!result.isBestMatch &&
+        result.providerName == "UrlbarProviderQuickSuggest" &&
+        lazy.UrlbarPrefs.get("quickSuggestBlockingEnabled") !=
+          item._buttons.has("block"));
 
     if (needsNewContent) {
       while (item.lastChild) {
@@ -1361,14 +1386,15 @@ export class UrlbarView {
       item._content.className = "urlbarView-row-inner";
       item.appendChild(item._content);
       item.removeAttribute("dynamicType");
-      if (item.result.type == lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC) {
+      if (item.result.type == lazy.UrlbarUtils.RESULT_TYPE.TIP) {
+        this.#createRowContentForTip(item);
+      } else if (item.result.type == lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC) {
         this.#createRowContentForDynamicType(item, result);
       } else if (item.result.isBestMatch) {
         this.#createRowContentForBestMatch(item, result);
       } else {
         this.#createRowContent(item, result);
       }
-      this.#addRowButtons(item, result);
     }
     item._content.id = item.id + "-inner";
 
@@ -1384,23 +1410,8 @@ export class UrlbarView {
       item.setAttribute("type", "switchtab");
     } else if (result.type == lazy.UrlbarUtils.RESULT_TYPE.TIP) {
       item.setAttribute("type", "tip");
-
-      // Due to role=button, the button and help icon can sometimes become
-      // focused. We want to prevent that because the input should always be
-      // focused instead. (This happens when input.search("", { focus: false })
-      // is called, a tip is the first result but not heuristic, and the user
-      // tabs the into the button from the navbar buttons. The input is skipped
-      // and the focus goes straight to the tip button.)
-      item.addEventListener("focus", () => this.input.focus(), true);
-
-      if (result.providerName == "UrlbarProviderSearchTips") {
-        // For a11y, we treat search tips as alerts. We use A11yUtils.announce
-        // instead of role="alert" because role="alert" will only fire an alert
-        // event when the alert (or something inside it) is the root of an
-        // insertion. In this case, the entire tip result gets inserted into the
-        // a11y tree as a single insertion, so no alert event would be fired.
-        this.window.A11yUtils.announce(result.payload.titleL10n);
-      }
+      this.#updateRowForTip(item, result);
+      return;
     } else if (result.source == lazy.UrlbarUtils.RESULT_SOURCE.BOOKMARKS) {
       item.setAttribute("type", "bookmark");
     } else if (result.type == lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC) {
@@ -1465,7 +1476,6 @@ export class UrlbarView {
     let actionSetter = null;
     let isVisitAction = false;
     let setURL = false;
-    let isRowSelectable = true;
     switch (result.type) {
       case lazy.UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
         actionSetter = () => {
@@ -1525,9 +1535,6 @@ export class UrlbarView {
           action.textContent = result.payload.content;
         };
         break;
-      case lazy.UrlbarUtils.RESULT_TYPE.TIP:
-        isRowSelectable = false;
-        break;
       default:
         if (result.heuristic && !result.autofill?.hasTitle) {
           isVisitAction = true;
@@ -1535,14 +1542,6 @@ export class UrlbarView {
           setURL = true;
         }
         break;
-    }
-
-    if (isRowSelectable) {
-      let selectableElement = item._buttons.size ? item._content : item;
-      selectableElement.setAttribute("selectable", "true");
-    } else {
-      item.removeAttribute("selectable");
-      item._content.removeAttribute("selectable");
     }
 
     if (result.providerName == "TabToSearch") {
@@ -1627,6 +1626,8 @@ export class UrlbarView {
     } else {
       title.removeAttribute("dir");
     }
+
+    this.#updateRowForButtons(item);
   }
 
   #iconForResult(result, iconUrlOverride = null) {
@@ -1642,6 +1643,47 @@ export class UrlbarView {
         lazy.UrlbarUtils.ICON.SEARCH_GLASS) ||
       lazy.UrlbarUtils.ICON.DEFAULT
     );
+  }
+
+  #updateRowForTip(item, result) {
+    let favicon = item._elements.get("favicon");
+    favicon.src = result.payload.icon || lazy.UrlbarUtils.ICON.TIP;
+    favicon.id = item.id + "-icon";
+
+    let title = item._elements.get("title");
+    title.id = item.id + "-title";
+    // Add-ons will provide text, rather than l10n ids.
+    if (result.payload.textData) {
+      this.#l10nCache.ensureAll([result.payload.textData]);
+      this.#setElementL10n(title, result.payload.textData);
+    } else {
+      title.textContent = result.payload.text;
+    }
+
+    item._content.setAttribute("aria-labelledby", `${favicon.id} ${title.id}`);
+
+    let tipButton = item._elements.get("tipButton");
+    tipButton.id = item.id + "-tip-button";
+    // Add-ons will provide buttonText, rather than l10n ids.
+    if (result.payload.buttonTextData) {
+      this.#l10nCache.ensureAll([result.payload.buttonTextData]);
+      this.#setElementL10n(tipButton, result.payload.buttonTextData);
+    } else {
+      tipButton.textContent = result.payload.buttonText;
+    }
+
+    let helpIcon = item._elements.get("helpButton");
+    helpIcon.id = item.id + "-tip-help";
+    helpIcon.style.display = result.payload.helpUrl ? "" : "none";
+
+    if (result.providerName == "UrlbarProviderSearchTips") {
+      // For a11y, we treat search tips as alerts.  We use A11yUtils.announce
+      // instead of role="alert" because role="alert" will only fire an alert
+      // event when the alert (or something inside it) is the root of an
+      // insertion.  In this case, the entire tip result gets inserted into the
+      // a11y tree as a single insertion, so no alert event would be fired.
+      this.window.A11yUtils.announce(result.payload.textData);
+    }
   }
 
   async #updateRowForDynamicType(item, result) {
@@ -1712,9 +1754,6 @@ export class UrlbarView {
   }
 
   #updateRowForBestMatch(item, result) {
-    let selectableElement = item._buttons.size ? item._content : item;
-    selectableElement.setAttribute("selectable", "true");
-
     let favicon = item._elements.get("favicon");
     favicon.src = this.#iconForResult(result);
 
@@ -1745,6 +1784,30 @@ export class UrlbarView {
       this.#setElementL10n(bottom, { id: "urlbar-result-action-sponsored" });
     } else {
       this.#removeElementL10n(bottom);
+    }
+
+    this.#updateRowForButtons(item);
+  }
+
+  #updateRowForButtons(item) {
+    if (item._buttons.size) {
+      item.setAttribute("has-buttons", "true");
+      item.style.setProperty("--button-count", item._buttons.size);
+      for (let [name, button] of item._buttons) {
+        button.id = `${item.id}-button-${name}`;
+      }
+
+      // When the row has buttons we set role=option on row-inner since the
+      // latter is the selectable logical row element when buttons are present.
+      // Since row-inner is not a child of the role=listbox element (the row
+      // container, this.#rows), screen readers will not automatically recognize
+      // it as a listbox option. To compensate, set role=presentation on the row
+      // so that screen readers ignore it.
+      item.setAttribute("role", "presentation");
+    } else {
+      item.removeAttribute("has-buttons");
+      item.style.removeProperty("--button-count");
+      item.setAttribute("role", "option");
     }
   }
 
@@ -1930,10 +1993,6 @@ export class UrlbarView {
     element,
     { updateInput = true, setAccessibleFocus = true } = {}
   ) {
-    if (element && !element.matches(SELECTABLE_ELEMENT_SELECTOR)) {
-      throw new Error("Element is not selectable");
-    }
-
     if (this.#selectedElement) {
       this.#selectedElement.toggleAttribute("selected", false);
       this.#selectedElement.removeAttribute("aria-selected");
@@ -1980,7 +2039,15 @@ export class UrlbarView {
    */
   #getClosestSelectableElement(element) {
     let closest = element.closest(SELECTABLE_ELEMENT_SELECTOR);
-    return closest && this.#isElementVisible(closest) ? closest : null;
+    if (!closest) {
+      let row = element.closest(".urlbarView-row");
+      if (row && row.querySelector(UNSELECTABLE_ELEMENT_SELECTOR)) {
+        return null;
+      } else if (row && !row.querySelector(SELECTABLE_ELEMENT_SELECTOR)) {
+        closest = row;
+      }
+    }
+    return this.#isElementVisible(closest) ? closest : null;
   }
 
   /**
@@ -2016,7 +2083,15 @@ export class UrlbarView {
    *   The last selectable element in the view.
    */
   #getLastSelectableElement() {
-    let element = this.#rows.lastElementChild;
+    let row = this.#rows.lastElementChild;
+    if (!row) {
+      return null;
+    }
+    let selectables = row.querySelectorAll(SELECTABLE_ELEMENT_SELECTOR);
+    let element = selectables.length
+      ? selectables[selectables.length - 1]
+      : row;
+
     if (element && !this.#isSelectableElement(element)) {
       element = this.#getPreviousSelectableElement(element);
     }
@@ -2098,7 +2173,17 @@ export class UrlbarView {
    *   item.
    */
   #getSelectedRow() {
-    return this.#getRowFromElement(this.#selectedElement);
+    if (!this.isOpen || !this.#selectedElement) {
+      return null;
+    }
+    let selected = this.#selectedElement;
+
+    if (!selected.classList.contains("urlbarView-row")) {
+      // selected may be an element in a result group, like RESULT_TYPE.TIP.
+      selected = selected.closest(".urlbarView-row");
+    }
+
+    return selected;
   }
 
   /**
@@ -2108,7 +2193,15 @@ export class UrlbarView {
    *   The row containing `element`, or `element` itself if it is a row.
    */
   #getRowFromElement(element) {
-    return element?.closest(".urlbarView-row");
+    if (!this.isOpen || !element) {
+      return null;
+    }
+
+    if (!element.classList.contains("urlbarView-row")) {
+      element = element.closest(".urlbarView-row");
+    }
+
+    return element;
   }
 
   #setAccessibleFocus(item) {
@@ -2128,18 +2221,6 @@ export class UrlbarView {
    *   The DOM node for the result's tile.
    */
   #setResultTitle(result, titleNode) {
-    if (result.payload.titleL10n) {
-      this.#setElementL10n(titleNode, result.payload.titleL10n);
-      return;
-    }
-
-    // TODO: `text` is intended only for WebExtensions. We should remove it and
-    // the WebExtensions urlbar API since we're no longer using it.
-    if (result.payload.text) {
-      titleNode.textContent = result.payload.text;
-      return;
-    }
-
     if (result.payload.providesSearchMode) {
       // Keyword offers are the only result that require a localized title.
       // We localize the title instead of using the action text as a title
@@ -2257,7 +2338,9 @@ export class UrlbarView {
     if (result.type != lazy.UrlbarUtils.RESULT_TYPE.TIP) {
       return false;
     }
-    let tipButton = this.#rows.firstElementChild._buttons.get("0");
+    let tipButton = this.#rows.firstElementChild.querySelector(
+      ".urlbarView-tip-button"
+    );
     if (!tipButton) {
       throw new Error("Expected a tip button");
     }

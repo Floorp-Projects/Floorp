@@ -55,9 +55,7 @@ const EXPECTED_SPONSORED_RESULT = {
     sponsoredAdvertiser: "TestAdvertiser",
     sponsoredIabCategory: "22 - Shopping",
     helpUrl: QuickSuggest.HELP_URL,
-    helpL10n: { id: "firefox-suggest-urlbar-learn-more" },
-    isBlockable: false,
-    blockL10n: { id: "firefox-suggest-urlbar-block" },
+    helpL10nId: "firefox-suggest-urlbar-learn-more",
     source: "remote-settings",
   },
 };
@@ -80,9 +78,7 @@ const EXPECTED_NONSPONSORED_RESULT = {
     sponsoredAdvertiser: "TestAdvertiser",
     sponsoredIabCategory: "5 - Education",
     helpUrl: QuickSuggest.HELP_URL,
-    helpL10n: { id: "firefox-suggest-urlbar-learn-more" },
-    isBlockable: false,
-    blockL10n: { id: "firefox-suggest-urlbar-block" },
+    helpL10nId: "firefox-suggest-urlbar-learn-more",
     source: "remote-settings",
   },
 };
