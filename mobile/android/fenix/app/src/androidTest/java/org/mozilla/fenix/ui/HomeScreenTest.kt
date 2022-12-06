@@ -279,6 +279,7 @@ class HomeScreenTest {
         }
     }
 
+    @Ignore("Failed, see: https://github.com/mozilla-mobile/fenix/issues/28098")
     @Test
     fun openPocketDiscoverMoreTest() {
         activityTestRule.activityRule.applySettingsExceptions {
