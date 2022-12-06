@@ -298,9 +298,6 @@ class WebGLFramebufferJS final : public nsWrapperCache, public webgl::ObjectJS {
   // Holds Some Id if async present is used
   Maybe<layers::RemoteTextureId> mLastRemoteTextureId;
   Maybe<layers::RemoteTextureOwnerId> mRemoteTextureOwnerId;
-  // Needs sync IPC to ensure that the remote texture exists in the
-  // RemoteTextureMap.
-  bool mNeedsRemoteTextureSync = true;
 
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLFramebufferJS)
@@ -750,9 +747,6 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   // Holds Some Id if async present is used
   mutable Maybe<layers::RemoteTextureId> mLastRemoteTextureId;
   mutable Maybe<layers::RemoteTextureOwnerId> mRemoteTextureOwnerId;
-  // Needs sync IPC to ensure that the remote texture exists in the
-  // RemoteTextureMap.
-  bool mNeedsRemoteTextureSync = true;
 
   // -
 

@@ -39,11 +39,11 @@
 namespace mozilla {
 namespace layers {
 
-using gfx::DataSourceSurface;
 using gfx::IntPoint;
+using gfx::IntSize;
 using gfx::IntRect;
 using gfx::IntRegion;
-using gfx::IntSize;
+using gfx::DataSourceSurface;
 using gfx::Matrix4x4;
 using gfx::SurfaceFormat;
 using gl::GLContext;
@@ -806,7 +806,7 @@ void NativeLayerCA::AttachExternalImage(wr::RenderTextureHost* aExternalImage) {
   MutexAutoLock lock(mMutex);
 
   wr::RenderMacIOSurfaceTextureHost* texture = aExternalImage->AsRenderMacIOSurfaceTextureHost();
-  MOZ_ASSERT(texture || aExternalImage->IsWrappingAsyncRemoteTexture());
+  MOZ_ASSERT(texture);
   mTextureHost = texture;
   if (!mTextureHost) {
     gfxCriticalNoteOnce << "ExternalImage is not RenderMacIOSurfaceTextureHost";

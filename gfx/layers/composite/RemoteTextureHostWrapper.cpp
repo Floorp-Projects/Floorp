@@ -6,12 +6,10 @@
 
 #include "RemoteTextureHostWrapper.h"
 
-#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/AsyncImagePipelineManager.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/RemoteTextureMap.h"
 #include "mozilla/layers/WebRenderTextureHost.h"
-#include "mozilla/StaticPrefs_webgl.h"
 #include "mozilla/webrender/RenderTextureHostWrapper.h"
 #include "mozilla/webrender/RenderThread.h"
 
@@ -46,74 +44,64 @@ RemoteTextureHostWrapper::~RemoteTextureHostWrapper() {
   MOZ_COUNT_DTOR(RemoteTextureHostWrapper);
 }
 
-bool RemoteTextureHostWrapper::IsValid() {
-  return !!mRemoteTextureForDisplayList;
-}
+bool RemoteTextureHostWrapper::IsValid() { return !!mRemoteTextureHost; }
 
 gfx::YUVColorSpace RemoteTextureHostWrapper::GetYUVColorSpace() const {
-  MOZ_ASSERT(mRemoteTextureForDisplayList, "TextureHost isn't valid yet");
-  if (!mRemoteTextureForDisplayList) {
+  MOZ_ASSERT(mRemoteTextureHost, "TextureHost isn't valid yet");
+  if (!mRemoteTextureHost) {
     return TextureHost::GetYUVColorSpace();
   }
-  return mRemoteTextureForDisplayList->GetYUVColorSpace();
+  return mRemoteTextureHost->GetYUVColorSpace();
 }
 
 gfx::ColorDepth RemoteTextureHostWrapper::GetColorDepth() const {
-  MOZ_ASSERT(mRemoteTextureForDisplayList, "TextureHost isn't valid yet");
-  if (!mRemoteTextureForDisplayList) {
+  MOZ_ASSERT(mRemoteTextureHost, "TextureHost isn't valid yet");
+  if (!mRemoteTextureHost) {
     return TextureHost::GetColorDepth();
   }
-  return mRemoteTextureForDisplayList->GetColorDepth();
+  return mRemoteTextureHost->GetColorDepth();
 }
 
 gfx::ColorRange RemoteTextureHostWrapper::GetColorRange() const {
-  MOZ_ASSERT(mRemoteTextureForDisplayList, "TextureHost isn't valid yet");
-  if (!mRemoteTextureForDisplayList) {
+  MOZ_ASSERT(mRemoteTextureHost, "TextureHost isn't valid yet");
+  if (!mRemoteTextureHost) {
     return TextureHost::GetColorRange();
   }
-  return mRemoteTextureForDisplayList->GetColorRange();
+  return mRemoteTextureHost->GetColorRange();
 }
 
 gfx::IntSize RemoteTextureHostWrapper::GetSize() const {
-  MOZ_ASSERT(mRemoteTextureForDisplayList, "TextureHost isn't valid yet");
-  if (!mRemoteTextureForDisplayList) {
+  MOZ_ASSERT(mRemoteTextureHost, "TextureHost isn't valid yet");
+  if (!mRemoteTextureHost) {
     return gfx::IntSize();
   }
-  return mRemoteTextureForDisplayList->GetSize();
+  return mRemoteTextureHost->GetSize();
 }
 
 gfx::SurfaceFormat RemoteTextureHostWrapper::GetFormat() const {
-  MOZ_ASSERT(mRemoteTextureForDisplayList, "TextureHost isn't valid yet");
-  if (!mRemoteTextureForDisplayList) {
+  MOZ_ASSERT(mRemoteTextureHost, "TextureHost isn't valid yet");
+  if (!mRemoteTextureHost) {
     return gfx::SurfaceFormat::UNKNOWN;
   }
-  return mRemoteTextureForDisplayList->GetFormat();
+  return mRemoteTextureHost->GetFormat();
 }
 
 void RemoteTextureHostWrapper::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
   MOZ_ASSERT(mExternalImageId.isSome());
-  MOZ_ASSERT(mRemoteTextureForDisplayList);
-  MOZ_ASSERT(mRemoteTextureForDisplayList->mExternalImageId.isSome());
+  MOZ_ASSERT(mRemoteTextureHost);
+  MOZ_ASSERT(mRemoteTextureHost->mExternalImageId.isSome());
 
-  if (gfx::gfxVars::WebglOopAsyncPresentForceSync()) {
-    // sync mode
-    auto wrappedId = mRemoteTextureForDisplayList->mExternalImageId.ref();
-    RefPtr<wr::RenderTextureHost> texture =
-        new wr::RenderTextureHostWrapper(wrappedId);
-    wr::RenderThread::Get()->RegisterExternalImage(mExternalImageId.ref(),
-                                                   texture.forget());
-  } else {
-    // async mode
-    RefPtr<wr::RenderTextureHost> texture =
-        new wr::RenderTextureHostWrapper(mTextureId, mOwnerId, mForPid);
-    wr::RenderThread::Get()->RegisterExternalImage(mExternalImageId.ref(),
-                                                   texture.forget());
-  }
+  auto wrappedId = mRemoteTextureHost->mExternalImageId.ref();
+
+  RefPtr<wr::RenderTextureHost> texture =
+      new wr::RenderTextureHostWrapper(wrappedId);
+  wr::RenderThread::Get()->RegisterExternalImage(mExternalImageId.ref(),
+                                                 texture.forget());
 }
 
 void RemoteTextureHostWrapper::MaybeDestroyRenderTexture() {
-  if (mExternalImageId.isNothing() || !mRemoteTextureForDisplayList) {
+  if (mExternalImageId.isNothing() || !mRemoteTextureHost) {
     // RenderTextureHost was not created
     return;
   }
@@ -121,88 +109,88 @@ void RemoteTextureHostWrapper::MaybeDestroyRenderTexture() {
 }
 
 uint32_t RemoteTextureHostWrapper::NumSubTextures() {
-  if (!mRemoteTextureForDisplayList) {
+  if (!mRemoteTextureHost) {
     return 0;
   }
-  return mRemoteTextureForDisplayList->NumSubTextures();
+  return mRemoteTextureHost->NumSubTextures();
 }
 
 void RemoteTextureHostWrapper::PushResourceUpdates(
     wr::TransactionBuilder& aResources, ResourceUpdateOp aOp,
     const Range<wr::ImageKey>& aImageKeys, const wr::ExternalImageId& aExtID) {
-  MOZ_ASSERT(mRemoteTextureForDisplayList, "TextureHost isn't valid yet");
-  if (!mRemoteTextureForDisplayList) {
+  MOZ_ASSERT(mRemoteTextureHost, "TextureHost isn't valid yet");
+  if (!mRemoteTextureHost) {
     return;
   }
-  mRemoteTextureForDisplayList->PushResourceUpdates(aResources, aOp, aImageKeys,
-                                                    aExtID);
+  mRemoteTextureHost->PushResourceUpdates(aResources, aOp, aImageKeys, aExtID);
 }
 
 void RemoteTextureHostWrapper::PushDisplayItems(
     wr::DisplayListBuilder& aBuilder, const wr::LayoutRect& aBounds,
     const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
     const Range<wr::ImageKey>& aImageKeys, PushDisplayItemFlagSet aFlags) {
-  MOZ_ASSERT(mRemoteTextureForDisplayList, "TextureHost isn't valid yet");
+  MOZ_ASSERT(mRemoteTextureHost, "TextureHost isn't valid yet");
   MOZ_ASSERT(aImageKeys.length() > 0);
-  if (!mRemoteTextureForDisplayList) {
+  if (!mRemoteTextureHost) {
     return;
   }
-  mRemoteTextureForDisplayList->PushDisplayItems(aBuilder, aBounds, aClip,
-                                                 aFilter, aImageKeys, aFlags);
+  mRemoteTextureHost->PushDisplayItems(aBuilder, aBounds, aClip, aFilter,
+                                       aImageKeys, aFlags);
 }
 
 bool RemoteTextureHostWrapper::SupportsExternalCompositing(
     WebRenderBackend aBackend) {
-  if (!mRemoteTextureForDisplayList) {
+  if (!mRemoteTextureHost) {
     return false;
   }
-  return mRemoteTextureForDisplayList->SupportsExternalCompositing(aBackend);
+  return mRemoteTextureHost->SupportsExternalCompositing(aBackend);
 }
 
 void RemoteTextureHostWrapper::UnbindTextureSource() {}
 
 void RemoteTextureHostWrapper::NotifyNotUsed() {
-  if (mRemoteTextureForDisplayList) {
-    mRemoteTextureForDisplayList = nullptr;
+  if (mRemoteTextureHost) {
+    // Release mRemoteTextureHost.
+    RemoteTextureMap::Get()->ReleaseRemoteTextureHost(this);
   }
+  MOZ_ASSERT(!mRemoteTextureHost);
+
   RemoteTextureMap::Get()->UnregisterRemoteTextureHostWrapper(
       mTextureId, mOwnerId, mForPid);
 }
 
 TextureHostType RemoteTextureHostWrapper::GetTextureHostType() {
-  if (!mRemoteTextureForDisplayList) {
+  if (!mRemoteTextureHost) {
     return TextureHostType::Unknown;
   }
-  return mRemoteTextureForDisplayList->GetTextureHostType();
+  return mRemoteTextureHost->GetTextureHostType();
 }
 
 bool RemoteTextureHostWrapper::CheckIsReadyForRendering() {
-  if (!mRemoteTextureForDisplayList) {
-    // mRemoteTextureForDisplayList might be updated.
-    RemoteTextureMap::Get()->GetRemoteTextureForDisplayList(this);
-    MOZ_ASSERT(mRemoteTextureForDisplayList);
+  if (!mRemoteTextureHost) {
+    // mRemoteTextureHost might be updated.
+    RemoteTextureMap::Get()->GetRemoteTextureHost(this);
   }
-  return !!mRemoteTextureForDisplayList;
+  return !!mRemoteTextureHost;
 }
 
 void RemoteTextureHostWrapper::ApplyTextureFlagsToRemoteTexture() {
-  if (!mRemoteTextureForDisplayList) {
+  if (!mRemoteTextureHost) {
     return;
   }
-  mRemoteTextureForDisplayList->SetFlags(mFlags |
-                                         TextureFlags::DEALLOCATE_CLIENT);
+  mRemoteTextureHost->SetFlags(mFlags | TextureFlags::DEALLOCATE_CLIENT);
 }
 
-TextureHost* RemoteTextureHostWrapper::GetRemoteTextureHostForDisplayList(
-    const MonitorAutoLock& aProofOfLock) {
+TextureHost* RemoteTextureHostWrapper::GetRemoteTextureHost(
+    const MutexAutoLock& aProofOfLock) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  return mRemoteTextureForDisplayList;
+  return mRemoteTextureHost;
 }
 
-void RemoteTextureHostWrapper::SetRemoteTextureHostForDisplayList(
-    const MonitorAutoLock& aProofOfLock, TextureHost* aTextureHost) {
+void RemoteTextureHostWrapper::SetRemoteTextureHost(
+    const MutexAutoLock& aProofOfLock, TextureHost* aTextureHost) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  mRemoteTextureForDisplayList = aTextureHost;
+  mRemoteTextureHost = aTextureHost;
 }
 
 }  // namespace mozilla::layers
