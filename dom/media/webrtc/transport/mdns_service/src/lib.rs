@@ -440,7 +440,7 @@ impl MDNSService {
         self.handle = Some(builder.spawn(move || {
             gecko_profiler::register_thread(thread_name);
             let mdns_addr = std::net::SocketAddr::from(([224, 0, 0, 251], port));
-            let mut buffer: [u8; 1024] = [0; 1024];
+            let mut buffer: [u8; 9_000] = [0; 9_000];
             let mut hosts = HashMap::new();
             let mut unsent_queries = LinkedList::new();
             let mut pending_queries = HashMap::new();
@@ -682,7 +682,7 @@ mod tests {
             .join_multicast_v4(&std::net::Ipv4Addr::new(224, 0, 0, 251), &addr)
             .unwrap();
 
-        let mut buffer: [u8; 1024] = [0; 1024];
+        let mut buffer: [u8; 9_000] = [0; 9_000];
         thread::spawn(move || {
             let start = time::Instant::now();
             let mut questions = Vec::new();
