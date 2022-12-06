@@ -319,8 +319,6 @@ class ByteStreamTeeSourceAlgorithms final
     return do_AddRef(mTeeState->CancelPromise());
   };
 
-  void ErrorCallback() override {}
-
  protected:
   ~ByteStreamTeeSourceAlgorithms() override = default;
 

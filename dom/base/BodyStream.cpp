@@ -278,10 +278,14 @@ void BodyStream::WriteIntoReadRequestBuffer(JSContext* aCx,
   // All good.
 }
 
-// UnderlyingSource.cancel callback, implmented for BodyStream.
+// UnderlyingSource.cancel callback, implemented for BodyStream.
 already_AddRefed<Promise> BodyStream::CancelCallback(
     JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
     ErrorResult& aRv) {
+  return Promise::CreateResolvedWithUndefined(mGlobal, aRv);
+}
+
+void BodyStream::CloseInputAndReleaseObjects() {
   mMutex.AssertOnWritingThread();
 
   if (mState == eInitializing) {
@@ -298,30 +302,6 @@ already_AddRefed<Promise> BodyStream::CancelCallback(
   if (mOriginalInputStream) {
     MOZ_ASSERT(!mInputStream);
     mOriginalInputStream->Close();
-  }
-
-  RefPtr<Promise> promise = Promise::CreateResolvedWithUndefined(mGlobal, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  // Must come after all uses of members!
-  ReleaseObjects();
-
-  return promise.forget();
-}
-
-// Non-standard UnderlyingSource.error callback.
-void BodyStream::ErrorCallback() {
-  mMutex.AssertOnWritingThread();
-
-  if (mState == eInitializing) {
-    // The stream has been used for the first time.
-    mStreamHolder->MarkAsRead();
-  }
-
-  if (mInputStream) {
-    mInputStream->CloseWithStatus(NS_BASE_STREAM_CLOSED);
   }
 
   ReleaseObjects();
@@ -375,6 +355,15 @@ void BodyStream::ErrorPropagation(JSContext* aCx,
       ReadableStreamError(aCx, aStream, errorValue, rv);
       NS_WARNING_ASSERTION(!rv.Failed(), "Failed to error BodyStream");
     }
+  }
+
+  if (mState == eInitializing) {
+    // The stream has been used for the first time.
+    mStreamHolder->MarkAsRead();
+  }
+
+  if (mInputStream) {
+    mInputStream->CloseWithStatus(NS_BASE_STREAM_CLOSED);
   }
 
   ReleaseObjects(aProofOfLock);
@@ -610,7 +599,7 @@ void BodyStream::ReleaseObjects(const MutexSingleWriterAutoLock& aProofOfLock) {
 
   ReadableStream* stream = mStreamHolder->GetReadableStreamBody();
   if (stream) {
-    stream->ReleaseObjects();
+    stream->ReleaseObjectsFromBodyStream();
   }
 
   mWorkerRef = nullptr;

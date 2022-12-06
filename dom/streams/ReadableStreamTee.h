@@ -48,8 +48,6 @@ class ReadableStreamDefaultTeeSourceAlgorithms final
       JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
       ErrorResult& aRv) override;
 
-  void ErrorCallback() override {}
-
  protected:
   ~ReadableStreamDefaultTeeSourceAlgorithms() override = default;
 

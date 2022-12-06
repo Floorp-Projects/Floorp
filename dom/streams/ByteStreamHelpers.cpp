@@ -134,9 +134,10 @@ class BodyStreamUnderlyingSourceAlgorithms final
     return bodyStream->CancelCallback(aCx, aReason, aRv);
   }
 
-  void ErrorCallback() override {
-    RefPtr<BodyStream> bodyStream = mUnderlyingSource->GetBodyStream();
-    bodyStream->ErrorCallback();
+  void ReleaseObjects() override {
+    RefPtr<BodyStreamHolder> holder = mUnderlyingSource.forget();
+    RefPtr<BodyStream> bodyStream = holder->GetBodyStream();
+    bodyStream->CloseInputAndReleaseObjects();
   }
 
  protected:

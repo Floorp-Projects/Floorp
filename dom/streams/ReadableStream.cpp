@@ -141,10 +141,13 @@ void ReadableStream::SetNativeUnderlyingSource(
   mNativeUnderlyingSource = aUnderlyingSource;
 }
 
-void ReadableStream::ReleaseObjects() {
+void ReadableStream::ReleaseObjectsFromBodyStream() {
   SetNativeUnderlyingSource(nullptr);
 
-  mController->ClearAlgorithms();
+  // XXX(krosylight): Hacky way to workaround the ownership issue between
+  // BodyStream and ReadableStream trying to cleanup each other. See bug
+  // 1803386.
+  mController->ClearAlgorithmsWithoutRelease();
 }
 
 // Streams Spec: 4.2.4: https://streams.spec.whatwg.org/#rs-prototype

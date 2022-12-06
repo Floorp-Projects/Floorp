@@ -485,8 +485,6 @@ class TransformStreamUnderlyingSourceAlgorithms final
                                                 aRv);
   }
 
-  void ErrorCallback() override {}
-
  protected:
   ~TransformStreamUnderlyingSourceAlgorithms() override = default;
 

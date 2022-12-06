@@ -90,7 +90,9 @@ class ReadableStream : public nsISupports, public nsWrapperCache {
   }
   bool HasNativeUnderlyingSource() { return mNativeUnderlyingSource; }
 
-  void ReleaseObjects();
+  // XXX(krosylight): BodyStream should really be a subclass of ReadableStream
+  // instead of owning ReadableStream this way. See bug 1803386.
+  void ReleaseObjectsFromBodyStream();
 
   // [Transferable]
   // https://html.spec.whatwg.org/multipage/structured-data.html#transfer-steps
@@ -159,6 +161,8 @@ class ReadableStream : public nsISupports, public nsWrapperCache {
   // as the underlying source right now, I'm going to punt that problem to
   // the future where we need to provide other native underlying sources
   // (i.e. perhaps WebTransport.)
+  //
+  // See bug 1803386.
   RefPtr<BodyStreamHolder> mNativeUnderlyingSource;
 };
 
