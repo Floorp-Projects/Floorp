@@ -63,6 +63,13 @@ class ProviderQuickActions extends UrlbarProvider {
     return UrlbarUtils.PROVIDER_TYPE.PROFILE;
   }
 
+  get helpUrl() {
+    return (
+      Services.urlFormatter.formatURLPref("app.support.baseURL") +
+      "quick-actions-firefox-search-bar"
+    );
+  }
+
   getPriority(context) {
     if (!context.searchString) {
       return 1;
@@ -140,6 +147,7 @@ class ProviderQuickActions extends UrlbarProvider {
       {
         results: results.map(key => ({ key })),
         dynamicType: DYNAMIC_TYPE_NAME,
+        helpUrl: this.helpUrl,
         inputLength: input.length,
       }
     );
@@ -149,6 +157,9 @@ class ProviderQuickActions extends UrlbarProvider {
 
   getViewTemplate(result) {
     return {
+      attributes: {
+        selectable: false,
+      },
       children: [
         {
           name: "buttons",
@@ -193,6 +204,15 @@ class ProviderQuickActions extends UrlbarProvider {
             }
             return row;
           }),
+        },
+        {
+          name: "onboarding",
+          tag: "a",
+          attributes: {
+            "data-key": "onboarding-button",
+            class: "urlbarView-button urlbarView-button-help",
+            "data-l10n-id": "quickactions-learn-more",
+          },
         },
       ],
     };

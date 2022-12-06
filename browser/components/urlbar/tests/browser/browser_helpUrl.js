@@ -21,11 +21,11 @@ add_setup(async function() {
   });
 });
 
-// Sets `helpL10n` on the result payload and makes sure the help button ends
+// Sets `helpL10nId` on the result payload and makes sure the help button ends
 // up with a corresponding l10n attribute.
-add_task(async function title_helpL10n() {
-  let helpL10n = { id: "urlbar-tip-help-icon" };
-  let provider = registerTestProvider(1, { helpL10n });
+add_task(async function title_helpL10nId() {
+  let helpL10nId = "urlbar-tip-help-icon";
+  let provider = registerTestProvider(1, { helpL10nId });
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     value: "example",
     window,
@@ -40,7 +40,7 @@ add_task(async function title_helpL10n() {
   let l10nAttrs = document.l10n.getAttributes(helpButton);
   Assert.deepEqual(
     l10nAttrs,
-    { id: helpL10n.id, args: null },
+    { id: helpL10nId, args: null },
     "The l10n ID attribute was correctly set"
   );
 
