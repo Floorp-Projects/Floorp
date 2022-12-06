@@ -9818,9 +9818,14 @@ void nsWindow::SetEGLNativeWindowSize(
   if (!mContainer || !GdkIsWaylandDisplay()) {
     return;
   }
-  moz_container_wayland_egl_window_set_size(mContainer, aEGLWindowSize.width,
-                                            aEGLWindowSize.height);
-  moz_container_wayland_set_scale_factor(mContainer);
+  if (moz_container_wayland_egl_window_needs_size_update(
+          mContainer, aEGLWindowSize.ToUnknownSize(), GdkCeiledScaleFactor())) {
+    LOG("nsWindow::SetEGLNativeWindowSize() %d x %d", aEGLWindowSize.width,
+        aEGLWindowSize.height);
+    moz_container_wayland_egl_window_set_size(mContainer,
+                                              aEGLWindowSize.ToUnknownSize());
+    moz_container_wayland_set_scale_factor(mContainer);
+  }
 }
 #endif
 

@@ -110,9 +110,7 @@ MozContainerSurfaceLock::MozContainerSurfaceLock(MozContainer* aContainer) {
 MozContainerSurfaceLock::~MozContainerSurfaceLock() {
   moz_container_wayland_surface_unlock(mContainer, &mSurface);
 }
-struct wl_surface* MozContainerSurfaceLock::GetSurface() {
-  return mSurface;
-}
+struct wl_surface* MozContainerSurfaceLock::GetSurface() { return mSurface; }
 
 // Imlemented in MozContainer.cpp
 void moz_container_realize(GtkWidget* widget);
@@ -165,11 +163,12 @@ static void moz_container_wayland_move_locked(const MutexAutoLock& aProofOfLock,
 // rendering artifacts as wl_egl_window size does not match
 // GL rendering pipeline setup.
 void moz_container_wayland_egl_window_set_size(MozContainer* container,
-                                               int width, int height) {
+                                               nsIntSize aSize) {
   MozContainerWayland* wl_container = &container->wl_container;
   MutexAutoLock lock(*wl_container->container_lock);
   if (wl_container->eglwindow) {
-    wl_egl_window_resize(wl_container->eglwindow, width, height, 0, 0);
+    wl_egl_window_resize(wl_container->eglwindow, aSize.width, aSize.height, 0,
+                         0);
   }
 }
 
@@ -434,7 +433,7 @@ static gboolean moz_container_wayland_map_event(GtkWidget* widget,
     }
   }
 
-  moz_container_wayland_set_scale_factor_locked(MOZ_CONTAINER(widget));
+  moz_container_wayland_set_scale_factor_locked(lock, MOZ_CONTAINER(widget));
   moz_container_wayland_set_opaque_region_locked(lock, MOZ_CONTAINER(widget));
   moz_container_clear_input_region(MOZ_CONTAINER(widget));
   moz_container_wayland_invalidate(MOZ_CONTAINER(widget));
@@ -489,7 +488,7 @@ void moz_container_wayland_size_allocate(GtkWidget* widget,
         return;
       }
     }
-    moz_container_wayland_set_scale_factor_locked(container);
+    moz_container_wayland_set_scale_factor_locked(lock, container);
     moz_container_wayland_set_opaque_region_locked(lock, container);
     moz_container_wayland_move_locked(lock, container, allocation->x,
                                       allocation->y);
@@ -544,7 +543,27 @@ static void moz_container_wayland_set_opaque_region(MozContainer* container) {
   }
 }
 
-void moz_container_wayland_set_scale_factor_locked(MozContainer* container) {
+static void moz_container_wayland_surface_set_scale_locked(
+    const MutexAutoLock& aProofOfLock, MozContainerWayland* wl_container,
+    int scale) {
+  if (wl_container->buffer_scale == scale) {
+    return;
+  }
+
+  LOGCONTAINER("%s scale %d\n", __FUNCTION__, scale);
+
+  // There is a chance that the attached wl_buffer has not yet been doubled
+  // on the main thread when scale factor changed to 2. This leads to
+  // crash with the following message:
+  // Buffer size (AxB) must be an integer multiple of the buffer_scale (2)
+  // Removing the possibly wrong wl_buffer to prevent that crash:
+  wl_surface_attach(wl_container->surface, nullptr, 0, 0);
+  wl_surface_set_buffer_scale(wl_container->surface, scale);
+  wl_container->buffer_scale = scale;
+}
+
+void moz_container_wayland_set_scale_factor_locked(
+    const MutexAutoLock& aProofOfLock, MozContainer* container) {
   if (gfx::gfxVars::UseWebRenderCompositor()) {
     // the compositor backend handles scaling itself
     return;
@@ -554,8 +573,8 @@ void moz_container_wayland_set_scale_factor_locked(MozContainer* container) {
   wl_container->container_lock->AssertCurrentThreadOwns();
 
   nsWindow* window = moz_container_get_nsWindow(container);
-
-  if (window && window->UseFractionalScale()) {
+  MOZ_DIAGNOSTIC_ASSERT(window);
+  if (window->UseFractionalScale()) {
     if (!wl_container->viewport) {
       wl_container->viewport = wp_viewporter_get_viewport(
           WaylandDisplayGet()->GetViewporter(), wl_container->surface);
@@ -566,29 +585,15 @@ void moz_container_wayland_set_scale_factor_locked(MozContainer* container) {
                                 gdk_window_get_width(gdkWindow),
                                 gdk_window_get_height(gdkWindow));
   } else {
-    int scale = window ? window->GdkCeiledScaleFactor() : 1;
-
-    if (scale == wl_container->buffer_scale) {
-      return;
-    }
-
-    LOGCONTAINER("%s [%p] scale %d\n", __FUNCTION__,
-                 (void*)moz_container_get_nsWindow(container), scale);
-    // There is a chance that the attached wl_buffer has not yet been doubled
-    // on the main thread when scale factor changed to 2. This leads to
-    // crash with the following message:
-    // Buffer size (AxB) must be an integer multiple of the buffer_scale (2)
-    // Removing the possibly wrong wl_buffer to prevent that crash:
-    wl_surface_attach(wl_container->surface, nullptr, 0, 0);
-    wl_surface_set_buffer_scale(wl_container->surface, scale);
-    wl_container->buffer_scale = scale;
+    moz_container_wayland_surface_set_scale_locked(
+        aProofOfLock, wl_container, window->GdkCeiledScaleFactor());
   }
 }
 
 void moz_container_wayland_set_scale_factor(MozContainer* container) {
   MutexAutoLock lock(*container->wl_container.container_lock);
   if (container->wl_container.surface) {
-    moz_container_wayland_set_scale_factor_locked(container);
+    moz_container_wayland_set_scale_factor_locked(lock, container);
   }
 }
 
@@ -600,6 +605,8 @@ static bool moz_container_wayland_surface_create_locked(
              (void*)moz_container_get_nsWindow(container));
 
   GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(container));
+  MOZ_DIAGNOSTIC_ASSERT(window);
+
   wl_surface* parent_surface = gdk_wayland_window_get_wl_surface(window);
   if (!parent_surface) {
     LOGWAYLAND("    Failed - missing parent surface!");
@@ -693,32 +700,61 @@ void moz_container_wayland_surface_unlock(MozContainer* container,
   container->wl_container.container_lock->Unlock();
 }
 
+bool moz_container_wayland_egl_window_needs_size_update(MozContainer* container,
+                                                        nsIntSize aSize,
+                                                        int aScale) {
+  MozContainerWayland* wl_container = &container->wl_container;
+  if (wl_container->buffer_scale != aScale) {
+    return true;
+  }
+  nsIntSize recentSize;
+  wl_egl_window_get_attached_size(wl_container->eglwindow, &recentSize.width,
+                                  &recentSize.height);
+  return aSize != recentSize;
+}
+
 struct wl_egl_window* moz_container_wayland_get_egl_window(
     MozContainer* container, double scale) {
   MozContainerWayland* wl_container = &container->wl_container;
 
-  LOGCONTAINER("%s [%p] eglwindow %p\n", __FUNCTION__,
+  LOGCONTAINER("%s [%p] eglwindow %p scale %d\n", __FUNCTION__,
                (void*)moz_container_get_nsWindow(container),
-               (void*)wl_container->eglwindow);
+               (void*)wl_container->eglwindow, (int)scale);
 
   MutexAutoLock lock(*wl_container->container_lock);
   if (!wl_container->surface || !wl_container->ready_to_draw) {
-    LOGWAYLAND(
+    LOGCONTAINER(
         "  quit, wl_container->surface %p wl_container->ready_to_draw %d\n",
         wl_container->surface, wl_container->ready_to_draw);
     return nullptr;
   }
-  if (!wl_container->eglwindow) {
-    GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(container));
-    wl_container->eglwindow = wl_egl_window_create(
-        wl_container->surface, (int)round(gdk_window_get_width(window) * scale),
-        (int)round(gdk_window_get_height(window) * scale));
 
-    LOGCONTAINER("%s [%p] created eglwindow %p size %d x %d scale %f\n",
+  GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(container));
+  nsIntSize requestedSize((int)round(gdk_window_get_width(window) * scale),
+                          (int)round(gdk_window_get_height(window) * scale));
+
+  if (!wl_container->eglwindow) {
+    wl_container->eglwindow = wl_egl_window_create(
+        wl_container->surface, requestedSize.width, requestedSize.height);
+
+    LOGCONTAINER("%s [%p] created eglwindow %p size %d x %d (with scale %f)\n",
                  __FUNCTION__, (void*)moz_container_get_nsWindow(container),
-                 (void*)wl_container->eglwindow, gdk_window_get_width(window),
-                 gdk_window_get_height(window), scale);
+                 (void*)wl_container->eglwindow, requestedSize.width,
+                 requestedSize.height, scale);
+  } else {
+    nsIntSize recentSize;
+    wl_egl_window_get_attached_size(wl_container->eglwindow, &recentSize.width,
+                                    &recentSize.height);
+    if (requestedSize != recentSize) {
+      LOGCONTAINER("%s [%p] resized to %d x %d (with scale %f)\n", __FUNCTION__,
+                   (void*)moz_container_get_nsWindow(container),
+                   requestedSize.width, requestedSize.height, scale);
+      wl_egl_window_resize(wl_container->eglwindow, requestedSize.width,
+                           requestedSize.height, 0, 0);
+    }
   }
+  moz_container_wayland_surface_set_scale_locked(lock, wl_container,
+                                                 static_cast<int>(scale));
   return wl_container->eglwindow;
 }
 

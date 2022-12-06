@@ -303,7 +303,7 @@ void WindowSurfaceWaylandMB::Commit(
     }
   }
 
-  moz_container_wayland_set_scale_factor_locked(container);
+  moz_container_wayland_set_scale_factor_locked(aProofOfLock, container);
   mInProgressBuffer->AttachAndCommit(waylandSurface);
 
   mInProgressBuffer->ResetBufferAge();
