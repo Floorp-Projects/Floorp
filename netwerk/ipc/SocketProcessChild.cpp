@@ -466,8 +466,10 @@ SocketProcessChild::GetAndRemoveDataBridge(uint64_t aChannelId) {
   return mBackgroundDataBridgeMap.Extract(aChannelId);
 }
 
-mozilla::ipc::IPCResult SocketProcessChild::RecvClearSessionCache() {
+mozilla::ipc::IPCResult SocketProcessChild::RecvClearSessionCache(
+    ClearSessionCacheResolver&& aResolve) {
   nsNSSComponent::DoClearSSLExternalAndInternalSessionCache();
+  aResolve(void_t{});
   return IPC_OK();
 }
 
