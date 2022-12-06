@@ -344,7 +344,7 @@ export class FeatureCallout {
           let containerTop =
             getOffset(parentEl).top + parentEl.clientHeight - overlap;
           container.style.top = `${Math.max(0, containerTop)}px`;
-          centerHorizontally(container, parentEl);
+          alignHorizontally("center");
         },
       },
       bottom: {
@@ -357,7 +357,7 @@ export class FeatureCallout {
           let containerTop =
             getOffset(parentEl).top - container.clientHeight + overlap;
           container.style.top = `${Math.max(0, containerTop)}px`;
-          centerHorizontally(container, parentEl);
+          alignHorizontally("center");
         },
       },
       right: {
@@ -373,9 +373,8 @@ export class FeatureCallout {
           if (container.offsetHeight <= parentEl.offsetHeight) {
             container.style.top = `${getOffset(parentEl).top}px`;
           } else {
-            centerVertically(container, parentEl);
+            centerVertically();
           }
-          container.classList.add("arrow-inline-end");
         },
       },
       left: {
@@ -391,9 +390,26 @@ export class FeatureCallout {
           if (container.offsetHeight <= parentEl.offsetHeight) {
             container.style.top = `${getOffset(parentEl).top}px`;
           } else {
-            centerVertically(container, parentEl);
+            centerVertically();
           }
-          container.classList.add("arrow-inline-start");
+        },
+      },
+      "top-start": {
+        availableSpace() {
+          doc.documentElement.clientHeight -
+            getOffset(parentEl).top -
+            parentEl.clientHeight;
+        },
+        neededSpace: container.clientHeight - overlap,
+        position() {
+          // Point to an element above and at the start of the callout
+          let containerTop =
+            getOffset(parentEl).top + parentEl.clientHeight - overlap;
+          container.style.top = `${Math.max(
+            container.clientHeight - overlap,
+            containerTop
+          )}px`;
+          alignHorizontally("start");
         },
       },
       "top-end": {
@@ -411,7 +427,7 @@ export class FeatureCallout {
             container.clientHeight - overlap,
             containerTop
           )}px`;
-          alignEnd(container, parentEl);
+          alignHorizontally("end");
         },
       },
     };
@@ -461,31 +477,42 @@ export class FeatureCallout {
       return sortedPositions[0] || position;
     };
 
-    const centerHorizontally = () => {
-      let sideOffset = (parentEl.clientWidth - container.clientWidth) / 2;
-      let containerSide = RTL
-        ? doc.documentElement.clientWidth -
-          getOffset(parentEl).right +
-          sideOffset
-        : getOffset(parentEl).left + sideOffset;
-      container.style[RTL ? "right" : "left"] = `${Math.max(
-        containerSide,
-        0
-      )}px`;
-    };
-
     const centerVertically = () => {
       let topOffset = (container.offsetHeight - parentEl.offsetHeight) / 2;
       container.style.top = `${getOffset(parentEl).top - topOffset}px`;
     };
 
-    const alignEnd = () => {
-      let containerSide = RTL
-        ? parentEl.getBoundingClientRect().left
-        : parentEl.getBoundingClientRect().left +
-          parentEl.clientWidth -
-          container.clientWidth;
-      container.style.left = `${Math.max(containerSide, 0)}px`;
+    /**
+     * Horizontally align a top/bottom-positioned callout according to the
+     * passed position.
+     * @param {string} [position = "start"] <"start"|"end"|"center">
+     */
+    const alignHorizontally = position => {
+      switch (position) {
+        case "center": {
+          let sideOffset = (parentEl.clientWidth - container.clientWidth) / 2;
+          let containerSide = RTL
+            ? doc.documentElement.clientWidth -
+              getOffset(parentEl).right +
+              sideOffset
+            : getOffset(parentEl).left + sideOffset;
+          container.style[RTL ? "right" : "left"] = `${Math.max(
+            containerSide,
+            0
+          )}px`;
+          break;
+        }
+        default: {
+          let containerSide =
+            RTL ^ (position === "end")
+              ? parentEl.getBoundingClientRect().left +
+                parentEl.clientWidth -
+                container.clientWidth
+              : parentEl.getBoundingClientRect().left;
+          container.style.left = `${Math.max(containerSide, 0)}px`;
+          break;
+        }
+      }
     };
 
     clearPosition(container);

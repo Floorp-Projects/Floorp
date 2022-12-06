@@ -3,7 +3,7 @@
 
 "use strict";
 
-requestLongerTimeout(1);
+requestLongerTimeout(2);
 
 const featureTourPref = "browser.firefox-view.feature-tour";
 const defaultPrefValue = getPrefValueByScreen(1);
@@ -188,6 +188,44 @@ add_task(async function feature_callout_top_end_positioning() {
         parentLeft,
         1, // Display scaling can cause up to 1px difference in layout
         "Feature Callout's right edge is approximately aligned with parent element's right edge"
+      );
+
+      await closeCallout(document);
+    }
+  );
+  sandbox.restore();
+});
+
+// This test should be moved into a surface agnostic test suite with bug 1793656.
+add_task(async function feature_callout_top_start_positioning() {
+  const testMessage = getCalloutMessageById(
+    "FIREFOX_VIEW_FEATURE_TOUR_1_NO_CWS"
+  );
+  testMessage.message.content.screens[0].content.arrow_position = "top-start";
+  const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:firefoxview",
+    },
+    async browser => {
+      const { document } = browser.contentWindow;
+      await waitForCalloutScreen(document, "FEATURE_CALLOUT_1");
+      let parent = document.querySelector("#tab-pickup-container");
+      let container = document.querySelector(calloutSelector);
+      let parentLeft = parent.getBoundingClientRect().left;
+      let containerLeft = container.getBoundingClientRect().left;
+
+      ok(
+        container.classList.contains("arrow-top-start"),
+        "Feature Callout container has the expected arrow-top-start class"
+      );
+      isfuzzy(
+        containerLeft,
+        parentLeft,
+        1, // Display scaling can cause up to 1px difference in layout
+        "Feature Callout's left edge is approximately aligned with parent element's left edge"
       );
 
       await closeCallout(document);
