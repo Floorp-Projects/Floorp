@@ -114,3 +114,6 @@ TEST(cubeb, record)
   ASSERT_FALSE(stream_state.invalid_audio_value.load());
 #endif
 }
+
+#undef SAMPLE_FREQUENCY
+#undef STREAM_FORMAT
