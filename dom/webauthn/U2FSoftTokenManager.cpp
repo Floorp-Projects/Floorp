@@ -568,7 +568,8 @@ nsresult U2FSoftTokenManager::IsRegistered(const nsTArray<uint8_t>& aKeyHandle,
 // *      attestation signature
 //
 RefPtr<U2FRegisterPromise> U2FSoftTokenManager::Register(
-    const WebAuthnMakeCredentialInfo& aInfo, bool aForceNoneAttestation) {
+    const WebAuthnMakeCredentialInfo& aInfo, bool aForceNoneAttestation,
+    void _ctap2_status_callback(rust_ctap2_status_update_res*)) {
   if (!mInitialized) {
     nsresult rv = Init();
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -798,7 +799,8 @@ bool U2FSoftTokenManager::FindRegisteredKeyHandle(
 //  *     Signature
 //
 RefPtr<U2FSignPromise> U2FSoftTokenManager::Sign(
-    const WebAuthnGetAssertionInfo& aInfo) {
+    const WebAuthnGetAssertionInfo& aInfo,
+    void _ctap2_status_callback(rust_ctap2_status_update_res*)) {
   if (!mInitialized) {
     nsresult rv = Init();
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -976,7 +978,9 @@ RefPtr<U2FSignPromise> U2FSoftTokenManager::Sign(
   WebAuthnGetAssertionResult result(aInfo.ClientDataJSON(), keyHandle,
                                     signatureBuf, authenticatorData, extensions,
                                     signatureDataBuf, userHandle);
-  return U2FSignPromise::CreateAndResolve(std::move(result), __func__);
+  nsTArray<WebAuthnGetAssertionResultWrapper> results = {
+      {result, mozilla::Nothing()}};
+  return U2FSignPromise::CreateAndResolve(std::move(results), __func__);
 }
 
 void U2FSoftTokenManager::Cancel() {

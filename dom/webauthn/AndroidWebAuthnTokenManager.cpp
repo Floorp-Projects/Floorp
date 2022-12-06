@@ -87,7 +87,8 @@ void AndroidWebAuthnTokenManager::Drop() {
 }
 
 RefPtr<U2FRegisterPromise> AndroidWebAuthnTokenManager::Register(
-    const WebAuthnMakeCredentialInfo& aInfo, bool aForceNoneAttestation) {
+    const WebAuthnMakeCredentialInfo& aInfo, bool aForceNoneAttestation,
+    void _status_callback(rust_ctap2_status_update_res*)) {
   AssertIsOnOwningThread();
 
   ClearPromises();
@@ -275,7 +276,8 @@ void AndroidWebAuthnTokenManager::HandleRegisterResult(
 }
 
 RefPtr<U2FSignPromise> AndroidWebAuthnTokenManager::Sign(
-    const WebAuthnGetAssertionInfo& aInfo) {
+    const WebAuthnGetAssertionInfo& aInfo,
+    void _status_callback(rust_ctap2_status_update_res*)) {
   AssertIsOnOwningThread();
 
   ClearPromises();
@@ -393,7 +395,9 @@ void AndroidWebAuthnTokenManager::HandleSignResult(
               aResult.mClientDataJSON, aResult.mKeyHandle, aResult.mSignature,
               aResult.mAuthData, emptyExtensions, emptyBuffer,
               aResult.mUserHandle);
-          self->mSignPromise.Resolve(std::move(result), __func__);
+          nsTArray<WebAuthnGetAssertionResultWrapper> results = {
+              {result, mozilla::Nothing()}};
+          self->mSignPromise.Resolve(std::move(results), __func__);
         }));
   }
 }
