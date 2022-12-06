@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["RunState"];
-
 const STATE_STOPPED = 0;
 const STATE_RUNNING = 1;
 const STATE_QUITTING = 2;
@@ -21,7 +17,7 @@ var state = STATE_STOPPED;
  * the initial browser window has loaded we switch to STATE_RUNNING. On the
  * first notice that a browser shutdown was granted we switch to STATE_QUITTING.
  */
-var RunState = Object.freeze({
+export var RunState = Object.freeze({
   // If we're stopped then SessionStore hasn't been initialized yet. As soon
   // as the session is read from disk and the initial browser window has loaded
   // the run state will change to STATE_RUNNING.

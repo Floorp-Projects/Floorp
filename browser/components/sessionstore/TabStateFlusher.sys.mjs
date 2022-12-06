@@ -2,16 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["TabStateFlusher"];
-
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "SessionStore",
-  "resource:///modules/sessionstore/SessionStore.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
+});
 
 /**
  * A module that enables async flushes. Updates from frame scripts are
@@ -20,7 +14,7 @@ ChromeUtils.defineModuleGetter(
  * wait until the frame scripts reported back. At this point the parent has the
  * latest data and the action can continue.
  */
-var TabStateFlusher = Object.freeze({
+export var TabStateFlusher = Object.freeze({
   /**
    * Requests an async flush for the given browser. Returns a promise that will
    * resolve when we heard back from the content process and the parent has

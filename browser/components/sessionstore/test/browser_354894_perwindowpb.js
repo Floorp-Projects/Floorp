@@ -26,8 +26,8 @@
  * notifications. The latter won't.
  */
 
-const { SessionStartup } = ChromeUtils.import(
-  "resource:///modules/sessionstore/SessionStartup.jsm"
+const { SessionStartup } = ChromeUtils.importESModule(
+  "resource:///modules/sessionstore/SessionStartup.sys.mjs"
 );
 // The rejection "BrowserWindowTracker.getTopWindow(...) is null" is left
 // unhandled in some cases. This bug should be fixed, but for the moment this

@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["TabAttributes"];
-
 // We never want to directly read or write these attributes.
 // 'image' should not be accessed directly but handled by using the
 //         gBrowser.getIcon()/setIcon() methods.
@@ -22,7 +18,7 @@ const ATTRIBUTES_TO_SKIP = new Set([
 // A set of tab attributes to persist. We will read a given list of tab
 // attributes when collecting tab data and will re-set those attributes when
 // the given tab data is restored to a new tab.
-var TabAttributes = Object.freeze({
+export var TabAttributes = Object.freeze({
   persist(name) {
     return TabAttributesInternal.persist(name);
   },

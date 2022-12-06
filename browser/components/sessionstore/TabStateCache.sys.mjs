@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["TabStateCache"];
-
 /**
  * A cache for tabs data.
  *
@@ -16,7 +12,7 @@ var EXPORTED_SYMBOLS = ["TabStateCache"];
  * - that data is used very seldom by SessionStore;
  * - caching private data in addition to public data is memory consuming.
  */
-var TabStateCache = Object.freeze({
+export var TabStateCache = Object.freeze({
   /**
    * Retrieves cached data for a given |tab| or associated |browser|.
    *

@@ -8,8 +8,8 @@ const TEST_URL =
   "data:text/html;charset=utf-8,<input%20id=txt>" +
   "<input%20type=checkbox%20id=chk>";
 
-const { SessionStore } = ChromeUtils.import(
-  "resource:///modules/sessionstore/SessionStore.jsm"
+const { SessionStore } = ChromeUtils.importESModule(
+  "resource:///modules/sessionstore/SessionStore.sys.mjs"
 );
 
 /**

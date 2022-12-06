@@ -2,34 +2,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["SessionSaver"];
-
-const {
+import {
   cancelIdleCallback,
   clearTimeout,
   requestIdleCallback,
   setTimeout,
-} = ChromeUtils.importESModule("resource://gre/modules/Timer.sys.mjs");
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+} from "resource://gre/modules/Timer.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  RunState: "resource:///modules/sessionstore/RunState.jsm",
-  SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
-  SessionFile: "resource:///modules/sessionstore/SessionFile.jsm",
+  RunState: "resource:///modules/sessionstore/RunState.sys.mjs",
+  SessionFile: "resource:///modules/sessionstore/SessionFile.sys.mjs",
+  SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
 });
 
 /*
@@ -74,7 +63,7 @@ var stopWatchFinish = stopWatch("finish");
 /**
  * The external API implemented by the SessionSaver module.
  */
-var SessionSaver = Object.freeze({
+export var SessionSaver = Object.freeze({
   /**
    * Immediately saves the current session to disk.
    */

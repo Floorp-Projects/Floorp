@@ -7,11 +7,9 @@
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "SessionStore",
-  "resource:///modules/sessionstore/SessionStore.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
+});
 
 var gStateObject;
 var gTreeData;

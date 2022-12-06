@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["SessionFile"];
-
 /**
  * Implementation of all the disk I/O required by the session store.
  * This is a private API, meant to be used only by the session store.
@@ -19,16 +15,12 @@ var EXPORTED_SYMBOLS = ["SessionFile"];
  * another attempts to copy that file.
  */
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  RunState: "resource:///modules/sessionstore/RunState.jsm",
-  SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
-  SessionWriter: "resource:///modules/sessionstore/SessionWriter.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  RunState: "resource:///modules/sessionstore/RunState.sys.mjs",
+  SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
+  SessionWriter: "resource:///modules/sessionstore/SessionWriter.sys.mjs",
 });
 
 const PREF_UPGRADE_BACKUP = "browser.sessionstore.upgradeBackup.latestBuildID";
@@ -38,7 +30,7 @@ const PREF_MAX_UPGRADE_BACKUPS =
 const PREF_MAX_SERIALIZE_BACK = "browser.sessionstore.max_serialize_back";
 const PREF_MAX_SERIALIZE_FWD = "browser.sessionstore.max_serialize_forward";
 
-var SessionFile = {
+export var SessionFile = {
   /**
    * Read the contents of the session file, asynchronously.
    */

@@ -20,17 +20,17 @@ const HTTPSROOT = ROOT.replace(
   "https://example.com/"
 );
 
-const { SessionSaver } = ChromeUtils.import(
-  "resource:///modules/sessionstore/SessionSaver.jsm"
+const { SessionSaver } = ChromeUtils.importESModule(
+  "resource:///modules/sessionstore/SessionSaver.sys.mjs"
 );
-const { SessionFile } = ChromeUtils.import(
-  "resource:///modules/sessionstore/SessionFile.jsm"
+const { SessionFile } = ChromeUtils.importESModule(
+  "resource:///modules/sessionstore/SessionFile.sys.mjs"
 );
-const { TabState } = ChromeUtils.import(
-  "resource:///modules/sessionstore/TabState.jsm"
+const { TabState } = ChromeUtils.importESModule(
+  "resource:///modules/sessionstore/TabState.sys.mjs"
 );
-const { TabStateFlusher } = ChromeUtils.import(
-  "resource:///modules/sessionstore/TabStateFlusher.jsm"
+const { TabStateFlusher } = ChromeUtils.importESModule(
+  "resource:///modules/sessionstore/TabStateFlusher.sys.mjs"
 );
 const ss = SessionStore;
 

@@ -62,7 +62,7 @@ avoid-blacklist-and-whitelist:
         - browser/components/preferences/privacy.js
         - browser/components/resistfingerprinting/test/mochitest/test_bug1354633_media_error.html
         - browser/components/safebrowsing/content/test/browser_whitelisted.js
-        - browser/components/sessionstore/ContentSessionStore.jsm
+        - browser/components/sessionstore/ContentSessionStore.sys.mjs
         - browser/components/sessionstore/test/browser_crashedTabs.js
         - browser/components/uitour/UITourChild.jsm
         - browser/components/urlbar/tests/browser/browser_searchSingleWordNotification.js
