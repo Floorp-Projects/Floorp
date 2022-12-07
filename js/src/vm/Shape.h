@@ -96,7 +96,7 @@ class PropertyIteratorObject;
 // Hash policy for ShapeCachePtr's ShapeSetForAdd. Maps the new property key and
 // flags to the new shape.
 struct ShapeForAddHasher : public DefaultHasher<Shape*> {
-  using Key = Shape*;
+  using Key = SharedShape*;
 
   struct Lookup {
     PropertyKey key;
@@ -106,9 +106,10 @@ struct ShapeForAddHasher : public DefaultHasher<Shape*> {
   };
 
   static MOZ_ALWAYS_INLINE HashNumber hash(const Lookup& l);
-  static MOZ_ALWAYS_INLINE bool match(Shape* shape, const Lookup& l);
+  static MOZ_ALWAYS_INLINE bool match(SharedShape* shape, const Lookup& l);
 };
-using ShapeSetForAdd = HashSet<Shape*, ShapeForAddHasher, SystemAllocPolicy>;
+using ShapeSetForAdd =
+    HashSet<SharedShape*, ShapeForAddHasher, SystemAllocPolicy>;
 
 // Each shape has a cache pointer that's either:
 //
@@ -139,11 +140,11 @@ class ShapeCachePtr {
   bool isSingleShapeForAdd() const {
     return (bits & MASK) == SINGLE_SHAPE_FOR_ADD && !isNone();
   }
-  Shape* toSingleShapeForAdd() const {
+  SharedShape* toSingleShapeForAdd() const {
     MOZ_ASSERT(isSingleShapeForAdd());
-    return reinterpret_cast<Shape*>(bits & ~uintptr_t(MASK));
+    return reinterpret_cast<SharedShape*>(bits & ~uintptr_t(MASK));
   }
-  void setSingleShapeForAdd(Shape* shape) {
+  void setSingleShapeForAdd(SharedShape* shape) {
     MOZ_ASSERT(shape);
     MOZ_ASSERT((uintptr_t(shape) & MASK) == 0);
     MOZ_ASSERT(!isShapeSetForAdd());  // Don't leak the ShapeSet.
@@ -359,23 +360,6 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
                                     uint32_t* index);
   MOZ_ALWAYS_INLINE PropMap* lookupPure(PropertyKey key, uint32_t* index);
 
-  bool lastPropertyMatchesForAdd(PropertyKey key, PropertyFlags flags,
-                                 uint32_t* slot) const {
-    MOZ_ASSERT(propMapLength() > 0);
-    MOZ_ASSERT(!isDictionary());
-    uint32_t index = propMapLength() - 1;
-    SharedPropMap* map = sharedPropMap();
-    if (map->getKey(index) != key) {
-      return false;
-    }
-    PropertyInfo prop = map->getPropertyInfo(index);
-    if (prop.flags() != flags) {
-      return false;
-    }
-    *slot = prop.maybeSlot();
-    return true;
-  }
-
   const JSClass* getObjectClass() const { return base()->clasp(); }
   JS::Realm* realm() const { return base()->realm(); }
 
@@ -503,6 +487,23 @@ class SharedShape : public js::Shape {
                            Handle<SharedPropMap*> map, uint32_t mapLength);
 
  public:
+  bool lastPropertyMatchesForAdd(PropertyKey key, PropertyFlags flags,
+                                 uint32_t* slot) const {
+    MOZ_ASSERT(isShared());
+    MOZ_ASSERT(propMapLength() > 0);
+    uint32_t index = propMapLength() - 1;
+    SharedPropMap* map = sharedPropMap();
+    if (map->getKey(index) != key) {
+      return false;
+    }
+    PropertyInfo prop = map->getPropertyInfo(index);
+    if (prop.flags() != flags) {
+      return false;
+    }
+    *slot = prop.maybeSlot();
+    return true;
+  }
+
   /*
    * Lookup an initial shape matching the given parameters, creating an empty
    * shape if none was found.
