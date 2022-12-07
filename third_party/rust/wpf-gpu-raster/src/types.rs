@@ -107,10 +107,6 @@ pub const    PathPointTypeBezier: u8          = 3;    // default Bezier (= cubic
 pub const    PathPointTypePathTypeMask: u8    = 0x07; // type mask (lowest 3 bits).
 pub const    PathPointTypeCloseSubpath: u8    = 0x80; // closed flag
 
-use std::cell::RefCell;
-
-use crate::{hwvertexbuffer::CHwVertexBuffer, OutputVertex};
-
 
 pub type DynArray<T> = Vec<T>;
 
@@ -141,22 +137,6 @@ impl<T> DynArrayExts<T> for DynArray<T> {
     }
 }
 
-#[derive(Default)]
-pub struct CD3DDeviceLevel1 {
-    pub clipRect: MilPointAndSizeL,
-    pub output: RefCell<Vec<OutputVertex>>
-}
-impl CD3DDeviceLevel1 {
-    pub fn new() -> Self { Default::default() }
-    pub fn GetClipRect(&self, rect: &mut MilPointAndSizeL) {
-        *rect = self.clipRect.clone();
-    }
-    pub fn GetViewport(&self) -> MilPointAndSizeL { self.clipRect.clone() }
-    pub fn GetVB_XYZDUV2(&self) -> Box<CHwVertexBuffer> {
-        Box::new(Default::default())
-    }
-    
-}
 pub struct CHwPipelineBuilder;
 
 pub mod CoordinateSpace {

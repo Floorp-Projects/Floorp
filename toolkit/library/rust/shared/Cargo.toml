@@ -100,8 +100,8 @@ localization-ffi = { path = "../../../../intl/l10n/rust/localization-ffi" }
 processtools = { path = "../../../components/processtools" }
 qcms = { path = "../../../../gfx/qcms", features = ["c_bindings", "neon"], default-features = false }
 
-wpf-gpu-raster = { git = "https://github.com/FirefoxGraphics/wpf-gpu-raster", rev = "b6ca51395c56648b50f21f68a1586f94f8b966c4" }
-aa-stroke = { git = "https://github.com/FirefoxGraphics/aa-stroke", rev = "5289b0ff5736a6a6b916ef007fcf07ac14a663d5" }
+wpf-gpu-raster = { git = "https://github.com/FirefoxGraphics/wpf-gpu-raster", rev = "e07e3741d1613b1b7ddb85a1120ed4071b3d6a56" }
+aa-stroke = { git = "https://github.com/FirefoxGraphics/aa-stroke", rev = "07d3c25322518f294300e96246e09b95e118555d" }
 
 # Force url to stay at 2.1.0. See bug 1734538.
 url = "=2.1.0"

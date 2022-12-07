@@ -31,7 +31,9 @@ struct VertexBuffer {
 };
 
 extern "C" {
-Stroker* aa_stroke_new(const StrokeStyle* style);
+Stroker* aa_stroke_new(const StrokeStyle* style,
+                       OutputVertex* output_ptr = nullptr,
+                       size_t output_capacity = 0);
 void aa_stroke_move_to(Stroker* s, float x, float y, bool closed);
 void aa_stroke_line_to(Stroker* s, float x, float y, bool end);
 void aa_stroke_curve_to(Stroker* s, float c1x, float c1y, float c2x, float c2y,

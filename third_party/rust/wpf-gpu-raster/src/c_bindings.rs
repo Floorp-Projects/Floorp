@@ -102,17 +102,35 @@ pub extern "C" fn wgr_path_rasterize_to_tri_list(
     clip_height: i32,
     need_inside: bool,
     need_outside: bool,
+    output_ptr: *mut OutputVertex,
+    output_capacity: usize,
 ) -> VertexBuffer {
-    let result = rasterize_to_tri_list(
+    let output_buffer = if output_ptr != std::ptr::null_mut() {
+        unsafe { Some(std::slice::from_raw_parts_mut(output_ptr, output_capacity)) }
+    } else {
+        None
+    };
+    let mut result = rasterize_to_tri_list(
         path.fill_mode,
         unsafe { std::slice::from_raw_parts(path.types, path.num_types) },
         unsafe { std::slice::from_raw_parts(path.points, path.num_points) },
         clip_x, clip_y, clip_width, clip_height,
-        need_inside, need_outside,
+        need_inside, need_outside, output_buffer,
     );
-    let vb = VertexBuffer { data: result.as_ptr(), len: result.len() };
-    std::mem::forget(result);
-    vb
+    if let Some(output_buffer_size) = result.get_output_buffer_size() {
+        VertexBuffer {
+            data: std::ptr::null(),
+            len: output_buffer_size,
+        }
+    } else {
+        let slice = result.flush_output();
+        let vb = VertexBuffer {
+            data: slice.as_ptr(),
+            len: slice.len(),
+        };
+        std::mem::forget(slice);
+        vb
+    }
 }
 
 #[no_mangle]
@@ -124,7 +142,11 @@ pub extern "C" fn wgr_path_release(path: Path) {
 #[no_mangle]
 pub extern "C" fn wgr_vertex_buffer_release(vb: VertexBuffer)
 {
-    unsafe { drop(Box::from_raw(std::slice::from_raw_parts_mut(vb.data as *mut OutputVertex, vb.len))) }
+    if vb.data != std::ptr::null() {
+        unsafe {
+            drop(Box::from_raw(std::slice::from_raw_parts_mut(vb.data as *mut OutputVertex, vb.len)));
+        }
+    }
 }
 
 #[no_mangle]

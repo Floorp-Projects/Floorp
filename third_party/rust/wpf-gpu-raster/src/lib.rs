@@ -44,17 +44,14 @@ pub mod c_bindings;
 #[cfg(test)]
 mod tri_rasterize;
 
-use std::{rc::Rc, cell::RefCell};
-
 use aarasterizer::CheckValidRange28_4;
 use hwrasterizer::CHwRasterizer;
-use hwvertexbuffer::CHwVertexBufferBuilder;
-use matrix::CMatrix;
+use hwvertexbuffer::{CHwVertexBuffer, CHwVertexBufferBuilder};
 use real::CFloatFPU;
-use types::{CoordinateSpace, CD3DDeviceLevel1, MilFillMode, PathPointTypeStart, MilPoint2F, PathPointTypeLine, MilVertexFormat, MilVertexFormatAttribute, DynArray, BYTE, PathPointTypeBezier, PathPointTypeCloseSubpath, CMILSurfaceRect, POINT};
+use types::{MilFillMode, PathPointTypeStart, MilPoint2F, MilPointAndSizeL, PathPointTypeLine, MilVertexFormat, MilVertexFormatAttribute, DynArray, BYTE, PathPointTypeBezier, PathPointTypeCloseSubpath, CMILSurfaceRect, POINT};
 
 #[repr(C)]
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct OutputVertex {
     pub x: f32,
     pub y: f32,
@@ -217,7 +214,8 @@ impl PathBuilder {
         } else {
             (clip_x, clip_y, clip_width, clip_height, false)
         };
-        rasterize_to_tri_list(self.fill_mode, &self.types, &self.points, x, y, width, height, self.need_inside, need_outside)
+        rasterize_to_tri_list(self.fill_mode, &self.types, &self.points, x, y, width, height, self.need_inside, need_outside, None)
+            .flush_output()
     }
 
     pub fn get_path(&mut self) -> Option<OutputPath> {
@@ -239,7 +237,7 @@ impl PathBuilder {
 // fill the inside of the path excluding the outside. It may alternatively be desirable to fill the
 // outside the path out to the clip boundary, optionally keeping the inside. PathBuilder may be
 // used instead as a simpler interface to this function that handles building the path arrays.
-pub fn rasterize_to_tri_list(
+pub fn rasterize_to_tri_list<'a>(
     fill_mode: FillMode,
     types: &[BYTE],
     points: &[POINT],
@@ -249,37 +247,24 @@ pub fn rasterize_to_tri_list(
     clip_height: i32,
     need_inside: bool,
     need_outside: bool,
-) -> Box<[OutputVertex]> {
-    let mut rasterizer = CHwRasterizer::new();
-    let mut device = CD3DDeviceLevel1::new();
-
-    device.clipRect.X = clip_x;
-    device.clipRect.Y = clip_y;
-    device.clipRect.Width = clip_width;
-    device.clipRect.Height = clip_height;
-    let device = Rc::new(device);
-    /*
-    device.m_rcViewport = device.clipRect;
-    */
-    let worldToDevice: CMatrix<CoordinateSpace::Shape, CoordinateSpace::Device> = CMatrix::Identity();
-
+    output_buffer: Option<&'a mut [OutputVertex]>,
+) -> CHwVertexBuffer<'a> {
+    let clipRect = MilPointAndSizeL {
+        X: clip_x,
+        Y: clip_y,
+        Width: clip_width,
+        Height: clip_height,
+    };
     let mil_fill_mode = match fill_mode {
         FillMode::EvenOdd => MilFillMode::Alternate,
         FillMode::Winding => MilFillMode::Winding,
     };
 
-    rasterizer.Setup(device.clone(), mil_fill_mode, Some(&worldToDevice));
-
-    let mut m_mvfIn: MilVertexFormat = MilVertexFormatAttribute::MILVFAttrNone as MilVertexFormat;
+    let m_mvfIn: MilVertexFormat = MilVertexFormatAttribute::MILVFAttrXY as MilVertexFormat;
     let m_mvfGenerated: MilVertexFormat  = MilVertexFormatAttribute::MILVFAttrNone as MilVertexFormat;
     //let mvfaAALocation  = MILVFAttrNone;
     const HWPIPELINE_ANTIALIAS_LOCATION: MilVertexFormatAttribute = MilVertexFormatAttribute::MILVFAttrDiffuse;
     let mvfaAALocation = HWPIPELINE_ANTIALIAS_LOCATION;
-
-    rasterizer.GetPerVertexDataType(&mut m_mvfIn);
-    let vertexBuilder= Rc::new(RefCell::new(CHwVertexBufferBuilder::Create(m_mvfIn, m_mvfIn | m_mvfGenerated,
-        mvfaAALocation,
-        device.clone())));
 
     let outside_bounds = if need_outside {
         Some(CMILSurfaceRect {
@@ -291,12 +276,22 @@ pub fn rasterize_to_tri_list(
     } else {
         None
     };
-    vertexBuilder.borrow_mut().SetOutsideBounds(outside_bounds.as_ref(), need_inside);
-    vertexBuilder.borrow_mut().BeginBuilding();
 
-    rasterizer.SendGeometry(vertexBuilder.clone(), points, types);
-    vertexBuilder.borrow_mut().FlushTryGetVertexBuffer(None);
-    device.output.replace(Vec::new()).into_boxed_slice()
+    let mut vertexBuffer = CHwVertexBuffer::new(output_buffer);
+    {
+        let mut vertexBuilder = CHwVertexBufferBuilder::Create(
+            m_mvfIn, m_mvfIn | m_mvfGenerated, mvfaAALocation, &mut vertexBuffer);
+        vertexBuilder.SetOutsideBounds(outside_bounds.as_ref(), need_inside);
+        vertexBuilder.BeginBuilding();
+        {
+            let mut rasterizer = CHwRasterizer::new(
+                &mut vertexBuilder, mil_fill_mode, None, clipRect);
+            rasterizer.SendGeometry(points, types);
+        }
+        vertexBuilder.EndBuilding();
+    }
+
+    vertexBuffer
 }
 
 #[cfg(test)]
