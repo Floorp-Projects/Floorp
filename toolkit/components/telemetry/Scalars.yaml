@@ -7535,35 +7535,18 @@ contextual.services.topsites:
 
 
 contextual.services.quicksuggest:
-  impression_dynamic_wikipedia:
+  impression:
     bug_numbers:
-      - 1800993
+      - 1693927
     description: >
-      A keyed uint recording how many times the user has viewed sponsored
-      Firefox Suggest dynamic wikipedia results in the urlbar. The
-      key is the 1-based index of each result.
+      A keyed uint recording how many times the user has viewed Firefox Suggest
+      (a.k.a. Quick Suggest) results in the urlbar. The key is the 1-based index
+      of each result.
     expires: never
     kind: uint
     keyed: true
     notification_emails:
-      - fx-search-telemetry@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - main
-  impression_nonsponsored:
-    bug_numbers:
-      - 1800993
-    description: >
-      A keyed uint recording how many times the user has viewed non-sponsored
-      Firefox Suggest (a.k.a. Quick Suggest) results in the urlbar. The key is
-      the 1-based index of each result.
-    expires: never
-    kind: uint
-    keyed: true
-    notification_emails:
-      - fx-search-telemetry@mozilla.com
+      - najiang@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -7580,24 +7563,7 @@ contextual.services.quicksuggest:
     kind: uint
     keyed: true
     notification_emails:
-      - fx-search-telemetry@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - main
-  impression_sponsored:
-    bug_numbers:
-      - 1800993
-    description: >
-      A keyed uint recording how many times the user has viewed sponsored Firefox
-      Suggest (a.k.a. Quick Suggest) results in the urlbar. The key is the 1-based
-      index of each result.
-    expires: never
-    kind: uint
-    keyed: true
-    notification_emails:
-      - fx-search-telemetry@mozilla.com
+      - adw@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -7614,41 +7580,24 @@ contextual.services.quicksuggest:
     kind: uint
     keyed: true
     notification_emails:
-      - fx-search-telemetry@mozilla.com
+      - adw@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
     record_in_processes:
       - main
-  click_dynamic_wikipedia:
+  click:
     bug_numbers:
-      - 1800993
+      - 1693927
     description: >
       A keyed uint recording how many times the user has clicked on Firefox
-      Suggest dynamic wikipedia results in the urlbar (not including the
+      Suggests (a.k.a. Quick Suggest) results in the urlbar (not including the
       help button). The key is the 1-based index of each result.
     expires: never
     kind: uint
     keyed: true
     notification_emails:
-      - fx-search-telemetry@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - main
-  click_nonsponsored:
-    bug_numbers:
-      - 1800993
-    description: >
-      A keyed uint recording how many times the user has clicked on non-sponsored
-      Firefox Suggests (a.k.a. Quick Suggest) results in the urlbar (not
-      including the help button). The key is the 1-based index of each result.
-    expires: never
-    kind: uint
-    keyed: true
-    notification_emails:
-      - fx-search-telemetry@mozilla.com
+      - najiang@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -7666,24 +7615,7 @@ contextual.services.quicksuggest:
     kind: uint
     keyed: true
     notification_emails:
-      - fx-search-telemetry@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - main
-  click_sponsored:
-    bug_numbers:
-      - 1800993
-    description: >
-      A keyed uint recording how many times the user has clicked on sponsored
-      Firefox Suggests (a.k.a. Quick Suggest) results in the urlbar (not
-      including the help button). The key is the 1-based index of each result.
-    expires: never
-    kind: uint
-    keyed: true
-    notification_emails:
-      - fx-search-telemetry@mozilla.com
+      - adw@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -7700,42 +7632,24 @@ contextual.services.quicksuggest:
     kind: uint
     keyed: true
     notification_emails:
-      - fx-search-telemetry@mozilla.com
+      - adw@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
     record_in_processes:
       - main
-  help_dynamic_wikipedia:
+  help:
     bug_numbers:
-      - 1800993
+      - 1693927
     description: >
       A keyed uint recording how many times the user has clicked on the help
-      button in sponsored Firefox Suggest dynamic wikipedia results
-      in the urlbar (not including the help button). The key is the 1-based
-      index of each result.
+      button in Firefox Suggests (a.k.a. Quick Suggest) results in the urlbar.
+      The key is the 1-based index of each result.
     expires: never
     kind: uint
     keyed: true
     notification_emails:
-      - fx-search-telemetry@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - main
-  help_nonsponsored:
-    bug_numbers:
-      - 1800993
-    description: >
-      A keyed uint recording how many times the user has clicked on the help
-      button in non-sponsored Firefox Suggests (a.k.a. Quick Suggest) results in
-      the urlbar. The key is the 1-based index of each result.
-    expires: never
-    kind: uint
-    keyed: true
-    notification_emails:
-      - fx-search-telemetry@mozilla.com
+      - najiang@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -7753,24 +7667,7 @@ contextual.services.quicksuggest:
     kind: uint
     keyed: true
     notification_emails:
-      - fx-search-telemetry@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - main
-  help_sponsored:
-    bug_numbers:
-      - 1800993
-    description: >
-      A keyed uint recording how many times the user has clicked on the help
-      button in sponsored Firefox Suggests (a.k.a. Quick Suggest) results in
-      the urlbar. The key is the 1-based index of each result.
-    expires: never
-    kind: uint
-    keyed: true
-    notification_emails:
-      - fx-search-telemetry@mozilla.com
+      - adw@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -7788,24 +7685,7 @@ contextual.services.quicksuggest:
     kind: uint
     keyed: true
     notification_emails:
-      - fx-search-telemetry@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - main
-  block_dynamic_wikipedia:
-    bug_numbers:
-      - 1800993
-    description: >
-      A keyed uint recording how many times the user has blocked/dismissed
-      sponsored Firefox Suggest dynamic wikipedia results in the
-      urlbar. The key is the 1-based index of each result.
-    expires: never
-    kind: uint
-    keyed: true
-    notification_emails:
-      - fx-search-telemetry@mozilla.com
+      - adw@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -7822,7 +7702,7 @@ contextual.services.quicksuggest:
     kind: uint
     keyed: true
     notification_emails:
-      - fx-search-telemetry@mozilla.com
+      - adw@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -7839,7 +7719,7 @@ contextual.services.quicksuggest:
     kind: uint
     keyed: true
     notification_emails:
-      - fx-search-telemetry@mozilla.com
+      - adw@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -7856,7 +7736,7 @@ contextual.services.quicksuggest:
     kind: uint
     keyed: true
     notification_emails:
-      - fx-search-telemetry@mozilla.com
+      - adw@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -7873,7 +7753,7 @@ contextual.services.quicksuggest:
     kind: uint
     keyed: true
     notification_emails:
-      - fx-search-telemetry@mozilla.com
+      - adw@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'

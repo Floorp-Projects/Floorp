@@ -30,7 +30,7 @@ const SUGGESTIONS = [
     keywords: ["sponsored"],
     click_url: "http://example.com/click",
     impression_url: "http://example.com/impression",
-    advertiser: "testadvertiser",
+    advertiser: "TestAdvertiser",
   },
   {
     id: 2,
@@ -39,17 +39,8 @@ const SUGGESTIONS = [
     keywords: ["nonsponsored"],
     click_url: "http://example.com/click",
     impression_url: "http://example.com/impression",
-    advertiser: "testadvertiser",
+    advertiser: "TestAdvertiser",
     iab_category: "5 - Education",
-  },
-  {
-    id: 3,
-    url: "http://example.com/wikipedia",
-    title: "Dynamic Wikipedia suggestion",
-    keywords: ["wikipedia"],
-    click_url: "http://example.com/click",
-    impression_url: "http://example.com/impression",
-    advertiser: "dynamic-wikipedia",
   },
 ];
 
@@ -187,10 +178,7 @@ async function doImpressionTest({
     });
 
     let index = 1;
-    let isDynamicWikipedia = suggestion.advertiser == "dynamic-wikipedia";
-    let isSponsored =
-      suggestion.keywords[0] == "sponsored" || isDynamicWikipedia;
-
+    let isSponsored = suggestion.keywords[0] == "sponsored";
     await QuickSuggestTestUtils.assertIsQuickSuggest({
       window,
       index,
@@ -206,9 +194,7 @@ async function doImpressionTest({
     });
 
     let scalars = {
-      [isSponsored
-        ? TELEMETRY_SCALARS.IMPRESSION_SPONSORED
-        : TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED]: index + 1,
+      [TELEMETRY_SCALARS.IMPRESSION]: index + 1,
     };
     if (isBestMatch) {
       if (isSponsored) {
@@ -223,17 +209,7 @@ async function doImpressionTest({
         };
       }
     }
-    if (isDynamicWikipedia) {
-      scalars = {
-        ...scalars,
-        [TELEMETRY_SCALARS.IMPRESSION_DYNAMIC_WIKIPEDIA]: index + 1,
-      };
-    }
     QuickSuggestTestUtils.assertScalars(scalars);
-    let suggestion_type = isSponsored ? "sponsored" : "nonsponsored";
-    if (isDynamicWikipedia) {
-      suggestion_type = "dynamic-wikipedia";
-    }
     QuickSuggestTestUtils.assertEvents([
       {
         category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
@@ -242,7 +218,7 @@ async function doImpressionTest({
         extra: {
           match_type: isBestMatch ? "best-match" : "firefox-suggest",
           position: String(index + 1),
-          suggestion_type,
+          suggestion_type: isSponsored ? "sponsored" : "nonsponsored",
         },
       },
     ]);
@@ -255,7 +231,6 @@ async function doImpressionTest({
           is_clicked: false,
           match_type: isBestMatch ? "best-match" : "firefox-suggest",
           position: index + 1,
-          advertiser: suggestion.advertiser,
         },
       },
     ]);
@@ -492,9 +467,7 @@ async function doClickTest({
     });
 
     let index = 1;
-    let isDynamicWikipedia = suggestion.advertiser == "dynamic-wikipedia";
-    let isSponsored =
-      suggestion.keywords[0] == "sponsored" || isDynamicWikipedia;
+    let isSponsored = suggestion.keywords[0] == "sponsored";
     let result = await QuickSuggestTestUtils.assertIsQuickSuggest({
       window,
       index,
@@ -512,12 +485,8 @@ async function doClickTest({
     });
 
     let scalars = {
-      [isSponsored
-        ? TELEMETRY_SCALARS.IMPRESSION_SPONSORED
-        : TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED]: index + 1,
-      [isSponsored
-        ? TELEMETRY_SCALARS.CLICK_SPONSORED
-        : TELEMETRY_SCALARS.CLICK_NONSPONSORED]: index + 1,
+      [TELEMETRY_SCALARS.IMPRESSION]: index + 1,
+      [TELEMETRY_SCALARS.CLICK]: index + 1,
     };
     if (isBestMatch) {
       if (isSponsored) {
@@ -534,20 +503,9 @@ async function doClickTest({
         };
       }
     }
-    if (isDynamicWikipedia) {
-      scalars = {
-        ...scalars,
-        [TELEMETRY_SCALARS.IMPRESSION_DYNAMIC_WIKIPEDIA]: index + 1,
-        [TELEMETRY_SCALARS.CLICK_DYNAMIC_WIKIPEDIA]: index + 1,
-      };
-    }
     QuickSuggestTestUtils.assertScalars(scalars);
 
     let match_type = isBestMatch ? "best-match" : "firefox-suggest";
-    let suggestion_type = isSponsored ? "sponsored" : "nonsponsored";
-    if (isDynamicWikipedia) {
-      suggestion_type = "dynamic-wikipedia";
-    }
     QuickSuggestTestUtils.assertEvents([
       {
         category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
@@ -556,7 +514,7 @@ async function doClickTest({
         extra: {
           match_type,
           position: String(index + 1),
-          suggestion_type,
+          suggestion_type: isSponsored ? "sponsored" : "nonsponsored",
         },
       },
     ]);
@@ -569,7 +527,6 @@ async function doClickTest({
           is_clicked: true,
           block_id: suggestion.id,
           position: index + 1,
-          advertiser: suggestion.advertiser,
         },
       },
       {
@@ -579,7 +536,6 @@ async function doClickTest({
           match_type,
           block_id: suggestion.id,
           position: index + 1,
-          advertiser: suggestion.advertiser,
         },
       },
     ]);
@@ -625,8 +581,8 @@ add_task(async function click_beforeSearchSuggestions() {
       });
       // Arrow down to the quick suggest result and press Enter.
       QuickSuggestTestUtils.assertScalars({
-        [TELEMETRY_SCALARS.IMPRESSION_SPONSORED]: index + 1,
-        [TELEMETRY_SCALARS.CLICK_SPONSORED]: index + 1,
+        [TELEMETRY_SCALARS.IMPRESSION]: index + 1,
+        [TELEMETRY_SCALARS.CLICK]: index + 1,
       });
       QuickSuggestTestUtils.assertEvents([
         {
@@ -713,8 +669,7 @@ async function doHelpTest({ suggestion, useKeyboard, isBestMatch = false }) {
     fireInputEvent: true,
   });
   let index = 1;
-  let isDynamicWikipedia = suggestion.advertiser == "dynamic-wikipedia";
-  let isSponsored = suggestion.keywords[0] == "sponsored" || isDynamicWikipedia;
+  let isSponsored = suggestion.keywords[0] == "sponsored";
   let result = await QuickSuggestTestUtils.assertIsQuickSuggest({
     window,
     index,
@@ -742,12 +697,8 @@ async function doHelpTest({ suggestion, useKeyboard, isBestMatch = false }) {
   );
 
   let scalars = {
-    [isSponsored
-      ? TELEMETRY_SCALARS.IMPRESSION_SPONSORED
-      : TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED]: index + 1,
-    [isSponsored
-      ? TELEMETRY_SCALARS.HELP_SPONSORED
-      : TELEMETRY_SCALARS.HELP_NONSPONSORED]: index + 1,
+    [TELEMETRY_SCALARS.IMPRESSION]: index + 1,
+    [TELEMETRY_SCALARS.HELP]: index + 1,
   };
   if (isBestMatch) {
     if (isSponsored) {
@@ -764,20 +715,9 @@ async function doHelpTest({ suggestion, useKeyboard, isBestMatch = false }) {
       };
     }
   }
-  if (isDynamicWikipedia) {
-    scalars = {
-      ...scalars,
-      [TELEMETRY_SCALARS.IMPRESSION_DYNAMIC_WIKIPEDIA]: index + 1,
-      [TELEMETRY_SCALARS.HELP_DYNAMIC_WIKIPEDIA]: index + 1,
-    };
-  }
   QuickSuggestTestUtils.assertScalars(scalars);
 
   let match_type = isBestMatch ? "best-match" : "firefox-suggest";
-  let suggestion_type = isSponsored ? "sponsored" : "nonsponsored";
-  if (isDynamicWikipedia) {
-    suggestion_type = "dynamic-wikipedia";
-  }
   QuickSuggestTestUtils.assertEvents([
     {
       category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
@@ -786,7 +726,7 @@ async function doHelpTest({ suggestion, useKeyboard, isBestMatch = false }) {
       extra: {
         match_type,
         position: String(index + 1),
-        suggestion_type,
+        suggestion_type: isSponsored ? "sponsored" : "nonsponsored",
       },
     },
   ]);
@@ -798,7 +738,6 @@ async function doHelpTest({ suggestion, useKeyboard, isBestMatch = false }) {
         block_id: suggestion.id,
         is_clicked: false,
         position: index + 1,
-        advertiser: suggestion.advertiser,
       },
     },
   ]);
@@ -1415,7 +1354,7 @@ add_task(async function impression_previousResultStillVisible() {
     // An impression for the first suggestion should be recorded since it's
     // still visible in the view, not the second suggestion.
     QuickSuggestTestUtils.assertScalars({
-      [TELEMETRY_SCALARS.IMPRESSION_SPONSORED]: index + 1,
+      [TELEMETRY_SCALARS.IMPRESSION]: index + 1,
     });
     QuickSuggestTestUtils.assertEvents([
       {
