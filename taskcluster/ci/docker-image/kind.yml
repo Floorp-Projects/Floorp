@@ -210,7 +210,7 @@ jobs:
         parent: ubuntu1804-test
     github-sync:
         symbol: I(github-sync)
-        parent: debian10-base
+        parent: debian11-base
     sentry:
         symbol: I(sentry)
         parent: debian10-base
