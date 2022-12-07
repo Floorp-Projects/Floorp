@@ -39,6 +39,11 @@ interface nsICookieBannerService : nsISupports {
   };
 
   /**
+   * Whether the feature / service is enabled.
+   */
+  readonly attribute boolean isEnabled;
+
+  /**
    * Getter for a list of all cookie banner rules. This includes both opt-in and opt-out rules.
    */
   readonly attribute Array<nsICookieBannerRule> rules;

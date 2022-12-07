@@ -176,6 +176,9 @@ nsresult nsCookieBannerService::Init() {
   nsresult rv = NS_DispatchToCurrentThreadQueue(
       NS_NewRunnableFunction("CookieBannerListService init startup",
                              [&] {
+                               if (!mIsInitialized) {
+                                 return;
+                               }
                                mListService->Init();
                                mDomainPrefService->Init();
                              }),
@@ -205,6 +208,13 @@ nsresult nsCookieBannerService::Shutdown() {
 
   // Clear all stored cookie banner rules. They will be imported again on Init.
   mRules.Clear();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCookieBannerService::GetIsEnabled(bool* aResult) {
+  *aResult = mIsInitialized;
 
   return NS_OK;
 }

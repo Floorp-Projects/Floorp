@@ -92,6 +92,15 @@ class CookieBannerListService {
 
     try {
       let rules = await this.#rs.get();
+
+      // While getting rules from RemoteSettings the enabled state of the
+      // feature could have changed. Ensure the service is still enabled before
+      // attempting to import rules.
+      if (!Services.cookieBanners.isEnabled) {
+        lazy.logConsole.warn("Skip import nsICookieBannerService is disabled");
+        return;
+      }
+
       this.#importRules(rules);
     } catch (error) {
       lazy.logConsole.error(

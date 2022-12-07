@@ -46,12 +46,7 @@ async function clickTestSetup() {
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("cookiebanners.service.mode");
     Services.prefs.clearUserPref("cookiebanners.service.mode.privateBrowsing");
-    if (
-      Services.prefs.getIntPref("cookiebanners.service.mode") !=
-        Ci.nsICookieBannerService.MODE_DISABLED ||
-      Services.prefs.getIntPref("cookiebanners.service.mode.privateBrowsing") !=
-        Ci.nsICookieBannerService.MODE_DISABLED
-    ) {
+    if (Services.cookieBanners.isEnabled) {
       // Restore original rules.
       Services.cookieBanners.resetRules(true);
     }

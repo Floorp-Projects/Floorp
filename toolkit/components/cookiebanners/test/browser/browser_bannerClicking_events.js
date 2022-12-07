@@ -17,7 +17,7 @@ async function runEventTest({ mode, openPageOptions = {} }) {
   });
 
   // Insert rules only if the feature is enabled.
-  if (mode != Ci.nsICookieBannerService.MODE_DISABLED) {
+  if (Services.cookieBanners.isEnabled) {
     insertTestClickRules();
   }
 
