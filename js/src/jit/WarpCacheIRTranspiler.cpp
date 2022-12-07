@@ -5329,7 +5329,7 @@ bool WarpCacheIRTranspiler::emitCallNativeSetter(ObjOperandId receiverId,
 
 bool WarpCacheIRTranspiler::emitMetaScriptedThisShape(
     uint32_t thisShapeOffset) {
-  Shape* shape = shapeStubField(thisShapeOffset);
+  SharedShape* shape = &shapeStubField(thisShapeOffset)->asShared();
   MOZ_ASSERT(shape->getObjectClass() == &PlainObject::class_);
 
   MConstant* shapeConst = MConstant::NewShape(alloc(), shape);
