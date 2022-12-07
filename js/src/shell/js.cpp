@@ -11509,7 +11509,7 @@ static bool SetGCParameterFromArg(JSContext* cx, char* arg) {
 
   uint32_t paramValue = uint32_t(value);
   if (value == ULONG_MAX || value != paramValue ||
-      !cx->runtime()->gc.setParameter(key, paramValue)) {
+      !cx->runtime()->gc.setParameter(cx, key, paramValue)) {
     fprintf(stderr, "Error: Value %s is out of range for GC parameter '%s'\n",
             valueStr, name);
     return false;
