@@ -5,11 +5,12 @@
       "skipPresenceVisibilityCheck",
       "hide",
       "optOut",
-      "optIn"
+      "optIn",
+      "runContext"
     ]
   },
-  "domain": {
-    "ui:title": "Domain"
+  "domains": {
+    "ui:title": "Domains"
   },
   "cookies": {
     "ui:order": [
@@ -22,7 +23,7 @@
   },
   "ui:order": [
     "id",
-    "domain",
+    "domains",
     "cookies",
     "click",
     "filter_expression"
