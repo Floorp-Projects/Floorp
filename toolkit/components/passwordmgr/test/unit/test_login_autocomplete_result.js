@@ -668,6 +668,7 @@ add_task(async function test_all_patterns() {
     let actual = new LoginAutoCompleteResult(
       pattern.searchString || "",
       pattern.matchingLogins,
+      [],
       pattern.formOrigin || "https://mochi.test:8888",
       {
         hostname: "mochi.test",

@@ -457,6 +457,8 @@ The following is a partial list of `collected preferences <https://searchfox.org
 
 - ``nimbus.qa.pref-2``: Used to monitor the results of pref-setting test experiments.
 
+- ``signon.firefoxRelay.feature``: User choice regarding Firefox Relay integration with Firefox Password Manager. Can be one of undefined, "available", "offered", "enabled" or "disabled".
+
 attribution
 ~~~~~~~~~~~
 
