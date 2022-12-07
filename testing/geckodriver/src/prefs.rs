@@ -6,11 +6,8 @@ use mozprofile::preferences::Pref;
 
 // ALL CHANGES TO THIS FILE MUST HAVE REVIEW FROM A GECKODRIVER PEER!
 //
-// All preferences in this file are not immediately effective, and
-// require a restart of Firefox, or have to be set in the profile before
-// Firefox gets started the first time. If a preference has to be added,
-// which is immediately effective, it needs to be done in Marionette
-// (RecommendedPreferences.sys.mjs).
+// Please refer to INSTRUCTIONS TO ADD A NEW PREFERENCE in
+// remote/shared/RecommendedPreferences.sys.mjs
 //
 // Note: geckodriver is used out-of-tree with various builds of Firefox.
 // Removing a preference from this file will cause regressions,
