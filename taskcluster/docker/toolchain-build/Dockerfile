@@ -19,7 +19,7 @@ RUN apt-get update && \
       bison \
       build-essential \
       curl \
-      clang-11 \
+      clang-13 \
       cmake \
       flex \
       gawk \
@@ -32,6 +32,7 @@ RUN apt-get update && \
       libtool \
       libucl-dev \
       libxml2-dev \
+      lld-13 \
       msitools \
       ninja-build \
       openssh-client \
