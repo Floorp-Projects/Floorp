@@ -62,3 +62,8 @@ document.getElementById("focus-text").addEventListener("compositionend", inputCo
 function inputCompositionEnd() {
   console.log("composition end");
 }
+
+document.addEventListener("scrollend", onScrollEnd);
+function onScrollEnd() {
+  console.log("scroll end");
+}

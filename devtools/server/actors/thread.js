@@ -594,7 +594,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   },
 
   getAvailableEventBreakpoints() {
-    return getAvailableEventBreakpoints();
+    return getAvailableEventBreakpoints(this._parent.window);
   },
   getActiveEventBreakpoints() {
     return Array.from(this._activeEventBreakpoints);
