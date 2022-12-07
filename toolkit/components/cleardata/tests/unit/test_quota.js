@@ -94,61 +94,32 @@ async function testEntryExists({
   return exists;
 }
 
-async function setTestEntries(storageType) {
+const TEST_ORIGINS = [
   // First party
-  setTestEntry({ storageType, host: "example.net" });
-  setTestEntry({ storageType, host: "test.example.net" });
-  setTestEntry({ storageType, host: "example.org" });
+  { host: "example.net" },
+  { host: "test.example.net" },
+  { host: "example.org" },
 
   // Third-party partitioned.
-  setTestEntry({
-    storageType,
-    host: "example.com",
-    topLevelBaseDomain: "example.net",
-  });
-  setTestEntry({
-    storageType,
+  { host: "example.com", topLevelBaseDomain: "example.net" },
+  {
     host: "example.com",
     topLevelBaseDomain: "example.net",
     originAttributes: { userContextId: 1 },
-  });
-  setTestEntry({
-    storageType,
-    host: "example.net",
-    topLevelBaseDomain: "example.org",
-  });
-  setTestEntry({
-    storageType,
-    host: "test.example.net",
-    topLevelBaseDomain: "example.org",
-  });
+  },
+  { host: "example.net", topLevelBaseDomain: "example.org" },
+  { host: "test.example.net", topLevelBaseDomain: "example.org" },
+];
+
+async function setTestEntries(storageType) {
+  for (const origin of TEST_ORIGINS) {
+    setTestEntry({ storageType, ...origin });
+  }
 
   // Ensure we have the correct storage test state.
-  await testEntryExists({ storageType, host: "example.net" });
-  await testEntryExists({ storageType, host: "test.example.net" });
-  await testEntryExists({ storageType, host: "example.org" });
-
-  await testEntryExists({
-    storageType,
-    host: "example.com",
-    topLevelBaseDomain: "example.net",
-  });
-  await testEntryExists({
-    storageType,
-    host: "example.com",
-    topLevelBaseDomain: "example.net",
-    originAttributes: { userContextId: 1 },
-  });
-  await testEntryExists({
-    storageType,
-    host: "example.net",
-    topLevelBaseDomain: "example.org",
-  });
-  await testEntryExists({
-    storageType,
-    host: "test.example.net",
-    topLevelBaseDomain: "example.org",
-  });
+  for (const origin of TEST_ORIGINS) {
+    await testEntryExists({ storageType, ...origin });
+  }
 }
 
 /**
@@ -491,4 +462,90 @@ add_task(async function test_principal_localStorage() {
     return;
   }
   await runTestPrincipal("localStorage");
+});
+
+function getRelativeFile(...components) {
+  const profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
+
+  const file = profileDir.clone();
+  for (const component of components) {
+    file.append(component);
+  }
+
+  return file;
+}
+
+function countSubitems(file) {
+  const entriesIterator = file.directoryEntries;
+  let count = 0;
+  while (entriesIterator.hasMoreElements()) {
+    ++count;
+    entriesIterator.nextFile;
+  }
+  return count;
+}
+
+add_task(async function test_deleteAllAtShutdown() {
+  const storageType = "indexedDB";
+
+  await new Promise(aResolve => {
+    Services.clearData.deleteData(
+      Ci.nsIClearDataService.CLEAR_DOM_QUOTA,
+      aResolve
+    );
+  });
+
+  const toBeRemovedDir = getRelativeFile("storage", "to-be-removed");
+  Assert.ok(
+    !toBeRemovedDir.exists(),
+    "to-be-removed directory shouldn't exist yet"
+  );
+
+  await setTestEntries(storageType);
+
+  Services.startup.advanceShutdownPhase(
+    Services.startup.SHUTDOWN_PHASE_APPSHUTDOWNTEARDOWN
+  );
+
+  // Clear entries from principal with custom OA.
+  for (const origin of TEST_ORIGINS) {
+    await new Promise(aResolve => {
+      Services.clearData.deleteDataFromPrincipal(
+        getPrincipal(
+          origin.host,
+          origin.topLevelBaseDomain,
+          origin.originAttributes
+        ),
+        false,
+        Ci.nsIClearDataService.CLEAR_DOM_QUOTA,
+        aResolve
+      );
+    });
+
+    await testEntryExists({ expected: false, storageType, ...origin });
+  }
+
+  Assert.ok(
+    toBeRemovedDir.exists(),
+    "to-be-removed directory should exist now"
+  );
+
+  Assert.equal(
+    countSubitems(toBeRemovedDir),
+    TEST_ORIGINS.length,
+    `storage/to-be-removed has ${TEST_ORIGINS.length} subdirectories`
+  );
+
+  info("Verifying cleanupAfterDeletionAtShutdown");
+  await new Promise(aResolve => {
+    Services.clearData.cleanupAfterDeletionAtShutdown(
+      Ci.nsIClearDataService.CLEAR_DOM_QUOTA,
+      aResolve
+    );
+  });
+
+  Assert.ok(
+    !toBeRemovedDir.exists(),
+    "to-be-removed directory should disappear"
+  );
 });
