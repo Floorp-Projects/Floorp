@@ -588,6 +588,7 @@ class NativeObject : public JSObject {
 
  public:
   SharedShape* sharedShape() const { return &shape()->asShared(); }
+  DictionaryShape* dictionaryShape() const { return &shape()->asDictionary(); }
 
   PropertyInfoWithKey getLastProperty() const {
     return shape()->lastProperty();
