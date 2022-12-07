@@ -266,8 +266,10 @@ input[type = "url"]:focus:-moz-ui-invalid:not(:placeholder-shown) ~ .tooltip-con
   margin-bottom: 8px;
 }
 
+moz-button-group,
 :host([data-editing]) .detail-cell input:read-write:not([type="checkbox"]) {
-  width: 280px;
+  width: 298px;
+  box-sizing: border-box;
 }
 
 .copy-button {
