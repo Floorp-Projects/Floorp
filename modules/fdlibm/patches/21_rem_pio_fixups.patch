@@ -1,6 +1,6 @@
-diff --git a/modules/fdlibm/src/e_rem_pio2.cpp b/modules/fdlibm/src/e_rem_pio2.cpp
---- a/modules/fdlibm/src/e_rem_pio2.cpp
-+++ b/modules/fdlibm/src/e_rem_pio2.cpp
+diff --git a/e_rem_pio2.cpp b/e_rem_pio2.cpp
+--- a/e_rem_pio2.cpp
++++ b/e_rem_pio2.cpp
 @@ -43,17 +43,17 @@ invpio2 =  6.36619772367581382433e-01, /* 0x3FE45F30, 0x6DC9C883 */
  pio2_1  =  1.57079632673412561417e+00, /* 0x3FF921FB, 0x54400000 */
  pio2_1t =  6.07710050650619224932e-11, /* 0x3DD0B461, 0x1A626331 */
@@ -20,9 +20,9 @@ diff --git a/modules/fdlibm/src/e_rem_pio2.cpp b/modules/fdlibm/src/e_rem_pio2.c
  	double tx[3],ty[2];
  	int32_t e0,i,j,nx,n,ix,hx;
  	u_int32_t low;
-diff --git a/modules/fdlibm/src/k_rem_pio2.cpp b/modules/fdlibm/src/k_rem_pio2.cpp
---- a/modules/fdlibm/src/k_rem_pio2.cpp
-+++ b/modules/fdlibm/src/k_rem_pio2.cpp
+diff --git a/k_rem_pio2.cpp b/k_rem_pio2.cpp
+--- a/k_rem_pio2.cpp
++++ b/k_rem_pio2.cpp
 @@ -305,17 +305,18 @@ __kernel_rem_pio2(double *x, double *y, int e0, int nx, int prec)
  	q0 =  e0-24*(jv+1);
  
@@ -43,9 +43,9 @@ diff --git a/modules/fdlibm/src/k_rem_pio2.cpp b/modules/fdlibm/src/k_rem_pio2.c
  	for(i=0,j=jz,z=q[jz];j>0;i++,j--) {
  	    fw    =  (double)((int32_t)(twon24* z));
  	    iq[i] =  (int32_t)(z-two24*fw);
-diff --git a/modules/fdlibm/src/s_cos.cpp b/modules/fdlibm/src/s_cos.cpp
---- a/modules/fdlibm/src/s_cos.cpp
-+++ b/modules/fdlibm/src/s_cos.cpp
+diff --git a/s_cos.cpp b/s_cos.cpp
+--- a/s_cos.cpp
++++ b/s_cos.cpp
 @@ -43,17 +43,17 @@
   * Accuracy:
   *	TRIG(x) returns trig(x) nearly rounded
@@ -65,9 +65,9 @@ diff --git a/modules/fdlibm/src/s_cos.cpp b/modules/fdlibm/src/s_cos.cpp
  	int32_t n, ix;
  
      /* High word of x. */
-diff --git a/modules/fdlibm/src/s_sin.cpp b/modules/fdlibm/src/s_sin.cpp
---- a/modules/fdlibm/src/s_sin.cpp
-+++ b/modules/fdlibm/src/s_sin.cpp
+diff --git a/s_sin.cpp b/s_sin.cpp
+--- a/s_sin.cpp
++++ b/s_sin.cpp
 @@ -43,17 +43,17 @@
   * Accuracy:
   *	TRIG(x) returns trig(x) nearly rounded
@@ -87,9 +87,9 @@ diff --git a/modules/fdlibm/src/s_sin.cpp b/modules/fdlibm/src/s_sin.cpp
  	int32_t n, ix;
  
      /* High word of x. */
-diff --git a/modules/fdlibm/src/s_tan.cpp b/modules/fdlibm/src/s_tan.cpp
---- a/modules/fdlibm/src/s_tan.cpp
-+++ b/modules/fdlibm/src/s_tan.cpp
+diff --git a/s_tan.cpp b/s_tan.cpp
+--- a/s_tan.cpp
++++ b/s_tan.cpp
 @@ -42,17 +42,17 @@
   * Accuracy:
   *	TRIG(x) returns trig(x) nearly rounded

@@ -1,6 +1,6 @@
-diff --git a/modules/fdlibm/src/fdlibm.h b/modules/fdlibm/src/fdlibm.h
---- a/modules/fdlibm/src/fdlibm.h
-+++ b/modules/fdlibm/src/fdlibm.h
+diff --git a/fdlibm.h b/fdlibm.h
+--- a/fdlibm.h
++++ b/fdlibm.h
 @@ -9,18 +9,18 @@
   * ====================================================
   */
