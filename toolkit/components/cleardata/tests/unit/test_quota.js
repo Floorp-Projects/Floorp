@@ -497,8 +497,8 @@ add_task(async function test_deleteAllAtShutdown() {
 
   const toBeRemovedDir = getRelativeFile("storage", "to-be-removed");
   if (toBeRemovedDir.exists()) {
-   toBeRemovedDir.remove(true);
- }
+    toBeRemovedDir.remove(true);
+  }
 
   await setTestEntries(storageType);
 
