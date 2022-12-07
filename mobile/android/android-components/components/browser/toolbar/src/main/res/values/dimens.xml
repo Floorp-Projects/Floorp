@@ -13,6 +13,7 @@
     <dimen name="mozac_browser_toolbar_icon_padding">12dp</dimen>
     <dimen name="mozac_browser_toolbar_icon_size">24dp</dimen>
     <dimen name="mozac_browser_toolbar_menu_padding">16dp</dimen>
+    <dimen name="mozac_browser_toolbar_origin_padding_end">0dp</dimen>
 
     <!-- EditToolbar -->
     <dimen name="mozac_browser_toolbar_url_horizontal_padding">8dp</dimen>
