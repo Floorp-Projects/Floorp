@@ -542,7 +542,7 @@ bool NativeObject::changeProperty(JSContext* cx, Handle<NativeObject*> obj,
         }
       }
 
-      Shape* newShape = SharedShape::getPropMapShape(
+      SharedShape* newShape = SharedShape::getPropMapShape(
           cx, obj->shape()->base(), obj->shape()->numFixedSlots(), sharedMap,
           mapLength, objectFlags);
       if (!newShape) {
@@ -550,7 +550,7 @@ bool NativeObject::changeProperty(JSContext* cx, Handle<NativeObject*> obj,
       }
 
       if (MOZ_LIKELY(oldProp.hasSlot())) {
-        MOZ_ASSERT(obj->shape()->slotSpan() == newShape->slotSpan());
+        MOZ_ASSERT(obj->sharedShape()->slotSpan() == newShape->slotSpan());
         obj->setShape(newShape);
         return true;
       }
@@ -723,7 +723,7 @@ void NativeObject::setShapeAndRemoveLastSlot(JSContext* cx, Shape* newShape,
                                              uint32_t slot) {
   MOZ_ASSERT(!inDictionaryMode());
   MOZ_ASSERT(!newShape->isDictionary());
-  MOZ_ASSERT(newShape->slotSpan() == slot);
+  MOZ_ASSERT(newShape->asShared().slotSpan() == slot);
 
   uint32_t numFixed = newShape->numFixedSlots();
   if (slot < numFixed) {
@@ -789,8 +789,8 @@ bool NativeObject::removeProperty(JSContext* cx, Handle<NativeObject*> obj,
       Rooted<SharedPropMap*> sharedMap(cx, map->asShared());
       SharedPropMap::getPrevious(&sharedMap, &mapLength);
 
-      Shape* shape = obj->shape();
-      Shape* newShape;
+      SharedShape* shape = obj->sharedShape();
+      SharedShape* newShape;
       if (sharedMap) {
         newShape = SharedShape::getPropMapShape(
             cx, shape->base(), shape->numFixedSlots(), sharedMap, mapLength,
@@ -930,13 +930,13 @@ bool NativeObject::freezeOrSealProperties(JSContext* cx,
     return false;
   }
 
-  Shape* newShape = SharedShape::getPropMapShape(cx, obj->shape()->base(),
-                                                 obj->numFixedSlots(), map,
-                                                 mapLength, objectFlags);
+  SharedShape* newShape = SharedShape::getPropMapShape(
+      cx, obj->shape()->base(), obj->numFixedSlots(), map, mapLength,
+      objectFlags);
   if (!newShape) {
     return false;
   }
-  MOZ_ASSERT(obj->shape()->slotSpan() == newShape->slotSpan());
+  MOZ_ASSERT(obj->sharedShape()->slotSpan() == newShape->slotSpan());
 
   obj->setShape(newShape);
   return true;

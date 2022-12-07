@@ -4753,7 +4753,7 @@ MObjectState::MObjectState(const Shape* shape)
   setResultType(MIRType::Object);
   setRecoveredOnBailout();
 
-  numSlots_ = shape->slotSpan();
+  numSlots_ = shape->asShared().slotSpan();
   numFixedSlots_ = shape->numFixedSlots();
 }
 
@@ -4785,7 +4785,8 @@ bool MObjectState::init(TempAllocator& alloc, MDefinition* obj) {
 void MObjectState::initFromTemplateObject(TempAllocator& alloc,
                                           MDefinition* undefinedVal) {
   if (object()->isNewPlainObject()) {
-    MOZ_ASSERT(object()->toNewPlainObject()->shape()->slotSpan() == numSlots());
+    MOZ_ASSERT(object()->toNewPlainObject()->shape()->asShared().slotSpan() ==
+               numSlots());
     for (size_t i = 0; i < numSlots(); i++) {
       initSlot(i, undefinedVal);
     }

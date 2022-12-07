@@ -76,7 +76,8 @@ MOZ_ALWAYS_INLINE uint32_t js::NativeObject::calculateDynamicSlots() const {
 
 /* static */ MOZ_ALWAYS_INLINE uint32_t
 js::NativeObject::calculateDynamicSlots(Shape* shape) {
-  return calculateDynamicSlots(shape->numFixedSlots(), shape->slotSpan(),
+  return calculateDynamicSlots(shape->numFixedSlots(),
+                               shape->asShared().slotSpan(),
                                shape->getObjectClass());
 }
 

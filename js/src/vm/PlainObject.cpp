@@ -194,7 +194,7 @@ PlainObject* js::NewPlainObjectWithProtoAndAllocKind(JSContext* cx,
 
 void js::NewPlainObjectWithPropsCache::add(Shape* shape) {
   MOZ_ASSERT(shape);
-  MOZ_ASSERT(shape->slotSpan() > 0);
+  MOZ_ASSERT(shape->asShared().slotSpan() > 0);
   for (size_t i = NumEntries - 1; i > 0; i--) {
     entries_[i] = entries_[i - 1];
   }
@@ -203,7 +203,7 @@ void js::NewPlainObjectWithPropsCache::add(Shape* shape) {
 
 static bool ShapeMatches(IdValuePair* properties, size_t nproperties,
                          Shape* shape) {
-  if (shape->slotSpan() != nproperties) {
+  if (shape->asShared().slotSpan() != nproperties) {
     return false;
   }
   ShapePropertyIter<NoGC> iter(shape);

@@ -31,7 +31,7 @@ namespace js {
 
   // Note: the slot span is passed as argument to allow more constant folding
   // below for the common case of slotSpan == 0.
-  MOZ_ASSERT(shape->slotSpan() == slotSpan);
+  MOZ_ASSERT(shape->asShared().slotSpan() == slotSpan);
 
   // Arrays can use their fixed slots to store elements, so can't have shapes
   // which allow named properties to be stored in the fixed slots.

@@ -736,7 +736,7 @@ class NativeObject : public JSObject {
     }
   }
   void initDynamicSlots(uint32_t numSlots) {
-    MOZ_ASSERT(numSlots == shape()->slotSpan() - numFixedSlots());
+    MOZ_ASSERT(numSlots == sharedShape()->slotSpan() - numFixedSlots());
     HeapSlot* slots = slots_;
     for (uint32_t i = 0; i < numSlots; i++) {
       slots[i].initAsUndefined();
@@ -817,7 +817,7 @@ class NativeObject : public JSObject {
   inline uint32_t numFixedSlotsMaybeForwarded() const;
 
   uint32_t numUsedFixedSlots() const {
-    uint32_t nslots = shape()->slotSpan();
+    uint32_t nslots = sharedShape()->slotSpan();
     return std::min(nslots, numFixedSlots());
   }
 
@@ -826,7 +826,7 @@ class NativeObject : public JSObject {
       return dictionaryModeSlotSpan();
     }
     MOZ_ASSERT(getSlotsHeader()->dictionarySlotSpan() == 0);
-    return shape()->slotSpan();
+    return sharedShape()->slotSpan();
   }
 
   uint32_t dictionaryModeSlotSpan() const {
