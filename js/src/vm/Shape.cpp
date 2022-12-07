@@ -201,7 +201,8 @@ bool NativeObject::addCustomDataProperty(JSContext* cx,
   return true;
 }
 
-static ShapeSetForAdd* MakeShapeSetForAdd(Shape* shape1, Shape* shape2) {
+static ShapeSetForAdd* MakeShapeSetForAdd(SharedShape* shape1,
+                                          SharedShape* shape2) {
   MOZ_ASSERT(shape1 != shape2);
   MOZ_ASSERT(shape1->propMapLength() == shape2->propMapLength());
 
@@ -221,13 +222,14 @@ static ShapeSetForAdd* MakeShapeSetForAdd(Shape* shape1, Shape* shape2) {
   return hash.release();
 }
 
-static MOZ_ALWAYS_INLINE Shape* LookupShapeForAdd(Shape* shape, PropertyKey key,
-                                                  PropertyFlags flags,
-                                                  uint32_t* slot) {
+static MOZ_ALWAYS_INLINE SharedShape* LookupShapeForAdd(Shape* shape,
+                                                        PropertyKey key,
+                                                        PropertyFlags flags,
+                                                        uint32_t* slot) {
   ShapeCachePtr cache = shape->cache();
 
   if (cache.isSingleShapeForAdd()) {
-    Shape* newShape = cache.toSingleShapeForAdd();
+    SharedShape* newShape = cache.toSingleShapeForAdd();
     if (newShape->lastPropertyMatchesForAdd(key, flags, slot)) {
       return newShape;
     }
@@ -238,7 +240,7 @@ static MOZ_ALWAYS_INLINE Shape* LookupShapeForAdd(Shape* shape, PropertyKey key,
     ShapeSetForAdd* set = cache.toShapeSetForAdd();
     ShapeForAddHasher::Lookup lookup(key, flags);
     if (auto p = set->lookup(lookup)) {
-      Shape* newShape = *p;
+      SharedShape* newShape = *p;
       *slot = newShape->lastProperty().slot();
       return newShape;
     }
@@ -288,7 +290,7 @@ bool NativeObject::addProperty(JSContext* cx, Handle<NativeObject*> obj,
     return false;
   }
 
-  if (Shape* shape = LookupShapeForAdd(obj->shape(), id, flags, slot)) {
+  if (auto* shape = LookupShapeForAdd(obj->shape(), id, flags, slot)) {
     return obj->setShapeAndAddNewSlot(cx, shape, *slot);
   }
 
@@ -328,7 +330,7 @@ bool NativeObject::addProperty(JSContext* cx, Handle<NativeObject*> obj,
   }
 
   bool allocatedNewShape;
-  Shape* newShape = SharedShape::getPropMapShape(
+  SharedShape* newShape = SharedShape::getPropMapShape(
       cx, obj->shape()->base(), obj->shape()->numFixedSlots(), map, mapLength,
       objectFlags, &allocatedNewShape);
   if (!newShape) {
@@ -358,7 +360,7 @@ bool NativeObject::addProperty(JSContext* cx, Handle<NativeObject*> obj,
   if (!cache.isForAdd()) {
     cache.setSingleShapeForAdd(newShape);
   } else if (cache.isSingleShapeForAdd()) {
-    Shape* prevShape = cache.toSingleShapeForAdd();
+    SharedShape* prevShape = cache.toSingleShapeForAdd();
     if (ShapeSetForAdd* set = MakeShapeSetForAdd(prevShape, newShape)) {
       cache.setShapeSetForAdd(set);
       AddCellMemory(oldShape, sizeof(ShapeSetForAdd),
@@ -1119,7 +1121,8 @@ MOZ_ALWAYS_INLINE HashNumber ShapeForAddHasher::hash(const Lookup& l) {
   return mozilla::AddToHash(hash, l.flags.toRaw());
 }
 
-MOZ_ALWAYS_INLINE bool ShapeForAddHasher::match(Shape* shape, const Lookup& l) {
+MOZ_ALWAYS_INLINE bool ShapeForAddHasher::match(SharedShape* shape,
+                                                const Lookup& l) {
   uint32_t slot;
   return shape->lastPropertyMatchesForAdd(l.key, l.flags, &slot);
 }
