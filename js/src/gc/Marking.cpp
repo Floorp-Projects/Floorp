@@ -906,13 +906,14 @@ static inline bool ShouldMark(GCMarker* gcmarker, T* thing) {
 }
 
 template <uint32_t opts>
-MarkingTracerT<opts>::MarkingTracerT(JSRuntime* runtime)
+MarkingTracerT<opts>::MarkingTracerT(JSRuntime* runtime, GCMarker* marker)
     : GenericTracerImpl<MarkingTracerT<opts>>(
           runtime, JS::TracerKind::Marking,
           JS::TraceOptions(JS::WeakMapTraceAction::Expand,
                            JS::WeakEdgeTraceAction::Skip)) {
-  // The MarkingTracer is owned by the the GCMarker.
-  MOZ_ASSERT(this == runtime->gc.marker.tracer());
+  // Marking tracers are owned by (and part of) a GCMarker.
+  MOZ_ASSERT(this == marker->tracer());
+  MOZ_ASSERT(getMarker() == marker);
 }
 
 template <uint32_t opts>
@@ -1833,7 +1834,7 @@ size_t MarkStack::sizeOfExcludingThis(
  * potential key.
  */
 GCMarker::GCMarker(JSRuntime* rt)
-    : tracer_(mozilla::VariantType<MarkingTracer>(), rt),
+    : tracer_(mozilla::VariantType<MarkingTracer>(), rt, this),
       runtime_(rt),
       stack(),
       delayedMarkingList(nullptr),
@@ -1955,11 +1956,11 @@ void GCMarker::setRootMarkingMode(bool newState) {
   if (newState) {
     MOZ_ASSERT(state == RegularMarking);
     state = RootMarking;
-    tracer_.emplace<RootMarkingTracer>(runtime());
+    tracer_.emplace<RootMarkingTracer>(runtime(), this);
   } else {
     MOZ_ASSERT(state == RootMarking);
     state = RegularMarking;
-    tracer_.emplace<MarkingTracer>(runtime());
+    tracer_.emplace<MarkingTracer>(runtime(), this);
   }
 }
 
@@ -2178,8 +2179,8 @@ void GCMarker::checkZone(void* p) {
 }
 #endif
 
-size_t GCMarker::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
-  return stack.sizeOfExcludingThis(mallocSizeOf);
+size_t GCMarker::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+  return mallocSizeOf(this) + stack.sizeOfExcludingThis(mallocSizeOf);
 }
 
 /*** IsMarked / IsAboutToBeFinalized ****************************************/
@@ -2467,7 +2468,7 @@ void UnmarkGrayTracer::onChild(JS::GCCellPtr thing, const char* name) {
   if (zone->isGCMarking()) {
     if (!cell->isMarkedBlack()) {
       // Skip disptaching on known tracer type.
-      GCMarker* trc = &runtime()->gc.marker;
+      GCMarker* trc = &runtime()->gc.marker();
       TraceEdgeForBarrier(trc, &tenured, thing.kind());
       unmarkedAny = true;
     }

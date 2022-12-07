@@ -236,7 +236,7 @@ template <uint32_t markingOptions>
 class MarkingTracerT
     : public GenericTracerImpl<MarkingTracerT<markingOptions>> {
  public:
-  explicit MarkingTracerT(JSRuntime* runtime);
+  MarkingTracerT(JSRuntime* runtime, GCMarker* marker);
   virtual ~MarkingTracerT() = default;
 
   template <typename T>
@@ -329,7 +329,7 @@ class GCMarker {
   bool shouldCheckCompartments() { return strictCompartmentChecking; }
 #endif
 
-  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+  size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
   static GCMarker* fromTracer(JSTracer* trc) {
     MOZ_ASSERT(trc->isMarkingTracer());

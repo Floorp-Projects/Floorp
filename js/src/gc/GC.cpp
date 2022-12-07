@@ -381,7 +381,6 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       mainThreadContext(rt),
       heapState_(JS::HeapState::Idle),
       stats_(this),
-      marker(rt),
       sweepingTracer(rt),
       fullGCRequested(false),
       helperThreadRatio(TuningDefaults::HelperThreadRatio),
@@ -820,6 +819,11 @@ bool GCRuntime::init(uint32_t maxbytes) {
   }
   TlsGCContext.set(&mainThreadContext.ref());
 
+  auto marker = MakeUnique<GCMarker>(rt);
+  if (!marker || !markers.emplaceBack(std::move(marker))) {
+    return false;
+  }
+
   {
     AutoLockGCBgAlloc lock(this);
 
@@ -855,7 +859,13 @@ bool GCRuntime::init(uint32_t maxbytes) {
   }
 #endif
 
-  if (!marker.init() || !initSweepActions()) {
+  for (auto& marker : markers) {
+    if (!marker->init()) {
+      return false;
+    }
+  }
+
+  if (!initSweepActions()) {
     return false;
   }
 
@@ -891,6 +901,7 @@ void GCRuntime::finish() {
   // helper thread shuts down before we forcefully release any remaining GC
   // memory.
   sweepTask.join();
+  markTask.join();
   freeTask.join();
   allocTask.cancelAndWait();
   decommitTask.cancelAndWait();
@@ -1023,7 +1034,9 @@ bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value,
       parallelMarkingEnabled = value != 0;
       break;
     case JSGC_INCREMENTAL_WEAKMAP_ENABLED:
-      marker.incrementalWeakMapMarkingEnabled = value != 0;
+      for (auto& marker : markers) {
+        marker->incrementalWeakMapMarkingEnabled = value != 0;
+      }
       break;
     case JSGC_HELPER_THREAD_RATIO:
       if (rt->parentRuntime) {
@@ -1088,8 +1101,10 @@ void GCRuntime::resetParameter(JSGCParamKey key, AutoLockGC& lock) {
       parallelMarkingEnabled = TuningDefaults::ParallelMarkingEnabled;
       break;
     case JSGC_INCREMENTAL_WEAKMAP_ENABLED:
-      marker.incrementalWeakMapMarkingEnabled =
-          TuningDefaults::IncrementalWeakMapMarkingEnabled;
+      for (auto& marker : markers) {
+        marker->incrementalWeakMapMarkingEnabled =
+            TuningDefaults::IncrementalWeakMapMarkingEnabled;
+      }
       break;
     case JSGC_HELPER_THREAD_RATIO:
       if (rt->parentRuntime) {
@@ -1187,7 +1202,7 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
     case JSGC_PARALLEL_MARKING_ENABLED:
       return parallelMarkingEnabled;
     case JSGC_INCREMENTAL_WEAKMAP_ENABLED:
-      return marker.incrementalWeakMapMarkingEnabled;
+      return marker().incrementalWeakMapMarkingEnabled;
     case JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION:
       return tunables.nurseryFreeThresholdForIdleCollection();
     case JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION_PERCENT:
@@ -1233,7 +1248,9 @@ void GCRuntime::setMarkStackLimit(size_t limit, AutoLockGC& lock) {
   MOZ_ASSERT(!JS::RuntimeHeapIsBusy());
   AutoUnlockGC unlock(lock);
   AutoStopVerifyingBarriers pauseVerification(rt, false);
-  marker.setMaxCapacity(limit);
+  for (auto& marker : markers) {
+    marker->setMaxCapacity(limit);
+  }
 }
 #endif
 
@@ -2712,8 +2729,10 @@ void GCRuntime::beginMarkPhase(AutoGCSession& session) {
   // get here.
   incMajorGcNumber();
 
-  marker.start();
-  MOZ_ASSERT(marker.isDrained());
+  for (auto& marker : markers) {
+    marker->start();
+    MOZ_ASSERT(marker->isDrained());
+  }
 
 #ifdef DEBUG
   queuePos = 0;
@@ -2738,9 +2757,9 @@ void GCRuntime::beginMarkPhase(AutoGCSession& session) {
     checkNoRuntimeRoots(session);
   } else {
     AutoUpdateLiveCompartments updateLive(this);
-    marker.setRootMarkingMode(true);
-    traceRuntimeForMajorGC(marker.tracer(), session);
-    marker.setRootMarkingMode(false);
+    marker().setRootMarkingMode(true);
+    traceRuntimeForMajorGC(marker().tracer(), session);
+    marker().setRootMarkingMode(false);
   }
 
   updateSchedulingStateOnGCStart();
@@ -2840,13 +2859,14 @@ IncrementalProgress GCRuntime::markUntilBudgetExhausted(
     return NotFinished;
   }
 
-  return marker.markUntilBudgetExhausted(sliceBudget, reportTime) ? Finished
-                                                                  : NotFinished;
+  return marker().markUntilBudgetExhausted(sliceBudget, reportTime)
+             ? Finished
+             : NotFinished;
 }
 
 void GCRuntime::drainMarkStack() {
   auto unlimited = SliceBudget::unlimited();
-  MOZ_RELEASE_ASSERT(marker.markUntilBudgetExhausted(unlimited));
+  MOZ_RELEASE_ASSERT(marker().markUntilBudgetExhausted(unlimited));
 }
 
 #ifdef DEBUG
@@ -2884,16 +2904,16 @@ GCRuntime::MarkQueueProgress GCRuntime::processTestMarkQueue() {
   // Remove this code if the restriction against marking gray during black is
   // relaxed.
   if (queueMarkColor == mozilla::Some(MarkColor::Gray) &&
-      marker.hasBlackEntries()) {
+      marker().hasBlackEntries()) {
     return QueueSuspended;
   }
 
   // If the queue wants to be marking a particular color, switch to that color.
   // In any case, restore the mark color to whatever it was when we entered
   // this function.
-  bool willRevertToGray = marker.markColor() == MarkColor::Gray;
-  AutoSetMarkColor autoRevertColor(marker,
-                                   queueMarkColor.valueOr(marker.markColor()));
+  bool willRevertToGray = marker().markColor() == MarkColor::Gray;
+  AutoSetMarkColor autoRevertColor(
+      marker(), queueMarkColor.valueOr(marker().markColor()));
 
   // Process the mark queue by taking each object in turn, pushing it onto the
   // mark stack, and processing just the top element with processMarkStackTop
@@ -2903,7 +2923,7 @@ GCRuntime::MarkQueueProgress GCRuntime::processTestMarkQueue() {
     if (val.isObject()) {
       JSObject* obj = &val.toObject();
       JS::Zone* zone = obj->zone();
-      if (!zone->isGCMarking() || obj->isMarkedAtLeast(marker.markColor())) {
+      if (!zone->isGCMarking() || obj->isMarkedAtLeast(marker().markColor())) {
         continue;
       }
 
@@ -2924,7 +2944,7 @@ GCRuntime::MarkQueueProgress GCRuntime::processTestMarkQueue() {
         }
       }
 
-      if (marker.markColor() == MarkColor::Gray &&
+      if (marker().markColor() == MarkColor::Gray &&
           zone->isGCMarkingBlackOnly()) {
         // Have not yet reached the point where we can mark this object, so
         // continue with the GC.
@@ -2932,7 +2952,7 @@ GCRuntime::MarkQueueProgress GCRuntime::processTestMarkQueue() {
         return QueueSuspended;
       }
 
-      if (marker.markColor() == MarkColor::Black && willRevertToGray) {
+      if (marker().markColor() == MarkColor::Black && willRevertToGray) {
         // If we put any black objects on the stack, we wouldn't be able to
         // return to gray marking. So delay the marking until we're back to
         // black marking.
@@ -2941,26 +2961,26 @@ GCRuntime::MarkQueueProgress GCRuntime::processTestMarkQueue() {
       }
 
       // Mark the object and push it onto the stack.
-      size_t oldPosition = marker.stack.position();
-      marker.markAndTraverse<MarkingOptions::None>(obj);
+      size_t oldPosition = marker().stack.position();
+      marker().markAndTraverse<MarkingOptions::None>(obj);
 
       // If we overflow the stack here and delay marking, then we won't be
       // testing what we think we're testing.
-      if (marker.stack.position() == oldPosition) {
+      if (marker().stack.position() == oldPosition) {
         MOZ_ASSERT(obj->asTenured().arena()->onDelayedMarkingList());
         AutoEnterOOMUnsafeRegion oomUnsafe;
         oomUnsafe.crash("Overflowed stack while marking test queue");
       }
 
       SliceBudget unlimited = SliceBudget::unlimited();
-      marker.processMarkStackTop<MarkingOptions::None>(unlimited);
+      marker().processMarkStackTop<MarkingOptions::None>(unlimited);
     } else if (val.isString()) {
       JSLinearString* str = &val.toString()->asLinear();
       if (js::StringEqualsLiteral(str, "yield") && isIncrementalGc()) {
         return QueueYielded;
       } else if (js::StringEqualsLiteral(str, "enter-weak-marking-mode") ||
                  js::StringEqualsLiteral(str, "abort-weak-marking-mode")) {
-        if (marker.isRegularMarking()) {
+        if (marker().isRegularMarking()) {
           // We can't enter weak marking mode at just any time, so instead
           // we'll stop processing the queue and continue on with the GC. Once
           // we enter weak marking mode, we can continue to the rest of the
@@ -2970,23 +2990,23 @@ GCRuntime::MarkQueueProgress GCRuntime::processTestMarkQueue() {
           return QueueSuspended;
         }
         if (js::StringEqualsLiteral(str, "abort-weak-marking-mode")) {
-          marker.abortLinearWeakMarking();
+          marker().abortLinearWeakMarking();
         }
       } else if (js::StringEqualsLiteral(str, "drain")) {
         auto unlimited = SliceBudget::unlimited();
-        MOZ_RELEASE_ASSERT(marker.markUntilBudgetExhausted(
+        MOZ_RELEASE_ASSERT(marker().markUntilBudgetExhausted(
             unlimited, GCMarker::DontReportMarkTime));
       } else if (js::StringEqualsLiteral(str, "set-color-gray")) {
         queueMarkColor = mozilla::Some(MarkColor::Gray);
-        if (state() != State::Sweep || marker.hasBlackEntries()) {
+        if (state() != State::Sweep || marker().hasBlackEntries()) {
           // Cannot mark gray yet, so continue with the GC.
           queuePos--;
           return QueueSuspended;
         }
-        marker.setMarkColor(MarkColor::Gray);
+        marker().setMarkColor(MarkColor::Gray);
       } else if (js::StringEqualsLiteral(str, "set-color-black")) {
         queueMarkColor = mozilla::Some(MarkColor::Black);
-        marker.setMarkColor(MarkColor::Black);
+        marker().setMarkColor(MarkColor::Black);
       } else if (js::StringEqualsLiteral(str, "unset-color")) {
         queueMarkColor.reset();
       }
@@ -3000,8 +3020,10 @@ GCRuntime::MarkQueueProgress GCRuntime::processTestMarkQueue() {
 void GCRuntime::finishCollection() {
   assertBackgroundSweepingFinished();
 
-  MOZ_ASSERT(marker.isDrained());
-  marker.stop();
+  for (auto& marker : markers) {
+    MOZ_ASSERT(marker->isDrained());
+    marker->stop();
+  }
 
   maybeStopPretenuring();
 
@@ -3027,8 +3049,11 @@ void GCRuntime::finishCollection() {
 
 void GCRuntime::checkGCStateNotInUse() {
 #ifdef DEBUG
-  MOZ_ASSERT(!marker.isActive());
-  MOZ_ASSERT(marker.isDrained());
+  for (auto& marker : markers) {
+    MOZ_ASSERT(!marker->isActive());
+    MOZ_ASSERT(marker->isDrained());
+  }
+
   MOZ_ASSERT(!lastMarkSlice);
 
   for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
@@ -3240,7 +3265,9 @@ GCRuntime::IncrementalResult GCRuntime::resetIncrementalGC(
 
     case State::Mark: {
       // Cancel any ongoing marking.
-      marker.reset();
+      for (auto& marker : markers) {
+        marker->reset();
+      }
 
       for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
         resetGrayList(c);
@@ -3261,7 +3288,11 @@ GCRuntime::IncrementalResult GCRuntime::resetIncrementalGC(
       lastMarkSlice = false;
       incrementalState = State::Finish;
 
-      MOZ_ASSERT(!marker.shouldCheckCompartments());
+#ifdef DEBUG
+      for (auto& marker : markers) {
+        MOZ_ASSERT(!marker->shouldCheckCompartments());
+      }
+#endif
 
       break;
     }
@@ -3433,7 +3464,8 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
       if (mightSweepInThisSlice(budget.isUnlimited())) {
         // Trace wrapper rooters before marking if we might start sweeping in
         // this slice.
-        rt->mainContextFromOwnThread()->traceWrapperGCRooters(marker.tracer());
+        rt->mainContextFromOwnThread()->traceWrapperGCRooters(
+            marker().tracer());
       }
 
       {
@@ -3443,7 +3475,11 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
         }
       }
 
-      MOZ_ASSERT(marker.isDrained());
+#ifdef DEBUG
+      for (auto& marker : markers) {
+        MOZ_ASSERT(marker->isDrained());
+      }
+#endif
 
       /*
        * There are a number of reasons why we break out of collection here,
@@ -3486,7 +3522,8 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
       }
 
       if (initialState == State::Sweep) {
-        rt->mainContextFromOwnThread()->traceWrapperGCRooters(marker.tracer());
+        rt->mainContextFromOwnThread()->traceWrapperGCRooters(
+            marker().tracer());
       }
 
       if (performSweepActions(budget) == NotFinished) {
@@ -3564,9 +3601,13 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
       break;
   }
 
+#ifdef DEBUG
   MOZ_ASSERT(safeToYield);
-  MOZ_ASSERT(marker.markColor() == MarkColor::Black);
+  for (auto& marker : markers) {
+    MOZ_ASSERT(marker->markColor() == MarkColor::Black);
+  }
   MOZ_ASSERT(!rt->gcContext()->hasJitCodeToPoison());
+#endif
 }
 
 void GCRuntime::collectNurseryFromMajorGC(JS::GCReason reason) {

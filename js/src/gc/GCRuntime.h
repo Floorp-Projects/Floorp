@@ -497,6 +497,9 @@ class GCRuntime {
 
   void setFullCompartmentChecks(bool enable);
 
+  // Get the main marking tracer.
+  GCMarker& marker() { return *markers[0]; }
+
   JS::Zone* getCurrentSweepGroup() { return currentSweepGroup; }
   unsigned getCurrentSweepGroupIndex() {
     return state() == State::Sweep ? sweepGroupIndex : 0;
@@ -951,7 +954,7 @@ class GCRuntime {
  public:
   js::StringStats stringStats;
 
-  GCMarker marker;
+  Vector<UniquePtr<GCMarker>, 1, SystemAllocPolicy> markers;
   SweepingTracer sweepingTracer;
 
   Vector<JS::GCCellPtr, 0, SystemAllocPolicy> unmarkGrayStack;
