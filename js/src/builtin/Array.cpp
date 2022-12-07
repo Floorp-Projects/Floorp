@@ -4784,7 +4784,7 @@ static MOZ_ALWAYS_INLINE ArrayObject* NewArrayWithShape(
   MOZ_ASSERT(CanChangeToBackgroundAllocKind(allocKind, &ArrayObject::class_));
   allocKind = ForegroundToBackgroundAllocKind(allocKind);
 
-  MOZ_ASSERT(shape->slotSpan() == 0);
+  MOZ_ASSERT(shape->asShared().slotSpan() == 0);
   constexpr uint32_t slotSpan = 0;
 
   AutoSetNewObjectMetadata metadata(cx);
@@ -5031,7 +5031,7 @@ ArrayObject* js::NewDenseFullyAllocatedArrayWithTemplate(
   MOZ_ASSERT(CanChangeToBackgroundAllocKind(allocKind, &ArrayObject::class_));
   allocKind = ForegroundToBackgroundAllocKind(allocKind);
 
-  Rooted<Shape*> shape(cx, templateObject->shape());
+  Rooted<SharedShape*> shape(cx, templateObject->sharedShape());
 
   gc::InitialHeap heap = GetInitialHeap(GenericObject, &ArrayObject::class_);
   ArrayObject* arr = ArrayObject::create(cx, allocKind, heap, shape, length,

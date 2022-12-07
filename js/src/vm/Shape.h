@@ -385,9 +385,6 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
         propMap_(map) {
     MOZ_ASSERT(base);
     MOZ_ASSERT(mapLength <= PropMap::Capacity);
-    if (!isDictionary && base->clasp()->isNativeObject()) {
-      initSmallSlotSpan();
-    }
   }
 
   Shape(const Shape& other) = delete;
@@ -399,33 +396,8 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   inline SharedShape& asShared();
   inline DictionaryShape& asDictionary();
 
-  uint32_t slotSpanSlow() const {
-    MOZ_ASSERT(!isDictionary());
-    const JSClass* clasp = getObjectClass();
-    return SharedPropMap::slotSpan(clasp, sharedPropMap(), propMapLength());
-  }
-
-  void initSmallSlotSpan() {
-    MOZ_ASSERT(!isDictionary());
-    uint32_t slotSpan = slotSpanSlow();
-    if (slotSpan > SMALL_SLOTSPAN_MAX) {
-      slotSpan = SMALL_SLOTSPAN_MAX;
-    }
-    MOZ_ASSERT((immutableFlags & SMALL_SLOTSPAN_MASK) == 0);
-    immutableFlags |= (slotSpan << SMALL_SLOTSPAN_SHIFT);
-  }
-
-  uint32_t slotSpan() const {
-    MOZ_ASSERT(!isDictionary());
-    MOZ_ASSERT(getObjectClass()->isNativeObject());
-    uint32_t span =
-        (immutableFlags & SMALL_SLOTSPAN_MASK) >> SMALL_SLOTSPAN_SHIFT;
-    if (MOZ_LIKELY(span < SMALL_SLOTSPAN_MAX)) {
-      MOZ_ASSERT(slotSpanSlow() == span);
-      return span;
-    }
-    return slotSpanSlow();
-  }
+  inline const SharedShape& asShared() const;
+  inline const DictionaryShape& asDictionary() const;
 
   uint32_t numFixedSlots() const {
     return (immutableFlags & FIXED_SLOTS_MASK) >> FIXED_SLOTS_SHIFT;
@@ -480,11 +452,25 @@ class SharedShape : public js::Shape {
   SharedShape(BaseShape* base, ObjectFlags objectFlags, uint32_t nfixed,
               PropMap* map, uint32_t mapLength)
       : Shape(base, objectFlags, nfixed, map, mapLength,
-              /* isDictionary = */ false) {}
+              /* isDictionary = */ false) {
+    if (base->clasp()->isNativeObject()) {
+      initSmallSlotSpan();
+    }
+  }
 
   static SharedShape* new_(JSContext* cx, Handle<BaseShape*> base,
                            ObjectFlags objectFlags, uint32_t nfixed,
                            Handle<SharedPropMap*> map, uint32_t mapLength);
+
+  void initSmallSlotSpan() {
+    MOZ_ASSERT(isShared());
+    uint32_t slotSpan = slotSpanSlow();
+    if (slotSpan > SMALL_SLOTSPAN_MAX) {
+      slotSpan = SMALL_SLOTSPAN_MAX;
+    }
+    MOZ_ASSERT((immutableFlags & SMALL_SLOTSPAN_MASK) == 0);
+    immutableFlags |= (slotSpan << SMALL_SLOTSPAN_SHIFT);
+  }
 
  public:
   bool lastPropertyMatchesForAdd(PropertyKey key, PropertyFlags flags,
@@ -502,6 +488,23 @@ class SharedShape : public js::Shape {
     }
     *slot = prop.maybeSlot();
     return true;
+  }
+
+  uint32_t slotSpanSlow() const {
+    MOZ_ASSERT(isShared());
+    const JSClass* clasp = getObjectClass();
+    return SharedPropMap::slotSpan(clasp, sharedPropMap(), propMapLength());
+  }
+  uint32_t slotSpan() const {
+    MOZ_ASSERT(isShared());
+    MOZ_ASSERT(getObjectClass()->isNativeObject());
+    uint32_t span =
+        (immutableFlags & SMALL_SLOTSPAN_MASK) >> SMALL_SLOTSPAN_SHIFT;
+    if (MOZ_LIKELY(span < SMALL_SLOTSPAN_MAX)) {
+      MOZ_ASSERT(slotSpanSlow() == span);
+      return span;
+    }
+    return slotSpanSlow();
   }
 
   /*
@@ -602,6 +605,16 @@ inline SharedShape& js::Shape::asShared() {
 inline DictionaryShape& js::Shape::asDictionary() {
   MOZ_ASSERT(isDictionary());
   return *static_cast<DictionaryShape*>(this);
+}
+
+inline const SharedShape& js::Shape::asShared() const {
+  MOZ_ASSERT(isShared());
+  return *static_cast<const SharedShape*>(this);
+}
+
+inline const DictionaryShape& js::Shape::asDictionary() const {
+  MOZ_ASSERT(isDictionary());
+  return *static_cast<const DictionaryShape*>(this);
 }
 
 // Iterator for iterating over a shape's properties. It can be used like this:

@@ -439,7 +439,7 @@ inline NativeObject* NativeObject::create(
   MOZ_ASSERT(clasp != &ArrayObject::class_, "should use ArrayObject::create");
 
   const uint32_t nfixed = shape->numFixedSlots();
-  const uint32_t slotSpan = shape->slotSpan();
+  const uint32_t slotSpan = shape->asShared().slotSpan();
   const size_t nDynamicSlots = calculateDynamicSlots(nfixed, slotSpan, clasp);
 
   NativeObject* nobj =
@@ -505,8 +505,8 @@ MOZ_ALWAYS_INLINE bool NativeObject::setShapeAndAddNewSlots(JSContext* cx,
   MOZ_ASSERT(newShape->getObjectClass() == getClass());
 
   MOZ_ASSERT(oldSpan < newSpan);
-  MOZ_ASSERT(shape()->slotSpan() == oldSpan);
-  MOZ_ASSERT(newShape->slotSpan() == newSpan);
+  MOZ_ASSERT(sharedShape()->slotSpan() == oldSpan);
+  MOZ_ASSERT(newShape->asShared().slotSpan() == newSpan);
 
   uint32_t numFixed = newShape->numFixedSlots();
   if (newSpan > numFixed) {
@@ -545,8 +545,8 @@ MOZ_ALWAYS_INLINE bool NativeObject::setShapeAndAddNewSlot(JSContext* cx,
   MOZ_ASSERT(newShape->numFixedSlots() == numFixedSlots());
 
   MOZ_ASSERT(newShape->base() == shape()->base());
-  MOZ_ASSERT(newShape->slotSpan() == shape()->slotSpan() + 1);
-  MOZ_ASSERT(newShape->slotSpan() == slot + 1);
+  MOZ_ASSERT(newShape->asShared().slotSpan() == sharedShape()->slotSpan() + 1);
+  MOZ_ASSERT(newShape->asShared().slotSpan() == slot + 1);
 
   uint32_t numFixed = newShape->numFixedSlots();
   if (slot < numFixed) {
