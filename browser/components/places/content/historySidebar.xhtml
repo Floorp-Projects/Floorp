@@ -17,7 +17,7 @@
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="HistorySidebarInit();"
-        onunload="unloadHistorySidebar();"
+        onunload="PlacesUIUtils.setMouseoverURL('', window);"
         data-l10n-id="places-history">
 
   <script src="chrome://browser/content/places/historySidebar.js"/>
@@ -84,8 +84,8 @@
         hidecolumnpicker="true"
         context="placesContext"
         singleclickopens="true"
-        onclick="selectLink(event);"
-        onkeypress="selectLink(event);"
+        onkeypress="PlacesUIUtils.onSidebarTreeKeyPress(event);"
+        onclick="PlacesUIUtils.onSidebarTreeClick(event);"
         onmousemove="PlacesUIUtils.onSidebarTreeMouseMove(event);"
         onmouseout="PlacesUIUtils.setMouseoverURL('', window);">
     <treecols>
