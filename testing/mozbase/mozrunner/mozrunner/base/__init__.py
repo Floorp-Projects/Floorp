@@ -5,6 +5,6 @@
 # flake8: noqa
 from __future__ import absolute_import
 
-from .runner import BaseRunner
+from .browser import BlinkRuntimeRunner, GeckoRuntimeRunner
 from .device import DeviceRunner, FennecRunner
-from .browser import GeckoRuntimeRunner, BlinkRuntimeRunner
+from .runner import BaseRunner

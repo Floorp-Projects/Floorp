@@ -5,9 +5,10 @@
 from __future__ import absolute_import
 
 import copy
-import mozinfo
 import os
 import sys
+
+import mozinfo
 
 from ..application import DefaultContext, FirefoxContext
 from .runner import BaseRunner

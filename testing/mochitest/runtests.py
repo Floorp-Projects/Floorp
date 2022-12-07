@@ -7,24 +7,16 @@ Runs the Mochitest test harness.
 """
 
 from __future__ import absolute_import, division, print_function, with_statement
+
 import os
 import sys
 
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
 sys.path.insert(0, SCRIPT_DIR)
 
-from argparse import Namespace
-from collections import defaultdict
-from contextlib import closing
-from distutils import spawn
 import ctypes
 import glob
 import json
-import mozcrash
-import mozdebug
-import mozinfo
-import mozprocess
-import mozrunner
 import numbers
 import platform
 import re
@@ -39,21 +31,30 @@ import time
 import traceback
 import uuid
 import zipfile
-import bisection
-
+from argparse import Namespace
+from collections import defaultdict
+from contextlib import closing
 from ctypes.util import find_library
 from datetime import datetime, timedelta
+from distutils import spawn
+
+import bisection
+import mozcrash
+import mozdebug
+import mozinfo
+import mozprocess
+import mozrunner
 from manifestparser import TestManifest
-from manifestparser.util import normsep
 from manifestparser.filters import (
     chunk_by_dir,
     chunk_by_runtime,
     chunk_by_slice,
+    failures,
     pathprefix,
     subsuite,
     tags,
-    failures,
 )
+from manifestparser.util import normsep
 from mozgeckoprofiler import symbolicate_profile_json, view_gecko_profile
 
 try:
@@ -66,19 +67,19 @@ except ImportError as e:  # noqa
 
     Marionette = reraise
 
-from leaks import ShutdownLeaks, LSANLeaks
+import mozleak
+from leaks import LSANLeaks, ShutdownLeaks
 from mochitest_options import (
     MochitestArgumentParser,
     build_obj,
     get_default_valgrind_suppression_files,
 )
-from mozprofile import Profile
-from mozprofile.cli import parse_preferences, parse_key_value, KeyValueParseError
-from mozprofile.permissions import ServerLocations
 from mozlog import commandline, get_proxy_logger
+from mozprofile import Profile
+from mozprofile.cli import KeyValueParseError, parse_key_value, parse_preferences
+from mozprofile.permissions import ServerLocations
 from mozrunner.utils import get_stack_fixer_function, test_environment
 from mozscreenshot import dump_screen
-import mozleak
 
 HAVE_PSUTIL = False
 try:
