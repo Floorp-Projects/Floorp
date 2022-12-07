@@ -3566,6 +3566,22 @@ firefoxview:
       - 1779642
     expiry_version: "never"
     release_channel_collection: opt-out
+  dismiss_closed_tab:
+    objects: ["tabs"]
+    description: >
+      Recorded when a recently closed tab is dismissed
+    extra_keys:
+      delta: Time since the tab was closed to when dismissed
+    notification_emails:
+      - firefoxview@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1804099
+    expiry_version: "never"
+    release_channel_collection: opt-out
   fxa_continue:
     objects: ["sync"]
     description: >

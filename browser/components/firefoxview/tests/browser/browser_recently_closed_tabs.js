@@ -31,6 +31,10 @@ const CLOSED_TABS_OPEN_EVENT = [
   ["firefoxview", "closed_tabs_open", "tabs", "false"],
 ];
 
+const RECENTLY_CLOSED_DISMISS_EVENT = [
+  ["firefoxview", "dismiss_closed_tab", "tabs", undefined],
+];
+
 async function add_new_tab(URL) {
   let tab = BrowserTestUtils.addTab(gBrowser, URL);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
@@ -607,7 +611,28 @@ add_task(async function test_dismiss_tab() {
 
     const tabsList = document.querySelector("ol.closed-tabs-list");
 
+    await clearAllParentTelemetryEvents();
+
     await dismiss_tab(tabsList.children[0], content);
+
+    await TestUtils.waitForCondition(
+      () => {
+        let events = Services.telemetry.snapshotEvents(
+          Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+          false
+        ).parent;
+        return events && events.length >= 1;
+      },
+      "Waiting for dismiss_closed_tab firefoxview telemetry event.",
+      200,
+      100
+    );
+
+    TelemetryTestUtils.assertEvents(
+      RECENTLY_CLOSED_DISMISS_EVENT,
+      { category: "firefoxview" },
+      { clear: true, process: "parent" }
+    );
 
     Assert.equal(
       tabsList.children[0].dataset.targetURI,
@@ -621,7 +646,28 @@ add_task(async function test_dismiss_tab() {
       "recently-closed-tabs-list should have two list items"
     );
 
+    await clearAllParentTelemetryEvents();
+
     await dismiss_tab(tabsList.children[0], content);
+
+    await TestUtils.waitForCondition(
+      () => {
+        let events = Services.telemetry.snapshotEvents(
+          Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+          false
+        ).parent;
+        return events && events.length >= 1;
+      },
+      "Waiting for dismiss_closed_tab firefoxview telemetry event.",
+      200,
+      100
+    );
+
+    TelemetryTestUtils.assertEvents(
+      RECENTLY_CLOSED_DISMISS_EVENT,
+      { category: "firefoxview" },
+      { clear: true, process: "parent" }
+    );
 
     Assert.equal(
       tabsList.children[0].dataset.targetURI,
@@ -635,7 +681,28 @@ add_task(async function test_dismiss_tab() {
       "recently-closed-tabs-list should have one list item"
     );
 
+    await clearAllParentTelemetryEvents();
+
     await dismiss_tab(tabsList.children[0], content);
+
+    await TestUtils.waitForCondition(
+      () => {
+        let events = Services.telemetry.snapshotEvents(
+          Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+          false
+        ).parent;
+        return events && events.length >= 1;
+      },
+      "Waiting for dismiss_closed_tab firefoxview telemetry event.",
+      200,
+      100
+    );
+
+    TelemetryTestUtils.assertEvents(
+      RECENTLY_CLOSED_DISMISS_EVENT,
+      { category: "firefoxview" },
+      { clear: true, process: "parent" }
+    );
 
     testVisibility(browser, {
       expectedVisible: {
