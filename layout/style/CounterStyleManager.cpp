@@ -510,7 +510,7 @@ static bool SystemUsesNegativeSign(StyleCounterSystem aSystem) {
 
 class BuiltinCounterStyle : public CounterStyle {
  public:
-  constexpr BuiltinCounterStyle(int32_t aStyle, nsStaticAtom* aName)
+  constexpr BuiltinCounterStyle(ListStyle aStyle, nsStaticAtom* aName)
       : CounterStyle(aStyle), mName(aName) {}
 
   nsStaticAtom* GetStyleName() const { return mName; }
@@ -549,31 +549,31 @@ void BuiltinCounterStyle::GetPrefix(nsAString& aResult) { aResult.Truncate(); }
 /* virtual */
 void BuiltinCounterStyle::GetSuffix(nsAString& aResult) {
   switch (mStyle) {
-    case NS_STYLE_LIST_STYLE_NONE:
+    case ListStyle::None:
       aResult.Truncate();
       break;
 
-    case NS_STYLE_LIST_STYLE_DISC:
-    case NS_STYLE_LIST_STYLE_CIRCLE:
-    case NS_STYLE_LIST_STYLE_SQUARE:
-    case NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED:
-    case NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN:
-    case NS_STYLE_LIST_STYLE_ETHIOPIC_NUMERIC:
+    case ListStyle::Disc:
+    case ListStyle::Circle:
+    case ListStyle::Square:
+    case ListStyle::DisclosureClosed:
+    case ListStyle::DisclosureOpen:
+    case ListStyle::EthiopicNumeric:
       aResult = ' ';
       break;
 
-    case NS_STYLE_LIST_STYLE_TRAD_CHINESE_INFORMAL:
-    case NS_STYLE_LIST_STYLE_TRAD_CHINESE_FORMAL:
-    case NS_STYLE_LIST_STYLE_SIMP_CHINESE_INFORMAL:
-    case NS_STYLE_LIST_STYLE_SIMP_CHINESE_FORMAL:
-    case NS_STYLE_LIST_STYLE_JAPANESE_INFORMAL:
-    case NS_STYLE_LIST_STYLE_JAPANESE_FORMAL:
+    case ListStyle::TradChineseInformal:
+    case ListStyle::TradChineseFormal:
+    case ListStyle::SimpChineseInformal:
+    case ListStyle::SimpChineseFormal:
+    case ListStyle::JapaneseInformal:
+    case ListStyle::JapaneseFormal:
       aResult = 0x3001;
       break;
 
-    case NS_STYLE_LIST_STYLE_KOREAN_HANGUL_FORMAL:
-    case NS_STYLE_LIST_STYLE_KOREAN_HANJA_INFORMAL:
-    case NS_STYLE_LIST_STYLE_KOREAN_HANJA_FORMAL:
+    case ListStyle::KoreanHangulFormal:
+    case ListStyle::KoreanHanjaInformal:
+    case ListStyle::KoreanHanjaFormal:
       aResult.AssignLiteral(u", ");
       break;
 
@@ -596,12 +596,12 @@ void BuiltinCounterStyle::GetSpokenCounterText(CounterValue aOrdinal,
                                                nsAString& aResult,
                                                bool& aIsBullet) {
   switch (mStyle) {
-    case NS_STYLE_LIST_STYLE_NONE:
-    case NS_STYLE_LIST_STYLE_DISC:
-    case NS_STYLE_LIST_STYLE_CIRCLE:
-    case NS_STYLE_LIST_STYLE_SQUARE:
-    case NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED:
-    case NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN: {
+    case ListStyle::None:
+    case ListStyle::Disc:
+    case ListStyle::Circle:
+    case ListStyle::Square:
+    case ListStyle::DisclosureClosed:
+    case ListStyle::DisclosureOpen: {
       // Same as the initial representation
       bool isRTL;
       GetInitialCounterText(aOrdinal, aWritingMode, aResult, isRTL);
@@ -618,11 +618,11 @@ void BuiltinCounterStyle::GetSpokenCounterText(CounterValue aOrdinal,
 /* virtual */
 bool BuiltinCounterStyle::IsBullet() {
   switch (mStyle) {
-    case NS_STYLE_LIST_STYLE_DISC:
-    case NS_STYLE_LIST_STYLE_CIRCLE:
-    case NS_STYLE_LIST_STYLE_SQUARE:
-    case NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED:
-    case NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN:
+    case ListStyle::Disc:
+    case ListStyle::Circle:
+    case ListStyle::Square:
+    case ListStyle::DisclosureClosed:
+    case ListStyle::DisclosureOpen:
       return true;
     default:
       return false;
@@ -639,24 +639,24 @@ static const char16_t gTradChineseNegative[] = {0x8ca0, 0x0000};
 /* virtual */
 void BuiltinCounterStyle::GetNegative(NegativeType& aResult) {
   switch (mStyle) {
-    case NS_STYLE_LIST_STYLE_JAPANESE_FORMAL:
-    case NS_STYLE_LIST_STYLE_JAPANESE_INFORMAL:
+    case ListStyle::JapaneseFormal:
+    case ListStyle::JapaneseInformal:
       aResult.before = gJapaneseNegative;
       break;
 
-    case NS_STYLE_LIST_STYLE_KOREAN_HANGUL_FORMAL:
-    case NS_STYLE_LIST_STYLE_KOREAN_HANJA_INFORMAL:
-    case NS_STYLE_LIST_STYLE_KOREAN_HANJA_FORMAL:
+    case ListStyle::KoreanHangulFormal:
+    case ListStyle::KoreanHanjaInformal:
+    case ListStyle::KoreanHanjaFormal:
       aResult.before = gKoreanNegative;
       break;
 
-    case NS_STYLE_LIST_STYLE_SIMP_CHINESE_FORMAL:
-    case NS_STYLE_LIST_STYLE_SIMP_CHINESE_INFORMAL:
+    case ListStyle::SimpChineseFormal:
+    case ListStyle::SimpChineseInformal:
       aResult.before = gSimpChineseNegative;
       break;
 
-    case NS_STYLE_LIST_STYLE_TRAD_CHINESE_FORMAL:
-    case NS_STYLE_LIST_STYLE_TRAD_CHINESE_INFORMAL:
+    case ListStyle::TradChineseFormal:
+    case ListStyle::TradChineseInformal:
       aResult.before = gTradChineseNegative;
       break;
 
@@ -671,32 +671,32 @@ bool BuiltinCounterStyle::IsOrdinalInRange(CounterValue aOrdinal) {
   switch (mStyle) {
     default:
     // cyclic
-    case NS_STYLE_LIST_STYLE_NONE:
-    case NS_STYLE_LIST_STYLE_DISC:
-    case NS_STYLE_LIST_STYLE_CIRCLE:
-    case NS_STYLE_LIST_STYLE_SQUARE:
-    case NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED:
-    case NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN:
+    case ListStyle::None:
+    case ListStyle::Disc:
+    case ListStyle::Circle:
+    case ListStyle::Square:
+    case ListStyle::DisclosureClosed:
+    case ListStyle::DisclosureOpen:
     // use DecimalToText
-    case NS_STYLE_LIST_STYLE_DECIMAL:
+    case ListStyle::Decimal:
     // use CJKIdeographicToText
-    case NS_STYLE_LIST_STYLE_JAPANESE_FORMAL:
-    case NS_STYLE_LIST_STYLE_JAPANESE_INFORMAL:
-    case NS_STYLE_LIST_STYLE_KOREAN_HANJA_FORMAL:
-    case NS_STYLE_LIST_STYLE_KOREAN_HANJA_INFORMAL:
-    case NS_STYLE_LIST_STYLE_KOREAN_HANGUL_FORMAL:
-    case NS_STYLE_LIST_STYLE_TRAD_CHINESE_FORMAL:
-    case NS_STYLE_LIST_STYLE_TRAD_CHINESE_INFORMAL:
-    case NS_STYLE_LIST_STYLE_SIMP_CHINESE_FORMAL:
-    case NS_STYLE_LIST_STYLE_SIMP_CHINESE_INFORMAL:
+    case ListStyle::JapaneseFormal:
+    case ListStyle::JapaneseInformal:
+    case ListStyle::KoreanHanjaFormal:
+    case ListStyle::KoreanHanjaInformal:
+    case ListStyle::KoreanHangulFormal:
+    case ListStyle::TradChineseFormal:
+    case ListStyle::TradChineseInformal:
+    case ListStyle::SimpChineseFormal:
+    case ListStyle::SimpChineseInformal:
       return true;
 
     // use EthiopicToText
-    case NS_STYLE_LIST_STYLE_ETHIOPIC_NUMERIC:
+    case ListStyle::EthiopicNumeric:
       return aOrdinal >= 1;
 
     // use HebrewToText
-    case NS_STYLE_LIST_STYLE_HEBREW:
+    case ListStyle::Hebrew:
       return aOrdinal >= 1 && aOrdinal <= 999999;
   }
 }
@@ -705,31 +705,31 @@ bool BuiltinCounterStyle::IsOrdinalInRange(CounterValue aOrdinal) {
 bool BuiltinCounterStyle::IsOrdinalInAutoRange(CounterValue aOrdinal) {
   switch (mStyle) {
     // cyclic:
-    case NS_STYLE_LIST_STYLE_NONE:
-    case NS_STYLE_LIST_STYLE_DISC:
-    case NS_STYLE_LIST_STYLE_CIRCLE:
-    case NS_STYLE_LIST_STYLE_SQUARE:
-    case NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED:
-    case NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN:
+    case ListStyle::None:
+    case ListStyle::Disc:
+    case ListStyle::Circle:
+    case ListStyle::Square:
+    case ListStyle::DisclosureClosed:
+    case ListStyle::DisclosureOpen:
     // numeric:
-    case NS_STYLE_LIST_STYLE_DECIMAL:
+    case ListStyle::Decimal:
       return true;
 
     // additive:
-    case NS_STYLE_LIST_STYLE_HEBREW:
+    case ListStyle::Hebrew:
       return aOrdinal >= 0;
 
     // complex predefined:
-    case NS_STYLE_LIST_STYLE_JAPANESE_FORMAL:
-    case NS_STYLE_LIST_STYLE_JAPANESE_INFORMAL:
-    case NS_STYLE_LIST_STYLE_KOREAN_HANJA_FORMAL:
-    case NS_STYLE_LIST_STYLE_KOREAN_HANJA_INFORMAL:
-    case NS_STYLE_LIST_STYLE_KOREAN_HANGUL_FORMAL:
-    case NS_STYLE_LIST_STYLE_TRAD_CHINESE_FORMAL:
-    case NS_STYLE_LIST_STYLE_TRAD_CHINESE_INFORMAL:
-    case NS_STYLE_LIST_STYLE_SIMP_CHINESE_FORMAL:
-    case NS_STYLE_LIST_STYLE_SIMP_CHINESE_INFORMAL:
-    case NS_STYLE_LIST_STYLE_ETHIOPIC_NUMERIC:
+    case ListStyle::JapaneseFormal:
+    case ListStyle::JapaneseInformal:
+    case ListStyle::KoreanHanjaFormal:
+    case ListStyle::KoreanHanjaInformal:
+    case ListStyle::KoreanHangulFormal:
+    case ListStyle::TradChineseFormal:
+    case ListStyle::TradChineseInformal:
+    case ListStyle::SimpChineseFormal:
+    case ListStyle::SimpChineseInformal:
+    case ListStyle::EthiopicNumeric:
       return IsOrdinalInRange(aOrdinal);
 
     default:
@@ -754,12 +754,12 @@ CounterStyle* BuiltinCounterStyle::GetFallback() {
 /* virtual */
 SpeakAs BuiltinCounterStyle::GetSpeakAs() {
   switch (mStyle) {
-    case NS_STYLE_LIST_STYLE_NONE:
-    case NS_STYLE_LIST_STYLE_DISC:
-    case NS_STYLE_LIST_STYLE_CIRCLE:
-    case NS_STYLE_LIST_STYLE_SQUARE:
-    case NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED:
-    case NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN:
+    case ListStyle::None:
+    case ListStyle::Disc:
+    case ListStyle::Circle:
+    case ListStyle::Square:
+    case ListStyle::DisclosureClosed:
+    case ListStyle::DisclosureOpen:
       return SpeakAs::Bullets;
     default:
       return SpeakAs::Numbers;
@@ -769,12 +769,12 @@ SpeakAs BuiltinCounterStyle::GetSpeakAs() {
 /* virtual */
 bool BuiltinCounterStyle::UseNegativeSign() {
   switch (mStyle) {
-    case NS_STYLE_LIST_STYLE_NONE:
-    case NS_STYLE_LIST_STYLE_DISC:
-    case NS_STYLE_LIST_STYLE_CIRCLE:
-    case NS_STYLE_LIST_STYLE_SQUARE:
-    case NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED:
-    case NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN:
+    case ListStyle::None:
+    case ListStyle::Disc:
+    case ListStyle::Circle:
+    case ListStyle::Square:
+    case ListStyle::DisclosureClosed:
+    case ListStyle::DisclosureOpen:
       return false;
     default:
       return true;
@@ -790,19 +790,19 @@ bool BuiltinCounterStyle::GetInitialCounterText(CounterValue aOrdinal,
   switch (mStyle) {
     // used by counters & extends counter-style code only
     // XXX We really need to do this the same way we do list bullets.
-    case NS_STYLE_LIST_STYLE_NONE:
+    case ListStyle::None:
       aResult.Truncate();
       return true;
-    case NS_STYLE_LIST_STYLE_DISC:
+    case ListStyle::Disc:
       aResult.Assign(kDiscCharacter);
       return true;
-    case NS_STYLE_LIST_STYLE_CIRCLE:
+    case ListStyle::Circle:
       aResult.Assign(kCircleCharacter);
       return true;
-    case NS_STYLE_LIST_STYLE_SQUARE:
+    case ListStyle::Square:
       aResult.Assign(kSquareCharacter);
       return true;
-    case NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED:
+    case ListStyle::DisclosureClosed:
       if (aWritingMode.IsVertical()) {
         aResult.Assign(kDownPointingCharacter);
       } else if (aWritingMode.IsBidiLTR()) {
@@ -811,7 +811,7 @@ bool BuiltinCounterStyle::GetInitialCounterText(CounterValue aOrdinal,
         aResult.Assign(kLeftPointingCharacter);
       }
       return true;
-    case NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN:
+    case ListStyle::DisclosureOpen:
       if (!aWritingMode.IsVertical()) {
         aResult.Assign(kDownPointingCharacter);
       } else if (aWritingMode.IsVerticalLR()) {
@@ -821,33 +821,33 @@ bool BuiltinCounterStyle::GetInitialCounterText(CounterValue aOrdinal,
       }
       return true;
 
-    case NS_STYLE_LIST_STYLE_DECIMAL:
+    case ListStyle::Decimal:
       return DecimalToText(aOrdinal, aResult);
 
-    case NS_STYLE_LIST_STYLE_TRAD_CHINESE_INFORMAL:
+    case ListStyle::TradChineseInformal:
       return CJKIdeographicToText(aOrdinal, aResult, gDataTradChineseInformal);
-    case NS_STYLE_LIST_STYLE_TRAD_CHINESE_FORMAL:
+    case ListStyle::TradChineseFormal:
       return CJKIdeographicToText(aOrdinal, aResult, gDataTradChineseFormal);
-    case NS_STYLE_LIST_STYLE_SIMP_CHINESE_INFORMAL:
+    case ListStyle::SimpChineseInformal:
       return CJKIdeographicToText(aOrdinal, aResult, gDataSimpChineseInformal);
-    case NS_STYLE_LIST_STYLE_SIMP_CHINESE_FORMAL:
+    case ListStyle::SimpChineseFormal:
       return CJKIdeographicToText(aOrdinal, aResult, gDataSimpChineseFormal);
-    case NS_STYLE_LIST_STYLE_JAPANESE_INFORMAL:
+    case ListStyle::JapaneseInformal:
       return CJKIdeographicToText(aOrdinal, aResult, gDataJapaneseInformal);
-    case NS_STYLE_LIST_STYLE_JAPANESE_FORMAL:
+    case ListStyle::JapaneseFormal:
       return CJKIdeographicToText(aOrdinal, aResult, gDataJapaneseFormal);
-    case NS_STYLE_LIST_STYLE_KOREAN_HANGUL_FORMAL:
+    case ListStyle::KoreanHangulFormal:
       return CJKIdeographicToText(aOrdinal, aResult, gDataKoreanHangulFormal);
-    case NS_STYLE_LIST_STYLE_KOREAN_HANJA_INFORMAL:
+    case ListStyle::KoreanHanjaInformal:
       return CJKIdeographicToText(aOrdinal, aResult, gDataKoreanHanjaInformal);
-    case NS_STYLE_LIST_STYLE_KOREAN_HANJA_FORMAL:
+    case ListStyle::KoreanHanjaFormal:
       return CJKIdeographicToText(aOrdinal, aResult, gDataKoreanHanjaFormal);
 
-    case NS_STYLE_LIST_STYLE_HEBREW:
+    case ListStyle::Hebrew:
       aIsRTL = true;
       return HebrewToText(aOrdinal, aResult);
 
-    case NS_STYLE_LIST_STYLE_ETHIOPIC_NUMERIC:
+    case ListStyle::EthiopicNumeric:
       return EthiopicToText(aOrdinal, aResult);
 
     default:
@@ -858,23 +858,24 @@ bool BuiltinCounterStyle::GetInitialCounterText(CounterValue aOrdinal,
 
 static constexpr BuiltinCounterStyle gBuiltinStyleTable[] = {
 #define BUILTIN_COUNTER_STYLE(value_, atom_) \
-  {NS_STYLE_LIST_STYLE_##value_, nsGkAtoms::atom_},
+  {ListStyle::value_, nsGkAtoms::atom_},
 #include "BuiltinCounterStyleList.h"
 #undef BUILTIN_COUNTER_STYLE
 };
 
 #define BUILTIN_COUNTER_STYLE(value_, atom_)                                   \
-  static_assert(gBuiltinStyleTable[NS_STYLE_LIST_STYLE_##value_].GetStyle() == \
-                    NS_STYLE_LIST_STYLE_##value_,                              \
-                "Builtin counter style " #atom_                                \
-                " has unmatched index and value.");
+  static_assert(                                                               \
+      gBuiltinStyleTable[static_cast<size_t>(ListStyle::value_)].GetStyle() == \
+          ListStyle::value_,                                                   \
+      "Builtin counter style " #atom_ " has unmatched index and value.");
 #include "BuiltinCounterStyleList.h"
 #undef BUILTIN_COUNTER_STYLE
 
 class DependentBuiltinCounterStyle final : public BuiltinCounterStyle {
  public:
-  DependentBuiltinCounterStyle(int32_t aStyle, CounterStyleManager* aManager)
-      : BuiltinCounterStyle(gBuiltinStyleTable[aStyle]), mManager(aManager) {
+  DependentBuiltinCounterStyle(ListStyle aStyle, CounterStyleManager* aManager)
+      : BuiltinCounterStyle(gBuiltinStyleTable[static_cast<size_t>(aStyle)]),
+        mManager(aManager) {
     NS_ASSERTION(IsDependentStyle(), "Not a dependent builtin style");
     MOZ_ASSERT(!IsCustomStyle(), "Not a builtin style");
   }
@@ -902,15 +903,15 @@ class DependentBuiltinCounterStyle final : public BuiltinCounterStyle {
 /* virtual */
 CounterStyle* DependentBuiltinCounterStyle::GetFallback() {
   switch (GetStyle()) {
-    case NS_STYLE_LIST_STYLE_JAPANESE_INFORMAL:
-    case NS_STYLE_LIST_STYLE_JAPANESE_FORMAL:
-    case NS_STYLE_LIST_STYLE_KOREAN_HANGUL_FORMAL:
-    case NS_STYLE_LIST_STYLE_KOREAN_HANJA_INFORMAL:
-    case NS_STYLE_LIST_STYLE_KOREAN_HANJA_FORMAL:
-    case NS_STYLE_LIST_STYLE_SIMP_CHINESE_INFORMAL:
-    case NS_STYLE_LIST_STYLE_SIMP_CHINESE_FORMAL:
-    case NS_STYLE_LIST_STYLE_TRAD_CHINESE_INFORMAL:
-    case NS_STYLE_LIST_STYLE_TRAD_CHINESE_FORMAL:
+    case ListStyle::JapaneseInformal:
+    case ListStyle::JapaneseFormal:
+    case ListStyle::KoreanHangulFormal:
+    case ListStyle::KoreanHanjaInformal:
+    case ListStyle::KoreanHanjaFormal:
+    case ListStyle::SimpChineseInformal:
+    case ListStyle::SimpChineseFormal:
+    case ListStyle::TradChineseInformal:
+    case ListStyle::TradChineseFormal:
       // These styles all have a larger range than cjk-decimal, so the
       // only case fallback is accessed is that they are extended.
       // Since extending styles will cache the data themselves, we need
@@ -926,7 +927,7 @@ class CustomCounterStyle final : public CounterStyle {
  public:
   CustomCounterStyle(CounterStyleManager* aManager,
                      const RawServoCounterStyleRule* aRule)
-      : CounterStyle(NS_STYLE_LIST_STYLE_CUSTOM),
+      : CounterStyle(ListStyle::Custom),
         mManager(aManager),
         mRule(aRule),
         mRuleGeneration(Servo_CounterStyleRule_GetGeneration(aRule)),
@@ -1504,7 +1505,7 @@ CounterStyle* CustomCounterStyle::GetExtendsRoot() {
 }
 
 AnonymousCounterStyle::AnonymousCounterStyle(const nsAString& aContent)
-    : CounterStyle(NS_STYLE_LIST_STYLE_CUSTOM),
+    : CounterStyle(ListStyle::Custom),
       mSingleString(true),
       mSymbolsType(StyleSymbolsType::Cyclic) {
   mSymbols.SetCapacity(1);
@@ -1513,7 +1514,7 @@ AnonymousCounterStyle::AnonymousCounterStyle(const nsAString& aContent)
 
 AnonymousCounterStyle::AnonymousCounterStyle(StyleSymbolsType aType,
                                              nsTArray<nsString> aSymbols)
-    : CounterStyle(NS_STYLE_LIST_STYLE_CUSTOM),
+    : CounterStyle(ListStyle::Custom),
       mSingleString(false),
       mSymbolsType(aType),
       mSymbols(std::move(aSymbols)) {}
@@ -1627,17 +1628,17 @@ bool AnonymousCounterStyle::GetInitialCounterText(CounterValue aOrdinal,
 bool CounterStyle::IsDependentStyle() const {
   switch (mStyle) {
     // CustomCounterStyle
-    case NS_STYLE_LIST_STYLE_CUSTOM:
+    case ListStyle::Custom:
     // DependentBuiltinCounterStyle
-    case NS_STYLE_LIST_STYLE_JAPANESE_INFORMAL:
-    case NS_STYLE_LIST_STYLE_JAPANESE_FORMAL:
-    case NS_STYLE_LIST_STYLE_KOREAN_HANGUL_FORMAL:
-    case NS_STYLE_LIST_STYLE_KOREAN_HANJA_INFORMAL:
-    case NS_STYLE_LIST_STYLE_KOREAN_HANJA_FORMAL:
-    case NS_STYLE_LIST_STYLE_SIMP_CHINESE_INFORMAL:
-    case NS_STYLE_LIST_STYLE_SIMP_CHINESE_FORMAL:
-    case NS_STYLE_LIST_STYLE_TRAD_CHINESE_INFORMAL:
-    case NS_STYLE_LIST_STYLE_TRAD_CHINESE_FORMAL:
+    case ListStyle::JapaneseInformal:
+    case ListStyle::JapaneseFormal:
+    case ListStyle::KoreanHangulFormal:
+    case ListStyle::KoreanHanjaInformal:
+    case ListStyle::KoreanHanjaFormal:
+    case ListStyle::SimpChineseInformal:
+    case ListStyle::SimpChineseFormal:
+    case ListStyle::TradChineseInformal:
+    case ListStyle::TradChineseFormal:
       return true;
 
     // BuiltinCounterStyle
@@ -1795,7 +1796,7 @@ CounterStyle* CounterStyleManager::ResolveCounterStyle(nsAtom* aName) {
   } else {
     for (const BuiltinCounterStyle& item : gBuiltinStyleTable) {
       if (item.GetStyleName() == aName) {
-        int32_t style = item.GetStyle();
+        const auto style = item.GetStyle();
         data = item.IsDependentStyle()
                    ? new (mPresContext)
                          DependentBuiltinCounterStyle(style, this)
@@ -1812,14 +1813,14 @@ CounterStyle* CounterStyleManager::ResolveCounterStyle(nsAtom* aName) {
 }
 
 /* static */
-CounterStyle* CounterStyleManager::GetBuiltinStyle(int32_t aStyle) {
-  MOZ_ASSERT(0 <= aStyle && size_t(aStyle) < sizeof(gBuiltinStyleTable),
+CounterStyle* CounterStyleManager::GetBuiltinStyle(ListStyle aStyle) {
+  MOZ_ASSERT(0 <= size_t(aStyle) && size_t(aStyle) < sizeof(gBuiltinStyleTable),
              "Require a valid builtin style constant");
-  MOZ_ASSERT(!gBuiltinStyleTable[aStyle].IsDependentStyle(),
+  MOZ_ASSERT(!gBuiltinStyleTable[size_t(aStyle)].IsDependentStyle(),
              "Cannot get dependent builtin style");
   // No method of BuiltinCounterStyle mutates the struct itself, so it
   // should be fine to cast const away.
-  return const_cast<BuiltinCounterStyle*>(&gBuiltinStyleTable[aStyle]);
+  return const_cast<BuiltinCounterStyle*>(&gBuiltinStyleTable[size_t(aStyle)]);
 }
 
 bool CounterStyleManager::NotifyRuleChanged() {

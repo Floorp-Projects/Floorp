@@ -23,20 +23,17 @@ NS_IMPL_ELEMENT_CLONE(HTMLLIElement)
 
 // values that are handled case-insensitively
 static const nsAttrValue::EnumTable kUnorderedListItemTypeTable[] = {
-    {"disc", NS_STYLE_LIST_STYLE_DISC},
-    {"circle", NS_STYLE_LIST_STYLE_CIRCLE},
-    {"round", NS_STYLE_LIST_STYLE_CIRCLE},
-    {"square", NS_STYLE_LIST_STYLE_SQUARE},
+    {"disc", ListStyle::Disc},
+    {"circle", ListStyle::Circle},
+    {"round", ListStyle::Circle},
+    {"square", ListStyle::Square},
     {nullptr, 0}};
 
 // values that are handled case-sensitively
 static const nsAttrValue::EnumTable kOrderedListItemTypeTable[] = {
-    {"A", NS_STYLE_LIST_STYLE_UPPER_ALPHA},
-    {"a", NS_STYLE_LIST_STYLE_LOWER_ALPHA},
-    {"I", NS_STYLE_LIST_STYLE_UPPER_ROMAN},
-    {"i", NS_STYLE_LIST_STYLE_LOWER_ROMAN},
-    {"1", NS_STYLE_LIST_STYLE_DECIMAL},
-    {nullptr, 0}};
+    {"A", ListStyle::UpperAlpha}, {"a", ListStyle::LowerAlpha},
+    {"I", ListStyle::UpperRoman}, {"i", ListStyle::LowerRoman},
+    {"1", ListStyle::Decimal},    {nullptr, 0}};
 
 bool HTMLLIElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                                    const nsAString& aValue,

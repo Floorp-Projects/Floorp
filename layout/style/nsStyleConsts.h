@@ -412,31 +412,33 @@ enum class ScrollingAttribute : uint8_t {
 };
 
 // See nsStyleList
-#define NS_STYLE_LIST_STYLE_CUSTOM -1  // for @counter-style
-#define NS_STYLE_LIST_STYLE_NONE 0
-#define NS_STYLE_LIST_STYLE_DECIMAL 1
-#define NS_STYLE_LIST_STYLE_DISC 2
-#define NS_STYLE_LIST_STYLE_CIRCLE 3
-#define NS_STYLE_LIST_STYLE_SQUARE 4
-#define NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED 5
-#define NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN 6
-#define NS_STYLE_LIST_STYLE_HEBREW 7
-#define NS_STYLE_LIST_STYLE_JAPANESE_INFORMAL 8
-#define NS_STYLE_LIST_STYLE_JAPANESE_FORMAL 9
-#define NS_STYLE_LIST_STYLE_KOREAN_HANGUL_FORMAL 10
-#define NS_STYLE_LIST_STYLE_KOREAN_HANJA_INFORMAL 11
-#define NS_STYLE_LIST_STYLE_KOREAN_HANJA_FORMAL 12
-#define NS_STYLE_LIST_STYLE_SIMP_CHINESE_INFORMAL 13
-#define NS_STYLE_LIST_STYLE_SIMP_CHINESE_FORMAL 14
-#define NS_STYLE_LIST_STYLE_TRAD_CHINESE_INFORMAL 15
-#define NS_STYLE_LIST_STYLE_TRAD_CHINESE_FORMAL 16
-#define NS_STYLE_LIST_STYLE_ETHIOPIC_NUMERIC 17
-// These styles are handled as custom styles defined in counterstyles.css.
-// They are preserved here only for html attribute map.
-#define NS_STYLE_LIST_STYLE_LOWER_ROMAN 100
-#define NS_STYLE_LIST_STYLE_UPPER_ROMAN 101
-#define NS_STYLE_LIST_STYLE_LOWER_ALPHA 102
-#define NS_STYLE_LIST_STYLE_UPPER_ALPHA 103
+enum class ListStyle : uint8_t {
+  Custom = 255,  // for @counter-style
+  None = 0,
+  Decimal,
+  Disc,
+  Circle,
+  Square,
+  DisclosureClosed,
+  DisclosureOpen,
+  Hebrew,
+  JapaneseInformal,
+  JapaneseFormal,
+  KoreanHangulFormal,
+  KoreanHanjaInformal,
+  KoreanHanjaFormal,
+  SimpChineseInformal,
+  SimpChineseFormal,
+  TradChineseInformal,
+  TradChineseFormal,
+  EthiopicNumeric,
+  // These styles are handled as custom styles defined in counterstyles.css.
+  // They are preserved here only for html attribute map.
+  LowerRoman = 100,
+  UpperRoman,
+  LowerAlpha,
+  UpperAlpha
+};
 
 // See nsStyleList
 #define NS_STYLE_LIST_STYLE_POSITION_INSIDE 0

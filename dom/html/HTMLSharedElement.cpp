@@ -97,8 +97,7 @@ static void DirectoryMapAttributesIntoRule(
         aDecls.SetKeywordValue(eCSSProperty_list_style_type,
                                value->GetEnumValue());
       } else {
-        aDecls.SetKeywordValue(eCSSProperty_list_style_type,
-                               NS_STYLE_LIST_STYLE_DISC);
+        aDecls.SetKeywordValue(eCSSProperty_list_style_type, ListStyle::Disc);
       }
     }
   }
