@@ -998,7 +998,7 @@ bool NativeObject::allocDictionarySlot(JSContext* cx, Handle<NativeObject*> obj,
   MOZ_ASSERT(slotSpan >= JSSLOT_FREE(obj->getClass()));
 
   // Try to pull a free slot from the slot-number free list.
-  DictionaryPropMap* map = obj->shape()->dictionaryPropMap();
+  DictionaryPropMap* map = obj->dictionaryShape()->propMap();
   uint32_t last = map->freeList();
   if (last != SHAPE_INVALID_SLOT) {
 #ifdef DEBUG
@@ -1042,7 +1042,7 @@ void NativeObject::freeDictionarySlot(uint32_t slot) {
   MOZ_ASSERT(inDictionaryMode());
   MOZ_ASSERT(slot < slotSpan());
 
-  DictionaryPropMap* map = shape()->dictionaryPropMap();
+  DictionaryPropMap* map = dictionaryShape()->propMap();
   uint32_t last = map->freeList();
 
   // Can't afford to check the whole free list, but let's check the head.

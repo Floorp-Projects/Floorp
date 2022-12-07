@@ -943,7 +943,7 @@ static SharedShape* AddLengthProperty(JSContext* cx,
   constexpr PropertyFlags flags = {PropertyFlag::CustomDataProperty,
                                    PropertyFlag::Writable};
 
-  Rooted<SharedPropMap*> map(cx, shape->sharedPropMap());
+  Rooted<SharedPropMap*> map(cx, shape->propMap());
   uint32_t mapLength = shape->propMapLength();
   ObjectFlags objectFlags = shape->objectFlags();
 

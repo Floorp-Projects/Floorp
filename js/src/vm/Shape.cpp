@@ -33,10 +33,11 @@ using JS::AutoCheckCannotGC;
 bool Shape::replaceShape(JSContext* cx, HandleObject obj,
                          ObjectFlags objectFlags, TaggedProto proto,
                          uint32_t nfixed) {
-  MOZ_ASSERT(!obj->shape()->isDictionary());
+  MOZ_ASSERT(obj->shape()->isShared());
 
   Shape* newShape;
   if (obj->shape()->propMap()) {
+    Handle<NativeObject*> nobj = obj.as<NativeObject>();
     Rooted<BaseShape*> base(cx, obj->shape()->base());
     if (proto != base->proto()) {
       Rooted<TaggedProto> protoRoot(cx, proto);
@@ -45,7 +46,7 @@ bool Shape::replaceShape(JSContext* cx, HandleObject obj,
         return false;
       }
     }
-    Rooted<SharedPropMap*> map(cx, obj->shape()->sharedPropMap());
+    Rooted<SharedPropMap*> map(cx, nobj->sharedShape()->propMap());
     uint32_t mapLength = obj->shape()->propMapLength();
     newShape = SharedShape::getPropMapShape(cx, base, nfixed, map, mapLength,
                                             objectFlags);
@@ -125,7 +126,7 @@ NativeObject::maybeConvertToDictionaryForAdd(JSContext* cx,
   if (obj->inDictionaryMode()) {
     return true;
   }
-  SharedPropMap* map = obj->shape()->sharedPropMap();
+  SharedPropMap* map = obj->sharedShape()->propMap();
   if (!map) {
     return true;
   }
@@ -172,7 +173,7 @@ bool NativeObject::addCustomDataProperty(JSContext* cx,
       return false;
     }
 
-    Rooted<DictionaryPropMap*> map(cx, obj->shape()->dictionaryPropMap());
+    Rooted<DictionaryPropMap*> map(cx, obj->dictionaryShape()->propMap());
     uint32_t mapLength = obj->shape()->propMapLength();
     if (!DictionaryPropMap::addProperty(cx, clasp, &map, &mapLength, id, flags,
                                         SHAPE_INVALID_SLOT, &objectFlags)) {
@@ -183,7 +184,7 @@ bool NativeObject::addCustomDataProperty(JSContext* cx,
     return true;
   }
 
-  Rooted<SharedPropMap*> map(cx, obj->shape()->sharedPropMap());
+  Rooted<SharedPropMap*> map(cx, obj->sharedShape()->propMap());
   uint32_t mapLength = obj->shape()->propMapLength();
   if (!SharedPropMap::addCustomDataProperty(cx, clasp, &map, &mapLength, id,
                                             flags, &objectFlags)) {
@@ -321,7 +322,7 @@ bool NativeObject::addProperty(JSContext* cx, Handle<NativeObject*> obj,
   ObjectFlags objectFlags = obj->shape()->objectFlags();
   const JSClass* clasp = obj->shape()->getObjectClass();
 
-  Rooted<SharedPropMap*> map(cx, obj->shape()->sharedPropMap());
+  Rooted<SharedPropMap*> map(cx, obj->sharedShape()->propMap());
   uint32_t mapLength = obj->shape()->propMapLength();
 
   if (!SharedPropMap::addProperty(cx, clasp, &map, &mapLength, id, flags,
@@ -414,7 +415,7 @@ bool NativeObject::addPropertyInReservedSlot(JSContext* cx,
   ObjectFlags objectFlags = obj->shape()->objectFlags();
   const JSClass* clasp = obj->shape()->getObjectClass();
 
-  Rooted<SharedPropMap*> map(cx, obj->shape()->sharedPropMap());
+  Rooted<SharedPropMap*> map(cx, obj->sharedShape()->propMap());
   uint32_t mapLength = obj->shape()->propMapLength();
   if (!SharedPropMap::addPropertyInReservedSlot(cx, clasp, &map, &mapLength, id,
                                                 flags, slot, &objectFlags)) {
@@ -686,7 +687,7 @@ void NativeObject::maybeFreeDictionaryPropSlots(JSContext* cx,
   // handle the case where there's a single slotless property, to support arrays
   // (array.length is a custom data property).
 
-  MOZ_ASSERT(shape()->dictionaryPropMap() == map);
+  MOZ_ASSERT(dictionaryShape()->propMap() == map);
   MOZ_ASSERT(shape()->propMapLength() == mapLength);
 
   if (mapLength > 1 || map->previous()) {
@@ -918,13 +919,13 @@ bool NativeObject::freezeOrSealProperties(JSContext* cx,
     if (!generateNewDictionaryShape(cx, obj)) {
       return false;
     }
-    DictionaryPropMap* map = obj->shape()->dictionaryPropMap();
+    DictionaryPropMap* map = obj->dictionaryShape()->propMap();
     map->freezeOrSealProperties(cx, level, clasp, mapLength, &objectFlags);
     obj->dictionaryShape()->updateNewShape(objectFlags, map, mapLength);
     return true;
   }
 
-  Rooted<SharedPropMap*> map(cx, obj->shape()->sharedPropMap());
+  Rooted<SharedPropMap*> map(cx, obj->sharedShape()->propMap());
   if (!SharedPropMap::freezeOrSealProperties(cx, level, clasp, &map, mapLength,
                                              &objectFlags)) {
     return false;
@@ -952,7 +953,7 @@ bool NativeObject::generateNewDictionaryShape(JSContext* cx,
   MOZ_ASSERT(obj->inDictionaryMode());
 
   Rooted<BaseShape*> base(cx, obj->shape()->base());
-  Rooted<DictionaryPropMap*> map(cx, obj->shape()->dictionaryPropMap());
+  Rooted<DictionaryPropMap*> map(cx, obj->dictionaryShape()->propMap());
   uint32_t mapLength = obj->shape()->propMapLength();
 
   Shape* shape =
