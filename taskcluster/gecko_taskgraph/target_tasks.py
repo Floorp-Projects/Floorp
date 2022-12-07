@@ -762,6 +762,8 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
                 if "linux" in platform:
                     if "speedometer" in try_name:
                         return True
+                if "safari" and "benchmark" in try_name:
+                    return True
             else:
                 # Don't run tp6 raptor tests
                 if "tp6" in try_name:
