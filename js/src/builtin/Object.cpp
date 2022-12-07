@@ -953,7 +953,7 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
       toPlain->canReuseShapeForNewProperties(fromPlain->shape())) {
     MOZ_ASSERT(!Watchtower::watchesPropertyAdd(toPlain),
                "watched objects require Watchtower calls");
-    Shape* newShape = fromPlain->shape();
+    SharedShape* newShape = fromPlain->sharedShape();
     uint32_t oldSpan = 0;
     uint32_t newSpan = props.length();
     if (!toPlain->setShapeAndAddNewSlots(cx, newShape, oldSpan, newSpan)) {
