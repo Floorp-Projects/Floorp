@@ -2874,7 +2874,9 @@ BrowserGlue.prototype = {
       },
 
       {
-        condition: lazy.NimbusFeatures.dapTelemetry.getVariable("enabled"),
+        condition:
+          lazy.TelemetryUtils.isTelemetryEnabled &&
+          lazy.NimbusFeatures.dapTelemetry.getVariable("enabled"),
         task: () => {
           lazy.DAPTelemetrySender.startup();
         },
