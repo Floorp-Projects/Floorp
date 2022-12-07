@@ -61,6 +61,8 @@ class LockManager final : public nsISupports, public nsWrapperCache {
   nsCOMPtr<nsIGlobalObject> mOwner;
   RefPtr<locks::LockManagerChild> mActor;
 
+  // Revokes itself and triggers LockManagerChild deletion on worker shutdown
+  // callback.
   RefPtr<WeakWorkerRef> mWorkerRef;
 };
 
