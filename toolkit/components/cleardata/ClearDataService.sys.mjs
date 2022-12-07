@@ -103,6 +103,11 @@ function hasBaseDomain(
 // * deleteByOriginAttributes() - this method is implemented only if the cleaner
 //                                knows how to delete data by originAttributes
 //                                pattern.
+// * cleanupAfterDeletionAtShutdown() - this method is implemented only if the
+//                                      cleaner needs a separate step after
+//                                      deletion. No-op if not implemented.
+//                                      Currently called via
+//                                      Sanitizer.maybeSanitizeSessionPrincipals().
 
 const CookieCleaner = {
   deleteByLocalFiles(aOriginAttributes) {
@@ -729,6 +734,16 @@ const QuotaCleaner = {
     if (swCleanupError) {
       throw swCleanupError;
     }
+  },
+
+  async cleanupAfterDeletionAtShutdown() {
+    const storageDir = PathUtils.join(
+      PathUtils.profileDir,
+      Services.prefs.getStringPref("dom.quotaManager.storageName"),
+      "to-be-removed"
+    );
+
+    await IOUtils.remove(storageDir, { recursive: true });
   },
 };
 
@@ -1698,6 +1713,14 @@ ClearDataService.prototype = Object.freeze({
       aCallback.onDataDeleted(0);
     });
     return Cr.NS_OK;
+  },
+
+  cleanupAfterDeletionAtShutdown(aFlags, aCallback) {
+    return this._deleteInternal(aFlags, aCallback, async aCleaner => {
+      if (aCleaner.cleanupAfterDeletionAtShutdown) {
+        await aCleaner.cleanupAfterDeletionAtShutdown();
+      }
+    });
   },
 
   // This internal method uses aFlags against FLAGS_MAP in order to retrieve a

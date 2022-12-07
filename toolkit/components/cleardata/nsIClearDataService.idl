@@ -151,6 +151,13 @@ interface nsIClearDataService : nsISupports
                                                [optional] in PRTime aFrom,
                                                [optional] in nsIClearDataCallback aCallback);
 
+  /**
+   * Some cleaners, namely QuotaCleaner, can opt in and treat things as deleted
+   * without actually removing files at shutdown. This function will trigger
+   * actual removal of them.
+   */
+  void cleanupAfterDeletionAtShutdown(in uint32_t aFlags, in nsIClearDataCallback aCallback);
+
   /**************************************************************************
    * Listed below are the various flags which may be or'd together.
    */
