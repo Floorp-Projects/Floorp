@@ -321,11 +321,6 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
                            ObjectFlags objectFlags, TaggedProto proto,
                            uint32_t nfixed);
 
-  void setObjectFlags(ObjectFlags flags) {
-    MOZ_ASSERT(isDictionary());
-    objectFlags_ = flags;
-  }
-
  public:
   void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
                               JS::ShapeInfo* info) const {
@@ -452,18 +447,6 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
     return (immutableFlags & FIXED_SLOTS_MASK) >> FIXED_SLOTS_SHIFT;
   }
 
-  void setNumFixedSlots(uint32_t nfixed) {
-    MOZ_ASSERT(nfixed < FIXED_SLOTS_MAX);
-    immutableFlags = immutableFlags & ~FIXED_SLOTS_MASK;
-    immutableFlags = immutableFlags | (nfixed << FIXED_SLOTS_SHIFT);
-  }
-
-  void setBase(BaseShape* base) {
-    MOZ_ASSERT(base);
-    MOZ_ASSERT(isDictionary());
-    setHeaderPtr(base);
-  }
-
  public:
 #ifdef DEBUG
   void dump(js::GenericPrinter& out) const;
@@ -493,15 +476,6 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   static constexpr size_t offsetOfCachePtr() { return offsetof(Shape, cache_); }
 
  private:
-  void updateNewDictionaryShape(ObjectFlags flags, DictionaryPropMap* map,
-                                uint32_t mapLength) {
-    MOZ_ASSERT(isDictionary());
-    objectFlags_ = flags;
-    propMap_ = map;
-    immutableFlags = (immutableFlags & ~MAP_LENGTH_MASK) | mapLength;
-    MOZ_ASSERT(propMapLength() == mapLength);
-  }
-
   static void staticAsserts() {
     static_assert(offsetOfBaseShape() == offsetof(JS::shadow::Shape, base));
     static_assert(offsetof(Shape, immutableFlags) ==
@@ -575,12 +549,41 @@ class SharedShape : public js::Shape {
 };
 
 class DictionaryShape : public js::Shape {
+  friend class ::JSObject;
   friend class js::gc::CellAllocator;
+  friend class NativeObject;
+
   DictionaryShape(BaseShape* base, ObjectFlags objectFlags, uint32_t nfixed,
                   PropMap* map, uint32_t mapLength)
       : Shape(base, objectFlags, nfixed, map, mapLength,
               /* isDictionary = */ true) {
     MOZ_ASSERT(map);
+  }
+
+  // Methods to set fields of a new dictionary shape. Must not be used for
+  // shapes that might have been exposed to script.
+  void updateNewShape(ObjectFlags flags, DictionaryPropMap* map,
+                      uint32_t mapLength) {
+    MOZ_ASSERT(isDictionary());
+    objectFlags_ = flags;
+    propMap_ = map;
+    immutableFlags = (immutableFlags & ~MAP_LENGTH_MASK) | mapLength;
+    MOZ_ASSERT(propMapLength() == mapLength);
+  }
+  void setBaseOfNewShape(BaseShape* base) {
+    MOZ_ASSERT(isDictionary());
+    MOZ_ASSERT(base);
+    setHeaderPtr(base);
+  }
+  void setObjectFlagsOfNewShape(ObjectFlags flags) {
+    MOZ_ASSERT(isDictionary());
+    objectFlags_ = flags;
+  }
+  void setNumFixedSlotsOfNewShape(uint32_t nfixed) {
+    MOZ_ASSERT(isDictionary());
+    MOZ_ASSERT(nfixed < FIXED_SLOTS_MAX);
+    immutableFlags = immutableFlags & ~FIXED_SLOTS_MASK;
+    immutableFlags = immutableFlags | (nfixed << FIXED_SLOTS_SHIFT);
   }
 
  public:

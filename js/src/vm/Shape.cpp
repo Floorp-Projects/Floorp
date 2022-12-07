@@ -179,7 +179,7 @@ bool NativeObject::addCustomDataProperty(JSContext* cx,
       return false;
     }
 
-    obj->shape()->updateNewDictionaryShape(objectFlags, map, mapLength);
+    obj->dictionaryShape()->updateNewShape(objectFlags, map, mapLength);
     return true;
   }
 
@@ -312,7 +312,7 @@ bool NativeObject::addProperty(JSContext* cx, Handle<NativeObject*> obj,
       return false;
     }
 
-    obj->shape()->updateNewDictionaryShape(objectFlags, map, mapLength);
+    obj->dictionaryShape()->updateNewShape(objectFlags, map, mapLength);
     return true;
   }
 
@@ -585,7 +585,7 @@ bool NativeObject::changeProperty(JSContext* cx, Handle<NativeObject*> obj,
 
   propMap->asDictionary()->changeProperty(cx, clasp, propIndex, flags, slot,
                                           &objectFlags);
-  obj->shape()->setObjectFlags(objectFlags);
+  obj->dictionaryShape()->setObjectFlagsOfNewShape(objectFlags);
 
   *slotOut = slot;
   return true;
@@ -673,7 +673,7 @@ bool NativeObject::changeCustomDataPropAttributes(JSContext* cx,
 
   propMap->asDictionary()->changePropertyFlags(cx, clasp, propIndex, flags,
                                                &objectFlags);
-  obj->shape()->setObjectFlags(objectFlags);
+  obj->dictionaryShape()->setObjectFlagsOfNewShape(objectFlags);
   return true;
 }
 
@@ -850,7 +850,7 @@ bool NativeObject::removeProperty(JSContext* cx, Handle<NativeObject*> obj,
 
   DictionaryPropMap::removeProperty(cx, &dictMap, &mapLength, table, ptr);
 
-  obj->shape()->updateNewDictionaryShape(obj->shape()->objectFlags(), dictMap,
+  obj->dictionaryShape()->updateNewShape(obj->shape()->objectFlags(), dictMap,
                                          mapLength);
 
   // If we just deleted the last property, consider shrinking the slots. We only
@@ -887,7 +887,7 @@ bool NativeObject::densifySparseElements(JSContext* cx,
   ObjectFlags objectFlags = obj->shape()->objectFlags();
   objectFlags.clearFlag(ObjectFlag::Indexed);
 
-  obj->shape()->updateNewDictionaryShape(objectFlags, map, mapLength);
+  obj->dictionaryShape()->updateNewShape(objectFlags, map, mapLength);
 
   obj->maybeFreeDictionaryPropSlots(cx, map, mapLength);
 
@@ -918,7 +918,7 @@ bool NativeObject::freezeOrSealProperties(JSContext* cx,
     }
     DictionaryPropMap* map = obj->shape()->dictionaryPropMap();
     map->freezeOrSealProperties(cx, level, clasp, mapLength, &objectFlags);
-    obj->shape()->updateNewDictionaryShape(objectFlags, map, mapLength);
+    obj->dictionaryShape()->updateNewShape(objectFlags, map, mapLength);
     return true;
   }
 
@@ -976,10 +976,11 @@ bool JSObject::setFlag(JSContext* cx, HandleObject obj, ObjectFlag flag) {
   objectFlags.setFlag(flag);
 
   if (obj->is<NativeObject>() && obj->as<NativeObject>().inDictionaryMode()) {
-    if (!NativeObject::generateNewDictionaryShape(cx, obj.as<NativeObject>())) {
+    Handle<NativeObject*> nobj = obj.as<NativeObject>();
+    if (!NativeObject::generateNewDictionaryShape(cx, nobj)) {
       return false;
     }
-    obj->shape()->setObjectFlags(objectFlags);
+    nobj->dictionaryShape()->setObjectFlagsOfNewShape(objectFlags);
     return true;
   }
 
@@ -1027,7 +1028,7 @@ bool JSObject::setProtoUnchecked(JSContext* cx, HandleObject obj,
       return false;
     }
 
-    nobj->shape()->setBase(nbase);
+    nobj->dictionaryShape()->setBaseOfNewShape(nbase);
     return true;
   }
 
@@ -1045,7 +1046,7 @@ bool NativeObject::changeNumFixedSlotsAfterSwap(JSContext* cx,
     if (!NativeObject::generateNewDictionaryShape(cx, obj)) {
       return false;
     }
-    obj->shape()->setNumFixedSlots(nfixed);
+    obj->dictionaryShape()->setNumFixedSlotsOfNewShape(nfixed);
     return true;
   }
 
