@@ -18,6 +18,21 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.sys.mjs",
 });
 
+/**
+ * @typedef {string} ScriptEvaluateResultType
+ **/
+
+/**
+ * Enum of possible evaluation result types.
+ *
+ * @readonly
+ * @enum {ScriptEvaluateResultType}
+ **/
+const ScriptEvaluateResultType = {
+  Exception: "exception",
+  Success: "success",
+};
+
 class ScriptModule extends Module {
   destroy() {}
 
@@ -67,6 +82,7 @@ class ScriptModule extends Module {
    *
    * @property {ExceptionDetails} exceptionDetails
    * @property {string} realm
+   * @property {ScriptEvaluateResultType} [type=ScriptEvaluateResultType.Exception]
    */
 
   /**
@@ -77,6 +93,7 @@ class ScriptModule extends Module {
    *
    * @property {string} realm
    * @property {RemoteValue} result
+   * @property {ScriptEvaluateResultType} [type=ScriptEvaluateResultType.Success]
    */
 
   /**
@@ -429,10 +446,12 @@ class ScriptModule extends Module {
     switch (evaluationResult.evaluationStatus) {
       // TODO: Compare with EvaluationStatus.Normal after Bug 1774444 is fixed.
       case "normal":
+        rv.type = ScriptEvaluateResultType.Success;
         rv.result = evaluationResult.result;
         break;
       // TODO: Compare with EvaluationStatus.Throw after Bug 1774444 is fixed.
       case "throw":
+        rv.type = ScriptEvaluateResultType.Exception;
         rv.exceptionDetails = evaluationResult.exceptionDetails;
         break;
       default:
