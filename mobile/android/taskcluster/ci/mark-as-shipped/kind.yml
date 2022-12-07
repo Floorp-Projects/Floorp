@@ -11,6 +11,9 @@ transforms:
 
 kind-dependencies:
     - post-beetmover
+    # TODO: Make it depend on push-apk too. At the moment, it's okay to wait solely
+    # on post-beetmover because they're part of the ship graph while push-apk is in the
+    # promote one
 
 primary-dependency: post-beetmover
 
@@ -20,7 +23,7 @@ only-for-build-types:
     - release
 
 task-template:
-    description: Mark Android-Components as shipped in ship-it
+    description: Mark Firefox-Android as shipped in ship-it
     worker-type: ship-it
     scopes:
         by-level:
@@ -30,6 +33,7 @@ task-template:
             default:
                 - project:releng:ship-it:action:mark-as-shipped
                 - project:releng:ship-it:server:staging
+    shipping-phase: ship
     worker: {}
 
     treeherder:

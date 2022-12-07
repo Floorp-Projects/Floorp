@@ -31,7 +31,7 @@ def resolve_keys(config, tasks):
 @transforms.add
 def make_task_description(config, tasks):
     for task in tasks:
-        product = "Android-components"  # shipit exactly uses this case
+        product = "Firefox-android"  # shipit exactly uses this case
         # {ver} is just a magic string to show "this isn't right"
         # https://github.com/mozilla-mobile/fenix/pull/7306/files#r360248631
         version = config.params['version'] or "{ver}"
