@@ -10,6 +10,8 @@
 #include "gfxPlatform.h"
 #include "nsRefreshDriver.h"
 #include "mozilla/dom/BrowserChild.h"
+#include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/layers/APZChild.h"
@@ -244,7 +246,19 @@ void PuppetWidget::Invalidate(const LayoutDeviceIntRect& aRect) {
   if (mBrowserChild && !aRect.IsEmpty() && !mWidgetPaintTask.IsPending()) {
     mWidgetPaintTask = new WidgetPaintTask(this);
     nsCOMPtr<nsIRunnable> event(mWidgetPaintTask.get());
-    SchedulerGroup::Dispatch(TaskCategory::Other, event.forget());
+    // Avoid doing an extra paint for the very initial document. Usually the
+    // next document is loaded within a couple of milliseconds.
+    BrowsingContext* bc = mBrowserChild->GetBrowsingContext();
+    bool delayedPaint = bc && bc->GetExtantDocument() &&
+                        bc->GetExtantDocument()->IsInitialDocument();
+    if (delayedPaint) {
+      // It shouldn't matter too much how many ms we delay the paint, as long as
+      // we still paint relatively soon. 16ms is the common time between
+      // RefreshDriver ticks.
+      NS_DelayedDispatchToCurrentThread(event.forget(), 16);
+    } else {
+      NS_DispatchToCurrentThread(event.forget());
+    }
   }
 }
 
