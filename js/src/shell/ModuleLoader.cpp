@@ -469,15 +469,13 @@ JSObject* ModuleLoader::loadAndParse(JSContext* cx, HandleString pathArg) {
     return nullptr;
   }
 
-  JS::AutoStableStringChars stableChars(cx);
-  if (!stableChars.initTwoByte(cx, source)) {
+  JS::AutoStableStringChars linearChars(cx);
+  if (!linearChars.initTwoByte(cx, source)) {
     return nullptr;
   }
 
-  const char16_t* chars = stableChars.twoByteRange().begin().get();
   JS::SourceText<char16_t> srcBuf;
-  if (!srcBuf.init(cx, chars, source->length(),
-                   JS::SourceOwnership::Borrowed)) {
+  if (!srcBuf.initMaybeBorrowed(cx, linearChars)) {
     return nullptr;
   }
 

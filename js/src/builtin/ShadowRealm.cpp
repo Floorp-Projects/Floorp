@@ -222,12 +222,7 @@ static bool PerformShadowRealmEval(JSContext* cx, Handle<JSString*> sourceText,
       return false;
     }
     SourceText<char16_t> srcBuf;
-
-    const char16_t* chars = linearChars.twoByteRange().begin().get();
-    SourceOwnership ownership = linearChars.maybeGiveOwnershipToCaller()
-                                    ? SourceOwnership::TakeOwnership
-                                    : SourceOwnership::Borrowed;
-    if (!srcBuf.init(cx, chars, linearChars.length(), ownership)) {
+    if (!srcBuf.initMaybeBorrowed(cx, linearChars)) {
       return false;
     }
 

@@ -6131,15 +6131,6 @@ static bool EvalReturningScope(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  AutoStableStringChars strChars(cx);
-  if (!strChars.initTwoByte(cx, str)) {
-    return false;
-  }
-
-  mozilla::Range<const char16_t> chars = strChars.twoByteRange();
-  size_t srclen = chars.length();
-  const char16_t* src = chars.begin().get();
-
   JS::AutoFilename filename;
   unsigned lineno;
 
@@ -6150,8 +6141,12 @@ static bool EvalReturningScope(JSContext* cx, unsigned argc, Value* vp) {
   options.setNoScriptRval(true);
   options.setNonSyntacticScope(true);
 
+  AutoStableStringChars linearChars(cx);
+  if (!linearChars.initTwoByte(cx, str)) {
+    return false;
+  }
   JS::SourceText<char16_t> srcBuf;
-  if (!srcBuf.init(cx, src, srclen, SourceOwnership::Borrowed)) {
+  if (!srcBuf.initMaybeBorrowed(cx, linearChars)) {
     return false;
   }
 
@@ -6362,8 +6357,7 @@ static bool CompileToStencil(JSContext* cx, uint32_t argc, Value* vp) {
     return false;
   }
   JS::SourceText<char16_t> srcBuf;
-  if (!srcBuf.init(cx, linearChars.twoByteChars(), src->length(),
-                   JS::SourceOwnership::Borrowed)) {
+  if (!srcBuf.initMaybeBorrowed(cx, linearChars)) {
     return false;
   }
 
@@ -6508,8 +6502,7 @@ static bool CompileToStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
     return false;
   }
   JS::SourceText<char16_t> srcBuf;
-  if (!srcBuf.init(cx, linearChars.twoByteChars(), src->length(),
-                   JS::SourceOwnership::Borrowed)) {
+  if (!srcBuf.initMaybeBorrowed(cx, linearChars)) {
     return false;
   }
 
@@ -7694,20 +7687,13 @@ JSScript* js::TestingFunctionArgumentToScript(
     JSContext* cx, HandleValue v, JSFunction** funp /* = nullptr */) {
   if (v.isString()) {
     // To convert a string to a script, compile it. Parse it as an ES6 Program.
-    Rooted<JSLinearString*> linearStr(
-        cx, JS::StringToLinearString(cx, v.toString()));
-    if (!linearStr) {
-      return nullptr;
-    }
-    size_t len = JS::GetLinearStringLength(linearStr);
+    Rooted<JSString*> str(cx, v.toString());
     AutoStableStringChars linearChars(cx);
-    if (!linearChars.initTwoByte(cx, linearStr)) {
+    if (!linearChars.initTwoByte(cx, str)) {
       return nullptr;
     }
-    const char16_t* chars = linearChars.twoByteRange().begin().get();
-
     SourceText<char16_t> source;
-    if (!source.init(cx, chars, len, SourceOwnership::Borrowed)) {
+    if (!source.initMaybeBorrowed(cx, linearChars)) {
       return nullptr;
     }
 

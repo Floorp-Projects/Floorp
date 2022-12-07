@@ -7009,18 +7009,13 @@ static bool HandleInstantiationFailure(JSContext* cx, CallArgs args,
     options.setForceStrictMode();
   }
 
-  AutoStableStringChars stableChars(cx);
-  if (!stableChars.initTwoByte(cx, src)) {
+  AutoStableStringChars linearChars(cx);
+  if (!linearChars.initTwoByte(cx, src)) {
     return false;
   }
 
   SourceText<char16_t> srcBuf;
-
-  const char16_t* chars = stableChars.twoByteRange().begin().get();
-  SourceOwnership ownership = stableChars.maybeGiveOwnershipToCaller()
-                                  ? SourceOwnership::TakeOwnership
-                                  : SourceOwnership::Borrowed;
-  if (!srcBuf.init(cx, chars, end - begin, ownership)) {
+  if (!srcBuf.initMaybeBorrowed(cx, linearChars)) {
     return false;
   }
 
