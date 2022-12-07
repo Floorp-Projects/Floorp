@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyGetter(lazy, "logConsole", function() {
   return console.createInstance({
     prefix: "SnapshotSelector",
     maxLogLevel: Services.prefs.getBoolPref(
-      "browser.snapshots.scorer.log",
+      "browser.places.snapshots.scorer.log",
       false
     )
       ? "Debug"
@@ -59,7 +59,7 @@ export const SnapshotScorer = new (class SnapshotScorer {
    *   A map of function suffixes to relevancy points. The suffixes are prefixed
    *   with `_score`. Each function will be called in turn to obtain the score
    *   for that item with the result multiplied by the relevancy points.
-   *   This map is filled from the `browser.snapshots.score.` preferences.
+   *   This map is filled from the `browser.places.snapshots.score.` preferences.
    */
   #RELEVANCY_POINTS = new Map();
 
@@ -77,7 +77,7 @@ export const SnapshotScorer = new (class SnapshotScorer {
       4
     );
 
-    let branch = Services.prefs.getBranch("browser.snapshots.score.");
+    let branch = Services.prefs.getBranch("browser.places.snapshots.score.");
     for (let name of branch.getChildList("")) {
       this.#RELEVANCY_POINTS.set(name, branch.getIntPref(name, 0));
     }

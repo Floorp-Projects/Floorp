@@ -60,6 +60,13 @@ XPCOMUtils.defineLazyGetter(lazy, "logConsole", function() {
   });
 });
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "snapshots_enabled",
+  "browser.places.snapshots.enabled",
+  false
+);
+
 /**
  * Snapshots are considered overlapping if interactions took place within snapshot_overlap_limit milleseconds of each other.
  * Default to a half-hour on each end of the interactions.
@@ -398,6 +405,10 @@ export const Snapshots = new (class Snapshots {
   async add({ url, title, userPersisted = this.USER_PERSISTED.NO }) {
     if (!url) {
       throw new Error("Missing url parameter to Snapshots.add()");
+    }
+
+    if (!lazy.snapshots_enabled) {
+      return;
     }
 
     url = this.stripFragments(url);
@@ -1085,6 +1096,10 @@ export const Snapshots = new (class Snapshots {
    *  The list of pages to check, if undefined all pages are checked.
    */
   async updateSnapshots(urls = undefined) {
+    if (!lazy.snapshots_enabled) {
+      return;
+    }
+
     if (urls !== undefined && !urls.length) {
       return;
     }

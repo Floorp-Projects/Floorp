@@ -143,12 +143,12 @@ export class SnapshotSelector extends EventEmitter {
     if (
       sourceWeights ||
       Services.prefs.getBoolPref(
-        "browser.pinebuild.snapshots.relevancy.enabled",
+        "browser.places.snapshots.relevancy.enabled",
         false
       )
     ) {
       // Fetch the defaults
-      let branch = Services.prefs.getBranch("browser.snapshots.source.");
+      let branch = Services.prefs.getBranch("browser.places.snapshots.source.");
       let weights = Object.fromEntries(
         branch.getChildList("").map(name => [name, branch.getIntPref(name, 0)])
       );
