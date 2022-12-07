@@ -566,9 +566,6 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
     case ColorID::IMESelectedConvertedTextUnderline:
       aColor = NS_TRANSPARENT;
       break;
-    case ColorID::SpellCheckerUnderline:
-      aColor = NS_RGB(0xff, 0, 0);
-      break;
     case ColorID::Scrollbar:
       aColor = mThemedScrollbar;
       break;
@@ -740,6 +737,7 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
     case ColorID::MozColheaderhovertext:
       aColor = mMozColHeaderHoverText;
       break;
+    case ColorID::SpellCheckerUnderline:
     case ColorID::Mark:
     case ColorID::Marktext:
       aColor = GetStandinForNativeColor(
