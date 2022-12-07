@@ -1,1 +1,1 @@
-Feature-Policy: usb *
+Permissions-Policy: usb=*
