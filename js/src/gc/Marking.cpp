@@ -329,7 +329,7 @@ static inline bool ShouldMarkCrossCompartment(GCMarker* marker, JSObject* src,
        * at the appropriate time.
        */
       if (!dst.isMarkedAny()) {
-        DelayCrossCompartmentGrayMarking(src);
+        DelayCrossCompartmentGrayMarking(marker, src);
       }
       return false;
     }
