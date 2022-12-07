@@ -14,5 +14,5 @@
 }
 
 .jsonParseError {
-  color: red;
+  color: var(--theme-text-color-error);
 }
