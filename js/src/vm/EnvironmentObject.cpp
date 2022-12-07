@@ -79,7 +79,7 @@ PropertyName* js::EnvironmentCoordinateNameSlow(JSScript* script,
 /*****************************************************************************/
 
 template <typename T>
-static T* CreateEnvironmentObject(JSContext* cx, Handle<Shape*> shape,
+static T* CreateEnvironmentObject(JSContext* cx, Handle<SharedShape*> shape,
                                   gc::InitialHeap heap) {
   static_assert(std::is_base_of_v<EnvironmentObject, T>,
                 "T must be an EnvironmentObject");
@@ -100,13 +100,14 @@ static T* CreateEnvironmentObject(JSContext* cx, Handle<Shape*> shape,
 // Helper function for simple environment objects that don't need the overloads
 // above.
 template <typename T>
-static T* CreateEnvironmentObject(JSContext* cx, Handle<Shape*> shape,
+static T* CreateEnvironmentObject(JSContext* cx, Handle<SharedShape*> shape,
                                   NewObjectKind newKind = GenericObject) {
   gc::InitialHeap heap = GetInitialHeap(newKind, &T::class_);
   return CreateEnvironmentObject<T>(cx, shape, heap);
 }
 
-CallObject* CallObject::createWithShape(JSContext* cx, Handle<Shape*> shape) {
+CallObject* CallObject::createWithShape(JSContext* cx,
+                                        Handle<SharedShape*> shape) {
   return CreateEnvironmentObject<CallObject>(cx, shape);
 }
 
@@ -118,7 +119,7 @@ CallObject* CallObject::createWithShape(JSContext* cx, Handle<Shape*> shape) {
 CallObject* CallObject::create(JSContext* cx, HandleScript script,
                                HandleObject enclosing, gc::InitialHeap heap) {
   Rooted<FunctionScope*> scope(cx, &script->bodyScope()->as<FunctionScope>());
-  Rooted<Shape*> shape(cx, scope->environmentShape());
+  Rooted<SharedShape*> shape(cx, scope->environmentShape());
   MOZ_ASSERT(shape->getObjectClass() == &class_);
 
   // The JITs assume the result is nursery allocated unless we collected the
@@ -223,7 +224,7 @@ CallObject* CallObject::createHollowForDebug(JSContext* cx,
 
   RootedScript script(cx, callee->nonLazyScript());
   Rooted<FunctionScope*> scope(cx, &script->bodyScope()->as<FunctionScope>());
-  Rooted<Shape*> shape(cx, EmptyEnvironmentShape<CallObject>(cx));
+  Rooted<SharedShape*> shape(cx, EmptyEnvironmentShape<CallObject>(cx));
   if (!shape) {
     return nullptr;
   }
@@ -258,7 +259,7 @@ const JSClass CallObject::class_ = {
 
 /* static */
 VarEnvironmentObject* VarEnvironmentObject::createInternal(
-    JSContext* cx, Handle<Shape*> shape, HandleObject enclosing,
+    JSContext* cx, Handle<SharedShape*> shape, HandleObject enclosing,
     gc::InitialHeap heap) {
   MOZ_ASSERT(shape->getObjectClass() == &class_);
 
@@ -283,7 +284,7 @@ VarEnvironmentObject* VarEnvironmentObject::create(JSContext* cx,
                                                    gc::InitialHeap heap) {
   MOZ_ASSERT(scope->is<EvalScope>() || scope->is<VarScope>());
 
-  Rooted<Shape*> shape(cx, scope->environmentShape());
+  Rooted<SharedShape*> shape(cx, scope->environmentShape());
   auto* env = createInternal(cx, shape, enclosing, heap);
   if (!env) {
     return nullptr;
@@ -320,7 +321,8 @@ VarEnvironmentObject* VarEnvironmentObject::createHollowForDebug(
   MOZ_ASSERT(scope->is<VarScope>() || scope->kind() == ScopeKind::StrictEval);
   MOZ_ASSERT(!scope->hasEnvironment());
 
-  Rooted<Shape*> shape(cx, EmptyEnvironmentShape<VarEnvironmentObject>(cx));
+  Rooted<SharedShape*> shape(cx,
+                             EmptyEnvironmentShape<VarEnvironmentObject>(cx));
   if (!shape) {
     return nullptr;
   }
@@ -404,7 +406,7 @@ const JSClass ModuleEnvironmentObject::class_ = {
 ModuleEnvironmentObject* ModuleEnvironmentObject::create(
     JSContext* cx, Handle<ModuleObject*> module) {
   RootedScript script(cx, module->script());
-  Rooted<Shape*> shape(
+  Rooted<SharedShape*> shape(
       cx, script->bodyScope()->as<ModuleScope>().environmentShape());
   MOZ_ASSERT(shape->getObjectClass() == &class_);
 
@@ -604,7 +606,7 @@ const JSClass WasmInstanceEnvironmentObject::class_ = {
 WasmInstanceEnvironmentObject*
 WasmInstanceEnvironmentObject::createHollowForDebug(
     JSContext* cx, Handle<WasmInstanceScope*> scope) {
-  Rooted<Shape*> shape(
+  Rooted<SharedShape*> shape(
       cx, EmptyEnvironmentShape<WasmInstanceEnvironmentObject>(cx));
   if (!shape) {
     return nullptr;
@@ -630,7 +632,8 @@ const JSClass WasmFunctionCallObject::class_ = {
 /* static */
 WasmFunctionCallObject* WasmFunctionCallObject::createHollowForDebug(
     JSContext* cx, HandleObject enclosing, Handle<WasmFunctionScope*> scope) {
-  Rooted<Shape*> shape(cx, EmptyEnvironmentShape<WasmFunctionCallObject>(cx));
+  Rooted<SharedShape*> shape(cx,
+                             EmptyEnvironmentShape<WasmFunctionCallObject>(cx));
   if (!shape) {
     return nullptr;
   }
@@ -652,7 +655,8 @@ WithEnvironmentObject* WithEnvironmentObject::create(JSContext* cx,
                                                      HandleObject object,
                                                      HandleObject enclosing,
                                                      Handle<WithScope*> scope) {
-  Rooted<Shape*> shape(cx, EmptyEnvironmentShape<WithEnvironmentObject>(cx));
+  Rooted<SharedShape*> shape(cx,
+                             EmptyEnvironmentShape<WithEnvironmentObject>(cx));
   if (!shape) {
     return nullptr;
   }
@@ -839,8 +843,8 @@ const JSClass WithEnvironmentObject::class_ = {
 /* static */
 NonSyntacticVariablesObject* NonSyntacticVariablesObject::create(
     JSContext* cx) {
-  Rooted<Shape*> shape(cx,
-                       EmptyEnvironmentShape<NonSyntacticVariablesObject>(cx));
+  Rooted<SharedShape*> shape(
+      cx, EmptyEnvironmentShape<NonSyntacticVariablesObject>(cx));
   if (!shape) {
     return nullptr;
   }
@@ -913,7 +917,7 @@ const JSClass LexicalEnvironmentObject::class_ = {
 
 /* static */
 LexicalEnvironmentObject* LexicalEnvironmentObject::create(
-    JSContext* cx, Handle<Shape*> shape, HandleObject enclosing,
+    JSContext* cx, Handle<SharedShape*> shape, HandleObject enclosing,
     gc::InitialHeap heap) {
   MOZ_ASSERT(shape->getObjectClass() == &LexicalEnvironmentObject::class_);
 
@@ -946,7 +950,7 @@ BlockLexicalEnvironmentObject* BlockLexicalEnvironmentObject::create(
   cx->check(enclosing);
   MOZ_ASSERT(scope->hasEnvironment());
 
-  Rooted<Shape*> shape(cx, scope->environmentShape());
+  Rooted<SharedShape*> shape(cx, scope->environmentShape());
   auto* env = static_cast<BlockLexicalEnvironmentObject*>(
       LexicalEnvironmentObject::create(cx, shape, enclosing, heap));
   if (!env) {
@@ -978,8 +982,8 @@ BlockLexicalEnvironmentObject::createHollowForDebug(
     JSContext* cx, Handle<LexicalScope*> scope) {
   MOZ_ASSERT(!scope->hasEnvironment());
 
-  Rooted<Shape*> shape(cx,
-                       LexicalScope::getEmptyExtensibleEnvironmentShape(cx));
+  Rooted<SharedShape*> shape(
+      cx, LexicalScope::getEmptyExtensibleEnvironmentShape(cx));
   if (!shape) {
     return nullptr;
   }
@@ -1123,7 +1127,7 @@ ClassBodyLexicalEnvironmentObject* ClassBodyLexicalEnvironmentObject::create(
   cx->check(enclosing);
   MOZ_ASSERT(scope->hasEnvironment());
 
-  Rooted<Shape*> shape(cx, scope->environmentShape());
+  Rooted<SharedShape*> shape(cx, scope->environmentShape());
   auto* env = static_cast<ClassBodyLexicalEnvironmentObject*>(
       LexicalEnvironmentObject::create(cx, shape, enclosing, heap));
   if (!env) {
@@ -1189,8 +1193,8 @@ GlobalLexicalEnvironmentObject* GlobalLexicalEnvironmentObject::create(
     JSContext* cx, Handle<GlobalObject*> global) {
   MOZ_ASSERT(global);
 
-  Rooted<Shape*> shape(cx,
-                       LexicalScope::getEmptyExtensibleEnvironmentShape(cx));
+  Rooted<SharedShape*> shape(
+      cx, LexicalScope::getEmptyExtensibleEnvironmentShape(cx));
   if (!shape) {
     return nullptr;
   }
@@ -1218,8 +1222,8 @@ NonSyntacticLexicalEnvironmentObject::create(JSContext* cx,
   MOZ_ASSERT(enclosing);
   MOZ_ASSERT(!IsSyntacticEnvironment(enclosing));
 
-  Rooted<Shape*> shape(cx,
-                       LexicalScope::getEmptyExtensibleEnvironmentShape(cx));
+  Rooted<SharedShape*> shape(
+      cx, LexicalScope::getEmptyExtensibleEnvironmentShape(cx));
   if (!shape) {
     return nullptr;
   }
@@ -1238,7 +1242,7 @@ NonSyntacticLexicalEnvironmentObject::create(JSContext* cx,
 /* static */
 RuntimeLexicalErrorObject* RuntimeLexicalErrorObject::create(
     JSContext* cx, HandleObject enclosing, unsigned errorNumber) {
-  Rooted<Shape*> shape(
+  Rooted<SharedShape*> shape(
       cx,
       EmptyEnvironmentShape(cx, &class_, JSSLOT_FREE(&class_), ObjectFlags()));
   if (!shape) {

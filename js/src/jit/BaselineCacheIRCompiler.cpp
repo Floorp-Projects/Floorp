@@ -3414,7 +3414,7 @@ bool BaselineCacheIRCompiler::emitNewPlainObjectResult(uint32_t numFixedSlots,
     masm.loadPtr(shapeAddr, shape);  // This might have been overwritten.
     masm.Push(shape);
 
-    using Fn = JSObject* (*)(JSContext*, Handle<Shape*>, gc::AllocKind,
+    using Fn = JSObject* (*)(JSContext*, Handle<SharedShape*>, gc::AllocKind,
                              gc::AllocSite*);
     callVM<Fn, NewPlainObjectBaselineFallback>(masm);
 

@@ -93,8 +93,9 @@ const char* js::ScopeKindString(ScopeKind kind) {
   MOZ_CRASH("Bad ScopeKind");
 }
 
-Shape* js::EmptyEnvironmentShape(JSContext* cx, const JSClass* cls,
-                                 uint32_t numSlots, ObjectFlags objectFlags) {
+SharedShape* js::EmptyEnvironmentShape(JSContext* cx, const JSClass* cls,
+                                       uint32_t numSlots,
+                                       ObjectFlags objectFlags) {
   // Put as many slots into the object header as possible.
   uint32_t numFixed = gc::GetGCKindSlots(gc::GetGCObjectKind(numSlots));
   return SharedShape::getInitialShape(
@@ -121,9 +122,9 @@ static bool AddToEnvironmentMap(JSContext* cx, const JSClass* clasp,
                                                  propFlags, slot, objectFlags);
 }
 
-Shape* js::CreateEnvironmentShape(JSContext* cx, BindingIter& bi,
-                                  const JSClass* cls, uint32_t numSlots,
-                                  ObjectFlags objectFlags) {
+SharedShape* js::CreateEnvironmentShape(JSContext* cx, BindingIter& bi,
+                                        const JSClass* cls, uint32_t numSlots,
+                                        ObjectFlags objectFlags) {
   Rooted<SharedPropMap*> map(cx);
   uint32_t mapLength = 0;
 
@@ -266,7 +267,7 @@ static UniquePtr<typename ConcreteScope::RuntimeData> LiftParserScopeData(
 
 /* static */
 Scope* Scope::create(JSContext* cx, ScopeKind kind, Handle<Scope*> enclosing,
-                     Handle<Shape*> envShape) {
+                     Handle<SharedShape*> envShape) {
   return cx->newCell<Scope>(kind, enclosing, envShape);
 }
 
@@ -274,7 +275,7 @@ template <typename ConcreteScope>
 /* static */
 ConcreteScope* Scope::create(
     JSContext* cx, ScopeKind kind, Handle<Scope*> enclosing,
-    Handle<Shape*> envShape,
+    Handle<SharedShape*> envShape,
     MutableHandle<UniquePtr<typename ConcreteScope::RuntimeData>> data) {
   Scope* scope = create(cx, kind, enclosing, envShape);
   if (!scope) {
@@ -551,7 +552,7 @@ void LexicalScope::prepareForScopeCreation(ScopeKind kind,
 }
 
 /* static */
-Shape* LexicalScope::getEmptyExtensibleEnvironmentShape(JSContext* cx) {
+SharedShape* LexicalScope::getEmptyExtensibleEnvironmentShape(JSContext* cx) {
   const JSClass* cls = &LexicalEnvironmentObject::class_;
   return EmptyEnvironmentShape(cx, cls, JSSLOT_FREE(cls), ObjectFlags());
 }
@@ -1582,9 +1583,9 @@ bool ScopeStencil::createForModuleScope(
 }
 
 template <typename SpecificEnvironmentT>
-bool ScopeStencil::createSpecificShape(JSContext* cx, ScopeKind kind,
-                                       BaseScopeData* scopeData,
-                                       MutableHandle<Shape*> shape) const {
+bool ScopeStencil::createSpecificShape(
+    JSContext* cx, ScopeKind kind, BaseScopeData* scopeData,
+    MutableHandle<SharedShape*> shape) const {
   const JSClass* cls = &SpecificEnvironmentT::class_;
   constexpr ObjectFlags objectFlags = SpecificEnvironmentT::OBJECT_FLAGS;
 
@@ -1693,7 +1694,7 @@ Scope* ScopeStencil::createSpecificScope(JSContext* cx,
     return nullptr;
   }
 
-  Rooted<Shape*> shape(cx);
+  Rooted<SharedShape*> shape(cx);
   if (!createSpecificShape<SpecificEnvironmentT>(
           cx, kind(), rootedData.get().get(), &shape)) {
     return nullptr;

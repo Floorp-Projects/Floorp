@@ -25,7 +25,7 @@
 #include "vm/NativeObject-inl.h"  // js::NativeObject::{create,setLastProperty}
 
 /* static */ inline js::PlainObject* js::PlainObject::createWithShape(
-    JSContext* cx, JS::Handle<Shape*> shape, gc::AllocKind kind,
+    JSContext* cx, JS::Handle<SharedShape*> shape, gc::AllocKind kind,
     NewObjectKind newKind) {
   MOZ_ASSERT(shape->getObjectClass() == &PlainObject::class_);
   gc::InitialHeap heap = GetInitialHeap(newKind, &PlainObject::class_);
@@ -42,14 +42,14 @@
 }
 
 /* static */ inline js::PlainObject* js::PlainObject::createWithShape(
-    JSContext* cx, JS::Handle<Shape*> shape, NewObjectKind newKind) {
+    JSContext* cx, JS::Handle<SharedShape*> shape, NewObjectKind newKind) {
   gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
   return createWithShape(cx, shape, kind, newKind);
 }
 
 /* static */ inline js::PlainObject* js::PlainObject::createWithTemplate(
     JSContext* cx, JS::Handle<PlainObject*> templateObject) {
-  JS::Rooted<Shape*> shape(cx, templateObject->shape());
+  JS::Rooted<SharedShape*> shape(cx, templateObject->sharedShape());
   return createWithShape(cx, shape);
 }
 
@@ -74,7 +74,7 @@ static MOZ_ALWAYS_INLINE bool CreateThis(JSContext* cx,
 
   MOZ_ASSERT(thisv.isMagic(JS_IS_CONSTRUCTING));
 
-  Rooted<Shape*> shape(cx, ThisShapeForFunction(cx, callee, newTarget));
+  Rooted<SharedShape*> shape(cx, ThisShapeForFunction(cx, callee, newTarget));
   if (!shape) {
     return false;
   }

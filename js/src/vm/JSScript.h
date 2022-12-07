@@ -2016,11 +2016,11 @@ class JSScript : public js::BaseScript {
     return getObject(GET_GCTHING_INDEX(pc));
   }
 
-  js::Shape* getShape(js::GCThingIndex index) const {
-    return &gcthings()[index].as<js::Shape>();
+  js::SharedShape* getShape(js::GCThingIndex index) const {
+    return &gcthings()[index].as<js::Shape>().asShared();
   }
 
-  js::Shape* getShape(const jsbytecode* pc) const {
+  js::SharedShape* getShape(const jsbytecode* pc) const {
     MOZ_ASSERT(containsPC<js::GCThingIndex>(pc));
     return getShape(GET_GCTHING_INDEX(pc));
   }

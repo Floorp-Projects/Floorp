@@ -28,7 +28,7 @@ using namespace js;
 using JS::Handle;
 using JS::Rooted;
 
-static MOZ_ALWAYS_INLINE Shape* GetPlainObjectShapeWithProto(
+static MOZ_ALWAYS_INLINE SharedShape* GetPlainObjectShapeWithProto(
     JSContext* cx, JSObject* proto, gc::AllocKind kind) {
   MOZ_ASSERT(JSCLASS_RESERVED_SLOTS(&PlainObject::class_) == 0,
              "all slots can be used for properties");
@@ -37,8 +37,8 @@ static MOZ_ALWAYS_INLINE Shape* GetPlainObjectShapeWithProto(
                                       TaggedProto(proto), nfixed);
 }
 
-Shape* js::ThisShapeForFunction(JSContext* cx, Handle<JSFunction*> callee,
-                                Handle<JSObject*> newTarget) {
+SharedShape* js::ThisShapeForFunction(JSContext* cx, Handle<JSFunction*> callee,
+                                      Handle<JSObject*> newTarget) {
   MOZ_ASSERT(cx->realm() == callee->realm());
   MOZ_ASSERT(!callee->constructorNeedsUninitializedThis());
 
@@ -49,7 +49,7 @@ Shape* js::ThisShapeForFunction(JSContext* cx, Handle<JSFunction*> callee,
 
   js::gc::AllocKind allocKind = NewObjectGCKind();
 
-  Shape* res;
+  SharedShape* res;
   if (proto && proto != cx->global()->maybeGetPrototype(JSProto_Object)) {
     res = GetPlainObjectShapeWithProto(cx, proto, allocKind);
   } else {
@@ -103,7 +103,7 @@ PlainObject* PlainObject::createWithTemplateFromDifferentRealm(
   Shape* templateShape = templateObject->shape();
   Rooted<SharedPropMap*> map(cx, templateShape->propMap()->asShared());
 
-  Rooted<Shape*> shape(
+  Rooted<SharedShape*> shape(
       cx, SharedShape::getInitialOrPropMapShape(
               cx, &PlainObject::class_, cx->realm(), proto,
               templateShape->numFixedSlots(), map,
@@ -115,15 +115,15 @@ PlainObject* PlainObject::createWithTemplateFromDifferentRealm(
 }
 
 // static
-Shape* GlobalObject::createPlainObjectShapeWithDefaultProto(
+SharedShape* GlobalObject::createPlainObjectShapeWithDefaultProto(
     JSContext* cx, gc::AllocKind kind) {
   PlainObjectSlotsKind slotsKind = PlainObjectSlotsKindFromAllocKind(kind);
-  HeapPtr<Shape*>& shapeRef =
+  HeapPtr<SharedShape*>& shapeRef =
       cx->global()->data().plainObjectShapesWithDefaultProto[slotsKind];
   MOZ_ASSERT(!shapeRef);
 
   JSObject* proto = &cx->global()->getObjectPrototype();
-  Shape* shape = GetPlainObjectShapeWithProto(cx, proto, kind);
+  SharedShape* shape = GetPlainObjectShapeWithProto(cx, proto, kind);
   if (!shape) {
     return nullptr;
   }
@@ -136,7 +136,7 @@ PlainObject* js::NewPlainObject(JSContext* cx, NewObjectKind newKind) {
   constexpr gc::AllocKind allocKind = gc::AllocKind::OBJECT0;
   MOZ_ASSERT(gc::GetGCObjectKind(&PlainObject::class_) == allocKind);
 
-  Rooted<Shape*> shape(
+  Rooted<SharedShape*> shape(
       cx, GlobalObject::getPlainObjectShapeWithDefaultProto(cx, allocKind));
   if (!shape) {
     return nullptr;
@@ -148,7 +148,7 @@ PlainObject* js::NewPlainObject(JSContext* cx, NewObjectKind newKind) {
 PlainObject* js::NewPlainObjectWithAllocKind(JSContext* cx,
                                              gc::AllocKind allocKind,
                                              NewObjectKind newKind) {
-  Rooted<Shape*> shape(
+  Rooted<SharedShape*> shape(
       cx, GlobalObject::getPlainObjectShapeWithDefaultProto(cx, allocKind));
   if (!shape) {
     return nullptr;
@@ -167,7 +167,8 @@ PlainObject* js::NewPlainObjectWithProto(JSContext* cx, HandleObject proto,
   constexpr gc::AllocKind allocKind = gc::AllocKind::OBJECT0;
   MOZ_ASSERT(gc::GetGCObjectKind(&PlainObject::class_) == allocKind);
 
-  Rooted<Shape*> shape(cx, GetPlainObjectShapeWithProto(cx, proto, allocKind));
+  Rooted<SharedShape*> shape(
+      cx, GetPlainObjectShapeWithProto(cx, proto, allocKind));
   if (!shape) {
     return nullptr;
   }
@@ -184,7 +185,8 @@ PlainObject* js::NewPlainObjectWithProtoAndAllocKind(JSContext* cx,
     return NewPlainObjectWithAllocKind(cx, allocKind, newKind);
   }
 
-  Rooted<Shape*> shape(cx, GetPlainObjectShapeWithProto(cx, proto, allocKind));
+  Rooted<SharedShape*> shape(
+      cx, GetPlainObjectShapeWithProto(cx, proto, allocKind));
   if (!shape) {
     return nullptr;
   }
@@ -240,8 +242,8 @@ static PlainObject* NewPlainObjectWithProperties(JSContext* cx,
 
   // If we recently created an object with these properties, we can use that
   // Shape directly.
-  if (Shape* shape = cache.lookup(properties, nproperties)) {
-    Rooted<Shape*> shapeRoot(cx, shape);
+  if (SharedShape* shape = cache.lookup(properties, nproperties)) {
+    Rooted<SharedShape*> shapeRoot(cx, shape);
     PlainObject* obj = PlainObject::createWithShape(cx, shapeRoot);
     if (!obj) {
       return nullptr;
