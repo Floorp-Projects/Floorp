@@ -1808,7 +1808,7 @@ static bool CreateLazyScript(JSContext* cx,
 // NOTE: Keep this in sync with `js::NewFunctionWithProto`.
 static JSFunction* CreateFunctionFast(JSContext* cx,
                                       CompilationAtomCache& atomCache,
-                                      Handle<Shape*> shape,
+                                      Handle<SharedShape*> shape,
                                       const ScriptStencil& script,
                                       const ScriptStencilExtra& scriptExtra) {
   MOZ_ASSERT(
@@ -1958,16 +1958,16 @@ static bool InstantiateFunctions(JSContext* cx, ErrorContext* ec,
   // Most JSFunctions will be have the same Shape so we can compute it now to
   // allow fast object creation. Generators / Async will use the slow path
   // instead.
-  Rooted<Shape*> functionShape(cx,
-                               GlobalObject::getFunctionShapeWithDefaultProto(
-                                   cx, /* extended = */ false));
+  Rooted<SharedShape*> functionShape(
+      cx, GlobalObject::getFunctionShapeWithDefaultProto(
+              cx, /* extended = */ false));
   if (!functionShape) {
     return false;
   }
 
-  Rooted<Shape*> extendedShape(cx,
-                               GlobalObject::getFunctionShapeWithDefaultProto(
-                                   cx, /* extended = */ true));
+  Rooted<SharedShape*> extendedShape(
+      cx, GlobalObject::getFunctionShapeWithDefaultProto(
+              cx, /* extended = */ true));
   if (!extendedShape) {
     return false;
   }
@@ -1988,9 +1988,9 @@ static bool InstantiateFunctions(JSContext* cx, ErrorContext* ec,
 
     JSFunction* fun;
     if (useFastPath) {
-      Handle<Shape*> shape = scriptStencil.functionFlags.isExtended()
-                                 ? extendedShape
-                                 : functionShape;
+      Handle<SharedShape*> shape = scriptStencil.functionFlags.isExtended()
+                                       ? extendedShape
+                                       : functionShape;
       fun =
           CreateFunctionFast(cx, atomCache, shape, scriptStencil, scriptExtra);
     } else {

@@ -1858,8 +1858,8 @@ static void AssertClassMatchesAllocKind(const JSClass* clasp,
 #endif
 }
 
-static Shape* GetFunctionShape(JSContext* cx, const JSClass* clasp,
-                               JSObject* proto, gc::AllocKind allocKind) {
+static SharedShape* GetFunctionShape(JSContext* cx, const JSClass* clasp,
+                                     JSObject* proto, gc::AllocKind allocKind) {
   AssertClassMatchesAllocKind(clasp, allocKind);
 
   size_t nfixed = GetGCKindSlots(allocKind);
@@ -1867,12 +1867,12 @@ static Shape* GetFunctionShape(JSContext* cx, const JSClass* clasp,
       cx, clasp, cx->realm(), TaggedProto(proto), nfixed, ObjectFlags());
 }
 
-Shape* GlobalObject::createFunctionShapeWithDefaultProto(JSContext* cx,
-                                                         bool extended) {
+SharedShape* GlobalObject::createFunctionShapeWithDefaultProto(JSContext* cx,
+                                                               bool extended) {
   GlobalObjectData& data = cx->global()->data();
-  HeapPtr<Shape*>& shapeRef = extended
-                                  ? data.extendedFunctionShapeWithDefaultProto
-                                  : data.functionShapeWithDefaultProto;
+  HeapPtr<SharedShape*>& shapeRef =
+      extended ? data.extendedFunctionShapeWithDefaultProto
+               : data.functionShapeWithDefaultProto;
   MOZ_ASSERT(!shapeRef);
 
   RootedObject proto(cx,
@@ -1890,7 +1890,7 @@ Shape* GlobalObject::createFunctionShapeWithDefaultProto(JSContext* cx,
       extended ? gc::AllocKind::FUNCTION_EXTENDED : gc::AllocKind::FUNCTION;
   const JSClass* clasp = FunctionClassForAllocKind(allocKind);
 
-  Shape* shape = GetFunctionShape(cx, clasp, proto, allocKind);
+  SharedShape* shape = GetFunctionShape(cx, clasp, proto, allocKind);
   if (!shape) {
     return nullptr;
   }
@@ -1913,7 +1913,7 @@ JSFunction* js::NewFunctionWithProto(
 
   const JSClass* clasp = FunctionClassForAllocKind(allocKind);
 
-  Rooted<Shape*> shape(cx);
+  Rooted<SharedShape*> shape(cx);
   if (!proto) {
     bool extended = (allocKind == gc::AllocKind::FUNCTION_EXTENDED);
     shape = GlobalObject::getFunctionShapeWithDefaultProto(cx, extended);
@@ -2017,12 +2017,12 @@ static inline JSFunction* NewFunctionClone(JSContext* cx, HandleFunction fun,
 
   // If |fun| also has |proto| as prototype (the common case) we can reuse its
   // shape for the clone. This works because |fun| isn't exposed to script.
-  Rooted<Shape*> shape(cx);
+  Rooted<SharedShape*> shape(cx);
   if (fun->staticPrototype() == proto) {
-    MOZ_ASSERT(fun->shape()->propMapLength() == 0);
-    MOZ_ASSERT(fun->shape()->objectFlags().isEmpty());
-    MOZ_ASSERT(fun->shape()->realm() == cx->realm());
-    shape = fun->shape();
+    shape = fun->sharedShape();
+    MOZ_ASSERT(shape->propMapLength() == 0);
+    MOZ_ASSERT(shape->objectFlags().isEmpty());
+    MOZ_ASSERT(shape->realm() == cx->realm());
   } else {
     shape = GetFunctionShape(cx, clasp, proto, allocKind);
     if (!shape) {
