@@ -11,7 +11,8 @@ transforms:
 
 kind-dependencies:
     - push-apk
-    - github-release
+    - github-release-components
+    - github-release-apks
     - version-bump
     - mark-as-shipped
 
