@@ -1432,6 +1432,20 @@ bool AutoStableStringChars::copyTwoByteChars(
   return true;
 }
 
+template <>
+bool JS::SourceText<char16_t>::initMaybeBorrowed(
+    JSContext* cx, JS::AutoStableStringChars& linearChars) {
+  MOZ_ASSERT(linearChars.isTwoByte(),
+             "AutoStableStringChars must be initialized with char16_t");
+
+  const char16_t* chars = linearChars.twoByteChars();
+  size_t length = linearChars.length();
+  JS::SourceOwnership ownership = linearChars.maybeGiveOwnershipToCaller()
+                                      ? JS::SourceOwnership::TakeOwnership
+                                      : JS::SourceOwnership::Borrowed;
+  return init(cx, chars, length, ownership);
+}
+
 #if defined(DEBUG) || defined(JS_JITSPEW) || defined(JS_CACHEIR_SPEW)
 void JSAtom::dump(js::GenericPrinter& out) {
   out.printf("JSAtom* (%p) = ", (void*)this);
