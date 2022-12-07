@@ -40,7 +40,7 @@ object Versions {
     const val disklrucache = "2.0.2"
     const val leakcanary = "2.10"
 
-    const val mozilla_appservices = "96.1.1"
+    const val mozilla_appservices = "96.1.2"
 
     // DO NOT MODIFY MANUALLY. This is auto-updated along with GeckoView.
     const val mozilla_glean = "51.8.2"
