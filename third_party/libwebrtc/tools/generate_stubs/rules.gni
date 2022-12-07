@@ -1,0 +1,2 @@
+# "empty" file in place of importing new tools/generate_stubs
+# to allow BUILD.gn imports to succeed.
