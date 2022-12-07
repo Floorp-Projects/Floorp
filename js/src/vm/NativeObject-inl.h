@@ -430,7 +430,7 @@ inline bool NativeObject::isInWholeCellBuffer() const {
 /* static */
 inline NativeObject* NativeObject::create(
     JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
-    js::Handle<Shape*> shape, js::gc::AllocSite* site /* = nullptr */) {
+    js::Handle<SharedShape*> shape, js::gc::AllocSite* site /* = nullptr */) {
   debugCheckNewObject(shape, kind, heap);
 
   const JSClass* clasp = shape->getObjectClass();
@@ -439,7 +439,7 @@ inline NativeObject* NativeObject::create(
   MOZ_ASSERT(clasp != &ArrayObject::class_, "should use ArrayObject::create");
 
   const uint32_t nfixed = shape->numFixedSlots();
-  const uint32_t slotSpan = shape->asShared().slotSpan();
+  const uint32_t slotSpan = shape->slotSpan();
   const size_t nDynamicSlots = calculateDynamicSlots(nfixed, slotSpan, clasp);
 
   NativeObject* nobj =

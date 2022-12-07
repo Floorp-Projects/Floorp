@@ -7139,8 +7139,8 @@ void CodeGenerator::visitNewPlainObject(LNewPlainObject* lir) {
   gc::InitialHeap initialHeap = mir->initialHeap();
   gc::AllocKind allocKind = mir->allocKind();
 
-  using Fn =
-      JSObject* (*)(JSContext*, Handle<Shape*>, gc::AllocKind, gc::InitialHeap);
+  using Fn = JSObject* (*)(JSContext*, Handle<SharedShape*>, gc::AllocKind,
+                           gc::InitialHeap);
   OutOfLineCode* ool = oolCallVM<Fn, NewPlainObjectOptimizedFallback>(
       lir,
       ArgList(ImmGCPtr(shape), Imm32(int32_t(allocKind)), Imm32(initialHeap)),
@@ -7228,9 +7228,10 @@ void CodeGenerator::visitNewCallObject(LNewCallObject* lir) {
 
   CallObject* templateObj = lir->mir()->templateObject();
 
-  using Fn = CallObject* (*)(JSContext*, Handle<Shape*>);
+  using Fn = CallObject* (*)(JSContext*, Handle<SharedShape*>);
   OutOfLineCode* ool = oolCallVM<Fn, CallObject::createWithShape>(
-      lir, ArgList(ImmGCPtr(templateObj->shape())), StoreRegisterTo(objReg));
+      lir, ArgList(ImmGCPtr(templateObj->sharedShape())),
+      StoreRegisterTo(objReg));
 
   // Inline call object creation, using the OOL path only for tricky cases.
   TemplateObject templateObject(templateObj);

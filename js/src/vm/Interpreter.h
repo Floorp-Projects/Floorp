@@ -627,11 +627,13 @@ ArrayObject* ArrayFromArgumentsObject(JSContext* cx,
 JSObject* NewObjectOperation(JSContext* cx, HandleScript script,
                              const jsbytecode* pc);
 
-JSObject* NewPlainObjectBaselineFallback(JSContext* cx, Handle<Shape*> shape,
+JSObject* NewPlainObjectBaselineFallback(JSContext* cx,
+                                         Handle<SharedShape*> shape,
                                          gc::AllocKind allocKind,
                                          gc::AllocSite* site);
 
-JSObject* NewPlainObjectOptimizedFallback(JSContext* cx, Handle<Shape*> shape,
+JSObject* NewPlainObjectOptimizedFallback(JSContext* cx,
+                                          Handle<SharedShape*> shape,
                                           gc::AllocKind allocKind,
                                           gc::InitialHeap initialHeap);
 

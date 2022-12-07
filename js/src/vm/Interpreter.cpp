@@ -5290,7 +5290,7 @@ ArrayObject* js::ArrayFromArgumentsObject(JSContext* cx,
 JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
                                  const jsbytecode* pc) {
   if (JSOp(*pc) == JSOp::NewObject) {
-    Rooted<Shape*> shape(cx, script->getShape(pc));
+    Rooted<SharedShape*> shape(cx, script->getShape(pc));
     return PlainObject::createWithShape(cx, shape);
   }
 
@@ -5299,7 +5299,7 @@ JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
 }
 
 JSObject* js::NewPlainObjectBaselineFallback(JSContext* cx,
-                                             Handle<Shape*> shape,
+                                             Handle<SharedShape*> shape,
                                              gc::AllocKind allocKind,
                                              gc::AllocSite* site) {
   MOZ_ASSERT(shape->getObjectClass() == &PlainObject::class_);
@@ -5315,7 +5315,7 @@ JSObject* js::NewPlainObjectBaselineFallback(JSContext* cx,
 }
 
 JSObject* js::NewPlainObjectOptimizedFallback(JSContext* cx,
-                                              Handle<Shape*> shape,
+                                              Handle<SharedShape*> shape,
                                               gc::AllocKind allocKind,
                                               gc::InitialHeap initialHeap) {
   MOZ_ASSERT(shape->getObjectClass() == &PlainObject::class_);

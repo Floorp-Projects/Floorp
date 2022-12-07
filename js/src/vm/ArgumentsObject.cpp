@@ -268,9 +268,9 @@ ArgumentsObject* ArgumentsObject::createTemplateObject(JSContext* cx,
   RootedObject proto(cx, &cx->global()->getObjectPrototype());
 
   constexpr ObjectFlags objectFlags = {ObjectFlag::Indexed};
-  Rooted<Shape*> shape(cx, SharedShape::getInitialShape(
-                               cx, clasp, cx->realm(), TaggedProto(proto),
-                               FINALIZE_KIND, objectFlags));
+  Rooted<SharedShape*> shape(cx, SharedShape::getInitialShape(
+                                     cx, clasp, cx->realm(), TaggedProto(proto),
+                                     FINALIZE_KIND, objectFlags));
   if (!shape) {
     return nullptr;
   }
@@ -324,7 +324,7 @@ ArgumentsObject* ArgumentsObject::create(JSContext* cx, HandleFunction callee,
     return nullptr;
   }
 
-  Rooted<Shape*> shape(cx, templateObj->shape());
+  Rooted<SharedShape*> shape(cx, templateObj->sharedShape());
 
   unsigned numFormals = callee->nargs();
   unsigned numArgs = std::max(numActuals, numFormals);

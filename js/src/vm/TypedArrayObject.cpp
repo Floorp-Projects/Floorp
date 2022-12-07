@@ -329,9 +329,10 @@ static TypedArrayObject* NewTypedArrayObject(JSContext* cx,
   static_assert(nfixed <= NativeObject::MAX_FIXED_SLOTS);
   static_assert(nfixed == TypedArrayObject::FIXED_DATA_START);
 
-  Rooted<Shape*> shape(cx, SharedShape::getInitialShape(cx, clasp, cx->realm(),
-                                                        AsTaggedProto(proto),
-                                                        nfixed, ObjectFlags()));
+  Rooted<SharedShape*> shape(
+      cx,
+      SharedShape::getInitialShape(cx, clasp, cx->realm(), AsTaggedProto(proto),
+                                   nfixed, ObjectFlags()));
   if (!shape) {
     return nullptr;
   }

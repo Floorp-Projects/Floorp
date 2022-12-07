@@ -198,8 +198,8 @@ inline void js::Scope::traceChildren(JSTracer* trc) {
 template <uint32_t opts>
 void js::GCMarker::eagerlyMarkChildren(Scope* scope) {
   do {
-    if (scope->environmentShape()) {
-      markAndTraverseEdge<opts>(scope, scope->environmentShape());
+    if (Shape* shape = scope->environmentShape()) {
+      markAndTraverseEdge<opts>(scope, shape);
     }
     mozilla::Span<AbstractBindingName<JSAtom>> names;
     switch (scope->kind()) {
