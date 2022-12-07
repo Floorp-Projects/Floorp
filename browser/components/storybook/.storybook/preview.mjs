@@ -24,7 +24,7 @@ window.MozXULElement = {
     // This should be browser, locales-preview or toolkit.
     let [root, ...rest] = name.split("/");
     let ftlContents;
-    //
+
     // TODO(mstriemer): These seem like they could be combined but I don't want
     // to fight with webpack anymore.
     if (root == "toolkit") {

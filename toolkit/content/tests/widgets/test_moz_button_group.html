@@ -1,0 +1,156 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>moz-button-group tests</title>
+    <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+    <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+    <!-- TODO: Bug 1798404 - in-content/common.css can be removed once we have a better
+      solution for token variables for the new widgets -->
+      <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
+      <script type="module" src="chrome://global/content/elements/moz-button-group.mjs"></script>
+  </head>
+  <body>
+    <p id="display"></p>
+    <div id="content">
+      <button id="before-button">Before</button>
+      <div id="render"></div>
+      <button id="after-button">After</button>
+    </div>
+    <!-- This is here to ensure the stylesheet is loaded. It gets removed in setup. -->
+    <moz-button-group></moz-button-group>
+    <pre id="test">
+    </pre>
+
+    <script>
+      const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+      let html;
+      let render;
+
+      let renderArea = document.getElementById("render");
+      let beforeButton = document.getElementById("before-button");
+      let afterButton = document.getElementById("after-button");
+
+      async function checkButtons(first, second) {
+        let firstBounds = first.getBoundingClientRect();
+        let secondBounds = second.getBoundingClientRect();
+
+        ok(firstBounds.x < secondBounds.x, `First button comes first`);
+        let locationDiff = Math.abs(secondBounds.x - firstBounds.x - firstBounds.width - 8);
+        ok(locationDiff < 1, `Second button is 8px after first (${locationDiff})`);
+
+        beforeButton.focus();
+        is(document.activeElement, beforeButton, "Before button is focused");
+        synthesizeKey("VK_TAB");
+        is(document.activeElement, first, "First button is first in tab order");
+        synthesizeKey("VK_TAB");
+        is(document.activeElement, second, "Second button is next in tab order");
+        synthesizeKey("VK_TAB");
+        is(document.activeElement, afterButton, "After button is at the end in tab order");
+      }
+
+
+      add_setup(async function setup() {
+        ({ html, render} = await import("chrome://global/content/vendor/lit.all.mjs"));
+        document.querySelector("moz-button-group").remove();
+      });
+
+      add_task(async function testButtonOrderingSlot() {
+        render(
+          html`
+            <moz-button-group>
+              <button slot="primary" id="primary-button">Primary</button>
+              <button id="secondary-button">Secondary</button>
+            </moz-button-group>
+          `,
+          renderArea
+        );
+
+        let buttonGroup = document.querySelector("moz-button-group");
+        let primaryButton = document.getElementById("primary-button");
+        let secondaryButton = document.getElementById("secondary-button");
+
+        buttonGroup.platform = "win";
+        await buttonGroup.updateComplete;
+        await checkButtons(primaryButton, secondaryButton);
+
+        buttonGroup.platform = "macosx";
+        await buttonGroup.updateComplete;
+        await checkButtons(secondaryButton, primaryButton);
+      });
+
+      add_task(async function testPrimaryButtonAutoSlotting() {
+        render(
+          html`
+            <moz-button-group>
+              <button class="primary">Primary</button>
+              <button class="secondary">Secondary</button>
+            </moz-button-group>
+          `,
+          renderArea
+        );
+
+        let buttonGroup = document.querySelector("moz-button-group");
+        let primaryButton = buttonGroup.querySelector(".primary");
+        let secondaryButton = buttonGroup.querySelector(".secondary");
+        buttonGroup.platform = "win";
+        await buttonGroup.updateComplete;
+        is(primaryButton.slot, "primary", "primary button was auto-slotted")
+        await checkButtons(primaryButton, secondaryButton);
+
+        buttonGroup.platform = "macosx";
+        await buttonGroup.updateComplete;
+        await checkButtons(secondaryButton, primaryButton);
+      });
+
+      add_task(async function testSubmitButtonAutoSlotting() {
+        render(
+          html`
+            <moz-button-group>
+              <button type="submit">Submit</button>
+              <button class="secondary">Secondary</button>
+            </moz-button-group>
+          `,
+          renderArea
+        );
+
+        let buttonGroup = document.querySelector("moz-button-group");
+        let submitButton = buttonGroup.querySelector("[type=submit]");
+        let secondaryButton = buttonGroup.querySelector(".secondary");
+        buttonGroup.platform = "win";
+        await buttonGroup.updateComplete;
+        is(submitButton.slot, "primary", "submit button was auto-slotted")
+        await checkButtons(submitButton, secondaryButton);
+
+        buttonGroup.platform = "macosx";
+        await buttonGroup.updateComplete;
+        await checkButtons(secondaryButton, submitButton);
+      });
+
+      add_task(async function testAutofocusButtonAutoSlotting() {
+        render(
+          html`
+            <moz-button-group>
+              <button autofocus>First</button>
+              <button class="secondary">Secondary</button>
+            </moz-button-group>
+          `,
+          renderArea
+        );
+
+        let buttonGroup = document.querySelector("moz-button-group");
+        let autofocusButton = buttonGroup.querySelector("[autofocus]");
+        let secondaryButton = buttonGroup.querySelector(".secondary");
+        buttonGroup.platform = "win";
+        await buttonGroup.updateComplete;
+        is(autofocusButton.slot, "primary", "autofocus button was auto-slotted")
+        await checkButtons(autofocusButton, secondaryButton);
+
+        buttonGroup.platform = "macosx";
+        await buttonGroup.updateComplete;
+        await checkButtons(secondaryButton, autofocusButton);
+      });
+    </script>
+  </body>
+</html>
