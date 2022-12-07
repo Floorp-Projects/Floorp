@@ -666,7 +666,7 @@ export class FeatureCallout {
     this.config = result.message.content;
 
     let newScreen = this.config?.screens?.[this.config?.startScreen || 0];
-    if (newScreen === this.currentScreen) {
+    if (newScreen?.id === this.currentScreen?.id) {
       return false;
     }
 
