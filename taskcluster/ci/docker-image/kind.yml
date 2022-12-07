@@ -216,7 +216,7 @@ jobs:
         parent: debian11-base
     system-symbols-mac:
         symbol: I(system-symbols-mac)
-        parent: debian10-base
+        parent: debian11-base
     system-symbols-win:
         symbol: I(system-symbols-win)
         parent: debian10-base
