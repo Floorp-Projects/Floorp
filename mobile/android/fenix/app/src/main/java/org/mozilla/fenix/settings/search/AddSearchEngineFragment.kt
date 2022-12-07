@@ -182,6 +182,7 @@ class AddSearchEngineFragment :
                         name,
                         searchString.toSearchUrl(),
                         requireComponents.core.icons.loadIcon(IconRequest(searchString)).await().bitmap,
+                        isGeneral = true,
                     )
 
                     requireComponents.useCases.searchUseCases.addSearchEngine(searchEngine)

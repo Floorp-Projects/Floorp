@@ -376,6 +376,7 @@ class SettingsSearchTest {
         }
     }
 
+    @Ignore("Test failure caused by: https://bugzilla.mozilla.org/show_bug.cgi?id=1807298")
     // Expected for en-us defaults
     @Test
     fun deleteAllSearchEnginesTest() {

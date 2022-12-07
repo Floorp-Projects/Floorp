@@ -28,6 +28,8 @@ import kotlinx.coroutines.launch
 import mozilla.appservices.Megazord
 import mozilla.components.browser.state.action.SystemAction
 import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.state.searchEngines
+import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.GlobalPlacesDependencyProvider
 import mozilla.components.concept.base.crash.Breadcrumb
@@ -245,6 +247,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         setupLeakCanary()
         startMetricsIfEnabled()
         setupPush()
+        migrateTopicSpecificSearchEngines()
 
         visibilityLifecycleCallback = VisibilityLifecycleCallback(getSystemService())
         registerActivityLifecycleCallbacks(visibilityLifecycleCallback)
@@ -548,6 +551,25 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                         AppCompatDelegate.MODE_NIGHT_NO,
                     )
                     settings.shouldUseLightTheme = true
+                }
+            }
+        }
+    }
+
+    /**
+     * If unified search is enabled try to migrate the topic specific engine to the
+     * first general or custom search engine available.
+     */
+    @Suppress("NestedBlockDepth")
+    private fun migrateTopicSpecificSearchEngines() {
+        if (settings().showUnifiedSearchFeature) {
+            components.core.store.state.search.selectedOrDefaultSearchEngine.let { currentSearchEngine ->
+                if (currentSearchEngine?.isGeneral == false) {
+                    components.core.store.state.search.searchEngines.firstOrNull() { nextSearchEngine ->
+                        nextSearchEngine.isGeneral
+                    }?.let {
+                        components.useCases.searchUseCases.selectSearchEngine(it)
+                    }
                 }
             }
         }
