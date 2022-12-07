@@ -183,52 +183,34 @@ uint64_t FileSystemSyncAccessHandle::Write(
   return ReadOrWrite(aBuffer, aOptions, /* aRead */ false, aRv);
 }
 
-already_AddRefed<Promise> FileSystemSyncAccessHandle::Truncate(
-    uint64_t aSize, ErrorResult& aError) {
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
-  if (aError.Failed()) {
-    return nullptr;
-  }
-
+void FileSystemSyncAccessHandle::Truncate(uint64_t aSize, ErrorResult& aError) {
   if (mClosed) {
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return promise.forget();
+    aError.ThrowInvalidStateError("SyncAccessHandle is closed");
+    return;
   }
 
-  auto rejectAndReturn = [&promise](const nsresult rv) {
-    promise->MaybeReject(rv);
-    return promise.forget();
+  auto throwAndReturn = [&aError](const nsresult rv) {
+    aError.Throw(rv);
+    return;
   };
 
   LOG(("%p: Truncate to %" PRIu64, mStream.get(), aSize));
 
   QM_TRY(MOZ_TO_RESULT(mStream->Seek(nsISeekableStream::NS_SEEK_SET, aSize)),
-         rejectAndReturn);
+         throwAndReturn);
 
-  // XXX FileQuotaStream::SetEOF needs to be updated to support extension of
-  // files. See bug 1797913.
-
-  QM_TRY(MOZ_TO_RESULT(mStream->SetEOF()), rejectAndReturn);
-
-  promise->MaybeResolveWithUndefined();
-  return promise.forget();
+  QM_TRY(MOZ_TO_RESULT(mStream->SetEOF()), throwAndReturn);
 }
 
-already_AddRefed<Promise> FileSystemSyncAccessHandle::GetSize(
-    ErrorResult& aError) {
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
-  if (aError.Failed()) {
-    return nullptr;
-  }
-
+uint64_t FileSystemSyncAccessHandle::GetSize(ErrorResult& aError) {
   if (mClosed) {
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return promise.forget();
+    aError.ThrowInvalidStateError("SyncAccessHandle is closed");
+    return 0;
   }
 
-  auto rejectAndReturn = [&promise](const nsresult rv) {
-    promise->MaybeReject(rv);
-    return promise.forget();
+  auto throwAndReturn = [&aError](const nsresult rv) {
+    aError.Throw(rv);
+    return 0;
   };
 
   nsCOMPtr<nsIFileMetadata> fileMetadata = do_QueryInterface(mStream);
@@ -236,50 +218,21 @@ already_AddRefed<Promise> FileSystemSyncAccessHandle::GetSize(
 
   QM_TRY_INSPECT(const auto& size,
                  MOZ_TO_RESULT_INVOKE_MEMBER(fileMetadata, GetSize),
-                 rejectAndReturn);
+                 throwAndReturn);
 
   LOG(("%p: GetSize %" PRIu64, mStream.get(), size));
-
-  promise->MaybeResolve(size);
-  return promise.forget();
+  return size;
 }
 
-already_AddRefed<Promise> FileSystemSyncAccessHandle::Flush(
-    ErrorResult& aError) {
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
-  if (aError.Failed()) {
-    return nullptr;
-  }
-
+void FileSystemSyncAccessHandle::Flush(ErrorResult& aError) {
   if (mClosed) {
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return promise.forget();
+    aError.ThrowInvalidStateError("SyncAccessHandle is closed");
+    return;
   }
-
-  auto rejectAndReturn = [&promise](const nsresult rv) {
-    promise->MaybeReject(rv);
-    return promise.forget();
-  };
 
   LOG(("%p: Flush", mStream.get()));
 
-  QM_TRY(MOZ_TO_RESULT(mStream->OutputStream()->Flush()), rejectAndReturn);
-
-  promise->MaybeResolveWithUndefined();
-  return promise.forget();
-}
-
-already_AddRefed<Promise> FileSystemSyncAccessHandle::Close(
-    ErrorResult& aError) {
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
-  if (aError.Failed()) {
-    return nullptr;
-  }
-
-  Close();
-
-  promise->MaybeResolveWithUndefined();
-  return promise.forget();
+  mStream->OutputStream()->Flush();
 }
 
 uint64_t FileSystemSyncAccessHandle::ReadOrWrite(
