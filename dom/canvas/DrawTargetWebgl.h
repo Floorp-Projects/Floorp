@@ -15,6 +15,10 @@
 #include "mozilla/ipc/Shmem.h"
 #include <vector>
 
+namespace WGR {
+struct OutputVertex;
+}
+
 namespace mozilla {
 
 class ClientWebGLContext;
@@ -180,6 +184,8 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     bool mPathAAStroke = true;
     // Whether to accelerate stroked paths with WGR.
     bool mPathWGRStroke = false;
+    // Temporary buffer for generating WGR output into.
+    UniquePtr<WGR::OutputVertex[]> mWGROutputBuffer;
     RefPtr<WebGLProgramJS> mSolidProgram;
     RefPtr<WebGLUniformLocationJS> mSolidProgramViewport;
     RefPtr<WebGLUniformLocationJS> mSolidProgramAA;
@@ -250,7 +256,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
 
     bool Initialize();
     bool CreateShaders();
-    void ResetPathVertexBuffer();
+    void ResetPathVertexBuffer(bool aChanged = true);
 
     void SetBlendState(CompositionOp aOp,
                        const Maybe<DeviceColor>& aBlendColor = Nothing());
