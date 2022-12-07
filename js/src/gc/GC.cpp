@@ -442,6 +442,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       defaultTimeBudgetMS_(TuningDefaults::DefaultTimeBudgetMS),
       incrementalAllowed(true),
       compactingEnabled(TuningDefaults::CompactingEnabled),
+      parallelMarkingEnabled(TuningDefaults::ParallelMarkingEnabled),
       rootsRemoved(false),
 #ifdef JS_GC_ZEAL
       zealModeBits(0),
@@ -1018,6 +1019,9 @@ bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value,
     case JSGC_COMPACTING_ENABLED:
       compactingEnabled = value != 0;
       break;
+    case JSGC_PARALLEL_MARKING_ENABLED:
+      parallelMarkingEnabled = value != 0;
+      break;
     case JSGC_INCREMENTAL_WEAKMAP_ENABLED:
       marker.incrementalWeakMapMarkingEnabled = value != 0;
       break;
@@ -1079,6 +1083,9 @@ void GCRuntime::resetParameter(JSGCParamKey key, AutoLockGC& lock) {
       break;
     case JSGC_COMPACTING_ENABLED:
       compactingEnabled = TuningDefaults::CompactingEnabled;
+      break;
+    case JSGC_PARALLEL_MARKING_ENABLED:
+      parallelMarkingEnabled = TuningDefaults::ParallelMarkingEnabled;
       break;
     case JSGC_INCREMENTAL_WEAKMAP_ENABLED:
       marker.incrementalWeakMapMarkingEnabled =
@@ -1177,6 +1184,8 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
       return maxEmptyChunkCount(lock);
     case JSGC_COMPACTING_ENABLED:
       return compactingEnabled;
+    case JSGC_PARALLEL_MARKING_ENABLED:
+      return parallelMarkingEnabled;
     case JSGC_INCREMENTAL_WEAKMAP_ENABLED:
       return marker.incrementalWeakMapMarkingEnabled;
     case JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION:
