@@ -196,6 +196,17 @@ this.DateTimeBoxWidget = class {
       },
       false
     );
+    // This is to open the picker when input element is tapped on Android
+    // (this includes padding area).
+    this.isAndroid = this.window.navigator.appVersion.includes("Android");
+    if (this.isAndroid) {
+      this.mInputElement.addEventListener(
+        "click",
+        this,
+        { mozSystemGroup: true },
+        false
+      );
+    }
 
     // Those events are dispatched to <div class="datetimebox"> with bubble set
     // to false. They are trapped inside UA Widget Shadow DOM and are not
@@ -732,8 +743,13 @@ this.DateTimeBoxWidget = class {
       return;
     }
 
-    // Toggle the picker on click on the Calendar button only
-    if (aEvent.originalTarget == this.mCalendarButton) {
+    // Toggle the picker on click on the Calendar button on any platform,
+    // and, while on Android, on anywhere within an input field, but a Calendar
+    // is excluded to avoid interfering with the default Calendar behavior
+    if (
+      aEvent.originalTarget == this.mCalendarButton ||
+      (this.isAndroid && aEvent.target != this.mCalendarButton)
+    ) {
       if (
         !this.mIsPickerOpen &&
         this.shouldOpenDateTimePickerOnClick(aEvent.originalTarget)
