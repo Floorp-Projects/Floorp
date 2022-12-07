@@ -69,18 +69,3 @@
   text-align: center;
   padding: 16px 32px;
 }
-
-.buttons {
-  display: flex;
-  justify-content: space-between;
-}
-
-@media (-moz-platform: linux), (-moz-platform: macos) {
-  .buttons > .confirm-button {
-    order: 1;
-  }
-}
-
-.buttons > button {
-  min-width: 140px;
-}
