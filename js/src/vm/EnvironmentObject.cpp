@@ -958,9 +958,7 @@ BlockLexicalEnvironmentObject* BlockLexicalEnvironmentObject::create(
   }
 
   // All lexical bindings start off uninitialized for TDZ.
-  ShapePropertyIter<NoGC> iter(shape);
-  uint32_t lastSlot = iter->slot();
-  MOZ_ASSERT(lastSlot == env->getLastProperty().slot());
+  uint32_t lastSlot = env->getLastProperty().slot();
   for (uint32_t slot = JSSLOT_FREE(&class_); slot <= lastSlot; slot++) {
     env->initSlot(slot, MagicValue(JS_UNINITIALIZED_LEXICAL));
   }
