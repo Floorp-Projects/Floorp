@@ -318,11 +318,6 @@ ShaderValidator::ValidateAndTranslate(const char* const source) const {
   return ret;
 }
 
-template <size_t N>
-static bool StartsWith(const std::string& haystack, const char (&needle)[N]) {
-  return haystack.compare(0, N - 1, needle) == 0;
-}
-
 bool ShaderValidatorResults::CanLinkTo(const ShaderValidatorResults& vert,
                                        nsCString* const out_log) const {
   MOZ_ASSERT(mValid);

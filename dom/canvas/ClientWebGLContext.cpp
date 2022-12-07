@@ -705,11 +705,6 @@ static bool IsWebglOutOfProcessEnabled() {
   return StaticPrefs::webgl_out_of_process();
 }
 
-static inline bool StartsWith(const std::string& haystack,
-                              const std::string& needle) {
-  return haystack.find(needle) == 0;
-}
-
 bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {
   const auto pNotLost = std::make_shared<webgl::NotLostData>(*this);
   auto& notLost = *pNotLost;
