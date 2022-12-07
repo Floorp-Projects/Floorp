@@ -541,6 +541,43 @@ events:
     metadata:
       tags:
         - Sharing
+  share_to_app:
+    type: event
+    description: |
+      A user selected an app to share to from the share sheet.
+    extra_keys:
+      app_package:
+        description: |
+          Allowed package identifier for app or action (ex. 'org.mozilla.focus'
+          or 'com.android.bluetooth') the user selected. Any package identifiers
+          not in list are recorded as 'other'.
+
+          Currently allowed packages are:
+          'com.google.android.gm', 'com.microsoft.office.outlook',
+          'com.samsung.android.email.provider', 'com.facebook.katana',
+          'com.instagram.android', 'com.snapchat.android',
+          'com.google.android.keep', 'com.samsung.android.app.notes',
+          'com.microsoft.office.onenote', 'com.evernote',
+          'com.google.android.apps.messaging', 'com.facebook.orca',
+          'com.chating.messages.chat.fun', 'org.telegram.messenger',
+          'org.thoughtcrime.securesms', 'com.google.android.apps.dynamite',
+          'com.whatsapp', 'com.tencent.mm', 'com.Slack', 'com.discord',
+          'com.android.bluetooth', 'com.google.android.gms',
+          'org.mozilla.fenix.COPY_LINK_TO_CLIPBOARD
+        type: string
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/28033
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/28118#issuecomment-1341620815
+    notification_emails:
+      - android-probes@mozilla.com
+      - kbrosnan@mozilla.com
+    data_sensitivity:
+      - interaction
+    expires: never
+    metadata:
+      tags:
+        - Sharing
   form_data_failure:
     type: event
     description: |

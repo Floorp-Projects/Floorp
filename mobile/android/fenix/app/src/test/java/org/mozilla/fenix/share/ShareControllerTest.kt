@@ -90,6 +90,8 @@ class ShareControllerTest {
 
     @Test
     fun `handleShareToApp should start a new sharing activity and close this`() = runTestOnMain {
+        assertNull(Events.shareToApp.testGetValue())
+
         val appPackageName = "package"
         val appClassName = "activity"
         val appShareOption = AppShareOption("app", mockk(), appPackageName, appClassName)
@@ -108,6 +110,9 @@ class ShareControllerTest {
         testController.handleShareToApp(appShareOption)
         advanceUntilIdle()
 
+        assertEquals("shareToApp event only called once", 1, Events.shareToApp.testGetValue()?.size)
+        assertEquals("other", Events.shareToApp.testGetValue()?.last()?.extra?.getValue("app_package"))
+
         // Check that the Intent used for querying apps has the expected structure
         assertTrue(shareIntent.isCaptured)
         assertEquals(Intent.ACTION_SEND, shareIntent.captured.action)
@@ -125,6 +130,59 @@ class ShareControllerTest {
             activityContext.startActivity(shareIntent.captured)
             dismiss(ShareController.Result.SUCCESS)
         }
+    }
+
+    @Test
+    fun `handleShareToApp should record to telemetry packages which are in allowed list`() {
+        assertNull(Events.shareToApp.testGetValue())
+
+        val appPackageName = "com.android.bluetooth"
+        val appClassName = "activity"
+        val appShareOption = AppShareOption("app", mockk(), appPackageName, appClassName)
+        val shareIntent = slot<Intent>()
+        // Our share Intent uses `FLAG_ACTIVITY_NEW_TASK` but when resolving the startActivity call
+        // needed for capturing the actual Intent used the `slot` one doesn't have this flag so we
+        // need to use an Activity Context.
+        val activityContext: Context = mockk<Activity>()
+        val testController = DefaultShareController(
+            activityContext, shareSubject, shareData, mockk(), mockk(),
+            mockk(), mockk(), recentAppStorage, testCoroutineScope, testDispatcher, dismiss,
+        )
+
+        every { activityContext.startActivity(capture(shareIntent)) } just Runs
+        every { recentAppStorage.updateRecentApp(appShareOption.activityName) } just Runs
+
+        testController.handleShareToApp(appShareOption)
+
+        assertEquals("shareToApp event only called once", 1, Events.shareToApp.testGetValue()?.size)
+        assertEquals("com.android.bluetooth", Events.shareToApp.testGetValue()?.last()?.extra?.getValue("app_package"))
+    }
+
+    @Test
+    fun `handleShareToApp should record to telemetry as other when app package not in allowed list`() {
+        assertNull(Events.shareToApp.testGetValue())
+
+        val appPackageName = "com.package.record.not.allowed"
+        val appClassName = "activity"
+        val appShareOption = AppShareOption("app", mockk(), appPackageName, appClassName)
+        val shareIntent = slot<Intent>()
+        // Our share Intent uses `FLAG_ACTIVITY_NEW_TASK` but when resolving the startActivity call
+        // needed for capturing the actual Intent used the `slot` one doesn't have this flag so we
+        // need to use an Activity Context.
+        val activityContext: Context = mockk<Activity>()
+        val testController = DefaultShareController(
+            activityContext, shareSubject, shareData, mockk(), mockk(),
+            mockk(), mockk(), recentAppStorage, testCoroutineScope, testDispatcher, dismiss,
+        )
+
+        every { activityContext.startActivity(capture(shareIntent)) } just Runs
+        every { recentAppStorage.updateRecentApp(appShareOption.activityName) } just Runs
+
+        testController.handleShareToApp(appShareOption)
+
+        // Only called once and package is not in the allowed telemetry list so this should record "other"
+        assertEquals("shareToApp event only called once", 1, Events.shareToApp.testGetValue()?.size)
+        assertEquals("other", Events.shareToApp.testGetValue()?.last()?.extra?.getValue("app_package"))
     }
 
     @Test
