@@ -258,30 +258,22 @@ extern JS_PUBLIC_API bool ThrowOnModuleEvaluationFailure(
     ModuleErrorBehaviour errorBehaviour = ReportModuleErrorsAsync);
 
 /*
- * Get a list of the module specifiers used by a source text module
- * record to request importation of modules.
+ * Functions to access the module specifiers of a source text module record used
+ * to request module imports.
  *
- * The result is a JavaScript array of object values.  To extract the individual
- * values use only JS::GetArrayLength and JS_GetElement with indices 0 to length
- * - 1.
- *
- * The element values are objects with the following properties:
- *  - moduleSpecifier: the module specifier string
- *  - lineNumber: the line number of the import in the source text
- *  - columnNumber: the column number of the import in the source text
- *
- * These property values can be extracted with GetRequestedModuleSpecifier() and
- * GetRequestedModuleSourcePos()
+ * Clients can use GetRequestedModulesCount() to get the number of specifiers
+ * and GetRequestedModuleSpecifier() / GetRequestedModuleSourcePos() to get the
+ * individual elements.
  */
-extern JS_PUBLIC_API JSObject* GetRequestedModules(
-    JSContext* cx, Handle<JSObject*> moduleRecord);
+extern JS_PUBLIC_API uint32_t
+GetRequestedModulesCount(JSContext* cx, Handle<JSObject*> moduleRecord);
 
 extern JS_PUBLIC_API JSString* GetRequestedModuleSpecifier(
-    JSContext* cx, Handle<Value> requestedModuleObject);
+    JSContext* cx, Handle<JSObject*> moduleRecord, uint32_t index);
 
 extern JS_PUBLIC_API void GetRequestedModuleSourcePos(
-    JSContext* cx, Handle<Value> requestedModuleObject, uint32_t* lineNumber,
-    uint32_t* columnNumber);
+    JSContext* cx, Handle<JSObject*> moduleRecord, uint32_t index,
+    uint32_t* lineNumber, uint32_t* columnNumber);
 
 /*
  * Get the top-level script for a module which has not yet been executed.

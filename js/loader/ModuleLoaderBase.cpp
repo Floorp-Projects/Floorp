@@ -759,23 +759,12 @@ nsresult ModuleLoaderBase::ResolveRequestedModules(
 
   JSContext* cx = jsapi.cx();
   JS::Rooted<JSObject*> moduleRecord(cx, ms->ModuleRecord());
-  JS::Rooted<JSObject*> requestedModules(cx);
-  requestedModules = JS::GetRequestedModules(cx, moduleRecord);
-  MOZ_ASSERT(requestedModules);
-
-  uint32_t length;
-  if (!JS::GetArrayLength(cx, requestedModules, &length)) {
-    return NS_ERROR_FAILURE;
-  }
+  uint32_t length = JS::GetRequestedModulesCount(cx, moduleRecord);
 
   JS::Rooted<JS::Value> requestedModule(cx);
   for (uint32_t i = 0; i < length; i++) {
-    if (!JS_GetElement(cx, requestedModules, i, &requestedModule)) {
-      return NS_ERROR_FAILURE;
-    }
-
     JS::Rooted<JSString*> str(
-        cx, JS::GetRequestedModuleSpecifier(cx, requestedModule));
+        cx, JS::GetRequestedModuleSpecifier(cx, moduleRecord, i));
     MOZ_ASSERT(str);
 
     nsAutoJSString specifier;
@@ -790,7 +779,7 @@ nsresult ModuleLoaderBase::ResolveRequestedModules(
     if (result.isErr()) {
       uint32_t lineNumber = 0;
       uint32_t columnNumber = 0;
-      JS::GetRequestedModuleSourcePos(cx, requestedModule, &lineNumber,
+      JS::GetRequestedModuleSourcePos(cx, moduleRecord, i, &lineNumber,
                                       &columnNumber);
 
       JS::Rooted<JS::Value> error(cx);

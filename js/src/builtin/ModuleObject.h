@@ -109,20 +109,22 @@ class ExportEntry {
 
 using ExportEntryVector = GCVector<ExportEntry, 0, SystemAllocPolicy>;
 
-class RequestedModuleObject : public NativeObject {
- public:
-  enum { ModuleRequestSlot = 0, LineNumberSlot, ColumnNumberSlot, SlotCount };
+class RequestedModule {
+  const HeapPtr<ModuleRequestObject*> moduleRequest_;
+  const uint32_t lineNumber_;
+  const uint32_t columnNumber_;
 
-  static const JSClass class_;
-  static bool isInstance(HandleValue value);
-  static RequestedModuleObject* create(JSContext* cx,
-                                       HandleObject moduleRequest,
-                                       uint32_t lineNumber,
-                                       uint32_t columnNumber);
-  ModuleRequestObject* moduleRequest() const;
-  uint32_t lineNumber() const;
-  uint32_t columnNumber() const;
+ public:
+  RequestedModule(Handle<ModuleRequestObject*> moduleRequest,
+                  uint32_t lineNumber, uint32_t columnNumber);
+  ModuleRequestObject* moduleRequest() const { return moduleRequest_; }
+  uint32_t lineNumber() const { return lineNumber_; }
+  uint32_t columnNumber() const { return columnNumber_; }
+
+  void trace(JSTracer* trc);
 };
+
+using RequestedModuleVector = GCVector<RequestedModule, 0, SystemAllocPolicy>;
 
 class ResolvedBindingObject : public NativeObject {
  public:
@@ -308,7 +310,7 @@ class ModuleObject : public NativeObject {
 
   void initFunctionDeclarations(UniquePtr<FunctionDeclarationVector> decls);
   void initImportExportData(
-      Handle<ArrayObject*> requestedModules,
+      MutableHandle<RequestedModuleVector> requestedModules,
       MutableHandle<ImportEntryVector> importEntries,
       MutableHandle<ExportEntryVector> localExportEntries,
       MutableHandle<ExportEntryVector> indirectExportEntries,
@@ -333,7 +335,7 @@ class ModuleObject : public NativeObject {
   Value evaluationError() const;
   JSObject* metaObject() const;
   ScriptSourceObject* scriptSourceObject() const;
-  ArrayObject& requestedModules() const;
+  const RequestedModuleVector& requestedModules() const;
   const ImportEntryVector& importEntries() const;
   const ExportEntryVector& localExportEntries() const;
   const ExportEntryVector& indirectExportEntries() const;
