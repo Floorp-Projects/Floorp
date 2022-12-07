@@ -1421,22 +1421,6 @@ security:
       - 'fennec'
     record_in_processes:
       - main
-  psm_ui_interaction:
-    bug_numbers:
-      - 1781466
-    description: >
-      Whether or not the identified PSM UI element has been interacted
-      with this session.
-    expires: "110"
-    kind: boolean
-    keyed: true
-    notification_emails:
-      - dkeeler@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - main
 
 pwmgr:
   potentially_breached_passwords:
