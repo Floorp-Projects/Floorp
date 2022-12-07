@@ -192,9 +192,9 @@ PlainObject* js::NewPlainObjectWithProtoAndAllocKind(JSContext* cx,
   return PlainObject::createWithShape(cx, shape, allocKind, newKind);
 }
 
-void js::NewPlainObjectWithPropsCache::add(Shape* shape) {
+void js::NewPlainObjectWithPropsCache::add(SharedShape* shape) {
   MOZ_ASSERT(shape);
-  MOZ_ASSERT(shape->asShared().slotSpan() > 0);
+  MOZ_ASSERT(shape->slotSpan() > 0);
   for (size_t i = NumEntries - 1; i > 0; i--) {
     entries_[i] = entries_[i - 1];
   }
@@ -202,8 +202,8 @@ void js::NewPlainObjectWithPropsCache::add(Shape* shape) {
 }
 
 static bool ShapeMatches(IdValuePair* properties, size_t nproperties,
-                         Shape* shape) {
-  if (shape->asShared().slotSpan() != nproperties) {
+                         SharedShape* shape) {
+  if (shape->slotSpan() != nproperties) {
     return false;
   }
   ShapePropertyIter<NoGC> iter(shape);
@@ -219,10 +219,10 @@ static bool ShapeMatches(IdValuePair* properties, size_t nproperties,
   return true;
 }
 
-Shape* js::NewPlainObjectWithPropsCache::lookup(IdValuePair* properties,
-                                                size_t nproperties) const {
+SharedShape* js::NewPlainObjectWithPropsCache::lookup(
+    IdValuePair* properties, size_t nproperties) const {
   for (size_t i = 0; i < NumEntries; i++) {
-    Shape* shape = entries_[i];
+    SharedShape* shape = entries_[i];
     if (shape && ShapeMatches(properties, nproperties, shape)) {
       return shape;
     }
@@ -307,7 +307,7 @@ static PlainObject* NewPlainObjectWithProperties(JSContext* cx,
   if (canCache && !obj->inDictionaryMode()) {
     MOZ_ASSERT(obj->getDenseInitializedLength() == 0);
     MOZ_ASSERT(obj->slotSpan() == nproperties);
-    cache.add(obj->shape());
+    cache.add(obj->sharedShape());
   }
 
   return obj;
