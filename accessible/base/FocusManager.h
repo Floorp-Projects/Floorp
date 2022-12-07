@@ -21,6 +21,7 @@ class Accessible;
 class AccEvent;
 class LocalAccessible;
 class DocAccessible;
+class DocAccessibleParent;
 
 /**
  * Manage the accessible focus. Used to fire and process accessible events.
@@ -132,6 +133,15 @@ class FocusManager {
    */
   void ProcessFocusEvent(AccEvent* aEvent);
 
+#ifdef ANDROID
+  void SetFocusedRemoteDoc(DocAccessibleParent* aDoc) {
+    mFocusedRemoteDoc = aDoc;
+  }
+  bool IsFocusedRemoteDoc(DocAccessibleParent* aDoc) {
+    return mFocusedRemoteDoc == aDoc;
+  }
+#endif
+
  protected:
   FocusManager();
 
@@ -148,6 +158,9 @@ class FocusManager {
   RefPtr<LocalAccessible> mActiveItem;
   RefPtr<LocalAccessible> mLastFocus;
   RefPtr<LocalAccessible> mActiveARIAMenubar;
+#ifdef ANDROID
+  DocAccessibleParent* mFocusedRemoteDoc = nullptr;
+#endif
 };
 
 }  // namespace a11y
