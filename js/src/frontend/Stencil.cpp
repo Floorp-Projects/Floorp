@@ -1928,7 +1928,7 @@ static bool InstantiateScriptSourceObject(JSContext* cx,
 
 // Instantiate ModuleObject. Further initialization is done after the associated
 // BaseScript is instantiated in InstantiateTopLevel.
-static bool InstantiateModuleObject(JSContext* cx,
+static bool InstantiateModuleObject(JSContext* cx, ErrorContext* ec,
                                     CompilationAtomCache& atomCache,
                                     const CompilationStencil& stencil,
                                     CompilationGCOutput& gcOutput) {
@@ -1940,7 +1940,7 @@ static bool InstantiateModuleObject(JSContext* cx,
   }
 
   Rooted<ModuleObject*> module(cx, gcOutput.module);
-  return stencil.moduleMetadata->initModule(cx, atomCache, module);
+  return stencil.moduleMetadata->initModule(cx, ec, atomCache, module);
 }
 
 // Instantiate JSFunctions for each FunctionBox.
@@ -2440,7 +2440,7 @@ bool CompilationStencil::instantiateStencilAfterPreparation(
       MOZ_ASSERT(input.enclosingScope.environmentChainLength() ==
                  ModuleScope::EnclosingEnvironmentChainLength);
 
-      if (!InstantiateModuleObject(cx, atomCache, stencil, gcOutput)) {
+      if (!InstantiateModuleObject(cx, &ec, atomCache, stencil, gcOutput)) {
         return false;
       }
     }

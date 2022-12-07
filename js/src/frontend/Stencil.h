@@ -626,7 +626,8 @@ class StencilModuleMetadata
 
   StencilModuleMetadata() = default;
 
-  bool initModule(JSContext* cx, CompilationAtomCache& atomCache,
+  bool initModule(JSContext* cx, ErrorContext* ec,
+                  CompilationAtomCache& atomCache,
                   JS::Handle<ModuleObject*> module) const;
 
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {

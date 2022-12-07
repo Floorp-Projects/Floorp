@@ -282,7 +282,7 @@ bool FunctionEmitter::emitTopLevelFunction(GCThingIndex index) {
     // For modules, we record the function and instantiate the binding
     // during ModuleInstantiate(), before the script is run.
     return bce_->sc->asModuleContext()->builder.noteFunctionDeclaration(
-        bce_->cx, index);
+        bce_->ec, index);
   }
 
   MOZ_ASSERT(bce_->sc->isGlobalContext() || bce_->sc->isEvalContext());

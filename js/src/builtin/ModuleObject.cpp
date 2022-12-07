@@ -1278,17 +1278,18 @@ bool ModuleObject::createEnvironment(JSContext* cx,
 
 ModuleBuilder::ModuleBuilder(JSContext* cx, ErrorContext* ec,
                              const frontend::EitherParser& eitherParser)
-    : cx_(cx),  // TODO bug 1782573 this can happen off main, so need to cover
-                // calls to ReportOutOfMemory
+    : cx_(cx),
+      ec_(ec),
       eitherParser_(eitherParser),
       requestedModuleSpecifiers_(ec),
       importEntries_(ec),
       exportEntries_(ec),
       exportNames_(ec) {}
 
-bool ModuleBuilder::noteFunctionDeclaration(JSContext* cx, uint32_t funIndex) {
+bool ModuleBuilder::noteFunctionDeclaration(ErrorContext* ec,
+                                            uint32_t funIndex) {
   if (!functionDecls_.emplaceBack(funIndex)) {
-    js::ReportOutOfMemory(cx);
+    js::ReportOutOfMemory(ec);
     return false;
   }
   return true;
@@ -1307,7 +1308,7 @@ bool ModuleBuilder::buildTables(frontend::StencilModuleMetadata& metadata) {
 
   // Step 5.
   if (!metadata.importEntries.reserve(importEntries_.count())) {
-    js::ReportOutOfMemory(cx_);
+    js::ReportOutOfMemory(ec_);
     return false;
   }
   for (auto r = importEntries_.all(); !r.empty(); r.popFront()) {
@@ -1321,13 +1322,13 @@ bool ModuleBuilder::buildTables(frontend::StencilModuleMetadata& metadata) {
       frontend::StencilModuleEntry* importEntry = importEntryFor(exp.localName);
       if (!importEntry) {
         if (!metadata.localExportEntries.append(exp)) {
-          js::ReportOutOfMemory(cx_);
+          js::ReportOutOfMemory(ec_);
           return false;
         }
       } else {
         if (!importEntry->importName) {
           if (!metadata.localExportEntries.append(exp)) {
-            js::ReportOutOfMemory(cx_);
+            js::ReportOutOfMemory(ec_);
             return false;
           }
         } else {
@@ -1336,19 +1337,19 @@ bool ModuleBuilder::buildTables(frontend::StencilModuleMetadata& metadata) {
               importEntry->specifier, importEntry->importName, exp.exportName,
               exp.lineno, exp.column);
           if (!metadata.indirectExportEntries.append(entry)) {
-            js::ReportOutOfMemory(cx_);
+            js::ReportOutOfMemory(ec_);
             return false;
           }
         }
       }
     } else if (!exp.importName && !exp.exportName) {
       if (!metadata.starExportEntries.append(exp)) {
-        js::ReportOutOfMemory(cx_);
+        js::ReportOutOfMemory(ec_);
         return false;
       }
     } else {
       if (!metadata.indirectExportEntries.append(exp)) {
-        js::ReportOutOfMemory(cx_);
+        js::ReportOutOfMemory(ec_);
         return false;
       }
     }
@@ -1515,7 +1516,7 @@ bool CreateRequestedModulesFromStencil(
 
 // Use StencilModuleMetadata data to fill in ModuleObject
 bool frontend::StencilModuleMetadata::initModule(
-    JSContext* cx, frontend::CompilationAtomCache& atomCache,
+    JSContext* cx, ErrorContext* ec, frontend::CompilationAtomCache& atomCache,
     JS::Handle<ModuleObject*> module) const {
   Rooted<RequestedModuleVector> requestedModulesVector(cx);
   if (!CreateRequestedModulesFromStencil(cx, atomCache, requestedModules,
@@ -1550,7 +1551,7 @@ bool frontend::StencilModuleMetadata::initModule(
   // Copy the vector of declarations to the ModuleObject.
   auto functionDeclsCopy = MakeUnique<FunctionDeclarationVector>();
   if (!functionDeclsCopy || !functionDeclsCopy->appendAll(functionDecls)) {
-    js::ReportOutOfMemory(cx);
+    js::ReportOutOfMemory(ec);
     return false;
   }
   module->initFunctionDeclarations(std::move(functionDeclsCopy));
@@ -1621,7 +1622,7 @@ bool ModuleBuilder::processAssertions(frontend::StencilModuleEntry& entry,
 
         StencilModuleAssertion assertionStencil(key, value);
         if (!entry.assertions.append(assertionStencil)) {
-          js::ReportOutOfMemory(cx_);
+          js::ReportOutOfMemory(ec_);
           return false;
         }
       }
@@ -2004,7 +2005,7 @@ bool ModuleBuilder::maybeAppendRequestedModule(
   }
 
   if (!requestedModules_.append(entry)) {
-    js::ReportOutOfMemory(cx_);
+    js::ReportOutOfMemory(ec_);
     return false;
   }
 
