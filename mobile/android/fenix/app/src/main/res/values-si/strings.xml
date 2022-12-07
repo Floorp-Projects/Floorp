@@ -44,8 +44,6 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">මෑත පොත්යොමු</string>
-    <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recently_saved_title">මෑතදී සුරැකි</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">සුරැකි සියළු පොත්යොමු පෙන්වන්න</string>
@@ -249,37 +247,18 @@
     <string name="search_settings_menu_item">සෙවුම් සැකසුම්</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">මෙවර සෙවීම:</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">මෙවර සෙවීම:</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">මෙවර සෙවීම:</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">%1$s හි අළුත් දෑ</string>
-    <!-- Onboarding home screen dialog description text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">ඔබ නතර කළ තැනින් අතට ගැනීමට දැන් පහසුයි.</string>
-    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">පුද්ගලීකරණය කළ %1$s මුල් පිටුව</string>
-    <!-- Onboarding home screen dialog description text for the home section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">ඔබගේ විවෘත පටිති, පොත්යොමු හා පිරික්සුම් ඉතිහාසය වෙත පනින්න.</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">පටිති පිරිසිදුව, පිළිවෙළට</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">දියුණු කළ පිරිසැලසුම සහ පටිති ස්වයං වැසීම සමඟින් පටිති අපිළිවෙළ සකසා ගන්න.</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">මෑත සෙවුම්</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">මුල් පිටුවෙන් හා පටිති හරහා පසුගිය සෙවුම් වෙත යළි ගොඩවදින්න.</string>
-    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">ඔබගේ පුද්ගලීකරණය කළ ෆයර්ෆොක්ස් මුල් පිටුව දැන් ඔබ නතර කළ තැනින් අතට ගැනීමට පහසු කරයි. ඔබගේ මෑත පටිති, පොත්යොමු සහ සෙවුම් ප්‍රතිඵල සොයා ගන්න.</string>
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">ඔබගේ පුද්ගලීකකරණය කළ මුල් පිටුව බලන්න. මෑත පටිති, පොත්යොමු හා සෙවුම් ප්‍රතිඵල මෙහි දිස් වනු ඇත.</string>
-    <!-- Home onboarding dialog welcome screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">ස්වාධීන අන්තර්ජාලයකට පිළිගනිමු</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title_2">වඩාත් පෞද්ගලික අන්තර්ජාලයකට පිළිගනිමු</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">බොහෝ වර්ණ. ඉහළ පෞද්ගලිකත්‍වය. එලෙසම ලාභයට වඩා මිනිසුන්ට කැපවීම.</string>
-    <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">දුරකථනයෙන් පරිගණකයට සහ ආපසු</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_3">තිර අතර මාරු වීම වෙනදාට වඩා පහසුය</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
@@ -349,6 +328,7 @@
     <string name="preferences_add_private_browsing_shortcut">පෞද්. පිරික්සුම් කෙටිමඟක් යොදන්න</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">HTTPS-පමණි ප්‍රකාරය</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">ඉහළ ආරක්‍ෂාවක් සඳහා HTTPS සංකේතන කෙටුම්පත භාවිතයෙන් අඩවි වෙත ස්වයංක්‍රීයව සම්බන්ධ වීමට තැත් කරයි.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -1113,6 +1093,13 @@
     %1$s is a placeholder that will be replaced by the app name (Fenix). -->
     <string name="notification_default_browser_text">%1$s පෙරනිමි අතිරික්සුව කරන්න</string>
 
+    <!-- Title shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_title">පෞද්. පිරික්සුම බලන්න</string>
+
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">%1$s හි සුරැකින ලද දත්තකඩ හෝ ඉතිහාසයක් නැතිව පිරික්සන්න</string>
+
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">එකතුව මැකිණි</string>
@@ -1237,33 +1224,20 @@
     <string name="delete_history_group_snackbar">සමූහය මැකිණි</string>
 
     <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">%s වෙත පිළිගනිමු!</string>
     <!-- Text for onboarding welcome header. -->
     <string name="onboarding_header_2">නව්‍ය අන්තර්ජාලයකට පිළිගනිමු</string>
     <!-- Text for the onboarding welcome message. -->
     <string name="onboarding_message">ලාභයට නොව මිනිසුන්ට තැනූ අතිරික්සුවකි.</string>
-    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">උපාංග අතර ෆයර්ෆොක්ස් සමමුහූර්තය</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
     <string name="onboarding_account_sign_in_header">ඔබ නතර කළ තැනින් අරඹන්න</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">මෙම උපාංගයේ %1$s වෙත පොත්යොමු, ඉතිහාසය සහ මුරපද ගෙනෙන්න.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
     <string name="onboarding_manual_sign_in_description">බාධාවකින් තොරව තිර අතර මාරු වීමට උපාංගවල පටිති හා මුරපද සමමුහූර්ත කරන්න.</string>
-    <!-- text for the button to manually sign into Firefox account. -->
-    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">ලියාපදිංචිය</string>
     <!-- Text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in">පිවිසෙන්න</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">සමමුහූර්තය සක්‍රියයි</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">සැමවිට සක්‍රිය පෞද්ගලිකත්‍වය</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">පෙරනිමි පෞද්ගලිකත්‍ව රැකවරණය</string>
-    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s මගින් අන්තර්ජාලය පුරා ඔබව රහසිගතව ලුහුබඳින සමාගම් ස්වයංක්‍රීයව නවත්වයි.</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">පූර්ණ දත්තකඩ රැකවරණය මගින් වියමන පුරා දත්තකඩ භාවිතයෙන් ඔබ පසුපස හඹා එන ලුහුබඳින්නන් නවත්වයි.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1277,18 +1251,11 @@
     <string name="onboarding_tracking_protection_strict_button_description_3">බොහෝ දැන්වීම් අවහිර කරන විට පිටු වේගයෙන් පූරණය වේ, නමුත් ඇතැම් පිටු හරිහැටි ක්‍රියා නොකරනු ඇත.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">මෙවලම් තීරුව ස්ථානගත කරන්න</string>
-    <!-- text for the toolbar position card description -->
-    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">මෙවලම් තීරුව පහසුවෙන් ළඟා වීමට හැකි තැනක තබන්න. එය පතුලේ තබා ගන්න, හෝ ඉහළට ගෙන යන්න.</string>
     <!-- Text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description">එය පතුලේ තබා ගන්න, හෝ මුදුනට ගෙන යන්න.</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">ඔබ‍‍ගේ පෞද්ගලිකත්‍වය</string>
 
     <!-- Text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header_1">ඔබ ඔබගේ දත්ත පාලනය කරයි</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">ඔබ මාර්ගගතව බෙදා ගන්නා දෑ සහ ඔබ අප සමඟ බෙදා ගන්නා දෑ පහසුවෙන් පාලනය කිරීමට %s නිර්මාණය කර ඇත.</string>
     <!-- Text for the privacy notice onboarding card description. -->
     <string name="onboarding_privacy_notice_description">ඔබ මාර්ගගතව බෙදා ගන්නා දෑ සහ ඔබ අප සමඟ බෙදා ගන්නා දෑ පහසුවෙන් පාලනය කිරීමට ෆයර්ෆොක්ස් ඉඩ සලසයි.</string>
     <!-- Text for the button to read the privacy notice -->
