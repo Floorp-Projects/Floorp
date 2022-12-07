@@ -19,14 +19,14 @@ from voluptuous import (
     All,
     Boolean,
     FqdnUrl,
+    In,
+    Invalid,
     Length,
     Match,
     Msg,
     Required,
     Schema,
     Unique,
-    In,
-    Invalid,
 )
 from yaml.error import MarkedYAMLError
 
@@ -282,7 +282,7 @@ updatebot:
 
   # TODO: allow multiple users to be specified
   # Phabricator username for a maintainer of the library, used for assigning
-  # reviewers
+  # reviewers. For a review group, preface with #, such as "#build""
   maintainer-phab: tjr
 
   # Bugzilla email address for a maintainer of the library, used for needinfos
