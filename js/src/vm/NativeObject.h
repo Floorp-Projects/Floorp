@@ -613,13 +613,15 @@ class NativeObject : public JSObject {
 
   // Update the object's shape and allocate slots if needed to match the shape's
   // slot span.
-  MOZ_ALWAYS_INLINE bool setShapeAndAddNewSlots(JSContext* cx, Shape* newShape,
+  MOZ_ALWAYS_INLINE bool setShapeAndAddNewSlots(JSContext* cx,
+                                                SharedShape* newShape,
                                                 uint32_t oldSpan,
                                                 uint32_t newSpan);
 
   // Methods optimized for adding/removing a single slot. Must only be used for
   // non-dictionary objects.
-  MOZ_ALWAYS_INLINE bool setShapeAndAddNewSlot(JSContext* cx, Shape* newShape,
+  MOZ_ALWAYS_INLINE bool setShapeAndAddNewSlot(JSContext* cx,
+                                               SharedShape* newShape,
                                                uint32_t slot);
   void setShapeAndRemoveLastSlot(JSContext* cx, Shape* newShape, uint32_t slot);
 

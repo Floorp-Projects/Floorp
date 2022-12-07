@@ -1344,7 +1344,7 @@ bool js::AddSlotAndCallAddPropHook(JSContext* cx, Handle<NativeObject*> obj,
   MOZ_ASSERT(!id.isInt());
 
   uint32_t slot = newShape->lastProperty().slot();
-  if (!obj->setShapeAndAddNewSlot(cx, newShape, slot)) {
+  if (!obj->setShapeAndAddNewSlot(cx, &newShape->asShared(), slot)) {
     return false;
   }
   obj->initSlot(slot, v);
