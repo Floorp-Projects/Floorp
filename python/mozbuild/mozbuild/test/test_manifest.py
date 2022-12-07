@@ -948,6 +948,158 @@ bugzilla:
                 ),
                 # -------------------------------------------------
                 (
+                    {
+                        "schema": "1",
+                        "origin": {
+                            "license": ["MPL-1.1", "LGPL-2.1"],
+                            "name": "cairo",
+                            "description": "2D Graphics Library",
+                            "url": "https://www.cairographics.org/",
+                            "release": "version 1.6.4",
+                            "revision": "AA001122334455",
+                        },
+                        "bugzilla": {"component": "Graphics", "product": "Core"},
+                        "vendoring": {
+                            "url": "https://example.com",
+                            "source-hosting": "gitlab",
+                            "flavor": "individual-files",
+                            "individual-files-default-destination": "bar",
+                            "individual-files-default-upstream": "foo",
+                            "individual-files-list": ["foo", "bar"],
+                            "update-actions": [
+                                {"action": "move-file", "from": "foo", "to": "bar"}
+                            ],
+                        },
+                    },
+                    b"""
+---
+schema: 1
+origin:
+  name: cairo
+  description: 2D Graphics Library
+  url: https://www.cairographics.org/
+  release: version 1.6.4
+  license:
+    - MPL-1.1
+    - LGPL-2.1
+  revision: AA001122334455
+vendoring:
+  url: https://example.com
+  source-hosting: gitlab
+  flavor: individual-files
+  individual-files-default-upstream: foo
+  individual-files-default-destination: bar
+  individual-files-list:
+    - foo
+    - bar
+  update-actions:
+    - action: move-file
+      from: foo
+      to: bar
+bugzilla:
+  product: Core
+  component: Graphics
+            """.strip(),
+                ),
+                # -------------------------------------------------
+                (
+                    "exception",  # can't have both types of indidivudal-files list
+                    b"""
+---
+schema: 1
+origin:
+  name: cairo
+  description: 2D Graphics Library
+  url: https://www.cairographics.org/
+  release: version 1.6.4
+  license:
+    - MPL-1.1
+    - LGPL-2.1
+  revision: AA001122334455
+vendoring:
+  url: https://example.com
+  source-hosting: gitlab
+  flavor: individual-files
+  individual-files-list:
+    - foo
+  individual-files:
+    - upstream: foo
+      destination: bar
+  update-actions:
+    - action: move-file
+      from: foo
+      to: bar
+bugzilla:
+  product: Core
+  component: Graphics
+            """.strip(),
+                ),
+                # -------------------------------------------------
+                (
+                    "exception",  # can't have indidivudal-files-default-upstream
+                    b"""
+---
+schema: 1
+origin:
+  name: cairo
+  description: 2D Graphics Library
+  url: https://www.cairographics.org/
+  release: version 1.6.4
+  license:
+    - MPL-1.1
+    - LGPL-2.1
+  revision: AA001122334455
+vendoring:
+  url: https://example.com
+  source-hosting: gitlab
+  flavor: individual-files
+  indidivudal-files-default-upstream: foo
+  individual-files:
+    - upstream: foo
+      destination: bar
+  update-actions:
+    - action: move-file
+      from: foo
+      to: bar
+bugzilla:
+  product: Core
+  component: Graphics
+            """.strip(),
+                ),
+                # -------------------------------------------------
+                (
+                    "exception",  # must have indidivudal-files-default-upstream
+                    b"""
+---
+schema: 1
+origin:
+  name: cairo
+  description: 2D Graphics Library
+  url: https://www.cairographics.org/
+  release: version 1.6.4
+  license:
+    - MPL-1.1
+    - LGPL-2.1
+  revision: AA001122334455
+vendoring:
+  url: https://example.com
+  source-hosting: gitlab
+  flavor: individual-files
+  indidivudal-files-default-destination: foo
+  individual-files-list:
+    - foo
+    - bar
+  update-actions:
+    - action: move-file
+      from: foo
+      to: bar
+bugzilla:
+  product: Core
+  component: Graphics
+            """.strip(),
+                ),
+                # -------------------------------------------------
+                (
                     "exception",
                     b"""
 ---
