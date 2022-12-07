@@ -609,6 +609,7 @@ details[open] > .page-section-header > .twisty {
   row-gap: 8px;
   margin-block-end: 0.5em;
   border-radius: 4px;
+  align-items: center;
 }
 
 .closed-tab-li-main {
