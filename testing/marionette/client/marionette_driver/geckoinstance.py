@@ -4,6 +4,9 @@
 
 # ALL CHANGES TO THIS FILE MUST HAVE REVIEW FROM A MARIONETTE PEER!
 #
+# Please refer to INSTRUCTIONS TO ADD A NEW PREFERENCE in
+# remote/shared/RecommendedPreferences.sys.mjs
+#
 # The Marionette Python client is used out-of-tree with various builds of
 # Firefox. Removing a preference from this file will cause regressions,
 # so please be careful and get review from a Testing :: Marionette peer
