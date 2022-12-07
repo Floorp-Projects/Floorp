@@ -85,13 +85,17 @@ void DebuggerScript::trace(JSTracer* trc) {
       BaseScript* script = cell->as<BaseScript>();
       TraceManuallyBarrieredCrossCompartmentEdge(
           trc, this, &script, "Debugger.Script script referent");
-      setReservedSlotGCThingAsPrivateUnbarriered(SCRIPT_SLOT, script);
+      if (script != cell->as<BaseScript>()) {
+        setReservedSlotGCThingAsPrivateUnbarriered(SCRIPT_SLOT, script);
+      }
     } else {
       JSObject* wasm = cell->as<JSObject>();
       TraceManuallyBarrieredCrossCompartmentEdge(
           trc, this, &wasm, "Debugger.Script wasm referent");
-      MOZ_ASSERT(wasm->is<WasmInstanceObject>());
-      setReservedSlotGCThingAsPrivateUnbarriered(SCRIPT_SLOT, wasm);
+      if (wasm != cell->as<JSObject>()) {
+        MOZ_ASSERT(wasm->is<WasmInstanceObject>());
+        setReservedSlotGCThingAsPrivateUnbarriered(SCRIPT_SLOT, wasm);
+      }
     }
   }
 }

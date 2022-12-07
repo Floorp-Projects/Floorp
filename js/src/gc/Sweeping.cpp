@@ -1120,7 +1120,7 @@ IncrementalProgress GCRuntime::markGray(JS::GCContext* gcx,
                                         SliceBudget& budget) {
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_MARK);
 
-  if (markUntilBudgetExhausted(budget) == NotFinished) {
+  if (markUntilBudgetExhausted(budget, AllowParallelMarking) == NotFinished) {
     return NotFinished;
   }
 
@@ -1666,20 +1666,18 @@ IncrementalProgress GCRuntime::markDuringSweeping(JS::GCContext* gcx,
                                                   SliceBudget& budget) {
   MOZ_ASSERT(markTask.isIdle());
 
-  if (marker().isDrained()) {
-    return Finished;
-  }
-
   if (markOnBackgroundThreadDuringSweeping) {
-    AutoLockHelperThreadState lock;
-    MOZ_ASSERT(markTask.isIdle(lock));
-    markTask.setBudget(budget);
-    markTask.startOrRunIfIdle(lock);
+    if (!marker().isDrained()) {
+      AutoLockHelperThreadState lock;
+      MOZ_ASSERT(markTask.isIdle(lock));
+      markTask.setBudget(budget);
+      markTask.startOrRunIfIdle(lock);
+    }
     return Finished;  // This means don't yield to the mutator here.
   }
 
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_MARK);
-  return markUntilBudgetExhausted(budget);
+  return markUntilBudgetExhausted(budget, AllowParallelMarking);
 }
 
 void GCRuntime::beginSweepPhase(JS::GCReason reason, AutoGCSession& session) {
@@ -1746,8 +1744,8 @@ void js::gc::BackgroundMarkTask::run(AutoLockHelperThreadState& lock) {
   AutoUnlockHelperThreadState unlock(lock);
 
   // Time reporting is handled separately for parallel tasks.
-  gc->sweepMarkResult =
-      gc->markUntilBudgetExhausted(this->budget, DontReportMarkTime);
+  gc->sweepMarkResult = gc->markUntilBudgetExhausted(
+      this->budget, GCRuntime::SingleThreadedMarking, DontReportMarkTime);
 }
 
 IncrementalProgress GCRuntime::joinBackgroundMarkTask() {
