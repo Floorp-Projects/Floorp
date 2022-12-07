@@ -543,7 +543,8 @@ IncrementalProgress GCRuntime::markWeakReferences(
 
     markedAny |= jit::JitRuntime::MarkJitcodeGlobalTableIteratively(&marker());
   }
-  MOZ_ASSERT(marker().isDrained());
+
+  assertNoMarkingWork();
 
   return Finished;
 }
@@ -1080,8 +1081,8 @@ IncrementalProgress GCRuntime::beginMarkingSweepGroup(JS::GCContext* gcx,
                                                       SliceBudget& budget) {
 #ifdef DEBUG
   MOZ_ASSERT(!markOnBackgroundThreadDuringSweeping);
+  assertNoMarkingWork();
   for (auto& marker : markers) {
-    MOZ_ASSERT(marker->isDrained());
     MOZ_ASSERT(marker->markColor() == MarkColor::Black);
   }
   MOZ_ASSERT(cellsToAssertNotGray.ref().empty());
@@ -1130,8 +1131,8 @@ IncrementalProgress GCRuntime::endMarkingSweepGroup(JS::GCContext* gcx,
                                                     SliceBudget& budget) {
 #ifdef DEBUG
   MOZ_ASSERT(!markOnBackgroundThreadDuringSweeping);
+  assertNoMarkingWork();
   for (auto& marker : markers) {
-    MOZ_ASSERT(marker->isDrained());
     MOZ_ASSERT(marker->markColor() == MarkColor::Black);
   }
   MOZ_ASSERT(!HasIncomingCrossCompartmentPointers(rt));
@@ -1615,11 +1616,7 @@ IncrementalProgress GCRuntime::endSweepingSweepGroup(JS::GCContext* gcx,
     return NotFinished;
   }
 
-#ifdef DEBUG
-  for (auto& marker : markers) {
-    MOZ_ASSERT(marker->isDrained());
-  }
-#endif
+  assertNoMarkingWork();
 
   // Disable background marking during sweeping until we start sweeping the next
   // zone group.
@@ -1750,7 +1747,7 @@ void js::gc::BackgroundMarkTask::run(AutoLockHelperThreadState& lock) {
 
   // Time reporting is handled separately for parallel tasks.
   gc->sweepMarkResult =
-      gc->markUntilBudgetExhausted(this->budget, GCMarker::DontReportMarkTime);
+      gc->markUntilBudgetExhausted(this->budget, DontReportMarkTime);
 }
 
 IncrementalProgress GCRuntime::joinBackgroundMarkTask() {
@@ -2284,9 +2281,7 @@ IncrementalProgress GCRuntime::performSweepActions(SliceBudget& budget) {
 #ifdef DEBUG
   MOZ_ASSERT(initialState <= State::Sweep);
   if (initialState != State::Sweep) {
-    for (auto& marker : markers) {
-      MOZ_ASSERT(marker->isDrained());
-    }
+    assertNoMarkingWork();
   }
 #endif
 

@@ -153,7 +153,7 @@ void js::GCMarker::eagerlyMarkChildren(JSRope* rope) {
         // When both children are ropes, set aside the right one to
         // scan it later.
         if (next && !stack.pushTempRope(next)) {
-          delayMarkingChildren(next);
+          delayMarkingChildrenOnOOM(next);
         }
         next = &left->asRope();
       }
