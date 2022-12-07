@@ -126,13 +126,13 @@ class NewProxyCache {
 // a recently created object's shape, we can use this shape directly.
 class NewPlainObjectWithPropsCache {
   static const size_t NumEntries = 4;
-  mozilla::Array<Shape*, NumEntries> entries_;
+  mozilla::Array<SharedShape*, NumEntries> entries_;
 
  public:
   NewPlainObjectWithPropsCache() { purge(); }
 
-  Shape* lookup(IdValuePair* properties, size_t nproperties) const;
-  void add(Shape* shape);
+  SharedShape* lookup(IdValuePair* properties, size_t nproperties) const;
+  void add(SharedShape* shape);
 
   void purge() {
     for (size_t i = 0; i < NumEntries; i++) {
