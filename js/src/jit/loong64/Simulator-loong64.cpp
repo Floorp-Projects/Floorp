@@ -34,7 +34,9 @@
 
 #include "jit/AtomicOperations.h"
 #include "jit/loong64/Assembler-loong64.h"
+#include "js/Conversions.h"
 #include "threading/LockGuard.h"
+#include "vm/JSContext.h"
 #include "vm/Runtime.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmSignalHandlers.h"

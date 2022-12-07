@@ -40,9 +40,11 @@
 
 #include "jit/AtomicOperations.h"
 #include "jit/mips64/Assembler-mips64.h"
+#include "js/Conversions.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "threading/LockGuard.h"
+#include "vm/JSContext.h"
 #include "vm/Runtime.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmSignalHandlers.h"
