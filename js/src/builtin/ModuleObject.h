@@ -16,6 +16,7 @@
 #include "gc/Barrier.h"        // HeapPtr
 #include "gc/ZoneAllocator.h"  // CellAllocPolicy
 #include "js/Class.h"          // JSClass, ObjectOpResult
+#include "js/GCVector.h"
 #include "js/Id.h"             // jsid
 #include "js/Modules.h"
 #include "js/Proxy.h"       // BaseProxyHandler
@@ -60,29 +61,28 @@ class ModuleRequestObject : public NativeObject {
   ArrayObject* assertions() const;
 };
 
-class ImportEntryObject : public NativeObject {
- public:
-  enum {
-    ModuleRequestSlot = 0,
-    ImportNameSlot,
-    LocalNameSlot,
-    LineNumberSlot,
-    ColumnNumberSlot,
-    SlotCount
-  };
+class ImportEntry {
+  const HeapPtr<ModuleRequestObject*> moduleRequest_;
+  const HeapPtr<JSAtom*> importName_;
+  const HeapPtr<JSAtom*> localName_;
+  const uint32_t lineNumber_;
+  const uint32_t columnNumber_;
 
-  static const JSClass class_;
-  static bool isInstance(HandleValue value);
-  static ImportEntryObject* create(JSContext* cx, HandleObject moduleRequest,
-                                   Handle<JSAtom*> maybeImportName,
-                                   Handle<JSAtom*> localName,
-                                   uint32_t lineNumber, uint32_t columnNumber);
-  ModuleRequestObject* moduleRequest() const;
-  JSAtom* importName() const;
-  JSAtom* localName() const;
-  uint32_t lineNumber() const;
-  uint32_t columnNumber() const;
+ public:
+  ImportEntry(Handle<ModuleRequestObject*> moduleRequest,
+              Handle<JSAtom*> maybeImportName, Handle<JSAtom*> localName,
+              uint32_t lineNumber, uint32_t columnNumber);
+
+  ModuleRequestObject* moduleRequest() const { return moduleRequest_; }
+  JSAtom* importName() const { return importName_; }
+  JSAtom* localName() const { return localName_; }
+  uint32_t lineNumber() const { return lineNumber_; }
+  uint32_t columnNumber() const { return columnNumber_; }
+
+  void trace(JSTracer* trc);
 };
+
+using ImportEntryVector = GCVector<ImportEntry, 0, SystemAllocPolicy>;
 
 class ExportEntryObject : public NativeObject {
  public:
@@ -311,7 +311,7 @@ class ModuleObject : public NativeObject {
 
   void initFunctionDeclarations(UniquePtr<FunctionDeclarationVector> decls);
   void initImportExportData(Handle<ArrayObject*> requestedModules,
-                            Handle<ArrayObject*> importEntries,
+                            MutableHandle<ImportEntryVector> importEntries,
                             Handle<ArrayObject*> localExportEntries,
                             Handle<ArrayObject*> indirectExportEntries,
                             Handle<ArrayObject*> starExportEntries);
@@ -336,7 +336,7 @@ class ModuleObject : public NativeObject {
   JSObject* metaObject() const;
   ScriptSourceObject* scriptSourceObject() const;
   ArrayObject& requestedModules() const;
-  ArrayObject& importEntries() const;
+  const ImportEntryVector& importEntries() const;
   ArrayObject& localExportEntries() const;
   ArrayObject& indirectExportEntries() const;
   ArrayObject& starExportEntries() const;

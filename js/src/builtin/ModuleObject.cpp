@@ -79,43 +79,22 @@ static Value StringOrNullValue(JSString* maybeString) {
   }
 
 ///////////////////////////////////////////////////////////////////////////
-// ImportEntryObject
+// ImportEntry
 
-/* static */ const JSClass ImportEntryObject::class_ = {
-    "ImportEntry", JSCLASS_HAS_RESERVED_SLOTS(ImportEntryObject::SlotCount)};
+ImportEntry::ImportEntry(Handle<ModuleRequestObject*> moduleRequest,
+                         Handle<JSAtom*> maybeImportName,
+                         Handle<JSAtom*> localName, uint32_t lineNumber,
+                         uint32_t columnNumber)
+    : moduleRequest_(moduleRequest),
+      importName_(maybeImportName),
+      localName_(localName),
+      lineNumber_(lineNumber),
+      columnNumber_(columnNumber) {}
 
-DEFINE_ATOM_OR_NULL_ACCESSOR_METHOD(ImportEntryObject, importName,
-                                    ImportNameSlot)
-DEFINE_ATOM_ACCESSOR_METHOD(ImportEntryObject, localName, LocalNameSlot)
-DEFINE_UINT32_ACCESSOR_METHOD(ImportEntryObject, lineNumber, LineNumberSlot)
-DEFINE_UINT32_ACCESSOR_METHOD(ImportEntryObject, columnNumber, ColumnNumberSlot)
-
-ModuleRequestObject* ImportEntryObject::moduleRequest() const {
-  Value value = getReservedSlot(ModuleRequestSlot);
-  return &value.toObject().as<ModuleRequestObject>();
-}
-
-/* static */
-bool ImportEntryObject::isInstance(HandleValue value) {
-  return value.isObject() && value.toObject().is<ImportEntryObject>();
-}
-
-/* static */
-ImportEntryObject* ImportEntryObject::create(
-    JSContext* cx, HandleObject moduleRequest, Handle<JSAtom*> maybeImportName,
-    Handle<JSAtom*> localName, uint32_t lineNumber, uint32_t columnNumber) {
-  ImportEntryObject* self =
-      NewObjectWithGivenProto<ImportEntryObject>(cx, nullptr);
-  if (!self) {
-    return nullptr;
-  }
-
-  self->initReservedSlot(ModuleRequestSlot, ObjectValue(*moduleRequest));
-  self->initReservedSlot(ImportNameSlot, StringOrNullValue(maybeImportName));
-  self->initReservedSlot(LocalNameSlot, StringValue(localName));
-  self->initReservedSlot(LineNumberSlot, NumberValue(lineNumber));
-  self->initReservedSlot(ColumnNumberSlot, NumberValue(columnNumber));
-  return self;
+void ImportEntry::trace(JSTracer* trc) {
+  TraceEdge(trc, &moduleRequest_, "ImportEntry::moduleRequest_");
+  TraceNullableEdge(trc, &importName_, "ImportEntry::importName_");
+  TraceNullableEdge(trc, &localName_, "ImportEntry::localName_");
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -691,7 +670,7 @@ class js::CyclicModuleFields {
   HeapPtr<JSObject*> metaObject;
   HeapPtr<ScriptSourceObject*> scriptSourceObject;
   HeapPtr<ArrayObject*> requestedModules;
-  HeapPtr<ArrayObject*> importEntries;
+  ImportEntryVector importEntries;
   HeapPtr<ArrayObject*> localExportEntries;
   HeapPtr<ArrayObject*> indirectExportEntries;
   HeapPtr<ArrayObject*> starExportEntries;
@@ -735,7 +714,7 @@ void CyclicModuleFields::trace(JSTracer* trc) {
                     "CyclicModuleFields::scriptSourceObject");
   TraceNullableEdge(trc, &requestedModules,
                     "CyclicModuleFields::requestedModules");
-  TraceNullableEdge(trc, &importEntries, "CyclicModuleFields::importEntries");
+  importEntries.trace(trc);
   TraceNullableEdge(trc, &localExportEntries,
                     "CyclicModuleFields::localExportEntries");
   TraceNullableEdge(trc, &indirectExportEntries,
@@ -852,8 +831,8 @@ ArrayObject& ModuleObject::requestedModules() const {
   return *cyclicModuleFields()->requestedModules;
 }
 
-ArrayObject& ModuleObject::importEntries() const {
-  return *cyclicModuleFields()->importEntries;
+const ImportEntryVector& ModuleObject::importEntries() const {
+  return cyclicModuleFields()->importEntries;
 }
 
 ArrayObject& ModuleObject::localExportEntries() const {
@@ -981,18 +960,18 @@ void ModuleObject::setInitialEnvironment(
 }
 
 void ModuleObject::initImportExportData(
-    Handle<ArrayObject*> requestedModules, Handle<ArrayObject*> importEntries,
+    Handle<ArrayObject*> requestedModules,
+    MutableHandle<ImportEntryVector> importEntries,
     Handle<ArrayObject*> localExportEntries,
     Handle<ArrayObject*> indirectExportEntries,
     Handle<ArrayObject*> starExportEntries) {
   MOZ_ASSERT(requestedModules);
-  MOZ_ASSERT(importEntries);
   MOZ_ASSERT(localExportEntries);
   MOZ_ASSERT(indirectExportEntries);
   MOZ_ASSERT(starExportEntries);
 
   cyclicModuleFields()->requestedModules = requestedModules;
-  cyclicModuleFields()->importEntries = importEntries;
+  cyclicModuleFields()->importEntries = std::move(importEntries.get());
   cyclicModuleFields()->localExportEntries = localExportEntries;
   cyclicModuleFields()->indirectExportEntries = indirectExportEntries;
   cyclicModuleFields()->starExportEntries = starExportEntries;
@@ -1007,7 +986,6 @@ static bool FreezeObjectProperty(JSContext* cx, NativeObject* propertyArg) {
 bool ModuleObject::Freeze(JSContext* cx, Handle<ModuleObject*> self) {
   CyclicModuleFields* fields = self->cyclicModuleFields();
   return FreezeObjectProperty(cx, fields->requestedModules) &&
-         FreezeObjectProperty(cx, fields->importEntries) &&
          FreezeObjectProperty(cx, fields->localExportEntries) &&
          FreezeObjectProperty(cx, fields->indirectExportEntries) &&
          FreezeObjectProperty(cx, fields->starExportEntries) &&
@@ -1037,7 +1015,6 @@ static inline bool AssertObjectPropertyFrozen(JSContext* cx,
     JSContext* cx, Handle<ModuleObject*> self) {
   CyclicModuleFields* fields = self->cyclicModuleFields();
   if (!AssertObjectPropertyFrozen(cx, fields->requestedModules) ||
-      !AssertObjectPropertyFrozen(cx, fields->importEntries) ||
       !AssertObjectPropertyFrozen(cx, fields->localExportEntries) ||
       !AssertObjectPropertyFrozen(cx, fields->indirectExportEntries) ||
       !AssertObjectPropertyFrozen(cx, fields->starExportEntries)) {
@@ -1576,10 +1553,7 @@ static ArrayObject* ModuleBuilderInitArray(
 
     switch (arrayType) {
       case ModuleArrayType::ImportEntryObject:
-        MOZ_ASSERT(localName);
-        req = ImportEntryObject::create(cx, moduleRequest, importName,
-                                        localName, entry.lineno, entry.column);
-        break;
+        MOZ_CRASH();
       case ModuleArrayType::ExportEntryObject:
         req =
             ExportEntryObject::create(cx, exportName, moduleRequest, importName,
@@ -1603,6 +1577,90 @@ static ArrayObject* ModuleBuilderInitArray(
   return resultArray;
 }
 
+ModuleRequestObject* CreateModuleRequestFromStencil(
+    JSContext* cx, frontend::CompilationAtomCache& atomCache,
+    const frontend::StencilModuleEntry& entry) {
+  Rooted<ArrayObject*> assertionArray(cx);
+  uint32_t numberOfAssertions = entry.assertions.length();
+  if (numberOfAssertions > 0) {
+    assertionArray = NewDenseFullyAllocatedArray(cx, numberOfAssertions);
+    if (!assertionArray) {
+      return nullptr;
+    }
+    assertionArray->ensureDenseInitializedLength(0, numberOfAssertions);
+
+    Rooted<PlainObject*> assertionObject(cx);
+    RootedId assertionKey(cx);
+    RootedValue assertionValue(cx);
+    for (uint32_t j = 0; j < numberOfAssertions; ++j) {
+      assertionObject = NewPlainObject(cx);
+      if (!assertionObject) {
+        return nullptr;
+      }
+
+      JSAtom* jsatom = atomCache.getExistingAtomAt(cx, entry.assertions[j].key);
+      MOZ_ASSERT(jsatom);
+      assertionKey = AtomToId(jsatom);
+
+      jsatom = atomCache.getExistingAtomAt(cx, entry.assertions[j].value);
+      MOZ_ASSERT(jsatom);
+      assertionValue = StringValue(jsatom);
+
+      if (!DefineDataProperty(cx, assertionObject, assertionKey, assertionValue,
+                              JSPROP_ENUMERATE)) {
+        return nullptr;
+      }
+
+      assertionArray->initDenseElement(j, ObjectValue(*assertionObject));
+    }
+  }
+
+  Rooted<JSAtom*> specifier(cx);
+  if (entry.specifier) {
+    specifier = atomCache.getExistingAtomAt(cx, entry.specifier);
+    MOZ_ASSERT(specifier);
+  }
+
+  return ModuleRequestObject::create(cx, specifier, assertionArray);
+}
+
+bool CreateImportEntriesFromStencil(
+    JSContext* cx, frontend::CompilationAtomCache& atomCache,
+    const frontend::StencilModuleMetadata::EntryVector& input,
+    MutableHandle<ImportEntryVector> output) {
+  if (!output.reserve(input.length())) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  for (const frontend::StencilModuleEntry& entry : input) {
+    Rooted<ModuleRequestObject*> moduleRequest(
+        cx, CreateModuleRequestFromStencil(cx, atomCache, entry));
+    if (!moduleRequest) {
+      return false;
+    }
+
+    Rooted<JSAtom*> localName(cx);
+    if (entry.localName) {
+      localName = atomCache.getExistingAtomAt(cx, entry.localName);
+      MOZ_ASSERT(localName);
+    }
+
+    Rooted<JSAtom*> importName(cx);
+    if (entry.importName) {
+      importName = atomCache.getExistingAtomAt(cx, entry.importName);
+      MOZ_ASSERT(importName);
+    }
+
+    MOZ_ASSERT(!entry.exportName);
+
+    output.infallibleEmplaceBack(moduleRequest, importName, localName,
+                                 entry.lineno, entry.column);
+  }
+
+  return true;
+}
+
 // Use StencilModuleMetadata data to fill in ModuleObject
 bool frontend::StencilModuleMetadata::initModule(
     JSContext* cx, frontend::CompilationAtomCache& atomCache,
@@ -1615,11 +1673,9 @@ bool frontend::StencilModuleMetadata::initModule(
     return false;
   }
 
-  Rooted<ArrayObject*> importEntriesObject(
-      cx,
-      ModuleBuilderInitArray(cx, atomCache, ModuleArrayType::ImportEntryObject,
-                             importEntries));
-  if (!importEntriesObject) {
+  Rooted<ImportEntryVector> importEntriesVector(cx);
+  if (!CreateImportEntriesFromStencil(cx, atomCache, importEntries,
+                                      &importEntriesVector)) {
     return false;
   }
 
@@ -1663,7 +1719,7 @@ bool frontend::StencilModuleMetadata::initModule(
   module->initAsyncSlots(cx, isAsync, asyncParentModulesList);
 
   module->initImportExportData(
-      requestedModulesObject, importEntriesObject, localExportEntriesObject,
+      requestedModulesObject, &importEntriesVector, localExportEntriesObject,
       indirectExportEntriesObject, starExportEntriesObject);
 
   return true;
