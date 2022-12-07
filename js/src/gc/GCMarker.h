@@ -228,7 +228,11 @@ enum : uint32_t {
   None = 0,
 
   // Set the compartment's hasMarkedCells flag for roots.
-  MarkRootCompartments = 1
+  MarkRootCompartments = 1,
+
+  // The marking tracer is operating in parallel. Use appropriate atomic
+  // accesses to update the mark bits correctly.
+  ParallelMarking = 2
 };
 }  // namespace MarkingOptions
 
