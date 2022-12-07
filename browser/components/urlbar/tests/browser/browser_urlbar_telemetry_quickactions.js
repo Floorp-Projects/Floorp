@@ -25,7 +25,7 @@ add_setup(async function setup() {
 
   UrlbarProviderQuickActions.addAction("testaction", {
     commands: ["testaction"],
-    label: "quickactions-downloads",
+    label: "quickactions-downloads2",
     onPick: () => testActionCalled++,
   });
 
