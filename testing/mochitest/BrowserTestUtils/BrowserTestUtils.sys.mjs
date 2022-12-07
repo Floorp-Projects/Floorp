@@ -1874,10 +1874,6 @@ export var BrowserTestUtils = {
         index,
       });
     }
-    // Make sure scrolling finished.
-    await new Promise(resolve => {
-      arrowScrollbox.addEventListener("scrollend", resolve, { once: true });
-    });
   },
 
   /**
