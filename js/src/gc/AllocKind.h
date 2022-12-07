@@ -35,6 +35,7 @@ class NormalAtom;
 class NormalPropMap;
 class DictionaryPropMap;
 class DictionaryShape;
+class SharedShape;
 
 namespace gc {
 
@@ -230,6 +231,10 @@ struct MapTypeToAllocKind<JSThinInlineString> {
   static const AllocKind kind = AllocKind::STRING;
 };
 
+template <>
+struct MapTypeToAllocKind<js::SharedShape> {
+  static const AllocKind kind = AllocKind::SHAPE;
+};
 template <>
 struct MapTypeToAllocKind<js::DictionaryShape> {
   static const AllocKind kind = AllocKind::SHAPE;

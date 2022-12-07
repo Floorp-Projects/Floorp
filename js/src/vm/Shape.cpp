@@ -1097,16 +1097,18 @@ BaseShape* BaseShape::get(JSContext* cx, const JSClass* clasp, JS::Realm* realm,
   return nbase;
 }
 
-Shape* SharedShape::new_(JSContext* cx, Handle<BaseShape*> base,
-                         ObjectFlags objectFlags, uint32_t nfixed,
-                         Handle<SharedPropMap*> map, uint32_t mapLength) {
-  return cx->newCell<Shape>(base, objectFlags, nfixed, map, mapLength, false);
+// static
+SharedShape* SharedShape::new_(JSContext* cx, Handle<BaseShape*> base,
+                               ObjectFlags objectFlags, uint32_t nfixed,
+                               Handle<SharedPropMap*> map, uint32_t mapLength) {
+  return cx->newCell<SharedShape>(base, objectFlags, nfixed, map, mapLength);
 }
 
-Shape* DictionaryShape::new_(JSContext* cx, Handle<BaseShape*> base,
-                             ObjectFlags objectFlags, uint32_t nfixed,
-                             Handle<DictionaryPropMap*> map,
-                             uint32_t mapLength) {
+// static
+DictionaryShape* DictionaryShape::new_(JSContext* cx, Handle<BaseShape*> base,
+                                       ObjectFlags objectFlags, uint32_t nfixed,
+                                       Handle<DictionaryPropMap*> map,
+                                       uint32_t mapLength) {
   return cx->newCell<DictionaryShape>(base, objectFlags, nfixed, map,
                                       mapLength);
 }

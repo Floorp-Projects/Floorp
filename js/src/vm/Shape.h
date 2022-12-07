@@ -268,7 +268,6 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   friend class TenuringTracer;
   friend class JS::ubi::Concrete<Shape>;
   friend class js::gc::RelocationOverlay;
-  friend class js::gc::CellAllocator;
 
  public:
   // Base shape, stored in the cell header.
@@ -515,14 +514,15 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
 };
 
 class SharedShape : public js::Shape {
+  friend class js::gc::CellAllocator;
   SharedShape(BaseShape* base, ObjectFlags objectFlags, uint32_t nfixed,
               PropMap* map, uint32_t mapLength)
       : Shape(base, objectFlags, nfixed, map, mapLength,
               /* isDictionary = */ false) {}
 
-  static Shape* new_(JSContext* cx, Handle<BaseShape*> base,
-                     ObjectFlags objectFlags, uint32_t nfixed,
-                     Handle<SharedPropMap*> map, uint32_t mapLength);
+  static SharedShape* new_(JSContext* cx, Handle<BaseShape*> base,
+                           ObjectFlags objectFlags, uint32_t nfixed,
+                           Handle<SharedPropMap*> map, uint32_t mapLength);
 
  public:
   /*
@@ -580,9 +580,10 @@ class DictionaryShape : public js::Shape {
   }
 
  public:
-  static Shape* new_(JSContext* cx, Handle<BaseShape*> base,
-                     ObjectFlags objectFlags, uint32_t nfixed,
-                     Handle<DictionaryPropMap*> map, uint32_t mapLength);
+  static DictionaryShape* new_(JSContext* cx, Handle<BaseShape*> base,
+                               ObjectFlags objectFlags, uint32_t nfixed,
+                               Handle<DictionaryPropMap*> map,
+                               uint32_t mapLength);
 };
 
 // Iterator for iterating over a shape's properties. It can be used like this:
