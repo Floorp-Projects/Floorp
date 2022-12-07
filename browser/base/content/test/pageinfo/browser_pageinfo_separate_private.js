@@ -12,7 +12,7 @@ add_task(async function() {
   let pageInfo = BrowserPageInfo(browser.currentURI.spec);
   await BrowserTestUtils.waitForEvent(pageInfo, "page-info-init");
   Assert.strictEqual(
-    pageInfo.docShell.usePrivateBrowsing,
+    pageInfo.docShell.QueryInterface(Ci.nsILoadContext).usePrivateBrowsing,
     false,
     "non-private window opened private page info window"
   );
@@ -30,7 +30,8 @@ add_task(async function() {
   );
   await BrowserTestUtils.waitForEvent(privatePageInfo, "page-info-init");
   Assert.strictEqual(
-    privatePageInfo.docShell.usePrivateBrowsing,
+    privatePageInfo.docShell.QueryInterface(Ci.nsILoadContext)
+      .usePrivateBrowsing,
     true,
     "private window opened non-private page info window"
   );
