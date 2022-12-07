@@ -5,7 +5,7 @@ version = 3
 [[package]]
 name = "aa-stroke"
 version = "0.1.0"
-source = "git+https://github.com/FirefoxGraphics/aa-stroke?rev=5289b0ff5736a6a6b916ef007fcf07ac14a663d5#5289b0ff5736a6a6b916ef007fcf07ac14a663d5"
+source = "git+https://github.com/FirefoxGraphics/aa-stroke?rev=07d3c25322518f294300e96246e09b95e118555d#07d3c25322518f294300e96246e09b95e118555d"
 dependencies = [
  "euclid",
 ]
@@ -6462,7 +6462,7 @@ dependencies = [
 [[package]]
 name = "wpf-gpu-raster"
 version = "0.1.0"
-source = "git+https://github.com/FirefoxGraphics/wpf-gpu-raster?rev=b6ca51395c56648b50f21f68a1586f94f8b966c4#b6ca51395c56648b50f21f68a1586f94f8b966c4"
+source = "git+https://github.com/FirefoxGraphics/wpf-gpu-raster?rev=e07e3741d1613b1b7ddb85a1120ed4071b3d6a56#e07e3741d1613b1b7ddb85a1120ed4071b3d6a56"
 dependencies = [
  "typed-arena-nomut",
 ]

@@ -9,8 +9,16 @@ pub struct VertexBuffer {
 }
 
 #[no_mangle]
-pub extern "C" fn aa_stroke_new(style: &StrokeStyle) -> *mut Stroker {
-    let s = Stroker::new(style);
+pub extern "C" fn aa_stroke_new(
+    style: &StrokeStyle,
+    output_ptr: *mut OutputVertex,
+    output_capacity: usize,
+) -> *mut Stroker {
+    let mut s = Stroker::new(style);
+    if output_ptr != std::ptr::null_mut() {
+        let slice = unsafe { std::slice::from_raw_parts_mut(output_ptr, output_capacity) };
+        s.set_output_buffer(slice);
+    }
     Box::into_raw(Box::new(s))
 }
 
@@ -50,16 +58,28 @@ pub extern "C" fn aa_stroke_close(s: &mut Stroker) {
 
 #[no_mangle]
 pub extern "C" fn aa_stroke_finish(s: &mut Stroker) -> VertexBuffer {
-    let result = s.finish();
-    let vb = VertexBuffer { data: result.as_ptr(), len: result.len() };
-    std::mem::forget(result);
-    vb
+    let stroked_path = s.get_stroked_path();
+    if let Some(output_buffer_size) = stroked_path.get_output_buffer_size() {
+        VertexBuffer {
+            data: std::ptr::null(),
+            len: output_buffer_size,
+        }
+    } else {
+        let result = stroked_path.finish();
+        let vb = VertexBuffer { data: result.as_ptr(), len: result.len() };
+        std::mem::forget(result);
+        vb
+    }
 }
 
 #[no_mangle]
 pub extern "C" fn aa_stroke_vertex_buffer_release(vb: VertexBuffer)
 {
-    unsafe { drop(Box::from_raw(std::slice::from_raw_parts_mut(vb.data as *mut OutputVertex, vb.len))) }
+    if vb.data != std::ptr::null() {
+        unsafe {
+            drop(Box::from_raw(std::slice::from_raw_parts_mut(vb.data as *mut OutputVertex, vb.len)));
+        }
+    }
 }
 
 #[no_mangle]
@@ -71,7 +91,7 @@ pub unsafe extern "C" fn aa_stroke_release(s: *mut Stroker) {
 #[test]
 fn simple() {
     let style = StrokeStyle::default();
-    let s = unsafe { &mut *aa_stroke_new(&style) } ;
+    let s = unsafe { &mut *aa_stroke_new(&style, std::ptr::null_mut(), 0) } ;
     aa_stroke_move_to(s, 10., 10., false);
     aa_stroke_line_to(s, 100., 100., false);
     aa_stroke_line_to(s, 100., 10., true);

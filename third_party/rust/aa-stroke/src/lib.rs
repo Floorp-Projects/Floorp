@@ -81,7 +81,9 @@ pub struct Vertex {
 }
 
 /// A helper struct used for constructing a `Path`.
-pub struct PathBuilder {
+pub struct PathBuilder<'z> {
+    output_buffer: Option<&'z mut [Vertex]>,
+    output_buffer_offset: usize,
     vertices: Vec<Vertex>,
     coverage: f32,
     aa: bool
@@ -89,27 +91,49 @@ pub struct PathBuilder {
 
 
 
-impl PathBuilder {
-    pub fn new(coverage: f32) -> PathBuilder {
+impl<'z> PathBuilder<'z> {
+    pub fn new(coverage: f32) -> PathBuilder<'z> {
         PathBuilder {
+            output_buffer: None,
+            output_buffer_offset: 0,
             vertices: Vec::new(),
             coverage,
             aa: true
         }
     }
 
+    pub fn set_output_buffer(&mut self, output_buffer: &'z mut [Vertex]) {
+        assert!(self.output_buffer.is_none());
+        self.output_buffer = Some(output_buffer);
+    }
+
+    pub fn push_tri_with_coverage(&mut self, x1: f32, y1: f32, c1: f32, x2: f32, y2: f32, c2: f32, x3: f32, y3: f32, c3: f32) {
+        let v1 = Vertex { x: x1, y: y1, coverage: c1 };
+        let v2 = Vertex { x: x2, y: y2, coverage: c2 };
+        let v3 = Vertex { x: x3, y: y3, coverage: c3 };
+        if let Some(output_buffer) = &mut self.output_buffer {
+            let offset = self.output_buffer_offset;
+            if offset + 3 <= output_buffer.len() {
+                output_buffer[offset] = v1;
+                output_buffer[offset + 1] = v2;
+                output_buffer[offset + 2] = v3;
+            }
+            self.output_buffer_offset = offset + 3;
+        } else {
+            self.vertices.push(v1);
+            self.vertices.push(v2);
+            self.vertices.push(v3);
+        }
+    }
+
     pub fn push_tri(&mut self, x1: f32, y1: f32, x2: f32, y2: f32, x3: f32, y3: f32) {
-        self.vertices.push(Vertex { x: x1, y: y1, coverage: self.coverage});
-        self.vertices.push(Vertex { x: x2, y: y2, coverage: self.coverage});
-        self.vertices.push(Vertex { x: x3, y: y3, coverage: self.coverage});
+        self.push_tri_with_coverage(x1, y1, self.coverage, x2, y2, self.coverage, x3, y3, self.coverage);
     }
 
 
     // x3, y3 is the full coverage vert
     pub fn tri_ramp(&mut self, x1: f32, y1: f32, x2: f32, y2: f32, x3: f32, y3: f32) {
-        self.vertices.push(Vertex { x: x1, y: y1, coverage: 0.});
-        self.vertices.push(Vertex { x: x2, y: y2, coverage: 0.});
-        self.vertices.push(Vertex { x: x3, y: y3, coverage: self.coverage});
+        self.push_tri_with_coverage(x1, y1, 0., x2, y2, 0., x3, y3, self.coverage);
     }
 
     pub fn quad(&mut self, x1: f32, y1: f32, x2: f32, y2: f32, x3: f32, y3: f32, x4: f32, y4: f32) {
@@ -118,13 +142,8 @@ impl PathBuilder {
     }
 
     pub fn ramp(&mut self, x1: f32, y1: f32, x2: f32, y2: f32, x3: f32, y3: f32, x4: f32, y4: f32) {
-        self.vertices.push(Vertex { x: x1, y: y1, coverage: self.coverage});
-        self.vertices.push(Vertex { x: x2, y: y2, coverage: 0.});
-        self.vertices.push(Vertex { x: x3, y: y3, coverage: 0.});
-
-        self.vertices.push(Vertex { x: x3, y: y3, coverage: 0.});
-        self.vertices.push(Vertex { x: x4, y: y4, coverage: self.coverage});
-        self.vertices.push(Vertex { x: x1, y: y1, coverage: self.coverage});
+        self.push_tri_with_coverage(x1, y1, self.coverage, x2, y2, 0., x3, y3, 0.);
+        self.push_tri_with_coverage(x3, y3, 0., x4, y4, self.coverage, x1, y1, self.coverage);
     }
 
     // first edge is outside
@@ -139,6 +158,14 @@ impl PathBuilder {
     /// Completes the current path
     pub fn finish(self) -> Vec<Vertex> {
         self.vertices
+    }
+
+    pub fn get_output_buffer_size(&self) -> Option<usize> {
+        if self.output_buffer.is_some() {
+            Some(self.output_buffer_offset)
+        } else {
+            None
+        }
     }
 }
 
@@ -207,8 +234,8 @@ fn arc_segment_tri(path: &mut PathBuilder, xc: f32, yc: f32, radius: f32, a: Vec
     let initial_normal = GpPointR { x: a.x as f64, y: a.y as f64 };
 
 
-    struct Target<'a> { last_point: GpPointR, last_normal: GpPointR, xc: f32, yc: f32, path: &'a mut PathBuilder }
-    impl<'a> CFlatteningSink for Target<'a> {
+    struct Target<'a, 'b> { last_point: GpPointR, last_normal: GpPointR, xc: f32, yc: f32, path: &'a mut PathBuilder<'b> }
+    impl<'a, 'b> CFlatteningSink for Target<'a, 'b> {
         fn AcceptPointAndTangent(&mut self,
             pt: &GpPointR,
                 // The point
@@ -585,8 +612,8 @@ fn join_line(
     }
 }
 
-pub struct Stroker {
-    stroked_path: PathBuilder,
+pub struct Stroker<'z> {
+    stroked_path: PathBuilder<'z>,
     cur_pt: Option<Point>,
     last_normal: Vector,
     half_width: f32,
@@ -595,7 +622,7 @@ pub struct Stroker {
     closed_subpath: bool
 }
 
-impl Stroker {
+impl<'z> Stroker<'z> {
     pub fn new(style: &StrokeStyle) -> Self {
         let mut style = style.clone();
         let mut coverage = 1.;
@@ -612,6 +639,10 @@ impl Stroker {
             style,
             closed_subpath: false,
         }
+    }
+
+    pub fn set_output_buffer(&mut self, output_buffer: &'z mut [Vertex]) {
+        self.stroked_path.set_output_buffer(output_buffer);
     }
 
     pub fn line_to_capped(&mut self, pt: Point) {
@@ -709,8 +740,8 @@ impl Stroker {
     }
 
     pub fn curve_to_internal(&mut self, cx1: Point, cx2: Point, pt: Point, end: bool) {
-        struct Target<'a> { stroker: &'a mut Stroker, end: bool }
-        impl<'a> CFlatteningSink for Target<'a> {
+        struct Target<'a, 'b> { stroker: &'a mut Stroker<'b>, end: bool }
+        impl<'a, 'b> CFlatteningSink for Target<'a, 'b> {
             fn AcceptPointAndTangent(&mut self, _: &GpPointR, _: &GpPointR, _: bool ) -> HRESULT {
                 panic!()
             }
@@ -794,16 +825,21 @@ impl Stroker {
         self.start_point = None;
     }
 
-    pub fn finish(&mut self) -> Vec<Vertex> {
+    pub fn get_stroked_path(&mut self) -> PathBuilder<'z> {
         let mut stroked_path = std::mem::replace(&mut self.stroked_path, PathBuilder::new(1.));
 
         if let (Some(cur_pt), Some((point, normal))) = (self.cur_pt, self.start_point) {
             // cap end
             cap_line(&mut stroked_path, &self.style, cur_pt, self.last_normal);
             // cap beginning
-            cap_line( &mut stroked_path, &self.style, point, flip(normal));
+            cap_line(&mut stroked_path, &self.style, point, flip(normal));
         }
-        stroked_path.finish()
+
+        stroked_path
+    }
+
+    pub fn finish(&mut self) -> Vec<Vertex> {
+        self.get_stroked_path().finish()
     }
 }
 
