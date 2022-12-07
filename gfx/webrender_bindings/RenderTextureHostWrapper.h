@@ -43,6 +43,7 @@ class RenderTextureHostWrapper final : public RenderTextureHostSWGL {
   RenderDXGITextureHost* AsRenderDXGITextureHost() override;
   RenderDXGIYCbCrTextureHost* AsRenderDXGIYCbCrTextureHost() override;
   RenderDcompSurfaceTextureHost* AsRenderDcompSurfaceTextureHost() override;
+  RenderAndroidSurfaceTextureHost* AsRenderAndroidSurfaceTextureHost() override;
   RenderTextureHostSWGL* AsRenderTextureHostSWGL() override;
   bool IsWrappingAsyncRemoteTexture() override;
 

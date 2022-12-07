@@ -74,6 +74,8 @@ class RemoteTextureHostWrapper : public TextureHost {
 
   TextureHostType GetTextureHostType() override;
 
+  bool IsWrappingSurfaceTextureHost() override;
+
   bool CheckIsReadyForRendering();
 
   void ApplyTextureFlagsToRemoteTexture();

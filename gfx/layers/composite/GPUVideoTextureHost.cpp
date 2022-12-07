@@ -206,6 +206,13 @@ bool GPUVideoTextureHost::IsWrappingBufferTextureHost() {
   return false;
 }
 
+bool GPUVideoTextureHost::IsWrappingSurfaceTextureHost() {
+  if (EnsureWrappedTextureHost()) {
+    return EnsureWrappedTextureHost()->IsWrappingSurfaceTextureHost();
+  }
+  return false;
+}
+
 TextureHostType GPUVideoTextureHost::GetTextureHostType() {
   if (!mWrappedTextureHost) {
     return TextureHostType::Unknown;

@@ -408,6 +408,8 @@ class SurfaceTextureHost : public TextureHost {
 
   SurfaceTextureHost* AsSurfaceTextureHost() override { return this; }
 
+  bool IsWrappingSurfaceTextureHost() override { return true; }
+
   void CreateRenderTexture(
       const wr::ExternalImageId& aExternalImageId) override;
 
