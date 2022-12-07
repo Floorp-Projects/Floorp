@@ -3729,6 +3729,13 @@ ContainSizeAxes nsStyleDisplay::GetContainSizeAxes(
     return ContainSizeAxes(false, false);
   }
 
+  // Internal SVG elements do not use the standard CSS box model, and wouldn't
+  // be affected by size containment. By disabling it we prevent them from
+  // becoming query containers for size features.
+  if (aFrame.HasAnyStateBits(NS_FRAME_SVG_LAYOUT)) {
+    return ContainSizeAxes(false, false);
+  }
+
   // https://drafts.csswg.org/css-contain-2/#content-visibility
   // If this content skips its content via content-visibility, it always has
   // size containment.
