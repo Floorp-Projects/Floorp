@@ -1814,7 +1814,7 @@ CounterStyle* CounterStyleManager::ResolveCounterStyle(nsAtom* aName) {
 
 /* static */
 CounterStyle* CounterStyleManager::GetBuiltinStyle(ListStyle aStyle) {
-  MOZ_ASSERT(0 <= size_t(aStyle) && size_t(aStyle) < sizeof(gBuiltinStyleTable),
+  MOZ_ASSERT(size_t(aStyle) < ArrayLength(gBuiltinStyleTable),
              "Require a valid builtin style constant");
   MOZ_ASSERT(!gBuiltinStyleTable[size_t(aStyle)].IsDependentStyle(),
              "Cannot get dependent builtin style");
