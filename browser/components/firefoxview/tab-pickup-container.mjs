@@ -19,6 +19,7 @@ class TabPickupContainer extends HTMLDetailsElement {
     this.boundObserve = (...args) => this.observe(...args);
     this._currentSetupStateIndex = -1;
     this.errorState = null;
+    this.tabListAdded = null;
   }
   get setupContainerElem() {
     return this.querySelector(".sync-setup-container");
@@ -26,6 +27,10 @@ class TabPickupContainer extends HTMLDetailsElement {
 
   get tabsContainerElem() {
     return this.querySelector(".synced-tabs-container");
+  }
+
+  get tabPickupListElem() {
+    return this.querySelector(".synced-tabs-container tab-pickup-list");
   }
 
   getWindow() {
@@ -38,7 +43,27 @@ class TabPickupContainer extends HTMLDetailsElement {
     this.addEventListener("toggle", this);
     this.addEventListener("visibilitychange", this);
     Services.obs.addObserver(this.boundObserve, TOPIC_SETUPSTATE_CHANGED);
+
+    // we wait until the list shows up before trying to populate it,
+    // when its safe to assume the custom-element's methods will be available
+    this.tabListAdded = this.promiseChildAdded();
     this.update();
+  }
+
+  promiseChildAdded() {
+    return new Promise(resolve => {
+      if (typeof this.tabPickupListElem?.getSyncedTabData == "function") {
+        resolve();
+        return;
+      }
+      this.addEventListener(
+        "list-ready",
+        event => {
+          resolve();
+        },
+        { once: true }
+      );
+    });
   }
 
   cleanup() {
@@ -120,35 +145,6 @@ class TabPickupContainer extends HTMLDetailsElement {
     return this.querySelector(".confirmation-message-box");
   }
 
-  insertTemplatedElement(templateId, elementId, replaceNode) {
-    const template = document.getElementById(templateId);
-    const templateContent = template.content;
-    const cloned = templateContent.cloneNode(true);
-    if (elementId) {
-      // populate id-prefixed attributes on elements that need them
-      for (let elem of cloned.querySelectorAll("[data-prefix]")) {
-        let [name, value] = elem.dataset.prefix
-          .split(":")
-          .map(str => str.trim());
-        elem.setAttribute(name, elementId + value);
-        delete elem.dataset.prefix;
-      }
-      for (let elem of cloned.querySelectorAll("a[data-support-url]")) {
-        elem.href =
-          Services.urlFormatter.formatURLPref("app.support.baseURL") +
-          elem.dataset.supportUrl;
-      }
-    }
-    if (replaceNode) {
-      if (typeof replaceNode == "string") {
-        replaceNode = document.getElementById(replaceNode);
-      }
-      this.replaceChild(cloned, replaceNode);
-    } else {
-      this.appendChild(cloned);
-    }
-  }
-
   update({
     stateIndex = TabsSetupFlowManager.uiStateIndex,
     showMobilePromo = TabsSetupFlowManager.shouldShowMobilePromo,
@@ -169,6 +165,12 @@ class TabPickupContainer extends HTMLDetailsElement {
     if (showMobilePairSuccess !== this._showMobilePairSuccess) {
       this._showMobilePairSuccess = showMobilePairSuccess;
       needsRender = true;
+    }
+    if (stateIndex == 4 && this._currentSetupStateIndex !== stateIndex) {
+      // trigger an initial request for the synced tabs list
+      this.tabListAdded.then(() => {
+        this.tabPickupListElem.getSyncedTabData();
+      });
     }
     if (stateIndex !== this._currentSetupStateIndex || stateIndex == 0) {
       this._currentSetupStateIndex = stateIndex;
@@ -289,17 +291,7 @@ class TabPickupContainer extends HTMLDetailsElement {
 
     // show/hide either the setup or tab list containers, creating each as necessary
     if (stateIndex < 4) {
-      if (!setupElem) {
-        this.insertTemplatedElement(
-          "sync-setup-template",
-          "tabpickup-steps",
-          "sync-setup-placeholder"
-        );
-        setupElem = this.setupContainerElem;
-      }
-      if (tabsElem) {
-        tabsElem.hidden = true;
-      }
+      tabsElem.hidden = true;
       setupElem.hidden = false;
       setupElem.selectedViewName = `sync-setup-view${stateIndex}`;
 
@@ -309,17 +301,7 @@ class TabPickupContainer extends HTMLDetailsElement {
       return;
     }
 
-    if (!tabsElem) {
-      this.insertTemplatedElement(
-        "synced-tabs-template",
-        "tabpickup-tabs-container",
-        "synced-tabs-placeholder"
-      );
-      tabsElem = this.tabsContainerElem;
-    }
-    if (setupElem) {
-      setupElem.hidden = true;
-    }
+    setupElem.hidden = true;
     tabsElem.hidden = false;
     tabsElem.classList.toggle("loading", isLoading);
   }

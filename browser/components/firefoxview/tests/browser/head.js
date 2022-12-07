@@ -332,10 +332,7 @@ async function setupListState(browser) {
   const tabsContainer = browser.contentWindow.document.querySelector(
     "#tabpickup-tabs-container"
   );
-  // fake a sync completion, as UIState.UI_UPDATE with a signed-in status will have
-  // triggered a sync when we have 0 tabs
-  Services.obs.notifyObservers(null, "weave:service:sync:finish");
-
+  await tabsContainer.tabListAdded;
   await BrowserTestUtils.waitForMutationCondition(
     tabsContainer,
     { attributeFilter: ["class"], attributes: true },
@@ -343,6 +340,7 @@ async function setupListState(browser) {
       return !tabsContainer.classList.contains("loading");
     }
   );
+  info("tabsContainer isn't loading anymore, returning");
 }
 
 function checkMobilePromo(browser, expected = {}) {
