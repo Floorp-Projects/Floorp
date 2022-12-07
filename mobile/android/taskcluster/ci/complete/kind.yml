@@ -36,7 +36,7 @@ task-defaults:
                 subject: "[Android-Components] Failed to update geckoview nightly PR#{pull_request_number}"
                 message: "Please check {repository}/pull/{pull_request_number}"
                 emails:
-                    - android-components-team@mozilla.com
+                    - fenix-eng-notifications@mozilla.com
                     - geckoview-core@mozilla.com
             default: {}
 
