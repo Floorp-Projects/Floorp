@@ -36,47 +36,44 @@ switch (BROWSER_CHROME_SYSTEM_COLOR){
 )
 
 // UserAgent
-
-const BROWSER_SETED_USERAGENT = Services.prefs.getIntPref("floorp.browser.UserAgent");
- switch (BROWSER_SETED_USERAGENT){
-    case 0:
-      Services.prefs.clearUserPref("general.useragent.override");
-     break;
-    case 1:
-      Services.prefs.setStringPref("general.useragent.override", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
-     break;
-    case 2:
-      Services.prefs.setStringPref("general.useragent.override", "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_0_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
-     break;
-    case 3:
-      Services.prefs.setStringPref("general.useragent.override", "Mozilla/5.0 (iPhone; CPU iPhone OS 16_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/108.0.5359.52 Mobile/15E148 Safari/604.1");
-     break;
-    case 4:
-      Services.prefs.setStringPref("general.useragent.override", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
-     break;
-}
-
-Services.prefs.addObserver("floorp.browser.UserAgent", function(){
-  const BROWSER_SETED_USERAGENT = Services.prefs.getIntPref("floorp.browser.UserAgent");
- switch (BROWSER_SETED_USERAGENT){
-    case 0:
-      Services.prefs.clearUserPref("general.useragent.override");
-     break;
-    case 1:
-      Services.prefs.setStringPref("general.useragent.override", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
-     break;
-    case 2:
-      Services.prefs.setStringPref("general.useragent.override", "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_0_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
-     break;
-    case 3:
-      Services.prefs.setStringPref("general.useragent.override", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
-     break;
-    case 4:
-      Services.prefs.setStringPref("general.useragent.override", "Mozilla/5.0 (iPhone; CPU iPhone OS 16_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/108.0.5359.52 Mobile/15E148 Safari/604.1");
-     break;
-    default:
-      Services.prefs.clearUserPref("general.useragent.override");
-     break;
+/*
+0: Default
+1: Chrome (Windows)
+2: Chrome (macOS)
+3: Chrome (Linux)
+4: Chrome (iOS)
+*/
+const BROWSER_SETED_USERAGENT_PREF = "floorp.browser.UserAgent";
+const GENERAL_USERAGENT_OVERRIDE_PREF = "general.useragent.override";
+{
+  let setUserAgent = function(BROWSER_SETED_USERAGENT) {
+    switch (BROWSER_SETED_USERAGENT){
+      case 0:
+        Services.prefs.clearUserPref(GENERAL_USERAGENT_OVERRIDE_PREF);
+        break;
+      case 1:
+        Services.prefs.setStringPref(GENERAL_USERAGENT_OVERRIDE_PREF, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
+        break;
+      case 2:
+        Services.prefs.setStringPref(GENERAL_USERAGENT_OVERRIDE_PREF, "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_0_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
+        break;
+      case 3:
+        Services.prefs.setStringPref(GENERAL_USERAGENT_OVERRIDE_PREF, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
+        break;
+      case 4:
+        Services.prefs.setStringPref(GENERAL_USERAGENT_OVERRIDE_PREF, "Mozilla/5.0 (iPhone; CPU iPhone OS 16_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/108.0.5359.52 Mobile/15E148 Safari/604.1");
+        break;
+      default:
+        Services.prefs.clearUserPref(GENERAL_USERAGENT_OVERRIDE_PREF);
+        break;
+    }
   }
- }   
-)
+
+  let BROWSER_SETED_USERAGENT = Services.prefs.getIntPref(BROWSER_SETED_USERAGENT_PREF);
+  setUserAgent(BROWSER_SETED_USERAGENT);
+
+  Services.prefs.addObserver(BROWSER_SETED_USERAGENT_PREF, function() {
+    let BROWSER_SETED_USERAGENT = Services.prefs.getIntPref(BROWSER_SETED_USERAGENT_PREF);
+    setUserAgent(BROWSER_SETED_USERAGENT);
+  })
+}
