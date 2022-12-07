@@ -190,7 +190,7 @@ jobs:
         parent: debian11-base
     partner-repack:
         symbol: I(PR)
-        parent: debian10-base
+        parent: debian11-base
         definition: partner-repack
     updatebot:
         symbol: I(3rdp)
