@@ -272,6 +272,11 @@ clang_checkers:
     reliability: high
   - name: readability-simplify-boolean-expr
     reliability: high
+    config:
+      - key: SimplifyDeMorgan
+        # Don't want to enable DeMorgan expressions because of MOZ_ASSERT()
+        # See Bug 1804160
+        value: 0
   - name: readability-uniqueptr-delete-release
     reliability: high
   # We don't publish the google checkers since we are interested in only having
