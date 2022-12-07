@@ -6,6 +6,7 @@ package org.mozilla.focus.components
 
 import android.content.Context
 import mozilla.components.browser.engine.gecko.GeckoEngine
+import mozilla.components.browser.engine.gecko.cookiebanners.GeckoCookieBannersStorage
 import mozilla.components.browser.engine.gecko.fetch.GeckoViewFetchClient
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
@@ -38,6 +39,12 @@ object EngineProvider {
         val runtime = getOrCreateRuntime(context)
 
         return GeckoEngine(context, defaultSettings, runtime)
+    }
+
+    fun createCookieBannerStorage(context: Context): GeckoCookieBannersStorage {
+        val runtime = getOrCreateRuntime(context)
+
+        return GeckoCookieBannersStorage(runtime)
     }
 
     fun createClient(context: Context): Client {

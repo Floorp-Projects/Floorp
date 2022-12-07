@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/connection_details_view"
+    android:layout_width="match_parent"
+    android:padding="8dp"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/details_back"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:contentDescription="@string/go_back"
+        android:padding="4dp"
+        android:scaleType="center"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/mozac_ic_back" />
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/title"
+        style="@style/PanelHeading"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="25dp"
+        android:clickable="false"
+        android:focusable="false"
+        android:paddingTop="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/details_back"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Title" />
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/details"
+        style="@style/PanelTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="25dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/details_back"
+        app:layout_constraintTop_toBottomOf="@id/title"
+        tools:text="Details" />
+
+    <org.mozilla.focus.cookiebannerexception.CookieBannerExceptionDetailsSwitch
+        android:id="@+id/cookie_banner_exception_details_switch"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="-19dp"
+        android:layout_marginTop="16dp"
+        android:minHeight="48dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/details_back"
+        app:layout_constraintTop_toBottomOf="@id/details" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

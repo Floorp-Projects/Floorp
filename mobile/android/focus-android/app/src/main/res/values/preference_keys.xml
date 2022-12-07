@@ -108,6 +108,7 @@
     <string name="new_onboarding_enabled" translatable="false"><xliff:g id="preference_key">new_onboarding_enabled</xliff:g></string>
 
     <!-- Cookie Banner Reduction Settings-->
+    <string name="pref_key_cookie_banner_enabled" translatable="false"><xliff:g id="preference_key">pref_key_cookie_banner_enabled</xliff:g></string>
     <string name="pref_key_cookie_banner_settings" translatable="false">pref_key_cookie_banner_settings</string>
     <string name="pref_key_cookie_banner_reject_all" translatable="false">pref_key_cookie_banner_reject_all</string>
     <string name="pref_key_cookie_banner_reject_or_accept" translatable="false">pref_key_cookie_banner_reject_or_accept</string>

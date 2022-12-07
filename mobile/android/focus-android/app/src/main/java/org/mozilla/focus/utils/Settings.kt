@@ -10,6 +10,7 @@ import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.view.accessibility.AccessibilityManager
+import androidx.annotation.VisibleForTesting
 import androidx.preference.PreferenceManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
@@ -435,6 +436,22 @@ class Settings(
             Engine.HttpsOnlyMode.DISABLED
         }
     }
+
+    /**
+     * This is needed for GUI Testing. If the value is not set in the sharePref
+     * the default value will be the one from Nimbus.
+     */
+    @VisibleForTesting
+    var isCookieBannerEnable: Boolean
+        get() = preferences.getBoolean(
+            getPreferenceKey(R.string.pref_key_cookie_banner_enabled),
+            FocusNimbus.features.cookieBanner.value(context).isCookieHandlingEnabled,
+        )
+        set(value) {
+            preferences.edit()
+                .putBoolean(getPreferenceKey(R.string.pref_key_cookie_banner_enabled), value)
+                .apply()
+        }
 
     fun saveCurrentCookieBannerOptionInSharePref(
         cookieBannerOption: CookieBannerOption,

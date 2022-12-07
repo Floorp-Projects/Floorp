@@ -8,21 +8,31 @@ import android.view.View
 import android.widget.FrameLayout
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.view.isVisible
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ViewTreeLifecycleOwner
+import androidx.savedstate.SavedStateRegistryOwner
+import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import mozilla.components.browser.icons.IconRequest
+import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeWithIntrinsicBounds
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.focus.R
+import org.mozilla.focus.cookiebannerexception.CookieBannerExceptionItem
+import org.mozilla.focus.cookiebannerexception.CookieBannerExceptionStore
 import org.mozilla.focus.databinding.DialogTrackingProtectionSheetBinding
 import org.mozilla.focus.engine.EngineSharedPreferencesListener.TrackerChanged
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.installedDate
 import org.mozilla.focus.ext.settings
+import org.mozilla.focus.ui.theme.FocusTheme
 
 @SuppressWarnings("LongParameterList")
 class TrackingProtectionPanel(
     context: Context,
+    private val lifecycleOwner: LifecycleOwner,
+    private val cookieBannerExceptionStore: CookieBannerExceptionStore,
     private val tabUrl: String,
     private val blockedTrackersCount: Int,
     private val isTrackingProtectionOn: Boolean,
@@ -30,21 +40,32 @@ class TrackingProtectionPanel(
     private val toggleTrackingProtection: (Boolean) -> Unit,
     private val updateTrackingProtectionPolicy: (String?, Boolean) -> Unit,
     private val showConnectionInfo: () -> Unit,
+    private val showCookieBannerExceptionsDetailsPanel: () -> Unit,
 ) : BottomSheetDialog(context) {
 
     private var binding: DialogTrackingProtectionSheetBinding =
         DialogTrackingProtectionSheetBinding.inflate(layoutInflater, null, false)
 
     init {
+        initWindow()
         setContentView(binding.root)
         expand()
-
         updateTitle()
         updateConnectionState()
         updateTrackingProtection()
         updateTrackersBlocked()
         updateTrackersState()
+        updateCookieBannerException()
         setListeners()
+    }
+
+    private fun initWindow() {
+        this.window?.decorView?.let {
+            ViewTreeLifecycleOwner.set(it, lifecycleOwner)
+            it.setViewTreeSavedStateRegistryOwner(
+                lifecycleOwner as SavedStateRegistryOwner,
+            )
+        }
     }
 
     private fun expand() {
@@ -59,6 +80,33 @@ class TrackingProtectionPanel(
             binding.siteFavicon,
             IconRequest(tabUrl, isPrivate = true),
         )
+    }
+
+    private fun updateCookieBannerException() {
+        binding.cookieBannerException.apply {
+            setContent {
+                FocusTheme {
+                    val hasException = cookieBannerExceptionStore.observeAsComposableState { state ->
+                        state.hasException
+                    }.value
+                    val shouldShowCookieBannerItem = cookieBannerExceptionStore.observeAsComposableState { state ->
+                        state.shouldShowCookieBannerItem
+                    }.value
+                    if (shouldShowCookieBannerItem == true) {
+                        binding.cookieBannerException.visibility = View.VISIBLE
+                    } else {
+                        binding.cookieBannerException.visibility = View.GONE
+                    }
+                    if (hasException != null) {
+                        CookieBannerExceptionItem(
+                            hasException = hasException,
+                            preferenceOnClickListener = ::showCookieBannerExceptionsDetailsPanel.invoke(),
+                        )
+                    }
+                }
+            }
+            isTransitionGroup = true
+        }
     }
 
     private fun updateConnectionState() {

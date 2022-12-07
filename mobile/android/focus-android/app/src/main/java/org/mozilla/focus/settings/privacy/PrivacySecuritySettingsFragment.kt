@@ -71,7 +71,7 @@ class PrivacySecuritySettingsFragment :
         javaScriptPreference?.onPreferenceChangeListener = preferencesListener
         webFontsPreference?.onPreferenceChangeListener = preferencesListener
 
-        cookieBannerPreference?.isVisible = FocusNimbus.features.cookieBanner.value(context).isCookieHandlingEnabled
+        cookieBannerPreference?.isVisible = requireContext().settings.isCookieBannerEnable
         if (requireContext().settings.getCurrentCookieBannerOptionFromSharePref() ==
             CookieBannerOption.CookieBannerDisabled()
         ) {

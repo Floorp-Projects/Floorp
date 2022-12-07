@@ -24,12 +24,14 @@ import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.net.toUri
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.CustomTabConfig
@@ -58,6 +60,7 @@ import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.exitImmersiveMode
 import mozilla.components.support.utils.Browsers
 import org.mozilla.focus.GleanMetrics.Browser
+import org.mozilla.focus.GleanMetrics.CookieBanner
 import org.mozilla.focus.GleanMetrics.Downloads
 import org.mozilla.focus.GleanMetrics.OpenWith
 import org.mozilla.focus.GleanMetrics.TabCount
@@ -70,6 +73,11 @@ import org.mozilla.focus.browser.integration.BrowserToolbarIntegration
 import org.mozilla.focus.browser.integration.FindInPageIntegration
 import org.mozilla.focus.browser.integration.FullScreenIntegration
 import org.mozilla.focus.contextmenu.ContextMenuCandidates
+import org.mozilla.focus.cookiebannerexception.CookieBannerExceptionDetailsPanel
+import org.mozilla.focus.cookiebannerexception.CookieBannerExceptionMiddleware
+import org.mozilla.focus.cookiebannerexception.CookieBannerExceptionState
+import org.mozilla.focus.cookiebannerexception.CookieBannerExceptionStore
+import org.mozilla.focus.cookiebannerexception.DefaultCookieBannerExceptionInteractor
 import org.mozilla.focus.databinding.FragmentBrowserBinding
 import org.mozilla.focus.downloads.DownloadService
 import org.mozilla.focus.engine.EngineSharedPreferencesListener
@@ -130,6 +138,8 @@ class BrowserFragment :
 
     private var trackingProtectionPanel: TrackingProtectionPanel? = null
     private lateinit var requestPermissionLauncher: ActivityResultLauncher<Array<String>>
+    private lateinit var cookieBannerExceptionStore: CookieBannerExceptionStore
+    private lateinit var defaultCookieBannerInteractor: DefaultCookieBannerExceptionInteractor
     private var tabsPopup: TabsPopup? = null
 
     /**
@@ -168,6 +178,20 @@ class BrowserFragment :
                     grandResults.toIntArray(),
                 )
             }
+        cookieBannerExceptionStore = CookieBannerExceptionStore(
+            CookieBannerExceptionState(),
+            listOf(
+                CookieBannerExceptionMiddleware(
+                    ioScope = this.lifecycleScope + Dispatchers.IO,
+                    cookieBannersStorage = requireContext().components.cookieBannerStorage,
+                    appContext = requireContext(),
+                    uri = tab.content.url,
+                ),
+            ),
+        )
+        defaultCookieBannerInteractor = DefaultCookieBannerExceptionInteractor(
+            store = cookieBannerExceptionStore,
+        )
     }
 
     @Suppress("LongMethod", "ComplexMethod")
@@ -857,6 +881,8 @@ class BrowserFragment :
     fun showTrackingProtectionPanel() {
         trackingProtectionPanel = TrackingProtectionPanel(
             context = requireContext(),
+            lifecycleOwner = this,
+            cookieBannerExceptionStore = cookieBannerExceptionStore,
             tabUrl = tab.content.url,
             isTrackingProtectionOn = tab.trackingProtection.ignoredOnTrackingProtection.not(),
             isConnectionSecure = tab.content.securityInfo.secure,
@@ -873,11 +899,25 @@ class BrowserFragment :
                 reloadCurrentTab()
             },
             showConnectionInfo = ::showConnectionInfo,
+            showCookieBannerExceptionsDetailsPanel = ::showCookieBannerExceptionDetailsPanel,
         ).also { currentEtp -> currentEtp.show() }
     }
 
     private fun reloadCurrentTab() {
         requireComponents.sessionUseCases.reload(tab.id)
+    }
+
+    private fun showCookieBannerExceptionDetailsPanel() {
+        val cookieBannerExceptionDetailsPanel = CookieBannerExceptionDetailsPanel(
+            context = requireContext(),
+            cookieBannerExceptionStore = cookieBannerExceptionStore,
+            tabUrl = tab.content.url,
+            goBack = { trackingProtectionPanel?.show() },
+            defaultCookieBannerInteractor = defaultCookieBannerInteractor,
+        )
+        trackingProtectionPanel?.hide()
+        cookieBannerExceptionDetailsPanel.show()
+        CookieBanner.visitedPanel.record(NoExtras())
     }
 
     private fun showConnectionInfo() {

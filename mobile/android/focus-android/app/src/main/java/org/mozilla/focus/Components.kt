@@ -10,6 +10,7 @@ import android.content.Intent
 import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import mozilla.components.browser.engine.gecko.cookiebanners.GeckoCookieBannersStorage
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.store.BrowserStore
@@ -45,6 +46,7 @@ import mozilla.components.lib.crash.sentry.SentryService
 import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.lib.crash.service.GleanCrashReporterService
 import mozilla.components.lib.crash.service.MozillaSocorroService
+import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.service.location.LocationService
 import mozilla.components.service.location.MozillaLocationService
 import mozilla.components.service.nimbus.NimbusApi
@@ -181,6 +183,10 @@ class Components(
     val sessionUseCases: SessionUseCases by lazy { SessionUseCases(store) }
 
     val tabsUseCases: TabsUseCases by lazy { TabsUseCases(store) }
+
+    val cookieBannerStorage: GeckoCookieBannersStorage by lazy { EngineProvider.createCookieBannerStorage(context) }
+
+    val publicSuffixList by lazy { PublicSuffixList(context) }
 
     val searchUseCases: SearchUseCases by lazy {
         SearchUseCases(store, tabsUseCases, sessionUseCases)
