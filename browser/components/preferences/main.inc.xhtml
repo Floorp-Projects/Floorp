@@ -84,6 +84,10 @@
     <checkbox id="showTabsInTaskbar" data-l10n-id="show-tabs-in-taskbar"
               preference="browser.taskbar.previews.enable"/>
 #endif
+    <hbox>
+      <description flex="1" data-l10n-id="tab-width"/>
+      <html:input type="number" min="50" value="0" id="tabWidthValue"/>
+    </hbox>
     <checkbox  data-l10n-id="enable-multitab" preference="floorp.enable.multitab"
                id="multitabar" class="needeboot"/>
     <hbox>

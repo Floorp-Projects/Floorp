@@ -97,6 +97,20 @@ if(document.getElementById("translateoption") != null){
    })
 
 
+   document.getElementById("tabWidthValue").value = 
+          Services.prefs.getIntPref("browser.tabs.tabMinWidth", undefined);
+   document.getElementById("tabWidthValue").addEventListener('change', function() {
+    Services.prefs.setIntPref(
+      "browser.tabs.tabMinWidth",
+      Number(document.getElementById("tabWidthValue").value)
+    );
+   }, false);
+   Services.prefs.addObserver("browser.tabs.tabMinWidth", function(){
+    document.getElementById("tabWidthValue").value = 
+          Services.prefs.getIntPref("browser.tabs.tabMinWidth", undefined);
+   })
+
+
     document.getElementById("leptonButton").addEventListener("click", function(){
       window.location.href = "about:preferences#lepton";
     }, false);

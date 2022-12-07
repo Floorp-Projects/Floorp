@@ -24,6 +24,7 @@ floorp-preference = Experimet Preferences
 browser-design-settings = Tab Bar Settings
 
 auto-reboot = If you change any of the settings below, your browser will be restarted to apply the changes. Please save the data you are working with before making any changes.
+tab-width = Minimum width of tabs
 enable-multitab = 
  .label = Enable multi-row tabs
 multirow-tabs-value = Number of Rows When Multi-row Tabs Are Enabled 
