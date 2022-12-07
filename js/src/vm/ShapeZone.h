@@ -92,7 +92,8 @@ struct InitialShapeHasher {
     return mozilla::AddToHash(hash, lookup.clasp, lookup.realm, lookup.nfixed,
                               lookup.objectFlags.toRaw());
   }
-  static bool match(const WeakHeapPtr<Shape*>& key, const Lookup& lookup) {
+  static bool match(const WeakHeapPtr<SharedShape*>& key,
+                    const Lookup& lookup) {
     const Shape* shape = key.unbarrieredGet();
     return lookup.clasp == shape->getObjectClass() &&
            lookup.realm == shape->realm() && lookup.proto == shape->proto() &&
@@ -100,8 +101,9 @@ struct InitialShapeHasher {
            lookup.objectFlags == shape->objectFlags();
   }
 };
-using InitialShapeSet = JS::WeakCache<
-    JS::GCHashSet<WeakHeapPtr<Shape*>, InitialShapeHasher, SystemAllocPolicy>>;
+using InitialShapeSet =
+    JS::WeakCache<JS::GCHashSet<WeakHeapPtr<SharedShape*>, InitialShapeHasher,
+                                SystemAllocPolicy>>;
 
 // Hash policy for the per-zone propMapShapes set storing shared shapes with
 // shared property maps.
@@ -126,7 +128,8 @@ struct PropMapShapeHasher {
     return mozilla::HashGeneric(lookup.base, lookup.map, lookup.mapLength,
                                 lookup.nfixed, lookup.objectFlags.toRaw());
   }
-  static bool match(const WeakHeapPtr<Shape*>& key, const Lookup& lookup) {
+  static bool match(const WeakHeapPtr<SharedShape*>& key,
+                    const Lookup& lookup) {
     const Shape* shape = key.unbarrieredGet();
     return lookup.base == shape->base() &&
            lookup.nfixed == shape->numFixedSlots() &&
@@ -134,12 +137,14 @@ struct PropMapShapeHasher {
            lookup.mapLength == shape->propMapLength() &&
            lookup.objectFlags == shape->objectFlags();
   }
-  static void rekey(WeakHeapPtr<Shape*>& k, const WeakHeapPtr<Shape*>& newKey) {
+  static void rekey(WeakHeapPtr<SharedShape*>& k,
+                    const WeakHeapPtr<SharedShape*>& newKey) {
     k = newKey;
   }
 };
-using PropMapShapeSet = JS::WeakCache<
-    JS::GCHashSet<WeakHeapPtr<Shape*>, PropMapShapeHasher, SystemAllocPolicy>>;
+using PropMapShapeSet =
+    JS::WeakCache<JS::GCHashSet<WeakHeapPtr<SharedShape*>, PropMapShapeHasher,
+                                SystemAllocPolicy>>;
 
 struct ShapeZone {
   // Set of all base shapes in the Zone.

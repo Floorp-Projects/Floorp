@@ -86,7 +86,8 @@ class ErrorObject : public NativeObject {
    * *not* include .message, which must be added separately if needed; see
    * ErrorObject::init.)
    */
-  static Shape* assignInitialShape(JSContext* cx, Handle<ErrorObject*> obj);
+  static SharedShape* assignInitialShape(JSContext* cx,
+                                         Handle<ErrorObject*> obj);
 
   JSExnType type() const {
     MOZ_ASSERT(isErrorClass(getClass()));

@@ -245,8 +245,8 @@ RegExpShared* RegExpObject::createShared(JSContext* cx,
   return shared;
 }
 
-Shape* RegExpObject::assignInitialShape(JSContext* cx,
-                                        Handle<RegExpObject*> self) {
+SharedShape* RegExpObject::assignInitialShape(JSContext* cx,
+                                              Handle<RegExpObject*> self) {
   MOZ_ASSERT(self->empty());
 
   static_assert(LAST_INDEX_SLOT == 0);
@@ -258,7 +258,7 @@ Shape* RegExpObject::assignInitialShape(JSContext* cx,
     return nullptr;
   }
 
-  return self->shape();
+  return self->sharedShape();
 }
 
 void RegExpObject::initIgnoringLastIndex(JSAtom* source, RegExpFlags flags) {

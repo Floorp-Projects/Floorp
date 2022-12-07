@@ -3941,8 +3941,8 @@ static const JSFunctionSpec string_static_methods[] = {
     JS_SELF_HOSTED_FN("raw", "String_static_raw", 1, 0), JS_FS_END};
 
 /* static */
-Shape* StringObject::assignInitialShape(JSContext* cx,
-                                        Handle<StringObject*> obj) {
+SharedShape* StringObject::assignInitialShape(JSContext* cx,
+                                              Handle<StringObject*> obj) {
   MOZ_ASSERT(obj->empty());
 
   if (!NativeObject::addPropertyInReservedSlot(cx, obj, cx->names().length,
@@ -3950,7 +3950,7 @@ Shape* StringObject::assignInitialShape(JSContext* cx,
     return nullptr;
   }
 
-  return obj->shape();
+  return obj->sharedShape();
 }
 
 JSObject* StringObject::createPrototype(JSContext* cx, JSProtoKey key) {
