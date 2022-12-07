@@ -4,25 +4,24 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import functools
+import glob
+import logging
 import os
 import re
-import sys
-import glob
 import shutil
-import logging
+import sys
 import tarfile
 import tempfile
-import requests
-import functools
 
 import mozfile
 import mozpack.path as mozpath
-
+import requests
 from mozbuild.base import MozbuildObject
 from mozbuild.vendor.rewrite_mozbuild import (
+    MozBuildRewriteException,
     add_file_to_moz_build_file,
     remove_file_from_moz_build_file,
-    MozBuildRewriteException,
 )
 
 DEFAULT_EXCLUDE_FILES = [".git*", ".git*/**"]

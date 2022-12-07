@@ -5,7 +5,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import requests
-
 from mozbuild.vendor.host_base import BaseHost
 
 
