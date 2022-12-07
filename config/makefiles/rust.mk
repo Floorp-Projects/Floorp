@@ -301,7 +301,7 @@ endif
 # don't use the prefix when make -n is used, so that cargo doesn't run
 # in that case)
 define RUN_CARGO
-$(if $(findstring n,$(filter-out --%, $(MAKEFLAGS))),,+)$(CARGO) $(1) $(cargo_build_flags)
+$(if $(findstring n,$(filter-out --%, $(MAKEFLAGS))),,+)$(CARGO) $(1) $(cargo_build_flags) $(cargo_extra_cli_flags)
 endef
 
 # This function is intended to be called by:
@@ -319,21 +319,24 @@ define CARGO_CHECK
 $(call RUN_CARGO,check)
 endef
 
-ifdef CARGO_UDEPS_EXPECT_ERR
+ifdef CARGO_NO_ERR
 define CARGO_UDEPS
 -$(call RUN_CARGO,udeps)
+endef
+define CARGO_AUDIT
+-$(call RUN_CARGO,audit)
 endef
 else
 define CARGO_UDEPS
 $(call RUN_CARGO,udeps)
 endef
+define CARGO_AUDIT
+$(call RUN_CARGO,audit)
+endef
 endif
 
 define CARGO_CLIPPY
 $(call RUN_CARGO,clippy)
-endef
-define CARGO_AUDIT
-$(call RUN_CARGO,audit)
 endef
 
 cargo_host_linker_env_var := CARGO_TARGET_$(call varize,$(RUST_HOST_TARGET))_LINKER

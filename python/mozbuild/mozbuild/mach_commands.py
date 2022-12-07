@@ -101,120 +101,17 @@ def watch(command_context, verbose=False):
         sys.exit(3)
 
 
-@Command("cargo", category="build", description="Invoke cargo in useful ways.")
-def cargo(command_context):
-    """Invoke cargo in useful ways."""
-    command_context._sub_mach(["help", "cargo"])
-    return 1
-
-
-@SubCommand(
+@Command(
     "cargo",
-    "check",
-    description="Run `cargo check` on a given crate.  Defaults to gkrust.",
+    category="build",
+    description="Run `cargo <cargo_command>` on a given crate.  Defaults to gkrust.",
     metrics_path=MOZBUILD_METRICS_PATH,
 )
 @CommandArgument(
-    "--all-crates",
+    "cargo_command",
     default=None,
-    action="store_true",
-    help="Check all of the crates in the tree.",
-)
-@CommandArgument("crates", default=None, nargs="*", help="The crate name(s) to check.")
-@CommandArgument(
-    "--jobs",
-    "-j",
-    default="0",
-    nargs="?",
-    metavar="jobs",
-    type=int,
-    help="Run the tests in parallel using multiple processes.",
-)
-@CommandArgument("-v", "--verbose", action="store_true", help="Verbose output.")
-@CommandArgument(
-    "--message-format-json",
-    action="store_true",
-    help="Emit error messages as JSON.",
-)
-def check(
-    command_context,
-    all_crates=None,
-    crates=None,
-    jobs=0,
-    verbose=False,
-    message_format_json=False,
-):
-    from mozbuild.controller.building import BuildDriver
-
-    command_context.log_manager.enable_all_structured_loggers()
-
-    try:
-        command_context.config_environment
-    except BuildEnvironmentNotFoundException:
-        build = command_context._spawn(BuildDriver)
-        ret = build.build(
-            command_context.metrics,
-            what=["pre-export", "export"],
-            jobs=jobs,
-            verbose=verbose,
-            mach_context=command_context._mach_context,
-        )
-        if ret != 0:
-            return ret
-
-    # XXX duplication with `mach vendor rust`
-    crates_and_roots = {
-        "gkrust": "toolkit/library/rust",
-        "gkrust-gtest": "toolkit/library/gtest/rust",
-        "geckodriver": "testing/geckodriver",
-    }
-
-    if all_crates:
-        crates = crates_and_roots.keys()
-    elif crates is None or crates == []:
-        crates = ["gkrust"]
-
-    for crate in crates:
-        root = crates_and_roots.get(crate, None)
-        if not root:
-            print(
-                "Cannot locate crate %s.  Please check your spelling or "
-                "add the crate information to the list." % crate
-            )
-            return 1
-
-        check_targets = [
-            "force-cargo-library-check",
-            "force-cargo-host-library-check",
-            "force-cargo-program-check",
-            "force-cargo-host-program-check",
-        ]
-
-        append_env = {}
-        if message_format_json:
-            append_env["USE_CARGO_JSON_MESSAGE_FORMAT"] = "1"
-
-        ret = command_context._run_make(
-            srcdir=False,
-            directory=root,
-            ensure_exit_code=0,
-            silent=not verbose,
-            print_directory=False,
-            target=check_targets,
-            num_jobs=jobs,
-            append_env=append_env,
-        )
-        if ret != 0:
-            return ret
-
-    return 0
-
-
-@SubCommand(
-    "cargo",
-    "udeps",
-    description="Run `cargo udeps` on a given crate.  Defaults to gkrust.",
-    metrics_path=MOZBUILD_METRICS_PATH,
+    choices=["check", "udeps", "audit", "clippy"],
+    help="The cargo subcommand to run.",
 )
 @CommandArgument(
     "--all-crates",
@@ -238,36 +135,46 @@ def check(
     help="Emit error messages as JSON.",
 )
 @CommandArgument(
-    "--expect-unused",
+    "--no-errors",
     action="store_true",
-    help="Do not return an error exit code if udeps detects unused dependencies.",
+    help="Do not return an error exit code if the subcommands errors out.",
 )
-def udeps(
+@CommandArgument(
+    "subcommand_args",
+    nargs=argparse.REMAINDER,
+    help="These arguments are passed as-is to the cargo subcommand.",
+)
+def cargo(
     command_context,
+    cargo_command,
     all_crates=None,
     crates=None,
     jobs=0,
     verbose=False,
     message_format_json=False,
-    expect_unused=False,
+    no_errors=False,
+    subcommand_args=[],
 ):
+
     from mozbuild.controller.building import BuildDriver
 
     command_context.log_manager.enable_all_structured_loggers()
 
-    try:
-        command_context.config_environment
-    except BuildEnvironmentNotFoundException:
-        build = command_context._spawn(BuildDriver)
-        ret = build.build(
-            command_context.metrics,
-            what=["pre-export", "export"],
-            jobs=jobs,
-            verbose=verbose,
-            mach_context=command_context._mach_context,
-        )
-        if ret != 0:
-            return ret
+    if cargo_command in ["check", "udeps", "clippy"]:
+        try:
+            command_context.config_environment
+        except BuildEnvironmentNotFoundException:
+            build = command_context._spawn(BuildDriver)
+            ret = build.build(
+                command_context.metrics,
+                what=["pre-export", "export"],
+                jobs=jobs,
+                verbose=verbose,
+                mach_context=command_context._mach_context,
+            )
+            if ret != 0:
+                return ret
+
     # XXX duplication with `mach vendor rust`
     crates_and_roots = {
         "gkrust": "toolkit/library/rust",
@@ -289,18 +196,25 @@ def udeps(
             )
             return 1
 
-        udeps_targets = [
-            "force-cargo-library-udeps",
-            "force-cargo-host-library-udeps",
-            "force-cargo-program-udeps",
-            "force-cargo-host-program-udeps",
+        targets = [
+            "force-cargo-library-%s" % cargo_command,
+            "force-cargo-host-library-%s" % cargo_command,
+            "force-cargo-program-%s" % cargo_command,
+            "force-cargo-host-program-%s" % cargo_command,
         ]
+
+        if subcommand_args:
+            targets = targets + ["cargo_extra_cli_flags=%s" % " ".join(subcommand_args)]
+        if cargo_command == "audit":
+            targets = targets + [
+                "cargo_build_flags=-f %s/Cargo.lock" % command_context.topsrcdir
+            ]
 
         append_env = {}
         if message_format_json:
             append_env["USE_CARGO_JSON_MESSAGE_FORMAT"] = "1"
-        if expect_unused:
-            append_env["CARGO_UDEPS_EXPECT_ERR"] = "1"
+        if no_errors:
+            append_env["CARGO_NO_ERR"] = "1"
 
         ret = command_context._run_make(
             srcdir=False,
@@ -308,7 +222,7 @@ def udeps(
             ensure_exit_code=0,
             silent=not verbose,
             print_directory=False,
-            target=udeps_targets,
+            target=targets,
             num_jobs=jobs,
             append_env=append_env,
         )
@@ -379,209 +293,6 @@ def cargo_vet(command_context, arguments, stdout=None, env=os.environ):
     # When the function is invoked with stdout (direct function call), return
     # the full result from subprocess.run.
     return res if stdout else res.returncode
-
-
-@SubCommand(
-    "cargo",
-    "clippy",
-    description="Run `cargo clippy` on a given crate.  Defaults to gkrust.",
-    metrics_path=MOZBUILD_METRICS_PATH,
-)
-@CommandArgument(
-    "--all-crates",
-    default=None,
-    action="store_true",
-    help="Check all of the crates in the tree.",
-)
-@CommandArgument("crates", default=None, nargs="*", help="The crate name(s) to check.")
-@CommandArgument(
-    "--jobs",
-    "-j",
-    default="0",
-    nargs="?",
-    metavar="jobs",
-    type=int,
-    help="Run the tests in parallel using multiple processes.",
-)
-@CommandArgument("-v", "--verbose", action="store_true", help="Verbose output.")
-@CommandArgument(
-    "--message-format-json",
-    action="store_true",
-    help="Emit error messages as JSON.",
-)
-def clippy(
-    command_context,
-    all_crates=None,
-    crates=None,
-    jobs=0,
-    verbose=False,
-    message_format_json=False,
-):
-    from mozbuild.controller.building import BuildDriver
-
-    command_context.log_manager.enable_all_structured_loggers()
-
-    try:
-        command_context.config_environment
-    except BuildEnvironmentNotFoundException:
-        build = command_context._spawn(BuildDriver)
-        ret = build.build(
-            command_context.metrics,
-            what=["pre-export", "export"],
-            jobs=jobs,
-            verbose=verbose,
-            mach_context=command_context._mach_context,
-        )
-        if ret != 0:
-            return ret
-    # XXX duplication with `mach vendor rust`
-    crates_and_roots = {
-        "gkrust": "toolkit/library/rust",
-        "gkrust-gtest": "toolkit/library/gtest/rust",
-        "geckodriver": "testing/geckodriver",
-    }
-
-    if all_crates:
-        crates = crates_and_roots.keys()
-    elif crates is None or crates == []:
-        crates = ["gkrust"]
-
-    final_ret = 0
-
-    for crate in crates:
-        root = crates_and_roots.get(crate, None)
-        if not root:
-            print(
-                "Cannot locate crate %s.  Please check your spelling or "
-                "add the crate information to the list." % crate
-            )
-            return 1
-
-        check_targets = [
-            "force-cargo-library-clippy",
-            "force-cargo-host-library-clippy",
-            "force-cargo-program-clippy",
-            "force-cargo-host-program-clippy",
-        ]
-
-        append_env = {}
-        if message_format_json:
-            append_env["USE_CARGO_JSON_MESSAGE_FORMAT"] = "1"
-
-        ret = 2
-
-        try:
-            ret = command_context._run_make(
-                srcdir=False,
-                directory=root,
-                ensure_exit_code=0,
-                silent=not verbose,
-                print_directory=False,
-                target=check_targets,
-                num_jobs=jobs,
-                append_env=append_env,
-            )
-        except Exception as e:
-            print("%s" % e)
-        if ret != 0:
-            final_ret = ret
-
-    return final_ret
-
-
-@SubCommand(
-    "cargo",
-    "audit",
-    description="Run `cargo audit` on a given crate.  Defaults to gkrust.",
-)
-@CommandArgument(
-    "--all-crates",
-    action="store_true",
-    help="Run `cargo audit` on all the crates in the tree.",
-)
-@CommandArgument(
-    "crates",
-    default=None,
-    nargs="*",
-    help="The crate name(s) to run `cargo audit` on.",
-)
-@CommandArgument(
-    "--jobs",
-    "-j",
-    default="0",
-    nargs="?",
-    metavar="jobs",
-    type=int,
-    help="Run `audit` in parallel using multiple processes.",
-)
-@CommandArgument("-v", "--verbose", action="store_true", help="Verbose output.")
-@CommandArgument(
-    "--message-format-json",
-    action="store_true",
-    help="Emit error messages as JSON.",
-)
-def audit(
-    command_context,
-    all_crates=None,
-    crates=None,
-    jobs=0,
-    verbose=False,
-    message_format_json=False,
-):
-    # XXX duplication with `mach vendor rust`
-    crates_and_roots = {
-        "gkrust": "toolkit/library/rust",
-        "gkrust-gtest": "toolkit/library/gtest/rust",
-        "geckodriver": "testing/geckodriver",
-    }
-
-    if all_crates:
-        crates = crates_and_roots.keys()
-    elif not crates:
-        crates = ["gkrust"]
-
-    final_ret = 0
-
-    for crate in crates:
-        root = crates_and_roots.get(crate, None)
-        if not root:
-            print(
-                "Cannot locate crate %s.  Please check your spelling or "
-                "add the crate information to the list." % crate
-            )
-            return 1
-
-        check_targets = [
-            "force-cargo-library-audit",
-            "force-cargo-host-library-audit",
-            "force-cargo-program-audit",
-            "force-cargo-host-program-audit",
-        ]
-
-        append_env = {}
-        if message_format_json:
-            append_env["USE_CARGO_JSON_MESSAGE_FORMAT"] = "1"
-
-        ret = 2
-
-        try:
-            ret = command_context._run_make(
-                srcdir=False,
-                directory=root,
-                ensure_exit_code=0,
-                silent=not verbose,
-                print_directory=False,
-                target=check_targets
-                + ["cargo_build_flags=-f %s/Cargo.lock" % command_context.topsrcdir],
-                num_jobs=jobs,
-                append_env=append_env,
-            )
-        except Exception as e:
-            print("%s" % e)
-        if ret != 0:
-            final_ret = ret
-
-    return final_ret
 
 
 @Command(
