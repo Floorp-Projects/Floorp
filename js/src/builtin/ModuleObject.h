@@ -17,7 +17,7 @@
 #include "gc/ZoneAllocator.h"  // CellAllocPolicy
 #include "js/Class.h"          // JSClass, ObjectOpResult
 #include "js/GCVector.h"
-#include "js/Id.h"             // jsid
+#include "js/Id.h"  // jsid
 #include "js/Modules.h"
 #include "js/Proxy.h"       // BaseProxyHandler
 #include "js/RootingAPI.h"  // Rooted, Handle, MutableHandle
