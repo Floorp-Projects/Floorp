@@ -344,6 +344,11 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvEvent(
 void DocAccessibleParent::FireEvent(RemoteAccessible* aAcc,
                                     const uint32_t& aEventType) {
   if (aEventType == nsIAccessibleEvent::EVENT_FOCUS) {
+#ifdef ANDROID
+    if (FocusMgr()) {
+      FocusMgr()->SetFocusedRemoteDoc(this);
+    }
+#endif
     mFocus = aAcc->ID();
   }
 
@@ -999,6 +1004,12 @@ void DocAccessibleParent::Destroy() {
 
   mShutdown = true;
   mBrowsingContext = nullptr;
+
+#ifdef ANDROID
+  if (FocusMgr() && FocusMgr()->IsFocusedRemoteDoc(this)) {
+    FocusMgr()->SetFocusedRemoteDoc(nullptr);
+  }
+#endif
 
   MOZ_DIAGNOSTIC_ASSERT(LiveDocs().Contains(mActorID));
   uint32_t childDocCount = mChildDocs.Length();
