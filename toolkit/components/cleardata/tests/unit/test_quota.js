@@ -496,10 +496,9 @@ add_task(async function test_deleteAllAtShutdown() {
   });
 
   const toBeRemovedDir = getRelativeFile("storage", "to-be-removed");
-  Assert.ok(
-    !toBeRemovedDir.exists(),
-    "to-be-removed directory shouldn't exist yet"
-  );
+  if (toBeRemovedDir.exists()) {
+   toBeRemovedDir.remove(true);
+ }
 
   await setTestEntries(storageType);
 
