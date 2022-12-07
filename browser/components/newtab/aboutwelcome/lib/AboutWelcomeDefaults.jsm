@@ -16,7 +16,6 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
-  BuiltInThemes: "resource:///modules/BuiltInThemes.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -447,147 +446,6 @@ const MR_ABOUT_WELCOME_DEFAULT = {
       },
     },
     {
-      id: "AW_CHOOSE_COLORWAY",
-      content: {
-        position: "split",
-        split_narrow_bkg_position: "-65px",
-        image_alt_text: {
-          string_id: "mr2022-onboarding-colorways-image-alt",
-        },
-        background:
-          "url('chrome://activity-stream/content/data/content/assets/mr-colorways.avif') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
-        progress_bar: true,
-        logo: {},
-        title: {
-          string_id: "mr2022-onboarding-colorway-title",
-        },
-        subtitle: {
-          string_id: "mr2022-onboarding-colorway-subtitle",
-        },
-        tiles: {
-          type: "colorway",
-          action: {
-            theme: "<event>",
-          },
-          defaultVariationIndex: 1,
-          systemVariations: ["light", "automatic", "dark"],
-          variations: ["soft", "balanced", "bold"],
-          colorways: [
-            {
-              id: "default",
-              label: {
-                string_id: "mr2022-onboarding-colorway-label-default",
-              },
-              tooltip: {
-                string_id: "mr2022-onboarding-colorway-tooltip-default2",
-              },
-              description: {
-                string_id: "mr2022-onboarding-colorway-description-default",
-              },
-            },
-            {
-              id: "playmaker",
-              label: {
-                string_id: "mr2022-onboarding-colorway-label-playmaker",
-              },
-              tooltip: {
-                string_id: "mr2022-onboarding-colorway-tooltip-playmaker2",
-              },
-              description: {
-                string_id: "mr2022-onboarding-colorway-description-playmaker",
-              },
-            },
-            {
-              id: "expressionist",
-              label: {
-                string_id: "mr2022-onboarding-colorway-label-expressionist",
-              },
-              tooltip: {
-                string_id: "mr2022-onboarding-colorway-tooltip-expressionist2",
-              },
-              description: {
-                string_id:
-                  "mr2022-onboarding-colorway-description-expressionist",
-              },
-            },
-            {
-              id: "visionary",
-              label: {
-                string_id: "mr2022-onboarding-colorway-label-visionary",
-              },
-              tooltip: {
-                string_id: "mr2022-onboarding-colorway-tooltip-visionary2",
-              },
-              description: {
-                string_id: "mr2022-onboarding-colorway-description-visionary",
-              },
-            },
-            {
-              id: "activist",
-              label: {
-                string_id: "mr2022-onboarding-colorway-label-activist",
-              },
-              tooltip: {
-                string_id: "mr2022-onboarding-colorway-tooltip-activist2",
-              },
-              description: {
-                string_id: "mr2022-onboarding-colorway-description-activist",
-              },
-            },
-            {
-              id: "dreamer",
-              label: {
-                string_id: "mr2022-onboarding-colorway-label-dreamer",
-              },
-              tooltip: {
-                string_id: "mr2022-onboarding-colorway-tooltip-dreamer2",
-              },
-              description: {
-                string_id: "mr2022-onboarding-colorway-description-dreamer",
-              },
-            },
-            {
-              id: "innovator",
-              label: {
-                string_id: "mr2022-onboarding-colorway-label-innovator",
-              },
-              tooltip: {
-                string_id: "mr2022-onboarding-colorway-tooltip-innovator2",
-              },
-              description: {
-                string_id: "mr2022-onboarding-colorway-description-innovator",
-              },
-            },
-          ],
-        },
-        primary_button: {
-          label: {
-            string_id:
-              "mr2022-onboarding-colorway-primary-button-label-continue",
-          },
-          action: {
-            persistActiveTheme: true,
-            navigate: true,
-          },
-        },
-        secondary_button: {
-          label: {
-            string_id: "mr2022-onboarding-secondary-skip-button-label",
-          },
-          action: {
-            theme: "automatic",
-            navigate: true,
-          },
-          has_arrow_icon: true,
-        },
-        navigate_away: {
-          action: {
-            theme: "revert",
-          },
-        },
-      },
-    },
-    {
       id: "AW_MOBILE_DOWNLOAD",
       content: {
         position: "split",
@@ -818,12 +676,6 @@ function prepareMRContent(content) {
     removeScreens(screen => screen.id === "AW_MOBILE_DOWNLOAD", screens);
   } else {
     prepareMobileDownload(screens);
-  }
-
-  // Remove colorways screen if there is no active colorways collection
-  const hasActiveColorways = !!lazy.BuiltInThemes.findActiveColorwayCollection?.();
-  if (!hasActiveColorways) {
-    removeScreens(screen => screen.id === "AW_CHOOSE_COLORWAY", screens);
   }
 
   return content;
