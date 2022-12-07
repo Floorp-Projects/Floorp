@@ -78,6 +78,8 @@
         synthesizeKey("KEY_Tab");
         opener.is(lastFocusTarget, shadowDate, "Should have focused date element in shadow DOM. (3)");
         synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, shadowDate, "Should have focused date element with a calendar button in shadow DOM. (3)");
+        synthesizeKey("KEY_Tab");
         opener.is(shadowIframe.contentDocument.activeElement,
                   shadowIframe.contentDocument.documentElement,
                   "Should have focused document element in shadow iframe. (3)");
@@ -101,6 +103,8 @@
         opener.is(shadowIframe.contentDocument.activeElement,
                   shadowIframe.contentDocument.documentElement,
                   "Should have focused document element in shadow iframe. (4)");
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, shadowDate, "Should have focused date element with a calendar button in shadow DOM. (4)");
         synthesizeKey("KEY_Tab", {shiftKey: true});
         opener.is(lastFocusTarget, shadowDate, "Should have focused date element in shadow DOM. (4)");
         synthesizeKey("KEY_Tab", {shiftKey: true});

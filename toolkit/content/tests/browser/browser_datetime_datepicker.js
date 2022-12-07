@@ -314,11 +314,15 @@ add_task(async function test_datepicker_reopen_state() {
   Assert.equal(helper.panel.state, "closed", "Panel should be closed");
 
   // Ensures the picker opens to the month of the input value
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "input",
-    {},
-    gBrowser.selectedBrowser
-  );
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    let input = content.document.querySelector("input");
+    function getCalendarButton(input) {
+      const shadowRoot = SpecialPowers.wrap(input).openOrClosedShadowRoot;
+      return shadowRoot.getElementById("calendar-button");
+    }
+    getCalendarButton(input).click();
+  });
+
   await helper.waitForPickerReady();
 
   Assert.equal(

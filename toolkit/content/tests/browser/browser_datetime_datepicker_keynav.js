@@ -11,6 +11,27 @@ const DATE_FORMAT = new Intl.DateTimeFormat("en-US", {
   timeZone: "UTC",
 }).format;
 
+/**
+ * Helper function to check the value of a Calendar button's specific attribute
+ *
+ * @param {String} attr: The name of the attribute to be tested
+ * @param {String} val: Value that is expected to be assigned to the attribute
+ */
+async function testCalendarBtnAttribute(attr, val) {
+  let browser = helper.tab.linkedBrowser;
+
+  await SpecialPowers.spawn(browser, [attr, val], (attr, val) => {
+    const input = content.document.querySelector("input");
+    const shadowRoot = SpecialPowers.wrap(input).openOrClosedShadowRoot;
+    const calendarBtn = shadowRoot.getElementById("calendar-button");
+    Assert.equal(
+      calendarBtn.getAttribute(attr),
+      val,
+      `Calendar button has ${attr} attribute set to ${val}`
+    );
+  });
+}
+
 let helper = new DateTimeTestHelper();
 
 registerCleanupFunction(() => {
@@ -46,6 +67,8 @@ add_task(async function test_datepicker_keyboard_nav() {
     "Panel should be closed after Escape from anywhere on the window"
   );
 
+  await testCalendarBtnAttribute("aria-expanded", "false");
+
   let ready = helper.waitForPickerReady();
 
   // Ensure focus is on the input field
@@ -66,6 +89,8 @@ add_task(async function test_datepicker_keyboard_nav() {
   BrowserTestUtils.synthesizeKey(" ", {}, browser);
 
   await ready;
+
+  await testCalendarBtnAttribute("aria-expanded", "true");
 
   Assert.equal(
     helper.panel.state,
@@ -122,6 +147,8 @@ add_task(async function test_datepicker_keyboard_nav() {
 
   await ready;
 
+  await testCalendarBtnAttribute("aria-expanded", "true");
+
   Assert.equal(helper.panel.state, "open", "Panel should be opened on Space");
 
   await BrowserTestUtils.waitForCondition(() => {
@@ -145,6 +172,8 @@ add_task(async function test_datepicker_keyboard_nav() {
     "closed",
     "Panel should be closed on Escape"
   );
+
+  await testCalendarBtnAttribute("aria-expanded", "false");
 
   await helper.tearDown();
 });
