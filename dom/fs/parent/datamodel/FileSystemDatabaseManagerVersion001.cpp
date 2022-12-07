@@ -303,7 +303,7 @@ Result<EntryId, QMResult> GetUniqueEntryId(
 
 Result<EntryId, QMResult> FindEntryId(const FileSystemConnection& aConnection,
                                       const FileSystemChildMetadata& aHandle,
-                                      bool isFile) {
+                                      bool aIsFile) {
   const nsCString aDirectoryQuery =
       "SELECT Entries.handle FROM Directories JOIN Entries USING (handle) "
       "WHERE Directories.name = :name AND Entries.parent = :parent "
@@ -315,8 +315,8 @@ Result<EntryId, QMResult> FindEntryId(const FileSystemConnection& aConnection,
       ";"_ns;
 
   QM_TRY_UNWRAP(ResultStatement stmt,
-                ResultStatement::Create(aConnection,
-                                        isFile ? aFileQuery : aDirectoryQuery));
+                ResultStatement::Create(
+                    aConnection, aIsFile ? aFileQuery : aDirectoryQuery));
   QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("parent"_ns, aHandle.parentId())));
   QM_TRY(QM_TO_RESULT(stmt.BindNameByName("name"_ns, aHandle.childName())));
   QM_TRY_UNWRAP(bool moreResults, stmt.ExecuteStep());
@@ -328,6 +328,16 @@ Result<EntryId, QMResult> FindEntryId(const FileSystemConnection& aConnection,
   QM_TRY_UNWRAP(EntryId entryId, stmt.GetEntryIdByColumn(/* Column */ 0u));
 
   return entryId;
+}
+
+bool IsSame(const FileSystemConnection& aConnection,
+            const FileSystemEntryMetadata& aHandle,
+            const FileSystemChildMetadata& aNewHandle, bool aIsFile) {
+  MOZ_ASSERT(!aNewHandle.parentId().IsEmpty());
+
+  QM_TRY_UNWRAP(EntryId entryId, FindEntryId(aConnection, aNewHandle, aIsFile),
+                false);
+  return entryId == aHandle.entryId();
 }
 
 Result<bool, QMResult> IsFile(const FileSystemConnection& aConnection,
@@ -788,11 +798,23 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RemoveFile(
 
 Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RenameEntry(
     const FileSystemEntryMetadata& aHandle, const Name& aNewName) {
+  // Can't rename root
+  if (mRootEntry == aHandle.entryId()) {
+    return Err(QMResult(NS_ERROR_DOM_NOT_FOUND_ERR));
+  }
+
   // Verify the source exists
   QM_TRY_UNWRAP(bool isFile, IsFile(mConnection, aHandle.entryId()), false);
 
-  if (mRootEntry == aHandle.entryId()) {
-    return Err(QMResult(NS_ERROR_DOM_NOT_FOUND_ERR));
+  // At this point, entry exists
+  if (isFile && mDataManager->IsLocked(aHandle.entryId())) {
+    LOG(("Trying to move in-use file"));
+    return Err(QMResult(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR));
+  }
+
+  // Are we actually renaming?
+  if (aHandle.entryName() == aNewName) {
+    return true;
   }
 
   mozStorageTransaction transaction(
@@ -823,6 +845,7 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::MoveEntry(
   MOZ_ASSERT(!aHandle.entryId().IsEmpty());
 
   const EntryId& entryId = aHandle.entryId();
+  const Name& newName = aNewDesignation.childName();
 
   if (mRootEntry == entryId) {
     return Err(QMResult(NS_ERROR_DOM_NOT_FOUND_ERR));
@@ -830,6 +853,12 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::MoveEntry(
 
   // Verify the source exists
   QM_TRY_UNWRAP(bool isFile, IsFile(mConnection, entryId), false);
+
+  // If the rename doesn't change the name or directory, just return success.
+  // XXX Needs to be added to the spec
+  if (IsSame(mConnection, aHandle, aNewDesignation, isFile)) {
+    return true;
+  }
 
   // At this point, entry exists
   if (isFile && mDataManager->IsLocked(entryId)) {
@@ -880,8 +909,6 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::MoveEntry(
     QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("handle"_ns, entryId)));
     QM_TRY(QM_TO_RESULT(stmt.Execute()));
   }
-
-  const Name& newName = aNewDesignation.childName();
 
   // Are we actually renaming?
   if (aHandle.entryName() == newName) {
