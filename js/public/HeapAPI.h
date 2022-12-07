@@ -208,7 +208,9 @@ struct MarkBitmap {
   inline bool isMarkedBlack(const TenuredCell* cell);
   inline bool isMarkedGray(const TenuredCell* cell);
   inline bool markIfUnmarked(const TenuredCell* cell, MarkColor color);
+  inline bool markIfUnmarkedAtomic(const TenuredCell* cell, MarkColor color);
   inline void markBlack(const TenuredCell* cell);
+  inline void markBlackAtomic(const TenuredCell* cell);
   inline void copyMarkBit(TenuredCell* dst, const TenuredCell* src,
                           ColorBit colorBit);
   inline void unmark(const TenuredCell* cell);

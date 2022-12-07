@@ -548,12 +548,45 @@ MOZ_ALWAYS_INLINE bool MarkBitmap::markIfUnmarked(const TenuredCell* cell,
   return true;
 }
 
+MOZ_ALWAYS_INLINE bool MarkBitmap::markIfUnmarkedAtomic(const TenuredCell* cell,
+                                                        MarkColor color) {
+  // This version of the method is safe in the face of concurrent writes to the
+  // mark bitmap but may return false positives. The extra synchronisation
+  // necessary to avoid this resulted in worse performance overall.
+
+  MarkBitmapWord* word;
+  uintptr_t mask;
+  getMarkWordAndMask(cell, ColorBit::BlackBit, &word, &mask);
+  if (*word & mask) {
+    return false;
+  }
+  if (color == MarkColor::Black) {
+    *word |= mask;
+  } else {
+    // We use getMarkWordAndMask to recalculate both mask and word as doing just
+    // mask << color may overflow the mask.
+    getMarkWordAndMask(cell, ColorBit::GrayOrBlackBit, &word, &mask);
+    if (*word & mask) {
+      return false;
+    }
+    *word |= mask;
+  }
+  return true;
+}
+
 MOZ_ALWAYS_INLINE void MarkBitmap::markBlack(const TenuredCell* cell) {
   MarkBitmapWord* word;
   uintptr_t mask;
   getMarkWordAndMask(cell, ColorBit::BlackBit, &word, &mask);
   uintptr_t bits = *word;
   *word = bits | mask;
+}
+
+MOZ_ALWAYS_INLINE void MarkBitmap::markBlackAtomic(const TenuredCell* cell) {
+  MarkBitmapWord* word;
+  uintptr_t mask;
+  getMarkWordAndMask(cell, ColorBit::BlackBit, &word, &mask);
+  *word |= mask;
 }
 
 MOZ_ALWAYS_INLINE void MarkBitmap::copyMarkBit(TenuredCell* dst,
