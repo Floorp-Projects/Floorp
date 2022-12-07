@@ -1058,7 +1058,7 @@ void js::GCMarker::markAndTraverse(T* thing) {
 
     traverse<traverseOpts>(thing);
 
-    if constexpr (opts & MarkingOptions::MarkRootCompartments) {
+    if constexpr (bool(opts & MarkingOptions::MarkRootCompartments)) {
       // Mark the compartment as live.
       SetCompartmentHasMarkedCells(thing);
     }
@@ -1239,6 +1239,11 @@ bool js::GCMarker::mark(T* thing) {
 
   MarkColor color =
       TraceKindCanBeGray<T>::value ? markColor() : MarkColor::Black;
+
+  if constexpr (bool(opts & MarkingOptions::ParallelMarking)) {
+    return thing->asTenured().markIfUnmarkedAtomic(color);
+  }
+
   return thing->asTenured().markIfUnmarked(color);
 }
 
