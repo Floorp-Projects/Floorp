@@ -1013,9 +1013,6 @@ html {
   align-items: center;
   margin: 10px auto;
 }
-.onboardingContainer .tiles-theme-container.colorway {
-  flex-direction: column-reverse;
-}
 .onboardingContainer .sr-only {
   opacity: 0;
   overflow: hidden;
@@ -1024,176 +1021,6 @@ html {
 .onboardingContainer .sr-only.input {
   height: 1px;
   width: 1px;
-}
-.onboardingContainer .colorway-variations {
-  align-items: center;
-  color: #000;
-  display: flex;
-  flex-direction: column;
-  height: 190px;
-  margin-bottom: 10px;
-  padding-top: 34px;
-  position: relative;
-  transition: var(--transition);
-  width: 190px;
-  /* Show a custom background image that transitions for each theme. */
-  /* Stack a disc background above the custom background image and below other
-   * content so that we can transform the parent variations element. Use a
-   * similar ::after disc to cover up content while transitioning. */
-}
-.onboardingContainer .colorway-variations::before {
-  background-size: 100%;
-  content: "";
-  height: 197px;
-  left: -48px;
-  margin: auto;
-  pointer-events: none;
-  position: absolute;
-  top: -7px;
-  transition: 0.5s opacity, 0.5s rotate, 0.5s scale;
-  width: 286px;
-  z-index: -1;
-}
-.onboardingContainer .colorway-variations.in::before {
-  rotate: calc(-4.5 * var(--rotate));
-  transition: none;
-}
-.onboardingContainer .colorway-variations:where(.in, .out)::before {
-  opacity: 0;
-  rotate: calc(4.5 * var(--rotate));
-  scale: var(--scale);
-}
-.onboardingContainer .colorway-variations .variations-disc, .onboardingContainer .colorway-variations::after {
-  background: center/cover;
-  border-radius: 100%;
-  height: 190px;
-  left: 0;
-  pointer-events: none;
-  position: absolute;
-  top: 0;
-  width: 190px;
-}
-.onboardingContainer .colorway-variations .variations-disc {
-  z-index: -1;
-}
-.onboardingContainer .colorway-variations::after {
-  content: "";
-  opacity: 0;
-  transition: 0.4s opacity;
-}
-.onboardingContainer .colorway-variations.out::after {
-  opacity: 1;
-}
-.onboardingContainer .colorway-variations.default .variations-disc, .onboardingContainer .colorway-variations[next=default]::after {
-  /* Gradients aren't used for high contrast, so show a solid color instead. */
-  background-color: var(--in-content-page-background);
-  background-image: linear-gradient(#F0F0F4, #9F9FAD);
-  outline: 2px solid var(--in-content-button-border-color);
-  outline-offset: -2px;
-}
-.onboardingContainer .colorway-variations.default::before {
-  background-image: url("chrome://browser/skin/upgradeDialog/default.png");
-}
-.onboardingContainer .colorway-variations.abstract .variations-disc, .onboardingContainer .colorway-variations[next=abstract]::after {
-  background-image: url("resource://builtin-themes/colorways/2021abstract/balanced/icon.svg");
-}
-.onboardingContainer .colorway-variations.abstract::before {
-  background-image: url("chrome://browser/skin/upgradeDialog/abstract.png");
-}
-.onboardingContainer .colorway-variations.cheers .variations-disc, .onboardingContainer .colorway-variations[next=cheers]::after {
-  background-image: url("resource://builtin-themes/colorways/2021cheers/balanced/icon.svg");
-}
-.onboardingContainer .colorway-variations.cheers::before {
-  background-image: url("chrome://browser/skin/upgradeDialog/cheers.png");
-}
-.onboardingContainer .colorway-variations.elemental .variations-disc, .onboardingContainer .colorway-variations[next=elemental]::after {
-  background-image: url("resource://builtin-themes/colorways/2021elemental/balanced/icon.svg");
-}
-.onboardingContainer .colorway-variations.elemental::before {
-  background-image: url("chrome://browser/skin/upgradeDialog/elemental.png");
-}
-.onboardingContainer .colorway-variations.foto .variations-disc, .onboardingContainer .colorway-variations[next=foto]::after {
-  background-image: url("resource://builtin-themes/colorways/2021foto/balanced/icon.svg");
-}
-.onboardingContainer .colorway-variations.foto::before {
-  background-image: url("chrome://browser/skin/upgradeDialog/foto.png");
-}
-.onboardingContainer .colorway-variations.graffiti .variations-disc, .onboardingContainer .colorway-variations[next=graffiti]::after {
-  background-image: url("resource://builtin-themes/colorways/2021graffiti/balanced/icon.svg");
-}
-.onboardingContainer .colorway-variations.graffiti::before {
-  background-image: url("chrome://browser/skin/upgradeDialog/graffiti.png");
-}
-.onboardingContainer .colorway-variations.lush .variations-disc, .onboardingContainer .colorway-variations[next=lush]::after {
-  background-image: url("resource://builtin-themes/colorways/2021lush/balanced/icon.svg");
-}
-.onboardingContainer .colorway-variations.lush::before {
-  background-image: url("chrome://browser/skin/upgradeDialog/lush.png");
-}
-.onboardingContainer .colorway-variations .colorway:focus-within {
-  border-radius: 4px;
-  outline: 2px solid rgba(0, 0, 0, 0.64);
-  outline-offset: -1px;
-}
-.onboardingContainer .colorway-variations .colorway-text {
-  font-size: 16px;
-  font-weight: bold;
-  line-height: 24px;
-  margin-bottom: 15px;
-}
-.onboardingContainer .colorway-variations .variation-button {
-  font-size: 12px;
-  line-height: 12px;
-  padding: 6px 12px;
-  width: auto;
-  height: 24px;
-  margin: 3px;
-  min-height: 24px;
-}
-.onboardingContainer .colorway-variations .variation-button:hover {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 2px;
-}
-.onboardingContainer .colorway-variations .variation-button.selected, .onboardingContainer .colorway-variations .variation-button:active {
-  background: rgba(0, 0, 0, 0.64);
-  border-radius: 2px;
-  color: #FFF;
-}
-@media (prefers-contrast) {
-  .onboardingContainer .colorway-variations .variation-button {
-    outline: 2px solid var(--in-content-button-border-color);
-    border-radius: 2px;
-  }
-  .onboardingContainer .colorway-variations .variation-button.selected, .onboardingContainer .colorway-variations .variation-button:active {
-    background: var(--in-content-box-background);
-    color: var(--in-content-text-color);
-  }
-  .onboardingContainer .colorway-variations .variation-button:hover {
-    background: var(--in-content-primary-button-background);
-    color: var(--in-content-primary-button-text-color);
-  }
-}
-.onboardingContainer .colorway-variations .colorway-text,
-.onboardingContainer .colorway-variations .variation-button {
-  transition: 0.4s opacity, 0.4s translate;
-}
-.onboardingContainer .colorway-variations.in :is(.colorway-text, .variation-button) {
-  opacity: 0;
-  transition: none;
-  translate: 0 calc(var(--translate) / -3);
-}
-.onboardingContainer .colorway-variations.out :is(.colorway-text, .variation-button) {
-  opacity: 0;
-  translate: 0 calc(var(--translate) / 3);
-}
-.onboardingContainer .colorway-variations .colorway:nth-of-type(1) .variation-button {
-  transition-delay: 0.1s;
-}
-.onboardingContainer .colorway-variations .colorway:nth-of-type(2) .variation-button {
-  transition-delay: 0.2s;
-}
-.onboardingContainer .colorway-variations .colorway:nth-of-type(3) .variation-button {
-  transition-delay: 0.3s;
 }
 .onboardingContainer .tiles-theme-section {
   border: 0;
@@ -1265,24 +1092,6 @@ html {
 }
 .onboardingContainer .tiles-theme-section .theme .icon.default.colorway, .onboardingContainer .tiles-theme-section .theme .icon.automatic.colorway {
   background-image: url("chrome://activity-stream/content/data/content/assets/default.svg");
-}
-.onboardingContainer .tiles-theme-section .theme .icon.abstract {
-  background-image: url("resource://builtin-themes/colorways/2021abstract/balanced/icon.svg");
-}
-.onboardingContainer .tiles-theme-section .theme .icon.cheers {
-  background-image: url("resource://builtin-themes/colorways/2021cheers/balanced/icon.svg");
-}
-.onboardingContainer .tiles-theme-section .theme .icon.elemental {
-  background-image: url("resource://builtin-themes/colorways/2021elemental/balanced/icon.svg");
-}
-.onboardingContainer .tiles-theme-section .theme .icon.foto {
-  background-image: url("resource://builtin-themes/colorways/2021foto/balanced/icon.svg");
-}
-.onboardingContainer .tiles-theme-section .theme .icon.graffiti {
-  background-image: url("resource://builtin-themes/colorways/2021graffiti/balanced/icon.svg");
-}
-.onboardingContainer .tiles-theme-section .theme .icon.lush {
-  background-image: url("resource://builtin-themes/colorways/2021lush/balanced/icon.svg");
 }
 .onboardingContainer .tiles-theme-section .theme .icon.playmaker {
   background-image: url("resource://builtin-themes/colorways/2022playmaker/balanced/icon.svg");
@@ -1687,7 +1496,6 @@ html {
 .onboardingContainer .dialog-initial .multi-select-container {
   transition-delay: 0.8s;
 }
-.onboardingContainer .dialog-initial .colorway-variations,
 .onboardingContainer .dialog-initial .tiles-theme-section {
   transition-delay: 0.9s;
 }
@@ -1697,7 +1505,6 @@ html {
 .onboardingContainer .dialog-initial .steps {
   transition-delay: 1s;
 }
-.onboardingContainer .screen:not(.dialog-initial):not([pos=corner]) .colorway-variations,
 .onboardingContainer .screen:not(.dialog-initial):not([pos=corner]) .tiles-theme-section,
 .onboardingContainer .screen:not(.dialog-initial):not([pos=corner]) .colorway-text {
   transition-delay: 0.2s;
@@ -1773,8 +1580,6 @@ html {
   opacity: var(--wipe-opacity);
 }
 .onboardingContainer.transition-in .screen:not([pos=corner]) .welcome-text,
-.onboardingContainer.transition-in .screen:not([pos=corner]) .multi-select-container,
-.onboardingContainer.transition-in .screen:not([pos=corner]) .colorway-variations,
 .onboardingContainer.transition-in .screen:not([pos=corner]) .tiles-theme-section,
 .onboardingContainer.transition-in .screen:not([pos=corner]) .colorway-text,
 .onboardingContainer.transition-in .screen:not([pos=corner]) .primary,
@@ -1816,7 +1621,6 @@ html {
   translate: 0 var(--translate);
   transition-delay: 0.1s;
 }
-.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .colorway-variations,
 .onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .tiles-theme-section,
 .onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .colorway-text {
   opacity: 0;

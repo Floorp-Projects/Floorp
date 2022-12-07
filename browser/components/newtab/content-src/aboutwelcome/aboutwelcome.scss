@@ -963,10 +963,6 @@ html {
     flex-direction: column;
     align-items: center;
     margin: 10px auto;
-
-    &.colorway {
-      flex-direction: column-reverse;
-    }
   }
 
   .sr-only {
@@ -977,220 +973,6 @@ html {
     &.input {
       height: 1px;
       width: 1px;
-    }
-  }
-
-  .colorway-variations {
-    align-items: center;
-    color: #000;
-    display: flex;
-    flex-direction: column;
-    height: 190px;
-    margin-bottom: 10px;
-    padding-top: 34px;
-    position: relative;
-    transition: var(--transition);
-    width: 190px;
-
-    /* Show a custom background image that transitions for each theme. */
-    &::before {
-      background-size: 100%;
-      content: '';
-      height: 197px;
-      left: -48px;
-      margin: auto;
-      pointer-events: none;
-      position: absolute;
-      top: -7px;
-      transition: 0.5s opacity, 0.5s rotate, 0.5s scale;
-      width: 286px;
-      z-index: -1;
-    }
-
-    &.in::before {
-      rotate: calc(-4.5 * var(--rotate));
-      transition: none;
-    }
-
-    &:where(.in, .out)::before {
-      opacity: 0;
-      rotate: calc(4.5 * var(--rotate));
-      scale: var(--scale);
-    }
-
-    /* Stack a disc background above the custom background image and below other
-     * content so that we can transform the parent variations element. Use a
-     * similar ::after disc to cover up content while transitioning. */
-    .variations-disc,
-    &::after {
-      background: center / cover;
-      border-radius: 100%;
-      height: 190px;
-      left: 0;
-      pointer-events: none;
-      position: absolute;
-      top: 0;
-      width: 190px;
-    }
-
-    .variations-disc {
-      z-index: -1;
-    }
-
-    &::after {
-      content: '';
-      opacity: 0;
-      transition: 0.4s opacity;
-    }
-
-    &.out::after {
-      opacity: 1;
-    }
-
-    &.default .variations-disc,
-    &[next='default']::after {
-      /* Gradients aren't used for high contrast, so show a solid color instead. */
-      background-color: var(--in-content-page-background);
-      background-image: linear-gradient(#F0F0F4, #9F9FAD);
-      outline: 2px solid var(--in-content-button-border-color);
-      outline-offset: -2px;
-    }
-
-    &.default::before {
-      background-image: url('chrome://browser/skin/upgradeDialog/default.png');
-    }
-
-    &.abstract .variations-disc,
-    &[next='abstract']::after {
-      background-image: url('resource://builtin-themes/colorways/2021abstract/balanced/icon.svg');
-    }
-
-    &.abstract::before {
-      background-image: url('chrome://browser/skin/upgradeDialog/abstract.png');
-    }
-
-    &.cheers .variations-disc,
-    &[next='cheers']::after {
-      background-image: url('resource://builtin-themes/colorways/2021cheers/balanced/icon.svg');
-    }
-
-    &.cheers::before {
-      background-image: url('chrome://browser/skin/upgradeDialog/cheers.png');
-    }
-
-    &.elemental .variations-disc,
-    &[next='elemental']::after {
-      background-image: url('resource://builtin-themes/colorways/2021elemental/balanced/icon.svg');
-    }
-
-    &.elemental::before {
-      background-image: url('chrome://browser/skin/upgradeDialog/elemental.png');
-    }
-
-    &.foto .variations-disc,
-    &[next='foto']::after {
-      background-image: url('resource://builtin-themes/colorways/2021foto/balanced/icon.svg');
-    }
-
-    &.foto::before {
-      background-image: url('chrome://browser/skin/upgradeDialog/foto.png');
-    }
-
-    &.graffiti .variations-disc,
-    &[next='graffiti']::after {
-      background-image: url('resource://builtin-themes/colorways/2021graffiti/balanced/icon.svg');
-    }
-
-    &.graffiti::before {
-      background-image: url('chrome://browser/skin/upgradeDialog/graffiti.png');
-    }
-
-    &.lush .variations-disc,
-    &[next='lush']::after {
-      background-image: url('resource://builtin-themes/colorways/2021lush/balanced/icon.svg');
-    }
-
-    &.lush::before {
-      background-image: url('chrome://browser/skin/upgradeDialog/lush.png');
-    }
-
-    .colorway:focus-within {
-      border-radius: 4px;
-      outline: 2px solid rgba(0, 0, 0, 0.64);
-      outline-offset: -1px;
-    }
-
-    .colorway-text {
-      font-size: 16px;
-      font-weight: bold;
-      line-height: 24px;
-      margin-bottom: 15px;
-    }
-
-    .variation-button {
-      font-size: 12px;
-      line-height: 12px;
-      padding: 6px 12px;
-      width: auto;
-      height: 24px;
-      margin: 3px;
-      min-height: 24px;
-
-      &:hover {
-        background: rgba(0, 0, 0, 0.2);
-        border-radius: 2px;
-      }
-
-      &.selected,
-      &:active {
-        background: rgba(0, 0, 0, 0.64);
-        border-radius: 2px;
-        color: #FFF;
-      }
-
-      @media (prefers-contrast) {
-        outline: 2px solid var(--in-content-button-border-color);
-        border-radius: 2px;
-
-        &.selected,
-        &:active {
-          background: var(--in-content-box-background);
-          color: var(--in-content-text-color);
-        }
-
-        &:hover {
-          background: var(--in-content-primary-button-background);
-          color: var(--in-content-primary-button-text-color);
-        }
-      }
-    }
-
-    .colorway-text,
-    .variation-button {
-      transition: 0.4s opacity, 0.4s translate;
-    }
-
-    &.in :is(.colorway-text, .variation-button) {
-      opacity: 0;
-      transition: none;
-      translate: 0 calc(var(--translate) / -3);
-    }
-
-    &.out :is(.colorway-text, .variation-button) {
-      opacity: 0;
-      translate: 0 calc(var(--translate) / 3);
-    }
-
-    .colorway:nth-of-type(1) .variation-button {
-      transition-delay: 0.1s;
-    }
-
-    .colorway:nth-of-type(2) .variation-button {
-      transition-delay: 0.2s;
-    }
-
-    .colorway:nth-of-type(3) .variation-button {
-      transition-delay: 0.3s;
     }
   }
 
@@ -1280,30 +1062,6 @@ html {
           &.colorway {
             background-image: url('chrome://activity-stream/content/data/content/assets/default.svg');
           }
-        }
-
-        &.abstract {
-          background-image: url('resource://builtin-themes/colorways/2021abstract/balanced/icon.svg');
-        }
-
-        &.cheers {
-          background-image: url('resource://builtin-themes/colorways/2021cheers/balanced/icon.svg');
-        }
-
-        &.elemental {
-          background-image: url('resource://builtin-themes/colorways/2021elemental/balanced/icon.svg');
-        }
-
-        &.foto {
-          background-image: url('resource://builtin-themes/colorways/2021foto/balanced/icon.svg');
-        }
-
-        &.graffiti {
-          background-image: url('resource://builtin-themes/colorways/2021graffiti/balanced/icon.svg');
-        }
-
-        &.lush {
-          background-image: url('resource://builtin-themes/colorways/2021lush/balanced/icon.svg');
         }
 
         &.playmaker {
@@ -1806,7 +1564,6 @@ html {
       transition-delay: 0.8s;
     }
 
-    .colorway-variations,
     .tiles-theme-section {
       transition-delay: 0.9s;
     }
@@ -1821,7 +1578,6 @@ html {
 
   // Delays for transitioning-in of intermediate screens
   .screen:not(.dialog-initial):not([pos='corner']) {
-    .colorway-variations,
     .tiles-theme-section,
     .colorway-text {
       transition-delay: 0.2s;
@@ -1927,8 +1683,6 @@ html {
 
     .screen:not([pos='corner']) {
       .welcome-text,
-      .multi-select-container,
-      .colorway-variations,
       .tiles-theme-section,
       .colorway-text,
       .primary,
@@ -1984,7 +1738,6 @@ html {
         transition-delay: 0.1s;
       }
 
-      .colorway-variations,
       .tiles-theme-section,
       .colorway-text {
         opacity: 0;

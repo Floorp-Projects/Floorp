@@ -114,25 +114,8 @@ mr1-onboarding-import-primary-button-label-attribution = Import from { $previous
 mr1-onboarding-import-primary-button-label-no-attribution = Import from previous browser
 mr1-onboarding-import-secondary-button-label = Not now
 
-mr2-onboarding-colorway-header = Life in color
-mr2-onboarding-colorway-subtitle = Vibrant new colorways. Available for a limited time.
-mr2-onboarding-colorway-primary-button-label = Save colorway
-mr2-onboarding-colorway-secondary-button-label = Not now
-mr2-onboarding-colorway-label-soft = Soft
-mr2-onboarding-colorway-label-balanced = Balanced
-# "Bold" is used in the sense of bravery or courage, not in the sense of
-# emphasized text.
-mr2-onboarding-colorway-label-bold = Bold
-
-# Automatic theme uses operating system color settings
-mr2-onboarding-theme-label-auto = Auto
-
-# This string will be used for Default theme
-mr2-onboarding-theme-label-default = Default
-
 mr1-onboarding-theme-header = Make it your own
 mr1-onboarding-theme-subtitle = Personalize { -brand-short-name } with a theme.
-mr1-onboarding-theme-primary-button-label = Save theme
 mr1-onboarding-theme-secondary-button-label = Not now
 
 # System theme uses operating system color settings
@@ -197,31 +180,6 @@ mr1-onboarding-theme-description-alpenglow =
   .aria-description =
     Use a dynamic, colorful theme for buttons,
     menus, and windows.
-
-# Tooltip displayed on hover of non-default colorway theme
-# variations e.g. soft, balanced, bold
-mr2-onboarding-theme-tooltip =
-  .title = Use this colorway.
-
-# Selector description for non-default colorway theme
-# variations e.g. soft, balanced, bold
-mr2-onboarding-theme-description =
-  .aria-description = Use this colorway.
-
-# Tooltip displayed on hover of colorway
-# Variables:
-#   $colorwayName (String) - Name of colorway
-mr2-onboarding-colorway-tooltip =
-  .title = Explore { $colorwayName } colorways.
-
-# Selector description for colorway
-# Variables:
-#   $colorwayName (String) - Name of colorway
-mr2-onboarding-colorway-label = Explore { $colorwayName } colorways.
-
-# Tooltip displayed on hover of default themes
-mr2-onboarding-default-theme-tooltip =
-  .title = Explore default themes.
 
 # Selector description for default themes
 mr2-onboarding-default-theme-label = Explore default themes.
