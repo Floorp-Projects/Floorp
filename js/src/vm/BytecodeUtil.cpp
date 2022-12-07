@@ -1336,11 +1336,12 @@ static bool DecompileAtPCForStackDump(
     JSContext* cx, HandleScript script,
     const OffsetAndDefIndex& offsetAndDefIndex, Sprinter* sp);
 
-static bool PrintShapeProperties(JSContext* cx, Sprinter* sp, Shape* shape) {
+static bool PrintShapeProperties(JSContext* cx, Sprinter* sp,
+                                 SharedShape* shape) {
   // Add all property keys to a vector to allow printing them in property
   // definition order.
   Vector<PropertyKey> props(cx);
-  for (ShapePropertyIter<NoGC> iter(shape); !iter.done(); iter++) {
+  for (SharedShapePropertyIter<NoGC> iter(shape); !iter.done(); iter++) {
     if (!props.append(iter->key())) {
       return false;
     }
@@ -1560,7 +1561,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
     }
 
     case JOF_SHAPE: {
-      Shape* shape = script->getShape(pc);
+      SharedShape* shape = script->getShape(pc);
       if (!sp->put(" ")) {
         return 0;
       }

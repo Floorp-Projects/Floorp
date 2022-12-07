@@ -40,8 +40,8 @@ using MutableHandleArgumentsObject = MutableHandle<ArgumentsObject*>;
 
 /*****************************************************************************/
 
-Shape* js::EnvironmentCoordinateToEnvironmentShape(JSScript* script,
-                                                   jsbytecode* pc) {
+SharedShape* js::EnvironmentCoordinateToEnvironmentShape(JSScript* script,
+                                                         jsbytecode* pc) {
   MOZ_ASSERT(JOF_OPTYPE(JSOp(*pc)) == JOF_ENVCOORD);
   ScopeIter si(script->innermostScope(pc));
   uint32_t hops = EnvironmentCoordinate(pc).hops();
@@ -60,10 +60,10 @@ Shape* js::EnvironmentCoordinateToEnvironmentShape(JSScript* script,
 
 PropertyName* js::EnvironmentCoordinateNameSlow(JSScript* script,
                                                 jsbytecode* pc) {
-  Shape* shape = EnvironmentCoordinateToEnvironmentShape(script, pc);
+  SharedShape* shape = EnvironmentCoordinateToEnvironmentShape(script, pc);
   EnvironmentCoordinate ec(pc);
 
-  ShapePropertyIter<NoGC> iter(shape);
+  SharedShapePropertyIter<NoGC> iter(shape);
   while (iter->slot() != ec.slot()) {
     iter++;
   }
@@ -1069,7 +1069,7 @@ NamedLambdaObject* NamedLambdaObject::create(JSContext* cx,
 #ifdef DEBUG
   {
     // Named lambda objects have one (non-writable) property.
-    ShapePropertyIter<NoGC> iter(scope->environmentShape());
+    SharedShapePropertyIter<NoGC> iter(scope->environmentShape());
     MOZ_ASSERT(iter->slot() == lambdaSlot());
     MOZ_ASSERT(!iter->writable());
     iter++;
