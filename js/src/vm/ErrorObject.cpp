@@ -414,8 +414,8 @@ JSObject* ErrorObject::createConstructor(JSContext* cx, JSProtoKey key) {
 }
 
 /* static */
-Shape* js::ErrorObject::assignInitialShape(JSContext* cx,
-                                           Handle<ErrorObject*> obj) {
+SharedShape* js::ErrorObject::assignInitialShape(JSContext* cx,
+                                                 Handle<ErrorObject*> obj) {
   MOZ_ASSERT(obj->empty());
 
   constexpr PropertyFlags propFlags = {PropertyFlag::Configurable,
@@ -436,7 +436,7 @@ Shape* js::ErrorObject::assignInitialShape(JSContext* cx,
     return nullptr;
   }
 
-  return obj->shape();
+  return obj->sharedShape();
 }
 
 /* static */

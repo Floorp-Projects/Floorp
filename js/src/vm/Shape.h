@@ -164,11 +164,11 @@ class ShapeCachePtr {
   bool isForAdd() const { return isSingleShapeForAdd() || isShapeSetForAdd(); }
 
   bool isShapeWithProto() const { return (bits & MASK) == SHAPE_WITH_PROTO; }
-  Shape* toShapeWithProto() const {
+  SharedShape* toShapeWithProto() const {
     MOZ_ASSERT(isShapeWithProto());
-    return reinterpret_cast<Shape*>(bits & ~uintptr_t(MASK));
+    return reinterpret_cast<SharedShape*>(bits & ~uintptr_t(MASK));
   }
-  void setShapeWithProto(Shape* shape) {
+  void setShapeWithProto(SharedShape* shape) {
     MOZ_ASSERT(shape);
     MOZ_ASSERT((uintptr_t(shape) & MASK) == 0);
     MOZ_ASSERT(!isShapeSetForAdd());  // Don't leak the ShapeSet.
@@ -414,7 +414,11 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   Shape(const Shape& other) = delete;
 
  public:
+  bool isShared() const { return !isDictionary(); }
   bool isDictionary() const { return immutableFlags & IS_DICTIONARY; }
+
+  inline SharedShape& asShared();
+  inline DictionaryShape& asDictionary();
 
   uint32_t slotSpanSlow() const {
     MOZ_ASSERT(!isDictionary());
@@ -529,32 +533,32 @@ class SharedShape : public js::Shape {
    * Lookup an initial shape matching the given parameters, creating an empty
    * shape if none was found.
    */
-  static Shape* getInitialShape(JSContext* cx, const JSClass* clasp,
-                                JS::Realm* realm, TaggedProto proto,
-                                size_t nfixed, ObjectFlags objectFlags = {});
-  static Shape* getInitialShape(JSContext* cx, const JSClass* clasp,
-                                JS::Realm* realm, TaggedProto proto,
-                                gc::AllocKind kind,
-                                ObjectFlags objectFlags = {});
+  static SharedShape* getInitialShape(JSContext* cx, const JSClass* clasp,
+                                      JS::Realm* realm, TaggedProto proto,
+                                      size_t nfixed,
+                                      ObjectFlags objectFlags = {});
+  static SharedShape* getInitialShape(JSContext* cx, const JSClass* clasp,
+                                      JS::Realm* realm, TaggedProto proto,
+                                      gc::AllocKind kind,
+                                      ObjectFlags objectFlags = {});
 
-  static Shape* getPropMapShape(JSContext* cx, BaseShape* base, size_t nfixed,
-                                Handle<SharedPropMap*> map, uint32_t mapLength,
-                                ObjectFlags objectFlags,
-                                bool* allocatedNewShape = nullptr);
+  static SharedShape* getPropMapShape(JSContext* cx, BaseShape* base,
+                                      size_t nfixed, Handle<SharedPropMap*> map,
+                                      uint32_t mapLength,
+                                      ObjectFlags objectFlags,
+                                      bool* allocatedNewShape = nullptr);
 
-  static Shape* getInitialOrPropMapShape(JSContext* cx, const JSClass* clasp,
-                                         JS::Realm* realm, TaggedProto proto,
-                                         size_t nfixed,
-                                         Handle<SharedPropMap*> map,
-                                         uint32_t mapLength,
-                                         ObjectFlags objectFlags);
+  static SharedShape* getInitialOrPropMapShape(
+      JSContext* cx, const JSClass* clasp, JS::Realm* realm, TaggedProto proto,
+      size_t nfixed, Handle<SharedPropMap*> map, uint32_t mapLength,
+      ObjectFlags objectFlags);
 
   /*
    * Reinsert an alternate initial shape, to be returned by future
    * getInitialShape calls, until the new shape becomes unreachable in a GC
    * and the table entry is purged.
    */
-  static void insertInitialShape(JSContext* cx, Handle<Shape*> shape);
+  static void insertInitialShape(JSContext* cx, Handle<SharedShape*> shape);
 
   /*
    * Some object subclasses are allocated with a built-in set of properties.
@@ -585,6 +589,16 @@ class DictionaryShape : public js::Shape {
                                Handle<DictionaryPropMap*> map,
                                uint32_t mapLength);
 };
+
+inline SharedShape& js::Shape::asShared() {
+  MOZ_ASSERT(isShared());
+  return *static_cast<SharedShape*>(this);
+}
+
+inline DictionaryShape& js::Shape::asDictionary() {
+  MOZ_ASSERT(isDictionary());
+  return *static_cast<DictionaryShape*>(this);
+}
 
 // Iterator for iterating over a shape's properties. It can be used like this:
 //

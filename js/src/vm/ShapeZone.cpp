@@ -15,7 +15,7 @@ using namespace js;
 
 void ShapeZone::fixupPropMapShapeTableAfterMovingGC() {
   for (PropMapShapeSet::Enum e(propMapShapes); !e.empty(); e.popFront()) {
-    Shape* shape = MaybeForwarded(e.front().unbarrieredGet());
+    SharedShape* shape = MaybeForwarded(e.front().unbarrieredGet());
     SharedPropMap* map = MaybeForwarded(shape->propMap())->asShared();
     BaseShape* base = MaybeForwarded(shape->base());
 

@@ -1144,9 +1144,10 @@ void Shape::dump() const {
 #endif  // DEBUG
 
 /* static */
-Shape* SharedShape::getInitialShape(JSContext* cx, const JSClass* clasp,
-                                    JS::Realm* realm, TaggedProto proto,
-                                    size_t nfixed, ObjectFlags objectFlags) {
+SharedShape* SharedShape::getInitialShape(JSContext* cx, const JSClass* clasp,
+                                          JS::Realm* realm, TaggedProto proto,
+                                          size_t nfixed,
+                                          ObjectFlags objectFlags) {
   MOZ_ASSERT(cx->compartment() == realm->compartment());
   MOZ_ASSERT_IF(proto.isObject(),
                 cx->isInsideCurrentCompartment(proto.toObject()));
@@ -1159,7 +1160,7 @@ Shape* SharedShape::getInitialShape(JSContext* cx, const JSClass* clasp,
       JSObject* protoObj = proto.toObject();
       Shape* protoObjShape = protoObj->shape();
       if (protoObjShape->cache().isShapeWithProto()) {
-        Shape* shape = protoObjShape->cache().toShapeWithProto();
+        SharedShape* shape = protoObjShape->cache().toShapeWithProto();
         if (shape->numFixedSlots() == nfixed &&
             shape->objectFlags() == objectFlags &&
             shape->getObjectClass() == clasp && shape->realm() == realm &&
@@ -1215,7 +1216,7 @@ Shape* SharedShape::getInitialShape(JSContext* cx, const JSClass* clasp,
     return nullptr;
   }
 
-  Rooted<Shape*> shape(
+  Rooted<SharedShape*> shape(
       cx, SharedShape::new_(cx, nbase, objectFlags, nfixed, nullptr, 0));
   if (!shape) {
     return nullptr;
@@ -1230,19 +1231,18 @@ Shape* SharedShape::getInitialShape(JSContext* cx, const JSClass* clasp,
 }
 
 /* static */
-Shape* SharedShape::getInitialShape(JSContext* cx, const JSClass* clasp,
-                                    JS::Realm* realm, TaggedProto proto,
-                                    gc::AllocKind kind,
-                                    ObjectFlags objectFlags) {
+SharedShape* SharedShape::getInitialShape(JSContext* cx, const JSClass* clasp,
+                                          JS::Realm* realm, TaggedProto proto,
+                                          gc::AllocKind kind,
+                                          ObjectFlags objectFlags) {
   return getInitialShape(cx, clasp, realm, proto, GetGCKindSlots(kind),
                          objectFlags);
 }
 
 /* static */
-Shape* SharedShape::getPropMapShape(JSContext* cx, BaseShape* base,
-                                    size_t nfixed, Handle<SharedPropMap*> map,
-                                    uint32_t mapLength, ObjectFlags objectFlags,
-                                    bool* allocatedNewShape) {
+SharedShape* SharedShape::getPropMapShape(
+    JSContext* cx, BaseShape* base, size_t nfixed, Handle<SharedPropMap*> map,
+    uint32_t mapLength, ObjectFlags objectFlags, bool* allocatedNewShape) {
   MOZ_ASSERT(cx->compartment() == base->compartment());
   MOZ_ASSERT_IF(base->proto().isObject(),
                 cx->isInsideCurrentCompartment(base->proto().toObject()));
@@ -1264,7 +1264,7 @@ Shape* SharedShape::getPropMapShape(JSContext* cx, BaseShape* base,
   }
 
   Rooted<BaseShape*> baseRoot(cx, base);
-  Rooted<Shape*> shape(
+  Rooted<SharedShape*> shape(
       cx, SharedShape::new_(cx, baseRoot, objectFlags, nfixed, map, mapLength));
   if (!shape) {
     return nullptr;
@@ -1283,7 +1283,7 @@ Shape* SharedShape::getPropMapShape(JSContext* cx, BaseShape* base,
 }
 
 /* static */
-Shape* SharedShape::getInitialOrPropMapShape(
+SharedShape* SharedShape::getInitialOrPropMapShape(
     JSContext* cx, const JSClass* clasp, JS::Realm* realm, TaggedProto proto,
     size_t nfixed, Handle<SharedPropMap*> map, uint32_t mapLength,
     ObjectFlags objectFlags) {
@@ -1302,7 +1302,8 @@ Shape* SharedShape::getInitialOrPropMapShape(
 }
 
 /* static */
-void SharedShape::insertInitialShape(JSContext* cx, Handle<Shape*> shape) {
+void SharedShape::insertInitialShape(JSContext* cx,
+                                     Handle<SharedShape*> shape) {
   using Lookup = InitialShapeHasher::Lookup;
   Lookup lookup(shape->getObjectClass(), shape->realm(), shape->proto(),
                 shape->numFixedSlots(), shape->objectFlags());
@@ -1313,7 +1314,7 @@ void SharedShape::insertInitialShape(JSContext* cx, Handle<Shape*> shape) {
 
   // The metadata callback can end up causing redundant changes of the initial
   // shape.
-  Shape* initialShape = *p;
+  SharedShape* initialShape = *p;
   if (initialShape == shape) {
     return;
   }
