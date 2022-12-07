@@ -584,7 +584,8 @@ add_task(async function test_MR_aboutwelcome_with_progress_bar() {
       // Base progress bar step styles.
       height: "6px",
       "padding-block": "0px",
-      margin: "0px",
+      "margin-inline": "-1px",
+      "margin-block": "0px",
     });
   }
 
