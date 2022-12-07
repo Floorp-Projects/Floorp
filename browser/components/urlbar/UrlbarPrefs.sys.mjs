@@ -133,6 +133,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether search engagement telemetry should be recorded.
   ["searchEngagementTelemetry.enabled", false],
 
+  // Interval time until taking pause impression telemetry.
+  ["searchEngagementTelemetry.pauseImpressionIntervalMs", 1000],
+
   // Whether Firefox Suggest group labels are shown in the urlbar view in en-*
   // locales. Labels are not shown in other locales but likely will be in the
   // future.

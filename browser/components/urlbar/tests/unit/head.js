@@ -922,6 +922,9 @@ async function check_results({
       onFirstResult() {
         return false;
       },
+      getSearchSource() {
+        return "dummy-search-source";
+      },
       window: {
         location: {
           href: AppConstants.BROWSER_CHROME_URL,
