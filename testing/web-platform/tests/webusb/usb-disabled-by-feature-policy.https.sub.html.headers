@@ -1,1 +1,1 @@
-Permissions-Policy: usb=()
+Feature-Policy: usb 'none'
