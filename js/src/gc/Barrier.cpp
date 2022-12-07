@@ -114,7 +114,8 @@ template <typename T>
 
   MOZ_ASSERT(k);
   MOZ_ASSERT(l);
-  MOZ_ASSERT(CurrentThreadCanAccessZone(l->zoneFromAnyThread()));
+  MOZ_ASSERT(CurrentThreadCanAccessZone(l->zoneFromAnyThread()) ||
+             CurrentThreadIsPerformingGC());
 
   Zone* zone = k->zoneFromAnyThread();
   if (zone != l->zoneFromAnyThread()) {
