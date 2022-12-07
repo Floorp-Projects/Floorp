@@ -2078,15 +2078,25 @@ WorkerThreadPrimaryRunnable::Run() {
       // and we can unroot them.
       mWorkerPrivate->UnrootGlobalScopes();
 
-      // Perform a full GC. This will collect the main worker global and CC,
+      // Perform a full GC until we collect the main worker global and CC,
       // which should break all cycles that touch JS.
-      JS::PrepareForFullGC(cx);
-      JS::NonIncrementalGC(cx, JS::GCOptions::Shutdown,
-                           JS::GCReason::WORKER_SHUTDOWN);
+      bool doGCCC = true;
+      while (doGCCC) {
+        JS::PrepareForFullGC(cx);
+        JS::NonIncrementalGC(cx, JS::GCOptions::Shutdown,
+                             JS::GCReason::WORKER_SHUTDOWN);
+
+        // Process any side effects thereof until we reach a stable state.
+        doGCCC = NS_HasPendingEvents(nullptr);
+        NS_ProcessPendingEvents(nullptr);
+      }
 
       // The worker global should be unrooted and the shutdown of cycle
       // collection should break all the remaining cycles.
       nsCycleCollector_shutdown();
+
+      // If ever the CC shutdown run caused side effects, process them.
+      NS_ProcessPendingEvents(nullptr);
 
       // Check sentinels if we actually removed all global scope references.
       nsCOMPtr<DOMEventTargetHelper> globalScopeAlive =
