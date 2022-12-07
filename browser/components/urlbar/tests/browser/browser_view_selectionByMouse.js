@@ -29,7 +29,7 @@ add_setup(async function() {
   });
   UrlbarProviderQuickActions.addAction("test-downloads", {
     commands: ["test-downloads"],
-    label: "quickactions-downloads",
+    label: "quickactions-downloads2",
     onPick: () =>
       BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:downloads"),
   });

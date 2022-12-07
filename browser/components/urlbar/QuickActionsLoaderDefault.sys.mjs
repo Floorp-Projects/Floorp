@@ -78,9 +78,9 @@ const DEFAULT_ACTIONS = {
     onPick: openAddonsUrl("addons://discover/"),
   },
   bookmarks: {
-    l10nCommands: ["quickactions-cmd-bookmarks", "quickactions-bookmarks"],
+    l10nCommands: ["quickactions-cmd-bookmarks", "quickactions-bookmarks2"],
     icon: "chrome://browser/skin/bookmark.svg",
-    label: "quickactions-bookmarks",
+    label: "quickactions-bookmarks2",
     onPick: () => {
       lazy.BrowserWindowTracker.getTopWindow().top.PlacesCommandHook.showPlacesOrganizer(
         "BookmarksToolbar"
@@ -100,9 +100,9 @@ const DEFAULT_ACTIONS = {
     },
   },
   downloads: {
-    l10nCommands: ["quickactions-cmd-downloads", "quickactions-downloads"],
+    l10nCommands: ["quickactions-cmd-downloads", "quickactions-downloads2"],
     icon: "chrome://browser/skin/downloads/downloads.svg",
-    label: "quickactions-downloads",
+    label: "quickactions-downloads2",
     onPick: openUrlFun("about:downloads"),
   },
   extensions: {
@@ -112,9 +112,9 @@ const DEFAULT_ACTIONS = {
     onPick: openAddonsUrl("addons://list/extension"),
   },
   inspect: {
-    l10nCommands: ["quickactions-cmd-inspector", "quickactions-inspector"],
-    icon: "chrome://devtools/skin/images/tool-inspector.svg",
-    label: "quickactions-inspector",
+    l10nCommands: ["quickactions-cmd-inspector", "quickactions-inspector2"],
+    icon: "chrome://devtools/skin/images/open-inspector.svg",
+    label: "quickactions-inspector2",
     isVisible: () =>
       lazy.DevToolsShim.isEnabled() || lazy.DevToolsShim.isDevToolsUser(),
     isActive: () => {
@@ -135,8 +135,8 @@ const DEFAULT_ACTIONS = {
     onPick: openInspector,
   },
   logins: {
-    l10nCommands: ["quickactions-cmd-logins", "quickactions-logins"],
-    label: "quickactions-logins",
+    l10nCommands: ["quickactions-cmd-logins", "quickactions-logins2"],
+    label: "quickactions-logins2",
     onPick: openUrlFun("about:logins"),
   },
   plugins: {
@@ -146,8 +146,9 @@ const DEFAULT_ACTIONS = {
     onPick: openAddonsUrl("addons://list/plugin"),
   },
   print: {
-    l10nCommands: ["quickactions-cmd-print", "quickactions-print"],
-    label: "quickactions-print",
+    l10nCommands: ["quickactions-cmd-print", "quickactions-print2"],
+    label: "quickactions-print2",
+    icon: "chrome://global/skin/icons/print.svg",
     onPick: () => {
       lazy.BrowserWindowTracker.getTopWindow()
         .document.getElementById("cmd_print")
@@ -155,8 +156,8 @@ const DEFAULT_ACTIONS = {
     },
   },
   private: {
-    l10nCommands: ["quickactions-cmd-private", "quickactions-private"],
-    label: "quickactions-private",
+    l10nCommands: ["quickactions-cmd-private", "quickactions-private2"],
+    label: "quickactions-private2",
     icon: "chrome://global/skin/icons/indicator-private-browsing.svg",
     onPick: () => {
       lazy.BrowserWindowTracker.getTopWindow().OpenBrowserWindow({
@@ -179,8 +180,9 @@ const DEFAULT_ACTIONS = {
     onPick: restartBrowser,
   },
   screenshot: {
-    l10nCommands: ["quickactions-cmd-screenshot", "quickactions-screenshot2"],
-    label: "quickactions-screenshot2",
+    l10nCommands: ["quickactions-cmd-screenshot", "quickactions-screenshot3"],
+    label: "quickactions-screenshot3",
+    icon: "chrome://browser/skin/screenshot.svg",
     isActive: currentPageIsWebContentFilter,
     onPick: () => {
       lazy.BrowserWindowTracker.getTopWindow()
@@ -190,8 +192,9 @@ const DEFAULT_ACTIONS = {
     },
   },
   settings: {
-    l10nCommands: ["quickactions-cmd-settings", "quickactions-settings"],
-    label: "quickactions-settings",
+    l10nCommands: ["quickactions-cmd-settings", "quickactions-settings2"],
+    icon: "chrome://global/skin/icons/settings.svg",
+    label: "quickactions-settings2",
     onPick: openUrlFun("about:preferences"),
   },
   themes: {
@@ -214,9 +217,9 @@ const DEFAULT_ACTIONS = {
     onPick: restartBrowser,
   },
   viewsource: {
-    l10nCommands: ["quickactions-cmd-viewsource", "quickactions-viewsource"],
+    l10nCommands: ["quickactions-cmd-viewsource", "quickactions-viewsource2"],
     icon: "chrome://global/skin/icons/settings.svg",
-    label: "quickactions-viewsource",
+    label: "quickactions-viewsource2",
     isActive: () => currentBrowser()?.currentURI.scheme !== "view-source",
     onPick: () => openUrl("view-source:" + currentBrowser().currentURI.spec),
   },

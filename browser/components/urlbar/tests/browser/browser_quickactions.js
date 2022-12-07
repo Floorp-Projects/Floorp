@@ -37,7 +37,7 @@ add_setup(async function setup() {
 
   UrlbarProviderQuickActions.addAction("testaction", {
     commands: ["testaction"],
-    label: "quickactions-downloads",
+    label: "quickactions-downloads2",
     onPick: () => testActionCalled++,
   });
 
@@ -80,7 +80,7 @@ add_task(async function test_label_command() {
   info("A prefix of the label matches");
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    value: "Open Dow",
+    value: "View Dow",
   });
   Assert.equal(
     UrlbarTestUtils.getResultCount(window),
@@ -240,7 +240,7 @@ add_task(async function test_screenshot_disabled() {
 add_task(async function match_in_phrase() {
   UrlbarProviderQuickActions.addAction("newtestaction", {
     commands: ["matchingstring"],
-    label: "quickactions-downloads",
+    label: "quickactions-downloads2",
   });
 
   info("The action is matched when at end of input");
