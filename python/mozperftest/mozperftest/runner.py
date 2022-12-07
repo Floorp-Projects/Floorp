@@ -24,10 +24,10 @@ The --push-to-try flow is:
   perftest
 """
 import json
+import logging
 import os
 import shutil
 import sys
-import logging
 import tempfile
 from pathlib import Path
 
@@ -62,10 +62,10 @@ def _activate_mach_virtualenv():
     ]
 
     from mach.site import (
-        resolve_requirements,
-        MachSiteManager,
         ExternalPythonSite,
+        MachSiteManager,
         SitePackagesSource,
+        resolve_requirements,
     )
 
     mach_site = MachSiteManager(
@@ -110,10 +110,10 @@ def run_tests(mach_cmd, kwargs, client_args):
         print(json.dumps(try_options, indent=4, sort_keys=True))
         kwargs.update(try_options)
 
-    from mozperftest.utils import build_test_list
     from mozperftest import MachEnvironment, Metadata
     from mozperftest.hooks import Hooks
     from mozperftest.script import ScriptInfo
+    from mozperftest.utils import build_test_list
 
     hooks_file = kwargs.pop("hooks", None)
     hooks = Hooks(mach_cmd, hooks_file)
@@ -182,13 +182,13 @@ def run_tools(mach_cmd, kwargs):
     into a separate file that runs the tools and sets them up dynamically
     in a similar way to how we use layers.
     """
-    from mozperftest.utils import install_package, ON_TRY
+    from mozperftest.utils import ON_TRY, install_package
 
     mach_cmd.activate_virtualenv()
     install_package(mach_cmd.virtualenv_manager, "opencv-python==4.5.4.60")
     install_package(
         mach_cmd.virtualenv_manager,
-        "mozperftest-tools==0.1.11",
+        "mozperftest-tools==0.1.12",
     )
 
     log_level = logging.INFO
@@ -225,11 +225,11 @@ def main(argv=sys.argv[1:]):
     """Used when the runner is directly called from the shell"""
     _activate_mach_virtualenv()
 
-    from mozbuild.mozconfig import MozconfigLoader
-    from mozbuild.base import MachCommandBase, MozbuildObject
-    from mozperftest import PerftestArgumentParser, PerftestToolsArgumentParser
     from mach.logging import LoggingManager
     from mach.util import get_state_dir
+    from mozbuild.base import MachCommandBase, MozbuildObject
+    from mozbuild.mozconfig import MozconfigLoader
+    from mozperftest import PerftestArgumentParser, PerftestToolsArgumentParser
 
     mozconfig = SRC_ROOT / "browser" / "config" / "mozconfig"
     if mozconfig.exists():
