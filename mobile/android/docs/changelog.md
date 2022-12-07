@@ -38,6 +38,9 @@ permalink: /changelog/
 * **service-sync-logins**
   * Removed Fennec to Fenix migration code. Deleted `importLoginsAsync` function. [bug #1803632](https://bugzilla.mozilla.org/show_bug.cgi?id=1803632)
 
+* **lib-crash-sentry**
+  * 🚒 Bug fixed [bug #1801349](https://bugzilla.mozilla.org/show_bug.cgi?id=1801349).  Copy the breadcrumb date to the Sentry breadcrumb.
+
 # 108.0.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/v107.0.0...v108.0.0)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/v108.0.0/android-components/buildSrc/src/main/java/Dependencies.kt)

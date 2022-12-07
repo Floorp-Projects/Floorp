@@ -192,7 +192,7 @@ class SentryService(
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 internal fun MozillaBreadcrumb.toSentryBreadcrumb(): Breadcrumb {
     val sentryLevel = this.level.toSentryBreadcrumbLevel()
-    val breadcrumb = Breadcrumb().apply {
+    val breadcrumb = Breadcrumb(this.date).apply {
         message = this@toSentryBreadcrumb.message
         category = this@toSentryBreadcrumb.category
         level = sentryLevel

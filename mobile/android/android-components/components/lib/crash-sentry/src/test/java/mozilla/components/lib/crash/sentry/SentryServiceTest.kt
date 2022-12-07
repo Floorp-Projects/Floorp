@@ -17,6 +17,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import java.util.Date
 import mozilla.components.concept.base.crash.Breadcrumb as MozillaBreadcrumb
 
 @RunWith(AndroidJUnit4::class)
@@ -204,6 +205,7 @@ class SentryServiceTest {
             category = "category",
             level = MozillaBreadcrumb.Level.INFO,
             type = MozillaBreadcrumb.Type.DEFAULT,
+            date = Date(1640995200L), // 2022-01-01
         )
         val sentryBreadcrumb = mozillaBreadcrumb.toSentryBreadcrumb()
 
@@ -212,6 +214,7 @@ class SentryServiceTest {
         assertEquals(mozillaBreadcrumb.category, sentryBreadcrumb.category)
         assertEquals(SentryLevel.INFO, sentryBreadcrumb.level)
         assertEquals(MozillaBreadcrumb.Type.DEFAULT.value, sentryBreadcrumb.type)
+        assertEquals(mozillaBreadcrumb.date, sentryBreadcrumb.timestamp)
     }
 
     @Test
