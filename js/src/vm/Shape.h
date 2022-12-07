@@ -338,16 +338,6 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
 
   void maybeCacheIterator(JSContext* cx, PropertyIteratorObject* iter);
 
-  SharedPropMap* sharedPropMap() const {
-    MOZ_ASSERT(!isDictionary());
-    return propMap_ ? propMap_->asShared() : nullptr;
-  }
-  DictionaryPropMap* dictionaryPropMap() const {
-    MOZ_ASSERT(isDictionary());
-    MOZ_ASSERT(propMap_);
-    return propMap_->asDictionary();
-  }
-
   uint32_t propMapLength() const { return immutableFlags & MAP_LENGTH_MASK; }
 
   PropertyInfoWithKey lastProperty() const {
@@ -473,12 +463,18 @@ class SharedShape : public js::Shape {
   }
 
  public:
+  SharedPropMap* propMap() const {
+    MOZ_ASSERT(isShared());
+    return propMap_ ? propMap_->asShared() : nullptr;
+  }
+  inline SharedPropMap* propMapMaybeForwarded() const;
+
   bool lastPropertyMatchesForAdd(PropertyKey key, PropertyFlags flags,
                                  uint32_t* slot) const {
     MOZ_ASSERT(isShared());
     MOZ_ASSERT(propMapLength() > 0);
     uint32_t index = propMapLength() - 1;
-    SharedPropMap* map = sharedPropMap();
+    SharedPropMap* map = propMap();
     if (map->getKey(index) != key) {
       return false;
     }
@@ -493,7 +489,7 @@ class SharedShape : public js::Shape {
   uint32_t slotSpanSlow() const {
     MOZ_ASSERT(isShared());
     const JSClass* clasp = getObjectClass();
-    return SharedPropMap::slotSpan(clasp, sharedPropMap(), propMapLength());
+    return SharedPropMap::slotSpan(clasp, propMap(), propMapLength());
   }
   uint32_t slotSpan() const {
     MOZ_ASSERT(isShared());
@@ -595,6 +591,12 @@ class DictionaryShape : public js::Shape {
                                ObjectFlags objectFlags, uint32_t nfixed,
                                Handle<DictionaryPropMap*> map,
                                uint32_t mapLength);
+
+  DictionaryPropMap* propMap() const {
+    MOZ_ASSERT(isDictionary());
+    MOZ_ASSERT(propMap_);
+    return propMap_->asDictionary();
+  }
 };
 
 inline SharedShape& js::Shape::asShared() {
