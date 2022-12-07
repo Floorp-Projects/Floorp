@@ -74,6 +74,8 @@ class CookieBannerChild extends JSWindowActorChild {
     failReason: null,
     bannerVisibilityFail: false,
   };
+  // For measuring the cookie banner handling duration.
+  #gleanBannerHandlingTimer = null;
 
   handleEvent(event) {
     if (!this.#isEnabled) {
@@ -172,6 +174,12 @@ class CookieBannerChild extends JSWindowActorChild {
 
     this.#clickRules = rules;
 
+    if (!this.#isDetectOnly) {
+      // Start a timer to measure how long it takes for the banner to appear and
+      // be handled.
+      this.#gleanBannerHandlingTimer = Glean.cookieBannersClick.handleDuration.start();
+    }
+
     let {
       bannerHandled,
       bannerDetected,
@@ -190,7 +198,22 @@ class CookieBannerChild extends JSWindowActorChild {
         url: this.document?.location.href,
         rule: matchedRule,
       });
+
+      // Stop the timer to record how long it took to handle the banner.
+      lazy.logConsole.debug(
+        "Telemetry timer: stop and accumulate",
+        this.#gleanBannerHandlingTimer
+      );
+      Glean.cookieBannersClick.handleDuration.stopAndAccumulate(
+        this.#gleanBannerHandlingTimer
+      );
+
       this.sendAsyncMessage("CookieBanner::HandledBanner");
+    } else if (!this.#isDetectOnly) {
+      // Cancel the timer we didn't handle the banner.
+      Glean.cookieBannersClick.handleDuration.cancel(
+        this.#gleanBannerHandlingTimer
+      );
     }
 
     this.#maybeSendTestMessage();
