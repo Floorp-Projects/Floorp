@@ -129,6 +129,11 @@ export class UrlbarValueFormatter {
     }
 
     let url = this.inputField.value;
+    // getFixupURIInfo logs an error if the URL is empty. Avoid that by
+    // returning early.
+    if (!url) {
+      return null;
+    }
     let browser = this.window.gBrowser.selectedBrowser;
 
     // Since doing a full URIFixup and offset calculations is expensive, we
