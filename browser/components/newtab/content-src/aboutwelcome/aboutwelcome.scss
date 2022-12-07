@@ -516,7 +516,7 @@ html {
               .indicator {
                 width: -moz-available;
                 height: 100%;
-                margin-inline: 0;
+                margin-inline: -1px;
                 scale: 1;
                 background: transparent;
                 border: 0;
@@ -547,12 +547,11 @@ html {
               border-top: 1px solid var(--in-content-page-color);
 
               .indicator {
-                opacity: 1;
-                border-color: var(--in-content-page-background);
+                background-color: var(--in-content-page-background);
 
                 &.current,
                 &.complete {
-                  border-color: var(--in-content-accent-color);
+                  background-color: var(--in-content-accent-color);
                 }
               }
             }
