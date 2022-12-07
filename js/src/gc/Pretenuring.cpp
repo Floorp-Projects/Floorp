@@ -304,7 +304,9 @@ bool AllocSite::maybeResetState() {
 void AllocSite::trace(JSTracer* trc) {
   if (JSScript* s = script()) {
     TraceManuallyBarrieredEdge(trc, &s, "AllocSite script");
-    setScript(s);
+    if (s != script()) {
+      setScript(s);
+    }
   }
 }
 
