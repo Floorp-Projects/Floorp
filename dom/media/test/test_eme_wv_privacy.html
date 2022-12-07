@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test generating encrypted request in Widevine privacy mode</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="eme.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function Test() {
+  return new Promise(function(resolve, reject) {
+    var configs = [{
+      initDataTypes: ['keyids'],
+      videoCapabilities: [{contentType: 'video/mp4' }],
+    }];
+    navigator.requestMediaKeySystemAccess('com.widevine.alpha', configs)
+      .then((access) => access.createMediaKeys(),
+            (e) => { throw e; })
+      .then((mediaKeys) => {
+          var session = mediaKeys.createSession('temporary');
+          session.addEventListener('message', event => {
+            is(event.messageType, 'license-request',
+               'MediaKeyMessage type should be license-request.');
+            const request = new Uint8Array(event.message);
+            info('request generated[' + request.length + ']: [' + request + ']');
+            ok(request.length == 2 && request[0] == 0x08 && request[1] == 0x04,
+               'Widevine license request should be [0x08, 0x04] in privacy mode');
+            session.close().then(() => { resolve(); });
+          });
+          return session.generateRequest('keyids',
+                                         new TextEncoder().encode('{"kids":["MDAwMDAwMDAwMDAwMDAwMQ=="]}'));
+        },
+        (e) => { throw e; })
+      .catch((e) => {
+        is(e.name, 'NotSupportedError',
+           'Should only be rejected when "not supported"');
+        resolve();
+      });
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+Test().then(function() {
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>
