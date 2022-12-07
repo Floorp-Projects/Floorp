@@ -2273,6 +2273,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructTableCell(
 
   nsFrameList childList;
   if (aItem.mFCData->mBits & FCDATA_USE_CHILD_ITEMS) {
+    AutoFrameConstructionPageName pageNameTracker(aState, cellInnerFrame);
     ConstructFramesFromItemList(
         aState, aItem.mChildItems, cellInnerFrame,
         aItem.mFCData->mBits & FCDATA_IS_WRAPPER_ANON_BOX, childList);
