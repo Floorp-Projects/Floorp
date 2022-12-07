@@ -132,6 +132,9 @@ const COMMON_PREFERENCES = new Map([
   // disables the New Tab Page ends up showing the toolbar on about:blank).
   ["browser.toolbars.bookmarks.visibility", "never"],
 
+  // Make sure Topsites doesn't hit the network to retrieve tiles from Contile.
+  ["browser.topsites.contile.enabled", false],
+
   // Disable first run splash page on Windows 10
   ["browser.usedOnWindows10.introURL", ""],
 
@@ -264,8 +267,9 @@ const COMMON_PREFERENCES = new Map([
   // Prevent starting into safe mode after application crashes
   ["toolkit.startup.max_resumed_crashes", -1],
 
-  // Make sure Topsites doesn't hit the network to retrieve tiles from Contile.
-  ["browser.topsites.contile.enabled", false],
+  // Disable window occlusion on Windows, which can prevent webdriver commands
+  // such as WebDriver:FindElements from working properly (Bug 1802473).
+  ["widget.windows.window_occlusion_tracking.enabled", false],
 ]);
 
 export const RecommendedPreferences = {
