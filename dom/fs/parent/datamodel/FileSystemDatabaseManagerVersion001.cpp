@@ -844,6 +844,14 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RenameEntry(
 
   QM_TRY_UNWRAP(bool exists, DoesFileExist(mConnection, destination));
   if (exists) {
+    // If the destination file exists, check if it is in use
+    QM_TRY_INSPECT(const EntryId& destId,
+                   FindEntryId(mConnection, destination, true));
+    if (mDataManager->IsLocked(destId)) {
+      LOG(("Trying to overwrite in-use file"));
+      return Err(QMResult(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR));
+    }
+
     return Err(QMResult(NS_ERROR_DOM_INVALID_MODIFICATION_ERR));
   }
 
@@ -905,6 +913,13 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::MoveEntry(
   // revise the spec
   QM_TRY_UNWRAP(bool exists, DoesFileExist(mConnection, aNewDesignation));
   if (exists) {
+    QM_TRY_INSPECT(const EntryId& destId,
+                   FindEntryId(mConnection, aNewDesignation, true));
+    if (mDataManager->IsLocked(destId)) {
+      LOG(("Trying to overwrite in-use file"));
+      return Err(QMResult(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR));
+    }
+
     return Err(QMResult(NS_ERROR_DOM_INVALID_MODIFICATION_ERR));
   }
 
