@@ -8520,7 +8520,7 @@
 # Enables support for the named pages
 - name: layout.css.named-pages.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: always
   rust: true
 
