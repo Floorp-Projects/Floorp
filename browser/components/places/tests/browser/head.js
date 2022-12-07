@@ -255,7 +255,7 @@ var withBookmarksDialog = async function(autoCancel, openFn, taskFn, closeFn) {
 
   // Check the first input is focused.
   let doc = dialogWin.document;
-  let elt = doc.querySelector("vbox:not([collapsed=true]) > input");
+  let elt = doc.querySelector('input:not([hidden="true"])');
   ok(elt, "There should be an input to focus.");
 
   if (elt) {

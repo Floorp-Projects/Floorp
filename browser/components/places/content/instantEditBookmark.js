@@ -307,7 +307,11 @@ var gEditItemOverlay = {
       if (visible) {
         visibleRows.add(rowId);
       }
-      return !(this._element(rowId).collapsed = !visible);
+      const cells = document.getElementsByClassName("editBMPanel_" + rowId);
+      for (const cell of cells) {
+        cell.hidden = !visible;
+      }
+      return visible;
     };
 
     if (showOrCollapse("nameRow", !bulkTagging, "name")) {
@@ -336,7 +340,7 @@ var gEditItemOverlay = {
     // Collapse the tag selector if the item does not accept tags.
     if (showOrCollapse("tagsRow", isURI || bulkTagging, "tags")) {
       this._initTagsField();
-    } else if (!this._element("tagsSelectorRow").collapsed) {
+    } else if (!this._element("tagsSelectorRow").hidden) {
       this.toggleTagsSelector().catch(Cu.reportError);
     }
 
@@ -383,8 +387,8 @@ var gEditItemOverlay = {
       // The focusedElement possible values are:
       //  * preferred: focus the field that the user touched first the last
       //    time the pane was shown (either namePicker or tagsField)
-      //  * first: focus the first non collapsed input
-      // Note: since all controls are collapsed by default, we don't get the
+      //  * first: focus the first non hidden input
+      // Note: since all controls are hidden by default, we don't get the
       // default XUL dialog behavior, that selects the first control, so we set
       // the focus explicitly.
       let elt;
@@ -395,7 +399,7 @@ var gEditItemOverlay = {
           )
         );
       } else if (focusedElement === "first") {
-        elt = document.querySelector("vbox:not([collapsed=true]) > input");
+        elt = document.querySelector('input:not([hidden="true"])');
       }
       if (elt) {
         elt.focus({ preventScroll: true });
@@ -566,13 +570,13 @@ var gEditItemOverlay = {
     if (aHideCollapsibleElements) {
       // Hide the folder tree if it was previously visible.
       var folderTreeRow = this._element("folderTreeRow");
-      if (!folderTreeRow.collapsed) {
+      if (!folderTreeRow.hidden) {
         this.toggleFolderTreeVisibility();
       }
 
       // Hide the tag selector if it was previously visible.
       var tagsSelectorRow = this._element("tagsSelectorRow");
-      if (!tagsSelectorRow.collapsed) {
+      if (!tagsSelectorRow.hidden) {
         this.toggleTagsSelector().catch(Cu.reportError);
       }
     }
@@ -833,15 +837,15 @@ var gEditItemOverlay = {
   toggleFolderTreeVisibility() {
     let expander = this._element("foldersExpander");
     let folderTreeRow = this._element("folderTreeRow");
-    let wasCollapsed = folderTreeRow.collapsed;
-    expander.classList.toggle("expander-up", wasCollapsed);
-    expander.classList.toggle("expander-down", !wasCollapsed);
-    if (!wasCollapsed) {
+    let wasHidden = folderTreeRow.hidden;
+    expander.classList.toggle("expander-up", wasHidden);
+    expander.classList.toggle("expander-down", !wasHidden);
+    if (!wasHidden) {
       expander.setAttribute(
         "tooltiptext",
         expander.getAttribute("tooltiptextdown")
       );
-      folderTreeRow.collapsed = true;
+      folderTreeRow.hidden = true;
       this._element("chooseFolderSeparator").hidden = this._element(
         "chooseFolderMenuItem"
       ).hidden = false;
@@ -856,10 +860,10 @@ var gEditItemOverlay = {
         "tooltiptext",
         expander.getAttribute("tooltiptextup")
       );
-      folderTreeRow.collapsed = false;
+      folderTreeRow.hidden = false;
 
       // XXXmano: Ideally we would only do this once, but for some odd reason,
-      // the editable mode set on this tree, together with its collapsed state
+      // the editable mode set on this tree, together with its hidden state
       // breaks the view.
       const FOLDER_TREE_PLACE_URI =
         "place:excludeItems=1&excludeQueries=1&type=" +
@@ -952,7 +956,7 @@ var gEditItemOverlay = {
 
     // Update folder-tree selection
     var folderTreeRow = this._element("folderTreeRow");
-    if (!folderTreeRow.collapsed) {
+    if (!folderTreeRow.hidden) {
       var selectedNode = this._folderTree.selectedNode;
       if (
         !selectedNode ||
@@ -987,7 +991,7 @@ var gEditItemOverlay = {
   onFolderTreeSelect() {
     // Ignore this event when the folder tree is hidden, even if the tree is
     // alive, it's clearly not a user activated action.
-    if (this._element("folderTreeRow").collapsed) {
+    if (this._element("folderTreeRow").hidden) {
       return;
     }
 
@@ -1014,7 +1018,7 @@ var gEditItemOverlay = {
   async _rebuildTagsSelectorList() {
     let tagsSelector = this._element("tagsSelector");
     let tagsSelectorRow = this._element("tagsSelectorRow");
-    if (tagsSelectorRow.collapsed) {
+    if (tagsSelectorRow.hidden) {
       return;
     }
 
@@ -1061,14 +1065,14 @@ var gEditItemOverlay = {
     var tagsSelector = this._element("tagsSelector");
     var tagsSelectorRow = this._element("tagsSelectorRow");
     var expander = this._element("tagsSelectorExpander");
-    expander.classList.toggle("expander-up", tagsSelectorRow.collapsed);
-    expander.classList.toggle("expander-down", !tagsSelectorRow.collapsed);
-    if (tagsSelectorRow.collapsed) {
+    expander.classList.toggle("expander-up", tagsSelectorRow.hidden);
+    expander.classList.toggle("expander-down", !tagsSelectorRow.hidden);
+    if (tagsSelectorRow.hidden) {
       expander.setAttribute(
         "tooltiptext",
         expander.getAttribute("tooltiptextup")
       );
-      tagsSelectorRow.collapsed = false;
+      tagsSelectorRow.hidden = false;
       await this._rebuildTagsSelectorList();
 
       // This is a no-op if we've added the listener.
@@ -1079,7 +1083,7 @@ var gEditItemOverlay = {
         "tooltiptext",
         expander.getAttribute("tooltiptextdown")
       );
-      tagsSelectorRow.collapsed = true;
+      tagsSelectorRow.hidden = true;
 
       // This is a no-op if we've removed the listener.
       tagsSelector.removeEventListener("mousedown", this);

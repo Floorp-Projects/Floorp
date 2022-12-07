@@ -92,7 +92,38 @@
 }
 
 /* Info box */
+#infoBox:not([hidden="true"]) {
+  display: block;
+}
+
+#editBookmarkPanelContent {
+  grid-template-columns: auto 1fr;
+}
+
+#editBookmarkPanelContent .caption-label:not([hidden="true"]) {
+  display: block;
+  grid-column: 2;
+}
+
+#editBookmarkPanelContent input {
+  margin: 4px;
+}
+
+#editBookmarkPanelContent label {
+  align-self: center;
+}
+
+#editBMPanel_itemsCountText {
+  grid-column: auto / span 2;
+  justify-self: center;
+}
+
+#editBMPanel_tagsSelectorRow {
+  grid-column: auto / span 2;
+}
+
 #detailsPane {
+  height: 16em;
   padding: 5px;
 }
 

@@ -57,9 +57,9 @@ add_task(async function test_selectChoose() {
     "Should have the correct default guid selected"
   );
   Assert.equal(
-    folderTreeRow.collapsed,
+    folderTreeRow.hidden,
     true,
-    "Should have the folder tree collapsed"
+    "Should have the folder tree hidden"
   );
 
   let promisePopup = BrowserTestUtils.waitForEvent(
@@ -77,7 +77,7 @@ add_task(async function test_selectChoose() {
   );
 
   await TestUtils.waitForCondition(
-    () => !folderTreeRow.collapsed,
+    () => !folderTreeRow.hidden,
     "Should show the folder tree"
   );
   let folderTree = win.document.getElementById("editBMPanel_folderTree");
@@ -112,7 +112,7 @@ add_task(async function test_selectChoose() {
   );
 
   await TestUtils.waitForCondition(
-    () => folderTreeRow.collapsed,
+    () => folderTreeRow.hidden,
     "Should hide the folder tree"
   );
   ok(input.hidden, "Folder tree should not be broken.");
@@ -125,7 +125,7 @@ add_task(async function test_selectChoose() {
   );
 
   await TestUtils.waitForCondition(
-    () => !folderTreeRow.collapsed,
+    () => !folderTreeRow.hidden,
     "Should re-show the folder tree"
   );
   ok(input.hidden, "Folder tree should still not be broken.");

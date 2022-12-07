@@ -143,8 +143,35 @@
 }
 
 /* Info box */
+#infoBox:not([hidden="true"]) {
+  display: block;
+}
+
+#editBookmarkPanelContent {
+  grid-template-columns: auto 1fr;
+}
+
+#editBookmarkPanelContent .caption-label:not([hidden="true"]) {
+  display: block;
+  grid-column: 2;
+}
+
+#editBookmarkPanelContent label {
+  align-self: center;
+}
+
+#editBMPanel_itemsCountText {
+  grid-column: auto / span 2;
+  justify-self: center;
+}
+
+#editBMPanel_tagsSelectorRow {
+  grid-column: auto / span 2;
+}
+
 #detailsPane {
   border-top: 1px solid color-mix(in srgb, FieldText 50%, transparent);
+  height: 16em;
   padding: 10px;
 }
 

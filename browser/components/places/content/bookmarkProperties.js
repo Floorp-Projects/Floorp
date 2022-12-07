@@ -276,19 +276,19 @@ var BookmarkPropertiesPanel = {
     acceptButton.label = this._getAcceptLabel();
     let acceptButtonDisabled = false;
 
-    // Since elements can be uncollapsed asynchronously, we must observe their
+    // Since elements can be unhidden asynchronously, we must observe their
     // mutations and resize the dialog accordingly.
     this._mutationObserver = new MutationObserver(mutations => {
       for (let { target, oldValue } of mutations) {
-        let collapsed = target.getAttribute("collapsed") == "true";
+        let hidden = target.getAttribute("hidden") == "true";
         if (
-          /^editBMPanel_.*(Row|Checkbox)$/.test(target.id) &&
-          collapsed != (oldValue == "true")
+          target.classList.contains("hideable") &&
+          hidden != (oldValue == "true")
         ) {
           // To support both kind of dialogs (window and dialog-box) we need
           // both resizeBy and sizeToContent, otherwise either the dialog
           // doesn't resize, or it gets empty unused space.
-          if (collapsed) {
+          if (hidden) {
             let diff = this._mutationObserver._heightsById.get(target.id);
             window.resizeBy(0, -diff);
           } else {
@@ -304,7 +304,7 @@ var BookmarkPropertiesPanel = {
     this._mutationObserver.observe(document, {
       subtree: true,
       attributeOldValue: true,
-      attributeFilter: ["collapsed"],
+      attributeFilter: ["hidden"],
     });
 
     switch (this._action) {
