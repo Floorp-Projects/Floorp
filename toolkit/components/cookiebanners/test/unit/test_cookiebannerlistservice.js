@@ -171,6 +171,7 @@ add_setup(async () => {
 
   let oldCookieBanners = Services.cookieBanners;
   Services.cookieBanners = {
+    isEnabled: true,
     insertRule,
     removeRule,
     resetRules() {},
