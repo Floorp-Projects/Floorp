@@ -4482,16 +4482,4 @@ const html = withStatic(html$1);
  */
 const svg = withStatic(svg$1);
 
-/**
- * @license
- * Copyright 2021 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */
-if (!window.litDisableBundleWarning) {
-    console.warn('Lit has been loaded from a bundle that combines all core features into ' +
-        'a single file. To reduce transfer size and parsing cost, consider ' +
-        'using the `lit` npm package directly in your project.');
-}
-
 export { AsyncDirective, AsyncReplaceDirective, CSSResult, Directive, LitElement, PartType, ReactiveElement, TemplateResultType, UnsafeHTMLDirective, UntilDirective, UpdatingElement, _$LE, _$LH, adoptStyles, asyncAppend, asyncReplace, cache, choose, classMap, clearPart, createRef, css, defaultConverter, directive, getCommittedValue, getCompatibleStyle, getDirectiveClass, guard, html$1 as html, ifDefined, insertPart, isDirectiveResult, isPrimitive, isServer, isSingleExpression, isTemplateResult, join, keyed, literal, live, map, noChange, notEqual, nothing, range, ref, removePart, render, repeat, setChildPartValue, setCommittedValue, html as staticHtml, svg as staticSvg, styleMap, supportsAdoptingStyleSheets, svg$1 as svg, templateContent, unsafeCSS, unsafeHTML, unsafeSVG, unsafeStatic, until, when, withStatic };
-//# sourceMappingURL=lit-all.min.js.map
