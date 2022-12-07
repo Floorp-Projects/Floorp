@@ -195,3 +195,30 @@
         </html:template>
       </popupnotificationcontent>
     </popupnotification>
+
+    <popupnotification id="relay-integration-offer-notification" hidden="true">
+      <popupnotificationcontent orient="vertical">
+        <html:div>    
+          <html:p data-l10n-id="firefox-relay-offer-why-relay"></html:p>
+          <html:p data-l10n-id="firefox-relay-offer-how-we-integrate"></html:p>
+          <html:p id="firefox-relay-offer-what-relay-does" data-l10n-id="firefox-relay-offer-what-relay-does" data-l10n-args='{"sitename": "", "useremail": ""}'></html:p>
+        </html:div>
+      </popupnotificationcontent>
+    </popupnotification>
+
+    <popupnotification id="relay-integration-reuse-masks-notification" hidden="true">
+      <popupnotificationcontent orient="vertical">
+        <html:div>
+          <html:p class="error-message"></html:p>
+          <html:div class="reusable-relay-masks" />
+        </html:div>
+      </popupnotificationcontent>
+    </popupnotification>
+
+    <template id="firefox-relay-header">
+      <html:div class="relay-integration-header">
+        <html:img src="chrome://browser/content/logos/relay.svg" />
+        <html:span>Firefox</html:span>
+        <html:span> Relay</html:span>
+      </html:div>
+    </template>
