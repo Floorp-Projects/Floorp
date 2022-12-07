@@ -142,9 +142,13 @@ export const SnapshotMonitor = new (class SnapshotMonitor {
    * Performs initialization to add observers.
    */
   init() {
-    // Only enable if interactions are enabled.
+    // Only enable if interactions and snapshots are enabled.
     if (
-      !Services.prefs.getBoolPref("browser.places.interactions.enabled", false)
+      !Services.prefs.getBoolPref(
+        "browser.places.interactions.enabled",
+        false
+      ) ||
+      !Services.prefs.getBoolPref("browser.places.snapshots.enabled", false)
     ) {
       return;
     }
@@ -212,8 +216,8 @@ export const SnapshotMonitor = new (class SnapshotMonitor {
    *     TODO: evaluate whether we want to consider user managed only snapshots
    *           that are part of a user curated group, rather than any group.
    * User managed snapshots will expire if their last interaction is older than
-   * browser.snapshots.expiration.userManaged.days, while others will expire
-   * after browser.snapshots.expiration.days.
+   * browser.places.snapshots.expiration.userManaged.days, while others will
+   * expire after browser.places.snapshots.expiration.days.
    * Snapshots that have a tombstone (removed_at is set) should not be expired.
    *
    * @param {boolean} onIdle

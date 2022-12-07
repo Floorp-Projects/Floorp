@@ -71,7 +71,7 @@ add_setup(async () => {
   // Ensure the pref is disabled, so the test runs properly whichever way it
   // is set.
   Services.prefs.setBoolPref(
-    "browser.pinebuild.snapshots.relevancy.enabled",
+    "browser.places.snapshots.relevancy.enabled",
     false
   );
 

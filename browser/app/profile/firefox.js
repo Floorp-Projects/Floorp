@@ -2744,19 +2744,19 @@ pref("svg.context-properties.content.allowed-domains", "profile.accounts.firefox
 // A set of scores for rating the relevancy of snapshots. The suffixes after the
 // last decimal are prefixed by `_score` and reference the functions called in
 // SnapshotScorer.
-pref("browser.snapshots.score.Visit", 1);
-pref("browser.snapshots.score.CurrentSession", 1);
-pref("browser.snapshots.score.IsUserPersisted", 1);
-pref("browser.snapshots.score.IsUserRemoved", -10);
+pref("browser.places.snapshots.score.Visit", 1);
+pref("browser.places.snapshots.score.CurrentSession", 1);
+pref("browser.places.snapshots.score.IsUserPersisted", 1);
+pref("browser.places.snapshots.score.IsUserRemoved", -10);
 
 // A set of weights for the snapshot recommendation sources. The suffixes after
 // the last decimal map to the keys of `Snapshots.recommendationSources`.
-pref("browser.snapshots.source.CommonReferrer", 3);
-pref("browser.snapshots.source.Overlapping", 3);
-pref("browser.snapshots.source.TimeOfDay", 3);
+pref("browser.places.snapshots.source.CommonReferrer", 3);
+pref("browser.places.snapshots.source.Overlapping", 3);
+pref("browser.places.snapshots.source.TimeOfDay", 3);
 
 // Other preferences affecting snapshots scoring.
-pref("browser.snapshots.relevancy.timeOfDayIntervalSeconds", 3600);
+pref("browser.places.snapshots.relevancy.timeOfDayIntervalSeconds", 3600);
 
 // Expiration days for snapshots.
 pref("browser.places.snapshots.expiration.days", 210);
