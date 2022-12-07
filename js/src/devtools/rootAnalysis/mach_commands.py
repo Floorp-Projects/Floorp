@@ -356,11 +356,36 @@ def inner_compile(command_context, **kwargs):
     "--work-dir", default=None, help="Directory for output and working files."
 )
 @CommandArgument(
+    "--jobs", "-j", default=None, type=int, help="Number of parallel analyzers."
+)
+@CommandArgument(
+    "--verbose",
+    "-v",
+    default=False,
+    action="store_true",
+    help="Display executed commands.",
+)
+@CommandArgument(
+    "--from-stage",
+    default=None,
+    help="Stage to begin running at ('list' to see all).",
+)
+@CommandArgument(
     "extra",
     nargs=argparse.REMAINDER,
+    default=(),
     help="Remaining non-optional arguments to analyze.py script",
 )
-def analyze(command_context, application, shell_objdir, work_dir, extra):
+def analyze(
+    command_context,
+    application,
+    shell_objdir,
+    work_dir,
+    jobs,
+    verbose,
+    from_stage,
+    extra,
+):
     """Analyzed gathered data for rooting hazards"""
 
     shell = ensure_shell(command_context, shell_objdir)
@@ -368,15 +393,21 @@ def analyze(command_context, application, shell_objdir, work_dir, extra):
         os.path.join(script_dir(command_context), "analyze.py"),
         "--js",
         shell,
+        *extra,
     ]
-    if extra:
-        args += extra
+
+    if from_stage is None:
+        pass
+    elif from_stage == "list":
+        args.append("--list")
     else:
-        args += [
-            "--first",
-            "gcTypes",
-            "-v",
-        ]
+        args.extend(["--first", from_stage])
+
+    if jobs is not None:
+        args.extend(["-j", jobs])
+
+    if verbose:
+        args.append("-v")
 
     setup_env_for_tools(os.environ)
     setup_env_for_shell(os.environ, shell)
