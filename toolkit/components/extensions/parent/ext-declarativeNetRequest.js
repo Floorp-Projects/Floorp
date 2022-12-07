@@ -31,7 +31,8 @@ this.declarativeNetRequest = class extends ExtensionAPI {
         updateSessionRules({ removeRuleIds, addRules }) {
           const ruleManager = ExtensionDNR.getRuleManager(extension);
           let ruleValidator = new ExtensionDNR.RuleValidator(
-            ruleManager.getSessionRules()
+            ruleManager.getSessionRules(),
+            { isSessionRuleset: true }
           );
           if (removeRuleIds) {
             ruleValidator.removeRuleIds(removeRuleIds);
