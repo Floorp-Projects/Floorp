@@ -671,7 +671,7 @@ const MESSAGES = () => {
     },
   ];
   messages = add24HourImpressionJEXLTargeting(
-    ["FIREFOX_VIEW_TAB_PICKUP_REMINDER"],
+    ["FIREFOX_VIEW_COLORWAYS_REMINDER", "FIREFOX_VIEW_TAB_PICKUP_REMINDER"],
     "FIREFOX_VIEW",
     messages
   );
