@@ -50,6 +50,14 @@ class LockRequestChild final : public PLockRequestChild,
   LockManagerChild* CastedManager() const;
 
   const LockRequest mRequest;
+
+  // This prevents the worker from being GC'ed when the caller is waiting to
+  // acquire the lock and when the lock is held.
+  //
+  // The StrongWorkerRef is dropped immediately in the shutdown notification
+  // callback, and thus does not ensure any cleanup before the worker advances
+  // to the Killing state. That is ensured instead by
+  // LockManagerChild::mWorkerRef, see also the details there.
   RefPtr<StrongWorkerRef> mWorkerRef;
 };
 
