@@ -2294,7 +2294,7 @@
     "PASS"
   ],
   "waittask specs Frame.waitForFunction should work when resolved right before execution context disposal (waittask.spec.js)": [
-    "PASS"
+    "PASS", "TIMEOUT"
   ],
   "waittask specs Frame.waitForFunction should poll on interval (waittask.spec.js)": [
     "PASS"
