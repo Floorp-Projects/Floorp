@@ -22,10 +22,6 @@ class ThemeCocoa : public Theme {
       nsPresContext* aPresContext, nsIFrame* aFrame,
       StyleAppearance aAppearance) override;
 
-  ThemeGeometryType ThemeGeometryTypeForWidget(nsIFrame*,
-                                               StyleAppearance) override;
-  bool ThemeSupportsWidget(nsPresContext*, nsIFrame*, StyleAppearance) override;
-
  protected:
   virtual ~ThemeCocoa() = default;
 };

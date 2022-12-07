@@ -26,26 +26,4 @@ LayoutDeviceIntSize ThemeCocoa::GetMinimumWidgetSize(
   return Theme::GetMinimumWidgetSize(aPresContext, aFrame, aAppearance);
 }
 
-nsITheme::ThemeGeometryType ThemeCocoa::ThemeGeometryTypeForWidget(
-    nsIFrame* aFrame, StyleAppearance aAppearance) {
-  switch (aAppearance) {
-    case StyleAppearance::Tooltip:
-      return eThemeGeometryTypeTooltip;
-    default:
-      break;
-  }
-  return Theme::ThemeGeometryTypeForWidget(aFrame, aAppearance);
-}
-
-bool ThemeCocoa::ThemeSupportsWidget(nsPresContext* aPc, nsIFrame* aFrame,
-                                     StyleAppearance aAppearance) {
-  switch (aAppearance) {
-    case StyleAppearance::Tooltip:
-      return true;
-    default:
-      break;
-  }
-  return Theme::ThemeSupportsWidget(aPc, aFrame, aAppearance);
-}
-
 }  // namespace mozilla::widget
