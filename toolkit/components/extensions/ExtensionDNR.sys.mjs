@@ -744,9 +744,10 @@ class ModifyResponseHeaders extends ModifyHeadersBase {
 }
 
 class RuleValidator {
-  constructor(alreadyValidatedRules) {
+  constructor(alreadyValidatedRules, { isSessionRuleset = false } = {}) {
     this.rulesMap = new Map(alreadyValidatedRules.map(r => [r.id, r]));
     this.failures = [];
+    this.isSessionRuleset = isSessionRuleset;
   }
 
   removeRuleIds(ruleIds) {
@@ -845,6 +846,15 @@ class RuleValidator {
   // Checks: tabIds & excludedTabIds
   #checkCondTabIds(rule) {
     const { tabIds, excludedTabIds } = rule.condition;
+
+    if ((tabIds || excludedTabIds) && !this.isSessionRuleset) {
+      this.#collectInvalidRule(
+        rule,
+        "tabIds and excludedTabIds can only be specified in session rules"
+      );
+      return false;
+    }
+
     if (this.#hasOverlap(tabIds, excludedTabIds)) {
       this.#collectInvalidRule(
         rule,
