@@ -149,6 +149,8 @@ class GeckoInstance(object):
         "toolkit.startup.max_resumed_crashes": -1,
         # Disable most telemetry pings
         "toolkit.telemetry.server": "https://%(server)s/telemetry-dummy/",
+        # Disable window occlusion on Windows, see Bug 1802473.
+        "widget.windows.window_occlusion_tracking.enabled": False,
     }
 
     def __init__(
