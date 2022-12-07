@@ -102,24 +102,17 @@ export class MozLitElement extends LitElement {
 
   /**
    * The URL for this component's styles. To make development in Storybook
-   * easier this will use the chrome:// URL when in product (feature detected
-   * by AppConstants existing) and a relative path for Storybook.
+   * easier this will use the chrome:// URL when in product and a relative path
+   * for Storybook.
    *
    * LOCAL_NAME should be the kebab-cased name of the element. It is added by
    * the `./mach addwidget` command.
    */
   static get stylesheetUrl() {
-    if (this.useChromeStylesheet) {
-      return `chrome://global/content/elements/${this.LOCAL_NAME}.css`;
+    if (window.IS_STORYBOOK) {
+      return `./${this.LOCAL_NAME}/${this.LOCAL_NAME}.css`;
     }
-    return `./${this.LOCAL_NAME}/${this.LOCAL_NAME}.css`;
-  }
-
-  static get useChromeStylesheet() {
-    return (
-      typeof AppConstants != "undefined" ||
-      (typeof Cu != "undefined" && Cu.isInAutomation)
-    );
+    return `chrome://global/content/elements/${this.LOCAL_NAME}.css`;
   }
 
   connectedCallback() {
