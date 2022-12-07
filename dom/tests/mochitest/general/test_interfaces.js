@@ -1684,6 +1684,8 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "onscroll", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "onscrollend", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "onsecuritypolicyviolation", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "onseeked", insecureContext: true },
