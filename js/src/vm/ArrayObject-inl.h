@@ -19,7 +19,7 @@ namespace js {
 
 /* static */ MOZ_ALWAYS_INLINE ArrayObject* ArrayObject::create(
     JSContext* cx, gc::AllocKind kind, gc::InitialHeap heap,
-    Handle<Shape*> shape, uint32_t length, uint32_t slotSpan,
+    Handle<SharedShape*> shape, uint32_t length, uint32_t slotSpan,
     AutoSetNewObjectMetadata& metadata, gc::AllocSite* site) {
   debugCheckNewObject(shape, kind, heap);
 
@@ -31,7 +31,7 @@ namespace js {
 
   // Note: the slot span is passed as argument to allow more constant folding
   // below for the common case of slotSpan == 0.
-  MOZ_ASSERT(shape->asShared().slotSpan() == slotSpan);
+  MOZ_ASSERT(shape->slotSpan() == slotSpan);
 
   // Arrays can use their fixed slots to store elements, so can't have shapes
   // which allow named properties to be stored in the fixed slots.
