@@ -9,8 +9,8 @@
 
 <?xml-stylesheet href="chrome://global/skin/global.css"?>
 <?xml-stylesheet href="chrome://browser/skin/places/tree-icons.css"?>
-<?xml-stylesheet href="chrome://browser/skin/places/organizer.css"?>
 <?xml-stylesheet href="chrome://browser/skin/places/editBookmark.css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/organizer.css"?>
 
 <?xml-stylesheet href="chrome://browser/content/downloads/downloads.css"?>
 <?xml-stylesheet href="chrome://browser/skin/downloads/allDownloadsView.css"?>
@@ -392,7 +392,7 @@
                      class="allDownloadsListBox"
                      context="downloadsContextMenu"/>
       </vbox>
-      <vbox id="detailsPane" style="height: 11em;">
+      <vbox id="detailsPane">
         <vbox id="itemsCountBox" align="center" flex="1" hidden="true">
           <spacer style="-moz-box-flex: 3"/>
           <label id="itemsCountText"/>
@@ -401,7 +401,7 @@
           </description>
           <spacer style="-moz-box-flex: 3"/>
         </vbox>
-        <vbox id="infoBox" flex="1">
+        <vbox id="infoBox">
 #include editBookmarkPanel.inc.xhtml
         </vbox>
       </vbox>

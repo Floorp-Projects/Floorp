@@ -53,12 +53,12 @@ html|img#editBookmarkPanelFavicon[src] {
   margin: 0;
 }
 
-#editBookmarkPanelRows,
+#editBookmarkPanelContent,
 #editBookmarkPanelBottomContent {
   padding: var(--arrowpanel-padding);
 }
 
-#editBookmarkPanelRows {
+#editBookmarkPanelContent {
   padding-bottom: 0;
 }
 
@@ -103,7 +103,9 @@ html|img#editBookmarkPanelFavicon[src] {
   font: caption;
 }
 
-#editBookmarkPanelRows > vbox:not(#editBMPanel_nameRow) {
+#editBookmarkPanelContent > label:not(.editBMPanel_nameRow),
+#editBookmarkPanelContent > #editBMPanel_folderTreeRow,
+#editBookmarkPanelContent > #editBMPanel_tagsSelectorRow {
   padding-block: var(--arrowpanel-padding) 0;
 }
 
@@ -116,7 +118,7 @@ html|img#editBookmarkPanelFavicon[src] {
   display: none;
 }
 
-#editBookmarkPanelRows {
+#editBookmarkPanelContent {
   padding: 0.8em var(--arrowpanel-padding) var(--arrowpanel-padding);
 }
 
@@ -186,8 +188,8 @@ html|img#editBookmarkPanelFavicon[src] {
   margin: 0;
 }
 
-#editBookmarkPanelRows > vbox > html|input,
-#editBookmarkPanelRows > vbox > hbox > html|input {
+#editBookmarkPanelContent > html|input,
+#editBookmarkPanelContent > hbox > html|input {
   appearance: none;
   padding: 8px;
   border-radius: 4px;
@@ -208,8 +210,8 @@ html|img#editBookmarkPanelFavicon[src] {
 
 #editBMPanel_folderTree:focus-visible,
 #editBMPanel_tagsSelector:focus-visible,
-#editBookmarkPanelRows > vbox > html|input:focus-visible,
-#editBookmarkPanelRows > vbox > hbox > html|input:focus-visible {
+#editBookmarkPanelContent > html|input:focus-visible,
+#editBookmarkPanelContent > hbox > html|input:focus-visible {
   border-color: transparent;
   outline: var(--focus-outline);
   outline-offset: -1px;

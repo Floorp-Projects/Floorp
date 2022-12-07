@@ -274,16 +274,42 @@ treechildren::-moz-tree-separator(selected) {
 }
 
 /* Info box */
+#infoBox:not([hidden="true"]) {
+  display: block;
+}
+
+#editBookmarkPanelContent {
+  grid-template-columns: auto 1fr;
+}
+
+#editBookmarkPanelContent .caption-label:not([hidden="true"]) {
+  display: block;
+  grid-column: 2;
+}
+
+#editBookmarkPanelContent label {
+  align-self: center;
+}
+
+#editBMPanel_itemsCountText {
+  grid-column: auto / span 2;
+  justify-self: center;
+}
+
+#editBMPanel_tagsSelectorRow {
+  grid-column: auto / span 2;
+}
 
 #detailsPane {
   background-color: var(--organizer-pane-background);
   color: var(--organizer-color);
+  height: 16em;
   padding: 5px;
   border-top: 1px solid var(--organizer-border-color);
 }
 
-#editBookmarkPanelRows .expander-up,
-#editBookmarkPanelRows .expander-down {
+#editBookmarkPanelContent .expander-up,
+#editBookmarkPanelContent .expander-down {
   appearance: none;
   min-width: 0;
   padding: 5px;
@@ -298,30 +324,30 @@ treechildren::-moz-tree-separator(selected) {
   fill: currentColor;
 }
 
-#editBookmarkPanelRows .expander-up:hover,
-#editBookmarkPanelRows .expander-down:hover {
+#editBookmarkPanelContent .expander-up:hover,
+#editBookmarkPanelContent .expander-down:hover {
   background-color: var(--organizer-hover-background);
   color: var(--organizer-hover-color);
 }
 
-#editBookmarkPanelRows .expander-up:hover:active,
-#editBookmarkPanelRows .expander-down:hover:active {
+#editBookmarkPanelContent .expander-up:hover:active,
+#editBookmarkPanelContent .expander-down:hover:active {
   background-color: var(--organizer-selected-background);
   color: var(--organizer-selected-color);
 }
 
-#editBookmarkPanelRows .expander-up:focus-visible,
-#editBookmarkPanelRows .expander-down:focus-visible {
+#editBookmarkPanelContent .expander-up:focus-visible,
+#editBookmarkPanelContent .expander-down:focus-visible {
   outline: 2px solid var(--organizer-outline-color);
   outline-offset: -1px;
 }
 
-#editBookmarkPanelRows .expander-up {
+#editBookmarkPanelContent .expander-up {
   list-style-image: url("chrome://global/skin/icons/arrow-up-12.svg");
 }
 
-#editBookmarkPanelRows .expander-up > .button-box,
-#editBookmarkPanelRows .expander-down > .button-box {
+#editBookmarkPanelContent .expander-up > .button-box,
+#editBookmarkPanelContent .expander-down > .button-box {
   padding: 0;
 }
 
@@ -346,6 +372,10 @@ treechildren::-moz-tree-separator(selected) {
 .caption-label {
   margin-inline-start: 8px;
   color: var(--organizer-deemphasized-color);
+}
+
+#editBookmarkPanelContent input {
+  margin: 4px;
 }
 
 #editBMPanel_tagsSelector {

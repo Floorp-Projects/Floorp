@@ -2,6 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#editBookmarkPanelContent {
+  display: grid;
+  grid-template-columns: auto;
+}
+
 #editBMPanel_folderTree,
 #editBMPanel_tagsSelector {
   height: 12.5em;
@@ -86,4 +91,71 @@
 #editBMPanel_folderMenuList[selectedGuid="menu________"],
 #editBMPanel_bmRootItem {
   list-style-image: url("chrome://browser/skin/places/bookmarksMenu.svg") !important;
+}
+
+#bookmarkpropertiesdialog #editBookmarkPanelContent > label:not(.editBMPanel_nameRow),
+#bookmarkpropertiesdialog #editBookmarkPanelContent > #editBMPanel_folderTreeRow,
+#bookmarkpropertiesdialog #editBookmarkPanelContent > #editBMPanel_tagsSelectorRow {
+  padding-block: var(--editbookmarkdialog-padding) 0;
+}
+
+#bookmarkpropertiesdialog #editBookmarkPanelContent label[control] {
+  margin-inline-start: 0;
+  margin-block: 0 4px;
+}
+
+#bookmarkpropertiesdialog #editBookmarkPanelContent {
+  padding: calc(var(--editbookmarkdialog-padding) / 2) var(--editbookmarkdialog-padding) var(--editbookmarkdialog-padding);
+}
+
+#bookmarkpropertiesdialog .expander-up,
+#bookmarkpropertiesdialog .expander-down {
+  appearance: none;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  margin: 0;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+}
+
+#bookmarkpropertiesdialog .expander-up {
+  list-style-image: url("chrome://global/skin/icons/arrow-up.svg");
+}
+
+#bookmarkpropertiesdialog .expander-down {
+  list-style-image: url("chrome://global/skin/icons/arrow-down.svg");
+}
+
+#bookmarkpropertiesdialog #editBookmarkPanelContent > input,
+#bookmarkpropertiesdialog #editBookmarkPanelContent > hbox > input,
+#bookmarkpropertiesdialog #editBMPanel_folderMenuList {
+  margin: 0;
+}
+
+/* dialog-specific #editBookmarkPanel styles */
+
+#bookmarkpropertiesdialog #editBookmarkPanelContent {
+  padding-inline: 0;
+  margin-inline: 4px;
+}
+
+#bookmarkpropertiesdialog #editBookmarkPanelContent,
+#bookmarkpropertiesdialog vbox#editBMPanel_nameRow {
+  padding-top: 0;
+}
+
+#bookmarkpropertiesdialog #editBookmarkPanelContent #editBMPanel_tagsField,
+#bookmarkpropertiesdialog #editBookmarkPanelContent #editBMPanel_folderMenuList {
+  margin-inline-end: 16px;
+}
+
+#bookmarkpropertiesdialog .caption-label {
+  margin: 4px;
+  color: var(--in-content-deemphasized-text);
+}
+
+.caption-label {
+  font-size: 0.9em;
+  margin: 2px 4px;
 }
