@@ -117,7 +117,8 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
   nscolor color = 0;
   switch (aID) {
     case ColorID::Infobackground:
-      color = NS_RGB(0xdd, 0xdd, 0xdd);
+      color = aScheme == ColorScheme::Light ? NS_RGB(0xdd, 0xdd, 0xdd)
+                                            : GetColorFromNSColor(NSColor.windowBackgroundColor);
       break;
     case ColorID::Highlight:
       color = ProcessSelectionBackground(GetColorFromNSColor(NSColor.selectedTextBackgroundColor),
