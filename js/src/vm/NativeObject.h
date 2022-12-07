@@ -1264,7 +1264,7 @@ class NativeObject : public JSObject {
   static MOZ_ALWAYS_INLINE uint32_t calculateDynamicSlots(uint32_t nfixed,
                                                           uint32_t span,
                                                           const JSClass* clasp);
-  static MOZ_ALWAYS_INLINE uint32_t calculateDynamicSlots(Shape* shape);
+  static MOZ_ALWAYS_INLINE uint32_t calculateDynamicSlots(SharedShape* shape);
 
   ObjectSlots* getSlotsHeader() const { return ObjectSlots::fromSlots(slots_); }
 

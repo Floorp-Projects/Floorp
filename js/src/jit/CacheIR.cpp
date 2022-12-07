@@ -5004,6 +5004,8 @@ AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(
     return AttachDecision::NoAction;
   }
 
+  SharedShape* oldSharedShape = &oldShape->asShared();
+
   ObjOperandId objId = writer.guardToObject(objValId);
   maybeEmitIdGuard(id);
 
@@ -5039,7 +5041,7 @@ AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(
     trackAttached("AddSlot");
   } else {
     size_t offset = holder->dynamicSlotIndex(propInfo.slot()) * sizeof(Value);
-    uint32_t numOldSlots = NativeObject::calculateDynamicSlots(oldShape);
+    uint32_t numOldSlots = NativeObject::calculateDynamicSlots(oldSharedShape);
     uint32_t numNewSlots = holder->numDynamicSlots();
     if (numOldSlots == numNewSlots) {
       writer.addAndStoreDynamicSlot(objId, offset, rhsValId, newShape);
