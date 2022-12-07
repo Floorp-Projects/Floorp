@@ -5256,6 +5256,19 @@
     "keyed": true,
     "description": "The time between navigationStart and the first contentful paint of a foreground http or https root content document, in milliseconds. The contentful paint timestamp is taken during display list building and does not include rasterization or compositing of that paint. Keyed by TRR domain for DoH or 'Native' otherwise"
   },
+  "DNS_PERF_FIRST_BYTE_MS": {
+    "record_in_processes": ["content"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "acreskey@mozilla.com"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "exponential",
+    "high": 30000,
+    "n_buckets": 100,
+    "bug_numbers": [1803671],
+    "keyed": true,
+    "description": "The time from a top-level document's HTTP channel open to the first byte of the reply is received (ms). Keyed by TRR domain for DoH or 'Native' otherwise"
+  },
   "REFRESH_DRIVER_TICK" : {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
