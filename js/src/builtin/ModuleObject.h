@@ -84,33 +84,30 @@ class ImportEntry {
 
 using ImportEntryVector = GCVector<ImportEntry, 0, SystemAllocPolicy>;
 
-class ExportEntryObject : public NativeObject {
- public:
-  enum {
-    ExportNameSlot = 0,
-    ModuleRequestSlot,
-    ImportNameSlot,
-    LocalNameSlot,
-    LineNumberSlot,
-    ColumnNumberSlot,
-    SlotCount
-  };
+class ExportEntry {
+  const HeapPtr<JSAtom*> exportName_;
+  const HeapPtr<ModuleRequestObject*> moduleRequest_;
+  const HeapPtr<JSAtom*> importName_;
+  const HeapPtr<JSAtom*> localName_;
+  const uint32_t lineNumber_;
+  const uint32_t columnNumber_;
 
-  static const JSClass class_;
-  static bool isInstance(HandleValue value);
-  static ExportEntryObject* create(JSContext* cx,
-                                   Handle<JSAtom*> maybeExportName,
-                                   HandleObject maybeModuleRequest,
-                                   Handle<JSAtom*> maybeImportName,
-                                   Handle<JSAtom*> maybeLocalName,
-                                   uint32_t lineNumber, uint32_t columnNumber);
-  JSAtom* exportName() const;
-  ModuleRequestObject* moduleRequest() const;
-  JSAtom* importName() const;
-  JSAtom* localName() const;
-  uint32_t lineNumber() const;
-  uint32_t columnNumber() const;
+ public:
+  ExportEntry(Handle<JSAtom*> maybeExportName,
+              Handle<ModuleRequestObject*> maybeModuleRequest,
+              Handle<JSAtom*> maybeImportName, Handle<JSAtom*> maybeLocalName,
+              uint32_t lineNumber, uint32_t columnNumber);
+  JSAtom* exportName() const { return exportName_; }
+  ModuleRequestObject* moduleRequest() const { return moduleRequest_; }
+  JSAtom* importName() const { return importName_; }
+  JSAtom* localName() const { return localName_; }
+  uint32_t lineNumber() const { return lineNumber_; }
+  uint32_t columnNumber() const { return columnNumber_; }
+
+  void trace(JSTracer* trc);
 };
+
+using ExportEntryVector = GCVector<ExportEntry, 0, SystemAllocPolicy>;
 
 class RequestedModuleObject : public NativeObject {
  public:
@@ -310,11 +307,12 @@ class ModuleObject : public NativeObject {
       Handle<ModuleEnvironmentObject*> initialEnvironment);
 
   void initFunctionDeclarations(UniquePtr<FunctionDeclarationVector> decls);
-  void initImportExportData(Handle<ArrayObject*> requestedModules,
-                            MutableHandle<ImportEntryVector> importEntries,
-                            Handle<ArrayObject*> localExportEntries,
-                            Handle<ArrayObject*> indirectExportEntries,
-                            Handle<ArrayObject*> starExportEntries);
+  void initImportExportData(
+      Handle<ArrayObject*> requestedModules,
+      MutableHandle<ImportEntryVector> importEntries,
+      MutableHandle<ExportEntryVector> localExportEntries,
+      MutableHandle<ExportEntryVector> indirectExportEntries,
+      MutableHandle<ExportEntryVector> starExportEntries);
   static bool Freeze(JSContext* cx, Handle<ModuleObject*> self);
 #ifdef DEBUG
   static bool AssertFrozen(JSContext* cx, Handle<ModuleObject*> self);
@@ -337,9 +335,9 @@ class ModuleObject : public NativeObject {
   ScriptSourceObject* scriptSourceObject() const;
   ArrayObject& requestedModules() const;
   const ImportEntryVector& importEntries() const;
-  ArrayObject& localExportEntries() const;
-  ArrayObject& indirectExportEntries() const;
-  ArrayObject& starExportEntries() const;
+  const ExportEntryVector& localExportEntries() const;
+  const ExportEntryVector& indirectExportEntries() const;
+  const ExportEntryVector& starExportEntries() const;
   IndirectBindingMap& importBindings();
 
   void setStatus(ModuleStatus newStatus);

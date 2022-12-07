@@ -82,7 +82,7 @@ using namespace js::shell;
 
 DEFINE_CLASS(ModuleRequestObject)
 DEFINE_NATIVE_CLASS(ImportEntry)
-DEFINE_CLASS(ExportEntryObject)
+DEFINE_NATIVE_CLASS(ExportEntry)
 DEFINE_CLASS(RequestedModuleObject)
 // NOTE: We don't need wrapper for IndirectBindingMap and ModuleNamespaceObject
 DEFINE_CLASS_IMPL(ModuleObject)
@@ -329,26 +329,21 @@ static const JSPropertySpec ShellImportEntryWrapper_accessors[] = {
     JS_PSG("columnNumber", ShellImportEntryWrapper_columnNumberGetter, 0),
     JS_PS_END};
 
-DEFINE_GETTER_FUNCTIONS(ExportEntryObject, exportName, StringOrNullValue,
-                        IdentFilter)
-DEFINE_GETTER_FUNCTIONS(ExportEntryObject, moduleRequest, ObjectOrNullValue,
+DEFINE_GETTER_FUNCTIONS(ExportEntry, exportName, StringOrNullValue, IdentFilter)
+DEFINE_GETTER_FUNCTIONS(ExportEntry, moduleRequest, ObjectOrNullValue,
                         SingleFilter<ShellModuleRequestObjectWrapper>)
-DEFINE_GETTER_FUNCTIONS(ExportEntryObject, importName, StringOrNullValue,
-                        IdentFilter)
-DEFINE_GETTER_FUNCTIONS(ExportEntryObject, localName, StringOrNullValue,
-                        IdentFilter)
-DEFINE_GETTER_FUNCTIONS(ExportEntryObject, lineNumber, Uint32Value, IdentFilter)
-DEFINE_GETTER_FUNCTIONS(ExportEntryObject, columnNumber, Uint32Value,
-                        IdentFilter)
+DEFINE_GETTER_FUNCTIONS(ExportEntry, importName, StringOrNullValue, IdentFilter)
+DEFINE_GETTER_FUNCTIONS(ExportEntry, localName, StringOrNullValue, IdentFilter)
+DEFINE_GETTER_FUNCTIONS(ExportEntry, lineNumber, Uint32Value, IdentFilter)
+DEFINE_GETTER_FUNCTIONS(ExportEntry, columnNumber, Uint32Value, IdentFilter)
 
-static const JSPropertySpec ShellExportEntryObjectWrapper_accessors[] = {
-    JS_PSG("exportName", ShellExportEntryObjectWrapper_exportNameGetter, 0),
-    JS_PSG("moduleRequest", ShellExportEntryObjectWrapper_moduleRequestGetter,
-           0),
-    JS_PSG("importName", ShellExportEntryObjectWrapper_importNameGetter, 0),
-    JS_PSG("localName", ShellExportEntryObjectWrapper_localNameGetter, 0),
-    JS_PSG("lineNumber", ShellExportEntryObjectWrapper_lineNumberGetter, 0),
-    JS_PSG("columnNumber", ShellExportEntryObjectWrapper_columnNumberGetter, 0),
+static const JSPropertySpec ShellExportEntryWrapper_accessors[] = {
+    JS_PSG("exportName", ShellExportEntryWrapper_exportNameGetter, 0),
+    JS_PSG("moduleRequest", ShellExportEntryWrapper_moduleRequestGetter, 0),
+    JS_PSG("importName", ShellExportEntryWrapper_importNameGetter, 0),
+    JS_PSG("localName", ShellExportEntryWrapper_localNameGetter, 0),
+    JS_PSG("lineNumber", ShellExportEntryWrapper_lineNumberGetter, 0),
+    JS_PSG("columnNumber", ShellExportEntryWrapper_columnNumberGetter, 0),
     JS_PS_END};
 
 DEFINE_GETTER_FUNCTIONS(RequestedModuleObject, moduleRequest, ObjectOrNullValue,
@@ -374,12 +369,12 @@ DEFINE_GETTER_FUNCTIONS(ModuleObject, requestedModules, ObjectValue,
                         ArrayFilter<ShellRequestedModuleObjectWrapper>)
 DEFINE_NATIVE_GETTER_FUNCTIONS(ModuleObject, importEntries,
                                VectorToArrayFilter<ShellImportEntryWrapper>)
-DEFINE_GETTER_FUNCTIONS(ModuleObject, localExportEntries, ObjectValue,
-                        ArrayFilter<ShellExportEntryObjectWrapper>)
-DEFINE_GETTER_FUNCTIONS(ModuleObject, indirectExportEntries, ObjectValue,
-                        ArrayFilter<ShellExportEntryObjectWrapper>)
-DEFINE_GETTER_FUNCTIONS(ModuleObject, starExportEntries, ObjectValue,
-                        ArrayFilter<ShellExportEntryObjectWrapper>)
+DEFINE_NATIVE_GETTER_FUNCTIONS(ModuleObject, localExportEntries,
+                               VectorToArrayFilter<ShellExportEntryWrapper>)
+DEFINE_NATIVE_GETTER_FUNCTIONS(ModuleObject, indirectExportEntries,
+                               VectorToArrayFilter<ShellExportEntryWrapper>)
+DEFINE_NATIVE_GETTER_FUNCTIONS(ModuleObject, starExportEntries,
+                               VectorToArrayFilter<ShellExportEntryWrapper>)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, maybeDfsIndex, Uint32OrUndefinedValue,
                         IdentFilter)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, maybeDfsAncestorIndex,
@@ -467,8 +462,7 @@ static const JSPropertySpec ShellModuleObjectWrapper_accessors[] = {
 DEFINE_CREATE(ModuleRequestObject, ShellModuleRequestObjectWrapper_accessors,
               nullptr)
 DEFINE_NATIVE_CREATE(ImportEntry, ShellImportEntryWrapper_accessors, nullptr)
-DEFINE_CREATE(ExportEntryObject, ShellExportEntryObjectWrapper_accessors,
-              nullptr)
+DEFINE_NATIVE_CREATE(ExportEntry, ShellExportEntryWrapper_accessors, nullptr)
 DEFINE_CREATE(RequestedModuleObject,
               ShellRequestedModuleObjectWrapper_accessors, nullptr)
 DEFINE_CREATE(ModuleObject, ShellModuleObjectWrapper_accessors, nullptr)
