@@ -219,7 +219,7 @@ jobs:
         parent: debian11-base
     system-symbols-win:
         symbol: I(system-symbols-win)
-        parent: debian10-base
+        parent: debian11-base
     system-symbols-linux-scraper:
         symbol: I(system-symbols-linux)
         parent: debian11-base
