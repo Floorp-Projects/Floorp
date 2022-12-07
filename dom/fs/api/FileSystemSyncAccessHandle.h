@@ -42,8 +42,6 @@ class FileSystemSyncAccessHandle final : public nsISupports,
 
   void ClearActor();
 
-  void Close();
-
   // WebIDL Boilerplate
   nsIGlobalObject* GetParentObject() const;
 
@@ -59,13 +57,13 @@ class FileSystemSyncAccessHandle final : public nsISupports,
       const MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer,
       const FileSystemReadWriteOptions& aOptions, ErrorResult& aRv);
 
-  already_AddRefed<Promise> Truncate(uint64_t aSize, ErrorResult& aError);
+  void Truncate(uint64_t aSize, ErrorResult& aError);
 
-  already_AddRefed<Promise> GetSize(ErrorResult& aError);
+  uint64_t GetSize(ErrorResult& aError);
 
-  already_AddRefed<Promise> Flush(ErrorResult& aError);
+  void Flush(ErrorResult& aError);
 
-  already_AddRefed<Promise> Close(ErrorResult& aError);
+  void Close();
 
  private:
   virtual ~FileSystemSyncAccessHandle();
