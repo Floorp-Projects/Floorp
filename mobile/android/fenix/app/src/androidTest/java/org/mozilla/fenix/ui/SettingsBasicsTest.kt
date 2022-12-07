@@ -4,7 +4,8 @@
 
 package org.mozilla.fenix.ui
 
-import android.content.res.Configuration
+import java.time.LocalDate
+import java.util.Locale
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
@@ -36,8 +37,6 @@ import org.mozilla.fenix.ui.util.FRENCH_LANGUAGE_HEADER
 import org.mozilla.fenix.ui.util.FRENCH_SYSTEM_LOCALE_OPTION
 import org.mozilla.fenix.ui.util.FR_SETTINGS
 import org.mozilla.fenix.ui.util.ROMANIAN_LANGUAGE_HEADER
-import java.time.LocalDate
-import java.util.Locale
 
 /**
  *  Tests for verifying the General section of the Settings menu
@@ -71,17 +70,6 @@ class SettingsBasicsTest {
         mockWebServer.shutdown()
     }
 
-    private fun getUiTheme(): Boolean {
-        val mode =
-            activityIntentTestRule.activity.resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)
-
-        return when (mode) {
-            Configuration.UI_MODE_NIGHT_YES -> true // dark theme is set
-            Configuration.UI_MODE_NIGHT_NO -> false // dark theme is not set, using light theme
-            else -> false // default option is light theme
-        }
-    }
-
     @Test
     fun settingsGeneralItemsTests() {
         homeScreen {
@@ -98,21 +86,6 @@ class SettingsBasicsTest {
             verifyAccessibilityButton()
             verifyLanguageButton()
             verifySetAsDefaultBrowserButton()
-        }
-    }
-
-    @Test
-    fun changeThemeSetting() {
-        // Goes through the settings and changes the default search engine, then verifies it changes.
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-        }.openCustomizeSubMenu {
-            verifyThemes()
-            selectDarkMode()
-            verifyDarkThemeApplied(getUiTheme())
-            selectLightMode()
-            verifyLightThemeApplied(getUiTheme())
         }
     }
 

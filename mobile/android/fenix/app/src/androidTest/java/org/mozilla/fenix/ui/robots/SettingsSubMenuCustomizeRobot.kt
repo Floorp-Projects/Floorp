@@ -22,7 +22,7 @@ import org.mozilla.fenix.helpers.click
 /**
  * Implementation of Robot Pattern for the settings Theme sub menu.
  */
-class SettingsSubMenuThemeRobot {
+class SettingsSubMenuCustomizeRobot {
 
     fun verifyThemes() = assertThemes()
 

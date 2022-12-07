@@ -147,12 +147,12 @@ class SettingsRobot {
             return SettingsSubMenuSearchRobot.Transition()
         }
 
-        fun openCustomizeSubMenu(interact: SettingsSubMenuThemeRobot.() -> Unit): SettingsSubMenuThemeRobot.Transition {
+        fun openCustomizeSubMenu(interact: SettingsSubMenuCustomizeRobot.() -> Unit): SettingsSubMenuCustomizeRobot.Transition {
             fun customizeButton() = onView(withText("Customize"))
             customizeButton().click()
 
-            SettingsSubMenuThemeRobot().interact()
-            return SettingsSubMenuThemeRobot.Transition()
+            SettingsSubMenuCustomizeRobot().interact()
+            return SettingsSubMenuCustomizeRobot.Transition()
         }
 
         fun openTabsSubMenu(interact: SettingsSubMenuTabsRobot.() -> Unit): SettingsSubMenuTabsRobot.Transition {
