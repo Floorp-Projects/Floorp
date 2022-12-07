@@ -18,15 +18,12 @@ apt-get update -y
 # Install dependencies
 apt-get install -y --no-install-recommends \
     arcanist \
-    bzr \
     ca-certificates \
     curl \
     ed \
     golang-go \
     gcc \
     libc6-dev \
-    python-requests \
-    python-requests-unixsocket \
     python3-minimal \
     python3-wheel \
     python3-pip \
@@ -65,7 +62,7 @@ git clone https://github.com/v8/v8.git
 cd /builds/worker/
 mkdir cloud_sql_proxy
 cd cloud_sql_proxy
-go mod init .
+go mod init cloud_sql_proxy
 go get github.com/GoogleCloudPlatform/cloudsql-proxy/cmd/cloud_sql_proxy@$SQLPROXY_REVISION
 
 # Check out source code
