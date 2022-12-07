@@ -32,11 +32,11 @@ Content
 
 Locale
    Localizable applications keep all their localized information in
-   locale providers. This allows translators to plug in a different
+   locale providers and Fluent FTL files, which are handled separately.
+   This allows translators to plug in a different
    chrome package to translate an application without altering the rest
-   of the source code. The two main types of localizable files are
-   `DTD` files and Java-style properties
-   files.
+   of the source code. In a chrome provider, localizable files are mostly
+   Java-style properties files.
 Skin
    A skin provider is responsible for providing a complete set of files
    that describe the visual appearance of the chrome. Typically a skin

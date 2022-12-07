@@ -297,7 +297,7 @@ Literals
 ~~~~~~~~
 
 Use ``\uXXXX`` unicode escapes for non-ASCII characters. The character
-set for XUL, DTD, script, and properties files is UTF-8, which is not easily
+set for XUL, script, and properties files is UTF-8, which is not easily
 readable.
 
 

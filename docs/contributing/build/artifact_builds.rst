@@ -115,7 +115,7 @@ Things that are supported
 -------------------------
 
 -  Modifying JavaScript, (X)HTML, and CSS resources; and string
-   properties and DTD and FTL files.
+   properties and FTL files.
 -  Modifying Android Java code, resources, and strings.
 -  Running mochitests and xpcshell tests.
 -  Modifying ``Scalars.yaml`` to add Scalar Telemetry (since {{

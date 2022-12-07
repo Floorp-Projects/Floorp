@@ -16,9 +16,6 @@ L10N Glossary
     L10n
         *Numeronym* for Localization, *L*, 10 chars, *n*
 
-    L12y
-        Numeronym for Localizability
-
     l10n-merge
         nick-name for the process of merging ``en-US`` and a particular
         localization into one joint artifact without any missing strings, and

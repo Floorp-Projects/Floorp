@@ -260,16 +260,11 @@ The following file formats are known to the l10n tool chains:
 
 Fluent
     Used in Firefox UI, both declarative and programmatically.
-DTD
-    Deprecated. Used in XUL and XHTML.
 Properties
     Used from JavaScript and C++. When used from js, also comes with
-    `plural support <https://developer.mozilla.org/docs/Mozilla/Localization/Localization_and_Plurals>`_.
+    plural support (avoid if possible).
 ini
     Used by the crashreporter and updater, avoid if possible.
-inc
-    Used during builds, for example to create metadata for
-    language packs or bookmarks.
 
 Adding new formats involves changing various different tools, and is strongly
 discouraged.
@@ -291,12 +286,11 @@ a ``key``, and an action. An example like
 .. code-block:: toml
 
   [[filters]]
-      path = "{l}browser/defines.inc"
-      key = "MOZ_LANGPACK_CONTRIBUTORS"
+      path = "{l}calendar/chrome/calendar/calendar-event-dialog.properties"
+      key = "re:.*Nounclass[1-9].*"
       action = "ignore"
 
-indicates that the ``MOZ_LANGPACK_CONTRIBUTORS`` in ``browser/defines.inc``
-is optional.
+indicates that the matching messages in ``calendar-event-dialog.properties`` are optional.
 
 For the legacy ini configuration files, there's a Python module
 ``filter.py`` next to the main ``l10n.ini``, implementing :py:func:`test`, with the following
@@ -359,7 +353,7 @@ As part of the build and other localization tool chains, we run a variety
 of source-based checks. Think of them as linters.
 
 The suite of checks is usually determined by file type, i.e., there's a
-suite of checks for DTD files and one for properties files, etc.
+suite of checks for Fluent files and one for properties files, etc.
 
 Localizations
 -------------
