@@ -118,20 +118,6 @@ Changelog
 .. _1755100: https://bugzilla.mozilla.org/show_bug.cgi?id=1755100
 .. _1756917: https://bugzilla.mozilla.org/show_bug.cgi?id=1756917
 
-contextual.services.quicksuggest.block_dynamic_wikipedia
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This keyed scalar is incremented each time the user dismisses ("blocks") a
-dynamic wikipedia suggestion. Each key is the index at which a suggestion
-appeared in the results (1-based), and the corresponding value is the number
-of dismissals at that index.
-
-Changelog
-  Firefox 109.0
-    Introduced. [Bug 1800993_]
-
-.. _1800993: https://bugzilla.mozilla.org/show_bug.cgi?id=1800993
-
 contextual.services.quicksuggest.block_nonsponsored
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -201,39 +187,7 @@ Changelog
   Firefox 87.0
     Introduced. [Bug 1693927_]
 
-  Firefox 109.0
-    Removed. [Bug 1800993_]
-
 .. _1693927: https://bugzilla.mozilla.org/show_bug.cgi?id=1693927
-.. _1800993: https://bugzilla.mozilla.org/show_bug.cgi?id=1800993
-
-contextual.services.quicksuggest.click_dynamic_wikipedia
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This keyed scalar is incremented each time the user picks a dynamic
-wikipedia suggestion. Each key is the index at which a suggestion appeared
-in the results (1-based), and the corresponding value is the number of
-clicks at that index.
-
-Changelog
-  Firefox 109.0
-    Introduced. [Bug 1800993_]
-
-.. _1800993: https://bugzilla.mozilla.org/show_bug.cgi?id=1800993
-
-contextual.services.quicksuggest.click_nonsponsored
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This keyed scalar is incremented each time the user picks a non-sponsored
-suggestion. Each key is the index at which a suggestion appeared in the
-results (1-based), and the corresponding value is the number of clicks at
-that index.
-
-Changelog
-  Firefox 109.0
-    Introduced. [Bug 1800993_]
-
-.. _1800993: https://bugzilla.mozilla.org/show_bug.cgi?id=1800993
 
 contextual.services.quicksuggest.click_nonsponsored_bestmatch
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -247,19 +201,6 @@ Changelog
     Introduced. [Bug 1752953_]
 
 .. _1752953: https://bugzilla.mozilla.org/show_bug.cgi?id=1752953
-
-contextual.services.quicksuggest.click_sponsored
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This keyed scalar is incremented each time the user picks a sponsored suggestion.
-Each key is the index at which a suggestion appeared in the results (1-based),
-and the corresponding value is the number of clicks at that index.
-
-Changelog
-  Firefox 109.0
-    Introduced. [Bug 1800993_]
-
-.. _1800993: https://bugzilla.mozilla.org/show_bug.cgi?id=1800993
 
 contextual.services.quicksuggest.click_sponsored_bestmatch
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -286,39 +227,7 @@ Changelog
   Firefox 87.0
     Introduced. [Bug 1693927_]
 
-  Firefox 109.0
-    Removed. [Bug 1800993_]
-
 .. _1693927: https://bugzilla.mozilla.org/show_bug.cgi?id=1693927
-.. _1800993: https://bugzilla.mozilla.org/show_bug.cgi?id=1800993
-
-contextual.services.quicksuggest.help_dynamic_wikipedia
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This keyed scalar is incremented each time the user picks the help button in a
-dynamic wikipedia suggestion. Each key is the index at which a suggestion
-appeared in the results (1-based), and the corresponding value is the number
-of help button clicks at that index.
-
-Changelog
-  Firefox 109.0
-    Introduced. [Bug 1800993_]
-
-.. _1800993: https://bugzilla.mozilla.org/show_bug.cgi?id=1800993
-
-contextual.services.quicksuggest.help_nonsponsored
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This keyed scalar is incremented each time the user picks the help button in a
-non-sponsored suggestion. Each key is the index at which a suggestion appeared in the
-results (1-based), and the corresponding value is the number of help button clicks
-at that index.
-
-Changelog
-  Firefox 109.0
-    Introduced. [Bug 1800993_]
-
-.. _1800993: https://bugzilla.mozilla.org/show_bug.cgi?id=1800993
 
 contextual.services.quicksuggest.help_nonsponsored_bestmatch
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -333,20 +242,6 @@ Changelog
     Introduced. [Bug 1752953_]
 
 .. _1752953: https://bugzilla.mozilla.org/show_bug.cgi?id=1752953
-
-contextual.services.quicksuggest.help_sponsored
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This keyed scalar is incremented each time the user picks the help button in a
-sponsored suggestion. Each key is the index at which a suggestion appeared in the
-results (1-based), and the corresponding value is the number of help button clicks
-at that index.
-
-Changelog
-  Firefox 109.0
-    Introduced. [Bug 1800993_]
-
-.. _1800993: https://bugzilla.mozilla.org/show_bug.cgi?id=1800993
 
 contextual.services.quicksuggest.help_sponsored_bestmatch
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -380,52 +275,7 @@ Changelog
   Firefox 87.0
     Introduced. [Bug 1693927_]
 
-  Firefox 109.0
-    Removed. [Bug 1800993_]
-
 .. _1693927: https://bugzilla.mozilla.org/show_bug.cgi?id=1693927
-.. _1800993: https://bugzilla.mozilla.org/show_bug.cgi?id=1800993
-
-contextual.services.quicksuggest.impression_dynamic_wikipedia
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This keyed scalar records dynamic wikipedia impressions. It is incremented
-each time the user is shown a dynamic wikipedia suggestion and the following
-two conditions hold:
-
-- The user has completed an engagement with the address bar by picking a result
-  in it or by pressing the Enter key.
-- At the time the user completed the engagement, a dynamic wikipedia suggestion
-  was present in the results.
-
-Each key is the index at which a suggestion appeared in the results (1-based),
-and the corresponding value is the number of impressions at that index.
-
-Changelog
-  Firefox 109.0
-    Introduced. [Bug 1800993_]
-
-.. _1800993: https://bugzilla.mozilla.org/show_bug.cgi?id=1800993
-
-contextual.services.quicksuggest.impression_nonsponsored
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This keyed scalar records suggestion impressions. It is incremented each time
-the user is shown a non-sponsored suggestion and the following two conditions hold:
-
-- The user has completed an engagement with the address bar by picking a result
-  in it or by pressing the Enter key.
-- At the time the user completed the engagement, a suggestion was present in the
-  results.
-
-Each key is the index at which a suggestion appeared in the results (1-based),
-and the corresponding value is the number of impressions at that index.
-
-Changelog
-  Firefox 109.0
-    Introduced. [Bug 1800993_]
-
-.. _1800993: https://bugzilla.mozilla.org/show_bug.cgi?id=1800993
 
 contextual.services.quicksuggest.impression_nonsponsored_bestmatch
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -447,26 +297,6 @@ Changelog
     Introduced. [Bug 1752953_]
 
 .. _1752953: https://bugzilla.mozilla.org/show_bug.cgi?id=1752953
-
-contextual.services.quicksuggest.impression_sponsored
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This keyed scalar records suggestion impressions. It is incremented each time
-the user is shown a sponsored suggestion and the following two conditions hold:
-
-- The user has completed an engagement with the address bar by picking a result
-  in it or by pressing the Enter key.
-- At the time the user completed the engagement, a suggestion was present in the
-  results.
-
-Each key is the index at which a suggestion appeared in the results (1-based),
-and the corresponding value is the number of impressions at that index.
-
-Changelog
-  Firefox 109.0
-    Introduced. [Bug 1800993_]
-
-.. _1800993: https://bugzilla.mozilla.org/show_bug.cgi?id=1800993
 
 contextual.services.quicksuggest.impression_sponsored_bestmatch
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -592,20 +422,13 @@ The event's ``extra`` contains the following properties:
 :position:
   The index of the suggestion in the list of results (1-based).
 :suggestion_type:
-  The type of suggestion, one of: "sponsored", "nonsponsored", "dynamic-wikipedia"
-:source:
-  The source of suggestion, one of: "remote-settings", "merino"
+  The type of suggestion, one of: "sponsored", "nonsponsored"
 
 Changelog
   Firefox 101.0
     Introduced. [Bug 1761059_]
 
-  Firefox 109.0
-    ``source`` is added. [Bug 1800993_]
-    ``dynamic-wikipedia`` is added as a value of ``suggestion_type``. [Bug 1800993_]
-
 .. _1761059: https://bugzilla.mozilla.org/show_bug.cgi?id=1761059
-.. _1800993: https://bugzilla.mozilla.org/show_bug.cgi?id=1800993
 
 contextservices.quicksuggest.impression_cap
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -961,8 +784,6 @@ payload includes the following:
 :request_id:
   A request identifier for each API request to Merino. This is only included for
   suggestions provided by Merino.
-:source:
-  The source of the suggestion, either "remote-settings" or "merino".
 
 Changelog
   Firefox 101.0
@@ -972,12 +793,8 @@ Changelog
     ``scenario`` is removed from the payload and
     ``improve_suggest_experience_checked`` is added. [Bug 1776797_]
 
-  Firefox 109.0
-    ``source`` is added. [Bug 1800993_]
-
 .. _1764669: https://bugzilla.mozilla.org/show_bug.cgi?id=1764669
 .. _1776797: https://bugzilla.mozilla.org/show_bug.cgi?id=1776797
-.. _1800993: https://bugzilla.mozilla.org/show_bug.cgi?id=1800993
 
 Click
 ~~~~~
@@ -1007,8 +824,6 @@ the following:
 :request_id:
   A request identifier for each API request to Merino. This is only included for
   suggestions provided by Merino.
-:source:
-  The source of the suggestion, either "remote-settings" or "merino".
 
 Changelog
   Firefox 87.0
@@ -1028,15 +843,11 @@ Changelog
     ``scenario`` is removed from the payload and
     ``improve_suggest_experience_checked`` is added. [Bug 1776797_]
 
-  Firefox 109.0
-    ``source`` is added. [Bug 1800993_]
-
 .. _1689365: https://bugzilla.mozilla.org/show_bug.cgi?id=1689365
 .. _1729576: https://bugzilla.mozilla.org/show_bug.cgi?id=1729576
 .. _1736117: https://bugzilla.mozilla.org/show_bug.cgi?id=1736117
 .. _1754622: https://bugzilla.mozilla.org/show_bug.cgi?id=1754622
 .. _1776797: https://bugzilla.mozilla.org/show_bug.cgi?id=1776797
-.. _1800993: https://bugzilla.mozilla.org/show_bug.cgi?id=1800993
 
 Impression
 ~~~~~~~~~~
@@ -1079,8 +890,6 @@ The impression ping payload contains the following:
 :request_id:
   A request identifier for each API request to Merino. This is only included for
   suggestions provided by Merino.
-:source:
-  The source of the suggestion, either "remote-settings" or "merino".
 
 Changelog
   Firefox 87.0
@@ -1124,9 +933,6 @@ Changelog
     ``scenario`` is removed from the payload and
     ``improve_suggest_experience_checked`` is added. [Bug 1776797_]
 
-  Firefox 109.0
-    ``source`` is added. [Bug 1800993_]
-
 .. _1689365: https://bugzilla.mozilla.org/show_bug.cgi?id=1689365
 .. _1725492: https://bugzilla.mozilla.org/show_bug.cgi?id=1725492
 .. _1728188: https://bugzilla.mozilla.org/show_bug.cgi?id=1728188
@@ -1137,7 +943,6 @@ Changelog
 .. _1754622: https://bugzilla.mozilla.org/show_bug.cgi?id=1754622
 .. _1761059: https://bugzilla.mozilla.org/show_bug.cgi?id=1761059
 .. _1776797: https://bugzilla.mozilla.org/show_bug.cgi?id=1776797
-.. _1800993: https://bugzilla.mozilla.org/show_bug.cgi?id=1800993
 
 Nimbus Exposure Event
 ---------------------
