@@ -708,6 +708,13 @@ class SourceSurface : public SupportsThreadSafeWeakPtr<SourceSurface> {
   void* GetUserData(UserDataKey* key) const { return mUserData.Get(key); }
   void RemoveUserData(UserDataKey* key) { mUserData.RemoveAndDestroy(key); }
 
+  /** Tries to extract an optimal subrect for the surface. This may fail if the
+   * request can't be satisfied.
+   */
+  virtual already_AddRefed<SourceSurface> ExtractSubrect(const IntRect& aRect) {
+    return nullptr;
+  }
+
  protected:
   friend class StoredPattern;
 
