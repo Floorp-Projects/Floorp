@@ -208,7 +208,7 @@ static bool ShapeMatches(IdValuePair* properties, size_t nproperties,
   if (shape->slotSpan() != nproperties) {
     return false;
   }
-  ShapePropertyIter<NoGC> iter(shape);
+  SharedShapePropertyIter<NoGC> iter(shape);
   for (size_t i = nproperties; i > 0; i--) {
     MOZ_ASSERT(iter->isDataProperty());
     MOZ_ASSERT(iter->flags() == PropertyFlags::defaultDataPropFlags);

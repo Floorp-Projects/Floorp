@@ -630,29 +630,38 @@ inline const DictionaryShape& js::Shape::asDictionary() const {
 // recently added property).
 template <AllowGC allowGC>
 class MOZ_RAII ShapePropertyIter {
- protected:
-  friend class Shape;
-
   typename MaybeRooted<PropMap*, allowGC>::RootType map_;
   uint32_t mapLength_;
   const bool isDictionary_;
 
- public:
-  ShapePropertyIter(JSContext* cx, Shape* shape)
+ protected:
+  ShapePropertyIter(JSContext* cx, Shape* shape, bool isDictionary)
       : map_(cx, shape->propMap()),
         mapLength_(shape->propMapLength()),
-        isDictionary_(shape->isDictionary()) {
+        isDictionary_(isDictionary) {
     static_assert(allowGC == CanGC);
+    MOZ_ASSERT(shape->isDictionary() == isDictionary);
+    MOZ_ASSERT(shape->getObjectClass()->isNativeObject());
+  }
+  ShapePropertyIter(Shape* shape, bool isDictionary)
+      : map_(nullptr, shape->propMap()),
+        mapLength_(shape->propMapLength()),
+        isDictionary_(isDictionary) {
+    static_assert(allowGC == NoGC);
+    MOZ_ASSERT(shape->isDictionary() == isDictionary);
     MOZ_ASSERT(shape->getObjectClass()->isNativeObject());
   }
 
+ public:
+  ShapePropertyIter(JSContext* cx, Shape* shape)
+      : ShapePropertyIter(cx, shape, shape->isDictionary()) {}
+
   explicit ShapePropertyIter(Shape* shape)
-      : map_(nullptr, shape->propMap()),
-        mapLength_(shape->propMapLength()),
-        isDictionary_(shape->isDictionary()) {
-    static_assert(allowGC == NoGC);
-    MOZ_ASSERT(shape->getObjectClass()->isNativeObject());
-  }
+      : ShapePropertyIter(shape, shape->isDictionary()) {}
+
+  // Deleted constructors: use SharedShapePropertyIter instead.
+  ShapePropertyIter(JSContext* cx, SharedShape* shape) = delete;
+  explicit ShapePropertyIter(SharedShape* shape) = delete;
 
   bool done() const { return mapLength_ == 0; }
 
@@ -689,6 +698,19 @@ class MOZ_RAII ShapePropertyIter {
     const PropertyInfoWithKey* operator->() const { return &val_; }
   };
   FakePtr operator->() const { return {get()}; }
+};
+
+// Optimized version of ShapePropertyIter for non-dictionary shapes. It passes
+// `false` for `isDictionary_`, which will let the compiler optimize away the
+// loop structure in ShapePropertyIter::operator++.
+template <AllowGC allowGC>
+class MOZ_RAII SharedShapePropertyIter : public ShapePropertyIter<allowGC> {
+ public:
+  SharedShapePropertyIter(JSContext* cx, SharedShape* shape)
+      : ShapePropertyIter<allowGC>(cx, shape, /* isDictionary = */ false) {}
+
+  explicit SharedShapePropertyIter(SharedShape* shape)
+      : ShapePropertyIter<allowGC>(shape, /* isDictionary = */ false) {}
 };
 
 }  // namespace js
