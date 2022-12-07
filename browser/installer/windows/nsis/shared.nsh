@@ -1284,24 +1284,7 @@ ${RemoveDefaultBrowserAgentShortcut}
         "Software\Mozilla\${AppName}\Installer\$AppUserModelID" \
         "WasPinnedToTaskbar" 1
       ${If} ${AtLeastWin7}
-        ; If we didn't run the stub installer, AddTaskbarSC will be empty.
-        ; We determine whether to pin based on whether we're the default
-        ; browser, or if we're on win8 or later, we always pin.
-        ${If} "${SHOULD_PIN}" == ""
-          ; No need to check the default on Win8 and later
-          ${If} ${AtMostWin2008R2}
-            ; Check if the Firefox is the http handler for this user
-            SetShellVarContext current ; Set SHCTX to the current user
-            ${IsHandlerForInstallDir} "http" $R9
-            ${If} $TmpVal == "HKLM"
-              SetShellVarContext all ; Set SHCTX to all users
-            ${EndIf}
-          ${EndIf}
-          ${If} "$R9" == "true"
-          ${OrIf} ${AtLeastWin8}
-            ${PinToTaskBar}
-          ${EndIf}
-        ${ElseIf} "${SHOULD_PIN}" == "1"
+        ${If} "${SHOULD_PIN}" == "1"
           ${PinToTaskBar}
         ${EndIf}
       ${EndIf}
