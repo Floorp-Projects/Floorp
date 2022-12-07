@@ -249,6 +249,11 @@ let Player = {
       seekForwardButton.previousElementSibling.hidden = false;
 
       this.scrubber.hidden = false;
+
+      const controlsBottomGradient = document.getElementById(
+        "controls-bottom-gradient"
+      );
+      controlsBottomGradient.hidden = false;
     }
 
     this.alignEndControlsButtonTooltips();

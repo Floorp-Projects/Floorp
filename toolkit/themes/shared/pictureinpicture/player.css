@@ -5,11 +5,15 @@
 :root {
   --player-bg-color: #000;
   --player-control-icon-fill: #fff;
-  --btn-bg-color: rgba(50,50,50,0.55);
+  --player-control-item-half-width: clamp(calc(16px / 2), calc(10vmax / 2), calc(32px / 2));
+  --player-control-item-height: clamp(16px, 10vmax, 32px);
+  --btn-bg-color: rgba(8, 8, 8, 0.55);
   --close-btn-bg-color: rgb(211,216,220);
   --close-btn-fill-color: #000;
+  --controls-bottom-distance: 15px;
+  --controls-bottom-upper-height: 30px;
+  --scrubber-vertical-margin: 7px;
   --resize-margin: 5px;
-  --control-item-half-width: clamp(calc(16px / 2), calc(10vmax / 2), calc(32px / 2));
 }
 
 button::-moz-focus-inner {
@@ -60,9 +64,22 @@ browser {
   box-shadow: 1px 2px 5px #000;
 }
 
+/* Styling for background gradient.
+ * Opacity changes are handled separately under .control-item.
+ */
+#controls-bottom-gradient {
+  background: linear-gradient(0deg, #000000 -13.24%, rgba(0, 0, 0, 0) 90.44%);
+  position: absolute;
+  height: calc(var(--controls-bottom-distance) + 2 * var(--resize-margin) + var(--player-control-item-height) + var(--controls-bottom-upper-height) + var(--scrubber-vertical-margin));
+  bottom: 0;
+  width: 100vw;
+  margin: 0 0 calc(-1 * var(--resize-margin)) calc(-1 * var(--resize-margin));
+  pointer-events: none;
+}
+
 #controls-bottom {
   position: absolute;
-  bottom: 15px;
+  bottom: var(--controls-bottom-distance);
   width: 100%;
 }
 
@@ -91,11 +108,9 @@ browser {
    * dimension of the window - in this case, the width dimension,
    * since we suspect most videos are wider than they are tall.
    */
-  height: 10vmax;
+  height: var(--player-control-item-height);
   width: 10vmax;
-  max-height: 32px;
   max-width: 32px;
-  min-height: 16px;
   min-width: 16px;
   background-repeat: no-repeat;
   -moz-context-properties: fill;
@@ -157,12 +172,12 @@ browser {
 #controls[keying] .center-tooltip:focus::after,
 #controls .center-tooltip:hover::after {
   inset-inline-end: 0.8em;
-  translate: calc(-50% + var(--control-item-half-width));
+  translate: calc(-50% + var(--player-control-item-half-width));
 }
 
 #controls[keying] .center-tooltip:dir(rtl):focus::after,
 #controls .center-tooltip:dir(rtl):hover::after {
-  translate: calc(50% - var(--control-item-half-width));
+  translate: calc(50% - var(--player-control-item-half-width));
 }
 
 /* Since the unpip button icon is reversed for RTL locales,
@@ -190,7 +205,8 @@ browser {
   scale: -1 1;
 }
 
-/* Set opacity for buttons when controls are visible on the pip window and are not hovered over. For fullscreen mode, only apply opacity if there is a showing attribute. */
+/* Set opacity for buttons and scrubber when controls are visible on the pip window and are not hovered over.
+ * For fullscreen mode, only apply opacity if there is a showing attribute. */
 body:not(:fullscreen) #controls:hover .control-item:not(:hover),
 body:fullscreen #controls[showing]:hover .control-item:not(:hover),
 #controls[donthide] .control-item {
@@ -201,6 +217,14 @@ body:fullscreen #controls[showing]:hover .control-item:not(:hover),
 #controls[showing] .control-item,
 #controls:hover .control-item:hover {
   opacity: 1;
+}
+
+/* Background gradient is the only control item with a fixed opacity value. */
+#controls[keying] .control-item#controls-bottom-gradient,
+#controls[showing] .control-item#controls-bottom-gradient,
+#controls:hover .control-item#controls-bottom-gradient:hover
+#controls[donthide] .control-item#controls-bottom-gradient {
+  opacity: 0.8;
 }
 
 #close {
@@ -412,7 +436,7 @@ input:checked + .slider:dir(rtl)::before {
 
 .controls-bottom-upper {
   width: calc(100% - 38px);
-  height: 30px;
+  height: var(--controls-bottom-upper-height);
   margin: 0 19px;
   display: grid;
 }
@@ -420,7 +444,7 @@ input:checked + .slider:dir(rtl)::before {
 .scrubber-no-drag {
   -moz-window-dragging: no-drag;
   height: 16px;
-  margin: 7px 0;
+  margin: var(--scrubber-vertical-margin) 0;
   display: grid;
   justify-items: center;
   align-items: center;
