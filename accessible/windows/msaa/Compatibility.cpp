@@ -268,12 +268,13 @@ void Compatibility::SuppressA11yForClipboardCopy() {
 
   if (doSuppress) {
     sA11yClipboardCopySuppressionStartTime = ::GetTickCount();
+    AccessibleWrap::SuppressHandlerA11yForClipboardCopy();
   }
 }
 
 /* static */
 bool Compatibility::IsA11ySuppressedForClipboardCopy() {
-  constexpr DWORD kSuppressTimeout = 1000;  // ms
+  constexpr DWORD kSuppressTimeout = 1500;  // ms
   if (!sA11yClipboardCopySuppressionStartTime) {
     return false;
   }

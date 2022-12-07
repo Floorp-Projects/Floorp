@@ -259,20 +259,6 @@ nsresult nsZipHandle::Init(nsZipArchive* zip, const char* entry,
   return NS_OK;
 }
 
-nsresult nsZipHandle::Init(const uint8_t* aData, uint32_t aLen,
-                           nsZipHandle** aRet) {
-  RefPtr<nsZipHandle> handle = new nsZipHandle();
-
-  handle->mFileStart = aData;
-  handle->mTotalLen = aLen;
-  nsresult rv = handle->findDataStart();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  handle.forget(aRet);
-  return NS_OK;
-}
-
 // This function finds the start of the ZIP data. If the file is a regular ZIP,
 // this is just the start of the file. If the file is a CRX file, the start of
 // the data is after the CRX header.
@@ -308,6 +294,7 @@ nsresult nsZipHandle::findDataStart() {
       mFileData = mFileStart + headerSize;
       return NS_OK;
     }
+    return NS_ERROR_FILE_CORRUPTED;
   }
   mLen = mTotalLen;
   mFileData = mFileStart;
@@ -775,6 +762,7 @@ nsZipHandle* nsZipArchive::GetFD() const { return mFd.get(); }
 
 //---------------------------------------------
 // nsZipArchive::GetDataOffset
+// Returns 0 on an error; 0 is not a valid result for any success case
 //---------------------------------------------
 uint32_t nsZipArchive::GetDataOffset(nsZipItem* aItem) {
   MOZ_ASSERT(aItem);
@@ -784,9 +772,17 @@ uint32_t nsZipArchive::GetDataOffset(nsZipItem* aItem) {
   //-- read local header to get variable length values and calculate
   //-- the real data offset
   uint32_t len = mFd->mLen;
+  MOZ_DIAGNOSTIC_ASSERT(len <= UINT32_MAX, "mLen > 2GB");
   const uint8_t* data = mFd->mFileData;
   offset = aItem->LocalOffset();
-  if (len < ZIPLOCAL_SIZE || offset > len - ZIPLOCAL_SIZE) return 0;
+  if (len < ZIPLOCAL_SIZE || offset > len - ZIPLOCAL_SIZE) {
+    return 0;
+  }
+  // Check there's enough space for the signature
+  if (offset > mFd->mLen) {
+    NS_WARNING("Corrupt local offset in JAR file");
+    return 0;
+  }
 
   // -- check signature before using the structure, in case the zip file is
   // corrupt
@@ -798,8 +794,14 @@ uint32_t nsZipArchive::GetDataOffset(nsZipItem* aItem) {
   //--       the offset accurately we need the _local_ extralen.
   offset += ZIPLOCAL_SIZE + xtoint(Local->filename_len) +
             xtoint(Local->extrafield_len);
+  // Check data points inside the file.
+  if (offset > mFd->mLen) {
+    NS_WARNING("Corrupt data offset in JAR file");
+    return 0;
+  }
 
   MMAP_FAULT_HANDLER_CATCH(0)
+  // can't be 0
   return offset;
 }
 

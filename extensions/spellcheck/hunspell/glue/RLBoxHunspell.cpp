@@ -31,7 +31,7 @@ RLBoxHunspell* RLBoxHunspell::Create(const nsCString& affpath,
                                      const nsCString& dpath) {
   MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
 
-  mozilla::UniquePtr<rlbox_sandbox_hunspell, RLBoxDeleter> sandbox(
+  mozilla::UniquePtr<rlbox_sandbox_hunspell> sandbox(
       new rlbox_sandbox_hunspell());
 
 #if defined(MOZ_WASM_SANDBOXING_HUNSPELL) && !defined(HAVE_64BIT_BUILD)
@@ -75,6 +75,9 @@ RLBoxHunspell* RLBoxHunspell::Create(const nsCString& affpath,
 
   NS_ENSURE_TRUE(success, nullptr);
 
+  mozilla::UniquePtr<rlbox_sandbox_hunspell, RLBoxDeleter> sandbox_initialized(
+      sandbox.release());
+
   // Add the aff and dict files to allow list
   if (!affpath.IsEmpty()) {
     mozHunspellCallbacks::AllowFile(affpath);
@@ -84,7 +87,7 @@ RLBoxHunspell* RLBoxHunspell::Create(const nsCString& affpath,
   }
 
   // TODO Bug 1788857: Verify error handling in case of inaccessible file
-  return new RLBoxHunspell(std::move(sandbox), affpath, dpath);
+  return new RLBoxHunspell(std::move(sandbox_initialized), affpath, dpath);
 }
 
 RLBoxHunspell::RLBoxHunspell(

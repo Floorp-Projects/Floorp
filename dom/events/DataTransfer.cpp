@@ -888,27 +888,6 @@ already_AddRefed<nsITransferable> DataTransfer::GetTransferable(
   const uint32_t baseLength = sizeof(uint32_t) + 1;
   uint32_t totalCustomLength = baseLength;
 
-  const char* knownFormats[] = {kTextMime,
-                                kHTMLMime,
-                                kNativeHTMLMime,
-                                kRTFMime,
-                                kURLMime,
-                                kURLDataMime,
-                                kURLDescriptionMime,
-                                kURLPrivateMime,
-                                kPNGImageMime,
-                                kJPEGImageMime,
-                                kGIFImageMime,
-                                kNativeImageMime,
-                                kFileMime,
-                                kFilePromiseMime,
-                                kFilePromiseURLMime,
-                                kFilePromiseDestFilename,
-                                kFilePromiseDirectoryMime,
-                                kMozTextInternal,
-                                kHTMLContext,
-                                kHTMLInfo,
-                                kImageRequestMime};
 
   /*
    * Two passes are made here to iterate over all of the types. First, look for
@@ -945,8 +924,8 @@ already_AddRefed<nsITransferable> DataTransfer::GetTransferable(
 
       // If the data is of one of the well-known formats, use it directly.
       bool isCustomFormat = true;
-      for (uint32_t f = 0; f < ArrayLength(knownFormats); f++) {
-        if (type.EqualsASCII(knownFormats[f])) {
+      for (const char* format : kKnownFormats) {
+        if (type.EqualsASCII(format)) {
           isCustomFormat = false;
           break;
         }

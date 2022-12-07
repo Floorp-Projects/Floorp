@@ -29,7 +29,7 @@ struct VertAttribLayoutData final {
   uint32_t divisor = 0;
   bool isArray = false;
   uint8_t byteSize = 0;
-  uint8_t byteStride = 0;  // at-most 255
+  uint8_t byteStride = 1;  // Non-zero, at-most 255
   webgl::AttribBaseType baseType = webgl::AttribBaseType::Float;
   uint64_t byteOffset = 0;
 };
@@ -57,7 +57,6 @@ class WebGLVertexArray : public WebGLContextBoundObject {
 
   RefPtr<WebGLBuffer> mElementArrayBuffer;
 
-  std::bitset<kMaxAttribs> mAttribIsArray;
   std::array<webgl::VertAttribBindingData, kMaxAttribs> mBindings;  // Hot data.
   std::array<webgl::VertAttribPointerDesc, kMaxAttribs>
       mDescs;  // cold data, parallel to mBindings.
@@ -76,14 +75,14 @@ class WebGLVertexArray : public WebGLContextBoundObject {
   virtual void BindVertexArray() = 0;
 
   void SetAttribIsArray(const uint32_t index, const bool val) {
-    auto& binding = mBindings[index];
+    auto& binding = mBindings.at(index);
     binding.layout.isArray = val;
     mAttribIsArrayWithNullBuffer[index] =
         binding.layout.isArray && !binding.buffer;
   }
 
   void AttribDivisor(const uint32_t index, const uint32_t val) {
-    auto& binding = mBindings[index];
+    auto& binding = mBindings.at(index);
     binding.layout.divisor = val;
   }
 
@@ -92,7 +91,7 @@ class WebGLVertexArray : public WebGLContextBoundObject {
                      const webgl::VertAttribPointerCalculated& calc) {
     mDescs[index] = desc;
 
-    auto& binding = mBindings[index];
+    auto& binding = mBindings.at(index);
     binding.buffer = buffer;
     binding.layout.byteSize = calc.byteSize;
     binding.layout.byteStride = calc.byteStride;
@@ -104,9 +103,11 @@ class WebGLVertexArray : public WebGLContextBoundObject {
   }
 
   const auto& AttribBinding(const uint32_t index) const {
-    return mBindings[index];
+    return mBindings.at(index);
   }
-  const auto& AttribDesc(const uint32_t index) const { return mDescs[index]; }
+  const auto& AttribDesc(const uint32_t index) const {
+    return mDescs.at(index);
+  }
 
   Maybe<uint32_t> GetAttribIsArrayWithNullBuffer() const {
     const auto& bitset = mAttribIsArrayWithNullBuffer;
@@ -118,6 +119,7 @@ class WebGLVertexArray : public WebGLContextBoundObject {
   }
 
   Maybe<double> GetVertexAttrib(uint32_t index, GLenum pname) const;
+  void DoVertexAttrib(uint32_t index, uint32_t vertOffset = 0) const;
 };
 
 }  // namespace mozilla

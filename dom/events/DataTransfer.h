@@ -393,6 +393,29 @@ class DataTransfer final : public nsISupports, public nsWrapperCache {
                                              bool aPlainTextOnly,
                                              nsTArray<nsCString>* aResult);
 
+  // Formats that are "known" and won't be converted to the kCustomTypesMime.
+  static inline const char* const kKnownFormats[] = {kTextMime,
+                                                     kHTMLMime,
+                                                     kNativeHTMLMime,
+                                                     kRTFMime,
+                                                     kURLMime,
+                                                     kURLDataMime,
+                                                     kURLDescriptionMime,
+                                                     kURLPrivateMime,
+                                                     kPNGImageMime,
+                                                     kJPEGImageMime,
+                                                     kGIFImageMime,
+                                                     kNativeImageMime,
+                                                     kFileMime,
+                                                     kFilePromiseMime,
+                                                     kFilePromiseURLMime,
+                                                     kFilePromiseDestFilename,
+                                                     kFilePromiseDirectoryMime,
+                                                     kMozTextInternal,
+                                                     kHTMLContext,
+                                                     kHTMLInfo,
+                                                     kImageRequestMime};
+
  protected:
   // Non-text items are ignored.
   //

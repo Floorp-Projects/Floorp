@@ -476,7 +476,7 @@ void CycleCollectedJSContext::AfterProcessMicrotasks() {
   // https://html.spec.whatwg.org/multipage/webappapis.html#notify-about-rejected-promises
   if (mAboutToBeNotifiedRejectedPromises.Length()) {
     RefPtr<NotifyUnhandledRejections> runnable = new NotifyUnhandledRejections(
-        this, std::move(mAboutToBeNotifiedRejectedPromises));
+        std::move(mAboutToBeNotifiedRejectedPromises));
     NS_DispatchToCurrentThread(runnable);
   }
   // Cleanup Indexed Database transactions:
@@ -724,12 +724,15 @@ void CycleCollectedJSContext::PerformDebuggerMicroTaskCheckpoint() {
 
 NS_IMETHODIMP CycleCollectedJSContext::NotifyUnhandledRejections::Run() {
   for (size_t i = 0; i < mUnhandledRejections.Length(); ++i) {
+    CycleCollectedJSContext* cccx = CycleCollectedJSContext::Get();
+    NS_ENSURE_STATE(cccx);
+
     RefPtr<Promise>& promise = mUnhandledRejections[i];
     if (!promise) {
       continue;
     }
 
-    JS::RootingContext* cx = mCx->RootingCx();
+    JS::RootingContext* cx = cccx->RootingCx();
     JS::RootedObject promiseObj(cx, promise->PromiseObj());
     MOZ_ASSERT(JS::IsPromiseObject(promiseObj));
 
@@ -752,29 +755,34 @@ NS_IMETHODIMP CycleCollectedJSContext::NotifyUnhandledRejections::Run() {
       }
     }
 
+    cccx = CycleCollectedJSContext::Get();
+    NS_ENSURE_STATE(cccx);
     if (!JS::GetPromiseIsHandled(promiseObj)) {
       DebugOnly<bool> isFound =
-          mCx->mPendingUnhandledRejections.Remove(promiseID);
+          cccx->mPendingUnhandledRejections.Remove(promiseID);
       MOZ_ASSERT(isFound);
     }
 
     // If a rejected promise is being handled in "unhandledrejection" event
     // handler, it should be removed from the table in
     // PromiseRejectionTrackerCallback.
-    MOZ_ASSERT(!mCx->mPendingUnhandledRejections.Lookup(promiseID));
+    MOZ_ASSERT(!cccx->mPendingUnhandledRejections.Lookup(promiseID));
   }
   return NS_OK;
 }
 
 nsresult CycleCollectedJSContext::NotifyUnhandledRejections::Cancel() {
+  CycleCollectedJSContext* cccx = CycleCollectedJSContext::Get();
+  NS_ENSURE_STATE(cccx);
+
   for (size_t i = 0; i < mUnhandledRejections.Length(); ++i) {
     RefPtr<Promise>& promise = mUnhandledRejections[i];
     if (!promise) {
       continue;
     }
 
-    JS::RootedObject promiseObj(mCx->RootingCx(), promise->PromiseObj());
-    mCx->mPendingUnhandledRejections.Remove(JS::GetPromiseID(promiseObj));
+    JS::RootedObject promiseObj(cccx->RootingCx(), promise->PromiseObj());
+    cccx->mPendingUnhandledRejections.Remove(JS::GetPromiseID(promiseObj));
   }
   return NS_OK;
 }

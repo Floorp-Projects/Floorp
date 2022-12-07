@@ -364,10 +364,8 @@ class CycleCollectedJSContext : dom::PerThreadAtomCache, private JS::JobQueue {
 
   class NotifyUnhandledRejections final : public CancelableRunnable {
    public:
-    NotifyUnhandledRejections(CycleCollectedJSContext* aCx,
-                              PromiseArray&& aPromises)
+    explicit NotifyUnhandledRejections(PromiseArray&& aPromises)
         : CancelableRunnable("NotifyUnhandledRejections"),
-          mCx(aCx),
           mUnhandledRejections(std::move(aPromises)) {}
 
     NS_IMETHOD Run() final;
@@ -375,7 +373,6 @@ class CycleCollectedJSContext : dom::PerThreadAtomCache, private JS::JobQueue {
     nsresult Cancel() final;
 
    private:
-    CycleCollectedJSContext* mCx;
     PromiseArray mUnhandledRejections;
   };
 

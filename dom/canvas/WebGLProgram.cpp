@@ -446,6 +446,9 @@ RefPtr<const webgl::LinkedProgramInfo> QueryProgramInfo(WebGLProgram* prog,
     }
   }
 
+  info->webgl_gl_VertexID_Offset =
+      gl->fGetUniformLocation(prog->mGLName, "webgl_gl_VertexID_Offset");
+
   // -
 
   for (const auto& uniform : info->active.activeUniforms) {

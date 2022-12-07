@@ -201,5 +201,21 @@ HRESULT AccessibleHandlerControl::GetCachedAccessible(
   return S_OK;
 }
 
+HRESULT AccessibleHandlerControl::SuppressA11yForClipboardCopy() {
+  mA11yClipboardCopySuppressionStartTime = ::GetTickCount();
+  return S_OK;
+}
+
+bool AccessibleHandlerControl::IsA11ySuppressedForClipboardCopy() {
+  // Must be kept in sync with kSuppressTimeout in
+  // accessible/windows/msaa/Compatibility.cpp.
+  constexpr DWORD kSuppressTimeout = 1500;  // ms
+  if (!mA11yClipboardCopySuppressionStartTime) {
+    return false;
+  }
+  return ::GetTickCount() - mA11yClipboardCopySuppressionStartTime <
+         kSuppressTimeout;
+}
+
 }  // namespace a11y
 }  // namespace mozilla

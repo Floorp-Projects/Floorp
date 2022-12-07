@@ -27,7 +27,7 @@ VsyncSource::~VsyncSource() { MOZ_ASSERT(NS_IsMainThread()); }
 void VsyncSource::NotifyVsync(const TimeStamp& aVsyncTimestamp,
                               const TimeStamp& aOutputTimestamp) {
   VsyncId vsyncId;
-  nsTArray<RefPtr<VsyncDispatcher>> dispatchers;
+  nsTArray<DispatcherRefWithCount> dispatchers;
 
   {
     auto state = mState.Lock();
@@ -39,7 +39,7 @@ void VsyncSource::NotifyVsync(const TimeStamp& aVsyncTimestamp,
   // Notify our listeners, outside of the lock.
   const VsyncEvent event(vsyncId, aVsyncTimestamp, aOutputTimestamp);
   for (const auto& dispatcher : dispatchers) {
-    dispatcher->NotifyVsync(event);
+    dispatcher.mDispatcher->NotifyVsync(event);
   }
 }
 
@@ -47,8 +47,20 @@ void VsyncSource::AddVsyncDispatcher(VsyncDispatcher* aVsyncDispatcher) {
   MOZ_ASSERT(aVsyncDispatcher);
   {
     auto state = mState.Lock();
-    if (!state->mDispatchers.Contains(aVsyncDispatcher)) {
-      state->mDispatchers.AppendElement(aVsyncDispatcher);
+
+    // Find the dispatcher in mDispatchers. If it is already present, increment
+    // the count. If not, add it with a count of 1.
+    bool found = false;
+    for (auto& dispatcherRefWithCount : state->mDispatchers) {
+      if (dispatcherRefWithCount.mDispatcher == aVsyncDispatcher) {
+        dispatcherRefWithCount.mCount++;
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      state->mDispatchers.AppendElement(
+          DispatcherRefWithCount{aVsyncDispatcher, 1});
     }
   }
 
@@ -59,7 +71,22 @@ void VsyncSource::RemoveVsyncDispatcher(VsyncDispatcher* aVsyncDispatcher) {
   MOZ_ASSERT(aVsyncDispatcher);
   {
     auto state = mState.Lock();
-    state->mDispatchers.RemoveElement(aVsyncDispatcher);
+
+    // Find the dispatcher in mDispatchers. If found, decrement the count.
+    // If the count becomes zero, remove it from mDispatchers.
+    for (auto it = state->mDispatchers.begin(); it != state->mDispatchers.end();
+         ++it) {
+      if (it->mDispatcher == aVsyncDispatcher) {
+        it->mCount--;
+        if (it->mCount == 0) {
+          state->mDispatchers.RemoveElementAt(it);
+        }
+        break;
+      }
+    }
+
+    // In the future we should probably MOZ_RELEASE_ASSERT here that we don't
+    // try to remove a dispatcher which isn't in mDispatchers.
   }
 
   UpdateVsyncStatus();

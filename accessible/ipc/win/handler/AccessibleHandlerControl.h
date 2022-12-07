@@ -62,6 +62,7 @@ class AccessibleHandlerControl final : public IHandlerControl {
   STDMETHODIMP OnTextChange(long aHwnd, long aIA2UniqueId,
                             VARIANT_BOOL aIsInsert,
                             IA2TextSegment* aText) override;
+  STDMETHODIMP SuppressA11yForClipboardCopy() override;
 
   uint32_t GetCacheGen() const { return mCacheGen; }
 
@@ -75,6 +76,8 @@ class AccessibleHandlerControl final : public IHandlerControl {
   void CacheAccessible(long aUniqueId, AccessibleHandler* aAccessible);
   HRESULT GetCachedAccessible(long aUniqueId, AccessibleHandler** aAccessible);
 
+  bool IsA11ySuppressedForClipboardCopy();
+
  private:
   AccessibleHandlerControl();
   ~AccessibleHandlerControl() = default;
@@ -87,6 +90,9 @@ class AccessibleHandlerControl final : public IHandlerControl {
   // We can't use Gecko APIs in this dll, hence the use of std::unordered_map.
   typedef std::unordered_map<long, RefPtr<AccessibleHandler>> AccessibleCache;
   AccessibleCache mAccessibleCache;
+  // Time when SuppressA11yForClipboardCopy() was called, as returned by
+  // ::GetTickCount().
+  DWORD mA11yClipboardCopySuppressionStartTime = 0;
 };
 
 extern mscom::SingletonFactory<AccessibleHandlerControl> gControlFactory;

@@ -202,8 +202,14 @@ std::unique_ptr<webgl::ShaderValidator> WebGLContext::CreateShaderValidator(
 
   const auto compileOptions =
       webgl::ChooseValidatorCompileOptions(resources, gl);
-  return webgl::ShaderValidator::Create(shaderType, spec, outputLanguage,
-                                        resources, compileOptions);
+  auto ret = webgl::ShaderValidator::Create(shaderType, spec, outputLanguage,
+                                            resources, compileOptions);
+  if (!ret) return ret;
+
+  ret->mIfNeeded_webgl_gl_VertexID_Offset |=
+      mBug_DrawArraysInstancedUserAttribFetchAffectedByFirst;
+
+  return ret;
 }
 
 ////////////////////////////////////////
@@ -224,6 +230,28 @@ std::unique_ptr<ShaderValidator> ShaderValidator::Create(
 }
 
 ShaderValidator::~ShaderValidator() { sh::Destruct(mHandle); }
+
+inline bool StartsWith(const std::string_view& str,
+                       const std::string_view& part) {
+  return str.find(part) == 0;
+}
+
+inline std::vector<std::string_view> Split(std::string_view src,
+                                           const std::string_view& delim,
+                                           const size_t maxSplits = -1) {
+  std::vector<std::string_view> ret;
+  for (const auto i : IntegerRange(maxSplits)) {
+    (void)i;
+    const auto end = src.find(delim);
+    if (end == size_t(-1)) {
+      break;
+    }
+    ret.push_back(src.substr(0, end));
+    src = src.substr(end + delim.size());
+  }
+  ret.push_back(src);
+  return ret;
+}
 
 std::unique_ptr<const ShaderValidatorResults>
 ShaderValidator::ValidateAndTranslate(const char* const source) const {
@@ -251,6 +279,38 @@ ShaderValidator::ValidateAndTranslate(const char* const source) const {
     const auto& nameMap = *sh::GetNameHashingMap(mHandle);
     for (const auto& pair : nameMap) {
       ret->mNameMap.insert(pair);
+    }
+
+    // -
+    // Custom translation steps
+    auto* const translatedSource = &ret->mObjectCode;
+
+    // gl_VertexID -> webgl_gl_VertexID
+    // gl_InstanceID -> webgl_gl_InstanceID
+
+    std::string header;
+    std::string_view body = *translatedSource;
+    if (StartsWith(body, "#version")) {
+      const auto parts = Split(body, "\n", 1);
+      header = parts.at(0);
+      header += "\n";
+      body = parts.at(1);
+    }
+
+    for (const auto& attrib : ret->mAttributes) {
+      if (mIfNeeded_webgl_gl_VertexID_Offset && attrib.name == "gl_VertexID" &&
+          attrib.staticUse) {
+        header += "uniform int webgl_gl_VertexID_Offset;\n";
+        header +=
+            "#define gl_VertexID (gl_VertexID + webgl_gl_VertexID_Offset)\n";
+        ret->mNeeds_webgl_gl_VertexID_Offset = true;
+      }
+    }
+
+    if (header.size()) {
+      auto combined = header;
+      combined += body;
+      *translatedSource = combined;
     }
   }
 

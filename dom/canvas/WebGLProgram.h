@@ -85,6 +85,16 @@ struct LocationInfo final {
   const ActiveUniformValidationInfo info;
   const uint32_t indexIntoUniform;
   SamplerUniformInfo* const samplerInfo;
+
+  auto PrettyName() const {
+    auto ret = info.info.name;
+    if (info.isArray) {
+      ret += "[";
+      ret += std::to_string(indexIntoUniform);
+      ret += "]";
+    }
+    return ret;
+  }
 };
 
 // -
@@ -108,6 +118,7 @@ struct LinkedProgramInfo final : public RefCounted<LinkedProgramInfo>,
   mutable std::vector<size_t> componentsPerTFVert;
 
   bool attrib0Active = false;
+  GLint webgl_gl_VertexID_Offset = -1;  // Location
 
   // -
 

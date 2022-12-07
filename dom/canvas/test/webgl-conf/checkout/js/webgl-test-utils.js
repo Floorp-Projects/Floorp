@@ -3103,7 +3103,11 @@ var setZeroTimeout = (function() {
 function dispatchPromise(fn) {
   return new Promise((fn_resolve, fn_reject) => {
     setZeroTimeout(() => {
-      fn_resolve(fn());
+      let val;
+      if (fn) {
+        val = fn();
+      }
+      fn_resolve(val);
     });
   });
 }

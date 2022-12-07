@@ -110,6 +110,9 @@ class gfxEnv final {
   // Stop the VR rendering
   DECL_GFX_ENV("NO_VR_RENDERING", NoVRRendering);
 
+  // WebGL workarounds
+  DECL_GFX_ENV("MOZ_WEBGL_WORKAROUND_FIRST_AFFECTS_INSTANCE_ID", MOZ_WEBGL_WORKAROUND_FIRST_AFFECTS_INSTANCE_ID)
+
   // WARNING:
   // Please make sure that you've added your new envvar to the list above in
   // alphabetical order. Please do not just append it to the end of the list.
