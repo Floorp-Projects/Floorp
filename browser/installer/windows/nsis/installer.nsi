@@ -415,6 +415,11 @@ Section "-Application" APP_IDX
     StrCpy $AddDesktopSC "1"
   ${EndIf}
 
+  ; Default for adding a Taskbar pin (1 = pin, 0 = don't pin)
+  ${If} $AddTaskbarSC == ""
+    StrCpy $AddTaskbarSC "1"
+  ${EndIf}
+
   ${LogHeader} "Adding Registry Entries"
   SetShellVarContext current  ; Set SHCTX to HKCU
   ${RegCleanMain} "Software\Mozilla"
