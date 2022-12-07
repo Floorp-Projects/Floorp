@@ -162,10 +162,10 @@ class VendorManifest(MozbuildObject):
         # for the last commit that modified a file; nor a way to get file
         # blame.  So really all we can do is just download and replace the
         # files and see if they changed...
-        for f in self.manifest["vendoring"]["individual-files"]:
-            url = self.source_host.upstream_path_to_file(new_revision, f["upstream"])
+
+        def download_and_write_file(url, destination):
             self.logInfo(
-                {"local_file": f["destination"], "url": url},
+                {"local_file": destination, "url": url},
                 "Downloading {local_file} from {url}...",
             )
 
@@ -176,10 +176,25 @@ class VendorManifest(MozbuildObject):
                         tmpfile.write(data)
                     tmpfile.seek(0)
 
-                    destination = self.get_full_path(f["destination"])
                     shutil.copy2(tmpfile.name, destination)
                 except Exception as e:
                     raise (e)
+
+        # Only one of these loops will have content, so just do them both
+        for f in self.manifest["vendoring"].get("individual-files", []):
+            url = self.source_host.upstream_path_to_file(new_revision, f["upstream"])
+            destination = self.get_full_path(f["destination"])
+            download_and_write_file(url, destination)
+
+        for f in self.manifest["vendoring"].get("individual-files-list", []):
+            url = self.source_host.upstream_path_to_file(
+                new_revision,
+                self.manifest["vendoring"]["individual-files-default-upstream"] + f,
+            )
+            destination = self.get_full_path(
+                self.manifest["vendoring"]["individual-files-default-destination"] + f
+            )
+            download_and_write_file(url, destination)
 
         self.spurious_check(new_revision, ignore_modified)
 
