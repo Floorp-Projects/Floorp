@@ -1,6 +1,6 @@
-diff --git a/modules/fdlibm/src/e_acos.cpp b/modules/fdlibm/src/e_acos.cpp
---- a/modules/fdlibm/src/e_acos.cpp
-+++ b/modules/fdlibm/src/e_acos.cpp
+diff --git a/e_acos.cpp b/e_acos.cpp
+--- a/e_acos.cpp
++++ b/e_acos.cpp
 @@ -35,17 +35,16 @@ __FBSDID("$FreeBSD$");
   *	if x is NaN, return x itself;
   *	if |x|>1, return NaN with invalid signal.
@@ -19,9 +19,9 @@ diff --git a/modules/fdlibm/src/e_acos.cpp b/modules/fdlibm/src/e_acos.cpp
  pio2_hi =  1.57079632679489655800e+00; /* 0x3FF921FB, 0x54442D18 */
  static volatile double
  pio2_lo =  6.12323399573676603587e-17; /* 0x3C91A626, 0x33145C07 */
-diff --git a/modules/fdlibm/src/e_acosh.cpp b/modules/fdlibm/src/e_acosh.cpp
---- a/modules/fdlibm/src/e_acosh.cpp
-+++ b/modules/fdlibm/src/e_acosh.cpp
+diff --git a/e_acosh.cpp b/e_acosh.cpp
+--- a/e_acosh.cpp
++++ b/e_acosh.cpp
 @@ -26,17 +26,16 @@ __FBSDID("$FreeBSD$");
   *
   * Special cases:
@@ -40,9 +40,9 @@ diff --git a/modules/fdlibm/src/e_acosh.cpp b/modules/fdlibm/src/e_acosh.cpp
  
  double
  __ieee754_acosh(double x)
-diff --git a/modules/fdlibm/src/e_asin.cpp b/modules/fdlibm/src/e_asin.cpp
---- a/modules/fdlibm/src/e_asin.cpp
-+++ b/modules/fdlibm/src/e_asin.cpp
+diff --git a/e_asin.cpp b/e_asin.cpp
+--- a/e_asin.cpp
++++ b/e_asin.cpp
 @@ -41,17 +41,16 @@ __FBSDID("$FreeBSD$");
   * Special cases:
   *	if x is NaN, return x itself;
@@ -61,9 +61,9 @@ diff --git a/modules/fdlibm/src/e_asin.cpp b/modules/fdlibm/src/e_asin.cpp
  pio2_hi =  1.57079632679489655800e+00, /* 0x3FF921FB, 0x54442D18 */
  pio2_lo =  6.12323399573676603587e-17, /* 0x3C91A626, 0x33145C07 */
  pio4_hi =  7.85398163397448278999e-01, /* 0x3FE921FB, 0x54442D18 */
-diff --git a/modules/fdlibm/src/e_atan2.cpp b/modules/fdlibm/src/e_atan2.cpp
---- a/modules/fdlibm/src/e_atan2.cpp
-+++ b/modules/fdlibm/src/e_atan2.cpp
+diff --git a/e_atan2.cpp b/e_atan2.cpp
+--- a/e_atan2.cpp
++++ b/e_atan2.cpp
 @@ -39,17 +39,16 @@ __FBSDID("$FreeBSD$");
   * The hexadecimal values are the intended ones for the following 
   * constants. The decimal values may be used, provided that the 
@@ -82,9 +82,9 @@ diff --git a/modules/fdlibm/src/e_atan2.cpp b/modules/fdlibm/src/e_atan2.cpp
  zero  = 0.0,
  pi_o_4  = 7.8539816339744827900E-01, /* 0x3FE921FB, 0x54442D18 */
  pi_o_2  = 1.5707963267948965580E+00, /* 0x3FF921FB, 0x54442D18 */
-diff --git a/modules/fdlibm/src/e_atanh.cpp b/modules/fdlibm/src/e_atanh.cpp
---- a/modules/fdlibm/src/e_atanh.cpp
-+++ b/modules/fdlibm/src/e_atanh.cpp
+diff --git a/e_atanh.cpp b/e_atanh.cpp
+--- a/e_atanh.cpp
++++ b/e_atanh.cpp
 @@ -30,17 +30,16 @@ __FBSDID("$FreeBSD$");
   *	atanh(x) is NaN if |x| > 1 with signal;
   *	atanh(NaN) is that NaN with no signal;
@@ -103,9 +103,9 @@ diff --git a/modules/fdlibm/src/e_atanh.cpp b/modules/fdlibm/src/e_atanh.cpp
  double
  __ieee754_atanh(double x)
  {
-diff --git a/modules/fdlibm/src/e_cosh.cpp b/modules/fdlibm/src/e_cosh.cpp
---- a/modules/fdlibm/src/e_cosh.cpp
-+++ b/modules/fdlibm/src/e_cosh.cpp
+diff --git a/e_cosh.cpp b/e_cosh.cpp
+--- a/e_cosh.cpp
++++ b/e_cosh.cpp
 @@ -32,17 +32,16 @@ __FBSDID("$FreeBSD$");
   *
   * Special cases:
@@ -124,9 +124,9 @@ diff --git a/modules/fdlibm/src/e_cosh.cpp b/modules/fdlibm/src/e_cosh.cpp
  __ieee754_cosh(double x)
  {
  	double t,w;
-diff --git a/modules/fdlibm/src/e_exp.cpp b/modules/fdlibm/src/e_exp.cpp
---- a/modules/fdlibm/src/e_exp.cpp
-+++ b/modules/fdlibm/src/e_exp.cpp
+diff --git a/e_exp.cpp b/e_exp.cpp
+--- a/e_exp.cpp
++++ b/e_exp.cpp
 @@ -73,17 +73,16 @@ __FBSDID("$FreeBSD$");
   * The hexadecimal values are the intended ones for the following 
   * constants. The decimal values may be used, provided that the 
@@ -145,9 +145,9 @@ diff --git a/modules/fdlibm/src/e_exp.cpp b/modules/fdlibm/src/e_exp.cpp
  o_threshold=  7.09782712893383973096e+02,  /* 0x40862E42, 0xFEFA39EF */
  u_threshold= -7.45133219101941108420e+02,  /* 0xc0874910, 0xD52D3051 */
  ln2HI[2]   ={ 6.93147180369123816490e-01,  /* 0x3fe62e42, 0xfee00000 */
-diff --git a/modules/fdlibm/src/e_hypot.cpp b/modules/fdlibm/src/e_hypot.cpp
---- a/modules/fdlibm/src/e_hypot.cpp
-+++ b/modules/fdlibm/src/e_hypot.cpp
+diff --git a/e_hypot.cpp b/e_hypot.cpp
+--- a/e_hypot.cpp
++++ b/e_hypot.cpp
 @@ -43,17 +43,16 @@ __FBSDID("$FreeBSD$");
   *
   * Accuracy:
@@ -166,9 +166,9 @@ diff --git a/modules/fdlibm/src/e_hypot.cpp b/modules/fdlibm/src/e_hypot.cpp
  	double a,b,t1,t2,y1,y2,w;
  	int32_t j,k,ha,hb;
  
-diff --git a/modules/fdlibm/src/e_log.cpp b/modules/fdlibm/src/e_log.cpp
---- a/modules/fdlibm/src/e_log.cpp
-+++ b/modules/fdlibm/src/e_log.cpp
+diff --git a/e_log.cpp b/e_log.cpp
+--- a/e_log.cpp
++++ b/e_log.cpp
 @@ -62,17 +62,16 @@ __FBSDID("$FreeBSD$");
   * The hexadecimal values are the intended ones for the following 
   * constants. The decimal values may be used, provided that the 
@@ -187,9 +187,9 @@ diff --git a/modules/fdlibm/src/e_log.cpp b/modules/fdlibm/src/e_log.cpp
  two54   =  1.80143985094819840000e+16,  /* 43500000 00000000 */
  Lg1 = 6.666666666666735130e-01,  /* 3FE55555 55555593 */
  Lg2 = 3.999999999940941908e-01,  /* 3FD99999 9997FA04 */
-diff --git a/modules/fdlibm/src/e_log10.cpp b/modules/fdlibm/src/e_log10.cpp
---- a/modules/fdlibm/src/e_log10.cpp
-+++ b/modules/fdlibm/src/e_log10.cpp
+diff --git a/e_log10.cpp b/e_log10.cpp
+--- a/e_log10.cpp
++++ b/e_log10.cpp
 @@ -19,17 +19,16 @@ __FBSDID("$FreeBSD$");
   * comments.
   *
@@ -208,9 +208,9 @@ diff --git a/modules/fdlibm/src/e_log10.cpp b/modules/fdlibm/src/e_log10.cpp
  ivln10hi   =  4.34294481878168880939e-01, /* 0x3fdbcb7b, 0x15200000 */
  ivln10lo   =  2.50829467116452752298e-11, /* 0x3dbb9438, 0xca9aadd5 */
  log10_2hi  =  3.01029995663611771306e-01, /* 0x3FD34413, 0x509F6000 */
-diff --git a/modules/fdlibm/src/e_log2.cpp b/modules/fdlibm/src/e_log2.cpp
---- a/modules/fdlibm/src/e_log2.cpp
-+++ b/modules/fdlibm/src/e_log2.cpp
+diff --git a/e_log2.cpp b/e_log2.cpp
+--- a/e_log2.cpp
++++ b/e_log2.cpp
 @@ -21,17 +21,16 @@ __FBSDID("$FreeBSD$");
   * This reduces x to {k, 1+f} exactly as in e_log.c, then calls the kernel,
   * then does the combining and scaling steps
@@ -229,9 +229,9 @@ diff --git a/modules/fdlibm/src/e_log2.cpp b/modules/fdlibm/src/e_log2.cpp
  ivln2hi    =  1.44269504072144627571e+00, /* 0x3ff71547, 0x65200000 */
  ivln2lo    =  1.67517131648865118353e-10; /* 0x3de705fc, 0x2eefa200 */
  
-diff --git a/modules/fdlibm/src/e_pow.cpp b/modules/fdlibm/src/e_pow.cpp
---- a/modules/fdlibm/src/e_pow.cpp
-+++ b/modules/fdlibm/src/e_pow.cpp
+diff --git a/e_pow.cpp b/e_pow.cpp
+--- a/e_pow.cpp
++++ b/e_pow.cpp
 @@ -53,17 +53,16 @@ __FBSDID("$FreeBSD$");
   * Constants :
   * The hexadecimal values are the intended ones for the following
@@ -250,9 +250,9 @@ diff --git a/modules/fdlibm/src/e_pow.cpp b/modules/fdlibm/src/e_pow.cpp
  dp_l[] = { 0.0, 1.35003920212974897128e-08,}, /* 0x3E4CFDEB, 0x43CFD006 */
  zero    =  0.0,
  half    =  0.5,
-diff --git a/modules/fdlibm/src/e_rem_pio2.cpp b/modules/fdlibm/src/e_rem_pio2.cpp
---- a/modules/fdlibm/src/e_rem_pio2.cpp
-+++ b/modules/fdlibm/src/e_rem_pio2.cpp
+diff --git a/e_rem_pio2.cpp b/e_rem_pio2.cpp
+--- a/e_rem_pio2.cpp
++++ b/e_rem_pio2.cpp
 @@ -19,17 +19,16 @@ __FBSDID("$FreeBSD$");
  /* __ieee754_rem_pio2(x,y)
   * 
@@ -271,9 +271,9 @@ diff --git a/modules/fdlibm/src/e_rem_pio2.cpp b/modules/fdlibm/src/e_rem_pio2.c
   * pio2_1t:  pi/2 - pio2_1
   * pio2_2:   second 33 bit of pi/2
   * pio2_2t:  pi/2 - (pio2_1+pio2_2)
-diff --git a/modules/fdlibm/src/e_sinh.cpp b/modules/fdlibm/src/e_sinh.cpp
---- a/modules/fdlibm/src/e_sinh.cpp
-+++ b/modules/fdlibm/src/e_sinh.cpp
+diff --git a/e_sinh.cpp b/e_sinh.cpp
+--- a/e_sinh.cpp
++++ b/e_sinh.cpp
 @@ -29,17 +29,16 @@ __FBSDID("$FreeBSD$");
   *
   * Special cases:
@@ -292,9 +292,9 @@ diff --git a/modules/fdlibm/src/e_sinh.cpp b/modules/fdlibm/src/e_sinh.cpp
  __ieee754_sinh(double x)
  {
  	double t,h;
-diff --git a/modules/fdlibm/src/k_cos.cpp b/modules/fdlibm/src/k_cos.cpp
---- a/modules/fdlibm/src/k_cos.cpp
-+++ b/modules/fdlibm/src/k_cos.cpp
+diff --git a/k_cos.cpp b/k_cos.cpp
+--- a/k_cos.cpp
++++ b/k_cos.cpp
 @@ -48,17 +48,16 @@ __FBSDID("$FreeBSD$");
   *	   and tmp having the same precision as x.  If they have extra
   *	   precision due to compiler bugs, then the extra precision is
@@ -313,9 +313,9 @@ diff --git a/modules/fdlibm/src/k_cos.cpp b/modules/fdlibm/src/k_cos.cpp
  C2  = -1.38888888888741095749e-03, /* 0xBF56C16C, 0x16C15177 */
  C3  =  2.48015872894767294178e-05, /* 0x3EFA01A0, 0x19CB1590 */
  C4  = -2.75573143513906633035e-07, /* 0xBE927E4F, 0x809C52AD */
-diff --git a/modules/fdlibm/src/k_exp.cpp b/modules/fdlibm/src/k_exp.cpp
---- a/modules/fdlibm/src/k_exp.cpp
-+++ b/modules/fdlibm/src/k_exp.cpp
+diff --git a/k_exp.cpp b/k_exp.cpp
+--- a/k_exp.cpp
++++ b/k_exp.cpp
 @@ -26,17 +26,16 @@
   * SUCH DAMAGE.
   */
@@ -334,9 +334,9 @@ diff --git a/modules/fdlibm/src/k_exp.cpp b/modules/fdlibm/src/k_exp.cpp
  /*
   * Compute exp(x), scaled to avoid spurious overflow.  An exponent is
   * returned separately in 'expt'.
-diff --git a/modules/fdlibm/src/k_rem_pio2.cpp b/modules/fdlibm/src/k_rem_pio2.cpp
---- a/modules/fdlibm/src/k_rem_pio2.cpp
-+++ b/modules/fdlibm/src/k_rem_pio2.cpp
+diff --git a/k_rem_pio2.cpp b/k_rem_pio2.cpp
+--- a/k_rem_pio2.cpp
++++ b/k_rem_pio2.cpp
 @@ -126,17 +126,16 @@ __FBSDID("$FreeBSD$");
   * The hexadecimal values are the intended ones for the following 
   * constants. The decimal values may be used, provided that the 
@@ -355,9 +355,9 @@ diff --git a/modules/fdlibm/src/k_rem_pio2.cpp b/modules/fdlibm/src/k_rem_pio2.c
   * Table of constants for 2/pi, 396 Hex digits (476 decimal) of 2/pi
   *
   *		integer array, contains the (24*i)-th to (24*i+23)-th 
-diff --git a/modules/fdlibm/src/k_sin.cpp b/modules/fdlibm/src/k_sin.cpp
---- a/modules/fdlibm/src/k_sin.cpp
-+++ b/modules/fdlibm/src/k_sin.cpp
+diff --git a/k_sin.cpp b/k_sin.cpp
+--- a/k_sin.cpp
++++ b/k_sin.cpp
 @@ -39,17 +39,16 @@ __FBSDID("$FreeBSD$");
   *		    ~ sin(x) + (1-x*x/2)*y
   *	   For better accuracy, let 
@@ -376,9 +376,9 @@ diff --git a/modules/fdlibm/src/k_sin.cpp b/modules/fdlibm/src/k_sin.cpp
  S2  =  8.33333333332248946124e-03, /* 0x3F811111, 0x1110F8A6 */
  S3  = -1.98412698298579493134e-04, /* 0xBF2A01A0, 0x19C161D5 */
  S4  =  2.75573137070700676789e-06, /* 0x3EC71DE3, 0x57B1FE7D */
-diff --git a/modules/fdlibm/src/k_tan.cpp b/modules/fdlibm/src/k_tan.cpp
---- a/modules/fdlibm/src/k_tan.cpp
-+++ b/modules/fdlibm/src/k_tan.cpp
+diff --git a/k_tan.cpp b/k_tan.cpp
+--- a/k_tan.cpp
++++ b/k_tan.cpp
 @@ -44,17 +44,16 @@ __FBSDID("$FreeBSD$");
   *		 		    3    2
   *		tan(x+y) = x + (T1*x + (x *(r+y)+y))
@@ -397,9 +397,9 @@ diff --git a/modules/fdlibm/src/k_tan.cpp b/modules/fdlibm/src/k_tan.cpp
  		 2.18694882948595424599e-02,	/* 3F9664F4, 8406D637 */
  		 8.86323982359930005737e-03,	/* 3F8226E3, E96E8493 */
  		 3.59207910759131235356e-03,	/* 3F6D6D22, C9560328 */
-diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private.h
---- a/modules/fdlibm/src/math_private.h
-+++ b/modules/fdlibm/src/math_private.h
+diff --git a/math_private.h b/math_private.h
+--- a/math_private.h
++++ b/math_private.h
 @@ -15,16 +15,18 @@
   */
  
@@ -419,9 +419,9 @@ diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private
   * to dig two 32 bit words out of the 64 bit IEEE floating point
   * value.  That is non-ANSI, and, moreover, the gcc instruction
   * scheduler gets it wrong.  We instead use the following macros.
-diff --git a/modules/fdlibm/src/s_asinh.cpp b/modules/fdlibm/src/s_asinh.cpp
---- a/modules/fdlibm/src/s_asinh.cpp
-+++ b/modules/fdlibm/src/s_asinh.cpp
+diff --git a/s_asinh.cpp b/s_asinh.cpp
+--- a/s_asinh.cpp
++++ b/s_asinh.cpp
 @@ -21,17 +21,16 @@ __FBSDID("$FreeBSD$");
   *	asinh(x) := x  if  1+x*x=1,
   *		 := sign(x)*(log(x)+ln2)) for large |x|, else
@@ -440,9 +440,9 @@ diff --git a/modules/fdlibm/src/s_asinh.cpp b/modules/fdlibm/src/s_asinh.cpp
  huge=  1.00000000000000000000e+300;
  
  double
-diff --git a/modules/fdlibm/src/s_atan.cpp b/modules/fdlibm/src/s_atan.cpp
---- a/modules/fdlibm/src/s_atan.cpp
-+++ b/modules/fdlibm/src/s_atan.cpp
+diff --git a/s_atan.cpp b/s_atan.cpp
+--- a/s_atan.cpp
++++ b/s_atan.cpp
 @@ -30,17 +30,16 @@ __FBSDID("$FreeBSD$");
   * The hexadecimal values are the intended ones for the following
   * constants. The decimal values may be used, provided that the
@@ -461,9 +461,9 @@ diff --git a/modules/fdlibm/src/s_atan.cpp b/modules/fdlibm/src/s_atan.cpp
    9.82793723247329054082e-01, /* atan(1.5)hi 0x3FEF730B, 0xD281F69B */
    1.57079632679489655800e+00, /* atan(inf)hi 0x3FF921FB, 0x54442D18 */
  };
-diff --git a/modules/fdlibm/src/s_cbrt.cpp b/modules/fdlibm/src/s_cbrt.cpp
---- a/modules/fdlibm/src/s_cbrt.cpp
-+++ b/modules/fdlibm/src/s_cbrt.cpp
+diff --git a/s_cbrt.cpp b/s_cbrt.cpp
+--- a/s_cbrt.cpp
++++ b/s_cbrt.cpp
 @@ -11,17 +11,16 @@
   *
   * Optimized by Bruce D. Evans.
@@ -482,9 +482,9 @@ diff --git a/modules/fdlibm/src/s_cbrt.cpp b/modules/fdlibm/src/s_cbrt.cpp
  static const u_int32_t
  	B1 = 715094163, /* B1 = (1023-1023/3-0.03306235651)*2**20 */
  	B2 = 696219795; /* B2 = (1023-1023/3-54/3-0.03306235651)*2**20 */
-diff --git a/modules/fdlibm/src/s_ceil.cpp b/modules/fdlibm/src/s_ceil.cpp
---- a/modules/fdlibm/src/s_ceil.cpp
-+++ b/modules/fdlibm/src/s_ceil.cpp
+diff --git a/s_ceil.cpp b/s_ceil.cpp
+--- a/s_ceil.cpp
++++ b/s_ceil.cpp
 @@ -19,17 +19,16 @@ __FBSDID("$FreeBSD$");
   * Method:
   *	Bit twiddling.
@@ -503,9 +503,9 @@ diff --git a/modules/fdlibm/src/s_ceil.cpp b/modules/fdlibm/src/s_ceil.cpp
  ceil(double x)
  {
  	int32_t i0,i1,j0;
-diff --git a/modules/fdlibm/src/s_ceilf.cpp b/modules/fdlibm/src/s_ceilf.cpp
---- a/modules/fdlibm/src/s_ceilf.cpp
-+++ b/modules/fdlibm/src/s_ceilf.cpp
+diff --git a/s_ceilf.cpp b/s_ceilf.cpp
+--- a/s_ceilf.cpp
++++ b/s_ceilf.cpp
 @@ -11,17 +11,16 @@
   * software is freely granted, provided that this notice
   * is preserved.
@@ -524,9 +524,9 @@ diff --git a/modules/fdlibm/src/s_ceilf.cpp b/modules/fdlibm/src/s_ceilf.cpp
  ceilf(float x)
  {
  	int32_t i0,j0;
-diff --git a/modules/fdlibm/src/s_copysign.cpp b/modules/fdlibm/src/s_copysign.cpp
---- a/modules/fdlibm/src/s_copysign.cpp
-+++ b/modules/fdlibm/src/s_copysign.cpp
+diff --git a/s_copysign.cpp b/s_copysign.cpp
+--- a/s_copysign.cpp
++++ b/s_copysign.cpp
 @@ -14,17 +14,16 @@
  __FBSDID("$FreeBSD$");
  
@@ -545,9 +545,9 @@ diff --git a/modules/fdlibm/src/s_copysign.cpp b/modules/fdlibm/src/s_copysign.c
  	u_int32_t hx,hy;
  	GET_HIGH_WORD(hx,x);
  	GET_HIGH_WORD(hy,y);
-diff --git a/modules/fdlibm/src/s_cos.cpp b/modules/fdlibm/src/s_cos.cpp
---- a/modules/fdlibm/src/s_cos.cpp
-+++ b/modules/fdlibm/src/s_cos.cpp
+diff --git a/s_cos.cpp b/s_cos.cpp
+--- a/s_cos.cpp
++++ b/s_cos.cpp
 @@ -41,17 +41,16 @@ __FBSDID("$FreeBSD$");
   *      trig(NaN)    is that NaN;
   *
@@ -566,9 +566,9 @@ diff --git a/modules/fdlibm/src/s_cos.cpp b/modules/fdlibm/src/s_cos.cpp
  cos(double x)
  {
  	double y[2],z=0.0;
-diff --git a/modules/fdlibm/src/s_expm1.cpp b/modules/fdlibm/src/s_expm1.cpp
---- a/modules/fdlibm/src/s_expm1.cpp
-+++ b/modules/fdlibm/src/s_expm1.cpp
+diff --git a/s_expm1.cpp b/s_expm1.cpp
+--- a/s_expm1.cpp
++++ b/s_expm1.cpp
 @@ -105,17 +105,16 @@ __FBSDID("$FreeBSD$");
   * The hexadecimal values are the intended ones for the following
   * constants. The decimal values may be used, provided that the
@@ -587,9 +587,9 @@ diff --git a/modules/fdlibm/src/s_expm1.cpp b/modules/fdlibm/src/s_expm1.cpp
  o_threshold	= 7.09782712893383973096e+02,/* 0x40862E42, 0xFEFA39EF */
  ln2_hi		= 6.93147180369123816490e-01,/* 0x3fe62e42, 0xfee00000 */
  ln2_lo		= 1.90821492927058770002e-10,/* 0x3dea39ef, 0x35793c76 */
-diff --git a/modules/fdlibm/src/s_fabs.cpp b/modules/fdlibm/src/s_fabs.cpp
---- a/modules/fdlibm/src/s_fabs.cpp
-+++ b/modules/fdlibm/src/s_fabs.cpp
+diff --git a/s_fabs.cpp b/s_fabs.cpp
+--- a/s_fabs.cpp
++++ b/s_fabs.cpp
 @@ -12,17 +12,16 @@
  
  #include <sys/cdefs.h>
@@ -608,9 +608,9 @@ diff --git a/modules/fdlibm/src/s_fabs.cpp b/modules/fdlibm/src/s_fabs.cpp
  	u_int32_t high;
  	GET_HIGH_WORD(high,x);
  	SET_HIGH_WORD(x,high&0x7fffffff);
-diff --git a/modules/fdlibm/src/s_floor.cpp b/modules/fdlibm/src/s_floor.cpp
---- a/modules/fdlibm/src/s_floor.cpp
-+++ b/modules/fdlibm/src/s_floor.cpp
+diff --git a/s_floor.cpp b/s_floor.cpp
+--- a/s_floor.cpp
++++ b/s_floor.cpp
 @@ -19,17 +19,16 @@ __FBSDID("$FreeBSD$");
   * Method:
   *	Bit twiddling.
@@ -629,9 +629,9 @@ diff --git a/modules/fdlibm/src/s_floor.cpp b/modules/fdlibm/src/s_floor.cpp
  floor(double x)
  {
  	int32_t i0,i1,j0;
-diff --git a/modules/fdlibm/src/s_floorf.cpp b/modules/fdlibm/src/s_floorf.cpp
---- a/modules/fdlibm/src/s_floorf.cpp
-+++ b/modules/fdlibm/src/s_floorf.cpp
+diff --git a/s_floorf.cpp b/s_floorf.cpp
+--- a/s_floorf.cpp
++++ b/s_floorf.cpp
 @@ -20,17 +20,16 @@ __FBSDID("$FreeBSD$");
   * floorf(x)
   * Return x rounded toward -inf to integral value
@@ -650,9 +650,9 @@ diff --git a/modules/fdlibm/src/s_floorf.cpp b/modules/fdlibm/src/s_floorf.cpp
  floorf(float x)
  {
  	int32_t i0,j0;
-diff --git a/modules/fdlibm/src/s_log1p.cpp b/modules/fdlibm/src/s_log1p.cpp
---- a/modules/fdlibm/src/s_log1p.cpp
-+++ b/modules/fdlibm/src/s_log1p.cpp
+diff --git a/s_log1p.cpp b/s_log1p.cpp
+--- a/s_log1p.cpp
++++ b/s_log1p.cpp
 @@ -75,17 +75,16 @@ __FBSDID("$FreeBSD$");
   *		if(u==1.0) return x ; else
   *			   return log(u)*(x/(u-1.0));
@@ -671,9 +671,9 @@ diff --git a/modules/fdlibm/src/s_log1p.cpp b/modules/fdlibm/src/s_log1p.cpp
  two54   =  1.80143985094819840000e+16,  /* 43500000 00000000 */
  Lp1 = 6.666666666666735130e-01,  /* 3FE55555 55555593 */
  Lp2 = 3.999999999940941908e-01,  /* 3FD99999 9997FA04 */
-diff --git a/modules/fdlibm/src/s_nearbyint.cpp b/modules/fdlibm/src/s_nearbyint.cpp
---- a/modules/fdlibm/src/s_nearbyint.cpp
-+++ b/modules/fdlibm/src/s_nearbyint.cpp
+diff --git a/s_nearbyint.cpp b/s_nearbyint.cpp
+--- a/s_nearbyint.cpp
++++ b/s_nearbyint.cpp
 @@ -25,17 +25,18 @@
   * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
   * SUCH DAMAGE.
@@ -694,9 +694,9 @@ diff --git a/modules/fdlibm/src/s_nearbyint.cpp b/modules/fdlibm/src/s_nearbyint
   * because the only exception defined for rint() is overflow, and
   * rounding can't overflow as long as emax >= p.
   *
-diff --git a/modules/fdlibm/src/s_rint.cpp b/modules/fdlibm/src/s_rint.cpp
---- a/modules/fdlibm/src/s_rint.cpp
-+++ b/modules/fdlibm/src/s_rint.cpp
+diff --git a/s_rint.cpp b/s_rint.cpp
+--- a/s_rint.cpp
++++ b/s_rint.cpp
 @@ -20,17 +20,16 @@ __FBSDID("$FreeBSD$");
   * Method:
   *	Using floating addition.
@@ -715,9 +715,9 @@ diff --git a/modules/fdlibm/src/s_rint.cpp b/modules/fdlibm/src/s_rint.cpp
   -4.50359962737049600000e+15, /* 0xC3300000, 0x00000000 */
  };
  
-diff --git a/modules/fdlibm/src/s_rintf.cpp b/modules/fdlibm/src/s_rintf.cpp
---- a/modules/fdlibm/src/s_rintf.cpp
-+++ b/modules/fdlibm/src/s_rintf.cpp
+diff --git a/s_rintf.cpp b/s_rintf.cpp
+--- a/s_rintf.cpp
++++ b/s_rintf.cpp
 @@ -14,17 +14,16 @@
   */
  
@@ -736,9 +736,9 @@ diff --git a/modules/fdlibm/src/s_rintf.cpp b/modules/fdlibm/src/s_rintf.cpp
   -8.3886080000e+06, /* 0xcb000000 */
  };
  
-diff --git a/modules/fdlibm/src/s_scalbn.cpp b/modules/fdlibm/src/s_scalbn.cpp
---- a/modules/fdlibm/src/s_scalbn.cpp
-+++ b/modules/fdlibm/src/s_scalbn.cpp
+diff --git a/s_scalbn.cpp b/s_scalbn.cpp
+--- a/s_scalbn.cpp
++++ b/s_scalbn.cpp
 @@ -2,19 +2,20 @@
   * Copyright (c) 2005-2020 Rich Felker, et al.
   *
@@ -761,9 +761,9 @@ diff --git a/modules/fdlibm/src/s_scalbn.cpp b/modules/fdlibm/src/s_scalbn.cpp
  	if (n > 1023) {
  		y *= 0x1p1023;
  		n -= 1023;
-diff --git a/modules/fdlibm/src/s_sin.cpp b/modules/fdlibm/src/s_sin.cpp
---- a/modules/fdlibm/src/s_sin.cpp
-+++ b/modules/fdlibm/src/s_sin.cpp
+diff --git a/s_sin.cpp b/s_sin.cpp
+--- a/s_sin.cpp
++++ b/s_sin.cpp
 @@ -41,17 +41,16 @@ __FBSDID("$FreeBSD$");
   *      trig(NaN)    is that NaN;
   *
@@ -782,9 +782,9 @@ diff --git a/modules/fdlibm/src/s_sin.cpp b/modules/fdlibm/src/s_sin.cpp
  sin(double x)
  {
  	double y[2],z=0.0;
-diff --git a/modules/fdlibm/src/s_tan.cpp b/modules/fdlibm/src/s_tan.cpp
---- a/modules/fdlibm/src/s_tan.cpp
-+++ b/modules/fdlibm/src/s_tan.cpp
+diff --git a/s_tan.cpp b/s_tan.cpp
+--- a/s_tan.cpp
++++ b/s_tan.cpp
 @@ -40,17 +40,16 @@ __FBSDID("$FreeBSD$");
   *      trig(NaN)    is that NaN;
   *
@@ -803,9 +803,9 @@ diff --git a/modules/fdlibm/src/s_tan.cpp b/modules/fdlibm/src/s_tan.cpp
  tan(double x)
  {
  	double y[2],z=0.0;
-diff --git a/modules/fdlibm/src/s_tanh.cpp b/modules/fdlibm/src/s_tanh.cpp
---- a/modules/fdlibm/src/s_tanh.cpp
-+++ b/modules/fdlibm/src/s_tanh.cpp
+diff --git a/s_tanh.cpp b/s_tanh.cpp
+--- a/s_tanh.cpp
++++ b/s_tanh.cpp
 @@ -34,17 +34,16 @@ __FBSDID("$FreeBSD$");
   *
   * Special cases:
@@ -824,9 +824,9 @@ diff --git a/modules/fdlibm/src/s_tanh.cpp b/modules/fdlibm/src/s_tanh.cpp
  double
  tanh(double x)
  {
-diff --git a/modules/fdlibm/src/s_trunc.cpp b/modules/fdlibm/src/s_trunc.cpp
---- a/modules/fdlibm/src/s_trunc.cpp
-+++ b/modules/fdlibm/src/s_trunc.cpp
+diff --git a/s_trunc.cpp b/s_trunc.cpp
+--- a/s_trunc.cpp
++++ b/s_trunc.cpp
 @@ -19,17 +19,16 @@ __FBSDID("$FreeBSD$");
   * Method:
   *	Bit twiddling.
@@ -845,9 +845,9 @@ diff --git a/modules/fdlibm/src/s_trunc.cpp b/modules/fdlibm/src/s_trunc.cpp
  trunc(double x)
  {
  	int32_t i0,i1,j0;
-diff --git a/modules/fdlibm/src/s_truncf.cpp b/modules/fdlibm/src/s_truncf.cpp
---- a/modules/fdlibm/src/s_truncf.cpp
-+++ b/modules/fdlibm/src/s_truncf.cpp
+diff --git a/s_truncf.cpp b/s_truncf.cpp
+--- a/s_truncf.cpp
++++ b/s_truncf.cpp
 @@ -17,17 +17,16 @@ __FBSDID("$FreeBSD$");
   * truncf(x)
   * Return x rounded toward 0 to integral value

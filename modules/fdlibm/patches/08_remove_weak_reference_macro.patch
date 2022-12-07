@@ -1,6 +1,6 @@
-diff --git a/modules/fdlibm/src/e_acos.cpp b/modules/fdlibm/src/e_acos.cpp
---- a/modules/fdlibm/src/e_acos.cpp
-+++ b/modules/fdlibm/src/e_acos.cpp
+diff --git a/e_acos.cpp b/e_acos.cpp
+--- a/e_acos.cpp
++++ b/e_acos.cpp
 @@ -99,12 +99,8 @@ __ieee754_acos(double x)
  	    c  = (z-df*df)/(s+df);
  	    p = z*(pS0+z*(pS1+z*(pS2+z*(pS3+z*(pS4+z*pS5)))));
@@ -14,9 +14,9 @@ diff --git a/modules/fdlibm/src/e_acos.cpp b/modules/fdlibm/src/e_acos.cpp
 -#if LDBL_MANT_DIG == 53
 -__weak_reference(acos, acosl);
 -#endif
-diff --git a/modules/fdlibm/src/e_acosh.cpp b/modules/fdlibm/src/e_acosh.cpp
---- a/modules/fdlibm/src/e_acosh.cpp
-+++ b/modules/fdlibm/src/e_acosh.cpp
+diff --git a/e_acosh.cpp b/e_acosh.cpp
+--- a/e_acosh.cpp
++++ b/e_acosh.cpp
 @@ -56,12 +56,8 @@ __ieee754_acosh(double x)
  	} else if (hx > 0x40000000) {	/* 2**28 > x > 2 */
  	    t=x*x;
@@ -30,9 +30,9 @@ diff --git a/modules/fdlibm/src/e_acosh.cpp b/modules/fdlibm/src/e_acosh.cpp
 -#if LDBL_MANT_DIG == 53
 -__weak_reference(acosh, acoshl);
 -#endif
-diff --git a/modules/fdlibm/src/e_asin.cpp b/modules/fdlibm/src/e_asin.cpp
---- a/modules/fdlibm/src/e_asin.cpp
-+++ b/modules/fdlibm/src/e_asin.cpp
+diff --git a/e_asin.cpp b/e_asin.cpp
+--- a/e_asin.cpp
++++ b/e_asin.cpp
 @@ -105,12 +105,8 @@ __ieee754_asin(double x)
  	    c  = (t-w*w)/(s+w);
  	    r  = p/q;
@@ -46,9 +46,9 @@ diff --git a/modules/fdlibm/src/e_asin.cpp b/modules/fdlibm/src/e_asin.cpp
 -#if LDBL_MANT_DIG == 53
 -__weak_reference(asin, asinl);
 -#endif
-diff --git a/modules/fdlibm/src/e_atan2.cpp b/modules/fdlibm/src/e_atan2.cpp
---- a/modules/fdlibm/src/e_atan2.cpp
-+++ b/modules/fdlibm/src/e_atan2.cpp
+diff --git a/e_atan2.cpp b/e_atan2.cpp
+--- a/e_atan2.cpp
++++ b/e_atan2.cpp
 @@ -117,12 +117,8 @@ __ieee754_atan2(double y, double x)
  	switch (m) {
  	    case 0: return       z  ;	/* atan(+,+) */
@@ -62,9 +62,9 @@ diff --git a/modules/fdlibm/src/e_atan2.cpp b/modules/fdlibm/src/e_atan2.cpp
 -#if LDBL_MANT_DIG == 53
 -__weak_reference(atan2, atan2l);
 -#endif
-diff --git a/modules/fdlibm/src/e_atanh.cpp b/modules/fdlibm/src/e_atanh.cpp
---- a/modules/fdlibm/src/e_atanh.cpp
-+++ b/modules/fdlibm/src/e_atanh.cpp
+diff --git a/e_atanh.cpp b/e_atanh.cpp
+--- a/e_atanh.cpp
++++ b/e_atanh.cpp
 @@ -56,12 +56,8 @@ __ieee754_atanh(double x)
  	SET_HIGH_WORD(x,ix);
  	if(ix<0x3fe00000) {		/* x < 0.5 */
@@ -78,9 +78,9 @@ diff --git a/modules/fdlibm/src/e_atanh.cpp b/modules/fdlibm/src/e_atanh.cpp
 -#if LDBL_MANT_DIG == 53
 -__weak_reference(atanh, atanhl);
 -#endif
-diff --git a/modules/fdlibm/src/e_cosh.cpp b/modules/fdlibm/src/e_cosh.cpp
---- a/modules/fdlibm/src/e_cosh.cpp
-+++ b/modules/fdlibm/src/e_cosh.cpp
+diff --git a/e_cosh.cpp b/e_cosh.cpp
+--- a/e_cosh.cpp
++++ b/e_cosh.cpp
 @@ -73,12 +73,8 @@ __ieee754_cosh(double x)
  
      /* |x| in [log(maxdouble), overflowthresold] */
@@ -94,9 +94,9 @@ diff --git a/modules/fdlibm/src/e_cosh.cpp b/modules/fdlibm/src/e_cosh.cpp
 -#if (LDBL_MANT_DIG == 53)
 -__weak_reference(cosh, coshl);
 -#endif
-diff --git a/modules/fdlibm/src/e_exp.cpp b/modules/fdlibm/src/e_exp.cpp
---- a/modules/fdlibm/src/e_exp.cpp
-+++ b/modules/fdlibm/src/e_exp.cpp
+diff --git a/e_exp.cpp b/e_exp.cpp
+--- a/e_exp.cpp
++++ b/e_exp.cpp
 @@ -152,12 +152,8 @@ __ieee754_exp(double x)	/* default IEEE double exp */
  	else 		y = one-((lo-(x*c)/(2.0-c))-hi);
  	if(k >= -1021) {
@@ -110,9 +110,9 @@ diff --git a/modules/fdlibm/src/e_exp.cpp b/modules/fdlibm/src/e_exp.cpp
 -#if (LDBL_MANT_DIG == 53)
 -__weak_reference(exp, expl);
 -#endif
-diff --git a/modules/fdlibm/src/e_hypot.cpp b/modules/fdlibm/src/e_hypot.cpp
---- a/modules/fdlibm/src/e_hypot.cpp
-+++ b/modules/fdlibm/src/e_hypot.cpp
+diff --git a/e_hypot.cpp b/e_hypot.cpp
+--- a/e_hypot.cpp
++++ b/e_hypot.cpp
 @@ -117,12 +117,8 @@ __ieee754_hypot(double x, double y)
  	    w  = sqrt(t1*y1-(w*(-w)-(t1*y2+t2*b)));
  	}
@@ -126,9 +126,9 @@ diff --git a/modules/fdlibm/src/e_hypot.cpp b/modules/fdlibm/src/e_hypot.cpp
 -#if LDBL_MANT_DIG == 53
 -__weak_reference(hypot, hypotl);
 -#endif
-diff --git a/modules/fdlibm/src/e_log.cpp b/modules/fdlibm/src/e_log.cpp
---- a/modules/fdlibm/src/e_log.cpp
-+++ b/modules/fdlibm/src/e_log.cpp
+diff --git a/e_log.cpp b/e_log.cpp
+--- a/e_log.cpp
++++ b/e_log.cpp
 @@ -135,12 +135,8 @@ __ieee754_log(double x)
  	    hfsq=0.5*f*f;
  	    if(k==0) return f-(hfsq-s*(hfsq+R)); else
@@ -142,9 +142,9 @@ diff --git a/modules/fdlibm/src/e_log.cpp b/modules/fdlibm/src/e_log.cpp
 -#if (LDBL_MANT_DIG == 53)
 -__weak_reference(log, logl);
 -#endif
-diff --git a/modules/fdlibm/src/e_log10.cpp b/modules/fdlibm/src/e_log10.cpp
---- a/modules/fdlibm/src/e_log10.cpp
-+++ b/modules/fdlibm/src/e_log10.cpp
+diff --git a/e_log10.cpp b/e_log10.cpp
+--- a/e_log10.cpp
++++ b/e_log10.cpp
 @@ -82,12 +82,8 @@ __ieee754_log10(double x)
  	 * with some parallelism and it reduces the error for many args.
  	 */
@@ -158,9 +158,9 @@ diff --git a/modules/fdlibm/src/e_log10.cpp b/modules/fdlibm/src/e_log10.cpp
 -#if (LDBL_MANT_DIG == 53)
 -__weak_reference(log10, log10l);
 -#endif
-diff --git a/modules/fdlibm/src/e_log2.cpp b/modules/fdlibm/src/e_log2.cpp
---- a/modules/fdlibm/src/e_log2.cpp
-+++ b/modules/fdlibm/src/e_log2.cpp
+diff --git a/e_log2.cpp b/e_log2.cpp
+--- a/e_log2.cpp
++++ b/e_log2.cpp
 @@ -105,12 +105,8 @@ __ieee754_log2(double x)
  
  	/* spadd(val_hi, val_lo, y), except for not using double_t: */
@@ -174,9 +174,9 @@ diff --git a/modules/fdlibm/src/e_log2.cpp b/modules/fdlibm/src/e_log2.cpp
 -#if (LDBL_MANT_DIG == 53)
 -__weak_reference(log2, log2l);
 -#endif
-diff --git a/modules/fdlibm/src/e_pow.cpp b/modules/fdlibm/src/e_pow.cpp
---- a/modules/fdlibm/src/e_pow.cpp
-+++ b/modules/fdlibm/src/e_pow.cpp
+diff --git a/e_pow.cpp b/e_pow.cpp
+--- a/e_pow.cpp
++++ b/e_pow.cpp
 @@ -302,12 +302,8 @@ __ieee754_pow(double x, double y)
  	r  = (z*t1)/(t1-two)-(w+z*w);
  	z  = one-(r-z);
@@ -190,9 +190,9 @@ diff --git a/modules/fdlibm/src/e_pow.cpp b/modules/fdlibm/src/e_pow.cpp
 -#if (LDBL_MANT_DIG == 53)
 -__weak_reference(pow, powl);
 -#endif
-diff --git a/modules/fdlibm/src/e_sinh.cpp b/modules/fdlibm/src/e_sinh.cpp
---- a/modules/fdlibm/src/e_sinh.cpp
-+++ b/modules/fdlibm/src/e_sinh.cpp
+diff --git a/e_sinh.cpp b/e_sinh.cpp
+--- a/e_sinh.cpp
++++ b/e_sinh.cpp
 @@ -67,12 +67,8 @@ __ieee754_sinh(double x)
  
      /* |x| in [log(maxdouble), overflowthresold] */
@@ -206,9 +206,9 @@ diff --git a/modules/fdlibm/src/e_sinh.cpp b/modules/fdlibm/src/e_sinh.cpp
 -#if (LDBL_MANT_DIG == 53)
 -__weak_reference(sinh, sinhl);
 -#endif
-diff --git a/modules/fdlibm/src/s_asinh.cpp b/modules/fdlibm/src/s_asinh.cpp
---- a/modules/fdlibm/src/s_asinh.cpp
-+++ b/modules/fdlibm/src/s_asinh.cpp
+diff --git a/s_asinh.cpp b/s_asinh.cpp
+--- a/s_asinh.cpp
++++ b/s_asinh.cpp
 @@ -50,12 +50,8 @@ asinh(double x)
  	    t = fabs(x);
  	    w = __ieee754_log(2.0*t+one/(__ieee754_sqrt(x*x+one)+t));
@@ -222,9 +222,9 @@ diff --git a/modules/fdlibm/src/s_asinh.cpp b/modules/fdlibm/src/s_asinh.cpp
 -#if LDBL_MANT_DIG == 53
 -__weak_reference(asinh, asinhl);
 -#endif
-diff --git a/modules/fdlibm/src/s_atan.cpp b/modules/fdlibm/src/s_atan.cpp
---- a/modules/fdlibm/src/s_atan.cpp
-+++ b/modules/fdlibm/src/s_atan.cpp
+diff --git a/s_atan.cpp b/s_atan.cpp
+--- a/s_atan.cpp
++++ b/s_atan.cpp
 @@ -112,12 +112,8 @@ atan(double x)
  	s1 = z*(aT[0]+w*(aT[2]+w*(aT[4]+w*(aT[6]+w*(aT[8]+w*aT[10])))));
  	s2 = w*(aT[1]+w*(aT[3]+w*(aT[5]+w*(aT[7]+w*aT[9]))));
@@ -238,9 +238,9 @@ diff --git a/modules/fdlibm/src/s_atan.cpp b/modules/fdlibm/src/s_atan.cpp
 -#if LDBL_MANT_DIG == 53
 -__weak_reference(atan, atanl);
 -#endif
-diff --git a/modules/fdlibm/src/s_cbrt.cpp b/modules/fdlibm/src/s_cbrt.cpp
---- a/modules/fdlibm/src/s_cbrt.cpp
-+++ b/modules/fdlibm/src/s_cbrt.cpp
+diff --git a/s_cbrt.cpp b/s_cbrt.cpp
+--- a/s_cbrt.cpp
++++ b/s_cbrt.cpp
 @@ -106,12 +106,8 @@ cbrt(double x)
  	s=t*t;				/* t*t is exact */
  	r=x/s;				/* error <= 0.5 ulps; |r| < |t| */
@@ -254,9 +254,9 @@ diff --git a/modules/fdlibm/src/s_cbrt.cpp b/modules/fdlibm/src/s_cbrt.cpp
 -#if (LDBL_MANT_DIG == 53)
 -__weak_reference(cbrt, cbrtl);
 -#endif
-diff --git a/modules/fdlibm/src/s_ceil.cpp b/modules/fdlibm/src/s_ceil.cpp
---- a/modules/fdlibm/src/s_ceil.cpp
-+++ b/modules/fdlibm/src/s_ceil.cpp
+diff --git a/s_ceil.cpp b/s_ceil.cpp
+--- a/s_ceil.cpp
++++ b/s_ceil.cpp
 @@ -65,12 +65,8 @@ ceil(double x)
  		    }
  		}
@@ -270,9 +270,9 @@ diff --git a/modules/fdlibm/src/s_ceil.cpp b/modules/fdlibm/src/s_ceil.cpp
 -#if LDBL_MANT_DIG == 53
 -__weak_reference(ceil, ceill);
 -#endif
-diff --git a/modules/fdlibm/src/s_cos.cpp b/modules/fdlibm/src/s_cos.cpp
---- a/modules/fdlibm/src/s_cos.cpp
-+++ b/modules/fdlibm/src/s_cos.cpp
+diff --git a/s_cos.cpp b/s_cos.cpp
+--- a/s_cos.cpp
++++ b/s_cos.cpp
 @@ -77,12 +77,8 @@ cos(double x)
  		case 0: return  __kernel_cos(y[0],y[1]);
  		case 1: return -__kernel_sin(y[0],y[1],1);
@@ -286,9 +286,9 @@ diff --git a/modules/fdlibm/src/s_cos.cpp b/modules/fdlibm/src/s_cos.cpp
 -#if (LDBL_MANT_DIG == 53)
 -__weak_reference(cos, cosl);
 -#endif
-diff --git a/modules/fdlibm/src/s_expm1.cpp b/modules/fdlibm/src/s_expm1.cpp
---- a/modules/fdlibm/src/s_expm1.cpp
-+++ b/modules/fdlibm/src/s_expm1.cpp
+diff --git a/s_expm1.cpp b/s_expm1.cpp
+--- a/s_expm1.cpp
++++ b/s_expm1.cpp
 @@ -210,12 +210,8 @@ expm1(double x)
  		SET_HIGH_WORD(t,((0x3ff-k)<<20));	/* 2^-k */
  	       	y = x-(e+t);
@@ -302,9 +302,9 @@ diff --git a/modules/fdlibm/src/s_expm1.cpp b/modules/fdlibm/src/s_expm1.cpp
 -#if (LDBL_MANT_DIG == 53)
 -__weak_reference(expm1, expm1l);
 -#endif
-diff --git a/modules/fdlibm/src/s_floor.cpp b/modules/fdlibm/src/s_floor.cpp
---- a/modules/fdlibm/src/s_floor.cpp
-+++ b/modules/fdlibm/src/s_floor.cpp
+diff --git a/s_floor.cpp b/s_floor.cpp
+--- a/s_floor.cpp
++++ b/s_floor.cpp
 @@ -66,12 +66,8 @@ floor(double x)
  		    }
  		}
@@ -318,9 +318,9 @@ diff --git a/modules/fdlibm/src/s_floor.cpp b/modules/fdlibm/src/s_floor.cpp
 -#if LDBL_MANT_DIG == 53
 -__weak_reference(floor, floorl);
 -#endif
-diff --git a/modules/fdlibm/src/s_log1p.cpp b/modules/fdlibm/src/s_log1p.cpp
---- a/modules/fdlibm/src/s_log1p.cpp
-+++ b/modules/fdlibm/src/s_log1p.cpp
+diff --git a/s_log1p.cpp b/s_log1p.cpp
+--- a/s_log1p.cpp
++++ b/s_log1p.cpp
 @@ -168,12 +168,8 @@ log1p(double x)
  	    	     return k*ln2_hi-((R-(k*ln2_lo+c))-f);
  	}
@@ -334,9 +334,9 @@ diff --git a/modules/fdlibm/src/s_log1p.cpp b/modules/fdlibm/src/s_log1p.cpp
 -#if (LDBL_MANT_DIG == 53)
 -__weak_reference(log1p, log1pl);
 -#endif
-diff --git a/modules/fdlibm/src/s_rint.cpp b/modules/fdlibm/src/s_rint.cpp
---- a/modules/fdlibm/src/s_rint.cpp
-+++ b/modules/fdlibm/src/s_rint.cpp
+diff --git a/s_rint.cpp b/s_rint.cpp
+--- a/s_rint.cpp
++++ b/s_rint.cpp
 @@ -80,12 +80,8 @@ rint(double x)
  	    if((i1&i)==0) return x;	/* x is integral */
  	    i>>=1;
@@ -350,9 +350,9 @@ diff --git a/modules/fdlibm/src/s_rint.cpp b/modules/fdlibm/src/s_rint.cpp
 -#if (LDBL_MANT_DIG == 53)
 -__weak_reference(rint, rintl);
 -#endif
-diff --git a/modules/fdlibm/src/s_scalbn.cpp b/modules/fdlibm/src/s_scalbn.cpp
---- a/modules/fdlibm/src/s_scalbn.cpp
-+++ b/modules/fdlibm/src/s_scalbn.cpp
+diff --git a/s_scalbn.cpp b/s_scalbn.cpp
+--- a/s_scalbn.cpp
++++ b/s_scalbn.cpp
 @@ -36,13 +36,8 @@ double scalbn(double x, int n)
  			if (n < -1022)
  				n = -1022;
@@ -367,9 +367,9 @@ diff --git a/modules/fdlibm/src/s_scalbn.cpp b/modules/fdlibm/src/s_scalbn.cpp
 -__weak_reference(scalbn, ldexpl);
 -__weak_reference(scalbn, scalbnl);
 -#endif
-diff --git a/modules/fdlibm/src/s_sin.cpp b/modules/fdlibm/src/s_sin.cpp
---- a/modules/fdlibm/src/s_sin.cpp
-+++ b/modules/fdlibm/src/s_sin.cpp
+diff --git a/s_sin.cpp b/s_sin.cpp
+--- a/s_sin.cpp
++++ b/s_sin.cpp
 @@ -77,12 +77,8 @@ sin(double x)
  		case 0: return  __kernel_sin(y[0],y[1],1);
  		case 1: return  __kernel_cos(y[0],y[1]);
@@ -383,9 +383,9 @@ diff --git a/modules/fdlibm/src/s_sin.cpp b/modules/fdlibm/src/s_sin.cpp
 -#if (LDBL_MANT_DIG == 53)
 -__weak_reference(sin, sinl);
 -#endif
-diff --git a/modules/fdlibm/src/s_tan.cpp b/modules/fdlibm/src/s_tan.cpp
---- a/modules/fdlibm/src/s_tan.cpp
-+++ b/modules/fdlibm/src/s_tan.cpp
+diff --git a/s_tan.cpp b/s_tan.cpp
+--- a/s_tan.cpp
++++ b/s_tan.cpp
 @@ -71,12 +71,8 @@ tan(double x)
  
      /* argument reduction needed */
@@ -399,9 +399,9 @@ diff --git a/modules/fdlibm/src/s_tan.cpp b/modules/fdlibm/src/s_tan.cpp
 -#if (LDBL_MANT_DIG == 53)
 -__weak_reference(tan, tanl);
 -#endif
-diff --git a/modules/fdlibm/src/s_tanh.cpp b/modules/fdlibm/src/s_tanh.cpp
---- a/modules/fdlibm/src/s_tanh.cpp
-+++ b/modules/fdlibm/src/s_tanh.cpp
+diff --git a/s_tanh.cpp b/s_tanh.cpp
+--- a/s_tanh.cpp
++++ b/s_tanh.cpp
 @@ -72,12 +72,8 @@ tanh(double x)
  	        z= -t/(t+two);
  	    }
@@ -415,9 +415,9 @@ diff --git a/modules/fdlibm/src/s_tanh.cpp b/modules/fdlibm/src/s_tanh.cpp
 -#if (LDBL_MANT_DIG == 53)
 -__weak_reference(tanh, tanhl);
 -#endif
-diff --git a/modules/fdlibm/src/s_trunc.cpp b/modules/fdlibm/src/s_trunc.cpp
---- a/modules/fdlibm/src/s_trunc.cpp
-+++ b/modules/fdlibm/src/s_trunc.cpp
+diff --git a/s_trunc.cpp b/s_trunc.cpp
+--- a/s_trunc.cpp
++++ b/s_trunc.cpp
 @@ -55,12 +55,8 @@ trunc(double x)
  	    i = ((u_int32_t)(0xffffffff))>>(j0-20);
  	    if((i1&i)==0) return x;	/* x is integral */

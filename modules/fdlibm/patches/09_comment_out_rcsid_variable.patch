@@ -1,6 +1,6 @@
-diff --git a/modules/fdlibm/src/e_acos.cpp b/modules/fdlibm/src/e_acos.cpp
---- a/modules/fdlibm/src/e_acos.cpp
-+++ b/modules/fdlibm/src/e_acos.cpp
+diff --git a/e_acos.cpp b/e_acos.cpp
+--- a/e_acos.cpp
++++ b/e_acos.cpp
 @@ -6,18 +6,18 @@
   *
   * Developed at SunSoft, a Sun Microsystems, Inc. business.
@@ -22,9 +22,9 @@ diff --git a/modules/fdlibm/src/e_acos.cpp b/modules/fdlibm/src/e_acos.cpp
   * For |x|<=0.5
   *	acos(x) = pi/2 - (x + x*x^2*R(x^2))	(see asin.c)
   * For x>0.5
-diff --git a/modules/fdlibm/src/e_acosh.cpp b/modules/fdlibm/src/e_acosh.cpp
---- a/modules/fdlibm/src/e_acosh.cpp
-+++ b/modules/fdlibm/src/e_acosh.cpp
+diff --git a/e_acosh.cpp b/e_acosh.cpp
+--- a/e_acosh.cpp
++++ b/e_acosh.cpp
 @@ -7,18 +7,18 @@
   * Developed at SunSoft, a Sun Microsystems, Inc. business.
   * Permission to use, copy, modify, and distribute this
@@ -46,9 +46,9 @@ diff --git a/modules/fdlibm/src/e_acosh.cpp b/modules/fdlibm/src/e_acosh.cpp
   *	we have
   *		acosh(x) := log(x)+ln2,	if x is large; else
   *		acosh(x) := log(2x-1/(sqrt(x*x-1)+x)) if x>2; else
-diff --git a/modules/fdlibm/src/e_asin.cpp b/modules/fdlibm/src/e_asin.cpp
---- a/modules/fdlibm/src/e_asin.cpp
-+++ b/modules/fdlibm/src/e_asin.cpp
+diff --git a/e_asin.cpp b/e_asin.cpp
+--- a/e_asin.cpp
++++ b/e_asin.cpp
 @@ -6,18 +6,18 @@
   *
   * Developed at SunSoft, a Sun Microsystems, Inc. business.
@@ -70,9 +70,9 @@ diff --git a/modules/fdlibm/src/e_asin.cpp b/modules/fdlibm/src/e_asin.cpp
   *		asin(x) = x + x*x^2*R(x^2)
   *	where
   *		R(x^2) is a rational approximation of (asin(x)-x)/x^3 
-diff --git a/modules/fdlibm/src/e_atan2.cpp b/modules/fdlibm/src/e_atan2.cpp
---- a/modules/fdlibm/src/e_atan2.cpp
-+++ b/modules/fdlibm/src/e_atan2.cpp
+diff --git a/e_atan2.cpp b/e_atan2.cpp
+--- a/e_atan2.cpp
++++ b/e_atan2.cpp
 @@ -7,18 +7,18 @@
   * Developed at SunSoft, a Sun Microsystems, Inc. business.
   * Permission to use, copy, modify, and distribute this
@@ -94,9 +94,9 @@ diff --git a/modules/fdlibm/src/e_atan2.cpp b/modules/fdlibm/src/e_atan2.cpp
   *		ARG (x+iy) = arctan(y/x)   	   ... if x > 0,
   *		ARG (x+iy) = pi - arctan[y/(-x)]   ... if x < 0,
   *
-diff --git a/modules/fdlibm/src/e_atanh.cpp b/modules/fdlibm/src/e_atanh.cpp
---- a/modules/fdlibm/src/e_atanh.cpp
-+++ b/modules/fdlibm/src/e_atanh.cpp
+diff --git a/e_atanh.cpp b/e_atanh.cpp
+--- a/e_atanh.cpp
++++ b/e_atanh.cpp
 @@ -7,18 +7,18 @@
   * Developed at SunSoft, a Sun Microsystems, Inc. business.
   * Permission to use, copy, modify, and distribute this
@@ -118,9 +118,9 @@ diff --git a/modules/fdlibm/src/e_atanh.cpp b/modules/fdlibm/src/e_atanh.cpp
   *                  1              2x                          x
   *	atanh(x) = --- * log(1 + -------) = 0.5 * log1p(2 * --------)
   *                  2             1 - x                      1 - x
-diff --git a/modules/fdlibm/src/e_cosh.cpp b/modules/fdlibm/src/e_cosh.cpp
---- a/modules/fdlibm/src/e_cosh.cpp
-+++ b/modules/fdlibm/src/e_cosh.cpp
+diff --git a/e_cosh.cpp b/e_cosh.cpp
+--- a/e_cosh.cpp
++++ b/e_cosh.cpp
 @@ -6,18 +6,18 @@
   *
   * Developed at SunSoft, a Sun Microsystems, Inc. business.
@@ -142,9 +142,9 @@ diff --git a/modules/fdlibm/src/e_cosh.cpp b/modules/fdlibm/src/e_cosh.cpp
   *	2. 
   *		                                        [ exp(x) - 1 ]^2 
   *	    0        <= x <= ln2/2  :  cosh(x) := 1 + -------------------
-diff --git a/modules/fdlibm/src/e_exp.cpp b/modules/fdlibm/src/e_exp.cpp
---- a/modules/fdlibm/src/e_exp.cpp
-+++ b/modules/fdlibm/src/e_exp.cpp
+diff --git a/e_exp.cpp b/e_exp.cpp
+--- a/e_exp.cpp
++++ b/e_exp.cpp
 @@ -5,18 +5,18 @@
   * Copyright (C) 2004 by Sun Microsystems, Inc. All rights reserved.
   *
@@ -166,9 +166,9 @@ diff --git a/modules/fdlibm/src/e_exp.cpp b/modules/fdlibm/src/e_exp.cpp
   *   1. Argument reduction:
   *      Reduce x to an r so that |r| <= 0.5*ln2 ~ 0.34658.
   *	Given x, find r and integer k such that
-diff --git a/modules/fdlibm/src/e_hypot.cpp b/modules/fdlibm/src/e_hypot.cpp
---- a/modules/fdlibm/src/e_hypot.cpp
-+++ b/modules/fdlibm/src/e_hypot.cpp
+diff --git a/e_hypot.cpp b/e_hypot.cpp
+--- a/e_hypot.cpp
++++ b/e_hypot.cpp
 @@ -6,18 +6,18 @@
   *
   * Developed at SunSoft, a Sun Microsystems, Inc. business.
@@ -190,9 +190,9 @@ diff --git a/modules/fdlibm/src/e_hypot.cpp b/modules/fdlibm/src/e_hypot.cpp
   *	has error less than sqrt(2)/2 ulp, than 
   *	sqrt(z) has error less than 1 ulp (exercise).
   *
-diff --git a/modules/fdlibm/src/e_log.cpp b/modules/fdlibm/src/e_log.cpp
---- a/modules/fdlibm/src/e_log.cpp
-+++ b/modules/fdlibm/src/e_log.cpp
+diff --git a/e_log.cpp b/e_log.cpp
+--- a/e_log.cpp
++++ b/e_log.cpp
 @@ -6,18 +6,18 @@
   *
   * Developed at SunSoft, a Sun Microsystems, Inc. business.
@@ -214,9 +214,9 @@ diff --git a/modules/fdlibm/src/e_log.cpp b/modules/fdlibm/src/e_log.cpp
   *   1. Argument Reduction: find k and f such that 
   *			x = 2^k * (1+f), 
   *	   where  sqrt(2)/2 < 1+f < sqrt(2) .
-diff --git a/modules/fdlibm/src/e_log10.cpp b/modules/fdlibm/src/e_log10.cpp
---- a/modules/fdlibm/src/e_log10.cpp
-+++ b/modules/fdlibm/src/e_log10.cpp
+diff --git a/e_log10.cpp b/e_log10.cpp
+--- a/e_log10.cpp
++++ b/e_log10.cpp
 @@ -6,32 +6,32 @@
   *
   * Developed at SunSoft, a Sun Microsystems, Inc. business.
@@ -253,9 +253,9 @@ diff --git a/modules/fdlibm/src/e_log10.cpp b/modules/fdlibm/src/e_log10.cpp
  log10_2lo  =  3.69423907715893078616e-13; /* 0x3D59FEF3, 0x11F12B36 */
  
  static const double zero   =  0.0;
-diff --git a/modules/fdlibm/src/e_log2.cpp b/modules/fdlibm/src/e_log2.cpp
---- a/modules/fdlibm/src/e_log2.cpp
-+++ b/modules/fdlibm/src/e_log2.cpp
+diff --git a/e_log2.cpp b/e_log2.cpp
+--- a/e_log2.cpp
++++ b/e_log2.cpp
 @@ -6,18 +6,18 @@
   *
   * Developed at SunSoft, a Sun Microsystems, Inc. business.
@@ -277,9 +277,9 @@ diff --git a/modules/fdlibm/src/e_log2.cpp b/modules/fdlibm/src/e_log2.cpp
   * This reduces x to {k, 1+f} exactly as in e_log.c, then calls the kernel,
   * then does the combining and scaling steps
   *    log2(x) = (f - 0.5*f*f + k_log1p(f)) / ln2 + k
-diff --git a/modules/fdlibm/src/e_pow.cpp b/modules/fdlibm/src/e_pow.cpp
---- a/modules/fdlibm/src/e_pow.cpp
-+++ b/modules/fdlibm/src/e_pow.cpp
+diff --git a/e_pow.cpp b/e_pow.cpp
+--- a/e_pow.cpp
++++ b/e_pow.cpp
 @@ -4,18 +4,18 @@
   * Copyright (C) 2004 by Sun Microsystems, Inc. All rights reserved.
   *
@@ -301,9 +301,9 @@ diff --git a/modules/fdlibm/src/e_pow.cpp b/modules/fdlibm/src/e_pow.cpp
   *	1. Compute and return log2(x) in two pieces:
   *		log2(x) = w1 + w2,
   *	   where w1 has 53-24 = 29 bit trailing zeros.
-diff --git a/modules/fdlibm/src/e_rem_pio2.cpp b/modules/fdlibm/src/e_rem_pio2.cpp
---- a/modules/fdlibm/src/e_rem_pio2.cpp
-+++ b/modules/fdlibm/src/e_rem_pio2.cpp
+diff --git a/e_rem_pio2.cpp b/e_rem_pio2.cpp
+--- a/e_rem_pio2.cpp
++++ b/e_rem_pio2.cpp
 @@ -8,18 +8,18 @@
   * Permission to use, copy, modify, and distribute this
   * software is freely granted, provided that this notice 
@@ -325,9 +325,9 @@ diff --git a/modules/fdlibm/src/e_rem_pio2.cpp b/modules/fdlibm/src/e_rem_pio2.c
   */
  
  #include <float.h>
-diff --git a/modules/fdlibm/src/e_sinh.cpp b/modules/fdlibm/src/e_sinh.cpp
---- a/modules/fdlibm/src/e_sinh.cpp
-+++ b/modules/fdlibm/src/e_sinh.cpp
+diff --git a/e_sinh.cpp b/e_sinh.cpp
+--- a/e_sinh.cpp
++++ b/e_sinh.cpp
 @@ -6,18 +6,18 @@
   *
   * Developed at SunSoft, a Sun Microsystems, Inc. business.
@@ -349,9 +349,9 @@ diff --git a/modules/fdlibm/src/e_sinh.cpp b/modules/fdlibm/src/e_sinh.cpp
   *	2. 
   *		                                    E + E/(E+1)
   *	    0        <= x <= 22     :  sinh(x) := --------------, E=expm1(x)
-diff --git a/modules/fdlibm/src/k_cos.cpp b/modules/fdlibm/src/k_cos.cpp
---- a/modules/fdlibm/src/k_cos.cpp
-+++ b/modules/fdlibm/src/k_cos.cpp
+diff --git a/k_cos.cpp b/k_cos.cpp
+--- a/k_cos.cpp
++++ b/k_cos.cpp
 @@ -6,18 +6,18 @@
   *
   * Developed at SunSoft, a Sun Microsystems, Inc. business.
@@ -373,9 +373,9 @@ diff --git a/modules/fdlibm/src/k_cos.cpp b/modules/fdlibm/src/k_cos.cpp
   * Input y is the tail of x. 
   *
   * Algorithm
-diff --git a/modules/fdlibm/src/k_exp.cpp b/modules/fdlibm/src/k_exp.cpp
---- a/modules/fdlibm/src/k_exp.cpp
-+++ b/modules/fdlibm/src/k_exp.cpp
+diff --git a/k_exp.cpp b/k_exp.cpp
+--- a/k_exp.cpp
++++ b/k_exp.cpp
 @@ -21,22 +21,22 @@
   * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
   * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
@@ -402,9 +402,9 @@ diff --git a/modules/fdlibm/src/k_exp.cpp b/modules/fdlibm/src/k_exp.cpp
   * Compute exp(x), scaled to avoid spurious overflow.  An exponent is
   * returned separately in 'expt'.
   *
-diff --git a/modules/fdlibm/src/k_log.h b/modules/fdlibm/src/k_log.h
---- a/modules/fdlibm/src/k_log.h
-+++ b/modules/fdlibm/src/k_log.h
+diff --git a/k_log.h b/k_log.h
+--- a/k_log.h
++++ b/k_log.h
 @@ -6,18 +6,18 @@
   *
   * Developed at SunSoft, a Sun Microsystems, Inc. business.
@@ -426,9 +426,9 @@ diff --git a/modules/fdlibm/src/k_log.h b/modules/fdlibm/src/k_log.h
   * The following describes the overall strategy for computing
   * logarithms in base e.  The argument reduction and adding the final
   * term of the polynomial are done by the caller for increased accuracy
-diff --git a/modules/fdlibm/src/k_rem_pio2.cpp b/modules/fdlibm/src/k_rem_pio2.cpp
---- a/modules/fdlibm/src/k_rem_pio2.cpp
-+++ b/modules/fdlibm/src/k_rem_pio2.cpp
+diff --git a/k_rem_pio2.cpp b/k_rem_pio2.cpp
+--- a/k_rem_pio2.cpp
++++ b/k_rem_pio2.cpp
 @@ -6,18 +6,18 @@
   *
   * Developed at SunSoft, a Sun Microsystems, Inc. business.
@@ -450,9 +450,9 @@ diff --git a/modules/fdlibm/src/k_rem_pio2.cpp b/modules/fdlibm/src/k_rem_pio2.c
   * __kernel_rem_pio2 return the last three digits of N with 
   *		y = x - N*pi/2
   * so that |y| < pi/2.
-diff --git a/modules/fdlibm/src/k_sin.cpp b/modules/fdlibm/src/k_sin.cpp
---- a/modules/fdlibm/src/k_sin.cpp
-+++ b/modules/fdlibm/src/k_sin.cpp
+diff --git a/k_sin.cpp b/k_sin.cpp
+--- a/k_sin.cpp
++++ b/k_sin.cpp
 @@ -6,18 +6,18 @@
   *
   * Developed at SunSoft, a Sun Microsystems, Inc. business.
@@ -474,9 +474,9 @@ diff --git a/modules/fdlibm/src/k_sin.cpp b/modules/fdlibm/src/k_sin.cpp
   * Input iy indicates whether y is 0. (if iy=0, y assume to be 0). 
   *
   * Algorithm
-diff --git a/modules/fdlibm/src/k_tan.cpp b/modules/fdlibm/src/k_tan.cpp
---- a/modules/fdlibm/src/k_tan.cpp
-+++ b/modules/fdlibm/src/k_tan.cpp
+diff --git a/k_tan.cpp b/k_tan.cpp
+--- a/k_tan.cpp
++++ b/k_tan.cpp
 @@ -6,18 +6,18 @@
   *
   * Permission to use, copy, modify, and distribute this
@@ -498,9 +498,9 @@ diff --git a/modules/fdlibm/src/k_tan.cpp b/modules/fdlibm/src/k_tan.cpp
   * Input k indicates whether tan (if k = 1) or -1/tan (if k = -1) is returned.
   *
   * Algorithm
-diff --git a/modules/fdlibm/src/s_asinh.cpp b/modules/fdlibm/src/s_asinh.cpp
---- a/modules/fdlibm/src/s_asinh.cpp
-+++ b/modules/fdlibm/src/s_asinh.cpp
+diff --git a/s_asinh.cpp b/s_asinh.cpp
+--- a/s_asinh.cpp
++++ b/s_asinh.cpp
 @@ -5,18 +5,18 @@
   *
   * Developed at SunPro, a Sun Microsystems, Inc. business.
@@ -522,9 +522,9 @@ diff --git a/modules/fdlibm/src/s_asinh.cpp b/modules/fdlibm/src/s_asinh.cpp
   *	we have
   *	asinh(x) := x  if  1+x*x=1,
   *		 := sign(x)*(log(x)+ln2)) for large |x|, else
-diff --git a/modules/fdlibm/src/s_atan.cpp b/modules/fdlibm/src/s_atan.cpp
---- a/modules/fdlibm/src/s_atan.cpp
-+++ b/modules/fdlibm/src/s_atan.cpp
+diff --git a/s_atan.cpp b/s_atan.cpp
+--- a/s_atan.cpp
++++ b/s_atan.cpp
 @@ -5,18 +5,18 @@
   *
   * Developed at SunPro, a Sun Microsystems, Inc. business.
@@ -546,9 +546,9 @@ diff --git a/modules/fdlibm/src/s_atan.cpp b/modules/fdlibm/src/s_atan.cpp
   *      is further reduced to one of the following intervals and the
   *      arctangent of t is evaluated by the corresponding formula:
   *
-diff --git a/modules/fdlibm/src/s_cbrt.cpp b/modules/fdlibm/src/s_cbrt.cpp
---- a/modules/fdlibm/src/s_cbrt.cpp
-+++ b/modules/fdlibm/src/s_cbrt.cpp
+diff --git a/s_cbrt.cpp b/s_cbrt.cpp
+--- a/s_cbrt.cpp
++++ b/s_cbrt.cpp
 @@ -7,18 +7,18 @@
   * Permission to use, copy, modify, and distribute this
   * software is freely granted, provided that this notice
@@ -570,9 +570,9 @@ diff --git a/modules/fdlibm/src/s_cbrt.cpp b/modules/fdlibm/src/s_cbrt.cpp
   * Return cube root of x
   */
  static const u_int32_t
-diff --git a/modules/fdlibm/src/s_ceil.cpp b/modules/fdlibm/src/s_ceil.cpp
---- a/modules/fdlibm/src/s_ceil.cpp
-+++ b/modules/fdlibm/src/s_ceil.cpp
+diff --git a/s_ceil.cpp b/s_ceil.cpp
+--- a/s_ceil.cpp
++++ b/s_ceil.cpp
 @@ -5,18 +5,18 @@
   *
   * Developed at SunPro, a Sun Microsystems, Inc. business.
@@ -594,9 +594,9 @@ diff --git a/modules/fdlibm/src/s_ceil.cpp b/modules/fdlibm/src/s_ceil.cpp
   *	Bit twiddling.
   * Exception:
   *	Inexact flag raised if x not equal to ceil(x).
-diff --git a/modules/fdlibm/src/s_ceilf.cpp b/modules/fdlibm/src/s_ceilf.cpp
---- a/modules/fdlibm/src/s_ceilf.cpp
-+++ b/modules/fdlibm/src/s_ceilf.cpp
+diff --git a/s_ceilf.cpp b/s_ceilf.cpp
+--- a/s_ceilf.cpp
++++ b/s_ceilf.cpp
 @@ -8,18 +8,18 @@
   *
   * Developed at SunPro, a Sun Microsystems, Inc. business.
@@ -618,9 +618,9 @@ diff --git a/modules/fdlibm/src/s_ceilf.cpp b/modules/fdlibm/src/s_ceilf.cpp
  float
  ceilf(float x)
  {
-diff --git a/modules/fdlibm/src/s_copysign.cpp b/modules/fdlibm/src/s_copysign.cpp
---- a/modules/fdlibm/src/s_copysign.cpp
-+++ b/modules/fdlibm/src/s_copysign.cpp
+diff --git a/s_copysign.cpp b/s_copysign.cpp
+--- a/s_copysign.cpp
++++ b/s_copysign.cpp
 @@ -5,18 +5,18 @@
   *
   * Developed at SunPro, a Sun Microsystems, Inc. business.
@@ -642,9 +642,9 @@ diff --git a/modules/fdlibm/src/s_copysign.cpp b/modules/fdlibm/src/s_copysign.c
   */
  
  #include "math_private.h"
-diff --git a/modules/fdlibm/src/s_cos.cpp b/modules/fdlibm/src/s_cos.cpp
---- a/modules/fdlibm/src/s_cos.cpp
-+++ b/modules/fdlibm/src/s_cos.cpp
+diff --git a/s_cos.cpp b/s_cos.cpp
+--- a/s_cos.cpp
++++ b/s_cos.cpp
 @@ -5,18 +5,18 @@
   *
   * Developed at SunPro, a Sun Microsystems, Inc. business.
@@ -666,9 +666,9 @@ diff --git a/modules/fdlibm/src/s_cos.cpp b/modules/fdlibm/src/s_cos.cpp
   *	__kernel_sin		... sine function on [-pi/4,pi/4]
   *	__kernel_cos		... cosine function on [-pi/4,pi/4]
   *	__ieee754_rem_pio2	... argument reduction routine
-diff --git a/modules/fdlibm/src/s_expm1.cpp b/modules/fdlibm/src/s_expm1.cpp
---- a/modules/fdlibm/src/s_expm1.cpp
-+++ b/modules/fdlibm/src/s_expm1.cpp
+diff --git a/s_expm1.cpp b/s_expm1.cpp
+--- a/s_expm1.cpp
++++ b/s_expm1.cpp
 @@ -5,18 +5,18 @@
   *
   * Developed at SunPro, a Sun Microsystems, Inc. business.
@@ -690,9 +690,9 @@ diff --git a/modules/fdlibm/src/s_expm1.cpp b/modules/fdlibm/src/s_expm1.cpp
   *   1. Argument reduction:
   *	Given x, find r and integer k such that
   *
-diff --git a/modules/fdlibm/src/s_fabs.cpp b/modules/fdlibm/src/s_fabs.cpp
---- a/modules/fdlibm/src/s_fabs.cpp
-+++ b/modules/fdlibm/src/s_fabs.cpp
+diff --git a/s_fabs.cpp b/s_fabs.cpp
+--- a/s_fabs.cpp
++++ b/s_fabs.cpp
 @@ -5,18 +5,18 @@
   *
   * Developed at SunPro, a Sun Microsystems, Inc. business.
@@ -714,9 +714,9 @@ diff --git a/modules/fdlibm/src/s_fabs.cpp b/modules/fdlibm/src/s_fabs.cpp
  #include "math_private.h"
  
  double
-diff --git a/modules/fdlibm/src/s_floor.cpp b/modules/fdlibm/src/s_floor.cpp
---- a/modules/fdlibm/src/s_floor.cpp
-+++ b/modules/fdlibm/src/s_floor.cpp
+diff --git a/s_floor.cpp b/s_floor.cpp
+--- a/s_floor.cpp
++++ b/s_floor.cpp
 @@ -5,18 +5,18 @@
   *
   * Developed at SunPro, a Sun Microsystems, Inc. business.
@@ -738,9 +738,9 @@ diff --git a/modules/fdlibm/src/s_floor.cpp b/modules/fdlibm/src/s_floor.cpp
   *	Bit twiddling.
   * Exception:
   *	Inexact flag raised if x not equal to floor(x).
-diff --git a/modules/fdlibm/src/s_floorf.cpp b/modules/fdlibm/src/s_floorf.cpp
---- a/modules/fdlibm/src/s_floorf.cpp
-+++ b/modules/fdlibm/src/s_floorf.cpp
+diff --git a/s_floorf.cpp b/s_floorf.cpp
+--- a/s_floorf.cpp
++++ b/s_floorf.cpp
 @@ -8,18 +8,18 @@
   *
   * Developed at SunPro, a Sun Microsystems, Inc. business.
@@ -762,9 +762,9 @@ diff --git a/modules/fdlibm/src/s_floorf.cpp b/modules/fdlibm/src/s_floorf.cpp
   *	Bit twiddling.
   * Exception:
   *	Inexact flag raised if x not equal to floorf(x).
-diff --git a/modules/fdlibm/src/s_log1p.cpp b/modules/fdlibm/src/s_log1p.cpp
---- a/modules/fdlibm/src/s_log1p.cpp
-+++ b/modules/fdlibm/src/s_log1p.cpp
+diff --git a/s_log1p.cpp b/s_log1p.cpp
+--- a/s_log1p.cpp
++++ b/s_log1p.cpp
 @@ -5,18 +5,18 @@
   *
   * Developed at SunPro, a Sun Microsystems, Inc. business.
@@ -786,9 +786,9 @@ diff --git a/modules/fdlibm/src/s_log1p.cpp b/modules/fdlibm/src/s_log1p.cpp
   *			1+x = 2^k * (1+f),
   *	   where  sqrt(2)/2 < 1+f < sqrt(2) .
   *
-diff --git a/modules/fdlibm/src/s_nearbyint.cpp b/modules/fdlibm/src/s_nearbyint.cpp
---- a/modules/fdlibm/src/s_nearbyint.cpp
-+++ b/modules/fdlibm/src/s_nearbyint.cpp
+diff --git a/s_nearbyint.cpp b/s_nearbyint.cpp
+--- a/s_nearbyint.cpp
++++ b/s_nearbyint.cpp
 @@ -21,18 +21,18 @@
   * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
   * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
@@ -810,9 +810,9 @@ diff --git a/modules/fdlibm/src/s_nearbyint.cpp b/modules/fdlibm/src/s_nearbyint
  /*
   * We save and restore the floating-point environment to avoid raising
   * an inexact exception.  We can get away with using fesetenv()
-diff --git a/modules/fdlibm/src/s_rint.cpp b/modules/fdlibm/src/s_rint.cpp
---- a/modules/fdlibm/src/s_rint.cpp
-+++ b/modules/fdlibm/src/s_rint.cpp
+diff --git a/s_rint.cpp b/s_rint.cpp
+--- a/s_rint.cpp
++++ b/s_rint.cpp
 @@ -5,18 +5,18 @@
   *
   * Developed at SunPro, a Sun Microsystems, Inc. business.
@@ -834,9 +834,9 @@ diff --git a/modules/fdlibm/src/s_rint.cpp b/modules/fdlibm/src/s_rint.cpp
   * Method:
   *	Using floating addition.
   * Exception:
-diff --git a/modules/fdlibm/src/s_rintf.cpp b/modules/fdlibm/src/s_rintf.cpp
---- a/modules/fdlibm/src/s_rintf.cpp
-+++ b/modules/fdlibm/src/s_rintf.cpp
+diff --git a/s_rintf.cpp b/s_rintf.cpp
+--- a/s_rintf.cpp
++++ b/s_rintf.cpp
 @@ -8,18 +8,18 @@
   *
   * Developed at SunPro, a Sun Microsystems, Inc. business.
@@ -858,9 +858,9 @@ diff --git a/modules/fdlibm/src/s_rintf.cpp b/modules/fdlibm/src/s_rintf.cpp
  
  static const float
  TWO23[2]={
-diff --git a/modules/fdlibm/src/s_sin.cpp b/modules/fdlibm/src/s_sin.cpp
---- a/modules/fdlibm/src/s_sin.cpp
-+++ b/modules/fdlibm/src/s_sin.cpp
+diff --git a/s_sin.cpp b/s_sin.cpp
+--- a/s_sin.cpp
++++ b/s_sin.cpp
 @@ -5,18 +5,18 @@
   *
   * Developed at SunPro, a Sun Microsystems, Inc. business.
@@ -882,9 +882,9 @@ diff --git a/modules/fdlibm/src/s_sin.cpp b/modules/fdlibm/src/s_sin.cpp
   *	__kernel_sin		... sine function on [-pi/4,pi/4]
   *	__kernel_cos		... cose function on [-pi/4,pi/4]
   *	__ieee754_rem_pio2	... argument reduction routine
-diff --git a/modules/fdlibm/src/s_tan.cpp b/modules/fdlibm/src/s_tan.cpp
---- a/modules/fdlibm/src/s_tan.cpp
-+++ b/modules/fdlibm/src/s_tan.cpp
+diff --git a/s_tan.cpp b/s_tan.cpp
+--- a/s_tan.cpp
++++ b/s_tan.cpp
 @@ -5,18 +5,18 @@
   *
   * Developed at SunPro, a Sun Microsystems, Inc. business.
@@ -906,9 +906,9 @@ diff --git a/modules/fdlibm/src/s_tan.cpp b/modules/fdlibm/src/s_tan.cpp
   *	__kernel_tan		... tangent function on [-pi/4,pi/4]
   *	__ieee754_rem_pio2	... argument reduction routine
   *
-diff --git a/modules/fdlibm/src/s_tanh.cpp b/modules/fdlibm/src/s_tanh.cpp
---- a/modules/fdlibm/src/s_tanh.cpp
-+++ b/modules/fdlibm/src/s_tanh.cpp
+diff --git a/s_tanh.cpp b/s_tanh.cpp
+--- a/s_tanh.cpp
++++ b/s_tanh.cpp
 @@ -5,18 +5,18 @@
   *
   * Developed at SunPro, a Sun Microsystems, Inc. business.
@@ -930,9 +930,9 @@ diff --git a/modules/fdlibm/src/s_tanh.cpp b/modules/fdlibm/src/s_tanh.cpp
   *				       x    -x
   *				      e  - e
   *	0. tanh(x) is defined to be -----------
-diff --git a/modules/fdlibm/src/s_trunc.cpp b/modules/fdlibm/src/s_trunc.cpp
---- a/modules/fdlibm/src/s_trunc.cpp
-+++ b/modules/fdlibm/src/s_trunc.cpp
+diff --git a/s_trunc.cpp b/s_trunc.cpp
+--- a/s_trunc.cpp
++++ b/s_trunc.cpp
 @@ -5,18 +5,18 @@
   *
   * Developed at SunPro, a Sun Microsystems, Inc. business.
@@ -954,9 +954,9 @@ diff --git a/modules/fdlibm/src/s_trunc.cpp b/modules/fdlibm/src/s_trunc.cpp
   *	Bit twiddling.
   * Exception:
   *	Inexact flag raised if x not equal to trunc(x).
-diff --git a/modules/fdlibm/src/s_truncf.cpp b/modules/fdlibm/src/s_truncf.cpp
---- a/modules/fdlibm/src/s_truncf.cpp
-+++ b/modules/fdlibm/src/s_truncf.cpp
+diff --git a/s_truncf.cpp b/s_truncf.cpp
+--- a/s_truncf.cpp
++++ b/s_truncf.cpp
 @@ -5,18 +5,18 @@
   *
   * Developed at SunPro, a Sun Microsystems, Inc. business.

@@ -1,6 +1,6 @@
-diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private.h
---- a/modules/fdlibm/src/math_private.h
-+++ b/modules/fdlibm/src/math_private.h
+diff --git a/math_private.h b/math_private.h
+--- a/math_private.h
++++ b/math_private.h
 @@ -867,16 +867,53 @@ irintl(long double x)
  #define	__ieee754_j1f	j1f
  #define	__ieee754_y0f	y0f

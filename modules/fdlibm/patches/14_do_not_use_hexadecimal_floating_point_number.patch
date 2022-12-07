@@ -1,6 +1,6 @@
-diff --git a/modules/fdlibm/src/e_exp.cpp b/modules/fdlibm/src/e_exp.cpp
---- a/modules/fdlibm/src/e_exp.cpp
-+++ b/modules/fdlibm/src/e_exp.cpp
+diff --git a/e_exp.cpp b/e_exp.cpp
+--- a/e_exp.cpp
++++ b/e_exp.cpp
 @@ -146,14 +146,17 @@ __ieee754_exp(double x)	/* default IEEE double exp */
  	if(k >= -1021)
  	    INSERT_WORDS(twopk,((u_int32_t)(0x3ff+k))<<20, 0);
@@ -20,9 +20,9 @@ diff --git a/modules/fdlibm/src/e_exp.cpp b/modules/fdlibm/src/e_exp.cpp
  	    return y*twopk*twom1000;
  	}
  }
-diff --git a/modules/fdlibm/src/s_expm1.cpp b/modules/fdlibm/src/s_expm1.cpp
---- a/modules/fdlibm/src/s_expm1.cpp
-+++ b/modules/fdlibm/src/s_expm1.cpp
+diff --git a/s_expm1.cpp b/s_expm1.cpp
+--- a/s_expm1.cpp
++++ b/s_expm1.cpp
 @@ -192,17 +192,20 @@ expm1(double x)
  	    e -= hxs;
  	    if(k== -1) return 0.5*(x-e)-0.5;
