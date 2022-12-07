@@ -4774,8 +4774,8 @@ static inline bool EnsureNewArrayElements(JSContext* cx, ArrayObject* obj,
 
 template <uint32_t maxLength>
 static MOZ_ALWAYS_INLINE ArrayObject* NewArrayWithShape(
-    JSContext* cx, Handle<Shape*> shape, uint32_t length, NewObjectKind newKind,
-    gc::AllocSite* site = nullptr) {
+    JSContext* cx, Handle<SharedShape*> shape, uint32_t length,
+    NewObjectKind newKind, gc::AllocSite* site = nullptr) {
   // The shape must already have the |length| property defined on it.
   MOZ_ASSERT(shape->propMapLength() == 1);
   MOZ_ASSERT(shape->lastProperty().key() == NameToId(cx->names().length));
@@ -4784,7 +4784,7 @@ static MOZ_ALWAYS_INLINE ArrayObject* NewArrayWithShape(
   MOZ_ASSERT(CanChangeToBackgroundAllocKind(allocKind, &ArrayObject::class_));
   allocKind = ForegroundToBackgroundAllocKind(allocKind);
 
-  MOZ_ASSERT(shape->asShared().slotSpan() == 0);
+  MOZ_ASSERT(shape->slotSpan() == 0);
   constexpr uint32_t slotSpan = 0;
 
   AutoSetNewObjectMetadata metadata(cx);
@@ -4804,7 +4804,7 @@ static MOZ_ALWAYS_INLINE ArrayObject* NewArrayWithShape(
   return arr;
 }
 
-static Shape* GetArrayShapeWithProto(JSContext* cx, HandleObject proto) {
+static SharedShape* GetArrayShapeWithProto(JSContext* cx, HandleObject proto) {
   // Get a shape with zero fixed slots, because arrays store the ObjectElements
   // header inline.
   Rooted<SharedShape*> shape(
@@ -4830,7 +4830,7 @@ static Shape* GetArrayShapeWithProto(JSContext* cx, HandleObject proto) {
   return shape;
 }
 
-Shape* GlobalObject::createArrayShapeWithDefaultProto(JSContext* cx) {
+SharedShape* GlobalObject::createArrayShapeWithDefaultProto(JSContext* cx) {
   MOZ_ASSERT(!cx->global()->data().arrayShapeWithDefaultProto);
 
   RootedObject proto(cx,
@@ -4839,7 +4839,7 @@ Shape* GlobalObject::createArrayShapeWithDefaultProto(JSContext* cx) {
     return nullptr;
   }
 
-  Shape* shape = GetArrayShapeWithProto(cx, proto);
+  SharedShape* shape = GetArrayShapeWithProto(cx, proto);
   if (!shape) {
     return nullptr;
   }
@@ -4852,7 +4852,8 @@ template <uint32_t maxLength>
 static MOZ_ALWAYS_INLINE ArrayObject* NewArray(JSContext* cx, uint32_t length,
                                                NewObjectKind newKind,
                                                gc::AllocSite* site = nullptr) {
-  Rooted<Shape*> shape(cx, GlobalObject::getArrayShapeWithDefaultProto(cx));
+  Rooted<SharedShape*> shape(cx,
+                             GlobalObject::getArrayShapeWithDefaultProto(cx));
   if (!shape) {
     return nullptr;
   }
@@ -4865,7 +4866,7 @@ static MOZ_ALWAYS_INLINE ArrayObject* NewArrayWithProto(JSContext* cx,
                                                         uint32_t length,
                                                         HandleObject proto,
                                                         NewObjectKind newKind) {
-  Rooted<Shape*> shape(cx);
+  Rooted<SharedShape*> shape(cx);
   if (!proto || proto == cx->global()->maybeGetArrayPrototype()) {
     shape = GlobalObject::getArrayShapeWithDefaultProto(cx);
   } else {
@@ -5303,7 +5304,7 @@ JS_PUBLIC_API bool JS::SetArrayLength(JSContext* cx, Handle<JSObject*> obj,
 }
 
 ArrayObject* js::NewArrayWithNullProto(JSContext* cx) {
-  Rooted<Shape*> shape(cx, GetArrayShapeWithProto(cx, nullptr));
+  Rooted<SharedShape*> shape(cx, GetArrayShapeWithProto(cx, nullptr));
   if (!shape) {
     return nullptr;
   }

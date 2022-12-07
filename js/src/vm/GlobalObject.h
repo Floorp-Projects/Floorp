@@ -188,7 +188,7 @@ class GlobalObjectData {
   HeapPtr<PropertyIteratorObject*> emptyIterator;
 
   // Cached shape for new arrays with Array.prototype as prototype.
-  HeapPtr<Shape*> arrayShapeWithDefaultProto;
+  HeapPtr<SharedShape*> arrayShapeWithDefaultProto;
 
   // Shape for PlainObject with %Object.prototype% as proto, for each object
   // AllocKind.
@@ -1011,18 +1011,18 @@ class GlobalObject : public NativeObject {
     data().sourceURLsHolder.unbarrieredSet(nullptr);
   }
 
-  Shape* maybeArrayShapeWithDefaultProto() const {
+  SharedShape* maybeArrayShapeWithDefaultProto() const {
     return data().arrayShapeWithDefaultProto;
   }
 
-  static Shape* getArrayShapeWithDefaultProto(JSContext* cx) {
-    if (Shape* shape = cx->global()->data().arrayShapeWithDefaultProto;
+  static SharedShape* getArrayShapeWithDefaultProto(JSContext* cx) {
+    if (SharedShape* shape = cx->global()->data().arrayShapeWithDefaultProto;
         MOZ_LIKELY(shape)) {
       return shape;
     }
     return createArrayShapeWithDefaultProto(cx);
   }
-  static Shape* createArrayShapeWithDefaultProto(JSContext* cx);
+  static SharedShape* createArrayShapeWithDefaultProto(JSContext* cx);
 
   static Shape* getPlainObjectShapeWithDefaultProto(JSContext* cx,
                                                     gc::AllocKind kind) {
