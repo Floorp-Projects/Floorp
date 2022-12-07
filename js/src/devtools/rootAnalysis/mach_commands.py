@@ -10,6 +10,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import argparse
 import json
 import os
+import sys
 import textwrap
 
 # Command files like this are listed in build/mach_initialize.py in alphabetical
@@ -237,6 +238,7 @@ def gather_hazard_data(command_context, **kwargs):
             source = "{srcdir}"
             sixgill = "{sixgill_dir}/usr/libexec/sixgill"
             sixgill_bin = "{sixgill_dir}/usr/bin"
+            gcc_bin = "{gcc_dir}/bin"
         """
         ).format(
             script_dir=script_dir(command_context),
@@ -256,16 +258,11 @@ def gather_hazard_data(command_context, **kwargs):
         ]
     )
     args = [
-        os.path.join(script_dir(command_context), "run_complete"),
-        "--foreground",
-        "--no-logs",
-        "--build-root=" + objdir,
-        "--wrap-dir=" + sixgill_dir() + "/usr/libexec/sixgill/scripts/wrap_gcc",
-        "--work-dir=work",
-        "-b",
-        sixgill_dir() + "/usr/bin",
+        sys.executable,
+        os.path.join(script_dir(command_context), "analyze.py"),
+        "dbs",
+        "-v",
         "--buildcommand=" + buildscript,
-        ".",
     ]
 
     return command_context.run_process(args=args, cwd=work_dir, pass_thru=True)
@@ -359,36 +356,11 @@ def inner_compile(command_context, **kwargs):
     "--work-dir", default=None, help="Directory for output and working files."
 )
 @CommandArgument(
-    "--jobs", "-j", default=None, type=int, help="Number of parallel analyzers."
-)
-@CommandArgument(
-    "--verbose",
-    "-v",
-    default=False,
-    action="store_true",
-    help="Display executed commands.",
-)
-@CommandArgument(
-    "--from-stage",
-    default=None,
-    help="Stage to begin running at ('list' to see all).",
-)
-@CommandArgument(
     "extra",
     nargs=argparse.REMAINDER,
-    default=(),
     help="Remaining non-optional arguments to analyze.py script",
 )
-def analyze(
-    command_context,
-    application,
-    shell_objdir,
-    work_dir,
-    jobs,
-    verbose,
-    from_stage,
-    extra,
-):
+def analyze(command_context, application, shell_objdir, work_dir, extra):
     """Analyzed gathered data for rooting hazards"""
 
     shell = ensure_shell(command_context, shell_objdir)
@@ -396,21 +368,15 @@ def analyze(
         os.path.join(script_dir(command_context), "analyze.py"),
         "--js",
         shell,
-        *extra,
     ]
-
-    if from_stage is None:
-        pass
-    elif from_stage == "list":
-        args.append("--list")
+    if extra:
+        args += extra
     else:
-        args.extend(["--first", from_stage])
-
-    if jobs is not None:
-        args.extend(["-j", jobs])
-
-    if verbose:
-        args.append("-v")
+        args += [
+            "--first",
+            "gcTypes",
+            "-v",
+        ]
 
     setup_env_for_tools(os.environ)
     setup_env_for_shell(os.environ, shell)
