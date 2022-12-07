@@ -32,7 +32,7 @@ inline const char* GetFunctionNameBytes(JSContext* cx, JSFunction* fun,
 /* static */
 inline JSFunction* JSFunction::create(JSContext* cx, js::gc::AllocKind kind,
                                       js::gc::InitialHeap heap,
-                                      js::Handle<js::Shape*> shape) {
+                                      js::Handle<js::SharedShape*> shape) {
   MOZ_ASSERT(kind == js::gc::AllocKind::FUNCTION ||
              kind == js::gc::AllocKind::FUNCTION_EXTENDED);
 
@@ -47,8 +47,7 @@ inline JSFunction* JSFunction::create(JSContext* cx, js::gc::AllocKind kind,
                 clasp == js::FunctionExtendedClassPtr);
 
   static constexpr size_t NumDynamicSlots = 0;
-  MOZ_ASSERT(calculateDynamicSlots(shape->numFixedSlots(),
-                                   shape->asShared().slotSpan(),
+  MOZ_ASSERT(calculateDynamicSlots(shape->numFixedSlots(), shape->slotSpan(),
                                    clasp) == NumDynamicSlots);
 
   NativeObject* nobj =
