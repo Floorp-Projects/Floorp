@@ -84,6 +84,11 @@ function Spinner(props, context) {
       // its properties to assistive technology
       this.elements.spinner.setAttribute("role", "spinbutton");
       this.elements.spinner.setAttribute("tabindex", "0");
+      // Remove up/down buttons from the focus order, because a keyboard-only
+      // user can adjust values by pressing Up/Down arrow keys on a spinbutton,
+      // otherwise it creates extra, redundant tab order stops for users
+      this.elements.up.setAttribute("tabindex", "-1");
+      this.elements.down.setAttribute("tabindex", "-1");
 
       if (id) {
         this.elements.container.id = id;
@@ -312,8 +317,10 @@ function Spinner(props, context) {
 
       spinner.addEventListener("scroll", this, { passive: true });
       spinner.addEventListener("scrollend", this, { passive: true });
+      spinner.addEventListener("keydown", this);
       container.addEventListener("mouseup", this, { passive: true });
       container.addEventListener("mousedown", this, { passive: true });
+      container.addEventListener("keydown", this);
     },
 
     /**
@@ -406,6 +413,62 @@ function Spinner(props, context) {
           // Change spinner position on drag
           spinner.scrollTop -= event.movementY;
           break;
+        }
+        case "keydown": {
+          // Providing keyboard navigation support in accordance with
+          // the ARIA Spinbutton design pattern
+          if (event.target === spinner) {
+            switch (event.key) {
+              case "ArrowUp": {
+                // While the spinner is focused, selects previous value and centers it
+                this._setValueForSpinner(event, index - 1);
+                break;
+              }
+              case "ArrowDown": {
+                // While the spinner is focused, selects next value and centers it
+                this._setValueForSpinner(event, index + 1);
+                break;
+              }
+              case "PageUp": {
+                // While the spinner is focused, selects 5th value above and centers it
+                this._setValueForSpinner(event, index - 5);
+                break;
+              }
+              case "PageDown": {
+                // While the spinner is focused, selects 5th value below and centers it
+                this._setValueForSpinner(event, index + 5);
+                break;
+              }
+              case "Home": {
+                // While the spinner is focused, selects the min value and centers it
+                let targetValue;
+                for (let i = 0; i < this.state.items.length - 1; i++) {
+                  if (this.state.items[i].enabled) {
+                    targetValue = this.state.items[i].value;
+                    break;
+                  }
+                }
+                this._smoothScrollTo(targetValue);
+                event.stopPropagation();
+                event.preventDefault();
+                break;
+              }
+              case "End": {
+                // While the spinner is focused, selects the max value and centers it
+                let targetValue;
+                for (let i = this.state.items.length - 1; i >= 0; i--) {
+                  if (this.state.items[i].enabled) {
+                    targetValue = this.state.items[i].value;
+                    break;
+                  }
+                }
+                this._smoothScrollTo(targetValue);
+                event.stopPropagation();
+                event.preventDefault();
+                break;
+              }
+            }
+          }
         }
       }
     },
@@ -562,6 +625,20 @@ function Spinner(props, context) {
         }
       }
       return false;
+    },
+
+    /**
+     * While the spinner is focused and keyboard command is used, selects an
+     * appropriate index and centers it, while preventing default behavior and
+     * stopping event propagation.
+     *
+     * @param {Object} event: Keyboard event
+     * @param {Number} index: The index of the expected next item
+     */
+    _setValueForSpinner(event, index) {
+      this._smoothScrollToIndex(index);
+      event.stopPropagation();
+      event.preventDefault();
     },
   };
 }
