@@ -837,7 +837,12 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
       // value of browser.visited_color.dark.
       color = NS_RGB(0xff, 0xad, 0xff);
       break;
-
+    case ColorID::SpellCheckerUnderline:
+      // This is the default for active links in dark mode as well
+      // (browser.active_color.dark). See bug 1755564 for some analysis and
+      // other options too.
+      color = NS_RGB(0xff, 0x66, 0x66);
+      break;
     default:
       return Nothing();
   }
