@@ -6,7 +6,7 @@
 # in the file PATENTS.  All contributing project authors may
 # be found in the AUTHORS file in the root of the source tree.
 
-#import("//third_party/libaom/options.gni")
+import("//third_party/libaom/options.gni")
 import("../../webrtc.gni")
 
 rtc_library("encoded_frame") {
@@ -201,8 +201,6 @@ rtc_library("video_coding") {
   sources = [
     "decoder_database.cc",
     "decoder_database.h",
-    "event_wrapper.cc",
-    "event_wrapper.h",
     "fec_controller_default.cc",
     "fec_controller_default.h",
     "fec_rate_table.h",
@@ -236,6 +234,12 @@ rtc_library("video_coding") {
     "video_receiver2.cc",
     "video_receiver2.h",
   ]
+  if (build_with_mozilla) {
+    sources += [
+      "event_wrapper.cc",
+      "event_wrapper.h",
+    ]
+  }
 
   deps = [
     ":codec_globals_headers",
@@ -527,8 +531,11 @@ rtc_library("webrtc_h264") {
     "../../rtc_base/system:rtc_export",
     "../../system_wrappers:field_trial",
     "../../system_wrappers:metrics",
-    #"//third_party/libyuv",
+    "//third_party/libyuv",
   ]
+  if (build_with_mozilla) {
+    deps -= [ "//third_party/libyuv" ]
+  }
   absl_deps = [
     "//third_party/abseil-cpp/absl/container:inlined_vector",
     "//third_party/abseil-cpp/absl/strings",
@@ -544,10 +551,12 @@ rtc_library("webrtc_h264") {
       deps += [ "../../media:rtc_media_base" ]
     }
   }
-  include_dirs = [
-    "/media/libyuv",
-    "/media/libyuv/libyuv/include",
-  ]
+  if (build_with_mozilla) {
+    include_dirs = [
+      "/media/libyuv",
+      "/media/libyuv/libyuv/include",
+    ]
+  }
 }
 
 rtc_library("webrtc_multiplex") {
@@ -645,8 +654,11 @@ rtc_library("webrtc_vp8") {
     "../../system_wrappers:field_trial",
     "../../system_wrappers:metrics",
     "svc:scalability_mode_util",
-    #"//third_party/libyuv",
+    "//third_party/libyuv",
   ]
+  if (build_with_mozilla) {
+    deps -= [ "//third_party/libyuv" ]
+  }
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/strings:strings",
@@ -655,10 +667,12 @@ rtc_library("webrtc_vp8") {
   if (rtc_build_libvpx) {
     deps += [ rtc_libvpx_dir ]
   }
-  include_dirs = [
-    "/media/libyuv",
-    "/media/libyuv/libyuv/include",
-  ]
+  if (build_with_mozilla) {
+    include_dirs = [
+      "/media/libyuv",
+      "/media/libyuv/libyuv/include",
+    ]
+  }
 }
 
 rtc_source_set("webrtc_vp8_scalability") {
@@ -774,8 +788,15 @@ rtc_library("webrtc_vp9") {
     "svc:scalability_structures",
     "svc:scalable_video_controller",
     "svc:svc_rate_allocator",
-    #"//third_party/libyuv",
+    "//third_party/libyuv",
   ]
+  if (build_with_mozilla) {
+    deps -= [ "//third_party/libyuv" ]
+    include_dirs = [
+      "/media/libyuv",
+      "/media/libyuv/libyuv/include",
+    ]
+  }
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/container:inlined_vector",
@@ -785,10 +806,6 @@ rtc_library("webrtc_vp9") {
   if (rtc_build_libvpx) {
     deps += [ rtc_libvpx_dir ]
   }
-  include_dirs = [
-    "/media/libyuv",
-    "/media/libyuv/libyuv/include",
-  ]
 }
 
 if (rtc_include_tests) {
@@ -920,13 +937,18 @@ if (rtc_include_tests) {
       "../../test:video_test_common",
       "../../test:video_test_support",
       "../rtp_rtcp:rtp_rtcp_format",
-      #"//third_party/libyuv",
+      "//third_party/libyuv",
     ]
+    if (build_with_mozilla) {
+      deps -= [ "//third_party/libyuv" ]
+    }
     absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
-    include_dirs = [
-      "/media/libyuv",
-      "/media/libyuv/libyuv/include",
-    ]
+    if (build_with_mozilla) {
+      include_dirs = [
+        "/media/libyuv",
+        "/media/libyuv/libyuv/include",
+      ]
+    }
   }
 
   video_coding_modules_tests_resources = []
@@ -1096,15 +1118,18 @@ if (rtc_include_tests) {
       "../rtp_rtcp:rtp_rtcp_format",
       "codecs/av1:dav1d_decoder",
       "codecs/av1:libaom_av1_decoder",
-      #"//third_party/libyuv",
+      "//third_party/libyuv",
     ]
+    if (build_with_mozilla) {
+      deps -= [ "//third_party/libyuv" ]
+      include_dirs = [
+        "/media/libyuv",
+        "/media/libyuv/libyuv/include",
+      ]
+    }
     absl_deps = [
       "//third_party/abseil-cpp/absl/memory",
       "//third_party/abseil-cpp/absl/types:optional",
-    ]
-    include_dirs = [
-      "/media/libyuv",
-      "/media/libyuv/libyuv/include",
     ]
 
     data = video_coding_modules_tests_resources
