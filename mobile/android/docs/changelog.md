@@ -23,11 +23,6 @@ permalink: /changelog/
 * **feature-awesomebar**
   * `SearchSuggestionProvider` and `SearchActionProvider` now have a new parameter `suggestionsHeader`, to add title to suggestions.
 
-* **lib-crash**
-  * 🚒 Bug fixed [bug #1801349](https://bugzilla.mozilla.org/show_bug.cgi?id=1801349).  Execute `recordCrashBreadcrumb()` inside our coroutine scope to avoid issues with mutating the array from multiple threads at once.
-* **lib-crash-sentry**
-  * 🚒 Bug fixed [bug #1801349](https://bugzilla.mozilla.org/show_bug.cgi?id=1801349).  Copy the breadcrumb date to the Sentry breadcrumb.
-
 * **support-ktx**:
   * Added `String.toShortUrl` extension that allows making URLs more user friendly [#1796379](https://bugzilla.mozilla.org/show_bug.cgi?id=1796379)
 
