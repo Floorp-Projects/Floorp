@@ -10,12 +10,10 @@ import os
 import subprocess
 import sys
 
-from mozbuild import build_commands
-
-from mozfile import which
-from mach.decorators import CommandArgument, Command
-
 import mozpack.path as mozpath
+from mach.decorators import Command, CommandArgument
+from mozbuild import build_commands
+from mozfile import which
 
 
 @Command(
@@ -159,9 +157,10 @@ def setup_vscode(command_context, vscode_cmd):
         if rc != 0:
             return rc
 
-    import multiprocessing
-    import json
     import difflib
+    import json
+    import multiprocessing
+
     from mozbuild.code_analysis.utils import ClangTidyConfig
 
     clang_tidy_cfg = ClangTidyConfig(command_context.topsrcdir)
@@ -177,6 +176,13 @@ def setup_vscode(command_context, vscode_cmd):
         "--all-crates",
         "--message-format-json",
     ]
+
+    file_associations_json = {
+        "files.associations": {
+            "*.jsm": "javascript",
+            "*.sjs": "javascript",
+        }
+    }
 
     clangd_json = {
         "clangd.path": clangd_path,
@@ -244,7 +250,7 @@ def setup_vscode(command_context, vscode_cmd):
                 "Existing settings will be lost!"
             )
 
-        settings = {**old_settings, **clangd_json}
+        settings = {**old_settings, **clangd_json, **file_associations_json}
 
         if old_settings != settings:
             # Prompt the user with a diff of the changes we're going to make
