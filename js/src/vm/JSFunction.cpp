@@ -1675,17 +1675,13 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
   }
 
   // Steps 7.a-b, 8.a-b, 9.a-b, 16-28.
-  AutoStableStringChars stableChars(cx);
-  if (!stableChars.initTwoByte(cx, functionText)) {
+  AutoStableStringChars linearChars(cx);
+  if (!linearChars.initTwoByte(cx, functionText)) {
     return false;
   }
 
-  mozilla::Range<const char16_t> chars = stableChars.twoByteRange();
-  SourceOwnership ownership = stableChars.maybeGiveOwnershipToCaller()
-                                  ? SourceOwnership::TakeOwnership
-                                  : SourceOwnership::Borrowed;
   SourceText<char16_t> srcBuf;
-  if (!srcBuf.init(cx, chars.begin().get(), chars.length(), ownership)) {
+  if (!srcBuf.initMaybeBorrowed(cx, linearChars)) {
     return false;
   }
 

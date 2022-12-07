@@ -2409,15 +2409,13 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
         return false;
       }
     } else {
-      AutoStableStringChars codeChars(cx);
-      if (!codeChars.initTwoByte(cx, code)) {
+      AutoStableStringChars linearChars(cx);
+      if (!linearChars.initTwoByte(cx, code)) {
         return false;
       }
-      mozilla::Range<const char16_t> chars = codeChars.twoByteRange();
 
       JS::SourceText<char16_t> srcBuf;
-      if (!srcBuf.init(cx, chars.begin().get(), chars.length(),
-                       JS::SourceOwnership::Borrowed)) {
+      if (!srcBuf.initMaybeBorrowed(cx, linearChars)) {
         return false;
       }
 
@@ -2629,14 +2627,13 @@ static bool Run(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  AutoStableStringChars chars(cx);
-  if (!chars.initTwoByte(cx, str)) {
+  AutoStableStringChars linearChars(cx);
+  if (!linearChars.initTwoByte(cx, str)) {
     return false;
   }
 
   JS::SourceText<char16_t> srcBuf;
-  if (!srcBuf.init(cx, chars.twoByteRange().begin().get(), str->length(),
-                   JS::SourceOwnership::Borrowed)) {
+  if (!srcBuf.initMaybeBorrowed(cx, linearChars)) {
     return false;
   }
 
@@ -4892,15 +4889,13 @@ static bool ParseModule(JSContext* cx, unsigned argc, Value* vp) {
   }
   options.setModule();
 
-  AutoStableStringChars stableChars(cx);
-  if (!stableChars.initTwoByte(cx, scriptContents)) {
+  AutoStableStringChars linearChars(cx);
+  if (!linearChars.initTwoByte(cx, scriptContents)) {
     return false;
   }
 
-  const char16_t* chars = stableChars.twoByteRange().begin().get();
   JS::SourceText<char16_t> srcBuf;
-  if (!srcBuf.init(cx, chars, scriptContents->length(),
-                   JS::SourceOwnership::Borrowed)) {
+  if (!srcBuf.initMaybeBorrowed(cx, linearChars)) {
     return false;
   }
 
@@ -8195,13 +8190,12 @@ static bool EntryPoints(JSContext* cx, unsigned argc, Value* vp) {
         return false;
       }
 
-      AutoStableStringChars stableChars(cx);
-      if (!stableChars.initTwoByte(cx, codeString)) {
+      AutoStableStringChars linearChars(cx);
+      if (!linearChars.initTwoByte(cx, codeString)) {
         return false;
       }
       JS::SourceText<char16_t> srcBuf;
-      if (!srcBuf.init(cx, stableChars.twoByteRange().begin().get(),
-                       codeString->length(), JS::SourceOwnership::Borrowed)) {
+      if (!srcBuf.initMaybeBorrowed(cx, linearChars)) {
         return false;
       }
 
