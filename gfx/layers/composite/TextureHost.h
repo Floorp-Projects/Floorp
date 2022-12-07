@@ -609,6 +609,7 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
   }
 
   virtual bool IsWrappingBufferTextureHost() { return false; }
+  virtual bool IsWrappingSurfaceTextureHost() { return false; }
 
   // Create the corresponding RenderTextureHost type of this texture, and
   // register the RenderTextureHost into render thread.
@@ -726,7 +727,7 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
   /**
    * Called when mCompositableCount becomes from 0 to 1.
    */
-  virtual void PrepareForUse() {}
+  virtual void PrepareForUse();
 
   /**
    * Called when mCompositableCount becomes 0.

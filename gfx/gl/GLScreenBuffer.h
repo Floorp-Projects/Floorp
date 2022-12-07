@@ -77,6 +77,7 @@ class SwapChain final {
   void SetDestroyedCallback(std::function<void()>&& aDestroyedCallback) {
     MOZ_ASSERT(!mDestroyedCallback);
     mDestroyedCallback = std::move(aDestroyedCallback);
+    mPool = {};
   }
 };
 

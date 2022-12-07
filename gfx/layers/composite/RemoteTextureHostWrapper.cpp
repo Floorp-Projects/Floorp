@@ -163,7 +163,7 @@ void RemoteTextureHostWrapper::UnbindTextureSource() {}
 
 void RemoteTextureHostWrapper::NotifyNotUsed() {
   if (mRemoteTextureForDisplayList) {
-    // Release mRemoteTextureHost.
+    // Release mRemoteTextureForDisplayList.
     RemoteTextureMap::Get()->ReleaseRemoteTextureHostForDisplayList(this);
   }
   MOZ_ASSERT(!mRemoteTextureForDisplayList);
@@ -206,6 +206,13 @@ void RemoteTextureHostWrapper::SetRemoteTextureHostForDisplayList(
     const MonitorAutoLock& aProofOfLock, TextureHost* aTextureHost) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   mRemoteTextureForDisplayList = aTextureHost;
+}
+
+bool RemoteTextureHostWrapper::IsWrappingSurfaceTextureHost() {
+  if (!mRemoteTextureForDisplayList) {
+    return false;
+  }
+  return mRemoteTextureForDisplayList->IsWrappingSurfaceTextureHost();
 }
 
 }  // namespace mozilla::layers

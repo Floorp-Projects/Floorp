@@ -42,7 +42,11 @@ UniquePtr<SwapChainPresenter> SwapChain::Acquire(
     }
   }
 
-  if (!mPool.empty() && (!kPoolSize || mPool.size() == kPoolSize)) {
+  // When mDestroyedCallback exists, recycling of SharedSurfaces is managed by
+  // the owner of the SwapChain by calling StoreRecycledSurface().
+  const auto poolSize = mDestroyedCallback ? 0 : kPoolSize;
+
+  if (!mPool.empty() && (!poolSize || mPool.size() == poolSize)) {
     surf = mPool.front();
     mPool.pop();
   }
@@ -52,7 +56,7 @@ UniquePtr<SwapChainPresenter> SwapChain::Acquire(
     surf.reset(uniquePtrSurf.release());
   }
   mPool.push(surf);
-  while (mPool.size() > kPoolSize) {
+  while (mPool.size() > poolSize) {
     mPool.pop();
   }
 

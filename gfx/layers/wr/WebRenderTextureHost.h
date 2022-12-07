@@ -62,6 +62,7 @@ class WebRenderTextureHost : public TextureHost {
   }
 
   bool IsWrappingBufferTextureHost() override;
+  bool IsWrappingSurfaceTextureHost() override;
 
   virtual void PrepareForUse() override;
 
