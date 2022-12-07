@@ -1,7 +1,7 @@
 From e2fb71a850fda2d1f02a19d41a3db1cd7cf8618d Mon Sep 17 00:00:00 2001
 From: Mark Striemer <mstriemer@mozilla.com>
 Date: Wed, 16 Nov 2022 23:07:57 -0600
-Subject: [PATCH 2/2] use DOMParser not innerHTML=
+Subject: [PATCH 2/4] use DOMParser not innerHTML=
 
 ---
  packages/lit-html/src/lit-html.ts | 13 ++++++++++---

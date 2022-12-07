@@ -1,0 +1,79 @@
+From 365df0820b125d5e6cf1a709c98e02f1a0783311 Mon Sep 17 00:00:00 2001
+From: Mark Striemer <mstriemer@mozilla.com>
+Date: Tue, 22 Nov 2022 18:17:01 -0600
+Subject: [PATCH 3/4] Disable source maps
+
+---
+ rollup-common.js | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/rollup-common.js b/rollup-common.js
+index 6fcac21a..cbfd1e27 100644
+--- a/rollup-common.js
++++ b/rollup-common.js
+@@ -8,7 +8,7 @@ import summary from 'rollup-plugin-summary';
+ import {terser} from 'rollup-plugin-terser';
+ import copy from 'rollup-plugin-copy';
+ import nodeResolve from '@rollup/plugin-node-resolve';
+-import sourcemaps from 'rollup-plugin-sourcemaps';
++// import sourcemaps from 'rollup-plugin-sourcemaps';
+ import replace from '@rollup/plugin-replace';
+ import virtual from '@rollup/plugin-virtual';
+ 
+@@ -358,7 +358,7 @@ export function litProdConfig({
+         // Preserve existing module structure (e.g. preserve the "directives/"
+         // directory).
+         preserveModules: true,
+-        sourcemap: !CHECKSIZE,
++        // sourcemap: !CHECKSIZE,
+       },
+       external,
+       plugins: [
+@@ -394,7 +394,7 @@ export function litProdConfig({
+         }),
+         // This plugin automatically composes the existing TypeScript -> raw JS
+         // sourcemap with the raw JS -> minified JS one that we're generating here.
+-        sourcemaps(),
++        // sourcemaps(),
+         // terser(terserOptions),
+         summary({
+           showBrotliSize: true,
+@@ -434,7 +434,7 @@ export function litProdConfig({
+               dir: `${outputDir}/node`,
+               format: 'esm',
+               preserveModules: true,
+-              sourcemap: !CHECKSIZE,
++              // sourcemap: !CHECKSIZE,
+             },
+             external,
+             plugins: [
+@@ -453,7 +453,7 @@ export function litProdConfig({
+                     'const ENABLE_SHADYDOM_NOPATCH = false',
+                 },
+               }),
+-              sourcemaps(),
++              // sourcemaps(),
+               // We want the Node build to be minified because:
+               //
+               // 1. It should be very slightly faster, even in Node where bytes
+@@ -504,7 +504,7 @@ const litMonoBundleConfig = ({
+     file: `${output || file}.js`,
+     format,
+     name,
+-    sourcemap: !CHECKSIZE,
++    // sourcemap: !CHECKSIZE,
+     sourcemapPathTransform,
+   },
+   plugins: [
+@@ -532,7 +532,7 @@ const litMonoBundleConfig = ({
+     }),
+     // This plugin automatically composes the existing TypeScript -> raw JS
+     // sourcemap with the raw JS -> minified JS one that we're generating here.
+-    sourcemaps(),
++    // sourcemaps(),
+     // terser(terserOptions),
+     summary({
+       showBrotliSize: true,
+-- 
+2.32.0 (Apple Git-132)
+

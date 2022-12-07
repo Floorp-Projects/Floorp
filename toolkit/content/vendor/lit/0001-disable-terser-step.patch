@@ -1,7 +1,7 @@
 From 1f0db62374e62965f521c3a44c31c947f702d53d Mon Sep 17 00:00:00 2001
 From: Mark Striemer <mstriemer@mozilla.com>
 Date: Wed, 16 Nov 2022 22:54:20 -0600
-Subject: [PATCH 1/2] disable terser step
+Subject: [PATCH 1/4] disable terser step
 
 ---
  rollup-common.js | 8 ++++----
