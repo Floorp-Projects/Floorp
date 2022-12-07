@@ -225,16 +225,19 @@ class MarkStack {
 // Bitmask of options to parameterize MarkingTracerT.
 namespace MarkingOptions {
 enum : uint32_t {
-  None = 0,
-
   // Set the compartment's hasMarkedCells flag for roots.
   MarkRootCompartments = 1,
 
   // The marking tracer is operating in parallel. Use appropriate atomic
   // accesses to update the mark bits correctly.
-  ParallelMarking = 2
+  ParallelMarking = 2,
+
+  // Mark any implicit edges if we are in weak marking mode.
+  MarkImplicitEdges = 4,
 };
 }  // namespace MarkingOptions
+
+constexpr uint32_t NormalMarkingOptions = MarkingOptions::MarkImplicitEdges;
 
 template <uint32_t markingOptions>
 class MarkingTracerT
@@ -250,7 +253,7 @@ class MarkingTracerT
   GCMarker* getMarker();
 };
 
-using MarkingTracer = MarkingTracerT<MarkingOptions::None>;
+using MarkingTracer = MarkingTracerT<NormalMarkingOptions>;
 using RootMarkingTracer = MarkingTracerT<MarkingOptions::MarkRootCompartments>;
 
 enum ShouldReportMarkTime : bool {

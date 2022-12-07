@@ -39,10 +39,6 @@ inline void js::BaseScript::traceChildren(JSTracer* trc) {
   if (data_) {
     data_->trace(trc);
   }
-
-  if (trc->isMarkingTracer()) {
-    GCMarker::fromTracer(trc)->markImplicitEdges(this);
-  }
 }
 
 inline void js::Shape::traceChildren(JSTracer* trc) {

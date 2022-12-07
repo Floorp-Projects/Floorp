@@ -3025,7 +3025,7 @@ GCRuntime::MarkQueueProgress GCRuntime::processTestMarkQueue() {
 
       // Mark the object and push it onto the stack.
       size_t oldPosition = marker().stack.position();
-      marker().markAndTraverse<MarkingOptions::None>(obj);
+      marker().markAndTraverse<NormalMarkingOptions>(obj);
 
       // If we overflow the stack here and delay marking, then we won't be
       // testing what we think we're testing.
@@ -3036,7 +3036,7 @@ GCRuntime::MarkQueueProgress GCRuntime::processTestMarkQueue() {
       }
 
       SliceBudget unlimited = SliceBudget::unlimited();
-      marker().processMarkStackTop<MarkingOptions::None>(unlimited);
+      marker().processMarkStackTop<NormalMarkingOptions>(unlimited);
     } else if (val.isString()) {
       JSLinearString* str = &val.toString()->asLinear();
       if (js::StringEqualsLiteral(str, "yield") && isIncrementalGc()) {
