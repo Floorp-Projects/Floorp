@@ -4,18 +4,18 @@
 import os
 
 import pytest
-from mach.logging import LoggingManager
-from responses import RequestsMock
-from taskgraph import generator as generator_mod, target_tasks as target_tasks_mod
-from taskgraph.config import GraphConfig, load_graph_config
-from taskgraph.generator import TaskGraphGenerator, Kind
-from taskgraph.optimize import base as optimize_mod
-from taskgraph.optimize.base import OptimizationStrategy
-from taskgraph.parameters import Parameters
-
 from gecko_taskgraph import GECKO
 from gecko_taskgraph.actions import render_actions_json
 from gecko_taskgraph.util.templates import merge
+from mach.logging import LoggingManager
+from responses import RequestsMock
+from taskgraph import generator as generator_mod
+from taskgraph import target_tasks as target_tasks_mod
+from taskgraph.config import GraphConfig, load_graph_config
+from taskgraph.generator import Kind, TaskGraphGenerator
+from taskgraph.optimize import base as optimize_mod
+from taskgraph.optimize.base import OptimizationStrategy
+from taskgraph.parameters import Parameters
 
 
 @pytest.fixture

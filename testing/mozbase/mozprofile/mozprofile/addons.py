@@ -4,19 +4,19 @@
 
 from __future__ import absolute_import
 
+import binascii
+import hashlib
 import json
 import os
-import sys
 import shutil
+import sys
 import tempfile
 import zipfile
-import hashlib
-import binascii
 from xml.dom import minidom
-from six import reraise, string_types
 
 import mozfile
 from mozlog.unstructured import getLogger
+from six import reraise, string_types
 
 _SALT = binascii.hexlify(os.urandom(32))
 _TEMPORARY_ADDON_SUFFIX = "@temporary-addon"
