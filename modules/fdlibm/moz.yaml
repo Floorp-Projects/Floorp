@@ -1,0 +1,94 @@
+# Version of this schema
+schema: 1
+
+bugzilla:
+  product: "Core"
+  component: "JavaScript Engine"
+
+origin:
+  name: "fdlibm"
+  description: "The fdlibm library imported from freebsd"
+
+  url: "https://github.com/freebsd/freebsd/tree/master/lib/msun/src"
+
+  # Human-readable identifier for this version/release
+  # Generally "version NNN", "tag SSS", "bookmark SSS"
+  release: "commit 369ea0520a3061c07400d7cd32172efb6af39815 (2022-08-04T17:33:34Z)"
+
+  # Revision to pull in
+  # Must be a long or short commit SHA (long preferred)
+  revision: 369ea0520a3061c07400d7cd32172efb6af39815
+
+  license: "BSD-2-Clause"
+  license-file: LICENSE
+
+vendoring:
+  url: https://github.com/freebsd/freebsd/
+  flavor: individual-files
+  source-hosting: github
+  vendor-directory: modules/fdlibm/src
+
+  individual-files-default-upstream: 'lib/msun/src/'
+  individual-files-default-destination: '{vendor_dir}/'
+  individual-files-list:
+    - math_private.h
+    - math.h
+    - e_acos.c
+    - e_acosh.c
+    - e_asin.c
+    - e_atan2.c
+    - e_atanh.c
+    - e_cosh.c
+    - e_exp.c
+    - e_hypot.c
+    - e_log10.c
+    - e_log2.c
+    - e_log.c
+    - e_pow.c
+    - e_rem_pio2.c
+    - e_sinh.c
+    - k_cos.c
+    - k_exp.c
+    - k_log.h
+    - k_rem_pio2.c
+    - k_sin.c
+    - k_tan.c
+    - s_asinh.c
+    - s_atan.c
+    - s_cbrt.c
+    - s_ceil.c
+    - s_ceilf.c
+    - s_copysign.c
+    - s_cos.c
+    - s_expm1.c
+    - s_fabs.c
+    - s_floor.c
+    - s_floorf.c
+    - s_log1p.c
+    - s_nearbyint.c
+    - s_rint.c
+    - s_rintf.c
+    - s_scalbn.c
+    - s_sin.c
+    - s_tan.c
+    - s_tanh.c
+    - s_trunc.c
+    - s_truncf.c
+
+  update-actions:
+    - action: 'move-file'
+      from: '{vendor_dir}/math.h'
+      to: '{vendor_dir}/fdlibm.h'
+    - action: 'run-script'
+      script: '{yaml_dir}/rename_c_to_cpp.sh'
+      cwd: '{vendor_dir}'
+
+  patches:
+    - 'patches/*.patch'
+
+updatebot:
+    maintainer-phab: arai
+    maintainer-bz: arai.unmht@gmail.com
+    tasks:
+      - type: vendoring
+        enabled: false
