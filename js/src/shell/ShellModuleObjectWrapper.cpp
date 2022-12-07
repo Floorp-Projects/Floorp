@@ -83,7 +83,7 @@ using namespace js::shell;
 DEFINE_CLASS(ModuleRequestObject)
 DEFINE_NATIVE_CLASS(ImportEntry)
 DEFINE_NATIVE_CLASS(ExportEntry)
-DEFINE_CLASS(RequestedModuleObject)
+DEFINE_NATIVE_CLASS(RequestedModule)
 // NOTE: We don't need wrapper for IndirectBindingMap and ModuleNamespaceObject
 DEFINE_CLASS_IMPL(ModuleObject)
 
@@ -346,27 +346,23 @@ static const JSPropertySpec ShellExportEntryWrapper_accessors[] = {
     JS_PSG("columnNumber", ShellExportEntryWrapper_columnNumberGetter, 0),
     JS_PS_END};
 
-DEFINE_GETTER_FUNCTIONS(RequestedModuleObject, moduleRequest, ObjectOrNullValue,
+DEFINE_GETTER_FUNCTIONS(RequestedModule, moduleRequest, ObjectOrNullValue,
                         SingleFilter<ShellModuleRequestObjectWrapper>)
-DEFINE_GETTER_FUNCTIONS(RequestedModuleObject, lineNumber, Uint32Value,
-                        IdentFilter)
-DEFINE_GETTER_FUNCTIONS(RequestedModuleObject, columnNumber, Uint32Value,
-                        IdentFilter)
+DEFINE_GETTER_FUNCTIONS(RequestedModule, lineNumber, Uint32Value, IdentFilter)
+DEFINE_GETTER_FUNCTIONS(RequestedModule, columnNumber, Uint32Value, IdentFilter)
 
-static const JSPropertySpec ShellRequestedModuleObjectWrapper_accessors[] = {
-    JS_PSG("moduleRequest",
-           ShellRequestedModuleObjectWrapper_moduleRequestGetter, 0),
-    JS_PSG("lineNumber", ShellRequestedModuleObjectWrapper_lineNumberGetter, 0),
-    JS_PSG("columnNumber", ShellRequestedModuleObjectWrapper_columnNumberGetter,
-           0),
+static const JSPropertySpec ShellRequestedModuleWrapper_accessors[] = {
+    JS_PSG("moduleRequest", ShellRequestedModuleWrapper_moduleRequestGetter, 0),
+    JS_PSG("lineNumber", ShellRequestedModuleWrapper_lineNumberGetter, 0),
+    JS_PSG("columnNumber", ShellRequestedModuleWrapper_columnNumberGetter, 0),
     JS_PS_END};
 
 DEFINE_GETTER_FUNCTIONS(ModuleObject, namespace_, ObjectOrNullValue,
                         IdentFilter)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, status, StatusValue, IdentFilter)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, maybeEvaluationError, Value, IdentFilter)
-DEFINE_GETTER_FUNCTIONS(ModuleObject, requestedModules, ObjectValue,
-                        ArrayFilter<ShellRequestedModuleObjectWrapper>)
+DEFINE_NATIVE_GETTER_FUNCTIONS(ModuleObject, requestedModules,
+                               VectorToArrayFilter<ShellRequestedModuleWrapper>)
 DEFINE_NATIVE_GETTER_FUNCTIONS(ModuleObject, importEntries,
                                VectorToArrayFilter<ShellImportEntryWrapper>)
 DEFINE_NATIVE_GETTER_FUNCTIONS(ModuleObject, localExportEntries,
@@ -463,8 +459,8 @@ DEFINE_CREATE(ModuleRequestObject, ShellModuleRequestObjectWrapper_accessors,
               nullptr)
 DEFINE_NATIVE_CREATE(ImportEntry, ShellImportEntryWrapper_accessors, nullptr)
 DEFINE_NATIVE_CREATE(ExportEntry, ShellExportEntryWrapper_accessors, nullptr)
-DEFINE_CREATE(RequestedModuleObject,
-              ShellRequestedModuleObjectWrapper_accessors, nullptr)
+DEFINE_NATIVE_CREATE(RequestedModule, ShellRequestedModuleWrapper_accessors,
+                     nullptr)
 DEFINE_CREATE(ModuleObject, ShellModuleObjectWrapper_accessors, nullptr)
 
 #undef DEFINE_CREATE

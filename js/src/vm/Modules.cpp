@@ -172,38 +172,37 @@ JS_PUBLIC_API bool JS::ThrowOnModuleEvaluationFailure(
   return OnModuleEvaluationFailure(cx, evaluationPromise, errorBehaviour);
 }
 
-JS_PUBLIC_API JSObject* JS::GetRequestedModules(JSContext* cx,
-                                                Handle<JSObject*> moduleArg) {
+JS_PUBLIC_API uint32_t
+JS::GetRequestedModulesCount(JSContext* cx, Handle<JSObject*> moduleRecord) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  cx->check(moduleArg);
+  cx->check(moduleRecord);
 
-  return &moduleArg->as<ModuleObject>().requestedModules();
+  return moduleRecord->as<ModuleObject>().requestedModules().length();
 }
 
-JS_PUBLIC_API JSString* JS::GetRequestedModuleSpecifier(JSContext* cx,
-                                                        Handle<Value> value) {
+JS_PUBLIC_API JSString* JS::GetRequestedModuleSpecifier(
+    JSContext* cx, Handle<JSObject*> moduleRecord, uint32_t index) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  cx->check(value);
+  cx->check(moduleRecord);
 
-  JSObject* obj = &value.toObject();
-  return obj->as<RequestedModuleObject>().moduleRequest()->specifier();
+  auto& module = moduleRecord->as<ModuleObject>();
+  return module.requestedModules()[index].moduleRequest()->specifier();
 }
 
-JS_PUBLIC_API void JS::GetRequestedModuleSourcePos(JSContext* cx,
-                                                   JS::HandleValue value,
-                                                   uint32_t* lineNumber,
-                                                   uint32_t* columnNumber) {
+JS_PUBLIC_API void JS::GetRequestedModuleSourcePos(
+    JSContext* cx, Handle<JSObject*> moduleRecord, uint32_t index,
+    uint32_t* lineNumber, uint32_t* columnNumber) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  cx->check(value);
+  cx->check(moduleRecord);
   MOZ_ASSERT(lineNumber);
   MOZ_ASSERT(columnNumber);
 
-  auto& requested = value.toObject().as<RequestedModuleObject>();
-  *lineNumber = requested.lineNumber();
-  *columnNumber = requested.columnNumber();
+  auto& module = moduleRecord->as<ModuleObject>();
+  *lineNumber = module.requestedModules()[index].lineNumber();
+  *columnNumber = module.requestedModules()[index].columnNumber();
 }
 
 JS_PUBLIC_API JSScript* JS::GetModuleScript(JS::HandleObject moduleRecord) {
@@ -1120,14 +1119,10 @@ static bool InnerModuleLinking(JSContext* cx, Handle<ModuleObject*> module,
 
   // Step 9. For each String required that is an element of
   //         module.[[RequestedModules]], do:
-  Rooted<ArrayObject*> requestedModules(cx, &module->requestedModules());
   Rooted<ModuleRequestObject*> moduleRequest(cx);
   Rooted<ModuleObject*> requiredModule(cx);
-  for (uint32_t i = 0; i != requestedModules->length(); i++) {
-    moduleRequest = requestedModules->getDenseElement(i)
-                        .toObject()
-                        .as<RequestedModuleObject>()
-                        .moduleRequest();
+  for (const RequestedModule& request : module->requestedModules()) {
+    moduleRequest = request.moduleRequest();
 
     // Step 9.a. Let requiredModule be ? HostResolveImportedModule(module,
     //           required).
@@ -1385,14 +1380,10 @@ static bool InnerModuleEvaluation(JSContext* cx, Handle<ModuleObject*> module,
   index++;
 
   // Step 11. For each String required of module.[[RequestedModules]], do:
-  Rooted<ArrayObject*> requestedModules(cx, &module->requestedModules());
   Rooted<ModuleRequestObject*> required(cx);
   Rooted<ModuleObject*> requiredModule(cx);
-  for (uint32_t i = 0; i != requestedModules->length(); i++) {
-    required = requestedModules->getDenseElement(i)
-                   .toObject()
-                   .as<RequestedModuleObject>()
-                   .moduleRequest();
+  for (const RequestedModule& request : module->requestedModules()) {
+    required = request.moduleRequest();
 
     // Step 11.a. Let requiredModule be ! HostResolveImportedModule(module,
     //            required).
