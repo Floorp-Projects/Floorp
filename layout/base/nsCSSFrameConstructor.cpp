@@ -1758,13 +1758,13 @@ void nsCSSFrameConstructor::CreateGeneratedContentFromListStyleType(
           styleList->mCounterStyle);
   bool needUseNode = false;
   switch (counterStyle->GetStyle()) {
-    case NS_STYLE_LIST_STYLE_NONE:
+    case ListStyle::None:
       return;
-    case NS_STYLE_LIST_STYLE_DISC:
-    case NS_STYLE_LIST_STYLE_CIRCLE:
-    case NS_STYLE_LIST_STYLE_SQUARE:
-    case NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED:
-    case NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN:
+    case ListStyle::Disc:
+    case ListStyle::Circle:
+    case ListStyle::Square:
+    case ListStyle::DisclosureClosed:
+    case ListStyle::DisclosureOpen:
       break;
     default:
       const auto* anonStyle = counterStyle->AsAnonymous();
