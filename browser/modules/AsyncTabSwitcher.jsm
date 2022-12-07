@@ -169,7 +169,7 @@ class AsyncTabSwitcher {
 
     let tabIsLoaded =
       !initialBrowser.isRemoteBrowser ||
-      initialBrowser.frameLoader.remoteTab.hasLayers;
+      initialBrowser.frameLoader.remoteTab?.hasLayers;
 
     // If we minimized the window before the switcher was activated,
     // we might have set  the preserveLayers flag for the current
