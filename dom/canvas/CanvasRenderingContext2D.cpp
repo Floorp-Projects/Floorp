@@ -4561,6 +4561,13 @@ static already_AddRefed<SourceSurface> ExtractSubrect(SourceSurface* aSurface,
     return surface.forget();
   }
 
+  // Try to extract an optimized sub-surface.
+  if (RefPtr<SourceSurface> surface =
+          aSurface->ExtractSubrect(roundedOutSourceRectInt)) {
+    *aSourceRect -= roundedOutSourceRect.TopLeft();
+    return surface.forget();
+  }
+
   RefPtr<DrawTarget> subrectDT = aTargetDT->CreateSimilarDrawTarget(
       roundedOutSourceRectInt.Size(), SurfaceFormat::B8G8R8A8);
 

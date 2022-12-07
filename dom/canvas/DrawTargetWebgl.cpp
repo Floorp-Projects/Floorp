@@ -826,7 +826,12 @@ void DrawTargetWebgl::SharedContext::InitTexParameters(WebGLTextureJS* aTex,
 }
 
 // Copy the contents of the WebGL framebuffer into a WebGL texture.
-already_AddRefed<TextureHandle> DrawTargetWebgl::SharedContext::CopySnapshot() {
+already_AddRefed<TextureHandle> DrawTargetWebgl::SharedContext::CopySnapshot(
+    const IntRect& aRect, TextureHandle* aHandle) {
+  if (!mWebgl || mWebgl->IsContextLost()) {
+    return nullptr;
+  }
+
   // If the target is going away, then we can just directly reuse the
   // framebuffer texture since it will never change.
   RefPtr<WebGLTextureJS> tex = mWebgl->CreateTexture();
@@ -834,19 +839,39 @@ already_AddRefed<TextureHandle> DrawTargetWebgl::SharedContext::CopySnapshot() {
     return nullptr;
   }
 
-  SurfaceFormat format = mCurrentTarget->GetFormat();
-  IntSize size = mCurrentTarget->GetSize();
+  // If copying from a non-DT source, we have to bind a scratch framebuffer for
+  // reading.
+  if (aHandle) {
+    if (!mScratchFramebuffer) {
+      mScratchFramebuffer = mWebgl->CreateFramebuffer();
+    }
+    mWebgl->BindFramebuffer(LOCAL_GL_FRAMEBUFFER, mScratchFramebuffer);
+    mWebgl->FramebufferTexture2D(
+        LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0, LOCAL_GL_TEXTURE_2D,
+        aHandle->GetWebGLTexture(), 0);
+  }
+
   // Create a texture to hold the copy
   mWebgl->BindTexture(LOCAL_GL_TEXTURE_2D, tex);
-  mWebgl->TexStorage2D(LOCAL_GL_TEXTURE_2D, 1, LOCAL_GL_RGBA8, size.width,
-                       size.height);
+  mWebgl->TexStorage2D(LOCAL_GL_TEXTURE_2D, 1, LOCAL_GL_RGBA8, aRect.width,
+                       aRect.height);
   InitTexParameters(tex);
   // Copy the framebuffer into the texture
-  mWebgl->CopyTexSubImage2D(LOCAL_GL_TEXTURE_2D, 0, 0, 0, 0, 0, size.width,
-                            size.height);
+  mWebgl->CopyTexSubImage2D(LOCAL_GL_TEXTURE_2D, 0, 0, 0, aRect.x, aRect.y,
+                            aRect.width, aRect.height);
   ClearLastTexture();
 
-  return WrapSnapshot(size, format, tex.forget());
+  SurfaceFormat format =
+      aHandle ? aHandle->GetFormat() : mCurrentTarget->GetFormat();
+  already_AddRefed<TextureHandle> result =
+      WrapSnapshot(aRect.Size(), format, tex.forget());
+
+  // Restore the actual framebuffer after reading is done.
+  if (aHandle && mCurrentTarget) {
+    mWebgl->BindFramebuffer(LOCAL_GL_FRAMEBUFFER, mCurrentTarget->mFramebuffer);
+  }
+
+  return result;
 }
 
 inline DrawTargetWebgl::AutoRestoreContext::AutoRestoreContext(
@@ -864,12 +889,13 @@ inline DrawTargetWebgl::AutoRestoreContext::~AutoRestoreContext() {
 }
 
 // Utility method to install the target before copying a snapshot.
-already_AddRefed<TextureHandle> DrawTargetWebgl::CopySnapshot() {
+already_AddRefed<TextureHandle> DrawTargetWebgl::CopySnapshot(
+    const IntRect& aRect) {
   AutoRestoreContext restore(this);
   if (!PrepareContext(false)) {
     return nullptr;
   }
-  return mSharedContext->CopySnapshot();
+  return mSharedContext->CopySnapshot(aRect);
 }
 
 // Borrow a snapshot that may be used by another thread for composition. Only

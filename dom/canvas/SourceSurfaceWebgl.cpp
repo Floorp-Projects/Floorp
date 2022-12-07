@@ -15,6 +15,16 @@ SourceSurfaceWebgl::SourceSurfaceWebgl(DrawTargetWebgl* aDT)
       mDT(aDT),
       mSharedContext(aDT->mSharedContext) {}
 
+SourceSurfaceWebgl::SourceSurfaceWebgl(
+    const RefPtr<TextureHandle>& aHandle,
+    const RefPtr<DrawTargetWebgl::SharedContext>& aSharedContext)
+    : mFormat(aHandle->GetFormat()),
+      mSize(aHandle->GetSize()),
+      mSharedContext(aSharedContext),
+      mHandle(aHandle) {
+  mHandle->SetSurface(this);
+}
+
 SourceSurfaceWebgl::~SourceSurfaceWebgl() {
   if (mHandle) {
     // Signal that the texture handle is not being used now.
@@ -122,6 +132,41 @@ void SourceSurfaceWebgl::OnUnlinkTexture(
     mData = aContext->ReadSnapshot(mHandle);
   }
   mHandle = nullptr;
+}
+
+already_AddRefed<SourceSurface> SourceSurfaceWebgl::ExtractSubrect(
+    const IntRect& aRect) {
+  // Ensure we have a texture source available to extract from.
+  if (!(mDT || (mHandle && mSharedContext)) || aRect.IsEmpty() ||
+      !GetRect().Contains(aRect)) {
+    return nullptr;
+  }
+  RefPtr<TextureHandle> subHandle;
+  RefPtr<DrawTargetWebgl::SharedContext> sharedContext;
+  if (mDT) {
+    // If this is still a snapshot linked to a target, then copy from the
+    // target.
+    subHandle = mDT->CopySnapshot(aRect);
+    if (!subHandle) {
+      return nullptr;
+    }
+    sharedContext = mDT->mSharedContext;
+  } else {
+    // Otherwise, we have a handle, but we need to verify it is still linked to
+    // a valid context.
+    sharedContext = mSharedContext;
+    if (!sharedContext) {
+      return nullptr;
+    }
+    // Try to copy directly from the handle using the context.
+    subHandle = sharedContext->CopySnapshot(aRect, mHandle);
+    if (!subHandle) {
+      return nullptr;
+    }
+  }
+  RefPtr<SourceSurface> surface =
+      new SourceSurfaceWebgl(subHandle, sharedContext);
+  return surface.forget();
 }
 
 }  // namespace mozilla::gfx

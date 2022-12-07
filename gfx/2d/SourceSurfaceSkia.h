@@ -43,6 +43,8 @@ class SourceSurfaceSkia : public DataSourceSurface {
                      SurfaceFormat aFormat = SurfaceFormat::UNKNOWN,
                      DrawTargetSkia* aOwner = nullptr);
 
+  already_AddRefed<SourceSurface> ExtractSubrect(const IntRect& aRect) override;
+
   uint8_t* GetData() override;
 
   /**
