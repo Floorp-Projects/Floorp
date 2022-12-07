@@ -212,7 +212,7 @@ bool AtomMarkingRuntime::atomIsMarked(Zone* zone, T* thing) {
   }
 
   size_t bit = GetAtomBit(&thing->asTenured());
-  return zone->markedAtoms().getBit(bit);
+  return zone->markedAtoms().readonlyThreadsafeGetBit(bit);
 }
 
 template bool AtomMarkingRuntime::atomIsMarked(Zone* zone, JSAtom* thing);
