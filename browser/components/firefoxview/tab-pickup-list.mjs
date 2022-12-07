@@ -26,7 +26,9 @@ class TabPickupList extends HTMLElement {
   constructor() {
     super();
     this.maxTabsLength = 3;
-    this.boundObserve = (...args) => this.getSyncedTabData(...args);
+    this.boundObserve = (...args) => {
+      this.getSyncedTabData(...args);
+    };
 
     // The recency timestamp update period is stored in a pref to allow tests to easily change it
     XPCOMUtils.defineLazyPreferenceGetter(
@@ -62,9 +64,10 @@ class TabPickupList extends HTMLElement {
     );
 
     this.addEventListener("click", this);
-    this.getSyncedTabData();
-
     Services.obs.addObserver(this.boundObserve, SYNCED_TABS_CHANGED);
+
+    // inform ancestor elements our getSyncedTabData method is available to fetch data
+    this.dispatchEvent(new CustomEvent("list-ready", { bubbles: true }));
   }
 
   handleEvent(event) {
@@ -212,9 +215,6 @@ class TabPickupList extends HTMLElement {
 
   updateTabsList(syncedTabs) {
     // don't do anything while the loading state is active
-    if (this.tabPickupContainer.classList.contains("loading")) {
-      return;
-    }
 
     while (this.tabsList.firstChild) {
       this.tabsList.firstChild.remove();
