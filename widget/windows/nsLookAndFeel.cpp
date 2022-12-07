@@ -187,9 +187,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
     case ColorID::IMESelectedConvertedTextUnderline:
       aColor = NS_TRANSPARENT;
       return NS_OK;
-    case ColorID::SpellCheckerUnderline:
-      aColor = NS_RGB(0xff, 0, 0);
-      return NS_OK;
 
     // New CSS 2 Color definitions
     case ColorID::Activeborder:
@@ -381,6 +378,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
       break;
     case ColorID::Marktext:
     case ColorID::Mark:
+    case ColorID::SpellCheckerUnderline:
       aColor = GetStandinForNativeColor(aID, aScheme);
       return NS_OK;
     default:
