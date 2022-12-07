@@ -37,7 +37,7 @@ class WebRenderCanvasRendererAsync final : public WebRenderCanvasRenderer {
 
   void Initialize(const CanvasRendererData& aData) override;
   bool CreateCompositable() override;
-  void EnsurePipeline(bool aIsAsync) override;
+  void EnsurePipeline() override;
 
   void ClearCachedResources() override;
 

@@ -7,6 +7,7 @@
 #include "RenderTextureHostWrapper.h"
 
 #include "mozilla/gfx/Logging.h"
+#include "mozilla/layers/RemoteTextureMap.h"
 #include "mozilla/webrender/RenderThread.h"
 
 namespace mozilla {
@@ -19,23 +20,64 @@ RenderTextureHostWrapper::RenderTextureHostWrapper(
   EnsureTextureHost();
 }
 
+RenderTextureHostWrapper::RenderTextureHostWrapper(
+    const layers::RemoteTextureId aTextureId,
+    const layers::RemoteTextureOwnerId aOwnerId, const base::ProcessId aForPid)
+    : mExternalImageId({}),
+      mTextureId(Some(aTextureId)),
+      mOwnerId(Some(aOwnerId)),
+      mForPid(Some(aForPid)) {
+  MOZ_COUNT_CTOR_INHERITED(RenderTextureHostWrapper, RenderTextureHost);
+}
+
 RenderTextureHostWrapper::~RenderTextureHostWrapper() {
   MOZ_COUNT_DTOR_INHERITED(RenderTextureHostWrapper, RenderTextureHost);
 }
 
 void RenderTextureHostWrapper::EnsureTextureHost() const {
+  MOZ_ASSERT(mTextureId.isNothing());
+
+  if (mTextureHost) {
+    return;
+  }
+
+  mTextureHost = RenderThread::Get()->GetRenderTexture(mExternalImageId);
+  MOZ_ASSERT(mTextureHost);
   if (!mTextureHost) {
-    mTextureHost = RenderThread::Get()->GetRenderTexture(mExternalImageId);
-    MOZ_ASSERT(mTextureHost);
-    if (!mTextureHost) {
-      gfxCriticalNoteOnce << "Failed to get RenderTextureHost for extId:"
-                          << AsUint64(mExternalImageId);
-    }
+    gfxCriticalNoteOnce << "Failed to get RenderTextureHost for extId:"
+                        << AsUint64(mExternalImageId);
+  }
+}
+
+void RenderTextureHostWrapper::EnsureRemoteTexture() const {
+  MOZ_ASSERT(mTextureId.isSome());
+
+  if (mTextureHost) {
+    return;
+  }
+
+  auto externalImageId =
+      layers::RemoteTextureMap::Get()->GetExternalImageIdOfRemoteTextureSync(
+          *mTextureId, *mOwnerId, *mForPid);
+  if (externalImageId.isNothing()) {
+    // This could happen with IPC abnormal shutdown
+    return;
+  }
+
+  mTextureHost = RenderThread::Get()->GetRenderTexture(*externalImageId);
+  MOZ_ASSERT(mTextureHost);
+  if (!mTextureHost) {
+    gfxCriticalNoteOnce << "Failed to get RenderTextureHost for extId:"
+                        << AsUint64(*externalImageId);
   }
 }
 
 wr::WrExternalImage RenderTextureHostWrapper::Lock(uint8_t aChannelIndex,
                                                    gl::GLContext* aGL) {
+  if (mTextureId.isSome()) {
+    EnsureRemoteTexture();
+  }
+
   if (!mTextureHost) {
     return InvalidToWrExternalImage();
   }
@@ -76,15 +118,13 @@ void RenderTextureHostWrapper::NotifyNotUsed() {
   mTextureHost->NotifyNotUsed();
 }
 
-bool RenderTextureHostWrapper::SyncObjectNeeded() {
-  if (!mTextureHost) {
-    return false;
-  }
-  return mTextureHost->SyncObjectNeeded();
-}
+bool RenderTextureHostWrapper::SyncObjectNeeded() { return false; }
 
 RenderMacIOSurfaceTextureHost*
 RenderTextureHostWrapper::AsRenderMacIOSurfaceTextureHost() {
+  if (mTextureId.isSome()) {
+    EnsureRemoteTexture();
+  }
   if (!mTextureHost) {
     return nullptr;
   }
@@ -92,6 +132,9 @@ RenderTextureHostWrapper::AsRenderMacIOSurfaceTextureHost() {
 }
 
 RenderDXGITextureHost* RenderTextureHostWrapper::AsRenderDXGITextureHost() {
+  if (mTextureId.isSome()) {
+    EnsureRemoteTexture();
+  }
   if (!mTextureHost) {
     return nullptr;
   }
@@ -100,6 +143,9 @@ RenderDXGITextureHost* RenderTextureHostWrapper::AsRenderDXGITextureHost() {
 
 RenderDXGIYCbCrTextureHost*
 RenderTextureHostWrapper::AsRenderDXGIYCbCrTextureHost() {
+  if (mTextureId.isSome()) {
+    EnsureRemoteTexture();
+  }
   if (!mTextureHost) {
     return nullptr;
   }
@@ -115,6 +161,9 @@ RenderTextureHostWrapper::AsRenderDcompSurfaceTextureHost() {
 }
 
 RenderTextureHostSWGL* RenderTextureHostWrapper::AsRenderTextureHostSWGL() {
+  if (mTextureId.isSome()) {
+    EnsureRemoteTexture();
+  }
   if (!mTextureHost) {
     return nullptr;
   }
@@ -123,10 +172,17 @@ RenderTextureHostSWGL* RenderTextureHostWrapper::AsRenderTextureHostSWGL() {
 
 RenderTextureHostSWGL* RenderTextureHostWrapper::EnsureRenderTextureHostSWGL()
     const {
+  if (mTextureId.isSome()) {
+    EnsureRemoteTexture();
+  }
   if (!mTextureHost) {
     return nullptr;
   }
   return mTextureHost->AsRenderTextureHostSWGL();
+}
+
+bool RenderTextureHostWrapper::IsWrappingAsyncRemoteTexture() {
+  return mTextureId.isSome();
 }
 
 size_t RenderTextureHostWrapper::GetPlaneCount() const {

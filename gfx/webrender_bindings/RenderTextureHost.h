@@ -95,6 +95,8 @@ class RenderTextureHost {
     return nullptr;
   }
 
+  virtual bool IsWrappingAsyncRemoteTexture() { return false; }
+
  protected:
   virtual ~RenderTextureHost();
 
