@@ -7,7 +7,7 @@
 # be found in the AUTHORS file in the root of the source tree.
 
 import("//build/config/linux/pkg_config.gni")
-#import("//third_party/libaom/options.gni")
+import("//third_party/libaom/options.gni")
 import("../webrtc.gni")
 
 group("media") {
@@ -66,7 +66,7 @@ rtc_library("rtc_media_base") {
     "../api/crypto:options",
     "../api/task_queue:pending_task_safety_flag",
     "../api/transport:datagram_transport_interface",
-    #"../api/transport:stun_types",
+    "../api/transport:stun_types",
     "../api/transport/rtp:rtp_source",
     "../api/units:time_delta",
     "../api/video:video_bitrate_allocation",
@@ -99,6 +99,9 @@ rtc_library("rtc_media_base") {
     "../rtc_base/third_party/sigslot",
     "../system_wrappers:field_trial",
   ]
+  if (build_with_mozilla) {
+    deps -= [ "../api/transport:stun_types" ]
+  }
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/container:inlined_vector",
@@ -106,26 +109,26 @@ rtc_library("rtc_media_base") {
     "//third_party/abseil-cpp/absl/types:optional",
   ]
   sources = [
-    #"base/adapted_video_track_source.cc",
-    #"base/adapted_video_track_source.h",
-    #"base/audio_source.h",
+    "base/adapted_video_track_source.cc",
+    "base/adapted_video_track_source.h",
+    "base/audio_source.h",
     "base/codec.cc",
     "base/codec.h",
-    #"base/delayable.h",
-    #"base/media_channel.cc",
-    #"base/media_channel.h",
+    "base/delayable.h",
+    "base/media_channel.cc",
+    "base/media_channel.h",
     "base/media_constants.cc",
     "base/media_constants.h",
-    #"base/media_engine.cc",
-    #"base/media_engine.h",
-    #"base/rid_description.cc",
-    #"base/rid_description.h",
-    #"base/rtp_utils.cc",
-    #"base/rtp_utils.h",
-    #"base/stream_params.cc",
-    #"base/stream_params.h",
-    #"base/turn_utils.cc",
-    #"base/turn_utils.h",
+    "base/media_engine.cc",
+    "base/media_engine.h",
+    "base/rid_description.cc",
+    "base/rid_description.h",
+    "base/rtp_utils.cc",
+    "base/rtp_utils.h",
+    "base/stream_params.cc",
+    "base/stream_params.h",
+    "base/turn_utils.cc",
+    "base/turn_utils.h",
     "base/video_adapter.cc",
     "base/video_adapter.h",
     "base/video_broadcaster.cc",
@@ -135,6 +138,26 @@ rtc_library("rtc_media_base") {
     "base/video_source_base.cc",
     "base/video_source_base.h",
   ]
+  if (build_with_mozilla) {
+    sources -= [
+      "base/adapted_video_track_source.cc",
+      "base/adapted_video_track_source.h",
+      "base/audio_source.h",
+      "base/delayable.h",
+      "base/media_channel.cc",
+      "base/media_channel.h",
+      "base/media_engine.cc",
+      "base/media_engine.h",
+      "base/rid_description.cc",
+      "base/rid_description.h",
+      "base/rtp_utils.cc",
+      "base/rtp_utils.h",
+      "base/stream_params.cc",
+      "base/stream_params.h",
+      "base/turn_utils.cc",
+      "base/turn_utils.h",
+    ]
+  }
 }
 
 rtc_library("rtc_simulcast_encoder_adapter") {
@@ -224,8 +247,11 @@ rtc_library("rtc_internal_video_codecs") {
     "../rtc_base:logging",
     "../rtc_base/system:rtc_export",
     "../system_wrappers:field_trial",
-    #"../test:fake_video_codecs",
+    "../test:fake_video_codecs",
   ]
+  if (build_with_mozilla) {
+    deps -= [ "../test:fake_video_codecs" ]
+  }
 
   if (enable_libaom) {
     defines += [ "RTC_USE_LIBAOM_AV1_ENCODER" ]
@@ -242,8 +268,8 @@ rtc_library("rtc_internal_video_codecs") {
     "//third_party/abseil-cpp/absl/types:optional",
   ]
   sources = [
-    #"engine/fake_video_codec_factory.cc",
-    #"engine/fake_video_codec_factory.h",
+    "engine/fake_video_codec_factory.cc",
+    "engine/fake_video_codec_factory.h",
     "engine/internal_decoder_factory.cc",
     "engine/internal_decoder_factory.h",
     "engine/internal_encoder_factory.cc",
@@ -255,6 +281,12 @@ rtc_library("rtc_internal_video_codecs") {
     # targets depend on :rtc_encoder_simulcast_proxy directly.
     "engine/encoder_simulcast_proxy.h",
   ]
+  if (build_with_mozilla) {
+    sources -= [
+      "engine/fake_video_codec_factory.cc",
+      "engine/fake_video_codec_factory.h",
+    ]
+  }
 }
 
 rtc_library("rtc_audio_video") {
@@ -266,7 +298,7 @@ rtc_library("rtc_audio_video") {
     ":rtc_media_base",
     "../api:call_api",
     "../api:field_trials_view",
-    #"../api:libjingle_peerconnection_api",
+    "../api:libjingle_peerconnection_api",
     "../api:media_stream_interface",
     "../api:rtp_parameters",
     "../api:scoped_refptr",
@@ -332,6 +364,9 @@ rtc_library("rtc_audio_video") {
     "../system_wrappers",
     "../system_wrappers:metrics",
   ]
+  if (build_with_mozilla) {
+    deps -= [ "../api:libjingle_peerconnection_api" ]
+  }
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/strings",

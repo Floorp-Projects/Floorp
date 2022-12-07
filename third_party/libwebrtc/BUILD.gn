@@ -470,29 +470,46 @@ if (!build_with_chromium) {
     defines = []
 
     deps = [
-      #"api:create_peerconnection_factory",
-      #"api:libjingle_peerconnection_api",
-      #"api:rtc_error",
-      #"api:transport_api",
-      #"api/crypto",
-      #"api/rtc_event_log:rtc_event_log_factory",
-      #"api/task_queue",
-      #"api/task_queue:default_task_queue_factory",
+      "api:create_peerconnection_factory",
+      "api:libjingle_peerconnection_api",
+      "api:rtc_error",
+      "api:transport_api",
+      "api/crypto",
+      "api/rtc_event_log:rtc_event_log_factory",
+      "api/task_queue",
+      "api/task_queue:default_task_queue_factory",
       "audio",
       "call",
       "common_audio",
       "common_video",
-      #"logging:rtc_event_log_api",
+      "logging:rtc_event_log_api",
       "media",
       "modules",
       "modules/video_capture:video_capture_internal_impl",
-      #"p2p:rtc_p2p",
-      #"pc:libjingle_peerconnection",
-      #"pc:rtc_pc",
+      "p2p:rtc_p2p",
+      "pc:libjingle_peerconnection",
+      "pc:rtc_pc",
       "rtc_base",
-      #"sdk",
+      "sdk",
       "video",
     ]
+    if (build_with_mozilla) {
+      deps -= [
+        "api:create_peerconnection_factory",
+        "api:libjingle_peerconnection_api",
+        "api:rtc_error",
+        "api:transport_api",
+        "api/crypto",
+        "api/rtc_event_log:rtc_event_log_factory",
+        "api/task_queue",
+        "api/task_queue:default_task_queue_factory",
+        "logging:rtc_event_log_api",
+        "p2p:rtc_p2p",
+        "pc:libjingle_peerconnection",
+        "pc:rtc_pc",
+        "sdk",
+      ]
+    }
 
     if (rtc_include_builtin_audio_codecs) {
       deps += [

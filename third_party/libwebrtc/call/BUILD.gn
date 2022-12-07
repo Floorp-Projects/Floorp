@@ -25,8 +25,6 @@ rtc_library("call_interfaces") {
     "audio_state.cc",
     "audio_state.h",
     "call.h",
-    "call_basic_stats.cc",
-    "call_basic_stats.h",
     "call_config.cc",
     "call_config.h",
     "flexfec_receive_stream.cc",
@@ -35,6 +33,12 @@ rtc_library("call_interfaces") {
     "syncable.cc",
     "syncable.h",
   ]
+  if (build_with_mozilla) {
+    sources += [
+      "call_basic_stats.cc",
+      "call_basic_stats.h",
+    ]
+  }
 
   deps = [
     ":audio_sender_interface",
@@ -238,11 +242,14 @@ rtc_library("bitrate_configurator") {
     ":rtp_interfaces",
 
     # For api/bitrate_constraints.h
-    #"../api:libjingle_peerconnection_api",
+    "../api:libjingle_peerconnection_api",
     "../api/transport:bitrate_settings",
     "../api/units:data_rate",
     "../rtc_base:checks",
   ]
+  if (build_with_mozilla) {
+    deps -= [ "../api:libjingle_peerconnection_api" ]
+  }
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 

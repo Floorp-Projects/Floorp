@@ -47,6 +47,9 @@ rtc_library("create_cross_traffic") {
     ":network_emulation",
     "../..:network_emulation_manager_api",
     "../../../rtc_base/task_utils:repeating_task",
-    #"../../../test/network:emulated_network",
+    "../../../test/network:emulated_network",
   ]
+  if (build_with_mozilla) {
+    deps -= [ "../../../test/network:emulated_network" ]
+  }
 }

@@ -227,9 +227,15 @@ rtc_library("audio_device_impl") {
     "dummy/file_audio_device.cc",
     "dummy/file_audio_device.h",
     "include/fake_audio_device.h",
-    #"include/test_audio_device.cc",
-    #"include/test_audio_device.h",
+    "include/test_audio_device.cc",
+    "include/test_audio_device.h",
   ]
+  if (build_with_mozilla) {
+    sources -= [
+      "include/test_audio_device.cc",
+      "include/test_audio_device.h",
+    ]
+  }
 
   #if (build_with_mozilla) {
   #  sources += [

@@ -260,7 +260,7 @@ rtc_library("rtp_rtcp") {
     "../../api:field_trials_view",
     "../../api:frame_transformer_interface",
     "../../api:function_view",
-    #"../../api:libjingle_peerconnection_api",
+    "../../api:libjingle_peerconnection_api",
     "../../api:rtp_headers",
     "../../api:rtp_packet_info",
     "../../api:rtp_parameters",
@@ -325,6 +325,9 @@ rtc_library("rtp_rtcp") {
     "../remote_bitrate_estimator",
     "../video_coding:codec_globals_headers",
   ]
+  if (build_with_mozilla) {
+    deps -= [ "../../api:libjingle_peerconnection_api" ]
+  }
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/base:core_headers",
