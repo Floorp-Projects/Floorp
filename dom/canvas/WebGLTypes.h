@@ -8,6 +8,7 @@
 
 #include <limits>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <type_traits>
 #include <unordered_map>
@@ -1180,6 +1181,13 @@ template <class T, class U>
 inline void Memcpy(const RangedPtr<T>* const destBegin,
                    const Range<U>& srcRange) {
   Memcpy(destBegin, srcRange->begin(), srcRange->length());
+}
+
+// -
+
+inline bool StartsWith(const std::string_view str,
+                       const std::string_view part) {
+  return str.find(part) == 0;
 }
 
 // -
