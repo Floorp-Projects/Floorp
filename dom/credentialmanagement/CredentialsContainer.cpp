@@ -8,6 +8,7 @@
 #include "mozilla/dom/CredentialsContainer.h"
 #include "mozilla/dom/IdentityCredential.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/dom/WebAuthnManager.h"
 #include "mozilla/dom/WindowGlobalChild.h"
