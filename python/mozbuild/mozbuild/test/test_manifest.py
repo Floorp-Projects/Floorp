@@ -527,6 +527,47 @@ updatebot:
                 ),
                 # -------------------------------------------------
                 (
+                    "exception",  # rust flavor cannot use update-actions
+                    b"""
+---
+schema: 1
+origin:
+  name: cairo
+  description: 2D Graphics Library
+  url: https://www.cairographics.org/
+  release: version 1.6.4
+  license:
+    - MPL-1.1
+    - LGPL-2.1
+  revision: AA001122334455
+vendoring:
+  url: https://example.com
+  tracking: tag
+  source-hosting: gitlab
+  flavor: rust
+  update-actions:
+    - action: move-file
+      from: foo
+      to: bar
+bugzilla:
+  product: Core
+  component: Graphics
+updatebot:
+  maintainer-phab: tjr
+  maintainer-bz: a@example.com
+  tasks:
+    - type: commit-alert
+      frequency: release
+    - type: vendoring
+      enabled: False
+      cc: ["b@example.com"]
+      needinfo: ["c@example.com"]
+      frequency: 1 weeks, 4 commits
+      platform: windows
+            """.strip(),
+                ),
+                # -------------------------------------------------
+                (
                     {
                         "schema": "1",
                         "origin": {
@@ -847,6 +888,59 @@ vendoring:
   individual-files:
     - upstream: foo
       destination: bar
+bugzilla:
+  product: Core
+  component: Graphics
+            """.strip(),
+                ),
+                # -------------------------------------------------
+                (
+                    {
+                        "schema": "1",
+                        "origin": {
+                            "license": ["MPL-1.1", "LGPL-2.1"],
+                            "name": "cairo",
+                            "description": "2D Graphics Library",
+                            "url": "https://www.cairographics.org/",
+                            "release": "version 1.6.4",
+                            "revision": "AA001122334455",
+                        },
+                        "bugzilla": {"component": "Graphics", "product": "Core"},
+                        "vendoring": {
+                            "url": "https://example.com",
+                            "source-hosting": "gitlab",
+                            "flavor": "individual-files",
+                            "individual-files": [
+                                {"upstream": "foo", "destination": "bar"}
+                            ],
+                            "update-actions": [
+                                {"action": "move-file", "from": "foo", "to": "bar"}
+                            ],
+                        },
+                    },
+                    b"""
+---
+schema: 1
+origin:
+  name: cairo
+  description: 2D Graphics Library
+  url: https://www.cairographics.org/
+  release: version 1.6.4
+  license:
+    - MPL-1.1
+    - LGPL-2.1
+  revision: AA001122334455
+vendoring:
+  url: https://example.com
+  source-hosting: gitlab
+  flavor: individual-files
+  individual-files:
+    - upstream: foo
+      destination: bar
+  update-actions:
+    - action: move-file
+      from: foo
+      to: bar
 bugzilla:
   product: Core
   component: Graphics

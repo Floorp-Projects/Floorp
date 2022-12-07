@@ -562,10 +562,16 @@ def _schema_1_additional(filename, manifest, require_license_file=True):
             "exclude",
             "include",
             "generated",
-            "update-actions",
         ]:
             if i in manifest["vendoring"]:
                 raise ValueError("A non-regular flavor of update cannot use '%s'" % i)
+
+        if manifest["vendoring"].get("flavor", "regular") == "rust":
+            for i in [
+                "update-actions",
+            ]:
+                if i in manifest["vendoring"]:
+                    raise ValueError("A rust flavor of update cannot use '%s'" % i)
 
     if (
         "vendoring" in manifest
