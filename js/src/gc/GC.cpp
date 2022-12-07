@@ -2221,8 +2221,8 @@ void GCRuntime::purgeRuntime() {
     SharedImmutableStringsCache::getSingleton().purge();
   }
 
-  MOZ_ASSERT(unmarkGrayStack.empty());
-  unmarkGrayStack.clearAndFree();
+  MOZ_ASSERT(marker().unmarkGrayStack.empty());
+  marker().unmarkGrayStack.clearAndFree();
 
   // If we're the main runtime, tell helper threads to free their unused
   // memory when they are next idle.

@@ -312,7 +312,7 @@ static inline bool ShouldMarkCrossCompartment(GCMarker* marker, JSObject* src,
      * as part of normal marking.
      */
     if (dst.isMarkedGray() && !dstZone->isGCMarking()) {
-      UnmarkGrayGCThingUnchecked(marker->runtime(),
+      UnmarkGrayGCThingUnchecked(marker,
                                  JS::GCCellPtr(&dst, dst.getTraceKind()));
       return false;
     }
@@ -1996,6 +1996,8 @@ void GCMarker::stop() {
 
   stack.clear();
   ClearEphemeronEdges(runtime());
+
+  unmarkGrayStack.clearAndFree();
 }
 
 void GCMarker::reset() {
@@ -2005,7 +2007,7 @@ void GCMarker::reset() {
 
   setMarkColor(MarkColor::Black);
 
-  MOZ_ASSERT(isDrained());
+  unmarkGrayStack.clearAndFree();
 }
 
 template <typename T>
@@ -2549,16 +2551,17 @@ struct AssertNonGrayTracer final : public JS::CallbackTracer {
 };
 #endif
 
-class UnmarkGrayTracer final : public JS::CallbackTracer {
+class js::gc::UnmarkGrayTracer final : public JS::CallbackTracer {
  public:
   // We set weakMapAction to WeakMapTraceAction::Skip because the cycle
   // collector will fix up any color mismatches involving weakmaps when it runs.
-  explicit UnmarkGrayTracer(JSRuntime* rt)
-      : JS::CallbackTracer(rt, JS::TracerKind::UnmarkGray,
+  explicit UnmarkGrayTracer(GCMarker* marker)
+      : JS::CallbackTracer(marker->runtime(), JS::TracerKind::UnmarkGray,
                            JS::WeakMapTraceAction::Skip),
         unmarkedAny(false),
         oom(false),
-        stack(rt->gc.unmarkGrayStack) {}
+        marker(marker),
+        stack(marker->unmarkGrayStack) {}
 
   void unmark(JS::GCCellPtr cell);
 
@@ -2569,6 +2572,10 @@ class UnmarkGrayTracer final : public JS::CallbackTracer {
   bool oom;
 
  private:
+  // Marker to use if we need to unmark in zones that are currently being
+  // marked.
+  GCMarker* marker;
+
   // Stack of cells to traverse.
   Vector<JS::GCCellPtr, 0, SystemAllocPolicy>& stack;
 
@@ -2604,9 +2611,7 @@ void UnmarkGrayTracer::onChild(JS::GCCellPtr thing, const char* name) {
   // marked. This will ensure they will eventually get marked black.
   if (zone->isGCMarking()) {
     if (!cell->isMarkedBlack()) {
-      // Skip disptaching on known tracer type.
-      GCMarker* trc = &runtime()->gc.marker();
-      TraceEdgeForBarrier(trc, &tenured, thing.kind());
+      TraceEdgeForBarrier(marker, &tenured, thing.kind());
       unmarkedAny = true;
     }
     return;
@@ -2616,7 +2621,9 @@ void UnmarkGrayTracer::onChild(JS::GCCellPtr thing, const char* name) {
     return;
   }
 
-  tenured.markBlack();
+  // TODO: It may be a small improvement to only use the atomic version during
+  // parallel marking.
+  tenured.markBlackAtomic();
   unmarkedAny = true;
 
   if (!stack.append(thing)) {
@@ -2642,7 +2649,7 @@ void UnmarkGrayTracer::unmark(JS::GCCellPtr cell) {
   }
 }
 
-bool js::gc::UnmarkGrayGCThingUnchecked(JSRuntime* rt, JS::GCCellPtr thing) {
+bool js::gc::UnmarkGrayGCThingUnchecked(GCMarker* marker, JS::GCCellPtr thing) {
   MOZ_ASSERT(thing);
   MOZ_ASSERT(thing.asCell()->isMarkedGray());
 
@@ -2652,7 +2659,7 @@ bool js::gc::UnmarkGrayGCThingUnchecked(JSRuntime* rt, JS::GCCellPtr thing) {
                                 JS::ProfilingCategoryPair::GCCC_UnmarkGray);
   }
 
-  UnmarkGrayTracer unmarker(rt);
+  UnmarkGrayTracer unmarker(marker);
   unmarker.unmark(thing);
   return unmarker.unmarkedAny;
 }
@@ -2667,7 +2674,7 @@ JS_PUBLIC_API bool JS::UnmarkGrayGCThingRecursively(JS::GCCellPtr thing) {
     return false;
   }
 
-  return UnmarkGrayGCThingUnchecked(rt, thing);
+  return UnmarkGrayGCThingUnchecked(&rt->gc.marker(), thing);
 }
 
 void js::gc::UnmarkGrayGCThingRecursively(TenuredCell* cell) {
