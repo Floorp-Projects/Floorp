@@ -1285,6 +1285,8 @@ bool GCMarker::markUntilBudgetExhausted(SliceBudget& budget,
 
 template <uint32_t opts>
 bool GCMarker::doMarking(SliceBudget& budget, ShouldReportMarkTime reportTime) {
+  GCRuntime& gc = runtime()->gc;
+
   // This method leaves the mark color as it found it.
   AutoSetMarkColor autoSetBlack(*this, MarkColor::Black);
 
@@ -1316,13 +1318,16 @@ bool GCMarker::doMarking(SliceBudget& budget, ShouldReportMarkTime reportTime) {
 
     // All normal marking happens before any delayed marking.
     MOZ_ASSERT(!hasBlackEntries() && !hasGrayEntries());
-
-    // Mark children of things that caused too deep recursion during the above
-    // tracing.
-    if (hasDelayedChildren()) {
-      markAllDelayedChildren(reportTime);
-    }
   }
+
+  // Mark children of things that caused too deep recursion during the above
+  // tracing.
+  if (gc.hasDelayedMarking()) {
+    gc.markAllDelayedChildren(reportTime);
+  }
+
+  MOZ_ASSERT(!gc.hasDelayedMarking());
+  MOZ_ASSERT(isDrained());
 
   return true;
 }
@@ -1837,14 +1842,11 @@ GCMarker::GCMarker(JSRuntime* rt)
     : tracer_(mozilla::VariantType<MarkingTracer>(), rt, this),
       runtime_(rt),
       stack(),
-      delayedMarkingList(nullptr),
-      delayedMarkingWorkAdded(false),
       state(NotActive),
       incrementalWeakMapMarkingEnabled(
           TuningDefaults::IncrementalWeakMapMarkingEnabled)
 #ifdef DEBUG
       ,
-      markLaterArenas(0),
       checkAtomMarking(true),
       strictCompartmentChecking(false)
 #endif
@@ -1853,17 +1855,12 @@ GCMarker::GCMarker(JSRuntime* rt)
 
 bool GCMarker::init() { return stack.init(); }
 
-bool GCMarker::isDrained() { return isMarkStackEmpty() && !delayedMarkingList; }
-
 void GCMarker::start() {
   MOZ_ASSERT(state == NotActive);
   MOZ_ASSERT(stack.isEmpty());
   state = RegularMarking;
   haveAllImplicitEdges = true;
   setMarkColor(MarkColor::Black);
-
-  MOZ_ASSERT(!delayedMarkingList);
-  MOZ_ASSERT(markLaterArenas == 0);
 }
 
 static void ClearEphemeronEdges(JSRuntime* rt) {
@@ -1880,8 +1877,6 @@ static void ClearEphemeronEdges(JSRuntime* rt) {
 
 void GCMarker::stop() {
   MOZ_ASSERT(isDrained());
-  MOZ_ASSERT(!delayedMarkingList);
-  MOZ_ASSERT(markLaterArenas == 0);
 
   if (state == NotActive) {
     return;
@@ -1892,36 +1887,14 @@ void GCMarker::stop() {
   ClearEphemeronEdges(runtime());
 }
 
-template <typename F>
-inline void GCMarker::forEachDelayedMarkingArena(F&& f) {
-  Arena* arena = delayedMarkingList;
-  Arena* next;
-  while (arena) {
-    next = arena->getNextDelayedMarking();
-    f(arena);
-    arena = next;
-  }
-}
-
 void GCMarker::reset() {
   stack.clear();
   ClearEphemeronEdges(runtime());
-  MOZ_ASSERT(isMarkStackEmpty());
+  MOZ_ASSERT(isDrained());
 
   setMarkColor(MarkColor::Black);
 
-  forEachDelayedMarkingArena([&](Arena* arena) {
-    MOZ_ASSERT(arena->onDelayedMarkingList());
-    arena->clearDelayedMarkingState();
-#ifdef DEBUG
-    MOZ_ASSERT(markLaterArenas);
-    markLaterArenas--;
-#endif
-  });
-  delayedMarkingList = nullptr;
-
   MOZ_ASSERT(isDrained());
-  MOZ_ASSERT(!markLaterArenas);
 }
 
 template <typename T>
@@ -2052,10 +2025,16 @@ void GCMarker::abortLinearWeakMarking() {
 }
 
 MOZ_NEVER_INLINE void GCMarker::delayMarkingChildrenOnOOM(Cell* cell) {
-  delayMarkingChildren(cell);
+  runtime()->gc.delayMarkingChildren(cell, markColor());
 }
 
-void GCMarker::delayMarkingChildren(Cell* cell) {
+bool GCRuntime::hasDelayedMarking() const {
+  bool result = delayedMarkingList;
+  MOZ_ASSERT(result == (markLaterArenas != 0));
+  return result;
+}
+
+void GCRuntime::delayMarkingChildren(Cell* cell, MarkColor color) {
   Arena* arena = cell->asTenured().arena();
   if (!arena->onDelayedMarkingList()) {
     arena->setNextDelayedMarkingArena(delayedMarkingList);
@@ -2065,20 +2044,21 @@ void GCMarker::delayMarkingChildren(Cell* cell) {
 #endif
   }
 
-  if (!arena->hasDelayedMarking(markColor())) {
-    arena->setHasDelayedMarking(markColor(), true);
+  if (!arena->hasDelayedMarking(color)) {
+    arena->setHasDelayedMarking(color, true);
     delayedMarkingWorkAdded = true;
   }
 }
 
-void GCMarker::markDelayedChildren(Arena* arena) {
+void GCRuntime::markDelayedChildren(Arena* arena, MarkColor color) {
+  JSTracer* trc = marker().tracer();
   JS::TraceKind kind = MapAllocToTraceKind(arena->getAllocKind());
   MarkColor colorToCheck =
-      TraceKindCanBeMarkedGray(kind) ? markColor() : MarkColor::Black;
+      TraceKindCanBeMarkedGray(kind) ? color : MarkColor::Black;
 
   for (ArenaCellIterUnderGC cell(arena); !cell.done(); cell.next()) {
     if (cell->isMarked(colorToCheck)) {
-      JS::TraceChildren(tracer(), JS::GCCellPtr(cell, kind));
+      JS::TraceChildren(trc, JS::GCCellPtr(cell, kind));
     }
   }
 }
@@ -2090,14 +2070,14 @@ void GCMarker::markDelayedChildren(Arena* arena) {
  * This is called twice, first to mark gray children and then to mark black
  * children.
  */
-void GCMarker::processDelayedMarkingList(MarkColor color) {
+void GCRuntime::processDelayedMarkingList(MarkColor color) {
   // Marking delayed children may add more arenas to the list, including arenas
   // we are currently processing or have previously processed. Handle this by
   // clearing a flag on each arena before marking its children. This flag will
   // be set again if the arena is re-added. Iterate the list until no new arenas
   // were added.
 
-  AutoSetMarkColor setColor(*this, color);
+  AutoSetMarkColor setColor(marker(), color);
 
   do {
     delayedMarkingWorkAdded = false;
@@ -2105,25 +2085,26 @@ void GCMarker::processDelayedMarkingList(MarkColor color) {
          arena = arena->getNextDelayedMarking()) {
       if (arena->hasDelayedMarking(color)) {
         arena->setHasDelayedMarking(color, false);
-        markDelayedChildren(arena);
+        markDelayedChildren(arena, color);
       }
     }
-    while (stack.hasEntries(color)) {
+    while (marker().hasEntries(color)) {
       SliceBudget budget = SliceBudget::unlimited();
-      processMarkStackTop<MarkingOptions::None>(budget);
+      marker().processMarkStackTop<MarkingOptions::None>(budget);
     }
   } while (delayedMarkingWorkAdded);
+
+  MOZ_ASSERT(marker().isDrained());
 }
 
-void GCMarker::markAllDelayedChildren(ShouldReportMarkTime reportTime) {
-  MOZ_ASSERT(isMarkStackEmpty());
-  MOZ_ASSERT(markColor() == MarkColor::Black);
-  MOZ_ASSERT(delayedMarkingList);
+void GCRuntime::markAllDelayedChildren(ShouldReportMarkTime reportTime) {
+  MOZ_ASSERT(marker().isDrained());
+  MOZ_ASSERT(marker().markColor() == MarkColor::Black);
+  MOZ_ASSERT(hasDelayedMarking());
 
-  GCRuntime& gc = runtime()->gc;
   mozilla::Maybe<gcstats::AutoPhase> ap;
   if (reportTime) {
-    ap.emplace(gc.stats(), gcstats::PhaseKind::MARK_DELAYED);
+    ap.emplace(stats(), gcstats::PhaseKind::MARK_DELAYED);
   }
 
   // We have a list of arenas containing marked cells with unmarked children
@@ -2136,11 +2117,10 @@ void GCMarker::markAllDelayedChildren(ShouldReportMarkTime reportTime) {
     rebuildDelayedMarkingList();
   }
 
-  MOZ_ASSERT(!delayedMarkingList);
-  MOZ_ASSERT(!markLaterArenas);
+  MOZ_ASSERT(!hasDelayedMarking());
 }
 
-void GCMarker::rebuildDelayedMarkingList() {
+void GCRuntime::rebuildDelayedMarkingList() {
   // Rebuild the delayed marking list, removing arenas which do not need further
   // marking.
 
@@ -2160,14 +2140,38 @@ void GCMarker::rebuildDelayedMarkingList() {
   appendToDelayedMarkingList(&listTail, nullptr);
 }
 
-inline void GCMarker::appendToDelayedMarkingList(Arena** listTail,
-                                                 Arena* arena) {
+void GCRuntime::resetDelayedMarking() {
+  forEachDelayedMarkingArena([&](Arena* arena) {
+    MOZ_ASSERT(arena->onDelayedMarkingList());
+    arena->clearDelayedMarkingState();
+#ifdef DEBUG
+    MOZ_ASSERT(markLaterArenas);
+    markLaterArenas--;
+#endif
+  });
+  delayedMarkingList = nullptr;
+  MOZ_ASSERT(!markLaterArenas);
+}
+
+inline void GCRuntime::appendToDelayedMarkingList(Arena** listTail,
+                                                  Arena* arena) {
   if (*listTail) {
     (*listTail)->updateNextDelayedMarkingArena(arena);
   } else {
     delayedMarkingList = arena;
   }
   *listTail = arena;
+}
+
+template <typename F>
+inline void GCRuntime::forEachDelayedMarkingArena(F&& f) {
+  Arena* arena = delayedMarkingList;
+  Arena* next;
+  while (arena) {
+    next = arena->getNextDelayedMarking();
+    f(arena);
+    arena = next;
+  }
 }
 
 #ifdef DEBUG

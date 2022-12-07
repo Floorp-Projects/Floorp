@@ -249,6 +249,11 @@ class MarkingTracerT
 using MarkingTracer = MarkingTracerT<MarkingOptions::None>;
 using RootMarkingTracer = MarkingTracerT<MarkingOptions::MarkRootCompartments>;
 
+enum ShouldReportMarkTime : bool {
+  ReportMarkTime = true,
+  DontReportMarkTime = false
+};
+
 } /* namespace gc */
 
 class GCMarker {
@@ -292,18 +297,15 @@ class GCMarker {
 
   gc::MarkColor markColor() const { return stack.markColor(); }
 
-  bool isDrained();
+  bool isDrained() const { return stack.isEmpty(); }
 
   void start();
   void stop();
   void reset();
 
-  enum ShouldReportMarkTime : bool {
-    ReportMarkTime = true,
-    DontReportMarkTime = false
-  };
   [[nodiscard]] bool markUntilBudgetExhausted(
-      SliceBudget& budget, ShouldReportMarkTime reportTime = ReportMarkTime);
+      SliceBudget& budget,
+      gc::ShouldReportMarkTime reportTime = gc::ReportMarkTime);
 
   void setRootMarkingMode(bool newState);
 
@@ -359,9 +361,9 @@ class GCMarker {
   void setMarkColor(gc::MarkColor newColor) { stack.setMarkColor(newColor); }
   friend class js::gc::AutoSetMarkColor;
 
-  bool isMarkStackEmpty() const { return stack.isEmpty(); }
   bool hasBlackEntries() const { return stack.hasBlackEntries(); }
   bool hasGrayEntries() const { return stack.hasGrayEntries(); }
+  bool hasEntries(gc::MarkColor color) const { return stack.hasEntries(color); }
 
   template <uint32_t markingOptions>
   void processMarkStackTop(SliceBudget& budget);
@@ -453,20 +455,9 @@ class GCMarker {
 #endif
 
   template <uint32_t markingOptions>
-  bool doMarking(SliceBudget& budget, ShouldReportMarkTime reportTime);
+  bool doMarking(SliceBudget& budget, gc::ShouldReportMarkTime reportTime);
 
   void delayMarkingChildrenOnOOM(gc::Cell* cell);
-  void delayMarkingChildren(gc::Cell* cell);
-
-  void markDelayedChildren(gc::Arena* arena);
-  void markAllDelayedChildren(ShouldReportMarkTime reportTime);
-  void processDelayedMarkingList(gc::MarkColor color);
-  bool hasDelayedChildren() const { return !!delayedMarkingList; }
-  void rebuildDelayedMarkingList();
-  void appendToDelayedMarkingList(gc::Arena** listTail, gc::Arena* arena);
-
-  template <typename F>
-  void forEachDelayedMarkingArena(F&& f);
 
   /*
    * The JSTracer used for marking. This can change depending on the current
@@ -478,12 +469,6 @@ class GCMarker {
 
   /* The stack of remaining marking work . */
   gc::MarkStack stack;
-
-  /* Pointer to the top of the stack of arenas we are delaying marking on. */
-  MainThreadOrGCTaskData<js::gc::Arena*> delayedMarkingList;
-
-  /* Whether more work has been added to the delayed marking list. */
-  MainThreadOrGCTaskData<bool> delayedMarkingWorkAdded;
 
   /* Whether we successfully added all edges to the implicit edges table. */
   MainThreadOrGCTaskData<bool> haveAllImplicitEdges;
@@ -502,9 +487,6 @@ class GCMarker {
 
 #ifdef DEBUG
  private:
-  /* Count of arenas that are currently in the stack. */
-  MainThreadOrGCTaskData<size_t> markLaterArenas;
-
   /* Assert that start and stop are called with correct ordering. */
   MainThreadOrGCTaskData<bool> started;
 
