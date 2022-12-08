@@ -412,6 +412,7 @@ mod tests {
         let expected = json!({
             "id": "my-device".to_string(),
             "payload": json!({
+                "id": "my-device".to_string(),
                 "clientName": "my device",
                 "tabs": serde_json::to_value(expected_tabs).unwrap(),
             }).to_string(),

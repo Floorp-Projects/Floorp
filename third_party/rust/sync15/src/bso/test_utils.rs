@@ -3,9 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 //! Utilities for tests to make IncomingBsos and Content from test data.
-//! Note that this is only available if you enable the `test-utils` feature,
-//! which external crates are able to do just for their tests.
-
 use super::{IncomingBso, IncomingEnvelope, OutgoingBso};
 use crate::{Guid, ServerTimestamp};
 
