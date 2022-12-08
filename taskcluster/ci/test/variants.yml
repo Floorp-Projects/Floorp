@@ -302,13 +302,3 @@ a11y-no-cache:
         mozharness:
             extra-options:
                 - "--setpref=accessibility.cache.enabled=false"
-
-msix:
-    description: "{description} from msix packages"
-    component: "Firefox:Installer"
-    expiration: "never"
-    suffix: "msix"
-    merge:
-        mozharness:
-            extra-options:
-                - "--installer-path installer.msix"

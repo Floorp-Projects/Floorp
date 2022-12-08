@@ -191,7 +191,7 @@ test_description_schema = Schema(
             # of chunks is 1
             Required("chunked"): optionally_keyed_by("test-platform", bool),
             Required("requires-signed-builds"): optionally_keyed_by(
-                "test-platform", "variant", bool
+                "test-platform", bool
             ),
         },
         # The set of test manifests to run.
@@ -252,7 +252,6 @@ test_description_schema = Schema(
         Optional("target"): optionally_keyed_by(
             "app",
             "test-platform",
-            "variant",
             Any(
                 str,
                 None,
@@ -283,6 +282,7 @@ def handle_keyed_by_mozharness(config, tasks):
         "mozharness.chunked",
         "mozharness.config",
         "mozharness.extra-options",
+        "mozharness.requires-signed-builds",
         "mozharness.script",
     ]
     for task in tasks:
