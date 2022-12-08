@@ -1,0 +1,72 @@
+.. _mozilla_projects_nss_nss_3_86_release_notes:
+
+NSS 3.86 release notes
+======================
+
+`Introduction <#introduction>`__
+--------------------------------
+
+.. container::
+
+   Network Security Services (NSS) 3.86 was released on **8 December 2022**.
+
+
+.. _distribution_information:
+
+`Distribution Information <#distribution_information>`__
+--------------------------------------------------------
+
+.. container::
+
+   The HG tag is NSS_3_86_RTM. NSS 3.86 requires NSPR 4.35 or newer.
+
+   NSS 3.86 source distributions are available on ftp.mozilla.org for secure HTTPS download:
+
+   -  Source tarballs:
+      https://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_3_86_RTM/src/
+
+   Other releases are available :ref:`mozilla_projects_nss_releases`.
+
+.. _changes_in_nss_3.86:
+
+`Changes in NSS 3.86 <#changes_in_nss_3.86>`__
+----------------------------------------------------
+
+.. container::
+
+   - Bug 1803190 - conscious language removal in NSS.
+   - Bug 1794506 - Set nssckbi version number to 2.60.
+   - Bug 1803453 - Set CKA_NSS_SERVER_DISTRUST_AFTER and CKA_NSS_EMAIL_DISTRUST_AFTER for 3 TrustCor Root Certificates.
+   - Bug 1799038 - Remove Staat der Nederlanden EV Root CA from NSS.
+   - Bug 1797559 - Remove EC-ACC root cert from NSS.
+   - Bug 1794507 - Remove SwissSign Platinum CA - G2 from NSS.
+   - Bug 1794495 - Remove Network Solutions Certificate Authority.
+   - Bug 1802331 - compress docker image artifact with zstd.
+   - Bug 1799315 - Migrate nss from AWS to GCP.
+   - Bug 1800989 - Enable static builds in the CI.
+   - Bug 1765759 - Removing SAW docker from the NSS build system.
+   - Bug 1783231 - Initialising variables in the rsa blinding code.
+   - Bug 320582 - Implementation of the double-signing of the message for ECDSA.
+   - Bug 1783231 - Adding exponent blinding for RSA.
+
+
+
+`Compatibility <#compatibility>`__
+----------------------------------
+
+.. container::
+
+   NSS 3.86 shared libraries are backwards-compatible with all older NSS 3.x shared
+   libraries. A program linked with older NSS 3.x shared libraries will work with
+   this new version of the shared libraries without recompiling or
+   relinking. Furthermore, applications that restrict their use of NSS APIs to the
+   functions listed in NSS Public Functions will remain compatible with future
+   versions of the NSS shared libraries.
+
+`Feedback <#feedback>`__
+------------------------
+
+.. container::
+
+   Bugs discovered should be reported by filing a bug report on
+   `bugzilla.mozilla.org <https://bugzilla.mozilla.org/enter_bug.cgi?product=NSS>`__ (product NSS).
