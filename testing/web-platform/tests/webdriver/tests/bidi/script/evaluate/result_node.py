@@ -1,7 +1,6 @@
 import pytest
 from webdriver.bidi.modules.script import ContextTarget
 
-
 page_data = """
     <div id="deep"><p><span></span></p><br/></div>
     <div id="text-node"><p></p>Lorem</div>
@@ -73,7 +72,7 @@ page_data = """
                             "namespaceURI": "http://www.w3.org/1999/xhtml",
                             "nodeType": 1
                         }
-                    },{
+                    }, {
                         "type": "node",
                         "value": {
                             "childNodeCount": 0,
@@ -107,7 +106,7 @@ page_data = """
                             "namespaceURI": "http://www.w3.org/1999/xhtml",
                             "nodeType": 1
                         }
-                    },{
+                    }, {
                         "type": "node",
                         "value": {
                             "attributes": {},
@@ -181,7 +180,7 @@ async def test_element_node(bidi_session, inline, top_context, expression, expec
                     "nodeValue": "foo",
                 },
             },
-        ),(
+        ), (
             """
                 document.querySelector("svg").attributes[1]
             """,
@@ -320,7 +319,6 @@ async def test_processing_instruction_node(
     result = await bidi_session.browsing_context.navigate(
         context=new_tab['context'], url=xml_page, wait="complete"
     )
-
 
     result = await bidi_session.script.evaluate(
         expression=expression,
