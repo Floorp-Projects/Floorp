@@ -24,4 +24,15 @@ object RustHttpConfig {
     fun setClient(c: Lazy<Client>) {
         AppSvcHttpConfig.setClient(c)
     }
+
+    /**
+     * Allows connections to the hard-coded address the Android Emulator uses
+     * to connect to the emulator's host (ie, http://10.0.2.2).
+     *
+     * Only call this in debug builds or if you are sure you are running on an emulator. If this is
+     * not called, viaduct will fail to use that address as it isn't https.
+     */
+    fun allowEmulatorLoopback() {
+        AppSvcHttpConfig.allowAndroidEmulatorLoopback()
+    }
 }
