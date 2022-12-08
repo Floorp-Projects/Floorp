@@ -773,5 +773,42 @@ def test_full_run(options, call_counts, log_ind, expected_log_message):
         assert perf_print.call_args_list[log_ind][0][0] == expected_log_message
 
 
+@pytest.mark.parametrize(
+    "query, should_fail",
+    [
+        (
+            {
+                "query": {
+                    # Raptor has all variants available so it
+                    # should fail on this category
+                    "raptor": ["browsertime 'live 'no-fission"],
+                }
+            },
+            True,
+        ),
+        (
+            {
+                "query": {
+                    # Awsy has no variants defined so it shouldn't fail
+                    # on a query like this
+                    "awsy": ["browsertime 'live 'no-fission"],
+                }
+            },
+            False,
+        ),
+    ],
+)
+def test_category_rules(query, should_fail):
+    # Set the categories, and variants to expand
+    ps.PerfParser.categories = {"test-live": query}
+    ps.PerfParser.variants = TEST_VARIANTS
+
+    if should_fail:
+        with pytest.raises(ps.InvalidCategoryException):
+            ps.PerfParser.run_category_checks()
+    else:
+        assert ps.PerfParser.run_category_checks()
+
+
 if __name__ == "__main__":
     mozunit.main()

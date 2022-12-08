@@ -36,6 +36,15 @@ MAX_PERF_TASKS = 300
 REVISION_MATCHER = re.compile(r"remote:.*/try/rev/([\w]*)[ \t]*$")
 
 
+class InvalidCategoryException(Exception):
+    """Thrown when a category is found to be invalid.
+
+    See the `PerfParser.run_category_checks()` method for more info.
+    """
+
+    pass
+
+
 class LogProcessor:
     def __init__(self):
         self.buf = ""
@@ -901,7 +910,7 @@ class PerfParser(CompareParser):
         requested_apps=[],
         try_config=None,
         dry_run=False,
-        **kwargs
+        **kwargs,
     ):
         # Setup fzf
         fzf = fzf_bootstrap(update)
@@ -947,6 +956,40 @@ class PerfParser(CompareParser):
             selected_tasks, selected_categories, queries, try_config, dry_run
         )
 
+    def run_category_checks():
+        # XXX: Add a jsonschema check for the category definition
+        # Make sure the queries don't specify variants in them
+        variant_queries = {
+            suite: [
+                PerfParser.variants[variant]["query"]
+                for variant in suite_info.get(
+                    "variants", list(PerfParser.variants.keys())
+                )
+            ]
+            + [
+                PerfParser.variants[variant]["negation"]
+                for variant in suite_info.get(
+                    "variants", list(PerfParser.variants.keys())
+                )
+            ]
+            for suite, suite_info in PerfParser.suites.items()
+        }
+
+        for category, category_info in PerfParser.categories.items():
+            for suite, query in category_info["query"].items():
+                if len(variant_queries[suite]) == 0:
+                    # This suite has no variants
+                    continue
+                if any(any(v in q for q in query) for v in variant_queries[suite]):
+                    raise InvalidCategoryException(
+                        f"The '{category}' category suite query for '{suite}' "
+                        f"uses a variant in it's query '{query}'."
+                        "If you don't want a particular variant use the "
+                        "`variant-restrictions` field in the category."
+                    )
+
+        return True
+
 
 def run(
     dry_run=False,
@@ -959,8 +1002,12 @@ def run(
     requested_variants=[],
     requested_platforms=[],
     requested_apps=[],
-    **kwargs
+    **kwargs,
 ):
+    # Make sure the categories are following
+    # the rules we've setup
+    PerfParser.run_category_checks()
+
     revisions = PerfParser.run(
         dry_run=dry_run,
         show_all=show_all,
@@ -972,7 +1019,7 @@ def run(
         requested_variants=requested_variants,
         requested_platforms=requested_platforms,
         requested_apps=requested_apps,
-        **kwargs
+        **kwargs,
     )
 
     if revisions is None:
