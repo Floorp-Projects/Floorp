@@ -677,11 +677,11 @@ pref("toolkit.telemetry.dap_enabled", false);
 // Verification tasks
 pref("toolkit.telemetry.dap_task1_enabled", false);
 // Leader endpoint for the DAP protocol
-pref("toolkit.telemetry.dap_leader", "https://interop-00.api.divviup.org");
+pref("toolkit.telemetry.dap_leader", "https://dap-02.api.divviup.org");
 // Not used for anything. Just additional information.
 pref("toolkit.telemetry.dap_leader_owner", "ISRG");
 // Second DAP server. Only two are currently supported.
-pref("toolkit.telemetry.dap_helper", "https://helper1.dap.cloudflareresearch.com/v01");
+pref("toolkit.telemetry.dap_helper", "https://helper1.dap.cloudflareresearch.com/v02");
 pref("toolkit.telemetry.dap_helper_owner", "Cloudflare");
 pref("toolkit.telemetry.dap.logLevel", "Warn");
 
