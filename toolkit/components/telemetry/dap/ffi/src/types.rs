@@ -7,15 +7,20 @@
 //!
 //! The current draft standard with the definition of these structs is available here:
 //! https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap
+//! This code is based on version 02 of the standard available here:
+//! https://www.ietf.org/archive/id/draft-ietf-ppm-dap-02.html
 
-use prio::codec::{decode_u16_items, encode_u16_items, CodecError, Decode, Encode};
+use prio::codec::{
+    decode_u16_items, decode_u32_items, encode_u16_items, encode_u32_items, CodecError, Decode,
+    Encode,
+};
 use std::io::{Cursor, Read};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use rand::Rng;
 
 /// opaque TaskId[32];
-/// https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#name-task-configuration
+/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-02.html#name-task-configuration
 #[derive(Debug, PartialEq, Eq)]
 pub struct TaskID(pub [u8; 32]);
 
@@ -36,7 +41,7 @@ impl Encode for TaskID {
 
 /// Time uint64;
 /// seconds elapsed since start of UNIX epoch
-/// https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#name-protocol-definition
+/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-02.html#name-protocol-definition
 #[derive(Debug, PartialEq, Eq)]
 pub struct Time(pub u64);
 
@@ -52,11 +57,23 @@ impl Encode for Time {
     }
 }
 
+impl Time {
+    /// Generates a Time for the current system time rounded to the desired precision.
+    pub fn generate(time_precision: u64) -> Time {
+        let now_secs = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("Failed to get time.")
+            .as_secs();
+        let timestamp = (now_secs / time_precision) * time_precision;
+        Time(timestamp)
+    }
+}
+
 /// struct {
 ///     ExtensionType extension_type;
 ///     opaque extension_data<0..2^16-1>;
 /// } Extension;
-/// https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#name-upload-extensions
+/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-02.html#name-upload-extensions
 #[derive(Debug, PartialEq)]
 pub struct Extension {
     extension_type: ExtensionType,
@@ -86,7 +103,7 @@ impl Encode for Extension {
 ///     TBD(0),
 ///     (65535)
 /// } ExtensionType;
-/// https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#name-upload-extensions
+/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-02.html#name-upload-extensions
 #[derive(Debug, PartialEq, Clone, Copy)]
 #[repr(u16)]
 enum ExtensionType {
@@ -104,7 +121,7 @@ impl ExtensionType {
 
 /// Identifier for a server's HPKE configuration
 /// uint8 HpkeConfigId;
-/// https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#name-protocol-definition
+/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-02.html#name-protocol-definition
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub struct HpkeConfigId(u8);
 
@@ -120,6 +137,18 @@ impl Encode for HpkeConfigId {
     }
 }
 
+/// struct {
+///     HpkeConfigId id;
+///     HpkeKemId kem_id;
+///     HpkeKdfId kdf_id;
+///     HpkeAeadId aead_id;
+///     HpkePublicKey public_key;
+/// } HpkeConfig;
+/// opaque HpkePublicKey<1..2^16-1>;
+/// uint16 HpkeAeadId; /* Defined in [HPKE] */
+/// uint16 HpkeKemId;  /* Defined in [HPKE] */
+/// uint16 HpkeKdfId;  /* Defined in [HPKE] */
+/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-02.html#name-hpke-configuration-request
 #[derive(Debug)]
 pub struct HpkeConfig {
     pub id: HpkeConfigId,
@@ -153,11 +182,11 @@ impl Encode for HpkeConfig {
 
 /// An HPKE ciphertext.
 /// struct {
-///   HpkeConfigId config_id;    // config ID
-///   opaque enc<1..2^16-1>;     // encapsulated HPKE key
-///   opaque payload<1..2^16-1>; // ciphertext
+///     HpkeConfigId config_id;    /* config ID */
+///     opaque enc<1..2^16-1>;     /* encapsulated HPKE key */
+///     opaque payload<1..2^32-1>; /* ciphertext */
 /// } HpkeCiphertext;
-/// https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#name-protocol-definition
+/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-02.html#name-protocol-definition
 #[derive(Debug, PartialEq, Eq)]
 pub struct HpkeCiphertext {
     pub config_id: HpkeConfigId,
@@ -169,7 +198,7 @@ impl Decode for HpkeCiphertext {
     fn decode(bytes: &mut Cursor<&[u8]>) -> Result<Self, CodecError> {
         let config_id = HpkeConfigId::decode(bytes)?;
         let enc: Vec<u8> = decode_u16_items(&(), bytes)?;
-        let payload: Vec<u8> = decode_u16_items(&(), bytes)?;
+        let payload: Vec<u8> = decode_u32_items(&(), bytes)?;
 
         Ok(HpkeCiphertext {
             config_id,
@@ -183,75 +212,96 @@ impl Encode for HpkeCiphertext {
     fn encode(&self, bytes: &mut Vec<u8>) {
         self.config_id.encode(bytes);
         encode_u16_items(bytes, &(), &self.enc);
-        encode_u16_items(bytes, &(), &self.payload);
+        encode_u32_items(bytes, &(), &self.payload);
     }
 }
 
-/// A nonce used to uniquely identify a report in the context of a DAP task. It
-/// includes the timestamp of the current batch and a random 16-byte value.
-/// struct {
-///   Time time;
-///   uint8 rand[16];
-/// } Nonce;
-/// https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#name-protocol-definition
-#[derive(PartialEq, Eq, Debug)]
-pub struct Nonce {
-    pub time: Time,
-    pub rand: [u8; 16],
-}
+/// uint8 ReportID[16];
+/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-02.html#name-protocol-definition
+#[derive(Debug, PartialEq, Eq)]
+pub struct ReportID(pub [u8; 16]);
 
-impl Decode for Nonce {
+impl Decode for ReportID {
     fn decode(bytes: &mut Cursor<&[u8]>) -> Result<Self, CodecError> {
-        let time = Time::decode(bytes)?;
-        let mut data = [0; 16];
+        let mut data: [u8; 16] = [0; 16];
         bytes.read_exact(&mut data)?;
-
-        Ok(Nonce { time, rand: data })
+        Ok(ReportID(data))
     }
 }
 
-impl Encode for Nonce {
+impl Encode for ReportID {
     fn encode(&self, bytes: &mut Vec<u8>) {
-        self.time.encode(bytes);
-        bytes.extend_from_slice(&self.rand);
+        bytes.extend_from_slice(&self.0);
     }
 }
 
-impl Nonce {
-    pub fn generate(time_precision: u64) -> Nonce {
-        let now_secs = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("Failed to get time.")
-            .as_secs();
-        let timestamp = (now_secs / time_precision) * time_precision;
-        Nonce {
-            time: Time(timestamp),
-            rand: rand::thread_rng().gen(),
-        }
+impl ReportID {
+    pub fn generate() -> ReportID {
+        ReportID(rand::thread_rng().gen())
     }
 }
 
 /// struct {
-///   TaskID task_id;
-///   Nonce nonce;
-///   Extension extensions<0..2^16-1>;
-///   HpkeCiphertext encrypted_input_shares<1..2^16-1>;
+///     ReportID report_id;
+///     Time time;
+///     Extension extensions<0..2^16-1>;
+/// } ReportMetadata;
+/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-02.html#name-upload-request
+#[derive(Debug, PartialEq)]
+pub struct ReportMetadata {
+    pub report_id: ReportID,
+    pub time: Time,
+    pub extensions: Vec<Extension>,
+}
+
+impl Decode for ReportMetadata {
+    fn decode(bytes: &mut Cursor<&[u8]>) -> Result<Self, CodecError> {
+        let report_id = ReportID::decode(bytes)?;
+        let time = Time::decode(bytes)?;
+        let extensions = decode_u16_items(&(), bytes)?;
+
+        Ok(ReportMetadata {
+            report_id,
+            time,
+            extensions,
+        })
+    }
+}
+
+impl Encode for ReportMetadata {
+    fn encode(&self, bytes: &mut Vec<u8>) {
+        self.report_id.encode(bytes);
+        self.time.encode(bytes);
+        encode_u16_items(bytes, &(), &self.extensions);
+    }
+}
+
+/// struct {
+///     TaskID task_id;
+///     ReportMetadata metadata;
+///     opaque public_share<0..2^32-1>;
+///     HpkeCiphertext encrypted_input_shares<1..2^32-1>;
 /// } Report;
-/// https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#name-upload-request
+/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-02.html#name-upload-request
 #[derive(Debug, PartialEq)]
 pub struct Report {
     pub task_id: TaskID,
-    pub nonce: Nonce,
-    pub extensions: Vec<Extension>,
+    pub metadata: ReportMetadata,
+    pub public_share: Vec<u8>,
     pub encrypted_input_shares: Vec<HpkeCiphertext>,
 }
 
 impl Report {
+    /// Creates a minimal report for use in tests.
     pub fn new_dummy() -> Self {
         Report {
             task_id: TaskID([0x12; 32]),
-            nonce: Nonce::generate(1),
-            extensions: vec![],
+            metadata: ReportMetadata {
+                report_id: ReportID::generate(),
+                time: Time::generate(1),
+                extensions: vec![],
+            },
+            public_share: vec![],
             encrypted_input_shares: vec![],
         }
     }
@@ -260,16 +310,16 @@ impl Report {
 impl Decode for Report {
     fn decode(bytes: &mut Cursor<&[u8]>) -> Result<Self, CodecError> {
         let task_id = TaskID::decode(bytes)?;
-        let nonce = Nonce::decode(bytes)?;
-        let extensions = decode_u16_items(&(), bytes)?;
-        let encrypted_input_shares: Vec<HpkeCiphertext> = decode_u16_items(&(), bytes)?;
+        let metadata = ReportMetadata::decode(bytes)?;
+        let public_share: Vec<u8> = decode_u32_items(&(), bytes)?;
+        let encrypted_input_shares: Vec<HpkeCiphertext> = decode_u32_items(&(), bytes)?;
 
         let remaining_bytes = bytes.get_ref().len() - (bytes.position() as usize);
         if remaining_bytes == 0 {
             Ok(Report {
                 task_id,
-                nonce,
-                extensions,
+                metadata,
+                public_share,
                 encrypted_input_shares,
             })
         } else {
@@ -281,8 +331,8 @@ impl Decode for Report {
 impl Encode for Report {
     fn encode(&self, bytes: &mut Vec<u8>) {
         self.task_id.encode(bytes);
-        self.nonce.encode(bytes);
-        encode_u16_items(bytes, &(), &self.extensions);
-        encode_u16_items(bytes, &(), &self.encrypted_input_shares);
+        self.metadata.encode(bytes);
+        encode_u32_items(bytes, &(), &self.public_share);
+        encode_u32_items(bytes, &(), &self.encrypted_input_shares);
     }
 }
