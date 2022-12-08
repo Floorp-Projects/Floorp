@@ -10,8 +10,8 @@ const FIREFOX_VIEW_PREF = "browser.firefox-view.feature-tour";
 const PDFJS_PREF = "browser.pdfjs.feature-tour";
 // Empty screens are included as placeholders to ensure step
 // indicator shows the correct number of total steps in the tour
+const PDF_SOURCE = `(source || "") | regExpMatch('(?<!q\=.+)\.pdf') | length > 0`;
 const EMPTY_SCREEN = { content: {} };
-
 const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
 
 // Generate a JEXL targeting string based on the current screen
@@ -454,7 +454,7 @@ const MESSAGES = () => {
         ],
       },
       priority: 1,
-      targeting: `${matchCurrentScreenTargeting(
+      targeting: `${PDF_SOURCE} && ${matchCurrentScreenTargeting(
         PDFJS_PREF,
         "FEATURE_CALLOUT_1_A"
       )}`,
@@ -524,7 +524,7 @@ const MESSAGES = () => {
         ],
       },
       priority: 1,
-      targeting: `${matchCurrentScreenTargeting(
+      targeting: `${PDF_SOURCE} && ${matchCurrentScreenTargeting(
         PDFJS_PREF,
         "FEATURE_CALLOUT_2_A"
       )}`,
@@ -593,7 +593,7 @@ const MESSAGES = () => {
         ],
       },
       priority: 1,
-      targeting: `${matchCurrentScreenTargeting(
+      targeting: `${PDF_SOURCE} && ${matchCurrentScreenTargeting(
         PDFJS_PREF,
         "FEATURE_CALLOUT_1_B"
       )}`,
@@ -663,7 +663,7 @@ const MESSAGES = () => {
         ],
       },
       priority: 1,
-      targeting: `${matchCurrentScreenTargeting(
+      targeting: `${PDF_SOURCE} && ${matchCurrentScreenTargeting(
         PDFJS_PREF,
         "FEATURE_CALLOUT_2_B"
       )}`,

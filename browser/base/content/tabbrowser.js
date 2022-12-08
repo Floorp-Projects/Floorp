@@ -1093,7 +1093,7 @@
       }
 
       if (newBrowser.currentURI.spec.endsWith(".pdf")) {
-        this._instantiateFeatureCalloutTour(newBrowser.currentURI.spec);
+        this._instantiateFeatureCalloutTour(newBrowser.currentURI);
         window.gBrowser.featureCallout.showFeatureCallout();
       }
 
