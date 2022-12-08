@@ -40,23 +40,12 @@ void OverflowAreas::ApplyOverflowClippingOnRect(nsRect& aOverflowRect,
 }
 
 void OverflowAreas::UnionWith(const OverflowAreas& aOther) {
-  // UnionRect returns aOther if this.IsEmpty(), but "is empty" in this
-  // context means "width OR height is zero." If aOther has both width and
-  // height as zero, but *this has one axis as zero, we'd lose that information.
-  if (!aOther.InkOverflow().IsEqualEdges(nsRect())) {
-    InkOverflow().UnionRect(InkOverflow(), aOther.InkOverflow());
-  }
-  if (!aOther.ScrollableOverflow().IsEqualEdges(nsRect())) {
-    ScrollableOverflow().UnionRect(ScrollableOverflow(),
-                                   aOther.ScrollableOverflow());
-  }
+  InkOverflow().UnionRect(InkOverflow(), aOther.InkOverflow());
+  ScrollableOverflow().UnionRect(ScrollableOverflow(),
+                                 aOther.ScrollableOverflow());
 }
 
 void OverflowAreas::UnionAllWith(const nsRect& aRect) {
-  if (aRect.IsEqualEdges(nsRect())) {
-    // Same as `UnionWith()` - avoid losing information.
-    return;
-  }
   InkOverflow().UnionRect(InkOverflow(), aRect);
   ScrollableOverflow().UnionRect(ScrollableOverflow(), aRect);
 }
