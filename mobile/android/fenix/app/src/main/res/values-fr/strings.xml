@@ -1342,7 +1342,7 @@
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">Connectez-vous avec votre appareil photo</string>
     <!-- Text shown for settings option for sign with email -->
-    <string name="sign_in_with_email">Utiliser plutôt une adresse électronique</string>
+    <string name="sign_in_with_email">Utiliser plutôt une adresse e-mail</string>
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
     <string name="sign_in_create_account_text"><![CDATA[Vous n’avez pas de compte ? <u>Créez-en un</u> pour synchroniser Firefox entre vos appareils.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1623,7 +1623,7 @@
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">Enregistrer et remplir automatiquement les adresses</string>
     <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary">Cela comprend des informations telles que des numéros, des adresses électroniques et des adresses d’expédition</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary">Cela comprend des informations telles que des numéros, des adresses e-mail et des adresses d’expédition</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Ajouter une carte</string>
@@ -1704,7 +1704,7 @@
     <!-- The header for the phone number of an address -->
     <string name="addresses_phone">Téléphone</string>
     <!-- The header for the email of an address -->
-    <string name="addresses_email">Adresse électronique</string>
+    <string name="addresses_email">Adresse e-mail</string>
     <!-- The text for the "Save" button for saving an address -->
     <string name="addresses_save_button">Enregistrer</string>
     <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
@@ -1914,7 +1914,7 @@
     <string name="inactive_tabs_auto_close_message_snackbar">Fermeture automatique activée</string>
 
     <!-- Default browser experiment -->
-    <string name="default_browser_experiment_card_text">Faites en sorte que les liens des sites web, des courriels et des messages s’ouvrent automatiquement dans Firefox.</string>
+    <string name="default_browser_experiment_card_text">Faites en sorte que les liens des sites web, des e-mails et des messages s’ouvrent automatiquement dans Firefox.</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Supprimer</string>
