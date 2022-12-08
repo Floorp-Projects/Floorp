@@ -3,6 +3,7 @@ from typing import Any, Mapping
 
 import pytest
 import webdriver
+from webdriver.bidi.error import InvalidArgumentException, NoSuchFrameException
 from webdriver.bidi.modules.script import ContextTarget
 
 
@@ -16,9 +17,12 @@ async def subscribe_events(bidi_session):
     yield subscribe_events
 
     for events, contexts in reversed(subscriptions):
-        await bidi_session.session.unsubscribe(
-            events=events, contexts=contexts
-    )
+        try:
+            await bidi_session.session.unsubscribe(
+                events=events, contexts=contexts
+        )
+        except (InvalidArgumentException, NoSuchFrameException):
+            pass
 
 
 @pytest.fixture
