@@ -61,14 +61,17 @@ class CompositorOptions {
     mNeedFastSnaphot = aNeedFastSnaphot;
   }
 
-  bool operator==(const CompositorOptions& aOther) const {
-    return mUseAPZ == aOther.mUseAPZ &&
-           mUseSoftwareWebRender == aOther.mUseSoftwareWebRender &&
+  bool EqualsIgnoringApzEnablement(const CompositorOptions& aOther) const {
+    return mUseSoftwareWebRender == aOther.mUseSoftwareWebRender &&
            mAllowSoftwareWebRenderD3D11 ==
                aOther.mAllowSoftwareWebRenderD3D11 &&
            mAllowSoftwareWebRenderOGL == aOther.mAllowSoftwareWebRenderOGL &&
            mInitiallyPaused == aOther.mInitiallyPaused &&
            mNeedFastSnaphot == aOther.mNeedFastSnaphot;
+  }
+
+  bool operator==(const CompositorOptions& aOther) const {
+    return mUseAPZ == aOther.mUseAPZ && EqualsIgnoringApzEnablement(aOther);
   }
 
   friend struct IPC::ParamTraits<CompositorOptions>;
