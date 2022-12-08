@@ -7,7 +7,17 @@ from unittest import mock
 
 import mozunit
 import pytest
-import tryselect.selectors.perf as ps
+from tryselect.selectors.perf import (
+    Apps,
+    InvalidCategoryException,
+    PerfParser,
+    Platforms,
+    Suites,
+    Variants,
+    check_for_live_sites,
+    check_for_profile,
+    run,
+)
 
 TASKS = [
     "test-linux1804-64-shippable-qr/opt-browsertime-benchmark-firefox-motionmark-animometer",
@@ -36,120 +46,112 @@ TASKS = [
 # to redo all the category counts. The platforms, and apps are
 # not forced because they change infrequently.
 TEST_VARIANTS = {
-    "no-fission": {
+    Variants.NO_FISSION.value: {
         "query": "'nofis",
         "negation": "!nofis",
-        "platforms": ["android"],
-        "apps": ["fenix", "geckoview"],
+        "platforms": [Platforms.ANDROID.value],
+        "apps": [Apps.FENIX.value, Apps.GECKOVIEW.value],
     },
-    "bytecode-cached": {
+    Variants.BYTECODE_CACHED.value: {
         "query": "'bytecode",
         "negation": "!bytecode",
-        "platforms": ["desktop"],
-        "apps": ["firefox"],
+        "platforms": [Platforms.DESKTOP.value],
+        "apps": [Apps.FIREFOX.value],
     },
-    "live-sites": {
+    Variants.LIVE_SITES.value: {
         "query": "'live",
         "negation": "!live",
-        "platforms": ["desktop", "android"],
-        "apps": list(ps.PerfParser.apps.keys()),
+        "restriction": check_for_live_sites,
+        "platforms": [Platforms.DESKTOP.value, Platforms.ANDROID.value],
+        "apps": list(PerfParser.apps.keys()),
     },
-    "profiling": {
+    Variants.PROFILING.value: {
         "query": "'profil",
         "negation": "!profil",
-        "platforms": ["desktop", "android"],
-        "apps": ["firefox", "geckoview", "fenix"],
+        "restriction": check_for_profile,
+        "platforms": [Platforms.DESKTOP.value, Platforms.ANDROID.value],
+        "apps": [Apps.FIREFOX.value, Apps.GECKOVIEW.value, Apps.FENIX.value],
     },
-    "swr": {
+    Variants.SWR.value: {
         "query": "'swr",
         "negation": "!swr",
-        "platforms": ["desktop"],
-        "apps": ["firefox"],
+        "platforms": [Platforms.DESKTOP.value],
+        "apps": [Apps.FIREFOX.value],
     },
 }
 
 TEST_CATEGORIES = {
     "Pageload": {
         "query": {
-            "raptor": ["'browsertime 'tp6"],
+            Suites.RAPTOR.value: ["'browsertime 'tp6"],
         },
-        "suites": ["raptor"],
+        "suites": [Suites.RAPTOR.value],
         "tasks": [],
     },
     "Pageload (essential)": {
         "query": {
-            "raptor": ["'browsertime 'tp6 'essential"],
+            Suites.RAPTOR.value: ["'browsertime 'tp6 'essential"],
         },
-        "suites": ["raptor"],
-        "tasks": [],
-    },
-    "Pageload (live)": {
-        "query": {
-            "raptor": ["'browsertime 'tp6 'live"],
-        },
-        "suites": ["raptor"],
-        "tasks": [],
-    },
-    "Bytecode Cached": {
-        "query": {
-            "raptor": ["'browsertime 'bytecode"],
-        },
-        "suites": ["raptor"],
+        "variant-restrictions": {Suites.RAPTOR.value: [Variants.NO_FISSION.value]},
+        "suites": [Suites.RAPTOR.value],
         "tasks": [],
     },
     "Responsiveness": {
         "query": {
-            "raptor": ["'browsertime 'responsive"],
+            Suites.RAPTOR.value: ["'browsertime 'responsive"],
         },
-        "suites": ["raptor"],
+        "suites": [Suites.RAPTOR.value],
+        "variant-restrictions": {Suites.RAPTOR.value: []},
         "tasks": [],
     },
     "Benchmarks": {
         "query": {
-            "raptor": ["'browsertime 'benchmark"],
+            Suites.RAPTOR.value: ["'browsertime 'benchmark"],
         },
-        "suites": ["raptor"],
+        "suites": [Suites.RAPTOR.value],
+        "variant-restrictions": {Suites.RAPTOR.value: []},
         "tasks": [],
     },
     "DAMP (Devtools)": {
         "query": {
-            "talos": ["'talos 'damp"],
+            Suites.TALOS.value: ["'talos 'damp"],
         },
-        "suites": ["talos"],
+        "suites": [Suites.TALOS.value],
         "tasks": [],
     },
     "Talos PerfTests": {
         "query": {
-            "talos": ["'talos"],
+            Suites.TALOS.value: ["'talos"],
         },
-        "suites": ["talos"],
+        "suites": [Suites.TALOS.value],
         "tasks": [],
     },
     "Resource Usage": {
         "query": {
-            "talos": ["'talos 'xperf | 'tp5"],
-            "raptor": ["'power 'osx"],
-            "awsy": ["'awsy"],
+            Suites.TALOS.value: ["'talos 'xperf | 'tp5"],
+            Suites.RAPTOR.value: ["'power 'osx"],
+            Suites.AWSY.value: ["'awsy"],
         },
-        "suites": ["talos", "raptor", "awsy"],
-        "platform-restrictions": ["desktop"],
+        "suites": [Suites.TALOS.value, Suites.RAPTOR.value, Suites.AWSY.value],
+        "platform-restrictions": [Platforms.DESKTOP.value],
         "variant-restrictions": {
-            "raptor": [],
-            "talos": [],
+            Suites.RAPTOR.value: [],
+            Suites.TALOS.value: [],
         },
         "app-restrictions": {
-            "raptor": ["firefox"],
-            "talos": ["firefox"],
+            Suites.RAPTOR.value: [Apps.FIREFOX.value],
+            Suites.TALOS.value: [Apps.FIREFOX.value],
         },
         "tasks": [],
     },
     "Graphics, & Media Playback": {
         "query": {
             # XXX This might not be an exhaustive list for talos atm
-            "talos": ["'talos 'svgr | 'bcv | 'webgl"],
-            "raptor": ["'browsertime 'youtube-playback"],
+            Suites.TALOS.value: ["'talos 'svgr | 'bcv | 'webgl"],
+            Suites.RAPTOR.value: ["'browsertime 'youtube-playback"],
         },
-        "suites": ["talos", "raptor"],
+        "suites": [Suites.TALOS.value, Suites.RAPTOR.value],
+        "variant-restrictions": {Suites.RAPTOR.value: [Variants.NO_FISSION.value]},
         "tasks": [],
     },
 }
@@ -163,39 +165,47 @@ TEST_CATEGORIES = {
         # except for when there are requested apps/variants/platforms
         (
             {},
-            76,
+            58,
             {
                 "Benchmarks desktop": {
                     "raptor": [
                         "'browsertime 'benchmark",
                         "!android 'shippable !-32 !clang",
+                        "!bytecode",
                         "!live",
                         "!profil",
                         "!chrom",
                         "!safari",
                     ]
                 },
-                "Pageload (live) macosx": {
+                "Pageload macosx": {
                     "raptor": [
-                        "'browsertime 'tp6 'live",
+                        "'browsertime 'tp6",
                         "'osx 'shippable",
+                        "!bytecode",
                         "!live",
                         "!profil",
                         "!chrom",
                         "!safari",
                     ]
                 },
-                "Resource Usage linux": {
-                    "awsy": ["'awsy", "!clang 'linux 'shippable"],
+                "Resource Usage desktop": {
+                    "awsy": ["'awsy", "!android 'shippable !-32 !clang"],
                     "raptor": [
                         "'power 'osx",
-                        "!clang 'linux 'shippable",
+                        "!android 'shippable !-32 !clang",
+                        "!bytecode",
                         "!live",
                         "!profil",
                         "!chrom",
                         "!safari",
                     ],
-                    "talos": ["'talos 'xperf | 'tp5", "!clang 'linux 'shippable"],
+                    "talos": [
+                        "'talos 'xperf | 'tp5",
+                        "!android 'shippable !-32 !clang",
+                        "!profil",
+                        "!swr",
+                    ],
                 },
             },
             [
@@ -205,51 +215,37 @@ TEST_CATEGORIES = {
         ),  # Default settings
         (
             {"live_sites": True},
-            332,
+            66,
             {
                 "Benchmarks desktop": {
                     "raptor": [
                         "'browsertime 'benchmark",
                         "!android 'shippable !-32 !clang",
+                        "!bytecode",
                         "!profil",
                         "!chrom",
                         "!safari",
-                    ],
+                    ]
                 },
-                "Pageload (live) macosx": {
+                "Pageload macosx": {
                     "raptor": [
-                        "'browsertime 'tp6 'live",
+                        "'browsertime 'tp6",
                         "'osx 'shippable",
+                        "!bytecode",
                         "!profil",
                         "!chrom",
                         "!safari",
-                    ],
+                    ]
                 },
-                "Benchmarks desktop firefox live-sites+profiling": {
+                "Pageload macosx live-sites": {
                     "raptor": [
-                        "'browsertime 'benchmark",
-                        "!android 'shippable !-32 !clang",
+                        "'browsertime 'tp6",
+                        "'osx 'shippable",
+                        "'live",
+                        "!bytecode",
+                        "!profil",
                         "!chrom",
                         "!safari",
-                        "!chrom !geckoview !fenix !safari",
-                        "'live",
-                        "'profil",
-                    ],
-                },
-                "Graphics, & Media Playback desktop live-sites+profiling+swr": {
-                    "raptor": [
-                        "'browsertime 'youtube-playback",
-                        "!android 'shippable !-32 !clang",
-                        "!chrom",
-                        "!safari",
-                        "'live",
-                        "'profil",
-                    ],
-                    "talos": [
-                        "'talos 'svgr | 'bcv | 'webgl",
-                        "!android 'shippable !-32 !clang",
-                        "'profil",
-                        "'swr",
                     ],
                 },
             },
@@ -259,24 +255,67 @@ TEST_CATEGORIES = {
                 "Benchmarks desktop firefox profiling",
                 "Talos desktop live-sites",
                 "Talos desktop profiling+swr",
+                "Benchmarks desktop firefox live-sites+profiling"
+                "Benchmarks desktop firefox live-sites",
             ],
         ),
         (
-            {"live_sites": True, "chrome": True},
-            644,
+            {"live_sites": True, "safari": True},
+            72,
             {
                 "Benchmarks desktop": {
                     "raptor": [
                         "'browsertime 'benchmark",
                         "!android 'shippable !-32 !clang",
+                        "!bytecode",
                         "!profil",
-                        "!safari",
+                        "!chrom",
+                    ]
+                },
+                "Pageload macosx safari": {
+                    "raptor": [
+                        "'browsertime 'tp6",
+                        "'osx 'shippable",
+                        "'safari",
+                        "!bytecode",
+                        "!profil",
+                    ]
+                },
+                "Pageload macosx safari live-sites": {
+                    "raptor": [
+                        "'browsertime 'tp6",
+                        "'osx 'shippable",
+                        "'safari",
+                        "'live",
+                        "!bytecode",
+                        "!profil",
                     ],
                 },
-                "Pageload (live) macosx": {
+            },
+            [
+                "Pageload linux safari",
+                "Pageload desktop safari",
+            ],
+        ),
+        (
+            {"live_sites": True, "chrome": True},
+            114,
+            {
+                "Benchmarks desktop": {
                     "raptor": [
-                        "'browsertime 'tp6 'live",
+                        "'browsertime 'benchmark",
+                        "!android 'shippable !-32 !clang",
+                        "!bytecode",
+                        "!profil",
+                        "!safari",
+                    ]
+                },
+                "Pageload macosx live-sites": {
+                    "raptor": [
+                        "'browsertime 'tp6",
                         "'osx 'shippable",
+                        "'live",
+                        "!bytecode",
                         "!profil",
                         "!safari",
                     ],
@@ -285,9 +324,9 @@ TEST_CATEGORIES = {
                     "raptor": [
                         "'browsertime 'benchmark",
                         "!android 'shippable !-32 !clang",
-                        "!profil",
-                        "!safari",
                         "'chromium",
+                        "!bytecode",
+                        "!profil",
                     ],
                 },
             },
@@ -299,12 +338,13 @@ TEST_CATEGORIES = {
         ),
         (
             {"android": True},
-            542,
+            88,
             {
                 "Benchmarks desktop": {
                     "raptor": [
                         "'browsertime 'benchmark",
                         "!android 'shippable !-32 !clang",
+                        "!bytecode",
                         "!live",
                         "!profil",
                         "!chrom",
@@ -315,11 +355,10 @@ TEST_CATEGORIES = {
                     "raptor": [
                         "'browsertime 'responsive",
                         "'android 'a51 'shippable 'aarch64",
+                        "'geckoview",
+                        "!nofis",
                         "!live",
                         "!profil",
-                        "!chrom",
-                        "!safari",
-                        "'geckoview",
                     ],
                 },
             },
@@ -330,12 +369,13 @@ TEST_CATEGORIES = {
         ),
         (
             {"android": True, "chrome": True},
-            924,
+            138,
             {
                 "Benchmarks desktop": {
                     "raptor": [
                         "'browsertime 'benchmark",
                         "!android 'shippable !-32 !clang",
+                        "!bytecode",
                         "!live",
                         "!profil",
                         "!safari",
@@ -345,10 +385,10 @@ TEST_CATEGORIES = {
                     "raptor": [
                         "'browsertime 'responsive",
                         "'android 'a51 'shippable 'aarch64",
+                        "'chrome-m",
+                        "!nofis",
                         "!live",
                         "!profil",
-                        "!safari",
-                        "'chrome-m",
                     ],
                 },
             },
@@ -356,22 +396,23 @@ TEST_CATEGORIES = {
         ),
         (
             {"android": True, "chrome": True, "profile": True},
-            1324,
+            176,
             {
                 "Benchmarks desktop": {
                     "raptor": [
                         "'browsertime 'benchmark",
                         "!android 'shippable !-32 !clang",
+                        "!bytecode",
                         "!live",
                         "!safari",
                     ]
                 },
-                "Talos PerfTests desktop profiling+swr": {
+                "Talos PerfTests desktop profiling": {
                     "talos": [
                         "'talos",
                         "!android 'shippable !-32 !clang",
                         "'profil",
-                        "'swr",
+                        "!swr",
                     ]
                 },
             },
@@ -386,18 +427,16 @@ TEST_CATEGORIES = {
         # including the desktop catgeory
         (
             {"requested_platforms": ["windows"]},
-            123,
+            14,
             {
-                "Benchmarks windows firefox bytecode-cached+profiling": {
+                "Benchmarks windows firefox": {
                     "raptor": [
                         "'browsertime 'benchmark",
                         "!-32 'windows 'shippable",
-                        "!live",
-                        "!chrom",
-                        "!safari",
                         "!chrom !geckoview !fenix !safari",
-                        "'bytecode",
-                        "'profil",
+                        "!bytecode",
+                        "!live",
+                        "!profil",
                     ]
                 },
             },
@@ -428,18 +467,16 @@ TEST_CATEGORIES = {
                 "requested_apps": ["fenix"],
                 "android": True,
             },
-            49,
+            10,
             {
-                "Bytecode Cached android fenix no-fission+live-sites+profiling": {
+                "Pageload android fenix": {
                     "raptor": [
-                        "'browsertime 'bytecode",
+                        "'browsertime 'tp6",
                         "'android 'a51 'shippable 'aarch64",
-                        "!chrom",
-                        "!safari",
                         "'fenix",
-                        "'nofis",
-                        "'live",
-                        "'profil",
+                        "!nofis",
+                        "!live",
+                        "!profil",
                     ],
                 }
             },
@@ -452,36 +489,33 @@ TEST_CATEGORIES = {
                 "requested_apps": ["fenix", "geckoview"],
                 "android": True,
             },
-            98,
+            15,
             {
-                "Benchmarks android geckoview live-sites+profiling": {
+                "Benchmarks android geckoview": {
                     "raptor": [
                         "'browsertime 'benchmark",
                         "'android 'a51 'shippable 'aarch64",
-                        "!chrom",
-                        "!safari",
                         "'geckoview",
-                        "'live",
-                        "'profil",
+                        "!nofis",
+                        "!live",
+                        "!profil",
                     ],
                 },
-                "Bytecode Cached android fenix no-fission+live-sites+profiling": {
+                "Pageload android fenix": {
                     "raptor": [
-                        "'browsertime 'bytecode",
+                        "'browsertime 'tp6",
                         "'android 'a51 'shippable 'aarch64",
-                        "!chrom",
-                        "!safari",
                         "'fenix",
-                        "'nofis",
-                        "'live",
-                        "'profil",
+                        "!nofis",
+                        "!live",
+                        "!profil",
                     ],
                 },
             },
             [
                 "Benchmarks desktop",
-                "Pageload (live) android",
-                "Pageload android-p2 fenix live-sites",
+                "Pageload android no-fission",
+                "Pageload android fenix live-sites",
             ],
         ),
         # Variants are inclusive, so we'll see the variant alongside the
@@ -492,41 +526,35 @@ TEST_CATEGORIES = {
                 "requested_apps": ["fenix"],
                 "android": True,
             },
-            70,
+            32,
             {
                 "Pageload android-a51 fenix": {
                     "raptor": [
                         "'browsertime 'tp6",
                         "'android 'a51 'shippable 'aarch64",
+                        "'fenix",
                         "!live",
                         "!profil",
-                        "!chrom",
-                        "!safari",
-                        "'fenix",
                     ],
                 },
                 "Pageload android-a51 fenix no-fission": {
                     "raptor": [
                         "'browsertime 'tp6",
                         "'android 'a51 'shippable 'aarch64",
-                        "!live",
-                        "!profil",
-                        "!chrom",
-                        "!safari",
                         "'fenix",
                         "'nofis",
+                        "!live",
+                        "!profil",
                     ],
                 },
-                "Pageload (essential) android fenix no-fission+live-sites": {
+                "Pageload (essential) android fenix no-fission": {
                     "raptor": [
                         "'browsertime 'tp6 'essential",
                         "'android 'a51 'shippable 'aarch64",
-                        "!profil",
-                        "!chrom",
-                        "!safari",
                         "'fenix",
                         "'nofis",
-                        "'live",
+                        "!live",
+                        "!profil",
                     ],
                 },
             },
@@ -544,52 +572,54 @@ TEST_CATEGORIES = {
                 "requested_apps": ["fenix"],
                 "android": True,
             },
-            98,
+            40,
             {
                 "Pageload android-a51 fenix": {
                     "raptor": [
                         "'browsertime 'tp6",
                         "'android 'a51 'shippable 'aarch64",
-                        "!live",
-                        "!profil",
-                        "!chrom",
-                        "!safari",
                         "'fenix",
+                        "!profil",
                     ],
                 },
                 "Pageload android-a51 fenix no-fission": {
                     "raptor": [
                         "'browsertime 'tp6",
                         "'android 'a51 'shippable 'aarch64",
-                        "!live",
-                        "!profil",
-                        "!chrom",
-                        "!safari",
                         "'fenix",
                         "'nofis",
+                        "!live",
+                        "!profil",
                     ],
                 },
                 "Pageload android-a51 fenix live-sites": {
                     "raptor": [
                         "'browsertime 'tp6",
                         "'android 'a51 'shippable 'aarch64",
-                        "!profil",
-                        "!chrom",
-                        "!safari",
                         "'fenix",
                         "'live",
+                        "!nofis",
+                        "!profil",
                     ],
                 },
-                "Pageload (essential) android fenix no-fission+live-sites": {
+                "Pageload (essential) android fenix no-fission": {
                     "raptor": [
                         "'browsertime 'tp6 'essential",
                         "'android 'a51 'shippable 'aarch64",
+                        "'fenix",
+                        "'nofis",
+                        "!live",
                         "!profil",
-                        "!chrom",
-                        "!safari",
+                    ],
+                },
+                "Pageload android fenix no-fission+live-sites": {
+                    "raptor": [
+                        "'browsertime 'tp6",
+                        "'android 'a51 'shippable 'aarch64",
                         "'fenix",
                         "'nofis",
                         "'live",
+                        "!profil",
                     ],
                 },
             },
@@ -597,6 +627,7 @@ TEST_CATEGORIES = {
                 "Benchmarks desktop",
                 "Pageload (live) android",
                 "Pageload android-p2 fenix live-sites",
+                "Pageload (essential) android fenix no-fission+live-sites",
             ],
         ),
         # Make sure that no no-fission tasks are selected when a variant cannot
@@ -606,67 +637,64 @@ TEST_CATEGORIES = {
                 "requested_variants": ["no-fission"],
                 "requested_platforms": ["windows"],
             },
-            19,
+            14,
             {
                 "Responsiveness windows firefox": {
                     "raptor": [
                         "'browsertime 'responsive",
                         "!-32 'windows 'shippable",
+                        "!chrom !geckoview !fenix !safari",
+                        "!bytecode",
                         "!live",
                         "!profil",
-                        "!chrom",
-                        "!safari",
-                        "!chrom !geckoview !fenix !safari",
                     ],
                 },
             },
             ["Benchmarks desktop", "Responsiveness windows firefox no-fisson"],
         ),
-        # We should only see the base and the live-site variants here
+        # We should only see the base and the live-site variants here for windows
         (
             {
                 "requested_variants": ["no-fission", "live-sites"],
                 "requested_platforms": ["windows"],
                 "android": True,
             },
-            83,
+            16,
             {
                 "Responsiveness windows firefox": {
                     "raptor": [
                         "'browsertime 'responsive",
                         "!-32 'windows 'shippable",
-                        "!live",
-                        "!profil",
-                        "!chrom",
-                        "!safari",
                         "!chrom !geckoview !fenix !safari",
+                        "!bytecode",
+                        "!profil",
                     ],
                 },
-                "Responsiveness windows firefox live-sites": {
+                "Pageload windows live-sites": {
                     "raptor": [
-                        "'browsertime 'responsive",
+                        "'browsertime 'tp6",
                         "!-32 'windows 'shippable",
+                        "'live",
+                        "!bytecode",
                         "!profil",
                         "!chrom",
                         "!safari",
-                        "!chrom !geckoview !fenix !safari",
-                        "'live",
                     ],
                 },
-                "Graphics, & Media Playback windows live-sites+profiling+swr": {
+                "Graphics, & Media Playback windows": {
                     "raptor": [
                         "'browsertime 'youtube-playback",
                         "!-32 'windows 'shippable",
+                        "!bytecode",
+                        "!profil",
                         "!chrom",
                         "!safari",
-                        "'live",
-                        "'profil",
                     ],
                     "talos": [
                         "'talos 'svgr | 'bcv | 'webgl",
                         "!-32 'windows 'shippable",
-                        "'profil",
-                        "'swr",
+                        "!profil",
+                        "!swr",
                     ],
                 },
             },
@@ -676,6 +704,8 @@ TEST_CATEGORIES = {
                 "Pageload (live) android",
                 "Talos desktop live-sites",
                 "Talos android",
+                "Graphics, & Media Playback windows live-sites",
+                "Graphics, & Media Playback android no-fission",
             ],
         ),
     ],
@@ -684,12 +714,12 @@ def test_category_expansion(
     category_options, expected_counts, unique_categories, missing
 ):
     # Set the categories, and variants to expand
-    ps.PerfParser.categories = TEST_CATEGORIES
-    ps.PerfParser.variants = TEST_VARIANTS
+    PerfParser.categories = TEST_CATEGORIES
+    PerfParser.variants = TEST_VARIANTS
 
     # Expand the categories, then either check if the unique_categories,
     # exist or are missing from the categories
-    expanded_cats = ps.PerfParser.expand_categories(**category_options)
+    expanded_cats = PerfParser.get_categories(**category_options)
 
     assert len(expanded_cats) == expected_counts
     assert not any([expanded_cats.get(ucat, None) is not None for ucat in missing])
@@ -708,7 +738,7 @@ def test_category_expansion(
     [
         (
             {},
-            [7, 2, 2, 5],
+            [8, 2, 2, 5],
             2,
             (
                 "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
@@ -719,7 +749,7 @@ def test_category_expansion(
         ),
         (
             {"dry_run": True},
-            [7, 1, 1, 5],
+            [8, 1, 1, 5],
             2,
             (
                 "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
@@ -762,9 +792,10 @@ def test_full_run(options, call_counts, log_ind, expected_log_message):
             ["", TASKS],
             ["", TASKS],
             ["", TASKS],
+            ["", TASKS],
         ]
 
-        ps.run(**options)
+        run(**options)
 
         assert fzf.call_count == call_counts[0]
         assert ptt.call_count == call_counts[1]
@@ -800,14 +831,14 @@ def test_full_run(options, call_counts, log_ind, expected_log_message):
 )
 def test_category_rules(query, should_fail):
     # Set the categories, and variants to expand
-    ps.PerfParser.categories = {"test-live": query}
-    ps.PerfParser.variants = TEST_VARIANTS
+    PerfParser.categories = {"test-live": query}
+    PerfParser.variants = TEST_VARIANTS
 
     if should_fail:
-        with pytest.raises(ps.InvalidCategoryException):
-            ps.PerfParser.run_category_checks()
+        with pytest.raises(InvalidCategoryException):
+            PerfParser.run_category_checks()
     else:
-        assert ps.PerfParser.run_category_checks()
+        assert PerfParser.run_category_checks()
 
 
 if __name__ == "__main__":
