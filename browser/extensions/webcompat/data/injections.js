@@ -40,7 +40,7 @@ const AVAILABLE_INJECTIONS = [
   },
   {
     id: "bug1452707",
-    platform: "desktop",
+    platform: "all",
     domain: "ib.absa.co.za",
     bug: "1452707",
     contentScripts: {
@@ -370,13 +370,16 @@ const AVAILABLE_INJECTIONS = [
   {
     id: "bug1724764",
     platform: "android",
-    domain: "amextravel.com",
+    domain: "Issues related to missing window.print",
     bug: "1724764",
     contentScripts: {
-      matches: ["*://*.amextravel.com/*"],
+      matches: [
+        "*://*.amextravel.com/*", // 1724764
+        "*://*.edupage.org/*", // 1804477 and 1800118
+      ],
       js: [
         {
-          file: "injections/js/bug1724764-amextravel.com-window-print.js",
+          file: "injections/js/bug1724764-window-print.js",
         },
       ],
     },
@@ -420,20 +423,6 @@ const AVAILABLE_INJECTIONS = [
       css: [
         {
           file: "injections/css/bug1743614-storytel.com-flex-min-width.css",
-        },
-      ],
-    },
-  },
-  {
-    id: "bug1751022",
-    platform: "android",
-    domain: "chotot.com",
-    bug: "1751022",
-    contentScripts: {
-      matches: ["*://*.chotot.com/*"],
-      css: [
-        {
-          file: "injections/css/bug1751022-chotot.com-image-width-fix.css",
         },
       ],
     },
@@ -545,16 +534,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1772949",
-    platform: "all",
-    domain: "YouTube embeds",
-    bug: "1772949",
-    customFunc: "runScriptBeforeRequest",
-    script: "injections/js/bug1772949-youtube-webshare-shim.js",
-    request: ["*://www.youtube.com/*/www-embed-player.js*"],
-    message: "The WebShare API is being disabled on a YouTube frame.",
-  },
-  {
     id: "bug1778239",
     platform: "all",
     domain: "m.pji.co.kr",
@@ -608,7 +587,7 @@ const AVAILABLE_INJECTIONS = [
   {
     id: "bug1784141",
     platform: "android",
-    domain: "aveeno.com",
+    domain: "aveeno.com and acuvue.com",
     bug: "1784141",
     contentScripts: {
       matches: [
@@ -618,10 +597,76 @@ const AVAILABLE_INJECTIONS = [
         "*://*.aveeno.co.kr/*",
         "*://*.aveeno.co.uk/*",
         "*://*.aveeno.ie/*",
+        "*://*.acuvue.com/*", // 1804730
+        "*://*.acuvue.com.ar/*",
+        "*://*.acuvue.com.br/*",
+        "*://*.acuvue.ca/*",
+        "*://*.acuvue-fr.ca/*",
+        "*://*.acuvue.cl/*",
+        "*://*.acuvue.co.cr/*",
+        "*://*.acuvue.com.co/*",
+        "*://*.acuvue.com.do/*",
+        "*://*.acuvue.com.pe/*",
+        "*://*.acuvue.com.sv/*",
+        "*://*.acuvue.com.gt/*",
+        "*://*.acuvue.hn/*",
+        "*://*.acuvue.com.mx/*",
+        "*://*.acuvue.com.pa/*",
+        "*://*.acuvue.com.py/*",
+        "*://*.acuvue.com.pr/*",
+        "*://*.acuvue.com.uy/*",
+        "*://*.acuvue.com.au/*",
+        "*://*.acuvue.com.cn/*",
+        "*://*.acuvue.com.hk/*",
+        "*://*.acuvue.co.in/*",
+        "*://*.acuvue.co.id/*",
+        "*://acuvuevision.jp/*",
+        "*://*.acuvue.co.kr/*",
+        "*://*.acuvue.com.my/*",
+        "*://*.acuvue.co.nz/*",
+        "*://*.acuvue.com.sg/*",
+        "*://*.acuvue.com.tw/*",
+        "*://*.acuvue.co.th/*",
+        "*://*.acuvue.com.vn/*",
+        "*://*.acuvue.at/*",
+        "*://*.acuvue.be/*",
+        "*://*.fr.acuvue.be/*",
+        "*://*.acuvue-croatia.com/*",
+        "*://*.acuvue.cz/*",
+        "*://*.acuvue.dk/*",
+        "*://*.acuvue.fi/*",
+        "*://*.acuvue.fr/*",
+        "*://*.acuvue.de/*",
+        "*://*.acuvue.gr/*",
+        "*://*.acuvue.hu/*",
+        "*://*.acuvue.ie/*",
+        "*://*.acuvue.co.il/*",
+        "*://*.acuvue.it/*",
+        "*://*.acuvuekz.com/*",
+        "*://*.acuvue.lu/*",
+        "*://*.en.acuvuearabia.com/*",
+        "*://*.acuvuearabia.com/*",
+        "*://*.acuvue.nl/*",
+        "*://*.acuvue.no/*",
+        "*://*.acuvue.pl/*",
+        "*://*.acuvue.pt/*",
+        "*://*.acuvue.ro/*",
+        "*://*.acuvue.ru/*",
+        "*://*.acuvue.sk/*",
+        "*://*.acuvue.si/*",
+        "*://*.acuvue.co.za/*",
+        "*://*.jnjvision.com.tr/*",
+        "*://*.acuvue.co.uk/*",
+        "*://*.acuvue.ua/*",
+        "*://*.acuvue.com.pe/*",
+        "*://*.acuvue.es/*",
+        "*://*.acuvue.se/*",
+        "*://*.acuvue.ch/*",
       ],
       css: [
         {
-          file: "injections/css/bug1784141-aveeno.com-unsupported.css",
+          file:
+            "injections/css/bug1784141-aveeno.com-acuvue.com-unsupported.css",
         },
       ],
     },
@@ -672,67 +717,6 @@ const AVAILABLE_INJECTIONS = [
       css: [
         {
           file: "injections/css/bug1784199-entrata-platform-unsupported.css",
-        },
-      ],
-    },
-  },
-  {
-    id: "bug1787267",
-    platform: "all",
-    domain: "All international Nintendo domains",
-    bug: "1787267",
-    contentScripts: {
-      matches: [
-        "*://*.mojenintendo.cz/*",
-        "*://*.nintendo-europe.com/*",
-        "*://*.nintendo.at/*",
-        "*://*.nintendo.be/*",
-        "*://*.nintendo.ch/*",
-        "*://*.nintendo.co.il/*",
-        "*://*.nintendo.co.jp/*",
-        "*://*.nintendo.co.kr/*",
-        "*://*.nintendo.co.nz/*",
-        "*://*.nintendo.co.uk/*",
-        "*://*.nintendo.co.za/*",
-        "*://*.nintendo.com.au/*",
-        "*://*.nintendo.com.hk/*",
-        "*://*.nintendo.com/*",
-        "*://*.nintendo.de/*",
-        "*://*.nintendo.dk/*",
-        "*://*.nintendo.es/*",
-        "*://*.nintendo.fi/*",
-        "*://*.nintendo.fr/*",
-        "*://*.nintendo.gr/*",
-        "*://*.nintendo.hu/*",
-        "*://*.nintendo.it/*",
-        "*://*.nintendo.nl/*",
-        "*://*.nintendo.no/*",
-        "*://*.nintendo.pt/*",
-        "*://*.nintendo.ru/*",
-        "*://*.nintendo.se/*",
-        "*://*.nintendo.sk/*",
-        "*://*.nintendo.tw/*",
-        "*://*.nintendoswitch.com.cn/*",
-      ],
-      js: [
-        {
-          file:
-            "injections/js/bug1787267-nintendo-window-OnetrustActiveGroups.js",
-        },
-      ],
-    },
-  },
-  {
-    id: "bug1788685",
-    platform: "all",
-    domain: "microsoftedgetips.microsoft.com",
-    bug: "1788685",
-    contentScripts: {
-      matches: ["*://microsoftedgetips.microsoft.com/*"],
-      css: [
-        {
-          file:
-            "injections/css/bug1788685-microsoftedgetips.microsoft.com-gallery-fix.css",
         },
       ],
     },
@@ -826,21 +810,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1800118",
-    platform: "android",
-    domain: "taszi.edupage.org",
-    bug: "1800118",
-    contentScripts: {
-      matches: ["*://taszi.edupage.org/timetable/*"],
-      js: [
-        {
-          file:
-            "injections/js/bug1800118-taszi.edupage.org-timetable-window.print-fix.js",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1800127",
     platform: "all",
     domain: "www.burgerking.es",
@@ -881,6 +850,21 @@ const AVAILABLE_INJECTIONS = [
         {
           file:
             "injections/css/bug1800143-www.nintendo.co.jp-zoomed-in-image-scrolling-fix.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1803976",
+    platform: "desktop",
+    domain: "www.youtube.com",
+    bug: "1803976",
+    contentScripts: {
+      matches: ["*://www.youtube.com/*"],
+      js: [
+        {
+          file:
+            "injections/js/bug1803976-www.youtube.com-performance-now-precision.js",
         },
       ],
     },

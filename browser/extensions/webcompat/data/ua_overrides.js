@@ -712,11 +712,10 @@ const AVAILABLE_UA_OVERRIDES = [
     config: {
       matches: [
         "*://*.commerzbank.de/*", // Bug 1767630
-        "*://fpt.dfp.microsoft.com/*", // #104237
         "*://ubank.com.au/*", // #104099
         "*://wifi.sncf/*", // #100194
         "*://www.metrobyt-mobile.com/*", // #105106
-        "*://www.screwfix.com/*", // #96959
+        "*://*.mms.telekom.de/*", // #1800241
       ],
       uaTransformer: originalUA => {
         return UAHelpers.capVersionTo99(originalUA);
@@ -910,6 +909,43 @@ const AVAILABLE_UA_OVERRIDES = [
       matches: ["*://wolf777.com/*"],
       uaTransformer: originalUA => {
         return originalUA.replace("Android", "Linux; Android");
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1800936 - UA override for cov19ent.kdca.go.kr
+     * Webcompat issue #110655 - https://webcompat.com/issues/110655
+     *
+     * Add 'Chrome;' to the UA for the site to load styles
+     */
+    id: "bug1800936",
+    platform: "all",
+    domain: "cov19ent.kdca.go.kr",
+    bug: "1800936",
+    config: {
+      matches: ["*://cov19ent.kdca.go.kr/*"],
+      uaTransformer: originalUA => {
+        return originalUA + " Chrome";
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1803131 - UA override for argaam.com
+     * Webcompat issue #113638 - https://webcompat.com/issues/113638
+     *
+     * To receive the proper mobile version instead of the desktop version
+     * the UA is spoofed.
+     */
+    id: "bug1803131",
+    platform: "android",
+    domain: "argaam.com",
+    bug: "1803131",
+    config: {
+      matches: ["*://*.argaam.com/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
       },
     },
   },
