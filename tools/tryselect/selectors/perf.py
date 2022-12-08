@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import copy
+import enum
 import itertools
 import os
 import re
@@ -34,6 +35,9 @@ PERFHERDER_BASE_URL = (
 # it's more likely that a query is broken and is selecting far too much.
 MAX_PERF_TASKS = 300
 REVISION_MATCHER = re.compile(r"remote:.*/try/rev/([\w]*)[ \t]*$")
+
+# Name of the base category with no variants applied to it
+BASE_CATEGORY_NAME = "base"
 
 
 class InvalidCategoryException(Exception):
@@ -79,6 +83,52 @@ class LogProcessor:
             if match:
                 # Last line found is the revision we want
                 self._revision = match.group(1)
+
+
+class ClassificationEnum(enum.Enum):
+    """This class provides the ability to use Enums as array indices."""
+
+    @property
+    def value(self):
+        return self._value_["value"]
+
+    def __index__(self):
+        return self._value_["index"]
+
+    def __int__(self):
+        return self._value_["index"]
+
+
+class Platforms(ClassificationEnum):
+    ANDROID_A51 = {"value": "android-a51", "index": 0}
+    ANDROID = {"value": "android", "index": 1}
+    WINDOWS = {"value": "windows", "index": 2}
+    LINUX = {"value": "linux", "index": 3}
+    MACOSX = {"value": "macosx", "index": 4}
+    DESKTOP = {"value": "desktop", "index": 5}
+
+
+class Apps(ClassificationEnum):
+    FIREFOX = {"value": "firefox", "index": 0}
+    CHROME = {"value": "chrome", "index": 1}
+    CHROMIUM = {"value": "chromium", "index": 2}
+    GECKOVIEW = {"value": "geckoview", "index": 3}
+    FENIX = {"value": "fenix", "index": 4}
+    CHROME_M = {"value": "chrome-m", "index": 5}
+
+
+class Suites(ClassificationEnum):
+    RAPTOR = {"value": "raptor", "index": 0}
+    TALOS = {"value": "talos", "index": 1}
+    AWSY = {"value": "awsy", "index": 2}
+
+
+class Variants(ClassificationEnum):
+    NO_FISSION = {"value": "no-fission", "index": 0}
+    BYTECODE_CACHED = {"value": "bytecode-cached", "index": 1}
+    LIVE_SITES = {"value": "live-sites", "index": 2}
+    PROFILING = {"value": "profiling", "index": 3}
+    SWR = {"value": "swr", "index": 4}
 
 
 class PerfParser(CompareParser):
@@ -483,6 +533,173 @@ class PerfParser(CompareParser):
             return [], [], []
 
         return selected_tasks, selected_categories, queries
+
+    def _check_app(app, target):
+        """Checks if the app exists in the target."""
+        if app.value in target:
+            return True
+        return False
+
+    def _check_platform(platform, target):
+        """Checks if the platform, or it's type exists in the target."""
+        if (
+            platform.value in target
+            or PerfParser.platforms[platform.value]["platform"] in target
+        ):
+            return True
+        return False
+
+    def _build_initial_decision_matrix():
+        # Build first stage of matrix APPS X PLATFORMS
+        initial_decision_matrix = []
+        for platform in Platforms:
+            platform_row = []
+            for app in Apps:
+                if PerfParser._check_platform(
+                    platform, PerfParser.apps[app.value]["platforms"]
+                ):
+                    # This app can run on this platform
+                    platform_row.append(True)
+                else:
+                    platform_row.append(False)
+            initial_decision_matrix.append(platform_row)
+        return initial_decision_matrix
+
+    def _build_intermediate_decision_matrix():
+        # Second stage of matrix building applies the 2D matrix found above
+        # to each suite
+        initial_decision_matrix = PerfParser._build_initial_decision_matrix()
+
+        intermediate_decision_matrix = []
+        for suite in Suites:
+            suite_matrix = copy.deepcopy(initial_decision_matrix)
+            suite_info = PerfParser.suites[suite.value]
+
+            # Restric the platforms for this suite now
+            for platform in Platforms:
+                for app in Apps:
+                    runnable = False
+                    if PerfParser._check_app(
+                        app, suite_info["apps"]
+                    ) and PerfParser._check_platform(platform, suite_info["platforms"]):
+                        runnable = True
+                    suite_matrix[platform][app] = (
+                        runnable and suite_matrix[platform][app]
+                    )
+
+            intermediate_decision_matrix.append(suite_matrix)
+        return intermediate_decision_matrix
+
+    def _build_variants_matrix():
+        # Third stage is expanding the intermediate matrix
+        # across all the variants (non-expanded). Start with the
+        # intermediate matrix in the list since it provides our
+        # base case with no variants
+        intermediate_decision_matrix = PerfParser._build_intermediate_decision_matrix()
+
+        variants_matrix = []
+        for variant in Variants:
+            variant_matrix = copy.deepcopy(intermediate_decision_matrix)
+
+            for suite in Suites:
+                if variant.value in PerfParser.suites[suite.value]["variants"]:
+                    # Allow the variant through and set it's platforms and apps
+                    # based on how it sets it -> only restrict, don't make allowances
+                    # here
+                    for platform in Platforms:
+                        for app in Apps:
+                            if not (
+                                PerfParser._check_platform(
+                                    platform,
+                                    PerfParser.variants[variant.value]["platforms"],
+                                )
+                                and PerfParser._check_app(
+                                    app, PerfParser.variants[variant.value]["apps"]
+                                )
+                            ):
+                                variant_matrix[suite][platform][app] = False
+                else:
+                    # This variant matrix needs to be completely False
+                    variant_matrix[suite] = [
+                        [False] * len(platform_row)
+                        for platform_row in variant_matrix[suite]
+                    ]
+
+            variants_matrix.append(variant_matrix)
+
+        return variants_matrix, intermediate_decision_matrix
+
+    def _build_decision_matrix():
+        """Build the decision matrix.
+
+        This method builds the decision matrix that is used
+        to determine what categories will be shown to the user.
+        This matrix has the following form (as lists):
+            - Variants
+                - Suites
+                    - Platforms
+                        - Apps
+
+        Each element in the 4D Matrix is either True or False and tells us
+        whether the particular combination is "runnable" according to
+        the given specifications. This does not mean that the combination
+        exists, just that it's fully configured in this selector.
+
+        The ("base",) variant combination found in the matrix has
+        no variants applied to it. At this stage, it's a catch-all for those
+        categories. The query it uses is reduced further in later stages.
+        """
+        # Get the variants matrix (see methods above) and the intermediate decision
+        # matrix to act as the base category
+        (
+            variants_matrix,
+            intermediate_decision_matrix,
+        ) = PerfParser._build_variants_matrix()
+
+        # Get all possible combinations of the variants
+        expanded_variants = [
+            variant_combination
+            for set_size in range(len(Variants) + 1)
+            for variant_combination in itertools.combinations(list(Variants), set_size)
+        ]
+
+        # Final stage combines the intermediate matrix with the
+        # expanded variants and leaves a "base" category which
+        # doesn't have any variant specifications (it catches them all)
+        decision_matrix = {(BASE_CATEGORY_NAME,): intermediate_decision_matrix}
+        for variant_combination in expanded_variants:
+            expanded_variant_matrix = []
+
+            # Perform an AND operation on the combination of variants
+            # to determine where this particular combination can run
+            for suite in Suites:
+                suite_matrix = []
+                suite_variants = PerfParser.suites[suite.value]["variants"]
+
+                # Disable the variant combination if none of them
+                # are found in the suite
+                disable_variant = not any(
+                    [variant.value in suite_variants for variant in variant_combination]
+                )
+
+                for platform in Platforms:
+                    if disable_variant:
+                        platform_row = [False for _ in Apps]
+                    else:
+                        platform_row = [
+                            all(
+                                variants_matrix[variant][suite][platform][app]
+                                for variant in variant_combination
+                                if variant.value in suite_variants
+                            )
+                            for app in Apps
+                        ]
+                    suite_matrix.append(platform_row)
+
+                expanded_variant_matrix.append(suite_matrix)
+            decision_matrix[variant_combination] = expanded_variant_matrix
+
+        return decision_matrix
 
     def _accept_variant(suite, category_info, variant):
         """Checks if the variant can run in the given suite."""
