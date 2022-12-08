@@ -96,6 +96,7 @@ class RemoteTabsStorageTest {
                     "client1",
                     "",
                     DeviceType.MOBILE,
+                    0, // any value for the timestamp is OK for these tests.
                     listOf(
                         RemoteTab("Foo", listOf("https://foo/1/1", "https://foo/1", "https://foo"), "https://foo/icon", 1574457405635),
                     ),
@@ -104,6 +105,7 @@ class RemoteTabsStorageTest {
                     "client2",
                     "",
                     DeviceType.MOBILE,
+                    0, // any value for the timestamp is OK for these tests.
                     listOf(
                         RemoteTab("Bar", listOf("https://bar"), null, 1574458165555),
                         RemoteTab("Foo Bar", listOf("https://foo.bar"), "https://foo.bar/icon", 0),
