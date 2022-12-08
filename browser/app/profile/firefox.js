@@ -404,7 +404,7 @@ pref("browser.urlbar.suggest.calculator",           false);
   pref("browser.urlbar.suggest.quickactions", true);
   pref("browser.urlbar.shortcuts.quickactions", true);
   pref("browser.urlbar.quickactions.showPrefs", true);
-  pref("browser.urlbar.quickactions.showInZeroPrefix", true);
+  pref("browser.urlbar.quickactions.showInZeroPrefix", false);
 #endif
 
 // Feature gate pref for weather suggestions in the urlbar.
