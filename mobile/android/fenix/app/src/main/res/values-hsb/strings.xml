@@ -45,8 +45,6 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Najnowše zapołožki</string>
-    <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recently_saved_title">Njedawno składowane</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Wšě składowane zapołožki pokazać</string>
@@ -257,40 +255,18 @@
     <string name="search_settings_menu_item">Pytanske nastajenja</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">Tónkróć pytać:</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Tónkróć pytać:</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">Tónkróć pytać w:</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">Nowe funkcije a změny w %1$s</string>
-    <!-- Onboarding home screen dialog description text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Je nětko lóšo tam pokročować, hdźež sće přestał.</string>
-    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">Personalizowana startowa strona %1$s</string>
-    <!-- Onboarding home screen dialog description text for the home section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Přeńdźće k swojim wočinjenym rajtarkam, zapołožkam a přehladowanskej historiji.</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Přehladne, organizowane rajtarki</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Wotstrońće rajtarkowu šmjatańcu přez polěpšene wuhotowanje a awtomatisce začinjace rajtarki.</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Najnowše pytanja</string>
-
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Wotwołće znowa swoje najnowše pytanja ze swojeje startoweje strony a rajtarkow.</string>
-
-    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Waša personalizowana startowa strona Firefox nětko wosnadnja tam pokročować, hdźež sće přestał. Namakajće swoje najnowše rajtarki, zapołožki a pytanske wuslědki.</string>
-
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">Zeznajće so ze swojej personalizowanej startowej stronu. Najnowše rajtarki, zapołožki a pytanske wuslědki so tu zjewja.</string>
-    <!-- Home onboarding dialog welcome screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">Witajće k njewotwisnemu internetej</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title_2">Witajće k bóle wosobinskemu internetej</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Wjace barbow. Lěpša priwatnosć. Samsna angažěrowanosć za ludźi njedźiwajo na dobytki.</string>
-    <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">Skočće wot smóratka do laptopa a wróćo</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_3">Přešaltowanje mjez wobrazowkami je lóše hdy do toho</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
@@ -357,6 +333,12 @@
     <string name="preferences_add_private_browsing_shortcut">Zwjazanje za priwatny modus přidać</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Modus Jenož-HTTPS</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Redukowanje plackowych chorhojow</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Plackowe chorhoje redukować</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Pospytuje z pomocu zaklučowanskeho protokola HTTPS za powyšenu wěstotu awtomatisce ze sydłami zwjazać.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -1129,6 +1111,13 @@
     %1$s is a placeholder that will be replaced by the app name (Fenix). -->
     <string name="notification_default_browser_text">%1$s k wašemu standardnemu wobhladowakej činić</string>
 
+    <!-- Title shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_title">Wupruwujće priwatny modus</string>
+
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">Přehladujće z %1$s bjez składowanych plackow abo historije</string>
+
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Zběrka je so zhašała</string>
@@ -1250,32 +1239,18 @@
     <string name="delete_history_group_snackbar">Skupina je so zhašała</string>
 
     <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">Witajće k %s!</string>
-
     <!-- Text for onboarding welcome header. -->
     <string name="onboarding_header_2">Witajće k lěpšemu internetej</string>
     <!-- Text for the onboarding welcome message. -->
     <string name="onboarding_message">Wobhladowak za ludźi, nic za dobytk.</string>
-    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Firefox mjez gratami synchronizować</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
     <string name="onboarding_account_sign_in_header">Čińće tam dale, hdźež sće přestał</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Přinjesće zapołožki, historiju a hesła k %1$s na tutym graće.</string>
-    <!-- text for the button to manually sign into Firefox account. -->
-    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Registrować</string>
     <!-- Text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in">Přizjewić</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Synchronizacija je zmóžnjena</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">Priwatnosć přeco aktiwna</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Škit priwatnosće po standardźe</string>
-    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s awtomatisce zadźěwa tomu, zo předewzaća wam skradźu po webje slěduja.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standard</string>
     <!-- text for standard blocking option button description -->
@@ -1286,17 +1261,10 @@
     <string name="onboarding_tracking_protection_strict_button_description_3">Blokuje dalše přesćěhowaki, zo bychu so strony spěšnišo začitali, ale někotre strony snano korektnje njefunguja.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Wubjerće poziciju za swoju symbolowu lajstu</string>
-    <!-- text for the toolbar position card description -->
-    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Pozicioněrujće symbolowu lajstu, zo móžeće ju lochko dosahnyć. Wobchowajće ju deleka abo přesuńće ju horje.</string>
     <!-- Text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description">Deleka wostajić abo horje přesunyć.</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Waša priwatnosć</string>
     <!-- Text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header_1">Kontrolujeće swoje daty</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">Sym %s wuwili, zo bychmy wam kontrolu wo tym dali, što online dźěliće a što z nami.</string>
     <!-- Text for the privacy notice onboarding card description. -->
     <string name="onboarding_privacy_notice_description">Firefox wam kontrolu wo tym da, što online dźěliće a što z nami.</string>
     <!-- Text for the button to read the privacy notice -->

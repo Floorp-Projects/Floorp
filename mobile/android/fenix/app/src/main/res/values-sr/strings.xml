@@ -89,7 +89,7 @@
     <string name="tcp_cfr_learn_more">Сазнајте више о свеобухватној заштити од колачића</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
-    <string name="camera_permissions_needed_message">Потребан је приступ камери. Отворите Андроид подешавања, одаберите дозволе и омогућите приступ.</string>
+    <string name="camera_permissions_needed_message">Потребан је приступ камери. Отворите Android подешавања, одаберите дозволе и омогућите приступ.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
     <string name="camera_permissions_needed_positive_button_text">Иди у подешавања</string>
     <!-- Text for the negative action button to dismiss the dialog. -->
@@ -969,7 +969,7 @@
     <!-- Label that indicates that a permission must be allowed -->
     <string name="preference_option_phone_feature_allowed">Дозвољено</string>
     <!--Label that indicates a permission is by the Android OS-->
-    <string name="phone_feature_blocked_by_android">Блокирао Андроид</string>
+    <string name="phone_feature_blocked_by_android">Блокирао Android</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Изузеци</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -1174,7 +1174,7 @@
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_2">Аутоматско одређивање величине фонта</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size_summary">Величина фонта пратиће ваша Андроид подешавања. Онемогућите ово да бисте овде подесили величину фонта.</string>
+    <string name="preference_accessibility_auto_size_summary">Величина фонта пратиће ваша Android подешавања. Онемогућите ово да бисте овде подесили величину фонта.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Обриши податке прегледања</string>
