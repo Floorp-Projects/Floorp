@@ -51,6 +51,8 @@ service on the network. This could mean the provider is down or blocked.
 2. The address successfully resolved via TRR could not be connected to.
 3. TRR result is NXDOMAIN.
 
+When a DNS resolution doesn't use TRR we will normally preserve that data in the form of a _TRRSkippedReason_. A detailed explanation of each one is available [here](trr-skip-reasons).
+
 In other cases, instead of falling back, we will trigger a fresh
 Confirmation (which will start us on a fresh connection to the provider)
 and retry the lookup with TRR again. We only retry once.
