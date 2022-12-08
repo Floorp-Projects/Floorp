@@ -7,18 +7,17 @@ use std::io::Cursor;
 use thin_vec::ThinVec;
 
 pub mod types;
+use types::Extension;
 use types::HpkeConfig;
+use types::Nonce;
 use types::Report;
-use types::ReportID;
-use types::ReportMetadata;
 use types::TaskID;
-use types::Time;
 
 pub mod prg;
 use prg::PrgAes128Alt;
 
 use prio::codec::Encode;
-use prio::codec::{encode_u32_items, Decode};
+use prio::codec::{encode_u16_items, Decode};
 use prio::field::Field128;
 use prio::flp::types::Sum;
 use prio::vdaf::prio3::Prio3;
@@ -96,7 +95,7 @@ fn hpke_encrypt_wrapper(
 /// Pre-fill the info part of the HPKE sealing with the constants from the standard.
 fn make_base_info() -> Vec<u8> {
     let mut info = Vec::<u8>::new();
-    const START: &[u8] = "dap-02 input share".as_bytes();
+    const START: &[u8] = "dap-01 input share".as_bytes();
     info.extend(START);
     const FIXED: u8 = 1;
     info.push(FIXED);
@@ -119,50 +118,31 @@ fn get_dap_report_internal(
     let helper_hpke_config = HpkeConfig::decode(&mut Cursor::new(helper_hpke_config_encoded))?;
 
     let prio = new_prio(2, 2)?;
-    let (public_share, input_shares) = prio.shard(&(measurement as u128))?;
-    debug_assert_eq!(input_shares.len(), 2);
-    debug_assert_eq!(public_share, ());
-    let public_share = Vec::new(); // the encoding wants an empty vector not ()
+    let shards = prio.shard(&(measurement as u128))?;
+    debug_assert_eq!(shards.len(), 2);
 
-    let metadata = ReportMetadata {
-        report_id: ReportID::generate(),
-        time: Time::generate(time_precision),
-        extensions: vec![],
-    };
-
-    // This quote from the standard describes which info and aad to use for the encryption:
-    //     enc, payload = SealBase(pk,
-    //         "dap-02 input share" || 0x01 || server_role,
-    //         task_id || metadata || public_share, input_share)
-    // https://www.ietf.org/archive/id/draft-ietf-ppm-dap-02.html#name-upload-request
-    let mut info = make_base_info();
+    let nonce = Nonce::generate(time_precision);
 
     let mut aad = Vec::from(*task_id);
-    metadata.encode(&mut aad);
-    encode_u32_items(&mut aad, &(), &public_share);
+    nonce.encode(&mut aad);
+    let extensions: Vec<Extension> = vec![];
+    encode_u16_items(&mut aad, &(), &extensions);
 
+    let mut info = make_base_info();
     info.push(Role::Leader as u8);
 
-    let leader_payload = hpke_encrypt_wrapper(
-        &input_shares[0].get_encoded(),
-        &aad,
-        &info,
-        &leader_hpke_config,
-    )?;
+    let leader_payload =
+        hpke_encrypt_wrapper(&shards[0].get_encoded(), &aad, &info, &leader_hpke_config)?;
 
     *info.last_mut().unwrap() = Role::Helper as u8;
 
-    let helper_payload = hpke_encrypt_wrapper(
-        &input_shares[1].get_encoded(),
-        &aad,
-        &info,
-        &helper_hpke_config,
-    )?;
+    let helper_payload =
+        hpke_encrypt_wrapper(&shards[1].get_encoded(), &aad, &info, &helper_hpke_config)?;
 
     Ok(Report {
         task_id: TaskID(*task_id),
-        metadata,
-        public_share,
+        nonce,
+        extensions,
         encrypted_input_shares: vec![leader_payload, helper_payload],
     })
 }

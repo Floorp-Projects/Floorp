@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
-//! Implementations of PRGs specified in [[draft-irtf-cfrg-vdaf-03]].
+//! Implementations of PRGs specified in [[draft-irtf-cfrg-vdaf-01]].
 //!
-//! [draft-irtf-cfrg-vdaf-03]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/03/
+//! [draft-irtf-cfrg-vdaf-01]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/01/
 
 use crate::vdaf::{CodecError, Decode, Encode};
 #[cfg(feature = "crypto-dependencies")]
@@ -41,6 +41,22 @@ impl<const L: usize> Seed<L> {
         rand_source(&mut seed)?;
         Ok(Self(seed))
     }
+
+    pub(crate) fn uninitialized() -> Self {
+        Self([0; L])
+    }
+
+    pub(crate) fn xor_accumulate(&mut self, other: &Self) {
+        for i in 0..L {
+            self.0[i] ^= other.0[i]
+        }
+    }
+
+    pub(crate) fn xor(&mut self, left: &Self, right: &Self) {
+        for i in 0..L {
+            self.0[i] = left.0[i] ^ right.0[i]
+        }
+    }
 }
 
 impl<const L: usize> AsRef<[u8; L]> for Seed<L> {
@@ -53,7 +69,7 @@ impl<const L: usize> PartialEq for Seed<L> {
     fn eq(&self, other: &Self) -> bool {
         // Do constant-time compare.
         let mut r = 0;
-        for (x, y) in self.0[..].iter().zip(&other.0[..]) {
+        for (x, y) in (&self.0[..]).iter().zip(&other.0[..]) {
             r |= x ^ y;
         }
         r == 0
@@ -80,9 +96,9 @@ pub trait SeedStream {
     fn fill(&mut self, buf: &mut [u8]);
 }
 
-/// A pseudorandom generator (PRG) with the interface specified in [[draft-irtf-cfrg-vdaf-03]].
+/// A pseudorandom generator (PRG) with the interface specified in [[draft-irtf-cfrg-vdaf-01]].
 ///
-/// [draft-irtf-cfrg-vdaf-03]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/03/
+/// [draft-irtf-cfrg-vdaf-01]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/01/
 pub trait Prg<const L: usize>: Clone + Debug {
     /// The type of stream produced by this PRG.
     type SeedStream: SeedStream;
@@ -113,9 +129,9 @@ pub trait Prg<const L: usize>: Clone + Debug {
     }
 }
 
-/// The PRG based on AES128 as specified in [[draft-irtf-cfrg-vdaf-03]].
+/// The PRG based on AES128 as specified in [[draft-irtf-cfrg-vdaf-01]].
 ///
-/// [draft-irtf-cfrg-vdaf-03]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/03/
+/// [draft-irtf-cfrg-vdaf-01]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/01/
 #[derive(Clone, Debug)]
 #[cfg(feature = "crypto-dependencies")]
 pub struct PrgAes128(Cmac<Aes128>);
@@ -200,7 +216,7 @@ mod tests {
         let mut prg = P::init(seed.as_ref());
         prg.update(info);
 
-        let mut want = Seed([0; L]);
+        let mut want: Seed<L> = Seed::uninitialized();
         prg.clone().into_seed_stream().fill(&mut want.0[..]);
         let got = prg.clone().into_seed();
         assert_eq!(got, want);
@@ -215,7 +231,7 @@ mod tests {
     #[test]
     fn prg_aes128() {
         let t: PrgTestVector =
-            serde_json::from_str(include_str!("test_vec/03/PrgAes128.json")).unwrap();
+            serde_json::from_str(include_str!("test_vec/01/PrgAes128.json")).unwrap();
         let mut prg = PrgAes128::init(&t.seed.try_into().unwrap());
         prg.update(&t.info);
 

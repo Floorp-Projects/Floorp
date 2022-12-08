@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.58"
 name = "prio"
-version = "0.9.1"
+version = "0.8.4"
 authors = [
     "Josh Aas <jaas@kflag.net>",
     "Tim Geoghegan <timg@letsencrypt.org>",
@@ -44,10 +44,6 @@ required-features = ["prio2"]
 
 [[bench]]
 name = "speed_tests"
-harness = false
-
-[[bench]]
-name = "cycle_counts"
 harness = false
 
 [dependencies.aes]
@@ -105,18 +101,12 @@ version = "1.0"
 [dev-dependencies.assert_matches]
 version = "1.5.0"
 
-[dev-dependencies.cfg-if]
-version = "1.0.0"
-
 [dev-dependencies.criterion]
-version = "0.4"
+version = "0.3"
 
 [dev-dependencies.hex]
 version = "0.4.3"
 features = ["serde"]
-
-[dev-dependencies.iai]
-version = "0.1"
 
 [dev-dependencies.itertools]
 version = "0.10.3"
