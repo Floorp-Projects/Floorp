@@ -701,6 +701,126 @@ class PerfParser(CompareParser):
 
         return decision_matrix
 
+    def _skip_with_restrictions(value, restrictions, requested=[]):
+        """Determines if we should skip an app, platform, or variant.
+
+        We add base here since it's the base category variant that
+        would always be displayed and it won't affect the app, or
+        platform selections.
+        """
+        if restrictions is not None and value not in restrictions + [
+            BASE_CATEGORY_NAME
+        ]:
+            return True
+        if requested and value not in requested + [BASE_CATEGORY_NAME]:
+            return True
+        return False
+
+    def build_category_matrix(
+        requested_variants=[BASE_CATEGORY_NAME],
+        requested_platforms=[],
+        requested_apps=[],
+        **kwargs,
+    ):
+        """Build a decision matrix for all the categories.
+
+        It will have the form:
+            - Category
+                - Variants
+                    - ...
+        """
+        # Build the base decision matrix
+        decision_matrix = PerfParser._build_decision_matrix()
+
+        # Here, the variants are further restricted by the category settings
+        # using the `_skip_with_restrictions` method. This part also handles
+        # explicitly requested platforms, apps, and variants.
+        category_decision_matrix = {}
+        for category, category_info in PerfParser.categories.items():
+            category_matrix = copy.deepcopy(decision_matrix)
+
+            for variant_combination, variant_matrix in decision_matrix.items():
+                variant_runnable = True
+                if BASE_CATEGORY_NAME not in variant_combination:
+                    # Make sure that all portions of the variant combination
+                    # target at least one of the suites in the category
+                    tmp_variant_combination = set(
+                        [v.value for v in variant_combination]
+                    )
+                    for suite in Suites:
+                        if suite.value not in category_info["suites"]:
+                            continue
+                        tmp_variant_combination = tmp_variant_combination - set(
+                            [
+                                variant.value
+                                for variant in variant_combination
+                                if variant.value
+                                in PerfParser.suites[suite.value]["variants"]
+                            ]
+                        )
+                    if tmp_variant_combination:
+                        # If it's not empty, then some variants
+                        # are non-existent
+                        variant_runnable = False
+
+                for suite, platform, app in itertools.product(Suites, Platforms, Apps):
+                    runnable = variant_runnable
+
+                    # Disable this combination if there are any variant
+                    # restrictions for this suite, or if the user didn't request it
+                    # (and did request some variants). The same is done below with
+                    # the apps, and platforms.
+                    if any(
+                        PerfParser._skip_with_restrictions(
+                            variant.value if not isinstance(variant, str) else variant,
+                            category_info.get("variant-restrictions", {}).get(
+                                suite.value, None
+                            ),
+                            requested_variants,
+                        )
+                        for variant in variant_combination
+                    ):
+                        runnable = False
+
+                    if PerfParser._skip_with_restrictions(
+                        platform.value,
+                        category_info.get("platform-restrictions", None),
+                        requested_platforms,
+                    ):
+                        runnable = False
+
+                    # If the platform is restricted, check if the appropriate
+                    # flags were provided (or appropriate conditions hit). We do
+                    # the same thing for apps below.
+                    if (
+                        PerfParser.platforms[platform.value].get("restriction", None)
+                        is not None
+                    ):
+                        runnable = runnable and PerfParser.platforms[platform.value][
+                            "restriction"
+                        ](**kwargs)
+
+                    if PerfParser._skip_with_restrictions(
+                        app.value,
+                        category_info.get("app-restrictions", {}).get(
+                            suite.value, None
+                        ),
+                        requested_apps,
+                    ):
+                        runnable = False
+                    if PerfParser.apps[app.value].get("restriction", None) is not None:
+                        runnable = runnable and PerfParser.apps[app.value][
+                            "restriction"
+                        ](**kwargs)
+
+                    category_matrix[variant_combination][suite][platform][app] = (
+                        runnable and variant_matrix[suite][platform][app]
+                    )
+
+            category_decision_matrix[category] = category_matrix
+
+        return category_decision_matrix
+
     def _accept_variant(suite, category_info, variant):
         """Checks if the variant can run in the given suite."""
         variant_restrictions = PerfParser.suites[suite]["variants"]
