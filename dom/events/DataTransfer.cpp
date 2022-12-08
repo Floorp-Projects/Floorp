@@ -42,6 +42,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/OSFileSystem.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/WindowContext.h"
 #include "mozilla/Unused.h"
 #include "nsComponentManagerUtils.h"
 #include "nsNetUtil.h"
@@ -435,6 +436,17 @@ already_AddRefed<nsINode> DataTransfer::GetMozSourceNode() {
   }
 
   return sourceNode.forget();
+}
+
+already_AddRefed<WindowContext> DataTransfer::GetSourceWindowContext() {
+  nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+  if (!dragSession) {
+    return nullptr;
+  }
+
+  RefPtr<WindowContext> sourceWindowContext;
+  dragSession->GetSourceWindowContext(getter_AddRefs(sourceWindowContext));
+  return sourceWindowContext.forget();
 }
 
 already_AddRefed<DOMStringList> DataTransfer::MozTypesAt(

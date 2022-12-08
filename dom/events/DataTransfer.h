@@ -42,6 +42,7 @@ class FileList;
 class Promise;
 template <typename T>
 class Optional;
+class WindowContext;
 
 #define NS_DATATRANSFER_IID                          \
   {                                                  \
@@ -252,6 +253,8 @@ class DataTransfer final : public nsISupports, public nsWrapperCache {
   bool MozUserCancelled() const { return mUserCancelled; }
 
   already_AddRefed<nsINode> GetMozSourceNode();
+
+  already_AddRefed<WindowContext> GetSourceWindowContext();
 
   /*
    * Integer version of dropEffect, set to one of the constants in
