@@ -17061,6 +17061,16 @@
     "n_buckets": 100,
     "description": "Collect the time elapsed between receiving a 103 response and the final response for a page load."
   },
+  "EH_STATE_OF_PRELOAD_REQUEST": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "expires_in_version": "never",
+    "n_values": 50,
+    "bug_numbers": [1803747],
+    "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
+    "kind": "enumerated",
+    "description": "The usage of a early hint preload request"
+  },
   "FX_PICTURE_IN_PICTURE_WINDOW_OPEN_DURATION": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
