@@ -144,7 +144,7 @@ class ActivityStreamMessageChannel {
    */
   validatePortID(id) {
     if (typeof id !== "string" || !id.includes(":")) {
-      Cu.reportError("Invalid portID");
+      console.error("Invalid portID");
     }
 
     return id;
@@ -328,7 +328,7 @@ class ActivityStreamMessageChannel {
   onMessage(msg) {
     const { portID } = msg.target;
     if (!msg.data || !msg.data.type) {
-      Cu.reportError(
+      console.error(
         new Error(`Received an improperly formatted message from ${portID}`)
       );
       return;

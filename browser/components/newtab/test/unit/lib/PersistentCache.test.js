@@ -6,7 +6,7 @@ describe("PersistentCache", () => {
   let fakePathUtils;
   let cache;
   let filename = "cache.json";
-  let reportErrorStub;
+  let consoleErrorStub;
   let globals;
   let sandbox;
 
@@ -21,8 +21,8 @@ describe("PersistentCache", () => {
       join: sinon.stub().returns(filename),
       localProfileDir: "/",
     };
-    reportErrorStub = sandbox.stub();
-    globals.set("Cu", { reportError: reportErrorStub });
+    consoleErrorStub = sandbox.stub();
+    globals.set("console", { error: consoleErrorStub });
     globals.set("IOUtils", fakeIOUtils);
     globals.set("PathUtils", fakePathUtils);
 
@@ -47,25 +47,25 @@ describe("PersistentCache", () => {
     it("should catch and report errors", async () => {
       fakeIOUtils.readJSON.rejects(new SyntaxError("Failed to parse JSON"));
       await cache._load();
-      assert.calledOnce(reportErrorStub);
+      assert.calledOnce(consoleErrorStub);
 
       cache._cache = undefined;
-      reportErrorStub.resetHistory();
+      consoleErrorStub.resetHistory();
 
       fakeIOUtils.readJSON.rejects(
         new DOMException("IOUtils shutting down", "AbortError")
       );
       await cache._load();
-      assert.calledOnce(reportErrorStub);
+      assert.calledOnce(consoleErrorStub);
 
       cache._cache = undefined;
-      reportErrorStub.resetHistory();
+      consoleErrorStub.resetHistory();
 
       fakeIOUtils.readJSON.rejects(
         new DOMException("File not found", "NotFoundError")
       );
       await cache._load();
-      assert.notCalled(reportErrorStub);
+      assert.notCalled(consoleErrorStub);
     });
     it("returns data for a given cache key", async () => {
       fakeIOUtils.readJSON.resolves({ foo: "bar" });

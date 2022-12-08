@@ -71,7 +71,7 @@ describe("PlacesFeed", () => {
     sandbox.spy(global.PlacesUtils.observers, "removeListener");
     sandbox.spy(global.Services.obs, "addObserver");
     sandbox.spy(global.Services.obs, "removeObserver");
-    sandbox.spy(global.Cu, "reportError");
+    sandbox.spy(global.console, "error");
     shortURLStub = sandbox
       .stub()
       .callsFake(site =>
@@ -443,7 +443,7 @@ describe("PlacesFeed", () => {
       };
 
       feed.onAction(openLinkAction);
-      const [e] = global.Cu.reportError.firstCall.args;
+      const [e] = global.console.error.firstCall.args;
       assert.equal(
         e.message,
         "Can't open link using file protocol from the new tab page."
@@ -562,7 +562,7 @@ describe("PlacesFeed", () => {
         .stub()
         .rejects(e);
       await feed.saveToPocket(action.data.site, action._target.browser);
-      assert.calledWith(global.Cu.reportError, e);
+      assert.calledWith(global.console.error, e);
     });
     it("should broadcast to content if we successfully added a link to Pocket", async () => {
       // test in the form that the API returns data based on: https://getpocket.com/developer/docs/v3/add
@@ -613,7 +613,7 @@ describe("PlacesFeed", () => {
         .rejects(e);
       await feed.deleteFromPocket(12345);
 
-      assert.calledWith(global.Cu.reportError, e);
+      assert.calledWith(global.console.error, e);
     });
     it("should call NewTabUtils.deletePocketEntry and dispatch POCKET_LINK_DELETED_OR_ARCHIVED when deleting from Pocket", async () => {
       await feed.deleteFromPocket(12345);
@@ -648,7 +648,7 @@ describe("PlacesFeed", () => {
         .rejects(e);
       await feed.archiveFromPocket(12345);
 
-      assert.calledWith(global.Cu.reportError, e);
+      assert.calledWith(global.console.error, e);
     });
     it("should call NewTabUtils.archivePocketEntry and dispatch POCKET_LINK_DELETED_OR_ARCHIVED when archiving from Pocket", async () => {
       await feed.archiveFromPocket(12345);

@@ -472,11 +472,11 @@ describe("ASRouterPreferences", () => {
   });
   describe("#_transformPersonalizedCfrScores", () => {
     it("should report JSON.parse errors", () => {
-      sandbox.stub(global.Cu, "reportError");
+      sandbox.stub(global.console, "error");
 
       ASRouterPreferences._transformPersonalizedCfrScores("");
 
-      assert.calledOnce(global.Cu.reportError);
+      assert.calledOnce(global.console.error);
     });
     it("should return an object parsed from a string", () => {
       const scores = { FOO: 3000, BAR: 4000 };

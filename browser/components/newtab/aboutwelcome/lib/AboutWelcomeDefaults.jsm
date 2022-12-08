@@ -715,7 +715,7 @@ async function getAddonInfo(attrbObj) {
       return await getAddonFromRepository(content);
     }
   } catch (e) {
-    Cu.reportError("Failed to get the latest add-on version for Return to AMO");
+    console.error("Failed to get the latest add-on version for Return to AMO");
   }
   return null;
 }
