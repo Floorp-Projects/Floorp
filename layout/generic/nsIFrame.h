@@ -1301,8 +1301,6 @@ class nsIFrame : public nsQueryFrame {
   // frame construction, we insert page breaks when we begin a new page box and
   // the previous page box had a different name.
   struct PageValues {
-    PageValues() = default;
-    PageValues(const PageValues& other) = default;
     // A value of null indicates that the value is equal to what auto resolves
     // to for this frame.
     RefPtr<const nsAtom> mStartPageValue = nullptr;
@@ -1311,14 +1309,16 @@ class nsIFrame : public nsQueryFrame {
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(PageValuesProperty, PageValues)
 
   const nsAtom* GetStartPageValue() const {
-    if (const PageValues* const values = GetProperty(PageValuesProperty())) {
+    if (const PageValues* const values =
+            FirstInFlow()->GetProperty(PageValuesProperty())) {
       return values->mStartPageValue;
     }
     return nullptr;
   }
 
   const nsAtom* GetEndPageValue() const {
-    if (const PageValues* const values = GetProperty(PageValuesProperty())) {
+    if (const PageValues* const values =
+            FirstInFlow()->GetProperty(PageValuesProperty())) {
       return values->mEndPageValue;
     }
     return nullptr;
