@@ -132,6 +132,10 @@ def get_test_platforms(
                         test_platforms[test_platform][
                             "build-signing-label"
                         ] = "repackage-macosx64/opt"
+            elif test_platform.startswith("windows10-64-2004"):
+                test_platforms[test_platform][
+                    "build-signing-label"
+                ] = "repackage-signing-shippable-l10n-msix-win64-shippable/opt"
             else:
                 test_platforms[test_platform][
                     "build-signing-label"
