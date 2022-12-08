@@ -283,7 +283,12 @@ async function selectRowByProvider(provider) {
 
 async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.searchEngagementTelemetry.enabled", true]],
+    set: [
+      ["browser.urlbar.searchEngagementTelemetry.enabled", true],
+      ["browser.urlbar.quickactions.enabled", true],
+      ["browser.urlbar.suggest.quickactions", true],
+      ["browser.urlbar.quickactions.showInZeroPrefix", true],
+    ],
   });
 
   const engine = await SearchTestUtils.promiseNewSearchEngine({
