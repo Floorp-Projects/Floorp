@@ -117,7 +117,7 @@ EarlyHintPreloader::~EarlyHintPreloader() {
 Maybe<PreloadHashKey> EarlyHintPreloader::GenerateHashKey(
     ASDestination aAs, nsIURI* aURI, nsIPrincipal* aPrincipal,
     CORSMode aCorsMode, const nsAString& aType) {
-  if (aAs == ASDestination::DESTINATION_FONT) {
+  if (aAs == ASDestination::DESTINATION_FONT && aCorsMode != CORS_NONE) {
     return Some(PreloadHashKey::CreateAsFont(aURI, aCorsMode));
   }
   if (aAs == ASDestination::DESTINATION_IMAGE) {
@@ -133,7 +133,7 @@ Maybe<PreloadHashKey> EarlyHintPreloader::GenerateHashKey(
         aURI, aPrincipal, aCorsMode,
         css::SheetParsingMode::eAuthorSheetFeatures));
   }
-  if (aAs == ASDestination::DESTINATION_FETCH) {
+  if (aAs == ASDestination::DESTINATION_FETCH && aCorsMode != CORS_NONE) {
     return Some(PreloadHashKey::CreateAsFetch(aURI, aCorsMode));
   }
   return Nothing();
