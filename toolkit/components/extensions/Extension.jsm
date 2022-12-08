@@ -1857,6 +1857,20 @@ class ExtensionData {
   }
 
   /**
+   * @param {string} origin
+   * @returns {boolean}       If this is one of the "all sites" permission.
+   */
+  static isAllSitesPermission(origin) {
+    try {
+      let info = ExtensionData.classifyOriginPermissions([origin], true);
+      return !!info.allUrls;
+    } catch (e) {
+      // Passed string is not an origin permission.
+      return false;
+    }
+  }
+
+  /**
    * @typedef {object} HostPermissions
    * @param {string} allUrls   permission used to obtain all urls access
    * @param {Set} wildcards    set contains permissions with wildcards

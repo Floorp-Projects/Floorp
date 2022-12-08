@@ -109,7 +109,7 @@ async function getExtensions({ manifest_version = 2 } = {}) {
         manifest_version,
         name: "Test add-on 7",
         browser_specific_settings: { gecko: { id: "addon7@mochi.test" } },
-        optional_permissions: ["<all_urls>", "*://*/*", "file://*/*"],
+        optional_permissions: ["<all_urls>", "https://*/*", "file://*/*"],
       },
       background,
       useAddonManager: "temporary",
@@ -119,7 +119,8 @@ async function getExtensions({ manifest_version = 2 } = {}) {
         manifest_version,
         name: "Test add-on 8",
         browser_specific_settings: { gecko: { id: "addon8@mochi.test" } },
-        optional_permissions: ["*://*/*", "file://*/*", "<all_urls>"],
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+        optional_permissions: ["https://*/*", "http://*/*", "file://*/*"],
       },
       background,
       useAddonManager: "temporary",
@@ -151,6 +152,7 @@ async function runTest(options) {
     addonId,
     permissions = [],
     optional_permissions = [],
+    optional_overlapping = [],
     optional_enabled = [],
     // Map<permission->string> to check optional_permissions against, if set.
     optional_strings = {},
@@ -243,18 +245,18 @@ async function runTest(options) {
   // This tests the permission change and button state when the user
   // changes the state in about:addons.
   async function testTogglePermissionButton(
-    permission,
+    permissions,
     button,
     excpectDisabled = false
   ) {
-    let enabled = optional_enabled.includes(permission);
+    let enabled = permissions.some(perm => optional_enabled.includes(perm));
     if (excpectDisabled) {
       enabled = !enabled;
     }
     is(
       button.checked,
       enabled,
-      `permission is set correctly for ${permission}: ${button.checked}`
+      `permission is set correctly for ${permissions}: ${button.checked}`
     );
     let change;
     if (addon.userDisabled || !extension) {
@@ -271,11 +273,25 @@ async function runTest(options) {
     if (addon.userDisabled || !extension) {
       perms = enabled ? perms.removed : perms.added;
     }
+
     ok(
-      perms.permissions.includes(permission) ||
-        perms.origins.includes(permission),
-      "permission was toggled"
+      perms.permissions.length + perms.origins.length > 0,
+      "Some permission(s) toggled."
     );
+
+    if (perms.permissions.length) {
+      // Only check api permissions against the first passed permission,
+      // because we treat <all_urls> as an api permission, but not *://*/*.
+      is(perms.permissions.length, 1, "A single api permission toggled.");
+      is(perms.permissions[0], permissions[0], "Correct api permission.");
+    }
+    if (perms.origins.length) {
+      Assert.deepEqual(
+        perms.origins.slice().sort(),
+        permissions.slice().sort(),
+        "Toggled origin permission."
+      );
+    }
 
     await BrowserTestUtils.waitForCondition(async () => {
       return button.checked == !enabled;
@@ -349,6 +365,12 @@ async function runTest(options) {
 
   if (optional_permissions.length) {
     for (let name of optional_permissions) {
+      // Set of permissions represented by this key.
+      let perms = [name];
+      if (name === optional_overlapping[0]) {
+        perms = optional_overlapping;
+      }
+
       // Check the row is a permission row with the correct key on the toggle
       // control.
       let row = permission_rows.shift();
@@ -369,18 +391,21 @@ async function runTest(options) {
         name,
         `optional permission toggle exists for ${name}`
       );
-      await testTogglePermissionButton(name, toggle);
-      await testTogglePermissionButton(name, toggle, true);
 
-      // make a change "outside" the UI and check the values.
-      // toggle twice to test both add/remove.
-      await testExternalPermissionChange(name, toggle);
-      // change another addon to mess around with optional permission
-      // values to see if it effects the addon we're testing here.  The
-      // next check would fail if anythign bleeds onto other addons.
-      await testOtherPermissionChange(name, toggle);
-      // repeate the "outside" test.
-      await testExternalPermissionChange(name, toggle);
+      await testTogglePermissionButton(perms, toggle);
+      await testTogglePermissionButton(perms, toggle, true);
+
+      for (let perm of perms) {
+        // make a change "outside" the UI and check the values.
+        // toggle twice to test both add/remove.
+        await testExternalPermissionChange(perm, toggle);
+        // change another addon to mess around with optional permission
+        // values to see if it effects the addon we're testing here.  The
+        // next check would fail if anythign bleeds onto other addons.
+        await testOtherPermissionChange(perm, toggle);
+        // repeate the "outside" test.
+        await testExternalPermissionChange(perm, toggle);
+      }
     }
   }
 
@@ -440,7 +465,7 @@ async function testPermissionsView({ manifestV3enabled, manifest_version }) {
     permissions: [],
     origins: ["https://example.com/*"],
   });
-  extensions["addon3@mochi.test"].awaitMessage("permission-added");
+  await extensions["addon3@mochi.test"].awaitMessage("permission-added");
 
   info("Check addon3 again and expect the new optional host permission");
   await runTest({
@@ -477,6 +502,7 @@ async function testPermissionsView({ manifestV3enabled, manifest_version }) {
       "<all_urls>",
       ...(manifestV3enabled ? ["*://*.mozilla.com/*"] : []),
     ],
+    optional_overlapping: ["<all_urls>", "*://*/*"],
     optional_strings: {
       "*://*.mozilla.com/*":
         "Access your data for sites in the *://mozilla.com domain",
@@ -487,12 +513,15 @@ async function testPermissionsView({ manifestV3enabled, manifest_version }) {
   await runTest({
     extension: extensions["addon7@mochi.test"],
     optional_permissions: ["<all_urls>"],
+    optional_overlapping: ["<all_urls>", "https://*/*"],
   });
 
-  info(`And again with permissions in the opposite order in the manifest`);
+  info(`Also check different "all sites" permissions in the manifest`);
   await runTest({
     extension: extensions["addon8@mochi.test"],
-    optional_permissions: ["<all_urls>"],
+    optional_permissions: ["https://*/*"],
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+    optional_overlapping: ["https://*/*", "http://*/*"],
   });
 
   for (let ext of Object.values(extensions)) {
@@ -616,4 +645,87 @@ add_task(async function testAllUrlsNotGrantedUnconditionally_MV3() {
 
   await extension.unload();
   await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function test_OneOfMany_AllSites_toggle() {
+  // ESLint autofix will silently convert http://*/* match patterns into https.
+  /* eslint-disable @microsoft/sdl/no-insecure-url */
+  let id = "addon9@mochi.test";
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      name: "Test add-on 9",
+      browser_specific_settings: { gecko: { id } },
+      optional_permissions: ["http://*/*", "https://*/*"],
+    },
+    background,
+    useAddonManager: "permanent",
+  });
+  await extension.startup();
+
+  // Grant the second "all sites" permission as listed in the manifest.
+  await ExtensionPermissions.add("addon9@mochi.test", {
+    permissions: [],
+    origins: ["https://*/*"],
+  });
+  await extension.awaitMessage("permission-added");
+
+  let view = await loadInitialView("extension");
+  let addon = await AddonManager.getAddonByID(id);
+
+  let card = getAddonCard(view, addon.id);
+
+  let permsSection = card.querySelector("addon-permissions-list");
+  if (!permsSection) {
+    ok(!card.hasAttribute("expanded"), "The list card is not expanded");
+    let loaded = waitForViewLoad(view);
+    card.querySelector('[action="expand"]').click();
+    await loaded;
+  }
+
+  card = getAddonCard(view, addon.id);
+  let { deck, tabGroup } = card.details;
+
+  let permsBtn = tabGroup.querySelector('[name="permissions"]');
+  let permsShown = BrowserTestUtils.waitForEvent(deck, "view-changed");
+  permsBtn.click();
+  await permsShown;
+
+  permsSection = card.querySelector("addon-permissions-list");
+  let permission_rows = permsSection.querySelectorAll(".permission-info");
+  is(permission_rows.length, 1, "Only one 'all sites' permission toggle.");
+
+  let row = permission_rows[0];
+  let label = row.firstElementChild;
+  let toggle = label.lastElementChild;
+  ok(
+    row.classList.contains("permission-info"),
+    `optional permission row for "http://*/*"`
+  );
+  is(
+    toggle.getAttribute("permission-key"),
+    "http://*/*",
+    `optional permission toggle exists for "http://*/*"`
+  );
+  ok(toggle.checked, "Expect 'all sites' toggle to be set.");
+
+  // Revoke the second "all sites" permission, expect toggle to be unchecked.
+  await ExtensionPermissions.remove("addon9@mochi.test", {
+    permissions: [],
+    origins: ["https://*/*"],
+  });
+  await extension.awaitMessage("permission-removed");
+  ok(!toggle.checked, "Expect 'all sites' toggle to be unchecked.");
+
+  toggle.click();
+
+  let granted = await extension.awaitMessage("permission-added");
+  Assert.deepEqual(granted, {
+    permissions: [],
+    origins: ["http://*/*", "https://*/*"],
+  });
+
+  await closeView(view);
+  await extension.unload();
+  /* eslint-enable @microsoft/sdl/no-insecure-url */
 });
