@@ -44,7 +44,7 @@
     <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
     <string name="mozac_feature_downloads_unable_to_open_third_party_app">Није могуће отворити %1$s</string>
     <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
-    <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">За преузимање датотека потребан је приступ датотекама и медијима. Идите на Андроид подешавања, изаберите Дозволе, а затим Дозволи.</string>
+    <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">За преузимање датотека потребан је приступ датотекама и медијима. Идите на Android подешавања, изаберите Дозволе, а затим Дозволи.</string>
 
     <!-- Alert dialog confirmation before cancelling downloads, this is the title   -->
     <string name="mozac_feature_downloads_cancel_active_downloads_warning_content_title">Отказати приватна преузимања?</string>
