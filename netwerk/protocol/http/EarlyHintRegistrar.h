@@ -60,9 +60,17 @@ class EarlyHintRegistrar final : public RefCounted<EarlyHintRegistrar> {
    */
   void DeleteEntry(uint64_t aEarlyHintPreloaderId);
 
+  /*
+   * This is called when "profile-change-net-teardown" is observed. We use this
+   * to cancel the ongoing preload and clear the linked EarlyHintPreloader
+   * objects.
+   */
+  static void CleanUp();
+
   // Singleton accessor
   static already_AddRefed<EarlyHintRegistrar> GetOrCreate();
 
+ private:
   // Store unlinked EarlyHintPreloader objects.
   EarlyHintHashtable mEarlyHint;
 };

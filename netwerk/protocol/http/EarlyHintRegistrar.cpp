@@ -9,6 +9,8 @@
 #include "EarlyHintPreloader.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
+#include "nsIObserver.h"
+#include "nsIObserverService.h"
 #include "nsXULAppAPI.h"
 
 namespace {
@@ -16,6 +18,30 @@ mozilla::StaticRefPtr<mozilla::net::EarlyHintRegistrar> gSingleton;
 }  // namespace
 
 namespace mozilla::net {
+
+namespace {
+
+class EHShutdownObserver final : public nsIObserver {
+ public:
+  EHShutdownObserver() = default;
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+ private:
+  ~EHShutdownObserver() = default;
+};
+
+NS_IMPL_ISUPPORTS(EHShutdownObserver, nsIObserver)
+
+NS_IMETHODIMP
+EHShutdownObserver::Observe(nsISupports* aSubject, const char* aTopic,
+                            const char16_t* aData) {
+  EarlyHintRegistrar::CleanUp();
+  return NS_OK;
+}
+
+}  // namespace
 
 EarlyHintRegistrar::EarlyHintRegistrar() {
   // EarlyHintRegistrar is a main-thread-only object.
@@ -28,9 +54,33 @@ EarlyHintRegistrar::EarlyHintRegistrar() {
 EarlyHintRegistrar::~EarlyHintRegistrar() { MOZ_ASSERT(NS_IsMainThread()); }
 
 // static
+void EarlyHintRegistrar::CleanUp() {
+  if (!gSingleton) {
+    return;
+  }
+
+  for (auto& preloader : gSingleton->mEarlyHint) {
+    if (auto p = preloader.GetData()) {
+      p->CancelChannel(NS_ERROR_ABORT, "EarlyHintRegistrar::CleanUp"_ns);
+    }
+  }
+  gSingleton->mEarlyHint.Clear();
+}
+
+// static
 already_AddRefed<EarlyHintRegistrar> EarlyHintRegistrar::GetOrCreate() {
   if (!gSingleton) {
     gSingleton = new EarlyHintRegistrar();
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    if (NS_WARN_IF(!obs)) {
+      return nullptr;
+    }
+    nsCOMPtr<nsIObserver> observer = new EHShutdownObserver();
+    nsresult rv =
+        obs->AddObserver(observer, "profile-change-net-teardown", false);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nullptr;
+    }
     mozilla::ClearOnShutdown(&gSingleton);
   }
   return do_AddRef(gSingleton);

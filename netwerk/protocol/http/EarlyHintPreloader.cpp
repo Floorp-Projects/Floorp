@@ -71,9 +71,9 @@ static uint64_t gEarlyHintPreloaderId{0};
 // OngoingEarlyHints
 //=============================================================================
 
-void OngoingEarlyHints::CancelAllOngoingPreloads() {
+void OngoingEarlyHints::CancelAllOngoingPreloads(const nsACString& aReason) {
   for (auto& preloader : mPreloaders) {
-    preloader->CancelChannel(nsresult::NS_ERROR_ABORT);
+    preloader->CancelChannel(NS_ERROR_ABORT, aReason);
   }
   mStartedPreloads.Clear();
 }
@@ -344,13 +344,17 @@ EarlyHintConnectArgs EarlyHintPreloader::Register() {
   return mConnectArgs;
 }
 
-nsresult EarlyHintPreloader::CancelChannel(nsresult aStatus) {
+nsresult EarlyHintPreloader::CancelChannel(nsresult aStatus,
+                                           const nsACString& aReason) {
   // clear redirect channel in case this channel is cleared between the call of
   // EarlyHintPreloader::AsyncOnChannelRedirect and
   // EarlyHintPreloader::OnRedirectResult
   mRedirectChannel = nullptr;
   if (mChannel) {
-    mChannel->Cancel(aStatus);
+    if (mSuspended) {
+      mChannel->Resume();
+    }
+    mChannel->CancelWithReason(aStatus, aReason);
     mChannel = nullptr;
     SetState(ePreloaderCancelled);
   }

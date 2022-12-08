@@ -40,7 +40,7 @@ class OngoingEarlyHints final {
   bool Contains(const PreloadHashKey& aKey);
   bool Add(const PreloadHashKey& aKey, RefPtr<EarlyHintPreloader> aPreloader);
 
-  void CancelAllOngoingPreloads();
+  void CancelAllOngoingPreloads(const nsACString& aReason);
 
   // registers all channels and returns the ids
   void RegisterLinksAndGetConnectArgs(
@@ -89,7 +89,7 @@ class EarlyHintPreloader final : public nsIStreamListener,
   // Should be called by the preloader service when the preload is not
   // needed after all, because the final response returns a non-2xx status
   // code.
-  nsresult CancelChannel(nsresult aStatus);
+  nsresult CancelChannel(nsresult aStatus, const nsACString& aReason);
 
   void OnParentReady(nsIParentChannel* aParent, uint64_t aChannelId);
 
