@@ -15,7 +15,7 @@ job-defaults:
         kind: build
         platform: packages/opt
         tier: 1
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         max-run-time: 1800
     run-on-projects: []
