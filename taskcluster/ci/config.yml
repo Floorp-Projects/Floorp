@@ -84,7 +84,6 @@ treeherder:
         'M-wmfme': 'Mochitests with Windows Media Foundation media engine enabled'
         'M-f': 'Mochitest failures'
         'M-dt-no-eft-nofis': 'DevTools Mochitests with EFT without fission enabled'
-        'M-msix': 'Mochitests from MSIX builds'
         'MSI': 'Repack installers into MSIs'
         'MSIs': 'Signing of Repacked installers of MSIs'
         'MSIX': 'Repack into MSIX package'
