@@ -7,6 +7,7 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 object Config {
 
@@ -43,5 +44,52 @@ object Config {
     @JvmStatic
     fun majorVersion(): String {
         return readVersionFromFile().split(".")[0]
+    }
+
+    /**
+     * Returns the git hash of the currently checked out revision. If there are uncommitted changes,
+     * a "+" will be appended to the hash, e.g. "c8ba05ad0+".
+     */
+    @JvmStatic
+    fun getGitHash(): String {
+        val revisionCmd = arrayOf("git", "rev-parse", "--short", "HEAD")
+        val revision = execReadStandardOutOrThrow(revisionCmd)
+
+        // Append "+" if there are uncommitted changes in the working directory.
+        val statusCmd = arrayOf("git", "status", "--porcelain=v2")
+        val status = execReadStandardOutOrThrow(statusCmd)
+        val hasUnstagedChanges = status.isNotBlank()
+        val statusSuffix = if (hasUnstagedChanges) "+" else ""
+
+        return "$revision$statusSuffix"
+    }
+
+    /**
+     * Executes the given command with [Runtime.exec], throwing if the command returns a non-zero exit
+     * code or times out. If successful, returns the command's stdout.
+     *
+     * @return stdout of the command
+     * @throws [IllegalStateException] if the command returns a non-zero exit code or times out.
+     */
+    private fun execReadStandardOutOrThrow(cmd: Array<String>, timeoutSeconds: Long = 30): String {
+        val process = Runtime.getRuntime().exec(cmd)
+
+        check(
+            process.waitFor(
+                timeoutSeconds,
+                TimeUnit.SECONDS,
+            ),
+        ) { "command unexpectedly timed out: `$cmd`" }
+        check(process.exitValue() == 0) {
+            val stderr = process.errorStream.bufferedReader().readText().trim()
+
+            """command exited with non-zero exit value: ${process.exitValue()}.
+           |cmd: ${cmd.joinToString(separator = " ")}
+           |stderr:
+           |$stderr"""
+                .trimMargin()
+        }
+
+        return process.inputStream.bufferedReader().readText().trim()
     }
 }

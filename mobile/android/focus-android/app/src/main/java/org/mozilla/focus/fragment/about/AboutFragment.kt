@@ -31,6 +31,7 @@ import androidx.core.content.pm.PackageInfoCompat
 import kotlinx.coroutines.Job
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.support.utils.ext.getPackageInfoCompat
+import org.mozilla.focus.BuildConfig
 import org.mozilla.focus.R
 import org.mozilla.focus.databinding.FragmentAboutBinding
 import org.mozilla.focus.ext.components
@@ -41,7 +42,7 @@ import org.mozilla.focus.ui.theme.FocusTheme
 import org.mozilla.focus.ui.theme.focusColors
 import org.mozilla.focus.ui.theme.focusTypography
 import org.mozilla.focus.utils.SupportUtils.manifestoURL
-import org.mozilla.geckoview.BuildConfig
+import org.mozilla.geckoview.BuildConfig as GeckoViewBuildConfig
 
 class AboutFragment : BaseSettingsLikeFragment() {
 
@@ -105,17 +106,19 @@ class AboutFragment : BaseSettingsLikeFragment() {
 
     private fun getAboutHeader(): String {
         val gecko = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) " \uD83E\uDD8E " else " GV: "
-        val engineIndicator = gecko + BuildConfig.MOZ_APP_VERSION + "-" + BuildConfig.MOZ_APP_BUILDID
+        val engineIndicator = gecko + GeckoViewBuildConfig.MOZ_APP_VERSION + "-" + GeckoViewBuildConfig.MOZ_APP_BUILDID
         val servicesAbbreviation = getString(R.string.services_abbreviation)
         val servicesIndicator = mozilla.components.Build.applicationServicesVersion
         val packageInfo = requireContext().packageManager.getPackageInfoCompat(requireContext().packageName, 0)
         val versionCode = PackageInfoCompat.getLongVersionCode(packageInfo).toString()
+        val gitHash = if (BuildConfig.GIT_HASH.isNotBlank()) ", ${BuildConfig.GIT_HASH}" else ""
 
         @Suppress("ImplicitDefaultLocale") // We want LTR in all cases as the version is not translatable.
         return String.format(
-            "%s (Build #%s)\n%s: %s",
+            "%s (Build #%s)%s\n%s: %s",
             packageInfo.versionName,
             versionCode + engineIndicator,
+            gitHash,
             servicesAbbreviation,
             servicesIndicator,
         )

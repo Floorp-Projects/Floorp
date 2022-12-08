@@ -30,6 +30,8 @@ android {
         versionName Config.generateDebugVersionName()
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArguments clearPackageData: 'true'
+        // See override in release builds for why it's blank.
+        buildConfigField "String", "GIT_HASH", "\"\""
 
         vectorDrawables.useSupportLibrary = true
 
@@ -56,6 +58,7 @@ android {
             minifyEnabled !project.hasProperty("disableOptimization")
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             matchingFallbacks = ['release']
+            buildConfigField "String", "GIT_HASH", "\"${Config.getGitHash()}\""
 
             if (gradle.hasProperty("localProperties.autosignReleaseWithDebugKey")) {
                 println ("All builds will be automatically signed with the debug key")
