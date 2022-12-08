@@ -12,6 +12,7 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.toolbar.BrowserToolbar
+import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.android.view.hideKeyboard
@@ -135,7 +136,12 @@ class ToolbarView(
             // we have the most up to date text
             interactor.onTextChanged(view.url.toString())
 
-            view.editMode()
+            // If search terms are displayed, move the cursor to the end instead of selecting all text.
+            if (settings.showUnifiedSearchFeature && searchState.searchTerms.isNotBlank()) {
+                view.editMode(cursorPlacement = Toolbar.CursorPlacement.END)
+            } else {
+                view.editMode()
+            }
             isInitialized = true
         }
 

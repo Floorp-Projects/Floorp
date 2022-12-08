@@ -11,12 +11,14 @@ import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.spyk
 import io.mockk.verify
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.edit.EditToolbar
 import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -24,12 +26,13 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.MetricsUtils
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.search.SearchEngineSource
 import org.mozilla.fenix.search.SearchFragmentState
-import org.mozilla.fenix.utils.Settings
 import java.util.UUID
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -71,6 +74,7 @@ class ToolbarViewTest {
     fun setup() {
         MockKAnnotations.init(this)
         context = ContextThemeWrapper(testContext, R.style.NormalTheme)
+        every { context.settings() } returns mockk(relaxed = true)
         toolbar = spyk(BrowserToolbar(context))
     }
 
@@ -113,6 +117,31 @@ class ToolbarViewTest {
         // search term changes update the url and invoke the interactor.
         verify(exactly = 2) { toolbar.url = any() }
         verify(exactly = 2) { interactor.onTextChanged(any()) }
+    }
+
+    @Test
+    fun `GIVEN search term is set WHEN switching to edit mode THEN the cursor is set at the end of the search term`() {
+        every { context.settings().showUnifiedSearchFeature } returns true
+        val view = buildToolbarView(false)
+        mockkObject(FeatureFlags)
+
+        view.update(defaultState.copy(searchTerms = "search terms"))
+
+        // editMode gets called when the view is initialized.
+        verify(exactly = 1) { toolbar.editMode(Toolbar.CursorPlacement.ALL) }
+        verify(exactly = 1) { toolbar.editMode(Toolbar.CursorPlacement.END) }
+    }
+
+    @Test
+    fun `GIVEN no search term is set WHEN switching to edit mode THEN the cursor is set at the end of the search term`() {
+        every { context.settings().showUnifiedSearchFeature } returns true
+        val view = buildToolbarView(false)
+        mockkObject(FeatureFlags)
+
+        view.update(defaultState)
+
+        // editMode gets called when the view is initialized.
+        verify(exactly = 2) { toolbar.editMode(Toolbar.CursorPlacement.ALL) }
     }
 
     @Test
@@ -223,7 +252,7 @@ class ToolbarViewTest {
 
     private fun buildToolbarView(isPrivate: Boolean) = ToolbarView(
         context,
-        Settings(context),
+        context.settings(),
         interactor,
         isPrivate = isPrivate,
         view = toolbar,
