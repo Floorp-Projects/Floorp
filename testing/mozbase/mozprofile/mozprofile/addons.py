@@ -253,10 +253,7 @@ class AddonManager(object):
         is_webext = False
         try:
             if zipfile.is_zipfile(addon_path):
-                # Bug 944361 - We cannot use 'with' together with zipFile because
-                # it will cause an exception thrown in Python 2.6.
-                try:
-                    compressed_file = zipfile.ZipFile(addon_path, "r")
+                with zipfile.ZipFile(addon_path, "r") as compressed_file:
                     filenames = [f.filename for f in (compressed_file).filelist]
                     if "install.rdf" in filenames:
                         manifest = compressed_file.read("install.rdf")
@@ -266,16 +263,35 @@ class AddonManager(object):
                         manifest = json.loads(manifest)
                     else:
                         raise KeyError("No manifest")
-                finally:
-                    compressed_file.close()
             elif os.path.isdir(addon_path):
-                try:
-                    with open(os.path.join(addon_path, "install.rdf")) as f:
-                        manifest = f.read()
-                except IOError:
-                    with open(os.path.join(addon_path, "manifest.json")) as f:
-                        manifest = json.loads(f.read())
-                        is_webext = True
+                entries = os.listdir(addon_path)
+                # Beginning with https://phabricator.services.mozilla.com/D126174
+                # directories may exist that contain one single XPI. If that's
+                # the case we need to process it just as we do above.
+                if len(entries) == 1 and zipfile.is_zipfile(
+                    os.path.join(addon_path, entries[0])
+                ):
+                    with zipfile.ZipFile(
+                        os.path.join(addon_path, entries[0]), "r"
+                    ) as compressed_file:
+                        filenames = [f.filename for f in (compressed_file).filelist]
+                        if "install.rdf" in filenames:
+                            manifest = compressed_file.read("install.rdf")
+                        elif "manifest.json" in filenames:
+                            is_webext = True
+                            manifest = compressed_file.read("manifest.json").decode()
+                            manifest = json.loads(manifest)
+                        else:
+                            raise KeyError("No manifest")
+                # Otherwise, treat is an already unpacked XPI.
+                else:
+                    try:
+                        with open(os.path.join(addon_path, "install.rdf")) as f:
+                            manifest = f.read()
+                    except IOError:
+                        with open(os.path.join(addon_path, "manifest.json")) as f:
+                            manifest = json.loads(f.read())
+                            is_webext = True
             else:
                 raise IOError(
                     "Add-on path is neither an XPI nor a directory: %s" % addon_path
