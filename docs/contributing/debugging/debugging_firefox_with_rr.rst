@@ -28,6 +28,11 @@ To record Firefox running normally, simply launch it under rr as you would if ru
 
 This will save a trace to your working directory as described in the `usage instructions <https://github.com/mozilla/rr/wiki/Usage>`__. Please refer to `those instructions <https://github.com/mozilla/rr/wiki/Usage>`__ for details on how to debug the recording, which isn't covered in this document.
 
+Sandboxing reduces recording performance because of the SIGSYS signals and extra syscall. Disabling it can help.
+
+The background hang monitor might also be making things worse by causing a lot of extra syscalls. It can be disabled by setting
+toolkit.content-background-hang-monitor.disabled=true.
+
 SIGSYS
 ------
 
