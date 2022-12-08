@@ -101,7 +101,7 @@ pub fn count_vec(c: &mut Criterion) {
                 benchmarked_v2_prove(&input, &mut client).len()
             );
 
-            c.bench_function(&format!("prio2 prove, input size={}", *size), |b| {
+            c.bench_function(&format!("prio2 prove, size={}", *size), |b| {
                 b.iter(|| {
                     benchmarked_v2_prove(&input, &mut client);
                 })
@@ -111,7 +111,7 @@ pub fn count_vec(c: &mut Criterion) {
             let mut validator: ValidationMemory<F> = ValidationMemory::new(input.len());
             let eval_at = random_vector(1).unwrap()[0];
 
-            c.bench_function(&format!("prio2 query, input size={}", *size), |b| {
+            c.bench_function(&format!("prio2 query, size={}", *size), |b| {
                 b.iter(|| {
                     generate_verification_message(
                         input.len(),
@@ -133,27 +133,21 @@ pub fn count_vec(c: &mut Criterion) {
 
         println!("prio3 countvec proof size={}\n", proof.len());
 
-        c.bench_function(
-            &format!("prio3 countvec prove, input size={}", *size),
-            |b| {
-                b.iter(|| {
-                    let prove_rand = random_vector(count_vec.prove_rand_len()).unwrap();
-                    count_vec.prove(&input, &prove_rand, &joint_rand).unwrap();
-                })
-            },
-        );
+        c.bench_function(&format!("prio3 countvec prove, size={}", *size), |b| {
+            b.iter(|| {
+                let prove_rand = random_vector(count_vec.prove_rand_len()).unwrap();
+                count_vec.prove(&input, &prove_rand, &joint_rand).unwrap();
+            })
+        });
 
-        c.bench_function(
-            &format!("prio3 countvec query, input size={}", *size),
-            |b| {
-                b.iter(|| {
-                    let query_rand = random_vector(count_vec.query_rand_len()).unwrap();
-                    count_vec
-                        .query(&input, &proof, &query_rand, &joint_rand, 1)
-                        .unwrap();
-                })
-            },
-        );
+        c.bench_function(&format!("prio3 countvec query, size={}", *size), |b| {
+            b.iter(|| {
+                let query_rand = random_vector(count_vec.query_rand_len()).unwrap();
+                count_vec
+                    .query(&input, &proof, &query_rand, &joint_rand, 1)
+                    .unwrap();
+            })
+        });
 
         #[cfg(feature = "multithreaded")]
         {
@@ -161,7 +155,7 @@ pub fn count_vec(c: &mut Criterion) {
                 CountVec::new(*size);
 
             c.bench_function(
-                &format!("prio3 countvec multithreaded prove, input size={}", *size),
+                &format!("prio3 countvec multithreaded prove, size={}", *size),
                 |b| {
                     b.iter(|| {
                         let prove_rand = random_vector(count_vec.prove_rand_len()).unwrap();
@@ -171,7 +165,7 @@ pub fn count_vec(c: &mut Criterion) {
             );
 
             c.bench_function(
-                &format!("prio3 countvec multithreaded query, input size={}", *size),
+                &format!("prio3 countvec multithreaded query, size={}", *size),
                 |b| {
                     b.iter(|| {
                         let query_rand = random_vector(count_vec.query_rand_len()).unwrap();
@@ -192,8 +186,8 @@ pub fn prio3_client(c: &mut Criterion) {
     let prio3 = Prio3::new_aes128_count(num_shares).unwrap();
     let measurement = 1;
     println!(
-        "prio3 count share size = {}",
-        prio3_input_share_size(&prio3.shard(&measurement).unwrap().1)
+        "prio3 count size = {}",
+        prio3_input_share_size(&prio3.shard(&measurement).unwrap())
     );
     c.bench_function("prio3 count", |b| {
         b.iter(|| {
@@ -205,9 +199,9 @@ pub fn prio3_client(c: &mut Criterion) {
     let prio3 = Prio3::new_aes128_histogram(num_shares, &buckets).unwrap();
     let measurement = 17;
     println!(
-        "prio3 histogram ({} buckets) share size = {}",
+        "prio3 histogram ({} buckets) size = {}",
         buckets.len() + 1,
-        prio3_input_share_size(&prio3.shard(&measurement).unwrap().1)
+        prio3_input_share_size(&prio3.shard(&measurement).unwrap())
     );
     c.bench_function(
         &format!("prio3 histogram ({} buckets)", buckets.len() + 1),
@@ -222,9 +216,9 @@ pub fn prio3_client(c: &mut Criterion) {
     let prio3 = Prio3::new_aes128_sum(num_shares, bits).unwrap();
     let measurement = 1337;
     println!(
-        "prio3 sum ({} bits) share size = {}",
+        "prio3 sum ({} bits) size = {}",
         bits,
-        prio3_input_share_size(&prio3.shard(&measurement).unwrap().1)
+        prio3_input_share_size(&prio3.shard(&measurement).unwrap())
     );
     c.bench_function(&format!("prio3 sum ({} bits)", bits), |b| {
         b.iter(|| {
@@ -236,9 +230,9 @@ pub fn prio3_client(c: &mut Criterion) {
     let prio3 = Prio3::new_aes128_count_vec(num_shares, len).unwrap();
     let measurement = vec![0; len];
     println!(
-        "prio3 countvec ({} len) share size = {}",
+        "prio3 countvec ({} len) size = {}",
         len,
-        prio3_input_share_size(&prio3.shard(&measurement).unwrap().1)
+        prio3_input_share_size(&prio3.shard(&measurement).unwrap())
     );
     c.bench_function(&format!("prio3 countvec ({} len)", len), |b| {
         b.iter(|| {
@@ -251,9 +245,9 @@ pub fn prio3_client(c: &mut Criterion) {
         let prio3 = Prio3::new_aes128_count_vec_multithreaded(num_shares, len).unwrap();
         let measurement = vec![0; len];
         println!(
-            "prio3 countvec multithreaded ({} len) share size = {}",
+            "prio3 countvec multithreaded ({} len) size = {}",
             len,
-            prio3_input_share_size(&prio3.shard(&measurement).unwrap().1)
+            prio3_input_share_size(&prio3.shard(&measurement).unwrap())
         );
         c.bench_function(&format!("prio3 parallel countvec ({} len)", len), |b| {
             b.iter(|| {

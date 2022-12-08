@@ -135,13 +135,6 @@ export const DAPTelemetrySender = new (class {
    */
   async getHpkeConfig(endpoint) {
     let response = await fetch(endpoint);
-    if (!response.ok) {
-      throw new Error(
-        `Failed to retrieve HPKE config for DAP from: ${endpoint}. Response: ${
-          response.status
-        }: ${await response.text()}.`
-      );
-    }
     let buffer = await response.arrayBuffer();
     let hpke_config_bytes = new Uint8Array(buffer);
     return hpke_config_bytes;

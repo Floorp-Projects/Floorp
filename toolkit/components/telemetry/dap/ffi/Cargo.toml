@@ -8,6 +8,6 @@ authors = [
 license = "MPL-2.0"
 
 [dependencies]
-prio = {version = "0.9.0", default-features = false }
+prio = {version = "0.8.4", default-features = false }
 thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
 rand = "0.8"
