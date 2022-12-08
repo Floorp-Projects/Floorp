@@ -70,7 +70,7 @@
     const tech = /tech\((.+)\)/;
     var specified_techs = tech.exec(specified)[1].split(/,\s*/).sort().join(", ");
     var serialized_techs = tech.exec(serialized)[1].split(/,\s*/).sort().join(", ");
-    assert_equals(serialized_techs, specified_techs, "expected matching tech() lists");
+    assert_equals(serialized_techs.toLowerCase(), specified_techs.toLowerCase(), "expected matching tech() lists");
   }
 
   for (let t of tests) {
