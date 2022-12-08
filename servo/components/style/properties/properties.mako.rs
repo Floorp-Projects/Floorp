@@ -2606,7 +2606,7 @@ pub struct SourcePropertyDeclaration {
 
 // This is huge, but we allocate it on the stack and then never move it,
 // we only pass `&mut SourcePropertyDeclaration` references around.
-size_of_test!(SourcePropertyDeclaration, 664);
+size_of_test!(SourcePropertyDeclaration, 632);
 
 impl SourcePropertyDeclaration {
     /// Create one. It’s big, try not to move it around.
