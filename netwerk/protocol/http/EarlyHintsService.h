@@ -29,7 +29,7 @@ class EarlyHintsService {
   void EarlyHint(const nsACString& aLinkHeader, nsIURI* aBaseURI,
                  nsIChannel* aChannel, const nsACString& aReferrerPolicy);
   void FinalResponse(uint32_t aResponseStatus);
-  void Cancel();
+  void Cancel(const nsACString& aReason);
 
   void RegisterLinksAndGetConnectArgs(
       nsTArray<EarlyHintConnectArgs>& aOutLinks);
