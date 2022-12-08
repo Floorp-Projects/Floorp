@@ -197,11 +197,8 @@ class HTMLInputElement final : public TextControlElement,
   void FinishRangeThumbDrag(WidgetGUIEvent* aEvent = nullptr);
   MOZ_CAN_RUN_SCRIPT
   void CancelRangeThumbDrag(bool aIsForUserEvent = true);
-
-  enum class SnapToTickMarks : bool { No, Yes };
   MOZ_CAN_RUN_SCRIPT
-  void SetValueOfRangeForUserEvent(Decimal aValue,
-                                   SnapToTickMarks = SnapToTickMarks::No);
+  void SetValueOfRangeForUserEvent(Decimal aValue);
 
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
   void UnbindFromTree(bool aNullParent = true) override;
@@ -1067,13 +1064,6 @@ class HTMLInputElement final : public TextControlElement,
   void HandleTypeChange(FormControlType aNewType, bool aNotify);
 
   enum class ForValueGetter { No, Yes };
-
-  /**
-   * If the input range has a list, this function will snap the given value to
-   * the nearest tick mark, but only if the given value is close enough to that
-   * tick mark.
-   */
-  void MaybeSnapToTickMark(Decimal& aValue);
 
   /**
    * Sanitize the value of the element depending of its current type.
