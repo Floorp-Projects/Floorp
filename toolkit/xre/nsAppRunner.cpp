@@ -3987,12 +3987,25 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
   if (ARG_FOUND ==
       CheckArg("backgroundtask", &backgroundTaskName, CheckArgFlag::None)) {
     backgroundTask = Some(backgroundTaskName);
-  }
-  BackgroundTasks::Init(backgroundTask);
 
-  if (BackgroundTasks::IsBackgroundTaskMode()) {
-    printf_stderr("*** You are running in background task mode. ***\n");
+    if (BackgroundTasks::IsNoOutputTaskName(backgroundTask.ref()) &&
+        !CheckArgExists("attach-console") &&
+        !EnvHasValue("MOZ_BACKGROUNDTASKS_IGNORE_NO_OUTPUT")) {
+      // Suppress output, somewhat crudely.  We need to suppress stderr as well
+      // as stdout because assertions, of which there are many, write to stderr.
+#  ifdef XP_WIN
+      Unused << freopen("nul:", "w", stdout);
+      Unused << freopen("nul:", "w", stderr);
+#  else
+      Unused << freopen("/dev/null", "w", stdout);
+      Unused << freopen("/dev/null", "w", stderr);
+#  endif
+    } else {
+      printf_stderr("*** You are running in background task mode. ***\n");
+    }
   }
+
+  BackgroundTasks::Init(backgroundTask);
 #endif
 
 #ifndef ANDROID
