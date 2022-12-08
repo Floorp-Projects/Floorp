@@ -119,7 +119,7 @@ fn json_to_kind<T>(mut json: serde_json::Value, id: &Guid) -> IncomingKind<T>
 where
     T: for<'de> serde::Deserialize<'de>,
 {
-    // In general, the payload does not carry 'id', but <T> does - so grab it from the
+    // It's possible that the payload does not carry 'id', but <T> always does - so grab it from the
     // envelope and put it into the json before deserializing the record.
     if let serde_json::Value::Object(ref mut map) = json {
         if map.contains_key("deleted") {
@@ -127,9 +127,7 @@ where
         }
         match map.get("id") {
             Some(serde_json::Value::String(content_id)) => {
-                // It exists in the payload! Note that this *should not* happen in practice
-                // (the `id` should *never* be in the payload), but if that does happen
-                // we should do the "right" thing, which is treat a mismatch as malformed.
+                // It exists in the payload! We treat a mismatch as malformed.
                 if content_id != id {
                     log::trace!(
                         "malformed incoming record: envelope id: {} payload id: {}",
@@ -150,8 +148,6 @@ where
                     );
                     return IncomingKind::Malformed;
                 }
-                // We accidentally included the ID in the record in the past but no one should any more.
-                log::info!("incoming record has 'id' in the payload - it does match, but is still unexpected");
             }
             Some(v) => {
                 // It exists in the payload but is not a string - they can't possibly be
@@ -161,6 +157,7 @@ where
                 return IncomingKind::Malformed;
             }
             None => {
+                // Doesn't exist in the payload - add it before trying to deser a T.
                 if !id.is_valid_for_sync_server() {
                     log::trace!("malformed incoming record: id is not valid: {}", id);
                     report_error!(
@@ -182,7 +179,8 @@ where
     }
 }
 
-// Serializing <T> into json with special handling of `id`
+// Serializing <T> into json with special handling of `id` (the `id` from the payload
+// is used as the envelope ID)
 fn content_with_id_to_json<T>(record: T) -> Result<(serde_json::Value, Guid)>
 where
     T: Serialize,
@@ -190,7 +188,7 @@ where
     let mut json = serde_json::to_value(record)?;
     let id = match json.as_object_mut() {
         Some(ref mut map) => {
-            match map.remove("id").as_ref().and_then(|v| v.as_str()) {
+            match map.get("id").as_ref().and_then(|v| v.as_str()) {
                 Some(id) => {
                     let id: Guid = id.into();
                     assert!(id.is_valid_for_sync_server(), "record's ID is invalid");
@@ -205,15 +203,21 @@ where
     Ok((json, id))
 }
 
+// Serializing <T> into json with special handling of `id` (if `id` in serialized
+// JSON already exists, we panic if it doesn't match the envelope. If the serialized
+// content does not have an `id`, it is added from the envelope)
+// is used as the envelope ID)
 fn content_to_json<T>(record: T, id: &Guid) -> Result<serde_json::Value>
 where
     T: Serialize,
 {
     let mut payload = serde_json::to_value(record)?;
     if let Some(ref mut map) = payload.as_object_mut() {
-        if let Some(content_id) = map.remove("id").as_ref().and_then(|v| v.as_str()) {
+        if let Some(content_id) = map.get("id").as_ref().and_then(|v| v.as_str()) {
             assert_eq!(content_id, id);
             assert!(id.is_valid_for_sync_server(), "record's ID is invalid");
+        } else {
+            map.insert("id".to_string(), serde_json::Value::String(id.to_string()));
         }
     };
     Ok(payload)
@@ -304,9 +308,9 @@ mod tests {
         // The envelope should have our ID.
         assert_eq!(outgoing.envelope.id, Guid::new("test"));
 
-        // and make sure `cleartext` part of the payload only has data.
+        // and make sure `cleartext` part of the payload the data and the id.
         let ct_value = serde_json::from_str::<serde_json::Value>(&outgoing.payload).unwrap();
-        assert_eq!(ct_value, json!({"data": 1}));
+        assert_eq!(ct_value, json!({"data": 1, "id": "test"}));
     }
 
     #[test]
@@ -324,9 +328,9 @@ mod tests {
         // The envelope should have our ID.
         assert_eq!(outgoing.envelope.id, Guid::new("test"));
 
-        // and make sure `cleartext` part of the payload only has data.
+        // and make sure `cleartext` part of the payload has data and the id.
         let ct_value = serde_json::from_str::<serde_json::Value>(&outgoing.payload).unwrap();
-        assert_eq!(ct_value, json!({"data": 1}));
+        assert_eq!(ct_value, json!({"data": 1, "id": "test"}));
     }
 
     #[test]

@@ -178,9 +178,9 @@ mod tests {
             serde_json::from_str::<serde_json::Value>(&outgoing.payload).unwrap();
         let outgoing_map = outgoing_payload.as_object().unwrap();
 
-        assert!(!outgoing_map.contains_key("id"));
+        assert!(outgoing_map.contains_key("id"));
         assert!(outgoing_map.contains_key("data"));
         assert!(outgoing_map.contains_key("extId"));
-        assert_eq!(outgoing_map.len(), 2);
+        assert_eq!(outgoing_map.len(), 3);
     }
 }

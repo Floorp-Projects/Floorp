@@ -44,9 +44,6 @@ sync-client = ["sync-engine", "crypto", "viaduct", "url"]
 # upgraded to make the sync-client part truly optional.
 standalone-sync = ["sync-client"]
 
-# A feature designed to be enabled in dev_dependencies.
-test-utils = []
-
 [dependencies]
 anyhow = "1.0"
 base16 = { version = "0.2", optional = true }
