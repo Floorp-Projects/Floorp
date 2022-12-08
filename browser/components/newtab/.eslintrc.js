@@ -126,10 +126,6 @@ module.exports = {
     "react/no-unknown-property": 2,
     "react/require-render-return": 2,
 
-    // Bug 877389 - Gradually migrate from Cu.reportError to console.error.
-    // Report as warnings where it is not yet passing.
-    "mozilla/no-cu-reportError": "off",
-
     "accessor-pairs": [2, { setWithoutGet: true, getWithoutSet: false }],
     "array-callback-return": 2,
     "block-scoped-var": 2,

@@ -258,8 +258,11 @@ const TEST_GLOBAL = {
   Cu: {
     importGlobalProperties() {},
     now: () => window.performance.now(),
-    reportError() {},
     cloneInto: o => JSON.parse(JSON.stringify(o)),
+  },
+  console: {
+    ...console,
+    error() {},
   },
   dump() {},
   EveryWindow: {

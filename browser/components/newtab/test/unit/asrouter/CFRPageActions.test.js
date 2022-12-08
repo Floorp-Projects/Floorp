@@ -452,7 +452,7 @@ describe("CFRPageActions", () => {
       });
       it("should report an error when no attributes are present but subAttribute is requested", async () => {
         const fromJson = { value: "Foo" };
-        const stub = sandbox.stub(global.Cu, "reportError");
+        const stub = sandbox.stub(global.console, "error");
 
         await pageAction.getStrings(fromJson, "accesskey");
 

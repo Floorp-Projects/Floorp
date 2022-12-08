@@ -27,7 +27,6 @@ describe("#CachedTargetingGetter", () => {
       global.NewTabUtils.activityStreamProvider,
       "getTopFrecentSites"
     );
-    sandbox.stub(global.Cu, "reportError");
     topsitesCache = new CachedTargetingGetter("getTopFrecentSites");
     globals = new GlobalOverrider();
     globals.set(

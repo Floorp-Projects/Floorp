@@ -868,14 +868,14 @@ describe("ToolbarPanelHub", () => {
         .throws();
       const onboardingMsgs = await OnboardingMessageProvider.getUntranslatedMessages();
       const msg = onboardingMsgs.find(m => m.template === "protections_panel");
-      sandbox.spy(global.Cu, "reportError");
+      sandbox.spy(global.console, "error");
 
       await fakeInsert();
 
       eventListeners.mouseup();
 
       assert.calledOnce(stub);
-      assert.calledOnce(global.Cu.reportError);
+      assert.calledOnce(global.console.error);
       assert.calledOnce(global.SpecialMessageActions.handleAction);
       assert.calledWithExactly(
         global.SpecialMessageActions.handleAction,

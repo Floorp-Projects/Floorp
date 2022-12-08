@@ -727,7 +727,7 @@ describe("Top Sites Feed", () => {
     });
     it("should catch indexedDB errors", async () => {
       feed._storage.get.throws(new Error());
-      globals.sandbox.spy(global.Cu, "reportError");
+      globals.sandbox.spy(global.console, "error");
 
       try {
         await feed.refresh({ broadcast: false });
@@ -735,7 +735,7 @@ describe("Top Sites Feed", () => {
         assert.fails();
       }
 
-      assert.calledOnce(Cu.reportError);
+      assert.calledOnce(console.error);
     });
   });
   describe("#updateSectionPrefs", () => {
