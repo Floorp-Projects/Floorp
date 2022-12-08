@@ -374,6 +374,22 @@ static void UpdateLastInputEventTime(void* aGdkEvent) {
   sLastUserInputTime = timestamp;
 }
 
+// Don't set parent (transient for) if nothing changes.
+// gtk_window_set_transient_for() blows up wl_subsurfaces used by aWindow
+// even if aParent is the same.
+static void GtkWindowSetTransientFor(GtkWindow* aWindow, GtkWindow* aParent) {
+  GtkWindow* parent = gtk_window_get_transient_for(aWindow);
+  if (parent != aParent) {
+    gtk_window_set_transient_for(aWindow, aParent);
+  }
+}
+
+#define gtk_window_set_transient_for(a, b)                         \
+  {                                                                \
+    MOZ_ASSERT_UNREACHABLE(                                        \
+        "gtk_window_set_transient_for() can't be used directly."); \
+  }
+
 nsWindow::nsWindow()
     : mIsDestroyed(false),
       mIsShown(false),
@@ -775,7 +791,7 @@ void nsWindow::ReparentNativeWidget(nsIWidget* aNewParent) {
   GtkWindow* newParentWidget = GTK_WINDOW(newParent->GetGtkWidget());
 
   LOG("nsWindow::ReparentNativeWidget new parent %p\n", newParent);
-  gtk_window_set_transient_for(GTK_WINDOW(mShell), newParentWidget);
+  GtkWindowSetTransientFor(GTK_WINDOW(mShell), newParentWidget);
 }
 
 void nsWindow::SetModal(bool aModal) {
@@ -1480,8 +1496,8 @@ void nsWindow::WaylandPopupHierarchyCalculatePositions() {
   while (popup) {
     LOG("  popup [%p] set parent window [%p]", (void*)popup,
         (void*)popup->mWaylandPopupPrev);
-    gtk_window_set_transient_for(GTK_WINDOW(popup->mShell),
-                                 GTK_WINDOW(popup->mWaylandPopupPrev->mShell));
+    GtkWindowSetTransientFor(GTK_WINDOW(popup->mShell),
+                             GTK_WINDOW(popup->mWaylandPopupPrev->mShell));
     popup = popup->mWaylandPopupNext;
   }
 
@@ -5966,8 +5982,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     gtk_window_set_type_hint(GTK_WINDOW(mShell), GDK_WINDOW_TYPE_HINT_DIALOG);
     LOG("nsWindow::Create(): dialog");
     if (parentnsWindow) {
-      gtk_window_set_transient_for(GTK_WINDOW(mShell),
-                                   GTK_WINDOW(parentnsWindow->GetGtkWidget()));
+      GtkWindowSetTransientFor(GTK_WINDOW(mShell),
+                               GTK_WINDOW(parentnsWindow->GetGtkWidget()));
       LOG("    set parent window [%p]\n", parentnsWindow);
     }
   } else if (mWindowType == eWindowType_popup) {
@@ -6032,7 +6048,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       LOG("    set parent window [%p] %s", parentnsWindow,
           parentnsWindow->mGtkWindowRoleName.get());
       GtkWindow* parentWidget = GTK_WINDOW(parentnsWindow->GetGtkWidget());
-      gtk_window_set_transient_for(GTK_WINDOW(mShell), parentWidget);
+      GtkWindowSetTransientFor(GTK_WINDOW(mShell), parentWidget);
 
       // If popup parent is modal, we need to make popup modal on Wayland too.
       if (GdkIsWaylandDisplay() && mPopupHint != ePopupTypeTooltip &&
@@ -7174,7 +7190,7 @@ FullscreenTransitionWindow::FullscreenTransitionWindow(GtkWidget* aWidget) {
   GtkWindow* gtkWin = GTK_WINDOW(mWindow);
 
   gtk_window_set_type_hint(gtkWin, GDK_WINDOW_TYPE_HINT_SPLASHSCREEN);
-  gtk_window_set_transient_for(gtkWin, GTK_WINDOW(aWidget));
+  GtkWindowSetTransientFor(gtkWin, GTK_WINDOW(aWidget));
   gtk_window_set_decorated(gtkWin, false);
 
   GdkWindow* gdkWin = gtk_widget_get_window(aWidget);
