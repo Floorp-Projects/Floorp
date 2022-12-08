@@ -13675,17 +13675,9 @@ void CodeGenerator::visitAddAndStoreSlot(LAddAndStoreSlot* ins) {
   const Register maybeTemp = ToTempRegisterOrInvalid(ins->temp0());
 
   Shape* shape = ins->mir()->shape();
-  // NOTE: we specifically elide an EmitPreBarrier for this shape change
-  // because we know it's redundant. If we are here, we must have been
-  // preceded by a MGuardShape which holds a reference to the old shape. The
-  // one exception to this would be if we determined we could elide the
-  // MGuardShape via the EliminateRedundantShapeGuards pass. However, in that
-  // case we only elided it because we saw an MAddAndStoreSlot or similar
-  // instruction which must hold a reference to the old shape. Thus, the
-  // reference inside this object to the shape cannot be the last remaining
-  // reference, and we do not need to have a pre barrier to remove it.
-  masm.storeObjShape(shape, obj,
-                     [](MacroAssembler& masm, const Address& addr) {});
+  masm.storeObjShape(shape, obj, [](MacroAssembler& masm, const Address& addr) {
+    EmitPreBarrier(masm, addr, MIRType::Shape);
+  });
 
   // Perform the store. No pre-barrier required since this is a new
   // initialization.
