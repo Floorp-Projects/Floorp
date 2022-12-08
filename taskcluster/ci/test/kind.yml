@@ -7,7 +7,6 @@ loader: gecko_taskgraph.loader.test:loader
 kind-dependencies:
     - build
     - build-signing
-    - repackage-signing-shippable-l10n-msix
     - repackage
     - fetch
     - toolchain
