@@ -5,6 +5,7 @@ const { UrlbarTestUtils } = ChromeUtils.importESModule(
 );
 
 const REDIRECTURL =
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://www.example.com/browser/docshell/test/browser/redirect_to_example.sjs";
 
 add_task(async function() {

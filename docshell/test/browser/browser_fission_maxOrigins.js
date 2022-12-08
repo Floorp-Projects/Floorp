@@ -27,14 +27,23 @@ const PREF_LAST_DISQUALIFIED =
   "fission.experiment.max-origins.last-disqualified";
 
 const SITE_ORIGINS = [
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.com/",
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.org/",
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.net/",
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.tw/",
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.cn/",
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.fi/",
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.in/",
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.lk/",
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://w3c-test.org/",
   "https://www.mozilla.org/",
 ];

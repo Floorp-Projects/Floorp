@@ -2,10 +2,12 @@
 
 const TEST_PATH = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.com"
 );
 const TEST_URI = TEST_PATH + "file_csp_uir.html"; // important to be http: to test upgrade-insecure-requests
 const RESULT_URI =
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   TEST_PATH.replace("http://", "https://") + "file_csp_uir_dummy.html";
 
 function verifyCSP(aTestName, aBrowser, aResultURI) {

@@ -9,10 +9,12 @@ add_task(async function() {
     async function(browser) {
       const BASE1 = getRootDirectory(gTestPath).replace(
         "chrome://mochitests/content",
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://example.com"
       );
       const BASE2 = getRootDirectory(gTestPath).replace(
         "chrome://mochitests/content",
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://test1.example.com"
       );
       const URL = BASE1 + "onload_message.html";

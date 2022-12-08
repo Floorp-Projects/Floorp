@@ -11,6 +11,7 @@ add_task(async function test_alt_fixup_middle_click() {
   await BrowserTestUtils.withNewTab("about:blank", async browser => {
     await SpecialPowers.spawn(browser, [], () => {
       let link = content.document.createElement("a");
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       link.href = "http://example/foo";
       link.textContent = "Me, me, click me!";
       content.document.body.append(link);
@@ -42,6 +43,7 @@ add_task(async function test_alt_fixup_middle_click() {
     // well be meaningful:
     is(
       tab.linkedBrowser.currentURI.spec,
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       "http://example/foo",
       "URL for tab should be correct."
     );
