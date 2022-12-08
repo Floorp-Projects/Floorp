@@ -9667,21 +9667,6 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
-  "page": {
-    "isInherited": false,
-    "subproperties": [
-      "page"
-    ],
-    "supports": [],
-    "values": [
-      "auto",
-      "inherit",
-      "initial",
-      "revert",
-      "revert-layer",
-      "unset"
-    ]
-  },
   "page-break-after": {
     "isInherited": false,
     "subproperties": [
