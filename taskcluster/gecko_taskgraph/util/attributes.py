@@ -5,7 +5,6 @@
 
 import re
 
-
 INTEGRATION_PROJECTS = {
     "autoland",
 }
@@ -53,7 +52,9 @@ RUN_ON_PROJECT_ALIASES = {
     "release": lambda project: (project in RELEASE_PROJECTS or project == "toolchains"),
     "trunk": lambda project: (project in TRUNK_PROJECTS or project == "toolchains"),
     "autoland": lambda project: project in ("autoland", "toolchains"),
+    "autoland-only": lambda project: project == "autoland",
     "mozilla-central": lambda project: project in ("mozilla-central", "toolchains"),
+    "mozilla-central-only": lambda project: project == "mozilla-central",
 }
 
 _COPYABLE_ATTRIBUTES = (

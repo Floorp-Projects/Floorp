@@ -18,7 +18,7 @@ android-geckoview-docs/opt:
         kind: build
         tier: 2
         symbol: A(gv-docs)
-    run-on-projects: [mozilla-central]
+    run-on-projects: [mozilla-central-only]
     worker-type: b-linux-gcp
     worker:
         docker-image: {in-tree: android-build}

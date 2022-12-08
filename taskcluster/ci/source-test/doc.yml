@@ -42,7 +42,7 @@ upload:
         symbol: doc(upload)
         kind: test
         tier: 2
-    run-on-projects: [mozilla-central]
+    run-on-projects: [mozilla-central-only]
     worker-type: t-linux-xlarge-source
     worker:
         docker-image: {in-tree: "lint"}
