@@ -430,6 +430,77 @@ function serializeMapping(
 }
 
 /**
+ * Helper to serialize as a Node.
+ *
+ * @param {Node} node
+ *     Node to be serialized.
+ * @param {number|null} maxDepth
+ *     Depth of a serialization.
+ * @param {OwnershipModel} childOwnership
+ *     The ownership model to use for this serialization.
+ * @param {Map} serializationInternalMap
+ *     Map of internal ids.
+ * @param {Realm} realm
+ *     The Realm from which comes the value being serialized.
+ *
+ * @return {Object} Serialized value.
+ */
+function serializeNode(
+  node,
+  maxDepth,
+  childOwnership,
+  serializationInternalMap,
+  realm
+) {
+  const isAttribute = Attr.isInstance(node);
+  const isElement = Element.isInstance(node);
+
+  const serialized = {
+    nodeType: node.nodeType,
+  };
+
+  if (node.nodeValue !== null) {
+    serialized.nodeValue = node.nodeValue;
+  }
+
+  if (isElement || isAttribute) {
+    serialized.localName = node.localName;
+    serialized.namespaceURI = node.namespaceURI;
+  }
+
+  serialized.childNodeCount = node.childNodes.length;
+
+  let children = null;
+  if (maxDepth !== 0) {
+    children = [];
+    const childDepth = maxDepth !== null ? maxDepth - 1 : null;
+    for (const child of node.childNodes) {
+      children.push(
+        serialize(
+          child,
+          childDepth,
+          childOwnership,
+          serializationInternalMap,
+          realm
+        )
+      );
+    }
+  }
+  serialized.children = children;
+
+  if (isElement) {
+    serialized.attributes = [...node.attributes].reduce((map, attr) => {
+      map[attr.name] = attr.value;
+      return map;
+    }, {});
+
+    // TODO: Bug 1802137 - Add support for shadowRoot
+  }
+
+  return serialized;
+}
+
+/**
  * Serialize a value as a remote value.
  *
  * @see https://w3c.github.io/webdriver-bidi/#serialize-as-a-remote-value
@@ -558,6 +629,21 @@ export function serialize(
     return buildSerialized("error", handleId);
   } else if (TYPED_ARRAY_CLASSES.includes(className)) {
     return buildSerialized("typedarray", handleId);
+  } else if (Node.isInstance(value)) {
+    const serialized = buildSerialized("node", handleId);
+    setInternalIdsIfNeeded(serializationInternalMap, serialized, value);
+
+    if (!knownObject) {
+      serialized.value = serializeNode(
+        value,
+        maxDepth,
+        childOwnership,
+        serializationInternalMap,
+        realm
+      );
+    }
+
+    return serialized;
   }
   // TODO: Bug 1770733 and 1792524. Remove the if condition when the serialization of all the other types is implemented,
   // since then the serialization of plain objects should be the fallback.
