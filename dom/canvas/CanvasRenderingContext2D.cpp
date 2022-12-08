@@ -3824,8 +3824,19 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
     Style style = (mOp == CanvasRenderingContext2D::TextDrawOperation::FILL)
                       ? Style::FILL
                       : Style::STROKE;
+    const ContextState& state = mCtx->CurrentState();
 
-    AdjustedTarget target(mCtx);
+    gfx::Rect bounds;
+    if (mCtx->NeedToCalculateBounds()) {
+      bounds = ToRect(mBoundingBox);
+      bounds.MoveBy(mPt / mAppUnitsPerDevPixel);
+      if (style == Style::STROKE) {
+        bounds.Inflate(state.lineWidth / 2.0);
+      }
+      bounds = mDrawTarget->GetTransform().TransformBounds(bounds);
+    }
+
+    AdjustedTarget target(mCtx, bounds.IsEmpty() ? nullptr : &bounds, false);
     if (!target) {
       return;
     }
@@ -3841,18 +3852,17 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
 
     params.allowGDI = false;
 
-    const ContextState* state = &mCtx->CurrentState();
-    if (state->StyleIsColor(style)) {  // Color
-      nscolor fontColor = state->colorStyles[style];
+    if (state.StyleIsColor(style)) {  // Color
+      nscolor fontColor = state.colorStyles[style];
       if (style == Style::FILL) {
         params.context->SetColor(sRGBColor::FromABGR(fontColor));
       } else {
         params.textStrokeColor = fontColor;
       }
     } else {
-      if (state->gradientStyles[style]) {  // Gradient
+      if (state.gradientStyles[style]) {  // Gradient
         pattern = GetGradientFor(style);
-      } else if (state->patternStyles[style]) {  // Pattern
+      } else if (state.patternStyles[style]) {  // Pattern
         pattern = GetPatternFor(style);
       } else {
         MOZ_ASSERT(false, "Should never reach here.");
@@ -3867,23 +3877,23 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
       }
     }
 
-    drawOpts.mAlpha = state->globalAlpha;
+    drawOpts.mAlpha = state.globalAlpha;
     drawOpts.mCompositionOp = target.UsedOperation();
     if (!mCtx->IsTargetValid()) {
       return;
     }
-    state = &mCtx->CurrentState();
+
     params.drawOpts = &drawOpts;
 
     if (style == Style::STROKE) {
-      strokeOpts.mLineWidth = state->lineWidth;
-      strokeOpts.mLineJoin = state->lineJoin;
-      strokeOpts.mLineCap = state->lineCap;
-      strokeOpts.mMiterLimit = state->miterLimit;
-      strokeOpts.mDashLength = state->dash.Length();
+      strokeOpts.mLineWidth = state.lineWidth;
+      strokeOpts.mLineJoin = state.lineJoin;
+      strokeOpts.mLineCap = state.lineCap;
+      strokeOpts.mMiterLimit = state.miterLimit;
+      strokeOpts.mDashLength = state.dash.Length();
       strokeOpts.mDashPattern =
-          (strokeOpts.mDashLength > 0) ? state->dash.Elements() : 0;
-      strokeOpts.mDashOffset = state->dashOffset;
+          (strokeOpts.mDashLength > 0) ? state.dash.Elements() : 0;
+      strokeOpts.mDashOffset = state.dashOffset;
 
       params.drawMode = DrawMode::GLYPH_STROKE;
       params.strokeOpts = &strokeOpts;
