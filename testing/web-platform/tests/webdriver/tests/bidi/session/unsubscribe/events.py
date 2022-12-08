@@ -1,10 +1,8 @@
 import asyncio
 
 import pytest
-from webdriver.error import TimeoutException
-
 from tests.support.sync import AsyncPoll
-
+from webdriver.error import TimeoutException
 
 # The basic use case of unsubscribing globally from a single event
 # is covered by tests for each event in the dedicated folders.

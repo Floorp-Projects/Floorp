@@ -2,7 +2,6 @@ import asyncio
 
 import pytest
 
-
 # The basic use case of subscribing globally for a single event
 # is covered by tests for each event in the dedicated folders.
 
