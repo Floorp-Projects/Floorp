@@ -6,7 +6,6 @@
 
 #include "mozilla/dom/HTMLInputElement.h"
 
-#include "Units.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/BasePrincipal.h"
@@ -3277,8 +3276,7 @@ void HTMLInputElement::StartRangeThumbDrag(WidgetGUIEvent* aEvent) {
   // have changed it by then).
   GetValue(mFocusedValue, CallerType::System);
 
-  SetValueOfRangeForUserEvent(rangeFrame->GetValueAtEventPoint(aEvent),
-                              SnapToTickMarks::Yes);
+  SetValueOfRangeForUserEvent(rangeFrame->GetValueAtEventPoint(aEvent));
 }
 
 void HTMLInputElement::FinishRangeThumbDrag(WidgetGUIEvent* aEvent) {
@@ -3289,8 +3287,7 @@ void HTMLInputElement::FinishRangeThumbDrag(WidgetGUIEvent* aEvent) {
   }
   if (aEvent) {
     nsRangeFrame* rangeFrame = do_QueryFrame(GetPrimaryFrame());
-    SetValueOfRangeForUserEvent(rangeFrame->GetValueAtEventPoint(aEvent),
-                                SnapToTickMarks::Yes);
+    SetValueOfRangeForUserEvent(rangeFrame->GetValueAtEventPoint(aEvent));
   }
   mIsDraggingRange = false;
   FireChangeEventIfNeeded();
@@ -3304,8 +3301,7 @@ void HTMLInputElement::CancelRangeThumbDrag(bool aIsForUserEvent) {
     PresShell::ReleaseCapturingContent();
   }
   if (aIsForUserEvent) {
-    SetValueOfRangeForUserEvent(mRangeThumbDragStartValue,
-                                SnapToTickMarks::Yes);
+    SetValueOfRangeForUserEvent(mRangeThumbDragStartValue);
   } else {
     // Don't dispatch an 'input' event - at least not using
     // DispatchTrustedEvent.
@@ -3326,12 +3322,8 @@ void HTMLInputElement::CancelRangeThumbDrag(bool aIsForUserEvent) {
   }
 }
 
-void HTMLInputElement::SetValueOfRangeForUserEvent(
-    Decimal aValue, SnapToTickMarks aSnapToTickMarks) {
+void HTMLInputElement::SetValueOfRangeForUserEvent(Decimal aValue) {
   MOZ_ASSERT(aValue.isFinite());
-  if (aSnapToTickMarks == SnapToTickMarks::Yes) {
-    MaybeSnapToTickMark(aValue);
-  }
 
   Decimal oldValue = GetValueAsDecimal();
 
@@ -4164,8 +4156,7 @@ void HTMLInputElement::PostHandleEventForRangeThumb(
         break;
       }
       SetValueOfRangeForUserEvent(
-          rangeFrame->GetValueAtEventPoint(aVisitor.mEvent->AsInputEvent()),
-          SnapToTickMarks::Yes);
+          rangeFrame->GetValueAtEventPoint(aVisitor.mEvent->AsInputEvent()));
       aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
       break;
 
@@ -4548,33 +4539,6 @@ void HTMLInputElement::HandleTypeChange(FormControlType aNewType,
         !IsSingleLineTextControl(/* aExcludePassword = */ false, oldType)) {
       AddStates(ElementState::FOCUSRING);
     }
-  }
-}
-
-void HTMLInputElement::MaybeSnapToTickMark(Decimal& aValue) {
-  nsRangeFrame* rangeFrame = do_QueryFrame(GetPrimaryFrame());
-  if (!rangeFrame) {
-    return;
-  }
-  auto tickMark = rangeFrame->NearestTickMark(aValue);
-  if (tickMark.isNaN()) {
-    return;
-  }
-  auto rangeFrameSize = CSSPixel::FromAppUnits(rangeFrame->GetSize());
-  CSSCoord rangeTrackLength;
-  if (rangeFrame->IsHorizontal()) {
-    rangeTrackLength = rangeFrameSize.width;
-  } else {
-    rangeTrackLength = rangeFrameSize.height;
-  }
-  auto stepBase = GetStepBase();
-  auto tickMarkLength =
-      rangeTrackLength * float(rangeFrame->GetDoubleAsFractionOfRange(
-                             stepBase + (tickMark - aValue).abs()));
-  const CSSCoord magnetEffectRange(
-      StaticPrefs::dom_range_element_magnet_effect_threshold());
-  if (tickMarkLength <= magnetEffectRange) {
-    aValue = tickMark;
   }
 }
 

@@ -490,30 +490,6 @@ nsTArray<Decimal> nsRangeFrame::TickMarks() {
   return tickMarks;
 }
 
-Decimal nsRangeFrame::NearestTickMark(const Decimal& aValue) {
-  auto tickMarks = TickMarks();
-  if (tickMarks.IsEmpty() || aValue.isNaN()) {
-    return Decimal::nan();
-  }
-  size_t index;
-  if (BinarySearch(tickMarks, 0, tickMarks.Length(), aValue, &index)) {
-    return tickMarks[index];
-  }
-  if (index == tickMarks.Length()) {
-    return tickMarks.LastElement();
-  }
-  if (index == 0) {
-    return tickMarks[0];
-  }
-  const auto& smallerTickMark = tickMarks[index - 1];
-  const auto& largerTickMark = tickMarks[index];
-  MOZ_ASSERT(smallerTickMark < aValue);
-  MOZ_ASSERT(largerTickMark > aValue);
-  return (aValue - smallerTickMark).abs() < (aValue - largerTickMark).abs()
-             ? smallerTickMark
-             : largerTickMark;
-}
-
 mozilla::dom::HTMLInputElement& nsRangeFrame::InputElement() const {
   MOZ_ASSERT(mContent->IsHTMLElement(nsGkAtoms::input), "bad cast");
   auto& input = *static_cast<dom::HTMLInputElement*>(GetContent());
