@@ -4,7 +4,6 @@ import pytest
 
 from ... import create_console_api_message, recursive_compare
 
-
 # The basic use case of subscribing to all contexts for a single event
 # is covered by tests for each event in the dedicated folders.
 

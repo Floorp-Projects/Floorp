@@ -1,7 +1,7 @@
 import pytest
+from tests.support.sync import AsyncPoll
 from webdriver.error import TimeoutException
 
-from tests.support.sync import AsyncPoll
 from .. import assert_navigation_info
 
 pytestmark = pytest.mark.asyncio

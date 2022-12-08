@@ -1,6 +1,6 @@
 import pytest
-
 from tests.support.sync import AsyncPoll
+
 from .. import assert_navigation_info
 
 pytestmark = pytest.mark.asyncio

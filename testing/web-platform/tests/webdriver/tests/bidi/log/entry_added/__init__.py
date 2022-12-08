@@ -1,6 +1,12 @@
 from webdriver.bidi.modules.script import ContextTarget
 
-from ... import any_int, any_list, any_string, create_console_api_message, recursive_compare
+from ... import (
+    any_int,
+    any_list,
+    any_string,
+    create_console_api_message,
+    recursive_compare,
+)
 
 
 def assert_base_entry(

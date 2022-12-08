@@ -1,10 +1,10 @@
 import asyncio
 
 import pytest
-from webdriver.error import TimeoutException
-from webdriver.bidi.modules.script import ContextTarget
-
 from tests.support.sync import AsyncPoll
+from webdriver.bidi.modules.script import ContextTarget
+from webdriver.error import TimeoutException
+
 from .. import assert_browsing_context
 
 pytestmark = pytest.mark.asyncio
