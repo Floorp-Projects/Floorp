@@ -1,0 +1,13 @@
+/**
+ * aveeno.com and acuvue.com - Unsupported message is displayed
+ *
+ * Bug #1784141 - aveeno.com - https://bugzilla.mozilla.org/show_bug.cgi?id=1784141
+ * Bug #1804730 - acuvue.com - https://bugzilla.mozilla.org/show_bug.cgi?id=1804730
+ *
+ * WebCompat issue #103557 - https://webcompat.com/issues/103557
+ * WebCompat issue #103557 - https://webcompat.com/issues/110797
+ */
+
+#browser-alert {
+  display: none !important;
+}
