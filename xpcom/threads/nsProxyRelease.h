@@ -78,7 +78,9 @@ nsresult ProxyRelease(const char* aName, nsIEventTarget* aTarget,
 
   rv = aTarget->Dispatch(ev, NS_DISPATCH_NORMAL);
   if (NS_FAILED(rv)) {
-    NS_WARNING("failed to post proxy release event, leaking!");
+    NS_WARNING(nsPrintfCString(
+                   "failed to post proxy release event for %s, leaking!", aName)
+                   .get());
     // It is better to leak the aDoomed object than risk crashing as
     // a result of deleting it on the wrong thread.
   }
