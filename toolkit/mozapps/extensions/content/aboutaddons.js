@@ -2628,13 +2628,21 @@ class AddonPermissionsList extends HTMLElement {
 
         toggle.setAttribute("permission-type", type);
         toggle.setAttribute("type", "checkbox");
-        if (
+
+        let checked =
           grantedPerms.permissions.includes(perm) ||
-          grantedPerms.origins.includes(perm)
-        ) {
-          toggle.checked = true;
-          item.classList.add("permission-checked");
+          grantedPerms.origins.includes(perm);
+
+        // If this is one of the "all sites" permissions
+        if (Extension.isAllSitesPermission(perm)) {
+          // mark it as checked if ANY of the "all sites" permission is granted.
+          checked = await AddonCard.optionalAllSitesGranted(this.addon.id);
+          toggle.toggleAttribute("permission-all-sites", true);
         }
+
+        toggle.checked = checked;
+        item.classList.toggle("permission-checked", checked);
+
         toggle.setAttribute("permission-key", perm);
         toggle.setAttribute("action", "toggle-permission");
         toggle.classList.add("toggle-button");
@@ -3113,6 +3121,14 @@ class AddonCard extends HTMLElement {
         }
       }
       origins = [permission];
+
+      // If this is one of the "all sites" permissions
+      if (Extension.isAllSitesPermission(permission)) {
+        // Grant/revoke ALL "all sites" optional permissions from the manifest.
+        origins = addon.optionalPermissions.origins.filter(perm =>
+          Extension.isAllSitesPermission(perm)
+        );
+      }
     } else {
       throw new Error("unknown permission type changed");
     }
@@ -3669,16 +3685,34 @@ class AddonCard extends HTMLElement {
   }
 
   /* Extension Permission change listener */
-  onChangePermissions(data) {
+  async onChangePermissions(data) {
     let perms = data.added || data.removed;
-    let fname = data.added ? "add" : "remove";
+    let hasAllSites = false;
     for (let permission of perms.permissions.concat(perms.origins)) {
+      if (Extension.isAllSitesPermission(permission)) {
+        hasAllSites = true;
+        continue;
+      }
       let target = document.querySelector(`[permission-key="${permission}"]`);
+      let checked = !data.removed;
       if (target) {
-        target.parentNode.parentNode.classList[fname]("permission-checked");
-        target.checked = !data.removed;
+        target.closest("li").classList.toggle("permission-checked", checked);
+        target.checked = checked;
       }
     }
+    if (hasAllSites) {
+      // special-case for finding the all-sites target by attribute.
+      let target = document.querySelector("[permission-all-sites]");
+      let checked = await AddonCard.optionalAllSitesGranted(this.addon.id);
+      target.closest("li").classList.toggle("permission-checked", checked);
+      target.checked = checked;
+    }
+  }
+
+  // Only covers optional_permissions in MV2 and all host permissions in MV3.
+  static async optionalAllSitesGranted(addonId) {
+    let granted = await ExtensionPermissions.get(addonId);
+    return granted.origins.some(perm => Extension.isAllSitesPermission(perm));
   }
 }
 customElements.define("addon-card", AddonCard);
