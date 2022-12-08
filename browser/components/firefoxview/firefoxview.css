@@ -600,13 +600,16 @@ details[open] > .page-section-header > .twisty {
 .closed-tabs-list {
   padding-inline-start: 0;
   margin-block-start: 0;
+  display: grid;
+  grid-template-columns: min-content repeat(5, 1fr) repeat(2, min-content);
+  column-gap: 8px;
+  row-gap: 8px;
 }
 
 .closed-tab-li {
   display: grid;
-  grid-template-columns: min-content 4fr 3fr 1fr min-content;
-  column-gap: 8px;
-  row-gap: 8px;
+  grid-template-columns: subgrid;
+  grid-column: span 8;
   margin-block-end: 0.5em;
   border-radius: 4px;
   align-items: center;
@@ -615,7 +618,7 @@ details[open] > .page-section-header > .twisty {
 .closed-tab-li-main {
   display: grid;
   grid-template-columns: subgrid;
-  grid-column: span 4;
+  grid-column: span 7;
   padding: 0.5em;
   cursor: pointer;
   align-items: center;
@@ -656,11 +659,13 @@ details[open] > .page-section-header > .twisty {
 .closed-tab-li-title {
   padding-inline-start: 10px;
   font-weight: 500;
+  grid-column: span 3;
 }
 
 .closed-tab-li-url {
   padding-inline-start: 8px;
   text-decoration-line: underline;
+  grid-column: span 2;
 }
 
 .closed-tab-li-time {
