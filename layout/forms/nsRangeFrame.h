@@ -149,6 +149,12 @@ class nsRangeFrame final : public nsContainerFrame,
 
   nsTArray<mozilla::Decimal> TickMarks();
 
+  /**
+   * Returns the given value's offset from the range's nearest list tick mark
+   * or NaN if there are no tick marks.
+   */
+  mozilla::Decimal NearestTickMark(const mozilla::Decimal& aValue);
+
  protected:
   mozilla::dom::HTMLInputElement& InputElement() const;
 

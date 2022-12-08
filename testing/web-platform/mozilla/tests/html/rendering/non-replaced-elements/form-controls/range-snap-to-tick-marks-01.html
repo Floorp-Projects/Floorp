@@ -1,0 +1,59 @@
+<!doctype html>
+<meta charset=utf-8>
+<meta name=viewport content=width=device-width>
+<title>Snap to a slider's tick marks by clicking near them</title>
+<link rel=help href="https://html.spec.whatwg.org/multipage/rendering.html#the-input-element-as-a-range-control">
+<link rel=help href="https://bugzilla.mozilla.org/show_bug.cgi?id=1803118">
+<link rel=author href="mailto:zach@zrhoffman.net" title="Zach Hoffman">
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script src=/resources/testdriver.js></script>
+<script src=/resources/testdriver-actions.js></script>
+<script src=/resources/testdriver-vendor.js></script>
+<input type=range list=tickmarks min=-5 max=35>
+<datalist id=tickmarks>
+  <option value=0></option>
+  <option value=3></option>
+</datalist>
+<script>
+  const range = document.querySelector("input[type=range]");
+  const step = 1;
+  promise_test(async function snapToTickMarks() {
+    const assertions = [[-3, "-3"], [-2, "0"], [1, "0"], [2, "3"], [5, "3"], [6, "6"]];
+    const rect = range.getBoundingClientRect();
+    const padding = 10;
+    const left = rect.left + padding;
+    const width = rect.width - 2 * padding;
+    const actions = new test_driver.Actions();
+    const min = parseInt(range.min);
+    const max = parseInt(range.max);
+    for (const assertion of assertions) {
+      const moveTo = (left + width * (assertion[0] - min) / (max - min)) | 0;
+      const expected = assertion[1];
+      await actions
+          .pointerMove(moveTo, rect.top)
+          .pointerDown()
+          .pointerUp()
+          .send();
+      assert_equals(range.value, expected);
+    }
+  });
+  promise_test(async function domDoesNotSnap() {
+    const startAt = -2;
+    range.value = startAt;
+    for (let expectedValue = startAt + 1; expectedValue <= 6; expectedValue++) {
+      range.stepUp();
+      assert_equals(parseInt(range.value), expectedValue);
+    }
+  });
+  promise_test(async function keyboardDoesNotSnap() {
+    const kArrowRight = "\uE014";
+    range.focus();
+    const startAt = -2;
+    range.value = startAt;
+    for (let expectedValue = startAt + 1; expectedValue <= 6; expectedValue++) {
+      await test_driver.send_keys(range, kArrowRight);
+      assert_equals(parseInt(range.value), expectedValue);
+    }
+  });
+</script>
