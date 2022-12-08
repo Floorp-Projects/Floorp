@@ -479,10 +479,10 @@ data class PocketStoriesCategoryColors(
          */
         @Composable
         fun buildColors(
-            selectedBackgroundColor: Color = FirefoxTheme.colors.textActionPrimary,
-            unselectedBackgroundColor: Color = FirefoxTheme.colors.textActionTertiary,
-            selectedTextColor: Color = FirefoxTheme.colors.actionPrimary,
-            unselectedTextColor: Color = FirefoxTheme.colors.actionTertiary,
+            selectedBackgroundColor: Color = FirefoxTheme.colors.actionPrimary,
+            unselectedBackgroundColor: Color = FirefoxTheme.colors.actionTertiary,
+            selectedTextColor: Color = FirefoxTheme.colors.textActionPrimary,
+            unselectedTextColor: Color = FirefoxTheme.colors.textActionTertiary,
         ) = PocketStoriesCategoryColors(
             selectedBackgroundColor = selectedBackgroundColor,
             unselectedBackgroundColor = unselectedBackgroundColor,
