@@ -12,21 +12,17 @@ EXPORTS.mozilla._ipdltest += [
     "IPDLUnitTestParent.h",
     "TestBasicChild.h",
     "TestBasicParent.h",
-    "TestGleanMsgTelemetryChild.h",
-    "TestGleanMsgTelemetryParent.h",
 ]
 
 SOURCES += [
     "IPDLUnitTest.cpp",
     "TestBasic.cpp",
-    "TestGleanMsgTelemetry.cpp",
     "TestManyHandles.cpp",
 ]
 
 IPDL_SOURCES += [
     "PIPDLUnitTest.ipdl",
     "PTestBasic.ipdl",
-    "PTestGleanMsgTelemetry.ipdl",
     "PTestManyHandles.ipdl",
 ]
 

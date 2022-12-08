@@ -19,7 +19,6 @@ gecko_metrics = [
     "dom/media/metrics.yaml",
     "dom/metrics.yaml",
     "gfx/metrics.yaml",
-    "ipc/ipdl/metrics.yaml",
     "netwerk/metrics.yaml",
     "netwerk/protocol/http/metrics.yaml",
     "toolkit/components/cookiebanners/metrics.yaml",
