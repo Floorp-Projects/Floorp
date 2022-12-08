@@ -971,6 +971,9 @@ static CompositorOptionsChangeKind ClassifyCompositorOptionsChange(
   if (aOld == aNew) {
     return CompositorOptionsChangeKind::eSupported;
   }
+  if (aOld.EqualsIgnoringApzEnablement(aNew)) {
+    return CompositorOptionsChangeKind::eBestEffort;
+  }
   return CompositorOptionsChangeKind::eUnsupported;
 }
 
