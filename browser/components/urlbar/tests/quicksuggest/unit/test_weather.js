@@ -372,6 +372,57 @@ add_task(async function nonEmptySearchString() {
   });
 });
 
+// Blocks a result and makes sure the weather pref is disabled.
+add_task(async function block() {
+  // Sanity check initial state.
+  assertEnabled({
+    message: "Sanity check initial state",
+    hasSuggestion: true,
+    pendingFetchCount: 0,
+  });
+  Assert.ok(
+    UrlbarPrefs.get("suggest.weather"),
+    "Sanity check: suggest.weather is true initially"
+  );
+
+  // Do a search so we can get an actual result.
+  let context = createContext("", {
+    providers: [UrlbarProviderQuickSuggest.name],
+    isPrivate: false,
+  });
+  await check_results({
+    context,
+    matches: [EXPECTED_RESULT],
+  });
+
+  // Block the result.
+  UrlbarProviderQuickSuggest.blockResult(context, context.results[0]);
+  Assert.ok(
+    !UrlbarPrefs.get("suggest.weather"),
+    "suggest.weather is false after blocking the result"
+  );
+
+  // Do a second search. Nothing should be returned.
+  context = createContext("", {
+    providers: [UrlbarProviderQuickSuggest.name],
+    isPrivate: false,
+  });
+  await check_results({
+    context,
+    matches: [],
+  });
+
+  // Re-enable the pref and clean up.
+  let fetchPromise = QuickSuggest.weather.waitForFetches();
+  UrlbarPrefs.set("suggest.weather", true);
+  await fetchPromise;
+  assertEnabled({
+    message: "On cleanup",
+    hasSuggestion: true,
+    pendingFetchCount: 0,
+  });
+});
+
 function assertEnabled({ message, hasSuggestion, pendingFetchCount }) {
   info("Asserting feature is enabled");
   if (message) {
@@ -447,8 +498,11 @@ function makeExpectedResult(temperatureUnit) {
       icon: "chrome://global/skin/icons/highlights.svg",
       helpUrl: QuickSuggest.HELP_URL,
       helpL10n: { id: "firefox-suggest-urlbar-learn-more" },
+      isBlockable: true,
+      blockL10n: { id: "firefox-suggest-urlbar-block" },
       requestId: MerinoTestUtils.server.response.body.request_id,
       source: "merino",
+      merinoProvider: "accuweather",
     },
   };
 }

@@ -315,6 +315,12 @@ class ProviderQuickSuggest extends UrlbarProvider {
    *   Whether the result was blocked.
    */
   blockResult(queryContext, result) {
+    if (result.payload.merinoProvider == "accuweather") {
+      this.logger.info("Blocking weather result");
+      lazy.UrlbarPrefs.set("suggest.weather", false);
+      return true;
+    }
+
     if (
       (!result.isBestMatch &&
         !lazy.UrlbarPrefs.get("quickSuggestBlockingEnabled")) ||
@@ -651,8 +657,11 @@ class ProviderQuickSuggest extends UrlbarProvider {
         icon: "chrome://global/skin/icons/highlights.svg",
         helpUrl: lazy.QuickSuggest.HELP_URL,
         helpL10n: { id: "firefox-suggest-urlbar-learn-more" },
+        isBlockable: true,
+        blockL10n: { id: "firefox-suggest-urlbar-block" },
         requestId: suggestion.request_id,
         source: suggestion.source,
+        merinoProvider: suggestion.provider,
       }
     );
 

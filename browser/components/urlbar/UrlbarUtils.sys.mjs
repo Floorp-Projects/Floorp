@@ -1556,6 +1556,9 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       isSponsored: {
         type: "boolean",
       },
+      merinoProvider: {
+        type: "string",
+      },
       originalUrl: {
         type: "string",
       },
