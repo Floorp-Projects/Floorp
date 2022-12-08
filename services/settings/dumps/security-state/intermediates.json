@@ -4915,24 +4915,6 @@
       "last_modified": 1666727871753
     },
     {
-      "schema": 1666727434598,
-      "derHash": "WS4aLwo0KEsOJvy0/tIq+FmEju6IIq22G0LatHov/cI=",
-      "subject": "CN=KPN PKIoverheid Server CA 2020,O=KPN B.V.,C=NL",
-      "subjectDN": "MEkxCzAJBgNVBAYTAk5MMREwDwYDVQQKDAhLUE4gQi5WLjEnMCUGA1UEAwweS1BOIFBLSW92ZXJoZWlkIFNlcnZlciBDQSAyMDIw",
-      "whitelist": false,
-      "attachment": {
-        "hash": "d6c29637397d41ba732890b7381061d5aa7ce2b45a6658ec8cd3e1578ec36521",
-        "size": 2463,
-        "filename": "Yao-RgzIlYNhXc65ch9IpKzSRFUSiL01Et8c6sN4XLU=.pem",
-        "location": "security-state-staging/intermediates/3efd3b60-86a5-4e22-9bab-2b41fe119c08.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "Yao+RgzIlYNhXc65ch9IpKzSRFUSiL01Et8c6sN4XLU=",
-      "crlite_enrolled": false,
-      "id": "432fb247-95f4-4391-8610-5de5c9148747",
-      "last_modified": 1666727871739
-    },
-    {
       "schema": 1666727383924,
       "derHash": "kzuA97lyVd9c8dlaEj6QFyLdswtIGvOqg1SCARGe0wM=",
       "subject": "CN=AC Firmaprofesional - Secure Web 2020,OU=Security Services,O=Firmaprofesional S.A.,C=ES",
@@ -6157,24 +6139,6 @@
       "last_modified": 1666727870702
     },
     {
-      "schema": 1666727353845,
-      "derHash": "6ywqgGxp/JY8TiSlu+og7U47hq55hzC7TupRv53jMyU=",
-      "subject": "CN=QuoVadis PKIoverheid Server CA 2020,O=QuoVadis Trustlink B.V.,C=NL",
-      "subjectDN": "MF0xCzAJBgNVBAYTAk5MMSAwHgYDVQQKDBdRdW9WYWRpcyBUcnVzdGxpbmsgQi5WLjEsMCoGA1UEAwwjUXVvVmFkaXMgUEtJb3ZlcmhlaWQgU2VydmVyIENBIDIwMjA=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "ccde215eb034050ccfc37f9fd71517cfb10b5c84d583a98f618475edced4e91a",
-        "size": 2491,
-        "filename": "Uru4DWx-N-Ju1LMOBUHr8l1GFqUp0S2IeniNdUJMn-Y=.pem",
-        "location": "security-state-staging/intermediates/35c9320d-45a6-453d-ae68-24b3333d5d27.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "Uru4DWx+N+Ju1LMOBUHr8l1GFqUp0S2IeniNdUJMn+Y=",
-      "crlite_enrolled": false,
-      "id": "e9b7daca-8ea8-41ba-8dea-5b07214af260",
-      "last_modified": 1666727870688
-    },
-    {
       "schema": 1666727387103,
       "derHash": "jz5daFi5J9KE/bhaGxWHXNeOY7ggwg3cU5zNhLDBpqo=",
       "subject": "CN=Alibaba Cloud GCC R3 DV TLS CA 2021,O=Alibaba Cloud Computing Co.\\, Ltd.,C=CN",
@@ -6857,24 +6821,6 @@
       "crlite_enrolled": false,
       "id": "f18528dd-6f56-46ab-942c-d0660c571a8d",
       "last_modified": 1666727870147
-    },
-    {
-      "schema": 1666727354016,
-      "derHash": "DakU+3El9uZE63qiYd6euAncf5Jbayp9in7dhzY5i1s=",
-      "subject": "CN=Staat der Nederlanden Domein Server CA 2020,O=Staat der Nederlanden,C=NL",
-      "subjectDN": "MGMxCzAJBgNVBAYTAk5MMR4wHAYDVQQKDBVTdGFhdCBkZXIgTmVkZXJsYW5kZW4xNDAyBgNVBAMMK1N0YWF0IGRlciBOZWRlcmxhbmRlbiBEb21laW4gU2VydmVyIENBIDIwMjA=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "2f30004a37d33d9c2a59bae9b9e7ae94f816bd331c1a88deabd4af0f028ec59e",
-        "size": 2438,
-        "filename": "N9-YluTCUa_HTXc60QxjUReBLpRniAkIK2N84DhgmW4=.pem",
-        "location": "security-state-staging/intermediates/bb106e72-beed-4616-9b9f-bb44107c3b3a.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "N9+YluTCUa/HTXc60QxjUReBLpRniAkIK2N84DhgmW4=",
-      "crlite_enrolled": false,
-      "id": "da9f74e2-bbea-491f-8b6d-4587b21de61e",
-      "last_modified": 1666727870118
     },
     {
       "schema": 1666727447078,
@@ -27001,5 +26947,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1669870624944
+  "timestamp": 1670338623491
 }
