@@ -1250,7 +1250,10 @@
       "../node_modules/babel-loader/lib/index.js??ref--1!../../shared/vendor/source-map/lib/read-wasm.js": 1098,
       "../node_modules/babel-loader/lib/index.js??ref--1!../../shared/vendor/source-map/lib/url.js": 1099,
       "../node_modules/babel-loader/lib/index.js??ref--1!../../shared/vendor/whatwg-url.js": 1100,
-      "../node_modules/path-browserify/index.js": 1101
+      "../node_modules/path-browserify/index.js": 1101,
+      "../node_modules/babel-loader/lib/index.js??ref--1!../packages/pretty-fast/pretty-fast.js": 1102,
+      "../node_modules/acorn/dist/acorn.mjs": 1103,
+      "../packages/pretty-fast/node_modules/acorn/dist/acorn.mjs": 1104
     },
     "usedIds": {
       "0": 0,
@@ -2354,7 +2357,10 @@
       "1098": 1098,
       "1099": 1099,
       "1100": 1100,
-      "1101": 1101
+      "1101": 1101,
+      "1102": 1102,
+      "1103": 1103,
+      "1104": 1104
     }
   },
   "chunks": {
