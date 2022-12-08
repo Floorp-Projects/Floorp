@@ -140,7 +140,7 @@ function uploadHandler(request, response) {
     "Wrong Content-Type header."
   );
   let body = new BinaryInputStream(request.bodyInputStream);
-  Assert.equal(body.available(), 422, "Wrong request body size.");
+  Assert.equal(body.available(), 432, "Wrong request body size.");
   received = true;
   response.setStatusLine(request.httpVersion, 200);
 }
