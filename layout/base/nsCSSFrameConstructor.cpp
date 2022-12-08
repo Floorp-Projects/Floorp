@@ -8095,6 +8095,23 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingFrame(
   // aFrame cannot be a dynamic reflow root because it has a continuation now.
   aFrame->RemoveStateBits(NS_FRAME_DYNAMIC_REFLOW_ROOT);
 
+  // XXXalaskanemily: This avoids linear-time FirstContinuation lookups during
+  // paginated reflow, but there are a lot of smarter ways to manage this. We
+  // might also want to share the struct (refcount or some guarantee the struct
+  // will remain valid during reflow).
+  if (nsIFrame::PageValues* pageValues =
+          aFrame->GetProperty(nsIFrame::PageValuesProperty())) {
+    // It is possible that both values of a PageValues struct can be
+    // overwritten with null. If that's the case, then as a minor optimization
+    // we don't need to create a copy of the struct since this property being
+    // missing is equivalent to having null start/end values.
+    if (pageValues->mStartPageValue || pageValues->mEndPageValue) {
+      nsIFrame::PageValues* const newPageValues =
+          new nsIFrame::PageValues(*pageValues);
+      newFrame->SetProperty(nsIFrame::PageValuesProperty(), newPageValues);
+    }
+  }
+
   MOZ_ASSERT(!newFrame->GetNextSibling(), "unexpected sibling");
   return newFrame;
 }
