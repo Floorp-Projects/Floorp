@@ -61,10 +61,12 @@
   line-height: 1;
 }
 
-.datetime-calendar-button:focus-visible,
-.datetime-calendar-button:hover {
-  opacity: 1;
+.datetime-calendar-button:focus-visible {
   outline: 0.15em solid SelectedItem;
+}
+
+.datetime-calendar-button:is(:focus-visible, :hover) {
+  opacity: 1;
 }
 
 .datetime-calendar-button-svg {
