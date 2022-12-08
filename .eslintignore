@@ -63,6 +63,7 @@ devtools/client/debugger/bin/
 devtools/client/debugger/configs/
 devtools/client/debugger/dist/
 devtools/client/debugger/images/
+devtools/client/debugger/packages/
 devtools/client/debugger/test/mochitest/examples/
 devtools/client/debugger/index.html
 devtools/client/debugger/webpack.config.js

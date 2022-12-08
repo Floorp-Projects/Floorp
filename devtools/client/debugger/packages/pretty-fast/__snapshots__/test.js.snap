@@ -1,0 +1,1108 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ASI return 1`] = `
+"function f() {
+  return
+  {
+  }
+}
+"
+`;
+
+exports[`ASI return 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(2, 13) -> (2, 0)",
+  "(3, 13) -> (3, 0)",
+  "(3, 14) -> (4, 0)",
+  "(4, 11) -> (5, 0)",
+]
+`;
+
+exports[`Arrays 1`] = `
+"var a = [
+  1,
+  2,
+  3
+];
+"
+`;
+
+exports[`Arrays 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(1, 7) -> (2, 0)",
+  "(1, 9) -> (3, 0)",
+  "(1, 11) -> (4, 0)",
+  "(1, 12) -> (5, 0)",
+]
+`;
+
+exports[`Binary operators 1`] = `
+"var a = 5 * 30;
+var b = 5 >> 3;
+"
+`;
+
+exports[`Binary operators 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(1, 11) -> (2, 0)",
+]
+`;
+
+exports[`Bug 975477 don't move end of line comments to next line 1`] = `
+"switch (request.action) {
+  case 'show': //$NON-NLS-0$
+    if (localStorage.hideicon !== 'true') { //$NON-NLS-0$
+      chrome.pageAction.show(sender.tab.id);
+    }
+    break;
+  case 'hide': /*Multiline
+               Comment */
+    break;
+  default:
+    console.warn('unknown request'); //$NON-NLS-0$
+    // don't respond if you don't understand the message.
+    return;
+}
+"
+`;
+
+exports[`Bug 975477 don't move end of line comments to next line 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(2, 13) -> (2, 0)",
+  "(3, 15) -> (3, 0)",
+  "(4, 17) -> (4, 0)",
+  "(5, 15) -> (5, 0)",
+  "(6, 15) -> (6, 0)",
+  "(7, 13) -> (7, 0)",
+  "(7, 13) -> (8, 0)",
+  "(9, 15) -> (9, 0)",
+  "(10, 13) -> (10, 0)",
+  "(11, 15) -> (11, 0)",
+  "(12, 15) -> (12, 0)",
+  "(13, 15) -> (13, 0)",
+  "(14, 11) -> (14, 0)",
+]
+`;
+
+exports[`Bug 977082 - space between grouping operator and dot notation 1`] = `
+"JSON.stringify(3).length;
+([1,
+2,
+3]).length;
+(new Date()).toLocaleString();
+"
+`;
+
+exports[`Bug 977082 - space between grouping operator and dot notation 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(2, 11) -> (2, 0)",
+  "(2, 15) -> (3, 0)",
+  "(2, 17) -> (4, 0)",
+  "(3, 11) -> (5, 0)",
+]
+`;
+
+exports[`Bug 1206633 - spaces in for of 1`] = `
+"for (let tab of tabs) {
+}
+"
+`;
+
+exports[`Bug 1206633 - spaces in for of 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(1, 23) -> (2, 0)",
+]
+`;
+
+exports[`Bug 1261971 - indentation after switch statement 1`] = `
+"{
+  switch (x) {
+  }
+  if (y) {
+  }
+  done();
+}
+"
+`;
+
+exports[`Bug 1261971 - indentation after switch statement 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(1, 1) -> (2, 0)",
+  "(1, 11) -> (3, 0)",
+  "(1, 12) -> (4, 0)",
+  "(1, 18) -> (5, 0)",
+  "(1, 19) -> (6, 0)",
+  "(1, 26) -> (7, 0)",
+]
+`;
+
+exports[`Bug pretty-sure-3 - escaping line and paragraph separators 1`] = `
+"x = '\\\\u2029\\\\u2028';
+"
+`;
+
+exports[`Bug pretty-sure-3 - escaping line and paragraph separators 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`Bug pretty-sure-4 - escaping null character before digit 1`] = `
+"x = '\\\\x001';
+"
+`;
+
+exports[`Bug pretty-sure-4 - escaping null character before digit 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`Bug pretty-sure-5 - empty multiline comment shouldn't throw exception 1`] = `
+"{
+  /*
+           */
+  return;
+}
+"
+`;
+
+exports[`Bug pretty-sure-5 - empty multiline comment shouldn't throw exception 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(2, 11) -> (2, 0)",
+  "(2, 11) -> (3, 0)",
+  "(4, 13) -> (4, 0)",
+  "(5, 11) -> (5, 0)",
+]
+`;
+
+exports[`Bug pretty-sure-6 - inline comment shouldn't move parenthesis to next line 1`] = `
+"return /* inline comment */ (1 + 1);
+"
+`;
+
+exports[`Bug pretty-sure-6 - inline comment shouldn't move parenthesis to next line 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`Bug pretty-sure-7 - accessing a literal number property requires a space 1`] = `
+"0 .toString() + x.toString();
+"
+`;
+
+exports[`Bug pretty-sure-7 - accessing a literal number property requires a space 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`Bug pretty-sure-8 - return and yield only accept arguments when on the same line 1`] = `
+"{
+  return
+  (x)
+  yield
+  (x)
+  yield
+  * x
+}
+"
+`;
+
+exports[`Bug pretty-sure-8 - return and yield only accept arguments when on the same line 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(2, 13) -> (2, 0)",
+  "(3, 13) -> (3, 0)",
+  "(4, 13) -> (4, 0)",
+  "(5, 13) -> (5, 0)",
+  "(6, 13) -> (6, 0)",
+  "(7, 13) -> (7, 0)",
+  "(8, 11) -> (8, 0)",
+]
+`;
+
+exports[`Bug pretty-sure-9 - accept unary operator at start of file 1`] = `
+"+ 0
+"
+`;
+
+exports[`Bug pretty-sure-9 - accept unary operator at start of file 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`Class extension within a function 1`] = `
+"(function () {
+  class X extends Y {
+    constructor() {
+    }
+  }
+}) ()
+"
+`;
+
+exports[`Class extension within a function 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(1, 15) -> (2, 0)",
+  "(1, 35) -> (3, 0)",
+  "(1, 50) -> (4, 0)",
+  "(1, 52) -> (5, 0)",
+  "(1, 55) -> (6, 0)",
+]
+`;
+
+exports[`Class handling 1`] = `
+"class Class {
+  constructor() {
+  }
+}
+"
+`;
+
+exports[`Class handling 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(1, 13) -> (2, 0)",
+  "(1, 27) -> (3, 0)",
+  "(1, 28) -> (4, 0)",
+]
+`;
+
+exports[`Code that relies on ASI 1`] = `
+"var foo = 10
+var bar = 20
+function g() {
+  a()
+  b()
+}
+"
+`;
+
+exports[`Code that relies on ASI 2`] = `
+Array [
+  "(2, 11) -> (1, 0)",
+  "(3, 11) -> (2, 0)",
+  "(4, 11) -> (3, 0)",
+  "(5, 13) -> (4, 0)",
+  "(6, 13) -> (5, 0)",
+  "(7, 11) -> (6, 0)",
+]
+`;
+
+exports[`Const handling 1`] = `
+"const d = 'yes';
+"
+`;
+
+exports[`Const handling 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`Continue/break statements 1`] = `
+"while (1) {
+  if (x) {
+    continue
+  }
+  if (y) {
+    break
+  }
+  if (z) {
+    break foo
+  }
+}
+"
+`;
+
+exports[`Continue/break statements 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(1, 9) -> (2, 0)",
+  "(1, 15) -> (3, 0)",
+  "(1, 23) -> (4, 0)",
+  "(1, 24) -> (5, 0)",
+  "(1, 30) -> (6, 0)",
+  "(1, 35) -> (7, 0)",
+  "(1, 36) -> (8, 0)",
+  "(1, 42) -> (9, 0)",
+  "(1, 51) -> (10, 0)",
+  "(1, 52) -> (11, 0)",
+]
+`;
+
+exports[`Delete 1`] = `
+"delete obj.prop;
+"
+`;
+
+exports[`Delete 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`Do/while loop 1`] = `
+"do {
+  x
+} while (y)
+"
+`;
+
+exports[`Do/while loop 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(1, 3) -> (2, 0)",
+  "(1, 4) -> (3, 0)",
+]
+`;
+
+exports[`Dot handling with keywords which are identifier name 1`] = `
+"y.await.break.const.delete.else.return.new.yield = 1.23;
+"
+`;
+
+exports[`Dot handling with keywords which are identifier name 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`Dot handling with let which is identifier name 1`] = `
+"y.let.let = 1.23;
+"
+`;
+
+exports[`Dot handling with let which is identifier name 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`Escaping backslashes in strings 1`] = `
+"'\\\\\\\\'
+"
+`;
+
+exports[`Escaping backslashes in strings 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`Escaping carriage return in strings 1`] = `
+"'\\\\r'
+"
+`;
+
+exports[`Escaping carriage return in strings 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`Escaping form feed in strings 1`] = `
+"'\\\\f'
+"
+`;
+
+exports[`Escaping form feed in strings 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`Escaping null character in strings 1`] = `
+"'\\\\x00'
+"
+`;
+
+exports[`Escaping null character in strings 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`Escaping tab in strings 1`] = `
+"'\\\\t'
+"
+`;
+
+exports[`Escaping tab in strings 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`Escaping vertical tab in strings 1`] = `
+"'\\\\v'
+"
+`;
+
+exports[`Escaping vertical tab in strings 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`False assignment 1`] = `
+"var foo = false;
+"
+`;
+
+exports[`False assignment 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`For loop 1`] = `
+"for (var i = 0; i < n; i++) {
+  console.log(i);
+}
+"
+`;
+
+exports[`For loop 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(1, 30) -> (2, 0)",
+  "(1, 46) -> (3, 0)",
+]
+`;
+
+exports[`Function calls 1`] = `
+"var result = func(a, b, c, d);
+"
+`;
+
+exports[`Function calls 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`Getter and setter literals 1`] = `
+"var obj = {
+  get foo() {
+    return this._foo
+  },
+  set foo(v) {
+    this._foo = v
+  }
+}
+"
+`;
+
+exports[`Getter and setter literals 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(1, 9) -> (2, 0)",
+  "(1, 19) -> (3, 0)",
+  "(1, 35) -> (4, 0)",
+  "(1, 37) -> (5, 0)",
+  "(1, 48) -> (6, 0)",
+  "(1, 59) -> (7, 0)",
+  "(1, 60) -> (8, 0)",
+]
+`;
+
+exports[`If/else statement 1`] = `
+"if (c) {
+  then()
+} else {
+  other()
+}
+"
+`;
+
+exports[`If/else statement 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(1, 6) -> (2, 0)",
+  "(1, 12) -> (3, 0)",
+  "(1, 18) -> (4, 0)",
+  "(1, 25) -> (5, 0)",
+]
+`;
+
+exports[`If/else without curlies 1`] = `
+"if (c) a else b
+"
+`;
+
+exports[`If/else without curlies 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`Immediately invoked function expression 1`] = `
+"(function () {
+  thingy()
+}())
+"
+`;
+
+exports[`Immediately invoked function expression 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(1, 12) -> (2, 0)",
+  "(1, 20) -> (3, 0)",
+]
+`;
+
+exports[`In operator 1`] = `
+"if (foo in bar) {
+  doThing()
+}
+"
+`;
+
+exports[`In operator 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(1, 15) -> (2, 0)",
+  "(1, 24) -> (3, 0)",
+]
+`;
+
+exports[`Indented multiline comment 1`] = `
+"function foo() {
+  /**
+              * java doc style comment
+              * more comment
+              */
+  bar();
+}
+"
+`;
+
+exports[`Indented multiline comment 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(2, 13) -> (2, 0)",
+  "(2, 13) -> (3, 0)",
+  "(2, 13) -> (4, 0)",
+  "(2, 13) -> (5, 0)",
+  "(6, 13) -> (6, 0)",
+  "(7, 11) -> (7, 0)",
+]
+`;
+
+exports[`Instanceof 1`] = `
+"var a = x instanceof y;
+"
+`;
+
+exports[`Instanceof 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`Let handling with value 1`] = `
+"let d = 'yes';
+"
+`;
+
+exports[`Let handling with value 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`Let handling without value 1`] = `
+"let d;
+"
+`;
+
+exports[`Let handling without value 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`Multi line comment 1`] = `
+"/* Comment
+    more comment */
+function foo() {
+  bar();
+}
+"
+`;
+
+exports[`Multi line comment 2`] = `
+Array [
+  "(2, 4) -> (1, 0)",
+  "(2, 4) -> (2, 0)",
+  "(4, 4) -> (3, 0)",
+  "(4, 21) -> (4, 0)",
+  "(4, 28) -> (5, 0)",
+]
+`;
+
+exports[`Multiple single line comments 1`] = `
+"function f() {
+  // a
+  // b
+  // c
+}
+"
+`;
+
+exports[`Multiple single line comments 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(2, 13) -> (2, 0)",
+  "(3, 13) -> (3, 0)",
+  "(4, 13) -> (4, 0)",
+  "(5, 11) -> (5, 0)",
+]
+`;
+
+exports[`Named class handling 1`] = `
+"let unnamed = class Class {
+  constructor() {
+  }
+}
+"
+`;
+
+exports[`Named class handling 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(1, 24) -> (2, 0)",
+  "(1, 38) -> (3, 0)",
+  "(1, 39) -> (4, 0)",
+]
+`;
+
+exports[`Nested function 1`] = `
+"function foo() {
+  function bar() {
+    debugger;
+  }
+  bar();
+}
+"
+`;
+
+exports[`Nested function 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(1, 17) -> (2, 0)",
+  "(1, 34) -> (3, 0)",
+  "(1, 44) -> (4, 0)",
+  "(1, 46) -> (5, 0)",
+  "(1, 53) -> (6, 0)",
+]
+`;
+
+exports[`New expression 1`] = `
+"var foo = new Foo();
+"
+`;
+
+exports[`New expression 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`Non-ASI function call 1`] = `
+"f()
+"
+`;
+
+exports[`Non-ASI function call 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`Non-ASI in 1`] = `
+"'x' in foo
+"
+`;
+
+exports[`Non-ASI in 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`Non-ASI new 1`] = `
+"new F()
+"
+`;
+
+exports[`Non-ASI new 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`Non-ASI property access 1`] = `
+"[
+  1,
+  2,
+  3
+]
+[0]
+"
+`;
+
+exports[`Non-ASI property access 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(1, 1) -> (2, 0)",
+  "(1, 3) -> (3, 0)",
+  "(1, 5) -> (4, 0)",
+  "(1, 6) -> (5, 0)",
+  "(2, 11) -> (6, 0)",
+]
+`;
+
+exports[`Null assignment 1`] = `
+"var i = null;
+"
+`;
+
+exports[`Null assignment 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`Objects 1`] = `
+"var o = {
+  a: 1,
+  b: 2
+};
+"
+`;
+
+exports[`Objects 2`] = `
+Array [
+  "(2, 6) -> (1, 0)",
+  "(2, 13) -> (2, 0)",
+  "(3, 6) -> (3, 0)",
+  "(3, 9) -> (4, 0)",
+]
+`;
+
+exports[`Optional chaining parsing support 1`] = `
+"x?.y?.z?.['a']?.check();
+"
+`;
+
+exports[`Optional chaining parsing support 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`Private fields parsing support 1`] = `
+"class MyClass {
+  constructor(a) {
+    this.#a = a;
+    this.#b = Math.random();
+    this.ab = this.#getAB();
+  }
+  #a
+  #b = 'default value'
+  static #someStaticPrivate
+  #getA() {
+    return this.#a;
+  }
+  #getAB() {
+    return this.#getA() + this.#b
+  }
+}
+"
+`;
+
+exports[`Private fields parsing support 2`] = `
+Array [
+  "(2, 6) -> (1, 0)",
+  "(3, 8) -> (2, 0)",
+  "(4, 10) -> (3, 0)",
+  "(4, 22) -> (4, 0)",
+  "(4, 46) -> (5, 0)",
+  "(5, 8) -> (6, 0)",
+  "(6, 8) -> (7, 0)",
+  "(7, 8) -> (8, 0)",
+  "(8, 8) -> (9, 0)",
+  "(9, 8) -> (10, 0)",
+  "(10, 10) -> (11, 0)",
+  "(11, 8) -> (12, 0)",
+  "(12, 8) -> (13, 0)",
+  "(13, 10) -> (14, 0)",
+  "(15, 8) -> (15, 0)",
+  "(16, 6) -> (16, 0)",
+]
+`;
+
+exports[`Regexp 1`] = `
+"var r = /foobar/g;
+"
+`;
+
+exports[`Regexp 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`Simple function 1`] = `
+"function foo() {
+  bar();
+}
+"
+`;
+
+exports[`Simple function 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(1, 17) -> (2, 0)",
+  "(1, 24) -> (3, 0)",
+]
+`;
+
+exports[`Single line comment 1`] = `
+"// Comment
+function foo() {
+  bar();
+}
+"
+`;
+
+exports[`Single line comment 2`] = `
+Array [
+  "(2, 4) -> (1, 0)",
+  "(3, 4) -> (2, 0)",
+  "(3, 21) -> (3, 0)",
+  "(3, 28) -> (4, 0)",
+]
+`;
+
+exports[`Stack-keyword property access 1`] = `
+"foo.a = 1.1;
+foo.do.switch.case.default = 2.2;
+foo.b = 3.3;
+"
+`;
+
+exports[`Stack-keyword property access 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(1, 10) -> (2, 0)",
+  "(1, 41) -> (3, 0)",
+]
+`;
+
+exports[`String with quote 1`] = `
+"var foo = '\\\\'';
+"
+`;
+
+exports[`String with quote 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`String with semicolon 1`] = `
+"var foo = ';';
+"
+`;
+
+exports[`String with semicolon 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`Subclass handling 1`] = `
+"class Class extends Base {
+  constructor() {
+  }
+}
+"
+`;
+
+exports[`Subclass handling 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(1, 28) -> (2, 0)",
+  "(1, 42) -> (3, 0)",
+  "(1, 43) -> (4, 0)",
+]
+`;
+
+exports[`Switch statements 1`] = `
+"switch (x) {
+  case a:
+    foo();
+    break;
+  default:
+    bar()
+}
+"
+`;
+
+exports[`Switch statements 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(1, 10) -> (2, 0)",
+  "(1, 17) -> (3, 0)",
+  "(1, 23) -> (4, 0)",
+  "(1, 29) -> (5, 0)",
+  "(1, 37) -> (6, 0)",
+  "(1, 42) -> (7, 0)",
+]
+`;
+
+exports[`Template literals 1`] = `
+"\`abc\${ JSON.stringify({
+  clas: 'testing'
+}) }def\`;
+{
+  a();
+}
+"
+`;
+
+exports[`Template literals 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(1, 22) -> (2, 0)",
+  "(1, 37) -> (3, 0)",
+  "(1, 45) -> (4, 0)",
+  "(1, 46) -> (5, 0)",
+  "(1, 50) -> (6, 0)",
+]
+`;
+
+exports[`Ternary operator 1`] = `
+"bar ? baz : bang;
+"
+`;
+
+exports[`Ternary operator 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`This property access 1`] = `
+"var foo = this.foo;
+"
+`;
+
+exports[`This property access 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`True assignment 1`] = `
+"var foo = true;
+"
+`;
+
+exports[`True assignment 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`Try/catch/finally statement 1`] = `
+"try {
+  dangerous()
+} catch (e) {
+  handle(e)
+} finally {
+  cleanup()
+}
+"
+`;
+
+exports[`Try/catch/finally statement 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(1, 4) -> (2, 0)",
+  "(1, 15) -> (3, 0)",
+  "(1, 25) -> (4, 0)",
+  "(1, 34) -> (5, 0)",
+  "(1, 43) -> (6, 0)",
+  "(1, 52) -> (7, 0)",
+]
+`;
+
+exports[`Undefined assignment 1`] = `
+"var i = undefined;
+"
+`;
+
+exports[`Undefined assignment 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`Unnamed class handling 1`] = `
+"let unnamed = class {
+  constructor() {
+  }
+}
+"
+`;
+
+exports[`Unnamed class handling 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(1, 18) -> (2, 0)",
+  "(1, 32) -> (3, 0)",
+  "(1, 33) -> (4, 0)",
+]
+`;
+
+exports[`Void 0 assignment 1`] = `
+"var i = void 0;
+"
+`;
+
+exports[`Void 0 assignment 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+]
+`;
+
+exports[`With statement 1`] = `
+"with (obj) {
+  crock()
+}
+"
+`;
+
+exports[`With statement 2`] = `
+Array [
+  "(1, 0) -> (1, 0)",
+  "(1, 10) -> (2, 0)",
+  "(1, 17) -> (3, 0)",
+]
+`;
