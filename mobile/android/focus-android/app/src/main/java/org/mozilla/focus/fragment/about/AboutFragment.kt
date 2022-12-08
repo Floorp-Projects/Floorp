@@ -106,8 +106,6 @@ class AboutFragment : BaseSettingsLikeFragment() {
     private fun getAboutHeader(): String {
         val gecko = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) " \uD83E\uDD8E " else " GV: "
         val engineIndicator = gecko + BuildConfig.MOZ_APP_VERSION + "-" + BuildConfig.MOZ_APP_BUILDID
-        val componentsAbbreviation = getString(R.string.components_abbreviation)
-        val componentsIndicator = mozilla.components.Build.version + ", " + mozilla.components.Build.gitHash
         val servicesAbbreviation = getString(R.string.services_abbreviation)
         val servicesIndicator = mozilla.components.Build.applicationServicesVersion
         val packageInfo = requireContext().packageManager.getPackageInfoCompat(requireContext().packageName, 0)
@@ -115,11 +113,9 @@ class AboutFragment : BaseSettingsLikeFragment() {
 
         @Suppress("ImplicitDefaultLocale") // We want LTR in all cases as the version is not translatable.
         return String.format(
-            "%s (Build #%s)\n%s: %s\n%s: %s",
+            "%s (Build #%s)\n%s: %s",
             packageInfo.versionName,
             versionCode + engineIndicator,
-            componentsAbbreviation,
-            componentsIndicator,
             servicesAbbreviation,
             servicesIndicator,
         )
