@@ -5,7 +5,6 @@ from __future__ import print_function
 
 import optparse
 import os
-import re
 import sys
 from configparser import RawConfigParser
 from io import StringIO
@@ -308,88 +307,6 @@ print(
 }
 
 } // namespace IPC
-
-#ifdef NIGHTLY_BUILD
-namespace mozilla::glean {
-
-// Used by FOGIPC.cpp
-nsLiteralCString GleanKeyFromIPCMessageType(uint32_t aMessageType)
-{
-  switch (aMessageType) {
-""",
-    file=ipc_msgtype_name,
-)
-
-
-def make_glean_key_segment(s):
-    # handle uppercase sequences after `_`, `.`, or at the start of the string.
-    s = re.sub("(^|_)[A-Z]+", lambda m: m[0].lower(), s)
-    # add `_` before remaining uppercase sequences, and lowercase them.
-    s = re.sub("[A-Z]+", lambda m: "_" + m[0].lower(), s)
-    # truncate the segment length to 30 characters
-    if len(s) > 30:
-        s = s[:30]
-    return s
-
-
-for protocol in sorted(allmessages.keys()):
-    for (msg, num) in allmessages[protocol].idnums:
-        if num or msg.endswith("End"):
-            continue
-        # Shorten the `Msg_` and `Reply_` prefixes.
-        glean_msg = re.sub("^Reply_", "r_", re.sub("^Msg_", "m_", msg))
-        print(
-            """
-  case %s__%s:
-    return "%s.%s"_ns;"""
-            % (
-                protocol,
-                msg,
-                make_glean_key_segment(protocol),
-                make_glean_key_segment(glean_msg),
-            ),
-            file=ipc_msgtype_name,
-        )
-
-print(
-    """
-  case DATA_PIPE_CLOSED_MESSAGE_TYPE:
-    return "data_pipe.closed"_ns;
-  case DATA_PIPE_BYTES_CONSUMED_MESSAGE_TYPE:
-    return "data_pipe.bytes_consumed"_ns;
-  case ACCEPT_INVITE_MESSAGE_TYPE:
-    return "node.accept_invite"_ns;
-  case REQUEST_INTRODUCTION_MESSAGE_TYPE:
-    return "node.request_introduction"_ns;
-  case INTRODUCE_MESSAGE_TYPE:
-    return "node.introduce"_ns;
-  case BROADCAST_MESSAGE_TYPE:
-    return "node.broadcast_message"_ns;
-  case EVENT_MESSAGE_TYPE:
-    return "node.event_message"_ns;
-  case IMPENDING_SHUTDOWN_MESSAGE_TYPE:
-    return "channel.impending_shutdown"_ns;
-  case BUILD_IDS_MATCH_MESSAGE_TYPE:
-    return "channel.build_ids_match"_ns;
-  case BUILD_ID_MESSAGE_TYPE:
-    return "channel.build_id"_ns;
-  case CHANNEL_OPENED_MESSAGE_TYPE:
-    return "channel.channel_opened"_ns;
-  case SHMEM_DESTROYED_MESSAGE_TYPE:
-    return "channel.shmem_destroyed"_ns;
-  case SHMEM_CREATED_MESSAGE_TYPE:
-    return "channel.shmem_created"_ns;
-  case GOODBYE_MESSAGE_TYPE:
-    return "channel.goodbye"_ns;
-  case CANCEL_MESSAGE_TYPE:
-    return "channel.cancel"_ns;
-  default:
-    return "unknown"_ns;
-  }
-}
-
-}  // namespace mozilla::glean
-#endif  // defined(NIGHTLY_BUILD)
 
 namespace mozilla {
 namespace ipc {
