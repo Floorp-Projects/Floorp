@@ -6433,6 +6433,11 @@
     type: bool
     value: true
     mirror: once
+  # Whether to use virtual surfaces, as opposed to each tile owning a surface.
+-   name: gfx.webrender.dcomp-use-virtual-surfaces
+    type: bool
+    value: true
+    mirror: once
 #endif
 
 # Whether or not fallback to Software WebRender requires the GPU process.

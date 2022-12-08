@@ -222,9 +222,11 @@ class DCLayerTree {
  */
 class DCSurface {
  public:
+  const bool mIsVirtualSurface;
+
   explicit DCSurface(wr::DeviceIntSize aTileSize,
-                     wr::DeviceIntPoint aVirtualOffset, bool aIsOpaque,
-                     DCLayerTree* aDCLayerTree);
+                     wr::DeviceIntPoint aVirtualOffset, bool aIsVirtualSurface,
+                     bool aIsOpaque, DCLayerTree* aDCLayerTree);
   virtual ~DCSurface();
 
   bool Initialize();
@@ -275,6 +277,12 @@ class DCSurface {
   // that belong to this surface are added as children. In this way, we can
   // set the clip and scroll offset once, on this visual, to affect all
   // children.
+  //
+  // However when using a virtual surface, it is directly attached to this
+  // visual and the tiles do not own visuals.
+  //
+  // Whether mIsVirtualSurface is enabled is decided at DCSurface creation
+  // time based on the pref gfx.webrender.dcomp-use-virtual-surfaces
   RefPtr<IDCompositionVisual2> mVisual;
 
   wr::DeviceIntSize mTileSize;
@@ -291,7 +299,8 @@ class DCSurface {
 class DCExternalSurfaceWrapper : public DCSurface {
  public:
   DCExternalSurfaceWrapper(bool aIsOpaque, DCLayerTree* aDCLayerTree)
-      : DCSurface(wr::DeviceIntSize{}, wr::DeviceIntPoint{}, false /* opaque */,
+      : DCSurface(wr::DeviceIntSize{}, wr::DeviceIntPoint{},
+                  false /* virtual surface */, false /* opaque */,
                   aDCLayerTree),
         mIsOpaque(aIsOpaque) {}
   ~DCExternalSurfaceWrapper() = default;
@@ -370,13 +379,38 @@ class DCSurfaceHandle : public DCSurface {
 
 class DCTile {
  public:
-  explicit DCTile(DCLayerTree* aDCLayerTree);
-  ~DCTile();
-  bool Initialize(int aX, int aY, wr::DeviceIntSize aSize, bool aIsOpaque);
-
   gfx::IntRect mValidRect;
 
   DCLayerTree* mDCLayerTree;
+  // Indicates that when the first BeginDraw occurs on the surface it must be
+  // full size - required by dcomp on non-virtual surfaces.
+  bool mNeedsFullDraw;
+
+  explicit DCTile(DCLayerTree* aDCLayerTree);
+  ~DCTile();
+  bool Initialize(int aX, int aY, wr::DeviceIntSize aSize,
+                  bool aIsVirtualSurface, bool aIsOpaque,
+                  RefPtr<IDCompositionVisual2> mSurfaceVisual);
+  RefPtr<IDCompositionSurface> Bind(wr::DeviceIntRect aValidRect);
+  IDCompositionVisual2* GetVisual() { return mVisual; }
+
+ protected:
+  // Size in pixels of this tile, some may be unused.  Set by Initialize.
+  wr::DeviceIntSize mSize;
+  // Whether the tile is composited as opaque (ignores alpha) or transparent.
+  // Set by Initialize.
+  bool mIsOpaque;
+  // Some code paths differ based on whether parent surface is virtual.
+  bool mIsVirtualSurface;
+  // Visual that displays the composition surface, or NULL if the tile belongs
+  // to a virtual surface.
+  RefPtr<IDCompositionVisual2> mVisual;
+  // Surface for the visual, or NULL if the tile has not had its first Bind or
+  // belongs to a virtual surface.
+  RefPtr<IDCompositionSurface> mCompositionSurface;
+
+  RefPtr<IDCompositionSurface> CreateCompositionSurface(wr::DeviceIntSize aSize,
+                                                        bool aIsOpaque);
 };
 
 static inline bool operator==(const DCSurface::TileKey& a0,

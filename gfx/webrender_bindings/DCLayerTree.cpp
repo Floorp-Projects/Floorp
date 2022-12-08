@@ -404,7 +404,7 @@ void DCLayerTree::CompositorEndFrame() {
     if (!same) {
       // Add surfaces in z-order they were added to the scene.
       const auto visual = surface->GetVisual();
-      mRootVisual->AddVisual(visual, FALSE, nullptr);
+      mRootVisual->AddVisual(visual, false, nullptr);
     }
   }
 
@@ -443,18 +443,35 @@ void DCLayerTree::Bind(wr::NativeTileId aId, wr::DeviceIntPoint* aOffset,
   auto tile = surface->GetTile(aId.x, aId.y);
   wr::DeviceIntPoint targetOffset{0, 0};
 
-  gfx::IntRect validRect(aValidRect.min.x, aValidRect.min.y, aValidRect.width(),
-                         aValidRect.height());
-  if (!tile->mValidRect.IsEqualEdges(validRect)) {
-    tile->mValidRect = validRect;
-    surface->DirtyAllocatedRect();
+  // If tile owns an IDCompositionSurface we use it, otherwise we're using an
+  // IDCompositionVirtualSurface owned by the DCSurface.
+  RefPtr<IDCompositionSurface> compositionSurface;
+  if (surface->mIsVirtualSurface) {
+    gfx::IntRect validRect(aValidRect.min.x, aValidRect.min.y,
+                           aValidRect.width(), aValidRect.height());
+    if (!tile->mValidRect.IsEqualEdges(validRect)) {
+      tile->mValidRect = validRect;
+      surface->DirtyAllocatedRect();
+    }
+    wr::DeviceIntSize tileSize = surface->GetTileSize();
+    compositionSurface = surface->GetCompositionSurface();
+    wr::DeviceIntPoint virtualOffset = surface->GetVirtualOffset();
+    targetOffset.x = virtualOffset.x + tileSize.width * aId.x;
+    targetOffset.y = virtualOffset.y + tileSize.height * aId.y;
+  } else {
+    compositionSurface = tile->Bind(aValidRect);
   }
-  wr::DeviceIntSize tileSize = surface->GetTileSize();
-  RefPtr<IDCompositionSurface> compositionSurface =
-      surface->GetCompositionSurface();
-  wr::DeviceIntPoint virtualOffset = surface->GetVirtualOffset();
-  targetOffset.x = virtualOffset.x + tileSize.width * aId.x;
-  targetOffset.y = virtualOffset.y + tileSize.height * aId.y;
+
+  if (tile->mNeedsFullDraw) {
+    // dcomp requires that the first BeginDraw on a non-virtual surface is the
+    // full size of the pixel buffer.
+    auto tileSize = surface->GetTileSize();
+    aDirtyRect.min.x = 0;
+    aDirtyRect.min.y = 0;
+    aDirtyRect.max.x = tileSize.width;
+    aDirtyRect.max.y = tileSize.height;
+    tile->mNeedsFullDraw = false;
+  }
 
   *aFboId = CreateEGLSurfaceForCompositionSurface(
       aDirtyRect, aOffset, compositionSurface, targetOffset);
@@ -490,8 +507,10 @@ void DCLayerTree::CreateSurface(wr::NativeSurfaceId aId,
                     << aTileSize.height << ")";
   }
 
-  auto surface =
-      MakeUnique<DCSurface>(aTileSize, aVirtualOffset, aIsOpaque, this);
+  bool isVirtualSurface =
+      StaticPrefs::gfx_webrender_dcomp_use_virtual_surfaces_AtStartup();
+  auto surface = MakeUnique<DCSurface>(aTileSize, aVirtualOffset,
+                                       isVirtualSurface, aIsOpaque, this);
   if (!surface->Initialize()) {
     gfxCriticalNote << "Failed to initialize DCSurface: " << wr::AsUint64(aId);
     return;
@@ -524,12 +543,12 @@ void DCLayerTree::DestroySurface(NativeSurfaceId aId) {
   mDCSurfaces.erase(surface_it);
 }
 
-void DCLayerTree::CreateTile(wr::NativeSurfaceId aId, int aX, int aY) {
+void DCLayerTree::CreateTile(wr::NativeSurfaceId aId, int32_t aX, int32_t aY) {
   auto surface = GetSurface(aId);
   surface->CreateTile(aX, aY);
 }
 
-void DCLayerTree::DestroyTile(wr::NativeSurfaceId aId, int aX, int aY) {
+void DCLayerTree::DestroyTile(wr::NativeSurfaceId aId, int32_t aX, int32_t aY) {
   auto surface = GetSurface(aId);
   surface->DestroyTile(aX, aY);
 }
@@ -833,9 +852,10 @@ layers::OverlayInfo DCLayerTree::GetOverlayInfo() {
 }
 
 DCSurface::DCSurface(wr::DeviceIntSize aTileSize,
-                     wr::DeviceIntPoint aVirtualOffset, bool aIsOpaque,
-                     DCLayerTree* aDCLayerTree)
-    : mDCLayerTree(aDCLayerTree),
+                     wr::DeviceIntPoint aVirtualOffset, bool aIsVirtualSurface,
+                     bool aIsOpaque, DCLayerTree* aDCLayerTree)
+    : mIsVirtualSurface(aIsVirtualSurface),
+      mDCLayerTree(aDCLayerTree),
       mTileSize(aTileSize),
       mIsOpaque(aIsOpaque),
       mAllocatedRectDirty(true),
@@ -844,6 +864,7 @@ DCSurface::DCSurface(wr::DeviceIntSize aTileSize,
 DCSurface::~DCSurface() {}
 
 bool DCSurface::Initialize() {
+  // Create a visual for tiles to attach to, whether virtual or not.
   HRESULT hr;
   const auto dCompDevice = mDCLayerTree->GetCompositionDevice();
   hr = dCompDevice->CreateVisual(getter_AddRefs(mVisual));
@@ -852,39 +873,53 @@ bool DCSurface::Initialize() {
     return false;
   }
 
-  DXGI_ALPHA_MODE alpha_mode =
-      mIsOpaque ? DXGI_ALPHA_MODE_IGNORE : DXGI_ALPHA_MODE_PREMULTIPLIED;
+  // If virtual surface is enabled, create and attach to visual, in this case
+  // the tiles won't own visuals or surfaces.
+  if (mIsVirtualSurface) {
+    DXGI_ALPHA_MODE alpha_mode =
+        mIsOpaque ? DXGI_ALPHA_MODE_IGNORE : DXGI_ALPHA_MODE_PREMULTIPLIED;
 
-  hr = dCompDevice->CreateVirtualSurface(
-      VIRTUAL_SURFACE_SIZE, VIRTUAL_SURFACE_SIZE, DXGI_FORMAT_R8G8B8A8_UNORM,
-      alpha_mode, getter_AddRefs(mVirtualSurface));
-  MOZ_ASSERT(SUCCEEDED(hr));
+    hr = dCompDevice->CreateVirtualSurface(
+        VIRTUAL_SURFACE_SIZE, VIRTUAL_SURFACE_SIZE, DXGI_FORMAT_R8G8B8A8_UNORM,
+        alpha_mode, getter_AddRefs(mVirtualSurface));
+    MOZ_ASSERT(SUCCEEDED(hr));
 
-  // Bind the surface memory to this visual
-  hr = mVisual->SetContent(mVirtualSurface);
-  MOZ_ASSERT(SUCCEEDED(hr));
+    // Bind the surface memory to this visual
+    hr = mVisual->SetContent(mVirtualSurface);
+    MOZ_ASSERT(SUCCEEDED(hr));
+  }
 
   return true;
 }
 
-void DCSurface::CreateTile(int aX, int aY) {
+void DCSurface::CreateTile(int32_t aX, int32_t aY) {
   TileKey key(aX, aY);
   MOZ_RELEASE_ASSERT(mDCTiles.find(key) == mDCTiles.end());
 
   auto tile = MakeUnique<DCTile>(mDCLayerTree);
-  if (!tile->Initialize(aX, aY, mTileSize, mIsOpaque)) {
+  if (!tile->Initialize(aX, aY, mTileSize, mIsVirtualSurface, mIsOpaque,
+                        mVisual)) {
     gfxCriticalNote << "Failed to initialize DCTile: " << aX << aY;
     return;
   }
 
-  mAllocatedRectDirty = true;
+  if (mIsVirtualSurface) {
+    mAllocatedRectDirty = true;
+  } else {
+    mVisual->AddVisual(tile->GetVisual(), false, nullptr);
+  }
 
   mDCTiles[key] = std::move(tile);
 }
 
-void DCSurface::DestroyTile(int aX, int aY) {
+void DCSurface::DestroyTile(int32_t aX, int32_t aY) {
   TileKey key(aX, aY);
-  mAllocatedRectDirty = true;
+  if (mIsVirtualSurface) {
+    mAllocatedRectDirty = true;
+  } else {
+    auto tile = GetTile(aX, aY);
+    mVisual->RemoveVisual(tile->GetVisual());
+  }
   mDCTiles.erase(key);
 }
 
@@ -892,31 +927,34 @@ void DCSurface::DirtyAllocatedRect() { mAllocatedRectDirty = true; }
 
 void DCSurface::UpdateAllocatedRect() {
   if (mAllocatedRectDirty) {
-    // The virtual surface may have holes in it (for example, an empty tile
-    // that has no primitives). Instead of trimming to a single bounding
-    // rect, supply the rect of each valid tile to handle this case.
-    std::vector<RECT> validRects;
+    if (mVirtualSurface) {
+      // The virtual surface may have holes in it (for example, an empty tile
+      // that has no primitives). Instead of trimming to a single bounding
+      // rect, supply the rect of each valid tile to handle this case.
+      std::vector<RECT> validRects;
 
-    for (auto it = mDCTiles.begin(); it != mDCTiles.end(); ++it) {
-      auto tile = GetTile(it->first.mX, it->first.mY);
-      RECT rect;
+      for (auto it = mDCTiles.begin(); it != mDCTiles.end(); ++it) {
+        auto tile = GetTile(it->first.mX, it->first.mY);
+        RECT rect;
 
-      rect.left = (LONG)(mVirtualOffset.x + it->first.mX * mTileSize.width +
-                         tile->mValidRect.x);
-      rect.top = (LONG)(mVirtualOffset.y + it->first.mY * mTileSize.height +
-                        tile->mValidRect.y);
-      rect.right = rect.left + tile->mValidRect.width;
-      rect.bottom = rect.top + tile->mValidRect.height;
+        rect.left = (LONG)(mVirtualOffset.x + it->first.mX * mTileSize.width +
+                           tile->mValidRect.x);
+        rect.top = (LONG)(mVirtualOffset.y + it->first.mY * mTileSize.height +
+                          tile->mValidRect.y);
+        rect.right = rect.left + tile->mValidRect.width;
+        rect.bottom = rect.top + tile->mValidRect.height;
 
-      validRects.push_back(rect);
+        validRects.push_back(rect);
+      }
+
+      mVirtualSurface->Trim(validRects.data(), validRects.size());
     }
-
-    mVirtualSurface->Trim(validRects.data(), validRects.size());
+    // When not using a virtual surface, we still want to reset this
     mAllocatedRectDirty = false;
   }
 }
 
-DCTile* DCSurface::GetTile(int aX, int aY) const {
+DCTile* DCSurface::GetTile(int32_t aX, int32_t aY) const {
   TileKey key(aX, aY);
   auto tile_it = mDCTiles.find(key);
   MOZ_RELEASE_ASSERT(tile_it != mDCTiles.end());
@@ -924,7 +962,7 @@ DCTile* DCSurface::GetTile(int aX, int aY) const {
 }
 
 DCSurfaceVideo::DCSurfaceVideo(bool aIsOpaque, DCLayerTree* aDCLayerTree)
-    : DCSurface(wr::DeviceIntSize{}, wr::DeviceIntPoint{}, aIsOpaque,
+    : DCSurface(wr::DeviceIntSize{}, wr::DeviceIntPoint{}, false, aIsOpaque,
                 aDCLayerTree) {}
 
 DCSurfaceVideo::~DCSurfaceVideo() {
@@ -1313,7 +1351,7 @@ void DCSurfaceVideo::ReleaseDecodeSwapChainResources() {
 }
 
 DCSurfaceHandle::DCSurfaceHandle(bool aIsOpaque, DCLayerTree* aDCLayerTree)
-    : DCSurface(wr::DeviceIntSize{}, wr::DeviceIntPoint{}, aIsOpaque,
+    : DCSurface(wr::DeviceIntSize{}, wr::DeviceIntPoint{}, false, aIsOpaque,
                 aDCLayerTree) {}
 
 void DCSurfaceHandle::AttachExternalImage(wr::ExternalImageId aExternalImage) {
@@ -1378,19 +1416,85 @@ DCTile::DCTile(DCLayerTree* aDCLayerTree) : mDCLayerTree(aDCLayerTree) {}
 DCTile::~DCTile() {}
 
 bool DCTile::Initialize(int aX, int aY, wr::DeviceIntSize aSize,
-                        bool aIsOpaque) {
+                        bool aIsVirtualSurface, bool aIsOpaque,
+                        RefPtr<IDCompositionVisual2> mSurfaceVisual) {
   if (aSize.width <= 0 || aSize.height <= 0) {
     return false;
   }
 
-  // Initially, the entire tile is considered valid, unless it is set by
-  // the SetTileProperties method.
-  mValidRect.x = 0;
-  mValidRect.y = 0;
-  mValidRect.width = aSize.width;
-  mValidRect.height = aSize.height;
+  mSize = aSize;
+  mIsOpaque = aIsOpaque;
+  mIsVirtualSurface = aIsVirtualSurface;
+  mNeedsFullDraw = !aIsVirtualSurface;
+
+  if (aIsVirtualSurface) {
+    // Initially, the entire tile is considered valid, unless it is set by
+    // the SetTileProperties method.
+    mValidRect.x = 0;
+    mValidRect.y = 0;
+    mValidRect.width = aSize.width;
+    mValidRect.height = aSize.height;
+  } else {
+    HRESULT hr;
+    const auto dCompDevice = mDCLayerTree->GetCompositionDevice();
+    // Create the visual and put it in the tree under the surface visual
+    hr = dCompDevice->CreateVisual(getter_AddRefs(mVisual));
+    if (FAILED(hr)) {
+      gfxCriticalNote << "Failed to CreateVisual for DCTile: " << gfx::hexa(hr);
+      return false;
+    }
+    mSurfaceVisual->AddVisual(mVisual, false, nullptr);
+    // Position the tile relative to the surface visual
+    mVisual->SetOffsetX(aX * aSize.width);
+    mVisual->SetOffsetY(aY * aSize.height);
+    // Clip the visual so it doesn't show anything until we update it
+    D2D_RECT_F clip = {0, 0, 0, 0};
+    mVisual->SetClip(clip);
+    // Create the underlying pixel buffer.
+    mCompositionSurface = CreateCompositionSurface(aSize, aIsOpaque);
+    if (!mCompositionSurface) {
+      return false;
+    }
+    hr = mVisual->SetContent(mCompositionSurface);
+    if (FAILED(hr)) {
+      gfxCriticalNote << "Failed to SetContent for DCTile: " << gfx::hexa(hr);
+      return false;
+    }
+  }
 
   return true;
+}
+
+RefPtr<IDCompositionSurface> DCTile::CreateCompositionSurface(
+    wr::DeviceIntSize aSize, bool aIsOpaque) {
+  HRESULT hr;
+  const auto dCompDevice = mDCLayerTree->GetCompositionDevice();
+  const auto alphaMode =
+      aIsOpaque ? DXGI_ALPHA_MODE_IGNORE : DXGI_ALPHA_MODE_PREMULTIPLIED;
+  RefPtr<IDCompositionSurface> compositionSurface;
+
+  hr = dCompDevice->CreateSurface(aSize.width, aSize.height,
+                                  DXGI_FORMAT_R8G8B8A8_UNORM, alphaMode,
+                                  getter_AddRefs(compositionSurface));
+  if (FAILED(hr)) {
+    gfxCriticalNote << "Failed to CreateSurface for DCTile: " << gfx::hexa(hr);
+    return nullptr;
+  }
+  return compositionSurface;
+}
+
+RefPtr<IDCompositionSurface> DCTile::Bind(wr::DeviceIntRect aValidRect) {
+  if (mVisual != nullptr) {
+    // Tile owns a visual, set the size of the visual to match the portion we
+    // want to be visible.
+    D2D_RECT_F clip_rect;
+    clip_rect.left = aValidRect.min.x;
+    clip_rect.top = aValidRect.min.y;
+    clip_rect.right = aValidRect.max.x;
+    clip_rect.bottom = aValidRect.max.y;
+    mVisual->SetClip(clip_rect);
+  }
+  return mCompositionSurface;
 }
 
 GLuint DCLayerTree::CreateEGLSurfaceForCompositionSurface(
@@ -1409,9 +1513,9 @@ GLuint DCLayerTree::CreateEGLSurfaceForCompositionSurface(
   update_rect.top = aSurfaceOffset.y + aDirtyRect.min.y;
   update_rect.right = aSurfaceOffset.x + aDirtyRect.max.x;
   update_rect.bottom = aSurfaceOffset.y + aDirtyRect.max.y;
-
   hr = aCompositionSurface->BeginDraw(&update_rect, __uuidof(ID3D11Texture2D),
                                       (void**)getter_AddRefs(backBuf), &offset);
+
   if (FAILED(hr)) {
     LayoutDeviceIntRect rect = widget::WinUtils::ToIntRect(update_rect);
 

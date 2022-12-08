@@ -915,7 +915,11 @@ void RenderCompositorANGLE::GetCompositorCapabilities(
     CompositorCapabilities* aCaps) {
   RenderCompositor::GetCompositorCapabilities(aCaps);
 
-  aCaps->virtual_surface_size = VIRTUAL_SURFACE_SIZE;
+  if (StaticPrefs::gfx_webrender_dcomp_use_virtual_surfaces_AtStartup()) {
+    aCaps->virtual_surface_size = VIRTUAL_SURFACE_SIZE;
+  } else {
+    aCaps->virtual_surface_size = 0;
+  }
 }
 
 void RenderCompositorANGLE::EnableNativeCompositor(bool aEnable) {
