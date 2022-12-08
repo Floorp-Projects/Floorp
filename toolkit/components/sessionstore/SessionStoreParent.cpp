@@ -146,8 +146,8 @@ static void DoSessionStoreUpdate(CanonicalBrowsingContext* aBrowsingContext,
     data.mScroll.Construct(aScroll);
   }
 
-  nsCOMPtr<nsISessionStoreFunctions> funcs = do_ImportModule(
-      "resource://gre/modules/SessionStoreFunctions.jsm", fallible);
+  nsCOMPtr<nsISessionStoreFunctions> funcs = do_ImportESModule(
+      "resource://gre/modules/SessionStoreFunctions.sys.mjs", fallible);
   nsCOMPtr<nsIXPConnectWrappedJS> wrapped = do_QueryInterface(funcs);
   if (!wrapped) {
     return;

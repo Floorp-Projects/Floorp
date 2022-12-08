@@ -2,11 +2,9 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-const { SessionStore } = ChromeUtils.importESModule(
-  "resource:///modules/sessionstore/SessionStore.sys.mjs"
-);
+import { SessionStore } from "resource:///modules/sessionstore/SessionStore.sys.mjs";
 
-function UpdateSessionStore(
+export function UpdateSessionStore(
   aBrowser,
   aBrowsingContext,
   aPermanentKey,
@@ -24,7 +22,7 @@ function UpdateSessionStore(
   );
 }
 
-function UpdateSessionStoreForStorage(
+export function UpdateSessionStoreForStorage(
   aBrowser,
   aBrowsingContext,
   aPermanentKey,
@@ -39,8 +37,6 @@ function UpdateSessionStoreForStorage(
     aData
   );
 }
-
-var EXPORTED_SYMBOLS = ["UpdateSessionStore", "UpdateSessionStoreForStorage"];
 
 var SessionStoreFuncInternal = {
   updateSessionStore: function SSF_updateSessionStore(
