@@ -256,7 +256,7 @@ export function validateProfilerWebChannelUrl(targetUrl) {
     // the official frontend URL for testing.
     if (
       // Allow a test URL.
-      targetUrl === "http://example.com" ||
+      /^https?:\/\/example\.com$/.test(targetUrl) ||
       // Allows the following:
       //   "http://localhost:4242"
       //   "http://localhost:4242/"
