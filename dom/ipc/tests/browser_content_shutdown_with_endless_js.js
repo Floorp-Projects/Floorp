@@ -19,7 +19,7 @@ async function createAndShutdownContentProcess(url) {
 
   // Launch a new process and load url. Sets up a promise that will resolve
   // on shutdown.
-  let browserParentDestroyed = PromiseUtils.defer();
+  let browserDestroyed = PromiseUtils.defer();
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -32,12 +32,17 @@ async function createAndShutdownContentProcess(url) {
 
       ok(true, "Content process created.");
 
-      browserParentDestroyed.resolve(
+      browserDestroyed.resolve(
         TestUtils.topicObserved(
           "ipc:browser-destroyed",
           subject => subject === remoteTab
         )
       );
+
+      // Trigger onmessage in the content browser
+      await SpecialPowers.spawn(otherBrowser, [], function() {
+        content.postMessage("LoadedMessage", "*");
+      });
 
       // Give the content process some extra time before we start its shutdown.
       // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
@@ -49,7 +54,7 @@ async function createAndShutdownContentProcess(url) {
 
   // Now wait for it to really shut down.
   // If the HANG_PAGE JS is not canceled we will hang here.
-  await browserParentDestroyed.promise;
+  await browserDestroyed.promise;
 
   // If we do not hang and get here, we are fine.
   ok(true, "Shutdown of content process.");
