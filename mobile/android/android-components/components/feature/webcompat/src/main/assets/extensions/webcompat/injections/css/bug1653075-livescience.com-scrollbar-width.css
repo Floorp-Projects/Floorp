@@ -7,8 +7,7 @@
  * making it thinner. Adding similar rules for Firefox fixes the issue.
  */
 
-.trending__wrapper .trending__items,
-.trending-wrapper .trending-items {
+.trending__list {
   scrollbar-width: thin;
   scrollbar-color: #f9ae3b #f5f5f5;
 }
