@@ -213,6 +213,11 @@ bool BackgroundTasks::IsEphemeralProfileTaskName(const nsCString& aName) {
            aName.EqualsLiteral("not_ephemeral_profile"));
 }
 
+bool BackgroundTasks::IsNoOutputTaskName(const nsCString& aName) {
+  return aName.EqualsLiteral("pingsender") ||
+         aName.EqualsLiteral("no_output");  // Just for testing.
+}
+
 nsCString BackgroundTasks::GetProfilePrefix(const nsCString& aInstallHash) {
   return nsPrintfCString("%sBackgroundTask-%s-%s", MOZ_APP_VENDOR,
                          aInstallHash.get(), GetBackgroundTasks().ref().get());

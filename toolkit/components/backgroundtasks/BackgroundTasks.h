@@ -80,6 +80,16 @@ class BackgroundTasks final : public nsIBackgroundTasks {
   static bool IsEphemeralProfileTaskName(const nsCString& aName);
 
   /**
+   * Whether the given task name should produce no output.  This is achieved by
+   * redirecting stdout and stderr to /dev/null (or, on Windows, nul:).
+   * profile.  Most tasks should produce output.
+   *
+   * At the time of writing, we produce no output for the `pingsender` task and
+   * the test-only `no_output` task.
+   */
+  static bool IsNoOutputTaskName(const nsCString& aName);
+
+  /**
    * Get the installation-specific profile prefix for the current task name and
    * the given install hash.
    */

@@ -104,3 +104,9 @@ Background tasks that are launched at shutdown (and that are not updating) do no
         firefox (version N+1)                    :2014-01-07, 3d
         firefox --backgroundtask ... (version N) :2014-01-05, 3d
 ```
+
+### Most background tasks produce console output
+
+Background tasks are usually scheduled in situations where their output is not user-visible: by the Windows Task Scheduler, at shutdown, etc.  Therefore, it's usually safe to always produce console output.  But some tasks, especially shutdown tasks executed during developer builds, can "pollute" the console even after the Firefox main process has exited.  To avoid this, background tasks can opt-in to producing no output; the predicate that determines whether a particular background task *does* produce output is [`BackgroundTasks::IsNoOutputTaskName`](https://searchfox.org/mozilla-central/source/toolkit/components/backgroundtasks/BackgroundTasks.h).  This predicate can be overridden by providing the `--attach-console` command line flag or by setting the `MOZ_BACKGROUNDTASKS_IGNORE_NO_OUTPUT` environment variable to a non-empty value.
+
+The `pingsender` background task opts to produce no output: see [Bug 1736623](https://bugzilla.mozilla.org/show_bug.cgi?id=1736623).

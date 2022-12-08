@@ -71,6 +71,7 @@ TESTING_JS_MODULES.backgroundtasks += [
     "tests/BackgroundTask_file_exists.sys.mjs",
     "tests/BackgroundTask_jsdebugger.sys.mjs",
     "tests/BackgroundTask_localization.sys.mjs",
+    "tests/BackgroundTask_no_output.sys.mjs",
     "tests/BackgroundTask_not_ephemeral_profile.sys.mjs",
     "tests/BackgroundTask_policies.sys.mjs",
     "tests/BackgroundTask_profile_is_slim.sys.mjs",
