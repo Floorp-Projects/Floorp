@@ -393,6 +393,7 @@ void gc::GCRuntime::endVerifyPreBarriers() {
 
   marker().reset();
   marker().stop();
+  resetDelayedMarking();
 
   js_delete(trc);
 }
