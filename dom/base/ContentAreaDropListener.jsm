@@ -247,28 +247,17 @@ ContentAreaDropListener.prototype = {
       return true;
     }
 
-    let sourceNode = dataTransfer.mozSourceNode;
-    if (!sourceNode) {
+    // If this is an external drag, allow drop.
+    let sourceWC = dataTransfer.sourceWindowContext;
+    if (!sourceWC) {
       return true;
     }
 
-    // don't allow a drop of a node from the same document onto this one
-    let sourceDocument = sourceNode.ownerDocument;
-    let eventDocument = aEvent.originalTarget.ownerDocument;
-    if (sourceDocument == eventDocument) {
+    // If drag source and drop target are in the same top window, don't allow.
+    let eventWC =
+      aEvent.originalTarget.ownerGlobal.browsingContext.currentWindowContext;
+    if (eventWC && sourceWC.topWindowContext == eventWC.topWindowContext) {
       return false;
-    }
-
-    // also check for nodes in other child or sibling frames by checking
-    // if both have the same top window.
-    if (sourceDocument && eventDocument) {
-      if (sourceDocument.defaultView == null) {
-        return true;
-      }
-      let sourceRoot = sourceDocument.defaultView.top;
-      if (sourceRoot && sourceRoot == eventDocument.defaultView.top) {
-        return false;
-      }
     }
 
     return true;
