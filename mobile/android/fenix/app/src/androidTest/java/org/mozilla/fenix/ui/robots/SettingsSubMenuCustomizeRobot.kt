@@ -48,8 +48,28 @@ class SettingsSubMenuCustomizeRobot {
 
     fun clickSwipeToolbarToSwitchTabToggle() = swipeToolbarToggle.click()
 
+    fun clickPullToRefreshToggle() = pullToRefreshToggle.click()
+
     fun verifySwipeToolbarGesturePrefState(isEnabled: Boolean) {
         swipeToolbarToggle
+            .check(
+                matches(
+                    hasCousin(
+                        allOf(
+                            withClassName(endsWith("Switch")),
+                            if (isEnabled) {
+                                isChecked()
+                            } else {
+                                isNotChecked()
+                            },
+                        ),
+                    ),
+                ),
+            )
+    }
+
+    fun verifyPullToRefreshGesturePrefState(isEnabled: Boolean) {
+        pullToRefreshToggle
             .check(
                 matches(
                     hasCousin(
@@ -102,6 +122,9 @@ private fun deviceModeToggle(): ViewInteraction {
 
 private val swipeToolbarToggle =
     onView(withText(getStringResource(R.string.preference_gestures_swipe_toolbar_switch_tabs)))
+
+private val pullToRefreshToggle =
+    onView(withText(getStringResource(R.string.preference_gestures_website_pull_to_refresh)))
 
 private fun goBackButton() =
     onView(allOf(ViewMatchers.withContentDescription("Navigate up")))

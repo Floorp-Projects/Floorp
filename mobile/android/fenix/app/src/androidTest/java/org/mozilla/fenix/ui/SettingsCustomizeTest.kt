@@ -82,4 +82,16 @@ class SettingsCustomizeTest {
             verifyUrl(secondWebPage.url.toString())
         }
     }
+
+    @Test
+    fun pullToRefreshPreferenceTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openCustomizeSubMenu {
+            verifyPullToRefreshGesturePrefState(isEnabled = true)
+            clickPullToRefreshToggle()
+            verifyPullToRefreshGesturePrefState(isEnabled = false)
+        }
+    }
 }
