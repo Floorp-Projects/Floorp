@@ -103,13 +103,14 @@ pub(crate) trait PinAuthCommand {
         }
 
         let client_data_hash = self.client_data_hash();
-        let pin_auth = match calculate_pin_auth(dev, &client_data_hash, &self.pin()) {
-            Ok(pin_auth) => pin_auth,
-            Err(e) => {
-                return Err(repackage_pin_errors(dev, e));
-            }
-        };
-        self.set_pin_auth(pin_auth, Some(1)); // TODO(MS): Currently, we only support version 1
+        let (pin_auth, pin_auth_protocol) =
+            match calculate_pin_auth(dev, &client_data_hash, &self.pin()) {
+                Ok((pin_auth, pin_auth_protocol)) => (pin_auth, pin_auth_protocol),
+                Err(e) => {
+                    return Err(repackage_pin_errors(dev, e));
+                }
+            };
+        self.set_pin_auth(pin_auth, pin_auth_protocol);
         Ok(())
     }
 }
@@ -146,7 +147,12 @@ pub(crate) fn repackage_pin_errors<D: FidoDevice>(
         ))) => {
             return AuthenticatorError::PinError(PinError::PinRequired);
         }
-        // TODO(MS): Add "PinNotSet"
+        AuthenticatorError::HIDError(HIDError::Command(CommandError::StatusCode(
+            StatusCode::PinNotSet,
+            _,
+        ))) => {
+            return AuthenticatorError::PinError(PinError::PinNotSet);
+        }
         // TODO(MS): Add "PinPolicyViolated"
         err => {
             return err;
@@ -427,7 +433,7 @@ pub(crate) fn calculate_pin_auth<Dev>(
     dev: &mut Dev,
     client_data_hash: &ClientDataHash,
     pin: &Option<Pin>,
-) -> Result<Option<PinAuth>, AuthenticatorError>
+) -> Result<(Option<PinAuth>, Option<u64>), AuthenticatorError>
 where
     Dev: FidoDevice,
 {
@@ -448,13 +454,16 @@ where
         let pin_command = GetPinToken::new(&info, &shared_secret, &pin)?;
         let pin_token = dev.send_cbor(&pin_command)?;
 
-        Some(
-            pin_token
-                .auth(client_data_hash.as_ref())
-                .map_err(CommandError::Crypto)?,
+        (
+            Some(
+                pin_token
+                    .auth(client_data_hash.as_ref())
+                    .map_err(CommandError::Crypto)?,
+            ),
+            Some(1), // Currently only pin_auth_protocol 1 supported
         )
     } else {
-        None
+        (None, None)
     };
 
     Ok(pin_auth)

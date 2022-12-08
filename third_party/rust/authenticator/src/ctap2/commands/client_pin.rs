@@ -745,6 +745,7 @@ pub enum PinError {
     InvalidPin(Option<u8>),
     PinAuthBlocked,
     PinBlocked,
+    PinNotSet,
     Backend(BackendError),
 }
 
@@ -770,6 +771,7 @@ impl fmt::Display for PinError {
                 f,
                 "PinError: No retries left. Pin blocked. Device needs reset."
             ),
+            PinError::PinNotSet => write!(f, "PinError: Pin needed but not set on device."),
             PinError::Backend(ref e) => write!(f, "PinError: Crypto backend error: {:?}", e),
         }
     }
