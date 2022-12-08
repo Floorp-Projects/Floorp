@@ -2,7 +2,7 @@
 
 //! **(NOTE: This module is experimental. Applications should not use it yet.)** This module
 //! partially implements the core component of the Poplar protocol [[BBCG+21]]. Named for the
-//! Poplar1 [[draft-irtf-cfrg-vdaf-01]], the specification of this VDAF is under active
+//! Poplar1 section of [[draft-irtf-cfrg-vdaf-03]], the specification of this VDAF is under active
 //! development. Thus this code should be regarded as experimental and not compliant with any
 //! existing speciication.
 //!
@@ -16,7 +16,7 @@
 //! merely intended as a proof-of-concept.
 //!
 //! [BBCG+21]: https://eprint.iacr.org/2021/017
-//! [draft-irtf-cfrg-vdaf-01]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/01/
+//! [draft-irtf-cfrg-vdaf-03]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/03/
 
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
@@ -320,7 +320,7 @@ impl<I, P, const L: usize> Poplar1<I, P, L> {
     /// deriving pseudorandom sequences of field elements, and a input length in bits, corresponding
     /// to `BITS` as defined in the [VDAF specification][1].
     ///
-    /// [1]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/01/
+    /// [1]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/03/
     pub fn new(bits: usize) -> Self {
         Self {
             input_length: bits,
@@ -339,9 +339,13 @@ where
     I: Idpf<2, 2>,
     P: Prg<L>,
 {
+    // TODO: This currently uses a codepoint reserved for testing purposes. Replace it with
+    // 0x00001000 once the implementation is updated to match draft-irtf-cfrg-vdaf-03.
+    const ID: u32 = 0xFFFF0000;
     type Measurement = IdpfInput;
     type AggregateResult = BTreeMap<IdpfInput, u64>;
     type AggregationParam = BTreeSet<IdpfInput>;
+    type PublicShare = (); // TODO: Replace this when the IDPF from [BBCGGI21] is implemented.
     type InputShare = Poplar1InputShare<I, L>;
     type OutputShare = OutputShare<I::Field>;
     type AggregateShare = AggregateShare<I::Field>;
@@ -357,7 +361,7 @@ where
     P: Prg<L>,
 {
     #[allow(clippy::many_single_char_names)]
-    fn shard(&self, input: &IdpfInput) -> Result<Vec<Poplar1InputShare<I, L>>, VdafError> {
+    fn shard(&self, input: &IdpfInput) -> Result<((), Vec<Poplar1InputShare<I, L>>), VdafError> {
         let idpf_values: Vec<[I::Field; 2]> = Prng::new()?
             .take(input.level + 1)
             .map(|k| [I::Field::one(), k])
@@ -396,18 +400,21 @@ where
         // Generate IDPF shares of the data and authentication vectors.
         let idpf_shares = I::gen(input, idpf_values)?;
 
-        Ok(vec![
-            Poplar1InputShare {
-                idpf: idpf_shares[0].clone(),
-                sketch_start_seed: leader_sketch_start_seed,
-                sketch_next: Share::Leader(leader_sketch_next),
-            },
-            Poplar1InputShare {
-                idpf: idpf_shares[1].clone(),
-                sketch_start_seed: helper_sketch_start_seed,
-                sketch_next: Share::Helper(helper_sketch_next_seed),
-            },
-        ])
+        Ok((
+            (),
+            vec![
+                Poplar1InputShare {
+                    idpf: idpf_shares[0].clone(),
+                    sketch_start_seed: leader_sketch_start_seed,
+                    sketch_next: Share::Leader(leader_sketch_next),
+                },
+                Poplar1InputShare {
+                    idpf: idpf_shares[1].clone(),
+                    sketch_start_seed: helper_sketch_start_seed,
+                    sketch_next: Share::Helper(helper_sketch_next_seed),
+                },
+            ],
+        ))
     }
 }
 
@@ -447,6 +454,7 @@ where
         agg_id: usize,
         agg_param: &BTreeSet<IdpfInput>,
         nonce: &[u8],
+        _public_share: &Self::PublicShare,
         input_share: &Self::InputShare,
     ) -> Result<
         (
@@ -867,13 +875,21 @@ mod tests {
         let mut agg_param = BTreeSet::new();
         agg_param.insert(IdpfInput::new(&[0b0000_0111], 6).unwrap());
         agg_param.insert(IdpfInput::new(&[0b0000_1000], 7).unwrap());
-        let input_shares = vdaf.shard(&input[0]).unwrap();
-        run_vdaf_prepare(&vdaf, &verify_key, &agg_param, nonce, input_shares).unwrap_err();
+        let (public_share, input_shares) = vdaf.shard(&input[0]).unwrap();
+        run_vdaf_prepare(
+            &vdaf,
+            &verify_key,
+            &agg_param,
+            nonce,
+            public_share,
+            input_shares,
+        )
+        .unwrap_err();
 
         // Try evaluating the VDAF with malformed inputs.
         //
         // This IDPF key pair evaluates to 1 everywhere, which is illegal.
-        let mut input_shares = vdaf.shard(&input[0]).unwrap();
+        let (public_share, mut input_shares) = vdaf.shard(&input[0]).unwrap();
         for (i, x) in input_shares[0].idpf.data0.iter_mut().enumerate() {
             if i != input[0].index {
                 *x += Field128::one();
@@ -881,16 +897,32 @@ mod tests {
         }
         let mut agg_param = BTreeSet::new();
         agg_param.insert(IdpfInput::new(&[0b0000_0111], 8).unwrap());
-        run_vdaf_prepare(&vdaf, &verify_key, &agg_param, nonce, input_shares).unwrap_err();
+        run_vdaf_prepare(
+            &vdaf,
+            &verify_key,
+            &agg_param,
+            nonce,
+            public_share,
+            input_shares,
+        )
+        .unwrap_err();
 
         // This IDPF key pair has a garbled authentication vector.
-        let mut input_shares = vdaf.shard(&input[0]).unwrap();
+        let (public_share, mut input_shares) = vdaf.shard(&input[0]).unwrap();
         for x in input_shares[0].idpf.data1.iter_mut() {
             *x = Field128::zero();
         }
         let mut agg_param = BTreeSet::new();
         agg_param.insert(IdpfInput::new(&[0b0000_0111], 8).unwrap());
-        run_vdaf_prepare(&vdaf, &verify_key, &agg_param, nonce, input_shares).unwrap_err();
+        run_vdaf_prepare(
+            &vdaf,
+            &verify_key,
+            &agg_param,
+            nonce,
+            public_share,
+            input_shares,
+        )
+        .unwrap_err();
     }
 
     fn check_btree(btree: &BTreeMap<IdpfInput, u64>, counts: &[u64]) {

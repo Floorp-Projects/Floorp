@@ -1012,6 +1012,11 @@ criteria = "safe-to-deploy"
 version = "0.8.4"
 notes = "The crate does not use any unsafe code or ambient capabilities and thus meets the criteria for safe-to-deploy. The cryptography itself should be considered experimental at this phase and is currently undergoing a thorough audit organized by Cloudflare."
 
+[[audits.prio]]
+who = "Simon Friedberger <simon@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.9.1"
+
 [[audits.proc-macro2]]
 who = "Nika Layzell <nika@thelayzells.com>"
 criteria = "safe-to-deploy"
