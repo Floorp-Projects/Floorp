@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MPL-2.0
 
 //! Implementation of the generic Fully Linear Proof (FLP) system specified in
-//! [[draft-irtf-cfrg-vdaf-01]]. This is the main building block of [`Prio3`](crate::vdaf::prio3).
+//! [[draft-irtf-cfrg-vdaf-03]]. This is the main building block of [`Prio3`](crate::vdaf::prio3).
 //!
 //! The FLP is derived for any implementation of the [`Type`] trait. Such an implementation
 //! specifies a validity circuit that defines the set of valid measurements, as well as the finite
 //! field in which the validity circuit is evaluated. It also determines how raw measurements are
-//! encoded as inputs to the validity circuit.
+//! encoded as inputs to the validity circuit, and how aggregates are decoded from sums of
+//! measurements.
 //!
 //! # Overview
 //!
@@ -43,7 +44,7 @@
 //! assert!(count.decide(&verifier).unwrap());
 //! ```
 //!
-//! [draft-irtf-cfrg-vdaf-01]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/01/
+//! [draft-irtf-cfrg-vdaf-03]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/03/
 
 use crate::fft::{discrete_fourier_transform, discrete_fourier_transform_inv_finish, FftError};
 use crate::field::{FieldElement, FieldError};
@@ -109,6 +110,9 @@ pub enum FlpError {
 /// as a vector of field elements and how validity of the encoded measurement is determined.
 /// Validity is determined via an arithmetic circuit evaluated over the encoded measurement.
 pub trait Type: Sized + Eq + Clone + Debug {
+    /// The Prio3 VDAF identifier corresponding to this type.
+    const ID: u32;
+
     /// The type of raw measurement to be encoded.
     type Measurement: Clone + Debug;
 
@@ -797,6 +801,7 @@ mod tests {
     }
 
     impl<F: FieldElement> Type for TestType<F> {
+        const ID: u32 = 0xFFFF0000;
         type Measurement = F::Integer;
         type AggregateResult = F::Integer;
         type Field = F;
@@ -931,6 +936,7 @@ mod tests {
     }
 
     impl<F: FieldElement> Type for Issue254Type<F> {
+        const ID: u32 = 0xFFFF0000;
         type Measurement = F::Integer;
         type AggregateResult = F::Integer;
         type Field = F;
