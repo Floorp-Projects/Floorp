@@ -8,7 +8,9 @@ import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.ui.robots.homeScreen
+import org.mozilla.fenix.ui.robots.navigationToolbar
 
 class SettingsCustomizeTest {
     private lateinit var mockWebServer: MockWebServer
@@ -41,7 +43,7 @@ class SettingsCustomizeTest {
     }
 
     @Test
-    fun changeThemeSetting() {
+    fun changeThemeSettingTest() {
         // Goes through the settings and changes the default search engine, then verifies it changes.
         homeScreen {
         }.openThreeDotMenu {
@@ -52,6 +54,32 @@ class SettingsCustomizeTest {
             verifyDarkThemeApplied(getUiTheme())
             selectLightMode()
             verifyLightThemeApplied(getUiTheme())
+        }
+    }
+
+    @Test
+    fun swipeToolbarGesturePreferenceOffTest() {
+        val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openCustomizeSubMenu {
+            verifySwipeToolbarGesturePrefState(true)
+            clickSwipeToolbarToSwitchTabToggle()
+            verifySwipeToolbarGesturePrefState(false)
+        }.goBack {
+        }.goBack {}
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(firstWebPage.url) {
+        }.openTabDrawer {
+        }.openNewTab {
+        }.submitQuery(secondWebPage.url.toString()) {
+            swipeNavBarRight(secondWebPage.url.toString())
+            verifyUrl(secondWebPage.url.toString())
+            swipeNavBarLeft(secondWebPage.url.toString())
+            verifyUrl(secondWebPage.url.toString())
         }
     }
 }

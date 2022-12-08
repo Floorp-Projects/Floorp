@@ -4,8 +4,6 @@
 
 package org.mozilla.fenix.ui
 
-import java.time.LocalDate
-import java.util.Locale
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
@@ -37,6 +35,8 @@ import org.mozilla.fenix.ui.util.FRENCH_LANGUAGE_HEADER
 import org.mozilla.fenix.ui.util.FRENCH_SYSTEM_LOCALE_OPTION
 import org.mozilla.fenix.ui.util.FR_SETTINGS
 import org.mozilla.fenix.ui.util.ROMANIAN_LANGUAGE_HEADER
+import java.time.LocalDate
+import java.util.Locale
 
 /**
  *  Tests for verifying the General section of the Settings menu

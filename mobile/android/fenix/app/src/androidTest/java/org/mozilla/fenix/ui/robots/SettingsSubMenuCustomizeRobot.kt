@@ -10,12 +10,19 @@ import android.os.Build
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.action.ViewActions
-import androidx.test.espresso.assertion.ViewAssertions
+import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.isChecked
+import androidx.test.espresso.matcher.ViewMatchers.isNotChecked
+import androidx.test.espresso.matcher.ViewMatchers.withClassName
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import org.hamcrest.CoreMatchers.allOf
+import org.hamcrest.Matchers.endsWith
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.TestHelper.getStringResource
+import org.mozilla.fenix.helpers.TestHelper.hasCousin
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.click
 
@@ -39,6 +46,26 @@ class SettingsSubMenuCustomizeRobot {
 
     fun clickBottomToolbarToggle() = bottomToolbarToggle().click()
 
+    fun clickSwipeToolbarToSwitchTabToggle() = swipeToolbarToggle.click()
+
+    fun verifySwipeToolbarGesturePrefState(isEnabled: Boolean) {
+        swipeToolbarToggle
+            .check(
+                matches(
+                    hasCousin(
+                        allOf(
+                            withClassName(endsWith("Switch")),
+                            if (isEnabled) {
+                                isChecked()
+                            } else {
+                                isNotChecked()
+                            },
+                        ),
+                    ),
+                ),
+            )
+    }
+
     class Transition {
         fun goBack(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
             mDevice.waitForIdle()
@@ -52,11 +79,11 @@ class SettingsSubMenuCustomizeRobot {
 
 private fun assertThemes() {
     lightModeToggle()
-        .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
     darkModeToggle()
-        .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
     deviceModeToggle()
-        .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
 
 private fun darkModeToggle() = onView(withText("Dark"))
@@ -72,6 +99,9 @@ private fun deviceModeToggle(): ViewInteraction {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) "Follow device theme" else "Set by Battery Saver"
     return onView(withText(followDeviceThemeText))
 }
+
+private val swipeToolbarToggle =
+    onView(withText(getStringResource(R.string.preference_gestures_swipe_toolbar_switch_tabs)))
 
 private fun goBackButton() =
     onView(allOf(ViewMatchers.withContentDescription("Navigate up")))
