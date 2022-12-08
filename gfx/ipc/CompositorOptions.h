@@ -67,6 +67,7 @@ class CompositorOptions {
            mAllowSoftwareWebRenderD3D11 ==
                aOther.mAllowSoftwareWebRenderD3D11 &&
            mAllowSoftwareWebRenderOGL == aOther.mAllowSoftwareWebRenderOGL &&
+           mInitiallyPaused == aOther.mInitiallyPaused &&
            mNeedFastSnaphot == aOther.mNeedFastSnaphot;
   }
 
