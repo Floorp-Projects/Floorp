@@ -4239,9 +4239,9 @@ version = "0.0.1"
 
 [[package]]
 name = "prio"
-version = "0.8.4"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41d747fc8ff20e95b1ff2c5c6162143b89a1b08cee1bc8941fada53bfe1b04d3"
+checksum = "c574f8eb821cee725c8e662e5881e0e94f40838af25be4035e15b5c4d960df3e"
 dependencies = [
  "base64",
  "byteorder",

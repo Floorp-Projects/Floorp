@@ -85,7 +85,7 @@ fn check_prep_test_vec<M, T, P, const L: usize>(
     let mut prep_shares = Vec::new();
     for (agg_id, input_share) in input_shares.iter().enumerate() {
         let (state, prep_share) = prio3
-            .prepare_init(verify_key, agg_id, &(), &t.nonce, input_share)
+            .prepare_init(verify_key, agg_id, &(), &t.nonce, &(), input_share)
             .unwrap_or_else(|e| err!(test_num, e, "prep state init"));
         states.push(state);
         prep_shares.push(prep_share);
@@ -128,7 +128,7 @@ fn check_prep_test_vec<M, T, P, const L: usize>(
 #[test]
 fn test_vec_prio3_count() {
     let t: TPrio3<u64> =
-        serde_json::from_str(include_str!("test_vec/01/Prio3Aes128Count.json")).unwrap();
+        serde_json::from_str(include_str!("test_vec/03/Prio3Aes128Count_0.json")).unwrap();
     let prio3 = Prio3::new_aes128_count(2).unwrap();
     let verify_key = t.verify_key.as_ref().try_into().unwrap();
 
@@ -140,7 +140,7 @@ fn test_vec_prio3_count() {
 #[test]
 fn test_vec_prio3_sum() {
     let t: TPrio3<u128> =
-        serde_json::from_str(include_str!("test_vec/01/Prio3Aes128Sum.json")).unwrap();
+        serde_json::from_str(include_str!("test_vec/03/Prio3Aes128Sum_0.json")).unwrap();
     let prio3 = Prio3::new_aes128_sum(2, 8).unwrap();
     let verify_key = t.verify_key.as_ref().try_into().unwrap();
 
@@ -152,7 +152,7 @@ fn test_vec_prio3_sum() {
 #[test]
 fn test_vec_prio3_histogram() {
     let t: TPrio3<u128> =
-        serde_json::from_str(include_str!("test_vec/01/Prio3Aes128Histogram.json")).unwrap();
+        serde_json::from_str(include_str!("test_vec/03/Prio3Aes128Histogram_0.json")).unwrap();
     let prio3 = Prio3::new_aes128_histogram(2, &[1, 10, 100]).unwrap();
     let verify_key = t.verify_key.as_ref().try_into().unwrap();
 

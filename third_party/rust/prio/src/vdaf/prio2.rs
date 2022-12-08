@@ -91,9 +91,11 @@ impl Prio2 {
 }
 
 impl Vdaf for Prio2 {
+    const ID: u32 = 0xFFFF0000;
     type Measurement = Vec<u32>;
     type AggregateResult = Vec<u32>;
     type AggregationParam = ();
+    type PublicShare = ();
     type InputShare = Share<FieldPrio2, 32>;
     type OutputShare = OutputShare<FieldPrio2>;
     type AggregateShare = AggregateShare<FieldPrio2>;
@@ -105,7 +107,7 @@ impl Vdaf for Prio2 {
 }
 
 impl Client for Prio2 {
-    fn shard(&self, measurement: &Vec<u32>) -> Result<Vec<Share<FieldPrio2, 32>>, VdafError> {
+    fn shard(&self, measurement: &Vec<u32>) -> Result<((), Vec<Share<FieldPrio2, 32>>), VdafError> {
         if measurement.len() != self.input_len {
             return Err(VdafError::Uncategorized("incorrect input length".into()));
         }
@@ -126,7 +128,10 @@ impl Client for Prio2 {
             *s1 -= d;
         }
 
-        Ok(vec![Share::Leader(leader_data), Share::Helper(helper_seed)])
+        Ok((
+            (),
+            vec![Share::Leader(leader_data), Share::Helper(helper_seed)],
+        ))
     }
 }
 
@@ -191,6 +196,7 @@ impl Aggregator<32> for Prio2 {
         agg_id: usize,
         _agg_param: &(),
         nonce: &[u8],
+        _public_share: &Self::PublicShare,
         input_share: &Share<FieldPrio2, 32>,
     ) -> Result<(Prio2PrepareState, Prio2PrepareShare), VdafError> {
         let is_leader = role_try_from(agg_id)?;
@@ -361,7 +367,7 @@ mod tests {
         let verify_key = rng.gen();
         let mut nonce = [0; 16];
         rng.fill(&mut nonce);
-        run_vdaf_prepare(&prio2, &verify_key, &(), &nonce, input_shares).unwrap();
+        run_vdaf_prepare(&prio2, &verify_key, &(), &nonce, (), input_shares).unwrap();
     }
 
     #[test]
@@ -373,7 +379,7 @@ mod tests {
 
         let data = vec![0, 0, 1, 1, 0];
         let prio2 = Prio2::new(data.len()).unwrap();
-        let input_shares = prio2.shard(&data).unwrap();
+        let (_public_share, input_shares) = prio2.shard(&data).unwrap();
 
         let encrypted_input_share1 =
             encrypt_share(&input_shares[0].get_encoded(), &pub_key1).unwrap();
@@ -405,10 +411,10 @@ mod tests {
         thread_rng().fill(&mut verify_key[..]);
         let data = vec![0, 0, 1, 1, 0];
         let prio2 = Prio2::new(data.len()).unwrap();
-        let input_shares = prio2.shard(&data).unwrap();
+        let (public_share, input_shares) = prio2.shard(&data).unwrap();
         for (agg_id, input_share) in input_shares.iter().enumerate() {
             let (want, _msg) = prio2
-                .prepare_init(&verify_key, agg_id, &(), &[], input_share)
+                .prepare_init(&verify_key, agg_id, &(), &[], &public_share, input_share)
                 .unwrap();
             let got =
                 Prio2PrepareState::get_decoded_with_param(&(&prio2, agg_id), &want.get_encoded())
