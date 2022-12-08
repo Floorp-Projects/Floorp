@@ -17,7 +17,7 @@ job-defaults:
     treeherder:
         kind: other
         tier: 3
-    run-on-projects: ['autoland']
+    run-on-projects: ['autoland-only']
     run:
         using: mach
         mach: taskgraph optimized -v --json -p task-id=$DECISION_TASK_ID --output-file /builds/worker/optimized-tasks.json
