@@ -1429,6 +1429,9 @@ class RecursiveMakeBackend(MakeBackend):
             backend_file.write_once("%s: %s\n" % (obj_target, list_file_path))
             backend_file.write("%s: %s\n" % (obj_target, objs_ref))
 
+        if getattr(obj, "symbols_file", None):
+            backend_file.write_once("%s: %s\n" % (obj_target, obj.symbols_file))
+
         for lib in shared_libs:
             assert obj.KIND != "host" and obj.KIND != "wasm"
             backend_file.write_once(
