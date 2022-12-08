@@ -22,6 +22,23 @@ internal const val URL_TYPE_SUGGEST_JSON = "application/x-suggestions+json"
 internal const val URL_TYPE_SEARCH_HTML = "text/html"
 internal const val URL_REL_MOBILE = "mobile"
 internal const val IMAGE_URI_PREFIX = "data:image/png;base64,"
+internal const val GOOGLE_ID = "google"
+
+// List of general search engine ids, taken from
+// https://searchfox.org/mozilla-central/rev/ef0aa879e94534ffd067a3748d034540a9fc10b0/toolkit/components/search/SearchUtils.sys.mjs#200
+internal val GENERAL_SEARCH_ENGINE_IDS = setOf(
+    GOOGLE_ID,
+    "ddg",
+    "bing",
+    "baidu",
+    "ecosia",
+    "qwant",
+    "yahoo-jp",
+    "seznam-cz",
+    "leit-is",
+    "coccoc",
+    "baidu",
+)
 
 /**
  * A simple XML reader for search engine plugins.
@@ -47,7 +64,17 @@ internal class SearchEngineReader(
             type = type,
             resultUrls = resultsUrls,
             suggestUrl = suggestUrl,
+            isGeneral = isGeneralSearchEngine(identifier, type),
         )
+
+        /**
+         * Returns true if the provided [type] is a custom search engine or the [identifier] is
+         * included in [GENERAL_SEARCH_ENGINE_IDS].
+         */
+        private fun isGeneralSearchEngine(identifier: String, type: SearchEngine.Type): Boolean =
+            type == SearchEngine.Type.CUSTOM ||
+                identifier.startsWith(GOOGLE_ID) ||
+                GENERAL_SEARCH_ENGINE_IDS.contains(identifier)
     }
 
     /**

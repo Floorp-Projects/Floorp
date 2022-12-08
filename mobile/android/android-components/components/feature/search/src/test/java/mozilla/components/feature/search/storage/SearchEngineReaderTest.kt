@@ -9,7 +9,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
@@ -26,17 +27,13 @@ class SearchEngineReaderTest {
             type = SearchEngine.Type.CUSTOM,
             resultUrls = listOf("https://www.example.com/search"),
         )
+        val readSearchEngine = saveAndLoadSearchEngine(searchEngine)
 
-        val storage = CustomSearchEngineStorage(testContext)
-        val writer = SearchEngineWriter()
-        val reader = SearchEngineReader(type = SearchEngine.Type.CUSTOM)
-        val file = storage.getSearchFile(searchEngine.id)
-        writer.saveSearchEngineXML(searchEngine, file)
-        val readSearchEngine = reader.loadFile(searchEngine.id, file)
-        Assert.assertEquals(searchEngine.id, readSearchEngine.id)
-        Assert.assertEquals(searchEngine.name, readSearchEngine.name)
-        Assert.assertEquals(searchEngine.type, readSearchEngine.type)
-        Assert.assertEquals(searchEngine.resultUrls, readSearchEngine.resultUrls)
+        assertEquals(searchEngine.id, readSearchEngine.id)
+        assertEquals(searchEngine.name, readSearchEngine.name)
+        assertEquals(searchEngine.type, readSearchEngine.type)
+        assertEquals(searchEngine.resultUrls, readSearchEngine.resultUrls)
+        assertTrue(readSearchEngine.isGeneral)
     }
 
     @Test(expected = IOException::class)
@@ -51,5 +48,35 @@ class SearchEngineReaderTest {
         val reader = SearchEngineReader(type = SearchEngine.Type.CUSTOM)
         val invalidFile = AtomicFile(File("", ""))
         reader.loadFile(searchEngine.id, invalidFile)
+    }
+
+    @Test
+    fun `WHEN SearchEngineReader is loading bundled search engines from a file THEN the correct SearchEngine properties are parsed`() {
+        for (id in GENERAL_SEARCH_ENGINE_IDS + setOf("mozilla", "wikipedia")) {
+            val searchEngine = SearchEngine(
+                id = id,
+                name = "example",
+                icon = mock(),
+                type = SearchEngine.Type.BUNDLED,
+                resultUrls = listOf("https://www.example.com/search"),
+            )
+            val readSearchEngine = saveAndLoadSearchEngine(searchEngine)
+
+            assertEquals(searchEngine.id, readSearchEngine.id)
+            assertEquals(searchEngine.name, readSearchEngine.name)
+            assertEquals(searchEngine.type, readSearchEngine.type)
+            assertEquals(searchEngine.resultUrls, readSearchEngine.resultUrls)
+            assertEquals(id in GENERAL_SEARCH_ENGINE_IDS, readSearchEngine.isGeneral)
+        }
+    }
+    private fun saveAndLoadSearchEngine(searchEngine: SearchEngine): SearchEngine {
+        val storage = CustomSearchEngineStorage(testContext)
+        val writer = SearchEngineWriter()
+        val reader = SearchEngineReader(type = searchEngine.type)
+        val file = storage.getSearchFile(searchEngine.id)
+
+        writer.saveSearchEngineXML(searchEngine, file)
+
+        return reader.loadFile(searchEngine.id, file)
     }
 }

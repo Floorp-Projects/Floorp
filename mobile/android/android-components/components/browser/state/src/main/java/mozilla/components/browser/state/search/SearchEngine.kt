@@ -19,6 +19,7 @@ const val OS_SEARCH_ENGINE_TERMS_PARAM = "{" + "searchTerms" + "}"
  * @property type the type of this search engine.
  * @property resultUrls the list of the queried suggestions result urls.
  * @property suggestUrl the search suggestion url.
+ * @property isGeneral whether the search engine is a general search engine.
  */
 data class SearchEngine(
     val id: String,
@@ -27,6 +28,7 @@ data class SearchEngine(
     val type: Type,
     val resultUrls: List<String> = emptyList(),
     val suggestUrl: String? = null,
+    val isGeneral: Boolean = false,
 ) {
     /**
      * A enum class representing a search engine type.

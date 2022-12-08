@@ -4,12 +4,14 @@
 
 package mozilla.components.feature.search.ext
 
+import android.graphics.Bitmap
 import android.net.Uri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.SearchState
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -17,6 +19,31 @@ import java.util.UUID
 
 @RunWith(AndroidJUnit4::class)
 class SearchEngineKtTest {
+
+    @Test
+    fun `WHEN search engine is created THEN the correct properties are set`() {
+        val name = "name"
+        val url = "https://www.example.com/search?q={searchTerms}"
+        val icon: Bitmap = mock()
+        val suggestUrl = "https://www.example.com/search"
+        val isGeneral = true
+        val searchEngine = createSearchEngine(
+            name = name,
+            url = url,
+            icon = icon,
+            suggestUrl = suggestUrl,
+            isGeneral = isGeneral,
+        )
+
+        assertNotNull(searchEngine.id)
+        assertEquals(name, searchEngine.name)
+        assertEquals(icon, searchEngine.icon)
+        assertEquals(SearchEngine.Type.CUSTOM, searchEngine.type)
+        assertEquals(listOf(url), searchEngine.resultUrls)
+        assertEquals(suggestUrl, searchEngine.suggestUrl)
+        assertEquals(isGeneral, searchEngine.isGeneral)
+    }
+
     @Test
     fun `Create search URL for startpage`() {
         val searchEngine = SearchEngine(
