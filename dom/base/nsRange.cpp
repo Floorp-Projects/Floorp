@@ -738,8 +738,8 @@ bool nsRange::IsPointComparableToRange(const nsINode& aContainer,
   }
 
   if (!aContainer.IsInclusiveDescendantOf(mRoot)) {
-    // TODO(emilio): Switch to ThrowWrongDocumentError, but IsPointInRange relies on the
-    // error code right now in order to suppress the exception.
+    // TODO(emilio): Switch to ThrowWrongDocumentError, but IsPointInRange
+    // relies on the error code right now in order to suppress the exception.
     aRv.Throw(NS_ERROR_DOM_WRONG_DOCUMENT_ERR);
     return false;
   }
@@ -942,7 +942,7 @@ void nsRange::DoSetRange(const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
       if (newCommonAncestor) {
         RegisterClosestCommonInclusiveAncestor(newCommonAncestor);
       } else {
-        NS_ASSERTION(!mIsPositioned, "unexpected disconnected nodes");
+        MOZ_DIAGNOSTIC_ASSERT(!mIsPositioned, "unexpected disconnected nodes");
         mSelection = nullptr;
         MOZ_DIAGNOSTIC_ASSERT(
             !mRegisteredClosestCommonInclusiveAncestor,
