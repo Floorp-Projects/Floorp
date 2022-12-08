@@ -6750,8 +6750,7 @@ exports.CSS_PROPERTIES = {
       "font-variant-position",
       "font-language-override",
       "font-feature-settings",
-      "font-variation-settings",
-      "font-palette"
+      "font-variation-settings"
     ],
     "supports": [],
     "values": [

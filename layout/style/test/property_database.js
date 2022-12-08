@@ -12009,7 +12009,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.font-variations.enabled")) {
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.font-palette.enabled")) {
-  gCSSProperties["font"].subproperties.push("font-palette");
   gCSSProperties["font-palette"] = {
     domProp: "fontPalette",
     inherited: true,
@@ -12018,7 +12017,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.font-palette.enabled")) {
     applies_to_first_line: true,
     applies_to_marker: true,
     applies_to_placeholder: true,
-    applies_to_cue: true,
     initial_values: ["normal"],
     other_values: ["light", "dark", "--custom"],
     invalid_values: ["custom"],

@@ -73,9 +73,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.font-variations.enabled")) {
   EXPECTED_DECLS.push("font-optical-sizing: inherit;");
   EXPECTED_DECLS.push("font-variation-settings: inherit;");
 }
-if (IsCSSPropertyPrefEnabled("layout.css.font-palette.enabled")) {
-  EXPECTED_DECLS.push("font-palette: inherit;");
-}
 EXPECTED_DECLS = EXPECTED_DECLS.sort().join(" ");
 let sortedDecls = e.style.cssText.split(/ (?=font-|line-)/).sort().join(" ");
 is(sortedDecls, EXPECTED_DECLS, "don't serialize system font for font:inherit");
