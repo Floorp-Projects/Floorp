@@ -11,6 +11,8 @@ namespace net {
 
 // IMPORTANT: when adding new values, always add them to the end, otherwise
 // it will mess up telemetry.
+// When adding a reason here, make sure it is documented in
+// netwerk/docs/dns/trr-skip-reasons.md
 enum class TRRSkippedReason : uint32_t {
   TRR_UNSET = 0,
   TRR_OK = 1,           // Only set when we actually got a positive TRR result
