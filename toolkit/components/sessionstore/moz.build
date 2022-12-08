@@ -32,7 +32,7 @@ UNIFIED_SOURCES += [
 ]
 
 EXTRA_JS_MODULES += [
-    "SessionStoreFunctions.jsm",
+    "SessionStoreFunctions.sys.mjs",
 ]
 
 XPIDL_MODULE = "sessionstore"
