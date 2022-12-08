@@ -86,7 +86,7 @@ interface U2F {
   readonly attribute object register;
 
   // A way to generate the actual implementation of register()
-  [Unexposed, Throws, BinaryName="Register"]
+  [Unexposed, Throws, BinaryName="Register", Deprecated="U2FRegister"]
   undefined register_impl(DOMString appId,
                           sequence<RegisterRequest> registerRequests,
                           sequence<RegisteredKey> registeredKeys,
@@ -99,7 +99,7 @@ interface U2F {
   readonly attribute object sign;
 
   // A way to generate the actual implementation of sign()
-  [Unexposed, Throws, BinaryName="Sign"]
+  [Unexposed, Throws, BinaryName="Sign", Deprecated="U2FSign"]
   undefined sign_impl (DOMString appId,
                        DOMString challenge,
                        sequence<RegisteredKey> registeredKeys,
