@@ -1,8 +1,8 @@
 import pytest
-
 from webdriver.bidi.modules.script import ContextTarget
 
 pytestmark = pytest.mark.asyncio
+
 
 @pytest.mark.parametrize("await_promise", [True, False])
 @pytest.mark.parametrize(
