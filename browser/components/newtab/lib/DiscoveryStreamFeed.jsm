@@ -241,13 +241,21 @@ class DiscoveryStreamFeed {
   }
 
   setupPrefs(isStartup = false) {
-    const pocketNewtabExperiment = lazy.ExperimentAPI.getExperiment({
+    const pocketNewtabExperiment = lazy.ExperimentAPI.getExperimentMetaData({
       featureId: "pocketNewtab",
     });
 
+    const pocketNewtabRollout = lazy.ExperimentAPI.getRolloutMetaData({
+      featureId: "pocketNewtab",
+    });
+
+    // We want to know if the user is in an experiment or rollout,
+    // but we prioritize experiments over rollouts.
+    const experimentMetaData = pocketNewtabExperiment || pocketNewtabRollout;
+
     let utmSource = "pocket-newtab";
-    let utmCampaign = pocketNewtabExperiment?.slug;
-    let utmContent = pocketNewtabExperiment?.branch?.slug;
+    let utmCampaign = experimentMetaData?.slug;
+    let utmContent = experimentMetaData?.branch?.slug;
 
     this.store.dispatch(
       ac.BroadcastToContent({

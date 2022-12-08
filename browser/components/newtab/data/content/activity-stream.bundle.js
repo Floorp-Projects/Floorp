@@ -8309,7 +8309,7 @@ function RecentSavesContainer({
     return null;
   }
 
-  let queryParams = `?utm_source=${utmSource}`;
+  let queryParams = `?utm_source=${utmSource}`; // We really only need to add these params to urls we own.
 
   if (utmCampaign && utmContent) {
     queryParams += `&utm_content=${utmContent}&utm_campaign=${utmCampaign}`;

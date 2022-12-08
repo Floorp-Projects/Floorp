@@ -229,22 +229,34 @@ var pktUI = (function() {
       height: options.height,
     });
 
-    const saveToPocketExperiment = ExperimentAPI.getExperiment({
+    const saveToPocketExperiment = ExperimentAPI.getExperimentMetaData({
       featureId: "saveToPocket",
     });
 
-    const pocketNewtabExperiment = ExperimentAPI.getExperiment({
+    const saveToPocketRollout = ExperimentAPI.getRolloutMetaData({
+      featureId: "saveToPocket",
+    });
+
+    const pocketNewtabExperiment = ExperimentAPI.getExperimentMetaData({
       featureId: "pocketNewtab",
     });
 
+    const pocketNewtabRollout = ExperimentAPI.getRolloutMetaData({
+      featureId: "pocketNewtab",
+    });
+
+    // We want to know if the user is in a Pocket related experiment or rollout,
+    // but we have 2 Pocket related features, so we prioritize the saveToPocket feature,
+    // and experiments over rollouts.
+    const experimentMetaData =
+      saveToPocketExperiment ||
+      pocketNewtabExperiment ||
+      saveToPocketRollout ||
+      pocketNewtabRollout;
+
     let utmSource = "firefox_pocket_save_button";
-    // We want to know if the user is in a Pocket related experiment,
-    // but we have 2 Pocket related features, so we prioritize the saveToPocket feature.
-    let utmCampaign =
-      saveToPocketExperiment?.slug || pocketNewtabExperiment?.slug;
-    let utmContent =
-      saveToPocketExperiment?.branch?.slug ||
-      pocketNewtabExperiment?.branch?.slug;
+    let utmCampaign = experimentMetaData?.slug;
+    let utmContent = experimentMetaData?.branch?.slug;
 
     const url = new URL(urlString);
     // A set of params shared across all panels.
