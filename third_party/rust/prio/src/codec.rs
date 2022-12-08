@@ -9,9 +9,11 @@
 
 use byteorder::{BigEndian, ReadBytesExt};
 use std::{
+    convert::TryInto,
     error::Error,
     io::{Cursor, Read},
     mem::size_of,
+    num::TryFromIntError,
 };
 
 #[allow(missing_docs)]
@@ -268,7 +270,7 @@ pub fn decode_u16_items<P, D: ParameterizedDecode<P>>(
 /// Encode `items` into `bytes` as a [variable-length vector][1] with a maximum length of
 /// `0xffffff`.
 ///
-/// [1]: https://datatracker.ietf.org/doc/html/rfc8446#section-3.4.
+/// [1]: https://datatracker.ietf.org/doc/html/rfc8446#section-3.4
 pub fn encode_u24_items<P, E: ParameterizedEncode<P>>(
     bytes: &mut Vec<u8>,
     encoding_parameter: &P,
@@ -301,6 +303,46 @@ pub fn decode_u24_items<P, D: ParameterizedDecode<P>>(
     let length = U24::decode(bytes)?.0 as usize;
 
     decode_items(length, decoding_parameter, bytes)
+}
+
+/// Encode `items` into `bytes` as a [variable-length vector][1] with a maximum length of
+/// `0xffffffff`.
+///
+/// [1]: https://datatracker.ietf.org/doc/html/rfc8446#section-3.4
+pub fn encode_u32_items<P, E: ParameterizedEncode<P>>(
+    bytes: &mut Vec<u8>,
+    encoding_parameter: &P,
+    items: &[E],
+) {
+    // Reserve space to later write length
+    let len_offset = bytes.len();
+    0u32.encode(bytes);
+
+    for item in items {
+        item.encode_with_param(encoding_parameter, bytes);
+    }
+
+    let len = bytes.len() - len_offset - 4;
+    let len: u32 = len.try_into().expect("Length too large");
+    for (offset, byte) in len.to_be_bytes().iter().enumerate() {
+        bytes[len_offset + offset] = *byte;
+    }
+}
+
+/// Decode `bytes` into a vector of `D` values, treating `bytes` as a [variable-length vector][1] of
+/// maximum length `0xffffffff`.
+///
+/// [1]: https://datatracker.ietf.org/doc/html/rfc8446#section-3.4
+pub fn decode_u32_items<P, D: ParameterizedDecode<P>>(
+    decoding_parameter: &P,
+    bytes: &mut Cursor<&[u8]>,
+) -> Result<Vec<D>, CodecError> {
+    // Read four bytes to get length of opaque byte vector.
+    let len: usize = u32::decode(bytes)?
+        .try_into()
+        .map_err(|err: TryFromIntError| CodecError::Other(err.into()))?;
+
+    decode_items(len, decoding_parameter, bytes)
 }
 
 /// Decode the next `length` bytes from `bytes` into as many instances of `D` as possible.
@@ -567,6 +609,24 @@ mod tests {
         assert_eq!(bytes[0..3], [0, 0, 3 * TestMessage::encoded_length() as u8]);
 
         let decoded = decode_u24_items(&(), &mut Cursor::new(&bytes)).unwrap();
+        assert_eq!(values, decoded);
+    }
+
+    #[test]
+    fn roundtrip_variable_length_u32() {
+        let values = messages_vec();
+        let mut bytes = Vec::new();
+        encode_u32_items(&mut bytes, &(), &values);
+
+        assert_eq!(bytes.len(), 4 + 3 * TestMessage::encoded_length());
+
+        // Check endianness of encoded length.
+        assert_eq!(
+            bytes[0..4],
+            [0, 0, 0, 3 * TestMessage::encoded_length() as u8]
+        );
+
+        let decoded = decode_u32_items(&(), &mut Cursor::new(&bytes)).unwrap();
         assert_eq!(values, decoded);
     }
 

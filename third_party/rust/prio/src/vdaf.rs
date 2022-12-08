@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
 //! Verifiable Distributed Aggregation Functions (VDAFs) as described in
-//! [[draft-irtf-cfrg-vdaf-01]].
+//! [[draft-irtf-cfrg-vdaf-03]].
 //!
-//! [draft-irtf-cfrg-vdaf-01]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/01/
+//! [draft-irtf-cfrg-vdaf-03]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/03/
 
 use crate::codec::{CodecError, Decode, Encode, ParameterizedDecode};
 use crate::field::{FieldElement, FieldError};
@@ -14,6 +14,12 @@ use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use std::fmt::Debug;
 use std::io::Cursor;
+
+/// A component of the domain-separation tag, used to bind the VDAF operations to the document
+/// version. This will be revised with each draft with breaking changes.
+const VERSION: &[u8] = b"vdaf-03";
+/// Length of the domain-separation tag, including document version and algorithm ID.
+const DST_LEN: usize = VERSION.len() + 4;
 
 /// Errors emitted by this module.
 #[derive(Debug, thiserror::Error)]
@@ -120,6 +126,9 @@ pub trait Vdaf: Clone + Debug
 where
     for<'a> &'a Self::AggregateShare: Into<Vec<u8>>,
 {
+    /// Algorithm identifier for this VDAF.
+    const ID: u32;
+
     /// The type of Client measurement to be aggregated.
     type Measurement: Clone + Debug;
 
@@ -129,6 +138,9 @@ where
     /// The aggregation parameter, used by the Aggregators to map their input shares to output
     /// shares.
     type AggregationParam: Clone + Debug + Decode + Encode;
+
+    /// A public share sent by a Client.
+    type PublicShare: Clone + Debug + for<'a> ParameterizedDecode<&'a Self> + Encode;
 
     /// An input share sent by a Client.
     type InputShare: Clone + Debug + for<'a> ParameterizedDecode<(&'a Self, usize)> + Encode;
@@ -149,8 +161,12 @@ pub trait Client: Vdaf
 where
     for<'a> &'a Self::AggregateShare: Into<Vec<u8>>,
 {
-    /// Shards a measurement into a sequence of input shares, one for each Aggregator.
-    fn shard(&self, measurement: &Self::Measurement) -> Result<Vec<Self::InputShare>, VdafError>;
+    /// Shards a measurement into a public share and a sequence of input shares, one for each
+    /// Aggregator.
+    fn shard(
+        &self,
+        measurement: &Self::Measurement,
+    ) -> Result<(Self::PublicShare, Vec<Self::InputShare>), VdafError>;
 }
 
 /// The Aggregator's role in the execution of a VDAF.
@@ -182,6 +198,7 @@ where
         agg_id: usize,
         agg_param: &Self::AggregationParam,
         nonce: &[u8],
+        public_share: &Self::PublicShare,
         input_share: &Self::InputShare,
     ) -> Result<(Self::PrepareState, Self::PrepareShare), VdafError>;
 
@@ -391,8 +408,15 @@ where
     let mut num_measurements: usize = 0;
     for measurement in measurements.into_iter() {
         num_measurements += 1;
-        let input_shares = vdaf.shard(&measurement)?;
-        let out_shares = run_vdaf_prepare(vdaf, &verify_key, agg_param, nonce, input_shares)?;
+        let (public_share, input_shares) = vdaf.shard(&measurement)?;
+        let out_shares = run_vdaf_prepare(
+            vdaf,
+            &verify_key,
+            agg_param,
+            nonce,
+            public_share,
+            input_shares,
+        )?;
         for (out_share, agg_share) in out_shares.into_iter().zip(agg_shares.iter_mut()) {
             if let Some(ref mut inner) = agg_share {
                 inner.merge(&out_share.into())?;
@@ -416,6 +440,7 @@ pub(crate) fn run_vdaf_prepare<V, M, const L: usize>(
     verify_key: &[u8; L],
     agg_param: &V::AggregationParam,
     nonce: &[u8],
+    public_share: V::PublicShare,
     input_shares: M,
 ) -> Result<Vec<V::OutputShare>, VdafError>
 where
@@ -435,6 +460,7 @@ where
             agg_id,
             agg_param,
             nonce,
+            &public_share,
             &V::InputShare::get_decoded_with_param(&(vdaf, agg_id), &input_share)
                 .expect("failed to decode input share"),
         )?;

@@ -416,7 +416,7 @@ pub struct ParallelSumMultithreaded<F: FieldElement, G: Gadget<F>> {
 impl<F, G> ParallelSumGadget<F, G> for ParallelSumMultithreaded<F, G>
 where
     F: FieldElement + Sync + Send,
-    G: 'static + Gadget<F> + Clone + Sync,
+    G: 'static + Gadget<F> + Clone + Sync + Send,
 {
     fn new(inner: G, chunks: usize) -> Self {
         Self {
@@ -425,11 +425,37 @@ where
     }
 }
 
+/// Data structures passed between fold operations in [`ParallelSumMultithreaded`].
+#[cfg(feature = "multithreaded")]
+struct ParallelSumFoldState<F, G> {
+    /// Inner gadget.
+    inner: G,
+    /// Output buffer for `call_poly()`.
+    partial_output: Vec<F>,
+    /// Sum accumulator.
+    partial_sum: Vec<F>,
+}
+
+#[cfg(feature = "multithreaded")]
+impl<F, G> ParallelSumFoldState<F, G> {
+    fn new(gadget: &G, length: usize) -> ParallelSumFoldState<F, G>
+    where
+        G: Clone,
+        F: FieldElement,
+    {
+        ParallelSumFoldState {
+            inner: gadget.clone(),
+            partial_output: vec![F::zero(); length],
+            partial_sum: vec![F::zero(); length],
+        }
+    }
+}
+
 #[cfg(feature = "multithreaded")]
 impl<F, G> Gadget<F> for ParallelSumMultithreaded<F, G>
 where
     F: FieldElement + Sync + Send,
-    G: 'static + Gadget<F> + Clone + Sync,
+    G: 'static + Gadget<F> + Clone + Sync + Send,
 {
     fn call(&mut self, inp: &[F]) -> Result<F, FlpError> {
         self.serial_sum.call(inp)
@@ -438,25 +464,43 @@ where
     fn call_poly(&mut self, outp: &mut [F], inp: &[Vec<F>]) -> Result<(), FlpError> {
         gadget_call_poly_check(self, outp, inp)?;
 
+        // Create a copy of the inner gadget and two working buffers on each thread. Evaluate the
+        // gadget on each input polynomial, using the first temporary buffer as an output buffer.
+        // Then accumulate that result into the second temporary buffer, which acts as a running
+        // sum. Then, discard everything but the partial sums, add them, and finally copy the sum
+        // to the output parameter. This is equivalent to the single threaded calculation in
+        // ParallelSum, since we only rearrange additions, and field addition is associative.
         let res = inp
             .par_chunks(self.serial_sum.inner.arity())
-            .map(|chunk| {
-                let mut inner = self.serial_sum.inner.clone();
-                let mut partial_outp = vec![F::zero(); outp.len()];
-                inner.call_poly(&mut partial_outp, chunk).unwrap();
-                partial_outp
-            })
+            .fold(
+                || ParallelSumFoldState::new(&self.serial_sum.inner, outp.len()),
+                |mut state, chunk| {
+                    state
+                        .inner
+                        .call_poly(&mut state.partial_output, chunk)
+                        .unwrap();
+                    for (sum_elem, output_elem) in state
+                        .partial_sum
+                        .iter_mut()
+                        .zip(state.partial_output.iter())
+                    {
+                        *sum_elem += *output_elem;
+                    }
+                    state
+                },
+            )
+            .map(|state| state.partial_sum)
             .reduce(
                 || vec![F::zero(); outp.len()],
                 |mut x, y| {
-                    for i in 0..x.len() {
-                        x[i] += y[i];
+                    for (xi, yi) in x.iter_mut().zip(y.iter()) {
+                        *xi += *yi;
                     }
                     x
                 },
             );
 
-        outp.clone_from_slice(&res[..outp.len()]);
+        outp.copy_from_slice(&res[..]);
         Ok(())
     }
 
@@ -596,47 +640,49 @@ mod tests {
     fn test_parallel_sum_multithreaded() {
         use std::iter;
 
-        let poly: Vec<TestField> = random_vector(10).unwrap();
-        let num_calls = 10;
-        let chunks = 23;
+        for num_calls in [1, 10, 100] {
+            let poly: Vec<TestField> = random_vector(10).unwrap();
+            let chunks = 23;
 
-        let mut g =
-            ParallelSumMultithreaded::new(BlindPolyEval::new(poly.clone(), num_calls), chunks);
-        gadget_test(&mut g, num_calls);
+            let mut g =
+                ParallelSumMultithreaded::new(BlindPolyEval::new(poly.clone(), num_calls), chunks);
+            gadget_test(&mut g, num_calls);
 
-        // Test that the multithreaded version has the same output as the normal version.
-        let mut g_serial = ParallelSum::new(BlindPolyEval::new(poly, num_calls), chunks);
-        assert_eq!(g.arity(), g_serial.arity());
-        assert_eq!(g.degree(), g_serial.degree());
-        assert_eq!(g.calls(), g_serial.calls());
+            // Test that the multithreaded version has the same output as the normal version.
+            let mut g_serial = ParallelSum::new(BlindPolyEval::new(poly, num_calls), chunks);
+            assert_eq!(g.arity(), g_serial.arity());
+            assert_eq!(g.degree(), g_serial.degree());
+            assert_eq!(g.calls(), g_serial.calls());
 
-        let arity = g.arity();
-        let degree = g.degree();
+            let arity = g.arity();
+            let degree = g.degree();
 
-        // Test that both gadgets evaluate to the same value when run on scalar inputs.
-        let inp: Vec<TestField> = random_vector(arity).unwrap();
-        let result = g.call(&inp).unwrap();
-        let result_serial = g_serial.call(&inp).unwrap();
-        assert_eq!(result, result_serial);
+            // Test that both gadgets evaluate to the same value when run on scalar inputs.
+            let inp: Vec<TestField> = random_vector(arity).unwrap();
+            let result = g.call(&inp).unwrap();
+            let result_serial = g_serial.call(&inp).unwrap();
+            assert_eq!(result, result_serial);
 
-        // Test that both gadgets evaluate to the same value when run on polynomial inputs.
-        let mut poly_outp = vec![TestField::zero(); (degree * (1 + num_calls)).next_power_of_two()];
-        let mut poly_outp_serial =
-            vec![TestField::zero(); (degree * (1 + num_calls)).next_power_of_two()];
-        let mut prng: Prng<TestField, _> = Prng::new().unwrap();
-        let poly_inp: Vec<_> = iter::repeat_with(|| {
-            iter::repeat_with(|| prng.get())
-                .take(1 + num_calls)
-                .collect::<Vec<_>>()
-        })
-        .take(arity)
-        .collect();
+            // Test that both gadgets evaluate to the same value when run on polynomial inputs.
+            let mut poly_outp =
+                vec![TestField::zero(); (degree * num_calls + 1).next_power_of_two()];
+            let mut poly_outp_serial =
+                vec![TestField::zero(); (degree * num_calls + 1).next_power_of_two()];
+            let mut prng: Prng<TestField, _> = Prng::new().unwrap();
+            let poly_inp: Vec<_> = iter::repeat_with(|| {
+                iter::repeat_with(|| prng.get())
+                    .take(1 + num_calls)
+                    .collect::<Vec<_>>()
+            })
+            .take(arity)
+            .collect();
 
-        g.call_poly(&mut poly_outp, &poly_inp).unwrap();
-        g_serial
-            .call_poly(&mut poly_outp_serial, &poly_inp)
-            .unwrap();
-        assert_eq!(poly_outp, poly_outp_serial);
+            g.call_poly(&mut poly_outp, &poly_inp).unwrap();
+            g_serial
+                .call_poly(&mut poly_outp_serial, &poly_inp)
+                .unwrap();
+            assert_eq!(poly_outp, poly_outp_serial);
+        }
     }
 
     // Test that calling g.call_poly() and evaluating the output at a given point is equivalent
