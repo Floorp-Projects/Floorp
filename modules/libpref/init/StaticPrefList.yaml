@@ -3351,6 +3351,14 @@
   value: 200
   mirror: always
 
+# Determines within what distance of a tick mark, in pixels, dragging an input
+# range range will snap the range's value to that tick mark. By default, this is
+# half the default width of the range thumb.
+- name: dom.range_element.magnet_effect_threshold
+  type: float
+  value: 10.0f
+  mirror: always
+
 # Reporting API.
 - name: dom.reporting.enabled
   type: RelaxedAtomicBool
