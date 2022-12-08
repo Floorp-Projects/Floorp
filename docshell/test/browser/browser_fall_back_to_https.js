@@ -24,6 +24,7 @@ const { UrlbarTestUtils } = ChromeUtils.importESModule(
 const bug1002724_tests = [
   {
     original: "example.com",
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     expected: "http://example.com",
     explanation: "Should load HTTP version of example.com",
   },

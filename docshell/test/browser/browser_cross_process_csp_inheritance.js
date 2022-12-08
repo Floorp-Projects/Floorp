@@ -5,6 +5,7 @@
 
 const TEST_PATH = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.com"
 );
 const TEST_URI = TEST_PATH + "file_cross_process_csp_inheritance.html";

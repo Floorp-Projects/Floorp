@@ -3,6 +3,7 @@
 add_task(async () => {
   const TEST_PATH = getRootDirectory(gTestPath).replace(
     "chrome://mochitests/content",
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://example.com"
   );
 
