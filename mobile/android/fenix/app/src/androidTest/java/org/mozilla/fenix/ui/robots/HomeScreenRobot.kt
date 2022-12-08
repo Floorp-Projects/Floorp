@@ -23,6 +23,8 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.assertion.PositionAssertions.isCompletelyAbove
+import androidx.test.espresso.assertion.PositionAssertions.isPartiallyBelow
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions.actionOnItem
 import androidx.test.espresso.matcher.RootMatchers
@@ -411,6 +413,17 @@ class HomeScreenRobot {
         ).text
 
         return publisher
+    }
+
+    fun verifyToolbarPosition(defaultPosition: Boolean) {
+        onView(withId(R.id.toolbarLayout))
+            .check(
+                if (defaultPosition) {
+                    isPartiallyBelow(withId(R.id.sessionControlRecyclerView))
+                } else {
+                    isCompletelyAbove(withId(R.id.homeAppBar))
+                },
+            )
     }
 
     class Transition {

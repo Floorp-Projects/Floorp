@@ -12,9 +12,11 @@ import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isChecked
 import androidx.test.espresso.matcher.ViewMatchers.isNotChecked
 import androidx.test.espresso.matcher.ViewMatchers.withClassName
+import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.Matchers.endsWith
@@ -45,6 +47,11 @@ class SettingsSubMenuCustomizeRobot {
     fun clickTopToolbarToggle() = topToolbarToggle().click()
 
     fun clickBottomToolbarToggle() = bottomToolbarToggle().click()
+
+    fun verifyToolbarPositionPreference(selectedPosition: String) {
+        onView(withText(selectedPosition))
+            .check(matches(hasSibling(allOf(withId(R.id.radio_button), isChecked()))))
+    }
 
     fun clickSwipeToolbarToSwitchTabToggle() = swipeToolbarToggle.click()
 

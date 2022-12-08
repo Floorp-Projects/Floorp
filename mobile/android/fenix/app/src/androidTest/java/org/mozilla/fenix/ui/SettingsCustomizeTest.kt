@@ -9,6 +9,7 @@ import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
@@ -58,6 +59,30 @@ class SettingsCustomizeTest {
     }
 
     @Test
+    fun setToolbarPositionTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openCustomizeSubMenu {
+            verifyToolbarPositionPreference("Bottom")
+            clickTopToolbarToggle()
+            verifyToolbarPositionPreference("Top")
+        }.goBack {
+        }.goBack {
+            verifyToolbarPosition(defaultPosition = false)
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openCustomizeSubMenu {
+            clickBottomToolbarToggle()
+            verifyToolbarPositionPreference("Bottom")
+            exitMenu()
+        }
+        homeScreen {
+            verifyToolbarPosition(defaultPosition = true)
+        }
+    }
+
+    @Test
     fun swipeToolbarGesturePreferenceOffTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
@@ -69,8 +94,8 @@ class SettingsCustomizeTest {
             verifySwipeToolbarGesturePrefState(true)
             clickSwipeToolbarToSwitchTabToggle()
             verifySwipeToolbarGesturePrefState(false)
-        }.goBack {
-        }.goBack {}
+            exitMenu()
+        }
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
         }.openTabDrawer {
