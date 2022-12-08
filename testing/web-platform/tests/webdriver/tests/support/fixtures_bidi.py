@@ -7,6 +7,21 @@ from webdriver.bidi.modules.script import ContextTarget
 
 
 @pytest.fixture
+async def subscribe_events(bidi_session):
+    subscriptions = [];
+    async def subscribe_events(events, contexts = None):
+       await bidi_session.session.subscribe(events=events, contexts=contexts)
+       subscriptions.append((events, contexts))
+
+    yield subscribe_events
+
+    for events, contexts in reversed(subscriptions):
+        await bidi_session.session.unsubscribe(
+            events=events, contexts=contexts
+    )
+
+
+@pytest.fixture
 async def new_tab(bidi_session):
     """Open and focus a new tab to run the test in a foreground tab."""
     new_tab = await bidi_session.browsing_context.create(type_hint='tab')
