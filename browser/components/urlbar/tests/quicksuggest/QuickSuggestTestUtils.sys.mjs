@@ -57,6 +57,7 @@ const DEFAULT_PING_PAYLOADS = {
     improve_suggest_experience_checked: false,
     match_type: "firefox-suggest",
     request_id: null,
+    source: "remote-settings",
   },
   [CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION]: {
     advertiser: "testadvertiser",
@@ -66,6 +67,7 @@ const DEFAULT_PING_PAYLOADS = {
     match_type: "firefox-suggest",
     reporting_url: "http://example.com/click",
     request_id: null,
+    source: "remote-settings",
   },
   [CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION]: {
     advertiser: "testadvertiser",
@@ -76,6 +78,7 @@ const DEFAULT_PING_PAYLOADS = {
     match_type: "firefox-suggest",
     reporting_url: "http://example.com/impression",
     request_id: null,
+    source: "remote-settings",
   },
 };
 
