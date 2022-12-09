@@ -162,9 +162,6 @@ let Player = {
 
     browser.setAttribute("nodefaultsrc", "true");
 
-    let playPauseBtn = document.getElementById("playpause");
-    playPauseBtn.focus({ focusVisible: false });
-
     let closeButton = document.getElementById("close");
     let closeShortcut = document.getElementById("closeShortcut");
     document.l10n.setAttributes(closeButton, "pictureinpicture-close-btn", {
