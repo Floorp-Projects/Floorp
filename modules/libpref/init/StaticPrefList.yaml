@@ -1665,7 +1665,11 @@
 # JavaScript.
 - name: browser.opaqueResponseBlocking
   type: RelaxedAtomicBool
+#if defined(ANDROID)
+  value: false
+#else
   value: @IS_NIGHTLY_BUILD@
+#endif
   mirror: always
 
 # When this pref is enabled, <object> and <embed> elements will create
