@@ -423,6 +423,18 @@ constexpr ScrollDirections EitherScrollDirection(ScrollDirection::eVertical,Scro
 constexpr ScrollDirections HorizontalScrollDirection(ScrollDirection::eHorizontal);
 constexpr ScrollDirections VerticalScrollDirection(ScrollDirection::eVertical);
 
+// Return the scroll directions which have a nonzero component in |aDelta|.
+template <typename Point>
+ScrollDirections DirectionsInDelta(const Point& aDelta) {
+  ScrollDirections result;
+  if (aDelta.x != 0) {
+    result += ScrollDirection::eHorizontal;
+  }
+  if (aDelta.y != 0) {
+    result += ScrollDirection::eVertical;
+  }
+  return result;
+}
 
 MOZ_DEFINE_ENUM_CLASS_WITH_BASE(CompositionPayloadType, uint8_t, (
   /**
