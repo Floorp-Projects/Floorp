@@ -674,25 +674,6 @@
     handleOverUnderflow() {}
   }
 
-  class MozAutocompleteGenericRichlistitem extends MozAutocompleteTwoLineRichlistitem {
-    static get inheritedAttributes() {
-      return {};
-    }
-
-    _adjustAcItem() {
-      super._adjustAcItem();
-
-      try {
-        const details = JSON.parse(this.getAttribute("ac-label"));
-        this.querySelector(".ac-site-icon").src = details.icon;
-        this.querySelector(".line1-label").textContent = details.title;
-        this.querySelector(".line2-label").textContent = details.subtitle;
-      } catch {
-        // Update item content only when expected JSON is provided
-      }
-    }
-  }
-
   class MozAutocompleteLoginRichlistitem extends MozAutocompleteTwoLineRichlistitem {
     static get inheritedAttributes() {
       return {
@@ -808,14 +789,6 @@
   customElements.define(
     "autocomplete-richlistitem",
     MozElements.MozAutocompleteRichlistitem,
-    {
-      extends: "richlistitem",
-    }
-  );
-
-  customElements.define(
-    "autocomplete-generic-richlistitem",
-    MozAutocompleteGenericRichlistitem,
     {
       extends: "richlistitem",
     }
