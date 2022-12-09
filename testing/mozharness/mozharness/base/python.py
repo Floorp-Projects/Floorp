@@ -8,23 +8,22 @@
 """
 
 from __future__ import absolute_import, division
+
 import errno
 import json
 import os
-import socket
-import sys
 import shutil
 import site
-import traceback
+import socket
 import subprocess
+import sys
+import traceback
 from pathlib import Path
 
 try:
     import urlparse
 except ImportError:
     import urllib.parse as urlparse
-
-from six import string_types
 
 import mozharness
 from mozharness.base.errors import VirtualenvErrorList
@@ -35,6 +34,7 @@ from mozharness.base.script import (
     PreScriptAction,
     ScriptMixin,
 )
+from six import string_types
 
 external_tools_path = os.path.join(
     os.path.abspath(os.path.dirname(os.path.dirname(mozharness.__file__))),
@@ -45,9 +45,10 @@ external_tools_path = os.path.join(
 def get_tlsv1_post():
     # Monkeypatch to work around SSL errors in non-bleeding-edge Python.
     # Taken from https://lukasa.co.uk/2013/01/Choosing_SSL_Version_In_Requests/
+    import ssl
+
     import requests
     from requests.packages.urllib3.poolmanager import PoolManager
-    import ssl
 
     class TLSV1Adapter(requests.adapters.HTTPAdapter):
         def init_poolmanager(self, connections, maxsize, block=False):
@@ -270,9 +271,9 @@ class VirtualenvMixin(object):
         pip install -r requirements1.txt -r requirements2.txt module_url
         """
         import http.client
-        import urllib.request
-        import urllib.error
         import time
+        import urllib.error
+        import urllib.request
 
         c = self.config
         dirs = self.query_abs_dirs()
@@ -790,7 +791,7 @@ class ResourceMonitoringMixin(PerfherderResourceOptionsMixin):
     def __init__(self, *args, **kwargs):
         super(ResourceMonitoringMixin, self).__init__(*args, **kwargs)
 
-        self.register_virtualenv_module("psutil>=5.6.3", method="pip", optional=True)
+        self.register_virtualenv_module("psutil>=5.9.0", method="pip", optional=True)
         self.register_virtualenv_module(
             "mozsystemmonitor==1.0.1", method="pip", optional=True
         )
