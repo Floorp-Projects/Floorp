@@ -77,6 +77,7 @@ class VideoStreamBufferController {
   void OnTimeout(TimeDelta delay);
   void FrameReadyForDecode(uint32_t rtp_timestamp, Timestamp render_time);
   void UpdateDroppedFrames() RTC_RUN_ON(&worker_sequence_checker_);
+  void UpdateDiscardedPackets() RTC_RUN_ON(&worker_sequence_checker_);
   void UpdateJitterDelay();
   void UpdateTimingFrameInfo();
   bool IsTooManyFramesQueued() const RTC_RUN_ON(&worker_sequence_checker_);
@@ -103,6 +104,8 @@ class VideoStreamBufferController {
   VideoReceiveStreamTimeoutTracker timeout_tracker_
       RTC_GUARDED_BY(&worker_sequence_checker_);
   int frames_dropped_before_last_new_frame_
+      RTC_GUARDED_BY(&worker_sequence_checker_) = 0;
+  int packets_discarded_before_last_new_frame_
       RTC_GUARDED_BY(&worker_sequence_checker_) = 0;
   VCMVideoProtection protection_mode_
       RTC_GUARDED_BY(&worker_sequence_checker_) = kProtectionNack;

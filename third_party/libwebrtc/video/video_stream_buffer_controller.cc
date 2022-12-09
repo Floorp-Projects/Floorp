@@ -299,6 +299,7 @@ void VideoStreamBufferController::OnFrameReady(
 
   // Update stats.
   UpdateDroppedFrames();
+  UpdateDiscardedPackets();
   UpdateJitterDelay();
   UpdateTimingFrameInfo();
 
@@ -344,6 +345,17 @@ void VideoStreamBufferController::UpdateDroppedFrames()
     stats_proxy_->OnDroppedFrames(dropped_frames);
   frames_dropped_before_last_new_frame_ =
       buffer_->GetTotalNumberOfDroppedFrames();
+}
+
+void VideoStreamBufferController::UpdateDiscardedPackets()
+    RTC_RUN_ON(&worker_sequence_checker_) {
+  const int discarded_packets = buffer_->GetTotalNumberOfDiscardedPackets() -
+                                packets_discarded_before_last_new_frame_;
+  if (discarded_packets > 0) {
+    stats_proxy_->OnDiscardedPackets(discarded_packets);
+  }
+  packets_discarded_before_last_new_frame_ =
+      buffer_->GetTotalNumberOfDiscardedPackets();
 }
 
 void VideoStreamBufferController::UpdateJitterDelay() {

@@ -66,6 +66,7 @@ class FrameBuffer {
 
   int GetTotalNumberOfContinuousTemporalUnits() const;
   int GetTotalNumberOfDroppedFrames() const;
+  int GetTotalNumberOfDiscardedPackets() const;
   size_t CurrentSize() const;
 
  private:
@@ -87,6 +88,8 @@ class FrameBuffer {
   void PropagateContinuity(const FrameIterator& frame_it);
   void FindNextAndLastDecodableTemporalUnit();
   void Clear();
+  void UpdateDroppedFramesAndDiscardedPackets(FrameIterator begin_it,
+                                              FrameIterator end_it);
 
   const bool legacy_frame_id_jump_behavior_;
   const size_t max_size_;
@@ -99,6 +102,7 @@ class FrameBuffer {
 
   int num_continuous_temporal_units_ = 0;
   int num_dropped_frames_ = 0;
+  int num_discarded_packets_ = 0;
 };
 
 }  // namespace webrtc
