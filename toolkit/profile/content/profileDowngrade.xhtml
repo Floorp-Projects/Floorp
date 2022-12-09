@@ -10,16 +10,15 @@
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
+        prefwidth="min-width"
         data-l10n-id="profiledowngrade-window2"
         data-l10n-attrs="title,style"
         onload="init()">
-
-  <linkset>
-        <html:link rel="localization" href="branding/brand.ftl"/>
-        <html:link rel="localization" href="browser/branding/sync-brand.ftl"/>
-        <html:link rel="localization" href="toolkit/global/profileDowngrade.ftl"/>
-  </linkset>
-
+<linkset>
+  <html:link rel="localization" href="branding/brand.ftl"/>
+  <html:link rel="localization" href="browser/branding/sync-brand.ftl"/>
+  <html:link rel="localization" href="toolkit/global/profileDowngrade.ftl"/>
+</linkset>
 <dialog buttons="accept,extra1" buttonpack="end"
         buttonidextra1="profiledowngrade-window-create"
         buttonidaccept="profiledowngrade-quit">
