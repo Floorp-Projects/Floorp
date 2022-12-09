@@ -27,6 +27,9 @@ KNOWN_TEST_MODIFIERS = [
     "webrender",
     "bytecode-cached",
 ]
+NON_FIREFOX_OPTS = ("webrender", "bytecode-cached", "fission")
+NON_FIREFOX_BROWSERS = ("chrome", "chromium", "safari")
+NON_FIREFOX_BROWSERS_MOBILE = ("chrome-m",)
 
 
 @six.add_metaclass(ABCMeta)
@@ -115,20 +118,17 @@ class PerftestResultsHandler(object):
                         % name
                     )
 
-        if self.app.lower() in (
-            "chrome",
-            "chrome-m",
-            "chromium",
-        ):
-            # Bug 1770225: Make this more dynamic, this will fail us again in the future
-            if "webrender" in extra_options:
-                extra_options.remove("webrender")
-            if "fission" in extra_options:
-                extra_options.remove("fission")
-            if "bytecode-cached" in extra_options:
-                extra_options.remove("bytecode-cached")
+        # Bug 1770225: Make this more dynamic, this will fail us again in the future
+        self._clean_up_browser_options(extra_options=extra_options)
 
         return extra_options
+
+    def _clean_up_browser_options(self, extra_options):
+        """Remove certain firefox specific options from different browsers"""
+        if self.app.lower() in NON_FIREFOX_BROWSERS + NON_FIREFOX_BROWSERS_MOBILE:
+            for opts in NON_FIREFOX_OPTS:
+                if opts in extra_options:
+                    extra_options.remove(opts)
 
     def add_browser_meta(self, browser_name, browser_version):
         # sets the browser metadata for the perfherder data
@@ -631,7 +631,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                     # chrome and safari we just measure fcp and loadtime; skip fnbpaint and dcf
                     if (
                         self.app
-                        and self.app.lower() in ["chrome", "chromium", "safari"]
+                        and self.app.lower() in NON_FIREFOX_BROWSERS
                         and bt
                         in (
                             "fnbpaint",
