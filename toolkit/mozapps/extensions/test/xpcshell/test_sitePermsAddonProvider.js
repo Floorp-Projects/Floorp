@@ -298,6 +298,39 @@ add_task(
       "Permission was removed when the addon was uninstalled"
     );
 
+    info("Add gated permissions");
+    PermissionTestUtils.add(
+      PRINCIPAL_COM,
+      GATED_SITE_PERM1,
+      Services.perms.ALLOW_ACTION
+    );
+    PermissionTestUtils.add(
+      PRINCIPAL_ORG,
+      GATED_SITE_PERM1,
+      Services.perms.ALLOW_ACTION
+    );
+    addons = await promiseAddonsByTypes([SITEPERMS_ADDON_TYPE]);
+    Assert.equal(addons.length, 2, "2 addons are now available");
+
+    info("Clear permissions");
+    const onAddon1Uninstall = AddonTestUtils.promiseAddonEvent(
+      "onUninstalled",
+      addon => addon.id === addons[0].id
+    );
+    const onAddon2Uninstall = AddonTestUtils.promiseAddonEvent(
+      "onUninstalled",
+      addon => addon.id === addons[1].id
+    );
+    Services.perms.removeAll();
+
+    await Promise.all([onAddon1Uninstall, onAddon2Uninstall]);
+    ok("Addons were properly uninstalled…");
+    Assert.equal(
+      (await promiseAddonsByTypes([SITEPERMS_ADDON_TYPE])).length,
+      0,
+      "… and getAddonsByTypes does not return them anymore"
+    );
+
     info("Adding a permission to a public etld");
     PermissionTestUtils.add(
       PRINCIPAL_GITHUB,
