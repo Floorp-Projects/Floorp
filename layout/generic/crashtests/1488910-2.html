@@ -1,0 +1,19 @@
+<html>
+<head>
+	<style id='style'></style>
+	<script>
+		function start() {
+			o1 = document.createElement('a')
+			o2 = document.createElement('a')
+			o1.textContent = '-=ð¢'
+			o1.setAttribute('style', 'block-size: calc(3px) !important')
+			o1.appendChild(o2)
+			document.documentElement.appendChild(o1)
+			document.getElementById('style').textContent = 'HTML * { columns: 0px !important } * { float: right} :first-letter,H{\'}:not(c),* { overflow: hidden !important }'
+			window.scrollByPages(4096, {})
+			o2.insertAdjacentHTML('beforebegin', '<d>')
+		}
+		window.addEventListener('load', start)
+	</script>
+</head>
+</html>
