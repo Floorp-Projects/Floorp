@@ -207,10 +207,13 @@
 
 .message > .indent.warning-indent {
   border-inline-end-color: var(--console-warning-color);
+  /* Align the border of the message in warning groups with the toggle icon */
+  margin-inline-start: 15px;
 }
 
 /* Center first level indent within the left gutter */
-.message[data-indent="1"]:not(.startGroup, .startGroupCollapsed) > .indent {
+.message[data-indent="1"]:not(.startGroup, .startGroupCollapsed) > .indent,
+.warning-indent {
   margin-inline-start: calc(1px + var(--console-icon-horizontal-offset));
   margin-inline-end: calc(11px - var(--console-icon-horizontal-offset));
 }

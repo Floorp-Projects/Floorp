@@ -1594,7 +1594,7 @@ async function checkConsoleOutputForWarningGroup(hud, expectedMessages) {
       ok(false, "Unexpected structure: an indented message isn't in a group");
     }
 
-    return groups[0].startsWith("▶︎⚠") || groups[0].startsWith("▼⚠");
+    return groups[0].startsWith("▼︎⚠");
   };
 
   for (let [i, expectedMessage] of expectedMessages.entries()) {
@@ -1658,9 +1658,8 @@ async function checkConsoleOutputForWarningGroup(hud, expectedMessages) {
     // In-group message
     if (expectedMessage.startsWith("|")) {
       if (isInWarningGroup(i)) {
-        is(
-          message.getAttribute("data-indent"),
-          "1",
+        ok(
+          message.querySelector(".warning-indent"),
           "The message has the expected indent"
         );
       }
