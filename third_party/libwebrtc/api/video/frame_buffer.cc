@@ -140,12 +140,27 @@ void FrameBuffer::DropNextDecodableTemporalUnit() {
   }
 
   auto end_it = std::next(next_decodable_temporal_unit_->last_frame);
-  num_dropped_frames_ += std::count_if(
-      frames_.begin(), end_it,
-      [](const auto& f) { return f.second.encoded_frame != nullptr; });
+
+  UpdateDroppedFramesAndDiscardedPackets(frames_.begin(), end_it);
 
   frames_.erase(frames_.begin(), end_it);
   FindNextAndLastDecodableTemporalUnit();
+}
+
+void FrameBuffer::UpdateDroppedFramesAndDiscardedPackets(FrameIterator begin_it,
+                                                         FrameIterator end_it) {
+  unsigned int num_discarded_packets = 0;
+  unsigned int num_dropped_frames =
+      std::count_if(begin_it, end_it, [&](const auto& f) {
+        if (f.second.encoded_frame) {
+          const auto& packetInfos = f.second.encoded_frame->PacketInfos();
+          num_discarded_packets += packetInfos.size();
+        }
+        return f.second.encoded_frame != nullptr;
+      });
+
+  num_dropped_frames_ += num_dropped_frames;
+  num_discarded_packets_ += num_discarded_packets;
 }
 
 absl::optional<int64_t> FrameBuffer::LastContinuousFrameId() const {
@@ -166,6 +181,9 @@ int FrameBuffer::GetTotalNumberOfContinuousTemporalUnits() const {
 }
 int FrameBuffer::GetTotalNumberOfDroppedFrames() const {
   return num_dropped_frames_;
+}
+int FrameBuffer::GetTotalNumberOfDiscardedPackets() const {
+  return num_discarded_packets_;
 }
 
 size_t FrameBuffer::CurrentSize() const {
@@ -269,6 +287,7 @@ void FrameBuffer::FindNextAndLastDecodableTemporalUnit() {
 }
 
 void FrameBuffer::Clear() {
+  UpdateDroppedFramesAndDiscardedPackets(frames_.begin(), frames_.end());
   frames_.clear();
   next_decodable_temporal_unit_.reset();
   decodable_temporal_units_info_.reset();
