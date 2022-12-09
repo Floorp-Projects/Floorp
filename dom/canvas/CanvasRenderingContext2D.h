@@ -750,9 +750,6 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
 
   // Whether we should try to create an accelerated buffer provider.
   bool mAllowAcceleration = true;
-  // Whether the application expects to use operations that perform poorly with
-  // acceleration.
-  bool mWillReadFrequently = false;
 
   RefPtr<CanvasShutdownObserver> mShutdownObserver;
   virtual void AddShutdownObserver();

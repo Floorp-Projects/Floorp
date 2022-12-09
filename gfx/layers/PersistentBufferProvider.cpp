@@ -147,22 +147,18 @@ void PersistentBufferProviderAccelerated::OnMemoryPressure() {
 
 static already_AddRefed<TextureClient> CreateTexture(
     KnowsCompositor* aKnowsCompositor, gfx::SurfaceFormat aFormat,
-    gfx::IntSize aSize, bool aWillReadFrequently) {
-  TextureAllocationFlags flags = ALLOC_DEFAULT;
-  if (aWillReadFrequently) {
-    flags = TextureAllocationFlags(flags | ALLOC_DO_NOT_ACCELERATE);
-  }
+    gfx::IntSize aSize) {
   return TextureClient::CreateForDrawing(
       aKnowsCompositor, aFormat, aSize, BackendSelector::Canvas,
-      TextureFlags::DEFAULT | TextureFlags::NON_BLOCKING_READ_LOCK, flags);
+      TextureFlags::DEFAULT | TextureFlags::NON_BLOCKING_READ_LOCK,
+      TextureAllocationFlags::ALLOC_DEFAULT);
 }
 
 // static
 already_AddRefed<PersistentBufferProviderShared>
 PersistentBufferProviderShared::Create(gfx::IntSize aSize,
                                        gfx::SurfaceFormat aFormat,
-                                       KnowsCompositor* aKnowsCompositor,
-                                       bool aWillReadFrequently) {
+                                       KnowsCompositor* aKnowsCompositor) {
   if (!aKnowsCompositor || !aKnowsCompositor->GetTextureForwarder() ||
       !aKnowsCompositor->GetTextureForwarder()->IPCOpen()) {
     return nullptr;
@@ -183,27 +179,25 @@ PersistentBufferProviderShared::Create(gfx::IntSize aSize,
 #endif
 
   RefPtr<TextureClient> texture =
-      CreateTexture(aKnowsCompositor, aFormat, aSize, aWillReadFrequently);
+      CreateTexture(aKnowsCompositor, aFormat, aSize);
   if (!texture) {
     return nullptr;
   }
 
   RefPtr<PersistentBufferProviderShared> provider =
       new PersistentBufferProviderShared(aSize, aFormat, aKnowsCompositor,
-                                         texture, aWillReadFrequently);
+                                         texture);
   return provider.forget();
 }
 
 PersistentBufferProviderShared::PersistentBufferProviderShared(
     gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-    KnowsCompositor* aKnowsCompositor, RefPtr<TextureClient>& aTexture,
-    bool aWillReadFrequently)
+    KnowsCompositor* aKnowsCompositor, RefPtr<TextureClient>& aTexture)
 
     : mSize(aSize),
       mFormat(aFormat),
       mKnowsCompositor(aKnowsCompositor),
-      mFront(Nothing()),
-      mWillReadFrequently(aWillReadFrequently) {
+      mFront(Nothing()) {
   MOZ_ASSERT(aKnowsCompositor);
   if (mTextures.append(aTexture)) {
     mBack = Some<uint32_t>(0);
@@ -259,7 +253,7 @@ bool PersistentBufferProviderShared::SetKnowsCompositor(
 
     if (prevTexture) {
       RefPtr<TextureClient> newTexture =
-          CreateTexture(aKnowsCompositor, mFormat, mSize, mWillReadFrequently);
+          CreateTexture(aKnowsCompositor, mFormat, mSize);
 
       MOZ_ASSERT(newTexture);
       if (!newTexture) {
@@ -389,7 +383,7 @@ PersistentBufferProviderShared::BorrowDrawTarget(
     }
 
     RefPtr<TextureClient> newTexture =
-        CreateTexture(mKnowsCompositor, mFormat, mSize, mWillReadFrequently);
+        CreateTexture(mKnowsCompositor, mFormat, mSize);
 
     MOZ_ASSERT(newTexture);
     if (newTexture) {
@@ -422,8 +416,7 @@ PersistentBufferProviderShared::BorrowDrawTarget(
         // We are about to read lock a texture that is in use by the compositor
         // and has synchronization. To prevent possible future contention we
         // switch to using a permanent back buffer.
-        mPermanentBackBuffer = CreateTexture(mKnowsCompositor, mFormat, mSize,
-                                             mWillReadFrequently);
+        mPermanentBackBuffer = CreateTexture(mKnowsCompositor, mFormat, mSize);
         if (!mPermanentBackBuffer) {
           return nullptr;
         }
@@ -560,8 +553,7 @@ PersistentBufferProviderShared::BorrowSnapshot(gfx::DrawTarget* aTarget) {
     // We are about to read lock a texture that is in use by the compositor and
     // has synchronization. To prevent possible future contention we switch to
     // using a permanent back buffer.
-    mPermanentBackBuffer =
-        CreateTexture(mKnowsCompositor, mFormat, mSize, mWillReadFrequently);
+    mPermanentBackBuffer = CreateTexture(mKnowsCompositor, mFormat, mSize);
     if (!mPermanentBackBuffer ||
         !mPermanentBackBuffer->Lock(OpenMode::OPEN_READ_WRITE)) {
       return nullptr;
@@ -652,20 +644,6 @@ void PersistentBufferProviderShared::Destroy() {
   }
 
   mTextures.clear();
-}
-
-bool PersistentBufferProviderShared::IsAccelerated() const {
-#ifdef XP_WIN
-  // Detect if we're using D2D canvas.
-  if (mWillReadFrequently || mTextures.empty()) {
-    return false;
-  }
-  TextureClient* texture = mTextures.front();
-  if (texture->GetInternalData()->AsD3D11TetxureData()) {
-    return true;
-  }
-#endif
-  return false;
 }
 
 }  // namespace layers

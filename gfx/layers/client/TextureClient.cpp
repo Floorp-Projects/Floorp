@@ -267,7 +267,7 @@ static TextureType GetTextureType(gfx::SurfaceFormat aFormat,
       (moz2DBackend == gfx::BackendType::DIRECT2D ||
        moz2DBackend == gfx::BackendType::DIRECT2D1_1) &&
       aSize.width <= maxTextureSize && aSize.height <= maxTextureSize &&
-      !(aAllocFlags & (ALLOC_UPDATE_FROM_SURFACE | ALLOC_DO_NOT_ACCELERATE))) {
+      !(aAllocFlags & ALLOC_UPDATE_FROM_SURFACE)) {
     return TextureType::D3D11;
   }
 #endif
