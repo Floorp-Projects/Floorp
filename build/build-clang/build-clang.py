@@ -25,10 +25,6 @@ from shutil import which
 import zstandard
 
 
-def is_llvm_toolchain(cc, cxx):
-    return "clang" in cc and "clang" in cxx
-
-
 def check_run(args):
     print(" ".join(args), file=sys.stderr, flush=True)
     if args[0] == "cmake":
@@ -177,10 +173,10 @@ def build_one_stage(
     cc,
     cxx,
     asm,
+    ld,
     ar,
     ranlib,
     libtool,
-    ldflags,
     src_dir,
     stage_dir,
     package_name,
@@ -201,7 +197,7 @@ def build_one_stage(
     def slashify_path(path):
         return path.replace("\\", "/")
 
-    def cmake_base_args(cc, cxx, asm, ar, ranlib, libtool, ldflags, inst_dir):
+    def cmake_base_args(cc, cxx, asm, ld, ar, ranlib, libtool, inst_dir):
         machine_targets = targets if is_final_stage and targets else "X86"
 
         cmake_args = [
@@ -209,12 +205,13 @@ def build_one_stage(
             "-DCMAKE_C_COMPILER=%s" % slashify_path(cc[0]),
             "-DCMAKE_CXX_COMPILER=%s" % slashify_path(cxx[0]),
             "-DCMAKE_ASM_COMPILER=%s" % slashify_path(asm[0]),
+            "-DCMAKE_LINKER=%s" % slashify_path(ld[0]),
             "-DCMAKE_AR=%s" % slashify_path(ar),
             "-DCMAKE_C_FLAGS=%s" % " ".join(cc[1:]),
             "-DCMAKE_CXX_FLAGS=%s" % " ".join(cxx[1:]),
             "-DCMAKE_ASM_FLAGS=%s" % " ".join(asm[1:]),
-            "-DCMAKE_EXE_LINKER_FLAGS=%s" % " ".join(ldflags),
-            "-DCMAKE_SHARED_LINKER_FLAGS=%s" % " ".join(ldflags),
+            "-DCMAKE_EXE_LINKER_FLAGS=%s" % " ".join(ld[1:]),
+            "-DCMAKE_SHARED_LINKER_FLAGS=%s" % " ".join(ld[1:]),
             "-DCMAKE_BUILD_TYPE=%s" % build_type,
             "-DCMAKE_INSTALL_PREFIX=%s" % inst_dir,
             "-DLLVM_TARGETS_TO_BUILD=%s" % machine_targets,
@@ -224,16 +221,13 @@ def build_one_stage(
             "-DLLVM_ENABLE_CURL=OFF",
             "-DLLVM_INCLUDE_TESTS=OFF",
         ]
-        if is_llvm_toolchain(cc[0], cxx[0]):
-            cmake_args += ["-DLLVM_ENABLE_LLD=ON"]
-
         if "TASK_ID" in os.environ:
             cmake_args += [
                 "-DCLANG_REPOSITORY_STRING=taskcluster-%s" % os.environ["TASK_ID"],
             ]
-        projects = ["clang", "lld"]
+        projects = ["clang"]
         if is_final_stage:
-            projects.append("clang-tools-extra")
+            projects.extend(("clang-tools-extra", "lld"))
         else:
             cmake_args.append("-DLLVM_TOOL_LLI_BUILD=OFF")
 
@@ -309,7 +303,7 @@ def build_one_stage(
         return cmake_args
 
     cmake_args = []
-    cmake_args += cmake_base_args(cc, cxx, asm, ar, ranlib, libtool, ldflags, inst_dir)
+    cmake_args += cmake_base_args(cc, cxx, asm, ld, ar, ranlib, libtool, inst_dir)
     cmake_args += [src_dir]
     build_package(build_dir, cmake_args)
 
@@ -598,8 +592,7 @@ def main():
     cc = get_tool(config, "cc")
     cxx = get_tool(config, "cxx")
     asm = get_tool(config, "ml" if is_windows() else "as")
-    # Not using lld here as default here because it's not in PATH. But clang
-    # knows how to find it when they are installed alongside each others.
+    ld = get_tool(config, "link" if is_windows() else "ld")
     ar = get_tool(config, "lib" if is_windows() else "ar")
     ranlib = None if is_windows() else get_tool(config, "ranlib")
     libtool = None
@@ -653,13 +646,7 @@ def main():
         # corresponding option to strip unused sections.  We do it explicitly
         # here.  LLVM's build system is also picky about turning on ICF, so
         # we do that explicitly here, too.
-
-        # It's unfortunately required to specify the linker used here because
-        # the linker flags are used in LLVM's configure step before
-        # -DLLVM_ENABLE_LLD is actually processed.
-        if is_llvm_toolchain(cc, cxx):
-            extra_ldflags += ["-fuse-ld=lld", "-Wl,--icf=safe"]
-        extra_ldflags += ["-Wl,--gc-sections"]
+        extra_ldflags += ["-fuse-ld=gold", "-Wl,--gc-sections", "-Wl,--icf=safe"]
     elif is_windows():
         extra_cflags = []
         extra_cxxflags = []
@@ -719,10 +706,10 @@ def main():
             [cc] + extra_cflags,
             [cxx] + extra_cxxflags,
             [asm] + extra_asmflags,
+            [ld] + extra_ldflags,
             ar,
             ranlib,
             libtool,
-            extra_ldflags,
             llvm_source_dir,
             stage1_dir,
             package_name,
@@ -745,10 +732,10 @@ def main():
             [cc] + extra_cflags2,
             [cxx] + extra_cxxflags2,
             [asm] + extra_asmflags,
+            [ld] + extra_ldflags,
             ar,
             ranlib,
             libtool,
-            extra_ldflags,
             llvm_source_dir,
             stage2_dir,
             package_name,
@@ -772,10 +759,10 @@ def main():
             [cc] + extra_cflags2,
             [cxx] + extra_cxxflags2,
             [asm] + extra_asmflags,
+            [ld] + extra_ldflags,
             ar,
             ranlib,
             libtool,
-            extra_ldflags,
             llvm_source_dir,
             stage3_dir,
             package_name,
@@ -815,10 +802,10 @@ def main():
             [cc] + extra_cflags2,
             [cxx] + extra_cxxflags2,
             [asm] + extra_asmflags,
+            [ld] + extra_ldflags,
             ar,
             ranlib,
             libtool,
-            extra_ldflags,
             llvm_source_dir,
             stage4_dir,
             package_name,
