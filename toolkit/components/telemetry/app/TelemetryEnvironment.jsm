@@ -2083,7 +2083,7 @@ EnvironmentCache.prototype = {
         winPackageFamilyName.startsWith("Mozilla.") ||
         winPackageFamilyName.startsWith("MozillaCorporation.")
       ) {
-        data = { winPackageFamilyName };
+        data = { winPackageFamilyName, ...data };
       }
       data = { ...this._getProcessData(), ...data };
     } else if (AppConstants.platform == "android") {
