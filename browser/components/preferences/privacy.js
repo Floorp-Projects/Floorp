@@ -42,7 +42,6 @@ const PREF_PASSWORD_GENERATION_AVAILABLE = "signon.generation.available";
 const { BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN } = Ci.nsICookieService;
 
 const PASSWORD_MANAGER_PREF_ID = "services.passwordSavingEnabled";
-const PREF_PASSWORD_MANAGER_ENABLED = "signon.rememberSignons";
 
 const PREF_DFPI_ENABLED_BY_DEFAULT =
   "privacy.restrict3rdpartystorage.rollout.enabledByDefault";
@@ -156,6 +155,7 @@ Preferences.addAll([
   { id: "signon.generation.enabled", type: "bool" },
   { id: "signon.autofillForms", type: "bool" },
   { id: "signon.management.page.breach-alerts.enabled", type: "bool" },
+  { id: "signon.firefoxRelay.feature", type: "string" },
 
   // Buttons
   { id: "pref.privacy.disable_button.view_passwords", type: "bool" },
@@ -691,6 +691,7 @@ var gPrivacyPane = {
     this._pane = document.getElementById("panePrivacy");
 
     this._initPasswordGenerationUI();
+    this._initRelayIntegrationUI();
     this._initMasterPasswordUI();
 
     this.initListenersForExtensionControllingPasswordManager();
@@ -2485,6 +2486,42 @@ var gPrivacyPane = {
     document.getElementById("generatePasswordsBox").hidden = !prefValue;
   },
 
+  toggleRelayIntegration() {
+    const checkbox = document.getElementById("relayIntegration");
+
+    if (checkbox.checked) {
+      FirefoxRelay.markAsEnabled();
+    } else {
+      FirefoxRelay.markAsDisabled();
+    }
+  },
+
+  _updateRelayIntegrationUI() {
+    document.getElementById(
+      "relayIntegrationBox"
+    ).hidden = !FirefoxRelay.isAvailable;
+    document.getElementById("relayIntegration").checked =
+      FirefoxRelay.isEnabled;
+  },
+
+  _initRelayIntegrationUI() {
+    document
+      .getElementById("relayIntegrationLearnMoreLink")
+      .setAttribute("href", FirefoxRelay.learnMoreUrl);
+
+    setEventListener(
+      "relayIntegration",
+      "command",
+      gPrivacyPane.toggleRelayIntegration.bind(gPrivacyPane)
+    );
+    Preferences.get("signon.firefoxRelay.feature").on(
+      "change",
+      gPrivacyPane._updateRelayIntegrationUI.bind(gPrivacyPane)
+    );
+
+    this._updateRelayIntegrationUI();
+  },
+
   /**
    * Shows the sites where the user has saved passwords and the associated login
    * information.
@@ -2506,6 +2543,7 @@ var gPrivacyPane = {
     document.getElementById("passwordExceptions").disabled = !prefValue;
     document.getElementById("generatePasswords").disabled = !prefValue;
     document.getElementById("passwordAutofillCheckbox").disabled = !prefValue;
+    document.getElementById("relayIntegration").disabled = !prefValue;
 
     // don't override pref value in UI
     return undefined;

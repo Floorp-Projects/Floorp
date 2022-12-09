@@ -9958,6 +9958,7 @@ var ConfirmationHint = {
   show(anchor, messageId, options = {}) {
     this._reset();
 
+    MozXULElement.insertFTLIfNeeded("browser/branding/brandings.ftl");
     MozXULElement.insertFTLIfNeeded("browser/confirmationHints.ftl");
     document.l10n.setAttributes(this._message, messageId);
 
