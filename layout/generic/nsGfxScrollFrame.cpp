@@ -4843,7 +4843,14 @@ nsPoint ScrollFrameHelper::GetVisualViewportOffset() const {
   PresShell* presShell = mOuter->PresShell();
   if (mIsRoot) {
     if (auto pendingUpdate = presShell->GetPendingVisualScrollUpdate()) {
-      return pendingUpdate->mVisualScrollOffset;
+      // The pending visual scroll update on the PresShell contains a raw,
+      // unclamped offset (basically, whatever was passed to ScrollToVisual()).
+      // It will be clamped on the APZ side, but if we use it as the
+      // main-thread's visual viewport offset we need to clamp it ourselves.
+      // Use GetScrollRangeForUserInputEvents() to do the clamping because this
+      // the scroll range that APZ will use.
+      return GetScrollRangeForUserInputEvents().ClampPoint(
+          pendingUpdate->mVisualScrollOffset);
     }
     return presShell->GetVisualViewportOffset();
   }
