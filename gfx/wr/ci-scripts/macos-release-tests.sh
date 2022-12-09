@@ -21,12 +21,12 @@ WRENCH_BINARY=${WRENCH_BINARY:-""}
 pushd wrench
 
 # Test that all shaders compile successfully and pass tests.
-python script/headless.py --precache test_init
-python script/headless.py --precache --use-unoptimized-shaders test_init
-python script/headless.py test_shaders
+python3 script/headless.py --precache test_init
+python3 script/headless.py --precache --use-unoptimized-shaders test_init
+python3 script/headless.py test_shaders
 
-python script/headless.py reftest
-python script/headless.py test_invalidation
+python3 script/headless.py reftest
+python3 script/headless.py test_invalidation
 if [[ -z "${WRENCH_BINARY}" ]]; then
     cargo build ${CARGOFLAGS} --release
     WRENCH_BINARY="../target/release/wrench"

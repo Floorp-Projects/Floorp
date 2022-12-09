@@ -17,7 +17,7 @@ while True:
         # Remove any previous results
         try:
             os.remove(FILE)
-        except:
+        except Exception:
             pass
 
         # Pull latest code
