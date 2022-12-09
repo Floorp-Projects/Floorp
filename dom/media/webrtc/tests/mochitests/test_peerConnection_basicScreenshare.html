@@ -11,14 +11,44 @@
     title: "Basic screenshare-only peer connection"
   });
 
-  var test;
-  runNetworkTest(function (options) {
-    test = new PeerConnectionTest(options);
-    var constraints = {
+  async function supportedVideoPayloadTypes() {
+    const pc = new RTCPeerConnection();
+    const offer = await pc.createOffer({offerToReceiveVideo: true});
+    return sdputils.getPayloadTypes(offer.sdp);
+  }
+
+  async function testScreenshare(payloadType) {
+    const options = {};
+    options.h264 = payloadType == 97 || payloadType == 126;
+    const test = new PeerConnectionTest(options);
+    const constraints = {
       video: { mediaSource: "screen" },
     };
     test.setMediaConstraints([constraints], []);
-    return test.run();
+    test.chain.insertAfterEach("PC_LOCAL_CREATE_OFFER", [
+      function PC_LOCAL_ISOLATE_CODEC() {
+        info(`Forcing payload type ${payloadType}. Note that other associated ` +
+             `payload types, like RTX, are removed too.`);
+        test.originalOffer.sdp =
+          sdputils.removeAllButPayloadType(test.originalOffer.sdp, payloadType);
+      },
+    ]);
+    await test.run();
+  }
+
+  runNetworkTest(async () => {
+    await matchPlatformH264CodecPrefs();
+    const pts = await supportedVideoPayloadTypes();
+    ok(pts.includes("120"), "VP8 is supported");
+    ok(pts.includes("121"), "VP9 is supported");
+    if (pts.length > 2) {
+      is(pts.length, 4, "Expected VP8, VP9 and two variants of H264");
+      ok(pts.includes("97"), "H264 with no packetization-mode is supported");
+      ok(pts.includes("126"), "H264 with packetization-mode=1 is supported");
+    }
+    for (const pt of pts) {
+      await testScreenshare(pt);
+    }
   });
 </script>
 </pre>
