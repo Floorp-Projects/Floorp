@@ -11,5 +11,5 @@ with open('reftest.log', "w") as out:
     try:
         subprocess.check_call(['script/headless.py', 'reftest'], stdout=out)
         print("All tests passed.")
-    except subprocess.CalledProcessError as ex:
+    except subprocess.CalledProcessError:
         subprocess.check_call(['firefox', 'reftest-analyzer.xhtml#logurl=reftest.log'])
