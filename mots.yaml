@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-12-02T16:09:26.715246'
+updated_at: '2022-12-08T10:34:34.569111'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -146,8 +146,7 @@ people:
   - bmo_id: 560379
     name: Bryce Seager van Dyk
     nick: bryce
-  - &bstack
-    bmo_id: 596517
+  - bmo_id: 596517
     name: Brian Stack
     nick: bstack
   - &bthrall
@@ -345,8 +344,7 @@ people:
     bmo_id: 47192
     name: Mike Hommey
     nick: glandium
-  - &gps
-    bmo_id: 420446
+  - bmo_id: 420446
     name: Gregory Szorc
     nick: gps
   - bmo_id: 561658
@@ -404,6 +402,10 @@ people:
     bmo_id: 281508
     name: ''
     nick: jchen
+  - &jcristau
+    bmo_id: 580382
+    name: Julien Cristau
+    nick: jcristau
   - &jdescottes
     bmo_id: 559949
     name: Julian Descottes
@@ -444,6 +446,10 @@ people:
     bmo_id: 462836
     name: Jed Davis
     nick: jld
+  - &jlorenzo
+    bmo_id: 504868
+    name: Johan Lorenzo
+    nick: jlorenzo
   - &jmaher
     bmo_id: 324370
     name: Joel Maher
@@ -1104,21 +1110,26 @@ modules:
         description: Support for task-graph generation in decision, action, and cron
           tasks, including configuration of all tasks including those for CI, nightlies,
           and releases; as well as Docker and VM images used to execute those tasks.
+        includes:
+          - taskcluster
         meta:
           components:
             - Firefox Build System::Task Configuration
+          owners_emeritus:
+            - Tom Prince
           peers_emeritus:
             - Dustin Mitchell
+            - Aki Sasaki
+            - Brian Stack
+            - Gregory Szorc
+            - Justin Wood
         owners:
-          - *tomprince
-        peers:
           - *ahal
-          - *aki
-          - *bstack
+        peers:
           - *glandium
-          - *gps
+          - *jcristau
+          - *jlorenzo
           - *jmaher
-          - *Callek
         machine_name: core_build_config_taskgraph
     machine_name: core_build_config
 
@@ -3477,7 +3488,8 @@ modules:
   - machine_name: testing_mozbase
     name: Mozbase
     description: Base modules used for implementing test components.
-    includes: []
+    includes:
+      - testing/mozbase
     excludes: []
     owners:
       - *gbrown
@@ -3655,5 +3667,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: b51d48aec06d6ff5df29f3fa17e9b0e1dde6cda8
-  export: 3ed7b9844d6e00949a5da796a9afea725ffbb9cd
+  config: 81fa57fcd5cf04d03b569dbbd02a0fb1cd269e7f
+  export: 3e6449e8e44a80d47bcd1a8e52c8dd41cf316515

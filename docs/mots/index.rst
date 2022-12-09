@@ -300,24 +300,20 @@ Support for task-graph generation in decision, action, and cron tasks, including
 
     * - Owner(s)
       -
-        | `Tom Prince (tomprince) <https://people.mozilla.org/s?query=tomprince>`__
+        | `Andrew Halberstadt (ahal) <https://people.mozilla.org/s?query=ahal>`__
     * - Peer(s)
       -
-        | `Andrew Halberstadt (ahal) <https://people.mozilla.org/s?query=ahal>`__
-        | `Aki Sasaki (aki) <https://people.mozilla.org/s?query=aki>`__
-        | `Brian Stack (bstack) <https://people.mozilla.org/s?query=bstack>`__
         | `Mike Hommey (glandium) <https://people.mozilla.org/s?query=glandium>`__
-        | `Gregory Szorc (gps) <https://people.mozilla.org/s?query=gps>`__
+        | `Julien Cristau (jcristau) <https://people.mozilla.org/s?query=jcristau>`__
+        | `Johan Lorenzo (jlorenzo) <https://people.mozilla.org/s?query=jlorenzo>`__
         | `Joel Maher (jmaher) <https://people.mozilla.org/s?query=jmaher>`__
-        | `Justin Wood (Callek) <https://people.mozilla.org/s?query=Callek>`__
+    * - Owner(s) Emeritus
+      - Tom Prince
     * - Peer(s) Emeritus
-      - Dustin Mitchell
+      - Dustin Mitchell, Aki Sasaki, Brian Stack, Gregory Szorc, Justin Wood
     * - Includes
       -
-        | `build/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=build/\*\*/\*>`__
-        | `config/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=config/\*\*/\*>`__
-        | `python/mozbuild/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=python/mozbuild/\*\*/\*>`__
-        | `browser/config/mozconfigs/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=browser/config/mozconfigs/\*\*/\*>`__
+        | `taskcluster <https://searchfox.org/mozilla-central/search?q=&path=taskcluster>`__
     * - Bugzilla Components
       - Firefox Build System::Task Configuration
 
@@ -3429,6 +3425,9 @@ Base modules used for implementing test components.
         | `Bob Clary (bc) <https://people.mozilla.org/s?query=bc>`__
         | `James Graham (jgraham) <https://people.mozilla.org/s?query=jgraham>`__
         | `Henrik Skupin (whimboo) <https://people.mozilla.org/s?query=whimboo>`__
+    * - Includes
+      -
+        | `testing/mozbase <https://searchfox.org/mozilla-central/search?q=&path=testing/mozbase>`__
     * - Bugzilla Components
       - Testing :: Mozbase, Testing :: Mozbase Rust
 
