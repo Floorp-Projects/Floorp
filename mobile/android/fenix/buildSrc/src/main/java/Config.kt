@@ -4,6 +4,7 @@
 
 import org.gradle.api.Project
 import org.mozilla.fenix.gradle.ext.execReadStandardOutOrThrow
+import java.io.File
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.util.Date
@@ -36,22 +37,18 @@ object Config {
 
     @JvmStatic
     fun nightlyVersionName(): String {
-        // Nightly versions use the Gecko/A-C major version and append "0.a1", e.g. with A-C 90.0.20210426143115
-        // the Nightly version will be 90.0a1
-        val majorVersion = AndroidComponents.VERSION.split(".")[0]
-        return "$majorVersion.0a1"
+        // Nightly versions will use the version from "version.txt".
+        return readVersionFromFile()
     }
 
     @JvmStatic
-    fun majorVersion(project: Project): String {
-        val releaseVersion = releaseVersionName(project)
-        val version = if (releaseVersion.isBlank()) {
-            nightlyVersionName()
-        } else {
-            releaseVersion
-        }
+    fun majorVersion(): String {
+        return readVersionFromFile().split(".")[0]
+    }
 
-        return version.split(".")[0]
+    @JvmStatic
+    fun readVersionFromFile(): String {
+        return File("../version.txt").useLines { it.firstOrNull() ?: "" }
     }
 
     /**

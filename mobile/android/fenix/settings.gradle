@@ -1,7 +1,114 @@
-include ':app'
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import org.yaml.snakeyaml.Yaml
+
+pluginManagement {
+    includeBuild("../android-components/plugins/publicsuffixlist")
+    includeBuild("../android-components/plugins/dependencies")
+}
+
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'org.yaml:snakeyaml:1.33'
+    }
+}
+
+plugins {
+    id 'mozac.DependenciesPlugin'
+}
+
+include ':app'
 include ':mozilla-detekt-rules'
 include ':mozilla-lint-rules'
+
+// Synchronized library configuration for all modules
+// This "componentsVersion" number is defined in "version.txt" and should follow
+// semantic versioning (MAJOR.MINOR.PATCH). See https://semver.org/
+class Config {
+
+    public final String componentsVersion
+    public final String componentsGroupId
+    public final Integer compileSdkVersion
+    public final Integer minSdkVersion
+    public final Integer targetSdkVersion
+
+    Config(
+            String componentsVersion,
+            String componentsGroupId,
+            Integer compileSdkVersion,
+            Integer minSdkVersion,
+            Integer targetSdkVersion
+    ) {
+        this.componentsVersion = componentsVersion
+        this.componentsGroupId = componentsGroupId
+        this.compileSdkVersion = compileSdkVersion
+        this.minSdkVersion = minSdkVersion
+        this.targetSdkVersion = targetSdkVersion
+    }
+}
+
+def setupProject(name, path, description) {
+    settings.include(":$name")
+
+    project(":$name").projectDir = new File(rootDir, "../android-components/${path}")
+
+    // project(...) gives us a skeleton project that we can't set ext.* on
+    gradle.beforeProject { project ->
+        // However, the "afterProject" listener iterates over every project and gives us the actual project
+        // So, once we filter for the project we care about, we can set whatever we want
+        if (project.name == name) {
+            project.ext.description = description
+        }
+    }
+}
+
+def yaml = new Yaml()
+def buildconfig = yaml.load(new File(rootDir, '../android-components/.buildconfig.yml').newInputStream())
+
+buildconfig.projects.each { project ->
+    if (!project.key.startsWith("samples")) {
+        setupProject(project.key, project.value.path, project.value.description)
+    }
+}
+
+gradle.projectsLoaded { ->
+    def componentsVersion = new File(rootDir, '../version.txt').text.stripTrailing()
+    def configData = yaml.load(new File(rootDir, '../android-components/.config.yml').newInputStream())
+
+    // Wait until root project is "loaded" before we set "config"
+    // Note that since this is set on "rootProject.ext", it will be "in scope" during the evaluation of all projects'
+    // gradle files. This means that they can just access "config.<value>", and it'll function properly
+    gradle.rootProject.ext.config = new Config(
+            componentsVersion,
+            configData.componentsGroupId,
+            configData.compileSdkVersion,
+            configData.minSdkVersion,
+            configData.targetSdkVersion
+    )
+    gradle.rootProject.ext.buildConfig = buildconfig
+
+    // Disables A-C tests and lint when building Fenix.
+    gradle.allprojects { project ->
+        if (project.projectDir.absolutePath.contains("/android-components/")) {
+            project.tasks.withType(Test) {
+                enabled = false
+            }
+            project.tasks.whenTaskAdded { task ->
+                if (task.name.contains("lint")) {
+                    task.enabled = false
+                }
+            }
+        }
+    }
+}
+
 def log(message) {
     logger.lifecycle("[settings] ${message}")
 }

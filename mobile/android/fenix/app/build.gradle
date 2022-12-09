@@ -473,7 +473,7 @@ dependencies {
     jnaForTest FenixDependencies.jna
     testImplementation files(configurations.jnaForTest.copyRecursive().files)
 
-    implementation  FenixDependencies.mozilla_browser_engine_gecko
+    implementation project(':browser-engine-gecko')
 
     implementation FenixDependencies.kotlin_stdlib
     implementation FenixDependencies.kotlin_coroutines
@@ -487,94 +487,95 @@ dependencies {
 
     implementation FenixDependencies.sentry
 
-    implementation FenixDependencies.mozilla_compose_awesomebar
-    implementation FenixDependencies.mozilla_compose_cfr
+    implementation project(':compose-awesomebar')
+    implementation project(':compose-cfr')
 
-    implementation FenixDependencies.mozilla_concept_awesomebar
-    implementation FenixDependencies.mozilla_concept_base
-    implementation FenixDependencies.mozilla_concept_engine
-    implementation FenixDependencies.mozilla_concept_menu
-    implementation FenixDependencies.mozilla_concept_push
-    implementation FenixDependencies.mozilla_concept_storage
-    implementation FenixDependencies.mozilla_concept_sync
-    implementation FenixDependencies.mozilla_concept_toolbar
-    implementation FenixDependencies.mozilla_concept_tabstray
+    implementation project(':concept-awesomebar')
+    implementation project(':concept-base')
+    implementation project(':concept-engine')
+    implementation project(':concept-menu')
+    implementation project(':concept-push')
+    implementation project(':concept-storage')
+    implementation project(':concept-sync')
+    implementation project(':concept-toolbar')
+    implementation project(':concept-tabstray')
 
-    implementation FenixDependencies.mozilla_browser_domains
-    implementation FenixDependencies.mozilla_browser_icons
-    implementation FenixDependencies.mozilla_browser_menu
-    implementation FenixDependencies.mozilla_browser_menu2
-    implementation FenixDependencies.mozilla_browser_session_storage
-    implementation FenixDependencies.mozilla_browser_state
-    implementation FenixDependencies.mozilla_browser_storage_sync
-    implementation FenixDependencies.mozilla_browser_tabstray
-    implementation FenixDependencies.mozilla_browser_thumbnails
-    implementation FenixDependencies.mozilla_browser_toolbar
+    implementation project(':browser-domains')
+    implementation project(':browser-icons')
+    implementation project(':browser-menu')
+    implementation project(':browser-menu2')
+    implementation project(':browser-session-storage')
+    implementation project(':browser-state')
+    implementation project(':browser-storage-sync')
+    implementation project(':browser-tabstray')
+    implementation project(':browser-thumbnails')
+    implementation project(':browser-toolbar')
 
-    implementation FenixDependencies.mozilla_feature_addons
-    implementation FenixDependencies.mozilla_feature_accounts
-    implementation FenixDependencies.mozilla_feature_app_links
-    implementation FenixDependencies.mozilla_feature_autofill
-    implementation FenixDependencies.mozilla_feature_awesomebar
-    implementation FenixDependencies.mozilla_feature_contextmenu
-    implementation FenixDependencies.mozilla_feature_customtabs
-    implementation FenixDependencies.mozilla_feature_downloads
-    implementation FenixDependencies.mozilla_feature_intent
-    implementation FenixDependencies.mozilla_feature_media
-    implementation FenixDependencies.mozilla_feature_prompts
-    implementation FenixDependencies.mozilla_feature_push
-    implementation FenixDependencies.mozilla_feature_privatemode
-    implementation FenixDependencies.mozilla_feature_pwa
-    implementation FenixDependencies.mozilla_feature_qr
-    implementation FenixDependencies.mozilla_feature_search
-    implementation FenixDependencies.mozilla_feature_session
-    implementation FenixDependencies.mozilla_feature_syncedtabs
-    implementation FenixDependencies.mozilla_feature_toolbar
-    implementation FenixDependencies.mozilla_feature_tabs
-    implementation FenixDependencies.mozilla_feature_findinpage
-    implementation FenixDependencies.mozilla_feature_logins
-    implementation FenixDependencies.mozilla_feature_site_permissions
-    implementation FenixDependencies.mozilla_feature_readerview
-    implementation FenixDependencies.mozilla_feature_tab_collections
-    implementation FenixDependencies.mozilla_feature_recentlyclosed
-    implementation FenixDependencies.mozilla_feature_top_sites
-    implementation FenixDependencies.mozilla_feature_share
-    implementation FenixDependencies.mozilla_feature_accounts_push
-    implementation FenixDependencies.mozilla_feature_webauthn
-    implementation FenixDependencies.mozilla_feature_webcompat
-    implementation FenixDependencies.mozilla_feature_webnotifications
-    implementation FenixDependencies.mozilla_feature_webcompat_reporter
+    implementation project(':feature-addons')
+    implementation project(':feature-accounts')
+    implementation project(':feature-app-links')
+    implementation project(':feature-autofill')
+    implementation project(':feature-awesomebar')
+    implementation project(':feature-contextmenu')
+    implementation project(':feature-customtabs')
+    implementation project(':feature-downloads')
+    implementation project(':feature-intent')
+    implementation project(':feature-media')
+    implementation project(':feature-prompts')
+    implementation project(':feature-push')
+    implementation project(':feature-privatemode')
+    implementation project(':feature-pwa')
+    implementation project(':feature-qr')
+    implementation project(':feature-search')
+    implementation project(':feature-session')
+    implementation project(':feature-syncedtabs')
+    implementation project(':feature-toolbar')
+    implementation project(':feature-tabs')
+    implementation project(':feature-findinpage')
+    implementation project(':feature-logins')
+    implementation project(':feature-sitepermissions')
+    implementation project(':feature-readerview')
+    implementation project(':feature-tab-collections')
+    implementation project(':feature-recentlyclosed')
+    implementation project(':feature-top-sites')
+    implementation project(':feature-share')
+    implementation project(':feature-accounts-push')
+    implementation project(':feature-webauthn')
+    implementation project(':feature-webcompat')
+    implementation project(':feature-webnotifications')
+    implementation project(':feature-webcompat-reporter')
 
-    implementation FenixDependencies.mozilla_service_pocket
-    implementation FenixDependencies.mozilla_service_contile
-    implementation FenixDependencies.mozilla_service_digitalassetlinks
-    implementation FenixDependencies.mozilla_service_sync_autofill
-    implementation FenixDependencies.mozilla_service_sync_logins
-    implementation FenixDependencies.mozilla_service_firefox_accounts
-    implementation(FenixDependencies.mozilla_service_glean)
-    implementation FenixDependencies.mozilla_service_location
-    implementation FenixDependencies.mozilla_service_nimbus
+    implementation project(':service-pocket')
+    implementation project(':service-contile')
+    implementation project(':service-digitalassetlinks')
+    implementation project(':service-sync-autofill')
+    implementation project(':service-sync-logins')
+    implementation project(':service-firefox-accounts')
+    implementation project(':service-glean')
+    implementation project(':service-location')
+    implementation project(':service-nimbus')
 
-    implementation FenixDependencies.mozilla_support_extensions
-    implementation FenixDependencies.mozilla_support_base
-    implementation FenixDependencies.mozilla_support_rusterrors
-    implementation FenixDependencies.mozilla_support_images
-    implementation FenixDependencies.mozilla_support_ktx
-    implementation FenixDependencies.mozilla_support_rustlog
-    implementation FenixDependencies.mozilla_support_utils
-    implementation FenixDependencies.mozilla_support_locale
+    implementation project(':support-webextensions')
+    implementation project(':support-base')
+    implementation project(':support-rusterrors')
+    implementation project(':support-images')
+    implementation project(':support-ktx')
+    implementation project(':support-rustlog')
+    implementation project(':support-utils')
+    implementation project(':support-locale')
 
-    implementation FenixDependencies.mozilla_ui_colors
-    implementation FenixDependencies.mozilla_ui_icons
-    implementation FenixDependencies.mozilla_lib_publicsuffixlist
-    implementation FenixDependencies.mozilla_ui_widgets
-    implementation FenixDependencies.mozilla_ui_tabcounter
+    implementation project(':ui-colors')
+    implementation project(':ui-icons')
+    implementation project(':lib-publicsuffixlist')
+    implementation project(':ui-widgets')
+    implementation project(':ui-tabcounter')
 
-    implementation FenixDependencies.mozilla_lib_crash
-    implementation FenixDependencies.lib_crash_sentry
-    implementation FenixDependencies.mozilla_lib_push_firebase
-    implementation FenixDependencies.mozilla_lib_state
-    implementation FenixDependencies.mozilla_lib_dataprotect
+    implementation project(':lib-crash')
+    implementation project(':lib-crash-sentry')
+    implementation project(':lib-push-firebase')
+    implementation project(':lib-state')
+    implementation project(':lib-dataprotect')
+
     debugImplementation FenixDependencies.leakcanary
 
     implementation FenixDependencies.androidx_annotation
@@ -649,8 +650,8 @@ dependencies {
     androidTestImplementation FenixDependencies.androidx_work_testing
     androidTestImplementation FenixDependencies.androidx_benchmark_junit4
     androidTestImplementation FenixDependencies.mockwebserver
-    testImplementation FenixDependencies.mozilla_support_test
-    testImplementation FenixDependencies.mozilla_support_test_libstate
+    testImplementation project(':support-test')
+    testImplementation project(':support-test-libstate')
     testImplementation FenixDependencies.androidx_junit
     testImplementation FenixDependencies.androidx_test_extensions
     testImplementation FenixDependencies.androidx_work_testing
@@ -659,7 +660,7 @@ dependencies {
     }
 
     testImplementation 'org.apache.maven:maven-ant-tasks:2.1.3'
-    implementation FenixDependencies.mozilla_support_rusthttp
+    implementation project(':support-rusthttp')
 
     androidTestImplementation FenixDependencies.mockk_android
     testImplementation FenixDependencies.mockk
@@ -872,26 +873,6 @@ if (gradle.hasProperty('localProperties.autoPublish.glean.dir')) {
     apply from: "../${gleanSrcDir}/build-scripts/substitute-local-glean.gradle"
 }
 
-// Define a reusable task for updating the versions of our built-in web extensions. We automate this
-// to make sure we never forget to update the version, either in local development or for releases.
-// In both cases, we want to make sure the latest version of all extensions (including their latest
-// changes) are installed on first start-up.
-// We're using the A-C version here as we want to uplift all built-in extensions to A-C (Once that's
-// done we can also remove the task below):
-// https://github.com/mozilla-mobile/android-components/issues/7249
-ext.updateExtensionVersion = { task, extDir ->
-    configure(task) {
-        from extDir
-        include 'manifest.template.json'
-        rename { 'manifest.json' }
-        into extDir
-
-        def values = ['version': AndroidComponents.VERSION + "." + new Date().format('MMddHHmmss')]
-        inputs.properties(values)
-        expand(values)
-    }
-}
-
 android.applicationVariants.all { variant ->
     tasks.register("apkSize${variant.name.capitalize()}", ApkSizeTask) {
         variantName = variant.name
@@ -901,4 +882,4 @@ android.applicationVariants.all { variant ->
 }
 
 // Enable expiration by major version.
-ext.gleanExpireByVersion = Config.majorVersion(project)
+ext.gleanExpireByVersion = Config.majorVersion()

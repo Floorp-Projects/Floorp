@@ -43,8 +43,6 @@ object FenixVersions {
     const val accompanist_drawablepainter = "0.23.1"
     const val accompanist_insets = "0.23.1"
 
-    const val mozilla_android_components = AndroidComponents.VERSION
-
     const val adjust = "4.33.0"
     const val installreferrer = "2.2"
 
@@ -75,108 +73,6 @@ object FenixDependencies {
     const val kotlin_coroutines_android = "org.jetbrains.kotlinx:kotlinx-coroutines-android:${FenixVersions.coroutines}"
 
     const val osslicenses_plugin = "com.google.android.gms:oss-licenses-plugin:${FenixVersions.osslicenses_plugin}"
-
-    const val mozilla_compose_awesomebar = "org.mozilla.components:compose-awesomebar:${FenixVersions.mozilla_android_components}"
-    const val mozilla_compose_cfr = "org.mozilla.components:compose-cfr:${FenixVersions.mozilla_android_components}"
-
-    const val mozilla_concept_awesomebar = "org.mozilla.components:concept-awesomebar:${FenixVersions.mozilla_android_components}"
-    const val mozilla_concept_base = "org.mozilla.components:concept-base:${FenixVersions.mozilla_android_components}"
-    const val mozilla_concept_engine = "org.mozilla.components:concept-engine:${FenixVersions.mozilla_android_components}"
-    const val mozilla_concept_menu = "org.mozilla.components:concept-menu:${FenixVersions.mozilla_android_components}"
-    const val mozilla_concept_push = "org.mozilla.components:concept-push:${FenixVersions.mozilla_android_components}"
-    const val mozilla_concept_tabstray = "org.mozilla.components:concept-tabstray:${FenixVersions.mozilla_android_components}"
-    const val mozilla_concept_toolbar = "org.mozilla.components:concept-toolbar:${FenixVersions.mozilla_android_components}"
-    const val mozilla_concept_storage = "org.mozilla.components:concept-storage:${FenixVersions.mozilla_android_components}"
-    const val mozilla_concept_sync = "org.mozilla.components:concept-sync:${FenixVersions.mozilla_android_components}"
-
-    const val mozilla_browser_engine_gecko = "org.mozilla.components:browser-engine-gecko:${FenixVersions.mozilla_android_components}"
-    const val mozilla_browser_domains = "org.mozilla.components:browser-domains:${FenixVersions.mozilla_android_components}"
-    const val mozilla_browser_icons = "org.mozilla.components:browser-icons:${FenixVersions.mozilla_android_components}"
-    const val mozilla_browser_session_storage = "org.mozilla.components:browser-session-storage:${FenixVersions.mozilla_android_components}"
-    const val mozilla_browser_state = "org.mozilla.components:browser-state:${FenixVersions.mozilla_android_components}"
-    const val mozilla_browser_tabstray = "org.mozilla.components:browser-tabstray:${FenixVersions.mozilla_android_components}"
-    const val mozilla_browser_thumbnails = "org.mozilla.components:browser-thumbnails:${FenixVersions.mozilla_android_components}"
-    const val mozilla_browser_toolbar = "org.mozilla.components:browser-toolbar:${FenixVersions.mozilla_android_components}"
-    const val mozilla_browser_menu = "org.mozilla.components:browser-menu:${FenixVersions.mozilla_android_components}"
-    const val mozilla_browser_menu2 = "org.mozilla.components:browser-menu2:${FenixVersions.mozilla_android_components}"
-    const val mozilla_browser_errorpages = "org.mozilla.components:browser-errorpages:${FenixVersions.mozilla_android_components}"
-    const val mozilla_browser_storage_sync = "org.mozilla.components:browser-storage-sync:${FenixVersions.mozilla_android_components}"
-
-    const val mozilla_feature_addons = "org.mozilla.components:feature-addons:${FenixVersions.mozilla_android_components}"
-    const val mozilla_support_extensions = "org.mozilla.components:support-webextensions:${FenixVersions.mozilla_android_components}"
-
-    const val mozilla_feature_accounts = "org.mozilla.components:feature-accounts:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_app_links = "org.mozilla.components:feature-app-links:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_autofill = "org.mozilla.components:feature-autofill:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_awesomebar = "org.mozilla.components:feature-awesomebar:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_contextmenu = "org.mozilla.components:feature-contextmenu:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_customtabs = "org.mozilla.components:feature-customtabs:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_intent = "org.mozilla.components:feature-intent:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_media = "org.mozilla.components:feature-media:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_qr = "org.mozilla.components:feature-qr:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_search = "org.mozilla.components:feature-search:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_session = "org.mozilla.components:feature-session:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_syncedtabs = "org.mozilla.components:feature-syncedtabs:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_tabs = "org.mozilla.components:feature-tabs:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_downloads = "org.mozilla.components:feature-downloads:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_storage = "org.mozilla.components:feature-storage:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_prompts = "org.mozilla.components:feature-prompts:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_push = "org.mozilla.components:feature-push:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_privatemode = "org.mozilla.components:feature-privatemode:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_pwa = "org.mozilla.components:feature-pwa:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_toolbar = "org.mozilla.components:feature-toolbar:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_findinpage = "org.mozilla.components:feature-findinpage:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_logins = "org.mozilla.components:feature-logins:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_site_permissions = "org.mozilla.components:feature-sitepermissions:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_readerview = "org.mozilla.components:feature-readerview:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_tab_collections = "org.mozilla.components:feature-tab-collections:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_recentlyclosed = "org.mozilla.components:feature-recentlyclosed:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_accounts_push = "org.mozilla.components:feature-accounts-push:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_top_sites = "org.mozilla.components:feature-top-sites:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_share = "org.mozilla.components:feature-share:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_webauthn = "org.mozilla.components:feature-webauthn:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_webcompat = "org.mozilla.components:feature-webcompat:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_webnotifications = "org.mozilla.components:feature-webnotifications:${FenixVersions.mozilla_android_components}"
-    const val mozilla_feature_webcompat_reporter = "org.mozilla.components:feature-webcompat-reporter:${FenixVersions.mozilla_android_components}"
-
-    const val mozilla_service_pocket = "org.mozilla.components:service-pocket:${FenixVersions.mozilla_android_components}"
-    const val mozilla_service_contile =
-        "org.mozilla.components:service-contile:${FenixVersions.mozilla_android_components}"
-    const val mozilla_service_digitalassetlinks =
-        "org.mozilla.components:service-digitalassetlinks:${FenixVersions.mozilla_android_components}"
-    const val mozilla_service_sync_autofill =
-        "org.mozilla.components:service-sync-autofill:${FenixVersions.mozilla_android_components}"
-    const val mozilla_service_sync_logins =
-        "org.mozilla.components:service-sync-logins:${FenixVersions.mozilla_android_components}"
-    const val mozilla_service_firefox_accounts = "org.mozilla.components:service-firefox-accounts:${FenixVersions.mozilla_android_components}"
-    const val mozilla_service_glean = "org.mozilla.components:service-glean:${FenixVersions.mozilla_android_components}"
-    const val mozilla_service_location = "org.mozilla.components:service-location:${FenixVersions.mozilla_android_components}"
-    const val mozilla_service_nimbus = "org.mozilla.components:service-nimbus:${FenixVersions.mozilla_android_components}"
-
-    const val mozilla_ui_colors = "org.mozilla.components:ui-colors:${FenixVersions.mozilla_android_components}"
-    const val mozilla_ui_icons = "org.mozilla.components:ui-icons:${FenixVersions.mozilla_android_components}"
-    const val mozilla_ui_widgets = "org.mozilla.components:ui-widgets:${FenixVersions.mozilla_android_components}"
-    const val mozilla_ui_tabcounter = "org.mozilla.components:ui-tabcounter:${FenixVersions.mozilla_android_components}"
-
-    const val mozilla_lib_crash = "org.mozilla.components:lib-crash:${FenixVersions.mozilla_android_components}"
-    const val lib_crash_sentry =
-        "org.mozilla.components:lib-crash-sentry:${FenixVersions.mozilla_android_components}"
-    const val mozilla_lib_push_firebase = "org.mozilla.components:lib-push-firebase:${FenixVersions.mozilla_android_components}"
-    const val mozilla_lib_dataprotect = "org.mozilla.components:lib-dataprotect:${FenixVersions.mozilla_android_components}"
-    const val mozilla_lib_state = "org.mozilla.components:lib-state:${FenixVersions.mozilla_android_components}"
-
-    const val mozilla_lib_publicsuffixlist = "org.mozilla.components:lib-publicsuffixlist:${FenixVersions.mozilla_android_components}"
-
-    const val mozilla_support_base = "org.mozilla.components:support-base:${FenixVersions.mozilla_android_components}"
-    const val mozilla_support_rusterrors = "org.mozilla.components:support-rusterrors:${FenixVersions.mozilla_android_components}"
-    const val mozilla_support_images = "org.mozilla.components:support-images:${FenixVersions.mozilla_android_components}"
-    const val mozilla_support_ktx = "org.mozilla.components:support-ktx:${FenixVersions.mozilla_android_components}"
-    const val mozilla_support_rusthttp = "org.mozilla.components:support-rusthttp:${FenixVersions.mozilla_android_components}"
-    const val mozilla_support_rustlog = "org.mozilla.components:support-rustlog:${FenixVersions.mozilla_android_components}"
-    const val mozilla_support_utils = "org.mozilla.components:support-utils:${FenixVersions.mozilla_android_components}"
-    const val mozilla_support_test = "org.mozilla.components:support-test:${FenixVersions.mozilla_android_components}"
-    const val mozilla_support_test_libstate = "org.mozilla.components:support-test-libstate:${FenixVersions.mozilla_android_components}"
-    const val mozilla_support_locale = "org.mozilla.components:support-locale:${FenixVersions.mozilla_android_components}"
 
     const val sentry = "io.sentry:sentry-android:${FenixVersions.sentry}"
     const val leakcanary = "com.squareup.leakcanary:leakcanary-android-core:${FenixVersions.leakcanary}"

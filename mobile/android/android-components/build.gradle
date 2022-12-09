@@ -149,7 +149,7 @@ subprojects {
             rename { 'manifest.json' }
             into extDir
 
-            def values = ['version': rootProject.ext.config.componentsVersion + "." + new Date().format('MMddHHmmss')]
+            def values = ['version': rootProject.ext.config.componentsVersion.split("a|b")[0] + "." + new Date().format('MMddHHmmss')]
             inputs.properties(values)
             expand(values)
         }

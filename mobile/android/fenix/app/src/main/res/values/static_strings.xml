@@ -22,8 +22,6 @@
     <string name="default_top_site_wikipedia" translatable="false">Wikipedia</string>
     <!-- Default title for pinned Google top site that links to Google home page  -->
     <string name="default_top_site_google" translatable="false">Google</string>
-    <!-- Android Components abbreviation used in AboutFragment -->
-    <string name="components_abbreviation" translatable="false">AC</string>
     <!-- Application Services abbreviation used in AboutFragment -->
     <string name="app_services_abbreviation" translatable="false">AS</string>
     <!-- Name for the Pocket product -->

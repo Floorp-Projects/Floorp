@@ -53,7 +53,6 @@ buildscript {
                     excludeGroupByRegex RepoMatching.mozilla
                     excludeGroupByRegex RepoMatching.androidx
                     excludeGroupByRegex RepoMatching.comAndroid
-                    excludeGroupByRegex RepoMatching.comGoogle
                 }
             }
         }
@@ -65,9 +64,21 @@ buildscript {
         classpath FenixDependencies.tools_benchmarkgradle
         classpath FenixDependencies.androidx_safeargs
         classpath FenixDependencies.osslicenses_plugin
-
-        classpath "org.mozilla.components:tooling-glean-gradle:${FenixVersions.mozilla_android_components}"
-        classpath "org.mozilla.components:tooling-nimbus-gradle:${FenixVersions.mozilla_android_components}"
+        classpath "org.mozilla.telemetry:glean-gradle-plugin:${Versions.mozilla_glean}"
+        // NOTE: The Nimbus plugin needs to be refactored into a top-level plugin
+        // and consumed via includeBuild (using composite builds). This is a short-term
+        // workaround to consume the latest version of the Nimbus plugin matching the Focus version.
+        if (Config.readVersionFromFile().contains("a")) {
+            // Use the latest version of the plugin on the main branch (nightly).
+            classpath("org.mozilla.components:tooling-nimbus-gradle:latest.release")
+        } else {
+            // Use the latest version matching the major version of the branch (beta/release).
+            classpath("org.mozilla.components:tooling-nimbus-gradle") {
+                version {
+                    strictly("${Config.majorVersion()}.+")
+                }
+            }
+        }
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -129,7 +140,6 @@ allprojects {
                     excludeGroupByRegex RepoMatching.mozilla
                     excludeGroupByRegex RepoMatching.androidx
                     excludeGroupByRegex RepoMatching.comAndroid
-                    excludeGroupByRegex RepoMatching.comGoogle
                 }
             }
         }
@@ -141,6 +151,25 @@ allprojects {
         kotlinOptions.freeCompilerArgs += [
             "-opt-in=kotlin.RequiresOptIn", "-Xjvm-default=all"
         ]
+    }
+}
+
+subprojects {
+    // Define a reusable task for updating the version in manifest.json for modules that package
+    // a web extension. We automate this to make sure we never forget to update the version, either
+    // in local development or for releases. In both cases, we want to make sure the latest version
+    // of all extensions (including their latest changes) are installed on first start-up.
+    ext.updateExtensionVersion = { task, extDir ->
+        configure(task) {
+            from extDir
+            include 'manifest.template.json'
+            rename { 'manifest.json' }
+            into extDir
+
+            def values = ['version': rootProject.ext.config.componentsVersion.split("a|b")[0] + "." + new Date().format('MMddHHmmss')]
+            inputs.properties(values)
+            expand(values)
+        }
     }
 }
 
