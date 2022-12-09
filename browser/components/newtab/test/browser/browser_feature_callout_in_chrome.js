@@ -80,6 +80,8 @@ const testMessage = {
   },
 };
 
+const testMessageCalloutSelector = testMessage.message.content.screens[0].id;
+
 add_task(async function feature_callout_renders_in_browser_chrome_for_pdf() {
   const sandbox = sinon.createSandbox();
   const sendTriggerStub = sandbox.stub(ASRouter, "sendTriggerMessage");
@@ -89,7 +91,7 @@ add_task(async function feature_callout_renders_in_browser_chrome_for_pdf() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
   await openURLInWindow(win, PDF_TEST_URL);
   let doc = win.document;
-  await waitForCalloutScreen(doc, testMessage.message.content.screens[0].id);
+  await waitForCalloutScreen(doc, testMessageCalloutSelector);
   let container = doc.querySelector(calloutSelector);
   ok(
     container,
@@ -117,47 +119,142 @@ add_task(
 
     let win = await BrowserTestUtils.openNewBrowserWindow();
 
-    // Test that callout shows up on first PDF tab
     let doc = win.document;
     let tab1 = await BrowserTestUtils.openNewForegroundTab(
       win.gBrowser,
       PDF_TEST_URL
     );
     tab1.focus();
-    await waitForCalloutScreen(doc, testMessage.message.content.screens[0].id);
+    await waitForCalloutScreen(doc, testMessageCalloutSelector);
     ok(
-      doc.querySelector(`.${testMessage.message.content.screens[0].id}`),
+      doc.querySelector(`.${testMessageCalloutSelector}`),
       "Feature callout rendered when opening a new tab with PDF url"
     );
 
-    // Test that callout is removed when swapping tabs
     let tab2 = await openURLInNewTab(win, "about:preferences");
     tab2.focus();
-    // We hang up on newtab around here
     await BrowserTestUtils.waitForCondition(() => {
       return !doc.body.querySelector("#root.featureCallout");
     });
 
     ok(
-      !doc.querySelector(`.${testMessage.message.content.screens[0].id}`),
+      !doc.querySelector(`.${testMessageCalloutSelector}`),
       "Feature callout removed when tab without PDF URL is navigated to"
     );
 
-    // Test that callout shows up when tabbing back to pdf
     let tab3 = await openURLInNewTab(win, PDF_TEST_URL);
     tab3.focus();
-    await waitForCalloutScreen(doc, testMessage.message.content.screens[0].id);
+    await waitForCalloutScreen(doc, testMessageCalloutSelector);
     ok(
-      doc.querySelector(`.${testMessage.message.content.screens[0].id}`),
+      doc.querySelector(`.${testMessageCalloutSelector}`),
       "Feature callout still renders when opening a new tab with PDF url after being initially rendered on another tab"
     );
 
-    // Test that callout remains when tabbing from one pdf tab to another
     tab1.focus();
-    await waitForCalloutScreen(doc, testMessage.message.content.screens[0].id);
+    await waitForCalloutScreen(doc, testMessageCalloutSelector);
     ok(
-      doc.querySelector(`.${testMessage.message.content.screens[0].id}`),
+      doc.querySelector(`.${testMessageCalloutSelector}`),
       "Feature callout rendered on original tab after switching tabs multiple times"
+    );
+
+    await BrowserTestUtils.closeWindow(win);
+    sandbox.restore();
+  }
+);
+
+add_task(
+  async function feature_callout_disappears_when_navigating_to_non_pdf_url_in_same_tab() {
+    const sandbox = sinon.createSandbox();
+    const sendTriggerStub = sandbox.stub(ASRouter, "sendTriggerMessage");
+    sendTriggerStub.withArgs(pdfMatch).resolves(testMessage);
+    sendTriggerStub.callThrough();
+
+    let win = await BrowserTestUtils.openNewBrowserWindow();
+
+    let doc = win.document;
+    let tab1 = await BrowserTestUtils.openNewForegroundTab(
+      win.gBrowser,
+      PDF_TEST_URL
+    );
+    tab1.focus();
+    await waitForCalloutScreen(doc, testMessageCalloutSelector);
+    ok(
+      doc.querySelector(`.${testMessageCalloutSelector}`),
+      "Feature callout rendered when opening a new tab with PDF url"
+    );
+
+    BrowserTestUtils.loadURI(win.gBrowser, "about:preferences");
+    await BrowserTestUtils.waitForLocationChange(
+      win.gBrowser,
+      "about:preferences"
+    );
+    await waitForRemoved();
+
+    ok(
+      !doc.querySelector(`.${testMessageCalloutSelector}`),
+      "Feature callout not rendered on original tab after navigating to non pdf URL"
+    );
+
+    await BrowserTestUtils.closeWindow(win);
+    sandbox.restore();
+  }
+);
+
+add_task(
+  async function feature_callout_disappears_when_closing_foreground_pdf_tab() {
+    const sandbox = sinon.createSandbox();
+    const sendTriggerStub = sandbox.stub(ASRouter, "sendTriggerMessage");
+    sendTriggerStub.withArgs(pdfMatch).resolves(testMessage);
+    sendTriggerStub.callThrough();
+
+    let win = await BrowserTestUtils.openNewBrowserWindow();
+
+    let doc = win.document;
+    let tab1 = await BrowserTestUtils.openNewForegroundTab(
+      win.gBrowser,
+      PDF_TEST_URL
+    );
+    tab1.focus();
+    await waitForCalloutScreen(doc, testMessageCalloutSelector);
+    ok(
+      doc.querySelector(`.${testMessageCalloutSelector}`),
+      "Feature callout rendered when opening a new tab with PDF url"
+    );
+
+    BrowserTestUtils.removeTab(tab1);
+    await waitForRemoved();
+
+    ok(
+      !doc.querySelector(`.${testMessageCalloutSelector}`),
+      "Feature callout disappears after closing foreground tab"
+    );
+
+    await BrowserTestUtils.closeWindow(win);
+    sandbox.restore();
+  }
+);
+
+add_task(
+  async function feature_callout_does_not_appear_when_opening_background_pdf_tab() {
+    const sandbox = sinon.createSandbox();
+    const sendTriggerStub = sandbox.stub(ASRouter, "sendTriggerMessage");
+    sendTriggerStub.withArgs(pdfMatch).resolves(testMessage);
+    sendTriggerStub.callThrough();
+
+    let win = await BrowserTestUtils.openNewBrowserWindow();
+    let doc = win.document;
+
+    let tab1 = await BrowserTestUtils.addTab(win.gBrowser, PDF_TEST_URL);
+    ok(
+      !doc.querySelector(`.${testMessageCalloutSelector}`),
+      "Feature callout not rendered when opening a background tab with PDF url"
+    );
+
+    BrowserTestUtils.removeTab(tab1);
+
+    ok(
+      !doc.querySelector(`.${testMessageCalloutSelector}`),
+      "Feature callout still not rendered after closing background tab with PDF url"
     );
 
     await BrowserTestUtils.closeWindow(win);

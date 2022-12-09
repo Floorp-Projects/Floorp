@@ -251,6 +251,8 @@
 
     _featureCallout: null,
 
+    _featureCalloutPanelId: null,
+
     get tabContainer() {
       delete this.tabContainer;
       return (this.tabContainer = document.getElementById("tabbrowser-tabs"));
@@ -336,8 +338,12 @@
       return this._instantiateFeatureCalloutTour;
     },
 
-    _instantiateFeatureCalloutTour(location) {
-      // Show Feature Callout in browser chrome when applicable
+    get featureCalloutPanelId() {
+      return this._featureCalloutPanelId;
+    },
+
+    _instantiateFeatureCalloutTour(location, panelId) {
+      this._featureCalloutPanelId = panelId;
       const { FeatureCallout } = ChromeUtils.importESModule(
         "chrome://browser/content/featureCallout.mjs"
       );
@@ -1087,13 +1093,25 @@
 
       let newTab = this.getTabForBrowser(newBrowser);
 
-      if (this._featureCallout) {
+      if (
+        this._featureCallout &&
+        this._featureCalloutPanelId !== newTab.linkedPanel
+      ) {
         this._featureCallout._endTour(true);
         this._featureCallout = null;
       }
 
-      if (newBrowser.currentURI.spec.endsWith(".pdf")) {
-        this._instantiateFeatureCalloutTour(newBrowser.currentURI);
+      // For now, only check for Feature Callout messages
+      // when viewing PDFs. Later, we can expand this to check
+      // for callout messages on every change of tab location.
+      if (
+        !this._featureCallout &&
+        newBrowser.currentURI.spec.endsWith(".pdf")
+      ) {
+        this._instantiateFeatureCalloutTour(
+          newBrowser.currentURI,
+          newTab.linkedPanel
+        );
         window.gBrowser.featureCallout.showFeatureCallout();
       }
 
@@ -6836,17 +6854,27 @@
             gBrowser._tabLayerCache.splice(tabCacheIndex, 1);
             gBrowser._getSwitcher().cleanUpTabAfterEviction(this.mTab);
           }
-        } else if (aLocation.spec.endsWith(".pdf")) {
+        } else {
+          if (
+            gBrowser.featureCallout &&
+            (gBrowser.featureCalloutPanelId !==
+              gBrowser.selectedTab.linkedPanel ||
+              gBrowser.featureCallout.source !== aLocation.spec)
+          ) {
+            gBrowser.featureCallout._endTour(true);
+            gBrowser.featureCallout = null;
+          }
+
           // For now, only check for Feature Callout messages
           // when viewing PDFs. Later, we can expand this to check
           // for callout messages on every change of tab location.
-          if (window.gBrowser.featureCallout) {
-            window.gBrowser.featureCallout._endTour(true);
-            window.gBrowser.featureCallout = null;
+          if (!gBrowser.featureCallout && aLocation.spec.endsWith(".pdf")) {
+            gBrowser.instantiateFeatureCalloutTour(
+              aLocation,
+              gBrowser.selectedTab.linkedPanel
+            );
+            gBrowser.featureCallout.showFeatureCallout();
           }
-
-          window.gBrowser.instantiateFeatureCalloutTour(aLocation);
-          window.gBrowser.featureCallout.showFeatureCallout();
         }
       }
 
