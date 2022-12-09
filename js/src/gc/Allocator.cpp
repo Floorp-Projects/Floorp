@@ -52,17 +52,6 @@ JSObject* gc::detail::AllocateObject(JSContext* cx, AllocKind kind,
   MOZ_ASSERT_IF(site && site->initialHeap() == TenuredHeap,
                 heap == TenuredHeap);
 
-  // We cannot trigger GC or make runtime assertions when nursery allocation
-  // is suppressed, either explicitly or because we are off-thread.
-  if (cx->isNurseryAllocSuppressed()) {
-    JSObject* obj = GCRuntime::tryNewTenuredObject<NoGC>(cx, kind, thingSize,
-                                                         nDynamicSlots);
-    if (MOZ_UNLIKELY(allowGC && !obj)) {
-      ReportOutOfMemory(cx);
-    }
-    return obj;
-  }
-
   JSRuntime* rt = cx->runtime();
   if (!rt->gc.checkAllocatorState<allowGC>(cx, kind)) {
     return nullptr;
@@ -108,7 +97,6 @@ JSObject* GCRuntime::tryNewNurseryObject(JSContext* cx, size_t thingSize,
                                          const JSClass* clasp,
                                          AllocSite* site) {
   MOZ_ASSERT(cx->isNurseryAllocAllowed());
-  MOZ_ASSERT(!cx->isNurseryAllocSuppressed());
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
 
   JSObject* obj =
@@ -172,7 +160,6 @@ Cell* GCRuntime::tryNewNurseryStringCell(JSContext* cx, size_t thingSize,
                                          AllocKind kind) {
   MOZ_ASSERT(IsNurseryAllocable(kind));
   MOZ_ASSERT(cx->isNurseryAllocAllowed());
-  MOZ_ASSERT(!cx->isNurseryAllocSuppressed());
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
 
   AllocSite* site = cx->zone()->unknownAllocSite();
@@ -201,15 +188,6 @@ Cell* gc::CellAllocator::AllocateStringCell(JSContext* cx, AllocKind kind,
   MOZ_ASSERT(size == sizeof(JSString) || size == sizeof(JSFatInlineString));
   MOZ_ASSERT(
       IsNurseryAllocable(kind));  // Atoms are allocated using Allocate().
-
-  // Off-thread alloc cannot trigger GC or make runtime assertions.
-  if (cx->isNurseryAllocSuppressed()) {
-    TenuredCell* cell = GCRuntime::tryNewTenuredThing<NoGC>(cx, kind, size);
-    if (MOZ_UNLIKELY(allowGC && !cell)) {
-      ReportOutOfMemory(cx);
-    }
-    return cell;
-  }
 
   JSRuntime* rt = cx->runtime();
   if (!rt->gc.checkAllocatorState<allowGC>(cx, kind)) {
@@ -250,7 +228,6 @@ JS::BigInt* GCRuntime::tryNewNurseryBigInt(JSContext* cx, size_t thingSize,
                                            AllocKind kind) {
   MOZ_ASSERT(IsNurseryAllocable(kind));
   MOZ_ASSERT(cx->isNurseryAllocAllowed());
-  MOZ_ASSERT(!cx->isNurseryAllocSuppressed());
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
 
   AllocSite* site = cx->zone()->unknownAllocSite();
@@ -281,16 +258,6 @@ JS::BigInt* gc::detail::AllocateBigInt(JSContext* cx, InitialHeap heap) {
   AllocKind kind = MapTypeToAllocKind<JS::BigInt>::kind;
   size_t size = sizeof(JS::BigInt);
   MOZ_ASSERT(size == Arena::thingSize(kind));
-
-  // Off-thread alloc cannot trigger GC or make runtime assertions.
-  if (cx->isNurseryAllocSuppressed()) {
-    TenuredCell* cell = GCRuntime::tryNewTenuredThing<NoGC>(cx, kind, size);
-    if (MOZ_UNLIKELY(allowGC && !cell)) {
-      ReportOutOfMemory(cx);
-      return nullptr;
-    }
-    return JS::BigInt::emplace(cell);
-  }
 
   JSRuntime* rt = cx->runtime();
   if (!rt->gc.checkAllocatorState<allowGC>(cx, kind)) {
