@@ -2177,18 +2177,9 @@ pref("extensions.pocket.refresh.hideRecentSaves.enabled", false);
 pref("signon.management.page.fileImport.enabled", false);
 
 #ifdef NIGHTLY_BUILD
-pref("signon.management.page.os-auth.enabled", false);
-
-// "not available"  - feature is not available (will be removed after QA).
-// "available"      - user can see feature offer.
-// "offered"        - we have offered feature to user and they have not yet made a decision.
-// "enabled"        - user opted in to the feature.
-// "disabled"       - user opted out of the feature.
-// will be enabled after QA round
-pref("signon.firefoxRelay.feature", "not available");
+pref("signon.management.page.os-auth.enabled", true);
 #else
 pref("signon.management.page.os-auth.enabled", false);
-pref("signon.firefoxRelay.feature", "not available");
 #endif
 pref("signon.management.page.breach-alerts.enabled", true);
 pref("signon.management.page.vulnerable-passwords.enabled", true);
