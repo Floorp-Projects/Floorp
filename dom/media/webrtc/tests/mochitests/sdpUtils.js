@@ -29,6 +29,16 @@ var sdputils = {
     return match[1];
   },
 
+  // Returns a list of all payload types, excluding rtx, in an sdp.
+  getPayloadTypes(sdp) {
+    const regex = /^a=rtpmap:([0-9]+) (?:(?!rtx).)*$/gim;
+    const pts = [];
+    for (const [line, pt] of sdp.matchAll(regex)) {
+      pts.push(pt);
+    }
+    return pts;
+  },
+
   // Finds all the extmap ids in the given sdp.  Note that this does NOT
   // consider m-sections, so a more generic version would need to
   // look at each m-section separately.
