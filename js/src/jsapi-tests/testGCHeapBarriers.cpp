@@ -8,6 +8,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 
+#include "gc/AllocKind.h"
 #include "gc/Cell.h"
 #include "gc/GCInternals.h"
 #include "gc/GCRuntime.h"
@@ -17,6 +18,7 @@
 #include "js/RootingAPI.h"
 #include "jsapi-tests/tests.h"
 #include "vm/Runtime.h"
+#include "vm/TypedArrayObject.h"
 
 #include "vm/JSContext-inl.h"
 
@@ -104,8 +106,12 @@ JS::ArrayBuffer CreateTenuredGCThing(JSContext* cx) {
 
 template <>
 JS::Uint8Array CreateTenuredGCThing(JSContext* cx) {
-  gc::AutoSuppressNurseryCellAlloc suppress(cx);
-  return JS::Uint8Array::create(cx, 100);
+  // Use internal APIs that lets us specify the InitialHeap so we can ensure
+  // that this is tenured.
+  JSObject* obj =
+      js::NewUint8ArrayWithLength(cx, 100, gc::InitialHeap::TenuredHeap);
+  MOZ_ASSERT(!IsInsideNursery(obj));
+  return JS::Uint8Array::fromObject(obj);
 }
 
 template <typename T>
