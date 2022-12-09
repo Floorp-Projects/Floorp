@@ -5621,6 +5621,15 @@ nsresult PresShell::SetResolutionAndScaleTo(float aResolution,
   if (mMobileViewportManager) {
     mMobileViewportManager->ResolutionUpdated(aOrigin);
   }
+  // Changing the resolution changes the visual viewport size which may
+  // make the current visual viewport offset out-of-bounds (if the size
+  // increased). APZ will reconcile this by sending a clamped visual
+  // viewport offset on the next repaint, but to avoid main-thread code
+  // observing an out-of-bounds offset until then, reclamp it here.
+  if (IsVisualViewportOffsetSet()) {
+    SetVisualViewportOffset(GetVisualViewportOffset(),
+                            GetLayoutViewportOffset());
+  }
   if (aOrigin == ResolutionChangeOrigin::Apz) {
     mResolutionUpdatedByApz = true;
   } else if (resolutionUpdated) {
