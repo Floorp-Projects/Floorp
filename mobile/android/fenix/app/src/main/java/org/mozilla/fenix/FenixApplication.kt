@@ -475,6 +475,9 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
     @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage
     private fun finishSetupMegazord(): Deferred<Unit> {
         return GlobalScope.async(Dispatchers.IO) {
+            if (Config.channel.isDebug) {
+                RustHttpConfig.allowEmulatorLoopback()
+            }
             RustHttpConfig.setClient(lazy { components.core.client })
 
             // Now viaduct (the RustHttp client) is initialized we can ask Nimbus to fetch
