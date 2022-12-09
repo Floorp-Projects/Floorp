@@ -99,7 +99,6 @@ web-platform-tests:
                     android-em-7.0-x86_64-qr/debug: ['mozilla-central']
                     android-em-7.0-x86_64-shippable-qr: ['mozilla-central']
                     android.*: []
-                    .*-tsan-qr/opt: ['trunk']
                     default: built-projects
     mozharness:
         chunked: true

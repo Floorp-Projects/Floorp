@@ -73,7 +73,6 @@ xpcshell:
                 by-test-platform:
                     android.*: []
                     windows10-64-2004-asan-qr/opt: []  # No XPCShell on ASAN yet
-                    .*-tsan-qr/opt: ['trunk']
                     default: built-projects
     chunks:
         by-test-platform:
