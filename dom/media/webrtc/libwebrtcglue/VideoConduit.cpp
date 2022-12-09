@@ -210,11 +210,10 @@ ConfigureVideoEncoderSettings(const VideoCodecConfig& aConfig,
   if (aConfig.mName == kVp9CodecName) {
     webrtc::VideoCodecVP9 vp9_settings =
         webrtc::VideoEncoder::GetDefaultVp9Settings();
-    if (is_screencast) {
-      // TODO(asapersson): Set to 2 for now since there is a DCHECK in
-      // VideoSendStream::ReconfigureVideoEncoder.
-      vp9_settings.numberOfSpatialLayers = 2;
-    } else {
+    if (!is_screencast) {
+      // Always configure only 1 spatial layer for screencapture as libwebrtc
+      // has some special requirements when SVC is active. For non-screencapture
+      // the spatial layers are experimentally configurable via a pref.
       vp9_settings.numberOfSpatialLayers = aConduit->SpatialLayers();
     }
     // VP9 denoising is disabled by default.
