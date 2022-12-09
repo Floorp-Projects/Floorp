@@ -1036,7 +1036,7 @@ class RootingContext {
   // we count recursion depth with RAII based AutoCheckRecursionLimit.
   uint32_t wasiRecursionDepth = 0u;
 
-  static constexpr uint32_t wasiRecursionDepthLimit = 100u;
+  static constexpr uint32_t wasiRecursionDepthLimit = 350u;
 #endif  // __wasi__
 
   static const RootingContext* get(const JSContext* cx) {
