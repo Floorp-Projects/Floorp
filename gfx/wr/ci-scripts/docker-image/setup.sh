@@ -35,6 +35,15 @@ apt-get install -y \
     software-properties-common \
     clang
 
+# some reftests fail with freetype >= 2.10, so downgrade to the version in
+# Debian buster. See bug 1804782.
+apt-get remove libfreetype-dev
+curl -LO http://snapshot.debian.org/archive/debian/20220718T031307Z/pool/main/f/freetype/libfreetype6_2.9.1-3%2Bdeb10u3_amd64.deb
+curl -LO http://snapshot.debian.org/archive/debian/20220718T031307Z/pool/main/f/freetype/libfreetype6-dev_2.9.1-3%2Bdeb10u3_amd64.deb
+
+dpkg -i libfreetype6*.deb
+rm libfreetype6*.deb
+
 # Other stuff we need
 
 # Normally, we'd
