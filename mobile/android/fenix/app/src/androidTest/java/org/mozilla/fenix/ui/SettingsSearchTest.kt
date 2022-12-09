@@ -422,6 +422,9 @@ class SettingsSearchTest {
                 "DuckDuckGo",
                 "ويكيبيديا (ar)",
             )
+            changeDefaultSearchEngine(activityTestRule, "ويكيبيديا (ar)")
+        }.submitQuery("firefox") {
+            verifyUrl("ar.m.wikipedia.org")
         }
     }
 
