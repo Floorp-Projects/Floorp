@@ -187,7 +187,7 @@ class PersistentBufferProviderShared : public PersistentBufferProvider,
 
   static already_AddRefed<PersistentBufferProviderShared> Create(
       gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-      KnowsCompositor* aKnowsCompositor);
+      KnowsCompositor* aKnowsCompositor, bool aWillReadFrequently = false);
 
   bool IsShared() const override { return true; }
 
@@ -213,10 +213,13 @@ class PersistentBufferProviderShared : public PersistentBufferProvider,
 
   bool PreservesDrawingState() const override { return false; }
 
+  bool IsAccelerated() const override;
+
  protected:
   PersistentBufferProviderShared(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                                  KnowsCompositor* aKnowsCompositor,
-                                 RefPtr<TextureClient>& aTexture);
+                                 RefPtr<TextureClient>& aTexture,
+                                 bool aWillReadFrequently);
 
   ~PersistentBufferProviderShared();
 
@@ -239,6 +242,8 @@ class PersistentBufferProviderShared : public PersistentBufferProvider,
   Maybe<uint32_t> mBack;
   // Offset of the texture in mTextures that is presented to the compositor.
   Maybe<uint32_t> mFront;
+  // Whether to avoid acceleration.
+  bool mWillReadFrequently = false;
 
   RefPtr<gfx::DrawTarget> mDrawTarget;
   RefPtr<gfx::SourceSurface> mSnapshot;
