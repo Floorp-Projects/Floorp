@@ -260,6 +260,7 @@ class SheetLoadData final
 
   bool BlocksLoadEvent() const { return !RootLoadData().IsLinkRelPreload(); }
 
+  bool IsSyncLoad() const override { return mSyncLoad; }
   bool IsLoading() const override { return mIsLoading; }
   bool IsCancelled() const override { return mIsCancelled; }
 
