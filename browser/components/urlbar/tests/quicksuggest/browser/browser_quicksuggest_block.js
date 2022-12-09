@@ -181,12 +181,12 @@ async function doBasicBlockTest({ suggestion, isBestMatch, block }) {
 
   // Check telemetry scalars.
   let index = 2;
-  let scalars = {
-    [TELEMETRY_SCALARS.IMPRESSION]: index,
-  };
+  let scalars = {};
   if (isSponsored) {
+    scalars[TELEMETRY_SCALARS.IMPRESSION_SPONSORED] = index;
     scalars[TELEMETRY_SCALARS.BLOCK_SPONSORED] = index;
   } else {
+    scalars[TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED] = index;
     scalars[TELEMETRY_SCALARS.BLOCK_NONSPONSORED] = index;
   }
   if (isBestMatch) {

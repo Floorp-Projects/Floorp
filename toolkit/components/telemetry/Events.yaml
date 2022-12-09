@@ -3299,7 +3299,9 @@ contextservices.quicksuggest:
       position: >
         The index of the suggestion in the list of results (1-based).
       suggestion_type: >
-        The type of suggestion, one of: "sponsored", "nonsponsored"
+        The type of suggestion, one of: "sponsored", "nonsponsored", "dynamic-wikipedia"
+      source: >
+        Where the suggestion came from, one of: "remote-settings", "merino"
     release_channel_collection: opt-out
     products:
       - "firefox"
