@@ -983,7 +983,6 @@ mozilla::GenericErrorResult<JS::Error> JSContext::alreadyReportedError() {
 JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
     : runtime_(runtime),
       kind_(ContextKind::Uninitialized),
-      nurserySuppressions_(this),
       options_(this, options),
       freeUnusedMemory(false),
       measuringExecutionTime_(this, false),
