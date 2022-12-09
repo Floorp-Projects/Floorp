@@ -52,6 +52,7 @@ struct SharedSubResourceCacheLoadingValueBase {
 
   virtual bool IsLoading() const = 0;
   virtual bool IsCancelled() const = 0;
+  virtual bool IsSyncLoad() const = 0;
 
   virtual void StartLoading() = 0;
   virtual void SetLoadCompleted() = 0;
@@ -161,8 +162,9 @@ class SharedSubResourceCache {
   }
 
   struct CompleteSubResource {
-    uint32_t mExpirationTime = 0;
     RefPtr<Value> mResource;
+    uint32_t mExpirationTime = 0;
+    bool mWasSyncLoad = false;
 
     inline bool Expired() const;
   };
@@ -360,19 +362,26 @@ void SharedSubResourceCache<Traits, Derived>::StartPendingLoadsForLoader(
 template <typename Traits, typename Derived>
 void SharedSubResourceCache<Traits, Derived>::Insert(LoadingValue& aValue) {
   auto key = KeyFromLoadingValue(aValue);
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#ifdef DEBUG
+  // We only expect a complete entry to be overriding when:
+  //  * It's expired.
+  //  * We're explicitly bypassing the cache.
+  //  * Our entry is a sync load that was completed after aValue started loading
+  //    async.
   for (const auto& entry : mComplete) {
     if (key.KeyEquals(entry.GetKey())) {
-      MOZ_ASSERT(
-          entry.GetData().Expired() || aValue.Loader().ShouldBypassCache(),
-          "Overriding existing complete entry?");
+      MOZ_ASSERT(entry.GetData().Expired() ||
+                     aValue.Loader().ShouldBypassCache() ||
+                     (entry.GetData().mWasSyncLoad && !aValue.IsSyncLoad()),
+                 "Overriding existing complete entry?");
     }
   }
 #endif
 
   // TODO(emilio): Use counters!
-  mComplete.InsertOrUpdate(key, CompleteSubResource{aValue.ExpirationTime(),
-                                                    aValue.ValueForCache()});
+  mComplete.InsertOrUpdate(
+      key, CompleteSubResource{aValue.ValueForCache(), aValue.ExpirationTime(),
+                               aValue.IsSyncLoad()});
 }
 
 template <typename Traits, typename Derived>
