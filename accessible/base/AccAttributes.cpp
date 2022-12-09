@@ -40,11 +40,18 @@ void AccAttributes::StringFromValueAndName(nsAtom* aAttrName,
         val->ToString(aValueString);
       },
       [&aValueString](const nsTArray<int32_t>& val) {
-        for (size_t i = 0; i < val.Length() - 1; i++) {
-          aValueString.AppendInt(val[i]);
-          aValueString.Append(u", ");
+        if (const size_t len = val.Length()) {
+          for (size_t i = 0; i < len - 1; i++) {
+            aValueString.AppendInt(val[i]);
+            aValueString.Append(u", ");
+          }
+          aValueString.AppendInt(val[len - 1]);
+        } else {
+          // The array is empty
+          NS_WARNING(
+              "Hmm, should we have used a DeleteEntry() for this instead?");
+          aValueString.Append(u"[ ]");
         }
-        aValueString.AppendInt(val[val.Length() - 1]);
       },
       [&aValueString](const CSSCoord& val) {
         aValueString.AppendFloat(val);
@@ -74,11 +81,18 @@ void AccAttributes::StringFromValueAndName(nsAtom* aAttrName,
         aValueString.AppendPrintf("Matrix4x4=%s", ToString(*val).c_str());
       },
       [&aValueString](const nsTArray<uint64_t>& val) {
-        for (size_t i = 0; i < val.Length() - 1; i++) {
-          aValueString.AppendInt(val[i]);
-          aValueString.Append(u", ");
+        if (const size_t len = val.Length()) {
+          for (size_t i = 0; i < len - 1; i++) {
+            aValueString.AppendInt(val[i]);
+            aValueString.Append(u", ");
+          }
+          aValueString.AppendInt(val[len - 1]);
+        } else {
+          // The array is empty
+          NS_WARNING(
+              "Hmm, should we have used a DeleteEntry() for this instead?");
+          aValueString.Append(u"[ ]");
         }
-        aValueString.AppendInt(val[val.Length() - 1]);
       });
 }
 
