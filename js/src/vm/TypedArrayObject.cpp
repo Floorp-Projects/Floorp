@@ -427,7 +427,8 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
 
   static TypedArrayObject* makeInstance(
       JSContext* cx, Handle<ArrayBufferObjectMaybeShared*> buffer,
-      size_t byteOffset, size_t len, HandleObject proto) {
+      size_t byteOffset, size_t len, HandleObject proto,
+      gc::InitialHeap heap = gc::InitialHeap::DefaultHeap) {
     MOZ_ASSERT(len <= maxByteLength() / BYTES_PER_ELEMENT);
 
     gc::AllocKind allocKind =
@@ -439,7 +440,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     if (proto) {
       obj = makeProtoInstance(cx, proto, allocKind);
     } else {
-      obj = newBuiltinClassInstance(cx, allocKind, gc::DefaultHeap);
+      obj = newBuiltinClassInstance(cx, allocKind, heap);
     }
     if (!obj || !obj->init(cx, buffer, byteOffset, len, BYTES_PER_ELEMENT)) {
       return nullptr;
@@ -896,14 +897,15 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
   // ES2023 draft rev cf86f1cdc28e809170733d74ea64fd0f3dd79f78
   // 23.2.5.1.1 AllocateTypedArray ( constructorName, newTarget, defaultProto [
   // , length ] )
-  static JSObject* fromLength(JSContext* cx, uint64_t nelements,
-                              HandleObject proto = nullptr) {
+  static TypedArrayObject* fromLength(
+      JSContext* cx, uint64_t nelements, HandleObject proto = nullptr,
+      gc::InitialHeap heap = gc::InitialHeap::DefaultHeap) {
     Rooted<ArrayBufferObject*> buffer(cx);
     if (!maybeCreateArrayBuffer(cx, nelements, &buffer)) {
       return nullptr;
     }
 
-    return makeInstance(cx, buffer, 0, nelements, proto);
+    return makeInstance(cx, buffer, 0, nelements, proto, heap);
   }
 
   static TypedArrayObject* fromArray(JSContext* cx, HandleObject other,
@@ -1069,6 +1071,11 @@ TypedArrayObject* js::NewTypedArrayWithTemplateAndBuffer(
     default:
       MOZ_CRASH("Unsupported TypedArray type");
   }
+}
+
+TypedArrayObject* js::NewUint8ArrayWithLength(JSContext* cx, int32_t len,
+                                              gc::InitialHeap heap) {
+  return TypedArrayObjectTemplate<uint8_t>::fromLength(cx, len, nullptr, heap);
 }
 
 template <typename T>

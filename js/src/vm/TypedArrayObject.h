@@ -10,6 +10,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/TextUtils.h"
 
+#include "gc/AllocKind.h"
 #include "gc/MaybeRooted.h"
 #include "js/Class.h"
 #include "js/experimental/TypedData.h"  // js::detail::TypedArrayLengthSlot
@@ -173,6 +174,10 @@ extern TypedArrayObject* NewTypedArrayWithTemplateAndArray(
 extern TypedArrayObject* NewTypedArrayWithTemplateAndBuffer(
     JSContext* cx, HandleObject templateObj, HandleObject arrayBuffer,
     HandleValue byteOffset, HandleValue length);
+
+extern TypedArrayObject* NewUint8ArrayWithLength(
+    JSContext* cx, int32_t len,
+    gc::InitialHeap heap = gc::InitialHeap::DefaultHeap);
 
 inline bool IsTypedArrayClass(const JSClass* clasp) {
   return &TypedArrayObject::classes[0] <= clasp &&
