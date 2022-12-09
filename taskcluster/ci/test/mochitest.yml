@@ -112,7 +112,6 @@ mochitest-plain:
             default:
                 by-test-platform:
                     android.*: []
-                    .*-tsan-qr/opt: ['trunk']
                     default: built-projects
     chunks:
         by-test-platform:
@@ -171,10 +170,7 @@ mochitest-a11y:
                     linux.*64-qr/debug: built-projects
                     default: []
             a11y-no-cache+1proc: ['trunk']
-            1proc:
-                by-test-platform:
-                    .*-tsan-qr/opt: ['trunk']
-                    default: built-projects
+            1proc: built-projects
     mozharness:
         mochitest-flavor: a11y
 
@@ -195,7 +191,7 @@ mochitest-browser-chrome:
             webrender-sw:
                 by-test-platform:
                     linux.*64(-asan)?-qr/(opt|debug): ['all']
-                    linux.*64-tsan-qr/opt: ['trunk']
+                    linux.*64-tsan-qr/opt: built-projects
                     linux.*64-shippable-qr/opt: ['release']
                     linux.*64(-shippable)?-qr/opt: built-projects
                     linux.*64-devedition-qr/opt: built-projects
@@ -321,10 +317,7 @@ mochitest-chrome:
                     android-em-7.0-x86_64-qr/debug: built-projects
                     linux.*64-qr/debug: built-projects
                     default: []
-            1proc:
-                by-test-platform:
-                    .*-tsan-qr/opt: ['trunk']
-                    default: built-projects
+            1proc: built-projects
     chunks:
         by-test-platform:
             .*(-ccov|-qr).*/.*: 3
@@ -381,7 +374,6 @@ mochitest-devtools-chrome:
             default:
                 by-test-platform:
                     android.*: []
-                    .*-tsan-qr/opt: ['trunk']
                     linux.*64-ccov-qr/opt: []
                     default: built-projects
     tier: default
@@ -497,7 +489,6 @@ mochitest-chrome-gpu:
                     default: []
             1proc:
                 by-test-platform:
-                    .*-tsan-qr/opt: ['trunk']
                     android.*/.*: []
                     default: built-projects
     tier: default
@@ -591,7 +582,6 @@ mochitest-media:
             default:
                 by-test-platform:
                     android.*: []
-                    .*-tsan-qr/opt: ['trunk']
                     linux.*(asan|ccov)/opt: []
                     .*(ccov/|asan/|-32).*: built-projects
                     (android|linux|windows10-64-2004|macos)(?!.*-qr).*: []
@@ -697,7 +687,6 @@ mochitest-webgl1-core:
                     default: []
             default:
                 by-test-platform:
-                    .*-tsan-qr/opt: ['trunk']
                     android.*: []
                     default: built-projects
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
@@ -757,7 +746,6 @@ mochitest-webgl1-ext:
                     default: []
             default:
                 by-test-platform:
-                    .*-tsan-qr/opt: ['trunk']
                     android.*: []
                     default: built-projects
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
@@ -819,7 +807,6 @@ mochitest-webgl2-core:
                     default: []
             default:
                 by-test-platform:
-                    .*-tsan-qr/opt: ['trunk']
                     android.*: []
                     default: built-projects
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
@@ -984,7 +971,6 @@ mochitest-remote:
             default:
                 by-test-platform:
                     android.*: []
-                    .*-tsan-qr/opt: ['trunk']
                     default: built-projects
     tier: default
     max-run-time: 5400
