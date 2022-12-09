@@ -507,7 +507,7 @@ const SitePermsAddonProvider = {
       return;
     }
 
-    // Pipe the change to the existing addon is there is one.
+    // Pipe the change to the existing addon if there is one.
     if (this.wrappersMapByOrigin.has(siteOriginNoSuffix)) {
       this.wrappersMapByOrigin
         .get(siteOriginNoSuffix)
@@ -637,6 +637,15 @@ const SitePermsAddonProvider = {
       ]);
       Services.obs.notifyObservers(null, "sitepermsaddon-provider-registered");
     } else if (topic === "perm-changed") {
+      if (data === "cleared") {
+        // In such case, `subject` is null, but we can simply uninstall all existing addons.
+        for (const addon of this.wrappersMapByOrigin.values()) {
+          addon.uninstall();
+        }
+        this.wrappersMapByOrigin.clear();
+        return;
+      }
+
       const perm = subject.QueryInterface(Ci.nsIPermission);
       this.handlePermissionChange(perm, data);
     }
