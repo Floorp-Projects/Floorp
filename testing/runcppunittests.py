@@ -5,16 +5,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import, print_function, with_statement
-import sys
+
 import os
+import sys
 from optparse import OptionParser
 from os import environ as env
+
 import manifestparser
-import mozprocess
-import mozinfo
 import mozcrash
 import mozfile
+import mozinfo
 import mozlog
+import mozprocess
 import mozrunner.utils
 
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
@@ -158,11 +160,6 @@ class CPPUnitTests(object):
                 self.log.info("ASan using symbolizer at %s" % llvmsym)
             else:
                 self.log.info("Failed to find ASan symbolizer at %s" % llvmsym)
-
-            # dom/media/webrtc/transport tests statically link in NSS, which
-            # causes ODR violations. See bug 1215679.
-            assert "ASAN_OPTIONS" not in env
-            env["ASAN_OPTIONS"] = "detect_leaks=0:detect_odr_violation=0"
 
         return env
 
