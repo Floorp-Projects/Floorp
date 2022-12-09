@@ -1127,7 +1127,6 @@ bool DelazifyTask::runTask(JSContext* cx) {
 
   AutoSetContextRuntime ascr(runtime);
   AutoSetContextOffThreadFrontendErrors recordErrors(&this->ec_);
-  gc::AutoSuppressNurseryCellAlloc noNurseryAlloc(cx);
 
   using namespace js::frontend;
 
