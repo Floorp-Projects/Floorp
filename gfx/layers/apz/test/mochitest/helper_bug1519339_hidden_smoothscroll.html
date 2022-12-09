@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Test for bug 1519339</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+    /* To exercise this bug, the page needs to be overflow:hidden in
+     * only one direction, and have actual room to scroll in the other.
+     * Otherwise we wouldn't try to hand the scroll off to APZ even
+     * before the fix.
+     */
+    html {
+      overflow-y: hidden;
+    }
+    div {
+      width: 200vw;
+      height: 10000px;
+      background-color: lightblue;
+    }
+  </style>
+</head>
+<body>
+  <div></div>
+  <script>
+    async function test() {
+      info("Testing scrollTo() in overflow:hidden direction");
+      let scrollEndPromise = promiseScrollend();
+      window.scrollTo({ top: 2000, behavior: 'smooth' });
+      await scrollEndPromise;
+      await promiseApzFlushedRepaints();
+      is(window.scrollY, 2000,
+         "scrollTo() in overflow:hidden direction scrolled to destination");
+
+      info("Testing scrollBy() in overflow:hidden direction");
+      scrollEndPromise = promiseScrollend();
+      window.scrollBy({ top: 2000, behavior: 'smooth'});
+      await scrollEndPromise;
+      await promiseApzFlushedRepaints();
+      is(window.scrollY, 4000,
+         "scrollBy() in overflow:hidden direction scrolled to destination");
+
+      info("Testing scrollByLines() in overflow:hidden direction");
+      scrollEndPromise = promiseScrollend();
+      window.scrollByLines(5, { behavior: 'smooth' });
+      await scrollEndPromise;
+      await promiseApzFlushedRepaints();
+      // Don't try to predict the exact scroll distance, just check we've
+      // scrolled at all.
+      ok(window.scrollY > 4000,
+         "scrollByLines() in overflow:hidden direction performed scrolling");
+
+    }
+    waitUntilApzStable()
+    .then(test)
+    .then(subtestDone, subtestFailed);
+  </script>
+</body>
+</html>

@@ -889,6 +889,11 @@ class ScrollFrameHelper : public nsIReflowCallback {
                          ScrollTriggeredByScript aTriggeredByScript,
                          UniquePtr<ScrollSnapTargetIds> aSnapTargetIds);
 
+  // Check whether APZ can scroll in the provided directions, keeping in mind
+  // that APZ currently cannot scroll along axes which are overflow:hidden.
+  bool CanApzScrollInTheseDirections(
+      mozilla::layers::ScrollDirections aDirections);
+
   // Removes any RefreshDriver observers we might have registered.
   void RemoveObservers();
 
