@@ -1,4 +1,4 @@
-const EXCLUDE_URL_PATTEANS = [
+const EXCLUDE_URL_PATTERNS = [
   "create",
   "delete",
   "edit",
@@ -19,10 +19,10 @@ const EXCLUDE_URL_PATTEANS = [
   "^resource:\/\/",
 ];
 
-const EXCLUDE_URL_PATTEANS_COMPILED = [];
+const EXCLUDE_URL_PATTERNS_COMPILED = [];
 
-for (let EXCLUDE_URL_PATTEAN of EXCLUDE_URL_PATTEANS) {
-  EXCLUDE_URL_PATTEANS_COMPILED.push(new RegExp(EXCLUDE_URL_PATTEAN));
+for (let EXCLUDE_URL_PATTERN of EXCLUDE_URL_PATTERNS) {
+  EXCLUDE_URL_PATTERNS_COMPILED.push(new RegExp(EXCLUDE_URL_PATTERN));
 }
 
 const tabsLastActivity = {};
@@ -106,8 +106,8 @@ async function setDiskCache(enabled) {
     });
     for (let tab of tabs) {
       let target = true;
-      for (let EXCLUDE_URL_PATTEAN_COMPILED of EXCLUDE_URL_PATTEANS_COMPILED) {
-        if (EXCLUDE_URL_PATTEAN_COMPILED.test(tab.url)) {
+      for (let EXCLUDE_URL_PATTERN_COMPILED of EXCLUDE_URL_PATTERNS_COMPILED) {
+        if (EXCLUDE_URL_PATTERN_COMPILED.test(tab.url)) {
           target = false;
         }
       }
