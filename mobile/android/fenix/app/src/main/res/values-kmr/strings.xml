@@ -631,6 +631,9 @@
     <!-- Title to show in alert when a lot of tabs are to be opened
     %d is a placeholder for the number of tabs that will be opened -->
     <string name="open_all_warning_title">%d hilpekînan veke?</string>
+    <!-- Message to warn users that a large number of tabs will be opened
+    %s will be replaced by app name. -->
+    <string name="open_all_warning_message">Vekirina zêde ya helpekînan dibe ku di vekirina rûpelan de geroka %sê girantir bike. Tu dixwazî berdewam bikî?</string>
     <!-- Dialog button text for confirming open all tabs -->
     <string name="open_all_warning_confirm">Hilpekînên vekirî</string>
     <!-- Dialog button text for canceling open all tabs -->
@@ -1103,6 +1106,12 @@
     <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
     %1$s is a placeholder that will be replaced by the app name (Fenix). -->
     <string name="notification_default_browser_text">%1$s bila bibe geroka te ya sereke</string>
+
+    <!-- Title shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_title">Gerîna veşartî biceribîne</string>
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">Di %1$sê de bêyî ku xurek û raboriya te were tomarkirin, bigere</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
