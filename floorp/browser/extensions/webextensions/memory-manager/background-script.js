@@ -19,6 +19,12 @@ const EXCLUDE_URL_PATTEANS = [
   "^resource:\/\/",
 ];
 
+const EXCLUDE_URL_PATTEANS_COMPILED = [];
+
+for (let EXCLUDE_URL_PATTEAN of EXCLUDE_URL_PATTEANS) {
+  EXCLUDE_URL_PATTEANS_COMPILED.push(new RegExp(EXCLUDE_URL_PATTEAN));
+}
+
 const tabsLastActivity = {};
 
 function handleUpdateActivity(tabId) {
@@ -100,8 +106,8 @@ async function setDiskCache(enabled) {
     });
     for (let tab of tabs) {
       let target = true;
-      for (let EXCLUDE_URL_PATTEAN of EXCLUDE_URL_PATTEANS) {
-        if ((new RegExp(EXCLUDE_URL_PATTEAN)).test(tab.url)) {
+      for (let EXCLUDE_URL_PATTEAN_COMPILED of EXCLUDE_URL_PATTEANS_COMPILED) {
+        if (EXCLUDE_URL_PATTEAN_COMPILED.test(tab.url)) {
           target = false;
         }
       }
