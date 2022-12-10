@@ -14,9 +14,6 @@ const EXCLUDE_URL_PATTEANS = [
   "^resource:\/\/",
 ];
 
-const BROWSER_CACHE_MEMORY_ENABLE_PREF = "browser.cache.memory.enable";
-const BROWSER_CACHE_DISK_ENABLE_PREF = "browser.cache.disk.enable";
-
 const tabsLastActivity = {};
 
 function handleUpdateActivity(tabId) {
@@ -52,20 +49,27 @@ browser.tabs.onUpdated.addListener(function(tabId, changeInfo) {
   }
 });
 
+async function setMemCache(enabled) {
+  await browser.aboutConfigPrefs.setBoolPref("browser.cache.memory.enable", enabled);
+}
+async function setDiskCache(enabled) {
+  await browser.aboutConfigPrefs.setBoolPref("browser.cache.disk.enable", enabled);
+}
+
 (async () => {
   let isTestMode = await browser.aboutConfigPrefs.getPref("floorp.tabsleep.testmode.enabled");
   if (isTestMode) console.log("Test mode is enabled");
 
   let sysMemGB = await browser.memoryInfo.getSystemMemorySize() / 1024 / 1024 / 1024;
   if (sysMemGB <= 3) {
-    await browser.aboutConfigPrefs.setBoolPref(BROWSER_CACHE_MEMORY_ENABLE_PREF, false);
-    await browser.aboutConfigPrefs.setBoolPref(BROWSER_CACHE_DISK_ENABLE_PREF, true);
+    await setMemCache(false);
+    await setDiskCache(true);
   } else if (sysMemGB >= 30) {
-    await browser.aboutConfigPrefs.setBoolPref(BROWSER_CACHE_MEMORY_ENABLE_PREF, true);
-    await browser.aboutConfigPrefs.setBoolPref(BROWSER_CACHE_DISK_ENABLE_PREF, false);
+    await setMemCache(true);
+    await setDiskCache(false);
   } else {
-    await browser.aboutConfigPrefs.setBoolPref(BROWSER_CACHE_MEMORY_ENABLE_PREF, true);
-    await browser.aboutConfigPrefs.setBoolPref(BROWSER_CACHE_DISK_ENABLE_PREF, true);
+    await setMemCache(true);
+    await setDiskCache(true);
   }
 
   let TAB_TIMEOUT_MILISEC = 60 * 1000 * (sysMemGB * 3);
