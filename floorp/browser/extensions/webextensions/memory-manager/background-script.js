@@ -13,7 +13,6 @@ const EXCLUDE_URL_PATTEANS = [
   "secret",
   "wp-admin",
   "cart",
-  "watch",
   "upload",
   "^about:",
   "^chrome:\/\/",
