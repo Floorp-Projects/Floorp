@@ -68,12 +68,7 @@ browser.tabs.onUpdated.addListener(function(tabId, changeInfo) {
     await browser.aboutConfigPrefs.setBoolPref(BROWSER_CACHE_DISK_ENABLE_PREF, true);
   }
 
-  let TAB_TIMEOUT_MILISEC = 60 * 1000 * 60;
-  if (sysMemGB <= 2) {
-    TAB_TIMEOUT_MILISEC = 60 * 1000 * 3;
-  } else {
-    TAB_TIMEOUT_MILISEC = 60 * 1000 * (sysMemGB * 3);
-  }
+  let TAB_TIMEOUT_MILISEC = 60 * 1000 * (sysMemGB * 3);
   if (isTestMode) {
     TAB_TIMEOUT_MILISEC = 60 * 1000 * 2;
   }
