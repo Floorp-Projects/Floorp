@@ -95,6 +95,9 @@ enum TextureAllocationFlags {
   // The texture is going to be updated using UpdateFromSurface and needs to
   // support that call.
   ALLOC_UPDATE_FROM_SURFACE = 1 << 7,
+
+  // Do not use an accelerated texture type.
+  ALLOC_DO_NOT_ACCELERATE = 1 << 8,
 };
 
 enum class BackendSelector { Content, Canvas };
