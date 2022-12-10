@@ -73,6 +73,11 @@ async function setDiskCache(enabled) {
   }
 
   let TAB_TIMEOUT_MILISEC = 60 * 1000 * (sysMemGB * 3);
+  let tabTimeoutMilisecPref = await browser.aboutConfigPrefs.getPref("floorp.tabsleep.tabTimeoutMiliseconds");
+  if (tabTimeoutMilisecPref !== undefined &&
+     tabTimeoutMilisecPref !== 0) {
+    TAB_TIMEOUT_MILISEC = tabTimeoutMilisecPref;
+  }
   if (isTestMode) {
     TAB_TIMEOUT_MILISEC = 60 * 1000 * 2;
   }
