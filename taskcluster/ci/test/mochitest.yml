@@ -980,5 +980,5 @@ mochitest-remote:
             - --setpref=remote.log.level=Trace
     virtualization:
         by-test-platform:
-            windows10-64.*: hardware
+            windows10-64.*: virtual
             default: virtual
