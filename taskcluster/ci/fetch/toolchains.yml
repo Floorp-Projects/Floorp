@@ -626,4 +626,4 @@ symbol-scrapers:
     fetch:
         type: git
         repo: http://github.com/mozilla/symbol-scrapers
-        revision: 946797311c65fd397785d41c69f967f09abab9e6
+        revision: f61d24345d27760a5c2dc8f9370368bdaa9a4e82
