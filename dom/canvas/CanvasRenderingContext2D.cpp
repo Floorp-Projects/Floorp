@@ -1348,7 +1348,13 @@ void CanvasRenderingContext2D::RestoreClipsAndTransformToTarget() {
 
 bool CanvasRenderingContext2D::BorrowTarget(const IntRect& aPersistedRect,
                                             bool aNeedsClear) {
-  if (!mBufferProvider || mBufferProvider->RequiresRefresh()) {
+  // We are attempting to request a DrawTarget from the current
+  // PersistentBufferProvider. However, if the provider needs to be refreshed,
+  // or if it is accelerated and the application has requested that we disallow
+  // acceleration, then we skip trying to use this provider so that it will be
+  // recreated by EnsureTarget later.
+  if (!mBufferProvider || mBufferProvider->RequiresRefresh() ||
+      (mBufferProvider->IsAccelerated() && mWillReadFrequently)) {
     return false;
   }
   mTarget = mBufferProvider->BorrowDrawTarget(aPersistedRect);
@@ -1564,7 +1570,9 @@ bool CanvasRenderingContext2D::TryAcceleratedTarget(
     // to be refreshed and we should avoid using acceleration in the future.
     mAllowAcceleration = false;
   }
-  if (!mAllowAcceleration) {
+  // Don't try creating an accelerate DrawTarget if either acceleration failed
+  // previously or if the application expects acceleration to be slow.
+  if (!mAllowAcceleration || mWillReadFrequently) {
     return false;
   }
   aOutDT = DrawTargetWebgl::Create(GetSize(), GetSurfaceFormat());
@@ -1815,6 +1823,8 @@ CanvasRenderingContext2D::SetContextOptions(JSContext* aCx,
     aRvForDictionaryInit.Throw(NS_ERROR_UNEXPECTED);
     return NS_ERROR_UNEXPECTED;
   }
+
+  mWillReadFrequently = attributes.mWillReadFrequently;
 
   mContextAttributesHasAlpha = attributes.mAlpha;
   UpdateIsOpaque();
