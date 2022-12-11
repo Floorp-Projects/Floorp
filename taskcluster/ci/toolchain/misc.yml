@@ -382,3 +382,4 @@ linux64-afl-instrumentation-2.5:
             - afl-2.5
         toolchain:
             - linux64-clang
+            - linux64-toolchain-sysroot
