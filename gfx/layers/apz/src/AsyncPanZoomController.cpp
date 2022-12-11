@@ -1540,12 +1540,6 @@ nsEventStatus AsyncPanZoomController::OnScaleBegin(
     return nsEventStatus_eIgnore;
   }
 
-  // If zooming is not allowed, this is a two-finger pan.
-  // Start tracking panning distance and velocity.
-  if (!ZoomConstraintsAllowZoom()) {
-    StartTouch(aEvent.mLocalFocusPoint, aEvent.mTimeStamp);
-  }
-
   // For platforms that don't support APZ zooming, dispatch a message to the
   // content controller, it may want to do something else with this gesture.
   // FIXME: bug 1525793 -- this may need to handle zooming or not on a
@@ -1592,11 +1586,11 @@ nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
   HandlePinchLocking(aEvent);
   bool allowZoom = ZoomConstraintsAllowZoom() && !mPinchLocked;
 
-  // If zooming is not allowed, this is a two-finger pan.
+  // If we are pinch-locked, this is a two-finger pan.
   // Tracking panning distance and velocity.
   // UpdateWithTouchAtDevicePoint() acquires the tree lock, so
   // it cannot be called while the mRecursiveMutex lock is held.
-  if (!allowZoom) {
+  if (mPinchLocked) {
     mX.UpdateWithTouchAtDevicePoint(aEvent.mLocalFocusPoint.x,
                                     aEvent.mTimeStamp);
     mY.UpdateWithTouchAtDevicePoint(aEvent.mLocalFocusPoint.y,
@@ -1796,7 +1790,7 @@ nsEventStatus AsyncPanZoomController::OnScaleEnd(
 
   if (aEvent.mType == PinchGestureInput::PINCHGESTURE_FINGERLIFTED) {
     // One finger is still down, so transition to a TOUCHING state
-    if (ZoomConstraintsAllowZoom()) {
+    if (!mPinchLocked) {
       mPanDirRestricted = false;
       mLastTouch.mPosition = mStartTouch =
           ToExternalPoint(aEvent.mScreenOffset, aEvent.mFocusPoint);
@@ -1804,8 +1798,8 @@ nsEventStatus AsyncPanZoomController::OnScaleEnd(
       StartTouch(aEvent.mLocalFocusPoint, aEvent.mTimeStamp);
       SetState(TOUCHING);
     } else {
-      // If zooming isn't allowed, StartTouch() was already called
-      // in OnScaleBegin().
+      // If we are pinch locked, StartTouch() was already called
+      // when we entered the pinch lock.
       StartPanning(ToExternalPoint(aEvent.mScreenOffset, aEvent.mFocusPoint),
                    aEvent.mTimeStamp);
     }
