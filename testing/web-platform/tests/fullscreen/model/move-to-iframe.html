@@ -8,13 +8,19 @@
 <div></div>
 <iframe></iframe>
 <script>
-async_test(t => {
-  t.add_cleanup(() => {
-    Promise.resolve(document.exitFullscreen()).catch(() => {});
-  });
-  const div = document.querySelector("div");
-  const iframe = document.querySelector("iframe");
-  document.onfullscreenchange = t.step_func(event => {
+  promise_test(async (t) => {
+    t.add_cleanup(() => {
+      if (document.fullscreenElement) {
+        return document.exitFullscreen();
+      }
+    });
+    const div = document.querySelector("div");
+    const iframe = document.querySelector("iframe");
+    const [, event] = await Promise.all([
+      trusted_request(div),
+      fullScreenChange(),
+    ]);
+
     assert_equals(document.fullscreenElement, div);
     assert_equals(event.target, div);
 
@@ -25,13 +31,14 @@ async_test(t => {
     // element synchronously becomes null.
     assert_equals(document.fullscreenElement, null);
 
-    div.onfullscreenchange = t.unreached_func("fullscreenchange fired on element");
-    iframe.contentDocument.onfullscreenchange = t.unreached_func("fullscreenchange fired on other document");
-    document.onfullscreenchange = t.step_func_done(event => {
-      assert_equals(document.fullscreenElement, null);
-      assert_equals(event.target, document);
-    });
+    div.onfullscreenchange = t.unreached_func(
+      "fullscreenchange fired on element"
+    );
+    iframe.contentDocument.onfullscreenchange = t.unreached_func(
+      "fullscreenchange fired on other document"
+    );
+    const secondEvent = await fullScreenChange();
+    assert_equals(document.fullscreenElement, null);
+    assert_equals(secondEvent.target, document);
   });
-  trusted_request(div);
-});
 </script>
