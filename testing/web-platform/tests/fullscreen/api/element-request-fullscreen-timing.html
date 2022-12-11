@@ -2,12 +2,13 @@
 <title>Element#requestFullscreen() timing</title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
+<script src="/resources/testdriver.js"></script>
+<script src="/resources/testdriver-vendor.js"></script>
 <script src="../trusted-click.js"></script>
 <div id="log"></div>
 <script>
-async_test(t => {
+promise_test(async t => {
   const div = document.querySelector('div');
-  trusted_request(t, div);
 
   // If fullscreenchange is an animation frame event, then animation frame
   // callbacks should be run after it is fired, before the timer callback.
@@ -25,6 +26,7 @@ async_test(t => {
     }
   });
   document.onfullscreenchange = window.onresize = callback;
+  await trusted_request(div);
 }, 'Timing of fullscreenchange and resize events');
 
 async_test(t => {
@@ -33,13 +35,7 @@ async_test(t => {
   requestAnimationFrame(t.step_func(() => {
     var promise = document.createElement('a').requestFullscreen();
     var promise_executed = false;
-    if (promise) {
-      promise.catch(()=>{promise_executed = true; });
-    } else {
-      // if promises aren't supported treat it as executed.
-      promise_executed = true;
-    }
-
+    promise.catch(()=>{promise_executed = true; });
     // If fullscreenerror is an animation frame event, then animation frame
     // callbacks should be run after it is fired, before the timer callback.
     document.onfullscreenerror = t.step_func(() => {
