@@ -8,6 +8,7 @@
   <CurrentIssues>
     <ID>AbsentOrWrongFileLicense:AutoFitTextureView.kt$mozilla.components.feature.qr.views.AutoFitTextureView.kt</ID>
     <ID>AbsentOrWrongFileLicense:QrFragment.kt$mozilla.components.feature.qr.QrFragment.kt</ID>
+    <ID>FunctionParameterNaming:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$_: View</ID>
     <ID>MaxLineLength:WebExtensionSupport.kt$WebExtensionSupport.&lt;no name provided&gt;$override</ID>
     <ID>MaxLineLength:WebExtensionSupport.kt$WebExtensionSupport.&lt;no name provided&gt;$val sessionId = openTab(store, onNewTabOverride, onSelectTabOverride, extension, engineSession)</ID>
     <ID>UndocumentedPublicClass:AutoSave.kt$AutoSave</ID>
@@ -29,10 +30,6 @@
     <ID>UndocumentedPublicClass:CustomTabsService.kt$CustomTabsService : AbstractCustomTabsService</ID>
     <ID>UndocumentedPublicClass:CustomTabsServiceStore.kt$CustomTabsServiceStore : Store</ID>
     <ID>UndocumentedPublicClass:DefaultComponents.kt$DefaultComponents</ID>
-    <ID>UndocumentedPublicClass:Dependencies.kt$Dependencies</ID>
-    <ID>UndocumentedPublicClass:Dependencies.kt$Versions</ID>
-    <ID>UndocumentedPublicClass:Dependencies.kt$Versions$AndroidX</ID>
-    <ID>UndocumentedPublicClass:Dependencies.kt$Versions$Firebase</ID>
     <ID>UndocumentedPublicClass:DeviceRecyclerViewAdapter.kt$DeviceRecyclerViewAdapter$ViewHolder : ViewHolder</ID>
     <ID>UndocumentedPublicClass:DiskIconLoader.kt$DiskIconLoader$LoaderDiskCache</ID>
     <ID>UndocumentedPublicClass:DiskIconPreparer.kt$DiskIconPreparer$PreparerDiskCache</ID>
@@ -85,9 +82,7 @@
     <ID>UndocumentedPublicClass:PromptRequest.kt$PromptRequest.TimeSelection$Type</ID>
     <ID>UndocumentedPublicClass:ProtectedDataAdapter.kt$ProtectedDataAdapter : Adapter</ID>
     <ID>UndocumentedPublicClass:ProtectedDataAdapter.kt$ProtectedDataAdapter$Holder : ViewHolder</ID>
-    <ID>UndocumentedPublicClass:Providers.kt$DomainAutocompleteProvider</ID>
     <ID>UndocumentedPublicClass:Providers.kt$DomainList</ID>
-    <ID>UndocumentedPublicClass:PublicSuffixListPlugin.kt$PublicSuffixListData</ID>
     <ID>UndocumentedPublicClass:PushProcessor.kt$PushError$MalformedMessage : PushError</ID>
     <ID>UndocumentedPublicClass:PushProcessor.kt$PushError$Network : PushError</ID>
     <ID>UndocumentedPublicClass:PushProcessor.kt$PushError$Registration : PushError</ID>
@@ -168,10 +163,10 @@
     <ID>UndocumentedPublicFunction:DiskIconLoader.kt$DiskIconLoader.LoaderDiskCache$fun getIconData(context: Context, resource: IconRequest.Resource): ByteArray?</ID>
     <ID>UndocumentedPublicFunction:DiskIconPreparer.kt$DiskIconPreparer.PreparerDiskCache$fun getResources(context: Context, request: IconRequest): List&lt;IconRequest.Resource&gt;</ID>
     <ID>UndocumentedPublicFunction:Domain.kt$Domain.Companion$fun create(url: String): Domain</ID>
-    <ID>UndocumentedPublicFunction:DomainMatcher.kt$// FIXME implement Fennec-style segment matching logic // See https://github.com/mozilla-mobile/android-components/issues/1279 fun segmentAwareDomainMatch(query: String, urls: Iterable&lt;String&gt;): DomainMatch?</ID>
+    <ID>UndocumentedPublicFunction:DomainMatcher.kt$fun segmentAwareDomainMatch(query: String, urls: Iterable&lt;String&gt;): DomainMatch?</ID>
     <ID>UndocumentedPublicFunction:DownloadManager.kt$DownloadManager$fun unregisterListeners()</ID>
     <ID>UndocumentedPublicFunction:DownloadManager.kt$fun DownloadManager.validatePermissionGranted(context: Context)</ID>
-    <ID>UndocumentedPublicFunction:DownloadUtils.kt$DownloadUtils$// Some site add extra information after the mimetype, for example 'application/pdf; qs=0.001' // we just want to extract the mimeType and ignore the rest. fun sanitizeMimeType(mimeType: String?): String?</ID>
+    <ID>UndocumentedPublicFunction:DownloadUtils.kt$DownloadUtils$fun sanitizeMimeType(mimeType: String?): String?</ID>
     <ID>UndocumentedPublicFunction:Engine.kt$Engine.BrowsingData$fun contains(type: Int)</ID>
     <ID>UndocumentedPublicFunction:Engine.kt$Engine.BrowsingData.Companion$fun all()</ID>
     <ID>UndocumentedPublicFunction:Engine.kt$Engine.BrowsingData.Companion$fun allCaches()</ID>
@@ -201,7 +196,6 @@
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onPromptRequest(promptRequest: PromptRequest)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onRecordingStateChanged(devices: List&lt;RecordingDevice&gt;)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onSecurityChange(secure: Boolean, host: String? = null, issuer: String? = null)</ID>
-    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onThumbnailChange(bitmap: Bitmap?)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onTitleChange(title: String)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onTrackerBlocked(tracker: Tracker)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onTrackerBlockingEnabledChange(enabled: Boolean)</ID>
@@ -257,7 +251,7 @@
     <ID>UndocumentedPublicFunction:JexlValue.kt$JexlValue$abstract operator fun div(other: JexlValue): JexlValue</ID>
     <ID>UndocumentedPublicFunction:JexlValue.kt$JexlValue$abstract operator fun plus(other: JexlValue): JexlValue</ID>
     <ID>UndocumentedPublicFunction:JexlValue.kt$JexlValue$abstract operator fun times(other: JexlValue): JexlValue</ID>
-    <ID>UndocumentedPublicFunction:Log.kt$Log$// Only for testing @VisibleForTesting fun reset()</ID>
+    <ID>UndocumentedPublicFunction:Log.kt$Log$@VisibleForTesting fun reset()</ID>
     <ID>UndocumentedPublicFunction:LogSink.kt$LogSink$fun log( priority: Log.Priority = Log.Priority.DEBUG, tag: String? = null, throwable: Throwable? = null, message: String? = null, )</ID>
     <ID>UndocumentedPublicFunction:LoginFragment.kt$LoginFragment.Companion$fun create(authUrl: String, redirectUrl: String): LoginFragment</ID>
     <ID>UndocumentedPublicFunction:LoginFragment.kt$LoginFragment.OnLoginCompleteListener$fun onLoginComplete(code: String, state: String, action: String, fragment: LoginFragment)</ID>
@@ -278,12 +272,9 @@
     <ID>UndocumentedPublicFunction:ReversibleString.kt$ReversibleString$abstract fun substring(startIndex: Int): ReversibleString</ID>
     <ID>UndocumentedPublicFunction:ReversibleString.kt$fun String.reverse(): ReversibleString</ID>
     <ID>UndocumentedPublicFunction:ReversibleString.kt$fun String.reversible(): ReversibleString</ID>
-    <ID>UndocumentedPublicFunction:SafeBundle.kt$SafeBundle$fun &lt;T : Parcelable&gt; getParcelable(name: String): T?</ID>
     <ID>UndocumentedPublicFunction:SafeBundle.kt$SafeBundle$fun getInt(name: String, defaultValue: Int = 0): Int</ID>
     <ID>UndocumentedPublicFunction:SafeBundle.kt$SafeBundle$fun getString(name: String): String?</ID>
     <ID>UndocumentedPublicFunction:SafeBundle.kt$SafeBundle$fun keySet(): Set&lt;String&gt;?</ID>
-    <ID>UndocumentedPublicFunction:SafeIntent.kt$SafeIntent$fun &lt;T : Parcelable&gt; getParcelableArrayListExtra(name: String): ArrayList&lt;T&gt;?</ID>
-    <ID>UndocumentedPublicFunction:SafeIntent.kt$SafeIntent$fun &lt;T : Parcelable&gt; getParcelableExtra(name: String): T?</ID>
     <ID>UndocumentedPublicFunction:SafeIntent.kt$SafeIntent$fun getBooleanExtra(name: String, defaultValue: Boolean): Boolean</ID>
     <ID>UndocumentedPublicFunction:SafeIntent.kt$SafeIntent$fun getBundleExtra(name: String): SafeBundle?</ID>
     <ID>UndocumentedPublicFunction:SafeIntent.kt$SafeIntent$fun getCharSequenceExtra(name: String): CharSequence?</ID>
@@ -300,7 +291,7 @@
     <ID>UndocumentedPublicFunction:SitePermissions.kt$SitePermissions.Status$fun isAllowed()</ID>
     <ID>UndocumentedPublicFunction:SitePermissions.kt$SitePermissions.Status$fun toggle(): Status</ID>
     <ID>UndocumentedPublicFunction:SitePermissionsRules.kt$SitePermissionsRules.Action$fun toStatus(): SitePermissions.Status</ID>
-    <ID>UndocumentedPublicFunction:StorageUtils.kt$StorageUtils$// Borrowed from https://gist.github.com/ademar111190/34d3de41308389a0d0d8 fun levenshteinDistance(a: String, b: String): Int</ID>
+    <ID>UndocumentedPublicFunction:StorageUtils.kt$StorageUtils$fun levenshteinDistance(a: String, b: String): Int</ID>
     <ID>UndocumentedPublicFunction:Store.kt$Store.Subscription.Binding$fun unbind()</ID>
     <ID>UndocumentedPublicFunction:String.kt$fun String.isEmail()</ID>
     <ID>UndocumentedPublicFunction:String.kt$fun String.isGeoLocation()</ID>
@@ -334,9 +325,28 @@
     <ID>UndocumentedPublicFunction:Types.kt$fun mozilla.components.concept.sync.Device.into(): Device</ID>
     <ID>UndocumentedPublicFunction:Types.kt$fun mozilla.components.concept.sync.TabData.into(): TabHistoryEntry</ID>
     <ID>UndocumentedPublicFunction:WebAppManifestParser.kt$WebAppManifestParser$fun serialize(manifest: WebAppManifest)</ID>
-    <ID>UndocumentedPublicFunction:WebserverRule.kt$WebserverRule$fun url(path: String = ""): String</ID>
     <ID>UndocumentedPublicFunction:WorkManagerSyncManager.kt$fun getLastSynced(context: Context): Long</ID>
     <ID>UndocumentedPublicFunction:nodes.kt$AstNode$open fun toString(level: Int, isTopLevel: Boolean = true): String</ID>
-    <ID>UnusedPrivateMember:GeckoPromptDelegate.kt$GeckoPromptDelegate$private operator fun Int.contains(mask: Int): Boolean</ID>
+    <ID>UnnecessaryAbstractClass:AccountStorage.kt$AbnormalAccountStorageEvent$AbnormalAccountStorageEvent</ID>
+    <ID>UnnecessaryAbstractClass:CrashReporter.kt$CrashReporterException$CrashReporterException</ID>
+    <ID>UseRequire:AutoFitTextureView.kt$AutoFitTextureView$throw IllegalArgumentException("Size cannot be negative.")</ID>
+    <ID>UseRequire:BrowserStore.kt$BrowserStore$throw IllegalArgumentException("Duplicate tabs found")</ID>
+    <ID>UseRequire:BrowserStore.kt$BrowserStore$throw IllegalArgumentException("Selected tab does not exist")</ID>
+    <ID>UseRequire:CrashReporter.kt$CrashReporter$throw IllegalArgumentException("No crash reporter services defined")</ID>
+    <ID>UseRequire:CustomTabIntentProcessor.kt$CustomTabIntentProcessor$throw IllegalArgumentException("getAdditionalHeaders() intent bundle contains wrong key value pair")</ID>
+    <ID>UseRequire:DeviceFragment.kt$DeviceFragment$throw IllegalArgumentException("$context must implement OnDeviceListInteractionListener")</ID>
+    <ID>UseRequire:FxaAccountManager.kt$FxaAccountManager$throw IllegalArgumentException("Set of supported engines can't be empty")</ID>
+    <ID>UseRequire:Headers.kt$Header$throw IllegalArgumentException("Header name cannot be empty")</ID>
+    <ID>UseRequire:HttpURLConnectionClient.kt$HttpURLConnectionClient$throw IllegalArgumentException("Client doesn't support private request")</ID>
+    <ID>UseRequire:LinkingMiddleware.kt$LinkingMiddleware$throw IllegalArgumentException("AddMultipleTabsAction does not support tabs with engine sessions")</ID>
+    <ID>UseRequire:OkHttpClient.kt$OkHttpClient$throw IllegalArgumentException("Client doesn't support private request")</ID>
+    <ID>UseRequire:SearchEngine.kt$throw IllegalArgumentException("URL does not contain search terms placeholder")</ID>
+    <ID>UseRequire:StoreExtensions.kt$throw IllegalArgumentException("Lifecycle is already DESTROYED")</ID>
+    <ID>UseRequire:SystemEngineSession.kt$SystemEngineSession$throw IllegalArgumentException("Can only restore from SystemEngineSessionState")</ID>
+    <ID>UseRequire:TabGroupReducer.kt$throw IllegalArgumentException("Tab group with same ID already exists")</ID>
+    <ID>UseRequire:TabListReducer.kt$TabListReducer$throw IllegalArgumentException("The parent does not exist")</ID>
+    <ID>UseRequire:UrlMatcher.kt$UrlMatcher$throw IllegalArgumentException("$key categoryMap contains undeclared category")</ID>
+    <ID>UseRequire:WebURLFinder.kt$WebURLFinder$throw IllegalArgumentException("string must not be null")</ID>
+    <ID>UseRequire:WebURLFinder.kt$WebURLFinder$throw IllegalArgumentException("strings must not be null")</ID>
   </CurrentIssues>
 </SmellBaseline>
