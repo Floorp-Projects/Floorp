@@ -13,7 +13,12 @@ add_setup(async function() {
   makeProfileResettable();
 
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.searchEngagementTelemetry.enabled", true]],
+    set: [
+      ["browser.urlbar.searchEngagementTelemetry.enabled", true],
+      ["browser.urlbar.quickactions.enabled", true],
+      ["browser.urlbar.suggest.quickactions", true],
+      ["browser.urlbar.quickactions.showInZeroPrefix", true],
+    ],
   });
   registerCleanupFunction(async function() {
     await SpecialPowers.popPrefEnv();
