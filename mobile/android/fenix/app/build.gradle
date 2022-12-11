@@ -224,7 +224,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = Versions.androidx_compose_compiler
+        kotlinCompilerExtensionVersion = FenixVersions.androidx_compose_compiler
     }
 
 }
