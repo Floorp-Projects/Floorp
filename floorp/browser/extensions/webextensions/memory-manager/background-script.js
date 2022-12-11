@@ -11,6 +11,7 @@ const EXCLUDE_URL_PATTERNS = [
   "token",
   "secure",
   "secret",
+  "new",
   "wp-admin",
   "cart",
   "upload",
