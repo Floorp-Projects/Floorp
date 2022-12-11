@@ -73,7 +73,7 @@ comments:
     matchDeclarationsOrder: true
     allowParamOnConstructorProperties: false
   UndocumentedPublicClass:
-    active: true
+    active: true # Enabled in https://github.com/mozilla-mobile/android-components/issues/76
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/jsTest/**', '**/iosTest/**']
     searchInNestedClass: true
     searchInInnerClass: true
@@ -81,7 +81,7 @@ comments:
     searchInInnerInterface: true
     searchInProtectedClass: false
   UndocumentedPublicFunction:
-    active: true
+    active: true # Enabled in https://github.com/mozilla-mobile/android-components/issues/76
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/jsTest/**', '**/iosTest/**']
     searchProtectedFunction: false
   UndocumentedPublicProperty:
@@ -105,8 +105,8 @@ complexity:
     ignoreOverloaded: false
   CyclomaticComplexMethod:
     active: true
-    threshold: 18
-    ignoreSingleWhenExpression: true
+    threshold: 18 # (Default: 15) Increased in https://github.com/mozilla-mobile/android-components/pull/10328
+    ignoreSingleWhenExpression: true # Enabled in https://github.com/mozilla-mobile/android-components/pull/3271
     ignoreSimpleWhenEntries: false
     ignoreNestingFunctions: false
     nestingFunctions:
@@ -127,12 +127,12 @@ complexity:
     threshold: 600
   LongMethod:
     active: true
-    threshold: 75
+    threshold: 75 # (Default: 60) Increased in https://github.com/mozilla-mobile/android-components/issues/6350
   LongParameterList:
     active: true
     functionThreshold: 6
     constructorThreshold: 7
-    ignoreDefaultParameters: true
+    ignoreDefaultParameters: true # Enabled in https://github.com/mozilla-mobile/android-components/issues/10835
     ignoreDataClasses: true
     ignoreAnnotatedParameter: []
   MethodOverloading:
@@ -166,10 +166,10 @@ complexity:
   TooManyFunctions:
     active: true
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/jsTest/**', '**/iosTest/**']
-    thresholdInFiles: 26
-    thresholdInClasses: 26
-    thresholdInInterfaces: 26
-    thresholdInObjects: 26
+    thresholdInFiles: 26 # (Default: 11) Increased in https://github.com/mozilla-mobile/android-components/pull/9927
+    thresholdInClasses: 26 # (Default: 11) Increased in https://github.com/mozilla-mobile/android-components/pull/9927
+    thresholdInInterfaces: 26 # (Default: 11) Increased in https://github.com/mozilla-mobile/android-components/pull/9927
+    thresholdInObjects: 26 # (Default: 11) Increased in https://github.com/mozilla-mobile/android-components/pull/9927
     thresholdInEnums: 11
     ignoreDeprecated: false
     ignorePrivate: false
@@ -333,7 +333,7 @@ naming:
     functionPattern: '[a-z][a-zA-Z0-9]*'
     excludeClassPattern: '$^'
     ignoreOverridden: true
-    ignoreAnnotated: ['Composable']
+    ignoreAnnotated: ['Composable'] # Configuration for Compose https://github.com/mozilla-mobile/android-components/issues/11866
   FunctionParameterNaming:
     active: true
     parameterPattern: '[a-z][A-Za-z0-9]*'
@@ -508,7 +508,7 @@ style:
   ClassOrdering:
     active: false
   CollapsibleIfStatements:
-    active: true
+    active: true # Enabled in https://github.com/mozilla-mobile/android-components/pull/78
   DataClassContainsFunctions:
     active: false
     conversionFunctionPrefix:
@@ -572,7 +572,7 @@ style:
       - '1'
       - '2'
     ignoreHashCodeFunction: true
-    ignorePropertyDeclaration: true
+    ignorePropertyDeclaration: true # Enabled for Compose in https://github.com/mozilla-mobile/android-components/issues/11864
     ignoreLocalVariableDeclaration: false
     ignoreConstantDeclaration: true
     ignoreCompanionObjectPropertyDeclaration: true
@@ -582,7 +582,7 @@ style:
     ignoreRanges: false
     ignoreExtensionFunctions: true
   MandatoryBracesIfStatements:
-    active: true
+    active: true # Enabled in https://github.com/mozilla-mobile/android-components/issues/1015
   MandatoryBracesLoops:
     active: false
   MaxChainedCallsOnSameLine:
@@ -609,7 +609,7 @@ style:
   NewLineAtEndOfFile:
     active: true
   NoTabs:
-    active: true
+    active: true # Enabled in https://github.com/mozilla-mobile/android-components/pull/78
   NullableBooleanCheck:
     active: false
   ObjectLiteralToLambda:
@@ -632,7 +632,7 @@ style:
     active: false
   ReturnCount:
     active: true
-    max: 3
+    max: 3 # (Default: 2) Increased in https://github.com/mozilla-mobile/android-components/issues/3
     excludedFunctions:
       - 'equals'
     excludeLabeled: false
@@ -643,7 +643,7 @@ style:
   SerialVersionUIDInSerializableClass:
     active: true
   SpacingBetweenPackageAndImports:
-    active: true
+    active: true # Enabled in https://github.com/mozilla-mobile/android-components/pull/78
   ThrowsCount:
     active: true
     max: 2
@@ -684,7 +684,7 @@ style:
   UnusedPrivateMember:
     active: true
     allowedNames: '(_|ignored|expected|serialVersionUID)'
-    ignoreAnnotated: ['Composable']
+    ignoreAnnotated: ['Composable'] # Configuration for Compose https://github.com/mozilla-mobile/android-components/issues/11866
   UseAnyOrNoneInsteadOfFind:
     active: false # (Default: true)
   UseArrayLiteralsInAnnotations:
