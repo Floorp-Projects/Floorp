@@ -1,19 +1,19 @@
 apply plugin: 'kotlin'
 
 dependencies {
-  compileOnly Deps.detektApi
-  implementation Deps.androidx_annotation
+  compileOnly FenixDependencies.detektApi
+  implementation FenixDependencies.androidx_annotation
 
   // I didn't look thoroughly enough to really know what's going on here but I think
   // the detekt API uses jdk8 so if we provide jdk7, the dependency collision system
   // doesn't work and there are duplicate APIs with different versions in the output.
-  implementation Deps.kotlin_stdlib_jdk8
+  implementation FenixDependencies.kotlin_stdlib_jdk8
 
-  testImplementation Deps.detektApi
-  testImplementation Deps.detektTest
-  testImplementation Deps.junitApi
-  testImplementation Deps.junitParams
-  testRuntimeOnly Deps.junitEngine
+  testImplementation FenixDependencies.detektApi
+  testImplementation FenixDependencies.detektTest
+  testImplementation FenixDependencies.junitApi
+  testImplementation FenixDependencies.junitParams
+  testRuntimeOnly FenixDependencies.junitEngine
 }
 
 test {

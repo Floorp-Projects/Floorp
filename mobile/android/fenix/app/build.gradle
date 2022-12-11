@@ -469,159 +469,159 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
 }
 
 dependencies {
-    jnaForTest Deps.jna
+    jnaForTest FenixDependencies.jna
     testImplementation files(configurations.jnaForTest.copyRecursive().files)
 
-    implementation  Deps.mozilla_browser_engine_gecko
+    implementation  FenixDependencies.mozilla_browser_engine_gecko
 
-    implementation Deps.kotlin_stdlib
-    implementation Deps.kotlin_coroutines
-    implementation Deps.kotlin_coroutines_android
-    testImplementation Deps.kotlin_coroutines_test
-    implementation Deps.androidx_appcompat
-    implementation Deps.androidx_constraintlayout
-    implementation Deps.androidx_coordinatorlayout
-    implementation Deps.google_accompanist_drawablepainter
-    implementation Deps.google_accompanist_insets
+    implementation FenixDependencies.kotlin_stdlib
+    implementation FenixDependencies.kotlin_coroutines
+    implementation FenixDependencies.kotlin_coroutines_android
+    testImplementation FenixDependencies.kotlin_coroutines_test
+    implementation FenixDependencies.androidx_appcompat
+    implementation FenixDependencies.androidx_constraintlayout
+    implementation FenixDependencies.androidx_coordinatorlayout
+    implementation FenixDependencies.google_accompanist_drawablepainter
+    implementation FenixDependencies.google_accompanist_insets
 
-    implementation Deps.sentry
+    implementation FenixDependencies.sentry
 
-    implementation Deps.mozilla_compose_awesomebar
+    implementation FenixDependencies.mozilla_compose_awesomebar
 
-    implementation Deps.mozilla_concept_awesomebar
-    implementation Deps.mozilla_concept_base
-    implementation Deps.mozilla_concept_engine
-    implementation Deps.mozilla_concept_menu
-    implementation Deps.mozilla_concept_push
-    implementation Deps.mozilla_concept_storage
-    implementation Deps.mozilla_concept_sync
-    implementation Deps.mozilla_concept_toolbar
-    implementation Deps.mozilla_concept_tabstray
+    implementation FenixDependencies.mozilla_concept_awesomebar
+    implementation FenixDependencies.mozilla_concept_base
+    implementation FenixDependencies.mozilla_concept_engine
+    implementation FenixDependencies.mozilla_concept_menu
+    implementation FenixDependencies.mozilla_concept_push
+    implementation FenixDependencies.mozilla_concept_storage
+    implementation FenixDependencies.mozilla_concept_sync
+    implementation FenixDependencies.mozilla_concept_toolbar
+    implementation FenixDependencies.mozilla_concept_tabstray
 
-    implementation Deps.mozilla_browser_domains
-    implementation Deps.mozilla_browser_icons
-    implementation Deps.mozilla_browser_menu
-    implementation Deps.mozilla_browser_menu2
-    implementation Deps.mozilla_browser_session_storage
-    implementation Deps.mozilla_browser_state
-    implementation Deps.mozilla_browser_storage_sync
-    implementation Deps.mozilla_browser_tabstray
-    implementation Deps.mozilla_browser_thumbnails
-    implementation Deps.mozilla_browser_toolbar
+    implementation FenixDependencies.mozilla_browser_domains
+    implementation FenixDependencies.mozilla_browser_icons
+    implementation FenixDependencies.mozilla_browser_menu
+    implementation FenixDependencies.mozilla_browser_menu2
+    implementation FenixDependencies.mozilla_browser_session_storage
+    implementation FenixDependencies.mozilla_browser_state
+    implementation FenixDependencies.mozilla_browser_storage_sync
+    implementation FenixDependencies.mozilla_browser_tabstray
+    implementation FenixDependencies.mozilla_browser_thumbnails
+    implementation FenixDependencies.mozilla_browser_toolbar
 
-    implementation Deps.mozilla_feature_addons
-    implementation Deps.mozilla_feature_accounts
-    implementation Deps.mozilla_feature_app_links
-    implementation Deps.mozilla_feature_autofill
-    implementation Deps.mozilla_feature_awesomebar
-    implementation Deps.mozilla_feature_contextmenu
-    implementation Deps.mozilla_feature_customtabs
-    implementation Deps.mozilla_feature_downloads
-    implementation Deps.mozilla_feature_intent
-    implementation Deps.mozilla_feature_media
-    implementation Deps.mozilla_feature_prompts
-    implementation Deps.mozilla_feature_push
-    implementation Deps.mozilla_feature_privatemode
-    implementation Deps.mozilla_feature_pwa
-    implementation Deps.mozilla_feature_qr
-    implementation Deps.mozilla_feature_search
-    implementation Deps.mozilla_feature_session
-    implementation Deps.mozilla_feature_syncedtabs
-    implementation Deps.mozilla_feature_toolbar
-    implementation Deps.mozilla_feature_tabs
-    implementation Deps.mozilla_feature_findinpage
-    implementation Deps.mozilla_feature_logins
-    implementation Deps.mozilla_feature_site_permissions
-    implementation Deps.mozilla_feature_readerview
-    implementation Deps.mozilla_feature_tab_collections
-    implementation Deps.mozilla_feature_recentlyclosed
-    implementation Deps.mozilla_feature_top_sites
-    implementation Deps.mozilla_feature_share
-    implementation Deps.mozilla_feature_accounts_push
-    implementation Deps.mozilla_feature_webauthn
-    implementation Deps.mozilla_feature_webcompat
-    implementation Deps.mozilla_feature_webnotifications
-    implementation Deps.mozilla_feature_webcompat_reporter
+    implementation FenixDependencies.mozilla_feature_addons
+    implementation FenixDependencies.mozilla_feature_accounts
+    implementation FenixDependencies.mozilla_feature_app_links
+    implementation FenixDependencies.mozilla_feature_autofill
+    implementation FenixDependencies.mozilla_feature_awesomebar
+    implementation FenixDependencies.mozilla_feature_contextmenu
+    implementation FenixDependencies.mozilla_feature_customtabs
+    implementation FenixDependencies.mozilla_feature_downloads
+    implementation FenixDependencies.mozilla_feature_intent
+    implementation FenixDependencies.mozilla_feature_media
+    implementation FenixDependencies.mozilla_feature_prompts
+    implementation FenixDependencies.mozilla_feature_push
+    implementation FenixDependencies.mozilla_feature_privatemode
+    implementation FenixDependencies.mozilla_feature_pwa
+    implementation FenixDependencies.mozilla_feature_qr
+    implementation FenixDependencies.mozilla_feature_search
+    implementation FenixDependencies.mozilla_feature_session
+    implementation FenixDependencies.mozilla_feature_syncedtabs
+    implementation FenixDependencies.mozilla_feature_toolbar
+    implementation FenixDependencies.mozilla_feature_tabs
+    implementation FenixDependencies.mozilla_feature_findinpage
+    implementation FenixDependencies.mozilla_feature_logins
+    implementation FenixDependencies.mozilla_feature_site_permissions
+    implementation FenixDependencies.mozilla_feature_readerview
+    implementation FenixDependencies.mozilla_feature_tab_collections
+    implementation FenixDependencies.mozilla_feature_recentlyclosed
+    implementation FenixDependencies.mozilla_feature_top_sites
+    implementation FenixDependencies.mozilla_feature_share
+    implementation FenixDependencies.mozilla_feature_accounts_push
+    implementation FenixDependencies.mozilla_feature_webauthn
+    implementation FenixDependencies.mozilla_feature_webcompat
+    implementation FenixDependencies.mozilla_feature_webnotifications
+    implementation FenixDependencies.mozilla_feature_webcompat_reporter
 
-    implementation Deps.mozilla_service_pocket
-    implementation Deps.mozilla_service_contile
-    implementation Deps.mozilla_service_digitalassetlinks
-    implementation Deps.mozilla_service_sync_autofill
-    implementation Deps.mozilla_service_sync_logins
-    implementation Deps.mozilla_service_firefox_accounts
-    implementation(Deps.mozilla_service_glean)
-    implementation Deps.mozilla_service_location
-    implementation Deps.mozilla_service_nimbus
+    implementation FenixDependencies.mozilla_service_pocket
+    implementation FenixDependencies.mozilla_service_contile
+    implementation FenixDependencies.mozilla_service_digitalassetlinks
+    implementation FenixDependencies.mozilla_service_sync_autofill
+    implementation FenixDependencies.mozilla_service_sync_logins
+    implementation FenixDependencies.mozilla_service_firefox_accounts
+    implementation(FenixDependencies.mozilla_service_glean)
+    implementation FenixDependencies.mozilla_service_location
+    implementation FenixDependencies.mozilla_service_nimbus
 
-    implementation Deps.mozilla_support_extensions
-    implementation Deps.mozilla_support_base
-    implementation Deps.mozilla_support_rusterrors
-    implementation Deps.mozilla_support_images
-    implementation Deps.mozilla_support_ktx
-    implementation Deps.mozilla_support_rustlog
-    implementation Deps.mozilla_support_utils
-    implementation Deps.mozilla_support_locale
+    implementation FenixDependencies.mozilla_support_extensions
+    implementation FenixDependencies.mozilla_support_base
+    implementation FenixDependencies.mozilla_support_rusterrors
+    implementation FenixDependencies.mozilla_support_images
+    implementation FenixDependencies.mozilla_support_ktx
+    implementation FenixDependencies.mozilla_support_rustlog
+    implementation FenixDependencies.mozilla_support_utils
+    implementation FenixDependencies.mozilla_support_locale
 
-    implementation Deps.mozilla_ui_colors
-    implementation Deps.mozilla_ui_icons
-    implementation Deps.mozilla_lib_publicsuffixlist
-    implementation Deps.mozilla_ui_widgets
-    implementation Deps.mozilla_ui_tabcounter
+    implementation FenixDependencies.mozilla_ui_colors
+    implementation FenixDependencies.mozilla_ui_icons
+    implementation FenixDependencies.mozilla_lib_publicsuffixlist
+    implementation FenixDependencies.mozilla_ui_widgets
+    implementation FenixDependencies.mozilla_ui_tabcounter
 
-    implementation Deps.mozilla_lib_crash
-    implementation Deps.lib_crash_sentry
-    implementation Deps.mozilla_lib_push_firebase
-    implementation Deps.mozilla_lib_state
-    implementation Deps.mozilla_lib_dataprotect
-    debugImplementation Deps.leakcanary
+    implementation FenixDependencies.mozilla_lib_crash
+    implementation FenixDependencies.lib_crash_sentry
+    implementation FenixDependencies.mozilla_lib_push_firebase
+    implementation FenixDependencies.mozilla_lib_state
+    implementation FenixDependencies.mozilla_lib_dataprotect
+    debugImplementation FenixDependencies.leakcanary
 
-    implementation Deps.androidx_annotation
-    implementation Deps.androidx_compose_ui
-    implementation Deps.androidx_compose_ui_tooling
-    implementation Deps.androidx_compose_foundation
-    implementation Deps.androidx_compose_material
-    implementation Deps.androidx_legacy
-    implementation Deps.androidx_biometric
-    implementation Deps.androidx_paging
-    implementation Deps.androidx_preference
-    implementation Deps.androidx_fragment
-    implementation Deps.androidx_navigation_fragment
-    implementation Deps.androidx_navigation_ui
-    implementation Deps.androidx_recyclerview
-    implementation Deps.androidx_lifecycle_common
-    implementation Deps.androidx_lifecycle_livedata
-    implementation Deps.androidx_lifecycle_process
-    implementation Deps.androidx_lifecycle_runtime
-    implementation Deps.androidx_lifecycle_viewmodel
-    implementation Deps.androidx_core
-    implementation Deps.androidx_core_ktx
-    implementation Deps.androidx_transition
-    implementation Deps.androidx_work_ktx
-    implementation Deps.androidx_datastore
-    implementation Deps.protobuf_javalite
-    implementation Deps.google_material
+    implementation FenixDependencies.androidx_annotation
+    implementation FenixDependencies.androidx_compose_ui
+    implementation FenixDependencies.androidx_compose_ui_tooling
+    implementation FenixDependencies.androidx_compose_foundation
+    implementation FenixDependencies.androidx_compose_material
+    implementation FenixDependencies.androidx_legacy
+    implementation FenixDependencies.androidx_biometric
+    implementation FenixDependencies.androidx_paging
+    implementation FenixDependencies.androidx_preference
+    implementation FenixDependencies.androidx_fragment
+    implementation FenixDependencies.androidx_navigation_fragment
+    implementation FenixDependencies.androidx_navigation_ui
+    implementation FenixDependencies.androidx_recyclerview
+    implementation FenixDependencies.androidx_lifecycle_common
+    implementation FenixDependencies.androidx_lifecycle_livedata
+    implementation FenixDependencies.androidx_lifecycle_process
+    implementation FenixDependencies.androidx_lifecycle_runtime
+    implementation FenixDependencies.androidx_lifecycle_viewmodel
+    implementation FenixDependencies.androidx_core
+    implementation FenixDependencies.androidx_core_ktx
+    implementation FenixDependencies.androidx_transition
+    implementation FenixDependencies.androidx_work_ktx
+    implementation FenixDependencies.androidx_datastore
+    implementation FenixDependencies.protobuf_javalite
+    implementation FenixDependencies.google_material
 
-    implementation Deps.adjust
-    implementation Deps.installreferrer // Required by Adjust
+    implementation FenixDependencies.adjust
+    implementation FenixDependencies.installreferrer // Required by Adjust
 
-    implementation Deps.google_ads_id // Required for the Google Advertising ID
+    implementation FenixDependencies.google_ads_id // Required for the Google Advertising ID
 
     // Required for in-app reviews
-    implementation Deps.google_play_review
-    implementation Deps.google_play_review_ktx
+    implementation FenixDependencies.google_play_review
+    implementation FenixDependencies.google_play_review_ktx
 
-    androidTestImplementation Deps.uiautomator
+    androidTestImplementation FenixDependencies.uiautomator
     androidTestImplementation "tools.fastlane:screengrab:2.0.0"
     // This Falcon version is added to maven central now required for Screengrab
     implementation 'com.jraska:falcon:2.2.0'
 
-    androidTestImplementation Deps.androidx_compose_ui_test
+    androidTestImplementation FenixDependencies.androidx_compose_ui_test
 
-    androidTestImplementation Deps.espresso_core, {
+    androidTestImplementation FenixDependencies.espresso_core, {
         exclude group: 'com.android.support', module: 'support-annotations'
     }
 
-    androidTestImplementation(Deps.espresso_contrib) {
+    androidTestImplementation(FenixDependencies.espresso_contrib) {
         exclude module: 'appcompat-v7'
         exclude module: 'support-v4'
         exclude module: 'support-annotations'
@@ -631,36 +631,36 @@ dependencies {
         exclude module: 'protobuf-lite'
     }
 
-    androidTestImplementation Deps.androidx_test_core
-    androidTestImplementation Deps.espresso_idling_resources
-    androidTestImplementation Deps.espresso_intents
+    androidTestImplementation FenixDependencies.androidx_test_core
+    androidTestImplementation FenixDependencies.espresso_idling_resources
+    androidTestImplementation FenixDependencies.espresso_intents
 
-    androidTestImplementation Deps.tools_test_runner
-    androidTestImplementation Deps.tools_test_rules
-    androidTestUtil Deps.orchestrator
-    androidTestImplementation Deps.espresso_core, {
+    androidTestImplementation FenixDependencies.tools_test_runner
+    androidTestImplementation FenixDependencies.tools_test_rules
+    androidTestUtil FenixDependencies.orchestrator
+    androidTestImplementation FenixDependencies.espresso_core, {
         exclude group: 'com.android.support', module: 'support-annotations'
     }
 
-    androidTestImplementation Deps.androidx_junit
-    androidTestImplementation Deps.androidx_test_extensions
-    androidTestImplementation Deps.androidx_work_testing
-    androidTestImplementation Deps.androidx_benchmark_junit4
-    androidTestImplementation Deps.mockwebserver
-    testImplementation Deps.mozilla_support_test
-    testImplementation Deps.mozilla_support_test_libstate
-    testImplementation Deps.androidx_junit
-    testImplementation Deps.androidx_test_extensions
-    testImplementation Deps.androidx_work_testing
-    testImplementation (Deps.robolectric) {
+    androidTestImplementation FenixDependencies.androidx_junit
+    androidTestImplementation FenixDependencies.androidx_test_extensions
+    androidTestImplementation FenixDependencies.androidx_work_testing
+    androidTestImplementation FenixDependencies.androidx_benchmark_junit4
+    androidTestImplementation FenixDependencies.mockwebserver
+    testImplementation FenixDependencies.mozilla_support_test
+    testImplementation FenixDependencies.mozilla_support_test_libstate
+    testImplementation FenixDependencies.androidx_junit
+    testImplementation FenixDependencies.androidx_test_extensions
+    testImplementation FenixDependencies.androidx_work_testing
+    testImplementation (FenixDependencies.robolectric) {
         exclude group: 'org.apache.maven'
     }
 
     testImplementation 'org.apache.maven:maven-ant-tasks:2.1.3'
-    implementation Deps.mozilla_support_rusthttp
+    implementation FenixDependencies.mozilla_support_rusthttp
 
-    androidTestImplementation Deps.mockk_android
-    testImplementation Deps.mockk
+    androidTestImplementation FenixDependencies.mockk_android
+    testImplementation FenixDependencies.mockk
 
     // For the initial release of Glean 19, we require consumer applications to
     // depend on a separate library for unit tests. This will be removed in future releases.
@@ -674,9 +674,9 @@ protobuf {
     // See https://github.com/mozilla-mobile/fenix/issues/22321
     protoc {
         if (osdetector.os == "osx") {
-            artifact = "${Deps.protobuf_compiler}:osx-x86_64"
+            artifact = "${FenixDependencies.protobuf_compiler}:osx-x86_64"
         } else {
-            artifact = Deps.protobuf_compiler
+            artifact = FenixDependencies.protobuf_compiler
         }
     }
 

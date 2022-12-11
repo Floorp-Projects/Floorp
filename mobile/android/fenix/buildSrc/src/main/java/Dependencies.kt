@@ -63,7 +63,7 @@ object Versions {
 }
 
 @Suppress("unused")
-object Deps {
+object FenixDependencies {
     const val tools_androidgradle = "com.android.tools.build:gradle:${Versions.android_gradle_plugin}"
     const val tools_kotlingradle = "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}"
     const val tools_benchmarkgradle = "androidx.benchmark:benchmark-gradle-plugin:${Versions.androidx_benchmark}"

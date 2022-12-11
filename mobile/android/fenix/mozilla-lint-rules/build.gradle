@@ -27,10 +27,10 @@ dependencies {
     //
     // The prepareLintJar task fails with "Found more than one jar in the 'lintChecks' configuration"
     // if we include the stdlib (with implementation) so we have to do compileOnly + testImplementation.
-    compileOnly Deps.kotlin_stdlib_jdk8
-    compileOnly Deps.kotlin_reflect
-    testImplementation Deps.kotlin_stdlib_jdk8
-    testImplementation Deps.kotlin_reflect
+    compileOnly FenixDependencies.kotlin_stdlib_jdk8
+    compileOnly FenixDependencies.kotlin_reflect
+    testImplementation FenixDependencies.kotlin_stdlib_jdk8
+    testImplementation FenixDependencies.kotlin_reflect
 
     compileOnly "com.android.tools.lint:lint-api:${Versions.android_lint_api}"
     compileOnly "com.android.tools.lint:lint-checks:${Versions.android_lint_api}"

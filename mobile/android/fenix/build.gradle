@@ -60,11 +60,11 @@ buildscript {
     }
 
     dependencies {
-        classpath Deps.tools_androidgradle
-        classpath Deps.tools_kotlingradle
-        classpath Deps.tools_benchmarkgradle
-        classpath Deps.androidx_safeargs
-        classpath Deps.osslicenses_plugin
+        classpath FenixDependencies.tools_androidgradle
+        classpath FenixDependencies.tools_kotlingradle
+        classpath FenixDependencies.tools_benchmarkgradle
+        classpath FenixDependencies.androidx_safeargs
+        classpath FenixDependencies.osslicenses_plugin
 
         classpath "org.mozilla.components:tooling-glean-gradle:${Versions.mozilla_android_components}"
         classpath "org.mozilla.components:tooling-nimbus-gradle:${Versions.mozilla_android_components}"
