@@ -9,16 +9,11 @@
     "notifications",
     "tabs",
     "storage",
-    "sessions",
-    "storage",
     "clipboardWrite",
-    "search",
-    "activeTab",
-    "browserSettings",
+    "mozillaAddons",
     "about:*",
-    "about:reader*",
     "downloads",
-    "mozillaAddons"
+    "<all_urls>"
   ],
   "experiment_apis": {
     "aboutConfigPrefs": {
@@ -36,7 +31,7 @@
         "script": "API/BrowserInfo.js",
         "paths": [["BrowserInfo"]]
       }
-   }
+    }
   },
   "page_action": {
     "browser_style": true,
@@ -47,17 +42,15 @@
     ]
   },
   "background": {
-    "scripts": ["background-script.js", "update.js"]
+    "scripts": [
+      "webcompat.js",
+      "update.js",
+      "download-notification.js"
+    ]
   },
    "applications": {
      "gecko": {
       "id": "floorp-system@floorp.ablaze.one"
     }
-  },
-  "content_scripts": [
-    {
-      "matches": ["https://www.youtube.com/*"],
-      "css": ["webcompat/fix-youtube-comment.css"], "js":["webcompat/fix-youtube-comment.js"]
-    }
-  ]
+  }
 }

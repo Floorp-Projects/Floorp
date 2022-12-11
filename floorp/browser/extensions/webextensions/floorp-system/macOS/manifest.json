@@ -9,16 +9,13 @@
     "notifications",
     "tabs",
     "storage",
-    "sessions",
-    "storage",
     "clipboardWrite",
-    "search",
-    "activeTab",
-    "browserSettings",
     "mozillaAddons",
     "about:*",
-    "about:reader*",
-    "downloads"
+    "downloads",
+    "webRequest",
+    "webRequestBlocking",
+    "<all_urls>"
   ],
   "experiment_apis": {
     "aboutConfigPrefs": {
@@ -36,11 +33,11 @@
         "script": "API/BrowserInfo.js",
         "paths": [["BrowserInfo"]]
       }
-   }
+    }
   },
   "browser_action": {
 		"default_icon":  "icons/floorp.png",
-		"default_title": "Check for Updates",
+		"default_title": "__MSG_browserActionTitle__",
 		"browser_style":  true
 	},
   "page_action": {
@@ -52,7 +49,11 @@
     ]
   },
   "background": {
-    "scripts": ["background-script.js", "update.js"]
+    "scripts": [
+      "webcompat.js",
+      "update.js",
+      "download-notification.js"
+    ]
   },
    "applications": {
      "gecko": {

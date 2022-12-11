@@ -3,6 +3,10 @@
     "message": "Floorp System",
     "description": "拡張機能の名前です。"
   },
+  "browserActionTitle": {
+    "message": "Check for Updates",
+    "description": "browserActionのタイトル"
+  },
   "start": {
     "message": "Download Start",
     "description": "ダウンロード開始"

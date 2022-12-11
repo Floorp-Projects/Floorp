@@ -3,6 +3,10 @@
     "message": "Floorp システムアドオン",
     "description": "拡張機能の名前です。"
   },
+  "browserActionTitle": {
+    "message": "アップデートを確認する",
+    "description": "browserActionのタイトル"
+  },
   "start": {
     "message": "ダウンロードを開始しました",
     "description": "ダウンロード開始"
