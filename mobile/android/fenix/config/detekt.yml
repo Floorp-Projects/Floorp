@@ -1,3 +1,6 @@
+# Please refer to https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/config/detekt.yml
+# for the source of truth for our detekt configuration.
+
 build:
   maxIssues: 0
   excludeCorrectable: false
@@ -150,23 +153,6 @@ coroutines:
     active: false
   SuspendFunWithFlowReturnType:
     active: false
-
-mozilla-detekt-rules:
-  active: true
-  MozillaBannedPropertyAccess:
-    active: true
-    # BuildConfig.Debug: This property tests whether the application was built
-    # with the debuggable flag or not. Use a check for different build variants,
-    # instead.
-    bannedProperties: 'BuildConfig.DEBUG'
-  MozillaStrictModeSuppression:
-    active: true
-  MozillaCorrectUnitTestRunner:
-    active: true
-  MozillaRunBlockingCheck:
-    active: true
-  MozillaUseLazyMonitored:
-    active: true
 
 empty-blocks:
   active: true
@@ -646,3 +632,22 @@ style:
     active: true
     excludeImports:
       - 'java.util.*'
+
+# Custom Rules
+
+mozilla-detekt-rules:
+  active: true
+  MozillaBannedPropertyAccess:
+    active: true
+    # BuildConfig.Debug: This property tests whether the application was built
+    # with the debuggable flag or not. Use a check for different build variants,
+    # instead.
+    bannedProperties: 'BuildConfig.DEBUG'
+  MozillaStrictModeSuppression:
+    active: true
+  MozillaCorrectUnitTestRunner:
+    active: true
+  MozillaRunBlockingCheck:
+    active: true
+  MozillaUseLazyMonitored:
+    active: true
