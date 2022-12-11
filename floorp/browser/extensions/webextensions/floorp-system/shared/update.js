@@ -1,5 +1,5 @@
 {
-    const API_END_POINT = "https://repo.ablaze.one/api/"
+    const API_END_POINT = "https://floorp-update.ablaze.one/browser/latest.json"
 
     const Notify = async(url, now, latest) =>{
         const msg = browser.i18n;
@@ -44,21 +44,25 @@
         let latestNotifyEnabled = (options && options.isBrowserActionClicked) || 
                                     latestNotifyEnabledPref;
 
-        let APP_ID = await browser.aboutConfigPrefs.getPref("update.id.floorp");
-
         let displayVersion = await browser.BrowserInfo.getDisplayVersion();
+
+        let platformInfo = await browser.runtime.getPlatformInfo();
 
         console.log("Floorp Display version: "+ displayVersion);
         console.log("enable.floorp.updater.latest = " + latestNotifyEnabled);
-        console.log("floorp.update.id = " + APP_ID);
 
-        fetch(`${API_END_POINT}?name=${APP_ID}`)
+        fetch(API_END_POINT)
             .then(res =>{
                 if (!res.ok) throw `${res.status} ${res.statusText}`;
                 return res.json();
-            }).then(data =>{
-                if(data.build !== displayVersion){
-                    Notify(data.file, displayVersion, data.build);
+            }).then(datas => {
+                let platformKeyName = 
+                    platformInfo["os"] === "mac" ?
+                        "mac" :
+                        `${platformInfo["os"]}-${platformInfo["arch"]}`;
+                let data = datas[platformKeyName];
+                if (data["version"] !== displayVersion) {
+                    Notify(data["url"], displayVersion, data["version"]);
                     console.log("notificationTitle");
                 } else if (latestNotifyEnabled) {
                     NotifyNew();
