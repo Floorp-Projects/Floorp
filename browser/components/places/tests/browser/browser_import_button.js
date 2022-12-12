@@ -80,7 +80,7 @@ add_task(async function test_bookmark_import_button_removal() {
   Services.obs.notifyObservers(
     null,
     "Migration:ItemAfterMigrate",
-    Ci.nsIBrowserProfileMigrator.BOOKMARKS
+    MigrationUtils.resourceTypes.BOOKMARKS
   );
 
   is(
@@ -95,7 +95,7 @@ add_task(async function test_bookmark_import_button_removal() {
   Services.obs.notifyObservers(
     null,
     "Migration:ItemAfterMigrate",
-    Ci.nsIBrowserProfileMigrator.BOOKMARKS
+    MigrationUtils.resourceTypes.BOOKMARKS
   );
 
   is(Services.prefs.prefHasUserValue(kPref), false, "Pref should be removed.");
@@ -159,7 +159,7 @@ add_task(async function test_bookmark_import_button_errors() {
   Services.obs.notifyObservers(
     null,
     "Migration:ItemError",
-    Ci.nsIBrowserProfileMigrator.BOOKMARKS
+    MigrationUtils.resourceTypes.BOOKMARKS
   );
 
   is(
@@ -174,7 +174,7 @@ add_task(async function test_bookmark_import_button_errors() {
   Services.obs.notifyObservers(
     null,
     "Migration:ItemError",
-    Ci.nsIBrowserProfileMigrator.BOOKMARKS
+    MigrationUtils.resourceTypes.BOOKMARKS
   );
 
   is(Services.prefs.prefHasUserValue(kPref), false, "Pref should be removed.");
