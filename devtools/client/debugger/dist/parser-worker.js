@@ -76371,8 +76371,8 @@ function WorkerDispatcher() {
 }
 
 WorkerDispatcher.prototype = {
-  start(url, win = window) {
-    this.worker = new win.Worker(url);
+  start(url) {
+    this.worker = new ChromeWorker(url);
 
     this.worker.onerror = err => {
       console.error(`Error in worker ${url}`, err.message);

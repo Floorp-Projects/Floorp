@@ -1480,8 +1480,7 @@ Toolbox.prototype = {
 
     this._parserService = new ParserDispatcher();
     this._parserService.start(
-      "resource://devtools/client/debugger/dist/parser-worker.js",
-      this.win
+      "resource://devtools/client/debugger/dist/parser-worker.js"
     );
     return this._parserService;
   },
