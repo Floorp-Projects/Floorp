@@ -22,6 +22,7 @@ import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.concept.sync.DeviceConfig
 import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.DeviceType
+import mozilla.components.concept.sync.FxAEntryPoint
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.OAuthScopedKey
 import mozilla.components.concept.sync.Profile
@@ -41,6 +42,7 @@ import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.whenever
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -115,6 +117,10 @@ const val UNEXPECTED_AUTH_STATE = "badAuthState"
 @ExperimentalCoroutinesApi // for runTest
 @RunWith(AndroidJUnit4::class)
 class FxaAccountManagerTest {
+
+    val entryPoint: FxAEntryPoint = mock<FxAEntryPoint>().apply {
+        whenever(entryName).thenReturn("home-menu")
+    }
 
     @After
     fun cleanup() {
@@ -368,7 +374,7 @@ class FxaAccountManagerTest {
 
         // Perform authentication.
 
-        assertEquals("auth://url", manager.beginAuthentication())
+        assertEquals("auth://url?entrypoint=home-menu", manager.beginAuthentication(entrypoint = entryPoint))
 
         assertTrue(manager.finishAuthentication(FxaAuthData(AuthType.Signin, "dummyCode", EXPECTED_AUTH_STATE)))
 
@@ -411,7 +417,7 @@ class FxaAccountManagerTest {
         assertFalse(manager.finishAuthentication(FxaAuthData(AuthType.Signin, "dummyCode", EXPECTED_AUTH_STATE)))
 
         // Start authentication. StatePersistenceTestableAccount will produce state=EXPECTED_AUTH_STATE.
-        assertEquals("auth://url", manager.beginAuthentication())
+        assertEquals("auth://url?entrypoint=home-menu", manager.beginAuthentication(entrypoint = entryPoint))
 
         // Attempt to finish authentication with a wrong state.
         assertFalse(manager.finishAuthentication(FxaAuthData(AuthType.Signin, "dummyCode", UNEXPECTED_AUTH_STATE)))
@@ -436,12 +442,12 @@ class FxaAccountManagerTest {
         var checkAuthorizationStatusCalled = false
         var authErrorDetectedCalled = false
 
-        override suspend fun beginOAuthFlow(scopes: Set<String>, entryPoint: String): AuthFlowUrl? {
-            return AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url")
+        override suspend fun beginOAuthFlow(scopes: Set<String>, entryPoint: FxAEntryPoint): AuthFlowUrl? {
+            return AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url?entrypoint=" + entryPoint.entryName)
         }
 
-        override suspend fun beginPairingFlow(pairingUrl: String, scopes: Set<String>, entryPoint: String): AuthFlowUrl? {
-            return AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url")
+        override suspend fun beginPairingFlow(pairingUrl: String, scopes: Set<String>, entryPoint: FxAEntryPoint): AuthFlowUrl? {
+            return AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url?entrypoint=" + entryPoint.entryName)
         }
 
         override suspend fun getProfile(ignoreCache: Boolean): Profile? {
@@ -665,7 +671,7 @@ class FxaAccountManagerTest {
         verify(accountObserver, never()).onAuthenticated(any(), any())
 
         reset(accountObserver)
-        assertEquals("auth://url", manager.beginAuthentication())
+        assertEquals("auth://url?entrypoint=home-menu", manager.beginAuthentication(entrypoint = mock()))
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
@@ -709,7 +715,7 @@ class FxaAccountManagerTest {
         verify(accountObserver, never()).onAuthenticated(any(), any())
 
         reset(accountObserver)
-        assertEquals("auth://url", manager.beginAuthentication())
+        assertEquals("auth://url?entrypoint=home-menu", manager.beginAuthentication(entrypoint = mock()))
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
@@ -731,7 +737,7 @@ class FxaAccountManagerTest {
 
         doAnswer {
             throw FxaPanicException("Don't panic!")
-        }.`when`(mockAccount).beginPairingFlow(any(), any(), anyString())
+        }.`when`(mockAccount).beginPairingFlow(any(), any(), any())
         `when`(mockAccount.completeOAuthFlow(anyString(), anyString())).thenReturn(true)
         // There's no account at the start.
         `when`(accountStorage.read()).thenReturn(null)
@@ -746,7 +752,7 @@ class FxaAccountManagerTest {
         }
 
         manager.start()
-        manager.beginAuthentication("http://pairing.com")
+        manager.beginAuthentication("http://pairing.com", mock())
         fail()
     }
 
@@ -765,7 +771,7 @@ class FxaAccountManagerTest {
         verify(accountObserver, never()).onAuthenticated(any(), any())
 
         reset(accountObserver)
-        assertEquals("auth://url", manager.beginAuthentication(pairingUrl = "auth://pairing"))
+        assertEquals("auth://url?entrypoint=home-menu", manager.beginAuthentication(pairingUrl = "auth://pairing", mock()))
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
@@ -802,12 +808,24 @@ class FxaAccountManagerTest {
 
         // Begin auth for the first time.
         reset(accountObserver)
-        assertEquals("auth://url", manager.beginAuthentication(pairingUrl = "auth://pairing"))
+        assertEquals(
+            "auth://url?entrypoint=home-menu",
+            manager.beginAuthentication(
+                pairingUrl = "auth://pairing",
+                entrypoint = mock(),
+            ),
+        )
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
         // Now, try to begin again before finishing the first one.
-        assertEquals("auth://url", manager.beginAuthentication(pairingUrl = "auth://pairing"))
+        assertEquals(
+            "auth://url?entrypoint=home-menu",
+            manager.beginAuthentication(
+                pairingUrl = "auth://pairing",
+                entrypoint = mock(),
+            ),
+        )
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
@@ -847,17 +865,17 @@ class FxaAccountManagerTest {
 
         reset(accountObserver)
 
-        assertNull(manager.beginAuthentication())
+        assertNull(manager.beginAuthentication(entrypoint = mock()))
 
         // Confirm that account state observable doesn't receive authentication errors.
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
         // Try again, without any network problems this time.
-        `when`(mockAccount.beginOAuthFlow(any(), anyString())).thenReturn(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url"))
+        `when`(mockAccount.beginOAuthFlow(any(), any())).thenReturn(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url"))
         `when`(constellation.finalizeDevice(any(), any())).thenReturn(ServiceResult.Ok)
 
-        assertEquals("auth://url", manager.beginAuthentication())
+        assertEquals("auth://url", manager.beginAuthentication(entrypoint = mock()))
 
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
@@ -894,17 +912,29 @@ class FxaAccountManagerTest {
 
         reset(accountObserver)
 
-        assertNull(manager.beginAuthentication(pairingUrl = "auth://pairing"))
+        assertNull(manager.beginAuthentication(pairingUrl = "auth://pairing", entrypoint = mock()))
 
         // Confirm that account state observable doesn't receive authentication errors.
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
         // Try again, without any network problems this time.
-        `when`(mockAccount.beginPairingFlow(anyString(), any(), anyString())).thenReturn(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url"))
+        `when`(
+            mockAccount.beginPairingFlow(
+                anyString(),
+                any(),
+                any(),
+            ),
+        ).thenReturn(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url"))
         `when`(constellation.finalizeDevice(any(), any())).thenReturn(ServiceResult.Ok)
 
-        assertEquals("auth://url", manager.beginAuthentication(pairingUrl = "auth://pairing"))
+        assertEquals(
+            "auth://url",
+            manager.beginAuthentication(
+                pairingUrl = "auth://pairing",
+                entrypoint = mock(),
+            ),
+        )
 
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
@@ -938,7 +968,7 @@ class FxaAccountManagerTest {
         verify(accountObserver, never()).onAuthenticated(any(), any())
 
         reset(accountObserver)
-        assertEquals("auth://url", manager.beginAuthentication())
+        assertEquals("auth://url?entrypoint=home-menu", manager.beginAuthentication(entrypoint = mock()))
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
@@ -966,7 +996,7 @@ class FxaAccountManagerTest {
 
         // Able to re-authenticate.
         reset(accountObserver)
-        assertEquals("auth://url", manager.beginAuthentication())
+        assertEquals("auth://url?entrypoint=home-menu", manager.beginAuthentication(entrypoint = mock()))
 
         assertTrue(manager.finishAuthentication(FxaAuthData(AuthType.Pairing, "dummyCode", EXPECTED_AUTH_STATE)))
 
@@ -1000,7 +1030,7 @@ class FxaAccountManagerTest {
         verify(accountObserver, never()).onAuthenticated(any(), any())
 
         reset(accountObserver)
-        assertEquals("auth://url", manager.beginAuthentication())
+        assertEquals("auth://url?entrypoint=home-menu", manager.beginAuthentication(entrypoint = mock()))
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
@@ -1047,7 +1077,7 @@ class FxaAccountManagerTest {
         verify(accountObserver, never()).onAuthenticated(any(), any())
 
         reset(accountObserver)
-        assertEquals("auth://url", manager.beginAuthentication())
+        assertEquals("auth://url?entrypoint=home-menu", manager.beginAuthentication(entrypoint = mock()))
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
@@ -1121,7 +1151,7 @@ class FxaAccountManagerTest {
         `when`(mockAccount.getCurrentDeviceId()).thenReturn("testDeviceId")
         `when`(constellation.finalizeDevice(any(), any())).thenReturn(ServiceResult.Ok)
         `when`(mockAccount.getProfile(ignoreCache = false)).thenReturn(null)
-        `when`(mockAccount.beginOAuthFlow(any(), anyString())).thenReturn(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url"))
+        `when`(mockAccount.beginOAuthFlow(any(), any())).thenReturn(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url"))
         `when`(mockAccount.completeOAuthFlow(anyString(), anyString())).thenReturn(true)
         // There's no account at the start.
         `when`(accountStorage.read()).thenReturn(null)
@@ -1145,7 +1175,7 @@ class FxaAccountManagerTest {
         verify(accountObserver, never()).onAuthenticated(any(), any())
 
         reset(accountObserver)
-        assertEquals("auth://url", manager.beginAuthentication())
+        assertEquals("auth://url", manager.beginAuthentication(entrypoint = mock()))
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
@@ -1192,7 +1222,7 @@ class FxaAccountManagerTest {
         // Our recovery flow should attempt to hit this API. Model the "can't recover" condition by returning false.
         `when`(mockAccount.checkAuthorizationStatus(eq("profile"))).thenReturn(false)
 
-        `when`(mockAccount.beginOAuthFlow(any(), anyString())).thenReturn(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url"))
+        `when`(mockAccount.beginOAuthFlow(any(), any())).thenReturn(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url"))
         `when`(mockAccount.completeOAuthFlow(anyString(), anyString())).thenReturn(true)
         // There's no account at the start.
         `when`(accountStorage.read()).thenReturn(null)
@@ -1226,7 +1256,7 @@ class FxaAccountManagerTest {
         assertFalse(manager.accountNeedsReauth())
 
         reset(accountObserver)
-        assertEquals("auth://url", manager.beginAuthentication())
+        assertEquals("auth://url", manager.beginAuthentication(entrypoint = mock()))
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
@@ -1252,7 +1282,7 @@ class FxaAccountManagerTest {
         // Our recovery flow should attempt to hit this API. Model the "don't know what's up" condition by returning null.
         `when`(mockAccount.checkAuthorizationStatus(eq("profile"))).thenReturn(null)
 
-        `when`(mockAccount.beginOAuthFlow(any(), anyString())).thenReturn(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url"))
+        `when`(mockAccount.beginOAuthFlow(any(), any())).thenReturn(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url"))
         `when`(mockAccount.completeOAuthFlow(anyString(), anyString())).thenReturn(true)
         // There's no account at the start.
         `when`(accountStorage.read()).thenReturn(null)
@@ -1286,7 +1316,7 @@ class FxaAccountManagerTest {
         assertFalse(manager.accountNeedsReauth())
 
         reset(accountObserver)
-        assertEquals("auth://url", manager.beginAuthentication())
+        assertEquals("auth://url", manager.beginAuthentication(entrypoint = mock()))
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
@@ -1320,7 +1350,7 @@ class FxaAccountManagerTest {
         // Recovery flow will hit this API, return a success.
         `when`(mockAccount.checkAuthorizationStatus(eq("profile"))).thenReturn(true)
 
-        `when`(mockAccount.beginOAuthFlow(any(), anyString())).thenReturn(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url"))
+        `when`(mockAccount.beginOAuthFlow(any(), any())).thenReturn(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url"))
         `when`(mockAccount.completeOAuthFlow(anyString(), anyString())).thenReturn(true)
         // There's no account at the start.
         `when`(accountStorage.read()).thenReturn(null)
@@ -1363,7 +1393,7 @@ class FxaAccountManagerTest {
         assertFalse(manager.accountNeedsReauth())
 
         reset(accountObserver)
-        assertEquals("auth://url", manager.beginAuthentication())
+        assertEquals("auth://url", manager.beginAuthentication(entrypoint = mock()))
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
@@ -1394,7 +1424,7 @@ class FxaAccountManagerTest {
         doAnswer {
             throw FxaPanicException("500")
         }.`when`(mockAccount).getProfile(ignoreCache = false)
-        `when`(mockAccount.beginOAuthFlow(any(), anyString())).thenReturn(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url"))
+        `when`(mockAccount.beginOAuthFlow(any(), any())).thenReturn(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url"))
         `when`(mockAccount.completeOAuthFlow(anyString(), anyString())).thenReturn(true)
         // There's no account at the start.
         `when`(accountStorage.read()).thenReturn(null)
@@ -1420,7 +1450,7 @@ class FxaAccountManagerTest {
         assertFalse(manager.accountNeedsReauth())
 
         reset(accountObserver)
-        assertEquals("auth://url", manager.beginAuthentication())
+        assertEquals("auth://url", manager.beginAuthentication(entrypoint = mock()))
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
@@ -1527,8 +1557,8 @@ class FxaAccountManagerTest {
         )
 
         `when`(mockAccount.getProfile(ignoreCache = false)).thenReturn(profile)
-        `when`(mockAccount.beginOAuthFlow(any(), anyString())).thenReturn(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url"))
-        `when`(mockAccount.beginPairingFlow(anyString(), any(), anyString())).thenReturn(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url"))
+        `when`(mockAccount.beginOAuthFlow(any(), any())).thenReturn(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url?entrypoint=home-menu"))
+        `when`(mockAccount.beginPairingFlow(anyString(), any(), any())).thenReturn(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url?entrypoint=home-menu"))
         `when`(mockAccount.completeOAuthFlow(anyString(), anyString())).thenReturn(true)
         `when`(mockAccount.getAccessToken(anyString())).thenReturn(accessTokenInfo)
         `when`(mockAccount.getTokenServerEndpointURL()).thenReturn("some://url")
@@ -1563,8 +1593,8 @@ class FxaAccountManagerTest {
     ): FxaAccountManager {
         `when`(mockAccount.getProfile(ignoreCache = false)).thenReturn(profile)
         `when`(mockAccount.deviceConstellation()).thenReturn(mock())
-        `when`(mockAccount.beginOAuthFlow(any(), anyString())).thenReturn(null)
-        `when`(mockAccount.beginPairingFlow(anyString(), any(), anyString())).thenReturn(null)
+        `when`(mockAccount.beginOAuthFlow(any(), any())).thenReturn(null)
+        `when`(mockAccount.beginPairingFlow(anyString(), any(), any())).thenReturn(null)
         `when`(mockAccount.completeOAuthFlow(anyString(), anyString())).thenReturn(true)
         // There's no account at the start.
         `when`(accountStorage.read()).thenReturn(null)

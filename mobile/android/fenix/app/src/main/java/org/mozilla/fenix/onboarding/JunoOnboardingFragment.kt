@@ -20,6 +20,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.ext.areNotificationsEnabledSafe
 import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.nav
@@ -110,7 +111,9 @@ class JunoOnboardingFragment : Fragment() {
             onSignInButtonClick = {
                 findNavController().nav(
                     id = R.id.junoOnboardingFragment,
-                    directions = JunoOnboardingFragmentDirections.actionGlobalTurnOnSync(),
+                    directions = JunoOnboardingFragmentDirections.actionGlobalTurnOnSync(
+                        entrypoint = FenixFxAEntryPoint.NewUserOnboarding,
+                    ),
                 )
                 telemetryRecorder.onSyncSignInClick(
                     sequenceId = pagesToDisplay.telemetrySequenceId(),

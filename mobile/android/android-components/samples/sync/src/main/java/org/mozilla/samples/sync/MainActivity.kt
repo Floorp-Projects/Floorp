@@ -132,7 +132,7 @@ class MainActivity :
 
         findViewById<View>(R.id.buttonSignIn).setOnClickListener {
             launch {
-                accountManager.beginAuthentication()?.let { openWebView(it) }
+                accountManager.beginAuthentication(entrypoint = SampleFxAEntryPoint.HomeMenu)?.let { openWebView(it) }
             }
         }
 

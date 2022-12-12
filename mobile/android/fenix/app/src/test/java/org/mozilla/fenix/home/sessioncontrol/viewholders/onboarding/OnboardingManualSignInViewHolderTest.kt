@@ -23,6 +23,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.Onboarding
+import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.databinding.OnboardingManualSigninBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -60,7 +61,13 @@ class OnboardingManualSignInViewHolderTest {
         OnboardingManualSignInViewHolder(binding.root)
         binding.fxaSignInButton.performClick()
 
-        verify { navController.navigate(HomeFragmentDirections.actionGlobalTurnOnSync()) }
+        verify {
+            navController.navigate(
+                HomeFragmentDirections.actionGlobalTurnOnSync(
+                    entrypoint = FenixFxAEntryPoint.OnboardingManualSignIn,
+                ),
+            )
+        }
         // Check if the event was recorded
         Assert.assertNotNull(Onboarding.fxaManualSignin.testGetValue())
         assertEquals(1, Onboarding.fxaManualSignin.testGetValue()!!.size)

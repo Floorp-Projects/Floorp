@@ -88,7 +88,7 @@ class FirefoxAccountsAuthFeatureTest {
         ) { _, url ->
             authUrl.complete(url)
         }
-        feature.beginAuthentication(testContext)
+        feature.beginAuthentication(testContext, mock())
         authUrl.await()
         assertEquals("auth://url", authUrl.getCompleted())
     }
@@ -107,7 +107,7 @@ class FirefoxAccountsAuthFeatureTest {
         ) { _, url ->
             authUrl.complete(url)
         }
-        feature.beginPairingAuthentication(testContext, "auth://pair")
+        feature.beginPairingAuthentication(testContext, "auth://pair", mock())
         authUrl.await()
         assertEquals("auth://url", authUrl.getCompleted())
     }
@@ -127,7 +127,7 @@ class FirefoxAccountsAuthFeatureTest {
         ) { _, url ->
             authUrl.complete(url)
         }
-        feature.beginAuthentication(testContext)
+        feature.beginAuthentication(testContext, mock())
         authUrl.await()
         // Fallback url is invoked.
         assertEquals("https://accounts.firefox.com/signin", authUrl.getCompleted())
@@ -148,7 +148,7 @@ class FirefoxAccountsAuthFeatureTest {
         ) { _, url ->
             authUrl.complete(url)
         }
-        feature.beginPairingAuthentication(testContext, "auth://pair")
+        feature.beginPairingAuthentication(testContext, "auth://pair", mock())
         authUrl.await()
         // Fallback url is invoked.
         assertEquals("https://accounts.firefox.com/signin", authUrl.getCompleted())
@@ -251,8 +251,8 @@ class FirefoxAccountsAuthFeatureTest {
 
         `when`(mockAccount.deviceConstellation()).thenReturn(mock())
         `when`(mockAccount.getProfile(anyBoolean())).thenReturn(profile)
-        `when`(mockAccount.beginOAuthFlow(any(), anyString())).thenReturn(AuthFlowUrl("authState", "auth://url"))
-        `when`(mockAccount.beginPairingFlow(anyString(), any(), anyString())).thenReturn(AuthFlowUrl("authState", "auth://url"))
+        `when`(mockAccount.beginOAuthFlow(any(), any())).thenReturn(AuthFlowUrl("authState", "auth://url"))
+        `when`(mockAccount.beginPairingFlow(anyString(), any(), any())).thenReturn(AuthFlowUrl("authState", "auth://url"))
         `when`(mockAccount.completeOAuthFlow(anyString(), anyString())).thenReturn(true)
 
         val manager = TestableFxaAccountManager(
@@ -278,8 +278,8 @@ class FirefoxAccountsAuthFeatureTest {
 
         `when`(mockAccount.getProfile(anyBoolean())).thenReturn(profile)
         `when`(mockAccount.deviceConstellation()).thenReturn(mock())
-        `when`(mockAccount.beginOAuthFlow(any(), anyString())).thenReturn(null)
-        `when`(mockAccount.beginPairingFlow(anyString(), any(), anyString())).thenReturn(null)
+        `when`(mockAccount.beginOAuthFlow(any(), any())).thenReturn(null)
+        `when`(mockAccount.beginPairingFlow(anyString(), any(), any())).thenReturn(null)
         `when`(mockAccount.completeOAuthFlow(anyString(), anyString())).thenReturn(true)
 
         val manager = TestableFxaAccountManager(

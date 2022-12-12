@@ -71,6 +71,7 @@ import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.accounts.AccountState
+import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.directionsEq
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -784,7 +785,9 @@ class DefaultBrowserToolbarMenuControllerTest {
     @Test
     fun `GIVEN account exists and the user is not signed in WHEN sign in to sync menu item is pressed THEN navigate to account problem fragment`() = runTest {
         val item = ToolbarMenu.Item.SyncAccount(AccountState.NEEDS_REAUTHENTICATION)
-        val accountProblemDirections = BrowserFragmentDirections.actionGlobalAccountProblemFragment()
+        val accountProblemDirections = BrowserFragmentDirections.actionGlobalAccountProblemFragment(
+            entrypoint = FenixFxAEntryPoint.BrowserToolbar,
+        )
         val controller = createController(scope = this, store = browserStore)
 
         controller.handleToolbarItemInteraction(item)
@@ -795,7 +798,9 @@ class DefaultBrowserToolbarMenuControllerTest {
     @Test
     fun `GIVEN account doesn't exist WHEN sign in to sync menu item is pressed THEN navigate to sign in`() = runTest {
         val item = ToolbarMenu.Item.SyncAccount(AccountState.NO_ACCOUNT)
-        val turnOnSyncDirections = BrowserFragmentDirections.actionGlobalTurnOnSync()
+        val turnOnSyncDirections = BrowserFragmentDirections.actionGlobalTurnOnSync(
+            entrypoint = FenixFxAEntryPoint.BrowserToolbar,
+        )
         val controller = createController(scope = this, store = browserStore)
 
         controller.handleToolbarItemInteraction(item)

@@ -27,6 +27,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.sync.Device
+import mozilla.components.concept.sync.FxAEntryPoint
 import mozilla.components.concept.sync.TabData
 import mozilla.components.feature.accounts.push.SendTabUseCases
 import mozilla.components.feature.session.SessionUseCases
@@ -37,6 +38,7 @@ import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.SyncAccount
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.share.listadapters.AppShareOption
 
@@ -73,6 +75,7 @@ interface ShareController {
  * @param sendTabUseCases instance of [SendTabUseCases] which allows sending tabs to account devices.
  * @param snackbar - instance of [FenixSnackbar] for displaying styled snackbars
  * @param navController - [NavController] used for navigation.
+ * @param fxaEntrypoint - the entrypoint if we need to authenticate, it will be reported in telemetry
  * @param dismiss - callback signalling sharing can be closed.
  */
 @Suppress("TooManyFunctions", "LongParameterList")
@@ -87,11 +90,14 @@ class DefaultShareController(
     private val recentAppsStorage: RecentAppsStorage,
     private val viewLifecycleScope: CoroutineScope,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val fxaEntrypoint: FxAEntryPoint = FenixFxAEntryPoint.ShareMenu,
     private val dismiss: (ShareController.Result) -> Unit,
 ) : ShareController {
 
     override fun handleReauth() {
-        val directions = ShareFragmentDirections.actionGlobalAccountProblemFragment()
+        val directions = ShareFragmentDirections.actionGlobalAccountProblemFragment(
+            entrypoint = fxaEntrypoint as FenixFxAEntryPoint,
+        )
         navController.nav(R.id.shareFragment, directions)
         dismiss(ShareController.Result.DISMISSED)
     }
@@ -161,8 +167,10 @@ class DefaultShareController(
 
     override fun handleSignIn() {
         SyncAccount.signInToSendTab.record(NoExtras())
-        val directions =
-            ShareFragmentDirections.actionGlobalTurnOnSync(padSnackbar = true)
+        val directions = ShareFragmentDirections.actionGlobalTurnOnSync(
+            padSnackbar = true,
+            entrypoint = fxaEntrypoint as FenixFxAEntryPoint,
+        )
         navController.nav(R.id.shareFragment, directions)
         dismiss(ShareController.Result.DISMISSED)
     }

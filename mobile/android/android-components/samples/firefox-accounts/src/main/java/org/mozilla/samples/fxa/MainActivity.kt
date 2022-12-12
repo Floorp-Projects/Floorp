@@ -71,7 +71,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
             },
             onScanResult = { pairingUrl ->
                 launch {
-                    val url = account.beginPairingFlow(pairingUrl, scopes)
+                    val url = account.beginPairingFlow(pairingUrl, scopes, SampleFxAEntryPoint.HomeMenu)
                     if (url == null) {
                         Log.log(
                             Log.Priority.ERROR,
@@ -90,7 +90,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
 
         findViewById<View>(R.id.buttonCustomTabs).setOnClickListener {
             launch {
-                account.beginOAuthFlow(scopes)?.let {
+                account.beginOAuthFlow(scopes, SampleFxAEntryPoint.HomeMenu)?.let {
                     openTab(it.url)
                 }
             }
@@ -98,7 +98,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
 
         findViewById<View>(R.id.buttonWebView).setOnClickListener {
             launch {
-                account.beginOAuthFlow(scopes)?.let {
+                account.beginOAuthFlow(scopes, SampleFxAEntryPoint.HomeMenu)?.let {
                     openWebView(it.url)
                 }
             }

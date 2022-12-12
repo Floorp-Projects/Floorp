@@ -12,6 +12,7 @@ import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.TabsTray
+import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.tabstray.ext.isActiveDownload
 
@@ -81,7 +82,7 @@ class DefaultNavigationInteractor(
         val direction = if (isSignedIn) {
             TabsTrayFragmentDirections.actionGlobalAccountSettingsFragment()
         } else {
-            TabsTrayFragmentDirections.actionGlobalTurnOnSync()
+            TabsTrayFragmentDirections.actionGlobalTurnOnSync(entrypoint = FenixFxAEntryPoint.NavigationInteraction)
         }
         navController.navigate(direction)
     }

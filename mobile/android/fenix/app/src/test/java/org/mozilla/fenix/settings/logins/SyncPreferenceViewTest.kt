@@ -30,6 +30,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.settings.SyncPreference
 import org.mozilla.fenix.settings.SyncPreferenceView
 import org.mozilla.fenix.settings.logins.fragment.SavedLoginsAuthFragmentDirections
@@ -98,7 +99,7 @@ class SyncPreferenceViewTest {
         assertFalse(preferenceChangeListener.captured.onPreferenceChange(syncPreference, any()))
         verify {
             navController.navigate(
-                SavedLoginsAuthFragmentDirections.actionGlobalAccountProblemFragment(),
+                SavedLoginsAuthFragmentDirections.actionGlobalAccountProblemFragment(entrypoint = FenixFxAEntryPoint.SavedLogins),
             )
         }
     }
@@ -115,7 +116,9 @@ class SyncPreferenceViewTest {
         assertFalse(preferenceChangeListener.captured.onPreferenceChange(syncPreference, any()))
         verify {
             navController.navigate(
-                SavedLoginsAuthFragmentDirections.actionGlobalAccountProblemFragment(),
+                SavedLoginsAuthFragmentDirections.actionGlobalAccountProblemFragment(
+                    entrypoint = FenixFxAEntryPoint.SavedLogins,
+                ),
             )
         }
     }
@@ -132,7 +135,9 @@ class SyncPreferenceViewTest {
         assertFalse(preferenceChangeListener.captured.onPreferenceChange(syncPreference, any()))
         verify {
             navController.navigate(
-                SavedLoginsAuthFragmentDirections.actionSavedLoginsAuthFragmentToTurnOnSyncFragment(),
+                SavedLoginsAuthFragmentDirections.actionSavedLoginsAuthFragmentToTurnOnSyncFragment(
+                    entrypoint = FenixFxAEntryPoint.SavedLogins,
+                ),
             )
         }
     }
@@ -184,12 +189,16 @@ class SyncPreferenceViewTest {
         loggedInTitle = loggedInTitle,
         onSyncSignInClicked = {
             val directions =
-                SavedLoginsAuthFragmentDirections.actionSavedLoginsAuthFragmentToTurnOnSyncFragment()
+                SavedLoginsAuthFragmentDirections.actionSavedLoginsAuthFragmentToTurnOnSyncFragment(
+                    entrypoint = FenixFxAEntryPoint.SavedLogins,
+                )
             navController.navigate(directions)
         },
         onReconnectClicked = {
             val directions =
-                SavedLoginsAuthFragmentDirections.actionGlobalAccountProblemFragment()
+                SavedLoginsAuthFragmentDirections.actionGlobalAccountProblemFragment(
+                    entrypoint = FenixFxAEntryPoint.SavedLogins,
+                )
             navController.navigate(directions)
         },
     )

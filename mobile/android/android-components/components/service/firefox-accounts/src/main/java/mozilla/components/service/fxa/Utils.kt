@@ -5,6 +5,7 @@
 package mozilla.components.service.fxa
 
 import mozilla.components.concept.sync.AuthFlowUrl
+import mozilla.components.concept.sync.FxAEntryPoint
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.ServiceResult
 import mozilla.components.service.fxa.manager.GlobalAccountManager
@@ -139,10 +140,14 @@ internal suspend fun withServiceRetries(
     return ServiceResult.OtherError
 }
 
-internal suspend fun String?.asAuthFlowUrl(account: OAuthAccount, scopes: Set<String>): AuthFlowUrl? {
+internal suspend fun String?.asAuthFlowUrl(
+    account: OAuthAccount,
+    scopes: Set<String>,
+    entrypoint: FxAEntryPoint,
+): AuthFlowUrl? {
     return if (this != null) {
-        account.beginPairingFlow(this, scopes)
+        account.beginPairingFlow(this, scopes, entrypoint)
     } else {
-        account.beginOAuthFlow(scopes)
+        account.beginOAuthFlow(scopes, entrypoint)
     }
 }

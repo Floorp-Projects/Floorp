@@ -11,6 +11,7 @@ import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.ServiceResult
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.manager.GlobalAccountManager
+import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -386,18 +387,18 @@ class UtilsKtTest {
     fun `as auth flow pairing`() = runTest {
         val account: OAuthAccount = mock()
         val authFlowUrl: AuthFlowUrl = mock()
-        `when`(account.beginPairingFlow(eq("http://pairing.url"), eq(emptySet()), anyString())).thenReturn(authFlowUrl)
-        verify(account, never()).beginOAuthFlow(eq(emptySet()), anyString())
-        assertEquals(authFlowUrl, "http://pairing.url".asAuthFlowUrl(account, emptySet()))
+        `when`(account.beginPairingFlow(eq("http://pairing.url"), eq(emptySet()), any())).thenReturn(authFlowUrl)
+        verify(account, never()).beginOAuthFlow(eq(emptySet()), any())
+        assertEquals(authFlowUrl, "http://pairing.url".asAuthFlowUrl(account, emptySet(), mock()))
     }
 
     @Test
     fun `as auth flow regular`() = runTest {
         val account: OAuthAccount = mock()
         val authFlowUrl: AuthFlowUrl = mock()
-        `when`(account.beginOAuthFlow(eq(emptySet()), anyString())).thenReturn(authFlowUrl)
-        verify(account, never()).beginPairingFlow(anyString(), eq(emptySet()), anyString())
-        assertEquals(authFlowUrl, null.asAuthFlowUrl(account, emptySet()))
+        `when`(account.beginOAuthFlow(eq(emptySet()), any())).thenReturn(authFlowUrl)
+        verify(account, never()).beginPairingFlow(anyString(), eq(emptySet()), any())
+        assertEquals(authFlowUrl, null.asAuthFlowUrl(account, emptySet(), mock()))
     }
 
     private class SucceedOn<S>(private val successOn: Int, private val succeedWith: S, private val failWith: S? = null) {

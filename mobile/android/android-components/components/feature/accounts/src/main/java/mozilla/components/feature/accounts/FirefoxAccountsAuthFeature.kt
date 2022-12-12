@@ -11,6 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.request.RequestInterceptor
+import mozilla.components.concept.sync.FxAEntryPoint
 import mozilla.components.service.fxa.FxaAuthData
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.toAuthType
@@ -32,15 +33,32 @@ class FirefoxAccountsAuthFeature(
     private val coroutineContext: CoroutineContext = Dispatchers.IO,
     private val onBeginAuthentication: (Context, String) -> Unit = { _, _ -> },
 ) {
-    fun beginAuthentication(context: Context) {
+    /**
+     * Begins Email authentication, launching `onBeginAuthentication` if successful
+     * @param context [Context] The application context
+     * @param entrypoint [FxAEntryPoint] The Firefox Accounts feature/entrypoint that is launching
+     * authentication
+     */
+    fun beginAuthentication(context: Context, entrypoint: FxAEntryPoint) {
         beginAuthenticationAsync(context) {
-            accountManager.beginAuthentication()
+            accountManager.beginAuthentication(entrypoint = entrypoint)
         }
     }
 
-    fun beginPairingAuthentication(context: Context, pairingUrl: String) {
+    /**
+     * Begins Pairing authentication, launching `onBeginAuthentication` if successful
+     * @param context [Context] The application context
+     * @param pairingUrl [String] The pairing URL retrieved from the QR scanner
+     * @param entrypoint [FxAEntryPoint] The Firefox Accounts feature/entrypoint that is launching
+     * authentication
+     */
+    fun beginPairingAuthentication(
+        context: Context,
+        pairingUrl: String,
+        entrypoint: FxAEntryPoint,
+    ) {
         beginAuthenticationAsync(context) {
-            accountManager.beginAuthentication(pairingUrl)
+            accountManager.beginAuthentication(pairingUrl, entrypoint = entrypoint)
         }
     }
 

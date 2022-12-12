@@ -26,6 +26,7 @@ import org.mozilla.fenix.BuildConfig.DEEP_LINK_SCHEME
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.SupportUtils
 import org.robolectric.annotation.Config
@@ -119,7 +120,13 @@ class HomeDeepLinkIntentProcessorTest {
         assertTrue(processorHome.process(testIntent("turn_on_sync"), navController, out))
 
         verify { activity wasNot Called }
-        verify { navController.navigate(NavGraphDirections.actionGlobalTurnOnSync()) }
+        verify {
+            navController.navigate(
+                NavGraphDirections.actionGlobalTurnOnSync(
+                    entrypoint = FenixFxAEntryPoint.DeepLink,
+                ),
+            )
+        }
         verify { out wasNot Called }
     }
 

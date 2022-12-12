@@ -30,6 +30,7 @@ import mozilla.components.ui.widgets.withCenterAlignedButtons
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
+import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.secure
@@ -165,12 +166,14 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
                 .getString(R.string.preferences_credit_cards_sync_cards),
             onSyncSignInClicked = {
                 findNavController().navigate(
-                    NavGraphDirections.actionGlobalTurnOnSync(),
+                    NavGraphDirections.actionGlobalTurnOnSync(entrypoint = FenixFxAEntryPoint.AutofillSetting),
                 )
             },
             onReconnectClicked = {
                 findNavController().navigate(
-                    AutofillSettingFragmentDirections.actionGlobalAccountProblemFragment(),
+                    AutofillSettingFragmentDirections.actionGlobalAccountProblemFragment(
+                        entrypoint = FenixFxAEntryPoint.AutofillSetting,
+                    ),
                 )
             },
         )

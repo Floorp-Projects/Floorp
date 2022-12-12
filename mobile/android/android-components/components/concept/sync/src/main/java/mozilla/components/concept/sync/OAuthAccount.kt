@@ -40,6 +40,19 @@ data class MigratingAccountInfo(
 )
 
 /**
+ * Representing all the possible entry points into FxA
+ *
+ * These entry points will be reflected in the authentication URL and will be tracked
+ * in server telemetry to allow studying authentication entry points independently.
+ *
+ * If you are introducing a new path to the firefox accounts sign in please add a new entry point
+ * here.
+ */
+interface FxAEntryPoint {
+    val entryName: String
+}
+
+/**
  * Facilitates testing consumers of FirefoxAccount.
  */
 interface OAuthAccount : AutoCloseable {
@@ -55,7 +68,7 @@ interface OAuthAccount : AutoCloseable {
      */
     suspend fun beginOAuthFlow(
         scopes: Set<String>,
-        entryPoint: String = "android-components",
+        entryPoint: FxAEntryPoint,
     ): AuthFlowUrl?
 
     /**
@@ -71,7 +84,7 @@ interface OAuthAccount : AutoCloseable {
     suspend fun beginPairingFlow(
         pairingUrl: String,
         scopes: Set<String>,
-        entryPoint: String = "android-components",
+        entryPoint: FxAEntryPoint,
     ): AuthFlowUrl?
 
     /**

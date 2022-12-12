@@ -48,6 +48,7 @@ import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.databinding.AmoCollectionOverrideDialogBinding
 import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.components
@@ -254,7 +255,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         val directions: NavDirections? = when (preference.key) {
             resources.getString(R.string.pref_key_sign_in) -> {
-                SettingsFragmentDirections.actionSettingsFragmentToTurnOnSyncFragment()
+                SettingsFragmentDirections.actionSettingsFragmentToTurnOnSyncFragment(
+                    entrypoint = FenixFxAEntryPoint.SettingsMenu,
+                )
             }
             resources.getString(R.string.pref_key_tabs) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToTabsSettingsFragment()
@@ -340,7 +343,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 SettingsFragmentDirections.actionSettingsFragmentToAccountSettingsFragment()
             }
             resources.getString(R.string.pref_key_account_auth_error) -> {
-                SettingsFragmentDirections.actionSettingsFragmentToAccountProblemFragment()
+                SettingsFragmentDirections.actionSettingsFragmentToAccountProblemFragment(
+                    entrypoint = FenixFxAEntryPoint.SettingsMenu,
+                )
             }
             resources.getString(R.string.pref_key_delete_browsing_data) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToDeleteBrowsingDataFragment()

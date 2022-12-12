@@ -104,7 +104,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
 
         findViewById<View>(R.id.buttonWebView).setOnClickListener {
             launch {
-                val authUrl = accountManager.beginAuthentication()
+                val authUrl = accountManager.beginAuthentication(entrypoint = SampleFxAEntryPoint.HomeMenu)
                 if (authUrl == null) {
                     Toast.makeText(this@MainActivity, "Account auth error", Toast.LENGTH_LONG).show()
                     return@launch

@@ -32,6 +32,7 @@ import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.TabsTray
+import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import mozilla.components.browser.state.state.createTab as createStateTab
 
@@ -84,7 +85,13 @@ class NavigationInteractorTest {
 
         createInteractor().onAccountSettingsClicked()
 
-        verify(exactly = 1) { navController.navigate(TabsTrayFragmentDirections.actionGlobalTurnOnSync()) }
+        verify(exactly = 1) {
+            navController.navigate(
+                TabsTrayFragmentDirections.actionGlobalTurnOnSync(
+                    entrypoint = FenixFxAEntryPoint.NavigationInteraction,
+                ),
+            )
+        }
     }
 
     @Test

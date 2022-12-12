@@ -63,7 +63,9 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
     private val binding get() = _binding!!
 
     private fun navigateToPairFragment() {
-        val directions = TurnOnSyncFragmentDirections.actionTurnOnSyncFragmentToPairFragment()
+        val directions = TurnOnSyncFragmentDirections.actionTurnOnSyncFragmentToPairFragment(
+            entrypoint = args.entrypoint,
+        )
         requireView().findNavController().navigate(directions)
         SyncAuth.scanPairing.record(NoExtras())
     }
@@ -170,7 +172,10 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
     }
 
     private fun navigateToPairWithEmail() {
-        requireComponents.services.accountsAuthFeature.beginAuthentication(requireContext())
+        requireComponents.services.accountsAuthFeature.beginAuthentication(
+            requireContext(),
+            entrypoint = args.entrypoint,
+        )
         SyncAuth.useEmail.record(NoExtras())
         // TODO The sign-in web content populates session history,
         // so pressing "back" after signing in won't take us back into the settings screen, but rather up the

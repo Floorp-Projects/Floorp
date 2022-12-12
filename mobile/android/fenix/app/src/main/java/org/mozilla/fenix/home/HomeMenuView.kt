@@ -14,6 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.menu.view.MenuButton
+import mozilla.components.concept.sync.FxAEntryPoint
 import mozilla.components.service.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.Events
@@ -22,6 +23,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.accounts.AccountState
+import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.settings.SupportUtils
@@ -52,6 +54,7 @@ class HomeMenuView(
     private val navController: NavController,
     private val menuButton: WeakReference<MenuButton>,
     private val hideOnboardingIfNeeded: () -> Unit,
+    private val fxaEntrypoint: FxAEntryPoint = FenixFxAEntryPoint.HomeMenu,
 ) {
 
     /**
@@ -115,9 +118,13 @@ class HomeMenuView(
                         AccountState.AUTHENTICATED ->
                             HomeFragmentDirections.actionGlobalAccountSettingsFragment()
                         AccountState.NEEDS_REAUTHENTICATION ->
-                            HomeFragmentDirections.actionGlobalAccountProblemFragment()
+                            HomeFragmentDirections.actionGlobalAccountProblemFragment(
+                                entrypoint = fxaEntrypoint as FenixFxAEntryPoint,
+                            )
                         AccountState.NO_ACCOUNT ->
-                            HomeFragmentDirections.actionGlobalTurnOnSync()
+                            HomeFragmentDirections.actionGlobalTurnOnSync(
+                                entrypoint = fxaEntrypoint as FenixFxAEntryPoint,
+                            )
                     },
                 )
             }
@@ -187,7 +194,9 @@ class HomeMenuView(
             HomeMenu.Item.ReconnectSync -> {
                 navController.nav(
                     R.id.homeFragment,
-                    HomeFragmentDirections.actionGlobalAccountProblemFragment(),
+                    HomeFragmentDirections.actionGlobalAccountProblemFragment(
+                        entrypoint = fxaEntrypoint as FenixFxAEntryPoint,
+                    ),
                 )
             }
             HomeMenu.Item.Extensions -> {

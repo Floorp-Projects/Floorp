@@ -13,6 +13,7 @@ import kotlinx.coroutines.withContext
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.sync.AuthFlowUrl
 import mozilla.components.concept.sync.DeviceConstellation
+import mozilla.components.concept.sync.FxAEntryPoint
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.StatePersistenceCallback
 import mozilla.components.support.base.log.logger.Logger
@@ -93,9 +94,12 @@ class FirefoxAccount internal constructor(
         persistCallback.setCallback(callback)
     }
 
-    override suspend fun beginOAuthFlow(scopes: Set<String>, entryPoint: String) = withContext(scope.coroutineContext) {
+    override suspend fun beginOAuthFlow(
+        scopes: Set<String>,
+        entryPoint: FxAEntryPoint,
+    ) = withContext(scope.coroutineContext) {
         handleFxaExceptions(logger, "begin oauth flow", { null }) {
-            val url = inner.beginOAuthFlow(scopes.toTypedArray(), entryPoint)
+            val url = inner.beginOAuthFlow(scopes.toTypedArray(), entryPoint.entryName)
             val state = Uri.parse(url).getQueryParameter("state")!!
             AuthFlowUrl(state, url)
         }
@@ -104,13 +108,13 @@ class FirefoxAccount internal constructor(
     override suspend fun beginPairingFlow(
         pairingUrl: String,
         scopes: Set<String>,
-        entryPoint: String,
+        entryPoint: FxAEntryPoint,
     ) = withContext(scope.coroutineContext) {
         // Eventually we should specify this as a param here, but for now, let's
         // use a generic value (it's used only for server-side telemetry, so the
         // actual value doesn't matter much)
         handleFxaExceptions(logger, "begin oauth pairing flow", { null }) {
-            val url = inner.beginPairingFlow(pairingUrl, scopes.toTypedArray(), entryPoint)
+            val url = inner.beginPairingFlow(pairingUrl, scopes.toTypedArray(), entryPoint.entryName)
             val state = Uri.parse(url).getQueryParameter("state")!!
             AuthFlowUrl(state, url)
         }

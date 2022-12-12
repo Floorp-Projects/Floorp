@@ -20,6 +20,7 @@ import mozilla.components.concept.sync.AuthFlowError
 import mozilla.components.concept.sync.AuthFlowUrl
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.DeviceConfig
+import mozilla.components.concept.sync.FxAEntryPoint
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.concept.sync.ServiceResult
@@ -343,9 +344,14 @@ open class FxaAccountManager(
      * Begins an authentication process. Should be finalized by calling [finishAuthentication] once
      * user successfully goes through the authentication at the returned url.
      * @param pairingUrl Optional pairing URL in case a pairing flow is being initiated.
+     * @param entrypoint an enum representing the feature entrypoint requesting the URL.
+     * the entrypoint is used in telemetry.
      * @return An authentication url which is to be presented to the user.
      */
-    suspend fun beginAuthentication(pairingUrl: String? = null): String? = withContext(coroutineContext) {
+    suspend fun beginAuthentication(
+        pairingUrl: String? = null,
+        entrypoint: FxAEntryPoint,
+    ): String? = withContext(coroutineContext) {
         // It's possible that at this point authentication is considered to be "in-progress".
         // For example, if user started authentication flow, but cancelled it (closing a custom tab)
         // without finishing.
@@ -353,9 +359,9 @@ open class FxaAccountManager(
         processQueue(Event.Progress.CancelAuth)
 
         val event = if (pairingUrl != null) {
-            Event.Account.BeginPairingFlow(pairingUrl)
+            Event.Account.BeginPairingFlow(pairingUrl, entrypoint)
         } else {
-            Event.Account.BeginEmailFlow
+            Event.Account.BeginEmailFlow(entrypoint)
         }
 
         // 'deferredAuthUrl' will be set as the state machine reacts to the 'event'.
@@ -535,14 +541,24 @@ open class FxaAccountManager(
             Event.Progress.LoggedOut
         }
         ProgressState.BeginningAuthentication -> when (via) {
-            is Event.Account.BeginPairingFlow, Event.Account.BeginEmailFlow -> {
+            is Event.Account.BeginPairingFlow, is Event.Account.BeginEmailFlow -> {
                 val pairingUrl = if (via is Event.Account.BeginPairingFlow) {
                     via.pairingUrl
                 } else {
                     null
                 }
+                val entrypoint = if (via is Event.Account.BeginEmailFlow) {
+                    via.entrypoint
+                } else if (via is Event.Account.BeginPairingFlow) {
+                    via.entrypoint
+                } else {
+                    // This should be impossible, both `BeginPairingFlow` and `BeginEmailFlow`
+                    // have a required `entrypoint` and we are matching against only instances
+                    // of those data classes.
+                    throw IllegalStateException("BeginningAuthentication with a flow that is neither email nor pairing")
+                }
                 val result = withRetries(logger, MAX_NETWORK_RETRIES) {
-                    pairingUrl.asAuthFlowUrl(account, scopes)
+                    pairingUrl.asAuthFlowUrl(account, scopes, entrypoint = entrypoint)
                 }
                 when (result) {
                     is Result.Success -> {

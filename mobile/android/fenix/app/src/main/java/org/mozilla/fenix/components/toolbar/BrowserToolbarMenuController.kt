@@ -42,6 +42,7 @@ import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.accounts.AccountState
+import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.nav
@@ -231,9 +232,11 @@ class DefaultBrowserToolbarMenuController(
                     AccountState.AUTHENTICATED ->
                         BrowserFragmentDirections.actionGlobalAccountSettingsFragment()
                     AccountState.NEEDS_REAUTHENTICATION ->
-                        BrowserFragmentDirections.actionGlobalAccountProblemFragment()
+                        BrowserFragmentDirections.actionGlobalAccountProblemFragment(
+                            entrypoint = FenixFxAEntryPoint.BrowserToolbar,
+                        )
                     AccountState.NO_ACCOUNT ->
-                        BrowserFragmentDirections.actionGlobalTurnOnSync()
+                        BrowserFragmentDirections.actionGlobalTurnOnSync(entrypoint = FenixFxAEntryPoint.BrowserToolbar)
                 }
                 browserAnimator.captureEngineViewAndDrawStatically {
                     navController.nav(

@@ -15,6 +15,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.navigation.fragment.findNavController
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
@@ -53,7 +54,9 @@ class HomeOnboardingDialogFragment : DialogFragment() {
                     onSignInButtonClick = {
                         findNavController().nav(
                             R.id.homeOnboardingDialogFragment,
-                            HomeOnboardingDialogFragmentDirections.actionGlobalTurnOnSync(),
+                            HomeOnboardingDialogFragmentDirections.actionGlobalTurnOnSync(
+                                entrypoint = FenixFxAEntryPoint.HomeOnboardingDialog,
+                            ),
                         )
                         onDismiss()
                     },

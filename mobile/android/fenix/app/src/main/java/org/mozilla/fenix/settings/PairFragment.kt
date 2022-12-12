@@ -14,6 +14,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import mozilla.components.feature.qr.QrFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
@@ -23,6 +24,7 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 
 class PairFragment : Fragment(R.layout.fragment_pair), UserInteractionHandler {
+    private val args by navArgs<PairFragmentArgs>()
 
     private val qrFeature = ViewBoundFeatureWrapper<QrFeature>()
 
@@ -51,6 +53,7 @@ class PairFragment : Fragment(R.layout.fragment_pair), UserInteractionHandler {
                     requireComponents.services.accountsAuthFeature.beginPairingAuthentication(
                         requireContext(),
                         pairingUrl,
+                        args.entrypoint,
                     )
                     val vibrator = requireContext().getSystemService<Vibrator>()!!
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
