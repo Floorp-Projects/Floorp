@@ -664,7 +664,7 @@ int32_t WorkerGlobalScope::SetTimeoutOrInterval(JSContext* aCx,
 
 void WorkerGlobalScope::GetOrigin(nsAString& aOrigin) const {
   AssertIsOnWorkerThread();
-  aOrigin = mWorkerPrivate->OriginNoSuffix();
+  nsContentUtils::GetUTFOrigin(mWorkerPrivate->GetPrincipal(), aOrigin);
 }
 
 bool WorkerGlobalScope::CrossOriginIsolated() const {

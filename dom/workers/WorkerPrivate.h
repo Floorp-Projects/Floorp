@@ -13,6 +13,7 @@
 #include "js/ContextOptions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/Maybe.h"
@@ -747,20 +748,18 @@ class WorkerPrivate final
     return mLoadInfo.mPartitionedPrincipal;
   }
 
-  const nsAString& OriginNoSuffix() const { return mLoadInfo.mOriginNoSuffix; }
-
-  const nsACString& Origin() const { return mLoadInfo.mOrigin; }
-
-  const nsACString& EffectiveStoragePrincipalOrigin() const;
+  nsIPrincipal* GetEffectiveStoragePrincipal() const;
 
   nsILoadGroup* GetLoadGroup() const {
     AssertIsOnMainThread();
     return mLoadInfo.mLoadGroup;
   }
 
-  bool UsesSystemPrincipal() const { return mLoadInfo.mPrincipalIsSystem; }
+  bool UsesSystemPrincipal() const {
+    return GetPrincipal()->IsSystemPrincipal();
+  }
   bool UsesAddonOrExpandedAddonPrincipal() const {
-    return mLoadInfo.mPrincipalIsAddonOrExpandedAddon;
+    return GetPrincipal()->GetIsAddonOrExpandedAddonPrincipal();
   }
 
   const mozilla::ipc::PrincipalInfo& GetPrincipalInfo() const {
@@ -772,7 +771,7 @@ class WorkerPrivate final
   }
 
   uint32_t GetPrincipalHashValue() const {
-    return mLoadInfo.mPrincipalHashValue;
+    return GetPrincipal()->GetHashValue();
   }
 
   const mozilla::ipc::PrincipalInfo& GetEffectiveStoragePrincipalInfo() const;

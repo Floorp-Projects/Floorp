@@ -88,15 +88,12 @@ WorkerLoadInfoData::WorkerLoadInfoData()
     : mLoadFlags(nsIRequest::LOAD_NORMAL),
       mWindowID(UINT64_MAX),
       mReferrerInfo(new ReferrerInfo(nullptr)),
-      mPrincipalHashValue(0),
       mFromWindow(false),
       mEvalAllowed(false),
       mReportEvalCSPViolations(false),
       mWasmEvalAllowed(false),
       mReportWasmEvalCSPViolations(false),
       mXHRParamsAllowed(false),
-      mPrincipalIsSystem(false),
-      mPrincipalIsAddonOrExpandedAddon(false),
       mWatchedByDevTools(false),
       mStorageAccess(StorageAccess::eDeny),
       mUseRegularPrincipal(false),
@@ -114,9 +111,6 @@ nsresult WorkerLoadInfo::SetPrincipalsAndCSPOnMainThread(
 
   mPrincipal = aPrincipal;
   mPartitionedPrincipal = aPartitionedPrincipal;
-  mPrincipalIsSystem = aPrincipal->IsSystemPrincipal();
-  mPrincipalIsAddonOrExpandedAddon =
-      aPrincipal->GetIsAddonOrExpandedAddonPrincipal();
 
   mCSP = aCsp;
 
@@ -145,26 +139,14 @@ nsresult WorkerLoadInfo::SetPrincipalsAndCSPOnMainThread(
   nsresult rv = PrincipalToPrincipalInfo(aPrincipal, mPrincipalInfo.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = nsContentUtils::GetUTFOrigin(aPrincipal, mOriginNoSuffix);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aPrincipal->GetOrigin(mOrigin);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   if (aPrincipal->Equals(aPartitionedPrincipal)) {
     *mPartitionedPrincipalInfo = *mPrincipalInfo;
-    mPartitionedOrigin = mOrigin;
   } else {
     mPartitionedPrincipalInfo = MakeUnique<PrincipalInfo>();
     rv = PrincipalToPrincipalInfo(aPartitionedPrincipal,
                                   mPartitionedPrincipalInfo.get());
     NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = aPartitionedPrincipal->GetOrigin(mPartitionedOrigin);
-    NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  mPrincipalHashValue = aPrincipal->GetHashValue();
   return NS_OK;
 }
 
