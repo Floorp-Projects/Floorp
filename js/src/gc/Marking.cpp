@@ -2234,7 +2234,6 @@ void GCRuntime::processDelayedMarkingList(MarkColor color) {
 
 void GCRuntime::markAllDelayedChildren(ShouldReportMarkTime reportTime) {
   MOZ_ASSERT(marker().isDrained());
-  MOZ_ASSERT(marker().markColor() == MarkColor::Black);
   MOZ_ASSERT(hasDelayedMarking());
 
   mozilla::Maybe<gcstats::AutoPhase> ap;
