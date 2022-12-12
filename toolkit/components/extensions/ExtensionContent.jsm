@@ -37,6 +37,12 @@ const Timer = Components.Constructor(
   "initWithCallback"
 );
 
+const ScriptError = Components.Constructor(
+  "@mozilla.org/scripterror;1",
+  "nsIScriptError",
+  "initWithWindowID"
+);
+
 const { ExtensionChild, ExtensionActivityLogChild } = ChromeUtils.import(
   "resource://gre/modules/ExtensionChild.jsm"
 );
@@ -623,6 +629,28 @@ class Script {
     // parsing and wait all promises to resolve.
     if (!scripts.every(script => script)) {
       let promise = Promise.all(scriptPromises);
+
+      // If there is any syntax error, the script promises will be rejected.
+      //
+      // Notify the exception directly to the console so that it can
+      // be displayed in the web console by flagging the error with the right
+      // innerWindowID.
+      for (const p of scriptPromises) {
+        p.catch(error => {
+          Services.console.logMessage(
+            new ScriptError(
+              `${error.name}: ${error.message}`,
+              error.fileName,
+              null,
+              error.lineNumber,
+              error.columnNumber,
+              Ci.nsIScriptError.errorFlag,
+              "content javascript",
+              context.innerWindowID
+            )
+          );
+        });
+      }
 
       // If we're supposed to inject at the start of the document load,
       // and we haven't already missed that point, block further parsing
