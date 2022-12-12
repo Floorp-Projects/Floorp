@@ -22483,24 +22483,6 @@
       "last_modified": 1645578266515
     },
     {
-      "schema": 1645577627880,
-      "derHash": "WfX/krYIoBGf8d18YD4OsW9P6tnUcXrDvGLShq45nNo=",
-      "subject": "CN=GlobalSign Atlas R3 DV TLS CA 2020-12,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFgxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS4wLAYDVQQDEyVHbG9iYWxTaWduIEF0bGFzIFIzIERWIFRMUyBDQSAyMDIwLTEy",
-      "whitelist": false,
-      "attachment": {
-        "hash": "978bbc0b5187a94f5a992a6478523b1f397eaf3bfd62a8b8256dc53cc30af2bb",
-        "size": 1691,
-        "filename": "qHEiXUiOfz6Ni9Jz-z5RQSnsI3DqTIU9kw0X_YkfXsU=.pem",
-        "location": "security-state-staging/intermediates/927a2d0c-b81c-44ca-8f61-8509049519f5.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "qHEiXUiOfz6Ni9Jz+z5RQSnsI3DqTIU9kw0X/YkfXsU=",
-      "crlite_enrolled": false,
-      "id": "dc8347d7-efd8-4734-aa3d-963854a8a8f6",
-      "last_modified": 1645578266505
-    },
-    {
       "schema": 1645577633162,
       "derHash": "Kg4/KneoDcvlzVLVDWUHbr03+tUx2xDWoThaVX97cl0=",
       "subject": "CN=e-Szigno Class2 SSL CA 2017,O=Microsec Ltd.,L=Budapest,C=HU",
@@ -23579,60 +23561,6 @@
       "crlite_enrolled": false,
       "id": "2780ce74-15ac-4292-b126-97ed74d0137a",
       "last_modified": 1610999846060
-    },
-    {
-      "schema": 1607694534261,
-      "derHash": "bzNd181Kqh2RQPKQ6eezSYp8w1okSqMA4Ua6LZ0CuWA=",
-      "subject": "CN=GlobalSign Atlas ECCR5 DV TLS CA 2020-12,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEF0bGFzIEVDQ1I1IERWIFRMUyBDQSAyMDIwLTEy",
-      "whitelist": false,
-      "attachment": {
-        "hash": "c382d90e02609513d21d5c25d700a6f8e6b01f00b16e0cc3be89ad8d2de7a642",
-        "size": 1248,
-        "filename": "V_K2Vnq-QG5Dg_lYp-FnfgtMGvtLYZ1qAfYtkKQAILg=.pem",
-        "location": "security-state-staging/intermediates/32b8806d-e3fb-4c24-838a-25c957f58b64.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "V/K2Vnq+QG5Dg/lYp+FnfgtMGvtLYZ1qAfYtkKQAILg=",
-      "crlite_enrolled": false,
-      "id": "9d98e0ae-79dc-42dd-b2ab-457585b3b2e0",
-      "last_modified": 1607695036009
-    },
-    {
-      "schema": 1607694531126,
-      "derHash": "pgMsw1Lx4uNijhYqMEe8fWR+LWAaLA8myq+ar3pUI5w=",
-      "subject": "CN=GlobalSign Atlas R3 OV TLS CA 2020-12,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFgxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS4wLAYDVQQDEyVHbG9iYWxTaWduIEF0bGFzIFIzIE9WIFRMUyBDQSAyMDIwLTEy",
-      "whitelist": false,
-      "attachment": {
-        "hash": "87bb6f2c47bbed017d590d273e3e104b9a51d89c90f2d746b6d5c6b22a32b5e5",
-        "size": 1691,
-        "filename": "q8RzYVnv8u4WxSzLeEvOffFfpsrmgSIHiNuWJdK7BlU=.pem",
-        "location": "security-state-staging/intermediates/45a9ec2b-ccc8-4abc-9d7c-a2ad83a3fca5.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "q8RzYVnv8u4WxSzLeEvOffFfpsrmgSIHiNuWJdK7BlU=",
-      "crlite_enrolled": false,
-      "id": "5176fc36-9fd7-446d-aa9d-773e2d5f82c2",
-      "last_modified": 1607695035994
-    },
-    {
-      "schema": 1607694532759,
-      "derHash": "LrihMXKI8IIz5og86+Z+pqCYniKspCxY1Z9ag04CxRM=",
-      "subject": "CN=GlobalSign Atlas ECCR5 OV TLS CA 2020-12,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEF0bGFzIEVDQ1I1IE9WIFRMUyBDQSAyMDIwLTEy",
-      "whitelist": false,
-      "attachment": {
-        "hash": "0da48dd5abf0b542d1a4a62dc458f758e9c3517117e8ec13525dc3dc3e0ac628",
-        "size": 1248,
-        "filename": "pE2Mn6zDBy5ZUUx_Fz25_Wr_c2YZWOT8FCJpeRfpTXQ=.pem",
-        "location": "security-state-staging/intermediates/c3fa086f-e7d9-478c-8836-1bc02ce096dd.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "pE2Mn6zDBy5ZUUx/Fz25/Wr/c2YZWOT8FCJpeRfpTXQ=",
-      "crlite_enrolled": false,
-      "id": "7313f33d-0022-4715-8279-106b6ce53a40",
-      "last_modified": 1607695035982
     },
     {
       "schema": 1606678892869,
@@ -26929,5 +26857,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1670489823440
+  "timestamp": 1670597823065
 }
