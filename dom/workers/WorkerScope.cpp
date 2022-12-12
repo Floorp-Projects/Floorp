@@ -12,7 +12,6 @@
 #include "Crypto.h"
 #include "GeckoProfiler.h"
 #include "MainThreadUtils.h"
-#include "Principal.h"
 #include "ScriptLoader.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"
@@ -916,9 +915,7 @@ bool DedicatedWorkerGlobalScope::WrapGlobalObject(
 
   return DedicatedWorkerGlobalScope_Binding::Wrap(
       aCx, this, this, options,
-      new WorkerPrincipal(usesSystemPrincipal ||
-                          mWorkerPrivate->UsesAddonOrExpandedAddonPrincipal()),
-      true, aReflector);
+      nsJSPrincipals::get(mWorkerPrivate->GetPrincipal()), true, aReflector);
 }
 
 void DedicatedWorkerGlobalScope::PostMessage(
@@ -1080,9 +1077,7 @@ bool SharedWorkerGlobalScope::WrapGlobalObject(
 
   return SharedWorkerGlobalScope_Binding::Wrap(
       aCx, this, this, options,
-      new WorkerPrincipal(mWorkerPrivate->UsesSystemPrincipal() ||
-                          mWorkerPrivate->UsesAddonOrExpandedAddonPrincipal()),
-      true, aReflector);
+      nsJSPrincipals::get(mWorkerPrivate->GetPrincipal()), true, aReflector);
 }
 
 void SharedWorkerGlobalScope::Close() {
@@ -1125,9 +1120,7 @@ bool ServiceWorkerGlobalScope::WrapGlobalObject(
 
   return ServiceWorkerGlobalScope_Binding::Wrap(
       aCx, this, this, options,
-      new WorkerPrincipal(mWorkerPrivate->UsesSystemPrincipal() ||
-                          mWorkerPrivate->UsesAddonOrExpandedAddonPrincipal()),
-      true, aReflector);
+      nsJSPrincipals::get(mWorkerPrivate->GetPrincipal()), true, aReflector);
 }
 
 already_AddRefed<Clients> ServiceWorkerGlobalScope::GetClients() {
@@ -1252,9 +1245,7 @@ bool WorkerDebuggerGlobalScope::WrapGlobalObject(
 
   return WorkerDebuggerGlobalScope_Binding::Wrap(
       aCx, this, this, options,
-      new WorkerPrincipal(mWorkerPrivate->UsesSystemPrincipal() ||
-                          mWorkerPrivate->UsesAddonOrExpandedAddonPrincipal()),
-      true, aReflector);
+      nsJSPrincipals::get(mWorkerPrivate->GetPrincipal()), true, aReflector);
 }
 
 void WorkerDebuggerGlobalScope::GetGlobal(JSContext* aCx,

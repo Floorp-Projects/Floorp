@@ -50,7 +50,6 @@ UNIFIED_SOURCES += [
     "ChromeWorkerScope.cpp",
     "JSExecutionManager.cpp",
     "MessageEventRunnable.cpp",
-    "Principal.cpp",
     "RegisterBindings.cpp",
     "RuntimeService.cpp",
     "ScriptLoader.cpp",

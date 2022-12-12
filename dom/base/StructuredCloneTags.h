@@ -130,11 +130,6 @@ enum StructuredCloneTags : uint32_t {
   // StructuredCloneHolder::{Read,Write}FullySerializableObjects. In theory they
   // can be 'less' stable.
 
-  // Principal written out by worker threads when serializing objects. When
-  // reading on the main thread this principal will be converted to a normal
-  // principal object using nsJSPrincipals::AutoSetActiveWorkerPrincipal.
-  SCTAG_DOM_WORKER_PRINCIPAL,
-
   SCTAG_DOM_IMAGEBITMAP,
   SCTAG_DOM_MAP_MESSAGEPORT,
   SCTAG_DOM_FORMDATA,
