@@ -299,8 +299,8 @@ export var ChromeMigrationUtils = {
         "Opera GX": ["Opera-GX"],
         // Canary is not available on Linux.
         // Edge is not available on Linux.
-        Opera: ["Opera"],
-        Vivaldi: ["Vivaldi"],
+        Opera: ["opera"],
+        Vivaldi: ["vivaldi"],
       },
     };
     let subfolders = SUB_DIRECTORIES[AppConstants.platform][chromeProjectName];
