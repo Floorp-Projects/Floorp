@@ -1748,7 +1748,7 @@ bool GCRuntime::foregroundFinalize(JS::GCContext* gcx, Zone* zone,
 }
 
 BackgroundMarkTask::BackgroundMarkTask(GCRuntime* gc)
-    : GCParallelTask(gc, gcstats::PhaseKind::SWEEP_MARK),
+    : GCParallelTask(gc, gcstats::PhaseKind::SWEEP_MARK, GCUse::Marking),
       budget(SliceBudget::unlimited()) {}
 
 void js::gc::BackgroundMarkTask::run(AutoLockHelperThreadState& lock) {
