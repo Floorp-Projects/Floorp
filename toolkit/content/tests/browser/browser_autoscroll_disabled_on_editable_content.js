@@ -230,4 +230,77 @@ add_task(async function() {
       }
     }
   );
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["middlemouse.paste", false]],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    "https://example.com/browser/toolkit/content/tests/browser/file_empty.html",
+    async function(browser) {
+      await SpecialPowers.spawn(browser, [], () => {
+        content.document.body.innerHTML =
+          '<input style="height: 10000px; width: 10000px;">';
+        content.document.documentElement.scrollTop = 500;
+        content.document.documentElement.scrollTop; // Flush layout.
+      });
+      await promiseNativeMouseMiddleButtonDown(browser);
+      try {
+        await BrowserTestUtils.waitForEvent(
+          window,
+          "popupshown",
+          { capture: true },
+          onPopupShown
+        );
+        ok(
+          true,
+          "Auto scroll should be started on <input> if middle paste is disabled"
+        );
+      } finally {
+        await promiseNativeMouseMiddleButtonUp(browser);
+        let waitForAutoScrollEnd = promiseWaitForAutoScrollerClosed();
+        await waitForAutoScrollEnd;
+      }
+    }
+  );
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["middlemouse.paste", true]],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    "https://example.com/browser/toolkit/content/tests/browser/file_empty.html",
+    async function(browser) {
+      await SpecialPowers.spawn(browser, [], () => {
+        content.document.body.innerHTML =
+          '<input style="height: 10000px; width: 10000px;">';
+        content.document.documentElement.scrollTop = 500;
+        content.document.documentElement.scrollTop; // Flush layout.
+      });
+      await promiseNativeMouseMiddleButtonDown(browser);
+      try {
+        await TestUtils.waitForCondition(
+          popupIsNotClosed,
+          "Wait for timeout of popup",
+          100,
+          10
+        );
+        ok(
+          false,
+          "Autoscroll shouldn't be started on <input> if middle paste is enabled"
+        );
+      } catch (e) {
+        ok(
+          typeof e == "string" && e.includes(" - timed out after 10 tries."),
+          `Autoscroll shouldn't be started on <input> if middle paste is enabled (${
+            typeof e == "string" ? e : e.message
+          })`
+        );
+      } finally {
+        await promiseNativeMouseMiddleButtonUp(browser);
+        let waitForAutoScrollEnd = promiseWaitForAutoScrollerClosed();
+        await waitForAutoScrollEnd;
+      }
+    }
+  );
 });

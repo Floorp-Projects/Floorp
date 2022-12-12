@@ -57,9 +57,10 @@ class AutoScrollChild extends JSWindowActorChild {
     }
 
     // Or if we're pasting into an input field of sorts.
+    let closestInput = mmPaste && node.closest("input,textarea");
     if (
-      mmPaste &&
-      node.closest("input,textarea")?.constructor.name.startsWith("HTML")
+      content.HTMLInputElement.isInstance(closestInput) ||
+      content.HTMLTextAreaElement.isInstance(closestInput)
     ) {
       return true;
     }
