@@ -94,7 +94,7 @@ EXTRA_JS_MODULES += [
 
 if CONFIG["MOZ_DEBUG"] or CONFIG["MOZ_DEV_EDITION"] or CONFIG["NIGHTLY_BUILD"]:
     EXTRA_JS_MODULES += [
-        "StartupRecorder.jsm",
+        "StartupRecorder.sys.mjs",
     ]
 
 BROWSER_CHROME_MANIFESTS += [

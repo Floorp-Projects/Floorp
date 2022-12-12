@@ -2,14 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["StartupRecorder"];
-
 const Cm = Components.manager;
 Cm.QueryInterface(Ci.nsIServiceManager);
 
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 let firstPaintNotification = "widget-first-paint";
 // widget-first-paint fires much later than expected on Linux.
@@ -59,7 +55,7 @@ let afterPaintListener = () => {
  * This component only exists in nightly and debug builds, it doesn't ship in
  * our release builds.
  */
-function StartupRecorder() {
+export function StartupRecorder() {
   this.wrappedJSObject = this;
   this.data = {
     images: {
@@ -74,6 +70,7 @@ function StartupRecorder() {
     this._resolve = resolve;
   });
 }
+
 StartupRecorder.prototype = {
   QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
