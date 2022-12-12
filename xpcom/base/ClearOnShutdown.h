@@ -138,8 +138,8 @@ inline bool PastShutdownPhase(ShutdownPhase aPhase) {
          size_t(aPhase);
 }
 
-// Called when XPCOM is shutting down, after all shutdown notifications have
-// been sent and after all threads' event loops have been purged.
+// Called by AdvanceShutdownPhase each time we switch a phase. Will null out
+// pointers added by ClearOnShutdown for all phases up to and including aPhase.
 void KillClearOnShutdown(ShutdownPhase aPhase);
 
 }  // namespace mozilla

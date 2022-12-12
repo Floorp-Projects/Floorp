@@ -349,18 +349,29 @@ void AppShutdown::AdvanceShutdownPhaseInternal(
   }
 
   nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
-  if (sCurrentShutdownPhase >= ShutdownPhase::AppShutdownConfirmed) {
-    // Give runnables dispatched between two calls to AdvanceShutdownPhase
-    // a chance to run before actually advancing the phase. We must do this
-    // only after we passed the point of no return and thus can expect a linear
-    // flow through our shutdown phases. This way the processing is also
-    // covered by the terminator's timer of the previous phase.
-    // Note that this affects only main thread runnables, such that the correct
-    // way of ensuring shutdown processing remains to have an async shutdown
-    // blocker.
-    if (thread) {
-      NS_ProcessPendingEvents(thread);
-    }
+
+  // AppShutdownConfirmed is special in some ways as
+  // - we can be called on top of a nested event loop (and it is the phase for
+  //   which SpinEventLoopUntilOrQuit breaks, so we want to return soon)
+  // - we can be called from a sync marionette function that wants immediate
+  //   feedback, too
+  // - in general, AppShutdownConfirmed will fire the "quit-application"
+  //   notification which in turn will cause an event to be dispatched that
+  //   runs all the rest of our shutdown sequence which we do not want to be
+  //   processed on top of the running event.
+  // Thus we never do any NS_ProcessPendingEvents for it.
+  bool mayProcessPending = (aPhase > ShutdownPhase::AppShutdownConfirmed);
+
+  // Give runnables dispatched between two calls to AdvanceShutdownPhase
+  // a chance to run before actually advancing the phase. As we excluded
+  // AppShutdownConfirmed above we can be sure that the processing is
+  // covered by the terminator's timer of the previous phase during normal
+  // shutdown (except out-of-order calls from some test).
+  // Note that this affects only main thread runnables, such that the correct
+  // way of ensuring shutdown processing remains to have an async shutdown
+  // blocker.
+  if (mayProcessPending && thread) {
+    NS_ProcessPendingEvents(thread);
   }
 
   // From now on any IsInOrBeyond checks will find the new phase set.
@@ -381,7 +392,7 @@ void AppShutdown::AdvanceShutdownPhaseInternal(
   mozilla::KillClearOnShutdown(aPhase);
 
   // Empty our MT event queue to process any side effects thereof.
-  if (thread) {
+  if (mayProcessPending && thread) {
     NS_ProcessPendingEvents(thread);
   }
 
@@ -398,7 +409,7 @@ void AppShutdown::AdvanceShutdownPhaseInternal(
         obsService->NotifyObservers(aNotificationSubject, aTopic,
                                     aNotificationData);
         // Empty our MT event queue again after the notification has finished
-        if (thread) {
+        if (mayProcessPending && thread) {
           NS_ProcessPendingEvents(thread);
         }
       }
