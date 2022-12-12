@@ -1451,9 +1451,6 @@ items from that key's value."
         if build_platform is not None:
             build_platform = build_platform.lower()
         else:
-            err = "The MOZ_ARTIFACT_PLATFORM env var is not set.\n"
-            err += "That means this build was not modified by the artifact transform. Exiting."
-            self.error(err)
             return
         try:
             upload_dir = os.environ["UPLOAD_DIR"]
