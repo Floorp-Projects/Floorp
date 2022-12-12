@@ -48,7 +48,7 @@ describe("Discovery Stream <TopicsWidget>", () => {
 
   it("should render", () => {
     assert.ok(wrapper.exists());
-    assert.ok(wrapper.find(".ds-topics-widget"));
+    assert.ok(wrapper.find(".ds-topics-widget").exists());
   });
 
   it("should connect with DiscoveryStream store", () => {

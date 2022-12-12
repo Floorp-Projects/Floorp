@@ -6,7 +6,7 @@ describe("<MSLocalized>", () => {
   it("should render span with no children", () => {
     const shallowWrapper = shallow(<Localized text="test" />);
 
-    assert.ok(shallowWrapper.find("span"));
+    assert.ok(shallowWrapper.find("span").exists());
     assert.equal(shallowWrapper.text(), "test");
   });
   it("should render span when using string_id with no children", () => {
@@ -14,7 +14,7 @@ describe("<MSLocalized>", () => {
       <Localized text={{ string_id: "test_id" }} />
     );
 
-    assert.ok(shallowWrapper.find("span[data-l10n-id='test_id']"));
+    assert.ok(shallowWrapper.find("span[data-l10n-id='test_id']").exists());
   });
   it("should render text inside child", () => {
     const shallowWrapper = shallow(
@@ -22,6 +22,7 @@ describe("<MSLocalized>", () => {
         <div />
       </Localized>
     );
+
     assert.ok(shallowWrapper.find("div").text(), "test");
   });
   it("should use l10n id on child", () => {
@@ -30,7 +31,8 @@ describe("<MSLocalized>", () => {
         <div />
       </Localized>
     );
-    assert.ok(shallowWrapper.find("div[data-l10n-id='test_id']"));
+
+    assert.ok(shallowWrapper.find("div[data-l10n-id='test_id']").exists());
   });
   it("should keep original children", () => {
     const shallowWrapper = shallow(
@@ -41,6 +43,6 @@ describe("<MSLocalized>", () => {
       </Localized>
     );
 
-    assert.ok(shallowWrapper.find("span[data-l10n-name='test']"));
+    assert.ok(shallowWrapper.find("span[data-l10n-name='test']").exists());
   });
 });

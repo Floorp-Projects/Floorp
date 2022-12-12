@@ -28,12 +28,12 @@ describe("CTAParagraph component", () => {
   });
 
   it("should render CTAParagraph component", () => {
-    assert.ok(wrapper.exists);
+    assert.ok(wrapper.exists());
   });
 
   it("should render CTAParagraph component if only CTA text is passed", () => {
     wrapper.setProps({ content: { text: "CTA Text" } });
-    assert.ok(wrapper.exists);
+    assert.ok(wrapper.exists());
   });
 
   it("should call handleAction method when button is link is clicked", () => {

@@ -63,7 +63,9 @@ export const Localized = ({ text, children }) => {
   // Allow augmenting existing child container properties.
   const props = { children: [], className: "", style: {}, ...children?.props };
   // Support nested Localized by starting with their children.
-  const textNodes = props.children;
+  const textNodes = Array.isArray(props.children)
+    ? props.children
+    : [props.children];
 
   // Pick desired fluent or raw/plain text to render.
   if (text.string_id) {

@@ -606,7 +606,7 @@ const Localized = ({
     ...(children === null || children === void 0 ? void 0 : children.props)
   }; // Support nested Localized by starting with their children.
 
-  const textNodes = props.children; // Pick desired fluent or raw/plain text to render.
+  const textNodes = Array.isArray(props.children) ? props.children : [props.children]; // Pick desired fluent or raw/plain text to render.
 
   if (text.string_id) {
     // Set the key so React knows not to reuse when switching to plain text.

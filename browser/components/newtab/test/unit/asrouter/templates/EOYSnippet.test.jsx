@@ -66,7 +66,7 @@ describe("EOYSnippet", () => {
   });
 
   it("should have a data-metric field", () => {
-    assert.ok(wrapper.find("form[data-metric='EOYSnippetForm']"));
+    assert.ok(wrapper.find("form[data-metric='EOYSnippetForm']").exists());
   });
 
   it("should select the second donation option", () => {
