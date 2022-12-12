@@ -8,26 +8,23 @@ const {
   WorkerDispatcher,
 } = require("resource://devtools/client/shared/worker-utils.js");
 
-let startArgs;
+const SEARCH_WORKER_URL =
+  "resource://devtools/client/netmonitor/src/workers/search/worker.js";
+
 let dispatcher;
 
 function getDispatcher() {
   if (!dispatcher) {
     dispatcher = new WorkerDispatcher();
-    dispatcher.start(...startArgs);
+    dispatcher.start(SEARCH_WORKER_URL);
   }
   return dispatcher;
-}
-
-function start(...args) {
-  startArgs = args;
 }
 
 function stop() {
   if (dispatcher) {
     dispatcher.stop();
     dispatcher = null;
-    startArgs = null;
   }
 }
 
@@ -38,7 +35,6 @@ function searchInResource(...args) {
 }
 
 module.exports = {
-  start,
   stop,
   searchInResource,
 };

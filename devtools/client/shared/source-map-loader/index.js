@@ -8,6 +8,9 @@ const {
   WorkerDispatcher,
 } = require("resource://devtools/client/shared/worker-utils.js");
 
+const SOURCE_MAP_WORKER_URL =
+  "resource://devtools/client/shared/source-map-loader/worker.js";
+
 const dispatcher = new WorkerDispatcher();
 
 const {
@@ -47,6 +50,9 @@ module.exports = {
   clearSourceMaps: dispatcher.task("clearSourceMaps"),
   getOriginalStackFrames: dispatcher.task("getOriginalStackFrames"),
 
-  startSourceMapWorker: dispatcher.start.bind(dispatcher),
+  startSourceMapWorker: dispatcher.start.bind(
+    dispatcher,
+    SOURCE_MAP_WORKER_URL
+  ),
   stopSourceMapWorker: dispatcher.stop.bind(dispatcher),
 };

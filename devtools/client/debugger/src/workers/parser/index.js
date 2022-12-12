@@ -4,7 +4,13 @@
 
 import { WorkerDispatcher } from "devtools/client/shared/worker-utils";
 
+const WORKER_URL = "resource://devtools/client/debugger/dist/parser-worker.js";
+
 export class ParserDispatcher extends WorkerDispatcher {
+  start(jestUrl) {
+    return super.start(jestUrl || WORKER_URL);
+  }
+
   async findOutOfScopeLocations(sourceId, position) {
     return this.invoke("findOutOfScopeLocations", sourceId, position);
   }
