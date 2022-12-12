@@ -12,9 +12,6 @@
 
 <script>
 
-var isGridTemplateSubgridValueEnabled =
-    SpecialPowers.getBoolPref("layout.css.grid-template-subgrid-value.enabled");
-
 var initial_values = {
     gridTemplateAreas: "none",
     gridTemplateRows: "none",
@@ -147,33 +144,31 @@ var grid_template_test_cases = [
     },
     {
         specified: "subgrid / subgrid",
-        gridTemplateColumns: isGridTemplateSubgridValueEnabled ? "subgrid" : "none",
-        gridTemplateRows: isGridTemplateSubgridValueEnabled ? "subgrid" : "none",
+        gridTemplateColumns: "subgrid",
+        gridTemplateRows: "subgrid",
     },
     {
         specified: "subgrid [foo] / subgrid",
-        gridTemplateColumns: isGridTemplateSubgridValueEnabled ? "subgrid" : "none",
-        gridTemplateRows: isGridTemplateSubgridValueEnabled ? "subgrid [foo]" : "none",
+        gridTemplateColumns: "subgrid",
+        gridTemplateRows: "subgrid [foo]",
     },
     {
         specified: "subgrid [foo] repeat(3, [] [a b] [c]) / subgrid",
-        gridTemplateColumns: isGridTemplateSubgridValueEnabled ? "subgrid" : "none",
-        gridTemplateRows: isGridTemplateSubgridValueEnabled ?
-            "subgrid [foo] [] [a b] [c] [] [a b] [c] [] [a b] [c]" : "none",
+        gridTemplateColumns: "subgrid",
+        gridTemplateRows: "subgrid [foo] [] [a b] [c] [] [a b] [c] [] [a b] [c]",
     },
     {
         // Test that the number of lines is clamped to kMaxLine = 10000.
         specified: "subgrid [foo] repeat(999999999, [a]) / subgrid",
-        gridTemplateColumns: isGridTemplateSubgridValueEnabled ? "subgrid" : "none",
+        gridTemplateColumns: "subgrid",
         // Array(n).join(s) is a hack for the non-standard s.repeat(n - 1) .
         // [foo] + 9999 [a] gives us 10000 lines.
-        gridTemplateRows: isGridTemplateSubgridValueEnabled ?
-            "subgrid [foo]" + Array(10000).join(" [a]") : "none",
+        gridTemplateRows: "subgrid [foo]" + Array(10000).join(" [a]"),
     },
     {
         specified: "subgrid [bar]/ subgrid [] [foo",
-        gridTemplateColumns: isGridTemplateSubgridValueEnabled ? "subgrid [] [foo]" : "none",
-        gridTemplateRows: isGridTemplateSubgridValueEnabled ? "subgrid [bar]" : "none",
+        gridTemplateColumns: "subgrid [] [foo]",
+        gridTemplateRows: "subgrid [bar]",
     },
     {
         specified: "'fizz' repeat(1, 100px)",

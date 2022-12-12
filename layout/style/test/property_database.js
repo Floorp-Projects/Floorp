@@ -12047,10 +12047,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.font-variant-emoji.enabled")) {
   };
 }
 
-var isGridTemplateSubgridValueEnabled = IsCSSPropertyPrefEnabled(
-  "layout.css.grid-template-subgrid-value.enabled"
-);
-
 var isGridTemplateMasonryValueEnabled = IsCSSPropertyPrefEnabled(
   "layout.css.grid-template-masonry-value.enabled"
 );
@@ -12187,6 +12183,22 @@ gCSSProperties["grid-template-columns"] = {
     "fit-content(1px) 1fr",
     "[a] fit-content(calc(1px - 99%)) [b]",
     "[a] fit-content(10%) [b c] fit-content(1em)",
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=981300
+    "[none subgrid min-content max-content foo] 40px",
+    "subgrid",
+    "subgrid [] [foo bar]",
+    "subgrid repeat(1, [])",
+    "subgrid Repeat(4, [a] [b c] [] [d])",
+    "subgrid repeat(auto-fill, [])",
+    "subgrid repeat(Auto-fill, [a b c]) [a] []",
+    "subgrid [x] repeat( Auto-fill, [a b c]) []",
+    "subgrid [x] repeat( auto-fill , [a b] [c]) [y]",
+    "subgrid repeat(auto-fill, [a] [b] [c]) [d]",
+    "subgrid repeat(Auto-fill, [a] [b c] [] [d])",
+    "subgrid [x y] [x] repeat(auto-fill, [a b] [c] [d] [d]) [x] [x]",
+    "subgrid [x] repeat(auto-fill, []) [y z]",
+    "subgrid [x] repeat(auto-fill, [y]) [z] [] repeat(2, [a] [b]) [y] []",
+    "subgrid [x] repeat(auto-fill, []) [x y] [z] [] []",
   ],
   invalid_values: [
     "",
@@ -12251,30 +12263,6 @@ gCSSProperties["grid-template-columns"] = {
     "fit-content(min-content)",
     "fit-content(1px) repeat(auto-fit, 1px)",
     "fit-content(1px) repeat(auto-fill, 1px)",
-  ],
-  unbalanced_values: ["(foo] 40px"],
-};
-if (isGridTemplateSubgridValueEnabled) {
-  gCSSProperties["grid-template-columns"].other_values.push(
-    // See https://bugzilla.mozilla.org/show_bug.cgi?id=981300
-    "[none subgrid min-content max-content foo] 40px",
-
-    "subgrid",
-    "subgrid [] [foo bar]",
-    "subgrid repeat(1, [])",
-    "subgrid Repeat(4, [a] [b c] [] [d])",
-    "subgrid repeat(auto-fill, [])",
-    "subgrid repeat(Auto-fill, [a b c]) [a] []",
-    "subgrid [x] repeat( Auto-fill, [a b c]) []",
-    "subgrid [x] repeat( auto-fill , [a b] [c]) [y]",
-    "subgrid repeat(auto-fill, [a] [b] [c]) [d]",
-    "subgrid repeat(Auto-fill, [a] [b c] [] [d])",
-    "subgrid [x y] [x] repeat(auto-fill, [a b] [c] [d] [d]) [x] [x]",
-    "subgrid [x] repeat(auto-fill, []) [y z]",
-    "subgrid [x] repeat(auto-fill, [y]) [z] [] repeat(2, [a] [b]) [y] []",
-    "subgrid [x] repeat(auto-fill, []) [x y] [z] [] []"
-  );
-  gCSSProperties["grid-template-columns"].invalid_values.push(
     "subgrid [inherit]",
     "subgrid [initial]",
     "subgrid [unset]",
@@ -12308,9 +12296,10 @@ if (isGridTemplateSubgridValueEnabled) {
     "subgrid [a] repeat(auto-fit,[])",
     "subgrid repeat(auto-fill, 1px)",
     "subgrid repeat(auto-fill, 1px [])",
-    "subgrid repeat(auto-fill, []) repeat(auto-fill, [])"
-  );
-}
+    "subgrid repeat(auto-fill, []) repeat(auto-fill, [])",
+  ],
+  unbalanced_values: ["(foo] 40px"],
+};
 if (isGridTemplateMasonryValueEnabled) {
   gCSSProperties["grid-template-columns"].other_values.push("masonry");
   gCSSProperties["grid-template-columns"].invalid_values.push(
@@ -12386,6 +12375,13 @@ gCSSProperties["grid-template"] = {
     "[bar] 'fizz' 100px / [foo] 40px",
     "[bar] 'fizz' 100px [buzz] / [foo] 40px",
     "[bar] 'fizz' 100px [buzz] \n [a] '.' 200px [b] / [foo] 40px",
+    "subgrid / subgrid",
+    "subgrid/40px 20px",
+    "subgrid [foo] [] [bar baz] / 40px 20px",
+    "40px 20px/subgrid",
+    "40px 20px/subgrid  [foo] [] repeat(3, [a] [b]) [bar baz]",
+    "subgrid/subgrid",
+    "subgrid [foo] [] [bar baz]/subgrid [foo] [] [bar baz]",
   ],
   invalid_values: [
     "'fizz' / repeat(1, 100px)",
@@ -12394,25 +12390,12 @@ gCSSProperties["grid-template"] = {
     "[fizz] [buzz] 100px / 40px",
     "[fizz] [buzz] 'foo' / 40px",
     "'foo' / none",
-  ],
-};
-if (isGridTemplateSubgridValueEnabled) {
-  gCSSProperties["grid-template"].other_values.push(
-    "subgrid / subgrid",
-    "subgrid/40px 20px",
-    "subgrid [foo] [] [bar baz] / 40px 20px",
-    "40px 20px/subgrid",
-    "40px 20px/subgrid  [foo] [] repeat(3, [a] [b]) [bar baz]",
-    "subgrid/subgrid",
-    "subgrid [foo] [] [bar baz]/subgrid [foo] [] [bar baz]"
-  );
-  gCSSProperties["grid-template"].invalid_values.push(
     "subgrid",
     "subgrid []",
     "subgrid [] / 'fizz'",
-    "subgrid / 'fizz'"
-  );
-}
+    "subgrid / 'fizz'",
+  ],
+};
 if (isGridTemplateMasonryValueEnabled) {
   gCSSProperties["grid-template"].other_values.push(
     "masonry / subgrid",

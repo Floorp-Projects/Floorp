@@ -735,7 +735,7 @@ load 1542441.html
 load 1543140-1.html
 load 1544060-1.html
 load 1544060-2.html
-pref(layout.css.grid-template-subgrid-value.enabled,true) load 1553824.html
+load 1553824.html
 asserts(26-42) load 1554824.html # extreme sizes, column-width: 0em
 load 1555142.html
 load 1560349.html

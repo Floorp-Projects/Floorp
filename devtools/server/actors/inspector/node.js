@@ -83,10 +83,6 @@ loader.lazyRequireGetter(
   true
 );
 
-const SUBGRID_ENABLED = Services.prefs.getBoolPref(
-  "layout.css.grid-template-subgrid-value.enabled"
-);
-
 const FONT_FAMILY_PREVIEW_TEXT = "The quick brown fox jumps over the lazy dog";
 const FONT_FAMILY_PREVIEW_TEXT_SIZE = 20;
 
@@ -376,7 +372,6 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     }
 
     if (
-      SUBGRID_ENABLED &&
       (display === "grid" || display === "inline-grid") &&
       (style.gridTemplateRows.startsWith("subgrid") ||
         style.gridTemplateColumns.startsWith("subgrid"))

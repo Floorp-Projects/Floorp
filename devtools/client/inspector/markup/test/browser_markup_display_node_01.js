@@ -30,9 +30,6 @@ const TEST_URI = `
 `;
 
 add_task(async function() {
-  info("Enable subgrid in order to see the subgrid display type.");
-  await pushPref("layout.css.grid-template-subgrid-value.enabled", true);
-
   const { inspector } = await openInspectorForURL(
     "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI)
   );

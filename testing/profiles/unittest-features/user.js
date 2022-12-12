@@ -12,8 +12,6 @@
 /* globals user_pref */
 // Enable w3c touch events for testing
 user_pref("dom.w3c_touch_events.enabled", 1);
-// Enable CSS Grid 'subgrid' feature for testing
-user_pref("layout.css.grid-template-subgrid-value.enabled", true);
 // Enable CSS initial-letter for testing
 user_pref("layout.css.initial-letter.enabled", true);
 // Enable Media Source Extensions for testing

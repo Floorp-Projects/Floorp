@@ -12,9 +12,6 @@
 
 <script>
 
-var isGridTemplateSubgridValueEnabled =
-    SpecialPowers.getBoolPref("layout.css.grid-template-subgrid-value.enabled");
-
 var initial_values = {
     gridTemplateAreas: "none",
     gridTemplateRows: "none",
@@ -48,7 +45,7 @@ var grid_template_test_cases = [
     {
         gridTemplateRows: "40px",
         gridTemplateColumns: "subgrid",
-        shorthand: isGridTemplateSubgridValueEnabled ? "40px / subgrid" : "",
+        shorthand: "40px / subgrid",
     },
     {
         gridTemplateRows: "[foo] 40px [bar]",
