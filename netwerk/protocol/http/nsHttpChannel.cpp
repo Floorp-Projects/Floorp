@@ -5653,10 +5653,6 @@ nsresult nsHttpChannel::CancelInternal(nsresult status) {
         &mTransactionTimings, std::move(mSource));
   }
 
-  // If we don't have mTransactionPump and mCachePump, we need to call
-  // AsyncAbort to make sure this channel's listener got notified.
-  bool needAsyncAbort = !mTransactionPump && !mCachePump;
-
   if (mProxyRequest) mProxyRequest->Cancel(status);
   CancelNetworkRequest(status);
   mCacheInputStream.CloseAndRelease();
@@ -5667,16 +5663,10 @@ nsresult nsHttpChannel::CancelInternal(nsresult status) {
     mOnTailUnblock = nullptr;
     mRequestContext->CancelTailedRequest(this);
     CloseCacheEntry(false);
-    needAsyncAbort = false;
     Unused << AsyncAbort(status);
   } else if (channelClassifierCancellationPending) {
     // If we're coming from an asynchronous path when canceling a channel due
     // to safe-browsing protection, we need to AsyncAbort the channel now.
-    needAsyncAbort = false;
-    Unused << AsyncAbort(status);
-  }
-
-  if (needAsyncAbort) {
     Unused << AsyncAbort(status);
   }
   return NS_OK;
