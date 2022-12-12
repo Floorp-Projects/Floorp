@@ -26,11 +26,6 @@
 using namespace std;
 
 #define MAX_NUM_CHANNELS 32
-
-#if !defined(M_PI)
-#define M_PI 3.14159265358979323846
-#endif
-
 #define VOLUME 0.2
 
 float get_frequency(int channel_index)
@@ -242,3 +237,7 @@ TEST(cubeb, run_channel_rate_test)
     }
   }
 }
+
+
+#undef MAX_NUM_CHANNELS
+#undef VOLUME

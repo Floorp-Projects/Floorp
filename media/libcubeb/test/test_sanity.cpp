@@ -690,3 +690,9 @@ TEST(cubeb, stable_devid)
   ASSERT_EQ(r, CUBEB_OK);
   cubeb_destroy(ctx);
 }
+
+#undef STREAM_RATE
+#undef STREAM_LATENCY
+#undef STREAM_CHANNELS
+#undef STREAM_LAYOUT
+#undef STREAM_FORMAT
