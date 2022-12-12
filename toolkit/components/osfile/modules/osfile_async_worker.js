@@ -158,7 +158,8 @@ if (this.Components) {
     }
     if (!(file instanceof File.DirectoryIterator)) {
       throw new Error(
-        "file is not a directory iterator " + file.__proto__.toSource()
+        "file is not a directory iterator " +
+          Object.getPrototypeOf(file).toSource()
       );
     }
     return f.call(file);

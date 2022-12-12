@@ -663,8 +663,6 @@ Prompter.prototype = {
 
 // Common utils not specific to a particular prompter style.
 var PromptUtilsTemp = {
-  __proto__: PromptUtils,
-
   getLocalizedString(key, formatArgs) {
     if (formatArgs) {
       return this.strBundle.formatStringFromName(key, formatArgs);
@@ -915,6 +913,7 @@ var PromptUtilsTemp = {
     return this.brandBundle.GetStringFromName("brandFullName");
   },
 };
+Object.setPrototypeOf(PromptUtilsTemp, PromptUtils);
 
 PromptUtils = PromptUtilsTemp;
 
