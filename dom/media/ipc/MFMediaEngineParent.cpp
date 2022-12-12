@@ -90,7 +90,10 @@ void MFMediaEngineParent::DestroyEngineIfExists(
   ENGINE_MARKER("MFMediaEngineParent::DestroyEngineIfExists");
   mMediaEngineNotify = nullptr;
   mMediaEngineExtension = nullptr;
-  mMediaSource = nullptr;
+  if (mMediaSource) {
+    mMediaSource->ShutdownTaskQueue();
+    mMediaSource = nullptr;
+  }
   if (mMediaEngine) {
     mMediaEngine->Shutdown();
     mMediaEngine = nullptr;

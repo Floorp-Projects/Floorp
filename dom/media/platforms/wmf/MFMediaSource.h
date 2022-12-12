@@ -113,6 +113,8 @@ class MFMediaSource
 
   void SetDCompSurfaceHandle(HANDLE aDCompSurfaceHandle);
 
+  void ShutdownTaskQueue();
+
  private:
   void AssertOnManagerThread() const;
   void AssertOnMFThreadPool() const;

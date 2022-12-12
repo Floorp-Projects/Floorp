@@ -112,6 +112,7 @@ HRESULT MFMediaEngineStream::RuntimeClassInitialize(
     uint64_t aStreamId, const TrackInfo& aInfo, MFMediaSource* aParentSource) {
   mParentSource = aParentSource;
   mTaskQueue = aParentSource->GetTaskQueue();
+  MOZ_ASSERT(mTaskQueue);
   mStreamId = aStreamId;
   RETURN_IF_FAILED(wmf::MFCreateEventQueue(&mMediaEventQueue));
 
@@ -142,8 +143,12 @@ HRESULT MFMediaEngineStream::Start(const PROPVARIANT* aPosition) {
     SLOG("No need to start non-selected stream");
     return S_OK;
   }
+  if (IsShutdown()) {
+    return MF_E_SHUTDOWN;
+  }
   SLOG("Start");
   RETURN_IF_FAILED(QueueEvent(MEStreamStarted, GUID_NULL, S_OK, aPosition));
+  MOZ_ASSERT(mTaskQueue);
   Unused << mTaskQueue->Dispatch(NS_NewRunnableFunction(
       "MFMediaEngineStream::Start", [self = RefPtr{this}, aPosition, this]() {
         if (const bool isFromCurrentPosition = aPosition->vt == VT_EMPTY;
@@ -203,12 +208,14 @@ void MFMediaEngineStream::Shutdown() {
   // MF_E_SHUTDOWN.
   RETURN_VOID_IF_FAILED(mMediaEventQueue->Shutdown());
   ComPtr<MFMediaEngineStream> self = this;
+  MOZ_ASSERT(mTaskQueue);
   Unused << mTaskQueue->Dispatch(
       NS_NewRunnableFunction("MFMediaEngineStream::Shutdown", [self]() {
         self->mParentSource = nullptr;
         self->mRawDataQueueForFeedingEngine.Reset();
         self->mRawDataQueueForGeneratingOutput.Reset();
         self->ShutdownCleanUpOnTaskQueue();
+        self->mTaskQueue = nullptr;
       }));
 }
 
@@ -247,6 +254,7 @@ IFACEMETHODIMP MFMediaEngineStream::RequestSample(IUnknown* aToken) {
 
   ComPtr<IUnknown> token = aToken;
   ComPtr<MFMediaEngineStream> self = this;
+  MOZ_ASSERT(mTaskQueue);
   Unused << mTaskQueue->Dispatch(NS_NewRunnableFunction(
       "MFMediaEngineStream::RequestSample", [token, self, this]() {
         AssertOnTaskQueue();
@@ -482,14 +490,16 @@ RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineStream::Drain() {
 }
 
 void MFMediaEngineStream::AssertOnTaskQueue() const {
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+  MOZ_ASSERT(mTaskQueue && mTaskQueue->IsCurrentThreadIn());
 }
 
 void MFMediaEngineStream::AssertOnMFThreadPool() const {
   // We can't really assert the thread id from thread pool, because it would
   // change any time. So we just assert this is not the task queue, and use the
   // explicit function name to indicate what thread we should run on.
-  MOZ_ASSERT(!mTaskQueue->IsCurrentThreadIn());
+  // TODO : this assertion is not precise, because the running thread could be
+  // the stream wrapper thread as well,
+  MOZ_ASSERT(!mTaskQueue || !mTaskQueue->IsCurrentThreadIn());
 }
 
 #undef WLOGV
