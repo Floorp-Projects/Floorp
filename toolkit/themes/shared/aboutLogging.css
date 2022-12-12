@@ -31,6 +31,10 @@ div.page-section > div {
   padding-bottom: 2em;
 }
 
+div.page-section > div.radio-entry {
+  padding-bottom: 0;
+}
+
 #current-log-modules,
 #no-log-modules {
   font-family: monospace;
