@@ -6,7 +6,6 @@
 
 #include "threading/ProtectedData.h"
 
-#include "gc/Zone.h"
 #include "vm/HelperThreads.h"
 #include "vm/JSContext.h"
 
@@ -80,22 +79,6 @@ template class CheckMainThread<AllowedHelperThread::ParseTask>;
 template class CheckMainThread<AllowedHelperThread::IonCompile>;
 template class CheckMainThread<AllowedHelperThread::ParseTaskOrIonCompile>;
 
-template <AllowedHelperThread Helper>
-void CheckZone<Helper>::check() const {
-  if (OnHelperThread<Helper>()) {
-    return;
-  }
-
-  // The main thread is permitted access to all zones. These accesses
-  // are threadsafe if the zone is not in use by a helper thread.
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(TlsContext.get()->runtime()));
-}
-
-template class CheckZone<AllowedHelperThread::None>;
-template class CheckZone<AllowedHelperThread::GCTask>;
-template class CheckZone<AllowedHelperThread::IonCompile>;
-template class CheckZone<AllowedHelperThread::GCTaskOrIonCompile>;
-
 template <GlobalLock Lock, AllowedHelperThread Helper>
 void CheckGlobalLock<Lock, Helper>::check() const {
   if (OnHelperThread<Helper>()) {
@@ -122,23 +105,6 @@ template class CheckGlobalLock<GlobalLock::ScriptDataLock,
                                AllowedHelperThread::None>;
 template class CheckGlobalLock<GlobalLock::HelperThreadLock,
                                AllowedHelperThread::None>;
-
-template <AllowedHelperThread Helper>
-void CheckArenaListAccess<Helper>::check() const {
-  MOZ_ASSERT(zone);
-
-  if (OnHelperThread<Helper>()) {
-    return;
-  }
-
-  if (zone->isAtomsZone()) {
-    return;
-  }
-
-  CheckZone<AllowedHelperThread::None>::check();
-}
-
-template class CheckArenaListAccess<AllowedHelperThread::GCTask>;
 
 #endif  // JS_HAS_PROTECTED_DATA_CHECKS
 

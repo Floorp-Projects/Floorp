@@ -15,10 +15,6 @@
 
 struct JS_PUBLIC_API JSContext;
 
-namespace JS {
-class JS_PUBLIC_API Zone;
-}
-
 namespace js {
 
 // This file provides classes for encapsulating pieces of data with a check
@@ -182,20 +178,6 @@ class ProtectedDataNoCheckArgs : public ProtectedData<Check, T> {
   using Base::operator=;
 };
 
-// Intermediate class for protected data whose checks take a Zone constructor
-// argument.
-template <typename Check, typename T>
-class ProtectedDataZoneArg : public ProtectedData<Check, T> {
-  using Base = ProtectedData<Check, T>;
-
- public:
-  template <typename... Args>
-  explicit ProtectedDataZoneArg(JS::Zone* zone, Args&&... args)
-      : ProtectedData<Check, T>(Check(zone), std::forward<Args>(args)...) {}
-
-  using Base::operator=;
-};
-
 // Intermediate class for protected data whose checks take a JSContext.
 template <typename Check, typename T>
 class ProtectedDataContextArg : public ProtectedData<Check, T> {
@@ -258,7 +240,7 @@ template <typename T>
 using ContextData = ProtectedDataContextArg<CheckContextLocal, T>;
 
 // Enum describing which helper threads (GC tasks or Ion compilations) may
-// access data even though they do not have exclusive access to any zone.
+// access data.
 enum class AllowedHelperThread {
   None,
   GCTask,
@@ -296,39 +278,6 @@ using MainThreadOrParseData =
 template <typename T>
 using MainThreadOrParseOrIonCompileData = ProtectedDataNoCheckArgs<
     CheckMainThread<AllowedHelperThread::ParseTaskOrIonCompile>, T>;
-
-template <AllowedHelperThread Helper>
-class CheckZone {
-#ifdef JS_HAS_PROTECTED_DATA_CHECKS
- protected:
-  JS::Zone* zone;
-
- public:
-  explicit CheckZone(JS::Zone* zone) : zone(zone) {}
-  void check() const;
-#else
- public:
-  explicit CheckZone(JS::Zone* zone) {}
-#endif
-};
-
-// Data which may only be accessed by threads with exclusive access to the
-// associated zone, or by the runtime's main thread for zones which are not in
-// use by a helper thread.
-template <typename T>
-using ZoneData = ProtectedDataZoneArg<CheckZone<AllowedHelperThread::None>, T>;
-
-// Data which may only be accessed by threads with exclusive access to the
-// associated zone, or by various helper thread tasks.
-template <typename T>
-using ZoneOrGCTaskData =
-    ProtectedDataZoneArg<CheckZone<AllowedHelperThread::GCTask>, T>;
-template <typename T>
-using ZoneOrIonCompileData =
-    ProtectedDataZoneArg<CheckZone<AllowedHelperThread::IonCompile>, T>;
-template <typename T>
-using ZoneOrGCTaskOrIonCompileData =
-    ProtectedDataZoneArg<CheckZone<AllowedHelperThread::GCTaskOrIonCompile>, T>;
 
 // Runtime wide locks which might protect some data.
 enum class GlobalLock { GCLock, ScriptDataLock, HelperThreadLock };
@@ -417,27 +366,6 @@ class ProtectedDataWriteOnce {
 // that write occurs.
 template <typename T>
 using WriteOnceData = ProtectedDataWriteOnce<CheckUnprotected, T>;
-
-// Custom check for arena list data that requires the GC lock to be held when
-// accessing the atoms zone if parallel parsing is running, in addition to the
-// usual Zone checks.
-template <AllowedHelperThread Helper>
-class CheckArenaListAccess : public CheckZone<AllowedHelperThread::None> {
-#ifdef JS_HAS_PROTECTED_DATA_CHECKS
- public:
-  explicit CheckArenaListAccess(JS::Zone* zone)
-      : CheckZone<AllowedHelperThread::None>(zone) {}
-  void check() const;
-#else
- public:
-  explicit CheckArenaListAccess(JS::Zone* zone)
-      : CheckZone<AllowedHelperThread::None>(zone) {}
-#endif
-};
-
-template <typename T>
-using ArenaListData =
-    ProtectedDataZoneArg<CheckArenaListAccess<AllowedHelperThread::GCTask>, T>;
 
 #undef DECLARE_ASSIGNMENT_OPERATOR
 #undef DECLARE_ONE_BOOL_OPERATOR
