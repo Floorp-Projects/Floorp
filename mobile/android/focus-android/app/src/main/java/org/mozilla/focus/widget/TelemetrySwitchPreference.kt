@@ -8,6 +8,7 @@ package org.mozilla.focus.widget
 
 import android.content.Context
 import android.util.AttributeSet
+import mozilla.components.service.glean.Glean
 import org.mozilla.focus.R
 import org.mozilla.focus.settings.LearnMoreSwitchPreference
 import org.mozilla.focus.telemetry.TelemetryWrapper
@@ -29,6 +30,8 @@ internal class TelemetrySwitchPreference(context: Context, attrs: AttributeSet?)
         TelemetryHolder.get()
             .configuration
             .setUploadEnabled(isChecked).isCollectionEnabled = isChecked
+
+        Glean.setUploadEnabled(isChecked)
     }
 
     override fun getDescription(): String {
