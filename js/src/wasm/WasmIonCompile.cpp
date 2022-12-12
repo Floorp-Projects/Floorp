@@ -280,7 +280,7 @@ class FunctionCompiler {
     return moduleEnv_.isAsmJS() ? BytecodeOffset() : iter_.bytecodeOffset();
   }
 
-  bool init() {
+  [[nodiscard]] bool init() {
     // Prepare the entry block for MIR generation:
 
     const ArgTypeVector args(funcType());
@@ -342,6 +342,8 @@ class FunctionCompiler {
         case ValType::Ref:
           ins = MWasmNullConstant::New(alloc());
           break;
+        default:
+          MOZ_CRASH();
       }
 
       curBlock_->add(ins);
@@ -821,7 +823,7 @@ class FunctionCompiler {
     return compare(value, nullVal, compareOp, MCompare::Compare_RefOrNull);
   }
 
-  bool refAsNonNull(MDefinition* value) {
+  [[nodiscard]] bool refAsNonNull(MDefinition* value) {
     if (inDeadCode()) {
       return true;
     }
@@ -844,14 +846,17 @@ class FunctionCompiler {
       return false;
     }
     MTest* test = MTest::New(alloc(), check, joinBlock, trapBlock);
+    if (!test) {
+      return false;
+    }
     curBlock_->end(test);
     curBlock_ = joinBlock;
     return true;
   }
 
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
-  bool brOnNull(uint32_t relativeDepth, const DefVector& values,
-                const ResultType& type, MDefinition* condition) {
+  [[nodiscard]] bool brOnNull(uint32_t relativeDepth, const DefVector& values,
+                              const ResultType& type, MDefinition* condition) {
     if (inDeadCode()) {
       return true;
     }
@@ -866,7 +871,8 @@ class FunctionCompiler {
       return false;
     }
     MTest* test = MTest::New(alloc(), check, nullptr, fallthroughBlock);
-    if (!addControlFlowPatch(test, relativeDepth, MTest::TrueBranchIndex)) {
+    if (!test ||
+        !addControlFlowPatch(test, relativeDepth, MTest::TrueBranchIndex)) {
       return false;
     }
 
@@ -879,8 +885,10 @@ class FunctionCompiler {
     return true;
   }
 
-  bool brOnNonNull(uint32_t relativeDepth, const DefVector& values,
-                   const ResultType& type, MDefinition* condition) {
+  [[nodiscard]] bool brOnNonNull(uint32_t relativeDepth,
+                                 const DefVector& values,
+                                 const ResultType& type,
+                                 MDefinition* condition) {
     if (inDeadCode()) {
       return true;
     }
@@ -895,7 +903,8 @@ class FunctionCompiler {
       return false;
     }
     MTest* test = MTest::New(alloc(), check, nullptr, fallthroughBlock);
-    if (!addControlFlowPatch(test, relativeDepth, MTest::TrueBranchIndex)) {
+    if (!test ||
+        !addControlFlowPatch(test, relativeDepth, MTest::TrueBranchIndex)) {
       return false;
     }
 
@@ -1652,8 +1661,9 @@ class FunctionCompiler {
     return load;
   }
 
-  bool storeGlobalVar(uint32_t lineOrBytecode, uint32_t globalDataOffset,
-                      bool isIndirect, MDefinition* v) {
+  [[nodiscard]] bool storeGlobalVar(uint32_t lineOrBytecode,
+                                    uint32_t globalDataOffset, bool isIndirect,
+                                    MDefinition* v) {
     if (inDeadCode()) {
       return true;
     }
@@ -1797,8 +1807,9 @@ class FunctionCompiler {
         MWasmInterruptCheck::New(alloc(), instancePointer_, bytecodeOffset()));
   }
 
-  bool postBarrierPrecise(uint32_t lineOrBytecode, MDefinition* valueAddr,
-                          MDefinition* value) {
+  [[nodiscard]] bool postBarrierPrecise(uint32_t lineOrBytecode,
+                                        MDefinition* valueAddr,
+                                        MDefinition* value) {
     const SymbolicAddressSignature& callee = SASigPostBarrierPrecise;
     CallCompileState args;
     if (!passInstance(callee.argTypes[0], &args)) {
@@ -1830,7 +1841,8 @@ class FunctionCompiler {
 
   // Operations that modify a CallCompileState.
 
-  bool passInstance(MIRType instanceType, CallCompileState* args) {
+  [[nodiscard]] bool passInstance(MIRType instanceType,
+                                  CallCompileState* args) {
     if (inDeadCode()) {
       return true;
     }
@@ -1843,8 +1855,8 @@ class FunctionCompiler {
   }
 
   // Do not call this directly.  Call one of the passArg() variants instead.
-  bool passArgWorker(MDefinition* argDef, MIRType type,
-                     CallCompileState* call) {
+  [[nodiscard]] bool passArgWorker(MDefinition* argDef, MIRType type,
+                                   CallCompileState* call) {
     ABIArg arg = call->abi_.next(type);
     switch (arg.kind()) {
 #ifdef JS_CODEGEN_REGISTER_PAIR
@@ -1877,7 +1889,8 @@ class FunctionCompiler {
   }
 
   template <typename SpanT>
-  bool passArgs(const DefVector& argDefs, SpanT types, CallCompileState* call) {
+  [[nodiscard]] bool passArgs(const DefVector& argDefs, SpanT types,
+                              CallCompileState* call) {
     MOZ_ASSERT(argDefs.length() == types.size());
     for (uint32_t i = 0; i < argDefs.length(); i++) {
       MDefinition* def = argDefs[i];
@@ -1889,14 +1902,16 @@ class FunctionCompiler {
     return true;
   }
 
-  bool passArg(MDefinition* argDef, MIRType type, CallCompileState* call) {
+  [[nodiscard]] bool passArg(MDefinition* argDef, MIRType type,
+                             CallCompileState* call) {
     if (inDeadCode()) {
       return true;
     }
     return passArgWorker(argDef, type, call);
   }
 
-  bool passArg(MDefinition* argDef, ValType type, CallCompileState* call) {
+  [[nodiscard]] bool passArg(MDefinition* argDef, ValType type,
+                             CallCompileState* call) {
     if (inDeadCode()) {
       return true;
     }
@@ -1906,8 +1921,8 @@ class FunctionCompiler {
   // If the call returns results on the stack, prepare a stack area to receive
   // them, and pass the address of the stack area to the callee as an additional
   // argument.
-  bool passStackResultAreaCallArg(const ResultType& resultType,
-                                  CallCompileState* call) {
+  [[nodiscard]] bool passStackResultAreaCallArg(const ResultType& resultType,
+                                                CallCompileState* call) {
     if (inDeadCode()) {
       return true;
     }
@@ -1958,7 +1973,8 @@ class FunctionCompiler {
 
   // Wrappers for creating various kinds of calls.
 
-  bool collectUnaryCallResult(MIRType type, MDefinition** result) {
+  [[nodiscard]] bool collectUnaryCallResult(MIRType type,
+                                            MDefinition** result) {
     MInstruction* def;
     switch (type) {
       case MIRType::Int32:
@@ -1995,9 +2011,9 @@ class FunctionCompiler {
     return true;
   }
 
-  bool collectCallResults(const ResultType& type,
-                          MWasmStackResultArea* stackResultArea,
-                          DefVector* results) {
+  [[nodiscard]] bool collectCallResults(const ResultType& type,
+                                        MWasmStackResultArea* stackResultArea,
+                                        DefVector* results) {
     if (!results->reserve(type.length())) {
       return false;
     }
@@ -2067,10 +2083,11 @@ class FunctionCompiler {
     return true;
   }
 
-  bool catchableCall(const CallSiteDesc& desc, const CalleeDesc& callee,
-                     const MWasmCallBase::Args& args,
-                     const ArgTypeVector& argTypes,
-                     MDefinition* indexOrRef = nullptr) {
+  [[nodiscard]] bool catchableCall(const CallSiteDesc& desc,
+                                   const CalleeDesc& callee,
+                                   const MWasmCallBase::Args& args,
+                                   const ArgTypeVector& argTypes,
+                                   MDefinition* indexOrRef = nullptr) {
     MWasmCallTryDesc tryDesc;
     if (!beginTryCall(&tryDesc)) {
       return false;
@@ -2094,9 +2111,10 @@ class FunctionCompiler {
     return finishTryCall(&tryDesc);
   }
 
-  bool callDirect(const FuncType& funcType, uint32_t funcIndex,
-                  uint32_t lineOrBytecode, const CallCompileState& call,
-                  DefVector* results) {
+  [[nodiscard]] bool callDirect(const FuncType& funcType, uint32_t funcIndex,
+                                uint32_t lineOrBytecode,
+                                const CallCompileState& call,
+                                DefVector* results) {
     if (inDeadCode()) {
       return true;
     }
@@ -2112,9 +2130,10 @@ class FunctionCompiler {
     return collectCallResults(resultType, call.stackResultArea_, results);
   }
 
-  bool callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
-                    MDefinition* index, uint32_t lineOrBytecode,
-                    const CallCompileState& call, DefVector* results) {
+  [[nodiscard]] bool callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
+                                  MDefinition* index, uint32_t lineOrBytecode,
+                                  const CallCompileState& call,
+                                  DefVector* results) {
     if (inDeadCode()) {
       return true;
     }
@@ -2155,9 +2174,10 @@ class FunctionCompiler {
     return collectCallResults(resultType, call.stackResultArea_, results);
   }
 
-  bool callImport(unsigned globalDataOffset, uint32_t lineOrBytecode,
-                  const CallCompileState& call, const FuncType& funcType,
-                  DefVector* results) {
+  [[nodiscard]] bool callImport(unsigned globalDataOffset,
+                                uint32_t lineOrBytecode,
+                                const CallCompileState& call,
+                                const FuncType& funcType, DefVector* results) {
     if (inDeadCode()) {
       return true;
     }
@@ -2173,9 +2193,10 @@ class FunctionCompiler {
     return collectCallResults(resultType, call.stackResultArea_, results);
   }
 
-  bool builtinCall(const SymbolicAddressSignature& builtin,
-                   uint32_t lineOrBytecode, const CallCompileState& call,
-                   MDefinition** def) {
+  [[nodiscard]] bool builtinCall(const SymbolicAddressSignature& builtin,
+                                 uint32_t lineOrBytecode,
+                                 const CallCompileState& call,
+                                 MDefinition** def) {
     if (inDeadCode()) {
       *def = nullptr;
       return true;
@@ -2196,10 +2217,9 @@ class FunctionCompiler {
     return collectUnaryCallResult(builtin.retType, def);
   }
 
-  bool builtinInstanceMethodCall(const SymbolicAddressSignature& builtin,
-                                 uint32_t lineOrBytecode,
-                                 const CallCompileState& call,
-                                 MDefinition** def = nullptr) {
+  [[nodiscard]] bool builtinInstanceMethodCall(
+      const SymbolicAddressSignature& builtin, uint32_t lineOrBytecode,
+      const CallCompileState& call, MDefinition** def = nullptr) {
     MOZ_ASSERT_IF(!def, builtin.retType == MIRType::None);
     if (inDeadCode()) {
       if (def) {
@@ -2222,9 +2242,9 @@ class FunctionCompiler {
   }
 
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
-  bool callRef(const FuncType& funcType, MDefinition* ref,
-               uint32_t lineOrBytecode, const CallCompileState& call,
-               DefVector* results) {
+  [[nodiscard]] bool callRef(const FuncType& funcType, MDefinition* ref,
+                             uint32_t lineOrBytecode,
+                             const CallCompileState& call, DefVector* results) {
     if (inDeadCode()) {
       return true;
     }
@@ -2247,7 +2267,7 @@ class FunctionCompiler {
 
   inline bool inDeadCode() const { return curBlock_ == nullptr; }
 
-  bool returnValues(const DefVector& values) {
+  [[nodiscard]] bool returnValues(const DefVector& values) {
     if (inDeadCode()) {
       return true;
     }
@@ -2326,7 +2346,7 @@ class FunctionCompiler {
     return true;
   }
 
-  bool popPushedDefs(DefVector* defs) {
+  [[nodiscard]] bool popPushedDefs(DefVector* defs) {
     size_t n = numPushed(curBlock_);
     if (!defs->resizeUninitialized(n)) {
       return false;
@@ -2340,7 +2360,8 @@ class FunctionCompiler {
   }
 
  private:
-  bool addJoinPredecessor(const DefVector& defs, MBasicBlock** joinPred) {
+  [[nodiscard]] bool addJoinPredecessor(const DefVector& defs,
+                                        MBasicBlock** joinPred) {
     *joinPred = curBlock_;
     if (inDeadCode()) {
       return true;
@@ -2349,7 +2370,8 @@ class FunctionCompiler {
   }
 
  public:
-  bool branchAndStartThen(MDefinition* cond, MBasicBlock** elseBlock) {
+  [[nodiscard]] bool branchAndStartThen(MDefinition* cond,
+                                        MBasicBlock** elseBlock) {
     if (inDeadCode()) {
       *elseBlock = nullptr;
     } else {
@@ -2370,7 +2392,8 @@ class FunctionCompiler {
     return startBlock();
   }
 
-  bool switchToElse(MBasicBlock* elseBlock, MBasicBlock** thenJoinPred) {
+  [[nodiscard]] bool switchToElse(MBasicBlock* elseBlock,
+                                  MBasicBlock** thenJoinPred) {
     DefVector values;
     if (!finishBlock(&values)) {
       return false;
@@ -2390,7 +2413,7 @@ class FunctionCompiler {
     return startBlock();
   }
 
-  bool joinIfElse(MBasicBlock* thenJoinPred, DefVector* defs) {
+  [[nodiscard]] bool joinIfElse(MBasicBlock* thenJoinPred, DefVector* defs) {
     DefVector values;
     if (!finishBlock(&values)) {
       return false;
@@ -2432,20 +2455,20 @@ class FunctionCompiler {
     return popPushedDefs(defs);
   }
 
-  bool startBlock() {
+  [[nodiscard]] bool startBlock() {
     MOZ_ASSERT_IF(blockDepth_ < blockPatches_.length(),
                   blockPatches_[blockDepth_].empty());
     blockDepth_++;
     return true;
   }
 
-  bool finishBlock(DefVector* defs) {
+  [[nodiscard]] bool finishBlock(DefVector* defs) {
     MOZ_ASSERT(blockDepth_);
     uint32_t topLabel = --blockDepth_;
     return bindBranches(topLabel, defs);
   }
 
-  bool startLoop(MBasicBlock** loopHeader, size_t paramCount) {
+  [[nodiscard]] bool startLoop(MBasicBlock** loopHeader, size_t paramCount) {
     *loopHeader = nullptr;
 
     blockDepth_++;
@@ -2503,8 +2526,9 @@ class FunctionCompiler {
     }
   }
 
-  bool setLoopBackedge(MBasicBlock* loopEntry, MBasicBlock* loopBody,
-                       MBasicBlock* backedge, size_t paramCount) {
+  [[nodiscard]] bool setLoopBackedge(MBasicBlock* loopEntry,
+                                     MBasicBlock* loopBody,
+                                     MBasicBlock* backedge, size_t paramCount) {
     if (!loopEntry->setBackedgeWasm(backedge, paramCount)) {
       return false;
     }
@@ -2567,7 +2591,8 @@ class FunctionCompiler {
   }
 
  public:
-  bool closeLoop(MBasicBlock* loopHeader, DefVector* loopResults) {
+  [[nodiscard]] bool closeLoop(MBasicBlock* loopHeader,
+                               DefVector* loopResults) {
     MOZ_ASSERT(blockDepth_ >= 1);
     MOZ_ASSERT(loopDepth_);
 
@@ -2635,8 +2660,8 @@ class FunctionCompiler {
     return inDeadCode() || popPushedDefs(loopResults);
   }
 
-  bool addControlFlowPatch(MControlInstruction* ins, uint32_t relative,
-                           uint32_t index) {
+  [[nodiscard]] bool addControlFlowPatch(MControlInstruction* ins,
+                                         uint32_t relative, uint32_t index) {
     MOZ_ASSERT(relative < blockDepth_);
     uint32_t absolute = blockDepth_ - 1 - relative;
 
@@ -2648,7 +2673,7 @@ class FunctionCompiler {
     return blockPatches_[absolute].append(ControlFlowPatch(ins, index));
   }
 
-  bool br(uint32_t relativeDepth, const DefVector& values) {
+  [[nodiscard]] bool br(uint32_t relativeDepth, const DefVector& values) {
     if (inDeadCode()) {
       return true;
     }
@@ -2667,8 +2692,8 @@ class FunctionCompiler {
     return true;
   }
 
-  bool brIf(uint32_t relativeDepth, const DefVector& values,
-            MDefinition* condition) {
+  [[nodiscard]] bool brIf(uint32_t relativeDepth, const DefVector& values,
+                          MDefinition* condition) {
     if (inDeadCode()) {
       return true;
     }
@@ -2692,8 +2717,9 @@ class FunctionCompiler {
     return true;
   }
 
-  bool brTable(MDefinition* operand, uint32_t defaultDepth,
-               const Uint32Vector& depths, const DefVector& values) {
+  [[nodiscard]] bool brTable(MDefinition* operand, uint32_t defaultDepth,
+                             const Uint32Vector& depths,
+                             const DefVector& values) {
     if (inDeadCode()) {
       return true;
     }
@@ -2722,6 +2748,10 @@ class FunctionCompiler {
     }
 
     for (size_t i = 0; i < numCases; i++) {
+      if (!mirGen_.ensureBallast()) {
+        return false;
+      }
+
       uint32_t depth = depths[i];
 
       size_t caseIndex;
@@ -2787,7 +2817,8 @@ class FunctionCompiler {
     curBlock_->add(*tag);
   }
 
-  bool setPendingExceptionState(MDefinition* exception, MDefinition* tag) {
+  [[nodiscard]] bool setPendingExceptionState(MDefinition* exception,
+                                              MDefinition* tag) {
     // Set the pending exception object
     auto* exceptionAddr = MWasmDerivedPointer::New(
         alloc(), instancePointer_, Instance::offsetOfPendingException());
@@ -2811,20 +2842,21 @@ class FunctionCompiler {
     return postBarrierPrecise(0, exceptionTagAddr, tag);
   }
 
-  bool addPadPatch(MControlInstruction* ins, size_t relativeTryDepth) {
+  [[nodiscard]] bool addPadPatch(MControlInstruction* ins,
+                                 size_t relativeTryDepth) {
     Control& tryControl = iter().controlItem(relativeTryDepth);
     ControlInstructionVector& padPatches = tryControl.tryPadPatches;
     return padPatches.emplaceBack(ins);
   }
 
-  bool endWithPadPatch(uint32_t relativeTryDepth) {
+  [[nodiscard]] bool endWithPadPatch(uint32_t relativeTryDepth) {
     MGoto* jumpToLandingPad = MGoto::New(alloc());
     curBlock_->end(jumpToLandingPad);
     return addPadPatch(jumpToLandingPad, relativeTryDepth);
   }
 
-  bool delegatePadPatches(const ControlInstructionVector& patches,
-                          uint32_t relativeDepth) {
+  [[nodiscard]] bool delegatePadPatches(const ControlInstructionVector& patches,
+                                        uint32_t relativeDepth) {
     if (patches.empty()) {
       return true;
     }
@@ -2845,7 +2877,7 @@ class FunctionCompiler {
     return true;
   }
 
-  bool beginTryCall(MWasmCallTryDesc* call) {
+  [[nodiscard]] bool beginTryCall(MWasmCallTryDesc* call) {
     call->inTry = inTryBlock(&call->relativeTryDepth);
     if (!call->inTry) {
       return true;
@@ -2860,7 +2892,7 @@ class FunctionCompiler {
            newBlock(curBlock_, &call->prePadBlock);
   }
 
-  bool finishTryCall(MWasmCallTryDesc* call) {
+  [[nodiscard]] bool finishTryCall(MWasmCallTryDesc* call) {
     if (!call->inTry) {
       return true;
     }
@@ -2885,7 +2917,8 @@ class FunctionCompiler {
 
   // Create a landing pad for a try block if there are any throwing
   // instructions.
-  bool createTryLandingPadIfNeeded(Control& control, MBasicBlock** landingPad) {
+  [[nodiscard]] bool createTryLandingPadIfNeeded(Control& control,
+                                                 MBasicBlock** landingPad) {
     // If there are no pad-patches for this try control, it means there are no
     // instructions in the try code that could throw an exception. In this
     // case, all the catches are dead code, and the try code ends up equivalent
@@ -2926,7 +2959,7 @@ class FunctionCompiler {
 
   // Consume the pending exception state from instance, and set up the slots
   // of the landing pad with the exception state.
-  bool setupLandingPadSlots(MBasicBlock* landingPad) {
+  [[nodiscard]] bool setupLandingPadSlots(MBasicBlock* landingPad) {
     MBasicBlock* prevBlock = curBlock_;
     curBlock_ = landingPad;
 
@@ -2953,12 +2986,12 @@ class FunctionCompiler {
     return true;
   }
 
-  bool startTry(MBasicBlock** curBlock) {
+  [[nodiscard]] bool startTry(MBasicBlock** curBlock) {
     *curBlock = curBlock_;
     return startBlock();
   }
 
-  bool joinTryOrCatchBlock(Control& control) {
+  [[nodiscard]] bool joinTryOrCatchBlock(Control& control) {
     // If the try or catch block ended with dead code, there is no need to
     // do any control flow join.
     if (inDeadCode()) {
@@ -2980,8 +3013,8 @@ class FunctionCompiler {
 
   // Finish the previous block (either a try or catch block) and then setup a
   // new catch block.
-  bool switchToCatch(Control& control, const LabelKind& fromKind,
-                     uint32_t tagIndex) {
+  [[nodiscard]] bool switchToCatch(Control& control, const LabelKind& fromKind,
+                                   uint32_t tagIndex) {
     // If there is no control block, then either:
     //   - the entry of the try block is dead code, or
     //   - there is no landing pad for the try-catch.
@@ -3081,8 +3114,8 @@ class FunctionCompiler {
     return true;
   }
 
-  bool loadExceptionValues(MDefinition* exception, uint32_t tagIndex,
-                           DefVector* values) {
+  [[nodiscard]] bool loadExceptionValues(MDefinition* exception,
+                                         uint32_t tagIndex, DefVector* values) {
     SharedTagType tagType = moduleEnv().tags[tagIndex].type;
     const ValTypeVector& params = tagType->argTypes_;
     const TagOffsetVector& offsets = tagType->argOffsets_;
@@ -3103,6 +3136,9 @@ class FunctionCompiler {
 
     // Load each value from the data pointer
     for (size_t i = 0; i < params.length(); i++) {
+      if (!mirGen_.ensureBallast()) {
+        return false;
+      }
       auto* load = MWasmLoadFieldKA::New(
           alloc(), exception, data, offsets[i], params[i].toMIRType(),
           MWideningOp::None, AliasSet::Load(AliasSet::Any));
@@ -3114,7 +3150,8 @@ class FunctionCompiler {
     return true;
   }
 
-  bool finishTryCatch(LabelKind kind, Control& control, DefVector* defs) {
+  [[nodiscard]] bool finishTryCatch(LabelKind kind, Control& control,
+                                    DefVector* defs) {
     switch (kind) {
       case LabelKind::Try: {
         // This is a catchless try, we must delegate all throwing instructions
@@ -3155,7 +3192,7 @@ class FunctionCompiler {
     return finishBlock(defs);
   }
 
-  bool emitBodyDelegateThrowPad(Control& control) {
+  [[nodiscard]] bool emitBodyDelegateThrowPad(Control& control) {
     // Create a landing pad for any throwing instructions
     MBasicBlock* padBlock;
     if (!createTryLandingPadIfNeeded(control, &padBlock)) {
@@ -3179,7 +3216,8 @@ class FunctionCompiler {
     return true;
   }
 
-  bool emitNewException(MDefinition* tag, MDefinition** exception) {
+  [[nodiscard]] bool emitNewException(MDefinition* tag,
+                                      MDefinition** exception) {
     uint32_t bytecodeOffset = readBytecodeOffset();
     const SymbolicAddressSignature& callee = SASigExceptionNew;
     CallCompileState args;
@@ -3195,7 +3233,7 @@ class FunctionCompiler {
     return builtinInstanceMethodCall(callee, bytecodeOffset, args, exception);
   }
 
-  bool emitThrow(uint32_t tagIndex, const DefVector& argValues) {
+  [[nodiscard]] bool emitThrow(uint32_t tagIndex, const DefVector& argValues) {
     if (inDeadCode()) {
       return true;
     }
@@ -3225,6 +3263,9 @@ class FunctionCompiler {
     // Store the params into the data pointer
     SharedTagType tagType = moduleEnv_.tags[tagIndex].type;
     for (size_t i = 0; i < tagType->argOffsets_.length(); i++) {
+      if (!mirGen_.ensureBallast()) {
+        return false;
+      }
       ValType type = tagType->argTypes_[i];
       uint32_t offset = tagType->argOffsets_[i];
 
@@ -3274,7 +3315,7 @@ class FunctionCompiler {
     return throwFrom(exception, tag);
   }
 
-  bool throwFrom(MDefinition* exn, MDefinition* tag) {
+  [[nodiscard]] bool throwFrom(MDefinition* exn, MDefinition* tag) {
     if (inDeadCode()) {
       return true;
     }
@@ -3319,7 +3360,7 @@ class FunctionCompiler {
     return true;
   }
 
-  bool emitRethrow(uint32_t relativeDepth) {
+  [[nodiscard]] bool emitRethrow(uint32_t relativeDepth) {
     if (inDeadCode()) {
       return true;
     }
@@ -4200,14 +4241,14 @@ class FunctionCompiler {
     MTest* test;
     if (onSuccess) {
       test = MTest::New(alloc(), success, nullptr, fallthroughBlock);
-      if (!addControlFlowPatch(test, labelRelativeDepth,
-                               MTest::TrueBranchIndex)) {
+      if (!test || !addControlFlowPatch(test, labelRelativeDepth,
+                                        MTest::TrueBranchIndex)) {
         return false;
       }
     } else {
       test = MTest::New(alloc(), success, fallthroughBlock, nullptr);
-      if (!addControlFlowPatch(test, labelRelativeDepth,
-                               MTest::FalseBranchIndex)) {
+      if (!test || !addControlFlowPatch(test, labelRelativeDepth,
+                                        MTest::FalseBranchIndex)) {
         return false;
       }
     }
@@ -4248,8 +4289,8 @@ class FunctionCompiler {
 
   /*************************************************************************/
  private:
-  bool newBlock(MBasicBlock* pred, MBasicBlock** block,
-                MBasicBlock::Kind kind = MBasicBlock::NORMAL) {
+  [[nodiscard]] bool newBlock(MBasicBlock* pred, MBasicBlock** block,
+                              MBasicBlock::Kind kind = MBasicBlock::NORMAL) {
     *block = MBasicBlock::New(mirGraph(), info(), pred, kind);
     if (!*block) {
       return false;
@@ -4259,7 +4300,7 @@ class FunctionCompiler {
     return true;
   }
 
-  bool goToNewBlock(MBasicBlock* pred, MBasicBlock** block) {
+  [[nodiscard]] bool goToNewBlock(MBasicBlock* pred, MBasicBlock** block) {
     if (!newBlock(pred, block)) {
       return false;
     }
@@ -4267,14 +4308,14 @@ class FunctionCompiler {
     return true;
   }
 
-  bool goToExistingBlock(MBasicBlock* prev, MBasicBlock* next) {
+  [[nodiscard]] bool goToExistingBlock(MBasicBlock* prev, MBasicBlock* next) {
     MOZ_ASSERT(prev);
     MOZ_ASSERT(next);
     prev->end(MGoto::New(alloc(), next));
     return next->addPredecessor(alloc(), prev);
   }
 
-  bool bindBranches(uint32_t absolute, DefVector* defs) {
+  [[nodiscard]] bool bindBranches(uint32_t absolute, DefVector* defs) {
     if (absolute >= blockPatches_.length() || blockPatches_[absolute].empty()) {
       return inDeadCode() || popPushedDefs(defs);
     }
