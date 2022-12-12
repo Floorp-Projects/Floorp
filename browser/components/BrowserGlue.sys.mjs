@@ -2,19 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = [
-  "AboutHomeStartupCache",
-  "BrowserGlue",
-  "ContentPermissionPrompt",
-  "DefaultBrowserCheck",
-];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -900,7 +889,7 @@ const STARTUP_CRASHES_END_DELAY_MS = 30 * 1000;
  */
 const OBSERVE_LASTWINDOW_CLOSE_TOPICS = AppConstants.platform != "macosx";
 
-function BrowserGlue() {
+export function BrowserGlue() {
   XPCOMUtils.defineLazyServiceGetter(
     this,
     "_userIdleService",
@@ -5232,7 +5221,7 @@ const ContentPermissionIntegration = {
   },
 };
 
-function ContentPermissionPrompt() {}
+export function ContentPermissionPrompt() {}
 
 ContentPermissionPrompt.prototype = {
   classID: Components.ID("{d8903bf6-68d5-4e97-bcd1-e4d3012f721a}"),
@@ -5328,7 +5317,7 @@ ContentPermissionPrompt.prototype = {
   },
 };
 
-var DefaultBrowserCheck = {
+export var DefaultBrowserCheck = {
   async prompt(win) {
     const shellService = win.getShellService();
     const needPin = await shellService.doesAppNeedPin();
@@ -5618,7 +5607,7 @@ var JawsScreenReaderVersionCheck = {
  * See https://firefox-source-docs.mozilla.org/browser/components/newtab/docs/v2-system-addon/about_home_startup_cache.html
  * for further details.
  */
-var AboutHomeStartupCache = {
+export var AboutHomeStartupCache = {
   ABOUT_HOME_URI_STRING: "about:home",
   SCRIPT_EXTENSION: "script",
   ENABLED_PREF: "browser.startup.homepage.abouthome_cache.enabled",

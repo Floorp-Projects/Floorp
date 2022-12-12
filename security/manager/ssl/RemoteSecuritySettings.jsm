@@ -233,7 +233,7 @@ var RemoteSecuritySettings = {
 
   /**
    * Initialize the clients (cheap instantiation) and setup their sync event.
-   * This static method is called from BrowserGlue.jsm soon after startup.
+   * This static method is called from BrowserGlue.sys.mjs soon after startup.
    *
    * @returns {object} instantiated clients for security remote settings.
    */

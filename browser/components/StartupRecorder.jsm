@@ -112,7 +112,7 @@ StartupRecorder.prototype = {
 
       // We can't ensure our observer will be called first or last, so the list of
       // topics we observe here should avoid the topics used to trigger things
-      // during startup (eg. the topics observed by BrowserGlue.jsm).
+      // during startup (eg. the topics observed by BrowserGlue.sys.mjs).
       let topics = [
         "profile-do-change", // This catches stuff loaded during app-startup
         "toplevel-window-ready", // Catches stuff from final-ui-startup

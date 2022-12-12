@@ -832,7 +832,7 @@ dapTelemetry:
   description: DAP Telemetry
   owner: simon@mozilla.com
   hasExposure: false
-  isEarlyStartup: true # Data is sent on startup with a trigger in BrowserGlue.jsm
+  isEarlyStartup: true # Data is sent on startup with a trigger in BrowserGlue.sys.mjs
   variables:
     enabled:
       type: boolean

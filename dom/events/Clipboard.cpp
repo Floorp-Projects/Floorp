@@ -72,7 +72,7 @@ static bool MaybeCreateAndDispatchMozClipboardReadPasteEvent(
 
   // Conceptionally, `ClipboardReadPasteChild` is the target of the event.
   // It ensures to receive the event by declaring the event in
-  // <BrowserGlue.jsm>.
+  // <BrowserGlue.sys.mjs>.
   return !NS_WARN_IF(NS_FAILED(nsContentUtils::DispatchChromeEvent(
       document, ToSupports(document), u"MozClipboardReadPaste"_ns,
       CanBubble::eNo, Cancelable::eNo)));

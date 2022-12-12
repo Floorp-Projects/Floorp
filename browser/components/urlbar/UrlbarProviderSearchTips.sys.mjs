@@ -18,6 +18,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.sys.mjs",
+  DefaultBrowserCheck: "resource:///modules/BrowserGlue.sys.mjs",
   ProfileAge: "resource://gre/modules/ProfileAge.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.sys.mjs",
@@ -27,7 +28,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  DefaultBrowserCheck: "resource:///modules/BrowserGlue.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
 });
 

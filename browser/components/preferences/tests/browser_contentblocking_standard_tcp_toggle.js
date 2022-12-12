@@ -2,13 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 ChromeUtils.defineESModuleGetters(this, {
+  BrowserGlue: "resource:///modules/BrowserGlue.sys.mjs",
   Preferences: "resource://gre/modules/Preferences.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  this,
-  "BrowserGlue",
-  "resource:///modules/BrowserGlue.jsm"
-);
 
 const { ExperimentFakes } = ChromeUtils.import(
   "resource://testing-common/NimbusTestUtils.jsm"
