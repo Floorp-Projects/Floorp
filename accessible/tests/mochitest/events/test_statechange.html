@@ -142,6 +142,7 @@
       await p;
 
       p = waitForStateChange("link3", STATE_LINKED, true, false);
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       getNode("link3").setAttribute("href", "http://example.com");
       await p;
     }
@@ -245,6 +246,7 @@
     async function testImageLoad() {
       let img = document.createElement("img");
       img.id = "image";
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       img.src = "http://example.com/a11y/accessible/tests/mochitest/events/slow_image.sjs";
       let p = waitForEvent(EVENT_SHOW, "image");
       getNode("eventdump").before(img);
@@ -254,6 +256,7 @@
         0, 0,
         "image should be invisible");
       p = waitForStateChange("image", STATE_INVISIBLE, false, false);
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       await fetch("http://example.com/a11y/accessible/tests/mochitest/events/slow_image.sjs?complete");
       await p;
       testStates("image",

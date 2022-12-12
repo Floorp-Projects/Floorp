@@ -28,6 +28,7 @@ addAccessibleTask(
 
     is(link.getAttributeValue("AXVisited"), 0, "Link has not been visited");
 
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     await PlacesTestUtils.addVisits(["http://www.example.com/"]);
 
     await stateChanged;
@@ -117,6 +118,7 @@ addAccessibleTask(
     await SpecialPowers.spawn(browser, [], () => {
       content.document
         .getElementById("link3")
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         .setAttribute("href", "http://example.com");
     });
     await stateChanged;

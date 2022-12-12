@@ -47,6 +47,7 @@ addAccessibleTask(
     }
 
     info("Testing same origin (in-process) iframe");
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     let src = "http://example.com/initial.html";
     let loaded = waitForEvent(
       EVENT_DOCUMENT_LOAD_COMPLETE,
@@ -61,6 +62,7 @@ addAccessibleTask(
     await testIframe();
 
     info("Testing different origin (out-of-process) iframe");
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     src = "http://example.net/initial.html";
     loaded = waitForEvent(
       EVENT_DOCUMENT_LOAD_COMPLETE,

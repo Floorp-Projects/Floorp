@@ -219,6 +219,7 @@ add_task(async () => {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       url: "http://example.com",
     },
     async browser => {

@@ -66,6 +66,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
                                              [nsIAccessibleHyperLink]);
       testThis("NormalHyperlink", normalHyperlinkAcc, ROLE_LINK, 1,
                "Mozilla Foundation", true, 17, 18);
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       is(normalHyperlinkAcc.getURI(0).spec, "http://www.mozilla.org/",
          "URI wrong for normalHyperlinkElement!");
       testStates(normalHyperlinkAcc, STATE_LINKED, 0);
@@ -94,8 +95,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       testThis("imgmap", imageMapHyperlinkAcc, ROLE_IMAGE_MAP, 2, "b", true,
                79, 80);
       is(imageMapHyperlinkAcc.getURI(0).spec,
+         // eslint-disable-next-line @microsoft/sdl/no-insecure-url
          "http://www.bbc.co.uk/radio4/atoz/index.shtml#b", "URI wrong!");
       is(imageMapHyperlinkAcc.getURI(1).spec,
+         // eslint-disable-next-line @microsoft/sdl/no-insecure-url
          "http://www.bbc.co.uk/radio4/atoz/index.shtml#a", "URI wrong!");
       testStates(imageMapHyperlinkAcc, 0, 0);
 
@@ -103,6 +106,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
                                 [nsIAccessibleHyperLink]);
       testThis("Area1", area1, ROLE_LINK, 1, "b", true, 0, 1);
       is(area1.getURI(0).spec,
+         // eslint-disable-next-line @microsoft/sdl/no-insecure-url
          "http://www.bbc.co.uk/radio4/atoz/index.shtml#b", "URI wrong!");
       testStates(area1, (STATE_LINKED));
 
@@ -110,6 +114,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
                                 [nsIAccessibleHyperLink]);
       testThis("Area2", area2, ROLE_LINK, 1, "a", true, 1, 2);
       is(area2.getURI(0).spec,
+         // eslint-disable-next-line @microsoft/sdl/no-insecure-url
          "http://www.bbc.co.uk/radio4/atoz/index.shtml#a", "URI wrong!");
       testStates(area2, (STATE_LINKED));
 
@@ -127,6 +132,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
                                                [nsIAccessibleHyperLink]);
       testThis("LinkWithSpan", hyperlinkWithSpanAcc, ROLE_LINK, 1,
                "Heise Online", true, 119, 120);
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       is(hyperlinkWithSpanAcc.getURI(0).spec, "http://www.heise.de/",
          "URI wrong for hyperlinkElementWithSpan!");
       testStates(hyperlinkWithSpanAcc, STATE_LINKED, 0);

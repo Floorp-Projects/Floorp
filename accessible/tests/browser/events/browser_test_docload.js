@@ -94,11 +94,13 @@ async function runTests(browser, accDoc) {
   await onLoadEvents;
 
   onLoadEvents = waitForEvents([
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     [EVENT_DOCUMENT_LOAD_COMPLETE, urlChecker("http://www.wronguri.wronguri/")],
     [EVENT_STATE_CHANGE, busyChecker(false)],
     [EVENT_REORDER, getAccessible(browser)],
   ]);
 
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   BrowserTestUtils.loadURI(browser, "http://www.wronguri.wronguri/");
 
   await onLoadEvents;
