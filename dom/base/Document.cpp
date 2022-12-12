@@ -2042,7 +2042,11 @@ void Document::RecordPageLoadEventTelemetry(
   }
 
   aEventTelemetryData.loadType = mozilla::Some(loadTypeStr);
-  mozilla::glean::perf::page_load.Record(mozilla::Some(aEventTelemetryData));
+
+  // Sending a glean ping must be done on the parent process.
+  if (ContentChild* cc = ContentChild::GetSingleton()) {
+    cc->SendRecordPageLoadEvent(aEventTelemetryData);
+  }
 }
 
 void Document::AccumulatePageLoadTelemetry(
