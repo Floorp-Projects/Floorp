@@ -439,7 +439,7 @@ class Script {
     return this.matcher.matchesWindowGlobal(windowGlobal, ignorePermissions);
   }
 
-  async injectInto(window) {
+  async injectInto(window, reportExceptions = true) {
     if (
       !lazy.isContentScriptProcess ||
       this.injectedInto.has(window.document)
@@ -465,7 +465,7 @@ class Script {
         ]);
       }
 
-      return this.inject(context);
+      return this.inject(context, reportExceptions);
     } catch (e) {
       return Promise.reject(context.normalizeError(e));
     }
@@ -477,11 +477,14 @@ class Script {
    *
    * @param {BaseContext} context
    *        The content script context into which to inject the scripts.
+   * @param {boolean} reportExceptions
+   *        Defaults to true and reports any exception directly to the console
+   *        and no exception will be thrown out of this function.
    * @returns {Promise<any>}
    *        Resolves to the last value in the evaluated script, when
    *        execution is complete.
    */
-  async inject(context) {
+  async inject(context, reportExceptions = true) {
     DocumentManager.lazyInit();
     if (this.requiresCleanup) {
       context.addScript(this);
@@ -577,7 +580,9 @@ class Script {
     );
     try {
       for (let script of scripts) {
-        result = script.executeInGlobal(context.cloneScope);
+        result = script.executeInGlobal(context.cloneScope, {
+          reportExceptions,
+        });
       }
 
       if (this.matcher.jsCode) {
@@ -1226,7 +1231,9 @@ var ExtensionContent = {
 
         return {
           frameId: bc.parent ? bc.id : 0,
-          promise: script.injectInto(bc.window),
+          // Disable exception reporting directly to the console
+          // in order to pass the exceptions back to the callsite.
+          promise: script.injectInto(bc.window, false),
         };
       }
     };

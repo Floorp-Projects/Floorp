@@ -515,11 +515,20 @@ void AutoJSAPI::ReportException() {
     if (mIsMainThread) {
       RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
 
-      RefPtr<nsGlobalWindowInner> inner = xpc::WindowOrNull(errorGlobal);
+      // We aren't using WindowOrNull as we also want to match web extension
+      // content scripts against the related window their sandbox executes
+      // against.
+      RefPtr<nsGlobalWindowInner> inner =
+          xpc::AssociatedWindowOrNull(errorGlobal, cx());
+      uint64_t innerWindowID = 0;
+      if (inner) {
+        innerWindowID = inner->WindowID();
+      }
+
       bool isChrome =
           nsContentUtils::ObjectPrincipal(errorGlobal)->IsSystemPrincipal();
       xpcReport->Init(jsReport.report(), jsReport.toStringResult().c_str(),
-                      isChrome, inner ? inner->WindowID() : 0);
+                      isChrome, innerWindowID);
       if (inner && jsReport.report()->errorNumber != JSMSG_OUT_OF_MEMORY) {
         JS::RootingContext* rcx = JS::RootingContext::get(cx());
         DispatchScriptErrorEvent(inner, rcx, xpcReport, exnStack.exception(),

@@ -1,5 +1,11 @@
 "use strict";
 
+const { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
+
+AddonTestUtils.init(this);
+
 add_task(async function() {
   let scriptUrl = Services.io.newFileURI(do_get_file("file_simple_script.js")).spec;
 
@@ -65,4 +71,29 @@ add_task(async function test_syntaxError() {
   await Assert.rejects(
     ChromeUtils.compileScript(scriptUrl),
     SyntaxError);
+});
+
+/**
+ * Assert that executeInGlobal throws a special exception when the content script throws.
+ * And the content script exception is notified to the console.
+ */
+add_task(async function test_exceptions_in_webconsole() {
+  const scriptUrl = `data:,throw new Error("foo")`;
+  const script = await ChromeUtils.compileScript(scriptUrl);
+  const sandbox = Cu.Sandbox("http://example.com");
+
+  Assert.throws(() => script.executeInGlobal(sandbox),
+    /Error: foo/,
+    "Without reportException set to true, executeInGlobal throws an exception");
+
+  info("With reportException, executeInGlobal doesn't throw, but notifies the console");
+  const { messages } = await AddonTestUtils.promiseConsoleOutput(() => {
+    script.executeInGlobal(sandbox, { reportExceptions: true });
+  });
+
+  info("Wait for the console message related to the content script exception");
+  equal(messages.length, 1, "Got one console message");
+  messages[0].QueryInterface(Ci.nsIScriptError);
+  equal(messages[0].errorMessage, "Error: foo", "We are notified about the plain content script exception via the console");
+  ok(messages[0].stack, "The message has a stack");
 });
