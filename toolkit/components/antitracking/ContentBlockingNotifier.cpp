@@ -137,6 +137,13 @@ void ReportBlockingToConsole(uint64_t aWindowID, nsIURI* aURI,
   if (aURI->SchemeIs("chrome") || aURI->SchemeIs("about")) {
     return;
   }
+  bool hasFlags;
+  nsresult rv = NS_URIChainHasFlags(
+      aURI, nsIProtocolHandler::URI_FORBIDS_COOKIE_ACCESS, &hasFlags);
+  if (NS_FAILED(rv) || hasFlags) {
+    // If the protocol doesn't support cookies, no need to report them blocked.
+    return;
+  }
 
   nsAutoString sourceLine;
   uint32_t lineNumber = 0, columnNumber = 0;
