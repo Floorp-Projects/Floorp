@@ -30,6 +30,7 @@ addAccessibleTask(
         const { src } = content.document.getElementById(id);
         content.document.getElementById(id).src = src.replace(
           olddir,
+          // eslint-disable-next-line @microsoft/sdl/no-insecure-url
           "http://example.net/browser/accessible/tests/browser/"
         );
       }

@@ -155,6 +155,7 @@ addAccessibleTask(
     await invokeContentTask(browser, [], () => {
       content.document
         .getElementById("onclick_img")
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         .setAttribute("longdesc", "http://example.com");
     });
     acc = findAccessibleChildByID(docAcc, "onclick_img");

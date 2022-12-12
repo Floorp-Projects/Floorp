@@ -32,6 +32,7 @@ const MOCHITESTS_DIR =
 /**
  * A base URL for test files used in content.
  */
+// eslint-disable-next-line @microsoft/sdl/no-insecure-url
 const CURRENT_CONTENT_DIR = `http://example.com${CURRENT_FILE_DIR}`;
 
 const LOADED_CONTENT_SCRIPTS = new Map();
@@ -355,6 +356,7 @@ function wrapWithIFrame(doc, options = {}) {
     ...iframeDocBodyAttrs,
   };
   if (options.remoteIframe) {
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     const srcURL = new URL(`http://example.net/document-builder.sjs`);
     if (doc.endsWith("html")) {
       srcURL.searchParams.append("file", `${CURRENT_FILE_DIR}${doc}`);

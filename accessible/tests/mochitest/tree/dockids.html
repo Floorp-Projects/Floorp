@@ -11,11 +11,13 @@
         document.documentElement.appendChild(document.createElement("input"));
 
         var l = document.createElement("link");
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         l.href = "http://www.mozilla.org";
         l.textContent = "Another ";
         document.documentElement.appendChild(l);
 
         l = document.createElement("a");
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         l.href = "http://www.mozilla.org";
         l.textContent = "Yet another link to mozilla";
         document.documentElement.appendChild(l);

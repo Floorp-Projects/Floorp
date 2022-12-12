@@ -30,6 +30,7 @@
 
         var docContainer = getNode("docContainer");
         var iframe = document.createElement("iframe");
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         iframe.setAttribute("src", "http://example.com");
         iframe.setAttribute("id", "newChildDoc");
 

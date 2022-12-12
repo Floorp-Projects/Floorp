@@ -32,6 +32,7 @@
       this.invoke = function insertArea_invoke() {
         var areaElm = document.createElement("area");
         areaElm.setAttribute("href",
+                             // eslint-disable-next-line @microsoft/sdl/no-insecure-url
                              "http://www.bbc.co.uk/radio4/atoz/index.shtml#a");
         areaElm.setAttribute("coords", "0,0,13,14");
         areaElm.setAttribute("alt", "a");
@@ -78,6 +79,7 @@
       this.invoke = function appendArea_invoke() {
         var areaElm = document.createElement("area");
         areaElm.setAttribute("href",
+                             // eslint-disable-next-line @microsoft/sdl/no-insecure-url
                              "http://www.bbc.co.uk/radio4/atoz/index.shtml#c");
         areaElm.setAttribute("coords", "34,0,47,14");
         areaElm.setAttribute("alt", "c");
@@ -285,6 +287,7 @@
 
         var area = document.createElement("area");
         area.setAttribute("href",
+                          // eslint-disable-next-line @microsoft/sdl/no-insecure-url
                           "http://www.bbc.co.uk/radio4/atoz/index.shtml#b");
         area.setAttribute("coords", "17,0,30,14");
         area.setAttribute("alt", "b");
