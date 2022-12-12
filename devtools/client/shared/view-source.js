@@ -209,7 +209,7 @@ async function getOriginalLocation(
 
   let originalLocation = null;
   try {
-    originalLocation = await toolbox.sourceMapService.getOriginalLocation({
+    originalLocation = await toolbox.sourceMapLoader.getOriginalLocation({
       sourceId: generatedID,
       line: generatedLine,
       column: generatedColumn,

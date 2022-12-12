@@ -13,13 +13,13 @@ const SOURCE_MAP_PREF = "devtools.source-map.client-service.enabled";
  *
  * @param {object} commands
  *        The commands object with all interfaces defined from devtools/shared/commands/
- * @param {SourceMapService} sourceMapService
- *        The devtools-source-map functions
+ * @param {SourceMapLoader} sourceMapLoader
+ *        The source-map-loader implemented in devtools/client/shared/source-map-loader/
  */
 class SourceMapURLService {
-  constructor(commands, sourceMapService) {
+  constructor(commands, sourceMapLoader) {
     this._commands = commands;
-    this._sourceMapService = sourceMapService;
+    this._sourceMapLoader = sourceMapLoader;
 
     this._prefValue = Services.prefs.getBoolPref(SOURCE_MAP_PREF);
     this._pendingIDSubscriptions = new Map();
@@ -40,7 +40,7 @@ class SourceMapURLService {
     // source map URL service about the change, so that
     // subscribers to that service can be updated as
     // well.
-    this._sourceMapService.on(
+    this._sourceMapLoader.on(
       "source-map-applied",
       this.newSourceMapCreated.bind(this)
     );
@@ -221,7 +221,7 @@ class SourceMapURLService {
   }
 
   _clearAllState() {
-    this._sourceMapService.clearSourceMaps();
+    this._sourceMapLoader.clearSourceMaps();
     this._pendingIDSubscriptions.clear();
     this._pendingURLSubscriptions.clear();
     this._urlToIDMap.clear();
@@ -305,7 +305,7 @@ class SourceMapURLService {
       // Call getOriginalURLs to make sure the source map has been
       // fetched.  We don't actually need the result of this though.
       if (!map.loaded) {
-        map.loaded = this._sourceMapService.getOriginalURLs({
+        map.loaded = this._sourceMapLoader.getOriginalURLs({
           id: map.id,
           url: map.url,
           sourceMapBaseURL: map.sourceMapBaseURL,
@@ -318,7 +318,7 @@ class SourceMapURLService {
         try {
           await map.loaded;
 
-          const position = await this._sourceMapService.getOriginalLocation({
+          const position = await this._sourceMapLoader.getOriginalLocation({
             sourceId: map.id,
             line: query.line,
             column: query.column,
