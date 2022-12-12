@@ -47,12 +47,9 @@ RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineStreamWrapper::Decode(
         MediaResult(NS_ERROR_FAILURE, "MFMediaEngineStreamWrapper is shutdown"),
         __func__);
   }
-  Microsoft::WRL::ComPtr<MFMediaEngineStream> stream = mStream;
-  Unused << mTaskQueue->Dispatch(NS_NewRunnableFunction(
-      "MFMediaEngineStreamWrapper::Decode",
-      [sample = RefPtr{aSample}, stream]() { stream->NotifyNewData(sample); }));
+  RefPtr<MediaRawData> sample = aSample;
   return InvokeAsync(mTaskQueue, mStream.Get(), __func__,
-                     &MFMediaEngineStream::OutputData);
+                     &MFMediaEngineStream::OutputData, std::move(sample));
 }
 
 RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineStreamWrapper::Drain() {
@@ -456,8 +453,10 @@ RefPtr<MediaDataDecoder::FlushPromise> MFMediaEngineStream::Flush() {
   return MediaDataDecoder::FlushPromise::CreateAndResolve(true, __func__);
 }
 
-RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineStream::OutputData() {
+RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineStream::OutputData(
+    RefPtr<MediaRawData> aSample) {
   AssertOnTaskQueue();
+  NotifyNewData(aSample);
   MediaDataDecoder::DecodedData outputs;
   if (RefPtr<MediaData> outputData = OutputDataInternal()) {
     outputs.AppendElement(outputData);
