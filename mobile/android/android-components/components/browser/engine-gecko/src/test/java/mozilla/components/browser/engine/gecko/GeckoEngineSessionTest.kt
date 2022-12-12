@@ -2292,6 +2292,25 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun containsFormData() {
+        val engineSession = GeckoEngineSession(runtime = mock(), geckoSessionProvider = geckoSessionProvider)
+        var formData = false
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onCheckForFormData(containsFormData: Boolean) {
+                    formData = true
+                }
+            },
+        )
+
+        whenever(geckoSession.containsFormData())
+            .thenReturn(GeckoResult.fromValue(null))
+            .thenReturn(GeckoResult.fromException(IllegalStateException()))
+        engineSession.checkForFormData()
+        assertEquals(false, formData)
+    }
+
+    @Test
     fun checkForMobileSite() {
         val mUrl = "https://m.example.com"
         val mobileUrl = "https://mobile.example.com"

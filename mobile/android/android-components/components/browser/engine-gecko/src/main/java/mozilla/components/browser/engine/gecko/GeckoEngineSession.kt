@@ -522,6 +522,28 @@ class GeckoEngineSession(
     }
 
     /**
+     * See [EngineSession.checkForFormData].
+     */
+    override fun checkForFormData() {
+        geckoSession.containsFormData().then(
+            { result ->
+                if (result == null) {
+                    logger.error("No result from GeckoView containsFormData.")
+                    return@then GeckoResult<Boolean>()
+                }
+                notifyObservers { onCheckForFormData(result) }
+                GeckoResult<Boolean>()
+            },
+            { throwable ->
+                notifyObservers {
+                    onCheckForFormDataException(throwable)
+                }
+                GeckoResult<Boolean>()
+            },
+        )
+    }
+
+    /**
      * Purges the history for the session (back and forward history).
      */
     override fun purgeHistory() {

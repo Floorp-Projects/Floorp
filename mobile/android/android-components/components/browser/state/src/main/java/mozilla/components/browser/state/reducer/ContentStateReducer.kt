@@ -23,7 +23,7 @@ internal object ContentStateReducer {
     /**
      * [ContentAction] Reducer function for modifying a specific [ContentState] of a [SessionState].
      */
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "ThrowsCount")
     fun reduce(state: BrowserState, action: ContentAction): BrowserState {
         return when (action) {
             is ContentAction.RemoveIconAction -> updateContentState(state, action.sessionId) {
@@ -301,6 +301,12 @@ internal object ContentStateReducer {
             }
             is ContentAction.UpdateExpandedToolbarStateAction -> updateContentState(state, action.sessionId) {
                 it.copy(showToolbarAsExpanded = action.expanded)
+            }
+            is ContentAction.CheckForFormDataAction,
+            is ContentAction.UpdatePriorityToDefaultAfterTimeoutAction,
+            is ContentAction.CheckForFormDataExceptionAction,
+            -> {
+                throw IllegalStateException("You need to add SessionPrioritizationMiddleware. ($action)")
             }
         }
     }
