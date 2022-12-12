@@ -32,6 +32,8 @@ about-logging-set-log-modules = Set Log Modules
 about-logging-start-logging = Start Logging
 about-logging-stop-logging = Stop Logging
 about-logging-buttons-disabled = Logging configured via environment variables, dynamic configuration unavailable.
+about-logging-some-elements-disabled = Logging configured via URL, some configuration options are unavailable
+about-logging-info = Info:
 about-logging-log-modules-selection = Log module selection
 about-logging-new-log-modules = New log modules:
 about-logging-logging-output-selection = Logging output
@@ -48,3 +50,19 @@ about-logging-preset-media-playback-label = Media playback
 about-logging-preset-media-playback-description = Log modules to diagnose media playback issues (not video-conferencing issues)
 about-logging-preset-custom-label = Custom
 about-logging-preset-custom-description = Log modules manually selected
+
+# Error handling
+about-logging-error = Error:
+
+## Variables:
+##   $k (String) - Variable name
+##   $v (String) - Variable value
+
+about-logging-invalid-output = Invalid value “{ $v }“ for key “{ $k }“
+about-logging-unknown-logging-preset = Unknown logging preset “{ $v }“
+about-logging-unknown-profiler-preset = Unknown profiler preset “{ $v }“
+about-logging-unknown-option = Unknown about:logging option “{ $k }“
+about-logging-configuration-url-ignored = Configuration URL ignored
+about-logging-file-and-profiler-override = Can’t force file output and override profiler options at the same time
+
+about-logging-configured-via-url = Option configured via URL
