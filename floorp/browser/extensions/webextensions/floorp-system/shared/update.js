@@ -61,6 +61,7 @@
                         "mac" :
                         `${platformInfo["os"]}-${platformInfo["arch"]}`;
                 let data = datas[platformKeyName];
+                if (!data["notify"]) return;
                 if (data["version"] !== displayVersion) {
                     Notify(data["url"], displayVersion, data["version"]);
                     console.log("notificationTitle");
