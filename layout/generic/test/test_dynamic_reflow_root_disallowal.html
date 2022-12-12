@@ -721,10 +721,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1508420
     for (let subtest of gridContainerSubtests) {
       runGridContainerSubtest(subtest);
     }
-    if (SpecialPowers.getBoolPref("layout.css.grid-template-subgrid-value.enabled")) {
-      for (let subtest of gridSubgridSubtests) {
-        runGridSubgridSubtest(subtest);
-      }
+    for (let subtest of gridSubgridSubtests) {
+      runGridSubgridSubtest(subtest);
     }
     for (let subtest of gridItemSubtests) {
       runGridItemSubtest(subtest);

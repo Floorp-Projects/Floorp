@@ -6,8 +6,6 @@
 const TEST_URL = URL_ROOT + "doc_markup_subgrid.html";
 
 add_task(async function() {
-  info("Enable subgrid in order to see the subgrid display type.");
-  await pushPref("layout.css.grid-template-subgrid-value.enabled", true);
   const { inspector } = await openInspectorForURL(TEST_URL);
   const { highlighters, store } = inspector;
 
