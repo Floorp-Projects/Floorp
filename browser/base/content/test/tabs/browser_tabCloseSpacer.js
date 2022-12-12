@@ -13,8 +13,15 @@ add_task(async function() {
 
   let downButton = gBrowser.tabContainer.arrowScrollbox._scrollButtonDown;
   let closingTabsSpacer = gBrowser.tabContainer._closingTabsSpacer;
+  let arrowScrollbox = gBrowser.tabContainer.arrowScrollbox;
 
-  await overflowTabs();
+  await BrowserTestUtils.overflowTabs(registerCleanupFunction, window);
+
+  // Make sure scrolling finished.
+  await new Promise(resolve => {
+    arrowScrollbox.addEventListener("scrollend", resolve, { once: true });
+  });
+
   ok(
     gBrowser.tabContainer.hasAttribute("overflow"),
     "Tab strip should be overflowing"
@@ -57,37 +64,10 @@ add_task(async function() {
     gBrowser.tabContainer.hasAttribute("using-closing-tabs-spacer"),
     "using spacer"
   );
+
   is(downButton.clientWidth, 0, "down button has no width");
   isnot(closingTabsSpacer.clientWidth, 0, "spacer has some width");
 });
-
-async function overflowTabs() {
-  let arrowScrollbox = gBrowser.tabContainer.arrowScrollbox;
-  const originalSmoothScroll = arrowScrollbox.smoothScroll;
-  arrowScrollbox.smoothScroll = false;
-  registerCleanupFunction(() => {
-    arrowScrollbox.smoothScroll = originalSmoothScroll;
-  });
-
-  let width = ele => ele.getBoundingClientRect().width;
-  let tabMinWidth = parseInt(
-    getComputedStyle(gBrowser.selectedTab, null).minWidth
-  );
-  let tabCountForOverflow = Math.ceil(
-    (width(arrowScrollbox) / tabMinWidth) * 1.1
-  );
-  while (gBrowser.tabs.length < tabCountForOverflow) {
-    BrowserTestUtils.addTab(gBrowser, "about:blank", {
-      skipAnimation: true,
-      index: 0,
-    });
-  }
-
-  // Make sure scrolling finished.
-  await new Promise(resolve => {
-    arrowScrollbox.addEventListener("scrollend", resolve, { once: true });
-  });
-}
 
 function getLastCloseButton() {
   let lastTab = gBrowser.tabs[gBrowser.tabs.length - 1];
