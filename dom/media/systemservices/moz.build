@@ -36,9 +36,15 @@ if CONFIG["MOZ_WEBRTC"]:
         REQUIRES_UNIFIED_BUILD = True
         UNIFIED_SOURCES += [
             "objc_video_capture/device_info.mm",
+            "objc_video_capture/device_info_avfoundation.mm",
             "objc_video_capture/device_info_objc.mm",
             "objc_video_capture/rtc_video_capture_objc.mm",
             "objc_video_capture/video_capture.mm",
+            "objc_video_capture/video_capture_avfoundation.mm",
+        ]
+        LOCAL_INCLUDES += [
+            "/third_party/libwebrtc/sdk/objc",
+            "/third_party/libwebrtc/sdk/objc/base",
         ]
         CMMFLAGS += [
             "-fobjc-arc",

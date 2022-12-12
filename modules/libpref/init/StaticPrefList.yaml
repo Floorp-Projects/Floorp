@@ -10355,6 +10355,13 @@
   value: @IS_ANDROID@
   mirror: always
 
+# Use the libwebrtc AVFoundation camera backend on Mac by default. When
+# disabled, an older forked capture module is used.
+- name: media.getusermedia.camera.macavf.enabled
+  type: bool
+  value: false
+  mirror: once
+
 # WebRTC prefs follow
 
 # Enables RTCPeerConnection support. Note that, when true, this pref enables
