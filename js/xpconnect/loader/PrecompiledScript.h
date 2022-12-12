@@ -32,6 +32,7 @@ class PrecompiledScript : public nsISupports, public nsWrapperCache {
                              JS::ReadOnlyCompileOptions& aOptions);
 
   void ExecuteInGlobal(JSContext* aCx, JS::Handle<JSObject*> aGlobal,
+                       const ExecuteInGlobalOptions& aOptions,
                        JS::MutableHandle<JS::Value> aRval, ErrorResult& aRv);
 
   void GetUrl(nsAString& aUrl);

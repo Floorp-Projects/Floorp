@@ -4,6 +4,16 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+dictionary ExecuteInGlobalOptions {
+  /**
+   * If `reportExceptions` is set to true and any exception happens
+   * while executing the script, the exceptions will automatically be logged
+   * in the console. This helps log the exception with the right global innerWindowID
+   * and make it display in the right DevTools console.
+   */
+  boolean reportExceptions = false;
+};
+
 /**
  * Represents a pre-compiled JS script, which can be repeatedly executed in
  * different globals without being re-parsed.
@@ -16,7 +26,7 @@ interface PrecompiledScript {
    * the value of the script's last expression. Otherwise returns undefined.
    */
   [Throws]
-  any executeInGlobal(object global);
+  any executeInGlobal(object global, optional ExecuteInGlobalOptions options = {});
 
   /**
    * The URL that the script was loaded from.
