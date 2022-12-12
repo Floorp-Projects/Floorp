@@ -90,3 +90,6 @@ TEST(cubeb, overload_callback)
   delay(500);
   cubeb_stream_stop(stream);
 }
+
+#undef SAMPLE_FREQUENCY
+#undef STREAM_FORMAT
