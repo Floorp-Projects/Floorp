@@ -689,11 +689,26 @@
     <!-- Preference for site permissions -->
     <string name="preference_site_permissions">Tisirag n usmel</string>
 
+    <!--  Preference for cookie banner. The name of the item from settings screen and the title of the cookie banner screen. -->
+    <string name="preferences_cookie_banner">Asenqes n yiɣarracen n yinagan n tuqqna</string>
+
     <!--  Preference summary for the cookie banner. If the cookie banner option is not disabled. -->
     <string name="preferences_cookie_banner_summary_on">Yermed</string>
 
     <!--  Preference summary for the cookie banner. If the cookie banner option is disabled. -->
     <string name="preferences_cookie_banner_summary_off">Yensa</string>
+
+    <!--  Title preference inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_title">Asenqes n yiɣarracen n yinagan n tuqqna</string>
+
+    <!--  Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_summary">Wali kra kan n yiɣarracen s ugdal awurman n yissutar n yinagan n tuqqna mi ara tettunefk tegnit.</string>
+
+    <!--  Checkbox Preference title inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
+    <string name="cookie_banner_further_reduce_option_title">Senqes ugar n yiɣarracen n yinagan n tuqqna</string>
+
+    <!--  Checkbox Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
+    <string name="cookie_banner_further_reduce_option_summary">Issutar n yiɣarracen n yinagan n tuqqna ad ttwaqeblen i ugdal daɣen n wugar n yiɣarracen.</string>
 
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Taɣuri tawurmant</string>
