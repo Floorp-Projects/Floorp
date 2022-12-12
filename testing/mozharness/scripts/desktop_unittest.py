@@ -11,16 +11,16 @@ author: Jordan Lund
 """
 
 from __future__ import absolute_import
+
+import copy
+import glob
+import imp
 import json
 import multiprocessing
 import os
 import re
-import sys
-import copy
 import shutil
-import glob
-import imp
-
+import sys
 from datetime import datetime, timedelta
 
 # load modules from parent dir
@@ -34,13 +34,13 @@ from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.automation import TBPL_EXCEPTION, TBPL_RETRY
 from mozharness.mozilla.mozbase import MozbaseMixin
 from mozharness.mozilla.structuredlog import StructuredOutputParser
-from mozharness.mozilla.testing.errors import HarnessErrorList
-from mozharness.mozilla.testing.unittest import DesktopUnittestOutputParser
 from mozharness.mozilla.testing.codecoverage import (
     CodeCoverageMixin,
     code_coverage_config_options,
 )
+from mozharness.mozilla.testing.errors import HarnessErrorList
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
+from mozharness.mozilla.testing.unittest import DesktopUnittestOutputParser
 
 SUITE_CATEGORIES = [
     "gtest",
@@ -500,8 +500,8 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
             )
         ]
 
-        if self._query_specified_suites("mochitest") is not None:
-            # mochitest is the only thing that needs this
+        if self._query_specified_suites("mochitest", "mochitest-media") is not None:
+            # mochitest-media is the only thing that needs this
             requirements_files.append(
                 os.path.join(
                     dirs["abs_mochitest_dir"],
@@ -713,7 +713,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
                 " '--binary-path' flag"
             )
 
-    def _query_specified_suites(self, category):
+    def _query_specified_suites(self, category, sub_category=None):
         """Checks if the provided suite does indeed exist.
 
         If at least one suite was given and if it does exist, return the suite
@@ -740,7 +740,14 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
         suite = specified_suites[0]
         if suite not in all_suites:
             self.fatal("""Selected suite does not exist!""")
-        return {suite: all_suites[suite]}
+
+        # allow for fine grain suite selection
+        ret_val = all_suites[suite]
+        if sub_category in all_suites:
+            if all_suites[sub_category] != ret_val:
+                return None
+
+        return {suite: ret_val}
 
     def _query_try_flavor(self, category, suite):
         flavors = {
@@ -949,6 +956,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
         # Kill a process tree (including grandchildren) with signal.SIGTERM
         try:
             import signal
+
             import psutil
 
             if pid == os.getpid():
