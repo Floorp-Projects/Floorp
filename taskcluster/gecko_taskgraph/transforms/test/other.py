@@ -129,37 +129,6 @@ def handle_artifact_prefix(config, tasks):
 
 
 @transforms.add
-def set_target(config, tasks):
-    for task in tasks:
-        build_platform = task["build-platform"]
-        target = None
-        if "target" in task:
-            resolve_keyed_by(
-                task, "target", item_name=task["test-name"], enforce_single_match=False
-            )
-            target = task["target"]
-        if not target:
-            if build_platform.startswith("macosx"):
-                target = "target.dmg"
-            elif build_platform.startswith("android"):
-                target = "target.apk"
-            elif build_platform.startswith("win"):
-                target = "target.zip"
-            else:
-                target = "target.tar.bz2"
-
-        if isinstance(target, dict):
-            # TODO Remove hardcoded mobile artifact prefix
-            index_url = get_index_url(target["index"])
-            installer_url = "{}/artifacts/public/{}".format(index_url, target["name"])
-            task["mozharness"]["installer-url"] = installer_url
-        else:
-            task["mozharness"]["build-artifact-name"] = get_artifact_path(task, target)
-
-        yield task
-
-
-@transforms.add
 def set_treeherder_machine_platform(config, tasks):
     """Set the appropriate task.extra.treeherder.machine.platform"""
     translation = {
@@ -261,6 +230,7 @@ def handle_keyed_by(config, tasks):
         "fetches.toolchain",
         "target",
         "webrender-run-on-projects",
+        "mozharness.requires-signed-builds",
     ]
     for task in tasks:
         for field in fields:
@@ -272,6 +242,34 @@ def handle_keyed_by(config, tasks):
                 project=config.params["project"],
                 variant=task["attributes"].get("unittest_variant"),
             )
+        yield task
+
+
+@transforms.add
+def set_target(config, tasks):
+    for task in tasks:
+        build_platform = task["build-platform"]
+        target = None
+        if "target" in task:
+            target = task["target"]
+        if not target:
+            if build_platform.startswith("macosx"):
+                target = "target.dmg"
+            elif build_platform.startswith("android"):
+                target = "target.apk"
+            elif build_platform.startswith("win"):
+                target = "target.zip"
+            else:
+                target = "target.tar.bz2"
+
+        if isinstance(target, dict):
+            # TODO Remove hardcoded mobile artifact prefix
+            index_url = get_index_url(target["index"])
+            installer_url = "{}/artifacts/public/{}".format(index_url, target["name"])
+            task["mozharness"]["installer-url"] = installer_url
+        else:
+            task["mozharness"]["build-artifact-name"] = get_artifact_path(task, target)
+
         yield task
 
 
