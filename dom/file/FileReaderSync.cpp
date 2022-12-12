@@ -329,7 +329,7 @@ class ReadReadyRunnable final : public WorkerSyncRunnable {
     nsCOMPtr<nsIEventTarget> syncLoopTarget;
     mSyncLoopTarget.swap(syncLoopTarget);
 
-    aWorkerPrivate->StopSyncLoop(syncLoopTarget, true);
+    aWorkerPrivate->StopSyncLoop(syncLoopTarget, NS_OK);
     return true;
   }
 
@@ -443,7 +443,7 @@ nsresult FileReaderSync::SyncRead(nsIInputStream* aStream, char* aBuffer,
       return rv;
     }
 
-    if (!syncLoop.Run()) {
+    if (NS_WARN_IF(NS_FAILED(syncLoop.Run()))) {
       return NS_ERROR_DOM_INVALID_STATE_ERR;
     }
   }

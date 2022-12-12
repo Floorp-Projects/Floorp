@@ -391,7 +391,7 @@ class LoadStartDetectionRunnable final : public Runnable,
       }
 
       if (mSyncLoopTarget) {
-        aWorkerPrivate->StopSyncLoop(mSyncLoopTarget, true);
+        aWorkerPrivate->StopSyncLoop(mSyncLoopTarget, NS_OK);
       }
 
       if (mXMLHttpRequestPrivate->SendInProgress()) {
@@ -826,7 +826,7 @@ void Proxy::Teardown(bool aSendUnpin) {
         // We have an unclosed sync loop.  Fix that now.
         RefPtr<MainThreadStopSyncLoopRunnable> runnable =
             new MainThreadStopSyncLoopRunnable(
-                mWorkerPrivate, std::move(mSyncLoopTarget), false);
+                mWorkerPrivate, std::move(mSyncLoopTarget), NS_ERROR_FAILURE);
         MOZ_ALWAYS_TRUE(runnable->Dispatch());
       }
 
@@ -1692,7 +1692,7 @@ void XMLHttpRequestWorker::SendInternal(const BodyExtractorBase* aBody,
 
   autoUnpin.Clear();
 
-  bool succeeded = autoSyncLoop->Run();
+  bool succeeded = NS_SUCCEEDED(autoSyncLoop->Run());
   mStateData->mFlagSend = false;
 
   // Don't clobber an existing exception that we may have thrown on aRv

@@ -327,14 +327,14 @@ uint64_t FileSystemSyncAccessHandle::ReadOrWrite(
 
                  workerPrivate->AssertIsOnWorkerThread();
 
-                 workerPrivate->StopSyncLoop(syncLoopTarget, true);
+                 workerPrivate->StopSyncLoop(syncLoopTarget, NS_OK);
 
                  return BoolPromise::CreateAndResolve(true, __func__);
                });
              })),
          throwAndReturn);
 
-  MOZ_ALWAYS_TRUE(syncLoop.Run());
+  MOZ_ALWAYS_SUCCEEDS(syncLoop.Run());
 
   return totalCount;
 }
