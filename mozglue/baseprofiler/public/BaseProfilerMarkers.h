@@ -148,8 +148,7 @@ struct TextMarker {
     MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
     schema.SetChartLabel("{marker.data.name}");
     schema.SetTableLabel("{marker.name} - {marker.data.name}");
-    schema.AddKeyLabelFormatSearchable("name", "Details", MS::Format::String,
-                                       MS::Searchable::Searchable);
+    schema.AddKeyLabelFormat("name", "Details", MS::Format::String);
     return schema;
   }
 };
@@ -170,8 +169,7 @@ struct Tracing {
     using MS = MarkerSchema;
     MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable,
               MS::Location::TimelineOverview};
-    schema.AddKeyLabelFormatSearchable("category", "Type", MS::Format::String,
-                                       MS::Searchable::Searchable);
+    schema.AddKeyLabelFormat("category", "Type", MS::Format::String);
     return schema;
   }
 };
