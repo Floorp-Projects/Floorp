@@ -300,11 +300,6 @@ bool nsJSPrincipals::ReadKnownPrincipalType(JSContext* aCx,
              aTag == SCTAG_DOM_EXPANDED_PRINCIPAL ||
              aTag == SCTAG_DOM_WORKER_PRINCIPAL);
 
-  if (NS_WARN_IF(!NS_IsMainThread())) {
-    xpc::Throw(aCx, NS_ERROR_UNCATCHABLE_EXCEPTION);
-    return false;
-  }
-
   if (aTag == SCTAG_DOM_WORKER_PRINCIPAL) {
     // When reading principals which were written on a worker thread, we need to
     // know the principal of the worker which did the write.
