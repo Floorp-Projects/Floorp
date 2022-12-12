@@ -1955,7 +1955,7 @@ void Document::ConstructUbiNode(void* storage) {
 void Document::LoadEventFired() {
   // Object used to collect some telemetry data so we don't need to query for it
   // twice.
-  PageLoadEventTelemetryData pageLoadEventData;
+  glean::perf::PageLoadExtra pageLoadEventData;
 
   // Accumulate timing data located in each document's realm and report to
   // telemetry.
@@ -1979,7 +1979,7 @@ static uint32_t ConvertToUnsignedFromDouble(double aNumber) {
 }
 
 void Document::RecordPageLoadEventTelemetry(
-    PageLoadEventTelemetryData aEventTelemetryData) {
+    glean::perf::PageLoadExtra& aEventTelemetryData) {
   static bool sTelemetryEventEnabled = false;
   if (!sTelemetryEventEnabled) {
     sTelemetryEventEnabled = true;
@@ -1988,8 +1988,7 @@ void Document::RecordPageLoadEventTelemetry(
 
   // If the page load time is empty, then the content wasn't something we want
   // to report (i.e. not a top level document).
-  if (!aEventTelemetryData.mPageLoadTime ||
-      aEventTelemetryData.mPageLoadTime.IsZero()) {
+  if (!aEventTelemetryData.loadTime) {
     return;
   }
   MOZ_ASSERT(IsTopLevelContentDocument());
@@ -2042,21 +2041,12 @@ void Document::RecordPageLoadEventTelemetry(
       break;
   }
 
-  mozilla::glean::perf::PageLoadExtra extra = {
-      mozilla::Some(ConvertToUnsignedFromDouble(
-          aEventTelemetryData.mFirstContentfulPaintTime.ToMilliseconds())),
-      mozilla::Some(ConvertToUnsignedFromDouble(
-          aEventTelemetryData.mTotalJSExecutionTime.ToMilliseconds())),
-      mozilla::Some(ConvertToUnsignedFromDouble(
-          aEventTelemetryData.mPageLoadTime.ToMilliseconds())),
-      mozilla::Some(loadTypeStr),
-      mozilla::Some(ConvertToUnsignedFromDouble(
-          aEventTelemetryData.mResponseStartTime.ToMilliseconds()))};
-  mozilla::glean::perf::page_load.Record(mozilla::Some(extra));
+  aEventTelemetryData.loadType = mozilla::Some(loadTypeStr);
+  mozilla::glean::perf::page_load.Record(mozilla::Some(aEventTelemetryData));
 }
 
 void Document::AccumulatePageLoadTelemetry(
-    PageLoadEventTelemetryData& aEventTelemetryDataOut) {
+    glean::perf::PageLoadExtra& aEventTelemetryDataOut) {
   // Interested only in top level documents for real websites that are in the
   // foreground.
   if (!ShouldIncludeInTelemetry(false) || !IsTopLevelContentDocument() ||
@@ -2158,8 +2148,8 @@ void Document::AccumulatePageLoadTelemetry(
         Telemetry::PERF_FIRST_CONTENTFUL_PAINT_FROM_RESPONSESTART_MS,
         responseStart, firstContentfulComposite);
 
-    aEventTelemetryDataOut.mFirstContentfulPaintTime =
-        firstContentfulComposite - navigationStart;
+    aEventTelemetryDataOut.fcpTime = mozilla::Some(static_cast<uint32_t>(
+        (firstContentfulComposite - navigationStart).ToMilliseconds()));
   }
 
   // DOM Content Loaded event
@@ -2192,13 +2182,15 @@ void Document::AccumulatePageLoadTelemetry(
         Telemetry::PERF_PAGE_LOAD_TIME_FROM_RESPONSESTART_MS, responseStart,
         loadEventStart);
 
-    aEventTelemetryDataOut.mResponseStartTime = responseStart - navigationStart;
-    aEventTelemetryDataOut.mPageLoadTime = loadEventStart - navigationStart;
+    aEventTelemetryDataOut.responseTime = mozilla::Some(static_cast<uint32_t>(
+        (responseStart - navigationStart).ToMilliseconds()));
+    aEventTelemetryDataOut.loadTime = mozilla::Some(static_cast<uint32_t>(
+        (loadEventStart - navigationStart).ToMilliseconds()));
   }
 }
 
 void Document::AccumulateJSTelemetry(
-    PageLoadEventTelemetryData& aEventTelemetryDataOut) {
+    glean::perf::PageLoadExtra& aEventTelemetryDataOut) {
   if (!IsTopLevelContentDocument() || !ShouldIncludeInTelemetry(false)) {
     return;
   }
@@ -2216,7 +2208,8 @@ void Document::AccumulateJSTelemetry(
     Telemetry::Accumulate(
         Telemetry::JS_PAGELOAD_EXECUTION_MS,
         ConvertToUnsignedFromDouble(timers.executionTime.ToMilliseconds()));
-    aEventTelemetryDataOut.mTotalJSExecutionTime = timers.executionTime;
+    aEventTelemetryDataOut.jsExecTime = mozilla::Some(
+        static_cast<uint32_t>(timers.executionTime.ToMilliseconds()));
   }
 
   if (!timers.delazificationTime.IsZero()) {
