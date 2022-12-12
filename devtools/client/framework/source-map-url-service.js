@@ -34,6 +34,16 @@ class SourceMapURLService {
     this._clearAllState = this._clearAllState.bind(this);
 
     Services.prefs.addObserver(SOURCE_MAP_PREF, this._syncPrevValue);
+
+    // If a tool has changed or introduced a source map
+    // (e.g, by pretty-printing a source), tell the
+    // source map URL service about the change, so that
+    // subscribers to that service can be updated as
+    // well.
+    this._sourceMapService.on(
+      "source-map-applied",
+      this.newSourceMapCreated.bind(this)
+    );
   }
 
   destroy() {
