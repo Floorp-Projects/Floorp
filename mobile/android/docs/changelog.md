@@ -24,6 +24,9 @@ permalink: /changelog/
 * **concept-toolbar**
   * Added optional parameter `cursorPlacement` to `editMode` which allows cursor placement to be specified when switching to edit mode.
 
+* **feature-toolbar**
+  * 🆕 Added a new parameter `shouldDisplaySearchTerms` to `ToolbarFeature` which allows clients to specify if the search terms should be shown instead of the URL when the toolbar is in display mode. [Bug 1805164](https://bugzilla.mozilla.org/show_bug.cgi?id=1805164)
+
 # 109.0.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/v108.0.0...v109.0.0)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/v109.0.0/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)

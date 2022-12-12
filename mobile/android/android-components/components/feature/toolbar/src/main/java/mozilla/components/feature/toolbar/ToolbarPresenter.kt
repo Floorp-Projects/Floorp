@@ -8,7 +8,6 @@ import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.Companion.PRIVATE
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collect
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
@@ -28,6 +27,7 @@ class ToolbarPresenter(
     private val toolbar: Toolbar,
     private val store: BrowserStore,
     private val customTabId: String? = null,
+    private val shouldDisplaySearchTerms: Boolean = false,
     urlRenderConfiguration: ToolbarFeature.UrlRenderConfiguration? = null,
 ) {
     @VisibleForTesting
@@ -59,7 +59,11 @@ class ToolbarPresenter(
         val tab = state.findCustomTabOrSelectedTab(customTabId)
 
         if (tab != null) {
-            renderer.post(tab.content.url)
+            if (shouldDisplaySearchTerms && tab.content.searchTerms.isNotBlank()) {
+                toolbar.url = tab.content.searchTerms
+            } else {
+                renderer.post(tab.content.url)
+            }
 
             toolbar.setSearchTerms(tab.content.searchTerms)
             toolbar.displayProgress(tab.content.progress)

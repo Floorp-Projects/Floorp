@@ -503,4 +503,46 @@ class ToolbarPresenterTest {
         verify(toolbar).siteTrackingProtection = Toolbar.SiteTrackingProtection.OFF_GLOBALLY
         verify(toolbar).highlight = Toolbar.Highlight.NONE
     }
+
+    @Test
+    fun `GIVEN search terms should not be shown in display mode WHEN rendering a state with search terms set THEN toolbar url is the tab url`() {
+        val url = "https://www.mozilla.org"
+        val toolbar: Toolbar = mock()
+        val store = spy(
+            BrowserStore(
+                BrowserState(
+                    tabs = listOf(createTab(url, id = "tab1", searchTerms = "search terms")),
+                    selectedTabId = "tab1",
+                ),
+            ),
+        )
+        val toolbarPresenter = spy(ToolbarPresenter(toolbar, store, shouldDisplaySearchTerms = false))
+        toolbarPresenter.renderer = mock()
+
+        toolbarPresenter.start()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        verify(toolbarPresenter.renderer).post(url)
+    }
+
+    @Test
+    fun `GIVEN search terms should be shown in display mode WHEN rendering a state with search terms set THEN toolbar url is set to the search terms`() {
+        val searchTerm = "mozilla firefox"
+        val toolbar: Toolbar = mock()
+        val store = spy(
+            BrowserStore(
+                BrowserState(
+                    tabs = listOf(createTab("https://www.mozilla.org", id = "tab1", searchTerms = searchTerm)),
+                    selectedTabId = "tab1",
+                ),
+            ),
+        )
+        val toolbarPresenter = spy(ToolbarPresenter(toolbar, store, shouldDisplaySearchTerms = true))
+        toolbarPresenter.renderer = mock()
+
+        toolbarPresenter.start()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        verify(toolbar).url = searchTerm
+    }
 }

@@ -22,16 +22,24 @@ typealias SearchUseCase = (String) -> Unit
 /**
  * Feature implementation for connecting a toolbar implementation with the session module.
  */
+@Suppress("LongParameterList")
 class ToolbarFeature(
     private val toolbar: Toolbar,
     store: BrowserStore,
     loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
     searchUseCase: SearchUseCase? = null,
     customTabId: String? = null,
+    shouldDisplaySearchTerms: Boolean = false,
     urlRenderConfiguration: UrlRenderConfiguration? = null,
 ) : LifecycleAwareFeature, UserInteractionHandler {
     @VisibleForTesting
-    internal var presenter = ToolbarPresenter(toolbar, store, customTabId, urlRenderConfiguration)
+    internal var presenter = ToolbarPresenter(
+        toolbar,
+        store,
+        customTabId,
+        shouldDisplaySearchTerms,
+        urlRenderConfiguration,
+    )
 
     @VisibleForTesting
     internal var interactor = ToolbarInteractor(toolbar, loadUrlUseCase, searchUseCase)
