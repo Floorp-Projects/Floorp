@@ -493,7 +493,7 @@ class CollectionTest {
 
         homeScreen {
             verifySnackBarText("Collection deleted")
-            clickUndoCollectionDeletion("UNDO")
+            clickUndoSnackBarButton()
             verifyCollectionIsDisplayed(collectionName, true)
         }
     }
