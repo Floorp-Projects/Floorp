@@ -36,6 +36,11 @@ add_task(async function test_cached_contentscript_on_document_start() {
           js: ["script4.js"],
           run_at: "document_start",
         },
+        {
+          matches: ["http://*/*/file_content_script_errors.html"],
+          js: ["script5.js"],
+          run_at: "document_start",
+        },
       ],
     },
 
@@ -50,6 +55,9 @@ add_task(async function test_cached_contentscript_on_document_start() {
         undefinedSymbol();
       `,
       "script4.js": `
+        )
+      `,
+      "script5.js": `
         Promise.reject("rejected promise");
 
         (async () => {
@@ -104,7 +112,7 @@ add_task(async function test_cached_contentscript_on_document_start() {
     Services.console.unregisterListener(this.consoleErrorListener);
     return this.collectedErrors;
   });
-  equal(errors.length, 6);
+  equal(errors.length, 7);
   for (const { innerWindowID, message } of errors) {
     equal(
       innerWindowID,
