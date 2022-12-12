@@ -49,8 +49,6 @@ function HistoryDownloadElementShell(download) {
 }
 
 HistoryDownloadElementShell.prototype = {
-  __proto__: DownloadsViewUI.DownloadElementShell.prototype,
-
   /**
    * Overrides the base getter to return the Download or HistoryDownload object
    * for displaying information and executing commands in the user interface.
@@ -188,6 +186,10 @@ HistoryDownloadElementShell.prototype = {
     }
   },
 };
+Object.setPrototypeOf(
+  HistoryDownloadElementShell.prototype,
+  DownloadsViewUI.DownloadElementShell.prototype
+);
 
 /**
  * Relays commands from the download.xml binding to the selected items.
@@ -268,8 +270,6 @@ function DownloadsPlacesView(
 }
 
 DownloadsPlacesView.prototype = {
-  __proto__: DownloadsViewUI.BaseView.prototype,
-
   get associatedElement() {
     return this._richlistbox;
   },
@@ -889,6 +889,10 @@ DownloadsPlacesView.prototype = {
     }
   },
 };
+Object.setPrototypeOf(
+  DownloadsPlacesView.prototype,
+  DownloadsViewUI.BaseView.prototype
+);
 
 for (let methodName of ["load", "applyFilter", "selectNode", "selectItems"]) {
   DownloadsPlacesView.prototype[methodName] = function() {

@@ -2320,15 +2320,18 @@ add_task(async function test_launcherPath_invalid() {
   });
 
   let promiseDownloadLaunched = new Promise(resolve => {
-    let waitFn = base => ({
-      __proto__: base,
-      launchDownload() {
-        Integration.downloads.unregister(waitFn);
-        let superPromise = super.launchDownload(...arguments);
-        resolve(superPromise);
-        return superPromise;
-      },
-    });
+    let waitFn = base => {
+      let launchOverride = {
+        launchDownload() {
+          Integration.downloads.unregister(waitFn);
+          let superPromise = super.launchDownload(...arguments);
+          resolve(superPromise);
+          return superPromise;
+        },
+      };
+      Object.setPrototypeOf(launchOverride, base);
+      return launchOverride;
+    };
     Integration.downloads.register(waitFn);
   });
 

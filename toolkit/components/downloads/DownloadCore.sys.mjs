@@ -1883,8 +1883,6 @@ DownloadError.BLOCK_VERDICT_UNCOMMON = "Uncommon";
 DownloadError.BLOCK_VERDICT_DOWNLOAD_SPAM = "DownloadSpam";
 
 DownloadError.prototype = {
-  __proto__: Error.prototype,
-
   /**
    * The result code associated with this error.
    */
@@ -1955,6 +1953,7 @@ DownloadError.prototype = {
     return serializable;
   },
 };
+Object.setPrototypeOf(DownloadError.prototype, Error.prototype);
 
 /**
  * Creates a new DownloadError object from its serializable representation.
@@ -2114,8 +2113,6 @@ DownloadSaver.fromSerializable = function(aSerializable) {
 export var DownloadCopySaver = function() {};
 
 DownloadCopySaver.prototype = {
-  __proto__: DownloadSaver.prototype,
-
   /**
    * BackgroundFileSaver object currently handling the download.
    */
@@ -2683,6 +2680,7 @@ DownloadCopySaver.prototype = {
     return this._redirects;
   },
 };
+Object.setPrototypeOf(DownloadCopySaver.prototype, DownloadSaver.prototype);
 
 /**
  * Creates a new DownloadCopySaver object, with its initial state derived from
@@ -2719,8 +2717,6 @@ export var DownloadLegacySaver = function() {
 };
 
 DownloadLegacySaver.prototype = {
-  __proto__: DownloadSaver.prototype,
-
   /**
    * Save the SHA-256 hash in raw bytes of the downloaded file. This may be
    * null when nsExternalHelperAppService (and thus BackgroundFileSaver) is not
@@ -2993,7 +2989,7 @@ DownloadLegacySaver.prototype = {
    * Implements "DownloadSaver.removeData".
    */
   removeData(canRemoveFinalTarget) {
-    // DownloadCopySaver and DownloadLeagcySaver use the same logic for removing
+    // DownloadCopySaver and DownloadLegacySaver use the same logic for removing
     // partially downloaded data, though this implementation isn't shared by
     // other saver types, thus it isn't found on their shared prototype.
     return DownloadCopySaver.prototype.removeData.call(
@@ -3065,6 +3061,7 @@ DownloadLegacySaver.prototype = {
     this._redirects = redirects;
   },
 };
+Object.setPrototypeOf(DownloadLegacySaver.prototype, DownloadSaver.prototype);
 
 /**
  * Returns a new DownloadLegacySaver object.  This saver type has a

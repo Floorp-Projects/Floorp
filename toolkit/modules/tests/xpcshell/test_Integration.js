@@ -56,28 +56,30 @@ let overrideFn = base => ({
   },
 });
 
-let superOverrideFn = base => ({
-  __proto__: base,
+let superOverrideFn = base => {
+  let nextLevel = {
+    value: "overridden-value",
 
-  value: "overridden-value",
+    get property() {
+      return "overridden-" + super.property;
+    },
 
-  get property() {
-    return "overridden-" + super.property;
-  },
+    set property(value) {
+      super.property = "overridden-" + value;
+    },
 
-  set property(value) {
-    super.property = "overridden-" + value;
-  },
+    method() {
+      return "overridden-" + super.method(...arguments);
+    },
 
-  method() {
-    return "overridden-" + super.method(...arguments);
-  },
-
-  async asyncMethod() {
-    // We cannot use the "super" keyword in methods defined using "Task.async".
-    return "overridden-" + (await base.asyncMethod.apply(this, arguments));
-  },
-});
+    async asyncMethod() {
+      // We cannot use the "super" keyword in methods defined using "Task.async".
+      return "overridden-" + (await base.asyncMethod.apply(this, arguments));
+    },
+  };
+  Object.setPrototypeOf(nextLevel, base);
+  return nextLevel;
+};
 
 /**
  * Fails the test if the results of method invocations on the combined object
