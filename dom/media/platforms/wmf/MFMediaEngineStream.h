@@ -72,7 +72,6 @@ class MFMediaEngineStream
 
   TaskQueue* GetTaskQueue() { return mTaskQueue; }
 
-  void NotifyNewData(MediaRawData* aSample);
   void NotifyEndOfStream() {
     Microsoft::WRL::ComPtr<MFMediaEngineStream> self = this;
     Unused << mTaskQueue->Dispatch(NS_NewRunnableFunction(
@@ -92,7 +91,8 @@ class MFMediaEngineStream
 
   virtual MFMediaEngineVideoStream* AsVideoStream() { return nullptr; }
 
-  RefPtr<MediaDataDecoder::DecodePromise> OutputData();
+  RefPtr<MediaDataDecoder::DecodePromise> OutputData(
+      RefPtr<MediaRawData> aSample);
 
   virtual RefPtr<MediaDataDecoder::DecodePromise> Drain();
 
@@ -116,6 +116,7 @@ class MFMediaEngineStream
   void ReplySampleRequestIfPossible();
   bool ShouldServeSamples() const;
 
+  void NotifyNewData(MediaRawData* aSample);
   void NotifyEndOfStreamInternal();
 
   virtual bool IsEnded() const;
