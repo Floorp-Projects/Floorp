@@ -11,6 +11,6 @@ The in-tree copy is updated by running
   sh update.sh
 from within the modules/woff2 directory.
 
-Current version: [commit 1bccf208bca986e53a647dfe4811322adb06ecf8].
+Current version: [commit 4721483ad780ee2b63cb787bfee4aa64b61a0446].
 
 Additional patch: woff2-rlbox.patch (bug 1732201).
