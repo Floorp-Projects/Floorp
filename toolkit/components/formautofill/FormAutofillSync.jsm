@@ -61,8 +61,6 @@ function AutofillRecord(collection, id) {
 }
 
 AutofillRecord.prototype = {
-  __proto__: CryptoWrapper.prototype,
-
   toEntry() {
     return Object.assign(
       {
@@ -87,6 +85,7 @@ AutofillRecord.prototype = {
     return JSON.stringify({ entry: sanitizeStorageObject(record.entry) });
   },
 };
+Object.setPrototypeOf(AutofillRecord.prototype, CryptoWrapper.prototype);
 
 // Profile data is stored in the "entry" object of the record.
 Utils.deferGetSet(AutofillRecord, "cleartext", ["entry"]);
@@ -96,8 +95,6 @@ function FormAutofillStore(name, engine) {
 }
 
 FormAutofillStore.prototype = {
-  __proto__: Store.prototype,
-
   _subStorageName: null, // overridden below.
   _storage: null,
 
@@ -201,13 +198,13 @@ FormAutofillStore.prototype = {
   // implementation throws, which is what we want to happen so we can identify
   // any places they are "accidentally" called.
 };
+Object.setPrototypeOf(FormAutofillStore.prototype, Store.prototype);
 
 function FormAutofillTracker(name, engine) {
   Tracker.call(this, name, engine);
 }
 
 FormAutofillTracker.prototype = {
-  __proto__: Tracker.prototype,
   async observe(subject, topic, data) {
     if (topic != "formautofill-storage-changed") {
       return;
@@ -239,6 +236,7 @@ FormAutofillTracker.prototype = {
     Services.obs.removeObserver(this, "formautofill-storage-changed");
   },
 };
+Object.setPrototypeOf(FormAutofillTracker.prototype, Tracker.prototype);
 
 // This uses the same conventions as BookmarkChangeset in
 // services/sync/modules/engines/bookmarks.js. Specifically,
@@ -276,8 +274,6 @@ function FormAutofillEngine(service, name) {
 }
 
 FormAutofillEngine.prototype = {
-  __proto__: SyncEngine.prototype,
-
   // the priority for this engine is == addons, so will happen after bookmarks
   // prefs and tabs, but before forms, history, etc.
   syncPriority: 5,
@@ -333,6 +329,7 @@ FormAutofillEngine.prototype = {
     this._store.storage.removeAll({ sourceSync: true });
   },
 };
+Object.setPrototypeOf(FormAutofillEngine.prototype, SyncEngine.prototype);
 
 // The concrete engines
 
@@ -341,25 +338,24 @@ function AddressesRecord(collection, id) {
 }
 
 AddressesRecord.prototype = {
-  __proto__: AutofillRecord.prototype,
   _logName: "Sync.Record.Addresses",
 };
+Object.setPrototypeOf(AddressesRecord.prototype, AutofillRecord.prototype);
 
 function AddressesStore(name, engine) {
   FormAutofillStore.call(this, name, engine);
 }
 
 AddressesStore.prototype = {
-  __proto__: FormAutofillStore.prototype,
   _subStorageName: "addresses",
 };
+Object.setPrototypeOf(AddressesStore.prototype, FormAutofillStore.prototype);
 
 function AddressesEngine(service) {
   FormAutofillEngine.call(this, service, "Addresses");
 }
 
 AddressesEngine.prototype = {
-  __proto__: FormAutofillEngine.prototype,
   _trackerObj: FormAutofillTracker,
   _storeObj: AddressesStore,
   _recordObj: AddressesRecord,
@@ -368,31 +364,31 @@ AddressesEngine.prototype = {
     return "addresses";
   },
 };
+Object.setPrototypeOf(AddressesEngine.prototype, FormAutofillEngine.prototype);
 
 function CreditCardsRecord(collection, id) {
   AutofillRecord.call(this, collection, id);
 }
 
 CreditCardsRecord.prototype = {
-  __proto__: AutofillRecord.prototype,
   _logName: "Sync.Record.CreditCards",
 };
+Object.setPrototypeOf(CreditCardsRecord.prototype, AutofillRecord.prototype);
 
 function CreditCardsStore(name, engine) {
   FormAutofillStore.call(this, name, engine);
 }
 
 CreditCardsStore.prototype = {
-  __proto__: FormAutofillStore.prototype,
   _subStorageName: "creditCards",
 };
+Object.setPrototypeOf(CreditCardsStore.prototype, FormAutofillStore.prototype);
 
 function CreditCardsEngine(service) {
   FormAutofillEngine.call(this, service, "CreditCards");
 }
 
 CreditCardsEngine.prototype = {
-  __proto__: FormAutofillEngine.prototype,
   _trackerObj: FormAutofillTracker,
   _storeObj: CreditCardsStore,
   _recordObj: CreditCardsRecord,
@@ -400,3 +396,7 @@ CreditCardsEngine.prototype = {
     return "creditcards";
   },
 };
+Object.setPrototypeOf(
+  CreditCardsEngine.prototype,
+  FormAutofillEngine.prototype
+);

@@ -62,8 +62,6 @@ var TestingCrashManager = function(options) {
 };
 
 TestingCrashManager.prototype = {
-  __proto__: CrashManager.prototype,
-
   createDummyDump(submitted = false, date = new Date(), hr = false) {
     let uuid = Services.uuid.generateUUID().toString();
     uuid = uuid.substring(1, uuid.length - 1);
@@ -170,6 +168,7 @@ TestingCrashManager.prototype = {
     );
   },
 };
+Object.setPrototypeOf(TestingCrashManager.prototype, CrashManager.prototype);
 
 var DUMMY_DIR_COUNT = 0;
 
