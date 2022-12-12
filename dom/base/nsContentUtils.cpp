@@ -365,6 +365,7 @@
 #include "nsStreamUtils.h"
 #include "nsString.h"
 #include "nsStringBuffer.h"
+#include "nsStringBundle.h"
 #include "nsStringFlags.h"
 #include "nsStringFwd.h"
 #include "nsStringIterator.h"
@@ -4083,6 +4084,16 @@ static const char* gPropertiesFiles[nsContentUtils::PropertiesFile_COUNT] = {
     "chrome://necko/locale/necko.properties",
     "resource://gre/res/locale/layout/HtmlForm.properties",
     "resource://gre/res/locale/dom/dom.properties"};
+
+/* static */
+nsresult nsContentUtils::EnsureAndLoadStringBundle(PropertiesFile aFile) {
+  MOZ_ASSERT(NS_IsMainThread(), "Should be called on main thread.");
+  nsresult rv = EnsureStringBundle(aFile);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  return nsStringBundleBase::Cast(sStringBundles[aFile])->LoadProperties();
+}
 
 /* static */
 nsresult nsContentUtils::EnsureStringBundle(PropertiesFile aFile) {
