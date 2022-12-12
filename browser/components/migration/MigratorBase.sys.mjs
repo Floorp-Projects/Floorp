@@ -48,6 +48,17 @@ export class MigratorBase {
   QueryInterface = ChromeUtils.generateQI(["nsIBrowserProfileMigrator"]);
 
   /**
+   * This must be overridden to return a simple string identifier for the
+   * migrator, for example "firefox", "chrome", "opera-gx". This key is what
+   * is used as an identifier when calling MigrationUtils.getMigrator.
+   *
+   * @type {boolean}
+   */
+  static get key() {
+    throw new Error("MigratorBase must be overridden.");
+  }
+
+  /**
    * OVERRIDE IF AND ONLY IF the source supports multiple profiles.
    *
    * Returns array of profile objects from which data may be imported. The object
@@ -161,7 +172,7 @@ export class MigratorBase {
    *   true if the migrator should be shown in the migration wizard.
    */
   get enabled() {
-    let key = this.getBrowserKey();
+    let key = this.constructor.key;
     return Services.prefs.getBoolPref(`browser.migrate.${key}.enabled`, false);
   }
 
@@ -186,10 +197,6 @@ export class MigratorBase {
       a |= b;
       return a;
     }, 0);
-  }
-
-  getBrowserKey() {
-    return this.contractID.match(/\=([^\=]+)$/)[1];
   }
 
   /**
@@ -238,7 +245,7 @@ export class MigratorBase {
       return null;
     };
 
-    let browserKey = this.getBrowserKey();
+    let browserKey = this.constructor.key;
 
     let maybeStartTelemetryStopwatch = resourceType => {
       let histogramId = getHistogramIdForResourceType(
