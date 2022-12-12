@@ -683,18 +683,49 @@ uint32_t MediaEngineRemoteVideoSource::GetBestFitnessDistance(
   return candidateSet[0].mDistance;
 }
 
+static const char* ConvertVideoTypeToCStr(webrtc::VideoType aType) {
+  switch (aType) {
+    case webrtc::VideoType::kI420:
+      return "I420";
+    case webrtc::VideoType::kIYUV:
+    case webrtc::VideoType::kYV12:
+      return "YV12";
+    case webrtc::VideoType::kRGB24:
+      return "24BG";
+    case webrtc::VideoType::kABGR:
+      return "ABGR";
+    case webrtc::VideoType::kARGB:
+      return "ARGB";
+    case webrtc::VideoType::kARGB4444:
+      return "R444";
+    case webrtc::VideoType::kRGB565:
+      return "RGBP";
+    case webrtc::VideoType::kARGB1555:
+      return "RGBO";
+    case webrtc::VideoType::kYUY2:
+      return "YUY2";
+    case webrtc::VideoType::kUYVY:
+      return "UYVY";
+    case webrtc::VideoType::kMJPEG:
+      return "MJPG";
+    case webrtc::VideoType::kNV21:
+      return "NV21";
+    case webrtc::VideoType::kNV12:
+      return "NV12";
+    case webrtc::VideoType::kBGRA:
+      return "BGRA";
+    case webrtc::VideoType::kUnknown:
+    default:
+      return "unknown";
+  }
+}
+
 static void LogCapability(const char* aHeader,
                           const webrtc::CaptureCapability& aCapability,
                           uint32_t aDistance) {
-  static const char* const codec[] = {"VP8",           "VP9",          "H264",
-                                      "I420",          "RED",          "ULPFEC",
-                                      "Generic codec", "Unknown codec"};
-
   LOG("%s: %4u x %4u x %2u maxFps, %s. Distance = %" PRIu32, aHeader,
       aCapability.width, aCapability.height, aCapability.maxFPS,
-      codec[std::min(std::max(uint32_t(0), uint32_t(aCapability.videoType)),
-                     uint32_t(sizeof(codec) / sizeof(*codec) - 1))],
-      aDistance);
+      ConvertVideoTypeToCStr(aCapability.videoType), aDistance);
 }
 
 bool MediaEngineRemoteVideoSource::ChooseCapability(
