@@ -21,6 +21,7 @@ namespace layers {
 
 WebRenderLayerScrollData::WebRenderLayerScrollData()
     : mDescendantCount(-1),
+      mAncestorTransformId(ScrollableLayerGuid::NULL_SCROLL_ID),
       mTransformIsPerspective(false),
       mResolution(1.f),
       mEventRegionsOverride(EventRegionsOverride::NoOverride),

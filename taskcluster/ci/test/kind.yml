@@ -7,6 +7,7 @@ loader: gecko_taskgraph.loader.test:loader
 kind-dependencies:
     - build
     - build-signing
+    - repackage-signing-shippable-l10n-msix
     - repackage
     - fetch
     - toolchain
@@ -56,6 +57,10 @@ job-defaults:
         requires-signed-builds:
             by-test-platform:
                 macosx1100.*: true
+                windows10-64-2004-shippable-qr/opt:
+                    by-variant:
+                        msix: true
+                        default: false
                 default: false
     fetches:
         toolchain:

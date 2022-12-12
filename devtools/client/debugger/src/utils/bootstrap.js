@@ -53,13 +53,11 @@ export function bootstrapStore(client, workers, panel, initialState) {
 }
 
 export function bootstrapWorkers(panelWorkers) {
-  const workerPath = "resource://devtools/client/debugger/dist";
+  prettyPrint.start();
+  search.start();
 
-  prettyPrint.start(`${workerPath}/pretty-print-worker.js`);
   parser = new ParserDispatcher();
-
-  parser.start(`${workerPath}/parser-worker.js`);
-  search.start(`${workerPath}/search-worker.js`);
+  parser.start();
   return { ...panelWorkers, prettyPrint, parser, search };
 }
 

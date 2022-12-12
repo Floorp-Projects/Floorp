@@ -271,7 +271,7 @@ Message Manager Actors
 
 While the JSWindowActor mechanism was being designed and developed, large sections of our framescripts were converted to an "actor style" pattern to make eventual porting to JSWindowActors easier. These Actors use the Message Manager under the hood, but made it much easier to shrink our framescripts, and also allowed us to gain significant memory savings by having the actors be lazily instantiated.
 
-You can find the list of Message Manager Actors (or "Legacy Actors") in :searchfox:`BrowserGlue.jsm <browser/components/BrowserGlue.jsm>` and :searchfox:`ActorManagerParent.sys.mjs <toolkit/modules/ActorManagerParent.sys.mjs>`, in the ``LEGACY_ACTORS`` lists.
+You can find the list of Message Manager Actors (or "Legacy Actors") in :searchfox:`BrowserGlue.sys.mjs <browser/components/BrowserGlue.sys.mjs>` and :searchfox:`ActorManagerParent.sys.mjs <toolkit/modules/ActorManagerParent.sys.mjs>`, in the ``LEGACY_ACTORS`` lists.
 
 .. note::
   The split in Message Manager Actors defined between ``BrowserGlue`` and ``ActorManagerParent`` is mainly to keep Firefox Desktop specific Actors separate from Actors that can (in theory) be instantiated for non-Desktop browsers (like Fennec and GeckoView-based browsers). Firefox Desktop-specific Actors should be registered in ``BrowserGlue``. Shared "toolkit" Actors should go into ``ActorManagerParent``.
@@ -386,7 +386,7 @@ The full list of registration parameters can be found:
 - for JSProcessActor in file `JSProcessActor.webidl`_ as ``WindowActorOptions``, ``ProcessActorSidedOptions`` and ``ProcessActorChildOptions``.
 - for JSWindowActor in file `JSWindowActor.webidl`_ as ``WindowActorOptions``, ``WindowActorSidedOptions`` and ``WindowActorChildOptions``.
 
-Here's an example ``JSWindowActor`` registration pulled from ``BrowserGlue.jsm``:
+Here's an example ``JSWindowActor`` registration pulled from ``BrowserGlue.sys.mjs``:
 
 .. code-block:: javascript
 

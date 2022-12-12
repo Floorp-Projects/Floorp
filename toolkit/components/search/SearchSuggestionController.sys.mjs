@@ -157,17 +157,6 @@ export class SearchSuggestionController {
   }
 
   /**
-   * Creates a Search Suggestion Controller.
-   *
-   * @param {Function} [callback] - Callback for search suggestion results. You
-   *                                can use the promise returned by the fetch
-   *                                method instead if you prefer.
-   */
-  constructor(callback = null) {
-    this.#callback = callback;
-  }
-
-  /**
    * The maximum number of local form history results to return. This limit is
    * only enforced if remote results are also returned.
    *
@@ -327,7 +316,6 @@ export class SearchSuggestionController {
     this.#context = null;
   }
 
-  #callback;
   #context;
   #formHistoryResult;
 
@@ -700,10 +688,6 @@ export class SearchSuggestionController {
       maxRemoteCount -= results.local.length;
     }
     results.remote = results.remote.slice(0, maxRemoteCount);
-
-    if (this.#callback) {
-      this.#callback(results);
-    }
 
     return results;
   }

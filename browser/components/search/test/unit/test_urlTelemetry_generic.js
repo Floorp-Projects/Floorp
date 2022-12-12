@@ -29,6 +29,17 @@ const TEST_PROVIDER_INFO = [
     followOnParamNames: ["a"],
     extraAdServersRegexps: [/^https:\/\/www\.example\.com\/ad2/],
   },
+  {
+    telemetryId: "example2",
+    searchPageRegexp: /^https:\/\/www\.example2\.com\/search/,
+    queryParamName: "q",
+    codeParamName: "abc",
+    taggedCodes: ["ff", "tb"],
+    expectedOrganicCodes: ["baz"],
+    organicCodes: ["foo"],
+    followOnParamNames: ["a"],
+    extraAdServersRegexps: [/^https:\/\/www\.example\.com\/ad2/],
+  },
 ];
 
 const TESTS = [
@@ -85,6 +96,14 @@ const TESTS = [
     trackingUrl: "https://www.example.com/search?q=test",
     expectedSearchCountEntry: "example:organic:none",
     expectedAdKey: "example:organic",
+    adUrls: ["https://www.example.com/ad2"],
+    nonAdUrls: ["https://www.example.com/ad3"],
+  },
+  {
+    title: "Different engines using the same adUrl",
+    trackingUrl: "https://www.example2.com/search?q=test",
+    expectedSearchCountEntry: "example2:organic:none",
+    expectedAdKey: "example2:organic",
     adUrls: ["https://www.example.com/ad2"],
     nonAdUrls: ["https://www.example.com/ad3"],
   },

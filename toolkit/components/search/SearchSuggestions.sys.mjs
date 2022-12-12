@@ -21,36 +21,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
  */
 class SuggestAutoComplete {
   constructor() {
-    this.#init();
-  }
-
-  /**
-   * Callback for handling results from SearchSuggestionController.jsm
-   *
-   * @param {Array} results
-   *   The array of results that have been returned.
-   * @private
-   */
-  onResultsReturned(results) {
-    let finalResults = [];
-
-    // If form history has results, add them to the list.
-    for (let i = 0; i < results.local.length; ++i) {
-      finalResults.push(results.local[i].value);
-    }
-
-    // If there are remote matches, add them.
-    if (results.remote.length) {
-      // now put the history results above the suggestions
-      // We shouldn't show tail suggestions in their full-text form.
-      let nonTailEntries = results.remote.filter(
-        e => !e.matchPrefix && !e.tail
-      );
-      finalResults = finalResults.concat(nonTailEntries.map(e => e.value));
-    }
-
-    // Notify the FE of our new results
-    this.onResultsReady(results.term, finalResults, results.formHistoryResult);
+    this.#suggestionController = new lazy.SearchSuggestionController();
+    this.#suggestionController.maxLocalResults = this.#historyLimit;
   }
 
   /**
@@ -132,7 +104,7 @@ class SuggestAutoComplete {
         formHistorySearchParam,
         listener,
         privacyMode
-      );
+      ).catch(console.error);
       return;
     }
 
@@ -144,7 +116,7 @@ class SuggestAutoComplete {
           formHistorySearchParam,
           listener,
           privacyMode
-        );
+        ).catch(console.error);
       })
       .catch(result =>
         console.error(
@@ -182,13 +154,6 @@ class SuggestAutoComplete {
    */
   #listener = null;
 
-  #init() {
-    this.#suggestionController = new lazy.SearchSuggestionController(obj =>
-      this.onResultsReturned(obj)
-    );
-    this.#suggestionController.maxLocalResults = this.#historyLimit;
-  }
-
   /**
    * Actual implementation of search.
    *
@@ -202,13 +167,29 @@ class SuggestAutoComplete {
    * @param {boolean} privacyMode
    *   True if the search was made from a private browsing mode context.
    */
-  #triggerSearch(searchString, searchParam, listener, privacyMode) {
+  async #triggerSearch(searchString, searchParam, listener, privacyMode) {
     this.#listener = listener;
-    this.#suggestionController.fetch(
+    let results = await this.#suggestionController.fetch(
       searchString,
       privacyMode,
       Services.search.defaultEngine
     );
+
+    // If form history has results, add them to the list.
+    let finalResults = results.local.map(r => r.value);
+
+    // If there are remote matches, add them.
+    if (results.remote.length) {
+      // now put the history results above the suggestions
+      // We shouldn't show tail suggestions in their full-text form.
+      let nonTailEntries = results.remote.filter(
+        e => !e.matchPrefix && !e.tail
+      );
+      finalResults = finalResults.concat(nonTailEntries.map(e => e.value));
+    }
+
+    // Notify the FE of our new results
+    this.onResultsReady(results.term, finalResults, results.formHistoryResult);
   }
 
   QueryInterface = ChromeUtils.generateQI([

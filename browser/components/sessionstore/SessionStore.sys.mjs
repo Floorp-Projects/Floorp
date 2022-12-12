@@ -2699,7 +2699,7 @@ var SessionStoreInternal = {
       // Discard was likely called before state can be cached.  Update
       // the persistent tab state cache with browser information so a
       // restore will be successful.  This information is necessary for
-      // restoreTabContent in ContentRestore.jsm to work properly.
+      // restoreTabContent in ContentRestore.sys.mjs to work properly.
       lazy.TabStateCache.update(browser.permanentKey, {
         userTypedValue,
         userTypedClear: 1,
@@ -6238,8 +6238,8 @@ var SessionStoreInternal = {
         return callbacks.onHistoryReload();
       },
 
-      // TODO(kashav): ContentRestore.jsm handles OnHistoryNewEntry separately,
-      // so we should eventually support that here as well.
+      // TODO(kashav): ContentRestore.sys.mjs handles OnHistoryNewEntry
+      // separately, so we should eventually support that here as well.
       OnHistoryNewEntry() {},
       OnHistoryGotoIndex() {},
       OnHistoryPurge() {},

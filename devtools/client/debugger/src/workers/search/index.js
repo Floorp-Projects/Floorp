@@ -4,27 +4,28 @@
 
 import { WorkerDispatcher } from "devtools/client/shared/worker-utils";
 
-let startArgs;
+const WORKER_URL = "resource://devtools/client/debugger/dist/search-worker.js";
+
 let dispatcher;
+let jestWorkerUrl;
 
 function getDispatcher() {
   if (!dispatcher) {
     dispatcher = new WorkerDispatcher();
-    dispatcher.start(...startArgs);
+    dispatcher.start(jestWorkerUrl || WORKER_URL);
   }
 
   return dispatcher;
 }
 
-export const start = (...args) => {
-  startArgs = args;
+export const start = jestUrl => {
+  jestWorkerUrl = jestUrl;
 };
 
 export const stop = () => {
   if (dispatcher) {
     dispatcher.stop();
     dispatcher = null;
-    startArgs = null;
   }
 };
 

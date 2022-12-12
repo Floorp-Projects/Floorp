@@ -298,7 +298,7 @@ window.onload = async function () {
       line: 23,
       sourceUrl: "https://bugzilla.mozilla.org/original.js",
     };
-    const mockSourceMapService = {
+    const mockSourceMapURLService = {
       subscribeByLocation (loc, callback) {
         // Resolve immediately.
         callback({
@@ -314,7 +314,7 @@ window.onload = async function () {
         line: 97,
         source: "https://bugzilla.mozilla.org/bundle.js",
       },
-      sourceMapURLService: mockSourceMapService,
+      sourceMapURLService: mockSourceMapURLService,
     }, {
       file: "original.js",
       line: resolvedLocation.line,

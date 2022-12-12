@@ -282,7 +282,7 @@ StyleSheetEditor.prototype = {
 
     let longStr = null;
     if (this.styleSheet.isOriginalSource) {
-      // If the stylesheet is OriginalSource, we should get the texts from SourceMapService.
+      // If the stylesheet is OriginalSource, we should get the texts from SourceMapLoader.
       // So, for now, we use OriginalSource.getText() as it is.
       longStr = await this.styleSheet.getText();
     } else {

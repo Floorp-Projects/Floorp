@@ -333,8 +333,7 @@ class WebConsole {
 
     this._parserService = new ParserDispatcher();
     this._parserService.start(
-      "resource://devtools/client/debugger/dist/parser-worker.js",
-      this.chromeUtilsWindow
+      "resource://devtools/client/debugger/dist/parser-worker.js"
     );
     return this._parserService;
   }

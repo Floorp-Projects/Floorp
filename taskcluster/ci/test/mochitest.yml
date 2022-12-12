@@ -9,6 +9,10 @@ job-defaults:
         by-test-platform:
             android-em-7.*: geckoview-test_runner.apk
             android-hw.*: geckoview-test_runner.apk
+            windows10-64-2004-shippable-qr/opt:
+                by-variant:
+                    msix: target.installer.msix
+                    default: null
             default: null
     tier:
         by-variant:
@@ -525,6 +529,7 @@ mochitest-media:
         - webrender-sw+no-fission
         - webrender-sw
         - wmf-media-engine
+        - msix
     run-on-projects:
         by-variant:
             webgl-ipc:
@@ -578,6 +583,10 @@ mochitest-media:
             wmf-media-engine:
                 by-test-platform:
                     windows10-64-2004.*: ['autoland', 'mozilla-central']
+                    default: []
+            msix:
+                by-test-platform:
+                    windows10-64-2004-shippable-qr/opt: built-projects
                     default: []
             default:
                 by-test-platform:
