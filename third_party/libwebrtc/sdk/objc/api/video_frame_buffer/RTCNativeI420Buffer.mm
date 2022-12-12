@@ -14,7 +14,7 @@
 
 #if !defined(NDEBUG) && defined(WEBRTC_IOS)
 #import <UIKit/UIKit.h>
-#include "third_party/libyuv/include/libyuv.h"
+#include "libyuv/include/libyuv.h"
 #endif
 
 @implementation RTC_OBJC_TYPE (RTCI420Buffer)

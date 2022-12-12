@@ -524,6 +524,10 @@ if (!build_with_chromium) {
       ]
     }
 
+    if (build_with_mozilla && is_mac) {
+      deps += [ "sdk:videocapture_objc" ]
+    }
+
     if (rtc_enable_protobuf) {
       deps += [ "logging:rtc_event_log_proto" ]
     }

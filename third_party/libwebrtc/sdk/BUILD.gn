@@ -221,7 +221,7 @@ if (is_ios || is_mac) {
     }
   }
 
-  if (!build_with_chromium && !build_with_mozilla) {
+  if (!build_with_chromium) {
     if (is_ios) {
       rtc_library("native_api_audio_device_module") {
         visibility = [ "*" ]
@@ -394,6 +394,7 @@ if (is_ios || is_mac) {
       }
     }
 
+    if (!build_with_mozilla) {
     rtc_library("videosource_objc") {
       sources = [
         "objc/api/peerconnection/RTCVideoSource+Private.h",
@@ -424,6 +425,7 @@ if (is_ios || is_mac) {
         ":used_from_extension",
       ]
     }
+    }
 
     rtc_library("videoframebuffer_objc") {
       visibility = [ "*" ]
@@ -445,6 +447,13 @@ if (is_ios || is_mac) {
         "//rtc_base:checks",
         "//third_party/libyuv",
       ]
+      if (build_with_mozilla) {
+        deps -= [ "//third_party/libyuv" ]
+        include_dirs = [
+          "/media/libyuv",
+          "/media/libyuv/libyuv/include",
+        ]
+      }
       configs += [
         "..:common_objc",
         ":used_from_extension",
@@ -456,6 +465,7 @@ if (is_ios || is_mac) {
       ]
     }
 
+    if (!build_with_mozilla) {
     rtc_library("opengl_objc") {
       sources = [
         "objc/components/renderer/opengl/RTCDefaultShader.h",
@@ -609,6 +619,7 @@ if (is_ios || is_mac) {
         ":videoframebuffer_objc",
       ]
     }
+    }
 
     rtc_library("videocapture_objc") {
       visibility = [ "*" ]
@@ -637,6 +648,7 @@ if (is_ios || is_mac) {
       ]
     }
 
+    if (!build_with_mozilla) {
     rtc_library("videocodec_objc") {
       visibility = [ "*" ]
       configs += [ "..:no_global_constructors" ]
@@ -1686,6 +1698,7 @@ if (is_ios || is_mac) {
         "CoreVideo.framework",
         "VideoToolbox.framework",
       ]
+    }
     }
   }
 }
