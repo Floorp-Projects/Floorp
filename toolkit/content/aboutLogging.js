@@ -10,12 +10,7 @@ const gDirServ = Cc["@mozilla.org/file/directory_service;1"].getService(
   Ci.nsIDirectoryServiceProvider
 );
 
-function col(element) {
-  let col = document.createElement("td");
-  let content = document.createTextNode(element);
-  col.appendChild(content);
-  return col;
-}
+const $ = document.querySelector.bind(document);
 
 let gInited = false;
 function init() {
@@ -153,7 +148,15 @@ function updateLogModules() {
       }
     }
 
-    currentLogModules.innerText = activeLogModules.join(",");
+    if (activeLogModules.length !== 0) {
+      currentLogModules.innerText = activeLogModules.join(",");
+      currentLogModules.hidden = false;
+      $("#no-log-modules").hidden = true;
+    } else {
+      currentLogModules.innerText = "";
+      currentLogModules.hidden = true;
+      $("#no-log-modules").hidden = false;
+    }
   }
 }
 
@@ -193,23 +196,25 @@ function setLogModules() {
   // Clear previously set log modules.
   clearLogModules();
 
-  let logModules = modules.split(",");
-  for (let module of logModules) {
-    if (module == "timestamp") {
-      Services.prefs.setBoolPref("logging.config.add_timestamp", true);
-    } else if (module == "rotate") {
-      // XXX: rotate is not yet supported.
-    } else if (module == "append") {
-      // XXX: append is not yet supported.
-    } else if (module == "sync") {
-      Services.prefs.setBoolPref("logging.config.sync", true);
-    } else if (module == "profilerstacks") {
-      Services.prefs.setBoolPref("logging.config.profilerstacks", true);
-    } else {
-      let lastColon = module.lastIndexOf(":");
-      let key = module.slice(0, lastColon);
-      let value = parseInt(module.slice(lastColon + 1), 10);
-      Services.prefs.setIntPref(`logging.${key}`, value);
+  if (modules.length !== 0) {
+    let logModules = modules.split(",");
+    for (let module of logModules) {
+      if (module == "timestamp") {
+        Services.prefs.setBoolPref("logging.config.add_timestamp", true);
+      } else if (module == "rotate") {
+        // XXX: rotate is not yet supported.
+      } else if (module == "append") {
+        // XXX: append is not yet supported.
+      } else if (module == "sync") {
+        Services.prefs.setBoolPref("logging.config.sync", true);
+      } else if (module == "profilerstacks") {
+        Services.prefs.setBoolPref("logging.config.profilerstacks", true);
+      } else {
+        let lastColon = module.lastIndexOf(":");
+        let key = module.slice(0, lastColon);
+        let value = parseInt(module.slice(lastColon + 1), 10);
+        Services.prefs.setIntPref(`logging.${key}`, value);
+      }
     }
   }
 
