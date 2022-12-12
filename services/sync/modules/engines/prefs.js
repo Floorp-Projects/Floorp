@@ -108,9 +108,9 @@ function PrefRec(collection, id) {
   CryptoWrapper.call(this, collection, id);
 }
 PrefRec.prototype = {
-  __proto__: CryptoWrapper.prototype,
   _logName: "Sync.Record.Pref",
 };
+Object.setPrototypeOf(PrefRec.prototype, CryptoWrapper.prototype);
 
 Utils.deferGetSet(PrefRec, "cleartext", ["value"]);
 
@@ -118,7 +118,6 @@ function PrefsEngine(service) {
   SyncEngine.call(this, "Prefs", service);
 }
 PrefsEngine.prototype = {
-  __proto__: SyncEngine.prototype,
   _storeObj: PrefStore,
   _trackerObj: PrefTracker,
   _recordObj: PrefRec,
@@ -156,6 +155,7 @@ PrefsEngine.prototype = {
     }
   },
 };
+Object.setPrototypeOf(PrefsEngine.prototype, SyncEngine.prototype);
 
 // We don't use services.sync.engine.tabs.filteredSchemes since it includes
 // about: pages and the like, which we want to be syncable in preferences.
@@ -181,8 +181,6 @@ function PrefStore(name, engine) {
   );
 }
 PrefStore.prototype = {
-  __proto__: Store.prototype,
-
   __prefs: null,
   get _prefs() {
     if (!this.__prefs) {
@@ -404,6 +402,7 @@ PrefStore.prototype = {
     this._log.trace("Ignoring wipe request");
   },
 };
+Object.setPrototypeOf(PrefStore.prototype, Store.prototype);
 
 function PrefTracker(name, engine) {
   Tracker.call(this, name, engine);
@@ -411,8 +410,6 @@ function PrefTracker(name, engine) {
   Svc.Obs.add("profile-before-change", this.asyncObserver);
 }
 PrefTracker.prototype = {
-  __proto__: Tracker.prototype,
-
   get ignoreAll() {
     return this._ignoreAll;
   },
@@ -472,6 +469,7 @@ PrefTracker.prototype = {
     }
   },
 };
+Object.setPrototypeOf(PrefTracker.prototype, Tracker.prototype);
 
 function getPrefsGUIDForTest() {
   return lazy.PREFS_GUID;

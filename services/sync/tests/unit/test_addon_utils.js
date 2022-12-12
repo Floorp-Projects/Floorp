@@ -119,10 +119,13 @@ add_task(async function test_source_uri_rewrite() {
   // skewed.
 
   // We resort to monkeypatching because of the API design.
-  let oldFunction = AddonUtils.__proto__.installAddonFromSearchResult;
+  let oldFunction = Object.getPrototypeOf(AddonUtils)
+    .installAddonFromSearchResult;
 
   let installCalled = false;
-  AddonUtils.__proto__.installAddonFromSearchResult = async function testInstallAddon(
+  Object.getPrototypeOf(
+    AddonUtils
+  ).installAddonFromSearchResult = async function testInstallAddon(
     addon,
     metadata
   ) {
@@ -156,7 +159,7 @@ add_task(async function test_source_uri_rewrite() {
   await AddonUtils.installAddons([installOptions]);
 
   Assert.ok(installCalled);
-  AddonUtils.__proto__.installAddonFromSearchResult = oldFunction;
+  Object.getPrototypeOf(AddonUtils).installAddonFromSearchResult = oldFunction;
 
   await promiseStopServer(server);
 });

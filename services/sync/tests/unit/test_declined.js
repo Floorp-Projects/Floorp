@@ -22,7 +22,8 @@ function DummyEngine() {}
 DummyEngine.prototype.name = "dummy";
 
 function ActualEngine() {}
-ActualEngine.prototype = { __proto__: SyncEngine.prototype, name: "actual" };
+ActualEngine.prototype.name = "actual";
+Object.setPrototypeOf(ActualEngine.prototype, SyncEngine.prototype);
 
 function getEngineManager() {
   let manager = new EngineManager(Service);

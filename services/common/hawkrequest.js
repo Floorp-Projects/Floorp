@@ -82,8 +82,6 @@ var HAWKAuthenticatedRESTRequest = function HawkAuthenticatedRESTRequest(
   this._intl = getIntl();
 };
 HAWKAuthenticatedRESTRequest.prototype = {
-  __proto__: RESTRequest.prototype,
-
   async dispatch(method, data) {
     let contentType = "text/plain";
     if (method == "POST" || method == "PUT" || method == "PATCH") {
@@ -116,6 +114,11 @@ HAWKAuthenticatedRESTRequest.prototype = {
     return super.dispatch(method, data);
   },
 };
+
+Object.setPrototypeOf(
+  HAWKAuthenticatedRESTRequest.prototype,
+  RESTRequest.prototype
+);
 
 /**
  * Generic function to derive Hawk credentials.

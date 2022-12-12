@@ -88,10 +88,10 @@ function ClientsRec(collection, id) {
   CryptoWrapper.call(this, collection, id);
 }
 ClientsRec.prototype = {
-  __proto__: CryptoWrapper.prototype,
   _logName: "Sync.Record.Clients",
   ttl: CLIENTS_TTL,
 };
+Object.setPrototypeOf(ClientsRec.prototype, CryptoWrapper.prototype);
 
 Utils.deferGetSet(ClientsRec, "cleartext", [
   "name",
@@ -115,7 +115,6 @@ function ClientEngine(service) {
   Utils.defineLazyIDProperty(this, "localID", "services.sync.client.GUID");
 }
 ClientEngine.prototype = {
-  __proto__: SyncEngine.prototype,
   _storeObj: ClientStore,
   _recordObj: ClientsRec,
   _trackerObj: ClientsTracker,
@@ -949,13 +948,12 @@ ClientEngine.prototype = {
     this._modified.delete(id);
   },
 };
+Object.setPrototypeOf(ClientEngine.prototype, SyncEngine.prototype);
 
 function ClientStore(name, engine) {
   Store.call(this, name, engine);
 }
 ClientStore.prototype = {
-  __proto__: Store.prototype,
-
   _remoteClients: {},
 
   async create(record) {
@@ -1088,13 +1086,12 @@ ClientStore.prototype = {
     this._remoteClients = {};
   },
 };
+Object.setPrototypeOf(ClientStore.prototype, Store.prototype);
 
 function ClientsTracker(name, engine) {
   LegacyTracker.call(this, name, engine);
 }
 ClientsTracker.prototype = {
-  __proto__: LegacyTracker.prototype,
-
   _enabled: false,
 
   onStart() {
@@ -1124,3 +1121,4 @@ ClientsTracker.prototype = {
     }
   },
 };
+Object.setPrototypeOf(ClientsTracker.prototype, LegacyTracker.prototype);

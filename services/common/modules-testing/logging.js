@@ -32,7 +32,7 @@ function initTestLogging(level) {
       );
     },
   };
-  LogStats.prototype.__proto__ = new Log.BasicFormatter();
+  Object.setPrototypeOf(LogStats.prototype, new Log.BasicFormatter());
 
   let log = Log.repository.rootLogger;
   let logStats = new LogStats();

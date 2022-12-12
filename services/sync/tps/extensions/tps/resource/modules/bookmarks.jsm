@@ -37,7 +37,7 @@ async function DumpBookmarks() {
  * extend, causes a child object to inherit from a parent
  */
 function extend(child, supertype) {
-  child.prototype.__proto__ = supertype.prototype;
+  Object.setPrototypeOf(child.prototype, supertype.prototype);
 }
 /**
  * PlacesItemProps object, holds properties for places items

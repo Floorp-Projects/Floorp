@@ -251,11 +251,14 @@ var configureFxAccountIdentity = function(
     FxAccountsClient.apply(this);
   };
   MockFxAccountsClient.prototype = {
-    __proto__: FxAccountsClient.prototype,
     accountStatus() {
       return Promise.resolve(true);
     },
   };
+  Object.setPrototypeOf(
+    MockFxAccountsClient.prototype,
+    FxAccountsClient.prototype
+  );
   let mockFxAClient = new MockFxAccountsClient();
   fxa._internal._fxAccountsClient = mockFxAClient;
 

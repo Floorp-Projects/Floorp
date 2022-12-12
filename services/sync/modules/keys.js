@@ -132,8 +132,6 @@ BulkKeyBundle.fromJWK = function(jwk) {
 };
 
 BulkKeyBundle.prototype = {
-  __proto__: KeyBundle.prototype,
-
   get collection() {
     return this._collection;
   },
@@ -171,3 +169,5 @@ BulkKeyBundle.prototype = {
     this.hmacKey = CommonUtils.safeAtoB(value[1]);
   },
 };
+
+Object.setPrototypeOf(BulkKeyBundle.prototype, KeyBundle.prototype);

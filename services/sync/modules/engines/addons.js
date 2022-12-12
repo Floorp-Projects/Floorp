@@ -110,9 +110,9 @@ function AddonRecord(collection, id) {
   CryptoWrapper.call(this, collection, id);
 }
 AddonRecord.prototype = {
-  __proto__: CryptoWrapper.prototype,
   _logName: "Record.Addon",
 };
+Object.setPrototypeOf(AddonRecord.prototype, CryptoWrapper.prototype);
 
 Utils.deferGetSet(AddonRecord, "cleartext", [
   "addonID",
@@ -137,7 +137,6 @@ function AddonsEngine(service) {
   this._reconciler = new AddonsReconciler(this._tracker.asyncObserver);
 }
 AddonsEngine.prototype = {
-  __proto__: SyncEngine.prototype,
   _storeObj: AddonsStore,
   _trackerObj: AddonsTracker,
   _recordObj: AddonRecord,
@@ -266,6 +265,7 @@ AddonsEngine.prototype = {
     return this._store.isAddonSyncable(addon, ignoreRepoCheck);
   },
 };
+Object.setPrototypeOf(AddonsEngine.prototype, SyncEngine.prototype);
 
 /**
  * This is the primary interface between Sync and the Addons Manager.
@@ -277,8 +277,6 @@ function AddonsStore(name, engine) {
   Store.call(this, name, engine);
 }
 AddonsStore.prototype = {
-  __proto__: Store.prototype,
-
   // Define the add-on types (.type) that we support.
   _syncableTypes: ["extension", "theme"],
 
@@ -728,6 +726,8 @@ AddonsStore.prototype = {
   },
 };
 
+Object.setPrototypeOf(AddonsStore.prototype, Store.prototype);
+
 /**
  * The add-ons tracker keeps track of real-time changes to add-ons.
  *
@@ -737,8 +737,6 @@ function AddonsTracker(name, engine) {
   LegacyTracker.call(this, name, engine);
 }
 AddonsTracker.prototype = {
-  __proto__: LegacyTracker.prototype,
-
   get reconciler() {
     return this.engine._reconciler;
   },
@@ -781,6 +779,8 @@ AddonsTracker.prototype = {
     this.reconciler.stopListening();
   },
 };
+
+Object.setPrototypeOf(AddonsTracker.prototype, LegacyTracker.prototype);
 
 class AddonValidator extends CollectionValidator {
   constructor(engine = null) {

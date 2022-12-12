@@ -7,8 +7,6 @@ function CanDecryptEngine() {
   SyncEngine.call(this, "CanDecrypt", Service);
 }
 CanDecryptEngine.prototype = {
-  __proto__: SyncEngine.prototype,
-
   // Override these methods with mocks for the test
   async canDecrypt() {
     return true;
@@ -19,13 +17,12 @@ CanDecryptEngine.prototype = {
     this.wasWiped = true;
   },
 };
+Object.setPrototypeOf(CanDecryptEngine.prototype, SyncEngine.prototype);
 
 function CannotDecryptEngine() {
   SyncEngine.call(this, "CannotDecrypt", Service);
 }
 CannotDecryptEngine.prototype = {
-  __proto__: SyncEngine.prototype,
-
   // Override these methods with mocks for the test
   async canDecrypt() {
     return false;
@@ -36,6 +33,7 @@ CannotDecryptEngine.prototype = {
     this.wasWiped = true;
   },
 };
+Object.setPrototypeOf(CannotDecryptEngine.prototype, SyncEngine.prototype);
 
 let canDecryptEngine;
 let cannotDecryptEngine;

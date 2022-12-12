@@ -14,19 +14,16 @@ function SteamStore(engine) {
   this.wasWiped = false;
 }
 SteamStore.prototype = {
-  __proto__: Store.prototype,
-
   async wipe() {
     this.wasWiped = true;
   },
 };
+Object.setPrototypeOf(SteamStore.prototype, Store.prototype);
 
 function SteamTracker(name, engine) {
   LegacyTracker.call(this, name || "Steam", engine);
 }
-SteamTracker.prototype = {
-  __proto__: LegacyTracker.prototype,
-};
+Object.setPrototypeOf(SteamTracker.prototype, LegacyTracker.prototype);
 
 function SteamEngine(name, service) {
   SyncEngine.call(this, name, service);
@@ -34,7 +31,6 @@ function SteamEngine(name, service) {
   this.wasSynced = false;
 }
 SteamEngine.prototype = {
-  __proto__: SyncEngine.prototype,
   _storeObj: SteamStore,
   _trackerObj: SteamTracker,
 
@@ -46,6 +42,7 @@ SteamEngine.prototype = {
     this.wasSynced = true;
   },
 };
+Object.setPrototypeOf(SteamEngine.prototype, SyncEngine.prototype);
 
 var engineObserver = {
   topics: [],

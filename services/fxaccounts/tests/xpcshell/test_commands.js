@@ -45,9 +45,11 @@ function MockFxAccountsClient() {
   FxAccountsClient.apply(this);
 }
 
-MockFxAccountsClient.prototype = {
-  __proto__: FxAccountsClient.prototype,
-};
+MockFxAccountsClient.prototype = {};
+Object.setPrototypeOf(
+  MockFxAccountsClient.prototype,
+  FxAccountsClient.prototype
+);
 
 add_task(async function test_sendtab_isDeviceCompatible() {
   const sendTab = new SendTab(null, null);

@@ -710,8 +710,6 @@ function TokenAuthenticatedRESTRequest(uri, authToken, extra) {
   this.extra = extra || {};
 }
 TokenAuthenticatedRESTRequest.prototype = {
-  __proto__: RESTRequest.prototype,
-
   async dispatch(method, data) {
     let sig = await lazy.CryptoUtils.computeHTTPMACSHA1(
       this.authToken.id,
@@ -726,3 +724,8 @@ TokenAuthenticatedRESTRequest.prototype = {
     return super.dispatch(method, data);
   },
 };
+
+Object.setPrototypeOf(
+  TokenAuthenticatedRESTRequest.prototype,
+  RESTRequest.prototype
+);

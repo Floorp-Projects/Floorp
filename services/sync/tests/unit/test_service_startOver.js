@@ -7,13 +7,12 @@ function BlaEngine() {
   SyncEngine.call(this, "Bla", Service);
 }
 BlaEngine.prototype = {
-  __proto__: SyncEngine.prototype,
-
   removed: false,
   async removeClientData() {
     this.removed = true;
   },
 };
+Object.setPrototypeOf(BlaEngine.prototype, SyncEngine.prototype);
 
 add_task(async function setup() {
   await Service.engineManager.register(BlaEngine);

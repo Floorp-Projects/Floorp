@@ -20,7 +20,6 @@ function SteamEngine() {
   SyncEngine.call(this, "Steam", Service);
 }
 SteamEngine.prototype = {
-  __proto__: SyncEngine.prototype,
   // We're not interested in engine sync but what the service does.
   _storeObj: QuietStore,
 
@@ -28,17 +27,18 @@ SteamEngine.prototype = {
     await this._syncStartup();
   },
 };
+Object.setPrototypeOf(SteamEngine.prototype, SyncEngine.prototype);
 
 function StirlingEngine() {
   SyncEngine.call(this, "Stirling", Service);
 }
 StirlingEngine.prototype = {
-  __proto__: SteamEngine.prototype,
   // This engine's enabled state is the same as the SteamEngine's.
   get prefName() {
     return "steam";
   },
 };
+Object.setPrototypeOf(StirlingEngine.prototype, SteamEngine.prototype);
 
 // Tracking info/collections.
 var collectionsHelper = track_collections_helper();

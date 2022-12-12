@@ -220,8 +220,6 @@ function LegacyTracker(name, engine) {
 }
 
 LegacyTracker.prototype = {
-  __proto__: Tracker.prototype,
-
   get ignoreAll() {
     return this._ignoreAll;
   },
@@ -333,6 +331,7 @@ LegacyTracker.prototype = {
     await this._storage.finalize();
   },
 };
+Object.setPrototypeOf(LegacyTracker.prototype, Tracker.prototype);
 
 /**
  * The Store serves as the interface between Sync and stored data.

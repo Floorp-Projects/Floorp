@@ -32,10 +32,10 @@ function FormRec(collection, id) {
   CryptoWrapper.call(this, collection, id);
 }
 FormRec.prototype = {
-  __proto__: CryptoWrapper.prototype,
   _logName: "Sync.Record.Form",
   ttl: FORMS_TTL,
 };
+Object.setPrototypeOf(FormRec.prototype, CryptoWrapper.prototype);
 
 Utils.deferGetSet(FormRec, "cleartext", ["name", "value"]);
 
@@ -91,7 +91,6 @@ function FormEngine(service) {
   SyncEngine.call(this, "Forms", service);
 }
 FormEngine.prototype = {
-  __proto__: SyncEngine.prototype,
   _storeObj: FormStore,
   _trackerObj: FormTracker,
   _recordObj: FormRec,
@@ -106,13 +105,12 @@ FormEngine.prototype = {
     return FormWrapper.getGUID(item.name, item.value);
   },
 };
+Object.setPrototypeOf(FormEngine.prototype, SyncEngine.prototype);
 
 function FormStore(name, engine) {
   Store.call(this, name, engine);
 }
 FormStore.prototype = {
-  __proto__: Store.prototype,
-
   async _processChange(change) {
     // If this._changes is defined, then we are applying a batch, so we
     // can defer it.
@@ -197,13 +195,12 @@ FormStore.prototype = {
     await FormWrapper._update(change);
   },
 };
+Object.setPrototypeOf(FormStore.prototype, Store.prototype);
 
 function FormTracker(name, engine) {
   LegacyTracker.call(this, name, engine);
 }
 FormTracker.prototype = {
-  __proto__: LegacyTracker.prototype,
-
   QueryInterface: ChromeUtils.generateQI([
     "nsIObserver",
     "nsISupportsWeakReference",
@@ -238,6 +235,7 @@ FormTracker.prototype = {
     }
   },
 };
+Object.setPrototypeOf(FormTracker.prototype, LegacyTracker.prototype);
 
 class FormsProblemData extends CollectionProblemData {
   getSummary() {

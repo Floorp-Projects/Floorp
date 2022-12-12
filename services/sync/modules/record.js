@@ -175,7 +175,6 @@ function RawCryptoWrapper(collection, id) {
   this.ciphertext = null;
 }
 RawCryptoWrapper.prototype = {
-  __proto__: WBORecord.prototype,
   _logName: "Sync.Record.RawCryptoWrapper",
 
   /**
@@ -280,6 +279,8 @@ RawCryptoWrapper.prototype = {
   },
 };
 
+Object.setPrototypeOf(RawCryptoWrapper.prototype, WBORecord.prototype);
+
 Utils.deferGetSet(RawCryptoWrapper, "payload", ["ciphertext", "IV", "hmac"]);
 
 /**
@@ -294,7 +295,6 @@ function CryptoWrapper(collection, id) {
   RawCryptoWrapper.call(this, collection, id);
 }
 CryptoWrapper.prototype = {
-  __proto__: RawCryptoWrapper.prototype,
   _logName: "Sync.Record.CryptoWrapper",
 
   defaultCleartext() {
@@ -364,6 +364,8 @@ CryptoWrapper.prototype = {
     this.cleartext.id = val;
   },
 };
+
+Object.setPrototypeOf(CryptoWrapper.prototype, RawCryptoWrapper.prototype);
 
 Utils.deferGetSet(CryptoWrapper, "cleartext", "deleted");
 
@@ -779,7 +781,6 @@ function Collection(uri, recordObj, service) {
   this._offset = null;
 }
 Collection.prototype = {
-  __proto__: Resource.prototype,
   _logName: "Sync.Collection",
 
   _rebuildURL: function Coll__rebuildURL() {
@@ -1009,6 +1010,8 @@ Collection.prototype = {
     );
   },
 };
+
+Object.setPrototypeOf(Collection.prototype, Resource.prototype);
 
 // These are limits for requests provided by the server at the
 // info/configuration endpoint -- server documentation is available here:

@@ -17,12 +17,12 @@ function CatapultEngine() {
   SyncEngine.call(this, "Catapult", Service);
 }
 CatapultEngine.prototype = {
-  __proto__: SyncEngine.prototype,
   exception: null, // tests fill this in
   async _sync() {
     throw this.exception;
   },
 };
+Object.setPrototypeOf(CatapultEngine.prototype, SyncEngine.prototype);
 
 var scheduler = new SyncScheduler(Service);
 let clientsEngine;
@@ -192,7 +192,6 @@ add_task(async function test_sync_skipped_low_score_no_resync() {
   }
 
   SkipEngine.prototype = {
-    __proto__: SyncEngine.prototype,
     _sync() {
       do_throw("Should have been skipped");
     },
@@ -200,6 +199,7 @@ add_task(async function test_sync_skipped_low_score_no_resync() {
       return true;
     },
   };
+  Object.setPrototypeOf(SkipEngine.prototype, SyncEngine.prototype);
   await Service.engineManager.register(SkipEngine);
 
   let engine = Service.engineManager.get("skip");

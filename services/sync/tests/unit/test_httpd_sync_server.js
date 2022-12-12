@@ -3,9 +3,7 @@
 
 add_test(function test_creation() {
   // Explicit callback for this one.
-  let server = new SyncServer({
-    __proto__: SyncServerCallback,
-  });
+  let server = new SyncServer(Object.create(SyncServerCallback));
   Assert.ok(!!server); // Just so we have a check.
   server.start(null, function() {
     _("Started on " + server.port);
@@ -83,9 +81,7 @@ add_task(async function test_basic_http() {
 });
 
 add_task(async function test_info_collections() {
-  let server = new SyncServer({
-    __proto__: SyncServerCallback,
-  });
+  let server = new SyncServer(Object.create(SyncServerCallback));
   function responseHasCorrectHeaders(r) {
     Assert.equal(r.status, 200);
     Assert.equal(r.headers["content-type"], "application/json");

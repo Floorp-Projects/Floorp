@@ -704,7 +704,7 @@ var SyncServerCallback = {
  * SyncServerCallback) as input.
  */
 function SyncServer(callback) {
-  this.callback = callback || { __proto__: SyncServerCallback };
+  this.callback = callback || Object.create(SyncServerCallback);
   this.server = new HttpServer();
   this.started = false;
   this.users = {};

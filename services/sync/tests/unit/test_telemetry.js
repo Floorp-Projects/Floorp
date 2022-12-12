@@ -15,25 +15,18 @@ const fxAccounts = getFxAccountsSingleton();
 function SteamStore(engine) {
   Store.call(this, "Steam", engine);
 }
-
-SteamStore.prototype = {
-  __proto__: Store.prototype,
-};
+Object.setPrototypeOf(SteamStore.prototype, Store.prototype);
 
 function SteamTracker(name, engine) {
   LegacyTracker.call(this, name || "Steam", engine);
 }
-
-SteamTracker.prototype = {
-  __proto__: LegacyTracker.prototype,
-};
+Object.setPrototypeOf(SteamTracker.prototype, LegacyTracker.prototype);
 
 function SteamEngine(service) {
   SyncEngine.call(this, "steam", service);
 }
 
 SteamEngine.prototype = {
-  __proto__: SyncEngine.prototype,
   _storeObj: SteamStore,
   _trackerObj: SteamTracker,
   _errToThrow: null,
@@ -47,6 +40,7 @@ SteamEngine.prototype = {
     return new SteamValidator();
   },
 };
+Object.setPrototypeOf(SteamEngine.prototype, SyncEngine.prototype);
 
 function BogusEngine(service) {
   SyncEngine.call(this, "bogus", service);

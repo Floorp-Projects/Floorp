@@ -54,7 +54,6 @@ function LoginRec(collection, id) {
   CryptoWrapper.call(this, collection, id);
 }
 LoginRec.prototype = {
-  __proto__: CryptoWrapper.prototype,
   _logName: "Sync.Record.Login",
 
   cleartextToString() {
@@ -65,6 +64,7 @@ LoginRec.prototype = {
     return JSON.stringify(o);
   },
 };
+Object.setPrototypeOf(LoginRec.prototype, CryptoWrapper.prototype);
 
 Utils.deferGetSet(LoginRec, "cleartext", [
   "hostname",
@@ -82,7 +82,6 @@ function PasswordEngine(service) {
   SyncEngine.call(this, "Passwords", service);
 }
 PasswordEngine.prototype = {
-  __proto__: SyncEngine.prototype,
   _storeObj: PasswordStore,
   _trackerObj: PasswordTracker,
   _recordObj: LoginRec,
@@ -185,6 +184,7 @@ PasswordEngine.prototype = {
     return new PasswordValidator();
   },
 };
+Object.setPrototypeOf(PasswordEngine.prototype, SyncEngine.prototype);
 
 function PasswordStore(name, engine) {
   Store.call(this, name, engine);
@@ -195,8 +195,6 @@ function PasswordStore(name, engine) {
   );
 }
 PasswordStore.prototype = {
-  __proto__: Store.prototype,
-
   _newPropertyBag() {
     return Cc["@mozilla.org/hash-property-bag;1"].createInstance(
       Ci.nsIWritablePropertyBag2
@@ -382,13 +380,12 @@ PasswordStore.prototype = {
     Services.logins.removeAllUserFacingLogins();
   },
 };
+Object.setPrototypeOf(PasswordStore.prototype, Store.prototype);
 
 function PasswordTracker(name, engine) {
   LegacyTracker.call(this, name, engine);
 }
 PasswordTracker.prototype = {
-  __proto__: LegacyTracker.prototype,
-
   onStart() {
     Svc.Obs.add("passwordmgr-storage-changed", this.asyncObserver);
   },
@@ -461,6 +458,7 @@ PasswordTracker.prototype = {
     return true;
   },
 };
+Object.setPrototypeOf(PasswordTracker.prototype, LegacyTracker.prototype);
 
 class PasswordValidator extends CollectionValidator {
   constructor() {

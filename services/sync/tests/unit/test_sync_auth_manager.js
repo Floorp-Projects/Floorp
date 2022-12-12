@@ -49,7 +49,6 @@ var MockFxAccountsClient = function() {
   FxAccountsClient.apply(this);
 };
 MockFxAccountsClient.prototype = {
-  __proto__: FxAccountsClient.prototype,
   accountStatus() {
     return Promise.resolve(true);
   },
@@ -64,6 +63,10 @@ MockFxAccountsClient.prototype = {
     });
   },
 };
+Object.setPrototypeOf(
+  MockFxAccountsClient.prototype,
+  FxAccountsClient.prototype
+);
 
 add_test(function test_initial_state() {
   _("Verify initial state");
@@ -150,7 +153,6 @@ add_task(async function test_initialializeWithAuthErrorAndDeletedAccount() {
     FxAccountsClient.apply(this);
   };
   AuthErrorMockFxAClient.prototype = {
-    __proto__: FxAccountsClient.prototype,
     accessTokenWithSessionToken() {
       accessTokenWithSessionTokenCalled = true;
       return Promise.reject({
@@ -167,6 +169,10 @@ add_task(async function test_initialializeWithAuthErrorAndDeletedAccount() {
       return Promise.resolve(false);
     },
   };
+  Object.setPrototypeOf(
+    AuthErrorMockFxAClient.prototype,
+    FxAccountsClient.prototype
+  );
 
   let mockFxAClient = new AuthErrorMockFxAClient();
   syncAuthManager._fxaService._internal._fxAccountsClient = mockFxAClient;
@@ -478,12 +484,15 @@ add_task(async function test_refreshAccessTokenOn401() {
     FxAccountsClient.apply(this);
   };
   CheckSignMockFxAClient.prototype = {
-    __proto__: FxAccountsClient.prototype,
     accessTokenWithSessionToken() {
       ++getTokenCount;
       return Promise.resolve({ access_token: "token" });
     },
   };
+  Object.setPrototypeOf(
+    CheckSignMockFxAClient.prototype,
+    FxAccountsClient.prototype
+  );
 
   let mockFxAClient = new CheckSignMockFxAClient();
   syncAuthManager._fxaService._internal._fxAccountsClient = mockFxAClient;

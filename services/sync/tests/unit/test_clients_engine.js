@@ -76,7 +76,6 @@ add_task(async function test_bad_hmac() {
   let deletedCollections = [];
   let deletedItems = [];
   let callback = {
-    __proto__: SyncServerCallback,
     onItemDeleted(username, coll, wboID) {
       deletedItems.push(coll + "/" + wboID);
     },
@@ -84,6 +83,7 @@ add_task(async function test_bad_hmac() {
       deletedCollections.push(coll);
     },
   };
+  Object.setPrototypeOf(callback, SyncServerCallback);
   let server = await serverForFoo(engine, callback);
   let user = server.user("foo");
 

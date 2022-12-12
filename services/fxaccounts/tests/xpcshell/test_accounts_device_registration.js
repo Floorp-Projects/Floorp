@@ -120,9 +120,11 @@ function MockFxAccountsClient(device) {
 
   FxAccountsClient.apply(this);
 }
-MockFxAccountsClient.prototype = {
-  __proto__: FxAccountsClient.prototype,
-};
+MockFxAccountsClient.prototype = {};
+Object.setPrototypeOf(
+  MockFxAccountsClient.prototype,
+  FxAccountsClient.prototype
+);
 
 async function MockFxAccounts(credentials, device = {}) {
   let fxa = new FxAccounts({

@@ -31,9 +31,8 @@ const { SerializableSet, Utils } = ChromeUtils.import(
 function RotaryRecord(collection, id) {
   CryptoWrapper.call(this, collection, id);
 }
-RotaryRecord.prototype = {
-  __proto__: CryptoWrapper.prototype,
-};
+RotaryRecord.prototype = {};
+Object.setPrototypeOf(RotaryRecord.prototype, CryptoWrapper.prototype);
 Utils.deferGetSet(RotaryRecord, "cleartext", ["denomination"]);
 
 function RotaryStore(name, engine) {
@@ -41,8 +40,6 @@ function RotaryStore(name, engine) {
   this.items = {};
 }
 RotaryStore.prototype = {
-  __proto__: Store.prototype,
-
   async create(record) {
     this.items[record.id] = record.denomination;
   },
@@ -92,12 +89,13 @@ RotaryStore.prototype = {
   },
 };
 
+Object.setPrototypeOf(RotaryStore.prototype, Store.prototype);
+
 function RotaryTracker(name, engine) {
   LegacyTracker.call(this, name, engine);
 }
-RotaryTracker.prototype = {
-  __proto__: LegacyTracker.prototype,
-};
+RotaryTracker.prototype = {};
+Object.setPrototypeOf(RotaryTracker.prototype, LegacyTracker.prototype);
 
 function RotaryEngine(service) {
   SyncEngine.call(this, "Rotary", service);
@@ -106,7 +104,6 @@ function RotaryEngine(service) {
   this.previousFailed = new SerializableSet();
 }
 RotaryEngine.prototype = {
-  __proto__: SyncEngine.prototype,
   _storeObj: RotaryStore,
   _trackerObj: RotaryTracker,
   _recordObj: RotaryRecord,
@@ -126,3 +123,4 @@ RotaryEngine.prototype = {
     return null;
   },
 };
+Object.setPrototypeOf(RotaryEngine.prototype, SyncEngine.prototype);
