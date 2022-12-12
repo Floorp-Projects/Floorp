@@ -2414,8 +2414,11 @@ ICAttachResult js::jit::AttachBaselineCacheIRStub(
     // stub so that we can still transpile, and reset the bailout
     // counter if we have already been transpiled.
     stub->resetEnteredCount();
-    if (stub->usedByTranspiler() && outerScript->hasIonScript()) {
-      outerScript->ionScript()->resetNumFixableBailouts();
+    JSScript* owningScript = icScript->isInlined()
+                                 ? icScript->inliningRoot()->owningScript()
+                                 : outerScript;
+    if (stub->usedByTranspiler() && owningScript->hasIonScript()) {
+      owningScript->ionScript()->resetNumFixableBailouts();
     }
     return ICAttachResult::Attached;
   }
