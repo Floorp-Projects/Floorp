@@ -1423,25 +1423,6 @@ Toolbox.prototype = {
                 });
             };
 
-          case "applySourceMap":
-            return (generatedId, url, code, mappings) => {
-              return target
-                .applySourceMap(generatedId, url, code, mappings)
-                .then(async result => {
-                  // If a tool has changed or introduced a source map
-                  // (e.g, by pretty-printing a source), tell the
-                  // source map URL service about the change, so that
-                  // subscribers to that service can be updated as
-                  // well.
-                  if (this._sourceMapURLService) {
-                    await this._sourceMapURLService.newSourceMapCreated(
-                      generatedId
-                    );
-                  }
-                  return result;
-                });
-            };
-
           default:
             return target[name];
         }
@@ -4103,6 +4084,8 @@ Toolbox.prototype = {
 
     if (this._sourceMapService) {
       this._sourceMapService.stopSourceMapWorker();
+      // Unregister all listeners
+      this._sourceMapService.clearEvents();
       this._sourceMapService = null;
     }
 

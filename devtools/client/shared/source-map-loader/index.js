@@ -7,6 +7,7 @@
 const {
   WorkerDispatcher,
 } = require("resource://devtools/client/shared/worker-utils.js");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
 const SOURCE_MAP_WORKER_URL =
   "resource://devtools/client/shared/source-map-loader/worker.js";
@@ -20,7 +21,9 @@ const {
   isOriginalId,
 } = require("resource://devtools/client/shared/source-map-loader/utils/index.js");
 
-module.exports = {
+const _applySourceMap = dispatcher.task("applySourceMap");
+
+const SourceMapLoader = {
   originalToGeneratedId,
   generatedToOriginalId,
   isGeneratedId,
@@ -46,9 +49,18 @@ module.exports = {
   ),
   getFileGeneratedRange: dispatcher.task("getFileGeneratedRange"),
   getOriginalSourceText: dispatcher.task("getOriginalSourceText"),
-  applySourceMap: dispatcher.task("applySourceMap"),
   clearSourceMaps: dispatcher.task("clearSourceMaps"),
   getOriginalStackFrames: dispatcher.task("getOriginalStackFrames"),
+
+  async applySourceMap(generatedId, ...rest) {
+    const rv = await _applySourceMap(generatedId, ...rest);
+
+    // Notify and ensure waiting for the SourceMapURLService to process the source map before resolving.
+    // Otherwise tests start failing because of pending request made by this component.
+    await this.emitAsync("source-map-applied", generatedId);
+
+    return rv;
+  },
 
   startSourceMapWorker: dispatcher.start.bind(
     dispatcher,
@@ -56,3 +68,5 @@ module.exports = {
   ),
   stopSourceMapWorker: dispatcher.stop.bind(dispatcher),
 };
+EventEmitter.decorate(SourceMapLoader);
+module.exports = SourceMapLoader;
