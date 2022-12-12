@@ -18,7 +18,7 @@
 #define IDI_NEWWINDOW 3
 #define IDI_NEWTAB 4
 // If IDI_PBMODE's index changes, PRIVATE_BROWSING_ICON_INDEX
-// in BrowserContentHandler.jsm must also be updated.
+// in BrowserContentHandler.sys.mjs must also be updated.
 #define IDI_PBMODE 5
 #define IDI_DOCUMENT_PDF 6
 #ifndef IDI_APPLICATION
