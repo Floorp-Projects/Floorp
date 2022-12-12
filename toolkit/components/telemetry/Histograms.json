@@ -381,6 +381,17 @@
     "n_buckets": 100,
     "description": "The time (in milliseconds) since the last content process was launched."
   },
+  "COOKIE_BANNERS_CLICK_HANDLE_DURATION_MS": {
+    "record_in_processes": ["content"],
+    "products": ["firefox"],
+    "alert_emails": ["pbz@mozilla.com", "tihuang@mozilla.com"],
+    "expires_in_version": "115",
+    "bug_numbers": [1797078, 1804259],
+    "kind": "exponential",
+    "high": 600000,
+    "n_buckets": 100,
+    "description": "Counts how long it takes to handle cookie banners successfully from DOMContentLoaded until click."
+  },
   "CYCLE_COLLECTOR": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],

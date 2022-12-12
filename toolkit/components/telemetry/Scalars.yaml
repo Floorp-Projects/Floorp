@@ -1224,6 +1224,105 @@ browser.ui.interaction:
     record_in_processes:
       - 'main'
 
+cookie.banners:
+  normal_window_service_mode:
+    bug_numbers:
+      - 1790781
+      - 1804259
+    description: >
+      The pref value of the cookie banner service mode for normal windows.
+    expires: never
+    kind: boolean
+    keyed: true
+    notification_emails:
+      - tihuang@mozilla.com
+      - pbz@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+  private_window_service_mode:
+    bug_numbers:
+      - 1790781
+      - 1804259
+    description: >
+      The pref value of the cookie banner service mode for private windows.
+    expires: never
+    kind: boolean
+    keyed: true
+    notification_emails:
+      - tihuang@mozilla.com
+      - pbz@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+  rule_lookup_by_load:
+    bug_numbers:
+      - 1797073
+      - 1804259
+    description: >
+      Counts the number of hit/miss of cookie banner rule lookups for every
+      load. We collect three types of counters, including counters for overall
+      rule lookup, counters for cookie rule lookup and counters for click rule
+      lookup. We also divide the counter by top-level loads and iframe loads.
+    expires: '115'
+    kind: uint
+    keyed: true
+    notification_emails:
+      - tihuang@mozilla.com
+      - pbz@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+  rule_lookup_by_domain:
+    bug_numbers:
+      - 1797073
+      - 1804259
+    description: >
+      Counts the number of hit/miss of cookie banner rule lookups for domain.
+      We collect three types of counters, including counters for overall
+      rule lookup, counters for cookie rule lookup and counters for click rule
+      lookup. We also divide the counter by top-level loads and iframe loads.
+      For each domain, we will only collect once.
+    expires: '115'
+    kind: uint
+    keyed: true
+    notification_emails:
+      - tihuang@mozilla.com
+      - pbz@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
+cookie.banners.click:
+  result:
+    bug_numbers:
+      - 1797078
+      - 1804259
+    description: >
+      Given a matching cookie banner click rule, how often do we handle or fail
+      to handle cookie banners, labelled by reason. The 'success' and 'fail'
+      counters count the total numbers independently of the reason counters.
+      Counters are incremented after the content window has been destroyed.
+    expires: '115'
+    keyed: true
+    kind: uint
+    notification_emails:
+      - pbz@mozilla.com
+      - tihuang@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'content'
+    release_channel_collection: opt-out
+
 gecko:
   version:
     bug_numbers:
