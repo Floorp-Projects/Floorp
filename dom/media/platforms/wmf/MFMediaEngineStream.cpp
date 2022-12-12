@@ -447,13 +447,13 @@ bool MFMediaEngineStream::IsEnded() const {
 }
 
 RefPtr<MediaDataDecoder::FlushPromise> MFMediaEngineStream::Flush() {
-  AssertOnTaskQueue();
   if (IsShutdown()) {
     return MediaDataDecoder::FlushPromise::CreateAndReject(
         MediaResult(NS_ERROR_FAILURE,
                     RESULT_DETAIL("MFMediaEngineStream is shutdown")),
         __func__);
   }
+  AssertOnTaskQueue();
   SLOG("Flush");
   mRawDataQueueForFeedingEngine.Reset();
   mRawDataQueueForGeneratingOutput.Reset();
@@ -463,6 +463,12 @@ RefPtr<MediaDataDecoder::FlushPromise> MFMediaEngineStream::Flush() {
 
 RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineStream::OutputData(
     RefPtr<MediaRawData> aSample) {
+  if (IsShutdown()) {
+    return MediaDataDecoder::DecodePromise::CreateAndReject(
+        MediaResult(NS_ERROR_FAILURE,
+                    RESULT_DETAIL("MFMediaEngineStream is shutdown")),
+        __func__);
+  }
   AssertOnTaskQueue();
   NotifyNewData(aSample);
   MediaDataDecoder::DecodedData outputs;
@@ -477,6 +483,12 @@ RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineStream::OutputData(
 };
 
 RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineStream::Drain() {
+  if (IsShutdown()) {
+    return MediaDataDecoder::DecodePromise::CreateAndReject(
+        MediaResult(NS_ERROR_FAILURE,
+                    RESULT_DETAIL("MFMediaEngineStream is shutdown")),
+        __func__);
+  }
   AssertOnTaskQueue();
   MediaDataDecoder::DecodedData outputs;
   while (RefPtr<MediaData> outputData = OutputDataInternal()) {
