@@ -272,13 +272,20 @@ export var Sanitizer = {
    *         - range (default: null): array-tuple of [from, to] timestamps
    *         - privateStateForNewWindow (default: "non-private"): when clearing
    *           open windows, defines the private state for the newly opened window.
+   * @returns {object} An object containing debug information about the
+   *          sanitization progress. This state object is also used as
+   *          AsyncShutdown metadata.
    */
   async sanitize(itemsToClear = null, options = {}) {
-    let progress = options.progress || {};
+    let progress = options.progress;
+    if (!progress) {
+      progress = options.progress = {};
+    }
+
     if (!itemsToClear) {
       itemsToClear = getItemsToClearFromPrefBranch(this.PREF_CPD_BRANCH);
     }
-    let promise = sanitizeInternal(this.items, itemsToClear, progress, options);
+    let promise = sanitizeInternal(this.items, itemsToClear, options);
 
     // Depending on preferences, the sanitizer may perform asynchronous
     // work before it starts cleaning up the Places database (e.g. closing
@@ -297,6 +304,7 @@ export var Sanitizer = {
     } finally {
       Services.obs.notifyObservers(null, "sanitizer-sanitization-complete");
     }
+    return progress;
   },
 
   observe(subject, topic, data) {
@@ -369,7 +377,7 @@ export var Sanitizer = {
         TelemetryStopwatch.start("FX_SANITIZE_COOKIES_2", refObj);
         // This is true if called by sanitizeOnShutdown.
         // On shutdown we clear by principal to be able to honor the users exceptions
-        if (progress && principalsForShutdownClearing) {
+        if (principalsForShutdownClearing) {
           await maybeSanitizeSessionPrincipals(
             progress,
             principalsForShutdownClearing,
@@ -388,7 +396,7 @@ export var Sanitizer = {
       async clear(range, { progress, principalsForShutdownClearing }) {
         // This is true if called by sanitizeOnShutdown.
         // On shutdown we clear by principal to be able to honor the users exceptions
-        if (progress && principalsForShutdownClearing) {
+        if (principalsForShutdownClearing) {
           // Cleaning per principal to be able to consider the users exceptions
           await maybeSanitizeSessionPrincipals(
             progress,
@@ -403,9 +411,10 @@ export var Sanitizer = {
     },
 
     history: {
-      async clear(range) {
+      async clear(range, { progress }) {
         let refObj = {};
         TelemetryStopwatch.start("FX_SANITIZE_HISTORY", refObj);
+        progress.step = "clearing browsing history";
         await clearData(
           range,
           Ci.nsIClearDataService.CLEAR_HISTORY |
@@ -420,7 +429,9 @@ export var Sanitizer = {
         // user interaction, we need to ensure that we only delete those permissions that
         // do not have any existing storage.
         let principalsCollector = new lazy.PrincipalsCollector();
-        let principals = await principalsCollector.getAllPrincipals();
+        progress.step = "getAllPrincipals";
+        let principals = await principalsCollector.getAllPrincipals(progress);
+        progress.step = "clearing user interaction";
         await new Promise(resolve => {
           Services.clearData.deleteUserInteractionForClearingHistory(
             principals,
@@ -546,7 +557,7 @@ export var Sanitizer = {
           win.skipNextCanClose = false;
         }
       },
-      async clear(range, privateStateForNewWindow = "non-private") {
+      async clear(range, { privateStateForNewWindow = "non-private" }) {
         // NB: this closes all *browser* windows, not other windows like the library, about window,
         // browser console, etc.
 
@@ -681,8 +692,8 @@ export var Sanitizer = {
   },
 };
 
-async function sanitizeInternal(items, aItemsToClear, progress, options = {}) {
-  let { ignoreTimespan = true, range } = options;
+async function sanitizeInternal(items, aItemsToClear, options) {
+  let { ignoreTimespan = true, range, progress } = options;
   let seenError = false;
   // Shallow copy the array, as we are going to modify it in place later.
   if (!Array.isArray(aItemsToClear)) {
@@ -701,6 +712,12 @@ async function sanitizeInternal(items, aItemsToClear, progress, options = {}) {
   // Store the list of items to clear, for debugging/forensics purposes
   for (let k of itemsToClear) {
     progress[k] = "ready";
+    // Create a progress object specific to each cleaner. We'll pass down this
+    // to the cleaners instead of the main progress object, so they don't end
+    // up overriding properties each other.
+    // This specific progress is deleted if the cleaner completes successfully,
+    // so the metadata will only contain progress of unresolved cleaners.
+    progress[k + "Progress"] = {};
   }
 
   // Ensure open windows get cleared first, if they're in our list, so that
@@ -710,8 +727,12 @@ async function sanitizeInternal(items, aItemsToClear, progress, options = {}) {
   let openWindowsIndex = itemsToClear.indexOf("openWindows");
   if (openWindowsIndex != -1) {
     itemsToClear.splice(openWindowsIndex, 1);
-    await items.openWindows.clear(null, options);
+    await items.openWindows.clear(
+      null,
+      Object.assign(options, { progress: progress.openWindowsProgress })
+    );
     progress.openWindows = "cleared";
+    delete progress.openWindowsProgress;
   }
 
   // If we ignore timespan, clear everything,
@@ -740,31 +761,36 @@ async function sanitizeInternal(items, aItemsToClear, progress, options = {}) {
     let principalsCollector = new lazy.PrincipalsCollector();
     let principals = await principalsCollector.getAllPrincipals(progress);
     options.principalsForShutdownClearing = principals;
-    options.progress = progress;
   }
   // Array of objects in form { name, promise }.
   // `name` is the item's name and `promise` may be a promise, if the
   // sanitization is asynchronous, or the function return value, otherwise.
   let handles = [];
   for (let name of itemsToClear) {
+    progress[name] = "blocking";
     let item = items[name];
     try {
       // Catch errors here, so later we can just loop through these.
       handles.push({
         name,
-        promise: item.clear(range, options).then(
-          () => (progress[name] = "cleared"),
-          ex => annotateError(name, ex)
-        ),
+        promise: item
+          .clear(
+            range,
+            Object.assign(options, { progress: progress[name + "Progress"] })
+          )
+          .then(
+            () => {
+              progress[name] = "cleared";
+              delete progress[name + "Progress"];
+            },
+            ex => annotateError(name, ex)
+          ),
       });
     } catch (ex) {
       annotateError(name, ex);
     }
   }
-  for (let handle of handles) {
-    progress[handle.name] = "blocking";
-    await handle.promise;
-  }
+  await Promise.all(handles.map(h => h.promise));
 
   // Sanitization is complete.
   TelemetryStopwatch.finish("FX_SANITIZE_TOTAL", refObj);

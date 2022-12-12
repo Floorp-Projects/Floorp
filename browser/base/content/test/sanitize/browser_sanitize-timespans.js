@@ -719,7 +719,12 @@ async function onHistoryReady() {
 
   // Clear Today
   Services.prefs.setIntPref(Sanitizer.PREF_TIMESPAN, 4);
-  await Sanitizer.sanitize(null, { ignoreTimespan: false });
+  let progress = await Sanitizer.sanitize(null, { ignoreTimespan: false });
+  Assert.deepEqual(progress, {
+    history: "cleared",
+    formdata: "cleared",
+    downloads: "cleared",
+  });
 
   await formHistoryPromise;
   await downloadPromise;

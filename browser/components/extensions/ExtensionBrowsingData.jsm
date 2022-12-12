@@ -34,13 +34,15 @@ class BrowsingDataDelegate {
   // This method returns undefined for all data types that are _not_ handled by
   // this delegate.
   handleRemoval(dataType, options) {
+    // TODO (Bug 1803799): Use Sanitizer.sanitize() instead of internal cleaners.
+    let o = { progress: {} };
     switch (dataType) {
       case "downloads":
-        return lazy.Sanitizer.items.downloads.clear(lazy.makeRange(options));
+        return lazy.Sanitizer.items.downloads.clear(lazy.makeRange(options), o);
       case "formData":
-        return lazy.Sanitizer.items.formdata.clear(lazy.makeRange(options));
+        return lazy.Sanitizer.items.formdata.clear(lazy.makeRange(options), o);
       case "history":
-        return lazy.Sanitizer.items.history.clear(lazy.makeRange(options));
+        return lazy.Sanitizer.items.history.clear(lazy.makeRange(options), o);
 
       default:
         return undefined;
