@@ -129,6 +129,9 @@ hashbrown = { path = "build/rust/hashbrown" }
 # Patch bindgen 0.59 to 0.63
 bindgen = { path = "build/rust/bindgen" }
 
+# Patch memoffset 0.6 to 0.7
+memoffset = { path = "build/rust/memoffset" }
+
 # Patch autocfg to hide rustc output. Workaround for https://github.com/cuviper/autocfg/issues/30
 autocfg = { path = "third_party/rust/autocfg" }
 

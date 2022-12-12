@@ -390,7 +390,7 @@ dependencies = [
  "libc",
  "libudev",
  "log",
- "memoffset 0.6.5",
+ "memoffset 0.6.99",
  "nom 7.1.1",
  "nss-gk-api",
  "pkcs11-bindings",
@@ -1042,7 +1042,7 @@ dependencies = [
  "autocfg",
  "cfg-if 1.0.0",
  "crossbeam-utils 0.8.11",
- "memoffset 0.6.5",
+ "memoffset 0.6.99",
  "once_cell",
  "scopeguard",
 ]
@@ -3274,9 +3274,16 @@ dependencies = [
 
 [[package]]
 name = "memoffset"
-version = "0.6.5"
+version = "0.6.99"
+dependencies = [
+ "memoffset 0.7.1",
+]
+
+[[package]]
+name = "memoffset"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5aa361d4faea93603064a027415f07bd8e1d5c88c9fbf68bf56a285428fd79ce"
+checksum = "5de893c32cde5f383baa4c04c5d6dbdd735cfd4a794b0debdb2bb1b421da5ff4"
 dependencies = [
  "autocfg",
 ]
