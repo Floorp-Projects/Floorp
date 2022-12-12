@@ -6,12 +6,12 @@
 // Test source mappings WASM sources.
 // This test is quite general and test various functions.
 
-const { WasmRemap } = browserRequire(
-  "resource://devtools/client/shared/source-map-loader/utils/wasmRemap.js"
-);
-const { SourceMapConsumer } = browserRequire(
-  "resource://devtools/client/shared/vendor/source-map/source-map.js"
-);
+const {
+  WasmRemap,
+} = require("resource://devtools/client/shared/source-map-loader/utils/wasmRemap.js");
+const {
+  SourceMapConsumer,
+} = require("resource://devtools/client/shared/vendor/source-map/source-map.js");
 
 SourceMapConsumer.initialize({
   "lib/mappings.wasm":

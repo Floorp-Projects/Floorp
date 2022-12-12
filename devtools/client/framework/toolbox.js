@@ -1379,9 +1379,7 @@ Toolbox.prototype = {
       return this._sourceMapService;
     }
     // Uses browser loader to access the `Worker` global.
-    const service = this.browserRequire(
-      "devtools/client/shared/source-map-loader/index"
-    );
+    const service = require("devtools/client/shared/source-map-loader/index");
 
     // Provide a wrapper for the service that reports errors more nicely.
     this._sourceMapService = new Proxy(service, {

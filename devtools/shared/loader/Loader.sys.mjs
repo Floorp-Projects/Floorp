@@ -111,6 +111,7 @@ export function DevToolsLoader({
     DOMPoint,
     DOMQuad,
     DOMRect,
+    fetch,
     HeapSnapshot,
     IOUtils,
     L10nRegistry,
