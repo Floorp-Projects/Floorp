@@ -357,11 +357,6 @@ export class IEProfileMigrator extends MigratorBase {
     return "ie";
   }
 
-  constructor() {
-    super();
-    this.wrappedJSObject = this; // export this to be able to use it in the unittest.
-  }
-
   getResources() {
     let resources = [
       MSMigrationUtils.getBookmarksMigrator(),
