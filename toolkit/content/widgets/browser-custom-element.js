@@ -41,7 +41,7 @@
       // Import if we can - this is a browser/ module so it may not be
       // available, in which case we return null. We replace this getter
       // when the module becomes available (should be on delayed startup
-      // when the first browser window loads, via BrowserGlue.jsm ).
+      // when the first browser window loads, via BrowserGlue.sys.mjs).
       const kURL = "resource:///modules/ProcessHangMonitor.jsm";
       if (Cu.isModuleLoaded(kURL)) {
         let { ProcessHangMonitor } = ChromeUtils.import(kURL);

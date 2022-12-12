@@ -329,7 +329,7 @@ function OnLDBLoad() {
   Services.obs.addObserver(TabCrashedObserver, "ipc:content-shutdown");
   Services.obs.addObserver(TabCrashedObserver, "oop-frameloader-crashed");
 
-  // Pretend slightly to be like a normal browser, so that SessionStore.jsm
+  // Pretend slightly to be like a normal browser, so that SessionStore.sys.mjs
   // doesn't get too confused.  The effect is that we'll never switch process
   // type when navigating, and for layout debugging purposes we don't bother
   // about getting that right.

@@ -5,24 +5,26 @@
 import { prefs } from "../../utils/prefs";
 import { WorkerDispatcher } from "devtools/client/shared/worker-utils";
 
-let dispatcher;
-let workerPath;
+const WORKER_URL =
+  "resource://devtools/client/debugger/dist/pretty-print-worker.js";
 
-export const start = path => {
-  workerPath = path;
+let dispatcher;
+let jestWorkerUrl;
+
+export const start = jestUrl => {
+  jestWorkerUrl = jestUrl;
 };
 export const stop = () => {
   if (dispatcher) {
     dispatcher.stop();
     dispatcher = null;
-    workerPath = null;
   }
 };
 
 export async function prettyPrint({ text, url }) {
   if (!dispatcher) {
     dispatcher = new WorkerDispatcher();
-    dispatcher.start(workerPath);
+    dispatcher.start(jestWorkerUrl || WORKER_URL);
   }
 
   return dispatcher.invoke("prettyPrint", {

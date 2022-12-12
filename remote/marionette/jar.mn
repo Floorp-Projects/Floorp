@@ -15,7 +15,6 @@ remote.jar:
   content/marionette/addon.sys.mjs (addon.sys.mjs)
   content/marionette/atom.sys.mjs (atom.sys.mjs)
   content/marionette/browser.sys.mjs (browser.sys.mjs)
-  content/marionette/capture.sys.mjs (capture.sys.mjs)
   content/marionette/cert.sys.mjs (cert.sys.mjs)
   content/marionette/cookie.sys.mjs (cookie.sys.mjs)
   content/marionette/dom.sys.mjs (dom.sys.mjs)

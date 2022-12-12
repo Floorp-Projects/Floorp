@@ -18,51 +18,126 @@ var tabPreviews = {
     return (this.aspectRatio = height / width);
   },
 
-  get: function tabPreviews_get(aTab) {
-    let uri = aTab.linkedBrowser.currentURI.spec;
+  /**
+   * Get the stored thumbnail URL for a given page URL and wait up to 1s for it
+   * to load. If the browser is discarded and there is no stored thumbnail, the
+   * image URL will fail to load and this method will return null after 1s.
+   * Callers should handle this case by doing nothing or using a fallback image.
+   * @param {String} uri The page URL.
+   * @returns {Promise<Image|null>}
+   */
+  loadImage: async function tabPreviews_loadImage(uri) {
+    let img = new Image();
+    img.src = PageThumbs.getThumbnailURL(uri);
+    if (img.complete && img.naturalWidth) {
+      return img;
+    }
+    return new Promise(resolve => {
+      const controller = new AbortController();
+      img.addEventListener(
+        "load",
+        () => {
+          clearTimeout(timeout);
+          controller.abort();
+          resolve(img);
+        },
+        { signal: controller.signal }
+      );
+      const timeout = setTimeout(() => {
+        controller.abort();
+        resolve(null);
+      }, 1000);
+    });
+  },
 
+  /**
+   * For a given tab, retrieve a preview thumbnail (a canvas or an image) from
+   * storage or capture a new one. If the tab's URL has changed since the
+   * previous call, the thumbnail will be regenerated.
+   * @param {MozTabbrowserTab} aTab The tab to get a preview for.
+   * @returns {Promise<HTMLCanvasElement|Image|null>} Resolves to...
+   * @resolves {HTMLCanvasElement} If a thumbnail can NOT be captured and stored
+   *   for the tab, or if the tab is still loading, a snapshot is taken and
+   *   returned as a canvas. It may be cached as a canvas (separately from
+   *   thumbnail storage) in aTab.__thumbnail if the tab is finished loading. If
+   *   the snapshot CAN be stored as a thumbnail, the snapshot is converted to a
+   *   blob image and drawn in the returned canvas, but the image is added to
+   *   thumbnail storage and cached in aTab.__thumbnail.
+   * @resolves {Image} A cached blob image from a previous thumbnail capture.
+   *   e.g. <img src="moz-page-thumb://thumbnails/?url=foo.com&revision=bar">
+   * @resolves {null} If a thumbnail cannot be captured for any reason (e.g.
+   *   because the tab is discarded) and there is no cached/stored thumbnail.
+   */
+  get: async function tabPreviews_get(aTab) {
+    let browser = aTab.linkedBrowser;
+    let uri = browser.currentURI.spec;
+
+    // Invalidate the cached thumbnail since the tab has changed.
     if (aTab.__thumbnail_lastURI && aTab.__thumbnail_lastURI != uri) {
       aTab.__thumbnail = null;
       aTab.__thumbnail_lastURI = null;
     }
 
+    // A cached thumbnail (not from thumbnail storage) is available.
     if (aTab.__thumbnail) {
       return aTab.__thumbnail;
     }
 
-    if (aTab.getAttribute("pending") == "true") {
-      let img = new Image();
-      img.src = PageThumbs.getThumbnailURL(uri);
-      return img;
+    // This means the browser is discarded. Try to load a stored thumbnail, and
+    // use a fallback style otherwise.
+    if (!browser.browsingContext) {
+      return this.loadImage(uri);
     }
 
+    // Don't cache or store the thumbnail if the tab is still loading.
     return this.capture(aTab, !aTab.hasAttribute("busy"));
   },
 
-  capture: function tabPreviews_capture(aTab, aShouldCache) {
+  /**
+   * For a given tab, capture a preview thumbnail (a canvas), optionally cache
+   * it in aTab.__thumbnail, and possibly store it in thumbnail storage.
+   * @param {MozTabbrowserTab} aTab The tab to capture a preview for.
+   * @param {Boolean} aShouldCache Cache/store the captured thumbnail?
+   * @returns {Promise<HTMLCanvasElement|null>} Resolves to...
+   * @resolves {HTMLCanvasElement} A snapshot of the tab's content. If the
+   *   snapshot is safe for storage and aShouldCache is true, the snapshot is
+   *   converted to a blob image, stored and cached, and drawn in the returned
+   *   canvas. The thumbnail can then be recovered even if the browser is
+   *   discarded. Otherwise, the canvas itself is cached in aTab.__thumbnail.
+   * @resolves {null} If a fatal exception occurred during thumbnail capture.
+   */
+  capture: async function tabPreviews_capture(aTab, aShouldCache) {
     let browser = aTab.linkedBrowser;
     let uri = browser.currentURI.spec;
     let canvas = PageThumbs.createCanvas(window);
-    PageThumbs.shouldStoreThumbnail(browser).then(aDoStore => {
-      if (aDoStore && aShouldCache) {
-        PageThumbs.captureAndStore(browser).then(function() {
-          let img = new Image();
-          img.src = PageThumbs.getThumbnailURL(uri);
-          aTab.__thumbnail = img;
-          aTab.__thumbnail_lastURI = uri;
-          canvas.getContext("2d").drawImage(img, 0, 0);
-        });
+    const doStore = await PageThumbs.shouldStoreThumbnail(browser);
+
+    if (doStore && aShouldCache) {
+      await PageThumbs.captureAndStore(browser);
+      let img = await this.loadImage(uri);
+      if (img) {
+        // Cache the stored blob image for future use.
+        aTab.__thumbnail = img;
+        aTab.__thumbnail_lastURI = uri;
+        // Draw the stored blob image in the canvas.
+        canvas.getContext("2d").drawImage(img, 0, 0);
       } else {
-        PageThumbs.captureToCanvas(browser, canvas)
-          .then(() => {
-            if (aShouldCache) {
-              aTab.__thumbnail = canvas;
-              aTab.__thumbnail_lastURI = uri;
-            }
-          })
-          .catch(e => Cu.reportError(e));
+        canvas = null;
       }
-    });
+    } else {
+      try {
+        await PageThumbs.captureToCanvas(browser, canvas);
+        if (aShouldCache) {
+          // Cache the canvas itself for future use.
+          aTab.__thumbnail = canvas;
+          aTab.__thumbnail_lastURI = uri;
+        }
+      } catch (error) {
+        console.error(error);
+        canvas = null;
+      }
+    }
+
     return canvas;
   },
 };
@@ -266,10 +341,6 @@ var ctrlTab = {
 
     aPreview._tab = aTab;
 
-    if (aPreview._canvas.firstElementChild) {
-      aPreview._canvas.firstElementChild.remove();
-    }
-
     if (aTab) {
       let canvas = aPreview._canvas;
       let canvasWidth = this.canvasWidth;
@@ -279,7 +350,26 @@ var ctrlTab = {
       canvas.style.maxWidth = canvasWidth + "px";
       canvas.style.minHeight = canvasHeight + "px";
       canvas.style.maxHeight = canvasHeight + "px";
-      canvas.appendChild(tabPreviews.get(aTab));
+      tabPreviews
+        .get(aTab)
+        .then(img => {
+          switch (aPreview._tab) {
+            case aTab:
+              this._clearCanvas(canvas);
+              if (img) {
+                canvas.appendChild(img);
+              }
+              break;
+            case null:
+              // The preview panel is not open, so don't render anything.
+              this._clearCanvas(canvas);
+              break;
+            // If the tab exists but it has changed since updatePreview was
+            // called, the preview will likely be handled by a later
+            // updatePreview call, e.g. on TabAttrModified.
+          }
+        })
+        .catch(error => console.error(error));
 
       aPreview._label.setAttribute("value", aTab.label);
       aPreview.setAttribute("tooltiptext", aTab.label);
@@ -290,10 +380,18 @@ var ctrlTab = {
       }
       aPreview.hidden = false;
     } else {
+      this._clearCanvas(aPreview._canvas);
       aPreview.hidden = true;
       aPreview._label.removeAttribute("value");
       aPreview.removeAttribute("tooltiptext");
       aPreview._favicon.removeAttribute("src");
+    }
+  },
+
+  // Remove previous preview images from the canvas box.
+  _clearCanvas(canvas) {
+    while (canvas.firstElementChild) {
+      canvas.firstElementChild.remove();
     }
   },
 

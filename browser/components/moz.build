@@ -87,14 +87,14 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES += [
-    "BrowserContentHandler.jsm",
-    "BrowserGlue.jsm",
+    "BrowserContentHandler.sys.mjs",
+    "BrowserGlue.sys.mjs",
     "distribution.js",
 ]
 
 if CONFIG["MOZ_DEBUG"] or CONFIG["MOZ_DEV_EDITION"] or CONFIG["NIGHTLY_BUILD"]:
     EXTRA_JS_MODULES += [
-        "StartupRecorder.jsm",
+        "StartupRecorder.sys.mjs",
     ]
 
 BROWSER_CHROME_MANIFESTS += [

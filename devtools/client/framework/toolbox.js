@@ -4,9 +4,6 @@
 
 "use strict";
 
-const SOURCE_MAP_WORKER =
-  "resource://devtools/client/shared/source-map-loader/worker.js";
-
 const MAX_ORDINAL = 99;
 const SPLITCONSOLE_ENABLED_PREF = "devtools.toolbox.splitconsoleEnabled";
 const SPLITCONSOLE_HEIGHT_PREF = "devtools.toolbox.splitconsoleHeight";
@@ -1375,95 +1372,21 @@ Toolbox.prototype = {
   },
 
   /**
-   * Unconditionally create and get the source map service.
-   */
-  _createSourceMapService() {
-    if (this._sourceMapService) {
-      return this._sourceMapService;
-    }
-    // Uses browser loader to access the `Worker` global.
-    const service = this.browserRequire(
-      "devtools/client/shared/source-map-loader/index"
-    );
-
-    // Provide a wrapper for the service that reports errors more nicely.
-    this._sourceMapService = new Proxy(service, {
-      get: (target, name) => {
-        switch (name) {
-          case "getOriginalURLs":
-            return urlInfo => {
-              return target.getOriginalURLs(urlInfo).catch(text => {
-                const message = L10N.getFormatStr(
-                  "toolbox.sourceMapFailure",
-                  text,
-                  urlInfo.url,
-                  urlInfo.sourceMapURL
-                );
-                this.target.logWarningInPage(message, "source map");
-                // It's ok to swallow errors here, because a null
-                // result just means that no source map was found.
-                return null;
-              });
-            };
-
-          case "getOriginalSourceText":
-            return originalSourceId => {
-              return target
-                .getOriginalSourceText(originalSourceId)
-                .catch(error => {
-                  const message = L10N.getFormatStr(
-                    "toolbox.sourceMapSourceFailure",
-                    error.message,
-                    error.metadata ? error.metadata.url : "<unknown>"
-                  );
-                  this.target.logWarningInPage(message, "source map");
-                  // Also replace the result with the error text.
-                  // Note that this result has to have the same form
-                  // as whatever the upstream getOriginalSourceText
-                  // returns.
-                  return {
-                    text: message,
-                    contentType: "text/plain",
-                  };
-                });
-            };
-
-          case "applySourceMap":
-            return (generatedId, url, code, mappings) => {
-              return target
-                .applySourceMap(generatedId, url, code, mappings)
-                .then(async result => {
-                  // If a tool has changed or introduced a source map
-                  // (e.g, by pretty-printing a source), tell the
-                  // source map URL service about the change, so that
-                  // subscribers to that service can be updated as
-                  // well.
-                  if (this._sourceMapURLService) {
-                    await this._sourceMapURLService.newSourceMapCreated(
-                      generatedId
-                    );
-                  }
-                  return result;
-                });
-            };
-
-          default:
-            return target[name];
-        }
-      },
-    });
-
-    this._sourceMapService.startSourceMapWorker(SOURCE_MAP_WORKER);
-    return this._sourceMapService;
-  },
-
-  /**
    * A common access point for the client-side mapping service for source maps that
    * any panel can use.  This is a "low-level" API that connects to
    * the source map worker.
    */
-  get sourceMapService() {
-    return this._createSourceMapService();
+  get sourceMapLoader() {
+    if (this._sourceMapLoader) {
+      return this._sourceMapLoader;
+    }
+    this._sourceMapLoader = require("devtools/client/shared/source-map-loader/index");
+    this._sourceMapLoader.on("source-map-error", message =>
+      this.target.logWarningInPage(message, "source map")
+    );
+    this._sourceMapLoader.startSourceMapWorker();
+
+    return this._sourceMapLoader;
   },
 
   /**
@@ -1480,8 +1403,7 @@ Toolbox.prototype = {
 
     this._parserService = new ParserDispatcher();
     this._parserService.start(
-      "resource://devtools/client/debugger/dist/parser-worker.js",
-      this.win
+      "resource://devtools/client/debugger/dist/parser-worker.js"
     );
     return this._parserService;
   },
@@ -1490,17 +1412,16 @@ Toolbox.prototype = {
    * Clients wishing to use source maps but that want the toolbox to
    * track the source and style sheet actor mapping can use this
    * source map service.  This is a higher-level service than the one
-   * returned by |sourceMapService|, in that it automatically tracks
+   * returned by |sourceMapLoader|, in that it automatically tracks
    * source and style sheet actor IDs.
    */
   get sourceMapURLService() {
     if (this._sourceMapURLService) {
       return this._sourceMapURLService;
     }
-    const sourceMaps = this._createSourceMapService();
     this._sourceMapURLService = new SourceMapURLService(
       this.commands,
-      sourceMaps
+      this.sourceMapLoader
     );
     return this._sourceMapURLService;
   },
@@ -4107,9 +4028,11 @@ Toolbox.prototype = {
     this._lastFocusedElement = null;
     this._pausedTargets = null;
 
-    if (this._sourceMapService) {
-      this._sourceMapService.stopSourceMapWorker();
-      this._sourceMapService = null;
+    if (this._sourceMapLoader) {
+      this._sourceMapLoader.stopSourceMapWorker();
+      // Unregister all listeners
+      this._sourceMapLoader.clearEvents();
+      this._sourceMapLoader = null;
     }
 
     if (this._parserService) {

@@ -9,12 +9,12 @@ const { ComponentUtils } = ChromeUtils.import(
 );
 
 ChromeUtils.defineESModuleGetters(this, {
+  AboutHomeStartupCache: "resource:///modules/BrowserGlue.sys.mjs",
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AboutHomeStartupCache: "resource:///modules/BrowserGlue.jsm",
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   PerTestCoverageUtils: "resource://testing-common/PerTestCoverageUtils.jsm",

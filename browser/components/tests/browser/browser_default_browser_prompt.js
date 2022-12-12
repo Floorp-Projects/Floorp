@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { DefaultBrowserCheck } = ChromeUtils.import(
-  "resource:///modules/BrowserGlue.jsm"
+const { DefaultBrowserCheck } = ChromeUtils.importESModule(
+  "resource:///modules/BrowserGlue.sys.mjs"
 );
 const CHECK_PREF = "browser.shell.checkDefaultBrowser";
 

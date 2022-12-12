@@ -1,60 +1,15 @@
 import pytest
-
 from tests.support.asserts import assert_success
 from tests.support.image import png_dimensions
+from tests.support.screenshot import (
+    DEFAULT_CONTENT,
+    INNER_IFRAME_STYLE,
+    OUTER_IFRAME_STYLE,
+    REFERENCE_CONTENT,
+    REFERENCE_STYLE,
+)
 
 from . import viewport_dimensions
-
-DEFAULT_CONTENT = "<div id='content'>Lorem ipsum dolor sit amet.</div>"
-
-REFERENCE_CONTENT = "<div id='outer'>{}</div>".format(DEFAULT_CONTENT)
-REFERENCE_STYLE = """
-    <style>
-      #outer {
-        display: block;
-        margin: 0;
-        border: 0;
-        width: 200px;
-        height: 200px;
-      }
-      #content {
-        display: block;
-        margin: 0;
-        border: 0;
-        width: 100px;
-        height: 100px;
-        background: green;
-      }
-    </style>
-"""
-
-OUTER_IFRAME_STYLE = """
-    <style>
-      iframe {
-        display: block;
-        margin: 0;
-        border: 0;
-        width: 200px;
-        height: 200px;
-      }
-    </style>
-"""
-
-INNER_IFRAME_STYLE = """
-    <style>
-      body {
-        margin: 0;
-      }
-      div {
-        display: block;
-        margin: 0;
-        border: 0;
-        width: 100px;
-        height: 100px;
-        background: green;
-      }
-    </style>
-"""
 
 
 def take_screenshot(session):

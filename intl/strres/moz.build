@@ -20,6 +20,10 @@ LOCAL_INCLUDES += [
     "/xpcom/ds",
 ]
 
+EXPORTS += [
+    "nsStringBundle.h",
+]
+
 include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"

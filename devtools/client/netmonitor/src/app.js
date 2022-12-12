@@ -26,8 +26,6 @@ const {
 } = require("resource://devtools/client/netmonitor/src/selectors/index.js");
 
 const SearchWorker = require("resource://devtools/client/netmonitor/src/workers/search/index.js");
-const SEARCH_WORKER_URL =
-  "resource://devtools/client/netmonitor/src/workers/search/worker.js";
 
 /**
  * Global App object for Network panel. This object depends
@@ -61,9 +59,6 @@ NetMonitorApp.prototype = {
         toolbox.target.logErrorInPage(err, "har");
       });
     };
-
-    // Bootstrap search worker
-    SearchWorker.start(SEARCH_WORKER_URL, win);
 
     const { actions, connector, store } = this.api;
 

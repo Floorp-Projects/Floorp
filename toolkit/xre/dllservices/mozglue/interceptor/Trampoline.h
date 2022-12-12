@@ -13,6 +13,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Types.h"
 #include "mozilla/WindowsProcessMitigations.h"
+#include "mozilla/WindowsUnwindInfo.h"
 
 namespace mozilla {
 namespace interceptor {
@@ -28,6 +29,10 @@ class MOZ_STACK_CLASS Trampoline final {
         mRemoteBase(aRemoteBase),
         mOffset(0),
         mExeOffset(0),
+#ifdef _M_X64
+        mCopyCodesEndOffset(0),
+        mExeEndOffset(0),
+#endif  // _M_X64
         mMaxOffset(aChunkSize),
         mAccumulatedStatus(true) {
     if (!::VirtualProtect(aLocalBase, aChunkSize,
@@ -44,6 +49,10 @@ class MOZ_STACK_CLASS Trampoline final {
         mRemoteBase(aOther.mRemoteBase),
         mOffset(aOther.mOffset),
         mExeOffset(aOther.mExeOffset),
+#ifdef _M_X64
+        mCopyCodesEndOffset(aOther.mCopyCodesEndOffset),
+        mExeEndOffset(aOther.mExeEndOffset),
+#endif  // _M_X64
         mMaxOffset(aOther.mMaxOffset),
         mAccumulatedStatus(aOther.mAccumulatedStatus) {
     aOther.mPrevLocalProt = 0;
@@ -57,8 +66,13 @@ class MOZ_STACK_CLASS Trampoline final {
         mRemoteBase(0),
         mOffset(0),
         mExeOffset(0),
+#ifdef _M_X64
+        mCopyCodesEndOffset(0),
+        mExeEndOffset(0),
+#endif  // _M_X64
         mMaxOffset(0),
-        mAccumulatedStatus(false) {}
+        mAccumulatedStatus(false) {
+  }
 
   Trampoline(const Trampoline&) = delete;
   Trampoline& operator=(const Trampoline&) = delete;
@@ -72,6 +86,10 @@ class MOZ_STACK_CLASS Trampoline final {
     mRemoteBase = aOther.mRemoteBase;
     mOffset = aOther.mOffset;
     mExeOffset = aOther.mExeOffset;
+#ifdef _M_X64
+    mCopyCodesEndOffset = aOther.mCopyCodesEndOffset;
+    mExeEndOffset = aOther.mExeEndOffset;
+#endif  // _M_X64
     mMaxOffset = aOther.mMaxOffset;
     mAccumulatedStatus = aOther.mAccumulatedStatus;
 
@@ -243,6 +261,22 @@ class MOZ_STACK_CLASS Trampoline final {
     mOffset += kDelta;
   }
 
+  void WriteBytes(void* aAddr, size_t aSize) {
+    if (!mMMPolicy) {
+      // Null tramp, just track offset
+      mOffset += aSize;
+      return;
+    }
+
+    if (mOffset + aSize > mMaxOffset) {
+      mAccumulatedStatus = false;
+      return;
+    }
+
+    std::memcpy(reinterpret_cast<void*>(mLocalBase + mOffset), aAddr, aSize);
+    mOffset += aSize;
+  }
+
 #endif
 
   void WritePointer(uintptr_t aValue) {
@@ -325,6 +359,15 @@ class MOZ_STACK_CLASS Trampoline final {
     mOffset += aNumBytes;
   }
 
+  void CopyCodes(uintptr_t aOrigBytes, uint32_t aNumBytes) {
+#ifdef _M_X64
+    if (mOffset == mCopyCodesEndOffset) {
+      mCopyCodesEndOffset += aNumBytes;
+    }
+#endif  // _M_X64
+    CopyFrom(aOrigBytes, aNumBytes);
+  }
+
   void Rewind() { mOffset = 0; }
 
   uintptr_t GetCurrentRemoteAddress() const { return mRemoteBase + mOffset; }
@@ -332,12 +375,19 @@ class MOZ_STACK_CLASS Trampoline final {
   void StartExecutableCode() {
     MOZ_ASSERT(!mExeOffset);
     mExeOffset = mOffset;
+#ifdef _M_X64
+    mCopyCodesEndOffset = mOffset;
+#endif  // _M_X64
   }
 
-  void* EndExecutableCode() const {
+  void* EndExecutableCode() {
     if (!mAccumulatedStatus || !mMMPolicy) {
       return nullptr;
     }
+
+#ifdef _M_X64
+    mExeEndOffset = mOffset;
+#endif  // _M_X64
 
     // This must always return the start address the executable code
     // *in the target process*
@@ -345,6 +395,208 @@ class MOZ_STACK_CLASS Trampoline final {
   }
 
   uint32_t GetCurrentExecutableCodeLen() const { return mOffset - mExeOffset; }
+
+#ifdef _M_X64
+
+  void Align(uint32_t aAlignment) {
+    // aAlignment should be a power of 2
+    MOZ_ASSERT(!(aAlignment & (aAlignment - 1)));
+
+    uint32_t alignedOffset = (mOffset + aAlignment - 1) & ~(aAlignment - 1);
+    if (alignedOffset > mMaxOffset) {
+      mAccumulatedStatus = false;
+      return;
+    }
+    mOffset = alignedOffset;
+  }
+
+  // We assume that all instructions that are part of the prologue are left
+  // intact by detouring code, i.e. that they are copied using CopyCodes. This
+  // is not true for calls and jumps for example, but calls and jumps cannot be
+  // part of the prologue. This assumption allows us to copy unwind information
+  // as-is, because unwind information only refers to instructions within the
+  // prologue.
+  bool AddUnwindInfo(uintptr_t aOrigFuncAddr, uintptr_t aOrigFuncStopOffset) {
+    if constexpr (!MMPolicy::kSupportsUnwindInfo) {
+      return false;
+    }
+
+    if (!mMMPolicy) {
+      return false;
+    }
+
+    uint32_t origFuncOffsetFromBeginAddr = 0;
+    uint32_t origFuncOffsetToEndAddr = 0;
+    uintptr_t origImageBase = 0;
+    auto unwindInfoData =
+        mMMPolicy->LookupUnwindInfo(aOrigFuncAddr, &origFuncOffsetFromBeginAddr,
+                                    &origFuncOffsetToEndAddr, &origImageBase);
+    if (!unwindInfoData) {
+      // If the original function does not have unwind info, there is nothing
+      // more to do.
+      return true;
+    }
+
+    // We do not support hooking at a location that isn't the beginning of a
+    // function.
+    MOZ_ASSERT(origFuncOffsetFromBeginAddr == 0);
+    if (origFuncOffsetFromBeginAddr != 0) {
+      return false;
+    }
+
+    IterableUnwindInfo unwindInfoIt(unwindInfoData.get());
+    auto& unwindInfo = unwindInfoIt.Info();
+
+    // The prologue should contain only instructions that we detour using
+    // CopyCodes. If not, there is most likely a mismatch between the unwind
+    // information and the actual code we are detouring, so we stop here. This
+    // is a best-effort safeguard intended to detect situations where e.g.
+    // third-party injected code would have altered the function we are
+    // detouring.
+    if (mCopyCodesEndOffset < aOrigFuncStopOffset &&
+        unwindInfo.size_of_prolog > mCopyCodesEndOffset) {
+      return false;
+    }
+
+    // According to the documentation, the array is sorted by descending order
+    // of offset in the prologue. Let's double check this assumption if in
+    // debug. This also checks that the full unwind information isn't
+    // ill-formed, thanks to all the MOZ_ASSERT in iteration code.
+#  ifdef DEBUG
+    uint8_t previousOffset = 0xFF;
+    for (const auto& unwindCode : unwindInfoIt) {
+      MOZ_ASSERT(unwindCode.offset_in_prolog <= previousOffset);
+      previousOffset = unwindCode.offset_in_prolog;
+    }
+#  endif  // DEBUG
+
+    // We skip entries that are not part of the code we have detoured.
+    // This code relies on the array being sorted by descending order of offset
+    // in the prolog.
+    uint8_t firstRelevantCode = 0;
+    uint8_t countOfCodes = 0;
+    auto it = unwindInfoIt.begin();
+    for (; it != unwindInfoIt.end(); ++it) {
+      const auto& unwindCode = *it;
+      if (unwindCode.offset_in_prolog <= aOrigFuncStopOffset) {
+        // Found a relevant entry
+        firstRelevantCode = it.Index();
+        countOfCodes = unwindInfo.count_of_codes - firstRelevantCode;
+        break;
+      }
+    }
+
+    // Check that we encountered no ill-formed unwind codes.
+    if (!it.IsValid() && !it.IsAtEnd()) {
+      return false;
+    }
+
+    // We do not support chained unwind info. We should add support for chained
+    // unwind info if we ever reach this assert. Since we hook functions at
+    // their start address, this should not happen.
+    if (unwindInfo.flags & UNW_FLAG_CHAININFO) {
+      MOZ_ASSERT(
+          false,
+          "Tried to detour at a location with chained unwind information");
+      return false;
+    }
+
+    // We do not support exception handler info either. This could be a problem
+    // if we detour code that does not belong to the prologue and contains a
+    // call instruction, as this handler would then not be found if unwinding
+    // from callees. The following assert checks that this does not happen.
+    //
+    // Our current assumption is that all the functions we hook either have no
+    // associated exception handlers, or it is __GSHandlerCheck. This handler
+    // is the most commonly found, for example it is present in LdrLoadDll,
+    // SendMessageTimeoutW, GetWindowInfo. It is added to functions that use
+    // stack buffers, in order to mitigate stack buffer overflows. We explain
+    // below why it is not a problem that we do not preserve __GSHandlerCheck
+    // information when we detour code.
+    //
+    // Preserving exception handler information would raise two challenges:
+    //
+    // (1) if the exception handler was not written in a generic way, it may
+    //     behave differently when called for our detoured code compared to
+    //     what it would do if called from the original location of the code;
+    // (2) the exception handler can be followed by handler-specific data,
+    //     which we cannot copy because we do not know its size.
+    //
+    // __GSHandlerCheck checks that the stack cookie value wasn't overwritten
+    // before continuing to unwind and call further handlers. That is a
+    // security feature that we want to preserve. However, since these
+    // functions allocate stack space and write the stack cookie as part of
+    // their prologue, the 13 bytes that we detour are necessarily part of
+    // their prologue, which must contain at least the following instructions:
+    //
+    //   48 81 ec XX XX XX XX     sub rsp, 0xXXXXXXXX
+    //   48 8b 05 XX XX XX XX     mov rax, qword ptr [rip+__security_cookie]
+    //   48 33 c4                 xor rax, rsp
+    //   48 89 84 24 XX XX XX XX  mov qword ptr [RSP + 0xXXXXXXXX],RAX
+    //
+    // As a consequence, code associated with __GSHandlerCheck will necessarily
+    // satisfy (aOrigFuncStopOffset <= unwindInfo.size_of_prolog), and it is OK
+    // to not preserve handler info in that case.
+#  ifdef DEBUG
+    if (aOrigFuncStopOffset > unwindInfo.size_of_prolog) {
+      MOZ_ASSERT(!(unwindInfo.flags & (UNW_FLAG_EHANDLER | UNW_FLAG_UHANDLER)));
+    }
+#  endif  // DEBUG
+
+    // The unwind info must be DWORD-aligned
+    Align(sizeof(uint32_t));
+    if (!mAccumulatedStatus) {
+      return false;
+    }
+    uintptr_t unwindInfoOffset = mOffset;
+
+    unwindInfo.flags &=
+        ~(UNW_FLAG_CHAININFO | UNW_FLAG_EHANDLER | UNW_FLAG_UHANDLER);
+    unwindInfo.count_of_codes = countOfCodes;
+    if (aOrigFuncStopOffset < unwindInfo.size_of_prolog) {
+      unwindInfo.size_of_prolog = aOrigFuncStopOffset;
+    }
+
+    WriteBytes(reinterpret_cast<void*>(&unwindInfo),
+               offsetof(UnwindInfo, unwind_code));
+    if (!mAccumulatedStatus) {
+      return false;
+    }
+
+    WriteBytes(
+        reinterpret_cast<void*>(&unwindInfo.unwind_code[firstRelevantCode]),
+        countOfCodes * sizeof(UnwindCode));
+    if (!mAccumulatedStatus) {
+      return false;
+    }
+
+    // The function table must be DWORD-aligned
+    Align(sizeof(uint32_t));
+    if (!mAccumulatedStatus) {
+      return false;
+    }
+    uintptr_t functionTableOffset = mOffset;
+
+    WriteInteger(mExeOffset);
+    if (!mAccumulatedStatus) {
+      return false;
+    }
+
+    WriteInteger(mExeEndOffset);
+    if (!mAccumulatedStatus) {
+      return false;
+    }
+
+    WriteInteger(unwindInfoOffset);
+    if (!mAccumulatedStatus) {
+      return false;
+    }
+
+    return mMMPolicy->AddFunctionTable(mRemoteBase + functionTableOffset, 1,
+                                       mRemoteBase);
+  }
+
+#endif  // _M_X64
 
   Trampoline<MMPolicy>& operator--() {
     MOZ_ASSERT(mOffset);
@@ -375,6 +627,10 @@ class MOZ_STACK_CLASS Trampoline final {
   uintptr_t mRemoteBase;
   uint32_t mOffset;
   uint32_t mExeOffset;
+#ifdef _M_X64
+  uint32_t mCopyCodesEndOffset;
+  uint32_t mExeEndOffset;
+#endif  // _M_X64
   uint32_t mMaxOffset;
   bool mAccumulatedStatus;
 };
@@ -386,9 +642,9 @@ class MOZ_STACK_CLASS TrampolineCollection final {
    public:
     Trampoline<MMPolicy> operator*() {
       uint32_t offset = mCurTramp * mCollection.mTrampSize;
-      return Trampoline<MMPolicy>(nullptr, mCollection.mLocalBase + offset,
-                                  mCollection.mRemoteBase + offset,
-                                  mCollection.mTrampSize);
+      return Trampoline<MMPolicy>(
+          &mCollection.mMMPolicy, mCollection.mLocalBase + offset,
+          mCollection.mRemoteBase + offset, mCollection.mTrampSize);
     }
 
     TrampolineIterator& operator++() {

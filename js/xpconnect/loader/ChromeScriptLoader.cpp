@@ -27,6 +27,7 @@
 #include "mozilla/HoldDropJSObjects.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsGlobalWindowInner.h"
 
 using namespace JS;
 using namespace mozilla;
@@ -178,8 +179,7 @@ AsyncScriptCompiler::Run() {
 }
 
 void AsyncScriptCompiler::FinishCompile(JSContext* aCx) {
-  RefPtr<JS::Stencil> stencil =
-      JS::FinishOffThreadStencil(aCx, mToken);
+  RefPtr<JS::Stencil> stencil = JS::FinishOffThreadStencil(aCx, mToken);
   if (stencil) {
     Finish(aCx, stencil);
   } else {
@@ -300,23 +300,38 @@ PrecompiledScript::PrecompiledScript(nsISupports* aParent,
 };
 
 void PrecompiledScript::ExecuteInGlobal(JSContext* aCx, HandleObject aGlobal,
+                                        const ExecuteInGlobalOptions& aOptions,
                                         MutableHandleValue aRval,
                                         ErrorResult& aRv) {
   {
     RootedObject targetObj(aCx, JS_FindCompilationScope(aCx, aGlobal));
-    JSAutoRealm ar(aCx, targetObj);
+    // Use AutoEntryScript for its ReportException method call.
+    // This will ensure notified any exception happening in the content script
+    // directly to the console, so that exceptions are flagged with the right
+    // innerWindowID. It helps these exceptions to appear in the page's web
+    // console.
+    AutoEntryScript aes(targetObj, "pre-compiled-script execution");
+    JSContext* cx = aes.cx();
 
     // See assertion in constructor.
     JS::InstantiateOptions options;
     Rooted<JSScript*> script(
-        aCx, JS::InstantiateGlobalStencil(aCx, options, mStencil));
+        cx, JS::InstantiateGlobalStencil(cx, options, mStencil));
     if (!script) {
       aRv.NoteJSContextException(aCx);
       return;
     }
 
-    if (!JS_ExecuteScript(aCx, script, aRval)) {
-      aRv.NoteJSContextException(aCx);
+    if (!JS_ExecuteScript(cx, script, aRval)) {
+      JS::RootedValue exn(cx);
+      if (aOptions.mReportExceptions) {
+        // Note that ReportException will consume the exception.
+        aes.ReportException();
+      } else {
+        // Set the exception on our caller's cx.
+        aRv.MightThrowJSException();
+        aRv.StealExceptionFromJSContext(cx);
+      }
       return;
     }
   }

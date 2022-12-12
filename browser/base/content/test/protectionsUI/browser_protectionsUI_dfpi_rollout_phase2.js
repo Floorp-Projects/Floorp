@@ -13,11 +13,9 @@ const { EnterprisePolicyTesting } = ChromeUtils.importESModule(
   "resource://testing-common/EnterprisePolicyTesting.sys.mjs"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "BrowserGlue",
-  "resource:///modules/BrowserGlue.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  BrowserGlue: "resource:///modules/BrowserGlue.sys.mjs",
+});
 
 const ROLLOUT_PREF_PHASE1 =
   "privacy.restrict3rdpartystorage.rollout.enabledByDefault";

@@ -11,7 +11,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
   AppInfo: "chrome://remote/content/shared/AppInfo.sys.mjs",
   assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
-  capture: "chrome://remote/content/marionette/capture.sys.mjs",
+  capture: "chrome://remote/content/shared/Capture.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   navigate: "chrome://remote/content/marionette/navigate.sys.mjs",
   print: "chrome://remote/content/shared/PDF.sys.mjs",

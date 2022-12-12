@@ -13,8 +13,13 @@ function WorkerDispatcher() {
 }
 
 WorkerDispatcher.prototype = {
-  start(url, win = window) {
-    this.worker = new win.Worker(url);
+  start(url) {
+    // When running in debugger jest test, we don't have access to ChromeWorker
+    if (typeof ChromeWorker == "function") {
+      this.worker = new ChromeWorker(url);
+    } else {
+      this.worker = new Worker(url);
+    }
     this.worker.onerror = err => {
       console.error(`Error in worker ${url}`, err.message);
     };

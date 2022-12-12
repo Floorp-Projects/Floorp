@@ -96,49 +96,6 @@ add_task(async function add_test_engines() {
 
 // Begin tests
 
-add_task(async function simple_no_result_callback() {
-  let histogram = TelemetryTestUtils.getAndClearKeyedHistogram(
-    SEARCH_TELEMETRY_LATENCY
-  );
-
-  await new Promise(resolve => {
-    let controller = new SearchSuggestionController(result => {
-      Assert.equal(result.term, "no remote");
-      Assert.equal(result.local.length, 0);
-      Assert.equal(result.remote.length, 0);
-      resolve();
-    });
-
-    controller.fetch("no remote", false, getEngine);
-  });
-
-  assertLatencyHistogram(histogram, true);
-});
-
-add_task(async function simple_no_result_callback_and_promise() {
-  let histogram = TelemetryTestUtils.getAndClearKeyedHistogram(
-    SEARCH_TELEMETRY_LATENCY
-  );
-
-  // Make sure both the callback and promise get results
-  let deferred = PromiseUtils.defer();
-  let controller = new SearchSuggestionController(result => {
-    Assert.equal(result.term, "no results");
-    Assert.equal(result.local.length, 0);
-    Assert.equal(result.remote.length, 0);
-    deferred.resolve();
-  });
-
-  let result = await controller.fetch("no results", false, getEngine);
-  Assert.equal(result.term, "no results");
-  Assert.equal(result.local.length, 0);
-  Assert.equal(result.remote.length, 0);
-
-  await deferred.promise;
-
-  assertLatencyHistogram(histogram, true);
-});
-
 add_task(async function simple_no_result_promise() {
   let histogram = TelemetryTestUtils.getAndClearKeyedHistogram(
     SEARCH_TELEMETRY_LATENCY

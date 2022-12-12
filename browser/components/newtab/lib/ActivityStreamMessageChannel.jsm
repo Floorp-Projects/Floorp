@@ -14,11 +14,9 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/AboutNewTab.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AboutHomeStartupCache",
-  "resource:///modules/BrowserGlue.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  AboutHomeStartupCache: "resource:///modules/BrowserGlue.sys.mjs",
+});
 
 const { RemotePages } = ChromeUtils.import(
   "resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm"

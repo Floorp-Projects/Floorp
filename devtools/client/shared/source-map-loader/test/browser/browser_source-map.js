@@ -144,17 +144,20 @@ add_task(async function testGetGeneratedRangesForOriginal() {
   }
 });
 
-add_task(async function testErrorHandling() {
+add_task(async function testBaseURLErrorHandling() {
   const source = {
     id: "missingmap.js",
     sourceMapURL: "missingmap.js.map",
     // Notice the duplicated ":" which cause the error here
-    sourceMapBaseURL: "http:://example.com/missingmap.js",
+    sourceMapBaseURL: "http:://example.com/",
   };
 
-  await Assert.rejects(
-    getOriginalURLs(source),
-    /http::\/\/example.com\/missingmap.js is not a valid URL/,
-    "Throws on network error"
+  const onError = SourceMapLoader.once("source-map-error");
+  is(await getOriginalURLs(source), null, "The error is silented...");
+  info("Wait for source-map-error event");
+  const error = await onError;
+  is(
+    error,
+    `Source map error: Error: URL constructor: http:://example.com/ is not a valid URL.\nResource URL: undefined\nSource Map URL: missingmap.js.map`
   );
 });

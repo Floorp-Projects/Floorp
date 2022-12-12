@@ -1483,7 +1483,7 @@ class Preferences {
   /**
    * Initializes the showSearchSuggestionsFirst pref based on the matchGroups
    * pref.  This function can be removed when the corresponding UI migration in
-   * BrowserGlue.jsm is no longer needed.
+   * BrowserGlue.sys.mjs is no longer needed.
    */
   initializeShowSearchSuggestionsFirstPref() {
     let matchGroups = [];

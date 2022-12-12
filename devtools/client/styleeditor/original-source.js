@@ -14,15 +14,15 @@
  * @param {String} sourceID
  *        The source ID of the original source, as used by the source
  *        map service.
- * @param {SourceMapService} sourceMapService
- *        The source map service; @see Toolbox.sourceMapService
+ * @param {SourceMapLoader} sourceMapLoader
+ *        The source map loader; @see Toolbox.sourceMapLoader
  */
-function OriginalSource(url, sourceId, sourceMapService) {
+function OriginalSource(url, sourceId, sourceMapLoader) {
   this.isOriginalSource = true;
 
   this._url = url;
   this._sourceId = sourceId;
-  this._sourceMapService = sourceMapService;
+  this._sourceMapLoader = sourceMapLoader;
 }
 
 OriginalSource.prototype = {
@@ -49,7 +49,7 @@ OriginalSource.prototype = {
    */
   getText() {
     if (!this._sourcePromise) {
-      this._sourcePromise = this._sourceMapService
+      this._sourcePromise = this._sourceMapLoader
         .getOriginalSourceText(this._sourceId)
         .then(contents => {
           // Make it look like a long string actor.
@@ -80,7 +80,7 @@ OriginalSource.prototype = {
   getOriginalLocation(relatedSheet, line, column) {
     const { href, nodeHref, resourceId: sourceId } = relatedSheet;
     const sourceUrl = href || nodeHref;
-    return this._sourceMapService
+    return this._sourceMapLoader
       .getOriginalLocation({
         sourceId,
         line,

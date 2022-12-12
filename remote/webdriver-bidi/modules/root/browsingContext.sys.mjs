@@ -13,6 +13,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
   BrowsingContextListener:
     "chrome://remote/content/shared/listeners/BrowsingContextListener.sys.mjs",
+  capture: "chrome://remote/content/shared/Capture.sys.mjs",
   ContextDescriptorType:
     "chrome://remote/content/shared/messagehandler/MessageHandler.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
@@ -81,6 +82,49 @@ class BrowsingContextModule extends Module {
   destroy() {
     this.#contextListener.off("attached", this.#onContextAttached);
     this.#contextListener.destroy();
+  }
+
+  /**
+   * Capture a base64-encoded screenshot of the provided browsing context.
+   *
+   * @param {Object=} options
+   * @param {string} context
+   *     Id of the browsing context to screenshot.
+   *
+   * @throws {NoSuchFrameError}
+   *     If the browsing context cannot be found.
+   */
+  async captureScreenshot(options = {}) {
+    const { context: contextId } = options;
+
+    lazy.assert.string(
+      contextId,
+      `Expected "context" to be a string, got ${contextId}`
+    );
+    const context = this.#getBrowsingContext(contextId);
+
+    const rect = await this.messageHandler.handleCommand({
+      moduleName: "browsingContext",
+      commandName: "_getScreenshotRect",
+      destination: {
+        type: lazy.WindowGlobalMessageHandler.type,
+        id: context.id,
+      },
+      retryOnAbort: true,
+    });
+
+    const canvas = await lazy.capture.canvas(
+      context.topChromeWindow,
+      context,
+      rect.x,
+      rect.y,
+      rect.width,
+      rect.height
+    );
+
+    return {
+      data: lazy.capture.toBase64(canvas),
+    };
   }
 
   /**
