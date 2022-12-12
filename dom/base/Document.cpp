@@ -2041,6 +2041,23 @@ void Document::RecordPageLoadEventTelemetry(
       break;
   }
 
+  nsCOMPtr<nsIEffectiveTLDService> tldService =
+      do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+  if (tldService && mReferrerInfo &&
+      (docshell->GetLoadType() & nsIDocShell::LOAD_CMD_NORMAL)) {
+    nsAutoCString currentBaseDomain, referrerBaseDomain;
+    nsCOMPtr<nsIURI> referrerURI = mReferrerInfo->GetComputedReferrer();
+    if (referrerURI) {
+      auto result = NS_SUCCEEDED(
+          tldService->GetBaseDomain(referrerURI, 0, referrerBaseDomain));
+      if (result) {
+        bool sameOrigin = false;
+        NodePrincipal()->IsSameOrigin(referrerURI, &sameOrigin);
+        aEventTelemetryData.sameOriginNav = mozilla::Some(sameOrigin);
+      }
+    }
+  }
+
   aEventTelemetryData.loadType = mozilla::Some(loadTypeStr);
 
   // Sending a glean ping must be done on the parent process.
@@ -2071,6 +2088,22 @@ void Document::AccumulatePageLoadTelemetry(
   TimeStamp responseStart;
   timedChannel->GetResponseStart(&responseStart);
 
+  TimeStamp redirectStart, redirectEnd;
+  timedChannel->GetRedirectStart(&redirectStart);
+  timedChannel->GetRedirectEnd(&redirectEnd);
+
+  uint8_t redirectCount;
+  timedChannel->GetRedirectCount(&redirectCount);
+  if (redirectCount) {
+    aEventTelemetryDataOut.redirectCount =
+        mozilla::Some(static_cast<uint32_t>(redirectCount));
+  }
+
+  if (!redirectStart.IsNull() && !redirectEnd.IsNull()) {
+    aEventTelemetryDataOut.redirectTime = mozilla::Some(
+        static_cast<uint32_t>((redirectEnd - redirectStart).ToMilliseconds()));
+  }
+
   TimeStamp navigationStart =
       GetNavigationTiming()->GetNavigationStartTimeStamp();
 
@@ -2090,6 +2123,7 @@ void Document::AccumulatePageLoadTelemetry(
       RefPtr<net::ChildDNSService> dnsServiceChild =
           net::ChildDNSService::GetSingleton();
       dnsServiceChild->GetTRRDomain(dnsKey);
+      aEventTelemetryDataOut.trrDomain = mozilla::Some(dnsKey);
     }
 
     uint32_t major;
@@ -2116,6 +2150,8 @@ void Document::AccumulatePageLoadTelemetry(
           http3Key = "supports_http3"_ns;
         }
       }
+
+      aEventTelemetryDataOut.httpVer = mozilla::Some(major);
     }
   }
 
