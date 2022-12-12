@@ -1048,8 +1048,6 @@
     <string name="share_copy_link_to_clipboard">Copy to clipboard</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Copied to clipboard</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string name="sync_menu_sign_in" moz:removedIn="107" tools:ignore="UnusedResources">Sign in to sync</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Sign in to Sync</string>
      <!-- An option from the three dot menu to sync and save data -->
