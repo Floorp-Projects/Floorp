@@ -30,7 +30,7 @@ window.onload = async function () {
       line: 23,
       sourceUrl: "https://bugzilla.mozilla.org/original.js",
     };
-    const mockSourceMapService = {
+    const mockSourceMapURLService = {
       _update () {
         this._callback(Services.prefs.getBoolPref(PREF)
           ? {
@@ -55,7 +55,7 @@ window.onload = async function () {
         line: 97,
         source: "https://bugzilla.mozilla.org/bundle.js",
       },
-      sourceMapURLService: mockSourceMapService,
+      sourceMapURLService: mockSourceMapURLService,
     };
 
     const PREF = "devtools.source-map.client-service.enabled";
@@ -83,11 +83,11 @@ window.onload = async function () {
     checkFrameString(Object.assign({ el, source }, expectedGenerated));
 
     Services.prefs.setBoolPref(PREF, true);
-    mockSourceMapService._update();
+    mockSourceMapURLService._update();
     checkFrameString(Object.assign({ el, source }, expectedOriginal));
 
     Services.prefs.setBoolPref(PREF, false);
-    mockSourceMapService._update();
+    mockSourceMapURLService._update();
     checkFrameString(Object.assign({ el, source }, expectedGenerated));
 
     Services.prefs.clearUserPref(PREF);

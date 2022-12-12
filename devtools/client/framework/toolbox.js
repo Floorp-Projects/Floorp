@@ -1372,29 +1372,21 @@ Toolbox.prototype = {
   },
 
   /**
-   * Unconditionally create and get the source map service.
-   */
-  _createSourceMapService() {
-    if (this._sourceMapService) {
-      return this._sourceMapService;
-    }
-    const service = require("devtools/client/shared/source-map-loader/index");
-    this._sourceMapService = service;
-    service.on("source-map-error", message =>
-      this.target.logWarningInPage(message, "source map")
-    );
-    service.startSourceMapWorker();
-
-    return this._sourceMapService;
-  },
-
-  /**
    * A common access point for the client-side mapping service for source maps that
    * any panel can use.  This is a "low-level" API that connects to
    * the source map worker.
    */
-  get sourceMapService() {
-    return this._createSourceMapService();
+  get sourceMapLoader() {
+    if (this._sourceMapLoader) {
+      return this._sourceMapLoader;
+    }
+    this._sourceMapLoader = require("devtools/client/shared/source-map-loader/index");
+    this._sourceMapLoader.on("source-map-error", message =>
+      this.target.logWarningInPage(message, "source map")
+    );
+    this._sourceMapLoader.startSourceMapWorker();
+
+    return this._sourceMapLoader;
   },
 
   /**
@@ -1420,17 +1412,16 @@ Toolbox.prototype = {
    * Clients wishing to use source maps but that want the toolbox to
    * track the source and style sheet actor mapping can use this
    * source map service.  This is a higher-level service than the one
-   * returned by |sourceMapService|, in that it automatically tracks
+   * returned by |sourceMapLoader|, in that it automatically tracks
    * source and style sheet actor IDs.
    */
   get sourceMapURLService() {
     if (this._sourceMapURLService) {
       return this._sourceMapURLService;
     }
-    const sourceMaps = this._createSourceMapService();
     this._sourceMapURLService = new SourceMapURLService(
       this.commands,
-      sourceMaps
+      this.sourceMapLoader
     );
     return this._sourceMapURLService;
   },
@@ -4037,11 +4028,11 @@ Toolbox.prototype = {
     this._lastFocusedElement = null;
     this._pausedTargets = null;
 
-    if (this._sourceMapService) {
-      this._sourceMapService.stopSourceMapWorker();
+    if (this._sourceMapLoader) {
+      this._sourceMapLoader.stopSourceMapWorker();
       // Unregister all listeners
-      this._sourceMapService.clearEvents();
-      this._sourceMapService = null;
+      this._sourceMapLoader.clearEvents();
+      this._sourceMapLoader = null;
     }
 
     if (this._parserService) {

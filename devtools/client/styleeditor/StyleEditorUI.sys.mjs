@@ -555,10 +555,10 @@ export class StyleEditorUI extends EventEmitter {
       const promise = (async () => {
         let editor = await this.#addStyleSheetEditor(resource);
 
-        const sourceMapService = this.#toolbox.sourceMapService;
+        const sourceMapLoader = this.#toolbox.sourceMapLoader;
 
         if (
-          !sourceMapService ||
+          !sourceMapLoader ||
           !Services.prefs.getBoolPref(PREF_ORIG_SOURCES)
         ) {
           return editor;
@@ -571,7 +571,7 @@ export class StyleEditorUI extends EventEmitter {
           sourceMapURL,
           sourceMapBaseURL,
         } = resource;
-        const sources = await sourceMapService.getOriginalURLs({
+        const sources = await sourceMapLoader.getOriginalURLs({
           id,
           url: href || nodeHref,
           sourceMapBaseURL,
@@ -588,7 +588,7 @@ export class StyleEditorUI extends EventEmitter {
             const original = new lazy.OriginalSource(
               originalURL,
               originalId,
-              sourceMapService
+              sourceMapLoader
             );
 
             // set so the first sheet will be selected, even if it's a source
