@@ -16,7 +16,7 @@ Add the following dependency to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-memoffset = "0.6"
+memoffset = "0.7"
 ```
 
 These versions will compile fine with rustc versions greater or equal to 1.19.
@@ -55,7 +55,7 @@ In order to use it, you must enable the `unstable_const` crate feature and sever
 Cargo.toml:
 ```toml
 [dependencies.memoffset]
-version = "0.6"
+version = "0.7"
 features = ["unstable_const"]
 ```
 
