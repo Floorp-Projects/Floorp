@@ -39,7 +39,6 @@ WorkletLoadInfo::WorkletLoadInfo(nsPIDOMWindowInner* aWindow)
 
 WorkletImpl::WorkletImpl(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
     : mPrincipal(NullPrincipal::CreateWithInheritedAttributes(aPrincipal)),
-      mIsSystemPrincipal(mPrincipal->IsSystemPrincipal()),
       mWorkletLoadInfo(aWindow),
       mTerminated(false),
       mFinishedOnExecutionThread(false),
@@ -58,10 +57,7 @@ WorkletImpl::WorkletImpl(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
       aWindow->AsGlobal()->ShouldResistFingerprinting();
 }
 
-WorkletImpl::~WorkletImpl() {
-  MOZ_ASSERT(!mGlobalScope);
-  MOZ_ASSERT(!mPrincipal || NS_IsMainThread());
-}
+WorkletImpl::~WorkletImpl() { MOZ_ASSERT(!mGlobalScope); }
 
 JSObject* WorkletImpl::WrapWorklet(JSContext* aCx, dom::Worklet* aWorklet,
                                    JS::Handle<JSObject*> aGivenProto) {
@@ -120,7 +116,6 @@ void WorkletImpl::NotifyWorkletFinished() {
     mWorkletThread->Terminate();
     mWorkletThread = nullptr;
   }
-  mPrincipal = nullptr;
 }
 
 nsresult WorkletImpl::SendControlMessage(
