@@ -157,9 +157,7 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
   RefPtr<BroadcastChannel> bc =
       new BroadcastChannel(global, aChannel, portUUID);
 
-  nsAutoCString origin;
-  nsAutoString originNoSuffix;
-  PrincipalInfo storagePrincipalInfo;
+  nsCOMPtr<nsIPrincipal> storagePrincipal;
 
   StorageAccess storageAccess;
 
@@ -184,29 +182,11 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
       return nullptr;
     }
 
-    nsIPrincipal* storagePrincipal = sop->GetEffectiveStoragePrincipal();
+    storagePrincipal = sop->GetEffectiveStoragePrincipal();
     if (!storagePrincipal) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
       return nullptr;
     }
-
-    aRv = storagePrincipal->GetOrigin(origin);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return nullptr;
-    }
-
-    nsAutoCString originNoSuffix8;
-    aRv = storagePrincipal->GetAsciiOrigin(originNoSuffix8);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return nullptr;
-    }
-    CopyUTF8toUTF16(originNoSuffix8, originNoSuffix);
-
-    aRv = PrincipalToPrincipalInfo(storagePrincipal, &storagePrincipalInfo);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return nullptr;
-    }
-
     storageAccess = StorageAllowedForWindow(window);
 
     Document* doc = window->GetExtantDoc();
@@ -229,10 +209,8 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
     }
 
     storageAccess = workerPrivate->StorageAccess();
-    storagePrincipalInfo = workerPrivate->GetEffectiveStoragePrincipalInfo();
-    origin = workerPrivate->EffectiveStoragePrincipalOrigin();
 
-    originNoSuffix = workerPrivate->GetLocationInfo().mOrigin;
+    storagePrincipal = workerPrivate->GetEffectiveStoragePrincipal();
 
     bc->mWorkerRef = workerRef;
 
@@ -240,7 +218,7 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
   }
 
   // We want to allow opaque origins.
-  if (storagePrincipalInfo.type() != PrincipalInfo::TNullPrincipalInfo &&
+  if (!storagePrincipal->GetIsNullPrincipal() &&
       (storageAccess == StorageAccess::eDeny ||
        (ShouldPartitionStorage(storageAccess) &&
         !StoragePartitioningEnabled(storageAccess, cjs)))) {
@@ -256,6 +234,24 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
     return nullptr;
   }
 
+  nsAutoCString origin;
+  aRv = storagePrincipal->GetOrigin(origin);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  nsString originForEvents;
+  aRv = nsContentUtils::GetUTFOrigin(storagePrincipal, originForEvents);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  PrincipalInfo storagePrincipalInfo;
+  aRv = PrincipalToPrincipalInfo(storagePrincipal, &storagePrincipalInfo);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
   PBroadcastChannelChild* actor = actorChild->SendPBroadcastChannelConstructor(
       storagePrincipalInfo, origin, nsString(aChannel));
 
@@ -263,7 +259,7 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
   MOZ_ASSERT(bc->mActor);
 
   bc->mActor->SetParent(bc);
-  bc->mOriginForEvents = originNoSuffix;
+  bc->mOriginForEvents = std::move(originForEvents);
 
   return bc.forget();
 }

@@ -109,11 +109,6 @@ struct WorkerLoadInfoData {
   UniquePtr<mozilla::ipc::PrincipalInfo> mPrincipalInfo;
   UniquePtr<mozilla::ipc::PrincipalInfo> mPartitionedPrincipalInfo;
   nsCString mDomain;
-  nsString mOriginNoSuffix;  // Derived from mPrincipal; can be used on worker
-                             // thread.
-  nsCString mOrigin;  // Derived from mPrincipal; can be used on worker thread.
-  nsCString mPartitionedOrigin;  // Derived from mPartitionedPrincipal; can be
-                                 // used on worker thread.
 
   nsString mServiceWorkerCacheName;
   Maybe<ServiceWorkerDescriptor> mServiceWorkerDescriptor;
@@ -130,7 +125,6 @@ struct WorkerLoadInfoData {
   uint64_t mWindowID;
 
   nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
-  uint32_t mPrincipalHashValue;
   OriginTrials mTrials;
   bool mFromWindow;
   bool mEvalAllowed;
@@ -138,8 +132,6 @@ struct WorkerLoadInfoData {
   bool mWasmEvalAllowed;
   bool mReportWasmEvalCSPViolations;
   bool mXHRParamsAllowed;
-  bool mPrincipalIsSystem;
-  bool mPrincipalIsAddonOrExpandedAddon;
   bool mWatchedByDevTools;
   StorageAccess mStorageAccess;
   bool mUseRegularPrincipal;
