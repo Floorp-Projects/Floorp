@@ -193,14 +193,10 @@ FreeLists::FreeLists() {
 
 ArenaLists::ArenaLists(Zone* zone)
     : zone_(zone),
-      freeLists_(zone),
-      arenaLists_(zone),
-      collectingArenaLists_(zone),
-      incrementalSweptArenaKind(zone, AllocKind::LIMIT),
-      incrementalSweptArenas(zone),
-      gcCompactPropMapArenasToUpdate(zone, nullptr),
-      gcNormalPropMapArenasToUpdate(zone, nullptr),
-      savedEmptyArenas(zone, nullptr) {
+      incrementalSweptArenaKind(AllocKind::LIMIT),
+      gcCompactPropMapArenasToUpdate(nullptr),
+      gcNormalPropMapArenasToUpdate(nullptr),
+      savedEmptyArenas(nullptr) {
   for (auto i : AllAllocKinds()) {
     concurrentUse(i) = ConcurrentUse::None;
   }

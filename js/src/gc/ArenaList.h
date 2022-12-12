@@ -268,29 +268,29 @@ class ArenaLists {
   // Whether this structure can be accessed by other threads.
   UnprotectedData<AllAllocKindArray<ConcurrentUseState>> concurrentUseState_;
 
-  ZoneData<FreeLists> freeLists_;
+  MainThreadData<FreeLists> freeLists_;
 
   /* The main list of arenas for each alloc kind. */
-  ArenaListData<AllAllocKindArray<ArenaList>> arenaLists_;
+  MainThreadOrGCTaskData<AllAllocKindArray<ArenaList>> arenaLists_;
 
   /*
    * Arenas which are currently being collected. The collector can move arenas
    * from arenaLists_ here and back again at various points in collection.
    */
-  ZoneOrGCTaskData<AllAllocKindArray<ArenaList>> collectingArenaLists_;
+  MainThreadOrGCTaskData<AllAllocKindArray<ArenaList>> collectingArenaLists_;
 
   /* During incremental sweeping, a list of the arenas already swept. */
-  ZoneOrGCTaskData<AllocKind> incrementalSweptArenaKind;
-  ZoneOrGCTaskData<ArenaList> incrementalSweptArenas;
+  MainThreadOrGCTaskData<AllocKind> incrementalSweptArenaKind;
+  MainThreadOrGCTaskData<ArenaList> incrementalSweptArenas;
 
   // Arena lists which have yet to be swept, but need additional foreground
   // processing before they are swept.
-  ZoneData<Arena*> gcCompactPropMapArenasToUpdate;
-  ZoneData<Arena*> gcNormalPropMapArenasToUpdate;
+  MainThreadData<Arena*> gcCompactPropMapArenasToUpdate;
+  MainThreadData<Arena*> gcNormalPropMapArenasToUpdate;
 
   // The list of empty arenas which are collected during the sweep phase and
   // released at the end of sweeping every sweep group.
-  ZoneOrGCTaskData<Arena*> savedEmptyArenas;
+  MainThreadOrGCTaskData<Arena*> savedEmptyArenas;
 
  public:
   explicit ArenaLists(JS::Zone* zone);

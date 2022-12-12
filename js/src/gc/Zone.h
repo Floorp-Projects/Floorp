@@ -168,18 +168,18 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::gc::ArenaLists arenas;
 
   // Per-zone data for use by an embedder.
-  js::ZoneData<void*> data;
+  js::MainThreadData<void*> data;
 
-  js::ZoneData<uint32_t> tenuredBigInts;
+  js::MainThreadData<uint32_t> tenuredBigInts;
 
-  js::ZoneOrIonCompileData<uint64_t> nurseryAllocatedStrings;
+  js::MainThreadOrIonCompileData<uint64_t> nurseryAllocatedStrings;
 
-  // Number of marked/finalzied JSString/JSFatInlineString during major GC.
-  js::ZoneOrGCTaskData<size_t> markedStrings;
-  js::ZoneOrGCTaskData<size_t> finalizedStrings;
+  // Number of marked/finalized JSStrings/JSFatInlineStrings during major GC.
+  js::MainThreadOrGCTaskData<size_t> markedStrings;
+  js::MainThreadOrGCTaskData<size_t> finalizedStrings;
 
-  js::ZoneData<bool> allocNurseryStrings;
-  js::ZoneData<bool> allocNurseryBigInts;
+  js::MainThreadData<bool> allocNurseryStrings;
+  js::MainThreadData<bool> allocNurseryBigInts;
 
   // When true, skip calling the metadata callback. We use this:
   // - to avoid invoking the callback recursively;
@@ -188,7 +188,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   // - to avoid attaching allocation stacks to allocation stack nodes, which
   //   is silly
   // And so on.
-  js::ZoneData<bool> suppressAllocationMetadataBuilder;
+  js::MainThreadData<bool> suppressAllocationMetadataBuilder;
 
   // Script side-tables. These used to be held by Realm, but are now placed
   // here in order to allow JSScript to access them during finalize (see bug
@@ -204,8 +204,8 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::UniquePtr<js::ScriptFinalWarmUpCountMap> scriptFinalWarmUpCountMap;
 #endif
 
-  js::ZoneData<js::StringStats> previousGCStringStats;
-  js::ZoneData<js::StringStats> stringStats;
+  js::MainThreadData<js::StringStats> previousGCStringStats;
+  js::MainThreadData<js::StringStats> stringStats;
 
 #ifdef DEBUG
   js::MainThreadData<unsigned> gcSweepGroupIndex;
@@ -215,13 +215,14 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
  private:
   // Side map for storing unique ids for cells, independent of address.
-  js::ZoneOrGCTaskData<js::gc::UniqueIdMap> uniqueIds_;
+  js::MainThreadOrGCTaskData<js::gc::UniqueIdMap> uniqueIds_;
 
   // Number of allocations since the most recent minor GC for this thread.
   uint32_t tenuredAllocsSinceMinorGC_ = 0;
 
   // Live weakmaps in this zone.
-  js::ZoneOrGCTaskData<mozilla::LinkedList<js::WeakMapBase>> gcWeakMapList_;
+  js::MainThreadOrGCTaskData<mozilla::LinkedList<js::WeakMapBase>>
+      gcWeakMapList_;
 
   // The set of compartments in this zone.
   using CompartmentVector =
@@ -233,13 +234,15 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
   // List of non-ephemeron weak containers to sweep during
   // beginSweepingSweepGroup.
-  js::ZoneOrGCTaskData<mozilla::LinkedList<detail::WeakCacheBase>> weakCaches_;
+  js::MainThreadOrGCTaskData<mozilla::LinkedList<detail::WeakCacheBase>>
+      weakCaches_;
 
   // Mapping from not yet marked keys to a vector of all values that the key
   // maps to in any live weak map. Separate tables for nursery and tenured
   // keys.
-  js::ZoneOrGCTaskData<js::gc::EphemeronEdgeTable> gcEphemeronEdges_;
-  js::ZoneOrGCTaskData<js::gc::EphemeronEdgeTable> gcNurseryEphemeronEdges_;
+  js::MainThreadOrGCTaskData<js::gc::EphemeronEdgeTable> gcEphemeronEdges_;
+  js::MainThreadOrGCTaskData<js::gc::EphemeronEdgeTable>
+      gcNurseryEphemeronEdges_;
 
   // Keep track of all RttValue and related objects in this compartment.
   // This is used by the GC to trace them all first when compacting, since the
@@ -253,30 +256,30 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
                     js::MovableCellHasher<js::HeapPtr<JSObject*>>,
                     js::SystemAllocPolicy>;
 
-  js::ZoneData<JS::WeakCache<RttValueObjectSet>> rttValueObjects_;
+  js::MainThreadData<JS::WeakCache<RttValueObjectSet>> rttValueObjects_;
 
   js::MainThreadData<js::UniquePtr<js::RegExpZone>> regExps_;
 
   // Bitmap of atoms marked by this zone.
-  js::ZoneOrGCTaskData<js::SparseBitmap> markedAtoms_;
+  js::MainThreadOrGCTaskData<js::SparseBitmap> markedAtoms_;
 
   // Set of atoms recently used by this Zone. Purged on GC.
-  js::ZoneOrGCTaskData<js::AtomSet> atomCache_;
+  js::MainThreadOrGCTaskData<js::AtomSet> atomCache_;
 
   // Cache storing allocated external strings. Purged on GC.
-  js::ZoneOrGCTaskData<js::ExternalStringCache> externalStringCache_;
+  js::MainThreadOrGCTaskData<js::ExternalStringCache> externalStringCache_;
 
   // Cache for Function.prototype.toString. Purged on GC.
-  js::ZoneOrGCTaskData<js::FunctionToStringCache> functionToStringCache_;
+  js::MainThreadOrGCTaskData<js::FunctionToStringCache> functionToStringCache_;
 
   // Information about Shapes and BaseShapes.
-  js::ZoneData<js::ShapeZone> shapeZone_;
+  js::MainThreadData<js::ShapeZone> shapeZone_;
 
   // Information about finalization registries, created on demand.
-  js::ZoneOrGCTaskData<js::UniquePtr<js::gc::FinalizationObservers>>
+  js::MainThreadOrGCTaskData<js::UniquePtr<js::gc::FinalizationObservers>>
       finalizationObservers_;
 
-  js::ZoneOrGCTaskData<js::jit::JitZone*> jitZone_;
+  js::MainThreadOrGCTaskData<js::jit::JitZone*> jitZone_;
 
   // Last time at which JIT code was discarded for this zone. This is only set
   // when JitScripts and Baseline code are discarded as well.
@@ -285,7 +288,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::MainThreadData<bool> gcScheduled_;
   js::MainThreadData<bool> gcScheduledSaved_;
   js::MainThreadData<bool> gcPreserveCode_;
-  js::ZoneData<bool> keepPropMapTables_;
+  js::MainThreadData<bool> keepPropMapTables_;
   js::MainThreadData<bool> wasCollected_;
 
   // Allow zones to be linked into a list
@@ -298,7 +301,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
                     js::MovableCellHasher<js::HeapPtr<JSObject*>>,
                     js::ZoneAllocPolicy>;
   friend class js::WeakRefObject;
-  js::ZoneOrGCTaskData<KeptAliveSet> keptObjects;
+  js::MainThreadOrGCTaskData<KeptAliveSet> keptObjects;
 
  public:
   static JS::Zone* from(ZoneAllocator* zoneAlloc) {
