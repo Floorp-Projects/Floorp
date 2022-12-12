@@ -79,7 +79,6 @@ HRESULT MFMediaSource::RuntimeClassInitialize(
 
 IFACEMETHODIMP MFMediaSource::GetCharacteristics(DWORD* aCharacteristics) {
   // This could be run on both mf thread pool and manager thread.
-  MOZ_ASSERT(!mTaskQueue->IsCurrentThreadIn());
   {
     MutexAutoLock lock(mMutex);
     if (mState == State::Shutdowned) {
@@ -532,11 +531,9 @@ void MFMediaSource::AssertOnManagerThread() const {
 
 void MFMediaSource::AssertOnMFThreadPool() const {
   // We can't really assert the thread id from thread pool, because it would
-  // change any time. So we just assert this is not the task queue and the
-  // manager thread, and use the explicit function name to indicate what thread
-  // we should run on.
-  MOZ_ASSERT(!mTaskQueue->IsCurrentThreadIn() &&
-             !mManagerThread->IsOnCurrentThread());
+  // change any time. So we just assert this is not the manager thread, and use
+  // the explicit function name to indicate what thread we should run on.
+  MOZ_ASSERT(!mManagerThread->IsOnCurrentThread());
 }
 
 #undef LOG
