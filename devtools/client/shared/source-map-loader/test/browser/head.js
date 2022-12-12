@@ -9,6 +9,8 @@ Services.scriptloader.loadSubScript(
   this
 );
 
+const SourceMapLoader = require("resource://devtools/client/shared/source-map-loader/index.js");
+
 const {
   startSourceMapWorker,
   getOriginalURLs,
@@ -16,8 +18,7 @@ const {
   getGeneratedLocation,
   getGeneratedRangesForOriginal,
   clearSourceMaps,
-} = require("resource://devtools/client/shared/source-map-loader/index.js");
-
+} = SourceMapLoader;
 startSourceMapWorker();
 
 function fetchFixtureSourceMap(name) {
