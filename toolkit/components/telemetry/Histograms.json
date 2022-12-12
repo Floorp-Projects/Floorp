@@ -15927,16 +15927,38 @@
     "releaseChannelCollection": "opt-out",
     "description": "The type of update manifest served for a given update request."
   },
-  "HISTORY_SIDEBAR_VIEW_TYPE": {
+  "PLACES_SEARCHBAR_FILTER_TYPE": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
     "expires_in_version": "never",
-    "alert_emails": ["emalysz@mozilla.com", "rtestard@mozilla.com"],
-    "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1648524],
+    "alert_emails": ["pguruprasad@mozilla.com", "rfambro@mozilla.com"],
+    "releaseChannelCollection": "opt-in",
+    "bug_numbers": [1801290],
     "kind": "categorical",
     "labels": ["visited", "lastvisited", "dayandsite", "site", "day"],
-    "description": "The type of view used for the history sidebar."
+    "description": "The type of search filters used for the sidebar search."
+  },
+  "PLACES_SEARCHBAR_CUMULATIVE_SEARCHES": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "expires_in_version": "never",
+    "alert_emails": ["pguruprasad@mozilla.com", "rfambro@mozilla.com"],
+    "releaseChannelCollection": "opt-in",
+    "bug_numbers": [1801290],
+    "kind": "enumerated",
+    "n_values": 20,
+    "description": "Cumulative no. of searches performed before selecting a link."
+  },
+  "PLACES_SEARCHBAR_CUMULATIVE_FILTER_COUNT": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "expires_in_version": "never",
+    "alert_emails": ["pguruprasad@mozilla.com", "rfambro@mozilla.com"],
+    "releaseChannelCollection": "opt-in",
+    "bug_numbers": [1801290],
+    "kind": "enumerated",
+    "n_values": 20,
+    "description": "Cumulative no. of search filters applied performed before selecting a link."
   },
   "NOTIFY_OBSERVERS_LATENCY_MS": {
     "record_in_processes": ["main", "content", "gpu"],
