@@ -1012,7 +1012,6 @@ if test -z "$MOZ_DISTRIBUTION_ID"; then
    MOZ_DISTRIBUTION_ID="org.mozilla"
 fi
 
-AC_DEFINE_UNQUOTED(MOZ_DISTRIBUTION_ID,"$MOZ_DISTRIBUTION_ID")
 AC_SUBST(MOZ_DISTRIBUTION_ID)
 
 dnl ========================================================
