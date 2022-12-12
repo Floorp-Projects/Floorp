@@ -212,7 +212,7 @@ test_description_schema = Schema(
         Required("build-label"): str,
         # the label of the signing task generating the materials to test.
         # Signed builds are used in xpcshell tests on Windows, for instance.
-        Optional("build-signing-label"): str,
+        Optional("build-signing-label"): optionally_keyed_by("variant", str),
         # the build's attributes
         Required("build-attributes"): {str: object},
         # the platform on which the tests will run

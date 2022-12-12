@@ -231,6 +231,7 @@ def handle_keyed_by(config, tasks):
         "target",
         "webrender-run-on-projects",
         "mozharness.requires-signed-builds",
+        "build-signing-label",
     ]
     for task in tasks:
         for field in fields:
