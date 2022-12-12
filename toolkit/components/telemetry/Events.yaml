@@ -2975,6 +2975,28 @@ slow_script_warning:
       uri_type: The kind of script URL that hung.
       uptime: How long the notification was up (ms).
 
+page_load:
+  toplevel:
+    bug_numbers:
+      - 1759744
+    description: >
+      Recorded when a top level content document has been loaded.
+    products:
+      - "firefox"
+    record_in_processes: ["content"]
+    release_channel_collection: opt-out
+    expiry_version: "never"
+    notification_emails:
+      - dpalmeiro@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
+    objects: ["content"]
+    extra_keys:
+      load_time: Time between loadEventStart and navigationStart, in ms.
+      response_time: Time between responseStart and navigationStart, in ms.
+      fcp_time: Time between firstContentfulPaint and navigationStart, in ms.
+      js_exec_time: Time spent executing JS during page load, in ms.
+      load_type: One of normal,reload,stop,link,history,error or other.
+
 webrtc.ui:
   share_display:
     objects:

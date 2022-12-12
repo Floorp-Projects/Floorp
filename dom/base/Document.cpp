@@ -1955,7 +1955,7 @@ void Document::ConstructUbiNode(void* storage) {
 void Document::LoadEventFired() {
   // Object used to collect some telemetry data so we don't need to query for it
   // twice.
-  glean::perf::PageLoadExtra pageLoadEventData;
+  PageLoadEventTelemetryData pageLoadEventData;
 
   // Accumulate timing data located in each document's realm and report to
   // telemetry.
@@ -1979,7 +1979,7 @@ static uint32_t ConvertToUnsignedFromDouble(double aNumber) {
 }
 
 void Document::RecordPageLoadEventTelemetry(
-    glean::perf::PageLoadExtra& aEventTelemetryData) {
+    PageLoadEventTelemetryData aEventTelemetryData) {
   static bool sTelemetryEventEnabled = false;
   if (!sTelemetryEventEnabled) {
     sTelemetryEventEnabled = true;
@@ -1988,7 +1988,8 @@ void Document::RecordPageLoadEventTelemetry(
 
   // If the page load time is empty, then the content wasn't something we want
   // to report (i.e. not a top level document).
-  if (!aEventTelemetryData.loadTime) {
+  if (!aEventTelemetryData.mPageLoadTime ||
+      aEventTelemetryData.mPageLoadTime.IsZero()) {
     return;
   }
   MOZ_ASSERT(IsTopLevelContentDocument());
@@ -2041,33 +2042,21 @@ void Document::RecordPageLoadEventTelemetry(
       break;
   }
 
-  nsCOMPtr<nsIEffectiveTLDService> tldService =
-      do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
-  if (tldService && mReferrerInfo &&
-      (docshell->GetLoadType() & nsIDocShell::LOAD_CMD_NORMAL)) {
-    nsAutoCString currentBaseDomain, referrerBaseDomain;
-    nsCOMPtr<nsIURI> referrerURI = mReferrerInfo->GetComputedReferrer();
-    if (referrerURI) {
-      auto result = NS_SUCCEEDED(
-          tldService->GetBaseDomain(referrerURI, 0, referrerBaseDomain));
-      if (result) {
-        bool sameOrigin = false;
-        NodePrincipal()->IsSameOrigin(referrerURI, &sameOrigin);
-        aEventTelemetryData.sameOriginNav = mozilla::Some(sameOrigin);
-      }
-    }
-  }
-
-  aEventTelemetryData.loadType = mozilla::Some(loadTypeStr);
-
-  // Sending a glean ping must be done on the parent process.
-  if (ContentChild* cc = ContentChild::GetSingleton()) {
-    cc->SendRecordPageLoadEvent(aEventTelemetryData);
-  }
+  mozilla::glean::perf::PageLoadExtra extra = {
+      mozilla::Some(ConvertToUnsignedFromDouble(
+          aEventTelemetryData.mFirstContentfulPaintTime.ToMilliseconds())),
+      mozilla::Some(ConvertToUnsignedFromDouble(
+          aEventTelemetryData.mTotalJSExecutionTime.ToMilliseconds())),
+      mozilla::Some(ConvertToUnsignedFromDouble(
+          aEventTelemetryData.mPageLoadTime.ToMilliseconds())),
+      mozilla::Some(loadTypeStr),
+      mozilla::Some(ConvertToUnsignedFromDouble(
+          aEventTelemetryData.mResponseStartTime.ToMilliseconds()))};
+  mozilla::glean::perf::page_load.Record(mozilla::Some(extra));
 }
 
 void Document::AccumulatePageLoadTelemetry(
-    glean::perf::PageLoadExtra& aEventTelemetryDataOut) {
+    PageLoadEventTelemetryData& aEventTelemetryDataOut) {
   // Interested only in top level documents for real websites that are in the
   // foreground.
   if (!ShouldIncludeInTelemetry(false) || !IsTopLevelContentDocument() ||
@@ -2088,22 +2077,6 @@ void Document::AccumulatePageLoadTelemetry(
   TimeStamp responseStart;
   timedChannel->GetResponseStart(&responseStart);
 
-  TimeStamp redirectStart, redirectEnd;
-  timedChannel->GetRedirectStart(&redirectStart);
-  timedChannel->GetRedirectEnd(&redirectEnd);
-
-  uint8_t redirectCount;
-  timedChannel->GetRedirectCount(&redirectCount);
-  if (redirectCount) {
-    aEventTelemetryDataOut.redirectCount =
-        mozilla::Some(static_cast<uint32_t>(redirectCount));
-  }
-
-  if (!redirectStart.IsNull() && !redirectEnd.IsNull()) {
-    aEventTelemetryDataOut.redirectTime = mozilla::Some(
-        static_cast<uint32_t>((redirectEnd - redirectStart).ToMilliseconds()));
-  }
-
   TimeStamp navigationStart =
       GetNavigationTiming()->GetNavigationStartTimeStamp();
 
@@ -2123,7 +2096,6 @@ void Document::AccumulatePageLoadTelemetry(
       RefPtr<net::ChildDNSService> dnsServiceChild =
           net::ChildDNSService::GetSingleton();
       dnsServiceChild->GetTRRDomain(dnsKey);
-      aEventTelemetryDataOut.trrDomain = mozilla::Some(dnsKey);
     }
 
     uint32_t major;
@@ -2150,8 +2122,6 @@ void Document::AccumulatePageLoadTelemetry(
           http3Key = "supports_http3"_ns;
         }
       }
-
-      aEventTelemetryDataOut.httpVer = mozilla::Some(major);
     }
   }
 
@@ -2188,8 +2158,8 @@ void Document::AccumulatePageLoadTelemetry(
         Telemetry::PERF_FIRST_CONTENTFUL_PAINT_FROM_RESPONSESTART_MS,
         responseStart, firstContentfulComposite);
 
-    aEventTelemetryDataOut.fcpTime = mozilla::Some(static_cast<uint32_t>(
-        (firstContentfulComposite - navigationStart).ToMilliseconds()));
+    aEventTelemetryDataOut.mFirstContentfulPaintTime =
+        firstContentfulComposite - navigationStart;
   }
 
   // DOM Content Loaded event
@@ -2222,15 +2192,13 @@ void Document::AccumulatePageLoadTelemetry(
         Telemetry::PERF_PAGE_LOAD_TIME_FROM_RESPONSESTART_MS, responseStart,
         loadEventStart);
 
-    aEventTelemetryDataOut.responseTime = mozilla::Some(static_cast<uint32_t>(
-        (responseStart - navigationStart).ToMilliseconds()));
-    aEventTelemetryDataOut.loadTime = mozilla::Some(static_cast<uint32_t>(
-        (loadEventStart - navigationStart).ToMilliseconds()));
+    aEventTelemetryDataOut.mResponseStartTime = responseStart - navigationStart;
+    aEventTelemetryDataOut.mPageLoadTime = loadEventStart - navigationStart;
   }
 }
 
 void Document::AccumulateJSTelemetry(
-    glean::perf::PageLoadExtra& aEventTelemetryDataOut) {
+    PageLoadEventTelemetryData& aEventTelemetryDataOut) {
   if (!IsTopLevelContentDocument() || !ShouldIncludeInTelemetry(false)) {
     return;
   }
@@ -2248,8 +2216,7 @@ void Document::AccumulateJSTelemetry(
     Telemetry::Accumulate(
         Telemetry::JS_PAGELOAD_EXECUTION_MS,
         ConvertToUnsignedFromDouble(timers.executionTime.ToMilliseconds()));
-    aEventTelemetryDataOut.jsExecTime = mozilla::Some(
-        static_cast<uint32_t>(timers.executionTime.ToMilliseconds()));
+    aEventTelemetryDataOut.mTotalJSExecutionTime = timers.executionTime;
   }
 
   if (!timers.delazificationTime.IsZero()) {

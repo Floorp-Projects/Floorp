@@ -55,7 +55,6 @@
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/TreeOrderedArray.h"
 #include "mozilla/dom/ViewportMetaData.h"
-#include "mozilla/glean/GleanMetrics.h"
 #include "nsAtom.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
@@ -341,6 +340,12 @@ class DOMStyleSheetSetList;
 class ResizeObserver;
 class ResizeObserverController;
 class PostMessageEvent;
+struct PageLoadEventTelemetryData {
+  TimeDuration mPageLoadTime;
+  TimeDuration mTotalJSExecutionTime;
+  TimeDuration mResponseStartTime;
+  TimeDuration mFirstContentfulPaintTime;
+};
 
 #define DEPRECATED_OPERATION(_op) e##_op,
 enum class DeprecatedOperations : uint16_t {
@@ -5331,15 +5336,15 @@ class Document : public nsINode,
 
   // Record page load telemetry
   void RecordPageLoadEventTelemetry(
-      glean::perf::PageLoadExtra& aEventTelemetryData);
+      PageLoadEventTelemetryData aEventTelemetryData);
 
   // Accumulate JS telemetry collected
   void AccumulateJSTelemetry(
-      glean::perf::PageLoadExtra& aEventTelemetryDataOut);
+      PageLoadEventTelemetryData& aEventTelemetryDataOut);
 
   // Accumulate page load metrics
   void AccumulatePageLoadTelemetry(
-      glean::perf::PageLoadExtra& aEventTelemetryDataOut);
+      PageLoadEventTelemetryData& aEventTelemetryDataOut);
 
   // The OOP counterpart to nsDocLoader::mChildrenInOnload.
   // Not holding strong refs here since we don't actually use the BBCs.
