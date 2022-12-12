@@ -737,18 +737,13 @@ class WorkerPrivate final
     mLoadInfo.mChannelInfo = aChannelInfo;
   }
 
-  nsIPrincipal* GetPrincipal() const {
-    AssertIsOnMainThread();
-    return mLoadInfo.mPrincipal;
-  }
+  nsIPrincipal* GetPrincipal() const { return mLoadInfo.mPrincipal; }
 
   nsIPrincipal* GetLoadingPrincipal() const {
-    AssertIsOnMainThread();
     return mLoadInfo.mLoadingPrincipal;
   }
 
   nsIPrincipal* GetPartitionedPrincipal() const {
-    AssertIsOnMainThread();
     return mLoadInfo.mPartitionedPrincipal;
   }
 
