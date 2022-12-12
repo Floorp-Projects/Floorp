@@ -31,9 +31,7 @@ const {
   "resource://devtools/client/shared/source-map-loader/index.js"
 );
 
-startSourceMapWorker(
-  "resource://devtools/client/shared/source-map-loader/worker.js"
-);
+startSourceMapWorker();
 
 function fetchFixtureSourceMap(name) {
   clearSourceMaps();
