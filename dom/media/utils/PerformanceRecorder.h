@@ -138,6 +138,40 @@ class PlaybackStage {
   mutable Maybe<nsCString> mName;
 };
 
+class CaptureStage {
+ public:
+  enum class ImageType : uint8_t {
+    Unknown,
+    I420,
+    YUY2,
+    YV12,
+    UYVY,
+    NV12,
+    NV21,
+    MJPEG,
+  };
+
+  CaptureStage(nsCString aSource, nsCString aTrackingId, int32_t aWidth,
+               int32_t aHeight, ImageType aImageType)
+      : mSource(std::move(aSource)),
+        mTrackingId(std::move(aTrackingId)),
+        mWidth(aWidth),
+        mHeight(aHeight),
+        mImageType(aImageType) {}
+
+  ProfilerString8View Name() const;
+  const MarkerCategory& Category() const {
+    return baseprofiler::category::MEDIA_RT;
+  }
+
+  nsCString mSource;
+  nsCString mTrackingId;
+  int32_t mWidth;
+  int32_t mHeight;
+  ImageType mImageType;
+  mutable Maybe<nsCString> mName;
+};
+
 class CopyVideoStage {
  public:
   CopyVideoStage(nsCString aSource, TrackingId aTrackingId, int32_t aWidth,

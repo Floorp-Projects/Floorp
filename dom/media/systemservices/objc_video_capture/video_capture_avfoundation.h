@@ -12,6 +12,7 @@
 #include "api/sequence_checker.h"
 #include "modules/video_capture/video_capture_impl.h"
 #include "mozilla/Maybe.h"
+#include "PerformanceRecorder.h"
 
 @class VideoCaptureAdapter;
 
@@ -29,20 +30,32 @@ class VideoCaptureAvFoundation : public VideoCaptureImpl {
   static rtc::scoped_refptr<VideoCaptureModule> Create(const char* _Nullable aDeviceUniqueIdUTF8);
 
   // Implementation of VideoCaptureImpl. Single threaded.
-  int32_t StartCapture(const VideoCaptureCapability& aCapability) override;
-  int32_t StopCapture() override;
-  bool CaptureStarted() override;
+  int32_t StartCapture(const VideoCaptureCapability& aCapability) MOZ_EXCLUDES(api_lock_) override;
+  int32_t StopCapture() MOZ_EXCLUDES(api_lock_) override;
+  bool CaptureStarted() MOZ_EXCLUDES(api_lock_) override;
   int32_t CaptureSettings(VideoCaptureCapability& aSettings) override;
 
   // Callback. This can be called on any thread.
   int32_t OnFrame(webrtc::VideoFrame& aFrame) MOZ_EXCLUDES(api_lock_);
+
+  void SetTrackingId(const char* _Nonnull aTrackingId) MOZ_EXCLUDES(api_lock_) override;
+
+  // Allows the capturer to start the recording before calling OnFrame, to cover more operations
+  // under the same measurement.
+  void StartFrameRecording(int32_t aWidth, int32_t aHeight) MOZ_EXCLUDES(api_lock_);
+
+  // Registers the current thread with the profiler if not already registered.
+  void MaybeRegisterCallbackThread();
 
  private:
   SequenceChecker mChecker;
   AVCaptureDevice* _Nonnull mDevice RTC_GUARDED_BY(mChecker);
   VideoCaptureAdapter* _Nonnull mAdapter RTC_GUARDED_BY(mChecker);
   RTC_OBJC_TYPE(RTCCameraVideoCapturer) * _Nullable mCapturer RTC_GUARDED_BY(mChecker);
-  mozilla::Maybe<VideoCaptureCapability> mCapability RTC_GUARDED_BY(mChecker);
+  mozilla::Maybe<VideoCaptureCapability> mCapability MOZ_GUARDED_BY(api_lock_);
+  mozilla::Maybe<nsCString> mTrackingId MOZ_GUARDED_BY(api_lock_);
+  mozilla::PerformanceRecorderMulti<mozilla::CaptureStage> mPerformanceRecorder;
+  std::atomic<ProfilerThreadId> mCallbackThreadId;
 };
 
 }  // namespace webrtc::videocapturemodule
