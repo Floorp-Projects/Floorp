@@ -9,17 +9,6 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-// source-map has to be loaded via a Browser Loader in order to be able to instantiate
-// a web worker and have access to Worker symbol in globals
-const { BrowserLoader } = ChromeUtils.import(
-  "resource://devtools/shared/loader/browser-loader.js"
-);
-const { require: browserRequire } = BrowserLoader({
-  baseURI: "resource://devtools/",
-  window,
-});
-delete window.getBrowserLoaderForWindow;
-
 const {
   startSourceMapWorker,
   getOriginalURLs,
@@ -27,9 +16,7 @@ const {
   getGeneratedLocation,
   getGeneratedRangesForOriginal,
   clearSourceMaps,
-} = browserRequire(
-  "resource://devtools/client/shared/source-map-loader/index.js"
-);
+} = require("resource://devtools/client/shared/source-map-loader/index.js");
 
 startSourceMapWorker();
 
