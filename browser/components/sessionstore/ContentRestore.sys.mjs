@@ -11,8 +11,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 /**
  * This module implements the content side of session restoration. The chrome
- * side is handled by SessionStore.jsm. The functions in this module are called
- * by content-sessionStore.js based on messages received from SessionStore.jsm
+ * side is handled by SessionStore.sys.mjs. The functions in this module are called
+ * by content-sessionStore.js based on messages received from SessionStore.sys.mjs
  * (or, in one case, based on a "load" event). Each tab has its own
  * ContentRestore instance, constructed by content-sessionStore.js.
  *
@@ -27,14 +27,14 @@ ChromeUtils.defineESModuleGetters(lazy, {
  *     Restore form and scroll data.
  *
  * When the page has been loaded from the network, we call finishCallback. It
- * should send a message to SessionStore.jsm, which may cause other tabs to be
+ * should send a message to SessionStore.sys.mjs, which may cause other tabs to be
  * restored.
  *
  * When the page has finished loading, a "load" event will trigger in
  * content-sessionStore.js, which will call restoreDocument. At that point,
  * form data is restored and the restore is complete.
  *
- * At any time, SessionStore.jsm can cancel the ongoing restore by sending a
+ * At any time, SessionStore.sys.mjs can cancel the ongoing restore by sending a
  * reset message, which causes resetRestore to be called. At that point it's
  * legal to begin another restore.
  */
@@ -315,7 +315,7 @@ ContentRestoreInternal.prototype = {
 /*
  * This listener detects when a page being restored is reloaded. It triggers a
  * callback and cancels the reload. The callback will send a message to
- * SessionStore.jsm so that it can restore the content immediately.
+ * SessionStore.sys.mjs so that it can restore the content immediately.
  */
 function HistoryListener(docShell, callback) {
   let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
@@ -380,9 +380,9 @@ HistoryListener.prototype = {
 };
 
 /**
- * This class informs SessionStore.jsm whenever the network requests for a
+ * This class informs SessionStore.sys.mjs whenever the network requests for a
  * restoring page have completely finished. We only restore three tabs
- * simultaneously, so this is the signal for SessionStore.jsm to kick off
+ * simultaneously, so this is the signal for SessionStore.sys.mjs to kick off
  * another restore (if there are more to do).
  *
  * The progress listener is also used to be notified when a load not initiated

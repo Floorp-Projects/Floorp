@@ -593,7 +593,7 @@ export class ContentSessionStore {
       },
 
       onLoadFinished: () => {
-        // Tell SessionStore.jsm that it may want to restore some more tabs,
+        // Tell SessionStore.sys.mjs that it may want to restore some more tabs,
         // since it restores a max of MAX_CONCURRENT_TAB_RESTORES at a time.
         this.mm.sendAsyncMessage("SessionStore:restoreTabContentComplete", {
           epoch,
@@ -603,7 +603,7 @@ export class ContentSessionStore {
 
     if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT) {
       // For non-remote tabs, when restoreHistory finishes, we send a synchronous
-      // message to SessionStore.jsm so that it can run SSTabRestoring. Users of
+      // message to SessionStore.sys.mjs so that it can run SSTabRestoring. Users of
       // SSTabRestoring seem to get confused if chrome and content are out of
       // sync about the state of the restore (particularly regarding
       // docShell.currentURI). Using a synchronous message is the easiest way
@@ -627,12 +627,12 @@ export class ContentSessionStore {
   restoreTabContent({ loadArguments, isRemotenessUpdate, reason }) {
     let epoch = this.epoch;
 
-    // We need to pass the value of didStartLoad back to SessionStore.jsm.
+    // We need to pass the value of didStartLoad back to SessionStore.sys.mjs.
     let didStartLoad = this.contentRestore.restoreTabContent(
       loadArguments,
       isRemotenessUpdate,
       () => {
-        // Tell SessionStore.jsm that it may want to restore some more tabs,
+        // Tell SessionStore.sys.mjs that it may want to restore some more tabs,
         // since it restores a max of MAX_CONCURRENT_TAB_RESTORES at a time.
         this.mm.sendAsyncMessage("SessionStore:restoreTabContentComplete", {
           epoch,
