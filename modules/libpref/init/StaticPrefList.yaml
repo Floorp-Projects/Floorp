@@ -13684,7 +13684,7 @@
 #ifdef MOZ_CODE_COVERAGE
   value: 0
 #else
-  value: 3
+  value: 2
 #endif
   mirror: always
 
