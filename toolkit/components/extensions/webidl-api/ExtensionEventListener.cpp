@@ -7,7 +7,6 @@
 #include "ExtensionPort.h"
 
 #include "mozilla/dom/FunctionBinding.h"
-#include "nsJSPrincipals.h"   // nsJSPrincipals::AutoSetActiveWorkerPrincipal
 #include "nsThreadManager.h"  // NS_IsMainThread
 
 namespace mozilla {
@@ -652,18 +651,7 @@ void ExtensionListenerCallPromiseResultHandler::WorkerRunCallback(
     JS::Rooted<JS::Value> jsvalue(cx);
     IgnoredErrorResult rv;
 
-    {
-      // Set the active worker principal while reading the result,
-      // needed to be sure to be able to successfully deserialize the
-      // SavedFrame part of a ClonedErrorHolder (in case that was the
-      // result stored in the StructuredCloneHolder).
-      Maybe<nsJSPrincipals::AutoSetActiveWorkerPrincipal> set;
-      if (workerRef) {
-        set.emplace(workerRef->Private()->GetPrincipal());
-      }
-
-      resHolder->Read(global, cx, &jsvalue, rv);
-    }
+    resHolder->Read(global, cx, &jsvalue, rv);
 
     if (NS_WARN_IF(rv.Failed())) {
       promiseResult->MaybeReject(rv.StealNSResult());

@@ -71,7 +71,6 @@
 #  include "nsMacUtilsImpl.h"
 #endif
 
-#include "Principal.h"
 #include "WorkerDebuggerManager.h"
 #include "WorkerError.h"
 #include "WorkerLoadInfo.h"
@@ -876,7 +875,7 @@ class WorkerJSContext final : public mozilla::CycleCollectedJSContext {
     JSContext* cx = Context();
 
     js::SetPreserveWrapperCallbacks(cx, PreserveWrapper, HasReleasedWrapper);
-    JS_InitDestroyPrincipalsCallback(cx, WorkerPrincipal::Destroy);
+    JS_InitDestroyPrincipalsCallback(cx, nsJSPrincipals::Destroy);
     JS_SetWrapObjectCallbacks(cx, &WrapObjectCallbacks);
     if (mWorkerPrivate->IsDedicatedWorker()) {
       JS_SetFutexCanWait(cx);

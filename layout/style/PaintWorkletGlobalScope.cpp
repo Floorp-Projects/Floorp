@@ -6,7 +6,6 @@
 
 #include "PaintWorkletGlobalScope.h"
 
-#include "mozilla/dom/WorkletPrincipals.h"
 #include "mozilla/dom/PaintWorkletGlobalScopeBinding.h"
 #include "mozilla/dom/FunctionBinding.h"
 #include "PaintWorkletImpl.h"
@@ -34,9 +33,9 @@ bool PaintWorkletGlobalScope::WrapGlobalObject(
   options.creationOptions().setDefineSharedArrayBufferConstructor(
       IsSharedMemoryAllowed());
 
-  JS::AutoHoldPrincipals principals(aCx, new WorkletPrincipals(mImpl));
   return PaintWorkletGlobalScope_Binding::Wrap(
-      aCx, this, this, options, principals.get(), true, aReflector);
+      aCx, this, this, options, nsJSPrincipals::get(mImpl->Principal()), true,
+      aReflector);
 }
 
 void PaintWorkletGlobalScope::RegisterPaint(const nsAString& aType,

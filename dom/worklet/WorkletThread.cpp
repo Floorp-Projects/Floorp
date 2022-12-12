@@ -9,9 +9,9 @@
 #include "nsContentUtils.h"
 #include "nsCycleCollector.h"
 #include "nsJSEnvironment.h"
+#include "nsJSPrincipals.h"
 #include "mozilla/dom/AtomList.h"
 #include "mozilla/dom/WorkletGlobalScope.h"
-#include "mozilla/dom/WorkletPrincipals.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
@@ -136,7 +136,7 @@ class WorkletJSContext final : public CycleCollectedJSContext {
     JSContext* cx = Context();
 
     js::SetPreserveWrapperCallbacks(cx, PreserveWrapper, HasReleasedWrapper);
-    JS_InitDestroyPrincipalsCallback(cx, WorkletPrincipals::Destroy);
+    JS_InitDestroyPrincipalsCallback(cx, nsJSPrincipals::Destroy);
     JS_SetWrapObjectCallbacks(cx, &WrapObjectCallbacks);
     JS_SetFutexCanWait(cx);
 
