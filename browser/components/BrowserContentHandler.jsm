@@ -198,7 +198,7 @@ function getPostUpdateOverridePage(update, defaultOverridePage) {
 
 /**
  * Open a browser window. If this is the initial launch, this function will
- * attempt to use the navigator:blank window opened by BrowserGlue.jsm during
+ * attempt to use the navigator:blank window opened by BrowserGlue.sys.mjs during
  * early startup.
  *
  * @param cmdLine

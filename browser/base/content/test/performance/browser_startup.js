@@ -24,11 +24,11 @@ const startupPhases = {
   // Anything loaded during app-startup must have a compelling reason
   // to run before we have even selected the user profile.
   // Consider loading your code after first paint instead,
-  // eg. from BrowserGlue.jsm' _onFirstWindowLoaded method).
+  // eg. from BrowserGlue.sys.mjs' _onFirstWindowLoaded method).
   "before profile selection": {
     allowlist: {
       modules: new Set([
-        "resource:///modules/BrowserGlue.jsm",
+        "resource:///modules/BrowserGlue.sys.mjs",
         "resource:///modules/StartupRecorder.jsm",
         "resource://gre/modules/AppConstants.sys.mjs",
         "resource://gre/modules/ActorManagerParent.sys.mjs",

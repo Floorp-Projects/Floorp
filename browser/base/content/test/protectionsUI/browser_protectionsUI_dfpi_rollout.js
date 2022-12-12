@@ -5,11 +5,9 @@ const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "BrowserGlue",
-  "resource:///modules/BrowserGlue.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  BrowserGlue: "resource:///modules/BrowserGlue.sys.mjs",
+});
 
 const PREF_DFPI_ENABLED_BY_DEFAULT =
   "privacy.restrict3rdpartystorage.rollout.enabledByDefault";

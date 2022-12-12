@@ -88,7 +88,7 @@ EXTRA_COMPONENTS += [
 
 EXTRA_JS_MODULES += [
     "BrowserContentHandler.jsm",
-    "BrowserGlue.jsm",
+    "BrowserGlue.sys.mjs",
     "distribution.js",
 ]
 
