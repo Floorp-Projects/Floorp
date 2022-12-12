@@ -119,3 +119,6 @@ TEST(cubeb, tone)
 
   ASSERT_TRUE(user_data->position.load());
 }
+
+#undef SAMPLE_FREQUENCY
+#undef STREAM_FORMAT

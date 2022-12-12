@@ -337,3 +337,10 @@ TEST(cubeb, one_duplex_one_input)
 
   ASSERT_FALSE(duplex_stream_state.invalid_audio_value.load());
 }
+
+#undef SAMPLE_FREQUENCY
+#undef STREAM_FORMAT
+#undef INPUT_CHANNELS
+#undef INPUT_LAYOUT
+#undef OUTPUT_CHANNELS
+#undef OUTPUT_LAYOUT
