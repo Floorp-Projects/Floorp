@@ -654,10 +654,6 @@ function getWarningGroupLabel(firstMessage) {
     return l10n.getStr("webconsole.group.cookieSameSiteLaxByDefaultDisabled2");
   }
 
-  if (isCSPMessage(firstMessage)) {
-    return l10n.getStr("webconsole.group.csp");
-  }
-
   return "";
 }
 
@@ -735,10 +731,6 @@ function getWarningGroupType(message) {
 
   if (isCookieSameSiteMessage(message)) {
     return MESSAGE_TYPE.COOKIE_SAMESITE_GROUP;
-  }
-
-  if (isCSPMessage(message)) {
-    return MESSAGE_TYPE.CSP_GROUP;
   }
 
   return null;
@@ -819,16 +811,6 @@ function isTrackingProtectionMessage(message) {
 function isCookieSameSiteMessage(message) {
   const { category } = message;
   return category == "cookieSameSite";
-}
-
-/**
- * Returns true if the message is a Content Security Policy (CSP) message.
- * @param {ConsoleMessage} message
- * @returns {Boolean}
- */
-function isCSPMessage(message) {
-  const { category } = message;
-  return typeof category == "string" && category.startsWith("CSP_");
 }
 
 function getDescriptorValue(descriptor) {
