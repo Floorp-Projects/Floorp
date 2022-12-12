@@ -40,8 +40,13 @@ interface nsIGleanDatetime : nsISupports
 {
   /**
    * Set the datetime to the provided value, or the local now.
+   * The internal value will store the local timezone.
    *
-   * @param aValue The time value in milliseconds since epoch. Defaults to local now.
+   * Note: The metric's time_unit affects the resolution of the value, not the
+   *       unit of this function's parameter (which is always PRTime/nanos).
+   *
+   * @param aValue The (optional) time value as PRTime (nanoseconds since epoch).
+   *        Defaults to local now.
    */
   [optional_argc]
   void set([optional] in PRTime aValue);
@@ -61,7 +66,8 @@ interface nsIGleanDatetime : nsISupports
    * @param aPingName The (optional) name of the ping to retrieve the metric
    *        for. Defaults to the first value in `send_in_pings`.
    *
-   * @return value of the stored metric, or undefined if there is no value.
+   * @return value of the stored metric as a JS Date with timezone,
+   *         or undefined if there is no value.
    */
   [implicit_jscontext]
   jsval testGetValue([optional] in AUTF8String aPingName);
