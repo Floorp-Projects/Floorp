@@ -449,7 +449,7 @@ DevTools.prototype = {
   },
 
   /**
-   * Called from SessionStore.jsm in mozilla-central when saving the current state.
+   * Called from SessionStore.sys.mjs in mozilla-central when saving the current state.
    *
    * @param {Object} state
    *                 A SessionStore state object that gets modified by reference
