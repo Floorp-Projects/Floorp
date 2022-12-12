@@ -275,7 +275,7 @@ IFACEMETHODIMP MFMediaSource::Pause() {
 }
 
 IFACEMETHODIMP MFMediaSource::Shutdown() {
-  AssertOnManagerThread();
+  // Could be called on either manager thread or MF thread pool.
   MutexAutoLock lock(mMutex);
   if (mState == State::Shutdowned) {
     return MF_E_SHUTDOWN;
@@ -285,6 +285,15 @@ IFACEMETHODIMP MFMediaSource::Shutdown() {
   // After this method is called, all IMFMediaEventQueue methods return
   // MF_E_SHUTDOWN.
   RETURN_IF_FAILED(mMediaEventQueue->Shutdown());
+  mState = State::Shutdowned;
+  LOG("Shutdowned media source");
+  return S_OK;
+}
+
+void MFMediaSource::ShutdownTaskQueue() {
+  AssertOnManagerThread();
+  LOG("ShutdownTaskQueue");
+  MutexAutoLock lock(mMutex);
   if (mAudioStream) {
     mAudioStream->Shutdown();
     mAudioStream = nullptr;
@@ -295,11 +304,8 @@ IFACEMETHODIMP MFMediaSource::Shutdown() {
     mVideoStream = nullptr;
     mVideoStreamEndedListener.DisconnectIfExists();
   }
-
-  mState = State::Shutdowned;
   Unused << mTaskQueue->BeginShutdown();
-  LOG("Shutdowned media source");
-  return S_OK;
+  mTaskQueue = nullptr;
 }
 
 IFACEMETHODIMP MFMediaSource::GetEvent(DWORD aFlags, IMFMediaEvent** aEvent) {
