@@ -9175,11 +9175,19 @@ class MObjectStaticProto : public MUnaryInstruction,
   }
 };
 
-class MConstantProto
-    : public MBinaryInstruction,
-      public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1>>::Data {
+class MConstantProto : public MUnaryInstruction,
+                       public SingleObjectPolicy::Data {
+  // NOTE: we're not going to actually use the underlying receiver object for
+  // anything. This is just here for giving extra information to MGuardShape
+  // to MGuardShape::mightAlias. Accordingly, we don't take it as an operand,
+  // but instead just keep a pointer to it. This means we need to ensure it's
+  // not discarded before we try to access it. If this is discarded, we
+  // basically just become an MConstant for the object's proto, which is fine.
+  MDefinition* receiverObject_;
+
   explicit MConstantProto(MDefinition* protoObject, MDefinition* receiverObject)
-      : MBinaryInstruction(classOpcode, protoObject, receiverObject) {
+      : MUnaryInstruction(classOpcode, protoObject),
+        receiverObject_(receiverObject) {
     MOZ_ASSERT(protoObject->isConstant());
     setResultType(MIRType::Object);
     setMovable();
@@ -9190,17 +9198,24 @@ class MConstantProto
  public:
   INSTRUCTION_HEADER(ConstantProto)
   TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, protoObject), (1, receiverObject))
+  NAMED_OPERANDS((0, protoObject))
 
   HashNumber valueHash() const override;
 
   bool congruentTo(const MDefinition* ins) const override {
-    return ins->isConstantProto() && ins->getOperand(0) == getOperand(0) &&
-           getOperand(1)->skipObjectGuards() ==
-               ins->getOperand(1)->skipObjectGuards();
+    const MDefinition* receiverObject = getReceiverObject();
+    return congruentIfOperandsEqual(ins) && receiverObject &&
+           receiverObject == ins->toConstantProto()->getReceiverObject();
   }
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
+
+  const MDefinition* getReceiverObject() const {
+    if (receiverObject_->isDiscarded()) {
+      return nullptr;
+    }
+    return receiverObject_->skipObjectGuards();
+  }
 };
 
 // Flips the input's sign bit, independently of the rest of the number's

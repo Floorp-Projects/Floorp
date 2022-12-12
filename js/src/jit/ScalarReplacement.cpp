@@ -932,7 +932,7 @@ void ObjectMemoryView::visitCompare(MCompare* ins) {
 }
 
 void ObjectMemoryView::visitConstantProto(MConstantProto* ins) {
-  if (ins->receiverObject() != obj_) {
+  if (ins->getReceiverObject() != obj_) {
     return;
   }
 

@@ -6303,7 +6303,7 @@ MDefinition::AliasType MGuardShape::mightAlias(const MDefinition* store) const {
   }
   if (object()->isConstantProto()) {
     const MDefinition* receiverObject =
-        object()->toConstantProto()->receiverObject()->skipObjectGuards();
+        object()->toConstantProto()->getReceiverObject();
     switch (store->op()) {
       case MDefinition::Opcode::StoreFixedSlot:
         if (store->toStoreFixedSlot()->object()->skipObjectGuards() ==
