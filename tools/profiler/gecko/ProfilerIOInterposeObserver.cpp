@@ -50,9 +50,6 @@ struct FileIOMarker {
     schema.AddKeyLabelFormatSearchable("filename", "Filename",
                                        MS::Format::FilePath,
                                        MS::Searchable::Searchable);
-    schema.AddKeyLabelFormatSearchable("threadId", "Thread ID",
-                                       MS::Format::String,
-                                       MS::Searchable::Searchable);
     return schema;
   }
 };

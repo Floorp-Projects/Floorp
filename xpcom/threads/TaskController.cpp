@@ -75,8 +75,7 @@ struct TaskMarker {
     schema.SetTableLabel(
         "{marker.name} - {marker.data.name} - priority: "
         "{marker.data.priorityName} ({marker.data.priority})");
-    schema.AddKeyLabelFormatSearchable("name", "Task Name", MS::Format::String,
-                                       MS::Searchable::Searchable);
+    schema.AddKeyLabelFormat("name", "Task Name", MS::Format::String);
     schema.AddKeyLabelFormat("priorityName", "Priority Name",
                              MS::Format::String);
     schema.AddKeyLabelFormat("priority", "Priority level", MS::Format::Integer);

@@ -335,8 +335,7 @@ struct UserTimingMarker {
     schema.SetAllLabels("{marker.data.name}");
     schema.AddStaticLabelValue("Marker", "UserTiming");
     schema.AddKeyLabelFormat("entryType", "Entry Type", MS::Format::String);
-    schema.AddKeyLabelFormatSearchable("name", "Name", MS::Format::String,
-                                       MS::Searchable::Searchable);
+    schema.AddKeyLabelFormat("name", "Name", MS::Format::String);
     schema.AddKeyLabelFormat("startMark", "Start Mark", MS::Format::String);
     schema.AddKeyLabelFormat("endMark", "End Mark", MS::Format::String);
     schema.AddStaticLabelValue("Description",
