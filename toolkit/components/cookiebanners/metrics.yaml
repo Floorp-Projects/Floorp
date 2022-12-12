@@ -17,6 +17,7 @@ cookie.banners:
       The pref value of the cookie banner service mode for normal windows.
     bugs:
       - https://bugzilla.mozilla.org/1797081
+      - https://bugzilla.mozilla.org/1804259
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1797081#c3
     notification_emails:
@@ -29,12 +30,14 @@ cookie.banners:
       - reject_or_accept
       - detect_only
       - invalid
+    telemetry_mirror: COOKIE_BANNERS_NORMAL_WINDOW_SERVICE_MODE
   private_window_service_mode:
     type: labeled_boolean
     description: >
       The pref value of the cookie banner service mode for private windows.
     bugs:
       - https://bugzilla.mozilla.org/1797081
+      - https://bugzilla.mozilla.org/1804259
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1797081#c3
     notification_emails:
@@ -46,6 +49,7 @@ cookie.banners:
       - reject
       - reject_or_accept
       - invalid
+    telemetry_mirror: COOKIE_BANNERS_PRIVATE_WINDOW_SERVICE_MODE
   rule_lookup_by_load:
     type: labeled_counter
     description: >
@@ -55,6 +59,7 @@ cookie.banners:
       lookup. We also divide the counter by top-level loads and iframe loads.
     bugs:
       - https://bugzilla.mozilla.org/1797073
+      - https://bugzilla.mozilla.org/1804259
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1797073#c6
     data_sensitivity:
@@ -88,6 +93,7 @@ cookie.banners:
       - iframe_click_hit_opt_in
       - iframe_click_hit_opt_out
       - iframe_click_miss
+    telemetry_mirror: COOKIE_BANNERS_RULE_LOOKUP_BY_LOAD
   rule_lookup_by_domain:
     type: labeled_counter
     description: >
@@ -98,6 +104,7 @@ cookie.banners:
       For each domain, we will only collect once.
     bugs:
       - https://bugzilla.mozilla.org/1797073
+      - https://bugzilla.mozilla.org/1804259
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1797073#c6
     data_sensitivity:
@@ -131,6 +138,7 @@ cookie.banners:
       - iframe_click_hit_opt_in
       - iframe_click_hit_opt_out
       - iframe_click_miss
+    telemetry_mirror: COOKIE_BANNERS_RULE_LOOKUP_BY_DOMAIN
 cookie.banners.click:
   handle_duration:
     type: timing_distribution
@@ -140,12 +148,14 @@ cookie.banners.click:
       DOMContentLoaded until click.
     bugs:
       - https://bugzilla.mozilla.org/1797078
+      - https://bugzilla.mozilla.org/1804259
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1797078#c6
     notification_emails:
       - pbz@mozilla.com
       - tihuang@mozilla.com
     expires: 115
+    telemetry_mirror: COOKIE_BANNERS_CLICK_HANDLE_DURATION_MS
   result:
     type: labeled_counter
     description: >
@@ -155,6 +165,7 @@ cookie.banners.click:
       Counters are incremented after the content window has been destroyed.
     bugs:
       - https://bugzilla.mozilla.org/1797078
+      - https://bugzilla.mozilla.org/1804259
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1797078#c6
     notification_emails:
@@ -172,3 +183,4 @@ cookie.banners.click:
       - fail_button_not_found
       - fail_no_rule_for_mode
       - fail_actor_destroyed
+    telemetry_mirror: COOKIE_BANNERS_CLICK_RESULT
