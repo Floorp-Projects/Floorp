@@ -6,6 +6,7 @@
 
 #include "CookieCommons.h"
 #include "CookieLogging.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ContentBlockingNotifier.h"
 #include "mozilla/RefPtr.h"
@@ -215,6 +216,8 @@ already_AddRefed<CookieService> CookieService::GetSingleton() {
   // Release our members (e.g. nsIObserverService and nsIPrefBranch), since GC
   // cycles have already been completed and would result in serious leaks.
   // See bug 209571.
+  // TODO: Verify what is the earliest point in time during shutdown where
+  // we can deny the creation of the CookieService as a whole.
   gCookieService = new CookieService();
   if (gCookieService) {
     if (NS_SUCCEEDED(gCookieService->Init())) {
@@ -269,8 +272,10 @@ void CookieService::InitCookieStorages() {
   NS_ASSERTION(!mPersistentStorage, "already have a default CookieStorage");
   NS_ASSERTION(!mPrivateStorage, "already have a private CookieStorage");
 
-  // Create two new CookieStorages.
-  if (MOZ_UNLIKELY(StaticPrefs::network_cookie_noPersistentStorage())) {
+  // Create two new CookieStorages. If we are in or beyond our observed
+  // shutdown phase, just be non-persistent.
+  if (MOZ_UNLIKELY(StaticPrefs::network_cookie_noPersistentStorage() ||
+                   AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdown))) {
     mPersistentStorage = CookiePrivateStorage::Create();
   } else {
     mPersistentStorage = CookiePersistentStorage::Create();
