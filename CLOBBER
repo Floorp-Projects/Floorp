@@ -23,4 +23,4 @@
 # don't change CLOBBER for WebIDL changes any more.
 
 
-Bug 1792775 - Update to ICU 72 requires clobber
+Merge day clobber 2022-12-12
