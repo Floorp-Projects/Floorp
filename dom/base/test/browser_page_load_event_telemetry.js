@@ -18,23 +18,31 @@ add_task(async function() {
   Services.telemetry.clearEvents();
   TelemetryTestUtils.assertNumberOfEvents(0);
 
-  // Perform page load
-  BrowserTestUtils.loadURI(browser, "https://example.com");
-  await BrowserTestUtils.browserLoaded(browser);
+  // Add checks for pageload ping and pageload event
+  let pingSubmitted = false;
+  GleanPings.pageload.testBeforeNextSubmit(reason => {
+    pingSubmitted = true;
+    Assert.equal(reason, "threshold");
+    let record = Glean.perf.pageLoad.testGetValue();
+    Assert.greaterOrEqual(
+      record.length,
+      30,
+      "Should have at least 30 page load events"
+    );
+    Assert.ok(record[0].extra.load_type === "NORMAL");
+    Assert.ok(record[0].extra.load_time > 0);
+  });
 
-  // Check that a page load event exists
-  let event_found = await TestUtils.waitForCondition(() => {
-    let events = Services.telemetry.snapshotEvents(ALL_CHANNELS, true).content;
-    if (events && events.length) {
-      events = events.filter(e => e[1] == "page_load");
-      if (events.length >= 1) {
-        return true;
-      }
-    }
-    return false;
-  }, "waiting for page load event to be flushed.");
+  // Perform page load 30 times to trigger the ping being sent
+  for (let i = 0; i < 30; i++) {
+    BrowserTestUtils.loadURI(browser, "https://example.com");
+    await BrowserTestUtils.browserLoaded(browser);
+  }
 
-  Assert.ok(event_found);
+  await BrowserTestUtils.waitForCondition(
+    () => pingSubmitted,
+    "Page load ping should have been submitted."
+  );
 
   BrowserTestUtils.removeTab(tab);
 });

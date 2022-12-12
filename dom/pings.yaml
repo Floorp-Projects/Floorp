@@ -1,0 +1,25 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+---
+$schema: moz://mozilla.org/schemas/glean/pings/2-0-0
+
+pageload:
+  description: |
+    Instrumentation collected during a page load.
+  reasons:
+    startup: |
+      Page load ping sent during startup.
+    threshold: |
+      Page load ping sent when a threshold limit
+      of page loads has been reached.
+  include_client_id: false
+  send_if_empty: false
+  bugs:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1759744
+  data_reviews:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1759744#c5
+  notification_emails:
+    - perf-telemetry-alerts@mozilla.com
+    - dpalmeiro@mozilla.com
