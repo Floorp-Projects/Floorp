@@ -11,6 +11,11 @@ def js_standalone(build_project):
         return True
 
 
+# Debug (see Bug 939505)
+# ==============================================================
+set_define("JS_DEBUG", True, when=moz_debug)
+
+
 # Branding
 # ==============================================================
 option(
