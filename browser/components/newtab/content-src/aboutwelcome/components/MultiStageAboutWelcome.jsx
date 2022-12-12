@@ -19,6 +19,7 @@ export const MultiStageAboutWelcome = props => {
   let { screens } = props;
 
   const [index, setScreenIndex] = useState(props.startScreen);
+  const [previousOrder, setPreviousOrder] = useState(-1);
   useEffect(() => {
     const screenInitials = screens
       .map(({ id }) => id?.split("_")[1]?.[0])
@@ -36,25 +37,10 @@ export const MultiStageAboutWelcome = props => {
     if (props.updateHistory && index > window.history.state) {
       window.history.pushState(index, "");
     }
+
+    // Remember the previous screen index so we can animate the transition
+    setPreviousOrder(index);
   }, [index]);
-
-  useEffect(() => {
-    if (props.updateHistory) {
-      // Switch to the screen tracked in state (null for initial state)
-      // or last screen index if a user navigates by pressing back
-      // button from about:home
-      const handler = ({ state }) =>
-        setScreenIndex(Math.min(state, screens.length - 1));
-
-      // Handle page load, e.g., going back to about:welcome from about:home
-      handler(window.history);
-
-      // Watch for browser back/forward button navigation events
-      window.addEventListener("popstate", handler);
-      return () => window.removeEventListener("popstate", handler);
-    }
-    return false;
-  }, []);
 
   const [flowParams, setFlowParams] = useState(null);
   const { metricsFlowUri } = props;
@@ -100,6 +86,39 @@ export const MultiStageAboutWelcome = props => {
       props.transitions ? TRANSITION_OUT_TIME : 0
     );
   };
+
+  useEffect(() => {
+    if (props.updateHistory) {
+      const handleIn = ({ state }) => {
+        setTransition(props.transitions ? "in" : "");
+        setScreenIndex(Math.min(state, screens.length - 1));
+      };
+      // Switch to the screen tracked in state (null for initial state)
+      // or last screen index if a user navigates by pressing back
+      // button from about:home
+      const handler = history => {
+        if (transition === "out") {
+          return;
+        }
+        setTransition(props.transitions ? "out" : "");
+        setTimeout(
+          () => handleIn(history),
+          props.transitions ? TRANSITION_OUT_TIME : 0
+        );
+      };
+
+      // Handle page load, e.g., going back to about:welcome from about:home
+      handleIn(window.history);
+      if (window.history.state) {
+        setPreviousOrder(Math.min(window.history.state, screens.length - 1));
+      }
+
+      // Watch for browser back/forward button navigation events
+      window.addEventListener("popstate", handler);
+      return () => window.removeEventListener("popstate", handler);
+    }
+    return false;
+  }, []);
 
   // Update top sites with default sites by region when region is available
   const [region, setRegion] = useState(null);
@@ -201,6 +220,7 @@ export const MultiStageAboutWelcome = props => {
               isLastCenteredScreen={isLastCenteredScreen}
               stepOrder={stepOrder}
               order={order}
+              previousOrder={previousOrder}
               content={screen.content}
               navigate={handleTransition}
               topSites={topSites}
@@ -263,6 +283,23 @@ export const StepsIndicator = props => {
     );
   }
   return steps;
+};
+
+export const ProgressBar = ({ step, previousStep, totalNumberOfScreens }) => {
+  const [progress, setProgress] = React.useState(
+    previousStep / totalNumberOfScreens
+  );
+  useEffect(() => setProgress(step / totalNumberOfScreens), [
+    step,
+    totalNumberOfScreens,
+  ]);
+  return (
+    <div
+      className="indicator"
+      role="presentation"
+      style={{ width: `${progress * 100}%` }}
+    />
+  );
 };
 
 export class WelcomeScreen extends React.PureComponent {
@@ -384,6 +421,7 @@ export class WelcomeScreen extends React.PureComponent {
         id={this.props.id}
         order={this.props.order}
         stepOrder={this.props.stepOrder}
+        previousOrder={this.props.previousOrder}
         activeTheme={this.props.activeTheme}
         activeMultiSelect={this.props.activeMultiSelect}
         setActiveMultiSelect={this.props.setActiveMultiSelect}

@@ -311,8 +311,7 @@ html {
     --translate: 30px;
     --rotate: 20deg;
     --scale: 0.4;
-    --wipe-scale: 0 1;
-    --wipe-opacity: 1;
+    --progress-bar-transition: 0.6s width;
   }
   .onboardingContainer:dir(rtl) {
     --scale: -0.4 0.4;
@@ -323,8 +322,7 @@ html {
     --translate: 0;
     --rotate: 0deg;
     --scale: 1;
-    --wipe-scale: 1;
-    --wipe-opacity: 0;
+    --progress-bar-transition: none;
   }
   .onboardingContainer:dir(rtl) {
     --scale: -1 1;
@@ -645,30 +643,6 @@ html {
 .onboardingContainer .screen[pos=split] .section-main .main-content .steps.progress-bar {
   width: 400px;
   margin-inline: -35px;
-  background-color: color-mix(in srgb, var(--in-content-button-text-color) 25%, transparent);
-  transition: none;
-  opacity: 1;
-  scale: 1;
-}
-.onboardingContainer .screen[pos=split] .section-main .main-content .steps.progress-bar .indicator {
-  width: -moz-available;
-  height: 100%;
-  margin-inline: -1px;
-  scale: 1;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  opacity: 1;
-}
-.onboardingContainer .screen[pos=split] .section-main .main-content .steps.progress-bar .indicator.current, .onboardingContainer .screen[pos=split] .section-main .main-content .steps.progress-bar .indicator.complete {
-  background-color: var(--checkbox-checked-bgcolor);
-}
-.onboardingContainer .screen[pos=split] .section-main .main-content .steps.progress-bar .indicator.current {
-  transition: var(--transition);
-  transform-origin: left;
-}
-.onboardingContainer .screen[pos=split] .section-main .main-content .steps.progress-bar .indicator.current:dir(rtl) {
-  transform-origin: right;
 }
 @media (prefers-contrast) {
   .onboardingContainer .screen[pos=split] .section-main .main-content {
@@ -676,11 +650,9 @@ html {
   }
   .onboardingContainer .screen[pos=split] .section-main .main-content .steps.progress-bar {
     border-top: 1px solid var(--in-content-page-color);
-  }
-  .onboardingContainer .screen[pos=split] .section-main .main-content .steps.progress-bar .indicator {
     background-color: var(--in-content-page-background);
   }
-  .onboardingContainer .screen[pos=split] .section-main .main-content .steps.progress-bar .indicator.current, .onboardingContainer .screen[pos=split] .section-main .main-content .steps.progress-bar .indicator.complete {
+  .onboardingContainer .screen[pos=split] .section-main .main-content .steps.progress-bar .indicator {
     background-color: var(--in-content-accent-color);
   }
 }
@@ -1305,18 +1277,20 @@ html {
   height: 6px;
   padding-block: 0;
   margin-block: 42px 0;
+  background-color: color-mix(in srgb, var(--in-content-button-text-color) 25%, transparent);
+  justify-content: start;
+  opacity: 1;
+  transition: none;
 }
 .onboardingContainer .steps.progress-bar .indicator {
-  border-radius: 0;
   width: -moz-available;
+  height: 100%;
   margin-inline: 0;
-}
-.onboardingContainer .steps .indicator.current, .onboardingContainer .steps.progress-bar .indicator.complete {
+  background-color: var(--checkbox-checked-bgcolor);
+  border: 0;
+  border-radius: 0;
   opacity: 1;
-  border-color: var(--checkbox-checked-bgcolor);
-}
-.onboardingContainer .steps .indicator.current:last-of-type:first-of-type, .onboardingContainer .steps.progress-bar .indicator.complete:last-of-type:first-of-type {
-  opacity: 0;
+  transition: var(--progress-bar-transition);
 }
 .onboardingContainer .primary,
 .onboardingContainer .secondary {
@@ -1572,12 +1546,8 @@ html {
   opacity: 0;
   translate: 0 calc(-1 * var(--translate));
 }
-.onboardingContainer.transition-in .screen:not(.dialog-initial):not([pos=corner]) .steps {
+.onboardingContainer.transition-in .screen:not(.dialog-initial):not([pos=corner]) .steps:not(.progress-bar) {
   opacity: 0.2;
-}
-.onboardingContainer.transition-in .screen[pos=split] .steps.progress-bar .indicator.current {
-  scale: var(--wipe-scale);
-  opacity: var(--wipe-opacity);
 }
 .onboardingContainer.transition-in .screen:not([pos=corner]) .welcome-text,
 .onboardingContainer.transition-in .screen:not([pos=corner]) .tiles-theme-section,
@@ -1635,7 +1605,7 @@ html {
   translate: 0 var(--translate);
   transition-delay: 0.3s;
 }
-.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .steps {
+.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .steps:not(.progress-bar) {
   opacity: 0.2;
   transition-delay: 0.5s;
 }
