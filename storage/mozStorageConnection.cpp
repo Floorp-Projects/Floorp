@@ -1577,7 +1577,7 @@ nsresult Connection::initializeClone(Connection* aClone, bool aReadOnly) {
   {
     nsCOMPtr<mozIStorageStatement> stmt;
     rv = CreateStatement("PRAGMA database_list"_ns, getter_AddRefs(stmt));
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    NS_ENSURE_SUCCESS(rv, rv);
     bool hasResult = false;
     while (stmt && NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
       nsAutoCString name;
@@ -1590,12 +1590,11 @@ nsresult Connection::initializeClone(Connection* aClone, bool aReadOnly) {
           nsCOMPtr<mozIStorageStatement> attachStmt;
           rv = aClone->CreateStatement("ATTACH DATABASE :path AS "_ns + name,
                                        getter_AddRefs(attachStmt));
-          MOZ_ASSERT(NS_SUCCEEDED(rv));
+          NS_ENSURE_SUCCESS(rv, rv);
           rv = attachStmt->BindUTF8StringByName("path"_ns, path);
-          MOZ_ASSERT(NS_SUCCEEDED(rv));
+          NS_ENSURE_SUCCESS(rv, rv);
           rv = attachStmt->Execute();
-          MOZ_ASSERT(NS_SUCCEEDED(rv),
-                     "couldn't re-attach database to cloned connection");
+          NS_ENSURE_SUCCESS(rv, rv);
         }
       }
     }
@@ -1619,13 +1618,13 @@ nsresult Connection::initializeClone(Connection* aClone, bool aReadOnly) {
     pragmaQuery.Append(pragma);
     nsCOMPtr<mozIStorageStatement> stmt;
     rv = CreateStatement(pragmaQuery, getter_AddRefs(stmt));
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    NS_ENSURE_SUCCESS(rv, rv);
     bool hasResult = false;
     if (stmt && NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
       pragmaQuery.AppendLiteral(" = ");
       pragmaQuery.AppendInt(stmt->AsInt32(0));
       rv = aClone->ExecuteSimpleSQL(pragmaQuery);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 

@@ -1474,10 +1474,17 @@ class ConcurrentStatementsHolder final : public mozIStorageCompletionCallback {
  public:
   NS_DECL_ISUPPORTS
 
-  explicit ConcurrentStatementsHolder(mozIStorageConnection* aDBConn)
-      : mShutdownWasInvoked(false) {
-    DebugOnly<nsresult> rv = aDBConn->AsyncClone(true, this);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
+  ConcurrentStatementsHolder() : mShutdownWasInvoked(false) {}
+
+  static RefPtr<ConcurrentStatementsHolder> Create(
+      mozIStorageConnection* aDBConn) {
+    RefPtr<ConcurrentStatementsHolder> holder =
+        new ConcurrentStatementsHolder();
+    nsresult rv = aDBConn->AsyncClone(true, holder);
+    if (NS_FAILED(rv)) {
+      return nullptr;
+    }
+    return holder;
   }
 
   NS_IMETHOD Complete(nsresult aStatus, nsISupports* aConnection) override {
@@ -1555,7 +1562,10 @@ nsresult History::QueueVisitedStatement(RefPtr<VisitedQuery> aQuery) {
   if (!mConcurrentStatementsHolder) {
     mozIStorageConnection* dbConn = GetDBConn();
     NS_ENSURE_STATE(dbConn);
-    mConcurrentStatementsHolder = new ConcurrentStatementsHolder(dbConn);
+    mConcurrentStatementsHolder = ConcurrentStatementsHolder::Create(dbConn);
+    if (!mConcurrentStatementsHolder) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
   }
   mConcurrentStatementsHolder->QueueVisitedStatement(std::move(aQuery));
   return NS_OK;
