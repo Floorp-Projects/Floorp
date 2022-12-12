@@ -1281,8 +1281,6 @@ function DownloadsIndicatorDataCtor(aPrivate) {
   this._views = [];
 }
 DownloadsIndicatorDataCtor.prototype = {
-  __proto__: DownloadsViewPrototype,
-
   /**
    * Map of the relative severities of different attention states.
    * Used in sorting the map of active downloads' attention states
@@ -1484,6 +1482,10 @@ DownloadsIndicatorDataCtor.prototype = {
     }
   },
 };
+Object.setPrototypeOf(
+  DownloadsIndicatorDataCtor.prototype,
+  DownloadsViewPrototype
+);
 
 XPCOMUtils.defineLazyGetter(lazy, "PrivateDownloadsIndicatorData", function() {
   return new DownloadsIndicatorDataCtor(true);
@@ -1544,8 +1546,6 @@ function DownloadsSummaryData(aIsPrivate, aNumToExclude) {
 }
 
 DownloadsSummaryData.prototype = {
-  __proto__: DownloadsViewPrototype,
-
   /**
    * Removes an object previously added using addView.
    *
@@ -1664,3 +1664,4 @@ DownloadsSummaryData.prototype = {
     }
   },
 };
+Object.setPrototypeOf(DownloadsSummaryData.prototype, DownloadsViewPrototype);

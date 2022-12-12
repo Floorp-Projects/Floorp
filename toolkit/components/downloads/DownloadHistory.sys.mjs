@@ -593,8 +593,6 @@ var DownloadHistoryList = function(publicList, place) {
 };
 
 DownloadHistoryList.prototype = {
-  __proto__: DownloadList.prototype,
-
   /**
    * This is set when executing the Places query.
    */
@@ -856,3 +854,4 @@ DownloadHistoryList.prototype = {
     throw new Error("Not implemented.");
   },
 };
+Object.setPrototypeOf(DownloadHistoryList.prototype, DownloadList.prototype);

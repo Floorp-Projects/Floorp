@@ -385,8 +385,6 @@ export var DownloadCombinedList = function(aPublicList, aPrivateList) {
 };
 
 DownloadCombinedList.prototype = {
-  __proto__: DownloadList.prototype,
-
   /**
    * Underlying DownloadList containing public downloads.
    */
@@ -483,6 +481,7 @@ DownloadCombinedList.prototype = {
     this._notifyAllViews("onDownloadRemoved", aDownload);
   },
 };
+Object.setPrototypeOf(DownloadCombinedList.prototype, DownloadList.prototype);
 
 /**
  * Provides an aggregated view on the contents of a DownloadList.
