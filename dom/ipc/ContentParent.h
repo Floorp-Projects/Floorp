@@ -1238,8 +1238,6 @@ class ContentParent final : public PContentParent,
       nsTArray<ChildEventData>&& events);
   mozilla::ipc::IPCResult RecvRecordDiscardedData(
       const DiscardedData& aDiscardedData);
-  mozilla::ipc::IPCResult RecvRecordPageLoadEvent(
-      const mozilla::glean::perf::PageLoadExtra& aPageLoadEventExtra);
   mozilla::ipc::IPCResult RecvRecordOrigin(const uint32_t& aMetricId,
                                            const nsACString& aOrigin);
   mozilla::ipc::IPCResult RecvReportContentBlockingLog(
@@ -1657,7 +1655,6 @@ class ContentParent final : public PContentParent,
   UniquePtr<mozilla::ipc::SharedPreferenceSerializer> mPrefSerializer;
 
   static uint32_t sMaxContentProcesses;
-  static uint32_t sPageLoadEventCounter;
   static Maybe<TimeStamp> sLastContentProcessLaunch;
 
   bool mIsNotifiedShutdownSuccess = false;

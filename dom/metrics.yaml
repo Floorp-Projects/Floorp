@@ -17,10 +17,8 @@ perf:
         Recorded when a top level content document has been loaded.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1759744
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1799727
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1759744#c5
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1799727#c4
     notification_emails:
       - perf-telemetry-alerts@mozilla.com
       - dpalmeiro@mozilla.com
@@ -46,32 +44,8 @@ perf:
           "Time spent executing JS during page load, in ms."
         type: quantity
         unit: ms
-      redirect_time:
-        type: quantity
-        description:
-          "Time spent in redirections for the top level document."
-        unit: ms
-      redirect_count:
-        description:
-          "Number of redirections for the top level document."
-        type: quantity
-        unit: integer
       load_type:
         description:
           "One of normal,reload,stop,link,history,error or other."
         type: string
-      same_origin_nav:
-        description:
-          "If true, a normal navigation was performed on the same origin."
-        type: boolean
-      http_ver:
-        description:
-          "Version of HTTP protocol used."
-        type: quantity
-        unit: integer
-      trr_domain:
-        description:
-          "TRR domain used."
-        type: string
-    send_in_pings:
-      - pageload
+    telemetry_mirror: Page_load_Toplevel_Content
