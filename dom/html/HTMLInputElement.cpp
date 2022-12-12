@@ -1470,13 +1470,18 @@ uint32_t HTMLInputElement::Width() {
 }
 
 bool HTMLInputElement::SanitizesOnValueGetter() const {
-  // Don't return non-sanitized value for datetime types or number.
-  return mType == FormControlType::InputNumber || IsDateTimeInputType(mType);
+  // Don't return non-sanitized value for datetime types, email, or number.
+  return mType == FormControlType::InputEmail ||
+         mType == FormControlType::InputNumber || IsDateTimeInputType(mType);
 }
 
 void HTMLInputElement::GetValue(nsAString& aValue, CallerType aCallerType) {
   GetValueInternal(aValue, aCallerType);
 
+  // In the case where we need to sanitize an input value without affecting
+  // the displayed user's input, we instead sanitize only on .value accesses.
+  // For the more general case of input elements displaying text that isn't
+  // their current value, see bug 805049.
   if (SanitizesOnValueGetter()) {
     SanitizeValue(aValue, ForValueGetter::Yes);
   }
@@ -4589,7 +4594,23 @@ void HTMLInputElement::SanitizeValue(nsAString& aValue,
     case FormControlType::InputPassword: {
       aValue.StripCRLF();
     } break;
-    case FormControlType::InputEmail:
+    case FormControlType::InputEmail: {
+      aValue.StripCRLF();
+      aValue = nsContentUtils::TrimWhitespace<nsContentUtils::IsHTMLWhitespace>(
+          aValue);
+
+      if (Multiple() && !aValue.IsEmpty()) {
+        nsAutoString oldValue(aValue);
+        HTMLSplitOnSpacesTokenizer tokenizer(oldValue, ',');
+        aValue.Truncate(0);
+        aValue.Append(tokenizer.nextToken());
+        while (tokenizer.hasMoreTokens() ||
+               tokenizer.separatorAfterCurrentToken()) {
+          aValue.Append(',');
+          aValue.Append(tokenizer.nextToken());
+        }
+      }
+    } break;
     case FormControlType::InputUrl: {
       aValue.StripCRLF();
 
