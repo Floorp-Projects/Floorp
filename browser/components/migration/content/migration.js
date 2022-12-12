@@ -4,14 +4,14 @@
 
 "use strict";
 
+const kIMig = Ci.nsIBrowserProfileMigrator;
+const kIPStartup = Ci.nsIProfileStartup;
+
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
 const { MigrationUtils } = ChromeUtils.importESModule(
   "resource:///modules/MigrationUtils.sys.mjs"
-);
-const { MigratorBase } = ChromeUtils.importESModule(
-  "resource:///modules/MigratorBase.sys.mjs"
 );
 
 /**
@@ -34,7 +34,7 @@ const kDataToStringMap = new Map([
 var MigrationWizard = {
   /* exported MigrationWizard */
   _source: "", // Source Profile Migrator ContractID suffix
-  _itemsFlags: MigrationUtils.resourceTypes.ALL, // Selected Import Data Sources (16-bit bitfield)
+  _itemsFlags: kIMig.ALL, // Selected Import Data Sources (16-bit bitfield)
   _selectedProfile: null, // Selected Profile name to import from
   _wiz: null,
   _migrator: null,
@@ -51,9 +51,8 @@ var MigrationWizard = {
 
     this._wiz = document.querySelector("wizard");
 
-    let args = window.arguments[0]?.wrappedJSObject || {};
-    let entryPointId =
-      args.entrypoint || MigrationUtils.MIGRATION_ENTRYPOINTS.UNKNOWN;
+    let args = window.arguments;
+    let entryPointId = args[0] || MigrationUtils.MIGRATION_ENTRYPOINTS.UNKNOWN;
     Services.telemetry
       .getHistogramById("FX_MIGRATION_ENTRY_POINT")
       .add(entryPointId);
@@ -69,25 +68,28 @@ var MigrationWizard = {
       );
     }
 
-    this._source = args.migratorKey;
-    this._migrator =
-      args.migrator instanceof MigratorBase ? args.migrator : null;
-    this._autoMigrate = !!args.isStartupMigration;
-    this._skipImportSourcePage = !!args.skipSourceSelection;
+    if (args.length == 2) {
+      this._source = args[1];
+    } else if (args.length > 2) {
+      this._source = args[1];
+      this._migrator = args[2] instanceof kIMig ? args[2] : null;
+      this._autoMigrate = args[3].QueryInterface(kIPStartup);
+      this._skipImportSourcePage = args[4];
+      if (this._migrator && args[5]) {
+        let sourceProfiles = this.spinResolve(
+          this._migrator.getSourceProfiles()
+        );
+        this._selectedProfile = sourceProfiles.find(
+          profile => profile.id == args[5]
+        );
+      }
 
-    if (this._migrator && args.profileId) {
-      let sourceProfiles = this.spinResolve(this._migrator.getSourceProfiles());
-      this._selectedProfile = sourceProfiles.find(
-        profile => profile.id == args.profileId
-      );
+      if (this._autoMigrate) {
+        // Show the "nothing" option in the automigrate case to provide an
+        // easily identifiable way to avoid migration and create a new profile.
+        document.getElementById("nothing").hidden = false;
+      }
     }
-
-    if (this._autoMigrate) {
-      // Show the "nothing" option in the automigrate case to provide an
-      // easily identifiable way to avoid migration and create a new profile.
-      document.getElementById("nothing").hidden = false;
-    }
-
     this._setSourceForDataLocalization();
 
     document.addEventListener("wizardcancel", function() {
@@ -263,7 +265,7 @@ var MigrationWizard = {
       // Create the migrator for the selected source.
       this._migrator = this.spinResolve(MigrationUtils.getMigrator(newSource));
 
-      this._itemsFlags = MigrationUtils.resourceTypes.ALL;
+      this._itemsFlags = kIMig.ALL;
       this._selectedProfile = null;
     }
     this._source = newSource;
@@ -353,7 +355,7 @@ var MigrationWizard = {
     );
 
     for (let itemType of kDataToStringMap.keys()) {
-      let itemValue = MigrationUtils.resourceTypes[itemType.toUpperCase()];
+      let itemValue = Ci.nsIBrowserProfileMigrator[itemType.toUpperCase()];
       if (items & itemValue) {
         let checkbox = document.createXULElement("checkbox");
         checkbox.id = itemValue;
@@ -420,10 +422,11 @@ var MigrationWizard = {
     if (
       this._source == "safari" &&
       AppConstants.isPlatformAndVersionAtLeast("macosx", "18") &&
-      (this._itemsFlags & MigrationUtils.resourceTypes.BOOKMARKS ||
-        this._itemsFlags == MigrationUtils.resourceTypes.ALL)
+      (this._itemsFlags & Ci.nsIBrowserProfileMigrator.BOOKMARKS ||
+        this._itemsFlags == Ci.nsIBrowserProfileMigrator.ALL)
     ) {
-      let havePermissions = this.spinResolve(this._migrator.hasPermissions());
+      let migrator = this._migrator.wrappedJSObject;
+      let havePermissions = this.spinResolve(migrator.hasPermissions());
 
       if (!havePermissions) {
         this._wiz.currentPage.next = "importPermissions";
@@ -442,8 +445,9 @@ var MigrationWizard = {
     // worked.
     event.preventDefault();
 
-    await this._migrator.getPermissions(window);
-    if (await this._migrator.hasPermissions()) {
+    let migrator = this._migrator.wrappedJSObject;
+    await migrator.getPermissions(window);
+    if (await migrator.hasPermissions()) {
       this._receivedPermissions.add(this._source);
       // Re-enter (we'll then allow the advancement through the early return above)
       this._wiz.advance();
@@ -501,7 +505,7 @@ var MigrationWizard = {
     }
 
     for (let itemType of kDataToStringMap.keys()) {
-      let itemValue = MigrationUtils.resourceTypes[itemType.toUpperCase()];
+      let itemValue = Ci.nsIBrowserProfileMigrator[itemType.toUpperCase()];
       if (this._itemsFlags & itemValue) {
         var label = document.createXULElement("label");
         label.id = itemValue + "_migrated";
@@ -563,22 +567,22 @@ var MigrationWizard = {
         let type = "undefined";
         let numericType = parseInt(aData);
         switch (numericType) {
-          case MigrationUtils.resourceTypes.COOKIES:
+          case Ci.nsIBrowserProfileMigrator.COOKIES:
             type = "cookies";
             break;
-          case MigrationUtils.resourceTypes.HISTORY:
+          case Ci.nsIBrowserProfileMigrator.HISTORY:
             type = "history";
             break;
-          case MigrationUtils.resourceTypes.FORMDATA:
+          case Ci.nsIBrowserProfileMigrator.FORMDATA:
             type = "form data";
             break;
-          case MigrationUtils.resourceTypes.PASSWORDS:
+          case Ci.nsIBrowserProfileMigrator.PASSWORDS:
             type = "passwords";
             break;
-          case MigrationUtils.resourceTypes.BOOKMARKS:
+          case Ci.nsIBrowserProfileMigrator.BOOKMARKS:
             type = "bookmarks";
             break;
-          case MigrationUtils.resourceTypes.OTHERDATA:
+          case Ci.nsIBrowserProfileMigrator.OTHERDATA:
             type = "misc. data";
             break;
         }

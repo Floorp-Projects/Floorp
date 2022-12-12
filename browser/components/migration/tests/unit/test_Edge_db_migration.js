@@ -535,8 +535,12 @@ add_task(async function() {
     ])
   );
 
-  let migrator = await MigrationUtils.getMigrator("edge");
-  let bookmarksMigrator = migrator.getBookmarksMigratorForTesting(db);
+  let migrator = Cc[
+    "@mozilla.org/profile/migrator;1?app=browser&type=edge"
+  ].createInstance(Ci.nsIBrowserProfileMigrator);
+  let bookmarksMigrator = migrator.wrappedJSObject.getBookmarksMigratorForTesting(
+    db
+  );
   Assert.ok(bookmarksMigrator.exists, "Should recognize db we just created");
 
   let seenBookmarks = [];
@@ -721,7 +725,9 @@ add_task(async function() {
   };
   PlacesUtils.observers.addListener(["bookmark-added"], listener);
 
-  let readingListMigrator = migrator.getReadingListMigratorForTesting(db);
+  let readingListMigrator = migrator.wrappedJSObject.getReadingListMigratorForTesting(
+    db
+  );
   Assert.ok(readingListMigrator.exists, "Should recognize db we just created");
   migrateResult = await new Promise(resolve =>
     readingListMigrator.migrate(resolve)

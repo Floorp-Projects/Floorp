@@ -1212,8 +1212,10 @@ function createRegistryPath(path) {
   }
 }
 
-async function getFirstResourceOfType(type) {
-  let migrator = await MigrationUtils.getMigrator("ie");
+function getFirstResourceOfType(type) {
+  let migrator = Cc[
+    "@mozilla.org/profile/migrator;1?app=browser&type=ie"
+  ].createInstance(Ci.nsISupports).wrappedJSObject;
   let migrators = migrator.getResources();
   for (let m of migrators) {
     if (m.name == IE7_FORM_PASSWORDS_MIGRATOR_NAME && m.type == type) {
@@ -1229,8 +1231,8 @@ function makeURI(aURL) {
 
 add_task(async function setup() {
   if (AppConstants.isPlatformAndVersionAtLeast("win", "6.2")) {
-    await Assert.rejects(
-      getFirstResourceOfType(MigrationUtils.resourceTypes.PASSWORDS),
+    Assert.throws(
+      () => getFirstResourceOfType(MigrationUtils.resourceTypes.PASSWORDS),
       /failed to find/,
       "The migrator doesn't exist for win8+"
     );
@@ -1258,9 +1260,7 @@ add_task(async function test_passwordsNotAvailable() {
     return;
   }
 
-  let migrator = await getFirstResourceOfType(
-    MigrationUtils.resourceTypes.PASSWORDS
-  );
+  let migrator = getFirstResourceOfType(MigrationUtils.resourceTypes.PASSWORDS);
   Assert.ok(migrator.exists, "The migrator has to exist");
   let logins = Services.logins.getAllLogins();
   Assert.equal(
@@ -1309,9 +1309,7 @@ add_task(async function test_passwordsAvailable() {
     crypto.finalize();
   });
 
-  let migrator = await getFirstResourceOfType(
-    MigrationUtils.resourceTypes.PASSWORDS
-  );
+  let migrator = getFirstResourceOfType(MigrationUtils.resourceTypes.PASSWORDS);
   Assert.ok(migrator.exists, "The migrator has to exist");
   let logins = Services.logins.getAllLogins();
   Assert.equal(

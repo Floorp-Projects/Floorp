@@ -1870,7 +1870,7 @@ export var PlacesUIUtils = {
     // Otherwise, wait for a successful migration:
     let obs = (subject, topic, data) => {
       if (
-        data == lazy.MigrationUtils.resourceTypes.BOOKMARKS &&
+        data == Ci.nsIBrowserProfileMigrator.BOOKMARKS &&
         lazy.MigrationUtils.getImportedCount("bookmarks") > 0
       ) {
         lazy.CustomizableUI.removeWidgetFromArea("import-button");
