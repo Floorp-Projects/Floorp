@@ -32,21 +32,17 @@ ChromeUtils.defineESModuleGetters(lazy, {
  */
 
 /**
- * Shared prototype for migrators, implementing nsIBrowserProfileMigrator.
+ * Shared prototype for migrators.
  *
  * To implement a migrator:
  * 1. Import this module.
  * 2. Create the prototype for the migrator, extending MigratorBase.
- * 3. Set classDescription, contractID and classID for your migrator, and update
- *    components.conf to register the migrator as an XPCOM component.
- * 4. If the migrator supports multiple profiles, override the sourceProfiles
+ * 3. If the migrator supports multiple profiles, override the sourceProfiles
  *    Here we default for single-profile migrator.
- * 5. Implement getResources(aProfile) (see below).
- * 6. For startup-only migrators, override |startupOnlyMigrator|.
+ * 4. Implement getResources(aProfile) (see below).
+ * 5. For startup-only migrators, override |startupOnlyMigrator|.
  */
 export class MigratorBase {
-  QueryInterface = ChromeUtils.generateQI(["nsIBrowserProfileMigrator"]);
-
   /**
    * This must be overridden to return a simple string identifier for the
    * migrator, for example "firefox", "chrome", "opera-gx". This key is what
@@ -180,7 +176,6 @@ export class MigratorBase {
    * DO NOT OVERRIDE - After deCOMing migration, the UI will just call
    * getResources.
    *
-   * See nsIBrowserProfileMigrator.
    *
    * @param {object|string} aProfile
    *   The profile from which data may be imported, or an empty string
@@ -202,8 +197,6 @@ export class MigratorBase {
   /**
    * DO NOT OVERRIDE - After deCOMing migration, the UI will just call
    * migrate for each resource.
-   *
-   * See nsIBrowserProfileMigrator.
    *
    * @see MigrationUtils
    *
@@ -445,8 +438,6 @@ export class MigratorBase {
   /**
    * DO NOT OVERRIDE - After deCOMing migration, this code
    * won't be part of the migrator itself.
-   *
-   * See nsIBrowserProfileMigrator.
    */
   async isSourceAvailable() {
     if (this.startupOnlyMigrator && !lazy.MigrationUtils.isStartupMigration) {
