@@ -3,6 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// WARNING: THIS FILE IS ALSO LOADED FROM A WORKER IN THE CHROME MOCHITEST
+// test_ctypes.xhtml - YOU CANNOT JUST ASSUME AN XPCSHELL ENVIRONMENT.
+// There is glue code in xpcshellTestHarnessAdaptor.js to make this work.
+
 /* eslint-disable no-new-wrappers */
 
 try {
