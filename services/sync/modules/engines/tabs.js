@@ -78,7 +78,6 @@ function TabEngine(service) {
 }
 
 TabEngine.prototype = {
-  __proto__: BridgedEngine.prototype,
   _trackerObj: TabTracker,
   syncPriority: 3,
 
@@ -342,6 +341,7 @@ TabEngine.prototype = {
     }
   },
 };
+Object.setPrototypeOf(TabEngine.prototype, BridgedEngine.prototype);
 
 const TabProvider = {
   getWindowEnumerator() {
@@ -425,8 +425,6 @@ function TabTracker(name, engine) {
   this._unregisterListeners = Utils.bind2(this, this._unregisterListeners);
 }
 TabTracker.prototype = {
-  __proto__: Tracker.prototype,
-
   QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
   clearChangedIDs() {
@@ -609,3 +607,4 @@ TabTracker.prototype = {
     }
   },
 };
+Object.setPrototypeOf(TabTracker.prototype, Tracker.prototype);

@@ -36,10 +36,10 @@ function HistoryRec(collection, id) {
   CryptoWrapper.call(this, collection, id);
 }
 HistoryRec.prototype = {
-  __proto__: CryptoWrapper.prototype,
   _logName: "Sync.Record.History",
   ttl: HISTORY_TTL,
 };
+Object.setPrototypeOf(HistoryRec.prototype, CryptoWrapper.prototype);
 
 Utils.deferGetSet(HistoryRec, "cleartext", ["histUri", "title", "visits"]);
 
@@ -47,7 +47,6 @@ function HistoryEngine(service) {
   SyncEngine.call(this, "History", service);
 }
 HistoryEngine.prototype = {
-  __proto__: SyncEngine.prototype,
   _recordObj: HistoryRec,
   _storeObj: HistoryStore,
   _trackerObj: HistoryTracker,
@@ -115,14 +114,13 @@ HistoryEngine.prototype = {
     await lazy.PlacesSyncUtils.history.reset();
   },
 };
+Object.setPrototypeOf(HistoryEngine.prototype, SyncEngine.prototype);
 
 function HistoryStore(name, engine) {
   Store.call(this, name, engine);
 }
 
 HistoryStore.prototype = {
-  __proto__: Store.prototype,
-
   // We try and only update this many visits at one time.
   MAX_VISITS_PER_INSERT: 500,
 
@@ -499,13 +497,12 @@ HistoryStore.prototype = {
     return lazy.PlacesSyncUtils.history.wipe();
   },
 };
+Object.setPrototypeOf(HistoryStore.prototype, Store.prototype);
 
 function HistoryTracker(name, engine) {
   LegacyTracker.call(this, name, engine);
 }
 HistoryTracker.prototype = {
-  __proto__: LegacyTracker.prototype,
-
   onStart() {
     this._log.info("Adding Places observer.");
     this._placesObserver = new PlacesWeakCallbackWrapper(
@@ -582,3 +579,4 @@ HistoryTracker.prototype = {
     }
   },
 };
+Object.setPrototypeOf(HistoryTracker.prototype, LegacyTracker.prototype);

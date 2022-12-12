@@ -108,9 +108,11 @@ function MockFxAccountsClient(activeTokens) {
   FxAccountsClient.apply(this);
 }
 
-MockFxAccountsClient.prototype = {
-  __proto__: FxAccountsClient.prototype,
-};
+MockFxAccountsClient.prototype = {};
+Object.setPrototypeOf(
+  MockFxAccountsClient.prototype,
+  FxAccountsClient.prototype
+);
 
 function MockFxAccounts() {
   // The FxA "auth" and "oauth" servers both share the same db of tokens,

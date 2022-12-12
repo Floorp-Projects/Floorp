@@ -21,12 +21,13 @@ function mock(options) {
     calls.push(arguments);
     return options.returns;
   };
-  Object.setPrototypeOf(ret, {
-    __proto__: Function.prototype,
+  let proto = {
     get calls() {
       return calls;
     },
-  });
+  };
+  Object.setPrototypeOf(proto, Function.prototype);
+  Object.setPrototypeOf(ret, proto);
   return ret;
 }
 

@@ -13,12 +13,12 @@ function CatapultEngine() {
   SyncEngine.call(this, "Catapult", Service);
 }
 CatapultEngine.prototype = {
-  __proto__: SyncEngine.prototype,
   exception: null, // tests fill this in
   async _sync() {
     throw this.exception;
   },
 };
+Object.setPrototypeOf(CatapultEngine.prototype, SyncEngine.prototype);
 
 async function sync_httpd_setup() {
   let collectionsHelper = track_collections_helper();

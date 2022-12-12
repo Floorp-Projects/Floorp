@@ -87,7 +87,6 @@ function ExtensionStorageEngineBridge(service) {
 }
 
 ExtensionStorageEngineBridge.prototype = {
-  __proto__: BridgedEngine.prototype,
   syncPriority: 10,
 
   // Used to override the engine name in telemetry, so that we can distinguish .
@@ -185,6 +184,10 @@ ExtensionStorageEngineBridge.prototype = {
     setEngineEnabled(enabled);
   },
 };
+Object.setPrototypeOf(
+  ExtensionStorageEngineBridge.prototype,
+  BridgedEngine.prototype
+);
 
 /**
  *****************************************************************************
@@ -212,7 +215,6 @@ function ExtensionStorageEngineKinto(service) {
   );
 }
 ExtensionStorageEngineKinto.prototype = {
-  __proto__: SyncEngine.prototype,
   _trackerObj: ExtensionStorageTracker,
   // we don't need these since we implement our own sync logic
   _storeObj: undefined,
@@ -266,14 +268,16 @@ ExtensionStorageEngineKinto.prototype = {
     return shouldSkip;
   },
 };
+Object.setPrototypeOf(
+  ExtensionStorageEngineKinto.prototype,
+  SyncEngine.prototype
+);
 
 function ExtensionStorageTracker(name, engine) {
   Tracker.call(this, name, engine);
   this._ignoreAll = false;
 }
 ExtensionStorageTracker.prototype = {
-  __proto__: Tracker.prototype,
-
   get ignoreAll() {
     return this._ignoreAll;
   },
@@ -304,3 +308,4 @@ ExtensionStorageTracker.prototype = {
     this.score += lazy.SCORE_INCREMENT_MEDIUM;
   },
 };
+Object.setPrototypeOf(ExtensionStorageTracker.prototype, Tracker.prototype);

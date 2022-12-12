@@ -161,7 +161,6 @@ const EHTestsCommon = {
       SyncEngine.call(this, "Catapult", Service);
     }
     CatapultEngine.prototype = {
-      __proto__: SyncEngine.prototype,
       exception: null, // tests fill this in
       async _sync() {
         if (this.exception) {
@@ -169,6 +168,7 @@ const EHTestsCommon = {
         }
       },
     };
+    Object.setPrototypeOf(CatapultEngine.prototype, SyncEngine.prototype);
 
     return CatapultEngine;
   })(),
