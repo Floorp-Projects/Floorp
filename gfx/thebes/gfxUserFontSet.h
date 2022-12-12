@@ -109,8 +109,6 @@ inline bool operator==(const gfxFontFaceSrc& a, const gfxFontFaceSrc& b) {
         return false;
       }
       if (a.mUseOriginPrincipal) {
-        // The mOriginPrincipal comparison isn't safe OMT.
-        MOZ_ASSERT(NS_IsMainThread());
         if (!a.mOriginPrincipal->Equals(b.mOriginPrincipal)) {
           return false;
         }
