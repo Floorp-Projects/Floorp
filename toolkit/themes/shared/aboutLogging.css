@@ -56,3 +56,27 @@ input[type=text] {
   font-family: monospace;
   padding-inline-start: 0;
 }
+
+input[type=radio] {
+  vertical-align: middle;
+}
+
+.info-box {
+  width: 100%;
+  padding: 0.3em 1em;
+  border-radius: 4px;
+}
+
+.info-box-label {
+  font-weight: 600;
+}
+
+#error {
+  background-color: rgba(240, 40, 40, 0.5);
+  border: 1px solid rgba(240, 40, 40, 0.6);
+}
+
+#some-elements-unavailable {
+  background-color: var(--in-content-box-info-background);
+  border-color: var(--in-content-box-border-color);
+}
