@@ -15,6 +15,7 @@ SPHINX_TREES["docs"] = "docs"
 JAR_MANIFESTS += ["jar.mn"]
 
 XPIDL_SOURCES += [
+    "nsIBrowserProfileMigrator.idl",
     "nsIEdgeMigrationUtils.idl",
 ]
 

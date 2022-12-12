@@ -346,8 +346,16 @@ SearchStrings.prototype = {
  * Safari migrator
  */
 export class SafariProfileMigrator extends MigratorBase {
-  static get key() {
-    return "safari";
+  get classDescription() {
+    return "Safari Profile Migrator";
+  }
+
+  get contractID() {
+    return "@mozilla.org/profile/migrator;1?app=browser&type=safari";
+  }
+
+  get classID() {
+    return Components.ID("{4b609ecf-60b2-4655-9df4-dc149e474da1}");
   }
 
   getResources() {

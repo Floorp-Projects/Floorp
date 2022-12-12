@@ -353,8 +353,21 @@ IE7FormPasswords.prototype = {
  * Internet Explorer profile migrator
  */
 export class IEProfileMigrator extends MigratorBase {
-  static get key() {
-    return "ie";
+  constructor() {
+    super();
+    this.wrappedJSObject = this; // export this to be able to use it in the unittest.
+  }
+
+  get classDescription() {
+    return "IE Profile Migrator";
+  }
+
+  get contractID() {
+    return "@mozilla.org/profile/migrator;1?app=browser&type=ie";
+  }
+
+  get classID() {
+    return Components.ID("{3d2532e3-4932-4774-b7ba-968f5899d3a4}");
   }
 
   getResources() {

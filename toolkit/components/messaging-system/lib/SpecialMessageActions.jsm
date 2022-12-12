@@ -232,10 +232,10 @@ const SpecialMessageActions = {
     switch (action.type) {
       case "SHOW_MIGRATION_WIZARD":
         Services.tm.dispatchToMainThread(() =>
-          lazy.MigrationUtils.showMigrationWizard(window, {
-            entrypoint: lazy.MigrationUtils.MIGRATION_ENTRYPOINTS.NEWTAB,
-            migratorKey: action.data?.source,
-          })
+          lazy.MigrationUtils.showMigrationWizard(window, [
+            lazy.MigrationUtils.MIGRATION_ENTRYPOINTS.NEWTAB,
+            action.data?.source,
+          ])
         );
         break;
       case "OPEN_PRIVATE_BROWSER_WINDOW":

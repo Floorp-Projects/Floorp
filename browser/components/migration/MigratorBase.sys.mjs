@@ -23,7 +23,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
  *   A resource returned by a subclass of MigratorBase that can migrate
  *   data to this browser.
  * @property {number} type
- *   A bitfield with bits from MigrationUtils.resourceTypes flipped to indicate
+ *   A bitfield with bits from nsIBrowserProfileMigrator flipped to indicate
  *   what this resource represents. A resource can represent one or more types
  *   of data, for example HISTORY and FORMDATA.
  * @property {Function} migrate
@@ -32,30 +32,20 @@ ChromeUtils.defineESModuleGetters(lazy, {
  */
 
 /**
- * Shared prototype for migrators.
+ * Shared prototype for migrators, implementing nsIBrowserProfileMigrator.
  *
  * To implement a migrator:
  * 1. Import this module.
- * 2. Create a subclass of MigratorBase for your new migrator.
- * 3. Override the `key` static getter with a unique identifier for the browser
- *    that this migrator migrates from.
+ * 2. Create the prototype for the migrator, extending MigratorBase.
+ * 3. Set classDescription, contractID and classID for your migrator, and update
+ *    components.conf to register the migrator as an XPCOM component.
  * 4. If the migrator supports multiple profiles, override the sourceProfiles
  *    Here we default for single-profile migrator.
  * 5. Implement getResources(aProfile) (see below).
  * 6. For startup-only migrators, override |startupOnlyMigrator|.
- * 7. Add the migrator to the MIGRATOR_MODULES structure in MigrationUtils.sys.mjs.
  */
 export class MigratorBase {
-  /**
-   * This must be overridden to return a simple string identifier for the
-   * migrator, for example "firefox", "chrome", "opera-gx". This key is what
-   * is used as an identifier when calling MigrationUtils.getMigrator.
-   *
-   * @type {boolean}
-   */
-  static get key() {
-    throw new Error("MigratorBase must be overridden.");
-  }
+  QueryInterface = ChromeUtils.generateQI(["nsIBrowserProfileMigrator"]);
 
   /**
    * OVERRIDE IF AND ONLY IF the source supports multiple profiles.
@@ -86,8 +76,8 @@ export class MigratorBase {
    * profiles.
    *
    * Each migration resource should provide:
-   * - a |type| getter, returning any of the migration resource types (see
-   *   MigrationUtils.resourceTypes).
+   * - a |type| getter, returning any of the migration types (see
+   *   nsIBrowserProfileMigrator).
    *
    * - a |migrate| method, taking a single argument, aCallback(bool success),
    *   for migrating the data for this resource.  It may do its job
@@ -98,7 +88,7 @@ export class MigratorBase {
    *   Note: In the case of a simple asynchronous implementation, you may find
    *   MigrationUtils.wrapMigrateFunction handy for handling aCallback easily.
    *
-   * For each migration type listed in MigrationUtils.resourceTypes, multiple
+   * For each migration type listed in nsIBrowserProfileMigrator, multiple
    * migration resources may be provided.  This practice is useful when the
    * data for a certain migration type is independently stored in few
    * locations.  For example, the mac version of Safari stores its "reading list"
@@ -171,19 +161,20 @@ export class MigratorBase {
    *   true if the migrator should be shown in the migration wizard.
    */
   get enabled() {
-    let key = this.constructor.key;
+    let key = this.getBrowserKey();
     return Services.prefs.getBoolPref(`browser.migrate.${key}.enabled`, false);
   }
 
   /**
-   * This method returns a number that is the bitwise OR of all resource
-   * types that are available in aProfile. See MigrationUtils.resourceTypes
-   * for each resource type.
+   * DO NOT OVERRIDE - After deCOMing migration, the UI will just call
+   * getResources.
+   *
+   * See nsIBrowserProfileMigrator.
    *
    * @param {object|string} aProfile
    *   The profile from which data may be imported, or an empty string
    *   in the case of a single-profile migrator.
-   * @returns {number}
+   * @returns {MigratorResource[]}
    */
   async getMigrateData(aProfile) {
     let resources = await this.#getMaybeCachedResources(aProfile);
@@ -197,11 +188,18 @@ export class MigratorBase {
     }, 0);
   }
 
+  getBrowserKey() {
+    return this.contractID.match(/\=([^\=]+)$/)[1];
+  }
+
   /**
-   * @see MigrationUtils
+   * DO NOT OVERRIDE - After deCOMing migration, the UI will just call
+   * migrate for each resource.
+   *
+   * See nsIBrowserProfileMigrator.
    *
    * @param {number} aItems
-   *   A bitfield with bits from MigrationUtils.resourceTypes flipped to indicate
+   *   A bitfield with bits from nsIBrowserProfileMigrator flipped to indicate
    *   what types of resources should be migrated.
    * @param {boolean} aStartup
    *   True if this migration is occurring during startup.
@@ -214,7 +212,7 @@ export class MigratorBase {
       throw new Error("migrate called for a non-existent source");
     }
 
-    if (aItems != lazy.MigrationUtils.resourceTypes.ALL) {
+    if (aItems != Ci.nsIBrowserProfileMigrator.ALL) {
       resources = resources.filter(r => aItems & r.type);
     }
 
@@ -238,7 +236,7 @@ export class MigratorBase {
       return null;
     };
 
-    let browserKey = this.constructor.key;
+    let browserKey = this.getBrowserKey();
 
     let maybeStartTelemetryStopwatch = resourceType => {
       let histogramId = getHistogramIdForResourceType(
@@ -436,12 +434,10 @@ export class MigratorBase {
   }
 
   /**
-   * Checks to see if one or more profiles exist for the browser that this
-   * migrator migrates from.
+   * DO NOT OVERRIDE - After deCOMing migration, this code
+   * won't be part of the migrator itself.
    *
-   * @returns {Promise<boolean>}
-   *   True if one or more profiles exists that this migrator can migrate
-   *   resources from.
+   * See nsIBrowserProfileMigrator.
    */
   async isSourceAvailable() {
     if (this.startupOnlyMigrator && !lazy.MigrationUtils.isStartupMigration) {

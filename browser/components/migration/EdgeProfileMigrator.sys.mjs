@@ -468,8 +468,21 @@ EdgeBookmarksMigrator.prototype = {
  * Edge (EdgeHTML) profile migrator
  */
 export class EdgeProfileMigrator extends MigratorBase {
-  static get key() {
-    return "edge";
+  constructor() {
+    super();
+    this.wrappedJSObject = this;
+  }
+
+  get classDescription() {
+    return "Edge Profile Migrator";
+  }
+
+  get contractID() {
+    return "@mozilla.org/profile/migrator;1?app=browser&type=edge";
+  }
+
+  get classID() {
+    return Components.ID("{62e8834b-2d17-49f5-96ff-56344903a2ae}");
   }
 
   getBookmarksMigratorForTesting(dbOverride) {

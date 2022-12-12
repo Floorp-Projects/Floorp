@@ -73,8 +73,16 @@ function convertBookmarks(items, errorAccumulator) {
  * migrators for browsers that are variants of Chrome.
  */
 export class ChromeProfileMigrator extends MigratorBase {
-  static get key() {
-    return "chrome";
+  get classDescription() {
+    return "Chrome Profile Migrator";
+  }
+
+  get contractID() {
+    return "@mozilla.org/profile/migrator;1?app=browser&type=chrome";
+  }
+
+  get classID() {
+    return Components.ID("{4cec1de4-1671-4fc3-a53e-6c539dc77a26}");
   }
 
   get _chromeUserDataPathSuffix() {
@@ -110,7 +118,7 @@ export class ChromeProfileMigrator extends MigratorBase {
       }
       if (await IOUtils.exists(profileFolder)) {
         let possibleResourcePromises = [
-          GetBookmarksResource(profileFolder, this.constructor.key),
+          GetBookmarksResource(profileFolder, this.getBrowserKey()),
           GetHistoryResource(profileFolder),
           GetCookiesResource(profileFolder),
         ];
@@ -611,8 +619,16 @@ async function GetCookiesResource(aProfileFolder) {
  * Chromium migrator
  */
 export class ChromiumProfileMigrator extends ChromeProfileMigrator {
-  static get key() {
-    return "chromium";
+  get classDescription() {
+    return "Chromium Profile Migrator";
+  }
+
+  get contractID() {
+    return "@mozilla.org/profile/migrator;1?app=browser&type=chromium";
+  }
+
+  get classID() {
+    return Components.ID("{8cece922-9720-42de-b7db-7cef88cb07ca}");
   }
 
   _chromeUserDataPathSuffix = "Chromium";
@@ -625,8 +641,16 @@ export class ChromiumProfileMigrator extends ChromeProfileMigrator {
  * Not available on Linux
  */
 export class CanaryProfileMigrator extends ChromeProfileMigrator {
-  static get key() {
-    return "canary";
+  get classDescription() {
+    return "Chrome Canary Profile Migrator";
+  }
+
+  get contractID() {
+    return "@mozilla.org/profile/migrator;1?app=browser&type=canary";
+  }
+
+  get classID() {
+    return Components.ID("{4bf85aa5-4e21-46ca-825f-f9c51a5e8c76}");
   }
 
   get _chromeUserDataPathSuffix() {
@@ -646,8 +670,16 @@ export class CanaryProfileMigrator extends ChromeProfileMigrator {
  * Chrome Dev - Linux only (not available in Mac and Windows)
  */
 export class ChromeDevMigrator extends ChromeProfileMigrator {
-  static get key() {
-    return "chrome-dev";
+  get classDescription() {
+    return "Chrome Dev Profile Migrator";
+  }
+
+  get contractID() {
+    return "@mozilla.org/profile/migrator;1?app=browser&type=chrome-dev";
+  }
+
+  get classID() {
+    return Components.ID("{7370a02a-4886-42c3-a4ec-d48c726ec30a}");
   }
 
   _chromeUserDataPathSuffix = "Chrome Dev";
@@ -659,8 +691,16 @@ export class ChromeDevMigrator extends ChromeProfileMigrator {
  * Chrome Beta migrator
  */
 export class ChromeBetaMigrator extends ChromeProfileMigrator {
-  static get key() {
-    return "chrome-beta";
+  get classDescription() {
+    return "Chrome Beta Profile Migrator";
+  }
+
+  get contractID() {
+    return "@mozilla.org/profile/migrator;1?app=browser&type=chrome-beta";
+  }
+
+  get classID() {
+    return Components.ID("{47f75963-840b-4950-a1f0-d9c1864f8b8e}");
   }
 
   _chromeUserDataPathSuffix = "Chrome Beta";
@@ -672,8 +712,16 @@ export class ChromeBetaMigrator extends ChromeProfileMigrator {
  * Brave migrator
  */
 export class BraveProfileMigrator extends ChromeProfileMigrator {
-  static get key() {
-    return "brave";
+  get classDescription() {
+    return "Brave Browser Migrator";
+  }
+
+  get contractID() {
+    return "@mozilla.org/profile/migrator;1?app=browser&type=brave";
+  }
+
+  get classID() {
+    return Components.ID("{4071880a-69e4-4c83-88b4-6c589a62801d}");
   }
 
   _chromeUserDataPathSuffix = "Brave";
@@ -685,8 +733,16 @@ export class BraveProfileMigrator extends ChromeProfileMigrator {
  * Edge (Chromium-based) migrator
  */
 export class ChromiumEdgeMigrator extends ChromeProfileMigrator {
-  static get key() {
-    return "chromium-edge";
+  get classDescription() {
+    return "Chromium Edge Profile Migrator";
+  }
+
+  get contractID() {
+    return "@mozilla.org/profile/migrator;1?app=browser&type=chromium-edge";
+  }
+
+  get classID() {
+    return Components.ID("{3c7f6b7c-baa9-4338-acfa-04bf79f1dcf1}");
   }
 
   _chromeUserDataPathSuffix = "Edge";
@@ -698,8 +754,16 @@ export class ChromiumEdgeMigrator extends ChromeProfileMigrator {
  * Edge Beta (Chromium-based) migrator
  */
 export class ChromiumEdgeBetaMigrator extends ChromeProfileMigrator {
-  static get key() {
-    return "chromium-edge-beta";
+  get classDescription() {
+    return "Chromium Edge Beta Profile Migrator";
+  }
+
+  get contractID() {
+    return "@mozilla.org/profile/migrator;1?app=browser&type=chromium-edge-beta";
+  }
+
+  get classID() {
+    return Components.ID("{0fc3d48a-c1c3-4871-b58f-a8b47d1555fb}");
   }
 
   _chromeUserDataPathSuffix = "Edge Beta";
@@ -711,8 +775,16 @@ export class ChromiumEdgeBetaMigrator extends ChromeProfileMigrator {
  * Chromium 360 migrator
  */
 export class Chromium360seMigrator extends ChromeProfileMigrator {
-  static get key() {
-    return "chromium-360se";
+  get classDescription() {
+    return "Chromium 360 Secure Browser Profile Migrator";
+  }
+
+  get contractID() {
+    return "@mozilla.org/profile/migrator;1?app=browser&type=chromium-360se";
+  }
+
+  get classID() {
+    return Components.ID("{2e1a182e-ce4f-4dc9-a22c-d4125b931552}");
   }
 
   _chromeUserDataPathSuffix = "360 SE";
@@ -724,8 +796,16 @@ export class Chromium360seMigrator extends ChromeProfileMigrator {
  * Opera migrator
  */
 export class OperaProfileMigrator extends ChromeProfileMigrator {
-  static get key() {
-    return "opera";
+  get classDescription() {
+    return "Opera Browser Migrator";
+  }
+
+  get contractID() {
+    return "@mozilla.org/profile/migrator;1?app=browser&type=opera";
+  }
+
+  get classID() {
+    return Components.ID("{16c5d501-e411-41eb-93f2-af6c9ba64dee}");
   }
 
   _chromeUserDataPathSuffix = "Opera";
@@ -741,8 +821,16 @@ export class OperaProfileMigrator extends ChromeProfileMigrator {
  * Opera GX migrator
  */
 export class OperaGXProfileMigrator extends ChromeProfileMigrator {
-  static get key() {
-    return "opera-gx";
+  get classDescription() {
+    return "Opera GX Browser Migrator";
+  }
+
+  get contractID() {
+    return "@mozilla.org/profile/migrator;1?app=browser&type=opera-gx";
+  }
+
+  get classID() {
+    return Components.ID("{26F4E0A0-B533-4FDA-B344-6FF5DA45D6DC}");
   }
 
   _chromeUserDataPathSuffix = "Opera GX";
@@ -758,8 +846,16 @@ export class OperaGXProfileMigrator extends ChromeProfileMigrator {
  * Vivaldi migrator
  */
 export class VivaldiProfileMigrator extends ChromeProfileMigrator {
-  static get key() {
-    return "vivaldi";
+  get classDescription() {
+    return "Vivaldi Migrator";
+  }
+
+  get contractID() {
+    return "@mozilla.org/profile/migrator;1?app=browser&type=vivaldi";
+  }
+
+  get classID() {
+    return Components.ID("{54a6a025-e70d-49dd-ba95-0f7e45d728d3}");
   }
 
   _chromeUserDataPathSuffix = "Vivaldi";
