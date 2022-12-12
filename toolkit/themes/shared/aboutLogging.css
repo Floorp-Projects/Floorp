@@ -28,6 +28,7 @@ div.page-section {
 
 div.page-section > div {
   padding-inline-start: 0.5em;
+  padding-bottom: 2em;
 }
 
 #current-log-modules,
@@ -39,6 +40,10 @@ div.page-section > div {
 
 #current-log-file {
   font-family: monospace;
+  padding-inline-start: 8px;
+}
+
+#logging-preset-description {
   padding-inline-start: 8px;
 }
 
