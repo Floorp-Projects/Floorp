@@ -26,10 +26,7 @@ describe("<DSContextFooter>", () => {
     sandbox.restore();
   });
 
-  it("should render", () => {
-    assert.isTrue(wrapper.exists());
-    assert.isOk(wrapper.find(".story-footer"));
-  });
+  it("should render", () => assert.isTrue(wrapper.exists()));
   it("should not render an engagement status if display_engagement_labels is false", () => {
     wrapper = mount(
       <DSContextFooter

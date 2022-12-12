@@ -408,7 +408,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
       };
       const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
       assert.ok(wrapper.exists());
-      assert.equal(wrapper.find(".action-buttons").exists(), false);
+      assert.isFalse(wrapper.find(".action-buttons").exists());
     });
   });
 });

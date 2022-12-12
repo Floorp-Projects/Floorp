@@ -211,19 +211,18 @@ describe("MultiStageAboutWelcome module", () => {
 
   describe("WelcomeScreen component", () => {
     describe("get started screen", () => {
-      const startScreen = DEFAULT_WELCOME_CONTENT.screens.find(screen => {
-        return screen.id === "AW_SET_DEFAULT";
-      });
+      const screen = DEFAULT_WELCOME_CONTENT.screens.find(
+        s => s.id === "AW_PIN_FIREFOX"
+      );
 
       const GET_STARTED_SCREEN_PROPS = {
-        id: startScreen.id,
-        totalNumberofScreens: 1,
-        content: startScreen.content,
+        id: screen.id,
+        totalNumberOfScreens: 1,
+        content: screen.content,
         topSites: [],
-        messageId: `${DEFAULT_PROPS.message_id}_${startScreen.id}`,
+        messageId: `${DEFAULT_PROPS.message_id}_${screen.id}`,
         UTMTerm: DEFAULT_PROPS.utm_term,
         flowParams: null,
-        startScreen: 0,
       };
 
       it("should render GetStarted Screen", () => {
@@ -245,7 +244,7 @@ describe("MultiStageAboutWelcome module", () => {
           position: "top",
         };
         const wrapper = mount(<SecondaryCTA {...SCREEN_PROPS} />);
-        assert.ok(wrapper.find("div.secondary_button_top"));
+        assert.ok(wrapper.find("div.secondary-cta.top").exists());
       });
 
       it("should render the arrow icon in the secondary button", () => {
@@ -259,38 +258,47 @@ describe("MultiStageAboutWelcome module", () => {
           },
         };
         const wrapper = mount(<SecondaryCTA {...SCREEN_PROPS} />);
-        assert.ok(wrapper.find("button[class='arrow-icon']"));
+        assert.ok(wrapper.find("button.arrow-icon").exists());
       });
 
       it("should render steps indicator", () => {
-        let SCREEN_PROPS = {
-          totalNumberOfScreens: 1,
-        };
-        <StepsIndicator {...SCREEN_PROPS} />;
-        const wrapper = mount(<StepsIndicator {...SCREEN_PROPS} />);
-        assert.ok(wrapper.find("div.indicator"));
+        let PROPS = { totalNumberOfScreens: 1 };
+        const wrapper = mount(<StepsIndicator {...PROPS} />);
+        assert.ok(wrapper.find("div.indicator").exists());
       });
 
       it("should assign the total number of screens and current screen to the aria-valuemax and aria-valuenow labels", () => {
-        const SCREEN_PROPS = {
-          totalNumberOfScreens: 3,
-          currentScreen: 1,
-        };
-        <StepsIndicator {...SCREEN_PROPS} />;
-        const wrapper = mount(<StepsIndicator {...SCREEN_PROPS} />);
-        assert.ok(
-          wrapper.find(
-            `div.steps[aria-valuemax=${SCREEN_PROPS.totalNumberOfScreens}][aria-valuenow=${SCREEN_PROPS.currentScreen}][aria-valuemin="1"]`
-          )
+        const EXTRA_PROPS = { totalNumberOfScreens: 3, order: 1 };
+        const wrapper = mount(
+          <WelcomeScreen {...GET_STARTED_SCREEN_PROPS} {...EXTRA_PROPS} />
+        );
+        const steps = wrapper.find(`div.steps`);
+        assert.ok(steps.exists());
+        const { attributes } = steps.getDOMNode();
+        assert.equal(
+          parseInt(attributes.getNamedItem("aria-valuemax").value, 10),
+          EXTRA_PROPS.totalNumberOfScreens
+        );
+        assert.equal(
+          parseInt(attributes.getNamedItem("aria-valuenow").value, 10),
+          EXTRA_PROPS.order + 1
         );
       });
 
       it("should have a primary, secondary and secondary.top button in the rendered input", () => {
         const wrapper = mount(<WelcomeScreen {...GET_STARTED_SCREEN_PROPS} />);
-        assert.ok(wrapper.find(".primary"));
-        assert.ok(wrapper.find(".secondary button[value='secondary_button']"));
+        assert.ok(wrapper.find(".primary").exists());
         assert.ok(
-          wrapper.find(".secondary button[value='secondary_button_top']")
+          wrapper
+            .find(".secondary-cta button.secondary[value='secondary_button']")
+            .exists()
+        );
+        assert.ok(
+          wrapper
+            .find(
+              ".secondary-cta.top button.secondary[value='secondary_button_top']"
+            )
+            .exists()
         );
       });
     });
@@ -298,7 +306,7 @@ describe("MultiStageAboutWelcome module", () => {
     describe("theme screen", () => {
       const THEME_SCREEN_PROPS = {
         id: "test-theme-screen",
-        totalNumberofScreens: 1,
+        totalNumberOfScreens: 1,
         content: {
           title: "test title",
           subtitle: "test subtitle",
