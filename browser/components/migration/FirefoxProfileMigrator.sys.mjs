@@ -33,21 +33,13 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * This migrator is what powers the "Profile Refresh" mechanism.
  */
 export class FirefoxProfileMigrator extends MigratorBase {
+  static get key() {
+    return "firefox";
+  }
+
   constructor() {
     super();
     this.wrappedJSObject = this; // for testing...
-  }
-
-  get classDescription() {
-    return "Firefox Profile Migrator";
-  }
-
-  get contractID() {
-    return "@mozilla.org/profile/migrator;1?app=browser&type=firefox";
-  }
-
-  get classID() {
-    return Components.ID("{91185366-ba97-4438-acba-48deaca63386}");
   }
 
   _getAllProfiles() {
