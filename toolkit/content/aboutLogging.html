@@ -31,8 +31,13 @@
       </div>
       <div>
         <label for="log-modules" data-l10n-id="about-logging-new-log-modules"></label>
-        <input type="text" name="log-modules" id="log-modules" value="timestamp,sync,nsHttp:5,cache2:5,nsSocketTransport:5,nsHostResolver:5">
+        <input type="text" name="log-modules" id="log-modules" value="">
         <button id="set-log-modules-button" data-l10n-id="about-logging-set-log-modules"></button>
+      </div>
+      <div id=preset-selector-section>
+        <label for="logging-preset-selector" data-l10n-id="about-logging-logging-preset-selector-text"></label>
+        <select name="logging-preset-selector" id=logging-preset-dropdown></select>
+        <div id="logging-preset-description"></div>
       </div>
     </div>
     <div id=logging-output class=page-section>
