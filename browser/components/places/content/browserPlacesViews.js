@@ -8,7 +8,7 @@
  * The base view implements everything that's common to the toolbar and
  * menu views.
  */
-this.PlacesViewBase = class {
+class PlacesViewBase {
   /**
    * @param {string} aPlace
    *   The query string associated with the view.
@@ -864,12 +864,12 @@ this.PlacesViewBase = class {
       aObject.removeEventListener(aEventNames[i], this, aCapturing);
     }
   }
-};
+}
 
 /**
  *
  */
-this.PlacesToolbar = class extends PlacesViewBase {
+class PlacesToolbar extends PlacesViewBase {
   constructor(aPlace) {
     let startTime = Date.now();
     super(aPlace, {
@@ -1965,14 +1965,14 @@ this.PlacesToolbar = class extends PlacesViewBase {
       target.open = true;
     }
   }
-};
+}
 
 /**
  * View for Places menus.  This object should be created during the first
  * popupshowing that's dispatched on the menu.
  *
  */
-this.PlacesMenu = class extends PlacesViewBase {
+class PlacesMenu extends PlacesViewBase {
   /**
    *
    * @param {object} aPopupShowingEvent
@@ -2070,12 +2070,12 @@ this.PlacesMenu = class extends PlacesViewBase {
       PlacesUIUtils.setupSpeculativeConnection(target._placesNode.uri, window);
     }
   }
-};
+}
 
 /**
  *
  */
-this.PlacesPanelMenuView = class extends PlacesViewBase {
+class PlacesPanelMenuView extends PlacesViewBase {
   constructor(aPlace, aViewId, aRootId, aOptions = {}) {
     aOptions.rootElt = document.getElementById(aRootId);
     aOptions.viewElt = document.getElementById(aViewId);
@@ -2199,9 +2199,11 @@ this.PlacesPanelMenuView = class extends PlacesViewBase {
     }
     this._rootElt.appendChild(fragment);
   }
-};
+}
 
-this.PlacesPanelview = class extends PlacesViewBase {
+// This is used from CustomizableWidgets.jsm using a `window` reference,
+// so we have to expose this on the global.
+this.PlacesPanelview = class PlacesPanelview extends PlacesViewBase {
   constructor(container, panelview, place, options = {}) {
     options.rootElt = container;
     options.viewElt = panelview;

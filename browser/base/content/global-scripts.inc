@@ -13,6 +13,7 @@
 
 <script type="text/javascript">
 Services.scriptloader.loadSubScript("chrome://browser/content/browser.js", this);
+Services.scriptloader.loadSubScript("chrome://browser/content/places/browserPlacesViews.js", this);
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-places.js", this);
 Services.scriptloader.loadSubScript("chrome://global/content/globalOverlay.js", this);
 Services.scriptloader.loadSubScript("chrome://global/content/editMenuOverlay.js", this);

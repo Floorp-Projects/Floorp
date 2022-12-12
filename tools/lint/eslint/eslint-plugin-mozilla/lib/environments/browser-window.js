@@ -50,6 +50,8 @@ const MAPPINGS = {
   "panelUI.js": "browser/components/customizableui/content/panelUI.js",
   "viewSourceUtils.js":
     "toolkit/components/viewsource/content/viewSourceUtils.js",
+  "browserPlacesViews.js":
+    "browser/components/places/content/browserPlacesViews.js",
   "places-tree.js": "browser/components/places/content/places-tree.js",
   "places-menupopup.js":
     "browser/components/places/content/places-menupopup.js",
