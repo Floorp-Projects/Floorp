@@ -43,12 +43,15 @@ add_task(async function test_permission_prompt_for_request() {
 
       let mockRequest = makeMockPermissionRequest(browser);
       let TestPrompt = {
-        __proto__: PermissionUI.PermissionPromptForRequestPrototype,
         request: mockRequest,
         notificationID: kTestNotificationID,
         message: kTestMessage,
         promptActions: [mainAction, secondaryAction],
       };
+      Object.setPrototypeOf(
+        TestPrompt,
+        PermissionUI.PermissionPromptForRequestPrototype
+      );
 
       let shownPromise = BrowserTestUtils.waitForEvent(
         PopupNotifications.panel,
@@ -131,7 +134,6 @@ add_task(async function test_permission_prompt_for_popupOptions() {
 
       let mockRequest = makeMockPermissionRequest(browser);
       let TestPrompt = {
-        __proto__: PermissionUI.PermissionPromptForRequestPrototype,
         request: mockRequest,
         notificationID: kTestNotificationID,
         message: kTestMessage,
@@ -140,6 +142,10 @@ add_task(async function test_permission_prompt_for_popupOptions() {
           displayURI: false,
         },
       };
+      Object.setPrototypeOf(
+        TestPrompt,
+        PermissionUI.PermissionPromptForRequestPrototype
+      );
 
       let shownPromise = BrowserTestUtils.waitForEvent(
         PopupNotifications.panel,
@@ -210,7 +216,6 @@ add_task(async function test_with_permission_key() {
       });
 
       let TestPrompt = {
-        __proto__: PermissionUI.PermissionPromptForRequestPrototype,
         request: mockRequest,
         notificationID: kTestNotificationID,
         permissionKey: kTestPermissionKey,
@@ -224,6 +229,10 @@ add_task(async function test_with_permission_key() {
           },
         },
       };
+      Object.setPrototypeOf(
+        TestPrompt,
+        PermissionUI.PermissionPromptForRequestPrototype
+      );
 
       let shownPromise = BrowserTestUtils.waitForEvent(
         PopupNotifications.panel,
@@ -396,7 +405,6 @@ add_task(async function test_on_before_show() {
       let beforeShown = false;
 
       let TestPrompt = {
-        __proto__: PermissionUI.PermissionPromptForRequestPrototype,
         request: mockRequest,
         notificationID: kTestNotificationID,
         message: kTestMessage,
@@ -406,6 +414,10 @@ add_task(async function test_on_before_show() {
           return true;
         },
       };
+      Object.setPrototypeOf(
+        TestPrompt,
+        PermissionUI.PermissionPromptForRequestPrototype
+      );
 
       let shownPromise = BrowserTestUtils.waitForEvent(
         PopupNotifications.panel,
@@ -464,7 +476,6 @@ add_task(async function test_no_request() {
       let beforeShown = false;
 
       let TestPrompt = {
-        __proto__: PermissionUI.PermissionPromptPrototype,
         notificationID: kTestNotificationID,
         principal,
         browser,
@@ -475,6 +486,10 @@ add_task(async function test_no_request() {
           return true;
         },
       };
+      Object.setPrototypeOf(
+        TestPrompt,
+        PermissionUI.PermissionPromptForRequestPrototype
+      );
 
       let shownPromise = BrowserTestUtils.waitForEvent(
         PopupNotifications.panel,
@@ -573,12 +588,15 @@ add_task(async function test_window_swap() {
       let mockRequest = makeMockPermissionRequest(browser);
 
       let TestPrompt = {
-        __proto__: PermissionUI.PermissionPromptForRequestPrototype,
         request: mockRequest,
         notificationID: kTestNotificationID,
         message: kTestMessage,
         promptActions: [mainAction, secondaryAction],
       };
+      Object.setPrototypeOf(
+        TestPrompt,
+        PermissionUI.PermissionPromptForRequestPrototype
+      );
 
       let shownPromise = BrowserTestUtils.waitForEvent(
         PopupNotifications.panel,

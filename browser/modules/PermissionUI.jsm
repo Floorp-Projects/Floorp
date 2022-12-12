@@ -27,23 +27,30 @@ var EXPORTED_SYMBOLS = ["PermissionUI"];
  *   "resource:///modules/PermissionUI.jsm"
  * );
  *
- * const SoundCardIntegration = (base) => ({
- *   __proto__: base,
- *   createPermissionPrompt(type, request) {
- *     if (type != "sound-api") {
- *       return super.createPermissionPrompt(...arguments);
- *     }
- *
- *     return {
- *       __proto__: PermissionUI.PermissionPromptForRequestPrototype,
- *       get permissionKey() {
- *         return "sound-permission";
+ * const SoundCardIntegration = base => {
+ *   let soundCardObj = {
+ *     createPermissionPrompt(type, request) {
+ *       if (type != "sound-api") {
+ *         return super.createPermissionPrompt(...arguments);
  *       }
- *       // etc - see the documentation for PermissionPrompt for
- *       // a better idea of what things one can and should override.
- *     }
- *   },
- * });
+ *
+ *       let permissionPrompt = {
+ *         get permissionKey() {
+ *           return "sound-permission";
+ *         }
+ *         // etc - see the documentation for PermissionPrompt for
+ *         // a better idea of what things one can and should override.
+ *       };
+ *       Object.setPrototypeOf(
+ *         permissionPrompt,
+ *         PermissionUI.PermissionPromptForRequestPrototype
+ *       );
+ *       return permissionPrompt;
+ *     },
+ *   };
+ *   Object.setPrototypeOf(soundCardObj, base);
+ *   return soundCardObj;
+ * };
  *
  * // Add-on startup:
  * Integration.contentPermission.register(SoundCardIntegration);
@@ -672,8 +679,6 @@ PermissionUI.PermissionPromptPrototype = PermissionPromptPrototype;
  * rather than PermissionPromptPrototype.
  */
 var PermissionPromptForRequestPrototype = {
-  __proto__: PermissionPromptPrototype,
-
   get browser() {
     // In the e10s-case, the <xul:browser> will be at request.element.
     // In the single-process case, we have to use some XPCOM incantations
@@ -697,6 +702,10 @@ var PermissionPromptForRequestPrototype = {
     this.request.allow(choices);
   },
 };
+Object.setPrototypeOf(
+  PermissionPromptForRequestPrototype,
+  PermissionPromptPrototype
+);
 
 PermissionUI.PermissionPromptForRequestPrototype = PermissionPromptForRequestPrototype;
 
@@ -706,8 +715,6 @@ PermissionUI.PermissionPromptForRequestPrototype = PermissionPromptForRequestPro
  * addon install flow.
  */
 var SitePermsAddonInstallRequestPrototype = {
-  __proto__: PermissionPromptForRequestPrototype,
-
   prompt() {
     // fallback to regular permission prompt for localhost,
     // or when the SitePermsAddonProvider is not enabled.
@@ -761,6 +768,10 @@ var SitePermsAddonInstallRequestPrototype = {
     return null;
   },
 };
+Object.setPrototypeOf(
+  SitePermsAddonInstallRequestPrototype,
+  PermissionPromptForRequestPrototype
+);
 
 PermissionUI.SitePermsAddonInstallRequestPrototype = SitePermsAddonInstallRequestPrototype;
 
@@ -776,8 +787,6 @@ function GeolocationPermissionPrompt(request) {
 }
 
 GeolocationPermissionPrompt.prototype = {
-  __proto__: PermissionPromptForRequestPrototype,
-
   get type() {
     return "geo";
   },
@@ -902,6 +911,10 @@ GeolocationPermissionPrompt.prototype = {
     PermissionPromptForRequestPrototype.cancel.apply(this, args);
   },
 };
+Object.setPrototypeOf(
+  GeolocationPermissionPrompt.prototype,
+  PermissionPromptForRequestPrototype
+);
 
 PermissionUI.GeolocationPermissionPrompt = GeolocationPermissionPrompt;
 
@@ -917,8 +930,6 @@ function XRPermissionPrompt(request) {
 }
 
 XRPermissionPrompt.prototype = {
-  __proto__: PermissionPromptForRequestPrototype,
-
   get type() {
     return "xr";
   },
@@ -1013,6 +1024,10 @@ XRPermissionPrompt.prototype = {
     PermissionPromptForRequestPrototype.cancel.apply(this, args);
   },
 };
+Object.setPrototypeOf(
+  XRPermissionPrompt.prototype,
+  PermissionPromptForRequestPrototype
+);
 
 PermissionUI.XRPermissionPrompt = XRPermissionPrompt;
 
@@ -1045,8 +1060,6 @@ function DesktopNotificationPermissionPrompt(request) {
 }
 
 DesktopNotificationPermissionPrompt.prototype = {
-  __proto__: PermissionPromptForRequestPrototype,
-
   get type() {
     return "desktop-notification";
   },
@@ -1154,6 +1167,10 @@ DesktopNotificationPermissionPrompt.prototype = {
     return actions;
   },
 };
+Object.setPrototypeOf(
+  DesktopNotificationPermissionPrompt.prototype,
+  PermissionPromptForRequestPrototype
+);
 
 PermissionUI.DesktopNotificationPermissionPrompt = DesktopNotificationPermissionPrompt;
 
@@ -1169,8 +1186,6 @@ function PersistentStoragePermissionPrompt(request) {
 }
 
 PersistentStoragePermissionPrompt.prototype = {
-  __proto__: PermissionPromptForRequestPrototype,
-
   get type() {
     return "persistent-storage";
   },
@@ -1227,6 +1242,10 @@ PersistentStoragePermissionPrompt.prototype = {
     ];
   },
 };
+Object.setPrototypeOf(
+  PersistentStoragePermissionPrompt.prototype,
+  PermissionPromptForRequestPrototype
+);
 
 PermissionUI.PersistentStoragePermissionPrompt = PersistentStoragePermissionPrompt;
 
@@ -1251,7 +1270,6 @@ function MIDIPermissionPrompt(request) {
 }
 
 MIDIPermissionPrompt.prototype = {
-  __proto__: SitePermsAddonInstallRequestPrototype,
   get type() {
     return "midi";
   },
@@ -1346,6 +1364,10 @@ MIDIPermissionPrompt.prototype = {
     return `WebMIDI access request was denied: ❝${err.message}❞. See https://developer.mozilla.org/docs/Web/API/Navigator/requestMIDIAccess for more information`;
   },
 };
+Object.setPrototypeOf(
+  MIDIPermissionPrompt.prototype,
+  SitePermsAddonInstallRequestPrototype
+);
 
 PermissionUI.MIDIPermissionPrompt = MIDIPermissionPrompt;
 
@@ -1366,8 +1388,6 @@ function StorageAccessPermissionPrompt(request) {
 }
 
 StorageAccessPermissionPrompt.prototype = {
-  __proto__: PermissionPromptForRequestPrototype,
-
   get usePermissionManager() {
     return false;
   },
@@ -1470,5 +1490,9 @@ StorageAccessPermissionPrompt.prototype = {
     return this.request.topLevelPrincipal;
   },
 };
+Object.setPrototypeOf(
+  StorageAccessPermissionPrompt.prototype,
+  PermissionPromptForRequestPrototype
+);
 
 PermissionUI.StorageAccessPermissionPrompt = StorageAccessPermissionPrompt;
