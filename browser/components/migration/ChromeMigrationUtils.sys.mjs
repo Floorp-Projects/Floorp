@@ -296,7 +296,7 @@ export var ChromeMigrationUtils = {
         "Chrome Beta": ["google-chrome-beta"],
         "Chrome Dev": ["google-chrome-unstable"],
         Chromium: ["chromium"],
-        "Opera GX": ["Opera-GX"],
+        // Opera GX is not available on Linux.
         // Canary is not available on Linux.
         // Edge is not available on Linux.
         Opera: ["opera"],
