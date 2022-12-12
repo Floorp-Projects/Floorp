@@ -5,11 +5,6 @@
 // This file is loaded into the browser window scope.
 /* eslint-env mozilla/browser-window */
 
-XPCOMUtils.defineLazyScriptGetter(
-  this,
-  ["PlacesToolbar", "PlacesMenu", "PlacesPanelview", "PlacesPanelMenuView"],
-  "chrome://browser/content/places/browserPlacesViews.js"
-);
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "NEWTAB_ENABLED",
@@ -616,7 +611,7 @@ ChromeUtils.defineESModuleGetters(this, {
 });
 
 // View for the history menu.
-this.HistoryMenu = class extends PlacesMenu {
+class HistoryMenu extends PlacesMenu {
   constructor(aPopupShowingEvent) {
     super(aPopupShowingEvent, "place:sort=4&maxResults=15");
   }
@@ -773,7 +768,7 @@ this.HistoryMenu = class extends PlacesMenu {
       });
     }
   }
-};
+}
 
 /**
  * Functions for handling events in the Bookmarks Toolbar and menu.
