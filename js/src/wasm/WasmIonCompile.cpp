@@ -317,37 +317,14 @@ class FunctionCompiler {
 
     for (size_t i = args.lengthWithoutStackResults(); i < locals_.length();
          i++) {
-      MInstruction* ins = nullptr;
-      switch (locals_[i].kind()) {
-        case ValType::I32:
-          ins = MConstant::New(alloc(), Int32Value(0), MIRType::Int32);
-          break;
-        case ValType::I64:
-          ins = MConstant::NewInt64(alloc(), 0);
-          break;
-        case ValType::V128:
-#ifdef ENABLE_WASM_SIMD
-          ins =
-              MWasmFloatConstant::NewSimd128(alloc(), SimdConstant::SplatX4(0));
-          break;
-#else
-          return iter().fail("Ion has no SIMD support yet");
-#endif
-        case ValType::F32:
-          ins = MConstant::New(alloc(), Float32Value(0.f), MIRType::Float32);
-          break;
-        case ValType::F64:
-          ins = MConstant::New(alloc(), DoubleValue(0.0), MIRType::Double);
-          break;
-        case ValType::Ref:
-          ins = MWasmNullConstant::New(alloc());
-          break;
-        default:
-          MOZ_CRASH();
+      ValType slotValType = locals_[i];
+#ifndef ENABLE_WASM_SIMD
+      if (slotValType == ValType::V128) {
+        return iter().fail("Ion has no SIMD support yet");
       }
-
-      curBlock_->add(ins);
-      curBlock_->initSlot(info().localSlot(i), ins);
+#endif
+      MDefinition* zero = constantZeroOfValType(slotValType);
+      curBlock_->initSlot(info().localSlot(i), zero);
       if (!mirGen_.ensureBallast()) {
         return false;
       }
@@ -386,18 +363,9 @@ class FunctionCompiler {
 
   const ValTypeVector& locals() const { return locals_; }
 
-  /***************************** Code generation (after local scope setup) */
+  /*********************************************************** Constants ***/
 
-  MDefinition* constant(const Value& v, MIRType type) {
-    if (inDeadCode()) {
-      return nullptr;
-    }
-    MConstant* constant = MConstant::New(alloc(), v, type);
-    curBlock_->add(constant);
-    return constant;
-  }
-
-  MDefinition* constant(float f) {
+  MDefinition* constantF32(float f) {
     if (inDeadCode()) {
       return nullptr;
     }
@@ -405,8 +373,11 @@ class FunctionCompiler {
     curBlock_->add(cst);
     return cst;
   }
+  // Hide all other overloads, to guarantee no implicit argument conversion.
+  template <typename T>
+  MDefinition* constantF32(T) = delete;
 
-  MDefinition* constant(double d) {
+  MDefinition* constantF64(double d) {
     if (inDeadCode()) {
       return nullptr;
     }
@@ -414,8 +385,22 @@ class FunctionCompiler {
     curBlock_->add(cst);
     return cst;
   }
+  template <typename T>
+  MDefinition* constantF64(T) = delete;
 
-  MDefinition* constant(int64_t i) {
+  MDefinition* constantI32(int32_t i) {
+    if (inDeadCode()) {
+      return nullptr;
+    }
+    MConstant* constant =
+        MConstant::New(alloc(), Int32Value(i), MIRType::Int32);
+    curBlock_->add(constant);
+    return constant;
+  }
+  template <typename T>
+  MDefinition* constantI32(T) = delete;
+
+  MDefinition* constantI64(int64_t i) {
     if (inDeadCode()) {
       return nullptr;
     }
@@ -423,9 +408,18 @@ class FunctionCompiler {
     curBlock_->add(constant);
     return constant;
   }
+  template <typename T>
+  MDefinition* constantI64(T) = delete;
+
+  // Produce an MConstant of the machine's target int type (Int32 or Int64).
+  MDefinition* constantTargetWord(intptr_t n) {
+    return targetIs64Bit() ? constantI64(int64_t(n)) : constantI32(int32_t(n));
+  }
+  template <typename T>
+  MDefinition* constantTargetWord(T) = delete;
 
 #ifdef ENABLE_WASM_SIMD
-  MDefinition* constant(V128 v) {
+  MDefinition* constantV128(V128 v) {
     if (inDeadCode()) {
       return nullptr;
     }
@@ -434,9 +428,11 @@ class FunctionCompiler {
     curBlock_->add(constant);
     return constant;
   }
+  template <typename T>
+  MDefinition* constantV128(T) = delete;
 #endif
 
-  MDefinition* nullRefConstant() {
+  MDefinition* constantNullRef() {
     if (inDeadCode()) {
       return nullptr;
     }
@@ -445,6 +441,30 @@ class FunctionCompiler {
     curBlock_->add(constant);
     return constant;
   }
+
+  // Produce a zero constant for the specified ValType.
+  MDefinition* constantZeroOfValType(ValType valType) {
+    switch (valType.kind()) {
+      case ValType::I32:
+        return constantI32(0);
+      case ValType::I64:
+        return constantI64(int64_t(0));
+#ifdef ENABLE_WASM_SIMD
+      case ValType::V128:
+        return constantV128(V128(0));
+#endif
+      case ValType::F32:
+        return constantF32(0.0f);
+      case ValType::F64:
+        return constantF64(0.0);
+      case ValType::Ref:
+        return constantNullRef();
+      default:
+        MOZ_CRASH();
+    }
+  }
+
+  /***************************** Code generation (after local scope setup) */
 
   void fence() {
     if (inDeadCode()) {
@@ -556,7 +576,7 @@ class FunctionCompiler {
 
     if (mustPreserveNaN(type)) {
       // Convert signaling NaN to quiet NaNs.
-      MDefinition* zero = constant(DoubleValue(0.0), type);
+      MDefinition* zero = constantZeroOfValType(ValType::fromMIRType(type));
       lhs = sub(lhs, zero, type);
       rhs = sub(rhs, zero, type);
     }
@@ -816,7 +836,7 @@ class FunctionCompiler {
   }
 
   MDefinition* compareIsNull(MDefinition* value, JSOp compareOp) {
-    MDefinition* nullVal = nullRefConstant();
+    MDefinition* nullVal = constantNullRef();
     if (!nullVal) {
       return nullptr;
     }
@@ -965,8 +985,7 @@ class FunctionCompiler {
 
     int32_t maskBits;
     if (MacroAssembler::MustMaskShiftCountSimd128(op, &maskBits)) {
-      MConstant* mask = MConstant::New(alloc(), Int32Value(maskBits));
-      curBlock_->add(mask);
+      MDefinition* mask = constantI32(maskBits);
       auto* rhs2 = MBitAnd::New(alloc(), rhs, mask, MIRType::Int32);
       curBlock_->add(rhs2);
       rhs = rhs2;
@@ -1169,15 +1188,7 @@ class FunctionCompiler {
       if (offset < offsetGuardLimit && basePtr < offsetGuardLimit - offset) {
         offset += uint32_t(basePtr);
         access->setOffset32(uint32_t(offset));
-
-        MConstant* ins = nullptr;
-        if (isMem64()) {
-          ins = MConstant::NewInt64(alloc(), 0);
-        } else {
-          ins = MConstant::New(alloc(), Int32Value(0), MIRType::Int32);
-        }
-        curBlock_->add(ins);
-        *base = ins;
+        *base = isMem64() ? constantI64(int64_t(0)) : constantI32(0);
       }
     }
   }
@@ -2137,9 +2148,7 @@ class FunctionCompiler {
           moduleEnv_.tables[moduleEnv_.asmJSSigToTableIndex[funcTypeIndex]];
       MOZ_ASSERT(IsPowerOfTwo(table.initialLength));
 
-      MConstant* mask =
-          MConstant::New(alloc(), Int32Value(table.initialLength - 1));
-      curBlock_->add(mask);
+      MDefinition* mask = constantI32(int32_t(table.initialLength - 1));
       MBitAnd* maskedIndex = MBitAnd::New(alloc(), index, mask, MIRType::Int32);
       curBlock_->add(maskedIndex);
 
@@ -2956,7 +2965,7 @@ class FunctionCompiler {
     loadPendingExceptionState(&exception, &tag);
 
     // Clear the pending exception and tag
-    auto* null = nullRefConstant();
+    auto* null = constantNullRef();
     if (!setPendingExceptionState(null, null)) {
       return false;
     }
@@ -3637,7 +3646,7 @@ class FunctionCompiler {
     // Currently there's no single MIR node that this can be translated into.
     // So compute the final address "manually", then store directly to that
     // address.  See bug 1802287.
-    MDefinition* scaleDef = constantTargetWord(scale);
+    MDefinition* scaleDef = constantTargetWord(intptr_t(scale));
     if (!scaleDef) {
       return false;
     }
@@ -3689,7 +3698,7 @@ class FunctionCompiler {
     // Currently there's no single MIR node that this can be translated into.
     // So compute the final address "manually", then store directly to that
     // address.  See bug 1802287.
-    MDefinition* scaleDef = constantTargetWord(scale);
+    MDefinition* scaleDef = constantTargetWord(intptr_t(scale));
     if (!scaleDef) {
       return nullptr;
     }
@@ -3828,21 +3837,6 @@ class FunctionCompiler {
 #else
     return false;
 #endif
-  }
-
-  // Produce an MConstant of the machine's target int type (Int32 or Int64),
-  // containing the lower 32 or 64 bits of `n` respectively.
-  [[nodiscard]] MDefinition* constantTargetWord(uint64_t n) {
-    if (targetIs64Bit()) {
-      MConstant* con = MConstant::NewInt64(alloc(), n);
-      if (!con) {
-        return nullptr;
-      }
-      curBlock_->add(con);
-      return con;
-    }
-    MOZ_RELEASE_ASSERT((n >> 32) == 0ULL);
-    return constant(Int32Value(uint32_t(n)), MIRType::Int32);
   }
 
   // Generate MIR to unsigned widen `val` out to the target word size.  If
@@ -4080,7 +4074,7 @@ class FunctionCompiler {
     }
 
     // ==== Fill in the remainder of the block preceding the loop ====
-    MDefinition* elemSizeDef = constantTargetWord(elemSize);
+    MDefinition* elemSizeDef = constantTargetWord(intptr_t(elemSize));
     if (!elemSizeDef) {
       return nullptr;
     }
@@ -4448,7 +4442,7 @@ static bool EmitI32Const(FunctionCompiler& f) {
     return false;
   }
 
-  f.iter().setResult(f.constant(Int32Value(i32), MIRType::Int32));
+  f.iter().setResult(f.constantI32(i32));
   return true;
 }
 
@@ -4458,7 +4452,7 @@ static bool EmitI64Const(FunctionCompiler& f) {
     return false;
   }
 
-  f.iter().setResult(f.constant(i64));
+  f.iter().setResult(f.constantI64(i64));
   return true;
 }
 
@@ -4468,7 +4462,7 @@ static bool EmitF32Const(FunctionCompiler& f) {
     return false;
   }
 
-  f.iter().setResult(f.constant(f32));
+  f.iter().setResult(f.constantF32(f32));
   return true;
 }
 
@@ -4478,7 +4472,7 @@ static bool EmitF64Const(FunctionCompiler& f) {
     return false;
   }
 
-  f.iter().setResult(f.constant(f64));
+  f.iter().setResult(f.constantF64(f64));
   return true;
 }
 
@@ -4955,32 +4949,31 @@ static bool EmitGetGlobal(FunctionCompiler& f) {
   }
 
   LitVal value = global.constantValue();
-  MIRType mirType = value.type().toMIRType();
 
   MDefinition* result;
   switch (value.type().kind()) {
     case ValType::I32:
-      result = f.constant(Int32Value(value.i32()), mirType);
+      result = f.constantI32(int32_t(value.i32()));
       break;
     case ValType::I64:
-      result = f.constant(int64_t(value.i64()));
+      result = f.constantI64(int64_t(value.i64()));
       break;
     case ValType::F32:
-      result = f.constant(value.f32());
+      result = f.constantF32(value.f32());
       break;
     case ValType::F64:
-      result = f.constant(value.f64());
+      result = f.constantF64(value.f64());
       break;
     case ValType::V128:
 #ifdef ENABLE_WASM_SIMD
-      result = f.constant(value.v128());
+      result = f.constantV128(value.v128());
       break;
 #else
       return f.iter().fail("Ion has no SIMD support yet");
 #endif
     case ValType::Ref:
       MOZ_ASSERT(value.ref().isNull());
-      result = f.nullRefConstant();
+      result = f.constantNullRef();
       break;
     default:
       MOZ_CRASH("unexpected type in EmitGetGlobal");
@@ -5873,8 +5866,8 @@ static bool EmitTableCopy(FunctionCompiler& f) {
   }
 
   uint32_t bytecodeOffset = f.readBytecodeOffset();
-  MDefinition* dti = f.constant(Int32Value(dstTableIndex), MIRType::Int32);
-  MDefinition* sti = f.constant(Int32Value(srcTableIndex), MIRType::Int32);
+  MDefinition* dti = f.constantI32(int32_t(dstTableIndex));
+  MDefinition* sti = f.constantI32(int32_t(srcTableIndex));
 
   return f.emitInstanceCall5(bytecodeOffset, SASigTableCopy, dst, src, len, dti,
                              sti);
@@ -5892,8 +5885,7 @@ static bool EmitDataOrElemDrop(FunctionCompiler& f, bool isData) {
 
   uint32_t bytecodeOffset = f.readBytecodeOffset();
 
-  MDefinition* segIndex =
-      f.constant(Int32Value(int32_t(segIndexVal)), MIRType::Int32);
+  MDefinition* segIndex = f.constantI32(int32_t(segIndexVal));
 
   const SymbolicAddressSignature& callee =
       isData ? SASigDataDrop : SASigElemDrop;
@@ -5940,20 +5932,18 @@ static bool EmitMemFillInline(FunctionCompiler& f, MDefinition* start,
 
   // Generate splatted definitions for wider fills as needed
 #ifdef ENABLE_WASM_SIMD
-  MDefinition* val16 = numCopies16 ? f.constant(V128(value)) : nullptr;
+  MDefinition* val16 = numCopies16 ? f.constantV128(V128(value)) : nullptr;
 #endif
 #ifdef JS_64BIT
   MDefinition* val8 =
-      numCopies8 ? f.constant(int64_t(SplatByteToUInt<uint64_t>(value, 8)))
+      numCopies8 ? f.constantI64(int64_t(SplatByteToUInt<uint64_t>(value, 8)))
                  : nullptr;
 #endif
   MDefinition* val4 =
-      numCopies4 ? f.constant(Int32Value(SplatByteToUInt<uint32_t>(value, 4)),
-                              MIRType::Int32)
+      numCopies4 ? f.constantI32(int32_t(SplatByteToUInt<uint32_t>(value, 4)))
                  : nullptr;
   MDefinition* val2 =
-      numCopies2 ? f.constant(Int32Value(SplatByteToUInt<uint32_t>(value, 2)),
-                              MIRType::Int32)
+      numCopies2 ? f.constantI32(int32_t(SplatByteToUInt<uint32_t>(value, 2)))
                  : nullptr;
 
   // Store the fill value to the destination from high to low. We will trap
@@ -6039,8 +6029,7 @@ static bool EmitMemOrTableInit(FunctionCompiler& f, bool isMem) {
 
   uint32_t bytecodeOffset = f.readBytecodeOffset();
 
-  MDefinition* segIndex =
-      f.constant(Int32Value(int32_t(segIndexVal)), MIRType::Int32);
+  MDefinition* segIndex = f.constantI32(int32_t(segIndexVal));
 
   if (isMem) {
     const SymbolicAddressSignature& callee =
@@ -6049,7 +6038,7 @@ static bool EmitMemOrTableInit(FunctionCompiler& f, bool isMem) {
                                segIndex);
   }
 
-  MDefinition* dti = f.constant(Int32Value(dstTableIndex), MIRType::Int32);
+  MDefinition* dti = f.constantI32(int32_t(dstTableIndex));
   return f.emitInstanceCall5(bytecodeOffset, SASigTableInit, dstOff, srcOff,
                              len, segIndex, dti);
 }
@@ -6070,8 +6059,7 @@ static bool EmitTableFill(FunctionCompiler& f) {
 
   uint32_t bytecodeOffset = f.readBytecodeOffset();
 
-  MDefinition* tableIndexArg =
-      f.constant(Int32Value(tableIndex), MIRType::Int32);
+  MDefinition* tableIndexArg = f.constantI32(int32_t(tableIndex));
   if (!tableIndexArg) {
     return false;
   }
@@ -6103,8 +6091,7 @@ static bool EmitTableGet(FunctionCompiler& f) {
 
   uint32_t bytecodeOffset = f.readBytecodeOffset();
 
-  MDefinition* tableIndexArg =
-      f.constant(Int32Value(tableIndex), MIRType::Int32);
+  MDefinition* tableIndexArg = f.constantI32(int32_t(tableIndex));
   if (!tableIndexArg) {
     return false;
   }
@@ -6135,8 +6122,7 @@ static bool EmitTableGrow(FunctionCompiler& f) {
 
   uint32_t bytecodeOffset = f.readBytecodeOffset();
 
-  MDefinition* tableIndexArg =
-      f.constant(Int32Value(tableIndex), MIRType::Int32);
+  MDefinition* tableIndexArg = f.constantI32(int32_t(tableIndex));
   if (!tableIndexArg) {
     return false;
   }
@@ -6170,8 +6156,7 @@ static bool EmitTableSet(FunctionCompiler& f) {
     return f.tableSetAnyRef(table, index, value, bytecodeOffset);
   }
 
-  MDefinition* tableIndexArg =
-      f.constant(Int32Value(tableIndex), MIRType::Int32);
+  MDefinition* tableIndexArg = f.constantI32(int32_t(tableIndex));
   if (!tableIndexArg) {
     return false;
   }
@@ -6213,7 +6198,7 @@ static bool EmitRefFunc(FunctionCompiler& f) {
 
   uint32_t bytecodeOffset = f.readBytecodeOffset();
 
-  MDefinition* funcIndexArg = f.constant(Int32Value(funcIndex), MIRType::Int32);
+  MDefinition* funcIndexArg = f.constantI32(int32_t(funcIndex));
   if (!funcIndexArg) {
     return false;
   }
@@ -6239,7 +6224,7 @@ static bool EmitRefNull(FunctionCompiler& f) {
     return true;
   }
 
-  MDefinition* nullVal = f.nullRefConstant();
+  MDefinition* nullVal = f.constantNullRef();
   if (!nullVal) {
     return false;
   }
@@ -6257,7 +6242,7 @@ static bool EmitRefIsNull(FunctionCompiler& f) {
     return true;
   }
 
-  MDefinition* nullVal = f.nullRefConstant();
+  MDefinition* nullVal = f.constantNullRef();
   if (!nullVal) {
     return false;
   }
@@ -6273,7 +6258,7 @@ static bool EmitConstSimd128(FunctionCompiler& f) {
     return false;
   }
 
-  f.iter().setResult(f.constant(v128));
+  f.iter().setResult(f.constantV128(v128));
   return true;
 }
 
@@ -6709,8 +6694,7 @@ static bool EmitArrayNewFixed(FunctionCompiler& f) {
     return true;
   }
 
-  MDefinition* numElementsDef =
-      f.constant(Int32Value(numElements), MIRType::Int32);
+  MDefinition* numElementsDef = f.constantI32(int32_t(numElements));
   if (!numElementsDef) {
     return false;
   }
@@ -6782,7 +6766,7 @@ static bool EmitArrayNewData(FunctionCompiler& f) {
   }
 
   // Other values we need to pass to the instance call:
-  MDefinition* segIndexM = f.constant(Int32Value(segIndex), MIRType::Int32);
+  MDefinition* segIndexM = f.constantI32(int32_t(segIndex));
   if (!segIndexM) {
     return false;
   }
@@ -6824,7 +6808,7 @@ static bool EmitArrayNewElem(FunctionCompiler& f) {
   }
 
   // Other values we need to pass to the instance call:
-  MDefinition* segIndexM = f.constant(Int32Value(segIndex), MIRType::Int32);
+  MDefinition* segIndexM = f.constantI32(int32_t(segIndex));
   if (!segIndexM) {
     return false;
   }
@@ -6977,8 +6961,8 @@ static bool EmitArrayCopy(FunctionCompiler& f) {
   // A negative element size is used to inform Instance::arrayCopy that the
   // values are reftyped.  This avoids having to pass it an extra boolean
   // argument.
-  MDefinition* elemSizeDef = f.constant(
-      Int32Value(elemsAreRefTyped ? -elemSize : elemSize), MIRType::Int32);
+  MDefinition* elemSizeDef =
+      f.constantI32(elemsAreRefTyped ? -elemSize : elemSize);
   if (!elemSizeDef) {
     return false;
   }
