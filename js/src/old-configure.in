@@ -26,23 +26,6 @@ HOST_CFLAGS="${HOST_CFLAGS=}"
 HOST_CXXFLAGS="${HOST_CXXFLAGS=}"
 HOST_LDFLAGS="${HOST_LDFLAGS=}"
 
-dnl ========================================================
-dnl = Preserve certain environment flags passed to configure
-dnl = We want sub projects to receive the same flags
-dnl = untainted by this configure script
-dnl ========================================================
-_SUBDIR_CC="$CC"
-_SUBDIR_CXX="$CXX"
-_SUBDIR_CFLAGS="$CFLAGS"
-_SUBDIR_CPPFLAGS="$CPPFLAGS"
-_SUBDIR_CXXFLAGS="$CXXFLAGS"
-_SUBDIR_LDFLAGS="$LDFLAGS"
-_SUBDIR_HOST_CC="$HOST_CC"
-_SUBDIR_HOST_CFLAGS="$HOST_CFLAGS"
-_SUBDIR_HOST_CXXFLAGS="$HOST_CXXFLAGS"
-_SUBDIR_HOST_LDFLAGS="$HOST_LDFLAGS"
-_SUBDIR_CONFIG_ARGS="$ac_configure_args"
-
 dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
 W32API_VERSION=3.14
@@ -1054,8 +1037,6 @@ dnl JavaScript shell
 dnl ========================================================
 
 MOZ_CHECK_ALLOCATOR
-
-AC_SUBST(ac_configure_args)
 
 if test -n "$JS_STANDALONE"; then
 JS_LIBRARY_NAME="mozjs-$MOZILLA_SYMBOLVERSION"
