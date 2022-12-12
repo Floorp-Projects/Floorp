@@ -11,6 +11,8 @@
 #ifndef mozilla_AssemblyPayloads_h
 #define mozilla_AssemblyPayloads_h
 
+#include <cstdint>
+
 #define PADDING_256_NOP                                              \
   "nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;" \
   "nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;" \
@@ -111,6 +113,49 @@ __declspec(dllexport) __attribute__((naked)) void MovImm64() {
   asm volatile(
       "mov $0x1234567812345678, %r10;"
       "nop;nop;nop");
+}
+
+// This code reproduces bug 1798787: it uses the same prologue, the same unwind
+// info, and it has a call instruction that starts within the 13 first bytes.
+__attribute__((naked)) void DetouredCallCode(uintptr_t aCallee) {
+  asm volatile(
+      "subq $0x28, %rsp;"
+      "testq %rcx, %rcx;"
+      "jz exit;"
+      "callq *%rcx;"
+      "exit:"
+      "addq $0x28, %rsp;"
+      "retq;");
+}
+constexpr uint8_t gDetouredCallCodeSize = 16;  // size of function in bytes
+alignas(uint32_t) uint8_t gDetouredCallUnwindInfo[] = {
+    0x01,  // Version (1), Flags (0)
+    0x04,  // SizeOfProlog (4)
+    0x01,  // CountOfUnwindCodes (1)
+    0x00,  // FrameRegister (0), FrameOffset (0)
+    // UnwindCodes[0]
+    0x04,  // .OffsetInProlog (4)
+    0x42,  // .UnwindOpCode(UWOP_ALLOC_SMALL=2), .UnwindInfo (4)
+};
+
+// This points to the same code as DetouredCallCode, but dynamically generated
+// so that it can have custom unwinding info. See TestDllInterceptor.cpp.
+extern decltype(&DetouredCallCode) gDetouredCall;
+
+// This is just a jumper: our hooking code will thus detour the jump target
+// DetouredCall -- it will not detour DetouredCallJumper. We need to do this to
+// point our hooking code to the dynamic code, because our hooking API needs an
+// exported function name.
+//
+// guard(nocf) ensures that our generated code is a recognized jumper:
+//   jmp qword ptr [rip+offset DetouredCall]
+// rather than:
+//   mov rax, qword ptr [rip+offset DetouredCall]
+//   mov rdx, qword ptr [rip+offset __guard_dispatch_icall_fptr]
+//   jmp rdx
+__declspec(dllexport noinline guard(nocf)) void DetouredCallJumper(
+    uintptr_t aCallee) {
+  gDetouredCall(aCallee);
 }
 
 #  elif defined(_M_IX86)
