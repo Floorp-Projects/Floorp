@@ -138,9 +138,9 @@ class MFMediaSource
   MediaEventListener mAudioStreamEndedListener;
   MediaEventListener mVideoStreamEndedListener;
 
-  // This class would be run/accessed on three threads, MF thread pool, the
-  // source's task queue and the manager thread. Following members could be used
-  // across threads so they need to be thread-safe.
+  // This class would be run/accessed on two threads, MF thread pool and the
+  // manager thread. Following members could be used across threads so they need
+  // to be thread-safe.
 
   mutable Mutex mMutex{"MFMediaEngineSource"};
 
