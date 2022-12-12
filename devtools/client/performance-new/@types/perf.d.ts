@@ -110,7 +110,6 @@ export type RecordingState =
 export type PageContext =
   | "devtools"
   | "devtools-remote"
-  | "aboutlogging"
   | "aboutprofiling"
   | "aboutprofiling-remote";
 
