@@ -132,6 +132,16 @@ class BrowsingContextModule extends Module {
   _getBaseURL() {
     return this.messageHandler.window.document.baseURI;
   }
+
+  _getScreenshotRect() {
+    const win = this.messageHandler.window;
+    return new DOMRect(
+      win.pageXOffset,
+      win.pageYOffset,
+      win.innerWidth,
+      win.innerHeight
+    );
+  }
 }
 
 export const browsingContext = BrowsingContextModule;
