@@ -258,5 +258,3 @@ TEST(cubeb, run_deadlock_test)
 
   cubeb_stream_stop(stream);
 }
-
-#undef CALL_THREAD_KILLER

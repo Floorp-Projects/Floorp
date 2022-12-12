@@ -21,7 +21,6 @@ if CONFIG['OS_TARGET'] != 'Android':
   UNIFIED_SOURCES += [
     '../test/test_audio.cpp',
     '../test/test_latency.cpp',
-    '../test/test_logging.cpp',
     '../test/test_sanity.cpp'
   ]
 
