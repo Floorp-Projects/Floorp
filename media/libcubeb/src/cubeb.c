@@ -351,8 +351,6 @@ cubeb_destroy(cubeb * context)
   }
 
   context->ops->destroy(context);
-
-  cubeb_set_log_callback(CUBEB_LOG_DISABLED, NULL);
 }
 
 int
