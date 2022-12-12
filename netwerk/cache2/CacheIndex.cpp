@@ -3371,7 +3371,7 @@ void CacheIndex::FrecencyArray::AppendRecord(
        "%08x%08x]",
        aRecord, LOGSHA1(aRecord->Get()->mHash)));
 
-  MOZ_ASSERT(!mRecs.Contains(aRecord));
+  MOZ_DIAGNOSTIC_ASSERT(!mRecs.Contains(aRecord));
   mRecs.AppendElement(aRecord);
 
   // If the new frecency is 0, the element should be at the end of the array,
@@ -3389,6 +3389,8 @@ void CacheIndex::FrecencyArray::RemoveRecord(
   decltype(mRecs)::index_type idx;
   idx = mRecs.IndexOf(aRecord);
   MOZ_RELEASE_ASSERT(idx != mRecs.NoIndex);
+  // sanity check to ensure correct record removal
+  MOZ_RELEASE_ASSERT(mRecs[idx] == aRecord);
   mRecs[idx] = nullptr;
   ++mRemovedElements;
 
@@ -3409,6 +3411,8 @@ void CacheIndex::FrecencyArray::ReplaceRecord(
   decltype(mRecs)::index_type idx;
   idx = mRecs.IndexOf(aOldRecord);
   MOZ_RELEASE_ASSERT(idx != mRecs.NoIndex);
+  // sanity check to ensure correct record replaced
+  MOZ_RELEASE_ASSERT(mRecs[idx] == aOldRecord);
   mRecs[idx] = aNewRecord;
 }
 
@@ -3433,9 +3437,10 @@ void CacheIndex::FrecencyArray::SortIfNeeded(
     mRecs.Sort(FrecencyComparator());
     mUnsortedElements = 0;
     if (mRemovedElements) {
-#ifdef DEBUG
+#if defined(EARLY_BETA_OR_EARLIER)
+      // validate only null items are removed
       for (uint32_t i = Length(); i < mRecs.Length(); ++i) {
-        MOZ_ASSERT(!mRecs[i]);
+        MOZ_DIAGNOSTIC_ASSERT(!mRecs[i]);
       }
 #endif
       // Removed elements are at the end after sorting.
