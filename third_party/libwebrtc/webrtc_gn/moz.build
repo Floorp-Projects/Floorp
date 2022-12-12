@@ -67,6 +67,11 @@ if CONFIG["OS_TARGET"] == "Darwin":
     DEFINES["__STDC_CONSTANT_MACROS"] = True
     DEFINES["__STDC_FORMAT_MACROS"] = True
 
+    LOCAL_INCLUDES += [
+        "/third_party/libwebrtc/sdk/objc/",
+        "/third_party/libwebrtc/sdk/objc/base/"
+    ]
+
 if CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["USE_AURA"] = "1"

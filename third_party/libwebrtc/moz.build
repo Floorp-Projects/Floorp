@@ -477,8 +477,11 @@ if CONFIG["OS_TARGET"] == "Darwin":
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_objc_gn",
         "/third_party/libwebrtc/modules/desktop_capture/primitives_gn",
         "/third_party/libwebrtc/rtc_base/system/cocoa_threading_gn",
+        "/third_party/libwebrtc/rtc_base/system/gcd_helpers_gn",
         "/third_party/libwebrtc/sdk/base_objc_gn",
-        "/third_party/libwebrtc/sdk/helpers_objc_gn"
+        "/third_party/libwebrtc/sdk/helpers_objc_gn",
+        "/third_party/libwebrtc/sdk/videocapture_objc_gn",
+        "/third_party/libwebrtc/sdk/videoframebuffer_objc_gn"
     ]
 
 if CONFIG["OS_TARGET"] == "OpenBSD":
