@@ -15,7 +15,6 @@
 #import <AVFoundation/AVFoundation.h>
 
 #import "device_info_objc.h"
-#include "modules/video_capture/video_capture_config.h"
 
 @implementation DeviceInfoIosObjC
 
@@ -30,7 +29,7 @@
 - (void)dealloc {
 }
 
-- (void)registerOwner:(DeviceInfoIos*)owner {
+- (void)registerOwner:(webrtc::VideoCaptureModule::DeviceInfo*)owner {
   [_lock lock];
   if (!_owner && owner) {
     [self configureObservers];

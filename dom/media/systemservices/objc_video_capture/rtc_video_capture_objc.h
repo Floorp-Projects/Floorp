@@ -11,6 +11,7 @@
 #ifndef MODULES_VIDEO_CAPTURE_OBJC_RTC_VIDEO_CAPTURE_OBJC_H_
 #define MODULES_VIDEO_CAPTURE_OBJC_RTC_VIDEO_CAPTURE_OBJC_H_
 
+#import <AVFoundation/AVFoundation.h>
 #import <Foundation/Foundation.h>
 #ifdef WEBRTC_IOS
 #  import <UIKit/UIKit.h>

@@ -19,8 +19,11 @@
 #include "device_info.h"
 #include "device_info_objc.h"
 #include "modules/video_capture/video_capture_impl.h"
+#include "mozilla/StaticPrefs_media.h"
+#include "objc_video_capture/device_info_avfoundation.h"
 #include "rtc_base/logging.h"
 
+using namespace mozilla;
 using namespace webrtc;
 using namespace videocapturemodule;
 
@@ -32,7 +35,12 @@ static NSArray* camera_presets = @[
   RTC_LOG(LS_ERROR) << __FUNCTION__ << " is not supported on the iOS platform."; \
   return -1;
 
-VideoCaptureModule::DeviceInfo* VideoCaptureImpl::CreateDeviceInfo() { return new DeviceInfoIos(); }
+VideoCaptureModule::DeviceInfo* VideoCaptureImpl::CreateDeviceInfo() {
+  if (StaticPrefs::media_getusermedia_camera_macavf_enabled_AtStartup()) {
+    return new DeviceInfoAvFoundation();
+  }
+  return new DeviceInfoIos();
+}
 
 DeviceInfoIos::DeviceInfoIos() { this->Init(); }
 

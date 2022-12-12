@@ -16,11 +16,17 @@
 #include "rtc_video_capture_objc.h"
 #include "rtc_base/ref_counted_object.h"
 #include "api/scoped_refptr.h"
+#include "video_capture_avfoundation.h"
+#include "mozilla/StaticPrefs_media.h"
 
+using namespace mozilla;
 using namespace webrtc;
 using namespace videocapturemodule;
 
 rtc::scoped_refptr<VideoCaptureModule> VideoCaptureImpl::Create(const char* deviceUniqueIdUTF8) {
+  if (StaticPrefs::media_getusermedia_camera_macavf_enabled_AtStartup()) {
+    return VideoCaptureAvFoundation::Create(deviceUniqueIdUTF8);
+  }
   return VideoCaptureIos::Create(deviceUniqueIdUTF8);
 }
 

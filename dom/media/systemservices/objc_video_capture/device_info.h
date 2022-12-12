@@ -18,8 +18,7 @@
 
 @class DeviceInfoIosObjC;
 
-namespace webrtc {
-namespace videocapturemodule {
+namespace webrtc::videocapturemodule {
 class DeviceInfoIos : public DeviceInfoImpl {
  public:
   DeviceInfoIos();
@@ -52,7 +51,6 @@ class DeviceInfoIos : public DeviceInfoImpl {
   DeviceInfoIosObjC* _captureInfo;
 };
 
-}  // namespace videocapturemodule
-}  // namespace webrtc
+}  // namespace webrtc::videocapturemodule
 
 #endif  // MODULES_VIDEO_CAPTURE_OBJC_DEVICE_INFO_H_
