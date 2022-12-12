@@ -68,8 +68,29 @@
 }
 
 .ctrlTab-canvas {
+  color-scheme: light;
+  background-color: Canvas;
+  color: CanvasText;
   box-shadow: 1px 1px 2px hsl(0,0%,12%);
   margin-bottom: 8px;
+}
+
+@media (-moz-content-prefers-color-scheme: dark) {
+  .ctrlTab-canvas {
+    /* Make the blank canvas match the default content background. */
+    color-scheme: dark;
+  }
+}
+
+.ctrlTab-preview:not([hidden]) .ctrlTab-canvas:empty::before {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: url("chrome://global/skin/icons/defaultFavicon.svg") center/20% no-repeat;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  filter: drop-shadow(0 0 2px hsla(0,0%,0%,0.5));
 }
 
 .ctrlTab-preview-inner,

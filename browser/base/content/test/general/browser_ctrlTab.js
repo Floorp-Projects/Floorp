@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.ctrlTab.sortByRecentlyUsed", true]],
@@ -186,6 +190,120 @@ add_task(async function() {
     }
     FirefoxViewHandler.tab = null;
     info("End hidden tabs test");
+  }
+
+  {
+    info("Bug 1293692: Test asynchronous tab previews");
+
+    checkTabs(1);
+
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.pagethumbnails.capturing_disabled", false]],
+    });
+
+    await BrowserTestUtils.addTab(gBrowser);
+    await BrowserTestUtils.addTab(gBrowser);
+
+    let tab = await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      `${getRootDirectory(gTestPath)}dummy_page.html`
+    );
+
+    info("Pressing Ctrl+Tab to open the panel");
+    ok(canOpen(), "Ctrl+Tab can open the preview panel");
+    let panelShown = BrowserTestUtils.waitForEvent(ctrlTab.panel, "popupshown");
+    EventUtils.synthesizeKey("VK_TAB", { ctrlKey: true });
+    await TestUtils.waitForTick();
+
+    let observedPreview = ctrlTab.previews[0];
+    is(observedPreview._tab, tab, "The observed preview is for the new tab");
+    ok(
+      !observedPreview._canvas.firstElementChild,
+      "The preview <canvas> does not exist yet"
+    );
+
+    let emptyCanvas = PageThumbs.createCanvas(window);
+    let emptyImageData = emptyCanvas
+      .getContext("2d")
+      .getImageData(0, 0, ctrlTab.canvasWidth, ctrlTab.canvasHeight)
+      .data.slice(0, 15)
+      .toString();
+
+    info("Waiting for the preview <canvas> to be loaded");
+    await BrowserTestUtils.waitForMutationCondition(
+      observedPreview._canvas,
+      {
+        childList: true,
+        attributes: true,
+        subtree: true,
+      },
+      () =>
+        HTMLCanvasElement.isInstance(observedPreview._canvas.firstElementChild)
+    );
+
+    // Ensure the image is not blank (see bug 1293692). The canvas shouldn't be
+    // rendered at all until it has image data, but this will allow us to catch
+    // any regressions in the future.
+    await BrowserTestUtils.waitForCondition(
+      () =>
+        emptyImageData !==
+        observedPreview._canvas.firstElementChild
+          .getContext("2d")
+          .getImageData(0, 0, ctrlTab.canvasWidth, ctrlTab.canvasHeight)
+          .data.slice(0, 15)
+          .toString(),
+      "The preview <canvas> should be filled with a thumbnail"
+    );
+
+    // Wait for the panel to be shown.
+    await panelShown;
+    ok(isOpen(), "The preview panel is open");
+
+    // Keep the same tab selected.
+    await pressCtrlTab(true);
+    await releaseCtrl();
+
+    // The next time the panel is open, our preview should now be an <img>, the
+    // thumbnail that was previously drawn in a <canvas> having been cached and
+    // now being immediately available for reuse.
+    info("Pressing Ctrl+Tab to open the panel again");
+    let imgExists = BrowserTestUtils.waitForMutationCondition(
+      observedPreview._canvas,
+      {
+        childList: true,
+        attributes: true,
+        subtree: true,
+      },
+      () => {
+        let img = observedPreview._canvas.firstElementChild;
+        return (
+          img &&
+          HTMLImageElement.isInstance(img) &&
+          img.src &&
+          img.complete &&
+          img.naturalWidth
+        );
+      }
+    );
+    let panelShownAgain = BrowserTestUtils.waitForEvent(
+      ctrlTab.panel,
+      "popupshown"
+    );
+    EventUtils.synthesizeKey("VK_TAB", { ctrlKey: true });
+
+    info("Waiting for the preview <img> to be loaded");
+    await imgExists;
+    ok(
+      true,
+      `The preview image is an <img> with src="${observedPreview._canvas.firstElementChild.src}"`
+    );
+    await panelShownAgain;
+    await releaseCtrl();
+
+    for (let i = gBrowser.tabs.length - 1; i > 0; i--) {
+      await BrowserTestUtils.removeTab(gBrowser.tabs[i]);
+    }
+    checkTabs(1);
   }
 
   /* private utility functions */
