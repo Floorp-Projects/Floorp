@@ -1366,6 +1366,7 @@ nsresult nsHttpConnectionMgr::TryDispatchTransaction(
         // No limit for number of websockets, dispatch transaction to the tunnel
         RefPtr<nsHttpConnection> connToTunnel;
         connTCP->CreateTunnelStream(trans, getter_AddRefs(connToTunnel), true);
+        ent->InsertIntoH2WebsocketConns(connToTunnel);
         trans->SetConnection(nullptr);
         connToTunnel->SetInSpdyTunnel();  // tells conn it is already in tunnel
         trans->SetIsHttp2Websocket(true);
@@ -2011,6 +2012,9 @@ void nsHttpConnectionMgr::AbortAndCloseAllConnections(int32_t, ARefBase*) {
     // Close all idle connections.
     ent->CloseIdleConnections();
 
+    // Close websocket "fake" connections
+    ent->CloseH2WebsocketConnections();
+
     // Close all pending transactions.
     ent->CancelAllTransactions(NS_ERROR_ABORT);
 
@@ -2467,6 +2471,9 @@ void nsHttpConnectionMgr::OnMsgReclaimConnection(HttpConnectionBase* conn) {
 
     ent->InsertIntoIdleConnections(connTCP);
   } else {
+    if (ent->IsInH2WebsocketConns(conn)) {
+      ent->RemoveH2WebsocketConns(conn);
+    }
     LOG(("  connection cannot be reused; closing connection\n"));
     conn->Close(NS_ERROR_ABORT);
   }
