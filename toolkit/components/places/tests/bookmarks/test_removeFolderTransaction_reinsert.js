@@ -39,9 +39,7 @@ add_task(async function test_removeFolderTransaction_reinsert() {
       ]);
     }
   };
-  let observer = {
-    __proto__: NavBookmarkObserver.prototype,
-  };
+  let observer = Object.create(NavBookmarkObserver.prototype);
   PlacesUtils.bookmarks.addObserver(observer);
   PlacesUtils.observers.addListener(
     ["bookmark-added", "bookmark-removed"],

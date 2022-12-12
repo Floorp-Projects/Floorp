@@ -367,7 +367,7 @@ add_task(async function test_async() {
   for (let test of tests) {
     await PlacesUtils.bookmarks.eraseEverything();
 
-    test.__proto__ = new Test();
+    Object.setPrototypeOf(test, new Test());
     await test.setup();
 
     print("------ Running test: " + test.desc);
