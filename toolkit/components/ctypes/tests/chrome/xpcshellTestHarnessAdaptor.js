@@ -44,6 +44,16 @@ var Assert = {
     }
   },
 
+  strictEqual(left, right, stack) {
+    if (left !== right) {
+      var text = "Assert.strictEqual failed";
+      try {
+        text += ": " + left + " !== " + right;
+      } catch (e) {}
+      do_throw(text, stack);
+    }
+  },
+
   ok(condition, stack) {
     this.equal(condition, true, stack);
   },
