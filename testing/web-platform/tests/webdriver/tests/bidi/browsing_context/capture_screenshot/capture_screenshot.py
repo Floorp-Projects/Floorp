@@ -1,5 +1,4 @@
 import pytest
-
 from tests.support.image import png_dimensions
 
 from . import compare_png_data, viewport_dimensions

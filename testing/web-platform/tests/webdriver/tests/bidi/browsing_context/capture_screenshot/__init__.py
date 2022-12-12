@@ -1,8 +1,8 @@
 from base64 import encodebytes
 
+from tests.support.image import png_dimensions
 from webdriver.bidi.modules.script import ContextTarget
 
-from tests.support.image import png_dimensions
 
 async def viewport_dimensions(bidi_session, context):
     """Get the dimensions of the viewport containing context.

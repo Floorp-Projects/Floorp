@@ -1,14 +1,15 @@
 import pytest
-
 from tests.support.asserts import assert_success
 from tests.support.image import png_dimensions
+from tests.support.screenshot import (
+    DEFAULT_CONTENT,
+    INNER_IFRAME_STYLE,
+    OUTER_IFRAME_STYLE,
+    REFERENCE_CONTENT,
+    REFERENCE_STYLE,
+)
 
 from . import viewport_dimensions
-from tests.support.screenshot import (DEFAULT_CONTENT,
-                                      REFERENCE_CONTENT,
-                                      REFERENCE_STYLE,
-                                      OUTER_IFRAME_STYLE,
-                                      INNER_IFRAME_STYLE)
 
 
 def take_screenshot(session):
