@@ -80,7 +80,6 @@ class TelemetryHandler {
     this._contentHandler = new ContentHandler({
       browserInfoByURL: this._browserInfoByURL,
       findBrowserItemForURL: (...args) => this._findBrowserItemForURL(...args),
-      getProviderInfoForURL: (...args) => this._getProviderInfoForURL(...args),
       checkURLForSerpMatch: (...args) => this._checkURLForSerpMatch(...args),
     });
   }
@@ -213,6 +212,7 @@ class TelemetryHandler {
       }
       return newProvider;
     });
+    this._contentHandler._searchProviderInfo = this._searchProviderInfo;
   }
 
   reportPageWithAds(info, browser) {
@@ -455,24 +455,9 @@ class TelemetryHandler {
    * Searches for provider information for a given url.
    *
    * @param {string} url The url to match for a provider.
-   * @param {boolean} useOnlyExtraAdServers If true, this will use the extra
-   *   ad server regexp to match instead of the main regexp.
    * @returns {Array | null} Returns an array of provider name and the provider information.
    */
-  _getProviderInfoForURL(url, useOnlyExtraAdServers = false) {
-    if (useOnlyExtraAdServers) {
-      return this._searchProviderInfo.find(info => {
-        if (info.extraAdServersRegexps) {
-          for (let regexp of info.extraAdServersRegexps) {
-            if (regexp.test(url)) {
-              return true;
-            }
-          }
-        }
-        return false;
-      });
-    }
-
+  _getProviderInfoForURL(url) {
     return this._searchProviderInfo.find(info =>
       info.searchPageRegexp.test(url)
     );
@@ -600,7 +585,6 @@ class ContentHandler {
   constructor(options) {
     this._browserInfoByURL = options.browserInfoByURL;
     this._findBrowserItemForURL = options.findBrowserItemForURL;
-    this._getProviderInfoForURL = options.getProviderInfoForURL;
     this._checkURLForSerpMatch = options.checkURLForSerpMatch;
   }
 
@@ -754,8 +738,12 @@ class ContentHandler {
 
       let URL = wrappedChannel.finalURL;
 
-      let info = this._getProviderInfoForURL(URL, true);
-      if (!info) {
+      let providerInfo = item.info.provider;
+      let info = this._searchProviderInfo.find(provider => {
+        return provider.telemetryId == providerInfo;
+      });
+
+      if (!info.extraAdServersRegexps?.some(regex => regex.test(URL))) {
         return;
       }
 
