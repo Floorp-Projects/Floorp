@@ -83,7 +83,7 @@ It is possible to run background tasks in non-emphemeral, i.e., persistent, prof
 
 The technical mechanism that keeps background tasks "lightweight" is very simple.  XPCOM declares a number of observer notifications for loosely coupling components via the observer service.   Some of those observer notifications are declared as category notifications which allow consumers to register themselves in static components.conf registration files (or in now deprecated chrome.manifest files).  In background task mode, category notifications are not registered by default.
 
-For Firefox in particular, this means that [`BrowserContentHandler.jsm`](https://searchfox.org/mozilla-central/source/browser/components/BrowserContentHandler.jsm) is not registered as a command-line-handler.  This means that [`BrowserGlue.sys.mjs`](https://searchfox.org/mozilla-central/source/browser/components/BrowserGlue.sys.mjs) is not loaded, and this short circuits regular headed browsing startup.
+For Firefox in particular, this means that [`BrowserContentHandler.sys.mjs`](https://searchfox.org/mozilla-central/source/browser/components/BrowserContentHandler.sys.mjs) is not registered as a command-line-handler.  This means that [`BrowserGlue.sys.mjs`](https://searchfox.org/mozilla-central/source/browser/components/BrowserGlue.sys.mjs) is not loaded, and this short circuits regular headed browsing startup.
 
 See the [documentation for defining static components](https://firefox-source-docs.mozilla.org/build/buildsystem/defining-xpcom-components.html) for how to change this default behaviour, and [Bug 1675848](https://bugzilla.mozilla.org/show_bug.cgi?id=1675848) for details of the implementation.
 

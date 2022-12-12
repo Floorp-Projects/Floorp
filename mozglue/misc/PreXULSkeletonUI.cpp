@@ -1622,9 +1622,9 @@ static Result<Ok, PreXULSkeletonUIError> ValidateCmdlineArguments(
     const char* flag = NormalizeFlag(argv[i]);
     if (!flag) {
       // If this is not a flag, then we interpret it as a URL, similar to
-      // BrowserContentHandler.jsm. Some command line options take additional
-      // arguments, which may or may not be URLs. We don't need to know this,
-      // because we don't need to parse them out; we just rely on the
+      // BrowserContentHandler.sys.mjs. Some command line options take
+      // additional arguments, which may or may not be URLs. We don't need to
+      // know this, because we don't need to parse them out; we just rely on the
       // assumption that if arg X is actually a parameter for the preceding
       // arg Y, then X must not look like a flag (starting with "--", "-",
       // or "/").
