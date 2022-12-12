@@ -5,12 +5,30 @@ const { updateAppInfo } = ChromeUtils.importESModule(
   "resource://testing-common/AppInfo.sys.mjs"
 );
 
-// 'Cc["@mozilla.org/xre/app-info;1"]' for xpcshell has no nsIXULAppInfo
-// so that we have to update it to make nsURLFormatter.js happy.
-// (SafeBrowsing.init() will indirectly use nsURLFormatter.js)
-updateAppInfo();
+add_setup(async () => {
+  // 'Cc["@mozilla.org/xre/app-info;1"]' for xpcshell has no nsIXULAppInfo
+  // so that we have to update it to make nsURLFormatter.js happy.
+  // (SafeBrowsing.init() will indirectly use nsURLFormatter.js)
+  updateAppInfo();
 
-function run_test() {
+  // This test should not actually try to create a connection to any real
+  // endpoint. But a background request could try that while the test is in
+  // progress before we've actually shut down networking, and would cause a
+  // crash due to connecting to a non-local IP.
+  Services.prefs.setCharPref(
+    "browser.safebrowsing.provider.mozilla.updateURL",
+    `http://localhost:4444/safebrowsing/update`
+  );
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref(
+      "browser.safebrowsing.provider.mozilla.updateURL"
+    );
+    Services.prefs.clearUserPref("browser.safebrowsing.provider.google.lists");
+    Services.prefs.clearUserPref("browser.safebrowsing.provider.google4.lists");
+  });
+});
+
+add_task(async function test() {
   SafeBrowsing.init();
 
   let origListV2 = Services.prefs.getCharPref(
@@ -40,9 +58,8 @@ function run_test() {
     // will be thrown while accessing a null object.
     //
     SafeBrowsing.registerTables();
+    ok(true, "SafeBrowsing.registerTables() did not throw.");
   } catch (e) {
     ok(false, "Exception thrown due to " + e.toString());
   }
-  Services.prefs.clearUserPref("browser.safebrowsing.provider.google.lists");
-  Services.prefs.clearUserPref("browser.safebrowsing.provider.google4.lists");
-}
+});
