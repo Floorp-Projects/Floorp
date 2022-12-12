@@ -1089,10 +1089,14 @@ nsresult EventDispatcher::Dispatch(nsISupports* aTarget,
               schema.SetTooltipLabel("{marker.data.eventType} - DOMEvent");
               schema.SetTableLabel(
                   "{marker.data.eventType} - {marker.data.target}");
-              schema.AddKeyLabelFormat("target", "Event Target",
-                                       MS::Format::String);
+              schema.AddKeyLabelFormatSearchable("target", "Event Target",
+                                                 MS::Format::String,
+                                                 MS::Searchable::Searchable);
               schema.AddKeyLabelFormat("latency", "Latency",
                                        MS::Format::Duration);
+              schema.AddKeyLabelFormatSearchable("eventType", "Event Type",
+                                                 MS::Format::String,
+                                                 MS::Searchable::Searchable);
               return schema;
             }
           };
