@@ -946,7 +946,8 @@ void WorkerScriptLoader::ShutdownScriptLoader(bool aResult, bool aMutedError) {
     }
 
     mWorkerRef->Private()->AssertIsOnWorkerThread();
-    mWorkerRef->Private()->StopSyncLoop(mSyncLoopTarget, aResult);
+    mWorkerRef->Private()->StopSyncLoop(mSyncLoopTarget,
+                                        aResult ? NS_OK : NS_ERROR_FAILURE);
 
     // Signal cleanup
     mCleanedUp = true;

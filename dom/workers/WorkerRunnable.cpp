@@ -456,7 +456,7 @@ void MainThreadWorkerSyncRunnable::PostDispatch(WorkerPrivate* aWorkerPrivate,
 
 MainThreadStopSyncLoopRunnable::MainThreadStopSyncLoopRunnable(
     WorkerPrivate* aWorkerPrivate, nsCOMPtr<nsIEventTarget>&& aSyncLoopTarget,
-    bool aResult)
+    nsresult aResult)
     : WorkerSyncRunnable(aWorkerPrivate, std::move(aSyncLoopTarget)),
       mResult(aResult) {
   AssertIsOnMainThread();
@@ -567,7 +567,7 @@ void WorkerMainThreadRunnable::Dispatch(WorkerStatus aFailStatus,
       NS_SUCCEEDED(rv),
       "Should only fail after xpcom-shutdown-threads and we're gone by then");
 
-  bool success = syncLoop.Run();
+  bool success = NS_SUCCEEDED(syncLoop.Run());
 
   Telemetry::Accumulate(
       Telemetry::SYNC_WORKER_OPERATION, mTelemetryKey,
@@ -595,7 +595,8 @@ WorkerMainThreadRunnable::Run() {
 
   RefPtr<MainThreadStopSyncLoopRunnable> response =
       new MainThreadStopSyncLoopRunnable(mWorkerPrivate,
-                                         std::move(mSyncLoopTarget), runResult);
+                                         std::move(mSyncLoopTarget),
+                                         runResult ? NS_OK : NS_ERROR_FAILURE);
 
   MOZ_ALWAYS_TRUE(response->Dispatch());
 

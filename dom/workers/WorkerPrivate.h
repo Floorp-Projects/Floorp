@@ -440,7 +440,7 @@ class WorkerPrivate final
     return data->mOnLine;
   }
 
-  void StopSyncLoop(nsIEventTarget* aSyncLoopTarget, bool aResult);
+  void StopSyncLoop(nsIEventTarget* aSyncLoopTarget, nsresult aResult);
 
   bool AllPendingRunnablesShouldBeCanceled() const {
     return mCancelAllPendingRunnables;
@@ -1118,9 +1118,9 @@ class WorkerPrivate final
   already_AddRefed<nsISerialEventTarget> CreateNewSyncLoop(
       WorkerStatus aFailStatus);
 
-  bool RunCurrentSyncLoop();
+  nsresult RunCurrentSyncLoop();
 
-  bool DestroySyncLoop(uint32_t aLoopIndex);
+  nsresult DestroySyncLoop(uint32_t aLoopIndex);
 
   void InitializeGCTimers();
 
@@ -1255,8 +1255,8 @@ class WorkerPrivate final
     explicit SyncLoopInfo(EventTarget* aEventTarget);
 
     RefPtr<EventTarget> mEventTarget;
+    nsresult mResult;
     bool mCompleted;
-    bool mResult;
 #ifdef DEBUG
     bool mHasRun;
 #endif
@@ -1490,12 +1490,12 @@ class AutoSyncLoopHolder {
   ~AutoSyncLoopHolder() {
     if (mWorkerPrivate && mTarget) {
       mWorkerPrivate->AssertIsOnWorkerThread();
-      mWorkerPrivate->StopSyncLoop(mTarget, false);
+      mWorkerPrivate->StopSyncLoop(mTarget, NS_ERROR_FAILURE);
       mWorkerPrivate->DestroySyncLoop(mIndex);
     }
   }
 
-  bool Run() {
+  nsresult Run() {
     CheckedUnsafePtr<WorkerPrivate> workerPrivate = mWorkerPrivate;
     mWorkerPrivate = nullptr;
 
