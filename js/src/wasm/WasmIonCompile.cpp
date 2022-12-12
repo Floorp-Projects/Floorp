@@ -1810,21 +1810,8 @@ class FunctionCompiler {
   [[nodiscard]] bool postBarrierPrecise(uint32_t lineOrBytecode,
                                         MDefinition* valueAddr,
                                         MDefinition* value) {
-    const SymbolicAddressSignature& callee = SASigPostBarrierPrecise;
-    CallCompileState args;
-    if (!passInstance(callee.argTypes[0], &args)) {
-      return false;
-    }
-    if (!passArg(valueAddr, callee.argTypes[1], &args)) {
-      return false;
-    }
-    if (!passArg(value, callee.argTypes[2], &args)) {
-      return false;
-    }
-    if (!finishCall(&args)) {
-      return false;
-    }
-    return builtinInstanceMethodCall(callee, lineOrBytecode, args);
+    return emitInstanceCall2(lineOrBytecode, SASigPostBarrierPrecise, valueAddr,
+                             value);
   }
 
   /***************************************************************** Calls */
@@ -3218,19 +3205,8 @@ class FunctionCompiler {
 
   [[nodiscard]] bool emitNewException(MDefinition* tag,
                                       MDefinition** exception) {
-    uint32_t bytecodeOffset = readBytecodeOffset();
-    const SymbolicAddressSignature& callee = SASigExceptionNew;
-    CallCompileState args;
-    if (!passInstance(callee.argTypes[0], &args)) {
-      return false;
-    }
-    if (!passArg(tag, callee.argTypes[1], &args)) {
-      return false;
-    }
-    if (!finishCall(&args)) {
-      return false;
-    }
-    return builtinInstanceMethodCall(callee, bytecodeOffset, args, exception);
+    return emitInstanceCall1(readBytecodeOffset(), SASigExceptionNew, tag,
+                             exception);
   }
 
   [[nodiscard]] bool emitThrow(uint32_t tagIndex, const DefVector& argValues) {
@@ -3339,19 +3315,7 @@ class FunctionCompiler {
 
     // If there is no surrounding catching block, call an instance method to
     // throw the exception.
-    uint32_t bytecodeOffset = readBytecodeOffset();
-    const SymbolicAddressSignature& callee = SASigThrowException;
-    CallCompileState args;
-    if (!passInstance(callee.argTypes[0], &args)) {
-      return false;
-    }
-    if (!passArg(exn, callee.argTypes[1], &args)) {
-      return false;
-    }
-    if (!finishCall(&args)) {
-      return false;
-    }
-    if (!builtinInstanceMethodCall(callee, bytecodeOffset, args)) {
+    if (!emitInstanceCall1(readBytecodeOffset(), SASigThrowException, exn)) {
       return false;
     }
     unreachableTrap();
@@ -3383,27 +3347,32 @@ class FunctionCompiler {
 
   /*********************************************** Instance call helpers ***/
 
-  // Emit a call to the Instance function indicated by `callee`.  This is
+  // Do not call this function directly -- it offers no protection against
+  // mis-counting of arguments.  Instead call one of
+  // ::emitInstanceCall{0,1,2,3,4,5,6}.
+  //
+  // Emits a call to the Instance function indicated by `callee`.  This is
   // assumed to take an Instance pointer as its first argument.  The remaining
-  // args are taken from `args`, which must be null-terminated.  If `result`
-  // is non-null, the MDefinition* holding the return value is written to
-  // `*result`.
-  [[nodiscard]] bool emitInstanceCall(uint32_t lineOrBytecode,
-                                      const SymbolicAddressSignature& callee,
-                                      MDefinition** args,
-                                      MDefinition** result = nullptr) {
+  // args are taken from `args`, which is assumed to hold `numArgs` entries.
+  // If `result` is non-null, the MDefinition* holding the return value is
+  // written to `*result`.
+  [[nodiscard]] bool emitInstanceCallN(uint32_t lineOrBytecode,
+                                       const SymbolicAddressSignature& callee,
+                                       MDefinition** args, size_t numArgs,
+                                       MDefinition** result = nullptr) {
     // Check that the first formal parameter is plausibly an Instance pointer.
     MOZ_ASSERT(callee.numArgs > 0);
     MOZ_ASSERT(callee.argTypes[0] == MIRType::Pointer);
+    // Check we agree on the number of args.
+    MOZ_ASSERT(numArgs + 1 /* the instance pointer */ == callee.numArgs);
     // Check we agree on whether a value is returned.
     MOZ_ASSERT((result == nullptr) == (callee.retType == MIRType::None));
 
     // If we are in dead code, it can happen that some of the `args` entries
-    // are nullptr.  In that case the assertions below relating to the number
-    // of args will fail, because they under-count the number of arguments
-    // provided.  So exit at this point.  `passInstance`, `passArg`,
-    // `finishCall` and `builtinInstanceMethodCall` all do nothing in dead
-    // code, so it's valid to exit here.
+    // are nullptr, which will look like an OOM to the logic below.  So exit
+    // at this point.  `passInstance`, `passArg`, `finishCall` and
+    // `builtinInstanceMethodCall` all do nothing in dead code, so it's valid
+    // to exit here.
     if (inDeadCode()) {
       if (result) {
         *result = nullptr;
@@ -3411,22 +3380,86 @@ class FunctionCompiler {
       return true;
     }
 
+    // Check all args for signs of OOMness before attempting to allocating any
+    // more memory.
+    for (size_t i = 0; i < numArgs; i++) {
+      if (!args[i]) {
+        if (result) {
+          *result = nullptr;
+        }
+        return false;
+      }
+    }
+
+    // Finally, construct the call.
     CallCompileState ccsArgs;
     if (!passInstance(callee.argTypes[0], &ccsArgs)) {
       return false;
     }
-    size_t i;
-    for (i = 0; args[i]; i++) {
-      MOZ_ASSERT(i + 1 /* the instance pointer */ < callee.numArgs);
+    for (size_t i = 0; i < numArgs; i++) {
       if (!passArg(args[i], callee.argTypes[i + 1], &ccsArgs)) {
         return false;
       }
     }
-    MOZ_ASSERT(i + 1 == callee.numArgs);
     if (!finishCall(&ccsArgs)) {
       return false;
     }
     return builtinInstanceMethodCall(callee, lineOrBytecode, ccsArgs, result);
+  }
+
+  [[nodiscard]] bool emitInstanceCall0(uint32_t lineOrBytecode,
+                                       const SymbolicAddressSignature& callee,
+                                       MDefinition** result = nullptr) {
+    MDefinition* args[0] = {};
+    return emitInstanceCallN(lineOrBytecode, callee, args, 0, result);
+  }
+  [[nodiscard]] bool emitInstanceCall1(uint32_t lineOrBytecode,
+                                       const SymbolicAddressSignature& callee,
+                                       MDefinition* arg1,
+                                       MDefinition** result = nullptr) {
+    MDefinition* args[1] = {arg1};
+    return emitInstanceCallN(lineOrBytecode, callee, args, 1, result);
+  }
+  [[nodiscard]] bool emitInstanceCall2(uint32_t lineOrBytecode,
+                                       const SymbolicAddressSignature& callee,
+                                       MDefinition* arg1, MDefinition* arg2,
+                                       MDefinition** result = nullptr) {
+    MDefinition* args[2] = {arg1, arg2};
+    return emitInstanceCallN(lineOrBytecode, callee, args, 2, result);
+  }
+  [[nodiscard]] bool emitInstanceCall3(uint32_t lineOrBytecode,
+                                       const SymbolicAddressSignature& callee,
+                                       MDefinition* arg1, MDefinition* arg2,
+                                       MDefinition* arg3,
+                                       MDefinition** result = nullptr) {
+    MDefinition* args[3] = {arg1, arg2, arg3};
+    return emitInstanceCallN(lineOrBytecode, callee, args, 3, result);
+  }
+  [[nodiscard]] bool emitInstanceCall4(uint32_t lineOrBytecode,
+                                       const SymbolicAddressSignature& callee,
+                                       MDefinition* arg1, MDefinition* arg2,
+                                       MDefinition* arg3, MDefinition* arg4,
+                                       MDefinition** result = nullptr) {
+    MDefinition* args[4] = {arg1, arg2, arg3, arg4};
+    return emitInstanceCallN(lineOrBytecode, callee, args, 4, result);
+  }
+  [[nodiscard]] bool emitInstanceCall5(uint32_t lineOrBytecode,
+                                       const SymbolicAddressSignature& callee,
+                                       MDefinition* arg1, MDefinition* arg2,
+                                       MDefinition* arg3, MDefinition* arg4,
+                                       MDefinition* arg5,
+                                       MDefinition** result = nullptr) {
+    MDefinition* args[5] = {arg1, arg2, arg3, arg4, arg5};
+    return emitInstanceCallN(lineOrBytecode, callee, args, 5, result);
+  }
+  [[nodiscard]] bool emitInstanceCall6(uint32_t lineOrBytecode,
+                                       const SymbolicAddressSignature& callee,
+                                       MDefinition* arg1, MDefinition* arg2,
+                                       MDefinition* arg3, MDefinition* arg4,
+                                       MDefinition* arg5, MDefinition* arg6,
+                                       MDefinition** result = nullptr) {
+    MDefinition* args[6] = {arg1, arg2, arg3, arg4, arg5, arg6};
+    return emitInstanceCallN(lineOrBytecode, callee, args, 6, result);
   }
 
   /******************************** WasmGC: low level load/store helpers ***/
@@ -3938,9 +3971,8 @@ class FunctionCompiler {
     // If the requested size exceeds MaxArrayPayloadBytes, the MIR generated
     // by this call will trap.
     MDefinition* arrayObject;
-    MDefinition* callArgs[3] = {numElements, arrayRtt, nullptr};
-    if (!emitInstanceCall(lineOrBytecode, SASigArrayNew, callArgs,
-                          &arrayObject)) {
+    if (!emitInstanceCall2(lineOrBytecode, SASigArrayNew, numElements, arrayRtt,
+                           &arrayObject)) {
       return nullptr;
     }
 
@@ -4174,8 +4206,8 @@ class FunctionCompiler {
                              MDefinition* castToRTT) {
     // Create call: success = Instance::refTest(ref, castToRTT)
     MDefinition* success;
-    MDefinition* callArgs[3] = {ref, castToRTT, nullptr};
-    if (!emitInstanceCall(lineOrBytecode, SASigRefTest, callArgs, &success)) {
+    if (!emitInstanceCall2(lineOrBytecode, SASigRefTest, ref, castToRTT,
+                           &success)) {
       return false;
     }
 
@@ -4190,8 +4222,8 @@ class FunctionCompiler {
                                      MDefinition* castToRTT) {
     // Create call: success = Instance::refTest(ref, castToRTT)
     MDefinition* success;
-    MDefinition* callArgs[3] = {ref, castToRTT, nullptr};
-    if (!emitInstanceCall(lineOrBytecode, SASigRefTest, callArgs, &success)) {
+    if (!emitInstanceCall2(lineOrBytecode, SASigRefTest, ref, castToRTT,
+                           &success)) {
       return nullptr;
     }
 
@@ -4233,8 +4265,8 @@ class FunctionCompiler {
 
     // Create call: success = Instance::refTest(ref, castToRTT);
     MDefinition* success;
-    MDefinition* callArgs[3] = {ref, castToRTT, nullptr};
-    if (!emitInstanceCall(lineOrBytecode, SASigRefTest, callArgs, &success)) {
+    if (!emitInstanceCall2(lineOrBytecode, SASigRefTest, ref, castToRTT,
+                           &success)) {
       return false;
     }
 
@@ -5455,28 +5487,16 @@ static bool EmitBinaryMathBuiltinCall(FunctionCompiler& f,
 static bool EmitMemoryGrow(FunctionCompiler& f) {
   uint32_t bytecodeOffset = f.readBytecodeOffset();
 
-  const SymbolicAddressSignature& callee =
-      f.isNoMemOrMem32() ? SASigMemoryGrowM32 : SASigMemoryGrowM64;
-  CallCompileState args;
-  if (!f.passInstance(callee.argTypes[0], &args)) {
-    return false;
-  }
-
   MDefinition* delta;
   if (!f.iter().readMemoryGrow(&delta)) {
     return false;
   }
 
-  if (!f.passArg(delta, callee.argTypes[1], &args)) {
-    return false;
-  }
-
-  if (!f.finishCall(&args)) {
-    return false;
-  }
+  const SymbolicAddressSignature& callee =
+      f.isNoMemOrMem32() ? SASigMemoryGrowM32 : SASigMemoryGrowM64;
 
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(callee, bytecodeOffset, args, &ret)) {
+  if (!f.emitInstanceCall1(bytecodeOffset, callee, delta, &ret)) {
     return false;
   }
 
@@ -5487,24 +5507,15 @@ static bool EmitMemoryGrow(FunctionCompiler& f) {
 static bool EmitMemorySize(FunctionCompiler& f) {
   uint32_t bytecodeOffset = f.readBytecodeOffset();
 
-  const SymbolicAddressSignature& callee =
-      f.isNoMemOrMem32() ? SASigMemorySizeM32 : SASigMemorySizeM64;
-  CallCompileState args;
-
   if (!f.iter().readMemorySize()) {
     return false;
   }
 
-  if (!f.passInstance(callee.argTypes[0], &args)) {
-    return false;
-  }
-
-  if (!f.finishCall(&args)) {
-    return false;
-  }
+  const SymbolicAddressSignature& callee =
+      f.isNoMemOrMem32() ? SASigMemorySizeM32 : SASigMemorySizeM64;
 
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(callee, bytecodeOffset, args, &ret)) {
+  if (!f.emitInstanceCall0(bytecodeOffset, callee, &ret)) {
     return false;
   }
 
@@ -5591,15 +5602,6 @@ static bool EmitWait(FunctionCompiler& f, ValType type, uint32_t byteSize) {
 
   uint32_t bytecodeOffset = f.readBytecodeOffset();
 
-  const SymbolicAddressSignature& callee =
-      f.isNoMemOrMem32()
-          ? (type == ValType::I32 ? SASigWaitI32M32 : SASigWaitI64M32)
-          : (type == ValType::I32 ? SASigWaitI32M64 : SASigWaitI64M64);
-  CallCompileState args;
-  if (!f.passInstance(callee.argTypes[0], &args)) {
-    return false;
-  }
-
   LinearMemoryAddress<MDefinition*> addr;
   MDefinition* expected;
   MDefinition* timeout;
@@ -5614,25 +5616,15 @@ static bool EmitWait(FunctionCompiler& f, ValType type, uint32_t byteSize) {
     return false;
   }
 
-  if (!f.passArg(ptr, callee.argTypes[1], &args)) {
-    return false;
-  }
-
+  const SymbolicAddressSignature& callee =
+      f.isNoMemOrMem32()
+          ? (type == ValType::I32 ? SASigWaitI32M32 : SASigWaitI64M32)
+          : (type == ValType::I32 ? SASigWaitI32M64 : SASigWaitI64M64);
   MOZ_ASSERT(type.toMIRType() == callee.argTypes[2]);
-  if (!f.passArg(expected, callee.argTypes[2], &args)) {
-    return false;
-  }
-
-  if (!f.passArg(timeout, callee.argTypes[3], &args)) {
-    return false;
-  }
-
-  if (!f.finishCall(&args)) {
-    return false;
-  }
 
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(callee, bytecodeOffset, args, &ret)) {
+  if (!f.emitInstanceCall3(bytecodeOffset, callee, ptr, expected, timeout,
+                           &ret)) {
     return false;
   }
 
@@ -5652,13 +5644,6 @@ static bool EmitFence(FunctionCompiler& f) {
 static bool EmitWake(FunctionCompiler& f) {
   uint32_t bytecodeOffset = f.readBytecodeOffset();
 
-  const SymbolicAddressSignature& callee =
-      f.isNoMemOrMem32() ? SASigWakeM32 : SASigWakeM64;
-  CallCompileState args;
-  if (!f.passInstance(callee.argTypes[0], &args)) {
-    return false;
-  }
-
   LinearMemoryAddress<MDefinition*> addr;
   MDefinition* count;
   if (!f.iter().readWake(&addr, &count)) {
@@ -5672,20 +5657,11 @@ static bool EmitWake(FunctionCompiler& f) {
     return false;
   }
 
-  if (!f.passArg(ptr, callee.argTypes[1], &args)) {
-    return false;
-  }
-
-  if (!f.passArg(count, callee.argTypes[2], &args)) {
-    return false;
-  }
-
-  if (!f.finishCall(&args)) {
-    return false;
-  }
+  const SymbolicAddressSignature& callee =
+      f.isNoMemOrMem32() ? SASigWakeM32 : SASigWakeM64;
 
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(callee, bytecodeOffset, args, &ret)) {
+  if (!f.emitInstanceCall2(bytecodeOffset, callee, ptr, count, &ret)) {
     return false;
   }
 
@@ -5716,33 +5692,13 @@ static bool EmitMemCopyCall(FunctionCompiler& f, MDefinition* dst,
                             MDefinition* src, MDefinition* len) {
   uint32_t bytecodeOffset = f.readBytecodeOffset();
 
+  MDefinition* memoryBase = f.memoryBase();
   const SymbolicAddressSignature& callee =
       (f.moduleEnv().usesSharedMemory()
            ? (f.isMem32() ? SASigMemCopySharedM32 : SASigMemCopySharedM64)
            : (f.isMem32() ? SASigMemCopyM32 : SASigMemCopyM64));
-  CallCompileState args;
-  if (!f.passInstance(callee.argTypes[0], &args)) {
-    return false;
-  }
 
-  if (!f.passArg(dst, callee.argTypes[1], &args)) {
-    return false;
-  }
-  if (!f.passArg(src, callee.argTypes[2], &args)) {
-    return false;
-  }
-  if (!f.passArg(len, callee.argTypes[3], &args)) {
-    return false;
-  }
-  MDefinition* memoryBase = f.memoryBase();
-  if (!f.passArg(memoryBase, callee.argTypes[4], &args)) {
-    return false;
-  }
-  if (!f.finishCall(&args)) {
-    return false;
-  }
-
-  return f.builtinInstanceMethodCall(callee, bytecodeOffset, args);
+  return f.emitInstanceCall4(bytecodeOffset, callee, dst, src, len, memoryBase);
 }
 
 static bool EmitMemCopyInline(FunctionCompiler& f, MDefinition* dst,
@@ -5917,41 +5873,11 @@ static bool EmitTableCopy(FunctionCompiler& f) {
   }
 
   uint32_t bytecodeOffset = f.readBytecodeOffset();
-
-  const SymbolicAddressSignature& callee = SASigTableCopy;
-  CallCompileState args;
-  if (!f.passInstance(callee.argTypes[0], &args)) {
-    return false;
-  }
-
-  if (!f.passArg(dst, callee.argTypes[1], &args)) {
-    return false;
-  }
-  if (!f.passArg(src, callee.argTypes[2], &args)) {
-    return false;
-  }
-  if (!f.passArg(len, callee.argTypes[3], &args)) {
-    return false;
-  }
   MDefinition* dti = f.constant(Int32Value(dstTableIndex), MIRType::Int32);
-  if (!dti) {
-    return false;
-  }
-  if (!f.passArg(dti, callee.argTypes[4], &args)) {
-    return false;
-  }
   MDefinition* sti = f.constant(Int32Value(srcTableIndex), MIRType::Int32);
-  if (!sti) {
-    return false;
-  }
-  if (!f.passArg(sti, callee.argTypes[5], &args)) {
-    return false;
-  }
-  if (!f.finishCall(&args)) {
-    return false;
-  }
 
-  return f.builtinInstanceMethodCall(callee, bytecodeOffset, args);
+  return f.emitInstanceCall5(bytecodeOffset, SASigTableCopy, dst, src, len, dti,
+                             sti);
 }
 
 static bool EmitDataOrElemDrop(FunctionCompiler& f, bool isData) {
@@ -5966,58 +5892,26 @@ static bool EmitDataOrElemDrop(FunctionCompiler& f, bool isData) {
 
   uint32_t bytecodeOffset = f.readBytecodeOffset();
 
-  const SymbolicAddressSignature& callee =
-      isData ? SASigDataDrop : SASigElemDrop;
-  CallCompileState args;
-  if (!f.passInstance(callee.argTypes[0], &args)) {
-    return false;
-  }
-
   MDefinition* segIndex =
       f.constant(Int32Value(int32_t(segIndexVal)), MIRType::Int32);
-  if (!f.passArg(segIndex, callee.argTypes[1], &args)) {
-    return false;
-  }
 
-  if (!f.finishCall(&args)) {
-    return false;
-  }
-
-  return f.builtinInstanceMethodCall(callee, bytecodeOffset, args);
+  const SymbolicAddressSignature& callee =
+      isData ? SASigDataDrop : SASigElemDrop;
+  return f.emitInstanceCall1(bytecodeOffset, callee, segIndex);
 }
 
 static bool EmitMemFillCall(FunctionCompiler& f, MDefinition* start,
                             MDefinition* val, MDefinition* len) {
   uint32_t bytecodeOffset = f.readBytecodeOffset();
 
+  MDefinition* memoryBase = f.memoryBase();
+
   const SymbolicAddressSignature& callee =
       (f.moduleEnv().usesSharedMemory()
            ? (f.isMem32() ? SASigMemFillSharedM32 : SASigMemFillSharedM64)
            : (f.isMem32() ? SASigMemFillM32 : SASigMemFillM64));
-  CallCompileState args;
-  if (!f.passInstance(callee.argTypes[0], &args)) {
-    return false;
-  }
-
-  if (!f.passArg(start, callee.argTypes[1], &args)) {
-    return false;
-  }
-  if (!f.passArg(val, callee.argTypes[2], &args)) {
-    return false;
-  }
-  if (!f.passArg(len, callee.argTypes[3], &args)) {
-    return false;
-  }
-  MDefinition* memoryBase = f.memoryBase();
-  if (!f.passArg(memoryBase, callee.argTypes[4], &args)) {
-    return false;
-  }
-
-  if (!f.finishCall(&args)) {
-    return false;
-  }
-
-  return f.builtinInstanceMethodCall(callee, bytecodeOffset, args);
+  return f.emitInstanceCall4(bytecodeOffset, callee, start, val, len,
+                             memoryBase);
 }
 
 static bool EmitMemFillInline(FunctionCompiler& f, MDefinition* start,
@@ -6145,43 +6039,19 @@ static bool EmitMemOrTableInit(FunctionCompiler& f, bool isMem) {
 
   uint32_t bytecodeOffset = f.readBytecodeOffset();
 
-  const SymbolicAddressSignature& callee =
-      isMem ? (f.isMem32() ? SASigMemInitM32 : SASigMemInitM64)
-            : SASigTableInit;
-  CallCompileState args;
-  if (!f.passInstance(callee.argTypes[0], &args)) {
-    return false;
-  }
-
-  if (!f.passArg(dstOff, callee.argTypes[1], &args)) {
-    return false;
-  }
-  if (!f.passArg(srcOff, callee.argTypes[2], &args)) {
-    return false;
-  }
-  if (!f.passArg(len, callee.argTypes[3], &args)) {
-    return false;
-  }
-
   MDefinition* segIndex =
       f.constant(Int32Value(int32_t(segIndexVal)), MIRType::Int32);
-  if (!f.passArg(segIndex, callee.argTypes[4], &args)) {
-    return false;
-  }
-  if (!isMem) {
-    MDefinition* dti = f.constant(Int32Value(dstTableIndex), MIRType::Int32);
-    if (!dti) {
-      return false;
-    }
-    if (!f.passArg(dti, callee.argTypes[5], &args)) {
-      return false;
-    }
-  }
-  if (!f.finishCall(&args)) {
-    return false;
+
+  if (isMem) {
+    const SymbolicAddressSignature& callee =
+        f.isMem32() ? SASigMemInitM32 : SASigMemInitM64;
+    return f.emitInstanceCall4(bytecodeOffset, callee, dstOff, srcOff, len,
+                               segIndex);
   }
 
-  return f.builtinInstanceMethodCall(callee, bytecodeOffset, args);
+  MDefinition* dti = f.constant(Int32Value(dstTableIndex), MIRType::Int32);
+  return f.emitInstanceCall5(bytecodeOffset, SASigTableInit, dstOff, srcOff,
+                             len, segIndex, dti);
 }
 
 // Note, table.{get,grow,set} on table(funcref) are currently rejected by the
@@ -6200,36 +6070,14 @@ static bool EmitTableFill(FunctionCompiler& f) {
 
   uint32_t bytecodeOffset = f.readBytecodeOffset();
 
-  const SymbolicAddressSignature& callee = SASigTableFill;
-  CallCompileState args;
-  if (!f.passInstance(callee.argTypes[0], &args)) {
-    return false;
-  }
-
-  if (!f.passArg(start, callee.argTypes[1], &args)) {
-    return false;
-  }
-  if (!f.passArg(val, callee.argTypes[2], &args)) {
-    return false;
-  }
-  if (!f.passArg(len, callee.argTypes[3], &args)) {
-    return false;
-  }
-
   MDefinition* tableIndexArg =
       f.constant(Int32Value(tableIndex), MIRType::Int32);
   if (!tableIndexArg) {
     return false;
   }
-  if (!f.passArg(tableIndexArg, callee.argTypes[4], &args)) {
-    return false;
-  }
 
-  if (!f.finishCall(&args)) {
-    return false;
-  }
-
-  return f.builtinInstanceMethodCall(callee, bytecodeOffset, args);
+  return f.emitInstanceCall4(bytecodeOffset, SASigTableFill, start, val, len,
+                             tableIndexArg);
 }
 
 static bool EmitTableGet(FunctionCompiler& f) {
@@ -6255,33 +6103,17 @@ static bool EmitTableGet(FunctionCompiler& f) {
 
   uint32_t bytecodeOffset = f.readBytecodeOffset();
 
-  const SymbolicAddressSignature& callee = SASigTableGet;
-  CallCompileState args;
-  if (!f.passInstance(callee.argTypes[0], &args)) {
-    return false;
-  }
-
-  if (!f.passArg(index, callee.argTypes[1], &args)) {
-    return false;
-  }
-
   MDefinition* tableIndexArg =
       f.constant(Int32Value(tableIndex), MIRType::Int32);
   if (!tableIndexArg) {
-    return false;
-  }
-  if (!f.passArg(tableIndexArg, callee.argTypes[2], &args)) {
-    return false;
-  }
-
-  if (!f.finishCall(&args)) {
     return false;
   }
 
   // The return value here is either null, denoting an error, or a short-lived
   // pointer to a location containing a possibly-null ref.
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(callee, bytecodeOffset, args, &ret)) {
+  if (!f.emitInstanceCall2(bytecodeOffset, SASigTableGet, index, tableIndexArg,
+                           &ret)) {
     return false;
   }
 
@@ -6303,35 +6135,15 @@ static bool EmitTableGrow(FunctionCompiler& f) {
 
   uint32_t bytecodeOffset = f.readBytecodeOffset();
 
-  const SymbolicAddressSignature& callee = SASigTableGrow;
-  CallCompileState args;
-  if (!f.passInstance(callee.argTypes[0], &args)) {
-    return false;
-  }
-
-  if (!f.passArg(initValue, callee.argTypes[1], &args)) {
-    return false;
-  }
-
-  if (!f.passArg(delta, callee.argTypes[2], &args)) {
-    return false;
-  }
-
   MDefinition* tableIndexArg =
       f.constant(Int32Value(tableIndex), MIRType::Int32);
   if (!tableIndexArg) {
     return false;
   }
-  if (!f.passArg(tableIndexArg, callee.argTypes[3], &args)) {
-    return false;
-  }
-
-  if (!f.finishCall(&args)) {
-    return false;
-  }
 
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(callee, bytecodeOffset, args, &ret)) {
+  if (!f.emitInstanceCall3(bytecodeOffset, SASigTableGrow, initValue, delta,
+                           tableIndexArg, &ret)) {
     return false;
   }
 
@@ -6358,34 +6170,14 @@ static bool EmitTableSet(FunctionCompiler& f) {
     return f.tableSetAnyRef(table, index, value, bytecodeOffset);
   }
 
-  const SymbolicAddressSignature& callee = SASigTableSet;
-  CallCompileState args;
-  if (!f.passInstance(callee.argTypes[0], &args)) {
-    return false;
-  }
-
-  if (!f.passArg(index, callee.argTypes[1], &args)) {
-    return false;
-  }
-
-  if (!f.passArg(value, callee.argTypes[2], &args)) {
-    return false;
-  }
-
   MDefinition* tableIndexArg =
       f.constant(Int32Value(tableIndex), MIRType::Int32);
   if (!tableIndexArg) {
     return false;
   }
-  if (!f.passArg(tableIndexArg, callee.argTypes[3], &args)) {
-    return false;
-  }
 
-  if (!f.finishCall(&args)) {
-    return false;
-  }
-
-  return f.builtinInstanceMethodCall(callee, bytecodeOffset, args);
+  return f.emitInstanceCall3(bytecodeOffset, SASigTableSet, index, value,
+                             tableIndexArg);
 }
 
 static bool EmitTableSize(FunctionCompiler& f) {
@@ -6421,28 +6213,15 @@ static bool EmitRefFunc(FunctionCompiler& f) {
 
   uint32_t bytecodeOffset = f.readBytecodeOffset();
 
-  const SymbolicAddressSignature& callee = SASigRefFunc;
-  CallCompileState args;
-  if (!f.passInstance(callee.argTypes[0], &args)) {
-    return false;
-  }
-
   MDefinition* funcIndexArg = f.constant(Int32Value(funcIndex), MIRType::Int32);
   if (!funcIndexArg) {
-    return false;
-  }
-  if (!f.passArg(funcIndexArg, callee.argTypes[1], &args)) {
-    return false;
-  }
-
-  if (!f.finishCall(&args)) {
     return false;
   }
 
   // The return value here is either null, denoting an error, or a short-lived
   // pointer to a location containing a possibly-null ref.
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(callee, bytecodeOffset, args, &ret)) {
+  if (!f.emitInstanceCall1(bytecodeOffset, SASigRefFunc, funcIndexArg, &ret)) {
     return false;
   }
 
@@ -6754,9 +6533,8 @@ static bool EmitStructNew(FunctionCompiler& f) {
 
   // Create call: structObject = Instance::structNew(structRTT)
   MDefinition* structObject;
-  MDefinition* callArgs[2] = {structRTT, nullptr};
-  if (!f.emitInstanceCall(lineOrBytecode, SASigStructNew, callArgs,
-                          &structObject)) {
+  if (!f.emitInstanceCall1(lineOrBytecode, SASigStructNew, structRTT,
+                           &structObject)) {
     return false;
   }
 
@@ -6798,9 +6576,8 @@ static bool EmitStructNewDefault(FunctionCompiler& f) {
 
   // Create call: structObject = Instance::structNew(structRTT)
   MDefinition* structObject;
-  MDefinition* callArgs[2] = {structRTT, nullptr};
-  if (!f.emitInstanceCall(lineOrBytecode, SASigStructNew, callArgs,
-                          &structObject)) {
+  if (!f.emitInstanceCall1(lineOrBytecode, SASigStructNew, structRTT,
+                           &structObject)) {
     return false;
   }
 
@@ -7016,10 +6793,8 @@ static bool EmitArrayNewData(FunctionCompiler& f) {
   // If the requested size exceeds MaxArrayPayloadBytes, the MIR generated by
   // this call will trap.
   MDefinition* arrayObject;
-  MDefinition* callArgs[5] = {segByteOffset, numElements, arrayRtt, segIndexM,
-                              nullptr};
-  if (!f.emitInstanceCall(lineOrBytecode, SASigArrayNewData, callArgs,
-                          &arrayObject)) {
+  if (!f.emitInstanceCall4(lineOrBytecode, SASigArrayNewData, segByteOffset,
+                           numElements, arrayRtt, segIndexM, &arrayObject)) {
     return false;
   }
 
@@ -7060,10 +6835,8 @@ static bool EmitArrayNewElem(FunctionCompiler& f) {
   // If the requested size exceeds MaxArrayPayloadBytes, the MIR generated by
   // this call will trap.
   MDefinition* arrayObject;
-  MDefinition* callArgs[5] = {segElemIndex, numElements, arrayRtt, segIndexM,
-                              nullptr};
-  if (!f.emitInstanceCall(lineOrBytecode, SASigArrayNewElem, callArgs,
-                          &arrayObject)) {
+  if (!f.emitInstanceCall4(lineOrBytecode, SASigArrayNewElem, segElemIndex,
+                           numElements, arrayRtt, segIndexM, &arrayObject)) {
     return false;
   }
 
@@ -7215,10 +6988,9 @@ static bool EmitArrayCopy(FunctionCompiler& f) {
   //                     srcArrayObject:word, srcArrayIndex:u32,
   //                     numElements:u32,
   //                     (elemsAreRefTyped ? -elemSize : elemSize):u32))
-  MDefinition* callArgs[7] = {dstArrayObject, dstArrayIndex, srcArrayObject,
-                              srcArrayIndex,  numElements,   elemSizeDef,
-                              nullptr};
-  return f.emitInstanceCall(lineOrBytecode, SASigArrayCopy, callArgs);
+  return f.emitInstanceCall6(lineOrBytecode, SASigArrayCopy, dstArrayObject,
+                             dstArrayIndex, srcArrayObject, srcArrayIndex,
+                             numElements, elemSizeDef);
 }
 
 static bool EmitRefTest(FunctionCompiler& f) {
@@ -7320,6 +7092,12 @@ static bool EmitExternExternalize(FunctionCompiler& f) {
 #endif  // ENABLE_WASM_GC
 
 static bool EmitIntrinsic(FunctionCompiler& f) {
+  // It's almost possible to use FunctionCompiler::emitInstanceCallN here.
+  // Unfortunately not currently possible though, since ::emitInstanceCallN
+  // expects an array of arguments along with a size, and that's not what is
+  // available here.  It would be possible if we were prepared to copy
+  // `intrinsic->params` into a fixed-sized (16 element?) array, add
+  // `memoryBase`, and make the call.
   const Intrinsic* intrinsic;
 
   DefVector params;
