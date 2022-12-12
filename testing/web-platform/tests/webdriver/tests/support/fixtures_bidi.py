@@ -87,8 +87,7 @@ def add_and_remove_iframe(bidi_session, inline):
     async def closed_frame(context, url=inline("test-frame")):
         initial_contexts = await bidi_session.browsing_context.get_tree(root=context["context"])
         resp = await bidi_session.script.call_function(
-            function_declaration=
-            """(url) => {
+            function_declaration="""(url) => {
                 const iframe = document.createElement("iframe");
                 // Once we're confident implementations support returning the iframe, just
                 // return that directly. For now generate a unique id to use as a handle.

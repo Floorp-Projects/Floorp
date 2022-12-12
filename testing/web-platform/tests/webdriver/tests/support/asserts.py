@@ -3,7 +3,6 @@ from base64 import decodebytes
 
 from webdriver import Element, NoSuchAlertException, WebDriverException
 
-
 # WebDriver specification ID: dfn-error-response-data
 errors = {
     "detached shadow root": 404,

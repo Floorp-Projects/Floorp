@@ -1,5 +1,5 @@
 import base64
-from typing import Any, Optional, Mapping, MutableMapping
+from typing import Any, Mapping, MutableMapping, Optional
 
 from ._module import BidiModule, command
 
