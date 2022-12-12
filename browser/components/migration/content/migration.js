@@ -4,14 +4,14 @@
 
 "use strict";
 
-const kIMig = Ci.nsIBrowserProfileMigrator;
-const kIPStartup = Ci.nsIProfileStartup;
-
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
 const { MigrationUtils } = ChromeUtils.importESModule(
   "resource:///modules/MigrationUtils.sys.mjs"
+);
+const { MigratorBase } = ChromeUtils.importESModule(
+  "resource:///modules/MigratorBase.sys.mjs"
 );
 
 /**
@@ -51,8 +51,9 @@ var MigrationWizard = {
 
     this._wiz = document.querySelector("wizard");
 
-    let args = window.arguments;
-    let entryPointId = args[0] || MigrationUtils.MIGRATION_ENTRYPOINTS.UNKNOWN;
+    let args = window.arguments[0]?.wrappedJSObject || {};
+    let entryPointId =
+      args.entrypoint || MigrationUtils.MIGRATION_ENTRYPOINTS.UNKNOWN;
     Services.telemetry
       .getHistogramById("FX_MIGRATION_ENTRY_POINT")
       .add(entryPointId);
@@ -68,28 +69,25 @@ var MigrationWizard = {
       );
     }
 
-    if (args.length == 2) {
-      this._source = args[1];
-    } else if (args.length > 2) {
-      this._source = args[1];
-      this._migrator = args[2] instanceof kIMig ? args[2] : null;
-      this._autoMigrate = args[3].QueryInterface(kIPStartup);
-      this._skipImportSourcePage = args[4];
-      if (this._migrator && args[5]) {
-        let sourceProfiles = this.spinResolve(
-          this._migrator.getSourceProfiles()
-        );
-        this._selectedProfile = sourceProfiles.find(
-          profile => profile.id == args[5]
-        );
-      }
+    this._source = args.migratorKey;
+    this._migrator =
+      args.migrator instanceof MigratorBase ? args.migrator : null;
+    this._autoMigrate = !!args.isStartupMigration;
+    this._skipImportSourcePage = !!args.skipSourceSelection;
 
-      if (this._autoMigrate) {
-        // Show the "nothing" option in the automigrate case to provide an
-        // easily identifiable way to avoid migration and create a new profile.
-        document.getElementById("nothing").hidden = false;
-      }
+    if (this._migrator && args.profileId) {
+      let sourceProfiles = this.spinResolve(this._migrator.getSourceProfiles());
+      this._selectedProfile = sourceProfiles.find(
+        profile => profile.id == args.profileId
+      );
     }
+
+    if (this._autoMigrate) {
+      // Show the "nothing" option in the automigrate case to provide an
+      // easily identifiable way to avoid migration and create a new profile.
+      document.getElementById("nothing").hidden = false;
+    }
+
     this._setSourceForDataLocalization();
 
     document.addEventListener("wizardcancel", function() {
