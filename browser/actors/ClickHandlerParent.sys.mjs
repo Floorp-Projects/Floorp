@@ -10,8 +10,25 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "WebNavigationFrames",
+  "resource://gre/modules/WebNavigationFrames.jsm"
+);
 
 let gContentClickListeners = new Set();
+
+// Fill in fields which are not sent by the content process for the click event
+// based on known data in the parent process.
+function fillInClickEvent(actor, data) {
+  const wgp = actor.manager;
+  data.frameID = lazy.WebNavigationFrames.getFrameId(wgp.browsingContext);
+  data.triggeringPrincipal = wgp.documentPrincipal;
+  data.originPrincipal = wgp.documentPrincipal;
+  data.originStoragePrincipal = wgp.documentStoragePrincipal;
+  data.originAttributes = wgp.documentPrincipal?.originAttributes ?? {};
+  data.isContentWindowPrivate = wgp.browsingContext.usePrivateBrowsing;
+}
 
 export class MiddleMousePasteHandlerParent extends JSWindowActorParent {
   receiveMessage(message) {
@@ -24,6 +41,7 @@ export class MiddleMousePasteHandlerParent extends JSWindowActorParent {
         // Just bail.
         return;
       }
+      fillInClickEvent(this, message.data);
       browser.ownerGlobal.middleMousePaste(message.data);
     }
   }
@@ -41,6 +59,7 @@ export class ClickHandlerParent extends JSWindowActorParent {
   receiveMessage(message) {
     switch (message.name) {
       case "Content:Click":
+        fillInClickEvent(this, message.data);
         this.contentAreaClick(message.data);
         this.notifyClickListeners(message.data);
         break;
