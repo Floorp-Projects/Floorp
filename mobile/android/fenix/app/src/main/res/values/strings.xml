@@ -339,8 +339,8 @@
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">Turn off Cookie Banner Reduction for %1$s?</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s will clear this site’s cookies and refresh the page. Clearing all cookies may sign you out or empty shopping carts.</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site">Firefox can try to automatically reject cookie requests. If a reject option isn’t available, Firefox may accept all cookies to dismiss the banner.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s can try to automatically reject cookie requests. If a reject option isn’t available, %2$s may accept all cookies to dismiss the banner.</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Automatically attempts to connect to sites using HTTPS encryption protocol for increased security.</string>

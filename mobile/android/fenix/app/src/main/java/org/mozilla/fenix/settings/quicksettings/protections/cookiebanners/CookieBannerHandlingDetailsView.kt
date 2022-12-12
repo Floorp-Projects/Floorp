@@ -63,7 +63,8 @@ class CookieBannerHandlingDetailsView(
             } else {
                 R.string.reduce_cookie_banner_details_panel_description_on_for_site
             }
-        binding.details.text = context.getString(stringID, context.getString(R.string.app_name))
+        val appName = context.getString(R.string.app_name)
+        binding.details.text = context.getString(stringID, appName, appName)
     }
 
     @VisibleForTesting

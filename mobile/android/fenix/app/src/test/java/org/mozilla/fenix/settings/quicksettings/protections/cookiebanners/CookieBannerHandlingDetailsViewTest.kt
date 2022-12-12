@@ -131,9 +131,12 @@ class CookieBannerHandlingDetailsViewTest {
     fun `GIVEN cookie banner handling is disabled WHEN biding description THEN description view must have the expected string`() {
         view.bindDescription(isCookieBannerHandlingEnabled = false)
 
+        val appName = testContext.getString(R.string.app_name)
         val expectedText =
             testContext.getString(
                 R.string.reduce_cookie_banner_details_panel_description_on_for_site,
+                appName,
+                appName,
             )
 
         assertEquals(expectedText, view.binding.details.text)
