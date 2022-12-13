@@ -1,7 +1,7 @@
 [package]
 name = "l10nregistry-ffi-gtest"
 version = "0.1.0"
-authors = ["nobody@mozilla.org"]
+authors = ["The Mozilla Project Developers"]
 license = "MPL-2.0"
 description = "Tests for rust bindings to l10nRegistry"
 edition = "2018"

@@ -2,7 +2,7 @@
 [package]
 name = "gkrust-shared"
 version = "0.1.0"
-authors = ["nobody@mozilla.org"]
+authors = ["The Mozilla Project Developers"]
 license = "MPL-2.0"
 description = "Shared Rust code for libxul"
 
