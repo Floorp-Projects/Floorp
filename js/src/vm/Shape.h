@@ -90,6 +90,7 @@ MOZ_ALWAYS_INLINE size_t JSSLOT_FREE(const JSClass* clasp) {
 
 namespace js {
 
+class NativeShape;
 class Shape;
 class PropertyIteratorObject;
 
@@ -322,7 +323,7 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   // The shape's property map. This is either nullptr for shared initial (empty)
   // shapes, a SharedPropMap for SharedPropMap shapes, or a DictionaryPropMap
   // for dictionary shapes.
-  GCPtr<PropMap*> propMap_;
+  GCPtr<PropMap*> nativePropMap_;
 
   // Cache used to speed up common operations on shapes.
   ShapeCachePtr cache_;
@@ -342,24 +343,12 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
     }
   }
 
-  PropMap* propMap() const { return propMap_; }
-
   ShapeCachePtr& cacheRef() { return cache_; }
   ShapeCachePtr cache() const { return cache_; }
 
   void maybeCacheIterator(JSContext* cx, PropertyIteratorObject* iter);
 
-  uint32_t propMapLength() const { return immutableFlags & MAP_LENGTH_MASK; }
-
-  PropertyInfoWithKey lastProperty() const {
-    MOZ_ASSERT(propMapLength() > 0);
-    size_t index = propMapLength() - 1;
-    return propMap()->getPropertyInfoWithKey(index);
-  }
-
-  MOZ_ALWAYS_INLINE PropMap* lookup(JSContext* cx, PropertyKey key,
-                                    uint32_t* index);
-  MOZ_ALWAYS_INLINE PropMap* lookupPure(PropertyKey key, uint32_t* index);
+  void assertHasNoPropMap() const { MOZ_ASSERT(!nativePropMap_); }
 
   const JSClass* getObjectClass() const { return base()->clasp(); }
   JS::Realm* realm() const { return base()->realm(); }
@@ -377,15 +366,11 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   }
 
  protected:
-  Shape(Kind kind, BaseShape* base, ObjectFlags objectFlags, uint32_t nfixed,
-        PropMap* map, uint32_t mapLength)
+  Shape(Kind kind, BaseShape* base, ObjectFlags objectFlags)
       : CellWithTenuredGCPointer(base),
-        immutableFlags((nfixed << FIXED_SLOTS_SHIFT) |
-                       (uint32_t(kind) << KIND_SHIFT) | mapLength),
-        objectFlags_(objectFlags),
-        propMap_(map) {
+        immutableFlags(uint32_t(kind) << KIND_SHIFT),
+        objectFlags_(objectFlags) {
     MOZ_ASSERT(base);
-    MOZ_ASSERT(mapLength <= PropMap::Capacity);
     MOZ_ASSERT(this->kind() == kind, "kind must fit in KIND_MASK");
   }
 
@@ -400,17 +385,14 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   bool isProxy() const { return kind() == Kind::Proxy; }
   bool isWasmGC() const { return kind() == Kind::WasmGC; }
 
+  inline NativeShape& asNative();
   inline SharedShape& asShared();
   inline DictionaryShape& asDictionary();
 
+  inline const NativeShape& asNative() const;
   inline const SharedShape& asShared() const;
   inline const DictionaryShape& asDictionary() const;
 
-  uint32_t numFixedSlots() const {
-    return (immutableFlags & FIXED_SLOTS_MASK) >> FIXED_SLOTS_SHIFT;
-  }
-
- public:
 #ifdef DEBUG
   void dump(js::GenericPrinter& out) const;
   void dump() const;
@@ -433,8 +415,6 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   static inline size_t offsetOfImmutableFlags() {
     return offsetof(Shape, immutableFlags);
   }
-  static inline uint32_t fixedSlotsMask() { return FIXED_SLOTS_MASK; }
-  static inline uint32_t fixedSlotsShift() { return FIXED_SLOTS_SHIFT; }
 
   static constexpr size_t offsetOfCachePtr() { return offsetof(Shape, cache_); }
 
@@ -454,13 +434,47 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   }
 };
 
+// Shared or dictionary shape for a NativeObject.
+class NativeShape : public Shape {
+ protected:
+  NativeShape(Kind kind, BaseShape* base, ObjectFlags objectFlags,
+              uint32_t nfixed, PropMap* map, uint32_t mapLength)
+      : Shape(kind, base, objectFlags) {
+    MOZ_ASSERT(base->clasp()->isNativeObject());
+    MOZ_ASSERT(mapLength <= PropMap::Capacity);
+    immutableFlags |= (nfixed << FIXED_SLOTS_SHIFT) | mapLength;
+    nativePropMap_ = map;
+  }
+
+ public:
+  PropMap* propMap() const { return nativePropMap_; }
+  uint32_t propMapLength() const { return immutableFlags & MAP_LENGTH_MASK; }
+
+  PropertyInfoWithKey lastProperty() const {
+    MOZ_ASSERT(propMapLength() > 0);
+    size_t index = propMapLength() - 1;
+    return propMap()->getPropertyInfoWithKey(index);
+  }
+
+  MOZ_ALWAYS_INLINE PropMap* lookup(JSContext* cx, PropertyKey key,
+                                    uint32_t* index);
+  MOZ_ALWAYS_INLINE PropMap* lookupPure(PropertyKey key, uint32_t* index);
+
+  uint32_t numFixedSlots() const {
+    return (immutableFlags & FIXED_SLOTS_MASK) >> FIXED_SLOTS_SHIFT;
+  }
+
+  // For JIT usage.
+  static constexpr uint32_t fixedSlotsMask() { return FIXED_SLOTS_MASK; }
+  static constexpr uint32_t fixedSlotsShift() { return FIXED_SLOTS_SHIFT; }
+};
+
 // Shared shape for a NativeObject.
-class SharedShape : public Shape {
+class SharedShape : public NativeShape {
   friend class js::gc::CellAllocator;
   SharedShape(BaseShape* base, ObjectFlags objectFlags, uint32_t nfixed,
               PropMap* map, uint32_t mapLength)
-      : Shape(Kind::Shared, base, objectFlags, nfixed, map, mapLength) {
-    MOZ_ASSERT(base->clasp()->isNativeObject());
+      : NativeShape(Kind::Shared, base, objectFlags, nfixed, map, mapLength) {
     initSmallSlotSpan();
   }
 
@@ -481,7 +495,7 @@ class SharedShape : public Shape {
  public:
   SharedPropMap* propMap() const {
     MOZ_ASSERT(isShared());
-    return propMap_ ? propMap_->asShared() : nullptr;
+    return nativePropMap_ ? nativePropMap_->asShared() : nullptr;
   }
   inline SharedPropMap* propMapMaybeForwarded() const;
 
@@ -509,7 +523,6 @@ class SharedShape : public Shape {
   }
   uint32_t slotSpan() const {
     MOZ_ASSERT(isShared());
-    MOZ_ASSERT(getObjectClass()->isNativeObject());
     uint32_t span =
         (immutableFlags & SMALL_SLOTSPAN_MASK) >> SMALL_SLOTSPAN_SHIFT;
     if (MOZ_LIKELY(span < SMALL_SLOTSPAN_MAX)) {
@@ -565,16 +578,16 @@ class SharedShape : public Shape {
 };
 
 // Dictionary shape for a NativeObject.
-class DictionaryShape : public Shape {
+class DictionaryShape : public NativeShape {
   friend class ::JSObject;
   friend class js::gc::CellAllocator;
   friend class NativeObject;
 
   DictionaryShape(BaseShape* base, ObjectFlags objectFlags, uint32_t nfixed,
                   PropMap* map, uint32_t mapLength)
-      : Shape(Kind::Dictionary, base, objectFlags, nfixed, map, mapLength) {
+      : NativeShape(Kind::Dictionary, base, objectFlags, nfixed, map,
+                    mapLength) {
     MOZ_ASSERT(map);
-    MOZ_ASSERT(base->clasp()->isNativeObject());
   }
 
   // Methods to set fields of a new dictionary shape. Must not be used for
@@ -583,7 +596,7 @@ class DictionaryShape : public Shape {
                       uint32_t mapLength) {
     MOZ_ASSERT(isDictionary());
     objectFlags_ = flags;
-    propMap_ = map;
+    nativePropMap_ = map;
     immutableFlags = (immutableFlags & ~MAP_LENGTH_MASK) | mapLength;
     MOZ_ASSERT(propMapLength() == mapLength);
   }
@@ -611,8 +624,8 @@ class DictionaryShape : public Shape {
 
   DictionaryPropMap* propMap() const {
     MOZ_ASSERT(isDictionary());
-    MOZ_ASSERT(propMap_);
-    return propMap_->asDictionary();
+    MOZ_ASSERT(nativePropMap_);
+    return nativePropMap_->asDictionary();
   }
 };
 
@@ -620,7 +633,7 @@ class DictionaryShape : public Shape {
 class ProxyShape : public Shape {
   friend class js::gc::CellAllocator;
   ProxyShape(BaseShape* base, ObjectFlags objectFlags)
-      : Shape(Kind::Proxy, base, objectFlags, 0, nullptr, 0) {
+      : Shape(Kind::Proxy, base, objectFlags) {
     MOZ_ASSERT(base->clasp()->isProxyObject());
   }
 
@@ -637,7 +650,7 @@ class ProxyShape : public Shape {
 class WasmGCShape : public Shape {
   friend class js::gc::CellAllocator;
   WasmGCShape(BaseShape* base, ObjectFlags objectFlags)
-      : Shape(Kind::WasmGC, base, objectFlags, 0, nullptr, 0) {
+      : Shape(Kind::WasmGC, base, objectFlags) {
     MOZ_ASSERT(!base->clasp()->isProxyObject());
     MOZ_ASSERT(!base->clasp()->isNativeObject());
   }
@@ -651,6 +664,11 @@ class WasmGCShape : public Shape {
                                ObjectFlags objectFlags);
 };
 
+inline NativeShape& js::Shape::asNative() {
+  MOZ_ASSERT(isNative());
+  return *static_cast<NativeShape*>(this);
+}
+
 inline SharedShape& js::Shape::asShared() {
   MOZ_ASSERT(isShared());
   return *static_cast<SharedShape*>(this);
@@ -659,6 +677,11 @@ inline SharedShape& js::Shape::asShared() {
 inline DictionaryShape& js::Shape::asDictionary() {
   MOZ_ASSERT(isDictionary());
   return *static_cast<DictionaryShape*>(this);
+}
+
+inline const NativeShape& js::Shape::asNative() const {
+  MOZ_ASSERT(isNative());
+  return *static_cast<const NativeShape*>(this);
 }
 
 inline const SharedShape& js::Shape::asShared() const {
@@ -687,28 +710,28 @@ class MOZ_RAII ShapePropertyIter {
   const bool isDictionary_;
 
  protected:
-  ShapePropertyIter(JSContext* cx, Shape* shape, bool isDictionary)
+  ShapePropertyIter(JSContext* cx, NativeShape* shape, bool isDictionary)
       : map_(cx, shape->propMap()),
         mapLength_(shape->propMapLength()),
         isDictionary_(isDictionary) {
     static_assert(allowGC == CanGC);
     MOZ_ASSERT(shape->isDictionary() == isDictionary);
-    MOZ_ASSERT(shape->getObjectClass()->isNativeObject());
+    MOZ_ASSERT(shape->isNative());
   }
-  ShapePropertyIter(Shape* shape, bool isDictionary)
+  ShapePropertyIter(NativeShape* shape, bool isDictionary)
       : map_(nullptr, shape->propMap()),
         mapLength_(shape->propMapLength()),
         isDictionary_(isDictionary) {
     static_assert(allowGC == NoGC);
     MOZ_ASSERT(shape->isDictionary() == isDictionary);
-    MOZ_ASSERT(shape->getObjectClass()->isNativeObject());
+    MOZ_ASSERT(shape->isNative());
   }
 
  public:
-  ShapePropertyIter(JSContext* cx, Shape* shape)
+  ShapePropertyIter(JSContext* cx, NativeShape* shape)
       : ShapePropertyIter(cx, shape, shape->isDictionary()) {}
 
-  explicit ShapePropertyIter(Shape* shape)
+  explicit ShapePropertyIter(NativeShape* shape)
       : ShapePropertyIter(shape, shape->isDictionary()) {}
 
   // Deleted constructors: use SharedShapePropertyIter instead.

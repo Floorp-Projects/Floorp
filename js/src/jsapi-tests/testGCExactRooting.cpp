@@ -355,7 +355,7 @@ BEGIN_TEST(testGCHandleHashMap) {
 }
 END_TEST(testGCHandleHashMap)
 
-using ShapeVec = GCVector<Shape*>;
+using ShapeVec = GCVector<NativeShape*>;
 
 BEGIN_TEST(testGCRootedVector) {
   JS::Rooted<ShapeVec> shapes(cx, cx);
@@ -369,7 +369,7 @@ BEGIN_TEST(testGCRootedVector) {
     buffer[0] = 'a' + i;
     buffer[1] = '\0';
     CHECK(JS_SetProperty(cx, obj, buffer, val));
-    CHECK(shapes.append(obj->shape()));
+    CHECK(shapes.append(obj->as<NativeObject>().shape()));
   }
 
   JS_GC(cx);
@@ -398,7 +398,8 @@ BEGIN_TEST(testGCRootedVector) {
   return true;
 }
 
-bool receiveConstRefToShapeVector(const JS::Rooted<GCVector<Shape*>>& rooted) {
+bool receiveConstRefToShapeVector(
+    const JS::Rooted<GCVector<NativeShape*>>& rooted) {
   // Ensure range enumeration works through the reference.
   for (auto shape : rooted) {
     CHECK(shape);
@@ -406,7 +407,7 @@ bool receiveConstRefToShapeVector(const JS::Rooted<GCVector<Shape*>>& rooted) {
   return true;
 }
 
-bool receiveHandleToShapeVector(JS::Handle<GCVector<Shape*>> handle) {
+bool receiveHandleToShapeVector(JS::Handle<GCVector<NativeShape*>> handle) {
   // Ensure range enumeration works through the handle.
   for (auto shape : handle) {
     CHECK(shape);
@@ -415,7 +416,7 @@ bool receiveHandleToShapeVector(JS::Handle<GCVector<Shape*>> handle) {
 }
 
 bool receiveMutableHandleToShapeVector(
-    JS::MutableHandle<GCVector<Shape*>> handle) {
+    JS::MutableHandle<GCVector<NativeShape*>> handle) {
   // Ensure range enumeration works through the handle.
   for (auto shape : handle) {
     CHECK(shape);
@@ -425,7 +426,7 @@ bool receiveMutableHandleToShapeVector(
 END_TEST(testGCRootedVector)
 
 BEGIN_TEST(testTraceableFifo) {
-  using ShapeFifo = TraceableFifo<Shape*>;
+  using ShapeFifo = TraceableFifo<NativeShape*>;
   JS::Rooted<ShapeFifo> shapes(cx, ShapeFifo(cx));
   CHECK(shapes.empty());
 
@@ -438,7 +439,7 @@ BEGIN_TEST(testTraceableFifo) {
     buffer[0] = 'a' + i;
     buffer[1] = '\0';
     CHECK(JS_SetProperty(cx, obj, buffer, val));
-    CHECK(shapes.pushBack(obj->shape()));
+    CHECK(shapes.pushBack(obj->as<NativeObject>().shape()));
   }
 
   CHECK(shapes.length() == 10);
@@ -461,7 +462,7 @@ BEGIN_TEST(testTraceableFifo) {
 }
 END_TEST(testTraceableFifo)
 
-using ShapeVec = GCVector<Shape*>;
+using ShapeVec = GCVector<NativeShape*>;
 
 static bool FillVector(JSContext* cx, MutableHandle<ShapeVec> shapes) {
   for (size_t i = 0; i < 10; ++i) {
@@ -475,7 +476,7 @@ static bool FillVector(JSContext* cx, MutableHandle<ShapeVec> shapes) {
     if (!JS_SetProperty(cx, obj, buffer, val)) {
       return false;
     }
-    if (!shapes.append(obj->shape())) {
+    if (!shapes.append(obj->as<NativeObject>().shape())) {
       return false;
     }
   }

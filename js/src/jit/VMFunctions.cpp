@@ -1862,7 +1862,8 @@ bool HasNativeDataPropertyPure(JSContext* cx, JSObject* obj, Value* vp) {
     MOZ_ASSERT(!obj->getOpsLookupProperty());
 
     uint32_t index;
-    if (PropMap* map = obj->shape()->lookup(cx, id, &index)) {
+    if (PropMap* map =
+            obj->as<NativeObject>().shape()->lookup(cx, id, &index)) {
       if (JitOptions.enableWatchtowerMegamorphic) {
         PropertyInfo prop = map->getPropertyInfo(index);
         if (prop.isDataProperty()) {
@@ -2002,9 +2003,10 @@ static bool TryAddOrSetPlainObjectProperty(JSContext* cx,
     if (!proto->is<PlainObject>()) {
       return true;
     }
-    if (proto->as<PlainObject>().hasNonWritableOrAccessorPropExclProto()) {
+    PlainObject* plainProto = &proto->as<PlainObject>();
+    if (plainProto->hasNonWritableOrAccessorPropExclProto()) {
       uint32_t index;
-      if (PropMap* map = proto->shape()->lookup(cx, key, &index)) {
+      if (PropMap* map = plainProto->shape()->lookup(cx, key, &index)) {
         PropertyInfo prop = map->getPropertyInfo(index);
         if (!prop.isDataProperty() || !prop.writable()) {
           return true;
@@ -2012,7 +2014,7 @@ static bool TryAddOrSetPlainObjectProperty(JSContext* cx,
         break;
       }
     }
-    proto = proto->as<PlainObject>().staticPrototype();
+    proto = plainProto->staticPrototype();
   }
 
 #ifdef DEBUG

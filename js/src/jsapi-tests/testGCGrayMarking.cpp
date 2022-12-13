@@ -611,7 +611,7 @@ struct ColorCheckFunctor {
       return false;
     }
 
-    Shape* shape = nobj.shape();
+    NativeShape* shape = nobj.shape();
     if (!CheckCellColor(shape, color)) {
       return false;
     }

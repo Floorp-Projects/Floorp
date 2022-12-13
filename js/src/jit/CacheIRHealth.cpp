@@ -110,14 +110,15 @@ void CacheIRHealth::spewShapeInformation(AutoStructuredSpewer& spew,
         spew->beginListProperty("shapes");
       }
 
-      const PropMap* propMap = shape->propMap();
+      const PropMap* propMap =
+          shape->isNative() ? shape->asNative().propMap() : nullptr;
       if (propMap) {
         spew->beginObject();
         {
           if (!propMap->isDictionary()) {
-            uint32_t mapLength = shape->propMapLength();
+            uint32_t mapLength = shape->asNative().propMapLength();
             if (mapLength) {
-              PropertyKey lastKey = shape->lastProperty().key();
+              PropertyKey lastKey = shape->asNative().lastProperty().key();
               if (lastKey.isInt()) {
                 spew->property("lastProperty", lastKey.toInt());
               } else if (lastKey.isString()) {

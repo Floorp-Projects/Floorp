@@ -100,8 +100,8 @@ PlainObject* PlainObject::createWithTemplateFromDifferentRealm(
   MOZ_ASSERT(!templateObject->shape()->isDictionary());
 
   TaggedProto proto = TaggedProto(nullptr);
-  Shape* templateShape = templateObject->shape();
-  Rooted<SharedPropMap*> map(cx, templateShape->propMap()->asShared());
+  SharedShape* templateShape = templateObject->sharedShape();
+  Rooted<SharedPropMap*> map(cx, templateShape->propMap());
 
   Rooted<SharedShape*> shape(
       cx, SharedShape::getInitialOrPropMapShape(
