@@ -83,7 +83,7 @@ add_task(async function test_telemetry_events() {
     }
   );
   let newTab = await promiseNewTab;
-  ok(true, "New tab opened to " + FAKE_LEARN_MORE_URL);
+  Assert.ok(true, "New tab opened to " + FAKE_LEARN_MORE_URL);
   BrowserTestUtils.removeTab(newTab);
   await LoginTestUtils.telemetry.waitForEventCount(3);
 
@@ -125,7 +125,7 @@ add_task(async function test_telemetry_events() {
     originInput.click();
   });
   newTab = await promiseNewTab;
-  ok(true, "New tab opened to " + TEST_LOGIN3.origin);
+  Assert.ok(true, "New tab opened to " + TEST_LOGIN3.origin);
   BrowserTestUtils.removeTab(newTab);
   await LoginTestUtils.telemetry.waitForEventCount(nextTelemetryEventCount++);
 

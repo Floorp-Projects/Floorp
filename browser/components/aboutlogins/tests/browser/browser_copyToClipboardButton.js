@@ -70,7 +70,7 @@ add_task(async function test() {
           }
         );
         await reauthObserved;
-        ok(true, testObj.expectedValue + " is on clipboard now");
+        Assert.ok(true, testObj.expectedValue + " is on clipboard now");
 
         await SpecialPowers.spawn(browser, [testObj], async function(aTestObj) {
           let loginItem = Cu.waiveXrays(
@@ -83,11 +83,14 @@ add_task(async function test() {
             copyButton == loginItem._copyUsernameButton
               ? loginItem._copyPasswordButton
               : loginItem._copyUsernameButton;
-          ok(
+          Assert.ok(
             !otherCopyButton.dataset.copied,
             "The other copy button should have the 'copied' state removed"
           );
-          ok(copyButton.dataset.copied, "Success message should be shown");
+          Assert.ok(
+            copyButton.dataset.copied,
+            "Success message should be shown"
+          );
         });
       }
 

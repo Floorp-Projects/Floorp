@@ -16,16 +16,19 @@ add_task(async function test_create_login() {
   let browser = gBrowser.selectedBrowser;
   await SpecialPowers.spawn(browser, [], async () => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
-    ok(!loginList._selectedGuid, "should not be a selected guid by default");
-    ok(
+    Assert.ok(
+      !loginList._selectedGuid,
+      "should not be a selected guid by default"
+    );
+    Assert.ok(
       content.document.documentElement.classList.contains("no-logins"),
       "Should initially be in no logins view"
     );
-    ok(
+    Assert.ok(
       loginList.classList.contains("no-logins"),
       "login-list should initially be in no logins view"
     );
-    is(
+    Assert.equal(
       loginList._loginGuidsSortedOrder.length,
       0,
       "login list should be empty"
@@ -59,11 +62,11 @@ add_task(async function test_create_login() {
           content.document.querySelector("login-list")
         );
         let createButton = loginList._createLoginButton;
-        ok(
+        Assert.ok(
           ContentTaskUtils.is_hidden(loginList._blankLoginListItem),
           "the blank login list item should be hidden initially"
         );
-        ok(
+        Assert.ok(
           !createButton.disabled,
           "Create button should not be disabled initially"
         );
@@ -78,17 +81,17 @@ add_task(async function test_create_login() {
 
         createButton.click();
 
-        ok(
+        Assert.ok(
           ContentTaskUtils.is_visible(loginList._blankLoginListItem),
           "the blank login list item should be visible after clicking on the create button"
         );
-        ok(
+        Assert.ok(
           createButton.disabled,
           "Create button should be disabled after being clicked"
         );
 
         let cancelButton = loginItem.shadowRoot.querySelector(".cancel-button");
-        ok(
+        Assert.ok(
           ContentTaskUtils.is_visible(cancelButton),
           "cancel button should be visible in create mode with no logins saved"
         );
@@ -100,12 +103,12 @@ add_task(async function test_create_login() {
           "input[name='password']"
         );
 
-        is(
+        Assert.equal(
           content.document.l10n.getAttributes(usernameInput).id,
           null,
           "there should be no placeholder id on the username input in edit mode"
         );
-        is(
+        Assert.equal(
           usernameInput.placeholder,
           "",
           "there should be no placeholder on the username input in edit mode"
@@ -138,22 +141,22 @@ add_task(async function test_create_login() {
           "no-logins"
         );
       }, "waiting for no-logins view to exit");
-      ok(
+      Assert.ok(
         !content.document.documentElement.classList.contains("no-logins"),
         "Should no longer be in no logins view"
       );
       let loginList = Cu.waiveXrays(
         content.document.querySelector("login-list")
       );
-      ok(
+      Assert.ok(
         !loginList.classList.contains("no-logins"),
         "login-list should no longer be in no logins view"
       );
-      ok(
+      Assert.ok(
         ContentTaskUtils.is_hidden(loginList._blankLoginListItem),
         "the blank login list item should be hidden after adding new login"
       );
-      ok(
+      Assert.ok(
         !loginList._createLoginButton.disabled,
         "Create button shouldn't be disabled after exiting create login view"
       );
@@ -163,29 +166,29 @@ add_task(async function test_create_login() {
           guid => loginList._logins[guid].login.origin == aOriginTuple[1]
         );
       }, "Waiting for login to be displayed");
-      ok(loginGuid, "Expected login found in login-list");
+      Assert.ok(loginGuid, "Expected login found in login-list");
 
       let loginItem = Cu.waiveXrays(
         content.document.querySelector("login-item")
       );
-      is(loginItem._login.guid, loginGuid, "login-item should match");
+      Assert.equal(loginItem._login.guid, loginGuid, "login-item should match");
 
       let { login, listItem } = loginList._logins[loginGuid];
-      ok(
+      Assert.ok(
         listItem.classList.contains("selected"),
         "list item should be selected"
       );
-      is(
+      Assert.equal(
         login.origin,
         aOriginTuple[1],
         "Stored login should only include the origin of the URL provided during creation"
       );
-      is(
+      Assert.equal(
         login.username,
         "testuser1",
         "Stored login should have username provided during creation"
       );
-      is(
+      Assert.equal(
         login.password,
         "testpass1",
         "Stored login should have password provided during creation"
@@ -198,7 +201,7 @@ add_task(async function test_create_login() {
         () => usernameInput.placeholder,
         "waiting for placeholder to get set"
       );
-      ok(
+      Assert.ok(
         usernameInput.placeholder,
         "there should be a placeholder on the username input when not in edit mode"
       );
@@ -268,17 +271,17 @@ add_task(async function test_create_login() {
           login.password == "testpass2"
         );
       }, "waiting for the login to get updated");
-      is(
+      Assert.equal(
         login.origin,
         aOriginTuple[1],
         "Stored login should only include the origin of the URL provided during creation"
       );
-      is(
+      Assert.equal(
         login.username,
         "testuser2",
         "Stored login should have modified username"
       );
-      is(
+      Assert.equal(
         login.password,
         "testpass2",
         "Stored login should have modified password"
@@ -293,7 +296,7 @@ add_task(async function test_create_login() {
       let loginList = Cu.waiveXrays(
         content.document.querySelector("login-list")
       );
-      is(
+      Assert.equal(
         loginList._loginGuidsSortedOrder.length,
         5,
         "login list should have a login per testcase"
@@ -306,11 +309,11 @@ add_task(async function test_cancel_create_login() {
   let browser = gBrowser.selectedBrowser;
   await SpecialPowers.spawn(browser, [], async () => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
-    ok(
+    Assert.ok(
       loginList._selectedGuid,
       "there should be a selected guid before create mode"
     );
-    ok(
+    Assert.ok(
       ContentTaskUtils.is_hidden(loginList._blankLoginListItem),
       "the blank login list item should be hidden before create mode"
     );
@@ -320,11 +323,11 @@ add_task(async function test_cancel_create_login() {
       .shadowRoot.querySelector(".create-login-button");
     createButton.click();
 
-    ok(
+    Assert.ok(
       !loginList._selectedGuid,
       "there should be no selected guid when in create mode"
     );
-    ok(
+    Assert.ok(
       ContentTaskUtils.is_visible(loginList._blankLoginListItem),
       "the blank login list item should be visible in create mode"
     );
@@ -333,11 +336,11 @@ add_task(async function test_cancel_create_login() {
     let cancelButton = loginItem.shadowRoot.querySelector(".cancel-button");
     cancelButton.click();
 
-    ok(
+    Assert.ok(
       loginList._selectedGuid,
       "there should be a selected guid after canceling create mode"
     );
-    ok(
+    Assert.ok(
       ContentTaskUtils.is_hidden(loginList._blankLoginListItem),
       "the blank login list item should be hidden after canceling create mode"
     );
@@ -356,7 +359,7 @@ add_task(
         content.document.querySelector("login-filter")
       );
       loginFilter.value = "bugzilla.mozilla.org";
-      is(
+      Assert.equal(
         loginList._list.querySelectorAll(
           ".login-list-item[data-guid]:not([hidden])"
         ).length,
@@ -374,18 +377,18 @@ add_task(
         content.document.querySelector("login-item")
       );
       let cancelButton = loginItem.shadowRoot.querySelector(".cancel-button");
-      ok(
+      Assert.ok(
         ContentTaskUtils.is_visible(cancelButton),
         "cancel button should be visible in create mode with one login showing"
       );
       cancelButton.click();
 
-      is(
+      Assert.equal(
         loginFilter.value,
         "bugzilla.mozilla.org",
         "login-filter should not be cleared if there was a login in the list"
       );
-      is(
+      Assert.equal(
         loginList.shadowRoot.querySelectorAll(
           ".login-list-item[data-guid]:not([hidden])"
         )[0].dataset.guid,
@@ -405,7 +408,7 @@ add_task(async function test_cancel_create_login_with_logins_filtered_out() {
     loginFilter.value = "XXX-no-logins-should-match-this-XXX";
     await Promise.resolve();
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
-    is(
+    Assert.equal(
       loginList._list.querySelectorAll(
         ".login-list-item[data-guid]:not([hidden])"
       ).length,
@@ -418,14 +421,14 @@ add_task(async function test_cancel_create_login_with_logins_filtered_out() {
 
     let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
     let cancelButton = loginItem.shadowRoot.querySelector(".cancel-button");
-    ok(
+    Assert.ok(
       ContentTaskUtils.is_visible(cancelButton),
       "cancel button should be visible in create mode with no logins showing"
     );
     cancelButton.click();
     await Promise.resolve();
 
-    is(
+    Assert.equal(
       loginFilter.value,
       "",
       "login-filter should be cleared if there were no logins in the list"
@@ -433,12 +436,12 @@ add_task(async function test_cancel_create_login_with_logins_filtered_out() {
     let visibleLoginItems = loginList.shadowRoot.querySelectorAll(
       ".login-list-item[data-guid]:not([hidden])"
     );
-    is(
+    Assert.equal(
       visibleLoginItems.length,
       5,
       "all logins should be visible with blank filter"
     );
-    is(
+    Assert.equal(
       loginList._selectedGuid,
       visibleLoginItems[0].dataset.guid,
       "the first item in the list should be selected"
@@ -488,7 +491,7 @@ add_task(async function test_create_duplicate_login() {
         v.login.origin == EXISTING_ORIGIN &&
         v.login.username == EXISTING_USERNAME
     ).login.guid;
-    is(
+    Assert.equal(
       loginItem._errorMessageLink.dataset.errorGuid,
       duplicatedGuid,
       "Error message has GUID of existing duplicated login set on it"
@@ -497,12 +500,12 @@ add_task(async function test_create_duplicate_login() {
     let confirmationDialog = Cu.waiveXrays(
       content.document.querySelector("confirmation-dialog")
     );
-    ok(
+    Assert.ok(
       confirmationDialog.hidden,
       "the discard-changes dialog should be hidden before clicking the error-message-text"
     );
     loginItem._errorMessageLink.querySelector("a").click();
-    ok(
+    Assert.ok(
       !confirmationDialog.hidden,
       "the discard-changes dialog should be visible"
     );
@@ -517,7 +520,7 @@ add_task(async function test_create_duplicate_login() {
         loginItem._login.guid == duplicatedGuid,
       "waiting until the existing duplicated login is selected"
     );
-    is(
+    Assert.equal(
       loginList._selectedGuid,
       duplicatedGuid,
       "the duplicated login should be selected in the list"

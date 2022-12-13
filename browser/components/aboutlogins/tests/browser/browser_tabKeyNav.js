@@ -99,7 +99,7 @@ add_task(async function test_tab_key_nav() {
         continue;
       }
       let actualElem = getFocusedElement();
-      is(
+      Assert.equal(
         actualElem,
         expectedElement,
         "Actual focused element should equal the expected focused element"
@@ -120,7 +120,7 @@ add_task(async function test_tab_key_nav() {
         continue;
       }
       let actualElement = getFocusedElement();
-      is(
+      Assert.equal(
         actualElement,
         expectedElement,
         "Actual focused element should equal the expected focused element"
@@ -152,20 +152,20 @@ add_task(async function testTabToCreateButton() {
     );
     let getFocusedElement = () => loginList.shadowRoot.activeElement;
 
-    is(getFocusedElement(), null, "login-list isn't focused");
+    Assert.equal(getFocusedElement(), null, "login-list isn't focused");
 
     loginSort.focus();
     await waitForAnimationFrame();
-    is(getFocusedElement(), loginSort, "login sort is focused");
+    Assert.equal(getFocusedElement(), loginSort, "login sort is focused");
 
     await tab();
-    is(getFocusedElement(), loginListbox, "listbox is focused next");
+    Assert.equal(getFocusedElement(), loginListbox, "listbox is focused next");
 
     await tab();
-    is(getFocusedElement(), createButton, "create button is after");
+    Assert.equal(getFocusedElement(), createButton, "create button is after");
 
     await tab();
-    is(getFocusedElement(), null, "login-list isn't focused again");
+    Assert.equal(getFocusedElement(), null, "login-list isn't focused again");
   });
 });
 
@@ -205,7 +205,7 @@ add_task(async function testTabToEditButton() {
         if (content.document.activeElement == loginFilter) {
           return loginFilter.shadowRoot.activeElement;
         }
-        ok(
+        Assert.ok(
           false,
           "not expecting a different element to get focused in this test: " +
             content.document.activeElement.outerHTML
@@ -226,7 +226,7 @@ add_task(async function testTabToEditButton() {
           );
         }, "waiting for login-item to show the selected login");
 
-        is(
+        Assert.equal(
           breachAlert.hidden,
           guidToSelect == testLoginNormalGuid,
           ".breach-alert should be hidden if the login is not breached. current login breached? " +
@@ -235,11 +235,15 @@ add_task(async function testTabToEditButton() {
 
         createButton.focus();
         await waitForAnimationFrame();
-        is(getFocusedElement(), createButton, "create button is focused");
+        Assert.equal(
+          getFocusedElement(),
+          createButton,
+          "create button is focused"
+        );
 
         await tab();
         await waitForAnimationFrame();
-        is(getFocusedElement(), editButton, "edit button is focused");
+        Assert.equal(getFocusedElement(), editButton, "edit button is focused");
       }
     }
   );

@@ -33,7 +33,7 @@ add_task(async function test_launch_login_item() {
 
   info("waiting for new tab to get opened");
   let newTab = await promiseNewTab;
-  ok(true, "New tab opened to " + TEST_LOGIN1.origin);
+  Assert.ok(true, "New tab opened to " + TEST_LOGIN1.origin);
   BrowserTestUtils.removeTab(newTab);
 
   if (!OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
@@ -54,7 +54,7 @@ add_task(async function test_launch_login_item() {
     let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
     loginItem._usernameInput.value += "-changed";
 
-    ok(
+    Assert.ok(
       content.document.querySelector("confirmation-dialog").hidden,
       "discard-changes confirmation-dialog should be hidden before opening the site"
     );
@@ -69,7 +69,7 @@ add_task(async function test_launch_login_item() {
 
   info("waiting for new tab to get opened");
   newTab = await promiseNewTab;
-  ok(true, "New tab opened to " + TEST_LOGIN1.origin);
+  Assert.ok(true, "New tab opened to " + TEST_LOGIN1.origin);
 
   let modifiedLogin = TEST_LOGIN1.clone();
   modifiedLogin.timeLastUsed = 9000;
@@ -86,7 +86,7 @@ add_task(async function test_launch_login_item() {
     await ContentTaskUtils.waitForCondition(() => {
       return !content.document.querySelector("confirmation-dialog").hidden;
     }, "waiting for confirmation-dialog to appear");
-    ok(
+    Assert.ok(
       !content.document.querySelector("confirmation-dialog").hidden,
       "discard-changes confirmation-dialog should be visible after logging in to a site with a modified login present in the form"
     );

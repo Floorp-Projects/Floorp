@@ -28,7 +28,7 @@ async function activateLoginItemEdit(browser) {
   await SimpleTest.promiseFocus(browser);
   await SpecialPowers.spawn(browser, [], async () => {
     let loginItem = content.document.querySelector("login-item");
-    ok(loginItem, "Login item should exist");
+    Assert.ok(loginItem, "Login item should exist");
   });
   function getLoginItemEditButton() {
     let loginItem = window.document.querySelector("login-item");
@@ -93,7 +93,7 @@ add_setup(async function() {
 });
 
 add_task(async function test_remove_all_dialog_l10n() {
-  ok(TEST_LOGIN1, "test_login1");
+  Assert.ok(TEST_LOGIN1, "test_login1");
   let browser = gBrowser.selectedBrowser;
   await openRemoveAllDialog(browser);
   await SpecialPowers.spawn(browser, [], async () => {
@@ -101,7 +101,7 @@ add_task(async function test_remove_all_dialog_l10n() {
     let dialog = Cu.waiveXrays(
       content.document.querySelector("remove-logins-dialog")
     );
-    ok(!dialog.hidden);
+    Assert.ok(!dialog.hidden);
     let title = dialog.shadowRoot.querySelector(".title");
     let message = dialog.shadowRoot.querySelector(".message");
     let label = dialog.shadowRoot.querySelector(".checkbox-text");
@@ -114,42 +114,42 @@ add_task(async function test_remove_all_dialog_l10n() {
       cancelButton,
       removeAllButton,
     ]);
-    is(
+    Assert.equal(
       title.dataset.l10nId,
       "about-logins-confirm-remove-all-dialog-title",
       "Title contents should match l10n-id attribute set on element"
     );
-    is(
+    Assert.equal(
       message.dataset.l10nId,
       "about-logins-confirm-remove-all-dialog-message",
       "Message contents should match l10n-id attribute set on element"
     );
-    is(
+    Assert.equal(
       label.dataset.l10nId,
       "about-logins-confirm-remove-all-dialog-checkbox-label",
       "Label contents should match l10n-id attribute set on outer element"
     );
-    is(
+    Assert.equal(
       cancelButton.dataset.l10nId,
       "confirmation-dialog-cancel-button",
       "Cancel button contents should match l10n-id attribute set on outer element"
     );
-    is(
+    Assert.equal(
       removeAllButton.dataset.l10nId,
       "about-logins-confirm-remove-all-dialog-confirm-button-label",
       "Remove all button contents should match l10n-id attribute set on outer element"
     );
-    is(
+    Assert.equal(
       JSON.parse(title.dataset.l10nArgs).count,
       1,
       "Title contents should match l10n-args attribute set on element"
     );
-    is(
+    Assert.equal(
       JSON.parse(message.dataset.l10nArgs).count,
       1,
       "Message contents should match l10n-args attribute set on element"
     );
-    is(
+    Assert.equal(
       JSON.parse(label.dataset.l10nArgs).count,
       1,
       "Label contents should match l10n-id attribute set on outer element"
@@ -176,25 +176,25 @@ add_task(async function test_remove_all_dialog_keyboard_navigation() {
     );
     let cancelButton = dialog.shadowRoot.querySelector(".cancel-button");
     let removeAllButton = dialog.shadowRoot.querySelector(".confirm-button");
-    is(
+    Assert.equal(
       removeAllButton.disabled,
       true,
       "Remove all should be disabled on dialog open"
     );
     await EventUtils.synthesizeKey(" ", {}, content);
-    is(
+    Assert.equal(
       removeAllButton.disabled,
       false,
       "Remove all should be enabled when activating the checkbox"
     );
     await EventUtils.synthesizeKey(" ", {}, content);
-    is(
+    Assert.equal(
       removeAllButton.disabled,
       true,
       "Remove all should be disabled after deactivating the checkbox"
     );
     await EventUtils.synthesizeKey("KEY_Tab", {}, content);
-    is(
+    Assert.equal(
       dialog.shadowRoot.activeElement,
       cancelButton,
       "Cancel button should be the next element in tab order"
@@ -223,7 +223,7 @@ add_task(async function test_remove_all_dialog_keyboard_navigation() {
     );
     let dismissButton = dialog.shadowRoot.querySelector(".dismiss-button");
     await EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true }, content);
-    is(
+    Assert.equal(
       dialog.shadowRoot.activeElement,
       dismissButton,
       "dismiss button should be focused"
@@ -262,52 +262,52 @@ add_task(async function test_remove_all_dialog_remove_logins() {
       label,
       checkbox,
     ]);
-    is(
+    Assert.equal(
       dialog.shadowRoot.activeElement,
       checkbox,
       "Checkbox should be the focused element on dialog open"
     );
-    is(
+    Assert.equal(
       title.dataset.l10nId,
       "about-logins-confirm-remove-all-dialog-title",
       "Title contents should match l10n-id attribute set on element"
     );
-    is(
+    Assert.equal(
       JSON.parse(title.dataset.l10nArgs).count,
       2,
       "Title contents should match l10n-args attribute set on element"
     );
-    is(
+    Assert.equal(
       message.dataset.l10nId,
       "about-logins-confirm-remove-all-dialog-message",
       "Message contents should match l10n-id attribute set on element"
     );
-    is(
+    Assert.equal(
       JSON.parse(message.dataset.l10nArgs).count,
       2,
       "Message contents should match l10n-args attribute set on element"
     );
-    is(
+    Assert.equal(
       label.dataset.l10nId,
       "about-logins-confirm-remove-all-dialog-checkbox-label",
       "Label contents should match l10n-id attribute set on outer element"
     );
-    is(
+    Assert.equal(
       JSON.parse(label.dataset.l10nArgs).count,
       2,
       "Label contents should match l10n-id attribute set on outer element"
     );
-    is(
+    Assert.equal(
       cancelButton.dataset.l10nId,
       "confirmation-dialog-cancel-button",
       "Cancel button contents should match l10n-id attribute set on outer element"
     );
-    is(
+    Assert.equal(
       removeAllButton.dataset.l10nId,
       "about-logins-confirm-remove-all-dialog-confirm-button-label",
       "Remove all button contents should match l10n-id attribute set on outer element"
     );
-    is(
+    Assert.equal(
       removeAllButton.disabled,
       true,
       "Remove all button should be disabled on dialog open"
@@ -329,7 +329,7 @@ add_task(async function test_remove_all_dialog_remove_logins() {
       content.document.querySelector("remove-logins-dialog")
     );
     let removeAllButton = dialog.shadowRoot.querySelector(".confirm-button");
-    is(
+    Assert.equal(
       removeAllButton.disabled,
       false,
       "Remove all should be enabled after clicking the checkbox"
@@ -367,7 +367,7 @@ add_task(async function test_remove_all_dialog_remove_logins() {
     let removeAllMenuButton = menuButton.shadowRoot.querySelector(
       ".menuitem-remove-all-logins"
     );
-    ok(
+    Assert.ok(
       removeAllMenuButton.disabled,
       "Remove all logins menu button is disabled if there are no logins"
     );
@@ -393,7 +393,7 @@ add_task(async function test_edit_mode_resets_on_remove_all_with_login() {
   await openRemoveAllDialog(browser);
   await SpecialPowers.spawn(browser, [], async () => {
     let loginItem = content.document.querySelector("login-item");
-    ok(
+    Assert.ok(
       loginItem.dataset.editing,
       "Login item is still in edit mode when the remove all dialog opens"
     );
@@ -410,7 +410,7 @@ add_task(async function test_edit_mode_resets_on_remove_all_with_login() {
   await TestUtils.waitForTick();
   await SpecialPowers.spawn(browser, [], async () => {
     let loginItem = content.document.querySelector("login-item");
-    ok(
+    Assert.ok(
       loginItem.dataset.editing,
       "Login item should be in editing mode after activating the cancel button in the remove all dialog"
     );
@@ -432,7 +432,7 @@ add_task(async function test_edit_mode_resets_on_remove_all_with_login() {
       content.document.querySelector("remove-logins-dialog")
     );
     let removeAllButton = dialog.shadowRoot.querySelector(".confirm-button");
-    is(
+    Assert.equal(
       removeAllButton.disabled,
       false,
       "Remove all should be enabled after clicking the checkbox"
@@ -450,7 +450,7 @@ add_task(async function test_edit_mode_resets_on_remove_all_with_login() {
   await TestUtils.waitForTick();
   await SpecialPowers.spawn(browser, [], async () => {
     let loginItem = content.document.querySelector("login-item");
-    ok(
+    Assert.ok(
       !loginItem.dataset.editing,
       "Login item should not be in editing mode after activating the confirm button in the remove all dialog"
     );
@@ -466,11 +466,11 @@ add_task(async function test_remove_all_when_creating_new_login() {
   await openRemoveAllDialog(browser);
   await SpecialPowers.spawn(browser, [], async () => {
     let loginItem = content.document.querySelector("login-item");
-    ok(
+    Assert.ok(
       loginItem.dataset.editing,
       "Login item should be in edit mode when the remove all dialog opens"
     );
-    ok(
+    Assert.ok(
       loginItem.dataset.isNewLogin,
       "Login item should be in the 'new login' state when the remove all dialog opens"
     );
@@ -486,11 +486,11 @@ add_task(async function test_remove_all_when_creating_new_login() {
   );
   await SpecialPowers.spawn(browser, [], async () => {
     let loginItem = content.document.querySelector("login-item");
-    ok(
+    Assert.ok(
       loginItem.dataset.editing,
       "Login item is still in edit mode after cancelling out of the remove all dialog"
     );
-    ok(
+    Assert.ok(
       loginItem.dataset.isNewLogin,
       "Login item should be in the 'newLogin' state after cancelling out of the remove all dialog"
     );
@@ -512,7 +512,7 @@ add_task(async function test_remove_all_when_creating_new_login() {
       content.document.querySelector("remove-logins-dialog")
     );
     let removeAllButton = dialog.shadowRoot.querySelector(".confirm-button");
-    is(
+    Assert.equal(
       removeAllButton.disabled,
       false,
       "Remove all should be enabled after clicking the checkbox"
@@ -529,11 +529,11 @@ add_task(async function test_remove_all_when_creating_new_login() {
   );
   await SpecialPowers.spawn(browser, [], async () => {
     let loginItem = content.document.querySelector("login-item");
-    ok(
+    Assert.ok(
       !loginItem.dataset.editing,
       "Login item should not be in editing mode after activating the confirm button in the remove all dialog"
     );
-    ok(
+    Assert.ok(
       !loginItem.dataset.isNewLogin,
       "Login item should not be in 'new login' mode after activating the confirm button in the remove all dialog"
     );
@@ -548,8 +548,8 @@ add_task(async function test_ensure_icons_are_not_draggable() {
   await SpecialPowers.spawn(browser, [], async () => {
     let dialog = content.document.querySelector("remove-logins-dialog");
     let warningIcon = dialog.shadowRoot.querySelector(".warning-icon");
-    ok(!warningIcon.draggable, "Warning icon should not be draggable");
+    Assert.ok(!warningIcon.draggable, "Warning icon should not be draggable");
     let dismissIcon = dialog.shadowRoot.querySelector(".dismiss-icon");
-    ok(!dismissIcon.draggable, "Dismiss icon should not be draggable");
+    Assert.ok(!dismissIcon.draggable, "Dismiss icon should not be draggable");
   });
 });

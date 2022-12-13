@@ -37,22 +37,22 @@ add_task(async function test() {
       confirmDeleteButton,
     ]);
 
-    is(
+    Assert.equal(
       title.textContent,
       "Remove this login?",
       "Title contents should match l10n attribute set on outer element"
     );
-    is(
+    Assert.equal(
       message.textContent,
       "This action cannot be undone.",
       "Message contents should match l10n attribute set on outer element"
     );
-    is(
+    Assert.equal(
       cancelButton.textContent,
       "Cancel",
       "Cancel button contents should match l10n attribute set on outer element"
     );
-    is(
+    Assert.equal(
       confirmDeleteButton.textContent,
       "Remove",
       "Remove button contents should match l10n attribute set on outer element"
@@ -61,12 +61,12 @@ add_task(async function test() {
     cancelButton.click();
     try {
       await showPromise;
-      ok(
+      Assert.ok(
         false,
         "Promise returned by show() should not resolve after clicking cancel button"
       );
     } catch (ex) {
-      ok(
+      Assert.ok(
         true,
         "Promise returned by show() should reject after clicking cancel button"
       );
@@ -75,18 +75,21 @@ add_task(async function test() {
       () => dialog.hidden,
       "Waiting for the dialog to be hidden"
     );
-    ok(dialog.hidden, "Dialog should be hidden after clicking cancel button");
+    Assert.ok(
+      dialog.hidden,
+      "Dialog should be hidden after clicking cancel button"
+    );
 
     showPromise = loginItem.showConfirmationDialog("delete");
     dismissButton.click();
     try {
       await showPromise;
-      ok(
+      Assert.ok(
         false,
         "Promise returned by show() should not resolve after clicking dismiss button"
       );
     } catch (ex) {
-      ok(
+      Assert.ok(
         true,
         "Promise returned by show() should reject after clicking dismiss button"
       );
@@ -95,18 +98,21 @@ add_task(async function test() {
       () => dialog.hidden,
       "Waiting for the dialog to be hidden"
     );
-    ok(dialog.hidden, "Dialog should be hidden after clicking dismiss button");
+    Assert.ok(
+      dialog.hidden,
+      "Dialog should be hidden after clicking dismiss button"
+    );
 
     showPromise = loginItem.showConfirmationDialog("delete");
     confirmDeleteButton.click();
     try {
       await showPromise;
-      ok(
+      Assert.ok(
         true,
         "Promise returned by show() should resolve after clicking confirm button"
       );
     } catch (ex) {
-      ok(
+      Assert.ok(
         false,
         "Promise returned by show() should not reject after clicking confirm button"
       );
@@ -115,6 +121,9 @@ add_task(async function test() {
       () => dialog.hidden,
       "Waiting for the dialog to be hidden"
     );
-    ok(dialog.hidden, "Dialog should be hidden after clicking confirm button");
+    Assert.ok(
+      dialog.hidden,
+      "Dialog should be hidden after clicking confirm button"
+    );
   });
 });

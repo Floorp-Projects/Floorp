@@ -59,7 +59,7 @@ add_task(async function test_showLoginItemErrors() {
         new content.CustomEvent("AboutLoginsCreateLogin", event)
       );
 
-      ok(
+      Assert.ok(
         loginItemErrorMessage.hidden,
         "An error message should not be displayed after adding a new login."
       );
@@ -75,7 +75,7 @@ add_task(async function test_showLoginItemErrors() {
         },
         "Waiting for error message to be shown after attempting to create a duplicate login."
       );
-      ok(
+      Assert.ok(
         loginItemErrorMessageVisible,
         "An error message should be shown after user attempts to add a login that already exists."
       );
@@ -83,7 +83,7 @@ add_task(async function test_showLoginItemErrors() {
       const loginItemErrorMessageText = loginItemErrorMessage.querySelector(
         "span:not([hidden])"
       );
-      is(
+      Assert.equal(
         loginItemErrorMessageText.dataset.l10nId,
         "about-logins-error-message-duplicate-login-with-link",
         "The correct error message is displayed."
@@ -96,7 +96,7 @@ add_task(async function test_showLoginItemErrors() {
       );
       loginListItem.click();
 
-      ok(
+      Assert.ok(
         loginItemErrorMessage.hidden,
         "The error message should no longer be visible."
       );
@@ -139,7 +139,7 @@ add_task(async function test_showLoginItemErrors() {
         },
         "Waiting for error message to show after updating login to existing login."
       );
-      ok(
+      Assert.ok(
         loginAlreadyExistsErrorShownAfterUpdate,
         "An error message should be shown after updating a login to a username/origin combination that already exists."
       );

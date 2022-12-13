@@ -92,7 +92,7 @@ class CsvImportHelper {
 
       info("waiting for Import file picker to get opened");
       await filePickerPromise;
-      ok(true, "Import file picker opened");
+      Assert.ok(true, "Import file picker opened");
     }
 
     await waitForFilePicker();
@@ -276,8 +276,8 @@ add_task(async function test_open_import_one_item_from_csv() {
       let summary = await CsvImportHelper.getCsvImportSuccessDialogData(
         browser
       );
-      is(summary.added, "1", "It should have one item as added");
-      is(
+      Assert.equal(summary.added, "1", "It should have one item as added");
+      Assert.equal(
         summary.l10nFocused,
         "about-logins-import-dialog-done",
         "dismiss button should be focused"
@@ -316,10 +316,18 @@ add_task(async function test_open_import_all_four_categories() {
       let summary = await CsvImportHelper.getCsvImportSuccessDialogData(
         browser
       );
-      is(summary.added, "1", "It should have one item as added");
-      is(summary.modified, "1", "It should have one item as modified");
-      is(summary.noChange, "1", "It should have one item as unchanged");
-      is(summary.errors, "1", "It should have one item as error");
+      Assert.equal(summary.added, "1", "It should have one item as added");
+      Assert.equal(
+        summary.modified,
+        "1",
+        "It should have one item as modified"
+      );
+      Assert.equal(
+        summary.noChange,
+        "1",
+        "It should have one item as unchanged"
+      );
+      Assert.equal(summary.errors, "1", "It should have one item as error");
     }
   );
 });
@@ -354,10 +362,10 @@ add_task(async function test_open_import_all_four_detailed_report() {
       const report = await CsvImportHelper.getDetailedReportData(browser);
       BrowserTestUtils.removeTab(reportTab);
       const { added, modified, noChange, errors, rows } = report;
-      is(added, 1, "It should have one item as added");
-      is(modified, 1, "It should have one item as modified");
-      is(noChange, 1, "It should have one item as unchanged");
-      is(errors, 1, "It should have one item as error");
+      Assert.equal(added, 1, "It should have one item as added");
+      Assert.equal(modified, 1, "It should have one item as modified");
+      Assert.equal(noChange, 1, "It should have one item as unchanged");
+      Assert.equal(errors, 1, "It should have one item as error");
       Assert.deepEqual(
         [
           "about-logins-import-report-row-description-added",
@@ -384,18 +392,18 @@ add_task(async function test_open_import_from_csv_with_invalid_file() {
       const errorDialog = await CsvImportHelper.getCsvImportErrorDialogData(
         browser
       );
-      is(errorDialog.hidden, false, "Dialog should not be hidden");
-      is(
+      Assert.equal(errorDialog.hidden, false, "Dialog should not be hidden");
+      Assert.equal(
         errorDialog.l10nTitle,
         "about-logins-import-dialog-error-file-format-title",
         "Dialog error title should be correct"
       );
-      is(
+      Assert.equal(
         errorDialog.l10nDescription,
         "about-logins-import-dialog-error-file-format-description",
         "Dialog error description should be correct"
       );
-      is(
+      Assert.equal(
         errorDialog.l10nFocused,
         "about-logins-import-dialog-error-learn-more",
         "Learn more link should be focused."
