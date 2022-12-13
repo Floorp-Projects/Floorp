@@ -225,7 +225,6 @@ MFMediaEngineStream::GetMediaSource(IMFMediaSource** aMediaSource) {
   if (IsShutdown()) {
     return MF_E_SHUTDOWN;
   }
-  SLOG("GetMediaSource");
   RETURN_IF_FAILED(mParentSource.CopyTo(aMediaSource));
   return S_OK;
 }
@@ -236,8 +235,6 @@ IFACEMETHODIMP MFMediaEngineStream::GetStreamDescriptor(
   if (IsShutdown()) {
     return MF_E_SHUTDOWN;
   }
-  SLOG("GetStreamDescriptor");
-
   if (!mStreamDescriptor) {
     SLOG("Hasn't initialized stream descriptor");
     return MF_E_NOT_INITIALIZED;
@@ -358,7 +355,6 @@ IFACEMETHODIMP MFMediaEngineStream::GetEvent(DWORD aFlags,
                                              IMFMediaEvent** aEvent) {
   AssertOnMFThreadPool();
   MOZ_ASSERT(mMediaEventQueue);
-  SLOG("GetEvent");
   RETURN_IF_FAILED(mMediaEventQueue->GetEvent(aFlags, aEvent));
   return S_OK;
 }
@@ -367,7 +363,6 @@ IFACEMETHODIMP MFMediaEngineStream::BeginGetEvent(IMFAsyncCallback* aCallback,
                                                   IUnknown* aState) {
   AssertOnMFThreadPool();
   MOZ_ASSERT(mMediaEventQueue);
-  SLOG("BeginGetEvent");
   RETURN_IF_FAILED(mMediaEventQueue->BeginGetEvent(aCallback, aState));
   return S_OK;
 }
@@ -376,7 +371,6 @@ IFACEMETHODIMP MFMediaEngineStream::EndGetEvent(IMFAsyncResult* aResult,
                                                 IMFMediaEvent** aEvent) {
   AssertOnMFThreadPool();
   MOZ_ASSERT(mMediaEventQueue);
-  SLOG("EndGetEvent");
   RETURN_IF_FAILED(mMediaEventQueue->EndGetEvent(aResult, aEvent));
   return S_OK;
 }

@@ -85,8 +85,6 @@ IFACEMETHODIMP MFMediaSource::GetCharacteristics(DWORD* aCharacteristics) {
       return MF_E_SHUTDOWN;
     }
   }
-
-  LOG("GetCharacteristics");
   // https://docs.microsoft.com/en-us/windows/win32/api/mfidl/ne-mfidl-mfmediasource_characteristics
   *aCharacteristics = MFMEDIASOURCE_CAN_SEEK | MFMEDIASOURCE_CAN_PAUSE;
   return S_OK;
@@ -310,21 +308,18 @@ void MFMediaSource::ShutdownTaskQueue() {
 
 IFACEMETHODIMP MFMediaSource::GetEvent(DWORD aFlags, IMFMediaEvent** aEvent) {
   MOZ_ASSERT(mMediaEventQueue);
-  LOG("GetEvent");
   return mMediaEventQueue->GetEvent(aFlags, aEvent);
 }
 
 IFACEMETHODIMP MFMediaSource::BeginGetEvent(IMFAsyncCallback* aCallback,
                                             IUnknown* aState) {
   MOZ_ASSERT(mMediaEventQueue);
-  LOG("BeginGetEvent");
   return mMediaEventQueue->BeginGetEvent(aCallback, aState);
 }
 
 IFACEMETHODIMP MFMediaSource::EndGetEvent(IMFAsyncResult* aResult,
                                           IMFMediaEvent** aEvent) {
   MOZ_ASSERT(mMediaEventQueue);
-  LOG("EndGetEvent");
   return mMediaEventQueue->EndGetEvent(aResult, aEvent);
 }
 
