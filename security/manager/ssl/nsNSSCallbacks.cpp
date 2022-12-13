@@ -17,8 +17,10 @@
 #include "mozilla/Logging.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Span.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
+#include "mozilla/intl/Localization.h"
 #include "nsContentUtils.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
@@ -27,7 +29,6 @@
 #include "nsIProtocolProxyService.h"
 #include "nsISupportsPriority.h"
 #include "nsIStreamLoader.h"
-#include "nsITokenDialogs.h"
 #include "nsIUploadChannel.h"
 #include "nsIWebProgressListener.h"
 #include "nsNSSCertHelper.h"
@@ -36,7 +37,6 @@
 #include "nsNSSHelper.h"
 #include "nsNSSIOLayer.h"
 #include "nsNetUtil.h"
-#include "nsProtectedAuthThread.h"
 #include "nsProxyRelease.h"
 #include "nsStringStream.h"
 #include "mozpkix/pkixtypes.h"
@@ -498,49 +498,60 @@ mozilla::pkix::Result DoOCSPRequest(
   return Success;
 }
 
-static char* ShowProtectedAuthPrompt(PK11SlotInfo* slot,
-                                     nsIInterfaceRequestor* ir) {
-  if (!NS_IsMainThread()) {
-    NS_ERROR("ShowProtectedAuthPrompt called off the main thread");
+static char* ShowProtectedAuthPrompt(PK11SlotInfo* slot, nsIPrompt* prompt) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(slot);
+  MOZ_ASSERT(prompt);
+  if (!NS_IsMainThread() || !slot || !prompt) {
     return nullptr;
   }
 
-  char* protAuthRetVal = nullptr;
-
-  // Get protected auth dialogs
-  nsCOMPtr<nsITokenDialogs> dialogs;
-  nsresult nsrv =
-      getNSSDialogs(getter_AddRefs(dialogs), NS_GET_IID(nsITokenDialogs),
-                    NS_TOKENDIALOGS_CONTRACTID);
-  if (NS_SUCCEEDED(nsrv)) {
-    RefPtr<nsProtectedAuthThread> protectedAuthRunnable =
-        new nsProtectedAuthThread();
-    protectedAuthRunnable->SetParams(slot);
-
-    nsrv = dialogs->DisplayProtectedAuth(ir, protectedAuthRunnable);
-
-    // We call join on the thread,
-    // so we can be sure that no simultaneous access will happen.
-    protectedAuthRunnable->Join();
-
-    if (NS_SUCCEEDED(nsrv)) {
-      SECStatus rv = protectedAuthRunnable->GetResult();
-      switch (rv) {
-        case SECSuccess:
-          protAuthRetVal =
-              ToNewCString(nsDependentCString(PK11_PW_AUTHENTICATED));
-          break;
-        case SECWouldBlock:
-          protAuthRetVal = ToNewCString(nsDependentCString(PK11_PW_RETRY));
-          break;
-        default:
-          protAuthRetVal = nullptr;
-          break;
-      }
-    }
+  // Dispatch a background task to (eventually) call C_Login. The call will
+  // block until the protected authentication succeeds or fails.
+  Atomic<bool> done;
+  Atomic<SECStatus> result;
+  nsresult rv =
+      NS_DispatchBackgroundTask(NS_NewRunnableFunction(__func__, [&]() mutable {
+        result = PK11_CheckUserPassword(slot, nullptr);
+        done = true;
+      }));
+  if (NS_FAILED(rv)) {
+    return nullptr;
   }
 
-  return protAuthRetVal;
+  nsTArray<nsCString> resIds = {
+      "security/pippki/pippki.ftl"_ns,
+  };
+  RefPtr<mozilla::intl::Localization> l10n =
+      mozilla::intl::Localization::Create(resIds, true);
+  auto l10nId = "protected-auth-alert"_ns;
+  auto l10nArgs = mozilla::dom::Optional<intl::L10nArgs>();
+  l10nArgs.Construct();
+  auto dirArg = l10nArgs.Value().Entries().AppendElement();
+  dirArg->mKey = "tokenName"_ns;
+  dirArg->mValue.SetValue().SetAsUTF8String().Assign(PK11_GetTokenName(slot));
+  nsAutoCString promptString;
+  ErrorResult errorResult;
+  l10n->FormatValueSync(l10nId, l10nArgs, promptString, errorResult);
+  if (NS_FAILED(errorResult.StealNSResult())) {
+    return nullptr;
+  }
+  rv = prompt->Alert(nullptr, NS_ConvertUTF8toUTF16(promptString).get());
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  MOZ_ALWAYS_TRUE(SpinEventLoopUntil(
+      "ShowProtectedAuthPrompt"_ns, [&]() { return static_cast<bool>(done); }));
+
+  switch (result) {
+    case SECSuccess:
+      return ToNewCString(nsDependentCString(PK11_PW_AUTHENTICATED));
+    case SECWouldBlock:
+      return ToNewCString(nsDependentCString(PK11_PW_RETRY));
+    default:
+      return nullptr;
+  }
 }
 
 class PK11PasswordPromptRunnable : public SyncRunnableBase {
@@ -553,8 +564,8 @@ class PK11PasswordPromptRunnable : public SyncRunnableBase {
   virtual void RunOnTargetThread() override;
 
  private:
-  PK11SlotInfo* const mSlot;         // in
-  nsIInterfaceRequestor* const mIR;  // in
+  PK11SlotInfo* mSlot;
+  nsIInterfaceRequestor* mIR;
 };
 
 void PK11PasswordPromptRunnable::RunOnTargetThread() {
@@ -575,7 +586,7 @@ void PK11PasswordPromptRunnable::RunOnTargetThread() {
   }
 
   if (PK11_ProtectedAuthenticationPath(mSlot)) {
-    mResult = ShowProtectedAuthPrompt(mSlot, mIR);
+    mResult = ShowProtectedAuthPrompt(mSlot, prompt);
     return;
   }
 
@@ -604,6 +615,9 @@ void PK11PasswordPromptRunnable::RunOnTargetThread() {
 }
 
 char* PK11PasswordPrompt(PK11SlotInfo* slot, PRBool /*retry*/, void* arg) {
+  if (!slot) {
+    return nullptr;
+  }
   RefPtr<PK11PasswordPromptRunnable> runnable(new PK11PasswordPromptRunnable(
       slot, static_cast<nsIInterfaceRequestor*>(arg)));
   runnable->DispatchToMainThreadAndWait();
