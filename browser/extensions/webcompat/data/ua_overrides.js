@@ -98,7 +98,7 @@ const AVAILABLE_UA_OVERRIDES = [
       uaTransformer: originalUA => {
         return (
           UAHelpers.getPrefix(originalUA) +
-          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.132 Safari/537.36"
+          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36"
         );
       },
     },
