@@ -7,6 +7,7 @@
 #include "sdp/SdpAttribute.h"
 #include "sdp/SdpHelper.h"
 #include <iomanip>
+#include <bitset>
 
 #ifdef CRLF
 #  undef CRLF
@@ -925,7 +926,7 @@ void SdpRidAttributeList::Rid::SerializeParameters(std::ostream& os) const {
 // Remove this function. See Bug 1469702
 bool SdpRidAttributeList::Rid::Parse(std::istream& is, std::string* error) {
   id = ParseToken(is, " ", error);
-  if (id.empty()) {
+  if (!CheckRidValidity(id, error)) {
     return false;
   }
 
@@ -942,6 +943,65 @@ bool SdpRidAttributeList::Rid::Parse(std::istream& is, std::string* error) {
 
   return ParseParameters(is, error);
 }
+
+static std::bitset<256> GetAllowedRidCharacters() {
+  // From RFC 8851:
+  // rid-id            = 1*(alpha-numeric / "-" / "_")
+  std::bitset<256> result;
+  for (unsigned char c = 'a'; c <= 'z'; ++c) {
+    result.set(c);
+  }
+  for (unsigned char c = 'A'; c <= 'Z'; ++c) {
+    result.set(c);
+  }
+  for (unsigned char c = '0'; c <= '9'; ++c) {
+    result.set(c);
+  }
+  // NOTE: RFC 8851 says these are allowed, but RFC 8852 says they are not
+  // https://www.rfc-editor.org/errata/eid7132
+  // result.set('-');
+  // result.set('_');
+  return result;
+}
+
+/* static */
+bool SdpRidAttributeList::CheckRidValidity(const std::string& aRid,
+                                           std::string* aError) {
+  if (aRid.empty()) {
+    *aError = "Rid must be non-empty (according to RFC 8851)";
+    return false;
+  }
+
+  // We need to check against a maximum length, but that is nowhere
+  // specified in webrtc-pc right now.
+  if (aRid.size() > 255) {
+    *aError = "Rid can be at most 255 characters long (according to RFC 8852)";
+    return false;
+  }
+
+  if (aRid.size() > kMaxRidLength) {
+    std::ostringstream ss;
+    ss << "Rid can be at most " << kMaxRidLength
+       << " characters long (due to internal limitations)";
+    *aError = ss.str();
+    return false;
+  }
+
+  static const std::bitset<256> allowed = GetAllowedRidCharacters();
+  for (unsigned char c : aRid) {
+    if (!allowed[c]) {
+      *aError =
+          "Rid can contain only alphanumeric characters (according to RFC "
+          "8852)";
+      return false;
+    }
+  }
+
+  return true;
+}
+
+// This can be overridden if necessary
+size_t SdpRidAttributeList::kMaxRidLength = 255;
 
 void SdpRidAttributeList::Rid::Serialize(std::ostream& os) const {
   os << id << " " << direction;
@@ -1094,6 +1154,9 @@ bool SdpSimulcastAttribute::Version::Parse(std::istream& is,
     std::string value = ParseToken(is, ",; ", error);
     if (value.empty()) {
       *error = "Missing rid";
+      return false;
+    }
+    if (!SdpRidAttributeList::CheckRidValidity(value, error)) {
       return false;
     }
     choices.push_back(Encoding(value, paused));

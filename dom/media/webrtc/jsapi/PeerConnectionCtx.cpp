@@ -6,6 +6,7 @@
 
 #include "api/audio/audio_mixer.h"
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
+#include "modules/rtp_rtcp/source/rtp_header_extensions.h"
 #include "call/audio_state.h"
 #include "common/browser_logging/CSFLog.h"
 #include "common/browser_logging/WebRtcLog.h"
@@ -490,7 +491,8 @@ void PeerConnectionCtx::ForEachPeerConnection(Function&& aFunction) const {
 
 nsresult PeerConnectionCtx::Initialize() {
   initGMP();
-
+  SdpRidAttributeList::kMaxRidLength =
+      webrtc::BaseRtpStringExtension::kMaxValueSizeBytes;
   nsresult rv = NS_NewTimerWithFuncCallback(
       getter_AddRefs(mTelemetryTimer), EverySecondTelemetryCallback_m, this,
       1000, nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP,
