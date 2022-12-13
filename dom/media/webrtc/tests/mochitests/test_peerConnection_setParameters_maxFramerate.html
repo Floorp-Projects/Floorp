@@ -14,13 +14,16 @@ createHTML({
 let sender, receiver;
 
 async function checkMaxFrameRate(rate) {
-  sender.setParameters({ encodings: [{ maxFramerate: rate }] });
+  const parameters = sender.getParameters();
+  parameters.encodings[0].maxFramerate = rate;
+  await sender.setParameters(parameters);
   await wait(2000);
   const stats = Array.from((await receiver.getStats()).values());
   const inboundRtp = stats.find(stat => stat.type == "inbound-rtp");
   info(`inbound-rtp stats: ${JSON.stringify(inboundRtp)}`);
   const fps = inboundRtp.framesPerSecond;
-  ok(fps <= (rate * 1.1) + 1, `fps is an appropriate value (${fps}) for rate (${rate})`);
+  ok(fps <= (rate * 1.1) + 1,
+    `fps is an appropriate value (${fps}) for rate (${rate})`);
 }
 
 runNetworkTest(async function (options) {
@@ -29,9 +32,9 @@ runNetworkTest(async function (options) {
   test.chain.append([
     function CHECK_PRECONDITIONS() {
       is(test.pcLocal._pc.getSenders().length, 1,
-          "Should have 1 local sender");
+        "Should have 1 local sender");
       is(test.pcRemote._pc.getReceivers().length, 1,
-          "Should have 1 remote receiver");
+        "Should have 1 remote receiver");
 
       sender = test.pcLocal._pc.getSenders()[0];
       receiver = test.pcRemote._pc.getReceivers()[0];
