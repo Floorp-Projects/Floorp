@@ -65,12 +65,6 @@ class AndroidBridge final {
   void GetIconForExtension(const nsACString& aFileExt, uint32_t aIconSize,
                            uint8_t* const aBuf);
 
-  bool GetStaticStringField(const char* classID, const char* field,
-                            nsAString& result, JNIEnv* env = nullptr);
-
-  bool GetStaticIntField(const char* className, const char* fieldName,
-                         int32_t* aInt, JNIEnv* env = nullptr);
-
   // Returns a global reference to the Context for Fennec's Activity. The
   // caller is responsible for ensuring this doesn't leak by calling
   // DeleteGlobalRef() when the context is no longer needed.

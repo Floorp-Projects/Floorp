@@ -229,57 +229,6 @@ void AndroidBridge::GetIconForExtension(const nsACString& aFileExt,
   env->ReleaseByteArrayElements(arr.Get(), elements, 0);
 }
 
-bool AndroidBridge::GetStaticIntField(const char* className,
-                                      const char* fieldName, int32_t* aInt,
-                                      JNIEnv* jEnv /* = nullptr */) {
-  ALOG_BRIDGE("AndroidBridge::GetStaticIntField %s", fieldName);
-
-  if (!jEnv) {
-    if (!jni::IsAvailable()) {
-      return false;
-    }
-    jEnv = jni::GetGeckoThreadEnv();
-  }
-
-  AutoJNIClass cls(jEnv, className);
-  jfieldID field = cls.getStaticField(fieldName, "I");
-
-  if (!field) {
-    return false;
-  }
-
-  *aInt = static_cast<int32_t>(jEnv->GetStaticIntField(cls.getRawRef(), field));
-  return true;
-}
-
-bool AndroidBridge::GetStaticStringField(const char* className,
-                                         const char* fieldName,
-                                         nsAString& result,
-                                         JNIEnv* jEnv /* = nullptr */) {
-  ALOG_BRIDGE("AndroidBridge::GetStaticStringField %s", fieldName);
-
-  if (!jEnv) {
-    if (!jni::IsAvailable()) {
-      return false;
-    }
-    jEnv = jni::GetGeckoThreadEnv();
-  }
-
-  AutoLocalJNIFrame jniFrame(jEnv, 1);
-  AutoJNIClass cls(jEnv, className);
-  jfieldID field = cls.getStaticField(fieldName, "Ljava/lang/String;");
-
-  if (!field) {
-    return false;
-  }
-
-  jstring jstr = (jstring)jEnv->GetStaticObjectField(cls.getRawRef(), field);
-  if (!jstr) return false;
-
-  result.Assign(jni::String::Ref::From(jstr)->ToString());
-  return true;
-}
-
 namespace mozilla {
 class TracerRunnable : public Runnable {
  public:

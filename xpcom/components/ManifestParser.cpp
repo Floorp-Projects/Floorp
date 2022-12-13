@@ -23,7 +23,7 @@
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
-#  include "AndroidBridge.h"
+#  include "AndroidBuild.h"
 #  include "mozilla/java/GeckoAppShellWrappers.h"
 #endif
 
@@ -471,9 +471,9 @@ void ParseManifest(NSLocationType aType, FileLocation& aFile, char* aBuf,
                             gtk_minor_version);
 #elif defined(MOZ_WIDGET_ANDROID)
   bool isTablet = false;
-  if (mozilla::AndroidBridge::Bridge()) {
-    mozilla::AndroidBridge::Bridge()->GetStaticStringField(
-        "android/os/Build$VERSION", "RELEASE", osVersion);
+  if (jni::IsAvailable()) {
+    jni::String::LocalRef release = java::sdk::Build::VERSION::RELEASE();
+    osVersion.Assign(release->ToString());
     isTablet = java::GeckoAppShell::IsTablet();
   }
 #endif
