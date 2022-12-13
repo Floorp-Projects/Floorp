@@ -6,8 +6,6 @@ import { html, ifDefined } from "../vendor/lit.all.mjs";
 import { MozLitElement } from "../lit-utils.mjs";
 
 export default class MozToggle extends MozLitElement {
-  static LOCAL_NAME = "moz-toggle";
-
   static properties = {
     checked: { type: Boolean, reflect: true },
     disabled: { type: Boolean, reflect: true },
@@ -23,6 +21,11 @@ export default class MozToggle extends MozLitElement {
       descriptionEl: "#moz-toggle-description",
     };
   }
+
+  // Use a relative URL in storybook to get faster reloads on style changes.
+  static stylesheetUrl = window.IS_STORYBOOK
+    ? "./moz-toggle/moz-toggle.css"
+    : "chrome://global/content/elements/moz-toggle.css";
 
   constructor() {
     super();
