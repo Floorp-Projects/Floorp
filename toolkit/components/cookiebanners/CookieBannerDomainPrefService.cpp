@@ -7,7 +7,6 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Logging.h"
-#include "mozilla/RefPtr.h"
 #include "mozilla/Services.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticPtr.h"
@@ -22,30 +21,13 @@
 
 namespace mozilla {
 
-NS_IMPL_ISUPPORTS(CookieBannerDomainPrefService, nsIAsyncShutdownBlocker,
+NS_IMPL_ISUPPORTS(CookieBannerDomainPrefService, nsIContentPrefCallback2,
                   nsIObserver)
 
 LazyLogModule gCookieBannerPerSitePrefLog("CookieBannerDomainPref");
 
 static StaticRefPtr<CookieBannerDomainPrefService>
     sCookieBannerDomainPrefService;
-
-namespace {
-
-// A helper function to get the profile-before-change shutdown barrier.
-
-nsCOMPtr<nsIAsyncShutdownClient> GetShutdownBarrier() {
-  nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdownService();
-  NS_ENSURE_TRUE(svc, nullptr);
-
-  nsCOMPtr<nsIAsyncShutdownClient> barrier;
-  nsresult rv = svc->GetProfileBeforeChange(getter_AddRefs(barrier));
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  return barrier;
-}
-
-}  // anonymous namespace
 
 /* static */
 already_AddRefed<CookieBannerDomainPrefService>
@@ -91,16 +73,11 @@ void CookieBannerDomainPrefService::Init() {
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "Fail to add observer for 'last-pb-context-exited'.");
 
-  auto initCallback = MakeRefPtr<InitialLoadContentPrefCallback>(this);
-
   // Populate the content pref for cookie banner domain preferences.
   rv = contentPrefService->GetByName(COOKIE_BANNER_CONTENT_PREF_NAME, nullptr,
-                                     initCallback);
+                                     this);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "Fail to get all content prefs during init.");
-
-  rv = AddShutdownBlocker();
-  NS_ENSURE_SUCCESS_VOID(rv);
 
   mIsInitialized = true;
 }
@@ -146,14 +123,6 @@ Maybe<nsICookieBannerService::Modes> CookieBannerDomainPrefService::GetPref(
 nsresult CookieBannerDomainPrefService::SetPref(
     const nsACString& aDomain, nsICookieBannerService::Modes aMode,
     bool aIsPrivate) {
-  MOZ_ASSERT(NS_IsMainThread());
-  // Don't do anything if we are shutting down.
-  if (NS_WARN_IF(mIsShuttingDown)) {
-    MOZ_LOG(gCookieBannerPerSitePrefLog, LogLevel::Warning,
-            ("Attempt to set a domain pref while shutting down."));
-    return NS_OK;
-  }
-
   // For private windows, the domain prefs will only be stored in memory.
   if (aIsPrivate) {
     Unused << mPrefsPrivate.InsertOrUpdate(aDomain, aMode);
@@ -174,13 +143,10 @@ nsresult CookieBannerDomainPrefService::SetPref(
   nsresult rv = variant->SetAsUint8(aMode);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  auto callback = MakeRefPtr<WriteContentPrefCallback>(this);
-  mWritingCount++;
-
   // Store the domain preference to the content pref service.
   rv = contentPrefService->Set(NS_ConvertUTF8toUTF16(aDomain),
                                COOKIE_BANNER_CONTENT_PREF_NAME, variant,
-                               nullptr, callback);
+                               nullptr, nullptr);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "Fail to set cookie banner domain pref.");
 
@@ -189,14 +155,6 @@ nsresult CookieBannerDomainPrefService::SetPref(
 
 nsresult CookieBannerDomainPrefService::RemovePref(const nsACString& aDomain,
                                                    bool aIsPrivate) {
-  MOZ_ASSERT(NS_IsMainThread());
-  // Don't do anything if we are shutting down.
-  if (NS_WARN_IF(mIsShuttingDown)) {
-    MOZ_LOG(gCookieBannerPerSitePrefLog, LogLevel::Warning,
-            ("Attempt to remove a domain pref while shutting down."));
-    return NS_OK;
-  }
-
   // For private windows, we only need to remove in-memory settings.
   if (aIsPrivate) {
     mPrefsPrivate.Remove(aDomain);
@@ -211,27 +169,16 @@ nsresult CookieBannerDomainPrefService::RemovePref(const nsACString& aDomain,
       do_GetService(NS_CONTENT_PREF_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(contentPrefService, NS_ERROR_FAILURE);
 
-  auto callback = MakeRefPtr<WriteContentPrefCallback>(this);
-  mWritingCount++;
-
   // Remove the domain preference from the content pref service.
   nsresult rv = contentPrefService->RemoveByDomainAndName(
       NS_ConvertUTF8toUTF16(aDomain), COOKIE_BANNER_CONTENT_PREF_NAME, nullptr,
-      callback);
+      nullptr);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "Fail to remove cookie banner domain pref.");
   return rv;
 }
 
 nsresult CookieBannerDomainPrefService::RemoveAll(bool aIsPrivate) {
-  MOZ_ASSERT(NS_IsMainThread());
-  // Don't do anything if we are shutting down.
-  if (NS_WARN_IF(mIsShuttingDown)) {
-    MOZ_LOG(gCookieBannerPerSitePrefLog, LogLevel::Warning,
-            ("Attempt to remove all domain prefs while shutting down."));
-    return NS_OK;
-  }
-
   // For private windows, we only need to remove in-memory settings.
   if (aIsPrivate) {
     mPrefsPrivate.Clear();
@@ -246,12 +193,9 @@ nsresult CookieBannerDomainPrefService::RemoveAll(bool aIsPrivate) {
       do_GetService(NS_CONTENT_PREF_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(contentPrefService, NS_ERROR_FAILURE);
 
-  auto callback = MakeRefPtr<WriteContentPrefCallback>(this);
-  mWritingCount++;
-
   // Remove all the domain preferences.
   nsresult rv = contentPrefService->RemoveByName(
-      COOKIE_BANNER_CONTENT_PREF_NAME, nullptr, callback);
+      COOKIE_BANNER_CONTENT_PREF_NAME, nullptr, nullptr);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "Fail to remove all cookie banner domain prefs.");
 
@@ -268,34 +212,9 @@ void CookieBannerDomainPrefService::EnsureInitCompleted() {
                      [&] { return mIsContentPrefLoaded; });
 }
 
-nsresult CookieBannerDomainPrefService::AddShutdownBlocker() {
-  MOZ_ASSERT(!mIsShuttingDown);
-
-  nsCOMPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
-  NS_ENSURE_TRUE(barrier, NS_ERROR_FAILURE);
-
-  return GetShutdownBarrier()->AddBlocker(
-      this, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__,
-      u"CookieBannerDomainPrefService: shutdown"_ns);
-}
-
-nsresult CookieBannerDomainPrefService::RemoveShutdownBlocker() {
-  MOZ_ASSERT(mIsShuttingDown);
-
-  nsCOMPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
-  NS_ENSURE_TRUE(barrier, NS_ERROR_FAILURE);
-
-  return GetShutdownBarrier()->RemoveBlocker(this);
-}
-
-NS_IMPL_ISUPPORTS(CookieBannerDomainPrefService::BaseContentPrefCallback,
-                  nsIContentPrefCallback2)
-
 NS_IMETHODIMP
-CookieBannerDomainPrefService::InitialLoadContentPrefCallback::HandleResult(
-    nsIContentPref* aPref) {
+CookieBannerDomainPrefService::HandleResult(nsIContentPref* aPref) {
   NS_ENSURE_ARG_POINTER(aPref);
-  MOZ_ASSERT(mService);
 
   nsAutoString domain;
   nsresult rv = aPref->GetDomain(domain);
@@ -313,64 +232,26 @@ CookieBannerDomainPrefService::InitialLoadContentPrefCallback::HandleResult(
   rv = value->GetAsUint8(&data);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  Unused << mService->mPrefs.InsertOrUpdate(
-      NS_ConvertUTF16toUTF8(domain), nsICookieBannerService::Modes(data));
+  Unused << mPrefs.InsertOrUpdate(NS_ConvertUTF16toUTF8(domain),
+                                  nsICookieBannerService::Modes(data));
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CookieBannerDomainPrefService::InitialLoadContentPrefCallback::HandleCompletion(
-    uint16_t aReason) {
-  MOZ_ASSERT(mService);
-
-  mService->mIsContentPrefLoaded = true;
-
+CookieBannerDomainPrefService::HandleCompletion(uint16_t aReason) {
+  mIsContentPrefLoaded = true;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CookieBannerDomainPrefService::InitialLoadContentPrefCallback::HandleError(
-    nsresult error) {
+CookieBannerDomainPrefService::HandleError(nsresult error) {
   // We don't need to do anything here because HandleCompletion is always
   // called.
 
   if (NS_WARN_IF(NS_FAILED(error))) {
     MOZ_LOG(gCookieBannerPerSitePrefLog, LogLevel::Warning,
             ("Fail to get content pref during initiation."));
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-CookieBannerDomainPrefService::WriteContentPrefCallback::HandleResult(
-    nsIContentPref* aPref) {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-CookieBannerDomainPrefService::WriteContentPrefCallback::HandleCompletion(
-    uint16_t aReason) {
-  MOZ_ASSERT(mService);
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mService->mWritingCount > 0);
-
-  mService->mWritingCount--;
-
-  // Remove the shutdown blocker after we complete writing to content pref.
-  if (mService->mIsShuttingDown && mService->mWritingCount == 0) {
-    mService->RemoveShutdownBlocker();
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-CookieBannerDomainPrefService::WriteContentPrefCallback::HandleError(
-    nsresult error) {
-  if (NS_WARN_IF(NS_FAILED(error))) {
-    MOZ_LOG(gCookieBannerPerSitePrefLog, LogLevel::Warning,
-            ("Fail to write content pref."));
     return NS_OK;
   }
 
@@ -392,30 +273,5 @@ CookieBannerDomainPrefService::Observe(nsISupports* /*aSubject*/,
 
   return NS_OK;
 }
-
-NS_IMETHODIMP
-CookieBannerDomainPrefService::GetName(nsAString& aName) {
-  aName.AssignLiteral(
-      "CookieBannerDomainPrefService: write content pref before "
-      "profile-before-change.");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-CookieBannerDomainPrefService::BlockShutdown(nsIAsyncShutdownClient*) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  mIsShuttingDown = true;
-
-  // If we are not writing the content pref, we can remove the shutdown blocker
-  // directly.
-  if (mWritingCount == 0) {
-    RemoveShutdownBlocker();
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-CookieBannerDomainPrefService::GetState(nsIPropertyBag**) { return NS_OK; }
 
 }  // namespace mozilla
