@@ -116,11 +116,16 @@ nsIURI* nsChromeRegistryContent::GetBaseURIFromPackage(
 
   if (aProvider.EqualsLiteral("locale")) {
     return entry->localeBaseURI;
-  } else if (aProvider.EqualsLiteral("skin")) {
+  }
+
+  if (aProvider.EqualsLiteral("skin")) {
     return entry->skinBaseURI;
-  } else if (aProvider.EqualsLiteral("content")) {
+  }
+
+  if (aProvider.EqualsLiteral("content")) {
     return entry->contentBaseURI;
   }
+
   return nullptr;
 }
 

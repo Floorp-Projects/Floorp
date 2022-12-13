@@ -329,9 +329,13 @@ nsIURI* nsChromeRegistryChrome::GetBaseURIFromPackage(
     nsAutoCString appLocale;
     LocaleService::GetInstance()->GetAppLocaleAsLangTag(appLocale);
     return entry->locales.GetBase(appLocale, nsProviderArray::LOCALE);
-  } else if (aProvider.EqualsLiteral("skin")) {
+  }
+
+  if (aProvider.EqualsLiteral("skin")) {
     return entry->skins.GetBase(SKIN, nsProviderArray::ANY);
-  } else if (aProvider.EqualsLiteral("content")) {
+  }
+
+  if (aProvider.EqualsLiteral("content")) {
     return entry->baseURI;
   }
   return nullptr;
