@@ -56,6 +56,12 @@ class MOZ_STACK_CLASS HTMLEditor::AutoInlineStyleSetter final
   ApplyCSSTextDecoration(HTMLEditor& aHTMLEditor, nsIContent& aContent) const;
 
   /**
+   * Returns true if aStyledElement is a good element to set `style` attribute.
+   */
+  [[nodiscard]] bool ElementIsGoodContainerToSetStyle(
+      nsStyledElement& aStyledElement) const;
+
+  /**
    * ElementIsGoodContainerForTheStyle() returns true if aElement is a
    * good container for applying the style to a node.  I.e., if this returns
    * true, moving nodes into aElement is enough to apply the style to them.

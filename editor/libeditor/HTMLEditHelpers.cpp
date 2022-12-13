@@ -113,8 +113,14 @@ bool EditorInlineStyle::IsRepresentedBy(const nsIContent& aContent) const {
     return false;
   }
   const Element& element = *aContent.AsElement();
-  if (element.NodeInfo()->NameAtom() == mHTMLProperty) {
-    return true;
+  if (mHTMLProperty == element.NodeInfo()->NameAtom() ||
+      mHTMLProperty == GetSimilarElementNameAtom()) {
+    // <a> cannot be nested.  Therefore, if we're the style of <a>, we should
+    // treat existing it even if the attribute does not match.
+    if (mHTMLProperty == nsGkAtoms::a) {
+      return true;
+    }
+    return !mAttribute || element.HasAttr(kNameSpaceID_None, mAttribute);
   }
   // Special case for linking or naming an <a> element.
   if ((mHTMLProperty == nsGkAtoms::href && HTMLEditUtils::IsLink(&element)) ||
