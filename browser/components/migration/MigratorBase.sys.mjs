@@ -36,11 +36,14 @@ ChromeUtils.defineESModuleGetters(lazy, {
  *
  * To implement a migrator:
  * 1. Import this module.
- * 2. Create the prototype for the migrator, extending MigratorBase.
- * 3. If the migrator supports multiple profiles, override the sourceProfiles
+ * 2. Create a subclass of MigratorBase for your new migrator.
+ * 3. Override the `key` static getter with a unique identifier for the browser
+ *    that this migrator migrates from.
+ * 4. If the migrator supports multiple profiles, override the sourceProfiles
  *    Here we default for single-profile migrator.
- * 4. Implement getResources(aProfile) (see below).
- * 5. For startup-only migrators, override |startupOnlyMigrator|.
+ * 5. Implement getResources(aProfile) (see below).
+ * 6. For startup-only migrators, override |startupOnlyMigrator|.
+ * 7. Add the migrator to the MIGRATOR_MODULES structure in MigrationUtils.sys.mjs.
  */
 export class MigratorBase {
   /**
