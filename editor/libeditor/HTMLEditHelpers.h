@@ -965,6 +965,14 @@ struct MOZ_STACK_CLASS EditorInlineStyle : public EditorElementStyle {
   }
 
   /**
+   * Returns true if the style is about <a>.
+   */
+  [[nodiscard]] bool IsStyleOfAnchorElement() const {
+    return mHTMLProperty == nsGkAtoms::a || mHTMLProperty == nsGkAtoms::href ||
+           mHTMLProperty == nsGkAtoms::name;
+  }
+
+  /**
    * Returns true if the style is invertible with CSS.
    */
   [[nodiscard]] bool IsInvertibleWithCSS() const {
