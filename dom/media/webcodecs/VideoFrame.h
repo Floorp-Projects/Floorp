@@ -54,15 +54,41 @@ struct VideoFrameCopyToOptions;
 
 namespace mozilla::dom {
 
-struct VideoFrameSerializedData {
+struct VideoFrameData {
+  VideoFrameData(layers::Image* aImage, const VideoPixelFormat& aFormat,
+                 gfx::IntRect aVisibleRect, gfx::IntSize aDisplaySize,
+                 Maybe<uint64_t> aDuration, int64_t aTimestamp,
+                 const VideoColorSpaceInit& aColorSpace)
+      : mImage(aImage),
+        mFormat(aFormat),
+        mVisibleRect(aVisibleRect),
+        mDisplaySize(aDisplaySize),
+        mDuration(aDuration),
+        mTimestamp(aTimestamp),
+        mColorSpace(aColorSpace) {}
+
   const RefPtr<layers::Image> mImage;
   const VideoPixelFormat mFormat;
-  const gfx::IntSize mCodedSize;
   const gfx::IntRect mVisibleRect;
   const gfx::IntSize mDisplaySize;
   const Maybe<uint64_t> mDuration;
   const int64_t mTimestamp;
   const VideoColorSpaceInit mColorSpace;
+};
+
+struct VideoFrameSerializedData : VideoFrameData {
+  VideoFrameSerializedData(layers::Image* aImage,
+                           const VideoPixelFormat& aFormat,
+                           gfx::IntSize aCodedSize, gfx::IntRect aVisibleRect,
+                           gfx::IntSize aDisplaySize, Maybe<uint64_t> aDuration,
+                           int64_t aTimestamp,
+                           const VideoColorSpaceInit& aColorSpace,
+                           nsIURI* aPrincipalURI)
+      : VideoFrameData(aImage, aFormat, aVisibleRect, aDisplaySize, aDuration,
+                       aTimestamp, aColorSpace),
+        mCodedSize(aCodedSize),
+        mPrincipalURI(aPrincipalURI) {}
+  const gfx::IntSize mCodedSize;
   const nsCOMPtr<nsIURI> mPrincipalURI;
 };
 
@@ -159,7 +185,7 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
                             StructuredCloneHolder* aHolder) const;
 
   // [Transferable] implementations: Transfer, FromTransferred
-  struct TransferredData;
+  using TransferredData = VideoFrameSerializedData;
 
   UniquePtr<TransferredData> Transfer();
 
@@ -189,41 +215,6 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
    private:
     bool IsYUV() const;
     VideoPixelFormat mFormat;
-  };
-
-  struct FrameData {
-    FrameData(layers::Image* aImage, const VideoPixelFormat& aFormat,
-              gfx::IntRect aVisibleRect, gfx::IntSize aDisplaySize,
-              Maybe<uint64_t> aDuration, int64_t aTimestamp,
-              const VideoColorSpaceInit& aColorSpace)
-        : mImage(aImage),
-          mFormat(aFormat),
-          mVisibleRect(aVisibleRect),
-          mDisplaySize(aDisplaySize),
-          mDuration(aDuration),
-          mTimestamp(aTimestamp),
-          mColorSpace(aColorSpace) {}
-
-    RefPtr<layers::Image> mImage;
-    VideoFrame::Format mFormat;
-    const gfx::IntRect mVisibleRect;
-    const gfx::IntSize mDisplaySize;
-    Maybe<uint64_t> mDuration;
-    int64_t mTimestamp;
-    const VideoColorSpaceInit mColorSpace;
-  };
-
-  struct TransferredData : FrameData {
-    TransferredData(layers::Image* aImage, const VideoPixelFormat& aFormat,
-                    gfx::IntRect aVisibleRect, gfx::IntSize aDisplaySize,
-                    Maybe<uint64_t> aDuration, int64_t aTimestamp,
-                    const VideoColorSpaceInit& aColorSpace,
-                    nsIURI* aPrincipalURI)
-        : FrameData(aImage, aFormat, aVisibleRect, aDisplaySize, aDuration,
-                    aTimestamp, aColorSpace),
-          mPrincipalURI(aPrincipalURI) {}
-
-    const nsCOMPtr<nsIURI> mPrincipalURI;
   };
 
  private:
