@@ -87,7 +87,6 @@ function createSourceObject(filename, props = {}) {
   return {
     id: filename,
     url: makeSourceURL(filename),
-    thread: props.thread || "FakeThread",
     isPrettyPrinted: false,
     isExtension: false,
     isOriginal: filename.includes("originalSource"),
@@ -162,6 +161,9 @@ function makeOriginalSource(source) {
   return {
     id: `${source.id}/originalSource`,
     url: `${source.url}-original`,
+    sourceActor: {
+      thread: "FakeThread",
+    },
   };
 }
 

@@ -238,11 +238,11 @@ describe("sources", () => {
       actions.newGeneratedSource(makeSource("base.js"))
     );
 
-    const originalBaseSource = await dispatch(
-      actions.newOriginalSource(makeOriginalSource(baseSource))
+    const originalBaseSources = await dispatch(
+      actions.newOriginalSources([makeOriginalSource(baseSource)])
     );
 
-    await dispatch(actions.selectSource(cx, originalBaseSource.id));
+    await dispatch(actions.selectSource(cx, originalBaseSources[0].id));
 
     const fooSource = await dispatch(
       actions.newGeneratedSource(makeSource("foo.js"))
@@ -271,14 +271,14 @@ describe("sources", () => {
       actions.newGeneratedSource(makeSource("base.js"))
     );
 
-    const baseSource = await dispatch(
-      actions.newOriginalSource(makeOriginalSource(baseGenSource))
+    const baseSources = await dispatch(
+      actions.newOriginalSources([makeOriginalSource(baseGenSource)])
     );
-    await dispatch(actions.selectSource(cx, baseSource.id));
+    await dispatch(actions.selectSource(cx, baseSources[0].id));
 
     await dispatch(
       actions.selectSpecificLocation(cx, {
-        sourceId: baseSource.id,
+        sourceId: baseSources[0].id,
         line: 1,
       })
     );

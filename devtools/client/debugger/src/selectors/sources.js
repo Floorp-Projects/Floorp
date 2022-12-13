@@ -177,12 +177,12 @@ export function getFirstSourceActorForGeneratedSource(
   sourceId,
   threadId
 ) {
-  const source = getSource(state, sourceId);
+  let source = getSource(state, sourceId);
   if (source.isOriginal) {
-    return null;
+    source = getSource(state, originalToGeneratedId(source.id));
   }
-  let actorsInfo = state.sources.actors[sourceId];
-  if (!actorsInfo.length) {
+  let actorsInfo = state.sources.actors[source.id];
+  if (!actorsInfo || !actorsInfo.length) {
     return null;
   }
   if (threadId) {

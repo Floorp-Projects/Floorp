@@ -25,7 +25,9 @@ export const getSourcesForTabs = createSelector(
   getSourcesMap,
   getSourceTabs,
   (sourcesMap, sourceTabs) => {
-    return sourceTabs.map(tab => sourcesMap.get(tab.sourceId));
+    return sourceTabs
+      .map(tab => sourcesMap.get(tab.sourceId))
+      .filter(source => source);
   },
   { equalityCheck: shallowEqual, resultEqualityCheck: shallowEqual }
 );

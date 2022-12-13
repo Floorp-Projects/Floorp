@@ -91,23 +91,9 @@ add_task(async function() {
     const list = dbg.selectors
       .getSourceList()
       .filter(s => s.url.includes("service-worker.sjs"));
-    return list.length == 2 ? list : null;
+    return list.length == 1 ? list : null;
   });
-  ok(true, "Found two different sources for service worker");
-
-  await selectSource(dbg, sources[0]);
-  await waitForLoadedSource(dbg, sources[0]);
-  const content0 = findSourceContent(dbg, sources[0]);
-
-  await selectSource(dbg, sources[1]);
-  await waitForLoadedSource(dbg, sources[1]);
-  const content1 = findSourceContent(dbg, sources[1]);
-
-  ok(
-    content0.value.includes("newServiceWorker") !=
-      content1.value.includes("newServiceWorker"),
-    "Got two different sources for service worker"
-  );
+  ok(sources.length, "Found one sources for service worker");
 
   // Add a breakpoint for the next subtest.
   await addBreakpoint(dbg, "service-worker.sjs", 2);

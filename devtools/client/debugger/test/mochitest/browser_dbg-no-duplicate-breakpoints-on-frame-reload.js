@@ -30,8 +30,8 @@ add_task(async function() {
 
   is(dbg.selectors.getBreakpointCount(), 1, "Only one breakpoint exists");
 
-  const oldSource = findSource(dbg, "simple2.js");
-  assertBreakpointsList(dbg, oldSource);
+  const source = findSource(dbg, "simple2.js");
+  assertBreakpointsList(dbg, source);
 
   is(
     countTabs(dbg),
@@ -58,42 +58,19 @@ add_task(async function() {
 
   await waitForSelectedSource(dbg, "simple2.js");
 
-  info(
-    "Check resources relating to the  old simple2.js source no longer exists"
-  );
-
-  ok(!dbg.selectors.getSource(oldSource.id), "The old simple2.js js not found");
-  is(
-    dbg.selectors.getSourceActorsForSource(oldSource.id).length,
-    0,
-    "The source actors for the old simple2.js no longer exists"
-  );
-  isnot(
-    dbg.selectors.getTabs()[0].sourceId,
-    oldSource.id,
-    "The tab no longer relates to the old simple2.js"
-  );
-
   is(dbg.selectors.getBreakpointCount(), 1, "Only one breakpoint still exists");
 
-  const newSource = findSource(dbg, "simple2.js");
-  assertBreakpointsList(dbg, newSource);
+  const sourceAfterReload = findSource(dbg, "simple2.js");
+  assertBreakpointsList(dbg, sourceAfterReload);
 
   is(countTabs(dbg), 2, "We still see the tabs for the two sources");
 
-  await removeBreakpoint(dbg, newSource.id, 3);
+  await removeBreakpoint(dbg, sourceAfterReload.id, 3);
 });
 
 function assertBreakpointsList(dbg, source) {
   const breakpointHeadings = findAllElements(dbg, "breakpointHeadings");
   const breakpointItems = findAllElements(dbg, "breakpointItems");
-
-  // The thread.name on certain reloads fallbacks to the url
-  // https://searchfox.org/mozilla-central/rev/211649f071259c4c733b4cafa94c44481c5caacc/devtools/client/fronts/targets/target-mixin.js#378-383
-  const expectedTitles = [
-    `Test remote frame sources - ${source.url}`,
-    `https://example.org/browser/devtools/client/debugger/test/mochitest/examples/doc_dbg-fission-frame-sources-frame.html - ${source.url}`,
-  ];
 
   is(
     breakpointHeadings.length,
@@ -106,11 +83,10 @@ function assertBreakpointsList(dbg, source) {
     "The breakpoint list shows only one breakpoint"
   );
 
-  ok(
-    expectedTitles.includes(breakpointHeadings[0].title),
-    `The breakpoint heading tooltip shows ${
-      breakpointHeadings[0].title
-    }, Expected ${expectedTitles.join(" or ")}`
+  is(
+    breakpointHeadings[0].title,
+    source.url,
+    "The info displayed for the breakpoint tooltip of the 1st breakpoint is correct"
   );
   is(
     breakpointHeadings[0].textContent,

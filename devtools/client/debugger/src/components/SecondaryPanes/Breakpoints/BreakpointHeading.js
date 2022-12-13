@@ -14,11 +14,7 @@ import {
   getSourceQueryString,
   getFileURL,
 } from "../../../utils/source";
-import {
-  getBreakpointsForSource,
-  getContext,
-  getThread,
-} from "../../../selectors";
+import { getBreakpointsForSource, getContext } from "../../../selectors";
 
 import SourceIcon from "../../shared/SourceIcon";
 
@@ -31,7 +27,6 @@ class BreakpointHeading extends PureComponent {
       sources: PropTypes.array.isRequired,
       source: PropTypes.object.isRequired,
       selectSource: PropTypes.func.isRequired,
-      thread: PropTypes.object.isRequired,
     };
   }
   onContextMenu = e => {
@@ -39,7 +34,7 @@ class BreakpointHeading extends PureComponent {
   };
 
   render() {
-    const { cx, sources, source, selectSource, thread } = this.props;
+    const { cx, sources, source, selectSource } = this.props;
 
     const path = getDisplayPath(source, sources);
     const query = getSourceQueryString(source);
@@ -47,7 +42,7 @@ class BreakpointHeading extends PureComponent {
     return (
       <div
         className="breakpoint-heading"
-        title={`${thread?.name} - ${getFileURL(source, false)}`}
+        title={getFileURL(source, false)}
         onClick={() => selectSource(cx, source.id)}
         onContextMenu={this.onContextMenu}
       >
@@ -69,7 +64,6 @@ class BreakpointHeading extends PureComponent {
 const mapStateToProps = (state, { source }) => ({
   cx: getContext(state),
   breakpointsForSource: getBreakpointsForSource(state, source.id),
-  thread: getThread(state, source.thread),
 });
 
 export default connect(mapStateToProps, {

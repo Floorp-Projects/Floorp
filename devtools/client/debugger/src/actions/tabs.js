@@ -16,10 +16,11 @@ import {
   getNewSelectedSourceId,
 } from "../selectors";
 
-export function addTab(source) {
+export function addTab(source, sourceActor) {
   return {
     type: "ADD_TAB",
     source,
+    sourceActor,
   };
 }
 

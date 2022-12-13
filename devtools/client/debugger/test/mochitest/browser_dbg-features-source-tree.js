@@ -303,49 +303,44 @@ add_task(async function testSourceTreeOnTheIntegrationTestPage() {
   info(
     "Assert the number of sources and source actors for the same-url.sjs sources"
   );
-  const mainThreadSameUrlSource = findSourceInThread(
-    dbg,
-    "same-url.sjs",
-    "Main Thread"
-  );
-  ok(mainThreadSameUrlSource, "Found same-url.js in the main thread");
+  const sameUrlSource = findSource(dbg, "same-url.sjs");
+  ok(sameUrlSource, "Found same-url.js in the main thread");
+
+  const sourceActors = dbg.selectors.getSourceActorsForSource(sameUrlSource.id);
+
+  const mainThread = dbg.selectors
+    .getAllThreads()
+    .find(thread => thread.name == "Main Thread");
+
   is(
-    dbg.selectors.getSourceActorsForSource(mainThreadSameUrlSource.id).length,
+    sourceActors.filter(actor => actor.thread == mainThread.actor).length,
     // When EFT is disabled the iframe's source is meld into the main target
     isEveryFrameTargetEnabled() ? 3 : 4,
     "same-url.js is loaded 3 times in the main thread"
   );
 
-  const iframeSameUrlSource = findSourceInThread(
-    dbg,
-    "same-url.sjs",
-    testServer.urlFor("iframe.html")
-  );
   if (isEveryFrameTargetEnabled()) {
-    ok(iframeSameUrlSource, "Found same-url.js in the iframe thread");
+    const iframeThread = dbg.selectors
+      .getAllThreads()
+      .find(thread => thread.name == testServer.urlFor("iframe.html"));
+
     is(
-      dbg.selectors.getSourceActorsForSource(iframeSameUrlSource.id).length,
+      sourceActors.filter(actor => actor.thread == iframeThread.actor).length,
       1,
       "same-url.js is loaded one time in the iframe thread"
     );
-  } else {
-    ok(
-      !iframeSameUrlSource,
-      "When EFT is off, the iframe source is into the main thread bucket"
-    );
   }
 
-  const workerSameUrlSource = findSourceInThread(
-    dbg,
-    "same-url.sjs",
-    testServer.urlFor("same-url.sjs")
-  );
-  ok(workerSameUrlSource, "Found same-url.js in the worker thread");
+  const workerThread = dbg.selectors
+    .getAllThreads()
+    .find(thread => thread.name == testServer.urlFor("same-url.sjs"));
+
   is(
-    dbg.selectors.getSourceActorsForSource(workerSameUrlSource.id).length,
+    sourceActors.filter(actor => actor.thread == workerThread.actor).length,
     1,
     "same-url.js is loaded one time in the worker thread"
   );
+
   const workerThreadItem = findSourceTreeThreadByName(dbg, "same-url.sjs");
   ok(workerThreadItem, "Found the thread item for the worker");
   ok(

@@ -8,6 +8,9 @@ import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
 
 import {
+  getSourceTabs,
+  getSourceActor,
+  getSource,
   getSelectedSource,
   getSourcesForTabs,
   getIsPaused,
@@ -71,6 +74,7 @@ class Tabs extends PureComponent {
       blackBoxRanges: PropTypes.object.isRequired,
       startPanelCollapsed: PropTypes.bool.isRequired,
       tabSources: PropTypes.array.isRequired,
+      tabs: PropTypes.array.isRequired,
       togglePaneCollapse: PropTypes.func.isRequired,
     };
   }
@@ -222,14 +226,14 @@ class Tabs extends PureComponent {
   };
 
   renderTabs() {
-    const { tabSources } = this.props;
-    if (!tabSources) {
+    const { tabs } = this.props;
+    if (!tabs) {
       return null;
     }
 
     return (
       <div className="source-tabs" ref="sourceTabs">
-        {tabSources.map((source, index) => {
+        {tabs.map(({ source, sourceActor }, index) => {
           return (
             <Tab
               onDragStart={_ => this.onTabDragStart(source, index)}
@@ -240,6 +244,7 @@ class Tabs extends PureComponent {
               onDragEnd={this.onTabDragEnd}
               key={index}
               source={source}
+              sourceActor={sourceActor}
               ref={`tab_${source.id}`}
             />
           );
@@ -309,11 +314,18 @@ class Tabs extends PureComponent {
 }
 
 const mapStateToProps = state => {
-  const tabSources = getSourcesForTabs(state);
   return {
     cx: getContext(state),
     selectedSource: getSelectedSource(state),
-    tabSources,
+    tabSources: getSourcesForTabs(state),
+    tabs: getSourceTabs(state)
+      .map(tab => {
+        return {
+          source: getSource(state, tab.sourceId),
+          sourceActor: getSourceActor(state, tab.sourceActorId),
+        };
+      })
+      .filter(tab => tab.source),
     blackBoxRanges: getBlackBoxRanges(state),
     isPaused: getIsPaused(state, getCurrentThread(state)),
   };

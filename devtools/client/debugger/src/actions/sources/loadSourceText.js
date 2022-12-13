@@ -89,11 +89,16 @@ async function loadGeneratedSourceTextPromise(
     [PROMISE]: loadGeneratedSource(getState(), sourceActor, client),
   });
 
-  await setParserAndBreakpointsTextContent(cx, sourceActor.source, {
-    state: getState(),
-    parser,
-    dispatch,
-  });
+  await setParserAndBreakpointsTextContent(
+    cx,
+    sourceActor.source,
+    sourceActor.actor,
+    {
+      state: getState(),
+      parser,
+      dispatch,
+    }
+  );
 }
 
 async function loadOriginalSourceTextPromise(
@@ -110,7 +115,7 @@ async function loadOriginalSourceTextPromise(
     [PROMISE]: loadOriginalSource(getState(), source, client, sourceMaps),
   });
 
-  await setParserAndBreakpointsTextContent(cx, source.id, {
+  await setParserAndBreakpointsTextContent(cx, source.id, null, {
     state: getState(),
     parser,
     dispatch,
@@ -120,6 +125,7 @@ async function loadOriginalSourceTextPromise(
 async function setParserAndBreakpointsTextContent(
   cx,
   sourceId,
+  sourceActorId,
   { dispatch, state, parser }
 ) {
   const source = getSource(state, sourceId);
@@ -127,10 +133,12 @@ async function setParserAndBreakpointsTextContent(
   if (!source) {
     return;
   }
+
   const content = getSettledSourceTextContent(
     state,
     createLocation({
       sourceId: source.id,
+      sourceActorId,
     })
   );
 

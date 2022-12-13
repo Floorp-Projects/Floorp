@@ -7,6 +7,7 @@
  * @module reducers/sources
  */
 
+import { originalToGeneratedId } from "devtools/client/shared/source-map-loader/index";
 import { prefs } from "../utils/prefs";
 
 export function initialSourcesState(state) {
@@ -27,9 +28,18 @@ export function initialSourcesState(state) {
     urls: {},
 
     /**
-     * Mapping of source id's to one or more source-actor id's.
+     * Map of the source id's to one or more related original source id's
+     * Only generated sources which have related original sources will be maintained here.
+     *
+     * Dictionary(source id => array<Original Source ID>)
+     */
+    originalSources: {},
+
+    /**
+     * Mapping of source id's to one or more source-actor's.
      * Dictionary whose keys are source id's and values are arrays
-     * made of all the related source-actor id's.
+     * made of all the related source-actor's.
+     * Note: The source mapped here are only generated sources.
      *
      * "source" are the objects stored in this reducer, in the `sources` attribute.
      * "source-actor" are the objects stored in the "source-actors.js" reducer, in its `sourceActors` attribute.
@@ -67,6 +77,9 @@ function update(state = initialSourcesState(), action) {
   switch (action.type) {
     case "ADD_SOURCES":
       return addSources(state, action.sources);
+
+    case "ADD_ORIGINAL_SOURCES":
+      return addSources(state, action.originalSources);
 
     case "INSERT_SOURCE_ACTORS":
       return insertSourceActors(state, action);
@@ -165,6 +178,14 @@ function addSources(state, sources) {
     if (!existing.includes(source.id)) {
       state.urls[source.url] = [...existing, source.id];
     }
+
+    if (source.isOriginal) {
+      const generatedSourceId = originalToGeneratedId(source.id);
+      if (!state.originalSources[generatedSourceId]) {
+        state.originalSources[generatedSourceId] = [];
+      }
+      state.originalSources[generatedSourceId].push(source.id);
+    }
   }
   state.sources = newSourceMap;
 
@@ -174,11 +195,13 @@ function addSources(state, sources) {
 function removeSourcesAndActors(state, threadActorID) {
   state = {
     ...state,
-    actors: { ...state.actors },
     urls: { ...state.urls },
+    actors: { ...state.actors },
+    originalSources: { ...state.originalSources },
   };
 
   const newSourceMap = new Map(state.sources);
+
   for (const sourceId in state.actors) {
     let i = state.actors[sourceId].length;
     while (i--) {
@@ -207,6 +230,13 @@ function removeSourcesAndActors(state, threadActorID) {
       }
 
       newSourceMap.delete(sourceId);
+
+      // Also remove any original sources related to this generated source
+      const originalSourceIds = state.originalSources[sourceId];
+      if (originalSourceIds && originalSourceIds.length) {
+        originalSourceIds.forEach(id => newSourceMap.delete(id));
+        delete state.originalSources[sourceId];
+      }
     }
   }
   state.sources = newSourceMap;

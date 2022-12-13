@@ -42,8 +42,8 @@ describe("sources - new sources", () => {
       actions.newGeneratedSource(makeSource("base.js"))
     );
 
-    await dispatch(actions.newOriginalSource(makeOriginalSource(generated)));
-    await dispatch(actions.newOriginalSource(makeOriginalSource(generated)));
+    await dispatch(actions.newOriginalSources([makeOriginalSource(generated)]));
+    await dispatch(actions.newOriginalSources([makeOriginalSource(generated)]));
 
     expect(getSourceCount(getState())).toEqual(2);
   });

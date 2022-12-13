@@ -681,28 +681,6 @@ function findSource(
   return source;
 }
 
-/**
- * Find the source in specied thread. Useful when there exists
- * same named sources in different targets (threads)
- *
- * @param {Object} dbg
- * @param {String} filenameOrUrl - The source file name of the full source url
- * @param {String} threadName - The name of the thread the source belongs to
- */
-function findSourceInThread(dbg, filenameOrUrl, threadName) {
-  const sources = dbg.selectors.getSourceList();
-  return sources.find(s => {
-    const sourceFileName = s.url
-      ? s.url.substring(s.url.lastIndexOf("/") + 1)
-      : "";
-    if (sourceFileName == filenameOrUrl || s.url == filenameOrUrl) {
-      const thread = dbg.selectors.getThread(s.thread);
-      return thread.name == threadName;
-    }
-    return false;
-  });
-}
-
 function findSourceContent(dbg, url, opts) {
   const source = findSource(dbg, url, opts);
 
