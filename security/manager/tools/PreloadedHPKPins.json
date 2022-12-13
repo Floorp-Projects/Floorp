@@ -27,7 +27,7 @@
 {
   "chromium_data" : {
     "cert_file_url": "https://chromium.googlesource.com/chromium/src/+/refs/heads/main/net/http/transport_security_state_static.pins?format=TEXT",
-    "json_file_url": "https://chromium.googlesource.com/chromium/src/+/refs/heads/main/net/http/transport_security_state_static.json?format=TEXT",
+    "json_file_url": "https://chromium.googlesource.com/chromium/src/+/refs/heads/main/net/http/transport_security_state_static_pins.json?format=TEXT",
     "substitute_pinsets": {
       // Use the larger google_root_pems pinset instead of google
       "google": "google_root_pems"
