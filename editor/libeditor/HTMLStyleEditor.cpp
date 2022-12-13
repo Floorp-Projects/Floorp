@@ -1693,21 +1693,21 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::RemoveStyleInside(
            aElement.HasAttr(kNameSpaceID_None, nsGkAtoms::_class))) {
         // Move `style` attribute and `class` element to span element before
         // removing aElement from the tree.
-        Result<CreateElementResult, nsresult> wrapInSpanElementResult =
-            InsertContainerWithTransaction(aElement, *nsGkAtoms::span);
-        if (wrapInSpanElementResult.isErr()) {
+        Result<CreateElementResult, nsresult> replaceWithSpanResult =
+            ReplaceContainerWithTransaction(aElement, *nsGkAtoms::span);
+        if (MOZ_UNLIKELY(replaceWithSpanResult.isErr())) {
           NS_WARNING(
-              "HTMLEditor::InsertContainerWithTransaction(nsGkAtoms::span) "
+              "HTMLEditor::ReplaceContainerWithTransaction(nsGkAtoms::span) "
               "failed");
-          return wrapInSpanElementResult.propagateErr();
+          return replaceWithSpanResult.propagateErr();
         }
-        CreateElementResult unwrappedWrapInSpanElementResult =
-            wrapInSpanElementResult.unwrap();
-        MOZ_ASSERT(unwrappedWrapInSpanElementResult.GetNewNode());
-        unwrappedWrapInSpanElementResult.MoveCaretPointTo(
+        CreateElementResult unwrappedReplaceWithSpanResult =
+            replaceWithSpanResult.unwrap();
+        MOZ_ASSERT(unwrappedReplaceWithSpanResult.GetNewNode());
+        unwrappedReplaceWithSpanResult.MoveCaretPointTo(
             pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
         const RefPtr<Element> spanElement =
-            unwrappedWrapInSpanElementResult.UnwrapNewNode();
+            unwrappedReplaceWithSpanResult.UnwrapNewNode();
         nsresult rv = CloneAttributeWithTransaction(*nsGkAtoms::style,
                                                     *spanElement, aElement);
         if (NS_WARN_IF(Destroyed())) {
@@ -1730,16 +1730,17 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::RemoveStyleInside(
               "failed");
           return Err(rv);
         }
-      }
-      Result<EditorDOMPoint, nsresult> unwrapElementResult =
-          RemoveContainerWithTransaction(aElement);
-      if (MOZ_UNLIKELY(unwrapElementResult.isErr())) {
-        NS_WARNING("HTMLEditor::RemoveContainerWithTransaction() failed");
-        return unwrapElementResult.propagateErr();
-      }
-      if (AllowsTransactionsToChangeSelection() &&
-          unwrapElementResult.inspect().IsSet()) {
-        pointToPutCaret = unwrapElementResult.unwrap();
+      } else {
+        Result<EditorDOMPoint, nsresult> unwrapElementResult =
+            RemoveContainerWithTransaction(aElement);
+        if (MOZ_UNLIKELY(unwrapElementResult.isErr())) {
+          NS_WARNING("HTMLEditor::RemoveContainerWithTransaction() failed");
+          return unwrapElementResult.propagateErr();
+        }
+        if (AllowsTransactionsToChangeSelection() &&
+            unwrapElementResult.inspect().IsSet()) {
+          pointToPutCaret = unwrapElementResult.unwrap();
+        }
       }
     }
     // If aStyleToRemove.mAttribute is specified, we want to remove only the
