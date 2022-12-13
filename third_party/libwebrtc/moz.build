@@ -294,6 +294,7 @@ DIRS += [
     "/third_party/libwebrtc/modules/video_coding/svc/scalable_video_controller_gn",
     "/third_party/libwebrtc/modules/video_coding/svc/svc_rate_allocator_gn",
     "/third_party/libwebrtc/modules/video_coding/timing/codec_timer_gn",
+    "/third_party/libwebrtc/modules/video_coding/timing/frame_delay_delta_kalman_filter_gn",
     "/third_party/libwebrtc/modules/video_coding/timing/inter_frame_delay_gn",
     "/third_party/libwebrtc/modules/video_coding/timing/jitter_estimator_gn",
     "/third_party/libwebrtc/modules/video_coding/timing/rtt_filter_gn",
