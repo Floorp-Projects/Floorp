@@ -6,7 +6,7 @@
 
 DIRS += [
     "fake-gesturefy",
-    "translate",
+    "fake-translate",
     "treestyletab",
     "undo-closed-tab",
     "official-site-ua",
