@@ -55,6 +55,10 @@ void HandleFailedStatus(nsresult aError, const RefPtr<Promise>& aPromise) {
     case NS_ERROR_DOM_INVALID_MODIFICATION_ERR:
       aPromise->MaybeRejectWithInvalidModificationError("Invalid modification");
       break;
+    case NS_ERROR_DOM_SECURITY_ERR:
+      aPromise->MaybeRejectWithSecurityError(
+          "Security error when calling GetDirectory");
+      break;
     default:
       if (NS_FAILED(aError)) {
         aPromise->MaybeRejectWithUnknownError("Unknown failure");
@@ -342,6 +346,7 @@ void FileSystemRequestHandler::GetRootHandle(
     ErrorResult& aError) {
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(aPromise);
+  LOG(("GetRoot"));
 
   if (aManager->IsShutdown()) {
     aError.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);

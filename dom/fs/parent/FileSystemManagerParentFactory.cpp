@@ -33,6 +33,11 @@ mozilla::ipc::IPCResult CreateFileSystemManagerParent(
   QM_TRY(OkIf(aParentEndpoint.IsValid()), IPC_OK(),
          [aResolver](const auto&) { aResolver(NS_ERROR_INVALID_ARG); });
 
+  // This blocks Null and Expanded principals
+  QM_TRY(OkIf(quota::QuotaManager::IsPrincipalInfoValid(aPrincipalInfo)),
+         IPC_OK(),
+         [aResolver](const auto&) { aResolver(NS_ERROR_DOM_SECURITY_ERR); });
+
   quota::OriginMetadata originMetadata(
       quota::QuotaManager::GetInfoFromValidatedPrincipalInfo(aPrincipalInfo),
       quota::PERSISTENCE_TYPE_DEFAULT);
