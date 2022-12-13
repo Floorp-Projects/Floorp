@@ -132,6 +132,7 @@ interface RTCPeerConnection : EventTarget  {
                         MediaStream... streams);
   undefined removeTrack(RTCRtpSender sender);
 
+  [Throws]
   RTCRtpTransceiver addTransceiver((MediaStreamTrack or DOMString) trackOrKind,
                                    optional RTCRtpTransceiverInit init = {});
 

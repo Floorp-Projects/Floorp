@@ -17,6 +17,7 @@
 #include "mozilla/dom/RTCStatsReportBinding.h"
 #include "mozilla/dom/RTCRtpParametersBinding.h"
 #include "RTCStatsReport.h"
+#include "jsep/JsepTrack.h"
 
 class nsPIDOMWindowInner;
 
@@ -41,6 +42,7 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
                MediaTransportHandler* aTransportHandler,
                AbstractThread* aCallThread, nsISerialEventTarget* aStsThread,
                MediaSessionConduit* aConduit, dom::MediaStreamTrack* aTrack,
+               const Sequence<RTCRtpEncodingParameters>& aEncodings,
                RTCRtpTransceiver* aTransceiver);
 
   // nsISupports
@@ -59,8 +61,14 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
                                          ErrorResult& aError);
   already_AddRefed<Promise> GetStats(ErrorResult& aError);
   already_AddRefed<Promise> SetParameters(
-      const dom::RTCRtpParameters& aParameters, ErrorResult& aError);
-  void GetParameters(RTCRtpParameters& aParameters) const;
+      const dom::RTCRtpSendParameters& aParameters, ErrorResult& aError);
+  // Not a simple getter, so not const
+  // See https://w3c.github.io/webrtc-pc/#dom-rtcrtpsender-getparameters
+  void GetParameters(RTCRtpSendParameters& aParameters);
+
+  static void CheckAndRectifyEncodings(
+      Sequence<RTCRtpEncodingParameters>& aEncodings, bool aVideo,
+      ErrorResult& aRv);
 
   nsPIDOMWindowInner* GetParentObject() const;
   nsTArray<RefPtr<RTCStatsPromise>> GetStatsInternal();
@@ -72,6 +80,7 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
   void SetStreams(const Sequence<OwningNonNull<DOMMediaStream>>& aStreams);
   // ChromeOnly webidl
   void GetStreams(nsTArray<RefPtr<DOMMediaStream>>& aStreams);
+  // ChromeOnly webidl
   void SetTrack(const RefPtr<MediaStreamTrack>& aTrack);
   void Shutdown();
   void BreakCycles();
@@ -120,15 +129,25 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
 
   std::string GetMid() const;
   JsepTransceiver& GetJsepTransceiver();
-  void ApplyParameters(const RTCRtpParameters& aParameters);
-  void ApplyJsEncodingToConduitEncoding(
+  void ConfigureVideoCodecMode();
+  void SetJsepRids(const RTCRtpSendParameters& aParameters);
+  static void ApplyJsEncodingToConduitEncoding(
       const RTCRtpEncodingParameters& aJsEncoding,
       VideoCodecConfig::Encoding* aConduitEncoding);
+  Sequence<RTCRtpEncodingParameters> GetMatchingEncodings(
+      const std::vector<std::string>& aRids) const;
+  Sequence<RTCRtpEncodingParameters> ToSendEncodings(
+      const std::vector<std::string>& aRids) const;
+  void MaybeGetJsepRids();
 
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<PeerConnectionImpl> mPc;
   RefPtr<dom::MediaStreamTrack> mSenderTrack;
-  RTCRtpParameters mParameters;
+  RTCRtpSendParameters mParameters;
+  Maybe<RTCRtpSendParameters> mPendingParameters;
+  uint32_t mNumSetParametersCalls = 0;
+  bool mSimulcastEnvelopeSet = false;
+  Maybe<RTCRtpSendParameters> mLastReturnedParameters;
   RefPtr<MediaPipelineTransmit> mPipeline;
   RefPtr<RTCRtpTransceiver> mTransceiver;
   nsTArray<RefPtr<DOMMediaStream>> mStreams;

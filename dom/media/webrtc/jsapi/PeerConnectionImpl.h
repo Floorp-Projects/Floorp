@@ -511,6 +511,14 @@ class PeerConnectionImpl final
     return mPacketDumper;
   }
 
+  nsString GenerateUUID() const {
+    std::string result;
+    if (!mUuidGen->Generate(&result)) {
+      MOZ_CRASH();
+    }
+    return NS_ConvertUTF8toUTF16(result.c_str());
+  }
+
  private:
   virtual ~PeerConnectionImpl();
   PeerConnectionImpl(const PeerConnectionImpl& rhs);
