@@ -121,8 +121,11 @@ class VideoCodecConfig {
   struct Encoding {
     std::string rid;
     EncodingConstraints constraints;
+    bool active = true;
+    // TODO(bug 1744116): Use = default here
     bool operator==(const Encoding& aOther) const {
-      return rid == aOther.rid && constraints == aOther.constraints;
+      return rid == aOther.rid && constraints == aOther.constraints &&
+             active == aOther.active;
     }
   };
   std::vector<Encoding> mEncodings;
@@ -133,6 +136,7 @@ class VideoCodecConfig {
   uint8_t mPacketizationMode;
   // TODO: add external negotiated SPS/PPS
 
+  // TODO(bug 1744116): Use = default here
   bool operator==(const VideoCodecConfig& aRhs) const {
     return mType == aRhs.mType && mName == aRhs.mName &&
            mAckFbTypes == aRhs.mAckFbTypes &&
