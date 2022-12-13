@@ -396,7 +396,7 @@ nsresult RTCRtpTransceiver::UpdateConduit() {
   }
 
   mReceiver->UpdateConduit();
-  mSender->UpdateConduit();
+  mSender->MaybeUpdateConduit();
 
   return NS_OK;
 }
