@@ -354,8 +354,7 @@ class ThreeDotMenuMainRobot {
         }
 
         fun openAddToHomeScreen(interact: AddToHomeScreenRobot.() -> Unit): AddToHomeScreenRobot.Transition {
-            mDevice.waitNotNull(Until.findObject(By.text("Add to Home screen")), waitingTime)
-            addToHomeScreenButton.click()
+            addToHomeScreenButton.clickAndWaitForNewWindow(waitingTime)
 
             AddToHomeScreenRobot().interact()
             return AddToHomeScreenRobot.Transition()

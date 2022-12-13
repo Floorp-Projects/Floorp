@@ -283,7 +283,7 @@ class SmokeTest {
         }.openThreeDotMenu {
             expandMenu()
         }.openAddToHomeScreen {
-            verifyShortcutNameField("Test_Page_1")
+            verifyShortcutTextFieldTitle("Test_Page_1")
             addShortcutName(shortcutTitle)
             clickAddShortcutButton()
             clickAddAutomaticallyButton()

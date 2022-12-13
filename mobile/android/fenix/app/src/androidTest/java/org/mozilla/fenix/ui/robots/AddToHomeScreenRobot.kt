@@ -6,24 +6,22 @@ package org.mozilla.fenix.ui.robots
 
 import android.os.Build
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.clearText
-import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
-import androidx.test.espresso.matcher.ViewMatchers.isCompletelyDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
-import org.hamcrest.CoreMatchers.allOf
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
-import org.mozilla.fenix.helpers.ext.waitNotNull
 import java.util.regex.Pattern
 
 /**
@@ -37,18 +35,15 @@ class AddToHomeScreenRobot {
 
     fun clickAddPrivateBrowsingShortcutButton() = addPrivateBrowsingShortcutButton().click()
 
-    fun addShortcutName(title: String) {
-        mDevice.waitNotNull(Until.findObject(By.text("Add to Home screen")), waitingTime)
-        shortcutNameField()
-            .perform(clearText())
-            .perform(typeText(title))
-    }
+    fun addShortcutName(title: String) = shortcutTextField.setText(title)
 
-    fun verifyShortcutNameField(expectedText: String) = assertShortcutNameField(expectedText)
+    fun verifyShortcutTextFieldTitle(title: String) = assertItemContainingTextExists(shortcutTitle(title))
 
-    fun clickAddShortcutButton() = addButton().click()
+    fun clickAddShortcutButton() =
+        confirmAddToHomeScreenButton.clickAndWaitForNewWindow(waitingTime)
 
-    fun clickCancelShortcutButton() = cancelAddToHomeScreenButton().click()
+    fun clickCancelShortcutButton() =
+        cancelAddToHomeScreenButton.click()
 
     fun clickAddAutomaticallyButton() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -106,22 +101,6 @@ fun addToHomeScreen(interact: AddToHomeScreenRobot.() -> Unit): AddToHomeScreenR
     return AddToHomeScreenRobot.Transition()
 }
 
-private fun shortcutNameField() = onView(withId(R.id.shortcut_text))
-
-private fun assertShortcutNameField(expectedText: String) {
-    onView(
-        allOf(
-            withId(R.id.shortcut_text),
-            withText(expectedText),
-        ),
-    )
-        .check(matches(isCompletelyDisplayed()))
-}
-
-private fun addButton() = onView((withText("ADD")))
-
-private fun cancelAddToHomeScreenButton() = onView((withText("CANCEL")))
-
 private fun addAutomaticallyButton() =
     mDevice.findObject(UiSelector().textContains("add automatically"))
 
@@ -134,3 +113,12 @@ private fun noThanksPrivateBrowsingShortcutButton() = onView(withId(R.id.cfr_neg
 
 private fun assertNoThanksPrivateBrowsingShortcutButton() = noThanksPrivateBrowsingShortcutButton()
     .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
+private val cancelAddToHomeScreenButton =
+    itemWithResId("$packageName:id/cancel_button")
+private val confirmAddToHomeScreenButton =
+    itemWithResId("$packageName:id/add_button")
+private val shortcutTextField =
+    itemWithResId("$packageName:id/shortcut_text")
+private fun shortcutTitle(title: String) =
+    itemWithResIdAndText("$packageName:id/shortcut_text", title)
