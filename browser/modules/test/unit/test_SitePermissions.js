@@ -16,6 +16,10 @@ const EXT_PROTOCOL_ENABLED = Services.prefs.getBoolPref(
   "security.external_protocol_requires_permission"
 );
 
+const SPEAKER_SELECTION_ENABLED = Services.prefs.getBoolPref(
+  "media.setsinkid.enabled"
+);
+
 add_task(async function testPermissionsListing() {
   let expectedPermissions = [
     "autoplay-media",
@@ -46,6 +50,9 @@ add_task(async function testPermissionsListing() {
   }
   if (EXT_PROTOCOL_ENABLED) {
     expectedPermissions.push("open-protocol-handler");
+  }
+  if (SPEAKER_SELECTION_ENABLED) {
+    expectedPermissions.push("speaker");
   }
   Assert.deepEqual(
     SitePermissions.listPermissions().sort(),
@@ -208,6 +215,9 @@ add_task(async function testExactHostMatch() {
   }
   if (EXT_PROTOCOL_ENABLED) {
     exactHostMatched.push("open-protocol-handler");
+  }
+  if (SPEAKER_SELECTION_ENABLED) {
+    exactHostMatched.push("speaker");
   }
   let nonExactHostMatched = [
     "cookie",
