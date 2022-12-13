@@ -926,17 +926,7 @@ nsresult PeerConnectionImpl::AddRtpTransceiverToJsepSession(
     return res;
   }
 
-  res = mJsepSession->AddTransceiver(transceiver);
-
-  if (NS_FAILED(res)) {
-    std::string errorString = mJsepSession->GetLastError();
-    CSFLogError(LOGTAG, "%s (%s) : pc = %s, error = %s", __FUNCTION__,
-                transceiver->GetMediaType() == SdpMediaSection::kAudio
-                    ? "audio"
-                    : "video",
-                mHandle.c_str(), errorString.c_str());
-    return NS_ERROR_FAILURE;
-  }
+  mJsepSession->AddTransceiver(transceiver);
 
   return NS_OK;
 }
