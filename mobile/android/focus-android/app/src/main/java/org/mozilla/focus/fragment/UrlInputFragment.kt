@@ -37,7 +37,6 @@ import org.mozilla.focus.R
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.databinding.FragmentUrlinputBinding
 import org.mozilla.focus.ext.defaultSearchEngineName
-import org.mozilla.focus.ext.isSearch
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.ext.settings
 import org.mozilla.focus.input.InputToolbarIntegration
