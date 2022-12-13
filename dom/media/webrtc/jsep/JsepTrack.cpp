@@ -377,10 +377,15 @@ void JsepTrack::GetRids(const SdpMediaSection& msection,
     return;
   }
 
+  // RFC 8853 does not seem to forbid duplicate rids in a simulcast attribute.
+  // So, while this is obviously silly, we should be prepared for it and
+  // ignore those duplicate rids.
+  std::set<std::string> uniqueRids;
   for (const SdpSimulcastAttribute::Version& version : *versions) {
-    if (!version.choices.empty()) {
+    if (!version.choices.empty() && !uniqueRids.count(version.choices[0].rid)) {
       // We validate that rids are present (and sane) elsewhere.
       rids->push_back(*msection.FindRid(version.choices[0].rid));
+      uniqueRids.insert(version.choices[0].rid);
     }
   }
 }
