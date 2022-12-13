@@ -650,7 +650,7 @@ var webrtcUI = {
    */
   clearPermissionsAndStopSharing(types, tab) {
     let invalidTypes = types.filter(
-      type => type != "camera" && type != "screen" && type != "microphone"
+      type => !["camera", "screen", "microphone", "speaker"].includes(type)
     );
     if (invalidTypes.length) {
       throw new Error(`Invalid device types ${invalidTypes.join(",")}`);
