@@ -991,15 +991,11 @@ const Element::MappedAttributeEntry SVGElement::sTextContentElementsMap[] = {
     // Properties that we don't support are commented out.
     // { nsGkAtoms::alignment_baseline },
     // { nsGkAtoms::baseline_shift },
-    {nsGkAtoms::direction},
-    {nsGkAtoms::dominant_baseline},
-    {nsGkAtoms::letter_spacing},
-    {nsGkAtoms::text_anchor},
-    {nsGkAtoms::text_decoration},
-    {nsGkAtoms::unicode_bidi},
-    {nsGkAtoms::word_spacing},
-    {nsGkAtoms::writing_mode},
-    {nullptr}};
+    {nsGkAtoms::direction},       {nsGkAtoms::dominant_baseline},
+    {nsGkAtoms::letter_spacing},  {nsGkAtoms::text_anchor},
+    {nsGkAtoms::text_decoration}, {nsGkAtoms::unicode_bidi},
+    {nsGkAtoms::white_space},     {nsGkAtoms::word_spacing},
+    {nsGkAtoms::writing_mode},    {nullptr}};
 
 // PresentationAttributes-FontSpecification
 /* static */
