@@ -1605,15 +1605,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::RemoveStyleInside(
   // Next, remove the element or its attribute.
   auto ShouldRemoveHTMLStyle = [&]() {
     if (!aStyleToRemove.IsStyleToClearAllInlineStyles()) {
-      return
-          // If the element is a presentation element of the style
-          aElement.NodeInfo()->NameAtom() == aStyleToRemove.mHTMLProperty ||
-          // or an `<a>` element with `href` attribute
-          (aStyleToRemove.mHTMLProperty == nsGkAtoms::href &&
-           HTMLEditUtils::IsLink(&aElement)) ||
-          // or an `<a>` element with `name` attribute
-          (aStyleToRemove.mHTMLProperty == nsGkAtoms::name &&
-           HTMLEditUtils::IsNamedAnchor(&aElement));
+      return aStyleToRemove.IsRepresentedBy(aElement);
     }
     // XXX Why do we check if aElement is editable only when we're removing all
     //     styles?

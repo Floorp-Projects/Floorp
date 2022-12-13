@@ -1008,6 +1008,11 @@ struct MOZ_STACK_CLASS EditorInlineStyle : public EditorElementStyle {
     return nullptr;
   }
 
+  /**
+   * Returns true if aContent is an HTML element and represents the style.
+   */
+  [[nodiscard]] bool IsRepresentedBy(const nsIContent& aContent) const;
+
   explicit EditorInlineStyle(nsStaticAtom& aHTMLProperty,
                              nsAtom* aAttribute = nullptr)
       : mHTMLProperty(&aHTMLProperty), mAttribute(aAttribute) {}
