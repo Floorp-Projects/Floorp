@@ -3926,6 +3926,23 @@ gfx.feature:
     release_channel_collection: opt-out
 
 gfx:
+  skipped_composites:
+    bug_numbers:
+      - 1797975
+    description: >
+      Number of skipped composites, happening when rendering is too slow to keep up with content.
+    keyed: false
+    kind: uint
+    expires: "never"
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
+    products:
+      - 'firefox'
+      - 'fennec'
+    record_in_processes:
+      - 'main'
+      - 'gpu'
   compositor:
     bug_numbers:
       - 1594145
