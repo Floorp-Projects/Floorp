@@ -44,9 +44,4 @@ interface RecentVisitsInteractor {
      * @param highlightUrl [RecentHistoryHighlight.url] of the item to remove.
      */
     fun onRemoveRecentHistoryHighlight(highlightUrl: String)
-
-    /**
-     * Called when opening the dropdown menu on a recent visit by long press.
-     */
-    fun onRecentVisitLongClicked()
 }

@@ -144,28 +144,10 @@ class SessionControlInteractorTest {
     }
 
     @Test
-    fun onCollectionMenuOpened() {
-        interactor.onCollectionMenuOpened()
-        verify { controller.handleMenuOpened() }
-    }
-
-    @Test
-    fun onTopSiteMenuOpened() {
-        interactor.onTopSiteMenuOpened()
-        verify { controller.handleMenuOpened() }
-    }
-
-    @Test
     fun onRecentTabClicked() {
         val tabId = "tabId"
         interactor.onRecentTabClicked(tabId)
         verify { recentTabController.handleRecentTabClicked(tabId) }
-    }
-
-    @Test
-    fun onRecentTabLongClicked() {
-        interactor.onRecentTabLongClicked()
-        verify { recentTabController.handleRecentTabLongClicked() }
     }
 
     @Test
@@ -195,12 +177,6 @@ class SessionControlInteractorTest {
 
         interactor.onRecentBookmarkClicked(bookmark)
         verify { recentBookmarksController.handleBookmarkClicked(bookmark) }
-    }
-
-    @Test
-    fun `WHEN a recent bookmark is long clicked THEN the long click is handled`() {
-        interactor.onRecentBookmarkLongClicked()
-        verify { recentBookmarksController.handleBookmarkLongClicked() }
     }
 
     @Test

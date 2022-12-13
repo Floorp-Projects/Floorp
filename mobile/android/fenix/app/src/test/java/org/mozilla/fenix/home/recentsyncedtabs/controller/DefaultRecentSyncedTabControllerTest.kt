@@ -151,20 +151,6 @@ class DefaultRecentSyncedTabControllerTest {
     }
 
     @Test
-    fun `GIVEN search dialog is displayed WHEN recent synced tab is long clicked THEN dismiss search dialog`() {
-        every { navController.navigateUp() } returns true
-        every { navController.currentDestination } returns mockk {
-            every { id } returns R.id.searchDialogFragment
-        }
-
-        controller.handleRecentSyncedTabLongClick()
-
-        verify {
-            navController.navigateUp()
-        }
-    }
-
-    @Test
     fun `WHEN synced tab clicked THEN metric counter labeled by device type is incremented`() {
         val url = "https://mozilla.org"
         val deviceType = DeviceType.DESKTOP

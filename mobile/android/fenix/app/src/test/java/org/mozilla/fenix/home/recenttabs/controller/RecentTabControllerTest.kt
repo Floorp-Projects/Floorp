@@ -63,7 +63,6 @@ class RecentTabControllerTest {
                 appStore = appStore,
             ),
         )
-        every { navController.navigateUp() } returns true
     }
 
     @Test
@@ -124,20 +123,12 @@ class RecentTabControllerTest {
     fun handleRecentTabShowAllClickedFromHome() {
         assertNull(RecentTabs.showAllClicked.testGetValue())
 
-        every { navController.currentDestination } returns mockk {
-            every { id } returns R.id.homeFragment
-        }
-
         controller.handleRecentTabShowAllClicked()
 
         verify {
-            controller.dismissSearchDialogIfDisplayed()
             navController.navigate(
                 match<NavDirections> { it.actionId == R.id.action_global_tabsTrayFragment },
             )
-        }
-        verify(exactly = 0) {
-            navController.navigateUp()
         }
 
         assertNotNull(RecentTabs.showAllClicked.testGetValue())
@@ -147,35 +138,14 @@ class RecentTabControllerTest {
     fun handleRecentTabShowAllClickedFromSearchDialog() {
         assertNull(RecentTabs.showAllClicked.testGetValue())
 
-        every { navController.currentDestination } returns mockk {
-            every { id } returns R.id.searchDialogFragment
-        }
-
         controller.handleRecentTabShowAllClicked()
 
         verify {
-            controller.dismissSearchDialogIfDisplayed()
-            navController.navigateUp()
             navController.navigate(
                 match<NavDirections> { it.actionId == R.id.action_global_tabsTrayFragment },
             )
         }
 
         assertNotNull(RecentTabs.showAllClicked.testGetValue())
-    }
-
-    @Test
-    fun `GIVEN search dialog is displayed WHEN long clicking a recent tab THEN search dialog is dismissed`() {
-        every { navController.currentDestination } returns mockk {
-            every { id } returns R.id.searchDialogFragment
-        }
-        every { navController.navigateUp() } returns true
-
-        controller.handleRecentTabLongClicked()
-
-        verify {
-            controller.dismissSearchDialogIfDisplayed()
-            navController.navigateUp()
-        }
     }
 }

@@ -54,7 +54,6 @@ class TopSiteItemViewHolder(
 
     init {
         itemView.setOnLongClickListener {
-            interactor.onTopSiteMenuOpened()
             TopSites.longPress.record(TopSites.LongPressExtra(topSite.name()))
 
             val topSiteMenu = TopSiteItemMenu(

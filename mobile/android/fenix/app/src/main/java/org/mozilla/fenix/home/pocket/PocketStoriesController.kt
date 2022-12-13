@@ -4,8 +4,6 @@
 
 package org.mozilla.fenix.home.pocket
 
-import androidx.annotation.VisibleForTesting
-import androidx.navigation.NavController
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.service.pocket.PocketStory
 import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
@@ -15,7 +13,6 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.Pocket
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
 
@@ -73,12 +70,10 @@ interface PocketStoriesController {
  *
  * @param homeActivity [HomeActivity] used to open URLs in a new tab.
  * @param appStore [AppStore] from which to read the current Pocket recommendations and dispatch new actions on.
- * @param navController [NavController] used for navigation.
  */
 internal class DefaultPocketStoriesController(
     private val homeActivity: HomeActivity,
     private val appStore: AppStore,
-    private val navController: NavController,
 ) : PocketStoriesController {
     override fun handleStoryShown(
         storyShown: PocketStory,
@@ -153,7 +148,6 @@ internal class DefaultPocketStoriesController(
         storyClicked: PocketStory,
         storyPosition: Pair<Int, Int>,
     ) {
-        dismissSearchDialogIfDisplayed()
         homeActivity.openToBrowserAndLoad(storyClicked.url, true, BrowserDirection.FromHome)
 
         when (storyClicked) {
@@ -179,21 +173,12 @@ internal class DefaultPocketStoriesController(
     }
 
     override fun handleLearnMoreClicked(link: String) {
-        dismissSearchDialogIfDisplayed()
         homeActivity.openToBrowserAndLoad(link, true, BrowserDirection.FromHome)
         Pocket.homeRecsLearnMoreClicked.record(NoExtras())
     }
 
     override fun handleDiscoverMoreClicked(link: String) {
-        dismissSearchDialogIfDisplayed()
         homeActivity.openToBrowserAndLoad(link, true, BrowserDirection.FromHome)
         Pocket.homeRecsDiscoverClicked.record(NoExtras())
-    }
-
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun dismissSearchDialogIfDisplayed() {
-        if (navController.currentDestination?.id == R.id.searchDialogFragment) {
-            navController.navigateUp()
-        }
     }
 }

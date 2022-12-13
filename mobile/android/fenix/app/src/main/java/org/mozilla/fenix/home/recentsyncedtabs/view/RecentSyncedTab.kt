@@ -63,7 +63,6 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param onRecentSyncedTabClick Invoked when the user clicks on the recent synced tab.
  * @param onSeeAllSyncedTabsButtonClick Invoked when user clicks on the "See all" button in the synced tab card.
  * @param onRemoveSyncedTab Invoked when user clicks on the "Remove" dropdown menu option.
- * @param onRecentSyncedTabLongClick Invoked when user long presses the recent synced tab.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Suppress("LongMethod", "LongParameterList")
@@ -76,7 +75,6 @@ fun RecentSyncedTab(
     onRecentSyncedTabClick: (RecentSyncedTab) -> Unit,
     onSeeAllSyncedTabsButtonClick: () -> Unit,
     onRemoveSyncedTab: (RecentSyncedTab) -> Unit,
-    onRecentSyncedTabLongClick: () -> Unit,
 ) {
     var isDropdownExpanded by remember { mutableStateOf(false) }
 
@@ -91,10 +89,7 @@ fun RecentSyncedTab(
             .height(180.dp)
             .combinedClickable(
                 onClick = { tab?.let { onRecentSyncedTabClick(tab) } },
-                onLongClick = {
-                    onRecentSyncedTabLongClick()
-                    isDropdownExpanded = true
-                },
+                onLongClick = { isDropdownExpanded = true },
             ),
         shape = RoundedCornerShape(8.dp),
         backgroundColor = backgroundColor,
@@ -292,7 +287,6 @@ private fun LoadedRecentSyncedTab() {
             onRecentSyncedTabClick = {},
             onSeeAllSyncedTabsButtonClick = {},
             onRemoveSyncedTab = {},
-            onRecentSyncedTabLongClick = {},
         )
     }
 }
@@ -307,7 +301,6 @@ private fun LoadingRecentSyncedTab() {
             onRecentSyncedTabClick = {},
             onSeeAllSyncedTabsButtonClick = {},
             onRemoveSyncedTab = {},
-            onRecentSyncedTabLongClick = {},
         )
     }
 }

@@ -417,7 +417,6 @@ class HomeFragment : Fragment() {
             pocketStoriesController = DefaultPocketStoriesController(
                 homeActivity = activity,
                 appStore = components.appStore,
-                navController = findNavController(),
             ),
         )
 

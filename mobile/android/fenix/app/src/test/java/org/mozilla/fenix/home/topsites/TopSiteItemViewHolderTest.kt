@@ -66,15 +66,6 @@ class TopSiteItemViewHolderTest {
     }
 
     @Test
-    fun `calls interactor on long click`() {
-        every { testContext.components.analytics } returns mockk(relaxed = true)
-        TopSiteItemViewHolder(binding.root, appStore, lifecycleOwner, interactor).bind(pocket, position = 0)
-
-        binding.root.performLongClick()
-        verify { interactor.onTopSiteMenuOpened() }
-    }
-
-    @Test
     fun `GIVEN a default top site WHEN bind is called THEN the title has a pin indicator`() {
         val defaultTopSite = TopSite.Default(
             id = 1L,

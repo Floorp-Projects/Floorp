@@ -87,7 +87,6 @@ class RecentVisitsControllerTest {
         controller.handleHistoryShowAllClicked()
 
         verify {
-            controller.dismissSearchDialogIfDisplayed()
             navController.navigate(
                 HomeFragmentDirections.actionGlobalHistoryFragment(),
             )
@@ -179,20 +178,6 @@ class RecentVisitsControllerTest {
             scope.launch {
                 storage.deleteHistoryMetadataForUrl(highlightUrl)
             }
-        }
-    }
-
-    @Test
-    fun `WHEN long clicking a recent visit THEN search dialog should be dismissed `() = runTestOnMain {
-        every { navController.currentDestination } returns mockk {
-            every { id } returns R.id.searchDialogFragment
-        }
-
-        controller.handleRecentVisitLongClicked()
-
-        verify {
-            controller.dismissSearchDialogIfDisplayed()
-            navController.navigateUp()
         }
     }
 }

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <baseline version="1.0">
     <file name="app/src/main/java/org/mozilla/fenix/home/topsites/TopSiteItemViewHolder.kt">
-        <error line="66" column="35" source="annotation" />
+        <error line="65" column="35" source="annotation" />
     </file>
 </baseline>

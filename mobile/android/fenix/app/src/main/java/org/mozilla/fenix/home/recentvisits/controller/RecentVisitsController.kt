@@ -4,8 +4,6 @@
 
 package org.mozilla.fenix.home.recentvisits.controller
 
-import androidx.annotation.VisibleForTesting
-import androidx.annotation.VisibleForTesting.Companion.PRIVATE
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -60,11 +58,6 @@ interface RecentVisitsController {
      * @param highlightUrl Url of the [RecentHistoryHighlight] to remove.
      */
     fun handleRemoveRecentHistoryHighlight(highlightUrl: String)
-
-    /**
-     * Callback for when the user long clicks on a recent visit.
-     */
-    fun handleRecentVisitLongClicked()
 }
 
 /**
@@ -83,7 +76,6 @@ class DefaultRecentVisitsController(
      * Shows the history fragment.
      */
     override fun handleHistoryShowAllClicked() {
-        dismissSearchDialogIfDisplayed()
         navController.navigate(
             HomeFragmentDirections.actionGlobalHistoryFragment(),
         )
@@ -142,20 +134,6 @@ class DefaultRecentVisitsController(
         appStore.dispatch(AppAction.RemoveRecentHistoryHighlight(highlightUrl))
         scope.launch {
             storage.deleteHistoryMetadataForUrl(highlightUrl)
-        }
-    }
-
-    /**
-     * Dismiss the search dialog if displayed.
-     */
-    override fun handleRecentVisitLongClicked() {
-        dismissSearchDialogIfDisplayed()
-    }
-
-    @VisibleForTesting(otherwise = PRIVATE)
-    fun dismissSearchDialogIfDisplayed() {
-        if (navController.currentDestination?.id == R.id.searchDialogFragment) {
-            navController.navigateUp()
         }
     }
 }

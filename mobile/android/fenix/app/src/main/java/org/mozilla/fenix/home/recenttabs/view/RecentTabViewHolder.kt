@@ -50,7 +50,6 @@ class RecentTabViewHolder(
             recentTabs = recentTabs.value ?: emptyList(),
             backgroundColor = wallpaperState.wallpaperCardColor,
             onRecentTabClick = { recentTabInteractor.onRecentTabClicked(it) },
-            onRecentTabLongClick = { recentTabInteractor.onRecentTabLongClicked() },
             menuItems = listOf(
                 RecentTabMenuItem(
                     title = stringResource(id = R.string.recent_tab_menu_item_remove),

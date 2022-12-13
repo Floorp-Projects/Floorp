@@ -33,9 +33,4 @@ interface RecentBookmarksInteractor {
      * @param bookmark The bookmark that has been removed.
      */
     fun onRecentBookmarkRemoved(bookmark: RecentBookmark)
-
-    /**
-     * Called when the user long clicks a recent bookmark.
-     */
-    fun onRecentBookmarkLongClicked()
 }

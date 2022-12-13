@@ -162,6 +162,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     }
 
     @SuppressWarnings("LongMethod")
+    @SuppressLint("ClickableViewAccessibility")
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -266,7 +267,6 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 binding.searchWrapper.background = ColorDrawable(Color.TRANSPARENT)
                 dialog?.window?.decorView?.setOnTouchListener { _, event ->
                     requireActivity().dispatchTouchEvent(event)
-                    // toolbarView.view.displayMode()
                     false
                 }
             }

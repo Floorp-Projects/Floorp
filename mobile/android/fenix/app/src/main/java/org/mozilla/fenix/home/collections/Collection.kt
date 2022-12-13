@@ -62,17 +62,15 @@ private val expandedCollectionShape = RoundedCornerShape(topStart = 8.dp, topEnd
  * @param menuItems List of [CollectionMenuItem] to be shown in a menu.
  * @param onToggleCollectionExpanded Invoked when the user clicks on the collection.
  * @param onCollectionShareTabsClicked Invoked when the user clicks to share the collection.
- * @param onCollectionMenuOpened Invoked when the user clicks to open a menu for the collection.
  */
 @Composable
-@Suppress("LongParameterList", "LongMethod")
+@Suppress("LongMethod")
 fun Collection(
     collection: TabCollection,
     expanded: Boolean,
     menuItems: List<CollectionMenuItem>,
     onToggleCollectionExpanded: (TabCollection, Boolean) -> Unit,
     onCollectionShareTabsClicked: (TabCollection) -> Unit,
-    onCollectionMenuOpened: () -> Unit,
 ) {
     var isMenuExpanded by remember(collection) { mutableStateOf(false) }
     val isExpanded by remember(collection) { mutableStateOf(expanded) }
@@ -131,7 +129,6 @@ fun Collection(
                         IconButton(
                             onClick = {
                                 isMenuExpanded = !isMenuExpanded
-                                onCollectionMenuOpened()
                             },
                         ) {
                             Icon(
@@ -165,7 +162,6 @@ private fun CollectionDarkPreview() {
             menuItems = emptyList(),
             onToggleCollectionExpanded = { _, _ -> },
             onCollectionShareTabsClicked = {},
-            onCollectionMenuOpened = {},
         )
     }
 }
@@ -180,7 +176,6 @@ private fun CollectionDarkExpandedPreview() {
             menuItems = emptyList(),
             onToggleCollectionExpanded = { _, _ -> },
             onCollectionShareTabsClicked = {},
-            onCollectionMenuOpened = {},
         )
     }
 }
@@ -195,7 +190,6 @@ private fun CollectionLightPreview() {
             menuItems = emptyList(),
             onToggleCollectionExpanded = { _, _ -> },
             onCollectionShareTabsClicked = {},
-            onCollectionMenuOpened = {},
         )
     }
 }
@@ -210,7 +204,6 @@ private fun CollectionLightExpandedPreview() {
             menuItems = emptyList(),
             onToggleCollectionExpanded = { _, _ -> },
             onCollectionShareTabsClicked = {},
-            onCollectionMenuOpened = {},
         )
     }
 }

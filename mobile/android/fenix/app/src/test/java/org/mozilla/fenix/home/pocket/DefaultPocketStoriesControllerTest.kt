@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.home.pocket
 
-import androidx.navigation.NavController
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -28,7 +27,6 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.Pocket
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppState
@@ -53,7 +51,7 @@ class DefaultPocketStoriesControllerTest {
                 ),
             ),
         )
-        val controller = DefaultPocketStoriesController(mockk(), store, mockk())
+        val controller = DefaultPocketStoriesController(mockk(), store)
         assertNull(Pocket.homeRecsCategoryClicked.testGetValue())
 
         controller.handleCategoryClick(category2)
@@ -98,7 +96,7 @@ class DefaultPocketStoriesControllerTest {
                 ),
             ),
         )
-        val controller = DefaultPocketStoriesController(mockk(), store, mockk())
+        val controller = DefaultPocketStoriesController(mockk(), store)
         assertNull(Pocket.homeRecsCategoryClicked.testGetValue())
 
         controller.handleCategoryClick(PocketRecommendedStoriesCategory(newSelectedCategory.name))
@@ -142,7 +140,7 @@ class DefaultPocketStoriesControllerTest {
             ),
         )
         val newSelectedCategoryName = "newSelectedCategory"
-        val controller = DefaultPocketStoriesController(mockk(), store, mockk())
+        val controller = DefaultPocketStoriesController(mockk(), store)
 
         controller.handleCategoryClick(PocketRecommendedStoriesCategory(newSelectedCategoryName))
 
@@ -163,7 +161,7 @@ class DefaultPocketStoriesControllerTest {
     @Test
     fun `WHEN a new recommended story is shown THEN update the State`() {
         val store = spyk(AppStore())
-        val controller = DefaultPocketStoriesController(mockk(), store, mockk())
+        val controller = DefaultPocketStoriesController(mockk(), store)
         val storyShown: PocketRecommendedStory = mockk()
         val storyGridLocation = 1 to 2
 
@@ -175,7 +173,7 @@ class DefaultPocketStoriesControllerTest {
     @Test
     fun `WHEN a new sponsored story is shown THEN update the State and record telemetry`() {
         val store = spyk(AppStore())
-        val controller = DefaultPocketStoriesController(mockk(), store, mockk())
+        val controller = DefaultPocketStoriesController(mockk(), store)
         val storyShown: PocketSponsoredStory = mockk {
             every { shim.click } returns "testClickShim"
             every { shim.impression } returns "testImpressionShim"
@@ -206,7 +204,7 @@ class DefaultPocketStoriesControllerTest {
     @Test
     fun `WHEN new stories are shown THEN update the State and record telemetry`() {
         val store = spyk(AppStore())
-        val controller = DefaultPocketStoriesController(mockk(), store, mockk())
+        val controller = DefaultPocketStoriesController(mockk(), store)
         val storiesShown: List<PocketStory> = mockk()
         assertNull(Pocket.homeRecsShown.testGetValue())
 
@@ -230,7 +228,7 @@ class DefaultPocketStoriesControllerTest {
             timesShown = 123,
         )
         val homeActivity: HomeActivity = mockk(relaxed = true)
-        val controller = DefaultPocketStoriesController(homeActivity, mockk(), mockk(relaxed = true))
+        val controller = DefaultPocketStoriesController(homeActivity, mockk())
         assertNull(Pocket.homeRecsStoryClicked.testGetValue())
 
         controller.handleStoryClicked(story, 1 to 2)
@@ -262,7 +260,7 @@ class DefaultPocketStoriesControllerTest {
             caps = mockk(relaxed = true),
         )
         val homeActivity: HomeActivity = mockk(relaxed = true)
-        val controller = DefaultPocketStoriesController(homeActivity, mockk(), mockk(relaxed = true))
+        val controller = DefaultPocketStoriesController(homeActivity, mockk())
         var wasPingSent = false
         assertNull(Pocket.homeRecsSpocClicked.testGetValue())
         mockkStatic("mozilla.components.service.pocket.ext.PocketStoryKt") {
@@ -291,7 +289,7 @@ class DefaultPocketStoriesControllerTest {
     fun `WHEN discover more is clicked then open that using HomeActivity and record telemetry`() {
         val link = "http://getpocket.com/explore"
         val homeActivity: HomeActivity = mockk(relaxed = true)
-        val controller = DefaultPocketStoriesController(homeActivity, mockk(), mockk(relaxed = true))
+        val controller = DefaultPocketStoriesController(homeActivity, mockk())
         assertNull(Pocket.homeRecsDiscoverClicked.testGetValue())
 
         controller.handleDiscoverMoreClicked(link)
@@ -306,7 +304,7 @@ class DefaultPocketStoriesControllerTest {
     fun `WHEN learn more is clicked then open that using HomeActivity and record telemetry`() {
         val link = "https://www.mozilla.org/en-US/firefox/pocket/"
         val homeActivity: HomeActivity = mockk(relaxed = true)
-        val controller = DefaultPocketStoriesController(homeActivity, mockk(), mockk(relaxed = true))
+        val controller = DefaultPocketStoriesController(homeActivity, mockk())
         assertNull(Pocket.homeRecsLearnMoreClicked.testGetValue())
 
         controller.handleLearnMoreClicked(link)
@@ -317,79 +315,41 @@ class DefaultPocketStoriesControllerTest {
     }
 
     @Test
-    fun `WHEN a story is clicked THEN search is dismissed and then its link opened`() {
+    fun `WHEN a story is clicked THEN its link is opened`() {
         val story = PocketRecommendedStory("", "url", "", "", "", 0, 0)
         val homeActivity: HomeActivity = mockk(relaxed = true)
-        val navController: NavController = mockk(relaxed = true)
-        every { navController.currentDestination } returns mockk {
-            every { id } returns R.id.searchDialogFragment
-        }
-        val controller = DefaultPocketStoriesController(homeActivity, mockk(), navController)
+        val controller = DefaultPocketStoriesController(homeActivity, mockk())
 
         controller.handleStoryClicked(story, 1 to 2)
 
         verifyOrder {
-            navController.navigateUp()
             homeActivity.openToBrowserAndLoad(story.url, true, BrowserDirection.FromHome)
         }
     }
 
     @Test
-    fun `WHEN discover more is clicked THEN search is dismissed and then its link opened`() {
+    fun `WHEN discover more is clicked THEN its link is opened`() {
         val link = "https://discoverMore.link"
         val homeActivity: HomeActivity = mockk(relaxed = true)
-        val navController: NavController = mockk(relaxed = true)
-        every { navController.currentDestination } returns mockk {
-            every { id } returns R.id.searchDialogFragment
-        }
-        val controller = DefaultPocketStoriesController(homeActivity, mockk(), navController)
+        val controller = DefaultPocketStoriesController(homeActivity, mockk())
 
         controller.handleDiscoverMoreClicked(link)
 
         verifyOrder {
-            navController.navigateUp()
             homeActivity.openToBrowserAndLoad(link, true, BrowserDirection.FromHome)
         }
     }
 
     @Test
-    fun `WHEN learn more link is clicked THEN search is dismissed and then that link is opened`() {
+    fun `WHEN learn more link is clicked THEN that link is opened`() {
         val link = "https://learnMore.link"
         val homeActivity: HomeActivity = mockk(relaxed = true)
-        val navController: NavController = mockk(relaxed = true)
-        every { navController.currentDestination } returns mockk {
-            every { id } returns R.id.searchDialogFragment
-        }
-        val controller = DefaultPocketStoriesController(homeActivity, mockk(), navController)
+        val controller = DefaultPocketStoriesController(homeActivity, mockk())
 
         controller.handleLearnMoreClicked(link)
 
         verifyOrder {
-            navController.navigateUp()
             homeActivity.openToBrowserAndLoad(link, true, BrowserDirection.FromHome)
         }
-    }
-
-    @Test
-    fun `GIVEN search dialog is currently focused WHEN dismissSearchDialogIfDisplayed is called THEN close the search dialog`() {
-        val navController: NavController = mockk(relaxed = true)
-        every { navController.currentDestination } returns mockk {
-            every { id } returns R.id.searchDialogFragment
-        }
-        val controller = DefaultPocketStoriesController(mockk(), mockk(), navController)
-
-        controller.dismissSearchDialogIfDisplayed()
-
-        verify { navController.navigateUp() }
-    }
-
-    @Test
-    fun `GIVEN search dialog is not currently focused WHEN dismissSearchDialogIfDisplayed is called THEN do nothing`() {
-        val navController: NavController = mockk(relaxed = true)
-        val controller = DefaultPocketStoriesController(mockk(), mockk(), navController)
-
-        controller.dismissSearchDialogIfDisplayed()
-
-        verify(exactly = 0) { navController.navigateUp() }
     }
 }

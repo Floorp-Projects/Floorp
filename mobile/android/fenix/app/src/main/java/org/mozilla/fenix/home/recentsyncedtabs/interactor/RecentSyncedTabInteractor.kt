@@ -18,11 +18,6 @@ interface RecentSyncedTabInteractor {
     fun onRecentSyncedTabClicked(tab: RecentSyncedTab)
 
     /**
-     * Called when opening the dropdown menu on a recent synced tab by long press.
-     */
-    fun onRecentSyncedTabLongClick()
-
-    /**
      * Opens the tabs tray to the synced tab page. Called when a user clicks on the "See all synced
      * tabs" button.
      */

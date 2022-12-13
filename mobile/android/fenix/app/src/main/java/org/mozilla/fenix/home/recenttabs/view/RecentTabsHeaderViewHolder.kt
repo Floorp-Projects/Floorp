@@ -14,7 +14,6 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LifecycleOwner
-import androidx.navigation.findNavController
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.compose.home.HomeSectionHeader
@@ -37,13 +36,6 @@ class RecentTabsHeaderViewHolder(
         composeView.setPadding(horizontalPadding, 0, horizontalPadding, 0)
     }
 
-    private fun dismissSearchDialogIfDisplayed() {
-        val navController = itemView.findNavController()
-        if (navController.currentDestination?.id == R.id.searchDialogFragment) {
-            navController.navigateUp()
-        }
-    }
-
     @Composable
     override fun Content() {
         Column {
@@ -53,7 +45,6 @@ class RecentTabsHeaderViewHolder(
                 headerText = stringResource(R.string.recent_tabs_header),
                 description = stringResource(R.string.recent_tabs_show_all_content_description_2),
                 onShowAllClick = {
-                    dismissSearchDialogIfDisplayed()
                     interactor.onRecentTabShowAllClicked()
                 },
             )

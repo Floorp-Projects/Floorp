@@ -120,11 +120,4 @@ class RecentVisitsInteractorTest {
 
         verify { recentVisitsController.handleRemoveRecentHistoryHighlight("url") }
     }
-
-    @Test
-    fun onRecentVisitLongClicked() {
-        interactor.onRecentVisitLongClicked()
-
-        verify { recentVisitsController.handleRecentVisitLongClicked() }
-    }
 }

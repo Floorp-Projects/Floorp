@@ -67,7 +67,6 @@ class CollectionViewHolder(
                     menuItems = menuItems,
                     onToggleCollectionExpanded = interactor::onToggleCollectionExpanded,
                     onCollectionShareTabsClicked = interactor::onCollectionShareTabsClicked,
-                    onCollectionMenuOpened = interactor::onCollectionMenuOpened,
                 )
             }
         }

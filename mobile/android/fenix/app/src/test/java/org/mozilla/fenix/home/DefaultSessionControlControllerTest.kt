@@ -43,7 +43,6 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -57,7 +56,6 @@ import org.mozilla.fenix.GleanMetrics.RecentTabs
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.Analytics
 import org.mozilla.fenix.components.AppStore
@@ -1047,33 +1045,6 @@ class DefaultSessionControlControllerTest {
     }
 
     @Test
-    @Ignore("Can't instantiate proxy for class kotlin.Function0")
-    fun handleMenuOpenedWhileSearchShowing() {
-        every { navController.currentDestination } returns mockk {
-            every { id } returns R.id.searchDialogFragment
-        }
-
-        createController().handleMenuOpened()
-
-        verify {
-            navController.navigateUp()
-        }
-    }
-
-    @Test
-    fun handleMenuOpenedWhileSearchNotShowing() {
-        every { navController.currentDestination } returns mockk {
-            every { id } returns R.id.homeFragment
-        }
-
-        createController().handleMenuOpened()
-
-        verify(exactly = 0) {
-            navController.navigateUp()
-        }
-    }
-
-    @Test
     fun `WHEN private mode button is selected from home THEN handle mode change`() {
         every { navController.currentDestination } returns mockk {
             every { id } returns R.id.homeFragment
@@ -1117,11 +1088,6 @@ class DefaultSessionControlControllerTest {
         verify {
             settings.incrementNumTimesPrivateModeOpened()
             AppAction.ModeChange(Mode.fromBrowsingMode(newMode))
-            navController.navigate(
-                BrowserFragmentDirections.actionGlobalSearchDialog(
-                    sessionId = null,
-                ),
-            )
         }
     }
 
@@ -1149,11 +1115,8 @@ class DefaultSessionControlControllerTest {
             settings.incrementNumTimesPrivateModeOpened()
         }
         verify {
-            AppAction.ModeChange(Mode.fromBrowsingMode(newMode))
-            navController.navigate(
-                BrowserFragmentDirections.actionGlobalSearchDialog(
-                    sessionId = null,
-                ),
+            appStore.dispatch(
+                AppAction.ModeChange(Mode.fromBrowsingMode(newMode)),
             )
         }
     }

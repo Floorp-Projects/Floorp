@@ -81,7 +81,6 @@ fun RecentTabs(
     menuItems: List<RecentTabMenuItem>,
     backgroundColor: Color = FirefoxTheme.colors.layer2,
     onRecentTabClick: (String) -> Unit = {},
-    onRecentTabLongClick: () -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -100,7 +99,6 @@ fun RecentTabs(
                         menuItems = menuItems,
                         backgroundColor = backgroundColor,
                         onRecentTabClick = onRecentTabClick,
-                        onRecentTabLongClick = onRecentTabLongClick,
                     )
                 }
             }
@@ -126,7 +124,6 @@ private fun RecentTabItem(
     menuItems: List<RecentTabMenuItem>,
     backgroundColor: Color,
     onRecentTabClick: (String) -> Unit = {},
-    onRecentTabLongClick: () -> Unit = {},
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
 
@@ -137,10 +134,7 @@ private fun RecentTabItem(
             .combinedClickable(
                 enabled = true,
                 onClick = { onRecentTabClick(tab.state.id) },
-                onLongClick = {
-                    onRecentTabLongClick()
-                    isMenuExpanded = true
-                },
+                onLongClick = { isMenuExpanded = true },
             ),
         shape = RoundedCornerShape(8.dp),
         backgroundColor = backgroundColor,

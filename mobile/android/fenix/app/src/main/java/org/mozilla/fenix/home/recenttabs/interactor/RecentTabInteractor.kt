@@ -18,11 +18,6 @@ interface RecentTabInteractor {
     fun onRecentTabClicked(tabId: String)
 
     /**
-     * Called when the user long clicks on a recent tab.
-     */
-    fun onRecentTabLongClicked()
-
-    /**
      * Show the tabs tray. Called when a user clicks on the "Show all" button besides the recent
      * tabs.
      */

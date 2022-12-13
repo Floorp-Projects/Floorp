@@ -26,11 +26,6 @@ interface RecentSyncedTabController {
     fun handleRecentSyncedTabClick(tab: RecentSyncedTab)
 
     /**
-     * @see [RecentSyncedTabInteractor.onRecentSyncedTabLongClick]
-     */
-    fun handleRecentSyncedTabLongClick()
-
-    /**
      * @see [RecentSyncedTabInteractor.onRecentSyncedTabClicked]
      */
     fun handleSyncedTabShowAllClicked()
@@ -69,12 +64,6 @@ class DefaultRecentSyncedTabController(
                 accessPoint = accessPoint,
             ),
         )
-    }
-
-    override fun handleRecentSyncedTabLongClick() {
-        if (navController.currentDestination?.id == R.id.searchDialogFragment) {
-            navController.navigateUp()
-        }
     }
 
     override fun handleRecentSyncedTabRemoved(tab: RecentSyncedTab) {
