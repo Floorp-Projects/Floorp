@@ -39,6 +39,12 @@ add_task(async () => {
           format: "file-path",
           searchable: true,
         },
+        {
+          key: "threadId",
+          label: "Thread ID",
+          format: "string",
+          searchable: true,
+        },
       ],
     });
   }
