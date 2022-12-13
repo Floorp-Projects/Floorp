@@ -135,4 +135,55 @@ promise_test(async t => {
   assert_array_equals(scaleDownByValues, [2]);
 }, 'sRD(simulcast offer) can narrow the simulcast envelope from a previous negotiation');
 
+// https://github.com/w3c/webrtc-pc/issues/2780
+promise_test(async t => {
+  const pc1 = new RTCPeerConnection();
+  t.add_cleanup(() => pc1.close());
+  const pc2 = new RTCPeerConnection();
+  t.add_cleanup(() => pc2.close());
+
+  const stream = await getNoiseStream({video: true});
+  t.add_cleanup(() => stream.getTracks().forEach(track => track.stop()));
+  const sender = pc1.addTrack(stream.getTracks()[0]);
+  pc2.addTrack(stream.getTracks()[0]);
+
+  await doOfferToRecvSimulcastAndAnswer(pc2, pc1, ["foo", "bar", "foo"]);
+  assert_equals(pc1.getTransceivers().length, 1);
+  let {encodings} = sender.getParameters();
+  let rids = encodings.map(({rid}) => rid);
+  assert_array_equals(rids, [undefined]);
+  assert_true(pc1.remoteDescription.sdp.includes("a=simulcast:recv foo;bar;foo"), "Duplicate rids should be present in offer");
+  assert_false(pc1.localDescription.sdp.includes("a=simulcast:send foo;bar;foo"), "Duplicate rids should not be present in answer");
+  assert_true(pc1.localDescription.sdp.includes("a=simulcast:send foo;bar"), "Answer should use the correct rids");
+  assert_equals(pc1.getTransceivers().length, 1);
+  encodings = sender.getParameters().encodings;
+  rids = encodings.map(({rid}) => rid);
+  assert_array_equals(rids, [undefined]);
+}, 'Duplicate rids in sRD(offer) are ignored');
+
+// https://github.com/w3c/webrtc-pc/issues/2769
+promise_test(async t => {
+  const pc1 = new RTCPeerConnection();
+  t.add_cleanup(() => pc1.close());
+  const pc2 = new RTCPeerConnection();
+  t.add_cleanup(() => pc2.close());
+
+  const stream = await getNoiseStream({video: true});
+  t.add_cleanup(() => stream.getTracks().forEach(track => track.stop()));
+  const sender = pc1.addTrack(stream.getTracks()[0]);
+  pc2.addTrack(stream.getTracks()[0]);
+
+  await doOfferToRecvSimulcastAndAnswer(pc2, pc1, ["foo,bar", "1,2"]);
+  assert_equals(pc1.getTransceivers().length, 1);
+  let {encodings} = sender.getParameters();
+  let rids = encodings.map(({rid}) => rid);
+  assert_array_equals(rids, ["foo", "1"]);
+  assert_true(pc1.remoteDescription.sdp.includes("a=simulcast:recv foo,bar;1,2"), "Choices of rids should be present in offer");
+  assert_true(pc1.localDescription.sdp.includes("a=simulcast:send foo;1\r\n"), "Choices of rids should not be present in answer");
+  assert_equals(pc1.getTransceivers().length, 1);
+  encodings = sender.getParameters().encodings;
+  rids = encodings.map(({rid}) => rid);
+  assert_array_equals(rids, ["foo", "1"]);
+}, 'Choices in rids in sRD(offer) are ignored');
+
 </script>
