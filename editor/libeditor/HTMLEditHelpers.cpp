@@ -122,6 +122,11 @@ bool EditorInlineStyle::IsRepresentedBy(const nsIContent& aContent) const {
        HTMLEditUtils::IsNamedAnchor(&element))) {
     return true;
   }
+  // If the style is font size, it's also represented by <big> or <small>.
+  if (mHTMLProperty == nsGkAtoms::font && mAttribute == nsGkAtoms::size &&
+      aContent.IsAnyOfHTMLElements(nsGkAtoms::big, nsGkAtoms::small)) {
+    return true;
+  }
   return false;
 }
 
