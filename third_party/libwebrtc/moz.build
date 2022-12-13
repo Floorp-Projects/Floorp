@@ -447,7 +447,6 @@ DIRS += [
     "/third_party/libwebrtc/third_party/rnnoise/rnn_vad_gn",
     "/third_party/libwebrtc/video/adaptation/video_adaptation_gn",
     "/third_party/libwebrtc/video/decode_synchronizer_gn",
-    "/third_party/libwebrtc/video/frame_buffer_proxy_gn",
     "/third_party/libwebrtc/video/frame_cadence_adapter_gn",
     "/third_party/libwebrtc/video/frame_decode_scheduler_gn",
     "/third_party/libwebrtc/video/frame_decode_timing_gn",
@@ -456,6 +455,7 @@ DIRS += [
     "/third_party/libwebrtc/video/unique_timestamp_counter_gn",
     "/third_party/libwebrtc/video/video_gn",
     "/third_party/libwebrtc/video/video_receive_stream_timeout_tracker_gn",
+    "/third_party/libwebrtc/video/video_stream_buffer_controller_gn",
     "/third_party/libwebrtc/video/video_stream_encoder_impl_gn",
     "/third_party/libwebrtc/webrtc_gn"
 ]
