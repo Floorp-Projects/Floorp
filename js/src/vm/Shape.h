@@ -32,51 +32,85 @@
 //
 // A Shape represents the layout of an object. It stores and implies:
 //
-//  * The object's JSClass, Realm, prototype (see BaseShape).
-//  * For native objects, the object's properties (PropMap and map length).
-//  * The fixed slot capacity of the object (numFixedSlots).
+//  * The object's JSClass, Realm, prototype (see BaseShape section below).
 //  * The object's flags (ObjectFlags).
+//  * For native objects, the object's properties (PropMap and map length).
+//  * For native objects, the fixed slot capacity of the object (numFixedSlots).
 //
-// The shape implies the property structure (keys, attributes, property order
-// for enumeration) but not the property values. The values are stored in object
-// slots.
+// For native objects, the shape implies the property structure (keys,
+// attributes, property order for enumeration) but not the property values.
+// The values are stored in object slots.
 //
 // Every JSObject has a pointer, |shape_|, accessible via shape(), to the
 // current shape of the object. This pointer permits fast object layout tests.
 //
-// There are two kinds of shapes:
+// Shapes use the following C++ class hierarchy:
 //
-// * Shared shapes. Either initial shapes (no property map) or SharedPropMap
-//   shapes (for native objects with properties).
+// C++ Type                     Used by
+// ============================ ====================================
+// Shape (abstract)             JSObject
+//  |
+//  +-- NativeShape (abstract)  NativeObject
+//  |    |
+//  |    +-- SharedShape        NativeObject with a shared shape
+//  |    |
+//  |    +-- DictionaryShape    NativeObject with a dictionary shape
+//  |
+//  +-- ProxyShape              ProxyObject
+//  |
+//  +-- WasmGCShape             WasmGCObject
 //
-//   These are immutable tuples stored in a hash table, so that objects with the
-//   same structure end up with the same shape (this both saves memory and
-//   allows JIT optimizations based on this shape).
+// Classes marked with (abstract) above are not literally C++ Abstract Base
+// Classes (since there are no virtual functions, pure or not, in this
+// hierarchy), but have the same meaning: there are no shapes with this type as
+// its most-derived type.
 //
-//   To avoid hash table lookups on the hot addProperty path, shapes have a
-//   ShapeCachePtr that's used as cache for this. This cache is purged on GC.
-//   The shape cache is also used as cache for prototype shapes, to point to the
-//   initial shape for objects using that shape, and for cached iterators.
+// SharedShape
+// ===========
+// Used only for native objects. This is either an initial shape (no property
+// map) or SharedPropMap shape (for objects with at least one property).
 //
-// * Dictionary shapes. Used only for native objects. An object with a
-//   dictionary shape is "in dictionary mode". Certain property operations
-//   are not supported for shared maps so in these cases we need to convert the
-//   object to dictionary mode by creating a dictionary property map and a
-//   dictionary shape. An object is converted to dictionary mode in the
-//   following cases:
+// These are immutable tuples stored in a hash table, so that objects with the
+// same structure end up with the same shape (this both saves memory and allows
+// JIT optimizations based on this shape).
 //
-//   - Changing a property's flags/attributes and the property is not the last
-//     property.
-//   - Removing a property other than the object's last property.
-//   - The object has many properties. See maybeConvertToDictionaryForAdd for
-//     the heuristics.
+// To avoid hash table lookups on the hot addProperty path, shapes have a
+// ShapeCachePtr that's used as cache for this. This cache is purged on GC.
+// The shape cache is also used as cache for prototype shapes, to point to the
+// initial shape for objects using that shape, and for cached iterators.
 //
-//   Dictionary shapes are unshared, private to a single object, and always have
-//   a DictionaryPropMap that's similarly unshared. Dictionary shape mutations
-//   do require allocating a new dictionary shape for the object, to properly
-//   invalidate JIT inline caches and other shape guards.
-//   See NativeObject::generateNewDictionaryShape.
+// DictionaryShape
+// ===============
+// Used only for native objects. An object with a dictionary shape is "in
+// dictionary mode". Certain property operations are not supported for shared
+// maps so in these cases we need to convert the object to dictionary mode by
+// creating a dictionary property map and a dictionary shape. An object is
+// converted to dictionary mode in the following cases:
 //
+// - Changing a property's flags/attributes and the property is not the last
+//   property.
+// - Removing a property other than the object's last property.
+// - The object has many properties. See maybeConvertToDictionaryForAdd for the
+//   heuristics.
+//
+// Dictionary shapes are unshared, private to a single object, and always have a
+// a DictionaryPropMap that's similarly unshared. Dictionary shape mutations do
+// require allocating a new dictionary shape for the object, to properly
+// invalidate JIT inline caches and other shape guards.
+// See NativeObject::generateNewDictionaryShape.
+//
+// ProxyShape
+// ==========
+// Shape used for proxy objects (including wrappers). Proxies with the same
+// JSClass, Realm, prototype and ObjectFlags will have the same shape.
+//
+// WasmGCShape
+// ===========
+// Shape used for Wasm GC objects. Wasm GC objects with the same JSClass, Realm,
+// prototype and ObjectFlags will have the same shape.
+//
+// BaseShape
+// =========
 // Because many Shapes have similar data, there is actually a secondary type
 // called a BaseShape that holds some of a Shape's data (the JSClass, Realm,
 // prototype). Many shapes can share a single BaseShape.
@@ -282,9 +316,9 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   // compilation can access the immutableFlags word, so we don't want any
   // mutable state here to avoid (TSan) races.
   enum ImmutableFlags : uint32_t {
-    // The length associated with the property map. This is a value in the range
-    // [0, PropMap::Capacity]. A length of 0 indicates the object is empty (has
-    // no properties).
+    // For NativeShape: the length associated with the property map. This is a
+    // value in the range [0, PropMap::Capacity]. A length of 0 indicates the
+    // object is empty (has no properties).
     MAP_LENGTH_MASK = BitMask(4),
 
     // The Shape Kind. The NativeObject kinds have the low bit set.
@@ -292,14 +326,14 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
     KIND_MASK = 0b11,
     IS_NATIVE_BIT = 0x1 << KIND_SHIFT,
 
-    // Number of fixed slots in objects with this shape.
+    // For NativeShape: the number of fixed slots in objects with this shape.
     // FIXED_SLOTS_MAX is the biggest count of fixed slots a Shape can store.
     FIXED_SLOTS_MAX = 0x1f,
     FIXED_SLOTS_SHIFT = 6,
     FIXED_SLOTS_MASK = uint32_t(FIXED_SLOTS_MAX << FIXED_SLOTS_SHIFT),
 
-    // For non-dictionary shapes: the slot span of the object, if it fits in a
-    // single byte. If the value is SMALL_SLOTSPAN_MAX, the slot span has to be
+    // For SharedShape: the slot span of the object, if it fits in a single
+    // byte. If the value is SMALL_SLOTSPAN_MAX, the slot span has to be
     // computed based on the property map (which is slower).
     //
     // Note: NativeObject::addProperty will convert to dictionary mode before we
@@ -313,9 +347,9 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   uint32_t immutableFlags;   // Immutable flags, see above.
   ObjectFlags objectFlags_;  // Immutable object flags, see ObjectFlags.
 
-  // The shape's property map. This is either nullptr for shared initial (empty)
-  // shapes, a SharedPropMap for SharedPropMap shapes, or a DictionaryPropMap
-  // for dictionary shapes.
+  // For NativeShape: the shape's property map. This is either nullptr (for an
+  // initial SharedShape with no properties), a SharedPropMap (for SharedShape)
+  // or a DictionaryPropMap (for DictionaryShape).
   GCPtr<PropMap*> nativePropMap_;
 
   // Cache used to speed up common operations on shapes.
