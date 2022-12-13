@@ -173,14 +173,14 @@ export class MigratorBase {
   }
 
   /**
-   * DO NOT OVERRIDE - After deCOMing migration, the UI will just call
-   * getResources.
-   *
+   * This method returns a number that is the bitwise OR of all resource
+   * types that are available in aProfile. See MigrationUtils.resourceTypes
+   * for each resource type.
    *
    * @param {object|string} aProfile
    *   The profile from which data may be imported, or an empty string
    *   in the case of a single-profile migrator.
-   * @returns {MigratorResource[]}
+   * @returns {number}
    */
   async getMigrateData(aProfile) {
     let resources = await this.#getMaybeCachedResources(aProfile);
@@ -195,9 +195,6 @@ export class MigratorBase {
   }
 
   /**
-   * DO NOT OVERRIDE - After deCOMing migration, the UI will just call
-   * migrate for each resource.
-   *
    * @see MigrationUtils
    *
    * @param {number} aItems
@@ -436,8 +433,12 @@ export class MigratorBase {
   }
 
   /**
-   * DO NOT OVERRIDE - After deCOMing migration, this code
-   * won't be part of the migrator itself.
+   * Checks to see if one or more profiles exist for the browser that this
+   * migrator migrates from.
+   *
+   * @returns {Promise<boolean>}
+   *   True if one or more profiles exists that this migrator can migrate
+   *   resources from.
    */
   async isSourceAvailable() {
     if (this.startupOnlyMigrator && !lazy.MigrationUtils.isStartupMigration) {
