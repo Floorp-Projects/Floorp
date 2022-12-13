@@ -15,11 +15,11 @@ import androidx.activity.result.ActivityResultLauncher
 import mozilla.components.feature.search.widget.BaseVoiceSearchActivity
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.utils.Browsers
+import mozilla.components.support.utils.ManufacturerCodes
 import mozilla.components.support.utils.ext.navigateToDefaultBrowserAppsSettings
 import org.mozilla.focus.ext.settings
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.AppStore
-import org.mozilla.focus.utils.ManufacturerCodes
 import org.mozilla.focus.utils.SupportUtils
 
 interface OnboardingController {
