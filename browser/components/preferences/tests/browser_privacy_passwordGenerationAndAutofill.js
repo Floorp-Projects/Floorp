@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
 add_task(async function initialState() {
   // check pref permutations to verify the UI opens in the correct state
   const prefTests = [

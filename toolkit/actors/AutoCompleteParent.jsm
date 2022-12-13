@@ -326,7 +326,8 @@ class AutoCompleteParent extends JSWindowActorParent {
     // Add counts by result style to rawExtraData.
     results.reduce((accumulated, r) => {
       // Ignore learn more as it is only added after importable logins.
-      if (r.style === "importableLearnMore") {
+      // Do not track generic items in the telemetry.
+      if (r.style === "importableLearnMore" || r.style === "generic") {
         return accumulated;
       }
 
