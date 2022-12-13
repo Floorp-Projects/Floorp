@@ -705,12 +705,12 @@ async function promiseRequestDevice(
   );
 }
 
-async function promiseRequestAudioOutput() {
+async function promiseRequestAudioOutput(options) {
   info("requesting audio output");
   const bc = gBrowser.selectedBrowser;
-  return SpecialPowers.spawn(bc, [], async function() {
+  return SpecialPowers.spawn(bc, [options], async function(opts) {
     const global = content.wrappedJSObject;
-    global.requestAudioOutput();
+    global.requestAudioOutput(Cu.cloneInto(opts, content));
   });
 }
 
