@@ -665,16 +665,16 @@ nsresult ProtocolParserV2::ProcessHostSubComplete(uint8_t aNumEntries,
   }
 
   for (uint8_t i = 0; i < aNumEntries; i++) {
-    Completion hash;
-    hash.Assign(Substring(aChunk, *aStart, COMPLETE_SIZE));
-    *aStart += COMPLETE_SIZE;
-
     const nsACString& addChunkStr = Substring(aChunk, *aStart, 4);
     *aStart += 4;
 
     uint32_t addChunk;
     memcpy(&addChunk, addChunkStr.BeginReading(), 4);
     addChunk = PR_ntohl(addChunk);
+
+    Completion hash;
+    hash.Assign(Substring(aChunk, *aStart, COMPLETE_SIZE));
+    *aStart += COMPLETE_SIZE;
 
     nsresult rv = mTableUpdate->NewSubComplete(addChunk, hash, mChunkState.num);
     if (NS_FAILED(rv)) {
