@@ -1776,7 +1776,7 @@ class EditorBase : public nsIEditor,
    * @param aElement        Element node which will lose aAttribute.
    * @param aAttribute      Attribute name to be removed from aElement.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   RemoveAttributeWithTransaction(Element& aElement, nsAtom& aAttribute);
 
   MOZ_CAN_RUN_SCRIPT virtual nsresult RemoveAttributeOrEquivalent(
