@@ -35,7 +35,7 @@ const TEST_OVERRIDES = {
 };
 
 add_task(async function init() {
-  await QuickSuggestTestUtils.initNimbusFeature();
+  await UrlbarTestUtils.initNimbusFeature();
 });
 
 // The following tasks test OFFLINE TO OFFLINE

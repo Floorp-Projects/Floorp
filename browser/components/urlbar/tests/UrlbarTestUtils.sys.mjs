@@ -28,6 +28,10 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
   BrowserUIUtils: "resource:///modules/BrowserUIUtils.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
+  ExperimentFakes: "resource://testing-common/NimbusTestUtils.jsm",
+  ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
 export var UrlbarTestUtils = {
@@ -59,6 +63,7 @@ export var UrlbarTestUtils = {
     if (scope) {
       this.Assert = scope.Assert;
       this.EventUtils = scope.EventUtils;
+      this.info = scope.info;
     }
     // If you add other properties to `this`, null them in uninit().
   },
@@ -876,6 +881,43 @@ export var UrlbarTestUtils = {
         throw error;
       }
     }
+  },
+
+  /**
+   * Enrolls in a mock Nimbus rollout.
+   *
+   * If you call UrlbarPrefs.updateFirefoxSuggestScenario() from an xpcshell
+   * test, you must call this first to intialize the Nimbus urlbar feature.
+   *
+   * @param {object} value
+   *   Define any desired Nimbus variables in this object.
+   * @returns {Function}
+   *   A cleanup function that will remove the mock rollout.
+   */
+  async initNimbusFeature(value = {}) {
+    this.info?.("initNimbusFeature awaiting ExperimentManager.onStartup");
+    await lazy.ExperimentManager.onStartup();
+
+    this.info?.("initNimbusFeature awaiting ExperimentAPI.ready");
+    await lazy.ExperimentAPI.ready();
+
+    this.info?.("initNimbusFeature awaiting ExperimentFakes.enrollWithRollout");
+    let doCleanup = await lazy.ExperimentFakes.enrollWithRollout({
+      featureId: lazy.NimbusFeatures.urlbar.featureId,
+      value: { enabled: true, ...value },
+    });
+
+    this.info?.("initNimbusFeature done");
+
+    this.registerCleanupFunction?.(() => {
+      // If `doCleanup()` has already been called (i.e., by the caller), it will
+      // throw an error here.
+      try {
+        doCleanup();
+      } catch (error) {}
+    });
+
+    return doCleanup;
   },
 };
 

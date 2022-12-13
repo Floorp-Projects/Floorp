@@ -46,7 +46,7 @@ const PREFS = [
 ];
 
 add_task(async function init() {
-  await QuickSuggestTestUtils.initNimbusFeature();
+  await UrlbarTestUtils.initNimbusFeature();
 });
 
 add_task(async function test() {
