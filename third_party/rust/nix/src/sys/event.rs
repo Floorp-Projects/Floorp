@@ -1,15 +1,15 @@
 /* TOOD: Implement for other kqueue based systems
  */
 
-use {Errno, Result};
+use crate::{Errno, Result};
 #[cfg(not(target_os = "netbsd"))]
 use libc::{timespec, time_t, c_int, c_long, intptr_t, uintptr_t};
 #[cfg(target_os = "netbsd")]
 use libc::{timespec, time_t, c_long, intptr_t, uintptr_t, size_t};
-use libc;
+use std::convert::TryInto;
+use std::mem;
 use std::os::unix::io::RawFd;
 use std::ptr;
-use std::mem;
 
 // Redefine kevent in terms of programmer-friendly enums and bitfields.
 #[repr(C)]
@@ -22,13 +22,8 @@ pub struct KEvent {
           target_os = "ios", target_os = "macos",
           target_os = "openbsd"))]
 type type_of_udata = *mut libc::c_void;
-#[cfg(any(target_os = "dragonfly", target_os = "freebsd",
-          target_os = "ios", target_os = "macos"))]
-type type_of_data = intptr_t;
 #[cfg(any(target_os = "netbsd"))]
 type type_of_udata = intptr_t;
-#[cfg(any(target_os = "netbsd", target_os = "openbsd"))]
-type type_of_data = libc::int64_t;
 
 #[cfg(target_os = "netbsd")]
 type type_of_event_filter = u32;
@@ -37,6 +32,7 @@ type type_of_event_filter = i16;
 libc_enum! {
     #[cfg_attr(target_os = "netbsd", repr(u32))]
     #[cfg_attr(not(target_os = "netbsd"), repr(i16))]
+    #[non_exhaustive]
     pub enum EventFilter {
         EVFILT_AIO,
         /// Returns whenever there is no remaining data in the write buffer
@@ -76,6 +72,7 @@ libc_enum! {
         EVFILT_VNODE,
         EVFILT_WRITE,
     }
+    impl TryFrom<type_of_event_filter>
 }
 
 #[cfg(any(target_os = "dragonfly", target_os = "freebsd",
@@ -90,14 +87,9 @@ libc_bitflags!{
         EV_CLEAR;
         EV_DELETE;
         EV_DISABLE;
-        // No released version of OpenBSD supports EV_DISPATCH or EV_RECEIPT.
-        // These have been commited to the -current branch though and are
-        // expected to be part of the OpenBSD 6.2 release in Nov 2017.
-        // See: https://marc.info/?l=openbsd-tech&m=149621427511219&w=2
-        // https://github.com/rust-lang/libc/pull/613
         #[cfg(any(target_os = "dragonfly", target_os = "freebsd",
                   target_os = "ios", target_os = "macos",
-                  target_os = "netbsd"))]
+                  target_os = "netbsd", target_os = "openbsd"))]
         EV_DISPATCH;
         #[cfg(target_os = "freebsd")]
         EV_DROP;
@@ -116,9 +108,8 @@ libc_bitflags!{
         EV_POLL;
         #[cfg(any(target_os = "dragonfly", target_os = "freebsd",
                   target_os = "ios", target_os = "macos",
-                  target_os = "netbsd"))]
+                  target_os = "netbsd", target_os = "openbsd"))]
         EV_RECEIPT;
-        EV_SYSFLAGS;
     }
 }
 
@@ -133,10 +124,6 @@ libc_bitflags!(
         NOTE_EOF;
         NOTE_EXEC;
         NOTE_EXIT;
-        #[cfg(any(target_os = "macos", target_os = "ios"))]
-        #[deprecated( since="0.14.0", note="Deprecated since OSX 10.9")]
-        #[allow(deprecated)]
-        NOTE_EXIT_REPARENTED;
         #[cfg(any(target_os = "macos", target_os = "ios"))]
         NOTE_EXITSTATUS;
         NOTE_EXTEND;
@@ -183,11 +170,6 @@ libc_bitflags!(
         NOTE_OOB;
         NOTE_PCTRLMASK;
         NOTE_PDATAMASK;
-        #[cfg(any(target_os = "macos", target_os = "ios"))]
-        #[cfg(any(target_os = "macos", target_os = "ios"))]
-        #[deprecated( since="0.14.0", note="Deprecated since OSX 10.9")]
-        #[allow(deprecated)]
-        NOTE_REAP;
         NOTE_RENAME;
         NOTE_REVOKE;
         #[cfg(any(target_os = "macos", target_os = "ios", target_os = "freebsd"))]
@@ -231,15 +213,18 @@ unsafe impl Send for KEvent {
 }
 
 impl KEvent {
+    #[allow(clippy::needless_update)]   // Not needless on all platforms.
     pub fn new(ident: uintptr_t, filter: EventFilter, flags: EventFlag,
                fflags:FilterFlag, data: intptr_t, udata: intptr_t) -> KEvent {
         KEvent { kevent: libc::kevent {
-            ident: ident,
+            ident,
             filter: filter as type_of_event_filter,
             flags: flags.bits(),
             fflags: fflags.bits(),
-            data: data as type_of_data,
-            udata: udata as type_of_udata
+            // data can be either i64 or intptr_t, depending on platform
+            data: data as _,
+            udata: udata as type_of_udata,
+            .. unsafe { mem::zeroed() }
         } }
     }
 
@@ -247,8 +232,8 @@ impl KEvent {
         self.kevent.ident
     }
 
-    pub fn filter(&self) -> EventFilter {
-        unsafe { mem::transmute(self.kevent.filter as type_of_event_filter) }
+    pub fn filter(&self) -> Result<EventFilter> {
+        self.kevent.filter.try_into()
     }
 
     pub fn flags(&self) -> EventFlag {
@@ -327,25 +312,35 @@ pub fn ev_set(ev: &mut KEvent,
 
 #[test]
 fn test_struct_kevent() {
+    use std::mem;
+
     let udata : intptr_t = 12345;
 
-    let expected = libc::kevent{ident: 0xdead_beef,
-                                filter: libc::EVFILT_READ,
-                                flags: libc::EV_ONESHOT | libc::EV_ADD,
-                                fflags: libc::NOTE_CHILD | libc::NOTE_EXIT,
-                                data: 0x1337,
-                                udata: udata as type_of_udata};
     let actual = KEvent::new(0xdead_beef,
                              EventFilter::EVFILT_READ,
                              EventFlag::EV_ONESHOT | EventFlag::EV_ADD,
                              FilterFlag::NOTE_CHILD | FilterFlag::NOTE_EXIT,
                              0x1337,
                              udata);
-    assert!(expected.ident == actual.ident());
-    assert!(expected.filter == actual.filter() as type_of_event_filter);
-    assert!(expected.flags == actual.flags().bits());
-    assert!(expected.fflags == actual.fflags().bits());
-    assert!(expected.data == actual.data() as type_of_data);
-    assert!(expected.udata == actual.udata() as type_of_udata);
-    assert!(mem::size_of::<libc::kevent>() == mem::size_of::<KEvent>());
+    assert_eq!(0xdead_beef, actual.ident());
+    let filter = actual.kevent.filter;
+    assert_eq!(libc::EVFILT_READ, filter);
+    assert_eq!(libc::EV_ONESHOT | libc::EV_ADD, actual.flags().bits());
+    assert_eq!(libc::NOTE_CHILD | libc::NOTE_EXIT, actual.fflags().bits());
+    assert_eq!(0x1337, actual.data());
+    assert_eq!(udata as type_of_udata, actual.udata() as type_of_udata);
+    assert_eq!(mem::size_of::<libc::kevent>(), mem::size_of::<KEvent>());
+}
+
+#[test]
+fn test_kevent_filter() {
+    let udata : intptr_t = 12345;
+
+    let actual = KEvent::new(0xdead_beef,
+                             EventFilter::EVFILT_READ,
+                             EventFlag::EV_ONESHOT | EventFlag::EV_ADD,
+                             FilterFlag::NOTE_CHILD | FilterFlag::NOTE_EXIT,
+                             0x1337,
+                             udata);
+    assert_eq!(EventFilter::EVFILT_READ, actual.filter().unwrap());
 }

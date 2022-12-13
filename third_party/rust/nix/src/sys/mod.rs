@@ -1,100 +1,228 @@
-#[cfg(any(target_os = "dragonfly",
-          target_os = "freebsd",
-          target_os = "ios",
-          target_os = "linux",
-          target_os = "macos",
-          target_os = "netbsd"))]
-pub mod aio;
+//! Mostly platform-specific functionality
+#[cfg(any(
+    target_os = "dragonfly",
+    target_os = "freebsd",
+    target_os = "ios",
+    all(target_os = "linux", not(target_env = "uclibc")),
+    target_os = "macos",
+    target_os = "netbsd"
+))]
+feature! {
+    #![feature = "aio"]
+    pub mod aio;
+}
 
-#[cfg(any(target_os = "android", target_os = "linux"))]
-pub mod epoll;
+feature! {
+    #![feature = "event"]
 
-#[cfg(any(target_os = "dragonfly",
-          target_os = "freebsd",
-          target_os = "ios",
-          target_os = "macos",
-          target_os = "netbsd",
-          target_os = "openbsd"))]
-pub mod event;
+    #[cfg(any(target_os = "android", target_os = "linux"))]
+    #[allow(missing_docs)]
+    pub mod epoll;
 
-#[cfg(target_os = "linux")]
-pub mod eventfd;
+    #[cfg(any(target_os = "dragonfly",
+              target_os = "freebsd",
+              target_os = "ios",
+              target_os = "macos",
+              target_os = "netbsd",
+              target_os = "openbsd"))]
+    #[allow(missing_docs)]
+    pub mod event;
 
-#[cfg(any(target_os = "android",
-          target_os = "dragonfly",
-          target_os = "freebsd",
-          target_os = "ios",
-          target_os = "linux",
-          target_os = "macos",
-          target_os = "netbsd",
-          target_os = "openbsd"))]
+    #[cfg(any(target_os = "android", target_os = "linux"))]
+    #[allow(missing_docs)]
+    pub mod eventfd;
+}
+
+#[cfg(any(
+    target_os = "android",
+    target_os = "dragonfly",
+    target_os = "freebsd",
+    target_os = "ios",
+    target_os = "linux",
+    target_os = "redox",
+    target_os = "macos",
+    target_os = "netbsd",
+    target_os = "illumos",
+    target_os = "openbsd"
+))]
+#[cfg(feature = "ioctl")]
+#[cfg_attr(docsrs, doc(cfg(feature = "ioctl")))]
 #[macro_use]
 pub mod ioctl;
 
-#[cfg(target_os = "linux")]
-pub mod memfd;
+#[cfg(any(target_os = "android", target_os = "linux"))]
+feature! {
+    #![feature = "fs"]
+    pub mod memfd;
+}
 
-pub mod mman;
-
-pub mod pthread;
-
-#[cfg(any(target_os = "android",
-          target_os = "dragonfly",
-          target_os = "freebsd",
-          target_os = "linux",
-          target_os = "macos",
-          target_os = "netbsd",
-          target_os = "openbsd"))]
-pub mod ptrace;
+#[cfg(not(target_os = "redox"))]
+feature! {
+    #![feature = "mman"]
+    pub mod mman;
+}
 
 #[cfg(target_os = "linux")]
-pub mod quota;
+feature! {
+    #![feature = "personality"]
+    pub mod personality;
+}
 
-#[cfg(any(target_os = "linux"))]
-pub mod reboot;
+feature! {
+    #![feature = "pthread"]
+    pub mod pthread;
+}
 
-pub mod select;
+#[cfg(any(
+    target_os = "android",
+    target_os = "dragonfly",
+    target_os = "freebsd",
+    target_os = "linux",
+    target_os = "macos",
+    target_os = "netbsd",
+    target_os = "openbsd"
+))]
+feature! {
+    #![feature = "ptrace"]
+    #[allow(missing_docs)]
+    pub mod ptrace;
+}
 
-#[cfg(any(target_os = "android",
-          target_os = "freebsd",
-          target_os = "ios",
-          target_os = "linux",
-          target_os = "macos"))]
-pub mod sendfile;
+#[cfg(target_os = "linux")]
+feature! {
+    #![feature = "quota"]
+    pub mod quota;
+}
+
+#[cfg(target_os = "linux")]
+feature! {
+    #![feature = "reboot"]
+    pub mod reboot;
+}
+
+#[cfg(not(any(
+    target_os = "redox",
+    target_os = "fuchsia",
+    target_os = "illumos",
+    target_os = "haiku"
+)))]
+feature! {
+    #![feature = "resource"]
+    pub mod resource;
+}
+
+#[cfg(not(target_os = "redox"))]
+feature! {
+    #![feature = "poll"]
+    pub mod select;
+}
+
+#[cfg(any(
+    target_os = "android",
+    target_os = "dragonfly",
+    target_os = "freebsd",
+    target_os = "ios",
+    target_os = "linux",
+    target_os = "macos"
+))]
+feature! {
+    #![feature = "zerocopy"]
+    pub mod sendfile;
+}
 
 pub mod signal;
 
 #[cfg(any(target_os = "android", target_os = "linux"))]
-pub mod signalfd;
+feature! {
+    #![feature = "signal"]
+    #[allow(missing_docs)]
+    pub mod signalfd;
+}
 
-pub mod socket;
+#[cfg(not(target_os = "redox"))]
+feature! {
+    #![feature = "socket"]
+    #[allow(missing_docs)]
+    pub mod socket;
+}
 
-pub mod stat;
+feature! {
+    #![feature = "fs"]
+    #[allow(missing_docs)]
+    pub mod stat;
+}
 
-#[cfg(any(target_os = "android",
-          target_os = "dragonfly",
-          target_os = "freebsd",
-          target_os = "ios",
-          target_os = "linux",
-          target_os = "macos",
-          target_os = "openbsd"
+#[cfg(any(
+    target_os = "android",
+    target_os = "dragonfly",
+    target_os = "freebsd",
+    target_os = "ios",
+    target_os = "linux",
+    target_os = "macos",
+    target_os = "openbsd"
 ))]
-pub mod statfs;
+feature! {
+    #![feature = "fs"]
+    pub mod statfs;
+}
 
-pub mod statvfs;
+feature! {
+    #![feature = "fs"]
+    pub mod statvfs;
+}
 
 #[cfg(any(target_os = "android", target_os = "linux"))]
+#[cfg_attr(docsrs, doc(cfg(all())))]
+#[allow(missing_docs)]
 pub mod sysinfo;
 
-pub mod termios;
+feature! {
+    #![feature = "term"]
+    #[allow(missing_docs)]
+    pub mod termios;
+}
 
+#[allow(missing_docs)]
 pub mod time;
 
-pub mod uio;
+feature! {
+    #![feature = "uio"]
+    pub mod uio;
+}
 
-pub mod utsname;
+feature! {
+    #![feature = "feature"]
+    pub mod utsname;
+}
 
-pub mod wait;
+feature! {
+    #![feature = "process"]
+    pub mod wait;
+}
 
 #[cfg(any(target_os = "android", target_os = "linux"))]
-pub mod inotify;
+feature! {
+    #![feature = "inotify"]
+    pub mod inotify;
+}
+
+#[cfg(any(target_os = "android", target_os = "linux"))]
+feature! {
+    #![feature = "time"]
+    pub mod timerfd;
+}
+
+#[cfg(all(
+    any(
+        target_os = "freebsd",
+        target_os = "illumos",
+        target_os = "linux",
+        target_os = "netbsd"
+    ),
+    feature = "time",
+    feature = "signal"
+))]
+feature! {
+    #![feature = "time"]
+    pub mod timer;
+}

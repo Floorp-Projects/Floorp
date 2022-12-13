@@ -30,7 +30,7 @@ impl Iterator for Iter {
 impl Card {
     pub fn new(index: c_int) -> Card { Card(index) }
     pub fn from_str(s: &CStr) -> Result<Card> {
-        acheck!(snd_card_get_index(s.as_ptr())).map(|i| Card(i))
+        acheck!(snd_card_get_index(s.as_ptr())).map(Card)
     }
     pub fn get_name(&self) -> Result<String> {
         let mut c: *mut c_char = ::std::ptr::null_mut();

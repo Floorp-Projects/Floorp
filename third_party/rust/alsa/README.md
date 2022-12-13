@@ -1,7 +1,7 @@
 ALSA bindings for Rust
 =======================
 
-Thin but safe wrappers for [ALSA](http://http://alsa-project.org), the most
+Thin but safe wrappers for [ALSA](https://alsa-project.org), the most
 common API for accessing audio devices on Linux.
 
 [![crates.io](https://img.shields.io/crates/v/alsa.svg)](https://crates.io/crates/alsa)
@@ -41,7 +41,7 @@ The following is not yet implemented (mostly because nobody asked for them) :
 Quickstart guide / API design:
 
  * Most functions map 1-to-1 to alsa-lib functions, e g, `ctl::CardInfo::get_id()` is a wrapper around
-   `snd_ctl_card_info_get_id` and the [alsa-lib documentation](http://www.alsa-project.org/alsa-doc/alsa-lib/)
+   `snd_ctl_card_info_get_id` and the [alsa-lib documentation](https://www.alsa-project.org/alsa-doc/alsa-lib/)
    can be consulted for additional information.
 
  * Structs are RAII and closed/freed on drop, e g, when a `PCM` struct is dropped, `snd_pcm_close` is called.
@@ -55,3 +55,8 @@ Quickstart guide / API design:
 
  * Many structs implement `poll::Descriptors`, to combine with poll or mio.
    Or just use `wait` if you don't need non-blocking functionality.
+   
+Notes:
+
+ * To run the tests successfully, there must be a "default" sound card configured. This is usually not a problem when running on normal hardware, but some CI systems, docker images etc, might not have that configured by default. 
+

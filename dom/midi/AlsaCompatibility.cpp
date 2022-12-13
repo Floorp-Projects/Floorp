@@ -5,31 +5,28 @@
 #include "mozilla/Assertions.h"
 
 // The code in this file is a workaround for building with ALSA versions prior
-// to 1.0.29. The snd_pcm_sw_params_set_tstamp_type() and
-// snd_pcm_sw_params_get_tstamp_type() functions are missing from those versions
-// and we need them for the alsa crate which in turn is a dependency of the
-// midir crate. The functions are not actually used so we provide dummy
-// implementations that return an error. This file can be safely removed when
-// the Linux sysroot will be updated to Debian 9 (or higher)
+// to 1.1. Various functions that the alsa crate (a dependency of the midir
+// crate) use are missing from those versions. The functions are not actually
+// used so we provide dummy implementations that return an error. This file
+// can be safely removed when the Linux sysroot will be updated to Debian 9
+// (or higher)
 #include <alsa/asoundlib.h>
-
-#if (SND_LIB_MAJOR == 1) && (SND_LIB_MINOR == 0) && (SND_LIB_SUBMINOR < 29)
 
 extern "C" {
 
-int snd_pcm_sw_params_set_tstamp_type(void) {
-  MOZ_CRASH(
-      "The replacement for snd_pcm_sw_params_set_tstamp_type() should never be "
-      "called");
-  return -1;
-}
+#define ALSA_DIVERT(func)                       \
+  int func(void) {                              \
+    MOZ_CRASH(#func "should never be called."); \
+    return -1;                                  \
+  }
 
-int snd_pcm_sw_params_get_tstamp_type(void) {
-  MOZ_CRASH(
-      "The replacement for snd_pcm_sw_params_get_tstamp_type() should never be "
-      "called");
-  return -1;
-}
-}
-
+#if (SND_LIB_MAJOR == 1) && (SND_LIB_MINOR == 0) && (SND_LIB_SUBMINOR < 29)
+ALSA_DIVERT(snd_pcm_sw_params_set_tstamp_type)
+ALSA_DIVERT(snd_pcm_sw_params_get_tstamp_type)
 #endif
+
+#if (SND_LIB_MAJOR == 1) && (SND_LIB_MINOR < 1)
+ALSA_DIVERT(snd_pcm_hw_params_supports_audio_ts_type)
+ALSA_DIVERT(snd_pcm_status_set_audio_htstamp_config)
+#endif
+}

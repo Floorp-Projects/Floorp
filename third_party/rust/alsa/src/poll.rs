@@ -34,7 +34,7 @@ pub trait Descriptors {
 
 impl Descriptors for pollfd {
     fn count(&self) -> usize { 1 }
-    fn fill(&self, a: &mut [pollfd]) -> Result<usize> { a[0] = self.clone(); Ok(1) }
+    fn fill(&self, a: &mut [pollfd]) -> Result<usize> { a[0] = *self; Ok(1) }
     fn revents(&self, a: &[pollfd]) -> Result<Flags> { Ok(Flags::from_bits_truncate(a[0].revents)) }
 }
 

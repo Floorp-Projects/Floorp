@@ -45,7 +45,7 @@ impl HintIter {
 
 impl Iterator for HintIter {
     type Item = Hint;
-    fn next<'a> (&'a mut self) -> Option<Hint> {
+    fn next(&mut self) -> Option<Hint> {
         if self.0.is_null() { return None; }
         let p = unsafe { *self.0.offset(self.1) };
         if p.is_null() { return None; }

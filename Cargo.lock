@@ -38,14 +38,14 @@ dependencies = [
 
 [[package]]
 name = "alsa"
-version = "0.4.3"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eb213f6b3e4b1480a60931ca2035794aa67b73103d254715b1db7b70dcb3c934"
+checksum = "8512c9117059663fb5606788fbca3619e2a91dac0e3fe516242eab1fa6be5e44"
 dependencies = [
  "alsa-sys",
  "bitflags",
  "libc",
- "nix",
+ "nix 0.24.99",
 ]
 
 [[package]]
@@ -3305,7 +3305,7 @@ dependencies = [
 [[package]]
 name = "midir"
 version = "0.7.0"
-source = "git+https://github.com/mozilla/midir.git?rev=e1b4dcb767f9e69afe95a860374aaa9635d81e3d#e1b4dcb767f9e69afe95a860374aaa9635d81e3d"
+source = "git+https://github.com/mozilla/midir.git?rev=519e651241e867af3391db08f9ae6400bc023e18#519e651241e867af3391db08f9ae6400bc023e18"
 dependencies = [
  "alsa",
  "bitflags",
@@ -3313,7 +3313,6 @@ dependencies = [
  "js-sys",
  "libc",
  "memalloc",
- "nix",
  "wasm-bindgen",
  "web-sys",
  "winapi",
@@ -3355,7 +3354,7 @@ dependencies = [
  "libc",
  "memmap2 0.2.999",
  "memoffset 0.5.6",
- "nix",
+ "nix 0.15.0",
  "tempfile",
  "thiserror",
 ]
@@ -3762,6 +3761,25 @@ dependencies = [
  "cfg-if 0.1.999",
  "libc",
  "void",
+]
+
+[[package]]
+name = "nix"
+version = "0.24.99"
+dependencies = [
+ "nix 0.25.0",
+]
+
+[[package]]
+name = "nix"
+version = "0.25.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e322c04a9e3440c327fca7b6c8a63e6890a32fa2ad689db972425f07e0d22abb"
+dependencies = [
+ "autocfg",
+ "bitflags",
+ "cfg-if 1.0.0",
+ "libc",
 ]
 
 [[package]]

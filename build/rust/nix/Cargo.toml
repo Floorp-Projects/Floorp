@@ -1,0 +1,30 @@
+[package]
+name = "nix"
+version = "0.24.99"
+edition = "2018"
+license = "MPL-2.0"
+
+[lib]
+path = "lib.rs"
+
+[dependencies.nix]
+version = "0.25"
+default-features = false
+
+[features]
+acct = ["nix/acct"]
+aio = ["nix/aio"]
+default = ["nix/default"]
+dir = ["nix/dir"]
+env = ["nix/env"]
+event = ["nix/event"]
+feature = ["nix/feature"]
+fs = ["nix/fs"]
+hostname = ["nix/hostname"]
+inotify = ["nix/inotify"]
+ioctl = ["nix/ioctl"]
+kmod = ["nix/kmod"]
+mman = ["nix/mman"]
+mount = ["nix/mount"]
+mqueue = ["nix/mqueue"]
+net = ["nix/net"]

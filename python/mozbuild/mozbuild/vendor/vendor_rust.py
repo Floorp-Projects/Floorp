@@ -12,19 +12,15 @@ import logging
 import os
 import re
 import subprocess
-from collections import defaultdict, OrderedDict
-from looseversion import LooseVersion
+from collections import OrderedDict, defaultdict
 from itertools import dropwhile
-from mozboot.util import MINIMUM_RUST_VERSION
 from pathlib import Path
 
-import pytoml
 import mozpack.path as mozpath
-from mozbuild.base import (
-    BuildEnvironmentNotFoundException,
-    MozbuildObject,
-)
-
+import pytoml
+from looseversion import LooseVersion
+from mozboot.util import MINIMUM_RUST_VERSION
+from mozbuild.base import BuildEnvironmentNotFoundException, MozbuildObject
 
 CARGO_CONFIG_TEMPLATE = """\
 # This file contains vendoring instructions for cargo.
@@ -107,6 +103,8 @@ TOLERATED_DUPES = {
     # nom 7 used by askama (dep of UniFFI, dep of Glean)
     # See https://github.com/mozilla/uniffi-rs/issues/1260
     "nom": 2,
+    # Bug 1793784 is set to remove the use of nix 0.15 shortly.
+    "nix": 2,
 }
 
 
