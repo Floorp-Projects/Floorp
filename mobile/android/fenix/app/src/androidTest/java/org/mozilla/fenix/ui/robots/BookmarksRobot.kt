@@ -258,6 +258,13 @@ class BookmarksRobot {
             SettingsTurnOnSyncRobot().interact()
             return SettingsTurnOnSyncRobot.Transition()
         }
+
+        fun goBack(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+            goBackButton().click()
+
+            HomeScreenRobot().interact()
+            return HomeScreenRobot.Transition()
+        }
     }
 }
 

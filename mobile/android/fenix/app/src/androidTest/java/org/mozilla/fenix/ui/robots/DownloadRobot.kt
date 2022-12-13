@@ -123,6 +123,13 @@ class DownloadRobot {
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
+
+        fun goBack(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+            goBackButton().click()
+
+            HomeScreenRobot().interact()
+            return HomeScreenRobot.Transition()
+        }
     }
 }
 
@@ -195,3 +202,5 @@ private fun assertDownloadedFileIcon() =
         mDevice.findObject(UiSelector().resourceId("$packageName:id/favicon"))
             .exists(),
     )
+
+private fun goBackButton() = onView(withContentDescription("Navigate up"))

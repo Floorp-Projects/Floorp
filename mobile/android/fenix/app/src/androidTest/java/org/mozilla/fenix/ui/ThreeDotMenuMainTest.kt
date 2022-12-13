@@ -44,50 +44,47 @@ class ThreeDotMenuMainTest {
     fun homeThreeDotMenuItemsTest() {
         homeScreen {
         }.openThreeDotMenu {
-            verifyBookmarksButton()
-            verifyHistoryButton()
-            verifyDownloadsButton()
-            verifyAddOnsButton()
-            // Disabled step due to https://github.com/mozilla-mobile/fenix/issues/26788
-            // verifySyncSignInButton()
-            verifyDesktopSite()
-            verifyWhatsNewButton()
-            verifyHelpButton()
-            verifyCustomizeHomeButton()
-            verifySettingsButton()
-        }.openSettings {
-            verifySettingsView()
+            verifyHomeThreeDotMainMenuItems(isRequestDesktopSiteEnabled = false)
+        }.openBookmarks {
+            verifyBookmarksMenuView()
         }.goBack {
+        }.openThreeDotMenu {
+        }.openHistory {
+            verifyHistoryMenuView()
+        }.goBack {
+        }.openThreeDotMenu {
+        }.openDownloadsManager {
+            verifyEmptyDownloadsList()
+        }.goBack {
+        }.openThreeDotMenu {
+        }.openAddonsManagerMenu {
+            verifyAddonsItems()
+        }.goBack {
+        }.openThreeDotMenu {
+        }.openSyncSignIn {
+            verifyTurnOnSyncMenu()
+        }.goBack {
+            // Desktop toggle
+        }.openThreeDotMenu {
+        }.switchDesktopSiteMode {
+        }
+        homeScreen {
+        }.openThreeDotMenu {
+            verifyDesktopSiteModeEnabled(isRequestDesktopSiteEnabled = true)
+        }.openWhatsNew {
+            verifyWhatsNewURL()
+        }.goToHomescreen {
+        }.openThreeDotMenu {
+        }.openHelp {
+            verifyHelpUrl()
+        }.goToHomescreen {
         }.openThreeDotMenu {
         }.openCustomizeHome {
             verifyHomePageView()
         }.goBack {
         }.openThreeDotMenu {
-        }.openHelp {
-            verifyHelpUrl()
-        }.openTabDrawer {
-            closeTab()
-        }
-
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openWhatsNew {
-            verifyWhatsNewURL()
-        }.openTabDrawer {
-            closeTab()
-        }
-
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openBookmarks {
-            verifyBookmarksMenuView()
-        }.closeMenu {
-        }
-
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openHistory {
-            verifyHistoryMenuView()
+        }.openSettings {
+            verifySettingsView()
         }
     }
 }

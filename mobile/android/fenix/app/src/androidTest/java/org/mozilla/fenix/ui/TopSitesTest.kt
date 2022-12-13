@@ -67,7 +67,7 @@ class TopSitesTest {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
             expandMenu()
-            verifyAddToTopSitesButton()
+            verifyAddToShortcutsButton()
         }.addToFirefoxHome {
             verifySnackBarText(getStringResource(R.string.snackbar_added_to_shortcuts))
         }.goToHomescreen {
@@ -84,7 +84,7 @@ class TopSitesTest {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
             expandMenu()
-            verifyAddToTopSitesButton()
+            verifyAddToShortcutsButton()
         }.addToFirefoxHome {
             verifySnackBarText(getStringResource(R.string.snackbar_added_to_shortcuts))
         }.goToHomescreen {
@@ -111,7 +111,7 @@ class TopSitesTest {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
             expandMenu()
-            verifyAddToTopSitesButton()
+            verifyAddToShortcutsButton()
         }.addToFirefoxHome {
             verifySnackBarText(getStringResource(R.string.snackbar_added_to_shortcuts))
         }.goToHomescreen {
@@ -134,7 +134,7 @@ class TopSitesTest {
             waitForPageToLoad()
         }.openThreeDotMenu {
             expandMenu()
-            verifyAddToTopSitesButton()
+            verifyAddToShortcutsButton()
         }.addToFirefoxHome {
             verifySnackBarText(getStringResource(R.string.snackbar_added_to_shortcuts))
         }.goToHomescreen {
@@ -156,7 +156,7 @@ class TopSitesTest {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
             expandMenu()
-            verifyAddToTopSitesButton()
+            verifyAddToShortcutsButton()
         }.addToFirefoxHome {
             verifySnackBarText(getStringResource(R.string.snackbar_added_to_shortcuts))
         }.goToHomescreen {
@@ -177,7 +177,7 @@ class TopSitesTest {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
             expandMenu()
-            verifyAddToTopSitesButton()
+            verifyAddToShortcutsButton()
         }.addToFirefoxHome {
             verifySnackBarText(getStringResource(R.string.snackbar_added_to_shortcuts))
         }.goToHomescreen {

@@ -65,7 +65,7 @@ class NavigationToolbarTest {
         }.enterURLAndEnterToBrowser(nextWebPage.url) {
             verifyUrl(nextWebPage.url.toString())
         }.openThreeDotMenu {
-        }.goBack {
+        }.goToPreviousPage {
             mDevice.waitForIdle()
             verifyUrl(defaultWebPage.url.toString())
         }
@@ -84,7 +84,7 @@ class NavigationToolbarTest {
             mDevice.waitForIdle()
             verifyUrl(nextWebPage.url.toString())
         }.openThreeDotMenu {
-        }.goBack {
+        }.goToPreviousPage {
             mDevice.waitForIdle()
             verifyUrl(defaultWebPage.url.toString())
         }

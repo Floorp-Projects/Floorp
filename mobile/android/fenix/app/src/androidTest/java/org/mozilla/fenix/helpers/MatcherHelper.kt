@@ -21,8 +21,19 @@ object MatcherHelper {
     fun itemContainingText(itemText: String) =
         mDevice.findObject(UiSelector().textContains(itemText))
 
+    fun itemWithDescription(description: String) =
+        mDevice.findObject(UiSelector().descriptionContains(description))
+
     fun checkedItemWithResId(resourceId: String, isChecked: Boolean) =
         mDevice.findObject(UiSelector().resourceId(resourceId).checked(isChecked))
+
+    fun checkedItemWithResIdAndText(resourceId: String, text: String, isChecked: Boolean) =
+        mDevice.findObject(
+            UiSelector()
+                .resourceId(resourceId)
+                .textContains(text)
+                .checked(isChecked),
+        )
 
     fun itemWithResIdAndDescription(resourceId: String, description: String) =
         mDevice.findObject(UiSelector().resourceId(resourceId).descriptionContains(description))
@@ -42,7 +53,19 @@ object MatcherHelper {
         }
     }
 
+    fun assertItemWithDescriptionExists(vararg appItems: UiObject) {
+        for (appItem in appItems) {
+            assertTrue(appItem.waitForExists(waitingTime))
+        }
+    }
+
     fun assertCheckedItemWithResIdExists(vararg appItems: UiObject) {
+        for (appItem in appItems) {
+            assertTrue(appItem.waitForExists(waitingTime))
+        }
+    }
+
+    fun assertCheckedItemWithResIdAndTextExists(vararg appItems: UiObject) {
         for (appItem in appItems) {
             assertTrue(appItem.waitForExists(waitingTime))
         }

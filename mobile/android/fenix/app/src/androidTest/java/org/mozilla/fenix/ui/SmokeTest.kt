@@ -172,7 +172,7 @@ class SmokeTest {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
             waitForPageToLoad()
         }.openThreeDotMenu {
-            verifyPageThreeDotMainMenuItems()
+            verifyPageThreeDotMainMenuItems(isRequestDesktopSiteEnabled = false)
         }
     }
 
