@@ -24,6 +24,10 @@
 #include <vector>
 #include <windef.h>
 #include <windows.h>
+/* clang-format off */
+/* These need to be included after windows.h */
+#include <mmsystem.h>
+/* clang-format on */
 
 #include "cubeb-internal.h"
 #include "cubeb/cubeb.h"
@@ -96,6 +100,8 @@ DEFINE_PROPERTYKEY(PKEY_Device_InstanceId, 0x78c34fc8, 0x104a, 0x4aca, 0x9e,
 namespace {
 
 const int64_t LATENCY_NOT_AVAILABLE_YET = -1;
+
+const DWORD DEVICE_CHANGE_DEBOUNCE_MS = 250;
 
 struct com_heap_ptr_deleter {
   void operator()(void * ptr) const noexcept { CoTaskMemFree(ptr); }
@@ -696,7 +702,8 @@ public:
   }
 
   wasapi_endpoint_notification_client(HANDLE event, ERole role)
-      : ref_count(1), reconfigure_event(event), role(role)
+      : ref_count(1), reconfigure_event(event), role(role),
+        last_device_change(timeGetTime())
   {
   }
 
@@ -705,17 +712,32 @@ public:
   HRESULT STDMETHODCALLTYPE OnDefaultDeviceChanged(EDataFlow flow, ERole role,
                                                    LPCWSTR device_id)
   {
-    LOG("endpoint: Audio device default changed.");
+    LOG("endpoint: Audio device default changed flow=%d role=%d "
+        "new_device_id=%ws.",
+        flow, role, device_id);
 
     /* we only support a single stream type for now. */
-    if (flow != eRender && role != this->role) {
+    if (flow != eRender || role != this->role) {
       return S_OK;
     }
 
-    BOOL ok = SetEvent(reconfigure_event);
-    if (!ok) {
-      LOG("endpoint: SetEvent on reconfigure_event failed: %lx",
-          GetLastError());
+    DWORD last_change_ms = timeGetTime() - last_device_change;
+    bool same_device = default_device_id && device_id &&
+                       wcscmp(default_device_id.get(), device_id) == 0;
+    LOG("endpoint: Audio device default changed last_change=%u same_device=%d",
+        last_change_ms, same_device);
+    if (last_change_ms > DEVICE_CHANGE_DEBOUNCE_MS || !same_device) {
+      if (device_id) {
+        default_device_id.reset(_wcsdup(device_id));
+      } else {
+        default_device_id.reset();
+      }
+      BOOL ok = SetEvent(reconfigure_event);
+      LOG("endpoint: Audio device default changed: trigger reconfig");
+      if (!ok) {
+        LOG("endpoint: SetEvent on reconfigure_event failed: %lx",
+            GetLastError());
+      }
     }
 
     return S_OK;
@@ -754,6 +776,8 @@ private:
   LONG ref_count;
   HANDLE reconfigure_event;
   ERole role;
+  std::unique_ptr<const wchar_t[]> default_device_id;
+  DWORD last_device_change;
 };
 
 namespace {
@@ -2478,8 +2502,8 @@ setup_wasapi_stream(cubeb_stream * stm)
   std::unique_ptr<const wchar_t[]> selected_output_device_id;
   if (stm->output_device_id) {
     if (std::unique_ptr<wchar_t[]> tmp =
-            move(copy_wide_string(stm->output_device_id.get()))) {
-      selected_output_device_id = move(tmp);
+            copy_wide_string(stm->output_device_id.get())) {
+      selected_output_device_id = std::move(tmp);
     } else {
       LOG("Failed to copy output device identifier.");
       return CUBEB_ERROR;
@@ -2521,7 +2545,7 @@ setup_wasapi_stream(cubeb_stream * stm)
       cubeb_devid matched = wasapi_find_bt_handsfree_output_device(stm);
       if (matched) {
         selected_output_device_id =
-            move(utf8_to_wstr(reinterpret_cast<char const *>(matched)));
+            utf8_to_wstr(reinterpret_cast<char const *>(matched));
       }
     }
   }
@@ -2537,9 +2561,9 @@ setup_wasapi_stream(cubeb_stream * stm)
     stm->output_stream_params.layout = stm->input_stream_params.layout;
     if (stm->input_device_id) {
       if (std::unique_ptr<wchar_t[]> tmp =
-              move(copy_wide_string(stm->input_device_id.get()))) {
+              copy_wide_string(stm->input_device_id.get())) {
         XASSERT(!selected_output_device_id);
-        selected_output_device_id = move(tmp);
+        selected_output_device_id = std::move(tmp);
       } else {
         LOG("Failed to copy device identifier while copying input stream "
             "configuration to output stream configuration to drive loopback.");
@@ -2802,7 +2826,7 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
 
   *stream = stm.release();
 
-  LOG("Stream init succesfull (%p)", *stream);
+  LOG("Stream init successful (%p)", *stream);
   return CUBEB_OK;
 }
 
@@ -2813,20 +2837,18 @@ close_wasapi_stream(cubeb_stream * stm)
 
   stm->stream_reset_lock.assert_current_thread_owns();
 
-  stm->output_client = nullptr;
-  stm->render_client = nullptr;
-
-  stm->input_client = nullptr;
-  stm->capture_client = nullptr;
-
-  stm->output_device = nullptr;
-  stm->input_device = nullptr;
-
 #ifdef CUBEB_WASAPI_USE_IAUDIOSTREAMVOLUME
   stm->audio_stream_volume = nullptr;
 #endif
-
   stm->audio_clock = nullptr;
+  stm->render_client = nullptr;
+  stm->output_client = nullptr;
+  stm->output_device = nullptr;
+
+  stm->capture_client = nullptr;
+  stm->input_client = nullptr;
+  stm->input_device = nullptr;
+
   stm->total_frames_written += static_cast<UINT64>(
       round(stm->frames_written *
             stream_to_mix_samplerate_ratio(stm->output_stream_params,
