@@ -59,18 +59,17 @@ promise_test(async t => {
   const pc2 = new RTCPeerConnection();
   t.add_cleanup(() => pc2.close());
 
-  const {sender} = pc1.addTransceiver("video", {sendEncodings: [{rid: "foo"}, {rid: "bar"}, {rid: "baz"}]});
+  const {sender} = pc1.addTransceiver("video", {sendEncodings: [{rid: "foo"}, {rid: "bar"}]});
   let {encodings} = sender.getParameters();
-  assert_equals(encodings.length, 3, "This test requires maxN >= 3");
 
-  await doOfferToSendSimulcastAndAnswer(pc1, pc2, ["foo", "bar"]);
+  await doOfferToSendSimulcastAndAnswer(pc1, pc2, ["foo"]);
 
   assert_equals(pc1.getTransceivers().length, 1);
   encodings = sender.getParameters().encodings;
   const rids = encodings.map(({rid}) => rid);
-  assert_array_equals(rids, ["foo", "bar"]);
+  assert_array_equals(rids, ["foo"]);
   const scaleDownByValues = encodings.map(({scaleResolutionDownBy}) => scaleResolutionDownBy);
-  assert_array_equals(scaleDownByValues, [4, 2]);
+  assert_array_equals(scaleDownByValues, [2]);
 }, 'sRD(recv simulcast answer) can narrow the simulcast envelope specified by addTransceiver');
 
 promise_test(async t => {
@@ -79,25 +78,24 @@ promise_test(async t => {
   const pc2 = new RTCPeerConnection();
   t.add_cleanup(() => pc2.close());
 
-  const {sender} = pc1.addTransceiver("video", {sendEncodings: [{rid: "foo"}, {rid: "bar"}, {rid: "baz"}]});
+  const {sender} = pc1.addTransceiver("video", {sendEncodings: [{rid: "foo"}, {rid: "bar"}]});
   let {encodings} = sender.getParameters();
-  assert_equals(encodings.length, 3, "This test requires maxN >= 3");
-
-  await doOfferToSendSimulcastAndAnswer(pc1, pc2, ["foo", "bar", "baz"]);
-
-  assert_equals(pc1.getTransceivers().length, 1);
-  encodings = sender.getParameters().encodings;
-  let rids = encodings.map(({rid}) => rid);
-  assert_array_equals(rids, ["foo", "bar", "baz"]);
 
   await doOfferToSendSimulcastAndAnswer(pc1, pc2, ["foo", "bar"]);
 
   assert_equals(pc1.getTransceivers().length, 1);
   encodings = sender.getParameters().encodings;
-  rids = encodings.map(({rid}) => rid);
+  let rids = encodings.map(({rid}) => rid);
   assert_array_equals(rids, ["foo", "bar"]);
+
+  await doOfferToSendSimulcastAndAnswer(pc1, pc2, ["foo"]);
+
+  assert_equals(pc1.getTransceivers().length, 1);
+  encodings = sender.getParameters().encodings;
+  rids = encodings.map(({rid}) => rid);
+  assert_array_equals(rids, ["foo"]);
   const scaleDownByValues = encodings.map(({scaleResolutionDownBy}) => scaleResolutionDownBy);
-  assert_array_equals(scaleDownByValues, [4, 2]);
+  assert_array_equals(scaleDownByValues, [2]);
 }, 'sRD(recv simulcast answer) can narrow the simulcast envelope from a previous negotiation');
 
 promise_test(async t => {

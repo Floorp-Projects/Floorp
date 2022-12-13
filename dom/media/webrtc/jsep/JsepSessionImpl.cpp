@@ -1057,7 +1057,6 @@ JsepSession::Result JsepSessionImpl::SetRemoteDescription(
         // We chose a level for this transceiver, but never negotiated it.
         // Discard this state.
         transceiver->ClearLevel();
-        transceiver->mSendTrack.ClearRids();
       }
     }
   }
