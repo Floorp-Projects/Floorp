@@ -40,20 +40,28 @@ class WritableFileStreamUnderlyingSinkAlgorithms final
   void StartCallback(JSContext* aCx,
                      WritableStreamDefaultController& aController,
                      JS::MutableHandle<JS::Value> aRetVal,
-                     ErrorResult& aRv) override;
+                     ErrorResult& aRv) override {
+    // https://streams.spec.whatwg.org/#writablestream-set-up
+    // Step 1. Let startAlgorithm be an algorithm that returns undefined.
+    aRetVal.setUndefined();
+  }
 
   MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> WriteCallback(
       JSContext* aCx, JS::Handle<JS::Value> aChunk,
       WritableStreamDefaultController& aController, ErrorResult& aRv) override;
 
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> CloseCallback(
-      JSContext* aCx, ErrorResult& aRv) override;
-
   MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> AbortCallback(
       JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
-      ErrorResult& aRv) override;
+      ErrorResult& aRv) override {
+    // https://streams.spec.whatwg.org/#writablestream-set-up
+    // Step 3.3. Return a promise resolved with undefined.
+    // (No abort algorithm is defined for this interface)
+    return Promise::CreateResolvedWithUndefined(mStream->GetParentObject(),
+                                                aRv);
+  }
 
-  void ReleaseObjects() override;
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> CloseCallback(
+      JSContext* aCx, ErrorResult& aRv) override;
 
  private:
   ~WritableFileStreamUnderlyingSinkAlgorithms() = default;
@@ -170,10 +178,9 @@ FileSystemWritableFileStream::Create(
   IgnoredErrorResult rv;
   SetUpWritableStreamDefaultController(
       cx, stream, controller, algorithms,
-      // https://fs.spec.whatwg.org/#create-a-new-filesystemwritablefilestream
-      // Step 6. Let highWaterMark be 1.
+      // default highWaterMark
       1,
-      // Step 7. Let sizeAlgorithm be an algorithm that returns 1.
+      // default sizeAlgorithm
       // (nullptr returns 1, See WritableStream::Constructor for details)
       nullptr, rv);
   if (rv.Failed()) {
@@ -212,9 +219,6 @@ void FileSystemWritableFileStream::ClearActor() {
 }
 
 void FileSystemWritableFileStream::Close() {
-  // https://fs.spec.whatwg.org/#create-a-new-filesystemwritablefilestream
-  // Step 4. Let closeAlgorithm be these steps:
-
   if (mClosed) {
     return;
   }
@@ -231,46 +235,37 @@ void FileSystemWritableFileStream::Close() {
   }
 }
 
+// WebIDL Boilerplate
+
+JSObject* FileSystemWritableFileStream::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
+  return FileSystemWritableFileStream_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+// WebIDL Interface
+
 already_AddRefed<Promise> FileSystemWritableFileStream::Write(
-    JSContext* aCx, JS::Handle<JS::Value> aChunk, ErrorResult& aError) {
-  MOZ_ASSERT(!mClosed);
-
-  // https://fs.spec.whatwg.org/#create-a-new-filesystemwritablefilestream
-  // Step 3. Let writeAlgorithm be an algorithm which takes a chunk argument
-  // and returns the result of running the write a chunk algorithm with stream
-  // and chunk.
-
-  // https://fs.spec.whatwg.org/#write-a-chunk
-  // Step 1. Let input be the result of converting chunk to a
-  // FileSystemWriteChunkType.
-
-  aError.MightThrowJSException();
-
-  ArrayBufferViewOrArrayBufferOrBlobOrUSVStringOrWriteParams data;
-  if (!data.Init(aCx, aChunk)) {
-    aError.StealExceptionFromJSContext(aCx);
-    return nullptr;
-  }
-
-  // Step 2. Let p be a new promise.
+    const ArrayBufferViewOrArrayBufferOrBlobOrUSVStringOrWriteParams& aData,
+    ErrorResult& aError) {
   RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
   if (aError.Failed()) {
     return nullptr;
   }
 
-  // Step 3.3. Let command be input.type if input is a WriteParams, ...
-  if (data.IsWriteParams()) {
-    const WriteParams& params = data.GetAsWriteParams();
+  if (mClosed) {
+    promise->MaybeRejectWithTypeError("WritableFileStream closed");
+    return promise.forget();
+  }
+
+  if (aData.IsWriteParams()) {
+    const WriteParams& params = aData.GetAsWriteParams();
     switch (params.mType) {
-      // Step 3.4. If command is "write":
       case WriteCommandType::Write: {
         if (!params.mData.WasPassed()) {
-          promise->MaybeRejectWithSyntaxError("write() requires data");
-          return promise.forget();
+          aError.ThrowSyntaxError("write() requires data");
+          return nullptr;
         }
 
-        // Step 3.4.2. If data is undefined, reject p with a TypeError and
-        // abort.
         if (params.mData.Value().IsNull()) {
           promise->MaybeRejectWithTypeError("write() of null data");
           return promise.forget();
@@ -291,15 +286,12 @@ already_AddRefed<Promise> FileSystemWritableFileStream::Write(
         return promise.forget();
       }
 
-      // Step 3.5. Otherwise, if command is "seek":
       case WriteCommandType::Seek:
         if (!params.mPosition.WasPassed()) {
-          promise->MaybeRejectWithSyntaxError("seek() requires a position");
-          return promise.forget();
+          aError.ThrowSyntaxError("seek() requires a position");
+          return nullptr;
         }
 
-        // Step 3.5.1. If chunk.position is undefined, reject p with a TypeError
-        // and abort.
         if (params.mPosition.Value().IsNull()) {
           promise->MaybeRejectWithTypeError("seek() with null position");
           return promise.forget();
@@ -308,15 +300,12 @@ already_AddRefed<Promise> FileSystemWritableFileStream::Write(
         Seek(params.mPosition.Value().Value(), promise);
         return promise.forget();
 
-      // Step 3.6. Otherwise, if command is "truncate":
       case WriteCommandType::Truncate:
         if (!params.mSize.WasPassed()) {
-          promise->MaybeRejectWithSyntaxError("truncate() requires a size");
-          return promise.forget();
+          aError.ThrowSyntaxError("truncate() requires a size");
+          return nullptr;
         }
 
-        // Step 3.6.1. If chunk.size is undefined, reject p with a TypeError
-        // and abort.
         if (params.mSize.Value().IsNull()) {
           promise->MaybeRejectWithTypeError("truncate() with null size");
           return promise.forget();
@@ -330,139 +319,39 @@ already_AddRefed<Promise> FileSystemWritableFileStream::Write(
     }
   }
 
-  // Step 3.3. ... and "write" otherwise.
-  // Step 3.4. If command is "write":
-  Write(data, Nothing(), promise);
-  return promise.forget();
-}
-
-// WebIDL Boilerplate
-
-JSObject* FileSystemWritableFileStream::WrapObject(
-    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
-  return FileSystemWritableFileStream_Binding::Wrap(aCx, this, aGivenProto);
-}
-
-// WebIDL Interface
-
-already_AddRefed<Promise> FileSystemWritableFileStream::Write(
-    const ArrayBufferViewOrArrayBufferOrBlobOrUSVStringOrWriteParams& aData,
-    ErrorResult& aError) {
-  // https://fs.spec.whatwg.org/#dom-filesystemwritablefilestream-write
-  // Step 1. Let writer be the result of getting a writer for this.
-  RefPtr<WritableStreamDefaultWriter> writer = GetWriter(aError);
-  if (aError.Failed()) {
-    return nullptr;
-  }
-
-  // Step 2. Let result be the result of writing a chunk to writer given data.
-  AutoJSAPI jsapi;
-  if (!jsapi.Init(GetParentObject())) {
-    aError.ThrowUnknownError("Internal error");
-    return nullptr;
-  }
-
-  JSContext* cx = jsapi.cx();
-
-  JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
-
-  JS::Rooted<JS::Value> val(cx);
-  if (!aData.ToJSVal(cx, global, &val)) {
-    aError.ThrowUnknownError("Internal error");
-    return nullptr;
-  }
-
-  RefPtr<Promise> promise = writer->Write(cx, val, aError);
-
-  // Step 3. Release writer.
-  {
-    IgnoredErrorResult error;
-    writer->ReleaseLock(cx, error);
-  }
-
-  // Step 4. Return result.
+  Write(aData, Nothing(), promise);
   return promise.forget();
 }
 
 already_AddRefed<Promise> FileSystemWritableFileStream::Seek(
     uint64_t aPosition, ErrorResult& aError) {
-  // https://fs.spec.whatwg.org/#dom-filesystemwritablefilestream-seek
-  // Step 1. Let writer be the result of getting a writer for this.
-  RefPtr<WritableStreamDefaultWriter> writer = GetWriter(aError);
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
   if (aError.Failed()) {
     return nullptr;
   }
 
-  // Step 2. Let result be the result of writing a chunk to writer given
-  // «[ "type" → "seek", "position" → position ]».
-  AutoJSAPI jsapi;
-  if (!jsapi.Init(GetParentObject())) {
-    aError.ThrowUnknownError("Internal error");
-    return nullptr;
+  if (mClosed) {
+    promise->MaybeRejectWithTypeError("WritableFileStream closed");
+    return promise.forget();
   }
 
-  JSContext* cx = jsapi.cx();
-
-  WriteParams writeParams;
-  writeParams.mType = WriteCommandType::Seek;
-  writeParams.mPosition.Construct(aPosition);
-
-  JS::Rooted<JS::Value> val(cx);
-  if (!ToJSValue(cx, writeParams, &val)) {
-    aError.ThrowUnknownError("Internal error");
-    return nullptr;
-  }
-
-  RefPtr<Promise> promise = writer->Write(cx, val, aError);
-
-  // Step 3. Release writer.
-  {
-    IgnoredErrorResult error;
-    writer->ReleaseLock(cx, error);
-  }
-
-  // Step 4. Return result.
+  Seek(aPosition, promise);
   return promise.forget();
 }
 
 already_AddRefed<Promise> FileSystemWritableFileStream::Truncate(
     uint64_t aSize, ErrorResult& aError) {
-  // https://fs.spec.whatwg.org/#dom-filesystemwritablefilestream-truncate
-  // Step 1. Let writer be the result of getting a writer for this.
-  RefPtr<WritableStreamDefaultWriter> writer = GetWriter(aError);
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
   if (aError.Failed()) {
     return nullptr;
   }
 
-  // Step 2. Let result be the result of writing a chunk to writer given
-  // «[ "type" → "truncate", "size" → size ]».
-  AutoJSAPI jsapi;
-  if (!jsapi.Init(GetParentObject())) {
-    aError.ThrowUnknownError("Internal error");
-    return nullptr;
+  if (mClosed) {
+    promise->MaybeRejectWithTypeError("WritableFileStream closed");
+    return promise.forget();
   }
 
-  JSContext* cx = jsapi.cx();
-
-  WriteParams writeParams;
-  writeParams.mType = WriteCommandType::Truncate;
-  writeParams.mSize.Construct(aSize);
-
-  JS::Rooted<JS::Value> val(cx);
-  if (!ToJSValue(cx, writeParams, &val)) {
-    aError.ThrowUnknownError("Internal error");
-    return nullptr;
-  }
-
-  RefPtr<Promise> promise = writer->Write(cx, val, aError);
-
-  // Step 3. Release writer.
-  {
-    IgnoredErrorResult error;
-    writer->ReleaseLock(cx, error);
-  }
-
-  // Step 4. Return result.
+  Truncate(aSize, promise);
   return promise.forget();
 }
 
@@ -470,8 +359,6 @@ template <typename T>
 void FileSystemWritableFileStream::Write(const T& aData,
                                          const Maybe<uint64_t> aPosition,
                                          RefPtr<Promise> aPromise) {
-  MOZ_ASSERT(!mClosed);
-
   auto rejectAndReturn = [&aPromise](const nsresult rv) {
     if (rv == NS_ERROR_FILE_NOT_FOUND) {
       aPromise->MaybeRejectWithNotFoundError("File not found");
@@ -551,6 +438,10 @@ void FileSystemWritableFileStream::Seek(uint64_t aPosition,
                                         RefPtr<Promise> aPromise) {
   MOZ_ASSERT(!mClosed);
 
+  // submit async seek
+  // XXX what happens if we read/write before seek finishes?
+  // Should we block read/write if an async operation is pending?
+  // Handle seek before write ('at')
   LOG_VERBOSE(("%p: Seeking to %" PRIu64, mFileDesc, aPosition));
 
   QM_TRY(SeekPosition(aPosition), [&aPromise](const nsresult rv) {
@@ -564,6 +455,12 @@ void FileSystemWritableFileStream::Seek(uint64_t aPosition,
 void FileSystemWritableFileStream::Truncate(uint64_t aSize,
                                             RefPtr<Promise> aPromise) {
   MOZ_ASSERT(!mClosed);
+
+  // submit async truncate
+  // XXX what happens if we read/write before seek finishes?
+  // Should we block read/write if an async operation is pending?
+  // What if there's an error, and several operations are pending?
+  // Spec issues raised.
 
   // truncate filehandle (can extend with 0's)
   LOG_VERBOSE(("%p: Truncate to %" PRIu64, mFileDesc, aSize));
@@ -593,8 +490,6 @@ void FileSystemWritableFileStream::Truncate(uint64_t aSize,
 
 Result<uint64_t, nsresult> FileSystemWritableFileStream::WriteBuffer(
     Buffer<char>&& aBuffer, const Maybe<uint64_t> aPosition) {
-  MOZ_ASSERT(!mClosed);
-
   Buffer<char> buffer = std::move(aBuffer);
 
   const auto checkedLength = CheckedInt<PRInt32>(buffer.Length());
@@ -610,7 +505,6 @@ Result<uint64_t, nsresult> FileSystemWritableFileStream::WriteBuffer(
 Result<uint64_t, nsresult> FileSystemWritableFileStream::WriteStream(
     nsCOMPtr<nsIInputStream> aStream, const Maybe<uint64_t> aPosition) {
   MOZ_ASSERT(aStream);
-  MOZ_ASSERT(!mClosed);
 
   void* rawBuffer = nullptr;
   uint64_t length;
@@ -625,8 +519,6 @@ Result<uint64_t, nsresult> FileSystemWritableFileStream::WriteStream(
 
 Result<Ok, nsresult> FileSystemWritableFileStream::SeekPosition(
     uint64_t aPosition) {
-  MOZ_ASSERT(!mClosed);
-
   const auto checkedPosition = CheckedInt<int64_t>(aPosition);
   QM_TRY(MOZ_TO_RESULT(checkedPosition.isValid()));
 
@@ -650,27 +542,26 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(
 NS_IMPL_CYCLE_COLLECTION_INHERITED(WritableFileStreamUnderlyingSinkAlgorithms,
                                    UnderlyingSinkAlgorithmsBase, mStream)
 
-void WritableFileStreamUnderlyingSinkAlgorithms::StartCallback(
-    JSContext* aCx, WritableStreamDefaultController& aController,
-    JS::MutableHandle<JS::Value> aRetVal, ErrorResult& aRv) {
-  // https://streams.spec.whatwg.org/#writablestream-set-up
-  // Step 1. Let startAlgorithm be an algorithm that returns undefined.
-  aRetVal.setUndefined();
-}
-
 already_AddRefed<Promise>
 WritableFileStreamUnderlyingSinkAlgorithms::WriteCallback(
     JSContext* aCx, JS::Handle<JS::Value> aChunk,
     WritableStreamDefaultController& aController, ErrorResult& aRv) {
-  return mStream->Write(aCx, aChunk, aRv);
+  // https://fs.spec.whatwg.org/#create-a-new-filesystemwritablefilestream
+  // Step 3. Let writeAlgorithm be an algorithm which takes a chunk argument ...
+  ArrayBufferViewOrArrayBufferOrBlobOrUSVStringOrWriteParams chunkUnion;
+  if (!chunkUnion.Init(aCx, aChunk)) {
+    aRv.MightThrowJSException();
+    aRv.StealExceptionFromJSContext(aCx);
+    return nullptr;
+  }
+  // Step 3. ... and returns the result of running the write a chunk algorithm
+  // with stream and chunk.
+  return mStream->Write(chunkUnion, aRv);
 }
 
 already_AddRefed<Promise>
 WritableFileStreamUnderlyingSinkAlgorithms::CloseCallback(JSContext* aCx,
                                                           ErrorResult& aRv) {
-  // https://streams.spec.whatwg.org/#writablestream-set-up
-  // Step 2. Let closeAlgorithmWrapper be an algorithm that runs these steps:
-
   RefPtr<Promise> promise = Promise::Create(mStream->GetParentObject(), aRv);
   if (aRv.Failed()) {
     return nullptr;
@@ -681,36 +572,10 @@ WritableFileStreamUnderlyingSinkAlgorithms::CloseCallback(JSContext* aCx,
     return promise.forget();
   }
 
-  // XXX The close should be async. For now we have to always fallback to the
-  // Step 2.3 below.
   mStream->Close();
 
-  // Step 2.3. Return a promise resolved with undefined.
   promise->MaybeResolveWithUndefined();
   return promise.forget();
-}
-
-already_AddRefed<Promise>
-WritableFileStreamUnderlyingSinkAlgorithms::AbortCallback(
-    JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
-    ErrorResult& aRv) {
-  // https://streams.spec.whatwg.org/#writablestream-set-up
-  // Step 3. Let abortAlgorithmWrapper be an algorithm that runs these steps:
-
-  // XXX The close or rather a dedicated abort should be async. For now we have
-  // to always fall back to the Step 3.3 below.
-  mStream->Close();
-
-  // Step 3.3. Return a promise resolved with undefined.
-  return Promise::CreateResolvedWithUndefined(mStream->GetParentObject(), aRv);
-}
-
-void WritableFileStreamUnderlyingSinkAlgorithms::ReleaseObjects() {
-  // XXX We shouldn't be calling close here. We should just release the lock.
-  // However, calling close here is not a big issue for now because we don't
-  // write to a temporary file which would atomically replace the real file
-  // during close.
-  mStream->Close();
 }
 
 }  // namespace mozilla::dom
