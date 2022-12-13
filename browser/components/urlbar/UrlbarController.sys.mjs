@@ -1038,7 +1038,7 @@ class TelemetryEvent {
       selType,
     }
   ) {
-    if (!lazy.UrlbarPrefs.get("searchEngagementTelemetry.enabled")) {
+    if (!lazy.UrlbarPrefs.get("searchEngagementTelemetryEnabled")) {
       return;
     }
 

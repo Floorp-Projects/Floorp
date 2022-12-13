@@ -9,7 +9,9 @@ ChromeUtils.defineESModuleGetters(this, {
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {
+const lazy = {};
+
+XPCOMUtils.defineLazyGetter(lazy, "QuickSuggestTestUtils", () => {
   const { QuickSuggestTestUtils: Utils } = ChromeUtils.importESModule(
     "resource://testing-common/QuickSuggestTestUtils.sys.mjs"
   );
@@ -58,7 +60,7 @@ function _assertGleanTelemetry(telemetryName, expectedExtraList) {
 }
 
 async function ensureQuickSuggestInit() {
-  return QuickSuggestTestUtils.ensureQuickSuggestInit([
+  return lazy.QuickSuggestTestUtils.ensureQuickSuggestInit([
     {
       id: 1,
       url: "https://example.com/sponsored",
@@ -308,6 +310,10 @@ async function setup() {
       Ci.nsISearchService.CHANGE_REASON_UNKNOWN
     );
   });
+}
+
+async function setupNimbus(variables) {
+  return lazy.QuickSuggestTestUtils.initNimbusFeature(variables);
 }
 
 async function showResultByArrowDown() {

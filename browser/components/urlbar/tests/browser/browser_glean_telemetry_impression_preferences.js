@@ -72,3 +72,33 @@ add_task(async function pauseImpressionIntervalMs() {
 
   await SpecialPowers.popPrefEnv();
 });
+
+add_task(async function nimbusEnabled() {
+  const doCleanup = await setupNimbus({
+    searchEngagementTelemetryEnabled: true,
+  });
+
+  await doTest(async browser => {
+    await openPopup("https://example.com");
+    await waitForPauseImpression();
+
+    assertImpressionTelemetry([{ reason: "pause", sap: "urlbar_newtab" }]);
+  });
+
+  doCleanup();
+});
+
+add_task(async function nimbusDisabled() {
+  const doCleanup = await setupNimbus({
+    searchEngagementTelemetryEnabled: false,
+  });
+
+  await doTest(async browser => {
+    await openPopup("https://example.com");
+    await waitForPauseImpression();
+
+    assertImpressionTelemetry([]);
+  });
+
+  doCleanup();
+});

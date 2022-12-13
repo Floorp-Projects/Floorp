@@ -40,3 +40,33 @@ add_task(async function disabled() {
 
   await SpecialPowers.popPrefEnv();
 });
+
+add_task(async function nimbusEnabled() {
+  const doCleanup = await setupNimbus({
+    searchEngagementTelemetryEnabled: true,
+  });
+
+  await doTest(async browser => {
+    await openPopup("https://example.com");
+    await doEnter();
+
+    assertEngagementTelemetry([{ selected_result: "url" }]);
+  });
+
+  doCleanup();
+});
+
+add_task(async function nimbusDisabled() {
+  const doCleanup = await setupNimbus({
+    searchEngagementTelemetryEnabled: false,
+  });
+
+  await doTest(async browser => {
+    await openPopup("https://example.com");
+    await doEnter();
+
+    assertEngagementTelemetry([]);
+  });
+
+  doCleanup();
+});
