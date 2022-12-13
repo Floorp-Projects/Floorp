@@ -41,6 +41,11 @@ add_task(async () => {
     var originalExec = RegExp.prototype.exec;
 
     var promptIterable = { [Symbol.iterator]() { return { next: prompt } } };
+
+    function aliasedTest() {
+      const aliased = "ALIASED";
+      return [0].map(() => aliased)[0];
+    }
   </script>`);
 
   const commands = await CommandsFactory.forTab(tab);
@@ -250,6 +255,10 @@ async function doSimpleEagerEval(commands) {
     {
       code: `"abc".match(/a./)[0]`,
       result: "ab",
+    },
+    {
+      code: "aliasedTest()",
+      result: "ALIASED",
     },
   ];
 
