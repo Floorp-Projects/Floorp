@@ -9,6 +9,9 @@ const {
   declareESEFunction,
   loadLibraries,
 } = ChromeUtils.importESModule("resource:///modules/ESEDBReader.sys.mjs");
+const { EdgeProfileMigrator } = ChromeUtils.importESModule(
+  "resource:///modules/EdgeProfileMigrator.sys.mjs"
+);
 
 let gESEInstanceCounter = 1;
 
@@ -535,12 +538,11 @@ add_task(async function() {
     ])
   );
 
-  let migrator = Cc[
-    "@mozilla.org/profile/migrator;1?app=browser&type=edge"
-  ].createInstance(Ci.nsIBrowserProfileMigrator);
-  let bookmarksMigrator = migrator.wrappedJSObject.getBookmarksMigratorForTesting(
-    db
-  );
+  // Manually create an EdgeProfileMigrator rather than going through
+  // MigrationUtils.getMigrator to avoid the user data availability check, since
+  // we're mocking out that stuff.
+  let migrator = new EdgeProfileMigrator();
+  let bookmarksMigrator = migrator.getBookmarksMigratorForTesting(db);
   Assert.ok(bookmarksMigrator.exists, "Should recognize db we just created");
 
   let seenBookmarks = [];
@@ -725,9 +727,7 @@ add_task(async function() {
   };
   PlacesUtils.observers.addListener(["bookmark-added"], listener);
 
-  let readingListMigrator = migrator.wrappedJSObject.getReadingListMigratorForTesting(
-    db
-  );
+  let readingListMigrator = migrator.getReadingListMigratorForTesting(db);
   Assert.ok(readingListMigrator.exists, "Should recognize db we just created");
   migrateResult = await new Promise(resolve =>
     readingListMigrator.migrate(resolve)
