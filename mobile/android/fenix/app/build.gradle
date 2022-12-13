@@ -47,7 +47,7 @@ android {
         buildConfigField "String", "GIT_HASH", "\"\"" // see override in release builds for why it's blank.
         // This should be the "public" base URL of AMO.
         buildConfigField "String", "AMO_BASE_URL", "\"https://addons.mozilla.org\""
-        buildConfigField "String", "AMO_COLLECTION_NAME", "\"7dfae8669acc4312a65e8ba5553036\""
+        buildConfigField "String", "AMO_COLLECTION_NAME", "\"Extensions-for-Android\""
         buildConfigField "String", "AMO_COLLECTION_USER", "\"mozilla\""
         // These add-ons should be excluded for Mozilla Online builds.
         buildConfigField "String[]", "MOZILLA_ONLINE_ADDON_EXCLUSIONS",
