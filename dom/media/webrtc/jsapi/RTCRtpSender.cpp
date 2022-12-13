@@ -18,6 +18,7 @@
 #include "PeerConnectionImpl.h"
 #include "libwebrtcglue/AudioConduit.h"
 #include <vector>
+#include "call/call.h"
 
 namespace mozilla::dom {
 
@@ -472,32 +473,21 @@ void RTCRtpSender::GetParameters(RTCRtpParameters& aParameters) const {
 
 void RTCRtpSender::ApplyParameters(const RTCRtpParameters& aParameters) {
   mParameters = aParameters;
-  std::vector<JsepTrack::JsConstraints> constraints;
+  std::vector<std::string> rids;
 
   if (aParameters.mEncodings.WasPassed()) {
     for (const auto& encoding : aParameters.mEncodings.Value()) {
-      JsepTrack::JsConstraints constraint;
       if (encoding.mRid.WasPassed()) {
-        // TODO: Either turn on the RID RTP header extension in JsepSession, or
-        // just leave that extension on all the time?
-        constraint.rid = NS_ConvertUTF16toUTF8(encoding.mRid.Value()).get();
+        rids.push_back(NS_ConvertUTF16toUTF8(encoding.mRid.Value()).get());
       }
-      if (encoding.mMaxBitrate.WasPassed()) {
-        constraint.constraints.maxBr = encoding.mMaxBitrate.Value();
-      }
-      if (encoding.mMaxFramerate.WasPassed()) {
-        constraint.constraints.maxFps = Some(encoding.mMaxFramerate.Value());
-      }
-      constraint.constraints.scaleDownBy = encoding.mScaleResolutionDownBy;
-      constraints.push_back(constraint);
     }
   }
 
-  if (GetJsepTransceiver().mSendTrack.SetJsConstraints(constraints)) {
-    if (mPipeline->Transmitting()) {
-      UpdateConduit();
-    }
+  if (!rids.empty()) {
+    GetJsepTransceiver().mSendTrack.SetRids(rids);
   }
+  // Do not permit the set of encodings to increase
+  GetJsepTransceiver().mSendTrack.SetMaxEncodings(rids.size());
 }
 
 void RTCRtpSender::SetStreams(
