@@ -643,8 +643,7 @@ void PersistentBufferProviderShared::Destroy() {
     mPermanentBackBuffer = nullptr;
   }
 
-  for (auto& mTexture : mTextures) {
-    TextureClient* texture = mTexture;
+  for (auto& texture : mTextures) {
     if (texture && texture->IsLocked()) {
       MOZ_ASSERT(false);
       texture->Unlock();
