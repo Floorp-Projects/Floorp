@@ -927,7 +927,6 @@ nsresult PeerConnectionImpl::AddRtpTransceiverToJsepSession(
   }
 
   mJsepSession->AddTransceiver(transceiver);
-
   return NS_OK;
 }
 
@@ -944,6 +943,9 @@ static Maybe<SdpMediaSection::MediaType> ToSdpMediaType(
 already_AddRefed<RTCRtpTransceiver> PeerConnectionImpl::AddTransceiver(
     const dom::RTCRtpTransceiverInit& aInit, const nsAString& aKind,
     dom::MediaStreamTrack* aSendTrack, ErrorResult& aRv) {
+  // Copy, because we might need to modify
+  RTCRtpTransceiverInit init(aInit);
+
   Maybe<SdpMediaSection::MediaType> type = ToSdpMediaType(aKind);
   if (NS_WARN_IF(!type.isSome())) {
     MOZ_ASSERT(false, "Invalid media kind");
@@ -964,9 +966,93 @@ already_AddRefed<RTCRtpTransceiver> PeerConnectionImpl::AddTransceiver(
     return nullptr;
   }
 
+  auto& sendEncodings = init.mSendEncodings;
+
+  // CheckAndRectifyEncodings covers these six:
+  // If any encoding contains a rid member whose value does not conform to the
+  // grammar requirements specified in Section 10 of [RFC8851], throw a
+  // TypeError.
+
+  // If some but not all encodings contain a rid member, throw a TypeError.
+
+  // If any encoding contains a rid member whose value is the same as that of a
+  // rid contained in another encoding in sendEncodings, throw a TypeError.
+
+  // If kind is "audio", remove the scaleResolutionDownBy member from all
+  // encodings that contain one.
+
+  // If any encoding contains a scaleResolutionDownBy member whose value is
+  // less than 1.0, throw a RangeError.
+
+  // Verify that the value of each maxFramerate member in sendEncodings that is
+  // defined is greater than 0.0. If one of the maxFramerate values does not
+  // meet this requirement, throw a RangeError.
+  RTCRtpSender::CheckAndRectifyEncodings(sendEncodings,
+                                         *type == SdpMediaSection::kVideo, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  // If any encoding contains a read-only parameter other than rid, throw an
+  // InvalidAccessError.
+  // NOTE: We don't support any additional read-only params right now. Also,
+  // spec shoehorns this in between checks that setParameters also performs
+  // (between the rid checks and the scaleResolutionDownBy checks).
+
+  // If any encoding contains a scaleResolutionDownBy member, then for each
+  // encoding without one, add a scaleResolutionDownBy member with the value
+  // 1.0.
+  for (const auto& constEncoding : sendEncodings) {
+    if (constEncoding.mScaleResolutionDownBy.WasPassed()) {
+      for (auto& encoding : sendEncodings) {
+        if (!encoding.mScaleResolutionDownBy.WasPassed()) {
+          encoding.mScaleResolutionDownBy.Construct(1.0f);
+        }
+      }
+      break;
+    }
+  }
+
+  // Let maxN be the maximum number of total simultaneous encodings the user
+  // agent may support for this kind, at minimum 1.This should be an optimistic
+  // number since the codec to be used is not known yet.
+  size_t maxN =
+      (*type == SdpMediaSection::kVideo) ? webrtc::kMaxSimulcastStreams : 1;
+
+  // If the number of encodings stored in sendEncodings exceeds maxN, then trim
+  // sendEncodings from the tail until its length is maxN.
+  // NOTE: Spec has this after all validation steps; even if there are elements
+  // that we will trim off, we still validate them.
+  if (sendEncodings.Length() > maxN) {
+    sendEncodings.TruncateLength(maxN);
+  }
+
+  // If kind is "video" and none of the encodings contain a
+  // scaleResolutionDownBy member, then for each encoding, add a
+  // scaleResolutionDownBy member with the value 2^(length of sendEncodings -
+  // encoding index - 1). This results in smaller-to-larger resolutions where
+  // the last encoding has no scaling applied to it, e.g. 4:2:1 if the length
+  // is 3.
+  // NOTE: The code above ensures that these are all set, or all unset, so we
+  // can just check the first one.
+  if (sendEncodings.Length() && *type == SdpMediaSection::kVideo &&
+      !sendEncodings[0].mScaleResolutionDownBy.WasPassed()) {
+    double scale = 1.0f;
+    for (auto it = sendEncodings.rbegin(); it != sendEncodings.rend(); ++it) {
+      it->mScaleResolutionDownBy.Construct(scale);
+      scale *= 2;
+    }
+  }
+
+  // If the number of encodings now stored in sendEncodings is 1, then remove
+  // any rid member from the lone entry.
+  if (sendEncodings.Length() == 1) {
+    sendEncodings[0].mRid.Reset();
+  }
+
   RefPtr<RTCRtpTransceiver> transceiver = CreateTransceiver(
       jsepTransceiver->GetUuid(),
-      jsepTransceiver->GetMediaType() == SdpMediaSection::kVideo, aInit,
+      jsepTransceiver->GetMediaType() == SdpMediaSection::kVideo, init,
       aSendTrack, aRv);
 
   if (aRv.Failed()) {

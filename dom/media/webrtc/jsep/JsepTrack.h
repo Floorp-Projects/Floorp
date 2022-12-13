@@ -131,6 +131,8 @@ class JsepTrack {
       mSsrcToRtxSsrc = rhs.mSsrcToRtxSsrc;
       mActive = rhs.mActive;
       mRemoteSetSendBit = rhs.mRemoteSetSendBit;
+      mMaxEncodings = rhs.mMaxEncodings;
+      mRtxIsAllowed = rhs.mRtxIsAllowed;
 
       mPrototypeCodecs.clear();
       for (const auto& codec : rhs.mPrototypeCodecs) {
@@ -234,6 +236,7 @@ class JsepTrack {
   void SetRtxIsAllowed(bool aRtxIsAllowed) { mRtxIsAllowed = aRtxIsAllowed; }
 
   void SetMaxEncodings(size_t aMax);
+  bool IsInHaveRemote() const { return mInHaveRemote; }
 
  private:
   std::vector<UniquePtr<JsepCodecDescription>> GetCodecClones() const;
@@ -277,6 +280,7 @@ class JsepTrack {
   bool mActive;
   bool mRemoteSetSendBit;
   size_t mMaxEncodings = 3;
+  bool mInHaveRemote = false;
 
   // See Bug 1642419, this can be removed when all sites are working with RTX.
   bool mRtxIsAllowed = true;
