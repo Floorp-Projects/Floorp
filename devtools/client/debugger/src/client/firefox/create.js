@@ -157,14 +157,7 @@ export function makeSourceId(sourceResource) {
   //   For now, the debugger arbitrarily picks the first source actor's text content and never
   //   updates it. (See bug 1751063)
   if (sourceResource.url) {
-    // Simplify the top level target source ID's. But we could probably be using the same pattern
-    // and always include the thread actor ID.
-    if (sourceResource.targetFront.isTopLevel) {
-      return `source-${sourceResource.url}`;
-    }
-    const threadActorID = sourceResource.targetFront.getCachedFront("thread")
-      .actorID;
-    return `source-${threadActorID}-${sourceResource.url}`;
+    return `source-url-${sourceResource.url}`;
   }
 
   // Otherwise, we are processing a source without URL.
@@ -173,7 +166,7 @@ export function makeSourceId(sourceResource) {
   // The main way to interact with them is to use a debugger statement from them,
   // or have other panels ask the debugger to open them (like DOM event handlers from the inspector).
   // We can register transient breakpoints against them (i.e. they will only apply to the current source actor instance)
-  return `source-${sourceResource.actor}`;
+  return `source-actor-${sourceResource.actor}`;
 }
 
 /**
