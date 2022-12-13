@@ -139,6 +139,8 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
   static void ApplyJsEncodingToConduitEncoding(
       const RTCRtpEncodingParameters& aJsEncoding,
       VideoCodecConfig::Encoding* aConduitEncoding);
+  void UpdateRestorableEncodings(
+      const Sequence<RTCRtpEncodingParameters>& aEncodings);
   Sequence<RTCRtpEncodingParameters> GetMatchingEncodings(
       const std::vector<std::string>& aRids) const;
   Sequence<RTCRtpEncodingParameters> ToSendEncodings(
@@ -151,6 +153,10 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
   RTCRtpSendParameters mParameters;
   Maybe<RTCRtpSendParameters> mPendingParameters;
   uint32_t mNumSetParametersCalls = 0;
+  // When JSEP goes from simulcast to unicast without a rid, and we started out
+  // as unicast without a rid, we are supposed to restore that unicast encoding
+  // from before.
+  Maybe<RTCRtpEncodingParameters> mUnicastEncoding;
   bool mSimulcastEnvelopeSet = false;
   Maybe<RTCRtpSendParameters> mLastReturnedParameters;
   RefPtr<MediaPipelineTransmit> mPipeline;

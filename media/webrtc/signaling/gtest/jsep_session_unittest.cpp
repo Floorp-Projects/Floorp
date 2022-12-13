@@ -7054,7 +7054,7 @@ TEST_F(JsepSessionTest, ComplicatedRemoteRollback) {
   ASSERT_TRUE(mSessionAns->GetTransceivers()[4]->IsStopped());
   ASSERT_FALSE(mSessionAns->GetTransceivers()[4]->IsAssociated());
   ASSERT_FALSE(mSessionAns->GetTransceivers()[4]->HasAddTrackMagic());
-  ASSERT_FALSE(IsNull(mSessionAns->GetTransceivers()[4]->mSendTrack));
+  ASSERT_TRUE(IsNull(mSessionAns->GetTransceivers()[4]->mSendTrack));
   ASSERT_TRUE(mSessionAns->GetTransceivers()[4]->IsRemoved());
 
   // Fourth audio transceiver, created after SetRemote
