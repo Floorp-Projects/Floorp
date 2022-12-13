@@ -109,8 +109,9 @@ void JsepTrack::AddToAnswer(const SdpMediaSection& offer,
 
 void JsepTrack::SetRids(const std::vector<std::string>& aRids) {
   MOZ_ASSERT(!aRids.empty());
-  MOZ_ASSERT(mRids.empty());
-  MOZ_ASSERT(aRids.size() <= mMaxEncodings);
+  if (!mRids.empty()) {
+    return;
+  }
   mRids = aRids;
 }
 

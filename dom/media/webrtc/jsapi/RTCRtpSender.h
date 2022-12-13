@@ -147,6 +147,8 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
       const std::vector<std::string>& aRids) const;
   void MaybeGetJsepRids();
 
+  void WarnAboutBadSetParameters(const nsCString& aError);
+
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<PeerConnectionImpl> mPc;
   RefPtr<dom::MediaStreamTrack> mSenderTrack;
@@ -163,6 +165,23 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
   RefPtr<RTCRtpTransceiver> mTransceiver;
   nsTArray<RefPtr<DOMMediaStream>> mStreams;
   bool mHaveSetupTransport = false;
+  // TODO(bug 1803388): Remove this stuff once it is no longer needed.
+  bool mAllowOldSetParameters = false;
+
+  // TODO(bug 1803388): Remove the glean warnings once they are no longer needed
+  bool mHaveWarnedBecauseNoGetParameters = false;
+  bool mHaveWarnedBecauseEncodingCountChange = false;
+  bool mHaveWarnedBecauseRidChange = false;
+  bool mHaveWarnedBecauseNoTransactionId = false;
+  bool mHaveWarnedBecauseStaleTransactionId = false;
+  // TODO(bug 1803389): Remove the glean errors once they are no longer needed.
+  bool mHaveFailedBecauseNoGetParameters = false;
+  bool mHaveFailedBecauseEncodingCountChange = false;
+  bool mHaveFailedBecauseRidChange = false;
+  bool mHaveFailedBecauseNoTransactionId = false;
+  bool mHaveFailedBecauseStaleTransactionId = false;
+  bool mHaveFailedBecauseNoEncodings = false;
+  bool mHaveFailedBecauseOtherError = false;
 
   RefPtr<dom::RTCDTMFSender> mDtmf;
 

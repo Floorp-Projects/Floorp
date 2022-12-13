@@ -17,6 +17,7 @@
 gecko_metrics = [
     "browser/base/content/metrics.yaml",
     "dom/media/metrics.yaml",
+    "dom/media/webrtc/metrics.yaml",
     "dom/metrics.yaml",
     "gfx/metrics.yaml",
     "netwerk/metrics.yaml",
