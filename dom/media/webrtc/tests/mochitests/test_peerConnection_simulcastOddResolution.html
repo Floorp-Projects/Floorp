@@ -65,7 +65,6 @@
     }
 
     await pushPrefs(
-        ['media.peerconnection.simulcast', true],
         // 180Kbps was determined empirically, set well-higher than
         // the 80Kbps+overhead needed for the two simulcast streams.
         // 100Kbps was apparently too low.

@@ -414,11 +414,6 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
     return p.forget();
   }
 
-  if (!Preferences::GetBool("media.peerconnection.simulcast", false)) {
-    p->MaybeResolveWithUndefined();
-    return p.forget();
-  }
-
   dom::RTCRtpParameters parameters(aParameters);
 
   if (!parameters.mEncodings.WasPassed()) {
