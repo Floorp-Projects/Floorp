@@ -477,6 +477,11 @@ nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   // Initialize the media object.
   mForceProxy = ShouldForceProxy();
 
+  // We put this here, in case we later want to set this based on a non-standard
+  // param in RTCConfiguration.
+  mAllowOldSetParameters = Preferences::GetBool(
+      "media.peerconnection.allow_old_setParameters", false);
+
   // setup the stun local addresses IPC async call
   InitLocalAddrs();
 
@@ -2079,6 +2084,12 @@ void PeerConnectionImpl::StampTimecard(const char* aEvent) {
   STAMP_TIMECARD(mTimeCard, aEvent);
 }
 
+void PeerConnectionImpl::SendWarningToConsole(const nsCString& aWarning) {
+  nsAutoString msg = NS_ConvertASCIItoUTF16(aWarning);
+  nsContentUtils::ReportToConsoleByWindowID(msg, nsIScriptError::warningFlag,
+                                            "WebRTC"_ns, mWindow->WindowID());
+}
+
 nsresult PeerConnectionImpl::CalculateFingerprint(
     const std::string& algorithm, std::vector<uint8_t>* fingerprint) const {
   DtlsDigest digest(algorithm);
@@ -2372,6 +2383,7 @@ nsresult PeerConnectionImpl::SetConfiguration(
 
   // Store the configuration for about:webrtc
   StoreConfigurationForAboutWebrtc(aConfiguration);
+
   return NS_OK;
 }
 

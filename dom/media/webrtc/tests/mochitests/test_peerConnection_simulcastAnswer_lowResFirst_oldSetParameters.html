@@ -1,0 +1,115 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="/tests/dom/canvas/test/captureStream_common.js"></script>
+  <script type="application/javascript" src="helpers_from_wpt/sdp.js"></script>
+  <script type="application/javascript" src="simulcast.js"></script>
+  <script type="application/javascript" src="stats.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1231507",
+    title: "Basic video-only peer connection with Simulcast answer, first rid has lowest resolution",
+    visible: true
+  });
+
+  runNetworkTest(async () => {
+    await pushPrefs(
+        ['media.peerconnection.simulcast', true],
+        // 180Kbps was determined empirically, set well-higher than
+        // the 80Kbps+overhead needed for the two simulcast streams.
+        // 100Kbps was apparently too low.
+        ['media.peerconnection.video.min_bitrate_estimate', 180*1000]);
+
+
+    const offerer = new RTCPeerConnection();
+    const answerer = new RTCPeerConnection();
+
+    const add = (pc, can, failed) => can && pc.addIceCandidate(can).catch(failed);
+    offerer.onicecandidate = e => add(answerer, e.candidate, generateErrorCallback());
+    answerer.onicecandidate = e => add(offerer, e.candidate, generateErrorCallback());
+
+    const metadataToBeLoaded = [];
+    offerer.ontrack = (e) => {
+      metadataToBeLoaded.push(getPlaybackWithLoadedMetadata(e.track));
+    };
+
+    // Two recv transceivers, one for each simulcast stream
+    offerer.addTransceiver('video', { direction: 'recvonly' });
+    offerer.addTransceiver('video', { direction: 'recvonly' });
+
+    // One send transceiver, that will be used to send both simulcast streams
+    const emitter = new VideoFrameEmitter();
+    const videoStream = emitter.stream();
+    answerer.addTrack(videoStream.getVideoTracks()[0], videoStream);
+    emitter.start();
+
+    const offer = await offerer.createOffer();
+
+    const mungedOffer = midToRid(offer);
+    info(`Transformed recv offer to simulcast: ${offer.sdp} to ${mungedOffer}`);
+
+    await answerer.setRemoteDescription({type: "offer", sdp: mungedOffer});
+    await offerer.setLocalDescription(offer);
+
+    const rids = offerer.getTransceivers().map(t => t.mid);
+    is(rids.length, 2, 'Should have 2 mids in offer');
+    ok(rids[0] != '', 'First mid should be non-empty');
+    ok(rids[1] != '', 'Second mid should be non-empty');
+    info(`rids: ${JSON.stringify(rids)}`);
+
+    const sender = answerer.getSenders()[0];
+    sender.setParameters({
+        encodings: [
+            { rid: rids[0], maxBitrate: 40000, scaleResolutionDownBy: 2 },
+            { rid: rids[1], maxBitrate: 40000 }
+          ]
+    });
+
+    const answer = await answerer.createAnswer();
+
+    const mungedAnswer = ridToMid(answer);
+    info(`Transformed send simulcast answer to multiple m-sections: ${answer.sdp} to ${mungedAnswer}`);
+    await offerer.setRemoteDescription({type: "answer", sdp: mungedAnswer});
+    await answerer.setLocalDescription(answer);
+
+    is(metadataToBeLoaded.length, 2, 'Offerer should have gotten 2 ontrack events');
+    info('Waiting for 2 loadedmetadata events');
+    const videoElems = await Promise.all(metadataToBeLoaded);
+
+    const statsReady =
+      Promise.all([waitForSyncedRtcp(offerer), waitForSyncedRtcp(answerer)]);
+
+    const helper = new VideoStreamHelper();
+    info('Waiting for first video element to start playing');
+    await helper.checkVideoPlaying(videoElems[0]);
+    info('Waiting for second video element to start playing');
+    await helper.checkVideoPlaying(videoElems[1]);
+
+    is(videoElems[1].videoWidth, 50,
+       "sink is same width as source, modulo our cropping algorithm");
+    is(videoElems[1].videoHeight, 50,
+       "sink is same height as source, modulo our cropping algorithm");
+    is(videoElems[0].videoWidth, 25,
+       "sink is 1/2 width of source, modulo our cropping algorithm");
+    is(videoElems[0].videoHeight, 25,
+       "sink is 1/2 height of source, modulo our cropping algorithm");
+
+    await statsReady;
+    const senderStats = await sender.getStats();
+    checkSenderStats(senderStats, 2);
+    checkExpectedFields(senderStats);
+    pedanticChecks(senderStats);
+
+    emitter.stop();
+    videoStream.getVideoTracks()[0].stop();
+    offerer.close();
+    answerer.close();
+  });
+</script>
+</pre>
+</body>
+</html>

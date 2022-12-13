@@ -6,6 +6,7 @@
 #include "transport/logging.h"
 #include "mozilla/dom/MediaStreamTrack.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "transportbridge/MediaPipeline.h"
 #include "nsPIDOMWindow.h"
 #include "nsString.h"
@@ -78,10 +79,18 @@ RTCRtpSender::RTCRtpSender(nsPIDOMWindowInner* aWindow, PeerConnectionImpl* aPc,
   }
   mPipeline->SetTrack(mSenderTrack);
 
+  mozilla::glean::rtcrtpsender::count.Add(1);
+
+  if (mPc->ShouldAllowOldSetParameters()) {
+    mAllowOldSetParameters = true;
+    mozilla::glean::rtcrtpsender::count_setparameters_compat.Add(1);
+  }
+
   if (aEncodings.Length()) {
     // This sender was created by addTransceiver with sendEncodings.
     mParameters.mEncodings = aEncodings;
     SetJsepRids(mParameters);
+    mozilla::glean::rtcrtpsender::used_sendencodings.AddToNumerator(1);
   } else {
     // This sender was created by addTrack, sRD(offer), or addTransceiver
     // without sendEncodings.
@@ -419,6 +428,16 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal() {
   return promises;
 }
 
+void RTCRtpSender::WarnAboutBadSetParameters(const nsCString& aError) {
+  nsCString warning(
+      "WARNING! Invalid setParameters call detected! The good news? Firefox "
+      "supports sendEncodings in addTransceiver now, so we ask that you switch "
+      "over to using the parameters code you use for other browsers. Thank you "
+      "for your patience and support. The specific error was: ");
+  warning += aError;
+  mPc->SendWarningToConsole(warning);
+}
+
 already_AddRefed<Promise> RTCRtpSender::SetParameters(
     const dom::RTCRtpSendParameters& aParameters, ErrorResult& aError) {
   dom::RTCRtpSendParameters paramsCopy(aParameters);
@@ -449,10 +468,46 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
   // If sender.[[LastReturnedParameters]] is null, return a promise rejected
   // with a newly created InvalidStateError.
   if (!mLastReturnedParameters.isSome()) {
-    p->MaybeRejectWithInvalidStateError(
+    nsCString error(
         "Cannot call setParameters without first calling getParameters");
-    return p.forget();
+    if (mAllowOldSetParameters) {
+      if (!mHaveWarnedBecauseNoGetParameters) {
+        mHaveWarnedBecauseNoGetParameters = true;
+        mozilla::glean::rtcrtpsender_setparameters::warn_no_getparameters
+            .AddToNumerator(1);
+      }
+      WarnAboutBadSetParameters(error);
+    } else {
+      if (!mHaveFailedBecauseNoGetParameters) {
+        mHaveFailedBecauseNoGetParameters = true;
+        mozilla::glean::rtcrtpsender_setparameters::fail_no_getparameters
+            .AddToNumerator(1);
+      }
+      p->MaybeRejectWithInvalidStateError(error);
+      return p.forget();
+    }
   }
+
+  // According to the spec, our consistency checking is based on
+  // [[LastReturnedParameters]], but if we're letting
+  // [[LastReturnedParameters]]==null slide, we still want to do
+  // consistency checking on _something_ so we can warn implementers if they
+  // are messing that up also. Just find something, _anything_, to do that
+  // checking with.
+  // TODO(bug 1803388): Remove this stuff once it is no longer needed.
+  // TODO(bug 1803389): Remove the glean errors once they are no longer needed.
+  Maybe<RTCRtpSendParameters> oldParams;
+  if (mAllowOldSetParameters) {
+    if (mPendingParameters.isSome()) {
+      oldParams = mPendingParameters;
+    } else {
+      oldParams = Some(mParameters);
+    }
+    MOZ_ASSERT(oldParams.isSome());
+  } else {
+    oldParams = mLastReturnedParameters;
+  }
+  MOZ_ASSERT(oldParams.isSome());
 
   // Validate parameters by running the following steps:
   // Let encodings be parameters.encodings.
@@ -463,32 +518,104 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
   // return a promise rejected with a newly created InvalidModificationError:
 
   // encodings.length is different from N.
-  if (paramsCopy.mEncodings.Length() !=
-      mLastReturnedParameters->mEncodings.Length()) {
-    p->MaybeRejectWithInvalidModificationError(
-        "Cannot change the number of encodings with setParameters");
-    return p.forget();
-  }
-
-  // encodings has been re-ordered.
-  for (size_t i = 0; i < paramsCopy.mEncodings.Length(); ++i) {
-    const auto& oldEncoding = mLastReturnedParameters->mEncodings[i];
-    const auto& newEncoding = paramsCopy.mEncodings[i];
-    if (oldEncoding.mRid != newEncoding.mRid) {
-      p->MaybeRejectWithInvalidModificationError(
-          "Cannot change rid, or reorder encodings");
+  if (paramsCopy.mEncodings.Length() != oldParams->mEncodings.Length()) {
+    nsCString error("Cannot change the number of encodings with setParameters");
+    if (!mAllowOldSetParameters) {
+      if (!mHaveFailedBecauseEncodingCountChange) {
+        mHaveFailedBecauseEncodingCountChange = true;
+        mozilla::glean::rtcrtpsender_setparameters::fail_length_changed
+            .AddToNumerator(1);
+      }
+      p->MaybeRejectWithInvalidModificationError(error);
       return p.forget();
+    }
+    if (!mHaveWarnedBecauseEncodingCountChange) {
+      mHaveWarnedBecauseEncodingCountChange = true;
+      mozilla::glean::rtcrtpsender_setparameters::warn_length_changed
+          .AddToNumerator(1);
+    }
+    WarnAboutBadSetParameters(error);
+  } else {
+    // encodings has been re-ordered.
+    for (size_t i = 0; i < paramsCopy.mEncodings.Length(); ++i) {
+      const auto& oldEncoding = oldParams->mEncodings[i];
+      const auto& newEncoding = paramsCopy.mEncodings[i];
+      if (oldEncoding.mRid != newEncoding.mRid) {
+        nsCString error("Cannot change rid, or reorder encodings");
+        if (!mAllowOldSetParameters) {
+          if (!mHaveFailedBecauseRidChange) {
+            mHaveFailedBecauseRidChange = true;
+            mozilla::glean::rtcrtpsender_setparameters::fail_rid_changed
+                .AddToNumerator(1);
+          }
+          p->MaybeRejectWithInvalidModificationError(error);
+          return p.forget();
+        }
+        if (!mHaveWarnedBecauseRidChange) {
+          mHaveWarnedBecauseRidChange = true;
+          mozilla::glean::rtcrtpsender_setparameters::warn_rid_changed
+              .AddToNumerator(1);
+        }
+        WarnAboutBadSetParameters(error);
+      }
     }
   }
 
-  // Any parameter in parameters is marked as a Read-only parameter (such as
-  // RID) and has a value that is different from the corresponding parameter
-  // value in sender.[[LastReturnedParameters]]. Note that this also applies to
-  // transactionId.
-  if (mLastReturnedParameters->mTransactionId != paramsCopy.mTransactionId) {
-    p->MaybeRejectWithInvalidModificationError(
+  // TODO(bug 1803388): Handle this in webidl, once we stop allowing the old
+  // setParameters style.
+  if (!paramsCopy.mTransactionId.WasPassed()) {
+    nsCString error("transactionId is not set!");
+    if (!mAllowOldSetParameters) {
+      if (!mHaveFailedBecauseNoTransactionId) {
+        mHaveFailedBecauseNoTransactionId = true;
+        mozilla::glean::rtcrtpsender_setparameters::fail_no_transactionid
+            .AddToNumerator(1);
+      }
+      p->MaybeRejectWithTypeError(error);
+      return p.forget();
+    }
+    if (!mHaveWarnedBecauseNoTransactionId) {
+      mHaveWarnedBecauseNoTransactionId = true;
+      mozilla::glean::rtcrtpsender_setparameters::warn_no_transactionid
+          .AddToNumerator(1);
+    }
+    WarnAboutBadSetParameters(error);
+  } else if (oldParams->mTransactionId != paramsCopy.mTransactionId) {
+    // Any parameter in parameters is marked as a Read-only parameter (such as
+    // RID) and has a value that is different from the corresponding parameter
+    // value in sender.[[LastReturnedParameters]]. Note that this also applies
+    // to transactionId.
+    nsCString error(
         "Cannot change transaction id: call getParameters, modify the result, "
         "and then call setParameters");
+    if (!mAllowOldSetParameters) {
+      if (!mHaveFailedBecauseStaleTransactionId) {
+        mHaveFailedBecauseStaleTransactionId = true;
+        mozilla::glean::rtcrtpsender_setparameters::fail_stale_transactionid
+            .AddToNumerator(1);
+      }
+      p->MaybeRejectWithInvalidModificationError(error);
+      return p.forget();
+    }
+    if (!mHaveWarnedBecauseStaleTransactionId) {
+      mHaveWarnedBecauseStaleTransactionId = true;
+      mozilla::glean::rtcrtpsender_setparameters::warn_stale_transactionid
+          .AddToNumerator(1);
+    }
+    WarnAboutBadSetParameters(error);
+  }
+
+  // This could conceivably happen if we are allowing the old setParameters
+  // behavior.
+  if (!paramsCopy.mEncodings.Length()) {
+    if (!mHaveFailedBecauseNoEncodings) {
+      mHaveFailedBecauseNoEncodings = true;
+      mozilla::glean::rtcrtpsender_setparameters::fail_no_encodings
+          .AddToNumerator(1);
+    }
+
+    p->MaybeRejectWithInvalidModificationError(
+        "Cannot set an empty encodings array");
     return p.forget();
   }
 
@@ -512,6 +639,10 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
   ErrorResult rv;
   CheckAndRectifyEncodings(paramsCopy.mEncodings, mTransceiver->IsVideo(), rv);
   if (rv.Failed()) {
+    if (!mHaveFailedBecauseOtherError) {
+      mHaveFailedBecauseOtherError = true;
+      mozilla::glean::rtcrtpsender_setparameters::fail_other.AddToNumerator(1);
+    }
     p->MaybeReject(std::move(rv));
     return p.forget();
   }
@@ -540,6 +671,10 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
   mPendingParameters = Some(paramsCopy);
   uint32_t serialNumber = ++mNumSetParametersCalls;
   MaybeUpdateConduit();
+
+  if (mAllowOldSetParameters) {
+    SetJsepRids(paramsCopy);
+  }
 
   // If the media stack is successfully configured with parameters,
   // queue a task to run the following steps:
@@ -676,7 +811,7 @@ void RTCRtpSender::GetParameters(RTCRtpSendParameters& aParameters) {
   // Let result be a new RTCRtpSendParameters dictionary constructed as follows:
 
   // transactionId is set to a new unique identifier
-  aParameters.mTransactionId = mPc->GenerateUUID();
+  aParameters.mTransactionId.Construct(mPc->GenerateUUID());
 
   // encodings is set to the value of the [[SendEncodings]] internal slot.
   aParameters.mEncodings = mParameters.mEncodings;
@@ -693,9 +828,11 @@ void RTCRtpSender::GetParameters(RTCRtpSendParameters& aParameters) {
   // rtcp.reducedSize is set to true if reduced-size RTCP has been negotiated
   // for sending, and false otherwise.
   // TODO(bug 1765852): We do not support this yet
-  // aParameters.mRtcp.Construct();
-  aParameters.mRtcp.mCname.Construct();
-  aParameters.mRtcp.mReducedSize.Construct(false);
+  aParameters.mRtcp.Construct();
+  aParameters.mRtcp.Value().mCname.Construct();
+  aParameters.mRtcp.Value().mReducedSize.Construct(false);
+  aParameters.mHeaderExtensions.Construct();
+  aParameters.mCodecs.Construct();
 
   // Set sender.[[LastReturnedParameters]] to result.
   mLastReturnedParameters = Some(aParameters);
@@ -786,8 +923,7 @@ Sequence<RTCRtpEncodingParameters> RTCRtpSender::ToSendEncodings(
 
 void RTCRtpSender::MaybeGetJsepRids() {
   MOZ_ASSERT(!mSimulcastEnvelopeSet);
-  MOZ_ASSERT(mParameters.mEncodings.Length() == 1);
-  MOZ_ASSERT(!mParameters.mEncodings[0].mRid.WasPassed());
+  MOZ_ASSERT(mParameters.mEncodings.Length());
 
   auto jsepRids = GetJsepTransceiver().mSendTrack.GetRids();
   if (!jsepRids.empty()) {
@@ -796,7 +932,6 @@ void RTCRtpSender::MaybeGetJsepRids() {
       // JSEP is using at least one rid. Stomp our single ridless encoding
       mParameters.mEncodings = ToSendEncodings(jsepRids);
     }
-    GetJsepTransceiver().mSendTrack.SetMaxEncodings(jsepRids.size());
     mSimulcastEnvelopeSet = true;
   }
 }
@@ -805,29 +940,33 @@ Sequence<RTCRtpEncodingParameters> RTCRtpSender::GetMatchingEncodings(
     const std::vector<std::string>& aRids) const {
   Sequence<RTCRtpEncodingParameters> result;
 
-  if (aRids.empty() || (aRids.size() == 1 && aRids[0].empty())) {
+  if (!aRids.empty() && !aRids[0].empty()) {
+    // Simulcast, or unicast with rid
+    for (const auto& encoding : mParameters.mEncodings) {
+      for (const auto& rid : aRids) {
+        auto utf16Rid = NS_ConvertUTF8toUTF16(rid.c_str());
+        if (!encoding.mRid.WasPassed() || (utf16Rid == encoding.mRid.Value())) {
+          auto encodingCopy(encoding);
+          if (!encodingCopy.mRid.WasPassed()) {
+            encodingCopy.mRid.Construct(NS_ConvertUTF8toUTF16(rid.c_str()));
+          }
+          Unused << result.AppendElement(encodingCopy, fallible);
+          break;
+        }
+      }
+    }
+  }
+
+  // If we're allowing the old setParameters behavior, we _might_ be able to
+  // get into this situation even if there were rids above. Be extra careful.
+  // Under normal circumstances, this just handles the ridless case.
+  if (!result.Length()) {
     // Unicast with no specified rid. Restore mUnicastEncoding, if
     // it exists, otherwise pick the first encoding.
     if (mUnicastEncoding.isSome()) {
       Unused << result.AppendElement(*mUnicastEncoding, fallible);
     } else {
       Unused << result.AppendElement(mParameters.mEncodings[0], fallible);
-    }
-    return result;
-  }
-
-  for (const auto& encoding : mParameters.mEncodings) {
-    for (const auto& rid : aRids) {
-      MOZ_ASSERT(!rid.empty());
-      auto utf16Rid = NS_ConvertUTF8toUTF16(rid.c_str());
-      if (!encoding.mRid.WasPassed() || (utf16Rid == encoding.mRid.Value())) {
-        auto encodingCopy(encoding);
-        if (!encodingCopy.mRid.WasPassed()) {
-          encodingCopy.mRid.Construct(NS_ConvertUTF8toUTF16(rid.c_str()));
-        }
-        Unused << result.AppendElement(encodingCopy, fallible);
-        break;
-      }
     }
   }
 

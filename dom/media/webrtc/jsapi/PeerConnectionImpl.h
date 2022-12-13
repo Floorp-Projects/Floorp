@@ -519,6 +519,10 @@ class PeerConnectionImpl final
     return NS_ConvertUTF8toUTF16(result.c_str());
   }
 
+  bool ShouldAllowOldSetParameters() const { return mAllowOldSetParameters; }
+
+  void SendWarningToConsole(const nsCString& aWarning);
+
  private:
   virtual ~PeerConnectionImpl();
   PeerConnectionImpl(const PeerConnectionImpl& rhs);
@@ -820,6 +824,9 @@ class PeerConnectionImpl final
 
   // Used to store the mDNS hostnames that we have registered
   std::set<std::string> mRegisteredMDNSHostnames;
+
+  // web-compat stopgap
+  bool mAllowOldSetParameters = false;
 
   // Used to store the mDNS hostnames that we have queried
   struct PendingIceCandidate {
