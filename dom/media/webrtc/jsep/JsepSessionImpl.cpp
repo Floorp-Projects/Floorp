@@ -1057,6 +1057,7 @@ JsepSession::Result JsepSessionImpl::SetRemoteDescription(
         // We chose a level for this transceiver, but never negotiated it.
         // Discard this state.
         transceiver->ClearLevel();
+        transceiver->mSendTrack.ClearRids();
       }
     }
   }
@@ -1564,6 +1565,7 @@ JsepTransceiver* JsepSessionImpl::GetTransceiverForLocal(size_t level) {
       if (newTransceiver) {
         newTransceiver->SetLevel(level);
         transceiver->ClearLevel();
+        transceiver->mSendTrack.ClearRids();
         return newTransceiver;
       }
     }
@@ -1602,6 +1604,7 @@ JsepTransceiver* JsepSessionImpl::GetTransceiverForRemote(
     }
     transceiver->Disassociate();
     transceiver->ClearLevel();
+    transceiver->mSendTrack.ClearRids();
   }
 
   // No transceiver for |level|
@@ -1669,6 +1672,8 @@ nsresult JsepSessionImpl::UpdateTransceiversFromRemoteDescription(
       continue;
     }
 
+    transceiver->mSendTrack.SendTrackSetRemote(mSsrcGenerator, msection);
+
     // Interop workaround for endpoints that don't support msid.
     // Ensures that there is a default stream id set, provided the remote is
     // sending.
@@ -1678,7 +1683,7 @@ nsresult JsepSessionImpl::UpdateTransceiversFromRemoteDescription(
     // This will process a=msid if present, or clear the stream ids if the
     // msection is not sending. If the msection is sending, and there are no
     // a=msid, the previously set default will stay.
-    transceiver->mRecvTrack.UpdateRecvTrack(remote, msection);
+    transceiver->mRecvTrack.RecvTrackSetRemote(remote, msection);
   }
 
   return NS_OK;
