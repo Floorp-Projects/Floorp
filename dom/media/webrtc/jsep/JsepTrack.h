@@ -271,8 +271,11 @@ class JsepTrack {
   sdp::Direction mDirection;
   std::vector<UniquePtr<JsepCodecDescription>> mPrototypeCodecs;
   // List of rids. May be initially populated from JS, or from a remote SDP.
-  // Can be updated by remote SDP. For unicast, this will contain one element
-  // with the empty string.
+  // Can be updated by remote SDP. If no negotiation has taken place at all,
+  // this will be empty. If negotiation has taken place, but no simulcast
+  // attr was negotiated, this will contain the empty string as a single
+  // element. If a simulcast attribute was negotiated, this will contain the
+  // negotiated rids.
   std::vector<std::string> mRids;
   UniquePtr<JsepTrackNegotiatedDetails> mNegotiatedDetails;
   std::vector<uint32_t> mSsrcs;
