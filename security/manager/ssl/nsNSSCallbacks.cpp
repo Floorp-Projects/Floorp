@@ -16,6 +16,7 @@
 #include "mozilla/Casting.h"
 #include "mozilla/Logging.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Span.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/Telemetry.h"
@@ -564,11 +565,32 @@ class PK11PasswordPromptRunnable : public SyncRunnableBase {
   virtual void RunOnTargetThread() override;
 
  private:
+  static bool mRunning;
+
   PK11SlotInfo* mSlot;
   nsIInterfaceRequestor* mIR;
 };
 
+bool PK11PasswordPromptRunnable::mRunning = false;
+
 void PK11PasswordPromptRunnable::RunOnTargetThread() {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!NS_IsMainThread()) {
+    return;
+  }
+
+  // If we've reentered due to the nested event loop implicit in using
+  // nsIPrompt synchronously (or indeed the explicit nested event loop in the
+  // protected authentication case), bail early, cancelling the password
+  // prompt. This will probably cause the operation that resulted in the prompt
+  // to fail, but this is better than littering the screen with a bunch of
+  // password prompts that the user will probably just cancel anyway.
+  if (mRunning) {
+    return;
+  }
+  mRunning = true;
+  auto setRunningToFalseOnExit = MakeScopeExit([&]() { mRunning = false; });
+
   nsresult rv;
   nsCOMPtr<nsIPrompt> prompt;
   if (!mIR) {
