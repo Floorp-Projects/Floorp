@@ -1,0 +1,140 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>RTCPeerConnection Simulcast Tests - negotiation/encodings</title>
+<meta name="timeout" content="long">
+<script src="../third_party/sdp/sdp.js"></script>
+<script src="simulcast.js"></script>
+<script src="../RTCPeerConnection-helper.js"></script>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="/resources/testdriver.js"></script>
+<script src="/resources/testdriver-vendor.js"></script>
+<script src="../../mediacapture-streams/permission-helper.js"></script>
+<script>
+
+promise_test(async t => {
+  const pc1 = new RTCPeerConnection();
+  t.add_cleanup(() => pc1.close());
+  const pc2 = new RTCPeerConnection();
+  t.add_cleanup(() => pc2.close());
+
+  const stream = await getNoiseStream({video: true});
+  t.add_cleanup(() => stream.getTracks().forEach(track => track.stop()));
+  const sender = pc1.addTrack(stream.getTracks()[0]);
+  // pc1 is unicast right now
+  pc2.addTrack(stream.getTracks()[0]);
+
+  await doOfferToRecvSimulcastAndAnswer(pc2, pc1, ["foo", "bar"]);
+  assert_equals(pc1.getTransceivers().length, 1);
+  const {encodings} = sender.getParameters();
+  const rids = encodings.map(({rid}) => rid);
+  assert_array_equals(rids, ["foo", "bar"]);
+}, 'addTrack, then sRD(simulcast recv offer) results in simulcast');
+
+promise_test(async t => {
+  const pc1 = new RTCPeerConnection();
+  t.add_cleanup(() => pc1.close());
+  const pc2 = new RTCPeerConnection();
+  t.add_cleanup(() => pc2.close());
+
+  const stream = await getNoiseStream({audio: true});
+  t.add_cleanup(() => stream.getTracks().forEach(track => track.stop()));
+  const sender = pc1.addTrack(stream.getTracks()[0]);
+  // pc1 is unicast right now
+  pc2.addTrack(stream.getTracks()[0]);
+
+  await doOfferToRecvSimulcastAndAnswer(pc2, pc1, ["foo", "bar"]);
+  assert_equals(pc1.getTransceivers().length, 1);
+  const {encodings} = sender.getParameters();
+  const rids = encodings.map(({rid}) => rid);
+  assert_array_equals(rids, [undefined]);
+}, 'simulcast is not supported for audio');
+
+// We do not have a test case for sRD(offer) narrowing a simulcast envelope
+// from addTransceiver, since that transceiver cannot be paired up with a remote
+// offer m-section
+promise_test(async t => {
+  const pc1 = new RTCPeerConnection();
+  t.add_cleanup(() => pc1.close());
+  const pc2 = new RTCPeerConnection();
+  t.add_cleanup(() => pc2.close());
+
+  const {sender} = pc1.addTransceiver("video", {sendEncodings: [{rid: "foo"}, {rid: "bar"}, {rid: "baz"}]});
+  let {encodings} = sender.getParameters();
+  assert_equals(encodings.length, 3, "This test requires maxN >= 3");
+
+  await doOfferToSendSimulcastAndAnswer(pc1, pc2, ["foo", "bar"]);
+
+  assert_equals(pc1.getTransceivers().length, 1);
+  encodings = sender.getParameters().encodings;
+  const rids = encodings.map(({rid}) => rid);
+  assert_array_equals(rids, ["foo", "bar"]);
+  const scaleDownByValues = encodings.map(({scaleResolutionDownBy}) => scaleResolutionDownBy);
+  assert_array_equals(scaleDownByValues, [4, 2]);
+}, 'sRD(recv simulcast answer) can narrow the simulcast envelope specified by addTransceiver');
+
+promise_test(async t => {
+  const pc1 = new RTCPeerConnection();
+  t.add_cleanup(() => pc1.close());
+  const pc2 = new RTCPeerConnection();
+  t.add_cleanup(() => pc2.close());
+
+  const {sender} = pc1.addTransceiver("video", {sendEncodings: [{rid: "foo"}, {rid: "bar"}, {rid: "baz"}]});
+  let {encodings} = sender.getParameters();
+  assert_equals(encodings.length, 3, "This test requires maxN >= 3");
+
+  await doOfferToSendSimulcastAndAnswer(pc1, pc2, ["foo", "bar", "baz"]);
+
+  assert_equals(pc1.getTransceivers().length, 1);
+  encodings = sender.getParameters().encodings;
+  let rids = encodings.map(({rid}) => rid);
+  assert_array_equals(rids, ["foo", "bar", "baz"]);
+
+  await doOfferToSendSimulcastAndAnswer(pc1, pc2, ["foo", "bar"]);
+
+  assert_equals(pc1.getTransceivers().length, 1);
+  encodings = sender.getParameters().encodings;
+  rids = encodings.map(({rid}) => rid);
+  assert_array_equals(rids, ["foo", "bar"]);
+  const scaleDownByValues = encodings.map(({scaleResolutionDownBy}) => scaleResolutionDownBy);
+  assert_array_equals(scaleDownByValues, [4, 2]);
+}, 'sRD(recv simulcast answer) can narrow the simulcast envelope from a previous negotiation');
+
+promise_test(async t => {
+  const pc1 = new RTCPeerConnection();
+  t.add_cleanup(() => pc1.close());
+  const pc2 = new RTCPeerConnection();
+  t.add_cleanup(() => pc2.close());
+
+  const {sender} = pc1.addTransceiver("video", {sendEncodings: [{rid: "foo"}, {rid: "bar"}]});
+  let {encodings} = sender.getParameters();
+
+  await doOfferToSendSimulcastAndAnswer(pc1, pc2, ["foo", "bar"]);
+
+  assert_equals(pc1.getTransceivers().length, 1);
+  encodings = sender.getParameters().encodings;
+  let rids = encodings.map(({rid}) => rid);
+  assert_array_equals(rids, ["foo", "bar"]);
+
+  // doAnswerToSendSimulcast causes pc2 to barf unless we set the direction to
+  // sendrecv
+  pc2.getTransceivers()[0].direction = "sendrecv";
+  pc2.getTransceivers()[1].direction = "sendrecv";
+
+  await doOfferToRecvSimulcast(pc2, pc1, ["foo"]);
+  assert_equals(pc1.getTransceivers().length, 1);
+  encodings = sender.getParameters().encodings;
+  rids = encodings.map(({rid}) => rid);
+  assert_array_equals(rids, ["foo", "bar"], "[[SendEncodings]] is not updated in have-remote-offer for reoffers");
+
+  await doAnswerToSendSimulcast(pc2, pc1);
+
+  assert_equals(pc1.getTransceivers().length, 1);
+  encodings = sender.getParameters().encodings;
+  rids = encodings.map(({rid}) => rid);
+  assert_array_equals(rids, ["foo"]);
+  const scaleDownByValues = encodings.map(({scaleResolutionDownBy}) => scaleResolutionDownBy);
+  assert_array_equals(scaleDownByValues, [2]);
+}, 'sRD(simulcast offer) can narrow the simulcast envelope from a previous negotiation');
+
+</script>

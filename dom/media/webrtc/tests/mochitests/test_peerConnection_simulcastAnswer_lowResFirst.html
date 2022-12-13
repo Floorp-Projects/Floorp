@@ -49,7 +49,7 @@
 
     const offer = await offerer.createOffer();
 
-    const mungedOffer = midToRid(offer.sdp);
+    const mungedOffer = midToRid(offer);
     info(`Transformed recv offer to simulcast: ${offer.sdp} to ${mungedOffer}`);
 
     await answerer.setRemoteDescription({type: 'offer', sdp: mungedOffer});
@@ -62,16 +62,15 @@
     info(`rids: ${JSON.stringify(rids)}`);
 
     const sender = answerer.getSenders()[0];
-    sender.setParameters({
-        encodings: [
-            { rid: rids[0], maxBitrate: 40000, scaleResolutionDownBy: 2 },
-            { rid: rids[1], maxBitrate: 40000 }
-          ]
-    });
+    const parameters = sender.getParameters();
+    parameters.encodings[0].maxBitrate = 40000;
+    parameters.encodings[0].scaleResolutionDownBy = 2;
+    parameters.encodings[1].maxBitrate = 40000;
+    await sender.setParameters(parameters);
 
     const answer = await answerer.createAnswer();
 
-    const mungedAnswer = ridToMid(answer.sdp);
+    const mungedAnswer = ridToMid(answer);
     info(`Transformed send simulcast answer to multiple m-sections: ${answer.sdp} to ${mungedAnswer}`);
     await offerer.setRemoteDescription({type: 'answer', sdp: mungedAnswer});
     await answerer.setLocalDescription(answer);
