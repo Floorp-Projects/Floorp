@@ -1254,7 +1254,7 @@ add_task(async function remoteSettingsDataType() {
     if (dataType) {
       value.quickSuggestRemoteSettingsDataType = dataType;
     }
-    let cleanUpNimbus = await QuickSuggestTestUtils.initNimbusFeature(value);
+    let cleanUpNimbus = await UrlbarTestUtils.initNimbusFeature(value);
 
     // Re-enable remote settings to trigger `remoteSettings.#rs.get()`.
     await QuickSuggest.remoteSettings.enable(false);

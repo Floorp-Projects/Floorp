@@ -18,6 +18,10 @@ XPCOMUtils.defineLazyGetter(lazy, "QuickSuggestTestUtils", () => {
   return new Utils(this);
 });
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
+});
+
 async function addTopSites(url) {
   for (let i = 0; i < 5; i++) {
     await PlacesTestUtils.addVisits(url);
@@ -313,7 +317,7 @@ async function setup() {
 }
 
 async function setupNimbus(variables) {
-  return lazy.QuickSuggestTestUtils.initNimbusFeature(variables);
+  return lazy.UrlbarTestUtils.initNimbusFeature(variables);
 }
 
 async function showResultByArrowDown() {
