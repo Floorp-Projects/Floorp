@@ -1298,12 +1298,12 @@ void GCRuntime::updateHelperThreadCount() {
 }
 
 size_t GCRuntime::markingWorkerCount() const {
-  if (!parallelMarkingEnabled) {
+  if (!CanUseExtraThreads() || !parallelMarkingEnabled) {
     return 1;
   }
 
   // Limit parallel marking to use at most two threads initially.
-  return std::min(parallelWorkerCount(), size_t(2));
+  return std::min(GetHelperThreadCount(), size_t(2));
 }
 
 #ifdef DEBUG
