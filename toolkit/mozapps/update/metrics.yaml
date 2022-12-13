@@ -14,19 +14,37 @@ background_update:
   client_id:
     type: uuid
     description: >
-      The Telemetry client ID of the default profile.
+      The legacy Telemetry client ID of this installation's default profile.
+
+      The default profile is as determined by the Profile Service, namely
+      `nsIToolkitProfileService.defaultProfile`.  The majority of users have
+      only one Firefox installation and only one profile, so the default profile
+      is their regular browsing profile.
+
+      It is possible for a Firefox installation to not have a default profile,
+      but in such cases the background update task will abort before sending any
+      telemetry; therefore, the legacy Telemetry client ID should always be
+      present.
+    lifetime: application
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1794053
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1794053
     data_sensitivity:
       - highly_sensitive
       - technical
     notification_emails:
       - install-update@mozilla.com
     expires: never
+    no_lint:
+      - BASELINE_PING
     send_in_pings:
       - background-update
+      - metrics
+      - events
+      - baseline
 
   final_state:
     type: string

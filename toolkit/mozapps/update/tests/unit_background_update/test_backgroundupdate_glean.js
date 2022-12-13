@@ -38,6 +38,8 @@ add_task(async function test_record_update_environment() {
     "app.update.background.enabled"
   );
   GleanPings.backgroundUpdate.testBeforeNextSubmit(reason => {
+    Assert.equal(reason, "backgroundupdate_task");
+
     pingSubmitted = true;
     Assert.equal(
       Services.prefs.getBoolPref("app.update.service.enabled", false),
