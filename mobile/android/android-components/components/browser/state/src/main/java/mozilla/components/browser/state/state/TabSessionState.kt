@@ -5,6 +5,7 @@
 package mozilla.components.browser.state.state
 
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSession.CookieBannerHandlingStatus
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.storage.HistoryMetadataKey
@@ -16,6 +17,7 @@ import java.util.UUID
  * @property id the ID of this tab and session.
  * @property content the [ContentState] of this tab.
  * @property trackingProtection the [TrackingProtectionState] of this tab.
+ * @property cookieBanner the [CookieBannerHandlingStatus] of this tab.
  * @property parentId the parent ID of this tab or null if this tab has no
  * parent. The parent tab is usually the tab that initiated opening this
  * tab (e.g. the user clicked a link with target="_blank" or selected
@@ -34,6 +36,7 @@ data class TabSessionState(
     override val id: String = UUID.randomUUID().toString(),
     override val content: ContentState,
     override val trackingProtection: TrackingProtectionState = TrackingProtectionState(),
+    override val cookieBanner: CookieBannerHandlingStatus = CookieBannerHandlingStatus.NO_DETECTED,
     override val engineState: EngineState = EngineState(),
     override val extensionState: Map<String, WebExtensionState> = emptyMap(),
     override val mediaSessionState: MediaSessionState? = null,
@@ -56,6 +59,7 @@ data class TabSessionState(
         extensionState: Map<String, WebExtensionState>,
         mediaSessionState: MediaSessionState?,
         contextId: String?,
+        cookieBanner: CookieBannerHandlingStatus,
     ): SessionState = copy(
         id = id,
         content = content,
@@ -64,6 +68,7 @@ data class TabSessionState(
         extensionState = extensionState,
         mediaSessionState = mediaSessionState,
         contextId = contextId,
+        cookieBanner = cookieBanner,
     )
 }
 

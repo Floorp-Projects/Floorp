@@ -11,6 +11,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.CookieBannerAction
 import mozilla.components.browser.state.action.CrashAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
@@ -25,6 +26,7 @@ import mozilla.components.browser.state.state.content.FindResultState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSession.CookieBannerHandlingStatus.HANDLED
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.Settings
@@ -223,6 +225,21 @@ class EngineObserverTest {
             TrackingProtectionAction.ToggleExclusionListAction(
                 "mozilla",
                 true,
+            ),
+        )
+    }
+
+    @Test
+    fun `WHEN onCookieBannerChange is called THEN dispatch an CookieBannerAction UpdateStatusAction`() {
+        val store: BrowserStore = mock()
+        val observer = EngineObserver("mozilla", store)
+
+        observer.onCookieBannerChange(HANDLED)
+
+        verify(store).dispatch(
+            CookieBannerAction.UpdateStatusAction(
+                "mozilla",
+                HANDLED,
             ),
         )
     }

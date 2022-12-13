@@ -577,6 +577,10 @@ class GeckoEngineSession(
             notifyObservers {
                 onExcludedOnTrackingProtectionChange(isIgnoredForTrackingProtection())
             }
+            // Re-set the status of cookie banner handling when the user navigates to another site.
+            notifyObservers {
+                onCookieBannerChange(CookieBannerHandlingStatus.NO_DETECTED)
+            }
             notifyObservers { onLocationChange(url) }
         }
 
@@ -893,6 +897,14 @@ class GeckoEngineSession(
 
     @Suppress("ComplexMethod", "NestedBlockDepth")
     internal fun createContentDelegate() = object : GeckoSession.ContentDelegate {
+        override fun onCookieBannerDetected(session: GeckoSession) {
+            notifyObservers { onCookieBannerChange(CookieBannerHandlingStatus.DETECTED) }
+        }
+
+        override fun onCookieBannerHandled(session: GeckoSession) {
+            notifyObservers { onCookieBannerChange(CookieBannerHandlingStatus.HANDLED) }
+        }
+
         override fun onFirstComposite(session: GeckoSession) = Unit
 
         override fun onFirstContentfulPaint(session: GeckoSession) {

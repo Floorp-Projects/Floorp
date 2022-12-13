@@ -7,6 +7,7 @@ package mozilla.components.browser.state.reducer
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContainerAction
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.CookieBannerAction
 import mozilla.components.browser.state.action.CrashAction
 import mozilla.components.browser.state.action.CustomTabListAction
 import mozilla.components.browser.state.action.DebugAction
@@ -56,6 +57,7 @@ internal object BrowserStateReducer {
             is TabListAction -> TabListReducer.reduce(state, action)
             is TabGroupAction -> TabGroupReducer.reduce(state, action)
             is TrackingProtectionAction -> TrackingProtectionStateReducer.reduce(state, action)
+            is CookieBannerAction -> CookieBannerStateReducer.reduce(state, action)
             is WebExtensionAction -> WebExtensionReducer.reduce(state, action)
             is MediaSessionAction -> MediaSessionReducer.reduce(state, action)
             is DownloadAction -> DownloadStateReducer.reduce(state, action)

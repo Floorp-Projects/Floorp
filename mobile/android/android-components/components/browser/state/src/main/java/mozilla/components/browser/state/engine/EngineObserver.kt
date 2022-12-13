@@ -8,6 +8,7 @@ import android.content.Intent
 import android.os.Environment
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.CookieBannerAction
 import mozilla.components.browser.state.action.CrashAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.MediaSessionAction
@@ -151,6 +152,10 @@ internal class EngineObserver(
 
     override fun onTrackerBlockingEnabledChange(enabled: Boolean) {
         store.dispatch(TrackingProtectionAction.ToggleAction(tabId, enabled))
+    }
+
+    override fun onCookieBannerChange(status: EngineSession.CookieBannerHandlingStatus) {
+        store.dispatch(CookieBannerAction.UpdateStatusAction(tabId, status))
     }
 
     override fun onLongPress(hitResult: HitResult) {

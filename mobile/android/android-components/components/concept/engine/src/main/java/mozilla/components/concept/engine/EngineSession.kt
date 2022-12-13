@@ -48,6 +48,11 @@ abstract class EngineSession(
         fun onNavigationStateChange(canGoBack: Boolean? = null, canGoForward: Boolean? = null) = Unit
         fun onSecurityChange(secure: Boolean, host: String? = null, issuer: String? = null) = Unit
         fun onTrackerBlockingEnabledChange(enabled: Boolean) = Unit
+
+        /**
+         * Event to indicate a new [CookieBannerHandlingStatus] is available.
+         */
+        fun onCookieBannerChange(status: CookieBannerHandlingStatus) = Unit
         fun onTrackerBlocked(tracker: Tracker) = Unit
         fun onTrackerLoaded(tracker: Tracker) = Unit
         fun onNavigateBack() = Unit
@@ -535,6 +540,26 @@ abstract class EngineSession(
          * Detect cookie banners but do not handle them.
          */
         DETECT_ONLY(3),
+    }
+
+    /**
+     * Represents a status for cookie banner handling.
+     */
+    enum class CookieBannerHandlingStatus {
+        /**
+         * Indicates a cookie banner was detected.
+         */
+        DETECTED,
+
+        /**
+         * Indicates a cookie banner was handled.
+         */
+        HANDLED,
+
+        /**
+         * Indicates a cookie banner has not been detected yet.
+         */
+        NO_DETECTED,
     }
 
     /**

@@ -18,6 +18,7 @@ import mozilla.components.browser.engine.gecko.permission.geckoContentPermission
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSession.CookieBannerHandlingStatus
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.concept.engine.EngineSession.SafeBrowsingPolicy
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
@@ -284,12 +285,16 @@ class GeckoEngineSessionTest {
         var observedUrl = ""
         var observedCanGoBack = false
         var observedCanGoForward = false
+        var cookieBanner = CookieBannerHandlingStatus.HANDLED
         engineSession.register(
             object : EngineSession.Observer {
                 override fun onLocationChange(url: String) { observedUrl = url }
                 override fun onNavigationStateChange(canGoBack: Boolean?, canGoForward: Boolean?) {
                     canGoBack?.let { observedCanGoBack = canGoBack }
                     canGoForward?.let { observedCanGoForward = canGoForward }
+                }
+                override fun onCookieBannerChange(status: CookieBannerHandlingStatus) {
+                    cookieBanner = status
                 }
             },
         )
@@ -298,6 +303,7 @@ class GeckoEngineSessionTest {
 
         navigationDelegate.value.onLocationChange(mock(), "http://mozilla.org", emptyList())
         assertEquals("http://mozilla.org", observedUrl)
+        assertEquals(CookieBannerHandlingStatus.NO_DETECTED, cookieBanner)
 
         navigationDelegate.value.onCanGoBack(mock(), true)
         assertEquals(true, observedCanGoBack)
@@ -2157,6 +2163,36 @@ class GeckoEngineSessionTest {
             MockContextElement(null, null, "title", "alt", "foobar", null),
         )
         assertFalse(observedChanged)
+    }
+
+    @Test
+    fun contentDelegateCookieBanner() {
+        val engineSession = GeckoEngineSession(
+            mock(),
+            geckoSessionProvider = geckoSessionProvider,
+        )
+        val delegate = engineSession.createContentDelegate()
+
+        var cookieBannerStatus: CookieBannerHandlingStatus? = null
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onCookieBannerChange(status: CookieBannerHandlingStatus) {
+                    cookieBannerStatus = status
+                }
+            },
+        )
+
+        delegate.onCookieBannerDetected(geckoSession)
+
+        assertNotNull(cookieBannerStatus)
+        assertEquals(CookieBannerHandlingStatus.DETECTED, cookieBannerStatus)
+
+        cookieBannerStatus = null
+
+        delegate.onCookieBannerHandled(geckoSession)
+
+        assertNotNull(cookieBannerStatus)
+        assertEquals(CookieBannerHandlingStatus.HANDLED, cookieBannerStatus)
     }
 
     @Test
