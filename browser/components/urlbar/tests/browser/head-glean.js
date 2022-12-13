@@ -87,7 +87,7 @@ async function ensureQuickSuggestInit() {
 async function doTest(testFn) {
   await Services.fog.testFlushAllChildren();
   Services.fog.testResetFOG();
-  gURLBar.controller.engagementEvent.discard();
+  gURLBar.controller.engagementEvent.reset();
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesTestUtils.clearHistoryVisits();
