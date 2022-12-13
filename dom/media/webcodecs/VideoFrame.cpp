@@ -1548,8 +1548,6 @@ already_AddRefed<VideoFrame> VideoFrame::Constructor(
   }
 
   // Check the usability.
-  // TODO: aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR) if this is _detached_ (bug
-  // 1774306).
   if (!aVideoFrame.mResource) {
     aRv.ThrowInvalidStateError(
         "The VideoFrame is closed or no image found there");
@@ -1604,7 +1602,6 @@ already_AddRefed<VideoFrame> VideoFrame::Constructor(
 Nullable<VideoPixelFormat> VideoFrame::GetFormat() const {
   AssertIsOnOwningThread();
 
-  // TODO: Return Nullable<T>() if this is _detached_ (bug 1774306).
   return mResource
              ? Nullable<VideoPixelFormat>(mResource->mFormat.PixelFormat())
              : Nullable<VideoPixelFormat>();
@@ -1628,8 +1625,6 @@ uint32_t VideoFrame::CodedHeight() const {
 already_AddRefed<DOMRectReadOnly> VideoFrame::GetCodedRect() const {
   AssertIsOnOwningThread();
 
-  // TODO: Return nullptr if this is _detached_ instead of checking resource
-  // (bug 1774306).
   return mResource
              ? MakeAndAddRef<DOMRectReadOnly>(
                    mParent, 0.0f, 0.0f, static_cast<double>(mCodedSize.Width()),
@@ -1641,8 +1636,6 @@ already_AddRefed<DOMRectReadOnly> VideoFrame::GetCodedRect() const {
 already_AddRefed<DOMRectReadOnly> VideoFrame::GetVisibleRect() const {
   AssertIsOnOwningThread();
 
-  // TODO: Return nullptr if this is _detached_ instead of checking resource
-  // (bug 1774306).
   return mResource ? MakeAndAddRef<DOMRectReadOnly>(
                          mParent, static_cast<double>(mVisibleRect.X()),
                          static_cast<double>(mVisibleRect.Y()),
@@ -1691,8 +1684,6 @@ uint32_t VideoFrame::AllocationSize(const VideoFrameCopyToOptions& aOptions,
                                     ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
-  // TODO: Throw error if this is _detached_ instead of checking resource (bug
-  // 1774306).
   if (!mResource) {
     aRv.ThrowInvalidStateError("No media resource in VideoFrame");
     return 0;
@@ -1716,8 +1707,6 @@ already_AddRefed<Promise> VideoFrame::CopyTo(
     const VideoFrameCopyToOptions& aOptions, ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
-  // TODO: Throw error if this is _detached_ instead of checking resource (bug
-  // 1774306).
   if (!mResource) {
     aRv.ThrowInvalidStateError("No media resource in VideoFrame");
     return nullptr;
@@ -1801,8 +1790,6 @@ already_AddRefed<Promise> VideoFrame::CopyTo(
 already_AddRefed<VideoFrame> VideoFrame::Clone(ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
-  // TODO: Throw error if this is _detached_ instead of checking resource (bug
-  // 1774306).
   if (!mResource) {
     aRv.ThrowInvalidStateError("No media resource in the VideoFrame now");
     return nullptr;
@@ -1816,7 +1803,6 @@ already_AddRefed<VideoFrame> VideoFrame::Clone(ErrorResult& aRv) {
 void VideoFrame::Close() {
   AssertIsOnOwningThread();
 
-  // TODO: Set _detached_ to `true` (bug 1774306).
   mResource.reset();
   mCodedSize = gfx::IntSize();
   mVisibleRect = gfx::IntRect();
@@ -1856,8 +1842,6 @@ bool VideoFrame::WriteStructuredClone(JSStructuredCloneWriter* aWriter,
                                       StructuredCloneHolder* aHolder) const {
   AssertIsOnOwningThread();
 
-  // TODO: Throw error if this is _detached_ instead of checking resource (bug
-  // 1774306).
   if (!mResource) {
     return false;
   }
@@ -1879,8 +1863,6 @@ bool VideoFrame::WriteStructuredClone(JSStructuredCloneWriter* aWriter,
 UniquePtr<VideoFrame::TransferredData> VideoFrame::Transfer() {
   AssertIsOnOwningThread();
 
-  // TODO: Throw error if this is _detached_ instead of checking resource (bug
-  // 1774306).
   if (!mResource) {
     return nullptr;
   }
