@@ -1602,18 +1602,19 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::RemoveStyleInside(
     }
   }
 
+  // TODO: It seems that if aElement is not editable, we should insert new
+  //       container to remove the style if possible.
+  if (!EditorUtils::IsEditableContent(aElement, EditorType::HTML)) {
+    return pointToPutCaret;
+  }
+
   // Next, remove the element or its attribute.
   auto ShouldRemoveHTMLStyle = [&]() {
     if (!aStyleToRemove.IsStyleToClearAllInlineStyles()) {
       return aStyleToRemove.IsRepresentedBy(aElement);
     }
-    // XXX Why do we check if aElement is editable only when we're removing all
-    //     styles?
-    if (EditorUtils::IsEditableContent(aElement, EditorType::HTML)) {
-      // or removing all styles and the element is a presentation element.
-      return HTMLEditUtils::IsRemovableInlineStyleElement(aElement);
-    }
-    return false;
+    // or removing all styles and the element is a presentation element.
+    return HTMLEditUtils::IsRemovableInlineStyleElement(aElement);
   };
 
   if (ShouldRemoveHTMLStyle()) {
