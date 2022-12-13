@@ -1,5 +1,5 @@
 [package]
-authors = ["nobody <nobody@mozilla.org>"]
+authors = ["The Mozilla Project Developers"]
 name = "testing"
 version = "0.0.1"
 

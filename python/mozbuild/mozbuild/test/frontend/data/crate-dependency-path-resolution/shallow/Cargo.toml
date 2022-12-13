@@ -2,5 +2,5 @@
 name = "shallow-crate"
 version = "0.1.0"
 authors = [
-  "Nobody <nobody@mozilla.org>",
+  "The Mozilla Project Developers",
 ]

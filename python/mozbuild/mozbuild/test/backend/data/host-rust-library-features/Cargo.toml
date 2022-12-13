@@ -1,9 +1,7 @@
 [package]
 name = "hostrusttool"
 version = "0.1.0"
-authors = [
-  "Nobody <nobody@mozilla.org>",
-]
+authors = ["The Mozilla Project Developers"]
 
 [lib]
 crate-type = ["staticlib"]
