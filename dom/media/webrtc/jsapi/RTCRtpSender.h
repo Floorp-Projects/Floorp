@@ -86,9 +86,9 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
 
   // This is called when we set an answer (ie; when the transport is finalized).
   void UpdateTransport();
-  void UpdateConduit();
   void SyncToJsep(JsepTransceiver& aJsepTransceiver) const;
   void SyncFromJsep(const JsepTransceiver& aJsepTransceiver);
+  void MaybeUpdateConduit();
 
   AbstractCanonical<Ssrcs>* CanonicalSsrcs() { return &mSsrcs; }
   AbstractCanonical<Ssrcs>* CanonicalVideoRtxSsrcs() { return &mVideoRtxSsrcs; }
@@ -121,7 +121,9 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
   std::string GetMid() const;
   JsepTransceiver& GetJsepTransceiver();
   void ApplyParameters(const RTCRtpParameters& aParameters);
-  void ConfigureVideoCodecMode();
+  void ApplyJsEncodingToConduitEncoding(
+      const RTCRtpEncodingParameters& aJsEncoding,
+      VideoCodecConfig::Encoding* aConduitEncoding);
 
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<PeerConnectionImpl> mPc;
@@ -133,6 +135,56 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
   bool mHaveSetupTransport = false;
 
   RefPtr<dom::RTCDTMFSender> mDtmf;
+
+  class BaseConfig {
+   public:
+    // TODO(bug 1744116): Use = default here
+    bool operator==(const BaseConfig& aOther) const {
+      return mSsrcs == aOther.mSsrcs &&
+             mLocalRtpExtensions == aOther.mLocalRtpExtensions &&
+             mCname == aOther.mCname && mTransmitting == aOther.mTransmitting;
+    }
+    Ssrcs mSsrcs;
+    RtpExtList mLocalRtpExtensions;
+    std::string mCname;
+    bool mTransmitting = false;
+  };
+
+  class VideoConfig : public BaseConfig {
+   public:
+    // TODO(bug 1744116): Use = default here
+    bool operator==(const VideoConfig& aOther) const {
+      return BaseConfig::operator==(aOther) &&
+             mVideoRtxSsrcs == aOther.mVideoRtxSsrcs &&
+             mVideoCodec == aOther.mVideoCodec &&
+             mVideoRtpRtcpConfig == aOther.mVideoRtpRtcpConfig &&
+             mVideoCodecMode == aOther.mVideoCodecMode;
+    }
+    Ssrcs mVideoRtxSsrcs;
+    Maybe<VideoCodecConfig> mVideoCodec;
+    Maybe<RtpRtcpConfig> mVideoRtpRtcpConfig;
+    webrtc::VideoCodecMode mVideoCodecMode =
+        webrtc::VideoCodecMode::kRealtimeVideo;
+  };
+
+  class AudioConfig : public BaseConfig {
+   public:
+    // TODO(bug 1744116): Use = default here
+    bool operator==(const AudioConfig& aOther) const {
+      return BaseConfig::operator==(aOther) &&
+             mAudioCodec == aOther.mAudioCodec && mDtmfPt == aOther.mDtmfPt &&
+             mDtmfFreq == aOther.mDtmfFreq;
+    }
+    Maybe<AudioCodecConfig> mAudioCodec;
+    int32_t mDtmfPt = -1;
+    int32_t mDtmfFreq = 0;
+  };
+
+  Maybe<VideoConfig> GetNewVideoConfig();
+  Maybe<AudioConfig> GetNewAudioConfig();
+  void UpdateBaseConfig(BaseConfig* aConfig);
+  void ApplyVideoConfig(const VideoConfig& aConfig);
+  void ApplyAudioConfig(const AudioConfig& aConfig);
 
   Canonical<Ssrcs> mSsrcs;
   Canonical<Ssrcs> mVideoRtxSsrcs;
