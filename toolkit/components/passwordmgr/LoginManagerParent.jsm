@@ -37,7 +37,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  FirefoxRelay: "resource://gre/modules/FirefoxRelay.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
   PasswordGenerator: "resource://gre/modules/PasswordGenerator.jsm",
@@ -349,14 +348,6 @@ class LoginManagerParent extends JSWindowActorParent {
         this.#onFormProcessed(data.formid);
         break;
       }
-
-      case "PasswordManager:offerRelayIntegration": {
-        return this.#offerRelayIntegration(context.origin);
-      }
-
-      case "PasswordManager:generateRelayUsername": {
-        return this.#generateRelayUsername(context.origin);
-      }
     }
 
     return undefined;
@@ -477,16 +468,6 @@ class LoginManagerParent extends JSWindowActorParent {
         browsingContext: this.browsingContext,
       });
     }
-  }
-
-  async #offerRelayIntegration(origin) {
-    const browser = lazy.LoginHelper.getBrowserForPrompt(this.getRootBrowser());
-    return lazy.FirefoxRelay.offerRelayIntegration(browser, origin);
-  }
-
-  async #generateRelayUsername(origin) {
-    const browser = lazy.LoginHelper.getBrowserForPrompt(this.getRootBrowser());
-    return lazy.FirefoxRelay.generateUsername(browser, origin);
   }
 
   /**
@@ -676,7 +657,6 @@ class LoginManagerParent extends JSWindowActorParent {
       forcePasswordGeneration,
       hasBeenTypePassword,
       isProbablyANewPasswordField,
-      scenarioName,
     }
   ) {
     // Note: previousResult is a regular object, not an
@@ -778,12 +758,6 @@ class LoginManagerParent extends JSWindowActorParent {
     return {
       generatedPassword,
       importable: await getImportableLogins(formOrigin),
-      autocompleteItems: hasBeenTypePassword
-        ? []
-        : await lazy.FirefoxRelay.autocompleteItemsAsync(
-            formOrigin,
-            scenarioName
-          ),
       logins: jsLogins,
       willAutoSaveGeneratedPassword,
     };

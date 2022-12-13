@@ -424,19 +424,6 @@ const observer = {
 Services.obs.addObserver(observer, "autocomplete-did-enter-text");
 
 /**
- * Form scenario defines what can be done with form.
- */
-class FormScenario {}
-
-/**
- * Sign up scenario defines typical account registration flow.
- */
-class SignUpFormScenario extends FormScenario {
-  usernameField;
-  passwordField;
-}
-
-/**
  * Logic of Capture and Filling.
  *
  * This class will be shared with Firefox iOS and should have no references to
@@ -456,6 +443,7 @@ class LoginFormState {
    */
   lastSubmittedValuesByRootElement = new WeakMap();
   fieldModificationsByRootElement = new WeakMap();
+  loginFormRootElements = new WeakSet();
   /**
    * Anything entered into an <input> that we think might be a username
    */
@@ -481,7 +469,7 @@ class LoginFormState {
    * Caches the results of the username heuristics
    */
   #cachedIsInferredUsernameField = new WeakMap();
-  #cachedIsInferredEmailField = new WeakMap();
+  cachedIsInferredEmailField = new WeakMap();
   #cachedIsInferredLoginForm = new WeakMap();
 
   /**
@@ -495,18 +483,6 @@ class LoginFormState {
   numFormHasPossibleUsernameEvent = 0;
 
   captureLoginTimeStamp = 0;
-
-  // Scenarios detected on this page
-  #scenariosByRoot = new WeakMap();
-
-  getScenario(inputElement) {
-    const formLikeRoot = lazy.FormLikeFactory.findRootForField(inputElement);
-    return this.#scenariosByRoot.get(formLikeRoot);
-  }
-
-  setScenario(formLikeRoot, scenario) {
-    this.#scenariosByRoot.set(formLikeRoot, scenario);
-  }
 
   storeUserInput(field) {
     if (field.value && lazy.LoginHelper.captureInputChanges) {
@@ -526,14 +502,10 @@ class LoginFormState {
    * @returns {boolean} True if the element is likely an email field
    */
   isProbablyAnEmailField(inputElement) {
-    if (!inputElement) {
-      return false;
-    }
-
-    let result = this.#cachedIsInferredEmailField.get(inputElement);
+    let result = this.cachedIsInferredEmailField.get(inputElement);
     if (result === undefined) {
       result = lazy.LoginHelper.isInferredEmailField(inputElement);
-      this.#cachedIsInferredEmailField.set(inputElement, result);
+      this.cachedIsInferredEmailField.set(inputElement, result);
     }
 
     return result;
@@ -2791,20 +2763,6 @@ class LoginManagerChild extends JSWindowActorChild {
       newPasswordField: passwordField,
     } = docState._getFormFields(form, false, recipes);
 
-    const passwordACFieldName = passwordField?.getAutocompleteInfo().fieldName;
-
-    let scenario;
-    // For "sign up" scenarios we expect an email like username and
-    // a password field with autocomplete=new-password
-    if (usernameField && passwordACFieldName == "new-password") {
-      scenario = new SignUpFormScenario(usernameField, passwordField);
-    }
-
-    if (scenario) {
-      docState.setScenario(form.rootElement, scenario);
-      lazy.gFormFillService.markAsLoginManagerField(usernameField);
-    }
-
     try {
       // Nothing to do if we have no matching (excluding form action
       // checks) logins available, and there isn't a need to show
@@ -2925,6 +2883,9 @@ class LoginManagerChild extends JSWindowActorChild {
         autofillResult = AUTOFILL_RESULT.NO_LOGINS_FIT;
         return;
       }
+
+      const passwordACFieldName = passwordField?.getAutocompleteInfo()
+        .fieldName;
 
       if (passwordField) {
         if (!userTriggered && passwordField.type != "password") {
@@ -3147,10 +3108,5 @@ class LoginManagerChild extends JSWindowActorChild {
         formid: form.rootElement.id,
       });
     }
-  }
-
-  getScenario(inputElement) {
-    const docState = this.stateForDocument(inputElement.ownerDocument);
-    return docState.getScenario(inputElement);
   }
 }
