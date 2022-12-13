@@ -127,6 +127,8 @@ class BasePrincipal : public nsJSPrincipals {
                                        bool allowIfInheritsPrincipal,
                                        uint64_t innerWindowID) final;
   NS_IMETHOD GetAddonPolicy(extensions::WebExtensionPolicy** aResult) final;
+  NS_IMETHOD GetContentScriptAddonPolicy(
+      extensions::WebExtensionPolicy** aResult) final;
   NS_IMETHOD GetIsNullPrincipal(bool* aResult) override;
   NS_IMETHOD GetIsContentPrincipal(bool* aResult) override;
   NS_IMETHOD GetIsExpandedPrincipal(bool* aResult) override;
