@@ -7,7 +7,10 @@
 "use strict";
 
 module.exports = {
-  CanvasRenderingContext2D: [["prototype", "mozImageSmoothingEnabled"]],
+  CanvasRenderingContext2D: [
+    ["prototype", "mozTextStyle"],
+    ["prototype", "mozImageSmoothingEnabled"],
+  ],
   Document: [
     ["prototype", "releaseCapture"],
     ["prototype", "onmozfullscreenchange"],
@@ -45,6 +48,14 @@ module.exports = {
   SVGElement: [
     ["prototype", "onmozfullscreenchange"],
     ["prototype", "onmozfullscreenerror"],
+  ],
+  SVGGraphicsElement: [
+    ["prototype", "nearestViewportElement"],
+    ["prototype", "farthestViewportElement"],
+  ],
+  U2F: [
+    ["prototype", "register_impl"],
+    ["prototype", "sign_impl"],
   ],
   Window: [
     ["prototype", "InstallTrigger"],
