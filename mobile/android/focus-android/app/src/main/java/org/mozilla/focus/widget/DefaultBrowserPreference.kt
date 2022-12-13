@@ -6,15 +6,13 @@ package org.mozilla.focus.widget
 
 import android.app.role.RoleManager
 import android.content.Context
-import android.content.Intent
 import android.os.Build
-import android.provider.Settings
 import android.util.AttributeSet
-import androidx.core.os.bundleOf
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import com.google.android.material.switchmaterial.SwitchMaterial
 import mozilla.components.support.utils.Browsers
+import mozilla.components.support.utils.ext.navigateToDefaultBrowserAppsSettings
 import org.mozilla.focus.GleanMetrics.SetDefaultBrowser
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.tryAsActivity
@@ -66,12 +64,14 @@ class DefaultBrowserPreference @JvmOverloads constructor(
                             ),
                         )
                     } else {
-                        navigateToDefaultBrowserAppsSettings(isDefault)
+                        context.navigateToDefaultBrowserAppsSettings()
+                        SetDefaultBrowser.fromOsSettings.record(SetDefaultBrowser.FromOsSettingsExtra(isDefault))
                     }
                 }
             }
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> {
-                navigateToDefaultBrowserAppsSettings(isDefault)
+                context.navigateToDefaultBrowserAppsSettings()
+                SetDefaultBrowser.fromOsSettings.record(SetDefaultBrowser.FromOsSettingsExtra(isDefault))
             }
             else -> {
                 openDefaultBrowserSumoPage(context)
@@ -84,27 +84,7 @@ class DefaultBrowserPreference @JvmOverloads constructor(
         }
     }
 
-    private fun navigateToDefaultBrowserAppsSettings(isDefault: Boolean) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            val intent = Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS)
-            intent.putExtra(
-                SETTINGS_SELECT_OPTION_KEY,
-                DEFAULT_BROWSER_APP_OPTION,
-            )
-            intent.putExtra(
-                SETTINGS_SHOW_FRAGMENT_ARGS,
-                bundleOf(SETTINGS_SELECT_OPTION_KEY to DEFAULT_BROWSER_APP_OPTION),
-            )
-
-            context.startActivity(intent)
-            SetDefaultBrowser.fromOsSettings.record(SetDefaultBrowser.FromOsSettingsExtra(isDefault))
-        }
-    }
-
     companion object {
         const val REQUEST_CODE_BROWSER_ROLE = 1
-        const val SETTINGS_SELECT_OPTION_KEY = ":settings:fragment_args_key"
-        const val SETTINGS_SHOW_FRAGMENT_ARGS = ":settings:show_fragment_args"
-        const val DEFAULT_BROWSER_APP_OPTION = "default_browser"
     }
 }
