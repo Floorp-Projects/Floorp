@@ -89,5 +89,8 @@ if CONFIG["OS_TARGET"] == "WINNT":
         "WinWebAuthnManager.cpp",
     ]
 
-MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
-BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
+MOCHITEST_MANIFESTS += ["tests/mochitest.ini", "tests/u2f/mochitest.ini"]
+BROWSER_CHROME_MANIFESTS += [
+    "tests/browser/browser.ini",
+    "tests/u2f/browser/browser.ini",
+]

@@ -8014,9 +8014,19 @@ var WebAuthnPromptHelper = {
     }
   },
 
-  register(mgr, { origin, tid }) {
+  register(mgr, { origin, tid, is_ctap2, device_selected }) {
     let mainAction = this.buildCancelAction(mgr, tid);
-    this.show(tid, "register", "webauthn.registerPrompt2", origin, mainAction);
+    let message;
+    if (is_ctap2) {
+      if (device_selected) {
+        message = "webauthn.registerTouchDevice";
+      } else {
+        message = "webauthn.CTAP2registerPrompt";
+      }
+    } else {
+      message = "webauthn.registerPrompt2";
+    }
+    this.show(tid, "register", message, origin, mainAction);
   },
 
   registerDirect(mgr, { origin, tid }) {
@@ -8045,9 +8055,19 @@ var WebAuthnPromptHelper = {
     );
   },
 
-  sign(mgr, { origin, tid }) {
+  sign(mgr, { origin, tid, is_ctap2, device_selected }) {
     let mainAction = this.buildCancelAction(mgr, tid);
-    this.show(tid, "sign", "webauthn.signPrompt2", origin, mainAction);
+    let message;
+    if (is_ctap2) {
+      if (device_selected) {
+        message = "webauthn.signTouchDevice";
+      } else {
+        message = "webauthn.CTAP2signPrompt";
+      }
+    } else {
+      message = "webauthn.signPrompt2";
+    }
+    this.show(tid, "sign", message, origin, mainAction);
   },
 
   show_info(mgr, origin, tid, id, stringId) {

@@ -59,13 +59,13 @@ static nsIThread* gBackgroundThread;
 // Data for WebAuthn UI prompt notifications.
 static const char16_t kRegisterPromptNotifcation[] =
     u"{\"action\":\"register\",\"tid\":%llu,\"origin\":\"%s\","
-    u"\"browsingContextId\":%llu}";
+    u"\"browsingContextId\":%llu,\"is_ctap2\":%s, \"device_selected\":%s}";
 static const char16_t kRegisterDirectPromptNotifcation[] =
     u"{\"action\":\"register-direct\",\"tid\":%llu,\"origin\":\"%s\","
     u"\"browsingContextId\":%llu}";
 static const char16_t kSignPromptNotifcation[] =
     u"{\"action\":\"sign\",\"tid\":%llu,\"origin\":\"%s\","
-    u"\"browsingContextId\":%llu}";
+    u"\"browsingContextId\":%llu,\"is_ctap2\":%s, \"device_selected\":%s}";
 static const char16_t kCancelPromptNotifcation[] =
     u"{\"action\":\"cancel\",\"tid\":%llu}";
 static const char16_t kPinRequiredNotifcation[] =
@@ -376,11 +376,11 @@ static void status_callback(rust_ctap2_status_update_res* status) {
     if (gInstance->CurrentTransactionIsRegister()) {
       nsTextFormatter::ssprintf(notification_json, kRegisterPromptNotifcation,
                                 gInstance->GetCurrentTransactionId(),
-                                origin.get(), browsingCtxId);
+                                origin.get(), browsingCtxId, "true", "true");
     } else if (gInstance->CurrentTransactionIsSign()) {
       nsTextFormatter::ssprintf(notification_json, kSignPromptNotifcation,
                                 gInstance->GetCurrentTransactionId(),
-                                origin.get(), browsingCtxId);
+                                origin.get(), browsingCtxId, "true", "true");
     }
   } else {
     // No-op for now
@@ -500,13 +500,12 @@ void U2FTokenManager::DoRegister(const WebAuthnMakeCredentialInfo& aInfo,
   mozilla::ipc::AssertIsOnBackgroundThread();
   MOZ_ASSERT(mLastTransactionId > 0);
 
-  if (!U2FPrefManager::Get()->GetIsCtap2()) {
-    // Show a prompt that lets the user cancel the ongoing transaction.
-    // CTAP2 is handling this in the status_callback
-    NS_ConvertUTF16toUTF8 origin(aInfo.Origin());
-    SendPromptNotification(kRegisterPromptNotifcation, mLastTransactionId,
-                           origin.get(), aInfo.BrowsingContextId());
-  }
+  // Show a prompt that lets the user cancel the ongoing transaction.
+  NS_ConvertUTF16toUTF8 origin(aInfo.Origin());
+  const char* is_ctap2 = U2FPrefManager::Get()->GetIsCtap2() ? "true" : "false";
+  SendPromptNotification(kRegisterPromptNotifcation, mLastTransactionId,
+                         origin.get(), aInfo.BrowsingContextId(), is_ctap2,
+                         "false");
 
   uint64_t tid = mLastTransactionId;
   mozilla::TimeStamp startTime = mozilla::TimeStamp::Now();
@@ -582,12 +581,10 @@ void U2FTokenManager::DoSign(const WebAuthnGetAssertionInfo& aTransactionInfo) {
   NS_ConvertUTF16toUTF8 origin(aTransactionInfo.Origin());
   uint64_t browserCtxId = aTransactionInfo.BrowsingContextId();
 
-  if (!U2FPrefManager::Get()->GetIsCtap2()) {
-    // Show a prompt that lets the user cancel the ongoing transaction.
-    // CTAP2 is handling this in the status_callback
-    SendPromptNotification(kSignPromptNotifcation, tid, origin.get(),
-                           browserCtxId);
-  }
+  // Show a prompt that lets the user cancel the ongoing transaction.
+  const char* is_ctap2 = U2FPrefManager::Get()->GetIsCtap2() ? "true" : "false";
+  SendPromptNotification(kSignPromptNotifcation, tid, origin.get(),
+                         browserCtxId, is_ctap2, "false");
 
   mozilla::TimeStamp startTime = mozilla::TimeStamp::Now();
 

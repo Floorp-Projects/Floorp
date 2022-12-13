@@ -9,6 +9,8 @@ const TEST_URL = "https://example.com/";
 add_task(async function test_setup_usbtoken() {
   return SpecialPowers.pushPrefEnv({
     set: [
+      ["security.webauth.u2f", false],
+      ["security.webauth.webauthn", true],
       ["security.webauth.webauthn_enable_softtoken", false],
       ["security.webauth.webauthn_enable_usbtoken", true],
     ],
@@ -22,6 +24,8 @@ add_task(test_window_switching);
 add_task(async function test_setup_softtoken() {
   return SpecialPowers.pushPrefEnv({
     set: [
+      ["security.webauth.u2f", false],
+      ["security.webauth.webauthn", true],
       ["security.webauth.webauthn_enable_softtoken", true],
       ["security.webauth.webauthn_enable_usbtoken", false],
     ],
