@@ -638,20 +638,9 @@ class DictionaryShape : public NativeShape {
     immutableFlags = (immutableFlags & ~MAP_LENGTH_MASK) | mapLength;
     MOZ_ASSERT(propMapLength() == mapLength);
   }
-  void setBaseOfNewShape(BaseShape* base) {
-    MOZ_ASSERT(isDictionary());
-    MOZ_ASSERT(base);
-    setHeaderPtr(base);
-  }
   void setObjectFlagsOfNewShape(ObjectFlags flags) {
     MOZ_ASSERT(isDictionary());
     objectFlags_ = flags;
-  }
-  void setNumFixedSlotsOfNewShape(uint32_t nfixed) {
-    MOZ_ASSERT(isDictionary());
-    MOZ_ASSERT(nfixed < FIXED_SLOTS_MAX);
-    immutableFlags = immutableFlags & ~FIXED_SLOTS_MASK;
-    immutableFlags = immutableFlags | (nfixed << FIXED_SLOTS_SHIFT);
   }
 
  public:
