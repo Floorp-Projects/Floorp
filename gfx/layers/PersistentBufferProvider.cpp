@@ -257,7 +257,7 @@ bool PersistentBufferProviderShared::SetKnowsCompositor(
     // Get rid of everything else
     Destroy();
 
-    if (prevTexture) {
+    if (prevTexture && prevTexture->IsValid()) {
       RefPtr<TextureClient> newTexture =
           CreateTexture(aKnowsCompositor, mFormat, mSize, mWillReadFrequently);
 
