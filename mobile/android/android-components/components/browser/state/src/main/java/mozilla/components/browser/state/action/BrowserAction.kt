@@ -540,12 +540,6 @@ sealed class ContentAction : BrowserAction() {
         ContentAction()
 
     /**
-     * Updates the isSearch state of the [ContentState] with the given [sessionId].
-     */
-    data class UpdateIsSearchAction(val sessionId: String, val isSearch: Boolean) :
-        ContentAction()
-
-    /**
      * Updates the [SecurityInfoState] of the [ContentState] with the given [sessionId].
      */
     data class UpdateSecurityInfoAction(

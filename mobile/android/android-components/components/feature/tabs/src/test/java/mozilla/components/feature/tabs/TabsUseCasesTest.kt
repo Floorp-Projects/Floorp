@@ -251,20 +251,6 @@ class TabsUseCasesTest {
     }
 
     @Test
-    fun `GIVEN a search is performed WHEN adding a new tab THEN the resulting tab is flagged as the result of a search`() {
-        tabsUseCases.addTab.invoke(
-            "https://www.mozilla.org",
-            flags = LoadUrlFlags.external(),
-            isSearch = true,
-        )
-
-        store.waitUntilIdle()
-
-        assertEquals(1, store.state.tabs.size)
-        assertEquals(true, store.state.tabs.single().content.isSearch)
-    }
-
-    @Test
     @Suppress("DEPRECATION")
     fun `AddNewPrivateTabUseCase will not load URL if flag is set to false`() {
         tabsUseCases.addPrivateTab("https://www.mozilla.org", startLoading = false)

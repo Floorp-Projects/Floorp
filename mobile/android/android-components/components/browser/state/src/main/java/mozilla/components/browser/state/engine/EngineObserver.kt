@@ -12,7 +12,6 @@ import mozilla.components.browser.state.action.CrashAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.MediaSessionAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
-import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.AppIntentState
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.LoadRequestState
@@ -47,26 +46,6 @@ internal class EngineObserver(
         store.dispatch(ContentAction.UpdateSearchTermsAction(tabId, ""))
     }
 
-    override fun onNavigateForward() {
-        store.dispatch(ContentAction.UpdateSearchTermsAction(tabId, ""))
-    }
-
-    override fun onGotoHistoryIndex() {
-        store.dispatch(ContentAction.UpdateSearchTermsAction(tabId, ""))
-    }
-
-    override fun onLoadData() {
-        store.dispatch(ContentAction.UpdateSearchTermsAction(tabId, ""))
-    }
-
-    override fun onLoadUrl() {
-        if (store.state.findTabOrCustomTab(tabId)?.content?.isSearch == true) {
-            store.dispatch(ContentAction.UpdateIsSearchAction(tabId, false))
-        } else {
-            store.dispatch(ContentAction.UpdateSearchTermsAction(tabId, ""))
-        }
-    }
-
     override fun onFirstContentfulPaint() {
         store.dispatch(ContentAction.UpdateFirstContentfulPaintStateAction(tabId, true))
     }
@@ -85,7 +64,7 @@ internal class EngineObserver(
         triggeredByRedirect: Boolean,
         triggeredByWebContent: Boolean,
     ) {
-        if (triggeredByWebContent) {
+        if (triggeredByRedirect || triggeredByWebContent) {
             store.dispatch(ContentAction.UpdateSearchTermsAction(tabId, ""))
         }
 

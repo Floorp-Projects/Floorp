@@ -8,7 +8,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mozilla.components.browser.session.storage.RecoverableBrowserState
 import mozilla.components.browser.session.storage.SessionStorage
-import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.RestoreCompleteAction
 import mozilla.components.browser.state.action.TabListAction
@@ -142,7 +141,6 @@ class TabsUseCases(
          * @param private Whether or not the new tab should be private.
          * @param historyMetadata the [HistoryMetadataKey] of the new tab in case this tab
          * was opened from history.
-         * @param isSearch whether or not the provided URL is the result of a search.
          * @return The ID of the created tab.
          */
         @Suppress("LongParameterList")
@@ -158,7 +156,6 @@ class TabsUseCases(
             searchTerms: String = "",
             private: Boolean = false,
             historyMetadata: HistoryMetadataKey? = null,
-            isSearch: Boolean = false,
         ): String {
             val tab = createTab(
                 url = url,
@@ -173,8 +170,6 @@ class TabsUseCases(
             )
 
             store.dispatch(TabListAction.AddTabAction(tab, select = selectTab))
-
-            store.dispatch(ContentAction.UpdateIsSearchAction(tab.id, isSearch))
 
             // If an engine session is specified then loading will have already started when linking
             // the tab to its engine session. Otherwise we ask to load the URL here.
