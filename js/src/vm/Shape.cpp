@@ -57,6 +57,24 @@ bool Shape::replaceShape(JSContext* cx, HandleObject obj,
       }
       break;
     }
+    case Kind::Dictionary: {
+      Handle<NativeObject*> nobj = obj.as<NativeObject>();
+
+      Rooted<BaseShape*> base(cx, nobj->shape()->base());
+      if (proto != base->proto()) {
+        Rooted<TaggedProto> protoRoot(cx, proto);
+        base = BaseShape::get(cx, nobj->getClass(), nobj->realm(), protoRoot);
+        if (!base) {
+          return false;
+        }
+      }
+
+      Rooted<DictionaryPropMap*> map(cx, nobj->dictionaryShape()->propMap());
+      uint32_t mapLength = nobj->shape()->propMapLength();
+      newShape =
+          DictionaryShape::new_(cx, base, objectFlags, nfixed, map, mapLength);
+      break;
+    }
     case Kind::Proxy:
       MOZ_ASSERT(nfixed == 0);
       newShape =
@@ -69,8 +87,6 @@ bool Shape::replaceShape(JSContext* cx, HandleObject obj,
           WasmGCShape::getShape(cx, obj->shape()->getObjectClass(),
                                 obj->shape()->realm(), proto, objectFlags);
       break;
-    case Kind::Dictionary:
-      MOZ_CRASH("Unexpected dictionary shape");
   }
   if (!newShape) {
     return false;
@@ -996,19 +1012,8 @@ bool JSObject::setFlag(JSContext* cx, HandleObject obj, ObjectFlag flag) {
   ObjectFlags objectFlags = obj->shape()->objectFlags();
   objectFlags.setFlag(flag);
 
-  uint32_t numFixed = 0;
-  if (obj->is<NativeObject>()) {
-    Handle<NativeObject*> nobj = obj.as<NativeObject>();
-    if (nobj->inDictionaryMode()) {
-      if (!NativeObject::generateNewDictionaryShape(cx, nobj)) {
-        return false;
-      }
-      nobj->dictionaryShape()->setObjectFlagsOfNewShape(objectFlags);
-      return true;
-    }
-    numFixed = nobj->numFixedSlots();
-  }
-
+  uint32_t numFixed =
+      obj->is<NativeObject>() ? obj->as<NativeObject>().numFixedSlots() : 0;
   return Shape::replaceShape(cx, obj, objectFlags, obj->shape()->proto(),
                              numFixed);
 }
@@ -1047,26 +1052,8 @@ bool JSObject::setProtoUnchecked(JSContext* cx, HandleObject obj,
     }
   }
 
-  uint32_t numFixed = 0;
-  if (obj->is<NativeObject>()) {
-    Handle<NativeObject*> nobj = obj.as<NativeObject>();
-    if (nobj->inDictionaryMode()) {
-      Rooted<BaseShape*> nbase(
-          cx, BaseShape::get(cx, nobj->getClass(), nobj->realm(), proto));
-      if (!nbase) {
-        return false;
-      }
-
-      if (!NativeObject::generateNewDictionaryShape(cx, nobj)) {
-        return false;
-      }
-
-      nobj->dictionaryShape()->setBaseOfNewShape(nbase);
-      return true;
-    }
-    numFixed = nobj->numFixedSlots();
-  }
-
+  uint32_t numFixed =
+      obj->is<NativeObject>() ? obj->as<NativeObject>().numFixedSlots() : 0;
   return Shape::replaceShape(cx, obj, obj->shape()->objectFlags(), proto,
                              numFixed);
 }
@@ -1076,14 +1063,6 @@ bool NativeObject::changeNumFixedSlotsAfterSwap(JSContext* cx,
                                                 Handle<NativeObject*> obj,
                                                 uint32_t nfixed) {
   MOZ_ASSERT(nfixed != obj->shape()->numFixedSlots());
-
-  if (obj->inDictionaryMode()) {
-    if (!NativeObject::generateNewDictionaryShape(cx, obj)) {
-      return false;
-    }
-    obj->dictionaryShape()->setNumFixedSlotsOfNewShape(nfixed);
-    return true;
-  }
 
   return Shape::replaceShape(cx, obj, obj->shape()->objectFlags(),
                              obj->shape()->proto(), nfixed);
