@@ -66,90 +66,58 @@ add_task(async function interaction_topsite_search() {
   // assertAbandonmentTelemetry([{ interaction: "topsite_search" }]);
 });
 
-add_task(async function interaction_returned() {
-  await doTest(async browser => {
-    await addTopSites("https://example.com/");
+add_task(async function interaction_returned_restarted_refined() {
+  const testData = [
+    {
+      firstInput: "x",
+      // Just move the focus to the URL bar after blur.
+      secondInput: null,
+      expected: "returned",
+    },
+    {
+      firstInput: "x",
+      secondInput: "x",
+      expected: "returned",
+    },
+    {
+      firstInput: "x",
+      secondInput: "y",
+      expected: "restarted",
+    },
+    {
+      firstInput: "x",
+      secondInput: "x y",
+      expected: "refined",
+    },
+    {
+      firstInput: "x y",
+      secondInput: "x",
+      expected: "refined",
+    },
+  ];
 
-    gURLBar.value = "example.com";
-    gURLBar.setPageProxyState("invalid");
-    await UrlbarTestUtils.promisePopupOpen(window, () => {
-      document.getElementById("Browser:OpenLocation").doCommand();
+  for (const { firstInput, secondInput, expected } of testData) {
+    await doTest(async browser => {
+      await openPopup(firstInput);
+      await doBlur();
+
+      await UrlbarTestUtils.promisePopupOpen(window, () => {
+        document.getElementById("Browser:OpenLocation").doCommand();
+      });
+      if (secondInput) {
+        for (let i = 0; i < secondInput.length; i++) {
+          EventUtils.synthesizeKey(secondInput.charAt(i));
+        }
+      }
+      await UrlbarTestUtils.promiseSearchComplete(window);
+      await doBlur();
+
+      assertAbandonmentTelemetry([
+        { interaction: "typed" },
+        { interaction: expected },
+      ]);
     });
-    await UrlbarTestUtils.promiseSearchComplete(window);
-    await doBlur();
-
-    assertAbandonmentTelemetry([{ interaction: "returned" }]);
-  });
-});
-
-add_task(async function interaction_restarted() {
-  await doTest(async browser => {
-    await openPopup("search");
-    await doBlur();
-    await UrlbarTestUtils.promisePopupOpen(window, () => {
-      document.getElementById("Browser:OpenLocation").doCommand();
-    });
-    EventUtils.synthesizeKey("x");
-    await UrlbarTestUtils.promiseSearchComplete(window);
-    await doBlur();
-
-    assertAbandonmentTelemetry([
-      { interaction: "typed" },
-      { interaction: "restarted" },
-    ]);
-  });
-});
-
-add_task(async function interaction_refined() {
-  // The following tests do a second search immediately
-  // after an initial search. The showSearchTerms feature has to be
-  // disabled as subsequent searches from a default SERP are a
-  // a persisted_search_terms interaction.
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.showSearchTerms.featureGate", false]],
-  });
-
-  await doTest(async browser => {
-    await openPopup("x");
-    await doEnter();
-
-    await openPopup("x y");
-    await doBlur();
-
-    assertAbandonmentTelemetry([{ interaction: "refined" }]);
-  });
-
-  await doTest(async browser => {
-    await openPopup("x y");
-    await doEnter();
-
-    await openPopup("x");
-    await doBlur();
-
-    assertAbandonmentTelemetry([{ interaction: "refined" }]);
-  });
-
-  await doTest(async browser => {
-    await openPopup("x");
-    await doEnter();
-
-    await openPopup("y z");
-    await doBlur();
-
-    assertAbandonmentTelemetry([{ interaction: "typed" }]);
-  });
-
-  await doTest(async browser => {
-    await openPopup("x y");
-    await doEnter();
-
-    await openPopup("x y");
-    await doBlur();
-
-    assertAbandonmentTelemetry([{ interaction: "typed" }]);
-  });
-
-  await SpecialPowers.popPrefEnv();
+  }
 });
 
 add_task(async function interaction_persisted_search_terms() {

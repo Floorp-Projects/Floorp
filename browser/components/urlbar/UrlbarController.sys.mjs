@@ -1054,21 +1054,12 @@ class TelemetryEvent {
       sap = "urlbar_addonpage";
     }
 
-    const searchWordsSet = new Set(searchWords);
-    let interaction =
-      this._controller.input.searchMode?.entry === "topsites_newtab"
-        ? "topsite_search"
-        : startEventInfo.interactionType;
-    if (interaction === "typed") {
-      if (searchSource === "urlbar-persisted") {
-        interaction = "persisted_search_terms";
-      } else if (
-        this._isRefined(searchWordsSet, this._previousSearchWordsSet)
-      ) {
-        interaction = "refined";
-      }
-    }
-    this._previousSearchWordsSet = searchWordsSet;
+    const interaction = this.#getInteractionType(
+      method,
+      startEventInfo,
+      searchSource,
+      searchWords
+    );
 
     const currentResults = queryContext?.results ?? [];
     const numResults = currentResults.length;
@@ -1124,6 +1115,39 @@ class TelemetryEvent {
     } else {
       Cu.reportError(`Unknown telemetry event method: ${method}`);
     }
+  }
+
+  #getInteractionType(method, startEventInfo, searchSource, searchWords) {
+    if (this._controller.input.searchMode?.entry === "topsites_newtab") {
+      return "topsite_search";
+    }
+
+    let interaction = startEventInfo.interactionType;
+    switch (interaction) {
+      case "typed": {
+        if (searchSource === "urlbar-persisted") {
+          interaction = "persisted_search_terms";
+        }
+        break;
+      }
+      case "restarted":
+      case "returned": {
+        if (
+          this._isRefined(new Set(searchWords), this.#previousSearchWordsSet)
+        ) {
+          interaction = "refined";
+        }
+        break;
+      }
+    }
+
+    if (method === "engagement") {
+      this.#previousSearchWordsSet = null;
+    } else if (method === "abandonment") {
+      this.#previousSearchWordsSet = new Set(searchWords);
+    }
+
+    return interaction;
   }
 
   _parseSearchString(searchString) {
@@ -1192,7 +1216,6 @@ class TelemetryEvent {
    */
   discard() {
     this.clearPauseImpressionTimer();
-    this._previousSearchWordsSet = null;
     if (this._startEventInfo) {
       this._startEventInfo = null;
       this._discarded = true;
@@ -1224,4 +1247,13 @@ class TelemetryEvent {
     // Now handle the result.
     return lazy.UrlbarUtils.telemetryTypeFromResult(row.result);
   }
+
+  /**
+   * Reset the internal state. This function is used for only when testing.
+   */
+  reset() {
+    this.#previousSearchWordsSet = null;
+  }
+
+  #previousSearchWordsSet = null;
 }
