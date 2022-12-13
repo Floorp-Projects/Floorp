@@ -78,10 +78,14 @@ struct TraceMarker {
     schema.SetTableLabel(
         "{marker.name}  {marker.data.name1} {marker.data.val1}  "
         "{marker.data.name2} {marker.data.val2}");
-    schema.AddKeyLabelFormat("name1", "Key 1", MS::Format::String);
-    schema.AddKeyLabelFormat("val1", "Value 1", MS::Format::String);
-    schema.AddKeyLabelFormat("name2", "Key 2", MS::Format::String);
-    schema.AddKeyLabelFormat("val2", "Value 2", MS::Format::String);
+    schema.AddKeyLabelFormatSearchable("name1", "Key 1", MS::Format::String,
+                                       MS::Searchable::Searchable);
+    schema.AddKeyLabelFormatSearchable("val1", "Value 1", MS::Format::String,
+                                       MS::Searchable::Searchable);
+    schema.AddKeyLabelFormatSearchable("name2", "Key 2", MS::Format::String,
+                                       MS::Searchable::Searchable);
+    schema.AddKeyLabelFormatSearchable("val2", "Value 2", MS::Format::String,
+                                       MS::Searchable::Searchable);
     return schema;
   }
 };

@@ -58,7 +58,8 @@ struct CSSAnimationMarker {
   static MarkerSchema MarkerTypeDisplay() {
     using MS = MarkerSchema;
     MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
-    schema.AddKeyFormat("Name", MS::Format::String);
+    schema.AddKeyFormatSearchable("Name", MS::Format::String,
+                                  MS::Searchable::Searchable);
     schema.AddKeyLabelFormat("properties", "Animated Properties",
                              MS::Format::String);
     schema.AddKeyLabelFormat("oncompositor", "Can Run on Compositor",
