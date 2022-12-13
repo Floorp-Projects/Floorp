@@ -1143,20 +1143,20 @@ InitializeFrameWithResourceAndSize(
 
 // https://w3c.github.io/webcodecs/#videoframe-initialize-frame-from-other-frame
 static Result<already_AddRefed<VideoFrame>, nsCString>
-InitializeFrameFromOtherFrame(nsIGlobalObject* aGlobal,
-                              VideoFrame::FrameData&& aData,
+InitializeFrameFromOtherFrame(nsIGlobalObject* aGlobal, VideoFrameData&& aData,
                               const VideoFrameInit& aInit) {
   MOZ_ASSERT(aGlobal);
   MOZ_ASSERT(aData.mImage);
 
+  VideoFrame::Format format(aData.mFormat);
   if (aInit.mAlpha == AlphaOption::Discard) {
-    aData.mFormat.MakeOpaque();
+    format.MakeOpaque();
     // Keep the alpha data in image for now until it's being rendered.
   }
 
   Tuple<Maybe<gfx::IntRect>, Maybe<gfx::IntSize>> init;
-  MOZ_TRY_VAR(init, ValidateVideoFrameInit(aInit, aData.mFormat,
-                                           aData.mImage->GetSize()));
+  MOZ_TRY_VAR(init,
+              ValidateVideoFrameInit(aInit, format, aData.mImage->GetSize()));
   Maybe<gfx::IntRect> visibleRect = Get<0>(init);
   Maybe<gfx::IntSize> displaySize = Get<1>(init);
 
@@ -1170,9 +1170,8 @@ InitializeFrameFromOtherFrame(nsIGlobalObject* aGlobal,
                                                    : aData.mTimestamp;
 
   return MakeAndAddRef<VideoFrame>(
-      aGlobal, aData.mImage, aData.mFormat.PixelFormat(),
-      aData.mImage->GetSize(), *visibleRect, *displaySize, duration, timestamp,
-      aData.mColorSpace);
+      aGlobal, aData.mImage, format.PixelFormat(), aData.mImage->GetSize(),
+      *visibleRect, *displaySize, duration, timestamp, aData.mColorSpace);
 }
 
 /*
@@ -1433,9 +1432,9 @@ already_AddRefed<VideoFrame> VideoFrame::Constructor(
   // TODO: Retrive/infer the duration, and colorspace.
   auto r = InitializeFrameFromOtherFrame(
       global.get(),
-      FrameData(image.get(), format.ref(), image->GetPictureRect(),
-                image->GetSize(), Nothing(),
-                static_cast<int64_t>(aVideoElement.CurrentTime()), {}),
+      VideoFrameData(image.get(), format.ref(), image->GetPictureRect(),
+                     image->GetSize(), Nothing(),
+                     static_cast<int64_t>(aVideoElement.CurrentTime()), {}),
       aInit);
   if (r.isErr()) {
     aRv.ThrowTypeError(r.unwrapErr());
@@ -1571,11 +1570,11 @@ already_AddRefed<VideoFrame> VideoFrame::Constructor(
 
   auto r = InitializeFrameFromOtherFrame(
       global.get(),
-      FrameData(aVideoFrame.mResource->mImage.get(),
-                aVideoFrame.mResource->mFormat.PixelFormat(),
-                aVideoFrame.mVisibleRect, aVideoFrame.mDisplaySize,
-                aVideoFrame.mDuration, aVideoFrame.mTimestamp,
-                aVideoFrame.mColorSpace),
+      VideoFrameData(aVideoFrame.mResource->mImage.get(),
+                     aVideoFrame.mResource->mFormat.PixelFormat(),
+                     aVideoFrame.mVisibleRect, aVideoFrame.mDisplaySize,
+                     aVideoFrame.mDuration, aVideoFrame.mTimestamp,
+                     aVideoFrame.mColorSpace),
       aInit);
   if (r.isErr()) {
     aRv.ThrowTypeError(r.unwrapErr());
@@ -1868,10 +1867,10 @@ bool VideoFrame::WriteStructuredClone(JSStructuredCloneWriter* aWriter,
   RefPtr<layers::Image> image(mResource->mImage.get());
   // The serialization is limited to the same process scope so it's ok to
   // serialize a reference instead of a copy.
-  aHolder->VideoFrames().AppendElement(VideoFrameSerializedData{
-      image.forget(), mResource->mFormat.PixelFormat(), mCodedSize,
-      mVisibleRect, mDisplaySize, mDuration, mTimestamp,
-      VideoColorSpaceInit(mColorSpace), GetPrincipalURI()});
+  nsCOMPtr<nsIURI> uri = GetPrincipalURI();
+  aHolder->VideoFrames().AppendElement(VideoFrameSerializedData(
+      image.get(), mResource->mFormat.PixelFormat(), mCodedSize, mVisibleRect,
+      mDisplaySize, mDuration, mTimestamp, mColorSpace, uri.get()));
 
   return !NS_WARN_IF(!JS_WriteUint32Pair(aWriter, SCTAG_DOM_VIDEOFRAME, index));
 }
@@ -1889,8 +1888,8 @@ UniquePtr<VideoFrame::TransferredData> VideoFrame::Transfer() {
   nsCOMPtr<nsIURI> uri = GetPrincipalURI();
   Resource r = mResource.extract();
   auto frame = MakeUnique<TransferredData>(
-      r.mImage.get(), r.mFormat.PixelFormat(), mVisibleRect, mDisplaySize,
-      mDuration, mTimestamp, mColorSpace, uri.get());
+      r.mImage.get(), r.mFormat.PixelFormat(), mCodedSize, mVisibleRect,
+      mDisplaySize, mDuration, mTimestamp, mColorSpace, uri.get());
   Close();
   return frame;
 }
@@ -1905,10 +1904,10 @@ already_AddRefed<VideoFrame> VideoFrame::FromTransferred(
     return nullptr;
   }
 
-  return MakeAndAddRef<VideoFrame>(
-      aGlobal, aData->mImage, aData->mFormat.PixelFormat(),
-      aData->mImage->GetSize(), aData->mVisibleRect, aData->mDisplaySize,
-      aData->mDuration.take(), aData->mTimestamp, aData->mColorSpace);
+  return MakeAndAddRef<VideoFrame>(aGlobal, aData->mImage, aData->mFormat,
+                                   aData->mCodedSize, aData->mVisibleRect,
+                                   aData->mDisplaySize, aData->mDuration,
+                                   aData->mTimestamp, aData->mColorSpace);
 }
 
 nsCOMPtr<nsIURI> VideoFrame::GetPrincipalURI() const {
