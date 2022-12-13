@@ -193,6 +193,10 @@ nsAvailableMemoryWatcher::Notify(nsITimer* aTimer) {
 
 void nsAvailableMemoryWatcher::HandleLowMemory() {
   MutexAutoLock lock(mMutex);
+  if (!mTimer) {
+    // We have been shut down from outside while in flight.
+    return;
+  }
   if (!mUnderMemoryPressure) {
     mUnderMemoryPressure = true;
     UpdateCrashAnnotation(lock);
@@ -220,6 +224,10 @@ void nsAvailableMemoryWatcher::UpdateCrashAnnotation(const MutexAutoLock&)
 // We can also adjust our polling interval.
 void nsAvailableMemoryWatcher::MaybeHandleHighMemory() {
   MutexAutoLock lock(mMutex);
+  if (!mTimer) {
+    // We have been shut down from outside while in flight.
+    return;
+  }
   if (mUnderMemoryPressure) {
     RecordTelemetryEventOnHighMemory();
     NS_NotifyOfEventualMemoryPressure(MemoryPressureState::NoPressure);
@@ -262,10 +270,12 @@ nsAvailableMemoryWatcher::Observe(nsISupports* aSubject, const char* aTopic,
     ShutDown();
   } else {
     MutexAutoLock lock(mMutex);
-    if (strcmp(aTopic, "user-interaction-active") == 0) {
-      StartPolling(lock);
-    } else if (strcmp(aTopic, "user-interaction-inactive") == 0) {
-      StopPolling(lock);
+    if (mTimer) {
+      if (strcmp(aTopic, "user-interaction-active") == 0) {
+        StartPolling(lock);
+      } else if (strcmp(aTopic, "user-interaction-inactive") == 0) {
+        StopPolling(lock);
+      }
     }
   }
 
