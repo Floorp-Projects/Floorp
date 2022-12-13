@@ -20,6 +20,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   LoginManagerChild: "resource://gre/modules/LoginManagerChild.jsm",
+  WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
 });
 
 let contextMenus = new WeakMap();
@@ -563,8 +564,11 @@ export class ContextMenuChild extends JSWindowActorChild {
       mozDocumentURIIfNotForErrorPages: docLocation,
       characterSet: charSet,
       baseURI,
+      cookieJarSettings,
     } = doc;
     docLocation = docLocation && docLocation.spec;
+    let frameID = lazy.WebNavigationFrames.getFrameId(doc.defaultView);
+    let frameBrowsingContextID = doc.defaultView.docShell.browsingContext.id;
     const loginManagerChild = lazy.LoginManagerChild.forWindow(doc.defaultView);
     const docState = loginManagerChild.stateForDocument(doc);
     const loginFillInfo = docState.getFieldContext(aEvent.composedTarget);
@@ -610,6 +614,8 @@ export class ContextMenuChild extends JSWindowActorChild {
     let selectionInfo = lazy.SelectionUtils.getSelectionDetails(
       this.contentWindow
     );
+    let loadContext = this.docShell.QueryInterface(Ci.nsILoadContext);
+    let userContextId = loadContext.originAttributes.userContextId;
 
     this._setContext(aEvent);
     let context = this.context;
@@ -617,6 +623,7 @@ export class ContextMenuChild extends JSWindowActorChild {
 
     let spellInfo = null;
     let editFlags = null;
+    let principal = null;
 
     let referrerInfo = Cc["@mozilla.org/referrer-info;1"].createInstance(
       Ci.nsIReferrerInfo
@@ -666,11 +673,15 @@ export class ContextMenuChild extends JSWindowActorChild {
       baseURI,
       referrerInfo,
       editFlags,
+      principal,
       contentType,
       docLocation,
       loginFillInfo,
       selectionInfo,
+      userContextId,
       contentDisposition,
+      frameID,
+      frameBrowsingContextID,
       disableSetDesktopBackground,
     };
 
@@ -686,15 +697,19 @@ export class ContextMenuChild extends JSWindowActorChild {
       );
     }
 
-    // Notify observers (currently only webextensions) of the context menu being
-    // prepared, allowing them to set webExtContextData for us.
-    let prepareContextMenu = {
-      principal: doc.nodePrincipal,
-      setWebExtContextData(webExtContextData) {
-        data.webExtContextData = webExtContextData;
-      },
-    };
-    Services.obs.notifyObservers(prepareContextMenu, "on-prepare-contextmenu");
+    Services.obs.notifyObservers(
+      { wrappedJSObject: data },
+      "on-prepare-contextmenu"
+    );
+
+    data.principal = doc.nodePrincipal;
+    data.context.principal = context.principal;
+    data.storagePrincipal = doc.effectiveStoragePrincipal;
+    data.context.storagePrincipal = context.storagePrincipal;
+
+    data.cookieJarSettings = lazy.E10SUtils.serializeCookieJarSettings(
+      cookieJarSettings
+    );
 
     // In the event that the content is running in the parent process, we don't
     // actually want the contextmenu events to reach the parent - we'll dispatch
@@ -884,7 +899,20 @@ export class ContextMenuChild extends JSWindowActorChild {
     context.target = node;
     context.targetIdentifier = lazy.ContentDOMReference.get(node);
 
+    context.principal = context.target.ownerDocument.nodePrincipal;
+    context.storagePrincipal =
+      context.target.ownerDocument.effectiveStoragePrincipal;
     context.csp = lazy.E10SUtils.serializeCSP(context.target.ownerDocument.csp);
+
+    context.frameID = lazy.WebNavigationFrames.getFrameId(
+      context.target.ownerGlobal
+    );
+
+    context.frameOuterWindowID =
+      context.target.ownerGlobal.docShell.outerWindowID;
+
+    context.frameBrowsingContextID =
+      context.target.ownerGlobal.browsingContext.id;
 
     // Check if we are in the PDF Viewer.
     context.inPDFViewer =
@@ -1163,10 +1191,7 @@ export class ContextMenuChild extends JSWindowActorChild {
           try {
             if (elem.download) {
               // Ignore download attribute on cross-origin links
-              context.target.ownerDocument.nodePrincipal.checkMayLoad(
-                context.linkURI,
-                true
-              );
+              context.principal.checkMayLoad(context.linkURI, true);
               context.linkDownload = elem.download;
             }
           } catch (ex) {}
