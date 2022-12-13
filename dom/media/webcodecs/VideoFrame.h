@@ -152,8 +152,7 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
                             StructuredCloneHolder* aHolder) const;
 
   // [Transferable] implementations: Transfer, FromTransferred
-  struct FrameData;
-  using TransferredData = FrameData;
+  struct TransferredData;
 
   UniquePtr<TransferredData> Transfer();
 
@@ -207,9 +206,24 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
     const VideoColorSpaceInit mColorSpace;
   };
 
+  struct TransferredData : FrameData {
+    TransferredData(layers::Image* aImage, const VideoPixelFormat& aFormat,
+                    gfx::IntRect aVisibleRect, gfx::IntSize aDisplaySize,
+                    Maybe<uint64_t> aDuration, int64_t aTimestamp,
+                    const VideoColorSpaceInit& aColorSpace,
+                    nsIURI* aPrincipalURI)
+        : FrameData(aImage, aFormat, aVisibleRect, aDisplaySize, aDuration,
+                    aTimestamp, aColorSpace),
+          mPrincipalURI(aPrincipalURI) {}
+
+    const nsCOMPtr<nsIURI> mPrincipalURI;
+  };
+
  private:
   // VideoFrame can run on either main thread or worker thread.
   void AssertIsOnOwningThread() const { NS_ASSERT_OWNINGTHREAD(VideoFrame); }
+
+  nsCOMPtr<nsIURI> GetPrincipalURI() const;
 
   // A class representing the VideoFrame's data.
   class Resource final {

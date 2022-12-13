@@ -1977,10 +1977,8 @@ bool VideoFrame::WriteStructuredClone(JSStructuredCloneWriter* aWriter,
   RefPtr<layers::Image> image(mResource->mImage.get());
   // The serialization is limited to the same process scope so it's ok to
   // serialize a reference instead of a copy.
-  nsIPrincipal* principal = mParent->PrincipalOrNull();
-  nsCOMPtr<nsIURI> uri = principal ? principal->GetURI() : nullptr;
   aHolder->VideoFrameImages().AppendElement(
-      VideoFrameImageData{image.forget(), uri});
+      VideoFrameImageData{image.forget(), GetPrincipalURI()});
 
   return !(
       NS_WARN_IF(!JS_WriteUint32Pair(aWriter, SCTAG_DOM_VIDEOFRAME, index)) ||
@@ -2008,10 +2006,11 @@ UniquePtr<VideoFrame::TransferredData> VideoFrame::Transfer() {
     return nullptr;
   }
 
+  nsCOMPtr<nsIURI> uri = GetPrincipalURI();
   Resource r = mResource.extract();
   auto frame = MakeUnique<TransferredData>(
       r.mImage.get(), r.mFormat.PixelFormat(), mVisibleRect, mDisplaySize,
-      mDuration, mTimestamp, mColorSpace);
+      mDuration, mTimestamp, mColorSpace, uri.get());
   Close();
   return frame;
 }
@@ -2022,10 +2021,21 @@ already_AddRefed<VideoFrame> VideoFrame::FromTransferred(
     nsIGlobalObject* aGlobal, TransferredData* aData) {
   MOZ_ASSERT(aData);
 
+  if (!IsSameOrigin(aGlobal, aData->mPrincipalURI.get())) {
+    return nullptr;
+  }
+
   return MakeAndAddRef<VideoFrame>(
       aGlobal, aData->mImage, aData->mFormat.PixelFormat(),
       aData->mImage->GetSize(), aData->mVisibleRect, aData->mDisplaySize,
       aData->mDuration.take(), aData->mTimestamp, aData->mColorSpace);
+}
+
+nsCOMPtr<nsIURI> VideoFrame::GetPrincipalURI() const {
+  AssertIsOnOwningThread();
+
+  nsIPrincipal* principal = mParent->PrincipalOrNull();
+  return principal ? principal->GetURI() : nullptr;
 }
 
 /*
