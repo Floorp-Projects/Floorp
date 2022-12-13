@@ -31,7 +31,6 @@ license:
         - intl/l10n/rust/l10nregistry-rs
         # tests
         - js/src/devtools/rootAnalysis/t/
-        - mobile/android/components/extensions
         - mobile/android/geckoview/src/main/AndroidManifest.xml
         - mobile/android/geckoview/src/main/AndroidManifest_overlay.jinja
         - mobile/android/geckoview/src/main/res/drawable/ic_generic_file.xml
