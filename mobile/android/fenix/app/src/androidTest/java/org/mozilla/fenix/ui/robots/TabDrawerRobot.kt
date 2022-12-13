@@ -32,7 +32,6 @@ import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import androidx.test.uiautomator.Until.findObject
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import junit.framework.AssertionFailedError
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import org.hamcrest.CoreMatchers.allOf
@@ -149,75 +148,14 @@ class TabDrawerRobot {
         snackBarButton.click()
     }
 
-    fun verifyTabMediaControlButtonState(action: String) {
-        try {
-            mDevice.findObject(
-                UiSelector().resourceId("$packageName:id/tab_tray_empty_view"),
-            ).waitUntilGone(waitingTime)
-
-            mDevice.findObject(
-                UiSelector().resourceId("$packageName:id/tab_tray_grid_item"),
-            ).waitForExists(waitingTime)
-
-            mDevice.findObject(
-                UiSelector()
-                    .resourceId("$packageName:id/play_pause_button")
-                    .descriptionContains(action),
-            ).waitForExists(waitingTime)
-
-            assertTrue(
-                mDevice.findObject(UiSelector().descriptionContains(action))
-                    .waitForExists(waitingTime),
-            )
-        } catch (e: AssertionFailedError) {
-            // In some cases the tab media button isn't updated after performing an action on it
-            println("Failed to update the state of the tab media button")
-
-            // Let's dismiss the tabs tray and try again
-            mDevice.pressBack()
-            mDevice.findObject(
-                UiSelector()
-                    .resourceId("$packageName:id/toolbar"),
-            ).waitForExists(waitingTime)
-
-            browserScreen {
-            }.openTabDrawer {
-                // Click again the tab media button
-                tabMediaControlButton().click()
-
-                mDevice.findObject(
-                    UiSelector().resourceId("$packageName:id/tab_tray_empty_view"),
-                ).waitUntilGone(waitingTime)
-
-                mDevice.findObject(
-                    UiSelector().resourceId("$packageName:id/tab_tray_grid_item"),
-                ).waitForExists(waitingTime)
-
-                mDevice.findObject(
-                    UiSelector()
-                        .resourceId("$packageName:id/play_pause_button")
-                        .descriptionContains(action),
-                ).waitForExists(waitingTime)
-
-                assertTrue(
-                    mDevice.findObject(UiSelector().descriptionContains(action))
-                        .waitForExists(waitingTime),
-                )
-            }
-        }
-    }
+    fun verifyTabMediaControlButtonState(action: String) =
+        assertTrue(tabMediaControlButton(action).waitForExists(waitingTime))
 
     fun clickTabMediaControlButton(action: String) {
-        mDevice.waitNotNull(
-            Until.findObjects(
-                By
-                    .res("$packageName:id/play_pause_button")
-                    .descContains(action),
-            ),
-            waitingTime,
-        )
-
-        tabMediaControlButton().click()
+        tabMediaControlButton(action).also {
+            it.waitForExists(waitingTime)
+            it.click()
+        }
     }
 
     fun clickSelectTabsOption() {
@@ -449,8 +387,8 @@ fun tabDrawer(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
     return TabDrawerRobot.Transition()
 }
 
-private fun tabMediaControlButton() =
-    mDevice.findObject(UiSelector().resourceId("$packageName:id/play_pause_button"))
+private fun tabMediaControlButton(action: String) =
+    mDevice.findObject(UiSelector().descriptionContains(action))
 
 private fun closeTabButton() =
     mDevice.findObject(UiSelector().descriptionContains("Close tab"))

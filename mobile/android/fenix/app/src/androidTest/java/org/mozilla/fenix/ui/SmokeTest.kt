@@ -772,7 +772,6 @@ class SmokeTest {
     }
 
     @Test
-    @Ignore("Failing after compose migration. See: https://github.com/mozilla-mobile/fenix/issues/26087")
     fun tabMediaControlButtonTest() {
         val audioTestPage = TestAssetHelper.getAudioPageAsset(mockWebServer)
 
