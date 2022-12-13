@@ -915,7 +915,7 @@ bool TestAssemblyFunctions() {
   return true;
 }
 
-#ifdef _M_X64
+#if defined(_M_X64) && !defined(MOZ_CODE_COVERAGE)
 // We want to test hooking and unhooking with unwind information, so we need:
 //  - a VMSharingPolicy such that ShouldUnhookUponDestruction() is true and
 //    Items() is implemented;
@@ -1147,7 +1147,7 @@ bool TestDetouredCallUnwindInfo() {
   // Check that we can still unwind after clearing the hook.
   return TestCallingDetouredCall("After unhooking", false);
 }
-#endif  // _M_X64
+#endif  // defined(_M_X64) && !defined(MOZ_CODE_COVERAGE)
 
 bool TestDynamicCodePolicy() {
   if (!IsWin8Point1OrLater()) {
@@ -1389,9 +1389,9 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
                        SEC_E_INVALID_HANDLE, &credHandle, 0, nullptr) &&
       TEST_HOOK_PARAMS("sspicli.dll", FreeCredentialsHandle, Equals,
                        SEC_E_INVALID_HANDLE, &credHandle) &&
-#ifdef _M_X64
+#if defined(_M_X64) && !defined(MOZ_CODE_COVERAGE)
       TestDetouredCallUnwindInfo() &&
-#endif  // _M_X64
+#endif  // defined(_M_X64) && !defined(MOZ_CODE_COVERAGE)
       // Run TestDynamicCodePolicy() at the end because the policy is
       // irreversible.
       TestDynamicCodePolicy()) {
