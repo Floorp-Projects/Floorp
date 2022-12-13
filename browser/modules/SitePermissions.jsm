@@ -1209,6 +1209,14 @@ let gPermissions = {
       states: [SitePermissions.UNKNOWN, SitePermissions.BLOCK],
     },
 
+    speaker: {
+      exactHostMatch: true,
+      states: [SitePermissions.UNKNOWN, SitePermissions.BLOCK],
+      get disabled() {
+        return !SitePermissions.setSinkIdEnabled;
+      },
+    },
+
     popup: {
       getDefault() {
         return Services.prefs.getBoolPref("dom.disable_open_during_load")
@@ -1295,6 +1303,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "temporaryPermissionExpireTime",
   "privacy.temporary_permission_expire_time_ms",
   3600 * 1000
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  SitePermissions,
+  "setSinkIdEnabled",
+  "media.setsinkid.enabled",
+  false,
+  SitePermissions.invalidatePermissionList.bind(SitePermissions)
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   SitePermissions,

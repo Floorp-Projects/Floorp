@@ -134,6 +134,24 @@ var gTests = [
       await escapePrompt();
     },
   },
+  {
+    desc: "SitePermissions speaker block",
+    run: async function checkPermissionsBlock() {
+      SitePermissions.setForPrincipal(
+        gBrowser.contentPrincipal,
+        "speaker",
+        SitePermissions.BLOCK
+      );
+      await Promise.all([
+        expectObserverCalled("getUserMedia:request"),
+        expectObserverCalled("recording-window-ended"),
+        expectObserverCalled("getUserMedia:response:deny"),
+        promiseMessage(permissionError),
+        promiseRequestAudioOutput(),
+      ]);
+      SitePermissions.removeFromPrincipal(gBrowser.contentPrincipal, "speaker");
+    },
+  },
 ];
 
 add_task(async function test() {
