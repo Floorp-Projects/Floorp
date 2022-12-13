@@ -734,6 +734,24 @@ iframe:fullscreen {
   padding: unset !important;
 }
 
+/* Details and summary
+ * https://html.spec.whatwg.org/#the-details-and-summary-elements
+ *
+ * Note that these rules need to be duplicated in details.css for the anonymous
+ * summary, which wouldn't match otherwise.
+ *
+ * The spec here says something different, see
+ * https://github.com/whatwg/html/issues/8610
+ */
+details > summary:first-of-type {
+  display: list-item;
+  counter-increment: list-item 0;
+  list-style: disclosure-closed inside;
+}
+details[open] > summary:first-of-type {
+  list-style-type: disclosure-open;
+}
+
 /* media elements */
 video {
   object-fit: contain;
