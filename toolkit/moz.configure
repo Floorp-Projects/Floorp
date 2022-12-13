@@ -2384,6 +2384,16 @@ option(
 )
 
 
+@depends(target, host, when="--with-wasm-sandboxed-libraries")
+def check_wasm_sandboxing(target, host):
+    if target.kernel == "WINNT" and host.kernel == "WINNT" and target.cpu != host.cpu:
+        # Bug 1741233
+        die(
+            f"Wasm sandboxing is not supported yet when building for {target.cpu} on {host.cpu} Windows. "
+            "Please use --without-wasm-sandboxed-libraries for now."
+        )
+
+
 @depends("--with-wasm-sandboxed-libraries")
 def requires_wasm_sandboxing(libraries):
     if libraries:
