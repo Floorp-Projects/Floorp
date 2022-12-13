@@ -714,14 +714,10 @@ this.DateTimeBoxWidget = class {
         break;
       }
       default: {
-        // digits and printable characters
-        const regex = new RegExp("Digit\\d");
-        const isDigit = regex.test(aEvent.code);
-
+        // Handle printable characters (e.g. letters, digits and numpad digits)
         if (
-          isDigit ||
-          (aEvent.key == 0 &&
-            !(aEvent.ctrlKey || aEvent.altKey || aEvent.metaKey))
+          aEvent.key.length === 1 &&
+          !(aEvent.ctrlKey || aEvent.altKey || aEvent.metaKey)
         ) {
           this.handleKeydown(aEvent);
           aEvent.preventDefault();
