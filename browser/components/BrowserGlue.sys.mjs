@@ -137,6 +137,8 @@ if (AppConstants.ENABLE_WEBDRIVER) {
 }
 
 const PREF_PDFJS_ISDEFAULT_CACHE_STATE = "pdfjs.enabledCache.state";
+const PREF_DFPI_ENABLED_BY_DEFAULT =
+  "privacy.restrict3rdpartystorage.rollout.enabledByDefault";
 
 const PRIVATE_BROWSING_BINARY = "private_browsing.exe";
 // Index of Private Browsing icon in private_browsing.exe
@@ -1247,6 +1249,11 @@ BrowserGlue.prototype = {
       "browser.contentblocking.features.strict",
       this._setPrefExpectationsAndUpdate
     );
+    Services.prefs.removeObserver(
+      PREF_DFPI_ENABLED_BY_DEFAULT,
+      this._setDefaultCookieBehavior
+    );
+    lazy.NimbusFeatures.tcpByDefault.off(this._setDefaultCookieBehavior);
   },
 
   // runs on startup, before the first command line handler is invoked
@@ -1709,6 +1716,18 @@ BrowserGlue.prototype = {
       16 * aWindow.devicePixelRatio
     );
 
+    // Keep track of the initial default cookie behavior to revert to when
+    // users opt-out. This is used by _setDefaultCookieBehavior.
+    BrowserGlue._defaultCookieBehaviorAtStartup = Services.prefs
+      .getDefaultBranch("")
+      .getIntPref("network.cookie.cookieBehavior");
+    // _setDefaultCookieBehavior needs to run before other functions that modify
+    // privacy preferences such as _setPrefExpectationsAndUpdate and _matchCBCategory
+    this._setDefaultCookieBehavior();
+
+    this._setPrefExpectationsAndUpdate();
+    this._matchCBCategory();
+
     // This observes the entire privacy.trackingprotection.* pref tree.
     Services.prefs.addObserver(
       "privacy.trackingprotection",
@@ -1758,6 +1777,11 @@ BrowserGlue.prototype = {
       "browser.contentblocking.features.strict",
       this._setPrefExpectationsAndUpdate
     );
+    Services.prefs.addObserver(
+      PREF_DFPI_ENABLED_BY_DEFAULT,
+      this._setDefaultCookieBehavior
+    );
+    lazy.NimbusFeatures.tcpByDefault.onUpdate(this._setDefaultCookieBehavior);
   },
 
   _updateAutoplayPref() {
@@ -1769,6 +1793,45 @@ BrowserGlue.prototype = {
     if (blocked in labels) {
       telemetry.add(labels[blocked]);
     }
+  },
+
+  _setDefaultCookieBehavior() {
+    let defaultPrefs = Services.prefs.getDefaultBranch("");
+
+    let hasCookieBehaviorPolicy = () =>
+      Services.policies.status == Services.policies.ACTIVE &&
+      Services.policies.getActivePolicies()?.Cookies?.Behavior;
+
+    // For phase 2 we enable dFPI / TCP for all clients which are part of the
+    // rollout.
+    // Avoid overwriting cookie behavior set by enterprise policy.
+    if (
+      lazy.NimbusFeatures.tcpByDefault.getVariable("enabled") &&
+      !hasCookieBehaviorPolicy()
+    ) {
+      // Enable TCP by updating the default pref state for cookie behaviour. This
+      // means we won't override user choice.
+      defaultPrefs.setIntPref(
+        "network.cookie.cookieBehavior",
+        Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN
+      );
+
+      return;
+    }
+
+    // For the initial rollout of dFPI, set the default cookieBehavior based on the pref
+    // set during onboarding when the user chooses to enable protections or not.
+    if (!Services.prefs.prefHasUserValue(PREF_DFPI_ENABLED_BY_DEFAULT)) {
+      return;
+    }
+    let dFPIEnabled = Services.prefs.getBoolPref(PREF_DFPI_ENABLED_BY_DEFAULT);
+
+    defaultPrefs.setIntPref(
+      "network.cookie.cookieBehavior",
+      dFPIEnabled
+        ? Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN
+        : BrowserGlue._defaultCookieBehaviorAtStartup
+    );
   },
 
   _setPrefExpectations() {

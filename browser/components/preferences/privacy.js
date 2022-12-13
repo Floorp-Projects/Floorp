@@ -44,6 +44,9 @@ const { BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN } = Ci.nsICookieService;
 const PASSWORD_MANAGER_PREF_ID = "services.passwordSavingEnabled";
 const PREF_PASSWORD_MANAGER_ENABLED = "signon.rememberSignons";
 
+const PREF_DFPI_ENABLED_BY_DEFAULT =
+  "privacy.restrict3rdpartystorage.rollout.enabledByDefault";
+
 XPCOMUtils.defineLazyGetter(this, "AlertsServiceDND", function() {
   try {
     let alertsService = Cc["@mozilla.org/alerts-service;1"]
@@ -84,6 +87,17 @@ Preferences.addAll([
 
   // Tracker list
   { id: "urlclassifier.trackingTable", type: "string" },
+
+  // TCP rollout
+  {
+    id: "privacy.restrict3rdpartystorage.rollout.enabledByDefault",
+    type: "bool",
+  },
+  {
+    id:
+      "privacy.restrict3rdpartystorage.rollout.preferences.TCPToggleInStandard",
+    type: "bool",
+  },
 
   // Button prefs
   { id: "pref.privacy.disable_button.cookie_exceptions", type: "bool" },
@@ -293,13 +307,55 @@ function initTCPStandardSection() {
   let cookieBehaviorPref = Preferences.get("network.cookie.cookieBehavior");
   let updateTCPSectionVisibilityState = () => {
     document.getElementById("etpStandardTCPBox").hidden =
+      // Hide this section if we show the rollout section already.
+      !document.getElementById("etpStandardTCPRolloutBox").hidden ||
       cookieBehaviorPref.value !=
-      Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
+        Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
   };
 
   cookieBehaviorPref.on("change", updateTCPSectionVisibilityState);
 
   updateTCPSectionVisibilityState();
+}
+
+function initTCPRolloutSection() {
+  document
+    .getElementById("tcp-rollout-learn-more-link")
+    .setAttribute(
+      "href",
+      Services.urlFormatter.formatURLPref("app.support.baseURL") +
+        Services.prefs.getStringPref(
+          "privacy.restrict3rdpartystorage.rollout.preferences.learnMoreURLSuffix"
+        )
+    );
+
+  let dfpiPref = Preferences.get(PREF_DFPI_ENABLED_BY_DEFAULT);
+  let updateTCPRolloutSectionVisibilityState = () => {
+    // For phase 2 we always hide the TCP preferences section. TCP will be
+    // enabled by default in "standard" ETP mode.
+    if (NimbusFeatures.tcpByDefault.getVariable("enabled")) {
+      document.getElementById("etpStandardTCPRolloutBox").hidden = true;
+      return;
+    }
+
+    let onboardingEnabled =
+      NimbusFeatures.tcpPreferences.getVariable("enabled") ||
+      (dfpiPref.value && dfpiPref.hasUserValue);
+    document.getElementById(
+      "etpStandardTCPRolloutBox"
+    ).hidden = !onboardingEnabled;
+  };
+
+  NimbusFeatures.tcpPreferences.onUpdate(
+    updateTCPRolloutSectionVisibilityState
+  );
+  NimbusFeatures.tcpByDefault.onUpdate(updateTCPRolloutSectionVisibilityState);
+  window.addEventListener("unload", () => {
+    NimbusFeatures.tcpPreferences.off(updateTCPRolloutSectionVisibilityState);
+    NimbusFeatures.tcpByDefault.off(updateTCPRolloutSectionVisibilityState);
+  });
+
+  updateTCPRolloutSectionVisibilityState();
 }
 
 var gPrivacyPane = {
@@ -943,6 +999,7 @@ var gPrivacyPane = {
 
     setUpContentBlockingWarnings();
 
+    initTCPRolloutSection();
     initTCPStandardSection();
   },
 
@@ -986,6 +1043,22 @@ var gPrivacyPane = {
             rulesArray.push("cookieBehavior4");
             break;
           case BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN:
+            // If the default cookie behavior is updated by the TCP rollout
+            // pref, don't update the UI for dFPI. That means for dFPI enabled
+            // and disabled the bulleted list in the "standard" category
+            // description will be the same. This is a compromise to avoid
+            // layout shifting when toggling the checkbox. The layout can
+            // otherwise shift, because dFPI on / off changes the bulleted list
+            // in the ETP category description.
+            if (
+              Services.prefs.getBoolPref(
+                "privacy.restrict3rdpartystorage.rollout.enabledByDefault",
+                false
+              )
+            ) {
+              rulesArray.push("cookieBehavior4");
+              break;
+            }
             rulesArray.push(
               gIsFirstPartyIsolated ? "cookieBehavior4" : "cookieBehavior5"
             );

@@ -576,6 +576,27 @@ readerMode:
       description: >-
         What version of Pocket CTA to show in Reader Mode (Empty string is no
         CTA)
+
+tcpPreferences:
+  description: "Toggles the Total Cookie Protection section in about:preferences"
+  owner: tihuang@mozilla.com
+  hasExposure: false
+  isEarlyStartup: false
+  variables:
+    enabled:
+      type: boolean
+      fallbackPref: "privacy.restrict3rdpartystorage.rollout.preferences.TCPToggleInStandard"
+      description: "Turn on the section in about:preferences"
+
+tcpByDefault:
+  description: "Enables TCP by default by updating the default pref value of network.cookie.cookieBehavior."
+  owner: tihuang@mozilla.com
+  hasExposure: false
+  isEarlyStartup: true
+  variables:
+    enabled:
+      type: boolean
+      description: "Enables TCP by default"
 cfr:
   description: "A Firefox Messaging System message for the cfr message channel"
   owner: omc@mozilla.com
