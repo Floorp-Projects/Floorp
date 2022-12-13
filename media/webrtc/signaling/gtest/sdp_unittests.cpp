@@ -5167,6 +5167,20 @@ TEST(NewSdpTestNoFixture, CheckRidValidParse)
   }
 
   {
+    SdpRidAttributeList::Rid rid(ParseRid("0123456789az-_ recv max-width=800"));
+    ASSERT_EQ("0123456789az-_", rid.id);
+    ASSERT_EQ(sdp::kRecv, rid.direction);
+    ASSERT_EQ(0U, rid.formats.size());
+    ASSERT_EQ(800U, rid.constraints.maxWidth);
+    ASSERT_EQ(0U, rid.constraints.maxHeight);
+    ASSERT_FALSE(rid.constraints.maxFps.isSome());
+    ASSERT_EQ(0U, rid.constraints.maxFs);
+    ASSERT_EQ(0U, rid.constraints.maxBr);
+    ASSERT_EQ(0U, rid.constraints.maxPps);
+    ASSERT_EQ(0U, rid.dependIds.size());
+  }
+
+  {
     SdpRidAttributeList::Rid rid(ParseRid("foo send"));
     ASSERT_EQ(0U, rid.formats.size());
     ASSERT_EQ(0U, rid.constraints.maxWidth);
@@ -5416,7 +5430,6 @@ TEST(NewSdpTestNoFixture, CheckRidInvalidParse)
   ParseInvalid<SdpRidAttributeList::Rid>("foo send depend=", 16);
   ParseInvalid<SdpRidAttributeList::Rid>("foo send depend=,", 16);
   ParseInvalid<SdpRidAttributeList::Rid>("foo send depend=1,", 18);
-  ParseInvalid<SdpRidAttributeList::Rid>("0123456789az-_", 14);
 }
 
 TEST(NewSdpTestNoFixture, CheckRidSerialize)

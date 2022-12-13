@@ -150,7 +150,6 @@ std::vector<webrtc::VideoStream> VideoStreamFactory::CreateEncoderStreams(
   for (int idx = streamCount - 1; idx >= 0; --idx) {
     webrtc::VideoStream video_stream;
     auto& encoding = mCodecConfig.mEncodings[idx];
-    video_stream.active = encoding.active;
     MOZ_ASSERT(encoding.constraints.scaleDownBy >= 1.0);
 
     gfx::IntSize newSize(0, 0);

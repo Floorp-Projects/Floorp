@@ -70,15 +70,14 @@ class JsepTransceiver {
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(JsepTransceiver);
 
-  void Rollback(JsepTransceiver& oldTransceiver, bool aRemote) {
+  void Rollback(JsepTransceiver& oldTransceiver, bool rollbackLevel) {
     MOZ_ASSERT(oldTransceiver.GetMediaType() == GetMediaType());
     MOZ_ASSERT(!oldTransceiver.IsNegotiated() || !oldTransceiver.HasLevel() ||
                !HasLevel() || oldTransceiver.GetLevel() == GetLevel());
     mTransport = oldTransceiver.mTransport;
-    if (aRemote) {
+    if (rollbackLevel) {
       mLevel = oldTransceiver.mLevel;
       mBundleLevel = oldTransceiver.mBundleLevel;
-      mSendTrack = oldTransceiver.mSendTrack;
     }
     mRecvTrack = oldTransceiver.mRecvTrack;
 

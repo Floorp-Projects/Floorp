@@ -952,9 +952,6 @@ class SdpRidAttributeList : public SdpAttribute {
     return new SdpRidAttributeList(*this);
   }
 
-  static bool CheckRidValidity(const std::string& aRid, std::string* aError);
-  static size_t kMaxRidLength;
-
   virtual void Serialize(std::ostream& os) const override;
 
   // Remove this function. See Bug 1469702

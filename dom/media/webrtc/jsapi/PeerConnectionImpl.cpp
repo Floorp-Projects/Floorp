@@ -477,11 +477,6 @@ nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   // Initialize the media object.
   mForceProxy = ShouldForceProxy();
 
-  // We put this here, in case we later want to set this based on a non-standard
-  // param in RTCConfiguration.
-  mAllowOldSetParameters = Preferences::GetBool(
-      "media.peerconnection.allow_old_setParameters", false);
-
   // setup the stun local addresses IPC async call
   InitLocalAddrs();
 
@@ -931,7 +926,18 @@ nsresult PeerConnectionImpl::AddRtpTransceiverToJsepSession(
     return res;
   }
 
-  mJsepSession->AddTransceiver(transceiver);
+  res = mJsepSession->AddTransceiver(transceiver);
+
+  if (NS_FAILED(res)) {
+    std::string errorString = mJsepSession->GetLastError();
+    CSFLogError(LOGTAG, "%s (%s) : pc = %s, error = %s", __FUNCTION__,
+                transceiver->GetMediaType() == SdpMediaSection::kAudio
+                    ? "audio"
+                    : "video",
+                mHandle.c_str(), errorString.c_str());
+    return NS_ERROR_FAILURE;
+  }
+
   return NS_OK;
 }
 
@@ -948,9 +954,6 @@ static Maybe<SdpMediaSection::MediaType> ToSdpMediaType(
 already_AddRefed<RTCRtpTransceiver> PeerConnectionImpl::AddTransceiver(
     const dom::RTCRtpTransceiverInit& aInit, const nsAString& aKind,
     dom::MediaStreamTrack* aSendTrack, ErrorResult& aRv) {
-  // Copy, because we might need to modify
-  RTCRtpTransceiverInit init(aInit);
-
   Maybe<SdpMediaSection::MediaType> type = ToSdpMediaType(aKind);
   if (NS_WARN_IF(!type.isSome())) {
     MOZ_ASSERT(false, "Invalid media kind");
@@ -971,93 +974,9 @@ already_AddRefed<RTCRtpTransceiver> PeerConnectionImpl::AddTransceiver(
     return nullptr;
   }
 
-  auto& sendEncodings = init.mSendEncodings;
-
-  // CheckAndRectifyEncodings covers these six:
-  // If any encoding contains a rid member whose value does not conform to the
-  // grammar requirements specified in Section 10 of [RFC8851], throw a
-  // TypeError.
-
-  // If some but not all encodings contain a rid member, throw a TypeError.
-
-  // If any encoding contains a rid member whose value is the same as that of a
-  // rid contained in another encoding in sendEncodings, throw a TypeError.
-
-  // If kind is "audio", remove the scaleResolutionDownBy member from all
-  // encodings that contain one.
-
-  // If any encoding contains a scaleResolutionDownBy member whose value is
-  // less than 1.0, throw a RangeError.
-
-  // Verify that the value of each maxFramerate member in sendEncodings that is
-  // defined is greater than 0.0. If one of the maxFramerate values does not
-  // meet this requirement, throw a RangeError.
-  RTCRtpSender::CheckAndRectifyEncodings(sendEncodings,
-                                         *type == SdpMediaSection::kVideo, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  // If any encoding contains a read-only parameter other than rid, throw an
-  // InvalidAccessError.
-  // NOTE: We don't support any additional read-only params right now. Also,
-  // spec shoehorns this in between checks that setParameters also performs
-  // (between the rid checks and the scaleResolutionDownBy checks).
-
-  // If any encoding contains a scaleResolutionDownBy member, then for each
-  // encoding without one, add a scaleResolutionDownBy member with the value
-  // 1.0.
-  for (const auto& constEncoding : sendEncodings) {
-    if (constEncoding.mScaleResolutionDownBy.WasPassed()) {
-      for (auto& encoding : sendEncodings) {
-        if (!encoding.mScaleResolutionDownBy.WasPassed()) {
-          encoding.mScaleResolutionDownBy.Construct(1.0f);
-        }
-      }
-      break;
-    }
-  }
-
-  // Let maxN be the maximum number of total simultaneous encodings the user
-  // agent may support for this kind, at minimum 1.This should be an optimistic
-  // number since the codec to be used is not known yet.
-  size_t maxN =
-      (*type == SdpMediaSection::kVideo) ? webrtc::kMaxSimulcastStreams : 1;
-
-  // If the number of encodings stored in sendEncodings exceeds maxN, then trim
-  // sendEncodings from the tail until its length is maxN.
-  // NOTE: Spec has this after all validation steps; even if there are elements
-  // that we will trim off, we still validate them.
-  if (sendEncodings.Length() > maxN) {
-    sendEncodings.TruncateLength(maxN);
-  }
-
-  // If kind is "video" and none of the encodings contain a
-  // scaleResolutionDownBy member, then for each encoding, add a
-  // scaleResolutionDownBy member with the value 2^(length of sendEncodings -
-  // encoding index - 1). This results in smaller-to-larger resolutions where
-  // the last encoding has no scaling applied to it, e.g. 4:2:1 if the length
-  // is 3.
-  // NOTE: The code above ensures that these are all set, or all unset, so we
-  // can just check the first one.
-  if (sendEncodings.Length() && *type == SdpMediaSection::kVideo &&
-      !sendEncodings[0].mScaleResolutionDownBy.WasPassed()) {
-    double scale = 1.0f;
-    for (auto it = sendEncodings.rbegin(); it != sendEncodings.rend(); ++it) {
-      it->mScaleResolutionDownBy.Construct(scale);
-      scale *= 2;
-    }
-  }
-
-  // If the number of encodings now stored in sendEncodings is 1, then remove
-  // any rid member from the lone entry.
-  if (sendEncodings.Length() == 1) {
-    sendEncodings[0].mRid.Reset();
-  }
-
   RefPtr<RTCRtpTransceiver> transceiver = CreateTransceiver(
       jsepTransceiver->GetUuid(),
-      jsepTransceiver->GetMediaType() == SdpMediaSection::kVideo, init,
+      jsepTransceiver->GetMediaType() == SdpMediaSection::kVideo, aInit,
       aSendTrack, aRv);
 
   if (aRv.Failed()) {
@@ -1612,22 +1531,6 @@ dom::RTCSdpType ToDomSdpType(JsepSdpType aType) {
   MOZ_CRASH("Nonexistent JsepSdpType");
 }
 
-JsepSdpType ToJsepSdpType(dom::RTCSdpType aType) {
-  switch (aType) {
-    case dom::RTCSdpType::Offer:
-      return kJsepSdpOffer;
-    case dom::RTCSdpType::Pranswer:
-      return kJsepSdpPranswer;
-    case dom::RTCSdpType::Answer:
-      return kJsepSdpAnswer;
-    case dom::RTCSdpType::Rollback:
-      return kJsepSdpRollback;
-    case dom::RTCSdpType::EndGuard_:;
-  }
-
-  MOZ_CRASH("Nonexistent dom::RTCSdpType");
-}
-
 NS_IMETHODIMP
 PeerConnectionImpl::SetLocalDescription(int32_t aAction, const char* aSDP) {
   PC_AUTO_ENTER_API_CALL(true);
@@ -2084,12 +1987,6 @@ void PeerConnectionImpl::StampTimecard(const char* aEvent) {
   STAMP_TIMECARD(mTimeCard, aEvent);
 }
 
-void PeerConnectionImpl::SendWarningToConsole(const nsCString& aWarning) {
-  nsAutoString msg = NS_ConvertASCIItoUTF16(aWarning);
-  nsContentUtils::ReportToConsoleByWindowID(msg, nsIScriptError::warningFlag,
-                                            "WebRTC"_ns, mWindow->WindowID());
-}
-
 nsresult PeerConnectionImpl::CalculateFingerprint(
     const std::string& algorithm, std::vector<uint8_t>* fingerprint) const {
   DtlsDigest digest(algorithm);
@@ -2325,21 +2222,6 @@ void PeerConnectionImpl::BreakCycles() {
   mTransceivers.Clear();
 }
 
-bool PeerConnectionImpl::HasPendingSetParameters() const {
-  for (const auto& transceiver : mTransceivers) {
-    if (transceiver->Sender()->HasPendingSetParameters()) {
-      return true;
-    }
-  }
-  return false;
-}
-
-void PeerConnectionImpl::InvalidateLastReturnedParameters() {
-  for (const auto& transceiver : mTransceivers) {
-    transceiver->Sender()->InvalidateLastReturnedParameters();
-  }
-}
-
 nsresult PeerConnectionImpl::SetConfiguration(
     const RTCConfiguration& aConfiguration) {
   nsresult rv = mTransportHandler->SetIceConfig(
@@ -2383,7 +2265,6 @@ nsresult PeerConnectionImpl::SetConfiguration(
 
   // Store the configuration for about:webrtc
   StoreConfigurationForAboutWebrtc(aConfiguration);
-
   return NS_OK;
 }
 
@@ -2544,52 +2425,31 @@ void PeerConnectionImpl::DoSetDescriptionSuccessPostProcessing(
 
         MOZ_ASSERT(mUncommittedJsepSession);
 
-        // sRD/sLD needs to be redone in certain circumstances
-        bool needsRedo = HasPendingSetParameters();
-        if (!needsRedo && aRemote && (aSdpType == dom::RTCSdpType::Offer)) {
-          for (auto& transceiver : mTransceivers) {
-            if (!mUncommittedJsepSession->GetTransceiver(
-                    transceiver->GetJsepTransceiverId())) {
-              needsRedo = true;
-              break;
-            }
-          }
-        }
-
-        if (needsRedo) {
-          // Spec says to abort, and re-do the sRD!
-          // This happens either when there is a SetParameters call in
-          // flight (that will race against the [[SendEncodings]]
-          // modification caused by sRD(offer)), or when addTrack has been
-          // called while sRD(offer) was in progress.
-          mUncommittedJsepSession.reset(mJsepSession->Clone());
-          JsepSession::Result result;
-          if (aRemote) {
-            mUncommittedJsepSession->SetRemoteDescription(
-                ToJsepSdpType(aSdpType), mRemoteRequestedSDP);
-          } else {
-            mUncommittedJsepSession->SetLocalDescription(
-                ToJsepSdpType(aSdpType), mLocalRequestedSDP);
-          }
-          if (result.mError.isSome()) {
-            // wat
-            nsCString error(
-                "When redoing sRD/sLD because it raced against "
-                "addTrack or setParameters, we encountered a failure that "
-                "did not happen "
-                "the first time. This should never happen. The error was: ");
-            error += mUncommittedJsepSession->GetLastError().c_str();
-            aP->MaybeRejectWithOperationError(error);
-            MOZ_ASSERT(false);
-          } else {
-            DoSetDescriptionSuccessPostProcessing(aSdpType, aRemote, aP);
-          }
-          return;
-        }
-
+        // Check for transceivers added by addTrack/addTransceiver while
+        // a sRD/sLD was in progress
         for (auto& transceiver : mTransceivers) {
           if (!mUncommittedJsepSession->GetTransceiver(
                   transceiver->GetJsepTransceiverId())) {
+            if (aSdpType == dom::RTCSdpType::Offer && aRemote) {
+              // Spec says to abort, and re-do the sRD(offer)!
+              mUncommittedJsepSession.reset(mJsepSession->Clone());
+              JsepSession::Result result =
+                  mUncommittedJsepSession->SetRemoteDescription(
+                      kJsepSdpOffer, mRemoteRequestedSDP);
+              MOZ_ASSERT(!!mUncommittedJsepSession->GetTransceiver(
+                  transceiver->GetJsepTransceiverId()));
+              if (result.mError.isSome()) {
+                // wat
+                aP->MaybeRejectWithOperationError(
+                    "When redoing sRD(offer) because it raced against "
+                    "addTrack, we encountered a failure that did not happen "
+                    "the first time. This should never happen.");
+                MOZ_ASSERT(false);
+              } else {
+                DoSetDescriptionSuccessPostProcessing(aSdpType, aRemote, aP);
+              }
+              return;
+            }
             // sLD, or sRD(answer), just make sure the new transceiver is
             // added, no need to re-do anything.
             mUncommittedJsepSession->AddTransceiver(
@@ -2604,11 +2464,6 @@ void PeerConnectionImpl::DoSetDescriptionSuccessPostProcessing(
 
         auto newSignalingState = GetSignalingState();
         SyncFromJsep();
-        if (aRemote || aSdpType == dom::RTCSdpType::Pranswer ||
-            aSdpType == dom::RTCSdpType::Answer) {
-          InvalidateLastReturnedParameters();
-        }
-
         // Section 4.4.1.5 Set the RTCSessionDescription:
         if (aSdpType == dom::RTCSdpType::Rollback) {
           // - step 4.5.10, type is rollback

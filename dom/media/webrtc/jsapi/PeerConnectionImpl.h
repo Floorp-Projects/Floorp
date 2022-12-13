@@ -511,18 +511,6 @@ class PeerConnectionImpl final
     return mPacketDumper;
   }
 
-  nsString GenerateUUID() const {
-    std::string result;
-    if (!mUuidGen->Generate(&result)) {
-      MOZ_CRASH();
-    }
-    return NS_ConvertUTF8toUTF16(result.c_str());
-  }
-
-  bool ShouldAllowOldSetParameters() const { return mAllowOldSetParameters; }
-
-  void SendWarningToConsole(const nsCString& aWarning);
-
  private:
   virtual ~PeerConnectionImpl();
   PeerConnectionImpl(const PeerConnectionImpl& rhs);
@@ -772,9 +760,6 @@ class PeerConnectionImpl final
 
   void BreakCycles();
 
-  bool HasPendingSetParameters() const;
-  void InvalidateLastReturnedParameters();
-
   RefPtr<WebrtcCallWrapper> mCall;
 
   // See Bug 1642419, this can be removed when all sites are working with RTX.
@@ -824,9 +809,6 @@ class PeerConnectionImpl final
 
   // Used to store the mDNS hostnames that we have registered
   std::set<std::string> mRegisteredMDNSHostnames;
-
-  // web-compat stopgap
-  bool mAllowOldSetParameters = false;
 
   // Used to store the mDNS hostnames that we have queried
   struct PendingIceCandidate {

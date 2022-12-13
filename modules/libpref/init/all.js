@@ -352,8 +352,8 @@ pref("media.videocontrols.keyboard-tab-to-all-controls", true);
   pref("media.navigator.audio.fake_frequency", 1000);
   pref("media.navigator.permission.disabled", false);
   pref("media.navigator.streams.fake", false);
+  pref("media.peerconnection.simulcast", true);
   pref("media.peerconnection.default_iceservers", "[]");
-  pref("media.peerconnection.allow_old_setParameters", true);
   pref("media.peerconnection.ice.loopback", false); // Set only for testing in offline environments.
   pref("media.peerconnection.ice.tcp", true);
   pref("media.peerconnection.ice.tcp_so_sock_count", 0); // Disable SO gathering

@@ -17,7 +17,8 @@ enum RTCRtpTransceiverDirection {
 dictionary RTCRtpTransceiverInit {
     RTCRtpTransceiverDirection         direction = "sendrecv";
     sequence<MediaStream>              streams = [];
-    sequence<RTCRtpEncodingParameters> sendEncodings = [];
+    // TODO: bug 1396918
+    // sequence<RTCRtpEncodingParameters> sendEncodings;
 };
 
 [Pref="media.peerconnection.enabled",

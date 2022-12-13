@@ -13,8 +13,8 @@ interface RTCRtpSender {
   readonly attribute MediaStreamTrack? track;
   readonly attribute RTCDtlsTransport? transport;
   [NewObject]
-  Promise<undefined> setParameters (RTCRtpSendParameters parameters);
-  RTCRtpSendParameters getParameters();
+  Promise<undefined> setParameters (optional RTCRtpParameters parameters = {});
+  RTCRtpParameters getParameters();
   [Throws]
   Promise<undefined> replaceTrack(MediaStreamTrack? withTrack);
   [NewObject]

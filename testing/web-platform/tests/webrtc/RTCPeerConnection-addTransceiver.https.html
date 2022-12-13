@@ -325,7 +325,7 @@
     assert_idl_attribute(pc, 'addTransceiver');
 
     assert_throws_js(TypeError, () =>
-      pc.addTransceiver('video', {
+      pc.addTransceiver('audio', {
         sendEncodings: [{
           rid: '@Invalid!'
         }]
@@ -359,7 +359,7 @@
     const pc = new RTCPeerConnection();
     t.add_cleanup(() => pc.close());
 
-    pc.addTransceiver('video', {
+    pc.addTransceiver('audio', {
       sendEncodings: [{
         dtx: 'enabled',
         active: false,

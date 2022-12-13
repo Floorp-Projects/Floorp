@@ -46,24 +46,15 @@
 
     v1.srcObject = stream;
     var sender = pc1.addTrack(stream.getVideoTracks()[0], stream);
-    let parameters = sender.getParameters();
-    is(parameters.encodings.length, 1, "Default number of encodings should be 1");
-    parameters.encodings[0].scaleResolutionDownBy = 0.5;
 
     await mustRejectWith(
         "Invalid scaleResolutionDownBy must reject", "RangeError",
-        () => sender.setParameters(parameters)
+        () => sender.setParameters(
+            { encodings:[{ scaleResolutionDownBy: 0.5 } ] })
     );
 
-    parameters = sender.getParameters();
-    parameters.encodings[0].scaleResolutionDownBy = 2;
-    parameters.encodings[0].maxBitrate = 60000;
-
-    await sender.setParameters(parameters);
-
-    parameters = sender.getParameters();
-    is(parameters.encodings[0].scaleResolutionDownBy, 2, "Should be able to set scaleResolutionDownBy");
-    is(parameters.encodings[0].maxBitrate, 60000, "Should be able to set maxBitrate");
+    await sender.setParameters({ encodings: [{ maxBitrate: 60000,
+                                               scaleResolutionDownBy: 2 }] });
 
     let offer = await pc1.createOffer();
     if (codec == "VP8") {

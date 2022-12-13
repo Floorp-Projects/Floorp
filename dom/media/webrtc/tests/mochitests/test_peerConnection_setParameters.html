@@ -12,158 +12,72 @@ createHTML({
   visible: true
 });
 
-function buildMaximumSendEncodings() {
-  const sendEncodings = [];
-  while (true) {
-    // isDeeply does not see identical string primitives and String objects
-    // as the same, so we make this a string primitive.
-    sendEncodings.push({rid: `${sendEncodings.length}`});
-    const pc = new RTCPeerConnection();
-    const {sender} = pc.addTransceiver('video', {sendEncodings});
-    const {encodings} = sender.getParameters();
-    if (encodings.length < sendEncodings.length) {
-      sendEncodings.pop();
-      return sendEncodings;
-    }
-  }
+function parameterstest(pc) {
+  ok(pc.getSenders().length, "have senders");
+  var sender = pc.getSenders()[0];
+
+  var testParameters = (params, errorName, errorMsg) => {
+    info("Trying to set " + JSON.stringify(params));
+
+    var validateParameters = (a, b) => {
+      var validateEncoding = (a, b) => {
+        is(a.rid, b.rid, "same rid");
+        is(a.maxBitrate, b.maxBitrate, "same maxBitrate");
+        is(a.maxFramerate, b.maxFramerate, "same maxFramerate");
+        is(a.scaleResolutionDownBy, b.scaleResolutionDownBy,
+           "same scaleResolutionDownBy");
+      };
+      is(a.encodings.length, (b.encodings || []).length, "same encodings");
+      a.encodings.forEach((en, i) => validateEncoding(en, b.encodings[i]));
+    };
+
+    var before = JSON.stringify(sender.getParameters());
+    isnot(JSON.stringify(params), before, "starting condition");
+
+    var p = sender.setParameters(params)
+    .then(() => {
+      isnot(JSON.stringify(sender.getParameters()), before, "parameters changed");
+      validateParameters(sender.getParameters(), params);
+      is(null, errorName || null, "is success expected");
+    }, e => {
+      is(e.name, errorName, "correct error name");
+      is(e.message, errorMsg, "correct error message");
+    });
+    is(JSON.stringify(sender.getParameters()), before, "parameters not set yet");
+    return p;
+  };
+
+  return [
+    [{ encodings: [ { rid: "foo", maxBitrate: 40000, scaleResolutionDownBy: 2 },
+                    { rid: "bar", maxBitrate: 10000, scaleResolutionDownBy: 4 }]
+    }],
+    [{ encodings: [{ maxBitrate: 10000, scaleResolutionDownBy: 4 }]}],
+    [{ encodings: [{ maxFramerate: 0.0, scaleResolutionDownBy: 1 }]}],
+    [{ encodings: [{ maxFramerate: 30.5, scaleResolutionDownBy: 1 }]}],
+    [{ encodings: [{ maxFramerate: -1, scaleResolutionDownBy: 1 }]}, "RangeError", "maxFramerate must be non-negative"],
+    [{ encodings: [{ maxBitrate: 40000 },
+                   { rid: "bar", maxBitrate: 10000 }] }, "TypeError", "Missing rid"],
+    [{ encodings: [{ rid: "foo", maxBitrate: 40000 },
+                   { rid: "bar", maxBitrate: 10000 },
+                   { rid: "bar", maxBitrate: 20000 }] }, "TypeError", "Duplicate rid"],
+    [{}]
+  ].reduce((p, args) => p.then(() => testParameters.apply(this, args)),
+           Promise.resolve());
 }
 
-// setParameters is mostly tested in wpt, but we test a few
-// implementation-specific things here. Other mochitests check whether the
-// set parameters actually have the desired effect on the media streams.
-const tests = [
+runNetworkTest(() => {
+  const test = new PeerConnectionTest();
+  test.setMediaConstraints([{video: true}], [{video: true}]);
+  test.chain.removeAfter("PC_REMOTE_WAIT_FOR_MEDIA_FLOW");
 
-  // wpt currently does not assume support for 3 encodings, which limits the
-  // effectiveness of its powers-of-2 test (since it can test only for 1 and 2)
-  async function checkScaleResolutionDownByAutoFillPowersOf2() {
-    const pc = new RTCPeerConnection();
-    const {sender} = pc.addTransceiver('video', {
-      sendEncodings: [{rid: "0"},{rid: "1"},{rid: "2"}]
-    });
-    const {encodings} = sender.getParameters();
-    const scaleValues = encodings.map(({scaleResolutionDownBy}) => scaleResolutionDownBy);
-    isDeeply(scaleValues, [4, 2, 1]);
-  },
-
-  // wpt currently does not assume support for 3 encodings, which limits the
-  // effectiveness of its fill-with-1 test
-  async function checkScaleResolutionDownByAutoFillWith1() {
-    const pc = new RTCPeerConnection();
-    const {sender} = pc.addTransceiver('video', {
-      sendEncodings: [
-        {rid: "0"},{rid: "1", scaleResolutionDownBy: 3},{rid: "2"}
-      ]
-    });
-    const {encodings} = sender.getParameters();
-    const scaleValues = encodings.map(({scaleResolutionDownBy}) => scaleResolutionDownBy);
-    isDeeply(scaleValues, [1, 3, 1]);
-  },
-
-  async function checkVideoEncodingLimit() {
-    const pc = new RTCPeerConnection();
-    const maxSendEncodings = buildMaximumSendEncodings();
-    const sendEncodings = maxSendEncodings.concat({rid: "a"});
-    const {sender} = pc.addTransceiver('video', {sendEncodings});
-    const {encodings} = sender.getParameters();
-
-    const rids = encodings.map(({rid}) => rid);
-    const expectedRids = maxSendEncodings.map(({rid}) => rid);
-    isDeeply(rids, expectedRids);
-
-    const scaleValues = encodings.map(({scaleResolutionDownBy}) => scaleResolutionDownBy);
-    const expectedScaleValues = [];
-    let scale = 1;
-    while (expectedScaleValues.length < maxSendEncodings.length) {
-      expectedScaleValues.push(scale);
-      scale *= 2;
+  // Test sender parameters.
+  test.chain.append([
+    function PC_LOCAL_SET_PARAMETERS(test) {
+      return parameterstest(test.pcLocal._pc);
     }
-    isDeeply(scaleValues, expectedScaleValues.reverse());
-  },
+  ]);
 
-  async function checkScaleDownByInTrimmedEncoding() {
-    const pc = new RTCPeerConnection();
-    const maxSendEncodings = buildMaximumSendEncodings();
-    const sendEncodings = maxSendEncodings.concat({rid: "a", scaleResolutionDownBy: 3});
-    const {sender} = pc.addTransceiver('video', {sendEncodings});
-    const {encodings} = sender.getParameters();
-    const rids = encodings.map(({rid}) => rid);
-    const expectedRids = maxSendEncodings.map(({rid}) => rid);
-    isDeeply(rids, expectedRids);
-    const scaleValues = encodings.map(({scaleResolutionDownBy}) => scaleResolutionDownBy);
-    const expectedScaleValues = maxSendEncodings.map(() => 1);
-    isDeeply(scaleValues, expectedScaleValues);
-  },
-
-  async function checkLibwebrtcRidLengthLimit() {
-    const pc = new RTCPeerConnection();
-    try {
-      pc.addTransceiver('video', {
-        sendEncodings: [{rid: "wibblywobblyjeremybearimy"}]}
-      );
-      ok(false, "Rid should be too long for libwebrtc!");
-    } catch (e) {
-      is(e.name, "TypeError",
-        "Rid that is too long for libwebrtc should result in a TypeError");
-    }
-  },
-
-  async function checkErrorsInTrimmedEncodings() {
-    const pc = new RTCPeerConnection();
-    const maxSendEncodings = buildMaximumSendEncodings();
-    try {
-      const sendEncodings = maxSendEncodings.concat({rid: "foo-bar"});
-      pc.addTransceiver('video', { sendEncodings });
-      ok(false, "Should throw due to invalid rid characters");
-    } catch (e) {
-      is(e.name, "TypeError")
-    }
-    try {
-      const sendEncodings = maxSendEncodings.concat({rid: "wibblywobblyjeremybearimy"});
-      pc.addTransceiver('video', { sendEncodings });
-      ok(false, "Should throw because rid too long");
-    } catch (e) {
-      is(e.name, "TypeError")
-    }
-    try {
-      const sendEncodings = maxSendEncodings.concat({scaleResolutionDownBy: 2});
-      pc.addTransceiver('video', { sendEncodings });
-      ok(false, "Should throw due to missing rid");
-    } catch (e) {
-      is(e.name, "TypeError")
-    }
-    try {
-      const sendEncodings = maxSendEncodings.concat(maxSendEncodings[0]);
-      pc.addTransceiver('video', { sendEncodings });
-      ok(false, "Should throw due to duplicate rid");
-    } catch (e) {
-      is(e.name, "TypeError")
-    }
-    try {
-      const sendEncodings = maxSendEncodings.concat({rid: maxSendEncodings.length, scaleResolutionDownBy: 0});
-      pc.addTransceiver('video', { sendEncodings });
-      ok(false, "Should throw due to invalid scaleResolutionDownBy");
-    } catch (e) {
-      is(e.name, "RangeError")
-    }
-    try {
-      const sendEncodings = maxSendEncodings.concat({rid: maxSendEncodings.length, maxFramerate: -1});
-      pc.addTransceiver('video', { sendEncodings });
-      ok(false, "Should throw due to invalid maxFramerate");
-    } catch (e) {
-      is(e.name, "RangeError")
-    }
-  },
-
-];
-
-runNetworkTest(async () => {
-  await pushPrefs(
-    ["media.peerconnection.allow_old_setParameters", false]);
-  for (const test of tests) {
-    info(`Running test: ${test.name}`);
-    await test();
-    info(`Done running test: ${test.name}`);
-  }
+  return test.run();
 });
 
 </script>
