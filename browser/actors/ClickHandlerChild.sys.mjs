@@ -10,13 +10,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "WebNavigationFrames",
-  "resource://gre/modules/WebNavigationFrames.jsm"
-);
 
 export class MiddleMousePasteHandlerChild extends JSWindowActorChild {
   handleEvent(clickEvent) {
@@ -107,7 +101,6 @@ export class ClickHandlerChild extends JSWindowActorChild {
       referrerInfo.initWithDocument(ownerDoc);
     }
     referrerInfo = lazy.E10SUtils.serializeReferrerInfo(referrerInfo);
-    let frameID = lazy.WebNavigationFrames.getFrameId(ownerDoc.defaultView);
 
     let json = {
       button: event.button,
@@ -117,14 +110,8 @@ export class ClickHandlerChild extends JSWindowActorChild {
       altKey: event.altKey,
       href: null,
       title: null,
-      frameID,
-      triggeringPrincipal: principal,
       csp,
       referrerInfo,
-      originAttributes: principal ? principal.originAttributes : {},
-      isContentWindowPrivate: lazy.PrivateBrowsingUtils.isContentWindowPrivate(
-        ownerDoc.defaultView
-      ),
     };
 
     if (href && !isFromMiddleMousePasteHandler) {
@@ -161,10 +148,6 @@ export class ClickHandlerChild extends JSWindowActorChild {
       if (node) {
         json.title = node.getAttribute("title");
       }
-
-      json.originPrincipal = ownerDoc.nodePrincipal;
-      json.originStoragePrincipal = ownerDoc.effectiveStoragePrincipal;
-      json.triggeringPrincipal = ownerDoc.nodePrincipal;
 
       if (
         (ownerDoc.URL === "about:newtab" || ownerDoc.URL === "about:home") &&
