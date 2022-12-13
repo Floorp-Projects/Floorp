@@ -2685,7 +2685,8 @@ void GetObjectSlotNameFunctor::operator()(JS::TracingContext* tcx, char* buf,
 
   Maybe<PropertyKey> key;
   if (obj->is<NativeObject>()) {
-    for (ShapePropertyIter<NoGC> iter(obj->shape()); !iter.done(); iter++) {
+    NativeShape* shape = obj->as<NativeObject>().shape();
+    for (ShapePropertyIter<NoGC> iter(shape); !iter.done(); iter++) {
       if (iter->hasSlot() && iter->slot() == slot) {
         key.emplace(iter->key());
         break;
@@ -3580,11 +3581,12 @@ void JSObject::debugCheckNewObject(Shape* shape, js::gc::AllocKind allocKind,
   const JSClass* clasp = shape->getObjectClass();
 
   if (!ClassCanHaveFixedData(clasp)) {
+    NativeShape* nshape = &shape->asNative();
     if (clasp == &ArrayObject::class_) {
       // Arrays can store the ObjectElements header inline.
-      MOZ_ASSERT(shape->numFixedSlots() == 0);
+      MOZ_ASSERT(nshape->numFixedSlots() == 0);
     } else {
-      MOZ_ASSERT(gc::GetGCKindSlots(allocKind) == shape->numFixedSlots());
+      MOZ_ASSERT(gc::GetGCKindSlots(allocKind) == nshape->numFixedSlots());
     }
   }
 
@@ -3620,7 +3622,6 @@ void JSObject::debugCheckNewObject(Shape* shape, js::gc::AllocKind allocKind,
   // included in numFixedSlots.
   if (!clasp->isNativeObject()) {
     MOZ_ASSERT_IF(!clasp->isProxyObject(), JSCLASS_RESERVED_SLOTS(clasp) == 0);
-    MOZ_ASSERT_IF(shape, shape->numFixedSlots() == 0);
   }
 }
 #endif

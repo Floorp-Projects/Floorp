@@ -4979,17 +4979,24 @@ AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(
   PropertyInfo propInfo = prop.propertyInfo();
   NativeObject* holder = nobj;
 
+  if (holder->inDictionaryMode()) {
+    return AttachDecision::NoAction;
+  }
+
+  SharedShape* oldSharedShape = &oldShape->asShared();
+
   // The property must be the last added property of the object.
-  Shape* newShape = holder->shape();
+  SharedShape* newShape = holder->sharedShape();
   MOZ_RELEASE_ASSERT(newShape->lastProperty() == propInfo);
 
 #ifdef DEBUG
   // Verify exactly one property was added by comparing the property map
   // lengths.
-  if (oldShape->propMapLength() == PropMap::Capacity) {
+  if (oldSharedShape->propMapLength() == PropMap::Capacity) {
     MOZ_ASSERT(newShape->propMapLength() == 1);
   } else {
-    MOZ_ASSERT(newShape->propMapLength() == oldShape->propMapLength() + 1);
+    MOZ_ASSERT(newShape->propMapLength() ==
+               oldSharedShape->propMapLength() + 1);
   }
 #endif
 
@@ -4998,13 +5005,10 @@ AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(
   JSOp op = JSOp(*pc_);
   PropertyFlags flags = SetPropertyFlags(op, isFunctionPrototype);
 
-  // Basic shape checks.
-  if (newShape->isDictionary() || !propInfo.isDataProperty() ||
-      propInfo.flags() != flags) {
+  // Basic property checks.
+  if (!propInfo.isDataProperty() || propInfo.flags() != flags) {
     return AttachDecision::NoAction;
   }
-
-  SharedShape* oldSharedShape = &oldShape->asShared();
 
   ObjOperandId objId = writer.guardToObject(objValId);
   maybeEmitIdGuard(id);

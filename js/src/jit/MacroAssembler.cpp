@@ -2258,8 +2258,8 @@ void MacroAssembler::emitMegamorphicCacheLookup(
   // scratch1 = outputScratch->numFixedSlots()
   loadPtr(Address(outputScratch, JSObject::offsetOfShape()), scratch1);
   load32(Address(scratch1, Shape::offsetOfImmutableFlags()), scratch1);
-  and32(Imm32(Shape::fixedSlotsMask()), scratch1);
-  rshift32(Imm32(Shape::fixedSlotsShift()), scratch1);
+  and32(Imm32(NativeShape::fixedSlotsMask()), scratch1);
+  rshift32(Imm32(NativeShape::fixedSlotsShift()), scratch1);
 
   // scratch3 = scratch2->slot()
   load16ZeroExtend(Address(scratch2, MegamorphicCache::Entry::offsetOfSlot()),
@@ -4781,7 +4781,7 @@ void MacroAssembler::debugAssertObjHasFixedSlots(Register obj,
   loadPtr(Address(obj, JSObject::offsetOfShape()), scratch);
   branchTest32(Assembler::NonZero,
                Address(scratch, Shape::offsetOfImmutableFlags()),
-               Imm32(Shape::fixedSlotsMask()), &hasFixedSlots);
+               Imm32(NativeShape::fixedSlotsMask()), &hasFixedSlots);
   assumeUnreachable("Expected a fixed slot");
   bind(&hasFixedSlots);
 #endif

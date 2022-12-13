@@ -4754,7 +4754,7 @@ MObjectState::MObjectState(const Shape* shape)
   setRecoveredOnBailout();
 
   numSlots_ = shape->asShared().slotSpan();
-  numFixedSlots_ = shape->numFixedSlots();
+  numFixedSlots_ = shape->asShared().numFixedSlots();
 }
 
 /* static */

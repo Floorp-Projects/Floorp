@@ -587,6 +587,7 @@ class NativeObject : public JSObject {
   }
 
  public:
+  NativeShape* shape() const { return &JSObject::shape()->asNative(); }
   SharedShape* sharedShape() const { return &shape()->asShared(); }
   DictionaryShape* dictionaryShape() const { return &shape()->asDictionary(); }
 
@@ -623,10 +624,12 @@ class NativeObject : public JSObject {
   MOZ_ALWAYS_INLINE bool setShapeAndAddNewSlot(JSContext* cx,
                                                SharedShape* newShape,
                                                uint32_t slot);
-  void setShapeAndRemoveLastSlot(JSContext* cx, Shape* newShape, uint32_t slot);
+  void setShapeAndRemoveLastSlot(JSContext* cx, SharedShape* newShape,
+                                 uint32_t slot);
 
-  MOZ_ALWAYS_INLINE bool canReuseShapeForNewProperties(Shape* newShape) const {
-    Shape* oldShape = shape();
+  MOZ_ALWAYS_INLINE bool canReuseShapeForNewProperties(
+      NativeShape* newShape) const {
+    NativeShape* oldShape = shape();
     MOZ_ASSERT(oldShape->propMapLength() == 0,
                "object must have no properties");
     MOZ_ASSERT(newShape->propMapLength() > 0,
