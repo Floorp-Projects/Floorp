@@ -22,8 +22,11 @@ background-update:
     submitted once per background update task invocation.  The expected schedule
     is every 7 hours, controlled by the pref `app.update.background.interval`,
     and subject to scheduling decisions made by the OS.
-  include_client_id: false
+  include_client_id: true
   send_if_empty: false
+  reasons:
+    backgroundupdate_task: |
+      The ping was sent as part of the normal background update task execution.
   bugs:
     - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
   data_reviews:
