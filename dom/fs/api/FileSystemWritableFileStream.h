@@ -46,23 +46,18 @@ class FileSystemWritableFileStream final : public WritableStream {
 
   void Close();
 
-  already_AddRefed<Promise> Write(JSContext* aCx, JS::Handle<JS::Value> aChunk,
-                                  ErrorResult& aError);
-
   // WebIDL Boilerplate
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL Interface
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> Write(
+  already_AddRefed<Promise> Write(
       const ArrayBufferViewOrArrayBufferOrBlobOrUSVStringOrWriteParams& aData,
       ErrorResult& aError);
 
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> Seek(uint64_t aPosition,
-                                                    ErrorResult& aError);
+  already_AddRefed<Promise> Seek(uint64_t aPosition, ErrorResult& aError);
 
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> Truncate(uint64_t aSize,
-                                                        ErrorResult& aError);
+  already_AddRefed<Promise> Truncate(uint64_t aSize, ErrorResult& aError);
 
  private:
   FileSystemWritableFileStream(
