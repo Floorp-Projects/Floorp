@@ -14266,6 +14266,8 @@
   type: RelaxedAtomicBool
 #if !defined(MOZ_WIDGET_ANDROID)
   value: true
+#elif defined(MOZ_WIDGET_ANDROID) && defined(NIGHTLY_BUILD)
+  value: true
 #else
   value: false
 #endif
