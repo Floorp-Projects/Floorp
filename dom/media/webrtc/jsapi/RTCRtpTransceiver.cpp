@@ -219,7 +219,7 @@ void RTCRtpTransceiver::Init(const RTCRtpTransceiverInit& aInit,
 
   mSender = new RTCRtpSender(mWindow, mPc, mTransportHandler,
                              mCallWrapper->mCallThread, mStsThread, mConduit,
-                             mSendTrack, this);
+                             mSendTrack, aInit.mSendEncodings, this);
 
   if (mConduit) {
     InitConduitControl();
@@ -236,7 +236,6 @@ void RTCRtpTransceiver::Init(const RTCRtpTransceiverInit& aInit,
             self.get(), &RTCRtpTransceiver::UpdateDtlsTransportState);
       }));
 
-  // TODO(bug 1401592): apply aInit.mSendEncodings to mSender
   mSender->SetStreams(aInit.mStreams);
   mDirection = aInit.mDirection;
 }
