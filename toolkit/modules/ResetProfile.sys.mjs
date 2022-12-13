@@ -4,8 +4,13 @@
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
+const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
+});
+
 const MOZ_APP_NAME = AppConstants.MOZ_APP_NAME;
-const MOZ_BUILD_APP = AppConstants.MOZ_BUILD_APP;
 
 export var ResetProfile = {
   /**
@@ -18,14 +23,10 @@ export var ResetProfile = {
       return false;
     }
     // Reset is only supported if the self-migrator used for reset exists.
-    let migrator =
-      "@mozilla.org/profile/migrator;1?app=" +
-      MOZ_BUILD_APP +
-      "&type=" +
-      MOZ_APP_NAME;
-    if (!(migrator in Cc)) {
+    if (!lazy.MigrationUtils.migratorExists(MOZ_APP_NAME)) {
       return false;
     }
+
     // We also need to be using a profile the profile manager knows about.
     let profileService = Cc[
       "@mozilla.org/toolkit/profile-service;1"

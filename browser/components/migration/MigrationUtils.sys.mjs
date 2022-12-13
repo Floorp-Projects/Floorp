@@ -35,6 +35,76 @@ function getL10n() {
   return gL10n;
 }
 
+const MIGRATOR_MODULES = Object.freeze({
+  EdgeProfileMigrator: {
+    moduleURI: "resource:///modules/EdgeProfileMigrator.sys.mjs",
+    platforms: ["win"],
+  },
+  FirefoxProfileMigrator: {
+    moduleURI: "resource:///modules/FirefoxProfileMigrator.sys.mjs",
+    platforms: ["linux", "macosx", "win"],
+  },
+  IEProfileMigrator: {
+    moduleURI: "resource:///modules/IEProfileMigrator.sys.mjs",
+    platforms: ["win"],
+  },
+  SafariProfileMigrator: {
+    moduleURI: "resource:///modules/SafariProfileMigrator.sys.mjs",
+    platforms: ["macosx"],
+  },
+
+  // The following migrators are all variants of the ChromeProfileMigrator
+
+  BraveProfileMigrator: {
+    moduleURI: "resource:///modules/ChromeProfileMigrator.sys.mjs",
+    platforms: ["linux", "macosx", "win"],
+  },
+  CanaryProfileMigrator: {
+    moduleURI: "resource:///modules/ChromeProfileMigrator.sys.mjs",
+    platforms: ["macosx", "win"],
+  },
+  ChromeProfileMigrator: {
+    moduleURI: "resource:///modules/ChromeProfileMigrator.sys.mjs",
+    platforms: ["linux", "macosx", "win"],
+  },
+  ChromeBetaMigrator: {
+    moduleURI: "resource:///modules/ChromeProfileMigrator.sys.mjs",
+    platforms: ["linux", "win"],
+  },
+  ChromeDevMigrator: {
+    moduleURI: "resource:///modules/ChromeProfileMigrator.sys.mjs",
+    platforms: ["linux"],
+  },
+  ChromiumProfileMigrator: {
+    moduleURI: "resource:///modules/ChromeProfileMigrator.sys.mjs",
+    platforms: ["linux", "macosx", "win"],
+  },
+  Chromium360seMigrator: {
+    moduleURI: "resource:///modules/ChromeProfileMigrator.sys.mjs",
+    platforms: ["win"],
+  },
+  ChromiumEdgeMigrator: {
+    moduleURI: "resource:///modules/ChromeProfileMigrator.sys.mjs",
+    platforms: ["macosx", "win"],
+  },
+  ChromiumEdgeBetaMigrator: {
+    moduleURI: "resource:///modules/ChromeProfileMigrator.sys.mjs",
+    platforms: ["macosx", "win"],
+  },
+  OperaProfileMigrator: {
+    moduleURI: "resource:///modules/ChromeProfileMigrator.sys.mjs",
+    platforms: ["linux", "macosx", "win"],
+  },
+  VivaldiProfileMigrator: {
+    moduleURI: "resource:///modules/ChromeProfileMigrator.sys.mjs",
+    platforms: ["linux", "macosx", "win"],
+  },
+  OperaGXProfileMigrator: {
+    moduleURI: "resource:///modules/ChromeProfileMigrator.sys.mjs",
+    platforms: ["linux", "macosx", "win"],
+  },
+});
+
 /**
  * The singleton MigrationUtils service. This service is the primary mechanism
  * by which migrations from other browsers to this browser occur. The singleton
@@ -190,6 +260,23 @@ class MigrationUtils {
   get #migrators() {
     if (!gMigrators) {
       gMigrators = new Map();
+      for (let [symbol, { moduleURI, platforms }] of Object.entries(
+        MIGRATOR_MODULES
+      )) {
+        if (platforms.includes(AppConstants.platform)) {
+          let { [symbol]: migratorClass } = ChromeUtils.importESModule(
+            moduleURI
+          );
+          if (gMigrators.has(migratorClass.key)) {
+            console.error(
+              "A pre-existing migrator exists with key " +
+                `${migratorClass.key}. Not registering.`
+            );
+            continue;
+          }
+          gMigrators.set(migratorClass.key, new migratorClass());
+        }
+      }
     }
     return gMigrators;
   }
@@ -246,18 +333,10 @@ class MigrationUtils {
    *   import any data, null otherwise.
    */
   async getMigrator(aKey) {
-    let migrator = null;
-    if (this.#migrators.has(aKey)) {
-      migrator = this.#migrators.get(aKey);
-    } else {
-      try {
-        migrator = Cc[
-          "@mozilla.org/profile/migrator;1?app=browser&type=" + aKey
-        ].createInstance(Ci.nsIBrowserProfileMigrator);
-      } catch (ex) {
-        Cu.reportError(ex);
-      }
-      this.#migrators.set(aKey, migrator);
+    let migrator = this.#migrators.get(aKey);
+    if (!migrator) {
+      console.error(`Could not find a migrator class for key ${aKey}`);
+      return null;
     }
 
     try {
@@ -266,6 +345,19 @@ class MigrationUtils {
       Cu.reportError(ex);
       return null;
     }
+  }
+
+  /**
+   * Returns true if a migrator is registered with key aKey. No check is made
+   * to determine if a profile exists that the migrator can migrate from.
+   *
+   * @param {string} aKey
+   *   Internal name of the migration source. See `availableMigratorKeys`
+   *   for supported values by OS.
+   * @returns {boolean}
+   */
+  migratorExists(aKey) {
+    return this.#migrators.has(aKey);
   }
 
   /**
@@ -818,53 +910,7 @@ class MigrationUtils {
   }
 
   get availableMigratorKeys() {
-    if (AppConstants.platform == "win") {
-      return [
-        "firefox",
-        "edge",
-        "ie",
-        "opera",
-        "opera-gx",
-        "vivaldi",
-        "brave",
-        "chrome",
-        "chromium-edge",
-        "chromium-edge-beta",
-        "chrome-beta",
-        "chromium",
-        "chromium-360se",
-        "canary",
-      ];
-    }
-    if (AppConstants.platform == "macosx") {
-      return [
-        "firefox",
-        "safari",
-        "opera",
-        "opera-gx",
-        "vivaldi",
-        "brave",
-        "chrome",
-        "chromium-edge",
-        "chromium-edge-beta",
-        "chromium",
-        "canary",
-      ];
-    }
-    if (AppConstants.XP_UNIX) {
-      return [
-        "firefox",
-        "opera",
-        "vivaldi",
-        "brave",
-        "chrome",
-        "chrome-beta",
-        "chrome-dev",
-        "chromium",
-        "opera-gx",
-      ];
-    }
-    return [];
+    return [...this.#migrators.keys()];
   }
 
   /**

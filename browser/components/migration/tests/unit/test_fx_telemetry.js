@@ -2,6 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
+const { FirefoxProfileMigrator } = ChromeUtils.importESModule(
+  "resource:///modules/FirefoxProfileMigrator.sys.mjs"
+);
 
 function readFile(file) {
   let stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
@@ -80,10 +83,11 @@ function createSubDir(dir, subDirName) {
   return subDir;
 }
 
-function promiseMigrator(name, srcDir, targetDir) {
-  let migrator = Cc[
-    "@mozilla.org/profile/migrator;1?app=browser&type=firefox"
-  ].createInstance(Ci.nsISupports).wrappedJSObject;
+async function promiseMigrator(name, srcDir, targetDir) {
+  // As the FirefoxProfileMigrator is a startup-only migrator, we import its
+  // module and instantiate it directly rather than going through MigrationUtils,
+  // to bypass that availability check.
+  let migrator = new FirefoxProfileMigrator();
   let migrators = migrator._getResourcesInternal(srcDir, targetDir);
   for (let m of migrators) {
     if (m.name == name) {
