@@ -139,6 +139,32 @@ cookie.banners:
       - iframe_click_hit_opt_out
       - iframe_click_miss
     telemetry_mirror: COOKIE_BANNERS_RULE_LOOKUP_BY_DOMAIN
+  reload:
+    type: event
+    description: >
+      Recorded when the top-level page is reloaded. We use this event metric to
+      know whether or not the reloading domain has cookie banner rule.
+    bugs:
+      - https://bugzilla.mozilla.org/1797079
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1797079#c6
+    notification_emails:
+      - pbz@mozilla.com
+      - tihuang@mozilla.com
+    expires: 115
+    data_sensitivity:
+      - interaction
+    extra_keys:
+      no_rule:
+        description: There is no cookie banner rule for the reloading domain.
+        type: boolean
+      has_cookie_rule:
+        description: There is a matching cookie rule for the reloading domain.
+        type: boolean
+      has_click_rule:
+        description: There is a matching click rule for the reloading domain.
+        type: boolean
+    telemetry_mirror: Cookie_banner_Reload_Browser
 cookie.banners.click:
   handle_duration:
     type: timing_distribution

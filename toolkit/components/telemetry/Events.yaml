@@ -3639,3 +3639,25 @@ search:
       new_name: The display name of the new default engine.
       new_load_path: The path relating to where the new default engine was installed/loaded from.
       new_sub_url: The new submission URL of the new default engine.
+
+cookie_banner:
+  reload:
+    objects: ["browser"]
+    description: >
+      Recorded when the top-level page is reloaded. We use this event metric to
+      know whether or not the reloading domain has cookie banner rule.
+    record_in_processes: ["main"]
+    products:
+      - "firefox"
+      - "fennec"
+    release_channel_collection: opt-out
+    notification_emails:
+      - pbz@mozilla.com
+      - tihuang@mozilla.com
+    bug_numbers:
+      - 1797079
+    expiry_version: "115"
+    extra_keys:
+      no_rule: There is no cookie banner rule for the reloading domain.
+      has_cookie_rule: There is a matching cookie rule for the reloading domain.
+      has_click_rule: There is a matching click rule for the reloading domain.
