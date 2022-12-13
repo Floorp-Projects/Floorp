@@ -74,6 +74,8 @@ class GeckoInstance(object):
         "dom.navigation.locationChangeRateLimit.count": 0,
         # DOM Push
         "dom.push.connection.enabled": False,
+        # Screen Orientation API
+        "dom.screenorientation.allow-lock": True,
         # Disable dialog abuse if alerts are triggered too quickly
         "dom.successive_dialog_time_limit": 0,
         # Only load extensions from the application and user profile

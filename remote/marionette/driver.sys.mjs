@@ -2359,7 +2359,7 @@ GeckoDriver.prototype.getScreenOrientation = function() {
 
   const win = this.getCurrentWindow();
 
-  return win.screen.mozOrientation;
+  return win.screen.orientation.type;
 };
 
 /**
@@ -2376,7 +2376,7 @@ GeckoDriver.prototype.getScreenOrientation = function() {
  * @throws {NoSuchWindowError}
  *     Top-level browsing context has been discarded.
  */
-GeckoDriver.prototype.setScreenOrientation = function(cmd) {
+GeckoDriver.prototype.setScreenOrientation = async function(cmd) {
   lazy.assert.mobile();
   lazy.assert.open(this.getBrowsingContext({ top: true }));
 
@@ -2399,7 +2399,10 @@ GeckoDriver.prototype.setScreenOrientation = function(cmd) {
   }
 
   const win = this.getCurrentWindow();
-  if (!win.screen.mozLockOrientation(mozOr)) {
+
+  try {
+    await win.screen.orientation.lock(mozOr);
+  } catch (e) {
     throw new lazy.error.WebDriverError(
       `Unable to set screen orientation: ${or}`
     );

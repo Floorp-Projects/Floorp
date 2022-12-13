@@ -221,6 +221,9 @@ const COMMON_PREFERENCES = new Map([
   // DOM Push
   ["dom.push.connection.enabled", false],
 
+  // Screen Orientation API
+  ["dom.screenorientation.allow-lock", true],
+
   // Disable dialog abuse if alerts are triggered too quickly.
   ["dom.successive_dialog_time_limit", 0],
 
