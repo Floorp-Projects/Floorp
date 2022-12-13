@@ -467,9 +467,9 @@ var PlacesOrganizer = {
    */
   importFromBrowser: function PO_importFromBrowser() {
     // We pass in the type of source we're using for use in telemetry:
-    MigrationUtils.showMigrationWizard(window, [
-      MigrationUtils.MIGRATION_ENTRYPOINTS.PLACES,
-    ]);
+    MigrationUtils.showMigrationWizard(window, {
+      entrypoint: MigrationUtils.MIGRATION_ENTRYPOINTS.PLACES,
+    });
   },
 
   /**

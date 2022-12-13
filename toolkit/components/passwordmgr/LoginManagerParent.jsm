@@ -445,7 +445,10 @@ class LoginManagerParent extends JSWindowActorParent {
       // Open the migration wizard pre-selecting the appropriate browser.
       lazy.MigrationUtils.showMigrationWizard(
         this.getRootBrowser().ownerGlobal,
-        [lazy.MigrationUtils.MIGRATION_ENTRYPOINTS.PASSWORDS, browserId]
+        {
+          entrypoint: lazy.MigrationUtils.MIGRATION_ENTRYPOINTS.PASSWORDS,
+          migratorKey: browserId,
+        }
       );
     }
   }
