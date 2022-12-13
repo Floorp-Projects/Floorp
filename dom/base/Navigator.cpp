@@ -1587,7 +1587,12 @@ void Navigator::GetGamepads(nsTArray<RefPtr<Gamepad>>& aGamepads,
   win->GetGamepads(aGamepads);
 }
 
-GamepadServiceTest* Navigator::RequestGamepadServiceTest() {
+GamepadServiceTest* Navigator::RequestGamepadServiceTest(ErrorResult& aRv) {
+  if (!xpc::IsInAutomation()) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
   if (!mGamepadServiceTest) {
     mGamepadServiceTest = GamepadServiceTest::CreateTestService(mWindow);
   }
@@ -1752,7 +1757,12 @@ void Navigator::NotifyActiveVRDisplaysChanged() {
   Navigator_Binding::ClearCachedActiveVRDisplaysValue(this);
 }
 
-VRServiceTest* Navigator::RequestVRServiceTest() {
+VRServiceTest* Navigator::RequestVRServiceTest(ErrorResult& aRv) {
+  if (!xpc::IsInAutomation()) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
   // Ensure that the Mock VR devices are not released prematurely
   nsGlobalWindowInner* win = nsGlobalWindowInner::Cast(mWindow);
   win->NotifyHasXRSession();
