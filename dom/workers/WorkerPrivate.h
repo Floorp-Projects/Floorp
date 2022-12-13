@@ -406,6 +406,8 @@ class WorkerPrivate final
 
   void ResetWorkerPrivateInWorkerThread();
 
+  SerialEventTargetGuard GetSerialEventTargetGuard();
+
   bool IsOnWorkerThread() const;
 
   void AssertIsOnWorkerThread() const
