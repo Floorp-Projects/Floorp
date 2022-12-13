@@ -13,8 +13,8 @@ from taskgraph.util.schema import resolve_keyed_by
 transforms = TransformSequence()
 
 PRODUCTION_SIGNING_BUILD_TYPES = [
-    "nightly",
-    "beta",
+    "focus-nightly",
+    "focus-beta",
     "focus-release",
     "klar-release",
     "android-test-nightly",
