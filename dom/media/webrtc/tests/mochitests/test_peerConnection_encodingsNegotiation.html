@@ -63,7 +63,7 @@ const tests = [
     await doOfferToRecvSimulcast(pc2, pc1, ["foo", "wibblywobblyjeremybearimy"]);
     const {encodings} = sender.getParameters();
     const rids = encodings.map(({rid}) => rid);
-    isDeeply(rids, [undefined]);
+    isDeeply(rids, ["foo"]);
 
     pc1.close();
     pc2.close();
