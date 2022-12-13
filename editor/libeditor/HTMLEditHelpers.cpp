@@ -106,4 +106,23 @@ PendingStyleCache EditorInlineStyle::ToPendingStyleCache(
                            std::move(aValue));
 }
 
+bool EditorInlineStyle::IsRepresentedBy(const nsIContent& aContent) const {
+  MOZ_ASSERT(!IsStyleToClearAllInlineStyles());
+
+  if (!aContent.IsHTMLElement()) {
+    return false;
+  }
+  const Element& element = *aContent.AsElement();
+  if (element.NodeInfo()->NameAtom() == mHTMLProperty) {
+    return true;
+  }
+  // Special case for linking or naming an <a> element.
+  if ((mHTMLProperty == nsGkAtoms::href && HTMLEditUtils::IsLink(&element)) ||
+      (mHTMLProperty == nsGkAtoms::name &&
+       HTMLEditUtils::IsNamedAnchor(&element))) {
+    return true;
+  }
+  return false;
+}
+
 }  // namespace mozilla
