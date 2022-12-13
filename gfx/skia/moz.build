@@ -163,7 +163,6 @@ UNIFIED_SOURCES += [
     'skia/src/core/SkStream.cpp',
     'skia/src/core/SkStrike.cpp',
     'skia/src/core/SkStrikeCache.cpp',
-    'skia/src/core/SkStrikeForGPU.cpp',
     'skia/src/core/SkStrikeSpec.cpp',
     'skia/src/core/SkString.cpp',
     'skia/src/core/SkStringUtils.cpp',
