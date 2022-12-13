@@ -4214,8 +4214,8 @@ Object.defineProperty(exports, "initSandbox", ({
   }
 }));
 var _initialization = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.2.47';
-const pdfjsBuild = 'feb6f5951';
+const pdfjsVersion = '3.2.58';
+const pdfjsBuild = 'ba2fec989';
 })();
 
 /******/ 	return __webpack_exports__;
