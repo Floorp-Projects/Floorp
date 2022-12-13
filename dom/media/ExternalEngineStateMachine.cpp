@@ -631,7 +631,6 @@ void ExternalEngineStateMachine::StartRunningEngine() {
 void ExternalEngineStateMachine::RunningEngineUpdate(MediaData::Type aType) {
   AssertOnTaskQueue();
   MOZ_ASSERT(mState.IsRunningEngine() || mState.IsSeekingData());
-  LOG("RunningEngineUpdate");
   if (aType == MediaData::Type::AUDIO_DATA && !mHasEnoughAudio) {
     OnRequestAudio();
   }
