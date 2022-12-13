@@ -42,13 +42,15 @@ function getL10n() {
  */
 class MigrationUtils {
   resourceTypes = Object.freeze({
-    COOKIES: Ci.nsIBrowserProfileMigrator.COOKIES,
-    HISTORY: Ci.nsIBrowserProfileMigrator.HISTORY,
-    FORMDATA: Ci.nsIBrowserProfileMigrator.FORMDATA,
-    PASSWORDS: Ci.nsIBrowserProfileMigrator.PASSWORDS,
-    BOOKMARKS: Ci.nsIBrowserProfileMigrator.BOOKMARKS,
-    OTHERDATA: Ci.nsIBrowserProfileMigrator.OTHERDATA,
-    SESSION: Ci.nsIBrowserProfileMigrator.SESSION,
+    ALL: 0x0000,
+    /* 0x01 used to be used for settings, but was removed. */
+    COOKIES: 0x0002,
+    HISTORY: 0x0004,
+    FORMDATA: 0x0008,
+    PASSWORDS: 0x0010,
+    BOOKMARKS: 0x0020,
+    OTHERDATA: 0x0040,
+    SESSION: 0x0080,
   });
 
   /**
