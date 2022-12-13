@@ -114,17 +114,6 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
         "ScaledFontFreeType.cpp",
     ]
 
-SOURCES += [
-    "ConvolutionFilter.cpp",
-    "DrawTargetSkia.cpp",
-    "PathSkia.cpp",
-    "SourceSurfaceSkia.cpp",
-]
-if CONFIG["CC_TYPE"] in ("clang", "clang-cl"):
-    # Suppress warnings from Skia header files.
-    SOURCES["DrawTargetSkia.cpp"].flags += ["-Wno-implicit-fallthrough"]
-    SOURCES["PathSkia.cpp"].flags += ["-Wno-implicit-fallthrough"]
-    SOURCES["SourceSurfaceSkia.cpp"].flags += ["-Wno-implicit-fallthrough"]
 EXPORTS.mozilla.gfx += [
     "ConvolutionFilter.h",
     "HelpersSkia.h",
@@ -161,6 +150,7 @@ UNIFIED_SOURCES += [
     "Blur.cpp",
     "BufferEdgePad.cpp",
     "BufferUnrotate.cpp",
+    "ConvolutionFilter.cpp",
     "DataSourceSurface.cpp",
     "DataSurfaceHelpers.cpp",
     "DrawEventRecorder.cpp",
@@ -168,6 +158,8 @@ UNIFIED_SOURCES += [
     "DrawTargetCairo.cpp",
     "DrawTargetOffset.cpp",
     "DrawTargetRecording.cpp",
+    "DrawTargetSkia.cpp",
+    "Factory.cpp",
     "FilterNodeSoftware.cpp",
     "FilterProcessing.cpp",
     "FilterProcessingScalar.cpp",
@@ -178,6 +170,7 @@ UNIFIED_SOURCES += [
     "PathCairo.cpp",
     "PathHelpers.cpp",
     "PathRecording.cpp",
+    "PathSkia.cpp",
     "Quaternion.cpp",
     "RecordedEvent.cpp",
     "Scale.cpp",
@@ -185,17 +178,14 @@ UNIFIED_SOURCES += [
     "SFNTData.cpp",
     "SourceSurfaceCairo.cpp",
     "SourceSurfaceRawData.cpp",
+    "SourceSurfaceSkia.cpp",
     "Swizzle.cpp",
     "Types.cpp",
 ]
 
 SOURCES += [
-    "Factory.cpp",  # Need to suppress warnings in Skia header files.
     "InlineTranslator.cpp",
 ]
-
-if CONFIG["CC_TYPE"] in ("clang", "clang-cl"):
-    SOURCES["Factory.cpp"].flags += ["-Wno-implicit-fallthrough"]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     EXPORTS.mozilla.gfx += [
