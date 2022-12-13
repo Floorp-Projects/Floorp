@@ -768,6 +768,9 @@ class PeerConnectionImpl final
 
   void BreakCycles();
 
+  bool HasPendingSetParameters() const;
+  void InvalidateLastReturnedParameters();
+
   RefPtr<WebrtcCallWrapper> mCall;
 
   // See Bug 1642419, this can be removed when all sites are working with RTX.
