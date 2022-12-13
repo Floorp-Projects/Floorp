@@ -2149,7 +2149,9 @@ size_t HTMLEditUtils::CollectEmptyInlineContainerDescendants(
 
 // static
 bool HTMLEditUtils::ElementHasAttributeExcept(const Element& aElement,
-                                              const nsAtom& aAttribute) {
+                                              const nsAtom& aAttribute1,
+                                              const nsAtom& aAttribute2,
+                                              const nsAtom& aAttribute3) {
   // FYI: This was moved from
   // https://searchfox.org/mozilla-central/rev/0b1543e85d13c30a13c57e959ce9815a3f0fa1d3/editor/libeditor/HTMLStyleEditor.cpp#1626
   for (auto i : IntegerRange<uint32_t>(aElement.GetAttrCount())) {
@@ -2158,8 +2160,21 @@ bool HTMLEditUtils::ElementHasAttributeExcept(const Element& aElement,
       return true;
     }
 
-    if (name->LocalName() == &aAttribute) {
+    if (name->LocalName() == &aAttribute1 ||
+        name->LocalName() == &aAttribute2 ||
+        name->LocalName() == &aAttribute3) {
       continue;  // Ignore the given attribute
+    }
+
+    // Ignore empty style, class and id attributes because those attributes are
+    // not meaningful with empty value.
+    if (name->LocalName() == nsGkAtoms::style ||
+        name->LocalName() == nsGkAtoms::_class ||
+        name->LocalName() == nsGkAtoms::id) {
+      if (aElement.HasNonEmptyAttr(name->LocalName())) {
+        return true;
+      }
+      continue;
     }
 
     // Ignore special _moz attributes

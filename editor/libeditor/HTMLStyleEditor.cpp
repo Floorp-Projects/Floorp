@@ -394,7 +394,7 @@ HTMLEditor::AutoInlineStyleSetter::ElementIsGoodContainerForTheStyle(
   if (!aHTMLEditor.IsCSSEnabled() || !isCSSEditable) {
     // First check for <b>, <i>, etc.
     if (aElement.IsHTMLElement(&HTMLPropertyRef()) &&
-        !aElement.GetAttrCount() && !mAttribute) {
+        !HTMLEditUtils::ElementHasAttribute(aElement) && !mAttribute) {
       return true;
     }
 
@@ -813,7 +813,7 @@ Result<CaretPoint, nsresult> HTMLEditor::AutoInlineStyleSetter::ApplyStyle(
     // We only add style="" to <span>s with no attributes (bug 746515).  If we
     // don't have one, we need to make one.
     if (aContent.IsHTMLElement(nsGkAtoms::span) &&
-        !aContent.AsElement()->GetAttrCount()) {
+        !HTMLEditUtils::ElementHasAttribute(*aContent.AsElement())) {
       spanElement = aContent.AsElement();
     } else {
       Result<CreateElementResult, nsresult> wrapInSpanElementResult =

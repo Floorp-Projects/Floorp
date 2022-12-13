@@ -10444,7 +10444,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::ChangeMarginStart(
 
   // Remove unnecessary divs
   if (!aElement.IsHTMLElement(nsGkAtoms::div) ||
-      HTMLEditUtils::ElementHasAttributesExceptMozDirty(aElement)) {
+      HTMLEditUtils::ElementHasAttribute(aElement)) {
     return EditorDOMPoint();
   }
   // Don't touch editing host nor node which is outside of it.
