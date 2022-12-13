@@ -536,18 +536,12 @@ bool NativeObject::changeProperty(JSContext* cx, Handle<NativeObject*> obj,
   // If the property flags are not changing, the only thing we have to do is
   // update the object flags. This prevents a dictionary mode conversion below.
   if (oldProp.flags() == flags) {
+    *slotOut = oldProp.slot();
     if (objectFlags == obj->shape()->objectFlags()) {
-      *slotOut = oldProp.slot();
       return true;
     }
-    if (map->isShared()) {
-      if (!Shape::replaceShape(cx, obj, objectFlags, obj->shape()->proto(),
-                               obj->shape()->numFixedSlots())) {
-        return false;
-      }
-      *slotOut = oldProp.slot();
-      return true;
-    }
+    return Shape::replaceShape(cx, obj, objectFlags, obj->shape()->proto(),
+                               obj->shape()->numFixedSlots());
   }
 
   const JSClass* clasp = obj->shape()->getObjectClass();
