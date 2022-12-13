@@ -9,16 +9,23 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <time.h>
 
 #include "base/eintr_wrapper.h"
 #include "base/message_loop.h"
 #include "base/process_util.h"
+#include "prenv.h"
 
 #include "chrome/common/process_watcher.h"
 
 // Maximum amount of time (in milliseconds) to wait for the process to exit.
 // XXX/cjones: fairly arbitrary, chosen to match process_watcher_win.cc
-static const int kMaxWaitMs = 2000;
+static constexpr int kMaxWaitMs = 2000;
+
+// This is also somewhat arbitrary, but loosely based on Try results.
+// See also toolkit.asyncshutdown.crash_timeout (currently 60s) after
+// which the parent process will be killed.
+static constexpr int kShutdownWaitMs = 8000;
 
 namespace {
 
@@ -129,13 +136,18 @@ class ChildLaxReaper : public ChildReaper,
 
   virtual void WillDestroyCurrentMessageLoop() override {
     DCHECK(process_);
+    if (!process_) {
+      return;
+    }
 
-#ifdef NS_FREE_PERMANENT_DATA
-    printf_stderr("Waiting in WillDestroyCurrentMessageLoop for pid %d\n",
-                  process_);
-#endif
-    WaitForChildExit();
-    process_ = 0;
+    // Exception for the fake hang tests in ipc/glue/test/browser
+    if (!PR_GetEnv("MOZ_TEST_CHILD_EXIT_HANG")) {
+      CrashProcessIfHanging();
+    }
+    if (process_) {
+      WaitForChildExit();
+      process_ = 0;
+    }
 
     // XXX don't think this is necessary, since destruction can only
     // be observed once, but can't hurt
@@ -145,6 +157,50 @@ class ChildLaxReaper : public ChildReaper,
 
  private:
   ChildLaxReaper(const ChildLaxReaper&) = delete;
+
+  void CrashProcessIfHanging() {
+    if (base::IsProcessDead(process_)) {
+      process_ = 0;
+      return;
+    }
+
+    // If child processes seems to be hanging on shutdown, wait for a
+    // reasonable time.  The wait is global instead of per-process
+    // because the child processes should be shutting down in
+    // parallel, and also we're potentially racing global timeouts
+    // like nsTerminator.  (The counter doesn't need to be atomic;
+    // this is always called on the I/O thread.)
+    static int sWaitMs = kShutdownWaitMs;
+    if (sWaitMs > 0) {
+      CHROMIUM_LOG(WARNING)
+          << "Process " << process_
+          << " may be hanging at shutdown; will wait for up to " << sWaitMs
+          << "ms";
+    }
+    // There isn't a way to do a time-limited wait that's both
+    // portable and doesn't require messing with signals.  Instead, we
+    // sleep in short increments and poll the process status.
+    while (sWaitMs > 0) {
+      static constexpr int kWaitTickMs = 200;
+      struct timespec ts = {kWaitTickMs / 1000, (kWaitTickMs % 1000) * 1000000};
+      HANDLE_EINTR(nanosleep(&ts, &ts));
+      sWaitMs -= kWaitTickMs;
+
+      if (base::IsProcessDead(process_)) {
+        process_ = 0;
+        return;
+      }
+    }
+
+    // We want TreeHerder to flag this log line as an error, so that
+    // this is more obviously a deliberate crash; "fatal error" is one
+    // of the strings it looks for.
+    CHROMIUM_LOG(ERROR)
+        << "Process " << process_
+        << " hanging at shutdown; attempting crash report (fatal error).";
+
+    kill(process_, SIGABRT);
+  }
 
   const ChildLaxReaper& operator=(const ChildLaxReaper&) = delete;
 };
