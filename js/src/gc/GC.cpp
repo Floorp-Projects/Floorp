@@ -2370,6 +2370,7 @@ void GCRuntime::startCollection(JS::GCReason reason) {
   cleanUpEverything = ShouldCleanUpEverything(gcOptions());
   isCompacting = shouldCompact();
   rootsRemoved = false;
+  sweepGroupIndex = 0;
   lastGCStartTime_ = TimeStamp::Now();
 
 #ifdef DEBUG

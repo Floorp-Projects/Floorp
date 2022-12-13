@@ -501,7 +501,9 @@ class GCRuntime {
 
   JS::Zone* getCurrentSweepGroup() { return currentSweepGroup; }
   unsigned getCurrentSweepGroupIndex() {
-    return state() == State::Sweep ? sweepGroupIndex : 0;
+    MOZ_ASSERT_IF(unsigned(state()) < unsigned(State::Sweep),
+                  sweepGroupIndex == 0);
+    return sweepGroupIndex;
   }
 
   uint64_t gcNumber() const { return number; }
