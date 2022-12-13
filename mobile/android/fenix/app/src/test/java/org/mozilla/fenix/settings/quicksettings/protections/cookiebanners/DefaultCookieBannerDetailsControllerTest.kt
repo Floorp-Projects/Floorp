@@ -9,22 +9,28 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import io.mockk.MockKAnnotations
+import io.mockk.Runs
+import io.mockk.coEvery
 import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.advanceUntilIdle
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.cookiehandling.CookieBannersStorage
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.TrackingProtectionUseCases
+import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
@@ -70,6 +76,12 @@ internal class DefaultCookieBannerDetailsControllerTest {
     @MockK(relaxed = true)
     private lateinit var reload: SessionUseCases.ReloadUrlUseCase
 
+    @MockK(relaxed = true)
+    private lateinit var engine: Engine
+
+    @MockK(relaxed = true)
+    private lateinit var publicSuffixList: PublicSuffixList
+
     private var gravity = 54
 
     @get:Rule
@@ -86,19 +98,23 @@ internal class DefaultCookieBannerDetailsControllerTest {
         context = spyk(testContext)
         tab = createTab("https://mozilla.org")
         browserStore = BrowserStore(BrowserState(tabs = listOf(tab)))
-        controller = DefaultCookieBannerDetailsController(
-            fragment = fragment,
-            context = context,
-            ioScope = scope,
-            cookieBannersStorage = cookieBannersStorage,
-            navController = { navController },
-            sitePermissions = sitePermissions,
-            gravity = gravity,
-            getCurrentTab = { tab },
-            sessionId = tab.id,
-            browserStore = browserStore,
-            protectionsStore = protectionsStore,
-            reload = reload,
+        controller = spyk(
+            DefaultCookieBannerDetailsController(
+                fragment = fragment,
+                context = context,
+                ioScope = scope,
+                cookieBannersStorage = cookieBannersStorage,
+                navController = { navController },
+                sitePermissions = sitePermissions,
+                gravity = gravity,
+                getCurrentTab = { tab },
+                sessionId = tab.id,
+                browserStore = browserStore,
+                protectionsStore = protectionsStore,
+                engine = engine,
+                publicSuffixList = publicSuffixList,
+                reload = reload,
+            ),
         )
 
         every { fragment.context } returns context
@@ -159,12 +175,14 @@ internal class DefaultCookieBannerDetailsControllerTest {
 
             assertNull(CookieBanners.exceptionRemoved.testGetValue())
             every { protectionsStore.dispatch(any()) } returns mockk()
+            coEvery { controller.clearSiteData(any()) } just Runs
 
             controller.handleTogglePressed(isEnabled)
 
             advanceUntilIdle()
 
             coVerifyOrder {
+                controller.clearSiteData(tab)
                 cookieBannersStorage.addException(
                     uri = tab.content.url,
                     privateBrowsing = tab.content.private,
@@ -178,5 +196,23 @@ internal class DefaultCookieBannerDetailsControllerTest {
             }
 
             assertNotNull(CookieBanners.exceptionAdded.testGetValue())
+        }
+
+    @Test
+    fun `WHEN clearSiteData THEN delegate the call to the engine`() =
+        runTestOnMain {
+            coEvery { publicSuffixList.getPublicSuffixPlusOne(any()) } returns CompletableDeferred("mozilla.org")
+
+            controller.clearSiteData(tab)
+
+            coVerifyOrder {
+                engine.clearData(
+                    host = "mozilla.org",
+                    data = Engine.BrowsingData.select(
+                        Engine.BrowsingData.AUTH_SESSIONS,
+                        Engine.BrowsingData.ALL_SITE_DATA,
+                    ),
+                )
+            }
         }
 }
