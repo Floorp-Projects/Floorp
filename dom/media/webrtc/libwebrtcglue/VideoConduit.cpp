@@ -1309,6 +1309,22 @@ MediaConduitErrorCode WebrtcVideoConduit::SendVideoFrame(
                     __FUNCTION__);
       return kMediaConduitNoError;
     }
+
+    // Workaround for bug in libwebrtc where all encodings are transmitted
+    // if they are all inactive.
+    bool anyActive = false;
+    for (const auto& encoding : mCurSendCodecConfig->mEncodings) {
+      if (encoding.active) {
+        anyActive = true;
+        break;
+      }
+    }
+    if (!anyActive) {
+      CSFLogVerbose(LOGTAG, "WebrtcVideoConduit %p %s No active encodings",
+                    this, __FUNCTION__);
+      return kMediaConduitNoError;
+    }
+
     CSFLogVerbose(LOGTAG, "WebrtcVideoConduit %p %s (send SSRC %u (0x%x))",
                   this, __FUNCTION__, mSendStreamConfig.rtp.ssrcs.front(),
                   mSendStreamConfig.rtp.ssrcs.front());
