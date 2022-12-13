@@ -161,7 +161,8 @@ class IdentityCredential final : public Credential {
       const IdentityAccount& aAccount);
 
   static RefPtr<GetMetadataPromise> FetchMetadata(
-      nsIPrincipal* aPrincipal, const IdentityInternalManifest& aManifest);
+      nsIPrincipal* aPrincipal, const IdentityProvider& aProvider,
+      const IdentityInternalManifest& aManifest);
 
   static RefPtr<GetIdentityProviderPromise> PromptUserToSelectProvider(
       BrowsingContext* aBrowsingContext,
