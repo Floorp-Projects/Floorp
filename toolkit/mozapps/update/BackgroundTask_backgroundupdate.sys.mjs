@@ -273,22 +273,10 @@ export async function runBackgroundTask(commandLine) {
       );
       Glean.backgroundUpdate.clientId.set(telemetryClientID);
 
-      try {
-        defaultProfileTargetingSnapshot = await lazy.BackgroundTasksUtils.readFirefoxMessagingSystemTargetingSnapshot(
-          lock
-        );
-      } catch (f) {
-        if (DOMException.isInstance(f) && f.name === "NotFoundError") {
-          lazy.log.info(
-            `${SLUG}: no default profile targeting snapshot exists`
-          );
-        } else {
-          lazy.log.warn(
-            `${SLUG}: ignoring exception reading default profile targeting snapshot`,
-            f
-          );
-        }
-      }
+      // Read targeting snapshot, collect background update specific telemetry.  Never throws.
+      defaultProfileTargetingSnapshot = await BackgroundUpdate.readFirefoxMessagingSystemTargetingSnapshot(
+        lock
+      );
     });
 
     for (let [name, value] of Object.entries(defaultProfilePrefs)) {

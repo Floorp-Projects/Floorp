@@ -231,7 +231,7 @@ export var BackgroundTasksUtils = {
    * read from it.  If `lock` is given, read from the given lock's directory.
    *
    * @param {nsIProfileLock} [lock] optional lock to use
-   * @returns {string}
+   * @returns {object}
    */
   async readFirefoxMessagingSystemTargetingSnapshot(lock = null) {
     if (!lock) {
