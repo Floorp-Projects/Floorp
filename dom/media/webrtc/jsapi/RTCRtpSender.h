@@ -121,6 +121,11 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
   AbstractCanonical<std::string>* CanonicalCname() { return &mCname; }
   AbstractCanonical<bool>* CanonicalTransmitting() { return &mTransmitting; }
 
+  bool HasPendingSetParameters() const { return mPendingParameters.isSome(); }
+  void InvalidateLastReturnedParameters() {
+    mLastReturnedParameters = Nothing();
+  }
+
  private:
   virtual ~RTCRtpSender();
 
