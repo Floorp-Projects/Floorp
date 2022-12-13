@@ -54,9 +54,16 @@ struct VideoFrameCopyToOptions;
 
 namespace mozilla::dom {
 
-struct VideoFrameImageData {
+struct VideoFrameSerializedData {
   const RefPtr<layers::Image> mImage;
-  const nsCOMPtr<nsIURI> mURI;
+  const VideoPixelFormat mFormat;
+  const gfx::IntSize mCodedSize;
+  const gfx::IntRect mVisibleRect;
+  const gfx::IntSize mDisplaySize;
+  const Maybe<uint64_t> mDuration;
+  const int64_t mTimestamp;
+  const VideoColorSpaceInit mColorSpace;
+  const nsCOMPtr<nsIURI> mPrincipalURI;
 };
 
 class VideoFrame final : public nsISupports, public nsWrapperCache {
@@ -68,7 +75,7 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
   VideoFrame(nsIGlobalObject* aParent, const RefPtr<layers::Image>& aImage,
              const VideoPixelFormat& aFormat, gfx::IntSize aCodedSize,
              gfx::IntRect aVisibleRect, gfx::IntSize aDisplaySize,
-             Maybe<uint64_t>&& aDuration, int64_t aTimestamp,
+             const Maybe<uint64_t>& aDuration, int64_t aTimestamp,
              const VideoColorSpaceInit& aColorSpace);
 
   VideoFrame(const VideoFrame& aOther);
@@ -146,7 +153,7 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
   // [Serializable] implementations: {Read, Write}StructuredClone
   static JSObject* ReadStructuredClone(JSContext* aCx, nsIGlobalObject* aGlobal,
                                        JSStructuredCloneReader* aReader,
-                                       const VideoFrameImageData& aImage);
+                                       const VideoFrameSerializedData& aData);
 
   bool WriteStructuredClone(JSStructuredCloneWriter* aWriter,
                             StructuredCloneHolder* aHolder) const;
