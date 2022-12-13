@@ -5,18 +5,17 @@
 slot:not([name]) {
   display: none;
 }
-/* Either the fallback summary (inside the shadow tree), or the slotted main
-   summary. */
-summary,
-slot[name=internal-main-summary]::slotted(summary) {
+:host([open]) slot:not([name]) {
+  display: revert;
+}
+
+/* See the comment around the summary styles in html.css, these rules should
+ * match */
+summary {
   display: list-item;
   counter-increment: list-item 0;
   list-style: disclosure-closed inside;
 }
-:host([open]) summary,
-:host([open]) slot[name=internal-main-summary]::slotted(summary) {
+:host([open]) summary {
   list-style-type: disclosure-open;
-}
-:host([open]) slot:not([name]) {
-  display: revert;
 }
