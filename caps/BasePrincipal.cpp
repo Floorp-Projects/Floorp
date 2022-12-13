@@ -1133,13 +1133,6 @@ nsresult BasePrincipal::GetAddonPolicy(
   return NS_OK;
 }
 
-nsresult BasePrincipal::GetContentScriptAddonPolicy(
-    extensions::WebExtensionPolicy** aResult) {
-  RefPtr<extensions::WebExtensionPolicy> policy(ContentScriptAddonPolicy());
-  policy.forget(aResult);
-  return NS_OK;
-}
-
 extensions::WebExtensionPolicy* BasePrincipal::AddonPolicy() {
   AssertIsOnMainThread();
   RefPtr<extensions::WebExtensionPolicyCore> core = AddonPolicyCore();
