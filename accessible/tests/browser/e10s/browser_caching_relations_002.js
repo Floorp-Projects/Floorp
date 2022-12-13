@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
-requestLongerTimeout(2);
 
 /**
  * Test MEMBER_OF relation caching on HTML radio buttons
@@ -122,43 +121,6 @@ addAccessibleTask(
 );
 
 /*
- * Test mutation of LABEL relations via DOM ID reuse.
- */
-addAccessibleTask(
-  `
-  <div id="label">before</div><input id="input" aria-labelledby="label">
-  `,
-  async function(browser, accDoc) {
-    let label = findAccessibleChildByID(accDoc, "label");
-    const input = findAccessibleChildByID(accDoc, "input");
-
-    await testCachedRelation(label, RELATION_LABEL_FOR, input);
-    await testCachedRelation(input, RELATION_LABELLED_BY, label);
-
-    const r = waitForEvent(EVENT_REORDER, accDoc);
-    await invokeContentTask(browser, [], () => {
-      content.document.getElementById("label").remove();
-      let l = content.document.createElement("div");
-      l.id = "label";
-      l.textContent = "after";
-      content.document.body.insertBefore(
-        l,
-        content.document.getElementById("input")
-      );
-    });
-    await r;
-    label = findAccessibleChildByID(accDoc, "label");
-    await testCachedRelation(label, RELATION_LABEL_FOR, input);
-    await testCachedRelation(input, RELATION_LABELLED_BY, label);
-  },
-  {
-    chrome: true,
-    iframe: true,
-    remoteIframe: true,
-  }
-);
-
-/*
  * Test LINKS_TO relation caching an anchor with multiple hashes
  */
 addAccessibleTask(
@@ -178,68 +140,5 @@ addAccessibleTask(
     topLevel: !isWinNoCache,
     iframe: !isWinNoCache,
     remoteIframe: !isWinNoCache,
-  }
-);
-
-/*
- * Test mutation of LABEL relations via accessible shutdown.
- */
-addAccessibleTask(
-  `
-  <div id="d"></div>
-  <label id="l">
-    <select id="s">
-  `,
-  async function(browser, accDoc) {
-    const label = findAccessibleChildByID(accDoc, "l");
-    const select = findAccessibleChildByID(accDoc, "s");
-    const div = findAccessibleChildByID(accDoc, "d");
-
-    await testCachedRelation(label, RELATION_LABEL_FOR, select);
-    await testCachedRelation(select, RELATION_LABELLED_BY, label);
-    await testCachedRelation(div, RELATION_LABELLED_BY, null);
-    await untilCacheOk(() => {
-      try {
-        // We should get an acc ID back from this, but we don't have a way of
-        // verifying its correctness -- it should be the ID of the select.
-        return label.cache.getStringProperty("for");
-      } catch (e) {
-        ok(false, "Exception thrown while trying to read from the cache");
-        return false;
-      }
-    }, "Label for relation exists");
-
-    const r = waitForEvent(EVENT_REORDER, "l");
-    await invokeContentTask(browser, [], () => {
-      content.document.getElementById("s").remove();
-    });
-    await r;
-    await untilCacheOk(() => {
-      try {
-        label.cache.getStringProperty("for");
-      } catch (e) {
-        // This property should no longer exist in the cache, so we should
-        // get an exception if we try to fetch it.
-        return true;
-      }
-      return false;
-    }, "Label for relation exists");
-
-    await invokeContentTask(browser, [], () => {
-      const l = content.document.getElementById("l");
-      l.htmlFor = "d";
-    });
-    await testCachedRelation(label, RELATION_LABEL_FOR, div);
-    await testCachedRelation(div, RELATION_LABELLED_BY, label);
-  },
-  {
-    /**
-     * This functionality is broken in our LocalAcccessible implementation,
-     * so we avoid running this test in chrome or when the cache is off.
-     */
-    chrome: false,
-    iframe: isCacheEnabled,
-    remoteIframe: isCacheEnabled,
-    topLevel: isCacheEnabled,
   }
 );
