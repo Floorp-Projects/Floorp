@@ -33,15 +33,6 @@ void use(const T& thing) {
   usePointer(&thing);
 }
 
-struct AutoSuppressHazardsForTest {
-  int dummy;
-  AutoSuppressHazardsForTest() : dummy(3) {}
-  ~AutoSuppressHazardsForTest() {
-    // Need nontrivial destructor.
-    usePointer(&dummy);
-  }
-} JS_HAZ_GC_SUPPRESSED;
-
 struct GDBFragment {
   GDBFragment() {
     next = allFragments;

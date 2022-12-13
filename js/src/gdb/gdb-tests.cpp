@@ -23,7 +23,7 @@ static const JSClass global_class = {"global", JSCLASS_GLOBAL_FLAGS,
 
 static volatile int dontOptimizeMeAway = 0;
 
-void usePointer(const void* ptr) { dontOptimizeMeAway++; }
+void usePointer(const void* ptr) { dontOptimizeMeAway = 1; }
 
 template <typename T>
 static inline T* checkPtr(T* ptr) {

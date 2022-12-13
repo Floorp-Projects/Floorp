@@ -4,8 +4,6 @@
 #include "js/Object.h"  // JS::GetClass
 
 FRAGMENT(JSObject, simple) {
-  AutoSuppressHazardsForTest noanalysis;
-
   JS::Rooted<JSObject*> glob(cx, JS::CurrentGlobalOrNull(cx));
   JS::Rooted<JSObject*> plain(cx, JS_NewPlainObject(cx));
   JS::Rooted<JSObject*> objectProto(cx, JS::GetRealmObjectPrototype(cx));
@@ -17,17 +15,18 @@ FRAGMENT(JSObject, simple) {
   JS::Rooted<JSFunction*> funcPtr(
       cx, JS_NewFunction(cx, (JSNative)1, 0, 0, "formFollows"));
 
-  JSObject& plainRef = *plain;
-  JSFunction& funcRef = *funcPtr;
-  JSObject* plainRaw = plain;
-  JSObject* funcRaw = func;
-
   // JS_NewObject will now assert if you feed it a bad class name, so mangle
   // the name after construction.
   char namebuf[20] = "goodname";
   static JSClass cls{namebuf};
   JS::RootedObject badClassName(cx, JS_NewObject(cx, &cls));
+  MOZ_RELEASE_ASSERT(badClassName);
   strcpy(namebuf, "\xc7X");
+
+  JSObject& plainRef = *plain;
+  JSFunction& funcRef = *funcPtr;
+  JSObject* plainRaw = plain;
+  JSObject* funcRaw = func;
 
   breakpoint();
 
