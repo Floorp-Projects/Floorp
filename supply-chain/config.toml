@@ -768,8 +768,10 @@ version = "0.7.3"
 criteria = "safe-to-deploy"
 
 [[exemptions.libsqlite3-sys]]
-version = "0.24.2"
+version = "0.25.2"
 criteria = "safe-to-deploy"
+suggest = false
+notes = "The in-gecko feature that we enable makes only pre-built bindings used, and none of the embedded C code is built. The build script was audited and is not doing anything besides exposing those bindings"
 
 [[exemptions.libudev]]
 version = "0.2.0"

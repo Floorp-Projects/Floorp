@@ -12,11 +12,12 @@
 [package]
 edition = "2018"
 name = "libsqlite3-sys"
-version = "0.24.2"
+version = "0.25.2"
 authors = ["The rusqlite developers"]
 build = "build.rs"
 links = "sqlite3"
 description = "Native bindings to the libsqlite3 library"
+readme = "README.md"
 keywords = [
     "sqlite",
     "sqlcipher",
@@ -31,7 +32,7 @@ version = "0.9"
 optional = true
 
 [build-dependencies.bindgen]
-version = "0.59"
+version = "0.60"
 features = ["runtime"]
 optional = true
 default-features = false
@@ -94,8 +95,5 @@ session = [
 sqlcipher = []
 unlock_notify = []
 wasm32-wasi-vfs = []
-winsqlite3 = [
-    "min_sqlite_version_3_7_16",
-    "buildtime_bindgen",
-]
+winsqlite3 = ["min_sqlite_version_3_7_16"]
 with-asan = []

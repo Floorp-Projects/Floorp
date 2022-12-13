@@ -110,7 +110,7 @@ impl RawStatement {
     #[cfg(feature = "unlock_notify")]
     pub fn step(&self) -> c_int {
         use crate::unlock_notify;
-        let mut db = core::ptr::null_mut::<ffi::sqlite3>();
+        let mut db = ptr::null_mut::<ffi::sqlite3>();
         loop {
             unsafe {
                 let mut rc = ffi::sqlite3_step(self.ptr);
@@ -224,6 +224,14 @@ impl RawStatement {
     pub fn tail(&self) -> usize {
         self.tail
     }
+
+    #[inline]
+    #[cfg(feature = "modern_sqlite")] // 3.28.0
+    pub fn is_explain(&self) -> i32 {
+        unsafe { ffi::sqlite3_stmt_isexplain(self.ptr) }
+    }
+
+    // TODO sqlite3_normalized_sql (https://sqlite.org/c3ref/expanded_sql.html) // 3.27.0 + SQLITE_ENABLE_NORMALIZE
 }
 
 impl Drop for RawStatement {

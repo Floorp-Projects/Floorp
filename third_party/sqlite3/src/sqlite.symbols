@@ -19,6 +19,7 @@ sqlite3_bind_zeroblob
 sqlite3_busy_handler
 sqlite3_busy_timeout
 sqlite3_changes
+sqlite3_changes64
 sqlite3_clear_bindings
 sqlite3_close
 sqlite3_collation_needed
@@ -55,6 +56,7 @@ sqlite3_db_config
 sqlite3_db_filename
 sqlite3_db_handle
 sqlite3_db_mutex
+sqlite3_db_readonly
 sqlite3_db_status
 sqlite3_declare_vtab
 sqlite3_enable_load_extension
@@ -62,6 +64,7 @@ sqlite3_enable_shared_cache
 sqlite3_errcode
 sqlite3_errmsg
 sqlite3_errmsg16
+sqlite3_error_offset
 sqlite3_exec
 sqlite3_expanded_sql
 sqlite3_extended_errcode
@@ -116,6 +119,7 @@ sqlite3_result_error_toobig
 sqlite3_result_int
 sqlite3_result_int64
 sqlite3_result_null
+sqlite3_result_subtype
 sqlite3_result_text
 sqlite3_result_text16
 sqlite3_result_text16be
@@ -141,6 +145,7 @@ sqlite3_temp_directory
 sqlite3_threadsafe
 sqlite3_total_changes
 sqlite3_trace_v2
+sqlite3_txn_state
 sqlite3_unlock_notify
 sqlite3_update_hook
 sqlite3_uri_parameter
@@ -152,6 +157,7 @@ sqlite3_value_double
 sqlite3_value_int
 sqlite3_value_int64
 sqlite3_value_numeric_type
+sqlite3_value_subtype
 sqlite3_value_text
 sqlite3_value_text16
 sqlite3_value_text16be

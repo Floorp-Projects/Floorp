@@ -11,7 +11,7 @@
 //!     // Note: This should be done once (usually when opening the DB).
 //!     let db = Connection::open_in_memory()?;
 //!     rusqlite::vtab::csvtab::load_module(&db)?;
-//!     // Assum3e my_csv.csv
+//!     // Assume my_csv.csv
 //!     let schema = "
 //!         CREATE VIRTUAL TABLE my_csv_data
 //!         USING csv(filename = 'my_csv.csv')
@@ -30,8 +30,8 @@ use std::str;
 use crate::ffi;
 use crate::types::Null;
 use crate::vtab::{
-    dequote, escape_double_quote, parse_boolean, read_only_module, Context, CreateVTab, IndexInfo,
-    VTab, VTabConnection, VTabCursor, Values,
+    escape_double_quote, parse_boolean, read_only_module, Context, CreateVTab, IndexInfo, VTab,
+    VTabConfig, VTabConnection, VTabCursor, VTabKind, Values,
 };
 use crate::{Connection, Error, Result};
 
@@ -74,19 +74,6 @@ impl CsvTab {
             .from_path(&self.filename)
     }
 
-    fn parameter(c_slice: &[u8]) -> Result<(&str, &str)> {
-        let arg = str::from_utf8(c_slice)?.trim();
-        let mut split = arg.split('=');
-        if let Some(key) = split.next() {
-            if let Some(value) = split.next() {
-                let param = key.trim();
-                let value = dequote(value);
-                return Ok((param, value));
-            }
-        }
-        Err(Error::ModuleError(format!("illegal argument: '{}'", arg)))
-    }
-
     fn parse_byte(arg: &str) -> Option<u8> {
         if arg.len() == 1 {
             arg.bytes().next()
@@ -101,7 +88,7 @@ unsafe impl<'vtab> VTab<'vtab> for CsvTab {
     type Cursor = CsvTabCursor<'vtab>;
 
     fn connect(
-        _: &mut VTabConnection,
+        db: &mut VTabConnection,
         _aux: Option<&()>,
         args: &[&[u8]],
     ) -> Result<(String, CsvTab)> {
@@ -122,7 +109,7 @@ unsafe impl<'vtab> VTab<'vtab> for CsvTab {
 
         let args = &args[3..];
         for c_slice in args {
-            let (param, value) = CsvTab::parameter(c_slice)?;
+            let (param, value) = super::parameter(c_slice)?;
             match param {
                 "filename" => {
                     if !Path::new(value).exists() {
@@ -249,7 +236,7 @@ unsafe impl<'vtab> VTab<'vtab> for CsvTab {
             }
             schema = Some(sql);
         }
-
+        db.config(VTabConfig::DirectOnly)?;
         Ok((schema.unwrap(), vtab))
     }
 
@@ -259,12 +246,14 @@ unsafe impl<'vtab> VTab<'vtab> for CsvTab {
         Ok(())
     }
 
-    fn open(&self) -> Result<CsvTabCursor<'_>> {
+    fn open(&mut self) -> Result<CsvTabCursor<'_>> {
         Ok(CsvTabCursor::new(self.reader()?))
     }
 }
 
-impl CreateVTab<'_> for CsvTab {}
+impl CreateVTab<'_> for CsvTab {
+    const KIND: VTabKind = VTabKind::Default;
+}
 
 /// A cursor for the CSV virtual table
 #[repr(C)]

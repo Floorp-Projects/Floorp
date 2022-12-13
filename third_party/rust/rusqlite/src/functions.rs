@@ -162,6 +162,19 @@ impl Context<'_> {
         unsafe { ValueRef::from_value(arg) }
     }
 
+    /// Returns the subtype of `idx`th argument.
+    ///
+    /// # Failure
+    ///
+    /// Will panic if `idx` is greater than or equal to
+    /// [`self.len()`](Context::len).
+    #[cfg(feature = "modern_sqlite")] // 3.9.0
+    #[cfg_attr(docsrs, doc(cfg(feature = "modern_sqlite")))]
+    pub fn get_subtype(&self, idx: usize) -> std::os::raw::c_uint {
+        let arg = self.args[idx];
+        unsafe { ffi::sqlite3_value_subtype(arg) }
+    }
+
     /// Fetch or insert the auxiliary data associated with a particular
     /// parameter. This is intended to be an easier-to-use way of fetching it
     /// compared to calling [`get_aux`](Context::get_aux) and
@@ -233,6 +246,13 @@ impl Context<'_> {
             conn: Connection::from_handle(handle)?,
             phantom: PhantomData,
         })
+    }
+
+    /// Set the Subtype of an SQL function
+    #[cfg(feature = "modern_sqlite")] // 3.9.0
+    #[cfg_attr(docsrs, doc(cfg(feature = "modern_sqlite")))]
+    pub fn set_result_subtype(&self, sub_type: std::os::raw::c_uint) {
+        unsafe { ffi::sqlite3_result_subtype(self.ctx, sub_type) };
     }
 }
 
@@ -319,7 +339,7 @@ bitflags::bitflags! {
         /// Specifies UTF-16 using native byte order as the text encoding this SQL function prefers for its parameters.
         const SQLITE_UTF16    = ffi::SQLITE_UTF16;
         /// Means that the function always gives the same output when the input parameters are the same.
-        const SQLITE_DETERMINISTIC = ffi::SQLITE_DETERMINISTIC;
+        const SQLITE_DETERMINISTIC = ffi::SQLITE_DETERMINISTIC; // 3.8.3
         /// Means that the function may only be invoked from top-level SQL.
         const SQLITE_DIRECTONLY    = 0x0000_0008_0000; // 3.30.0
         /// Indicates to SQLite that a function may call `sqlite3_value_subtype()` to inspect the sub-types of its arguments.
@@ -617,7 +637,7 @@ unsafe extern "C" fn call_boxed_step<A, D, T>(
     D: Aggregate<A, T>,
     T: ToSql,
 {
-    let pac = if let Some(pac) = aggregate_context(ctx, ::std::mem::size_of::<*mut A>()) {
+    let pac = if let Some(pac) = aggregate_context(ctx, std::mem::size_of::<*mut A>()) {
         pac
     } else {
         ffi::sqlite3_result_error_nomem(ctx);
@@ -664,7 +684,7 @@ unsafe extern "C" fn call_boxed_inverse<A, W, T>(
     W: WindowAggregate<A, T>,
     T: ToSql,
 {
-    let pac = if let Some(pac) = aggregate_context(ctx, ::std::mem::size_of::<*mut A>()) {
+    let pac = if let Some(pac) = aggregate_context(ctx, std::mem::size_of::<*mut A>()) {
         pac
     } else {
         ffi::sqlite3_result_error_nomem(ctx);
@@ -787,7 +807,6 @@ where
 #[cfg(test)]
 mod test {
     use regex::Regex;
-    use std::f64::EPSILON;
     use std::os::raw::c_double;
 
     #[cfg(feature = "window")]
@@ -812,7 +831,7 @@ mod test {
         )?;
         let result: Result<f64> = db.query_row("SELECT half(6)", [], |r| r.get(0));
 
-        assert!((3f64 - result?).abs() < EPSILON);
+        assert!((3f64 - result?).abs() < f64::EPSILON);
         Ok(())
     }
 
@@ -826,7 +845,7 @@ mod test {
             half,
         )?;
         let result: Result<f64> = db.query_row("SELECT half(6)", [], |r| r.get(0));
-        assert!((3f64 - result?).abs() < EPSILON);
+        assert!((3f64 - result?).abs() < f64::EPSILON);
 
         db.remove_function("half", 1)?;
         let result: Result<f64> = db.query_row("SELECT half(6)", [], |r| r.get(0));

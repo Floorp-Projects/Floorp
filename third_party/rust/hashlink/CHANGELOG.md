@@ -1,10 +1,23 @@
-## [0.7.0
+## [0.8.1]
+- Add `retain_with_order` methods, equivalent to `retain` but which iterate
+  through the map in the proper linked list order
+
+## [0.8.0]
+- API incompatible change: No longer re-export hashbrown types so that bumping
+  hashbrown is no longer an API compatible change.
+- bump hashbrown to 0.12
+- Fix implementation of `shrink_to_fit` to not panic when called on non-empty
+  containers.
+
+## [0.7.0]
 - API incompatible change: depend on hashbrown 0.11, changes re-exported types.
 - Fix `LinkedHashSet::back` to take `&self` not `&mut self`.
 - API incompatible change: equality tests on `LinkedHashSet` are now *ordered*,
   similar to `LinkedHashMap`.
 - Make the serde `Deserialize` implementations on `LinkedHashMap` and
   `LinkedHashSet` generic on the `BuildHasher` type.
+- Add `to_back` and `to_front` methods for `LinkedHashMap` to control entry
+  order.
 
 ## [0.6.0]
 - API incompatible change: depend on hashbrown 0.9, re-export renamed
