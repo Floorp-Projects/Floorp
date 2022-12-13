@@ -1300,7 +1300,7 @@ class DefaultExternalServices {
   static updateFindMatchesCount(data) {}
   static initPassiveLoading(callbacks) {}
   static reportTelemetry(data) {}
-  static createDownloadManager(options) {
+  static createDownloadManager() {
     throw new Error("Not implemented: createDownloadManager");
   }
   static createPreferences() {
@@ -7986,7 +7986,7 @@ class PDFViewer {
   #scrollModePageState = null;
   #onVisibilityChange = null;
   constructor(options) {
-    const viewerVersion = '3.2.47';
+    const viewerVersion = '3.2.58';
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -8280,7 +8280,7 @@ class PDFViewer {
         if (isPureXfa) {
           console.warn("Warning: XFA-editing is not implemented.");
         } else if (isValidAnnotationEditorMode(mode)) {
-          this.#annotationEditorUIManager = new _pdfjsLib.AnnotationEditorUIManager(this.container, this.eventBus);
+          this.#annotationEditorUIManager = new _pdfjsLib.AnnotationEditorUIManager(this.container, this.eventBus, this.pdfDocument?.annotationStorage);
           if (mode !== _pdfjsLib.AnnotationEditorType.NONE) {
             this.#annotationEditorUIManager.updateMode(mode);
           }
@@ -8935,7 +8935,7 @@ class PDFViewer {
     return new _text_highlighter.TextHighlighter({
       eventBus,
       pageIndex,
-      findController: this.isInPresentationMode ? null : this.findController
+      findController: this.findController
     });
   }
   createAnnotationLayerBuilder({
@@ -8974,14 +8974,12 @@ class PDFViewer {
     pageDiv,
     pdfPage,
     accessibilityManager = null,
-    l10n,
-    annotationStorage = this.pdfDocument?.annotationStorage
+    l10n
   }) {
     return new _annotation_editor_layer_builder.AnnotationEditorLayerBuilder({
       uiManager,
       pageDiv,
       pdfPage,
-      annotationStorage,
       accessibilityManager,
       l10n
     });
@@ -9367,7 +9365,6 @@ class AnnotationEditorLayerBuilder {
   constructor(options) {
     this.pageDiv = options.pageDiv;
     this.pdfPage = options.pdfPage;
-    this.annotationStorage = options.annotationStorage || null;
     this.accessibilityManager = options.accessibilityManager;
     this.l10n = options.l10n || _l10n_utils.NullL10n;
     this.annotationEditorLayer = null;
@@ -9399,9 +9396,8 @@ class AnnotationEditorLayerBuilder {
     this.annotationEditorLayer = new _pdfjsLib.AnnotationEditorLayer({
       uiManager: this.#uiManager,
       div: this.div,
-      annotationStorage: this.annotationStorage,
       accessibilityManager: this.accessibilityManager,
-      pageIndex: this.pdfPage._pageIndex,
+      pageIndex: this.pdfPage.pageNumber - 1,
       l10n: this.l10n,
       viewport: clonedViewport
     });
@@ -12023,7 +12019,7 @@ class FirefoxExternalServices extends _app.DefaultExternalServices {
   static reportTelemetry(data) {
     FirefoxCom.request("reportTelemetry", JSON.stringify(data));
   }
-  static createDownloadManager(options) {
+  static createDownloadManager() {
     return new DownloadManager();
   }
   static createPreferences() {
@@ -12486,8 +12482,8 @@ var _ui_utils = __webpack_require__(1);
 var _app_options = __webpack_require__(2);
 var _pdf_link_service = __webpack_require__(3);
 var _app = __webpack_require__(4);
-const pdfjsVersion = '3.2.47';
-const pdfjsBuild = 'feb6f5951';
+const pdfjsVersion = '3.2.58';
+const pdfjsBuild = 'ba2fec989';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;
