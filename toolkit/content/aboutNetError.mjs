@@ -24,8 +24,16 @@ const { parse, pemToDER } = globalThis.certDecoderInitializer(
 
 const formatter = new Intl.DateTimeFormat();
 
-const HOST_NAME =
-  new URL(RPMGetInnerMostURI(document.location.href)).hostname ?? "";
+const HOST_NAME = getHostName();
+
+function getHostName() {
+  try {
+    return new URL(RPMGetInnerMostURI(document.location.href)).hostname;
+  } catch (error) {
+    console.error("Could not parse URL", error);
+  }
+  return "";
+}
 
 // Used to check if we have a specific localized message for an error.
 const KNOWN_ERROR_TITLE_IDS = new Set([
@@ -300,7 +308,7 @@ function initPage() {
       document.getElementById("errorShortDesc").hidden = true;
 
       document.l10n.setAttributes(longDesc, "csp-xfo-blocked-long-desc", {
-        hostname: document.location.hostname, // FIXME - should this be HOST_NAME?
+        hostname: document.location.hostname ?? "", // FIXME - should this be HOST_NAME?
       });
       longDesc = null;
 
