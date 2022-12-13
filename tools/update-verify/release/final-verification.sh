@@ -161,7 +161,7 @@ do
     then
         log "  Downloading config file '${file}'"
         cfg=$(mktemp)
-        curl -fL --retry 5 "${file}" > "$cfg"
+        curl -fL --retry 5 --compressed "${file}" > "$cfg"
         if [ "$?" != 0 ]; then
             log "Error downloading config file '${file}'"
             BAD_FILE=1
