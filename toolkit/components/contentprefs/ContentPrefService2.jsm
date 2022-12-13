@@ -1159,6 +1159,13 @@ ContentPrefService2.prototype = {
   },
 
   async _getConnection(aAttemptNum = 0) {
+    if (
+      Services.startup.isInOrBeyondShutdownPhase(
+        Ci.nsIAppStartup.SHUTDOWN_PHASE_APPSHUTDOWN
+      )
+    ) {
+      throw new Error("Can't open content prefs, we're in shutdown.");
+    }
     let path = PathUtils.join(PathUtils.profileDir, "content-prefs.sqlite");
     let conn;
     let resetAndRetry = async e => {
@@ -1184,10 +1191,21 @@ ContentPrefService2.prototype = {
     };
     try {
       conn = await lazy.Sqlite.openConnection({ path });
-      lazy.Sqlite.shutdown.addBlocker(
-        "Closing ContentPrefService2 connection.",
-        () => conn.close()
-      );
+      try {
+        lazy.Sqlite.shutdown.addBlocker(
+          "Closing ContentPrefService2 connection.",
+          () => conn.close()
+        );
+      } catch (ex) {
+        // Uh oh, we failed to add a shutdown blocker. Close the connection
+        // anyway, but make sure that doesn't throw.
+        try {
+          await conn?.close();
+        } catch (ex) {
+          console.error(ex);
+        }
+        return null;
+      }
     } catch (e) {
       Cu.reportError(e);
       return resetAndRetry(e);
