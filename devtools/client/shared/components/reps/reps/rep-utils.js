@@ -484,14 +484,10 @@ define(function(require, exports, module) {
         "(?:min-|max-)?width|(?:min-|max-)?height)"
     );
 
-    // Regular expression that matches the forbidden CSS property values.
-    const forbiddenValuesRegexs = [
-      // -moz-element()
-      /\b((?:-moz-)?element)[\s('"]+/gi,
+    const mozElementRegex = /\b((?:-moz-)?element)[\s('"]+/gi;
 
-      // various URL protocols
-      /['"(]*(?:chrome|resource|about|app|https?|ftp|file):+\/*/gi,
-    ];
+    // Regex to retrieve usages of `url(*)` in property value
+    const cssUrlRegex = /url\([\'\"]?([^\)]*)/g;
 
     // Use a dummy element to parse the style string.
     const dummy = createElement("div");
@@ -502,10 +498,20 @@ define(function(require, exports, module) {
     // without forbidden properties and values.
     return Array.from(dummy.style)
       .filter(name => {
-        return (
-          allowedStylesRegex.test(name) &&
-          !forbiddenValuesRegexs.some(regex => regex.test(dummy.style[name]))
-        );
+        if (!allowedStylesRegex.test(name)) {
+          return false;
+        }
+
+        if (mozElementRegex.test(name)) {
+          return false;
+        }
+
+        // There can be multiple call to `url()` (e.g.` background: url("path/to/image"), url("data:image/png,…");`);
+        // filter out the property if the url function is called with anything that is not
+        // a data URL.
+        return Array.from(dummy.style[name].matchAll(cssUrlRegex))
+          .map(match => match[1])
+          .every(potentialUrl => potentialUrl.startsWith("data:"));
       })
       .reduce((object, name) => {
         // React requires CSS properties to be provided in JavaScript form, i.e. camelCased.
