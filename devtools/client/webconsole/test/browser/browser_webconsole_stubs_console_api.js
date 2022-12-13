@@ -261,7 +261,7 @@ function getCommands() {
       code: `
   console.log(
     "%cfoo%cbar",
-    "color:blue; font-size:1.3em; background:url('https://example.com/test'); position:absolute; top:10px; ",
+    "color:blue; font-size:1.3em; background:url('data:image/png,base64,iVBORw0KGgoAAAAN'), url('https://example.com/test'); position:absolute; top:10px; ",
     "color:red; line-height: 1.5; background:\\165rl('https://example.com/test')"
   );
   `,
