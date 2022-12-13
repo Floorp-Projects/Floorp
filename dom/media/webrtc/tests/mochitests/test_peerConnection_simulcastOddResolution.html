@@ -49,9 +49,13 @@
       }
     }
 
+    const sendEncodings = [{ rid: "0", maxBitrate: 40000, scaleResolutionDownBy: 1.9 },
+                           { rid: "1", maxBitrate: 40000, scaleResolutionDownBy: 3.5 },
+                           { rid: "2", maxBitrate: 40000, scaleResolutionDownBy: 17.8 }];
+
     async function checkSenderStats(sender) {
       const senderStats = await sender.getStats();
-      checkSenderStats(senderStats, encodings.length);
+      checkSenderStats(senderStats, sendEncodings.length);
       checkExpectedFields(senderStats);
       pedanticChecks(senderStats);
     }
@@ -59,10 +63,6 @@
     async function waitForResizeEvents(elements) {
       return Promise.all(elements.map(elem => haveEvent(elem, 'resize')));
     }
-
-    const encodings = [{ rid: "0", maxBitrate: 40000, scaleResolutionDownBy: 1.9 },
-                       { rid: "1", maxBitrate: 40000, scaleResolutionDownBy: 3.5 },
-                       { rid: "2", maxBitrate: 40000, scaleResolutionDownBy: 17.8 }];
 
     await pushPrefs(
         ['media.peerconnection.simulcast', true],
@@ -86,18 +86,27 @@
 
     // One send transceiver, that will be used to send both simulcast streams
     const videoStream = emitter.stream();
-    offerer.addTrack(videoStream.getVideoTracks()[0], videoStream);
+    offerer.addTransceiver(videoStream.getVideoTracks()[0], {sendEncodings});
     const senderElement = document.createElement('video');
     senderElement.autoplay = true;
     senderElement.srcObject = videoStream;
     senderElement.id = videoStream.id
 
     const sender = offerer.getSenders()[0];
-    sender.setParameters({encodings});
+    let parameters = sender.getParameters();
+    is(parameters.encodings[0].maxBitrate, sendEncodings[0].maxBitrate);
+    isfuzzy(parameters.encodings[0].scaleResolutionDownBy,
+      sendEncodings[0].scaleResolutionDownBy, 0.01);
+    is(parameters.encodings[1].maxBitrate, sendEncodings[1].maxBitrate);
+    isfuzzy(parameters.encodings[1].scaleResolutionDownBy,
+      sendEncodings[1].scaleResolutionDownBy, 0.01);
+    is(parameters.encodings[2].maxBitrate, sendEncodings[2].maxBitrate);
+    isfuzzy(parameters.encodings[2].scaleResolutionDownBy,
+      sendEncodings[2].scaleResolutionDownBy, 0.01);
 
     const offer = await offerer.createOffer();
 
-    const mungedOffer = ridToMid(offer.sdp);
+    const mungedOffer = ridToMid(offer);
     info(`Transformed send simulcast offer to multiple m-sections: ${offer.sdp} to ${mungedOffer}`);
 
     await answerer.setRemoteDescription({type: 'offer', sdp: mungedOffer});
@@ -112,7 +121,7 @@
 
     const answer = await answerer.createAnswer();
 
-    const mungedAnswer = midToRid(answer.sdp);
+    const mungedAnswer = midToRid(answer);
     info(`Transformed recv answer to simulcast: ${answer.sdp} to ${mungedAnswer}`);
     await offerer.setRemoteDescription({type: 'answer', sdp: mungedAnswer});
     await answerer.setLocalDescription(answer);
@@ -121,7 +130,7 @@
     emitter.start();
     info('Waiting for 3 loadedmetadata events');
     const videoElems = await Promise.all(metadataToBeLoaded);
-    await checkVideoElements(senderElement, videoElems, encodings);
+    await checkVideoElements(senderElement, videoElems, parameters.encodings);
     emitter.stop();
 
     await Promise.all([waitForSyncedRtcp(offerer), waitForSyncedRtcp(answerer)]);
@@ -130,34 +139,37 @@
     emitter.size(1280, 720);
     emitter.start();
     await waitForResizeEvents([senderElement, ...videoElems]);
-    await checkVideoElements(senderElement, videoElems, encodings);
+    await checkVideoElements(senderElement, videoElems, parameters.encodings);
     await checkSenderStats(sender);
 
-    encodings[0].scaleResolutionDownBy = 1;
-    encodings[1].scaleResolutionDownBy = 2;
-    encodings[2].scaleResolutionDownBy = 3;
-    info(`Changing encodings to ${JSON.stringify(encodings)}`);
-    await sender.setParameters({encodings});
+    parameters = sender.getParameters();
+    parameters.encodings[0].scaleResolutionDownBy = 1;
+    parameters.encodings[1].scaleResolutionDownBy = 2;
+    parameters.encodings[2].scaleResolutionDownBy = 3;
+    info(`Changing encodings to ${JSON.stringify(parameters.encodings)}`);
+    await sender.setParameters(parameters);
     await waitForResizeEvents(videoElems);
-    await checkVideoElements(senderElement, videoElems, encodings);
+    await checkVideoElements(senderElement, videoElems, parameters.encodings);
     await checkSenderStats(sender);
 
-    encodings[0].scaleResolutionDownBy = 6;
-    encodings[1].scaleResolutionDownBy = 5;
-    encodings[2].scaleResolutionDownBy = 4;
-    info(`Changing encodings to ${JSON.stringify(encodings)}`);
-    await sender.setParameters({encodings});
+    parameters = sender.getParameters();
+    parameters.encodings[0].scaleResolutionDownBy = 6;
+    parameters.encodings[1].scaleResolutionDownBy = 5;
+    parameters.encodings[2].scaleResolutionDownBy = 4;
+    info(`Changing encodings to ${JSON.stringify(parameters.encodings)}`);
+    await sender.setParameters(parameters);
     await waitForResizeEvents(videoElems);
-    await checkVideoElements(senderElement, videoElems, encodings);
+    await checkVideoElements(senderElement, videoElems, parameters.encodings);
     await checkSenderStats(sender);
 
-    encodings[0].scaleResolutionDownBy = 4;
-    encodings[1].scaleResolutionDownBy = 1;
-    encodings[2].scaleResolutionDownBy = 2;
-    info(`Changing encodings to ${JSON.stringify(encodings)}`);
-    await sender.setParameters({encodings});
+    parameters = sender.getParameters();
+    parameters.encodings[0].scaleResolutionDownBy = 4;
+    parameters.encodings[1].scaleResolutionDownBy = 1;
+    parameters.encodings[2].scaleResolutionDownBy = 2;
+    info(`Changing encodings to ${JSON.stringify(parameters.encodings)}`);
+    await sender.setParameters(parameters);
     await waitForResizeEvents(videoElems);
-    await checkVideoElements(senderElement, videoElems, encodings);
+    await checkVideoElements(senderElement, videoElems, parameters.encodings);
     await checkSenderStats(sender);
 
     emitter.stop();

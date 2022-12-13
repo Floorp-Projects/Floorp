@@ -41,18 +41,22 @@
     offerer.addTransceiver('video', { direction: 'recvonly' });
     offerer.addTransceiver('video', { direction: 'recvonly' });
 
-    // One send transceiver, that will be used to send both simulcast streams
-    const emitter = new VideoFrameEmitter();
-    const videoStream = emitter.stream();
-    answerer.addTrack(videoStream.getVideoTracks()[0], videoStream);
-    emitter.start();
-
     const offer = await offerer.createOffer();
 
-    const mungedOffer = midToRid(offer.sdp);
+    const mungedOffer = midToRid(offer);
     info(`Transformed recv offer to simulcast: ${offer.sdp} to ${mungedOffer}`);
 
     await answerer.setRemoteDescription({type: 'offer', sdp: mungedOffer});
+
+    // One send transceiver, that will be used to send both simulcast streams
+    const emitter = new VideoFrameEmitter();
+    const videoStream = emitter.stream();
+    const sender = answerer.addTrack(videoStream.getVideoTracks()[0], videoStream);
+    let parameters = sender.getParameters();
+    is(parameters.encodings.length, 2);
+    is(answerer.getSenders().length, 1);
+    emitter.start();
+
     await offerer.setLocalDescription(offer);
 
     const rids = offerer.getTransceivers().map(t => t.mid);
@@ -61,17 +65,19 @@
     ok(rids[1] != '', 'Second mid should be non-empty');
     info(`rids: ${JSON.stringify(rids)}`);
 
-    const sender = answerer.getSenders()[0];
-    await sender.setParameters({
-        encodings: [
-            { rid: rids[0], maxBitrate: 40000 },
-            { rid: rids[1], maxBitrate: 40000, scaleResolutionDownBy: 2 }
-          ]
-    });
+    parameters = sender.getParameters();
+    info(`parameters: ${JSON.stringify(parameters)}`);
+    const observedRids = parameters.encodings.map(({rid}) => rid);
+    isDeeply(observedRids, rids);
+    parameters.encodings[0].maxBitrate = 40000;
+    parameters.encodings[0].scaleResolutionDownBy = 1;
+    parameters.encodings[1].maxBitrate = 40000;
+    parameters.encodings[1].scaleResolutionDownBy = 2;
+    await sender.setParameters(parameters);
 
     const answer = await answerer.createAnswer();
 
-    const mungedAnswer = ridToMid(answer.sdp);
+    const mungedAnswer = ridToMid(answer);
     info(`Transformed send simulcast answer to multiple m-sections: ${answer.sdp} to ${mungedAnswer}`);
     await offerer.setRemoteDescription({type: 'answer', sdp: mungedAnswer});
     await answerer.setLocalDescription(answer);
@@ -99,6 +105,7 @@
        "sink is 1/2 height of source, modulo our cropping algorithm");
 
     await statsReady;
+    info("Stats ready");
     const senderStats = await sender.getStats();
     checkSenderStats(senderStats, 2);
     checkExpectedFields(senderStats);
