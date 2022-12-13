@@ -63,6 +63,8 @@ categories:
         - testing/perfdocs
         - tools/code-coverage
         - testing-rust-code
+    release_doc:
+        - update-infrastructure
     l10n_doc:
         - intl
         - l10n

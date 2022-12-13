@@ -208,4 +208,6 @@ SPHINX_TREES["nspr"] = "docs/nspr"
 
 SPHINX_TREES["mots"] = "docs/mots"
 
+SPHINX_TREES["update-infrastructure"] = "docs/update-infrastructure"
+
 include("build/templates.mozbuild")

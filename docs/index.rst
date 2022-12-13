@@ -39,6 +39,12 @@ Firefox Source Tree Documentation
    {testing_doc}
 
 .. toctree::
+   :caption: Releases & Updates
+   :maxdepth: 1
+
+   {release_doc}
+
+.. toctree::
    :caption: Localization & Internationalization
    :maxdepth: 2
 
