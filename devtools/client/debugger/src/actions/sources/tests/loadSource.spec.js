@@ -170,8 +170,8 @@ describe("loadGeneratedSourceText", () => {
             ...item,
             sourceId:
               item.sourceId === fooGenSource1.id
-                ? fooOrigSource1.id
-                : fooOrigSource2.id,
+                ? fooOrigSources1[0].id
+                : fooOrigSources2[0].id,
           })),
         getOriginalSourceText: async s => ({
           text: fooOrigContent.source,
@@ -184,20 +184,22 @@ describe("loadGeneratedSourceText", () => {
     const fooGenSource1 = await dispatch(
       actions.newGeneratedSource(makeSource("fooGen1"))
     );
-    const fooOrigSource1 = await dispatch(
-      actions.newOriginalSource(makeOriginalSource(fooGenSource1))
+
+    const fooOrigSources1 = await dispatch(
+      actions.newOriginalSources([makeOriginalSource(fooGenSource1)])
     );
     const fooGenSource2 = await dispatch(
       actions.newGeneratedSource(makeSource("fooGen2"))
     );
-    const fooOrigSource2 = await dispatch(
-      actions.newOriginalSource(makeOriginalSource(fooGenSource2))
+
+    const fooOrigSources2 = await dispatch(
+      actions.newOriginalSources([makeOriginalSource(fooGenSource2)])
     );
 
     await dispatch(
       actions.loadOriginalSourceText({
         cx,
-        source: fooOrigSource1,
+        source: fooOrigSources1[0],
       })
     );
 
@@ -205,7 +207,7 @@ describe("loadGeneratedSourceText", () => {
       actions.addBreakpoint(
         cx,
         {
-          sourceId: fooOrigSource1.id,
+          sourceId: fooOrigSources1[0].id,
           line: 1,
           column: 0,
         },
@@ -264,7 +266,7 @@ describe("loadGeneratedSourceText", () => {
     await dispatch(
       actions.loadOriginalSourceText({
         cx,
-        source: fooOrigSource2,
+        source: fooOrigSources2[0],
       })
     );
 

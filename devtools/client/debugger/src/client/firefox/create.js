@@ -183,7 +183,6 @@ export function createGeneratedSource(sourceResource) {
   return createSourceObject({
     id: makeSourceId(sourceResource),
     url: sourceResource.url,
-    thread: sourceResource.targetFront.getCachedFront("thread").actorID,
     extensionName: sourceResource.extensionName,
     isWasm: !!features.wasm && sourceResource.introductionType === "wasm",
     isExtension:
@@ -201,7 +200,6 @@ export function createGeneratedSource(sourceResource) {
 function createSourceObject({
   id,
   url,
-  thread = null,
   extensionName = null,
   isWasm = false,
   isExtension = false,
@@ -222,9 +220,6 @@ function createSourceObject({
     // The URL object is augmented of a "group" attribute and some other standard attributes
     // are modified from their typical value. See getDisplayURL implementation.
     displayURL: getDisplayURL(url, extensionName),
-
-    // The thread actor id of the thread/target which this source belongs to
-    thread,
 
     // Only set for generated sources that are WebExtension sources.
     // This is especially useful to display the extension name for content scripts
@@ -262,14 +257,11 @@ function createSourceObject({
  *        The ID of the source, computed by source map codebase.
  * @param {String} url
  *        The URL of the original source file.
- * @param {String} thread
- *        The thread actor id of the thread the related generated source belongs to
  */
-export function createSourceMapOriginalSource(id, url, thread) {
+export function createSourceMapOriginalSource(id, url) {
   return createSourceObject({
     id,
     url,
-    thread,
     isOriginal: true,
   });
 }
@@ -286,14 +278,11 @@ export function createSourceMapOriginalSource(id, url, thread) {
  * @param {String} url
  *        The URL of the pretty-printed source file.
  *        This URL doesn't work. It is the URL of the non-pretty-printed file with ":formated" suffix.
- * @param {String} thread
- *        The thread actor id of the thread the related generated source belongs to
  */
-export function createPrettyPrintOriginalSource(id, url, thread) {
+export function createPrettyPrintOriginalSource(id, url) {
   return createSourceObject({
     id,
     url,
-    thread,
     isOriginal: true,
     isPrettyPrinted: true,
   });

@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Testing displaying breakpoints in the breakpoints list and the tooltip
-// shows the thread information.
+// shows the source url.
 
 "use strict";
 
@@ -40,8 +40,8 @@ add_task(async function testBreakpointsListForMultipleTargets() {
 
   is(
     breakpointHeadings[0].title,
-    `Main Thread - ${source1.url}`,
-    "The breakpoint heading tooltip shows the thread and source info for the first breakpoint"
+    source1.url,
+    "The breakpoint heading tooltip shows the source info for the first breakpoint"
   );
   is(
     breakpointHeadings[0].textContent,
@@ -54,17 +54,10 @@ add_task(async function testBreakpointsListForMultipleTargets() {
     "The info displayed for the 1st breakpoint is correct"
   );
 
-  // With fission and EFT disabled all the sources are going to be under the Main Thread
-  const expectedThreadName =
-    !Services.prefs.getBoolPref("fission.autostart") &&
-    !Services.prefs.getBoolPref("devtools.every-frame-target.enabled")
-      ? "Main Thread"
-      : "Test remote frame sources";
-
   is(
     breakpointHeadings[1].title,
-    `${expectedThreadName} - ${source2.url}`,
-    "The breakpoint heading tooltip shows the thread and source info for the second breakpoint"
+    source2.url,
+    "The breakpoint heading tooltip shows the source info for the second breakpoint"
   );
   is(
     breakpointHeadings[1].textContent,
@@ -84,7 +77,7 @@ add_task(async function testBreakpointsListForMultipleTargets() {
 add_task(async function testBreakpointsListForOriginalFiles() {
   const dbg = await initDebugger("doc-sourcemaps.html", "entry.js");
 
-  info("Add breakpoint to the entry.js (original source) in the main thread");
+  info("Add breakpoint to the entry.js (original source)");
   await selectSource(dbg, "entry.js");
   const source = findSource(dbg, "entry.js");
   await addBreakpoint(dbg, "entry.js", 5);
@@ -105,8 +98,8 @@ add_task(async function testBreakpointsListForOriginalFiles() {
 
   is(
     breakpointHeadings[0].title,
-    `Main Thread - ${source.url}`,
-    "The breakpoint heading tooltip shows the thread and source info for the first breakpoint"
+    source.url,
+    "The breakpoint heading tooltip shows the source info for the first breakpoint"
   );
   is(
     breakpointHeadings[0].textContent,

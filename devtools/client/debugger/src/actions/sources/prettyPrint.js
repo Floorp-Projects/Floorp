@@ -77,13 +77,13 @@ export function createPrettySource(cx, sourceId) {
     const source = getSourceFromId(getState(), sourceId);
     const url = getPrettyOriginalSourceURL(source);
     const id = generatedToOriginalId(sourceId, url);
-    const prettySource = createPrettyPrintOriginalSource(
-      id,
-      url,
-      source.thread
-    );
+    const prettySource = createPrettyPrintOriginalSource(id, url);
 
-    dispatch({ type: "ADD_SOURCES", cx, sources: [prettySource] });
+    dispatch({
+      type: "ADD_ORIGINAL_SOURCES",
+      cx,
+      originalSources: [prettySource],
+    });
 
     await dispatch(selectSource(cx, id));
 

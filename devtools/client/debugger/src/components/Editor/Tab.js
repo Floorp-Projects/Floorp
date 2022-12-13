@@ -50,6 +50,7 @@ class Tab extends PureComponent {
       selectedLocation: PropTypes.object,
       showSource: PropTypes.func.isRequired,
       source: PropTypes.object.isRequired,
+      sourceActor: PropTypes.object.isRequired,
       tabSources: PropTypes.array.isRequired,
       toggleBlackBox: PropTypes.func.isRequired,
       togglePrettyPrint: PropTypes.func.isRequired,
@@ -181,6 +182,7 @@ class Tab extends PureComponent {
       selectSource,
       closeTab,
       source,
+      sourceActor,
       tabSources,
       onDragOver,
       onDragStart,
@@ -202,7 +204,7 @@ class Tab extends PureComponent {
     function handleTabClick(e) {
       e.preventDefault();
       e.stopPropagation();
-      return selectSource(cx, sourceId);
+      return selectSource(cx, sourceId, sourceActor?.actor);
     }
 
     const className = classnames("source-tab", {

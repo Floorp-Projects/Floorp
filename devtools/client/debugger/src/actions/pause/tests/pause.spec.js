@@ -161,7 +161,7 @@ describe("pause", () => {
       const source = await dispatch(
         actions.newGeneratedSource(makeSource("foo"))
       );
-      await dispatch(actions.newOriginalSource(makeOriginalSource(source)));
+      await dispatch(actions.newOriginalSources([makeOriginalSource(source)]));
 
       await dispatch(actions.paused(mockPauseInfo));
       expect(selectors.getFrames(getState(), "FakeThread")).toEqual([
@@ -316,7 +316,8 @@ describe("pause", () => {
           makeSource("foo-wasm", { introductionType: "wasm" })
         )
       );
-      await dispatch(actions.newOriginalSource(makeOriginalSource(source)));
+
+      await dispatch(actions.newOriginalSources([makeOriginalSource(source)]));
 
       await dispatch(actions.paused(mockPauseInfo));
       expect(selectors.getFrames(getState(), "FakeThread")).toEqual([
@@ -330,7 +331,7 @@ describe("pause", () => {
           location: {
             column: 1,
             line: 1,
-            sourceActorId: null,
+            sourceActorId: "foo-wasm-1-actor",
             sourceId: "foo-wasm/originalSource",
           },
           originalDisplayName: "fooBar",

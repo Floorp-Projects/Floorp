@@ -89,15 +89,7 @@ add_task(async function testPausedByBreakpoint() {
   );
 
   await waitForSource(dbg, POPUP_URL);
-  const newSource = findSource(dbg, POPUP_URL);
-
-  isnot(
-    source,
-    newSource,
-    "The second one is related to the new popup and is different"
-  );
-  isnot(source.id, newSource.id, "The source IDs are different");
-  assertPausedAtSourceAndLine(dbg, newSource.id, 4);
+  assertPausedAtSourceAndLine(dbg, source.id, 4);
 
   await resume(dbg);
   is(

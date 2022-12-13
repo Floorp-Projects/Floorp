@@ -22,7 +22,7 @@ Array [
         "options": Object {},
         "originalText": "return a",
         "text": "return a",
-        "thread": "FakeThread",
+        "thread": undefined,
       },
     ],
     "filename": "a",
@@ -41,7 +41,6 @@ Array [
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
-      "thread": "FakeThread",
       "url": "http://localhost:8000/examples/a",
     },
   },
@@ -69,7 +68,7 @@ Object {
   "options": Object {},
   "originalText": "function a() {",
   "text": "function a() {",
-  "thread": "FakeThread",
+  "thread": undefined,
 }
 `;
 
@@ -95,7 +94,7 @@ Array [
         "options": Object {},
         "originalText": "",
         "text": "",
-        "thread": "FakeThread",
+        "thread": undefined,
       },
     ],
     "filename": "a",
@@ -114,7 +113,6 @@ Array [
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
-      "thread": "FakeThread",
       "url": "http://localhost:8000/examples/a",
     },
   },

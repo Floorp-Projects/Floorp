@@ -10,7 +10,7 @@ import { connect } from "../../utils/connect";
 
 // Selectors
 import {
-  getSelectedSource,
+  getSelectedLocation,
   getMainThreadHost,
   getExpandedState,
   getProjectDirectoryRoot,
@@ -19,6 +19,8 @@ import {
   getContext,
   getGeneratedSourceByURL,
   getBlackBoxRanges,
+  getSourceActor,
+  getSource,
 } from "../../selectors";
 
 // Actions
@@ -40,16 +42,18 @@ function shouldAutoExpand(item, mainThreadHost) {
 /**
  * Get the one directory item where the given source is meant to be displayed in the SourceTree.
  *
- * @param {Source} source
- *        Source object coming from the sources.js reducer
+ * @param {Object} treeLocation
+ *        An object containing  the Source coming from the sources.js reducer and the source actor
  * @param {object} rootItems
  *        Result of getSourcesTreeSources selector, containing all sources sorted in a tree structure.
  *        items to be displayed in the source tree.
  * @return {SourceItem}
  *        The directory source item where the given source is displayed.
  */
-function getDirectoryForSource(source, rootItems) {
+function getDirectoryForSource(treeLocation, rootItems) {
   // Sources without URLs are not visible in the SourceTree
+  const { source, sourceActor } = treeLocation;
+
   if (!source.url) {
     return null;
   }
@@ -62,7 +66,7 @@ function getDirectoryForSource(source, rootItems) {
       return null;
     }
     // Bail out if we the current item doesn't match the source
-    if (item.type == "thread" && source.thread != item.thread.actor) {
+    if (item.type == "thread" && item.threadActorID != sourceActor?.thread) {
       return null;
     }
     if (item.type == "group" && displayURL.group != item.groupName) {
@@ -108,7 +112,7 @@ class SourcesTree extends Component {
       focused: PropTypes.object,
       projectRoot: PropTypes.string.isRequired,
       selectSource: PropTypes.func.isRequired,
-      selectedSource: PropTypes.object,
+      selectedTreeLocation: PropTypes.object,
       setExpandedState: PropTypes.func.isRequired,
       blackBoxRanges: PropTypes.object.isRequired,
       rootItems: PropTypes.object.isRequired,
@@ -117,17 +121,21 @@ class SourcesTree extends Component {
 
   // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
   UNSAFE_componentWillReceiveProps(nextProps) {
-    const { selectedSource } = this.props;
+    const { selectedTreeLocation } = this.props;
 
     // We might fail to find the source if its thread is registered late,
     // so that we should re-search the selected source if highlightItems is empty.
     if (
-      nextProps.selectedSource &&
-      (nextProps.selectedSource != selectedSource ||
+      nextProps.selectedTreeLocation.source &&
+      (nextProps.selectedTreeLocation.source != selectedTreeLocation.source ||
+        (nextProps.selectedTreeLocation.source ===
+          selectedTreeLocation.source &&
+          nextProps.selectedTreeLocation.sourceActor !=
+            selectedTreeLocation.sourceActor) ||
         !this.state.highlightItems?.length)
     ) {
       let parentDirectory = getDirectoryForSource(
-        nextProps.selectedSource,
+        nextProps.selectedTreeLocation,
         this.props.rootItems
       );
       // As highlightItems has to contains *all* the expanded items,
@@ -142,7 +150,11 @@ class SourcesTree extends Component {
   }
 
   selectSourceItem = item => {
-    this.props.selectSource(this.props.cx, item.source.id);
+    this.props.selectSource(
+      this.props.cx,
+      item.source.id,
+      item.sourceActor.actor
+    );
   };
 
   onFocus = item => {
@@ -366,25 +378,26 @@ class SourcesTree extends Component {
   }
 }
 
-function getSourceForTree(state, source) {
-  if (!source) {
-    return null;
+function getTreeLocation(state, location) {
+  let source = location ? getSource(state, location.sourceId) : null;
+  const sourceActor = location
+    ? getSourceActor(state, location.sourceActorId)
+    : null;
+
+  if (source && source.isPrettyPrinted) {
+    source =
+      getGeneratedSourceByURL(state, getRawSourceURL(source.url)) || null;
   }
 
-  if (!source.isPrettyPrinted) {
-    return source;
-  }
-
-  return getGeneratedSourceByURL(state, getRawSourceURL(source.url));
+  return { source, sourceActor };
 }
 
 const mapStateToProps = state => {
-  const selectedSource = getSelectedSource(state);
   const rootItems = getSourcesTreeSources(state);
 
   return {
     cx: getContext(state),
-    selectedSource: getSourceForTree(state, selectedSource),
+    selectedTreeLocation: getTreeLocation(state, getSelectedLocation(state)),
     mainThreadHost: getMainThreadHost(state),
     expanded: getExpandedState(state),
     focused: getFocusedSourceItem(state),

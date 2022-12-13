@@ -23,7 +23,7 @@ function resetTabState(state) {
 function update(state = initialTabState(), action) {
   switch (action.type) {
     case "ADD_TAB":
-      return updateTabList(state, action.source);
+      return updateTabList(state, action.source, action.sourceActor);
 
     case "MOVE_TAB":
       return moveTabInList(state, action);
@@ -37,12 +37,8 @@ function update(state = initialTabState(), action) {
     case "CLOSE_TABS":
       return removeSourcesFromTabList(state, action);
 
-    case "ADD_SOURCES":
-      return addVisibleTabs(state, action.sources);
-
-    case "SET_SELECTED_LOCATION": {
-      return addSelectedSource(state, action.source);
-    }
+    case "INSERT_SOURCE_ACTORS":
+      return addVisibleTabs(state, action.items);
 
     case "NAVIGATE": {
       return resetTabState(state);
@@ -65,23 +61,22 @@ function matchesUrl(tab, source) {
   return tab.url === source.url && tab.isOriginal == isOriginalId(source.id);
 }
 
-function addSelectedSource(state, source) {
-  if (state.tabs.some(({ sourceId }) => sourceId == source.id)) {
-    return state;
-  }
-
-  return updateTabList(state, source);
-}
-
-function addVisibleTabs(state, sources) {
+function addVisibleTabs(state, sourceActors) {
   const tabCount = state.tabs.filter(({ sourceId }) => sourceId).length;
   const tabs = state.tabs
     .map(tab => {
-      const source = sources.find(src => matchesUrl(tab, src));
-      if (!source) {
+      const sourceActor = sourceActors.find(actor =>
+        matchesUrl(tab, actor.sourceObject)
+      );
+      if (!sourceActor) {
         return tab;
       }
-      return { ...tab, sourceId: source.id, threadActorID: source.thread };
+      return {
+        ...tab,
+        sourceId: sourceActor.source,
+        threadActorId: sourceActor.thread,
+        sourceActorId: sourceActor.actor,
+      };
     })
     .filter(tab => tab.sourceId);
 
@@ -113,7 +108,7 @@ function removeSourcesFromTabList(state, { sources }) {
 }
 
 function resetTabsForThread(state, threadActorID) {
-  const newTabs = state.tabs.filter(tab => tab.threadActorID !== threadActorID);
+  const newTabs = state.tabs.filter(tab => tab.threadActorId !== threadActorID);
   if (newTabs.length == state.tabs.length) {
     return state;
   }
@@ -123,7 +118,7 @@ function resetTabsForThread(state, threadActorID) {
 /**
  * Adds the new source to the tab list if it is not already there.
  */
-function updateTabList(state, source) {
+function updateTabList(state, source, sourceActor) {
   const { url } = source;
   const isOriginal = isOriginalId(source.id);
 
@@ -139,7 +134,8 @@ function updateTabList(state, source) {
       url,
       sourceId: source.id,
       isOriginal,
-      threadActorID: source.thread,
+      threadActorId: sourceActor?.thread,
+      sourceActorId: sourceActor?.actor,
     };
     // New tabs are added first in the list
     tabs = [newTab, ...tabs];

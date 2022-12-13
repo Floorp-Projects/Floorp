@@ -113,5 +113,10 @@ export function isSimilarTab(tab, url, isOriginal) {
 export function persistTabs(tabs) {
   return [...tabs]
     .filter(tab => tab.url)
-    .map(tab => ({ ...tab, sourceId: null, threadActorID: null }));
+    .map(tab => ({
+      ...tab,
+      sourceId: null,
+      threadActorId: null,
+      sourceActorId: null,
+    }));
 }

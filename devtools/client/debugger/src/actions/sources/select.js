@@ -164,10 +164,6 @@ export function selectLocation(cx, location, { keepContext = true } = {}) {
       source = getLocationSource(getState(), location);
     }
 
-    if (!tabExists(getState(), source.id)) {
-      dispatch(addTab(source));
-    }
-
     let sourceActor;
     if (!location.sourceActorId) {
       sourceActor = getFirstSourceActorForGeneratedSource(
@@ -177,6 +173,10 @@ export function selectLocation(cx, location, { keepContext = true } = {}) {
       location.sourceActorId = sourceActor ? sourceActor.actor : null;
     } else {
       sourceActor = getSourceActor(getState(), location.sourceActorId);
+    }
+
+    if (!tabExists(getState(), source.id)) {
+      dispatch(addTab(source, sourceActor));
     }
 
     dispatch(setSelectedLocation(cx, source, location));
