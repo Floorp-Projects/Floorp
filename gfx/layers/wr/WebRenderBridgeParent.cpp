@@ -2251,6 +2251,9 @@ void WebRenderBridgeParent::CompositeToTarget(VsyncId aId,
     PROFILER_MARKER_TEXT("SkippedComposite", GRAPHICS,
                          MarkerInnerWindowId(innerWindowId),
                          "Too many pending frames");
+
+    Telemetry::ScalarAdd(Telemetry::ScalarID::GFX_SKIPPED_COMPOSITES, 1);
+
     return;
   }
 
