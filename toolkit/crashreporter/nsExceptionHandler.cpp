@@ -617,7 +617,9 @@ class PlatformWriter {
       while (length > 0) {
 #ifdef XP_WIN
         DWORD written_bytes = 0;
-        Unused << WriteFile(mFD, buffer, length, &written_bytes, nullptr);
+        if (!WriteFile(mFD, buffer, length, &written_bytes, nullptr)) {
+          break;
+        }
 #elif defined(XP_UNIX)
         ssize_t written_bytes = sys_write(mFD, buffer, length);
         if (written_bytes < 0) {
