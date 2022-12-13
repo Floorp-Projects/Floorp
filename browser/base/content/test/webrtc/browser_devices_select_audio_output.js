@@ -8,12 +8,18 @@ const permissionError =
   "error: NotAllowedError: The request is not allowed " +
   "by the user agent or the platform in the current context.";
 
-async function requestAudioOutputExpectingPrompt() {
+async function requestAudioOutput(options) {
   await Promise.all([
-    promisePopupNotificationShown("webRTC-shareDevices"),
     expectObserverCalled("getUserMedia:request"),
     expectObserverCalled("recording-window-ended"),
-    promiseRequestAudioOutput(),
+    promiseRequestAudioOutput(options),
+  ]);
+}
+
+async function requestAudioOutputExpectingPrompt(options) {
+  await Promise.all([
+    promisePopupNotificationShown("webRTC-shareDevices"),
+    requestAudioOutput(options),
   ]);
 
   is(
@@ -54,20 +60,24 @@ async function simulateAudioOutputRequest(options) {
   );
 }
 
-async function allow() {
+async function allowPrompt() {
   const observerPromise = expectObserverCalled("getUserMedia:response:allow");
-  await promiseMessage("ok", () => {
-    PopupNotifications.panel.firstElementChild.button.click();
-  });
+  PopupNotifications.panel.firstElementChild.button.click();
+  await observerPromise;
+}
+
+async function allow() {
+  await Promise.all([promiseMessage("ok"), allowPrompt()]);
+}
+
+async function denyPrompt() {
+  const observerPromise = expectObserverCalled("getUserMedia:response:deny");
+  activateSecondaryAction(kActionDeny);
   await observerPromise;
 }
 
 async function deny() {
-  const observerPromise = expectObserverCalled("getUserMedia:response:deny");
-  await promiseMessage(permissionError, () => {
-    activateSecondaryAction(kActionDeny);
-  });
-  await observerPromise;
+  await Promise.all([promiseMessage(permissionError), denyPrompt()]);
 }
 
 async function escapePrompt() {
@@ -82,13 +92,27 @@ async function escape() {
 
 var gTests = [
   {
-    desc: 'User clicks "Allow"',
+    desc: 'User clicks "Allow" and revokes',
     run: async function checkAllow() {
       await requestAudioOutputExpectingPrompt();
       await allow();
+
       info("selectAudioOutput() with no deviceId again should prompt again.");
       await requestAudioOutputExpectingPrompt();
       await allow();
+
+      info("selectAudioOutput() with same deviceId should not prompt again.");
+      await Promise.all([
+        expectObserverCalled("getUserMedia:response:allow"),
+        promiseMessage("ok"),
+        requestAudioOutput({ requestSameDevice: true }),
+      ]);
+
+      await revokePermission("speaker", true);
+      info("Same deviceId should prompt again after revoked permission.");
+      await requestAudioOutputExpectingPrompt({ requestSameDevice: true });
+      await allow();
+      await revokePermission("speaker", true);
     },
   },
   {
@@ -106,6 +130,7 @@ var gTests = [
       info("selectAudioOutput() after Esc should prompt again.");
       await requestAudioOutputExpectingPrompt();
       await allow();
+      await revokePermission("speaker", true);
     },
   },
   {
@@ -122,16 +147,39 @@ var gTests = [
   {
     desc: "Multi Device with deviceId",
     run: async function checkMulti() {
+      const deviceCount = 4;
       await Promise.all([
         promisePopupNotificationShown("webRTC-shareDevices"),
-        simulateAudioOutputRequest({ deviceCount: 4, deviceId: "id 2" }),
+        simulateAudioOutputRequest({ deviceCount, deviceId: "id 2" }),
       ]);
       const selectorList = document.getElementById(
         `webRTC-selectSpeaker-menulist`
       );
       is(selectorList.selectedIndex, 2, "pre-selected index");
       checkDeviceSelectors(["speaker"]);
+      await allowPrompt();
+
+      info("Expect same-device request allowed without prompt");
+      await Promise.all([
+        expectObserverCalled("getUserMedia:response:allow"),
+        simulateAudioOutputRequest({ deviceCount, deviceId: "id 2" }),
+      ]);
+
+      info("Expect prompt for different-device request");
+      await Promise.all([
+        promisePopupNotificationShown("webRTC-shareDevices"),
+        simulateAudioOutputRequest({ deviceCount, deviceId: "id 1" }),
+      ]);
+      await denyPrompt();
+
+      info("Expect prompt again for denied-device request");
+      await Promise.all([
+        promisePopupNotificationShown("webRTC-shareDevices"),
+        simulateAudioOutputRequest({ deviceCount, deviceId: "id 1" }),
+      ]);
       await escapePrompt();
+
+      await revokePermission("speaker", true);
     },
   },
   {

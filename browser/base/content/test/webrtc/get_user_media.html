@@ -74,10 +74,15 @@ async function requestDevice(aAudio, aVideo, aShare, aBadDevice = false) {
   }
 }
 
-async function requestAudioOutput() {
+let selectedAudioOutputId;
+async function requestAudioOutput(options = {}) {
+  const audioOutputOptions = options.requestSameDevice && {
+    deviceId: selectedAudioOutputId,
+  };
   SpecialPowers.wrap(document).notifyUserGestureActivation();
   try {
-    await navigator.mediaDevices.selectAudioOutput();
+    ({ deviceId: selectedAudioOutputId } =
+     await navigator.mediaDevices.selectAudioOutput(audioOutputOptions));
     message("ok");
   } catch (err) {
     message("error: " + err);
