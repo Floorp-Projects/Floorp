@@ -67,10 +67,14 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">آپݨی ہوم سکرین کنوں نجی ٹیب کھولݨ کیتے ہک شارٹ کٹ شامل کرو۔</string>
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">آپݨی ہوم سکرین کنوں نجی ٹیب کھولݨ کیتے ہک شارٹ کٹ شامل کرو۔</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message">ہک ٹیپ وچ اڳلی نویں ٹیب لان٘چ کرو۔</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">شارٹ کٹ شامل کرو</string>
-    <!-- Text for the negative button -->
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">شارٹ کٹ شامل کرو</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">ہوم سکرین تے شامل کرو</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">کو، شکریہ</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -338,6 +342,21 @@
 
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
     <string name="reduce_cookie_banner_summary">فائر فوکس آپݨے آپ کوکی بینراں دی درخواست کوں مسترد کرݨ دی کوشش کرینداے. اگر مسترد کرݨ دا آپشن موجودکائنی ، تاں فائر فوکس ساری کوکیز کوں بینر ختم کرݨ پاروں قبول کر سڳدا ہے. </string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">ایں سائٹ کیتے بند کرو</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">ایں سائٹ کیتے چالو کرو</string>
+
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site">%1$s کیتے کوکی بینر گھٹاوݨ چالو کروں؟</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site">%1$s کیتے کوکی بینر گھٹاوݨ بند کروں؟</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s ایں سائٹ دیاں کوکیاں صاف کریسی تے ورقہ تازہ کریسی۔ساریاں کوکیاں صاف کرݨ نال تساں سائن آوٹ تھی سڳدے ہو یا تہاݙی خریداری ریڑھی خالی تھی ویسی۔</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s آپݨے آپ کوکی بینراں دی درخواست کوں مسترد کرݨ دی کوشش کریندا ہے. اگر مسترد کرݨ دا آپشن موجودکائنی ، تاں %2$s ساری کوکیز کوں بینر ختم کرݨ پاروں قبول کر سڳدا ہے. </string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">خودکار طور تے ودھدی ہوئی حفاظت کیتے ایچ ٹی ٹی پی ایس خفیہ کاری پروٹوکول ورتندے ہوئے سائٹاں کوں کنکٹ کرݨ دی کوشش کریندے۔</string>
@@ -1074,8 +1093,6 @@
     <string name="share_copy_link_to_clipboard">کلپ بورڈ تے نقل کرو</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">کلپ بورڈ تے نقل تھی ڳیا</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">ہم وقت کرݨ کیتے سائن ان تھیوو</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">ہم وقت کرݨ کیتے سائن ان تھیوو</string>
      <!-- An option from the three dot menu to sync and save data -->

@@ -71,10 +71,14 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">홈 화면에서 사생활 보호 탭을 열기 위한 바로 가기 추가.</string>
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">홈 화면에서 사생활 보호 탭을 열기 위한 바로 가기 추가.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message">한 번 눌러 다음 사생활 보호 탭을 시작합니다.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">바로 가기 추가</string>
-    <!-- Text for the negative button -->
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">바로 가기 추가</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">홈 화면에 추가</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">아니요</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -349,6 +353,20 @@
     <string name="reduce_cookie_banner_option">쿠키 배너 줄이기</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
     <string name="reduce_cookie_banner_summary">Firefox는 자동으로 쿠키 배너에서 쿠키 요청을 거부하려고 시도합니다. 거부 옵션을 사용할 수 없는 경우, Firefox는 배너를 닫기 위해 모든 쿠키를 허용할 수 있습니다.</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">이 사이트에서 꺼짐</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">이 사이트에서 켜짐</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site">%1$s에 대해 쿠키 배너 감소를 켜시겠습니까?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site">%1$s에 대해 쿠키 배너 감소를 끄시겠습니까?</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s는 이 사이트의 쿠키를 지우고 페이지를 새로 고침합니다. 모든 쿠키를 삭제하면 로그아웃되거나 장바구니가 비워질 수 있습니다.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s는 자동으로 쿠키 요청을 거부하려고 시도합니다. 거부 옵션을 사용할 수 없는 경우, %2$s는 배너를 닫기 위해 모든 쿠키를 허용할 수 있습니다.</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">보안 강화를 위해 HTTPS 암호화 프로토콜을 사용하여 사이트에 자동으로 연결을 시도합니다.</string>
@@ -1101,8 +1119,6 @@
     <string name="share_copy_link_to_clipboard">클립보드에 복사</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">클립보드에 복사됨</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">Sync에 로그인</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Sync에 로그인</string>
      <!-- An option from the three dot menu to sync and save data -->

@@ -63,11 +63,15 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">Үй экранынан жекелік беттерді ашу үшін жарлықты қосыңыз.</string>
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Үй экранынан жекелік беттерді ашу үшін жарлықты қосыңыз.</string>
 
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message">Келесі жекелік бетін бір шерту арқылы ашыңыз.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Жарлықты қосу</string>
-    <!-- Text for the negative button -->
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Жарлықты қосу</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">Үй экранына қосу</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Жоқ, рахмет</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -338,6 +342,21 @@
     <string name="reduce_cookie_banner_option">Cookie баннерлерін азайту</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
     <string name="reduce_cookie_banner_summary">Firefox cookie баннерлеріндегі cookie сұрауларын автоматты түрде қабылдамау әрекетін жасайды. Қабылдамау опциясы қол жетімді болмаса, Firefox баннерді жабу үшін барлық cookie файлдарын қабылдауы мүмкін.</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">Бұл сайт үшін сөндірілген</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">Бұл сайт үшін іске қосылған</string>
+
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site">%1$s үшін cookie баннерлерін азайту мүмкіндігін іске қосу керек пе?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site">%1$s үшін cookie баннерлерін азайту мүмкіндігін сөндіру керек пе?</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s осы сайттың cookie файлдарын тазартып, бетті жаңартады. Барлық cookie файлдарын тазарту салдарынан сіз сайттан шығуыңыз мүмкін немесе дүкен себеттері тазартылуы мүмкін.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s cookie сұрауларын автоматты түрде тайдыру әрекетін жасайды. Тайдыру опциясы қол жетімді болмаса, %2$s баннерді жабу үшін барлық cookie файлдарын қабылдауы мүмкін.</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Қауіпсіздікті арттыру үшін сайттарға HTTPS шифрлеу хаттамасын пайдаланып автоматты түрде қосылу әрекетін жасайды.</string>
@@ -1060,8 +1079,6 @@
     <string name="share_copy_link_to_clipboard">Алмасу буферіне көшіріп алу</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Алмасу буферіне көшірілді</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">Синхрондау ішіне кіру</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Синхрондау ішіне кіру</string>
      <!-- An option from the three dot menu to sync and save data -->

@@ -66,10 +66,14 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">Lägg till en genväg för att öppna privata flikar från din startsida.</string>
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Lägg till en genväg för att öppna privata flikar från din startsida.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message">Starta nästa privata flik med ett tryck.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Lägg till genväg</string>
-    <!-- Text for the negative button -->
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Lägg till genväg</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">Lägg till på startsidan</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Nej tack</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -346,6 +350,19 @@
     <string name="reduce_cookie_banner_option">Minska kakbanners</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
     <string name="reduce_cookie_banner_summary">Firefox försöker automatiskt avvisa kak-förfrågningar på kak-banners. Om ett avvisningsalternativ inte är tillgängligt kan Firefox acceptera alla kakor för att ta bort bannern.</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">Av för denna webbplats</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">PÅ för denna webbplats</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site">Vill du aktivera reducering av kakbanners för %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site">Vill du stänga av reducering av kakbanners för %1$s?</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s rensar webbplatsens kakor och uppdaterar sidan. Rensa alla kakor kan logga ut dig eller tömma kundvagnar.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s kan försöka att automatiskt avvisa kak-förfrågningar. Om ett avvisningsalternativ inte är tillgängligt kan %2$s acceptera alla kakor för att ta bort bannern.</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Försöker automatiskt ansluta till webbplatser med HTTPS-krypteringsprotokollet för ökad säkerhet.</string>
@@ -1079,8 +1096,6 @@
     <string name="share_copy_link_to_clipboard">Kopiera till urklipp</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Kopierad till urklipp</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">Logga in för att synkronisera</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Logga in till Sync</string>
      <!-- An option from the three dot menu to sync and save data -->

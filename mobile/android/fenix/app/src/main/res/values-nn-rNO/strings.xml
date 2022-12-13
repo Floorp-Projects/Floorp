@@ -68,10 +68,10 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">Legg til ein snarveg for å opne private faner frå startskjermen.</string>
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Legg til ein snarveg for å opne private faner frå startskjermen.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Legg til snarveg</string>
-    <!-- Text for the negative button -->
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Legg til snarveg</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Nei takk</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -1070,8 +1070,6 @@
     <string name="share_copy_link_to_clipboard">Kopier til utklippstavla</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Kopier til utklippstavla</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">Logg inn for å synkronisere</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Logg inn på Sync</string>
      <!-- An option from the three dot menu to sync and save data -->
@@ -1112,6 +1110,12 @@
     <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
     %1$s is a placeholder that will be replaced by the app name (Fenix). -->
     <string name="notification_default_browser_text">Bruk %1$s som standard nettlesar</string>
+
+    <!-- Title shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_title">Prøv privat nettlesing</string>
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">Surf utan lagra infokapslar eller historikk med %1$s</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->

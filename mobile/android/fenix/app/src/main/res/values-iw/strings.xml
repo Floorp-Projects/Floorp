@@ -66,10 +66,14 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">ניתן להוסיף קיצור דרך לפתיחת לשוניות פרטיות ממסך הבית.</string>
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">ניתן להוסיף קיצור דרך לפתיחת לשוניות פרטיות ממסך הבית.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message">פתיחת הלשונית הפרטית הבאה בהקשה אחת.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">הוספת קיצור דרך</string>
-    <!-- Text for the negative button -->
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">הוספת קיצור דרך</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">הוספה למסך הבית</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">לא תודה</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -1053,8 +1057,6 @@
     <string name="share_copy_link_to_clipboard">העתקה ללוח העריכה</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">הועתק ללוח</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">כניסה כדי לסנכרן</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">התחברות אל Sync</string>
      <!-- An option from the three dot menu to sync and save data -->

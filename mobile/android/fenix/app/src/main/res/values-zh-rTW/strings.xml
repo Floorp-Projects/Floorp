@@ -67,10 +67,14 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">加入捷徑，從裝置主畫面直接開啟隱私瀏覽分頁。</string>
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">加入捷徑，從裝置主畫面直接開啟隱私瀏覽分頁。</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message">只要輕鬆一點，即可開啟新的隱私保護分頁。</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">新增捷徑</string>
-    <!-- Text for the negative button -->
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">新增捷徑</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">新增至裝置主畫面</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">不要，謝謝</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -346,6 +350,19 @@
     <string name="reduce_cookie_banner_option">減少 Cookie 橫幅</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
     <string name="reduce_cookie_banner_summary">Firefox 會自動嘗試為您點擊 Cookie 橫幅上的「拒絕」按鈕。若網站未提供拒絕選向，可能還是會接受所有 Cookie 來讓橫幅消失。</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">對此網站關閉</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">對此網站開啟</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site">要為 %1$s 開啟減少 Cookie 橫幅功能嗎？</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site">要為 %1$s 關閉減少 Cookie 橫幅功能嗎？</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s 將清除此網站的 Cookie 並重新載入頁面。清除 Cookie 可能會將您從網站登出，或清空購物車。</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s 可自動嘗試為您拒絕 Cookie。若網站未提供拒絕選向，%2$s 可能還是會接受所有 Cookie 來讓橫幅消失。</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">自動嘗試使用加密過的 HTTPS 通訊協定連線到網站，以增加安全性。</string>
@@ -1094,8 +1111,6 @@
     <string name="share_copy_link_to_clipboard">複製到剪貼簿</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">已複製至剪貼簿</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">登入進行同步</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">登入 Sync</string>
      <!-- An option from the three dot menu to sync and save data -->

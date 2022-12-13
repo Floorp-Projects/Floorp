@@ -62,11 +62,15 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">ᱟᱢᱟᱜ ᱚᱲᱟᱜ ᱤᱥᱠᱨᱤᱱ ᱠᱷᱚᱱ ᱱᱤᱡᱮᱨᱟᱜ ᱴᱮᱵᱽ ᱡᱷᱤᱡᱽ ᱞᱟᱹᱜᱤᱫ ᱛᱮ ᱢᱤᱫᱴᱟᱹᱝ ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱥᱮᱞᱮᱫᱽ ᱛᱟᱞᱟᱝ ᱢᱮ ᱾</string>
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">ᱟᱢᱟᱜ ᱚᱲᱟᱜ ᱤᱥᱠᱨᱤᱱ ᱠᱷᱚᱱ ᱱᱤᱡᱮᱨᱟᱜ ᱴᱮᱵᱽ ᱡᱷᱤᱡᱽ ᱞᱟᱹᱜᱤᱫ ᱛᱮ ᱢᱤᱫᱴᱟᱹᱝ ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱥᱮᱞᱮᱫᱽ ᱛᱟᱞᱟᱝ ᱢᱮ ᱾</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message">ᱢᱤᱫᱴᱟᱝ ᱴᱤᱯᱟᱹᱣ ᱛᱮ ᱤᱱᱟᱹ ᱛᱟᱭᱚᱢᱟᱜ ᱯᱨᱟᱭᱵᱷᱮᱴ ᱴᱟᱵ ᱮᱦᱚᱵ ᱢᱮ ᱾</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
 
-    <!-- Text for the negative button -->
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">ᱚᱲᱟᱜ ᱥᱠᱨᱤᱱ ᱨᱮ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">ᱵᱟᱝᱟ ᱥᱟᱨᱦᱟᱣ</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -340,6 +344,13 @@
     <string name="reduce_cookie_banner_option">ᱠᱩᱠᱤ ᱵᱮᱱᱚᱨ ᱠᱷᱟᱴᱚᱭ ᱢᱮ</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
     <string name="reduce_cookie_banner_summary">ᱠᱩᱠᱤ ᱵᱮᱱᱚᱨ ᱨᱮ Firefox ᱫᱚ ᱟᱡ ᱛᱮᱜᱮ ᱠᱩᱠᱤ ᱱᱮᱦᱚᱨ ᱠᱚ ᱵᱟᱫ ᱜᱤᱰᱤ ᱠᱟᱜᱼᱟᱭ ᱾ ᱡᱩᱫᱤ ᱵᱟᱫ ᱜᱤᱫᱤ ᱚᱯᱥᱚᱱ ᱨᱮ ᱵᱟᱹᱱᱩᱜ ᱠᱷᱟᱱ, Firefox ᱫᱚ ᱵᱮᱱᱚᱨ ᱢᱮᱴᱟᱣ ᱞᱟᱹᱜᱤᱫ ᱡᱷᱚᱛᱚ ᱠᱩᱠᱤ ᱦᱮᱥᱤᱭᱟᱹᱨ ᱩᱛᱟᱹᱨ ᱟᱭ ᱾</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱫ ᱵᱚᱱᱫ ᱜᱮᱭᱟ</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱫ ᱮᱢ ᱪᱷᱚ ᱜᱮᱭᱟ</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site">%1$s ᱞᱟᱹᱜᱤᱫ ᱠᱩᱠᱤ ᱵᱮᱱᱚᱨ ᱨᱮᱰᱟᱹᱠᱥᱚᱱ ᱮᱢ ᱪᱷᱚᱭ ᱢᱮ?</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">ᱵᱮᱰᱷᱟᱣ ᱠᱟᱱᱟ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱞᱟᱹᱜᱤᱫ ᱛᱮ HTTPS ᱫᱟᱱᱟᱝ ᱵᱮᱵᱷᱟᱨ ᱛᱮ ᱥᱟᱭᱤᱴ ᱠᱚ ᱥᱟᱞᱟᱜ ᱟᱡ ᱛᱮ ᱡᱩᱲᱟᱹᱣ ᱵᱤᱲᱟᱹᱣ ᱾</string>
@@ -1072,8 +1083,6 @@
     <string name="share_copy_link_to_clipboard">ᱨᱮᱴᱚᱯ ᱵᱚᱰᱨᱮ ᱨᱮ ᱱᱚᱠᱚᱞᱮᱱᱟ!</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">ᱨᱮᱴᱚᱯ ᱵᱳᱨᱰ ᱨᱮ ᱱᱚᱠᱚᱞᱮᱱᱟ</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">ᱥᱭᱝᱠ ᱞᱟᱹᱜᱤᱫ ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ ᱢᱮ</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">ᱥᱭᱝᱠ ᱞᱟᱹᱜᱤᱫ ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ ᱢᱮ</string>
      <!-- An option from the three dot menu to sync and save data -->

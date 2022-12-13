@@ -71,10 +71,14 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">Voeg een snelkoppeling toe om privétabbladen vanuit uw startscherm te openen.</string>
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Voeg een snelkoppeling toe om privétabbladen vanuit uw startscherm te openen.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message">Start het volgende privétabblad met één tik.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Snelkoppeling toevoegen</string>
-    <!-- Text for the negative button -->
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Snelkoppeling toevoegen</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">Toevoegen aan startscherm</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Nee, bedankt</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -348,6 +352,19 @@
     <string name="reduce_cookie_banner_option">Cookiebanners reduceren</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
     <string name="reduce_cookie_banner_summary">Firefox probeert automatisch cookie-aanvragen op cookiebanners te weigeren. Als er geen weigeringsoptie beschikbaar is, accepteert Firefox mogelijk alle cookies om de banner te sluiten.</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">Uit voor deze website</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">Aan voor deze website</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site">Reductie van cookiebanners inschakelen voor %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site">Reductie van cookiebanners uitschakelen voor %1$s?</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s wist de cookies voor deze website en vernieuwt de pagina. Als alle cookies worden gewist, wordt u mogelijk afgemeld of worden winkelwagentjes geleegd.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s kan proberen om automatisch cookie-aanvragen te weigeren. Als er geen weigeringsoptie beschikbaar is, accepteert %2$s mogelijk alle cookies om de banner te sluiten.</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Probeert voor een betere beveiliging automatisch middels het HTTPS-versleutelingsprotocol verbinding te maken met websites.</string>
@@ -1079,8 +1096,6 @@
     <string name="share_copy_link_to_clipboard">Kopiëren naar klembord</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Naar klembord gekopieerd</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">Aanmelden om te synchroniseren</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Aanmelden bij Sync</string>
      <!-- An option from the three dot menu to sync and save data -->

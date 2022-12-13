@@ -67,11 +67,15 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">Embojuaju jeike pya’eha embojuruja hag̃ua tendayke ñemi ne mba’erechaha ñepyrũgua guive.</string>
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Embojuaju jeike pya’eha embojuruja hag̃ua tendayke ñemi ne mba’erechaha ñepyrũgua guive.</string>
 
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message">Emoñepyrũ tendayke ñemigua peteĩ jekutúpe.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Embojuaju jeike pya’eha</string>
-    <!-- Text for the negative button -->
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Embojuaju jeike pya’eha</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">Embojuaju mba’erechaha ñepyrũháre</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Nahániri, aguyje</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -345,6 +349,15 @@
 
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
     <string name="reduce_cookie_banner_summary">Firefox omboykese ijehegui kookie mba’ejerure kookie banner ndive. Ndaipóriramo emboykekuaa hag̃ua, Firefox omoneĩkuaa opaite kookie omboyke hag̃ua pe banner.</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">Ogue ko tendápe</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">Hendy ko tendápe</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site">¿Emyandy kookie ñemurã momichĩ %1$s peg̃uarã?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site">¿Embogue kookie ñemurã momichĩ %1$s peg̃uarã?</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Eñeha’ã eike hag̃ua tendakuérape eipurúvo pe taperekoite HTTPS ipapapýva tekorosãverã.</string>
@@ -1088,8 +1101,6 @@
     <string name="share_copy_link_to_clipboard">Emondo kuatiajohápe</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Emondo kuatiajohápe</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">Eike embojuehe hag̃ua</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Eñepyrũ tembiapo Sync-pe</string>
      <!-- An option from the three dot menu to sync and save data -->
