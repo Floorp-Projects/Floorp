@@ -335,7 +335,6 @@ DIRS += [
     "/third_party/libwebrtc/rtc_base/experiments/cpu_speed_experiment_gn",
     "/third_party/libwebrtc/rtc_base/experiments/encoder_info_settings_gn",
     "/third_party/libwebrtc/rtc_base/experiments/field_trial_parser_gn",
-    "/third_party/libwebrtc/rtc_base/experiments/jitter_upper_bound_experiment_gn",
     "/third_party/libwebrtc/rtc_base/experiments/keyframe_interval_settings_experiment_gn",
     "/third_party/libwebrtc/rtc_base/experiments/min_video_bitrate_experiment_gn",
     "/third_party/libwebrtc/rtc_base/experiments/quality_rampup_experiment_gn",
