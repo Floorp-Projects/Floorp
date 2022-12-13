@@ -835,7 +835,6 @@ void RTCRtpTransceiver::NegotiatedDetailsToVideoCodecConfigs(
         if (jsepEncoding.HasFormat(video.mDefaultPt)) {
           VideoCodecConfig::Encoding encoding;
           encoding.rid = jsepEncoding.mRid;
-          encoding.constraints = jsepEncoding.mConstraints;
           config->mEncodings.push_back(encoding);
         }
       }
