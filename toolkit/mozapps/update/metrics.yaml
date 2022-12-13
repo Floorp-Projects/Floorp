@@ -46,6 +46,116 @@ background_update:
       - events
       - baseline
 
+  targeting_exists:
+    type: boolean
+    description: >
+      True if the default profile had a targeting snapshot serialized to disk,
+      and there was no exception thrown reading it.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1795467
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1795467
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    send_in_pings:
+      - background-update
+
+  targeting_exception:
+    type: boolean
+    description: >
+      True if the default profile had a targeting snapshot serialized to disk,
+      but an exception was thrown reading it.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1795467
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1795467
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    send_in_pings:
+      - background-update
+
+  targeting_version:
+    type: quantity
+    unit: version number
+    description: >
+      If the default profile had a targeting snapshot serialized to disk, the
+      `version` of the snapshot.
+
+      This version number does not have a physical unit: it's only useful to
+      compare between versions.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1795467
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1795467
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    send_in_pings:
+      - background-update
+
+  targeting_env_firefox_version:
+    type: quantity
+    unit: version number
+    description: >
+      The `environment.firefoxVersion` of the default profile's serialized
+      targeting snapshot.  At the time of writing, this version is an integer
+      representing the Firefox major version, e.g., `109`.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1795467
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1795467
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    send_in_pings:
+      - background-update
+
+  targeting_env_current_date:
+    type: datetime
+    time_unit: day
+    description: >
+      The `environment.currentDate` of the default profile's serialized
+      targeting snapshot.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1795467
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1795467
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    send_in_pings:
+      - background-update
+
+  targeting_env_profile_age:
+    type: datetime
+    time_unit: day
+    description: >
+      The `environment.profileAgeCreated` of the default profile's serialized
+      targeting snapshot.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1795467
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1795467
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    send_in_pings:
+      - background-update
+
   final_state:
     type: string
     description: >

@@ -693,6 +693,71 @@ var BackgroundUpdate = {
       Ci.nsITimer.TYPE_REPEATING_SLACK_LOW_PRIORITY
     );
   },
+
+  /**
+   * Reads the snapshotted Firefox Messaging System targeting out of a profile.
+   * Collects background update specific telemetry.  Never throws.
+   *
+   * If no `lock` is given, the default profile is locked and the preferences
+   * read from it.  If `lock` is given, read from the given lock's directory.
+   *
+   * @param {nsIProfileLock} [lock] optional lock to use
+   * @returns {object} possibly empty targeting snapshot.
+   */
+  async readFirefoxMessagingSystemTargetingSnapshot(lock = null) {
+    let SLUG = "readFirefoxMessagingSystemTargetingSnapshot";
+
+    let defaultProfileTargetingSnapshot = {};
+
+    Glean.backgroundUpdate.targetingExists.set(false);
+    Glean.backgroundUpdate.targetingException.set(true);
+    try {
+      defaultProfileTargetingSnapshot = await lazy.BackgroundTasksUtils.readFirefoxMessagingSystemTargetingSnapshot(
+        lock
+      );
+      Glean.backgroundUpdate.targetingExists.set(true);
+      Glean.backgroundUpdate.targetingException.set(false);
+
+      if (defaultProfileTargetingSnapshot?.version) {
+        Glean.backgroundUpdate.targetingVersion.set(
+          defaultProfileTargetingSnapshot.version
+        );
+      }
+      if (defaultProfileTargetingSnapshot?.environment?.firefoxVersion) {
+        Glean.backgroundUpdate.targetingEnvFirefoxVersion.set(
+          defaultProfileTargetingSnapshot.environment.firefoxVersion
+        );
+      }
+      if (defaultProfileTargetingSnapshot?.environment?.currentDate) {
+        Glean.backgroundUpdate.targetingEnvCurrentDate.set(
+          // Glean date times are provided in nanoseconds, `getTime()` yields
+          // milliseconds (after the Unix epoch).
+          new Date(
+            defaultProfileTargetingSnapshot.environment.currentDate
+          ).getTime() * 1000
+        );
+      }
+      if (defaultProfileTargetingSnapshot?.environment?.profileAgeCreated) {
+        Glean.backgroundUpdate.targetingEnvProfileAge.set(
+          // Glean date times are provided in nanoseconds, `profileAgeCreated`
+          // is in milliseconds (after the Unix epoch).
+          defaultProfileTargetingSnapshot.environment.profileAgeCreated * 1000
+        );
+      }
+    } catch (f) {
+      if (DOMException.isInstance(f) && f.name === "NotFoundError") {
+        Glean.backgroundUpdate.targetingException.set(false);
+        lazy.log.info(`${SLUG}: no default profile targeting snapshot exists`);
+      } else {
+        lazy.log.warn(
+          `${SLUG}: ignoring exception reading default profile targeting snapshot`,
+          f
+        );
+      }
+    }
+
+    return defaultProfileTargetingSnapshot;
+  },
 };
 
 BackgroundUpdate.REASON = {
