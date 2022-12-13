@@ -492,7 +492,7 @@ static size_t gPageSize;
 #  define END_GLOBALS
 #  define DEFINE_GLOBAL(type) static const type
 #  define GLOBAL_LOG2 LOG2
-#  define GLOBAL_ASSERT_HELPER1(x) static_assert(x, #  x)
+#  define GLOBAL_ASSERT_HELPER1(x) static_assert(x, #x)
 #  define GLOBAL_ASSERT_HELPER2(x, y) static_assert(x, y)
 #  define GLOBAL_ASSERT(...)                                               \
     MACRO_CALL(                                                            \
