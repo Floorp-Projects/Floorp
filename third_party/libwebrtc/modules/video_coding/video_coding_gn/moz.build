@@ -45,7 +45,6 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/video_coding/rtp_seq_num_only_ref_finder.cc",
     "/third_party/libwebrtc/modules/video_coding/rtp_vp8_ref_finder.cc",
     "/third_party/libwebrtc/modules/video_coding/rtp_vp9_ref_finder.cc",
-    "/third_party/libwebrtc/modules/video_coding/timestamp_map.cc",
     "/third_party/libwebrtc/modules/video_coding/video_codec_initializer.cc",
     "/third_party/libwebrtc/modules/video_coding/video_receiver2.cc"
 ]
