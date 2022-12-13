@@ -766,6 +766,17 @@ already_AddRefed<Promise> StorageManager::GetDirectory(ErrorResult& aRv) {
   return mFileSystemManager->GetDirectory(aRv);
 }
 
+FileSystemManager* StorageManager::GetFileSystemManager() {
+  if (!mFileSystemManager) {
+    MOZ_ASSERT(mOwner);
+
+    mFileSystemManager = MakeRefPtr<FileSystemManager>(mOwner, this);
+    ErrorResult result;
+  }
+
+  return mFileSystemManager;
+}
+
 void StorageManager::Shutdown() {
   if (mFileSystemManager) {
     mFileSystemManager->Shutdown();

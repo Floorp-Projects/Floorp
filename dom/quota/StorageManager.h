@@ -45,6 +45,8 @@ class StorageManager final : public nsISupports, public nsWrapperCache {
 
   already_AddRefed<Promise> GetDirectory(ErrorResult& aRv);
 
+  FileSystemManager* GetFileSystemManager();
+
   void Shutdown();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
