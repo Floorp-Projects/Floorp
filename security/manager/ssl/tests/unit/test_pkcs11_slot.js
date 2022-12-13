@@ -26,7 +26,30 @@ function find_module_by_name(moduleDB, name) {
   return null;
 }
 
+var gPrompt = {
+  QueryInterface: ChromeUtils.generateQI(["nsIPrompt"]),
+
+  // This intentionally does not use arrow function syntax to avoid an issue
+  // where in the context of the arrow function, |this != gPrompt| due to
+  // how objects get wrapped when going across xpcom boundaries.
+  alert(title, text) {
+    equal(
+      text,
+      "Please authenticate to the token “Test PKCS11 Tokeñ 2 Label”. " +
+        "How to do so depends on the token (for example, using a fingerprint " +
+        "reader or entering a code with a keypad)."
+    );
+  },
+};
+
+const gPromptFactory = {
+  QueryInterface: ChromeUtils.generateQI(["nsIPromptFactory"]),
+  getPrompt: (aWindow, aIID) => gPrompt,
+};
+
 function run_test() {
+  MockRegistrar.register("@mozilla.org/prompter;1", gPromptFactory);
+
   let libraryFile = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
   libraryFile.append("pkcs11testmodule");
   libraryFile.append(ctypes.libraryName("pkcs11testmodule"));
@@ -67,7 +90,7 @@ function run_test() {
   );
   equal(
     testSlot.status,
-    Ci.nsIPKCS11Slot.SLOT_READY,
+    Ci.nsIPKCS11Slot.SLOT_NOT_LOGGED_IN,
     "Actual and expected status should match"
   );
   equal(
@@ -84,6 +107,9 @@ function run_test() {
     "Spot check: the actual and expected test token names should be equal"
   );
   ok(!testToken.isInternalKeyToken, "This token is not the internal key token");
+
+  testToken.login(true);
+  ok(testToken.isLoggedIn(), "Should have 'logged in' successfully");
 
   testSlot = find_slot_by_name(testModule, "Empty PKCS11 Slot");
   notEqual(testSlot, null, "should be able to find 'Empty PKCS11 Slot'");

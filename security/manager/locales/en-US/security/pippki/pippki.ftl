@@ -72,9 +72,8 @@ set-password-repeat-backup-pw =
   .value = Certificate backup password (again):
 set-password-reminder = Important: If you forget your certificate backup password, you will not be able to restore this backup later. Please record it in a safe location.
 
-## Protected Auth dialog
+## Protected authentication alert
 
-protected-auth-window =
-  .title = Protected Token Authentication
-protected-auth-msg = Please authenticate to the token. Authentication method depends on the type of your token.
-protected-auth-token = Token:
+# Variables:
+# $tokenName (String) - The name of the token to authenticate to (for example, "OS Client Cert Token (Modern)")
+protected-auth-alert = Please authenticate to the token “{ $tokenName }”. How to do so depends on the token (for example, using a fingerprint reader or entering a code with a keypad).

@@ -13,6 +13,7 @@
 // that don't want the cyclic behavior described above.
 
 #include <assert.h>
+#include <atomic>
 #include <string.h>
 
 #if defined(WIN32)
@@ -152,6 +153,8 @@ static const char TestTokenLabel[] = "Test PKCS11 Tokeñ Label";
 static const char TestToken2Label[] = "Test PKCS11 Tokeñ 2 Label";
 static const char TestTokenModel[] = "Test Model";
 
+std::atomic<bool> sLoggedIn = false;
+
 CK_RV Test_C_GetTokenInfo(CK_SLOT_ID slotID, CK_TOKEN_INFO_PTR pInfo) {
   if (!pInfo) {
     return CKR_ARGUMENTS_BAD;
@@ -172,6 +175,10 @@ CK_RV Test_C_GetTokenInfo(CK_SLOT_ID slotID, CK_TOKEN_INFO_PTR pInfo) {
   CopyString(pInfo->model, TestTokenModel);
   memset(pInfo->serialNumber, 0, sizeof(pInfo->serialNumber));
   pInfo->flags = CKF_TOKEN_INITIALIZED;
+  if (slotID == 2) {
+    pInfo->flags |= CKF_PROTECTED_AUTHENTICATION_PATH |
+                    CKF_USER_PIN_INITIALIZED | CKF_LOGIN_REQUIRED;
+  }
   pInfo->ulMaxSessionCount = 1;
   pInfo->ulSessionCount = 0;
   pInfo->ulMaxRwSessionCount = 1;
@@ -185,6 +192,7 @@ CK_RV Test_C_GetTokenInfo(CK_SLOT_ID slotID, CK_TOKEN_INFO_PTR pInfo) {
   pInfo->hardwareVersion = TestLibraryVersion;
   pInfo->firmwareVersion = TestLibraryVersion;
   memset(pInfo->utcTime, 0, sizeof(pInfo->utcTime));
+
   return CKR_OK;
 }
 
@@ -245,16 +253,18 @@ CK_RV Test_C_GetSessionInfo(CK_SESSION_HANDLE hSession,
   switch (hSession) {
     case 1:
       pInfo->slotID = 1;
+      pInfo->state = CKS_RO_PUBLIC_SESSION;
       break;
     case 2:
       pInfo->slotID = 2;
+      pInfo->state = sLoggedIn ? CKS_RO_USER_FUNCTIONS : CKS_RO_PUBLIC_SESSION;
       break;
     default:
       return CKR_ARGUMENTS_BAD;
   }
 
-  pInfo->state = CKS_RO_PUBLIC_SESSION;
   pInfo->flags = CKF_SERIAL_SESSION;
+
   return CKR_OK;
 }
 
@@ -268,10 +278,20 @@ CK_RV Test_C_SetOperationState(CK_SESSION_HANDLE, CK_BYTE_PTR, CK_ULONG,
 }
 
 CK_RV Test_C_Login(CK_SESSION_HANDLE, CK_USER_TYPE, CK_UTF8CHAR_PTR, CK_ULONG) {
-  return CKR_FUNCTION_NOT_SUPPORTED;
+  // Sleep for 3 seconds to simulate the user using a protected auth path.
+#ifdef WIN32
+  Sleep(3000);  // Sleep takes the duration argument as milliseconds
+#else
+  usleep(3000000);  // usleep takes the duration argument as microseconds
+#endif
+  sLoggedIn = true;
+  return CKR_OK;
 }
 
-CK_RV Test_C_Logout(CK_SESSION_HANDLE) { return CKR_FUNCTION_NOT_SUPPORTED; }
+CK_RV Test_C_Logout(CK_SESSION_HANDLE) {
+  sLoggedIn = false;
+  return CKR_OK;
+}
 
 CK_RV Test_C_CreateObject(CK_SESSION_HANDLE, CK_ATTRIBUTE_PTR, CK_ULONG,
                           CK_OBJECT_HANDLE_PTR) {
@@ -494,7 +514,7 @@ CK_RV Test_C_WaitForSlotEvent(CK_FLAGS, CK_SLOT_ID_PTR pSlot, CK_VOID_PTR) {
 #ifdef WIN32
   Sleep(50);  // Sleep takes the duration argument as milliseconds
 #else
-  usleep(50000);  // usleep takes the duration argument as microseconds
+  usleep(50000);    // usleep takes the duration argument as microseconds
 #endif
   *pSlot = 1;
   tokenPresent = !tokenPresent;
