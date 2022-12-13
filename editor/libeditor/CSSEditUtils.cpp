@@ -585,7 +585,7 @@ CSSEditUtils::RemoveCSSInlineStyleWithTransaction(
   }
 
   if (!aStyledElement.IsHTMLElement(nsGkAtoms::span) ||
-      HTMLEditUtils::ElementHasAttributesExceptMozDirty(aStyledElement)) {
+      HTMLEditUtils::ElementHasAttribute(aStyledElement)) {
     return EditorDOMPoint();
   }
 
