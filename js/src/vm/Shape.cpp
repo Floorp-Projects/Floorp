@@ -986,13 +986,7 @@ bool NativeObject::generateNewDictionaryShape(JSContext* cx,
 
   MOZ_ASSERT(obj->inDictionaryMode());
 
-  Rooted<BaseShape*> base(cx, obj->shape()->base());
-  Rooted<DictionaryPropMap*> map(cx, obj->dictionaryShape()->propMap());
-  uint32_t mapLength = obj->shape()->propMapLength();
-
-  Shape* shape =
-      DictionaryShape::new_(cx, base, obj->shape()->objectFlags(),
-                            obj->shape()->numFixedSlots(), map, mapLength);
+  Shape* shape = DictionaryShape::new_(cx, obj);
   if (!shape) {
     return false;
   }
@@ -1126,6 +1120,18 @@ DictionaryShape* DictionaryShape::new_(JSContext* cx, Handle<BaseShape*> base,
                                        uint32_t mapLength) {
   return cx->newCell<DictionaryShape>(base, objectFlags, nfixed, map,
                                       mapLength);
+}
+
+DictionaryShape::DictionaryShape(NativeObject* nobj)
+    : DictionaryShape(nobj->shape()->base(), nobj->shape()->objectFlags(),
+                      nobj->shape()->numFixedSlots(),
+                      nobj->dictionaryShape()->propMap(),
+                      nobj->shape()->propMapLength()) {}
+
+// static
+DictionaryShape* DictionaryShape::new_(JSContext* cx,
+                                       Handle<NativeObject*> obj) {
+  return cx->newCell<DictionaryShape>(obj);
 }
 
 // static

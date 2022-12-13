@@ -511,7 +511,7 @@ class NativeShape : public Shape {
 class SharedShape : public NativeShape {
   friend class js::gc::CellAllocator;
   SharedShape(BaseShape* base, ObjectFlags objectFlags, uint32_t nfixed,
-              PropMap* map, uint32_t mapLength)
+              SharedPropMap* map, uint32_t mapLength)
       : NativeShape(Kind::Shared, base, objectFlags, nfixed, map, mapLength) {
     initSmallSlotSpan();
   }
@@ -622,11 +622,12 @@ class DictionaryShape : public NativeShape {
   friend class NativeObject;
 
   DictionaryShape(BaseShape* base, ObjectFlags objectFlags, uint32_t nfixed,
-                  PropMap* map, uint32_t mapLength)
+                  DictionaryPropMap* map, uint32_t mapLength)
       : NativeShape(Kind::Dictionary, base, objectFlags, nfixed, map,
                     mapLength) {
     MOZ_ASSERT(map);
   }
+  explicit DictionaryShape(NativeObject* nobj);
 
   // Methods to set fields of a new dictionary shape. Must not be used for
   // shapes that might have been exposed to script.
@@ -648,6 +649,7 @@ class DictionaryShape : public NativeShape {
                                ObjectFlags objectFlags, uint32_t nfixed,
                                Handle<DictionaryPropMap*> map,
                                uint32_t mapLength);
+  static DictionaryShape* new_(JSContext* cx, Handle<NativeObject*> obj);
 
   DictionaryPropMap* propMap() const {
     MOZ_ASSERT(isDictionary());
