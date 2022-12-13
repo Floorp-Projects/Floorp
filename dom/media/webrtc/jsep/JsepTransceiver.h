@@ -78,6 +78,7 @@ class JsepTransceiver {
     if (aRemote) {
       mLevel = oldTransceiver.mLevel;
       mBundleLevel = oldTransceiver.mBundleLevel;
+      mSendTrack = oldTransceiver.mSendTrack;
     }
     mRecvTrack = oldTransceiver.mRecvTrack;
 
