@@ -34,7 +34,7 @@ const kDataToStringMap = new Map([
 var MigrationWizard = {
   /* exported MigrationWizard */
   _source: "", // Source Profile Migrator ContractID suffix
-  _itemsFlags: kIMig.ALL, // Selected Import Data Sources (16-bit bitfield)
+  _itemsFlags: MigrationUtils.resourceTypes.ALL, // Selected Import Data Sources (16-bit bitfield)
   _selectedProfile: null, // Selected Profile name to import from
   _wiz: null,
   _migrator: null,
@@ -265,7 +265,7 @@ var MigrationWizard = {
       // Create the migrator for the selected source.
       this._migrator = this.spinResolve(MigrationUtils.getMigrator(newSource));
 
-      this._itemsFlags = kIMig.ALL;
+      this._itemsFlags = MigrationUtils.resourceTypes.ALL;
       this._selectedProfile = null;
     }
     this._source = newSource;
@@ -355,7 +355,7 @@ var MigrationWizard = {
     );
 
     for (let itemType of kDataToStringMap.keys()) {
-      let itemValue = Ci.nsIBrowserProfileMigrator[itemType.toUpperCase()];
+      let itemValue = MigrationUtils.resourceTypes[itemType.toUpperCase()];
       if (items & itemValue) {
         let checkbox = document.createXULElement("checkbox");
         checkbox.id = itemValue;
@@ -422,8 +422,8 @@ var MigrationWizard = {
     if (
       this._source == "safari" &&
       AppConstants.isPlatformAndVersionAtLeast("macosx", "18") &&
-      (this._itemsFlags & Ci.nsIBrowserProfileMigrator.BOOKMARKS ||
-        this._itemsFlags == Ci.nsIBrowserProfileMigrator.ALL)
+      (this._itemsFlags & MigrationUtils.resourceTypes.BOOKMARKS ||
+        this._itemsFlags == MigrationUtils.resourceTypes.ALL)
     ) {
       let migrator = this._migrator.wrappedJSObject;
       let havePermissions = this.spinResolve(migrator.hasPermissions());
@@ -505,7 +505,7 @@ var MigrationWizard = {
     }
 
     for (let itemType of kDataToStringMap.keys()) {
-      let itemValue = Ci.nsIBrowserProfileMigrator[itemType.toUpperCase()];
+      let itemValue = MigrationUtils.resourceTypes[itemType.toUpperCase()];
       if (this._itemsFlags & itemValue) {
         var label = document.createXULElement("label");
         label.id = itemValue + "_migrated";
@@ -567,22 +567,22 @@ var MigrationWizard = {
         let type = "undefined";
         let numericType = parseInt(aData);
         switch (numericType) {
-          case Ci.nsIBrowserProfileMigrator.COOKIES:
+          case MigrationUtils.resourceTypes.COOKIES:
             type = "cookies";
             break;
-          case Ci.nsIBrowserProfileMigrator.HISTORY:
+          case MigrationUtils.resourceTypes.HISTORY:
             type = "history";
             break;
-          case Ci.nsIBrowserProfileMigrator.FORMDATA:
+          case MigrationUtils.resourceTypes.FORMDATA:
             type = "form data";
             break;
-          case Ci.nsIBrowserProfileMigrator.PASSWORDS:
+          case MigrationUtils.resourceTypes.PASSWORDS:
             type = "passwords";
             break;
-          case Ci.nsIBrowserProfileMigrator.BOOKMARKS:
+          case MigrationUtils.resourceTypes.BOOKMARKS:
             type = "bookmarks";
             break;
-          case Ci.nsIBrowserProfileMigrator.OTHERDATA:
+          case MigrationUtils.resourceTypes.OTHERDATA:
             type = "misc. data";
             break;
         }
