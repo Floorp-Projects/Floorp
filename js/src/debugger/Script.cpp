@@ -1395,7 +1395,9 @@ bool DebuggerScript::CallData::getOffsetLocation() {
 // effectful if they only modify the current frame's state, modify objects
 // created by the current frame, or can potentially call other scripts or
 // natives which could have side effects.
-static bool BytecodeIsEffectful(JSOp op) {
+static bool BytecodeIsEffectful(JSScript* script, size_t offset) {
+  jsbytecode* pc = script->offsetToPC(offset);
+  JSOp op = JSOp(*pc);
   switch (op) {
     case JSOp::SetProp:
     case JSOp::StrictSetProp:
@@ -1416,7 +1418,6 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::DelName:
     case JSOp::SetAliasedVar:
     case JSOp::InitHomeObject:
-    case JSOp::InitAliasedLexical:
     case JSOp::SetIntrinsic:
     case JSOp::InitGLexical:
     case JSOp::GlobalOrEvalDeclInstantiation:
@@ -1638,6 +1639,18 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::FinishTuple:
 #endif
       return false;
+
+    case JSOp::InitAliasedLexical: {
+      uint32_t hops = EnvironmentCoordinate(pc).hops();
+      if (hops == 0) {
+        // Initializing aliased lexical in the current scope is almost same
+        // as JSOp::InitLexical.
+        return false;
+      }
+
+      // Otherwise this can touch an environment outside of the current scope.
+      return true;
+    }
   }
 
   MOZ_ASSERT_UNREACHABLE("Invalid opcode");
@@ -1654,11 +1667,11 @@ bool DebuggerScript::CallData::getEffectfulOffsets() {
     return false;
   }
   for (BytecodeRange r(cx, script); !r.empty(); r.popFront()) {
-    if (!BytecodeIsEffectful(r.frontOpcode())) {
+    size_t offset = r.frontOffset();
+    if (!BytecodeIsEffectful(script, offset)) {
       continue;
     }
 
-    size_t offset = r.frontOffset();
     if (IsGeneratorSlotInitialization(script, offset, cx)) {
       // This is engine-internal operation and not visible outside the
       // currently executing frame.
