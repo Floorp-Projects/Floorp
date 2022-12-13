@@ -1,0 +1,122 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1244913",
+    title: "Scale resolution down on a PeerConnection",
+    visible: true
+  });
+
+  async function checkForH264Support() {
+    const pc = new RTCPeerConnection();
+    const offer = await pc.createOffer({offerToReceiveVideo: true});
+    return offer.sdp.match(/a=rtpmap:[1-9][0-9]* H264/);
+  }
+
+  let resolutionAlignment = 1;
+
+  var mustRejectWith = (msg, reason, f) =>
+    f().then(() => ok(false, msg),
+             e => is(e.name, reason, msg));
+
+  async function testScale(codec) {
+    var pc1 = new RTCPeerConnection();
+    var pc2 = new RTCPeerConnection();
+
+    var add = (pc, can, failed) => can && pc.addIceCandidate(can).catch(failed);
+    pc1.onicecandidate = e => add(pc2, e.candidate, generateErrorCallback());
+    pc2.onicecandidate = e => add(pc1, e.candidate, generateErrorCallback());
+
+    info("testing scaling with " + codec);
+
+    let stream = await navigator.mediaDevices.getUserMedia({ video: true });
+
+    var v1 = createMediaElement('video', 'v1');
+    var v2 = createMediaElement('video', 'v2');
+
+    var ontrackfired = new Promise(resolve => pc2.ontrack = e => resolve(e));
+    var v2loadedmetadata = new Promise(resolve => v2.onloadedmetadata = resolve);
+
+    is(v2.currentTime, 0, "v2.currentTime is zero at outset");
+
+    v1.srcObject = stream;
+    var sender = pc1.addTrack(stream.getVideoTracks()[0], stream);
+
+    const otherErrorStart = await GleanTest.rtcrtpsenderSetparameters.failOther.testGetValue();
+    const noTransactionIdWarningStart = await GleanTest.rtcrtpsenderSetparameters.warnNoTransactionid.testGetValue();
+
+    await mustRejectWith(
+        "Invalid scaleResolutionDownBy must reject", "RangeError",
+        () => sender.setParameters(
+            { encodings:[{ scaleResolutionDownBy: 0.5 } ] })
+    );
+
+    const otherErrorEnd = await GleanTest.rtcrtpsenderSetparameters.failOther.testGetValue();
+    const noTransactionIdWarningEnd = await GleanTest.rtcrtpsenderSetparameters.warnNoTransactionid.testGetValue();
+
+    // Make sure Glean is recording these statistics
+    is(otherErrorEnd.denominator, otherErrorStart.denominator, "No new RTCRtpSenders were created during this time");
+    is(otherErrorEnd.numerator, otherErrorStart.numerator + 1, "RTCRtpSender.setParameters reported a failure via Glean");
+    is(noTransactionIdWarningEnd.denominator, noTransactionIdWarningStart.denominator, "No new RTCRtpSenders were created during this time");
+    is(noTransactionIdWarningEnd.numerator, noTransactionIdWarningStart.numerator + 1, "Glean should have recorded a warning due to missing transactionId");
+
+    await sender.setParameters({ encodings: [{ maxBitrate: 60000,
+                                               scaleResolutionDownBy: 2 }] });
+
+    let offer = await pc1.createOffer();
+    if (codec == "VP8") {
+      offer.sdp = sdputils.removeAllButPayloadType(offer.sdp, 126);
+    }
+    await pc1.setLocalDescription(offer);
+    await pc2.setRemoteDescription(pc1.localDescription);
+
+    let answer = await pc2.createAnswer();
+    await pc2.setLocalDescription(answer);
+    await pc1.setRemoteDescription(pc2.localDescription);
+    let trackevent = await ontrackfired;
+
+    v2.srcObject = trackevent.streams[0];
+
+    await v2loadedmetadata;
+
+    await waitUntil(() => v2.currentTime > 0);
+    ok(v2.currentTime > 0, "v2.currentTime is moving (" + v2.currentTime + ")");
+
+    ok(v1.videoWidth > 0, "source width is positive");
+    ok(v1.videoHeight > 0, "source height is positive");
+    const expectedWidth =
+      v1.videoWidth / 2 - (v1.videoWidth / 2 % resolutionAlignment);
+    const expectedHeight =
+      v1.videoHeight / 2 - (v1.videoHeight / 2 % resolutionAlignment);
+    is(v2.videoWidth, expectedWidth,
+       "sink is half the width of the source");
+    is(v2.videoHeight, expectedHeight,
+       "sink is half the height of the source");
+    stream.getTracks().forEach(track => track.stop());
+    v1.srcObject = v2.srcObject = null;
+    pc1.close()
+    pc2.close()
+  }
+
+  runNetworkTest(async () => {
+    await matchPlatformH264CodecPrefs();
+    const hasH264 = await checkForH264Support();
+    if (hasH264 && navigator.userAgent.includes("Android")) {
+      // Android only has a hw encoder for h264
+      resolutionAlignment = 16;
+    }
+    await pushPrefs(['media.peerconnection.video.lock_scaling', true]);
+    await testScale("VP8");
+    if (hasH264) {
+      await testScale("H264");
+    }
+  });
+</script>
+</pre>
+</body>
+</html>

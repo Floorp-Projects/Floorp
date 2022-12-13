@@ -991,6 +991,38 @@ const getTurnHostname = turnUrl => {
   return hostAndMaybePort.split(":")[0];
 };
 
+// Yo dawg I heard you like Proxies
+// Example: let value = await GleanTest.category.metric.testGetValue();
+const GleanTest = new Proxy(
+  {},
+  {
+    get(target, categoryName, receiver) {
+      return new Proxy(
+        {},
+        {
+          get(target, metricName, receiver) {
+            return {
+              // The only API we actually implement right now.
+              async testGetValue() {
+                return SpecialPowers.spawnChrome(
+                  [categoryName, metricName],
+                  async (categoryName, metricName) => {
+                    await Services.fog.testFlushAllChildren();
+                    const window = this.browsingContext.topChromeWindow;
+                    return window.Glean[categoryName][
+                      metricName
+                    ].testGetValue();
+                  }
+                );
+              },
+            };
+          },
+        }
+      );
+    },
+  }
+);
+
 /**
  * This class executes a series of functions in a continuous sequence.
  * Promise-bearing functions are executed after the previous promise completes.

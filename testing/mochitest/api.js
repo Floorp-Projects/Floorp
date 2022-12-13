@@ -59,6 +59,8 @@ function androidStartup() {
 
     windowTracker.init();
   }
+
+  Services.fog.initializeFOG();
 }
 
 // ///// Desktop ///////

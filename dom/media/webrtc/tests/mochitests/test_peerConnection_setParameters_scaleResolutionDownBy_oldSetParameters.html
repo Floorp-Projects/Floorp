@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+createHTML({
+  bug: "1253499",
+  title: "Live-updating scaleResolutionDownBy"
+});
+
+async function checkForH264Support() {
+  const pc = new RTCPeerConnection();
+  const offer = await pc.createOffer({offerToReceiveVideo: true});
+  return offer.sdp.match(/a=rtpmap:[1-9][0-9]* H264/);
+}
+
+let sender, localElem, remoteElem;
+let originalWidth, originalHeight;
+let resolutionAlignment = 1;
+
+async function checkScaleDownBy(scale) {
+  sender.setParameters({ encodings: [{ scaleResolutionDownBy: scale }] });
+  await haveEvent(remoteElem, "resize", wait(5000, new Error("Timeout")));
+
+  // Find the expected resolution. Internally we floor the exact scaling, then
+  // shrink each dimension to the alignment requested by the encoder.
+  let expectedWidth =
+    originalWidth / scale - (originalWidth / scale % resolutionAlignment);
+  let expectedHeight =
+    originalHeight / scale - (originalHeight / scale % resolutionAlignment);
+
+  is(remoteElem.videoWidth, expectedWidth,
+    `Width should have scaled down by ${scale}`);
+  is(remoteElem.videoHeight, expectedHeight,
+    `Height should have scaled down by ${scale}`);
+}
+
+runNetworkTest(async function (options) {
+  await pushPrefs(['media.peerconnection.video.lock_scaling', true]);
+  // [TODO] re-enable HW decoder after bug 1526207 is fixed.
+  if (navigator.userAgent.includes("Android")) {
+    if (await checkForH264Support()) {
+      // Android only has h264 in hw, so now we know it will use vp8 in hw too.
+      resolutionAlignment = 16;
+    }
+    await pushPrefs(["media.navigator.mediadatadecoder_vpx_enabled", false],
+                    ["media.webrtc.hw.h264.enabled", false]);
+  }
+
+  let test = new PeerConnectionTest(options);
+  test.setMediaConstraints([{video: true}], []);
+  test.chain.append([
+    function CHECK_PRECONDITIONS() {
+      is(test.pcLocal._pc.getSenders().length, 1,
+          "Should have 1 local sender");
+      is(test.pcLocal.localMediaElements.length, 1,
+          "Should have 1 local sending media element");
+      is(test.pcRemote.remoteMediaElements.length, 1,
+          "Should have 1 remote media element");
+
+      sender = test.pcLocal._pc.getSenders()[0];
+      localElem = test.pcLocal.localMediaElements[0];
+      remoteElem = test.pcRemote.remoteMediaElements[0];
+
+      remoteElem.addEventListener("resize", () =>
+        info(`Video resized to ${remoteElem.videoWidth}x${remoteElem.videoHeight}`));
+
+      originalWidth = localElem.videoWidth;
+      originalHeight = localElem.videoHeight;
+      info(`Original width is ${originalWidth}`);
+    },
+    function PC_LOCAL_SCALEDOWNBY_2() {
+      return checkScaleDownBy(2);
+    },
+    function PC_LOCAL_SCALEDOWNBY_4() {
+      return checkScaleDownBy(4);
+    },
+    function PC_LOCAL_SCALEDOWNBY_15() {
+      return checkScaleDownBy(15);
+    },
+    function PC_LOCAL_SCALEDOWNBY_8() {
+      return checkScaleDownBy(8);
+    },
+    function PC_LOCAL_SCALEDOWNBY_1() {
+      return checkScaleDownBy(1);
+    },
+  ]);
+  await test.run();
+});
+</script>
+</pre>
+</body>
+</html>

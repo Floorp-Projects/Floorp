@@ -157,6 +157,8 @@ const tests = [
 ];
 
 runNetworkTest(async () => {
+  await pushPrefs(
+    ["media.peerconnection.allow_old_setParameters", false]);
   for (const test of tests) {
     info(`Running test: ${test.name}`);
     await test();
