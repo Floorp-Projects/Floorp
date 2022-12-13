@@ -2681,6 +2681,7 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
 #endif
             "chrome://browser/content/webext-panels.xhtml"_ns,
             "chrome://devtools/content/netmonitor/index.html"_ns,
+            "chrome://devtools/content/webconsole/index.html"_ns,
         };
 
         for (const auto& allowedURI : kAllowedURIs) {
