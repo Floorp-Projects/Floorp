@@ -22,7 +22,9 @@ let originalWidth, originalHeight;
 let resolutionAlignment = 1;
 
 async function checkScaleDownBy(scale) {
-  sender.setParameters({ encodings: [{ scaleResolutionDownBy: scale }] });
+  const parameters = sender.getParameters();
+  parameters.encodings[0].scaleResolutionDownBy = scale;
+  await sender.setParameters(parameters);
   await haveEvent(remoteElem, "resize", wait(5000, new Error("Timeout")));
 
   // Find the expected resolution. Internally we floor the exact scaling, then
