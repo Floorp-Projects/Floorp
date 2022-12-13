@@ -17,7 +17,7 @@ thiserror = "1.0"
 tempfile = "3.1.0"
 
 [dependencies.rusqlite]
-version = "0.27.0"
+version = "0.28.0"
 features = ["functions", "limits", "bundled", "unlock_notify"]
 
 [dev-dependencies]

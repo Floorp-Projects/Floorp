@@ -123,9 +123,6 @@ wasi = { path = "build/rust/wasi" }
 # Patch goblin 0.1 to 0.5
 goblin = { path = "build/rust/goblin" }
 
-# Patch hashbrown 0.11 to 0.12
-hashbrown = { path = "build/rust/hashbrown" }
-
 # Patch bindgen 0.59 to 0.63
 bindgen = { path = "build/rust/bindgen" }
 
@@ -167,12 +164,12 @@ midir = { git = "https://github.com/mozilla/midir.git", rev = "519e651241e867af3
 minidump_writer_linux = { git = "https://github.com/rust-minidump/minidump-writer.git", rev = "75ada456c92a429704691a85e1cb42fef8cafc0d" }
 
 # application-services overrides to make updating them all simpler.
-interrupt-support = { git = "https://github.com/mozilla/application-services", rev = "bef536015f038872ad991a1d5a17f765363349f6" }
-sql-support = { git = "https://github.com/mozilla/application-services", rev = "bef536015f038872ad991a1d5a17f765363349f6" }
-sync15 = { git = "https://github.com/mozilla/application-services", rev = "bef536015f038872ad991a1d5a17f765363349f6" }
-tabs = { git = "https://github.com/mozilla/application-services", rev = "bef536015f038872ad991a1d5a17f765363349f6" }
-viaduct = { git = "https://github.com/mozilla/application-services", rev = "bef536015f038872ad991a1d5a17f765363349f6" }
-webext-storage = { git = "https://github.com/mozilla/application-services", rev = "bef536015f038872ad991a1d5a17f765363349f6" }
+interrupt-support = { git = "https://github.com/mozilla/application-services", rev = "ba67a665dd086b1ea5f1fad638843e82bf9208b4" }
+sql-support = { git = "https://github.com/mozilla/application-services", rev = "ba67a665dd086b1ea5f1fad638843e82bf9208b4" }
+sync15 = { git = "https://github.com/mozilla/application-services", rev = "ba67a665dd086b1ea5f1fad638843e82bf9208b4" }
+tabs = { git = "https://github.com/mozilla/application-services", rev = "ba67a665dd086b1ea5f1fad638843e82bf9208b4" }
+viaduct = { git = "https://github.com/mozilla/application-services", rev = "ba67a665dd086b1ea5f1fad638843e82bf9208b4" }
+webext-storage = { git = "https://github.com/mozilla/application-services", rev = "ba67a665dd086b1ea5f1fad638843e82bf9208b4" }
 
 # Patch mio 0.6 to use winapi 0.3 and miow 0.3, getting rid of winapi 0.2.
 # There is not going to be new version of mio 0.6, mio now being >= 0.7.11.

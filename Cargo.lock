@@ -1560,7 +1560,7 @@ dependencies = [
 [[package]]
 name = "error-support"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=bef536015f038872ad991a1d5a17f765363349f6#bef536015f038872ad991a1d5a17f765363349f6"
+source = "git+https://github.com/mozilla/application-services?rev=ba67a665dd086b1ea5f1fad638843e82bf9208b4#ba67a665dd086b1ea5f1fad638843e82bf9208b4"
 dependencies = [
  "lazy_static",
  "log",
@@ -1621,7 +1621,7 @@ version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c195cf4b2285d3c993eb887b4dc56b0d5728bbe1d0f9a99c0ac6bec2da3e4d85"
 dependencies = [
- "hashbrown 0.12.3",
+ "hashbrown",
 ]
 
 [[package]]
@@ -2431,7 +2431,7 @@ checksum = "0b0c02e1ba0bdb14e965058ca34e09c020f8e507a760df1121728e0aef68d57a"
 dependencies = [
  "bitflags",
  "gpu-descriptor-types",
- "hashbrown 0.12.3",
+ "hashbrown",
 ]
 
 [[package]]
@@ -2480,13 +2480,6 @@ checksum = "eabb4a44450da02c90444cf74558da904edde8fb4e9035a9a6a4e15445af0bd7"
 
 [[package]]
 name = "hashbrown"
-version = "0.11.999"
-dependencies = [
- "hashbrown 0.12.3",
-]
-
-[[package]]
-name = "hashbrown"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a9ee70c43aaf417c914396645a0fa852624801b24ebb7ae78fe8272889ac888"
@@ -2496,11 +2489,11 @@ dependencies = [
 
 [[package]]
 name = "hashlink"
-version = "0.7.0"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7249a3129cbc1ffccd74857f81464a323a152173cdb134e0fd81bc803b29facf"
+checksum = "69fe1fcf8b4278d860ad0548329f892a3631fb63f82574df68275f34cdbe0ffa"
 dependencies = [
- "hashbrown 0.11.999",
+ "hashbrown",
 ]
 
 [[package]]
@@ -2679,7 +2672,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "10a35a97730320ffe8e2d410b5d3b69279b98d2c14bdb8b70ea89ecf7888d41e"
 dependencies = [
  "autocfg",
- "hashbrown 0.12.3",
+ "hashbrown",
  "serde",
 ]
 
@@ -2706,7 +2699,7 @@ dependencies = [
 [[package]]
 name = "interrupt-support"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=bef536015f038872ad991a1d5a17f765363349f6#bef536015f038872ad991a1d5a17f765363349f6"
+source = "git+https://github.com/mozilla/application-services?rev=ba67a665dd086b1ea5f1fad638843e82bf9208b4#ba67a665dd086b1ea5f1fad638843e82bf9208b4"
 dependencies = [
  "lazy_static",
  "parking_lot 0.12.999",
@@ -3043,9 +3036,9 @@ dependencies = [
 
 [[package]]
 name = "libsqlite3-sys"
-version = "0.24.2"
+version = "0.25.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "898745e570c7d0453cc1fbc4a701eb6c662ed54e8fec8b7d14be137ebeeb9d14"
+checksum = "29f835d03d717946d28b1d1ed632eb6f0e24a299388ee623d0c23118d3e8a7fa"
 dependencies = [
  "cc",
  "pkg-config",
@@ -3830,7 +3823,7 @@ dependencies = [
 [[package]]
 name = "nss_build_common"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=bef536015f038872ad991a1d5a17f765363349f6#bef536015f038872ad991a1d5a17f765363349f6"
+source = "git+https://github.com/mozilla/application-services?rev=ba67a665dd086b1ea5f1fad638843e82bf9208b4#ba67a665dd086b1ea5f1fad638843e82bf9208b4"
 
 [[package]]
 name = "nsstring"
@@ -4634,16 +4627,15 @@ dependencies = [
 
 [[package]]
 name = "rusqlite"
-version = "0.27.0"
+version = "0.28.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85127183a999f7db96d1a976a309eebbfb6ea3b0b400ddd8340190129de6eb7a"
+checksum = "01e213bc3ecb39ac32e81e51ebe31fd888a940515173e3a18a35f8c6e896422a"
 dependencies = [
  "bitflags",
  "fallible-iterator",
  "fallible-streaming-iterator",
  "hashlink",
  "libsqlite3-sys",
- "memchr",
  "serde_json",
  "smallvec",
 ]
@@ -5047,7 +5039,7 @@ dependencies = [
 [[package]]
 name = "sql-support"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=bef536015f038872ad991a1d5a17f765363349f6#bef536015f038872ad991a1d5a17f765363349f6"
+source = "git+https://github.com/mozilla/application-services?rev=ba67a665dd086b1ea5f1fad638843e82bf9208b4#ba67a665dd086b1ea5f1fad638843e82bf9208b4"
 dependencies = [
  "ffi-support",
  "interrupt-support",
@@ -5229,7 +5221,7 @@ dependencies = [
 [[package]]
 name = "sync-guid"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=bef536015f038872ad991a1d5a17f765363349f6#bef536015f038872ad991a1d5a17f765363349f6"
+source = "git+https://github.com/mozilla/application-services?rev=ba67a665dd086b1ea5f1fad638843e82bf9208b4#ba67a665dd086b1ea5f1fad638843e82bf9208b4"
 dependencies = [
  "base64",
  "rand 0.8.5",
@@ -5240,7 +5232,7 @@ dependencies = [
 [[package]]
 name = "sync15"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=bef536015f038872ad991a1d5a17f765363349f6#bef536015f038872ad991a1d5a17f765363349f6"
+source = "git+https://github.com/mozilla/application-services?rev=ba67a665dd086b1ea5f1fad638843e82bf9208b4#ba67a665dd086b1ea5f1fad638843e82bf9208b4"
 dependencies = [
  "anyhow",
  "error-support",
@@ -5270,7 +5262,7 @@ dependencies = [
 [[package]]
 name = "tabs"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=bef536015f038872ad991a1d5a17f765363349f6#bef536015f038872ad991a1d5a17f765363349f6"
+source = "git+https://github.com/mozilla/application-services?rev=ba67a665dd086b1ea5f1fad638843e82bf9208b4#ba67a665dd086b1ea5f1fad638843e82bf9208b4"
 dependencies = [
  "anyhow",
  "error-support",
@@ -6014,7 +6006,7 @@ checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 [[package]]
 name = "viaduct"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=bef536015f038872ad991a1d5a17f765363349f6#bef536015f038872ad991a1d5a17f765363349f6"
+source = "git+https://github.com/mozilla/application-services?rev=ba67a665dd086b1ea5f1fad638843e82bf9208b4#ba67a665dd086b1ea5f1fad638843e82bf9208b4"
 dependencies = [
  "ffi-support",
  "log",
@@ -6171,7 +6163,7 @@ dependencies = [
 [[package]]
 name = "webext-storage"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=bef536015f038872ad991a1d5a17f765363349f6#bef536015f038872ad991a1d5a17f765363349f6"
+source = "git+https://github.com/mozilla/application-services?rev=ba67a665dd086b1ea5f1fad638843e82bf9208b4#ba67a665dd086b1ea5f1fad638843e82bf9208b4"
 dependencies = [
  "error-support",
  "ffi-support",

@@ -424,6 +424,22 @@ fn test_retain() {
 }
 
 #[test]
+fn test_retain_with_order() {
+    let xs = [1, 2, 3, 4, 5, 6];
+    let mut set: LinkedHashSet<i32> = xs.iter().cloned().collect();
+    let mut vec = Vec::new();
+    set.retain_with_order(|&k| {
+        if k % 2 == 0 {
+            true
+        } else {
+            vec.push(k);
+            false
+        }
+    });
+    assert_eq!(vec![1, 3, 5], vec);
+}
+
+#[test]
 fn insert_order() {
     let mut set = LinkedHashSet::new();
     set.insert(1);

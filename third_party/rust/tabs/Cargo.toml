@@ -25,7 +25,7 @@ error-support = { path = "../support/error" }
 interrupt-support = { path = "../support/interrupt" }
 lazy_static = "1.4"
 log = "0.4"
-rusqlite = { version = "0.27.0", features = ["bundled", "unlock_notify"] }
+rusqlite = { version = "0.28.0", features = ["bundled", "unlock_notify"] }
 serde = "1"
 serde_derive = "1"
 serde_json = "1"

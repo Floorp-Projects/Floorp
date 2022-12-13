@@ -1,6 +1,6 @@
 # hashlink -- HashMap-like containers that hold their key-value pairs in a user controllable order
 
-[![Build Status](https://img.shields.io/circleci/project/github/kyren/hashlink.svg)](https://circleci.com/gh/kyren/hashlink)
+[![Build Status](https://img.shields.io/circleci/project/github/triplehex/hashlink.svg)](https://circleci.com/gh/triplehex/hashlink)
 [![Latest Version](https://img.shields.io/crates/v/hashlink.svg)](https://crates.io/crates/hashlink)
 [![API Documentation](https://docs.rs/hashlink/badge.svg)](https://docs.rs/hashlink)
 

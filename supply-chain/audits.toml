@@ -727,6 +727,11 @@ criteria = "safe-to-deploy"
 version = "0.12.3"
 notes = "This version is used in rust's libstd, so effectively we're already trusting it"
 
+[[audits.hashlink]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.7.0 -> 0.8.1"
+
 [[audits.hex]]
 who = "Simon Friedberger <simon@mozilla.com>"
 criteria = "safe-to-deploy"
@@ -1180,6 +1185,11 @@ Panics are handled in all Rust FFI methods, meaning that projects which do not
 disable unwinding will still consistently abort (using `libc::abort()`) if a
 panic occurs in the Rust code.
 """
+
+[[audits.rusqlite]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.27.0 -> 0.28.0"
 
 [[audits.rust_decimal]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"

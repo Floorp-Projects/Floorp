@@ -1,4 +1,5 @@
 use std::{
+    alloc::Layout,
     borrow::Borrow,
     cmp::Ordering,
     fmt,
@@ -12,7 +13,10 @@ use std::{
 
 use hashbrown::{hash_map, HashMap};
 
-pub type TryReserveError = hashbrown::TryReserveError;
+pub enum TryReserveError {
+    CapacityOverflow,
+    AllocError { layout: Layout },
+}
 
 /// A version of `HashMap` that has a user controllable order for its entries.
 ///
@@ -93,14 +97,12 @@ impl<K, V, S> LinkedHashMap<K, V, S> {
 
     #[inline]
     pub fn try_reserve(&mut self, additional: usize) -> Result<(), TryReserveError> {
-        self.map.try_reserve(additional)
-    }
-
-    #[inline]
-    pub fn shrink_to_fit(&mut self) {
-        self.map.shrink_to_fit();
-        unsafe { drop_free_nodes(self.free) };
-        self.free = None;
+        self.map.try_reserve(additional).map_err(|e| match e {
+            hashbrown::TryReserveError::CapacityOverflow => TryReserveError::CapacityOverflow,
+            hashbrown::TryReserveError::AllocError { layout } => {
+                TryReserveError::AllocError { layout }
+            }
+        })
     }
 
     #[inline]
@@ -238,42 +240,6 @@ impl<K, V, S> LinkedHashMap<K, V, S> {
     where
         F: FnMut(&K, &mut V) -> bool,
     {
-        // We do not drop the key and value when a value is filtered from the map during the call to
-        // `retain`.  We need to be very careful not to have a live `HashMap` entry pointing to
-        // either a dangling `Node` or a `Node` with dropped keys / values.  Since the key and value
-        // types may panic on drop, they may short-circuit the entry in the map actually being
-        // removed.  Instead, we push the removed nodes onto the free list eagerly, then try and
-        // drop the keys and values for any newly freed nodes *after* `HashMap::retain` has
-        // completely finished.
-        struct DropFilteredValues<'a, K, V> {
-            free: &'a mut Option<NonNull<Node<K, V>>>,
-            cur_free: Option<NonNull<Node<K, V>>>,
-        }
-
-        impl<'a, K, V> DropFilteredValues<'a, K, V> {
-            #[inline]
-            fn drop_later(&mut self, node: NonNull<Node<K, V>>) {
-                unsafe {
-                    detach_node(node);
-                    push_free(&mut self.cur_free, node);
-                }
-            }
-        }
-
-        impl<'a, K, V> Drop for DropFilteredValues<'a, K, V> {
-            fn drop(&mut self) {
-                unsafe {
-                    let end_free = self.cur_free;
-                    while self.cur_free != *self.free {
-                        let cur_free = self.cur_free.as_ptr();
-                        (*cur_free).take_entry();
-                        self.cur_free = (*cur_free).links.free.next;
-                    }
-                    *self.free = end_free;
-                }
-            }
-        }
-
         let free = self.free;
         let mut drop_filtered_values = DropFilteredValues {
             free: &mut self.free,
@@ -378,6 +344,21 @@ where
         }
     }
 
+    /// If the given key is not in this map, inserts the key / value pair at the *back* of the
+    /// internal linked list and returns `None`, otherwise, replaces the existing value with the
+    /// given value *without* moving the entry in the internal linked list and returns the previous
+    /// value.
+    #[inline]
+    pub fn replace(&mut self, k: K, v: V) -> Option<V> {
+        match self.raw_entry_mut().from_key(&k) {
+            RawEntryMut::Occupied(mut occupied) => Some(occupied.replace_value(v)),
+            RawEntryMut::Vacant(vacant) => {
+                vacant.insert(k, v);
+                None
+            }
+        }
+    }
+
     #[inline]
     pub fn remove<Q>(&mut self, k: &Q) -> Option<V>
     where
@@ -473,6 +454,81 @@ where
                 Some(occupied.into_mut())
             }
             RawEntryMut::Vacant(_) => None,
+        }
+    }
+
+    #[inline]
+    pub fn shrink_to_fit(&mut self) {
+        unsafe {
+            let len = self.map.len();
+            if len != self.map.capacity() {
+                self.map = HashMap::with_hasher(NullHasher);
+                self.map.reserve(len);
+
+                if let Some(guard) = self.values {
+                    let mut cur = guard.as_ref().links.value.next;
+                    while cur != guard {
+                        let hash = hash_key(&self.hash_builder, cur.as_ref().key_ref());
+                        match self
+                            .map
+                            .raw_entry_mut()
+                            .from_hash(hash, |k| (*k).as_ref().key_ref().eq(cur.as_ref().key_ref()))
+                        {
+                            hash_map::RawEntryMut::Occupied(_) => unreachable!(),
+                            hash_map::RawEntryMut::Vacant(vacant) => {
+                                let hash_builder = &self.hash_builder;
+                                vacant.insert_with_hasher(hash, cur, (), |k| {
+                                    hash_key(hash_builder, (*k).as_ref().key_ref())
+                                });
+                            }
+                        }
+                        cur = cur.as_ref().links.value.next;
+                    }
+                }
+            }
+
+            drop_free_nodes(self.free);
+            self.free = None;
+        }
+    }
+
+    pub fn retain_with_order<F>(&mut self, mut f: F)
+    where
+        F: FnMut(&K, &mut V) -> bool,
+    {
+        let free = self.free;
+        let mut drop_filtered_values = DropFilteredValues {
+            free: &mut self.free,
+            cur_free: free,
+        };
+
+        if let Some(values) = self.values {
+            unsafe {
+                let mut cur = values.as_ref().links.value.next;
+                while cur != values {
+                    let next = cur.as_ref().links.value.next;
+                    let filter = {
+                        let (k, v) = (*cur.as_ptr()).entry_mut();
+                        !f(k, v)
+                    };
+                    if filter {
+                        let k = (*cur.as_ptr()).key_ref();
+                        let hash = hash_key(&self.hash_builder, k);
+                        match self
+                            .map
+                            .raw_entry_mut()
+                            .from_hash(hash, |o| (*o).as_ref().key_ref().eq(k))
+                        {
+                            hash_map::RawEntryMut::Occupied(entry) => {
+                                entry.remove();
+                                drop_filtered_values.drop_later(cur);
+                            }
+                            hash_map::RawEntryMut::Vacant(_) => unreachable!(),
+                        }
+                    }
+                    cur = next;
+                }
+            }
         }
     }
 }
@@ -591,7 +647,7 @@ impl<K, V, S> Drop for LinkedHashMap<K, V, S> {
         unsafe {
             if let Some(values) = self.values {
                 drop_value_nodes(values);
-                Box::from_raw(values.as_ptr());
+                let _ = Box::from_raw(values.as_ptr());
             }
             drop_free_nodes(self.free);
         }
@@ -1641,7 +1697,7 @@ impl<K, V> Drop for IntoIter<K, V> {
                 let tail = self.tail.as_ptr();
                 self.tail = Some((*tail).links.value.prev);
                 (*tail).take_entry();
-                Box::from_raw(tail);
+                let _ = Box::from_raw(tail);
             }
         }
     }
@@ -1833,7 +1889,7 @@ impl<K, V, S> IntoIterator for LinkedHashMap<K, V, S> {
                     prev: tail,
                 } = values.as_ref().links.value;
 
-                Box::from_raw(self.values.as_ptr());
+                let _ = Box::from_raw(self.values.as_ptr());
                 self.values = None;
 
                 (Some(head), Some(tail))
@@ -2049,7 +2105,7 @@ unsafe fn drop_value_nodes<K, V>(guard: NonNull<Node<K, V>>) {
     while cur != guard {
         let prev = cur.as_ref().links.value.prev;
         cur.as_mut().take_entry();
-        Box::from_raw(cur.as_ptr());
+        let _ = Box::from_raw(cur.as_ptr());
         cur = prev;
     }
 }
@@ -2060,7 +2116,7 @@ unsafe fn drop_value_nodes<K, V>(guard: NonNull<Node<K, V>>) {
 unsafe fn drop_free_nodes<K, V>(mut free: Option<NonNull<Node<K, V>>>) {
     while let Some(some_free) = free {
         let next_free = some_free.as_ref().links.free.next;
-        Box::from_raw(some_free.as_ptr());
+        let _ = Box::from_raw(some_free.as_ptr());
         free = next_free;
     }
 }
@@ -2084,4 +2140,40 @@ where
     let mut hasher = s.build_hasher();
     k.hash(&mut hasher);
     hasher.finish()
+}
+
+// We do not drop the key and value when a value is filtered from the map during the call to
+// `retain`.  We need to be very careful not to have a live `HashMap` entry pointing to
+// either a dangling `Node` or a `Node` with dropped keys / values.  Since the key and value
+// types may panic on drop, they may short-circuit the entry in the map actually being
+// removed.  Instead, we push the removed nodes onto the free list eagerly, then try and
+// drop the keys and values for any newly freed nodes *after* `HashMap::retain` has
+// completely finished.
+struct DropFilteredValues<'a, K, V> {
+    free: &'a mut Option<NonNull<Node<K, V>>>,
+    cur_free: Option<NonNull<Node<K, V>>>,
+}
+
+impl<'a, K, V> DropFilteredValues<'a, K, V> {
+    #[inline]
+    fn drop_later(&mut self, node: NonNull<Node<K, V>>) {
+        unsafe {
+            detach_node(node);
+            push_free(&mut self.cur_free, node);
+        }
+    }
+}
+
+impl<'a, K, V> Drop for DropFilteredValues<'a, K, V> {
+    fn drop(&mut self) {
+        unsafe {
+            let end_free = self.cur_free;
+            while self.cur_free != *self.free {
+                let cur_free = self.cur_free.as_ptr();
+                (*cur_free).take_entry();
+                self.cur_free = (*cur_free).links.free.next;
+            }
+            *self.free = end_free;
+        }
+    }
 }
