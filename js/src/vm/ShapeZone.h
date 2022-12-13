@@ -65,40 +65,55 @@ using InitialPropMapSet =
     JS::WeakCache<JS::GCHashSet<WeakHeapPtr<SharedPropMap*>,
                                 InitialPropMapHasher, SystemAllocPolicy>>;
 
+// Helper class to hash information relevant for all shapes.
+struct ShapeBaseHasher {
+  struct Lookup {
+    const JSClass* clasp;
+    JS::Realm* realm;
+    TaggedProto proto;
+    ObjectFlags objectFlags;
+
+    Lookup(const JSClass* clasp, JS::Realm* realm, const TaggedProto& proto,
+           ObjectFlags objectFlags)
+        : clasp(clasp), realm(realm), proto(proto), objectFlags(objectFlags) {}
+  };
+
+  static HashNumber hash(const Lookup& lookup) {
+    HashNumber hash = MovableCellHasher<TaggedProto>::hash(lookup.proto);
+    return mozilla::AddToHash(hash, lookup.clasp, lookup.realm,
+                              lookup.objectFlags.toRaw());
+  }
+  static bool match(const Shape* shape, const Lookup& lookup) {
+    return lookup.clasp == shape->getObjectClass() &&
+           lookup.realm == shape->realm() && lookup.proto == shape->proto() &&
+           lookup.objectFlags == shape->objectFlags();
+  }
+};
+
 // Hash policy for the per-zone initialShapes set storing initial shapes for
 // objects in the zone.
 //
 // These are empty shapes, except for certain classes (e.g. String, RegExp)
 // which may add certain baked-in properties. See insertInitialShape.
 struct InitialShapeHasher {
-  struct Lookup {
-    const JSClass* clasp;
-    JS::Realm* realm;
-    TaggedProto proto;
+  struct Lookup : public ShapeBaseHasher::Lookup {
     uint32_t nfixed;
-    ObjectFlags objectFlags;
 
     Lookup(const JSClass* clasp, JS::Realm* realm, const TaggedProto& proto,
            uint32_t nfixed, ObjectFlags objectFlags)
-        : clasp(clasp),
-          realm(realm),
-          proto(proto),
-          nfixed(nfixed),
-          objectFlags(objectFlags) {}
+        : ShapeBaseHasher::Lookup(clasp, realm, proto, objectFlags),
+          nfixed(nfixed) {}
   };
 
   static HashNumber hash(const Lookup& lookup) {
-    HashNumber hash = MovableCellHasher<TaggedProto>::hash(lookup.proto);
-    return mozilla::AddToHash(hash, lookup.clasp, lookup.realm, lookup.nfixed,
-                              lookup.objectFlags.toRaw());
+    HashNumber hash = ShapeBaseHasher::hash(lookup);
+    return mozilla::AddToHash(hash, lookup.nfixed);
   }
   static bool match(const WeakHeapPtr<SharedShape*>& key,
                     const Lookup& lookup) {
-    const Shape* shape = key.unbarrieredGet();
-    return lookup.clasp == shape->getObjectClass() &&
-           lookup.realm == shape->realm() && lookup.proto == shape->proto() &&
-           lookup.nfixed == shape->numFixedSlots() &&
-           lookup.objectFlags == shape->objectFlags();
+    const SharedShape* shape = key.unbarrieredGet();
+    return ShapeBaseHasher::match(shape, lookup) &&
+           lookup.nfixed == shape->numFixedSlots();
   }
 };
 using InitialShapeSet =
@@ -130,7 +145,7 @@ struct PropMapShapeHasher {
   }
   static bool match(const WeakHeapPtr<SharedShape*>& key,
                     const Lookup& lookup) {
-    const Shape* shape = key.unbarrieredGet();
+    const SharedShape* shape = key.unbarrieredGet();
     return lookup.base == shape->base() &&
            lookup.nfixed == shape->numFixedSlots() &&
            lookup.map == shape->propMap() &&
