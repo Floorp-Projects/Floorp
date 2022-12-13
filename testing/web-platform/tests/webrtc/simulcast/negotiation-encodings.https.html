@@ -186,4 +186,56 @@ promise_test(async t => {
   assert_array_equals(rids, ["foo", "1"]);
 }, 'Choices in rids in sRD(offer) are ignored');
 
+// https://github.com/w3c/webrtc-pc/issues/2764
+promise_test(async t => {
+  const pc1 = new RTCPeerConnection();
+  t.add_cleanup(() => pc1.close());
+  const pc2 = new RTCPeerConnection();
+  t.add_cleanup(() => pc2.close());
+
+  const stream = await getNoiseStream({video: true});
+  t.add_cleanup(() => stream.getTracks().forEach(track => track.stop()));
+  const sender = pc1.addTrack(stream.getTracks()[0]);
+  pc2.addTrack(stream.getTracks()[0]);
+
+  await doOfferToRecvSimulcast(pc2, pc1, ["foo", "bar"]);
+  assert_equals(pc1.getTransceivers().length, 1);
+  let {encodings} = sender.getParameters();
+  let rids = encodings.map(({rid}) => rid);
+  assert_array_equals(rids, ["foo", "bar"]);
+
+  await pc1.setRemoteDescription({sdp: "", type: "rollback"});
+
+  assert_equals(pc1.getTransceivers().length, 1);
+  encodings = sender.getParameters().encodings;
+  rids = encodings.map(({rid}) => rid);
+  assert_array_equals(rids, [undefined]);
+}, 'addTrack, then rollback of sRD(simulcast offer), brings us back to having a single encoding');
+
+promise_test(async t => {
+  const pc1 = new RTCPeerConnection();
+  t.add_cleanup(() => pc1.close());
+  const pc2 = new RTCPeerConnection();
+  t.add_cleanup(() => pc2.close());
+
+  const stream = await getNoiseStream({video: true});
+  t.add_cleanup(() => stream.getTracks().forEach(track => track.stop()));
+  pc2.addTrack(stream.getTracks()[0]);
+  await doOfferToRecvSimulcast(pc2, pc1, ["foo", "bar"]);
+  const sender = pc1.addTrack(stream.getTracks()[0]);
+  assert_equals(pc1.getTransceivers().length, 1);
+
+  assert_equals(pc1.getTransceivers().length, 1);
+  let {encodings} = sender.getParameters();
+  let rids = encodings.map(({rid}) => rid);
+  assert_array_equals(rids, ["foo", "bar"]);
+
+  await pc1.setRemoteDescription({sdp: "", type: "rollback"});
+
+  assert_equals(pc1.getTransceivers().length, 1);
+  encodings = sender.getParameters().encodings;
+  rids = encodings.map(({rid}) => rid);
+  assert_array_equals(rids, [undefined]);
+}, 'sRD(simulcast offer), addTrack, then rollback brings us back to having a single encoding');
+
 </script>
