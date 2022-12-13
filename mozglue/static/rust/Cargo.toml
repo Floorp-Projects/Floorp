@@ -2,7 +2,7 @@
 name = "mozglue-static"
 version = "0.1.0"
 edition = "2018"
-license = "MPL"
+license = "MPL-2.0"
 
 [lib]
 path = "lib.rs"

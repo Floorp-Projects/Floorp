@@ -2,6 +2,7 @@
 name = "profiler_helper"
 version = "0.1.0"
 authors = ["Markus Stange <mstange@themasta.com>"]
+license = "MPL-2.0"
 
 [dependencies]
 memmap2 = "0.5"

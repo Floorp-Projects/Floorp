@@ -2,6 +2,7 @@
 name = "mozurl"
 version = "0.0.1"
 authors = ["Nika Layzell <nika@thelayzells.com>"]
+license = "MPL-2.0"
 
 [dependencies]
 url = "2.0"

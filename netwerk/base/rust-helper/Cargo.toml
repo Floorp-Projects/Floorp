@@ -2,6 +2,7 @@
 name = "netwerk_helper"
 version = "0.0.1"
 authors = ["Jeff Hemphill <jthemphill@mozilla.com>"]
+license = "MPL-2.0"
 
 [dependencies]
 nserror = { path = "../../../xpcom/rust/nserror" }

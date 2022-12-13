@@ -2,6 +2,7 @@
 name = "kvstore"
 version = "0.1.0"
 authors = ["Myk Melez <myk@mykzilla.org>"]
+license = "MPL-2.0"
 
 [dependencies]
 atomic_refcell = "0.1"

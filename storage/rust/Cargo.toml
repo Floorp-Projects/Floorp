@@ -4,6 +4,7 @@ description = "Rust bindings for mozStorage."
 version = "0.1.0"
 authors = ["Lina Cambridge <lina@yakshaving.ninja>"]
 edition = "2018"
+license = "MPL-2.0"
 
 [dependencies]
 libc = "0.2"
