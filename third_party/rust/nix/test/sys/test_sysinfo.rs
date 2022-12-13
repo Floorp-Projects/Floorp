@@ -9,10 +9,12 @@ fn sysinfo_works() {
     assert!(l5 >= 0.0);
     assert!(l15 >= 0.0);
 
-    info.uptime();  // just test Duration construction
+    info.uptime(); // just test Duration construction
 
-    assert!(info.swap_free() <= info.swap_total(),
-            "more swap available than installed (free: {}, total: {})",
-            info.swap_free(),
-            info.swap_total());
+    assert!(
+        info.swap_free() <= info.swap_total(),
+        "more swap available than installed (free: {}, total: {})",
+        info.swap_free(),
+        info.swap_total()
+    );
 }

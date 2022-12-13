@@ -1,38 +1,58 @@
+//! Portably monitor a group of file descriptors for readiness.
+use std::convert::TryFrom;
+use std::iter::FusedIterator;
 use std::mem;
+use std::ops::Range;
 use std::os::unix::io::RawFd;
 use std::ptr::{null, null_mut};
 use libc::{self, c_int};
-use Result;
-use errno::Errno;
-use sys::signal::SigSet;
-use sys::time::{TimeSpec, TimeVal};
+use crate::Result;
+use crate::errno::Errno;
+use crate::sys::time::{TimeSpec, TimeVal};
 
 pub use libc::FD_SETSIZE;
 
-// FIXME: Change to repr(transparent) once it's stable
-#[repr(C)]
+/// Contains a set of file descriptors used by [`select`]
+#[repr(transparent)]
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct FdSet(libc::fd_set);
 
+fn assert_fd_valid(fd: RawFd) {
+    assert!(
+        usize::try_from(fd).map_or(false, |fd| fd < FD_SETSIZE),
+        "fd must be in the range 0..FD_SETSIZE",
+    );
+}
+
 impl FdSet {
+    /// Create an empty `FdSet`
     pub fn new() -> FdSet {
-        let mut fdset = unsafe { mem::uninitialized() };
-        unsafe { libc::FD_ZERO(&mut fdset) };
-        FdSet(fdset)
+        let mut fdset = mem::MaybeUninit::uninit();
+        unsafe {
+            libc::FD_ZERO(fdset.as_mut_ptr());
+            FdSet(fdset.assume_init())
+        }
     }
 
+    /// Add a file descriptor to an `FdSet`
     pub fn insert(&mut self, fd: RawFd) {
+        assert_fd_valid(fd);
         unsafe { libc::FD_SET(fd, &mut self.0) };
     }
 
+    /// Remove a file descriptor from an `FdSet`
     pub fn remove(&mut self, fd: RawFd) {
+        assert_fd_valid(fd);
         unsafe { libc::FD_CLR(fd, &mut self.0) };
     }
 
-    pub fn contains(&mut self, fd: RawFd) -> bool {
-        unsafe { libc::FD_ISSET(fd, &mut self.0) }
+    /// Test an `FdSet` for the presence of a certain file descriptor.
+    pub fn contains(&self, fd: RawFd) -> bool {
+        assert_fd_valid(fd);
+        unsafe { libc::FD_ISSET(fd, &self.0) }
     }
 
+    /// Remove all file descriptors from this `FdSet`.
     pub fn clear(&mut self) {
         unsafe { libc::FD_ZERO(&mut self.0) };
     }
@@ -46,28 +66,89 @@ impl FdSet {
     /// # Example
     ///
     /// ```
-    /// # extern crate nix;
     /// # use nix::sys::select::FdSet;
-    /// # fn main() {
     /// let mut set = FdSet::new();
     /// set.insert(4);
     /// set.insert(9);
     /// assert_eq!(set.highest(), Some(9));
-    /// # }
     /// ```
     ///
     /// [`select`]: fn.select.html
-    pub fn highest(&mut self) -> Option<RawFd> {
-        for i in (0..FD_SETSIZE).rev() {
-            let i = i as RawFd;
-            if unsafe { libc::FD_ISSET(i, self as *mut _ as *mut libc::fd_set) } {
-                return Some(i)
+    pub fn highest(&self) -> Option<RawFd> {
+        self.fds(None).next_back()
+    }
+
+    /// Returns an iterator over the file descriptors in the set.
+    ///
+    /// For performance, it takes an optional higher bound: the iterator will
+    /// not return any elements of the set greater than the given file
+    /// descriptor.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use nix::sys::select::FdSet;
+    /// # use std::os::unix::io::RawFd;
+    /// let mut set = FdSet::new();
+    /// set.insert(4);
+    /// set.insert(9);
+    /// let fds: Vec<RawFd> = set.fds(None).collect();
+    /// assert_eq!(fds, vec![4, 9]);
+    /// ```
+    #[inline]
+    pub fn fds(&self, highest: Option<RawFd>) -> Fds {
+        Fds {
+            set: self,
+            range: 0..highest.map(|h| h as usize + 1).unwrap_or(FD_SETSIZE),
+        }
+    }
+}
+
+impl Default for FdSet {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Iterator over `FdSet`.
+#[derive(Debug)]
+pub struct Fds<'a> {
+    set: &'a FdSet,
+    range: Range<usize>,
+}
+
+impl<'a> Iterator for Fds<'a> {
+    type Item = RawFd;
+
+    fn next(&mut self) -> Option<RawFd> {
+        for i in &mut self.range {
+            if self.set.contains(i as RawFd) {
+                return Some(i as RawFd);
             }
         }
+        None
+    }
 
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let (_, upper) = self.range.size_hint();
+        (0, upper)
+    }
+}
+
+impl<'a> DoubleEndedIterator for Fds<'a> {
+    #[inline]
+    fn next_back(&mut self) -> Option<RawFd> {
+        while let Some(i) = self.range.next_back() {
+            if self.set.contains(i as RawFd) {
+                return Some(i as RawFd);
+            }
+        }
         None
     }
 }
+
+impl<'a> FusedIterator for Fds<'a> {}
 
 /// Monitors file descriptors for readiness
 ///
@@ -89,13 +170,13 @@ impl FdSet {
 ///
 /// # References
 ///
-/// [select(2)](http://pubs.opengroup.org/onlinepubs/9699919799/functions/select.html)
+/// [select(2)](https://pubs.opengroup.org/onlinepubs/9699919799/functions/select.html)
 ///
 /// [`FdSet::highest`]: struct.FdSet.html#method.highest
 pub fn select<'a, N, R, W, E, T>(nfds: N,
-                                 readfds: R,
-                                 writefds: W,
-                                 errorfds: E,
+    readfds: R,
+    writefds: W,
+    errorfds: E,
                                  timeout: T) -> Result<c_int>
 where
     N: Into<Option<c_int>>,
@@ -122,7 +203,7 @@ where
     let writefds = writefds.map(|set| set as *mut _ as *mut libc::fd_set).unwrap_or(null_mut());
     let errorfds = errorfds.map(|set| set as *mut _ as *mut libc::fd_set).unwrap_or(null_mut());
     let timeout = timeout.map(|tv| tv as *mut _ as *mut libc::timeval)
-                         .unwrap_or(null_mut());
+        .unwrap_or(null_mut());
 
     let res = unsafe {
         libc::select(nfds, readfds, writefds, errorfds, timeout)
@@ -130,6 +211,11 @@ where
 
     Errno::result(res)
 }
+
+feature! {
+#![feature = "signal"]
+
+use crate::sys::signal::SigSet;
 
 /// Monitors file descriptors for readiness with an altered signal mask.
 ///
@@ -155,16 +241,16 @@ where
 ///
 /// # References
 ///
-/// [pselect(2)](http://pubs.opengroup.org/onlinepubs/9699919799/functions/pselect.html)
+/// [pselect(2)](https://pubs.opengroup.org/onlinepubs/9699919799/functions/pselect.html)
 ///
 /// [The new pselect() system call](https://lwn.net/Articles/176911/)
 ///
 /// [`FdSet::highest`]: struct.FdSet.html#method.highest
 pub fn pselect<'a, N, R, W, E, T, S>(nfds: N,
-                                     readfds: R,
-                                     writefds: W,
-                                     errorfds: E,
-                                     timeout: T,
+    readfds: R,
+    writefds: W,
+    errorfds: E,
+    timeout: T,
                                      sigmask: S) -> Result<c_int>
 where
     N: Into<Option<c_int>>,
@@ -201,14 +287,14 @@ where
 
     Errno::result(res)
 }
-
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::os::unix::io::RawFd;
-    use sys::time::{TimeVal, TimeValLike};
-    use unistd::{write, pipe};
+    use crate::sys::time::{TimeVal, TimeValLike};
+    use crate::unistd::{write, pipe};
 
     #[test]
     fn fdset_insert() {
@@ -273,6 +359,20 @@ mod tests {
     }
 
     #[test]
+    fn fdset_fds() {
+        let mut set = FdSet::new();
+        assert_eq!(set.fds(None).collect::<Vec<_>>(), vec![]);
+        set.insert(0);
+        assert_eq!(set.fds(None).collect::<Vec<_>>(), vec![0]);
+        set.insert(90);
+        assert_eq!(set.fds(None).collect::<Vec<_>>(), vec![0, 90]);
+
+        // highest limit
+        assert_eq!(set.fds(Some(89)).collect::<Vec<_>>(), vec![0]);
+        assert_eq!(set.fds(Some(90)).collect::<Vec<_>>(), vec![0, 90]);
+    }
+
+    #[test]
     fn test_select() {
         let (r1, w1) = pipe().unwrap();
         write(w1, b"hi!").unwrap();
@@ -304,9 +404,9 @@ mod tests {
 
         let mut timeout = TimeVal::seconds(10);
         assert_eq!(1, select(Some(fd_set.highest().unwrap() + 1),
-                             &mut fd_set,
-                             None,
-                             None,
+                &mut fd_set,
+                None,
+                None,
                              &mut timeout).unwrap());
         assert!(fd_set.contains(r1));
         assert!(!fd_set.contains(r2));
@@ -324,9 +424,9 @@ mod tests {
 
         let mut timeout = TimeVal::seconds(10);
         assert_eq!(1, select(::std::cmp::max(r1, r2) + 1,
-                             &mut fd_set,
-                             None,
-                             None,
+                &mut fd_set,
+                None,
+                None,
                              &mut timeout).unwrap());
         assert!(fd_set.contains(r1));
         assert!(!fd_set.contains(r2));

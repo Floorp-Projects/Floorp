@@ -170,7 +170,7 @@ pub fn elem_value_ptr(a: &ElemValue) -> *mut alsa::snd_ctl_elem_value_t { a.ptr 
 pub fn elem_value_new(t: ElemType, count: u32) -> Result<ElemValue> {
     let mut p = ptr::null_mut();
     acheck!(snd_ctl_elem_value_malloc(&mut p))
-        .map(|_| ElemValue { ptr: p, etype: t, count: count })
+        .map(|_| ElemValue { ptr: p, etype: t, count })
 }
 
 impl ElemValue {
@@ -346,20 +346,20 @@ pub fn elem_id_ptr(a: &ElemId) -> *mut alsa::snd_ctl_elem_id_t { a.0 }
 
 impl ElemId {
     pub fn get_name(&self) -> Result<&str> {
-        from_const("snd_hctl_elem_id_get_name", unsafe { alsa::snd_ctl_elem_id_get_name(elem_id_ptr(&self)) })}
-    pub fn get_device(&self) -> u32 { unsafe { alsa::snd_ctl_elem_id_get_device(elem_id_ptr(&self)) as u32 }}
-    pub fn get_subdevice(&self) -> u32 { unsafe { alsa::snd_ctl_elem_id_get_subdevice(elem_id_ptr(&self)) as u32 }}
-    pub fn get_numid(&self) -> u32 { unsafe { alsa::snd_ctl_elem_id_get_numid(elem_id_ptr(&self)) as u32 }}
-    pub fn get_index(&self) -> u32 { unsafe { alsa::snd_ctl_elem_id_get_index(elem_id_ptr(&self)) as u32 }}
+        from_const("snd_hctl_elem_id_get_name", unsafe { alsa::snd_ctl_elem_id_get_name(elem_id_ptr(self)) })}
+    pub fn get_device(&self) -> u32 { unsafe { alsa::snd_ctl_elem_id_get_device(elem_id_ptr(self)) as u32 }}
+    pub fn get_subdevice(&self) -> u32 { unsafe { alsa::snd_ctl_elem_id_get_subdevice(elem_id_ptr(self)) as u32 }}
+    pub fn get_numid(&self) -> u32 { unsafe { alsa::snd_ctl_elem_id_get_numid(elem_id_ptr(self)) as u32 }}
+    pub fn get_index(&self) -> u32 { unsafe { alsa::snd_ctl_elem_id_get_index(elem_id_ptr(self)) as u32 }}
     pub fn get_interface(&self) -> ElemIface { ElemIface::from_c_int(
-        unsafe { alsa::snd_ctl_elem_id_get_interface(elem_id_ptr(&self)) } as c_int, "snd_ctl_elem_id_get_interface").unwrap() }
+        unsafe { alsa::snd_ctl_elem_id_get_interface(elem_id_ptr(self)) } as c_int, "snd_ctl_elem_id_get_interface").unwrap() }
 
-    pub fn set_device(&mut self, v: u32) { unsafe { alsa::snd_ctl_elem_id_set_device(elem_id_ptr(&self), v) }}
-    pub fn set_subdevice(&mut self, v: u32) { unsafe { alsa::snd_ctl_elem_id_set_subdevice(elem_id_ptr(&self), v) }}
-    pub fn set_numid(&mut self, v: u32) { unsafe { alsa::snd_ctl_elem_id_set_numid(elem_id_ptr(&self), v) }}
-    pub fn set_index(&mut self, v: u32) { unsafe { alsa::snd_ctl_elem_id_set_index(elem_id_ptr(&self), v) }}
-    pub fn set_interface(&mut self, v: ElemIface) { unsafe { alsa::snd_ctl_elem_id_set_interface(elem_id_ptr(&self), v as u32) }}
-    pub fn set_name(&mut self, v: &CStr) { unsafe { alsa::snd_ctl_elem_id_set_name(elem_id_ptr(&self), v.as_ptr()) }}
+    pub fn set_device(&mut self, v: u32) { unsafe { alsa::snd_ctl_elem_id_set_device(elem_id_ptr(self), v) }}
+    pub fn set_subdevice(&mut self, v: u32) { unsafe { alsa::snd_ctl_elem_id_set_subdevice(elem_id_ptr(self), v) }}
+    pub fn set_numid(&mut self, v: u32) { unsafe { alsa::snd_ctl_elem_id_set_numid(elem_id_ptr(self), v) }}
+    pub fn set_index(&mut self, v: u32) { unsafe { alsa::snd_ctl_elem_id_set_index(elem_id_ptr(self), v) }}
+    pub fn set_interface(&mut self, v: ElemIface) { unsafe { alsa::snd_ctl_elem_id_set_interface(elem_id_ptr(self), v as u32) }}
+    pub fn set_name(&mut self, v: &CStr) { unsafe { alsa::snd_ctl_elem_id_set_name(elem_id_ptr(self), v.as_ptr()) }}
 
     /// Creates a new ElemId.
     ///

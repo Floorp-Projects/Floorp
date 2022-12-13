@@ -30,7 +30,7 @@ rev = "3bfc47d9a571d0842676043ba60716318e946c06"
 [source."https://github.com/mozilla/midir.git"]
 git = "https://github.com/mozilla/midir.git"
 replace-with = "vendored-sources"
-rev = "e1b4dcb767f9e69afe95a860374aaa9635d81e3d"
+rev = "519e651241e867af3391db08f9ae6400bc023e18"
 
 [source."https://github.com/mozilla/cubeb-pulse-rs"]
 git = "https://github.com/mozilla/cubeb-pulse-rs"

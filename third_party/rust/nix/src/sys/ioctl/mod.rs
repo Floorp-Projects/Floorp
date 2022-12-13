@@ -29,7 +29,7 @@
 //! Historically `ioctl` numbers were arbitrary hard-coded values. In Linux (before 2.6) and some
 //! unices this has changed to a more-ordered system where the ioctl numbers are partitioned into
 //! subcomponents (For linux this is documented in
-//! [`Documentation/ioctl/ioctl-number.txt`](http://elixir.free-electrons.com/linux/latest/source/Documentation/ioctl/ioctl-number.txt)):
+//! [`Documentation/ioctl/ioctl-number.rst`](https://elixir.bootlin.com/linux/latest/source/Documentation/userspace-api/ioctl/ioctl-number.rst)):
 //!
 //!   * Number: The actual ioctl ID
 //!   * Type: A grouping of ioctls for a common purpose or driver
@@ -104,7 +104,7 @@
 //! respectively. To determine the specific `write_` variant to use you'll need to find
 //! what the argument type is supposed to be. If it's an `int`, then `write_int` should be used,
 //! otherwise it should be a pointer and `write_ptr` should be used. On Linux the
-//! [`ioctl_list` man page](http://man7.org/linux/man-pages/man2/ioctl_list.2.html) describes a
+//! [`ioctl_list` man page](https://man7.org/linux/man-pages/man2/ioctl_list.2.html) describes a
 //! large number of `ioctl`s and describes their argument data type.
 //!
 //! Using "bad" `ioctl`s
@@ -221,39 +221,51 @@
 //!
 //! # fn main() {}
 //! ```
-#[cfg(any(target_os = "android", target_os = "linux"))]
+use cfg_if::cfg_if;
+
+#[cfg(any(target_os = "android", target_os = "linux", target_os = "redox"))]
 #[macro_use]
 mod linux;
 
-#[cfg(any(target_os = "android", target_os = "linux"))]
+#[cfg(any(
+    target_os = "android",
+    target_os = "linux",
+    target_os = "redox"
+))]
 pub use self::linux::*;
 
-#[cfg(any(target_os = "dragonfly",
-          target_os = "freebsd",
-          target_os = "ios",
-          target_os = "macos",
-          target_os = "netbsd",
-          target_os = "openbsd"))]
+#[cfg(any(
+    target_os = "dragonfly",
+    target_os = "freebsd",
+    target_os = "illumos",
+    target_os = "ios",
+    target_os = "macos",
+    target_os = "netbsd",
+    target_os = "haiku",
+    target_os = "openbsd"
+))]
 #[macro_use]
 mod bsd;
 
-#[cfg(any(target_os = "dragonfly",
-          target_os = "freebsd",
-          target_os = "ios",
-          target_os = "macos",
-          target_os = "netbsd",
-          target_os = "openbsd"))]
+#[cfg(any(
+    target_os = "dragonfly",
+    target_os = "freebsd",
+    target_os = "illumos",
+    target_os = "ios",
+    target_os = "macos",
+    target_os = "netbsd",
+    target_os = "haiku",
+    target_os = "openbsd"
+))]
 pub use self::bsd::*;
 
 /// Convert raw ioctl return value to a Nix result
 #[macro_export]
 #[doc(hidden)]
 macro_rules! convert_ioctl_res {
-    ($w:expr) => (
-        {
-            $crate::errno::Errno::result($w)
-        }
-    );
+    ($w:expr) => {{
+        $crate::errno::Errno::result($w)
+    }};
 }
 
 /// Generates a wrapper function for an ioctl that passes no data to the kernel.
@@ -317,7 +329,6 @@ macro_rules! ioctl_none {
 ///
 /// ```no_run
 /// # #[macro_use] extern crate nix;
-/// # extern crate libc;
 /// # use libc::TIOCNXCL;
 /// # use std::fs::File;
 /// # use std::os::unix::io::AsRawFd;
@@ -396,7 +407,6 @@ macro_rules! ioctl_read {
 /// # Example
 ///
 /// ```
-/// # extern crate libc;
 /// # #[macro_use] extern crate nix;
 /// # #[cfg(any(target_os = "android", target_os = "linux"))]
 /// ioctl_read_bad!(tcgets, libc::TCGETS, libc::termios);
@@ -470,7 +480,6 @@ macro_rules! ioctl_write_ptr {
 /// # Example
 ///
 /// ```
-/// # extern crate libc;
 /// # #[macro_use] extern crate nix;
 /// # #[cfg(any(target_os = "android", target_os = "linux"))]
 /// ioctl_write_ptr_bad!(tcsets, libc::TCSETS, libc::termios);
@@ -488,7 +497,7 @@ macro_rules! ioctl_write_ptr_bad {
     )
 }
 
-cfg_if!{
+cfg_if! {
     if #[cfg(any(target_os = "dragonfly", target_os = "freebsd"))] {
         /// Generates a wrapper function for a ioctl that writes an integer to the kernel.
         ///
@@ -590,7 +599,6 @@ cfg_if!{
 /// # Examples
 ///
 /// ```
-/// # extern crate libc;
 /// # #[macro_use] extern crate nix;
 /// # #[cfg(any(target_os = "android", target_os = "linux"))]
 /// ioctl_write_int_bad!(tcsbrk, libc::TCSBRK);

@@ -59,11 +59,15 @@ impl HCtl {
 
     pub fn load(&self) -> Result<()> { acheck!(snd_hctl_load(self.0)).map(|_| ()) }
 
-    pub fn elem_iter<'a>(&'a self) -> ElemIter<'a> { ElemIter(self, ptr::null_mut()) }
+    pub fn elem_iter(&self) -> ElemIter { ElemIter(self, ptr::null_mut()) }
 
-    pub fn find_elem<'a>(&'a self, id: &ctl_int::ElemId) -> Option<Elem<'a>> {
-        let p = unsafe { alsa::snd_hctl_find_elem(self.0, ctl_int::elem_id_ptr(&id)) };
-        if p == ptr::null_mut() { None } else { Some(Elem(&self, p)) }
+    pub fn find_elem(&self, id: &ctl_int::ElemId) -> Option<Elem> {
+        let p = unsafe { alsa::snd_hctl_find_elem(self.0, ctl_int::elem_id_ptr(id)) };
+        if p.is_null() { None } else { Some(Elem(self, p)) }
+    }
+
+    pub fn handle_events(&self) -> Result<u32> {
+        acheck!(snd_hctl_handle_events(self.0)).map(|x| x as u32)
     }
 
     pub fn wait(&self, timeout_ms: Option<u32>) -> Result<bool> {
@@ -91,9 +95,9 @@ pub struct ElemIter<'a>(&'a HCtl, *mut alsa::snd_hctl_elem_t);
 impl<'a> Iterator for ElemIter<'a> {
     type Item = Elem<'a>;
     fn next(&mut self) -> Option<Elem<'a>> {
-        self.1 = if self.1 == ptr::null_mut() { unsafe { alsa::snd_hctl_first_elem((self.0).0) }}
+        self.1 = if self.1.is_null() { unsafe { alsa::snd_hctl_first_elem((self.0).0) }}
             else { unsafe { alsa::snd_hctl_elem_next(self.1) }};
-        if self.1 == ptr::null_mut() { None }
+        if self.1.is_null() { None }
         else { Some(Elem(self.0, self.1)) }
     }
 }
@@ -119,7 +123,7 @@ impl<'a> Elem<'a> {
     }
 
     pub fn write(&self, v: &ctl_int::ElemValue) -> Result<bool> {
-        acheck!(snd_hctl_elem_write(self.1, ctl_int::elem_value_ptr(&v))).map(|e| e > 0)
+        acheck!(snd_hctl_elem_write(self.1, ctl_int::elem_value_ptr(v))).map(|e| e > 0)
     }
 }
 

@@ -19,7 +19,7 @@ don't expect it to work with, e g, the PulseAudio plugin or so.
 For an example of how to use this mode, look in the "synth-example" directory.
 */
 
-use {libc, nix};
+use libc;
 use std::{mem, ptr, fmt, cmp};
 use crate::error::{Error, Result};
 use std::os::unix::io::RawFd;
@@ -103,7 +103,7 @@ impl Status {
     pub fn new(p: &pcm::PCM) -> Result<Self> { Status::from_fd(pcm_to_fd(p)?) }
 
     pub fn from_fd(fd: RawFd) -> Result<Self> {
-        DriverMemory::new(fd, 1, SNDRV_PCM_MMAP_OFFSET_STATUS as libc::off_t, false).map(|d| Status(d))
+        DriverMemory::new(fd, 1, SNDRV_PCM_MMAP_OFFSET_STATUS as libc::off_t, false).map(Status)
     }
 
     /// Current PCM state.
@@ -162,7 +162,7 @@ impl Control {
     pub fn new(p: &pcm::PCM) -> Result<Self> { Self::from_fd(pcm_to_fd(p)?) }
 
     pub fn from_fd(fd: RawFd) -> Result<Self> {
-        DriverMemory::new(fd, 1, SNDRV_PCM_MMAP_OFFSET_CONTROL as libc::off_t, true).map(|d| Control(d))
+        DriverMemory::new(fd, 1, SNDRV_PCM_MMAP_OFFSET_CONTROL as libc::off_t, true).map(Control)
     }
 
     /// Read number of frames application has read or written
@@ -217,7 +217,7 @@ impl<S> DriverMemory<S> {
         if total % ps != 0 { total += ps - total % ps };
         let flags = if writable { libc::PROT_WRITE | libc::PROT_READ } else { libc::PROT_READ };
         let p = unsafe { libc::mmap(ptr::null_mut(), total, flags, libc::MAP_FILE | libc::MAP_SHARED, fd, offs) };
-        if p == ptr::null_mut() || p == libc::MAP_FAILED {
+        if p.is_null() || p == libc::MAP_FAILED {
             Err(Error::new("mmap (of driver memory)", nix::errno::Errno::last() as i32))
         } else {
             Ok(DriverMemory { ptr: p as *mut S, size: total })
@@ -264,7 +264,7 @@ impl<S> SampleData<S> {
         Ok(SampleData {
             mem: DriverMemory::new(fd, (bufsize as usize) * (channels as usize), info.offset as libc::off_t, true)?,
             frames: bufsize,
-            channels: channels,
+            channels,
         })
     }
 }
@@ -460,7 +460,7 @@ impl<S> MmapCapture<S> {
     ///
     /// When the iterator is dropped or depleted, the read samples will be committed, i e,
     /// the kernel can then write data to the location again. So do this ASAP.
-    pub fn iter<'a>(&'a mut self) -> CaptureIter<'a, S> {
+    pub fn iter(&mut self) -> CaptureIter<S> {
         let (data, more_data) = self.data_ptr();
         CaptureIter {
             m: self,

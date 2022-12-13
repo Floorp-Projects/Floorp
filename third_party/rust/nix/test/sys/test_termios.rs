@@ -1,11 +1,11 @@
 use std::os::unix::prelude::*;
 use tempfile::tempfile;
 
-use nix::{Error, fcntl};
 use nix::errno::Errno;
+use nix::fcntl;
 use nix::pty::openpty;
-use nix::sys::termios::{self, LocalFlags, OutputFlags, Termios, tcgetattr};
-use nix::unistd::{read, write, close};
+use nix::sys::termios::{self, tcgetattr, LocalFlags, OutputFlags};
+use nix::unistd::{close, read, write};
 
 /// Helper function analogous to `std::io::Write::write_all`, but for `RawFd`s
 fn write_all(f: RawFd, buf: &[u8]) {
@@ -19,10 +19,10 @@ fn write_all(f: RawFd, buf: &[u8]) {
 #[test]
 fn test_tcgetattr_pty() {
     // openpty uses ptname(3) internally
-    let _m = ::PTSNAME_MTX.lock().expect("Mutex got poisoned by another test");
+    let _m = crate::PTSNAME_MTX.lock();
 
     let pty = openpty(None, None).expect("openpty failed");
-    assert!(termios::tcgetattr(pty.master).is_ok());
+    termios::tcgetattr(pty.slave).unwrap();
     close(pty.master).expect("closing the master failed");
     close(pty.slave).expect("closing the slave failed");
 }
@@ -31,40 +31,45 @@ fn test_tcgetattr_pty() {
 #[test]
 fn test_tcgetattr_enotty() {
     let file = tempfile().unwrap();
-    assert_eq!(termios::tcgetattr(file.as_raw_fd()).err(),
-               Some(Error::Sys(Errno::ENOTTY)));
+    assert_eq!(
+        termios::tcgetattr(file.as_raw_fd()).err(),
+        Some(Errno::ENOTTY)
+    );
 }
 
 // Test tcgetattr on an invalid file descriptor
 #[test]
 fn test_tcgetattr_ebadf() {
-    assert_eq!(termios::tcgetattr(-1).err(),
-               Some(Error::Sys(Errno::EBADF)));
+    assert_eq!(termios::tcgetattr(-1).err(), Some(Errno::EBADF));
 }
 
 // Test modifying output flags
 #[test]
 fn test_output_flags() {
     // openpty uses ptname(3) internally
-    let _m = ::PTSNAME_MTX.lock().expect("Mutex got poisoned by another test");
+    let _m = crate::PTSNAME_MTX.lock();
 
     // Open one pty to get attributes for the second one
     let mut termios = {
         let pty = openpty(None, None).expect("openpty failed");
         assert!(pty.master > 0);
         assert!(pty.slave > 0);
-        let termios = tcgetattr(pty.master).expect("tcgetattr failed");
+        let termios = tcgetattr(pty.slave).expect("tcgetattr failed");
         close(pty.master).unwrap();
         close(pty.slave).unwrap();
         termios
     };
 
     // Make sure postprocessing '\r' isn't specified by default or this test is useless.
-    assert!(!termios.output_flags.contains(OutputFlags::OPOST | OutputFlags::OCRNL));
+    assert!(!termios
+        .output_flags
+        .contains(OutputFlags::OPOST | OutputFlags::OCRNL));
 
     // Specify that '\r' characters should be transformed to '\n'
     // OPOST is specified to enable post-processing
-    termios.output_flags.insert(OutputFlags::OPOST | OutputFlags::OCRNL);
+    termios
+        .output_flags
+        .insert(OutputFlags::OPOST | OutputFlags::OCRNL);
 
     // Open a pty
     let pty = openpty(None, &termios).unwrap();
@@ -77,7 +82,7 @@ fn test_output_flags() {
 
     // Read from the slave verifying that the output has been properly transformed
     let mut buf = [0u8; 10];
-    ::read_exact(pty.slave, &mut buf);
+    crate::read_exact(pty.slave, &mut buf);
     let transformed_string = "foofoofoo\n";
     close(pty.master).unwrap();
     close(pty.slave).unwrap();
@@ -88,14 +93,14 @@ fn test_output_flags() {
 #[test]
 fn test_local_flags() {
     // openpty uses ptname(3) internally
-    let _m = ::PTSNAME_MTX.lock().expect("Mutex got poisoned by another test");
+    let _m = crate::PTSNAME_MTX.lock();
 
     // Open one pty to get attributes for the second one
     let mut termios = {
         let pty = openpty(None, None).unwrap();
         assert!(pty.master > 0);
         assert!(pty.slave > 0);
-        let termios = tcgetattr(pty.master).unwrap();
+        let termios = tcgetattr(pty.slave).unwrap();
         close(pty.master).unwrap();
         close(pty.slave).unwrap();
         termios
@@ -114,7 +119,8 @@ fn test_local_flags() {
 
     // Set the master is in nonblocking mode or reading will never return.
     let flags = fcntl::fcntl(pty.master, fcntl::F_GETFL).unwrap();
-    let new_flags = fcntl::OFlag::from_bits_truncate(flags) | fcntl::OFlag::O_NONBLOCK;
+    let new_flags =
+        fcntl::OFlag::from_bits_truncate(flags) | fcntl::OFlag::O_NONBLOCK;
     fcntl::fcntl(pty.master, fcntl::F_SETFL(new_flags)).unwrap();
 
     // Write into the master
@@ -126,11 +132,5 @@ fn test_local_flags() {
     let read = read(pty.master, &mut buf).unwrap_err();
     close(pty.master).unwrap();
     close(pty.slave).unwrap();
-    assert_eq!(read, Error::Sys(Errno::EAGAIN));
-}
-
-#[test]
-fn test_cfmakeraw() {
-    let mut termios = unsafe { Termios::default_uninit() };
-    termios::cfmakeraw(&mut termios);
+    assert_eq!(read, Errno::EAGAIN);
 }

@@ -1,6 +1,5 @@
 use crate::alsa;
-use libc;
-use std::{fmt, mem, ptr, slice};
+use std::{fmt, mem, slice};
 use super::error::*;
 
 alsa_enum!(
@@ -90,7 +89,7 @@ impl fmt::Display for Chmap {
 impl<'a> From<&'a [ChmapPosition]> for Chmap {
     fn from(a: &'a [ChmapPosition]) -> Chmap {
         let p = unsafe { libc::malloc((mem::size_of::<alsa::snd_pcm_chmap_t>() + mem::size_of::<libc::c_uint>() * a.len()) as libc::size_t) };
-        if p == ptr::null_mut() { panic!("Out of memory") }
+        if p.is_null() { panic!("Out of memory") }
         let mut r = Chmap(p as *mut alsa::snd_pcm_chmap_t, true);
         r.set_channels(a.len() as libc::c_uint);
         for (i,v) in r.as_slice_mut().iter_mut().enumerate() { *v = a[i] as libc::c_uint }
@@ -120,9 +119,9 @@ pub fn chmaps_query_new(a: *mut *mut alsa::snd_pcm_chmap_query_t) -> ChmapsQuery
 impl Iterator for ChmapsQuery {
     type Item = (ChmapType, Chmap);
     fn next(&mut self) -> Option<Self::Item> {
-        if self.0 == ptr::null_mut() { return None; }
+        if self.0.is_null() { return None; }
         let p = unsafe { *self.0.offset(self.1) };
-        if p == ptr::null_mut() { return None; }
+        if p.is_null() { return None; }
         self.1 += 1;
         let t = ChmapType::from_c_int(unsafe { (*p).type_ } as libc::c_int, "snd_pcm_query_chmaps").unwrap();
         let m = Chmap(unsafe { &mut (*p).map }, false);
