@@ -6,8 +6,6 @@
 #include "vm/StringType.h"
 
 FRAGMENT(JSString, simple) {
-  AutoSuppressHazardsForTest noanalysis;
-
   JS::Rooted<JSString*> empty(cx, JS_NewStringCopyN(cx, nullptr, 0));
   JS::Rooted<JSString*> x(cx, JS_NewStringCopyN(cx, "x", 1));
   JS::Rooted<JSString*> z(cx, JS_NewStringCopyZ(cx, "z"));
@@ -41,8 +39,6 @@ FRAGMENT(JSString, simple) {
 }
 
 FRAGMENT(JSString, null) {
-  AutoSuppressHazardsForTest noanalysis;
-
   JS::Rooted<JSString*> null(cx, nullptr);
   JSString* nullRaw = null;
 
