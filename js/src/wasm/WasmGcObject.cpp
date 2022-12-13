@@ -319,9 +319,9 @@ T* WasmGcObject::create(JSContext* cx, js::gc::AllocKind allocKind,
     allocKind = ForegroundToBackgroundAllocKind(allocKind);
   }
 
-  Rooted<Shape*> shape(
-      cx, SharedShape::getInitialShape(cx, clasp, cx->realm(), TaggedProto(),
-                                       /* nfixed = */ 0, ObjectFlags()));
+  Rooted<WasmGCShape*> shape(
+      cx, WasmGCShape::getShape(cx, clasp, cx->realm(), TaggedProto(),
+                                ObjectFlags()));
   if (!shape) {
     return nullptr;
   }

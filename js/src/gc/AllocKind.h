@@ -36,6 +36,8 @@ class NormalPropMap;
 class DictionaryPropMap;
 class DictionaryShape;
 class SharedShape;
+class ProxyShape;
+class WasmGCShape;
 
 namespace gc {
 
@@ -237,6 +239,14 @@ struct MapTypeToAllocKind<js::SharedShape> {
 };
 template <>
 struct MapTypeToAllocKind<js::DictionaryShape> {
+  static const AllocKind kind = AllocKind::SHAPE;
+};
+template <>
+struct MapTypeToAllocKind<js::ProxyShape> {
+  static const AllocKind kind = AllocKind::SHAPE;
+};
+template <>
+struct MapTypeToAllocKind<js::WasmGCShape> {
   static const AllocKind kind = AllocKind::SHAPE;
 };
 

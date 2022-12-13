@@ -35,7 +35,7 @@ class Shape {
   shadow::BaseShape* base;
   uint32_t immutableFlags;
 
-  static constexpr uint32_t FIXED_SLOTS_SHIFT = 5;
+  static constexpr uint32_t FIXED_SLOTS_SHIFT = 6;
   static constexpr uint32_t FIXED_SLOTS_MASK = 0x1f << FIXED_SLOTS_SHIFT;
 };
 

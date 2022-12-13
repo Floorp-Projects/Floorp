@@ -161,6 +161,31 @@ using PropMapShapeSet =
     JS::WeakCache<JS::GCHashSet<WeakHeapPtr<SharedShape*>, PropMapShapeHasher,
                                 SystemAllocPolicy>>;
 
+// Hash policy for the per-zone proxyShapes set storing shapes for proxy objects
+// in the zone.
+struct ProxyShapeHasher : public ShapeBaseHasher {
+  static bool match(const WeakHeapPtr<ProxyShape*>& key, const Lookup& lookup) {
+    const ProxyShape* shape = key.unbarrieredGet();
+    return ShapeBaseHasher::match(shape, lookup);
+  }
+};
+using ProxyShapeSet =
+    JS::WeakCache<JS::GCHashSet<WeakHeapPtr<ProxyShape*>, ProxyShapeHasher,
+                                SystemAllocPolicy>>;
+
+// Hash policy for the per-zone wasmGCShapes set storing shapes for Wasm GC
+// objects in the zone.
+struct WasmGCShapeHasher : public ShapeBaseHasher {
+  static bool match(const WeakHeapPtr<WasmGCShape*>& key,
+                    const Lookup& lookup) {
+    const WasmGCShape* shape = key.unbarrieredGet();
+    return ShapeBaseHasher::match(shape, lookup);
+  }
+};
+using WasmGCShapeSet =
+    JS::WeakCache<JS::GCHashSet<WeakHeapPtr<WasmGCShape*>, WasmGCShapeHasher,
+                                SystemAllocPolicy>>;
+
 struct ShapeZone {
   // Set of all base shapes in the Zone.
   BaseShapeSet baseShapes;
@@ -174,6 +199,12 @@ struct ShapeZone {
 
   // Set of SharedPropMapShapes in the Zone.
   PropMapShapeSet propMapShapes;
+
+  // Set of ProxyShapes in the Zone.
+  ProxyShapeSet proxyShapes;
+
+  // Set of WasmGCShapes in the Zone.
+  WasmGCShapeSet wasmGCShapes;
 
   using ShapeWithCacheVector = js::Vector<js::Shape*, 0, js::SystemAllocPolicy>;
   ShapeWithCacheVector shapesWithCache;
