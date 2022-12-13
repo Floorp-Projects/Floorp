@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Maybe.h"
 #include "mozilla/Sprintf.h"
 
 #include <algorithm>
@@ -558,6 +559,12 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
     }
   }
 
+  /* Save and restore test mark queue state. */
+#ifdef DEBUG
+  size_t savedQueuePos = gc->queuePos;
+  mozilla::Maybe<MarkColor> savedQueueColor = gc->queueMarkColor;
+#endif
+
   /*
    * After this point, the function should run to completion, so we shouldn't
    * do anything fallible.
@@ -654,6 +661,11 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
     }
   }
 
+#ifdef DEBUG
+  gc->queuePos = savedQueuePos;
+  gc->queueMarkColor = savedQueueColor;
+#endif
+
   gc->incrementalState = state;
 }
 
@@ -709,7 +721,7 @@ void js::gc::MarkingValidator::validate() {
             ok = false;
             const char* color = TenuredCell::getColor(bitmap, cell).name();
             fprintf(stderr,
-                    "%p: cell not marked, but would be marked by %s "
+                    "%p: cell not marked, but would be marked %s by "
                     "non-incremental marking\n",
                     cell, color);
 #  ifdef DEBUG

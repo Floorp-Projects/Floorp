@@ -2959,7 +2959,10 @@ bool GCRuntime::appendTestMarkQueue(const JS::Value& value) {
   return testMarkQueue.append(value);
 }
 
-void GCRuntime::clearTestMarkQueue() { testMarkQueue.clear(); }
+void GCRuntime::clearTestMarkQueue() {
+  testMarkQueue.clear();
+  queuePos = 0;
+}
 
 size_t GCRuntime::testMarkQueuePos() const { return queuePos; }
 
