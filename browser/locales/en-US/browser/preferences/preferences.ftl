@@ -1209,7 +1209,11 @@ content-blocking-all-third-party-cookies = All third-party cookies
 content-blocking-cryptominers = Cryptominers
 content-blocking-fingerprinters = Fingerprinters
 
-# The tcp-rollout strings are no longer used for the rollout but for tcp-by-default in the standard section
+# "Test pilot" is used as a verb. Possible alternatives:
+# "Be the first to try", "Join an early experiment".
+content-blocking-etp-standard-tcp-rollout-checkbox =
+  .label = Test pilot our most powerful privacy feature ever
+  .accesskey = T
 
 # "Contains" here means "isolates", "limits".
 content-blocking-etp-standard-tcp-rollout-description = Total Cookie Protection contains cookies to the site you’re on, so trackers can’t use them to follow you between sites.
