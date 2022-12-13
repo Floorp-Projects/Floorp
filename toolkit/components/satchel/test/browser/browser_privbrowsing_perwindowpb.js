@@ -24,9 +24,9 @@ add_task(async function test() {
     let count = await FormHistory.count({ fieldname: "field", value: "value" });
 
     if (aShouldValueExist) {
-      is(count, 1, "In non-PB mode, we add a single entry");
+      Assert.equal(count, 1, "In non-PB mode, we add a single entry");
     } else {
-      is(count, 0, "In PB mode, we don't add any entries");
+      Assert.equal(count, 0, "In PB mode, we don't add any entries");
     }
   }
 
