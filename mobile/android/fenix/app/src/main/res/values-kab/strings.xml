@@ -339,6 +339,13 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Askar HTTPS-Only</string>
 
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Asenqes n yiɣarracen n yinagan n tuqqna</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Senqes iɣarracen n yinagan n tuqqna</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Firefox yettaɛraḍ s wudem awurman ad yegdel issutar n yinagan n tuqqna mi ara d-iban uɣerrac n yinagan. Ma yella ulac taxtiṛt n ugdal, Firefox yezmer ad yeqbel meṛṛa inagan n tuqqna i umdal n uɣarrac.</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Ɛreḍ ad teqqneḍ s wudem awurman ɣer yismal s useqdec n uneggaf n uwgelhen HTTPS i tɣellist ɛlayen.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -1120,6 +1127,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
 
     <!-- Title shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_title">Ɛreḍ tunigin tusligt</string>
+
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">Inig s war asekles n yinagan n tuqqnad uzray deg %1$s</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
