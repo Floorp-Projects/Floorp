@@ -1607,6 +1607,22 @@ dom::RTCSdpType ToDomSdpType(JsepSdpType aType) {
   MOZ_CRASH("Nonexistent JsepSdpType");
 }
 
+JsepSdpType ToJsepSdpType(dom::RTCSdpType aType) {
+  switch (aType) {
+    case dom::RTCSdpType::Offer:
+      return kJsepSdpOffer;
+    case dom::RTCSdpType::Pranswer:
+      return kJsepSdpPranswer;
+    case dom::RTCSdpType::Answer:
+      return kJsepSdpAnswer;
+    case dom::RTCSdpType::Rollback:
+      return kJsepSdpRollback;
+    case dom::RTCSdpType::EndGuard_:;
+  }
+
+  MOZ_CRASH("Nonexistent dom::RTCSdpType");
+}
+
 NS_IMETHODIMP
 PeerConnectionImpl::SetLocalDescription(int32_t aAction, const char* aSDP) {
   PC_AUTO_ENTER_API_CALL(true);
@@ -2517,46 +2533,46 @@ void PeerConnectionImpl::DoSetDescriptionSuccessPostProcessing(
         MOZ_ASSERT(mUncommittedJsepSession);
 
         // sRD/sLD needs to be redone in certain circumstances
-        // TODO: Should we do this for rollback too?
-        if (aSdpType == dom::RTCSdpType::Offer ||
-            aSdpType == dom::RTCSdpType::Answer) {
-          bool setParametersRace = HasPendingSetParameters();
+        bool needsRedo = HasPendingSetParameters();
+        if (!needsRedo && aRemote && (aSdpType == dom::RTCSdpType::Offer)) {
           for (auto& transceiver : mTransceivers) {
-            if (setParametersRace || !mUncommittedJsepSession->GetTransceiver(
-                                         transceiver->GetJsepTransceiverId())) {
-              // Spec says to abort, and re-do the sRD(offer)!
-              // This happens either when there is a SetParameters call in
-              // flight (that will race against the [[SendEncodings]]
-              // modification caused by sRD(offer)), or when addTrack has been
-              // called while sRD(offer) was in progress.
-              mUncommittedJsepSession.reset(mJsepSession->Clone());
-              JsepSession::Result result;
-              if (aRemote) {
-                mUncommittedJsepSession->SetRemoteDescription(
-                    aSdpType == dom::RTCSdpType::Offer ? kJsepSdpOffer
-                                                       : kJsepSdpAnswer,
-                    mRemoteRequestedSDP);
-              } else {
-                mUncommittedJsepSession->SetLocalDescription(
-                    aSdpType == dom::RTCSdpType::Offer ? kJsepSdpOffer
-                                                       : kJsepSdpAnswer,
-                    mLocalRequestedSDP);
-              }
-              MOZ_ASSERT(!!mUncommittedJsepSession->GetTransceiver(
-                  transceiver->GetJsepTransceiverId()));
-              if (result.mError.isSome()) {
-                // wat
-                aP->MaybeRejectWithOperationError(
-                    "When redoing sRD/sLD because it raced against "
-                    "addTrack, we encountered a failure that did not happen "
-                    "the first time. This should never happen.");
-                MOZ_ASSERT(false);
-              } else {
-                DoSetDescriptionSuccessPostProcessing(aSdpType, aRemote, aP);
-              }
-              return;
+            if (!mUncommittedJsepSession->GetTransceiver(
+                    transceiver->GetJsepTransceiverId())) {
+              needsRedo = true;
+              break;
             }
           }
+        }
+
+        if (needsRedo) {
+          // Spec says to abort, and re-do the sRD!
+          // This happens either when there is a SetParameters call in
+          // flight (that will race against the [[SendEncodings]]
+          // modification caused by sRD(offer)), or when addTrack has been
+          // called while sRD(offer) was in progress.
+          mUncommittedJsepSession.reset(mJsepSession->Clone());
+          JsepSession::Result result;
+          if (aRemote) {
+            mUncommittedJsepSession->SetRemoteDescription(
+                ToJsepSdpType(aSdpType), mRemoteRequestedSDP);
+          } else {
+            mUncommittedJsepSession->SetLocalDescription(
+                ToJsepSdpType(aSdpType), mLocalRequestedSDP);
+          }
+          if (result.mError.isSome()) {
+            // wat
+            nsCString error(
+                "When redoing sRD/sLD because it raced against "
+                "addTrack or setParameters, we encountered a failure that "
+                "did not happen "
+                "the first time. This should never happen. The error was: ");
+            error += mUncommittedJsepSession->GetLastError().c_str();
+            aP->MaybeRejectWithOperationError(error);
+            MOZ_ASSERT(false);
+          } else {
+            DoSetDescriptionSuccessPostProcessing(aSdpType, aRemote, aP);
+          }
+          return;
         }
 
         for (auto& transceiver : mTransceivers) {
