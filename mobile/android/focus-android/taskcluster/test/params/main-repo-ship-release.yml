@@ -1,0 +1,53 @@
+base_repository: https://github.com/mozilla-mobile/focus-android
+build_date: 1655828664
+build_number: 1
+do_not_optimize: []
+existing_tasks:
+  build-android-test-beta: cM1yV3-qS1SxUuRh2XgUmA
+  build-android-test-debug: XERsoIl3RZSfyrnjE6rZ8A
+  build-android-test-nightly: D3Kbdb-sT4Kbaz6gLE_leQ
+  build-beta-firebase: cnas0FvGQ7qZJh_Vpl2VOA
+  build-docker-image-android-build: JgpWeaJWQYyHEMGD7R55RQ
+  build-docker-image-base: YxBJJvhiQeOKmV-5zK5lPw
+  build-docker-image-ui-tests: I8LzhCd_SDuqASeXophkyA
+  build-focus-debug: e-S9TGZtQ9eCVFCwRNWvPw
+  build-klar-debug: MyQ8gTRORzertxymLKnPxQ
+  build-nightly-firebase: BH4i836STg2M5ObxrWY_2A
+  fetch-android-sdk-3859397: Es-GUCNWR-iJsOd5F1A3pA
+  lint-compare-locales: Hq4WZIGJTEKDuLgOZvNEqw
+  lint-detekt: aN1o7Uj1RvaGWh-ZvsPV_g
+  lint-ktlint: OrUmx9VuRqSepWJkWyyR1w
+  lint-lint: RA_njqTpRfGthHstvM6ElQ
+  signing-android-test-beta: cBRorcBOTOuzOBBaEN206g
+  signing-android-test-debug: bQ7y5bBJThC2iOaOnMZLWA
+  signing-android-test-nightly: RpzN_SuLRCOr_umlLfDikQ
+  signing-beta-firebase: JeOd0_XSSuWenD7dIq2e5Q
+  signing-focus-debug: XCxMiyjoQi670Vz79j5qLA
+  signing-nightly-firebase: AHGDZ33rRnWDDSAKU9BlTA
+  test-debug: FCh_9bOkTaygpcx0D25suA
+  toolchain-linux64-android-gradle-dependencies: dqx-TQUwQU6tdhXVhufSRg
+  toolchain-linux64-android-sdk-linux-repack: Fq4Z4hQbSUeWKdIIHpfBDQ
+  ui-test-x86-beta: YAbhRVOHSGW15njKXfV7Kw
+  ui-test-x86-debug: HJnp0HJhREOamxmIdJ_Wqg
+  ui-test-x86-nightly: C2RcKgk-RHGK93_Wga9PJg
+filters:
+- target_tasks_method
+head_ref: refs/heads/releases_v102.0
+head_repository: https://github.com/mozilla-mobile/focus-android
+head_rev: 24211263a74d597df2aef3d86586645bf1cf986a
+head_tag: v102.1.1
+level: '3'
+moz_build_date: '20220621162424'
+next_version: 102.1.2
+optimize_target_tasks: true
+owner: pascal@mozilla.com
+project: focus-android
+pull_request_number: null
+pushdate: 0
+pushlog_id: '0'
+release_type: release
+repository_type: git
+shipping_phase: ship
+target_tasks_method: release
+tasks_for: action
+version: 102.1.1

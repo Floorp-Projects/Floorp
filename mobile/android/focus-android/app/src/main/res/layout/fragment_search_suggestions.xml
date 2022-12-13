@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<org.mozilla.focus.widget.ResizableKeyboardLinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="org.mozilla.focus.searchsuggestions.ui.SearchSuggestionsFragment">
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="vertical"
+        android:fadeScrollbars="false">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/enable_search_suggestions_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/background_search_suggestion_section"
+        android:paddingStart="16dp"
+        android:paddingTop="16dp"
+        android:paddingEnd="16dp">
+
+        <TextView
+            android:id="@+id/enable_search_suggestions_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:fontFamily="@font/metropolis_bold"
+            android:letterSpacing="0.03"
+            android:lineSpacingExtra="1sp"
+            android:text="@string/enable_search_suggestion_title2"
+            android:textColor="@color/searchSuggestionPromptTitleColor"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/enable_search_suggestions_subtitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="24dp"
+            android:layout_marginBottom="15dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:lineSpacingExtra="4sp"
+            android:text="@string/enable_search_suggestion_description"
+            android:textColor="@color/searchSuggestionPromptSubtitleColor"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toTopOf="@+id/disable_search_suggestions_button"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/enable_search_suggestions_title" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/disable_search_suggestions_button"
+            style="@style/MetropolisButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="20dp"
+            android:text="@string/enable_search_suggestions_no"
+            android:textColor="@color/searchSuggestionPromptButtonTextColor"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/enable_search_suggestions_button" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/enable_search_suggestions_button"
+            style="@style/MetropolisButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="20dp"
+            android:text="@string/enable_search_suggestions_yes"
+            android:textColor="@color/searchSuggestionPromptButtonTextColor"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/no_suggestions_container"
+        android:background="@drawable/background_search_suggestion_section"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/no_suggestions_message"
+            android:textColor="@color/searchSuggestionPromptTitleColor"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/no_suggestions_message"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/dismiss_no_suggestions_message"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:minWidth="48dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:text="@string/dismiss_no_suggestions_prompt_button"
+            android:textColor="@color/searchSuggestionPromptButtonTextColor"
+            android:layout_marginTop="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/no_suggestions_message" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/search_suggestions_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+</org.mozilla.focus.widget.ResizableKeyboardLinearLayout>

@@ -1,0 +1,41 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: focus_android_taskgraph.loader.multi_dep:loader
+
+transforms:
+    - focus_android_taskgraph.transforms.multi_dep:transforms
+    - focus_android_taskgraph.transforms.version_bump:transforms
+    - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - push-apk
+
+primary-dependency: push-apk
+
+group-by: build-type
+
+only-for-build-types:
+    - beta
+    - focus-release
+
+job-template:
+    attributes:
+        shipping_phase: ship
+    description: Focus version bump/tag for use by shipit
+    worker-type: tree
+    worker:
+        bump: true
+        bump-files: ["version.txt"]
+        push:
+            by-level:
+                "3": true
+                # If you set the following line to true, you need to grant write access
+                # to https://github.com/moz-releng-automation-stage on your
+                # fork.
+                default: false
+
+    treeherder:
+        job-symbol: vb
+        kind: build

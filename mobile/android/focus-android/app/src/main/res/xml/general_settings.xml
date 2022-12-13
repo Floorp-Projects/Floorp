@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.preference.PreferenceCategory
+        android:layout="@layout/focus_preference_no_icon"
+        android:title="@string/preferences_theme"
+        app:iconSpaceReserved="false">
+        <org.mozilla.focus.settings.RadioButtonPreference
+            android:key="@string/pref_key_light_theme"
+            android:title="@string/preference_light_theme"
+            android:layout="@layout/preference_radio_button" />
+
+        <org.mozilla.focus.settings.RadioButtonPreference
+            android:key="@string/pref_key_dark_theme"
+            android:title="@string/preference_dark_theme"
+            android:layout="@layout/preference_radio_button" />
+
+
+        <org.mozilla.focus.settings.RadioButtonPreference
+            android:defaultValue="true"
+            android:key="@string/pref_key_default_theme"
+            android:title="@string/preference_follow_device_theme"
+            android:layout="@layout/preference_radio_button" />
+    </androidx.preference.PreferenceCategory>
+
+    <!-- Empty default: we use an empty string to indicate "system default" language being selected -->
+    <androidx.preference.Preference
+        android:key="@string/pref_key_locale"
+        android:layout="@layout/focus_preference"
+        android:title="@string/preference_language"
+        app:iconSpaceReserved="false" />
+
+    <org.mozilla.focus.widget.DefaultBrowserPreference
+        android:key="@string/pref_key_default_browser"
+        android:layout="@layout/focus_preference_no_icon"
+        android:title="@string/preference_default_browser2" />
+
+</androidx.preference.PreferenceScreen>

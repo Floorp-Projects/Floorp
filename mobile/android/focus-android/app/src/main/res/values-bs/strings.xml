@@ -1,0 +1,198 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="action_cancel">Otkaži</string>
+  <string name="action_ok">U redu</string>
+  <string name="action_save">Sačuvaj</string>
+  <string name="urlbar_hint">Tražite ili upišite adresu</string>
+  <string name="teaser">Automatsko privatno pretraživanje.\nPretražujte. Izbrišite. Ponovite.</string>
+  <string name="feedback_erase">Vaša historija pretraživanja je izbrisana.</string>
+  <string name="search_hint">Traži %1$s</string>
+  <string name="menu_share">Dijeli…</string>
+  <string name="menu_report_site_issue">Prijavite problem sa stranicom</string>
+  <string name="menu_open_with_default_browser2">Otvori u %1$s</string>
+  <string name="menu_open_with_a_browser2">Otvori u…</string>
+  <string name="menu_add_to_home_screen">Dodaj na početni ekran</string>
+  <string name="menu_whats_new">Šta je novo</string>
+  <string name="menu_settings">Postavke</string>
+  <string name="menu_about">O aplikaciji</string>
+  <string name="menu_help">Pomoć</string>
+  <string name="menu_rights">Vaša prava</string>
+  <string name="menu_trackers_blocked_title">Blokirani pratioci</string>
+  <string name="menu_custom_tab_branding">Pokreće ga %1$s</string>
+  <string name="share_dialog_title">Dijeli putem</string>
+  <string name="notification_erase_text">Izbrišite historiju pretraživanja</string>
+  <string name="notification_action_open">Otvori</string>
+  <string name="notification_action_erase_and_open">Izbriši i otvori</string>
+  <string name="shortcut_erase_short_label">Izbriši</string>
+  <string name="shortcut_erase_long_label">Izbriši historiju pretraživanja</string>
+  <string name="text_selection_search_action">Tražite privatno</string>
+
+  <string name="preference_privacy_and_security_header">Privatnost i sigurnost</string>
+  <string name="preference_privacy_and_security_summary">Praćenje, kolačići, izbori podataka</string>
+  <string name="preference_search_summary">Postavi kao zadano, automatsko dovršavanje</string>
+  <string name="preference_mozilla_summary">O %1$s, pomoć</string>
+  <string name="preference_category_tracking_protection">Zaštita od praćenja</string>
+  <string name="preference_category_web_content">Web sadržaj</string>
+  <string name="preference_category_switching_apps">Mijenjanje aplikacija</string>
+  <string name="preference_category_general">Opće</string>
+  <string name="preference_category_data_collection_use">Prikupljanje podataka i korištenje</string>
+  <string name="preference_category_search">Traži</string>
+  <string name="preference_search_engine_default">Izvorno</string>
+  <string name="preference_state_on">Uključeno</string>
+  <string name="preference_state_off">Isključeno</string>
+  <string name="preference_subitem_autocomplete">Automatsko završavanje URL-a</string>
+  <string name="preference_autocomplete_action_add">+ Dodaj prilagođeni URL</string>
+  <string name="preference_autocomplete_title_add">Dodaj prilagođeni URL</string>
+  <string name="custom_autocomplete_quick_add">Dodaj prilagođeni URL</string>
+  <string name="preference_category_cookies">Kolačići i podaci stranice</string>
+  <string name="preference_category_data_choices">Izbori podataka</string>
+  <string name="preference_autocomplete_title_remove">Ukloni prilagođene URL-ove</string>
+  <string name="preference_autocomplete_learn_more">Saznajte više</string>
+  <string name="preference_autocomplete_custom_summary">Dodajte i upravljajte prilagođenim automatski završenim URL-ovima.</string>
+  <string name="preference_autocomplete_add_title">URL za dodavanje</string>
+  <string name="preference_autocomplete_add_hint">Zalijepite ili unesite URL</string>
+  <string name="preference_autocomplete_add_example2">Primjer: mozilla.org</string>
+  <string name="preference_autocomplete_add_example">Primjer: example.com</string>
+  <string name="preference_autocomplete_add_confirmation">Novi prilagođeni URL dodan.</string>
+  <string name="preference_autocomplete_menu_remove">Ukloni</string>
+  <string name="preference_autocomplete_action_remove_content_description">Ukloni</string>
+  <string name="preference_autocomplete_add_error">Dvaput provjerite URL koji ste unijeli.</string>
+  <string name="preference_language">Jezik</string>
+  <string name="preference_language_systemdefault">Izvorni sistemski</string>
+  <string name="preference_category_privacy">Privatnost</string>
+  <string name="preference_privacy_block_ads">Blokiraj reklame</string>
+  <string name="preference_privacy_block_ads_summary">Neke reklame prate posjete stranica, čak i kad ne klinete na reklame</string>
+  <string name="preference_privacy_block_analytics">Blokiraj analitičke pratioce</string>
+  <string name="preference_privacy_block_analytics_summary">Koristi se za sakupljanje, analiziranje i mjerenje aktivnosti kao što su tipkanje i skrolovanje</string>
+  <string name="preference_privacy_block_social">Blokiraj društvene pratioce</string>
+  <string name="preference_privacy_block_social_summary">Ugrađene u stranice kako bi pratile vaše posjete i da prikažu funkcije kao što su dugmići za dijeljenje</string>
+  <string name="preference_privacy_block_content">Blokiraj pratioce ostalog sadržaja</string>
+  <string name="preference_privacy_block_content_summary2">Omogućavanje može uticati loše na neke stranice</string>
+  <string name="preference_privacy_category_cookies">Blokiraj kolačiće</string>
+  <string name="preference_privacy_should_block_cookies_no_option">Ne</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Blokiraj samo kolačiće trećih strana</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Da</string>
+  <string name="preference_privacy_secure_mode">Tajni način</string>
+  <string name="preference_privacy_stealth_summary">Sakrij web stranice prilikom prebacivanja između aplikacija</string>
+  <string name="preference_category_performance">Performanse</string>
+  <string name="preference_performance_block_webfonts">Blokiraj web fontove</string>
+  <string name="preference_performance_block_webfonts_summary">Može prouzrokovati nestajanje ikona ili slika</string>
+  <string name="preference_performance_block_javascript">Blokiraj JavaScript</string>
+  <string name="preference_performance_block_javascript_summary">Stranice će se možda učitavati brže, ali također se mogu ponašati neočekivano</string>
+  <string name="preference_default_browser2">Učini %1$s glavnim pretraživačem</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Šalji podatke o korištenju</string>
+  <string name="preference_mozilla_telemetry_summary">Saznajte više</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozila nastoji prikupljati samo ono što trebamo da osiguramo i poboljšamo %1$s za sve.</string>
+  <string name="preference_privacy_notice">Napomena o privatnosti</string>
+  <string name="preference_about">O %1$s</string>
+  <string name="preference_search_installed_search_engines">Instalirani pretraživači</string>
+  <string name="preference_search_restore">Vrati izvorne pretraživače</string>
+  <string name="preference_search_add2">+ Dodaj novi pretraživač</string>
+  <string name="preference_search_remove_title">Ukloni pretraživače</string>
+  <string name="preference_search_remove">Ukloni</string>
+  <string name="action_option_add_search_engine">Dodajte pretraživač</string>
+  <string name="search_add_manually_name_hint">Ime pretraživača</string>
+  <string name="search_add_manually_string">Pretraži tekst za korištenje</string>
+  <string name="search_add_manually_save">Sačuvaj</string>
+  <string name="search_add_manually_example">Primjer: example.com/search/?q=%s</string>
+  <string name="search_add_confirmation">Novi pretraživač dodan.</string>
+  <string name="search_add_error_empty_name">Unesite naziv pretraživača</string>
+  <string name="search_add_error_duplicate_name">Instalirani pretraživač već koristi to ime.</string>
+  <string name="search_add_error_empty_search">Unesite string za pretragu</string>
+  <string name="search_add_error_format">Provjerite da traženi string odgovara formatu primjera</string>
+  <string name="content_description_clear_input">Očisti unos</string>
+  <string name="content_description_dismiss_input">Odbaci</string>
+  <string name="content_description_erase">Izbriši historiju pretraživanja</string>
+  <string name="content_description_tab_counter">Otvorenih tabova: %1$s</string>
+  <string name="content_description_lock">Sigurna veza</string>
+  <string name="accessibility_announcement_loading">Učitavanje</string>
+  <string name="accessibility_announcement_loading_finished">Web stranica učitana</string>
+  <string name="content_description_menu">Više opcija</string>
+  <string name="content_description_forward">Idite naprijed</string>
+  <string name="content_description_reload">Ponovo učitaj web stranicu</string>
+  <string name="content_description_back">Idite nazad</string>
+  <string name="content_description_stop">Zaustavi učitavanje web stranice</string>
+  <string name="content_description_customtab_exit">Povratak na raniju aplikaciju</string>
+  <string name="content_description_blocking_switch">Blokiraj pratioce</string>
+  <string name="your_rights">Vaša prava</string>
+  <string name="external_app_prompt_title">Otvori vezu u drugoj aplikaciji</string>
+  <string name="external_app_prompt">Možete napustiti %1$s da otvorite ovu vezu u %2$s.</string>
+  <string name="external_app_prompt_no_app_title">Pronađite aplikaciju koja može otvoriti vezu</string>
+  <string name="external_app_prompt_no_app">Nijedna od aplikacija na vašem uređaju nije u mogućnosti otvoriti vezu. Možete napustiti %1$s da pretražite %2$s za aplikaciju koja može.</string>
+  <string name="external_multiple_apps_matched_exit">Izaći iz privatnog pretraživanja?</string>
+  <string name="download_snackbar_finished">%1$s završeno</string>
+  <string name="download_snackbar_open">Otvori</string>
+
+
+
+
+
+
+
+
+
+  <string name="error_hostLookup_title">Server nije pronađen</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <string name="firstrun_defaultbrowser_title">Osnažite vašu privatnost</string>
+  <string name="firstrun_defaultbrowser_text2">Unaprijedite privatno pretraživanje. Blokirajte reklame i drugi sadržaj koji vas mogu pratiti putem stranica i ubrzajte učitavanje stranica.</string>
+  <string name="firstrun_search_title">Tražite, na svoj način</string>
+  <string name="firstrun_search_text">Tražite nešto drugačije? Izaberite drugi zadani pretraživač u postavkama.</string>
+  <string name="firstrun_shortcut_title">Dodajte prečice na vaš početni zaslon</string>
+  <string name="firstrun_shortcut_text">Vratite se brzo na vaše omiljene stranice u %1$s. Samo izaberite \"Dodaj na početni zaslon\" iz %1$s menija.</string>
+  <string name="firstrun_privacy_title">Učinite privatnost navikom</string>
+  <string name="firstrun_privacy_text">Postavite %1$s kao vaš glavni pretraživač i dobijte koristi od privatnog pretraživanja kada otvarate web stranice iz drugih aplikacija.</string>
+  <string name="firstrun_close_button">U redu, razumijem!</string>
+  <string name="firstrun_skip_button">Preskoči</string>
+  <string name="firstrun_next_button">Sljedeće</string>
+  <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_action_add">Dodaj</string>
+  <string name="dialog_addtohomescreen_action_cancel">Otkaži</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Prečica će se otvoriti uz onemogućenu zaštitu od praćenja</string>
+  <string name="notification_browsing_session_channel_name">Sesija za privatno pretraživanje</string>
+  <string name="notification_browsing_session_channel_description">Obaviještenja vam omogućavaju da izbrišete vašu %1$s sesiju jednim dodirom. Ne morate da otvorite aplikaciju ili da provjerite šta se izvršava u vašem pretraživaču.</string>
+  <string name="tabs_tray_action_erase">Izbriši historiju pretraživanja</string>
+  <string name="download_firefox">Preuzmite Firefox</string>
+  <string name="your_rights_content1">%1$s je besplatan softver i otvorenog koda napravljen od strane Mozille i drugih doprinosilaca.</string>
+
+
+
+
+  <string name="gv_prompt_username_hint">Korisničko ime</string>
+  <string name="gv_prompt_password_hint">Lozinka</string>
+  <string name="gv_prompt_clear">Očisti</string>
+  <string name="security_popup_secure_connection">Sigurna veza</string>
+  <string name="security_popup_insecure_connection">Nesigurna veza</string>
+  <string name="security_popup_security_verified">Provjerio: %1$s</string>
+  <string name="site_security_icon_content_description">Sigurnost stranice</string>
+  <string name="preference_autocomplete_duplicate_url_error">URL već postoji</string>
+  <string name="find_in_page">Pronađi na stranici</string>
+  <string name="find_in_page_input">Pronađi na stranici</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%1$d od %2$d</string>
+  <string name="accessibility_next_result">Pronađi sljedeći rezultat</string>
+  <string name="accessibility_previous_result">Pronađi prethodni rezultat</string>
+  <string name="accessibility_dismiss_find_in_page">Odbaci pronalazak na stranici</string>
+
+
+
+  <string name="preference_performance_request_desktop_site">Zahtjevaj desktop stranicu</string>
+  <string name="custom_tab_copy_url_action">URL je kopiran</string>
+</resources>

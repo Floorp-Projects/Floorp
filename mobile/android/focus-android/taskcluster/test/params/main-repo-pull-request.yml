@@ -1,0 +1,24 @@
+base_repository: https://github.com/mozilla-mobile/focus-android
+build_date: 1657007041
+do_not_optimize: []
+existing_tasks: {}
+filters:
+- target_tasks_method
+head_ref: import-l10n
+head_repository: https://github.com/mozilla-l10n-automation-bot/focus-android
+head_rev: dbdc2927de363cb13c3f7a0b793b02c59279c221
+head_tag: ''
+level: '1'
+moz_build_date: '20220705074401'
+next_version: null
+optimize_target_tasks: true
+owner: mozilla-l10n-automation-bot@users.noreply.github.com
+project: focus-android
+pull_request_number: 7314
+pushdate: 0
+pushlog_id: '0'
+release_type: ''
+repository_type: git
+target_tasks_method: default
+tasks_for: github-pull-request
+version: ''

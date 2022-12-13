@@ -1,0 +1,46 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: focus_android_taskgraph.loader.multi_dep:loader
+
+transforms:
+    - focus_android_taskgraph.transforms.multi_dep:transforms
+    - focus_android_taskgraph.transforms.signing:transforms
+    - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - build
+
+primary-dependency: build
+
+group-by: build-type
+
+job-template:
+    description: Sign Focus for Android
+    worker: {}
+    signing-format: autograph_focus
+    index:
+        by-tasks-for:
+            (action|cron|github-release):
+                by-build-type:
+                    (nightly|focus-release|klar-release|beta):
+                        type: signing
+                    default: {}
+            default: {}
+    run-on-tasks-for: 
+        by-build-type:
+            (focus-debug|android-test-debug|nightly-firebase|android-test-nightly|beta-firebase|android-test-beta): [github-push]
+            default: []
+    treeherder:
+        job-symbol:
+            by-build-type:
+                focus-.*: Bfs
+                klar-.*: Bkls
+                default: Bs
+                android-test.+: Bats
+                beta-firebase: Bfs
+                nightly-firebase: Bfs
+        kind: build
+        platform: android-all/opt
+        tier: 1

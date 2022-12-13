@@ -1,0 +1,37 @@
+<html>
+<head>
+    <title>Audio_Test_Page</title>
+</head>
+<body>
+<p id="testContent">Page content: audio player</p>
+
+<div class="audioPlayer">
+    <audio id="audioSample" controls loop>
+        <source src="resources/audioSample.mp3">
+    </audio>
+</div>
+
+<div class="playbackState">
+</div>
+
+<script>
+    const audio = document.querySelector('audio');
+    var showPlayingAlert=true;
+
+    audio.addEventListener('playing', (event) => {
+    <!--document.querySelector('.playbackState').innerText="Media file is playing"-->
+    <!--Need this hack to verify that the video is playing,-->
+    <!--the test cannot currently verify the text displayed on the page-->
+      if(showPlayingAlert===true){
+        showPlayingAlert=false;
+        alert("Media file is playing");
+      }
+    });
+
+    audio.addEventListener('pause', (event) => {
+        <!--document.querySelector('.playbackState').innerText="Media file is paused"-->
+        alert("Media file is paused");
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+---
+trust-domain: mobile
+treeherder:
+    group-names:
+        'beta': 'Beta-related tasks with same APK configuration as Fennec'
+        'bump': 'Bump dependencies'
+        'debug': 'Builds made for testing'
+        'Fetch': 'Fetch and store content'
+        'I': 'Docker Image Builds'
+        'nightly': 'Nightly-related tasks'
+        'release': 'Production-related tasks with same APK configuration as Focus'
+        'TL': 'Toolchain builds for Linux 64-bits'
+
+task-priority:
+    by-project:
+        "focus-android": highest
+        "staging-focus-android": low
+        # This handles cases where a fork may end up not being named
+        # as one of the explicit names above. Ideally anything forked
+        # from "focus-android" would inherit its setting, but "low" is the
+        # safer default
+        default: low
+
+taskgraph:
+    register: focus_android_taskgraph:register
+    repositories:
+        mobile:
+            name: "Focus-Android"
+    cached-task-prefix: mobile.v2.focus-android
+    decision-parameters: 'focus_android_taskgraph.parameters:get_decision_parameters'
+
+workers:
+    aliases:
+        b-android:
+            provisioner: 'mobile-{level}'
+            implementation: docker-worker
+            os: linux
+            worker-type: b-linux-gcp
+        b-android-large:
+            provisioner: 'mobile-{level}'
+            implementation: docker-worker
+            os: linux
+            worker-type: b-linux-large-gcp
+        dep-signing:
+            provisioner: scriptworker-k8s
+            implementation: scriptworker-signing
+            os: scriptworker
+            worker-type: mobile-t-signing
+        github:
+            provisioner: scriptworker-k8s
+            implementation: scriptworker-github
+            os: scriptworker
+            worker-type: 'mobile-{level}-github'
+        images:
+            provisioner: 'mobile-{level}'
+            implementation: docker-worker
+            os: linux
+            worker-type: 'images-gcp'
+        # misc is used by taskgraph to generate tasks with more than 10 routes
+        misc:
+            provisioner: 'mobile-{level}'
+            implementation: docker-worker
+            os: linux
+            worker-type: 'b-linux-gcp'
+        push-apk:
+            provisioner: scriptworker-k8s
+            implementation: scriptworker-pushapk
+            os: scriptworker
+            worker-type: 'mobile-{level}-pushapk'
+        ship-it:
+            provisioner: scriptworker-k8s
+            implementation: scriptworker-shipit
+            os: scriptworker
+            worker-type: 'mobile-{level}-shipit'
+        signing:
+            provisioner: scriptworker-k8s
+            implementation: scriptworker-signing
+            os: scriptworker
+            worker-type:
+                by-level:
+                    "3": mobile-3-signing
+                    default: mobile-t-signing
+        tree:
+            provisioner: scriptworker-k8s
+            implementation: scriptworker-tree
+            os: scriptworker
+            worker-type: 'mobile-{level}-tree'
+
+scriptworker:
+    scope-prefix: project:mobile:focus-android:releng
+
+
+release-promotion:
+    flavors:
+        promote:
+            target-tasks-method: promote
+        ship:
+            target-tasks-method: ship

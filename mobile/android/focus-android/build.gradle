@@ -1,0 +1,102 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+import org.mozilla.focus.gradle.tasks.GithubDetailsTask
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            // We will always need this repository for retrieving stable dependencies (like Glean).
+            url "https://maven.mozilla.org/maven2"
+        }
+        maven {
+            url "https://nightly.maven.mozilla.org/maven2"
+        }
+    }
+
+    dependencies {
+        classpath FocusDependencies.android_gradle_plugin
+        classpath FocusDependencies.kotlin_gradle_plugin
+        classpath "org.mozilla.components:tooling-glean-gradle:${AndroidComponents.VERSION}"
+        classpath "org.mozilla.components:tooling-nimbus-gradle:${AndroidComponents.VERSION}"
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+plugins {
+    id "io.gitlab.arturbosch.detekt" version "1.18.0" // Variables in plugins {} aren't supported
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    input = files("$projectDir/app")
+    config = files("$projectDir/quality/detekt.yml")
+    baseline = file("$projectDir/quality/detekt-baseline.xml")
+
+    reports {
+        html {
+            enabled = true
+            destination = file("$projectDir/build/reports/detekt.html")
+        }
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url "https://nightly.maven.mozilla.org/maven2"
+        }
+        maven {
+            url "https://maven.mozilla.org/maven2"
+        }
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
+
+
+configurations {
+    ktlint
+}
+
+dependencies {
+    ktlint("com.pinterest:ktlint:${FocusVersions.ktlint_version}") {
+        attributes {
+            attribute(Bundling.BUNDLING_ATTRIBUTE, getObjects().named(Bundling, Bundling.EXTERNAL))
+        }
+    }
+}
+
+task ktlint(type: JavaExec, group: "verification") {
+    description = "Check Kotlin code style."
+    classpath = configurations.ktlint
+    main = "com.pinterest.ktlint.Main"
+    args "app/**/*.kt", "!**/build/**/*.kt", "buildSrc/**/*.kt"
+}
+
+
+task ktlintFormat(type: JavaExec, group: "formatting") {
+    description = "Fix Kotlin code style deviations."
+    classpath = configurations.ktlint
+    main = "com.pinterest.ktlint.Main"
+    args "-F", "app/**/*.kt", "!**/build/**/*.kt", "buildSrc/**/*.kt"
+}
+
+tasks.register("githubTestDetails", GithubDetailsTask) {
+    text = "### [Unit Test Results]({reportsUrl}/test/testFocusDebugUnitTest/index.html)"
+}
+
+tasks.register("githubLintDetektDetails", GithubDetailsTask) {
+    text = "### [Detekt Results]({reportsUrl}/detekt.html)"
+}
+
+tasks.register("githubLintAndroidDetails", GithubDetailsTask) {
+    text = "### [Android Lint Results]({reportsUrl}/lint-results-debug.html)"
+}

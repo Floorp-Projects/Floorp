@@ -1,0 +1,28 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="360dp"
+    android:height="640dp"
+    android:viewportWidth="360"
+    android:viewportHeight="640">
+  <path
+      android:pathData="M360,640V0H0V640H360Z"
+      android:fillType="evenOdd">
+    <aapt:attr name="android:fillColor">
+      <gradient 
+          android:startY="-3.93329E-6"
+          android:startX="330"
+          android:endY="640"
+          android:endX="60"
+          android:type="linear">
+        <item android:offset="0" android:color="#FF1F1336"/>
+        <item android:offset="0.356451" android:color="#FF8755F1"/>
+        <item android:offset="0.56273" android:color="#FF9C75EF"/>
+        <item android:offset="0.723955" android:color="#FF593EA5"/>
+        <item android:offset="1" android:color="#FF1E1335"/>
+      </gradient>
+    </aapt:attr>
+  </path>
+</vector>

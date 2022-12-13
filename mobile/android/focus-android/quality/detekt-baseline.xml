@@ -1,0 +1,184 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>AbsentOrWrongFileLicense:AddToHomescreenDialogFragment.kt$org.mozilla.focus.fragment.AddToHomescreenDialogFragment.kt</ID>
+    <ID>AbsentOrWrongFileLicense:AppConstants.kt$org.mozilla.focus.utils.AppConstants.kt</ID>
+    <ID>AbsentOrWrongFileLicense:Browser.kt$org.mozilla.focus.GleanMetrics.Browser.kt</ID>
+    <ID>AbsentOrWrongFileLicense:BrowserMenu.kt$org.mozilla.focus.menu.browser.BrowserMenu.kt</ID>
+    <ID>AbsentOrWrongFileLicense:BrowserMenuAdapter.kt$org.mozilla.focus.menu.browser.BrowserMenuAdapter.kt</ID>
+    <ID>AbsentOrWrongFileLicense:BrowserSearch.kt$org.mozilla.focus.GleanMetrics.BrowserSearch.kt</ID>
+    <ID>AbsentOrWrongFileLicense:Features.kt$org.mozilla.focus.utils.Features.kt</ID>
+    <ID>AbsentOrWrongFileLicense:FileUtils.kt$org.mozilla.focus.utils.FileUtils.kt</ID>
+    <ID>AbsentOrWrongFileLicense:FirstrunFragment.kt$org.mozilla.focus.fragment.FirstrunFragment.kt</ID>
+    <ID>AbsentOrWrongFileLicense:FirstrunPagerAdapter.kt$org.mozilla.focus.firstrun.FirstrunPagerAdapter.kt</ID>
+    <ID>AbsentOrWrongFileLicense:FocusApplication.kt$org.mozilla.focus.FocusApplication.kt</ID>
+    <ID>AbsentOrWrongFileLicense:GleanBuildInfo.kt$org.mozilla.focus.GleanMetrics.GleanBuildInfo.kt</ID>
+    <ID>AbsentOrWrongFileLicense:ImageSelectTest.kt$org.mozilla.focus.activity.ImageSelectTest.kt</ID>
+    <ID>AbsentOrWrongFileLicense:InstallFirefoxActivity.kt$org.mozilla.focus.activity.InstallFirefoxActivity.kt</ID>
+    <ID>AbsentOrWrongFileLicense:LearnMoreSwitchPreference.kt$org.mozilla.focus.settings.LearnMoreSwitchPreference.kt</ID>
+    <ID>AbsentOrWrongFileLicense:LegacyIds.kt$org.mozilla.focus.GleanMetrics.LegacyIds.kt</ID>
+    <ID>AbsentOrWrongFileLicense:MobileMetricsPingStorageTest.kt$org.mozilla.focus.utils.MobileMetricsPingStorageTest.kt</ID>
+    <ID>AbsentOrWrongFileLicense:Pings.kt$org.mozilla.focus.GleanMetrics.Pings.kt</ID>
+    <ID>AbsentOrWrongFileLicense:PreferenceSwitch.kt$org.mozilla.focus.settings.privacy.PreferenceSwitch.kt</ID>
+    <ID>AbsentOrWrongFileLicense:SearchEnginePreference.kt$org.mozilla.focus.search.SearchEnginePreference.kt</ID>
+    <ID>AbsentOrWrongFileLicense:SearchRobot.kt$org.mozilla.focus.activity.robots.SearchRobot.kt</ID>
+    <ID>AbsentOrWrongFileLicense:SearchSuggestionsViewModelTest.kt$org.mozilla.focus.searchsuggestions.SearchSuggestionsViewModelTest.kt</ID>
+    <ID>AbsentOrWrongFileLicense:SettingsBlockToggleTest.kt$org.mozilla.focus.activity.SettingsBlockToggleTest.kt</ID>
+    <ID>AbsentOrWrongFileLicense:SettingsTest.kt$org.mozilla.focus.activity.SettingsTest.kt</ID>
+    <ID>AbsentOrWrongFileLicense:SmokeTest.kt$org.mozilla.focus.testAnnotations.SmokeTest.kt</ID>
+    <ID>AbsentOrWrongFileLicense:SupportUtils.kt$org.mozilla.focus.utils.SupportUtils.kt</ID>
+    <ID>AbsentOrWrongFileLicense:SupportUtilsTest.kt$org.mozilla.focus.utils.SupportUtilsTest.kt</ID>
+    <ID>AbsentOrWrongFileLicense:TelemetryWrapper.kt$org.mozilla.focus.telemetry.TelemetryWrapper.kt</ID>
+    <ID>AbsentOrWrongFileLicense:Theme.kt$org.mozilla.focus.theme.Theme.kt</ID>
+    <ID>AbsentOrWrongFileLicense:ToggleBlockTest.kt$org.mozilla.focus.activity.ToggleBlockTest.kt</ID>
+    <ID>AbsentOrWrongFileLicense:TransitionDrawableGroup.kt$org.mozilla.focus.animation.TransitionDrawableGroup.kt</ID>
+    <ID>AbsentOrWrongFileLicense:URLExceptionTest.kt$org.mozilla.focus.activity.URLExceptionTest.kt</ID>
+    <ID>AbsentOrWrongFileLicense:ViewUtils.kt$org.mozilla.focus.utils.ViewUtils.kt</ID>
+    <ID>CollapsibleIfStatements:MainActivity.kt$MainActivity$if (!isTaskRoot) { if (intent.hasCategory(Intent.CATEGORY_LAUNCHER) &amp;&amp; Intent.ACTION_MAIN == intent.action) { finish() return } }</ID>
+    <ID>CollapsibleIfStatements:UrlInputFragment.kt$UrlInputFragment.&lt;no name provided&gt;$if (reverse) { if (isOverlay) { dismiss() } }</ID>
+    <ID>EmptyFunctionBlock:AutocompleteListFragment.kt$AutocompleteListFragment.&lt;no name provided&gt;${}</ID>
+    <ID>EmptyFunctionBlock:ExceptionsListFragment.kt$ExceptionsListFragment.&lt;no name provided&gt;${}</ID>
+    <ID>EmptyFunctionBlock:FirstrunFragment.kt$FirstrunFragment.&lt;no name provided&gt;${}</ID>
+    <ID>EmptyFunctionBlock:ManualAddSearchEnginePreference.kt$ManualAddSearchEnginePreference.&lt;no name provided&gt;${}</ID>
+    <ID>EmptyFunctionBlock:TabSheetFragment.kt$TabSheetFragment${}</ID>
+    <ID>ImplicitDefaultLocale:LocalizedContent.kt$LocalizedContent$String.format( "%s (Build #%s)", packageInfo.versionName, packageInfo.versionCode.toString() + engineIndicator )</ID>
+    <ID>LongMethod:BrowserFragment.kt$BrowserFragment$@Suppress("ComplexMethod") override fun onClick(view: View)</ID>
+    <ID>LongMethod:BrowserMenuAdapter.kt$BrowserMenuAdapter$private fun initializeMenu(url: String, customTabConfig: CustomTabConfig?)</ID>
+    <ID>MatchingDeclarationName:SettingsSearchMenuRobot.kt$SearchSettingsRobot</ID>
+    <ID>MayBeConst:AddToHomescreenDialogFragment.kt$AddToHomescreenDialogFragment.Companion$private val BLOCKING_ENABLED = "blocking_enabled"</ID>
+    <ID>MayBeConst:AddToHomescreenDialogFragment.kt$AddToHomescreenDialogFragment.Companion$private val REQUEST_DESKTOP = "request_desktop"</ID>
+    <ID>MayBeConst:AddToHomescreenDialogFragment.kt$AddToHomescreenDialogFragment.Companion$private val TITLE = "title"</ID>
+    <ID>MayBeConst:AddToHomescreenDialogFragment.kt$AddToHomescreenDialogFragment.Companion$private val URL = "url"</ID>
+    <ID>MayBeConst:AddToHomescreenDialogFragment.kt$AddToHomescreenDialogFragment.Companion$val FRAGMENT_TAG = "add-to-homescreen-prompt-dialog"</ID>
+    <ID>MayBeConst:CrashReporterFragment.kt$CrashReporterFragment.Companion$val FRAGMENT_TAG = "crash-reporter"</ID>
+    <ID>MayBeConst:Features.kt$Features.Companion$val SEARCH_TERMS_OR_URL: Boolean = true</ID>
+    <ID>MayBeConst:IconGenerator.kt$IconGenerator.Companion$private val DEFAULT_ICON_CHAR = '?'</ID>
+    <ID>MayBeConst:IconGenerator.kt$IconGenerator.Companion$private val TEXT_SIZE_DP = 36f</ID>
+    <ID>MayBeConst:ManualAddSearchEnginePreference.kt$ManualAddSearchEnginePreference.Companion$private val SEARCH_ENGINE_NAME_KEY = "search-engine-name"</ID>
+    <ID>MayBeConst:ManualAddSearchEnginePreference.kt$ManualAddSearchEnginePreference.Companion$private val SEARCH_QUERY_KEY = "search-query"</ID>
+    <ID>MayBeConst:ManualAddSearchEnginePreference.kt$ManualAddSearchEnginePreference.Companion$private val SUPER_STATE_KEY = "super-state"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Category$val ACTION = "action"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Category$val ERROR = "error"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Category$val HISTOGRAM = "histogram"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Extra$val AUTOCOMPLETE = "autocomplete"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Extra$val ERROR_CODE = "error_code"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Extra$val FROM = "from"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Extra$val HIGHLIGHTED = "highlighted"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Extra$val SEARCH_SUGGESTION = "search_suggestion"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Extra$val SELECTED = "selected"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Extra$val SOURCE = "source"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Extra$val SUBMIT_CRASH = "submit_crash"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Extra$val SUCCESS = "success"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Extra$val TO = "to"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Extra$val TOTAL = "total"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Extra$val TOTAL_URI_COUNT = "total_uri_count"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Extra$val UNIQUE_DOMAINS_COUNT = "unique_domains_count"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val BACKGROUND = "background"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val CANCEL = "cancel"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val CHANGE = "change"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val CLICK = "click"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val COPY = "copy"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val FOREGROUND = "foreground"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val HIDE = "hide"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val INSTALL = "install"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val INTENT_CUSTOM_TAB = "intent_custom_tab"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val INTENT_URL = "intent_url"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val LONG_PRESS = "long_press"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val OPEN = "open"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val PAGE = "page"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val REMOVE = "remove"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val REMOVE_ALL = "remove_all"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val REORDER = "reorder"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val RESOURCE = "resource"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val RESTORE = "restore"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val SAVE = "save"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val SHARE = "share"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val SHARE_INTENT = "share_intent"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val SHOW = "show"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val SWIPE = "swipe"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val TEXT_SELECTION_INTENT = "text_selection_intent"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val TYPE_QUERY = "type_query"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val TYPE_SELECT_QUERY = "select_query"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val TYPE_URL = "type_url"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val ADD_SEARCH_ENGINE_LEARN_MORE = "search_engine_learn_more"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val ADD_TO_HOMESCREEN_DIALOG = "add_to_homescreen_dialog"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val ALLOWLIST = "allowlist"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val APP = "app"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val APP_ICON = "app_icon"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val AUTOCOMPLETE_DOMAIN = "autocomplete_domain"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val AUTOFILL = "autofill"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val BACK_BUTTON = "back_button"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val BLOCKING_SWITCH = "blocking_switch"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val BROWSER = "browser"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val BROWSER_CONTEXTMENU = "browser_contextmenu"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val CRASH_REPORTER = "crash_reporter"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val CUSTOM_SEARCH_ENGINE = "custom_search_engine"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val CUSTOM_TAB_ACTION_BUTTON = "custom_tab_action_bu"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val CUSTOM_TAB_CLOSE_BUTTON = "custom_tab_close_but"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val DESKTOP_REQUEST_CHECK = "desktop_request_check"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val DOWNLOAD_DIALOG = "download_dialog"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val ERASE_BUTTON = "erase_button"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val FIRSTRUN = "firstrun"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val GECKO_ENGINE = "gecko_engine"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val HOMESCREEN_SHORTCUT = "homescreen_shortcut"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val MAKE_DEFAULT_BROWSER_OPEN_WITH = "make_default_browser_open_with"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val MAKE_DEFAULT_BROWSER_SETTINGS = "make_default_browser_settings"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val MENU = "menu"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val NOTIFICATION = "notification"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val NOTIFICATION_ACTION = "notification_action"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val RECENT_APPS = "recent_apps"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val REMOVE_SEARCH_ENGINES = "remove_search_engines"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val SEARCH_BAR = "search_bar"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val SEARCH_ENGINE_SETTING = "search_engine_setting"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val SEARCH_SUGGESTION_PROMPT = "search_suggestion_prompt"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val SETTING = "setting"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val SHORTCUT = "shortcut"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val TABS_TRAY = "tabs_tray"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val TIP = "tip"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val ADD_TO_HOMESCREEN = "add_to_homescreen"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val ADD_TO_HOMESCREEN_TIP = "add_to_homescreen_tip"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val AUTOCOMPLETE_URL_TIP = "autocomplete_url_tip"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val CANCEL = "cancel"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val CLOSE_TAB = "close_tab"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val CUSTOM_TAB = "custom_tab"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val DEFAULT = "default"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val DEFAULT_BROWSER_TIP = "default_browser_tip"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val DISABLE_TIPS_TIP = "disable_tips_tip"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val DISABLE_TRACKING_PROTECTION_TIP = "disable_tracking_protection_tip"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val DOWNLOAD = "download"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val ERASE = "erase"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val ERASE_AND_OPEN = "erase_open"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val ERASE_TO_APP = "erase_app"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val ERASE_TO_HOME = "erase_home"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val FIND_IN_PAGE = "find_in_page"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val FINISH = "finish"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val FIREFOX = "firefox"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val FULL_BROWSER = "full_browser"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val IMAGE = "image"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val IMAGE_WITH_LINK = "image+link"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val LINK = "link"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val OPEN = "open"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val OPEN_IN_NEW_TAB_TIP = "open_in_new_tab_tip"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val QUICK_ADD = "quick_add"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val RELOAD = "refresh"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val REPORT_ISSUE = "report_issue"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val RESUME = "resume"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val SEARCH = "search"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val SELECTION = "selection"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val SETTINGS = "settings"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val SKIP = "skip"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val TAB = "tab"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val URL = "url"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val WHATS_NEW = "whats_new"</ID>
+    <ID>MayBeConst:UrlInputFragment.kt$UrlInputFragment.Companion$@JvmField val FRAGMENT_TAG = "url_input"</ID>
+    <ID>MayBeConst:UrlInputFragment.kt$UrlInputFragment.Companion$private val ANIMATION_BROWSER_SCREEN = "browser_screen"</ID>
+    <ID>MayBeConst:UrlInputFragment.kt$UrlInputFragment.Companion$private val ANIMATION_DURATION = 200</ID>
+    <ID>MayBeConst:UrlInputFragment.kt$UrlInputFragment.Companion$private val ARGUMENT_ANIMATION = "animation"</ID>
+    <ID>MayBeConst:UrlInputFragment.kt$UrlInputFragment.Companion$private val ARGUMENT_SESSION_UUID = "sesssion_uuid"</ID>
+    <ID>MayBeConst:UrlInputFragment.kt$UrlInputFragment.Companion$private val TIPS_ALPHA = 0.65f</ID>
+    <ID>NewLineAtEndOfFile:SupportUtilsTest.kt$org.mozilla.focus.utils.SupportUtilsTest.kt</ID>
+    <ID>NewLineAtEndOfFile:TestFocusApplication.kt$org.mozilla.focus.TestFocusApplication.kt</ID>
+    <ID>ReturnCount:MainActivity.kt$MainActivity$override fun onBackPressed()</ID>
+  </CurrentIssues>
+</SmellBaseline>

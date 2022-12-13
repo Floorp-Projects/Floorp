@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<lint>
+    <!-- While we are developing the app and importing/exporting strings from the l10n repository
+         there will always be missing or extra translations. -->
+    <issue id="MissingTranslation" severity="ignore" />
+    <issue id="PluralsCandidate" severity="ignore" />
+    <issue id="StringFormatCount" severity="ignore" />
+    <issue id="TypographyEllipsis" severity="ignore" />
+    <issue id="ExtraTranslation" severity="warning" />
+
+    <!-- Ignore support library lint bug: https://code.google.com/p/android/issues/detail?id=227098
+         (Present in 25.3.1, despite claims of being fixed in 23) -->
+    <issue id="InconsistentLayout">
+        <ignore path="**/appcompat-v7/**/res/layout/notification_template_custom_big.xml"/>
+    </issue>
+
+    <issue id="InvalidPackage">
+        <!-- Sentry: it uses one SDK for desktop apps and Android apps so I assume it's
+        calling functions from desktop apps and silently ignoring those calls when
+        the functions are not available on Android. -->
+        <ignore path="**/sentry*.jar" />
+        <ignore path="**/junit*.jar" />
+    </issue>
+</lint>

@@ -1,0 +1,98 @@
+queue_rules:
+  - name: default
+    conditions:
+      - or:
+        - status-success=complete-pr
+        - and:
+          # For more context, see "Auto Merge" rules down below
+          - status-success=complete-push
+          - or:
+            - and:
+              - base~=^releases[_/].*
+              - head~=^(relbot/focus|automation/sync-strings)-\d+
+            - and:
+              - base=main
+              - head~=relbot/AC-Nightly-.+
+
+pull_request_rules:
+  - name: L10N - Auto Merge
+    conditions:
+      - and:
+        - files~=^(l10n.toml|app/src/main/res/values[A-Za-z-]*/strings\.xml)$
+        # /!\ The line above doesn't prevent random files to be changed alongside
+        # l10n ones. That's why the additional condition exists below. For more
+        # information: https://docs.mergify.com/conditions/#how-to-match-lists
+        - -files~=^(?!(l10n.toml|app/src/main/res/values[A-Za-z-]*/strings\.xml)).+$
+        - or:
+          - and:
+            - author=mozilla-l10n-automation-bot
+            - base=main
+            - head=import-l10n
+            - status-success=complete-pr
+          - and:
+            - author=github-actions[bot]
+            - base~=releases[_/].*
+            - head~=^automation/sync-strings-\d+
+            - status-success=complete-push
+            # Taskcluster only runs on git-push events because github-actions[bot] is not considered
+            # a collaborator, so pull request events not are triggered. That said, github-actions[bot]
+            # doesn't create the PR on a separate fork (unlike mozilla-l10n-automation-bot). That's
+            # why git-push events are taken into account
+    actions:
+      review:
+        type: APPROVE
+        message: LGTM 😎
+      queue:
+        method: rebase
+        name: default
+        rebase_fallback: none
+  - name: Android-Components bump - Auto Merge
+    conditions:
+      - and:
+        - files=buildSrc/src/main/java/AndroidComponents.kt
+        - -files~=^(?!buildSrc/src/main/java/AndroidComponents.kt).+$
+        - author=github-actions[bot]
+        - status-success=complete-push
+        - or:
+          - and:
+            - base=main
+            - head~=relbot/AC-Nightly-.+
+          - and:
+            - base~=^releases[_/].*
+            - head~=^relbot/focus-\d+
+    actions:
+      review:
+        type: APPROVE
+        message: 🚢
+      queue:
+        method: rebase
+        name: default
+        rebase_fallback: none
+  - name: Needs landing - Rebase
+    conditions:
+      - base=main
+      - label=🛬 needs landing
+      - "#approved-reviews-by>=1"
+      - -draft
+    actions:
+      queue:
+        method: rebase
+        name: default
+        rebase_fallback: none
+  - name: Needs landing - Squash
+    conditions:
+      - base=main
+      - label=🛬 needs landing (squash)
+      - "#approved-reviews-by>=1"
+      - -draft
+    actions:
+      queue:
+        method: squash
+        name: default
+        rebase_fallback: none
+  - name: Relbot - delete head branch after merge
+    conditions:
+      - author=github-actions[bot]
+      - merged
+    actions:
+      delete_head_branch:

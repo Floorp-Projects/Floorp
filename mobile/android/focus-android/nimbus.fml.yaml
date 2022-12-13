@@ -1,0 +1,48 @@
+about:
+  description: Nimbus Feature Manifest for Focus Android
+  kotlin:
+    package: org.mozilla.focus
+    class: .nimbus.FocusNimbus
+channels:
+  - debug
+  - nightly
+  - beta
+  - release
+features:
+  onboarding:
+    description: Nimbus feature name intended to control the onboarding plus all CFRs in the app.
+    variables:
+      is-enabled:
+        description: If `true`, the app will show the new onboarding screen
+        type: Boolean
+        default: true
+      is-cfr-enabled:
+        description: If `true`, the app will show the cfrs
+        type: Boolean
+        default: false
+      is-promote-search-widget-dialog-enabled:
+        description: If `true`, the app will show the new dialog for promote search widget
+        type: Boolean
+        default: false
+    defaults:
+      - channel: debug
+        value: {
+          "is-enabled": true,
+          "is-cfr-enabled": true,
+          "is-promote-search-widget-dialog-enabled": true,
+        }
+  cookie-banner:
+    description: Nimbus feature name intended to control the cookie banner handling  in the app.
+    variables:
+      is-cookie-handling-enabled:
+        description: If 'true' , the app will show the settings part for cookie banner handling
+        type: Boolean
+        default: false
+    defaults:
+      - channel: debug
+        value: {
+          "is-cookie-handling-enabled": true
+        }
+types:
+  objects: { }
+  enums: { }

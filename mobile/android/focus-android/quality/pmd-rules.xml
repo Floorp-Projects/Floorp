@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<ruleset name="Custom ruleset"
+         xmlns="http://pmd.sf.net/ruleset/1.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="http://pmd.sf.net/ruleset_xml_schema.xsd"
+         xsi:schemaLocation="http://pmd.sf.net/ruleset/1.0.0 http://pmd.sf.net/ruleset_xml_schema.xsd">
+
+    <description>Focus Android Ruleset</description>
+
+    <rule ref="rulesets/java/basic.xml"/>
+    <rule ref="rulesets/java/braces.xml"/>
+    <rule ref="rulesets/java/clone.xml"/>
+    <rule ref="rulesets/java/codesize.xml"/>
+
+    <!-- We'll use the entire 'strings' ruleset -->
+    <rule ref="rulesets/java/strings.xml"/>
+
+    <!-- Here's some rules we'll specify one at a time -->
+    <rule ref="rulesets/java/unusedcode.xml/UnusedLocalVariable"/>
+    <rule ref="rulesets/java/unusedcode.xml/UnusedPrivateField"/>
+    <rule ref="rulesets/java/unusedcode.xml/UnusedPrivateMethod"/>
+    <rule ref="rulesets/java/imports.xml/DuplicateImports"/>
+    <rule ref="rulesets/java/unnecessary.xml/UnnecessaryConversionTemporary"/>
+
+    <!-- We want to customize this rule a bit, change the message and raise the priority  -->
+    <rule
+        message="Must handle exceptions"
+        ref="rulesets/java/empty.xml/EmptyCatchBlock">
+        <priority>2</priority>
+    </rule>
+
+    <!-- Now we'll customize a rule's property value -->
+    <rule ref="rulesets/java/codesize.xml/CyclomaticComplexity">
+        <properties>
+            <property name="reportLevel" value="5"/>
+        </properties>
+    </rule>
+</ruleset>

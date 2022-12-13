@@ -1,0 +1,153 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="action_ok">እሺ</string>
+  <string name="action_save">ማስቀመጥ</string>
+  <string name="urlbar_hint">ፍለጋ ወይም አድራሻ ያስገቡ</string>
+  <string name="teaser">አውቶማቲክ የግል አሰሳ\nያስሱ. ደምስስ. ድገም.</string>
+  <string name="feedback_erase">የአሰሳ ታሪክዎ ተደምስሷል</string>
+  <string name="search_hint">ምፈልገው %1$s</string>
+  <string name="menu_share">ያጋሩ…\n\n</string>
+  <string name="menu_add_to_home_screen">ወደ መነሻ ማያ ገጽ ማከል\n</string>
+  <string name="menu_whats_new">አዲስ ምን አለ</string>
+  <string name="menu_settings">ቅንብሮች</string>
+  <string name="menu_about">ስለ</string>
+  <string name="menu_help">እገዛ</string>
+  <string name="menu_rights">የእርስዎ መብቶች</string>
+  <string name="menu_trackers_blocked_title">ተከታታዮች ታግደዋል</string>
+  <string name="share_dialog_title">በኩል ያጋሩ</string>
+  <string name="notification_erase_text">የአሰሳ ታሪክን አጥፋ</string>
+  <string name="notification_action_open">ክፈት</string>
+  <string name="notification_action_erase_and_open">አጠፉ እና ክፈት</string>
+  <string name="shortcut_erase_short_label">አጠፉ</string>
+  <string name="shortcut_erase_long_label">የአሰሳ ታሪክን አጥፋ</string>
+  <string name="text_selection_search_action">በግል ይፈልጉ</string>
+
+  <string name="preference_category_search">ፍለጋ</string>
+  <string name="preference_search_engine_default">ነባሪ</string>
+  <string name="preference_state_on">በርቷል</string>
+  <string name="preference_state_off">ጠፍቷል</string>
+  <string name="preference_subitem_autocomplete">URL ራስ-አጠናቅቅ</string>
+  <string name="preference_autocomplete_action_add">+ ብጁ አክል URL</string>
+  <string name="preference_autocomplete_title_add">ብጁ አክል URL</string>
+  <string name="preference_autocomplete_title_remove">ብጁ አስወግድ URLs</string>
+  <string name="preference_autocomplete_learn_more">ተጨማሪ እወቅ</string>
+  <string name="preference_autocomplete_custom_summary">አክል ወይም አደራጅ ብጁ ራስ-አጠናቅቅ URLs</string>
+  <string name="preference_autocomplete_add_title">URL መጨመር</string>
+  <string name="preference_autocomplete_add_hint">ለጥፍ ወይም ግባ URL</string>
+  <string name="preference_autocomplete_add_example">ምሳሌ : ምሳሌ.com</string>
+  <string name="preference_autocomplete_add_confirmation">አዲስ ብጁ URL ታክሏል</string>
+  <string name="preference_autocomplete_menu_remove">አስወግድ</string>
+  <string name="preference_autocomplete_action_remove_content_description">አስወግድ</string>
+  <string name="preference_autocomplete_add_error">በድጋሚ አረጋጡ ያስገቡትን URL</string>
+  <string name="preference_language">ቋንቋ</string>
+  <string name="preference_language_systemdefault">የስርዓት ነባሪ</string>
+  <string name="preference_category_privacy">የግል መብት መጠበቅ</string>
+  <string name="preference_privacy_block_ads">የማስታወቂያ መከታተያዎችን አግድ</string>
+  <string name="preference_privacy_block_ads_summary">"ማስታወቂያዎች ባይጫኑ እንኳን አንዳንድ የማስታወቂያ መከታተያዎች የጣቢያ ጉብኝቶችን ይከታተላሉ "</string>
+  <string name="preference_privacy_block_analytics">መተንተኛ ተቆጣጣሪዎች ያግዱ</string>
+  <string name="preference_privacy_block_analytics_summary">እንደ ማሸብለል እና መታ በማድረግ ያሉ እንቅስቃሴዎችን ለመተንተን እና ለመለካት ጥቅም ላይ የዋለ</string>
+  <string name="preference_privacy_block_social">ማህበራዊ ሚዲያ መከታተያዎችን አግድ\n</string>
+  <string name="preference_privacy_block_social_summary">የእርስዎን ጉብኝቶች ለመከታተል እና እንደ የአጋራ አዝራሮች ያሉ ተግባሮችን ለማሳየት በጣቢያዎች ላይ የተካተተ</string>
+  <string name="preference_privacy_block_content">ሌሎች የይዘት መከታተያዎችን ያግዱ\n</string>
+  <string name="preference_privacy_block_content_summary2">ማስቻል አንዳንድ ገፆችን ያልታሰበ ፀባይ እንዲፈጽሙ ሊያደርጋቸው ይችላል</string>
+  <string name="preference_privacy_category_cookies">ኩኪዎችን አግድ</string>
+  <string name="preference_privacy_should_block_cookies_no_option">አይ</string>
+  <string name="preference_privacy_secure_mode">ስውር</string>
+  <string name="preference_privacy_stealth_summary">መተግበሪያዎችን በሚቀይሩበት ጊዜ ድረ-ገጾችን ደብቅ\n</string>
+  <string name="preference_category_performance">አፈፃፀም</string>
+  <string name="preference_performance_block_webfonts">የድር ቅርጸ ቁምፊዎችን አግድ</string>
+  <string name="preference_performance_block_webfonts_summary">አዶዎችን ወይም ምስሎችን የጠፉ ሊያስከትል ይችላል\n</string>
+  <string name="preference_default_browser2">አከናውን %1$s ነባሪ አሳሽ</string>
+  <string name="preference_category_mozilla">ሞዚላ</string>
+  <string name="preference_mozilla_telemetry2">የአጠቃቀም ውሂብ ይላኩ</string>
+  <string name="preference_mozilla_telemetry_summary">ተጨማሪ ይወቁ</string>
+  <string name="preference_mozilla_telemetry_summary2">ሞዚላ %1$s ለሁሉም ለማቅረብ እና ለማሻሻል የሚያስፈልገንን ብቻ ለመሰብሰብ ይጥራል</string>
+  <string name="preference_privacy_notice">የግላዊነት ማሳወቂያ</string>
+  <string name="preference_about">ስለ %1$s</string>
+  <string name="preference_search_installed_search_engines">የተጫኑ የፍለጋ ፕሮግራሞች</string>
+  <string name="preference_search_restore">ነባሪ የፍለጋ ፕሮግራሞችን ወደነበረበት መልስ</string>
+  <string name="preference_search_add2">+ ሌላ የፍለጋ ፕሮግራም አክል</string>
+  <string name="preference_search_remove_title">የፍለጋ ፕሮግራሞችን አስወግድ</string>
+  <string name="preference_search_remove">አስወግድ</string>
+  <string name="action_option_add_search_engine">የፍለጋ ፕሮግራም አክል\n</string>
+  <string name="search_add_manually_name_hint">የመፈለጊያ ማሸን ስም</string>
+  <string name="search_add_manually_string">የሚጠቀሙ ሕብረ ቁምፊዎችን ፈልግ</string>
+  <string name="search_add_manually_save">አስቀምጥ</string>
+  <string name="search_add_manually_example">ለምሳሌ: ለምሳሌ.com /search/?q=%s</string>
+  <string name="search_add_confirmation">አዲስ የፍለጋ ፕሮግራም ታክሏል</string>
+  <string name="search_add_error_empty_name">የፍለጋውን ስም አስገባ</string>
+  <string name="search_add_error_duplicate_name">አንድ የተጫነ የፍለጋ ፕሮግራም አስቀድሞ በዚያ ስም እየተጠቀመ ነው\n</string>
+  <string name="search_add_error_empty_search">የፍለጋ ህብረ ቁምፊ ያስገቡ</string>
+  <string name="search_add_error_format">የፍለጋ ሕብረቁምፊ ና የምሳሌ ቅርጸት እንደ ሚመሳሰሉ አረጋግጥ</string>
+  <string name="content_description_clear_input">ግቤት አጽዳ</string>
+  <string name="content_description_dismiss_input">አሰናብት</string>
+  <string name="content_description_erase">የአሰሳ ታሪክን አጥፋ</string>
+  <string name="content_description_tab_counter">ትሮች ተከፍተዋል: %1$s</string>
+  <string name="content_description_lock">ደህንነቱ የተጠበቀ ግንኙነት</string>
+  <string name="accessibility_announcement_loading">በመጫን ላይ</string>
+  <string name="accessibility_announcement_loading_finished">ድር ጣቢያ ተጭኗል</string>
+  <string name="content_description_menu">ተጨማሪ አማራጮች</string>
+  <string name="content_description_forward">ወደ ፊት አስስ</string>
+  <string name="content_description_reload">ድር ጣቢያ እንደገና ይጫኑ</string>
+  <string name="content_description_back">ወደ ኋላ ዳስስ</string>
+  <string name="content_description_stop">ድር ጣቢያ መጫን አቁም</string>
+  <string name="content_description_customtab_exit">ወደ ቀዳሚው መተግበሪያ ይመለሱ</string>
+  <string name="content_description_blocking_switch">መከታተያዎችን አግድ</string>
+  <string name="your_rights">የእርስዎ መብቶች</string>
+  <string name="external_app_prompt_title">አገናኙን በሌላ መተግበሪያ ውስጥ ይክፈቱ</string>
+  <string name="external_app_prompt">መሄድ ይችላሉ %1$s ይህንን አገናኝ በ ውስጥ ለመክፈት %2$s</string>
+  <string name="external_app_prompt_no_app_title">አገናኙን መክፈት የሚችል መተግበሪያ ያግኙ</string>
+  <string name="external_multiple_apps_matched_exit">የግል አሰሳውን ውጣ?</string>
+  <string name="download_snackbar_finished">%1$s ተጠናቅቋል</string>
+  <string name="download_snackbar_open">ክፈት</string>
+
+
+
+
+
+
+
+
+
+  <string name="error_hostLookup_title">አገልጋይ አልተገኘም</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <string name="firstrun_defaultbrowser_title">ግላዊነትዎን ያስፉ</string>
+  <string name="firstrun_defaultbrowser_text2">የግል ፍለጋን ወደ ቀጣዩ ደረጃ ይወስዳል::በጣቢያዎች ውስጥ እርስዎን ሊከታተል የሚችል እና የገፅ ጭነት ጊዜዎችን ማደንዘዝ ማስታወቂያዎችን እና ሌላ ይዘትን አግድ</string>
+  <string name="firstrun_search_title">የእርስዎ ፍለጋ, የእርስዎ መንገድ</string>
+  <string name="firstrun_search_text">የሆነ የተለየ ነገር በመፈለግ ላይ? በቅንብሮች ውስጥ ሌላ ነባሪ የፍለጋ ፕሮግራም ይምረጡ</string>
+  <string name="firstrun_shortcut_title">ወደ መነሻ ማያ ገጽዎ አቋራጮችን ያክሉ</string>
+  <string name="firstrun_shortcut_text">ወደ እርስዎ ተወዳጅ ጣቢያዎች ይመለሱ %1$s በፍጥነት:: በቀላሉ ይምረጡ \"ወደ መነሻ ማያ ገጽ አክል\" ከ ዘንድ %1$s ምናሌ::</string>
+  <string name="firstrun_privacy_title">ግላዊነት የማድረግ ልማድ ያድርጉ</string>
+  <string name="firstrun_privacy_text">እንደ %1$s ነባሪ አሳሽዎ አድርገው ያቀናብሩ እና የድር ገጾች ከሌላ መተግበሪያዎች ሲከፍቱ የግል ማሰሻዎችን ጥቅሞች ያግኙ</string>
+  <string name="firstrun_close_button">እሺ ገባኝ!</string>
+  <string name="firstrun_skip_button">እለፍ</string>
+  <string name="firstrun_next_button">ቀጣይ</string>
+  <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_action_add">ጨምር</string>
+  <string name="dialog_addtohomescreen_action_cancel">አጥፋ</string>
+  <string name="dialog_addtohomescreen_tracking_protection">አቋራጭ ከተሰናከለ ከመከታተያ ጥበቃ ጋር ይከፈታል</string>
+  <string name="notification_browsing_session_channel_name">የግል የማሰሻ ክፍል</string>
+  <string name="tabs_tray_action_erase">የማሰሻ ታሪክን አጥፋ</string>
+  <string name="download_firefox">ፋየርፎክስ አውርድ</string>
+  <string name="your_rights_content1">%1$s ሞዚላ እና ሌሎች አስተዋፅዖ አድራጊዎች የተሰሩ ነጻ እና ግልጽ ምንጭ ሶፍትዌሮች ናቸው</string>
+  <string name="gv_prompt_username_hint">የተጠቃሚ ስም</string>
+  <string name="gv_prompt_password_hint">የይለፍ ቃል</string>
+  <string name="gv_prompt_clear">አጽዳ</string>
+</resources>

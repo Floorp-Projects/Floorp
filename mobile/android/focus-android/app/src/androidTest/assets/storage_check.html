@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1>Storage check</h1>
+
+<script type="text/javascript">
+    if (sessionStorage.getItem('focusSessionTest') == 'caterpillar') {
+        document.write('<p>Session storage has value</p>');
+    } else {
+        document.write('<p>Session storage empty</p>');
+    }
+
+    if (localStorage.getItem('focusLocalTest') == 'caterpillar') {
+        document.write('<p>Local storage has value</p>');
+    } else {
+        document.write('<p>Local storage empty</p>');
+    }
+</script>
+
+</body>
+</html>

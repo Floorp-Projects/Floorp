@@ -1,0 +1,56 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: focus_android_taskgraph.loader.multi_dep:loader
+
+transforms:
+    - focus_android_taskgraph.transforms.multi_dep:transforms
+    - focus_android_taskgraph.transforms.push_apk:transforms
+    - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - signing
+
+primary-dependency: signing
+
+group-by: build-type
+
+only-for-build-types:
+    - nightly
+    - focus-release
+    - klar-release
+    - beta
+
+job-template:
+    attributes:
+        shipping_phase: promote     # APKs are sent to testing tracks
+    description: Publish Focus
+    worker-type: push-apk
+    run-on-tasks-for: []
+    worker:
+        certificate-alias: focus
+        commit: true
+        channel:
+            by-build-type:
+                nightly: nightly
+                focus-release: focus-release
+                klar-release: klar-release
+                beta: beta
+        dep:
+            by-level:
+                '3': false
+                default: true
+        product: focus-android
+    treeherder:
+        job-symbol:
+            by-build-type:
+                default: gp
+                focus-release: gpf
+                klar-release: gpkl
+        kind: build
+    routes:
+        by-level:
+            '3':
+              - "notify.email.release-mgmt@mozilla.com.on-failed"
+            'default': []

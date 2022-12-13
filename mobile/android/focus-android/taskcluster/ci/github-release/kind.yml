@@ -1,0 +1,53 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: focus_android_taskgraph.loader.multi_dep:loader
+
+transforms:
+    - focus_android_taskgraph.transforms.multi_dep:transforms
+    - focus_android_taskgraph.transforms.github_release:transforms
+    - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - signing
+
+primary-dependency: signing
+
+group-by: build-type
+
+only-for-build-types:
+    - beta
+    - focus-release
+    - klar-release
+
+job-template:
+    attributes:
+        shipping_phase: ship
+    description: Create or update a Github release in order to upload APKs
+    worker-type: github
+    worker:
+        action: release
+        github-project:
+            by-level:
+                '3': focus-android
+                default: staging-focus-android
+        is-prerelease:
+            by-build-type:
+                beta: true
+                focus-release: false
+                klar-release: false
+                default: true
+        release-name:
+            by-build-type:
+                beta: Focus/Klar {version}-beta
+                focus-release: Focus/Klar v{version}
+                klar-release: Focus/Klar v{version}
+
+    treeherder:
+        job-symbol:
+            by-build-type:
+                focus-release: fgh-r
+                klar-release: klgh-r
+                default: gh-r
+        kind: build
