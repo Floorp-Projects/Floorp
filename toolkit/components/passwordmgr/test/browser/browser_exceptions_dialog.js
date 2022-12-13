@@ -43,7 +43,7 @@ add_task(async function test_disable() {
   });
   Services.logins.setLoginSavingEnabled(LOGIN_HOST, false);
   await promiseChanged;
-  is(countDisabledHosts(dialog), 1, "Verify disabled host added");
+  Assert.equal(countDisabledHosts(dialog), 1, "Verify disabled host added");
   await BrowserTestUtils.closeWindow(dialog);
 });
 
@@ -57,7 +57,7 @@ add_task(async function test_enable() {
   });
   Services.logins.setLoginSavingEnabled(LOGIN_HOST, true);
   await promiseChanged;
-  is(countDisabledHosts(dialog), 0, "Verify disabled host removed");
+  Assert.equal(countDisabledHosts(dialog), 0, "Verify disabled host removed");
   await BrowserTestUtils.closeWindow(dialog);
 });
 
@@ -75,52 +75,65 @@ add_task(async function test_block_button_with_enter_key() {
   let btnHttpsOnlyOffTmp = dialog.document.getElementById("btnHttpsOnlyOffTmp");
   let btnAllow = dialog.document.getElementById("btnAllow");
 
-  ok(!btnBlock.hidden, "Block button is visible");
-  ok(btnCookieSession.hidden, "Cookie session button is not visible");
-  ok(btnAllow.hidden, "Allow button is not visible");
-  ok(btnHttpsOnlyOff.hidden, "HTTPS-Only session button is not visible");
-  ok(btnHttpsOnlyOffTmp.hidden, "HTTPS-Only session button is not visible");
-  ok(btnBlock.disabled, "Block button is initially disabled");
-  ok(btnCookieSession.disabled, "Cookie session button is initially disabled");
-  ok(btnAllow.disabled, "Allow button is initially disabled");
-  ok(btnHttpsOnlyOff.disabled, "HTTPS-Only off-button is initially disabled");
-  ok(
+  Assert.ok(!btnBlock.hidden, "Block button is visible");
+  Assert.ok(btnCookieSession.hidden, "Cookie session button is not visible");
+  Assert.ok(btnAllow.hidden, "Allow button is not visible");
+  Assert.ok(btnHttpsOnlyOff.hidden, "HTTPS-Only session button is not visible");
+  Assert.ok(
+    btnHttpsOnlyOffTmp.hidden,
+    "HTTPS-Only session button is not visible"
+  );
+  Assert.ok(btnBlock.disabled, "Block button is initially disabled");
+  Assert.ok(
+    btnCookieSession.disabled,
+    "Cookie session button is initially disabled"
+  );
+  Assert.ok(btnAllow.disabled, "Allow button is initially disabled");
+  Assert.ok(
+    btnHttpsOnlyOff.disabled,
+    "HTTPS-Only off-button is initially disabled"
+  );
+  Assert.ok(
     btnHttpsOnlyOffTmp.disabled,
     "HTTPS-Only temporary off-button is initially disabled"
   );
 
   EventUtils.sendString(LOGIN_HOST, dialog);
 
-  ok(
+  Assert.ok(
     !btnBlock.disabled,
     "Block button is enabled after entering text in the URL input"
   );
-  ok(
+  Assert.ok(
     btnCookieSession.disabled,
     "Cookie session button is still disabled after entering text in the URL input"
   );
-  ok(
+  Assert.ok(
     btnAllow.disabled,
     "Allow button is still disabled after entering text in the URL input"
   );
-  ok(
+  Assert.ok(
     btnHttpsOnlyOff.disabled,
     "HTTPS-Only off-button is still disabled after entering text in the URL input"
   );
-  ok(
+  Assert.ok(
     btnHttpsOnlyOffTmp.disabled,
     "HTTPS-Only session off-button is still disabled after entering text in the URL input"
   );
 
-  is(
+  Assert.equal(
     countDisabledHosts(dialog),
     0,
     "No blocked hosts should be present before hitting the Enter/Return key"
   );
   EventUtils.sendKey("return", dialog);
 
-  is(countDisabledHosts(dialog), 1, "Verify the blocked host was added");
-  ok(
+  Assert.equal(
+    countDisabledHosts(dialog),
+    1,
+    "Verify the blocked host was added"
+  );
+  Assert.ok(
     btnBlock.disabled,
     "Block button is disabled after submitting to the list"
   );

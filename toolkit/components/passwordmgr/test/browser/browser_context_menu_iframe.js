@@ -64,11 +64,11 @@ add_task(async function test_context_menu_iframe_fill() {
       let firstLoginItem = popupMenu.getElementsByClassName(
         "context-login-item"
       )[0];
-      ok(firstLoginItem, "Found the first login item");
+      Assert.ok(firstLoginItem, "Found the first login item");
 
       await TestUtils.waitForTick();
 
-      ok(
+      Assert.ok(
         BrowserTestUtils.is_visible(firstLoginItem),
         "First login menuitem is visible"
       );
@@ -84,12 +84,16 @@ add_task(async function test_context_menu_iframe_fill() {
 
       // Find the used login by it's username.
       let login = getLoginFromUsername(firstLoginItem.label);
-      is(login.password, passwordValue, "Password filled and correct.");
+      Assert.equal(
+        login.password,
+        passwordValue,
+        "Password filled and correct."
+      );
 
       let usernameNewValue = await promiseFrameInputValue(
         "form-basic-username"
       );
-      is(
+      Assert.equal(
         usernameOriginalValue,
         usernameNewValue,
         "Username value was not changed."
@@ -121,7 +125,7 @@ add_task(async function test_context_menu_iframe_sandbox() {
         function checkDisabled() {
           info("checkDisabled for test_context_menu_iframe_sandbox");
           let popupHeader = document.getElementById("fill-login");
-          ok(
+          Assert.ok(
             popupHeader.hidden,
             "Check that the Fill Login menu item is hidden"
           );
@@ -150,11 +154,11 @@ add_task(async function test_context_menu_iframe_sandbox_same_origin() {
         "#form-basic-password",
         function checkDisabled() {
           let popupHeader = document.getElementById("fill-login");
-          ok(
+          Assert.ok(
             !popupHeader.hidden,
             "Check that the Fill Login menu item is visible"
           );
-          ok(
+          Assert.ok(
             !popupHeader.disabled,
             "Check that the Fill Login menu item is disabled"
           );

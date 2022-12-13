@@ -13,7 +13,7 @@ function task({ contentIds, expected }) {
   });
 
   function unexpectedContentEvent(evt) {
-    ok(false, "Received a " + evt.type + " event on content");
+    Assert.ok(false, "Received a " + evt.type + " event on content");
   }
 
   var gDoc = null;
@@ -56,7 +56,7 @@ function task({ contentIds, expected }) {
   function test_inputAddHandler(evt) {
     if (expected) {
       removeEventListener(evt.type, test_inputAddHandler, false);
-      is(
+      Assert.equal(
         evt.target.id,
         contentIds.FORM1_ID,
         evt.type +
@@ -83,7 +83,7 @@ function task({ contentIds, expected }) {
   function test_inputChangeFormHandler(evt) {
     if (expected) {
       removeEventListener(evt.type, test_inputChangeFormHandler, false);
-      is(
+      Assert.equal(
         evt.target.id,
         contentIds.FORM2_ID,
         evt.type + " event targets correct form element (changed form)"
@@ -109,7 +109,7 @@ function task({ contentIds, expected }) {
   function test_inputChangesTypeHandler(evt) {
     if (expected) {
       removeEventListener(evt.type, test_inputChangesTypeHandler, false);
-      is(
+      Assert.equal(
         evt.target.id,
         contentIds.FORM1_ID,
         evt.type + " event targets correct form element (changed type)"
@@ -166,7 +166,7 @@ add_task(async function test_usernameOnlyForm() {
     );
     await promise;
 
-    ok(true, "Test completed");
+    Assert.ok(true, "Test completed");
     gBrowser.removeCurrentTab();
   }
 });
@@ -198,7 +198,7 @@ add_task(async function test_nonSupportedInputType() {
     );
     await promise;
 
-    ok(true, "Test completed");
+    Assert.ok(true, "Test completed");
     gBrowser.removeCurrentTab();
   }
 });
@@ -232,7 +232,7 @@ add_task(async function test_usernameOnlyFormPrefOff() {
     );
     await promise;
 
-    ok(true, "Test completed");
+    Assert.ok(true, "Test completed");
     gBrowser.removeCurrentTab();
   }
 

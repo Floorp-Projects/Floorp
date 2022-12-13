@@ -61,10 +61,10 @@ add_task(async function test_warningForLocalIP() {
     });
 
     let popup = document.getElementById("PopupAutoComplete");
-    ok(popup, "Got popup");
+    Assert.ok(popup, "Got popup");
 
     let ifr = browser.browsingContext.children[0];
-    ok(ifr, "Got iframe");
+    Assert.ok(ifr, "Got iframe");
 
     let popupShown = openACPopup(
       popup,
@@ -75,7 +75,7 @@ add_task(async function test_warningForLocalIP() {
     await popupShown;
 
     let item = popup.querySelector(test.expected);
-    ok(item, "Got expected richlistitem");
+    Assert.ok(item, "Got expected richlistitem");
 
     await BrowserTestUtils.waitForCondition(
       () => !item.collapsed,

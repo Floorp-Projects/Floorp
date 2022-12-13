@@ -36,7 +36,7 @@ add_task(
       async function(browser) {
         let popup = document.getElementById("PopupAutoComplete");
 
-        ok(popup, "Got Popup");
+        Assert.ok(popup, "Got Popup");
 
         await openACPopup(
           popup,
@@ -66,12 +66,12 @@ add_task(
             return [contentUsername, contentPassword];
           }
         );
-        is(
+        Assert.equal(
           username,
           "username1",
           "Username was autocompleted with correct value."
         );
-        is(
+        Assert.equal(
           password,
           "",
           "Password was not autocompleted, because field is disabled."
@@ -91,7 +91,7 @@ add_task(
       async function(browser) {
         let popup = document.getElementById("PopupAutoComplete");
 
-        ok(popup, "Got Popup");
+        Assert.ok(popup, "Got Popup");
 
         await openACPopup(
           popup,
@@ -123,12 +123,12 @@ add_task(
             return [contentUsername, contentPassword];
           }
         );
-        is(
+        Assert.equal(
           username,
           "username1",
           "Username was autocompleted with correct value."
         );
-        is(
+        Assert.equal(
           password,
           "",
           "Password was not autocompleted, because field is readonly."

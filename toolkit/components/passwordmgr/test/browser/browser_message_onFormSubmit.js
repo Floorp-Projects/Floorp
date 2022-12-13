@@ -41,7 +41,7 @@ add_task(async function test_login_save_disable() {
       });
 
       await promise;
-      ok(true, "Test completed");
+      Assert.ok(true, "Test completed");
     }
   );
 });
@@ -76,7 +76,7 @@ add_task(async function test_login_save_enable() {
       });
 
       await Promise.all([p1, p2]);
-      ok(true, "Test completed");
+      Assert.ok(true, "Test completed");
     }
   );
 });

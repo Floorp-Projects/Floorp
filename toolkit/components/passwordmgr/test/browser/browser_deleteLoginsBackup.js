@@ -83,12 +83,12 @@ add_task(
       "password-storage-updated"
     );
     Services.logins.addLogin(login1);
-    ok(true, "added login1");
+    Assert.ok(true, "added login1");
     await loginStoreExists();
     Services.logins.addLogin(fxaKey);
-    ok(true, "added fxaKey");
+    Assert.ok(true, "added fxaKey");
     await loginBackupExists();
-    ok(true, "logins-backup.json now exists");
+    Assert.ok(true, "logins-backup.json now exists");
     await storageUpdatePromise;
     info("Writes to storage are complete for addLogin calls");
 
@@ -98,7 +98,7 @@ add_task(
     await storageUpdatePromise;
     info("Writes to storage are complete after removeAllUserFacingLogins call");
     await waitForBackupUpdate();
-    ok(
+    Assert.ok(
       true,
       "logins-backup.json was updated to only store the fxa key, as expected"
     );
@@ -125,7 +125,7 @@ add_task(async function test_deleteLoginsBackup_removeAllUserFacingLogins() {
   info("Add a login to create logins.json");
   Services.logins.addLogin(login1);
   await loginStoreExists();
-  ok(true, "logins.json now exists");
+  Assert.ok(true, "logins.json now exists");
 
   info("Add a second login to create logins-backup.json");
   Services.logins.addLogin(login2);
@@ -167,11 +167,11 @@ add_task(async function test_deleteLoginsBackup_removeAllLogins() {
   );
   info("Add a login to create logins.json");
   Services.logins.addLogin(login1);
-  ok(true, "added login1");
+  Assert.ok(true, "added login1");
   await loginStoreExists();
-  ok(true, "logins.json now exists");
+  Assert.ok(true, "logins.json now exists");
   Services.logins.addLogin(login2);
-  ok(true, "added login2");
+  Assert.ok(true, "added login2");
   await loginBackupExists();
   info("logins-backup.json now exists");
 

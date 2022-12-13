@@ -18,7 +18,7 @@ add_task(async function mainMenu_entryPoint() {
     "Main menu button should be visible."
   );
   info("mainMenu_entryPoint, Main menu button is visible");
-  is(
+  Assert.equal(
     mainMenu.state,
     "closed",
     `Menu panel (${mainMenu.id}) is initally closed.`
@@ -30,7 +30,7 @@ add_task(async function mainMenu_entryPoint() {
   await popupshown;
 
   info("mainMenu_entryPoint, main menu popup is shown");
-  is(mainMenu.state, "open", `Menu panel (${mainMenu.id}) is open.`);
+  Assert.equal(mainMenu.state, "open", `Menu panel (${mainMenu.id}) is open.`);
 
   let loginsButtonID = "appMenu-passwords-button";
 

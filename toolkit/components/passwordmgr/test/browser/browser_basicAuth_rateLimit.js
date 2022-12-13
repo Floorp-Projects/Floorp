@@ -30,9 +30,9 @@ add_task(async function test() {
       "https://example.com/browser/toolkit/components/passwordmgr/test/browser/authenticate.sjs"
     );
     await authShown;
-    ok(true, "Seen dialog number 1");
+    Assert.ok(true, "Seen dialog number 1");
     await browserLoaded;
-    ok(true, "Loaded document number 1");
+    Assert.ok(true, "Loaded document number 1");
 
     // Reload the document a bit more often than should be allowed.
     // As long as we're in the acceptable range we should receive
@@ -49,10 +49,10 @@ add_task(async function test() {
       });
       if (i < cancelDialogLimit) {
         await authShown;
-        ok(true, `Seen dialog number ${i + 1}`);
+        Assert.ok(true, `Seen dialog number ${i + 1}`);
       }
       await browserLoaded;
-      ok(true, `Loaded document number ${i + 1}`);
+      Assert.ok(true, `Loaded document number ${i + 1}`);
     }
 
     let reloadButton = document.getElementById("reload-button");
@@ -65,9 +65,9 @@ add_task(async function test() {
     browserLoaded = BrowserTestUtils.browserLoaded(browser);
     reloadButton.click();
     await authShown;
-    ok(true, "Seen dialog number 1");
+    Assert.ok(true, "Seen dialog number 1");
     await browserLoaded;
-    ok(true, "Loaded document number 1");
+    Assert.ok(true, "Loaded document number 1");
 
     // Now check loading subresources with auth on the page.
     browserLoaded = BrowserTestUtils.browserLoaded(browser);
@@ -100,11 +100,11 @@ add_task(async function test() {
 
       if (i < cancelDialogLimit) {
         await authShown;
-        ok(true, `Seen dialog number ${i + 1}`);
+        Assert.ok(true, `Seen dialog number ${i + 1}`);
       }
 
       await iframeLoaded;
-      ok(true, `Loaded iframe number ${i + 1}`);
+      Assert.ok(true, `Loaded iframe number ${i + 1}`);
     }
 
     // Verify that third party subresources can not spawn new auth dialogs.
@@ -127,7 +127,10 @@ add_task(async function test() {
     });
 
     await iframeLoaded;
-    ok(true, "Loaded a third party iframe without showing the auth dialog");
+    Assert.ok(
+      true,
+      "Loaded a third party iframe without showing the auth dialog"
+    );
 
     // Verify that pressing enter in the urlbar also resets the counter.
     authShown = promiseAuthWindowShown();

@@ -67,18 +67,22 @@ add_task(async function test_changeUPLoginOnPUpdateForm_accept() {
   await testSubmittingLoginForm(
     "subtst_notifications_change_p.html",
     async function(fieldValues) {
-      is(fieldValues.username, "null", "Checking submitted username");
-      is(fieldValues.password, "pass2", "Checking submitted password");
+      Assert.equal(fieldValues.username, "null", "Checking submitted username");
+      Assert.equal(
+        fieldValues.password,
+        "pass2",
+        "Checking submitted password"
+      );
 
       info("Waiting for select dialog to appear.");
       let doc = (await selectDialogPromise)[0].document;
       let dialog = doc.getElementsByTagName("dialog")[0];
       let listbox = doc.getElementById("list");
 
-      is(listbox.selectedIndex, 0, "Checking selected index");
-      is(listbox.itemCount, 2, "Checking selected length");
+      Assert.equal(listbox.selectedIndex, 0, "Checking selected index");
+      Assert.equal(listbox.itemCount, 2, "Checking selected length");
       ["notifyu1", "notifyu1B"].forEach((username, i) => {
-        is(
+        Assert.equal(
           listbox.getItemAtIndex(i).label,
           username,
           "Check username selection on dialog"
@@ -94,17 +98,17 @@ add_task(async function test_changeUPLoginOnPUpdateForm_accept() {
   );
 
   let logins = Services.logins.getAllLogins();
-  is(logins.length, 2, "Should have 2 logins");
+  Assert.equal(logins.length, 2, "Should have 2 logins");
 
   let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
-  is(login.username, "notifyu1", "Check the username unchanged");
-  is(login.password, "pass2", "Check the password changed");
-  is(login.timesUsed, 2, "Check times used");
+  Assert.equal(login.username, "notifyu1", "Check the username unchanged");
+  Assert.equal(login.password, "pass2", "Check the password changed");
+  Assert.equal(login.timesUsed, 2, "Check times used");
 
   login = SpecialPowers.wrap(logins[1]).QueryInterface(Ci.nsILoginMetaInfo);
-  is(login.username, "notifyu1B", "Check the username unchanged");
-  is(login.password, "notifyp1B", "Check the password unchanged");
-  is(login.timesUsed, 1, "Check times used");
+  Assert.equal(login.username, "notifyu1B", "Check the username unchanged");
+  Assert.equal(login.password, "notifyp1B", "Check the password unchanged");
+  Assert.equal(login.timesUsed, 1, "Check times used");
 
   // cleanup
   login1.password = "pass2";
@@ -126,18 +130,22 @@ add_task(async function test_changeUPLoginOnPUpdateForm_cancel() {
   await testSubmittingLoginForm(
     "subtst_notifications_change_p.html",
     async function(fieldValues) {
-      is(fieldValues.username, "null", "Checking submitted username");
-      is(fieldValues.password, "pass2", "Checking submitted password");
+      Assert.equal(fieldValues.username, "null", "Checking submitted username");
+      Assert.equal(
+        fieldValues.password,
+        "pass2",
+        "Checking submitted password"
+      );
 
       info("Waiting for select dialog to appear.");
       let doc = (await selectDialogPromise)[0].document;
       let dialog = doc.getElementsByTagName("dialog")[0];
       let listbox = doc.getElementById("list");
 
-      is(listbox.selectedIndex, 0, "Checking selected index");
-      is(listbox.itemCount, 2, "Checking selected length");
+      Assert.equal(listbox.selectedIndex, 0, "Checking selected index");
+      Assert.equal(listbox.itemCount, 2, "Checking selected length");
       ["notifyu1", "notifyu1B"].forEach((username, i) => {
-        is(
+        Assert.equal(
           listbox.getItemAtIndex(i).label,
           username,
           "Check username selection on dialog"
@@ -153,17 +161,17 @@ add_task(async function test_changeUPLoginOnPUpdateForm_cancel() {
   );
 
   let logins = Services.logins.getAllLogins();
-  is(logins.length, 2, "Should have 2 logins");
+  Assert.equal(logins.length, 2, "Should have 2 logins");
 
   let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
-  is(login.username, "notifyu1", "Check the username unchanged");
-  is(login.password, "notifyp1", "Check the password unchanged");
-  is(login.timesUsed, 1, "Check times used");
+  Assert.equal(login.username, "notifyu1", "Check the username unchanged");
+  Assert.equal(login.password, "notifyp1", "Check the password unchanged");
+  Assert.equal(login.timesUsed, 1, "Check times used");
 
   login = SpecialPowers.wrap(logins[1]).QueryInterface(Ci.nsILoginMetaInfo);
-  is(login.username, "notifyu1B", "Check the username unchanged");
-  is(login.password, "notifyp1B", "Check the password unchanged");
-  is(login.timesUsed, 1, "Check times used");
+  Assert.equal(login.username, "notifyu1B", "Check the username unchanged");
+  Assert.equal(login.password, "notifyp1B", "Check the password unchanged");
+  Assert.equal(login.timesUsed, 1, "Check times used");
 
   // cleanup
   Services.logins.removeLogin(login1);

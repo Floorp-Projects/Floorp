@@ -32,7 +32,7 @@ async function setup_withOneLogin(username = "username", password = "pass1") {
 async function setup_withNoLogins() {
   // Reset to a single, known login
   await task_setup();
-  is(
+  Assert.equal(
     Services.logins.getAllLogins().length,
     0,
     "0 logins at the start of the test"
@@ -44,7 +44,7 @@ async function fillGeneratedPasswordFromACPopup(
   passwordInputSelector
 ) {
   let popup = document.getElementById("PopupAutoComplete");
-  ok(popup, "Got popup");
+  Assert.ok(popup, "Got popup");
   await openACPopup(popup, browser, passwordInputSelector);
   await fillGeneratedPasswordFromOpenACPopup(browser, passwordInputSelector);
 }
@@ -55,7 +55,7 @@ async function checkPromptContents(
   expectedPasswordLength = 0
 ) {
   let { panel } = PopupNotifications;
-  ok(PopupNotifications.isPanelOpen, "Confirm popup is open");
+  Assert.ok(PopupNotifications.isPanelOpen, "Confirm popup is open");
   let notificationElement = panel.childNodes[0];
   if (expectedPasswordLength) {
     info(
@@ -91,7 +91,7 @@ async function verifyGeneratedPasswordWasFilled(
         "resource://testing-common/LoginTestUtils.jsm"
       );
       let passwordInput = content.document.querySelector(inputSelector);
-      is(
+      Assert.equal(
         passwordInput.value.length,
         LTU.generation.LENGTH,
         "Password field was filled with generated password"
@@ -134,7 +134,7 @@ async function openFormInNewTab(url, formValues, taskFn) {
 
             field.setAttribute("autocomplete", "new-password");
             if (props.hasOwnProperty("expectedValue")) {
-              is(
+              Assert.equal(
                 field.value,
                 props.expectedValue,
                 "Check autofilled password value"
@@ -145,7 +145,7 @@ async function openFormInNewTab(url, formValues, taskFn) {
           if (props) {
             let field = doc.querySelector(props.selector);
             if (props.hasOwnProperty("expectedValue")) {
-              is(
+              Assert.equal(
                 field.value,
                 props.expectedValue,
                 "Check autofilled username value"
@@ -200,13 +200,13 @@ async function openFormInNewTab(url, formValues, taskFn) {
 async function openAndVerifyDoorhanger(browser, type, expected) {
   // check a dismissed prompt was shown with extraAttr attribute
   let notif = getCaptureDoorhanger(type);
-  ok(notif, `${type} doorhanger was created`);
-  is(
+  Assert.ok(notif, `${type} doorhanger was created`);
+  Assert.equal(
     notif.dismissed,
     expected.dismissed,
     "Check notification dismissed property"
   );
-  is(
+  Assert.equal(
     notif.anchorElement.getAttribute("extraAttr"),
     expected.anchorExtraAttr,
     "Check icon extraAttr attribute"
@@ -227,12 +227,12 @@ async function openAndVerifyDoorhanger(browser, type, expected) {
     browser,
     expected.passwordLength
   );
-  is(
+  Assert.equal(
     passwordValue.length,
     expected.passwordLength || LoginTestUtils.generation.LENGTH,
     "Doorhanger password field has generated 15-char value"
   );
-  is(
+  Assert.equal(
     usernameValue,
     expected.usernameValue,
     "Doorhanger username field was popuplated"
@@ -288,7 +288,7 @@ add_setup(async function() {
   });
   // assert that there are no logins
   let logins = Services.logins.getAllLogins();
-  is(logins.length, 0, "There are no logins");
+  Assert.equal(logins.length, 0, "There are no logins");
 });
 
 add_task(async function autocomplete_generated_password_auto_saved() {
@@ -322,8 +322,8 @@ add_task(async function autocomplete_generated_password_auto_saved() {
       await hintShownAndVerified;
 
       // Check properties of the newly auto-saved login
-      is(username, "", "Saved login should have no username");
-      is(
+      Assert.equal(username, "", "Saved login should have no username");
+      Assert.equal(
         password.length,
         LoginTestUtils.generation.LENGTH,
         "Saved login should have generated password"
@@ -344,7 +344,7 @@ add_task(async function autocomplete_generated_password_auto_saved() {
       await promiseHidden;
 
       // confirm the extraAttr attribute is removed after opening & dismissing the doorhanger
-      ok(
+      Assert.ok(
         !notif.anchorElement.hasAttribute("extraAttr"),
         "Check if the extraAttr attribute was removed"
       );
@@ -407,8 +407,8 @@ add_task(
         await hintShownAndVerified;
 
         // Check properties of the newly auto-saved login
-        is(username, "", "Saved login should have no username");
-        is(
+        Assert.equal(username, "", "Saved login should have no username");
+        Assert.equal(
           password.length,
           LoginTestUtils.generation.LENGTH,
           "Saved login should have generated password"
@@ -429,7 +429,7 @@ add_task(
         await promiseHidden;
 
         // confirm the extraAttr attribute is removed after opening & dismissing the doorhanger
-        ok(
+        Assert.ok(
           !notif.anchorElement.hasAttribute("extraAttr"),
           "Check if the extraAttr attribute was removed"
         );
@@ -585,7 +585,7 @@ add_task(async function autocomplete_generated_password_saved_username() {
       await promiseHidden;
 
       // confirm the extraAttr attribute is removed after opening & dismissing the doorhanger
-      ok(
+      Assert.ok(
         !notif.anchorElement.hasAttribute("extraAttr"),
         "Check if the extraAttr attribute was removed"
       );
@@ -902,7 +902,7 @@ add_task(async function contextmenu_fill_generated_password_and_set_username() {
         browser,
         [[passwordInputSelector, usernameInputSelector]],
         function checkEmptyPasswordField([passwordSelector, usernameSelector]) {
-          is(
+          Assert.equal(
             content.document.querySelector(passwordSelector).value,
             "",
             "Password field is empty"
@@ -1079,7 +1079,7 @@ add_task(async function contextmenu_password_change_form_without_username() {
       ]);
       // Check no new doorhanger was shown
       notif = getCaptureDoorhanger("password-change");
-      ok(!notif, "No new doorhanger should be shown");
+      Assert.ok(!notif, "No new doorhanger should be shown");
       await cleanupDoorhanger(); // cleanup for next test
     }
   );
@@ -1159,16 +1159,16 @@ add_task(
           "https://example.com"
         );
 
-        ok(
+        Assert.ok(
           passwordCacheEntry,
           "Got the cached generated password entry for https://example.com"
         );
-        is(
+        Assert.equal(
           passwordCacheEntry.value,
           autoSavedLogin.password,
           "Cached password matches the auto-saved login password"
         );
-        is(
+        Assert.equal(
           passwordCacheEntry.storageGUID,
           autoSavedLogin.guid,
           "Cached password guid matches the auto-saved login guid"
@@ -1181,7 +1181,7 @@ add_task(
           usernameValue: "",
           password: autoSavedLogin.password,
         });
-        ok(notif, "Got password-change notification");
+        Assert.ok(notif, "Got password-change notification");
 
         info("Calling updateDoorhangerInputValues");
         await updateDoorhangerInputValues({
@@ -1240,14 +1240,14 @@ add_task(
         ]);
 
         // Check we have no notifications at this point
-        ok(!PopupNotifications.isPanelOpen, "No doorhanger is open");
-        ok(
+        Assert.ok(!PopupNotifications.isPanelOpen, "No doorhanger is open");
+        Assert.ok(
           !PopupNotifications.getNotification("password", browser),
           "No notifications"
         );
 
         // make sure the cache entry is unchanged with the removal of the auto-saved login
-        is(
+        Assert.equal(
           autoSavedLogin.password,
           LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().get(
             "https://example.com"
@@ -1334,16 +1334,16 @@ add_task(async function autosaved_login_updated_to_existing_login_onsubmit() {
         "https://example.com"
       );
 
-      ok(
+      Assert.ok(
         passwordCacheEntry,
         "Got the cached generated password entry for https://example.com"
       );
-      is(
+      Assert.equal(
         passwordCacheEntry.value,
         autoSavedLogin.password,
         "Cached password matches the auto-saved login password"
       );
-      is(
+      Assert.equal(
         passwordCacheEntry.storageGUID,
         autoSavedLogin.guid,
         "Cached password guid matches the auto-saved login guid"
@@ -1366,12 +1366,12 @@ add_task(async function autosaved_login_updated_to_existing_login_onsubmit() {
           "#form-basic-username": "user1",
         }
       );
-      is(
+      Assert.equal(
         submitResults.username,
         "user1",
         "Form submitted with expected username"
       );
-      is(
+      Assert.equal(
         submitResults.password,
         autoSavedLogin.password,
         "Form submitted with expected password"
@@ -1438,14 +1438,14 @@ add_task(async function autosaved_login_updated_to_existing_login_onsubmit() {
       ]);
 
       // Check we have no notifications at this point
-      ok(!PopupNotifications.isPanelOpen, "No doorhanger is open");
-      ok(
+      Assert.ok(!PopupNotifications.isPanelOpen, "No doorhanger is open");
+      Assert.ok(
         !PopupNotifications.getNotification("password", browser),
         "No notifications"
       );
 
       // make sure the cache entry is unchanged with the removal of the auto-saved login
-      is(
+      Assert.equal(
         autoSavedLogin.password,
         LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().get(
           "https://example.com"
@@ -1525,16 +1525,16 @@ add_task(async function form_change_from_autosaved_login_to_existing_login() {
         "https://example.com"
       );
 
-      ok(
+      Assert.ok(
         passwordCacheEntry,
         "Got the cached generated password entry for https://example.com"
       );
-      is(
+      Assert.equal(
         passwordCacheEntry.value,
         autoSavedLogin.password,
         "Cached password matches the auto-saved login password"
       );
-      is(
+      Assert.equal(
         passwordCacheEntry.storageGUID,
         autoSavedLogin.guid,
         "Cached password guid matches the auto-saved login guid"
@@ -1601,7 +1601,7 @@ add_task(async function form_change_from_autosaved_login_to_existing_login() {
       } catch (ex) {
         info("Got expected timeout from the waitForCondition: ", ex);
       } finally {
-        ok(!hintDidShow, "No confirmation hint shown");
+        Assert.ok(!hintDidShow, "No confirmation hint shown");
       }
 
       // the previous doorhanger would have old values, verify it was updated/replaced with new values from the form
@@ -1640,14 +1640,14 @@ add_task(async function form_change_from_autosaved_login_to_existing_login() {
       ]);
 
       // Check we have no notifications at this point
-      ok(!PopupNotifications.isPanelOpen, "No doorhanger is open");
-      ok(
+      Assert.ok(!PopupNotifications.isPanelOpen, "No doorhanger is open");
+      Assert.ok(
         !PopupNotifications.getNotification("password", browser),
         "No notifications"
       );
 
       // make sure the cache entry is unchanged with the removal of the auto-saved login
-      is(
+      Assert.equal(
         autoSavedLogin.password,
         LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().get(
           "https://example.com"
@@ -1798,7 +1798,11 @@ add_task(async function form_edit_username_and_password_of_generated_login() {
           info("Got expected timeout from the waitForCondition: " + ex);
         } finally {
           info("confirmationHint check done, assert on hintDidShow");
-          is(hintDidShow, expectedConfirmation, "Confirmation hint shown");
+          Assert.equal(
+            hintDidShow,
+            expectedConfirmation,
+            "Confirmation hint shown"
+          );
         }
         info(
           "Waiting for loginModifiedPromise, expectedConfirmation? " +

@@ -45,16 +45,16 @@ add_task(async function test_generated_noLogins() {
   let LMP = new LoginManagerParent();
   LMP.useBrowsingContext(123);
 
-  ok(LMP.doAutocompleteSearch, "doAutocompleteSearch exists");
+  Assert.ok(LMP.doAutocompleteSearch, "doAutocompleteSearch exists");
 
   let result1 = await LMP.doAutocompleteSearch(
     "https://example.com",
     NEW_PASSWORD_TEMPLATE_ARG
   );
   equal(result1.logins.length, 0, "no logins");
-  ok(result1.generatedPassword, "has a generated password");
+  Assert.ok(result1.generatedPassword, "has a generated password");
   equal(result1.generatedPassword.length, 15, "generated password length");
-  ok(
+  Assert.ok(
     result1.willAutoSaveGeneratedPassword,
     "will auto-save when storage is empty"
   );
@@ -70,7 +70,7 @@ add_task(async function test_generated_noLogins() {
     result1.generatedPassword,
     "same generated password"
   );
-  ok(
+  Assert.ok(
     result1.willAutoSaveGeneratedPassword,
     "will auto-save when storage is still empty"
   );
@@ -127,16 +127,16 @@ add_task(async function test_generated_emptyUsernameSavedLogin() {
   let LMP = new LoginManagerParent();
   LMP.useBrowsingContext(123);
 
-  ok(LMP.doAutocompleteSearch, "doAutocompleteSearch exists");
+  Assert.ok(LMP.doAutocompleteSearch, "doAutocompleteSearch exists");
 
   let result1 = await LMP.doAutocompleteSearch(
     "https://example.com",
     NEW_PASSWORD_TEMPLATE_ARG
   );
   equal(result1.logins.length, 1, "1 login");
-  ok(result1.generatedPassword, "has a generated password");
+  Assert.ok(result1.generatedPassword, "has a generated password");
   equal(result1.generatedPassword.length, 15, "generated password length");
-  ok(
+  Assert.ok(
     !result1.willAutoSaveGeneratedPassword,
     "won't auto-save when an empty-username match is found"
   );

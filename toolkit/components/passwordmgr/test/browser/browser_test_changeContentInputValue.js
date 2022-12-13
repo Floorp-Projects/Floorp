@@ -86,7 +86,7 @@ async function testStringChange({
           let input = content.document.querySelector(USERNAME_INPUT_SELECTOR);
 
           let verifyKeyListener = event => {
-            is(
+            Assert.equal(
               expectedKeypresses[0],
               event.key,
               "Key press matches expected value"
@@ -122,7 +122,7 @@ async function checkForm(browser, expectedUsername) {
       USERNAME_INPUT_SELECTOR,
     }) {
       let field = content.document.querySelector(USERNAME_INPUT_SELECTOR);
-      is(
+      Assert.equal(
         field.value,
         expectedUsername,
         `Username field has teh expected initial value '${expectedUsername}'`

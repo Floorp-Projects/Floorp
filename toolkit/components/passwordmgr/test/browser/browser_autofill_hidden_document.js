@@ -48,7 +48,11 @@ testUrlsWithForm.forEach(testUrl => {
       INITIAL_URL
     );
     let tab1Visibility = await getDocumentVisibilityState(tab1.linkedBrowser);
-    is(tab1Visibility, "visible", "The first tab should be foreground");
+    Assert.equal(
+      tab1Visibility,
+      "visible",
+      "The first tab should be foreground"
+    );
 
     let formProcessedPromise = listenForTestNotification("FormProcessed");
     BrowserTestUtils.loadURI(tab1.linkedBrowser, testUrl);
@@ -72,7 +76,11 @@ testUrls.forEach(testUrl => {
 
     // confirm document is hidden
     tab1Visibility = await getDocumentVisibilityState(tab1.linkedBrowser);
-    is(tab1Visibility, "hidden", "The first tab should be backgrounded");
+    Assert.equal(
+      tab1Visibility,
+      "hidden",
+      "The first tab should be backgrounded"
+    );
 
     // we shouldn't even try to autofill while hidden, so wait for the document to be in the
     // non-visible pending queue instead.
@@ -92,7 +100,7 @@ testUrls.forEach(testUrl => {
       return actor.sendQuery("PasswordManager:formIsPending");
     });
 
-    ok(
+    Assert.ok(
       !formFilled,
       "Observer should not be notified when form is loaded into a hidden document"
     );
@@ -102,8 +110,12 @@ testUrls.forEach(testUrl => {
     await BrowserTestUtils.switchTab(gBrowser, tab1);
     result = await formProcessedPromise;
     tab1Visibility = await getDocumentVisibilityState(tab1.linkedBrowser);
-    is(tab1Visibility, "visible", "The first tab should be foreground");
-    ok(
+    Assert.equal(
+      tab1Visibility,
+      "visible",
+      "The first tab should be foreground"
+    );
+    Assert.ok(
       result,
       "Observer should be notified when input's document becomes visible"
     );
@@ -120,11 +132,11 @@ testUrls.forEach(testUrl => {
         };
       }
     );
-    is(fieldValues.username, "user1", "Checking filled username");
+    Assert.equal(fieldValues.username, "user1", "Checking filled username");
 
     // skip password test for a username-only form
     if (![FORM_MULTIPAGE_URL].includes(testUrl)) {
-      is(fieldValues.password, "pass1", "Checking filled password");
+      Assert.equal(fieldValues.password, "pass1", "Checking filled password");
     }
 
     gBrowser.removeTab(tab1);
@@ -159,14 +171,18 @@ testUrlsWithForm.forEach(testUrl => {
       "load a background login form tab with a matching saved login " +
         "and wait to see if the primary password dialog is shown"
     );
-    is(
+    Assert.equal(
       await getDocumentVisibilityState(tab2.linkedBrowser),
       "visible",
       "The second tab should be visible"
     );
 
     const tab1Visibility = await getDocumentVisibilityState(tab1.linkedBrowser);
-    is(tab1Visibility, "hidden", "The first tab should be backgrounded");
+    Assert.equal(
+      tab1Visibility,
+      "hidden",
+      "The first tab should be backgrounded"
+    );
 
     const dialogObserved = waitForMPDialog("authenticate", tab1.ownerGlobal);
 
@@ -176,11 +192,11 @@ testUrlsWithForm.forEach(testUrl => {
     BrowserTestUtils.loadURI(tab1.linkedBrowser, testUrl);
     await Promise.all([formProcessedPromise, dialogObserved]);
 
-    ok(
+    Assert.ok(
       formProcessedPromise,
       "Observer should be notified when form is loaded into a hidden document"
     );
-    ok(
+    Assert.ok(
       dialogObserved,
       "MP Dialog should be shown when form is loaded into a hidden document"
     );

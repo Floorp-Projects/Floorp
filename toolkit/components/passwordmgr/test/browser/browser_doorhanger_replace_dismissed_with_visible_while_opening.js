@@ -28,7 +28,7 @@ add_task(async function test_replaceDismissedWithVisibleWhileOpening() {
         null
       );
       let doorhanger = await waitForDoorhanger(browser, "password-save");
-      ok(doorhanger, "Got doorhanger");
+      Assert.ok(doorhanger, "Got doorhanger");
       EventUtils.synthesizeMouseAtCenter(doorhanger.anchorElement, {});
       await BrowserTestUtils.waitForEvent(
         PopupNotifications.panel,

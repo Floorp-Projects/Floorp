@@ -16,7 +16,7 @@ add_task(async function test_randomUInt8Index() {
     /uint8/,
     "Should throw for larger than uint8"
   );
-  ok(
+  Assert.ok(
     Number.isSafeInteger(PasswordGenerator._randomUInt8Index(255)),
     "Check integer returned"
   );
@@ -30,19 +30,19 @@ add_task(async function test_generatePassword_classes() {
   );
   info(password);
   equal(password.length, 3, "Check length is correct");
-  ok(
+  Assert.ok(
     password.match(/[a-km-np-z]/),
     "Minimal password should include at least one lowercase character"
   );
-  ok(
+  Assert.ok(
     password.match(/[A-HJ-NP-Z]/),
     "Minimal password should include at least one uppercase character"
   );
-  ok(
+  Assert.ok(
     password.match(/[2-9]/),
     "Minimal password should include at least one digit"
   );
-  ok(
+  Assert.ok(
     password.match(/^[a-km-np-zA-HJ-NP-Z2-9]+$/),
     "All characters should be in the expected set"
   );
@@ -63,7 +63,7 @@ add_task(async function test_generatePassword_length() {
     "Maximum generated length is Math.pow(2, 8) - 1 "
   );
 
-  ok(
+  Assert.ok(
     password.match(/^[a-km-np-zA-HJ-NP-Z2-9]+$/),
     "All characters should be in the expected set"
   );
@@ -73,7 +73,7 @@ add_task(async function test_generatePassword_defaultLength() {
   let password = PasswordGenerator.generatePassword({});
   info(password);
   equal(password.length, 15, "Check default length is correct");
-  ok(
+  Assert.ok(
     password.match(/^[a-km-np-zA-HJ-NP-Z2-9]{15}$/),
     "All characters should be in the expected set"
   );
@@ -93,24 +93,24 @@ add_task(
     rules.set("required", ["special"]);
     let password = PasswordGenerator.generatePassword({ rules });
     equal(password.length, 15, "Check default length is correct");
-    ok(
+    Assert.ok(
       password.match(specialCharacters),
       "Password should include special character."
     );
     let allCharacters = new RegExp(
       `[a-km-np-zA-HJ-NP-Z2-9 ${escapedSpecialCharacters}]{15}`
     );
-    ok(
+    Assert.ok(
       password.match(allCharacters),
       "All characters should be in the expected set"
     );
     password = PasswordGenerator.generatePassword({});
     equal(password.length, 15, "Check default length is correct");
-    ok(
+    Assert.ok(
       !password.match(specialCharacters),
       "Password should not include special character."
     );
-    ok(
+    Assert.ok(
       password.match(/^[a-km-np-zA-HJ-NP-Z2-9]{15}$/),
       "All characters, minus special characters, should be in the expected set"
     );

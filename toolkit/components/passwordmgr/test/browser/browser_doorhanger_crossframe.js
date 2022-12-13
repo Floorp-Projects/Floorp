@@ -40,7 +40,7 @@ function listenForNotifications(count, expectedFormOrigin) {
       if (msg == "FormProcessed") {
         notifications.push("FormProcessed: " + data.browsingContext.id);
       } else if (msg == "ShowDoorhanger") {
-        is(
+        Assert.equal(
           data.origin,
           expectedFormOrigin,
           "Message origin should match expected"
@@ -57,14 +57,14 @@ function listenForNotifications(count, expectedFormOrigin) {
 async function verifyNotifications(notifyPromise, expected) {
   let actual = await notifyPromise;
 
-  is(actual.length, expected.length, "Extra notification(s) sent");
+  Assert.equal(actual.length, expected.length, "Extra notification(s) sent");
   let expectedItem;
   while ((expectedItem = expected.pop())) {
     let index = actual.indexOf(expectedItem);
     if (index >= 0) {
       actual.splice(index, 1);
     } else {
-      ok(false, "Expected notification '" + expectedItem + "' not sent");
+      Assert.ok(false, "Expected notification '" + expectedItem + "' not sent");
     }
   }
 }
@@ -76,14 +76,14 @@ async function autocompleteLoginInIFrame(
   selector
 ) {
   let popup = document.getElementById("PopupAutoComplete");
-  ok(popup, "Got popup");
+  Assert.ok(popup, "Got popup");
 
   await openACPopup(popup, browser, selector, iframeBrowsingContext);
 
   let autocompleteLoginResult = popup.querySelector(
     `[originaltype="loginWithOrigin"]`
   );
-  ok(autocompleteLoginResult, "Got login richlistitem");
+  Assert.ok(autocompleteLoginResult, "Got login richlistitem");
 
   let promiseHidden = BrowserTestUtils.waitForEvent(popup, "popuphidden");
 

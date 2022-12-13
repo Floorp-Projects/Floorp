@@ -40,7 +40,7 @@ add_task(async function testCrossOriginFormUsesCorrectOrigin() {
   let data = await dataPromise;
   info("Origin retrieved from message listener");
 
-  is(
+  Assert.equal(
     data.origin,
     "https://example.com",
     "Message origin should match form origin"

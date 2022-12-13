@@ -263,11 +263,11 @@ for (let testData of TEST_CASES) {
 
 function _validateTestCase(tc) {
   for (let event of tc.expectedEvents) {
-    ok(
+    Assert.ok(
       !(event.ping.did_edit_un && event.ping.did_select_un),
       "'did_edit_un' and 'did_select_un' can never be true at the same time"
     );
-    ok(
+    Assert.ok(
       !(event.ping.did_edit_pw && event.ping.did_select_pw),
       "'did_edit_pw' and 'did_select_pw' can never be true at the same time"
     );

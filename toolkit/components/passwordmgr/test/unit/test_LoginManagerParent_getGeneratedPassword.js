@@ -24,7 +24,7 @@ add_task(async function test_getGeneratedPassword() {
   let LMP = new LoginManagerParent();
   LMP.useBrowsingContext(99);
 
-  ok(LMP.getGeneratedPassword, "LMP.getGeneratedPassword exists");
+  Assert.ok(LMP.getGeneratedPassword, "LMP.getGeneratedPassword exists");
   equal(
     LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().size,
     0,
@@ -33,11 +33,11 @@ add_task(async function test_getGeneratedPassword() {
 
   equal(await LMP.getGeneratedPassword(), null, "Null with no BrowsingContext");
 
-  ok(
+  Assert.ok(
     LoginManagerParent._browsingContextGlobal,
     "Check _browsingContextGlobal exists"
   );
-  ok(
+  Assert.ok(
     !LoginManagerParent._browsingContextGlobal.get(99),
     "BrowsingContext 99 shouldn't exist yet"
   );
@@ -55,7 +55,7 @@ add_task(async function test_getGeneratedPassword() {
         },
       };
     });
-  ok(
+  Assert.ok(
     LoginManagerParent._browsingContextGlobal.get(99),
     "Checking BrowsingContext.get(99) stub"
   );

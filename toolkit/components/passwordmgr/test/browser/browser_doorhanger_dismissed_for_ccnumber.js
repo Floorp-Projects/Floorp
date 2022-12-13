@@ -41,8 +41,11 @@ add_task(async function test_doorhanger_dismissal_un() {
       await processedPromise;
 
       let notif = getCaptureDoorhanger("password-save");
-      ok(notif, "got notification popup");
-      ok(notif.dismissed, "notification popup was automatically dismissed");
+      Assert.ok(notif, "got notification popup");
+      Assert.ok(
+        notif.dismissed,
+        "notification popup was automatically dismissed"
+      );
       await cleanupDoorhanger(notif);
     }
   );
@@ -87,8 +90,11 @@ add_task(async function test_doorhanger_dismissal_pw() {
       await processedPromise;
 
       let notif = getCaptureDoorhanger("password-save");
-      ok(notif, "got notification popup");
-      ok(notif.dismissed, "notification popup was automatically dismissed");
+      Assert.ok(notif, "got notification popup");
+      Assert.ok(
+        notif.dismissed,
+        "notification popup was automatically dismissed"
+      );
       await cleanupDoorhanger(notif);
     }
   );
@@ -128,8 +134,8 @@ add_task(async function test_doorhanger_shown_on_un_with_invalid_ccnumber() {
       await processedPromise;
 
       let notif = await getCaptureDoorhangerThatMayOpen("password-save");
-      ok(notif, "got notification popup");
-      ok(
+      Assert.ok(notif, "got notification popup");
+      Assert.ok(
         !notif.dismissed,
         "notification popup was not automatically dismissed"
       );
@@ -185,8 +191,11 @@ add_task(async function test_doorhanger_dismissal_on_change() {
       await processedPromise;
 
       let notif = getCaptureDoorhanger("password-change");
-      ok(notif, "got notification popup");
-      ok(notif.dismissed, "notification popup was automatically dismissed");
+      Assert.ok(notif, "got notification popup");
+      Assert.ok(
+        notif.dismissed,
+        "notification popup was automatically dismissed"
+      );
       await cleanupDoorhanger(notif);
     }
   );
