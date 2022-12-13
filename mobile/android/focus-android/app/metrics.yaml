@@ -236,17 +236,26 @@ legacy_ids:
   client_id:
     type: uuid
     description: |
-      Sets the legacy client ID as part of the deletion-reqest ping.
+      Sets the legacy client ID as part of the deletion-reqest and other pings.
     send_in_pings:
       - deletion-request
+      - metrics
+      - events
+      - baseline
+      - activation
     bugs:
       - https://github.com/mozilla-mobile/focus-android/issues/4545
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1805256
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5512#issuecomment-1023668181
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1805256
     notification_emails:
       - jalmeida@mozilla.com
       - android-probes@mozilla.com
+      - tlong@mozilla.com
     expires: never
+    no_lint:
+      - BASELINE_PING
 
 browser.search:
   with_ads:
