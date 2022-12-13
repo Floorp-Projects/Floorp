@@ -176,7 +176,7 @@ class JsepSessionImpl : public JsepSession, public JsepSessionCopyableStuff {
     return mTransceivers;
   }
 
-  virtual nsresult AddTransceiver(RefPtr<JsepTransceiver> transceiver) override;
+  virtual void AddTransceiver(RefPtr<JsepTransceiver> transceiver) override;
 
   virtual bool CheckNegotiationNeeded() const override;
 
@@ -258,6 +258,8 @@ class JsepSessionImpl : public JsepSession, public JsepSessionCopyableStuff {
       JsepDescriptionPendingOrCurrent type) const;
   const Sdp* GetAnswer() const;
   void SetIceRestarting(bool restarting);
+
+  void InitTransceiver(JsepTransceiver& aTransceiver);
 
   // !!!NOT INDEXED BY LEVEL!!! The level mapping is done with
   // JsepTransceiver::mLevel. The keys are UUIDs.

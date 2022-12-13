@@ -136,7 +136,7 @@ class JsepSession {
     }
     return nullptr;
   }
-  virtual nsresult AddTransceiver(RefPtr<JsepTransceiver> transceiver) = 0;
+  virtual void AddTransceiver(RefPtr<JsepTransceiver> transceiver) = 0;
 
   class Result {
    public:
