@@ -92,11 +92,16 @@ gradle.projectsLoaded { ->
     )
     gradle.rootProject.ext.buildConfig = buildconfig
 
-    // Disables A-C tests when building Focus.
+    // Disables A-C tests and lint when building Focus.
     gradle.allprojects { project ->
         if (project.projectDir.absolutePath.contains("/android-components/")) {
             project.tasks.withType(Test) {
                 enabled = false
+            }
+            project.tasks.whenTaskAdded { task ->
+                if (task.name.contains("lint")) {
+                    task.enabled = false
+                }
             }
         }
     }
