@@ -293,10 +293,6 @@ LOCAL_INCLUDES += CONFIG["SKIA_INCLUDES"]
 
 DEFINES["GRAPHITE2_STATIC"] = True
 
-if CONFIG["CC_TYPE"] in ("clang", "clang-cl"):
-    # Suppress warnings from Skia header files.
-    SOURCES["gfxPlatform.cpp"].flags += ["-Wno-implicit-fallthrough"]
-
 CXXFLAGS += ["-Werror=switch"]
 
 include("/tools/fuzzing/libfuzzer-config.mozbuild")
