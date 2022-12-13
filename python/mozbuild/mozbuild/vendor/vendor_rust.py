@@ -91,7 +91,6 @@ TOLERATED_DUPES = {
     "crossbeam-epoch": 2,
     "crossbeam-utils": 3,
     "futures": 2,
-    "libloading": 2,
     "memoffset": 2,
     "mio": 2,
     # Transition from time 0.1 to 0.3 underway, but chrono is stuck on 0.1

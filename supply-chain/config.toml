@@ -760,10 +760,6 @@ version = "0.2.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.libloading]]
-version = "0.5.2"
-criteria = "safe-to-deploy"
-
-[[exemptions.libloading]]
 version = "0.7.3"
 criteria = "safe-to-deploy"
 

@@ -84,15 +84,17 @@ struct SecurityFramework<'a> {
 }
 
 lazy_static! {
-    static ref SECURITY_LIBRARY: std::io::Result<Library> =
-        Library::new("/System/Library/Frameworks/Security.framework/Security");
+    static ref SECURITY_LIBRARY: Result<Library, String> = unsafe {
+        Library::new("/System/Library/Frameworks/Security.framework/Security")
+            .map_err(|e| e.to_string())
+    };
 }
 
 impl<'a> SecurityFramework<'a> {
     fn new() -> Result<SecurityFramework<'a>, Error> {
         let library = match &*SECURITY_LIBRARY {
             Ok(library) => library,
-            Err(e) => return Err(error_here!(ErrorType::ExternalError, e.to_string())),
+            Err(e) => return Err(error_here!(ErrorType::ExternalError, e.clone())),
         };
         let sec_certificate_copy_key = unsafe {
             library
