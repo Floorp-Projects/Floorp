@@ -128,6 +128,14 @@ class DocAccessible : public HyperTextAccessibleWrap,
   void QueueCacheUpdate(LocalAccessible* aAcc, uint64_t aNewDomain);
 
   /**
+   * Walks the mDependentIDsHashes list for the given accessible and
+   * queues a CacheDomain::Relations cache update fore each related acc.
+   * We call this when we observe an ID mutation or when an acc is bound
+   * to its document.
+   */
+  void QueueCacheUpdateForDependentRelations(LocalAccessible* aAcc);
+
+  /**
    * Return virtual cursor associated with the document.
    */
   nsIAccessiblePivot* VirtualCursor();

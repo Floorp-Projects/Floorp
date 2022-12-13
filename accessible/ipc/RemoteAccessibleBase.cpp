@@ -59,16 +59,10 @@ void RemoteAccessibleBase<Derived>::Shutdown() {
 
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     // Remove this acc's relation map from the doc's map of
-    // reverse relations. We don't need to do additional processing
-    // of the corresponding forward relations, because this shutdown
-    // should trigger a cache update from the content process.
-    // Similarly, we don't need to remove the reverse rels created
-    // by this acc's forward rels because they'll be cleared during
-    // the next update's call to PreProcessRelations().
-    // In short, accs are responsible for managing their own
-    // reverse relation map, both in PreProcessRelations() and in
-    // Shutdown().
-    Unused << mDoc->mReverseRelations.Remove(ID());
+    // reverse relations. Prune forward relations associated with this
+    // acc's reverse relations. This also removes the acc's map of reverse
+    // rels from the mDoc's mReverseRelations.
+    PruneRelationsOnShutdown();
   }
 
   // XXX Ideally  this wouldn't be necessary, but it seems OuterDoc
@@ -1014,6 +1008,44 @@ void RemoteAccessibleBase<Derived>::PostProcessRelations(
       }
     }
   }
+}
+
+template <class Derived>
+void RemoteAccessibleBase<Derived>::PruneRelationsOnShutdown() {
+  auto reverseRels = mDoc->mReverseRelations.Lookup(ID());
+  if (!reverseRels) {
+    return;
+  }
+  for (auto const& data : kRelationTypeAtoms) {
+    // Fetch the list of targets for this reverse relation
+    auto reverseTargetList =
+        reverseRels->Lookup(static_cast<uint64_t>(data.mReverseType));
+    if (!reverseTargetList) {
+      continue;
+    }
+    for (uint64_t id : *reverseTargetList) {
+      // For each target, retrieve its corresponding forward relation target
+      // list
+      RemoteAccessible* affectedAcc = mDoc->GetAccessible(id);
+      if (!affectedAcc) {
+        // It's possible the affect acc also shut down, in which case
+        // we don't have anything to update.
+        continue;
+      }
+      if (auto forwardTargetList =
+              affectedAcc->mCachedFields
+                  ->GetMutableAttribute<nsTArray<uint64_t>>(data.mAtom)) {
+        forwardTargetList->RemoveElement(ID());
+        if (!forwardTargetList->Length()) {
+          // The ID we removed was the only thing in the list, so remove the
+          // entry from the cache entirely -- don't leave an empty array.
+          affectedAcc->mCachedFields->Remove(data.mAtom);
+        }
+      }
+    }
+  }
+  // Remove this ID from the document's map of reverse relations.
+  reverseRels.Remove();
 }
 
 template <class Derived>
