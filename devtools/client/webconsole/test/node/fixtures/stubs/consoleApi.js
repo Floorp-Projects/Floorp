@@ -170,7 +170,7 @@ rawPackets.set(`console.assert(false, {message: 'foobar'})`, {
       {
         "_grip": {
           "type": "object",
-          "actor": "server0.conn0.windowGlobal15032385537/obj32",
+          "actor": "server0.conn0.windowGlobal15032385537/obj30",
           "class": "Object",
           "ownPropertyLength": 1,
           "extensible": true,
@@ -190,7 +190,7 @@ rawPackets.set(`console.assert(false, {message: 'foobar'})`, {
             "ownPropertiesLength": 1
           }
         },
-        "actorID": "server0.conn0.windowGlobal15032385537/obj32"
+        "actorID": "server0.conn0.windowGlobal15032385537/obj30"
       }
     ],
     "columnNumber": 35,
@@ -237,7 +237,7 @@ rawPackets.set(`console.dirxml(window)`, {
       {
         "_grip": {
           "type": "object",
-          "actor": "server0.conn0.windowGlobal15032385537/obj35",
+          "actor": "server0.conn0.windowGlobal15032385537/obj33",
           "class": "Window",
           "ownPropertyLength": 818,
           "extensible": true,
@@ -249,7 +249,7 @@ rawPackets.set(`console.dirxml(window)`, {
             "url": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html"
           }
         },
-        "actorID": "server0.conn0.windowGlobal15032385537/obj35"
+        "actorID": "server0.conn0.windowGlobal15032385537/obj33"
       }
     ],
     "columnNumber": 35,
@@ -271,7 +271,7 @@ rawPackets.set(`console.log('myarray', ['red', 'green', 'blue'])`, {
       {
         "_grip": {
           "type": "object",
-          "actor": "server0.conn0.windowGlobal15032385537/obj37",
+          "actor": "server0.conn0.windowGlobal15032385537/obj35",
           "class": "Array",
           "ownPropertyLength": 4,
           "extensible": true,
@@ -288,7 +288,7 @@ rawPackets.set(`console.log('myarray', ['red', 'green', 'blue'])`, {
             ]
           }
         },
-        "actorID": "server0.conn0.windowGlobal15032385537/obj37"
+        "actorID": "server0.conn0.windowGlobal15032385537/obj35"
       }
     ],
     "columnNumber": 35,
@@ -310,7 +310,7 @@ rawPackets.set(`console.log('myregex', /a.b.c/)`, {
       {
         "_grip": {
           "type": "object",
-          "actor": "server0.conn0.windowGlobal15032385537/obj39",
+          "actor": "server0.conn0.windowGlobal15032385537/obj37",
           "class": "RegExp",
           "ownPropertyLength": 1,
           "extensible": true,
@@ -319,7 +319,7 @@ rawPackets.set(`console.log('myregex', /a.b.c/)`, {
           "isError": false,
           "displayString": "/a.b.c/"
         },
-        "actorID": "server0.conn0.windowGlobal15032385537/obj39"
+        "actorID": "server0.conn0.windowGlobal15032385537/obj37"
       }
     ],
     "columnNumber": 35,
@@ -340,7 +340,7 @@ rawPackets.set(`console.table(['red', 'green', 'blue']);`, {
       {
         "_grip": {
           "type": "object",
-          "actor": "server0.conn0.windowGlobal15032385537/obj41",
+          "actor": "server0.conn0.windowGlobal15032385537/obj39",
           "class": "Array",
           "ownPropertyLength": 4,
           "extensible": true,
@@ -369,7 +369,7 @@ rawPackets.set(`console.table(['red', 'green', 'blue']);`, {
             }
           }
         },
-        "actorID": "server0.conn0.windowGlobal15032385537/obj41"
+        "actorID": "server0.conn0.windowGlobal15032385537/obj39"
       }
     ],
     "columnNumber": 35,
@@ -391,7 +391,7 @@ rawPackets.set(`console.log('myobject', {red: 'redValue', green: 'greenValue', b
       {
         "_grip": {
           "type": "object",
-          "actor": "server0.conn0.windowGlobal15032385537/obj43",
+          "actor": "server0.conn0.windowGlobal15032385537/obj41",
           "class": "Object",
           "ownPropertyLength": 3,
           "extensible": true,
@@ -423,7 +423,7 @@ rawPackets.set(`console.log('myobject', {red: 'redValue', green: 'greenValue', b
             "ownPropertiesLength": 3
           }
         },
-        "actorID": "server0.conn0.windowGlobal15032385537/obj43"
+        "actorID": "server0.conn0.windowGlobal15032385537/obj41"
       }
     ],
     "columnNumber": 35,
@@ -505,7 +505,7 @@ rawPackets.set(`console.log('mymap')`, {
       {
         "_grip": {
           "type": "object",
-          "actor": "server0.conn0.windowGlobal15032385537/obj48",
+          "actor": "server0.conn0.windowGlobal15032385537/obj46",
           "class": "Map",
           "ownPropertyLength": 0,
           "extensible": true,
@@ -527,7 +527,7 @@ rawPackets.set(`console.log('mymap')`, {
             ]
           }
         },
-        "actorID": "server0.conn0.windowGlobal15032385537/obj48"
+        "actorID": "server0.conn0.windowGlobal15032385537/obj46"
       }
     ],
     "columnNumber": 11,
@@ -549,7 +549,7 @@ rawPackets.set(`console.log('myset')`, {
       {
         "_grip": {
           "type": "object",
-          "actor": "server0.conn0.windowGlobal15032385537/obj50",
+          "actor": "server0.conn0.windowGlobal15032385537/obj48",
           "class": "Set",
           "ownPropertyLength": 0,
           "extensible": true,
@@ -565,7 +565,7 @@ rawPackets.set(`console.log('myset')`, {
             ]
           }
         },
-        "actorID": "server0.conn0.windowGlobal15032385537/obj50"
+        "actorID": "server0.conn0.windowGlobal15032385537/obj48"
       }
     ],
     "columnNumber": 11,
@@ -625,7 +625,7 @@ rawPackets.set(`console.trace('bar', {'foo': 'bar'}, [1,2,3])`, {
       {
         "_grip": {
           "type": "object",
-          "actor": "server0.conn0.windowGlobal15032385537/obj53",
+          "actor": "server0.conn0.windowGlobal15032385537/obj51",
           "class": "Object",
           "ownPropertyLength": 1,
           "extensible": true,
@@ -645,12 +645,12 @@ rawPackets.set(`console.trace('bar', {'foo': 'bar'}, [1,2,3])`, {
             "ownPropertiesLength": 1
           }
         },
-        "actorID": "server0.conn0.windowGlobal15032385537/obj53"
+        "actorID": "server0.conn0.windowGlobal15032385537/obj51"
       },
       {
         "_grip": {
           "type": "object",
-          "actor": "server0.conn0.windowGlobal15032385537/obj54",
+          "actor": "server0.conn0.windowGlobal15032385537/obj52",
           "class": "Array",
           "ownPropertyLength": 4,
           "extensible": true,
@@ -667,7 +667,7 @@ rawPackets.set(`console.trace('bar', {'foo': 'bar'}, [1,2,3])`, {
             ]
           }
         },
-        "actorID": "server0.conn0.windowGlobal15032385537/obj54"
+        "actorID": "server0.conn0.windowGlobal15032385537/obj52"
       }
     ],
     "columnNumber": 13,
@@ -808,7 +808,7 @@ rawPackets.set(`console.timeLog('bar') - 2`, {
       {
         "_grip": {
           "type": "object",
-          "actor": "server0.conn0.windowGlobal15032385537/obj57",
+          "actor": "server0.conn0.windowGlobal15032385537/obj55",
           "class": "Object",
           "ownPropertyLength": 1,
           "extensible": true,
@@ -828,7 +828,7 @@ rawPackets.set(`console.timeLog('bar') - 2`, {
             "ownPropertiesLength": 1
           }
         },
-        "actorID": "server0.conn0.windowGlobal15032385537/obj57"
+        "actorID": "server0.conn0.windowGlobal15032385537/obj55"
       }
     ],
     "columnNumber": 11,
@@ -933,7 +933,7 @@ rawPackets.set(`console.table(['a', 'b', 'c'])`, {
       {
         "_grip": {
           "type": "object",
-          "actor": "server0.conn0.windowGlobal15032385537/obj60",
+          "actor": "server0.conn0.windowGlobal15032385537/obj58",
           "class": "Array",
           "ownPropertyLength": 4,
           "extensible": true,
@@ -962,7 +962,7 @@ rawPackets.set(`console.table(['a', 'b', 'c'])`, {
             }
           }
         },
-        "actorID": "server0.conn0.windowGlobal15032385537/obj60"
+        "actorID": "server0.conn0.windowGlobal15032385537/obj58"
       }
     ],
     "columnNumber": 11,
@@ -1085,7 +1085,7 @@ rawPackets.set(`console.log(%cfoobar)`, {
     "sourceId": "server0.conn0.child1/source48",
     "innerWindowID": 8589934593,
     "styles": [
-      "color:blue; font-size:1.3em; background:url('https://example.com/test'); position:absolute; top:10px; ",
+      "color:blue; font-size:1.3em; background:url('data:image/png,base64,iVBORw0KGgoAAAAN'), url('https://example.com/test'); position:absolute; top:10px; ",
       "color:red; line-height: 1.5; background:url('https://example.com/test')"
     ]
   },
@@ -1197,7 +1197,7 @@ rawPackets.set(`console.dir({C, M, Y, K})`, {
       {
         "_grip": {
           "type": "object",
-          "actor": "server0.conn0.windowGlobal15032385537/obj69",
+          "actor": "server0.conn0.windowGlobal15032385537/obj67",
           "class": "Object",
           "ownPropertyLength": 4,
           "extensible": true,
@@ -1235,7 +1235,7 @@ rawPackets.set(`console.dir({C, M, Y, K})`, {
             "ownPropertiesLength": 4
           }
         },
-        "actorID": "server0.conn0.windowGlobal15032385537/obj69"
+        "actorID": "server0.conn0.windowGlobal15032385537/obj67"
       }
     ],
     "columnNumber": 35,
