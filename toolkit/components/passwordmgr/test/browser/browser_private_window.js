@@ -135,15 +135,23 @@ add_task(async function test_normal_popup_notification_1() {
           "#pass": "notifyp1",
         }
       );
-      is(fieldValues.username, "notifyu1", "Checking submitted username");
-      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      Assert.equal(
+        fieldValues.username,
+        "notifyu1",
+        "Checking submitted username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
 
       let notif = getCaptureDoorhanger(
         "password-save",
         PopupNotifications,
         browser
       );
-      ok(notif, "got notification popup");
+      Assert.ok(notif, "got notification popup");
       if (notif) {
         await TestUtils.waitForCondition(
           () => !notif.dismissed,
@@ -163,7 +171,7 @@ add_task(async function test_private_popup_notification_2() {
   const capturePrefValue = Services.prefs.getBoolPref(
     PRIVATE_BROWSING_CAPTURE_PREF
   );
-  ok(
+  Assert.ok(
     capturePrefValue,
     `Expect ${PRIVATE_BROWSING_CAPTURE_PREF} to default to true`
   );
@@ -185,15 +193,23 @@ add_task(async function test_private_popup_notification_2() {
           "#pass": "notifyp1",
         }
       );
-      is(fieldValues.username, "notifyu1", "Checking submitted username");
-      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      Assert.equal(
+        fieldValues.username,
+        "notifyu1",
+        "Checking submitted username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
 
       let notif = getCaptureDoorhanger(
         "password-save",
         PopupNotifications,
         browser
       );
-      ok(notif, "Expected notification popup");
+      Assert.ok(notif, "Expected notification popup");
       if (notif) {
         await TestUtils.waitForCondition(
           () => notif.dismissed,
@@ -210,7 +226,10 @@ add_task(async function test_private_popup_notification_2() {
           "#password-notification-visibilityToggle"
         );
 
-        ok(!toggleCheckbox.hidden, "Toggle should be visible upon 1st opening");
+        Assert.ok(
+          !toggleCheckbox.hidden,
+          "Toggle should be visible upon 1st opening"
+        );
 
         info("Hiding popup.");
         let promiseHidden = BrowserTestUtils.waitForEvent(panel, "popuphidden");
@@ -222,13 +241,20 @@ add_task(async function test_private_popup_notification_2() {
         notif.anchorElement.click();
         await promiseShown;
 
-        ok(toggleCheckbox.hidden, "Toggle should be hidden upon 2nd opening");
+        Assert.ok(
+          toggleCheckbox.hidden,
+          "Toggle should be hidden upon 2nd opening"
+        );
 
         await cleanupDoorhanger(notif);
       }
     }
   );
-  is(Services.logins.getAllLogins().length, 0, "No logins were saved");
+  Assert.equal(
+    Services.logins.getAllLogins().length,
+    0,
+    "No logins were saved"
+  );
 });
 
 add_task(async function test_private_popup_notification_no_capture_pref_2b() {
@@ -260,8 +286,16 @@ add_task(async function test_private_popup_notification_no_capture_pref_2b() {
           "#pass": "notifyp1",
         }
       );
-      is(fieldValues.username, "notifyu1", "Checking submitted username");
-      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      Assert.equal(
+        fieldValues.username,
+        "notifyu1",
+        "Checking submitted username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
 
       let notif = getCaptureDoorhanger(
         "password-save",
@@ -274,13 +308,17 @@ add_task(async function test_private_popup_notification_no_capture_pref_2b() {
         capturePrefValue
       );
 
-      ok(!notif, "Expected no notification popup");
+      Assert.ok(!notif, "Expected no notification popup");
       if (notif) {
         await cleanupDoorhanger(notif);
       }
     }
   );
-  is(Services.logins.getAllLogins().length, 0, "No logins were saved");
+  Assert.equal(
+    Services.logins.getAllLogins().length,
+    0,
+    "No logins were saved"
+  );
 });
 
 add_task(async function test_normal_popup_notification_3() {
@@ -293,7 +331,7 @@ add_task(async function test_normal_popup_notification_3() {
   Services.logins.addLogin(login);
   let allLogins = Services.logins.getAllLogins();
   // Sanity check the HTTP login exists.
-  is(allLogins.length, 1, "Should have the HTTP login");
+  Assert.equal(allLogins.length, 1, "Should have the HTTP login");
   let timeLastUsed = allLogins[0].timeLastUsed;
   let loginGuid = allLogins[0].guid;
 
@@ -312,23 +350,31 @@ add_task(async function test_normal_popup_notification_3() {
           "#pass": "notifyp1",
         }
       );
-      is(fieldValues.username, "notifyu1", "Checking submitted username");
-      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      Assert.equal(
+        fieldValues.username,
+        "notifyu1",
+        "Checking submitted username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
 
       let notif = getCaptureDoorhanger("any", PopupNotifications, browser);
-      ok(!notif, "got no notification popup");
+      Assert.ok(!notif, "got no notification popup");
       if (notif) {
         await cleanupDoorhanger(notif);
       }
     }
   );
   allLogins = Services.logins.getAllLogins();
-  is(
+  Assert.equal(
     allLogins[0].guid,
     loginGuid,
     "Sanity-check we are comparing the same login record"
   );
-  ok(
+  Assert.ok(
     allLogins[0].timeLastUsed > timeLastUsed,
     "The timeLastUsed timestamp has been updated"
   );
@@ -344,7 +390,7 @@ add_task(async function test_private_popup_notification_3b() {
   Services.logins.addLogin(login);
   let allLogins = Services.logins.getAllLogins();
   // Sanity check the HTTP login exists.
-  is(allLogins.length, 1, "Should have the HTTP login");
+  Assert.equal(allLogins.length, 1, "Should have the HTTP login");
   let timeLastUsed = allLogins[0].timeLastUsed;
   let loginGuid = allLogins[0].guid;
 
@@ -363,24 +409,32 @@ add_task(async function test_private_popup_notification_3b() {
           "#pass": "notifyp1",
         }
       );
-      is(fieldValues.username, "notifyu1", "Checking submitted username");
-      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      Assert.equal(
+        fieldValues.username,
+        "notifyu1",
+        "Checking submitted username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
 
       let notif = getCaptureDoorhanger("any", PopupNotifications, browser);
 
-      ok(!notif, "got no notification popup");
+      Assert.ok(!notif, "got no notification popup");
       if (notif) {
         await cleanupDoorhanger(notif);
       }
     }
   );
   allLogins = Services.logins.getAllLogins();
-  is(
+  Assert.equal(
     allLogins[0].guid,
     loginGuid,
     "Sanity-check we are comparing the same login record"
   );
-  is(
+  Assert.equal(
     allLogins[0].timeLastUsed,
     timeLastUsed,
     "The timeLastUsed timestamp has not been updated"
@@ -396,7 +450,7 @@ add_task(async function test_normal_new_password_4() {
   Services.logins.addLogin(login);
   let allLogins = Services.logins.getAllLogins();
   // Sanity check the HTTP login exists.
-  is(allLogins.length, 1, "Should have the HTTP login");
+  Assert.equal(allLogins.length, 1, "Should have the HTTP login");
   let timeLastUsed = allLogins[0].timeLastUsed;
   let loginGuid = allLogins[0].guid;
 
@@ -415,13 +469,17 @@ add_task(async function test_normal_new_password_4() {
           "#newpass": "notifyp2",
         }
       );
-      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
       let notif = getCaptureDoorhanger(
         "password-change",
         PopupNotifications,
         browser
       );
-      ok(notif, "got notification popup");
+      Assert.ok(notif, "got notification popup");
       if (notif) {
         await TestUtils.waitForCondition(
           () => !notif.dismissed,
@@ -434,12 +492,12 @@ add_task(async function test_normal_new_password_4() {
   // We put up a doorhanger, but didn't interact with it, so we expect the login timestamps
   // to be unchanged
   allLogins = Services.logins.getAllLogins();
-  is(
+  Assert.equal(
     allLogins[0].guid,
     loginGuid,
     "Sanity-check we are comparing the same login record"
   );
-  is(
+  Assert.equal(
     allLogins[0].timeLastUsed,
     timeLastUsed,
     "The timeLastUsed timestamp was not updated"
@@ -455,14 +513,14 @@ add_task(async function test_private_new_password_5() {
   const capturePrefValue = Services.prefs.getBoolPref(
     PRIVATE_BROWSING_CAPTURE_PREF
   );
-  ok(
+  Assert.ok(
     capturePrefValue,
     `Expect ${PRIVATE_BROWSING_CAPTURE_PREF} to default to true`
   );
 
   let allLogins = Services.logins.getAllLogins();
   // Sanity check the HTTP login exists.
-  is(allLogins.length, 1, "Should have the HTTP login");
+  Assert.equal(allLogins.length, 1, "Should have the HTTP login");
   let timeLastUsed = allLogins[0].timeLastUsed;
   let loginGuid = allLogins[0].guid;
 
@@ -481,13 +539,17 @@ add_task(async function test_private_new_password_5() {
           "#newpass": "notifyp2",
         }
       );
-      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
       let notif = getCaptureDoorhanger(
         "password-change",
         PopupNotifications,
         browser
       );
-      ok(notif, "Expected notification popup");
+      Assert.ok(notif, "Expected notification popup");
       if (notif) {
         await TestUtils.waitForCondition(
           () => !notif.dismissed,
@@ -500,12 +562,12 @@ add_task(async function test_private_new_password_5() {
   // We put up a doorhanger, but didn't interact with it, so we expect the login timestamps
   // to be unchanged
   allLogins = Services.logins.getAllLogins();
-  is(
+  Assert.equal(
     allLogins[0].guid,
     loginGuid,
     "Sanity-check we are comparing the same login record"
   );
-  is(
+  Assert.equal(
     allLogins[0].timeLastUsed,
     timeLastUsed,
     "The timeLastUsed timestamp has not been updated"
@@ -533,13 +595,17 @@ add_task(async function test_normal_with_login_6() {
           "#newpass": "notifyp2",
         }
       );
-      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
       let notif = getCaptureDoorhanger(
         "password-change",
         PopupNotifications,
         browser
       );
-      ok(notif, "got notification popup");
+      Assert.ok(notif, "got notification popup");
       if (notif) {
         await TestUtils.waitForCondition(
           () => !notif.dismissed,
@@ -557,7 +623,11 @@ add_task(async function test_normal_autofilled_7() {
   Services.logins.addLogin(login);
 
   // Sanity check the HTTP login exists.
-  is(Services.logins.getAllLogins().length, 1, "Should have the HTTP login");
+  Assert.equal(
+    Services.logins.getAllLogins().length,
+    1,
+    "Should have the HTTP login"
+  );
 
   await focusWindow(normalWin);
   await BrowserTestUtils.withNewTab(
@@ -578,8 +648,16 @@ add_task(async function test_normal_autofilled_7() {
         "formsubmit.sjs",
         {}
       );
-      is(fieldValues.username, "notifyu1", "Checking submitted username");
-      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      Assert.equal(
+        fieldValues.username,
+        "notifyu1",
+        "Checking submitted username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
     }
   );
 });
@@ -587,7 +665,11 @@ add_task(async function test_normal_autofilled_7() {
 add_task(async function test_private_not_autofilled_8() {
   info("test 8: verify that the user/pass pair was not autofilled");
   // Sanity check the HTTP login exists.
-  is(Services.logins.getAllLogins().length, 1, "Should have the HTTP login");
+  Assert.equal(
+    Services.logins.getAllLogins().length,
+    1,
+    "Should have the HTTP login"
+  );
 
   let formFilled = listenForTestNotification("FormProcessed");
 
@@ -604,8 +686,8 @@ add_task(async function test_private_not_autofilled_8() {
         "formsubmit.sjs",
         {}
       );
-      ok(!fieldValues.username, "Checking submitted username");
-      ok(!fieldValues.password, "Checking submitted password");
+      Assert.ok(!fieldValues.username, "Checking submitted username");
+      Assert.ok(!fieldValues.password, "Checking submitted password");
     }
   );
 });
@@ -614,7 +696,7 @@ add_task(async function test_private_not_autofilled_8() {
 // add_task(async function test_private_autocomplete_9() {
 //   info("test 9: verify that the user/pass pair was available for autocomplete");
 //   // Sanity check the HTTP login exists.
-//   is(Services.logins.getAllLogins().length, 1, "Should have the HTTP login");
+//   Assert.equal(Services.logins.getAllLogins().length, 1, "Should have the HTTP login");
 
 //   await focusWindow(privateWin);
 //   await BrowserTestUtils.withNewTab({
@@ -622,7 +704,7 @@ add_task(async function test_private_not_autofilled_8() {
 //     url: form1Url,
 //   }, async function(browser) {
 //     let popup = document.getElementById("PopupAutoComplete");
-//     ok(popup, "Got popup");
+//     Assert.ok(popup, "Got popup");
 
 //     let promiseShown = BrowserTestUtils.waitForEvent(popup, "popupshown");
 
@@ -631,7 +713,7 @@ add_task(async function test_private_not_autofilled_8() {
 //       content.document.getElementById("user").focus();
 //     });
 //     await promiseShown;
-//     ok(promiseShown, "autocomplete shown");
+//     Assert.ok(promiseShown, "autocomplete shown");
 
 //     let promiseFormInput = ContentTask.spawn(browser, null, async function() {
 //       let doc = content.document;
@@ -647,8 +729,8 @@ add_task(async function test_private_not_autofilled_8() {
 //     await promiseFormInput;
 
 //     let fieldValues = await submitFormAndGetResults(browser, "formsubmit.sjs", {});
-//     is(fieldValues.username, "notifyu1", "Checking submitted username");
-//     is(fieldValues.password, "notifyp1", "Checking submitted password");
+//     Assert.equal(fieldValues.username, "notifyu1", "Checking submitted username");
+//     Assert.equal(fieldValues.password, "notifyp1", "Checking submitted password");
 //   });
 // });
 
@@ -657,7 +739,11 @@ add_task(async function test_normal_autofilled_10() {
     "test 10: verify that the user/pass pair does get autofilled in non-private window"
   );
   // Sanity check the HTTP login exists.
-  is(Services.logins.getAllLogins().length, 1, "Should have the HTTP login");
+  Assert.equal(
+    Services.logins.getAllLogins().length,
+    1,
+    "Should have the HTTP login"
+  );
 
   let formFilled = listenForTestNotification("FormProcessed");
 
@@ -674,8 +760,16 @@ add_task(async function test_normal_autofilled_10() {
         "formsubmit.sjs",
         {}
       );
-      is(fieldValues.username, "notifyu1", "Checking submitted username");
-      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      Assert.equal(
+        fieldValues.username,
+        "notifyu1",
+        "Checking submitted username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
     }
   );
 });
@@ -695,7 +789,7 @@ add_task(async function test_normal_http_basic_auth() {
     },
     async function(browser) {
       await loadAccessRestrictedURL(browser, authUrl, "test", "testpass");
-      ok(true, "Auth-required page loaded");
+      Assert.ok(true, "Auth-required page loaded");
 
       // verify result in the response document
       let fieldValues = await SpecialPowers.spawn(
@@ -712,16 +806,24 @@ add_task(async function test_normal_http_basic_auth() {
           };
         }
       );
-      is(fieldValues.ok, "PASS", "Checking authorization passed");
-      is(fieldValues.username, "test", "Checking authorized username");
-      is(fieldValues.password, "testpass", "Checking authorized password");
+      Assert.equal(fieldValues.ok, "PASS", "Checking authorization passed");
+      Assert.equal(
+        fieldValues.username,
+        "test",
+        "Checking authorized username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "testpass",
+        "Checking authorized password"
+      );
 
       let notif = getCaptureDoorhanger(
         "password-save",
         PopupNotifications,
         browser
       );
-      ok(notif, "got notification popup");
+      Assert.ok(notif, "got notification popup");
       if (notif) {
         await TestUtils.waitForCondition(
           () => !notif.dismissed,
@@ -743,7 +845,7 @@ add_task(async function test_private_http_basic_auth() {
   const capturePrefValue = Services.prefs.getBoolPref(
     PRIVATE_BROWSING_CAPTURE_PREF
   );
-  ok(
+  Assert.ok(
     capturePrefValue,
     `Expect ${PRIVATE_BROWSING_CAPTURE_PREF} to default to true`
   );
@@ -761,15 +863,23 @@ add_task(async function test_private_http_basic_auth() {
         browser,
         "authenticate.sjs"
       );
-      is(fieldValues.username, "test", "Checking authorized username");
-      is(fieldValues.password, "testpass", "Checking authorized password");
+      Assert.equal(
+        fieldValues.username,
+        "test",
+        "Checking authorized username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "testpass",
+        "Checking authorized password"
+      );
 
       let notif = getCaptureDoorhanger(
         "password-save",
         PopupNotifications,
         browser
       );
-      ok(notif, "got notification popup");
+      Assert.ok(notif, "got notification popup");
       if (notif) {
         await TestUtils.waitForCondition(
           () => notif.dismissed,
@@ -808,8 +918,16 @@ add_task(async function test_private_http_basic_auth_no_capture_pref() {
         browser,
         "authenticate.sjs"
       );
-      is(fieldValues.username, "test", "Checking authorized username");
-      is(fieldValues.password, "testpass", "Checking authorized password");
+      Assert.equal(
+        fieldValues.username,
+        "test",
+        "Checking authorized username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "testpass",
+        "Checking authorized password"
+      );
 
       let notif = getCaptureDoorhanger(
         "password-save",
@@ -822,7 +940,7 @@ add_task(async function test_private_http_basic_auth_no_capture_pref() {
         capturePrefValue
       );
 
-      ok(!notif, "got no notification popup");
+      Assert.ok(!notif, "got no notification popup");
       if (notif) {
         await cleanupDoorhanger(notif);
       }

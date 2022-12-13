@@ -136,12 +136,12 @@ async function test_save_change({
         { expectedUsername, expectedPassword },
         async function awaitAutofill({ expectedUsername, expectedPassword }) {
           info("Validating updated fields");
-          is(
+          Assert.equal(
             expectedUsername,
             content.document.querySelector("#form-basic-username").value,
             "Verify username field updated"
           );
-          is(
+          Assert.equal(
             expectedPassword,
             content.document.querySelector("#form-basic-password").value,
             "Verify password field updated"

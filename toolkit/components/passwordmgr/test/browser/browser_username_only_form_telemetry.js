@@ -67,7 +67,7 @@ async function checkChildHistogram(id, index, expected) {
     histogram = histograms[id];
     return !!histogram && histogram.values[index] == expected;
   });
-  is(histogram.values[index], expected);
+  Assert.equal(histogram.values[index], expected);
 }
 
 add_setup(async function() {

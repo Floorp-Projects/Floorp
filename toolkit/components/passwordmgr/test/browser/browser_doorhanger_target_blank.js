@@ -43,7 +43,7 @@ add_task(async function test_saveTargetBlank() {
           ),
         "Waiting for doorhanger"
       );
-      ok(notif, "got notification popup");
+      Assert.ok(notif, "got notification popup");
 
       EventUtils.synthesizeMouseAtCenter(notif.anchorElement, {});
       await notifShownPromise;
@@ -61,11 +61,19 @@ add_task(async function test_saveTargetBlank() {
 
   // Check result of clicking Remember
   let logins = Services.logins.getAllLogins();
-  is(logins.length, 1, "Should only have 1 login now");
+  Assert.equal(logins.length, 1, "Should only have 1 login now");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
-  is(login.username, "notifyu3", "Check the username used on the new entry");
-  is(login.password, "notifyp3", "Check the password used on the new entry");
-  is(login.timesUsed, 1, "Check times used on new entry");
+  Assert.equal(
+    login.username,
+    "notifyu3",
+    "Check the username used on the new entry"
+  );
+  Assert.equal(
+    login.password,
+    "notifyp3",
+    "Check the password used on the new entry"
+  );
+  Assert.equal(login.timesUsed, 1, "Check times used on new entry");
 
   // Check for stale values in the doorhanger <input> after closing.
   let usernameField = document.getElementById("password-notification-username");

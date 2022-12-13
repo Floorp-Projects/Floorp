@@ -171,11 +171,11 @@ add_task(async function testProxyAuthPromptMerge() {
 
   // Accepting the window prompts should complete all auth requests.
   let authInfo1 = await cbWinPrompt.promise;
-  ok(authInfo1, "Received callback from first proxy auth call.");
+  Assert.ok(authInfo1, "Received callback from first proxy auth call.");
   let authInfo2 = await cbNoPrompt.promise;
-  ok(authInfo2, "Received callback from second proxy auth call.");
+  Assert.ok(authInfo2, "Received callback from second proxy auth call.");
   let authInfo3 = await cbNoPrompt2.promise;
-  ok(authInfo3, "Received callback from third proxy auth call.");
+  Assert.ok(authInfo3, "Received callback from third proxy auth call.");
 
   BrowserTestUtils.removeTab(tabA);
   BrowserTestUtils.removeTab(tabB);

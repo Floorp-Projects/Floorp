@@ -14,7 +14,7 @@ async function waitForDialog() {
   let [subject] = await TestUtils.topicObserved("common-dialog-loaded");
   let dialog = subject.Dialog;
   let expected = "Password Required - " + BRAND_FULL_NAME;
-  is(dialog.args.title, expected, "Check common dialog title");
+  Assert.equal(dialog.args.title, expected, "Check common dialog title");
   return {
     async close(win = window) {
       dialog.ui.button1.click();
@@ -106,13 +106,13 @@ add_task(async function test_mpAutocompleteUIBusy() {
   };
 
   function dialogObserver(subject, topic, data) {
-    ok(false, "A second dialog shouldn't have been shown");
+    Assert.ok(false, "A second dialog shouldn't have been shown");
     Services.obs.removeObserver(dialogObserver, topic);
   }
   Services.obs.addObserver(dialogObserver, "common-dialog-loaded");
 
   let results = await loginManagerParent.doAutocompleteSearch(origin, data);
-  is(results.logins.length, 0, "No results since uiBusy is true");
+  Assert.equal(results.logins.length, 0, "No results since uiBusy is true");
   await close(win);
 
   await BrowserTestUtils.closeWindow(win);

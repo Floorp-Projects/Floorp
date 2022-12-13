@@ -126,7 +126,7 @@ add_task(async function test_edit_username() {
 
         info("Waiting for the doorhanger");
         let notif = await waitForDoorhanger(browser, "any");
-        ok(!notif.dismissed, "Doorhanger is not dismissed");
+        Assert.ok(!notif.dismissed, "Doorhanger is not dismissed");
         await promiseShown;
 
         // Modify the username in the dialog if requested.

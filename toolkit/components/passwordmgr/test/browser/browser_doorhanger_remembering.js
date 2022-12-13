@@ -74,11 +74,19 @@ add_task(async function test_remember_opens() {
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_1.html",
     async function(fieldValues) {
-      is(fieldValues.username, "notifyu1", "Checking submitted username");
-      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      Assert.equal(
+        fieldValues.username,
+        "notifyu1",
+        "Checking submitted username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
       let notif = await getCaptureDoorhangerThatMayOpen("password-save");
-      ok(notif, "got notification popup");
-      ok(!notif.dismissed, "doorhanger is not dismissed");
+      Assert.ok(notif, "got notification popup");
+      Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
       await cleanupDoorhanger(notif);
     }
   );
@@ -88,12 +96,20 @@ add_task(async function test_clickNever() {
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_1.html",
     async function(fieldValues) {
-      is(fieldValues.username, "notifyu1", "Checking submitted username");
-      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      Assert.equal(
+        fieldValues.username,
+        "notifyu1",
+        "Checking submitted username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
       let notif = await getCaptureDoorhangerThatMayOpen("password-save");
-      ok(!notif.dismissed, "doorhanger is not dismissed");
-      ok(notif, "got notification popup");
-      is(
+      Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
+      Assert.ok(notif, "got notification popup");
+      Assert.equal(
         true,
         Services.logins.getLoginSavingEnabled("http://example.com"),
         "Checking for login saving enabled"
@@ -105,7 +121,7 @@ add_task(async function test_clickNever() {
     }
   );
 
-  is(
+  Assert.equal(
     Services.logins.getAllLogins().length,
     0,
     "Should not have any logins yet"
@@ -115,11 +131,19 @@ add_task(async function test_clickNever() {
   await testSubmittingLoginFormHTTP("subtst_notifications_1.html", function(
     fieldValues
   ) {
-    is(fieldValues.username, "notifyu1", "Checking submitted username");
-    is(fieldValues.password, "notifyp1", "Checking submitted password");
+    Assert.equal(
+      fieldValues.username,
+      "notifyu1",
+      "Checking submitted username"
+    );
+    Assert.equal(
+      fieldValues.password,
+      "notifyp1",
+      "Checking submitted password"
+    );
     let notif = getCaptureDoorhanger("password-save");
-    ok(!notif, "checking for no notification popup");
-    is(
+    Assert.ok(!notif, "checking for no notification popup");
+    Assert.equal(
       false,
       Services.logins.getLoginSavingEnabled("http://example.com"),
       "Checking for login saving disabled"
@@ -127,7 +151,7 @@ add_task(async function test_clickNever() {
     Services.logins.setLoginSavingEnabled("http://example.com", true);
   });
 
-  is(
+  Assert.equal(
     Services.logins.getAllLogins().length,
     0,
     "Should not have any logins yet"
@@ -138,13 +162,21 @@ add_task(async function test_clickRemember() {
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_1.html",
     async function(fieldValues) {
-      is(fieldValues.username, "notifyu1", "Checking submitted username");
-      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      Assert.equal(
+        fieldValues.username,
+        "notifyu1",
+        "Checking submitted username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
       let notif = await getCaptureDoorhangerThatMayOpen("password-save");
-      ok(notif, "got notification popup");
-      ok(!notif.dismissed, "doorhanger is not dismissed");
+      Assert.ok(notif, "got notification popup");
+      Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
 
-      is(
+      Assert.equal(
         Services.logins.getAllLogins().length,
         0,
         "Should not have any logins yet"
@@ -161,11 +193,19 @@ add_task(async function test_clickRemember() {
   );
 
   let logins = Services.logins.getAllLogins();
-  is(logins.length, 1, "Should only have 1 login");
+  Assert.equal(logins.length, 1, "Should only have 1 login");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
-  is(login.username, "notifyu1", "Check the username used on the new entry");
-  is(login.password, "notifyp1", "Check the password used on the new entry");
-  is(login.timesUsed, 1, "Check times used on new entry");
+  Assert.equal(
+    login.username,
+    "notifyu1",
+    "Check the username used on the new entry"
+  );
+  Assert.equal(
+    login.password,
+    "notifyp1",
+    "Check the password used on the new entry"
+  );
+  Assert.equal(login.timesUsed, 1, "Check times used on new entry");
 
   info(
     "Make sure Remember took effect and we don't prompt for an existing login"
@@ -174,18 +214,26 @@ add_task(async function test_clickRemember() {
     fieldValues
   ) {
     // form login matches a saved login, we don't expect a notification on change or submit
-    is(fieldValues.username, "notifyu1", "Checking submitted username");
-    is(fieldValues.password, "notifyp1", "Checking submitted password");
+    Assert.equal(
+      fieldValues.username,
+      "notifyu1",
+      "Checking submitted username"
+    );
+    Assert.equal(
+      fieldValues.password,
+      "notifyp1",
+      "Checking submitted password"
+    );
     let notif = getCaptureDoorhanger("password-save");
-    ok(!notif, "checking for no notification popup");
+    Assert.ok(!notif, "checking for no notification popup");
   });
 
   logins = Services.logins.getAllLogins();
-  is(logins.length, 1, "Should only have 1 login");
+  Assert.equal(logins.length, 1, "Should only have 1 login");
   login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
-  is(login.username, "notifyu1", "Check the username used");
-  is(login.password, "notifyp1", "Check the password used");
-  is(login.timesUsed, 2, "Check times used incremented");
+  Assert.equal(login.username, "notifyu1", "Check the username used");
+  Assert.equal(login.password, "notifyp1", "Check the password used");
+  Assert.equal(login.timesUsed, 2, "Check times used incremented");
 
   checkOnlyLoginWasUsedTwice({ justChanged: false });
 
@@ -203,13 +251,21 @@ add_task(async function test_rememberSignonsFalse() {
   await testSubmittingLoginFormHTTP("subtst_notifications_1.html", function(
     fieldValues
   ) {
-    is(fieldValues.username, "notifyu1", "Checking submitted username");
-    is(fieldValues.password, "notifyp1", "Checking submitted password");
+    Assert.equal(
+      fieldValues.username,
+      "notifyu1",
+      "Checking submitted username"
+    );
+    Assert.equal(
+      fieldValues.password,
+      "notifyp1",
+      "Checking submitted password"
+    );
     let notif = getCaptureDoorhanger("password-save");
-    ok(!notif, "checking for no notification popup");
+    Assert.ok(!notif, "checking for no notification popup");
   });
 
-  is(
+  Assert.equal(
     Services.logins.getAllLogins().length,
     0,
     "Should not have any logins yet"
@@ -223,16 +279,24 @@ add_task(async function test_rememberSignonsTrue() {
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_1.html",
     async function(fieldValues) {
-      is(fieldValues.username, "notifyu1", "Checking submitted username");
-      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      Assert.equal(
+        fieldValues.username,
+        "notifyu1",
+        "Checking submitted username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
       let notif = await getCaptureDoorhangerThatMayOpen("password-save");
-      ok(notif, "got notification popup");
-      ok(!notif.dismissed, "doorhanger is not dismissed");
+      Assert.ok(notif, "got notification popup");
+      Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
       await cleanupDoorhanger(notif);
     }
   );
 
-  is(
+  Assert.equal(
     Services.logins.getAllLogins().length,
     0,
     "Should not have any logins yet"
@@ -249,16 +313,24 @@ add_task(async function test_autocompleteOffUsername() {
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_2.html",
     async function(fieldValues) {
-      is(fieldValues.username, "notifyu1", "Checking submitted username");
-      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      Assert.equal(
+        fieldValues.username,
+        "notifyu1",
+        "Checking submitted username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
       let notif = await getCaptureDoorhangerThatMayOpen("password-save");
-      ok(notif, "checking for notification popup");
-      ok(!notif.dismissed, "doorhanger is not dismissed");
+      Assert.ok(notif, "checking for notification popup");
+      Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
       await cleanupDoorhanger(notif);
     }
   );
 
-  is(
+  Assert.equal(
     Services.logins.getAllLogins().length,
     0,
     "Should not have any logins yet"
@@ -273,16 +345,24 @@ add_task(async function test_autocompleteOffPassword() {
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_3.html",
     async function(fieldValues) {
-      is(fieldValues.username, "notifyu1", "Checking submitted username");
-      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      Assert.equal(
+        fieldValues.username,
+        "notifyu1",
+        "Checking submitted username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
       let notif = await getCaptureDoorhangerThatMayOpen("password-save");
-      ok(notif, "checking for notification popup");
-      ok(!notif.dismissed, "doorhanger is not dismissed");
+      Assert.ok(notif, "checking for notification popup");
+      Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
       await cleanupDoorhanger(notif);
     }
   );
 
-  is(
+  Assert.equal(
     Services.logins.getAllLogins().length,
     0,
     "Should not have any logins yet"
@@ -295,16 +375,24 @@ add_task(async function test_autocompleteOffForm() {
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_4.html",
     async function(fieldValues) {
-      is(fieldValues.username, "notifyu1", "Checking submitted username");
-      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      Assert.equal(
+        fieldValues.username,
+        "notifyu1",
+        "Checking submitted username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
       let notif = await getCaptureDoorhangerThatMayOpen("password-save");
-      ok(notif, "checking for notification popup");
-      ok(!notif.dismissed, "doorhanger is not dismissed");
+      Assert.ok(notif, "checking for notification popup");
+      Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
       await cleanupDoorhanger(notif);
     }
   );
 
-  is(
+  Assert.equal(
     Services.logins.getAllLogins().length,
     0,
     "Should not have any logins yet"
@@ -317,13 +405,17 @@ add_task(async function test_noPasswordField() {
   await testSubmittingLoginFormHTTP("subtst_notifications_5.html", function(
     fieldValues
   ) {
-    is(fieldValues.username, "notifyu1", "Checking submitted username");
-    is(fieldValues.password, "null", "Checking submitted password");
+    Assert.equal(
+      fieldValues.username,
+      "notifyu1",
+      "Checking submitted username"
+    );
+    Assert.equal(fieldValues.password, "null", "Checking submitted password");
     let notif = getCaptureDoorhanger("password-save");
-    ok(!notif, "checking for no notification popup");
+    Assert.ok(!notif, "checking for no notification popup");
   });
 
-  is(
+  Assert.equal(
     Services.logins.getAllLogins().length,
     0,
     "Should not have any logins yet"
@@ -336,18 +428,30 @@ add_task(async function test_pwOnlyNewLoginMatchesUPForm() {
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_1.html",
     async function(fieldValues) {
-      is(fieldValues.username, "notifyu1", "Checking submitted username");
-      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      Assert.equal(
+        fieldValues.username,
+        "notifyu1",
+        "Checking submitted username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
       let notif = await getCaptureDoorhangerThatMayOpen("password-change");
-      ok(notif, "checking for notification popup");
-      ok(!notif.dismissed, "doorhanger is not dismissed");
-      is(notif.message, "Add username to saved password?", "Check message");
+      Assert.ok(notif, "checking for notification popup");
+      Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
+      Assert.equal(
+        notif.message,
+        "Add username to saved password?",
+        "Check message"
+      );
 
       let { panel } = PopupNotifications;
       let passwordVisiblityToggle = panel.querySelector(
         "#password-notification-visibilityToggle"
       );
-      ok(
+      Assert.ok(
         !passwordVisiblityToggle.hidden,
         "Toggle visible for a recently saved pw"
       );
@@ -355,16 +459,19 @@ add_task(async function test_pwOnlyNewLoginMatchesUPForm() {
       await checkDoorhangerUsernamePassword("notifyu1", "notifyp1");
       clickDoorhangerButton(notif, CHANGE_BUTTON);
 
-      ok(!getCaptureDoorhanger("password-change"), "popup should be gone");
+      Assert.ok(
+        !getCaptureDoorhanger("password-change"),
+        "popup should be gone"
+      );
     }
   );
 
   let logins = Services.logins.getAllLogins();
-  is(logins.length, 1, "Should only have 1 login");
+  Assert.equal(logins.length, 1, "Should only have 1 login");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
-  is(login.username, "notifyu1", "Check the username");
-  is(login.password, "notifyp1", "Check the password");
-  is(login.timesUsed, 2, "Check times used");
+  Assert.equal(login.username, "notifyu1", "Check the username");
+  Assert.equal(login.password, "notifyp1", "Check the password");
+  Assert.equal(login.timesUsed, 2, "Check times used");
 
   Services.logins.removeLogin(login);
 });
@@ -388,32 +495,50 @@ add_task(async function test_pwOnlyOldLoginMatchesUPForm() {
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_1.html",
     async function(fieldValues) {
-      is(fieldValues.username, "notifyu1", "Checking submitted username");
-      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      Assert.equal(
+        fieldValues.username,
+        "notifyu1",
+        "Checking submitted username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
       let notif = await getCaptureDoorhangerThatMayOpen("password-change");
-      ok(notif, "checking for notification popup");
-      ok(!notif.dismissed, "doorhanger is not dismissed");
-      is(notif.message, "Add username to saved password?", "Check message");
+      Assert.ok(notif, "checking for notification popup");
+      Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
+      Assert.equal(
+        notif.message,
+        "Add username to saved password?",
+        "Check message"
+      );
 
       let { panel } = PopupNotifications;
       let passwordVisiblityToggle = panel.querySelector(
         "#password-notification-visibilityToggle"
       );
-      ok(passwordVisiblityToggle.hidden, "Toggle hidden for an old saved pw");
+      Assert.ok(
+        passwordVisiblityToggle.hidden,
+        "Toggle hidden for an old saved pw"
+      );
 
       await checkDoorhangerUsernamePassword("notifyu1", "notifyp1");
       clickDoorhangerButton(notif, CHANGE_BUTTON);
 
-      ok(!getCaptureDoorhanger("password-change"), "popup should be gone");
+      Assert.ok(
+        !getCaptureDoorhanger("password-change"),
+        "popup should be gone"
+      );
     }
   );
 
   let logins = Services.logins.getAllLogins();
-  is(logins.length, 1, "Should only have 1 login");
+  Assert.equal(logins.length, 1, "Should only have 1 login");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
-  is(login.username, "notifyu1", "Check the username");
-  is(login.password, "notifyp1", "Check the password");
-  is(login.timesUsed, 2, "Check times used");
+  Assert.equal(login.username, "notifyu1", "Check the username");
+  Assert.equal(login.password, "notifyp1", "Check the password");
+  Assert.equal(login.timesUsed, 2, "Check times used");
 
   Services.logins.removeLogin(login);
 });
@@ -427,18 +552,22 @@ add_task(async function test_pwOnlyFormMatchesLogin() {
   await testSubmittingLoginFormHTTP("subtst_notifications_6.html", function(
     fieldValues
   ) {
-    is(fieldValues.username, "null", "Checking submitted username");
-    is(fieldValues.password, "notifyp1", "Checking submitted password");
+    Assert.equal(fieldValues.username, "null", "Checking submitted username");
+    Assert.equal(
+      fieldValues.password,
+      "notifyp1",
+      "Checking submitted password"
+    );
     let notif = getCaptureDoorhanger("password-save");
-    ok(!notif, "checking for no notification popup");
+    Assert.ok(!notif, "checking for no notification popup");
   });
 
   let logins = Services.logins.getAllLogins();
-  is(logins.length, 1, "Should only have 1 login");
+  Assert.equal(logins.length, 1, "Should only have 1 login");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
-  is(login.username, "notifyu1", "Check the username");
-  is(login.password, "notifyp1", "Check the password");
-  is(login.timesUsed, 2, "Check times used");
+  Assert.equal(login.username, "notifyu1", "Check the username");
+  Assert.equal(login.password, "notifyp1", "Check the password");
+  Assert.equal(login.timesUsed, 2, "Check times used");
 
   Services.logins.removeLogin(login1);
 });
@@ -452,21 +581,25 @@ add_task(async function test_pwOnlyFormDoesntMatchExisting() {
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_6.html",
     async function(fieldValues) {
-      is(fieldValues.username, "null", "Checking submitted username");
-      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      Assert.equal(fieldValues.username, "null", "Checking submitted username");
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
       let notif = await getCaptureDoorhangerThatMayOpen("password-save");
-      ok(notif, "got notification popup");
-      ok(!notif.dismissed, "doorhanger is not dismissed");
+      Assert.ok(notif, "got notification popup");
+      Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
       await cleanupDoorhanger(notif);
     }
   );
 
   let logins = Services.logins.getAllLogins();
-  is(logins.length, 1, "Should only have 1 login");
+  Assert.equal(logins.length, 1, "Should only have 1 login");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
-  is(login.username, "notifyu1B", "Check the username unchanged");
-  is(login.password, "notifyp1B", "Check the password unchanged");
-  is(login.timesUsed, 1, "Check times used");
+  Assert.equal(login.username, "notifyu1B", "Check the username unchanged");
+  Assert.equal(login.password, "notifyp1B", "Check the password unchanged");
+  Assert.equal(login.timesUsed, 1, "Check times used");
 
   Services.logins.removeLogin(login1B);
 });
@@ -478,12 +611,24 @@ add_task(async function test_changeUPLoginOnUPForm_dont() {
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_8.html",
     async function(fieldValues) {
-      is(fieldValues.username, "notifyu1", "Checking submitted username");
-      is(fieldValues.password, "pass2", "Checking submitted password");
+      Assert.equal(
+        fieldValues.username,
+        "notifyu1",
+        "Checking submitted username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "pass2",
+        "Checking submitted password"
+      );
       let notif = await getCaptureDoorhangerThatMayOpen("password-change");
-      ok(notif, "got notification popup");
-      ok(!notif.dismissed, "doorhanger is not dismissed");
-      is(notif.message, "Update login for example.com?", "Check message");
+      Assert.ok(notif, "got notification popup");
+      Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
+      Assert.equal(
+        notif.message,
+        "Update login for example.com?",
+        "Check message"
+      );
 
       await checkDoorhangerUsernamePassword("notifyu1", "pass2");
       clickDoorhangerButton(notif, DONT_CHANGE_BUTTON);
@@ -491,11 +636,11 @@ add_task(async function test_changeUPLoginOnUPForm_dont() {
   );
 
   let logins = Services.logins.getAllLogins();
-  is(logins.length, 1, "Should only have 1 login");
+  Assert.equal(logins.length, 1, "Should only have 1 login");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
-  is(login.username, "notifyu1", "Check the username unchanged");
-  is(login.password, "notifyp1", "Check the password unchanged");
-  is(login.timesUsed, 1, "Check times used");
+  Assert.equal(login.username, "notifyu1", "Check the username unchanged");
+  Assert.equal(login.password, "notifyp1", "Check the password unchanged");
+  Assert.equal(login.timesUsed, 1, "Check times used");
 
   Services.logins.removeLogin(login1);
 });
@@ -507,12 +652,24 @@ add_task(async function test_changeUPLoginOnUPForm_remove() {
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_8.html",
     async function(fieldValues, browser) {
-      is(fieldValues.username, "notifyu1", "Checking submitted username");
-      is(fieldValues.password, "pass2", "Checking submitted password");
+      Assert.equal(
+        fieldValues.username,
+        "notifyu1",
+        "Checking submitted username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "pass2",
+        "Checking submitted password"
+      );
       let notif = await getCaptureDoorhangerThatMayOpen("password-change");
-      ok(notif, "got notification popup");
-      ok(!notif.dismissed, "doorhanger is not dismissed");
-      is(notif.message, "Update login for example.com?", "Check message");
+      Assert.ok(notif, "got notification popup");
+      Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
+      Assert.equal(
+        notif.message,
+        "Update login for example.com?",
+        "Check message"
+      );
 
       await checkDoorhangerUsernamePassword("notifyu1", "pass2");
       clickDoorhangerButton(notif, REMOVE_LOGIN_MENUITEM);
@@ -526,7 +683,7 @@ add_task(async function test_changeUPLoginOnUPForm_remove() {
   );
 
   let logins = Services.logins.getAllLogins();
-  is(logins.length, 0, "Should have 0 logins");
+  Assert.equal(logins.length, 0, "Should have 0 logins");
 });
 
 add_task(async function test_changeUPLoginOnUPForm_change() {
@@ -536,12 +693,24 @@ add_task(async function test_changeUPLoginOnUPForm_change() {
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_8.html",
     async function(fieldValues) {
-      is(fieldValues.username, "notifyu1", "Checking submitted username");
-      is(fieldValues.password, "pass2", "Checking submitted password");
+      Assert.equal(
+        fieldValues.username,
+        "notifyu1",
+        "Checking submitted username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "pass2",
+        "Checking submitted password"
+      );
       let notif = await getCaptureDoorhangerThatMayOpen("password-change");
-      ok(notif, "got notification popup");
-      ok(!notif.dismissed, "doorhanger is not dismissed");
-      is(notif.message, "Update login for example.com?", "Check message");
+      Assert.ok(notif, "got notification popup");
+      Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
+      Assert.equal(
+        notif.message,
+        "Update login for example.com?",
+        "Check message"
+      );
 
       await checkDoorhangerUsernamePassword("notifyu1", "pass2");
       let promiseLoginUpdateSaved = TestUtils.topicObserved(
@@ -551,16 +720,19 @@ add_task(async function test_changeUPLoginOnUPForm_change() {
       clickDoorhangerButton(notif, CHANGE_BUTTON);
       await promiseLoginUpdateSaved;
 
-      ok(!getCaptureDoorhanger("password-change"), "popup should be gone");
+      Assert.ok(
+        !getCaptureDoorhanger("password-change"),
+        "popup should be gone"
+      );
     }
   );
 
   let logins = Services.logins.getAllLogins();
-  is(logins.length, 1, "Should only have 1 login");
+  Assert.equal(logins.length, 1, "Should only have 1 login");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
-  is(login.username, "notifyu1", "Check the username unchanged");
-  is(login.password, "pass2", "Check the password changed");
-  is(login.timesUsed, 2, "Check times used");
+  Assert.equal(login.username, "notifyu1", "Check the username unchanged");
+  Assert.equal(login.password, "pass2", "Check the password changed");
+  Assert.equal(login.timesUsed, 2, "Check times used");
 
   checkOnlyLoginWasUsedTwice({ justChanged: true });
 
@@ -577,26 +749,37 @@ add_task(async function test_changePLoginOnUPForm() {
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_9.html",
     async function(fieldValues) {
-      is(fieldValues.username, "", "Checking submitted username");
-      is(fieldValues.password, "pass2", "Checking submitted password");
+      Assert.equal(fieldValues.username, "", "Checking submitted username");
+      Assert.equal(
+        fieldValues.password,
+        "pass2",
+        "Checking submitted password"
+      );
       let notif = await getCaptureDoorhangerThatMayOpen("password-change");
-      ok(notif, "got notification popup");
-      ok(!notif.dismissed, "doorhanger is not dismissed");
-      is(notif.message, "Update password for example.com?", "Check msg");
+      Assert.ok(notif, "got notification popup");
+      Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
+      Assert.equal(
+        notif.message,
+        "Update password for example.com?",
+        "Check msg"
+      );
 
       await checkDoorhangerUsernamePassword("", "pass2");
       clickDoorhangerButton(notif, CHANGE_BUTTON);
 
-      ok(!getCaptureDoorhanger("password-change"), "popup should be gone");
+      Assert.ok(
+        !getCaptureDoorhanger("password-change"),
+        "popup should be gone"
+      );
     }
   );
 
   let logins = Services.logins.getAllLogins();
-  is(logins.length, 1, "Should only have 1 login");
+  Assert.equal(logins.length, 1, "Should only have 1 login");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
-  is(login.username, "", "Check the username unchanged");
-  is(login.password, "pass2", "Check the password changed");
-  is(login.timesUsed, 2, "Check times used");
+  Assert.equal(login.username, "", "Check the username unchanged");
+  Assert.equal(login.password, "pass2", "Check the password changed");
+  Assert.equal(login.timesUsed, 2, "Check times used");
 
   // no cleanup -- saved password to be used in the next test.
 });
@@ -607,26 +790,37 @@ add_task(async function test_changePLoginOnPForm() {
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_10.html",
     async function(fieldValues) {
-      is(fieldValues.username, "null", "Checking submitted username");
-      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      Assert.equal(fieldValues.username, "null", "Checking submitted username");
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
       let notif = await getCaptureDoorhangerThatMayOpen("password-change");
-      ok(notif, "got notification popup");
-      ok(!notif.dismissed, "doorhanger is not dismissed");
-      is(notif.message, "Update password for example.com?", "Check msg");
+      Assert.ok(notif, "got notification popup");
+      Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
+      Assert.equal(
+        notif.message,
+        "Update password for example.com?",
+        "Check msg"
+      );
 
       await checkDoorhangerUsernamePassword("", "notifyp1");
       clickDoorhangerButton(notif, CHANGE_BUTTON);
 
-      ok(!getCaptureDoorhanger("password-change"), "popup should be gone");
+      Assert.ok(
+        !getCaptureDoorhanger("password-change"),
+        "popup should be gone"
+      );
     }
   );
 
   let logins = Services.logins.getAllLogins();
-  is(logins.length, 1, "Should only have 1 login");
+  Assert.equal(logins.length, 1, "Should only have 1 login");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
-  is(login.username, "", "Check the username unchanged");
-  is(login.password, "notifyp1", "Check the password changed");
-  is(login.timesUsed, 3, "Check times used");
+  Assert.equal(login.username, "", "Check the username unchanged");
+  Assert.equal(login.password, "notifyp1", "Check the password changed");
+  Assert.equal(login.timesUsed, 3, "Check times used");
 
   Services.logins.removeLogin(login2);
 });
@@ -637,20 +831,32 @@ add_task(async function test_checkUPSaveText() {
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_1.html",
     async function(fieldValues) {
-      is(fieldValues.username, "notifyu1", "Checking submitted username");
-      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      Assert.equal(
+        fieldValues.username,
+        "notifyu1",
+        "Checking submitted username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
       let notif = await getCaptureDoorhangerThatMayOpen("password-save");
-      ok(!notif.dismissed, "doorhanger is not dismissed");
-      ok(notif, "got notification popup");
+      Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
+      Assert.ok(notif, "got notification popup");
       // Check the text, which comes from the localized saveLoginMsg string.
       let notificationText = notif.message;
       let expectedText = "Save login for example.com?";
-      is(notificationText, expectedText, "Checking text: " + notificationText);
+      Assert.equal(
+        notificationText,
+        expectedText,
+        "Checking text: " + notificationText
+      );
       await cleanupDoorhanger(notif);
     }
   );
 
-  is(
+  Assert.equal(
     Services.logins.getAllLogins().length,
     0,
     "Should not have any logins yet"
@@ -663,20 +869,28 @@ add_task(async function test_checkPSaveText() {
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_6.html",
     async function(fieldValues) {
-      is(fieldValues.username, "null", "Checking submitted username");
-      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      Assert.equal(fieldValues.username, "null", "Checking submitted username");
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
       let notif = await getCaptureDoorhangerThatMayOpen("password-save");
-      ok(!notif.dismissed, "doorhanger is not dismissed");
-      ok(notif, "got notification popup");
+      Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
+      Assert.ok(notif, "got notification popup");
       // Check the text, which comes from the localized saveLoginMsgNoUser string.
       let notificationText = notif.message;
       let expectedText = "Save password for example.com?";
-      is(notificationText, expectedText, "Checking text: " + notificationText);
+      Assert.equal(
+        notificationText,
+        expectedText,
+        "Checking text: " + notificationText
+      );
       await cleanupDoorhanger(notif);
     }
   );
 
-  is(
+  Assert.equal(
     Services.logins.getAllLogins().length,
     0,
     "Should not have any logins yet"
@@ -692,16 +906,20 @@ add_task(async function test_capture2pw0un() {
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_2pw_0un.html",
     async function(fieldValues) {
-      is(fieldValues.username, "null", "Checking submitted username");
-      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      Assert.equal(fieldValues.username, "null", "Checking submitted username");
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
       let notif = await getCaptureDoorhangerThatMayOpen("password-save");
-      ok(!notif.dismissed, "doorhanger is not dismissed");
-      ok(notif, "got notification popup");
+      Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
+      Assert.ok(notif, "got notification popup");
       await cleanupDoorhanger(notif);
     }
   );
 
-  is(
+  Assert.equal(
     Services.logins.getAllLogins().length,
     0,
     "Should not have any logins yet"
@@ -719,21 +937,25 @@ add_task(async function test_change2pw0unExistingDifferentUP() {
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_2pw_0un.html",
     async function(fieldValues) {
-      is(fieldValues.username, "null", "Checking submitted username");
-      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      Assert.equal(fieldValues.username, "null", "Checking submitted username");
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
       let notif = await getCaptureDoorhangerThatMayOpen("password-change");
-      ok(notif, "got notification popup");
-      ok(!notif.dismissed, "doorhanger is not dismissed");
+      Assert.ok(notif, "got notification popup");
+      Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
       await cleanupDoorhanger(notif);
     }
   );
 
   let logins = Services.logins.getAllLogins();
-  is(logins.length, 1, "Should only have 1 login");
+  Assert.equal(logins.length, 1, "Should only have 1 login");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
-  is(login.username, "notifyu1B", "Check the username unchanged");
-  is(login.password, "notifyp1B", "Check the password unchanged");
-  is(login.timesUsed, 1, "Check times used");
+  Assert.equal(login.username, "notifyu1B", "Check the username unchanged");
+  Assert.equal(login.password, "notifyp1B", "Check the password unchanged");
+  Assert.equal(login.timesUsed, 1, "Check times used");
 
   Services.logins.removeLogin(login1B);
 });
@@ -749,21 +971,25 @@ add_task(async function test_change2pw0unExistingDifferentP() {
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_2pw_0un.html",
     async function(fieldValues) {
-      is(fieldValues.username, "null", "Checking submitted username");
-      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      Assert.equal(fieldValues.username, "null", "Checking submitted username");
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
       let notif = await getCaptureDoorhangerThatMayOpen("password-change");
-      ok(notif, "got notification popup");
-      ok(!notif.dismissed, "doorhanger is not dismissed");
+      Assert.ok(notif, "got notification popup");
+      Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
       await cleanupDoorhanger(notif);
     }
   );
 
   let logins = Services.logins.getAllLogins();
-  is(logins.length, 1, "Should only have 1 login");
+  Assert.equal(logins.length, 1, "Should only have 1 login");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
-  is(login.username, "", "Check the username unchanged");
-  is(login.password, "notifyp1B", "Check the password unchanged");
-  is(login.timesUsed, 1, "Check times used");
+  Assert.equal(login.username, "", "Check the username unchanged");
+  Assert.equal(login.password, "notifyp1B", "Check the password unchanged");
+  Assert.equal(login.timesUsed, 1, "Check times used");
 
   Services.logins.removeLogin(login2B);
 });
@@ -779,19 +1005,23 @@ add_task(async function test_change2pw0unExistingWithSameP() {
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_2pw_0un.html",
     function(fieldValues) {
-      is(fieldValues.username, "null", "Checking submitted username");
-      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      Assert.equal(fieldValues.username, "null", "Checking submitted username");
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
       let notif = getCaptureDoorhanger("password-change");
-      ok(!notif, "checking for no notification popup");
+      Assert.ok(!notif, "checking for no notification popup");
     }
   );
 
   let logins = Services.logins.getAllLogins();
-  is(logins.length, 1, "Should only have 1 login");
+  Assert.equal(logins.length, 1, "Should only have 1 login");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
-  is(login.username, "", "Check the username unchanged");
-  is(login.password, "notifyp1", "Check the password unchanged");
-  is(login.timesUsed, 2, "Check times used incremented");
+  Assert.equal(login.username, "", "Check the username unchanged");
+  Assert.equal(login.password, "notifyp1", "Check the password unchanged");
+  Assert.equal(login.timesUsed, 2, "Check times used incremented");
 
   checkOnlyLoginWasUsedTwice({ justChanged: false });
 
@@ -805,25 +1035,32 @@ add_task(async function test_changeUPLoginOnPUpdateForm() {
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_change_p.html",
     async function(fieldValues) {
-      is(fieldValues.username, "null", "Checking submitted username");
-      is(fieldValues.password, "pass2", "Checking submitted password");
+      Assert.equal(fieldValues.username, "null", "Checking submitted username");
+      Assert.equal(
+        fieldValues.password,
+        "pass2",
+        "Checking submitted password"
+      );
       let notif = await getCaptureDoorhangerThatMayOpen("password-change");
-      ok(notif, "got notification popup");
-      ok(!notif.dismissed, "doorhanger is not dismissed");
+      Assert.ok(notif, "got notification popup");
+      Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
 
       await checkDoorhangerUsernamePassword("notifyu1", "pass2");
       clickDoorhangerButton(notif, CHANGE_BUTTON);
 
-      ok(!getCaptureDoorhanger("password-change"), "popup should be gone");
+      Assert.ok(
+        !getCaptureDoorhanger("password-change"),
+        "popup should be gone"
+      );
     }
   );
 
   let logins = Services.logins.getAllLogins();
-  is(logins.length, 1, "Should only have 1 login");
+  Assert.equal(logins.length, 1, "Should only have 1 login");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
-  is(login.username, "notifyu1", "Check the username unchanged");
-  is(login.password, "pass2", "Check the password changed");
-  is(login.timesUsed, 2, "Check times used");
+  Assert.equal(login.username, "notifyu1", "Check the username unchanged");
+  Assert.equal(login.password, "pass2", "Check the password changed");
+  Assert.equal(login.timesUsed, 2, "Check times used");
 
   checkOnlyLoginWasUsedTwice({ justChanged: true });
 
@@ -841,15 +1078,23 @@ add_task(async function test_recipeCaptureFields_NewLogin() {
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_2pw_1un_1text.html",
     async function(fieldValues) {
-      is(fieldValues.username, "notifyu1", "Checking submitted username");
-      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      Assert.equal(
+        fieldValues.username,
+        "notifyu1",
+        "Checking submitted username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
       let notif = await getCaptureDoorhangerThatMayOpen("password-save");
-      ok(notif, "got notification popup");
-      ok(!notif.dismissed, "doorhanger is not dismissed");
+      Assert.ok(notif, "got notification popup");
+      Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
 
       // Sanity check, no logins should exist yet.
       let logins = Services.logins.getAllLogins();
-      is(logins.length, 0, "Should not have any logins yet");
+      Assert.equal(logins.length, 0, "Should not have any logins yet");
 
       await checkDoorhangerUsernamePassword("notifyu1", "notifyp1");
       clickDoorhangerButton(notif, REMEMBER_BUTTON);
@@ -858,11 +1103,11 @@ add_task(async function test_recipeCaptureFields_NewLogin() {
   ); // The recipe is for example.org
 
   let logins = Services.logins.getAllLogins();
-  is(logins.length, 1, "Should only have 1 login");
+  Assert.equal(logins.length, 1, "Should only have 1 login");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
-  is(login.username, "notifyu1", "Check the username unchanged");
-  is(login.password, "notifyp1", "Check the password unchanged");
-  is(login.timesUsed, 1, "Check times used");
+  Assert.equal(login.username, "notifyu1", "Check the username unchanged");
+  Assert.equal(login.password, "notifyp1", "Check the password unchanged");
+  Assert.equal(login.timesUsed, 1, "Check times used");
 });
 
 add_task(async function test_recipeCaptureFields_ExistingLogin() {
@@ -874,21 +1119,29 @@ add_task(async function test_recipeCaptureFields_ExistingLogin() {
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_2pw_1un_1text.html",
     function(fieldValues) {
-      is(fieldValues.username, "notifyu1", "Checking submitted username");
-      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      Assert.equal(
+        fieldValues.username,
+        "notifyu1",
+        "Checking submitted username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
       let notif = getCaptureDoorhanger("password-save");
-      ok(!notif, "checking for no notification popup");
+      Assert.ok(!notif, "checking for no notification popup");
     },
     "http://example.org"
   );
 
   checkOnlyLoginWasUsedTwice({ justChanged: false });
   let logins = Services.logins.getAllLogins();
-  is(logins.length, 1, "Should only have 1 login");
+  Assert.equal(logins.length, 1, "Should only have 1 login");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
-  is(login.username, "notifyu1", "Check the username unchanged");
-  is(login.password, "notifyp1", "Check the password unchanged");
-  is(login.timesUsed, 2, "Check times used incremented");
+  Assert.equal(login.username, "notifyu1", "Check the username unchanged");
+  Assert.equal(login.password, "notifyp1", "Check the password unchanged");
+  Assert.equal(login.timesUsed, 2, "Check times used incremented");
 
   Services.logins.removeAllUserFacingLogins();
 });
@@ -905,18 +1158,26 @@ add_task(async function test_saveUsingEnter() {
     await FormHistoryTestUtils.clear(usernameFieldName);
 
     let historyEntries = await FormHistoryTestUtils.count(usernameFieldName);
-    is(historyEntries, 0, "Should have 0 entries in form history");
+    Assert.equal(historyEntries, 0, "Should have 0 entries in form history");
 
     info("Waiting for form submit and doorhanger interaction");
     await testSubmittingLoginFormHTTP(
       "subtst_notifications_1.html",
       async function(fieldValues) {
-        is(fieldValues.username, "notifyu1", "Checking submitted username");
-        is(fieldValues.password, "notifyp1", "Checking submitted password");
+        Assert.equal(
+          fieldValues.username,
+          "notifyu1",
+          "Checking submitted username"
+        );
+        Assert.equal(
+          fieldValues.password,
+          "notifyp1",
+          "Checking submitted password"
+        );
         let notif = await getCaptureDoorhangerThatMayOpen("password-save");
-        ok(notif, "got notification popup");
-        ok(!notif.dismissed, "doorhanger is not dismissed");
-        is(
+        Assert.ok(notif, "got notification popup");
+        Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
+        Assert.equal(
           Services.logins.getAllLogins().length,
           0,
           "Should not have any logins yet"
@@ -931,14 +1192,26 @@ add_task(async function test_saveUsingEnter() {
     await storageChangedPromise;
 
     let logins = Services.logins.getAllLogins();
-    is(logins.length, 1, "Should only have 1 login");
+    Assert.equal(logins.length, 1, "Should only have 1 login");
     let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
-    is(login.username, "notifyu1", "Check the username used on the new entry");
-    is(login.password, "notifyp1", "Check the password used on the new entry");
-    is(login.timesUsed, 1, "Check times used on new entry");
+    Assert.equal(
+      login.username,
+      "notifyu1",
+      "Check the username used on the new entry"
+    );
+    Assert.equal(
+      login.password,
+      "notifyp1",
+      "Check the password used on the new entry"
+    );
+    Assert.equal(login.timesUsed, 1, "Check times used on new entry");
 
     historyEntries = await FormHistoryTestUtils.count(usernameFieldName);
-    is(historyEntries, 0, "Username should not be stored in form history.");
+    Assert.equal(
+      historyEntries,
+      0,
+      "Username should not be stored in form history."
+    );
 
     Services.logins.removeAllUserFacingLogins();
   }
@@ -955,7 +1228,7 @@ add_task(async function test_noShowPasswordOnDismissal() {
     async function(fieldValues) {
       info("Opening popup");
       let notif = await getCaptureDoorhangerThatMayOpen("password-save");
-      ok(!notif.dismissed, "doorhanger is not dismissed");
+      Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
       let { panel } = PopupNotifications;
 
       info("Hiding popup.");
@@ -971,7 +1244,7 @@ add_task(async function test_noShowPasswordOnDismissal() {
       let passwordVisiblityToggle = panel.querySelector(
         "#password-notification-visibilityToggle"
       );
-      is(
+      Assert.equal(
         passwordVisiblityToggle.hidden,
         true,
         "Check that the Show Password field is Hidden"
@@ -989,7 +1262,7 @@ add_task(async function test_showPasswordOn1stOpenOfDismissedByDefault() {
     async function(fieldValues) {
       info("Opening popup");
       let notif = await getCaptureDoorhangerThatMayOpen("password-save");
-      ok(!notif.dismissed, "doorhanger is not dismissed");
+      Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
       let { panel } = PopupNotifications;
 
       info("Hiding popup.");
@@ -1005,7 +1278,7 @@ add_task(async function test_showPasswordOn1stOpenOfDismissedByDefault() {
       let passwordVisiblityToggle = panel.querySelector(
         "#password-notification-visibilityToggle"
       );
-      is(
+      Assert.equal(
         passwordVisiblityToggle.hidden,
         true,
         "Check that the Show Password field is Hidden"

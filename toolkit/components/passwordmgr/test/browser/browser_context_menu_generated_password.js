@@ -27,7 +27,7 @@ add_setup(async function() {
   });
   // assert that there are no logins
   let logins = Services.logins.getAllLogins();
-  is(logins.length, 0, "There are no logins");
+  Assert.equal(logins.length, 0, "There are no logins");
 });
 
 add_task(async function test_hidden_by_prefs() {
@@ -51,7 +51,7 @@ add_task(async function test_hidden_by_prefs() {
       let generatedPasswordItem = document.getElementById(
         "fill-login-generated-password"
       );
-      ok(
+      Assert.ok(
         !BrowserTestUtils.is_visible(generatedPasswordItem),
         "generated password item is hidden"
       );
@@ -79,7 +79,7 @@ add_task(async function test_fill_hidden_by_login_saving_disabled() {
       let generatedPasswordItem = document.getElementById(
         "fill-login-generated-password"
       );
-      ok(
+      Assert.ok(
         !BrowserTestUtils.is_visible(generatedPasswordItem),
         "generated password item is hidden"
       );
@@ -112,11 +112,14 @@ add_task(async function test_fill_hidden_by_locked_primary_password() {
       let generatedPasswordItem = document.getElementById(
         "fill-login-generated-password"
       );
-      ok(
+      Assert.ok(
         BrowserTestUtils.is_visible(generatedPasswordItem),
         "generated password item is visible"
       );
-      ok(generatedPasswordItem.disabled, "generated password item is disabled");
+      Assert.ok(
+        generatedPasswordItem.disabled,
+        "generated password item is disabled"
+      );
 
       CONTEXT_MENU.hidePopup();
     }
@@ -139,8 +142,8 @@ add_task(async function fill_generated_password_empty_field() {
         [[passwordInputSelector]],
         function checkInitialFieldValue(inputSelector) {
           const input = content.document.querySelector(inputSelector);
-          is(input.value.length, 0, "Password field is empty");
-          ok(
+          Assert.equal(input.value.length, 0, "Password field is empty");
+          Assert.ok(
             !input.matches(":autofill"),
             "Password field should not be highlighted"
           );
@@ -159,12 +162,12 @@ add_task(async function fill_generated_password_empty_field() {
             "resource://testing-common/LoginTestUtils.jsm"
           );
           const input = content.document.querySelector(inputSelector);
-          is(
+          Assert.equal(
             input.value.length,
             LTU.generation.LENGTH,
             "Password field was filled with generated password"
           );
-          ok(
+          Assert.ok(
             input.matches(":autofill"),
             "Password field should be highlighted"
           );
@@ -181,7 +184,7 @@ add_task(async function fill_generated_password_empty_field() {
       let pwgenItem = acPopup.querySelector(
         `[originaltype="generatedPassword"]`
       );
-      ok(
+      Assert.ok(
         !pwgenItem || EventUtils.isHidden(pwgenItem),
         "pwgen item should no longer be shown"
       );
@@ -208,7 +211,7 @@ add_task(async function fill_generated_password_nonempty_field() {
         [[passwordInputSelector]],
         function checkInitialFieldValue(inputSelector) {
           const input = content.document.querySelector(inputSelector);
-          ok(
+          Assert.ok(
             !input.matches(":autofill"),
             "Password field should not be highlighted"
           );
@@ -227,12 +230,12 @@ add_task(async function fill_generated_password_nonempty_field() {
             "resource://testing-common/LoginTestUtils.jsm"
           );
           const input = content.document.querySelector(inputSelector);
-          is(
+          Assert.equal(
             input.value.length,
             LTU.generation.LENGTH,
             "Password field was filled with generated password"
           );
-          ok(
+          Assert.ok(
             input.matches(":autofill"),
             "Password field should be highlighted"
           );
@@ -274,7 +277,7 @@ add_task(async function fill_generated_password_with_matching_logins() {
         browser,
         [[passwordInputSelector]],
         function checkInitialFieldValue(inputSelector) {
-          is(
+          Assert.equal(
             content.document.querySelector(inputSelector).value,
             "pass1",
             "Password field has initial value"
@@ -294,12 +297,12 @@ add_task(async function fill_generated_password_with_matching_logins() {
             "resource://testing-common/LoginTestUtils.jsm"
           );
           const input = content.document.querySelector(inputSelector);
-          is(
+          Assert.equal(
             input.value.length,
             LTU.generation.LENGTH,
             "Password field was filled with generated password"
           );
-          ok(
+          Assert.ok(
             input.matches(":autofill"),
             "Password field should be highlighted"
           );
@@ -348,7 +351,7 @@ add_task(async function fill_generated_password_with_matching_logins() {
             "resource://testing-common/LoginTestUtils.jsm"
           );
           const input = content.document.querySelector(inputSelector);
-          is(
+          Assert.equal(
             input.value,
             "pass1",
             "Password field was filled with the saved password"
@@ -364,7 +367,7 @@ add_task(async function fill_generated_password_with_matching_logins() {
   );
 
   let logins = Services.logins.getAllLogins();
-  is(logins.length, 2, "Check 2 logins");
+  Assert.equal(logins.length, 2, "Check 2 logins");
   isnot(
     logins[0].password,
     logins[1].password,
@@ -390,8 +393,8 @@ add_task(async function test_edited_generated_password_in_new_tab() {
         [[passwordInputSelector]],
         function checkInitialFieldValue(inputSelector) {
           const input = content.document.querySelector(inputSelector);
-          is(input.value.length, 0, "Password field is empty");
-          ok(
+          Assert.equal(input.value.length, 0, "Password field is empty");
+          Assert.ok(
             !input.matches(":autofill"),
             "Password field should not be highlighted"
           );
@@ -410,12 +413,12 @@ add_task(async function test_edited_generated_password_in_new_tab() {
             "resource://testing-common/LoginTestUtils.jsm"
           );
           const input = content.document.querySelector(inputSelector);
-          is(
+          Assert.equal(
             input.value.length,
             LTU.generation.LENGTH,
             "Password field was filled with generated password"
           );
-          ok(
+          Assert.ok(
             input.matches(":autofill"),
             "Password field should be highlighted"
           );
@@ -463,7 +466,7 @@ add_task(async function test_edited_generated_password_in_new_tab() {
             "resource://testing-common/LoginTestUtils.jsm"
           );
           const input = content.document.querySelector(inputSelector);
-          is(
+          Assert.equal(
             input.value.length,
             LTU.generation.LENGTH + 2,
             "Password field was filled with edited generated password"

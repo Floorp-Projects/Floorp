@@ -24,7 +24,7 @@ add_task(async function test_autocomplete_new_password_popup_item_visible() {
         "LoginManager"
       );
       await lmp.getGeneratedPassword();
-      is(
+      Assert.equal(
         LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().size,
         1,
         "Non-Private password should be cached"
@@ -51,11 +51,11 @@ add_task(async function test_autocomplete_new_password_popup_item_visible() {
       );
 
       let popup = doc.getElementById("PopupAutoComplete");
-      ok(popup, "Got popup");
+      Assert.ok(popup, "Got popup");
       await openACPopup(popup, browser, passwordInputSelector);
 
       let item = popup.querySelector(`[originaltype="generatedPassword"]`);
-      ok(item, "Should get 'Generate password' richlistitem");
+      Assert.ok(item, "Should get 'Generate password' richlistitem");
 
       let onPopupClosed = BrowserTestUtils.waitForCondition(
         () => !popup.popupOpen,
@@ -79,7 +79,7 @@ add_task(async function test_autocomplete_new_password_popup_item_visible() {
   ).then(() => TestUtils.waitForTick());
   await BrowserTestUtils.closeWindow(win);
   await lastPBContextExitedPromise;
-  is(
+  Assert.equal(
     LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().size,
     1,
     "Only private-context passwords should be cleared"
@@ -100,7 +100,7 @@ add_task(async function test_autocomplete_menu_item_enabled() {
       let generatedPasswordItem = doc.getElementById(
         "fill-login-generated-password"
       );
-      is(
+      Assert.equal(
         generatedPasswordItem.disabled,
         false,
         "Generate password context menu item should be enabled in PB mode"

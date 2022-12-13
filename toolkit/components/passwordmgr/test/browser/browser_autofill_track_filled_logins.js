@@ -32,7 +32,11 @@ add_task(async function test() {
       "form-basic-password"
     );
     login = Services.logins.addLogin(login);
-    is(login.timesUsed, 1, "The timesUsed should be 1 after creation");
+    Assert.equal(
+      login.timesUsed,
+      1,
+      "The timesUsed should be 1 after creation"
+    );
 
     let tab = await BrowserTestUtils.openNewForegroundTab({
       gBrowser,
@@ -73,9 +77,13 @@ add_task(async function test() {
 
         if (aUsernameRequested) {
           let username = content.document.querySelector("#form-basic-username");
-          is(username.value, "bob", "Filled username should match");
+          Assert.equal(username.value, "bob", "Filled username should match");
         }
-        is(password.value, "mypassword", "Filled password should match");
+        Assert.equal(
+          password.value,
+          "mypassword",
+          "Filled password should match"
+        );
       }
     );
 
@@ -87,8 +95,8 @@ add_task(async function test() {
 
     let logins = Services.logins.getAllLogins();
 
-    is(logins.length, 1, "There should only be one login saved");
-    is(
+    Assert.equal(logins.length, 1, "There should only be one login saved");
+    Assert.equal(
       logins[0].guid,
       login.guid,
       "The saved login should match the one added and used above"

@@ -11,7 +11,7 @@ add_setup(function() {
     Ci.nsILoginInfo,
     "init"
   );
-  ok(nsLoginInfo != null, "nsLoginInfo constructor");
+  Assert.ok(nsLoginInfo != null, "nsLoginInfo constructor");
 
   info("Adding two logins to get autocomplete instead of autofill");
   let login1 = new nsLoginInfo(
@@ -57,12 +57,16 @@ add_task(async function test_autocompleteFromUsername() {
       let uname = doc.querySelector("#uname");
       let pword = doc.querySelector("#pword");
 
-      ok(uname, "Username field found");
-      ok(pword, "Password field found");
+      Assert.ok(uname, "Username field found");
+      Assert.ok(pword, "Password field found");
 
-      is(doc.activeElement, uname, "#uname element should be focused");
-      is(uname.value, "", "Checking username is empty");
-      is(pword.value, "", "Checking password is empty");
+      Assert.equal(
+        doc.activeElement,
+        uname,
+        "#uname element should be focused"
+      );
+      Assert.equal(uname.value, "", "Checking username is empty");
+      Assert.equal(pword.value, "", "Checking password is empty");
     }
   );
 
@@ -70,7 +74,7 @@ add_task(async function test_autocompleteFromUsername() {
   await autocompletePopupShown;
 
   let richlistbox = autocompletePopup.richlistbox;
-  is(
+  Assert.equal(
     richlistbox.localName,
     "richlistbox",
     "The richlistbox should be the first anonymous node"
@@ -92,8 +96,8 @@ add_task(async function test_autocompleteFromUsername() {
     let uname = doc.querySelector("#uname");
     let pword = doc.querySelector("#pword");
 
-    is(uname.value, "tempuser1", "Checking username is filled");
-    is(pword.value, "temppass1", "Checking password is filled");
+    Assert.equal(uname.value, "tempuser1", "Checking username is filled");
+    Assert.equal(pword.value, "temppass1", "Checking password is filled");
   });
 
   BrowserTestUtils.removeTab(newTab);

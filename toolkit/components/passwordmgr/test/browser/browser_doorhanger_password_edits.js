@@ -141,7 +141,7 @@ add_task(async function test_edit_password() {
         await formSubmittedPromise;
 
         let notif = await waitForDoorhanger(browser, "any");
-        ok(!notif.dismissed, "Doorhanger is not dismissed");
+        Assert.ok(!notif.dismissed, "Doorhanger is not dismissed");
         await promiseShown;
 
         // Modify the username & password in the dialog if requested.

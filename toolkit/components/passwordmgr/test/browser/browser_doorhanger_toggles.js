@@ -270,15 +270,15 @@ async function testDoorhangerToggles({
         let expectedDoorhanger = expected.passwordChangedDoorhanger;
         info("Verifying dismissed doorhanger from password change");
         let notif = await waitForDoorhanger(browser, expectedDoorhanger.type);
-        ok(notif, "got notification popup");
-        is(
+        Assert.ok(notif, "got notification popup");
+        Assert.equal(
           notif.dismissed,
           expectedDoorhanger.dismissed,
           "Check notification dismissed property"
         );
         let { panel } = browser.ownerGlobal.PopupNotifications;
         // we will open dismissed doorhanger to check panel contents
-        is(panel.state, "closed", "Panel is initially closed");
+        Assert.equal(panel.state, "closed", "Panel is initially closed");
         let promiseShown = BrowserTestUtils.waitForEvent(panel, "popupshown");
         info("Opening the doorhanger popup");
         // synthesize click on anchor as this also blurs the form field triggering
@@ -286,7 +286,7 @@ async function testDoorhangerToggles({
         EventUtils.synthesizeMouseAtCenter(notif.anchorElement, {});
         await promiseShown;
         await TestUtils.waitForTick();
-        ok(
+        Assert.ok(
           panel.children.length,
           `Check the popup has at least one notification (${panel.children.length})`
         );
@@ -309,13 +309,13 @@ async function testDoorhangerToggles({
         info("Waiting for doorhanger popup to open");
         await promiseShown;
         let notif = await getCaptureDoorhanger(expectedDoorhanger.type);
-        ok(notif, "got notification popup");
-        is(
+        Assert.ok(notif, "got notification popup");
+        Assert.equal(
           notif.dismissed,
           expectedDoorhanger.dismissed,
           "Check notification dismissed property"
         );
-        ok(
+        Assert.ok(
           panel.children.length,
           `Check the popup has at least one notification (${panel.children.length})`
         );
@@ -348,72 +348,72 @@ async function verifyDoorhangerToggles(browser, notif, expected) {
   let toggleCheckbox = notificationElement.querySelector(
     "#password-notification-visibilityToggle"
   );
-  is(panel.state, "open", "Panel is open");
-  ok(
+  Assert.equal(panel.state, "open", "Panel is open");
+  Assert.ok(
     BrowserTestUtils.is_visible(passwordTextbox),
     "The doorhanger password field is visible"
   );
 
   await checkDoorhangerUsernamePassword(expected.username, expected.password);
   if (expected.toggleVisible) {
-    ok(
+    Assert.ok(
       BrowserTestUtils.is_visible(toggleCheckbox),
       "The visibility checkbox is shown"
     );
   } else {
-    ok(
+    Assert.ok(
       BrowserTestUtils.is_hidden(toggleCheckbox),
       "The visibility checkbox is hidden"
     );
   }
 
   if (initialToggleState) {
-    is(
+    Assert.equal(
       toggleCheckbox.checked,
       initialToggleState.toggleChecked,
       `Initially, toggle is ${
         initialToggleState.toggleChecked ? "checked" : "unchecked"
       }`
     );
-    is(
+    Assert.equal(
       passwordTextbox.type,
       initialToggleState.inputType,
       `Initially, password input has type: ${initialToggleState.inputType}`
     );
   }
   if (afterToggleClick0) {
-    ok(
+    Assert.ok(
       !toggleCheckbox.hidden,
       "The checkbox shouldnt be hidden when clicking on it"
     );
     info("Clicking on the visibility toggle");
     await EventUtils.synthesizeMouseAtCenter(toggleCheckbox, {});
     await TestUtils.waitForTick();
-    is(
+    Assert.equal(
       toggleCheckbox.checked,
       afterToggleClick0.toggleChecked,
       `After 1st click, expect toggle to be checked? ${afterToggleClick0.toggleChecked}, actual: ${toggleCheckbox.checked}`
     );
-    is(
+    Assert.equal(
       passwordTextbox.type,
       afterToggleClick0.inputType,
       `After 1st click, expect password input to have type: ${afterToggleClick0.inputType}`
     );
   }
   if (afterToggleClick1) {
-    ok(
+    Assert.ok(
       !toggleCheckbox.hidden,
       "The checkbox shouldnt be hidden when clicking on it"
     );
     info("Clicking on the visibility toggle again");
     await EventUtils.synthesizeMouseAtCenter(toggleCheckbox, {});
     await TestUtils.waitForTick();
-    is(
+    Assert.equal(
       toggleCheckbox.checked,
       afterToggleClick1.toggleChecked,
       `After 2nd click, expect toggle to be checked? ${afterToggleClick0.toggleChecked}, actual: ${toggleCheckbox.checked}`
     );
-    is(
+    Assert.equal(
       passwordTextbox.type,
       afterToggleClick1.inputType,
       `After 2nd click, expect password input to have type: ${afterToggleClick1.inputType}`
@@ -441,7 +441,11 @@ async function checkForm(browser, expected) {
     async function contentCheckForm(selectorValues) {
       for (let [sel, value] of Object.entries(selectorValues)) {
         let field = content.document.querySelector(sel);
-        is(field.value, value, sel + " has the expected initial value");
+        Assert.equal(
+          field.value,
+          value,
+          sel + " has the expected initial value"
+        );
       }
     }
   );

@@ -43,12 +43,12 @@ add_task(async function test_http_autofill() {
       }
     );
 
-    is(
+    Assert.equal(
       username,
       scheme == "http" ? "" : "username",
       "Username filled correctly"
     );
-    is(
+    Assert.equal(
       password,
       scheme == "http" ? "" : "password",
       "Password filled correctly"
@@ -82,12 +82,12 @@ add_task(async function test_iframe_in_http_autofill() {
       }
     );
 
-    is(
+    Assert.equal(
       username,
       scheme == "http" ? "" : "username",
       "Username filled correctly"
     );
-    is(
+    Assert.equal(
       password,
       scheme == "http" ? "" : "password",
       "Password filled correctly"
@@ -120,12 +120,12 @@ add_task(async function test_http_action_autofill() {
       }
     );
 
-    is(
+    Assert.equal(
       username,
       type == "insecure" ? "" : "username",
       "Username filled correctly"
     );
-    is(
+    Assert.equal(
       password,
       type == "insecure" ? "" : "password",
       "Password filled correctly"

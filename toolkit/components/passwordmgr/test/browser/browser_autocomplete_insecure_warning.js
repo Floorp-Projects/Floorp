@@ -17,12 +17,12 @@ add_task(async function test_clickInsecureFieldWarning() {
     },
     async function(browser) {
       let popup = document.getElementById("PopupAutoComplete");
-      ok(popup, "Got popup");
+      Assert.ok(popup, "Got popup");
       await openACPopup(popup, browser, "#form-basic-username");
       await new Promise(requestAnimationFrame);
 
       let warningItem = popup.querySelector(`[type="insecureWarning"]`);
-      ok(warningItem, "Got warning richlistitem");
+      Assert.ok(warningItem, "Got warning richlistitem");
 
       await BrowserTestUtils.waitForCondition(
         () => !warningItem.collapsed,
@@ -36,7 +36,7 @@ add_task(async function test_clickInsecureFieldWarning() {
       );
       EventUtils.synthesizeMouseAtCenter(warningItem, {});
       let supportTab = await supportTabPromise;
-      ok(supportTab, "Support tab opened");
+      Assert.ok(supportTab, "Support tab opened");
       await closePopup(popup);
       BrowserTestUtils.removeTab(supportTab);
     }

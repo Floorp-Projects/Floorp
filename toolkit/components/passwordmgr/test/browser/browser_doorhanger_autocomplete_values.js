@@ -120,12 +120,12 @@ const TEST_CASES = [
 
 function _validateTestCase(tc) {
   if (tc.expectUsernameDropmarker) {
-    ok(
+    Assert.ok(
       !!tc.expectedValues.length,
       "Validate test case.  A visible dropmarker implies expected values"
     );
   } else {
-    ok(
+    Assert.ok(
       !tc.expectedValues.length,
       "Validate test case.  A hidden dropmarker implies no expected values"
     );
@@ -221,7 +221,7 @@ add_task(async function test_edit_password() {
         let usernameDropmarker = notificationElement.querySelector(
           USERNAME_DROPMARKER_SELECTOR
         );
-        ok(
+        Assert.ok(
           BrowserTestUtils.is_visible(usernameDropmarker) ==
             testCase.expectUsernameDropmarker,
           "Confirm dropmarker visibility"
@@ -242,7 +242,7 @@ add_task(async function test_edit_password() {
         );
 
         // Log expected/actual inconsistencies
-        ok(
+        Assert.ok(
           !expectedNotFound.length,
           `All expected values should be found\nCase: "${
             testCase.description
@@ -253,7 +253,7 @@ add_task(async function test_edit_password() {
           )}\nExpected not found: ${JSON.stringify(expectedNotFound)}
         `
         );
-        ok(
+        Assert.ok(
           !foundNotExpected.length,
           `All actual values should be expected\nCase: "${
             testCase.description
