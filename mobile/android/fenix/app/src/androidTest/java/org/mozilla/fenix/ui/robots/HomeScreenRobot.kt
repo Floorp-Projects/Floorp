@@ -194,7 +194,10 @@ class HomeScreenRobot {
 
     // First Run elements
     fun verifyWelcomeHeader() = assertItemContainingTextExists(welcomeHeader)
-    fun verifyAccountsSignInButton() = assertItemWithResIdExists(signInButton)
+    fun verifyAccountsSignInButton() {
+        scrollToElementByText(getStringResource(R.string.onboarding_account_sign_in_header))
+        assertItemWithResIdExists(signInButton)
+    }
     fun verifyStartBrowsingButton() {
         scrollToElementByText(getStringResource(R.string.onboarding_finish))
         assertItemWithResIdExists(startBrowsingButton)
