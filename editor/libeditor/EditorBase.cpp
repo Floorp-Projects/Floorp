@@ -1856,12 +1856,15 @@ NS_IMETHODIMP EditorBase::RemoveAttribute(Element* aElement,
 
 nsresult EditorBase::RemoveAttributeWithTransaction(Element& aElement,
                                                     nsAtom& aAttribute) {
-  // XXX If aElement doesn't have aAttribute, shouldn't we stop creating
-  //     the transaction?  Otherwise, there will be added a transaction
-  //     which does nothing at doing undo/redo.
+  if (!aElement.HasAttr(&aAttribute)) {
+    return NS_OK;
+  }
   RefPtr<ChangeAttributeTransaction> transaction =
       ChangeAttributeTransaction::CreateToRemove(aElement, aAttribute);
   nsresult rv = DoTransactionInternal(transaction);
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::DoTransactionInternal() failed");
   return rv;

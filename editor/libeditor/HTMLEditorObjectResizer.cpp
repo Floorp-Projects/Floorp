@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ErrorList.h"
 #include "HTMLEditor.h"
 
 #include "CSSEditUtils.h"
@@ -1302,26 +1303,32 @@ nsresult HTMLEditor::SetFinalSizeWithTransaction(int32_t aX, int32_t aY) {
   if (IsCSSEnabled() || mResizedObjectIsAbsolutelyPositioned) {
     if (setWidth &&
         resizedElement->HasAttr(kNameSpaceID_None, nsGkAtoms::width)) {
-      DebugOnly<nsresult> rvIgnored =
+      nsresult rv =
           RemoveAttributeWithTransaction(*resizedElement, *nsGkAtoms::width);
-      if (NS_WARN_IF(Destroyed())) {
+      if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        NS_WARNING(
+            "EditorBase::RemoveAttributeWithTransaction(nsGkAtoms::width) "
+            "failed");
         return NS_ERROR_EDITOR_DESTROYED;
       }
       NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rvIgnored),
+          NS_SUCCEEDED(rv),
           "EditorBase::RemoveAttributeWithTransaction(nsGkAtoms::width) "
           "failed, but ignored");
     }
 
     if (setHeight &&
         resizedElement->HasAttr(kNameSpaceID_None, nsGkAtoms::height)) {
-      DebugOnly<nsresult> rvIgnored =
+      nsresult rv =
           RemoveAttributeWithTransaction(*resizedElement, *nsGkAtoms::height);
-      if (NS_WARN_IF(Destroyed())) {
+      if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        NS_WARNING(
+            "EditorBase::RemoveAttributeWithTransaction(nsGkAtoms::height) "
+            "failed");
         return NS_ERROR_EDITOR_DESTROYED;
       }
       NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rvIgnored),
+          NS_SUCCEEDED(rv),
           "EditorBase::RemoveAttributeWithTransaction(nsGkAtoms::height) "
           "failed, but ignored");
     }

@@ -1695,9 +1695,6 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::RemoveStyleInside(
       } else {
         nsresult rv = RemoveAttributeWithTransaction(
             aElement, *aStyleToRemove.mAttribute);
-        if (NS_WARN_IF(Destroyed())) {
-          return Err(NS_ERROR_EDITOR_DESTROYED);
-        }
         if (NS_FAILED(rv)) {
           NS_WARNING("EditorBase::RemoveAttributeWithTransaction() failed");
           return Err(rv);
