@@ -436,6 +436,9 @@
             case "autofill-insecureWarning":
               options = { is: "autocomplete-creditcard-insecure-field" };
               break;
+            case "generic":
+              options = { is: "autocomplete-generic-richlistitem" };
+              break;
             case "importableLearnMore":
               options = {
                 is: "autocomplete-importable-learn-more-richlistitem",

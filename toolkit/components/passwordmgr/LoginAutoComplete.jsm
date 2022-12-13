@@ -108,6 +108,22 @@ class AutocompleteItem {
   }
 }
 
+// This item shows icon, title & subtitle.
+// Once selected it will send fillMessageName with fillMessageData
+// to LoginManagerParent and response will be used to fill into the field.
+class GenericAutocompleteItem extends AutocompleteItem {
+  constructor(icon, title, subtitle, fillMessageName, fillMessageData) {
+    super("generic");
+    this.comment = JSON.stringify({
+      icon,
+      title,
+      subtitle,
+      fillMessageName,
+      fillMessageData,
+    });
+  }
+}
+
 class InsecureLoginFormAutocompleteItem extends AutocompleteItem {
   constructor() {
     super("insecureWarning");
@@ -258,6 +274,7 @@ class LoginAutoCompleteResult {
   constructor(
     aSearchString,
     matchingLogins,
+    autocompleteItems,
     formOrigin,
     {
       generatedPassword,
@@ -331,6 +348,21 @@ class LoginAutoCompleteResult {
         })
       );
       this.#rows.push(item);
+    }
+
+    if (autocompleteItems) {
+      this.#rows.push(
+        ...autocompleteItems.map(
+          item =>
+            new GenericAutocompleteItem(
+              item.icon,
+              item.title,
+              item.subtitle,
+              item.fillMessageName,
+              item.fillMessageData
+            )
+        )
+      );
     }
 
     // The footer comes last if it's enabled
@@ -521,6 +553,7 @@ class LoginAutoComplete {
         generatedPassword,
         importable,
         logins,
+        autocompleteItems,
         willAutoSaveGeneratedPassword,
       } = await autoCompleteLookupPromise;
 
@@ -546,6 +579,7 @@ class LoginAutoComplete {
       let results = new LoginAutoCompleteResult(
         aSearchString,
         logins,
+        autocompleteItems,
         formOrigin,
         {
           generatedPassword,
@@ -635,6 +669,7 @@ class LoginAutoComplete {
         autocompleteInfo.fieldName == "new-password" ||
         this.isProbablyANewPasswordField(inputElement);
     }
+    const scenario = loginManagerActor.getScenario(inputElement);
 
     const messageData = {
       actionOrigin,
@@ -643,6 +678,7 @@ class LoginAutoComplete {
       forcePasswordGeneration,
       hasBeenTypePassword,
       isProbablyANewPasswordField,
+      scenarioName: scenario?.constructor.name,
     };
 
     if (lazy.LoginHelper.showAutoCompleteFooter) {
@@ -664,6 +700,7 @@ class LoginAutoComplete {
     return {
       generatedPassword: result.generatedPassword,
       importable: result.importable,
+      autocompleteItems: result.autocompleteItems,
       logins: lazy.LoginHelper.vanillaObjectsToLogins(result.logins),
       willAutoSaveGeneratedPassword: result.willAutoSaveGeneratedPassword,
     };

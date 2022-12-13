@@ -1205,6 +1205,24 @@ pwmgr:
       did_select_pw: >
         Whether or not the saved/updated password was selected by the user choosing a suggested
         value from the autocomplete popup.
+  make_relay:
+    description: >
+      Firefox Relay integration generated an email mask.
+    objects: ["relay"]
+    bug_numbers: [1786960]
+    expiry_version: "112"
+    products: ["firefox"]
+    record_in_processes: [main]
+    notification_emails: ["passwords-dev@mozilla.org"]
+  make_relay_fail:
+    description: >
+      Firefox Relay failed to generate an email mask.
+    objects: ["relay"]
+    bug_numbers: [1786960]
+    expiry_version: "112"
+    products: ["firefox"]
+    record_in_processes: [main]
+    notification_emails: ["passwords-dev@mozilla.org"]
 
 jsonfile:
   load:

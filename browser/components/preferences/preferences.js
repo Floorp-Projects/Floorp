@@ -85,6 +85,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "resource://gre/modules/ExtensionPreferencesManager.jsm",
   ExtensionSettingsStore: "resource://gre/modules/ExtensionSettingsStore.jsm",
   FeatureGate: "resource://featuregates/FeatureGate.jsm",
+  FirefoxRelay: "resource://gre/modules/FirefoxRelay.jsm",
   HomePage: "resource:///modules/HomePage.jsm",
   LangPackMatcher: "resource://gre/modules/LangPackMatcher.jsm",
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
