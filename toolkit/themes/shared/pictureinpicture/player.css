@@ -57,9 +57,9 @@ browser {
   z-index: 1;
 }
 
-#controls[keying] button:-moz-focusring,
-.switch > input:focus-visible + .slider,
-.font-size-selection > label > input:focus-visible {
+#controls button:focus-visible,
+#controls input:focus-visible,
+.switch > input:focus-visible + .slider {
   outline: 3px solid #0060DF;
   box-shadow: 1px 2px 5px #000;
 }
