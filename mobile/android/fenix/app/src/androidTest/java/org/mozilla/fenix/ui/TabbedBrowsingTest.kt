@@ -234,7 +234,6 @@ class TabbedBrowsingTest {
     }
 
     @Test
-    @Ignore("Failing after compose migration. See: https://github.com/mozilla-mobile/fenix/issues/26087")
     fun verifyPrivateTabUndoSnackBarTest() {
         val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
@@ -314,7 +313,6 @@ class TabbedBrowsingTest {
     }
 
     @Test
-    @Ignore("Failing after compose migration. See: https://github.com/mozilla-mobile/fenix/issues/26087")
     fun verifyOpenTabDetails() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
@@ -328,7 +326,8 @@ class TabbedBrowsingTest {
             verifyTabsTrayCounter()
             verifyExistingTabList()
             verifyNormalBrowsingNewTabButton()
-            verifyOpenedTabThumbnail()
+            // Disabled step due to ongoing tabs tray compose refactoring, see: https://github.com/mozilla-mobile/fenix/issues/21318
+            // verifyOpenedTabThumbnail()
             verifyExistingOpenTabs(defaultWebPage.title)
             verifyCloseTabsButton(defaultWebPage.title)
         }.openTab(defaultWebPage.title) {

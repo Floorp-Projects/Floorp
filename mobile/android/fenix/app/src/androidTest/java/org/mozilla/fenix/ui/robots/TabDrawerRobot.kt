@@ -397,9 +397,9 @@ private fun assertCloseTabsButton(title: String) =
     assertTrue(
         mDevice.findObject(
             UiSelector()
-                .resourceId("$packageName:id/mozac_browser_tabstray_close")
-                .descriptionContains("Close tab $title"),
-        ).waitForExists(waitingTime),
+                .descriptionContains("Close tab"),
+        ).getFromParent(UiSelector().textContains(title))
+            .waitForExists(waitingTime),
     )
 
 private fun normalBrowsingButton() = onView(

@@ -17,7 +17,6 @@ import mozilla.components.concept.engine.mediasession.MediaSession
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.IntentReceiverActivity
@@ -524,7 +523,6 @@ class SmokeTest {
     }
 
     @Test
-    @Ignore("Failing after compose migration. See: https://github.com/mozilla-mobile/fenix/issues/26087")
     fun shareTabsFromTabsTrayTest() {
         val firstWebsite = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val secondWebsite = TestAssetHelper.getGenericAsset(mockWebServer, 2)
@@ -572,7 +570,6 @@ class SmokeTest {
     }
 
     @Test
-    @Ignore("Failing after compose migration. See: https://github.com/mozilla-mobile/fenix/issues/26087")
     fun privateTabsTrayWithOpenedTabTest() {
         val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
@@ -582,7 +579,6 @@ class SmokeTest {
         homeScreen {
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(website.url) {
-            mDevice.waitForIdle()
         }.openTabDrawer {
             verifyNormalBrowsingButtonIsSelected(false)
             verifyPrivateBrowsingButtonIsSelected(true)
@@ -592,7 +588,8 @@ class SmokeTest {
             verifyExistingTabList()
             verifyExistingOpenTabs(website.title)
             verifyCloseTabsButton(website.title)
-            verifyOpenedTabThumbnail()
+            // Disabled step due to ongoing tabs tray compose refactoring, see: https://github.com/mozilla-mobile/fenix/issues/21318
+            // verifyOpenedTabThumbnail()
             verifyPrivateBrowsingNewTabButton()
         }
     }
