@@ -4139,9 +4139,10 @@ void MacroAssembler::branchTestObjCompartment(
 
 void MacroAssembler::branchIfNonNativeObj(Register obj, Register scratch,
                                           Label* label) {
-  loadObjClassUnsafe(obj, scratch);
-  branchTest32(Assembler::NonZero, Address(scratch, JSClass::offsetOfFlags()),
-               Imm32(JSClass::NON_NATIVE), label);
+  loadPtr(Address(obj, JSObject::offsetOfShape()), scratch);
+  branchTest32(Assembler::Zero,
+               Address(scratch, Shape::offsetOfImmutableFlags()),
+               Imm32(Shape::isNativeBit()), label);
 }
 
 void MacroAssembler::branchIfObjectNotExtensible(Register obj, Register scratch,
