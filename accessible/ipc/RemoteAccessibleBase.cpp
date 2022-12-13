@@ -872,8 +872,7 @@ Relation RemoteAccessibleBase<Derived>::RelationByType(
   }
 
   if (auto accRelMapEntry = mDoc->mReverseRelations.Lookup(ID())) {
-    if (auto reverseIdsEntry =
-            accRelMapEntry.Data().Lookup(static_cast<uint64_t>(aType))) {
+    if (auto reverseIdsEntry = accRelMapEntry.Data().Lookup(aType)) {
       rel.AppendIter(new RemoteAccIterator(reverseIdsEntry.Data(), Document()));
     }
   }
@@ -967,8 +966,8 @@ nsTArray<bool> RemoteAccessibleBase<Derived>::PreProcessRelations(
             // we know the acc and `this` are still alive in the doc. If we hit
             // the following assert, we don't have parity on implicit/explicit
             // rels and something is wrong.
-            nsTArray<uint64_t>& reverseRelIDs = reverseRels->LookupOrInsert(
-                static_cast<uint64_t>(data.mReverseType));
+            nsTArray<uint64_t>& reverseRelIDs =
+                reverseRels->LookupOrInsert(data.mReverseType);
             //  There might be other reverse relations stored for this acc, so
             //  remove our ID instead of deleting the array entirely.
             DebugOnly<bool> removed = reverseRelIDs.RemoveElement(ID());
@@ -1000,10 +999,9 @@ void RemoteAccessibleBase<Derived>::PostProcessRelations(
       const nsTArray<uint64_t>& newIDs =
           *mCachedFields->GetAttribute<nsTArray<uint64_t>>(data.mAtom);
       for (uint64_t id : newIDs) {
-        nsTHashMap<nsUint64HashKey, nsTArray<uint64_t>>& relations =
+        nsTHashMap<RelationType, nsTArray<uint64_t>>& relations =
             Document()->mReverseRelations.LookupOrInsert(id);
-        nsTArray<uint64_t>& ids =
-            relations.LookupOrInsert(static_cast<uint64_t>(data.mReverseType));
+        nsTArray<uint64_t>& ids = relations.LookupOrInsert(data.mReverseType);
         ids.AppendElement(ID());
       }
     }
@@ -1018,8 +1016,7 @@ void RemoteAccessibleBase<Derived>::PruneRelationsOnShutdown() {
   }
   for (auto const& data : kRelationTypeAtoms) {
     // Fetch the list of targets for this reverse relation
-    auto reverseTargetList =
-        reverseRels->Lookup(static_cast<uint64_t>(data.mReverseType));
+    auto reverseTargetList = reverseRels->Lookup(data.mReverseType);
     if (!reverseTargetList) {
       continue;
     }
