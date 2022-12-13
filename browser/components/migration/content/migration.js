@@ -425,8 +425,7 @@ var MigrationWizard = {
       (this._itemsFlags & MigrationUtils.resourceTypes.BOOKMARKS ||
         this._itemsFlags == MigrationUtils.resourceTypes.ALL)
     ) {
-      let migrator = this._migrator.wrappedJSObject;
-      let havePermissions = this.spinResolve(migrator.hasPermissions());
+      let havePermissions = this.spinResolve(this._migrator.hasPermissions());
 
       if (!havePermissions) {
         this._wiz.currentPage.next = "importPermissions";
@@ -445,9 +444,8 @@ var MigrationWizard = {
     // worked.
     event.preventDefault();
 
-    let migrator = this._migrator.wrappedJSObject;
-    await migrator.getPermissions(window);
-    if (await migrator.hasPermissions()) {
+    await this._migrator.getPermissions(window);
+    if (await this._migrator.hasPermissions()) {
       this._receivedPermissions.add(this._source);
       // Re-enter (we'll then allow the advancement through the early return above)
       this._wiz.advance();

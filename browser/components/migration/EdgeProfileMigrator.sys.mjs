@@ -472,11 +472,6 @@ export class EdgeProfileMigrator extends MigratorBase {
     return "edge";
   }
 
-  constructor() {
-    super();
-    this.wrappedJSObject = this;
-  }
-
   getBookmarksMigratorForTesting(dbOverride) {
     return new EdgeBookmarksMigrator(dbOverride);
   }

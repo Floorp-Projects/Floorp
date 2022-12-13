@@ -41,7 +41,7 @@ add_task(async function setup() {
 
   if (AppConstants.platform == "macosx") {
     let migrator = await MigrationUtils.getMigrator("chrome");
-    Object.assign(migrator.wrappedJSObject, {
+    Object.assign(migrator, {
       _keychainServiceName: mockMacOSKeychain.serviceName,
       _keychainAccountName: mockMacOSKeychain.accountName,
       // No `_keychainMockPassphrase` as we don't want to mock the OS dialog as

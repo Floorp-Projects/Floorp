@@ -37,11 +37,6 @@ export class FirefoxProfileMigrator extends MigratorBase {
     return "firefox";
   }
 
-  constructor() {
-    super();
-    this.wrappedJSObject = this; // for testing...
-  }
-
   _getAllProfiles() {
     let allProfiles = new Map();
     let profileService = Cc[
