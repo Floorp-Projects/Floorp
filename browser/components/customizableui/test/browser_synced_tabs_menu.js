@@ -342,9 +342,9 @@ add_task(async function() {
   node = node.nextElementSibling;
   is(node, null, "no more siblings");
 
-  // Next is a menuseparator between the clients.
+  // Next is a toolbarseparator between the clients.
   node = currentClient.nextElementSibling;
-  is(node.nodeName, "menuseparator");
+  is(node.nodeName, "toolbarseparator");
 
   // Next is the container for client 2.
   node = node.nextElementSibling;
@@ -362,9 +362,9 @@ add_task(async function() {
   node = node.nextElementSibling;
   is(node, null, "no more siblings");
 
-  // Next is a menuseparator between the clients.
+  // Next is a toolbarseparator between the clients.
   node = currentClient.nextElementSibling;
-  is(node.nodeName, "menuseparator");
+  is(node.nodeName, "toolbarseparator");
 
   // Next is the container for client 3.
   node = node.nextElementSibling;
