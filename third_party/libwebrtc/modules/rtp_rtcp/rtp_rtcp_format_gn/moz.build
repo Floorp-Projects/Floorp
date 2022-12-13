@@ -43,7 +43,6 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/rtp_rtcp/source/rtcp_packet/common_header.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/rtcp_packet/compound_packet.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/rtcp_packet/dlrr.cc",
-    "/third_party/libwebrtc/modules/rtp_rtcp/source/rtcp_packet/extended_jitter_report.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/rtcp_packet/extended_reports.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/rtcp_packet/fir.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/rtcp_packet/loss_notification.cc",
