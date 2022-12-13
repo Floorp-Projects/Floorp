@@ -3073,8 +3073,8 @@ BrowserGlue.prototype = {
       return;
     }
 
-    var windowcount = 0;
-    var pagecount = 0;
+    let windowcount = 0;
+    let pagecount = 0;
     let pinnedcount = 0;
     for (let win of lazy.BrowserWindowTracker.orderedWindows) {
       if (win.closed) {
@@ -3084,10 +3084,7 @@ BrowserGlue.prototype = {
       let tabbrowser = win.gBrowser;
       if (tabbrowser) {
         pinnedcount += tabbrowser._numPinnedTabs;
-        pagecount +=
-          tabbrowser.browsers.length -
-          tabbrowser._numPinnedTabs -
-          tabbrowser._removingTabs.length;
+        pagecount += tabbrowser.visibleTabs.length - tabbrowser._numPinnedTabs;
       }
     }
 
