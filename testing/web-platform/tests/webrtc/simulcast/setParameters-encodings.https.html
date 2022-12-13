@@ -377,4 +377,92 @@ promise_test(async t => {
   await promise_rejects_dom(t, 'InvalidStateError', sender.setParameters(parameters));
 },'Success task for setRemoteDescription(answer) clears [[LastReturnedParameters]]');
 
+promise_test(async t => {
+  const pc1 = new RTCPeerConnection();
+  t.add_cleanup(() => pc1.close());
+  const pc2 = new RTCPeerConnection();
+  t.add_cleanup(() => pc2.close());
+
+  const stream = await getNoiseStream({video: true});
+  t.add_cleanup(() => stream.getTracks().forEach(track => track.stop()));
+  const sender = pc1.addTrack(stream.getTracks()[0]);
+  pc2.addTrack(stream.getTracks()[0]);
+
+  await doOfferToRecvSimulcast(pc2, pc1, ["foo", "bar"]);
+  let parameters = sender.getParameters();
+  let rids = parameters.encodings.map(({rid}) => rid);
+  assert_array_equals(rids, ["foo", "bar"]);
+  parameters.encodings[0].scaleResolutionDownBy = 3;
+  parameters.encodings[1].scaleResolutionDownBy = 5;
+  await sender.setParameters(parameters);
+
+  await pc1.setRemoteDescription({sdp: "", type: "rollback"});
+
+  parameters = sender.getParameters();
+  rids = parameters.encodings.map(({rid}) => rid);
+  assert_array_equals(rids, [undefined]);
+  assert_equals(parameters.encodings[0].scaleResolutionDownBy, 1);
+}, 'addTrack, then rollback of sRD(simulcast offer), brings us back to having a single encoding without any previously set parameters');
+
+promise_test(async t => {
+  const pc1 = new RTCPeerConnection();
+  t.add_cleanup(() => pc1.close());
+  const pc2 = new RTCPeerConnection();
+  t.add_cleanup(() => pc2.close());
+
+  const stream = await getNoiseStream({video: true});
+  t.add_cleanup(() => stream.getTracks().forEach(track => track.stop()));
+  const {sender} = pc1.addTransceiver(stream.getTracks()[0], {sendEncodings: [{rid: "foo"}, {rid: "bar"}]});
+
+  await doOfferToSendSimulcastAndAnswer(pc1, pc2, ["foo", "bar"]);
+  let parameters = sender.getParameters();
+  let rids = parameters.encodings.map(({rid}) => rid);
+  assert_array_equals(rids, ["foo", "bar"]);
+  parameters.encodings[0].scaleResolutionDownBy = 3;
+  parameters.encodings[1].scaleResolutionDownBy = 5;
+  await sender.setParameters(parameters);
+
+  await doOfferToRecvSimulcast(pc2, pc1, []);
+  parameters = sender.getParameters();
+  rids = parameters.encodings.map(({rid}) => rid);
+  assert_array_equals(rids, ["foo", "bar"]);
+
+  await pc1.setRemoteDescription({sdp: "", type: "rollback"});
+  parameters = sender.getParameters();
+  rids = parameters.encodings.map(({rid}) => rid);
+  assert_array_equals(rids, ["foo", "bar"]);
+  assert_equals(parameters.encodings[0].scaleResolutionDownBy, 3);
+  assert_equals(parameters.encodings[1].scaleResolutionDownBy, 5);
+}, 'rollback of a remote offer that disabled a previously negotiated simulcast should restore simulcast along with any previously set parameters');
+
+promise_test(async t => {
+  const pc1 = new RTCPeerConnection();
+  t.add_cleanup(() => pc1.close());
+  const pc2 = new RTCPeerConnection();
+  t.add_cleanup(() => pc2.close());
+
+  const stream = await getNoiseStream({video: true});
+  t.add_cleanup(() => stream.getTracks().forEach(track => track.stop()));
+  const sender = pc1.addTrack(stream.getTracks()[0]);
+  pc2.addTrack(stream.getTracks()[0]);
+
+  await doOfferToRecvSimulcast(pc2, pc1, ["foo", "bar"]);
+  const aTask = queueAWebrtcTask();
+  let parameters = sender.getParameters();
+  let rids = parameters.encodings.map(({rid}) => rid);
+  assert_array_equals(rids, ["foo", "bar"]);
+  parameters.encodings[0].scaleResolutionDownBy = 3;
+  parameters.encodings[1].scaleResolutionDownBy = 5;
+
+  const rollbackDone = pc1.setRemoteDescription({sdp: "", type: "rollback"});
+  await aTask;
+  await sender.setParameters(parameters);
+  await rollbackDone;
+
+  parameters = sender.getParameters();
+  rids = parameters.encodings.map(({rid}) => rid);
+  assert_array_equals(rids, [undefined]);
+  assert_equals(parameters.encodings[0].scaleResolutionDownBy, 1);
+}, 'rollback of sRD(simulcast offer) interrupted by setParameters(simulcast) brings us back to having a single encoding without any previously set parameters');
+
 </script>
