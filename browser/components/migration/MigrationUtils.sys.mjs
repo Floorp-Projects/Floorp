@@ -101,7 +101,7 @@ const MIGRATOR_MODULES = Object.freeze({
   },
   OperaGXProfileMigrator: {
     moduleURI: "resource:///modules/ChromeProfileMigrator.sys.mjs",
-    platforms: ["linux", "macosx", "win"],
+    platforms: ["macosx", "win"],
   },
 });
 
