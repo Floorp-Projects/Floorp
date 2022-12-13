@@ -67,8 +67,6 @@ class FileSystemManager : public nsISupports {
 
   already_AddRefed<Promise> GetDirectory(ErrorResult& aError);
 
-  static FileSystemManager* GetManagerForGlobal(nsIGlobalObject* aGlobal);
-
  private:
   virtual ~FileSystemManager();
 

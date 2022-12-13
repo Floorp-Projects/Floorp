@@ -55,10 +55,6 @@ void HandleFailedStatus(nsresult aError, const RefPtr<Promise>& aPromise) {
     case NS_ERROR_DOM_INVALID_MODIFICATION_ERR:
       aPromise->MaybeRejectWithInvalidModificationError("Invalid modification");
       break;
-    case NS_ERROR_DOM_SECURITY_ERR:
-      aPromise->MaybeRejectWithSecurityError(
-          "Security error when calling GetDirectory");
-      break;
     default:
       if (NS_FAILED(aError)) {
         aPromise->MaybeRejectWithUnknownError("Unknown failure");
@@ -346,7 +342,7 @@ void FileSystemRequestHandler::GetRootHandle(
     ErrorResult& aError) {
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(aPromise);
-  LOG(("GetRoot"));
+  LOG(("GetRootHandle"));
 
   if (aManager->IsShutdown()) {
     aError.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
@@ -371,7 +367,7 @@ void FileSystemRequestHandler::GetDirectoryHandle(
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(!aDirectory.parentId().IsEmpty());
   MOZ_ASSERT(aPromise);
-  LOG(("getDirectoryHandle"));
+  LOG(("GetDirectoryHandle"));
 
   if (aManager->IsShutdown()) {
     aError.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
@@ -403,7 +399,7 @@ void FileSystemRequestHandler::GetFileHandle(
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(!aFile.parentId().IsEmpty());
   MOZ_ASSERT(aPromise);
-  LOG(("getFileHandle"));
+  LOG(("GetFileHandle"));
 
   if (aManager->IsShutdown()) {
     aError.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
@@ -547,7 +543,7 @@ void FileSystemRequestHandler::RemoveEntry(
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(!aEntry.parentId().IsEmpty());
   MOZ_ASSERT(aPromise);
-  LOG(("removeEntry"));
+  LOG(("RemoveEntry"));
 
   if (aManager->IsShutdown()) {
     aError.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
