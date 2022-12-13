@@ -75,7 +75,7 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/rtp_rtcp/source/time_util.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/tmmbr_help.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/ulpfec_header_reader_writer.cc",
-    "/third_party/libwebrtc/modules/rtp_rtcp/source/ulpfec_receiver_impl.cc",
+    "/third_party/libwebrtc/modules/rtp_rtcp/source/ulpfec_receiver.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/video_rtp_depacketizer.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/video_rtp_depacketizer_av1.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/video_rtp_depacketizer_generic.cc",
