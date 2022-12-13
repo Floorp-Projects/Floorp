@@ -188,7 +188,9 @@ export async function maybeSubmitBackgroundUpdatePing() {
   // It should be possible to turn AUSTLMY data into Glean data, but mapping histograms isn't
   // trivial, so we don't do it at this time.  Bug 1703313.
 
-  GleanPings.backgroundUpdate.submit();
+  // Including a reason allows to differentiate pings sent as part of the task
+  // and pings queued and sent by Glean on a different schedule.
+  GleanPings.backgroundUpdate.submit("backgroundupdate_task");
 
   lazy.log.info(`${SLUG}: submitted "background-update" ping`);
 }
