@@ -38,7 +38,7 @@ add_task(async function test_open_preferences() {
         seenFirstURL = true;
         return true;
       } else if (url == "about:preferences#privacy") {
-        ok(
+        Assert.ok(
           seenFirstURL,
           "Must have seen an onLocationChange notification for the privacy-logins hash"
         );
@@ -68,7 +68,7 @@ add_task(async function test_open_preferences() {
 
   info("waiting for new tab to get opened");
   let newTab = await promiseNewTab;
-  ok(true, "New tab opened to about:preferences");
+  Assert.ok(true, "New tab opened to about:preferences");
 
   BrowserTestUtils.removeTab(newTab);
 

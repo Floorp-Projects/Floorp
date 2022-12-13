@@ -158,7 +158,7 @@ add_setup(async function setup_head() {
       // Ignore MarionetteEvents error (Bug 1730837, Bug 1710079).
       return;
     }
-    ok(false, msg.message || msg.errorMessage);
+    Assert.ok(false, msg.message || msg.errorMessage);
   });
 
   registerCleanupFunction(async () => {
@@ -183,7 +183,11 @@ function waitForMPDialog(action, aWindow = window) {
   return dialogShown.then(function([subject]) {
     let dialog = subject.Dialog;
     let expected = "Password Required - " + BRAND_FULL_NAME;
-    is(dialog.args.title, expected, "Dialog is the Primary Password dialog");
+    Assert.equal(
+      dialog.args.title,
+      expected,
+      "Dialog is the Primary Password dialog"
+    );
     if (action == "authenticate") {
       SpecialPowers.wrap(dialog.ui.password1Textbox).setUserInput(
         LoginTestUtils.primaryPassword.primaryPassword

@@ -12,7 +12,7 @@ async function checkLoginDisplayed(browser, testGuid) {
         loginList._loginGuidsSortedOrder[0] == guid
       );
     }, "Waiting for login to be displayed in page");
-    ok(loginFound, "Confirming that login is displayed in page");
+    Assert.ok(loginFound, "Confirming that login is displayed in page");
   });
 }
 
@@ -35,7 +35,7 @@ add_task(async function() {
     createLazyBrowser: true,
   });
 
-  is(lazyTab.linkedPanel, "", "Tab is lazy");
+  Assert.equal(lazyTab.linkedPanel, "", "Tab is lazy");
   let tabLoaded = new Promise(resolve => {
     gBrowser.addTabsProgressListener({
       async onLocationChange(aBrowser) {

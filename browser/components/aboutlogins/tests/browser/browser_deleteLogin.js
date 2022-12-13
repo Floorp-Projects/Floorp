@@ -30,15 +30,15 @@ add_task(async function test_show_logins() {
           loginList._loginGuidsSortedOrder.includes(loginGuids[1])
         );
       }, "Waiting for logins to be displayed");
-      ok(
+      Assert.ok(
         !content.document.documentElement.classList.contains("no-logins"),
         "Should no longer be in no logins view"
       );
-      ok(
+      Assert.ok(
         !loginList.classList.contains("no-logins"),
         "login-list should no longer be in no logins view"
       );
-      ok(loginFound, "Newly added logins should be added to the page");
+      Assert.ok(loginFound, "Newly added logins should be added to the page");
     }
   );
 });
@@ -69,7 +69,7 @@ add_task(async function test_login_item() {
       let loginItemPopulated = await ContentTaskUtils.waitForCondition(() => {
         return loginItem._login.guid == loginListItem.dataset.guid;
       }, "Waiting for login item to get populated");
-      ok(loginItemPopulated, "The login item should get populated");
+      Assert.ok(loginItemPopulated, "The login item should get populated");
     });
     let reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
     await SpecialPowers.spawn(browser, [], async () => {
@@ -119,7 +119,7 @@ add_task(async function test_login_item() {
       let loginItemPopulated = await ContentTaskUtils.waitForCondition(() => {
         return loginItem._login.guid == loginListItem.dataset.guid;
       }, "Waiting for login item to get populated");
-      ok(loginItemPopulated, "The login item should get populated");
+      Assert.ok(loginItemPopulated, "The login item should get populated");
 
       let deleteButton = loginItem.shadowRoot.querySelector(".delete-button");
       deleteButton.click();
@@ -143,11 +143,11 @@ add_task(async function test_login_item() {
 
     await SpecialPowers.spawn(browser, [], async () => {
       let loginList = content.document.querySelector("login-list");
-      ok(
+      Assert.ok(
         !content.document.documentElement.classList.contains("no-logins"),
         "Should not be in no logins view as there is still one login"
       );
-      ok(
+      Assert.ok(
         !loginList.classList.contains("no-logins"),
         "Should not be in no logins view as there is still one login"
       );
@@ -155,7 +155,7 @@ add_task(async function test_login_item() {
       let confirmDiscardDialog = Cu.waiveXrays(
         content.document.querySelector("confirmation-dialog")
       );
-      ok(
+      Assert.ok(
         confirmDiscardDialog.hidden,
         "Discard confirm dialog should not show up after delete an edited login"
       );
@@ -172,11 +172,11 @@ add_task(async function test_login_item() {
 
   await SpecialPowers.spawn(browser, [], async () => {
     let loginList = content.document.querySelector("login-list");
-    ok(
+    Assert.ok(
       content.document.documentElement.classList.contains("no-logins"),
       "Should be in no logins view as all logins got deleted"
     );
-    ok(
+    Assert.ok(
       loginList.classList.contains("no-logins"),
       "login-list should be in no logins view as all logins got deleted"
     );

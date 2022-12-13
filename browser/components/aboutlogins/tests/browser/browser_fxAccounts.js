@@ -31,13 +31,17 @@ add_task(async function test_logged_out() {
   let browser = gBrowser.selectedBrowser;
   await SpecialPowers.spawn(browser, [], async () => {
     let fxAccountsButton = content.document.querySelector("fxaccounts-button");
-    ok(fxAccountsButton, "fxAccountsButton should exist");
+    Assert.ok(fxAccountsButton, "fxAccountsButton should exist");
     fxAccountsButton = Cu.waiveXrays(fxAccountsButton);
     await ContentTaskUtils.waitForCondition(
       () => fxAccountsButton._loggedIn === false,
       "waiting for _loggedIn to strictly equal false"
     );
-    is(fxAccountsButton._loggedIn, false, "state should reflect not logged in");
+    Assert.equal(
+      fxAccountsButton._loggedIn,
+      false,
+      "state should reflect not logged in"
+    );
   });
 });
 
@@ -63,15 +67,23 @@ add_task(async function test_login_syncing_enabled() {
       let fxAccountsButton = content.document.querySelector(
         "fxaccounts-button"
       );
-      ok(fxAccountsButton, "fxAccountsButton should exist");
+      Assert.ok(fxAccountsButton, "fxAccountsButton should exist");
       fxAccountsButton = Cu.waiveXrays(fxAccountsButton);
       await ContentTaskUtils.waitForCondition(
         () => fxAccountsButton._email === expectedEmail,
         "waiting for _email to strictly equal expectedEmail"
       );
-      is(fxAccountsButton._loggedIn, true, "state should reflect logged in");
-      is(fxAccountsButton._email, expectedEmail, "state should have email set");
-      is(
+      Assert.equal(
+        fxAccountsButton._loggedIn,
+        true,
+        "state should reflect logged in"
+      );
+      Assert.equal(
+        fxAccountsButton._email,
+        expectedEmail,
+        "state should have email set"
+      );
+      Assert.equal(
         fxAccountsButton._avatarURL,
         expectedAvatarURL,
         "state should have avatarURL set"

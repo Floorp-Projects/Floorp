@@ -24,7 +24,7 @@ add_setup(async function() {
   let breaches = await LoginBreaches.getPotentialBreachesByLoginGUID([
     TEST_LOGIN3,
   ]);
-  ok(breaches.size, "TEST_LOGIN3 should be marked as breached");
+  Assert.ok(breaches.size, "TEST_LOGIN3 should be marked as breached");
 
   // Remove the breached login so the 'alerts' option
   // is hidden when opening about:logins.
@@ -52,7 +52,7 @@ add_task(async function test_new_login_marked_vulnerable_in_both_windows() {
   const ORIGIN_FOR_NEW_VULNERABLE_LOGIN = "https://vulnerable";
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
-    ok(
+    Assert.ok(
       loginList.shadowRoot.querySelector("#login-sort").namedItem("alerts")
         .hidden,
       "The 'alerts' option should be hidden before adding a vulnerable login to the list"
@@ -73,7 +73,7 @@ add_task(async function test_new_login_marked_vulnerable_in_both_windows() {
       );
 
       let loginSort = loginList.shadowRoot.querySelector("#login-sort");
-      ok(
+      Assert.ok(
         loginSort.namedItem("alerts").hidden,
         "The 'alerts' option should be hidden when there are no breached or vulnerable logins in the list"
       );
@@ -115,16 +115,16 @@ add_task(async function test_new_login_marked_vulnerable_in_both_windows() {
         `.login-list-item[data-guid="${vulnerableLoginGuid}"]`
       );
 
-      ok(
+      Assert.ok(
         vulnerableListItem.classList.contains("vulnerable"),
         "vulnerable login list item should be marked as such"
       );
-      ok(
+      Assert.ok(
         !loginItem.shadowRoot.querySelector(".vulnerable-alert").hidden,
         "vulnerable alert on login-item should be visible"
       );
 
-      ok(
+      Assert.ok(
         !loginSort.namedItem("alerts").hidden,
         "The 'alerts' option should be visible after adding a vulnerable login to the list"
       );
@@ -147,13 +147,17 @@ add_task(async function test_new_login_marked_vulnerable_in_both_windows() {
       "waiting for sort to get updated to 'alerts'"
     );
 
-    is(loginSort.value, "alerts", "The login list should be sorted by Alerts");
+    Assert.equal(
+      loginSort.value,
+      "alerts",
+      "The login list should be sorted by Alerts"
+    );
     let loginListItems = loginList.shadowRoot.querySelectorAll(
       ".login-list-item[data-guid]"
     );
     for (let i = 1; i < loginListItems.length; i++) {
       if (loginListItems[i].matches(".vulnerable, .breached")) {
-        ok(
+        Assert.ok(
           loginListItems[i - 1].matches(".vulnerable, .breached"),
           `The previous login-list-item must be vulnerable or breached if the current one is (second window, i=${i})`
         );
@@ -177,12 +181,12 @@ add_task(async function test_new_login_marked_vulnerable_in_both_windows() {
         vulnerableListItem = entry[1].listItem;
         return !!entry;
       }, "waiting for vulnerable list item to get added to login-list");
-      ok(
+      Assert.ok(
         vulnerableListItem.classList.contains("vulnerable"),
         "vulnerable login list item should be marked as such"
       );
 
-      ok(
+      Assert.ok(
         !loginList.shadowRoot.querySelector("#login-sort").namedItem("alerts")
           .hidden,
         "The 'alerts' option should be visible after adding a vulnerable login to the list"
@@ -207,7 +211,7 @@ add_task(async function test_new_login_marked_vulnerable_in_both_windows() {
     );
     for (let i = 1; i < loginListItems.length; i++) {
       if (loginListItems[i].matches(".vulnerable, .breached")) {
-        ok(
+        Assert.ok(
           loginListItems[i - 1].matches(".vulnerable, .breached"),
           `The previous login-list-item must be vulnerable or breached if the current one is (first window, i=${i})`
         );

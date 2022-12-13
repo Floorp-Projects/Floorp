@@ -31,7 +31,7 @@ add_task(async function test_login_added() {
         loginList._loginGuidsSortedOrder[0] == addedLogin.guid
       );
     }, "Waiting for login to be added");
-    ok(loginFound, "Newly added logins should be added to the page");
+    Assert.ok(loginFound, "Newly added logins should be added to the page");
   });
 });
 
@@ -57,7 +57,7 @@ add_task(async function test_login_modified() {
           modifiedLogin.username
       );
     }, "Waiting for username to get updated");
-    ok(loginFound, "The login should get updated on the page");
+    Assert.ok(loginFound, "The login should get updated on the page");
   });
 });
 
@@ -78,7 +78,7 @@ add_task(async function test_login_removed() {
     let loginRemoved = await ContentTaskUtils.waitForCondition(() => {
       return !loginList._loginGuidsSortedOrder.length;
     }, "Waiting for login to get removed");
-    ok(loginRemoved, "The login should be removed from the page");
+    Assert.ok(loginRemoved, "The login should be removed from the page");
   });
 });
 
@@ -113,12 +113,12 @@ add_task(async function test_all_logins_removed() {
         loginList._loginGuidsSortedOrder[1] == addedLogins[1].guid
       );
     }, "Waiting for login to be added");
-    ok(loginFound, "Newly added logins should be added to the page");
-    ok(
+    Assert.ok(loginFound, "Newly added logins should be added to the page");
+    Assert.ok(
       !content.document.documentElement.classList.contains("no-logins"),
       "Should not be in no logins view after adding logins"
     );
-    ok(
+    Assert.ok(
       !loginList.classList.contains("no-logins"),
       "login-list should not be in no logins view after adding logins"
     );
@@ -131,12 +131,12 @@ add_task(async function test_all_logins_removed() {
     let loginFound = await ContentTaskUtils.waitForCondition(() => {
       return !loginList._loginGuidsSortedOrder.length;
     }, "Waiting for logins to be cleared");
-    ok(loginFound, "Logins should be cleared");
-    ok(
+    Assert.ok(loginFound, "Logins should be cleared");
+    Assert.ok(
       content.document.documentElement.classList.contains("no-logins"),
       "Should be in no logins view after clearing"
     );
-    ok(
+    Assert.ok(
       loginList.classList.contains("no-logins"),
       "login-list should be in no logins view after clearing"
     );

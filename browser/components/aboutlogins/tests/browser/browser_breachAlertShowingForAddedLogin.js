@@ -29,7 +29,7 @@ add_task(async function test_added_login_shows_breach_warning() {
   let browser = gBrowser.selectedBrowser;
   await SpecialPowers.spawn(browser, [], async () => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
-    is(
+    Assert.equal(
       loginList._loginGuidsSortedOrder.length,
       0,
       "the login list should be empty"
@@ -49,7 +49,7 @@ add_task(async function test_added_login_shows_breach_warning() {
         "waiting for login list count to equal one. count=" +
           loginList._loginGuidsSortedOrder.length
       );
-      is(
+      Assert.equal(
         loginList._loginGuidsSortedOrder.length,
         1,
         "one login should be in the list"
@@ -61,7 +61,7 @@ add_task(async function test_added_login_shows_breach_warning() {
         );
         return breachedLoginListItems.length == 1;
       }, "waiting for the login to get marked as breached");
-      is(
+      Assert.equal(
         breachedLoginListItems[0].dataset.guid,
         aTestLogin3Guid,
         "the breached login should be login3"
@@ -92,7 +92,7 @@ add_task(async function test_added_login_shows_breach_warning() {
         "waiting for login list count to equal two. count=" +
           loginList._loginGuidsSortedOrder.length
       );
-      is(
+      Assert.equal(
         loginList._loginGuidsSortedOrder.length,
         2,
         "two logins should be in the list"
@@ -104,14 +104,14 @@ add_task(async function test_added_login_shows_breach_warning() {
         ];
         return breachedAndVulnerableLoginListItems.length == 2;
       }, "waiting for the logins to get marked as breached and vulnerable");
-      ok(
+      Assert.ok(
         !!breachedAndVulnerableLoginListItems.find(
           listItem => listItem.dataset.guid == aTestLogin3Guid
         ),
         "the list should include the breached login: " +
           breachedAndVulnerableLoginListItems.map(li => li.dataset.guid)
       );
-      ok(
+      Assert.ok(
         !!breachedAndVulnerableLoginListItems.find(
           listItem => listItem.dataset.guid == aVulnerableLoginGuid
         ),

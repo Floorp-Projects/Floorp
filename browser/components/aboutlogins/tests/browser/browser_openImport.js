@@ -46,7 +46,7 @@ add_task(async function test_open_import() {
 
   info("waiting for Import to get opened");
   let importWindow = await promiseImportWindow;
-  ok(true, "Import opened");
+  Assert.ok(true, "Import opened");
 
   // First event is for opening about:logins
   await LoginTestUtils.telemetry.waitForEventCount(2);

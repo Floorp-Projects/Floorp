@@ -47,12 +47,12 @@ add_task(async function test_sort_order_persisted() {
             "Waiting for login-list sort to get changed to 'alerts'. Current value is: " +
               loginList._sortSelect.value
           );
-          is(
+          Assert.equal(
             loginList._sortSelect.value,
             "alerts",
             "selected sort should be 'alerts' since there is a breached login"
           );
-          is(
+          Assert.equal(
             loginList._list.querySelector(
               ".login-list-item[data-guid]:not([hidden])"
             ).dataset.guid,
@@ -64,7 +64,7 @@ add_task(async function test_sort_order_persisted() {
           loginList._sortSelect.dispatchEvent(
             new content.Event("change", { bubbles: true })
           );
-          is(
+          Assert.equal(
             loginList._list.querySelector(
               ".login-list-item[data-guid]:not([hidden])"
             ).dataset.guid,
@@ -76,7 +76,7 @@ add_task(async function test_sort_order_persisted() {
     }
   );
 
-  is(
+  Assert.equal(
     Services.prefs.getCharPref(SORT_PREF_NAME),
     "last-changed",
     "'last-changed' should be stored in the pref"
@@ -102,12 +102,12 @@ add_task(async function test_sort_order_persisted() {
           "Waiting for login-list sort to get changed to 'alerts'. Current value is: " +
             loginList._sortSelect.value
         );
-        is(
+        Assert.equal(
           loginList._sortSelect.value,
           "alerts",
           "selected sort should be restored to 'alerts' since 'breached' was in prefs"
         );
-        is(
+        Assert.equal(
           loginList._list.querySelector(
             ".login-list-item[data-guid]:not([hidden])"
           ).dataset.guid,
@@ -126,7 +126,7 @@ add_task(async function test_sort_order_persisted() {
   await storageChangedPromised;
   TEST_LOGIN2 = await addLogin(TEST_LOGIN2);
 
-  is(
+  Assert.equal(
     Services.prefs.getCharPref(SORT_PREF_NAME),
     "breached",
     "confirm that the stored sort is still 'breached' and as such shouldn't apply when the page loads"
@@ -150,12 +150,12 @@ add_task(async function test_sort_order_persisted() {
             ),
           "wait for a visible loging to get populated"
         );
-        is(
+        Assert.equal(
           loginList._sortSelect.value,
           "name",
           "selected sort should be name since 'alerts' no longer applies with no breached or vulnerable logins"
         );
-        is(
+        Assert.equal(
           loginList._list.querySelector(
             ".login-list-item[data-guid]:not([hidden])"
           ).dataset.guid,

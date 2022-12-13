@@ -58,7 +58,7 @@ add_task(async function test_open_feedback() {
 
     info("waiting for new tab to get opened");
     let newTab = await promiseNewTab;
-    ok(true, "New tab opened to" + urlFinal);
+    Assert.ok(true, "New tab opened to" + urlFinal);
 
     BrowserTestUtils.removeTab(newTab);
   }
