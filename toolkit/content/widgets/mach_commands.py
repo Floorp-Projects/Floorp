@@ -16,11 +16,14 @@ import {{ html }} from "../vendor/lit.all.mjs";
 import {{ MozLitElement }} from "../lit-utils.mjs";
 
 export default class {class_name} extends MozLitElement {{
-  static LOCAL_NAME = "{element_name}";
-
   static properties = {{
     variant: {{ type: String }},
   }};
+
+  // Use a relative URL in storybook to get faster reloads on style changes.
+  static stylesheetUrl = window.IS_STORYBOOK
+    ? "./{element_name}/{element_name}.css"
+    : "chrome://global/content/elements/{element_name}.css";
 
   constructor() {{
     super();
@@ -42,7 +45,7 @@ import {{ html }} from "../vendor/lit.all.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "./{element_name}.mjs";
 
-const storybookConfig = {{
+export default {{
   title: "Design System/Experiments/{class_name}",
   argTypes: {{
     variant: {{
@@ -60,8 +63,6 @@ export const Default = Template.bind({{}});
 Default.args = {{
   variant: "default",
 }};
-
-export default storybookConfig;
 """
 
 
