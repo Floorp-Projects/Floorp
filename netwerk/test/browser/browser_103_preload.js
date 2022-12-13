@@ -5,6 +5,11 @@
 "use strict";
 
 Services.prefs.setBoolPref("network.early-hints.enabled", true);
+// Disable mixed-content upgrading as this test is expecting HTTP image loads
+Services.prefs.setBoolPref(
+  "security.mixed_content.upgrade_display_content",
+  false
+);
 
 const {
   request_count_checking,
