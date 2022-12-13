@@ -199,7 +199,13 @@ void JsepTrack::SendTrackSetRemote(SsrcGenerator& aSsrcGenerator,
   if (mRids.empty()) {
     // Initial configuration
     for (const auto& ridAttr : rids) {
-      mRids.push_back(ridAttr.id);
+      // The sipcc-based parser will detect this problem earlier on, but right
+      // now the rust-based parser will not. So, we do a little bit of
+      // belt-and-suspenders here.
+      std::string dummy;
+      if (SdpRidAttributeList::CheckRidValidity(ridAttr.id, &dummy)) {
+        mRids.push_back(ridAttr.id);
+      }
     }
     if (mRids.size() > mMaxEncodings) {
       mRids.resize(mMaxEncodings);
