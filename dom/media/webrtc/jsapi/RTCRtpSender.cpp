@@ -859,6 +859,7 @@ bool operator==(const RTCRtpEncodingParameters& a1,
 void RTCRtpSender::ApplyJsEncodingToConduitEncoding(
     const RTCRtpEncodingParameters& aJsEncoding,
     VideoCodecConfig::Encoding* aConduitEncoding) {
+  aConduitEncoding->active = aJsEncoding.mActive;
   if (aJsEncoding.mMaxBitrate.WasPassed()) {
     aConduitEncoding->constraints.maxBr = aJsEncoding.mMaxBitrate.Value();
   }
