@@ -381,7 +381,7 @@ class JS_PUBLIC_API BaseProxyHandler {
 extern JS_PUBLIC_DATA const JSClass ProxyClass;
 
 inline bool IsProxy(const JSObject* obj) {
-  return JS::GetClass(obj)->isProxyObject();
+  return reinterpret_cast<const JS::shadow::Object*>(obj)->shape->isProxy();
 }
 
 namespace detail {
