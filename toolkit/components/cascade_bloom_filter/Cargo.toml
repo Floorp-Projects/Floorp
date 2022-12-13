@@ -2,6 +2,7 @@
 name = "cascade_bloom_filter"
 version = "0.1.0"
 authors = ["Rob Wu <rob@robwu.nl>"]
+license = "MPL-2.0"
 
 [dependencies]
 nserror = { path = "../../../xpcom/rust/nserror" }

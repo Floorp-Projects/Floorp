@@ -2,6 +2,7 @@
 name = "detect_win32k_conflicts"
 version = "0.1.0"
 edition = "2021"
+license = "MPL-2.0"
 
 [dependencies]
 log = "0.4"

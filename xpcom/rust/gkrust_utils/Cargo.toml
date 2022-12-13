@@ -2,6 +2,7 @@
 name = "gkrust_utils"
 version = "0.1.0"
 authors = ["Jonathan Kingston <jkt@mozilla.com>"]
+license = "MPL-2.0"
 
 [dependencies]
 semver = "1.0"

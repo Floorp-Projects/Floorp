@@ -3,6 +3,7 @@ name = "fluent-ffi"
 version = "0.1.0"
 authors = ["Zibi Braniecki <zibi@braniecki.net>"]
 edition = "2018"
+license = "MPL-2.0"
 
 [dependencies]
 fluent = { version = "0.16.0", features = ["fluent-pseudo"] }

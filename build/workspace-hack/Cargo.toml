@@ -1,6 +1,7 @@
 [package]
 name = "mozilla-central-workspace-hack"
 version = "0.1.0"
+license = "MPL-2.0"
 
 # This is a hack to help rust code in the tree that are built by different
 # invocations of cargo share dependencies rather than rebuilding them. This is

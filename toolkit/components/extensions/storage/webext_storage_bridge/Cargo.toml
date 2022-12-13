@@ -4,6 +4,7 @@ description = "The WebExtension `storage.sync` bindings for Firefox"
 version = "0.1.0"
 authors = ["The Firefox Sync Developers <sync-team@mozilla.com>"]
 edition = "2018"
+license = "MPL-2.0"
 
 [dependencies]
 atomic_refcell = "0.1"

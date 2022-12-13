@@ -2,6 +2,7 @@
 name = "mp4parse-gtest"
 version = "0.1.0"
 authors = ["nobody@mozilla.org"]
+license = "MPL-2.0"
 
 [lib]
 path = "hello.rs"

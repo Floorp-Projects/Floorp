@@ -3,6 +3,7 @@ name = "builtins-static"
 version = "0.1.0"
 authors = ["John Schanck <jschanck@mozilla.com>"]
 edition = "2021"
+license = "MPL-2.0"
 
 [dependencies]
 pkcs11-bindings = "0.1.1"

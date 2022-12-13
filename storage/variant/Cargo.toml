@@ -5,6 +5,7 @@ authors = [
     "Lina Cambridge <lina@yakshaving.ninja>",
     "Myk Melez <myk@mykzilla.org>"
 ]
+license = "MPL-2.0"
 
 [dependencies]
 libc = "0.2"

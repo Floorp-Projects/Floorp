@@ -3,6 +3,7 @@ name = "http3server"
 version = "0.1.1"
 authors = ["Dragana Damjanovic <dragana.damjano@gmail.com>"]
 edition = "2018"
+license = "MPL-2.0"
 
 [dependencies]
 neqo-transport = { tag = "v0.6.1", git = "https://github.com/mozilla/neqo" }

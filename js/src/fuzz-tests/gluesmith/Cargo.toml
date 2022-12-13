@@ -2,7 +2,7 @@
 name = "gluesmith"
 version = "0.1.0"
 authors = ["Christian Holler"]
-license = "MPL 2.0"
+license = "MPL-2.0"
 
 [dependencies]
 wasm-smith = "0.11.8"
