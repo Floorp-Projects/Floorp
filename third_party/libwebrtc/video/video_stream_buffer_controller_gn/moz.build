@@ -29,7 +29,7 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/video/frame_buffer_proxy.cc"
+    "/third_party/libwebrtc/video/video_stream_buffer_controller.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
@@ -211,4 +211,4 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
-Library("frame_buffer_proxy_gn")
+Library("video_stream_buffer_controller_gn")
