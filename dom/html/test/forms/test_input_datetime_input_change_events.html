@@ -4,13 +4,14 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=1370858
 -->
 <head>
-<title>Test for Bug 1370858</title>
+<title>Test for Bugs 1370858 and 1804881</title>
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 <script src="/tests/SimpleTest/EventUtils.js"></script>
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1370858">Mozilla Bug 722599</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1370858">Mozilla Bug 1370858</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1804881">Mozilla Bug 1804881</a>
 <p id="display"></p>
 <div id="content">
 <input type="time" id="input_time" onchange="++changeEvents[0]"
@@ -34,7 +35,7 @@ var inputTypes = ["time", "date", "datetime-local"];
 var changeEvents = [0, 0, 0];
 var inputEvents = [0, 0, 0];
 var values = ["10:30", "2017-06-08", "2017-06-08T10:30"];
-var expectedValues = [["09:30", "01:30"], ["2017-05-08", "2017-01-08"], ["2017-05-08T10:30", "2017-01-08T10:30"]];
+var expectedValues = [["09:30", "01:30", "01:25", "", "01:59", "13:59"], ["2017-05-08", "2017-01-08", "2017-01-25", "", "2017-01-31", "2017-01-31"], ["2017-05-08T10:30", "2017-01-08T10:30", "2017-01-25T10:30", "", "2017-01-31T10:30", "2017-01-31T10:30"]];
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
@@ -62,7 +63,7 @@ function test() {
     synthesizeKey("KEY_ArrowDown");
     is(input.value, expectedValues[i][0], "Check that value was set correctly (1).");
     is(changeEvents[i], 1, "Change event should be dispatched (1).");
-    is(inputEvents[i], 1, "Input event should ne dispatched (1).");
+    is(inputEvents[i], 1, "Input event should be dispatched (1).");
 
     // Test that change and input events are fired when changing the value with
     // the keyboard.
@@ -71,6 +72,55 @@ function test() {
     is(input.value, expectedValues[i][1], "Check that value was set correctly (2).");
     is(changeEvents[i], 3, "Change event should be dispatched (2).");
     is(inputEvents[i], 3, "Input event should be dispatched (2).");
+
+    // Test that change and input events are fired when changing the value with
+    // both the numeric keyboard and digit keys.
+    synthesizeKey("2", { code: "Numpad2" });
+    synthesizeKey("5");
+    // We get event per character.
+    is(input.value, expectedValues[i][2], "Check that value was set correctly (3).");
+    is(changeEvents[i], 5, "Change event should be dispatched (3).");
+    is(inputEvents[i], 5, "Input event should be dispatched (3).");
+
+    // Test that change and input events are not fired when navigating with Tab.
+    // Return to the previously focused field (minutes, day, day).
+    synthesizeKey("KEY_Tab", { shiftKey: true });
+    is(input.value, expectedValues[i][2], "Check that value was not changed (4).");
+    is(changeEvents[i], 5, "Change event should not be dispatched (4).");
+    is(inputEvents[i], 5, "Input event should not be dispatched (4).");
+
+    // Test that change and input events are fired when using Backspace.
+    synthesizeKey("KEY_Backspace");
+    // We get event per character.
+    is(input.value, expectedValues[i][3], "Check that value was set correctly (5).");
+    is(changeEvents[i], 6, "Change event should be dispatched (5).");
+    is(inputEvents[i], 6, "Input event should be dispatched (5).");
+
+    // Test that change and input events are fired when using Home key.
+    synthesizeKey("KEY_End");
+    // We get event per character.
+    is(input.value, expectedValues[i][4], "Check that value was set correctly (6).");
+    is(changeEvents[i], 7, "Change event should be dispatched (6).");
+    is(inputEvents[i], 7, "Input event should be dispatched (6).");
+
+    // Test that change and input events are fired for time and not fired
+    // for others when changing the value with a letter key.
+    // Navigate to the next field (time of the day, year, year).
+    synthesizeKey("KEY_Tab");
+    synthesizeKey("P");
+    // We get event per character.
+    is(input.value, expectedValues[i][5], "Check that value was set correctly (7).");
+    if (i === 0) {
+      // For the time input, the time of the day should be focused and it,
+      // as an AM/PM toggle, should change to "PM" when the "p" key is pressed
+      is(changeEvents[i], 8, "Change event should be dispatched (7).");
+      is(inputEvents[i], 8, "Input event should be dispatched (7).");
+    } else {
+      // For the date and datetime inputs, the year should be focused and it,
+      // as a numeric value, should not change when the "p" key is pressed
+      is(changeEvents[i], 7, "Change event should not be dispatched (7).");
+      is(inputEvents[i], 7, "Input event should not be dispatched (7).");
+    }
   }
 }
 
