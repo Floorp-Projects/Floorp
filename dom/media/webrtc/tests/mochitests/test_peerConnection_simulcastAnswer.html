@@ -18,6 +18,7 @@
 
   runNetworkTest(async () => {
     await pushPrefs(
+        ['media.peerconnection.simulcast', true],
         // 180Kbps was determined empirically, set well-higher than
         // the 80Kbps+overhead needed for the two simulcast streams.
         // 100Kbps was apparently too low.
@@ -40,22 +41,18 @@
     offerer.addTransceiver('video', { direction: 'recvonly' });
     offerer.addTransceiver('video', { direction: 'recvonly' });
 
-    const offer = await offerer.createOffer();
-
-    const mungedOffer = midToRid(offer);
-    info(`Transformed recv offer to simulcast: ${offer.sdp} to ${mungedOffer}`);
-
-    await answerer.setRemoteDescription({type: 'offer', sdp: mungedOffer});
-
     // One send transceiver, that will be used to send both simulcast streams
     const emitter = new VideoFrameEmitter();
     const videoStream = emitter.stream();
-    const sender = answerer.addTrack(videoStream.getVideoTracks()[0], videoStream);
-    let parameters = sender.getParameters();
-    is(parameters.encodings.length, 2);
-    is(answerer.getSenders().length, 1);
+    answerer.addTrack(videoStream.getVideoTracks()[0], videoStream);
     emitter.start();
 
+    const offer = await offerer.createOffer();
+
+    const mungedOffer = midToRid(offer.sdp);
+    info(`Transformed recv offer to simulcast: ${offer.sdp} to ${mungedOffer}`);
+
+    await answerer.setRemoteDescription({type: 'offer', sdp: mungedOffer});
     await offerer.setLocalDescription(offer);
 
     const rids = offerer.getTransceivers().map(t => t.mid);
@@ -64,19 +61,17 @@
     ok(rids[1] != '', 'Second mid should be non-empty');
     info(`rids: ${JSON.stringify(rids)}`);
 
-    parameters = sender.getParameters();
-    info(`parameters: ${JSON.stringify(parameters)}`);
-    const observedRids = parameters.encodings.map(({rid}) => rid);
-    isDeeply(observedRids, rids);
-    parameters.encodings[0].maxBitrate = 40000;
-    parameters.encodings[0].scaleResolutionDownBy = 1;
-    parameters.encodings[1].maxBitrate = 40000;
-    parameters.encodings[1].scaleResolutionDownBy = 2;
-    await sender.setParameters(parameters);
+    const sender = answerer.getSenders()[0];
+    await sender.setParameters({
+        encodings: [
+            { rid: rids[0], maxBitrate: 40000 },
+            { rid: rids[1], maxBitrate: 40000, scaleResolutionDownBy: 2 }
+          ]
+    });
 
     const answer = await answerer.createAnswer();
 
-    const mungedAnswer = ridToMid(answer);
+    const mungedAnswer = ridToMid(answer.sdp);
     info(`Transformed send simulcast answer to multiple m-sections: ${answer.sdp} to ${mungedAnswer}`);
     await offerer.setRemoteDescription({type: 'answer', sdp: mungedAnswer});
     await answerer.setLocalDescription(answer);
@@ -104,7 +99,6 @@
        "sink is 1/2 height of source, modulo our cropping algorithm");
 
     await statsReady;
-    info("Stats ready");
     const senderStats = await sender.getStats();
     checkSenderStats(senderStats, 2);
     checkExpectedFields(senderStats);

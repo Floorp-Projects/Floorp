@@ -17,7 +17,6 @@
 #include "mozilla/dom/RTCStatsReportBinding.h"
 #include "mozilla/dom/RTCRtpParametersBinding.h"
 #include "RTCStatsReport.h"
-#include "jsep/JsepTrack.h"
 
 class nsPIDOMWindowInner;
 
@@ -42,7 +41,6 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
                MediaTransportHandler* aTransportHandler,
                AbstractThread* aCallThread, nsISerialEventTarget* aStsThread,
                MediaSessionConduit* aConduit, dom::MediaStreamTrack* aTrack,
-               const Sequence<RTCRtpEncodingParameters>& aEncodings,
                RTCRtpTransceiver* aTransceiver);
 
   // nsISupports
@@ -61,14 +59,8 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
                                          ErrorResult& aError);
   already_AddRefed<Promise> GetStats(ErrorResult& aError);
   already_AddRefed<Promise> SetParameters(
-      const dom::RTCRtpSendParameters& aParameters, ErrorResult& aError);
-  // Not a simple getter, so not const
-  // See https://w3c.github.io/webrtc-pc/#dom-rtcrtpsender-getparameters
-  void GetParameters(RTCRtpSendParameters& aParameters);
-
-  static void CheckAndRectifyEncodings(
-      Sequence<RTCRtpEncodingParameters>& aEncodings, bool aVideo,
-      ErrorResult& aRv);
+      const dom::RTCRtpParameters& aParameters, ErrorResult& aError);
+  void GetParameters(RTCRtpParameters& aParameters) const;
 
   nsPIDOMWindowInner* GetParentObject() const;
   nsTArray<RefPtr<RTCStatsPromise>> GetStatsInternal();
@@ -80,7 +72,6 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
   void SetStreams(const Sequence<OwningNonNull<DOMMediaStream>>& aStreams);
   // ChromeOnly webidl
   void GetStreams(nsTArray<RefPtr<DOMMediaStream>>& aStreams);
-  // ChromeOnly webidl
   void SetTrack(const RefPtr<MediaStreamTrack>& aTrack);
   void Shutdown();
   void BreakCycles();
@@ -95,9 +86,9 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
 
   // This is called when we set an answer (ie; when the transport is finalized).
   void UpdateTransport();
+  void UpdateConduit();
   void SyncToJsep(JsepTransceiver& aJsepTransceiver) const;
   void SyncFromJsep(const JsepTransceiver& aJsepTransceiver);
-  void MaybeUpdateConduit();
 
   AbstractCanonical<Ssrcs>* CanonicalSsrcs() { return &mSsrcs; }
   AbstractCanonical<Ssrcs>* CanonicalVideoRtxSsrcs() { return &mVideoRtxSsrcs; }
@@ -121,11 +112,6 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
   AbstractCanonical<std::string>* CanonicalCname() { return &mCname; }
   AbstractCanonical<bool>* CanonicalTransmitting() { return &mTransmitting; }
 
-  bool HasPendingSetParameters() const { return mPendingParameters.isSome(); }
-  void InvalidateLastReturnedParameters() {
-    mLastReturnedParameters = Nothing();
-  }
-
  private:
   virtual ~RTCRtpSender();
 
@@ -134,106 +120,19 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
 
   std::string GetMid() const;
   JsepTransceiver& GetJsepTransceiver();
+  void ApplyParameters(const RTCRtpParameters& aParameters);
   void ConfigureVideoCodecMode();
-  void SetJsepRids(const RTCRtpSendParameters& aParameters);
-  static void ApplyJsEncodingToConduitEncoding(
-      const RTCRtpEncodingParameters& aJsEncoding,
-      VideoCodecConfig::Encoding* aConduitEncoding);
-  void UpdateRestorableEncodings(
-      const Sequence<RTCRtpEncodingParameters>& aEncodings);
-  Sequence<RTCRtpEncodingParameters> GetMatchingEncodings(
-      const std::vector<std::string>& aRids) const;
-  Sequence<RTCRtpEncodingParameters> ToSendEncodings(
-      const std::vector<std::string>& aRids) const;
-  void MaybeGetJsepRids();
-
-  void WarnAboutBadSetParameters(const nsCString& aError);
 
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<PeerConnectionImpl> mPc;
   RefPtr<dom::MediaStreamTrack> mSenderTrack;
-  RTCRtpSendParameters mParameters;
-  Maybe<RTCRtpSendParameters> mPendingParameters;
-  uint32_t mNumSetParametersCalls = 0;
-  // When JSEP goes from simulcast to unicast without a rid, and we started out
-  // as unicast without a rid, we are supposed to restore that unicast encoding
-  // from before.
-  Maybe<RTCRtpEncodingParameters> mUnicastEncoding;
-  bool mSimulcastEnvelopeSet = false;
-  Maybe<RTCRtpSendParameters> mLastReturnedParameters;
+  RTCRtpParameters mParameters;
   RefPtr<MediaPipelineTransmit> mPipeline;
   RefPtr<RTCRtpTransceiver> mTransceiver;
   nsTArray<RefPtr<DOMMediaStream>> mStreams;
   bool mHaveSetupTransport = false;
-  // TODO(bug 1803388): Remove this stuff once it is no longer needed.
-  bool mAllowOldSetParameters = false;
-
-  // TODO(bug 1803388): Remove the glean warnings once they are no longer needed
-  bool mHaveWarnedBecauseNoGetParameters = false;
-  bool mHaveWarnedBecauseEncodingCountChange = false;
-  bool mHaveWarnedBecauseRidChange = false;
-  bool mHaveWarnedBecauseNoTransactionId = false;
-  bool mHaveWarnedBecauseStaleTransactionId = false;
-  // TODO(bug 1803389): Remove the glean errors once they are no longer needed.
-  bool mHaveFailedBecauseNoGetParameters = false;
-  bool mHaveFailedBecauseEncodingCountChange = false;
-  bool mHaveFailedBecauseRidChange = false;
-  bool mHaveFailedBecauseNoTransactionId = false;
-  bool mHaveFailedBecauseStaleTransactionId = false;
-  bool mHaveFailedBecauseNoEncodings = false;
-  bool mHaveFailedBecauseOtherError = false;
 
   RefPtr<dom::RTCDTMFSender> mDtmf;
-
-  class BaseConfig {
-   public:
-    // TODO(bug 1744116): Use = default here
-    bool operator==(const BaseConfig& aOther) const {
-      return mSsrcs == aOther.mSsrcs &&
-             mLocalRtpExtensions == aOther.mLocalRtpExtensions &&
-             mCname == aOther.mCname && mTransmitting == aOther.mTransmitting;
-    }
-    Ssrcs mSsrcs;
-    RtpExtList mLocalRtpExtensions;
-    std::string mCname;
-    bool mTransmitting = false;
-  };
-
-  class VideoConfig : public BaseConfig {
-   public:
-    // TODO(bug 1744116): Use = default here
-    bool operator==(const VideoConfig& aOther) const {
-      return BaseConfig::operator==(aOther) &&
-             mVideoRtxSsrcs == aOther.mVideoRtxSsrcs &&
-             mVideoCodec == aOther.mVideoCodec &&
-             mVideoRtpRtcpConfig == aOther.mVideoRtpRtcpConfig &&
-             mVideoCodecMode == aOther.mVideoCodecMode;
-    }
-    Ssrcs mVideoRtxSsrcs;
-    Maybe<VideoCodecConfig> mVideoCodec;
-    Maybe<RtpRtcpConfig> mVideoRtpRtcpConfig;
-    webrtc::VideoCodecMode mVideoCodecMode =
-        webrtc::VideoCodecMode::kRealtimeVideo;
-  };
-
-  class AudioConfig : public BaseConfig {
-   public:
-    // TODO(bug 1744116): Use = default here
-    bool operator==(const AudioConfig& aOther) const {
-      return BaseConfig::operator==(aOther) &&
-             mAudioCodec == aOther.mAudioCodec && mDtmfPt == aOther.mDtmfPt &&
-             mDtmfFreq == aOther.mDtmfFreq;
-    }
-    Maybe<AudioCodecConfig> mAudioCodec;
-    int32_t mDtmfPt = -1;
-    int32_t mDtmfFreq = 0;
-  };
-
-  Maybe<VideoConfig> GetNewVideoConfig();
-  Maybe<AudioConfig> GetNewAudioConfig();
-  void UpdateBaseConfig(BaseConfig* aConfig);
-  void ApplyVideoConfig(const VideoConfig& aConfig);
-  void ApplyAudioConfig(const AudioConfig& aConfig);
 
   Canonical<Ssrcs> mSsrcs;
   Canonical<Ssrcs> mVideoRtxSsrcs;

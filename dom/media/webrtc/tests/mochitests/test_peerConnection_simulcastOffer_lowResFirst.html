@@ -19,6 +19,7 @@
 
   runNetworkTest(async () => {
     await pushPrefs(
+        ['media.peerconnection.simulcast', true],
         // 180Kbps was determined empirically, set well-higher than
         // the 80Kbps+overhead needed for the two simulcast streams.
         // 100Kbps was apparently too low.
@@ -40,18 +41,20 @@
     // One send transceiver, that will be used to send both simulcast streams
     const emitter = new VideoFrameEmitter();
     const videoStream = emitter.stream();
-    const sendEncodings = [
-      { rid: '0', maxBitrate: 40000, scaleResolutionDownBy: 2 },
-      { rid: '1', maxBitrate: 40000 }
-    ];
-    offerer.addTransceiver(videoStream.getVideoTracks()[0], {sendEncodings});
+    offerer.addTrack(videoStream.getVideoTracks()[0], videoStream);
     emitter.start();
 
     const sender = offerer.getSenders()[0];
+    sender.setParameters({
+        encodings: [
+            { rid: '0', maxBitrate: 40000, scaleResolutionDownBy: 2 },
+            { rid: '1', maxBitrate: 40000 }
+          ]
+    });
 
     const offer = await offerer.createOffer();
 
-    const mungedOffer = ridToMid(offer);
+    const mungedOffer = ridToMid(offer.sdp);
     info(`Transformed send simulcast offer to multiple m-sections: ${offer.sdp} to ${mungedOffer}`);
 
     await answerer.setRemoteDescription({type: 'offer', sdp: mungedOffer});
@@ -65,7 +68,7 @@
 
     const answer = await answerer.createAnswer();
 
-    const mungedAnswer = midToRid(answer);
+    const mungedAnswer = midToRid(answer.sdp);
     info(`Transformed recv answer to simulcast: ${answer.sdp} to ${mungedAnswer}`);
     await offerer.setRemoteDescription({type: 'answer', sdp: mungedAnswer});
     await answerer.setLocalDescription(answer);

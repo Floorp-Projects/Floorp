@@ -18,6 +18,7 @@
 
   runNetworkTest(async () => {
     await pushPrefs(
+        ['media.peerconnection.simulcast', true],
         // 180Kbps was determined empirically, set well-higher than
         // the 80Kbps+overhead needed for the two simulcast streams.
         // 100Kbps was apparently too low.
@@ -48,7 +49,7 @@
 
     const offer = await offerer.createOffer();
 
-    const mungedOffer = midToRid(offer);
+    const mungedOffer = midToRid(offer.sdp);
     info(`Transformed recv offer to simulcast: ${offer.sdp} to ${mungedOffer}`);
 
     await answerer.setRemoteDescription({type: 'offer', sdp: mungedOffer});
@@ -61,15 +62,16 @@
     info(`rids: ${JSON.stringify(rids)}`);
 
     const sender = answerer.getSenders()[0];
-    const parameters = sender.getParameters();
-    parameters.encodings[0].maxBitrate = 40000;
-    parameters.encodings[0].scaleResolutionDownBy = 2;
-    parameters.encodings[1].maxBitrate = 40000;
-    await sender.setParameters(parameters);
+    sender.setParameters({
+        encodings: [
+            { rid: rids[0], maxBitrate: 40000, scaleResolutionDownBy: 2 },
+            { rid: rids[1], maxBitrate: 40000 }
+          ]
+    });
 
     const answer = await answerer.createAnswer();
 
-    const mungedAnswer = ridToMid(answer);
+    const mungedAnswer = ridToMid(answer.sdp);
     info(`Transformed send simulcast answer to multiple m-sections: ${answer.sdp} to ${mungedAnswer}`);
     await offerer.setRemoteDescription({type: 'answer', sdp: mungedAnswer});
     await answerer.setLocalDescription(answer);
