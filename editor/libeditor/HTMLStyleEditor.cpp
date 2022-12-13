@@ -1608,7 +1608,70 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::RemoveStyleInside(
     return pointToPutCaret;
   }
 
-  // Next, remove the element or its attribute.
+  // Next, remove CSS style first.  Then, `style` attribute will be removed if
+  // the corresponding CSS property is last one.
+  const bool isCSSEditable = aStyleToRemove.IsCSSEditable(aElement);
+  auto isStyleSpecifiedOrError = [&]() -> Result<bool, nsresult> {
+    if (!isCSSEditable) {
+      return false;
+    }
+    MOZ_ASSERT(!aStyleToRemove.IsStyleToClearAllInlineStyles());
+    Result<bool, nsresult> elementHasSpecifiedCSSEquivalentStylesOrError =
+        CSSEditUtils::HaveSpecifiedCSSEquivalentStyles(*this, aElement,
+                                                       aStyleToRemove);
+    NS_WARNING_ASSERTION(
+        elementHasSpecifiedCSSEquivalentStylesOrError.isOk(),
+        "CSSEditUtils::HaveSpecifiedCSSEquivalentStyles() failed");
+    return elementHasSpecifiedCSSEquivalentStylesOrError;
+  }();
+  if (MOZ_UNLIKELY(isStyleSpecifiedOrError.isErr())) {
+    return isStyleSpecifiedOrError.propagateErr();
+  }
+  bool styleSpecified = isStyleSpecifiedOrError.unwrap();
+  if (nsStyledElement* styledElement = nsStyledElement::FromNode(&aElement)) {
+    if (styleSpecified) {
+      // MOZ_KnownLive(*styledElement) because it's an alias of aElement.
+      nsresult rv = CSSEditUtils::RemoveCSSEquivalentToStyle(
+          WithTransaction::Yes, *this, MOZ_KnownLive(*styledElement),
+          aStyleToRemove, nullptr);
+      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        return Err(NS_ERROR_EDITOR_DESTROYED);
+      }
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rv),
+          "CSSEditUtils::RemoveCSSEquivalentToStyle() failed, but ignored");
+    }
+
+    // If the style is <sub> or <sup>, we won't use vertical-align CSS
+    // property because <sub>/<sup> changes font size but neither
+    // `vertical-align: sub` nor `vertical-align: super` changes it
+    // (bug 394304 comment 2).  Therefore, they are not equivalents.  However,
+    // they're obviously conflict with vertical-align style.  Thus, we need to
+    // remove the vertical-align style from elements.
+    if (aStyleToRemove.IsStyleConflictingWithVerticalAlign()) {
+      nsAutoString value;
+      nsresult rv = CSSEditUtils::GetSpecifiedProperty(
+          aElement, *nsGkAtoms::vertical_align, value);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("CSSEditUtils::GetSpecifiedProperty() failed");
+        return Err(rv);
+      }
+      if (!value.IsEmpty()) {
+        // MOZ_KnownLive(*styledElement) because it's an alias of aElement.
+        nsresult rv = CSSEditUtils::RemoveCSSPropertyWithTransaction(
+            *this, MOZ_KnownLive(*styledElement), *nsGkAtoms::vertical_align,
+            value);
+        if (NS_FAILED(rv)) {
+          NS_WARNING("CSSEditUtils::RemoveCSSPropertyWithTransaction() failed");
+          return Err(rv);
+        }
+        styleSpecified = true;
+      }
+    }
+  }
+
+  // Then, if we could and should remove or replace aElement, let's do it. Or
+  // just remove attribute.
   auto ShouldRemoveHTMLStyle = [&]() {
     if (!aStyleToRemove.IsStyleToClearAllInlineStyles()) {
       return aStyleToRemove.IsRepresentedBy(aElement);
@@ -1704,86 +1767,16 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::RemoveStyleInside(
     }
   }
 
-  // Then, remove CSS style if specified.
-  // XXX aElement may have already been removed from the DOM tree.  Why
-  //     do we keep handling aElement here??
-  if (aStyleToRemove.IsCSSEditable(aElement)) {
-    Result<bool, nsresult> elementHasSpecifiedCSSEquivalentStylesOrError =
-        CSSEditUtils::HaveSpecifiedCSSEquivalentStyles(*this, aElement,
-                                                       aStyleToRemove);
-    if (MOZ_UNLIKELY(elementHasSpecifiedCSSEquivalentStylesOrError.isErr())) {
-      NS_WARNING("CSSEditUtils::HaveSpecifiedCSSEquivalentStyles() failed");
-      return elementHasSpecifiedCSSEquivalentStylesOrError.propagateErr();
-    }
-    if (elementHasSpecifiedCSSEquivalentStylesOrError.unwrap()) {
-      if (nsStyledElement* styledElement =
-              nsStyledElement::FromNode(&aElement)) {
-        // If aElement has CSS declaration of the given style, remove it.
-        // MOZ_KnownLive(*styledElement): It's aElement and its lifetime must be
-        // guaranteed by the caller because of MOZ_CAN_RUN_SCRIPT method.
-        nsresult rv = CSSEditUtils::RemoveCSSEquivalentToStyle(
-            WithTransaction::Yes, *this, MOZ_KnownLive(*styledElement),
-            aStyleToRemove, nullptr);
-        if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-          return Err(NS_ERROR_EDITOR_DESTROYED);
-        }
-        NS_WARNING_ASSERTION(
-            NS_SUCCEEDED(rv),
-            "CSSEditUtils::RemoveCSSEquivalentToStyle() failed, but ignored");
-      }
-      // Additionally, remove aElement itself if it's a `<span>` or `<font>`
-      // and it does not have non-empty `style`, `id` nor `class` attribute.
-      if (aElement.IsAnyOfHTMLElements(nsGkAtoms::span, nsGkAtoms::font) &&
-          !HTMLEditor::HasStyleOrIdOrClassAttribute(aElement)) {
-        Result<EditorDOMPoint, nsresult> unwrapSpanOrFontElementResult =
-            RemoveContainerWithTransaction(aElement);
-        if (MOZ_UNLIKELY(unwrapSpanOrFontElementResult.isErr() &&
-                         unwrapSpanOrFontElementResult.inspectErr() ==
-                             NS_ERROR_EDITOR_DESTROYED)) {
-          NS_WARNING("HTMLEditor::RemoveContainerWithTransaction() failed");
-          return Err(NS_ERROR_EDITOR_DESTROYED);
-        }
-        NS_WARNING_ASSERTION(
-            unwrapSpanOrFontElementResult.isOk(),
-            "HTMLEditor::RemoveContainerWithTransaction() failed, but ignored");
-        if (MOZ_LIKELY(unwrapSpanOrFontElementResult.isOk()) &&
-            unwrapSpanOrFontElementResult.inspect().IsSet()) {
-          pointToPutCaret = unwrapSpanOrFontElementResult.unwrap();
-        }
-      }
-    }
-  }
-
-  // If the style is <sub> or <sup>, we won't use vertical-align CSS property
-  // because <sub>/<sup> changes font size but neither `vertical-align: sub` nor
-  // `vertical-align: super` changes it (bug 394304 comment 2).  Therefore, they
-  // are not equivalents. However, they're obviously conflict with
-  // vertical-align style.  Thus, we need to remove the vertical-align style
-  // from elements.
-  if (aStyleToRemove.IsStyleConflictingWithVerticalAlign()) {
-    nsAutoString value;
-    nsresult rv = CSSEditUtils::GetSpecifiedProperty(
-        aElement, *nsGkAtoms::vertical_align, value);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("CSSEditUtils::GetSpecifiedProperty() failed");
-      return Err(rv);
-    }
-    if (!value.IsEmpty()) {
-      if (nsStyledElement* styledElement =
-              nsStyledElement::FromNode(&aElement)) {
-        Result<EditorDOMPoint, nsresult> result =
-            CSSEditUtils::RemoveCSSInlineStyleWithTransaction(
-                *this, MOZ_KnownLive(*styledElement), nsGkAtoms::vertical_align,
-                value);
-        if (MOZ_UNLIKELY(result.isErr())) {
-          NS_WARNING("CSSEditUtils::RemoveCSSPropertyWithTransaction() failed");
-          return result.propagateErr();
-        }
-        if (result.inspect().IsSet()) {
-          pointToPutCaret = result.unwrap();
-        }
-      }
-    }
+  // If we've removed a CSS style and that made the <span> element have no
+  // attributes, we can delete it.
+  if (styleSpecified &&
+      aElement.IsAnyOfHTMLElements(nsGkAtoms::span, nsGkAtoms::font) &&
+      !HTMLEditUtils::ElementHasAttribute(aElement)) {
+    Result<EditorDOMPoint, nsresult> unwrapSpanElement =
+        RemoveContainerWithTransaction(aElement);
+    NS_WARNING_ASSERTION(unwrapSpanElement.isOk(),
+                         "HTMLEditor::RemoveContainerWithTransaction() failed");
+    return unwrapSpanElement;
   }
 
   if (aStyleToRemove.mHTMLProperty != nsGkAtoms::font ||
