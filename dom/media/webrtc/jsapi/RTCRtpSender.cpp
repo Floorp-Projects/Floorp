@@ -490,6 +490,31 @@ void RTCRtpSender::ApplyParameters(const RTCRtpParameters& aParameters) {
   GetJsepTransceiver().mSendTrack.SetMaxEncodings(rids.size());
 }
 
+bool operator==(const RTCRtpEncodingParameters& a1,
+                const RTCRtpEncodingParameters& a2) {
+  // webidl does not generate types that are equality comparable
+  return a1.mActive == a2.mActive && a1.mFec == a2.mFec &&
+         a1.mMaxBitrate == a2.mMaxBitrate &&
+         a1.mMaxFramerate == a2.mMaxFramerate && a1.mPriority == a2.mPriority &&
+         a1.mRid == a2.mRid && a1.mRtx == a2.mRtx &&
+         a1.mScaleResolutionDownBy == a2.mScaleResolutionDownBy &&
+         a1.mSsrc == a2.mSsrc;
+}
+
+void RTCRtpSender::ApplyJsEncodingToConduitEncoding(
+    const RTCRtpEncodingParameters& aJsEncoding,
+    VideoCodecConfig::Encoding* aConduitEncoding) {
+  if (aJsEncoding.mMaxBitrate.WasPassed()) {
+    aConduitEncoding->constraints.maxBr = aJsEncoding.mMaxBitrate.Value();
+  }
+  if (aJsEncoding.mMaxFramerate.WasPassed()) {
+    aConduitEncoding->constraints.maxFps =
+        Some(aJsEncoding.mMaxFramerate.Value());
+  }
+  aConduitEncoding->constraints.scaleDownBy =
+      aJsEncoding.mScaleResolutionDownBy;
+}
+
 void RTCRtpSender::SetStreams(
     const Sequence<OwningNonNull<DOMMediaStream>>& aStreams) {
   mStreams.Clear();
@@ -643,31 +668,7 @@ bool RTCRtpSender::SeamlessTrackSwitch(
 
   mPipeline->SetTrack(aWithTrack);
 
-  if (sending && aWithTrack) {
-    // If sending is true, and withTrack is not null, determine if withTrack can
-    // be sent immediately by the sender without violating the sender's
-    // already-negotiated envelope, and if it cannot, then reject p with a newly
-    // created InvalidModificationError, and abort these steps.
-
-    if (mTransceiver->IsVideo()) {
-      // We update the media conduits here so we can apply different codec
-      // settings for different sources (e.g. screensharing as opposed to
-      // camera.)
-      Maybe<MediaSourceEnum> oldType;
-      Maybe<MediaSourceEnum> newType;
-      if (mSenderTrack) {
-        oldType = Some(mSenderTrack->GetSource().GetMediaSource());
-      }
-      if (aWithTrack) {
-        newType = Some(aWithTrack->GetSource().GetMediaSource());
-      }
-      if (oldType != newType) {
-        UpdateConduit();
-      }
-    } else if (!mSenderTrack != !aWithTrack) {
-      UpdateConduit();
-    }
-  }
+  MaybeUpdateConduit();
 
   // There may eventually be cases where a renegotiation is necessary to switch.
   return true;
@@ -715,7 +716,7 @@ void RTCRtpSender::UpdateTransport() {
                                nullptr);
 }
 
-void RTCRtpSender::UpdateConduit() {
+void RTCRtpSender::MaybeUpdateConduit() {
   // NOTE(pkerr) - the Call API requires the both local_ssrc and remote_ssrc be
   // set to a non-zero value or the CreateVideo...Stream call will fail.
   if (NS_WARN_IF(GetJsepTransceiver().mSendTrack.GetSsrcs().empty())) {
@@ -726,20 +727,20 @@ void RTCRtpSender::UpdateConduit() {
     return;
   }
 
-  mTransmitting = false;
-  Stop();
-
-  mSsrcs = GetJsepTransceiver().mSendTrack.GetSsrcs();
-  mVideoRtxSsrcs = GetJsepTransceiver().mSendTrack.GetRtxSsrcs();
-  mCname = GetJsepTransceiver().mSendTrack.GetCNAME();
+  if (!mPipeline) {
+    return;
+  }
 
   if (mPipeline->mConduit->type() == MediaSessionConduit::VIDEO) {
-    UpdateVideoConduit();
+    Maybe<VideoConfig> newConfig = GetNewVideoConfig();
+    if (newConfig.isSome()) {
+      ApplyVideoConfig(*newConfig);
+    }
   } else {
-    UpdateAudioConduit();
-  }
-  if ((mTransmitting = GetJsepTransceiver().mSendTrack.GetActive())) {
-    Start();
+    Maybe<AudioConfig> newConfig = GetNewAudioConfig();
+    if (newConfig.isSome()) {
+      ApplyAudioConfig(*newConfig);
+    }
   }
 }
 
@@ -758,84 +759,132 @@ void RTCRtpSender::SyncToJsep(JsepTransceiver& aJsepTransceiver) const {
   aJsepTransceiver.mSendTrack.UpdateStreamIds(streamIds);
 }
 
-void RTCRtpSender::ConfigureVideoCodecMode() {
-  if (!mSenderTrack) {
-    // Nothing to do
-    return;
-  }
-
-  RefPtr<mozilla::dom::VideoStreamTrack> videotrack =
-      mSenderTrack->AsVideoStreamTrack();
-
-  if (!videotrack) {
-    MOZ_CRASH(
-        "In ConfigureVideoCodecMode, mSenderTrack is not video! This should "
-        "never happen!");
-  }
-
-  dom::MediaSourceEnum source = videotrack->GetSource().GetMediaSource();
-  webrtc::VideoCodecMode mode = webrtc::VideoCodecMode::kRealtimeVideo;
-  switch (source) {
-    case dom::MediaSourceEnum::Browser:
-    case dom::MediaSourceEnum::Screen:
-    case dom::MediaSourceEnum::Window:
-      mode = webrtc::VideoCodecMode::kScreensharing;
-      break;
-
-    case dom::MediaSourceEnum::Camera:
-    default:
-      mode = webrtc::VideoCodecMode::kRealtimeVideo;
-      break;
-  }
-
-  mVideoCodecMode = mode;
-}
-
-void RTCRtpSender::UpdateVideoConduit() {
+Maybe<RTCRtpSender::VideoConfig> RTCRtpSender::GetNewVideoConfig() {
   // It is possible for SDP to signal that there is a send track, but there not
   // actually be a send track, according to the specification; all that needs to
   // happen is for the transceiver to be configured to send...
-  if (GetJsepTransceiver().mSendTrack.GetNegotiatedDetails() &&
-      GetJsepTransceiver().mSendTrack.GetActive()) {
-    const auto& details(
-        *GetJsepTransceiver().mSendTrack.GetNegotiatedDetails());
-
-    {
-      std::vector<webrtc::RtpExtension> extmaps;
-      // @@NG read extmap from track
-      details.ForEachRTPHeaderExtension(
-          [&extmaps](const SdpExtmapAttributeList::Extmap& extmap) {
-            extmaps.emplace_back(extmap.extensionname, extmap.entry);
-          });
-      mLocalRtpExtensions = extmaps;
-    }
-
-    ConfigureVideoCodecMode();
-
-    std::vector<VideoCodecConfig> configs;
-    RTCRtpTransceiver::NegotiatedDetailsToVideoCodecConfigs(details, &configs);
-
-    if (configs.empty()) {
-      // TODO: Are we supposed to plumb this error back to JS? This does not
-      // seem like a failure to set an answer, it just means that codec
-      // negotiation failed. For now, we're just doing the same thing we do
-      // if negotiation as a whole failed.
-      MOZ_LOG(gSenderLog, LogLevel::Error,
-              ("%s[%s]: %s  No video codecs were negotiated (send).",
-               mPc->GetHandle().c_str(), GetMid().c_str(), __FUNCTION__));
-      return;
-    }
-
-    mVideoCodec = Some(configs[0]);
-    mVideoRtpRtcpConfig = Some(details.GetRtpRtcpConfig());
+  if (!GetJsepTransceiver().mSendTrack.GetNegotiatedDetails()) {
+    return Nothing();
   }
+
+  VideoConfig oldConfig;
+  oldConfig.mSsrcs = mSsrcs;
+  oldConfig.mLocalRtpExtensions = mLocalRtpExtensions;
+  oldConfig.mCname = mCname;
+  oldConfig.mTransmitting = mTransmitting;
+  oldConfig.mVideoRtxSsrcs = mVideoRtxSsrcs;
+  oldConfig.mVideoCodec = mVideoCodec;
+  oldConfig.mVideoRtpRtcpConfig = mVideoRtpRtcpConfig;
+  oldConfig.mVideoCodecMode = mVideoCodecMode;
+
+  VideoConfig newConfig(oldConfig);
+
+  UpdateBaseConfig(&newConfig);
+
+  newConfig.mVideoRtxSsrcs = GetJsepTransceiver().mSendTrack.GetRtxSsrcs();
+
+  const JsepTrackNegotiatedDetails details(
+      *GetJsepTransceiver().mSendTrack.GetNegotiatedDetails());
+
+  if (mSenderTrack) {
+    RefPtr<mozilla::dom::VideoStreamTrack> videotrack =
+        mSenderTrack->AsVideoStreamTrack();
+
+    if (!videotrack) {
+      MOZ_CRASH(
+          "In ConfigureVideoCodecMode, mSenderTrack is not video! This should "
+          "never happen!");
+    }
+
+    dom::MediaSourceEnum source = videotrack->GetSource().GetMediaSource();
+    switch (source) {
+      case dom::MediaSourceEnum::Browser:
+      case dom::MediaSourceEnum::Screen:
+      case dom::MediaSourceEnum::Window:
+      case dom::MediaSourceEnum::Application:
+        newConfig.mVideoCodecMode = webrtc::VideoCodecMode::kScreensharing;
+        break;
+
+      case dom::MediaSourceEnum::Camera:
+      case dom::MediaSourceEnum::Other:
+        // Other is used by canvas capture, which we treat as realtime video.
+        // This seems debatable, but we've been doing it this way for a long
+        // time, so this is likely fine.
+        newConfig.mVideoCodecMode = webrtc::VideoCodecMode::kRealtimeVideo;
+        break;
+
+      case dom::MediaSourceEnum::Microphone:
+      case dom::MediaSourceEnum::AudioCapture:
+      case dom::MediaSourceEnum::EndGuard_:
+        MOZ_ASSERT(false);
+        break;
+    }
+  }
+
+  std::vector<VideoCodecConfig> configs;
+  RTCRtpTransceiver::NegotiatedDetailsToVideoCodecConfigs(details, &configs);
+
+  if (configs.empty()) {
+    // TODO: Are we supposed to plumb this error back to JS? This does not
+    // seem like a failure to set an answer, it just means that codec
+    // negotiation failed. For now, we're just doing the same thing we do
+    // if negotiation as a whole failed.
+    MOZ_LOG(gSenderLog, LogLevel::Error,
+            ("%s[%s]: %s  No video codecs were negotiated (send).",
+             mPc->GetHandle().c_str(), GetMid().c_str(), __FUNCTION__));
+    return Nothing();
+  }
+
+  MOZ_ASSERT(mParameters.mEncodings.WasPassed());
+  newConfig.mVideoCodec = Some(configs[0]);
+  for (VideoCodecConfig::Encoding& conduitEncoding :
+       newConfig.mVideoCodec->mEncodings) {
+    for (const RTCRtpEncodingParameters& jsEncoding :
+         mParameters.mEncodings.Value()) {
+      std::string rid;
+      if (jsEncoding.mRid.WasPassed()) {
+        rid = NS_ConvertUTF16toUTF8(jsEncoding.mRid.Value()).get();
+      }
+      if (conduitEncoding.rid == rid) {
+        ApplyJsEncodingToConduitEncoding(jsEncoding, &conduitEncoding);
+        break;
+      }
+    }
+  }
+
+  newConfig.mVideoRtpRtcpConfig = Some(details.GetRtpRtcpConfig());
+
+  if (newConfig == oldConfig) {
+    MOZ_LOG(gSenderLog, LogLevel::Debug,
+            ("%s[%s]: %s  No change in video config", mPc->GetHandle().c_str(),
+             GetMid().c_str(), __FUNCTION__));
+    return Nothing();
+  }
+
+  if (newConfig.mVideoCodec.isSome()) {
+    MOZ_ASSERT(newConfig.mSsrcs.size() ==
+               newConfig.mVideoCodec->mEncodings.size());
+  }
+  return Some(newConfig);
 }
 
-void RTCRtpSender::UpdateAudioConduit() {
+Maybe<RTCRtpSender::AudioConfig> RTCRtpSender::GetNewAudioConfig() {
+  AudioConfig oldConfig;
+  oldConfig.mSsrcs = mSsrcs;
+  oldConfig.mLocalRtpExtensions = mLocalRtpExtensions;
+  oldConfig.mCname = mCname;
+  oldConfig.mTransmitting = mTransmitting;
+  oldConfig.mAudioCodec = mAudioCodec;
+
+  AudioConfig newConfig(oldConfig);
+
+  UpdateBaseConfig(&newConfig);
+
   if (GetJsepTransceiver().mSendTrack.GetNegotiatedDetails() &&
       GetJsepTransceiver().mSendTrack.GetActive()) {
     const auto& details(
         *GetJsepTransceiver().mSendTrack.GetNegotiatedDetails());
+
     std::vector<AudioCodecConfig> configs;
     RTCRtpTransceiver::NegotiatedDetailsToAudioCodecConfigs(details, &configs);
     if (configs.empty()) {
@@ -846,7 +895,7 @@ void RTCRtpSender::UpdateAudioConduit() {
       MOZ_LOG(gSenderLog, LogLevel::Error,
               ("%s[%s]: %s No audio codecs were negotiated (send)",
                mPc->GetHandle().c_str(), GetMid().c_str(), __FUNCTION__));
-      return;
+      return Nothing();
     }
 
     std::vector<AudioCodecConfig> dtmfConfigs;
@@ -871,10 +920,31 @@ void RTCRtpSender::UpdateAudioConduit() {
             [](const auto& a, const auto& b) { return a.mFreq < b.mFreq; });
       }
       MOZ_ASSERT(dtmfIterator != dtmfConfigs.end());
-      mDtmf->SetPayloadType(dtmfIterator->mType, dtmfIterator->mFreq);
+      newConfig.mDtmfPt = dtmfIterator->mType;
+      newConfig.mDtmfFreq = dtmfIterator->mFreq;
     }
 
-    mAudioCodec = Some(sendCodec);
+    newConfig.mAudioCodec = Some(sendCodec);
+  }
+
+  if (newConfig == oldConfig) {
+    MOZ_LOG(gSenderLog, LogLevel::Debug,
+            ("%s[%s]: %s  No change in audio config", mPc->GetHandle().c_str(),
+             GetMid().c_str(), __FUNCTION__));
+    return Nothing();
+  }
+
+  return Some(newConfig);
+}
+
+void RTCRtpSender::UpdateBaseConfig(BaseConfig* aConfig) {
+  aConfig->mSsrcs = GetJsepTransceiver().mSendTrack.GetSsrcs();
+  aConfig->mCname = GetJsepTransceiver().mSendTrack.GetCNAME();
+
+  if (GetJsepTransceiver().mSendTrack.GetNegotiatedDetails() &&
+      GetJsepTransceiver().mSendTrack.GetActive()) {
+    const auto& details(
+        *GetJsepTransceiver().mSendTrack.GetNegotiatedDetails());
     {
       std::vector<webrtc::RtpExtension> extmaps;
       // @@NG read extmap from track
@@ -882,8 +952,49 @@ void RTCRtpSender::UpdateAudioConduit() {
           [&extmaps](const SdpExtmapAttributeList::Extmap& extmap) {
             extmaps.emplace_back(extmap.extensionname, extmap.entry);
           });
-      mLocalRtpExtensions = extmaps;
+      aConfig->mLocalRtpExtensions = extmaps;
     }
+  }
+  aConfig->mTransmitting = GetJsepTransceiver().mSendTrack.GetActive();
+}
+
+void RTCRtpSender::ApplyVideoConfig(const VideoConfig& aConfig) {
+  if (aConfig.mVideoCodec.isSome()) {
+    MOZ_ASSERT(aConfig.mSsrcs.size() == aConfig.mVideoCodec->mEncodings.size());
+  }
+  mTransmitting = false;
+  Stop();
+
+  mSsrcs = aConfig.mSsrcs;
+  mCname = aConfig.mCname;
+  mLocalRtpExtensions = aConfig.mLocalRtpExtensions;
+
+  mVideoRtxSsrcs = aConfig.mVideoRtxSsrcs;
+  mVideoCodec = aConfig.mVideoCodec;
+  mVideoRtpRtcpConfig = aConfig.mVideoRtpRtcpConfig;
+  mVideoCodecMode = aConfig.mVideoCodecMode;
+
+  if ((mTransmitting = aConfig.mTransmitting)) {
+    Start();
+  }
+}
+
+void RTCRtpSender::ApplyAudioConfig(const AudioConfig& aConfig) {
+  mTransmitting = false;
+  Stop();
+
+  mSsrcs = aConfig.mSsrcs;
+  mCname = aConfig.mCname;
+  mLocalRtpExtensions = aConfig.mLocalRtpExtensions;
+
+  mAudioCodec = aConfig.mAudioCodec;
+
+  if (aConfig.mDtmfPt >= 0) {
+    mDtmf->SetPayloadType(aConfig.mDtmfPt, aConfig.mDtmfFreq);
+  }
+
+  if ((mTransmitting = aConfig.mTransmitting)) {
+    Start();
   }
 }
 
