@@ -732,6 +732,43 @@ StorageManager::StorageManager(nsIGlobalObject* aGlobal) : mOwner(aGlobal) {
 
 StorageManager::~StorageManager() = default;
 
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(StorageManager)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(StorageManager)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(StorageManager)
+
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(StorageManager, mOwner,
+                                      mFileSystemManager)
+
+void StorageManager::Shutdown() {
+  if (mFileSystemManager) {
+    mFileSystemManager->Shutdown();
+    mFileSystemManager = nullptr;
+  }
+}
+
+already_AddRefed<FileSystemManager> StorageManager::GetFileSystemManager() {
+  if (!mFileSystemManager) {
+    MOZ_ASSERT(mOwner);
+
+    mFileSystemManager = MakeRefPtr<FileSystemManager>(mOwner, this);
+  }
+
+  return do_AddRef(mFileSystemManager);
+}
+
+// WebIDL Boilerplate
+
+JSObject* StorageManager::WrapObject(JSContext* aCx,
+                                     JS::Handle<JSObject*> aGivenProto) {
+  return StorageManager_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+// WebIDL Interface
+
 already_AddRefed<Promise> StorageManager::Persisted(ErrorResult& aRv) {
   MOZ_ASSERT(mOwner);
 
@@ -757,47 +794,7 @@ already_AddRefed<Promise> StorageManager::Estimate(ErrorResult& aRv) {
 }
 
 already_AddRefed<Promise> StorageManager::GetDirectory(ErrorResult& aRv) {
-  if (!mFileSystemManager) {
-    MOZ_ASSERT(mOwner);
-
-    mFileSystemManager = MakeRefPtr<FileSystemManager>(mOwner, this);
-  }
-
-  return mFileSystemManager->GetDirectory(aRv);
-}
-
-FileSystemManager* StorageManager::GetFileSystemManager() {
-  if (!mFileSystemManager) {
-    MOZ_ASSERT(mOwner);
-
-    mFileSystemManager = MakeRefPtr<FileSystemManager>(mOwner, this);
-    ErrorResult result;
-  }
-
-  return mFileSystemManager;
-}
-
-void StorageManager::Shutdown() {
-  if (mFileSystemManager) {
-    mFileSystemManager->Shutdown();
-    mFileSystemManager = nullptr;
-  }
-}
-
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(StorageManager, mOwner,
-                                      mFileSystemManager)
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(StorageManager)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(StorageManager)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(StorageManager)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-JSObject* StorageManager::WrapObject(JSContext* aCx,
-                                     JS::Handle<JSObject*> aGivenProto) {
-  return StorageManager_Binding::Wrap(aCx, this, aGivenProto);
+  return RefPtr(GetFileSystemManager())->GetDirectory(aRv);
 }
 
 }  // namespace mozilla::dom

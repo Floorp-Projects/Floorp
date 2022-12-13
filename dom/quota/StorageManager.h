@@ -34,9 +34,20 @@ class StorageManager final : public nsISupports, public nsWrapperCache {
  public:
   explicit StorageManager(nsIGlobalObject* aGlobal);
 
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(StorageManager)
+
+  void Shutdown();
+
+  already_AddRefed<FileSystemManager> GetFileSystemManager();
+
+  // WebIDL Boilerplate
   nsIGlobalObject* GetParentObject() const { return mOwner; }
 
-  // WebIDL
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
+
+  // WebIDL Interface
   already_AddRefed<Promise> Persisted(ErrorResult& aRv);
 
   already_AddRefed<Promise> Persist(ErrorResult& aRv);
@@ -44,17 +55,6 @@ class StorageManager final : public nsISupports, public nsWrapperCache {
   already_AddRefed<Promise> Estimate(ErrorResult& aRv);
 
   already_AddRefed<Promise> GetDirectory(ErrorResult& aRv);
-
-  FileSystemManager* GetFileSystemManager();
-
-  void Shutdown();
-
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(StorageManager)
-
-  // nsWrapperCache
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
 
  private:
   ~StorageManager();

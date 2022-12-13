@@ -18,7 +18,6 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/StorageManager.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
-#include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsJSPrincipals.h"
@@ -67,7 +66,6 @@ bool ConstructHandleMetadata(JSContext* aCx, nsIGlobalObject* aGlobal,
 
   LOG_VERBOSE(("Deserializing %s", NS_ConvertUTF16toUTF8(name).get()));
 
-  LOG_VERBOSE(("Metadata: name=%s", NS_ConvertUTF16toUTF8(name).get()));
   aMetadata = fs::FileSystemEntryMetadata(entryId, name, aDirectory);
   return true;
 }
@@ -211,8 +209,9 @@ already_AddRefed<Promise> FileSystemHandle::Move(const fs::EntryId& aParentId,
 already_AddRefed<FileSystemHandle> FileSystemHandle::ReadStructuredClone(
     JSContext* aCx, nsIGlobalObject* aGlobal,
     JSStructuredCloneReader* aReader) {
-  uint32_t kind = static_cast<uint32_t>(FileSystemHandleKind::EndGuard_);
   LOG_VERBOSE(("Reading File/DirectoryHandle"));
+
+  uint32_t kind = static_cast<uint32_t>(FileSystemHandleKind::EndGuard_);
 
   if (!JS_ReadBytes(aReader, reinterpret_cast<void*>(&kind),
                     sizeof(uint32_t))) {
@@ -237,6 +236,7 @@ already_AddRefed<FileSystemHandle> FileSystemHandle::ReadStructuredClone(
 bool FileSystemHandle::WriteStructuredClone(
     JSContext* aCx, JSStructuredCloneWriter* aWriter) const {
   LOG_VERBOSE(("Writing File/DirectoryHandle"));
+  MOZ_ASSERT(mMetadata.entryId().Length() == 32);
 
   auto kind = static_cast<uint32_t>(Kind());
   if (NS_WARN_IF(!JS_WriteBytes(aWriter, static_cast<void*>(&kind),
@@ -244,7 +244,6 @@ bool FileSystemHandle::WriteStructuredClone(
     return false;
   }
 
-  MOZ_ASSERT(mMetadata.entryId().Length() == 32);
   if (NS_WARN_IF(!JS_WriteBytes(
           aWriter, static_cast<const void*>(mMetadata.entryId().get()),
           mMetadata.entryId().Length()))) {
@@ -266,17 +265,22 @@ bool FileSystemHandle::WriteStructuredClone(
 already_AddRefed<FileSystemFileHandle> FileSystemHandle::ConstructFileHandle(
     JSContext* aCx, nsIGlobalObject* aGlobal,
     JSStructuredCloneReader* aReader) {
-  using namespace mozilla::dom::fs;
+  LOG(("Reading FileHandle"));
 
-  FileSystemEntryMetadata metadata;
+  fs::FileSystemEntryMetadata metadata;
   if (!ConstructHandleMetadata(aCx, aGlobal, aReader, /* aDirectory */ false,
                                metadata)) {
     return nullptr;
   }
 
+  RefPtr<StorageManager> storageManager = aGlobal->GetStorageManager();
+  if (!storageManager) {
+    return nullptr;
+  }
+
   // Note that the actor may not exist or may not be connected yet.
   RefPtr<FileSystemManager> fileSystemManager =
-      FileSystemManager::GetManagerForGlobal(aGlobal);
+      storageManager->GetFileSystemManager();
 
   RefPtr<FileSystemFileHandle> fsHandle =
       new FileSystemFileHandle(aGlobal, fileSystemManager, metadata);
@@ -290,17 +294,21 @@ FileSystemHandle::ConstructDirectoryHandle(JSContext* aCx,
                                            nsIGlobalObject* aGlobal,
                                            JSStructuredCloneReader* aReader) {
   LOG(("Reading DirectoryHandle"));
-  using namespace mozilla::dom::fs;
 
-  FileSystemEntryMetadata metadata;
+  fs::FileSystemEntryMetadata metadata;
   if (!ConstructHandleMetadata(aCx, aGlobal, aReader, /* aDirectory */ true,
                                metadata)) {
     return nullptr;
   }
 
+  RefPtr<StorageManager> storageManager = aGlobal->GetStorageManager();
+  if (!storageManager) {
+    return nullptr;
+  }
+
   // Note that the actor may not exist or may not be connected yet.
   RefPtr<FileSystemManager> fileSystemManager =
-      FileSystemManager::GetManagerForGlobal(aGlobal);
+      storageManager->GetFileSystemManager();
 
   RefPtr<FileSystemDirectoryHandle> fsHandle =
       new FileSystemDirectoryHandle(aGlobal, fileSystemManager, metadata);
