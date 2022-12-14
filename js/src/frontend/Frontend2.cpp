@@ -20,6 +20,7 @@
 #include "frontend/AbstractScopePtr.h"    // ScopeIndex
 #include "frontend/BytecodeSection.h"     // EmitScriptThingsVector
 #include "frontend/CompilationStencil.h"  // CompilationState, CompilationStencil
+#include "frontend/FrontendContext.h"     // AutoReportFrontendContext
 #include "frontend/Parser.h"  // NewEmptyLexicalScopeData, NewEmptyGlobalScopeData, NewEmptyVarScopeData, NewEmptyFunctionScopeData
 #include "frontend/ParserAtom.h"   // ParserAtomsTable, TaggedParserAtomIndex
 #include "frontend/ScriptIndex.h"  // ScriptIndex
@@ -36,11 +37,10 @@
 #include "js/RootingAPI.h"            // JS::MutableHandle
 #include "js/Stack.h"                 // JS::NativeStackLimit
 #include "js/UniquePtr.h"             // js::UniquePtr
-#include "js/Utility.h"       // JS::UniqueTwoByteChars, StringBufferArena
-#include "vm/ErrorContext.h"  // AutoReportFrontendContext
-#include "vm/JSScript.h"      // JSScript
-#include "vm/Scope.h"         // GetScopeDataTrailingNames
-#include "vm/ScopeKind.h"     // ScopeKind
+#include "js/Utility.h"    // JS::UniqueTwoByteChars, StringBufferArena
+#include "vm/JSScript.h"   // JSScript
+#include "vm/Scope.h"      // GetScopeDataTrailingNames
+#include "vm/ScopeKind.h"  // ScopeKind
 #include "vm/SharedStencil.h"  // ImmutableScriptData, ScopeNote, TryNote, GCThingIndex
 
 using mozilla::Utf8Unit;

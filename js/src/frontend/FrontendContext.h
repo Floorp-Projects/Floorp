@@ -4,14 +4,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef vm_ErrorContext_h
-#define vm_ErrorContext_h
+#ifndef frontend_FrontendContext_h
+#define frontend_FrontendContext_h
 
+#include "mozilla/Assertions.h" // MOZ_ASSERT
+#include "mozilla/Attributes.h" // MOZ_STACK_CLASS
 #include "mozilla/Maybe.h"  // mozilla::Maybe
 
-#include "js/ErrorReport.h"
-#include "vm/ErrorReporting.h"
-#include "vm/MallocProvider.h"
+#include <stddef.h> // size_t
+
+#include "js/AllocPolicy.h"  // SystemAllocPolicy, AllocFunction
+#include "js/ErrorReport.h" // JSErrorCallback, JSErrorFormatString
+#include "js/Vector.h"  // Vector
+#include "vm/ErrorReporting.h" // CompileError
+#include "vm/MallocProvider.h" // MallocProvider
+
+struct JSContext;
 
 namespace js {
 
@@ -176,4 +184,4 @@ class ManualReportFrontendContext : public FrontendContext {
 
 }  // namespace js
 
-#endif /* vm_ErrorContext_h */
+#endif /* frontend_FrontendContext_h */

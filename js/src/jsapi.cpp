@@ -35,6 +35,7 @@
 #include "builtin/Promise.h"
 #include "builtin/Symbol.h"
 #include "frontend/BytecodeCompiler.h"
+#include "frontend/FrontendContext.h"  // AutoReportFrontendContext
 #include "gc/GC.h"
 #include "gc/GCContext.h"
 #include "gc/Marking.h"
@@ -73,7 +74,6 @@
 #include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "vm/EnvironmentObject.h"
-#include "vm/ErrorContext.h"  // AutoReportFrontendContext
 #include "vm/ErrorObject.h"
 #include "vm/ErrorReporting.h"
 #include "vm/Interpreter.h"

@@ -6,7 +6,7 @@
 
 #include "js/AllocPolicy.h"
 
-#include "vm/ErrorContext.h"
+#include "frontend/FrontendContext.h"  // FrontendContext
 #include "vm/JSContext.h"
 
 using namespace js;

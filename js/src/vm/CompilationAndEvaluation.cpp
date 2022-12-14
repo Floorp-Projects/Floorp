@@ -20,6 +20,7 @@
 #include "frontend/BytecodeCompilation.h"  // frontend::CompileGlobalScript
 #include "frontend/BytecodeCompiler.h"     // frontend::IsIdentifier
 #include "frontend/CompilationStencil.h"  // for frontened::{CompilationStencil, BorrowingCompilationStencil, CompilationGCOutput}
+#include "frontend/FrontendContext.h"     // js::AutoReportFrontendContext
 #include "frontend/Parser.h"       // frontend::Parser, frontend::ParseGoal
 #include "js/CharacterEncoding.h"  // JS::UTF8Chars, JS::UTF8CharsToNewTwoByteCharsZ
 #include "js/experimental/JSStencil.h"  // JS::Stencil
@@ -32,9 +33,8 @@
 #include "util/CompleteFile.h"     // js::FileContents, js::ReadCompleteFile
 #include "util/StringBuffer.h"     // js::StringBuffer
 #include "vm/EnvironmentObject.h"  // js::CreateNonSyntacticEnvironmentChain
-#include "vm/ErrorContext.h"  // js::AutoReportFrontendContext, js::ManualReportFrontendContext
-#include "vm/Interpreter.h"  // js::Execute
-#include "vm/JSContext.h"    // JSContext
+#include "vm/Interpreter.h"        // js::Execute
+#include "vm/JSContext.h"          // JSContext
 
 #include "vm/JSContext-inl.h"  // JSContext::check
 

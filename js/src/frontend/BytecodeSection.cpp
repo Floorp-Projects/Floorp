@@ -10,9 +10,9 @@
 
 #include "frontend/AbstractScopePtr.h"    // ScopeIndex
 #include "frontend/CompilationStencil.h"  // CompilationStencil
+#include "frontend/FrontendContext.h"     // FrontendContext
 #include "frontend/SharedContext.h"       // FunctionBox
 #include "vm/BytecodeUtil.h"              // INDEX_LIMIT, StackUses, StackDefs
-#include "vm/ErrorContext.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"     // JSContext
 #include "vm/RegExpObject.h"  // RegexpObject

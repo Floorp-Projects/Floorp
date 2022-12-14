@@ -26,6 +26,7 @@
 #include "builtin/Symbol.h"
 #include "frontend/BytecodeCompilation.h"
 #include "frontend/BytecodeCompiler.h"
+#include "frontend/FrontendContext.h"  // AutoReportFrontendContext, ManualReportFrontendContext
 #include "jit/Ion.h"
 #include "js/CallNonGenericMethod.h"
 #include "js/CompilationAndEvaluation.h"
@@ -41,7 +42,6 @@
 #include "util/Text.h"
 #include "vm/BooleanObject.h"
 #include "vm/Compartment.h"
-#include "vm/ErrorContext.h"  // AutoReportFrontendContext, ManualReportFrontendContext
 #include "vm/FunctionFlags.h"          // js::FunctionFlags
 #include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind
 #include "vm/GlobalObject.h"

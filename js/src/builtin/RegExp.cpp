@@ -12,6 +12,7 @@
 
 #include "jsapi.h"
 
+#include "frontend/FrontendContext.h"  // AutoReportFrontendContext
 #include "frontend/TokenStream.h"
 #include "irregexp/RegExpAPI.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_NEWREGEXP_FLAGGED
@@ -19,7 +20,6 @@
 #include "js/RegExpFlags.h"  // JS::RegExpFlag, JS::RegExpFlags
 #include "util/StringBuffer.h"
 #include "util/Unicode.h"
-#include "vm/ErrorContext.h"  // AutoReportFrontendContext
 #include "vm/JSContext.h"
 #include "vm/RegExpObject.h"
 #include "vm/RegExpStatics.h"

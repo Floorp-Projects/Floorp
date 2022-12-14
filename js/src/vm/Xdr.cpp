@@ -18,12 +18,12 @@
 #include <type_traits>  // std::is_same_v
 #include <utility>      // std::move
 
+#include "frontend/FrontendContext.h"  // FrontendContext
 #include "js/Transcoding.h"  // JS::TranscodeResult, JS::TranscodeBuffer, JS::TranscodeRange
-#include "js/UniquePtr.h"     // UniquePtr
-#include "js/Utility.h"       // JS::FreePolicy, js_delete
-#include "vm/ErrorContext.h"  // FrontendContext
-#include "vm/JSContext.h"     // JSContext, ReportAllocationOverflow
-#include "vm/StringType.h"    // JSString
+#include "js/UniquePtr.h"   // UniquePtr
+#include "js/Utility.h"     // JS::FreePolicy, js_delete
+#include "vm/JSContext.h"   // JSContext, ReportAllocationOverflow
+#include "vm/StringType.h"  // JSString
 
 using namespace js;
 

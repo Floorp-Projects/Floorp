@@ -14,8 +14,9 @@
 #include <string.h>  // for memcpy
 #include <utility>   // for move
 
-#include "debugger/Debugger.h"  // for DebuggerSourceReferent, Debugger
-#include "debugger/Script.h"    // for DebuggerScript
+#include "debugger/Debugger.h"         // for DebuggerSourceReferent, Debugger
+#include "debugger/Script.h"           // for DebuggerScript
+#include "frontend/FrontendContext.h"  // for AutoReportFrontendContext
 #include "gc/Tracer.h"  // for TraceManuallyBarrieredCrossCompartmentEdge
 #include "js/CompilationAndEvaluation.h"  // for Compile
 #include "js/ErrorReport.h"  // for JS_ReportErrorASCII,  JS_ReportErrorNumberASCII
@@ -25,7 +26,6 @@
 #include "js/SourceText.h"              // for JS::SourceOwnership
 #include "js/String.h"                  // for JS_CopyStringCharsZ
 #include "vm/BytecodeUtil.h"            // for JSDVG_SEARCH_STACK
-#include "vm/ErrorContext.h"            // for AutoReportFrontendContext
 #include "vm/JSContext.h"               // for JSContext (ptr only)
 #include "vm/JSObject.h"                // for JSObject, RequireObject
 #include "vm/JSScript.h"                // for ScriptSource, ScriptSourceObject

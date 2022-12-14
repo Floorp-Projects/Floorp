@@ -17,6 +17,7 @@
 #include "frontend/AbstractScopePtr.h"  // AbstractScopePtr, ScopeIndex
 #include "frontend/BytecodeOffset.h"    // BytecodeOffset
 #include "frontend/CompilationStencil.h"  // CompilationStencil, CompilationGCOutput, CompilationAtomCache
+#include "frontend/FrontendContext.h"  // FrontendContext
 #include "frontend/JumpList.h"         // JumpTarget
 #include "frontend/NameCollections.h"  // AtomIndexMap, PooledMapPtr
 #include "frontend/ParseNode.h"        // BigIntLiteral
@@ -25,9 +26,8 @@
 #include "frontend/Stencil.h"      // Stencils
 #include "js/TypeDecls.h"          // jsbytecode, JSContext
 #include "js/Vector.h"             // Vector
-#include "vm/ErrorContext.h"
-#include "vm/SharedStencil.h"  // TryNote, ScopeNote, GCThingIndex
-#include "vm/StencilEnums.h"   // TryNoteKind
+#include "vm/SharedStencil.h"      // TryNote, ScopeNote, GCThingIndex
+#include "vm/StencilEnums.h"       // TryNoteKind
 
 namespace js {
 namespace frontend {

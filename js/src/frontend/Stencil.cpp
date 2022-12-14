@@ -20,8 +20,9 @@
 #include "frontend/BytecodeCompiler.h"    // ParseModuleToStencil
 #include "frontend/BytecodeSection.h"     // EmitScriptThingsVector
 #include "frontend/CompilationStencil.h"  // CompilationStencil, CompilationState, ExtensibleCompilationStencil, CompilationGCOutput, CompilationStencilMerger
-#include "frontend/NameAnalysisTypes.h"   // EnvironmentCoordinate
-#include "frontend/ScopeBindingCache.h"   // ScopeBindingCache
+#include "frontend/FrontendContext.h"
+#include "frontend/NameAnalysisTypes.h"  // EnvironmentCoordinate
+#include "frontend/ScopeBindingCache.h"  // ScopeBindingCache
 #include "frontend/SharedContext.h"
 #include "frontend/StencilXdr.h"        // XDRStencilEncoder, XDRStencilDecoder
 #include "gc/AllocKind.h"               // gc::AllocKind
@@ -37,7 +38,6 @@
 #include "vm/BigIntType.h"   // ParseBigIntLiteral, BigIntLiteralIsZero
 #include "vm/BindingKind.h"  // BindingKind
 #include "vm/EnvironmentObject.h"
-#include "vm/ErrorContext.h"
 #include "vm/GeneratorAndAsyncKind.h"  // GeneratorKind, FunctionAsyncKind
 #include "vm/JSContext.h"              // JSContext
 #include "vm/JSFunction.h"  // JSFunction, GetFunctionPrototype, NewFunctionWithProto

@@ -9,10 +9,10 @@
 #include <utility>  // std::initializer_list
 #include <vector>   // std::vector
 
+#include "frontend/FrontendContext.h"  // AutoReportFrontendContext
 #include "frontend/ParserAtom.h"  // js::frontend::ParserAtomsTable, js::frontend::WellKnownParserAtoms
 #include "js/TypeDecls.h"  // JS::Latin1Char
 #include "jsapi-tests/tests.h"
-#include "vm/ErrorContext.h"  // AutoReportFrontendContext
 
 // Test empty strings behave consistently.
 BEGIN_TEST(testParserAtom_empty) {
