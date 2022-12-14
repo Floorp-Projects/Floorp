@@ -61,6 +61,7 @@ add_task(async function test_showAlert() {
   let [alert] = showAlertStub.firstCall.args;
   Assert.equal(alert.title, expectedTitle, "Should match");
   Assert.equal(alert.text, "Body", "Should match");
+  Assert.equal(alert.name, "test_toast_notification", "Should match");
 });
 
 // Test that the `title` of each `action` of a toast notification is localized.
@@ -99,6 +100,7 @@ add_task(async function test_actionLocalization() {
   let [alert] = showAlertStub.firstCall.args;
   Assert.equal(alert.title, expectedTitle, "Should match title");
   Assert.equal(alert.text, expectedText, "Should match text");
+  Assert.equal(alert.name, "mr2022_background_update", "Should match");
   Assert.equal(alert.actions[0].title, expectedPrimary, "Should match primary");
   Assert.equal(
     alert.actions[1].title,
