@@ -162,6 +162,9 @@ MIDIPermissionRequest::Run() {
         if (aHasDevices) {
           self->DoPrompt();
         } else {
+          nsContentUtils::ReportToConsoleNonLocalized(
+              u"Silently denying site request for MIDI access because no devices were detected. You may need to restart your browser after connecting a new device."_ns,
+              nsIScriptError::infoFlag, "WebMIDI"_ns, mWindow->GetDoc());
           // For auto-deny, we randomize the response time between 3 and 13
           // seconds to make it harder for the site to determine if auto-deny
           // occurred.
