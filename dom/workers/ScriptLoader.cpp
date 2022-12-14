@@ -1009,6 +1009,9 @@ ScriptLoaderRunnable::ScriptLoaderRunnable(
 nsresult ScriptLoaderRunnable::Run() {
   AssertIsOnMainThread();
 
+  // Ensure the string bundle is loaded, in case the ModuleLoader errors out.
+  nsContentUtils::EnsureAndLoadStringBundle(nsContentUtils::eDOM_PROPERTIES);
+
   // Convert the origin stack to JSON (which must be done on the main
   // thread) explicitly, so that we can use the stack to notify the net
   // monitor about every script we load. We do this, rather than pass
