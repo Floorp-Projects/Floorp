@@ -17,7 +17,8 @@
 
 namespace js {
 
-class ErrorContext;
+class FrontendContext;
+using ErrorContext = FrontendContext;
 
 namespace frontend {
 class ParserAtomsTable;
@@ -381,7 +382,7 @@ class StringBuffer {
  * again.
  */
 class JSStringBuilder : public StringBuffer {
-  OffThreadErrorContext ec_;
+  FrontendContext ec_;
 #ifdef DEBUG
   bool handled_ = false;
 #endif

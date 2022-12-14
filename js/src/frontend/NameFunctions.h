@@ -12,7 +12,8 @@
 
 namespace js {
 
-class ErrorContext;
+class FrontendContext;
+using ErrorContext = FrontendContext;
 
 namespace frontend {
 

@@ -2309,12 +2309,12 @@ void js::FillSelfHostingCompileOptions(CompileOptions& options) {
 // startup process for any other error reporting to be used, and we don't want
 // errors in self-hosted code to be silently swallowed.
 class MOZ_STACK_CLASS AutoPrintSelfHostingFrontendContext
-    : public OffThreadErrorContext {
+    : public FrontendContext {
   JSContext* cx_;
 
  public:
   explicit AutoPrintSelfHostingFrontendContext(JSContext* cx)
-      : OffThreadErrorContext(), cx_(cx) {
+      : FrontendContext(), cx_(cx) {
     setCurrentJSContext(cx_);
   }
   ~AutoPrintSelfHostingFrontendContext() {

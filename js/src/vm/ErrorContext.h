@@ -15,7 +15,7 @@
 
 namespace js {
 
-class ErrorContext;
+class FrontendContext;
 
 struct FrontendErrors {
   FrontendErrors() = default;
@@ -34,57 +34,19 @@ struct FrontendErrors {
 
 class FrontendAllocator : public MallocProvider<FrontendAllocator> {
  private:
-  ErrorContext* const context_;
+  FrontendContext* const context_;
 
  public:
-  explicit FrontendAllocator(ErrorContext* ec) : context_(ec) {}
+  explicit FrontendAllocator(FrontendContext* ec) : context_(ec) {}
 
   void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
                       size_t nbytes, void* reallocPtr = nullptr);
   void reportAllocationOverflow();
 };
 
-class ErrorContext {
-  FrontendAllocator alloc_;
-
- public:
-  explicit ErrorContext() : alloc_(this) {}
-  virtual ~ErrorContext() = default;
-
-  FrontendAllocator* getAllocator() { return &alloc_; }
-
-  // Report CompileErrors
-  virtual void reportError(js::CompileError&& err) = 0;
-  virtual bool reportWarning(js::CompileError&& err) = 0;
-
-  // Report FrontendAllocator errors
-  virtual void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
-                              size_t nbytes, void* reallocPtr = nullptr) = 0;
-  virtual void onAllocationOverflow() = 0;
-
-  virtual void onOutOfMemory() = 0;
-  virtual void onOverRecursed() = 0;
-
-  virtual void recoverFromOutOfMemory() = 0;
-
-  virtual const JSErrorFormatString* gcSafeCallback(
-      JSErrorCallback callback, void* userRef, const unsigned errorNumber) = 0;
-
-  // Status of errors reported to this ErrorContext
-  virtual bool hadOutOfMemory() const = 0;
-  virtual bool hadOverRecursed() const = 0;
-  virtual bool hadAllocationOverflow() const = 0;
-  virtual bool hadErrors() const = 0;
-
-#ifdef __wasi__
-  virtual void incWasiRecursionDepth() = 0;
-  virtual void decWasiRecursionDepth() = 0;
-  virtual bool checkWasiRecursionLimit() = 0;
-#endif  // __wasi__
-};
-
-class OffThreadErrorContext : public ErrorContext {
+class FrontendContext {
  private:
+  FrontendAllocator alloc_;
   js::FrontendErrors errors_;
 
  protected:
@@ -95,7 +57,10 @@ class OffThreadErrorContext : public ErrorContext {
   JSContext* maybeCx_ = nullptr;
 
  public:
-  OffThreadErrorContext() = default;
+  FrontendContext() : alloc_(this) {}
+  ~FrontendContext() = default;
+
+  FrontendAllocator* getAllocator() { return &alloc_; }
 
   void setCurrentJSContext(JSContext* cx);
 
@@ -111,35 +76,33 @@ class OffThreadErrorContext : public ErrorContext {
   }
 
   // Report CompileErrors
-  void reportError(js::CompileError&& err) override;
-  bool reportWarning(js::CompileError&& err) override;
+  void reportError(js::CompileError&& err);
+  bool reportWarning(js::CompileError&& err);
 
   // Report FrontendAllocator errors
   void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
-                      size_t nbytes, void* reallocPtr = nullptr) override;
-  void onAllocationOverflow() override;
+                      size_t nbytes, void* reallocPtr = nullptr);
+  void onAllocationOverflow();
 
-  void onOutOfMemory() override;
-  void onOverRecursed() override;
+  void onOutOfMemory();
+  void onOverRecursed();
 
-  void recoverFromOutOfMemory() override;
+  void recoverFromOutOfMemory();
 
-  const JSErrorFormatString* gcSafeCallback(
-      JSErrorCallback callback, void* userRef,
-      const unsigned errorNumber) override;
+  const JSErrorFormatString* gcSafeCallback(JSErrorCallback callback,
+                                            void* userRef,
+                                            const unsigned errorNumber);
 
-  // Status of errors reported to this ErrorContext
-  bool hadOutOfMemory() const override { return errors_.outOfMemory; }
-  bool hadOverRecursed() const override { return errors_.overRecursed; }
-  bool hadAllocationOverflow() const override {
-    return errors_.allocationOverflow;
-  }
-  bool hadErrors() const override;
+  // Status of errors reported to this FrontendContext
+  bool hadOutOfMemory() const { return errors_.outOfMemory; }
+  bool hadOverRecursed() const { return errors_.overRecursed; }
+  bool hadAllocationOverflow() const { return errors_.allocationOverflow; }
+  bool hadErrors() const;
 
 #ifdef __wasi__
-  void incWasiRecursionDepth() override;
-  void decWasiRecursionDepth() override;
-  bool checkWasiRecursionLimit() override;
+  void incWasiRecursionDepth();
+  void decWasiRecursionDepth();
+  bool checkWasiRecursionLimit();
 #endif  // __wasi__
 
  private:
@@ -148,7 +111,7 @@ class OffThreadErrorContext : public ErrorContext {
 };
 
 // Automatically report any pending exception when leaving the scope.
-class MOZ_STACK_CLASS AutoReportFrontendContext : public OffThreadErrorContext {
+class MOZ_STACK_CLASS AutoReportFrontendContext : public FrontendContext {
   // The target JSContext to report the errors to.
   JSContext* cx_;
 
@@ -157,7 +120,7 @@ class MOZ_STACK_CLASS AutoReportFrontendContext : public OffThreadErrorContext {
  public:
   explicit AutoReportFrontendContext(JSContext* cx,
                                      Warning warning = Warning::Report)
-      : OffThreadErrorContext(), cx_(cx), warning_(warning) {
+      : FrontendContext(), cx_(cx), warning_(warning) {
     setCurrentJSContext(cx_);
     MOZ_ASSERT(cx_ == maybeCx_);
   }
@@ -183,7 +146,7 @@ class MOZ_STACK_CLASS AutoReportFrontendContext : public OffThreadErrorContext {
  * failure() (if there are exceptions to report) or ok() (if there are no
  * exceptions to report).
  */
-class ManualReportFrontendContext : public OffThreadErrorContext {
+class ManualReportFrontendContext : public FrontendContext {
   JSContext* cx_;
 #ifdef DEBUG
   bool handled_ = false;
@@ -191,7 +154,7 @@ class ManualReportFrontendContext : public OffThreadErrorContext {
 
  public:
   explicit ManualReportFrontendContext(JSContext* cx)
-      : OffThreadErrorContext(), cx_(cx) {
+      : FrontendContext(), cx_(cx) {
     setCurrentJSContext(cx_);
   }
 
@@ -210,6 +173,9 @@ class ManualReportFrontendContext : public OffThreadErrorContext {
     convertToRuntimeError(cx_);
   }
 };
+
+// TODO: Rewrite all consumers and remove this alias.
+using ErrorContext = FrontendContext;
 
 }  // namespace js
 

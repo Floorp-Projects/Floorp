@@ -189,7 +189,8 @@
 
 namespace js {
 
-class ErrorContext;
+class FrontendContext;
+using ErrorContext = FrontendContext;
 struct ErrorMetadata;
 
 namespace frontend {
