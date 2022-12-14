@@ -32,6 +32,16 @@ object Config {
     @JvmStatic
     fun nightlyVersionName(): String {
         // Nightly versions will use the version from "version.txt".
+        return readVersionFromFile()
+    }
+
+    @JvmStatic
+    fun readVersionFromFile(): String {
         return File("../version.txt").useLines { it.firstOrNull() ?: "" }
+    }
+
+    @JvmStatic
+    fun majorVersion(): String {
+        return readVersionFromFile().split(".")[0]
     }
 }
