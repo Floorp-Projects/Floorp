@@ -13,14 +13,13 @@
 namespace js {
 
 class FrontendContext;
-using ErrorContext = FrontendContext;
 
 namespace frontend {
 
 class ParseNode;
 class ParserAtomsTable;
 
-[[nodiscard]] bool NameFunctions(JSContext* cx, ErrorContext* ec,
+[[nodiscard]] bool NameFunctions(JSContext* cx, FrontendContext* ec,
                                  JS::NativeStackLimit stackLimit,
                                  ParserAtomsTable& parserAtoms, ParseNode* pn);
 

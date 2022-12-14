@@ -169,7 +169,7 @@ class XDRStencilDecoder : public XDRState<XDR_DECODE> {
   using Base = XDRState<XDR_DECODE>;
 
  public:
-  XDRStencilDecoder(JSContext* cx, ErrorContext* ec,
+  XDRStencilDecoder(JSContext* cx, FrontendContext* ec,
                     const JS::TranscodeRange& range)
       : Base(cx, ec, range) {
     MOZ_ASSERT(JS::IsTranscodingBytecodeAligned(range.begin().get()));
@@ -191,7 +191,7 @@ class XDRStencilEncoder : public XDRState<XDR_ENCODE> {
   using Base = XDRState<XDR_ENCODE>;
 
  public:
-  XDRStencilEncoder(JSContext* cx, ErrorContext* ec,
+  XDRStencilEncoder(JSContext* cx, FrontendContext* ec,
                     JS::TranscodeBuffer& buffer)
       : Base(cx, ec, buffer, buffer.length()) {
     // NOTE: If buffer is empty, buffer.begin() doesn't point valid buffer.

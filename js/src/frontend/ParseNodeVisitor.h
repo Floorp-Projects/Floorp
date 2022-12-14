@@ -16,7 +16,6 @@
 namespace js {
 
 class FrontendContext;
-using ErrorContext = FrontendContext;
 
 namespace frontend {
 
@@ -55,10 +54,10 @@ namespace frontend {
 template <typename Derived>
 class ParseNodeVisitor {
  public:
-  ErrorContext* ec_;
+  FrontendContext* ec_;
   JS::NativeStackLimit stackLimit_;
 
-  ParseNodeVisitor(ErrorContext* ec, JS::NativeStackLimit stackLimit)
+  ParseNodeVisitor(FrontendContext* ec, JS::NativeStackLimit stackLimit)
       : ec_(ec), stackLimit_(stackLimit) {}
 
   [[nodiscard]] bool visit(ParseNode* pn) {
@@ -102,10 +101,11 @@ class ParseNodeVisitor {
 template <typename Derived>
 class RewritingParseNodeVisitor {
  public:
-  ErrorContext* ec_;
+  FrontendContext* ec_;
   JS::NativeStackLimit stackLimit_;
 
-  RewritingParseNodeVisitor(ErrorContext* ec, JS::NativeStackLimit stackLimit)
+  RewritingParseNodeVisitor(FrontendContext* ec,
+                            JS::NativeStackLimit stackLimit)
       : ec_(ec), stackLimit_(stackLimit) {}
 
   [[nodiscard]] bool visit(ParseNode*& pn) {

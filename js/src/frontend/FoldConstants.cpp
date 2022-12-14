@@ -34,7 +34,7 @@ using mozilla::PositiveInfinity;
 
 struct FoldInfo {
   JSContext* cx;
-  ErrorContext* ec;
+  FrontendContext* ec;
   JS::NativeStackLimit stackLimit;
   ParserAtomsTable& parserAtoms;
   FullParseHandler* handler;
@@ -1324,8 +1324,9 @@ class FoldVisitor : public RewritingParseNodeVisitor<FoldVisitor> {
   }
 
  public:
-  FoldVisitor(JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
-              ParserAtomsTable& parserAtoms, FullParseHandler* handler)
+  FoldVisitor(JSContext* cx, FrontendContext* ec,
+              JS::NativeStackLimit stackLimit, ParserAtomsTable& parserAtoms,
+              FullParseHandler* handler)
       : RewritingParseNodeVisitor(ec, stackLimit),
         cx(cx),
         parserAtoms(parserAtoms),
@@ -1574,7 +1575,7 @@ class FoldVisitor : public RewritingParseNodeVisitor<FoldVisitor> {
   }
 };
 
-static bool Fold(JSContext* cx, ErrorContext* ec,
+static bool Fold(JSContext* cx, FrontendContext* ec,
                  JS::NativeStackLimit stackLimit, ParserAtomsTable& parserAtoms,
                  FullParseHandler* handler, ParseNode** pnp) {
   FoldVisitor visitor(cx, ec, stackLimit, parserAtoms, handler);
@@ -1585,7 +1586,7 @@ static bool Fold(FoldInfo info, ParseNode** pnp) {
               pnp);
 }
 
-bool frontend::FoldConstants(JSContext* cx, ErrorContext* ec,
+bool frontend::FoldConstants(JSContext* cx, FrontendContext* ec,
                              JS::NativeStackLimit stackLimit,
                              ParserAtomsTable& parserAtoms, ParseNode** pnp,
                              FullParseHandler* handler) {

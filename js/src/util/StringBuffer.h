@@ -18,7 +18,6 @@
 namespace js {
 
 class FrontendContext;
-using ErrorContext = FrontendContext;
 
 namespace frontend {
 class ParserAtomsTable;
@@ -58,7 +57,7 @@ class StringBufferAllocPolicy {
   const arena_id_t& arenaId_;
 
  public:
-  StringBufferAllocPolicy(ErrorContext* ec, const arena_id_t& arenaId)
+  StringBufferAllocPolicy(FrontendContext* ec, const arena_id_t& arenaId)
       : impl_(ec), arenaId_(arenaId) {}
 
   template <typename T>
@@ -123,7 +122,7 @@ class StringBuffer {
   using TwoByteCharBuffer = BufferType<char16_t>;
 
   JSContext* cx_;
-  ErrorContext* ec_;
+  FrontendContext* ec_;
   const arena_id_t& arenaId_;
 
   /*
@@ -182,7 +181,7 @@ class StringBuffer {
   JSLinearString* finishStringInternal(JSContext* cx);
 
  public:
-  explicit StringBuffer(JSContext* cx, ErrorContext* ec,
+  explicit StringBuffer(JSContext* cx, FrontendContext* ec,
                         const arena_id_t& arenaId = js::MallocArena)
       : cx_(cx), ec_(ec), arenaId_(arenaId), reserved_(0) {
     cb.construct<Latin1CharBuffer>(StringBufferAllocPolicy{ec_, arenaId_});
@@ -357,7 +356,7 @@ class StringBuffer {
   /* Identical to finishString() except that an atom is created. */
   JSAtom* finishAtom();
   frontend::TaggedParserAtomIndex finishParserAtom(
-      frontend::ParserAtomsTable& parserAtoms, ErrorContext* ec);
+      frontend::ParserAtomsTable& parserAtoms, FrontendContext* ec);
 
   /*
    * Creates a raw string from the characters in this buffer.  The string is

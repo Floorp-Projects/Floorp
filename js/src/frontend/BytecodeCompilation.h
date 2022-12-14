@@ -23,7 +23,6 @@ namespace js {
 class Scope;
 class LifoAlloc;
 class FrontendContext;
-using ErrorContext = FrontendContext;
 
 namespace frontend {
 
@@ -34,19 +33,19 @@ struct ExtensibleCompilationStencil;
 class ScopeBindingCache;
 
 extern already_AddRefed<CompilationStencil> CompileGlobalScriptToStencil(
-    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
     js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
     ScopeBindingCache* scopeCache, JS::SourceText<char16_t>& srcBuf,
     ScopeKind scopeKind);
 
 extern already_AddRefed<CompilationStencil> CompileGlobalScriptToStencil(
-    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
     js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
     ScopeBindingCache* scopeCache, JS::SourceText<mozilla::Utf8Unit>& srcBuf,
     ScopeKind scopeKind);
 
 extern UniquePtr<ExtensibleCompilationStencil>
-CompileGlobalScriptToExtensibleStencil(JSContext* cx, ErrorContext* ec,
+CompileGlobalScriptToExtensibleStencil(JSContext* cx, FrontendContext* ec,
                                        JS::NativeStackLimit stackLimit,
                                        CompilationInput& input,
                                        ScopeBindingCache* scopeCache,
@@ -55,7 +54,7 @@ CompileGlobalScriptToExtensibleStencil(JSContext* cx, ErrorContext* ec,
 
 extern UniquePtr<ExtensibleCompilationStencil>
 CompileGlobalScriptToExtensibleStencil(
-    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
     CompilationInput& input, ScopeBindingCache* scopeCache,
     JS::SourceText<mozilla::Utf8Unit>& srcBuf, ScopeKind scopeKind);
 
@@ -65,7 +64,7 @@ CompileGlobalScriptToExtensibleStencil(
 // PrepareForInstantiate is GC-free operation that can be performed
 // off-main-thread without parse global.
 [[nodiscard]] extern bool PrepareForInstantiate(
-    JSContext* cx, ErrorContext* ec, CompilationInput& input,
+    JSContext* cx, FrontendContext* ec, CompilationInput& input,
     const CompilationStencil& stencil, CompilationGCOutput& gcOutput);
 
 [[nodiscard]] extern bool InstantiateStencils(JSContext* cx,
@@ -73,13 +72,13 @@ CompileGlobalScriptToExtensibleStencil(
                                               const CompilationStencil& stencil,
                                               CompilationGCOutput& gcOutput);
 
-extern JSScript* CompileGlobalScript(JSContext* cx, ErrorContext* ec,
+extern JSScript* CompileGlobalScript(JSContext* cx, FrontendContext* ec,
                                      JS::NativeStackLimit stackLimit,
                                      const JS::ReadOnlyCompileOptions& options,
                                      JS::SourceText<char16_t>& srcBuf,
                                      ScopeKind scopeKind);
 
-extern JSScript* CompileGlobalScript(JSContext* cx, ErrorContext* ec,
+extern JSScript* CompileGlobalScript(JSContext* cx, FrontendContext* ec,
                                      JS::NativeStackLimit stackLimit,
                                      const JS::ReadOnlyCompileOptions& options,
                                      JS::SourceText<mozilla::Utf8Unit>& srcBuf,
@@ -91,12 +90,13 @@ extern JSScript* CompileEvalScript(JSContext* cx,
                                    JS::Handle<js::Scope*> enclosingScope,
                                    JS::Handle<JSObject*> enclosingEnv);
 
-extern bool DelazifyCanonicalScriptedFunction(JSContext* cx, ErrorContext* ec,
+extern bool DelazifyCanonicalScriptedFunction(JSContext* cx,
+                                              FrontendContext* ec,
                                               JS::NativeStackLimit stackLimit,
                                               JS::Handle<JSFunction*> fun);
 
 extern already_AddRefed<CompilationStencil> DelazifyCanonicalScriptedFunction(
-    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
     ScopeBindingCache* scopeCache, CompilationStencil& context,
     ScriptIndex scriptIndex);
 

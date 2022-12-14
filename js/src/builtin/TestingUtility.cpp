@@ -174,7 +174,8 @@ bool js::ParseSourceOptions(JSContext* cx, JS::Handle<JSObject*> opts,
   return true;
 }
 
-bool js::SetSourceOptions(JSContext* cx, ErrorContext* ec, ScriptSource* source,
+bool js::SetSourceOptions(JSContext* cx, FrontendContext* ec,
+                          ScriptSource* source,
                           JS::Handle<JSString*> displayURL,
                           JS::Handle<JSString*> sourceMapURL) {
   if (displayURL && !source->hasDisplayURL()) {

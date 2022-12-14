@@ -33,7 +33,7 @@
 
 namespace js {
 
-bool ObjLiteralWriter::checkForDuplicatedNames(ErrorContext* ec) {
+bool ObjLiteralWriter::checkForDuplicatedNames(FrontendContext* ec) {
   if (!mightContainDuplicatePropertyNames_) {
     return true;
   }

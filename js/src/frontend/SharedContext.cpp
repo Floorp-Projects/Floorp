@@ -33,7 +33,7 @@ class ModuleBuilder;
 
 namespace frontend {
 
-SharedContext::SharedContext(JSContext* cx, ErrorContext* ec, Kind kind,
+SharedContext::SharedContext(JSContext* cx, FrontendContext* ec, Kind kind,
                              const JS::ReadOnlyCompileOptions& options,
                              Directives directives, SourceExtent extent)
     : cx_(cx),
@@ -77,7 +77,7 @@ SharedContext::SharedContext(JSContext* cx, ErrorContext* ec, Kind kind,
 }
 
 GlobalSharedContext::GlobalSharedContext(
-    JSContext* cx, ErrorContext* ec, ScopeKind scopeKind,
+    JSContext* cx, FrontendContext* ec, ScopeKind scopeKind,
     const JS::ReadOnlyCompileOptions& options, Directives directives,
     SourceExtent extent)
     : SharedContext(cx, ec, Kind::Global, options, directives, extent),
@@ -88,7 +88,7 @@ GlobalSharedContext::GlobalSharedContext(
   MOZ_ASSERT(thisBinding_ == ThisBinding::Global);
 }
 
-EvalSharedContext::EvalSharedContext(JSContext* cx, ErrorContext* ec,
+EvalSharedContext::EvalSharedContext(JSContext* cx, FrontendContext* ec,
                                      CompilationState& compilationState,
                                      SourceExtent extent)
     : SharedContext(cx, ec, Kind::Eval, compilationState.input.options,
@@ -104,7 +104,7 @@ EvalSharedContext::EvalSharedContext(JSContext* cx, ErrorContext* ec,
 }
 
 SuspendableContext::SuspendableContext(
-    JSContext* cx, ErrorContext* ec, Kind kind,
+    JSContext* cx, FrontendContext* ec, Kind kind,
     const JS::ReadOnlyCompileOptions& options, Directives directives,
     SourceExtent extent, bool isGenerator, bool isAsync)
     : SharedContext(cx, ec, kind, options, directives, extent) {
@@ -112,7 +112,8 @@ SuspendableContext::SuspendableContext(
   setFlag(ImmutableFlags::IsAsync, isAsync);
 }
 
-FunctionBox::FunctionBox(JSContext* cx, ErrorContext* ec, SourceExtent extent,
+FunctionBox::FunctionBox(JSContext* cx, FrontendContext* ec,
+                         SourceExtent extent,
                          CompilationState& compilationState,
                          Directives directives, GeneratorKind generatorKind,
                          FunctionAsyncKind asyncKind, bool isInitialCompilation,
@@ -297,8 +298,9 @@ bool FunctionBox::setAsmJSModule(const JS::WasmModule* module) {
 }
 
 ModuleSharedContext::ModuleSharedContext(
-    JSContext* cx, ErrorContext* ec, const JS::ReadOnlyCompileOptions& options,
-    ModuleBuilder& builder, SourceExtent extent)
+    JSContext* cx, FrontendContext* ec,
+    const JS::ReadOnlyCompileOptions& options, ModuleBuilder& builder,
+    SourceExtent extent)
     : SuspendableContext(cx, ec, Kind::Module, options, Directives(true),
                          extent,
                          /* isGenerator = */ false,

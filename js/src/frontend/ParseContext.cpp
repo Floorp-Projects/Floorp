@@ -70,7 +70,7 @@ bool DeclarationKindIsParameter(DeclarationKind kind) {
          kind == DeclarationKind::FormalParameter;
 }
 
-bool UsedNameTracker::noteUse(ErrorContext* ec, TaggedParserAtomIndex name,
+bool UsedNameTracker::noteUse(FrontendContext* ec, TaggedParserAtomIndex name,
                               NameVisibility visibility, uint32_t scriptId,
                               uint32_t scopeId,
                               mozilla::Maybe<TokenPos> tokenPosition) {
@@ -138,7 +138,7 @@ bool UsedNameTracker::getUnboundPrivateNames(
 }
 
 bool UsedNameTracker::hasUnboundPrivateNames(
-    ErrorContext* ec, mozilla::Maybe<UnboundPrivateName>& maybeUnboundName) {
+    FrontendContext* ec, mozilla::Maybe<UnboundPrivateName>& maybeUnboundName) {
   // We never saw any private names, so can just return early
   if (!hasPrivateNames_) {
     return true;
@@ -340,7 +340,7 @@ bool ParseContext::init() {
     return false;
   }
 
-  ErrorContext* ec = sc()->ec_;
+  FrontendContext* ec = sc()->ec_;
 
   if (isFunctionBox()) {
     // Named lambdas always need a binding for their own name. If this

@@ -159,7 +159,7 @@ void CGScopeNoteList::recordEndImpl(uint32_t index, uint32_t offset) {
   list[index].length = offset - list[index].start;
 }
 
-BytecodeSection::BytecodeSection(ErrorContext* ec, uint32_t lineNum,
+BytecodeSection::BytecodeSection(FrontendContext* ec, uint32_t lineNum,
                                  uint32_t column)
     : code_(ec),
       notes_(ec),
@@ -185,8 +185,10 @@ void BytecodeSection::updateDepth(BytecodeOffset target) {
   }
 }
 
-PerScriptData::PerScriptData(ErrorContext* ec, NameCollectionPool& ncp,
+PerScriptData::PerScriptData(FrontendContext* ec, NameCollectionPool& ncp,
                              frontend::CompilationState& compilationState)
     : gcThingList_(ec, compilationState), atomIndices_(ncp) {}
 
-bool PerScriptData::init(ErrorContext* ec) { return atomIndices_.acquire(ec); }
+bool PerScriptData::init(FrontendContext* ec) {
+  return atomIndices_.acquire(ec);
+}

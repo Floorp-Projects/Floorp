@@ -66,7 +66,6 @@ class AutoAssertNoContentJS;
 class Debugger;
 class EnterDebuggeeNoExecute;
 class FrontendContext;
-using ErrorContext = FrontendContext;
 class StaticStrings;
 
 }  // namespace js
@@ -84,7 +83,7 @@ namespace js {
 
 extern MOZ_COLD void ReportOutOfMemory(JSContext* cx);
 extern MOZ_COLD void ReportAllocationOverflow(JSContext* maybecx);
-extern MOZ_COLD void ReportAllocationOverflow(ErrorContext* ec);
+extern MOZ_COLD void ReportAllocationOverflow(FrontendContext* ec);
 extern MOZ_COLD void ReportOversizedAllocation(JSContext* cx,
                                                const unsigned errorNumber);
 

@@ -174,9 +174,6 @@ class ManualReportFrontendContext : public FrontendContext {
   }
 };
 
-// TODO: Rewrite all consumers and remove this alias.
-using ErrorContext = FrontendContext;
-
 }  // namespace js
 
 #endif /* vm_ErrorContext_h */

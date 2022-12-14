@@ -298,7 +298,7 @@ JS_PUBLIC_API void js::ReportOutOfMemory(JSContext* cx) {
   cx->onOutOfMemory();
 }
 
-JS_PUBLIC_API void js::ReportOutOfMemory(ErrorContext* ec) {
+JS_PUBLIC_API void js::ReportOutOfMemory(FrontendContext* ec) {
   MaybeReportOutOfMemoryForDifferentialTesting();
 
   ec->onOutOfMemory();
@@ -348,7 +348,7 @@ JS_PUBLIC_API void js::ReportOverRecursed(JSContext* maybecx) {
   maybecx->onOverRecursed();
 }
 
-JS_PUBLIC_API void js::ReportOverRecursed(ErrorContext* ec) {
+JS_PUBLIC_API void js::ReportOverRecursed(FrontendContext* ec) {
   MaybeReportOverRecursedForDifferentialTesting();
 
   ec->onOverRecursed();
@@ -384,7 +384,7 @@ void js::ReportAllocationOverflow(JSContext* cx) {
   cx->reportAllocationOverflow();
 }
 
-void js::ReportAllocationOverflow(ErrorContext* ec) {
+void js::ReportAllocationOverflow(FrontendContext* ec) {
   ec->onAllocationOverflow();
 }
 

@@ -870,7 +870,7 @@ JSAtom* js::Int32ToAtom(JSContext* cx, int32_t si) {
 }
 
 frontend::TaggedParserAtomIndex js::Int32ToParserAtom(
-    ErrorContext* ec, frontend::ParserAtomsTable& parserAtoms, int32_t si) {
+    FrontendContext* ec, frontend::ParserAtomsTable& parserAtoms, int32_t si) {
   char buffer[JSFatInlineString::MAX_LENGTH_TWO_BYTE + 1];
   size_t length;
   char* start = BackfillInt32InBuffer(
@@ -1829,7 +1829,7 @@ JSAtom* js::NumberToAtom(JSContext* cx, double d) {
 }
 
 frontend::TaggedParserAtomIndex js::NumberToParserAtom(
-    ErrorContext* ec, frontend::ParserAtomsTable& parserAtoms, double d) {
+    FrontendContext* ec, frontend::ParserAtomsTable& parserAtoms, double d) {
   int32_t si;
   if (NumberEqualsInt32(d, &si)) {
     return Int32ToParserAtom(ec, parserAtoms, si);

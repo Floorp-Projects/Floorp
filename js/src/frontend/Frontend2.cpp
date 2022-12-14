@@ -55,7 +55,8 @@ namespace frontend {
 
 // Given the result of SmooshMonkey's parser, Convert the list of atoms into
 // the list of ParserAtoms.
-bool ConvertAtoms(JSContext* cx, ErrorContext* ec, const SmooshResult& result,
+bool ConvertAtoms(JSContext* cx, FrontendContext* ec,
+                  const SmooshResult& result,
                   CompilationState& compilationState,
                   Vector<TaggedParserAtomIndex>& allAtoms) {
   size_t numAtoms = result.all_atoms_len;
@@ -118,7 +119,7 @@ void CopyBindingNames(JSContext* cx, CVec<COption<SmooshBindingName>>& from,
 
 // Given the result of SmooshMonkey's parser, convert a list of scope data
 // into a list of ScopeStencil.
-bool ConvertScopeStencil(JSContext* cx, ErrorContext* ec,
+bool ConvertScopeStencil(JSContext* cx, FrontendContext* ec,
                          const SmooshResult& result,
                          Vector<TaggedParserAtomIndex>& allAtoms,
                          CompilationState& compilationState) {
@@ -263,7 +264,7 @@ bool ConvertScopeStencil(JSContext* cx, ErrorContext* ec,
 
 // Given the result of SmooshMonkey's parser, convert a list of RegExp data
 // into a list of RegExpStencil.
-bool ConvertRegExpData(JSContext* cx, ErrorContext* ec,
+bool ConvertRegExpData(JSContext* cx, FrontendContext* ec,
                        JS::NativeStackLimit stackLimit,
                        const SmooshResult& result,
                        CompilationState& compilationState) {
@@ -375,7 +376,7 @@ UniquePtr<ImmutableScriptData> ConvertImmutableScriptData(
 
 // Given the result of SmooshMonkey's parser, convert a list of GC things
 // used by a script into ScriptThingsVector.
-bool ConvertGCThings(JSContext* cx, ErrorContext* ec,
+bool ConvertGCThings(JSContext* cx, FrontendContext* ec,
                      const SmooshResult& result,
                      const SmooshScriptStencil& smooshScript,
                      CompilationState& compilationState,
@@ -432,7 +433,7 @@ bool ConvertGCThings(JSContext* cx, ErrorContext* ec,
 //
 // The StencilScript would then be in charge of handling the lifetime and
 // (until GC things gets removed from stencil) tracing API of the GC.
-bool ConvertScriptStencil(JSContext* cx, ErrorContext* ec,
+bool ConvertScriptStencil(JSContext* cx, FrontendContext* ec,
                           const SmooshResult& result,
                           const SmooshScriptStencil& smooshScript,
                           Vector<TaggedParserAtomIndex>& allAtoms,
@@ -551,7 +552,7 @@ class AutoFreeSmooshParseResult {
 
 void InitSmoosh() { smoosh_init(); }
 
-void ReportSmooshCompileError(JSContext* cx, ErrorContext* ec,
+void ReportSmooshCompileError(JSContext* cx, FrontendContext* ec,
                               ErrorMetadata&& metadata, int errorNumber, ...) {
   va_list args;
   va_start(args, errorNumber);
@@ -562,7 +563,7 @@ void ReportSmooshCompileError(JSContext* cx, ErrorContext* ec,
 
 /* static */
 bool Smoosh::tryCompileGlobalScriptToExtensibleStencil(
-    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
     CompilationInput& input, JS::SourceText<mozilla::Utf8Unit>& srcBuf,
     UniquePtr<ExtensibleCompilationStencil>& stencilOut) {
   // FIXME: check info members and return with *unimplemented = true

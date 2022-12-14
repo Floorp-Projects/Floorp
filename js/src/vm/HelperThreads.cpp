@@ -669,7 +669,7 @@ struct CompileToStencilTask : public ParseTask {
   CompileToStencilTask(JSContext* cx, JS::SourceText<Unit>& srcBuf,
                        JS::OffThreadCompileCallback callback,
                        void* callbackData);
-  void parse(JSContext* cx, ErrorContext* ec) override;
+  void parse(JSContext* cx, FrontendContext* ec) override;
 };
 
 template <typename Unit>
@@ -679,7 +679,7 @@ struct CompileModuleToStencilTask : public ParseTask {
   CompileModuleToStencilTask(JSContext* cx, JS::SourceText<Unit>& srcBuf,
                              JS::OffThreadCompileCallback callback,
                              void* callbackData);
-  void parse(JSContext* cx, ErrorContext* ec) override;
+  void parse(JSContext* cx, FrontendContext* ec) override;
 };
 
 struct DecodeStencilTask : public ParseTask {
@@ -687,7 +687,7 @@ struct DecodeStencilTask : public ParseTask {
 
   DecodeStencilTask(JSContext* cx, const JS::TranscodeRange& range,
                     JS::OffThreadCompileCallback callback, void* callbackData);
-  void parse(JSContext* cx, ErrorContext* ec) override;
+  void parse(JSContext* cx, FrontendContext* ec) override;
 };
 
 struct MultiStencilsDecodeTask : public ParseTask {
@@ -696,7 +696,7 @@ struct MultiStencilsDecodeTask : public ParseTask {
   MultiStencilsDecodeTask(JSContext* cx, JS::TranscodeSources& sources,
                           JS::OffThreadCompileCallback callback,
                           void* callbackData);
-  void parse(JSContext* cx, ErrorContext* ec) override;
+  void parse(JSContext* cx, FrontendContext* ec) override;
 };
 
 template <typename Unit>
@@ -707,7 +707,7 @@ CompileToStencilTask<Unit>::CompileToStencilTask(
       data(std::move(srcBuf)) {}
 
 template <typename Unit>
-void CompileToStencilTask<Unit>::parse(JSContext* cx, ErrorContext* ec) {
+void CompileToStencilTask<Unit>::parse(JSContext* cx, FrontendContext* ec) {
   MOZ_ASSERT(cx->isHelperThreadContext());
 
   ScopeKind scopeKind =
@@ -744,7 +744,8 @@ CompileModuleToStencilTask<Unit>::CompileModuleToStencilTask(
       data(std::move(srcBuf)) {}
 
 template <typename Unit>
-void CompileModuleToStencilTask<Unit>::parse(JSContext* cx, ErrorContext* ec) {
+void CompileModuleToStencilTask<Unit>::parse(JSContext* cx,
+                                             FrontendContext* ec) {
   MOZ_ASSERT(cx->isHelperThreadContext());
 
   stencilInput_ =
@@ -777,7 +778,7 @@ DecodeStencilTask::DecodeStencilTask(JSContext* cx,
   MOZ_ASSERT(JS::IsTranscodingBytecodeAligned(range.begin().get()));
 }
 
-void DecodeStencilTask::parse(JSContext* cx, ErrorContext* ec) {
+void DecodeStencilTask::parse(JSContext* cx, FrontendContext* ec) {
   MOZ_ASSERT(cx->isHelperThreadContext());
 
   stencilInput_ =
@@ -817,7 +818,7 @@ MultiStencilsDecodeTask::MultiStencilsDecodeTask(
     : ParseTask(ParseTaskKind::MultiStencilsDecode, cx, callback, callbackData),
       sources(&sources) {}
 
-void MultiStencilsDecodeTask::parse(JSContext* cx, ErrorContext* ec) {
+void MultiStencilsDecodeTask::parse(JSContext* cx, FrontendContext* ec) {
   MOZ_ASSERT(cx->isHelperThreadContext());
 
   if (!stencils.reserve(sources->length())) {
@@ -883,7 +884,7 @@ void js::StartOffThreadDelazification(
   }
 }
 
-bool DelazifyStrategy::add(ErrorContext* ec,
+bool DelazifyStrategy::add(FrontendContext* ec,
                            const frontend::CompilationStencil& stencil,
                            ScriptIndex index) {
   using namespace js::frontend;

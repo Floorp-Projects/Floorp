@@ -22,7 +22,7 @@ class ParseNodeVerifier : public ParseNodeVisitor<ParseNodeVerifier> {
   const LifoAlloc& alloc_;
 
  public:
-  ParseNodeVerifier(ErrorContext* ec, JS::NativeStackLimit stackLimit,
+  ParseNodeVerifier(FrontendContext* ec, JS::NativeStackLimit stackLimit,
                     const LifoAlloc& alloc)
       : Base(ec, stackLimit), alloc_(alloc) {}
 
@@ -43,7 +43,8 @@ class ParseNodeVerifier : public ParseNodeVisitor<ParseNodeVerifier> {
 }  // namespace frontend
 }  // namespace js
 
-bool frontend::CheckParseTree(ErrorContext* ec, JS::NativeStackLimit stackLimit,
+bool frontend::CheckParseTree(FrontendContext* ec,
+                              JS::NativeStackLimit stackLimit,
                               const LifoAlloc& alloc, ParseNode* pn) {
   ParseNodeVerifier verifier(ec, stackLimit, alloc);
   return verifier.visit(pn);

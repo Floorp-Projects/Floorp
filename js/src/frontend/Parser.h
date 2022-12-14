@@ -190,7 +190,6 @@
 namespace js {
 
 class FrontendContext;
-using ErrorContext = FrontendContext;
 struct ErrorMetadata;
 
 namespace frontend {
@@ -288,7 +287,7 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
   const bool foldConstants_ : 1;
 
  protected:
-  ErrorContext* ec_;
+  FrontendContext* ec_;
   JS::NativeStackLimit stackLimit_;
 
 #if DEBUG
@@ -328,7 +327,8 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
   template <class, typename>
   friend class AutoInParametersOfAsyncFunction;
 
-  ParserBase(JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+  ParserBase(JSContext* cx, FrontendContext* ec,
+             JS::NativeStackLimit stackLimit,
              const JS::ReadOnlyCompileOptions& options, bool foldConstants,
              CompilationState& compilationState);
   ~ParserBase();
@@ -349,7 +349,7 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
  public:
   // Implement ErrorReportMixin.
 
-  ErrorContext* getContext() const override { return ec_; }
+  FrontendContext* getContext() const override { return ec_; }
 
   bool strictMode() const override { return pc_->sc()->strict(); }
 
@@ -477,7 +477,7 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   // NOTE: The argument ordering here is deliberately different from the
   //       public constructor so that typos calling the public constructor
   //       are less likely to select this overload.
-  PerHandlerParser(JSContext* cx, ErrorContext* ec,
+  PerHandlerParser(JSContext* cx, FrontendContext* ec,
                    JS::NativeStackLimit stackLimit,
                    const JS::ReadOnlyCompileOptions& options,
                    bool foldConstants, CompilationState& compilationState,
@@ -485,7 +485,7 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
 
  protected:
   template <typename Unit>
-  PerHandlerParser(JSContext* cx, ErrorContext* ec,
+  PerHandlerParser(JSContext* cx, FrontendContext* ec,
                    JS::NativeStackLimit stackLimit,
                    const JS::ReadOnlyCompileOptions& options,
                    bool foldConstants, CompilationState& compilationState,
@@ -934,7 +934,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   TokenStream tokenStream;
 
  public:
-  GeneralParser(JSContext* cx, ErrorContext* ec,
+  GeneralParser(JSContext* cx, FrontendContext* ec,
                 JS::NativeStackLimit stackLimit,
                 const JS::ReadOnlyCompileOptions& options, const Unit* units,
                 size_t length, bool foldConstants,
@@ -1925,39 +1925,40 @@ class MOZ_STACK_CLASS AutoInParametersOfAsyncFunction {
   }
 };
 
-GlobalScope::ParserData* NewEmptyGlobalScopeData(ErrorContext* ec,
+GlobalScope::ParserData* NewEmptyGlobalScopeData(FrontendContext* ec,
                                                  LifoAlloc& alloc,
                                                  uint32_t numBindings);
 
-VarScope::ParserData* NewEmptyVarScopeData(ErrorContext* ec, LifoAlloc& alloc,
+VarScope::ParserData* NewEmptyVarScopeData(FrontendContext* ec,
+                                           LifoAlloc& alloc,
                                            uint32_t numBindings);
 
-LexicalScope::ParserData* NewEmptyLexicalScopeData(ErrorContext* ec,
+LexicalScope::ParserData* NewEmptyLexicalScopeData(FrontendContext* ec,
                                                    LifoAlloc& alloc,
                                                    uint32_t numBindings);
 
-FunctionScope::ParserData* NewEmptyFunctionScopeData(ErrorContext* ec,
+FunctionScope::ParserData* NewEmptyFunctionScopeData(FrontendContext* ec,
                                                      LifoAlloc& alloc,
                                                      uint32_t numBindings);
 
 mozilla::Maybe<GlobalScope::ParserData*> NewGlobalScopeData(
-    JSContext* cx, ErrorContext* ec, ParseContext::Scope& scope,
+    JSContext* cx, FrontendContext* ec, ParseContext::Scope& scope,
     LifoAlloc& alloc, ParseContext* pc);
 
 mozilla::Maybe<EvalScope::ParserData*> NewEvalScopeData(
-    JSContext* cx, ErrorContext* ec, ParseContext::Scope& scope,
+    JSContext* cx, FrontendContext* ec, ParseContext::Scope& scope,
     LifoAlloc& alloc, ParseContext* pc);
 
 mozilla::Maybe<FunctionScope::ParserData*> NewFunctionScopeData(
-    JSContext* cx, ErrorContext* ec, ParseContext::Scope& scope,
+    JSContext* cx, FrontendContext* ec, ParseContext::Scope& scope,
     bool hasParameterExprs, LifoAlloc& alloc, ParseContext* pc);
 
 mozilla::Maybe<VarScope::ParserData*> NewVarScopeData(
-    JSContext* cx, ErrorContext* ec, ParseContext::Scope& scope,
+    JSContext* cx, FrontendContext* ec, ParseContext::Scope& scope,
     LifoAlloc& alloc, ParseContext* pc);
 
 mozilla::Maybe<LexicalScope::ParserData*> NewLexicalScopeData(
-    JSContext* cx, ErrorContext* ec, ParseContext::Scope& scope,
+    JSContext* cx, FrontendContext* ec, ParseContext::Scope& scope,
     LifoAlloc& alloc, ParseContext* pc);
 
 bool FunctionScopeHasClosedOverBindings(ParseContext* pc);

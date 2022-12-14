@@ -1276,7 +1276,7 @@ bool ModuleObject::createEnvironment(JSContext* cx,
 ///////////////////////////////////////////////////////////////////////////
 // ModuleBuilder
 
-ModuleBuilder::ModuleBuilder(JSContext* cx, ErrorContext* ec,
+ModuleBuilder::ModuleBuilder(JSContext* cx, FrontendContext* ec,
                              const frontend::EitherParser& eitherParser)
     : cx_(cx),
       ec_(ec),
@@ -1286,7 +1286,7 @@ ModuleBuilder::ModuleBuilder(JSContext* cx, ErrorContext* ec,
       exportEntries_(ec),
       exportNames_(ec) {}
 
-bool ModuleBuilder::noteFunctionDeclaration(ErrorContext* ec,
+bool ModuleBuilder::noteFunctionDeclaration(FrontendContext* ec,
                                             uint32_t funIndex) {
   if (!functionDecls_.emplaceBack(funIndex)) {
     js::ReportOutOfMemory(ec);
@@ -1516,7 +1516,8 @@ bool CreateRequestedModulesFromStencil(
 
 // Use StencilModuleMetadata data to fill in ModuleObject
 bool frontend::StencilModuleMetadata::initModule(
-    JSContext* cx, ErrorContext* ec, frontend::CompilationAtomCache& atomCache,
+    JSContext* cx, FrontendContext* ec,
+    frontend::CompilationAtomCache& atomCache,
     JS::Handle<ModuleObject*> module) const {
   Rooted<RequestedModuleVector> requestedModulesVector(cx);
   if (!CreateRequestedModulesFromStencil(cx, atomCache, requestedModules,

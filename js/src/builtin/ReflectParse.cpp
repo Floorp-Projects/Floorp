@@ -274,7 +274,7 @@ class NodeBuilder {
   using CallbackArray = RootedValueArray<AST_LIMIT>;
 
   JSContext* cx;
-  ErrorContext* ec;
+  FrontendContext* ec;
   frontend::Parser<frontend::FullParseHandler, char16_t>* parser;
   bool saveLoc;            /* save source location information?     */
   char const* src;         /* source filename or null               */
@@ -283,7 +283,7 @@ class NodeBuilder {
   RootedValue userv;       /* user-specified builder object or null */
 
  public:
-  NodeBuilder(JSContext* c, ErrorContext* e, bool l, char const* s)
+  NodeBuilder(JSContext* c, FrontendContext* e, bool l, char const* s)
       : cx(c),
         ec(e),
         parser(nullptr),
@@ -1755,7 +1755,7 @@ namespace {
  */
 class ASTSerializer {
   JSContext* cx;
-  ErrorContext* ec;
+  FrontendContext* ec;
   Parser<FullParseHandler, char16_t>* parser;
   NodeBuilder builder;
   DebugOnly<uint32_t> lineno;
@@ -1862,7 +1862,7 @@ class ASTSerializer {
   bool functionBody(ParseNode* pn, TokenPos* pos, MutableHandleValue dst);
 
  public:
-  ASTSerializer(JSContext* c, ErrorContext* e, bool l, char const* src,
+  ASTSerializer(JSContext* c, FrontendContext* e, bool l, char const* src,
                 uint32_t ln)
       : cx(c),
         ec(e),

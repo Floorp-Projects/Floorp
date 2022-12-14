@@ -53,11 +53,11 @@ using JS::SourceText;
 class MOZ_RAII AutoAssertReportedException {
 #ifdef DEBUG
   JSContext* cx_;
-  ErrorContext* ec_;
+  FrontendContext* ec_;
   bool check_;
 
  public:
-  explicit AutoAssertReportedException(JSContext* cx, ErrorContext* ec)
+  explicit AutoAssertReportedException(JSContext* cx, FrontendContext* ec)
       : cx_(cx), ec_(ec), check_(true) {}
   void reset() { check_ = false; }
   ~AutoAssertReportedException() {
@@ -80,13 +80,13 @@ class MOZ_RAII AutoAssertReportedException {
   }
 #else
  public:
-  explicit AutoAssertReportedException(JSContext*, ErrorContext*) {}
+  explicit AutoAssertReportedException(JSContext*, FrontendContext*) {}
   void reset() {}
 #endif
 };
 
 static bool EmplaceEmitter(CompilationState& compilationState,
-                           Maybe<BytecodeEmitter>& emitter, ErrorContext* ec,
+                           Maybe<BytecodeEmitter>& emitter, FrontendContext* ec,
                            JS::NativeStackLimit stackLimit,
                            const EitherParser& parser, SharedContext* sc);
 
@@ -99,13 +99,13 @@ class MOZ_STACK_CLASS SourceAwareCompiler {
 
   Maybe<Parser<SyntaxParseHandler, Unit>> syntaxParser;
   Maybe<Parser<FullParseHandler, Unit>> parser;
-  ErrorContext* errorContext = nullptr;
+  FrontendContext* errorContext = nullptr;
   JS::NativeStackLimit stackLimit;
 
   using TokenStreamPosition = frontend::TokenStreamPosition<Unit>;
 
  protected:
-  explicit SourceAwareCompiler(JSContext* cx, ErrorContext* ec,
+  explicit SourceAwareCompiler(JSContext* cx, FrontendContext* ec,
                                JS::NativeStackLimit stackLimit,
                                LifoAllocScope& parserAllocScope,
                                CompilationInput& input,
@@ -116,7 +116,7 @@ class MOZ_STACK_CLASS SourceAwareCompiler {
     MOZ_ASSERT(sourceBuffer_.get() != nullptr);
   }
 
-  [[nodiscard]] bool init(JSContext* cx, ErrorContext* ec,
+  [[nodiscard]] bool init(JSContext* cx, FrontendContext* ec,
                           ScopeBindingCache* scopeCache,
                           InheritThis inheritThis = InheritThis::No,
                           JSObject* enclosingEnv = nullptr) {
@@ -129,7 +129,7 @@ class MOZ_STACK_CLASS SourceAwareCompiler {
   }
 
   // Call this before calling compile{Global,Eval}Script.
-  [[nodiscard]] bool createSourceAndParser(JSContext* cx, ErrorContext* ec);
+  [[nodiscard]] bool createSourceAndParser(JSContext* cx, FrontendContext* ec);
 
   void assertSourceAndParserCreated() const {
     MOZ_ASSERT(compilationState_.source != nullptr);
@@ -173,7 +173,7 @@ class MOZ_STACK_CLASS ScriptCompiler : public SourceAwareCompiler<Unit> {
   using typename Base::TokenStreamPosition;
 
  public:
-  explicit ScriptCompiler(JSContext* cx, ErrorContext* ec,
+  explicit ScriptCompiler(JSContext* cx, FrontendContext* ec,
                           JS::NativeStackLimit stackLimit,
                           LifoAllocScope& parserAllocScope,
                           CompilationInput& input,
@@ -188,7 +188,7 @@ class MOZ_STACK_CLASS ScriptCompiler : public SourceAwareCompiler<Unit> {
 
 #ifdef JS_ENABLE_SMOOSH
 [[nodiscard]] static bool TrySmoosh(
-    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
     CompilationInput& input, JS::SourceText<mozilla::Utf8Unit>& srcBuf,
     UniquePtr<ExtensibleCompilationStencil>& stencilOut) {
   MOZ_ASSERT(!stencilOut);
@@ -220,7 +220,7 @@ class MOZ_STACK_CLASS ScriptCompiler : public SourceAwareCompiler<Unit> {
 }
 
 [[nodiscard]] static bool TrySmoosh(
-    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
     CompilationInput& input, JS::SourceText<char16_t>& srcBuf,
     UniquePtr<ExtensibleCompilationStencil>& stencilOut) {
   MOZ_ASSERT(!stencilOut);
@@ -238,7 +238,7 @@ using BytecodeCompilerOutput =
 //   * CompilationGCOutput (with instantiation).
 template <typename Unit>
 [[nodiscard]] static bool CompileGlobalScriptToStencilAndMaybeInstantiate(
-    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
     js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
     ScopeBindingCache* scopeCache, JS::SourceText<Unit>& srcBuf,
     ScopeKind scopeKind, BytecodeCompilerOutput& output) {
@@ -373,7 +373,7 @@ template <typename Unit>
 
 template <typename Unit>
 static already_AddRefed<CompilationStencil> CompileGlobalScriptToStencilImpl(
-    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
     js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
     ScopeBindingCache* scopeCache, JS::SourceText<Unit>& srcBuf,
     ScopeKind scopeKind) {
@@ -388,7 +388,7 @@ static already_AddRefed<CompilationStencil> CompileGlobalScriptToStencilImpl(
 }
 
 already_AddRefed<CompilationStencil> frontend::CompileGlobalScriptToStencil(
-    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
     js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
     ScopeBindingCache* scopeCache, JS::SourceText<char16_t>& srcBuf,
     ScopeKind scopeKind) {
@@ -397,7 +397,7 @@ already_AddRefed<CompilationStencil> frontend::CompileGlobalScriptToStencil(
 }
 
 already_AddRefed<CompilationStencil> frontend::CompileGlobalScriptToStencil(
-    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
     js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
     ScopeBindingCache* scopeCache, JS::SourceText<Utf8Unit>& srcBuf,
     ScopeKind scopeKind) {
@@ -407,7 +407,7 @@ already_AddRefed<CompilationStencil> frontend::CompileGlobalScriptToStencil(
 
 template <typename Unit>
 static UniquePtr<ExtensibleCompilationStencil>
-CompileGlobalScriptToExtensibleStencilImpl(JSContext* cx, ErrorContext* ec,
+CompileGlobalScriptToExtensibleStencilImpl(JSContext* cx, FrontendContext* ec,
                                            JS::NativeStackLimit stackLimit,
                                            CompilationInput& input,
                                            ScopeBindingCache* scopeCache,
@@ -425,7 +425,7 @@ CompileGlobalScriptToExtensibleStencilImpl(JSContext* cx, ErrorContext* ec,
 
 UniquePtr<ExtensibleCompilationStencil>
 frontend::CompileGlobalScriptToExtensibleStencil(
-    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
     CompilationInput& input, ScopeBindingCache* scopeCache,
     JS::SourceText<char16_t>& srcBuf, ScopeKind scopeKind) {
   return CompileGlobalScriptToExtensibleStencilImpl(
@@ -434,7 +434,7 @@ frontend::CompileGlobalScriptToExtensibleStencil(
 
 UniquePtr<ExtensibleCompilationStencil>
 frontend::CompileGlobalScriptToExtensibleStencil(
-    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
     CompilationInput& input, ScopeBindingCache* scopeCache,
     JS::SourceText<Utf8Unit>& srcBuf, ScopeKind scopeKind) {
   return CompileGlobalScriptToExtensibleStencilImpl(
@@ -468,7 +468,7 @@ bool frontend::InstantiateStencils(JSContext* cx, CompilationInput& input,
   return true;
 }
 
-bool frontend::PrepareForInstantiate(JSContext* cx, ErrorContext* ec,
+bool frontend::PrepareForInstantiate(JSContext* cx, FrontendContext* ec,
                                      CompilationInput& input,
                                      const CompilationStencil& stencil,
                                      CompilationGCOutput& gcOutput) {
@@ -484,7 +484,7 @@ bool frontend::PrepareForInstantiate(JSContext* cx, ErrorContext* ec,
 
 template <typename Unit>
 static JSScript* CompileGlobalScriptImpl(
-    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
     const JS::ReadOnlyCompileOptions& options, JS::SourceText<Unit>& srcBuf,
     ScopeKind scopeKind) {
   Rooted<CompilationInput> input(cx, CompilationInput(options));
@@ -500,7 +500,7 @@ static JSScript* CompileGlobalScriptImpl(
 }
 
 JSScript* frontend::CompileGlobalScript(
-    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
     const JS::ReadOnlyCompileOptions& options, JS::SourceText<char16_t>& srcBuf,
     ScopeKind scopeKind) {
   return CompileGlobalScriptImpl(cx, ec, stackLimit, options, srcBuf,
@@ -508,7 +508,7 @@ JSScript* frontend::CompileGlobalScript(
 }
 
 JSScript* frontend::CompileGlobalScript(
-    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
     const JS::ReadOnlyCompileOptions& options, JS::SourceText<Utf8Unit>& srcBuf,
     ScopeKind scopeKind) {
   return CompileGlobalScriptImpl(cx, ec, stackLimit, options, srcBuf,
@@ -582,7 +582,7 @@ class MOZ_STACK_CLASS ModuleCompiler final : public SourceAwareCompiler<Unit> {
   using Base::parser;
 
  public:
-  explicit ModuleCompiler(JSContext* cx, ErrorContext* ec,
+  explicit ModuleCompiler(JSContext* cx, FrontendContext* ec,
                           JS::NativeStackLimit stackLimit,
                           LifoAllocScope& parserAllocScope,
                           CompilationInput& input,
@@ -592,7 +592,7 @@ class MOZ_STACK_CLASS ModuleCompiler final : public SourceAwareCompiler<Unit> {
   using Base::init;
   using Base::stencil;
 
-  [[nodiscard]] bool compile(JSContext* cx, ErrorContext* ec);
+  [[nodiscard]] bool compile(JSContext* cx, FrontendContext* ec);
 };
 
 template <typename Unit>
@@ -611,7 +611,7 @@ class MOZ_STACK_CLASS StandaloneFunctionCompiler final
   using typename Base::TokenStreamPosition;
 
  public:
-  explicit StandaloneFunctionCompiler(JSContext* cx, ErrorContext* ec,
+  explicit StandaloneFunctionCompiler(JSContext* cx, FrontendContext* ec,
                                       JS::NativeStackLimit stackLimit,
                                       LifoAllocScope& parserAllocScope,
                                       CompilationInput& input,
@@ -635,7 +635,7 @@ class MOZ_STACK_CLASS StandaloneFunctionCompiler final
 
 template <typename Unit>
 bool SourceAwareCompiler<Unit>::createSourceAndParser(JSContext* cx,
-                                                      ErrorContext* ec) {
+                                                      FrontendContext* ec) {
   const auto& options = compilationState_.input.options;
 
   errorContext = ec;
@@ -665,7 +665,7 @@ bool SourceAwareCompiler<Unit>::createSourceAndParser(JSContext* cx,
 }
 
 static bool EmplaceEmitter(CompilationState& compilationState,
-                           Maybe<BytecodeEmitter>& emitter, ErrorContext* ec,
+                           Maybe<BytecodeEmitter>& emitter, FrontendContext* ec,
                            JS::NativeStackLimit stackLimit,
                            const EitherParser& parser, SharedContext* sc) {
   BytecodeEmitter::EmitterMode emitterMode =
@@ -765,7 +765,7 @@ bool ScriptCompiler<Unit>::compile(JSContext* cx, SharedContext* sc) {
 }
 
 template <typename Unit>
-bool ModuleCompiler<Unit>::compile(JSContext* cx, ErrorContext* ec) {
+bool ModuleCompiler<Unit>::compile(JSContext* cx, FrontendContext* ec) {
   // Emplace the topLevel stencil
   MOZ_ASSERT(compilationState_.scriptData.length() ==
              CompilationStencil::TopLevelIndex);
@@ -896,7 +896,7 @@ bool StandaloneFunctionCompiler<Unit>::compile(
 //   * CompilationGCOutput (with instantiation).
 template <typename Unit>
 [[nodiscard]] static bool ParseModuleToStencilAndMaybeInstantiate(
-    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
     CompilationInput& input, ScopeBindingCache* scopeCache,
     SourceText<Unit>& srcBuf, BytecodeCompilerOutput& output) {
   MOZ_ASSERT(srcBuf.get());
@@ -962,7 +962,7 @@ template <typename Unit>
 
 template <typename Unit>
 already_AddRefed<CompilationStencil> ParseModuleToStencilImpl(
-    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
     CompilationInput& input, ScopeBindingCache* scopeCache,
     SourceText<Unit>& srcBuf) {
   using OutputType = RefPtr<CompilationStencil>;
@@ -975,7 +975,7 @@ already_AddRefed<CompilationStencil> ParseModuleToStencilImpl(
 }
 
 already_AddRefed<CompilationStencil> frontend::ParseModuleToStencil(
-    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
     CompilationInput& input, ScopeBindingCache* scopeCache,
     SourceText<char16_t>& srcBuf) {
   return ParseModuleToStencilImpl(cx, ec, stackLimit, input, scopeCache,
@@ -983,7 +983,7 @@ already_AddRefed<CompilationStencil> frontend::ParseModuleToStencil(
 }
 
 already_AddRefed<CompilationStencil> frontend::ParseModuleToStencil(
-    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
     CompilationInput& input, ScopeBindingCache* scopeCache,
     SourceText<Utf8Unit>& srcBuf) {
   return ParseModuleToStencilImpl(cx, ec, stackLimit, input, scopeCache,
@@ -992,7 +992,7 @@ already_AddRefed<CompilationStencil> frontend::ParseModuleToStencil(
 
 template <typename Unit>
 UniquePtr<ExtensibleCompilationStencil> ParseModuleToExtensibleStencilImpl(
-    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
     CompilationInput& input, ScopeBindingCache* scopeCache,
     SourceText<Unit>& srcBuf) {
   using OutputType = UniquePtr<ExtensibleCompilationStencil>;
@@ -1005,7 +1005,7 @@ UniquePtr<ExtensibleCompilationStencil> ParseModuleToExtensibleStencilImpl(
 }
 
 UniquePtr<ExtensibleCompilationStencil>
-frontend::ParseModuleToExtensibleStencil(JSContext* cx, ErrorContext* ec,
+frontend::ParseModuleToExtensibleStencil(JSContext* cx, FrontendContext* ec,
                                          JS::NativeStackLimit stackLimit,
                                          CompilationInput& input,
                                          ScopeBindingCache* scopeCache,
@@ -1015,7 +1015,7 @@ frontend::ParseModuleToExtensibleStencil(JSContext* cx, ErrorContext* ec,
 }
 
 UniquePtr<ExtensibleCompilationStencil>
-frontend::ParseModuleToExtensibleStencil(JSContext* cx, ErrorContext* ec,
+frontend::ParseModuleToExtensibleStencil(JSContext* cx, FrontendContext* ec,
                                          JS::NativeStackLimit stackLimit,
                                          CompilationInput& input,
                                          ScopeBindingCache* scopeCache,
@@ -1026,7 +1026,7 @@ frontend::ParseModuleToExtensibleStencil(JSContext* cx, ErrorContext* ec,
 
 template <typename Unit>
 static ModuleObject* CompileModuleImpl(
-    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
     const JS::ReadOnlyCompileOptions& optionsInput, SourceText<Unit>& srcBuf) {
   AutoAssertReportedException assertException(cx, ec);
 
@@ -1046,14 +1046,14 @@ static ModuleObject* CompileModuleImpl(
   return gcOutput.get().module;
 }
 
-ModuleObject* frontend::CompileModule(JSContext* cx, ErrorContext* ec,
+ModuleObject* frontend::CompileModule(JSContext* cx, FrontendContext* ec,
                                       JS::NativeStackLimit stackLimit,
                                       const JS::ReadOnlyCompileOptions& options,
                                       SourceText<char16_t>& srcBuf) {
   return CompileModuleImpl(cx, ec, stackLimit, options, srcBuf);
 }
 
-ModuleObject* frontend::CompileModule(JSContext* cx, ErrorContext* ec,
+ModuleObject* frontend::CompileModule(JSContext* cx, FrontendContext* ec,
                                       JS::NativeStackLimit stackLimit,
                                       const JS::ReadOnlyCompileOptions& options,
                                       SourceText<Utf8Unit>& srcBuf) {
@@ -1114,7 +1114,7 @@ enum class GetCachedResult {
 // When we have a cache hit, the addPtr out-param would evaluate to a true-ish
 // value.
 static GetCachedResult GetCachedLazyFunctionStencilMaybeInstantiate(
-    JSContext* cx, ErrorContext* ec, CompilationInput& input,
+    JSContext* cx, FrontendContext* ec, CompilationInput& input,
     BytecodeCompilerOutput& output) {
   RefPtr<CompilationStencil> stencil;
   {
@@ -1163,7 +1163,7 @@ static GetCachedResult GetCachedLazyFunctionStencilMaybeInstantiate(
 
 template <typename Unit>
 static bool CompileLazyFunctionToStencilMaybeInstantiate(
-    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
     CompilationInput& input, ScopeBindingCache* scopeCache, const Unit* units,
     size_t length, BytecodeCompilerOutput& output) {
   MOZ_ASSERT(input.source);
@@ -1300,7 +1300,7 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
 
 template <typename Unit>
 static bool DelazifyCanonicalScriptedFunctionImpl(
-    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
     ScopeBindingCache* scopeCache, HandleFunction fun, Handle<BaseScript*> lazy,
     ScriptSource* ss) {
   MOZ_ASSERT(!lazy->hasBytecode(), "Script is already compiled!");
@@ -1346,7 +1346,7 @@ static bool DelazifyCanonicalScriptedFunctionImpl(
 }
 
 bool frontend::DelazifyCanonicalScriptedFunction(
-    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
     HandleFunction fun) {
   Maybe<AutoGeckoProfilerEntry> pseudoFrame;
   if (cx) {
@@ -1373,7 +1373,7 @@ bool frontend::DelazifyCanonicalScriptedFunction(
 
 template <typename Unit>
 static already_AddRefed<CompilationStencil>
-DelazifyCanonicalScriptedFunctionImpl(JSContext* cx, ErrorContext* ec,
+DelazifyCanonicalScriptedFunctionImpl(JSContext* cx, FrontendContext* ec,
                                       JS::NativeStackLimit stackLimit,
                                       ScopeBindingCache* scopeCache,
                                       CompilationStencil& context,
@@ -1431,7 +1431,7 @@ DelazifyCanonicalScriptedFunctionImpl(JSContext* cx, ErrorContext* ec,
 }
 
 already_AddRefed<CompilationStencil>
-frontend::DelazifyCanonicalScriptedFunction(JSContext* cx, ErrorContext* ec,
+frontend::DelazifyCanonicalScriptedFunction(JSContext* cx, FrontendContext* ec,
                                             JS::NativeStackLimit stackLimit,
                                             ScopeBindingCache* scopeCache,
                                             CompilationStencil& context,
