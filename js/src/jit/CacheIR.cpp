@@ -880,14 +880,17 @@ static void EmitMissingPropResult(CacheIRWriter& writer, NativeObject* obj,
 }
 
 static void EmitCallGetterResultNoGuards(JSContext* cx, CacheIRWriter& writer,
+                                         NativeGetPropKind kind,
                                          NativeObject* obj,
                                          NativeObject* holder,
                                          PropertyInfo prop,
                                          ValOperandId receiverId) {
+  MOZ_ASSERT(IsCacheableGetPropCall(obj, holder, prop) == kind);
+
   JSFunction* target = &holder->getGetter(prop)->as<JSFunction>();
   bool sameRealm = cx->realm() == target->realm();
 
-  switch (IsCacheableGetPropCall(obj, holder, prop)) {
+  switch (kind) {
     case NativeGetPropKind::NativeGetter: {
       writer.callNativeGetterResult(receiverId, target, sameRealm);
       writer.returnFromIC();
@@ -964,12 +967,12 @@ static void EmitCallGetterResultGuards(CacheIRWriter& writer, NativeObject* obj,
 }
 
 static void EmitCallGetterResult(JSContext* cx, CacheIRWriter& writer,
-                                 NativeObject* obj, NativeObject* holder,
-                                 HandleId id, PropertyInfo prop,
-                                 ObjOperandId objId, ValOperandId receiverId,
-                                 ICState::Mode mode) {
+                                 NativeGetPropKind kind, NativeObject* obj,
+                                 NativeObject* holder, HandleId id,
+                                 PropertyInfo prop, ObjOperandId objId,
+                                 ValOperandId receiverId, ICState::Mode mode) {
   EmitCallGetterResultGuards(writer, obj, holder, id, prop, objId, mode);
-  EmitCallGetterResultNoGuards(cx, writer, obj, holder, prop, receiverId);
+  EmitCallGetterResultNoGuards(cx, writer, kind, obj, holder, prop, receiverId);
 }
 
 static bool CanAttachDOMCall(JSContext* cx, JSJitInfo::OpType type,
@@ -1115,7 +1118,7 @@ AttachDecision GetPropIRGenerator::tryAttachNative(HandleObject obj,
         return AttachDecision::Attach;
       }
 
-      EmitCallGetterResult(cx_, writer, nobj, holder, id, *prop, objId,
+      EmitCallGetterResult(cx_, writer, kind, nobj, holder, id, *prop, objId,
                            receiverId, mode_);
 
       trackAttached("NativeGetter");
@@ -1240,7 +1243,7 @@ AttachDecision GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
         trackAttached("WindowProxyDOMGetter");
       } else {
         ValOperandId receiverId = writer.boxObject(windowObjId);
-        EmitCallGetterResult(cx_, writer, windowObj, holder, id, *prop,
+        EmitCallGetterResult(cx_, writer, kind, windowObj, holder, id, *prop,
                              windowObjId, receiverId, mode_);
         trackAttached("WindowProxyGetter");
       }
@@ -1592,7 +1595,7 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyExpando(
     MOZ_ASSERT(kind == NativeGetPropKind::NativeGetter ||
                kind == NativeGetPropKind::ScriptedGetter);
     EmitGuardGetterSetterSlot(writer, nativeExpandoObj, *prop, expandoObjId);
-    EmitCallGetterResultNoGuards(cx_, writer, nativeExpandoObj,
+    EmitCallGetterResultNoGuards(cx_, writer, kind, nativeExpandoObj,
                                  nativeExpandoObj, *prop, receiverId);
   }
 
@@ -1696,8 +1699,8 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyUnshadowed(
       MOZ_ASSERT(!isSuper());
       EmitGuardGetterSetterSlot(writer, holder, *prop, holderId,
                                 /* holderIsConstant = */ true);
-      EmitCallGetterResultNoGuards(cx_, writer, nativeCheckObj, holder, *prop,
-                                   receiverId);
+      EmitCallGetterResultNoGuards(cx_, writer, kind, nativeCheckObj, holder,
+                                   *prop, receiverId);
     }
   } else {
     // Property was not found on the prototype chain. Deoptimize down to
@@ -2357,8 +2360,8 @@ AttachDecision GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId,
       maybeEmitIdGuard(id);
 
       ObjOperandId protoId = writer.loadObject(nproto);
-      EmitCallGetterResult(cx_, writer, nproto, holder, id, *prop, protoId,
-                           valId, mode_);
+      EmitCallGetterResult(cx_, writer, kind, nproto, holder, id, *prop,
+                           protoId, valId, mode_);
 
       trackAttached("PrimitiveGetter");
       return AttachDecision::Attach;
@@ -3093,7 +3096,7 @@ AttachDecision GetNameIRGenerator::tryAttachGlobalNameGetter(ObjOperandId objId,
     trackAttached("GlobalNameDOMGetter");
   } else {
     ValOperandId receiverId = writer.boxObject(globalId);
-    EmitCallGetterResultNoGuards(cx_, writer, global, holder, *prop,
+    EmitCallGetterResultNoGuards(cx_, writer, kind, global, holder, *prop,
                                  receiverId);
     trackAttached("GlobalNameGetter");
   }
