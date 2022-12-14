@@ -643,7 +643,7 @@ class ScriptSource {
       js_delete(this);
     }
   }
-  [[nodiscard]] bool initFromOptions(JSContext* cx, FrontendContext* ec,
+  [[nodiscard]] bool initFromOptions(JSContext* cx, FrontendContext* fc,
                                      const JS::ReadOnlyCompileOptions& options);
 
   /**
@@ -652,9 +652,9 @@ class ScriptSource {
    */
   static constexpr size_t MinimumCompressibleLength = 256;
 
-  SharedImmutableString getOrCreateStringZ(FrontendContext* ec,
+  SharedImmutableString getOrCreateStringZ(FrontendContext* fc,
                                            UniqueChars&& str);
-  SharedImmutableTwoByteString getOrCreateStringZ(FrontendContext* ec,
+  SharedImmutableTwoByteString getOrCreateStringZ(FrontendContext* fc,
                                                   UniqueTwoByteChars&& str);
 
  private:
@@ -669,7 +669,7 @@ class ScriptSource {
 
   // Assign source data from |srcBuf| to this recently-created |ScriptSource|.
   template <typename Unit>
-  [[nodiscard]] bool assignSource(FrontendContext* ec,
+  [[nodiscard]] bool assignSource(FrontendContext* fc,
                                   const JS::ReadOnlyCompileOptions& options,
                                   JS::SourceText<Unit>& srcBuf);
 
@@ -993,16 +993,16 @@ class ScriptSource {
   const char* filename() const {
     return filename_ ? filename_.chars() : nullptr;
   }
-  [[nodiscard]] bool setFilename(JSContext* cx, FrontendContext* ec,
+  [[nodiscard]] bool setFilename(JSContext* cx, FrontendContext* fc,
                                  const char* filename);
-  [[nodiscard]] bool setFilename(FrontendContext* ec, UniqueChars&& filename);
+  [[nodiscard]] bool setFilename(FrontendContext* fc, UniqueChars&& filename);
 
   const char* introducerFilename() const {
     return introducerFilename_ ? introducerFilename_.chars() : filename();
   }
-  [[nodiscard]] bool setIntroducerFilename(JSContext* cx, FrontendContext* ec,
+  [[nodiscard]] bool setIntroducerFilename(JSContext* cx, FrontendContext* fc,
                                            const char* filename);
-  [[nodiscard]] bool setIntroducerFilename(FrontendContext* ec,
+  [[nodiscard]] bool setIntroducerFilename(FrontendContext* fc,
                                            UniqueChars&& filename);
 
   bool hasIntroductionType() const { return introductionType_; }
@@ -1014,17 +1014,17 @@ class ScriptSource {
   uint32_t id() const { return id_; }
 
   // Display URLs
-  [[nodiscard]] bool setDisplayURL(JSContext* cx, FrontendContext* ec,
+  [[nodiscard]] bool setDisplayURL(JSContext* cx, FrontendContext* fc,
                                    const char16_t* url);
-  [[nodiscard]] bool setDisplayURL(JSContext* cx, FrontendContext* ec,
+  [[nodiscard]] bool setDisplayURL(JSContext* cx, FrontendContext* fc,
                                    UniqueTwoByteChars&& url);
   bool hasDisplayURL() const { return bool(displayURL_); }
   const char16_t* displayURL() { return displayURL_.chars(); }
 
   // Source maps
-  [[nodiscard]] bool setSourceMapURL(JSContext* cx, FrontendContext* ec,
+  [[nodiscard]] bool setSourceMapURL(JSContext* cx, FrontendContext* fc,
                                      const char16_t* url);
-  [[nodiscard]] bool setSourceMapURL(FrontendContext* ec,
+  [[nodiscard]] bool setSourceMapURL(FrontendContext* fc,
                                      UniqueTwoByteChars&& url);
   bool hasSourceMapURL() const { return bool(sourceMapURL_); }
   const char16_t* sourceMapURL() { return sourceMapURL_.chars(); }

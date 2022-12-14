@@ -344,9 +344,9 @@ bool js::ExecuteRegExpLegacy(JSContext* cx, RegExpStatics* res,
 static bool CheckPatternSyntaxSlow(JSContext* cx, Handle<JSAtom*> pattern,
                                    RegExpFlags flags) {
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  AutoReportFrontendContext ec(cx);
+  AutoReportFrontendContext fc(cx);
   CompileOptions options(cx);
-  frontend::DummyTokenStream dummyTokenStream(cx, &ec, options);
+  frontend::DummyTokenStream dummyTokenStream(cx, &fc, options);
   return irregexp::CheckPatternSyntax(cx, cx->stackLimitForCurrentPrincipal(),
                                       dummyTokenStream, pattern, flags);
 }

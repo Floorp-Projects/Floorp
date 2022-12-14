@@ -94,7 +94,7 @@ class SystemAllocPolicy : public AllocPolicyBase {
 };
 
 MOZ_COLD JS_PUBLIC_API void ReportOutOfMemory(JSContext* cx);
-MOZ_COLD JS_PUBLIC_API void ReportOutOfMemory(FrontendContext* ec);
+MOZ_COLD JS_PUBLIC_API void ReportOutOfMemory(FrontendContext* fc);
 
 /*
  * Allocation policy that calls the system memory functions and reports errors
@@ -121,7 +121,7 @@ class JS_PUBLIC_API TempAllocPolicy : public AllocPolicyBase {
     return reinterpret_cast<JSContext*>(context_bits_ ^ JsContextTag);
   }
 
-  MOZ_ALWAYS_INLINE FrontendContext* ec() const {
+  MOZ_ALWAYS_INLINE FrontendContext* fc() const {
     MOZ_ASSERT(!hasJSContext());
     return reinterpret_cast<FrontendContext*>(context_bits_);
   }
@@ -155,9 +155,9 @@ class JS_PUBLIC_API TempAllocPolicy : public AllocPolicyBase {
       : context_bits_(uintptr_t(cx) | JsContextTag) {
     MOZ_ASSERT((uintptr_t(cx) & JsContextTag) == 0);
   }
-  MOZ_IMPLICIT TempAllocPolicy(FrontendContext* ec)
-      : context_bits_(uintptr_t(ec)) {
-    MOZ_ASSERT((uintptr_t(ec) & JsContextTag) == 0);
+  MOZ_IMPLICIT TempAllocPolicy(FrontendContext* fc)
+      : context_bits_(uintptr_t(fc)) {
+    MOZ_ASSERT((uintptr_t(fc) & JsContextTag) == 0);
   }
 
   template <typename T>
@@ -219,7 +219,7 @@ class JS_PUBLIC_API TempAllocPolicy : public AllocPolicyBase {
       if (hasJSContext()) {
         ReportOutOfMemory(cx());
       } else {
-        ReportOutOfMemory(ec());
+        ReportOutOfMemory(fc());
       }
       return false;
     }

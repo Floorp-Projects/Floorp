@@ -1959,8 +1959,8 @@ static bool SortLexicographically(JSContext* cx,
                                   size_t len) {
   MOZ_ASSERT(vec.length() >= len);
 
-  AutoReportFrontendContext ec(cx);
-  StringBuffer sb(cx, &ec);
+  AutoReportFrontendContext fc(cx);
+  StringBuffer sb(cx, &fc);
   Vector<StringifiedElement, 0, TempAllocPolicy> strElements(cx);
 
   /* MergeSort uses the upper half as scratch space. */

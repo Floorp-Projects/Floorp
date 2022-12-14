@@ -57,8 +57,8 @@ class StringBufferAllocPolicy {
   const arena_id_t& arenaId_;
 
  public:
-  StringBufferAllocPolicy(FrontendContext* ec, const arena_id_t& arenaId)
-      : impl_(ec), arenaId_(arenaId) {}
+  StringBufferAllocPolicy(FrontendContext* fc, const arena_id_t& arenaId)
+      : impl_(fc), arenaId_(arenaId) {}
 
   template <typename T>
   T* maybe_pod_malloc(size_t numElems) {
@@ -122,7 +122,7 @@ class StringBuffer {
   using TwoByteCharBuffer = BufferType<char16_t>;
 
   JSContext* cx_;
-  FrontendContext* ec_;
+  FrontendContext* fc_;
   const arena_id_t& arenaId_;
 
   /*
@@ -181,10 +181,10 @@ class StringBuffer {
   JSLinearString* finishStringInternal(JSContext* cx);
 
  public:
-  explicit StringBuffer(JSContext* cx, FrontendContext* ec,
+  explicit StringBuffer(JSContext* cx, FrontendContext* fc,
                         const arena_id_t& arenaId = js::MallocArena)
-      : cx_(cx), ec_(ec), arenaId_(arenaId), reserved_(0) {
-    cb.construct<Latin1CharBuffer>(StringBufferAllocPolicy{ec_, arenaId_});
+      : cx_(cx), fc_(fc), arenaId_(arenaId), reserved_(0) {
+    cb.construct<Latin1CharBuffer>(StringBufferAllocPolicy{fc_, arenaId_});
   }
 
   void clear() {
@@ -356,7 +356,7 @@ class StringBuffer {
   /* Identical to finishString() except that an atom is created. */
   JSAtom* finishAtom();
   frontend::TaggedParserAtomIndex finishParserAtom(
-      frontend::ParserAtomsTable& parserAtoms, FrontendContext* ec);
+      frontend::ParserAtomsTable& parserAtoms, FrontendContext* fc);
 
   /*
    * Creates a raw string from the characters in this buffer.  The string is
@@ -381,15 +381,15 @@ class StringBuffer {
  * again.
  */
 class JSStringBuilder : public StringBuffer {
-  FrontendContext ec_;
+  FrontendContext fc_;
 #ifdef DEBUG
   bool handled_ = false;
 #endif
 
  public:
   explicit JSStringBuilder(JSContext* cx)
-      : StringBuffer(cx, &ec_, js::StringBufferArena) {
-    ec_.setCurrentJSContext(cx);
+      : StringBuffer(cx, &fc_, js::StringBufferArena) {
+    fc_.setCurrentJSContext(cx);
   }
 
   ~JSStringBuilder() { MOZ_ASSERT(handled_); }
@@ -398,7 +398,7 @@ class JSStringBuilder : public StringBuffer {
 #ifdef DEBUG
     handled_ = true;
 #endif /* DEBUG */
-    ec_.convertToRuntimeError(cx_);
+    fc_.convertToRuntimeError(cx_);
   }
 
   void ok() {

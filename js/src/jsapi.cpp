@@ -3425,8 +3425,8 @@ JS_PUBLIC_API bool JS_Stringify(JSContext* cx, MutableHandleValue vp,
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->check(replacer, space);
-  AutoReportFrontendContext ec(cx);
-  StringBuffer sb(cx, &ec);
+  AutoReportFrontendContext fc(cx);
+  StringBuffer sb(cx, &fc);
   if (!sb.ensureTwoByteChars()) {
     return false;
   }
@@ -3446,8 +3446,8 @@ JS_PUBLIC_API bool JS::ToJSONMaybeSafely(JSContext* cx, JS::HandleObject input,
   CHECK_THREAD(cx);
   cx->check(input);
 
-  AutoReportFrontendContext ec(cx);
-  StringBuffer sb(cx, &ec);
+  AutoReportFrontendContext fc(cx);
+  StringBuffer sb(cx, &fc);
   if (!sb.ensureTwoByteChars()) {
     return false;
   }
@@ -3644,8 +3644,8 @@ JS_PUBLIC_API bool JS_ExpandErrorArgumentsASCII(JSContext* cx,
 
   AssertHeapIsIdle();
   va_start(ap, reportp);
-  AutoReportFrontendContext ec(cx);
-  ok = ExpandErrorArgumentsVA(&ec, errorCallback, nullptr, errorNumber,
+  AutoReportFrontendContext fc(cx);
+  ok = ExpandErrorArgumentsVA(&fc, errorCallback, nullptr, errorNumber,
                               ArgumentsAreASCII, reportp, ap);
   va_end(ap);
   return ok;
@@ -3815,13 +3815,13 @@ JSErrorNotes::JSErrorNotes() : notes_() {}
 JSErrorNotes::~JSErrorNotes() = default;
 
 static UniquePtr<JSErrorNotes::Note> CreateErrorNoteVA(
-    FrontendContext* ec, const char* filename, unsigned sourceId,
+    FrontendContext* fc, const char* filename, unsigned sourceId,
     unsigned lineno, unsigned column, JSErrorCallback errorCallback,
     void* userRef, const unsigned errorNumber, ErrorArgumentsType argumentsType,
     va_list ap) {
   auto note = MakeUnique<JSErrorNotes::Note>();
   if (!note) {
-    ReportOutOfMemory(ec);
+    ReportOutOfMemory(fc);
     return nullptr;
   }
 
@@ -3831,7 +3831,7 @@ static UniquePtr<JSErrorNotes::Note> CreateErrorNoteVA(
   note->lineno = lineno;
   note->column = column;
 
-  if (!ExpandErrorArgumentsVA(ec, errorCallback, userRef, errorNumber, nullptr,
+  if (!ExpandErrorArgumentsVA(fc, errorCallback, userRef, errorNumber, nullptr,
                               argumentsType, note.get(), ap)) {
     return nullptr;
   }
@@ -3839,20 +3839,20 @@ static UniquePtr<JSErrorNotes::Note> CreateErrorNoteVA(
   return note;
 }
 
-bool JSErrorNotes::addNoteVA(FrontendContext* ec, const char* filename,
+bool JSErrorNotes::addNoteVA(FrontendContext* fc, const char* filename,
                              unsigned sourceId, unsigned lineno,
                              unsigned column, JSErrorCallback errorCallback,
                              void* userRef, const unsigned errorNumber,
                              ErrorArgumentsType argumentsType, va_list ap) {
   auto note =
-      CreateErrorNoteVA(ec, filename, sourceId, lineno, column, errorCallback,
+      CreateErrorNoteVA(fc, filename, sourceId, lineno, column, errorCallback,
                         userRef, errorNumber, argumentsType, ap);
 
   if (!note) {
     return false;
   }
   if (!notes_.append(std::move(note))) {
-    ReportOutOfMemory(ec);
+    ReportOutOfMemory(fc);
     return false;
   }
   return true;
@@ -3863,23 +3863,23 @@ bool JSErrorNotes::addNoteASCII(JSContext* cx, const char* filename,
                                 unsigned column, JSErrorCallback errorCallback,
                                 void* userRef, const unsigned errorNumber,
                                 ...) {
-  AutoReportFrontendContext ec(cx);
+  AutoReportFrontendContext fc(cx);
   va_list ap;
   va_start(ap, errorNumber);
-  bool ok = addNoteVA(&ec, filename, sourceId, lineno, column, errorCallback,
+  bool ok = addNoteVA(&fc, filename, sourceId, lineno, column, errorCallback,
                       userRef, errorNumber, ArgumentsAreASCII, ap);
   va_end(ap);
   return ok;
 }
 
-bool JSErrorNotes::addNoteASCII(FrontendContext* ec, const char* filename,
+bool JSErrorNotes::addNoteASCII(FrontendContext* fc, const char* filename,
                                 unsigned sourceId, unsigned lineno,
                                 unsigned column, JSErrorCallback errorCallback,
                                 void* userRef, const unsigned errorNumber,
                                 ...) {
   va_list ap;
   va_start(ap, errorNumber);
-  bool ok = addNoteVA(ec, filename, sourceId, lineno, column, errorCallback,
+  bool ok = addNoteVA(fc, filename, sourceId, lineno, column, errorCallback,
                       userRef, errorNumber, ArgumentsAreASCII, ap);
   va_end(ap);
   return ok;
@@ -3890,23 +3890,23 @@ bool JSErrorNotes::addNoteLatin1(JSContext* cx, const char* filename,
                                  unsigned column, JSErrorCallback errorCallback,
                                  void* userRef, const unsigned errorNumber,
                                  ...) {
-  AutoReportFrontendContext ec(cx);
+  AutoReportFrontendContext fc(cx);
   va_list ap;
   va_start(ap, errorNumber);
-  bool ok = addNoteVA(&ec, filename, sourceId, lineno, column, errorCallback,
+  bool ok = addNoteVA(&fc, filename, sourceId, lineno, column, errorCallback,
                       userRef, errorNumber, ArgumentsAreLatin1, ap);
   va_end(ap);
   return ok;
 }
 
-bool JSErrorNotes::addNoteLatin1(FrontendContext* ec, const char* filename,
+bool JSErrorNotes::addNoteLatin1(FrontendContext* fc, const char* filename,
                                  unsigned sourceId, unsigned lineno,
                                  unsigned column, JSErrorCallback errorCallback,
                                  void* userRef, const unsigned errorNumber,
                                  ...) {
   va_list ap;
   va_start(ap, errorNumber);
-  bool ok = addNoteVA(ec, filename, sourceId, lineno, column, errorCallback,
+  bool ok = addNoteVA(fc, filename, sourceId, lineno, column, errorCallback,
                       userRef, errorNumber, ArgumentsAreLatin1, ap);
   va_end(ap);
   return ok;
@@ -3916,22 +3916,22 @@ bool JSErrorNotes::addNoteUTF8(JSContext* cx, const char* filename,
                                unsigned sourceId, unsigned lineno,
                                unsigned column, JSErrorCallback errorCallback,
                                void* userRef, const unsigned errorNumber, ...) {
-  AutoReportFrontendContext ec(cx);
+  AutoReportFrontendContext fc(cx);
   va_list ap;
   va_start(ap, errorNumber);
-  bool ok = addNoteVA(&ec, filename, sourceId, lineno, column, errorCallback,
+  bool ok = addNoteVA(&fc, filename, sourceId, lineno, column, errorCallback,
                       userRef, errorNumber, ArgumentsAreUTF8, ap);
   va_end(ap);
   return ok;
 }
 
-bool JSErrorNotes::addNoteUTF8(FrontendContext* ec, const char* filename,
+bool JSErrorNotes::addNoteUTF8(FrontendContext* fc, const char* filename,
                                unsigned sourceId, unsigned lineno,
                                unsigned column, JSErrorCallback errorCallback,
                                void* userRef, const unsigned errorNumber, ...) {
   va_list ap;
   va_start(ap, errorNumber);
-  bool ok = addNoteVA(ec, filename, sourceId, lineno, column, errorCallback,
+  bool ok = addNoteVA(fc, filename, sourceId, lineno, column, errorCallback,
                       userRef, errorNumber, ArgumentsAreUTF8, ap);
   va_end(ap);
   return ok;

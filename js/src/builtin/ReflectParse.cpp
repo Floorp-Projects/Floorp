@@ -274,7 +274,7 @@ class NodeBuilder {
   using CallbackArray = RootedValueArray<AST_LIMIT>;
 
   JSContext* cx;
-  FrontendContext* ec;
+  FrontendContext* fc;
   frontend::Parser<frontend::FullParseHandler, char16_t>* parser;
   bool saveLoc;            /* save source location information?     */
   char const* src;         /* source filename or null               */
@@ -283,9 +283,9 @@ class NodeBuilder {
   RootedValue userv;       /* user-specified builder object or null */
 
  public:
-  NodeBuilder(JSContext* c, FrontendContext* e, bool l, char const* s)
+  NodeBuilder(JSContext* c, FrontendContext* f, bool l, char const* s)
       : cx(c),
-        ec(e),
+        fc(f),
         parser(nullptr),
         saveLoc(l),
         src(s),
@@ -782,7 +782,7 @@ bool NodeBuilder::createNode(ASTType type, TokenPos* pos,
 bool NodeBuilder::newArray(NodeVector& elts, MutableHandleValue dst) {
   const size_t len = elts.length();
   if (len > UINT32_MAX) {
-    ReportAllocationOverflow(ec);
+    ReportAllocationOverflow(fc);
     return false;
   }
   RootedObject array(cx, NewDenseFullyAllocatedArray(cx, uint32_t(len)));
@@ -1755,7 +1755,7 @@ namespace {
  */
 class ASTSerializer {
   JSContext* cx;
-  FrontendContext* ec;
+  FrontendContext* fc;
   Parser<FullParseHandler, char16_t>* parser;
   NodeBuilder builder;
   DebugOnly<uint32_t> lineno;
@@ -1862,12 +1862,12 @@ class ASTSerializer {
   bool functionBody(ParseNode* pn, TokenPos* pos, MutableHandleValue dst);
 
  public:
-  ASTSerializer(JSContext* c, FrontendContext* e, bool l, char const* src,
+  ASTSerializer(JSContext* c, FrontendContext* f, bool l, char const* src,
                 uint32_t ln)
       : cx(c),
-        ec(e),
+        fc(f),
         parser(nullptr),
-        builder(c, e, l, src)
+        builder(c, f, l, src)
 #ifdef DEBUG
         ,
         lineno(ln)
@@ -3634,7 +3634,7 @@ bool ASTSerializer::literal(ParseNode* pn, MutableHandleValue dst) {
 
     case ParseNodeKind::RegExpExpr: {
       RegExpObject* re = pn->as<RegExpLiteral>().create(
-          cx, ec, parser->parserAtoms(),
+          cx, fc, parser->parserAtoms(),
           parser->getCompilationState().input.atomCache,
           parser->getCompilationState());
       if (!re) {
@@ -4097,8 +4097,8 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
   }
 
   /* Extract the builder methods first to report errors before parsing. */
-  AutoReportFrontendContext ec(cx);
-  ASTSerializer serialize(cx, &ec, loc, filename.get(), lineno);
+  AutoReportFrontendContext fc(cx);
+  ASTSerializer serialize(cx, &fc, loc, filename.get(), lineno);
   if (!serialize.init(builder)) {
     return false;
   }
@@ -4121,24 +4121,24 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
 
   Rooted<CompilationInput> input(cx, CompilationInput(options));
   if (target == ParseGoal::Script) {
-    if (!input.get().initForGlobal(cx, &ec)) {
+    if (!input.get().initForGlobal(cx, &fc)) {
       return false;
     }
   } else {
-    if (!input.get().initForModule(cx, &ec)) {
+    if (!input.get().initForModule(cx, &fc)) {
       return false;
     }
   }
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   frontend::NoScopeBindingCache scopeCache;
-  frontend::CompilationState compilationState(cx, &ec, allocScope, input.get());
-  if (!compilationState.init(cx, &ec, &scopeCache)) {
+  frontend::CompilationState compilationState(cx, &fc, allocScope, input.get());
+  if (!compilationState.init(cx, &fc, &scopeCache)) {
     return false;
   }
 
   Parser<FullParseHandler, char16_t> parser(
-      cx, &ec, cx->stackLimitForCurrentPrincipal(), options,
+      cx, &fc, cx->stackLimitForCurrentPrincipal(), options,
       chars.begin().get(), chars.length(),
       /* foldConstants = */ false, compilationState,
       /* syntaxParser = */ nullptr);
@@ -4155,12 +4155,12 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
       return false;
     }
   } else {
-    ModuleBuilder builder(cx, &ec, &parser);
+    ModuleBuilder builder(cx, &fc, &parser);
 
     uint32_t len = chars.length();
     SourceExtent extent =
         SourceExtent::makeGlobalExtent(len, options.lineno, options.column);
-    ModuleSharedContext modulesc(cx, &ec, options, builder, extent);
+    ModuleSharedContext modulesc(cx, &fc, options, builder, extent);
     pn = parser.moduleBody(&modulesc);
     if (!pn) {
       return false;

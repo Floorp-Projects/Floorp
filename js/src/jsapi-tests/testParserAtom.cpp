@@ -21,7 +21,7 @@ BEGIN_TEST(testParserAtom_empty) {
   using js::frontend::ParserAtomVector;
   using js::frontend::TaggedParserAtomIndex;
 
-  js::AutoReportFrontendContext ec(cx);
+  js::AutoReportFrontendContext fc(cx);
   js::LifoAlloc alloc(512);
   ParserAtomsTable atomTable(alloc);
 
@@ -32,10 +32,10 @@ BEGIN_TEST(testParserAtom_empty) {
 
   // Check that the well-known empty atom matches for different entry points.
   auto refIndex = TaggedParserAtomIndex::WellKnown::empty();
-  CHECK(atomTable.internAscii(&ec, ascii, 0) == refIndex);
-  CHECK(atomTable.internLatin1(&ec, latin1, 0) == refIndex);
-  CHECK(atomTable.internUtf8(&ec, utf8, 0) == refIndex);
-  CHECK(atomTable.internChar16(&ec, char16, 0) == refIndex);
+  CHECK(atomTable.internAscii(&fc, ascii, 0) == refIndex);
+  CHECK(atomTable.internLatin1(&fc, latin1, 0) == refIndex);
+  CHECK(atomTable.internUtf8(&fc, utf8, 0) == refIndex);
+  CHECK(atomTable.internChar16(&fc, char16, 0) == refIndex);
 
   return true;
 }
@@ -48,7 +48,7 @@ BEGIN_TEST(testParserAtom_tiny1_ASCII) {
   using js::frontend::ParserAtomVector;
   using js::frontend::WellKnownParserAtoms;
 
-  js::AutoReportFrontendContext ec(cx);
+  js::AutoReportFrontendContext fc(cx);
   js::LifoAlloc alloc(512);
   ParserAtomsTable atomTable(alloc);
 
@@ -60,10 +60,10 @@ BEGIN_TEST(testParserAtom_tiny1_ASCII) {
 
   auto refIndex = WellKnownParserAtoms::getSingleton().lookupTinyIndex(&a, 1);
   CHECK(refIndex);
-  CHECK(atomTable.internAscii(&ec, ascii, 1) == refIndex);
-  CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
-  CHECK(atomTable.internUtf8(&ec, utf8, 1) == refIndex);
-  CHECK(atomTable.internChar16(&ec, char16, 1) == refIndex);
+  CHECK(atomTable.internAscii(&fc, ascii, 1) == refIndex);
+  CHECK(atomTable.internLatin1(&fc, latin1, 1) == refIndex);
+  CHECK(atomTable.internUtf8(&fc, utf8, 1) == refIndex);
+  CHECK(atomTable.internChar16(&fc, char16, 1) == refIndex);
 
   return true;
 }
@@ -76,7 +76,7 @@ BEGIN_TEST(testParserAtom_tiny1_nonASCII) {
   using js::frontend::ParserAtomVector;
   using js::frontend::WellKnownParserAtoms;
 
-  js::AutoReportFrontendContext ec(cx);
+  js::AutoReportFrontendContext fc(cx);
   js::LifoAlloc alloc(512);
   ParserAtomsTable atomTable(alloc);
 
@@ -91,9 +91,9 @@ BEGIN_TEST(testParserAtom_tiny1_nonASCII) {
     auto refIndex =
         WellKnownParserAtoms::getSingleton().lookupTinyIndex(&euro, 1);
     CHECK(refIndex);
-    CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
-    CHECK(atomTable.internUtf8(&ec, utf8, 2) == refIndex);
-    CHECK(atomTable.internChar16(&ec, char16, 1) == refIndex);
+    CHECK(atomTable.internLatin1(&fc, latin1, 1) == refIndex);
+    CHECK(atomTable.internUtf8(&fc, utf8, 2) == refIndex);
+    CHECK(atomTable.internChar16(&fc, char16, 1) == refIndex);
   }
 
   {
@@ -107,9 +107,9 @@ BEGIN_TEST(testParserAtom_tiny1_nonASCII) {
     auto refIndex =
         WellKnownParserAtoms::getSingleton().lookupTinyIndex(&frac12, 1);
     CHECK(refIndex);
-    CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
-    CHECK(atomTable.internUtf8(&ec, utf8, 2) == refIndex);
-    CHECK(atomTable.internChar16(&ec, char16, 1) == refIndex);
+    CHECK(atomTable.internLatin1(&fc, latin1, 1) == refIndex);
+    CHECK(atomTable.internUtf8(&fc, utf8, 2) == refIndex);
+    CHECK(atomTable.internChar16(&fc, char16, 1) == refIndex);
   }
 
   {
@@ -123,9 +123,9 @@ BEGIN_TEST(testParserAtom_tiny1_nonASCII) {
     auto refIndex =
         WellKnownParserAtoms::getSingleton().lookupTinyIndex(&iquest, 1);
     CHECK(refIndex);
-    CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
-    CHECK(atomTable.internUtf8(&ec, utf8, 2) == refIndex);
-    CHECK(atomTable.internChar16(&ec, char16, 1) == refIndex);
+    CHECK(atomTable.internLatin1(&fc, latin1, 1) == refIndex);
+    CHECK(atomTable.internUtf8(&fc, utf8, 2) == refIndex);
+    CHECK(atomTable.internChar16(&fc, char16, 1) == refIndex);
   }
 
   {
@@ -139,9 +139,9 @@ BEGIN_TEST(testParserAtom_tiny1_nonASCII) {
     auto refIndex =
         WellKnownParserAtoms::getSingleton().lookupTinyIndex(&agrave, 1);
     CHECK(refIndex);
-    CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
-    CHECK(atomTable.internUtf8(&ec, utf8, 2) == refIndex);
-    CHECK(atomTable.internChar16(&ec, char16, 1) == refIndex);
+    CHECK(atomTable.internLatin1(&fc, latin1, 1) == refIndex);
+    CHECK(atomTable.internUtf8(&fc, utf8, 2) == refIndex);
+    CHECK(atomTable.internChar16(&fc, char16, 1) == refIndex);
   }
 
   {
@@ -155,9 +155,9 @@ BEGIN_TEST(testParserAtom_tiny1_nonASCII) {
     auto refIndex =
         WellKnownParserAtoms::getSingleton().lookupTinyIndex(&ae, 1);
     CHECK(refIndex);
-    CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
-    CHECK(atomTable.internUtf8(&ec, utf8, 2) == refIndex);
-    CHECK(atomTable.internChar16(&ec, char16, 1) == refIndex);
+    CHECK(atomTable.internLatin1(&fc, latin1, 1) == refIndex);
+    CHECK(atomTable.internUtf8(&fc, utf8, 2) == refIndex);
+    CHECK(atomTable.internChar16(&fc, char16, 1) == refIndex);
   }
 
   {
@@ -171,9 +171,9 @@ BEGIN_TEST(testParserAtom_tiny1_nonASCII) {
     auto refIndex =
         WellKnownParserAtoms::getSingleton().lookupTinyIndex(&yuml, 1);
     CHECK(refIndex);
-    CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
-    CHECK(atomTable.internUtf8(&ec, utf8, 2) == refIndex);
-    CHECK(atomTable.internChar16(&ec, char16, 1) == refIndex);
+    CHECK(atomTable.internLatin1(&fc, latin1, 1) == refIndex);
+    CHECK(atomTable.internUtf8(&fc, utf8, 2) == refIndex);
+    CHECK(atomTable.internChar16(&fc, char16, 1) == refIndex);
   }
 
   return true;
@@ -190,7 +190,7 @@ BEGIN_TEST(testParserAtom_tiny1_invalidUTF8) {
   using js::frontend::ParserAtomsTable;
   using js::frontend::WellKnownParserAtoms;
 
-  js::AutoReportFrontendContext ec(cx);
+  js::AutoReportFrontendContext fc(cx);
   js::LifoAlloc alloc(512);
   ParserAtomsTable atomTable(alloc);
 
@@ -219,7 +219,7 @@ BEGIN_TEST(testParserAtom_tiny1_invalidUTF8) {
     auto refIndex =
         WellKnownParserAtoms::getSingleton().lookupTinyIndexUTF8(utf8, 2);
     CHECK(refIndex);
-    CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
+    CHECK(atomTable.internLatin1(&fc, latin1, 1) == refIndex);
   }
 
   {
@@ -231,7 +231,7 @@ BEGIN_TEST(testParserAtom_tiny1_invalidUTF8) {
     auto refIndex =
         WellKnownParserAtoms::getSingleton().lookupTinyIndexUTF8(utf8, 2);
     CHECK(refIndex);
-    CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
+    CHECK(atomTable.internLatin1(&fc, latin1, 1) == refIndex);
   }
 
   {
@@ -259,7 +259,7 @@ BEGIN_TEST(testParserAtom_tiny1_invalidUTF8) {
     auto refIndex =
         WellKnownParserAtoms::getSingleton().lookupTinyIndexUTF8(utf8, 2);
     CHECK(refIndex);
-    CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
+    CHECK(atomTable.internLatin1(&fc, latin1, 1) == refIndex);
   }
 
   {
@@ -271,7 +271,7 @@ BEGIN_TEST(testParserAtom_tiny1_invalidUTF8) {
     auto refIndex =
         WellKnownParserAtoms::getSingleton().lookupTinyIndexUTF8(utf8, 2);
     CHECK(refIndex);
-    CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
+    CHECK(atomTable.internLatin1(&fc, latin1, 1) == refIndex);
   }
 
   {
@@ -325,7 +325,7 @@ BEGIN_TEST(testParserAtom_tiny2) {
   using js::frontend::ParserAtomVector;
   using js::frontend::WellKnownParserAtoms;
 
-  js::AutoReportFrontendContext ec(cx);
+  js::AutoReportFrontendContext fc(cx);
   js::LifoAlloc alloc(512);
   ParserAtomsTable atomTable(alloc);
 
@@ -338,10 +338,10 @@ BEGIN_TEST(testParserAtom_tiny2) {
   auto refIndex =
       WellKnownParserAtoms::getSingleton().lookupTinyIndex(ascii, 2);
   CHECK(refIndex);
-  CHECK(atomTable.internAscii(&ec, ascii, 2) == refIndex);
-  CHECK(atomTable.internLatin1(&ec, latin1, 2) == refIndex);
-  CHECK(atomTable.internUtf8(&ec, utf8, 2) == refIndex);
-  CHECK(atomTable.internChar16(&ec, char16, 2) == refIndex);
+  CHECK(atomTable.internAscii(&fc, ascii, 2) == refIndex);
+  CHECK(atomTable.internLatin1(&fc, latin1, 2) == refIndex);
+  CHECK(atomTable.internUtf8(&fc, utf8, 2) == refIndex);
+  CHECK(atomTable.internChar16(&fc, char16, 2) == refIndex);
 
   // Note: If Latin1-Extended characters become supported, then UTF-8 behaviour
   // should be tested.
@@ -359,7 +359,7 @@ BEGIN_TEST(testParserAtom_int) {
   using js::frontend::ParserAtomVector;
   using js::frontend::WellKnownParserAtoms;
 
-  js::AutoReportFrontendContext ec(cx);
+  js::AutoReportFrontendContext fc(cx);
   js::LifoAlloc alloc(512);
   ParserAtomsTable atomTable(alloc);
 
@@ -373,10 +373,10 @@ BEGIN_TEST(testParserAtom_int) {
     auto refIndex =
         WellKnownParserAtoms::getSingleton().lookupTinyIndex(ascii, 3);
     CHECK(refIndex);
-    CHECK(atomTable.internAscii(&ec, ascii, 3) == refIndex);
-    CHECK(atomTable.internLatin1(&ec, latin1, 3) == refIndex);
-    CHECK(atomTable.internUtf8(&ec, utf8, 3) == refIndex);
-    CHECK(atomTable.internChar16(&ec, char16, 3) == refIndex);
+    CHECK(atomTable.internAscii(&fc, ascii, 3) == refIndex);
+    CHECK(atomTable.internLatin1(&fc, latin1, 3) == refIndex);
+    CHECK(atomTable.internUtf8(&fc, utf8, 3) == refIndex);
+    CHECK(atomTable.internChar16(&fc, char16, 3) == refIndex);
   }
 
   {
@@ -389,10 +389,10 @@ BEGIN_TEST(testParserAtom_int) {
     auto refIndex =
         WellKnownParserAtoms::getSingleton().lookupTinyIndex(ascii, 3);
     CHECK(refIndex);
-    CHECK(atomTable.internAscii(&ec, ascii, 3) == refIndex);
-    CHECK(atomTable.internLatin1(&ec, latin1, 3) == refIndex);
-    CHECK(atomTable.internUtf8(&ec, utf8, 3) == refIndex);
-    CHECK(atomTable.internChar16(&ec, char16, 3) == refIndex);
+    CHECK(atomTable.internAscii(&fc, ascii, 3) == refIndex);
+    CHECK(atomTable.internLatin1(&fc, latin1, 3) == refIndex);
+    CHECK(atomTable.internUtf8(&fc, utf8, 3) == refIndex);
+    CHECK(atomTable.internChar16(&fc, char16, 3) == refIndex);
   }
 
   {

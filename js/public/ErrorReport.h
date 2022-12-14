@@ -187,7 +187,7 @@ class JSErrorNotes {
   // Stores pointers to each note.
   js::Vector<js::UniquePtr<Note>, 1, js::SystemAllocPolicy> notes_;
 
-  bool addNoteVA(js::FrontendContext* ec, const char* filename,
+  bool addNoteVA(js::FrontendContext* fc, const char* filename,
                  unsigned sourceId, unsigned lineno, unsigned column,
                  JSErrorCallback errorCallback, void* userRef,
                  const unsigned errorNumber,
@@ -202,7 +202,7 @@ class JSErrorNotes {
                     unsigned lineno, unsigned column,
                     JSErrorCallback errorCallback, void* userRef,
                     const unsigned errorNumber, ...);
-  bool addNoteASCII(js::FrontendContext* ec, const char* filename,
+  bool addNoteASCII(js::FrontendContext* fc, const char* filename,
                     unsigned sourceId, unsigned lineno, unsigned column,
                     JSErrorCallback errorCallback, void* userRef,
                     const unsigned errorNumber, ...);
@@ -210,7 +210,7 @@ class JSErrorNotes {
                      unsigned lineno, unsigned column,
                      JSErrorCallback errorCallback, void* userRef,
                      const unsigned errorNumber, ...);
-  bool addNoteLatin1(js::FrontendContext* ec, const char* filename,
+  bool addNoteLatin1(js::FrontendContext* fc, const char* filename,
                      unsigned sourceId, unsigned lineno, unsigned column,
                      JSErrorCallback errorCallback, void* userRef,
                      const unsigned errorNumber, ...);
@@ -218,7 +218,7 @@ class JSErrorNotes {
                    unsigned lineno, unsigned column,
                    JSErrorCallback errorCallback, void* userRef,
                    const unsigned errorNumber, ...);
-  bool addNoteUTF8(js::FrontendContext* ec, const char* filename,
+  bool addNoteUTF8(js::FrontendContext* fc, const char* filename,
                    unsigned sourceId, unsigned lineno, unsigned column,
                    JSErrorCallback errorCallback, void* userRef,
                    const unsigned errorNumber, ...);

@@ -69,8 +69,8 @@ static JSScript* CompileSourceBuffer(JSContext* cx,
 
   JS::Rooted<JSScript*> script(cx);
   {
-    AutoReportFrontendContext ec(cx);
-    script = frontend::CompileGlobalScript(cx, &ec,
+    AutoReportFrontendContext fc(cx);
+    script = frontend::CompileGlobalScript(cx, &fc,
                                            cx->stackLimitForCurrentPrincipal(),
                                            options, srcBuf, scopeKind);
   }
@@ -105,8 +105,8 @@ JS_PUBLIC_API bool JS::StartIncrementalEncoding(JSContext* cx,
       return false;
     }
 
-    AutoReportFrontendContext ec(cx);
-    if (!initial->steal(&ec, std::move(stencil))) {
+    AutoReportFrontendContext fc(cx);
+    if (!initial->steal(&fc, std::move(stencil))) {
       return false;
     }
   }
@@ -170,24 +170,24 @@ JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
   using frontend::ParseGoal;
   using frontend::Parser;
 
-  AutoReportFrontendContext ec(cx,
+  AutoReportFrontendContext fc(cx,
                                AutoReportFrontendContext::Warning::Suppress);
   CompileOptions options(cx);
   Rooted<frontend::CompilationInput> input(cx,
                                            frontend::CompilationInput(options));
-  if (!input.get().initForGlobal(cx, &ec)) {
+  if (!input.get().initForGlobal(cx, &fc)) {
     return false;
   }
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   js::frontend::NoScopeBindingCache scopeCache;
-  frontend::CompilationState compilationState(cx, &ec, allocScope, input.get());
-  if (!compilationState.init(cx, &ec, &scopeCache)) {
+  frontend::CompilationState compilationState(cx, &fc, allocScope, input.get());
+  if (!compilationState.init(cx, &fc, &scopeCache)) {
     return false;
   }
 
   Parser<FullParseHandler, char16_t> parser(
-      cx, &ec, cx->stackLimitForCurrentPrincipal(), options, chars.get(),
+      cx, &fc, cx->stackLimitForCurrentPrincipal(), options, chars.get(),
       length,
       /* foldConstants = */ true, compilationState,
       /* syntaxParser = */ nullptr);
@@ -215,8 +215,8 @@ class FunctionCompiler {
   bool nameIsIdentifier_ = true;
 
  public:
-  explicit FunctionCompiler(JSContext* cx, FrontendContext* ec)
-      : cx_(cx), nameAtom_(cx), funStr_(cx, ec) {
+  explicit FunctionCompiler(JSContext* cx, FrontendContext* fc)
+      : cx_(cx), nameAtom_(cx), funStr_(cx, fc) {
     AssertHeapIsIdle();
     CHECK_THREAD(cx);
     MOZ_ASSERT(!cx->zone()->isAtomsZone());
@@ -526,9 +526,9 @@ static bool EvaluateSourceBuffer(JSContext* cx, ScopeKind scopeKind,
   options.setNonSyntacticScope(scopeKind == ScopeKind::NonSyntactic);
   options.setIsRunOnce(true);
 
-  AutoReportFrontendContext ec(cx);
+  AutoReportFrontendContext fc(cx);
   RootedScript script(cx, frontend::CompileGlobalScript(
-                              cx, &ec, cx->stackLimitForCurrentPrincipal(),
+                              cx, &fc, cx->stackLimitForCurrentPrincipal(),
                               options, srcBuf, scopeKind));
   if (!script) {
     return false;

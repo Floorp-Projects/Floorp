@@ -18,7 +18,7 @@ void* TempAllocPolicy::onOutOfMemory(arena_id_t arenaId,
   if (hasJSContext()) {
     result = cx()->onOutOfMemory(allocFunc, arenaId, nbytes, reallocPtr);
   } else {
-    result = ec()->onOutOfMemory(allocFunc, arenaId, nbytes, reallocPtr);
+    result = fc()->onOutOfMemory(allocFunc, arenaId, nbytes, reallocPtr);
   }
   return result;
 }
@@ -33,6 +33,6 @@ void TempAllocPolicy::reportAllocOverflow() const {
   if (hasJSContext()) {
     ReportAllocationOverflow(cx());
   } else {
-    ReportAllocationOverflow(ec());
+    ReportAllocationOverflow(fc());
   }
 }

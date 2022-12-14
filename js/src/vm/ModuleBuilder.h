@@ -32,13 +32,13 @@ class ParseNode;
 // Process a module's parse tree to collate the import and export data used when
 // creating a ModuleObject.
 class MOZ_STACK_CLASS ModuleBuilder {
-  explicit ModuleBuilder(JSContext* cx, FrontendContext* ec,
+  explicit ModuleBuilder(JSContext* cx, FrontendContext* fc,
                          const frontend::EitherParser& eitherParser);
 
  public:
   template <class Parser>
-  explicit ModuleBuilder(JSContext* cx, FrontendContext* ec, Parser* parser)
-      : ModuleBuilder(cx, ec, frontend::EitherParser(parser)) {}
+  explicit ModuleBuilder(JSContext* cx, FrontendContext* fc, Parser* parser)
+      : ModuleBuilder(cx, fc, frontend::EitherParser(parser)) {}
 
   bool processImport(frontend::BinaryNode* importNode);
   bool processExport(frontend::ParseNode* exportNode);
@@ -50,7 +50,7 @@ class MOZ_STACK_CLASS ModuleBuilder {
 
   // During BytecodeEmitter we note top-level functions, and afterwards we must
   // call finishFunctionDecls on the list.
-  bool noteFunctionDeclaration(FrontendContext* ec, uint32_t funIndex);
+  bool noteFunctionDeclaration(FrontendContext* fc, uint32_t funIndex);
   void finishFunctionDecls(frontend::StencilModuleMetadata& metadata);
 
   void noteAsync(frontend::StencilModuleMetadata& metadata);
@@ -67,7 +67,7 @@ class MOZ_STACK_CLASS ModuleBuilder {
               frontend::TaggedParserAtomIndexHasher>;
 
   JSContext* cx_;
-  FrontendContext* ec_;
+  FrontendContext* fc_;
   frontend::EitherParser eitherParser_;
 
   // These are populated while parsing.

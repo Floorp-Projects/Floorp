@@ -6123,31 +6123,31 @@ bool Debugger::isCompilableUnit(JSContext* cx, unsigned argc, Value* vp) {
 
   bool result = true;
 
-  AutoReportFrontendContext ec(cx,
+  AutoReportFrontendContext fc(cx,
                                AutoReportFrontendContext::Warning::Suppress);
   CompileOptions options(cx);
   Rooted<frontend::CompilationInput> input(cx,
                                            frontend::CompilationInput(options));
-  if (!input.get().initForGlobal(cx, &ec)) {
+  if (!input.get().initForGlobal(cx, &fc)) {
     return false;
   }
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   frontend::NoScopeBindingCache scopeCache;
-  frontend::CompilationState compilationState(cx, &ec, allocScope, input.get());
-  if (!compilationState.init(cx, &ec, &scopeCache)) {
+  frontend::CompilationState compilationState(cx, &fc, allocScope, input.get());
+  if (!compilationState.init(cx, &fc, &scopeCache)) {
     return false;
   }
 
   frontend::Parser<frontend::FullParseHandler, char16_t> parser(
-      cx, &ec, cx->stackLimitForCurrentPrincipal(), options,
+      cx, &fc, cx->stackLimitForCurrentPrincipal(), options,
       chars.twoByteChars(), length,
       /* foldConstants = */ true, compilationState,
       /* syntaxParser = */ nullptr);
   if (!parser.checkOptions() || !parser.parse()) {
     // We ran into an error. If it was because we ran out of memory we report
     // it in the usual way.
-    if (ec.hadOutOfMemory()) {
+    if (fc.hadOutOfMemory()) {
       return false;
     }
 
@@ -6157,7 +6157,7 @@ bool Debugger::isCompilableUnit(JSContext* cx, unsigned argc, Value* vp) {
       result = false;
     }
 
-    ec.clearAutoReport();
+    fc.clearAutoReport();
   }
 
   args.rval().setBoolean(result);

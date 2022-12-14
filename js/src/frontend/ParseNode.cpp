@@ -53,7 +53,7 @@ void* ParseNodeAllocator::allocNode(size_t size) {
   LifoAlloc::AutoFallibleScope fallibleAllocator(&alloc);
   void* p = alloc.alloc(size);
   if (!p) {
-    ReportOutOfMemory(ec);
+    ReportOutOfMemory(fc);
   }
   return p;
 }
@@ -400,16 +400,16 @@ void BaseScopeNode<Kind, ScopeType>::dumpImpl(
 #endif
 
 TaggedParserAtomIndex NumericLiteral::toAtom(
-    FrontendContext* ec, ParserAtomsTable& parserAtoms) const {
-  return NumberToParserAtom(ec, parserAtoms, value());
+    FrontendContext* fc, ParserAtomsTable& parserAtoms) const {
+  return NumberToParserAtom(fc, parserAtoms, value());
 }
 
 RegExpObject* RegExpLiteral::create(
-    JSContext* cx, FrontendContext* ec, ParserAtomsTable& parserAtoms,
+    JSContext* cx, FrontendContext* fc, ParserAtomsTable& parserAtoms,
     CompilationAtomCache& atomCache,
     ExtensibleCompilationStencil& stencil) const {
   return stencil.regExpData[index_].createRegExpAndEnsureAtom(
-      cx, ec, parserAtoms, atomCache);
+      cx, fc, parserAtoms, atomCache);
 }
 
 bool js::frontend::IsAnonymousFunctionDefinition(ParseNode* pn) {

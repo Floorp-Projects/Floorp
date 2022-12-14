@@ -190,13 +190,13 @@ static void PrepareScopeData(ParserBindingIter& bi,
 
 template <typename ConcreteScope>
 static typename ConcreteScope::ParserData* NewEmptyParserScopeData(
-    FrontendContext* ec, LifoAlloc& alloc, uint32_t length = 0) {
+    FrontendContext* fc, LifoAlloc& alloc, uint32_t length = 0) {
   using Data = typename ConcreteScope::ParserData;
 
   size_t dataSize = SizeOfScopeData<Data>(length);
   void* raw = alloc.alloc(dataSize);
   if (!raw) {
-    js::ReportOutOfMemory(ec);
+    js::ReportOutOfMemory(fc);
     return nullptr;
   }
 
@@ -1372,16 +1372,16 @@ JS::ubi::Node::Size JS::ubi::Concrete<Scope>::size(
 
 template <typename... Args>
 /* static */ bool ScopeStencil::appendScopeStencilAndData(
-    FrontendContext* ec, CompilationState& compilationState,
+    FrontendContext* fc, CompilationState& compilationState,
     BaseParserScopeData* data, ScopeIndex* indexOut, Args&&... args) {
   *indexOut = ScopeIndex(compilationState.scopeData.length());
   if (uint32_t(*indexOut) >= TaggedScriptThingIndex::IndexLimit) {
-    ReportAllocationOverflow(ec);
+    ReportAllocationOverflow(fc);
     return false;
   }
 
   if (!compilationState.scopeData.emplaceBack(std::forward<Args>(args)...)) {
-    js::ReportOutOfMemory(ec);
+    js::ReportOutOfMemory(fc);
     return false;
   }
   if (!compilationState.scopeNames.append(data)) {
@@ -1389,7 +1389,7 @@ template <typename... Args>
     MOZ_ASSERT(compilationState.scopeData.length() ==
                compilationState.scopeNames.length());
 
-    js::ReportOutOfMemory(ec);
+    js::ReportOutOfMemory(fc);
     return false;
   }
 
@@ -1398,7 +1398,7 @@ template <typename... Args>
 
 /* static */
 bool ScopeStencil::createForFunctionScope(
-    FrontendContext* ec, frontend::CompilationState& compilationState,
+    FrontendContext* fc, frontend::CompilationState& compilationState,
     FunctionScope::ParserData* data, bool hasParameterExprs,
     bool needsEnvironment, ScriptIndex functionIndex, bool isArrow,
     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
@@ -1409,7 +1409,7 @@ bool ScopeStencil::createForFunctionScope(
   if (data) {
     MarkParserScopeData<ScopeType>(data, compilationState);
   } else {
-    data = NewEmptyParserScopeData<ScopeType>(ec, compilationState.alloc);
+    data = NewEmptyParserScopeData<ScopeType>(fc, compilationState.alloc);
     if (!data) {
       return false;
     }
@@ -1420,14 +1420,14 @@ bool ScopeStencil::createForFunctionScope(
   FunctionScope::prepareForScopeCreation(data, hasParameterExprs,
                                          needsEnvironment, &envShape);
 
-  return appendScopeStencilAndData(ec, compilationState, data, index, kind,
+  return appendScopeStencilAndData(fc, compilationState, data, index, kind,
                                    enclosing, firstFrameSlot, envShape,
                                    mozilla::Some(functionIndex), isArrow);
 }
 
 /* static */
 bool ScopeStencil::createForLexicalScope(
-    FrontendContext* ec, frontend::CompilationState& compilationState,
+    FrontendContext* fc, frontend::CompilationState& compilationState,
     ScopeKind kind, LexicalScope::ParserData* data, uint32_t firstFrameSlot,
     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
   using ScopeType = LexicalScope;
@@ -1436,7 +1436,7 @@ bool ScopeStencil::createForLexicalScope(
   if (data) {
     MarkParserScopeData<ScopeType>(data, compilationState);
   } else {
-    data = NewEmptyParserScopeData<ScopeType>(ec, compilationState.alloc);
+    data = NewEmptyParserScopeData<ScopeType>(fc, compilationState.alloc);
     if (!data) {
       return false;
     }
@@ -1445,13 +1445,13 @@ bool ScopeStencil::createForLexicalScope(
   mozilla::Maybe<uint32_t> envShape;
   ScopeType::prepareForScopeCreation(kind, firstFrameSlot, data, &envShape);
 
-  return appendScopeStencilAndData(ec, compilationState, data, index, kind,
+  return appendScopeStencilAndData(fc, compilationState, data, index, kind,
                                    enclosing, firstFrameSlot, envShape);
 }
 
 /* static */
 bool ScopeStencil::createForClassBodyScope(
-    FrontendContext* ec, frontend::CompilationState& compilationState,
+    FrontendContext* fc, frontend::CompilationState& compilationState,
     ScopeKind kind, ClassBodyScope::ParserData* data, uint32_t firstFrameSlot,
     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
   using ScopeType = ClassBodyScope;
@@ -1460,7 +1460,7 @@ bool ScopeStencil::createForClassBodyScope(
   if (data) {
     MarkParserScopeData<ScopeType>(data, compilationState);
   } else {
-    data = NewEmptyParserScopeData<ScopeType>(ec, compilationState.alloc);
+    data = NewEmptyParserScopeData<ScopeType>(fc, compilationState.alloc);
     if (!data) {
       return false;
     }
@@ -1469,12 +1469,12 @@ bool ScopeStencil::createForClassBodyScope(
   mozilla::Maybe<uint32_t> envShape;
   ScopeType::prepareForScopeCreation(kind, firstFrameSlot, data, &envShape);
 
-  return appendScopeStencilAndData(ec, compilationState, data, index, kind,
+  return appendScopeStencilAndData(fc, compilationState, data, index, kind,
                                    enclosing, firstFrameSlot, envShape);
 }
 
 bool ScopeStencil::createForVarScope(
-    FrontendContext* ec, frontend::CompilationState& compilationState,
+    FrontendContext* fc, frontend::CompilationState& compilationState,
     ScopeKind kind, VarScope::ParserData* data, uint32_t firstFrameSlot,
     bool needsEnvironment, mozilla::Maybe<ScopeIndex> enclosing,
     ScopeIndex* index) {
@@ -1484,7 +1484,7 @@ bool ScopeStencil::createForVarScope(
   if (data) {
     MarkParserScopeData<ScopeType>(data, compilationState);
   } else {
-    data = NewEmptyParserScopeData<ScopeType>(ec, compilationState.alloc);
+    data = NewEmptyParserScopeData<ScopeType>(fc, compilationState.alloc);
     if (!data) {
       return false;
     }
@@ -1494,13 +1494,13 @@ bool ScopeStencil::createForVarScope(
   VarScope::prepareForScopeCreation(kind, data, firstFrameSlot,
                                     needsEnvironment, &envShape);
 
-  return appendScopeStencilAndData(ec, compilationState, data, index, kind,
+  return appendScopeStencilAndData(fc, compilationState, data, index, kind,
                                    enclosing, firstFrameSlot, envShape);
 }
 
 /* static */
 bool ScopeStencil::createForGlobalScope(
-    FrontendContext* ec, frontend::CompilationState& compilationState,
+    FrontendContext* fc, frontend::CompilationState& compilationState,
     ScopeKind kind, GlobalScope::ParserData* data, ScopeIndex* index) {
   using ScopeType = GlobalScope;
   MOZ_ASSERT(matchScopeKind<ScopeType>(kind));
@@ -1508,7 +1508,7 @@ bool ScopeStencil::createForGlobalScope(
   if (data) {
     MarkParserScopeData<ScopeType>(data, compilationState);
   } else {
-    data = NewEmptyParserScopeData<ScopeType>(ec, compilationState.alloc);
+    data = NewEmptyParserScopeData<ScopeType>(fc, compilationState.alloc);
     if (!data) {
       return false;
     }
@@ -1523,13 +1523,13 @@ bool ScopeStencil::createForGlobalScope(
 
   mozilla::Maybe<ScopeIndex> enclosing;
 
-  return appendScopeStencilAndData(ec, compilationState, data, index, kind,
+  return appendScopeStencilAndData(fc, compilationState, data, index, kind,
                                    enclosing, firstFrameSlot, envShape);
 }
 
 /* static */
 bool ScopeStencil::createForEvalScope(
-    FrontendContext* ec, frontend::CompilationState& compilationState,
+    FrontendContext* fc, frontend::CompilationState& compilationState,
     ScopeKind kind, EvalScope::ParserData* data,
     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
   using ScopeType = EvalScope;
@@ -1538,7 +1538,7 @@ bool ScopeStencil::createForEvalScope(
   if (data) {
     MarkParserScopeData<ScopeType>(data, compilationState);
   } else {
-    data = NewEmptyParserScopeData<ScopeType>(ec, compilationState.alloc);
+    data = NewEmptyParserScopeData<ScopeType>(fc, compilationState.alloc);
     if (!data) {
       return false;
     }
@@ -1548,13 +1548,13 @@ bool ScopeStencil::createForEvalScope(
   mozilla::Maybe<uint32_t> envShape;
   EvalScope::prepareForScopeCreation(kind, data, &envShape);
 
-  return appendScopeStencilAndData(ec, compilationState, data, index, kind,
+  return appendScopeStencilAndData(fc, compilationState, data, index, kind,
                                    enclosing, firstFrameSlot, envShape);
 }
 
 /* static */
 bool ScopeStencil::createForModuleScope(
-    FrontendContext* ec, frontend::CompilationState& compilationState,
+    FrontendContext* fc, frontend::CompilationState& compilationState,
     ModuleScope::ParserData* data, mozilla::Maybe<ScopeIndex> enclosing,
     ScopeIndex* index) {
   auto kind = ScopeKind::Module;
@@ -1564,7 +1564,7 @@ bool ScopeStencil::createForModuleScope(
   if (data) {
     MarkParserScopeData<ScopeType>(data, compilationState);
   } else {
-    data = NewEmptyParserScopeData<ScopeType>(ec, compilationState.alloc);
+    data = NewEmptyParserScopeData<ScopeType>(fc, compilationState.alloc);
     if (!data) {
       return false;
     }
@@ -1578,7 +1578,7 @@ bool ScopeStencil::createForModuleScope(
   mozilla::Maybe<uint32_t> envShape;
   ModuleScope::prepareForScopeCreation(data, &envShape);
 
-  return appendScopeStencilAndData(ec, compilationState, data, index, kind,
+  return appendScopeStencilAndData(fc, compilationState, data, index, kind,
                                    enclosing, firstFrameSlot, envShape);
 }
 
@@ -1605,7 +1605,7 @@ bool ScopeStencil::createSpecificShape(
 }
 
 /* static */
-bool ScopeStencil::createForWithScope(FrontendContext* ec,
+bool ScopeStencil::createForWithScope(FrontendContext* fc,
                                       CompilationState& compilationState,
                                       mozilla::Maybe<ScopeIndex> enclosing,
                                       ScopeIndex* index) {
@@ -1615,7 +1615,7 @@ bool ScopeStencil::createForWithScope(FrontendContext* ec,
   uint32_t firstFrameSlot = 0;
   mozilla::Maybe<uint32_t> envShape;
 
-  return appendScopeStencilAndData(ec, compilationState, nullptr, index, kind,
+  return appendScopeStencilAndData(fc, compilationState, nullptr, index, kind,
                                    enclosing, firstFrameSlot, envShape);
 }
 

@@ -45,8 +45,8 @@ struct MOZ_STACK_CLASS GCThingList {
   // Index of the first scope in the vector.
   mozilla::Maybe<GCThingIndex> firstScopeIndex;
 
-  explicit GCThingList(FrontendContext* ec, CompilationState& compilationState)
-      : compilationState(compilationState), vector(ec) {}
+  explicit GCThingList(FrontendContext* fc, CompilationState& compilationState)
+      : compilationState(compilationState), vector(fc) {}
 
   [[nodiscard]] bool append(TaggedParserAtomIndex atom,
                             ParserAtom::Atomize atomize, GCThingIndex* index) {
@@ -128,7 +128,7 @@ struct MOZ_STACK_CLASS GCThingList {
 
 struct CGTryNoteList {
   Vector<TryNote, 0> list;
-  explicit CGTryNoteList(FrontendContext* ec) : list(ec) {}
+  explicit CGTryNoteList(FrontendContext* fc) : list(fc) {}
 
   [[nodiscard]] bool append(TryNoteKind kind, uint32_t stackDepth,
                             BytecodeOffset start, BytecodeOffset end);
@@ -140,7 +140,7 @@ struct CGTryNoteList {
 
 struct CGScopeNoteList {
   Vector<ScopeNote, 0> list;
-  explicit CGScopeNoteList(FrontendContext* ec) : list(ec) {}
+  explicit CGScopeNoteList(FrontendContext* fc) : list(fc) {}
 
   [[nodiscard]] bool append(GCThingIndex scopeIndex, BytecodeOffset offset,
                             uint32_t parent);
@@ -157,7 +157,7 @@ struct CGScopeNoteList {
 
 struct CGResumeOffsetList {
   Vector<uint32_t, 0> list;
-  explicit CGResumeOffsetList(FrontendContext* ec) : list(ec) {}
+  explicit CGResumeOffsetList(FrontendContext* fc) : list(fc) {}
 
   [[nodiscard]] bool append(uint32_t offset) { return list.append(offset); }
   mozilla::Span<const uint32_t> span() const {
@@ -178,7 +178,7 @@ typedef Vector<js::SrcNote, 64> SrcNotesVector;
 // bytecode is stored in this class.
 class BytecodeSection {
  public:
-  BytecodeSection(FrontendContext* ec, uint32_t lineNum, uint32_t column);
+  BytecodeSection(FrontendContext* fc, uint32_t lineNum, uint32_t column);
 
   // ---- Bytecode ----
 
@@ -368,10 +368,10 @@ class BytecodeSection {
 // bytecode, but referred from bytecode is stored in this class.
 class PerScriptData {
  public:
-  explicit PerScriptData(FrontendContext* ec, NameCollectionPool& ncp,
+  explicit PerScriptData(FrontendContext* fc, NameCollectionPool& ncp,
                          frontend::CompilationState& compilationState);
 
-  [[nodiscard]] bool init(FrontendContext* ec);
+  [[nodiscard]] bool init(FrontendContext* fc);
 
   GCThingList& gcThingList() { return gcThingList_; }
   const GCThingList& gcThingList() const { return gcThingList_; }

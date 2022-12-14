@@ -51,7 +51,7 @@ bool js::ReportExceptionClosure::operator()(JSContext* cx) {
   return false;
 }
 
-bool js::ReportCompileWarning(FrontendContext* ec, ErrorMetadata&& metadata,
+bool js::ReportCompileWarning(FrontendContext* fc, ErrorMetadata&& metadata,
                               UniquePtr<JSErrorNotes> notes,
                               unsigned errorNumber, va_list* args) {
   // On the main thread, report the error immediately. When compiling off
@@ -73,15 +73,15 @@ bool js::ReportCompileWarning(FrontendContext* ec, ErrorMetadata&& metadata,
                          metadata.tokenOffset);
   }
 
-  if (!ExpandErrorArgumentsVA(ec, GetErrorMessage, nullptr, errorNumber,
+  if (!ExpandErrorArgumentsVA(fc, GetErrorMessage, nullptr, errorNumber,
                               ArgumentsAreLatin1, &err, *args)) {
     return false;
   }
 
-  return ec->reportWarning(std::move(err));
+  return fc->reportWarning(std::move(err));
 }
 
-static void ReportCompileErrorImpl(FrontendContext* ec,
+static void ReportCompileErrorImpl(FrontendContext* fc,
                                    js::ErrorMetadata&& metadata,
                                    js::UniquePtr<JSErrorNotes> notes,
                                    unsigned errorNumber, va_list* args,
@@ -102,25 +102,25 @@ static void ReportCompileErrorImpl(FrontendContext* ec,
                          metadata.tokenOffset);
   }
 
-  if (!js::ExpandErrorArgumentsVA(ec, js::GetErrorMessage, nullptr, errorNumber,
+  if (!js::ExpandErrorArgumentsVA(fc, js::GetErrorMessage, nullptr, errorNumber,
                                   argumentsType, &err, *args)) {
     return;
   }
 
-  ec->reportError(std::move(err));
+  fc->reportError(std::move(err));
 }
 
-void js::ReportCompileErrorLatin1(FrontendContext* ec, ErrorMetadata&& metadata,
+void js::ReportCompileErrorLatin1(FrontendContext* fc, ErrorMetadata&& metadata,
                                   UniquePtr<JSErrorNotes> notes,
                                   unsigned errorNumber, va_list* args) {
-  ReportCompileErrorImpl(ec, std::move(metadata), std::move(notes), errorNumber,
+  ReportCompileErrorImpl(fc, std::move(metadata), std::move(notes), errorNumber,
                          args, ArgumentsAreLatin1);
 }
 
-void js::ReportCompileErrorUTF8(FrontendContext* ec, ErrorMetadata&& metadata,
+void js::ReportCompileErrorUTF8(FrontendContext* fc, ErrorMetadata&& metadata,
                                 UniquePtr<JSErrorNotes> notes,
                                 unsigned errorNumber, va_list* args) {
-  ReportCompileErrorImpl(ec, std::move(metadata), std::move(notes), errorNumber,
+  ReportCompileErrorImpl(fc, std::move(metadata), std::move(notes), errorNumber,
                          args, ArgumentsAreUTF8);
 }
 
@@ -299,7 +299,7 @@ class MOZ_RAII AutoMessageArgs {
  * using void* here simplifies our callers a bit.
  */
 template <typename T>
-static bool ExpandErrorArgumentsHelper(FrontendContext* ec,
+static bool ExpandErrorArgumentsHelper(FrontendContext* fc,
                                        JSErrorCallback callback, void* userRef,
                                        const unsigned errorNumber,
                                        void* messageArgs,
@@ -311,7 +311,7 @@ static bool ExpandErrorArgumentsHelper(FrontendContext* ec,
     callback = GetErrorMessage;
   }
 
-  efs = ec->gcSafeCallback(callback, userRef, errorNumber);
+  efs = fc->gcSafeCallback(callback, userRef, errorNumber);
 
   if (efs) {
     if constexpr (std::is_same_v<T, JSErrorReport>) {
@@ -341,7 +341,7 @@ static bool ExpandErrorArgumentsHelper(FrontendContext* ec,
         size_t len = strlen(efs->format);
 
         AutoMessageArgs args;
-        if (!args.init(ec->getAllocator(), messageArgs, argCount, argumentsType,
+        if (!args.init(fc->getAllocator(), messageArgs, argCount, argumentsType,
                        ap)) {
           return false;
         }
@@ -354,7 +354,7 @@ static bool ExpandErrorArgumentsHelper(FrontendContext* ec,
          * is used once and only once in the expansion !!!
          */
         char* utf8 = out =
-            ec->getAllocator()->pod_malloc<char>(expandedLength + 1);
+            fc->getAllocator()->pod_malloc<char>(expandedLength + 1);
         if (!out) {
           return false;
         }
@@ -398,7 +398,7 @@ static bool ExpandErrorArgumentsHelper(FrontendContext* ec,
     const char* defaultErrorMessage =
         "No error message available for error number %d";
     size_t nbytes = strlen(defaultErrorMessage) + 16;
-    char* message = ec->getAllocator()->pod_malloc<char>(nbytes);
+    char* message = fc->getAllocator()->pod_malloc<char>(nbytes);
     if (!message) {
       return false;
     }
@@ -408,40 +408,40 @@ static bool ExpandErrorArgumentsHelper(FrontendContext* ec,
   return true;
 }
 
-bool js::ExpandErrorArgumentsVA(FrontendContext* ec, JSErrorCallback callback,
+bool js::ExpandErrorArgumentsVA(FrontendContext* fc, JSErrorCallback callback,
                                 void* userRef, const unsigned errorNumber,
                                 const char16_t** messageArgs,
                                 ErrorArgumentsType argumentsType,
                                 JSErrorReport* reportp, va_list ap) {
   MOZ_ASSERT(argumentsType == ArgumentsAreUnicode);
-  return ExpandErrorArgumentsHelper(ec, callback, userRef, errorNumber,
+  return ExpandErrorArgumentsHelper(fc, callback, userRef, errorNumber,
                                     messageArgs, argumentsType, reportp, ap);
 }
 
-bool js::ExpandErrorArgumentsVA(FrontendContext* ec, JSErrorCallback callback,
+bool js::ExpandErrorArgumentsVA(FrontendContext* fc, JSErrorCallback callback,
                                 void* userRef, const unsigned errorNumber,
                                 const char** messageArgs,
                                 ErrorArgumentsType argumentsType,
                                 JSErrorReport* reportp, va_list ap) {
   MOZ_ASSERT(argumentsType != ArgumentsAreUnicode);
-  return ExpandErrorArgumentsHelper(ec, callback, userRef, errorNumber,
+  return ExpandErrorArgumentsHelper(fc, callback, userRef, errorNumber,
                                     messageArgs, argumentsType, reportp, ap);
 }
 
-bool js::ExpandErrorArgumentsVA(FrontendContext* ec, JSErrorCallback callback,
+bool js::ExpandErrorArgumentsVA(FrontendContext* fc, JSErrorCallback callback,
                                 void* userRef, const unsigned errorNumber,
                                 ErrorArgumentsType argumentsType,
                                 JSErrorReport* reportp, va_list ap) {
-  return ExpandErrorArgumentsHelper(ec, callback, userRef, errorNumber, nullptr,
+  return ExpandErrorArgumentsHelper(fc, callback, userRef, errorNumber, nullptr,
                                     argumentsType, reportp, ap);
 }
 
-bool js::ExpandErrorArgumentsVA(FrontendContext* ec, JSErrorCallback callback,
+bool js::ExpandErrorArgumentsVA(FrontendContext* fc, JSErrorCallback callback,
                                 void* userRef, const unsigned errorNumber,
                                 const char16_t** messageArgs,
                                 ErrorArgumentsType argumentsType,
                                 JSErrorNotes::Note* notep, va_list ap) {
-  return ExpandErrorArgumentsHelper(ec, callback, userRef, errorNumber,
+  return ExpandErrorArgumentsHelper(fc, callback, userRef, errorNumber,
                                     messageArgs, argumentsType, notep, ap);
 }
 
@@ -454,8 +454,8 @@ bool js::ReportErrorNumberVA(JSContext* cx, IsWarning isWarning,
   report.errorNumber = errorNumber;
   PopulateReportBlame(cx, &report);
 
-  AutoReportFrontendContext ec(cx);
-  if (!ExpandErrorArgumentsVA(&ec, callback, userRef, errorNumber,
+  AutoReportFrontendContext fc(cx);
+  if (!ExpandErrorArgumentsVA(&fc, callback, userRef, errorNumber,
                               argumentsType, &report, ap)) {
     return false;
   }
@@ -466,7 +466,7 @@ bool js::ReportErrorNumberVA(JSContext* cx, IsWarning isWarning,
 }
 
 template <typename CharT>
-static bool ExpandErrorArguments(FrontendContext* ec, JSErrorCallback callback,
+static bool ExpandErrorArguments(FrontendContext* fc, JSErrorCallback callback,
                                  void* userRef, const unsigned errorNumber,
                                  const CharT** messageArgs,
                                  js::ErrorArgumentsType argumentsType,
@@ -474,7 +474,7 @@ static bool ExpandErrorArguments(FrontendContext* ec, JSErrorCallback callback,
   va_list ap;
   va_start(ap, reportp);
   bool expanded =
-      js::ExpandErrorArgumentsVA(ec, callback, userRef, errorNumber,
+      js::ExpandErrorArgumentsVA(fc, callback, userRef, errorNumber,
                                  messageArgs, argumentsType, reportp, ap);
   va_end(ap);
   return expanded;
@@ -495,8 +495,8 @@ static bool ReportErrorNumberArray(JSContext* cx, IsWarning isWarning,
   report.errorNumber = errorNumber;
   PopulateReportBlame(cx, &report);
 
-  AutoReportFrontendContext ec(cx);
-  if (!ExpandErrorArguments(&ec, callback, userRef, errorNumber, args, argType,
+  AutoReportFrontendContext fc(cx);
+  if (!ExpandErrorArguments(&fc, callback, userRef, errorNumber, args, argType,
                             &report)) {
     return false;
   }

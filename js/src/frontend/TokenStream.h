@@ -429,7 +429,7 @@ class SourceCoords {
   }
 
  public:
-  SourceCoords(FrontendContext* ec, uint32_t initialLineNumber,
+  SourceCoords(FrontendContext* fc, uint32_t initialLineNumber,
                uint32_t initialOffset);
 
   [[nodiscard]] bool add(uint32_t lineNum, uint32_t lineStartOffset);
@@ -564,7 +564,7 @@ class TokenStreamAnyChars : public TokenStreamShared {
 
   JSContext* const cx;
 
-  FrontendContext* const ec;
+  FrontendContext* const fc;
 
   /** Options used for parsing/tokenizing. */
   const JS::ReadOnlyCompileOptions& options_;
@@ -723,7 +723,7 @@ class TokenStreamAnyChars : public TokenStreamShared {
   // End of fields.
 
  public:
-  TokenStreamAnyChars(JSContext* cx, FrontendContext* ec,
+  TokenStreamAnyChars(JSContext* cx, FrontendContext* fc,
                       const JS::ReadOnlyCompileOptions& options,
                       StrictModeGetter* smg);
 
@@ -877,7 +877,7 @@ class TokenStreamAnyChars : public TokenStreamShared {
 
   char16_t* sourceMapURL() { return sourceMapURL_.get(); }
 
-  FrontendContext* context() const { return ec; }
+  FrontendContext* context() const { return fc; }
   JSContext* jsContext() const { return cx; }
 
   using LineToken = SourceCoords::LineToken;
@@ -1569,7 +1569,7 @@ using CharBuffer = Vector<char16_t, 32>;
 class TokenStreamCharsShared {
  protected:
   JSContext* cx;
-  FrontendContext* ec;
+  FrontendContext* fc;
 
   /**
    * Buffer transiently used to store sequences of identifier or string code
@@ -1582,9 +1582,9 @@ class TokenStreamCharsShared {
   ParserAtomsTable* parserAtoms;
 
  protected:
-  explicit TokenStreamCharsShared(JSContext* cx, FrontendContext* ec,
+  explicit TokenStreamCharsShared(JSContext* cx, FrontendContext* fc,
                                   ParserAtomsTable* parserAtoms)
-      : cx(cx), ec(ec), charBuffer(ec), parserAtoms(parserAtoms) {}
+      : cx(cx), fc(fc), charBuffer(fc), parserAtoms(parserAtoms) {}
 
   [[nodiscard]] bool copyCharBufferTo(
       JSContext* cx, UniquePtr<char16_t[], JS::FreePolicy>* destination);
@@ -1601,7 +1601,7 @@ class TokenStreamCharsShared {
 
   TaggedParserAtomIndex drainCharBufferIntoAtom() {
     // Add to parser atoms table.
-    auto atom = this->parserAtoms->internChar16(ec, charBuffer.begin(),
+    auto atom = this->parserAtoms->internChar16(fc, charBuffer.begin(),
                                                 charBuffer.length());
     charBuffer.clear();
     return atom;
@@ -1630,7 +1630,7 @@ class TokenStreamCharsBase : public TokenStreamCharsShared {
   // End of fields.
 
  protected:
-  TokenStreamCharsBase(JSContext* cx, FrontendContext* ec,
+  TokenStreamCharsBase(JSContext* cx, FrontendContext* fc,
                        ParserAtomsTable* parserAtoms, const Unit* units,
                        size_t length, size_t startOffset);
 
@@ -1733,14 +1733,14 @@ template <>
 MOZ_ALWAYS_INLINE TaggedParserAtomIndex
 TokenStreamCharsBase<char16_t>::atomizeSourceChars(
     mozilla::Span<const char16_t> units) {
-  return this->parserAtoms->internChar16(ec, units.data(), units.size());
+  return this->parserAtoms->internChar16(fc, units.data(), units.size());
 }
 
 template <>
 /* static */ MOZ_ALWAYS_INLINE TaggedParserAtomIndex
 TokenStreamCharsBase<mozilla::Utf8Unit>::atomizeSourceChars(
     mozilla::Span<const mozilla::Utf8Unit> units) {
-  return this->parserAtoms->internUtf8(ec, units.data(), units.size());
+  return this->parserAtoms->internUtf8(fc, units.data(), units.size());
 }
 
 template <typename Unit>
@@ -2488,7 +2488,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
   friend class TokenStreamPosition;
 
  public:
-  TokenStreamSpecific(JSContext* cx, FrontendContext* ec,
+  TokenStreamSpecific(JSContext* cx, FrontendContext* fc,
                       ParserAtomsTable* parserAtoms,
                       const JS::ReadOnlyCompileOptions& options,
                       const Unit* units, size_t length);
@@ -2928,19 +2928,19 @@ class MOZ_STACK_CLASS TokenStream
   using Unit = char16_t;
 
  public:
-  TokenStream(JSContext* cx, FrontendContext* ec, ParserAtomsTable* parserAtoms,
+  TokenStream(JSContext* cx, FrontendContext* fc, ParserAtomsTable* parserAtoms,
               const JS::ReadOnlyCompileOptions& options, const Unit* units,
               size_t length, StrictModeGetter* smg)
-      : TokenStreamAnyChars(cx, ec, options, smg),
+      : TokenStreamAnyChars(cx, fc, options, smg),
         TokenStreamSpecific<Unit, TokenStreamAnyCharsAccess>(
-            cx, ec, parserAtoms, options, units, length) {}
+            cx, fc, parserAtoms, options, units, length) {}
 };
 
 class MOZ_STACK_CLASS DummyTokenStream final : public TokenStream {
  public:
-  DummyTokenStream(JSContext* cx, FrontendContext* ec,
+  DummyTokenStream(JSContext* cx, FrontendContext* fc,
                    const JS::ReadOnlyCompileOptions& options)
-      : TokenStream(cx, ec, nullptr, options, nullptr, 0, nullptr) {}
+      : TokenStream(cx, fc, nullptr, options, nullptr, 0, nullptr) {}
 };
 
 template <class TokenStreamSpecific>

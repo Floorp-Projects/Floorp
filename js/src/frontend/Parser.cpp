@@ -160,15 +160,15 @@ void ParserSharedBase::dumpAtom(TaggedParserAtomIndex index) const {
 }
 #endif
 
-ParserBase::ParserBase(JSContext* cx, FrontendContext* ec,
+ParserBase::ParserBase(JSContext* cx, FrontendContext* fc,
                        JS::NativeStackLimit stackLimit,
                        const ReadOnlyCompileOptions& options,
                        bool foldConstants, CompilationState& compilationState)
     : ParserSharedBase(cx, compilationState, ParserSharedBase::Kind::Parser),
-      anyChars(cx, ec, options, this),
+      anyChars(cx, fc, options, this),
       ss(nullptr),
       foldConstants_(foldConstants),
-      ec_(ec),
+      fc_(fc),
       stackLimit_(stackLimit),
 #ifdef DEBUG
       checkOptionsCalled_(false),
@@ -190,11 +190,11 @@ ParserBase::~ParserBase() { MOZ_ASSERT(checkOptionsCalled_); }
 
 template <class ParseHandler>
 PerHandlerParser<ParseHandler>::PerHandlerParser(
-    JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
     const ReadOnlyCompileOptions& options, bool foldConstants,
     CompilationState& compilationState, void* internalSyntaxParser)
-    : ParserBase(cx, ec, stackLimit, options, foldConstants, compilationState),
-      handler_(ec, compilationState),
+    : ParserBase(cx, fc, stackLimit, options, foldConstants, compilationState),
+      handler_(fc, compilationState),
       internalSyntaxParser_(internalSyntaxParser) {
   MOZ_ASSERT(compilationState.isInitialStencil() ==
              compilationState.input.isInitialStencil());
@@ -202,13 +202,13 @@ PerHandlerParser<ParseHandler>::PerHandlerParser(
 
 template <class ParseHandler, typename Unit>
 GeneralParser<ParseHandler, Unit>::GeneralParser(
-    JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
     const ReadOnlyCompileOptions& options, const Unit* units, size_t length,
     bool foldConstants, CompilationState& compilationState,
     SyntaxParser* syntaxParser)
-    : Base(cx, ec, stackLimit, options, foldConstants, compilationState,
+    : Base(cx, fc, stackLimit, options, foldConstants, compilationState,
            syntaxParser),
-      tokenStream(cx, ec, &compilationState.parserAtoms, options, units,
+      tokenStream(cx, fc, &compilationState.parserAtoms, options, units,
                   length) {}
 
 template <typename Unit>
@@ -262,10 +262,10 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
 
   ScriptIndex index = ScriptIndex(compilationState_.scriptData.length());
   if (uint32_t(index) >= TaggedScriptThingIndex::IndexLimit) {
-    ReportAllocationOverflow(ec_);
+    ReportAllocationOverflow(fc_);
     return nullptr;
   }
-  if (!compilationState_.appendScriptStencilAndData(ec_)) {
+  if (!compilationState_.appendScriptStencilAndData(fc_)) {
     return nullptr;
   }
 
@@ -283,10 +283,10 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
    * function.
    */
   FunctionBox* funbox = alloc_.new_<FunctionBox>(
-      cx_, ec_, extent, compilationState_, inheritedDirectives, generatorKind,
+      cx_, fc_, extent, compilationState_, inheritedDirectives, generatorKind,
       asyncKind, isInitialStencil, explicitName, flags, index);
   if (!funbox) {
-    ReportOutOfMemory(ec_);
+    ReportOutOfMemory(fc_);
     return nullptr;
   }
 
@@ -303,10 +303,10 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
 
   ScriptIndex index = ScriptIndex(compilationState_.scriptData.length());
   if (uint32_t(index) >= TaggedScriptThingIndex::IndexLimit) {
-    ReportAllocationOverflow(ec_);
+    ReportAllocationOverflow(fc_);
     return nullptr;
   }
-  if (!compilationState_.appendScriptStencilAndData(ec_)) {
+  if (!compilationState_.appendScriptStencilAndData(fc_)) {
     return nullptr;
   }
 
@@ -318,12 +318,12 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
    * function.
    */
   FunctionBox* funbox = alloc_.new_<FunctionBox>(
-      cx_, ec_, cachedScriptExtra.extent, compilationState_,
+      cx_, fc_, cachedScriptExtra.extent, compilationState_,
       Directives(/* strict = */ false), cachedScriptExtra.generatorKind(),
       cachedScriptExtra.asyncKind(), compilationState_.isInitialStencil(),
       cachedScriptData.functionAtom, cachedScriptData.functionFlags, index);
   if (!funbox) {
-    ReportOutOfMemory(ec_);
+    ReportOutOfMemory(fc_);
     return nullptr;
   }
 
@@ -347,14 +347,14 @@ bool ParserBase::setSourceMapInfo() {
   }
 
   if (anyChars.hasDisplayURL()) {
-    if (!ss->setDisplayURL(cx_, ec_, anyChars.displayURL())) {
+    if (!ss->setDisplayURL(cx_, fc_, anyChars.displayURL())) {
       return false;
     }
   }
 
   if (anyChars.hasSourceMapURL()) {
     MOZ_ASSERT(!ss->hasSourceMapURL());
-    if (!ss->setSourceMapURL(cx_, ec_, anyChars.sourceMapURL())) {
+    if (!ss->setSourceMapURL(cx_, fc_, anyChars.sourceMapURL())) {
       return false;
     }
   }
@@ -372,7 +372,7 @@ bool ParserBase::setSourceMapInfo() {
       }
     }
 
-    if (!ss->setSourceMapURL(cx_, ec_, options().sourceMapURL())) {
+    if (!ss->setSourceMapURL(cx_, fc_, options().sourceMapURL())) {
       return false;
     }
   }
@@ -390,7 +390,7 @@ typename ParseHandler::ListNodeType GeneralParser<ParseHandler, Unit>::parse() {
   SourceExtent extent = SourceExtent::makeGlobalExtent(
       /* len = */ 0, options().lineno, options().column);
   Directives directives(options().forceStrictMode());
-  GlobalSharedContext globalsc(cx_, this->ec_, ScopeKind::Global, options(),
+  GlobalSharedContext globalsc(cx_, this->fc_, ScopeKind::Global, options(),
                                directives, extent);
   SourceParseContext globalpc(this, &globalsc, /* newDirectives = */ nullptr);
   if (!globalpc.init()) {
@@ -416,7 +416,7 @@ typename ParseHandler::ListNodeType GeneralParser<ParseHandler, Unit>::parse() {
     return null();
   }
 
-  if (!CheckParseTree(this->ec_, this->stackLimit_, alloc_, stmtList)) {
+  if (!CheckParseTree(this->fc_, this->stackLimit_, alloc_, stmtList)) {
     return null();
   }
 
@@ -425,7 +425,7 @@ typename ParseHandler::ListNodeType GeneralParser<ParseHandler, Unit>::parse() {
     // Don't constant-fold inside "use asm" code, as this could create a parse
     // tree that doesn't type-check as asm.js.
     if (!pc_->useAsmOrInsideUseAsm()) {
-      if (!FoldConstants(cx_, this->ec_, this->stackLimit_, this->parserAtoms(),
+      if (!FoldConstants(cx_, this->fc_, this->stackLimit_, this->parserAtoms(),
                          &node, &handler_)) {
         return null();
       }
@@ -476,7 +476,7 @@ void GeneralParser<ParseHandler, Unit>::reportMissingClosing(
     unsigned errorNumber, unsigned noteNumber, uint32_t openedPos) {
   auto notes = MakeUnique<JSErrorNotes>();
   if (!notes) {
-    ReportOutOfMemory(this->ec_);
+    ReportOutOfMemory(this->fc_);
     return;
   }
 
@@ -489,7 +489,7 @@ void GeneralParser<ParseHandler, Unit>::reportMissingClosing(
   char lineNumber[MaxWidth];
   SprintfLiteral(lineNumber, "%" PRIu32, line);
 
-  if (!notes->addNoteASCII(this->ec_, getFilename(), 0, line, column,
+  if (!notes->addNoteASCII(this->fc_, getFilename(), 0, line, column,
                            GetErrorMessage, nullptr, noteNumber, lineNumber,
                            columnNumber)) {
     return;
@@ -515,7 +515,7 @@ void GeneralParser<ParseHandler, Unit>::reportRedeclaration(
 
   auto notes = MakeUnique<JSErrorNotes>();
   if (!notes) {
-    ReportOutOfMemory(this->ec_);
+    ReportOutOfMemory(this->fc_);
     return;
   }
 
@@ -528,7 +528,7 @@ void GeneralParser<ParseHandler, Unit>::reportRedeclaration(
   char lineNumber[MaxWidth];
   SprintfLiteral(lineNumber, "%" PRIu32, line);
 
-  if (!notes->addNoteASCII(this->ec_, getFilename(), 0, line, column,
+  if (!notes->addNoteASCII(this->fc_, getFilename(), 0, line, column,
                            GetErrorMessage, nullptr, JSMSG_REDECLARED_PREV,
                            lineNumber, columnNumber)) {
     return;
@@ -582,7 +582,7 @@ bool GeneralParser<ParseHandler, Unit>::notePositionalFormalParameter(
 
   if (!pc_->positionalFormalParameterNames().append(
           TrivialTaggedParserAtomIndex::from(name))) {
-    ReportOutOfMemory(this->ec_);
+    ReportOutOfMemory(this->fc_);
     return false;
   }
 
@@ -602,7 +602,7 @@ bool PerHandlerParser<ParseHandler>::noteDestructuredPositionalFormalParameter(
   // argument slots when making FunctionScope::ParserData.
   if (!pc_->positionalFormalParameterNames().append(
           TrivialTaggedParserAtomIndex::null())) {
-    ReportOutOfMemory(ec_);
+    ReportOutOfMemory(fc_);
     return false;
   }
 
@@ -895,7 +895,7 @@ bool ParserBase::noteUsedNameInternal(TaggedParserAtomIndex name,
     return true;
   }
 
-  return usedNames_.noteUse(ec_, name, visibility, pc_->scriptId(), scope->id(),
+  return usedNames_.noteUse(fc_, name, visibility, pc_->scriptId(), scope->id(),
                             tokenPosition);
 }
 
@@ -943,7 +943,7 @@ bool PerHandlerParser<ParseHandler>::
         if constexpr (isSyntaxParser) {
           if (!pc_->closedOverBindingsForLazy().append(
                   TrivialTaggedParserAtomIndex::from(bi.name()))) {
-            ReportOutOfMemory(ec_);
+            ReportOutOfMemory(fc_);
             return false;
           }
         }
@@ -966,7 +966,7 @@ bool PerHandlerParser<ParseHandler>::
   if constexpr (isSyntaxParser) {
     if (!pc_->closedOverBindingsForLazy().append(
             TrivialTaggedParserAtomIndex::null())) {
-      ReportOutOfMemory(ec_);
+      ReportOutOfMemory(fc_);
       return false;
     }
   }
@@ -993,34 +993,34 @@ bool Parser<FullParseHandler, Unit>::checkStatementsEOF() {
 }
 
 template <typename ScopeT>
-typename ScopeT::ParserData* NewEmptyBindingData(FrontendContext* ec,
+typename ScopeT::ParserData* NewEmptyBindingData(FrontendContext* fc,
                                                  LifoAlloc& alloc,
                                                  uint32_t numBindings) {
   using Data = typename ScopeT::ParserData;
   size_t allocSize = SizeOfScopeData<Data>(numBindings);
   auto* bindings = alloc.newWithSize<Data>(allocSize, numBindings);
   if (!bindings) {
-    ReportOutOfMemory(ec);
+    ReportOutOfMemory(fc);
   }
   return bindings;
 }
 
-GlobalScope::ParserData* NewEmptyGlobalScopeData(FrontendContext* ec,
+GlobalScope::ParserData* NewEmptyGlobalScopeData(FrontendContext* fc,
                                                  LifoAlloc& alloc,
                                                  uint32_t numBindings) {
-  return NewEmptyBindingData<GlobalScope>(ec, alloc, numBindings);
+  return NewEmptyBindingData<GlobalScope>(fc, alloc, numBindings);
 }
 
-LexicalScope::ParserData* NewEmptyLexicalScopeData(FrontendContext* ec,
+LexicalScope::ParserData* NewEmptyLexicalScopeData(FrontendContext* fc,
                                                    LifoAlloc& alloc,
                                                    uint32_t numBindings) {
-  return NewEmptyBindingData<LexicalScope>(ec, alloc, numBindings);
+  return NewEmptyBindingData<LexicalScope>(fc, alloc, numBindings);
 }
 
-FunctionScope::ParserData* NewEmptyFunctionScopeData(FrontendContext* ec,
+FunctionScope::ParserData* NewEmptyFunctionScopeData(FrontendContext* fc,
                                                      LifoAlloc& alloc,
                                                      uint32_t numBindings) {
-  return NewEmptyBindingData<FunctionScope>(ec, alloc, numBindings);
+  return NewEmptyBindingData<FunctionScope>(fc, alloc, numBindings);
 }
 
 namespace detail {
@@ -1077,13 +1077,13 @@ static MOZ_ALWAYS_INLINE void InitializeBindingData(
   data->length = count;
 }
 
-Maybe<GlobalScope::ParserData*> NewGlobalScopeData(FrontendContext* ec,
+Maybe<GlobalScope::ParserData*> NewGlobalScopeData(FrontendContext* fc,
                                                    ParseContext::Scope& scope,
                                                    LifoAlloc& alloc,
                                                    ParseContext* pc) {
-  ParserBindingNameVector vars(ec);
-  ParserBindingNameVector lets(ec);
-  ParserBindingNameVector consts(ec);
+  ParserBindingNameVector vars(fc);
+  ParserBindingNameVector lets(fc);
+  ParserBindingNameVector consts(fc);
 
   bool allBindingsClosedOver = pc->sc()->allBindingsClosedOver();
   for (BindingIter bi = scope.bindings(pc); bi; bi++) {
@@ -1123,7 +1123,7 @@ Maybe<GlobalScope::ParserData*> NewGlobalScopeData(FrontendContext* ec,
   uint32_t numBindings = vars.length() + lets.length() + consts.length();
 
   if (numBindings > 0) {
-    bindings = NewEmptyBindingData<GlobalScope>(ec, alloc, numBindings);
+    bindings = NewEmptyBindingData<GlobalScope>(fc, alloc, numBindings);
     if (!bindings) {
       return Nothing();
     }
@@ -1139,17 +1139,17 @@ Maybe<GlobalScope::ParserData*> NewGlobalScopeData(FrontendContext* ec,
 
 Maybe<GlobalScope::ParserData*> ParserBase::newGlobalScopeData(
     ParseContext::Scope& scope) {
-  return NewGlobalScopeData(ec_, scope, stencilAlloc(), pc_);
+  return NewGlobalScopeData(fc_, scope, stencilAlloc(), pc_);
 }
 
-Maybe<ModuleScope::ParserData*> NewModuleScopeData(FrontendContext* ec,
+Maybe<ModuleScope::ParserData*> NewModuleScopeData(FrontendContext* fc,
                                                    ParseContext::Scope& scope,
                                                    LifoAlloc& alloc,
                                                    ParseContext* pc) {
-  ParserBindingNameVector imports(ec);
-  ParserBindingNameVector vars(ec);
-  ParserBindingNameVector lets(ec);
-  ParserBindingNameVector consts(ec);
+  ParserBindingNameVector imports(fc);
+  ParserBindingNameVector vars(fc);
+  ParserBindingNameVector lets(fc);
+  ParserBindingNameVector consts(fc);
 
   bool allBindingsClosedOver =
       pc->sc()->allBindingsClosedOver() || scope.tooBigToOptimize();
@@ -1190,7 +1190,7 @@ Maybe<ModuleScope::ParserData*> NewModuleScopeData(FrontendContext* ec,
       imports.length() + vars.length() + lets.length() + consts.length();
 
   if (numBindings > 0) {
-    bindings = NewEmptyBindingData<ModuleScope>(ec, alloc, numBindings);
+    bindings = NewEmptyBindingData<ModuleScope>(fc, alloc, numBindings);
     if (!bindings) {
       return Nothing();
     }
@@ -1207,14 +1207,14 @@ Maybe<ModuleScope::ParserData*> NewModuleScopeData(FrontendContext* ec,
 
 Maybe<ModuleScope::ParserData*> ParserBase::newModuleScopeData(
     ParseContext::Scope& scope) {
-  return NewModuleScopeData(ec_, scope, stencilAlloc(), pc_);
+  return NewModuleScopeData(fc_, scope, stencilAlloc(), pc_);
 }
 
-Maybe<EvalScope::ParserData*> NewEvalScopeData(FrontendContext* ec,
+Maybe<EvalScope::ParserData*> NewEvalScopeData(FrontendContext* fc,
                                                ParseContext::Scope& scope,
                                                LifoAlloc& alloc,
                                                ParseContext* pc) {
-  ParserBindingNameVector vars(ec);
+  ParserBindingNameVector vars(fc);
 
   // Treat all bindings as closed over in non-strict eval.
   bool allBindingsClosedOver =
@@ -1236,7 +1236,7 @@ Maybe<EvalScope::ParserData*> NewEvalScopeData(FrontendContext* ec,
   uint32_t numBindings = vars.length();
 
   if (numBindings > 0) {
-    bindings = NewEmptyBindingData<EvalScope>(ec, alloc, numBindings);
+    bindings = NewEmptyBindingData<EvalScope>(fc, alloc, numBindings);
     if (!bindings) {
       return Nothing();
     }
@@ -1249,15 +1249,15 @@ Maybe<EvalScope::ParserData*> NewEvalScopeData(FrontendContext* ec,
 
 Maybe<EvalScope::ParserData*> ParserBase::newEvalScopeData(
     ParseContext::Scope& scope) {
-  return NewEvalScopeData(ec_, scope, stencilAlloc(), pc_);
+  return NewEvalScopeData(fc_, scope, stencilAlloc(), pc_);
 }
 
 Maybe<FunctionScope::ParserData*> NewFunctionScopeData(
-    FrontendContext* ec, ParseContext::Scope& scope, bool hasParameterExprs,
+    FrontendContext* fc, ParseContext::Scope& scope, bool hasParameterExprs,
     LifoAlloc& alloc, ParseContext* pc) {
-  ParserBindingNameVector positionalFormals(ec);
-  ParserBindingNameVector formals(ec);
-  ParserBindingNameVector vars(ec);
+  ParserBindingNameVector positionalFormals(fc);
+  ParserBindingNameVector formals(fc);
+  ParserBindingNameVector vars(fc);
 
   bool allBindingsClosedOver =
       pc->sc()->allBindingsClosedOver() || scope.tooBigToOptimize();
@@ -1338,7 +1338,7 @@ Maybe<FunctionScope::ParserData*> NewFunctionScopeData(
       positionalFormals.length() + formals.length() + vars.length();
 
   if (numBindings > 0) {
-    bindings = NewEmptyBindingData<FunctionScope>(ec, alloc, numBindings);
+    bindings = NewEmptyBindingData<FunctionScope>(fc, alloc, numBindings);
     if (!bindings) {
       return Nothing();
     }
@@ -1379,21 +1379,21 @@ bool FunctionScopeHasClosedOverBindings(ParseContext* pc) {
 
 Maybe<FunctionScope::ParserData*> ParserBase::newFunctionScopeData(
     ParseContext::Scope& scope, bool hasParameterExprs) {
-  return NewFunctionScopeData(ec_, scope, hasParameterExprs, stencilAlloc(),
+  return NewFunctionScopeData(fc_, scope, hasParameterExprs, stencilAlloc(),
                               pc_);
 }
 
-VarScope::ParserData* NewEmptyVarScopeData(FrontendContext* ec,
+VarScope::ParserData* NewEmptyVarScopeData(FrontendContext* fc,
                                            LifoAlloc& alloc,
                                            uint32_t numBindings) {
-  return NewEmptyBindingData<VarScope>(ec, alloc, numBindings);
+  return NewEmptyBindingData<VarScope>(fc, alloc, numBindings);
 }
 
-Maybe<VarScope::ParserData*> NewVarScopeData(FrontendContext* ec,
+Maybe<VarScope::ParserData*> NewVarScopeData(FrontendContext* fc,
                                              ParseContext::Scope& scope,
                                              LifoAlloc& alloc,
                                              ParseContext* pc) {
-  ParserBindingNameVector vars(ec);
+  ParserBindingNameVector vars(fc);
 
   bool allBindingsClosedOver =
       pc->sc()->allBindingsClosedOver() || scope.tooBigToOptimize();
@@ -1416,7 +1416,7 @@ Maybe<VarScope::ParserData*> NewVarScopeData(FrontendContext* ec,
   uint32_t numBindings = vars.length();
 
   if (numBindings > 0) {
-    bindings = NewEmptyBindingData<VarScope>(ec, alloc, numBindings);
+    bindings = NewEmptyBindingData<VarScope>(fc, alloc, numBindings);
     if (!bindings) {
       return Nothing();
     }
@@ -1441,15 +1441,15 @@ static bool VarScopeHasBindings(ParseContext* pc) {
 
 Maybe<VarScope::ParserData*> ParserBase::newVarScopeData(
     ParseContext::Scope& scope) {
-  return NewVarScopeData(ec_, scope, stencilAlloc(), pc_);
+  return NewVarScopeData(fc_, scope, stencilAlloc(), pc_);
 }
 
-Maybe<LexicalScope::ParserData*> NewLexicalScopeData(FrontendContext* ec,
+Maybe<LexicalScope::ParserData*> NewLexicalScopeData(FrontendContext* fc,
                                                      ParseContext::Scope& scope,
                                                      LifoAlloc& alloc,
                                                      ParseContext* pc) {
-  ParserBindingNameVector lets(ec);
-  ParserBindingNameVector consts(ec);
+  ParserBindingNameVector lets(fc);
+  ParserBindingNameVector consts(fc);
 
   bool allBindingsClosedOver =
       pc->sc()->allBindingsClosedOver() || scope.tooBigToOptimize();
@@ -1481,7 +1481,7 @@ Maybe<LexicalScope::ParserData*> NewLexicalScopeData(FrontendContext* ec,
   uint32_t numBindings = lets.length() + consts.length();
 
   if (numBindings > 0) {
-    bindings = NewEmptyBindingData<LexicalScope>(ec, alloc, numBindings);
+    bindings = NewEmptyBindingData<LexicalScope>(fc, alloc, numBindings);
     if (!bindings) {
       return Nothing();
     }
@@ -1521,15 +1521,15 @@ bool LexicalScopeHasClosedOverBindings(ParseContext* pc,
 
 Maybe<LexicalScope::ParserData*> ParserBase::newLexicalScopeData(
     ParseContext::Scope& scope) {
-  return NewLexicalScopeData(ec_, scope, stencilAlloc(), pc_);
+  return NewLexicalScopeData(fc_, scope, stencilAlloc(), pc_);
 }
 
 Maybe<ClassBodyScope::ParserData*> NewClassBodyScopeData(
-    FrontendContext* ec, ParseContext::Scope& scope, LifoAlloc& alloc,
+    FrontendContext* fc, ParseContext::Scope& scope, LifoAlloc& alloc,
     ParseContext* pc) {
-  ParserBindingNameVector privateBrand(ec);
-  ParserBindingNameVector synthetics(ec);
-  ParserBindingNameVector privateMethods(ec);
+  ParserBindingNameVector privateBrand(fc);
+  ParserBindingNameVector synthetics(fc);
+  ParserBindingNameVector privateMethods(fc);
 
   bool allBindingsClosedOver =
       pc->sc()->allBindingsClosedOver() || scope.tooBigToOptimize();
@@ -1571,14 +1571,14 @@ Maybe<ClassBodyScope::ParserData*> NewClassBodyScopeData(
       privateBrand.length() + synthetics.length() + privateMethods.length();
 
   if (numBindings > 0) {
-    bindings = NewEmptyBindingData<ClassBodyScope>(ec, alloc, numBindings);
+    bindings = NewEmptyBindingData<ClassBodyScope>(fc, alloc, numBindings);
     if (!bindings) {
       return Nothing();
     }
     // To simplify initialization of the bindings, we concatenate the
     // synthetics+privateBrand vector such that the private brand is always the
     // first element, as ordering is important. See comments in ClassBodyScope.
-    ParserBindingNameVector brandAndSynthetics(ec);
+    ParserBindingNameVector brandAndSynthetics(fc);
     if (!brandAndSynthetics.appendAll(privateBrand)) {
       return Nothing();
     }
@@ -1605,7 +1605,7 @@ Maybe<ClassBodyScope::ParserData*> NewClassBodyScopeData(
 
 Maybe<ClassBodyScope::ParserData*> ParserBase::newClassBodyScopeData(
     ParseContext::Scope& scope) {
-  return NewClassBodyScopeData(ec_, scope, stencilAlloc(), pc_);
+  return NewClassBodyScopeData(fc_, scope, stencilAlloc(), pc_);
 }
 
 template <>
@@ -1669,7 +1669,7 @@ bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
     return true;
   }
 
-  Vector<UnboundPrivateName, 8> unboundPrivateNames(ec_);
+  Vector<UnboundPrivateName, 8> unboundPrivateNames(fc_);
   if (!usedNames_.getUnboundPrivateNames(unboundPrivateNames)) {
     return false;
   }
@@ -1772,7 +1772,7 @@ LexicalScopeNode* Parser<FullParseHandler, Unit>::evalBody(
   }
 #endif
 
-  if (!CheckParseTree(this->ec_, this->stackLimit_, alloc_, body)) {
+  if (!CheckParseTree(this->fc_, this->stackLimit_, alloc_, body)) {
     return null();
   }
 
@@ -1780,7 +1780,7 @@ LexicalScopeNode* Parser<FullParseHandler, Unit>::evalBody(
   // Don't constant-fold inside "use asm" code, as this could create a parse
   // tree that doesn't type-check as asm.js.
   if (!pc_->useAsmOrInsideUseAsm()) {
-    if (!FoldConstants(cx_, this->ec_, this->stackLimit_, this->parserAtoms(),
+    if (!FoldConstants(cx_, this->fc_, this->stackLimit_, this->parserAtoms(),
                        &node, &handler_)) {
       return null();
     }
@@ -1836,7 +1836,7 @@ ListNode* Parser<FullParseHandler, Unit>::globalBody(
     return nullptr;
   }
 
-  if (!CheckParseTree(this->ec_, this->stackLimit_, alloc_, body)) {
+  if (!CheckParseTree(this->fc_, this->stackLimit_, alloc_, body)) {
     return null();
   }
 
@@ -1848,7 +1848,7 @@ ListNode* Parser<FullParseHandler, Unit>::globalBody(
   // Don't constant-fold inside "use asm" code, as this could create a parse
   // tree that doesn't type-check as asm.js.
   if (!pc_->useAsmOrInsideUseAsm()) {
-    if (!FoldConstants(cx_, this->ec_, this->stackLimit_, this->parserAtoms(),
+    if (!FoldConstants(cx_, this->fc_, this->stackLimit_, this->parserAtoms(),
                        &node, &handler_)) {
       return null();
     }
@@ -1978,7 +1978,7 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
     }
   }
 
-  if (!CheckParseTree(this->ec_, this->stackLimit_, alloc_, stmtList)) {
+  if (!CheckParseTree(this->fc_, this->stackLimit_, alloc_, stmtList)) {
     return null();
   }
 
@@ -1986,7 +1986,7 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
   // Don't constant-fold inside "use asm" code, as this could create a parse
   // tree that doesn't type-check as asm.js.
   if (!pc_->useAsmOrInsideUseAsm()) {
-    if (!FoldConstants(cx_, this->ec_, this->stackLimit_, this->parserAtoms(),
+    if (!FoldConstants(cx_, this->fc_, this->stackLimit_, this->parserAtoms(),
                        &node, &handler_)) {
       return null();
     }
@@ -2191,7 +2191,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
       mozilla::CheckedUint32(pc_->innerFunctionIndexesForLazy.length()) +
       mozilla::CheckedUint32(pc_->closedOverBindingsForLazy().length());
   if (!ngcthings.isValid()) {
-    ReportAllocationOverflow(ec_);
+    ReportAllocationOverflow(fc_);
     return false;
   }
 
@@ -2203,7 +2203,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
 
   TaggedScriptThingIndex* cursor = nullptr;
   if (!this->compilationState_.allocateGCThingsUninitialized(
-          cx_, ec_, funbox->index(), ngcthings.value(), &cursor)) {
+          cx_, fc_, funbox->index(), ngcthings.value(), &cursor)) {
     return false;
   }
 
@@ -2377,7 +2377,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
     return null();
   }
 
-  if (!CheckParseTree(this->ec_, this->stackLimit_, alloc_, funNode)) {
+  if (!CheckParseTree(this->fc_, this->stackLimit_, alloc_, funNode)) {
     return null();
   }
 
@@ -2385,7 +2385,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
   // Don't constant-fold inside "use asm" code, as this could create a parse
   // tree that doesn't type-check as asm.js.
   if (!pc_->useAsmOrInsideUseAsm()) {
-    if (!FoldConstants(cx_, this->ec_, this->stackLimit_, this->parserAtoms(),
+    if (!FoldConstants(cx_, this->fc_, this->stackLimit_, this->parserAtoms(),
                        &node, &handler_)) {
       return null();
     }
@@ -2582,7 +2582,7 @@ bool ParserBase::leaveInnerFunction(ParseContext* outerpc) {
 
 TaggedParserAtomIndex ParserBase::prefixAccessorName(
     PropertyType propType, TaggedParserAtomIndex propAtom) {
-  StringBuffer prefixed(cx_, ec_);
+  StringBuffer prefixed(cx_, fc_);
   if (propType == PropertyType::Setter) {
     if (!prefixed.append("set ")) {
       return TaggedParserAtomIndex::null();
@@ -2595,7 +2595,7 @@ TaggedParserAtomIndex ParserBase::prefixAccessorName(
   if (!prefixed.append(this->parserAtoms(), propAtom)) {
     return TaggedParserAtomIndex::null();
   }
-  return prefixed.finishParserAtom(this->parserAtoms(), ec_);
+  return prefixed.finishParserAtom(this->parserAtoms(), fc_);
 }
 
 template <class ParseHandler, typename Unit>
@@ -3429,7 +3429,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
     }
   }
 
-  if (!CheckParseTree(this->ec_, this->stackLimit_, alloc_, funNode)) {
+  if (!CheckParseTree(this->fc_, this->stackLimit_, alloc_, funNode)) {
     return null();
   }
 
@@ -3437,7 +3437,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
   // Don't constant-fold inside "use asm" code, as this could create a parse
   // tree that doesn't type-check as asm.js.
   if (!pc_->useAsmOrInsideUseAsm()) {
-    if (!FoldConstants(cx_, this->ec_, this->stackLimit_, this->parserAtoms(),
+    if (!FoldConstants(cx_, this->fc_, this->stackLimit_, this->parserAtoms(),
                        &node, &handler_)) {
       return null();
     }
@@ -3870,7 +3870,7 @@ bool Parser<FullParseHandler, Unit>::asmJS(ListNodeType list) {
   // function from the beginning. Reparsing is triggered by marking that a
   // new directive has been encountered and returning 'false'.
   bool validated;
-  if (!CompileAsmJS(cx_, this->ec_, this->stackLimit_, this->parserAtoms(),
+  if (!CompileAsmJS(cx_, this->fc_, this->stackLimit_, this->parserAtoms(),
                     *this, list, &validated)) {
     return false;
   }
@@ -4009,8 +4009,8 @@ bool GeneralParser<ParseHandler, Unit>::maybeParseDirective(
 template <class ParseHandler, typename Unit>
 typename ParseHandler::ListNodeType
 GeneralParser<ParseHandler, Unit>::statementList(YieldHandling yieldHandling) {
-  AutoCheckRecursionLimit recursion(this->ec_);
-  if (!recursion.check(this->ec_, this->stackLimit_)) {
+  AutoCheckRecursionLimit recursion(this->fc_);
+  if (!recursion.check(this->fc_, this->stackLimit_)) {
     return null();
   }
 
@@ -4328,8 +4328,8 @@ GeneralParser<ParseHandler, Unit>::objectBindingPattern(
     DeclarationKind kind, YieldHandling yieldHandling) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::LeftCurly));
 
-  AutoCheckRecursionLimit recursion(this->ec_);
-  if (!recursion.check(this->ec_, this->stackLimit_)) {
+  AutoCheckRecursionLimit recursion(this->fc_);
+  if (!recursion.check(this->fc_, this->stackLimit_)) {
     return null();
   }
 
@@ -4483,8 +4483,8 @@ GeneralParser<ParseHandler, Unit>::arrayBindingPattern(
     DeclarationKind kind, YieldHandling yieldHandling) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::LeftBracket));
 
-  AutoCheckRecursionLimit recursion(this->ec_);
-  if (!recursion.check(this->ec_, this->stackLimit_)) {
+  AutoCheckRecursionLimit recursion(this->fc_);
+  if (!recursion.check(this->fc_, this->stackLimit_)) {
     return null();
   }
 
@@ -5017,7 +5017,7 @@ bool GeneralParser<ParseHandler, Unit>::assertClause(
       return false;
     }
     if (!usedAssertionKeys.add(p, keyName)) {
-      ReportOutOfMemory(this->ec_);
+      ReportOutOfMemory(this->fc_);
       return false;
     }
 
@@ -6393,8 +6393,8 @@ GeneralParser<ParseHandler, Unit>::consequentOrAlternative(
 template <class ParseHandler, typename Unit>
 typename ParseHandler::TernaryNodeType
 GeneralParser<ParseHandler, Unit>::ifStatement(YieldHandling yieldHandling) {
-  Vector<Node, 4> condList(ec_), thenList(ec_);
-  Vector<uint32_t, 4> posList(ec_);
+  Vector<Node, 4> condList(fc_), thenList(fc_);
+  Vector<uint32_t, 4> posList(fc_);
   Node elseBranch;
 
   ParseContext::Statement stmt(pc_, StatementKind::If);
@@ -8357,7 +8357,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
   // We're leaving a class definition that was not itself nested within a class
   if (!isInClass) {
     mozilla::Maybe<UnboundPrivateName> maybeUnboundName;
-    if (!usedNames_.hasUnboundPrivateNames(ec_, maybeUnboundName)) {
+    if (!usedNames_.hasUnboundPrivateNames(fc_, maybeUnboundName)) {
       return null();
     }
     if (maybeUnboundName) {
@@ -9037,7 +9037,7 @@ GeneralParser<ParseHandler, Unit>::synthesizePrivateMethodInitializer(
 
   // Synthesize a name for the lexical variable that will store the
   // accessor body.
-  StringBuffer storedMethodName(cx_, ec_);
+  StringBuffer storedMethodName(cx_, fc_);
   if (!storedMethodName.append(this->parserAtoms(), propAtom)) {
     return null();
   }
@@ -9046,7 +9046,7 @@ GeneralParser<ParseHandler, Unit>::synthesizePrivateMethodInitializer(
     return null();
   }
   auto storedMethodProp =
-      storedMethodName.finishParserAtom(this->parserAtoms(), ec_);
+      storedMethodName.finishParserAtom(this->parserAtoms(), fc_);
   if (!storedMethodProp) {
     return null();
   }
@@ -9332,8 +9332,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::statement(
     YieldHandling yieldHandling) {
   MOZ_ASSERT(checkOptionsCalled_);
 
-  AutoCheckRecursionLimit recursion(this->ec_);
-  if (!recursion.check(this->ec_, this->stackLimit_)) {
+  AutoCheckRecursionLimit recursion(this->fc_);
+  if (!recursion.check(this->fc_, this->stackLimit_)) {
     return null();
   }
 
@@ -9579,8 +9579,8 @@ GeneralParser<ParseHandler, Unit>::statementListItem(
     YieldHandling yieldHandling, bool canHaveDirectives /* = false */) {
   MOZ_ASSERT(checkOptionsCalled_);
 
-  AutoCheckRecursionLimit recursion(this->ec_);
-  if (!recursion.check(this->ec_, this->stackLimit_)) {
+  AutoCheckRecursionLimit recursion(this->fc_);
+  if (!recursion.check(this->fc_, this->stackLimit_)) {
     return null();
   }
 
@@ -10141,8 +10141,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
     TripledotHandling tripledotHandling,
     PossibleError* possibleError /* = nullptr */,
     InvokedPrediction invoked /* = PredictUninvoked */) {
-  AutoCheckRecursionLimit recursion(this->ec_);
-  if (!recursion.check(this->ec_, this->stackLimit_)) {
+  AutoCheckRecursionLimit recursion(this->fc_);
+  if (!recursion.check(this->fc_, this->stackLimit_)) {
     return null();
   }
 
@@ -10519,8 +10519,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::optionalExpr(
     YieldHandling yieldHandling, TripledotHandling tripledotHandling,
     TokenKind tt, PossibleError* possibleError /* = nullptr */,
     InvokedPrediction invoked /* = PredictUninvoked */) {
-  AutoCheckRecursionLimit recursion(this->ec_);
-  if (!recursion.check(this->ec_, this->stackLimit_)) {
+  AutoCheckRecursionLimit recursion(this->fc_);
+  if (!recursion.check(this->fc_, this->stackLimit_)) {
     return null();
   }
 
@@ -10631,8 +10631,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
     PossibleError* possibleError /* = nullptr */,
     InvokedPrediction invoked /* = PredictUninvoked */,
     PrivateNameHandling privateNameHandling /* = PrivateNameProhibited */) {
-  AutoCheckRecursionLimit recursion(this->ec_);
-  if (!recursion.check(this->ec_, this->stackLimit_)) {
+  AutoCheckRecursionLimit recursion(this->fc_);
+  if (!recursion.check(this->fc_, this->stackLimit_)) {
     return null();
   }
 
@@ -10906,8 +10906,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
 
   Node lhs;
 
-  AutoCheckRecursionLimit recursion(this->ec_);
-  if (!recursion.check(this->ec_, this->stackLimit_)) {
+  AutoCheckRecursionLimit recursion(this->fc_);
+  if (!recursion.check(this->fc_, this->stackLimit_)) {
     return null();
   }
 
@@ -11516,7 +11516,7 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
   }
 
   auto atom =
-      this->parserAtoms().internChar16(ec_, chars.begin(), chars.length());
+      this->parserAtoms().internChar16(fc_, chars.begin(), chars.length());
   if (!atom) {
     return nullptr;
   }
@@ -11525,11 +11525,11 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
 
   RegExpIndex index(this->compilationState_.regExpData.length());
   if (uint32_t(index) >= TaggedScriptThingIndex::IndexLimit) {
-    ReportAllocationOverflow(ec_);
+    ReportAllocationOverflow(fc_);
     return nullptr;
   }
   if (!this->compilationState_.regExpData.emplaceBack(atom, flags)) {
-    js::ReportOutOfMemory(this->ec_);
+    js::ReportOutOfMemory(this->fc_);
     return nullptr;
   }
 
@@ -11575,22 +11575,22 @@ BigIntLiteral* Parser<FullParseHandler, Unit>::newBigInt() {
   // productions start with 0[bBoOxX], indicating binary/octal/hex.
   const auto& chars = tokenStream.getCharBuffer();
   if (chars.length() > UINT32_MAX) {
-    ReportAllocationOverflow(ec_);
+    ReportAllocationOverflow(fc_);
     return null();
   }
 
   BigIntIndex index(this->compilationState_.bigIntData.length());
   if (uint32_t(index) >= TaggedScriptThingIndex::IndexLimit) {
-    ReportAllocationOverflow(ec_);
+    ReportAllocationOverflow(fc_);
     return null();
   }
   if (!this->compilationState_.bigIntData.emplaceBack()) {
-    js::ReportOutOfMemory(this->ec_);
+    js::ReportOutOfMemory(this->fc_);
     return null();
   }
 
   if (!this->compilationState_.bigIntData[index].init(
-          this->ec_, this->stencilAlloc(), chars)) {
+          this->fc_, this->stencilAlloc(), chars)) {
     return null();
   }
 
@@ -11877,7 +11877,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
   *propAtomOut = TaggedParserAtomIndex::null();
   switch (ltok) {
     case TokenKind::Number: {
-      auto numAtom = NumberToParserAtom(ec_, this->parserAtoms(),
+      auto numAtom = NumberToParserAtom(fc_, this->parserAtoms(),
                                         anyChars.currentToken().number());
       if (!numAtom) {
         return null();
@@ -12858,8 +12858,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::primaryExpr(
     YieldHandling yieldHandling, TripledotHandling tripledotHandling,
     TokenKind tt, PossibleError* possibleError, InvokedPrediction invoked) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(tt));
-  AutoCheckRecursionLimit recursion(this->ec_);
-  if (!recursion.check(this->ec_, this->stackLimit_)) {
+  AutoCheckRecursionLimit recursion(this->fc_);
+  if (!recursion.check(this->fc_, this->stackLimit_)) {
     return null();
   }
 

@@ -517,7 +517,7 @@ class alignas(uint32_t) ImmutableScriptData final : public TrailingArray {
 
  public:
   static js::UniquePtr<ImmutableScriptData> new_(
-      FrontendContext* ec, uint32_t mainOffset, uint32_t nfixed,
+      FrontendContext* fc, uint32_t mainOffset, uint32_t nfixed,
       uint32_t nslots, GCThingIndex bodyScopeIndex, uint32_t numICEntries,
       bool isFunction, uint16_t funLength, mozilla::Span<const jsbytecode> code,
       mozilla::Span<const SrcNote> notes,
@@ -526,7 +526,7 @@ class alignas(uint32_t) ImmutableScriptData final : public TrailingArray {
       mozilla::Span<const TryNote> tryNotes);
 
   static js::UniquePtr<ImmutableScriptData> new_(
-      FrontendContext* ec, uint32_t codeLength, uint32_t noteLength,
+      FrontendContext* fc, uint32_t codeLength, uint32_t noteLength,
       uint32_t numResumeOffsets, uint32_t numScopeNotes, uint32_t numTryNotes);
 
   static js::UniquePtr<ImmutableScriptData> new_(JSContext* cx,
@@ -684,11 +684,11 @@ class SharedImmutableScriptData {
   }
 
  private:
-  static SharedImmutableScriptData* create(FrontendContext* ec);
+  static SharedImmutableScriptData* create(FrontendContext* fc);
 
  public:
   static SharedImmutableScriptData* createWith(
-      FrontendContext* ec, js::UniquePtr<ImmutableScriptData>&& isd);
+      FrontendContext* fc, js::UniquePtr<ImmutableScriptData>&& isd);
 
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
     size_t isdSize = isExternal ? 0 : mallocSizeOf(isd_);
@@ -700,7 +700,7 @@ class SharedImmutableScriptData {
   SharedImmutableScriptData& operator=(const SharedImmutableScriptData&) =
       delete;
 
-  static bool shareScriptData(JSContext* cx, FrontendContext* ec,
+  static bool shareScriptData(JSContext* cx, FrontendContext* fc,
                               RefPtr<SharedImmutableScriptData>& sisd);
 
   size_t immutableDataLength() const { return isd_->immutableData().Length(); }
