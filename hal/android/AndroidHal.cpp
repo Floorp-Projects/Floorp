@@ -114,7 +114,19 @@ RefPtr<GenericNonExclusivePromise> LockScreenOrientation(
     return GenericNonExclusivePromise::CreateAndReject(NS_ERROR_DOM_ABORT_ERR,
                                                        __func__);
   }
-  auto result = runtime->LockScreenOrientation(uint32_t(aOrientation));
+
+  hal::ScreenOrientation orientation = [&aOrientation]() {
+    if (aOrientation == hal::ScreenOrientation::Default) {
+      // GeckoView only supports single monitor, so get primary screen data for
+      // natural orientation.
+      RefPtr<widget::Screen> screen =
+          widget::ScreenManager::GetSingleton().GetPrimaryScreen();
+      return screen->GetDefaultOrientationType();
+    }
+    return aOrientation;
+  }();
+
+  auto result = runtime->LockScreenOrientation(uint32_t(orientation));
   auto geckoResult = java::GeckoResult::LocalRef(std::move(result));
   return GenericNonExclusivePromise::FromGeckoResult(geckoResult)
       ->Then(
