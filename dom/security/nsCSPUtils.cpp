@@ -579,11 +579,7 @@ void nsCSPSchemeSrc::toString(nsAString& outStr) const {
 
 /* ===== nsCSPHostSrc ======================== */
 
-nsCSPHostSrc::nsCSPHostSrc(const nsAString& aHost)
-    : mHost(aHost),
-      mGeneratedFromSelfKeyword(false),
-      mIsUniqueOrigin(false),
-      mWithinFrameAncstorsDir(false) {
+nsCSPHostSrc::nsCSPHostSrc(const nsAString& aHost) : mHost(aHost) {
   ToLowerCase(mHost);
 }
 
@@ -820,11 +816,13 @@ void nsCSPHostSrc::toString(nsAString& outStr) const {
     return;
   }
 
-  // append scheme
-  outStr.Append(mScheme);
+  // append scheme if it wasn't generated from the mSelfURI
+  if (!mGeneratedScheme) {
+    outStr.Append(mScheme);
+    outStr.AppendLiteral("://");
+  }
 
   // append host
-  outStr.AppendLiteral("://");
   outStr.Append(mHost);
 
   // append port
