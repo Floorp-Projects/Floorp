@@ -45,7 +45,7 @@ export class AddonSearchEngine extends SearchEngine {
     let id = extensionId + (details?.locale ?? json._locale);
 
     super({
-      loadPath: "[other]addEngineWithDetails:" + extensionId,
+      loadPath: "[addon]" + extensionId,
       isAppProvided,
       id,
     });

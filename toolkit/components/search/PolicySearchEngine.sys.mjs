@@ -32,7 +32,7 @@ export class PolicySearchEngine extends SearchEngine {
     let id = "policy-" + (options.details?.name ?? options.json._name);
 
     super({
-      loadPath: "[other]addEngineWithDetails:set-via-policy",
+      loadPath: "[policy]",
       id,
     });
 

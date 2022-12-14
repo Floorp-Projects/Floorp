@@ -163,6 +163,11 @@ export class SearchSettings {
       Services.prefs.clearUserPref(prefName);
     }
 
+    // Added in Firefox 110.
+    if (this.#settings.version < 8 && Array.isArray(this.#settings.engines)) {
+      this.#migrateTelemetryLoadPaths();
+    }
+
     return structuredClone(json);
   }
 
@@ -547,6 +552,27 @@ export class SearchSettings {
       }
 
       lazy.logConsole.debug("migrateEngineIds: done");
+    }
+  }
+
+  /**
+   * Migrates telemetry load paths for versions of settings prior to v8.
+   */
+  #migrateTelemetryLoadPaths() {
+    for (let engine of this.#settings.engines) {
+      if (!engine._loadPath) {
+        continue;
+      }
+      if (engine._loadPath.includes("set-via-policy")) {
+        engine._loadPath = "[policy]";
+      } else if (engine._loadPath.includes("set-via-user")) {
+        engine._loadPath = "[user]";
+      } else if (engine._loadPath.startsWith("[other]addEngineWithDetails:")) {
+        engine._loadPath = engine._loadPath.replace(
+          "[other]addEngineWithDetails:",
+          "[addon]"
+        );
+      }
     }
   }
 

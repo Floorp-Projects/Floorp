@@ -296,7 +296,7 @@ async function setupRemoteSettings() {
   sinon.stub(settings, "get").returns([
     {
       id: "load-paths",
-      matches: ["[other]addEngineWithDetails:searchignore@mozilla.com"],
+      matches: ["[addon]searchignore@mozilla.com"],
       _status: "synced",
     },
     {

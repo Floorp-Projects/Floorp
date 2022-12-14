@@ -1,0 +1,134 @@
+{
+  "version": 7,
+  "engines": [
+    {
+      "id": "google@search.mozilla.orgdefault",
+      "_name": "Google",
+      "_isAppProvided": true,
+      "_metaData": { "order": 1 }
+    },
+    {
+      "id": "amazon@search.mozilla.orgen-GB",
+      "_name": "Amazon.co.uk",
+      "_isAppProvided": true,
+      "_metaData": { "order": 2 }
+    },
+    {
+      "id": "bing@search.mozilla.orgdefault",
+      "_name": "Bing",
+      "_isAppProvided": true,
+      "_metaData": { "order": 3 }
+    },
+    {
+      "id": "ddg@search.mozilla.orgdefault",
+      "_name": "DuckDuckGo",
+      "_isAppProvided": true,
+      "_metaData": { "order": 4 }
+    },
+    {
+      "id": "ebay@search.mozilla.orguk",
+      "_name": "eBay",
+      "_isAppProvided": true,
+      "_metaData": { "order": 5 }
+    },
+    {
+      "id": "wikipedia@search.mozilla.orgdefault",
+      "_name": "Wikipedia (en)",
+      "_isAppProvided": true,
+      "_metaData": { "order": 6 }
+    },
+    {
+      "id": "policy-Policy",
+      "_name": "Policy",
+      "_loadPath": "[other]addEngineWithDetails:set-via-policy",
+      "_metaData": { "alias": "PolicyAlias", "order": 6 }
+    },
+    {
+      "id": "bbc163e7-7b1a-47aa-a32c-c59062de2753",
+      "_name": "Bugzilla@Mozilla",
+      "_loadPath": "[https]bugzilla.mozilla.org/bugzillamozilla.xml",
+      "description": "Bugzilla@Mozilla Quick Search",
+      "_metaData": {
+        "loadPathHash": "Bxz6jVe3IIBxLLaafUus536LMyLKoGZm7xsBv/yiTw8=",
+        "order": 8,
+        "alias": "bugzillaAlias"
+      },
+      "_urls": [
+        {
+          "params": [],
+          "rels": [],
+          "template": "https://bugzilla.mozilla.org/buglist.cgi?quicksearch={searchTerms}"
+        }
+      ],
+      "_orderHint": null,
+      "_telemetryId": null,
+      "_updateInterval": null,
+      "_updateURL": null,
+      "_iconUpdateURL": null,
+      "_extensionID": null,
+      "_locale": null,
+      "_definedAliases": []
+    },
+    {
+      "id": "bbc163e7-7b1a-47aa-a32c-c59062de2754",
+      "_name": "User",
+      "_loadPath": "[other]addEngineWithDetails:set-via-user",
+      "_metaData": {
+        "order": 9,
+        "alias": "UserAlias"
+      },
+      "_urls": [
+        {
+          "params": [],
+          "rels": [],
+          "template": "https://example.com/test?q={searchTerms}"
+        }
+      ],
+      "_telemetryId": null,
+      "_updateInterval": null,
+      "_updateURL": null,
+      "_iconUpdateURL": null,
+      "_extensionID": null,
+      "_locale": null,
+      "_hasPreferredIcon": null
+    },
+    {
+      "id": "example@tests.mozilla.orgdefault",
+      "_name":"Example",
+      "_loadPath":"[other]addEngineWithDetails:example@tests.mozilla.org",
+      "description":null,
+      "_iconURL":"",
+      "_metaData":{},
+      "_urls":[
+      {
+        "params": [
+          {
+            "name": "q",
+            "value": "{searchTerms}"
+          }
+        ],
+        "rels": [],
+        "template": "https://example.com/"}
+      ],
+      "_telemetryId": null,
+      "_updateInterval": null,
+      "_updateURL": null,
+      "_iconUpdateURL": null,
+      "_extensionID": "example@tests.mozilla.org",
+      "_locale": "default",
+      "_definedAliases": [],
+      "_hasPreferredIcon": null
+    }
+  ],
+  "metaData": {
+    "useSavedOrder": true,
+    "locale": "en-US",
+    "region": "GB",
+    "channel": "default",
+    "experiment": "",
+    "distroID": "",
+    "appDefaultEngine": "Google",
+    "current": "Bing",
+    "hash": "5Of6s1D+BDjPRti1wqtFyBTH1PnOf9n6cRwWlEXZhd0="
+  }
+}

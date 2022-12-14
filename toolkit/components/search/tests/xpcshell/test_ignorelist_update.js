@@ -63,7 +63,7 @@ add_task(async function test_ignoreList() {
           id: "load-paths",
           schema: 1553857697843,
           last_modified: 1553859483588,
-          matches: ["[other]addEngineWithDetails:searchignore@mozilla.com"],
+          matches: ["[addon]searchignore@mozilla.com"],
         },
         {
           id: "submission-urls",
