@@ -316,9 +316,11 @@ async function testClickResultTelemetry(expected, resetFOG = true) {
   } finally {
     // Test again but this time with assertions and test all labels.
     testMetricState(true);
-  }
 
-  if (resetFOG) {
-    Services.fog.testResetFOG();
+    // Reset telemetry, even if the test condition above throws. This is to
+    // avoid failing subsequent tests in case of a test failure.
+    if (resetFOG) {
+      Services.fog.testResetFOG();
+    }
   }
 }
