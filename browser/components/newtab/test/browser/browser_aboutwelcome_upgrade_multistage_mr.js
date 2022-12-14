@@ -118,10 +118,7 @@ async function waitForDialogClose(browser) {
  * Test homepage/newtab prefs start off as defaults and do not change
  */
 add_task(async function test_aboutwelcome_upgrade_mr_prefs_off() {
-  let browser = await openMRUpgradeWelcome([
-    "UPGRADE_GET_STARTED",
-    "UPGRADE_COLORWAY",
-  ]);
+  let browser = await openMRUpgradeWelcome(["UPGRADE_GET_STARTED"]);
 
   await test_upgrade_screen_content(
     browser,
@@ -132,15 +129,6 @@ add_task(async function test_aboutwelcome_upgrade_mr_prefs_off() {
   );
 
   await clickVisibleButton(browser, ".action-buttons button.secondary");
-
-  await test_upgrade_screen_content(
-    browser,
-    //Expected selectors:
-    ["main.UPGRADE_COLORWAY"],
-    //Unexpected selectors:
-    ["main.action-checkbox"]
-  );
-
   await clickVisibleButton(browser, ".action-buttons button.primary");
   await waitForDialogClose(browser);
 
@@ -155,101 +143,6 @@ add_task(async function test_aboutwelcome_upgrade_mr_prefs_off() {
 
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
-
-/**
- * Test homepage/newtab prefs start off as non-defaults and do not change
- */
-add_task(
-  async function test_aboutwelcome_upgrade_mr_prefs_non_default_unchecked() {
-    await pushPrefs([HOMEPAGE_PREF, "about:blank"], [NEWTAB_PREF, false]);
-
-    let browser = await openMRUpgradeWelcome([
-      "UPGRADE_GET_STARTED",
-      "UPGRADE_COLORWAY",
-    ]);
-
-    await test_upgrade_screen_content(
-      browser,
-      //Expected selectors:
-      ["main.UPGRADE_GET_STARTED"],
-      //Unexpected selectors:
-      ["main.PIN_FIREFOX"]
-    );
-
-    await clickVisibleButton(browser, ".action-buttons button.secondary");
-
-    await test_upgrade_screen_content(
-      browser,
-      //Expected selectors:
-      ["main.UPGRADE_COLORWAY", "#action-checkbox"],
-      //Unexpected selectors:
-      []
-    );
-
-    await clickVisibleButton(browser, ".action-buttons button.primary");
-    await waitForDialogClose(browser);
-
-    Assert.ok(
-      Services.prefs.prefHasUserValue(HOMEPAGE_PREF),
-      "homepage pref should have a user value"
-    );
-    Assert.ok(
-      Services.prefs.prefHasUserValue(NEWTAB_PREF),
-      "newtab pref should have a user value"
-    );
-
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
-    await popPrefs();
-  }
-);
-
-/**
- * Test homepage/newtab prefs start off as non-defaults and do change
- */
-add_task(
-  async function test_aboutwelcome_upgrade_mr_prefs_non_default_checked() {
-    await pushPrefs([HOMEPAGE_PREF, "about:blank"], [NEWTAB_PREF, false]);
-    let browser = await openMRUpgradeWelcome([
-      "UPGRADE_GET_STARTED",
-      "UPGRADE_COLORWAY",
-    ]);
-
-    await test_upgrade_screen_content(
-      browser,
-      //Expected selectors:
-      ["main.UPGRADE_GET_STARTED"],
-      //Unexpected selectors:
-      ["main.PIN_FIREFOX"]
-    );
-
-    await clickVisibleButton(browser, ".action-buttons button.secondary");
-
-    await test_upgrade_screen_content(
-      browser,
-      //Expected selectors:
-      ["main.UPGRADE_COLORWAY", "#action-checkbox"],
-      //Unexpected selectors:
-      []
-    );
-
-    browser.document.querySelector("#action-checkbox").click();
-
-    await clickVisibleButton(browser, ".action-buttons button.primary");
-    await waitForDialogClose(browser);
-
-    Assert.ok(
-      !Services.prefs.prefHasUserValue(HOMEPAGE_PREF),
-      "homepage pref should have a user value"
-    );
-    Assert.ok(
-      !Services.prefs.prefHasUserValue(NEWTAB_PREF),
-      "newtab pref should have a user value"
-    );
-
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
-    await popPrefs();
-  }
-);
 
 /*
  *Test checkbox if needPrivatePin is true
