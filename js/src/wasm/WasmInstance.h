@@ -222,7 +222,6 @@ class alignas(16) Instance {
             const WasmTagObjectVector& tagObjs,
             const DataSegmentVector& dataSegments,
             const ElemSegmentVector& elemSegments);
-  void trace(JSTracer* trc);
 
   // Trace any GC roots on the stack, for the frame associated with |wfi|,
   // whose next instruction to execute is |nextPC|.
