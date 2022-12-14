@@ -60,9 +60,16 @@ TLSTransportLayer::InputStreamWrapper::Read(char* buf, uint32_t count,
                                             uint32_t* countRead) {
   LOG(("TLSTransportLayer::InputStreamWrapper::Read [this=%p]\n", this));
 
-  mStatus = NS_OK;
+  *countRead = 0;
+
+  if (NS_FAILED(mStatus)) {
+    return (mStatus == NS_BASE_STREAM_CLOSED) ? NS_OK : mStatus;
+  }
+
   int32_t bytesRead = PR_Read(mTransport->mFD, buf, count);
-  if (bytesRead == -1) {
+  if (bytesRead > 0) {
+    *countRead = bytesRead;
+  } else if (bytesRead < 0) {
     PRErrorCode code = PR_GetError();
     if (code == PR_WOULD_BLOCK_ERROR) {
       LOG((
@@ -78,9 +85,7 @@ TLSTransportLayer::InputStreamWrapper::Read(char* buf, uint32_t count,
            ".\n",
            this, static_cast<uint32_t>(mStatus)));
     }
-    return mStatus;
   }
-  *countRead = bytesRead;
 
   if (NS_SUCCEEDED(mStatus) && !bytesRead) {
     LOG(
@@ -203,7 +208,10 @@ TLSTransportLayer::OutputStreamWrapper::Write(const char* buf, uint32_t count,
        this, count));
 
   *countWritten = 0;
-  mStatus = NS_OK;
+
+  if (NS_FAILED(mStatus)) {
+    return (mStatus == NS_BASE_STREAM_CLOSED) ? NS_OK : mStatus;
+  }
 
   int32_t written = PR_Write(mTransport->mFD, buf, count);
   LOG(
@@ -211,7 +219,9 @@ TLSTransportLayer::OutputStreamWrapper::Write(const char* buf, uint32_t count,
        "%d\n",
        this, count, written, PR_GetError() == PR_WOULD_BLOCK_ERROR));
 
-  if (written < 0) {
+  if (written > 0) {
+    *countWritten = written;
+  } else if (written < 0) {
     PRErrorCode code = PR_GetError();
     if (code == PR_WOULD_BLOCK_ERROR) {
       LOG(
@@ -225,11 +235,8 @@ TLSTransportLayer::OutputStreamWrapper::Write(const char* buf, uint32_t count,
     if (NS_SUCCEEDED(mStatus)) {
       mStatus = ErrorAccordingToNSPR(code);
     }
-
-    return mStatus;
   }
 
-  *countWritten = written;
   return mStatus;
 }
 
@@ -690,7 +697,6 @@ int32_t TLSTransportLayer::OutputInternal(const char* aBuf, int32_t aAmount) {
 
   uint32_t outCountWrite = 0;
   nsresult rv = mSocketOutWrapper.WriteDirectly(aBuf, aAmount, &outCountWrite);
-  mSocketOutWrapper.SetStatus(rv);
   if (NS_FAILED(rv)) {
     if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
       PR_SetError(PR_WOULD_BLOCK_ERROR, 0);
@@ -708,7 +714,6 @@ int32_t TLSTransportLayer::InputInternal(char* aBuf, int32_t aAmount) {
 
   uint32_t outCountRead = 0;
   nsresult rv = mSocketInWrapper.ReadDirectly(aBuf, aAmount, &outCountRead);
-  mSocketInWrapper.SetStatus(rv);
   if (NS_FAILED(rv)) {
     if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
       PR_SetError(PR_WOULD_BLOCK_ERROR, 0);
