@@ -38,11 +38,13 @@
   }, {
     name: "persistent-storage",
     type: "persistent-storage",
+  }, {
+    name: "midi",
+    type: "midi",
   } ];
 
   const UNSUPPORTED_PERMISSIONS = [
     "foobarbaz", // Not in spec, for testing only.
-    "midi",
   ];
 
   // Create a closure, so that tests are run on the correct window object.

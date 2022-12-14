@@ -8,11 +8,13 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 EXPORTS.mozilla.dom += [
+    "MidiPermissionStatus.h",
     "Permissions.h",
     "PermissionStatus.h",
 ]
 
 UNIFIED_SOURCES += [
+    "MidiPermissionStatus.cpp",
     "PermissionObserver.cpp",
     "Permissions.cpp",
     "PermissionStatus.cpp",
