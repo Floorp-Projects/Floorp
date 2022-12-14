@@ -1,0 +1,23 @@
+diff --git a/gfx/cairo/cairo/src/cairo-polygon-intersect.c b/gfx/cairo/cairo/src/cairo-polygon-intersect.c
+--- a/gfx/cairo/cairo/src/cairo-polygon-intersect.c
++++ b/gfx/cairo/cairo/src/cairo-polygon-intersect.c
+@@ -1167,7 +1167,7 @@ active_edges (cairo_bo_edge_t		*left,
+ 	    } while (1);
+ 
+ 	    right = left->next;
+-	    do {
++	    while (right) {
+ 		if unlikely ((right->deferred.other))
+ 		    edges_end (right, top, polygon);
+ 
+@@ -1179,7 +1179,9 @@ active_edges (cairo_bo_edge_t		*left,
+ 		}
+ 
+ 		right = right->next;
+-	    } while (1);
++	    };
++	    if (! right)
++		return;
+ 
+ 	    edges_start_or_continue (left, right, top, polygon);
+ 
