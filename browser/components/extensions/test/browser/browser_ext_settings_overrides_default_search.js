@@ -24,14 +24,14 @@ SearchTestUtils.init(this);
 const DEFAULT_ENGINE = {
   id: "basic",
   name: "basic",
-  loadPath: "[other]addEngineWithDetails:basic@search.mozilla.org",
+  loadPath: "[addon]basic@search.mozilla.org",
   submissionUrl:
     "https://mochi.test:8888/browser/browser/components/search/test/browser/?search=&foo=1",
 };
 const ALTERNATE_ENGINE = {
   id: "simple",
   name: "Simple Engine",
-  loadPath: "[other]addEngineWithDetails:simple@search.mozilla.org",
+  loadPath: "[addon]simple@search.mozilla.org",
   submissionUrl: "https://example.com/?sourceId=Mozilla-search&search=",
 };
 const ALTERNATE2_ENGINE = {
@@ -267,7 +267,7 @@ add_task(async function test_extension_setting_default_engine_external() {
   await checkTelemetry("addon-install", DEFAULT_ENGINE, {
     id: "other-Example Engine",
     name: "Example Engine",
-    loadPath: "[other]addEngineWithDetails:extension1@mozilla.com",
+    loadPath: "[addon]extension1@mozilla.com",
     submissionUrl: "https://example.com/?q=",
   });
   clearTelemetry();
@@ -292,7 +292,7 @@ add_task(async function test_extension_setting_default_engine_external() {
     {
       id: "other-Example Engine",
       name: "Example Engine",
-      loadPath: "[other]addEngineWithDetails:extension1@mozilla.com",
+      loadPath: "[addon]extension1@mozilla.com",
       submissionUrl: "https://example.com/?q=",
     },
     DEFAULT_ENGINE
@@ -317,7 +317,7 @@ add_task(async function test_extension_setting_default_engine_external() {
   await checkTelemetry("addon-install", DEFAULT_ENGINE, {
     id: "other-Example Engine",
     name: "Example Engine",
-    loadPath: "[other]addEngineWithDetails:extension1@mozilla.com",
+    loadPath: "[addon]extension1@mozilla.com",
     submissionUrl: "https://example.com/?q=",
   });
 

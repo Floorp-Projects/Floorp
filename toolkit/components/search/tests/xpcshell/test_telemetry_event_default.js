@@ -65,31 +65,31 @@ const MAIN_CONFIG = [
 const testSearchEngine = {
   id: "engine",
   name: "Test search engine",
-  loadPath: "[other]addEngineWithDetails:engine@search.mozilla.org",
+  loadPath: "[addon]engine@search.mozilla.org",
   submissionUrl: "https://www.google.com/search?q=",
 };
 const testChromeIconEngine = {
   id: "engine-chromeicon",
   name: "engine-chromeicon",
-  loadPath: "[other]addEngineWithDetails:engine-chromeicon@search.mozilla.org",
+  loadPath: "[addon]engine-chromeicon@search.mozilla.org",
   submissionUrl: "https://www.google.com/search?q=",
 };
 const testFrEngine = {
   id: "engine-fr",
   name: "Test search engine (fr)",
-  loadPath: "[other]addEngineWithDetails:engine-fr@search.mozilla.org",
+  loadPath: "[addon]engine-fr@search.mozilla.org",
   submissionUrl: "https://www.google.fr/search?q=&ie=iso-8859-1&oe=iso-8859-1",
 };
 const testPrefEngine = {
   id: "engine-pref",
   name: "engine-pref",
-  loadPath: "[other]addEngineWithDetails:engine-pref@search.mozilla.org",
+  loadPath: "[addon]engine-pref@search.mozilla.org",
   submissionUrl: "https://www.google.com/search?q=",
 };
 const testEngine2 = {
   id: "engine2",
   name: "A second test engine",
-  loadPath: "[other]addEngineWithDetails:engine2@search.mozilla.org",
+  loadPath: "[addon]engine2@search.mozilla.org",
   submissionUrl: "https://duckduckgo.com/?q=",
 };
 
