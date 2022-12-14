@@ -1157,12 +1157,17 @@ static ObjOperandId GuardAndLoadWindowProxyWindow(CacheIRWriter& writer,
   return windowObjId;
 }
 
-// Whether a getter on the global should have the WindowProxy as |this| value
-// instead of the Window (the global object). This always returns true for
+// Whether a getter/setter on the global should have the WindowProxy as |this|
+// value instead of the Window (the global object). This always returns true for
 // scripted functions.
 static bool GetterNeedsWindowProxyThis(NativeObject* holder,
                                        PropertyInfo prop) {
   JSFunction* callee = &holder->getGetter(prop)->as<JSFunction>();
+  return !callee->hasJitInfo() || callee->jitInfo()->needsOuterizedThisObject();
+}
+static bool SetterNeedsWindowProxyThis(NativeObject* holder,
+                                       PropertyInfo prop) {
+  JSFunction* callee = &holder->getSetter(prop)->as<JSFunction>();
   return !callee->hasJitInfo() || callee->jitInfo()->needsOuterizedThisObject();
 }
 
@@ -4072,21 +4077,13 @@ static bool IsCacheableSetPropCallNative(NativeObject* obj,
     return false;
   }
 
-  if (setter.hasJitInfo() && !setter.jitInfo()->needsOuterizedThisObject()) {
-    return true;
-  }
-
-  return !IsWindow(obj);
+  return true;
 }
 
 static bool IsCacheableSetPropCallScripted(NativeObject* obj,
                                            NativeObject* holder,
                                            PropertyInfo prop) {
   MOZ_ASSERT(IsCacheableProtoChain(obj, holder));
-
-  if (IsWindow(obj)) {
-    return false;
-  }
 
   if (!prop.isAccessorProperty()) {
     return false;
@@ -4133,20 +4130,20 @@ static bool CanAttachSetter(JSContext* cx, jsbytecode* pc, JSObject* obj,
 
 static void EmitCallSetterNoGuards(JSContext* cx, CacheIRWriter& writer,
                                    NativeObject* obj, NativeObject* holder,
-                                   PropertyInfo prop, ObjOperandId objId,
+                                   PropertyInfo prop, ObjOperandId receiverId,
                                    ValOperandId rhsId) {
   JSFunction* target = &holder->getSetter(prop)->as<JSFunction>();
   bool sameRealm = cx->realm() == target->realm();
 
   if (target->isNativeWithoutJitEntry()) {
     MOZ_ASSERT(IsCacheableSetPropCallNative(obj, holder, prop));
-    writer.callNativeSetter(objId, target, rhsId, sameRealm);
+    writer.callNativeSetter(receiverId, target, rhsId, sameRealm);
     writer.returnFromIC();
     return;
   }
 
   MOZ_ASSERT(IsCacheableSetPropCallScripted(obj, holder, prop));
-  writer.callScriptedSetter(objId, target, rhsId, sameRealm);
+  writer.callScriptedSetter(receiverId, target, rhsId, sameRealm);
   writer.returnFromIC();
 }
 
@@ -4173,6 +4170,9 @@ AttachDecision SetPropIRGenerator::tryAttachSetter(HandleObject obj,
     return AttachDecision::NoAction;
   }
   auto* nobj = &obj->as<NativeObject>();
+
+  bool needsWindowProxy =
+      IsWindow(nobj) && SetterNeedsWindowProxyThis(holder, *prop);
 
   maybeEmitIdGuard(id);
 
@@ -4201,13 +4201,21 @@ AttachDecision SetPropIRGenerator::tryAttachSetter(HandleObject obj,
 
   if (CanAttachDOMGetterSetter(cx_, JSJitInfo::Setter, nobj, holder, *prop,
                                mode_)) {
+    MOZ_ASSERT(!needsWindowProxy);
     EmitCallDOMSetterNoGuards(cx_, writer, holder, *prop, objId, rhsId);
 
     trackAttached("DOMSetter");
     return AttachDecision::Attach;
   }
 
-  EmitCallSetterNoGuards(cx_, writer, nobj, holder, *prop, objId, rhsId);
+  ObjOperandId receiverId;
+  if (needsWindowProxy) {
+    MOZ_ASSERT(cx_->global()->maybeWindowProxy());
+    receiverId = writer.loadObject(cx_->global()->maybeWindowProxy());
+  } else {
+    receiverId = objId;
+  }
+  EmitCallSetterNoGuards(cx_, writer, nobj, holder, *prop, receiverId, rhsId);
 
   trackAttached("Setter");
   return AttachDecision::Attach;
