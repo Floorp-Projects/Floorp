@@ -1,9 +1,13 @@
-import os, sys, json
+import importlib
+import json
+import os
+import sys
 from urllib.parse import unquote
 
 from wptserve.utils import isomorphic_decode
-import importlib
+
 subresource = importlib.import_module("common.security-features.subresource.subresource")
+
 
 def get_csp_value(value):
     '''
@@ -42,20 +46,22 @@ def get_csp_value(value):
         return "worker-src 'none'"
     raise Exception('Invalid delivery_value: %s' % value)
 
+
 def generate_payload(request):
     import_url = unquote(isomorphic_decode(request.GET[b'import_url']))
     return subresource.get_template(u"static-import.js.template") % {
         u"import_url": import_url
     }
 
+
 def main(request, response):
-    payload_generator = lambda _: generate_payload(request)
+    def payload_generator(_): return generate_payload(request)
     maybe_additional_headers = {}
     if b'contentSecurityPolicy' in request.GET:
         csp = unquote(isomorphic_decode(request.GET[b'contentSecurityPolicy']))
-        maybe_additional_headers[b'Content-Security-Policy'] = get_csp_value(csp);
+        maybe_additional_headers[b'Content-Security-Policy'] = get_csp_value(csp)
     subresource.respond(request,
                         response,
-                        payload_generator = payload_generator,
-                        content_type = b"application/javascript",
-                        maybe_additional_headers = maybe_additional_headers)
+                        payload_generator=payload_generator,
+                        content_type=b"application/javascript",
+                        maybe_additional_headers=maybe_additional_headers)
