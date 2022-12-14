@@ -234,8 +234,6 @@ tasks:
                             retries: 5
 
                             payload:
-                                cache:
-                                    "${trustDomain}-level-${level}-gradle-decision-cache": /builds/worker/.gradle
                                 env:
                                     # run-task uses these to check out the source; the inputs
                                     # to `mach taskgraph decision` are all on the command line.
@@ -250,7 +248,6 @@ tasks:
                                           MOBILE_REPOSITORY_TYPE: git
                                           MOZ_AUTOMATION: "1"
                                           REPOSITORIES: {$json: {mobile: "firefox-android"}}
-                                          TASKCLUSTER_CACHES: /builds/worker/.gradle
                                         - $if: 'isPullRequest'
                                           then:
                                               MOBILE_PULL_REQUEST_NUMBER: '${event.pull_request.number}'
@@ -266,7 +263,7 @@ tasks:
                                 # Note: This task is built server side without the context or tooling that
                                 # exist in tree so we must hard code the hash
                                 image:
-                                    mozillareleases/taskgraph:decision-mobile-c0fca789e58f5458999ac9780a45897340f96f2a273c3c5ea1d2be438ab5223b@sha256:e9f387c9049db80281eaed73c7173b653be195423cdd58300f71d9796d8f1ac7
+                                    mozillareleases/taskgraph:decision-mobile-0f66ff9a7aef437051e84d1202c1ac341b23a5cdd797a0989ccd4ea3fd93c1d5@sha256:71a50e8c6de8ac394093cda3815ea2d19c0e67b025053b5c47c2364bd895903f
 
                                 maxRunTime: 1800
 
