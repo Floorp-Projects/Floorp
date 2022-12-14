@@ -4642,31 +4642,29 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
     UpdateFlexLineAndItemInfo(*containerInfo, flr.mLines);
   }
 
-  if (aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE) {
-    // If we are the first-in-flow, we want to store data for our next-in-flows,
-    // or clear the existing data if it is not needed.
-    if (!prevInFlow) {
-      SharedFlexData* sharedData = GetProperty(SharedFlexData::Prop());
-      if (!aStatus.IsFullyComplete()) {
-        if (!sharedData) {
-          sharedData = new SharedFlexData;
-          SetProperty(SharedFlexData::Prop(), sharedData);
-        }
-        sharedData->Update(std::move(flr));
-
-        SetProperty(SumOfChildrenBlockSizeProperty(), sumOfChildrenBlockSize);
-      } else if (sharedData && !GetNextInFlow()) {
-        // We are fully-complete, so no next-in-flow is needed. However, if we
-        // report SetInlineLineBreakBeforeAndReset() in an incremental reflow,
-        // our next-in-flow might still exist. It can be reflowed again before
-        // us if it is an overflow container. Delete the existing data only if
-        // we don't have a next-in-flow.
-        RemoveProperty(SharedFlexData::Prop());
-        RemoveProperty(SumOfChildrenBlockSizeProperty());
+  // If we are the first-in-flow, we want to store data for our next-in-flows,
+  // or clear the existing data if it is not needed.
+  if (!prevInFlow) {
+    SharedFlexData* sharedData = GetProperty(SharedFlexData::Prop());
+    if (!aStatus.IsFullyComplete()) {
+      if (!sharedData) {
+        sharedData = new SharedFlexData;
+        SetProperty(SharedFlexData::Prop(), sharedData);
       }
-    } else {
+      sharedData->Update(std::move(flr));
+
       SetProperty(SumOfChildrenBlockSizeProperty(), sumOfChildrenBlockSize);
+    } else if (sharedData && !GetNextInFlow()) {
+      // We are fully-complete, so no next-in-flow is needed. However, if we
+      // report SetInlineLineBreakBeforeAndReset() in an incremental reflow, our
+      // next-in-flow might still exist. It can be reflowed again before us if
+      // it is an overflow container. Delete the existing data only if we don't
+      // have a next-in-flow.
+      RemoveProperty(SharedFlexData::Prop());
+      RemoveProperty(SumOfChildrenBlockSizeProperty());
     }
+  } else {
+    SetProperty(SumOfChildrenBlockSizeProperty(), sumOfChildrenBlockSize);
   }
 }
 
