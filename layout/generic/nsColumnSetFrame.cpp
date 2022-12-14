@@ -126,7 +126,7 @@ void nsColumnSetFrame::ForEachColumnRule(
   if (!nextSibling) return;  // 1 column only - this means no gap to draw on
 
   const nsStyleColumn* colStyle = StyleColumn();
-  nscoord ruleWidth = colStyle->GetColumnRuleWidth();
+  nscoord ruleWidth = colStyle->GetComputedColumnRuleWidth();
   if (!ruleWidth) return;
 
   WritingMode wm = GetWritingMode();
@@ -184,7 +184,7 @@ void nsColumnSetFrame::CreateBorderRenderers(
   else
     ruleStyle = colStyle->mColumnRuleStyle;
 
-  nscoord ruleWidth = colStyle->GetColumnRuleWidth();
+  nscoord ruleWidth = colStyle->GetComputedColumnRuleWidth();
   if (!ruleWidth) return;
 
   aBorderRenderers.Clear();

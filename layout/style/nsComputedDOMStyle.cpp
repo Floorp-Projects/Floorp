@@ -1228,6 +1228,12 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetBottom() {
   return GetOffsetWidthFor(eSideBottom);
 }
 
+already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetColumnRuleWidth() {
+  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+  val->SetAppUnits(StyleColumn()->GetComputedColumnRuleWidth());
+  return val.forget();
+}
+
 static Position MaybeResolvePositionForTransform(const LengthPercentage& aX,
                                                  const LengthPercentage& aY,
                                                  nsIFrame* aInnerFrame) {
