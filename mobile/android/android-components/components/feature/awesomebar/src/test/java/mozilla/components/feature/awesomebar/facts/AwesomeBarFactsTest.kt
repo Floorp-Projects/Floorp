@@ -66,6 +66,14 @@ class AwesomeBarFactsTest {
                 assertEquals(Action.INTERACTION, action)
                 assertEquals(AwesomeBarFacts.Items.OPENED_TAB_SUGGESTION_CLICKED, item)
             }
+
+            emitSearchTermSuggestionClickedFact()
+            assertEquals(7, facts.size)
+            facts[6].apply {
+                assertEquals(Component.FEATURE_AWESOMEBAR, component)
+                assertEquals(Action.INTERACTION, action)
+                assertEquals(AwesomeBarFacts.Items.SEARCH_TERM_SUGGESTION_CLICKED, item)
+            }
         }
     }
 }

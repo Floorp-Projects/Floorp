@@ -17,7 +17,11 @@ import mozilla.components.concept.storage.DocumentType.Media
 import mozilla.components.concept.storage.DocumentType.Regular
 import mozilla.components.concept.storage.HistoryMetadata
 import mozilla.components.concept.storage.HistoryMetadataKey
+import mozilla.components.feature.awesomebar.facts.AwesomeBarFacts
 import mozilla.components.feature.search.SearchUseCases.SearchUseCase
+import mozilla.components.support.base.Component
+import mozilla.components.support.base.facts.Action
+import mozilla.components.support.base.facts.processor.CollectionProcessor
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -164,16 +168,7 @@ class SearchTermSuggestionsProviderTest {
 
     @Test
     fun `GIVEN a valid input WHEN querying suggestions THEN return suggestions configured to do a new search when clicked`() = runTest {
-        var suggestionClickedText = ""
-        var suggestionClickedEngine: SearchEngine? = null
-        var suggestionParentSession: String? = null
-        val searchUseCase = object : SearchUseCase {
-            override fun invoke(searchTerms: String, searchEngine: SearchEngine?, parentSessionId: String?) {
-                suggestionClickedText = searchTerms
-                suggestionClickedEngine = searchEngine
-                suggestionParentSession = parentSessionId
-            }
-        }
+        val searchUseCase: SearchUseCase = mock()
         doReturn(listOf(historyEntry)).`when`(storage).getHistoryMetadataSince(Long.MIN_VALUE)
         val provider = SearchTermSuggestionsProvider(
             historyStorage = storage,
@@ -185,9 +180,31 @@ class SearchTermSuggestionsProviderTest {
         assertEquals(1, suggestions.size)
         suggestions[0].onSuggestionClicked?.invoke()
 
-        assertEquals(historyEntry.key.searchTerm, suggestionClickedText)
-        assertNull(suggestionClickedEngine)
-        assertNull(suggestionParentSession)
+        verify(searchUseCase).invoke(historyEntry.key.searchTerm!!, null, null)
+    }
+
+    @Test
+    fun `GIVEN a valid input WHEN querying suggestions THEN return suggestions configured to emit a telemetry fact when clicked`() = runTest {
+        val searchUseCase: SearchUseCase = mock()
+        doReturn(listOf(historyEntry)).`when`(storage).getHistoryMetadataSince(Long.MIN_VALUE)
+        val provider = SearchTermSuggestionsProvider(
+            historyStorage = storage,
+            searchUseCase = searchUseCase,
+            searchEngine = searchEngine,
+        )
+
+        val suggestions = provider.onInputChanged("fir")
+        assertEquals(1, suggestions.size)
+        CollectionProcessor.withFactCollection { facts ->
+            suggestions[0].onSuggestionClicked?.invoke()
+
+            assertEquals(1, facts.size)
+            with(facts[0]) {
+                assertEquals(Component.FEATURE_AWESOMEBAR, component)
+                assertEquals(Action.INTERACTION, action)
+                assertEquals(AwesomeBarFacts.Items.SEARCH_TERM_SUGGESTION_CLICKED, item)
+            }
+        }
     }
 
     @Test

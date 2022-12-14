@@ -12,6 +12,7 @@ import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.storage.HistoryMetadata
+import mozilla.components.feature.awesomebar.facts.emitSearchTermSuggestionClickedFact
 import mozilla.components.feature.search.SearchUseCases.SearchUseCase
 import mozilla.components.feature.search.ext.buildSearchUrl
 import java.util.UUID
@@ -107,6 +108,7 @@ private fun Iterable<HistoryMetadata>.into(
             editSuggestion = if (showEditSuggestion) safeSearchTerm else null,
             onSuggestionClicked = {
                 searchUseCase.invoke(safeSearchTerm)
+                emitSearchTermSuggestionClickedFact()
             },
         )
     }

@@ -23,6 +23,7 @@ class AwesomeBarFacts {
         const val SEARCH_ACTION_CLICKED = "search_action_clicked"
         const val SEARCH_SUGGESTION_CLICKED = "search_suggestion_clicked"
         const val OPENED_TAB_SUGGESTION_CLICKED = "opened_tab_suggestion_clicked"
+        const val SEARCH_TERM_SUGGESTION_CLICKED = "search_term_suggestion_clicked"
     }
 }
 
@@ -80,5 +81,12 @@ internal fun emitOpenTabSuggestionClickedFact() {
     emitAwesomebarFact(
         Action.INTERACTION,
         AwesomeBarFacts.Items.OPENED_TAB_SUGGESTION_CLICKED,
+    )
+}
+
+internal fun emitSearchTermSuggestionClickedFact() {
+    emitAwesomebarFact(
+        Action.INTERACTION,
+        AwesomeBarFacts.Items.SEARCH_TERM_SUGGESTION_CLICKED,
     )
 }
