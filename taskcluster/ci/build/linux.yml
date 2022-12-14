@@ -657,7 +657,6 @@ linux-rusttests/opt:
             - linux64-pkgconf
             - sysroot-i686-linux-gnu
             - sysroot-x86_64-linux-gnu
-            - sysroot-wasm32-wasi
     optimization:
         test-inclusive: [rusttests]
 
@@ -701,7 +700,6 @@ linux-rusttests/debug:
             - linux64-pkgconf
             - sysroot-i686-linux-gnu
             - sysroot-x86_64-linux-gnu
-            - sysroot-wasm32-wasi
     optimization:
         test-inclusive: [rusttests]
 
@@ -1515,7 +1513,6 @@ linux64-rusttests/opt:
             - linux64-node
             - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
-            - sysroot-wasm32-wasi
     optimization:
         test-inclusive: [rusttests]
 
@@ -1558,7 +1555,6 @@ linux64-rusttests/debug:
             - linux64-node
             - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
-            - sysroot-wasm32-wasi
     optimization:
         test-inclusive: [rusttests]
 
