@@ -10,7 +10,6 @@ components = [
     "Arithmetic",
     "CustomTypes",
     "ExternalTypes",
-    "FixtureCallbacks",
     "Geometry",
     "Rondpoint",
     "Sprites",

@@ -5,10 +5,7 @@
 
 "use strict";
 
-// Objects intended to be used in the unit tests
-var UnitTestObjs = {};
-
-var EXPORTED_SYMBOLS = ["UnitTestObjs"];
+var EXPORTED_SYMBOLS = [];
 
 // Write/Read data to/from an ArrayBuffer
 class ArrayBufferDataStream {
@@ -105,6 +102,7 @@ class ArrayBufferDataStream {
         this.dataView.setBigInt64(this.pos, BigInt(value));
         this.pos += 8;
     }
+
 
     readFloat32() {
         let rv = this.dataView.getFloat32(this.pos);
@@ -241,10 +239,6 @@ function handleRustResult(result, liftCallback, liftErrCallback) {
 class UniFFIError {
     constructor(message) {
         this.message = message;
-    }
-
-    toString() {
-        return `UniFFIError: ${this.message}`
     }
 }
 
@@ -633,468 +627,418 @@ class Optionneur {
      *      to a newly constructed Optionneur
      */
     static init() {
-        const liftResult = (result) => FfiConverterTypeOptionneur.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            return UniFFIScaffolding.callAsync(
-                55, // rondpoint:rondpoint_c6ef_Optionneur_new
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }}
-
+    const liftResult = (result) => FfiConverterTypeOptionneur.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        return UniFFIScaffolding.callAsync(
+            55, // rondpoint:rondpoint_c6ef_Optionneur_new
+        )
+    }
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     sinonBoolean(value = false) {
-        const liftResult = (result) => FfiConverterBool.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterBool.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                56, // rondpoint:rondpoint_c6ef_Optionneur_sinon_boolean
-                FfiConverterTypeOptionneur.lower(this),
-                FfiConverterBool.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterBool.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterBool.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            56, // rondpoint:rondpoint_c6ef_Optionneur_sinon_boolean
+            FfiConverterTypeOptionneur.lower(this),
+            FfiConverterBool.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     sinonString(value = "default") {
-        const liftResult = (result) => FfiConverterString.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterString.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                57, // rondpoint:rondpoint_c6ef_Optionneur_sinon_string
-                FfiConverterTypeOptionneur.lower(this),
-                FfiConverterString.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterString.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterString.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            57, // rondpoint:rondpoint_c6ef_Optionneur_sinon_string
+            FfiConverterTypeOptionneur.lower(this),
+            FfiConverterString.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     sinonSequence(value = []) {
-        const liftResult = (result) => FfiConverterSequencestring.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterSequencestring.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                58, // rondpoint:rondpoint_c6ef_Optionneur_sinon_sequence
-                FfiConverterTypeOptionneur.lower(this),
-                FfiConverterSequencestring.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterSequencestring.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterSequencestring.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            58, // rondpoint:rondpoint_c6ef_Optionneur_sinon_sequence
+            FfiConverterTypeOptionneur.lower(this),
+            FfiConverterSequencestring.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     sinonNull(value = null) {
-        const liftResult = (result) => FfiConverterOptionalstring.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterOptionalstring.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                59, // rondpoint:rondpoint_c6ef_Optionneur_sinon_null
-                FfiConverterTypeOptionneur.lower(this),
-                FfiConverterOptionalstring.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterOptionalstring.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterOptionalstring.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            59, // rondpoint:rondpoint_c6ef_Optionneur_sinon_null
+            FfiConverterTypeOptionneur.lower(this),
+            FfiConverterOptionalstring.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     sinonZero(value = 0) {
-        const liftResult = (result) => FfiConverterOptionali32.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterOptionali32.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                60, // rondpoint:rondpoint_c6ef_Optionneur_sinon_zero
-                FfiConverterTypeOptionneur.lower(this),
-                FfiConverterOptionali32.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterOptionali32.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterOptionali32.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            60, // rondpoint:rondpoint_c6ef_Optionneur_sinon_zero
+            FfiConverterTypeOptionneur.lower(this),
+            FfiConverterOptionali32.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     sinonU8Dec(value = 42) {
-        const liftResult = (result) => FfiConverterU8.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterU8.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                61, // rondpoint:rondpoint_c6ef_Optionneur_sinon_u8_dec
-                FfiConverterTypeOptionneur.lower(this),
-                FfiConverterU8.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterU8.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterU8.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            61, // rondpoint:rondpoint_c6ef_Optionneur_sinon_u8_dec
+            FfiConverterTypeOptionneur.lower(this),
+            FfiConverterU8.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     sinonI8Dec(value = -42) {
-        const liftResult = (result) => FfiConverterI8.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterI8.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                62, // rondpoint:rondpoint_c6ef_Optionneur_sinon_i8_dec
-                FfiConverterTypeOptionneur.lower(this),
-                FfiConverterI8.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterI8.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterI8.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            62, // rondpoint:rondpoint_c6ef_Optionneur_sinon_i8_dec
+            FfiConverterTypeOptionneur.lower(this),
+            FfiConverterI8.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     sinonU16Dec(value = 42) {
-        const liftResult = (result) => FfiConverterU16.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterU16.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                63, // rondpoint:rondpoint_c6ef_Optionneur_sinon_u16_dec
-                FfiConverterTypeOptionneur.lower(this),
-                FfiConverterU16.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterU16.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterU16.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            63, // rondpoint:rondpoint_c6ef_Optionneur_sinon_u16_dec
+            FfiConverterTypeOptionneur.lower(this),
+            FfiConverterU16.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     sinonI16Dec(value = 42) {
-        const liftResult = (result) => FfiConverterI16.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterI16.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                64, // rondpoint:rondpoint_c6ef_Optionneur_sinon_i16_dec
-                FfiConverterTypeOptionneur.lower(this),
-                FfiConverterI16.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterI16.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterI16.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            64, // rondpoint:rondpoint_c6ef_Optionneur_sinon_i16_dec
+            FfiConverterTypeOptionneur.lower(this),
+            FfiConverterI16.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     sinonU32Dec(value = 42) {
-        const liftResult = (result) => FfiConverterU32.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterU32.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                65, // rondpoint:rondpoint_c6ef_Optionneur_sinon_u32_dec
-                FfiConverterTypeOptionneur.lower(this),
-                FfiConverterU32.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterU32.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterU32.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            65, // rondpoint:rondpoint_c6ef_Optionneur_sinon_u32_dec
+            FfiConverterTypeOptionneur.lower(this),
+            FfiConverterU32.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     sinonI32Dec(value = 42) {
-        const liftResult = (result) => FfiConverterI32.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterI32.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                66, // rondpoint:rondpoint_c6ef_Optionneur_sinon_i32_dec
-                FfiConverterTypeOptionneur.lower(this),
-                FfiConverterI32.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterI32.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterI32.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            66, // rondpoint:rondpoint_c6ef_Optionneur_sinon_i32_dec
+            FfiConverterTypeOptionneur.lower(this),
+            FfiConverterI32.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     sinonU64Dec(value = 42) {
-        const liftResult = (result) => FfiConverterU64.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterU64.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                67, // rondpoint:rondpoint_c6ef_Optionneur_sinon_u64_dec
-                FfiConverterTypeOptionneur.lower(this),
-                FfiConverterU64.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterU64.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterU64.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            67, // rondpoint:rondpoint_c6ef_Optionneur_sinon_u64_dec
+            FfiConverterTypeOptionneur.lower(this),
+            FfiConverterU64.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     sinonI64Dec(value = 42) {
-        const liftResult = (result) => FfiConverterI64.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterI64.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                68, // rondpoint:rondpoint_c6ef_Optionneur_sinon_i64_dec
-                FfiConverterTypeOptionneur.lower(this),
-                FfiConverterI64.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterI64.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterI64.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            68, // rondpoint:rondpoint_c6ef_Optionneur_sinon_i64_dec
+            FfiConverterTypeOptionneur.lower(this),
+            FfiConverterI64.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     sinonU8Hex(value = 0xff) {
-        const liftResult = (result) => FfiConverterU8.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterU8.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                69, // rondpoint:rondpoint_c6ef_Optionneur_sinon_u8_hex
-                FfiConverterTypeOptionneur.lower(this),
-                FfiConverterU8.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterU8.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterU8.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            69, // rondpoint:rondpoint_c6ef_Optionneur_sinon_u8_hex
+            FfiConverterTypeOptionneur.lower(this),
+            FfiConverterU8.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     sinonI8Hex(value = -127) {
-        const liftResult = (result) => FfiConverterI8.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterI8.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                70, // rondpoint:rondpoint_c6ef_Optionneur_sinon_i8_hex
-                FfiConverterTypeOptionneur.lower(this),
-                FfiConverterI8.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterI8.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterI8.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            70, // rondpoint:rondpoint_c6ef_Optionneur_sinon_i8_hex
+            FfiConverterTypeOptionneur.lower(this),
+            FfiConverterI8.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     sinonU16Hex(value = 0xffff) {
-        const liftResult = (result) => FfiConverterU16.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterU16.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                71, // rondpoint:rondpoint_c6ef_Optionneur_sinon_u16_hex
-                FfiConverterTypeOptionneur.lower(this),
-                FfiConverterU16.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterU16.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterU16.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            71, // rondpoint:rondpoint_c6ef_Optionneur_sinon_u16_hex
+            FfiConverterTypeOptionneur.lower(this),
+            FfiConverterU16.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     sinonI16Hex(value = 0x7f) {
-        const liftResult = (result) => FfiConverterI16.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterI16.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                72, // rondpoint:rondpoint_c6ef_Optionneur_sinon_i16_hex
-                FfiConverterTypeOptionneur.lower(this),
-                FfiConverterI16.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterI16.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterI16.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            72, // rondpoint:rondpoint_c6ef_Optionneur_sinon_i16_hex
+            FfiConverterTypeOptionneur.lower(this),
+            FfiConverterI16.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     sinonU32Hex(value = 0xffffffff) {
-        const liftResult = (result) => FfiConverterU32.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterU32.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                73, // rondpoint:rondpoint_c6ef_Optionneur_sinon_u32_hex
-                FfiConverterTypeOptionneur.lower(this),
-                FfiConverterU32.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterU32.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterU32.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            73, // rondpoint:rondpoint_c6ef_Optionneur_sinon_u32_hex
+            FfiConverterTypeOptionneur.lower(this),
+            FfiConverterU32.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     sinonI32Hex(value = 0x7fffffff) {
-        const liftResult = (result) => FfiConverterI32.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterI32.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                74, // rondpoint:rondpoint_c6ef_Optionneur_sinon_i32_hex
-                FfiConverterTypeOptionneur.lower(this),
-                FfiConverterI32.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterI32.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterI32.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            74, // rondpoint:rondpoint_c6ef_Optionneur_sinon_i32_hex
+            FfiConverterTypeOptionneur.lower(this),
+            FfiConverterI32.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     sinonU64Hex(value = 0xffffffffffffffff) {
-        const liftResult = (result) => FfiConverterU64.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterU64.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                75, // rondpoint:rondpoint_c6ef_Optionneur_sinon_u64_hex
-                FfiConverterTypeOptionneur.lower(this),
-                FfiConverterU64.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterU64.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterU64.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            75, // rondpoint:rondpoint_c6ef_Optionneur_sinon_u64_hex
+            FfiConverterTypeOptionneur.lower(this),
+            FfiConverterU64.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     sinonI64Hex(value = 0x7fffffffffffffff) {
-        const liftResult = (result) => FfiConverterI64.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterI64.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                76, // rondpoint:rondpoint_c6ef_Optionneur_sinon_i64_hex
-                FfiConverterTypeOptionneur.lower(this),
-                FfiConverterI64.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterI64.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterI64.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            76, // rondpoint:rondpoint_c6ef_Optionneur_sinon_i64_hex
+            FfiConverterTypeOptionneur.lower(this),
+            FfiConverterI64.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     sinonU32Oct(value = 0o755) {
-        const liftResult = (result) => FfiConverterU32.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterU32.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                77, // rondpoint:rondpoint_c6ef_Optionneur_sinon_u32_oct
-                FfiConverterTypeOptionneur.lower(this),
-                FfiConverterU32.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterU32.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterU32.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            77, // rondpoint:rondpoint_c6ef_Optionneur_sinon_u32_oct
+            FfiConverterTypeOptionneur.lower(this),
+            FfiConverterU32.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     sinonF32(value = 42.0) {
-        const liftResult = (result) => FfiConverterF32.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterF32.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                78, // rondpoint:rondpoint_c6ef_Optionneur_sinon_f32
-                FfiConverterTypeOptionneur.lower(this),
-                FfiConverterF32.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterF32.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterF32.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            78, // rondpoint:rondpoint_c6ef_Optionneur_sinon_f32
+            FfiConverterTypeOptionneur.lower(this),
+            FfiConverterF32.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     sinonF64(value = 42.1) {
-        const liftResult = (result) => FfiConverterF64.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterF64.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                79, // rondpoint:rondpoint_c6ef_Optionneur_sinon_f64
-                FfiConverterTypeOptionneur.lower(this),
-                FfiConverterF64.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterF64.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterF64.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            79, // rondpoint:rondpoint_c6ef_Optionneur_sinon_f64
+            FfiConverterTypeOptionneur.lower(this),
+            FfiConverterF64.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     sinonEnum(value = Enumeration.TROIS) {
-        const liftResult = (result) => FfiConverterTypeEnumeration.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterTypeEnumeration.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                80, // rondpoint:rondpoint_c6ef_Optionneur_sinon_enum
-                FfiConverterTypeOptionneur.lower(this),
-                FfiConverterTypeEnumeration.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterTypeEnumeration.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterTypeEnumeration.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            80, // rondpoint:rondpoint_c6ef_Optionneur_sinon_enum
+            FfiConverterTypeOptionneur.lower(this),
+            FfiConverterTypeEnumeration.lower(value),
+        )
     }
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
 
 }
 
@@ -1147,288 +1091,258 @@ class Retourneur {
      *      to a newly constructed Retourneur
      */
     static init() {
-        const liftResult = (result) => FfiConverterTypeRetourneur.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            return UniFFIScaffolding.callAsync(
-                26, // rondpoint:rondpoint_c6ef_Retourneur_new
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }}
-
+    const liftResult = (result) => FfiConverterTypeRetourneur.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        return UniFFIScaffolding.callAsync(
+            26, // rondpoint:rondpoint_c6ef_Retourneur_new
+        )
+    }
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     identiqueI8(value) {
-        const liftResult = (result) => FfiConverterI8.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterI8.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                27, // rondpoint:rondpoint_c6ef_Retourneur_identique_i8
-                FfiConverterTypeRetourneur.lower(this),
-                FfiConverterI8.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterI8.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterI8.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            27, // rondpoint:rondpoint_c6ef_Retourneur_identique_i8
+            FfiConverterTypeRetourneur.lower(this),
+            FfiConverterI8.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     identiqueU8(value) {
-        const liftResult = (result) => FfiConverterU8.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterU8.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                28, // rondpoint:rondpoint_c6ef_Retourneur_identique_u8
-                FfiConverterTypeRetourneur.lower(this),
-                FfiConverterU8.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterU8.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterU8.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            28, // rondpoint:rondpoint_c6ef_Retourneur_identique_u8
+            FfiConverterTypeRetourneur.lower(this),
+            FfiConverterU8.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     identiqueI16(value) {
-        const liftResult = (result) => FfiConverterI16.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterI16.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                29, // rondpoint:rondpoint_c6ef_Retourneur_identique_i16
-                FfiConverterTypeRetourneur.lower(this),
-                FfiConverterI16.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterI16.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterI16.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            29, // rondpoint:rondpoint_c6ef_Retourneur_identique_i16
+            FfiConverterTypeRetourneur.lower(this),
+            FfiConverterI16.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     identiqueU16(value) {
-        const liftResult = (result) => FfiConverterU16.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterU16.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                30, // rondpoint:rondpoint_c6ef_Retourneur_identique_u16
-                FfiConverterTypeRetourneur.lower(this),
-                FfiConverterU16.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterU16.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterU16.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            30, // rondpoint:rondpoint_c6ef_Retourneur_identique_u16
+            FfiConverterTypeRetourneur.lower(this),
+            FfiConverterU16.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     identiqueI32(value) {
-        const liftResult = (result) => FfiConverterI32.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterI32.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                31, // rondpoint:rondpoint_c6ef_Retourneur_identique_i32
-                FfiConverterTypeRetourneur.lower(this),
-                FfiConverterI32.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterI32.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterI32.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            31, // rondpoint:rondpoint_c6ef_Retourneur_identique_i32
+            FfiConverterTypeRetourneur.lower(this),
+            FfiConverterI32.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     identiqueU32(value) {
-        const liftResult = (result) => FfiConverterU32.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterU32.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                32, // rondpoint:rondpoint_c6ef_Retourneur_identique_u32
-                FfiConverterTypeRetourneur.lower(this),
-                FfiConverterU32.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterU32.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterU32.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            32, // rondpoint:rondpoint_c6ef_Retourneur_identique_u32
+            FfiConverterTypeRetourneur.lower(this),
+            FfiConverterU32.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     identiqueI64(value) {
-        const liftResult = (result) => FfiConverterI64.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterI64.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                33, // rondpoint:rondpoint_c6ef_Retourneur_identique_i64
-                FfiConverterTypeRetourneur.lower(this),
-                FfiConverterI64.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterI64.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterI64.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            33, // rondpoint:rondpoint_c6ef_Retourneur_identique_i64
+            FfiConverterTypeRetourneur.lower(this),
+            FfiConverterI64.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     identiqueU64(value) {
-        const liftResult = (result) => FfiConverterU64.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterU64.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                34, // rondpoint:rondpoint_c6ef_Retourneur_identique_u64
-                FfiConverterTypeRetourneur.lower(this),
-                FfiConverterU64.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterU64.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterU64.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            34, // rondpoint:rondpoint_c6ef_Retourneur_identique_u64
+            FfiConverterTypeRetourneur.lower(this),
+            FfiConverterU64.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     identiqueFloat(value) {
-        const liftResult = (result) => FfiConverterF32.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterF32.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                35, // rondpoint:rondpoint_c6ef_Retourneur_identique_float
-                FfiConverterTypeRetourneur.lower(this),
-                FfiConverterF32.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterF32.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterF32.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            35, // rondpoint:rondpoint_c6ef_Retourneur_identique_float
+            FfiConverterTypeRetourneur.lower(this),
+            FfiConverterF32.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     identiqueDouble(value) {
-        const liftResult = (result) => FfiConverterF64.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterF64.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                36, // rondpoint:rondpoint_c6ef_Retourneur_identique_double
-                FfiConverterTypeRetourneur.lower(this),
-                FfiConverterF64.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterF64.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterF64.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            36, // rondpoint:rondpoint_c6ef_Retourneur_identique_double
+            FfiConverterTypeRetourneur.lower(this),
+            FfiConverterF64.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     identiqueBoolean(value) {
-        const liftResult = (result) => FfiConverterBool.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterBool.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                37, // rondpoint:rondpoint_c6ef_Retourneur_identique_boolean
-                FfiConverterTypeRetourneur.lower(this),
-                FfiConverterBool.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterBool.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterBool.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            37, // rondpoint:rondpoint_c6ef_Retourneur_identique_boolean
+            FfiConverterTypeRetourneur.lower(this),
+            FfiConverterBool.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     identiqueString(value) {
-        const liftResult = (result) => FfiConverterString.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterString.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                38, // rondpoint:rondpoint_c6ef_Retourneur_identique_string
-                FfiConverterTypeRetourneur.lower(this),
-                FfiConverterString.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterString.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterString.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            38, // rondpoint:rondpoint_c6ef_Retourneur_identique_string
+            FfiConverterTypeRetourneur.lower(this),
+            FfiConverterString.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     identiqueNombresSignes(value) {
-        const liftResult = (result) => FfiConverterTypeDictionnaireNombresSignes.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterTypeDictionnaireNombresSignes.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                39, // rondpoint:rondpoint_c6ef_Retourneur_identique_nombres_signes
-                FfiConverterTypeRetourneur.lower(this),
-                FfiConverterTypeDictionnaireNombresSignes.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterTypeDictionnaireNombresSignes.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterTypeDictionnaireNombresSignes.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            39, // rondpoint:rondpoint_c6ef_Retourneur_identique_nombres_signes
+            FfiConverterTypeRetourneur.lower(this),
+            FfiConverterTypeDictionnaireNombresSignes.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     identiqueNombres(value) {
-        const liftResult = (result) => FfiConverterTypeDictionnaireNombres.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterTypeDictionnaireNombres.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                40, // rondpoint:rondpoint_c6ef_Retourneur_identique_nombres
-                FfiConverterTypeRetourneur.lower(this),
-                FfiConverterTypeDictionnaireNombres.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterTypeDictionnaireNombres.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterTypeDictionnaireNombres.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            40, // rondpoint:rondpoint_c6ef_Retourneur_identique_nombres
+            FfiConverterTypeRetourneur.lower(this),
+            FfiConverterTypeDictionnaireNombres.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     identiqueOptionneurDictionnaire(value) {
-        const liftResult = (result) => FfiConverterTypeOptionneurDictionnaire.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterTypeOptionneurDictionnaire.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                41, // rondpoint:rondpoint_c6ef_Retourneur_identique_optionneur_dictionnaire
-                FfiConverterTypeRetourneur.lower(this),
-                FfiConverterTypeOptionneurDictionnaire.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterTypeOptionneurDictionnaire.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterTypeOptionneurDictionnaire.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            41, // rondpoint:rondpoint_c6ef_Retourneur_identique_optionneur_dictionnaire
+            FfiConverterTypeRetourneur.lower(this),
+            FfiConverterTypeOptionneurDictionnaire.lower(value),
+        )
     }
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
 
 }
 
@@ -1481,234 +1395,210 @@ class Stringifier {
      *      to a newly constructed Stringifier
      */
     static init() {
-        const liftResult = (result) => FfiConverterTypeStringifier.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            return UniFFIScaffolding.callAsync(
-                42, // rondpoint:rondpoint_c6ef_Stringifier_new
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }}
-
+    const liftResult = (result) => FfiConverterTypeStringifier.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        return UniFFIScaffolding.callAsync(
+            42, // rondpoint:rondpoint_c6ef_Stringifier_new
+        )
+    }
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     wellKnownString(value) {
-        const liftResult = (result) => FfiConverterString.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterString.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                43, // rondpoint:rondpoint_c6ef_Stringifier_well_known_string
-                FfiConverterTypeStringifier.lower(this),
-                FfiConverterString.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterString.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterString.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            43, // rondpoint:rondpoint_c6ef_Stringifier_well_known_string
+            FfiConverterTypeStringifier.lower(this),
+            FfiConverterString.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     toStringI8(value) {
-        const liftResult = (result) => FfiConverterString.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterI8.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                44, // rondpoint:rondpoint_c6ef_Stringifier_to_string_i8
-                FfiConverterTypeStringifier.lower(this),
-                FfiConverterI8.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterString.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterI8.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            44, // rondpoint:rondpoint_c6ef_Stringifier_to_string_i8
+            FfiConverterTypeStringifier.lower(this),
+            FfiConverterI8.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     toStringU8(value) {
-        const liftResult = (result) => FfiConverterString.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterU8.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                45, // rondpoint:rondpoint_c6ef_Stringifier_to_string_u8
-                FfiConverterTypeStringifier.lower(this),
-                FfiConverterU8.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterString.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterU8.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            45, // rondpoint:rondpoint_c6ef_Stringifier_to_string_u8
+            FfiConverterTypeStringifier.lower(this),
+            FfiConverterU8.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     toStringI16(value) {
-        const liftResult = (result) => FfiConverterString.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterI16.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                46, // rondpoint:rondpoint_c6ef_Stringifier_to_string_i16
-                FfiConverterTypeStringifier.lower(this),
-                FfiConverterI16.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterString.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterI16.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            46, // rondpoint:rondpoint_c6ef_Stringifier_to_string_i16
+            FfiConverterTypeStringifier.lower(this),
+            FfiConverterI16.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     toStringU16(value) {
-        const liftResult = (result) => FfiConverterString.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterU16.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                47, // rondpoint:rondpoint_c6ef_Stringifier_to_string_u16
-                FfiConverterTypeStringifier.lower(this),
-                FfiConverterU16.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterString.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterU16.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            47, // rondpoint:rondpoint_c6ef_Stringifier_to_string_u16
+            FfiConverterTypeStringifier.lower(this),
+            FfiConverterU16.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     toStringI32(value) {
-        const liftResult = (result) => FfiConverterString.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterI32.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                48, // rondpoint:rondpoint_c6ef_Stringifier_to_string_i32
-                FfiConverterTypeStringifier.lower(this),
-                FfiConverterI32.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterString.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterI32.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            48, // rondpoint:rondpoint_c6ef_Stringifier_to_string_i32
+            FfiConverterTypeStringifier.lower(this),
+            FfiConverterI32.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     toStringU32(value) {
-        const liftResult = (result) => FfiConverterString.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterU32.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                49, // rondpoint:rondpoint_c6ef_Stringifier_to_string_u32
-                FfiConverterTypeStringifier.lower(this),
-                FfiConverterU32.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterString.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterU32.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            49, // rondpoint:rondpoint_c6ef_Stringifier_to_string_u32
+            FfiConverterTypeStringifier.lower(this),
+            FfiConverterU32.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     toStringI64(value) {
-        const liftResult = (result) => FfiConverterString.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterI64.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                50, // rondpoint:rondpoint_c6ef_Stringifier_to_string_i64
-                FfiConverterTypeStringifier.lower(this),
-                FfiConverterI64.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterString.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterI64.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            50, // rondpoint:rondpoint_c6ef_Stringifier_to_string_i64
+            FfiConverterTypeStringifier.lower(this),
+            FfiConverterI64.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     toStringU64(value) {
-        const liftResult = (result) => FfiConverterString.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterU64.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                51, // rondpoint:rondpoint_c6ef_Stringifier_to_string_u64
-                FfiConverterTypeStringifier.lower(this),
-                FfiConverterU64.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterString.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterU64.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            51, // rondpoint:rondpoint_c6ef_Stringifier_to_string_u64
+            FfiConverterTypeStringifier.lower(this),
+            FfiConverterU64.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     toStringFloat(value) {
-        const liftResult = (result) => FfiConverterString.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterF32.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                52, // rondpoint:rondpoint_c6ef_Stringifier_to_string_float
-                FfiConverterTypeStringifier.lower(this),
-                FfiConverterF32.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterString.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterF32.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            52, // rondpoint:rondpoint_c6ef_Stringifier_to_string_float
+            FfiConverterTypeStringifier.lower(this),
+            FfiConverterF32.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     toStringDouble(value) {
-        const liftResult = (result) => FfiConverterString.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterF64.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                53, // rondpoint:rondpoint_c6ef_Stringifier_to_string_double
-                FfiConverterTypeStringifier.lower(this),
-                FfiConverterF64.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterString.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterF64.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            53, // rondpoint:rondpoint_c6ef_Stringifier_to_string_double
+            FfiConverterTypeStringifier.lower(this),
+            FfiConverterF64.lower(value),
+        )
     }
-
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
     toStringBoolean(value) {
-        const liftResult = (result) => FfiConverterString.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterBool.checkType("value", value);
-            return UniFFIScaffolding.callAsync(
-                54, // rondpoint:rondpoint_c6ef_Stringifier_to_string_boolean
-                FfiConverterTypeStringifier.lower(this),
-                FfiConverterBool.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterString.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterBool.checkType("value", value);
+        return UniFFIScaffolding.callAsync(
+            54, // rondpoint:rondpoint_c6ef_Stringifier_to_string_boolean
+            FfiConverterTypeStringifier.lower(this),
+            FfiConverterBool.lower(value),
+        )
     }
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }}
 
 }
 
@@ -2480,96 +2370,96 @@ EXPORTED_SYMBOLS.push("FfiConverterMapStringTypeEnumerationAvecDonnees");
 
 function copieDictionnaire(d) {
     
-        const liftResult = (result) => FfiConverterTypeDictionnaire.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterTypeDictionnaire.checkType("d", d);
-            return UniFFIScaffolding.callAsync(
-                81, // rondpoint:rondpoint_c6ef_copie_dictionnaire
-                FfiConverterTypeDictionnaire.lower(d),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterTypeDictionnaire.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterTypeDictionnaire.checkType("d", d);
+        return UniFFIScaffolding.callAsync(
+            81, // rondpoint:rondpoint_c6ef_copie_dictionnaire
+            FfiConverterTypeDictionnaire.lower(d),
+        )
+    }
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }
 }
 
 EXPORTED_SYMBOLS.push("copieDictionnaire");
 function copieEnumeration(e) {
     
-        const liftResult = (result) => FfiConverterTypeEnumeration.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterTypeEnumeration.checkType("e", e);
-            return UniFFIScaffolding.callAsync(
-                82, // rondpoint:rondpoint_c6ef_copie_enumeration
-                FfiConverterTypeEnumeration.lower(e),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterTypeEnumeration.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterTypeEnumeration.checkType("e", e);
+        return UniFFIScaffolding.callAsync(
+            82, // rondpoint:rondpoint_c6ef_copie_enumeration
+            FfiConverterTypeEnumeration.lower(e),
+        )
+    }
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }
 }
 
 EXPORTED_SYMBOLS.push("copieEnumeration");
 function copieEnumerations(e) {
     
-        const liftResult = (result) => FfiConverterSequenceTypeEnumeration.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterSequenceTypeEnumeration.checkType("e", e);
-            return UniFFIScaffolding.callAsync(
-                83, // rondpoint:rondpoint_c6ef_copie_enumerations
-                FfiConverterSequenceTypeEnumeration.lower(e),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterSequenceTypeEnumeration.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterSequenceTypeEnumeration.checkType("e", e);
+        return UniFFIScaffolding.callAsync(
+            83, // rondpoint:rondpoint_c6ef_copie_enumerations
+            FfiConverterSequenceTypeEnumeration.lower(e),
+        )
+    }
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }
 }
 
 EXPORTED_SYMBOLS.push("copieEnumerations");
 function copieCarte(c) {
     
-        const liftResult = (result) => FfiConverterMapStringTypeEnumerationAvecDonnees.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterMapStringTypeEnumerationAvecDonnees.checkType("c", c);
-            return UniFFIScaffolding.callAsync(
-                84, // rondpoint:rondpoint_c6ef_copie_carte
-                FfiConverterMapStringTypeEnumerationAvecDonnees.lower(c),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterMapStringTypeEnumerationAvecDonnees.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterMapStringTypeEnumerationAvecDonnees.checkType("c", c);
+        return UniFFIScaffolding.callAsync(
+            84, // rondpoint:rondpoint_c6ef_copie_carte
+            FfiConverterMapStringTypeEnumerationAvecDonnees.lower(c),
+        )
+    }
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }
 }
 
 EXPORTED_SYMBOLS.push("copieCarte");
 function switcheroo(b) {
     
-        const liftResult = (result) => FfiConverterBool.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterBool.checkType("b", b);
-            return UniFFIScaffolding.callAsync(
-                85, // rondpoint:rondpoint_c6ef_switcheroo
-                FfiConverterBool.lower(b),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterBool.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterBool.checkType("b", b);
+        return UniFFIScaffolding.callAsync(
+            85, // rondpoint:rondpoint_c6ef_switcheroo
+            FfiConverterBool.lower(b),
+        )
+    }
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }
 }
 
 EXPORTED_SYMBOLS.push("switcheroo");

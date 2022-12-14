@@ -5,10 +5,7 @@
 
 "use strict";
 
-// Objects intended to be used in the unit tests
-var UnitTestObjs = {};
-
-var EXPORTED_SYMBOLS = ["UnitTestObjs"];
+var EXPORTED_SYMBOLS = [];
 
 // Write/Read data to/from an ArrayBuffer
 class ArrayBufferDataStream {
@@ -106,6 +103,7 @@ class ArrayBufferDataStream {
         this.pos += 8;
     }
 
+
     readFloat32() {
         let rv = this.dataView.getFloat32(this.pos);
         this.pos += 4;
@@ -181,10 +179,6 @@ function handleRustResult(result, liftCallback, liftErrCallback) {
 class UniFFIError {
     constructor(message) {
         this.message = message;
-    }
-
-    toString() {
-        return `UniFFIError: ${this.message}`
     }
 }
 
@@ -412,41 +406,41 @@ EXPORTED_SYMBOLS.push("FfiConverterOptionalTypePoint");
 
 function gradient(ln) {
     
-        const liftResult = (result) => FfiConverterF64.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterTypeLine.checkType("ln", ln);
-            return UniFFIScaffolding.callAsync(
-                20, // geometry:geometry_1cce_gradient
-                FfiConverterTypeLine.lower(ln),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterF64.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterTypeLine.checkType("ln", ln);
+        return UniFFIScaffolding.callAsync(
+            20, // geometry:geometry_1cce_gradient
+            FfiConverterTypeLine.lower(ln),
+        )
+    }
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }
 }
 
 EXPORTED_SYMBOLS.push("gradient");
 function intersection(ln1,ln2) {
     
-        const liftResult = (result) => FfiConverterOptionalTypePoint.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterTypeLine.checkType("ln1", ln1);
-            FfiConverterTypeLine.checkType("ln2", ln2);
-            return UniFFIScaffolding.callAsync(
-                21, // geometry:geometry_1cce_intersection
-                FfiConverterTypeLine.lower(ln1),
-                FfiConverterTypeLine.lower(ln2),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterOptionalTypePoint.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterTypeLine.checkType("ln1", ln1);
+        FfiConverterTypeLine.checkType("ln2", ln2);
+        return UniFFIScaffolding.callAsync(
+            21, // geometry:geometry_1cce_intersection
+            FfiConverterTypeLine.lower(ln1),
+            FfiConverterTypeLine.lower(ln2),
+        )
+    }
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }
 }
 
 EXPORTED_SYMBOLS.push("intersection");

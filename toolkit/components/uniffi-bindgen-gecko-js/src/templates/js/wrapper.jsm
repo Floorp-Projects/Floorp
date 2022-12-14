@@ -5,10 +5,7 @@
 
 "use strict";
 
-// Objects intended to be used in the unit tests
-var UnitTestObjs = {};
-
-var EXPORTED_SYMBOLS = ["UnitTestObjs"];
+var EXPORTED_SYMBOLS = [];
 
 {% include "Helpers.jsm" %}
 

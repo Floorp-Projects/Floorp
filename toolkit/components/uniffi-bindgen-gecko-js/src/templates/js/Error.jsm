@@ -18,19 +18,16 @@ class {{ variant.name().to_upper_camel_case() }} extends {{ error.nm() }} {
         {{field.nm()}},
         {% endfor -%}
         ...params
-    ) {
-        super(...params);
-        {%- for field in variant.fields() %}
-        this.{{field.nm()}} = {{ field.nm() }};
-        {%- endfor %}
-    }
+        ) {
+            super(...params);
+            {%- for field in variant.fields() %}
+            this.{{field.nm()}} = {{ field.nm() }};
+            {%- endfor %}
+        }
     {%- endif %}
-    toString() {
-        return `{{ variant.name().to_upper_camel_case() }}: ${super.toString()}`
-    }
 }
 EXPORTED_SYMBOLS.push("{{ variant.name().to_upper_camel_case() }}");
-{%- endfor %}
+{%-endfor %}
 
 class {{ ffi_converter }} extends FfiConverterArrayBuffer {
     static read(dataStream) {
@@ -48,34 +45,7 @@ class {{ ffi_converter }} extends FfiConverterArrayBuffer {
                 {%- endif %}
             {%- endfor %}
             default:
-                throw new Error("Unknown {{ error.nm() }} variant");
+                return new Error("Unknown {{ error.nm() }} variant");
         }
     }
-    static computeSize(value) {
-        // Size of the Int indicating the variant
-        let totalSize = 4;
-        {%- for variant in error.variants() %}
-        if (value instanceof {{ variant.name().to_upper_camel_case() }}) {
-            {%- for field in variant.fields() %}
-            totalSize += {{ field.ffi_converter() }}.computeSize(value.{{ field.nm() }});
-            {%- endfor %}
-            return totalSize;
-        }
-        {%- endfor %}
-        throw new Error("Unknown {{ error.nm() }} variant");
-    }
-    static write(dataStream, value) {
-        {%- for variant in error.variants() %}
-        if (value instanceof {{ variant.name().to_upper_camel_case() }}) {
-            dataStream.writeInt32({{ loop.index }});
-            {%- for field in variant.fields() %}
-            {{ field.ffi_converter() }}.write(dataStream, value.{{ field.nm() }});
-            {%- endfor %}
-            return;
-        }
-        {%- endfor %}
-        throw new Error("Unknown {{ error.nm() }} variant");
-    }
-
-    static errorClass = {{ error.nm() }};
 }

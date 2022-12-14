@@ -94,6 +94,7 @@ class ArrayBufferDataStream {
         this.pos += 8;
     }
 
+
     readFloat32() {
         let rv = this.dataView.getFloat32(this.pos);
         this.pos += 4;
@@ -191,10 +192,6 @@ function handleRustResult(result, liftCallback, liftErrCallback) {
 class UniFFIError {
     constructor(message) {
         this.message = message;
-    }
-
-    toString() {
-        return `UniFFIError: ${this.message}`
     }
 }
 

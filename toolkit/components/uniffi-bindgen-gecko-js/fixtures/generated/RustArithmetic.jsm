@@ -5,10 +5,7 @@
 
 "use strict";
 
-// Objects intended to be used in the unit tests
-var UnitTestObjs = {};
-
-var EXPORTED_SYMBOLS = ["UnitTestObjs"];
+var EXPORTED_SYMBOLS = [];
 
 // Write/Read data to/from an ArrayBuffer
 class ArrayBufferDataStream {
@@ -106,6 +103,7 @@ class ArrayBufferDataStream {
         this.pos += 8;
     }
 
+
     readFloat32() {
         let rv = this.dataView.getFloat32(this.pos);
         this.pos += 4;
@@ -181,10 +179,6 @@ function handleRustResult(result, liftCallback, liftErrCallback) {
 class UniFFIError {
     constructor(message) {
         this.message = message;
-    }
-
-    toString() {
-        return `UniFFIError: ${this.message}`
     }
 }
 
@@ -316,9 +310,6 @@ class IntegerOverflow extends ArithmeticError {
         super(...params);
         this.message = message;
     }
-    toString() {
-        return `IntegerOverflow: ${super.toString()}`
-    }
 }
 EXPORTED_SYMBOLS.push("IntegerOverflow");
 
@@ -328,26 +319,9 @@ class FfiConverterTypeArithmeticError extends FfiConverterArrayBuffer {
             case 1:
                 return new IntegerOverflow(FfiConverterString.read(dataStream));
             default:
-                throw new Error("Unknown ArithmeticError variant");
+                return new Error("Unknown ArithmeticError variant");
         }
     }
-    static computeSize(value) {
-        // Size of the Int indicating the variant
-        let totalSize = 4;
-        if (value instanceof IntegerOverflow) {
-            return totalSize;
-        }
-        throw new Error("Unknown ArithmeticError variant");
-    }
-    static write(dataStream, value) {
-        if (value instanceof IntegerOverflow) {
-            dataStream.writeInt32(1);
-            return;
-        }
-        throw new Error("Unknown ArithmeticError variant");
-    }
-
-    static errorClass = ArithmeticError;
 }
 
 // Export the FFIConverter object to make external types work.
@@ -358,85 +332,85 @@ EXPORTED_SYMBOLS.push("FfiConverterTypeArithmeticError");
 
 function add(a,b) {
     
-        const liftResult = (result) => FfiConverterU64.lift(result);
-        const liftError = (data) => FfiConverterTypeArithmeticError.lift(data);
-        const functionCall = () => {
-            FfiConverterU64.checkType("a", a);
-            FfiConverterU64.checkType("b", b);
-            return UniFFIScaffolding.callAsync(
-                22, // arithmetic:arithmetic_906c_add
-                FfiConverterU64.lower(a),
-                FfiConverterU64.lower(b),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterU64.lift(result);
+    const liftError = (data) => FfiConverterTypeArithmeticError.lift(data);
+    const functionCall = () => {
+        FfiConverterU64.checkType("a", a);
+        FfiConverterU64.checkType("b", b);
+        return UniFFIScaffolding.callAsync(
+            22, // arithmetic:arithmetic_906c_add
+            FfiConverterU64.lower(a),
+            FfiConverterU64.lower(b),
+        )
+    }
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }
 }
 
 EXPORTED_SYMBOLS.push("add");
 function sub(a,b) {
     
-        const liftResult = (result) => FfiConverterU64.lift(result);
-        const liftError = (data) => FfiConverterTypeArithmeticError.lift(data);
-        const functionCall = () => {
-            FfiConverterU64.checkType("a", a);
-            FfiConverterU64.checkType("b", b);
-            return UniFFIScaffolding.callAsync(
-                23, // arithmetic:arithmetic_906c_sub
-                FfiConverterU64.lower(a),
-                FfiConverterU64.lower(b),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterU64.lift(result);
+    const liftError = (data) => FfiConverterTypeArithmeticError.lift(data);
+    const functionCall = () => {
+        FfiConverterU64.checkType("a", a);
+        FfiConverterU64.checkType("b", b);
+        return UniFFIScaffolding.callAsync(
+            23, // arithmetic:arithmetic_906c_sub
+            FfiConverterU64.lower(a),
+            FfiConverterU64.lower(b),
+        )
+    }
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }
 }
 
 EXPORTED_SYMBOLS.push("sub");
 function div(dividend,divisor) {
     
-        const liftResult = (result) => FfiConverterU64.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterU64.checkType("dividend", dividend);
-            FfiConverterU64.checkType("divisor", divisor);
-            return UniFFIScaffolding.callAsync(
-                24, // arithmetic:arithmetic_906c_div
-                FfiConverterU64.lower(dividend),
-                FfiConverterU64.lower(divisor),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterU64.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterU64.checkType("dividend", dividend);
+        FfiConverterU64.checkType("divisor", divisor);
+        return UniFFIScaffolding.callAsync(
+            24, // arithmetic:arithmetic_906c_div
+            FfiConverterU64.lower(dividend),
+            FfiConverterU64.lower(divisor),
+        )
+    }
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }
 }
 
 EXPORTED_SYMBOLS.push("div");
 function equal(a,b) {
     
-        const liftResult = (result) => FfiConverterBool.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterU64.checkType("a", a);
-            FfiConverterU64.checkType("b", b);
-            return UniFFIScaffolding.callAsync(
-                25, // arithmetic:arithmetic_906c_equal
-                FfiConverterU64.lower(a),
-                FfiConverterU64.lower(b),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterBool.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterU64.checkType("a", a);
+        FfiConverterU64.checkType("b", b);
+        return UniFFIScaffolding.callAsync(
+            25, // arithmetic:arithmetic_906c_equal
+            FfiConverterU64.lower(a),
+            FfiConverterU64.lower(b),
+        )
+    }
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }
 }
 
 EXPORTED_SYMBOLS.push("equal");

@@ -2,25 +2,18 @@
 
 #include "nsString.h"
 #include "nsPrintfCString.h"
-#include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/StaticPtr.h"
-#include "mozilla/dom/UniFFICallbacks.h"
 #include "mozilla/dom/UniFFIScaffolding.h"
 #include "mozilla/dom/ScaffoldingCall.h"
-
-static mozilla::LazyLogModule UniFFIFixturesLogger("uniffi");
 
 namespace mozilla::uniffi {
 
 using dom::ArrayBuffer;
-using dom::AutoEntryScript;
 using dom::GlobalObject;
 using dom::RootedDictionary;
 using dom::Promise;
 using dom::ScaffoldingType;
 using dom::Sequence;
-using dom::UniFFICallbackHandler;
 using dom::UniFFIPointer;
 using dom::UniFFIScaffoldingCallResult;
 
@@ -118,9 +111,6 @@ extern "C" {
   RustBuffer todolist_aa33_get_default_list(RustCallStatus*);
   void todolist_aa33_set_default_list(void *, RustCallStatus*);
   RustBuffer todolist_aa33_create_entry_with(RustBuffer, RustCallStatus*);
-  void ffi_fixture_callbacks_1107_Logger_init_callback(ForeignCallback, RustCallStatus*);
-  void fixture_callbacks_1107_log_even_numbers(uint64_t, RustBuffer, RustCallStatus*);
-  void fixture_callbacks_1107_log_even_numbers_main_thread(uint64_t, RustBuffer, RustCallStatus*);
   RustBuffer custom_types_8ecd_get_custom_types_demo(RustBuffer, RustCallStatus*);
   double external_types_54cc_gradient(RustBuffer, RustCallStatus*);
 }
@@ -146,36 +136,6 @@ const static mozilla::uniffi::UniFFIPointerType kTodolistTodoListPointerType {
   "todolist::TodoList"_ns,
   ffi_todolist_aa33_TodoList_object_free
 };
-
-// Define the data we need per-callback interface
-MOZ_CAN_RUN_SCRIPT
-extern "C" int UniFFIFixturesCallbackHandlerLogger(uint64_t aHandle, uint32_t aMethod, RustBuffer aArgs, RustBuffer* aOutBuffer) {
-    // Currently, we only support "fire-and-forget" async callbacks.  These are
-    // callbacks that run asynchronously without returning anything.  The main
-    // use case for callbacks is logging, which fits very well with this model.
-    //
-    // So, here we simple queue the callback and return immediately.
-    mozilla::uniffi::QueueCallback(0, aHandle, aMethod, aArgs);
-    return CALLBACK_INTERFACE_SUCCESS;
-}
-static StaticRefPtr<dom::UniFFICallbackHandler> JS_CALLBACK_HANDLER_LOGGER;
-
-// Define a lookup function for our callback interface info
-Maybe<CallbackInterfaceInfo> UniFFIFixturesGetCallbackInterfaceInfo(uint64_t aInterfaceId) {
-    switch(aInterfaceId) {
-        case 0: { // fixture_callbacks:Logger
-            return Some(CallbackInterfaceInfo {
-                "Logger",
-                &JS_CALLBACK_HANDLER_LOGGER,
-                UniFFIFixturesCallbackHandlerLogger,
-                ffi_fixture_callbacks_1107_Logger_init_callback,
-            });
-        }
-
-        default:
-            return Nothing();
-    }
-}
 
 Maybe<already_AddRefed<Promise>> UniFFIFixturesCallAsync(const GlobalObject& aGlobal, uint64_t aId, const Sequence<ScaffoldingType>& aArgs, ErrorResult& aError) {
   switch (aId) {
@@ -527,19 +487,11 @@ Maybe<already_AddRefed<Promise>> UniFFIFixturesCallAsync(const GlobalObject& aGl
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
       return Some(CallHandler::CallAsync(todolist_aa33_create_entry_with, aGlobal, aArgs, "todolist_aa33_create_entry_with: "_ns, aError));
     }
-    case 107: { // fixture_callbacks:fixture_callbacks_1107_log_even_numbers
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(fixture_callbacks_1107_log_even_numbers, aGlobal, aArgs, "fixture_callbacks_1107_log_even_numbers: "_ns, aError));
-    }
-    case 108: { // fixture_callbacks:fixture_callbacks_1107_log_even_numbers_main_thread
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(fixture_callbacks_1107_log_even_numbers_main_thread, aGlobal, aArgs, "fixture_callbacks_1107_log_even_numbers_main_thread: "_ns, aError));
-    }
-    case 109: { // custom_types:custom_types_8ecd_get_custom_types_demo
+    case 107: { // custom_types:custom_types_8ecd_get_custom_types_demo
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
       return Some(CallHandler::CallAsync(custom_types_8ecd_get_custom_types_demo, aGlobal, aArgs, "custom_types_8ecd_get_custom_types_demo: "_ns, aError));
     }
-    case 110: { // external_types:external_types_54cc_gradient
+    case 108: { // external_types:external_types_54cc_gradient
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<double>, ScaffoldingConverter<RustBuffer>>;
       return Some(CallHandler::CallAsync(external_types_54cc_gradient, aGlobal, aArgs, "external_types_54cc_gradient: "_ns, aError));
     }
@@ -984,22 +936,12 @@ bool UniFFIFixturesCallSync(const GlobalObject& aGlobal, uint64_t aId, const Seq
       CallHandler::CallSync(todolist_aa33_create_entry_with, aGlobal, aArgs, aReturnValue, "todolist_aa33_create_entry_with: "_ns, aError);
       return true;
     }
-    case 107: { // fixture_callbacks:fixture_callbacks_1107_log_even_numbers
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(fixture_callbacks_1107_log_even_numbers, aGlobal, aArgs, aReturnValue, "fixture_callbacks_1107_log_even_numbers: "_ns, aError);
-      return true;
-    }
-    case 108: { // fixture_callbacks:fixture_callbacks_1107_log_even_numbers_main_thread
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(fixture_callbacks_1107_log_even_numbers_main_thread, aGlobal, aArgs, aReturnValue, "fixture_callbacks_1107_log_even_numbers_main_thread: "_ns, aError);
-      return true;
-    }
-    case 109: { // custom_types:custom_types_8ecd_get_custom_types_demo
+    case 107: { // custom_types:custom_types_8ecd_get_custom_types_demo
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
       CallHandler::CallSync(custom_types_8ecd_get_custom_types_demo, aGlobal, aArgs, aReturnValue, "custom_types_8ecd_get_custom_types_demo: "_ns, aError);
       return true;
     }
-    case 110: { // external_types:external_types_54cc_gradient
+    case 108: { // external_types:external_types_54cc_gradient
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<double>, ScaffoldingConverter<RustBuffer>>;
       CallHandler::CallSync(external_types_54cc_gradient, aGlobal, aArgs, aReturnValue, "external_types_54cc_gradient: "_ns, aError);
       return true;

@@ -5,10 +5,7 @@
 
 "use strict";
 
-// Objects intended to be used in the unit tests
-var UnitTestObjs = {};
-
-var EXPORTED_SYMBOLS = ["UnitTestObjs"];
+var EXPORTED_SYMBOLS = [];
 
 // Write/Read data to/from an ArrayBuffer
 class ArrayBufferDataStream {
@@ -106,6 +103,7 @@ class ArrayBufferDataStream {
         this.pos += 8;
     }
 
+
     readFloat32() {
         let rv = this.dataView.getFloat32(this.pos);
         this.pos += 4;
@@ -181,10 +179,6 @@ function handleRustResult(result, liftCallback, liftErrCallback) {
 class UniFFIError {
     constructor(message) {
         this.message = message;
-    }
-
-    toString() {
-        return `UniFFIError: ${this.message}`
     }
 }
 
@@ -423,20 +417,20 @@ EXPORTED_SYMBOLS.push("FfiConverterTypeUrl");
 
 function getCustomTypesDemo(demo) {
     
-        const liftResult = (result) => FfiConverterTypeCustomTypesDemo.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            FfiConverterOptionalTypeCustomTypesDemo.checkType("demo", demo);
-            return UniFFIScaffolding.callAsync(
-                109, // custom_types:custom_types_8ecd_get_custom_types_demo
-                FfiConverterOptionalTypeCustomTypesDemo.lower(demo),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
+    const liftResult = (result) => FfiConverterTypeCustomTypesDemo.lift(result);
+    const liftError = null;
+    const functionCall = () => {
+        FfiConverterOptionalTypeCustomTypesDemo.checkType("demo", demo);
+        return UniFFIScaffolding.callAsync(
+            107, // custom_types:custom_types_8ecd_get_custom_types_demo
+            FfiConverterOptionalTypeCustomTypesDemo.lower(demo),
+        )
+    }
+    try {
+        return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+    }  catch (error) {
+        return Promise.reject(error)
+    }
 }
 
 EXPORTED_SYMBOLS.push("getCustomTypesDemo");
