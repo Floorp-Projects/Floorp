@@ -496,7 +496,7 @@ var OriginControls = {
       return;
     }
     let perms = { permissions: [], origins: ["*://" + uri.host] };
-    ExtensionPermissions.add(policy.id, perms, policy.extension);
+    return ExtensionPermissions.add(policy.id, perms, policy.extension);
   },
 
   // Revoke permission, extension should run only when clicked on this host.
@@ -505,7 +505,7 @@ var OriginControls = {
       return;
     }
     let perms = { permissions: [], origins: ["*://" + uri.host] };
-    ExtensionPermissions.remove(policy.id, perms, policy.extension);
+    return ExtensionPermissions.remove(policy.id, perms, policy.extension);
   },
 
   /**

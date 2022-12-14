@@ -7,12 +7,6 @@ requestLongerTimeout(2);
 
 /* import-globals-from ../../../../../toolkit/mozapps/extensions/test/browser/head.js */
 
-// This is needed to import the `MockProvider`.
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/toolkit/mozapps/extensions/test/browser/head.js",
-  this
-);
-
 const { ExtensionPermissions } = ChromeUtils.import(
   "resource://gre/modules/ExtensionPermissions.jsm"
 );
@@ -321,11 +315,24 @@ add_task(async function test_list_active_extensions_only() {
   });
 
   const arrayOfManifestData = [
-    { name: "hidden addon", hidden: true },
-    { name: "regular addon", hidden: false },
-    { name: "disabled addon", hidden: false },
+    {
+      name: "hidden addon",
+      browser_specific_settings: { gecko: { id: "ext1@test" } },
+      hidden: true,
+    },
+    {
+      name: "regular addon",
+      browser_specific_settings: { gecko: { id: "ext2@test" } },
+      hidden: false,
+    },
+    {
+      name: "disabled addon",
+      browser_specific_settings: { gecko: { id: "ext3@test" } },
+      hidden: false,
+    },
     {
       name: "regular addon with browser action",
+      browser_specific_settings: { gecko: { id: "ext4@test" } },
       hidden: false,
       browser_action: {
         default_area: "navbar",
@@ -334,6 +341,7 @@ add_task(async function test_list_active_extensions_only() {
     {
       manifest_version: 3,
       name: "regular mv3 addon with browser action",
+      browser_specific_settings: { gecko: { id: "ext5@test" } },
       hidden: false,
       action: {
         default_area: "navbar",
@@ -341,14 +349,13 @@ add_task(async function test_list_active_extensions_only() {
     },
     {
       name: "regular addon with page action",
+      browser_specific_settings: { gecko: { id: "ext6@test" } },
       hidden: false,
       page_action: {},
     },
   ];
   const extensions = createExtensions(arrayOfManifestData, {
-    // We have to use the mock provider below so we don't need to use the
-    // `addonManager` here.
-    useAddonManager: false,
+    useAddonManager: "temporary",
     // Allow all extensions in PB mode by default.
     incognitoOverride: "spanning",
   });
@@ -357,89 +364,19 @@ add_task(async function test_list_active_extensions_only() {
   extensions.push(
     ExtensionTestUtils.loadExtension({
       manifest: {
+        browser_specific_settings: { gecko: { id: "ext7@test" } },
         name: "regular addon with private browsing disabled",
       },
-      useAddonManager: false,
+      useAddonManager: "temporary",
       incognitoOverride: "not_allowed",
     })
   );
 
   await Promise.all(extensions.map(extension => extension.startup()));
 
-  const extensionWithoutPolicyID = "ext-without-policy@";
-
-  // We use MockProvider because the "hidden" property cannot be set when
-  // "useAddonManager" is passed to loadExtension.
-  const mockProvider = new MockProvider();
-  mockProvider.createAddons([
-    // We register an add-on here BUT without loading the extension above. That
-    // allows us to simulate the presence of an active add-on but without a
-    // WebExtensionPolicy.
-    {
-      id: extensionWithoutPolicyID,
-      name: "regular addon without policy",
-      type: "extension",
-      version: "1",
-      hidden: false,
-    },
-    {
-      id: extensions[0].id,
-      name: arrayOfManifestData[0].name,
-      type: "extension",
-      version: "1",
-      hidden: arrayOfManifestData[0].hidden,
-    },
-    {
-      id: extensions[1].id,
-      name: arrayOfManifestData[1].name,
-      type: "extension",
-      version: "1",
-      hidden: arrayOfManifestData[1].hidden,
-    },
-    {
-      id: extensions[2].id,
-      name: arrayOfManifestData[2].name,
-      type: "extension",
-      version: "1",
-      hidden: arrayOfManifestData[2].hidden,
-      // Mark this add-on as disabled.
-      userDisabled: true,
-    },
-    {
-      id: extensions[3].id,
-      name: arrayOfManifestData[3].name,
-      type: "extension",
-      version: "1",
-      hidden: arrayOfManifestData[3].hidden,
-    },
-    {
-      id: extensions[4].id,
-      name: arrayOfManifestData[4].name,
-      type: "extension",
-      version: "1",
-      hidden: arrayOfManifestData[4].hidden,
-    },
-    {
-      id: extensions[5].id,
-      name: arrayOfManifestData[5].name,
-      type: "extension",
-      version: "1",
-      hidden: arrayOfManifestData[5].hidden,
-    },
-    {
-      id: extensions[6].id,
-      name: "regular addon with private browsing disabled",
-      type: "extension",
-      version: "1",
-      hidden: false,
-    },
-  ]);
-
-  is(
-    WebExtensionPolicy.getByID(extensionWithoutPolicyID),
-    null,
-    "expected add-on without a policy"
-  );
+  // Disable the "disabled addon".
+  let addon2 = await AddonManager.getAddonByID(extensions[2].id);
+  await addon2.disable();
 
   for (const isPrivate of [false, true]) {
     info(
@@ -454,16 +391,6 @@ add_task(async function test_list_active_extensions_only() {
     await ensureMaximizedWindow(aWin);
 
     await openExtensionsPanel(aWin);
-
-    const addonWithoutPolicyItem = getUnifiedExtensionsItem(
-      aWin,
-      extensionWithoutPolicyID
-    );
-    is(
-      addonWithoutPolicyItem,
-      null,
-      "didn't expect an item for an add-on without policy"
-    );
 
     const hiddenAddonItem = getUnifiedExtensionsItem(aWin, extensions[0].id);
     is(hiddenAddonItem, null, "didn't expect an item for a hidden add-on");
@@ -529,14 +456,13 @@ add_task(async function test_list_active_extensions_only() {
   }
 
   await Promise.all(extensions.map(extension => extension.unload()));
-  mockProvider.unregister();
 });
 
 add_task(async function test_button_opens_discopane_when_no_extension() {
   // The test harness registers regular extensions so we need to mock the
-  // `getActiveExtensions` extension to simulate zero extensions installed.
-  const origGetActionExtensions = win.gUnifiedExtensions.getActiveExtensions;
-  win.gUnifiedExtensions.getActiveExtensions = () => Promise.resolve([]);
+  // `getActivePolicies` extension to simulate zero extensions installed.
+  const origGetActivePolicies = win.gUnifiedExtensions.getActivePolicies;
+  win.gUnifiedExtensions.getActivePolicies = () => [];
 
   // Navigate away from the initial page so that about:addons always opens in a
   // new tab during tests.
@@ -582,7 +508,7 @@ add_task(async function test_button_opens_discopane_when_no_extension() {
   await popupShownPromise;
   await closeChromeContextMenu(contextMenu.id, null, win);
 
-  win.gUnifiedExtensions.getActiveExtensions = origGetActionExtensions;
+  win.gUnifiedExtensions.getActivePolicies = origGetActivePolicies;
 });
 
 add_task(
