@@ -724,7 +724,6 @@ nsStyleColumn::nsStyleColumn(const Document& aDocument)
       mColumnRuleColor(StyleColor::CurrentColor()),
       mColumnRuleStyle(StyleBorderStyle::None),
       mColumnRuleWidth(kMediumBorderWidth),
-      mActualColumnRuleWidth(0),
       mTwipsPerPixel(TwipsPerPixel(aDocument)) {
   MOZ_COUNT_CTOR(nsStyleColumn);
 }
@@ -739,7 +738,6 @@ nsStyleColumn::nsStyleColumn(const nsStyleColumn& aSource)
       mColumnFill(aSource.mColumnFill),
       mColumnSpan(aSource.mColumnSpan),
       mColumnRuleWidth(aSource.mColumnRuleWidth),
-      mActualColumnRuleWidth(aSource.mActualColumnRuleWidth),
       mTwipsPerPixel(aSource.mTwipsPerPixel) {
   MOZ_COUNT_CTOR(nsStyleColumn);
 }
@@ -761,7 +759,7 @@ nsChangeHint nsStyleColumn::CalcDifference(
     return NS_STYLE_HINT_REFLOW;
   }
 
-  if (mActualColumnRuleWidth != aNewData.mActualColumnRuleWidth ||
+  if (GetComputedColumnRuleWidth() != aNewData.GetComputedColumnRuleWidth() ||
       mColumnRuleStyle != aNewData.mColumnRuleStyle ||
       mColumnRuleColor != aNewData.mColumnRuleColor) {
     return NS_STYLE_HINT_VISUAL;
