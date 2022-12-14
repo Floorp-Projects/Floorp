@@ -93,8 +93,21 @@ Inject the jitdump files into your perf.data file:
 perf inject -j -i perf.data -o jit.data
 ```
 
-View the profile:
+View the profile (--call-graph=graph,0 shows all call stacks instead of the default threshold of >= 0.5%):
 ```
-perf report --no-children -i jit.data
+perf report --no-children --call-graph=graph,0 -i jit.data
 ```
 
+### Additional Information
+
+Some Linux distributions offer a "libc6-prof" package that includes frame pointers.  This can help resolve symbols and call stacks that involve libc calls.
+
+On Ubuntu, you can install this with:
+```
+sudo apt-get install libc6-prof
+```
+
+It may also be useful to have access to kernel addresses during profiling. These can be exposed with:
+```
+sudo sh -c "echo 0 > /proc/sys/kernel/kptr_restrict"
+``` 
