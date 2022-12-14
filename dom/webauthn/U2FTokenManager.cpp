@@ -806,7 +806,7 @@ void U2FTokenManager::RunCancel(uint64_t aTransactionId) {
   mTokenManagerImpl->Cancel();
 
   // Reject the promise.
-  AbortTransaction(aTransactionId, NS_ERROR_DOM_ABORT_ERR, true);
+  AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
 }
 
 }  // namespace mozilla::dom
