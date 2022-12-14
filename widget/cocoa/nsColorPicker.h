@@ -19,10 +19,7 @@ class mozIDOMWindowProxy;
 class nsColorPicker final : public nsIColorPicker {
  public:
   NS_DECL_ISUPPORTS
-
-  NS_IMETHOD Init(mozIDOMWindowProxy* aParent, const nsAString& aTitle,
-                  const nsAString& aInitialColor) override;
-  NS_IMETHOD Open(nsIColorPickerShownCallback* aCallback) override;
+  NS_DECL_NSICOLORPICKER
 
   // For NSColorPanelWrapper.
   void Update(NSColor* aColor);

@@ -22,7 +22,8 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 const { debug, warn } = GeckoViewUtils.initLogging("ColorPickerDelegate");
 
 class ColorPickerDelegate {
-  init(aParent, aTitle, aInitialColor) {
+  // TODO(bug 1805397): Implement default colors
+  init(aParent, aTitle, aInitialColor, aDefaultColors) {
     this._prompt = new lazy.GeckoViewPrompter(aParent);
     this._msg = {
       type: "color",

@@ -56,6 +56,8 @@
 #include "nsMappedAttributes.h"
 #include "nsIFormControl.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/HTMLDataListElement.h"
+#include "mozilla/dom/HTMLOptionElement.h"
 #include "nsIFormControlFrame.h"
 #include "nsITextControlFrame.h"
 #include "nsIFrame.h"
@@ -687,6 +689,33 @@ static bool IsPopupBlocked(Document* aDoc) {
   return true;
 }
 
+nsTArray<nsString> HTMLInputElement::GetColorsFromList() {
+  RefPtr<HTMLDataListElement> dataList = GetList();
+  if (!dataList) {
+    return {};
+  }
+
+  nsTArray<nsString> colors;
+
+  RefPtr<nsContentList> options = dataList->Options();
+  uint32_t length = options->Length(true);
+  for (uint32_t i = 0; i < length; ++i) {
+    auto* option = HTMLOptionElement::FromNodeOrNull(options->Item(i, false));
+    if (!option) {
+      continue;
+    }
+
+    nsString value;
+    option->GetValue(value);
+    if (IsValidSimpleColor(value)) {
+      ToLowerCase(value);
+      colors.AppendElement(value);
+    }
+  }
+
+  return colors;
+}
+
 nsresult HTMLInputElement::InitColorPicker() {
   MOZ_ASSERT(IsMutable());
 
@@ -719,7 +748,8 @@ nsresult HTMLInputElement::InitColorPicker() {
 
   nsAutoString initialValue;
   GetNonFileValueInternal(initialValue);
-  nsresult rv = colorPicker->Init(win, title, initialValue);
+  nsTArray<nsString> colors = GetColorsFromList();
+  nsresult rv = colorPicker->Init(win, title, initialValue, colors);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIColorPickerShownCallback> callback =
@@ -4762,6 +4792,22 @@ void HTMLInputElement::SanitizeValue(nsAString& aValue,
     default:
       break;
   }
+}
+
+Maybe<nscolor> HTMLInputElement::ParseSimpleColor(const nsAString& aColor) {
+  // Input color string should be 7 length (i.e. a string representing a valid
+  // simple color)
+  if (aColor.Length() != 7 || aColor.First() != '#') {
+    return {};
+  }
+
+  const nsAString& withoutHash = StringTail(aColor, 6);
+  nscolor color;
+  if (!NS_HexToRGBA(withoutHash, nsHexColorType::NoAlpha, &color)) {
+    return {};
+  }
+
+  return Some(color);
 }
 
 bool HTMLInputElement::IsValidSimpleColor(const nsAString& aValue) const {

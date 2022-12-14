@@ -5,12 +5,16 @@
 
 #include <gtk/gtk.h>
 
+#include "mozilla/Maybe.h"
+#include "mozilla/dom/HTMLInputElement.h"
 #include "nsColor.h"
 #include "nsColorPicker.h"
 #include "nsGtkUtils.h"
 #include "nsIWidget.h"
 #include "WidgetUtils.h"
 #include "nsPIDOMWindow.h"
+
+using mozilla::dom::HTMLInputElement;
 
 NS_IMPL_ISUPPORTS(nsColorPicker, nsIColorPicker)
 
@@ -59,28 +63,24 @@ GtkColorSelection* nsColorPicker::WidgetGetColorSelection(GtkWidget* widget) {
 
 NS_IMETHODIMP nsColorPicker::Init(mozIDOMWindowProxy* aParent,
                                   const nsAString& title,
-                                  const nsAString& initialColor) {
+                                  const nsAString& initialColor,
+                                  const nsTArray<nsString>& aDefaultColors) {
   auto* parent = nsPIDOMWindowOuter::From(aParent);
   mParentWidget = mozilla::widget::WidgetUtils::DOMWindowToWidget(parent);
   mTitle = title;
   mInitialColor = initialColor;
+  mDefaultColors.Assign(aDefaultColors);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP nsColorPicker::Open(
     nsIColorPickerShownCallback* aColorPickerShownCallback) {
-  // Input color string should be 7 length (i.e. a string representing a valid
-  // simple color)
-  if (mInitialColor.Length() != 7) {
+  auto maybeColor = HTMLInputElement::ParseSimpleColor(mInitialColor);
+  if (maybeColor.isNothing()) {
     return NS_ERROR_FAILURE;
   }
-
-  const nsAString& withoutHash = StringTail(mInitialColor, 6);
-  nscolor color;
-  if (!NS_HexToRGBA(withoutHash, nsHexColorType::NoAlpha, &color)) {
-    return NS_ERROR_FAILURE;
-  }
+  nscolor color = maybeColor.value();
 
   if (mCallback) {
     // It means Open has already been called: this is not allowed
@@ -106,6 +106,16 @@ NS_IMETHODIMP nsColorPicker::Open(
   }
 
   gtk_color_chooser_set_use_alpha(GTK_COLOR_CHOOSER(color_chooser), FALSE);
+
+  // Setting the default colors will put them into "Custom" colors list.
+  for (const nsString& defaultColor : mDefaultColors) {
+    if (auto color = HTMLInputElement::ParseSimpleColor(defaultColor)) {
+      GdkRGBA color_rgba = convertToRgbaColor(*color);
+      gtk_color_chooser_set_rgba(GTK_COLOR_CHOOSER(color_chooser), &color_rgba);
+    }
+  }
+
+  // The initial color needs to be set last.
   GdkRGBA color_rgba = convertToRgbaColor(color);
   gtk_color_chooser_set_rgba(GTK_COLOR_CHOOSER(color_chooser), &color_rgba);
 
