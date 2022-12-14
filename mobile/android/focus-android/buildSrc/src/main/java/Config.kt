@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import org.gradle.api.Project
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -30,9 +31,7 @@ object Config {
 
     @JvmStatic
     fun nightlyVersionName(): String {
-        // Nightly versions use the Gecko/A-C major version and append "0.a1", e.g. with A-C 90.0.20210426143115
-        // the Nightly version will be 90.0a1
-        val majorVersion = AndroidComponents.VERSION.split(".")[0]
-        return "$majorVersion.0a1"
+        // Nightly versions will use the version from "version.txt".
+        return File("../version.txt").useLines { it.firstOrNull() ?: "" }
     }
 }
