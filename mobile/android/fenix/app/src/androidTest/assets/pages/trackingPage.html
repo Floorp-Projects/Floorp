@@ -13,31 +13,31 @@
     <h3>Level 1 (Basic) List</h3>
     <p>social-track-digest256:</p>
     <img
-            src="https://social-track-digest256.dummytracker.org/test_not_blocked.png"
-            onerror="this.onerror=null;this.src='https://not-a-tracker.dummytracker.org/test_blocked.png'">
+            src="https://social-track-digest256.dummytracker.org/test_not_blocked.png" alt="social not blocked"
+            onerror="this.onerror=null;this.src='https://not-a-tracker.dummytracker.org/test_blocked.png';this.alt='social blocked'">
     <br/>
     <p>ads-track-digest256:</p>
     <img
             src="https://ads-track-digest256.dummytracker.org/test_not_blocked.png"
-            onerror="this.onerror=null;this.src='https://not-a-tracker.dummytracker.org/test_blocked.png'">
+            onerror="this.onerror=null;this.src='https://not-a-tracker.dummytracker.org/test_blocked.png';this.alt='ads blocked'">
     <br/>
     <p>analytics-track-digest256:</p>
     <img
             src="https://analytics-track-digest256.dummytracker.org/test_not_blocked.png"
-            onerror="this.onerror=null;this.src='https://not-a-tracker.dummytracker.org/test_blocked.png'">
+            onerror="this.onerror=null;this.src='https://not-a-tracker.dummytracker.org/test_blocked.png';this.alt='analytics blocked'">
     <br/>
     <p>Fingerprinting:
     <pre id="result">test not run</pre>
     <script src="https://base-fingerprinting-track-digest256.dummytracker.org/tracker.js"
-            onerror="this.onerror=null;var result=document.getElementById('result');result.innerHTML='blocked';"
-            onload="this.onload=null;var result=document.getElementById('result');result.innerHTML='NOT blocked';"
+            onerror="this.onerror=null;var result=document.getElementById('result');result.innerHTML='Fingerprinting blocked';"
+            onload="this.onload=null;var result=document.getElementById('result');result.innerHTML='Fingerprinting NOT blocked';"
     ></script>
     </p>
     <br/>
     <p>Cryptomining:
       <img
-              src="https://base-cryptomining-track-digest256.dummytracker.org/test_not_blocked.png" alt="not blocked"
-              onerror="this.onerror=null;this.src='https://not-a-tracker.dummytracker.org/test_blocked.png';this.alt='blocked'">
+              src="https://base-cryptomining-track-digest256.dummytracker.org/test_not_blocked.png" alt="Cryptomining not blocked"
+              onerror="this.onerror=null;this.src='https://not-a-tracker.dummytracker.org/test_blocked.png';this.alt='Cryptomining blocked'">
     </p>
 
     <p><b>Cookie blocking</b>

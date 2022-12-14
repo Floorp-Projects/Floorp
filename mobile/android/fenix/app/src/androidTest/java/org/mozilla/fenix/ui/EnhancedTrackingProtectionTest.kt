@@ -8,7 +8,6 @@ import androidx.core.net.toUri
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -165,7 +164,6 @@ class EnhancedTrackingProtectionTest {
         }
     }
 
-    @Ignore("Permanent failure: https://github.com/mozilla-mobile/fenix/issues/27312")
     @Test
     fun testStrictVisitSheetDetails() {
         appContext.settings().setStrictETP()
@@ -182,7 +180,11 @@ class EnhancedTrackingProtectionTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(trackingProtectionTest.url) {
-            verifyTrackingProtectionWebContent("blocked")
+            verifyTrackingProtectionWebContent("social blocked")
+            verifyTrackingProtectionWebContent("ads blocked")
+            verifyTrackingProtectionWebContent("analytics blocked")
+            verifyTrackingProtectionWebContent("Fingerprinting blocked")
+            verifyTrackingProtectionWebContent("Cryptomining blocked")
         }
         enhancedTrackingProtection {
         }.openEnhancedTrackingProtectionSheet {
@@ -197,7 +199,6 @@ class EnhancedTrackingProtectionTest {
         }
     }
 
-    @Ignore("Permanent failure: https://github.com/mozilla-mobile/fenix/issues/27312")
     @SmokeTest
     @Test
     fun customTrackingProtectionSettingsTest() {
@@ -217,7 +218,13 @@ class EnhancedTrackingProtectionTest {
             // browsing a basic page to allow GV to load on a fresh run
         }.enterURLAndEnterToBrowser(genericWebPage.url) {
         }.openNavigationToolbar {
-        }.enterURLAndEnterToBrowser(trackingPage.url) {}
+        }.enterURLAndEnterToBrowser(trackingPage.url) {
+            verifyTrackingProtectionWebContent("social blocked")
+            verifyTrackingProtectionWebContent("ads blocked")
+            verifyTrackingProtectionWebContent("analytics blocked")
+            verifyTrackingProtectionWebContent("Fingerprinting blocked")
+            verifyTrackingProtectionWebContent("Cryptomining blocked")
+        }
 
         enhancedTrackingProtection {
         }.openEnhancedTrackingProtectionSheet {
