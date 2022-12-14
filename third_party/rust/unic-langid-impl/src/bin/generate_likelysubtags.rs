@@ -1,6 +1,5 @@
 use serde_json::Value;
 use std::fs;
-use std::str::FromStr;
 use tinystr::TinyStr8;
 use unic_langid_impl::{subtags, LanguageIdentifier};
 
@@ -77,7 +76,7 @@ fn main() {
 
         match (lang, script, region) {
             (None, None, None) => lang_only.push((
-                TinyStr8::from_str("und").unwrap().into(),
+                u64::from_le_bytes(*TinyStr8::from_str("und").unwrap().all_bytes()),
                 (val_lang, val_script, val_region),
             )),
             (Some(l), None, None) => lang_only.push((
