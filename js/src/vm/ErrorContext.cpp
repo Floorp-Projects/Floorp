@@ -69,12 +69,13 @@ const JSErrorFormatString* OffThreadErrorContext::gcSafeCallback(
 }
 
 void OffThreadErrorContext::reportError(CompileError&& err) {
+  if (errors_.error) {
+    errors_.error.reset();
+  }
+
   // When compiling off thread, save the error so that the thread finishing the
   // parse can report it later.
-  if (!errors_.errors.append(std::move(err))) {
-    ReportOutOfMemory();
-    return;
-  }
+  errors_.error.emplace(std::move(err));
 }
 
 bool OffThreadErrorContext::reportWarning(CompileError&& err) {
@@ -115,8 +116,8 @@ void OffThreadErrorContext::convertToRuntimeError(
     return;
   }
 
-  for (CompileError& error : errors()) {
-    error.throwError(cx);
+  if (maybeError()) {
+    maybeError()->throwError(cx);
   }
   if (warning == Warning::Report) {
     for (CompileError& error : warnings()) {

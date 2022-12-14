@@ -2325,8 +2325,8 @@ class MOZ_STACK_CLASS AutoPrintSelfHostingFrontendContext
       fprintf(stderr, "Out of memory\n");
     }
 
-    for (CompileError& error : errors()) {
-      JS::PrintError(stderr, &error, true);
+    if (maybeError()) {
+      JS::PrintError(stderr, &*maybeError(), true);
     }
     for (CompileError& error : warnings()) {
       JS::PrintError(stderr, &error, true);
