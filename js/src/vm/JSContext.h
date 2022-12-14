@@ -80,7 +80,7 @@ class MOZ_RAII AutoCycleDetector {
 
 struct AutoResolving;
 
-struct OffThreadFrontendErrors;  // vm/HelperThreadState.h
+struct FrontendErrors;  // vm/HelperThreadState.h
 
 class InternalJobQueue : public JS::JobQueue {
  public:
@@ -178,7 +178,7 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   // Thread that the JSContext is currently running on, if in use.
   js::ThreadId currentThread_;
 
-  js::OffThreadFrontendErrors* errors_;
+  js::FrontendErrors* errors_;
 
   // When a helper thread is using a context, it may need to periodically
   // free unused memory.
@@ -329,12 +329,8 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
 
   inline void leaveRealm(JS::Realm* oldRealm);
 
-  void setOffThreadFrontendErrors(js::OffThreadFrontendErrors* errors) {
-    errors_ = errors;
-  }
-  js::OffThreadFrontendErrors* offThreadFrontendErrors() const {
-    return errors_;
-  }
+  void setFrontendErrors(js::FrontendErrors* errors) { errors_ = errors; }
+  js::FrontendErrors* frontendErrors() const { return errors_; }
 
   // Threads may freely access any data in their realm, compartment and zone.
   JS::Compartment* compartment() const {

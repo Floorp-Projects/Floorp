@@ -141,7 +141,7 @@ void OffThreadErrorContext::convertToRuntimeError(
 
 void OffThreadErrorContext::linkWithJSContext(JSContext* cx) {
   if (cx) {
-    cx->setOffThreadFrontendErrors(&errors_);
+    cx->setFrontendErrors(&errors_);
   }
 }
 

@@ -727,7 +727,7 @@ JSObject* js::CreateErrorNotesArray(JSContext* cx, JSErrorReport* report) {
 void JSContext::recoverFromOutOfMemory() {
   if (isHelperThreadContext()) {
     // Keep in sync with addPendingOutOfMemory.
-    if (OffThreadFrontendErrors* errors = offThreadFrontendErrors()) {
+    if (FrontendErrors* errors = frontendErrors()) {
       errors->outOfMemory = false;
     }
   } else {
@@ -966,7 +966,7 @@ mozilla::GenericErrorResult<OOM> JSContext::alreadyReportedOOM() {
 #ifdef DEBUG
   if (isHelperThreadContext()) {
     // Keep in sync with addPendingOutOfMemory.
-    if (OffThreadFrontendErrors* errors = offThreadFrontendErrors()) {
+    if (FrontendErrors* errors = frontendErrors()) {
       MOZ_ASSERT(errors->outOfMemory);
     }
   } else {
