@@ -1,5 +1,5 @@
 
-This repository currently hosts the [Mozilla Android Components](android-components/README.md) project. It is also the future home of [Focus](https://github.com/mozilla-mobile/focus-android/) and [Fenix](https://github.com/mozilla-mobile/fenix), which will both be [migrated in the coming months](https://github.com/mozilla-mobile/fenix/issues/26855).
+This repository currently hosts the [Mozilla Android Components](android-components/README.md) and [Focus (Android)](focus-android/README.md) projects. It is also the future home of [Fenix](https://github.com/mozilla-mobile/fenix), which will be [migrated in the coming weeks](https://github.com/mozilla-mobile/fenix/issues/26855).
 
-Please file issues for Android Components in [Bugzilla](https://bugzilla.mozilla.org/enter_bug.cgi?product=Fenix), selecting the corresponding component. For now, issues for Focus and Fenix can continue to be filed in their current repositories.
+Please file issues for Android Components in [Bugzilla](https://bugzilla.mozilla.org/enter_bug.cgi?product=Fenix), selecting the corresponding component. Firefox Focus (Android) issues should now also be filed in [Bugzilla](https://bugzilla.mozilla.org/enter_bug.cgi?product=Focus) under the Focus product.
 
