@@ -36,7 +36,10 @@ job-defaults:
                 by-test-platform:
                     .*/debug: built-projects
                     default: []
-            default: built-projects
+            default:
+                by-test-platform:
+                    .*tsan.*: []
+                    default: built-projects
     virtualization: virtual
 
 marionette:
