@@ -3,15 +3,6 @@
 const PAGE =
   "http://example.com/browser/browser/base/content/test/general/page_style_sample.html";
 
-async function openMenu(id) {
-  let menu = document.getElementById(id);
-  let popup = menu.querySelector(":scope > menupopup");
-  let shown = BrowserTestUtils.waitForPopupEvent(popup, "shown");
-  menu.openMenu(true);
-  await shown;
-  return popup;
-}
-
 /**
  * Tests that the Page Style menu shows the currently
  * selected Page Style after a new one has been selected.
@@ -26,8 +17,8 @@ add_task(async function() {
   BrowserTestUtils.loadURI(browser, PAGE);
   await promiseStylesheetsLoaded(tab, 18);
 
-  await openMenu("view-menu");
-  let menupopup = await openMenu("pageStyleMenu");
+  let menupopup = document.getElementById("pageStyleMenu").menupopup;
+  gPageStyleMenu.fillPopup(menupopup);
 
   // page_style_sample.html should default us to selecting the stylesheet
   // with the title "6" first.
@@ -38,13 +29,9 @@ add_task(async function() {
     "Should have '6' stylesheet selected by default"
   );
 
-  let closed = BrowserTestUtils.waitForEvent(menupopup, "popuphidden");
-
   // Now select stylesheet "1"
   let target = menupopup.querySelector("menuitem[label='1']");
-  menupopup.activateItem(target);
-
-  await closed;
+  target.doCommand();
 
   gPageStyleMenu.fillPopup(menupopup);
   // gPageStyleMenu empties out the menu between opens, so we need
