@@ -7,17 +7,17 @@
 #ifndef frontend_FrontendContext_h
 #define frontend_FrontendContext_h
 
-#include "mozilla/Assertions.h" // MOZ_ASSERT
-#include "mozilla/Attributes.h" // MOZ_STACK_CLASS
-#include "mozilla/Maybe.h"  // mozilla::Maybe
+#include "mozilla/Assertions.h"  // MOZ_ASSERT
+#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS
+#include "mozilla/Maybe.h"       // mozilla::Maybe
 
-#include <stddef.h> // size_t
+#include <stddef.h>  // size_t
 
-#include "js/AllocPolicy.h"  // SystemAllocPolicy, AllocFunction
-#include "js/ErrorReport.h" // JSErrorCallback, JSErrorFormatString
-#include "js/Vector.h"  // Vector
-#include "vm/ErrorReporting.h" // CompileError
-#include "vm/MallocProvider.h" // MallocProvider
+#include "js/AllocPolicy.h"     // SystemAllocPolicy, AllocFunction
+#include "js/ErrorReport.h"     // JSErrorCallback, JSErrorFormatString
+#include "js/Vector.h"          // Vector
+#include "vm/ErrorReporting.h"  // CompileError
+#include "vm/MallocProvider.h"  // MallocProvider
 
 struct JSContext;
 
