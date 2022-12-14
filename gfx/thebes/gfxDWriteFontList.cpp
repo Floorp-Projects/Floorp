@@ -2212,7 +2212,7 @@ gfxFontEntry* gfxDWriteFontList::PlatformGlobalFontFallback(
       FindFamily(aPresContext, mFallbackRenderer->FallbackFamilyName());
   if (!family.IsNull()) {
     gfxFontEntry* fontEntry = nullptr;
-    if (family.mIsShared) {
+    if (family.mShared) {
       auto face =
           family.mShared->FindFaceForStyle(SharedFontList(), *aMatchStyle);
       if (face) {

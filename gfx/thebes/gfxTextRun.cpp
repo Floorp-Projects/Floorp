@@ -1971,7 +1971,7 @@ void gfxFontGroup::BuildFontList() {
 
   // build the fontlist from the specified families
   for (const auto& f : fonts) {
-    if (f.mFamily.mIsShared) {
+    if (f.mFamily.mShared) {
       AddFamilyToFontList(f.mFamily.mShared, f.mGeneric);
     } else {
       AddFamilyToFontList(f.mFamily.mUnshared, f.mGeneric);
@@ -1988,9 +1988,9 @@ void gfxFontGroup::AddPlatformFont(const nsACString& aName, bool aQuotedName,
   if (mUserFontSet) {
     // Add userfonts to the fontlist whether already loaded
     // or not. Loading is initiated during font matching.
-    gfxFontFamily* family = mUserFontSet->LookupFamily(aName);
+    RefPtr<gfxFontFamily> family = mUserFontSet->LookupFamily(aName);
     if (family) {
-      aFamilyList.AppendElement(family);
+      aFamilyList.AppendElement(std::move(family));
       return;
     }
   }
@@ -2166,7 +2166,7 @@ already_AddRefed<gfxFont> gfxFontGroup::GetDefaultFont() {
              "invalid default font returned by GetDefaultFont");
 
   gfxFontEntry* fe = nullptr;
-  if (family.mIsShared) {
+  if (family.mShared) {
     fontlist::Family* fam = family.mShared;
     if (!fam->IsInitialized()) {
       // If this fails, FindFaceForStyle will just safely return nullptr
@@ -3753,7 +3753,7 @@ already_AddRefed<gfxFont> gfxFontGroup::WhichPrefFontSupportsChar(
       }
 
       gfxFontEntry* fe = nullptr;
-      if (family.mIsShared) {
+      if (family.mShared) {
         fontlist::Family* fam = family.mShared;
         if (!fam->IsInitialized()) {
           Unused << pfl->InitializeFamily(fam);
@@ -3786,7 +3786,7 @@ already_AddRefed<gfxFont> gfxFontGroup::WhichPrefFontSupportsChar(
       // If the char was not available, see if we can fall back to an
       // alternative face in the same family.
       if (!prefFont) {
-        prefFont = family.mIsShared
+        prefFont = family.mShared
                        ? FindFallbackFaceForChar(family.mShared, aCh, aNextCh,
                                                  aPresentation)
                        : FindFallbackFaceForChar(family.mUnshared, aCh, aNextCh,
