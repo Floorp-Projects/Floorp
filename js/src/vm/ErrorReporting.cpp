@@ -78,7 +78,7 @@ bool js::ReportCompileWarning(ErrorContext* ec, ErrorMetadata&& metadata,
     return false;
   }
 
-  return ec->reportWarning(&err);
+  return ec->reportWarning(std::move(err));
 }
 
 static void ReportCompileErrorImpl(ErrorContext* ec,
@@ -107,7 +107,7 @@ static void ReportCompileErrorImpl(ErrorContext* ec,
     return;
   }
 
-  ec->reportError(&err);
+  ec->reportError(std::move(err));
 }
 
 void js::ReportCompileErrorLatin1(ErrorContext* ec, ErrorMetadata&& metadata,
