@@ -265,6 +265,17 @@ void LoadAllScripts(WorkerPrivate* aWorkerPrivate,
     return;
   }
 
+  if (aIsMainScript) {
+    // Module Load
+    RefPtr<JS::loader::ScriptLoadRequest> mainScript = loader->GetMainScript();
+    if (mainScript && mainScript->IsModuleRequest()) {
+      if (NS_FAILED(mainScript->AsModuleRequest()->StartModuleLoad())) {
+        return;
+      }
+      syncLoop.Run();
+      return;
+    }
+  }
   if (loader->DispatchLoadScripts()) {
     syncLoop.Run();
   }
@@ -371,6 +382,10 @@ class ScriptExecutorRunnable final : public MainThreadWorkerSyncRunnable {
 
   virtual bool PreRun(WorkerPrivate* aWorkerPrivate) override;
 
+  bool ProcessModuleScript(JSContext* aCx, WorkerPrivate* aWorkerPrivate);
+
+  bool ProcessClassicScripts(JSContext* aCx, WorkerPrivate* aWorkerPrivate);
+
   virtual bool WorkerRun(JSContext* aCx,
                          WorkerPrivate* aWorkerPrivate) override;
 
@@ -424,6 +439,15 @@ WorkerScriptLoader::WorkerScriptLoader(
   }
 }
 
+ScriptLoadRequest* WorkerScriptLoader::GetMainScript() {
+  mWorkerRef->Private()->AssertIsOnWorkerThread();
+  ScriptLoadRequest* request = mLoadingRequests.getFirst();
+  if (request->GetWorkerLoadContext()->IsTopLevel()) {
+    return request;
+  }
+  return nullptr;
+}
+
 void WorkerScriptLoader::InitModuleLoader() {
   mWorkerRef->Private()->AssertIsOnWorkerThread();
   RefPtr<WorkerModuleLoader> moduleLoader =
@@ -435,14 +459,15 @@ void WorkerScriptLoader::InitModuleLoader() {
 bool WorkerScriptLoader::CreateScriptRequests(
     const nsTArray<nsString>& aScriptURLs,
     const mozilla::Encoding* aDocumentEncoding, bool aIsMainScript) {
-  // If a worker has been loaded as a module worker, ImportScripts calls are
-  // disallowed -- then the operation is invalid.
-  //
-  // 10.3.1 Importing scripts and libraries.
-  // Step 1. If worker global scope's type is "module", throw a TypeError
-  //         exception.
-  if (!aIsMainScript &&
-      mWorkerRef->Private()->WorkerType() == WorkerType::Module) {
+  mWorkerRef->Private()->AssertIsOnWorkerThread();
+  if (mWorkerRef->Private()->WorkerType() == WorkerType::Module &&
+      !aIsMainScript) {
+    // If a worker has been loaded as a module worker, ImportScripts calls are
+    // disallowed -- then the operation is invalid.
+    //
+    // 10.3.1 Importing scripts and libraries.
+    // Step 1. If worker global scope's type is "module", throw a TypeError
+    //         exception.
     mRv.ThrowTypeError(
         "Using `ImportScripts` inside a Module Worker is "
         "disallowed.");
@@ -472,6 +497,7 @@ nsTArray<RefPtr<ThreadSafeRequestHandle>> WorkerScriptLoader::GetLoadingList() {
 already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
     const nsString& aScriptURL, const mozilla::Encoding* aDocumentEncoding,
     bool aIsMainScript) {
+  mWorkerRef->Private()->AssertIsOnWorkerThread();
   WorkerLoadContext::Kind kind =
       WorkerLoadContext::GetKind(aIsMainScript, IsDebuggerScript());
 
@@ -497,13 +523,33 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
     loadContext->mLoadResult = rv;
   }
 
-  RefPtr<ScriptFetchOptions> fetchOptions =
-      new ScriptFetchOptions(CORSMode::CORS_NONE, referrerPolicy, nullptr);
+  RefPtr<ScriptLoadRequest> request;
+  if (mWorkerRef->Private()->WorkerType() == WorkerType::Classic) {
+    RefPtr<ScriptFetchOptions> fetchOptions =
+        new ScriptFetchOptions(CORSMode::CORS_NONE, referrerPolicy, nullptr);
 
-  RefPtr<ScriptLoadRequest> request =
-      new ScriptLoadRequest(ScriptKind::eClassic, uri, fetchOptions,
-                            SRIMetadata(), nullptr, /* = aReferrer */
-                            loadContext);
+    request = new ScriptLoadRequest(ScriptKind::eClassic, uri, fetchOptions,
+                                    SRIMetadata(), nullptr, /* = aReferrer */
+                                    loadContext);
+  } else {
+    // Implements part of "To fetch a worklet/module worker script graph"
+    // including, setting up the request with a credentials mode (TODO),
+    // destination (CSP, TODO).
+
+    // Step 1. Let options be a script fetch options. TODO: credentials mode.
+    RefPtr<ScriptFetchOptions> fetchOptions =
+        new ScriptFetchOptions(CORSMode::CORS_NONE, referrerPolicy, nullptr);
+
+    // Part of Step 2. This sets the Top-level flag to true
+    RefPtr<WorkerModuleLoader::ModuleLoaderBase> moduleLoader =
+        static_cast<WorkerGlobalScopeBase*>(GetGlobal())->GetModuleLoader();
+    request = new ModuleLoadRequest(
+        uri, fetchOptions, SRIMetadata(), nullptr, loadContext,
+        true,  /* is top level */
+        false, /* is dynamic import */
+        moduleLoader, ModuleLoadRequest::NewVisitedSetForTopLevelImport(uri),
+        nullptr);
+  }
 
   // Set the mURL, it will be used for error handling and debugging.
   request->mURL = NS_ConvertUTF16toUTF8(aScriptURL);
@@ -595,7 +641,11 @@ nsIGlobalObject* WorkerScriptLoader::GetGlobal() {
 
 void WorkerScriptLoader::MaybeMoveToLoadedList(ScriptLoadRequest* aRequest) {
   mWorkerRef->Private()->AssertIsOnWorkerThread();
-  aRequest->SetReady();
+  // Only set to ready for regular scripts. Module loader will set the script to
+  // ready if it is a Module Request.
+  if (!aRequest->IsModuleRequest()) {
+    aRequest->SetReady();
+  }
 
   // If the request is not in a list, we are in an illegal state.
   MOZ_RELEASE_ASSERT(aRequest->isInList());
@@ -892,6 +942,25 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
       mWorkerRef->Private()->GlobalScope()->Control(mController.ref());
     }
     mWorkerRef->Private()->ExecutionReady();
+  }
+
+  if (aRequest->IsModuleRequest()) {
+    // Only the top level module of the module graph will be executed from here,
+    // the rest will be executed from SpiderMonkey as part of the execution of
+    // the module graph.
+    MOZ_ASSERT(aRequest->IsTopLevel());
+    ModuleLoadRequest* request = aRequest->AsModuleRequest();
+    if (!request->mModuleScript) {
+      return false;
+    }
+    // Implements To fetch a worklet/module worker script graph
+    // Step 5. Fetch the descendants of and link result.
+    if (!request->InstantiateModuleGraph()) {
+      return false;
+    }
+
+    nsresult rv = request->EvaluateModule();
+    return NS_SUCCEEDED(rv);
   }
 
   JS::CompileOptions options(aCx);
@@ -1282,10 +1351,48 @@ bool ScriptExecutorRunnable::PreRun(WorkerPrivate* aWorkerPrivate) {
   return mScriptLoader->StoreCSP();
 }
 
-bool ScriptExecutorRunnable::WorkerRun(JSContext* aCx,
-                                       WorkerPrivate* aWorkerPrivate) {
-  aWorkerPrivate->AssertIsOnWorkerThread();
+bool ScriptExecutorRunnable::ProcessModuleScript(
+    JSContext* aCx, WorkerPrivate* aWorkerPrivate) {
+  // We should only ever have one script when processing modules
+  MOZ_ASSERT(mLoadedRequests.Length() == 1);
+  RefPtr<ScriptLoadRequest> request;
+  {
+    // There is a possibility that we cleaned up while this task was waiting to
+    // run. If this has happened, return and exit.
+    MutexAutoLock lock(mScriptLoader->CleanUpLock());
+    if (mScriptLoader->CleanedUp()) {
+      return true;
+    }
 
+    const auto& requestHandle = mLoadedRequests.begin()->get();
+    // The request must be valid.
+    MOZ_ASSERT(!requestHandle->IsEmpty());
+
+    // Release the request to the worker. From this point on, the Request Handle
+    // is empty.
+    request = requestHandle->ReleaseRequest();
+
+    // release lock. We will need it later if we cleanup.
+  }
+
+  MOZ_ASSERT(request->IsModuleRequest());
+
+  WorkerLoadContext* loadContext = request->GetWorkerLoadContext();
+  ModuleLoadRequest* moduleRequest = request->AsModuleRequest();
+  if (NS_FAILED(loadContext->mLoadResult)) {
+    if (!moduleRequest->IsTopLevel()) {
+      moduleRequest->Cancel();
+    } else {
+      moduleRequest->LoadFailed();
+    }
+  }
+
+  moduleRequest->OnFetchComplete(loadContext->mLoadResult);
+  return true;
+}
+
+bool ScriptExecutorRunnable::ProcessClassicScripts(
+    JSContext* aCx, WorkerPrivate* aWorkerPrivate) {
   // There is a possibility that we cleaned up while this task was waiting to
   // run. If this has happened, return and exit.
   {
@@ -1294,11 +1401,6 @@ bool ScriptExecutorRunnable::WorkerRun(JSContext* aCx,
       return true;
     }
 
-    // We must be on the same worker as we started on.
-    MOZ_ASSERT(
-        mScriptLoader->mSyncLoopTarget == mSyncLoopTarget,
-        "Unexpected SyncLoopTarget. Check if the sync loop was closed early");
-
     for (const auto& requestHandle : mLoadedRequests) {
       // The request must be valid.
       MOZ_ASSERT(!requestHandle->IsEmpty());
@@ -1306,11 +1408,26 @@ bool ScriptExecutorRunnable::WorkerRun(JSContext* aCx,
       // Release the request to the worker. From this point on, the Request
       // Handle is empty.
       RefPtr<ScriptLoadRequest> request = requestHandle->ReleaseRequest();
-
       mScriptLoader->MaybeMoveToLoadedList(request);
     }
   }
   return mScriptLoader->ProcessPendingRequests(aCx);
+}
+
+bool ScriptExecutorRunnable::WorkerRun(JSContext* aCx,
+                                       WorkerPrivate* aWorkerPrivate) {
+  aWorkerPrivate->AssertIsOnWorkerThread();
+
+  // We must be on the same worker as we started on.
+  MOZ_ASSERT(
+      mScriptLoader->mSyncLoopTarget == mSyncLoopTarget,
+      "Unexpected SyncLoopTarget. Check if the sync loop was closed early");
+
+  if (aWorkerPrivate->WorkerType() == WorkerType::Module) {
+    return ProcessModuleScript(aCx, aWorkerPrivate);
+  }
+
+  return ProcessClassicScripts(aCx, aWorkerPrivate);
 }
 
 nsresult ScriptExecutorRunnable::Cancel() {
