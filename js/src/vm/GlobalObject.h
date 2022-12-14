@@ -997,11 +997,7 @@ class GlobalObject : public NativeObject {
   JSObject* maybeWindowProxy() const { return data().windowProxy; }
 
   void setWindowProxy(JSObject* windowProxy) {
-    // Note: the global must always be associated with the same WindowProxy.
-    // CacheIR optimizations rely on this by baking in the WindowProxy for the
-    // global.
-    MOZ_ASSERT(!data().windowProxy);
-    data().windowProxy.init(windowProxy);
+    data().windowProxy = windowProxy;
   }
 
   ArrayObject* getSourceURLsHolder() const { return data().sourceURLsHolder; }
