@@ -245,6 +245,8 @@ class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
 
   nsTArray<RefPtr<ThreadSafeRequestHandle>> GetLoadingList();
 
+  nsContentPolicyType GetContentPolicyType(ScriptLoadRequest* aRequest);
+
   bool EvaluateScript(JSContext* aCx, ScriptLoadRequest* aRequest);
 
   nsresult FillCompileOptionsForRequest(

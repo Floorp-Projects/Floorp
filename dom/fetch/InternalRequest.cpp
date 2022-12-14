@@ -229,6 +229,7 @@ RequestDestination InternalRequest::MapContentPolicyTypeToRequestDestination(
     case nsIContentPolicy::TYPE_SCRIPT:
       return RequestDestination::Script;
     case nsIContentPolicy::TYPE_INTERNAL_WORKER:
+    case nsIContentPolicy::TYPE_INTERNAL_WORKER_STATIC_MODULE:
       return RequestDestination::Worker;
     case nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER:
       return RequestDestination::Sharedworker;
@@ -305,6 +306,7 @@ RequestDestination InternalRequest::MapContentPolicyTypeToRequestDestination(
     case nsIContentPolicy::TYPE_WEB_IDENTITY:
       return RequestDestination::_empty;
     case nsIContentPolicy::TYPE_INVALID:
+    case nsIContentPolicy::TYPE_END:
       break;
       // Do not add default: so that compilers can catch the missing case.
   }
