@@ -15,13 +15,13 @@
 using namespace js;
 
 void FrontendAllocator::reportAllocationOverflow() {
-  context_->onAllocationOverflow();
+  fc_->onAllocationOverflow();
 }
 
 void* FrontendAllocator::onOutOfMemory(AllocFunction allocFunc,
                                        arena_id_t arena, size_t nbytes,
                                        void* reallocPtr) {
-  return context_->onOutOfMemory(allocFunc, arena, nbytes, reallocPtr);
+  return fc_->onOutOfMemory(allocFunc, arena, nbytes, reallocPtr);
 }
 
 bool FrontendContext::hadErrors() const {
