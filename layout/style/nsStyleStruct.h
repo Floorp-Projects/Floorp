@@ -1987,7 +1987,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleColumn {
   mozilla::StyleColumnFill mColumnFill = mozilla::StyleColumnFill::Balance;
   mozilla::StyleColumnSpan mColumnSpan = mozilla::StyleColumnSpan::None;
 
-  nscoord GetColumnRuleWidth() const { return mActualColumnRuleWidth; }
+  nscoord GetComputedColumnRuleWidth() const {
+    return (IsVisibleBorderStyle(mColumnRuleStyle) ? mColumnRuleWidth : 0);
+  }
 
   bool IsColumnContainerStyle() const {
     return mColumnCount != kColumnCountAuto || !mColumnWidth.IsAuto();
@@ -1998,16 +2000,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleColumn {
   }
 
  protected:
-  // This is the specified value of column-rule-width, but with length values
-  // computed to absolute.  mActualColumnRuleWidth stores the column-rule-width
-  // value used by layout.  (We must store mColumnRuleWidth for the same
-  // style struct resolution reasons that we do nsStyleBorder::mBorder;
-  // see that field's comment.)
-  nscoord mColumnRuleWidth;
-  // The actual value of column-rule-width is the computed value (an absolute
-  // length, forced to zero when column-rule-style is none) rounded to device
-  // pixels.  This is the value used by layout.
-  nscoord mActualColumnRuleWidth;
+  nscoord mColumnRuleWidth;  // coord
   nscoord mTwipsPerPixel;
 };
 
