@@ -68,25 +68,17 @@ const JSErrorFormatString* OffThreadErrorContext::gcSafeCallback(
   return callback(userRef, errorNumber);
 }
 
-void OffThreadErrorContext::reportError(CompileError* err) {
+void OffThreadErrorContext::reportError(CompileError&& err) {
   // When compiling off thread, save the error so that the thread finishing the
   // parse can report it later.
-  auto errorPtr = getAllocator()->make_unique<CompileError>(std::move(*err));
-  if (!errorPtr) {
-    return;
-  }
-  if (!errors_.errors.append(std::move(errorPtr))) {
+  if (!errors_.errors.append(std::move(err))) {
     ReportOutOfMemory();
     return;
   }
 }
 
-bool OffThreadErrorContext::reportWarning(CompileError* err) {
-  auto errorPtr = getAllocator()->make_unique<CompileError>(std::move(*err));
-  if (!errorPtr) {
-    return false;
-  }
-  if (!errors_.warnings.append(std::move(errorPtr))) {
+bool OffThreadErrorContext::reportWarning(CompileError&& err) {
+  if (!errors_.warnings.append(std::move(err))) {
     ReportOutOfMemory();
     return false;
   }
@@ -123,12 +115,12 @@ void OffThreadErrorContext::convertToRuntimeError(
     return;
   }
 
-  for (const UniquePtr<CompileError>& error : errors()) {
-    error->throwError(cx);
+  for (CompileError& error : errors()) {
+    error.throwError(cx);
   }
   if (warning == Warning::Report) {
-    for (const UniquePtr<CompileError>& error : warnings()) {
-      error->throwError(cx);
+    for (CompileError& error : warnings()) {
+      error.throwError(cx);
     }
   }
   if (hadOverRecursed()) {

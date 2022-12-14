@@ -2325,11 +2325,11 @@ class MOZ_STACK_CLASS AutoPrintSelfHostingFrontendContext
       fprintf(stderr, "Out of memory\n");
     }
 
-    for (const UniquePtr<CompileError>& error : errors()) {
-      JS::PrintError(stderr, const_cast<CompileError*>(error.get()), true);
+    for (CompileError& error : errors()) {
+      JS::PrintError(stderr, &error, true);
     }
-    for (const UniquePtr<CompileError>& error : warnings()) {
-      JS::PrintError(stderr, const_cast<CompileError*>(error.get()), true);
+    for (CompileError& error : warnings()) {
+      JS::PrintError(stderr, &error, true);
     }
     if (hadOverRecursed()) {
       fprintf(stderr, "Over recursed\n");

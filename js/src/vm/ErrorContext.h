@@ -19,8 +19,8 @@ struct FrontendErrors {
   FrontendErrors() = default;
   // Any errors or warnings produced during compilation. These are reported
   // when finishing the script.
-  Vector<UniquePtr<CompileError>, 0, SystemAllocPolicy> errors;
-  Vector<UniquePtr<CompileError>, 0, SystemAllocPolicy> warnings;
+  Vector<CompileError, 0, SystemAllocPolicy> errors;
+  Vector<CompileError, 0, SystemAllocPolicy> warnings;
   bool overRecursed = false;
   bool outOfMemory = false;
   bool allocationOverflow = false;
@@ -52,8 +52,8 @@ class ErrorContext {
   ErrorAllocator* getAllocator() { return &alloc_; }
 
   // Report CompileErrors
-  virtual void reportError(js::CompileError* err) = 0;
-  virtual bool reportWarning(js::CompileError* err) = 0;
+  virtual void reportError(js::CompileError&& err) = 0;
+  virtual bool reportWarning(js::CompileError&& err) = 0;
 
   // Report ErrorAllocator errors
   virtual void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
@@ -103,17 +103,16 @@ class OffThreadErrorContext : public ErrorContext {
 
   void linkWithJSContext(JSContext* cx);
 
-  const Vector<UniquePtr<CompileError>, 0, SystemAllocPolicy>& errors() const {
+  Vector<CompileError, 0, SystemAllocPolicy>& errors() {
     return errors_.errors;
   }
-  const Vector<UniquePtr<CompileError>, 0, SystemAllocPolicy>& warnings()
-      const {
+  Vector<CompileError, 0, SystemAllocPolicy>& warnings() {
     return errors_.warnings;
   }
 
   // Report CompileErrors
-  void reportError(js::CompileError* err) override;
-  bool reportWarning(js::CompileError* err) override;
+  void reportError(js::CompileError&& err) override;
+  bool reportWarning(js::CompileError&& err) override;
 
   // Report ErrorAllocator errors
   void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
