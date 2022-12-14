@@ -58,7 +58,7 @@ impl Sprite {
 
     fn move_by(&self, direction: Vector) {
         let mut current_position = self.current_position.write().unwrap();
-        *current_position = translate(&*current_position, direction)
+        *current_position = translate(&current_position, direction)
     }
 }
 

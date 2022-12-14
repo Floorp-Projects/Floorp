@@ -22,6 +22,7 @@ using mozilla::dom::Promise;
 using mozilla::dom::RootedDictionary;
 using mozilla::dom::ScaffoldingType;
 using mozilla::dom::Sequence;
+using mozilla::dom::UniFFICallbackHandler;
 using mozilla::dom::UniFFIPointer;
 using mozilla::dom::UniFFIScaffoldingCallResult;
 
@@ -143,6 +144,18 @@ void UniFFIScaffolding::WritePointer(const GlobalObject& aGlobal, uint64_t aId,
 #endif
 
   aError.ThrowUnknownError(nsPrintfCString("Unknown object id: %" PRIu64, aId));
+}
+
+void UniFFIScaffolding::RegisterCallbackHandler(
+    GlobalObject& aGlobal, uint64_t aInterfaceId,
+    UniFFICallbackHandler& aCallbackHandler, ErrorResult& aError) {
+  uniffi::RegisterCallbackHandler(aInterfaceId, aCallbackHandler, aError);
+}
+
+void UniFFIScaffolding::DeregisterCallbackHandler(GlobalObject& aGlobal,
+                                                  uint64_t aInterfaceId,
+                                                  ErrorResult& aError) {
+  uniffi::DeregisterCallbackHandler(aInterfaceId, aError);
 }
 
 }  // namespace mozilla::dom

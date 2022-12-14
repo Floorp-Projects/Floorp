@@ -3,13 +3,13 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use super::shared::*;
-use crate::{FunctionIds, ObjectIds};
+use crate::{CallbackIds, Config, FunctionIds, ObjectIds};
 use askama::Template;
 use extend::ext;
 use heck::{ToLowerCamelCase, ToShoutySnakeCase, ToUpperCamelCase};
 use uniffi_bindgen::interface::{
-    Argument, ComponentInterface, Constructor, Enum, Error, Field, Function, Literal, Method,
-    Object, Radix, Record, Type,
+    Argument, CallbackInterface, ComponentInterface, Constructor, Enum, Error, Field, Function,
+    Literal, Method, Object, Radix, Record, Type,
 };
 
 fn arg_names(args: &[&Argument]) -> String {
@@ -42,8 +42,10 @@ fn render_enum_literal(typ: &Type, variant_name: &str) -> String {
 #[template(path = "js/wrapper.jsm", escape = "none")]
 pub struct JSBindingsTemplate<'a> {
     pub ci: &'a ComponentInterface,
+    pub config: &'a Config,
     pub function_ids: &'a FunctionIds<'a>,
     pub object_ids: &'a ObjectIds<'a>,
+    pub callback_ids: &'a CallbackIds<'a>,
 }
 
 impl<'a> JSBindingsTemplate<'a> {
@@ -130,10 +132,29 @@ pub impl Record {
     }
 }
 
+#[ext(name=CallbackInterfaceJSExt)]
+pub impl CallbackInterface {
+    fn nm(&self) -> String {
+        self.name().to_upper_camel_case()
+    }
+
+    fn handler(&self) -> String {
+        format!("callbackHandler{}", self.nm())
+    }
+}
+
 #[ext(name=FieldJSExt)]
 pub impl Field {
     fn nm(&self) -> String {
         self.name().to_lower_camel_case()
+    }
+
+    fn lower_fn(&self) -> String {
+        self.type_().lower_fn()
+    }
+
+    fn lift_fn(&self) -> String {
+        self.type_().lift_fn()
     }
 
     fn write_datastream_fn(&self) -> String {
@@ -142,6 +163,10 @@ pub impl Field {
 
     fn read_datastream_fn(&self) -> String {
         self.type_().read_datastream_fn()
+    }
+
+    fn compute_size_fn(&self) -> String {
+        self.type_().compute_size_fn()
     }
 
     fn ffi_converter(&self) -> String {
@@ -160,12 +185,32 @@ pub impl Field {
 
 #[ext(name=ArgumentJSExt)]
 pub impl Argument {
-    fn lower_fn_name(&self) -> String {
-        format!("{}.lower", self.type_().ffi_converter())
-    }
-
     fn nm(&self) -> String {
         self.name().to_lower_camel_case()
+    }
+
+    fn lower_fn(&self) -> String {
+        self.type_().lower_fn()
+    }
+
+    fn lift_fn(&self) -> String {
+        self.type_().lift_fn()
+    }
+
+    fn write_datastream_fn(&self) -> String {
+        self.type_().write_datastream_fn()
+    }
+
+    fn read_datastream_fn(&self) -> String {
+        self.type_().read_datastream_fn()
+    }
+
+    fn compute_size_fn(&self) -> String {
+        self.type_().compute_size_fn()
+    }
+
+    fn ffi_converter(&self) -> String {
+        self.type_().ffi_converter()
     }
 
     fn check_type(&self) -> String {
@@ -188,12 +233,24 @@ pub impl Type {
         }
     }
 
+    fn lower_fn(&self) -> String {
+        format!("{}.lower", self.ffi_converter())
+    }
+
+    fn lift_fn(&self) -> String {
+        format!("{}.lift", self.ffi_converter())
+    }
+
     fn write_datastream_fn(&self) -> String {
         format!("{}.write", self.ffi_converter())
     }
 
     fn read_datastream_fn(&self) -> String {
         format!("{}.read", self.ffi_converter())
+    }
+
+    fn compute_size_fn(&self) -> String {
+        format!("{}.computeSize", self.ffi_converter())
     }
 
     fn ffi_converter(&self) -> String {
