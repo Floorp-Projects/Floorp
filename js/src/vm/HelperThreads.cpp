@@ -486,12 +486,12 @@ bool js::HasOffThreadIonCompile(Realm* realm) {
 }
 #endif
 
-struct MOZ_RAII AutoSetContextOffThreadFrontendErrors {
-  explicit AutoSetContextOffThreadFrontendErrors(OffThreadErrorContext* ec) {
+struct MOZ_RAII AutoSetContextFrontendErrors {
+  explicit AutoSetContextFrontendErrors(OffThreadErrorContext* ec) {
     ec->linkWithJSContext(TlsContext.get());
   }
-  ~AutoSetContextOffThreadFrontendErrors() {
-    TlsContext.get()->setOffThreadFrontendErrors(nullptr);
+  ~AutoSetContextFrontendErrors() {
+    TlsContext.get()->setFrontendErrors(nullptr);
   }
 };
 
@@ -1008,7 +1008,7 @@ UniquePtr<DelazifyTask> DelazifyTask::Create(
     return nullptr;
   }
 
-  AutoSetContextOffThreadFrontendErrors recordErrors(&task->ec_);
+  AutoSetContextFrontendErrors recordErrors(&task->ec_);
   RefPtr<ScriptSource> source(stencil.source);
   StencilCache& cache = runtime->caches().delazificationCache;
   if (!cache.startCaching(std::move(source))) {
@@ -1126,7 +1126,7 @@ bool DelazifyTask::runTask(JSContext* cx) {
   stackLimit = GetStackLimit();
 
   AutoSetContextRuntime ascr(runtime);
-  AutoSetContextOffThreadFrontendErrors recordErrors(&this->ec_);
+  AutoSetContextFrontendErrors recordErrors(&this->ec_);
 
   using namespace js::frontend;
 
@@ -1566,7 +1566,7 @@ JS::OffThreadToken* js::StartOffThreadDecodeMultiStencils(
 bool js::CurrentThreadIsParseThread() {
   JSContext* cx = TlsContext.get();
   // Check whether this is a ParseTask or a DelazifyTask.
-  return cx && cx->isHelperThreadContext() && cx->offThreadFrontendErrors();
+  return cx && cx->isHelperThreadContext() && cx->frontendErrors();
 }
 
 bool GlobalHelperThreadState::ensureInitialized() {
