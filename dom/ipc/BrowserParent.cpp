@@ -3402,8 +3402,9 @@ BrowserParent::GetAuthPrompt(uint32_t aPromptReason, const nsIID& iid,
 }
 
 PColorPickerParent* BrowserParent::AllocPColorPickerParent(
-    const nsString& aTitle, const nsString& aInitialColor) {
-  return new ColorPickerParent(aTitle, aInitialColor);
+    const nsString& aTitle, const nsString& aInitialColor,
+    const nsTArray<nsString>& aDefaultColors) {
+  return new ColorPickerParent(aTitle, aInitialColor, aDefaultColors);
 }
 
 bool BrowserParent::DeallocPColorPickerParent(PColorPickerParent* actor) {

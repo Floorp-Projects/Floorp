@@ -53,7 +53,8 @@ bool ColorPickerParent::CreateColorPicker() {
     return false;
   }
 
-  return NS_SUCCEEDED(mPicker->Init(window, mTitle, mInitialColor));
+  return NS_SUCCEEDED(
+      mPicker->Init(window, mTitle, mInitialColor, mDefaultColors));
 }
 
 mozilla::ipc::IPCResult ColorPickerParent::RecvOpen() {

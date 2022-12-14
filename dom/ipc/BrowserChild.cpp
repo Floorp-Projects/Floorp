@@ -2272,8 +2272,8 @@ bool BrowserChild::DeallocPDocAccessibleChild(
 }
 #endif
 
-PColorPickerChild* BrowserChild::AllocPColorPickerChild(const nsAString&,
-                                                        const nsAString&) {
+PColorPickerChild* BrowserChild::AllocPColorPickerChild(
+    const nsAString&, const nsAString&, const nsTArray<nsString>&) {
   MOZ_CRASH("unused");
   return nullptr;
 }

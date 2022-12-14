@@ -8,6 +8,7 @@
 
 #include <shlwapi.h>
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/AutoRestore.h"
 #include "nsIWidget.h"
 #include "nsString.h"
@@ -86,18 +87,18 @@ static void BGRIntToRGBString(DWORD color, nsAString& aResult) {
 static AsyncColorChooser* gColorChooser;
 
 AsyncColorChooser::AsyncColorChooser(COLORREF aInitialColor,
+                                     const nsTArray<nsString>& aDefaultColors,
                                      nsIWidget* aParentWidget,
                                      nsIColorPickerShownCallback* aCallback)
     : mozilla::Runnable("AsyncColorChooser"),
       mInitialColor(aInitialColor),
+      mDefaultColors(aDefaultColors.Clone()),
       mColor(aInitialColor),
       mParentWidget(aParentWidget),
       mCallback(aCallback) {}
 
 NS_IMETHODIMP
 AsyncColorChooser::Run() {
-  static COLORREF sCustomColors[16] = {0};
-
   MOZ_ASSERT(NS_IsMainThread(),
              "Color pickers can only be opened from main thread currently");
 
@@ -112,12 +113,21 @@ AsyncColorChooser::Run() {
                    ? mParentWidget->GetNativeData(NS_NATIVE_TMP_WINDOW)
                    : nullptr));
 
+    COLORREF customColors[16];
+    for (size_t i = 0; i < mozilla::ArrayLength(customColors); i++) {
+      if (i < mDefaultColors.Length()) {
+        customColors[i] = ColorStringToRGB(mDefaultColors[i]);
+      } else {
+        customColors[i] = 0x00FFFFFF;
+      }
+    }
+
     CHOOSECOLOR options;
     options.lStructSize = sizeof(options);
     options.hwndOwner = adtw.get();
     options.Flags = CC_RGBINIT | CC_FULLOPEN | CC_ENABLEHOOK;
     options.rgbResult = mInitialColor;
-    options.lpCustColors = sCustomColors;
+    options.lpCustColors = customColors;
     options.lpfnHook = HookProc;
 
     mColor = ChooseColor(&options) ? options.rgbResult : mInitialColor;
@@ -191,19 +201,21 @@ NS_IMPL_ISUPPORTS(nsColorPicker, nsIColorPicker)
 
 NS_IMETHODIMP
 nsColorPicker::Init(mozIDOMWindowProxy* parent, const nsAString& title,
-                    const nsAString& aInitialColor) {
+                    const nsAString& aInitialColor,
+                    const nsTArray<nsString>& aDefaultColors) {
   MOZ_ASSERT(parent,
              "Null parent passed to colorpicker, no color picker for you!");
   mParentWidget =
       WidgetUtils::DOMWindowToWidget(nsPIDOMWindowOuter::From(parent));
   mInitialColor = ColorStringToRGB(aInitialColor);
+  mDefaultColors.Assign(aDefaultColors);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsColorPicker::Open(nsIColorPickerShownCallback* aCallback) {
   NS_ENSURE_ARG(aCallback);
-  nsCOMPtr<nsIRunnable> event =
-      new AsyncColorChooser(mInitialColor, mParentWidget, aCallback);
+  nsCOMPtr<nsIRunnable> event = new AsyncColorChooser(
+      mInitialColor, mDefaultColors, mParentWidget, aCallback);
   return NS_DispatchToMainThread(event);
 }
