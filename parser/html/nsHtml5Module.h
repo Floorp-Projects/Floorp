@@ -10,18 +10,19 @@
 class nsHtml5Parser;
 
 class nsHtml5Module {
+  friend class nsHtml5ParserThreadTerminator;
+
  public:
   static void InitializeStatics();
   static void ReleaseStatics();
   static already_AddRefed<nsHtml5Parser> NewHtml5Parser();
-  static nsIThread* GetStreamParserThread();
+  static already_AddRefed<nsISerialEventTarget> GetStreamParserEventTarget();
 
  private:
 #ifdef DEBUG
   static bool sNsHtml5ModuleInitialized;
 #endif
   static nsIThread* sStreamParserThread;
-  static nsIThread* sMainThread;
 };
 
 #endif  // nsHtml5Module_h

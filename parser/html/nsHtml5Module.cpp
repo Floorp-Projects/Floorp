@@ -3,10 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsHtml5Module.h"
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_html5.h"
+#include "nsCOMPtr.h"
 #include "nsHtml5AttributeName.h"
 #include "nsHtml5ElementName.h"
 #include "nsHtml5HtmlAttributes.h"
@@ -22,7 +24,29 @@ using namespace mozilla;
 
 // static
 nsIThread* nsHtml5Module::sStreamParserThread = nullptr;
-nsIThread* nsHtml5Module::sMainThread = nullptr;
+
+class nsHtml5ParserThreadTerminator final : public nsIObserver {
+ public:
+  NS_DECL_ISUPPORTS
+  explicit nsHtml5ParserThreadTerminator(nsIThread* aThread)
+      : mThread(aThread) {}
+  NS_IMETHOD Observe(nsISupports*, const char* topic,
+                     const char16_t*) override {
+    NS_ASSERTION(!strcmp(topic, "xpcom-shutdown-threads"), "Unexpected topic");
+    mThread->Shutdown();
+    mThread = nullptr;
+    NS_IF_RELEASE(nsHtml5Module::sStreamParserThread);
+    nsHtml5Module::sStreamParserThread = nullptr;
+    return NS_OK;
+  }
+
+ private:
+  ~nsHtml5ParserThreadTerminator() = default;
+
+  nsCOMPtr<nsIThread> mThread;
+};
+
+NS_IMPL_ISUPPORTS(nsHtml5ParserThreadTerminator, nsIObserver)
 
 // static
 void nsHtml5Module::InitializeStatics() {
@@ -35,6 +59,21 @@ void nsHtml5Module::InitializeStatics() {
   nsHtml5Tokenizer::initializeStatics();
   nsHtml5TreeBuilder::initializeStatics();
   nsHtml5UTF16Buffer::initializeStatics();
+
+  NS_NewNamedThread("HTML5 Parser", &sStreamParserThread);
+  if (sStreamParserThread) {
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (os) {
+      os->AddObserver(new nsHtml5ParserThreadTerminator(sStreamParserThread),
+                      "xpcom-shutdown-threads", false);
+    } else {
+      MOZ_ASSERT(false,
+                 "How come we failed to create get the observer service?");
+    }
+  } else {
+    MOZ_ASSERT(false, "How come we failed to create the parser thread?");
+  }
+
 #ifdef DEBUG
   sNsHtml5ModuleInitialized = true;
 #endif
@@ -55,7 +94,6 @@ void nsHtml5Module::ReleaseStatics() {
   nsHtml5TreeBuilder::releaseStatics();
   nsHtml5UTF16Buffer::releaseStatics();
   NS_IF_RELEASE(sStreamParserThread);
-  NS_IF_RELEASE(sMainThread);
 }
 
 // static
@@ -65,47 +103,20 @@ already_AddRefed<nsHtml5Parser> nsHtml5Module::NewHtml5Parser() {
   return rv.forget();
 }
 
-class nsHtml5ParserThreadTerminator final : public nsIObserver {
- public:
-  NS_DECL_ISUPPORTS
-  explicit nsHtml5ParserThreadTerminator(nsIThread* aThread)
-      : mThread(aThread) {}
-  NS_IMETHOD Observe(nsISupports*, const char* topic,
-                     const char16_t*) override {
-    NS_ASSERTION(!strcmp(topic, "xpcom-shutdown-threads"), "Unexpected topic");
-    if (mThread) {
-      mThread->Shutdown();
-      mThread = nullptr;
-    }
-    return NS_OK;
-  }
-
- private:
-  ~nsHtml5ParserThreadTerminator() {}
-
-  nsCOMPtr<nsIThread> mThread;
-};
-
-NS_IMPL_ISUPPORTS(nsHtml5ParserThreadTerminator, nsIObserver)
-
 // static
-nsIThread* nsHtml5Module::GetStreamParserThread() {
-  if (StaticPrefs::html5_offmainthread()) {
-    if (!sStreamParserThread) {
-      NS_NewNamedThread("HTML5 Parser", &sStreamParserThread);
-      NS_ASSERTION(sStreamParserThread, "Thread creation failed!");
-      nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-      NS_ASSERTION(os, "do_GetService failed");
-      os->AddObserver(new nsHtml5ParserThreadTerminator(sStreamParserThread),
-                      "xpcom-shutdown-threads", false);
-    }
-    return sStreamParserThread;
+already_AddRefed<nsISerialEventTarget>
+nsHtml5Module::GetStreamParserEventTarget() {
+  MOZ_ASSERT(sNsHtml5ModuleInitialized, "nsHtml5Module not initialized.");
+  if (sStreamParserThread) {
+    nsCOMPtr<nsISerialEventTarget> target =
+        sStreamParserThread->SerialEventTarget();
+    return target.forget();
   }
-  if (!sMainThread) {
-    NS_GetMainThread(&sMainThread);
-    NS_ASSERTION(sMainThread, "Main thread getter failed");
-  }
-  return sMainThread;
+  nsCOMPtr<nsIThread> mainThread;
+  NS_GetMainThread(getter_AddRefs(mainThread));
+  MOZ_RELEASE_ASSERT(mainThread);  // Unrecoverable situation
+  nsCOMPtr<nsISerialEventTarget> target = mainThread->SerialEventTarget();
+  return target.forget();
 }
 
 #ifdef DEBUG
