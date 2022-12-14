@@ -12,8 +12,8 @@ enum AlphaOption {
   "discard",
 };
 
-// [Serializable, Transferable] are implemented without adding attributes here.
-[Exposed=(Window,DedicatedWorker), Pref="dom.media.webcodecs.enabled"]
+// [Serializable] is implemented without adding attribute here.
+[Exposed=(Window,DedicatedWorker) /*, Transferable (bug 1774306) */, Pref="dom.media.webcodecs.enabled"]
 interface VideoFrame {
   // The constructors should be shorten to:
   //   ```

@@ -54,42 +54,9 @@ struct VideoFrameCopyToOptions;
 
 namespace mozilla::dom {
 
-struct VideoFrameData {
-  VideoFrameData(layers::Image* aImage, const VideoPixelFormat& aFormat,
-                 gfx::IntRect aVisibleRect, gfx::IntSize aDisplaySize,
-                 Maybe<uint64_t> aDuration, int64_t aTimestamp,
-                 const VideoColorSpaceInit& aColorSpace)
-      : mImage(aImage),
-        mFormat(aFormat),
-        mVisibleRect(aVisibleRect),
-        mDisplaySize(aDisplaySize),
-        mDuration(aDuration),
-        mTimestamp(aTimestamp),
-        mColorSpace(aColorSpace) {}
-
+struct VideoFrameImageData {
   const RefPtr<layers::Image> mImage;
-  const VideoPixelFormat mFormat;
-  const gfx::IntRect mVisibleRect;
-  const gfx::IntSize mDisplaySize;
-  const Maybe<uint64_t> mDuration;
-  const int64_t mTimestamp;
-  const VideoColorSpaceInit mColorSpace;
-};
-
-struct VideoFrameSerializedData : VideoFrameData {
-  VideoFrameSerializedData(layers::Image* aImage,
-                           const VideoPixelFormat& aFormat,
-                           gfx::IntSize aCodedSize, gfx::IntRect aVisibleRect,
-                           gfx::IntSize aDisplaySize, Maybe<uint64_t> aDuration,
-                           int64_t aTimestamp,
-                           const VideoColorSpaceInit& aColorSpace,
-                           nsIURI* aPrincipalURI)
-      : VideoFrameData(aImage, aFormat, aVisibleRect, aDisplaySize, aDuration,
-                       aTimestamp, aColorSpace),
-        mCodedSize(aCodedSize),
-        mPrincipalURI(aPrincipalURI) {}
-  const gfx::IntSize mCodedSize;
-  const nsCOMPtr<nsIURI> mPrincipalURI;
+  const nsCOMPtr<nsIURI> mURI;
 };
 
 class VideoFrame final : public nsISupports, public nsWrapperCache {
@@ -101,7 +68,7 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
   VideoFrame(nsIGlobalObject* aParent, const RefPtr<layers::Image>& aImage,
              const VideoPixelFormat& aFormat, gfx::IntSize aCodedSize,
              gfx::IntRect aVisibleRect, gfx::IntSize aDisplaySize,
-             const Maybe<uint64_t>& aDuration, int64_t aTimestamp,
+             Maybe<uint64_t>&& aDuration, int64_t aTimestamp,
              const VideoColorSpaceInit& aColorSpace);
 
   VideoFrame(const VideoFrame& aOther);
@@ -179,18 +146,10 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
   // [Serializable] implementations: {Read, Write}StructuredClone
   static JSObject* ReadStructuredClone(JSContext* aCx, nsIGlobalObject* aGlobal,
                                        JSStructuredCloneReader* aReader,
-                                       const VideoFrameSerializedData& aData);
+                                       const VideoFrameImageData& aImage);
 
   bool WriteStructuredClone(JSStructuredCloneWriter* aWriter,
                             StructuredCloneHolder* aHolder) const;
-
-  // [Transferable] implementations: Transfer, FromTransferred
-  using TransferredData = VideoFrameSerializedData;
-
-  UniquePtr<TransferredData> Transfer();
-
-  static already_AddRefed<VideoFrame> FromTransferred(nsIGlobalObject* aGlobal,
-                                                      TransferredData* aData);
 
  public:
   // A VideoPixelFormat wrapper providing utilities for VideoFrame.
@@ -221,8 +180,6 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
   // VideoFrame can run on either main thread or worker thread.
   void AssertIsOnOwningThread() const { NS_ASSERT_OWNINGTHREAD(VideoFrame); }
 
-  nsCOMPtr<nsIURI> GetPrincipalURI() const;
-
   // A class representing the VideoFrame's data.
   class Resource final {
    public:
@@ -241,7 +198,6 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
   nsCOMPtr<nsIGlobalObject> mParent;
 
   // Use Maybe instead of UniquePtr to allow copy ctor.
-  // The mResource's existence is used as the [[Detached]] for [Transferable].
   Maybe<const Resource> mResource;  // Nothing() after `Close()`d
 
   // TODO: Replace this by mResource->mImage->GetSize()?
