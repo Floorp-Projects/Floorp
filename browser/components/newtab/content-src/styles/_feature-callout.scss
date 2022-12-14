@@ -118,7 +118,9 @@ $background-dark: rgb(28, 27, 34);
 
           .dismiss-button {
             font-size: 1em;
-            margin-block: 25px -45px;
+            position: absolute;
+            margin-block: 15px 0;
+            margin-inline: 0 15px;
             z-index: 1;
             background-color: $background;
             @media (prefers-color-scheme: dark) {
