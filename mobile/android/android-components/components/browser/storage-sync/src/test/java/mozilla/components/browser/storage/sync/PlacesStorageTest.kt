@@ -14,6 +14,7 @@ import mozilla.components.support.test.mock
 import org.junit.Test
 import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import kotlin.coroutines.CoroutineContext
 
@@ -52,6 +53,25 @@ class PlacesStorageTest {
 
         verify(storage.reader).interrupt()
         verify(storage.readScope.coroutineContext).cancelChildren()
+    }
+
+    @Test
+    fun `GIVEN a specific query WHEN a call is made to clean all reads THEN they are cancelled only if the query is different from the previous call`() {
+        storage.readScope = mock {
+            doReturn(mock<CoroutineContext>()).`when`(this).coroutineContext
+        }
+
+        storage.cancelReads("test")
+        verify(storage.reader, times(1)).interrupt()
+        verify(storage.readScope.coroutineContext, times(1)).cancelChildren()
+
+        storage.cancelReads("test")
+        verify(storage.reader, times(1)).interrupt()
+        verify(storage.readScope.coroutineContext, times(1)).cancelChildren()
+
+        storage.cancelReads("tset")
+        verify(storage.reader, times(2)).interrupt()
+        verify(storage.readScope.coroutineContext, times(2)).cancelChildren()
     }
 
     @Test

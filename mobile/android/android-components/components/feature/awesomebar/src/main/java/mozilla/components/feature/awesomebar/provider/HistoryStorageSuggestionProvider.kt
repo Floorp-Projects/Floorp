@@ -54,7 +54,7 @@ class HistoryStorageSuggestionProvider(
     }
 
     override suspend fun onInputChanged(text: String): List<AwesomeBar.Suggestion> {
-        historyStorage.cancelReads()
+        historyStorage.cancelReads(text)
 
         if (text.isEmpty()) {
             return emptyList()

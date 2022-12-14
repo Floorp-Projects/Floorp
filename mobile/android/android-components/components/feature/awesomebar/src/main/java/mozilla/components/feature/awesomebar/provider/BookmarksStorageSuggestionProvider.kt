@@ -50,7 +50,7 @@ class BookmarksStorageSuggestionProvider(
     }
 
     override suspend fun onInputChanged(text: String): List<AwesomeBar.Suggestion> {
-        bookmarksStorage.cancelReads()
+        bookmarksStorage.cancelReads(text)
 
         if (text.isEmpty()) {
             return emptyList()

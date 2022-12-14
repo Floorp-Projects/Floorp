@@ -28,4 +28,15 @@ interface Cancellable {
     fun cancelReads() {
         // no-op
     }
+
+    /**
+     * Cleans up pending read operations in preparation for a new query.
+     * This is useful when the same storage is shared between multiple functionalities and will
+     * allow preventing overlapped cancel requests.
+     *
+     * @param nextQuery Next query to cancel reads for.
+     */
+    fun cancelReads(nextQuery: String) {
+        // no-op
+    }
 }

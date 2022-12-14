@@ -60,7 +60,8 @@ class BookmarksStorageSuggestionProviderTest {
 
         provider.onInputChanged("")
 
-        verify(provider.bookmarksStorage).cancelReads()
+        verify(provider.bookmarksStorage, never()).cancelReads()
+        verify(provider.bookmarksStorage).cancelReads("")
     }
 
     @Test
@@ -72,7 +73,8 @@ class BookmarksStorageSuggestionProviderTest {
 
         provider.onInputChanged("moz")
 
-        orderVerifier.verify(provider.bookmarksStorage).cancelReads()
+        orderVerifier.verify(provider.bookmarksStorage, never()).cancelReads()
+        orderVerifier.verify(provider.bookmarksStorage).cancelReads("moz")
         orderVerifier.verify(provider.bookmarksStorage).searchBookmarks(eq("moz"), anyInt())
     }
 
@@ -262,6 +264,10 @@ class BookmarksStorageSuggestionProviderTest {
         }
 
         override fun cancelReads() {
+            // no-op
+        }
+
+        override fun cancelReads(nextQuery: String) {
             // no-op
         }
     }

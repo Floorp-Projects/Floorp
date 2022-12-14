@@ -43,6 +43,12 @@ abstract class PlacesStorage(
         @VisibleForTesting internal set
     private val storageDir by lazy { context.filesDir }
 
+    /**
+     * Cache of the last value with which [cancelReads] was called.
+     * Used to check whether a new call to [cancelReads] should trigger a cancellation or not.
+     */
+    private var lastCancelledQuery = ""
+
     abstract val logger: Logger
 
     internal open val places: Connection by lazy {
@@ -91,6 +97,23 @@ abstract class PlacesStorage(
     override fun cancelReads() {
         interruptCurrentReads()
         readScope.coroutineContext.cancelChildren()
+    }
+
+    /**
+     * Cleans up pending read operations of a specific query.
+     *
+     * @param nextQuery Previous query to cancel reads for.
+     * Calling cancel multiple times for the same query has effect only the first time.
+     * Use this in scenarios where the same instance is used in multiple scenarios to prevent cases
+     * in which a general cancel operation for one scenario cancels other reads for the same query.
+     * If the value is an empty string all current reads are immediately cancelled.
+     */
+    override fun cancelReads(nextQuery: String) {
+        if (nextQuery.isEmpty() || lastCancelledQuery != nextQuery) {
+            lastCancelledQuery = nextQuery
+            interruptCurrentReads()
+            readScope.coroutineContext.cancelChildren()
+        }
     }
 
     /**

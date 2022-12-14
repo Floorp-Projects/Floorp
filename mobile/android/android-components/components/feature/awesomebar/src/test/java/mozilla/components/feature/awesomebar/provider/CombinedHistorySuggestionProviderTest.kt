@@ -23,6 +23,7 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito
 import org.mockito.Mockito.anyInt
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 
 @ExperimentalCoroutinesApi // for runTest
@@ -59,8 +60,10 @@ class CombinedHistorySuggestionProviderTest {
 
         provider.onInputChanged("")
 
-        verify(history).cancelReads()
-        verify(metadata).cancelReads()
+        verify(history, never()).cancelReads()
+        verify(metadata, never()).cancelReads()
+        verify(history).cancelReads("")
+        verify(metadata).cancelReads("")
     }
 
     @Test
@@ -89,8 +92,10 @@ class CombinedHistorySuggestionProviderTest {
 
         provider.onInputChanged("moz")
 
-        orderVerifier.verify(history).cancelReads()
-        orderVerifier.verify(storage).cancelReads()
+        orderVerifier.verify(history, never()).cancelReads()
+        orderVerifier.verify(storage, never()).cancelReads()
+        orderVerifier.verify(history).cancelReads("moz")
+        orderVerifier.verify(storage).cancelReads("moz")
         orderVerifier.verify(storage).queryHistoryMetadata(eq("moz"), anyInt())
         orderVerifier.verify(history).getSuggestions(eq("moz"), anyInt())
     }

@@ -57,7 +57,8 @@ class HistoryStorageSuggestionProviderTest {
 
         provider.onInputChanged("")
 
-        verify(provider.historyStorage).cancelReads()
+        verify(provider.historyStorage, never()).cancelReads()
+        verify(provider.historyStorage).cancelReads("")
     }
 
     @Test
@@ -70,7 +71,8 @@ class HistoryStorageSuggestionProviderTest {
 
         provider.onInputChanged("moz")
 
-        orderVerifier.verify(provider.historyStorage).cancelReads()
+        orderVerifier.verify(provider.historyStorage, never()).cancelReads()
+        orderVerifier.verify(provider.historyStorage).cancelReads("moz")
         orderVerifier.verify(provider.historyStorage).getSuggestions(eq("moz"), anyInt())
     }
 

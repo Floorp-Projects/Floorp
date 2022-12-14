@@ -189,5 +189,9 @@ class HistoryDelegateTest {
         override fun cancelReads() {
             fail()
         }
+
+        override fun cancelReads(nextQuery: String) {
+            fail()
+        }
     }
 }

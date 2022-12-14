@@ -64,7 +64,8 @@ class HistoryMetadataSuggestionProviderTest {
 
         provider.onInputChanged("")
 
-        verify(provider.historyStorage).cancelReads()
+        verify(provider.historyStorage, never()).cancelReads()
+        verify(provider.historyStorage).cancelReads("")
     }
 
     @Test
@@ -76,7 +77,8 @@ class HistoryMetadataSuggestionProviderTest {
 
         provider.onInputChanged("moz")
 
-        orderVerifier.verify(provider.historyStorage).cancelReads()
+        orderVerifier.verify(provider.historyStorage, never()).cancelReads()
+        orderVerifier.verify(provider.historyStorage).cancelReads("moz")
         orderVerifier.verify(provider.historyStorage).queryHistoryMetadata(eq("moz"), anyInt())
     }
 
