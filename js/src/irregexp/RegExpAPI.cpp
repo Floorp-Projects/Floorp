@@ -13,6 +13,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
 
+#include "frontend/FrontendContext.h"  // AutoReportFrontendContext
 #include "frontend/TokenStream.h"
 #include "gc/GC.h"
 #include "gc/Zone.h"
@@ -31,7 +32,6 @@
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "js/friend/StackLimits.h"    // js::ReportOverRecursed
 #include "util/StringBuffer.h"
-#include "vm/ErrorContext.h"  // AutoReportFrontendContext
 #include "vm/MatchPairs.h"
 #include "vm/PlainObject.h"
 #include "vm/RegExpShared.h"

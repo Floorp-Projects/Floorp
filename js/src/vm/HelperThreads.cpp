@@ -16,7 +16,8 @@
 #include "frontend/BytecodeCompilation.h"  // frontend::{CompileGlobalScriptToExtensibleStencil, FireOnNewScript}
 #include "frontend/BytecodeCompiler.h"  // frontend::ParseModuleToExtensibleStencil
 #include "frontend/CompilationStencil.h"  // frontend::{CompilationStencil, ExtensibleCompilationStencil, CompilationInput, BorrowingCompilationStencil, ScriptStencilRef}
-#include "frontend/ScopeBindingCache.h"   // frontend::ScopeBindingCache
+#include "frontend/FrontendContext.h"
+#include "frontend/ScopeBindingCache.h"  // frontend::ScopeBindingCache
 #include "gc/GC.h"
 #include "jit/IonCompileTask.h"
 #include "jit/JitRuntime.h"
@@ -34,7 +35,6 @@
 #include "js/Utility.h"
 #include "threading/CpuCount.h"
 #include "util/NativeStack.h"
-#include "vm/ErrorContext.h"
 #include "vm/ErrorReporting.h"
 #include "vm/HelperThreadState.h"
 #include "vm/InternalThreadPool.h"

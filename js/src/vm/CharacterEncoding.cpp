@@ -16,10 +16,10 @@
 #include <limits>
 #include <type_traits>
 
+#include "frontend/FrontendContext.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "util/StringBuffer.h"
 #include "util/Unicode.h"  // unicode::REPLACEMENT_CHARACTER
-#include "vm/ErrorContext.h"
 #include "vm/JSContext.h"
 
 using mozilla::AsChars;

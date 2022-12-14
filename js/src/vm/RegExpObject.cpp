@@ -13,6 +13,7 @@
 
 #include "builtin/RegExp.h"
 #include "builtin/SelfHostingDefines.h"  // REGEXP_*_FLAG
+#include "frontend/FrontendContext.h"    // AutoReportFrontendContext
 #include "frontend/TokenStream.h"
 #include "gc/HashUtil.h"
 #include "irregexp/RegExpAPI.h"
@@ -22,7 +23,6 @@
 #include "js/RegExp.h"
 #include "js/RegExpFlags.h"  // JS::RegExpFlags
 #include "util/StringBuffer.h"
-#include "vm/ErrorContext.h"  // AutoReportFrontendContext
 #include "vm/MatchPairs.h"
 #include "vm/PlainObject.h"
 #include "vm/RegExpStatics.h"

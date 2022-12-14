@@ -11,8 +11,8 @@
 #include "mozilla/MaybeOneOf.h"
 #include "mozilla/Utf8.h"
 
+#include "frontend/FrontendContext.h"
 #include "js/Vector.h"
-#include "vm/ErrorContext.h"
 #include "vm/StringType.h"
 
 namespace js {

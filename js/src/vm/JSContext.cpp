@@ -30,6 +30,7 @@
 #include "jsexn.h"
 #include "jstypes.h"
 
+#include "frontend/FrontendContext.h"
 #include "gc/GC.h"
 #include "irregexp/RegExpAPI.h"
 #include "jit/Simulator.h"
@@ -50,7 +51,6 @@
 #include "util/Text.h"
 #include "util/WindowsWrapper.h"
 #include "vm/BytecodeUtil.h"  // JSDVG_IGNORE_STACK
-#include "vm/ErrorContext.h"
 #include "vm/ErrorObject.h"
 #include "vm/ErrorReporting.h"
 #include "vm/JSFunction.h"

@@ -18,11 +18,11 @@
 #include "builtin/ModuleObject.h"  // js::FinishDynamicModuleImport, js::{,Requested}ModuleObject
 #include "ds/Sort.h"
 #include "frontend/BytecodeCompiler.h"  // js::frontend::CompileModule
+#include "frontend/FrontendContext.h"   // js::AutoReportFrontendContext
 #include "js/Context.h"                 // js::AssertHeapIsIdle
 #include "js/RootingAPI.h"              // JS::MutableHandle
 #include "js/Value.h"                   // JS::Value
 #include "vm/EnvironmentObject.h"       // js::ModuleEnvironmentObject
-#include "vm/ErrorContext.h"            // js::AutoReportFrontendContext
 #include "vm/JSContext.h"               // CHECK_THREAD, JSContext
 #include "vm/JSObject.h"                // JSObject
 #include "vm/List.h"                    // ListObject

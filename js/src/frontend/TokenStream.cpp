@@ -31,6 +31,7 @@
 #include "jsnum.h"
 
 #include "frontend/BytecodeCompiler.h"
+#include "frontend/FrontendContext.h"
 #include "frontend/Parser.h"
 #include "frontend/ParserAtom.h"
 #include "frontend/ReservedWords.h"
@@ -40,7 +41,6 @@
 #include "js/UniquePtr.h"
 #include "util/Text.h"
 #include "util/Unicode.h"
-#include "vm/ErrorContext.h"
 #include "vm/FrameIter.h"  // js::{,NonBuiltin}FrameIter
 #include "vm/JSContext.h"
 #include "vm/Realm.h"

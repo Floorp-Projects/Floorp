@@ -33,6 +33,7 @@
 #include "jsmath.h"
 
 #include "frontend/BytecodeCompiler.h"    // CompileStandaloneFunction
+#include "frontend/FrontendContext.h"     // js::FrontendContext
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
@@ -54,7 +55,6 @@
 #include "util/DifferentialTesting.h"
 #include "util/StringBuffer.h"
 #include "util/Text.h"
-#include "vm/ErrorContext.h"  // js::FrontendContext
 #include "vm/ErrorReporting.h"
 #include "vm/FunctionFlags.h"          // js::FunctionFlags
 #include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind

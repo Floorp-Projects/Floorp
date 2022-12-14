@@ -15,6 +15,7 @@
 
 #include "builtin/Array.h"
 #include "frontend/CompilationStencil.h"
+#include "frontend/FrontendContext.h"  // AutoReportFrontendContext
 #include "frontend/ModuleSharedContext.h"
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
@@ -22,7 +23,6 @@
 #include "js/friend/StackLimits.h"    // js::AutoCheckRecursionLimit
 #include "js/PropertyAndElement.h"    // JS_DefineFunction
 #include "js/StableStringChars.h"
-#include "vm/ErrorContext.h"   // AutoReportFrontendContext
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
 #include "vm/Interpreter.h"
 #include "vm/JSAtom.h"

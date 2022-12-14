@@ -20,12 +20,12 @@
 #ifdef JS_ENABLE_SMOOSH
 #  include "frontend/Frontend2.h"  // Smoosh
 #endif
+#include "frontend/FrontendContext.h"  // AutoReportFrontendContext
 #include "frontend/ModuleSharedContext.h"
 #include "js/experimental/JSStencil.h"
 #include "js/SourceText.h"
 #include "js/Stack.h"  // JS::NativeStackLimit
 #include "js/UniquePtr.h"
-#include "vm/ErrorContext.h"           // AutoReportFrontendContext
 #include "vm/FunctionFlags.h"          // FunctionFlags
 #include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind
 #include "vm/HelperThreads.h"  // StartOffThreadDelazification, WaitForAllDelazifyTasks

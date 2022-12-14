@@ -21,13 +21,13 @@
 
 #include "ds/Fifo.h"
 #include "frontend/CompilationStencil.h"  // CompilationStencil, CompilationGCOutput
+#include "frontend/FrontendContext.h"
 #include "js/CompileOptions.h"
 #include "js/experimental/JSStencil.h"
 #include "js/HelperThreadAPI.h"
 #include "js/Stack.h"  // JS::NativeStackLimit
 #include "js/TypeDecls.h"
 #include "threading/ConditionVariable.h"
-#include "vm/ErrorContext.h"
 #include "vm/HelperThreads.h"
 #include "vm/HelperThreadTask.h"
 #include "vm/JSContext.h"

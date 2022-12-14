@@ -361,7 +361,6 @@ UNIFIED_SOURCES += [
     "vm/DateTime.cpp",
     "vm/EnvironmentObject.cpp",
     "vm/EqualityOperations.cpp",
-    "vm/ErrorContext.cpp",
     "vm/ErrorMessages.cpp",
     "vm/ErrorObject.cpp",
     "vm/ErrorReporting.cpp",

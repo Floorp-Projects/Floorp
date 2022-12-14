@@ -12,10 +12,10 @@
 #include "jsexn.h"
 #include "jsfriendapi.h"
 
-#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "js/Printf.h"                // JS_vsmprintf
-#include "js/Warnings.h"              // JS::WarningReporter
-#include "vm/ErrorContext.h"          // AutoReportFrontendContext
+#include "frontend/FrontendContext.h"  // AutoReportFrontendContext
+#include "js/friend/ErrorMessages.h"   // js::GetErrorMessage, JSMSG_*
+#include "js/Printf.h"                 // JS_vsmprintf
+#include "js/Warnings.h"               // JS::WarningReporter
 #include "vm/FrameIter.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
