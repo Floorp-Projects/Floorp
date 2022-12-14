@@ -3,6 +3,7 @@ import {
   MultiStageAboutWelcome,
   SecondaryCTA,
   StepsIndicator,
+  ProgressBar,
   WelcomeScreen,
 } from "content-src/aboutwelcome/components/MultiStageAboutWelcome";
 import { Themes } from "content-src/aboutwelcome/components/Themes";
@@ -282,6 +283,21 @@ describe("MultiStageAboutWelcome module", () => {
         assert.equal(
           parseInt(attributes.getNamedItem("aria-valuenow").value, 10),
           EXTRA_PROPS.order + 1
+        );
+      });
+
+      it("should render progress bar", () => {
+        let SCREEN_PROPS = {
+          step: 1,
+          previousStep: 0,
+          totalNumberOfScreens: 2,
+        };
+        const wrapper = mount(<ProgressBar {...SCREEN_PROPS} />);
+        assert.ok(wrapper.find("div.indicator").exists());
+        assert.propertyVal(
+          wrapper.find("div.indicator").prop("style"),
+          "width",
+          "50%"
         );
       });
 

@@ -96,6 +96,7 @@ async function testAboutWelcomeLogoFor(logo = {}) {
   );
 
   await doExperimentCleanup();
+  browser.closeBrowser();
 }
 
 /**
@@ -120,6 +121,7 @@ add_task(async function test_aboutwelcome_with_noodles() {
       "div.noodle.yellow-circle",
     ]
   );
+  browser.closeBrowser();
 });
 
 /**
@@ -154,6 +156,7 @@ add_task(async function test_aboutwelcome_with_customized_logo() {
       height: TEST_LOGO_HEIGHT,
     }
   );
+  browser.closeBrowser();
 });
 
 /**
@@ -187,6 +190,7 @@ add_task(async function test_aboutwelcome_with_empty_logo_spacing() {
       height: TEST_LOGO_HEIGHT,
     }
   );
+  browser.closeBrowser();
 });
 
 /**
@@ -224,6 +228,7 @@ add_task(async function test_aboutwelcome_with_title_styles() {
       "letter-spacing": "normal",
     }
   );
+  browser.closeBrowser();
 });
 
 /**
@@ -245,6 +250,7 @@ add_task(async function test_aboutwelcome_with_background() {
     // Expected selectors:
     [`div.main-content[style*='${BACKGROUND_URL}'`]
   );
+  browser.closeBrowser();
 });
 
 /**
@@ -267,14 +273,13 @@ add_task(async function test_aboutwelcome_dismiss_button() {
   // Spy AboutWelcomeParent Content Message Handler
   sandbox.spy(aboutWelcomeActor, "onContentMessage");
 
-  registerCleanupFunction(() => {
-    sandbox.restore();
-  });
+  registerCleanupFunction(() => sandbox.restore());
 
   // Click dismiss button
   await onButtonClick(browser, "button.dismiss-button");
   const { callCount } = aboutWelcomeActor.onContentMessage;
-  ok(callCount >= 1, `${callCount} Stub was called`);
+  ok(callCount >= 1, `${callCount} spy was called`);
+  browser.closeBrowser();
 });
 
 /**
@@ -318,6 +323,7 @@ add_task(async function test_aboutwelcome_split_position() {
       color: "rgb(21, 20, 26)",
     }
   );
+  browser.closeBrowser();
 });
 
 /**
@@ -345,6 +351,7 @@ add_task(async function test_aboutwelcome_with_url_backdrop() {
     [`div.outer-wrapper.onboardingContainer[style*='${TEST_BACKDROP_URL}']`]
   );
   await doExperimentCleanup();
+  browser.closeBrowser();
 });
 
 /**
@@ -373,6 +380,7 @@ add_task(async function test_aboutwelcome_with_color_backdrop() {
     [`div.outer-wrapper.onboardingContainer[style*='${TEST_BACKDROP_COLOR}']`]
   );
   await doExperimentCleanup();
+  browser.closeBrowser();
 });
 
 /**
@@ -436,105 +444,25 @@ add_task(async function test_aboutwelcome_with_text_color_override() {
   );
 
   await doExperimentCleanup();
+  await SpecialPowers.popPrefEnv();
+  browser.closeBrowser();
 });
 
 /**
  * Test rendering a screen with a "progress bar" style step indicator
  */
 add_task(async function test_aboutwelcome_with_progress_bar() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["ui.systemUsesDarkTheme", 0],
+      ["ui.prefersReducedMotion", 0],
+    ],
+  });
   let screens = [];
   // we need at least three screens to test the progress bar styling
   for (let i = 0; i < 3; i++) {
     screens.push(
-      makeTestContent("TEST_PROGRESS_BAR_OVERRIDE_STEP", {
-        progress_bar: true,
-        primary_button: {
-          label: "next",
-          action: {
-            navigate: true,
-          },
-        },
-      })
-    );
-  }
-
-  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
-    featureId: "aboutwelcome",
-    value: {
-      enabled: true,
-      screens,
-    },
-  });
-  let browser = await openAboutWelcome(JSON.stringify(screens));
-
-  // Advance to second screen
-  await onButtonClick(browser, "button.primary");
-
-  // Ensure step indicator has progress bar styles
-  // progress indicator height can differ based on device size and test_element_styles doesn't allow comparisons
-  await SpecialPowers.spawn(browser, [], async () => {
-    const indicatorElement = await ContentTaskUtils.waitForCondition(() =>
-      content.document.querySelector(".indicator")
-    );
-    const indicatorStyles = content.window.getComputedStyle(indicatorElement);
-    const [computedHeight] = indicatorStyles.height.match(/\d+/);
-
-    ok(
-      computedHeight >= 5 && computedHeight <= 7,
-      `Indicator height -  ${indicatorStyles.height} - is in correct range`
-    );
-  });
-
-  await test_element_styles(
-    browser,
-    ".indicator",
-    // Expected styles:
-    {
-      "padding-block": "0px",
-      margin: "0px",
-    }
-  );
-
-  // Both completed and current steps should have border color set
-  await test_element_styles(
-    browser,
-    ".indicator.complete",
-    // Expected styles:
-    {
-      "border-color": "rgb(0, 221, 255)",
-    }
-  );
-  await test_element_styles(
-    browser,
-    ".indicator.current",
-    // Expected styles:
-    {
-      "border-color": "rgb(0, 221, 255)",
-    }
-  );
-
-  // Upcoming steps should be gray
-  await test_element_styles(
-    browser,
-    ".indicator:not(.current):not(.complete)",
-    // Expected styles:
-    {
-      "border-color": "rgb(251, 251, 254)",
-    }
-  );
-
-  await doExperimentCleanup();
-});
-
-/**
- * Test rendering an MR onboarding split screen with a progress bar indicator
- */
-add_task(async function test_MR_aboutwelcome_with_progress_bar() {
-  let screens = [];
-  // we need at least three screens to test the progress bar styling
-  for (let i = 0; i < 3; i++) {
-    screens.push(
-      makeTestContent("TEST_MR_PROGRESS_BAR", {
+      makeTestContent(`TEST_MR_PROGRESS_BAR_${i + 1}`, {
         position: "split",
         progress_bar: true,
         primary_button: {
@@ -555,46 +483,45 @@ add_task(async function test_MR_aboutwelcome_with_progress_bar() {
     },
   });
   let browser = await openAboutWelcome(JSON.stringify(screens));
-  let transitionEnd = SpecialPowers.spawn(browser, [], async () => {
+
+  await SpecialPowers.spawn(browser, [], async () => {
     const progressBar = await ContentTaskUtils.waitForCondition(() =>
       content.document.querySelector(".progress-bar")
     );
-    await Promise.race([
-      ContentTaskUtils.waitForEvent(progressBar, "transitionend"),
-      ContentTaskUtils.waitForEvent(progressBar, "transitioncancel"),
-    ]);
-  });
+    const indicator1 = await ContentTaskUtils.waitForCondition(() =>
+      content.document.querySelector(".indicator")
+    );
+    // Progress bar should have a gray background.
+    is(
+      content.window.getComputedStyle(progressBar)["background-color"],
+      "rgba(21, 20, 26, 0.25)",
+      "Correct progress bar background"
+    );
 
-  // Advance to second screen
-  await onButtonClick(browser, "button.primary");
-
-  // test the wipe transition
-  await transitionEnd;
-
-  // Progress bar should have a gray background.
-  await test_element_styles(browser, ".steps.progress-bar", {
-    "background-color": "rgba(251, 251, 254, 0.25)",
-  });
-
-  for (let cls of ["complete", "current"]) {
-    await test_element_styles(browser, `.indicator.${cls}`, {
-      // Both completed and current steps should have
+    const indicatorStyles = content.window.getComputedStyle(indicator1);
+    for (let [key, val] of Object.entries({
+      // The filled "completed" element should have
       // `background-color: var(--checkbox-checked-bgcolor);`
-      "background-color": "rgb(0, 221, 255)",
+      "background-color": "rgb(0, 97, 224)",
       // Base progress bar step styles.
       height: "6px",
+      margin: "0px",
       "padding-block": "0px",
-      "margin-inline": "-1px",
-      "margin-block": "0px",
-    });
-  }
-
-  // Upcoming steps should be invisible
-  await test_element_styles(browser, ".indicator:not(.current, .complete)", {
-    "background-color": "rgba(0, 0, 0, 0)",
+    })) {
+      is(indicatorStyles[key], val, `Correct indicator ${key} style`);
+    }
+    const indicatorWidth = indicator1.clientWidth;
+    content.document.querySelector("button.primary").click();
+    await ContentTaskUtils.waitForCondition(
+      () =>
+        content.document.querySelector(".indicator")?.clientWidth >
+        indicatorWidth,
+      "Indicator should have grown"
+    );
   });
 
   await doExperimentCleanup();
+  browser.closeBrowser();
 });
 
 /**
@@ -635,6 +562,7 @@ add_task(async function test_aboutwelcome_history_updates_disabled() {
   );
 
   await doExperimentCleanup();
+  browser.closeBrowser();
 });
 
 /**
@@ -689,12 +617,8 @@ add_task(async function test_aboutwelcome_start_screen_configured() {
   });
 
   let sandbox = sinon.createSandbox();
-
-  let stub = sandbox.stub(AboutWelcomeTelemetry.prototype, "sendTelemetry");
-
-  registerCleanupFunction(() => {
-    sandbox.restore();
-  });
+  let spy = sandbox.spy(AboutWelcomeTelemetry.prototype, "sendTelemetry");
+  registerCleanupFunction(() => sandbox.restore());
 
   let browser = await openAboutWelcome(JSON.stringify(screens));
 
@@ -711,18 +635,29 @@ add_task(async function test_aboutwelcome_start_screen_configured() {
     `Starts on second screen when configured with startScreen index equal to ${startScreen}`
   );
 
-  Assert.equal(
-    stub.secondCall.args[0].event,
-    "IMPRESSION",
-    "An impression event is sent with start screen configured"
-  );
-
-  Assert.equal(
-    stub.secondCall.args[0].message_id,
-    `MR_WELCOME_DEFAULT_${startScreen}_TEST_START_STEP_${startScreen +
+  let expectedTelemetry = sinon.match({
+    event: "IMPRESSION",
+    message_id: `MR_WELCOME_DEFAULT_${startScreen}_TEST_START_STEP_${startScreen +
       1}_${screens.map(({ id }) => id?.split("_")[1]?.[0]).join("")}`,
-    "Impression events have the correct message id with start screen configured"
-  );
+  });
+  if (spy.calledWith(expectedTelemetry)) {
+    ok(
+      true,
+      "Impression events have the correct message id with start screen configured"
+    );
+  } else if (spy.called) {
+    ok(
+      false,
+      `Wrong telemetry sent: ${JSON.stringify(
+        spy.getCalls().map(c => c.args[0]),
+        null,
+        2
+      )}`
+    );
+  } else {
+    ok(false, "No telemetry sent");
+  }
 
   await doExperimentCleanup();
+  browser.closeBrowser();
 });
