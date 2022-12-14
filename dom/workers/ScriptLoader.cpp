@@ -529,7 +529,7 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
         new ScriptFetchOptions(CORSMode::CORS_NONE, referrerPolicy, nullptr);
 
     request = new ScriptLoadRequest(ScriptKind::eClassic, uri, fetchOptions,
-                                    SRIMetadata(), nullptr, /* = aReferrer */
+                                    SRIMetadata(), nullptr,  // mReferrer
                                     loadContext);
   } else {
     // Implements part of "To fetch a worklet/module worker script graph"
@@ -540,11 +540,23 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
     RefPtr<ScriptFetchOptions> fetchOptions =
         new ScriptFetchOptions(CORSMode::CORS_NONE, referrerPolicy, nullptr);
 
-    // Part of Step 2. This sets the Top-level flag to true
     RefPtr<WorkerModuleLoader::ModuleLoaderBase> moduleLoader =
         static_cast<WorkerGlobalScopeBase*>(GetGlobal())->GetModuleLoader();
+
+    // Implements the referrer for "To fetch a single module script"
+    // Our implementation does not have a "client" as a referrer.
+    // However, when client is resolved (per 8.3. Determine request’s
+    // Referrer in
+    // https://w3c.github.io/webappsec-referrer-policy/#determine-requests-referrer)
+    // This should result in the referrer source being the creation URL.
+    //
+    // In subresource modules, the referrer is the importing script.
+    nsCOMPtr<nsIURI> referrer =
+        mWorkerRef->Private()->GetReferrerInfo()->GetOriginalReferrer();
+
+    // Part of Step 2. This sets the Top-level flag to true
     request = new ModuleLoadRequest(
-        uri, fetchOptions, SRIMetadata(), nullptr, loadContext,
+        uri, fetchOptions, SRIMetadata(), referrer, loadContext,
         true,  /* is top level */
         false, /* is dynamic import */
         moduleLoader, ModuleLoadRequest::NewVisitedSetForTopLevelImport(uri),
@@ -788,18 +800,24 @@ nsresult WorkerScriptLoader::LoadScript(
   }
 
   if (!channel) {
-    nsCOMPtr<nsIReferrerInfo> referrerInfo =
-        ReferrerInfo::CreateForFetch(principal, nullptr);
-    if (parentWorker && !loadContext->IsTopLevel()) {
+    nsCOMPtr<nsIReferrerInfo> referrerInfo;
+    ScriptLoadRequest* request = aRequestHandle->GetRequest();
+    if (request->IsModuleRequest()) {
       referrerInfo =
-          static_cast<ReferrerInfo*>(referrerInfo.get())
-              ->CloneWithNewPolicy(parentWorker->GetReferrerPolicy());
+          new ReferrerInfo(request->mReferrer, request->ReferrerPolicy());
+    } else {
+      referrerInfo = ReferrerInfo::CreateForFetch(principal, nullptr);
+      if (parentWorker && !loadContext->IsTopLevel()) {
+        referrerInfo =
+            static_cast<ReferrerInfo*>(referrerInfo.get())
+                ->CloneWithNewPolicy(parentWorker->GetReferrerPolicy());
+      }
     }
 
     rv = ChannelFromScriptURL(
         principal, parentDoc, mWorkerRef->Private(), loadGroup, ios, secMan,
-        aRequestHandle->GetRequest()->mURI, loadContext->mClientInfo,
-        mController, loadContext->IsTopLevel(), mWorkerScriptType,
+        request->mURI, loadContext->mClientInfo, mController,
+        loadContext->IsTopLevel(), mWorkerScriptType,
         mWorkerRef->Private()->ContentPolicyType(), loadFlags,
         mWorkerRef->Private()->CookieJarSettings(), referrerInfo,
         getter_AddRefs(channel));
