@@ -708,6 +708,9 @@
     <!--  Checkbox Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
     <string name="cookie_banner_further_reduce_option_summary">Requestas de banners pro cookies sera acceptate pro dimitter plus banners.</string>
 
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle. -->
+    <string name="cookie_banner_exception_item_description_state_off">Disactivar pro iste sito</string>
+
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Autoreproduction</string>
 
