@@ -295,6 +295,18 @@ async function runTests() {
   assertFound(entireWord, "-fo");
   assertFound(entireWord, "-ba");
 
+  // Searching in elements with display: table-*, bug 1645990
+  var table = document.getElementById("tabular");
+  assertFound(table, "One");
+  assertFound(table, "TwoThree");  // across adjacent cells
+  assertNotFound(table, "wordsanother");  // not across rows
+  rf.entireWord = true;
+  assertNotFound(table, "One");  // because nothing separates it from next cell
+  assertFound(table, "several");
+  assertFound(table, "whole");
+  assertFound(table, "words");
+  rf.entireWord = false;
+
   // Do these test at the end since they trigger failure screenshots in
   // the test harness, and we want as much information as possible about
   // any OTHER tests that may have already failed.
@@ -344,6 +356,11 @@ async function runTests() {
   SimpleTest.finish();
 }
 </script>
+<style>
+#tabular { display: table; }
+#tabular div { display: table-row; }
+#tabular div div { display: table-cell; }
+</style>
 </head>
 <body onload="runTests()">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=450048">Mozilla Bug 450048</a>
@@ -370,6 +387,11 @@ async function runTests() {
 <div id="entireWord"><p>(one)</p><p>[two] [three]</p><p>-foo -bar</p></div>
 <div id="content" style="display: none">
 
+</div>
+<div id="tabular">
+  <div><div>One</div><div>Two</div><div>Three</div></div>
+  <div><div></div><div></div><div>several whole words</div></div>
+  <div><div>one</div><div>more</div><div>row</div></div>
 </div>
 <pre id="test">
 </pre>
