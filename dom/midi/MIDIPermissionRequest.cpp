@@ -123,7 +123,7 @@ MIDIPermissionRequest::Run() {
   }
 
   if (nsContentUtils::IsSitePermDeny(mPrincipal, permName)) {
-    Cancel();
+    CancelWithRandomizedDelay();
     return NS_OK;
   }
 
@@ -133,7 +133,7 @@ MIDIPermissionRequest::Run() {
       !StaticPrefs::dom_sitepermsaddon_provider_enabled() &&
       !nsContentUtils::HasSitePerm(mPrincipal, permName) &&
       !mPrincipal->GetIsLoopbackHost()) {
-    Cancel();
+    CancelWithRandomizedDelay();
     return NS_OK;
   }
 
@@ -142,7 +142,7 @@ MIDIPermissionRequest::Run() {
   if (StaticPrefs::dom_sitepermsaddon_provider_enabled() &&
       nsContentUtils::IsSitePermDeny(mPrincipal, "install"_ns) &&
       !mPrincipal->GetIsLoopbackHost()) {
-    Cancel();
+    CancelWithRandomizedDelay();
     return NS_OK;
   }
 
@@ -162,21 +162,28 @@ MIDIPermissionRequest::Run() {
         if (aHasDevices) {
           self->DoPrompt();
         } else {
-          // For auto-deny, we randomize the response time between 3 and 13
-          // seconds to make it harder for the site to determine if auto-deny
-          // occurred.
-          uint32_t baseDelayMS = 3 * 1000;
-          uint32_t randomDelayMS = RandomUint64OrDie() % (10 * 1000);
-          auto delay =
-              TimeDuration::FromMilliseconds(baseDelayMS + randomDelayMS);
-          NS_NewTimerWithCallback(
-              getter_AddRefs(self->mCancelTimer), [=](auto) { self->Cancel(); },
-              delay, nsITimer::TYPE_ONE_SHOT, __func__);
+          self->CancelWithRandomizedDelay();
         }
       },
-      [=](auto) { self->Cancel(); });
+      [=](auto) { self->CancelWithRandomizedDelay(); });
 
   return NS_OK;
+}
+
+// If the user has no MIDI devices, we automatically deny the request. To
+// prevent sites from using timing attack to discern the existence of MIDI
+// devices, we instrument silent denials with a randomized delay between 3
+// and 13 seconds, which is intended to model the time the user might spend
+// considering a prompt before denying it.
+void MIDIPermissionRequest::CancelWithRandomizedDelay() {
+  MOZ_ASSERT(NS_IsMainThread());
+  uint32_t baseDelayMS = 3 * 1000;
+  uint32_t randomDelayMS = RandomUint64OrDie() % (10 * 1000);
+  auto delay = TimeDuration::FromMilliseconds(baseDelayMS + randomDelayMS);
+  RefPtr<MIDIPermissionRequest> self = this;
+  NS_NewTimerWithCallback(
+      getter_AddRefs(mCancelTimer), [=](auto) { self->Cancel(); }, delay,
+      nsITimer::TYPE_ONE_SHOT, __func__);
 }
 
 nsresult MIDIPermissionRequest::DoPrompt() {
