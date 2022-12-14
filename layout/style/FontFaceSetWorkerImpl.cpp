@@ -262,12 +262,6 @@ void FontFaceSetWorkerImpl::FlushUserFontSet() {
   }
 }
 
-already_AddRefed<gfxUserFontFamily> FontFaceSetWorkerImpl::LookupFamily(
-    const nsACString& aName) const {
-  RecursiveMutexAutoLock lock(mMutex);
-  return gfxUserFontSet::LookupFamily(aName);
-}
-
 nsresult FontFaceSetWorkerImpl::StartLoad(gfxUserFontEntry* aUserFontEntry,
                                           uint32_t aSrcIndex) {
   RecursiveMutexAutoLock lock(mMutex);

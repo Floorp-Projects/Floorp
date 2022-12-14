@@ -51,8 +51,6 @@ class FontFaceSetImpl : public nsISupports, public gfxUserFontSet {
 
   bool BypassCache() final { return mBypassCache; }
 
-  void ForgetLocalFaces() final;
-
  protected:
   virtual nsresult CreateChannelForSyncLoadFontData(
       nsIChannel** aOutChannel, gfxUserFontEntry* aFontToLoad,
@@ -71,11 +69,14 @@ class FontFaceSetImpl : public nsISupports, public gfxUserFontSet {
                       nsresult aStatus = NS_OK) override;
   void DoRebuildUserFontSet() override;
   already_AddRefed<gfxUserFontEntry> CreateUserFontEntry(
-      nsTArray<gfxFontFaceSrc>&& aFontFaceSrcList,
-      gfxUserFontAttributes&& aAttr) override;
-
-  already_AddRefed<gfxUserFontFamily> GetFamily(
-      const nsACString& aFamilyName) final;
+      const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList, WeightRange aWeight,
+      StretchRange aStretch, SlantStyleRange aStyle,
+      const nsTArray<gfxFontFeature>& aFeatureSettings,
+      const nsTArray<gfxFontVariation>& aVariationSettings,
+      uint32_t aLanguageOverride, gfxCharacterMap* aUnicodeRanges,
+      StyleFontDisplay aFontDisplay, RangeFlags aRangeFlags,
+      float aAscentOverride, float aDescentOverride, float aLineGapOverride,
+      float aSizeAdjust) override;
 
   explicit FontFaceSetImpl(FontFaceSet* aOwner);
 
@@ -110,9 +111,7 @@ class FontFaceSetImpl : public nsISupports, public gfxUserFontSet {
    * font entry for the given FontFace object.
    */
   static already_AddRefed<gfxUserFontEntry>
-  FindOrCreateUserFontEntryFromFontFace(FontFaceImpl* aFontFace,
-                                        gfxUserFontAttributes&& aAttr,
-                                        StyleOrigin);
+  FindOrCreateUserFontEntryFromFontFace(FontFaceImpl* aFontFace);
 
   /**
    * Notification method called by a FontFace to indicate that its loading
@@ -208,6 +207,10 @@ class FontFaceSetImpl : public nsISupports, public gfxUserFontSet {
     Maybe<StyleOrigin> mOrigin;  // only relevant for mRuleFaces entries
   };
 
+  static already_AddRefed<gfxUserFontEntry>
+  FindOrCreateUserFontEntryFromFontFace(const nsACString& aFamilyName,
+                                        FontFaceImpl* aFontFace, StyleOrigin);
+
   // search for @font-face rule that matches a userfont font entry
   virtual RawServoFontFaceRule* FindRuleForUserFontEntry(
       gfxUserFontEntry* aUserFontEntry) {
@@ -217,10 +220,6 @@ class FontFaceSetImpl : public nsISupports, public gfxUserFontSet {
   virtual void FindMatchingFontFaces(
       const nsTHashSet<FontFace*>& aMatchingFaces,
       nsTArray<FontFace*>& aFontFaces);
-
-  class UpdateUserFontEntryRunnable;
-  void UpdateUserFontEntry(gfxUserFontEntry* aEntry,
-                           gfxUserFontAttributes&& aAttr);
 
   nsresult CheckFontLoad(const gfxFontFaceSrc* aFontFaceSrc,
                          gfxFontSrcPrincipal** aPrincipal, bool* aBypassCache);

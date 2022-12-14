@@ -165,7 +165,6 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   typedef mozilla::intl::Script Script;
 
   using AutoLock = mozilla::RecursiveMutexAutoLock;
-  using AutoUnlock = mozilla::RecursiveMutexAutoUnlock;
 
   // Class used to hold cached copies of the font-name prefs, so that they can
   // be accessed from non-main-thread callers who are not allowed to touch the
@@ -865,11 +864,6 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   void InitLoader() MOZ_REQUIRES(mLock) override;
   bool LoadFontInfo() override;
   void CleanupLoader() override;
-
-  void ForceGlobalReflowLocked(
-      gfxPlatform::NeedsReframe aNeedsReframe,
-      gfxPlatform::BroadcastToChildren aBroadcastToChildren =
-          gfxPlatform::BroadcastToChildren::Yes) MOZ_REQUIRES(mLock);
 
   // read the loader initialization prefs, and start it
   void GetPrefsAndStartLoader();
