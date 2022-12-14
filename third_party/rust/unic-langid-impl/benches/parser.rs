@@ -21,6 +21,13 @@ fn language_identifier_parser_bench(c: &mut Criterion) {
         "fr-FR",
         "mk",
         "uk",
+        "en-US",
+        "en-GB",
+        "es-AR",
+        "th",
+        "de",
+        "zh-Cyrl-HN",
+        "en-Latn-US",
     ];
 
     c.bench_function("language_identifier_parser", |b| {
@@ -49,6 +56,13 @@ fn language_identifier_parser_casing_bench(c: &mut Criterion) {
         "fr_fr",
         "Mk",
         "uK",
+        "en-us",
+        "en_gb",
+        "ES-AR",
+        "tH",
+        "DE",
+        "ZH_cyrl_hN",
+        "eN-lAtN-uS",
     ];
     c.bench_function("language_identifier_parser_casing", |b| {
         let slices: Vec<&[u8]> = strings.iter().map(|s| s.as_bytes()).collect();

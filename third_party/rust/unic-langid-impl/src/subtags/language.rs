@@ -34,7 +34,7 @@ impl Language {
     /// This function accepts any u64 that is exected to be a valid
     /// `TinyStr8` and a valid `Language` subtag.
     pub const unsafe fn from_raw_unchecked(v: u64) -> Self {
-        Self(Some(TinyStr8::new_unchecked(v)))
+        Self(Some(TinyStr8::from_bytes_unchecked(v.to_le_bytes())))
     }
 
     pub fn matches<O: Borrow<Self>>(
@@ -59,13 +59,13 @@ impl Language {
 
 impl From<Language> for Option<u64> {
     fn from(input: Language) -> Self {
-        input.0.map(|i| i.into())
+        input.0.map(|i| u64::from_le_bytes(*i.all_bytes()))
     }
 }
 
 impl From<&Language> for Option<u64> {
     fn from(input: &Language) -> Self {
-        input.0.map(|i| i.into())
+        input.0.map(|i| u64::from_le_bytes(*i.all_bytes()))
     }
 }
 

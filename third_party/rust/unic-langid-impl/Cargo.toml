@@ -3,19 +3,24 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g., crates.io) dependencies
+# to registry (e.g., crates.io) dependencies.
 #
-# If you believe there's an error in this file please file an
-# issue against the rust-lang/cargo repository. If you're
-# editing this file be aware that the upstream Cargo.toml
-# will likely look very different (and much more reasonable)
+# If you are reading this file be aware that the original Cargo.toml
+# will likely look very different (and much more reasonable).
+# See Cargo.toml.orig for the original contents.
 
 [package]
 edition = "2018"
 name = "unic-langid-impl"
-version = "0.9.0"
+version = "0.9.1"
 authors = ["Zibi Braniecki <gandalf@mozilla.com>"]
-include = ["src/**/*", "benches/*.rs", "Cargo.toml", "README.md"]
+include = [
+    "src/**/*",
+    "benches/*.rs",
+    "tests/*.rs",
+    "Cargo.toml",
+    "README.md",
+]
 description = "API for managing Unicode Language Identifiers"
 readme = "README.md"
 categories = ["internationalization"]
@@ -51,6 +56,7 @@ harness = false
 name = "likely_subtags"
 harness = false
 required-features = ["likelysubtags"]
+
 [dependencies.serde]
 version = "1.0"
 optional = true
@@ -60,7 +66,8 @@ version = "1.0"
 optional = true
 
 [dependencies.tinystr]
-version = "0.3.2"
+version = "0.7.0"
+
 [dev-dependencies.criterion]
 version = "0.3"
 
@@ -72,5 +79,8 @@ features = ["derive"]
 version = "1.0"
 
 [features]
-binary = ["serde", "serde_json"]
+binary = [
+    "serde",
+    "serde_json",
+]
 likelysubtags = []
