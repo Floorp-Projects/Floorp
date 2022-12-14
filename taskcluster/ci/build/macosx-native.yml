@@ -109,7 +109,6 @@ macosx64-rusttests/opt:
             - macosx64-nasm
             - macosx64-node
             - macosx64-sdk
-            - sysroot-wasm32-wasi
     optimization:
         test-inclusive: [rusttests]
 
@@ -142,6 +141,5 @@ macosx64-rusttests/debug:
             - macosx64-nasm
             - macosx64-node
             - macosx64-sdk
-            - sysroot-wasm32-wasi
     optimization:
         test-inclusive: [rusttests]

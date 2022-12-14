@@ -856,7 +856,6 @@ win32-rusttests/opt:
             - win64-mozmake
             - win64-dump_syms
             - win64-vs2017
-            - sysroot-wasm32-wasi
     optimization:
         test-inclusive: [rusttests]
 
@@ -902,7 +901,6 @@ win32-rusttests/debug:
             - win64-mozmake
             - win64-dump_syms
             - win64-vs2017
-            - sysroot-wasm32-wasi
     optimization:
         test-inclusive: [rusttests]
 
@@ -945,7 +943,6 @@ win64-rusttests/opt:
             - win64-mozmake
             - win64-dump_syms
             - win64-vs2017
-            - sysroot-wasm32-wasi
     optimization:
         test-inclusive: [rusttests]
 
@@ -988,7 +985,6 @@ win64-rusttests/debug:
             - win64-mozmake
             - win64-dump_syms
             - win64-vs2017
-            - sysroot-wasm32-wasi
     optimization:
         test-inclusive: [rusttests]
 
