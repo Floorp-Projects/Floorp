@@ -166,7 +166,7 @@ tasks:
                             metadata:
                                 $merge:
                                     - owner: "${ownerEmail}"
-                                      source: 'https://github.com/${repoFullName}/raw/${head_sha}/.taskcluster.yml'
+                                      source: '${repoUrl}/raw/${head_sha}/.taskcluster.yml'
                                     - $if: 'isPullRequest || tasks_for == "github-push"'
                                       then:
                                           name: "Decision Task"
