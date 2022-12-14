@@ -1,0 +1,22 @@
+diff --git a/gfx/cairo/cairo/src/cairo-xlib-xrender-private.h b/gfx/cairo/cairo/src/cairo-xlib-xrender-private.h
+--- a/gfx/cairo/cairo/src/cairo-xlib-xrender-private.h
++++ b/gfx/cairo/cairo/src/cairo-xlib-xrender-private.h
+@@ -96,6 +96,10 @@
+ #define PictOpBlendMaximum			    0x3e
+ #endif
+ 
++/* The mozilla build doesn't set up all the following HAVE_* symbols,
++   so we cheat by just checking the version number for now. */
++#if RENDER_MAJOR == 0 && RENDER_MINOR < 10
++
+ #if !HAVE_XRENDERCREATESOLIDFILL
+ #define XRenderCreateSolidFill				_int_consume
+ #endif
+@@ -132,6 +136,7 @@ typedef struct _XConicalGradient {
+ } XConicalGradient;
+ #endif
+ 
++#endif /* RENDER_MAJOR == 0 && RENDER_MINOR < 10 */
+ 
+ #else /* !CAIRO_HAS_XLIB_XRENDER_SURFACE */
+ 
