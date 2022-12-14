@@ -36,17 +36,17 @@ using XDRResult = XDRResultT<mozilla::Ok>;
 class XDRBufferBase {
  public:
   explicit XDRBufferBase(JSContext* cx, FrontendContext* fc, size_t cursor = 0)
-      : context_(cx), err_(fc), cursor_(cursor) {}
+      : context_(cx), fc_(fc), cursor_(cursor) {}
 
   JSContext* cx() const { return context_; }
 
-  FrontendContext* fc() const { return err_; }
+  FrontendContext* fc() const { return fc_; }
 
   size_t cursor() const { return cursor_; }
 
  protected:
   JSContext* const context_;
-  FrontendContext* const err_;
+  FrontendContext* const fc_;
   size_t cursor_;
 };
 

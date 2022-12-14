@@ -34,10 +34,10 @@ struct FrontendErrors {
 
 class FrontendAllocator : public MallocProvider<FrontendAllocator> {
  private:
-  FrontendContext* const context_;
+  FrontendContext* const fc_;
 
  public:
-  explicit FrontendAllocator(FrontendContext* fc) : context_(fc) {}
+  explicit FrontendAllocator(FrontendContext* fc) : fc_(fc) {}
 
   void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
                       size_t nbytes, void* reallocPtr = nullptr);
