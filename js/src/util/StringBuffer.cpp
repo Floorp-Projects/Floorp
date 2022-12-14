@@ -63,7 +63,7 @@ char16_t* StringBuffer::stealChars() {
 bool StringBuffer::inflateChars() {
   MOZ_ASSERT(isLatin1());
 
-  TwoByteCharBuffer twoByte(StringBufferAllocPolicy{ec_, arenaId_});
+  TwoByteCharBuffer twoByte(StringBufferAllocPolicy{fc_, arenaId_});
 
   /*
    * Note: we don't use Vector::capacity() because it always returns a
@@ -154,19 +154,19 @@ JSAtom* StringBuffer::finishAtom() {
 }
 
 frontend::TaggedParserAtomIndex StringBuffer::finishParserAtom(
-    frontend::ParserAtomsTable& parserAtoms, FrontendContext* ec) {
+    frontend::ParserAtomsTable& parserAtoms, FrontendContext* fc) {
   size_t len = length();
   if (len == 0) {
     return frontend::TaggedParserAtomIndex::WellKnown::empty();
   }
 
   if (isLatin1()) {
-    auto result = parserAtoms.internLatin1(ec, latin1Chars().begin(), len);
+    auto result = parserAtoms.internLatin1(fc, latin1Chars().begin(), len);
     latin1Chars().clear();
     return result;
   }
 
-  auto result = parserAtoms.internChar16(ec, twoByteChars().begin(), len);
+  auto result = parserAtoms.internChar16(fc, twoByteChars().begin(), len);
   twoByteChars().clear();
   return result;
 }

@@ -142,7 +142,7 @@ class SuspendableContext;
 class SharedContext {
  public:
   JSContext* const cx_;
-  FrontendContext* const ec_;
+  FrontendContext* const fc_;
 
  protected:
   // See: BaseScript::immutableFlags_
@@ -202,7 +202,7 @@ class SharedContext {
   }
 
  public:
-  SharedContext(JSContext* cx, FrontendContext* ec, Kind kind,
+  SharedContext(JSContext* cx, FrontendContext* fc, Kind kind,
                 const JS::ReadOnlyCompileOptions& options,
                 Directives directives, SourceExtent extent);
 
@@ -284,7 +284,7 @@ class MOZ_STACK_CLASS GlobalSharedContext : public SharedContext {
  public:
   GlobalScope::ParserData* bindings;
 
-  GlobalSharedContext(JSContext* cx, FrontendContext* ec, ScopeKind scopeKind,
+  GlobalSharedContext(JSContext* cx, FrontendContext* fc, ScopeKind scopeKind,
                       const JS::ReadOnlyCompileOptions& options,
                       Directives directives, SourceExtent extent);
 
@@ -300,7 +300,7 @@ class MOZ_STACK_CLASS EvalSharedContext : public SharedContext {
  public:
   EvalScope::ParserData* bindings;
 
-  EvalSharedContext(JSContext* cx, FrontendContext* ec,
+  EvalSharedContext(JSContext* cx, FrontendContext* fc,
                     CompilationState& compilationState, SourceExtent extent);
 };
 
@@ -313,7 +313,7 @@ enum class HasHeritage { No, Yes };
 
 class SuspendableContext : public SharedContext {
  public:
-  SuspendableContext(JSContext* cx, FrontendContext* ec, Kind kind,
+  SuspendableContext(JSContext* cx, FrontendContext* fc, Kind kind,
                      const JS::ReadOnlyCompileOptions& options,
                      Directives directives, SourceExtent extent,
                      bool isGenerator, bool isAsync);
@@ -427,7 +427,7 @@ class FunctionBox : public SuspendableContext {
 
   // End of fields.
 
-  FunctionBox(JSContext* cx, FrontendContext* ec, SourceExtent extent,
+  FunctionBox(JSContext* cx, FrontendContext* fc, SourceExtent extent,
               CompilationState& compilationState, Directives directives,
               GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
               bool isInitialCompilation, TaggedParserAtomIndex atom,

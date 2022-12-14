@@ -40,7 +40,7 @@ struct CompilationState;
 class Smoosh {
  public:
   [[nodiscard]] static bool tryCompileGlobalScriptToExtensibleStencil(
-      JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
+      JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
       CompilationInput& input, JS::SourceText<mozilla::Utf8Unit>& srcBuf,
       UniquePtr<ExtensibleCompilationStencil>& stencilOut);
 };

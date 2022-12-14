@@ -870,7 +870,7 @@ JSAtom* js::Int32ToAtom(JSContext* cx, int32_t si) {
 }
 
 frontend::TaggedParserAtomIndex js::Int32ToParserAtom(
-    FrontendContext* ec, frontend::ParserAtomsTable& parserAtoms, int32_t si) {
+    FrontendContext* fc, frontend::ParserAtomsTable& parserAtoms, int32_t si) {
   char buffer[JSFatInlineString::MAX_LENGTH_TWO_BYTE + 1];
   size_t length;
   char* start = BackfillInt32InBuffer(
@@ -881,7 +881,7 @@ frontend::TaggedParserAtomIndex js::Int32ToParserAtom(
     indexValue.emplace(si);
   }
 
-  return parserAtoms.internAscii(ec, start, length);
+  return parserAtoms.internAscii(fc, start, length);
 }
 
 /* Returns a non-nullptr pointer to inside `buf`. */
@@ -1829,10 +1829,10 @@ JSAtom* js::NumberToAtom(JSContext* cx, double d) {
 }
 
 frontend::TaggedParserAtomIndex js::NumberToParserAtom(
-    FrontendContext* ec, frontend::ParserAtomsTable& parserAtoms, double d) {
+    FrontendContext* fc, frontend::ParserAtomsTable& parserAtoms, double d) {
   int32_t si;
   if (NumberEqualsInt32(d, &si)) {
-    return Int32ToParserAtom(ec, parserAtoms, si);
+    return Int32ToParserAtom(fc, parserAtoms, si);
   }
 
   ToCStringBuf cbuf;
@@ -1842,7 +1842,7 @@ frontend::TaggedParserAtomIndex js::NumberToParserAtom(
   MOZ_ASSERT(std::begin(cbuf.sbuf) <= numStr && numStr < std::end(cbuf.sbuf));
   MOZ_ASSERT(length == strlen(numStr));
 
-  return parserAtoms.internAscii(ec, numStr, length);
+  return parserAtoms.internAscii(fc, numStr, length);
 }
 
 JSLinearString* js::IndexToString(JSContext* cx, uint32_t index) {

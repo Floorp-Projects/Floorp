@@ -240,7 +240,7 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
           !buf_.append(parserAtoms_, funbox->displayAtom())) {
         return false;
       }
-      *retId = buf_.finishParserAtom(parserAtoms_, ec_);
+      *retId = buf_.finishParserAtom(parserAtoms_, fc_);
       return !!*retId;
     }
 
@@ -349,7 +349,7 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
       return true;
     }
 
-    *retId = buf_.finishParserAtom(parserAtoms_, ec_);
+    *retId = buf_.finishParserAtom(parserAtoms_, fc_);
     if (!*retId) {
       return false;
     }
@@ -485,13 +485,13 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
     return internalVisitSpecList(pn);
   }
 
-  NameResolver(JSContext* cx, FrontendContext* ec,
+  NameResolver(JSContext* cx, FrontendContext* fc,
                JS::NativeStackLimit stackLimit, ParserAtomsTable& parserAtoms)
-      : ParseNodeVisitor(ec, stackLimit),
+      : ParseNodeVisitor(fc, stackLimit),
         cx_(cx),
         parserAtoms_(parserAtoms),
         nparents_(0),
-        buf_(cx, ec) {}
+        buf_(cx, fc) {}
 
   /*
    * Resolve names for all anonymous functions in the given ParseNode tree.
@@ -522,9 +522,9 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
 
 } /* anonymous namespace */
 
-bool frontend::NameFunctions(JSContext* cx, FrontendContext* ec,
+bool frontend::NameFunctions(JSContext* cx, FrontendContext* fc,
                              JS::NativeStackLimit stackLimit,
                              ParserAtomsTable& parserAtoms, ParseNode* pn) {
-  NameResolver nr(cx, ec, stackLimit, parserAtoms);
+  NameResolver nr(cx, fc, stackLimit, parserAtoms);
   return nr.visit(pn);
 }

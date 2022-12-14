@@ -30,7 +30,7 @@ using namespace js;
 using mozilla::Utf8Unit;
 
 #ifdef DEBUG
-bool XDRCoderBase::validateResultCode(JSContext* cx, FrontendContext* ec,
+bool XDRCoderBase::validateResultCode(JSContext* cx, FrontendContext* fc,
                                       JS::TranscodeResult code) const {
   // NOTE: This function is called to verify that we do not have a pending
   // exception on the JSContext at the same time as a TranscodeResult failure.
@@ -48,7 +48,7 @@ bool XDRCoderBase::validateResultCode(JSContext* cx, FrontendContext* ec,
     return bool(code == JS::TranscodeResult::Throw);
   }
 
-  return ec->hadErrors() == bool(code == JS::TranscodeResult::Throw);
+  return fc->hadErrors() == bool(code == JS::TranscodeResult::Throw);
 }
 #endif
 

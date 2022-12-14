@@ -1637,7 +1637,7 @@ class NumericLiteral : public ParseNode {
   DecimalPoint decimalPoint() const { return decimalPoint_; }
 
   // Return the decimal string representation of this numeric literal.
-  TaggedParserAtomIndex toAtom(FrontendContext* ec,
+  TaggedParserAtomIndex toAtom(FrontendContext* fc,
                                ParserAtomsTable& parserAtoms) const;
 };
 
@@ -1976,7 +1976,7 @@ class RegExpLiteral : public ParseNode {
       : ParseNode(ParseNodeKind::RegExpExpr, pos), index_(dataIndex) {}
 
   // Create a RegExp object of this RegExp literal.
-  RegExpObject* create(JSContext* cx, FrontendContext* ec,
+  RegExpObject* create(JSContext* cx, FrontendContext* fc,
                        ParserAtomsTable& parserAtoms,
                        CompilationAtomCache& atomCache,
                        ExtensibleCompilationStencil& stencil) const;
@@ -2520,13 +2520,13 @@ void DumpParseTree(ParserBase* parser, ParseNode* pn, GenericPrinter& out,
 
 class ParseNodeAllocator {
  public:
-  explicit ParseNodeAllocator(FrontendContext* ec, LifoAlloc& alloc)
-      : ec(ec), alloc(alloc) {}
+  explicit ParseNodeAllocator(FrontendContext* fc, LifoAlloc& alloc)
+      : fc(fc), alloc(alloc) {}
 
   void* allocNode(size_t size);
 
  private:
-  FrontendContext* ec;
+  FrontendContext* fc;
   LifoAlloc& alloc;
 };
 

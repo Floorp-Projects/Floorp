@@ -154,15 +154,15 @@ bool FrontendContext::checkWasiRecursionLimit() {
   return true;
 }
 
-JS_PUBLIC_API void js::IncWasiRecursionDepth(FrontendContext* ec) {
-  ec->incWasiRecursionDepth();
+JS_PUBLIC_API void js::IncWasiRecursionDepth(FrontendContext* fc) {
+  fc->incWasiRecursionDepth();
 }
 
-JS_PUBLIC_API void js::DecWasiRecursionDepth(FrontendContext* ec) {
-  ec->decWasiRecursionDepth();
+JS_PUBLIC_API void js::DecWasiRecursionDepth(FrontendContext* fc) {
+  fc->decWasiRecursionDepth();
 }
 
-JS_PUBLIC_API bool js::CheckWasiRecursionLimit(FrontendContext* ec) {
-  return ec->checkWasiRecursionLimit();
+JS_PUBLIC_API bool js::CheckWasiRecursionLimit(FrontendContext* fc) {
+  return fc->checkWasiRecursionLimit();
 }
 #endif  // __wasi__

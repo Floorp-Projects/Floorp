@@ -46,7 +46,7 @@ class ScriptSource;
     JS::MutableHandle<JSString*> displayURL,
     JS::MutableHandle<JSString*> sourceMapURL);
 
-[[nodiscard]] bool SetSourceOptions(JSContext* cx, FrontendContext* ec,
+[[nodiscard]] bool SetSourceOptions(JSContext* cx, FrontendContext* fc,
                                     ScriptSource* source,
                                     JS::Handle<JSString*> displayURL,
                                     JS::Handle<JSString*> sourceMapURL);

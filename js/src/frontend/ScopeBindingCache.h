@@ -44,16 +44,16 @@ struct GenericAtom {
   // by variable locations.
   struct EmitterName {
     JSContext* cx;
-    FrontendContext* ec;
+    FrontendContext* fc;
     ParserAtomsTable& parserAtoms;
     CompilationAtomCache& atomCache;
     TaggedParserAtomIndex index;
 
-    EmitterName(JSContext* cx, FrontendContext* ec,
+    EmitterName(JSContext* cx, FrontendContext* fc,
                 ParserAtomsTable& parserAtoms, CompilationAtomCache& atomCache,
                 TaggedParserAtomIndex index)
         : cx(cx),
-          ec(ec),
+          fc(fc),
           parserAtoms(parserAtoms),
           atomCache(atomCache),
           index(index) {}
@@ -78,7 +78,7 @@ struct GenericAtom {
 
   // Constructor for atoms managed by an ExtensibleCompilationState, while
   // compiling a script.
-  GenericAtom(JSContext* cx, FrontendContext* ec, ParserAtomsTable& parserAtoms,
+  GenericAtom(JSContext* cx, FrontendContext* fc, ParserAtomsTable& parserAtoms,
               CompilationAtomCache& atomCache, TaggedParserAtomIndex index);
 
   // Constructors for atoms managed by a CompilationStencil or a

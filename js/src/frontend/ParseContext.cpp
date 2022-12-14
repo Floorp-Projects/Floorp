@@ -70,7 +70,7 @@ bool DeclarationKindIsParameter(DeclarationKind kind) {
          kind == DeclarationKind::FormalParameter;
 }
 
-bool UsedNameTracker::noteUse(FrontendContext* ec, TaggedParserAtomIndex name,
+bool UsedNameTracker::noteUse(FrontendContext* fc, TaggedParserAtomIndex name,
                               NameVisibility visibility, uint32_t scriptId,
                               uint32_t scopeId,
                               mozilla::Maybe<TokenPos> tokenPosition) {
@@ -90,7 +90,7 @@ bool UsedNameTracker::noteUse(FrontendContext* ec, TaggedParserAtomIndex name,
       hasPrivateNames_ = true;
     }
 
-    UsedNameInfo info(ec, visibility, tokenPosition);
+    UsedNameInfo info(fc, visibility, tokenPosition);
 
     if (!info.noteUsedInScope(scriptId, scopeId)) {
       return false;
@@ -138,13 +138,13 @@ bool UsedNameTracker::getUnboundPrivateNames(
 }
 
 bool UsedNameTracker::hasUnboundPrivateNames(
-    FrontendContext* ec, mozilla::Maybe<UnboundPrivateName>& maybeUnboundName) {
+    FrontendContext* fc, mozilla::Maybe<UnboundPrivateName>& maybeUnboundName) {
   // We never saw any private names, so can just return early
   if (!hasPrivateNames_) {
     return true;
   }
 
-  Vector<UnboundPrivateName, 8> unboundPrivateNames(ec);
+  Vector<UnboundPrivateName, 8> unboundPrivateNames(fc);
   if (!getUnboundPrivateNames(unboundPrivateNames)) {
     return false;
   }
@@ -202,7 +202,7 @@ void ParseContext::Scope::dump(ParseContext* pc, ParserBase* parser) {
 bool ParseContext::Scope::addPossibleAnnexBFunctionBox(ParseContext* pc,
                                                        FunctionBox* funbox) {
   if (!possibleAnnexBFunctionBoxes_) {
-    if (!possibleAnnexBFunctionBoxes_.acquire(pc->sc()->ec_)) {
+    if (!possibleAnnexBFunctionBoxes_.acquire(pc->sc()->fc_)) {
       return false;
     }
   }
@@ -320,7 +320,7 @@ ParseContext::ParseContext(JSContext* cx, ParseContext*& parent,
       varScope_(nullptr),
       positionalFormalParameterNames_(cx->frontendCollectionPool()),
       closedOverBindingsForLazy_(cx->frontendCollectionPool()),
-      innerFunctionIndexesForLazy(sc->ec_),
+      innerFunctionIndexesForLazy(sc->fc_),
       newDirectives(newDirectives),
       lastYieldOffset(NoYieldOffset),
       lastAwaitOffset(NoAwaitOffset),
@@ -340,7 +340,7 @@ bool ParseContext::init() {
     return false;
   }
 
-  FrontendContext* ec = sc()->ec_;
+  FrontendContext* fc = sc()->fc_;
 
   if (isFunctionBox()) {
     // Named lambdas always need a binding for their own name. If this
@@ -365,12 +365,12 @@ bool ParseContext::init() {
       return false;
     }
 
-    if (!positionalFormalParameterNames_.acquire(ec)) {
+    if (!positionalFormalParameterNames_.acquire(fc)) {
       return false;
     }
   }
 
-  if (!closedOverBindingsForLazy_.acquire(ec)) {
+  if (!closedOverBindingsForLazy_.acquire(fc)) {
     return false;
   }
 

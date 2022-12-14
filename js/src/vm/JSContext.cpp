@@ -298,10 +298,10 @@ JS_PUBLIC_API void js::ReportOutOfMemory(JSContext* cx) {
   cx->onOutOfMemory();
 }
 
-JS_PUBLIC_API void js::ReportOutOfMemory(FrontendContext* ec) {
+JS_PUBLIC_API void js::ReportOutOfMemory(FrontendContext* fc) {
   MaybeReportOutOfMemoryForDifferentialTesting();
 
-  ec->onOutOfMemory();
+  fc->onOutOfMemory();
 }
 
 static void MaybeReportOverRecursedForDifferentialTesting() {
@@ -348,10 +348,10 @@ JS_PUBLIC_API void js::ReportOverRecursed(JSContext* maybecx) {
   maybecx->onOverRecursed();
 }
 
-JS_PUBLIC_API void js::ReportOverRecursed(FrontendContext* ec) {
+JS_PUBLIC_API void js::ReportOverRecursed(FrontendContext* fc) {
   MaybeReportOverRecursedForDifferentialTesting();
 
-  ec->onOverRecursed();
+  fc->onOverRecursed();
 }
 
 void js::ReportOversizedAllocation(JSContext* cx, const unsigned errorNumber) {
@@ -384,8 +384,8 @@ void js::ReportAllocationOverflow(JSContext* cx) {
   cx->reportAllocationOverflow();
 }
 
-void js::ReportAllocationOverflow(FrontendContext* ec) {
-  ec->onAllocationOverflow();
+void js::ReportAllocationOverflow(FrontendContext* fc) {
+  fc->onAllocationOverflow();
 }
 
 /* |callee| requires a usage string provided by JS_DefineFunctionsWithHelp. */

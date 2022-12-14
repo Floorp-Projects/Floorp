@@ -94,14 +94,14 @@ class CollectionPool {
 
   // Fallibly aquire one of the supported collection types from the pool.
   template <typename Collection>
-  Collection* acquire(FrontendContext* ec) {
+  Collection* acquire(FrontendContext* fc) {
     ConcreteCollectionPool::template assertInvariants<Collection>();
 
     RepresentativeCollection* collection;
     if (recyclable_.empty()) {
       collection = allocate();
       if (!collection) {
-        ReportOutOfMemory(ec);
+        ReportOutOfMemory(fc);
       }
     } else {
       collection = asRepresentative(recyclable_.popCopy());
@@ -301,9 +301,9 @@ class NameCollectionPool {
   }
 
   template <typename Map>
-  Map* acquireMap(FrontendContext* ec) {
+  Map* acquireMap(FrontendContext* fc) {
     MOZ_ASSERT(hasActiveCompilation());
-    return mapPool_.acquire<Map>(ec);
+    return mapPool_.acquire<Map>(fc);
   }
 
   template <typename Map>
@@ -316,7 +316,7 @@ class NameCollectionPool {
   }
 
   template <typename Vector>
-  inline Vector* acquireVector(FrontendContext* ec);
+  inline Vector* acquireVector(FrontendContext* fc);
 
   template <typename Vector>
   inline void releaseVector(Vector** vec);
@@ -332,9 +332,9 @@ class NameCollectionPool {
 
 template <>
 inline AtomVector* NameCollectionPool::acquireVector<AtomVector>(
-    FrontendContext* ec) {
+    FrontendContext* fc) {
   MOZ_ASSERT(hasActiveCompilation());
-  return atomVectorPool_.acquire<AtomVector>(ec);
+  return atomVectorPool_.acquire<AtomVector>(fc);
 }
 
 template <>
@@ -348,9 +348,9 @@ inline void NameCollectionPool::releaseVector<AtomVector>(AtomVector** vec) {
 
 template <>
 inline FunctionBoxVector* NameCollectionPool::acquireVector<FunctionBoxVector>(
-    FrontendContext* ec) {
+    FrontendContext* fc) {
   MOZ_ASSERT(hasActiveCompilation());
-  return functionBoxVectorPool_.acquire<FunctionBoxVector>(ec);
+  return functionBoxVectorPool_.acquire<FunctionBoxVector>(fc);
 }
 
 template <>
@@ -384,9 +384,9 @@ class PooledCollectionPtr {
  public:
   explicit PooledCollectionPtr(NameCollectionPool& pool) : pool_(pool) {}
 
-  bool acquire(FrontendContext* ec) {
+  bool acquire(FrontendContext* fc) {
     MOZ_ASSERT(!collection_);
-    collection_ = Impl<T>::acquireCollection(ec, pool_);
+    collection_ = Impl<T>::acquireCollection(fc, pool_);
     return !!collection_;
   }
 
@@ -405,8 +405,8 @@ template <typename Map>
 class PooledMapPtr : public PooledCollectionPtr<Map, PooledMapPtr> {
   friend class PooledCollectionPtr<Map, PooledMapPtr>;
 
-  static Map* acquireCollection(FrontendContext* ec, NameCollectionPool& pool) {
-    return pool.acquireMap<Map>(ec);
+  static Map* acquireCollection(FrontendContext* fc, NameCollectionPool& pool) {
+    return pool.acquireMap<Map>(fc);
   }
 
   static void releaseCollection(NameCollectionPool& pool, Map** ptr) {
@@ -425,9 +425,9 @@ template <typename Vector>
 class PooledVectorPtr : public PooledCollectionPtr<Vector, PooledVectorPtr> {
   friend class PooledCollectionPtr<Vector, PooledVectorPtr>;
 
-  static Vector* acquireCollection(FrontendContext* ec,
+  static Vector* acquireCollection(FrontendContext* fc,
                                    NameCollectionPool& pool) {
-    return pool.acquireVector<Vector>(ec);
+    return pool.acquireVector<Vector>(fc);
   }
 
   static void releaseCollection(NameCollectionPool& pool, Vector** ptr) {

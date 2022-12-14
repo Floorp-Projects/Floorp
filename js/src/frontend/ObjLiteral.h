@@ -274,19 +274,19 @@ struct ObjLiteralWriterBase {
   uint32_t curOffset() const { return code_.length(); }
 
  private:
-  [[nodiscard]] bool pushByte(FrontendContext* ec, uint8_t data) {
+  [[nodiscard]] bool pushByte(FrontendContext* fc, uint8_t data) {
     if (!code_.append(data)) {
-      js::ReportOutOfMemory(ec);
+      js::ReportOutOfMemory(fc);
       return false;
     }
     return true;
   }
 
-  [[nodiscard]] bool prepareBytes(FrontendContext* ec, size_t len,
+  [[nodiscard]] bool prepareBytes(FrontendContext* fc, size_t len,
                                   uint8_t** p) {
     size_t offset = code_.length();
     if (!code_.growByUninitialized(len)) {
-      js::ReportOutOfMemory(ec);
+      js::ReportOutOfMemory(fc);
       return false;
     }
     *p = &code_[offset];
@@ -294,9 +294,9 @@ struct ObjLiteralWriterBase {
   }
 
   template <typename T>
-  [[nodiscard]] bool pushRawData(FrontendContext* ec, T data) {
+  [[nodiscard]] bool pushRawData(FrontendContext* fc, T data) {
     uint8_t* p = nullptr;
-    if (!prepareBytes(ec, sizeof(T), &p)) {
+    if (!prepareBytes(fc, sizeof(T), &p)) {
       return false;
     }
     memcpy(p, &data, sizeof(T));
@@ -304,23 +304,23 @@ struct ObjLiteralWriterBase {
   }
 
  protected:
-  [[nodiscard]] bool pushOpAndName(FrontendContext* ec, ObjLiteralOpcode op,
+  [[nodiscard]] bool pushOpAndName(FrontendContext* fc, ObjLiteralOpcode op,
                                    ObjLiteralKey key) {
     uint8_t opdata = static_cast<uint8_t>(op);
     uint32_t data = key.rawIndex() | (key.isArrayIndex() ? INDEXED_PROP : 0);
-    return pushByte(ec, opdata) && pushRawData(ec, data);
+    return pushByte(fc, opdata) && pushRawData(fc, data);
   }
 
-  [[nodiscard]] bool pushValueArg(FrontendContext* ec, const JS::Value& value) {
+  [[nodiscard]] bool pushValueArg(FrontendContext* fc, const JS::Value& value) {
     MOZ_ASSERT(value.isNumber() || value.isNullOrUndefined() ||
                value.isBoolean());
     uint64_t data = value.asRawBits();
-    return pushRawData(ec, data);
+    return pushRawData(fc, data);
   }
 
-  [[nodiscard]] bool pushAtomArg(FrontendContext* ec,
+  [[nodiscard]] bool pushAtomArg(FrontendContext* fc,
                                  frontend::TaggedParserAtomIndex atomIndex) {
-    return pushRawData(ec, atomIndex.rawData());
+    return pushRawData(fc, atomIndex.rawData());
   }
 };
 
@@ -337,7 +337,7 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
 
   using CodeVector = typename ObjLiteralWriterBase::CodeVector;
 
-  bool checkForDuplicatedNames(FrontendContext* ec);
+  bool checkForDuplicatedNames(FrontendContext* fc);
   mozilla::Span<const uint8_t> getCode() const { return code_; }
   ObjLiteralKind getKind() const { return kind_; }
   ObjLiteralFlags getFlags() const { return flags_; }
@@ -408,41 +408,41 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
     nextKey_ = ObjLiteralKey::none();
   }
 
-  [[nodiscard]] bool propWithConstNumericValue(FrontendContext* ec,
+  [[nodiscard]] bool propWithConstNumericValue(FrontendContext* fc,
                                                const JS::Value& value) {
     MOZ_ASSERT(kind_ != ObjLiteralKind::Shape);
     propertyCount_++;
     MOZ_ASSERT(value.isNumber());
-    return pushOpAndName(ec, ObjLiteralOpcode::ConstValue, nextKey_) &&
-           pushValueArg(ec, value);
+    return pushOpAndName(fc, ObjLiteralOpcode::ConstValue, nextKey_) &&
+           pushValueArg(fc, value);
   }
   [[nodiscard]] bool propWithAtomValue(
-      FrontendContext* ec, frontend::ParserAtomsTable& parserAtoms,
+      FrontendContext* fc, frontend::ParserAtomsTable& parserAtoms,
       const frontend::TaggedParserAtomIndex value) {
     MOZ_ASSERT(kind_ != ObjLiteralKind::Shape);
     propertyCount_++;
     parserAtoms.markUsedByStencil(value, frontend::ParserAtom::Atomize::No);
-    return pushOpAndName(ec, ObjLiteralOpcode::ConstString, nextKey_) &&
-           pushAtomArg(ec, value);
+    return pushOpAndName(fc, ObjLiteralOpcode::ConstString, nextKey_) &&
+           pushAtomArg(fc, value);
   }
-  [[nodiscard]] bool propWithNullValue(FrontendContext* ec) {
+  [[nodiscard]] bool propWithNullValue(FrontendContext* fc) {
     MOZ_ASSERT(kind_ != ObjLiteralKind::Shape);
     propertyCount_++;
-    return pushOpAndName(ec, ObjLiteralOpcode::Null, nextKey_);
+    return pushOpAndName(fc, ObjLiteralOpcode::Null, nextKey_);
   }
-  [[nodiscard]] bool propWithUndefinedValue(FrontendContext* ec) {
+  [[nodiscard]] bool propWithUndefinedValue(FrontendContext* fc) {
     propertyCount_++;
-    return pushOpAndName(ec, ObjLiteralOpcode::Undefined, nextKey_);
+    return pushOpAndName(fc, ObjLiteralOpcode::Undefined, nextKey_);
   }
-  [[nodiscard]] bool propWithTrueValue(FrontendContext* ec) {
+  [[nodiscard]] bool propWithTrueValue(FrontendContext* fc) {
     MOZ_ASSERT(kind_ != ObjLiteralKind::Shape);
     propertyCount_++;
-    return pushOpAndName(ec, ObjLiteralOpcode::True, nextKey_);
+    return pushOpAndName(fc, ObjLiteralOpcode::True, nextKey_);
   }
-  [[nodiscard]] bool propWithFalseValue(FrontendContext* ec) {
+  [[nodiscard]] bool propWithFalseValue(FrontendContext* fc) {
     MOZ_ASSERT(kind_ != ObjLiteralKind::Shape);
     propertyCount_++;
-    return pushOpAndName(ec, ObjLiteralOpcode::False, nextKey_);
+    return pushOpAndName(fc, ObjLiteralOpcode::False, nextKey_);
   }
 
   static bool arrayIndexInRange(int32_t i) {

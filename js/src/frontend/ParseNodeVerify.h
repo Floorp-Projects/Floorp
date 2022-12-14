@@ -27,11 +27,11 @@ class ParseNode;
 // If the ParseNode is actually bad, we crash.
 
 #ifdef DEBUG
-[[nodiscard]] extern bool CheckParseTree(FrontendContext* ec,
+[[nodiscard]] extern bool CheckParseTree(FrontendContext* fc,
                                          JS::NativeStackLimit stackLimit,
                                          const LifoAlloc& alloc, ParseNode* pn);
 #else
-[[nodiscard]] inline bool CheckParseTree(FrontendContext* ec,
+[[nodiscard]] inline bool CheckParseTree(FrontendContext* fc,
                                          JS::NativeStackLimit stackLimit,
                                          const LifoAlloc& alloc,
                                          ParseNode* pn) {
@@ -39,7 +39,7 @@ class ParseNode;
 }
 #endif
 
-[[nodiscard]] inline bool CheckParseTree(FrontendContext* ec,
+[[nodiscard]] inline bool CheckParseTree(FrontendContext* fc,
                                          JS::NativeStackLimit stackLimit,
                                          const LifoAlloc& alloc,
                                          SyntaxParseHandler::Node pn) {

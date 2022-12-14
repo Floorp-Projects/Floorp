@@ -6396,8 +6396,8 @@ static bool CompileToStencil(JSContext* cx, uint32_t argc, Value* vp) {
     return false;
   }
 
-  AutoReportFrontendContext ec(cx);
-  if (!SetSourceOptions(cx, &ec, stencil->source, displayURL, sourceMapURL)) {
+  AutoReportFrontendContext fc(cx);
+  if (!SetSourceOptions(cx, &fc, stencil->source, displayURL, sourceMapURL)) {
     return false;
   }
 
@@ -6532,25 +6532,25 @@ static bool CompileToStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
   }
 
   /* Compile the script text to stencil. */
-  AutoReportFrontendContext ec(cx);
+  AutoReportFrontendContext fc(cx);
   frontend::NoScopeBindingCache scopeCache;
   Rooted<frontend::CompilationInput> input(cx,
                                            frontend::CompilationInput(options));
   UniquePtr<frontend::ExtensibleCompilationStencil> stencil;
   if (isModule) {
     stencil = frontend::ParseModuleToExtensibleStencil(
-        cx, &ec, cx->stackLimitForCurrentPrincipal(), input.get(), &scopeCache,
+        cx, &fc, cx->stackLimitForCurrentPrincipal(), input.get(), &scopeCache,
         srcBuf);
   } else {
     stencil = frontend::CompileGlobalScriptToExtensibleStencil(
-        cx, &ec, cx->stackLimitForCurrentPrincipal(), input.get(), &scopeCache,
+        cx, &fc, cx->stackLimitForCurrentPrincipal(), input.get(), &scopeCache,
         srcBuf, ScopeKind::Global);
   }
   if (!stencil) {
     return false;
   }
 
-  if (!SetSourceOptions(cx, &ec, stencil->source, displayURL, sourceMapURL)) {
+  if (!SetSourceOptions(cx, &fc, stencil->source, displayURL, sourceMapURL)) {
     return false;
   }
 
@@ -6613,10 +6613,10 @@ static bool EvalStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
   }
 
   /* Prepare the CompilationStencil for decoding. */
-  AutoReportFrontendContext ec(cx);
+  AutoReportFrontendContext fc(cx);
   Rooted<frontend::CompilationInput> input(cx,
                                            frontend::CompilationInput(options));
-  if (!input.get().initForGlobal(cx, &ec)) {
+  if (!input.get().initForGlobal(cx, &fc)) {
     return false;
   }
   frontend::CompilationStencil stencil(nullptr);
@@ -6624,18 +6624,18 @@ static bool EvalStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
   /* Deserialize the stencil from XDR. */
   JS::TranscodeRange xdrRange(xdrObj->buffer(), xdrObj->bufferLength());
   bool succeeded = false;
-  if (!stencil.deserializeStencils(cx, &ec, input.get(), xdrRange,
+  if (!stencil.deserializeStencils(cx, &fc, input.get(), xdrRange,
                                    &succeeded)) {
     return false;
   }
   if (!succeeded) {
-    ec.clearAutoReport();
+    fc.clearAutoReport();
     JS_ReportErrorASCII(cx, "Decoding failure");
     return false;
   }
 
   if (stencil.isModule()) {
-    ec.clearAutoReport();
+    fc.clearAutoReport();
     JS_ReportErrorASCII(cx,
                         "evalStencilXDR: Module stencil cannot be evaluated. "
                         "Use instantiateModuleStencilXDR instead");

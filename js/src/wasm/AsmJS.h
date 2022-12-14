@@ -65,14 +65,14 @@ using AsmJSParser = frontend::Parser<frontend::FullParseHandler, Unit>;
 // indeterminate amount and the entire function should be reparsed from the
 // beginning.
 
-[[nodiscard]] extern bool CompileAsmJS(JSContext* cx, FrontendContext* ec,
+[[nodiscard]] extern bool CompileAsmJS(JSContext* cx, FrontendContext* fc,
                                        JS::NativeStackLimit stackLimit,
                                        frontend::ParserAtomsTable& parserAtoms,
                                        AsmJSParser<mozilla::Utf8Unit>& parser,
                                        frontend::ParseNode* stmtList,
                                        bool* validated);
 
-[[nodiscard]] extern bool CompileAsmJS(JSContext* cx, FrontendContext* ec,
+[[nodiscard]] extern bool CompileAsmJS(JSContext* cx, FrontendContext* fc,
                                        JS::NativeStackLimit stackLimit,
                                        frontend::ParserAtomsTable& parserAtoms,
                                        AsmJSParser<char16_t>& parser,

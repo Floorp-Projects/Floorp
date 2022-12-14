@@ -287,7 +287,7 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
   const bool foldConstants_ : 1;
 
  protected:
-  FrontendContext* ec_;
+  FrontendContext* fc_;
   JS::NativeStackLimit stackLimit_;
 
 #if DEBUG
@@ -304,7 +304,7 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
 
  public:
   JSAtom* liftParserAtomToJSAtom(TaggedParserAtomIndex index) {
-    return parserAtoms().toJSAtom(cx_, ec_, index,
+    return parserAtoms().toJSAtom(cx_, fc_, index,
                                   compilationState_.input.atomCache);
   }
 
@@ -327,7 +327,7 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
   template <class, typename>
   friend class AutoInParametersOfAsyncFunction;
 
-  ParserBase(JSContext* cx, FrontendContext* ec,
+  ParserBase(JSContext* cx, FrontendContext* fc,
              JS::NativeStackLimit stackLimit,
              const JS::ReadOnlyCompileOptions& options, bool foldConstants,
              CompilationState& compilationState);
@@ -349,7 +349,7 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
  public:
   // Implement ErrorReportMixin.
 
-  FrontendContext* getContext() const override { return ec_; }
+  FrontendContext* getContext() const override { return fc_; }
 
   bool strictMode() const override { return pc_->sc()->strict(); }
 
@@ -477,7 +477,7 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   // NOTE: The argument ordering here is deliberately different from the
   //       public constructor so that typos calling the public constructor
   //       are less likely to select this overload.
-  PerHandlerParser(JSContext* cx, FrontendContext* ec,
+  PerHandlerParser(JSContext* cx, FrontendContext* fc,
                    JS::NativeStackLimit stackLimit,
                    const JS::ReadOnlyCompileOptions& options,
                    bool foldConstants, CompilationState& compilationState,
@@ -485,12 +485,12 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
 
  protected:
   template <typename Unit>
-  PerHandlerParser(JSContext* cx, FrontendContext* ec,
+  PerHandlerParser(JSContext* cx, FrontendContext* fc,
                    JS::NativeStackLimit stackLimit,
                    const JS::ReadOnlyCompileOptions& options,
                    bool foldConstants, CompilationState& compilationState,
                    GeneralParser<SyntaxParseHandler, Unit>* syntaxParser)
-      : PerHandlerParser(cx, ec, stackLimit, options, foldConstants,
+      : PerHandlerParser(cx, fc, stackLimit, options, foldConstants,
                          compilationState, static_cast<void*>(syntaxParser)) {}
 
   static typename ParseHandler::NullNode null() { return ParseHandler::null(); }
@@ -770,7 +770,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
  public:
   using Base::anyChars;
   using Base::cx_;
-  using Base::ec_;
+  using Base::fc_;
   using Base::handler_;
   using Base::noteUsedName;
   using Base::pc_;
@@ -934,7 +934,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   TokenStream tokenStream;
 
  public:
-  GeneralParser(JSContext* cx, FrontendContext* ec,
+  GeneralParser(JSContext* cx, FrontendContext* fc,
                 JS::NativeStackLimit stackLimit,
                 const JS::ReadOnlyCompileOptions& options, const Unit* units,
                 size_t length, bool foldConstants,
@@ -1726,7 +1726,7 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
 #endif
   using Base::checkForUndefinedPrivateFields;
   using Base::cx_;
-  using Base::ec_;
+  using Base::fc_;
   using Base::finishClassBodyScope;
   using Base::finishFunctionScopes;
   using Base::finishLexicalScope;
@@ -1925,40 +1925,40 @@ class MOZ_STACK_CLASS AutoInParametersOfAsyncFunction {
   }
 };
 
-GlobalScope::ParserData* NewEmptyGlobalScopeData(FrontendContext* ec,
+GlobalScope::ParserData* NewEmptyGlobalScopeData(FrontendContext* fc,
                                                  LifoAlloc& alloc,
                                                  uint32_t numBindings);
 
-VarScope::ParserData* NewEmptyVarScopeData(FrontendContext* ec,
+VarScope::ParserData* NewEmptyVarScopeData(FrontendContext* fc,
                                            LifoAlloc& alloc,
                                            uint32_t numBindings);
 
-LexicalScope::ParserData* NewEmptyLexicalScopeData(FrontendContext* ec,
+LexicalScope::ParserData* NewEmptyLexicalScopeData(FrontendContext* fc,
                                                    LifoAlloc& alloc,
                                                    uint32_t numBindings);
 
-FunctionScope::ParserData* NewEmptyFunctionScopeData(FrontendContext* ec,
+FunctionScope::ParserData* NewEmptyFunctionScopeData(FrontendContext* fc,
                                                      LifoAlloc& alloc,
                                                      uint32_t numBindings);
 
 mozilla::Maybe<GlobalScope::ParserData*> NewGlobalScopeData(
-    JSContext* cx, FrontendContext* ec, ParseContext::Scope& scope,
+    JSContext* cx, FrontendContext* fc, ParseContext::Scope& scope,
     LifoAlloc& alloc, ParseContext* pc);
 
 mozilla::Maybe<EvalScope::ParserData*> NewEvalScopeData(
-    JSContext* cx, FrontendContext* ec, ParseContext::Scope& scope,
+    JSContext* cx, FrontendContext* fc, ParseContext::Scope& scope,
     LifoAlloc& alloc, ParseContext* pc);
 
 mozilla::Maybe<FunctionScope::ParserData*> NewFunctionScopeData(
-    JSContext* cx, FrontendContext* ec, ParseContext::Scope& scope,
+    JSContext* cx, FrontendContext* fc, ParseContext::Scope& scope,
     bool hasParameterExprs, LifoAlloc& alloc, ParseContext* pc);
 
 mozilla::Maybe<VarScope::ParserData*> NewVarScopeData(
-    JSContext* cx, FrontendContext* ec, ParseContext::Scope& scope,
+    JSContext* cx, FrontendContext* fc, ParseContext::Scope& scope,
     LifoAlloc& alloc, ParseContext* pc);
 
 mozilla::Maybe<LexicalScope::ParserData*> NewLexicalScopeData(
-    JSContext* cx, FrontendContext* ec, ParseContext::Scope& scope,
+    JSContext* cx, FrontendContext* fc, ParseContext::Scope& scope,
     LifoAlloc& alloc, ParseContext* pc);
 
 bool FunctionScopeHasClosedOverBindings(ParseContext* pc);

@@ -35,13 +35,13 @@ namespace js {
 class FrontendContext;
 
 #ifdef __wasi__
-extern MOZ_COLD JS_PUBLIC_API void IncWasiRecursionDepth(JSContext* ec);
-extern MOZ_COLD JS_PUBLIC_API void DecWasiRecursionDepth(JSContext* ec);
-extern MOZ_COLD JS_PUBLIC_API bool CheckWasiRecursionLimit(JSContext* ec);
+extern MOZ_COLD JS_PUBLIC_API void IncWasiRecursionDepth(JSContext* cx);
+extern MOZ_COLD JS_PUBLIC_API void DecWasiRecursionDepth(JSContext* cx);
+extern MOZ_COLD JS_PUBLIC_API bool CheckWasiRecursionLimit(JSContext* cx);
 
-extern MOZ_COLD JS_PUBLIC_API void IncWasiRecursionDepth(FrontendContext* ec);
-extern MOZ_COLD JS_PUBLIC_API void DecWasiRecursionDepth(FrontendContext* ec);
-extern MOZ_COLD JS_PUBLIC_API bool CheckWasiRecursionLimit(FrontendContext* ec);
+extern MOZ_COLD JS_PUBLIC_API void IncWasiRecursionDepth(FrontendContext* fc);
+extern MOZ_COLD JS_PUBLIC_API void DecWasiRecursionDepth(FrontendContext* fc);
+extern MOZ_COLD JS_PUBLIC_API bool CheckWasiRecursionLimit(FrontendContext* fc);
 #endif  // __wasi__
 
 // AutoCheckRecursionLimit can be used to check whether we're close to using up
@@ -92,9 +92,9 @@ class MOZ_RAII AutoCheckRecursionLimit {
 #endif  // __wasi__
   }
 
-  explicit MOZ_ALWAYS_INLINE AutoCheckRecursionLimit(FrontendContext* ec)
+  explicit MOZ_ALWAYS_INLINE AutoCheckRecursionLimit(FrontendContext* fc)
 #ifdef __wasi__
-      : context_(mozilla::AsVariant(ec))
+      : context_(mozilla::AsVariant(fc))
 #endif  // __wasi__
   {
 #ifdef __wasi__
@@ -114,8 +114,8 @@ class MOZ_RAII AutoCheckRecursionLimit {
       JSContext* cx = context_.as<JSContext*>();
       IncWasiRecursionDepth(cx);
     } else {
-      FrontendContext* ec = context_.as<FrontendContext*>();
-      IncWasiRecursionDepth(ec);
+      FrontendContext* fc = context_.as<FrontendContext*>();
+      IncWasiRecursionDepth(fc);
     }
   }
 
@@ -124,8 +124,8 @@ class MOZ_RAII AutoCheckRecursionLimit {
       JSContext* cx = context_.as<JSContext*>();
       DecWasiRecursionDepth(cx);
     } else {
-      FrontendContext* ec = context_.as<FrontendContext*>();
-      DecWasiRecursionDepth(ec);
+      FrontendContext* fc = context_.as<FrontendContext*>();
+      DecWasiRecursionDepth(fc);
     }
   }
 
@@ -136,8 +136,8 @@ class MOZ_RAII AutoCheckRecursionLimit {
         return false;
       }
     } else {
-      FrontendContext* ec = context_.as<FrontendContext*>();
-      if (!CheckWasiRecursionLimit(ec)) {
+      FrontendContext* fc = context_.as<FrontendContext*>();
+      if (!CheckWasiRecursionLimit(fc)) {
         return false;
       }
     }
@@ -150,7 +150,7 @@ class MOZ_RAII AutoCheckRecursionLimit {
   void operator=(const AutoCheckRecursionLimit&) = delete;
 
   [[nodiscard]] MOZ_ALWAYS_INLINE bool check(JSContext* cx) const;
-  [[nodiscard]] MOZ_ALWAYS_INLINE bool check(FrontendContext* ec,
+  [[nodiscard]] MOZ_ALWAYS_INLINE bool check(FrontendContext* fc,
                                              JS::NativeStackLimit limit) const;
   [[nodiscard]] MOZ_ALWAYS_INLINE bool checkDontReport(JSContext* cx) const;
   [[nodiscard]] MOZ_ALWAYS_INLINE bool checkDontReport(
@@ -174,7 +174,7 @@ class MOZ_RAII AutoCheckRecursionLimit {
 };
 
 extern MOZ_COLD JS_PUBLIC_API void ReportOverRecursed(JSContext* maybecx);
-extern MOZ_COLD JS_PUBLIC_API void ReportOverRecursed(FrontendContext* ec);
+extern MOZ_COLD JS_PUBLIC_API void ReportOverRecursed(FrontendContext* fc);
 
 MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::checkLimitImpl(
     JS::NativeStackLimit limit, void* sp) const {
@@ -222,9 +222,9 @@ MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::check(JSContext* cx) const {
 }
 
 MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::check(
-    FrontendContext* ec, JS::NativeStackLimit limit) const {
+    FrontendContext* fc, JS::NativeStackLimit limit) const {
   if (MOZ_UNLIKELY(!checkDontReport(limit))) {
-    ReportOverRecursed(ec);
+    ReportOverRecursed(fc);
     return false;
   }
   return true;

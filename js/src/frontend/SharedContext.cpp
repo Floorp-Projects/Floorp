@@ -33,11 +33,11 @@ class ModuleBuilder;
 
 namespace frontend {
 
-SharedContext::SharedContext(JSContext* cx, FrontendContext* ec, Kind kind,
+SharedContext::SharedContext(JSContext* cx, FrontendContext* fc, Kind kind,
                              const JS::ReadOnlyCompileOptions& options,
                              Directives directives, SourceExtent extent)
     : cx_(cx),
-      ec_(ec),
+      fc_(fc),
       extent_(extent),
       allowNewTarget_(false),
       allowSuperProperty_(false),
@@ -77,10 +77,10 @@ SharedContext::SharedContext(JSContext* cx, FrontendContext* ec, Kind kind,
 }
 
 GlobalSharedContext::GlobalSharedContext(
-    JSContext* cx, FrontendContext* ec, ScopeKind scopeKind,
+    JSContext* cx, FrontendContext* fc, ScopeKind scopeKind,
     const JS::ReadOnlyCompileOptions& options, Directives directives,
     SourceExtent extent)
-    : SharedContext(cx, ec, Kind::Global, options, directives, extent),
+    : SharedContext(cx, fc, Kind::Global, options, directives, extent),
       scopeKind_(scopeKind),
       bindings(nullptr) {
   MOZ_ASSERT(scopeKind == ScopeKind::Global ||
@@ -88,10 +88,10 @@ GlobalSharedContext::GlobalSharedContext(
   MOZ_ASSERT(thisBinding_ == ThisBinding::Global);
 }
 
-EvalSharedContext::EvalSharedContext(JSContext* cx, FrontendContext* ec,
+EvalSharedContext::EvalSharedContext(JSContext* cx, FrontendContext* fc,
                                      CompilationState& compilationState,
                                      SourceExtent extent)
-    : SharedContext(cx, ec, Kind::Eval, compilationState.input.options,
+    : SharedContext(cx, fc, Kind::Eval, compilationState.input.options,
                     compilationState.directives, extent),
       bindings(nullptr) {
   // Eval inherits syntax and binding rules from enclosing environment.
@@ -104,22 +104,22 @@ EvalSharedContext::EvalSharedContext(JSContext* cx, FrontendContext* ec,
 }
 
 SuspendableContext::SuspendableContext(
-    JSContext* cx, FrontendContext* ec, Kind kind,
+    JSContext* cx, FrontendContext* fc, Kind kind,
     const JS::ReadOnlyCompileOptions& options, Directives directives,
     SourceExtent extent, bool isGenerator, bool isAsync)
-    : SharedContext(cx, ec, kind, options, directives, extent) {
+    : SharedContext(cx, fc, kind, options, directives, extent) {
   setFlag(ImmutableFlags::IsGenerator, isGenerator);
   setFlag(ImmutableFlags::IsAsync, isAsync);
 }
 
-FunctionBox::FunctionBox(JSContext* cx, FrontendContext* ec,
+FunctionBox::FunctionBox(JSContext* cx, FrontendContext* fc,
                          SourceExtent extent,
                          CompilationState& compilationState,
                          Directives directives, GeneratorKind generatorKind,
                          FunctionAsyncKind asyncKind, bool isInitialCompilation,
                          TaggedParserAtomIndex atom, FunctionFlags flags,
                          ScriptIndex index)
-    : SuspendableContext(cx, ec, Kind::FunctionBox,
+    : SuspendableContext(cx, fc, Kind::FunctionBox,
                          compilationState.input.options, directives, extent,
                          generatorKind == GeneratorKind::Generator,
                          asyncKind == FunctionAsyncKind::AsyncFunction),
@@ -291,17 +291,17 @@ bool FunctionBox::setAsmJSModule(const JS::WasmModule* module) {
   }
 
   if (!compilationState_.asmJS->moduleMap.putNew(index(), module)) {
-    js::ReportOutOfMemory(ec_);
+    js::ReportOutOfMemory(fc_);
     return false;
   }
   return true;
 }
 
 ModuleSharedContext::ModuleSharedContext(
-    JSContext* cx, FrontendContext* ec,
+    JSContext* cx, FrontendContext* fc,
     const JS::ReadOnlyCompileOptions& options, ModuleBuilder& builder,
     SourceExtent extent)
-    : SuspendableContext(cx, ec, Kind::Module, options, Directives(true),
+    : SuspendableContext(cx, fc, Kind::Module, options, Directives(true),
                          extent,
                          /* isGenerator = */ false,
                          /* isAsync = */ false),

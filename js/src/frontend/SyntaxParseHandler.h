@@ -175,7 +175,7 @@ class SyntaxParseHandler {
   }
 
  public:
-  SyntaxParseHandler(FrontendContext* ec, CompilationState& compilationState) {
+  SyntaxParseHandler(FrontendContext* fc, CompilationState& compilationState) {
     MOZ_ASSERT(!compilationState.input.isDelazifying());
   }
 

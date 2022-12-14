@@ -128,9 +128,9 @@ class UsedNameTracker {
     mozilla::Maybe<TokenPos> firstUsePos_;
 
    public:
-    explicit UsedNameInfo(FrontendContext* ec, NameVisibility visibility,
+    explicit UsedNameInfo(FrontendContext* fc, NameVisibility visibility,
                           mozilla::Maybe<TokenPos> position)
-        : uses_(ec), visibility_(visibility), firstUsePos_(position) {}
+        : uses_(fc), visibility_(visibility), firstUsePos_(position) {}
 
     UsedNameInfo(UsedNameInfo&& other) = default;
 
@@ -197,8 +197,8 @@ class UsedNameTracker {
   bool hasPrivateNames_;
 
  public:
-  explicit UsedNameTracker(FrontendContext* ec)
-      : map_(ec),
+  explicit UsedNameTracker(FrontendContext* fc)
+      : map_(fc),
         scriptCounter_(0),
         scopeCounter_(0),
         hasPrivateNames_(false) {}
@@ -219,14 +219,14 @@ class UsedNameTracker {
   }
 
   [[nodiscard]] bool noteUse(
-      FrontendContext* ec, TaggedParserAtomIndex name,
+      FrontendContext* fc, TaggedParserAtomIndex name,
       NameVisibility visibility, uint32_t scriptId, uint32_t scopeId,
       mozilla::Maybe<TokenPos> tokenPosition = mozilla::Nothing());
 
   // Fill maybeUnboundName with the first (source order) unbound name, or
   // Nothing() if there are no unbound names.
   [[nodiscard]] bool hasUnboundPrivateNames(
-      FrontendContext* ec,
+      FrontendContext* fc,
       mozilla::Maybe<UnboundPrivateName>& maybeUnboundName);
 
   // Return a list of unbound private names, sorted by increasing location in

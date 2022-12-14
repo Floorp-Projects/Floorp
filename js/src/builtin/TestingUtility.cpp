@@ -174,7 +174,7 @@ bool js::ParseSourceOptions(JSContext* cx, JS::Handle<JSObject*> opts,
   return true;
 }
 
-bool js::SetSourceOptions(JSContext* cx, FrontendContext* ec,
+bool js::SetSourceOptions(JSContext* cx, FrontendContext* fc,
                           ScriptSource* source,
                           JS::Handle<JSString*> displayURL,
                           JS::Handle<JSString*> sourceMapURL) {
@@ -183,7 +183,7 @@ bool js::SetSourceOptions(JSContext* cx, FrontendContext* ec,
     if (!chars) {
       return false;
     }
-    if (!source->setDisplayURL(cx, ec, std::move(chars))) {
+    if (!source->setDisplayURL(cx, fc, std::move(chars))) {
       return false;
     }
   }
@@ -192,7 +192,7 @@ bool js::SetSourceOptions(JSContext* cx, FrontendContext* ec,
     if (!chars) {
       return false;
     }
-    if (!source->setSourceMapURL(ec, std::move(chars))) {
+    if (!source->setSourceMapURL(fc, std::move(chars))) {
       return false;
     }
   }

@@ -680,9 +680,9 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
     V8HandleString wrappedPattern(v8::internal::String(pattern), cx->isolate);
     if (!RegExpParser::ParseRegExpFromHeapString(
             cx->isolate, &zone, wrappedPattern, flags, &data)) {
-      AutoReportFrontendContext ec(cx);
+      AutoReportFrontendContext fc(cx);
       JS::CompileOptions options(cx);
-      DummyTokenStream dummyTokenStream(cx, &ec, options);
+      DummyTokenStream dummyTokenStream(cx, &fc, options);
       ReportSyntaxError(dummyTokenStream, data, pattern);
       return false;
     }

@@ -90,12 +90,12 @@ extern void CallWarningReporter(JSContext* cx, JSErrorReport* report);
  * Report a compile error during script processing prior to execution of the
  * script.
  */
-extern void ReportCompileErrorLatin1(FrontendContext* ec,
+extern void ReportCompileErrorLatin1(FrontendContext* fc,
                                      ErrorMetadata&& metadata,
                                      UniquePtr<JSErrorNotes> notes,
                                      unsigned errorNumber, va_list* args);
 
-extern void ReportCompileErrorUTF8(FrontendContext* ec,
+extern void ReportCompileErrorUTF8(FrontendContext* fc,
                                    ErrorMetadata&& metadata,
                                    UniquePtr<JSErrorNotes> notes,
                                    unsigned errorNumber, va_list* args);
@@ -105,7 +105,7 @@ extern void ReportCompileErrorUTF8(FrontendContext* ec,
  * script.  Returns true if the warning was successfully reported, false if an
  * error occurred.
  */
-[[nodiscard]] extern bool ReportCompileWarning(FrontendContext* ec,
+[[nodiscard]] extern bool ReportCompileWarning(FrontendContext* fc,
                                                ErrorMetadata&& metadata,
                                                UniquePtr<JSErrorNotes> notes,
                                                unsigned errorNumber,
@@ -147,14 +147,14 @@ extern bool ReportErrorNumberUTF8Array(JSContext* cx, IsWarning isWarning,
                                        const unsigned errorNumber,
                                        const char** args);
 
-extern bool ExpandErrorArgumentsVA(FrontendContext* ec,
+extern bool ExpandErrorArgumentsVA(FrontendContext* fc,
                                    JSErrorCallback callback, void* userRef,
                                    const unsigned errorNumber,
                                    const char16_t** messageArgs,
                                    ErrorArgumentsType argumentsType,
                                    JSErrorReport* reportp, va_list ap);
 
-extern bool ExpandErrorArgumentsVA(FrontendContext* ec,
+extern bool ExpandErrorArgumentsVA(FrontendContext* fc,
                                    JSErrorCallback callback, void* userRef,
                                    const unsigned errorNumber,
                                    const char** messageArgs,
@@ -164,13 +164,13 @@ extern bool ExpandErrorArgumentsVA(FrontendContext* ec,
 /*
  * For cases when we do not have an arguments array.
  */
-extern bool ExpandErrorArgumentsVA(FrontendContext* ec,
+extern bool ExpandErrorArgumentsVA(FrontendContext* fc,
                                    JSErrorCallback callback, void* userRef,
                                    const unsigned errorNumber,
                                    ErrorArgumentsType argumentsType,
                                    JSErrorReport* reportp, va_list ap);
 
-extern bool ExpandErrorArgumentsVA(FrontendContext* ec,
+extern bool ExpandErrorArgumentsVA(FrontendContext* fc,
                                    JSErrorCallback callback, void* userRef,
                                    const unsigned errorNumber,
                                    const char16_t** messageArgs,

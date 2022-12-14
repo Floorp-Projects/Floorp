@@ -159,14 +159,14 @@ void CGScopeNoteList::recordEndImpl(uint32_t index, uint32_t offset) {
   list[index].length = offset - list[index].start;
 }
 
-BytecodeSection::BytecodeSection(FrontendContext* ec, uint32_t lineNum,
+BytecodeSection::BytecodeSection(FrontendContext* fc, uint32_t lineNum,
                                  uint32_t column)
-    : code_(ec),
-      notes_(ec),
+    : code_(fc),
+      notes_(fc),
       lastNoteOffset_(0),
-      tryNoteList_(ec),
-      scopeNoteList_(ec),
-      resumeOffsetList_(ec),
+      tryNoteList_(fc),
+      scopeNoteList_(fc),
+      resumeOffsetList_(fc),
       currentLine_(lineNum),
       lastColumn_(column) {}
 
@@ -185,10 +185,10 @@ void BytecodeSection::updateDepth(BytecodeOffset target) {
   }
 }
 
-PerScriptData::PerScriptData(FrontendContext* ec, NameCollectionPool& ncp,
+PerScriptData::PerScriptData(FrontendContext* fc, NameCollectionPool& ncp,
                              frontend::CompilationState& compilationState)
-    : gcThingList_(ec, compilationState), atomIndices_(ncp) {}
+    : gcThingList_(fc, compilationState), atomIndices_(ncp) {}
 
-bool PerScriptData::init(FrontendContext* ec) {
-  return atomIndices_.acquire(ec);
+bool PerScriptData::init(FrontendContext* fc) {
+  return atomIndices_.acquire(fc);
 }

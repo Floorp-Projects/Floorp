@@ -1276,20 +1276,20 @@ bool ModuleObject::createEnvironment(JSContext* cx,
 ///////////////////////////////////////////////////////////////////////////
 // ModuleBuilder
 
-ModuleBuilder::ModuleBuilder(JSContext* cx, FrontendContext* ec,
+ModuleBuilder::ModuleBuilder(JSContext* cx, FrontendContext* fc,
                              const frontend::EitherParser& eitherParser)
     : cx_(cx),
-      ec_(ec),
+      fc_(fc),
       eitherParser_(eitherParser),
-      requestedModuleSpecifiers_(ec),
-      importEntries_(ec),
-      exportEntries_(ec),
-      exportNames_(ec) {}
+      requestedModuleSpecifiers_(fc),
+      importEntries_(fc),
+      exportEntries_(fc),
+      exportNames_(fc) {}
 
-bool ModuleBuilder::noteFunctionDeclaration(FrontendContext* ec,
+bool ModuleBuilder::noteFunctionDeclaration(FrontendContext* fc,
                                             uint32_t funIndex) {
   if (!functionDecls_.emplaceBack(funIndex)) {
-    js::ReportOutOfMemory(ec);
+    js::ReportOutOfMemory(fc);
     return false;
   }
   return true;
@@ -1308,7 +1308,7 @@ bool ModuleBuilder::buildTables(frontend::StencilModuleMetadata& metadata) {
 
   // Step 5.
   if (!metadata.importEntries.reserve(importEntries_.count())) {
-    js::ReportOutOfMemory(ec_);
+    js::ReportOutOfMemory(fc_);
     return false;
   }
   for (auto r = importEntries_.all(); !r.empty(); r.popFront()) {
@@ -1322,13 +1322,13 @@ bool ModuleBuilder::buildTables(frontend::StencilModuleMetadata& metadata) {
       frontend::StencilModuleEntry* importEntry = importEntryFor(exp.localName);
       if (!importEntry) {
         if (!metadata.localExportEntries.append(exp)) {
-          js::ReportOutOfMemory(ec_);
+          js::ReportOutOfMemory(fc_);
           return false;
         }
       } else {
         if (!importEntry->importName) {
           if (!metadata.localExportEntries.append(exp)) {
-            js::ReportOutOfMemory(ec_);
+            js::ReportOutOfMemory(fc_);
             return false;
           }
         } else {
@@ -1337,19 +1337,19 @@ bool ModuleBuilder::buildTables(frontend::StencilModuleMetadata& metadata) {
               importEntry->specifier, importEntry->importName, exp.exportName,
               exp.lineno, exp.column);
           if (!metadata.indirectExportEntries.append(entry)) {
-            js::ReportOutOfMemory(ec_);
+            js::ReportOutOfMemory(fc_);
             return false;
           }
         }
       }
     } else if (!exp.importName && !exp.exportName) {
       if (!metadata.starExportEntries.append(exp)) {
-        js::ReportOutOfMemory(ec_);
+        js::ReportOutOfMemory(fc_);
         return false;
       }
     } else {
       if (!metadata.indirectExportEntries.append(exp)) {
-        js::ReportOutOfMemory(ec_);
+        js::ReportOutOfMemory(fc_);
         return false;
       }
     }
@@ -1516,7 +1516,7 @@ bool CreateRequestedModulesFromStencil(
 
 // Use StencilModuleMetadata data to fill in ModuleObject
 bool frontend::StencilModuleMetadata::initModule(
-    JSContext* cx, FrontendContext* ec,
+    JSContext* cx, FrontendContext* fc,
     frontend::CompilationAtomCache& atomCache,
     JS::Handle<ModuleObject*> module) const {
   Rooted<RequestedModuleVector> requestedModulesVector(cx);
@@ -1552,7 +1552,7 @@ bool frontend::StencilModuleMetadata::initModule(
   // Copy the vector of declarations to the ModuleObject.
   auto functionDeclsCopy = MakeUnique<FunctionDeclarationVector>();
   if (!functionDeclsCopy || !functionDeclsCopy->appendAll(functionDecls)) {
-    js::ReportOutOfMemory(ec);
+    js::ReportOutOfMemory(fc);
     return false;
   }
   module->initFunctionDeclarations(std::move(functionDeclsCopy));
@@ -1623,7 +1623,7 @@ bool ModuleBuilder::processAssertions(frontend::StencilModuleEntry& entry,
 
         StencilModuleAssertion assertionStencil(key, value);
         if (!entry.assertions.append(assertionStencil)) {
-          js::ReportOutOfMemory(ec_);
+          js::ReportOutOfMemory(fc_);
           return false;
         }
       }
@@ -2006,7 +2006,7 @@ bool ModuleBuilder::maybeAppendRequestedModule(
   }
 
   if (!requestedModules_.append(entry)) {
-    js::ReportOutOfMemory(ec_);
+    js::ReportOutOfMemory(fc_);
     return false;
   }
 

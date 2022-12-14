@@ -166,7 +166,7 @@ class RegExpStencil {
   // This is used by `Reflect.parse` when we need the RegExpObject but are not
   // doing a complete instantiation of the CompilationStencil.
   RegExpObject* createRegExpAndEnsureAtom(
-      JSContext* cx, FrontendContext* ec, ParserAtomsTable& parserAtoms,
+      JSContext* cx, FrontendContext* fc, ParserAtomsTable& parserAtoms,
       CompilationAtomCache& atomCache) const;
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
@@ -189,7 +189,7 @@ class BigIntStencil {
  public:
   BigIntStencil() = default;
 
-  [[nodiscard]] bool init(FrontendContext* ec, LifoAlloc& alloc,
+  [[nodiscard]] bool init(FrontendContext* fc, LifoAlloc& alloc,
                           const mozilla::Span<const char16_t> buf);
 
   BigInt* createBigInt(JSContext* cx) const;
@@ -278,54 +278,54 @@ class ScopeStencil {
   // Create ScopeStencil with `args`, and append ScopeStencil and `data` to
   // `compilationState`, and return the index of them as `indexOut`.
   template <typename... Args>
-  static bool appendScopeStencilAndData(FrontendContext* ec,
+  static bool appendScopeStencilAndData(FrontendContext* fc,
                                         CompilationState& compilationState,
                                         BaseParserScopeData* data,
                                         ScopeIndex* indexOut, Args&&... args);
 
  public:
   static bool createForFunctionScope(
-      FrontendContext* ec, CompilationState& compilationState,
+      FrontendContext* fc, CompilationState& compilationState,
       FunctionScope::ParserData* dataArg, bool hasParameterExprs,
       bool needsEnvironment, ScriptIndex functionIndex, bool isArrow,
       mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index);
 
   static bool createForLexicalScope(
-      FrontendContext* ec, CompilationState& compilationState, ScopeKind kind,
+      FrontendContext* fc, CompilationState& compilationState, ScopeKind kind,
       LexicalScope::ParserData* dataArg, uint32_t firstFrameSlot,
       mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index);
 
   static bool createForClassBodyScope(
-      FrontendContext* ec, CompilationState& compilationState, ScopeKind kind,
+      FrontendContext* fc, CompilationState& compilationState, ScopeKind kind,
       ClassBodyScope::ParserData* dataArg, uint32_t firstFrameSlot,
       mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index);
 
-  static bool createForVarScope(FrontendContext* ec,
+  static bool createForVarScope(FrontendContext* fc,
                                 CompilationState& compilationState,
                                 ScopeKind kind, VarScope::ParserData* dataArg,
                                 uint32_t firstFrameSlot, bool needsEnvironment,
                                 mozilla::Maybe<ScopeIndex> enclosing,
                                 ScopeIndex* index);
 
-  static bool createForGlobalScope(FrontendContext* ec,
+  static bool createForGlobalScope(FrontendContext* fc,
                                    CompilationState& compilationState,
                                    ScopeKind kind,
                                    GlobalScope::ParserData* dataArg,
                                    ScopeIndex* index);
 
-  static bool createForEvalScope(FrontendContext* ec,
+  static bool createForEvalScope(FrontendContext* fc,
                                  CompilationState& compilationState,
                                  ScopeKind kind, EvalScope::ParserData* dataArg,
                                  mozilla::Maybe<ScopeIndex> enclosing,
                                  ScopeIndex* index);
 
-  static bool createForModuleScope(FrontendContext* ec,
+  static bool createForModuleScope(FrontendContext* fc,
                                    CompilationState& compilationState,
                                    ModuleScope::ParserData* dataArg,
                                    mozilla::Maybe<ScopeIndex> enclosing,
                                    ScopeIndex* index);
 
-  static bool createForWithScope(FrontendContext* ec,
+  static bool createForWithScope(FrontendContext* fc,
                                  CompilationState& compilationState,
                                  mozilla::Maybe<ScopeIndex> enclosing,
                                  ScopeIndex* index);
@@ -626,7 +626,7 @@ class StencilModuleMetadata
 
   StencilModuleMetadata() = default;
 
-  bool initModule(JSContext* cx, FrontendContext* ec,
+  bool initModule(JSContext* cx, FrontendContext* fc,
                   CompilationAtomCache& atomCache,
                   JS::Handle<ModuleObject*> module) const;
 

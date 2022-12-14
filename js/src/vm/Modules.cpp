@@ -116,8 +116,8 @@ static JSObject* CompileModuleHelper(JSContext* cx,
 
   JS::Rooted<JSObject*> mod(cx);
   {
-    AutoReportFrontendContext ec(cx);
-    mod = frontend::CompileModule(cx, &ec, cx->stackLimitForCurrentPrincipal(),
+    AutoReportFrontendContext fc(cx);
+    mod = frontend::CompileModule(cx, &fc, cx->stackLimitForCurrentPrincipal(),
                                   options, srcBuf);
   }
   return mod;

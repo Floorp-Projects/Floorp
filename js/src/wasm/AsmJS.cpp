@@ -1365,7 +1365,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
 
  protected:
   JSContext* cx_;
-  FrontendContext* ec_;
+  FrontendContext* fc_;
   JS::NativeStackLimit stackLimit_;
   ParserAtomsTable& parserAtoms_;
   FunctionNode* moduleFunctionNode_;
@@ -1396,24 +1396,24 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
   bool errorOverRecursed_ = false;
 
  protected:
-  ModuleValidatorShared(JSContext* cx, FrontendContext* ec,
+  ModuleValidatorShared(JSContext* cx, FrontendContext* fc,
                         JS::NativeStackLimit stackLimit,
                         ParserAtomsTable& parserAtoms,
                         FunctionNode* moduleFunctionNode)
       : cx_(cx),
-        ec_(ec),
+        fc_(fc),
         stackLimit_(stackLimit),
         parserAtoms_(parserAtoms),
         moduleFunctionNode_(moduleFunctionNode),
         moduleFunctionName_(FunctionName(moduleFunctionNode)),
-        standardLibraryMathNames_(ec),
+        standardLibraryMathNames_(fc),
         validationLifo_(VALIDATION_LIFO_DEFAULT_CHUNK_SIZE),
-        funcDefs_(ec),
-        tables_(ec),
-        globalMap_(ec),
-        sigSet_(ec),
-        funcImportMap_(ec),
-        arrayViews_(ec),
+        funcDefs_(fc),
+        tables_(fc),
+        globalMap_(fc),
+        sigSet_(fc),
+        funcImportMap_(fc),
+        arrayViews_(fc),
         compilerEnv_(CompileMode::Once, Tier::Optimized, DebugEnabled::False),
         moduleEnv_(FeatureArgs(), ModuleKind::AsmJS) {
     compilerEnv_.computeParameters();
@@ -1442,7 +1442,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
 
     auto AddMathFunction = [this](const char* name,
                                   AsmJSMathBuiltinFunction func) {
-      auto atom = parserAtoms_.internAscii(ec_, name, strlen(name));
+      auto atom = parserAtoms_.internAscii(fc_, name, strlen(name));
       if (!atom) {
         return false;
       }
@@ -1471,7 +1471,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
     };
 
     auto AddMathConstant = [this](const char* name, double cst) {
-      auto atom = parserAtoms_.internAscii(ec_, name, strlen(name));
+      auto atom = parserAtoms_.internAscii(fc_, name, strlen(name));
       if (!atom) {
         return false;
       }
@@ -1489,7 +1489,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
   }
 
  public:
-  FrontendContext* ec() const { return ec_; }
+  FrontendContext* fc() const { return fc_; }
   JS::NativeStackLimit stackLimit() const { return stackLimit_; }
   TaggedParserAtomIndex moduleFunctionName() const {
     return moduleFunctionName_;
@@ -1915,11 +1915,11 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
   AsmJSParser<Unit>& parser_;
 
  public:
-  ModuleValidator(JSContext* cx, FrontendContext* ec,
+  ModuleValidator(JSContext* cx, FrontendContext* fc,
                   JS::NativeStackLimit stackLimit,
                   ParserAtomsTable& parserAtoms, AsmJSParser<Unit>& parser,
                   FunctionNode* moduleFunctionNode)
-      : ModuleValidatorShared(cx, ec, stackLimit, parserAtoms,
+      : ModuleValidatorShared(cx, fc, stackLimit, parserAtoms,
                               moduleFunctionNode),
         parser_(parser) {}
 
@@ -1965,7 +1965,7 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
     ErrorMetadata metadata;
     if (ts.computeErrorMetadata(&metadata, AsVariant(offset))) {
       if (ts.anyCharsAccess().options().throwOnAsmJSValidationFailureOption) {
-        ReportCompileErrorLatin1(ec_, std::move(metadata), nullptr,
+        ReportCompileErrorLatin1(fc_, std::move(metadata), nullptr,
                                  JSMSG_USE_ASM_TYPE_FAIL, &args);
       } else {
         // asm.js type failure is indicated by calling one of the fail*
@@ -2429,27 +2429,27 @@ class MOZ_STACK_CLASS FunctionValidatorShared {
 
  private:
   FunctionValidatorShared(ModuleValidatorShared& m, FunctionNode* fn,
-                          FrontendContext* ec)
+                          FrontendContext* fc)
       : m_(m),
         fn_(fn),
         encoder_(bytes_),
-        locals_(ec),
-        breakLabels_(ec),
-        continueLabels_(ec),
+        locals_(fc),
+        breakLabels_(fc),
+        continueLabels_(fc),
         blockDepth_(0),
         hasAlreadyReturned_(false) {}
 
  protected:
   template <typename Unit>
   FunctionValidatorShared(ModuleValidator<Unit>& m, FunctionNode* fn,
-                          FrontendContext* ec)
+                          FrontendContext* fc)
       : FunctionValidatorShared(static_cast<ModuleValidatorShared&>(m), fn,
-                                ec) {}
+                                fc) {}
 
  public:
   ModuleValidatorShared& m() const { return m_; }
 
-  FrontendContext* ec() const { return m_.ec(); }
+  FrontendContext* fc() const { return m_.fc(); }
   JS::NativeStackLimit stackLimit() const { return m_.stackLimit(); }
   FunctionNode* fn() const { return fn_; }
 
@@ -2681,7 +2681,7 @@ template <typename Unit>
 class MOZ_STACK_CLASS FunctionValidator : public FunctionValidatorShared {
  public:
   FunctionValidator(ModuleValidator<Unit>& m, FunctionNode* fn)
-      : FunctionValidatorShared(m, fn, m.ec()) {}
+      : FunctionValidatorShared(m, fn, m.fc()) {}
 
  public:
   ModuleValidator<Unit>& m() const {
@@ -3375,7 +3375,7 @@ static bool CheckVariables(FunctionValidatorShared& f, ParseNode** stmtIter) {
   uint32_t firstVar = f.numLocals();
 
   ValTypeVector types;
-  Vector<NumLit> inits(f.ec());
+  Vector<NumLit> inits(f.fc());
 
   for (; stmt && stmt->isKind(ParseNodeKind::VarStmt);
        stmt = NextNonEmptyStatement(stmt)) {
@@ -4569,7 +4569,7 @@ static bool CheckCoercedCall(FunctionValidator<Unit>& f, ParseNode* call,
                              Type ret, Type* type) {
   MOZ_ASSERT(ret.isCanonical());
 
-  AutoCheckRecursionLimit recursion(f.ec());
+  AutoCheckRecursionLimit recursion(f.fc());
   if (!recursion.checkDontReport(f.stackLimit())) {
     return f.m().failOverRecursed();
   }
@@ -4902,7 +4902,7 @@ static bool CheckMultiply(FunctionValidator<Unit>& f, ParseNode* star,
 template <typename Unit>
 static bool CheckAddOrSub(FunctionValidator<Unit>& f, ParseNode* expr,
                           Type* type, unsigned* numAddOrSubOut = nullptr) {
-  AutoCheckRecursionLimit recursion(f.ec());
+  AutoCheckRecursionLimit recursion(f.fc());
   if (!recursion.checkDontReport(f.stackLimit())) {
     return f.m().failOverRecursed();
   }
@@ -5285,7 +5285,7 @@ static bool CheckBitwise(FunctionValidator<Unit>& f, ParseNode* bitwise,
 
 template <typename Unit>
 static bool CheckExpr(FunctionValidator<Unit>& f, ParseNode* expr, Type* type) {
-  AutoCheckRecursionLimit recursion(f.ec());
+  AutoCheckRecursionLimit recursion(f.fc());
   if (!recursion.checkDontReport(f.stackLimit())) {
     return f.m().failOverRecursed();
   }
@@ -6020,7 +6020,7 @@ static bool CheckBreakOrContinue(FunctionValidatorShared& f, bool isBreak,
 
 template <typename Unit>
 static bool CheckStatement(FunctionValidator<Unit>& f, ParseNode* stmt) {
-  AutoCheckRecursionLimit recursion(f.ec());
+  AutoCheckRecursionLimit recursion(f.fc());
   if (!recursion.checkDontReport(f.stackLimit())) {
     return f.m().failOverRecursed();
   }
@@ -6436,7 +6436,7 @@ static bool CheckModuleEnd(ModuleValidator<Unit>& m) {
 }
 
 template <typename Unit>
-static SharedModule CheckModule(JSContext* cx, FrontendContext* ec,
+static SharedModule CheckModule(JSContext* cx, FrontendContext* fc,
                                 JS::NativeStackLimit stackLimit,
                                 ParserAtomsTable& parserAtoms,
                                 AsmJSParser<Unit>& parser, ParseNode* stmtList,
@@ -6445,7 +6445,7 @@ static SharedModule CheckModule(JSContext* cx, FrontendContext* ec,
 
   FunctionNode* moduleFunctionNode = parser.pc_->functionBox()->functionNode;
 
-  ModuleValidator<Unit> m(cx, ec, stackLimit, parserAtoms, parser,
+  ModuleValidator<Unit> m(cx, fc, stackLimit, parserAtoms, parser,
                           moduleFunctionNode);
   if (!m.init()) {
     return nullptr;
@@ -7066,7 +7066,7 @@ bool js::InstantiateAsmJS(JSContext* cx, unsigned argc, JS::Value* vp) {
 /*****************************************************************************/
 // Top-level js::CompileAsmJS
 
-static bool NoExceptionPending(FrontendContext* ec) { return !ec->hadErrors(); }
+static bool NoExceptionPending(FrontendContext* fc) { return !fc->hadErrors(); }
 
 static bool SuccessfulValidation(frontend::ParserBase& parser,
                                  unsigned compilationTime) {
@@ -7146,7 +7146,7 @@ static bool EstablishPreconditions(JSContext* cx,
 }
 
 template <typename Unit>
-static bool DoCompileAsmJS(JSContext* cx, FrontendContext* ec,
+static bool DoCompileAsmJS(JSContext* cx, FrontendContext* fc,
                            JS::NativeStackLimit stackLimit,
                            ParserAtomsTable& parserAtoms,
                            AsmJSParser<Unit>& parser, ParseNode* stmtList,
@@ -7155,16 +7155,16 @@ static bool DoCompileAsmJS(JSContext* cx, FrontendContext* ec,
 
   // Various conditions disable asm.js optimizations.
   if (!EstablishPreconditions(cx, parser)) {
-    return NoExceptionPending(ec);
+    return NoExceptionPending(fc);
   }
 
   // "Checking" parses, validates and compiles, producing a fully compiled
   // WasmModuleObject as result.
   unsigned time;
   SharedModule module =
-      CheckModule(cx, ec, stackLimit, parserAtoms, parser, stmtList, &time);
+      CheckModule(cx, fc, stackLimit, parserAtoms, parser, stmtList, &time);
   if (!module) {
-    return NoExceptionPending(ec);
+    return NoExceptionPending(fc);
   }
 
   // Finished! Save the ref-counted module on the FunctionBox. When JSFunctions
@@ -7172,31 +7172,31 @@ static bool DoCompileAsmJS(JSContext* cx, FrontendContext* ec,
   FunctionBox* funbox = parser.pc_->functionBox();
   MOZ_ASSERT(funbox->isInterpreted());
   if (!funbox->setAsmJSModule(module)) {
-    return NoExceptionPending(ec);
+    return NoExceptionPending(fc);
   }
 
   // Success! Write to the console with a "warning" message indicating
   // total compilation time.
   *validated = true;
   SuccessfulValidation(parser, time);
-  return NoExceptionPending(ec);
+  return NoExceptionPending(fc);
 }
 
-bool js::CompileAsmJS(JSContext* cx, FrontendContext* ec,
+bool js::CompileAsmJS(JSContext* cx, FrontendContext* fc,
                       JS::NativeStackLimit stackLimit,
                       ParserAtomsTable& parserAtoms,
                       AsmJSParser<char16_t>& parser, ParseNode* stmtList,
                       bool* validated) {
-  return DoCompileAsmJS(cx, ec, stackLimit, parserAtoms, parser, stmtList,
+  return DoCompileAsmJS(cx, fc, stackLimit, parserAtoms, parser, stmtList,
                         validated);
 }
 
-bool js::CompileAsmJS(JSContext* cx, FrontendContext* ec,
+bool js::CompileAsmJS(JSContext* cx, FrontendContext* fc,
                       JS::NativeStackLimit stackLimit,
                       ParserAtomsTable& parserAtoms,
                       AsmJSParser<Utf8Unit>& parser, ParseNode* stmtList,
                       bool* validated) {
-  return DoCompileAsmJS(cx, ec, stackLimit, parserAtoms, parser, stmtList,
+  return DoCompileAsmJS(cx, fc, stackLimit, parserAtoms, parser, stmtList,
                         validated);
 }
 
