@@ -17,16 +17,7 @@
         { customFormatHeaderAndBody: "body" },
       ];
 
-      globalThis.formatted = 0;
-
       window.devtoolsFormatters = [
-        {
-          // this header shouldn't execute as it has side-effects.
-          header: obj => {
-            globalThis.formatted = globalThis.formatted + 1;
-            return ["span", {}, "SHOULD NOT HAPPEN"];
-          },
-        },
         {
           header: obj => {
             if (obj.hasOwnProperty("customFormatHeader")) {
@@ -49,6 +40,6 @@
       ];
 
       variables.forEach(variable => console.log(variable));
-      </script>
+    </script>
   </body>
 </html>
