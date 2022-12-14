@@ -32,12 +32,12 @@ struct FrontendErrors {
   }
 };
 
-class ErrorAllocator : public MallocProvider<ErrorAllocator> {
+class FrontendAllocator : public MallocProvider<FrontendAllocator> {
  private:
   ErrorContext* const context_;
 
  public:
-  explicit ErrorAllocator(ErrorContext* ec) : context_(ec) {}
+  explicit FrontendAllocator(ErrorContext* ec) : context_(ec) {}
 
   void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
                       size_t nbytes, void* reallocPtr = nullptr);
@@ -45,19 +45,19 @@ class ErrorAllocator : public MallocProvider<ErrorAllocator> {
 };
 
 class ErrorContext {
-  ErrorAllocator alloc_;
+  FrontendAllocator alloc_;
 
  public:
   explicit ErrorContext() : alloc_(this) {}
   virtual ~ErrorContext() = default;
 
-  ErrorAllocator* getAllocator() { return &alloc_; }
+  FrontendAllocator* getAllocator() { return &alloc_; }
 
   // Report CompileErrors
   virtual void reportError(js::CompileError&& err) = 0;
   virtual bool reportWarning(js::CompileError&& err) = 0;
 
-  // Report ErrorAllocator errors
+  // Report FrontendAllocator errors
   virtual void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
                               size_t nbytes, void* reallocPtr = nullptr) = 0;
   virtual void onAllocationOverflow() = 0;
@@ -114,7 +114,7 @@ class OffThreadErrorContext : public ErrorContext {
   void reportError(js::CompileError&& err) override;
   bool reportWarning(js::CompileError&& err) override;
 
-  // Report ErrorAllocator errors
+  // Report FrontendAllocator errors
   void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
                       size_t nbytes, void* reallocPtr = nullptr) override;
   void onAllocationOverflow() override;
