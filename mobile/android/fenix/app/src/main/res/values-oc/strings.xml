@@ -64,10 +64,14 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">Apondre un acorchi per dobrir d’onglets privats de l’ecran d’acuèlh estant.</string>
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Apondre un acorchi per dobrir d’onglets privats de l’ecran d’acuèlh estant.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message">Lançar un onglet privat d’una tòca.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Apondre un acorchi</string>
-    <!-- Text for the negative button -->
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Apondre un acorchi</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">Apondre a l’ecran d’acuèlh</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Non, mercé</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -341,6 +345,15 @@
     <string name="reduce_cookie_banner_option">Reduire las bandièras de cookies</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
     <string name="reduce_cookie_banner_summary">Firefox ensaja automaticament de regetar las demandas de cookies de las bandièras de cookies. Se l’opcion de refús es pas disponibla, Firefox accèpta totes las cookies per tampar la bandièra.</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">Desactivada per aqueste site</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">Activada per aqueste site</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site">Activar la reduccion de las bandièras de cookies per %1$s ?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site">Desactivar la reduccion de las bandièras de cookies per %1$s ?</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Ensaja automaticament de se connectar als sites amb lo chiframent HTTPS per una seguretat melhorada.</string>
@@ -1084,8 +1097,6 @@
     <string name="share_copy_link_to_clipboard">Copiar dins lo quichapapièrs</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Copiat dins lo quichapapièrs</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">Se connectar per sincronizar</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Se connectar a Sync</string>
      <!-- An option from the three dot menu to sync and save data -->

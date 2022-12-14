@@ -67,10 +67,14 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">Lisää pikakuvake avataksesi yksityisiä välilehtiä aloitusnäytöltä.</string>
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Lisää pikakuvake avataksesi yksityisiä välilehtiä aloitusnäytöltä.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message">Avaa seuraava yksityinen välilehti yhdellä napautuksella.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Lisää pikavalinta</string>
-    <!-- Text for the negative button -->
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Lisää pikavalinta</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">Lisää aloitusnäytölle</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Ei kiitos</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -1083,8 +1087,6 @@
     <string name="share_copy_link_to_clipboard">Kopioi leikepöydälle</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Kopioitu leikepöydälle</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">Kirjaudu Sync-palveluun</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Kirjaudu sisään Synciin</string>
      <!-- An option from the three dot menu to sync and save data -->

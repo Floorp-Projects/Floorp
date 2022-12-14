@@ -65,10 +65,14 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">Додайте ярлик для відкриття приватних вкладок з головного екрана.</string>
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Додайте ярлик для відкриття приватних вкладок з головного екрана.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message">Запускайте наступну приватну вкладку одним торканням.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Додати ярлик</string>
-    <!-- Text for the negative button -->
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Додати ярлик</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">Додати на головний екран</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Ні, дякую</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -344,6 +348,19 @@
     <string name="reduce_cookie_banner_option">Зменшити кількість банерів кук</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
     <string name="reduce_cookie_banner_summary">Firefox автоматично намагається відхилити банери запитів на розміщення кук. Якщо параметр відхилення недоступний, Firefox може погодитися розмістити всі куки, щоб закрити банер.</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">Вимкнено для цього сайту</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">Увімкнено для цього сайту</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site">Увімкнути зменшення кількості банерів кук для %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site">Вимкнути зменшення кількості банерів кук для %1$s?</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s очистить куки цього сайту та оновить сторінку. Очищення всіх кук може призвести до виходу з облікових записів або спорожнення кошика для покупок.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s може спробувати автоматично відхилити запити на розміщення кук. Якщо опція відхилення недоступна, %2$s може погодитися на всі куки, щоб закрити банер.</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Намагатися автоматично доступатися до сайтів за допомогою протоколу шифрування HTTPS для поліпшення безпеки.</string>
@@ -1079,8 +1096,6 @@
     <string name="share_copy_link_to_clipboard">Копіювати у буфер обміну</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Скопійовано у буфер обміну</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">Увійти до синхронізації</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Увійти до Синхронізації</string>
      <!-- An option from the three dot menu to sync and save data -->

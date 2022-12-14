@@ -66,10 +66,14 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">Ana ekranınızdan gizli sekme açmak için kısayol ekleyebilirsiniz.</string>
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Ana ekranınızdan gizli sekme açmak için kısayol ekleyebilirsiniz.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message">Bir sonraki gizli sekmenizi tek dokunuşla açın.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Kısayol ekle</string>
-    <!-- Text for the negative button -->
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Kısayol ekle</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">Ana ekrana ekle</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Gerek yok</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -342,6 +346,19 @@
     <string name="reduce_cookie_banner_option">Çerez duyurularını azalt</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
     <string name="reduce_cookie_banner_summary">Firefox, çerez duyurularındaki çerez isteklerini otomatik olarak reddetmeye çalışır. Reddetme seçeneği mevcut değilse Firefox, duyuruyu kapatmak için tüm çerezleri kabul edebilir.</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">Bu sitede kapalı</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">Bu sitede açık</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site">%1$s için çerez duyurularını azaltma açılsın mı?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site">%1$s için çerez duyurularını azaltma kapatılsın mı?</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s bu sitenin çerezlerini temizleyip sayfayı tazeleyecek. Tüm çerezlerin temizlenmesi oturumunuzu kapatabilir veya alışveriş sepetlerinizi boşaltabilir.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s, çerez duyurularındaki çerez isteklerini otomatik olarak reddetmeye çalışır. Reddetme seçeneği mevcut değilse %2$s, duyuruyu kapatmak için tüm çerezleri kabul edebilir.</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Daha fazla güvenlik için sitelere otomatik olarak HTTPS şifreleme protokolüyle bağlanmaya çalışır.</string>
@@ -1072,8 +1089,6 @@
     <string name="share_copy_link_to_clipboard">Panoya kopyala</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Panoya kopyalandı</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">Eşitlemek için giriş yap</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Sync’e giriş yap</string>
      <!-- An option from the three dot menu to sync and save data -->
