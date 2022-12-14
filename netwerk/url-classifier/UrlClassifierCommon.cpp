@@ -6,7 +6,6 @@
 
 #include "mozilla/net/UrlClassifierCommon.h"
 
-#include "ClassifierDummyChannel.h"
 #include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Components.h"
@@ -475,11 +474,6 @@ void UrlClassifierCommon::SetClassificationFlagsHelper(
   RefPtr<HttpBaseChannel> httpChannel = do_QueryObject(aChannel);
   if (httpChannel) {
     httpChannel->AddClassificationFlags(aClassificationFlags, aIsThirdParty);
-  }
-
-  RefPtr<ClassifierDummyChannel> dummyChannel = do_QueryObject(aChannel);
-  if (dummyChannel) {
-    dummyChannel->AddClassificationFlags(aClassificationFlags, aIsThirdParty);
   }
 }
 
