@@ -1219,6 +1219,11 @@ nsresult ModuleLoaderBase::EvaluateModuleInContext(
   // unless the user cancels execution.
   MOZ_ASSERT_IF(ok, !JS_IsExceptionPending(aCx));
 
+  // For long running scripts, the request may be cancelled abruptly.
+  if (request->IsCanceled() || !mLoader) {
+    return NS_ERROR_ABORT;
+  }
+
   if (!ok) {
     LOG(("ScriptLoadRequest (%p):   evaluation failed", aRequest));
     // For a dynamic import, the promise is rejected. Otherwise an error is

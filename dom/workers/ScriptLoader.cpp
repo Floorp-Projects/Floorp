@@ -755,7 +755,9 @@ bool WorkerScriptLoader::ProcessPendingRequests(JSContext* aCx) {
   MOZ_ASSERT(global);
 
   while (!mLoadedRequests.isEmpty()) {
-    RefPtr<ScriptLoadRequest> req = mLoadedRequests.StealFirst();
+    // Take a reference, but do not remove it from the list yet. There is a
+    // possibility that this will need to be cancelled.
+    RefPtr<ScriptLoadRequest> req = mLoadedRequests.getFirst();
     // We don't have a ProcessRequest method (like we do on the DOM), as there
     // isn't much processing that we need to do per request that isn't related
     // to evaluation (the processsing done for the DOM is handled in
@@ -769,6 +771,8 @@ bool WorkerScriptLoader::ProcessPendingRequests(JSContext* aCx) {
       mLoadedRequests.CancelRequestsAndClear();
       break;
     }
+    // remove the element from the list.
+    mLoadedRequests.Remove(req);
   }
 
   TryShutdown();
@@ -1070,6 +1074,9 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
           : EvaluateSourceBuffer(aCx, options,
                                  maybeSource.ref<JS::SourceText<char16_t>>());
 
+  if (aRequest->IsCanceled()) {
+    return false;
+  }
   if (!successfullyEvaluated) {
     mRv.StealExceptionFromJSContext(aCx);
     return false;
