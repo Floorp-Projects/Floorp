@@ -457,8 +457,8 @@ DrawBlitProg::DrawBlitProg(const GLBlitHelper* const parent, const GLuint prog)
       mLoc_uColorMatrix(
           mParent.mGL->fGetUniformLocation(mProg, "uColorMatrix")) {
   const auto& gl = mParent.mGL;
-  MOZ_GL_ASSERT(gl, mLoc_uDestMatrix != -1);     // Required
-  MOZ_GL_ASSERT(gl, mLoc_uTexMatrix0 != -1);     // Required
+  MOZ_GL_ASSERT(gl, mLoc_uDestMatrix != -1);  // Required
+  MOZ_GL_ASSERT(gl, mLoc_uTexMatrix0 != -1);  // Required
   if (mLoc_uColorMatrix != -1) {
     MOZ_GL_ASSERT(gl, mLoc_uTexMatrix1 != -1);
 
@@ -567,17 +567,17 @@ void DrawBlitProg::Draw(const BaseArgs& args,
     gl->fBindVertexArray(mParent.mQuadVAO);
   } else {
     // clang-format off
-        gl->fGetVertexAttribiv(0, LOCAL_GL_VERTEX_ATTRIB_ARRAY_ENABLED, &vaa0Enabled);
-        gl->fGetVertexAttribiv(0, LOCAL_GL_VERTEX_ATTRIB_ARRAY_SIZE, &vaa0Size);
-        gl->fGetVertexAttribiv(0, LOCAL_GL_VERTEX_ATTRIB_ARRAY_TYPE, (GLint*)&vaa0Type);
-        gl->fGetVertexAttribiv(0, LOCAL_GL_VERTEX_ATTRIB_ARRAY_NORMALIZED, &vaa0Normalized);
-        gl->fGetVertexAttribiv(0, LOCAL_GL_VERTEX_ATTRIB_ARRAY_STRIDE, (GLint*)&vaa0Stride);
-        gl->fGetVertexAttribPointerv(0, LOCAL_GL_VERTEX_ATTRIB_ARRAY_POINTER, &vaa0Pointer);
+    gl->fGetVertexAttribiv(0, LOCAL_GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, (GLint*)&vaa0Buffer);
+    gl->fGetVertexAttribiv(0, LOCAL_GL_VERTEX_ATTRIB_ARRAY_ENABLED, &vaa0Enabled);
+    gl->fGetVertexAttribiv(0, LOCAL_GL_VERTEX_ATTRIB_ARRAY_SIZE, &vaa0Size);
+    gl->fGetVertexAttribiv(0, LOCAL_GL_VERTEX_ATTRIB_ARRAY_TYPE, (GLint*)&vaa0Type);
+    gl->fGetVertexAttribiv(0, LOCAL_GL_VERTEX_ATTRIB_ARRAY_NORMALIZED, &vaa0Normalized);
+    gl->fGetVertexAttribiv(0, LOCAL_GL_VERTEX_ATTRIB_ARRAY_STRIDE, (GLint*)&vaa0Stride);
+    gl->fGetVertexAttribPointerv(0, LOCAL_GL_VERTEX_ATTRIB_ARRAY_POINTER, &vaa0Pointer);
     // clang-format on
 
     gl->fEnableVertexAttribArray(0);
     const ScopedBindArrayBuffer bindVBO(gl, mParent.mQuadVBO);
-    vaa0Buffer = bindVBO.mOldVBO;
     gl->fVertexAttribPointer(0, 2, LOCAL_GL_FLOAT, false, 0, 0);
   }
 
