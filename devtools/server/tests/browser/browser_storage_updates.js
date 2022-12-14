@@ -12,6 +12,9 @@ Services.scriptloader.loadSubScript(
   this
 );
 
+const l10n = new Localization(["devtools/client/storage.ftl"], true);
+const sessionString = l10n.formatValueSync("storage-expires-session");
+
 const TESTS = [
   // index 0
   {
@@ -224,7 +227,11 @@ async function checkStores(commands, snapshot) {
       async onAvailable(resources) {
         for (const resource of resources) {
           actual[resource.resourceType] = await resource.getStoreObjects(
-            TEST_DOMAIN
+            TEST_DOMAIN,
+            null,
+            {
+              sessionString,
+            }
           );
         }
       },

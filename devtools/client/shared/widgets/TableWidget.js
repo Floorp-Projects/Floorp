@@ -16,6 +16,11 @@ loader.lazyRequireGetter(
   "resource://devtools/shared/natural-sort.js",
   true
 );
+loader.lazyGetter(this, "standardSessionString", () => {
+  const l10n = new Localization(["devtools/client/storage.ftl"], true);
+  return l10n.formatValueSync("storage-expires-session");
+});
+
 const { KeyCodes } = require("resource://devtools/client/shared/keycodes.js");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
@@ -1390,11 +1395,23 @@ Column.prototype = {
       let index;
       if (this.sorted == 1) {
         index = this.cells.findIndex(element => {
-          return naturalSortCaseInsensitive(value, element.value) === -1;
+          return (
+            naturalSortCaseInsensitive(
+              value,
+              element.value,
+              standardSessionString
+            ) === -1
+          );
         });
       } else {
         index = this.cells.findIndex(element => {
-          return naturalSortCaseInsensitive(value, element.value) === 1;
+          return (
+            naturalSortCaseInsensitive(
+              value,
+              element.value,
+              standardSessionString
+            ) === 1
+          );
         });
       }
       index = index >= 0 ? index : this.cells.length;
@@ -1526,7 +1543,7 @@ Column.prototype = {
         const val2 = Node.isInstance(b[this.id])
           ? b[this.id].textContent
           : b[this.id];
-        return naturalSortCaseInsensitive(val1, val2);
+        return naturalSortCaseInsensitive(val1, val2, standardSessionString);
       });
     } else if (this.sorted > 1) {
       items.sort((a, b) => {
@@ -1536,7 +1553,7 @@ Column.prototype = {
         const val2 = Node.isInstance(b[this.id])
           ? b[this.id].textContent
           : b[this.id];
-        return naturalSortCaseInsensitive(val2, val1);
+        return naturalSortCaseInsensitive(val2, val1, standardSessionString);
       });
     }
 

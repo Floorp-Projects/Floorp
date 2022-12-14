@@ -39,6 +39,11 @@ loader.lazyRequireGetter(
   "resource://devtools/shared/debounce.js",
   true
 );
+loader.lazyGetter(this, "standardSessionString", () => {
+  const l10n = new Localization(["devtools/client/storage.ftl"], true);
+  return l10n.formatValueSync("storage-expires-session");
+});
+
 const lazy = {};
 ChromeUtils.defineModuleGetter(
   lazy,
@@ -904,6 +909,7 @@ class StorageUI {
   async fetchStorageObjects(type, host, names, reason) {
     const fetchOpts =
       reason === REASON.NEXT_50_ITEMS ? { offset: this.itemOffset } : {};
+    fetchOpts.sessionString = standardSessionString;
     const storage = this._getStorage(type, host);
     this.sidebarToggledOpen = null;
 

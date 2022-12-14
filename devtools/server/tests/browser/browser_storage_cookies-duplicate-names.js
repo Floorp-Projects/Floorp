@@ -12,6 +12,9 @@ Services.scriptloader.loadSubScript(
   this
 );
 
+const l10n = new Localization(["devtools/client/storage.ftl"], true);
+const sessionString = l10n.formatValueSync("storage-expires-session");
+
 const TESTDATA = {
   "http://test1.example.org": [
     {
@@ -71,7 +74,7 @@ add_task(async function() {
             data[resourceType].hosts[host].push(...hostValues);
             data[resourceType].dataByHost[
               host
-            ] = await resource.getStoreObjects(host);
+            ] = await resource.getStoreObjects(host, null, { sessionString });
           }
         }
       },
