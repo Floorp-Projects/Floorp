@@ -101,6 +101,7 @@ inline T MaybeForwarded(T t) {
   if (IsForwarded(t)) {
     t = Forwarded(t);
   }
+  MOZ_ASSERT(!IsForwarded(t));
   return t;
 }
 
