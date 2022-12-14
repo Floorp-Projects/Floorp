@@ -939,13 +939,21 @@ void nsCSPContext::logToConsole(const char* aName,
   // appropriate MDN docs depending on the specific error.
   nsDependentCString category(aName);
 
+  // Fallback
+  nsAutoString sourceName(aSourceName);
+  if (sourceName.IsEmpty() && mSelfURI) {
+    nsAutoCString spec;
+    mSelfURI->GetSpec(spec);
+    CopyUTF8toUTF16(spec, sourceName);
+  }
+
   // let's check if we have to queue up console messages
   if (mQueueUpMessages) {
     nsAutoString msg;
     CSP_GetLocalizedStr(aName, aParams, msg);
     ConsoleMsgQueueElem& elem = *mConsoleMsgQueue.AppendElement();
     elem.mMsg = msg;
-    elem.mSourceName = PromiseFlatString(aSourceName);
+    elem.mSourceName = PromiseFlatString(sourceName);
     elem.mSourceLine = PromiseFlatString(aSourceLine);
     elem.mLineNumber = aLineNumber;
     elem.mColumnNumber = aColumnNumber;
@@ -961,7 +969,7 @@ void nsCSPContext::logToConsole(const char* aName,
         !!doc->NodePrincipal()->OriginAttributesRef().mPrivateBrowsingId;
   }
 
-  CSP_LogLocalizedStr(aName, aParams, aSourceName, aSourceLine, aLineNumber,
+  CSP_LogLocalizedStr(aName, aParams, sourceName, aSourceLine, aLineNumber,
                       aColumnNumber, aSeverityFlag, category, mInnerWindowID,
                       privateWindow);
 }
