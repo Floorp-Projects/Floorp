@@ -4152,9 +4152,9 @@ WebSocketChannel::OnOutputStreamReady(nsIAsyncOutputStream* aStream) {
       toSend = mCurrentOut->Length() - mCurrentOutSent;
       if (toSend > 0) {
         LOG(
-            ("WebSocketChannel::OnOutputStreamReady: "
+            ("WebSocketChannel::OnOutputStreamReady [%p]: "
              "Try to send %u of data\n",
-             toSend));
+             this, toSend));
       }
     }
 
@@ -4162,8 +4162,9 @@ WebSocketChannel::OnOutputStreamReady(nsIAsyncOutputStream* aStream) {
       amtSent = 0;
     } else {
       rv = mSocketOut->Write(sndBuf, toSend, &amtSent);
-      LOG(("WebSocketChannel::OnOutputStreamReady: write %u rv %" PRIx32 "\n",
-           amtSent, static_cast<uint32_t>(rv)));
+      LOG(("WebSocketChannel::OnOutputStreamReady [%p]: write %u rv %" PRIx32
+           "\n",
+           this, amtSent, static_cast<uint32_t>(rv)));
 
       if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
         mSocketOut->AsyncWait(this, 0, 0, mIOThread);
