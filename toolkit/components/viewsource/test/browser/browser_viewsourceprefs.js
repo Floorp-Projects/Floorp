@@ -18,8 +18,9 @@ add_task(async function() {
   await exercisePrefs(htmlURL, true);
 });
 
+const contextMenu = document.getElementById("contentAreaContextMenu");
 async function openContextMenu(browser) {
-  const contextMenu = document.getElementById("contentAreaContextMenu");
+  info("Opening context menu");
   const popupShownPromise = BrowserTestUtils.waitForEvent(
     contextMenu,
     "popupshown"
@@ -30,15 +31,24 @@ async function openContextMenu(browser) {
     browser
   );
   await popupShownPromise;
+  info("Opened context menu");
 }
 
 async function closeContextMenu() {
-  const contextMenu = document.getElementById("contentAreaContextMenu");
   const popupHiddenPromise = BrowserTestUtils.waitForEvent(
     contextMenu,
     "popuphidden"
   );
   contextMenu.hidePopup();
+  await popupHiddenPromise;
+}
+
+async function simulateClick(id) {
+  const popupHiddenPromise = BrowserTestUtils.waitForEvent(
+    contextMenu,
+    "popuphidden"
+  );
+  contextMenu.activateItem(document.getElementById(id));
   await popupHiddenPromise;
 }
 
@@ -74,8 +84,7 @@ var exercisePrefs = async function(source, highlightable) {
   // Next, test that the Wrap Long Lines menu item works.
   let prefReady = waitForPrefChange("view_source.wrap_long_lines");
   await openContextMenu(browser);
-  simulateClick(wrapMenuItem);
-  await closeContextMenu();
+  await simulateClick(wrapMenuItem);
   await openContextMenu(browser);
   await checkStyle(browser, "white-space", "pre-wrap");
   is(getAttribute(wrapMenuItem, "checked"), "true", "Wrap menu item checked");
@@ -89,8 +98,7 @@ var exercisePrefs = async function(source, highlightable) {
 
   prefReady = waitForPrefChange("view_source.wrap_long_lines");
   await openContextMenu(browser);
-  simulateClick(wrapMenuItem);
-  await closeContextMenu();
+  await simulateClick(wrapMenuItem);
   await openContextMenu(browser);
   await checkStyle(browser, "white-space", "pre");
   is(
@@ -109,8 +117,7 @@ var exercisePrefs = async function(source, highlightable) {
   // Check that the Syntax Highlighting menu item works.
   prefReady = waitForPrefChange("view_source.syntax_highlight");
   await openContextMenu(browser);
-  simulateClick(syntaxMenuItem);
-  await closeContextMenu();
+  await simulateClick(syntaxMenuItem);
   await openContextMenu(browser);
   await checkHighlight(browser, false);
   is(
@@ -128,8 +135,7 @@ var exercisePrefs = async function(source, highlightable) {
 
   prefReady = waitForPrefChange("view_source.syntax_highlight");
   await openContextMenu(browser);
-  simulateClick(syntaxMenuItem);
-  await closeContextMenu();
+  await simulateClick(syntaxMenuItem);
   await openContextMenu(browser);
   await checkHighlight(browser, highlightable);
   is(
@@ -172,10 +178,6 @@ var exercisePrefs = async function(source, highlightable) {
   await closeContextMenu();
   gBrowser.removeTab(tab);
 };
-
-function simulateClick(id) {
-  document.getElementById(id).click();
-}
 
 var checkStyle = async function(browser, styleProperty, expected) {
   let value = await SpecialPowers.spawn(

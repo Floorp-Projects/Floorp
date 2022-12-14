@@ -32,7 +32,7 @@ add_task(async function() {
     document.querySelector("#requests-list-contentSize-button")
   );
 
-  getContextMenuItem(monitor, "request-list-header-reset-columns").click();
+  await selectContextMenuItem(monitor, "request-list-header-reset-columns");
 
   ok(
     JSON.stringify(prefBefore) === JSON.stringify(Prefs.visibleColumns),

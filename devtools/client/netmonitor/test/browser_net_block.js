@@ -58,16 +58,13 @@ add_task(async function() {
 
     // Mark as blocked
     EventUtils.sendMouseEvent({ type: "contextmenu" }, firstRequest);
-    const contextBlock = getContextMenuItem(
-      monitor,
-      "request-list-context-block-url"
-    );
-
     const onRequestBlocked = waitForDispatch(
       store,
       "REQUEST_BLOCKING_UPDATE_COMPLETE"
     );
-    contextBlock.click();
+
+    await selectContextMenuItem(monitor, "request-list-context-block-url");
+
     info("Wait for selected request to be blocked");
     await onRequestBlocked;
     info("Selected request is now blocked");
@@ -114,15 +111,12 @@ add_task(async function() {
 
     // Mark as unblocked
     EventUtils.sendMouseEvent({ type: "contextmenu" }, firstRequest);
-    const contextUnblock = getContextMenuItem(
-      monitor,
-      "request-list-context-unblock-url"
-    );
     const onRequestUnblocked = waitForDispatch(
       store,
       "REQUEST_BLOCKING_UPDATE_COMPLETE"
     );
-    contextUnblock.click();
+
+    await selectContextMenuItem(monitor, "request-list-context-unblock-url");
 
     info("Wait for selected request to be unblocked");
     await onRequestUnblocked;

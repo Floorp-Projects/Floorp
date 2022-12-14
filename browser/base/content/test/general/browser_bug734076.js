@@ -167,18 +167,23 @@ add_task(async function() {
     let loadedAfterCommandPromise = test.opensNewTab
       ? BrowserTestUtils.waitForNewTab(gBrowser, null, true)
       : BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    document.getElementById(commandToRun).click();
+    let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+      contentAreaContextMenu,
+      "popuphidden"
+    );
+    if (commandToRun == "context-showonlythisframe") {
+      let subMenu = document.getElementById("frame");
+      let subMenuShown = BrowserTestUtils.waitForEvent(subMenu, "popupshown");
+      subMenu.openMenu(true);
+      await subMenuShown;
+    }
+    contentAreaContextMenu.activateItem(document.getElementById(commandToRun));
     let result = await loadedAfterCommandPromise;
 
     await test.verify(
       test.opensNewTab ? result.linkedBrowser : gBrowser.selectedBrowser
     );
 
-    let popupHiddenPromise = BrowserTestUtils.waitForEvent(
-      contentAreaContextMenu,
-      "popuphidden"
-    );
-    contentAreaContextMenu.hidePopup();
     await popupHiddenPromise;
 
     if (test.opensNewTab) {

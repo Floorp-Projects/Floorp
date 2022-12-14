@@ -70,8 +70,9 @@ add_task(async function() {
   });
   await shownPromise;
 
-  contextMenu.querySelector(".customize-context-moveToPanel").click();
-  await contextMenu.hidePopup();
+  contextMenu.activateItem(
+    contextMenu.querySelector(".customize-context-moveToPanel")
+  );
 
   await Promise.all([
     promiseWidgetAnimationOut(stopReloadButton),

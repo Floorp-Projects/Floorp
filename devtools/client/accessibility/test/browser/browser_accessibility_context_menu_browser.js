@@ -40,12 +40,11 @@ addA11YPanelTask(
       "Triggering 'Inspect Accessibility Properties' and waiting for " +
         "accessibility panel to open"
     );
-    inspectA11YPropsItem.click();
     const popupHidden = BrowserTestUtils.waitForEvent(
       contextMenu,
       "popuphidden"
     );
-    contextMenu.hidePopup();
+    contextMenu.activateItem(inspectA11YPropsItem);
     await popupHidden;
 
     const selected = await panel.once("new-accessible-front-selected");

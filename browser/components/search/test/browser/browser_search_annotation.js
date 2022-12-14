@@ -143,8 +143,7 @@ add_task(async function contextmenu() {
       const openLinkMenuItem = contextMenu.querySelector(
         "#context-searchselect"
       );
-      openLinkMenuItem.click();
-      contextMenu.hidePopup();
+      contextMenu.activateItem(openLinkMenuItem);
       const tab = await onLoad;
 
       await assertDatabase({

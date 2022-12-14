@@ -126,27 +126,66 @@ add_setup(async function() {
   });
 });
 
+async function showMaintenancePopup(libraryWindow) {
+  let button = libraryWindow.document.getElementById("maintenanceButton");
+  let popup = libraryWindow.document.getElementById("maintenanceButtonPopup");
+  let shown = BrowserTestUtils.waitForEvent(popup, "popupshown");
+
+  info("Clicking maintenance menu");
+
+  button.openMenu(true);
+
+  await shown;
+  info("Maintenance popup shown");
+  return popup;
+}
+
 add_task(async function test_export_json() {
   let libraryWindow = await promiseLibrary();
-  libraryWindow.document
-    .querySelector("#maintenanceButtonPopup #backupBookmarks")
-    .click();
+  let popup = await showMaintenancePopup(libraryWindow);
+  let hidden = BrowserTestUtils.waitForEvent(popup, "popuphidden");
 
-  let backupFile = await promiseImportExport();
-  await TestUtils.waitForCondition(backupFile.exists);
+  info("Activating #backupBookmarks");
+
+  let backupPromise = promiseImportExport();
+
+  popup.activateItem(popup.querySelector("#backupBookmarks"));
+  await hidden;
+
+  info("Popup hidden");
+
+  let backupFile = await backupPromise;
+  await TestUtils.waitForCondition(
+    backupFile.exists,
+    "Backup file should exist"
+  );
   await promiseLibraryClosed(libraryWindow);
 
   await PlacesUtils.bookmarks.eraseEverything();
 });
 
+async function showFileRestorePopup(libraryWindow) {
+  let parentPopup = await showMaintenancePopup(libraryWindow);
+  let popup = parentPopup.querySelector("#fileRestorePopup");
+  let shown = BrowserTestUtils.waitForEvent(popup, "popupshown");
+  parentPopup.querySelector("#fileRestoreMenu").openMenu(true);
+  await shown;
+  return popup;
+}
+
 add_task(async function test_import_json() {
   let libraryWindow = await promiseLibrary();
-  libraryWindow.document
-    .querySelector("#maintenanceButtonPopup #restoreFromFile")
-    .click();
+  let popup = await showFileRestorePopup(libraryWindow);
 
-  await promiseImportExport();
-  await BrowserTestUtils.promiseAlertDialogOpen("accept");
+  let backupPromise = promiseImportExport();
+  let dialogPromise = BrowserTestUtils.promiseAlertDialogOpen("accept");
+
+  let hidden = BrowserTestUtils.waitForEvent(popup, "popuphidden");
+  popup.activateItem(popup.querySelector("#restoreFromFile"));
+  await hidden;
+
+  await backupPromise;
+  await dialogPromise;
 
   let restored = 0;
   let promiseBookmarksRestored = PlacesTestUtils.waitForNotification(
