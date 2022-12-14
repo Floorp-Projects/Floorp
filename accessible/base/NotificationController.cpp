@@ -628,10 +628,13 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
   }
 
   // Wait until an update, we have started, or an interruptible reflow is
-  // finished.
+  // finished. We also check the existance of our pres context and root pres
+  // context, since if we can't reach either of these the frame tree is being
+  // destroyed.
+  nsPresContext* pc = mPresShell->GetPresContext();
   if (mObservingState == eRefreshProcessing ||
       mObservingState == eRefreshProcessingForUpdate ||
-      mPresShell->IsReflowInterrupted()) {
+      mPresShell->IsReflowInterrupted() || !pc || !pc->GetRootPresContext()) {
     return;
   }
 
