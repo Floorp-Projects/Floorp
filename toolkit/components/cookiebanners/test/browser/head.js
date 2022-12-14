@@ -271,6 +271,12 @@ function insertTestClickRules() {
  * method has finished.
  */
 async function testClickResultTelemetry(expected, resetFOG = true) {
+  // TODO: Bug 1805653: Enable tests for Linux.
+  if (AppConstants.platform == "linux") {
+    ok(true, "Skip click telemetry tests on linux.");
+    return;
+  }
+
   // Ensure we have all data from the content process.
   await Services.fog.testFlushAllChildren();
 
