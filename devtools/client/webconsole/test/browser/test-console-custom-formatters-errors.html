@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>Webconsole erroneous custom formatters test page</title>
+  </head>
+  <body>
+    <p>Erroneous custom formatters test page</p>
+    <script>
+      "use strict";
+
+      const variables = [
+        {},
+        {bodyNotAFunction: true},
+        {bodyReturnsNull: true},
+        {bodyNoJsonMl: true},
+        {bodyNoElementType: true},
+        {bodyThrows: true},
+        /*
+          Custom formatters can currently cause side effects.
+          {bodyHasSideEffects: true},
+        */
+      ];
+
+      window.devtoolsFormatters = [
+        {
+          // this header is invalid because it is not a function
+          header: 1,
+        },
+        {
+          // this header is invalid because it doesn't return JsonML
+          header: () => 1,
+        },
+        {
+          // this header is invalid because the returned array misses an element type
+          header: () => [],
+        },
+        {
+          // this header is invalid because it throws an exception
+          header: () => { throw new Error("ERROR"); },
+        },
+        /*
+          Custom formatters can currently cause side effects.
+          {
+            // this header shouldn't execute as it has side effects.
+            header: (obj) => {
+              globalThis.localStorage.setItem("custom-formatters-test", "header");
+              return ["span", {}, "COULD EXECUTE HEADER WITH SIDE EFFECTS"];
+            },
+          },
+        */
+        {
+          header: () => ["div", "hasBody not a function"],
+          // this hasBody is invalid because it is not a function
+          hasBody: 1,
+        },
+        {
+          header: () => ["div", "hasBody throws"],
+          // this hasBody throws an exception
+          hasBody: () => { throw new Error("ERROR"); },
+        },
+        /*
+          Custom formatters can currently cause side effects.
+          {
+            header: () => ["div", "hasBody has side effects"],
+            // this hasBody shouldn't execute as it has side effects.
+            hasBody: (obj) => {
+              globalThis.localStorage.setItem("custom-formatters-test", "hasBody");
+              return ["span", {}, "COULD EXECUTE HASBODY WITH SIDE EFFECTS"];
+            },
+          },
+        */
+        {
+          header: (obj) => {
+            return obj.hasOwnProperty("bodyNotAFunction") ?
+              ["div", "body not a function"] :
+              null;
+          },
+          hasBody: () => true,
+          // this body is invalid because it is not a function
+          body: 1,
+        },
+        {
+          header: (obj) => {
+            return obj.hasOwnProperty("bodyReturnsNull") ?
+              ["div", "body returns null"] :
+              null;
+          },
+          hasBody: () => true,
+          // this body is invalid because it doesn't return JsonML
+          body: () => null,
+        },
+        {
+          header: (obj) => {
+            return obj.hasOwnProperty("bodyNoJsonMl") ?
+              ["div", "body doesn't return JsonML"] :
+              null;
+          },
+          hasBody: () => true,
+          // this body is invalid because it doesn't return JsonML
+          body: () => 1,
+        },
+        {
+          header: (obj) => {
+            return obj.hasOwnProperty("bodyNoElementType") ?
+              ["div", "body array misses element type"] :
+              null;
+          },
+          hasBody: () => true,
+          // this body is invalid because the returned array misses an element type
+          body: () => [],
+        },
+        {
+          header: (obj) => {
+            return obj.hasOwnProperty("bodyThrows") ?
+              ["div", "body throws"] :
+              null;
+          },
+          hasBody: () => true,
+          // this body is invalid because it throws an exception
+          body: () => { throw new Error("ERROR"); },
+        },
+        /*
+          Custom formatters can currently cause side effects.
+          {
+            header: (obj) => {
+              return obj.hasOwnProperty("bodyHasSideEffects") ?
+                ["div", "body has side effects"] :
+                null;
+            },
+            hasBody: () => true,
+            // this body shouldn't execute as it has side effects.
+            body: (obj) => {
+              globalThis.localStorage.setItem("custom-formatters-test", "body");
+              return ["span", {}, "COULD EXECUTE BODY WITH SIDE EFFECTS"];
+            },
+          },
+        */
+        {
+          header: (obj) => {
+            if (obj.hasOwnProperty("customFormatHeader")) {
+              return ["span", {"style": "font-size: 3rem;"}, "custom formatted header"];
+            }
+            return null;
+          },
+          hasBody: (obj) => false
+        },
+        {
+          header: (obj) => {
+            if (obj.hasOwnProperty("customFormatHeaderAndBody")) {
+              return ["span", {"style": "font-style: italic;"}, "custom formatted body"];
+            }
+            return null;
+          },
+          hasBody: (obj) => true,
+          body: (obj) => ["span", {"style": "font-family: serif; font-size: 2rem;"}, obj.customFormatHeaderAndBody]
+        },
+      ];
+
+      variables.forEach(variable => console.log(variable));
+    </script>
+  </body>
+</html>

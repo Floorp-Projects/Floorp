@@ -5,7 +5,7 @@
 
 // Check display of custom formatters.
 const TEST_URI =
-  "http://example.com/browser/devtools/client/webconsole/" +
+  "https://example.com/browser/devtools/client/webconsole/" +
   "test/browser/test-console-custom-formatters.html";
 
 add_task(async function() {
@@ -23,7 +23,6 @@ add_task(async function() {
   await testObjectWithoutFormatting(hud);
   await testObjectWithFormattedHeader(hud);
   await testObjectWithFormattedHeaderAndBody(hud);
-  await testSideEffectsFreeFormatting(hud);
 });
 
 async function testString(hud) {
@@ -128,14 +127,4 @@ async function testCustomFormatting(
   } else {
     ok(!headerJsonMlNode, "The message is not custom formatted");
   }
-}
-
-async function testSideEffectsFreeFormatting(hud) {
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    is(
-      content.wrappedJSObject.formatted,
-      0,
-      "The variable 'formatted' must be unchanged"
-    );
-  });
 }
