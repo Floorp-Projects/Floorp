@@ -8,7 +8,11 @@ import { Colorways } from "./MRColorways";
 import { MobileDownloads } from "./MobileDownloads";
 import { MultiSelect } from "./MultiSelect";
 import { Themes } from "./Themes";
-import { SecondaryCTA, StepsIndicator } from "./MultiStageAboutWelcome";
+import {
+  SecondaryCTA,
+  StepsIndicator,
+  ProgressBar,
+} from "./MultiStageAboutWelcome";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { CTAParagraph } from "./CTAParagraph";
 import { HeroImage } from "./HeroImage";
@@ -44,6 +48,7 @@ export const MultiStageProtonScreen = props => {
       isFirstCenteredScreen={props.isFirstCenteredScreen}
       isLastCenteredScreen={props.isLastCenteredScreen}
       stepOrder={props.stepOrder}
+      previousOrder={props.previousOrder}
       autoAdvance={props.autoAdvance}
       isRtamo={props.isRtamo}
       addonName={props.addonName}
@@ -251,6 +256,40 @@ export class ProtonScreen extends React.PureComponent {
     );
   }
 
+  renderStepsIndicator() {
+    const currentStep = (this.props.order ?? 0) + 1;
+    const previousStep = (this.props.previousOrder ?? -1) + 1;
+    const { content, totalNumberOfScreens: total } = this.props;
+    return (
+      <div
+        className={`steps${content.progress_bar ? " progress-bar" : ""}`}
+        data-l10n-id={"onboarding-welcome-steps-indicator2"}
+        data-l10n-args={JSON.stringify({
+          current: currentStep,
+          total: total ?? 0,
+        })}
+        data-l10n-attrs="aria-valuetext"
+        role="meter"
+        aria-valuenow={currentStep}
+        aria-valuemin={1}
+        aria-valuemax={total}
+      >
+        {content.progress_bar ? (
+          <ProgressBar
+            step={currentStep}
+            previousStep={previousStep}
+            totalNumberOfScreens={total}
+          />
+        ) : (
+          <StepsIndicator
+            order={this.props.stepOrder}
+            totalNumberOfScreens={total}
+          />
+        )}
+      </div>
+    );
+  }
+
   renderSecondarySection(content) {
     return (
       <div
@@ -300,7 +339,6 @@ export class ProtonScreen extends React.PureComponent {
       isTheme,
       isFirstCenteredScreen,
       isLastCenteredScreen,
-      totalNumberOfScreens: total,
     } = this.props;
     const includeNoodles = content.has_noodles;
     // The default screen position is "center"
@@ -322,8 +360,6 @@ export class ProtonScreen extends React.PureComponent {
           content?.video_container
         )
       : "";
-
-    const currentStep = (this.props.order ?? 0) + 1;
 
     return (
       <main
@@ -404,28 +440,7 @@ export class ProtonScreen extends React.PureComponent {
                 handleAction={this.props.handleAction}
               />
             </div>
-            {hideStepsIndicator ? null : (
-              <div
-                className={`steps ${
-                  content.progress_bar ? "progress-bar" : ""
-                }`}
-                data-l10n-id={"onboarding-welcome-steps-indicator2"}
-                data-l10n-args={JSON.stringify({
-                  current: currentStep,
-                  total: total ?? 0,
-                })}
-                data-l10n-attrs="aria-valuetext"
-                role="meter"
-                aria-valuenow={currentStep}
-                aria-valuemin={1}
-                aria-valuemax={total}
-              >
-                <StepsIndicator
-                  order={this.props.stepOrder}
-                  totalNumberOfScreens={total}
-                />
-              </div>
-            )}
+            {hideStepsIndicator ? null : this.renderStepsIndicator()}
           </div>
         </div>
       </main>

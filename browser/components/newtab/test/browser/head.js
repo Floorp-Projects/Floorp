@@ -131,11 +131,10 @@ async function onButtonClick(browser, elementId) {
     browser,
     { elementId },
     async ({ elementId: buttonId }) => {
-      await ContentTaskUtils.waitForCondition(
+      let button = await ContentTaskUtils.waitForCondition(
         () => content.document.querySelector(buttonId),
         buttonId
       );
-      let button = content.document.querySelector(buttonId);
       button.click();
     }
   );
