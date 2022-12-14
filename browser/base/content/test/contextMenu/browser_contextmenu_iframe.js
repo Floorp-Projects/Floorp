@@ -63,9 +63,10 @@ add_task(async function test_open_iframe() {
     "DOM context menu item tab should be visible"
   );
   ok(!domItem.disabled, "DOM context menu item tab shouldn't be disabled");
-  contextMenu.activateItem(domItem);
+  domItem.click();
 
   let openedTab = await openPromise;
+  contextMenu.hidePopup();
   await awaitPopupHidden;
   await BrowserTestUtils.removeTab(openedTab);
 

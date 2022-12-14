@@ -81,7 +81,8 @@ async function activateContextAndWaitFor(selector, where) {
     !domItem.disabled,
     "DOM context menu item " + where + " shouldn't be disabled"
   );
-  contextMenu.activateItem(domItem);
+  domItem.click();
+  contextMenu.hidePopup();
   await awaitPopupHidden;
 
   info("Waiting for the link to open");

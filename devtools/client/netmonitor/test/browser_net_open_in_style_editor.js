@@ -31,12 +31,15 @@ add_task(async function() {
     { type: "contextmenu" },
     document.querySelectorAll(".request-list-item")[1]
   );
+  await waitUntil(() =>
+    getContextMenuItem(monitor, "request-list-context-open-in-style-editor")
+  );
 
   const onStyleEditorReady = toolbox.once("styleeditor-ready");
-  await selectContextMenuItem(
+  getContextMenuItem(
     monitor,
     "request-list-context-open-in-style-editor"
-  );
+  ).click();
   await onStyleEditorReady;
 
   ok(true, "Style Editor has been open");

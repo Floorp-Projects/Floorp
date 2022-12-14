@@ -29,10 +29,7 @@ add_task(async function() {
   // Throttling menu items cannot be retrieved by id so we can't use getContextMenuItem
   // here. Instead use querySelector on the toolbox top document, where the context menu
   // will be rendered.
-  const item = toolbox.topWindow.document.querySelector(
-    "menuitem[label='GPRS']"
-  );
-  item.parentNode.activateItem(item);
+  toolbox.topWindow.document.querySelector("menuitem[label='GPRS']").click();
   await monitor.panelWin.api.once(TEST_EVENTS.THROTTLING_CHANGED);
 
   // Verify existence of the telemetry event.

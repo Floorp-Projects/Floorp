@@ -31,7 +31,7 @@ add_task(async function() {
 
   // Now select stylesheet "1"
   let target = menupopup.querySelector("menuitem[label='1']");
-  target.doCommand();
+  target.click();
 
   gPageStyleMenu.fillPopup(menupopup);
   // gPageStyleMenu empties out the menu between opens, so we need

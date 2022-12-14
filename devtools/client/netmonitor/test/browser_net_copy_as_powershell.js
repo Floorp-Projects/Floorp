@@ -139,18 +139,19 @@ Invoke-WebRequest -UseBasicParsing -Uri "https://example.com/browser/devtools/cl
     );
 
     /* Ensure that the copy as fetch option is always visible */
+    const copyAsPowerShellNode = getContextMenuItem(
+      monitor,
+      "request-list-context-copy-as-powershell"
+    );
     is(
-      !!getContextMenuItem(monitor, "request-list-context-copy-as-powershell"),
+      !!copyAsPowerShellNode,
       true,
       'The "Copy as PowerShell" context menu item should not be hidden on windows'
     );
 
     await waitForClipboardPromise(
       async function setup() {
-        await selectContextMenuItem(
-          monitor,
-          "request-list-context-copy-as-powershell"
-        );
+        copyAsPowerShellNode.click();
       },
       function validate(result) {
         if (typeof result !== "string") {

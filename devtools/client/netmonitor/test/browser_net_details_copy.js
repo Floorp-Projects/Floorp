@@ -30,11 +30,11 @@ add_task(async function() {
 
   /* Test for copy value on the url */
   EventUtils.sendMouseEvent({ type: "contextmenu" }, urlRow);
-  await waitForClipboardPromise(async function setup() {
-    await selectContextMenuItem(
+  await waitForClipboardPromise(function setup() {
+    getContextMenuItem(
       monitor,
       "properties-view-context-menu-copyvalue"
-    );
+    ).click();
   }, "http://example.com/browser/devtools/client/netmonitor/test/html_simple-test-page.html");
 
   ok(true, "The copy value action put expected url string into clipboard");
@@ -56,11 +56,8 @@ add_task(async function() {
     null,
     "\t"
   );
-  await waitForClipboardPromise(async function setup() {
-    await selectContextMenuItem(
-      monitor,
-      "properties-view-context-menu-copyall"
-    );
+  await waitForClipboardPromise(function setup() {
+    getContextMenuItem(monitor, "properties-view-context-menu-copyall").click();
   }, expected);
 
   ok(true, "The copy all action put expected json data into clipboard");
@@ -99,11 +96,8 @@ add_task(async function() {
 
   /* Test for copy value */
   EventUtils.sendMouseEvent({ type: "contextmenu" }, httpSummaryValue);
-  await waitForClipboardPromise(async function setup() {
-    await selectContextMenuItem(
-      monitor,
-      "headers-panel-context-menu-copyvalue"
-    );
+  await waitForClipboardPromise(function setup() {
+    getContextMenuItem(monitor, "headers-panel-context-menu-copyvalue").click();
   }, "HTTP/1.1");
 
   ok(true, "The copy value action put expected text into clipboard");
@@ -120,8 +114,8 @@ add_task(async function() {
     null,
     "\t"
   );
-  await waitForClipboardPromise(async function setup() {
-    await selectContextMenuItem(monitor, "headers-panel-context-menu-copyall");
+  await waitForClipboardPromise(function setup() {
+    getContextMenuItem(monitor, "headers-panel-context-menu-copyall").click();
   }, expected);
 
   ok(true, "The copy all action put expected json into clipboard");
@@ -169,33 +163,30 @@ add_task(async function() {
   /* Test for copy value on an object */
   EventUtils.sendMouseEvent({ type: "contextmenu" }, objectRow);
   const expected = JSON.stringify({ obj: { type: "string" } }, null, "\t");
-  await waitForClipboardPromise(async function setup() {
-    await selectContextMenuItem(
+  await waitForClipboardPromise(function setup() {
+    getContextMenuItem(
       monitor,
       "properties-view-context-menu-copyvalue"
-    );
+    ).click();
   }, expected);
 
   ok(true, "The copy value action put expected json into clipboard");
 
   /* Test for copy all */
   EventUtils.sendMouseEvent({ type: "contextmenu" }, objectRow);
-  await waitForClipboardPromise(async function setup() {
-    await selectContextMenuItem(
-      monitor,
-      "properties-view-context-menu-copyall"
-    );
+  await waitForClipboardPromise(function setup() {
+    getContextMenuItem(monitor, "properties-view-context-menu-copyall").click();
   }, expected);
 
   ok(true, "The copy all action put expected json into clipboard");
 
   /* Test for copy value of a single row */
   EventUtils.sendMouseEvent({ type: "contextmenu" }, stringRow);
-  await waitForClipboardPromise(async function setup() {
-    await selectContextMenuItem(
+  await waitForClipboardPromise(function setup() {
+    getContextMenuItem(
       monitor,
       "properties-view-context-menu-copyvalue"
-    );
+    ).click();
   }, "string");
 
   ok(true, "The copy value action put expected text into clipboard");
@@ -250,11 +241,11 @@ add_task(async function() {
   for (let i = 0; i < objectRows.length; i++) {
     const cur = objectRows[i];
     EventUtils.sendMouseEvent({ type: "contextmenu" }, cur);
-    await waitForClipboardPromise(async function setup() {
-      await selectContextMenuItem(
+    await waitForClipboardPromise(function setup() {
+      getContextMenuItem(
         monitor,
         "properties-view-context-menu-copyvalue"
-      );
+      ).click();
     }, JSON.stringify(expectedResponseCookies[i], null, "\t"));
   }
 
@@ -262,11 +253,11 @@ add_task(async function() {
   for (let i = 0; i < expectedRequestCookies.length; i++) {
     const cur = stringRows[objectRows.length + i];
     EventUtils.sendMouseEvent({ type: "contextmenu" }, cur);
-    await waitForClipboardPromise(async function setup() {
-      await selectContextMenuItem(
+    await waitForClipboardPromise(function setup() {
+      getContextMenuItem(
         monitor,
         "properties-view-context-menu-copyvalue"
-      );
+      ).click();
     }, expectedRequestCookies[i]);
   }
 

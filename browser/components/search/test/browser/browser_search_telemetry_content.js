@@ -77,7 +77,7 @@ add_task(async function test_context_menu() {
     "id",
     "context-searchselect"
   )[0];
-  contextMenu.activateItem(searchItem);
+  searchItem.click();
 
   info("Validate the search metrics.");
 

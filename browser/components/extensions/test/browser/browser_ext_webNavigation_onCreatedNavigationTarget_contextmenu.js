@@ -27,9 +27,8 @@ async function clickContextMenuItem({
     contextMenuItemLabel
   );
   is(item.length, 1, `found contextMenu item for "${contextMenuItemLabel}"`);
-  const closed = promiseContextMenuClosed(contentAreaContextMenu);
-  contentAreaContextMenu.activateItem(item[0]);
-  await closed;
+  item[0].click();
+  await closeContextMenu();
 }
 
 async function background() {

@@ -118,6 +118,6 @@ add_task(async function test_clear_downloads_context_menu() {
     let clearDownloadsButton = [...contextMenu.children].find(
       child => child.command == "downloadsCmd_clearDownloads"
     );
-    contextMenu.activateItem(clearDownloadsButton);
+    clearDownloadsButton.click();
   });
 });
