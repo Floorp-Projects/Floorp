@@ -3732,6 +3732,18 @@
   value: false
   mirror: always
 
+# pref controls whether we should delay identity credential rejections at all
+- name: dom.security.credentialmanagement.identity.reject_delay.enabled
+  type: bool
+  value: true
+  mirror: always
+
+# pref controls how long we should delay identity credential rejections if enabled
+- name: dom.security.credentialmanagement.identity.reject_delay.duration_ms
+  type: uint32_t
+  value: 120000
+  mirror: always
+
 # Whether or not selection events on text controls are enabled.
 - name: dom.select_events.textcontrols.selectionchange.enabled
   type: bool
