@@ -119,4 +119,23 @@ add_task(async function() {
     const msg = await waitFor(() => findErrorMessage(hud, CSP_VIOLATION));
     ok(msg, "Frame-Ancestors violation by html was printed");
   }
+  await clearOutput(hud);
+  // Testing CSP inline event handler violations
+  {
+    const TEST_VIOLATION =
+      "https://example.com/browser/devtools/client/webconsole/" +
+      "test/browser/test-csp-violation-event-handler.html";
+    const CSP_VIOLATION = `Content Security Policy: The page’s settings blocked the loading of a resource at inline (“script-src”).
+Source: document.body.textContent = 'JavaScript …`;
+    // Future-Todo: Include line and column number.
+    const VIOLATION_LOCATION = "test-csp-violation-event-handler.html";
+    await navigateTo(TEST_VIOLATION);
+    const msg = await waitFor(() => findErrorMessage(hud, CSP_VIOLATION));
+    const locationNode = msg.querySelector(".message-location");
+    is(
+      locationNode.textContent,
+      VIOLATION_LOCATION,
+      "Inline event handler location doesn't yet include the line/column"
+    );
+  }
 });
