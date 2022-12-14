@@ -253,6 +253,7 @@ private val testSearchFragmentState = SearchFragmentState(
     searchTerms = "search terms",
     searchEngineSource = SearchEngineSource.None,
     defaultEngine = null,
+    showSearchTermHistory = true,
     showSearchSuggestions = false,
     showSearchShortcutsSetting = false,
     showSearchSuggestionsHint = false,

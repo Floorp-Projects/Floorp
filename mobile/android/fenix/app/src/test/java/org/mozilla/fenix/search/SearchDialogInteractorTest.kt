@@ -70,6 +70,14 @@ class SearchDialogInteractorTest {
     }
 
     @Test
+    fun `WHEN the search term from history is tapped THEN delegate the event to the controller`() {
+        interactor.onHistorySearchTermTapped("test")
+        verify {
+            searchController.handleSearchTermsTapped("test")
+        }
+    }
+
+    @Test
     fun onSearchShortcutEngineSelected() {
         val searchEngine: SearchEngine = mockk(relaxed = true)
 

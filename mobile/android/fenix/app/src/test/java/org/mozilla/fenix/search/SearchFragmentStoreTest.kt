@@ -73,6 +73,7 @@ class SearchFragmentStoreTest {
             showSearchShortcuts = false,
             areShortcutsAvailable = false,
             showClipboardSuggestions = false,
+            showSearchTermHistory = true,
             showHistorySuggestionsForCurrentEngine = false,
             showAllHistorySuggestions = true,
             showBookmarkSuggestions = false,
@@ -133,6 +134,7 @@ class SearchFragmentStoreTest {
                 showSearchShortcuts = false,
                 areShortcutsAvailable = false,
                 showClipboardSuggestions = false,
+                showSearchTermHistory = false,
                 showHistorySuggestionsForCurrentEngine = false,
                 showAllHistorySuggestions = false,
                 showBookmarkSuggestions = false,
@@ -181,6 +183,7 @@ class SearchFragmentStoreTest {
         assertTrue(store.state.showSearchSuggestions)
         assertFalse(store.state.showSearchShortcuts)
         assertTrue(store.state.showClipboardSuggestions)
+        assertFalse(store.state.showSearchTermHistory)
         assertFalse(store.state.showHistorySuggestionsForCurrentEngine)
         assertTrue(store.state.showAllHistorySuggestions)
         assertFalse(store.state.showBookmarkSuggestions)
@@ -207,6 +210,7 @@ class SearchFragmentStoreTest {
         assertTrue(store.state.showSearchSuggestions)
         assertFalse(store.state.showSearchShortcuts)
         assertTrue(store.state.showClipboardSuggestions)
+        assertTrue(store.state.showSearchTermHistory)
         assertFalse(store.state.showHistorySuggestionsForCurrentEngine)
         assertFalse(store.state.showAllHistorySuggestions)
         assertFalse(store.state.showBookmarkSuggestions)
@@ -234,6 +238,7 @@ class SearchFragmentStoreTest {
         assertTrue(store.state.showSearchSuggestions)
         assertFalse(store.state.showSearchShortcuts)
         assertFalse(store.state.showClipboardSuggestions)
+        assertTrue(store.state.showSearchTermHistory)
         assertTrue(store.state.showHistorySuggestionsForCurrentEngine)
         assertFalse(store.state.showAllHistorySuggestions)
         assertFalse(store.state.showBookmarkSuggestions)
@@ -259,6 +264,7 @@ class SearchFragmentStoreTest {
         assertTrue(store.state.showSearchSuggestions)
         assertTrue(store.state.showSearchShortcuts)
         assertFalse(store.state.showClipboardSuggestions)
+        assertFalse(store.state.showSearchTermHistory)
         assertFalse(store.state.showHistorySuggestionsForCurrentEngine)
         assertTrue(store.state.showAllHistorySuggestions)
         assertFalse(store.state.showBookmarkSuggestions)
@@ -278,6 +284,7 @@ class SearchFragmentStoreTest {
         assertFalse(store.state.showSearchSuggestions)
         assertFalse(store.state.showSearchShortcuts)
         assertFalse(store.state.showClipboardSuggestions)
+        assertFalse(store.state.showSearchTermHistory)
         assertFalse(store.state.showHistorySuggestionsForCurrentEngine)
         assertTrue(store.state.showAllHistorySuggestions)
         assertFalse(store.state.showBookmarkSuggestions)
@@ -297,6 +304,7 @@ class SearchFragmentStoreTest {
         assertFalse(store.state.showSearchSuggestions)
         assertFalse(store.state.showSearchShortcuts)
         assertFalse(store.state.showClipboardSuggestions)
+        assertFalse(store.state.showSearchTermHistory)
         assertFalse(store.state.showHistorySuggestionsForCurrentEngine)
         assertFalse(store.state.showAllHistorySuggestions)
         assertTrue(store.state.showBookmarkSuggestions)
@@ -316,6 +324,7 @@ class SearchFragmentStoreTest {
         assertFalse(store.state.showSearchSuggestions)
         assertFalse(store.state.showSearchShortcuts)
         assertFalse(store.state.showClipboardSuggestions)
+        assertFalse(store.state.showSearchTermHistory)
         assertFalse(store.state.showHistorySuggestionsForCurrentEngine)
         assertFalse(store.state.showAllHistorySuggestions)
         assertFalse(store.state.showBookmarkSuggestions)
@@ -559,6 +568,7 @@ class SearchFragmentStoreTest {
         showSearchShortcuts = false,
         areShortcutsAvailable = areShortcutsAvailable,
         showClipboardSuggestions = false,
+        showSearchTermHistory = true,
         showHistorySuggestionsForCurrentEngine = showHistorySuggestionsForCurrentEngine,
         showAllHistorySuggestions = false,
         showBookmarkSuggestions = false,

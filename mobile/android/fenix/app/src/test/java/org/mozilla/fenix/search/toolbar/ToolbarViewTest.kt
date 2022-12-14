@@ -57,6 +57,7 @@ class ToolbarViewTest {
             },
         ),
         defaultEngine = null,
+        showSearchTermHistory = true,
         showSearchShortcutsSetting = false,
         showSearchSuggestionsHint = false,
         showSearchSuggestions = false,

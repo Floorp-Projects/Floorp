@@ -85,6 +85,8 @@ sealed class SearchEngineSource {
  * @property showSearchShortcutsSetting Whether the setting for showing search shortcuts is enabled
  * or disabled.
  * @property showClipboardSuggestions Whether or not to show clipboard suggestion in the AwesomeBar
+ * @property showSearchTermHistory Whether or not to show suggestions based on the previously used search terms
+ * with the currently selected search engine.
  * @property showHistorySuggestionsForCurrentEngine Whether or not to show history suggestions for only
  * the current search engine.
  * @property showAllHistorySuggestions Whether or not to show history suggestions in the AwesomeBar
@@ -106,6 +108,7 @@ data class SearchFragmentState(
     val areShortcutsAvailable: Boolean,
     val showSearchShortcutsSetting: Boolean,
     val showClipboardSuggestions: Boolean,
+    val showSearchTermHistory: Boolean,
     val showHistorySuggestionsForCurrentEngine: Boolean,
     val showAllHistorySuggestions: Boolean,
     val showBookmarkSuggestions: Boolean,
@@ -157,6 +160,7 @@ fun createInitialSearchFragmentState(
         areShortcutsAvailable = false,
         showSearchShortcutsSetting = settings.shouldShowSearchShortcuts,
         showClipboardSuggestions = settings.shouldShowClipboardSuggestions,
+        showSearchTermHistory = settings.showUnifiedSearchFeature && settings.shouldShowHistorySuggestions,
         showHistorySuggestionsForCurrentEngine = false,
         showAllHistorySuggestions = settings.shouldShowHistorySuggestions,
         showBookmarkSuggestions = settings.shouldShowBookmarkSuggestions,
@@ -241,6 +245,8 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
                 showSearchSuggestions = action.settings.shouldShowSearchSuggestions,
                 showSearchShortcuts = action.settings.shouldShowSearchShortcuts,
                 showClipboardSuggestions = action.settings.shouldShowClipboardSuggestions,
+                showSearchTermHistory = action.settings.showUnifiedSearchFeature &&
+                    action.settings.shouldShowHistorySuggestions,
                 showHistorySuggestionsForCurrentEngine = false, // we'll show all history
                 showAllHistorySuggestions = action.settings.shouldShowHistorySuggestions,
                 showBookmarkSuggestions = action.settings.shouldShowBookmarkSuggestions,
@@ -256,6 +262,8 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
                     false -> action.settings.shouldShowSearchShortcuts
                 },
                 showClipboardSuggestions = action.settings.shouldShowClipboardSuggestions,
+                showSearchTermHistory = action.settings.showUnifiedSearchFeature &&
+                    action.settings.shouldShowHistorySuggestions,
                 showHistorySuggestionsForCurrentEngine = action.settings.showUnifiedSearchFeature &&
                     action.settings.shouldShowHistorySuggestions && !action.engine.isGeneral,
                 showAllHistorySuggestions = when (action.settings.showUnifiedSearchFeature) {
@@ -281,6 +289,7 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
                 showSearchSuggestions = false,
                 showSearchShortcuts = false,
                 showClipboardSuggestions = false,
+                showSearchTermHistory = false,
                 showHistorySuggestionsForCurrentEngine = false,
                 showAllHistorySuggestions = true,
                 showBookmarkSuggestions = false,
@@ -293,6 +302,7 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
                 showSearchSuggestions = false,
                 showSearchShortcuts = false,
                 showClipboardSuggestions = false,
+                showSearchTermHistory = false,
                 showHistorySuggestionsForCurrentEngine = false,
                 showAllHistorySuggestions = false,
                 showBookmarkSuggestions = true,
@@ -305,6 +315,7 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
                 showSearchSuggestions = false,
                 showSearchShortcuts = false,
                 showClipboardSuggestions = false,
+                showSearchTermHistory = false,
                 showHistorySuggestionsForCurrentEngine = false,
                 showAllHistorySuggestions = false,
                 showBookmarkSuggestions = false,

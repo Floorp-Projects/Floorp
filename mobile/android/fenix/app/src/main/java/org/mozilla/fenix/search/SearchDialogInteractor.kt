@@ -39,6 +39,10 @@ class SearchDialogInteractor(
         searchController.handleSearchTermsTapped(searchTerms)
     }
 
+    override fun onHistorySearchTermTapped(searchTerms: String) {
+        searchController.handleSearchTermsTapped(searchTerms)
+    }
+
     override fun onSearchEngineSuggestionSelected(searchEngine: SearchEngine) {
         searchController.handleSearchEngineSuggestionClicked(searchEngine)
     }

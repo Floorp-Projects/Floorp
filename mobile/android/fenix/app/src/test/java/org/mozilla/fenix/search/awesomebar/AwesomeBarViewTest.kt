@@ -18,6 +18,7 @@ import mozilla.components.feature.awesomebar.provider.HistoryStorageSuggestionPr
 import mozilla.components.feature.awesomebar.provider.SearchActionProvider
 import mozilla.components.feature.awesomebar.provider.SearchEngineSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
+import mozilla.components.feature.awesomebar.provider.SearchTermSuggestionsProvider
 import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
 import mozilla.components.feature.syncedtabs.SyncedTabsStorageSuggestionProvider
 import mozilla.components.support.ktx.android.content.getColorFromAttr
@@ -57,6 +58,7 @@ class AwesomeBarViewTest {
         every { any<Activity>().components.core.bookmarksStorage } returns mockk()
         every { any<Activity>().components.core.client } returns mockk()
         every { any<Activity>().components.backgroundServices.syncedTabsStorage } returns mockk()
+        every { any<Activity>().components.core.store.state.search } returns mockk(relaxed = true)
         every { any<Activity>().components.core.store.state.search } returns mockk(relaxed = true)
         every { any<Activity>().getColorFromAttr(any()) } returns 0
         every { AwesomeBarView.Companion.getDrawable(any(), any()) } returns mockk<VectorDrawable>(relaxed = true) {
@@ -413,6 +415,48 @@ class AwesomeBarViewTest {
         assertNotNull((result as HistoryStorageSuggestionProvider).resultsHostFilter)
         assertEquals(AwesomeBarView.METADATA_SUGGESTION_LIMIT, result.getMaxNumberOfSuggestions())
     }
+
+    @Test
+    fun `GIVEN a search engine is not available WHEN asking for a search term provider THEN return null`() {
+        val searchEngineSource: SearchEngineSource = SearchEngineSource.None
+
+        val result = awesomeBarView.getSearchTermSuggestionsProvider(searchEngineSource)
+
+        assertNull(result)
+    }
+
+    @Test
+    fun `GIVEN a search engine is available WHEN asking for a search term provider THEN return a valid provider`() {
+        val searchEngineSource = SearchEngineSource.Default(mockk())
+
+        val result = awesomeBarView.getSearchTermSuggestionsProvider(searchEngineSource)
+
+        assertTrue(result is SearchTermSuggestionsProvider)
+    }
+
+    @Test
+    fun `GIVEN history search term suggestions disabled WHEN getting suggestions providers THEN don't search term provider of past searches`() {
+        every { activity.settings() } returns mockk(relaxed = true)
+        val state = getSearchProviderState(
+            searchEngineSource = SearchEngineSource.Default(mockk(relaxed = true)),
+            showSearchTermHistory = false,
+        )
+        val result = awesomeBarView.getProvidersToAdd(state)
+
+        assertEquals(0, result.filterIsInstance<SearchTermSuggestionsProvider>().size)
+    }
+
+    @Test
+    fun `GIVEN history search term suggestions enabled WHEN getting suggestions providers THEN add a search term provider of past searches`() {
+        every { activity.settings() } returns mockk(relaxed = true)
+        val state = getSearchProviderState(
+            searchEngineSource = SearchEngineSource.Default(mockk(relaxed = true)),
+            showSearchTermHistory = true,
+        )
+        val result = awesomeBarView.getProvidersToAdd(state)
+
+        assertEquals(1, result.filterIsInstance<SearchTermSuggestionsProvider>().size)
+    }
 }
 
 /**
@@ -420,6 +464,7 @@ class AwesomeBarViewTest {
  */
 private fun getSearchProviderState(
     showSearchShortcuts: Boolean = true,
+    showSearchTermHistory: Boolean = true,
     showHistorySuggestionsForCurrentEngine: Boolean = true,
     showAllHistorySuggestions: Boolean = true,
     showBookmarkSuggestions: Boolean = true,
@@ -429,6 +474,7 @@ private fun getSearchProviderState(
     searchEngineSource: SearchEngineSource = SearchEngineSource.None,
 ) = SearchProviderState(
     showSearchShortcuts = showSearchShortcuts,
+    showSearchTermHistory = showSearchTermHistory,
     showHistorySuggestionsForCurrentEngine = showHistorySuggestionsForCurrentEngine,
     showAllHistorySuggestions = showAllHistorySuggestions,
     showBookmarkSuggestions = showBookmarkSuggestions,

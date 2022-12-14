@@ -23,6 +23,7 @@ import mozilla.components.feature.awesomebar.provider.HistoryStorageSuggestionPr
 import mozilla.components.feature.awesomebar.provider.SearchActionProvider
 import mozilla.components.feature.awesomebar.provider.SearchEngineSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
+import mozilla.components.feature.awesomebar.provider.SearchTermSuggestionsProvider
 import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
@@ -75,6 +76,16 @@ class AwesomeBarView(
     }
 
     private val searchUseCase = object : SearchUseCases.SearchUseCase {
+        override fun invoke(
+            searchTerms: String,
+            searchEngine: SearchEngine?,
+            parentSessionId: String?,
+        ) {
+            interactor.onSearchTermsTapped(searchTerms)
+        }
+    }
+
+    private val historySearchTermUseCase = object : SearchUseCases.SearchUseCase {
         override fun invoke(
             searchTerms: String,
             searchEngine: SearchEngine?,
@@ -277,6 +288,12 @@ class AwesomeBarView(
             }
         }
 
+        if (state.showSearchTermHistory) {
+            getSearchTermSuggestionsProvider(state.searchEngineSource)?.let {
+                providersToAdd.add(it)
+            }
+        }
+
         if (state.showAllHistorySuggestions) {
             if (activity.settings().historyMetadataUIFeature) {
                 providersToAdd.add(defaultCombinedHistoryProvider)
@@ -370,6 +387,22 @@ class AwesomeBarView(
         }
     }
 
+    @VisibleForTesting
+    internal fun getSearchTermSuggestionsProvider(
+        searchEngineSource: SearchEngineSource,
+    ): AwesomeBar.SuggestionProvider? {
+        val validSearchEngine = searchEngineSource.searchEngine ?: return null
+
+        return SearchTermSuggestionsProvider(
+            historyStorage = components.core.historyStorage,
+            searchUseCase = historySearchTermUseCase,
+            searchEngine = validSearchEngine,
+            icon = getDrawable(activity, R.drawable.ic_history)?.toBitmap(),
+            engine = engineForSpeculativeConnects,
+            suggestionsHeader = getSearchEngineSuggestionsHeader(),
+        )
+    }
+
     private fun handleDisplayShortcutsProviders() {
         view.addProviders(shortcutsEnginePickerProvider)
     }
@@ -419,6 +452,7 @@ class AwesomeBarView(
 
     data class SearchProviderState(
         val showSearchShortcuts: Boolean,
+        val showSearchTermHistory: Boolean,
         val showHistorySuggestionsForCurrentEngine: Boolean,
         val showAllHistorySuggestions: Boolean,
         val showBookmarkSuggestions: Boolean,
@@ -443,6 +477,7 @@ class AwesomeBarView(
 
 fun SearchFragmentState.toSearchProviderState() = AwesomeBarView.SearchProviderState(
     showSearchShortcuts,
+    showSearchTermHistory,
     showHistorySuggestionsForCurrentEngine,
     showAllHistorySuggestions,
     showBookmarkSuggestions,

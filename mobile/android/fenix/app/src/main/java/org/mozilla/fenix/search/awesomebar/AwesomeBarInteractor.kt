@@ -26,6 +26,12 @@ interface AwesomeBarInteractor {
     fun onSearchTermsTapped(searchTerms: String)
 
     /**
+     * Called whenever a suggestion for a previously used search term is tapped.
+     * @param searchTerms the query contained by the search suggestion.
+     */
+    fun onHistorySearchTermTapped(searchTerms: String)
+
+    /**
      * Called whenever a search engine shortcut is tapped
      * @param searchEngine the searchEngine that was selected
      */
