@@ -135,7 +135,7 @@ async function checkContextMenu(
     expectedBaseUrl + "?test=test%2520search",
     true
   );
-  contextMenu.activateItem(searchItem);
+  searchItem.click();
   let searchTab = await loaded;
   let browser = win.gBrowser.selectedBrowser;
   await SpecialPowers.spawn(browser, [], async function() {

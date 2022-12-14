@@ -52,10 +52,10 @@ add_task(async function() {
     document.querySelector("#requests-list-transferred-button")
   );
 
-  await selectContextMenuItem(
+  getContextMenuItem(
     monitor,
     "request-list-header-resize-column-to-fit-content"
-  );
+  ).click();
 
   columnsData = JSON.parse(
     Services.prefs.getCharPref("devtools.netmonitor.columnsData")

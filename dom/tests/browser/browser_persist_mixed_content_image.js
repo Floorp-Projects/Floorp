@@ -99,7 +99,8 @@ add_task(async function test_image_download() {
       );
       await popupShown;
       let popupHidden = BrowserTestUtils.waitForEvent(popup, "popuphidden");
-      popup.activateItem(popup.querySelector("#context-saveimage"));
+      popup.querySelector("#context-saveimage").click();
+      popup.hidePopup();
       await popupHidden;
       info("Context menu hidden, waiting for download to finish");
       let imageDownload = await downloadFinishedPromise;

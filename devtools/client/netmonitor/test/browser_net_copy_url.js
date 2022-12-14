@@ -42,8 +42,8 @@ add_task(async function() {
     document.querySelectorAll(".request-list-item")[0]
   );
 
-  await waitForClipboardPromise(async function setup() {
-    await selectContextMenuItem(monitor, "request-list-context-copy-url");
+  await waitForClipboardPromise(function setup() {
+    getContextMenuItem(monitor, "request-list-context-copy-url").click();
   }, requestItem.url);
 
   await teardown(monitor);

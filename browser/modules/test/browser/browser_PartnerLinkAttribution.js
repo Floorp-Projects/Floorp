@@ -246,7 +246,7 @@ add_task(async function test_context_menu() {
 
       info("Open the context menu.");
       contextMenu = document.getElementById("contentAreaContextMenu");
-      let shownPromise = BrowserTestUtils.waitForEvent(
+      let popupPromise = BrowserTestUtils.waitForEvent(
         contextMenu,
         "popupshown"
       );
@@ -255,19 +255,17 @@ add_task(async function test_context_menu() {
         { type: "contextmenu", button: 2 },
         gBrowser.selectedBrowser
       );
-      await shownPromise;
-
-      let hiddenPromise = BrowserTestUtils.waitForEvent(
-        contextMenu,
-        "popuphidden"
-      );
+      await popupPromise;
 
       info("Click on search.");
-      let searchItem = contextMenu.querySelector("#context-searchselect");
-      contextMenu.activateItem(searchItem);
-      await hiddenPromise;
+      let searchItem = contextMenu.getElementsByAttribute(
+        "id",
+        "context-searchselect"
+      )[0];
+      searchItem.click();
     },
     () => {
+      contextMenu.hidePopup();
       BrowserTestUtils.removeTab(gBrowser.selectedTab);
     }
   );

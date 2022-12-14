@@ -99,7 +99,8 @@ async function openMenuAndClick(monitor, store, document, itemSelector) {
   );
 
   const wait = waitForDispatch(store, "REQUEST_BLOCKING_UPDATE_COMPLETE");
-  await selectContextMenuItem(monitor, itemSelector);
+  const node = getContextMenuItem(monitor, itemSelector);
+  node.click();
   await wait;
 }
 

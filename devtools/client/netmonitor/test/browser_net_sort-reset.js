@@ -84,7 +84,7 @@ add_task(async function() {
     { type: "contextmenu" },
     document.querySelector("#requests-list-contentSize-button")
   );
-  await selectContextMenuItem(monitor, "request-list-header-reset-sorting");
+  getContextMenuItem(monitor, "request-list-header-reset-sorting").click();
   testHeaders();
   await testContents([0, 2, 4, 3, 1]);
 
@@ -97,14 +97,14 @@ add_task(async function() {
     { type: "contextmenu" },
     document.querySelector("#requests-list-contentSize-button")
   );
-  await selectContextMenuItem(monitor, "request-list-header-reset-columns");
+  getContextMenuItem(monitor, "request-list-header-reset-columns").click();
   testHeaders();
   // add columns because verifyRequestItemTarget expects some extra columns
-  await showColumn(monitor, "protocol");
-  await showColumn(monitor, "remoteip");
-  await showColumn(monitor, "scheme");
-  await showColumn(monitor, "duration");
-  await showColumn(monitor, "latency");
+  showColumn(monitor, "protocol");
+  showColumn(monitor, "remoteip");
+  showColumn(monitor, "scheme");
+  showColumn(monitor, "duration");
+  showColumn(monitor, "latency");
   await testContents([0, 2, 4, 3, 1]);
 
   return teardown(monitor);

@@ -31,8 +31,12 @@ add_task(async function() {
     { type: "contextmenu" },
     document.querySelectorAll(".request-list-item")[2]
   );
+  await waitUntil(() =>
+    getContextMenuItem(monitor, "request-list-context-open-in-debugger")
+  );
+
   const onDebuggerReady = toolbox.once("jsdebugger-ready");
-  await selectContextMenuItem(monitor, "request-list-context-open-in-debugger");
+  getContextMenuItem(monitor, "request-list-context-open-in-debugger").click();
   await onDebuggerReady;
 
   ok(true, "Debugger has been open");

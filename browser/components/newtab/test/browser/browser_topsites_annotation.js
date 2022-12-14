@@ -185,7 +185,8 @@ async function openAndTest({
     const openLinkMenuItem = contextMenu.querySelector(
       "#context-openlinkintab"
     );
-    contextMenu.activateItem(openLinkMenuItem);
+    openLinkMenuItem.click();
+    contextMenu.hidePopup();
 
     const tab = await onLoad;
     await onLocationChanged;
@@ -202,7 +203,8 @@ async function openAndTest({
     await onPopup;
     const contextMenu = document.getElementById("contentAreaContextMenu");
     const openLinkMenuItem = contextMenu.querySelector("#context-openlink");
-    contextMenu.activateItem(openLinkMenuItem);
+    openLinkMenuItem.click();
+    contextMenu.hidePopup();
 
     const win = await onLoad;
     await BrowserTestUtils.closeWindow(win);

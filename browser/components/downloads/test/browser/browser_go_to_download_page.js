@@ -85,7 +85,7 @@ add_task(async function test_go_to_download_page() {
   let goToDownloadButton = [...contextMenu.children].find(
     child => child.command == "downloadsCmd_openReferrer"
   );
-  contextMenu.activateItem(goToDownloadButton);
+  goToDownloadButton.click();
 
   let newTab = await tabPromise;
   ok(newTab, "Go To Download Page opened a new tab");

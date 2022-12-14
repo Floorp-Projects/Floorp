@@ -1,17 +1,3 @@
-async function openTabMenuFor(tab) {
-  let tabMenu = tab.ownerDocument.getElementById("tabContextMenu");
-
-  let tabMenuShown = BrowserTestUtils.waitForEvent(tabMenu, "popupshown");
-  EventUtils.synthesizeMouseAtCenter(
-    tab,
-    { type: "contextmenu" },
-    tab.ownerGlobal
-  );
-  await tabMenuShown;
-
-  return tabMenu;
-}
-
 add_task(async function test() {
   let originalTab = gBrowser.selectedTab;
   let tab1 = await addTab("http://example.com/1");
@@ -45,10 +31,8 @@ add_task(async function test() {
     "http://example.com/3",
     true
   );
-  {
-    let menu = await openTabMenuFor(tab3);
-    menu.activateItem(menuItemDuplicateTab);
-  }
+  window.TabContextMenu.contextTab = tab3; // Set proper context for command handler
+  menuItemDuplicateTab.click();
   let tab4 = await newTabOpened;
 
   is(
@@ -85,10 +69,8 @@ add_task(async function test() {
     () => gBrowser.visibleTabs.length == 7,
     "Wait for two tabs to get created"
   );
-  {
-    let menu = await openTabMenuFor(tab3);
-    menu.activateItem(menuItemDuplicateTabs);
-  }
+  window.TabContextMenu.contextTab = tab3; // Set proper context for command handler
+  menuItemDuplicateTabs.click();
   await newTabsOpened;
   info("Two tabs opened");
 

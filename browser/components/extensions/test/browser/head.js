@@ -12,7 +12,7 @@
  *          closeBrowserAction closePageAction
  *          promisePopupShown promisePopupHidden promisePopupNotificationShown
  *          toggleBookmarksToolbar
- *          openContextMenu closeContextMenu promiseContextMenuClosed
+ *          openContextMenu closeContextMenu
  *          openContextMenuInSidebar openContextMenuInPopup
  *          openExtensionContextMenu closeExtensionContextMenu
  *          openActionContextMenu openSubmenu closeActionContextMenu
@@ -528,18 +528,16 @@ async function openContextMenu(selector = "#img1", win = window) {
   return contentAreaContextMenu;
 }
 
-async function promiseContextMenuClosed(contextMenu) {
-  let contentAreaContextMenu =
-    contextMenu || document.getElementById("contentAreaContextMenu");
-  return BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popuphidden");
-}
-
 async function closeContextMenu(contextMenu, win = window) {
+  let doc = win.document;
   let contentAreaContextMenu =
-    contextMenu || win.document.getElementById("contentAreaContextMenu");
-  let closed = promiseContextMenuClosed(contentAreaContextMenu);
+    contextMenu || doc.getElementById("contentAreaContextMenu");
+  let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+    contentAreaContextMenu,
+    "popuphidden"
+  );
   contentAreaContextMenu.hidePopup();
-  await closed;
+  await popupHiddenPromise;
 }
 
 async function openExtensionContextMenu(selector = "#img1") {
@@ -568,7 +566,10 @@ async function closeExtensionContextMenu(itemToSelect, modifiers = {}) {
   let contentAreaContextMenu = document.getElementById(
     "contentAreaContextMenu"
   );
-  let popupHiddenPromise = promiseContextMenuClosed(contentAreaContextMenu);
+  let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+    contentAreaContextMenu,
+    "popuphidden"
+  );
   if (itemToSelect) {
     itemToSelect.closest("menupopup").activateItem(itemToSelect, modifiers);
   } else {

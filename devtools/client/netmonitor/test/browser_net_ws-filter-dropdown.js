@@ -58,7 +58,11 @@ add_task(async function() {
   );
 
   // Click on "sent" option and check
-  await selectContextMenuItem(monitor, "message-list-context-filter-sent");
+  const sentOption = getContextMenuItem(
+    monitor,
+    "message-list-context-filter-sent"
+  );
+  sentOption.click();
 
   const sentFrames = document.querySelectorAll(
     "#messages-view .message-list-table .message-list-item"
@@ -75,14 +79,12 @@ add_task(async function() {
     "The payload type is 'Sent'"
   );
 
-  // Click on filter menu
-  EventUtils.sendMouseEvent(
-    { type: "click" },
-    document.querySelector("#frame-filter-menu")
-  );
-
   // Click on "received" option and check
-  await selectContextMenuItem(monitor, "message-list-context-filter-received");
+  const receivedOption = getContextMenuItem(
+    monitor,
+    "message-list-context-filter-received"
+  );
+  receivedOption.click();
 
   const receivedFrames = document.querySelectorAll(
     "#messages-view .message-list-table .message-list-item"
