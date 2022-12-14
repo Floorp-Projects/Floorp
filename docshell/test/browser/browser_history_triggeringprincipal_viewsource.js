@@ -34,12 +34,8 @@ add_task(async function() {
     );
     await popupPromise;
     let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, VIEW_SRC_URI);
-    let vSrcItem = vSrcCtxtMenu.getElementsByAttribute(
-      "id",
-      "context-viewsource"
-    )[0];
-    vSrcItem.click();
-    vSrcCtxtMenu.hidePopup();
+    let vSrcItem = vSrcCtxtMenu.querySelector("#context-viewsource");
+    vSrcCtxtMenu.activateItem(vSrcItem);
     let tab = await tabPromise;
     is(
       gBrowser.selectedBrowser.currentURI.spec,
@@ -78,9 +74,8 @@ add_task(async function() {
       tab.linkedBrowser,
       "pageshow"
     );
-    let backItem = backCtxtMenu.getElementsByAttribute("id", "context-back")[0];
-    backItem.click();
-    backCtxtMenu.hidePopup();
+    let backItem = backCtxtMenu.querySelector("#context-back");
+    backCtxtMenu.activateItem(backItem);
     await loadPromise;
     is(
       gBrowser.selectedBrowser.currentURI.spec,

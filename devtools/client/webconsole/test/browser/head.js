@@ -437,7 +437,7 @@ async function openContextMenu(hud, element) {
  */
 function hideContextMenu(hud) {
   const popup = _getContextMenu(hud);
-  if (!popup) {
+  if (!popup || popup.state == "hidden") {
     return Promise.resolve();
   }
 

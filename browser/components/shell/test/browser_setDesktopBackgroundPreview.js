@@ -6,6 +6,10 @@
  * correctly, without stretching
  */
 
+const { ShellService } = ChromeUtils.import(
+  "resource:///modules/ShellService.jsm"
+);
+
 add_task(async function() {
   await BrowserTestUtils.withNewTab(
     {
@@ -28,12 +32,33 @@ add_task(async function() {
 
       const menu = document.getElementById("contentAreaContextMenu");
       await BrowserTestUtils.waitForPopupEvent(menu, "shown");
-      document.getElementById("context-setDesktopBackground").click();
-
-      // Need to explicitly close the menu (and wait for it), otherwise it fails
-      // verify/later tests
       const menuClosed = BrowserTestUtils.waitForPopupEvent(menu, "hidden");
-      menu.hidePopup();
+
+      const menuItem = document.getElementById("context-setDesktopBackground");
+      try {
+        menu.activateItem(menuItem);
+      } catch (ex) {
+        ok(
+          menuItem.hidden,
+          "should only fail to activate when menu item is hidden"
+        );
+        ok(
+          !ShellService.canSetDesktopBackground,
+          "Should only hide when not able to set the desktop background"
+        );
+        is(
+          AppConstants.platform,
+          "linux",
+          "Should always be able to set desktop background on non-linux platforms"
+        );
+        todo(false, "Skipping test on this configuration");
+
+        menu.hidePopup();
+        await menuClosed;
+        return;
+      }
+
+      await menuClosed;
 
       const win = await dialogLoad;
 

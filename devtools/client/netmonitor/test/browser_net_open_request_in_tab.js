@@ -66,12 +66,9 @@ add_task(async function() {
     const lastRequest = requestItems[requestItems.length - 1];
     EventUtils.sendMouseEvent({ type: "mousedown" }, lastRequest);
     EventUtils.sendMouseEvent({ type: "contextmenu" }, lastRequest);
-    await waitUntil(() =>
-      getContextMenuItem(monitor, "request-list-context-newtab")
-    );
 
     const onTabOpen = once(gBrowser.tabContainer, "TabOpen", false);
-    getContextMenuItem(monitor, "request-list-context-newtab").click();
+    await selectContextMenuItem(monitor, "request-list-context-newtab");
     await onTabOpen;
     info("A new tab has been opened");
 

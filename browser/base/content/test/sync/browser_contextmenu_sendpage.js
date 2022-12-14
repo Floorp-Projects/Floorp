@@ -87,7 +87,7 @@ add_task(async function test_link_contextmenu() {
     content.document.body.appendChild(a);
   });
 
-  await openContentContextMenu(
+  let contextMenu = await openContentContextMenu(
     "#testingLink",
     "context-sendlinktodevice",
     "context-sendlinktodevice-popup"
@@ -151,10 +151,11 @@ add_task(async function test_link_contextmenu() {
     false,
     "Send link to device is enabled"
   );
-  document
-    .getElementById("context-sendlinktodevice-popup")
-    .querySelector("menuitem")
-    .click();
+  contextMenu.activateItem(
+    document
+      .getElementById("context-sendlinktodevice-popup")
+      .querySelector("menuitem")
+  );
   await hideContentContextMenu();
 
   expectation.verify();
@@ -450,6 +451,7 @@ async function openContentContextMenu(selector, openSubmenuId = null) {
     menu.openMenu(true);
     await menuPopupPromise;
   }
+  return contextMenu;
 }
 
 async function hideContentContextMenu() {

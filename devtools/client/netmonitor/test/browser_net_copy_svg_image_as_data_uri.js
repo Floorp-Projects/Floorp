@@ -33,11 +33,11 @@ add_task(async function() {
   );
 
   await waitForClipboardPromise(
-    function setup() {
-      getContextMenuItem(
+    async function setup() {
+      await selectContextMenuItem(
         monitor,
         "request-list-context-copy-image-as-data-uri"
-      ).click();
+      );
     },
     function check(text) {
       return text.startsWith("data:") && !/undefined/.test(text);

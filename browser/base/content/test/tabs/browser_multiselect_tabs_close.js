@@ -127,8 +127,7 @@ add_task(async function usingTabContextMenu() {
 
   let tab1Closing = BrowserTestUtils.waitForTabClosing(tab1);
   let tab2Closing = BrowserTestUtils.waitForTabClosing(tab2);
-  menuItemCloseTab.click();
-  menu.hidePopup();
+  menu.activateItem(menuItemCloseTab);
   await tab1Closing;
   await tab2Closing;
 

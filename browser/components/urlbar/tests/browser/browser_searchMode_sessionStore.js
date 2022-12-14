@@ -219,6 +219,20 @@ async function doTest({
   await BrowserTestUtils.closeWindow(win);
 }
 
+async function openTabMenuFor(tab) {
+  let tabMenu = tab.ownerDocument.getElementById("tabContextMenu");
+
+  let tabMenuShown = BrowserTestUtils.waitForEvent(tabMenu, "popupshown");
+  EventUtils.synthesizeMouseAtCenter(
+    tab,
+    { type: "contextmenu" },
+    tab.ownerGlobal
+  );
+  await tabMenuShown;
+
+  return tabMenu;
+}
+
 // Tests that search mode is duplicated when duplicating tabs.  Note that tab
 // duplication is handled by session store.
 add_task(async function duplicateTabs() {
@@ -237,16 +251,13 @@ add_task(async function duplicateTabs() {
     source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
   });
 
-  // Now duplicate the current tab using the context menu item.  First we need
-  // to set TabContextMenu.contextTab because that's how the menu item's command
-  // determines which tab to duplicate.
-  window.TabContextMenu.contextTab = gBrowser.selectedTab;
+  // Now duplicate the current tab using the context menu item.
+  const menu = await openTabMenuFor(gBrowser.selectedTab);
   let tabPromise = BrowserTestUtils.waitForNewTab(
     gBrowser,
     gBrowser.currentURI.spec
   );
-  let menuitem = document.getElementById("context_duplicateTab");
-  menuitem.click();
+  menu.activateItem(document.getElementById("context_duplicateTab"));
   let newTab = await tabPromise;
   Assert.equal(
     gBrowser.selectedTab,

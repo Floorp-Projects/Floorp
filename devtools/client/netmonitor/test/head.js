@@ -986,7 +986,7 @@ async function hideColumn(monitor, column) {
     `#requests-list-${column}-button`,
     0
   );
-  getContextMenuItem(monitor, `request-list-header-${column}-toggle`).click();
+  await selectContextMenuItem(monitor, `request-list-header-${column}-toggle`);
   await onHeaderRemoved;
 
   ok(
@@ -1009,7 +1009,7 @@ async function showColumn(monitor, column) {
     `#requests-list-${column}-button`,
     1
   );
-  getContextMenuItem(monitor, `request-list-header-${column}-toggle`).click();
+  await selectContextMenuItem(monitor, `request-list-header-${column}-toggle`);
   await onHeaderAdded;
 
   ok(
@@ -1246,6 +1246,22 @@ function getContextMenuItem(monitor, id) {
   return Menu.getMenuElementById(id, monitor.panelWin.document);
 }
 
+async function maybeOpenAncestorMenu(menuItem) {
+  const parentPopup = menuItem.parentNode;
+  if (parentPopup.state == "shown") {
+    return;
+  }
+  const shown = BrowserTestUtils.waitForEvent(parentPopup, "popupshown");
+  if (parentPopup.state == "showing") {
+    await shown;
+    return;
+  }
+  const parentMenu = parentPopup.parentNode;
+  await maybeOpenAncestorMenu(parentMenu);
+  parentMenu.openMenu(true);
+  await shown;
+}
+
 /*
  * Selects and clicks the context menu item, it should
  * also wait for the popup to close.
@@ -1256,16 +1272,12 @@ function getContextMenuItem(monitor, id) {
  */
 async function selectContextMenuItem(monitor, id) {
   const contextMenuItem = getContextMenuItem(monitor, id);
-  contextMenuItem.click();
 
-  // Hide and wait for hiding of the context menu
-  const onHidden = new Promise(resolve =>
-    contextMenuItem.parentElement.addEventListener("popuphidden", resolve, {
-      once: true,
-    })
-  );
-  contextMenuItem.parentElement.hidePopup();
-  await onHidden;
+  const popup = contextMenuItem.parentNode;
+  await maybeOpenAncestorMenu(contextMenuItem);
+  const hidden = BrowserTestUtils.waitForEvent(popup, "popuphidden");
+  popup.activateItem(contextMenuItem);
+  await hidden;
 }
 
 /**
@@ -1300,12 +1312,11 @@ async function waitForDOMIfNeeded(target, selector, expectedLength = 1) {
 async function toggleBlockedUrl(element, monitor, store, action = "block") {
   EventUtils.sendMouseEvent({ type: "contextmenu" }, element);
   const contextMenuId = `request-list-context-${action}-url`;
-  const contextBlockToggle = getContextMenuItem(monitor, contextMenuId);
   const onRequestComplete = waitForDispatch(
     store,
     "REQUEST_BLOCKING_UPDATE_COMPLETE"
   );
-  contextBlockToggle.click();
+  await selectContextMenuItem(monitor, contextMenuId);
 
   info(`Wait for selected request to be ${action}ed`);
   await onRequestComplete;

@@ -14,7 +14,7 @@ add_task(async function() {
     "context-openlinknewtab"
   );
 
-  await rightClickStyleSheet(panel, ui.editors[0]);
+  let menu = await rightClickStyleSheet(panel, ui.editors[0]);
   is(
     openLinkNewTabItem.getAttribute("disabled"),
     "false",
@@ -38,21 +38,27 @@ add_task(async function() {
     };
   });
 
-  openLinkNewTabItem.click();
+  const hidden = onPopupHide(menu);
+
+  menu.activateItem(openLinkNewTabItem);
 
   info(`Waiting for a tab to open - ${url}`);
   await tabOpenedDefer;
 
-  await rightClickInlineStyleSheet(panel, ui.editors[1]);
+  await hidden;
+
+  menu = await rightClickInlineStyleSheet(panel, ui.editors[1]);
   is(
     openLinkNewTabItem.getAttribute("disabled"),
     "true",
     "The menu item is disabled"
   );
   ok(!openLinkNewTabItem.hidden, "The menu item should not be hidden");
+  menu.hidePopup();
 
-  await rightClickNoStyleSheet(panel);
+  menu = await rightClickNoStyleSheet(panel);
   ok(openLinkNewTabItem.hidden, "The menu item should be hidden");
+  menu.hidePopup();
 });
 
 function onPopupShow(contextMenu) {
@@ -83,10 +89,7 @@ function rightClickStyleSheet(panel, editor) {
   const contextMenu = getContextMenuElement(panel);
   return new Promise(resolve => {
     onPopupShow(contextMenu).then(() => {
-      onPopupHide(contextMenu).then(() => {
-        resolve();
-      });
-      contextMenu.hidePopup();
+      resolve(contextMenu);
     });
 
     EventUtils.synthesizeMouseAtCenter(
@@ -101,10 +104,7 @@ function rightClickInlineStyleSheet(panel, editor) {
   const contextMenu = getContextMenuElement(panel);
   return new Promise(resolve => {
     onPopupShow(contextMenu).then(() => {
-      onPopupHide(contextMenu).then(() => {
-        resolve();
-      });
-      contextMenu.hidePopup();
+      resolve(contextMenu);
     });
 
     EventUtils.synthesizeMouseAtCenter(
@@ -119,10 +119,7 @@ function rightClickNoStyleSheet(panel) {
   const contextMenu = getContextMenuElement(panel);
   return new Promise(resolve => {
     onPopupShow(contextMenu).then(() => {
-      onPopupHide(contextMenu).then(() => {
-        resolve();
-      });
-      contextMenu.hidePopup();
+      resolve(contextMenu);
     });
 
     EventUtils.synthesizeMouseAtCenter(

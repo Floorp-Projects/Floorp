@@ -63,18 +63,16 @@ add_task(async function() {
     );
 
     /* Ensure that the use as fetch option is always visible */
-    const useAsFetchNode = getContextMenuItem(
-      monitor,
-      "request-list-context-use-as-fetch"
-    );
     is(
-      !!useAsFetchNode,
+      !!getContextMenuItem(monitor, "request-list-context-use-as-fetch"),
       true,
       'The "Use as Fetch" context menu item should not be hidden.'
     );
 
-    useAsFetchNode.click();
-    await toolbox.once("split-console");
+    const split = toolbox.once("split-console");
+    await selectContextMenuItem(monitor, "request-list-context-use-as-fetch");
+
+    await split;
     const hud = toolbox.getPanel("webconsole").hud;
     await hud.jsterm.once("set-input-value");
 

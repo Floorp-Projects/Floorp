@@ -102,7 +102,7 @@ async function storeAsVariable(hud, msg, type, varIdx, equalTo) {
 
   info("Click on store as global variable");
   const onceInputSet = hud.jsterm.once("set-input-value");
-  storeMenuItem.click();
+  menuPopup.activateItem(storeMenuItem);
 
   info("Wait for console input to be updated with the temp variable");
   await onceInputSet;
