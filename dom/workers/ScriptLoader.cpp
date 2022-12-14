@@ -258,7 +258,12 @@ void LoadAllScripts(WorkerPrivate* aWorkerPrivate,
     return;
   }
 
-  loader->CreateScriptRequests(aScriptURLs, aDocumentEncoding, aIsMainScript);
+  bool ok = loader->CreateScriptRequests(aScriptURLs, aDocumentEncoding,
+                                         aIsMainScript);
+
+  if (!ok) {
+    return;
+  }
 
   if (loader->DispatchLoadScripts()) {
     syncLoop.Run();
@@ -427,14 +432,29 @@ void WorkerScriptLoader::InitModuleLoader() {
       ->InitModuleLoader(moduleLoader);
 }
 
-void WorkerScriptLoader::CreateScriptRequests(
+bool WorkerScriptLoader::CreateScriptRequests(
     const nsTArray<nsString>& aScriptURLs,
     const mozilla::Encoding* aDocumentEncoding, bool aIsMainScript) {
+  // If a worker has been loaded as a module worker, ImportScripts calls are
+  // disallowed -- then the operation is invalid.
+  //
+  // 10.3.1 Importing scripts and libraries.
+  // Step 1. If worker global scope's type is "module", throw a TypeError
+  //         exception.
+  if (!aIsMainScript &&
+      mWorkerRef->Private()->WorkerType() == WorkerType::Module) {
+    mRv.ThrowTypeError(
+        "Using `ImportScripts` inside a Module Worker is "
+        "disallowed.");
+    return false;
+  }
   for (const nsString& scriptURL : aScriptURLs) {
     RefPtr<ScriptLoadRequest> request =
         CreateScriptLoadRequest(scriptURL, aDocumentEncoding, aIsMainScript);
     mLoadingRequests.AppendElement(request);
   }
+
+  return true;
 }
 
 nsTArray<RefPtr<ThreadSafeRequestHandle>> WorkerScriptLoader::GetLoadingList() {
