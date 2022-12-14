@@ -2239,7 +2239,6 @@ dependencies = [
  "uniffi-example-rondpoint",
  "uniffi-example-sprites",
  "uniffi-example-todolist",
- "uniffi-fixture-callbacks",
  "uniffi-fixture-external-types",
  "url",
  "viaduct",
@@ -5823,8 +5822,8 @@ dependencies = [
 
 [[package]]
 name = "uniffi-example-arithmetic"
-version = "0.21.0"
-source = "git+https://github.com/mozilla/uniffi-rs.git?rev=846612a1d4fb5d11e246bf0682da4a499409424c#846612a1d4fb5d11e246bf0682da4a499409424c"
+version = "0.18.0"
+source = "git+https://github.com/mozilla/uniffi-rs.git?rev=bb2039f077a29dba0879372a67e764e6ace8e33f#bb2039f077a29dba0879372a67e764e6ace8e33f"
 dependencies = [
  "thiserror",
  "uniffi",
@@ -5847,8 +5846,8 @@ dependencies = [
 
 [[package]]
 name = "uniffi-example-geometry"
-version = "0.21.0"
-source = "git+https://github.com/mozilla/uniffi-rs.git?rev=846612a1d4fb5d11e246bf0682da4a499409424c#846612a1d4fb5d11e246bf0682da4a499409424c"
+version = "0.18.0"
+source = "git+https://github.com/mozilla/uniffi-rs.git?rev=bb2039f077a29dba0879372a67e764e6ace8e33f#bb2039f077a29dba0879372a67e764e6ace8e33f"
 dependencies = [
  "uniffi",
  "uniffi_build",
@@ -5857,8 +5856,8 @@ dependencies = [
 
 [[package]]
 name = "uniffi-example-rondpoint"
-version = "0.21.0"
-source = "git+https://github.com/mozilla/uniffi-rs.git?rev=846612a1d4fb5d11e246bf0682da4a499409424c#846612a1d4fb5d11e246bf0682da4a499409424c"
+version = "0.18.0"
+source = "git+https://github.com/mozilla/uniffi-rs.git?rev=bb2039f077a29dba0879372a67e764e6ace8e33f#bb2039f077a29dba0879372a67e764e6ace8e33f"
 dependencies = [
  "uniffi",
  "uniffi_build",
@@ -5867,8 +5866,8 @@ dependencies = [
 
 [[package]]
 name = "uniffi-example-sprites"
-version = "0.21.0"
-source = "git+https://github.com/mozilla/uniffi-rs.git?rev=846612a1d4fb5d11e246bf0682da4a499409424c#846612a1d4fb5d11e246bf0682da4a499409424c"
+version = "0.18.0"
+source = "git+https://github.com/mozilla/uniffi-rs.git?rev=bb2039f077a29dba0879372a67e764e6ace8e33f#bb2039f077a29dba0879372a67e764e6ace8e33f"
 dependencies = [
  "uniffi",
  "uniffi_build",
@@ -5877,20 +5876,10 @@ dependencies = [
 
 [[package]]
 name = "uniffi-example-todolist"
-version = "0.21.0"
-source = "git+https://github.com/mozilla/uniffi-rs.git?rev=846612a1d4fb5d11e246bf0682da4a499409424c#846612a1d4fb5d11e246bf0682da4a499409424c"
+version = "0.18.0"
+source = "git+https://github.com/mozilla/uniffi-rs.git?rev=bb2039f077a29dba0879372a67e764e6ace8e33f#bb2039f077a29dba0879372a67e764e6ace8e33f"
 dependencies = [
- "once_cell",
- "thiserror",
- "uniffi",
- "uniffi_build",
- "uniffi_macros",
-]
-
-[[package]]
-name = "uniffi-fixture-callbacks"
-version = "0.21.0"
-dependencies = [
+ "lazy_static",
  "thiserror",
  "uniffi",
  "uniffi_build",

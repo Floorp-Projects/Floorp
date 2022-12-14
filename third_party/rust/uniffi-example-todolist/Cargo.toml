@@ -1,7 +1,7 @@
 [package]
 name = "uniffi-example-todolist"
 edition = "2021"
-version = "0.21.0"
+version = "0.18.0"
 authors = ["Firefox Sync Team <sync-team@mozilla.com>"]
 license = "MPL-2.0"
 publish = false
@@ -13,8 +13,8 @@ name = "uniffi_todolist"
 [dependencies]
 uniffi_macros = {path = "../../uniffi_macros"}
 uniffi = {path = "../../uniffi", features=["builtin-bindgen"]}
-once_cell = "1.12"
 thiserror = "1.0"
+lazy_static = "1.4"
 
 [build-dependencies]
 uniffi_build = {path = "../../uniffi_build", features=["builtin-bindgen"]}
