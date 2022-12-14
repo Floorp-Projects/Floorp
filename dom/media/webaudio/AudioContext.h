@@ -420,6 +420,7 @@ class AudioContext final : public DOMEventTargetHelper,
   RefPtr<BasicWaveFormCache> mBasicWaveFormCache;
   // Number of channels passed in the OfflineAudioContext ctor.
   uint32_t mNumberOfChannels;
+  const RTPCallerType mRTPCallerType;
   const bool mIsOffline;
   // true iff realtime or startRendering() has been called.
   bool mIsStarted;
