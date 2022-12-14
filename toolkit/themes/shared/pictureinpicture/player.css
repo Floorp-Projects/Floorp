@@ -120,7 +120,7 @@ browser {
   background-repeat: no-repeat;
 }
 
-#controls[keying] .control-item:focus::after,
+#controls .control-item:focus::after,
 .control-item:hover::after {
   content: attr(tooltip);
   display: inline-block;
@@ -135,54 +135,54 @@ browser {
 
 /* Set the tooltip position for different playback controls */
 
-#controls[keying] .tooltip-under-controls:focus::after,
+#controls .tooltip-under-controls:focus::after,
 #controls .tooltip-under-controls:hover::after {
   bottom: -3em;
 }
 
-#controls[keying] #close:focus::after,
+#controls #close:focus::after,
 #controls #close:hover::after {
   float: right;
   transform: translateX(1em);
 }
 
-#controls[keying] #close[mac="true"]:focus::after,
+#controls #close[mac="true"]:focus::after,
 #controls #close[mac="true"]:hover::after {
   float: left;
   transform: translateX(-1em);
 }
 
-#controls[keying] .tooltip-over-controls:focus::after,
+#controls .tooltip-over-controls:focus::after,
 #controls .tooltip-over-controls:hover::after {
   bottom: 3em;
 }
 
-#controls[keying] .inline-end-tooltip:focus::after,
+#controls .inline-end-tooltip:focus::after,
 #controls .inline-end-tooltip:hover::after {
   float: inline-end;
   inset-inline-end: -1em;
 }
 
-#controls[keying] .inline-start-tooltip:focus::after,
+#controls .inline-start-tooltip:focus::after,
 #controls .inline-start-tooltip:hover::after {
   float: inline-start;
   inset-inline-start: -1em;
 }
 
-#controls[keying] .center-tooltip:focus::after,
+#controls .center-tooltip:focus::after,
 #controls .center-tooltip:hover::after {
   inset-inline-end: 0.8em;
   translate: calc(-50% + var(--player-control-item-half-width));
 }
 
-#controls[keying] .center-tooltip:dir(rtl):focus::after,
+#controls .center-tooltip:dir(rtl):focus::after,
 #controls .center-tooltip:dir(rtl):hover::after {
   translate: calc(50% - var(--player-control-item-half-width));
 }
 
 /* Since the unpip button icon is reversed for RTL locales,
  * re-position the tooltip so that the tooltip is right aligned with the button. */
-#controls[keying] #unpip:dir(rtl):focus::after,
+#controls #unpip:dir(rtl):focus::after,
 #controls #unpip:dir(rtl):hover::after {
   float: inline-end;
   inset-inline-start: 1em;
@@ -190,7 +190,7 @@ browser {
 
 /* Since the closed caption icon is reversed for RTL locales,
  * re-position the tooltip so that the tooltip is left aligned with the button. */
-#controls[keying] .closed-caption.inline-end-tooltip:dir(rtl):focus::after,
+#controls .closed-caption.inline-end-tooltip:dir(rtl):focus::after,
 #controls .closed-caption.inline-end-tooltip:dir(rtl):hover::after {
   float: inline-start;
   inset-inline-end: 1em;
@@ -200,7 +200,7 @@ browser {
  * flip the tooltips back */
 #unpip:dir(rtl):focus::after,
 #controls #unpip:dir(rtl):hover::after,
-#controls[keying] .closed-caption:dir(rtl):focus::after,
+#controls .closed-caption:dir(rtl):focus::after,
 #controls .closed-caption:dir(rtl):hover::after {
   scale: -1 1;
 }
