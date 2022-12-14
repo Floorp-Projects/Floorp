@@ -45,6 +45,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.LISTS_MAXSWIPES
 import org.mozilla.fenix.helpers.Constants.PackageName.GOOGLE_PLAY_SERVICES
 import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
+import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.getStringResource
@@ -216,6 +217,14 @@ class SettingsRobot {
 
             SettingsSubMenuSetDefaultBrowserRobot().interact()
             return SettingsSubMenuSetDefaultBrowserRobot.Transition()
+        }
+
+        fun openCookieBannerReductionSubMenu(interact: SettingsSubMenuCookieBannerReductionRobot.() -> Unit): SettingsSubMenuCookieBannerReductionRobot.Transition {
+            scrollToElementByText(getStringResource(R.string.preferences_cookie_banner_reduction))
+            itemContainingText(getStringResource(R.string.preferences_cookie_banner_reduction)).click()
+
+            SettingsSubMenuCookieBannerReductionRobot().interact()
+            return SettingsSubMenuCookieBannerReductionRobot.Transition()
         }
 
         fun openEnhancedTrackingProtectionSubMenu(interact: SettingsSubMenuEnhancedTrackingProtectionRobot.() -> Unit): SettingsSubMenuEnhancedTrackingProtectionRobot.Transition {

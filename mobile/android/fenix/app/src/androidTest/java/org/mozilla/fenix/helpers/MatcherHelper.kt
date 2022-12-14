@@ -6,6 +6,7 @@ package org.mozilla.fenix.helpers
 
 import androidx.test.uiautomator.UiObject
 import androidx.test.uiautomator.UiSelector
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -41,9 +42,15 @@ object MatcherHelper {
     fun itemWithResIdAndText(resourceId: String, text: String) =
         mDevice.findObject(UiSelector().resourceId(resourceId).text(text))
 
-    fun assertItemWithResIdExists(vararg appItems: UiObject) {
-        for (appItem in appItems) {
-            assertTrue(appItem.waitForExists(waitingTime))
+    fun assertItemWithResIdExists(vararg appItems: UiObject, exists: Boolean = true) {
+        if (exists) {
+            for (appItem in appItems) {
+                assertTrue(appItem.waitForExists(waitingTime))
+            }
+        } else {
+            for (appItem in appItems) {
+                assertFalse(appItem.waitForExists(waitingTime))
+            }
         }
     }
 

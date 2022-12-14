@@ -45,6 +45,8 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
 import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.MatcherHelper
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
@@ -885,6 +887,27 @@ class BrowserRobot {
         )
     }
 
+    fun verifyCookieBannerExists(exists: Boolean) {
+        for (i in 1..RETRY_COUNT) {
+            try {
+                assertItemWithResIdExists(cookieBanner, exists = exists)
+
+                break
+            } catch (e: AssertionError) {
+                if (i == RETRY_COUNT) {
+                    throw e
+                } else {
+                    browserScreen {
+                    }.openThreeDotMenu {
+                    }.refreshPage {
+                        waitForPageToLoad()
+                    }
+                }
+            }
+        }
+        assertItemWithResIdExists(cookieBanner, exists = exists)
+    }
+
     class Transition {
         private fun threeDotButton() = onView(
             allOf(
@@ -1232,3 +1255,4 @@ private val currentDate = LocalDate.now()
 private val currentDay = currentDate.dayOfMonth
 private val currentMonth = currentDate.month
 private val currentYear = currentDate.year
+private val cookieBanner = itemWithResId("CybotCookiebotDialog")
