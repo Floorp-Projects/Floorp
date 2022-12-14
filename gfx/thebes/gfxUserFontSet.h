@@ -222,48 +222,18 @@ class gfxUserFontFamily : public gfxFontFamily {
 class gfxUserFontEntry;
 class gfxOTSMessageContext;
 
-struct gfxUserFontAttributes {
-  using FontStretch = mozilla::FontStretch;
-  using StretchRange = mozilla::StretchRange;
-  using FontSlantStyle = mozilla::FontSlantStyle;
-  using SlantStyleRange = mozilla::SlantStyleRange;
-  using FontWeight = mozilla::FontWeight;
-  using WeightRange = mozilla::WeightRange;
-  using StyleFontFaceSourceListComponent =
-      mozilla::StyleFontFaceSourceListComponent;
-  using RangeFlags = gfxFontEntry::RangeFlags;
-
-  WeightRange mWeight = WeightRange(FontWeight::NORMAL);
-  StretchRange mStretch = StretchRange(FontStretch::NORMAL);
-  SlantStyleRange mStyle = SlantStyleRange(FontSlantStyle::NORMAL);
-  RangeFlags mRangeFlags = RangeFlags::eAutoWeight | RangeFlags::eAutoStretch |
-                           RangeFlags::eAutoSlantStyle;
-  mozilla::StyleFontDisplay mFontDisplay = mozilla::StyleFontDisplay::Auto;
-  float mAscentOverride = -1.0;
-  float mDescentOverride = -1.0;
-  float mLineGapOverride = -1.0;
-  float mSizeAdjust = 1.0;
-  uint32_t mLanguageOverride = NO_FONT_LANGUAGE_OVERRIDE;
-  nsTArray<gfxFontFeature> mFeatureSettings;
-  nsTArray<gfxFontVariation> mVariationSettings;
-  RefPtr<gfxCharacterMap> mUnicodeRanges;
-
-  nsCString mFamilyName;
-  AutoTArray<StyleFontFaceSourceListComponent, 8> mSources;
-};
-
 class gfxUserFontSet {
   friend class gfxUserFontEntry;
   friend class gfxOTSMessageContext;
 
  public:
-  using FontStretch = mozilla::FontStretch;
-  using StretchRange = mozilla::StretchRange;
-  using FontSlantStyle = mozilla::FontSlantStyle;
-  using SlantStyleRange = mozilla::SlantStyleRange;
-  using FontWeight = mozilla::FontWeight;
-  using WeightRange = mozilla::WeightRange;
-  using RangeFlags = gfxFontEntry::RangeFlags;
+  typedef mozilla::FontStretch FontStretch;
+  typedef mozilla::StretchRange StretchRange;
+  typedef mozilla::FontSlantStyle FontSlantStyle;
+  typedef mozilla::SlantStyleRange SlantStyleRange;
+  typedef mozilla::FontWeight FontWeight;
+  typedef mozilla::WeightRange WeightRange;
+  typedef gfxFontEntry::RangeFlags RangeFlags;
 
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
@@ -279,23 +249,40 @@ class gfxUserFontSet {
   // nsLayoutUtils::ParseFontLanguageOverride
   // TODO: support for unicode ranges not yet implemented
   virtual already_AddRefed<gfxUserFontEntry> CreateUserFontEntry(
-      nsTArray<gfxFontFaceSrc>&& aFontFaceSrcList,
-      gfxUserFontAttributes&& aAttr) = 0;
+      const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList, WeightRange aWeight,
+      StretchRange aStretch, SlantStyleRange aStyle,
+      const nsTArray<gfxFontFeature>& aFeatureSettings,
+      const nsTArray<mozilla::gfx::FontVariation>& aVariationSettings,
+      uint32_t aLanguageOverride, gfxCharacterMap* aUnicodeRanges,
+      mozilla::StyleFontDisplay aFontDisplay, RangeFlags aRangeFlags,
+      float aAscentOverride, float aDescentOverride, float aLineGapOverride,
+      float aSizeAdjust) = 0;
 
   // creates a font face for the specified family, or returns an existing
   // matching entry on the family if there is one
   already_AddRefed<gfxUserFontEntry> FindOrCreateUserFontEntry(
-      nsTArray<gfxFontFaceSrc>&& aFontFaceSrcList,
-      gfxUserFontAttributes&& aAttr);
+      const nsACString& aFamilyName,
+      const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList, WeightRange aWeight,
+      StretchRange aStretch, SlantStyleRange aStyle,
+      const nsTArray<gfxFontFeature>& aFeatureSettings,
+      const nsTArray<mozilla::gfx::FontVariation>& aVariationSettings,
+      uint32_t aLanguageOverride, gfxCharacterMap* aUnicodeRanges,
+      mozilla::StyleFontDisplay aFontDisplay, RangeFlags aRangeFlags,
+      float aAscentOverride, float aDescentOverride, float aLineGapOverride,
+      float aSizeAdjust);
 
   // add in a font face for which we have the gfxUserFontEntry already
   void AddUserFontEntry(const nsCString& aFamilyName,
                         gfxUserFontEntry* aUserFontEntry);
 
+  // Whether there is a face with this family name
+  bool HasFamily(const nsACString& aFamilyName) const {
+    return LookupFamily(aFamilyName) != nullptr;
+  }
+
   // Look up and return the gfxUserFontFamily in mFontFamilies with
   // the given name
-  virtual already_AddRefed<gfxUserFontFamily> LookupFamily(
-      const nsACString& aName) const;
+  gfxUserFontFamily* LookupFamily(const nsACString& aName) const;
 
   virtual already_AddRefed<gfxFontSrcPrincipal> GetStandardFontLoadPrincipal()
       const = 0;
@@ -328,7 +315,7 @@ class gfxUserFontSet {
   // be reloaded next time they're needed. This is called when the platform
   // font list has changed, which means local font entries that were set up
   // may no longer be valid.
-  virtual void ForgetLocalFaces();
+  void ForgetLocalFaces();
 
   class UserFontCache {
    public:
@@ -523,15 +510,18 @@ class gfxUserFontSet {
   // helper method for FindOrCreateUserFontEntry
   gfxUserFontEntry* FindExistingUserFontEntry(
       gfxUserFontFamily* aFamily,
-      const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
-      const gfxUserFontAttributes& aAttr);
+      const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList, WeightRange aWeight,
+      StretchRange aStretch, SlantStyleRange aStyle,
+      const nsTArray<gfxFontFeature>& aFeatureSettings,
+      const nsTArray<mozilla::gfx::FontVariation>& aVariationSettings,
+      uint32_t aLanguageOverride, gfxCharacterMap* aUnicodeRanges,
+      mozilla::StyleFontDisplay aFontDisplay, RangeFlags aRangeFlags,
+      float aAscentOverride, float aDescentOverride, float aLineGapOverride,
+      float aSizeAdjust);
 
   // creates a new gfxUserFontFamily in mFontFamilies, or returns an existing
   // family if there is one
-  virtual already_AddRefed<gfxUserFontFamily> GetFamily(
-      const nsACString& aFamilyName);
-
-  void ForgetLocalFace(gfxUserFontFamily* aFontFamily);
+  gfxUserFontFamily* GetFamily(const nsACString& aFamilyName);
 
   // font families defined by @font-face rules
   nsRefPtrHashtable<nsCStringHashKey, gfxUserFontFamily> mFontFamilies;
@@ -568,18 +558,39 @@ class gfxUserFontEntry : public gfxFontEntry {
     STATUS_FAILED
   };
 
-  gfxUserFontEntry(nsTArray<gfxFontFaceSrc>&& aFontFaceSrcList,
-                   gfxUserFontAttributes&& aAttr);
+  gfxUserFontEntry(
+      const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList, WeightRange aWeight,
+      StretchRange aStretch, SlantStyleRange aStyle,
+      const nsTArray<gfxFontFeature>& aFeatureSettings,
+      const nsTArray<mozilla::gfx::FontVariation>& aVariationSettings,
+      uint32_t aLanguageOverride, gfxCharacterMap* aUnicodeRanges,
+      mozilla::StyleFontDisplay aFontDisplay, RangeFlags aRangeFlags,
+      float aAscentOverride, float aDescentOverride, float aLineGapOverride,
+      float aSizeAdjust);
 
-  ~gfxUserFontEntry() override;
+  virtual ~gfxUserFontEntry();
 
   // Update the attributes of the entry to the given values, without disturbing
   // the associated platform font entry or in-progress downloads.
-  void UpdateAttributes(gfxUserFontAttributes&& aAttr);
+  void UpdateAttributes(
+      WeightRange aWeight, StretchRange aStretch, SlantStyleRange aStyle,
+      const nsTArray<gfxFontFeature>& aFeatureSettings,
+      const nsTArray<mozilla::gfx::FontVariation>& aVariationSettings,
+      uint32_t aLanguageOverride, gfxCharacterMap* aUnicodeRanges,
+      mozilla::StyleFontDisplay aFontDisplay, RangeFlags aRangeFlags,
+      float aAscentOverride, float aDescentOverride, float aLineGapOverride,
+      float aSizeAdjust);
 
   // Return whether the entry matches the given list of attributes
   bool Matches(const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
-               const gfxUserFontAttributes& aAttr);
+               WeightRange aWeight, StretchRange aStretch,
+               SlantStyleRange aStyle,
+               const nsTArray<gfxFontFeature>& aFeatureSettings,
+               const nsTArray<mozilla::gfx::FontVariation>& aVariationSettings,
+               uint32_t aLanguageOverride, gfxCharacterMap* aUnicodeRanges,
+               mozilla::StyleFontDisplay aFontDisplay, RangeFlags aRangeFlags,
+               float aAscentOverride, float aDescentOverride,
+               float aLineGapOverride, float aSizeAdjust);
 
   gfxFont* CreateFontInstance(const gfxFontStyle* aFontStyle) override;
 
@@ -617,14 +628,12 @@ class gfxUserFontEntry : public gfxFontEntry {
   }
 
   gfxCharacterMap* GetUnicodeRangeMap() const { return GetCharacterMap(); }
-  void SetUnicodeRangeMap(RefPtr<gfxCharacterMap>&& aCharMap) {
+  void SetUnicodeRangeMap(gfxCharacterMap* aCharMap) {
     auto* oldCmap = GetUnicodeRangeMap();
     if (oldCmap != aCharMap) {
-      auto* newCmap = aCharMap.forget().take();
-      if (mCharacterMap.compareExchange(oldCmap, newCmap)) {
+      if (mCharacterMap.compareExchange(oldCmap, aCharMap)) {
         NS_IF_RELEASE(oldCmap);
-      } else {
-        NS_IF_RELEASE(newCmap);
+        NS_IF_ADDREF(aCharMap);
       }
     }
   }

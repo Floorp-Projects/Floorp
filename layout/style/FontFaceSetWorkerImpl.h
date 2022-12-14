@@ -35,9 +35,6 @@ class FontFaceSetWorkerImpl final : public FontFaceSetImpl {
 
   // gfxUserFontSet
 
-  already_AddRefed<gfxUserFontFamily> LookupFamily(
-      const nsACString& aName) const override;
-
   nsresult StartLoad(gfxUserFontEntry* aUserFontEntry,
                      uint32_t aSrcIndex) override;
 
