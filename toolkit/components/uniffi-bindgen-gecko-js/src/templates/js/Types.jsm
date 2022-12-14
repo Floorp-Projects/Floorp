@@ -1,3 +1,8 @@
+{%- if !ci.callback_interface_definitions().is_empty() %}
+{%- include "CallbackInterfaceRuntime.jsm" %}
+
+{% endif %}
+
 {%- for type_ in ci.iter_types() %}
 {%- let ffi_converter = type_.ffi_converter() %}
 {%- match type_ %}
@@ -65,6 +70,9 @@
 {%- when Type::External with { name, crate_name } %}
 {%- include "ExternalType.jsm" %}
 
+{%- when Type::CallbackInterface with (name) %}
+{%- include "CallbackInterface.jsm" %}
+
 {%- else %}
 {#- TODO implement the other types #}
 
@@ -74,3 +82,11 @@
 EXPORTED_SYMBOLS.push("{{ ffi_converter }}");
 
 {% endfor %}
+
+{%- if !ci.callback_interface_definitions().is_empty() %}
+// Define callback interface handlers, this must come after the type loop since they reference the FfiConverters defined above.
+
+{% for cbi in ci.callback_interface_definitions() %}
+{%- include "CallbackInterfaceHandler.jsm" %}
+{% endfor %}
+{% endif %}

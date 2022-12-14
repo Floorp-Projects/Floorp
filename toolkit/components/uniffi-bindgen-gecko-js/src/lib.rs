@@ -6,16 +6,18 @@ use anyhow::{Context, Result};
 use askama::Template;
 use camino::Utf8PathBuf;
 use clap::Parser;
+use serde::{Deserialize, Serialize};
+use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io::Write;
+use uniffi_bindgen::ComponentInterface;
 
 mod ci_list;
 mod render;
 
-pub use ci_list::{ComponentInterfaceUniverse, FunctionIds, ObjectIds};
-pub use render::cpp::CPPScaffoldingTemplate;
-pub use render::js::JSBindingsTemplate;
-use uniffi_bindgen::ComponentInterface;
+use ci_list::{CallbackIds, ComponentUniverse, FunctionIds, ObjectIds};
+use render::cpp::CPPScaffoldingTemplate;
+use render::js::JSBindingsTemplate;
 
 #[derive(Debug, Parser)]
 #[clap(name = "uniffi-bindgen-gecko-js")]
@@ -44,6 +46,25 @@ struct CliArgs {
     fixture_udl_files: Vec<Utf8PathBuf>,
 }
 
+/// Configuration for all components, read from `uniffi.toml`
+type ConfigMap = HashMap<String, Config>;
+
+/// Configuration for a single Component
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct Config {
+    receiver_thread: ReceiverThreadConfig,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+struct ReceiverThreadConfig {
+    #[serde(default)]
+    default: Option<String>,
+    #[serde(default)]
+    main: HashSet<String>,
+    #[serde(default)]
+    worker: HashSet<String>,
+}
+
 fn render(out_path: Utf8PathBuf, template: impl Template) -> Result<()> {
     println!("rendering {}", out_path);
     let contents = template.render()?;
@@ -55,32 +76,37 @@ fn render(out_path: Utf8PathBuf, template: impl Template) -> Result<()> {
 fn render_cpp(
     path: Utf8PathBuf,
     prefix: &str,
-    ci_list: &Vec<ComponentInterface>,
+    components: &Vec<(ComponentInterface, Config)>,
     function_ids: &FunctionIds,
     object_ids: &ObjectIds,
+    callback_ids: &CallbackIds,
 ) -> Result<()> {
     render(
         path,
         CPPScaffoldingTemplate {
             prefix,
-            ci_list,
-            function_ids: &function_ids,
-            object_ids: &object_ids,
+            components,
+            function_ids,
+            object_ids,
+            callback_ids,
         },
     )
 }
 
 fn render_js(
     out_dir: Utf8PathBuf,
-    ci_list: &Vec<ComponentInterface>,
+    components: &Vec<(ComponentInterface, Config)>,
     function_ids: &FunctionIds,
     object_ids: &ObjectIds,
+    callback_ids: &CallbackIds,
 ) -> Result<()> {
-    for ci in ci_list {
+    for (ci, config) in components {
         let template = JSBindingsTemplate {
             ci,
-            function_ids: &function_ids,
-            object_ids: &object_ids,
+            config,
+            function_ids,
+            object_ids,
+            callback_ids,
         };
         let path = out_dir.join(template.js_module_name());
         render(path, template)?;
@@ -90,30 +116,42 @@ fn render_js(
 
 pub fn run_main() -> Result<()> {
     let args = CliArgs::parse();
-    let cis = ComponentInterfaceUniverse::new(args.udl_files, args.fixture_udl_files)?;
-    let function_ids = FunctionIds::new(&cis);
-    let object_ids = ObjectIds::new(&cis);
+    let config_map: ConfigMap =
+        toml::from_str(include_str!("../config.toml")).expect("Error parsing config.toml");
+    let components = ComponentUniverse::new(args.udl_files, args.fixture_udl_files, config_map)?;
+    let function_ids = FunctionIds::new(&components);
+    let object_ids = ObjectIds::new(&components);
+    let callback_ids = CallbackIds::new(&components);
 
     render_cpp(
         args.cpp_path,
         "UniFFI",
-        cis.ci_list(),
+        &components.components,
         &function_ids,
         &object_ids,
+        &callback_ids,
     )?;
     render_cpp(
         args.fixture_cpp_path,
         "UniFFIFixtures",
-        cis.fixture_ci_list(),
+        &components.fixture_components,
         &function_ids,
         &object_ids,
+        &callback_ids,
     )?;
-    render_js(args.js_dir, cis.ci_list(), &function_ids, &object_ids)?;
+    render_js(
+        args.js_dir,
+        &components.components,
+        &function_ids,
+        &object_ids,
+        &callback_ids,
+    )?;
     render_js(
         args.fixture_js_dir,
-        cis.fixture_ci_list(),
+        &components.fixture_components,
         &function_ids,
         &object_ids,
+        &callback_ids,
     )?;
 
     Ok(())

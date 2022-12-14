@@ -4,18 +4,18 @@
 
 use std::sync::{Arc, RwLock};
 
+use once_cell::sync::Lazy;
+
 #[derive(Debug, Clone)]
 pub struct TodoEntry {
     text: String,
 }
 
-lazy_static::lazy_static! {
-    // There is a single "default" TodoList that can be shared
-    // by all consumers of this component. Depending on requirements,
-    // a real app might like to use a `Weak<>` rather than an `Arc<>`
-    // here to reduce the risk of circular references.
-    static ref DEFAULT_LIST: RwLock<Option<Arc<TodoList>>> = RwLock::new(None);
-}
+// There is a single "default" TodoList that can be shared
+// by all consumers of this component. Depending on requirements,
+// a real app might like to use a `Weak<>` rather than an `Arc<>`
+// here to reduce the risk of circular references.
+static DEFAULT_LIST: Lazy<RwLock<Option<Arc<TodoList>>>> = Lazy::new(|| RwLock::new(None));
 
 #[derive(Debug, thiserror::Error)]
 pub enum TodoError {
