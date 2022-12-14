@@ -21,9 +21,9 @@ class ManufacturerCodesTest {
         assertFalse(ManufacturerCodes.isXiaomi)
     }
 
-    @Test // To reduce boilerplate, we avoid best practice and put several tests in one.
+    @Test
     fun testIsSamsung() {
-        manufacturer = "samsung"
+        manufacturer = "Samsung" // expected value for Samsung devices
 
         assertFalse(ManufacturerCodes.isHuawei)
 
