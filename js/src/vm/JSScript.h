@@ -50,7 +50,8 @@ class SourceText;
 
 namespace js {
 
-class ErrorContext;
+class FrontendContext;
+using ErrorContext = FrontendContext;
 class ScriptSource;
 
 class VarScope;

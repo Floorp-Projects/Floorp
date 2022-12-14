@@ -24,7 +24,7 @@ void* FrontendAllocator::onOutOfMemory(AllocFunction allocFunc,
   return context_->onOutOfMemory(allocFunc, arena, nbytes, reallocPtr);
 }
 
-bool OffThreadErrorContext::hadErrors() const {
+bool FrontendContext::hadErrors() const {
   if (maybeCx_) {
     if (maybeCx_->isExceptionPending()) {
       return true;
@@ -34,22 +34,21 @@ bool OffThreadErrorContext::hadErrors() const {
   return errors_.hadErrors();
 }
 
-void* OffThreadErrorContext::onOutOfMemory(AllocFunction allocFunc,
-                                           arena_id_t arena, size_t nbytes,
-                                           void* reallocPtr) {
+void* FrontendContext::onOutOfMemory(AllocFunction allocFunc, arena_id_t arena,
+                                     size_t nbytes, void* reallocPtr) {
   addPendingOutOfMemory();
   return nullptr;
 }
 
-void OffThreadErrorContext::onAllocationOverflow() {
+void FrontendContext::onAllocationOverflow() {
   errors_.allocationOverflow = true;
 }
 
-void OffThreadErrorContext::onOutOfMemory() { addPendingOutOfMemory(); }
+void FrontendContext::onOutOfMemory() { addPendingOutOfMemory(); }
 
-void OffThreadErrorContext::onOverRecursed() { errors_.overRecursed = true; }
+void FrontendContext::onOverRecursed() { errors_.overRecursed = true; }
 
-void OffThreadErrorContext::recoverFromOutOfMemory() {
+void FrontendContext::recoverFromOutOfMemory() {
   // TODO: Remove this branch once error report directly against JSContext is
   //       removed from the frontend code.
   if (maybeCx_) {
@@ -59,7 +58,7 @@ void OffThreadErrorContext::recoverFromOutOfMemory() {
   errors_.outOfMemory = false;
 }
 
-const JSErrorFormatString* OffThreadErrorContext::gcSafeCallback(
+const JSErrorFormatString* FrontendContext::gcSafeCallback(
     JSErrorCallback callback, void* userRef, const unsigned errorNumber) {
   if (maybeCx_) {
     gc::AutoSuppressGC suppressGC(maybeCx_);
@@ -69,7 +68,7 @@ const JSErrorFormatString* OffThreadErrorContext::gcSafeCallback(
   return callback(userRef, errorNumber);
 }
 
-void OffThreadErrorContext::reportError(CompileError&& err) {
+void FrontendContext::reportError(CompileError&& err) {
   if (errors_.error) {
     errors_.error.reset();
   }
@@ -79,7 +78,7 @@ void OffThreadErrorContext::reportError(CompileError&& err) {
   errors_.error.emplace(std::move(err));
 }
 
-bool OffThreadErrorContext::reportWarning(CompileError&& err) {
+bool FrontendContext::reportWarning(CompileError&& err) {
   if (!errors_.warnings.append(std::move(err))) {
     ReportOutOfMemory();
     return false;
@@ -88,7 +87,7 @@ bool OffThreadErrorContext::reportWarning(CompileError&& err) {
   return true;
 }
 
-void OffThreadErrorContext::ReportOutOfMemory() {
+void FrontendContext::ReportOutOfMemory() {
   /*
    * OOMs are non-deterministic, especially across different execution modes
    * (e.g. interpreter vs JIT). When doing differential testing, print to
@@ -101,15 +100,11 @@ void OffThreadErrorContext::ReportOutOfMemory() {
   addPendingOutOfMemory();
 }
 
-void OffThreadErrorContext::addPendingOutOfMemory() {
-  errors_.outOfMemory = true;
-}
+void FrontendContext::addPendingOutOfMemory() { errors_.outOfMemory = true; }
 
-void OffThreadErrorContext::setCurrentJSContext(JSContext* cx) {
-  maybeCx_ = cx;
-}
+void FrontendContext::setCurrentJSContext(JSContext* cx) { maybeCx_ = cx; }
 
-void OffThreadErrorContext::convertToRuntimeError(
+void FrontendContext::convertToRuntimeError(
     JSContext* cx, Warning warning /* = Warning::Report */) {
   // Report out of memory errors eagerly, or errors could be malformed.
   if (hadOutOfMemory()) {
@@ -133,41 +128,41 @@ void OffThreadErrorContext::convertToRuntimeError(
   }
 }
 
-void OffThreadErrorContext::linkWithJSContext(JSContext* cx) {
+void FrontendContext::linkWithJSContext(JSContext* cx) {
   if (cx) {
     cx->setFrontendErrors(&errors_);
   }
 }
 
 #ifdef __wasi__
-void OffThreadErrorContext::incWasiRecursionDepth() {
+void FrontendContext::incWasiRecursionDepth() {
   if (maybeCx_) {
     IncWasiRecursionDepth(maybeCx_);
   }
 }
 
-void OffThreadErrorContext::decWasiRecursionDepth() {
+void FrontendContext::decWasiRecursionDepth() {
   if (maybeCx_) {
     DecWasiRecursionDepth(maybeCx_);
   }
 }
 
-bool OffThreadErrorContext::checkWasiRecursionLimit() {
+bool FrontendContext::checkWasiRecursionLimit() {
   if (maybeCx_) {
     return CheckWasiRecursionLimit(maybeCx_);
   }
   return true;
 }
 
-JS_PUBLIC_API void js::IncWasiRecursionDepth(ErrorContext* ec) {
+JS_PUBLIC_API void js::IncWasiRecursionDepth(FrontendContext* ec) {
   ec->incWasiRecursionDepth();
 }
 
-JS_PUBLIC_API void js::DecWasiRecursionDepth(ErrorContext* ec) {
+JS_PUBLIC_API void js::DecWasiRecursionDepth(FrontendContext* ec) {
   ec->decWasiRecursionDepth();
 }
 
-JS_PUBLIC_API bool js::CheckWasiRecursionLimit(ErrorContext* ec) {
+JS_PUBLIC_API bool js::CheckWasiRecursionLimit(FrontendContext* ec) {
   return ec->checkWasiRecursionLimit();
 }
 #endif  // __wasi__

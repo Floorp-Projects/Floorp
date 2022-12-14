@@ -22,7 +22,8 @@ namespace js {
 
 class Scope;
 class LifoAlloc;
-class ErrorContext;
+class FrontendContext;
+using ErrorContext = FrontendContext;
 
 namespace frontend {
 

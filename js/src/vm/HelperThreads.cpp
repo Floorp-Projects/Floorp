@@ -487,7 +487,7 @@ bool js::HasOffThreadIonCompile(Realm* realm) {
 #endif
 
 struct MOZ_RAII AutoSetContextFrontendErrors {
-  explicit AutoSetContextFrontendErrors(OffThreadErrorContext* ec) {
+  explicit AutoSetContextFrontendErrors(FrontendContext* ec) {
     ec->linkWithJSContext(TlsContext.get());
   }
   ~AutoSetContextFrontendErrors() {

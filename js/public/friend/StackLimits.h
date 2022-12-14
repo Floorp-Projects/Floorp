@@ -32,7 +32,8 @@ struct JS_PUBLIC_API JSContext;
 
 namespace js {
 
-class ErrorContext;
+class FrontendContext;
+using ErrorContext = FrontendContext;
 
 #ifdef __wasi__
 extern MOZ_COLD JS_PUBLIC_API void IncWasiRecursionDepth(JSContext* ec);

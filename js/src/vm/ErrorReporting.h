@@ -17,7 +17,8 @@
 
 namespace js {
 
-class ErrorContext;
+class FrontendContext;
+using ErrorContext = FrontendContext;
 
 /**
  * Use this type instead of JSContext when the object is only used for its

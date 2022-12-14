@@ -20,7 +20,8 @@ class JS_PUBLIC_API CompileOptions;
 
 namespace js {
 
-class ErrorContext;
+class FrontendContext;
+using ErrorContext = FrontendContext;
 class ScriptSource;
 
 // Populate `options` fields from `opt` object.

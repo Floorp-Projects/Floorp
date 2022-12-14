@@ -26,7 +26,8 @@ struct SmooshResult;
 namespace js {
 
 class ScriptSourceObject;
-class ErrorContext;
+class FrontendContext;
+using ErrorContext = FrontendContext;
 
 namespace frontend {
 

@@ -104,7 +104,8 @@ namespace js {
 
 class ModuleObject;
 class ScriptSourceObject;
-class ErrorContext;
+class FrontendContext;
+using ErrorContext = FrontendContext;
 
 namespace frontend {
 

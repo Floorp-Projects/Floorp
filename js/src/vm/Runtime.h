@@ -65,7 +65,8 @@ namespace js {
 class AutoAssertNoContentJS;
 class Debugger;
 class EnterDebuggeeNoExecute;
-class ErrorContext;
+class FrontendContext;
+using ErrorContext = FrontendContext;
 class StaticStrings;
 
 }  // namespace js

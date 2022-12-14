@@ -21,7 +21,8 @@ extern MOZ_COLD JS_PUBLIC_API void JS_ReportOutOfMemory(JSContext* cx);
 
 namespace js {
 
-class ErrorContext;
+class FrontendContext;
+using ErrorContext = FrontendContext;
 
 enum class AllocFunction { Malloc, Calloc, Realloc };
 
