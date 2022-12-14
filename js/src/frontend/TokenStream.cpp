@@ -356,7 +356,7 @@ TaggedParserAtomIndex TokenStreamAnyChars::reservedWordToPropertyName(
   return TaggedParserAtomIndex::null();
 }
 
-SourceCoords::SourceCoords(ErrorContext* ec, uint32_t initialLineNumber,
+SourceCoords::SourceCoords(FrontendContext* ec, uint32_t initialLineNumber,
                            uint32_t initialOffset)
     : lineStartOffsets_(ec), initialLineNum_(initialLineNumber), lastIndex_(0) {
   // This is actually necessary!  Removing it causes compile errors on
@@ -491,7 +491,7 @@ SourceCoords::LineToken SourceCoords::lineToken(uint32_t offset) const {
   return LineToken(indexFromOffset(offset), offset);
 }
 
-TokenStreamAnyChars::TokenStreamAnyChars(JSContext* cx, ErrorContext* ec,
+TokenStreamAnyChars::TokenStreamAnyChars(JSContext* cx, FrontendContext* ec,
                                          const ReadOnlyCompileOptions& options,
                                          StrictModeGetter* smg)
     : cx(cx),
@@ -514,7 +514,7 @@ TokenStreamAnyChars::TokenStreamAnyChars(JSContext* cx, ErrorContext* ec,
 
 template <typename Unit>
 TokenStreamCharsBase<Unit>::TokenStreamCharsBase(
-    JSContext* cx, ErrorContext* ec, ParserAtomsTable* parserAtoms,
+    JSContext* cx, FrontendContext* ec, ParserAtomsTable* parserAtoms,
     const Unit* units, size_t length, size_t startOffset)
     : TokenStreamCharsShared(cx, ec, parserAtoms),
       sourceUnits(units, length, startOffset) {}
@@ -580,7 +580,7 @@ bool FillCharBufferFromSourceNormalizingAsciiLineBreaks(CharBuffer& charBuffer,
 
 template <typename Unit, class AnyCharsAccess>
 TokenStreamSpecific<Unit, AnyCharsAccess>::TokenStreamSpecific(
-    JSContext* cx, ErrorContext* ec, ParserAtomsTable* parserAtoms,
+    JSContext* cx, FrontendContext* ec, ParserAtomsTable* parserAtoms,
     const ReadOnlyCompileOptions& options, const Unit* units, size_t length)
     : TokenStreamChars<Unit, AnyCharsAccess>(cx, ec, parserAtoms, units, length,
                                              options.scriptSourceOffset) {}

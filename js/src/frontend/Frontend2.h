@@ -27,7 +27,6 @@ namespace js {
 
 class ScriptSourceObject;
 class FrontendContext;
-using ErrorContext = FrontendContext;
 
 namespace frontend {
 
@@ -41,7 +40,7 @@ struct CompilationState;
 class Smoosh {
  public:
   [[nodiscard]] static bool tryCompileGlobalScriptToExtensibleStencil(
-      JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+      JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
       CompilationInput& input, JS::SourceText<mozilla::Utf8Unit>& srcBuf,
       UniquePtr<ExtensibleCompilationStencil>& stencilOut);
 };

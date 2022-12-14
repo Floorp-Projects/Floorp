@@ -105,7 +105,7 @@ HashNumber TaggedParserAtomIndex::staticOrWellKnownHash() const {
 
 template <typename CharT, typename SeqCharT>
 /* static */ ParserAtom* ParserAtom::allocate(
-    ErrorContext* ec, LifoAlloc& alloc, InflatedChar16Sequence<SeqCharT> seq,
+    FrontendContext* ec, LifoAlloc& alloc, InflatedChar16Sequence<SeqCharT> seq,
     uint32_t length, HashNumber hash) {
   constexpr size_t HeaderSize = sizeof(ParserAtom);
   void* raw = alloc.alloc(HeaderSize + (sizeof(CharT) * length));
@@ -136,7 +136,7 @@ bool ParserAtom::isInstantiatedAsJSAtom() const {
   return false;
 }
 
-JSString* ParserAtom::instantiateString(JSContext* cx, ErrorContext* ec,
+JSString* ParserAtom::instantiateString(JSContext* cx, FrontendContext* ec,
                                         ParserAtomIndex index,
                                         CompilationAtomCache& atomCache) const {
   MOZ_ASSERT(!isInstantiatedAsJSAtom());
@@ -159,7 +159,7 @@ JSString* ParserAtom::instantiateString(JSContext* cx, ErrorContext* ec,
   return str;
 }
 
-JSAtom* ParserAtom::instantiateAtom(JSContext* cx, ErrorContext* ec,
+JSAtom* ParserAtom::instantiateAtom(JSContext* cx, FrontendContext* ec,
                                     ParserAtomIndex index,
                                     CompilationAtomCache& atomCache) const {
   MOZ_ASSERT(isInstantiatedAsJSAtom());
@@ -182,7 +182,7 @@ JSAtom* ParserAtom::instantiateAtom(JSContext* cx, ErrorContext* ec,
 }
 
 JSAtom* ParserAtom::instantiatePermanentAtom(
-    JSContext* cx, ErrorContext* ec, AtomSet& atomSet, ParserAtomIndex index,
+    JSContext* cx, FrontendContext* ec, AtomSet& atomSet, ParserAtomIndex index,
     CompilationAtomCache& atomCache) const {
   MOZ_ASSERT(!cx->zone());
 
@@ -327,7 +327,7 @@ void ParserAtomsTable::dumpCharsNoQuote(js::GenericPrinter& out,
 
 ParserAtomsTable::ParserAtomsTable(LifoAlloc& alloc) : alloc_(&alloc) {}
 
-TaggedParserAtomIndex ParserAtomsTable::addEntry(ErrorContext* ec,
+TaggedParserAtomIndex ParserAtomsTable::addEntry(FrontendContext* ec,
                                                  EntryMap::AddPtr& addPtr,
                                                  ParserAtom* entry) {
   MOZ_ASSERT(!addPtr);
@@ -350,7 +350,7 @@ TaggedParserAtomIndex ParserAtomsTable::addEntry(ErrorContext* ec,
 
 template <typename AtomCharT, typename SeqCharT>
 TaggedParserAtomIndex ParserAtomsTable::internChar16Seq(
-    ErrorContext* ec, EntryMap::AddPtr& addPtr, HashNumber hash,
+    FrontendContext* ec, EntryMap::AddPtr& addPtr, HashNumber hash,
     InflatedChar16Sequence<SeqCharT> seq, uint32_t length) {
   MOZ_ASSERT(!addPtr);
 
@@ -364,7 +364,7 @@ TaggedParserAtomIndex ParserAtomsTable::internChar16Seq(
 
 static const uint16_t MAX_LATIN1_CHAR = 0xff;
 
-TaggedParserAtomIndex ParserAtomsTable::internAscii(ErrorContext* ec,
+TaggedParserAtomIndex ParserAtomsTable::internAscii(FrontendContext* ec,
                                                     const char* asciiPtr,
                                                     uint32_t length) {
   // ASCII strings are strict subsets of Latin1 strings.
@@ -373,7 +373,7 @@ TaggedParserAtomIndex ParserAtomsTable::internAscii(ErrorContext* ec,
 }
 
 TaggedParserAtomIndex ParserAtomsTable::internLatin1(
-    ErrorContext* ec, const Latin1Char* latin1Ptr, uint32_t length) {
+    FrontendContext* ec, const Latin1Char* latin1Ptr, uint32_t length) {
   // Check for tiny strings which are abundant in minified code.
   if (auto tiny = WellKnownParserAtoms::getSingleton().lookupTinyIndex(
           latin1Ptr, length)) {
@@ -410,7 +410,7 @@ bool IsWide(const InflatedChar16Sequence<char16_t>& seq) {
 
 template <typename AtomCharT>
 TaggedParserAtomIndex ParserAtomsTable::internExternalParserAtomImpl(
-    ErrorContext* ec, const ParserAtom* atom) {
+    FrontendContext* ec, const ParserAtom* atom) {
   InflatedChar16Sequence<AtomCharT> seq(atom->chars<AtomCharT>(),
                                         atom->length());
   SpecificParserAtomLookup<AtomCharT> lookup(seq, atom->hash());
@@ -441,14 +441,14 @@ TaggedParserAtomIndex ParserAtomsTable::internExternalParserAtomImpl(
 }
 
 TaggedParserAtomIndex ParserAtomsTable::internExternalParserAtom(
-    ErrorContext* ec, const ParserAtom* atom) {
+    FrontendContext* ec, const ParserAtom* atom) {
   if (atom->hasLatin1Chars()) {
     return internExternalParserAtomImpl<JS::Latin1Char>(ec, atom);
   }
   return internExternalParserAtomImpl<char16_t>(ec, atom);
 }
 
-bool ParserAtomsTable::addPlaceholder(ErrorContext* ec) {
+bool ParserAtomsTable::addPlaceholder(FrontendContext* ec) {
   ParserAtomIndex index = ParserAtomIndex(entries_.length());
   if (size_t(index) >= TaggedParserAtomIndex::IndexLimit) {
     ReportAllocationOverflow(ec);
@@ -462,7 +462,7 @@ bool ParserAtomsTable::addPlaceholder(ErrorContext* ec) {
 }
 
 TaggedParserAtomIndex ParserAtomsTable::internExternalParserAtomIndex(
-    ErrorContext* ec, const CompilationStencil& context,
+    FrontendContext* ec, const CompilationStencil& context,
     TaggedParserAtomIndex atom) {
   // When the atom is not a parser atom index, the value represent the atom
   // without the need for a ParserAtom, and thus we can skip interning it.
@@ -504,7 +504,7 @@ bool ParserAtomsTable::isEqualToExternalParserAtomIndex(
   return externalAtom->equalsSeq(hash, seq);
 }
 
-bool ParserAtomSpanBuilder::allocate(ErrorContext* ec, LifoAlloc& alloc,
+bool ParserAtomSpanBuilder::allocate(FrontendContext* ec, LifoAlloc& alloc,
                                      size_t count) {
   if (count >= TaggedParserAtomIndex::IndexLimit) {
     ReportAllocationOverflow(ec);
@@ -540,7 +540,7 @@ static inline bool IsLatin1(mozilla::Utf8Unit c1, mozilla::Utf8Unit c2) {
 }
 
 TaggedParserAtomIndex ParserAtomsTable::internUtf8(
-    ErrorContext* ec, const mozilla::Utf8Unit* utf8Ptr, uint32_t nbyte) {
+    FrontendContext* ec, const mozilla::Utf8Unit* utf8Ptr, uint32_t nbyte) {
   if (auto tiny = WellKnownParserAtoms::getSingleton().lookupTinyIndexUTF8(
           utf8Ptr, nbyte)) {
     return tiny;
@@ -585,7 +585,7 @@ TaggedParserAtomIndex ParserAtomsTable::internUtf8(
                                            length);
 }
 
-TaggedParserAtomIndex ParserAtomsTable::internChar16(ErrorContext* ec,
+TaggedParserAtomIndex ParserAtomsTable::internChar16(FrontendContext* ec,
                                                      const char16_t* char16Ptr,
                                                      uint32_t length) {
   // Check for tiny strings which are abundant in minified code.
@@ -615,7 +615,7 @@ TaggedParserAtomIndex ParserAtomsTable::internChar16(ErrorContext* ec,
 }
 
 TaggedParserAtomIndex ParserAtomsTable::internJSAtom(
-    JSContext* cx, ErrorContext* ec, CompilationAtomCache& atomCache,
+    JSContext* cx, FrontendContext* ec, CompilationAtomCache& atomCache,
     JSAtom* atom) {
   TaggedParserAtomIndex parserAtom;
   {
@@ -1077,7 +1077,7 @@ UniqueChars ParserAtomsTable::toQuotedString(
       '\"');
 }
 
-JSAtom* ParserAtomsTable::toJSAtom(JSContext* cx, ErrorContext* ec,
+JSAtom* ParserAtomsTable::toJSAtom(JSContext* cx, FrontendContext* ec,
                                    TaggedParserAtomIndex index,
                                    CompilationAtomCache& atomCache) const {
   // This function can be called before we instantiate atoms based on
@@ -1150,7 +1150,7 @@ bool ParserAtomsTable::appendTo(StringBuffer& buffer,
   return buffer.append(content, 3);
 }
 
-bool InstantiateMarkedAtoms(JSContext* cx, ErrorContext* ec,
+bool InstantiateMarkedAtoms(JSContext* cx, FrontendContext* ec,
                             const ParserAtomSpan& entries,
                             CompilationAtomCache& atomCache) {
   MOZ_ASSERT(cx->zone());
@@ -1182,7 +1182,7 @@ bool InstantiateMarkedAtoms(JSContext* cx, ErrorContext* ec,
   return true;
 }
 
-bool InstantiateMarkedAtomsAsPermanent(JSContext* cx, ErrorContext* ec,
+bool InstantiateMarkedAtomsAsPermanent(JSContext* cx, FrontendContext* ec,
                                        AtomSet& atomSet,
                                        const ParserAtomSpan& entries,
                                        CompilationAtomCache& atomCache) {

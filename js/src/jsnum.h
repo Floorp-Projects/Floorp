@@ -48,7 +48,7 @@ extern JSString* NumberToStringPure(JSContext* cx, double d);
 extern JSAtom* NumberToAtom(JSContext* cx, double d);
 
 frontend::TaggedParserAtomIndex NumberToParserAtom(
-    ErrorContext* ec, frontend::ParserAtomsTable& parserAtoms, double d);
+    FrontendContext* ec, frontend::ParserAtomsTable& parserAtoms, double d);
 
 template <AllowGC allowGC>
 extern JSLinearString* Int32ToString(JSContext* cx, int32_t i);
@@ -60,7 +60,7 @@ extern JSString* Int32ToStringWithBase(JSContext* cx, int32_t i, int32_t base);
 extern JSAtom* Int32ToAtom(JSContext* cx, int32_t si);
 
 frontend::TaggedParserAtomIndex Int32ToParserAtom(
-    ErrorContext* ec, frontend::ParserAtomsTable& parserAtoms, int32_t si);
+    FrontendContext* ec, frontend::ParserAtomsTable& parserAtoms, int32_t si);
 
 // ES6 15.7.3.12
 extern bool IsInteger(double d);

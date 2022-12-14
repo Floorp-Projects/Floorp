@@ -94,7 +94,7 @@ class CollectionPool {
 
   // Fallibly aquire one of the supported collection types from the pool.
   template <typename Collection>
-  Collection* acquire(ErrorContext* ec) {
+  Collection* acquire(FrontendContext* ec) {
     ConcreteCollectionPool::template assertInvariants<Collection>();
 
     RepresentativeCollection* collection;
@@ -301,7 +301,7 @@ class NameCollectionPool {
   }
 
   template <typename Map>
-  Map* acquireMap(ErrorContext* ec) {
+  Map* acquireMap(FrontendContext* ec) {
     MOZ_ASSERT(hasActiveCompilation());
     return mapPool_.acquire<Map>(ec);
   }
@@ -316,7 +316,7 @@ class NameCollectionPool {
   }
 
   template <typename Vector>
-  inline Vector* acquireVector(ErrorContext* ec);
+  inline Vector* acquireVector(FrontendContext* ec);
 
   template <typename Vector>
   inline void releaseVector(Vector** vec);
@@ -332,7 +332,7 @@ class NameCollectionPool {
 
 template <>
 inline AtomVector* NameCollectionPool::acquireVector<AtomVector>(
-    ErrorContext* ec) {
+    FrontendContext* ec) {
   MOZ_ASSERT(hasActiveCompilation());
   return atomVectorPool_.acquire<AtomVector>(ec);
 }
@@ -348,7 +348,7 @@ inline void NameCollectionPool::releaseVector<AtomVector>(AtomVector** vec) {
 
 template <>
 inline FunctionBoxVector* NameCollectionPool::acquireVector<FunctionBoxVector>(
-    ErrorContext* ec) {
+    FrontendContext* ec) {
   MOZ_ASSERT(hasActiveCompilation());
   return functionBoxVectorPool_.acquire<FunctionBoxVector>(ec);
 }
@@ -384,7 +384,7 @@ class PooledCollectionPtr {
  public:
   explicit PooledCollectionPtr(NameCollectionPool& pool) : pool_(pool) {}
 
-  bool acquire(ErrorContext* ec) {
+  bool acquire(FrontendContext* ec) {
     MOZ_ASSERT(!collection_);
     collection_ = Impl<T>::acquireCollection(ec, pool_);
     return !!collection_;
@@ -405,7 +405,7 @@ template <typename Map>
 class PooledMapPtr : public PooledCollectionPtr<Map, PooledMapPtr> {
   friend class PooledCollectionPtr<Map, PooledMapPtr>;
 
-  static Map* acquireCollection(ErrorContext* ec, NameCollectionPool& pool) {
+  static Map* acquireCollection(FrontendContext* ec, NameCollectionPool& pool) {
     return pool.acquireMap<Map>(ec);
   }
 
@@ -425,7 +425,8 @@ template <typename Vector>
 class PooledVectorPtr : public PooledCollectionPtr<Vector, PooledVectorPtr> {
   friend class PooledCollectionPtr<Vector, PooledVectorPtr>;
 
-  static Vector* acquireCollection(ErrorContext* ec, NameCollectionPool& pool) {
+  static Vector* acquireCollection(FrontendContext* ec,
+                                   NameCollectionPool& pool) {
     return pool.acquireVector<Vector>(ec);
   }
 

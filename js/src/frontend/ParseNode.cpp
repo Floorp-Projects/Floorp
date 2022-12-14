@@ -116,7 +116,7 @@ const size_t ParseNode::sizeTable[] = {
 };
 
 static const char* const parseNodeNames[] = {
-#  define STRINGIFY(name, _type) #  name,
+#  define STRINGIFY(name, _type) #name,
     FOR_EACH_PARSE_NODE_KIND(STRINGIFY)
 #  undef STRINGIFY
 };
@@ -400,12 +400,12 @@ void BaseScopeNode<Kind, ScopeType>::dumpImpl(
 #endif
 
 TaggedParserAtomIndex NumericLiteral::toAtom(
-    ErrorContext* ec, ParserAtomsTable& parserAtoms) const {
+    FrontendContext* ec, ParserAtomsTable& parserAtoms) const {
   return NumberToParserAtom(ec, parserAtoms, value());
 }
 
 RegExpObject* RegExpLiteral::create(
-    JSContext* cx, ErrorContext* ec, ParserAtomsTable& parserAtoms,
+    JSContext* cx, FrontendContext* ec, ParserAtomsTable& parserAtoms,
     CompilationAtomCache& atomCache,
     ExtensibleCompilationStencil& stencil) const {
   return stencil.regExpData[index_].createRegExpAndEnsureAtom(

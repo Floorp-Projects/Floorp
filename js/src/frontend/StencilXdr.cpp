@@ -1197,7 +1197,7 @@ XDRResult StencilXDR::codeSource(XDRState<mode>* xdr,
                                  const JS::DecodeOptions* maybeOptions,
                                  RefPtr<ScriptSource>& source) {
   JSContext* cx = xdr->cx();
-  ErrorContext* ec = xdr->ec();
+  FrontendContext* ec = xdr->ec();
 
   if (mode == XDR_DECODE) {
     // Allocate a new ScriptSource and root it with the holder.

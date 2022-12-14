@@ -131,7 +131,7 @@ static bool ShouldSuppressBreakpointsAndSourceNotes(
   return false;
 }
 
-BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, ErrorContext* ec,
+BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, FrontendContext* ec,
                                  JS::NativeStackLimit stackLimit,
                                  SharedContext* sc,
                                  const ErrorReporter& errorReporter,
@@ -158,7 +158,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc)
                       parent->errorReporter_, parent->compilationState,
                       parent->emitterMode) {}
 
-BytecodeEmitter::BytecodeEmitter(ErrorContext* ec,
+BytecodeEmitter::BytecodeEmitter(FrontendContext* ec,
                                  JS::NativeStackLimit stackLimit,
                                  const EitherParser& parser, SharedContext* sc,
                                  CompilationState& compilationState,
@@ -11633,8 +11633,8 @@ bool BytecodeEmitter::emitTree(
   return true;
 }
 
-static bool AllocSrcNote(ErrorContext* ec, SrcNotesVector& notes, unsigned size,
-                         unsigned* index) {
+static bool AllocSrcNote(FrontendContext* ec, SrcNotesVector& notes,
+                         unsigned size, unsigned* index) {
   size_t oldLength = notes.length();
 
   if (MOZ_UNLIKELY(oldLength + size > MaxSrcNotesLength)) {

@@ -219,7 +219,6 @@ struct KeywordInfo;
 namespace js {
 
 class FrontendContext;
-using ErrorContext = FrontendContext;
 
 namespace frontend {
 
@@ -430,7 +429,7 @@ class SourceCoords {
   }
 
  public:
-  SourceCoords(ErrorContext* ec, uint32_t initialLineNumber,
+  SourceCoords(FrontendContext* ec, uint32_t initialLineNumber,
                uint32_t initialOffset);
 
   [[nodiscard]] bool add(uint32_t lineNum, uint32_t lineStartOffset);
@@ -565,7 +564,7 @@ class TokenStreamAnyChars : public TokenStreamShared {
 
   JSContext* const cx;
 
-  ErrorContext* const ec;
+  FrontendContext* const ec;
 
   /** Options used for parsing/tokenizing. */
   const JS::ReadOnlyCompileOptions& options_;
@@ -724,7 +723,7 @@ class TokenStreamAnyChars : public TokenStreamShared {
   // End of fields.
 
  public:
-  TokenStreamAnyChars(JSContext* cx, ErrorContext* ec,
+  TokenStreamAnyChars(JSContext* cx, FrontendContext* ec,
                       const JS::ReadOnlyCompileOptions& options,
                       StrictModeGetter* smg);
 
@@ -878,7 +877,7 @@ class TokenStreamAnyChars : public TokenStreamShared {
 
   char16_t* sourceMapURL() { return sourceMapURL_.get(); }
 
-  ErrorContext* context() const { return ec; }
+  FrontendContext* context() const { return ec; }
   JSContext* jsContext() const { return cx; }
 
   using LineToken = SourceCoords::LineToken;
@@ -1570,7 +1569,7 @@ using CharBuffer = Vector<char16_t, 32>;
 class TokenStreamCharsShared {
  protected:
   JSContext* cx;
-  ErrorContext* ec;
+  FrontendContext* ec;
 
   /**
    * Buffer transiently used to store sequences of identifier or string code
@@ -1583,7 +1582,7 @@ class TokenStreamCharsShared {
   ParserAtomsTable* parserAtoms;
 
  protected:
-  explicit TokenStreamCharsShared(JSContext* cx, ErrorContext* ec,
+  explicit TokenStreamCharsShared(JSContext* cx, FrontendContext* ec,
                                   ParserAtomsTable* parserAtoms)
       : cx(cx), ec(ec), charBuffer(ec), parserAtoms(parserAtoms) {}
 
@@ -1631,7 +1630,7 @@ class TokenStreamCharsBase : public TokenStreamCharsShared {
   // End of fields.
 
  protected:
-  TokenStreamCharsBase(JSContext* cx, ErrorContext* ec,
+  TokenStreamCharsBase(JSContext* cx, FrontendContext* ec,
                        ParserAtomsTable* parserAtoms, const Unit* units,
                        size_t length, size_t startOffset);
 
@@ -2489,7 +2488,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
   friend class TokenStreamPosition;
 
  public:
-  TokenStreamSpecific(JSContext* cx, ErrorContext* ec,
+  TokenStreamSpecific(JSContext* cx, FrontendContext* ec,
                       ParserAtomsTable* parserAtoms,
                       const JS::ReadOnlyCompileOptions& options,
                       const Unit* units, size_t length);
@@ -2548,7 +2547,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
  private:
   // Implement ErrorReportMixin.
 
-  ErrorContext* getContext() const override {
+  FrontendContext* getContext() const override {
     return anyCharsAccess().context();
   }
 
@@ -2929,7 +2928,7 @@ class MOZ_STACK_CLASS TokenStream
   using Unit = char16_t;
 
  public:
-  TokenStream(JSContext* cx, ErrorContext* ec, ParserAtomsTable* parserAtoms,
+  TokenStream(JSContext* cx, FrontendContext* ec, ParserAtomsTable* parserAtoms,
               const JS::ReadOnlyCompileOptions& options, const Unit* units,
               size_t length, StrictModeGetter* smg)
       : TokenStreamAnyChars(cx, ec, options, smg),
@@ -2939,7 +2938,7 @@ class MOZ_STACK_CLASS TokenStream
 
 class MOZ_STACK_CLASS DummyTokenStream final : public TokenStream {
  public:
-  DummyTokenStream(JSContext* cx, ErrorContext* ec,
+  DummyTokenStream(JSContext* cx, FrontendContext* ec,
                    const JS::ReadOnlyCompileOptions& options)
       : TokenStream(cx, ec, nullptr, options, nullptr, 0, nullptr) {}
 };

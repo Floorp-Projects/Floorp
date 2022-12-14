@@ -3815,9 +3815,10 @@ JSErrorNotes::JSErrorNotes() : notes_() {}
 JSErrorNotes::~JSErrorNotes() = default;
 
 static UniquePtr<JSErrorNotes::Note> CreateErrorNoteVA(
-    ErrorContext* ec, const char* filename, unsigned sourceId, unsigned lineno,
-    unsigned column, JSErrorCallback errorCallback, void* userRef,
-    const unsigned errorNumber, ErrorArgumentsType argumentsType, va_list ap) {
+    FrontendContext* ec, const char* filename, unsigned sourceId,
+    unsigned lineno, unsigned column, JSErrorCallback errorCallback,
+    void* userRef, const unsigned errorNumber, ErrorArgumentsType argumentsType,
+    va_list ap) {
   auto note = MakeUnique<JSErrorNotes::Note>();
   if (!note) {
     ReportOutOfMemory(ec);
@@ -3838,7 +3839,7 @@ static UniquePtr<JSErrorNotes::Note> CreateErrorNoteVA(
   return note;
 }
 
-bool JSErrorNotes::addNoteVA(ErrorContext* ec, const char* filename,
+bool JSErrorNotes::addNoteVA(FrontendContext* ec, const char* filename,
                              unsigned sourceId, unsigned lineno,
                              unsigned column, JSErrorCallback errorCallback,
                              void* userRef, const unsigned errorNumber,
@@ -3871,7 +3872,7 @@ bool JSErrorNotes::addNoteASCII(JSContext* cx, const char* filename,
   return ok;
 }
 
-bool JSErrorNotes::addNoteASCII(ErrorContext* ec, const char* filename,
+bool JSErrorNotes::addNoteASCII(FrontendContext* ec, const char* filename,
                                 unsigned sourceId, unsigned lineno,
                                 unsigned column, JSErrorCallback errorCallback,
                                 void* userRef, const unsigned errorNumber,
@@ -3898,7 +3899,7 @@ bool JSErrorNotes::addNoteLatin1(JSContext* cx, const char* filename,
   return ok;
 }
 
-bool JSErrorNotes::addNoteLatin1(ErrorContext* ec, const char* filename,
+bool JSErrorNotes::addNoteLatin1(FrontendContext* ec, const char* filename,
                                  unsigned sourceId, unsigned lineno,
                                  unsigned column, JSErrorCallback errorCallback,
                                  void* userRef, const unsigned errorNumber,
@@ -3924,7 +3925,7 @@ bool JSErrorNotes::addNoteUTF8(JSContext* cx, const char* filename,
   return ok;
 }
 
-bool JSErrorNotes::addNoteUTF8(ErrorContext* ec, const char* filename,
+bool JSErrorNotes::addNoteUTF8(FrontendContext* ec, const char* filename,
                                unsigned sourceId, unsigned lineno,
                                unsigned column, JSErrorCallback errorCallback,
                                void* userRef, const unsigned errorNumber, ...) {

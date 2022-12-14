@@ -51,7 +51,7 @@ bool js::ReportExceptionClosure::operator()(JSContext* cx) {
   return false;
 }
 
-bool js::ReportCompileWarning(ErrorContext* ec, ErrorMetadata&& metadata,
+bool js::ReportCompileWarning(FrontendContext* ec, ErrorMetadata&& metadata,
                               UniquePtr<JSErrorNotes> notes,
                               unsigned errorNumber, va_list* args) {
   // On the main thread, report the error immediately. When compiling off
@@ -81,7 +81,7 @@ bool js::ReportCompileWarning(ErrorContext* ec, ErrorMetadata&& metadata,
   return ec->reportWarning(std::move(err));
 }
 
-static void ReportCompileErrorImpl(ErrorContext* ec,
+static void ReportCompileErrorImpl(FrontendContext* ec,
                                    js::ErrorMetadata&& metadata,
                                    js::UniquePtr<JSErrorNotes> notes,
                                    unsigned errorNumber, va_list* args,
@@ -110,14 +110,14 @@ static void ReportCompileErrorImpl(ErrorContext* ec,
   ec->reportError(std::move(err));
 }
 
-void js::ReportCompileErrorLatin1(ErrorContext* ec, ErrorMetadata&& metadata,
+void js::ReportCompileErrorLatin1(FrontendContext* ec, ErrorMetadata&& metadata,
                                   UniquePtr<JSErrorNotes> notes,
                                   unsigned errorNumber, va_list* args) {
   ReportCompileErrorImpl(ec, std::move(metadata), std::move(notes), errorNumber,
                          args, ArgumentsAreLatin1);
 }
 
-void js::ReportCompileErrorUTF8(ErrorContext* ec, ErrorMetadata&& metadata,
+void js::ReportCompileErrorUTF8(FrontendContext* ec, ErrorMetadata&& metadata,
                                 UniquePtr<JSErrorNotes> notes,
                                 unsigned errorNumber, va_list* args) {
   ReportCompileErrorImpl(ec, std::move(metadata), std::move(notes), errorNumber,
@@ -299,7 +299,7 @@ class MOZ_RAII AutoMessageArgs {
  * using void* here simplifies our callers a bit.
  */
 template <typename T>
-static bool ExpandErrorArgumentsHelper(ErrorContext* ec,
+static bool ExpandErrorArgumentsHelper(FrontendContext* ec,
                                        JSErrorCallback callback, void* userRef,
                                        const unsigned errorNumber,
                                        void* messageArgs,
@@ -408,7 +408,7 @@ static bool ExpandErrorArgumentsHelper(ErrorContext* ec,
   return true;
 }
 
-bool js::ExpandErrorArgumentsVA(ErrorContext* ec, JSErrorCallback callback,
+bool js::ExpandErrorArgumentsVA(FrontendContext* ec, JSErrorCallback callback,
                                 void* userRef, const unsigned errorNumber,
                                 const char16_t** messageArgs,
                                 ErrorArgumentsType argumentsType,
@@ -418,7 +418,7 @@ bool js::ExpandErrorArgumentsVA(ErrorContext* ec, JSErrorCallback callback,
                                     messageArgs, argumentsType, reportp, ap);
 }
 
-bool js::ExpandErrorArgumentsVA(ErrorContext* ec, JSErrorCallback callback,
+bool js::ExpandErrorArgumentsVA(FrontendContext* ec, JSErrorCallback callback,
                                 void* userRef, const unsigned errorNumber,
                                 const char** messageArgs,
                                 ErrorArgumentsType argumentsType,
@@ -428,7 +428,7 @@ bool js::ExpandErrorArgumentsVA(ErrorContext* ec, JSErrorCallback callback,
                                     messageArgs, argumentsType, reportp, ap);
 }
 
-bool js::ExpandErrorArgumentsVA(ErrorContext* ec, JSErrorCallback callback,
+bool js::ExpandErrorArgumentsVA(FrontendContext* ec, JSErrorCallback callback,
                                 void* userRef, const unsigned errorNumber,
                                 ErrorArgumentsType argumentsType,
                                 JSErrorReport* reportp, va_list ap) {
@@ -436,7 +436,7 @@ bool js::ExpandErrorArgumentsVA(ErrorContext* ec, JSErrorCallback callback,
                                     argumentsType, reportp, ap);
 }
 
-bool js::ExpandErrorArgumentsVA(ErrorContext* ec, JSErrorCallback callback,
+bool js::ExpandErrorArgumentsVA(FrontendContext* ec, JSErrorCallback callback,
                                 void* userRef, const unsigned errorNumber,
                                 const char16_t** messageArgs,
                                 ErrorArgumentsType argumentsType,
@@ -466,7 +466,7 @@ bool js::ReportErrorNumberVA(JSContext* cx, IsWarning isWarning,
 }
 
 template <typename CharT>
-static bool ExpandErrorArguments(ErrorContext* ec, JSErrorCallback callback,
+static bool ExpandErrorArguments(FrontendContext* ec, JSErrorCallback callback,
                                  void* userRef, const unsigned errorNumber,
                                  const CharT** messageArgs,
                                  js::ErrorArgumentsType argumentsType,

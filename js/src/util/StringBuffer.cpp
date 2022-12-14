@@ -154,7 +154,7 @@ JSAtom* StringBuffer::finishAtom() {
 }
 
 frontend::TaggedParserAtomIndex StringBuffer::finishParserAtom(
-    frontend::ParserAtomsTable& parserAtoms, ErrorContext* ec) {
+    frontend::ParserAtomsTable& parserAtoms, FrontendContext* ec) {
   size_t len = length();
   if (len == 0) {
     return frontend::TaggedParserAtomIndex::WellKnown::empty();

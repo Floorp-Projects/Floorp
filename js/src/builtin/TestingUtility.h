@@ -21,7 +21,6 @@ class JS_PUBLIC_API CompileOptions;
 namespace js {
 
 class FrontendContext;
-using ErrorContext = FrontendContext;
 class ScriptSource;
 
 // Populate `options` fields from `opt` object.
@@ -47,7 +46,7 @@ class ScriptSource;
     JS::MutableHandle<JSString*> displayURL,
     JS::MutableHandle<JSString*> sourceMapURL);
 
-[[nodiscard]] bool SetSourceOptions(JSContext* cx, ErrorContext* ec,
+[[nodiscard]] bool SetSourceOptions(JSContext* cx, FrontendContext* ec,
                                     ScriptSource* source,
                                     JS::Handle<JSString*> displayURL,
                                     JS::Handle<JSString*> sourceMapURL);

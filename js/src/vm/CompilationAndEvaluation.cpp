@@ -215,7 +215,7 @@ class FunctionCompiler {
   bool nameIsIdentifier_ = true;
 
  public:
-  explicit FunctionCompiler(JSContext* cx, ErrorContext* ec)
+  explicit FunctionCompiler(JSContext* cx, FrontendContext* ec)
       : cx_(cx), nameAtom_(cx), funStr_(cx, ec) {
     AssertHeapIsIdle();
     CHECK_THREAD(cx);

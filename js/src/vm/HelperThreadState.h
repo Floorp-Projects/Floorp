@@ -542,7 +542,7 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
   void activate(JSRuntime* rt);
   void deactivate(JSRuntime* rt);
 
-  virtual void parse(JSContext* cx, ErrorContext* ec) = 0;
+  virtual void parse(JSContext* cx, FrontendContext* ec) = 0;
 
   bool runtimeMatches(JSRuntime* rt) { return runtime == rt; }
 
@@ -595,7 +595,7 @@ struct DelazifyStrategy {
   // This function is called with the script index of:
   //  - top-level script, when starting the off-thread delazification.
   //  - functions added by `add` and delazified by `DelazifyTask`.
-  [[nodiscard]] bool add(ErrorContext* ec,
+  [[nodiscard]] bool add(FrontendContext* ec,
                          const frontend::CompilationStencil& stencil,
                          ScriptIndex index);
 };

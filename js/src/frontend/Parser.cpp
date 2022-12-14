@@ -160,7 +160,7 @@ void ParserSharedBase::dumpAtom(TaggedParserAtomIndex index) const {
 }
 #endif
 
-ParserBase::ParserBase(JSContext* cx, ErrorContext* ec,
+ParserBase::ParserBase(JSContext* cx, FrontendContext* ec,
                        JS::NativeStackLimit stackLimit,
                        const ReadOnlyCompileOptions& options,
                        bool foldConstants, CompilationState& compilationState)
@@ -190,7 +190,7 @@ ParserBase::~ParserBase() { MOZ_ASSERT(checkOptionsCalled_); }
 
 template <class ParseHandler>
 PerHandlerParser<ParseHandler>::PerHandlerParser(
-    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
     const ReadOnlyCompileOptions& options, bool foldConstants,
     CompilationState& compilationState, void* internalSyntaxParser)
     : ParserBase(cx, ec, stackLimit, options, foldConstants, compilationState),
@@ -202,7 +202,7 @@ PerHandlerParser<ParseHandler>::PerHandlerParser(
 
 template <class ParseHandler, typename Unit>
 GeneralParser<ParseHandler, Unit>::GeneralParser(
-    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* ec, JS::NativeStackLimit stackLimit,
     const ReadOnlyCompileOptions& options, const Unit* units, size_t length,
     bool foldConstants, CompilationState& compilationState,
     SyntaxParser* syntaxParser)
@@ -993,7 +993,7 @@ bool Parser<FullParseHandler, Unit>::checkStatementsEOF() {
 }
 
 template <typename ScopeT>
-typename ScopeT::ParserData* NewEmptyBindingData(ErrorContext* ec,
+typename ScopeT::ParserData* NewEmptyBindingData(FrontendContext* ec,
                                                  LifoAlloc& alloc,
                                                  uint32_t numBindings) {
   using Data = typename ScopeT::ParserData;
@@ -1005,19 +1005,19 @@ typename ScopeT::ParserData* NewEmptyBindingData(ErrorContext* ec,
   return bindings;
 }
 
-GlobalScope::ParserData* NewEmptyGlobalScopeData(ErrorContext* ec,
+GlobalScope::ParserData* NewEmptyGlobalScopeData(FrontendContext* ec,
                                                  LifoAlloc& alloc,
                                                  uint32_t numBindings) {
   return NewEmptyBindingData<GlobalScope>(ec, alloc, numBindings);
 }
 
-LexicalScope::ParserData* NewEmptyLexicalScopeData(ErrorContext* ec,
+LexicalScope::ParserData* NewEmptyLexicalScopeData(FrontendContext* ec,
                                                    LifoAlloc& alloc,
                                                    uint32_t numBindings) {
   return NewEmptyBindingData<LexicalScope>(ec, alloc, numBindings);
 }
 
-FunctionScope::ParserData* NewEmptyFunctionScopeData(ErrorContext* ec,
+FunctionScope::ParserData* NewEmptyFunctionScopeData(FrontendContext* ec,
                                                      LifoAlloc& alloc,
                                                      uint32_t numBindings) {
   return NewEmptyBindingData<FunctionScope>(ec, alloc, numBindings);
@@ -1077,7 +1077,7 @@ static MOZ_ALWAYS_INLINE void InitializeBindingData(
   data->length = count;
 }
 
-Maybe<GlobalScope::ParserData*> NewGlobalScopeData(ErrorContext* ec,
+Maybe<GlobalScope::ParserData*> NewGlobalScopeData(FrontendContext* ec,
                                                    ParseContext::Scope& scope,
                                                    LifoAlloc& alloc,
                                                    ParseContext* pc) {
@@ -1142,7 +1142,7 @@ Maybe<GlobalScope::ParserData*> ParserBase::newGlobalScopeData(
   return NewGlobalScopeData(ec_, scope, stencilAlloc(), pc_);
 }
 
-Maybe<ModuleScope::ParserData*> NewModuleScopeData(ErrorContext* ec,
+Maybe<ModuleScope::ParserData*> NewModuleScopeData(FrontendContext* ec,
                                                    ParseContext::Scope& scope,
                                                    LifoAlloc& alloc,
                                                    ParseContext* pc) {
@@ -1210,7 +1210,7 @@ Maybe<ModuleScope::ParserData*> ParserBase::newModuleScopeData(
   return NewModuleScopeData(ec_, scope, stencilAlloc(), pc_);
 }
 
-Maybe<EvalScope::ParserData*> NewEvalScopeData(ErrorContext* ec,
+Maybe<EvalScope::ParserData*> NewEvalScopeData(FrontendContext* ec,
                                                ParseContext::Scope& scope,
                                                LifoAlloc& alloc,
                                                ParseContext* pc) {
@@ -1253,7 +1253,7 @@ Maybe<EvalScope::ParserData*> ParserBase::newEvalScopeData(
 }
 
 Maybe<FunctionScope::ParserData*> NewFunctionScopeData(
-    ErrorContext* ec, ParseContext::Scope& scope, bool hasParameterExprs,
+    FrontendContext* ec, ParseContext::Scope& scope, bool hasParameterExprs,
     LifoAlloc& alloc, ParseContext* pc) {
   ParserBindingNameVector positionalFormals(ec);
   ParserBindingNameVector formals(ec);
@@ -1383,12 +1383,13 @@ Maybe<FunctionScope::ParserData*> ParserBase::newFunctionScopeData(
                               pc_);
 }
 
-VarScope::ParserData* NewEmptyVarScopeData(ErrorContext* ec, LifoAlloc& alloc,
+VarScope::ParserData* NewEmptyVarScopeData(FrontendContext* ec,
+                                           LifoAlloc& alloc,
                                            uint32_t numBindings) {
   return NewEmptyBindingData<VarScope>(ec, alloc, numBindings);
 }
 
-Maybe<VarScope::ParserData*> NewVarScopeData(ErrorContext* ec,
+Maybe<VarScope::ParserData*> NewVarScopeData(FrontendContext* ec,
                                              ParseContext::Scope& scope,
                                              LifoAlloc& alloc,
                                              ParseContext* pc) {
@@ -1443,7 +1444,7 @@ Maybe<VarScope::ParserData*> ParserBase::newVarScopeData(
   return NewVarScopeData(ec_, scope, stencilAlloc(), pc_);
 }
 
-Maybe<LexicalScope::ParserData*> NewLexicalScopeData(ErrorContext* ec,
+Maybe<LexicalScope::ParserData*> NewLexicalScopeData(FrontendContext* ec,
                                                      ParseContext::Scope& scope,
                                                      LifoAlloc& alloc,
                                                      ParseContext* pc) {
@@ -1524,7 +1525,7 @@ Maybe<LexicalScope::ParserData*> ParserBase::newLexicalScopeData(
 }
 
 Maybe<ClassBodyScope::ParserData*> NewClassBodyScopeData(
-    ErrorContext* ec, ParseContext::Scope& scope, LifoAlloc& alloc,
+    FrontendContext* ec, ParseContext::Scope& scope, LifoAlloc& alloc,
     ParseContext* pc) {
   ParserBindingNameVector privateBrand(ec);
   ParserBindingNameVector synthetics(ec);

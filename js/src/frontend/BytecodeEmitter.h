@@ -48,7 +48,6 @@
 namespace js {
 
 class FrontendContext;
-using ErrorContext = FrontendContext;
 
 namespace frontend {
 
@@ -210,7 +209,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   SharedContext* const sc = nullptr;
 
   JSContext* const cx = nullptr;
-  ErrorContext* const ec = nullptr;
+  FrontendContext* const ec = nullptr;
 
   JS::NativeStackLimit stackLimit;
 
@@ -323,7 +322,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
    */
  private:
   // Internal constructor, for delegation use only.
-  BytecodeEmitter(BytecodeEmitter* parent, ErrorContext* ec,
+  BytecodeEmitter(BytecodeEmitter* parent, FrontendContext* ec,
                   JS::NativeStackLimit stackLimit, SharedContext* sc,
                   const ErrorReporter& errorReporter,
                   CompilationState& compilationState, EmitterMode emitterMode);
@@ -333,13 +332,13 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   void initFromBodyPosition(TokenPos bodyPosition);
 
  public:
-  BytecodeEmitter(ErrorContext* ec, JS::NativeStackLimit stackLimit,
+  BytecodeEmitter(FrontendContext* ec, JS::NativeStackLimit stackLimit,
                   const EitherParser& parser, SharedContext* sc,
                   CompilationState& compilationState,
                   EmitterMode emitterMode = Normal);
 
   template <typename Unit>
-  BytecodeEmitter(ErrorContext* ec, JS::NativeStackLimit stackLimit,
+  BytecodeEmitter(FrontendContext* ec, JS::NativeStackLimit stackLimit,
                   Parser<FullParseHandler, Unit>* parser, SharedContext* sc,
                   CompilationState& compilationState,
                   EmitterMode emitterMode = Normal)
