@@ -98,7 +98,11 @@ class ProviderQuickActions extends UrlbarProvider {
   async startQuery(queryContext, addCallback) {
     let input = queryContext.trimmedSearchString.toLowerCase();
 
-    if (!lazy.UrlbarPrefs.get(SHOW_IN_ZERO_PREFIX_PREF) && !input) {
+    if (
+      !queryContext.searchMode &&
+      !lazy.UrlbarPrefs.get(SHOW_IN_ZERO_PREFIX_PREF) &&
+      !input
+    ) {
       return;
     }
 

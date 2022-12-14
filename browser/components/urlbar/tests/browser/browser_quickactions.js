@@ -152,6 +152,9 @@ add_task(async function enter_search_mode_oneoff_by_key() {
 });
 
 add_task(async function enter_search_mode_key() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.quickactions.showInZeroPrefix", false]],
+  });
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: "> ",
@@ -160,7 +163,12 @@ add_task(async function enter_search_mode_key() {
     source: UrlbarUtils.RESULT_SOURCE.ACTIONS,
     entry: "typed",
   });
-
+  Assert.equal(
+    await hasQuickActions(window),
+    true,
+    "Actions are shown in search mode"
+  );
+  await SpecialPowers.popPrefEnv();
   await UrlbarTestUtils.exitSearchMode(window);
   await UrlbarTestUtils.promisePopupClose(window);
   EventUtils.synthesizeKey("KEY_Escape");
