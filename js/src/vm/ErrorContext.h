@@ -7,6 +7,8 @@
 #ifndef vm_ErrorContext_h
 #define vm_ErrorContext_h
 
+#include "mozilla/Maybe.h"  // mozilla::Maybe
+
 #include "js/ErrorReport.h"
 #include "vm/ErrorReporting.h"
 #include "vm/MallocProvider.h"
@@ -19,14 +21,14 @@ struct FrontendErrors {
   FrontendErrors() = default;
   // Any errors or warnings produced during compilation. These are reported
   // when finishing the script.
-  Vector<CompileError, 0, SystemAllocPolicy> errors;
+  mozilla::Maybe<CompileError> error;
   Vector<CompileError, 0, SystemAllocPolicy> warnings;
   bool overRecursed = false;
   bool outOfMemory = false;
   bool allocationOverflow = false;
 
   bool hadErrors() const {
-    return outOfMemory || overRecursed || allocationOverflow || !errors.empty();
+    return outOfMemory || overRecursed || allocationOverflow || error;
   }
 };
 
@@ -103,9 +105,7 @@ class OffThreadErrorContext : public ErrorContext {
 
   void linkWithJSContext(JSContext* cx);
 
-  Vector<CompileError, 0, SystemAllocPolicy>& errors() {
-    return errors_.errors;
-  }
+  mozilla::Maybe<CompileError>& maybeError() { return errors_.error; }
   Vector<CompileError, 0, SystemAllocPolicy>& warnings() {
     return errors_.warnings;
   }
