@@ -6659,12 +6659,6 @@
   value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
-# Toggle which thread the HTML5 parser uses for stream parsing.
-- name: html5.offmainthread
-  type: bool
-  value: true
-  mirror: always
-
 # Time in milliseconds between the time a network buffer is seen and the timer
 # firing when the timer hasn't fired previously in this parse in the
 # off-the-main-thread HTML5 parser.
