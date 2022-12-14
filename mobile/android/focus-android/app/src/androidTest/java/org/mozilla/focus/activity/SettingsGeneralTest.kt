@@ -10,7 +10,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import mozilla.components.support.locale.LocaleManager
 import mozilla.components.support.locale.LocaleUseCases
 import org.junit.After
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
@@ -27,7 +26,6 @@ import org.mozilla.focus.helpers.StringsHelper.AF_LANGUAGE_SYSTEM_DEFAULT
 import org.mozilla.focus.helpers.StringsHelper.AF_SETTINGS
 import org.mozilla.focus.helpers.StringsHelper.EN_AFRIKAANS_LOCALE
 import org.mozilla.focus.helpers.StringsHelper.EN_LANGUAGE_MENU_HEADING
-import org.mozilla.focus.helpers.StringsHelper.FR_ENGLISH_LOCALE
 import org.mozilla.focus.helpers.StringsHelper.FR_GENERAL_HEADING
 import org.mozilla.focus.helpers.StringsHelper.FR_LANGUAGE_MENU
 import org.mozilla.focus.helpers.StringsHelper.FR_LANGUAGE_SYSTEM_DEFAULT
@@ -108,7 +106,6 @@ class SettingsGeneralTest {
         }
     }
 
-    @Ignore("Compose scrolling issue: https://github.com/mozilla-mobile/focus-android/issues/7718")
     @Test
     fun frenchLocaleTest() {
         /* Go to Settings */
@@ -119,14 +116,14 @@ class SettingsGeneralTest {
             openLanguageSelectionMenu(FR_LANGUAGE_MENU)
             verifySystemLocaleSelected(FR_LANGUAGE_SYSTEM_DEFAULT)
             /* change locale to English, verify the locale is changed */
-            selectLanguage(FR_ENGLISH_LOCALE)
-            verifyTranslatedTextExists(EN_LANGUAGE_MENU_HEADING)
+            selectLanguage(EN_AFRIKAANS_LOCALE)
+            verifyTranslatedTextExists(AF_LANGUAGE_MENU)
             exitToTop()
         }
         homeScreen {
         }.openMainMenu {
-            verifySettingsButtonExists()
-            verifyHelpPageLinkExists()
+            verifyTranslatedTextExists(AF_SETTINGS)
+            verifyTranslatedTextExists(AF_HELP)
         }
     }
 
