@@ -34,6 +34,7 @@
 #include "js/SourceText.h"
 #include "nsError.h"
 #include "nsComponentManagerUtils.h"
+#include "nsContentSecurityManager.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
 #include "nsDocShellCID.h"
@@ -109,8 +110,8 @@ nsresult ChannelFromScriptURL(
     nsIScriptSecurityManager* secMan, nsIURI* aScriptURL,
     const Maybe<ClientInfo>& aClientInfo,
     const Maybe<ServiceWorkerDescriptor>& aController, bool aIsMainScript,
-    WorkerScriptType aWorkerScriptType,
-    nsContentPolicyType aMainScriptContentPolicyType, nsLoadFlags aLoadFlags,
+    WorkerScriptType aWorkerScriptType, nsContentPolicyType aContentPolicyType,
+    nsLoadFlags aLoadFlags, uint32_t aSecFlags,
     nsICookieJarSettings* aCookieJarSettings, nsIReferrerInfo* aReferrerInfo,
     nsIChannel** aChannel) {
   AssertIsOnMainThread();
@@ -126,45 +127,6 @@ nsresult ChannelFromScriptURL(
     parentDoc = nullptr;
   }
 
-  uint32_t secFlags =
-      aIsMainScript ? nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED
-                    : nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT;
-
-  bool inheritAttrs = nsContentUtils::ChannelShouldInheritPrincipal(
-      principal, uri, true /* aInheritForAboutBlank */,
-      false /* aForceInherit */);
-
-  bool isData = uri->SchemeIs("data");
-  if (inheritAttrs && !isData) {
-    secFlags |= nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
-  }
-
-  if (aWorkerScriptType == DebuggerScript) {
-    // A DebuggerScript needs to be a local resource like chrome: or resource:
-    bool isUIResource = false;
-    rv = NS_URIChainHasFlags(uri, nsIProtocolHandler::URI_IS_UI_RESOURCE,
-                             &isUIResource);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (!isUIResource) {
-      return NS_ERROR_DOM_SECURITY_ERR;
-    }
-
-    secFlags |= nsILoadInfo::SEC_ALLOW_CHROME;
-  }
-
-  // Note: this is for backwards compatibility and goes against spec.
-  // We should find a better solution.
-  if (aIsMainScript && isData) {
-    secFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL;
-  }
-
-  nsContentPolicyType contentPolicyType =
-      aIsMainScript ? aMainScriptContentPolicyType
-                    : nsIContentPolicy::TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS;
-
   // The main service worker script should never be loaded over the network
   // in this path.  It should always be offlined by ServiceWorkerScriptCache.
   // We assert here since this error should also be caught by the runtime
@@ -173,13 +135,13 @@ nsresult ChannelFromScriptURL(
   // Note, if we ever allow service worker scripts to be loaded from network
   // here we need to configure the channel properly.  For example, it must
   // not allow redirects.
-  MOZ_DIAGNOSTIC_ASSERT(contentPolicyType !=
+  MOZ_DIAGNOSTIC_ASSERT(aContentPolicyType !=
                         nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER);
 
   nsCOMPtr<nsIChannel> channel;
   if (parentDoc) {
-    rv = NS_NewChannel(getter_AddRefs(channel), uri, parentDoc, secFlags,
-                       contentPolicyType,
+    rv = NS_NewChannel(getter_AddRefs(channel), uri, parentDoc, aSecFlags,
+                       aContentPolicyType,
                        nullptr,  // aPerformanceStorage
                        loadGroup,
                        nullptr,  // aCallbacks
@@ -200,13 +162,13 @@ nsresult ChannelFromScriptURL(
 
     if (aClientInfo.isSome()) {
       rv = NS_NewChannel(getter_AddRefs(channel), uri, principal,
-                         aClientInfo.ref(), aController, secFlags,
-                         contentPolicyType, aCookieJarSettings,
+                         aClientInfo.ref(), aController, aSecFlags,
+                         aContentPolicyType, aCookieJarSettings,
                          performanceStorage, loadGroup, nullptr,  // aCallbacks
                          aLoadFlags, ios);
     } else {
-      rv = NS_NewChannel(getter_AddRefs(channel), uri, principal, secFlags,
-                         contentPolicyType, aCookieJarSettings,
+      rv = NS_NewChannel(getter_AddRefs(channel), uri, principal, aSecFlags,
+                         aContentPolicyType, aCookieJarSettings,
                          performanceStorage, loadGroup, nullptr,  // aCallbacks
                          aLoadFlags, ios);
     }
@@ -360,6 +322,88 @@ class ChannelGetterRunnable final : public WorkerMainThreadRunnable {
  private:
   virtual ~ChannelGetterRunnable() = default;
 };
+
+nsresult GetCommonSecFlags(bool aIsMainScript, nsIURI* uri,
+                           nsIPrincipal* principal,
+                           WorkerScriptType aWorkerScriptType,
+                           uint32_t& secFlags) {
+  bool inheritAttrs = nsContentUtils::ChannelShouldInheritPrincipal(
+      principal, uri, true /* aInheritForAboutBlank */,
+      false /* aForceInherit */);
+
+  bool isData = uri->SchemeIs("data");
+  if (inheritAttrs && !isData) {
+    secFlags |= nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
+  }
+
+  if (aWorkerScriptType == DebuggerScript) {
+    // A DebuggerScript needs to be a local resource like chrome: or resource:
+    bool isUIResource = false;
+    nsresult rv = NS_URIChainHasFlags(
+        uri, nsIProtocolHandler::URI_IS_UI_RESOURCE, &isUIResource);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (!isUIResource) {
+      return NS_ERROR_DOM_SECURITY_ERR;
+    }
+
+    secFlags |= nsILoadInfo::SEC_ALLOW_CHROME;
+  }
+
+  return NS_OK;
+}
+
+nsresult GetModuleSecFlags(nsIPrincipal* principal,
+                           WorkerScriptType aWorkerScriptType,
+                           ScriptLoadRequest* aRequest,
+                           RequestCredentials aCredentials,
+                           uint32_t& secFlags) {
+  // Implements "To fetch a single module script,"
+  // Step 9. If destination is "worker", "sharedworker", or "serviceworker",
+  //         and the top-level module fetch flag is set, then set request's
+  //         mode to "same-origin".
+  secFlags = aRequest->GetWorkerLoadContext()->IsTopLevel()
+                 ? nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED
+                 : nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT;
+
+  // Step 8. Let request be a new request whose [...] mode is "cors" [...]
+  // This implements the same Cookie settings as  nsContentSecurityManager's
+  // ComputeSecurityFlags. The main difference is the line above, Step 9,
+  // setting to same origin.
+  if (aCredentials == RequestCredentials::Include) {
+    secFlags |= nsILoadInfo::nsILoadInfo::SEC_COOKIES_INCLUDE;
+  } else if (aCredentials == RequestCredentials::Same_origin) {
+    secFlags |= nsILoadInfo::nsILoadInfo::SEC_COOKIES_SAME_ORIGIN;
+  } else if (aCredentials == RequestCredentials::Omit) {
+    secFlags |= nsILoadInfo::nsILoadInfo::SEC_COOKIES_OMIT;
+  }
+
+  return GetCommonSecFlags(aRequest->GetWorkerLoadContext()->IsTopLevel(),
+                           aRequest->mURI, principal, aWorkerScriptType,
+                           secFlags);
+}
+
+nsresult GetClassicSecFlags(bool aIsMainScript, nsIURI* uri,
+                            nsIPrincipal* principal,
+                            WorkerScriptType aWorkerScriptType,
+                            uint32_t& secFlags) {
+  secFlags = aIsMainScript
+                 ? nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED
+                 : nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT;
+
+  nsresult rv = GetCommonSecFlags(aIsMainScript, uri, principal,
+                                  aWorkerScriptType, secFlags);
+  bool isData = uri->SchemeIs("data");
+  // Note: this is for backwards compatibility and goes against spec.
+  // We should find a better solution.
+  if (aIsMainScript && isData) {
+    secFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL;
+  }
+
+  return rv;
+}
 
 }  //  anonymous namespace
 
@@ -523,11 +567,11 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
     loadContext->mLoadResult = rv;
   }
 
+  RefPtr<ScriptFetchOptions> fetchOptions =
+      new ScriptFetchOptions(CORSMode::CORS_NONE, referrerPolicy, nullptr);
+
   RefPtr<ScriptLoadRequest> request = nullptr;
   if (mWorkerRef->Private()->WorkerType() == WorkerType::Classic) {
-    RefPtr<ScriptFetchOptions> fetchOptions =
-        new ScriptFetchOptions(CORSMode::CORS_NONE, referrerPolicy, nullptr);
-
     request = new ScriptLoadRequest(ScriptKind::eClassic, uri, fetchOptions,
                                     SRIMetadata(), nullptr,  // mReferrer
                                     loadContext);
@@ -538,14 +582,8 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
 
     // Step 1. Let options be a script fetch options.
     // We currently don't track credentials in our ScriptFetchOptions
-    // implementation. We translate this instead to cors.
-    CORSMode cors = mWorkerRef->Private()->WorkerCredentials() ==
-                            RequestCredentials::Include
-                        ? CORSMode::CORS_USE_CREDENTIALS
-                        : CORSMode::CORS_ANONYMOUS;
-
-    RefPtr<ScriptFetchOptions> fetchOptions =
-        new ScriptFetchOptions(cors, referrerPolicy, nullptr);
+    // implementation, so we are defaulting the fetchOptions object defined
+    // above. This behavior is handled fully in GetModuleSecFlags.
 
     RefPtr<WorkerModuleLoader::ModuleLoaderBase> moduleLoader =
         static_cast<WorkerGlobalScopeBase*>(GetGlobal())->GetModuleLoader();
@@ -808,10 +846,14 @@ nsresult WorkerScriptLoader::LoadScript(
 
   if (!channel) {
     nsCOMPtr<nsIReferrerInfo> referrerInfo;
+    uint32_t secFlags;
     ScriptLoadRequest* request = aRequestHandle->GetRequest();
     if (request->IsModuleRequest()) {
       referrerInfo =
           new ReferrerInfo(request->mReferrer, request->ReferrerPolicy());
+      rv = GetModuleSecFlags(principal, mWorkerScriptType, request,
+                             mWorkerRef->Private()->WorkerCredentials(),
+                             secFlags);
     } else {
       referrerInfo = ReferrerInfo::CreateForFetch(principal, nullptr);
       if (parentWorker && !loadContext->IsTopLevel()) {
@@ -819,15 +861,25 @@ nsresult WorkerScriptLoader::LoadScript(
             static_cast<ReferrerInfo*>(referrerInfo.get())
                 ->CloneWithNewPolicy(parentWorker->GetReferrerPolicy());
       }
+      rv = GetClassicSecFlags(loadContext->IsTopLevel(), request->mURI,
+                              principal, mWorkerScriptType, secFlags);
     }
+
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    nsContentPolicyType contentPolicyType =
+        loadContext->IsTopLevel()
+            ? mWorkerRef->Private()->ContentPolicyType()
+            : nsIContentPolicy::TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS;
 
     rv = ChannelFromScriptURL(
         principal, parentDoc, mWorkerRef->Private(), loadGroup, ios, secMan,
         request->mURI, loadContext->mClientInfo, mController,
-        loadContext->IsTopLevel(), mWorkerScriptType,
-        mWorkerRef->Private()->ContentPolicyType(), loadFlags,
-        mWorkerRef->Private()->CookieJarSettings(), referrerInfo,
-        getter_AddRefs(channel));
+        loadContext->IsTopLevel(), mWorkerScriptType, contentPolicyType,
+        loadFlags, secFlags, mWorkerRef->Private()->CookieJarSettings(),
+        referrerInfo, getter_AddRefs(channel));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1481,11 +1533,18 @@ nsresult ChannelFromScriptURLMainThread(
   nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
   NS_ASSERTION(secMan, "This should never be null!");
 
+  uint32_t secFlags;
+  nsresult rv =
+      GetClassicSecFlags(true, aScriptURL, aPrincipal, WorkerScript, secFlags);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   return ChannelFromScriptURL(
       aPrincipal, aParentDoc, nullptr, aLoadGroup, ios, secMan, aScriptURL,
       aClientInfo, Maybe<ServiceWorkerDescriptor>(), true, WorkerScript,
-      aMainScriptContentPolicyType, nsIRequest::LOAD_NORMAL, aCookieJarSettings,
-      aReferrerInfo, aChannel);
+      aMainScriptContentPolicyType, nsIRequest::LOAD_NORMAL, secFlags,
+      aCookieJarSettings, aReferrerInfo, aChannel);
 }
 
 nsresult ChannelFromScriptURLWorkerThread(JSContext* aCx,

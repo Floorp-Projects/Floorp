@@ -2534,11 +2534,10 @@ already_AddRefed<WorkerPrivate> WorkerPrivate::Constructor(
     WorkerKind aWorkerKind, const nsAString& aWorkerName,
     const nsACString& aServiceWorkerScope, WorkerLoadInfo* aLoadInfo,
     ErrorResult& aRv, nsString aId) {
-  return WorkerPrivate::Constructor(aCx, aScriptURL, aIsChromeWorker,
-                                    aWorkerKind, RequestCredentials::Omit,
-                                    WorkerType::Classic, aWorkerName,
-                                    aServiceWorkerScope, aLoadInfo, aRv,
-                                    std::move(aId));
+  return WorkerPrivate::Constructor(
+      aCx, aScriptURL, aIsChromeWorker, aWorkerKind, RequestCredentials::Omit,
+      WorkerType::Classic, aWorkerName, aServiceWorkerScope, aLoadInfo, aRv,
+      std::move(aId));
 }
 
 // static
