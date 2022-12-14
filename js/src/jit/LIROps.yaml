@@ -2865,6 +2865,7 @@
     offset: size_t
     type: MIRType
     wideningOp: MWideningOp
+    maybeTrap: MaybeTrapSiteInfo
 
 - name: WasmLoadSlotI64
   result_type: Int64
@@ -2872,6 +2873,7 @@
     containerRef: WordSized
   arguments:
     offset: size_t
+    maybeTrap: MaybeTrapSiteInfo
 
 - name: WasmStoreSlot
   operands:
@@ -2881,6 +2883,7 @@
     offset: size_t
     type: MIRType
     narrowingOp: MNarrowingOp
+    maybeTrap: MaybeTrapSiteInfo
 
 - name: WasmStoreSlotI64
   operands:
@@ -2888,6 +2891,7 @@
     containerRef: WordSized
   arguments:
     offset: size_t
+    maybeTrap: MaybeTrapSiteInfo
 
 - name: WasmLoadTableElement
   result_type: WordSized
