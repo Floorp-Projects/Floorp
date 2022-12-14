@@ -119,10 +119,9 @@ nsresult ChannelFromScriptURL(
   nsresult rv;
   nsCOMPtr<nsIURI> uri = aScriptURL;
 
-  // If we have the document, use it. Unfortunately, for dedicated workers
-  // 'parentDoc' ends up being the parent document, which is not the document
-  // that we want to use. So make sure to avoid using 'parentDoc' in that
-  // situation.
+  // Only use the document when its principal matches the principal of the
+  // current request. This means scripts fetched using the Workers' own
+  // principal won't inherit properties of the document, in particular the CSP.
   if (parentDoc && parentDoc->NodePrincipal() != principal) {
     parentDoc = nullptr;
   }
@@ -140,6 +139,7 @@ nsresult ChannelFromScriptURL(
 
   nsCOMPtr<nsIChannel> channel;
   if (parentDoc) {
+    // This is the path for top level dedicated worker scripts with a document
     rv = NS_NewChannel(getter_AddRefs(channel), uri, parentDoc, aSecFlags,
                        aContentPolicyType,
                        nullptr,  // aPerformanceStorage
@@ -148,6 +148,11 @@ nsresult ChannelFromScriptURL(
                        aLoadFlags, ios);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SECURITY_ERR);
   } else {
+    // This branch is used in the following cases:
+    //    * Shared and ServiceWorkers (who do not have a doc)
+    //    * Static Module Imports
+    //    * ImportScripts
+
     // We must have a loadGroup with a load context for the principal to
     // traverse the channel correctly.
     MOZ_ASSERT(loadGroup);
@@ -161,6 +166,8 @@ nsresult ChannelFromScriptURL(
     }
 
     if (aClientInfo.isSome()) {
+      // If we have an existing clientInfo (true for all modules and
+      // importScripts), we will use this branch
       rv = NS_NewChannel(getter_AddRefs(channel), uri, principal,
                          aClientInfo.ref(), aController, aSecFlags,
                          aContentPolicyType, aCookieJarSettings,
@@ -538,6 +545,26 @@ nsTArray<RefPtr<ThreadSafeRequestHandle>> WorkerScriptLoader::GetLoadingList() {
   return list;
 }
 
+nsContentPolicyType WorkerScriptLoader::GetContentPolicyType(
+    ScriptLoadRequest* aRequest) {
+  if (aRequest->GetWorkerLoadContext()->IsTopLevel()) {
+    // Implements https://html.spec.whatwg.org/#worker-processing-model
+    // Step 13: Let destination be "sharedworker" if is shared is true, and
+    // "worker" otherwise.
+    return mWorkerRef->Private()->ContentPolicyType();
+  }
+  if (aRequest->IsModuleRequest()) {
+    // Implements the destination for Step 14 in
+    // https://html.spec.whatwg.org/#worker-processing-model
+    //
+    // We need a special subresource type in order to correctly implement
+    // the graph fetch, where the destination is set to "worker" or
+    // "sharedworker".
+    return nsIContentPolicy::TYPE_INTERNAL_WORKER_STATIC_MODULE;
+  }
+  return nsIContentPolicy::TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS;
+}
+
 already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
     const nsString& aScriptURL, const mozilla::Encoding* aDocumentEncoding,
     bool aIsMainScript) {
@@ -578,7 +605,7 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
   } else {
     // Implements part of "To fetch a worklet/module worker script graph"
     // including, setting up the request with a credentials mode,
-    // destination (CSP, TODO).
+    // destination.
 
     // Step 1. Let options be a script fetch options.
     // We currently don't track credentials in our ScriptFetchOptions
@@ -873,10 +900,7 @@ nsresult WorkerScriptLoader::LoadScript(
       return rv;
     }
 
-    nsContentPolicyType contentPolicyType =
-        loadContext->IsTopLevel()
-            ? mWorkerRef->Private()->ContentPolicyType()
-            : nsIContentPolicy::TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS;
+    nsContentPolicyType contentPolicyType = GetContentPolicyType(request);
 
     rv = ChannelFromScriptURL(
         principal, parentDoc, mWorkerRef->Private(), loadGroup, ios, secMan,
