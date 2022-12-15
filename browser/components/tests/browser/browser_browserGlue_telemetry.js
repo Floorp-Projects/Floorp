@@ -10,18 +10,32 @@ add_task(function check_startup_pinned_telemetry() {
   // Check the appropriate telemetry is set or not reported by platform.
   switch (AppConstants.platform) {
     case "win":
-      TelemetryTestUtils.assertScalar(
-        scalars,
-        "os.environment.is_taskbar_pinned",
-        false,
-        "Pin set on win"
-      );
-      TelemetryTestUtils.assertScalar(
-        scalars,
-        "os.environment.is_taskbar_pinned_private",
-        false,
-        "Pin private set on win"
-      );
+      if (
+        AppConstants.platform === "win" &&
+        Services.sysinfo.getProperty("hasWinPackageId")
+      ) {
+        TelemetryTestUtils.assertScalarUnset(
+          scalars,
+          "os.environment.is_taskbar_pinned"
+        );
+        TelemetryTestUtils.assertScalarUnset(
+          scalars,
+          "os.environment.is_taskbar_pinned_private"
+        );
+      } else {
+        TelemetryTestUtils.assertScalar(
+          scalars,
+          "os.environment.is_taskbar_pinned",
+          false,
+          "Pin set on win"
+        );
+        TelemetryTestUtils.assertScalar(
+          scalars,
+          "os.environment.is_taskbar_pinned_private",
+          false,
+          "Pin private set on win"
+        );
+      }
       TelemetryTestUtils.assertScalarUnset(
         scalars,
         "os.environment.is_kept_in_dock"
