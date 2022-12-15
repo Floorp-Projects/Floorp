@@ -12,6 +12,63 @@ const gDirServ = Cc["@mozilla.org/file/directory_service;1"].getService(
 
 const $ = document.querySelector.bind(document);
 
+const gLoggingPresets = {
+  networking: {
+    modules:
+      "timestamp,sync,nsHttp:5,cache2:5,nsSocketTransport:5,nsHostResolver:5",
+    l10nIds: {
+      label: "about-logging-preset-networking-label",
+      description: "about-logging-preset-networking-description",
+    },
+  },
+  "media-playback": {
+    modules:
+      "cubeb:5,PlatformDecoderModule:5,AudioSink:5,AudioSinkWrapper:5,MediaDecoderStateMachine:4,MediaDecoder:4",
+    l10nIds: {
+      label: "about-logging-preset-media-playback-label",
+      description: "about-logging-preset-media-playback-description",
+    },
+  },
+  custom: {
+    modules: "",
+    l10nIds: {
+      label: "about-logging-preset-custom-label",
+      description: "about-logging-preset-custom-description",
+    },
+  },
+};
+
+function populatePresets() {
+  let dropdown = $("#logging-preset-dropdown");
+  for (let presetName in gLoggingPresets) {
+    let preset = gLoggingPresets[presetName];
+    let option = document.createElement("option");
+    document.l10n.setAttributes(option, preset.l10nIds.label);
+    option.value = presetName;
+    dropdown.appendChild(option);
+  }
+
+  function setPresetAndDescription(preset) {
+    document.l10n.setAttributes(
+      $("#logging-preset-description"),
+      gLoggingPresets[preset].l10nIds.description
+    );
+  }
+
+  dropdown.onchange = function() {
+    $("#log-modules").value = gLoggingPresets[dropdown.value].modules;
+    setPresetAndDescription(dropdown.value);
+    Services.prefs.setCharPref("logging.config.preset", dropdown.value);
+    setLogModules();
+  };
+
+  $("#log-modules").value = gLoggingPresets[dropdown.value].modules;
+  setPresetAndDescription(dropdown.value);
+  $("#log-modules").oninput = e => {
+    dropdown.value = "custom";
+  };
+}
+
 let gInited = false;
 function init() {
   if (gInited) {
@@ -39,6 +96,8 @@ function init() {
   } catch (e) {
     console.error(e);
   }
+
+  populatePresets();
 
   // Update the value of the log file.
   updateLogFile();
