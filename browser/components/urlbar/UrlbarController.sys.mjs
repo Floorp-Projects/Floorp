@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
@@ -90,6 +93,10 @@ export class UrlbarController {
     this.engagementEvent = new TelemetryEvent(
       this,
       options.eventTelemetryCategory
+    );
+
+    XPCOMUtils.defineLazyGetter(this, "logger", () =>
+      lazy.UrlbarUtils.getLogger({ prefix: "Controller" })
     );
   }
 
@@ -1038,10 +1045,6 @@ class TelemetryEvent {
       selType,
     }
   ) {
-    if (!lazy.UrlbarPrefs.get("searchEngagementTelemetryEnabled")) {
-      return;
-    }
-
     const browserWindow = this._controller.browserWindow;
     let sap = "urlbar";
     if (searchSource === "urlbar-handoff") {
@@ -1070,9 +1073,10 @@ class TelemetryEvent {
       .map(r => lazy.UrlbarUtils.searchEngagementTelemetryType(r))
       .join(",");
 
+    let eventInfo;
     if (method === "engagement") {
       const selectedResult = currentResults[selIndex];
-      Glean.urlbar.engagement.record({
+      eventInfo = {
         sap,
         interaction,
         n_chars: numChars,
@@ -1090,9 +1094,9 @@ class TelemetryEvent {
           selType === "help" || selType === "dismiss" ? selType : action,
         groups,
         results,
-      });
+      };
     } else if (method === "abandonment") {
-      Glean.urlbar.abandonment.record({
+      eventInfo = {
         sap,
         interaction,
         n_chars: numChars,
@@ -1100,9 +1104,9 @@ class TelemetryEvent {
         n_results: numResults,
         groups,
         results,
-      });
+      };
     } else if (method === "impression") {
-      Glean.urlbar.impression.record({
+      eventInfo = {
         reason,
         sap,
         interaction,
@@ -1111,9 +1115,18 @@ class TelemetryEvent {
         n_results: numResults,
         groups,
         results,
-      });
+      };
     } else {
       Cu.reportError(`Unknown telemetry event method: ${method}`);
+      return;
+    }
+
+    this._controller.logger.info(
+      `${method} event: ${JSON.stringify(eventInfo)}`
+    );
+
+    if (lazy.UrlbarPrefs.get("searchEngagementTelemetryEnabled")) {
+      Glean.urlbar[method].record(eventInfo);
     }
   }
 

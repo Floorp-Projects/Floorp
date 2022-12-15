@@ -238,7 +238,7 @@ export var UrlbarTokenizer = {
    *          tokens property.
    */
   tokenize(queryContext) {
-    lazy.logger.info(
+    lazy.logger.debug(
       "Tokenizing search string",
       JSON.stringify(queryContext.searchString)
     );
@@ -410,6 +410,6 @@ function filterTokens(tokens) {
     }
   }
 
-  lazy.logger.info("Filtered Tokens", tokens);
+  lazy.logger.info("Filtered Tokens", filtered);
   return filtered;
 }
