@@ -115,6 +115,7 @@ class EarlyHintPreloader final : public nsIStreamListener,
                        nsContentPolicyType aContentPolicyType,
                        nsIReferrerInfo* aReferrerInfo,
                        nsICookieJarSettings* aCookieJarSettings);
+  void PriorizeAsPreload();
   void SetLinkHeader(const LinkHeader& aLinkHeader);
 
   static void CollectResourcesTypeTelemetry(ASDestination aASDestination);
