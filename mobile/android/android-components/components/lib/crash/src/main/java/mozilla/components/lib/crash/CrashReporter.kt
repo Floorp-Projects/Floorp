@@ -32,6 +32,29 @@ import mozilla.components.lib.crash.service.SendCrashTelemetryService
 import mozilla.components.support.base.log.logger.Logger
 
 /**
+ * Stores a list of `Breadcrumb` objects for the crash reporter.
+ *
+ * This is shared between multiple threads and needs to be thread-safe.
+ */
+private class BreadcrumbList(val maxBreadCrumbs: Int) {
+    private val breadcrumbs = ArrayDeque<Breadcrumb>()
+
+    @Synchronized
+    internal fun copy(): ArrayList<Breadcrumb> {
+        return ArrayList<Breadcrumb>(breadcrumbs)
+    }
+
+    @Synchronized
+    internal fun add(breadcrumb: Breadcrumb) {
+        if (breadcrumbs.size >= maxBreadCrumbs) {
+            breadcrumbs.removeFirst()
+        }
+        breadcrumbs.add(breadcrumb)
+    }
+}
+
+/**
+ *
  * A generic crash reporter that can report crashes to multiple services.
  *
  * In the `onCreate()` method of your Application class create a `CrashReporter` instance and call `install()`:
@@ -75,7 +98,7 @@ class CrashReporter(
     internal val logger = Logger("mozac/CrashReporter")
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal val crashBreadcrumbs = ArrayList<Breadcrumb>()
+    private val crashBreadcrumbs = BreadcrumbList(maxBreadCrumbs)
 
     init {
         if (services.isEmpty() and telemetryServices.isEmpty()) {
@@ -97,11 +120,10 @@ class CrashReporter(
     }
 
     /**
-     * Get a copy of the crashBreadCrumbs
+     * Get a copy of the crashBreadcrumbs
      */
     fun crashBreadcrumbsCopy(): ArrayList<Breadcrumb> {
-        @Suppress("UNCHECKED_CAST")
-        return crashBreadcrumbs.clone() as ArrayList<Breadcrumb>
+        return crashBreadcrumbs.copy()
     }
 
     /**
@@ -181,10 +203,6 @@ class CrashReporter(
      * ```
      */
     override fun recordCrashBreadcrumb(breadcrumb: Breadcrumb) {
-        if (crashBreadcrumbs.size >= maxBreadCrumbs) {
-            crashBreadcrumbs.removeAt(0)
-        }
-
         crashBreadcrumbs.add(breadcrumb)
     }
 

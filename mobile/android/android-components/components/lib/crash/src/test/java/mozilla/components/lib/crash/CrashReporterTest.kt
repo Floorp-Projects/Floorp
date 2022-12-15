@@ -750,7 +750,7 @@ class CrashReporterTest {
             crashReporter.recordCrashBreadcrumb(Breadcrumb(testMessage, testData, testCategory, testLevel, testType))
         }
         advanceUntilIdle()
-        assertEquals(crashReporter.crashBreadcrumbs.size, 5)
+        assertEquals(crashReporter.crashBreadcrumbsCopy().size, 5)
 
         crashReporter = CrashReporter(
             context = testContext,
@@ -762,7 +762,7 @@ class CrashReporterTest {
             crashReporter.recordCrashBreadcrumb(Breadcrumb(testMessage, testData, testCategory, testLevel, testType))
         }
         advanceUntilIdle()
-        assertEquals(crashReporter.crashBreadcrumbs.size, 5)
+        assertEquals(crashReporter.crashBreadcrumbsCopy().size, 5)
     }
 
     @Test
@@ -788,14 +788,16 @@ class CrashReporterTest {
         }
         advanceUntilIdle()
 
-        for (i in 0 until maxNum) {
-            assertEquals(crashReporter.crashBreadcrumbs.elementAt(i).level, Breadcrumb.Level.CRITICAL)
-        }
+        crashReporter.crashBreadcrumbsCopy().let {
+            for (i in 0 until maxNum) {
+                assertEquals(it.elementAt(i).level, Breadcrumb.Level.CRITICAL)
+            }
 
-        var time = crashReporter.crashBreadcrumbs[0].date
-        for (i in 1 until crashReporter.crashBreadcrumbs.size) {
-            assertTrue(time.before(crashReporter.crashBreadcrumbs[i].date))
-            time = crashReporter.crashBreadcrumbs[i].date
+            var time = it[0].date
+            for (i in 1 until it.size) {
+                assertTrue(time.before(it[i].date))
+                time = it[i].date
+            }
         }
 
         repeat(maxNum) {
@@ -806,14 +808,16 @@ class CrashReporterTest {
         }
         advanceUntilIdle()
 
-        for (i in 0 until maxNum) {
-            assertEquals(crashReporter.crashBreadcrumbs.elementAt(i).level, Breadcrumb.Level.DEBUG)
-        }
+        crashReporter.crashBreadcrumbsCopy().let {
+            for (i in 0 until maxNum) {
+                assertEquals(it.elementAt(i).level, Breadcrumb.Level.DEBUG)
+            }
 
-        time = crashReporter.crashBreadcrumbs[0].date
-        for (i in 1 until crashReporter.crashBreadcrumbs.size) {
-            assertTrue(time.before(crashReporter.crashBreadcrumbs[i].date))
-            time = crashReporter.crashBreadcrumbs[i].date
+            var time = it[0].date
+            for (i in 1 until it.size) {
+                assertTrue(time.before(it[i].date))
+                time = it[i].date
+            }
         }
     }
 
@@ -840,10 +844,12 @@ class CrashReporterTest {
         }
         advanceUntilIdle()
 
-        var time = crashReporter.crashBreadcrumbs[0].date
-        for (i in 1 until crashReporter.crashBreadcrumbs.size) {
-            assertTrue(time.before(crashReporter.crashBreadcrumbs[i].date))
-            time = crashReporter.crashBreadcrumbs[i].date
+        crashReporter.crashBreadcrumbsCopy().let {
+            var time = it[0].date
+            for (i in 1 until it.size) {
+                assertTrue(time.before(it[i].date))
+                time = it[i].date
+            }
         }
 
         repeat(maxNum / 2) {
@@ -854,10 +860,12 @@ class CrashReporterTest {
         }
         advanceUntilIdle()
 
-        time = crashReporter.crashBreadcrumbs[0].date
-        for (i in 1 until crashReporter.crashBreadcrumbs.size) {
-            assertTrue(time.before(crashReporter.crashBreadcrumbs[i].date))
-            time = crashReporter.crashBreadcrumbs[i].date
+        crashReporter.crashBreadcrumbsCopy().let {
+            var time = it[0].date
+            for (i in 1 until it.size) {
+                assertTrue(time.before(it[i].date))
+                time = it[i].date
+            }
         }
     }
 }
