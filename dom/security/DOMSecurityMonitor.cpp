@@ -12,6 +12,7 @@
 #include "nsIPrincipal.h"
 #include "nsIURI.h"
 #include "nsJSUtils.h"
+#include "xpcpublic.h"
 
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/StaticPrefs_dom.h"
@@ -105,6 +106,8 @@ void DOMSecurityMonitor::AuditParsingOfHTMLXMLFragments(
           "(fragment: %s)",
           uriSpec.get(), NS_ConvertUTF16toUTF8(filename).get(), lineNum,
           columnNum, NS_ConvertUTF16toUTF8(aFragment).get());
+
+  xpc_DumpJSStack(true, true, false);
   MOZ_ASSERT(false);
 }
 
