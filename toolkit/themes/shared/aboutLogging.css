@@ -1,0 +1,49 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url("chrome://global/skin/in-content/common.css");
+
+html {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+}
+
+/** Content area **/
+
+.main-content {
+  flex: 1;
+}
+
+#logging {
+  padding: 1em;
+}
+
+div.page-section {
+  padding: 0.5em;
+}
+
+div.page-section > div {
+  padding-inline-start: 0.5em;
+}
+
+#current-log-modules,
+#no-log-modules {
+  font-family: monospace;
+  padding-inline-start: 8px;
+  margin-bottom: 1em;
+}
+
+#current-log-file {
+  font-family: monospace;
+  padding-inline-start: 8px;
+}
+
+input[type=text] {
+  width: 100%;
+  font-family: monospace;
+  padding-inline-start: 0;
+}
