@@ -63,10 +63,6 @@ JSObject* PermissionStatus::WrapObject(JSContext* aCx,
   return PermissionStatus_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsLiteralCString PermissionStatus::GetPermissionType() {
-  return PermissionNameToType(mName);
-}
-
 nsresult PermissionStatus::UpdateState() {
   nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
   if (NS_WARN_IF(!window)) {
@@ -87,7 +83,7 @@ nsresult PermissionStatus::UpdateState() {
   }
 
   nsresult rv = permissionHandler->GetPermissionForPermissionsAPI(
-      GetPermissionType(), &action);
+      PermissionNameToType(mName), &action);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

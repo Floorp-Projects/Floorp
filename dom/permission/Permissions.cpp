@@ -8,10 +8,9 @@
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/Document.h"
-#include "mozilla/dom/MidiPermissionStatus.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
-#include "mozilla/dom/PermissionStatus.h"
 #include "mozilla/dom/PermissionsBinding.h"
+#include "mozilla/dom/PermissionStatus.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/Components.h"
 #include "nsIPermissionManager.h"
@@ -51,16 +50,6 @@ already_AddRefed<PermissionStatus> CreatePermissionStatus(
   }
 
   switch (permission.mName) {
-    case PermissionName::Midi: {
-      MidiPermissionDescriptor midiPerm;
-      if (NS_WARN_IF(!midiPerm.Init(aCx, value))) {
-        aRv.NoteJSContextException(aCx);
-        return nullptr;
-      }
-
-      bool sysex = midiPerm.mSysex.WasPassed() && midiPerm.mSysex.Value();
-      return MidiPermissionStatus::Create(aWindow, sysex, aRv);
-    }
     case PermissionName::Geolocation:
     case PermissionName::Notifications:
     case PermissionName::Push:

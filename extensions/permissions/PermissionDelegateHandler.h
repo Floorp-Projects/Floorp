@@ -52,7 +52,7 @@ class PermissionDelegateHandler final : public nsIPermissionDelegateHandler {
   explicit PermissionDelegateHandler() = default;
   explicit PermissionDelegateHandler(mozilla::dom::Document* aDocument);
 
-  static constexpr size_t DELEGATED_PERMISSION_COUNT = 12;
+  static constexpr size_t DELEGATED_PERMISSION_COUNT = 11;
 
   typedef struct DelegatedPermissionList {
     Array<uint32_t, DELEGATED_PERMISSION_COUNT> mPermissions;
