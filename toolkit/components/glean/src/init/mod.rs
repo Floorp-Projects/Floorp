@@ -110,7 +110,7 @@ fn fog_init_internal(
     log::debug!("Configuration: {:#?}", conf);
 
     // Register all custom pings before we initialize.
-    fog::pings::register_pings();
+    fog::pings::register_pings(Some(&conf.application_id));
 
     glean::initialize(conf, client_info);
 
@@ -165,7 +165,7 @@ fn build_configuration(
         server_endpoint: Some(server),
         uploader: None,
         use_core_mps,
-        trim_data_to_registered_pings: false,
+        trim_data_to_registered_pings: true,
     };
 
     Ok((configuration, client_info))

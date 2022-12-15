@@ -39,7 +39,7 @@ def test_all_metric_types():
     all_objs, options = run_glean_parser.parse_with_options(input_files, options)
 
     output_fd = io.StringIO()
-    rust.output_rust(all_objs, output_fd, options)
+    rust.output_rust(all_objs, output_fd, {}, options)
 
     expect(
         path.join(path.dirname(__file__), "metrics_test_output"), output_fd.getvalue()
@@ -62,7 +62,7 @@ def test_fake_pings():
     all_objs, options = run_glean_parser.parse_with_options(input_files, options)
 
     output_fd = io.StringIO()
-    rust.output_rust(all_objs, output_fd, options)
+    rust.output_rust(all_objs, output_fd, {}, options)
 
     expect(path.join(path.dirname(__file__), "pings_test_output"), output_fd.getvalue())
 
