@@ -204,13 +204,19 @@ class GeckoProfile(object):
                     data = json.load(f)
                 results_dir = os.path.dirname(results_json)
                 for entry in data:
-                    for rel_profile_path in entry["files"]["geckoProfiles"]:
-                        res.append(
-                            {
-                                "path": os.path.join(results_dir, rel_profile_path),
-                                "type": testtype,
-                            }
-                        )
+                    try:
+                        for rel_profile_path in entry["files"]["geckoProfiles"]:
+                            res.append(
+                                {
+                                    "path": os.path.join(results_dir, rel_profile_path),
+                                    "type": testtype,
+                                }
+                            )
+                    except KeyError:
+                        if is_extra_profiler_run:
+                            LOG.info("Failed to find profiles for extra profiler run.")
+                        else:
+                            LOG.error("Failed to find profiles.")
         else:
             # Raptor-webext stores its profiles in the self.gecko_profile_dir
             # directory
