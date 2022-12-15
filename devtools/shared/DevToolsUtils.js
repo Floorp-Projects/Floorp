@@ -15,6 +15,7 @@ var {
 } = require("resource://devtools/shared/platform/stack.js");
 
 const lazy = {};
+ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 
 ChromeUtils.defineESModuleGetters(lazy, {
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
@@ -564,23 +565,7 @@ function mainThreadFetch(
         // to using the locale default encoding (bug 1181345).
 
         // Read and decode the data according to the locale default encoding.
-
-        let available;
-        try {
-          available = stream.available();
-        } catch (ex) {
-          if (ex.name === "NS_BASE_STREAM_CLOSED") {
-            // Empty files cause NS_BASE_STREAM_CLOSED exception.
-            // If there was a real stream error, we would have already rejected above.
-            resolve({
-              content: "",
-              contentType: "text/plan",
-            });
-            return;
-          }
-
-          reject(ex);
-        }
+        const available = stream.available();
         let source = NetUtil.readInputStreamToString(stream, available);
         stream.close();
 
@@ -654,7 +639,35 @@ function mainThreadFetch(
           sourceMapURL,
         });
       } catch (ex) {
-        reject(ex);
+        const uri = request.originalURI;
+        if (
+          ex.name === "NS_BASE_STREAM_CLOSED" &&
+          uri instanceof Ci.nsIFileURL
+        ) {
+          // Empty files cause NS_BASE_STREAM_CLOSED exception. Use OS.File to
+          // differentiate between empty files and other errors (bug 1170864).
+          // This can be removed when bug 982654 is fixed.
+
+          uri.QueryInterface(Ci.nsIFileURL);
+          // Bug 1779574: IOUtils is not available in non-parent processes.
+          // eslint-disable-next-line mozilla/reject-osfile
+          const result = lazy.OS.File.read(uri.file.path).then(bytes => {
+            // Convert the bytearray to a String.
+            const decoder = new TextDecoder();
+            const content = decoder.decode(bytes);
+
+            // We can't detect the contentType without opening a channel
+            // and that failed already. This is the best we can do here.
+            return {
+              content,
+              contentType: "text/plain",
+            };
+          });
+
+          resolve(result);
+        } else {
+          reject(ex);
+        }
       }
     };
 
