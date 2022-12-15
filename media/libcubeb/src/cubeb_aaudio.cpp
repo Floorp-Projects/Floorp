@@ -9,6 +9,7 @@
 #include "cubeb_android.h"
 #include "cubeb_log.h"
 #include "cubeb_resampler.h"
+#include "cubeb_triple_buffer.h"
 #include <aaudio/AAudio.h>
 #include <atomic>
 #include <cassert>
@@ -20,6 +21,19 @@
 #include <mutex>
 #include <thread>
 #include <time.h>
+
+#if defined(__ANDROID__)
+#ifdef LOG
+#undef LOG
+#endif
+// #define LOGGING_ENABLED
+#ifdef LOGGING_ENABLED
+#define LOG(args...)                                                           \
+  __android_log_print(ANDROID_LOG_INFO, "Cubeb_AAudio", ##args)
+#else
+#define LOG(...)
+#endif
+#endif
 
 #ifdef DISABLE_LIBAAUDIO_DLOPEN
 #define WRAP(x) x
@@ -101,13 +115,26 @@ enum class stream_state {
   SHUTDOWN,
 };
 
+struct AAudioTimingInfo {
+  // The timestamp at which the audio engine last called the calback.
+  uint64_t tstamp;
+  // The number of output frames sent to the engine.
+  uint64_t output_frame_index;
+  // The current output latency in frames. 0 if there is no output stream.
+  uint32_t output_latency;
+  // The current input latency in frames. 0 if there is no input stream.
+  uint32_t input_latency;
+};
+
 struct cubeb_stream {
   /* Note: Must match cubeb_stream layout in cubeb.c. */
   cubeb * context{};
   void * user_ptr{};
 
   std::atomic<bool> in_use{false};
+  std::atomic<bool> latency_metrics_available{false};
   std::atomic<stream_state> state{stream_state::INIT};
+  triple_buffer<AAudioTimingInfo> timing_info;
 
   AAudioStream * ostream{};
   AAudioStream * istream{};
@@ -124,11 +151,10 @@ struct cubeb_stream {
   unsigned in_frame_size{}; // size of one input frame
 
   cubeb_sample_format out_format{};
+  uint32_t sample_rate;
   std::atomic<float> volume{1.f};
   unsigned out_channels{};
   unsigned out_frame_size{};
-  int64_t latest_output_latency = 0;
-  int64_t latest_input_latency = 0;
   bool voice_input;
   bool voice_output;
   uint64_t previous_clock;
@@ -264,8 +290,8 @@ update_state(cubeb_stream * stm)
         istate == AAUDIO_STREAM_STATE_FLUSHED ||
         istate == AAUDIO_STREAM_STATE_UNKNOWN ||
         istate == AAUDIO_STREAM_STATE_DISCONNECTED) {
-      const char * name = WRAP(AAudio_convertStreamStateToText)(istate);
-      LOG("Unexpected android input stream state %s", name);
+      LOG("Unexpected android input stream state %s",
+          WRAP(AAudio_convertStreamStateToText)(istate));
       shutdown(stm);
       return;
     }
@@ -276,8 +302,8 @@ update_state(cubeb_stream * stm)
         ostate == AAUDIO_STREAM_STATE_FLUSHED ||
         ostate == AAUDIO_STREAM_STATE_UNKNOWN ||
         ostate == AAUDIO_STREAM_STATE_DISCONNECTED) {
-      const char * name = WRAP(AAudio_convertStreamStateToText)(istate);
-      LOG("Unexpected android output stream state %s", name);
+      LOG("Unexpected android output stream state %s",
+          WRAP(AAudio_convertStreamStateToText)(istate));
       shutdown(stm);
       return;
     }
@@ -496,6 +522,86 @@ apply_volume(cubeb_stream * stm, void * audio_data, uint32_t num_frames)
   }
 }
 
+uint64_t
+now_ns()
+{
+  using namespace std::chrono;
+  return duration_cast<nanoseconds>(steady_clock::now().time_since_epoch())
+      .count();
+}
+
+// To be called from the real-time audio callback
+uint64_t
+aaudio_get_latency(cubeb_stream * stm, aaudio_direction_t direction,
+                   uint64_t tstamp_ns)
+{
+  bool is_output = direction == AAUDIO_DIRECTION_OUTPUT;
+  int64_t hw_frame_index;
+  int64_t hw_tstamp;
+  AAudioStream * stream = is_output ? stm->ostream : stm->istream;
+  // For an output stream (resp. input stream), get the number of frames
+  // written to (resp read from) the hardware.
+  int64_t app_frame_index = is_output
+                                ? WRAP(AAudioStream_getFramesWritten)(stream)
+                                : WRAP(AAudioStream_getFramesRead)(stream);
+
+  // Get a timestamp for a particular frame index written to or read from the
+  // hardware.
+  auto result = WRAP(AAudioStream_getTimestamp)(stream, CLOCK_MONOTONIC,
+                                                &hw_frame_index, &hw_tstamp);
+  if (result != AAUDIO_OK) {
+    LOG("AAudioStream_getTimestamp failure.");
+    return 0;
+  }
+
+  // Compute the difference between the app and the hardware indices.
+  int64_t frame_index_delta = app_frame_index - hw_frame_index;
+  // Convert to ns
+  int64_t frame_time_delta = (frame_index_delta * 1e9) / stm->sample_rate;
+  // Extrapolate from the known timestamp for a particular frame presented.
+  int64_t app_frame_hw_time = hw_tstamp + frame_time_delta;
+  // For an output stream, the latency is positive, for an input stream, it's
+  // negative.
+  int64_t latency_ns =
+      is_output ? app_frame_hw_time - tstamp_ns : tstamp_ns - app_frame_hw_time;
+  int64_t latency_frames = stm->sample_rate * latency_ns / 1e9;
+
+  LOGV("Latency in frames (%s): %d (%dms)", is_output ? "output" : "input",
+       latency_frames, latency_ns / 1e6);
+
+  return latency_frames;
+}
+
+void
+compute_and_report_latency_metrics(cubeb_stream * stm)
+{
+  AAudioTimingInfo info = {};
+
+  info.tstamp = now_ns();
+
+  if (stm->ostream) {
+    uint64_t latency_frames =
+        aaudio_get_latency(stm, AAUDIO_DIRECTION_OUTPUT, info.tstamp);
+    if (latency_frames) {
+      info.output_latency = latency_frames;
+      info.output_frame_index =
+          WRAP(AAudioStream_getFramesWritten)(stm->ostream);
+    }
+  }
+  if (stm->istream) {
+    uint64_t latency_frames =
+        aaudio_get_latency(stm, AAUDIO_DIRECTION_INPUT, info.tstamp);
+    if (latency_frames) {
+      info.input_latency = latency_frames;
+    }
+  }
+
+  if (info.output_latency || info.input_latency) {
+    stm->latency_metrics_available = true;
+    stm->timing_info.write(info);
+  }
+}
+
 // Returning AAUDIO_CALLBACK_RESULT_STOP seems to put the stream in
 // an invalid state. Seems like an AAudio bug/bad documentation.
 // We therefore only return it on error.
@@ -540,6 +646,8 @@ aaudio_duplex_data_cb(AAudioStream * astream, void * user_data,
         WRAP(AAudio_convertResultToText)(in_num_frames));
     return AAUDIO_CALLBACK_RESULT_STOP;
   }
+
+  compute_and_report_latency_metrics(stm);
 
   // This can happen shortly after starting the stream. AAudio might immediately
   // begin to buffer output but not have any input ready yet. We could
@@ -605,6 +713,8 @@ aaudio_output_data_cb(AAudioStream * astream, void * user_data,
     return AAUDIO_CALLBACK_RESULT_CONTINUE;
   }
 
+  compute_and_report_latency_metrics(stm);
+
   long done_frames =
       cubeb_resampler_fill(stm->resampler, NULL, NULL, audio_data, num_frames);
   if (done_frames < 0 || done_frames > num_frames) {
@@ -649,9 +759,12 @@ aaudio_input_data_cb(AAudioStream * astream, void * user_data,
     return AAUDIO_CALLBACK_RESULT_CONTINUE;
   }
 
+  compute_and_report_latency_metrics(stm);
+
   long input_frame_count = num_frames;
   long done_frames = cubeb_resampler_fill(stm->resampler, audio_data,
                                           &input_frame_count, NULL, 0);
+
   if (done_frames < 0 || done_frames > num_frames) {
     LOG("Error in data callback or resampler: %ld", done_frames);
     stm->state.store(stream_state::ERROR);
@@ -854,7 +967,6 @@ aaudio_stream_init_impl(cubeb_stream * stm, cubeb_devid input_device,
 
   // initialize streams
   // output
-  uint32_t target_sample_rate = 0;
   cubeb_stream_params out_params;
   if (output_stream_params) {
     int output_preset = stm->voice_output ? AAUDIO_USAGE_VOICE_COMMUNICATION
@@ -868,20 +980,18 @@ aaudio_stream_init_impl(cubeb_stream * stm, cubeb_devid input_device,
       return res_err;
     }
 
-    // output debug information
-    aaudio_sharing_mode_t sm = WRAP(AAudioStream_getSharingMode)(stm->ostream);
-    aaudio_performance_mode_t pm =
-        WRAP(AAudioStream_getPerformanceMode)(stm->ostream);
-    int bcap = WRAP(AAudioStream_getBufferCapacityInFrames)(stm->ostream);
-    int bsize = WRAP(AAudioStream_getBufferSizeInFrames)(stm->ostream);
     int rate = WRAP(AAudioStream_getSampleRate)(stm->ostream);
-    LOG("AAudio output stream sharing mode: %d", sm);
-    LOG("AAudio output stream performance mode: %d", pm);
-    LOG("AAudio output stream buffer capacity: %d", bcap);
-    LOG("AAudio output stream buffer size: %d", bsize);
-    LOG("AAudio output stream buffer rate: %d", rate);
+    LOG("AAudio output stream sharing mode: %d",
+        WRAP(AAudioStream_getSharingMode)(stm->ostream));
+    LOG("AAudio output stream performance mode: %d",
+        WRAP(AAudioStream_getPerformanceMode)(stm->ostream));
+    LOG("AAudio output stream buffer capacity: %d",
+        WRAP(AAudioStream_getBufferCapacityInFrames)(stm->ostream));
+    LOG("AAudio output stream buffer size: %d",
+        WRAP(AAudioStream_getBufferSizeInFrames)(stm->ostream));
+    LOG("AAudio output stream sample-rate: %d", rate);
 
-    target_sample_rate = output_stream_params->rate;
+    stm->sample_rate = output_stream_params->rate;
     out_params = *output_stream_params;
     out_params.rate = rate;
 
@@ -909,24 +1019,21 @@ aaudio_stream_init_impl(cubeb_stream * stm, cubeb_devid input_device,
       return res_err;
     }
 
-    // output debug information
-    aaudio_sharing_mode_t sm = WRAP(AAudioStream_getSharingMode)(stm->istream);
-    aaudio_performance_mode_t pm =
-        WRAP(AAudioStream_getPerformanceMode)(stm->istream);
     int bcap = WRAP(AAudioStream_getBufferCapacityInFrames)(stm->istream);
-    int bsize = WRAP(AAudioStream_getBufferSizeInFrames)(stm->istream);
     int rate = WRAP(AAudioStream_getSampleRate)(stm->istream);
-    LOG("AAudio input stream sharing mode: %d", sm);
-    LOG("AAudio input stream performance mode: %d", pm);
+    LOG("AAudio input stream sharing mode: %d",
+        WRAP(AAudioStream_getSharingMode)(stm->istream));
+    LOG("AAudio input stream performance mode: %d",
+        WRAP(AAudioStream_getPerformanceMode)(stm->istream));
     LOG("AAudio input stream buffer capacity: %d", bcap);
-    LOG("AAudio input stream buffer size: %d", bsize);
+    LOG("AAudio input stream buffer size: %d",
+        WRAP(AAudioStream_getBufferSizeInFrames)(stm->istream));
     LOG("AAudio input stream buffer rate: %d", rate);
 
     stm->in_buf.reset(new char[bcap * frame_size]());
-    assert(!target_sample_rate ||
-           target_sample_rate == input_stream_params->rate);
+    assert(!stm->sample_rate || stm->sample_rate == input_stream_params->rate);
 
-    target_sample_rate = input_stream_params->rate;
+    stm->sample_rate = input_stream_params->rate;
     in_params = *input_stream_params;
     in_params.rate = rate;
     stm->in_frame_size = frame_size;
@@ -935,7 +1042,7 @@ aaudio_stream_init_impl(cubeb_stream * stm, cubeb_devid input_device,
   // initialize resampler
   stm->resampler = cubeb_resampler_create(
       stm, input_stream_params ? &in_params : NULL,
-      output_stream_params ? &out_params : NULL, target_sample_rate,
+      output_stream_params ? &out_params : NULL, stm->sample_rate,
       stm->data_callback, stm->user_ptr, CUBEB_RESAMPLER_QUALITY_DEFAULT,
       CUBEB_RESAMPLER_RECLOCK_NONE);
 
@@ -1259,63 +1366,47 @@ aaudio_stream_get_position(cubeb_stream * stm, uint64_t * position)
     break;
   }
 
-  int64_t pos;
-  int64_t ns;
-  aaudio_result_t res;
-  res = WRAP(AAudioStream_getTimestamp)(stream, CLOCK_MONOTONIC, &pos, &ns);
-  if (res != AAUDIO_OK) {
-    // When the audio stream is not running, invalid_state is returned and we
-    // simply fall back to the method we use for non-playing streams.
-    if (res == AAUDIO_ERROR_INVALID_STATE) {
-      *position = WRAP(AAudioStream_getFramesRead)(stream);
-      if (*position < stm->previous_clock) {
-        *position = stm->previous_clock;
-      } else {
-        stm->previous_clock = *position;
-      }
-      return CUBEB_OK;
-    }
-
-    LOG("AAudioStream_getTimestamp: %s", WRAP(AAudio_convertResultToText)(res));
-    return CUBEB_ERROR;
+  // No callback yet, the stream hasn't really started.
+  if (stm->previous_clock == 0 && !stm->timing_info.updated()) {
+    LOG("Not timing info yet");
+    *position = 0;
+    return CUBEB_OK;
   }
 
-  *position = pos;
+  AAudioTimingInfo info = stm->timing_info.read();
+  LOGV("AAudioTimingInfo idx:%lu tstamp:%lu latency:%u",
+       info.output_frame_index, info.tstamp, info.output_latency);
+  // Interpolate client side since the last callback.
+  int64_t interpolation = stm->sample_rate * (now_ns() - info.tstamp) / 1e9;
+  *position = info.output_frame_index + interpolation - info.output_latency;
   if (*position < stm->previous_clock) {
     *position = stm->previous_clock;
   } else {
     stm->previous_clock = *position;
   }
+
+  LOG("aaudio_stream_get_position: %ld", *position);
+
   return CUBEB_OK;
 }
 
 static int
 aaudio_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
 {
-  int64_t pos;
-  int64_t ns;
-  aaudio_result_t res;
-
   if (!stm->ostream) {
     LOG("error: aaudio_stream_get_latency on input-only stream");
     return CUBEB_ERROR;
   }
 
-  res =
-      WRAP(AAudioStream_getTimestamp)(stm->ostream, CLOCK_MONOTONIC, &pos, &ns);
-  if (res != AAUDIO_OK) {
-    LOG("aaudio_stream_get_latency, AAudioStream_getTimestamp: %s, returning "
-        "memoized value",
-        WRAP(AAudio_convertResultToText)(res));
-    // Expected when the stream is paused.
-    *latency = stm->latest_output_latency;
+  if (!stm->latency_metrics_available) {
+    LOG("Not timing info yet (output)");
     return CUBEB_OK;
   }
 
-  int64_t read = WRAP(AAudioStream_getFramesRead)(stm->ostream);
+  AAudioTimingInfo info = stm->timing_info.read();
 
-  *latency = stm->latest_output_latency = read - pos;
-  LOG("aaudio_stream_get_latency, %u", *latency);
+  *latency = info.output_latency;
+  LOG("aaudio_stream_get_latency, %u frames", *latency);
 
   return CUBEB_OK;
 }
@@ -1323,30 +1414,20 @@ aaudio_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
 static int
 aaudio_stream_get_input_latency(cubeb_stream * stm, uint32_t * latency)
 {
-  int64_t pos;
-  int64_t ns;
-  aaudio_result_t res;
-
   if (!stm->istream) {
-    LOG("error: aaudio_stream_get_input_latency on an ouput-only stream");
+    LOG("error: aaudio_stream_get_input_latency on an output-only stream");
     return CUBEB_ERROR;
   }
 
-  res =
-      WRAP(AAudioStream_getTimestamp)(stm->istream, CLOCK_MONOTONIC, &pos, &ns);
-  if (res != AAUDIO_OK) {
-    // Expected when the stream is paused.
-    LOG("aaudio_stream_get_input_latency, AAudioStream_getTimestamp: %s, "
-        "returning memoized value",
-        WRAP(AAudio_convertResultToText)(res));
-    *latency = stm->latest_input_latency;
+  if (!stm->latency_metrics_available) {
+    LOG("Not timing info yet (input)");
     return CUBEB_OK;
   }
 
-  int64_t written = WRAP(AAudioStream_getFramesWritten)(stm->istream);
+  AAudioTimingInfo info = stm->timing_info.read();
 
-  *latency = stm->latest_input_latency = written - pos;
-  LOG("aaudio_stream_get_input_latency, %u", *latency);
+  *latency = info.input_latency;
+  LOG("aaudio_stream_get_latency, %u frames", *latency);
 
   return CUBEB_OK;
 }
