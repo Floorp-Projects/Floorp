@@ -687,7 +687,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   double GetInnerWidthOuter(mozilla::ErrorResult& aError);
 
  protected:
-  nsresult GetInnerWidth(double* aWidth) override;
+  nsresult GetInnerWidth(double* aInnerWidth) override;
   void SetInnerWidthOuter(double aInnerWidth,
                           mozilla::dom::CallerType aCallerType,
                           mozilla::ErrorResult& aError);
@@ -696,7 +696,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   double GetInnerHeightOuter(mozilla::ErrorResult& aError);
 
  protected:
-  nsresult GetInnerHeight(double* aHeight) override;
+  nsresult GetInnerHeight(double* aInnerHeight) override;
   void SetInnerHeightOuter(double aInnerHeight,
                            mozilla::dom::CallerType aCallerType,
                            mozilla::ErrorResult& aError);
@@ -830,9 +830,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   // Outer windows only.
   // Arguments to this function should have values in app units
   void SetCSSViewportWidthAndHeight(nscoord width, nscoord height);
-  // Arguments to this function should have values in device pixels
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  nsresult SetDocShellSize(const mozilla::LayoutDeviceIntSize& aInnerSize);
 
   static bool CanSetProperty(const char* aPrefName);
 
@@ -861,6 +858,12 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   void SetOuterSize(int32_t aLengthCSSPixels, bool aIsWidth,
                     mozilla::dom::CallerType aCallerType,
                     mozilla::ErrorResult& aError);
+  void SetInnerSize(int32_t aLengthCSSPixels, bool aIsWidth,
+                    mozilla::dom::CallerType aCallerType,
+                    mozilla::ErrorResult& aError);
+  void SetScreenCoord(int32_t aCoordCSSPixels, bool aIsX,
+                      mozilla::dom::CallerType aCallerType,
+                      mozilla::ErrorResult& aError);
   nsRect GetInnerScreenRect();
   static mozilla::Maybe<mozilla::CSSIntSize> GetRDMDeviceSize(
       const Document& aDocument);

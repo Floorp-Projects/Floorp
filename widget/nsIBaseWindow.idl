@@ -11,11 +11,14 @@
 [ptr] native nsIWidget(nsIWidget);
 %{C++
 #include "Units.h"
+#include "mozilla/DimensionRequest.h"
 
 class nsIWidget;
 %}
 
 typedef voidPtr nativeWindow;
+native DimensionRequest(mozilla::DimensionRequest&&);
+native DimensionKind(mozilla::DimensionKind);
 
 /**
  * The nsIBaseWindow describes a generic window and basic operations that
@@ -145,6 +148,37 @@ interface nsIBaseWindow : nsISupports
     return mozilla::LayoutDeviceIntRect(x, y, w, h);
   }
 %}
+
+  /**
+   * Allows to request the change of individual dimensions without specifying
+   * the other components.
+   *
+   * @param aRequest - The requested change. A request to change only the width
+   *                   may look like:
+   *                   {DimensionKind::Outer, Nothing(), Nothing(), Some(20), Nothing()}
+   *
+   * Note: Inner position is not supported.
+   *
+   * @see DimensionRequest
+   */
+  void setDimensions(in DimensionRequest aRequest);
+
+  /**
+   * Gets the dimensions of the window. The caller may pass nullptr for any
+   * value it is uninterested in receiving.
+   *
+   * @param aDimensionKind  Specifies whether the dimensions are in reference
+   *                        to the inner or outer dimensions.
+   * @param aX              Left hand corner of the outer area; or nullptr.
+   * @param aY              Top corner of the outer area; or nullptr.
+   * @param aCX             Width of the inner or outer area; or nullptr.
+   * @param aCY             Height of the inner or outer area; or nullptr.
+   *
+   * Note: Inner position is not supported.
+   *
+   * @see DimensionRequest
+   */
+  void getDimensions(in DimensionKind aDimensionKind, out long aX, out long aY, out long aCX, out long aCY);
 
   /**
    * Tell the window to repaint itself

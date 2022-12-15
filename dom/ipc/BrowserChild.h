@@ -12,7 +12,6 @@
 #include "nsIWebNavigation.h"
 #include "nsCOMPtr.h"
 #include "nsIWebBrowserChrome.h"
-#include "nsIEmbeddingSiteWindow.h"
 #include "nsIWebBrowserChromeFocus.h"
 #include "nsIDOMEventListener.h"
 #include "nsIInterfaceRequestor.h"
@@ -141,7 +140,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
                            public ipc::MessageManagerCallback,
                            public PBrowserChild,
                            public nsIWebBrowserChrome,
-                           public nsIEmbeddingSiteWindow,
                            public nsIWebBrowserChromeFocus,
                            public nsIInterfaceRequestor,
                            public nsIWindowProvider,
@@ -199,7 +197,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIWEBBROWSERCHROME
-  NS_DECL_NSIEMBEDDINGSITEWINDOW
   NS_DECL_NSIWEBBROWSERCHROMEFOCUS
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIWINDOWPROVIDER

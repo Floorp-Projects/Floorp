@@ -7,6 +7,7 @@
 
 #include "nsIFrame.h"
 #include "nsNativeTheme.h"
+#include "mozilla/StaticPrefs_widget.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;

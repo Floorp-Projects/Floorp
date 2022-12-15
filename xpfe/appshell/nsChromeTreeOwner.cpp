@@ -10,7 +10,6 @@
 
 // Helper Classes
 #include "nsString.h"
-#include "nsIEmbeddingSiteWindow.h"
 #include "nsIDocShellTreeItem.h"
 
 // Interfaces needed to include
@@ -74,10 +73,6 @@ NS_IMETHODIMP nsChromeTreeOwner::GetInterface(const nsIID& aIID, void** aSink) {
     return mAppWindow->GetInterface(aIID, aSink);
   }
   if (aIID.Equals(NS_GET_IID(nsIWebBrowserChrome))) {
-    NS_ENSURE_STATE(mAppWindow);
-    return mAppWindow->GetInterface(aIID, aSink);
-  }
-  if (aIID.Equals(NS_GET_IID(nsIEmbeddingSiteWindow))) {
     NS_ENSURE_STATE(mAppWindow);
     return mAppWindow->GetInterface(aIID, aSink);
   }
@@ -309,6 +304,27 @@ NS_IMETHODIMP nsChromeTreeOwner::GetPositionAndSize(int32_t* x, int32_t* y,
                                                     int32_t* cx, int32_t* cy) {
   NS_ENSURE_STATE(mAppWindow);
   return mAppWindow->GetPositionAndSize(x, y, cx, cy);
+}
+
+NS_IMETHODIMP
+nsChromeTreeOwner::SetDimensions(DimensionRequest&& aRequest) {
+  MOZ_TRY(aRequest.SupplementFrom(this));
+  if (aRequest.mDimensionKind == DimensionKind::Outer) {
+    return aRequest.ApplyOuterTo(this);
+  }
+  return aRequest.ApplyInnerTo(this, /* aAsRootShell */ true);
+}
+
+NS_IMETHODIMP
+nsChromeTreeOwner::GetDimensions(DimensionKind aDimensionKind, int32_t* aX,
+                                 int32_t* aY, int32_t* aCX, int32_t* aCY) {
+  if (aDimensionKind == DimensionKind::Outer) {
+    return GetPositionAndSize(aX, aY, aCX, aCY);
+  }
+  if (aY || aX) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  return GetRootShellSize(aCX, aCY);
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::Repaint(bool aForce) {

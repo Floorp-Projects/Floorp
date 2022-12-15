@@ -1021,9 +1021,9 @@ LayoutDeviceIntPoint PuppetWidget::GetWindowPosition() {
   }
 
   int32_t winX, winY, winW, winH;
-  NS_ENSURE_SUCCESS(
-      GetOwningBrowserChild()->GetDimensions(0, &winX, &winY, &winW, &winH),
-      LayoutDeviceIntPoint());
+  NS_ENSURE_SUCCESS(GetOwningBrowserChild()->GetDimensions(
+                        DimensionKind::Outer, &winX, &winY, &winW, &winH),
+                    LayoutDeviceIntPoint());
   return LayoutDeviceIntPoint(winX, winY) +
          GetOwningBrowserChild()->GetClientOffset();
 }
