@@ -7217,6 +7217,21 @@ void nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
   nsFrameConstructorSaveState floatSaveState;
   state.MaybePushFloatContainingBlock(insertion.mParentFrame, floatSaveState);
 
+  if (state.mPresContext->IsPaginated() &&
+      StaticPrefs::layout_css_named_pages_enabled()) {
+    // Because this function can be called outside frame construction, we need
+    // to set state.mAutoPageNameValue based on what the parent frame's auto
+    // value is.
+    // Calling this from outside the frame constructor can violate many of the
+    // expectations in AutoFrameConstructionPageName, and unlike during frame
+    // construction we already have an auto value from parentFrame, so we do
+    // not use AutoFrameConstructionPageName here.
+    state.mAutoPageNameValue = insertion.mParentFrame->GetAutoPageValue();
+#ifdef DEBUG
+    insertion.mParentFrame->mWasVisitedByAutoFrameConstructionPageName = true;
+#endif
+  }
+
   // If the container is a table and a caption will be appended, it needs to be
   // put in the table wrapper frame's additional child list.
   // We make no attempt here to set flags to indicate whether the list
