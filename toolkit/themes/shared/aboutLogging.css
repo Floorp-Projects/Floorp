@@ -42,7 +42,8 @@ div.page-section > div.radio-entry {
   margin-bottom: 1em;
 }
 
-#current-log-file {
+#current-log-file,
+#no-log-file {
   font-family: monospace;
   padding-inline-start: 8px;
 }
