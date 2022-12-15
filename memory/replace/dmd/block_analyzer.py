@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,8 +8,6 @@
 # particular block, such as its allocation stack or which other blocks
 # contain pointers to it. This can be useful when investigating leaks
 # caused by unknown references to refcounted objects.
-
-from __future__ import absolute_import, print_function
 
 import argparse
 import gzip
@@ -160,7 +158,7 @@ def show_referrers(args, blocks, stacks, block):
     while True:
         referrers = {}
 
-        for b, data in blocks.iteritems():
+        for b, data in blocks.items():
             which_edge = 0
             for e in data.contents:
                 if e == block:
