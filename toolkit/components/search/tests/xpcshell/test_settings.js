@@ -207,8 +207,17 @@ add_task(
 );
 
 add_task(
-  async function test_legacy_setting_migration_with_incorrect_metaData_current_and_private_hashes() {
+  async function test_legacy_setting_migration_with_incorrect_metaData_current_and_private_hashes_app_provided() {
     let ss = Services.search.wrappedJSObject;
+
+    // Here we are testing correct migration for the case that a user has set
+    // their default engine to an application provided engine (but not the app
+    // default).
+    //
+    // In this case we should ignore invalid hashes for the default engines,
+    // and allow the select default to remain. This covers the case where
+    // a user has copied a profile from a different directory.
+    // See SearchService._getEngineDefault for more details.
 
     await loadSettingsFile(
       "data/search-legacy-wrong-default-engine-hashes.json",
@@ -226,15 +235,72 @@ add_task(
 
     Assert.equal(
       migratedSettingsFile.metaData.defaultEngineId,
-      "",
+      "engine2@search.mozilla.orgdefault",
+      "Should ignore invalid metaData.hash when the default engine is application provided."
+    );
+    Assert.equal(
+      Services.search.defaultEngine.name,
+      "engine2",
+      "Should have the correct engine set as default"
+    );
 
-      "When metaData.hash is not the correct hash for metaData.current, the migration should reset the defaultEngineId to an empty string."
+    Assert.equal(
+      migratedSettingsFile.metaData.privateDefaultEngineId,
+      "engine2@search.mozilla.orgdefault",
+      "Should ignore invalid metaData.privateHash when the default private engine is application provided."
+    );
+    Assert.equal(
+      Services.search.defaultPrivateEngine.name,
+      "engine2",
+      "Should have the correct engine set as default private"
+    );
+
+    removeSettingsFile();
+  }
+);
+
+add_task(
+  async function test_legacy_setting_migration_with_incorrect_metaData_current_and_private_hashes_third_party() {
+    let ss = Services.search.wrappedJSObject;
+
+    // This test is checking that if the user has set a third-party engine as
+    // default, and the verification hash is invalid, then we do not copy
+    // the default engine setting.
+
+    await loadSettingsFile(
+      "data/search-legacy-wrong-third-party-engine-hashes.json",
+      false,
+      false
+    );
+    const settingsFileWritten = promiseAfterSettings();
+
+    await ss.reset();
+    await Services.search.init();
+
+    await settingsFileWritten;
+
+    let migratedSettingsFile = await promiseSettingsData();
+
+    Assert.equal(
+      migratedSettingsFile.metaData.defaultEngineId,
+      "",
+      "Should reset the default engine when metaData.hash is invalid and the engine is not application provided."
+    );
+    Assert.equal(
+      Services.search.defaultEngine.name,
+      "engine1",
+      "Should have reset the default engine"
     );
 
     Assert.equal(
       migratedSettingsFile.metaData.privateDefaultEngineId,
       "",
-      "When metaData.privateHash is not the correct hash for metaData.private, the migration should reset the privateDefaultEngineId to an empty string."
+      "Should reset the default engine when metaData.privateHash is invalid and the engine is not application provided."
+    );
+    Assert.equal(
+      Services.search.defaultPrivateEngine.name,
+      "engine1",
+      "Should have reset the default private engine"
     );
 
     removeSettingsFile();
