@@ -24,6 +24,7 @@ TESTING_JS_MODULES += [
     "content-src/asrouter/templates/OnboardingMessage/WhatsNewMessage.schema.json",
     "content-src/asrouter/templates/PBNewtab/NewtabPromoMessage.schema.json",
     "content-src/asrouter/templates/ToastNotification/ToastNotification.schema.json",
+    "test/InflightAssetsMessageProvider.jsm",
     "test/RemoteImagesTestUtils.jsm",
 ]
 
