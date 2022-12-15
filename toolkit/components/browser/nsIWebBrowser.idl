@@ -37,8 +37,6 @@ interface nsIWebBrowser : nsISupports
      * this property to point to the chrome object before creating the browser
      * window via the browser's <CODE>nsIBaseWindow</CODE> interface.
      *
-     * The chrome object must also implement <CODE>nsIEmbeddingSiteWindow</CODE>.
-     *
      * The chrome may optionally implement <CODE>nsIInterfaceRequestor</CODE>,
      * <CODE>nsIWebBrowserChromeFocus</CODE>,
      * <CODE>nsIContextMenuListener</CODE> and
@@ -58,7 +56,6 @@ interface nsIWebBrowser : nsISupports
      *
      * @see nsIBaseWindow
      * @see nsIWebBrowserChrome
-     * @see nsIEmbeddingSiteWindow
      * @see nsIInterfaceRequestor
      * @see nsIWebBrowserChromeFocus
      * @see nsIContextMenuListener

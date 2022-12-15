@@ -133,7 +133,6 @@
 #include "mozilla/dom/Document.h"
 #include "Crypto.h"
 #include "nsDOMString.h"
-#include "nsIEmbeddingSiteWindow.h"
 #include "nsThreadUtils.h"
 #include "nsILoadContext.h"
 #include "nsIScrollableFrame.h"
@@ -3527,40 +3526,66 @@ nsresult nsGlobalWindowOuter::GetInnerWidth(double* aInnerWidth) {
   FORWARD_TO_INNER(GetInnerWidth, (aInnerWidth), NS_ERROR_UNEXPECTED);
 }
 
-void nsGlobalWindowOuter::SetInnerWidthOuter(double aInnerWidth,
-                                             CallerType aCallerType,
-                                             ErrorResult& aError) {
+void nsGlobalWindowOuter::SetInnerSize(int32_t aLengthCSSPixels, bool aIsWidth,
+                                       mozilla::dom::CallerType aCallerType,
+                                       mozilla::ErrorResult& aError) {
   if (!mDocShell) {
     aError.Throw(NS_ERROR_UNEXPECTED);
     return;
   }
 
-  // We only allow setting integers, for now.
-  int32_t value = std::round(ToZeroIfNonfinite(aInnerWidth));
+  CSSIntCoord length(aLengthCSSPixels);
 
-  CheckSecurityWidthAndHeight(&value, nullptr, aCallerType);
+  CheckSecurityWidthAndHeight((aIsWidth ? &length.value : nullptr),
+                              (aIsWidth ? nullptr : &length.value),
+                              aCallerType);
+
   RefPtr<PresShell> presShell = mDocShell->GetPresShell();
 
-  // Setting inner width should set the CSS viewport. If the CSS viewport
+  // Setting inner size should set the CSS viewport. If the CSS viewport
   // has been overridden, change the override.
   if (presShell && presShell->UsesMobileViewportSizing()) {
-    nscoord height = 0;
-
     RefPtr<nsPresContext> presContext;
     presContext = presShell->GetPresContext();
 
     nsRect shellArea = presContext->GetVisibleArea();
-    height = shellArea.Height();
-    SetCSSViewportWidthAndHeight(CSSPixel::ToAppUnits(value), height);
+    if (aIsWidth) {
+      shellArea.width = CSSPixel::ToAppUnits(CSSCoord(length));
+    } else {
+      shellArea.height = CSSPixel::ToAppUnits(CSSCoord(length));
+    }
+
+    SetCSSViewportWidthAndHeight(shellArea.Width(), shellArea.Height());
     return;
   }
 
-  // Nothing has been overridden, so change the docshell itself.
-  nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
-  LayoutDeviceIntSize size = docShellAsWin->GetSize();
-  size.width =
-      (CSSCoord(value) * CSSToDevScaleForBaseWindow(docShellAsWin)).Rounded();
-  aError = SetDocShellSize(size);
+  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin = GetTreeOwnerWindow();
+  if (!treeOwnerAsWin) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  auto scale = CSSToDevScaleForBaseWindow(treeOwnerAsWin);
+  LayoutDeviceIntCoord valueDev = (CSSCoord(length) * scale).Rounded();
+
+  Maybe<LayoutDeviceIntCoord> width, height;
+  if (aIsWidth) {
+    width.emplace(valueDev);
+  } else {
+    height.emplace(valueDev);
+  }
+
+  aError = treeOwnerAsWin->SetDimensions(
+      {DimensionKind::Inner, Nothing(), Nothing(), width, height});
+
+  CheckForDPIChange();
+}
+
+void nsGlobalWindowOuter::SetInnerWidthOuter(double aInnerWidth,
+                                             CallerType aCallerType,
+                                             ErrorResult& aError) {
+  SetInnerSize(NSToIntRound(ToZeroIfNonfinite(aInnerWidth)),
+               /* aIsWidth */ true, aCallerType, aError);
 }
 
 double nsGlobalWindowOuter::GetInnerHeightOuter(ErrorResult& aError) {
@@ -3576,35 +3601,8 @@ nsresult nsGlobalWindowOuter::GetInnerHeight(double* aInnerHeight) {
 void nsGlobalWindowOuter::SetInnerHeightOuter(double aInnerHeight,
                                               CallerType aCallerType,
                                               ErrorResult& aError) {
-  if (!mDocShell) {
-    aError.Throw(NS_ERROR_UNEXPECTED);
-    return;
-  }
-
-  int32_t value = std::round(ToZeroIfNonfinite(aInnerHeight));
-  CheckSecurityWidthAndHeight(nullptr, &value, aCallerType);
-  RefPtr<PresShell> presShell = mDocShell->GetPresShell();
-
-  // Setting inner height should set the CSS viewport. If the CSS viewport
-  // has been overridden, change the override.
-  if (presShell && presShell->UsesMobileViewportSizing()) {
-    nscoord width = 0;
-
-    RefPtr<nsPresContext> presContext;
-    presContext = presShell->GetPresContext();
-
-    nsRect shellArea = presContext->GetVisibleArea();
-    width = shellArea.Width();
-    SetCSSViewportWidthAndHeight(width, CSSPixel::ToAppUnits(value));
-    return;
-  }
-
-  // Nothing has been overriden, so change the docshell itself.
-  nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
-  LayoutDeviceIntSize size = docShellAsWin->GetSize();
-  size.height =
-      (CSSCoord(value) * CSSToDevScaleForBaseWindow(docShellAsWin)).Rounded();
-  aError = SetDocShellSize(size);
+  SetInnerSize(NSToIntRound(ToZeroIfNonfinite(aInnerHeight)),
+               /* aIsWidth */ false, aCallerType, aError);
 }
 
 CSSIntSize nsGlobalWindowOuter::GetOuterSize(CallerType aCallerType,
@@ -3657,11 +3655,19 @@ void nsGlobalWindowOuter::SetOuterSize(int32_t aLengthCSSPixels, bool aIsWidth,
                               aIsWidth ? nullptr : &aLengthCSSPixels,
                               aCallerType);
 
-  LayoutDeviceIntSize size = treeOwnerAsWin->GetSize();
   auto scale = CSSToDevScaleForBaseWindow(treeOwnerAsWin);
-  (aIsWidth ? size.width : size.height) =
-      (CSSCoord(aLengthCSSPixels) * scale).Rounded();
-  aError = treeOwnerAsWin->SetSize(size.width, size.height, true);
+  LayoutDeviceIntCoord value =
+      (CSSCoord(CSSIntCoord(aLengthCSSPixels)) * scale).Rounded();
+
+  Maybe<LayoutDeviceIntCoord> width, height;
+  if (aIsWidth) {
+    width.emplace(value);
+  } else {
+    height.emplace(value);
+  }
+
+  aError = treeOwnerAsWin->SetDimensions(
+      {DimensionKind::Outer, Nothing(), Nothing(), width, height});
 
   CheckForDPIChange();
 }
@@ -3792,25 +3798,39 @@ float nsGlobalWindowOuter::GetMozInnerScreenYOuter(CallerType aCallerType) {
   return nsPresContext::AppUnitsToFloatCSSPixels(r.y);
 }
 
-void nsGlobalWindowOuter::SetScreenXOuter(int32_t aScreenX,
-                                          CallerType aCallerType,
-                                          ErrorResult& aError) {
+void nsGlobalWindowOuter::SetScreenCoord(int32_t aCoordCSSPixels, bool aIsX,
+                                         CallerType aCallerType,
+                                         ErrorResult& aError) {
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin = GetTreeOwnerWindow();
   if (!treeOwnerAsWin) {
     aError.Throw(NS_ERROR_FAILURE);
     return;
   }
 
-  LayoutDeviceIntPoint pos = treeOwnerAsWin->GetPosition();
+  CheckSecurityLeftAndTop(aIsX ? &aCoordCSSPixels : nullptr,
+                          aIsX ? nullptr : &aCoordCSSPixels, aCallerType);
 
-  CheckSecurityLeftAndTop(&aScreenX, nullptr, aCallerType);
+  auto scale = CSSToDevScaleForBaseWindow(treeOwnerAsWin);
+  LayoutDeviceIntCoord coord =
+      (CSSCoord(CSSIntCoord(aCoordCSSPixels)) * scale).Rounded();
 
-  pos.x = (CSSCoord(aScreenX) * CSSToDevScaleForBaseWindow(treeOwnerAsWin))
-              .Rounded();
+  Maybe<LayoutDeviceIntCoord> x, y;
+  if (aIsX) {
+    x.emplace(coord);
+  } else {
+    y.emplace(coord);
+  }
 
-  aError = treeOwnerAsWin->SetPosition(pos.x, pos.y);
+  aError = treeOwnerAsWin->SetDimensions(
+      {DimensionKind::Outer, x, y, Nothing(), Nothing()});
 
   CheckForDPIChange();
+}
+
+void nsGlobalWindowOuter::SetScreenXOuter(int32_t aScreenX,
+                                          CallerType aCallerType,
+                                          ErrorResult& aError) {
+  SetScreenCoord(aScreenX, /* aIsX */ true, aCallerType, aError);
 }
 
 int32_t nsGlobalWindowOuter::GetScreenYOuter(CallerType aCallerType,
@@ -3821,19 +3841,7 @@ int32_t nsGlobalWindowOuter::GetScreenYOuter(CallerType aCallerType,
 void nsGlobalWindowOuter::SetScreenYOuter(int32_t aScreenY,
                                           CallerType aCallerType,
                                           ErrorResult& aError) {
-  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin = GetTreeOwnerWindow();
-  if (!treeOwnerAsWin) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  LayoutDeviceIntPoint pos = treeOwnerAsWin->GetPosition();
-  CheckSecurityLeftAndTop(nullptr, &aScreenY, aCallerType);
-  pos.y = (CSSCoord(aScreenY) * CSSToDevScaleForBaseWindow(treeOwnerAsWin))
-              .Rounded();
-  aError = treeOwnerAsWin->SetPosition(pos.x, pos.y);
-
-  CheckForDPIChange();
+  SetScreenCoord(aScreenY, /* aIsX */ false, aCallerType, aError);
 }
 
 // NOTE: Arguments to this function should have values scaled to
@@ -3860,22 +3868,6 @@ void nsGlobalWindowOuter::CheckSecurityWidthAndHeight(int32_t* aWidth,
       }
     }
   }
-}
-
-// NOTE: Arguments to this function should have values in device pixels
-nsresult nsGlobalWindowOuter::SetDocShellSize(
-    const LayoutDeviceIntSize& aSize) {
-  NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDocShell> docShell = mDocShell;
-  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-  docShell->GetTreeOwner(getter_AddRefs(treeOwner));
-  NS_ENSURE_TRUE(treeOwner, NS_ERROR_FAILURE);
-
-  NS_ENSURE_SUCCESS(treeOwner->SizeShellTo(docShell, aSize.width, aSize.height),
-                    NS_ERROR_FAILURE);
-
-  return NS_OK;
 }
 
 // NOTE: Arguments to this function should have values in app units
@@ -5032,27 +5024,9 @@ void nsGlobalWindowOuter::BlurOuter(CallerType aCallerType) {
     return;
   }
 
-  // If embedding apps don't implement nsIEmbeddingSiteWindow, we
-  // shouldn't throw exceptions to web content.
-
-  nsCOMPtr<nsIDocShellTreeOwner> treeOwner = GetTreeOwner();
-  nsCOMPtr<nsIEmbeddingSiteWindow> siteWindow(do_GetInterface(treeOwner));
-  if (siteWindow) {
-    // This method call may cause mDocShell to become nullptr.
-    siteWindow->Blur();
-
-    // if the root is focused, clear the focus
-    if (mDoc) {
-      if (RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager()) {
-        RefPtr<Element> element;
-        fm->GetFocusedElementForWindow(this, false, nullptr,
-                                       getter_AddRefs(element));
-        if (element == mDoc->GetRootElement()) {
-          OwningNonNull<nsGlobalWindowOuter> kungFuDeathGrip(*this);
-          fm->ClearFocus(kungFuDeathGrip);
-        }
-      }
-    }
+  nsCOMPtr<nsIWebBrowserChrome> chrome = GetWebBrowserChrome();
+  if (chrome) {
+    chrome->Blur();
   }
 }
 

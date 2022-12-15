@@ -21,26 +21,28 @@ function closeEnough(actual, expected) {
 }
 
 async function resizeWindow(x, y) {
-  window.innerWidth = x;
-  window.innerHeight = y;
+  // For Linux we have to change only one dimension at a time. (Bug 1803611)
+  if (window.innerWidth != x) {
+    let resizePromise = BrowserTestUtils.waitForEvent(window, "resize");
+    window.innerWidth = x;
+    await resizePromise;
+  }
+
+  if (window.innerHeight != y) {
+    let resizePromise = BrowserTestUtils.waitForEvent(window, "resize");
+    window.innerHeight = y;
+    await resizePromise;
+  }
 
   await waitForAnimationFrames();
 
-  await TestUtils.waitForCondition(
-    () => {
-      info(`window is ${window.innerWidth} x ${window.innerHeight}`);
-      if (
-        closeEnough(window.innerWidth, x) &&
-        closeEnough(window.innerHeight, y)
-      ) {
-        return true;
-      }
-      window.innerWidth = x;
-      window.innerHeight = y;
-      return false;
-    },
-    `Wait for ${x}x${y}`,
-    250
+  ok(
+    closeEnough(window.innerWidth, x),
+    `Window innerWidth ${window.innerWidth} is close enough to ${x}`
+  );
+  ok(
+    closeEnough(window.innerHeight, y),
+    `Window innerHeight ${window.innerHeight} is close enough to ${y}`
   );
 }
 
@@ -97,6 +99,33 @@ async function checkPreviewNavigationVisibility(expected) {
 }
 
 add_task(async function testResizing() {
+  if (window.windowState != window.STATE_NORMAL) {
+    todo_is(
+      window.windowState,
+      window.STATE_NORMAL,
+      "windowState should be STATE_NORMAL"
+    );
+    // On Windows the size of the window decoration depends on the size mode.
+    // Trying to set the inner size of a maximized window changes the size mode
+    // but calculates the new window size with the maximized window
+    // decorations. On Linux a maximized window can also cause problems when
+    // the window was maximized recently and the corresponding resize event is
+    // still outstanding.
+    window.restore();
+    // On Linux we would have to wait for the resize event here, but the
+    // restored and maximized size can also be equal. Brute forcing a resize
+    // to a specific size works around that.
+    await BrowserTestUtils.waitForCondition(async () => {
+      let width = window.screen.availWidth * 0.75;
+      let height = window.screen.availHeight * 0.75;
+      window.resizeTo(width, height);
+      return (
+        closeEnough(window.outerWidth, width) &&
+        closeEnough(window.outerHeight, height)
+      );
+    });
+  }
+
   await PrintHelper.withTestPage(async helper => {
     let { innerWidth, innerHeight } = window;
 
