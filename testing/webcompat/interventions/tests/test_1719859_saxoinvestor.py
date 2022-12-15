@@ -1,7 +1,6 @@
 import pytest
 from helpers import Css, find_element
 
-
 URL = (
     "https://www.saxoinvestor.fr/login/?adobe_mc="
     "MCORGID%3D173338B35278510F0A490D4C%2540AdobeOrg%7CTS%3D1621688498"

@@ -1,6 +1,5 @@
 import pytest
 
-
 URL = "https://buskocchi.desuca.co.jp/smartPhone.html"
 SCRIPT = """return document.getElementById("map_canvas")?.clientHeight;"""
 

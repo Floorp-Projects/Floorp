@@ -1,6 +1,5 @@
 import pytest
 
-
 URL = "http://histography.io/"
 
 
