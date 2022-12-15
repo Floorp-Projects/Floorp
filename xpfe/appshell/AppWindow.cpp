@@ -2882,9 +2882,8 @@ void AppWindow::SizeModeChanged(nsSizeMode aSizeMode) {
   if (ourWindow) {
     // Ensure that the fullscreen state is synchronized between
     // the widget and the outer window object.
-    if (aSizeMode == nsSizeMode_Fullscreen) {
-      ourWindow->SetFullScreen(true);
-    } else if (aSizeMode != nsSizeMode_Minimized) {
+    if (aSizeMode != nsSizeMode_Fullscreen &&
+        aSizeMode != nsSizeMode_Minimized) {
       if (ourWindow->GetFullScreen()) {
         // The first SetFullscreenInternal call below ensures that we do
         // not trigger any fullscreen transition even if the window was
