@@ -113,12 +113,7 @@ class GeckoProfile(object):
             return profile
 
     def _is_extra_profiler_run(self):
-        topdir = self.raptor_config.get("browsertime_result_dir")
-        profiling_dir = os.path.join(topdir, "profiling")
-        is_extra_profiler_run = self.raptor_config.get(
-            "extra_profiler_run", False
-        ) and os.path.isdir(profiling_dir)
-        return is_extra_profiler_run, profiling_dir
+        return self.raptor_config.get("extra_profiler_run", False)
 
     def collect_profiles(self):
         """Returns all profiles files."""
@@ -145,8 +140,15 @@ class GeckoProfile(object):
             # Get the browsertime.json file along with the cold/warm splits
             # if they exist from a chimera test
             results = {"main": None, "cold": None, "warm": None}
-            is_extra_profiler_run, profiling_dir = self._is_extra_profiler_run()
+            profiling_dir = os.path.join(topdir, "profiling")
+            is_extra_profiler_run = self._is_extra_profiler_run()
             result_dir = profiling_dir if is_extra_profiler_run else topdir
+
+            if not os.path.isdir(result_dir):
+                # Result directory not found. Return early. Caller will decide
+                # if this should throw an error or not.
+                LOG.info("Could not find the result directory.")
+                return []
 
             for filename in os.listdir(result_dir):
                 if filename == "browsertime.json":
@@ -237,7 +239,7 @@ class GeckoProfile(object):
 
         """
         profiles = self.collect_profiles()
-        is_extra_profiler_run, _ = self._is_extra_profiler_run()
+        is_extra_profiler_run = self._is_extra_profiler_run()
         if len(profiles) == 0:
             if is_extra_profiler_run:
                 LOG.info("No profiles collected in the extra profiler run")
