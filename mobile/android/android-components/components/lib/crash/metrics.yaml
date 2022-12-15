@@ -40,6 +40,6 @@ crash_metrics:
     data_sensitivity:
       - technical
     notification_emails:
-      - android-components-team@mozilla.com
+      - android-probes@mozilla.com
       - jnicol@mozilla.com
     expires: never
