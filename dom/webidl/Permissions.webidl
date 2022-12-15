@@ -11,13 +11,18 @@ enum PermissionName {
   "geolocation",
   "notifications",
   "push",
-  "persistent-storage"
-  // Unsupported: "midi"
+  "persistent-storage",
+  "midi"
 };
 
 [GenerateInit]
 dictionary PermissionDescriptor {
   required PermissionName name;
+};
+
+[GenerateInit]
+dictionary MidiPermissionDescriptor : PermissionDescriptor {
+  boolean sysex;
 };
 
 // We don't implement `PushPermissionDescriptor` because we use a background
