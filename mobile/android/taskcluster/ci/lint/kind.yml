@@ -40,6 +40,7 @@ task-defaults:
             - "android-components/**"
 
 tasks-from:
+    - buildconfig.yml
     - compare-locales.yml
     - detekt.yml
     - ktlint.yml

@@ -5,6 +5,7 @@ treeherder:
         Fetch: Fetch and store content
         I: Docker Image Builds
         TL: Toolchain builds for Linux 64-bits
+        buildconfig: Make sure the content of .buildconfig.yml matches what gradle knows about its projects
         compare-locales: Validate strings.xml with compare-locales
         detekt: detekt linter
         ktlint: ktlint linter
