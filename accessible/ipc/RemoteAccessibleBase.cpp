@@ -395,73 +395,40 @@ Accessible* RemoteAccessibleBase<Derived>::ChildAtPoint(
           break;
         }
 
-        // Because our rects are in hittesting order, the first match we
-        // encounter is supposed to be the deepest match. Unfortunately, this
-        // isn't always the case; e.g. on Gmail (bug 1801756).
-        // 1. Find the first match. We do this to respect visual order as far as
-        // possible.
-        if (!lastMatch) {
-          if (acc->Bounds().Contains(aX, aY)) {
-            lastMatch = acc;
-          }
-          continue;
+        if (acc == this) {
+          MOZ_ASSERT(!acc->IsOuterDoc());
+          // Even though we're searching from the doc's cache
+          // this call shouldn't pass the boundary defined by
+          // the acc this call originated on. If we hit `this`,
+          // return our most recent match.
+          break;
         }
 
-        // 2. We assume that lastMatch is at least in the correct subtree, even
-        // if it isn't the deepest match therein. We also assume a
-        // descendant match won't have a lower z-index. Therefore, find the
-        // deepest matching descendant of lastMatch.
-        // Note that IsAncestorOf is generally faster than Bounds, so we call
-        // that first.
-        if (lastMatch->IsAncestorOf(acc) && acc->Bounds().Contains(aX, aY)) {
+        if (acc->Bounds().Contains(aX, aY)) {
+          if (aWhichChild == EWhichChildAtPoint::DeepestChild) {
+            // Because our rects are in hittesting order, the
+            // first match we encounter is guaranteed to be the
+            // deepest match.
+            lastMatch = acc;
+            break;
+          }
+
+          // We're looking for a DirectChild match. Update our
+          // `lastMatch` marker as we ascend towards `this`.
           lastMatch = acc;
         }
       }
     }
   }
 
-  if (lastMatch == this || (!lastMatch && Bounds().Contains(aX, aY))) {
+  if (!lastMatch && Bounds().Contains(aX, aY)) {
     return this;
   }
-  if (!lastMatch) {
+  // If we end up with a match that is not in the ancestor chain
+  // of the accessible this call originated on, we should ignore it.
+  // This can happen when the aX, aY given are outside `this`.
+  if (lastMatch && !IsDoc() && !IsAncestorOf(lastMatch)) {
     return nullptr;
-  }
-
-  // lastMatch is currently the deepest descendant.
-  // ChildAtPoint should always return an Accessible which is a descendant of
-  // `this`. However, it's possible that the initial match in the viewport cache
-  // is in a different subtree. For example, this can happen when the aX, aY
-  // given are outside `this`.
-  if (aWhichChild == EWhichChildAtPoint::DeepestChild) {
-    if (IsDoc()) {
-      // There are less documents in the ancestor chain than there are
-      // Accessibles, so walk the document ancestors.
-      DocAccessibleParent* doc;
-      for (doc = lastMatch->Document(); doc; doc = doc->ParentDoc()) {
-        if (doc == this) {
-          break;
-        }
-      }
-      if (!doc) {
-        // lastMatch is not a descendant of this.
-        return nullptr;
-      }
-    } else if (!IsAncestorOf(lastMatch)) {
-      return nullptr;
-    }
-  } else {
-    // The caller requested a direct child of this.
-    RemoteAccessible* parent = lastMatch;
-    while ((parent = parent->RemoteParent())) {
-      if (parent == this) {
-        break;
-      }
-      lastMatch = parent;
-    }
-    if (!parent) {
-      // lastMatch is not a descendant of this.
-      return nullptr;
-    }
   }
 
   return lastMatch;
