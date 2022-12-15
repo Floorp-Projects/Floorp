@@ -62,6 +62,7 @@ EXPORTS.mozilla.dom += [
     "MaybeDiscarded.h",
     "MemoryReportRequest.h",
     "NativeThreadId.h",
+    "PageLoadEventUtils.h",
     "PermissionMessageUtils.h",
     "ProcessActor.h",
     "ProcessIsolation.h",

@@ -66,6 +66,7 @@ metrics_yamls = (
 # (Firefox Desktop, Firefox for Android, Focus for Android, etc.).
 # Order is lexicographical, enforced by t/c/glean/tests/pytest/test_yaml_indices.py
 gecko_pings = [
+    "dom/pings.yaml",
     "toolkit/components/glean/pings.yaml",
 ]
 

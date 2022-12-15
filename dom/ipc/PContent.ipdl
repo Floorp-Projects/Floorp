@@ -73,7 +73,9 @@ include "mozilla/dom/CSPMessageUtils.h";
 include "mozilla/dom/DocShellMessageUtils.h";
 include "mozilla/dom/FeaturePolicyUtils.h";
 include "mozilla/dom/MediaSessionIPCUtils.h";
+include "mozilla/dom/PageLoadEventUtils.h";
 include "mozilla/dom/ReferrerInfoUtils.h";
+include "mozilla/glean/GleanMetrics.h";
 include "mozilla/ipc/ByteBufUtils.h";
 include "mozilla/ipc/TransportSecurityInfoUtils.h";
 include "mozilla/ipc/URIUtils.h";
@@ -118,6 +120,7 @@ using mozilla::Telemetry::ChildEventData from "mozilla/TelemetryComms.h";
 #endif  // defined(XP_WIN)
 
 using mozilla::Telemetry::DiscardedData from "mozilla/TelemetryComms.h";
+using mozilla::glean::perf::PageLoadExtra from "mozilla/glean/GleanMetrics.h";
 [MoveOnly] using mozilla::CrossProcessMutexHandle from "mozilla/ipc/CrossProcessMutex.h";
 using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingContext.h";
 using mozilla::dom::BrowsingContextTransaction from "mozilla/dom/BrowsingContext.h";
@@ -1614,6 +1617,11 @@ parent:
                                                 nsID? aAgentClusterId);
 
      async UnstoreAndBroadcastBlobURLUnregistration(nsCString url, nsIPrincipal principal);
+
+    /**
+     * Messages for communicating child Glean data to the parent process
+     */
+    async RecordPageLoadEvent(PageLoadExtra event);
 
     /**
      * Messages for communicating child Telemetry to the parent process

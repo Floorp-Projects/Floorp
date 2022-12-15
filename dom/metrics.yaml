@@ -48,4 +48,5 @@ perf:
         description:
           "One of normal,reload,stop,link,history,error or other."
         type: string
-    telemetry_mirror: Page_load_Toplevel_Content
+    send_in_pings:
+      - pageload
