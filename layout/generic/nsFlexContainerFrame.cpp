@@ -1344,7 +1344,7 @@ StyleAlignFlags nsFlexContainerFrame::CSSAlignmentForAbsPosChild(
   return (alignment | alignmentFlags);
 }
 
-FlexItem* nsFlexContainerFrame::GenerateFlexItemForChild(
+void nsFlexContainerFrame::GenerateFlexItemForChild(
     FlexLine& aLine, nsIFrame* aChildFrame,
     const ReflowInput& aParentReflowInput,
     const FlexboxAxisTracker& aAxisTracker,
@@ -1448,7 +1448,7 @@ FlexItem* nsFlexContainerFrame::GenerateFlexItemForChild(
       childRI.ComputedMaxBSize());
 
   // Construct the flex item!
-  FlexItem* item = aLine.Items().EmplaceBack(
+  FlexItem& item = *aLine.Items().EmplaceBack(
       childRI, flexGrow, flexShrink, flexBaseSize, mainMinSize, mainMaxSize,
       tentativeCrossSize, crossMinSize, crossMaxSize, aAxisTracker);
 
@@ -1473,7 +1473,7 @@ FlexItem* nsFlexContainerFrame::GenerateFlexItemForChild(
         aTentativeContentBoxCrossSize != NS_UNCONSTRAINEDSIZE) {
       // Container's cross size is "definite", so we can resolve the item's
       // stretched cross size using that.
-      item->ResolveStretchedCrossSize(aTentativeContentBoxCrossSize);
+      item.ResolveStretchedCrossSize(aTentativeContentBoxCrossSize);
     }
   }
 
@@ -1481,23 +1481,22 @@ FlexItem* nsFlexContainerFrame::GenerateFlexItemForChild(
   // it a chance to recalculate the base size from its cross size and aspect
   // ratio (since its cross size might've *just* now become definite due to
   // 'stretch' above)
-  item->ResolveFlexBaseSizeFromAspectRatio(childRI);
+  item.ResolveFlexBaseSizeFromAspectRatio(childRI);
 
   // If we're inflexible, we can just freeze to our hypothetical main-size
   // up-front.
   if (flexGrow == 0.0f && flexShrink == 0.0f) {
-    item->Freeze();
+    item.Freeze();
     if (flexBaseSize < mainMinSize) {
-      item->SetWasMinClamped();
+      item.SetWasMinClamped();
     } else if (flexBaseSize > mainMaxSize) {
-      item->SetWasMaxClamped();
+      item.SetWasMaxClamped();
     }
   }
 
   // Resolve "flex-basis:auto" and/or "min-[width|height]:auto" (which might
   // require us to reflow the item to measure content height)
-  ResolveAutoFlexBasisAndMinSize(*item, childRI, aAxisTracker);
-  return item;
+  ResolveAutoFlexBasisAndMinSize(item, childRI, aAxisTracker);
 }
 
 // Static helper-functions for ResolveAutoFlexBasisAndMinSize():
