@@ -518,10 +518,15 @@ export class SearchSettings {
         clonedSettings.metaData.private
       );
 
+      // As per SearchService._getEngineDefault, we relax the verification hash
+      // check for application provided engines to reduce the annoyance for
+      // users who backup/sync their profile in custom ways.
       if (
         currentDefaultEngine &&
-        lazy.SearchUtils.getVerificationHash(clonedSettings.metaData.current) ==
-          clonedSettings.metaData[this.getHashName("current")]
+        (currentDefaultEngine.isAppProvided ||
+          lazy.SearchUtils.getVerificationHash(
+            clonedSettings.metaData.current
+          ) == clonedSettings.metaData[this.getHashName("current")])
       ) {
         // Store the defaultEngineId
         this.setVerifiedMetaDataAttribute(
@@ -534,8 +539,10 @@ export class SearchSettings {
 
       if (
         privateDefaultEngine &&
-        lazy.SearchUtils.getVerificationHash(clonedSettings.metaData.private) ==
-          clonedSettings.metaData[this.getHashName("private")]
+        (privateDefaultEngine.isAppProvided ||
+          lazy.SearchUtils.getVerificationHash(
+            clonedSettings.metaData.private
+          ) == clonedSettings.metaData[this.getHashName("private")])
       ) {
         // Store the privateDefaultEngineId
         this.setVerifiedMetaDataAttribute(
