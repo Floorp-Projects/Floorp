@@ -9,7 +9,9 @@
 
 #include "mozilla/UniquePtr.h"
 
+namespace skia {
 class SkConvolutionFilter1D;
+}
 
 namespace mozilla {
 namespace gfx {
@@ -29,7 +31,7 @@ class ConvolutionFilter final {
   void ConvolveVertically(uint8_t* const* aSrc, uint8_t* aDst,
                           int32_t aRowIndex, int32_t aRowSize, bool aHasAlpha);
 
-  enum class ResizeMethod { BOX, TRIANGLE, LANCZOS3, HAMMING, MITCHELL };
+  enum class ResizeMethod { BOX, LANCZOS3 };
 
   bool ComputeResizeFilter(ResizeMethod aResizeMethod, int32_t aSrcSize,
                            int32_t aDstSize);
@@ -38,8 +40,12 @@ class ConvolutionFilter final {
     return (aBytes + 31) & ~31;
   }
 
+  const skia::SkConvolutionFilter1D& GetSkiaFilter() const {
+    return *mFilter.get();
+  }
+
  private:
-  UniquePtr<SkConvolutionFilter1D> mFilter;
+  UniquePtr<skia::SkConvolutionFilter1D> mFilter;
 };
 
 }  // namespace gfx

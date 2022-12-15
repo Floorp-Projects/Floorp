@@ -123,6 +123,8 @@ EXPORTS.mozilla.gfx += [
 if CONFIG["INTEL_ARCHITECTURE"]:
     SOURCES += [
         "BlurSSE2.cpp",
+        "ConvolutionFilterAVX2.cpp",
+        "ConvolutionFilterSSE2.cpp",
         "FilterProcessingSSE2.cpp",
         "ImageScalingSSE2.cpp",
         "ssse3-scaler.c",
@@ -134,6 +136,8 @@ if CONFIG["INTEL_ARCHITECTURE"]:
     # The file uses SSE2 intrinsics, so it needs special compile flags on some
     # compilers.
     SOURCES["BlurSSE2.cpp"].flags += CONFIG["SSE2_FLAGS"]
+    SOURCES["ConvolutionFilterAVX2.cpp"].flags += ["-mavx2"]
+    SOURCES["ConvolutionFilterSSE2.cpp"].flags += CONFIG["SSE2_FLAGS"]
     SOURCES["FilterProcessingSSE2.cpp"].flags += CONFIG["SSE2_FLAGS"]
     SOURCES["ImageScalingSSE2.cpp"].flags += CONFIG["SSE2_FLAGS"]
     SOURCES["SwizzleAVX2.cpp"].flags += ["-mavx2"]
@@ -173,9 +177,9 @@ UNIFIED_SOURCES += [
     "PathSkia.cpp",
     "Quaternion.cpp",
     "RecordedEvent.cpp",
-    "Scale.cpp",
     "ScaledFontBase.cpp",
     "SFNTData.cpp",
+    "SkConvolver.cpp",
     "SourceSurfaceCairo.cpp",
     "SourceSurfaceRawData.cpp",
     "SourceSurfaceSkia.cpp",
@@ -199,11 +203,13 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
 if CONFIG["CPU_ARCH"] == "aarch64" or CONFIG["BUILD_ARM_NEON"]:
     SOURCES += [
         "BlurNEON.cpp",
+        "ConvolutionFilterNEON.cpp",
         "LuminanceNEON.cpp",
         "SwizzleNEON.cpp",
     ]
     DEFINES["USE_NEON"] = True
     SOURCES["BlurNEON.cpp"].flags += CONFIG["NEON_FLAGS"]
+    SOURCES["ConvolutionFilterNEON.cpp"].flags += CONFIG["NEON_FLAGS"]
     SOURCES["LuminanceNEON.cpp"].flags += CONFIG["NEON_FLAGS"]
     SOURCES["SwizzleNEON.cpp"].flags += CONFIG["NEON_FLAGS"]
 
