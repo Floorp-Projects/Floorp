@@ -15,7 +15,7 @@ testing FOG is a matter of choosing the right tool for the situation.
 
 To run all the things, here's the tl;dr:
 
-`./mach build && ./mach lint -Ww -o --fix
+`./mach build && ./mach lint -W -w -o --fix
 && ./mach lint --linter clippy toolkit/components/glean/api/src
 && ./mach rusttests && ./mach gtest "FOG*"
 && python3 ./mach python-test toolkit/components/glean/tests/pytest
