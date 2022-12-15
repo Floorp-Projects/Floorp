@@ -19,8 +19,17 @@
   <div id="logging">
     <h1 id="title" data-l10n-id="about-logging-page-title"></h1>
     <div class=page-section>
-      <button id="toggle-logging-button" data-l10n-id="about-logging-start-logging"></button>
+      <div hidden id=error class=info-box>
+        <div class=info-box-label data-l10n-id="about-logging-error"></div>
+        <div id=error-description></div>
+        <div data-l10n-id="about-logging-configuration-url-ignored"></div>
+      </div>
+      <div hidden id=some-elements-unavailable class=info-box>
+        <div class=info-box-label data-l10n-id="about-logging-info"></div>
+        <div data-l10n-id="about-logging-some-elements-disabled"></div>
+      </div>
     </div>
+    <button id="toggle-logging-button" data-l10n-id="about-logging-start-logging"></button>
     <div id=log-module-selection class=page-section>
       <h2 data-l10n-id="about-logging-log-modules-selection"></h2>
       <div>
@@ -44,11 +53,11 @@
         <span hidden id="buttons-disabled" data-l10n-id="about-logging-buttons-disabled"></span>
       </div>
       <h2 data-l10n-id="about-logging-logging-output-selection"></h2>
-      <div id=logging-output-profiler>
+      <div id=logging-output-profiler class="radio-entry">
         <input type="radio" id="radio-logging-profiler" name="logging-output" value="profiler" checked>
         <label for="profiler" data-l10n-id="about-logging-logging-to-profiler"></label>
       </div>
-      <div id=logging-output-file>
+      <div id=logging-output-file class="radio-entry">
         <input type="radio" id="radio-logging-file" name="logging-output" value="file">
         <label for="file" data-l10n-id="about-logging-logging-to-file"></label>
         <div>
@@ -69,9 +78,11 @@
           </div>
         </div>
       </div>
-      <p id="log-tutorial" data-l10n-id="about-logging-log-tutorial">
-      <a data-l10n-name="logging" href="https://firefox-source-docs.mozilla.org/networking/http/logging.html"></a>
-      </p>
+      <div>
+        <p id="log-tutorial" data-l10n-id="about-logging-log-tutorial">
+          <a data-l10n-name="logging" href="https://firefox-source-docs.mozilla.org/networking/http/logging.html"></a>
+        </p>
+      </div>
     </div>
   </div>
 </div>
