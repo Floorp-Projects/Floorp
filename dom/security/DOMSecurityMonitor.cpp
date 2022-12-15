@@ -79,6 +79,7 @@ void DOMSecurityMonitor::AuditParsingOfHTMLXMLFragments(
       // ------------------------------------------------------------------
       // test pages
       // ------------------------------------------------------------------
+      "chrome://mochikit/content/browser-harness.xhtml"_ns,
       "chrome://mochikit/content/harness.xhtml"_ns,
       "chrome://mochikit/content/tests/"_ns,
       "chrome://mochitests/content/"_ns,
