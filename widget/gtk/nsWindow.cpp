@@ -5228,14 +5228,10 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
 
   if (mWidgetListener) {
     if (mSizeMode != oldSizeMode) {
+      mWidgetListener->SizeModeChanged(mSizeMode);
       if (mSizeMode == nsSizeMode_Fullscreen ||
           oldSizeMode == nsSizeMode_Fullscreen) {
-        bool isFullscreen = mSizeMode == nsSizeMode_Fullscreen;
-        mWidgetListener->FullscreenWillChange(isFullscreen);
-        mWidgetListener->SizeModeChanged(mSizeMode);
-        mWidgetListener->FullscreenChanged(isFullscreen);
-      } else {
-        mWidgetListener->SizeModeChanged(mSizeMode);
+        mWidgetListener->FullscreenChanged(mSizeMode == nsSizeMode_Fullscreen);
       }
     }
   }
@@ -7353,6 +7349,10 @@ nsresult nsWindow::MakeFullScreen(bool aFullScreen) {
   }
 
   const bool wasFullscreen = mSizeMode == nsSizeMode_Fullscreen;
+  if (aFullScreen != wasFullscreen && mWidgetListener) {
+    mWidgetListener->FullscreenWillChange(aFullScreen);
+  }
+
   if (aFullScreen) {
     if (!wasFullscreen) {
       mLastSizeModeBeforeFullscreen = mSizeMode;
