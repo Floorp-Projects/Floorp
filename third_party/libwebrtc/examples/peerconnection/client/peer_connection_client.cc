@@ -10,6 +10,7 @@
 
 #include "examples/peerconnection/client/peer_connection_client.h"
 
+#include "api/units/time_delta.h"
 #include "examples/peerconnection/client/defaults.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
@@ -18,9 +19,9 @@
 namespace {
 
 // This is our magical hangup signal.
-const char kByeMessage[] = "BYE";
+constexpr char kByeMessage[] = "BYE";
 // Delay between server connection retries, in milliseconds
-const int kReconnectDelay = 2000;
+constexpr webrtc::TimeDelta kReconnectDelay = webrtc::TimeDelta::Seconds(2);
 
 rtc::Socket* CreateClientSocket(int family) {
   rtc::Thread* thread = rtc::Thread::Current();
@@ -33,9 +34,7 @@ rtc::Socket* CreateClientSocket(int family) {
 PeerConnectionClient::PeerConnectionClient()
     : callback_(NULL), resolver_(NULL), state_(NOT_CONNECTED), my_id_(-1) {}
 
-PeerConnectionClient::~PeerConnectionClient() {
-  rtc::Thread::Current()->Clear(this);
-}
+PeerConnectionClient::~PeerConnectionClient() = default;
 
 void PeerConnectionClient::InitSocketSignals() {
   RTC_DCHECK(control_socket_.get() != NULL);
@@ -480,16 +479,11 @@ void PeerConnectionClient::OnClose(rtc::Socket* socket, int err) {
   } else {
     if (socket == control_socket_.get()) {
       RTC_LOG(LS_WARNING) << "Connection refused; retrying in 2 seconds";
-      rtc::Thread::Current()->PostDelayed(RTC_FROM_HERE, kReconnectDelay, this,
-                                          0);
+      rtc::Thread::Current()->PostDelayedTask(
+          SafeTask(safety_.flag(), [this] { DoConnect(); }), kReconnectDelay);
     } else {
       Close();
       callback_->OnDisconnected();
     }
   }
-}
-
-void PeerConnectionClient::OnMessage(rtc::Message* msg) {
-  // ignore msg; there is currently only one supported message ("retry")
-  DoConnect();
 }

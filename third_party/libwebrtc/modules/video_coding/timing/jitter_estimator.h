@@ -17,6 +17,7 @@
 #include "api/units/frequency.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
+#include "modules/video_coding/timing/frame_delay_delta_kalman_filter.h"
 #include "modules/video_coding/timing/rtt_filter.h"
 #include "rtc_base/rolling_accumulator.h"
 
@@ -27,7 +28,7 @@ class Clock;
 class JitterEstimator {
  public:
   explicit JitterEstimator(Clock* clock, const FieldTrialsView& field_trials);
-  virtual ~JitterEstimator();
+  ~JitterEstimator();
   JitterEstimator(const JitterEstimator&) = delete;
   JitterEstimator& operator=(const JitterEstimator&) = delete;
 
@@ -48,9 +49,8 @@ class JitterEstimator {
   //          - rtt_mult_add_cap : Multiplier cap from the RTTMultExperiment.
   //
   // Return value              : Jitter estimate.
-  virtual TimeDelta GetJitterEstimate(
-      double rtt_multiplier,
-      absl::optional<TimeDelta> rtt_mult_add_cap);
+  TimeDelta GetJitterEstimate(double rtt_multiplier,
+                              absl::optional<TimeDelta> rtt_mult_add_cap);
 
   // Updates the nack counter.
   void FrameNacked();
@@ -66,23 +66,8 @@ class JitterEstimator {
   // decoding delay estimate.
   static constexpr TimeDelta OPERATING_SYSTEM_JITTER = TimeDelta::Millis(10);
 
- protected:
-  // These are protected for better testing possibilities.
-  double theta_[2];   // Estimated line parameters (slope, offset)
-  double var_noise_;  // Variance of the time-deviation from the line
-
  private:
-  // Updates the Kalman filter for the line describing the frame size dependent
-  // jitter.
-  //
-  // Input:
-  //          - frame_delay
-  //              Delay-delta calculated by UTILDelayEstimate.
-  //          - delta_frame_size_bytes
-  //              Frame size delta, i.e. frame size at time T minus frame size
-  //              at time T-1.
-  void KalmanEstimateChannel(TimeDelta frame_delay,
-                             double delta_frame_size_bytes);
+  double var_noise_;  // Variance of the time-deviation from the line
 
   // Updates the random jitter estimate, i.e. the variance of the time
   // deviations from the line given by the Kalman filter.
@@ -101,23 +86,11 @@ class JitterEstimator {
   // Post process the calculated estimate.
   void PostProcessEstimate();
 
-  // Calculates the difference in delay between a sample and the expected delay
-  // estimated by the Kalman filter.
-  //
-  // Input:
-  //          - frame_delay       : Delay-delta calculated by UTILDelayEstimate.
-  //          - delta_frame_size_bytes : Frame size delta, i.e. frame size at
-  //          time
-  //                               T minus frame size at time T-1.
-  //
-  // Return value               : The delay difference in ms.
-  double DeviationFromExpectedDelay(TimeDelta frame_delay,
-                                    double delta_frame_size_bytes) const;
-
   Frequency GetFrameRate() const;
 
-  double theta_cov_[2][2];  // Estimate covariance
-  double q_cov_[2][2];      // Process noise covariance
+  // Filters the {frame_delay_delta, frame_size_delta} measurements through
+  // a linear Kalman filter.
+  FrameDelayDeltaKalmanFilter kalman_filter_;
 
   static constexpr DataSize kDefaultAvgAndMaxFrameSize = DataSize::Bytes(500);
   DataSize avg_frame_size_ = kDefaultAvgAndMaxFrameSize;  // Average frame size
@@ -148,8 +121,6 @@ class JitterEstimator {
 
   // Tracks frame rates in microseconds.
   rtc::RollingAccumulator<uint64_t> fps_counter_;
-  const double time_deviation_upper_bound_;
-  const bool enable_reduced_delay_;
   Clock* clock_;
 };
 

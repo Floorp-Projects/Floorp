@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/rtp_rtcp/source/ulpfec_receiver_impl.h"
+#include "modules/rtp_rtcp/source/ulpfec_receiver.h"
 
 #include <memory>
 #include <utility>
@@ -17,37 +17,65 @@
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/time_utils.h"
+#include "system_wrappers/include/metrics.h"
 
 namespace webrtc {
 
-std::unique_ptr<UlpfecReceiver> UlpfecReceiver::Create(
-    uint32_t ssrc,
-    RecoveredPacketReceiver* callback,
-    rtc::ArrayView<const RtpExtension> extensions) {
-  return std::make_unique<UlpfecReceiverImpl>(ssrc, callback, extensions);
-}
-
-UlpfecReceiverImpl::UlpfecReceiverImpl(
-    uint32_t ssrc,
-    RecoveredPacketReceiver* callback,
-    rtc::ArrayView<const RtpExtension> extensions)
+UlpfecReceiver::UlpfecReceiver(uint32_t ssrc,
+                               int ulpfec_payload_type,
+                               RecoveredPacketReceiver* callback,
+                               rtc::ArrayView<const RtpExtension> extensions,
+                               Clock* clock)
     : ssrc_(ssrc),
+      ulpfec_payload_type_(ulpfec_payload_type),
+      clock_(clock),
       extensions_(extensions),
       recovered_packet_callback_(callback),
-      fec_(ForwardErrorCorrection::CreateUlpfec(ssrc_)) {}
+      fec_(ForwardErrorCorrection::CreateUlpfec(ssrc_)) {
+  // TODO(tommi, brandtr): Once considerations for red have been split
+  // away from this implementation, we can require the ulpfec payload type
+  // to always be valid and use uint8 for storage (as is done elsewhere).
+  RTC_DCHECK_GE(ulpfec_payload_type_, -1);
+}
 
-UlpfecReceiverImpl::~UlpfecReceiverImpl() {
+UlpfecReceiver::~UlpfecReceiver() {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
+
+  if (packet_counter_.first_packet_time != Timestamp::MinusInfinity()) {
+    const Timestamp now = clock_->CurrentTime();
+    TimeDelta elapsed = (now - packet_counter_.first_packet_time);
+    if (elapsed.seconds() >= metrics::kMinRunTimeInSeconds) {
+      if (packet_counter_.num_packets > 0) {
+        RTC_HISTOGRAM_PERCENTAGE(
+            "WebRTC.Video.ReceivedFecPacketsInPercent",
+            static_cast<int>(packet_counter_.num_fec_packets * 100 /
+                             packet_counter_.num_packets));
+      }
+      if (packet_counter_.num_fec_packets > 0) {
+        RTC_HISTOGRAM_PERCENTAGE(
+            "WebRTC.Video.RecoveredMediaPacketsInPercentOfFec",
+            static_cast<int>(packet_counter_.num_recovered_packets * 100 /
+                             packet_counter_.num_fec_packets));
+      }
+      if (ulpfec_payload_type_ != -1) {
+        RTC_HISTOGRAM_COUNTS_10000(
+            "WebRTC.Video.FecBitrateReceivedInKbps",
+            static_cast<int>(packet_counter_.num_bytes * 8 / elapsed.seconds() /
+                             1000));
+      }
+    }
+  }
+
   received_packets_.clear();
   fec_->ResetState(&recovered_packets_);
 }
 
-FecPacketCounter UlpfecReceiverImpl::GetPacketCounter() const {
+FecPacketCounter UlpfecReceiver::GetPacketCounter() const {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
   return packet_counter_;
 }
 
-void UlpfecReceiverImpl::SetRtpExtensions(
+void UlpfecReceiver::SetRtpExtensions(
     rtc::ArrayView<const RtpExtension> extensions) {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
   extensions_.Reset(extensions);
@@ -81,9 +109,7 @@ void UlpfecReceiverImpl::SetRtpExtensions(
 //    block length:  10 bits Length in bytes of the corresponding data
 //        block excluding header.
 
-bool UlpfecReceiverImpl::AddReceivedRedPacket(
-    const RtpPacketReceived& rtp_packet,
-    uint8_t ulpfec_payload_type) {
+bool UlpfecReceiver::AddReceivedRedPacket(const RtpPacketReceived& rtp_packet) {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
   // TODO(bugs.webrtc.org/11993): We get here via Call::DeliverRtp, so should be
   // moved to the network thread.
@@ -113,7 +139,7 @@ bool UlpfecReceiverImpl::AddReceivedRedPacket(
 
   // Get payload type from RED header and sequence number from RTP header.
   uint8_t payload_type = rtp_packet.payload()[0] & 0x7f;
-  received_packet->is_fec = payload_type == ulpfec_payload_type;
+  received_packet->is_fec = payload_type == ulpfec_payload_type_;
   received_packet->is_recovered = rtp_packet.recovered();
   received_packet->ssrc = rtp_packet.Ssrc();
   received_packet->seq_num = rtp_packet.SequenceNumber();
@@ -127,8 +153,8 @@ bool UlpfecReceiverImpl::AddReceivedRedPacket(
 
   ++packet_counter_.num_packets;
   packet_counter_.num_bytes += rtp_packet.size();
-  if (packet_counter_.first_packet_time_ms == -1) {
-    packet_counter_.first_packet_time_ms = rtc::TimeMillis();
+  if (packet_counter_.first_packet_time == Timestamp::MinusInfinity()) {
+    packet_counter_.first_packet_time = clock_->CurrentTime();
   }
 
   if (received_packet->is_fec) {
@@ -159,7 +185,7 @@ bool UlpfecReceiverImpl::AddReceivedRedPacket(
   return true;
 }
 
-void UlpfecReceiverImpl::ProcessReceivedFec() {
+void UlpfecReceiver::ProcessReceivedFec() {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
 
   // If we iterate over `received_packets_` and it contains a packet that cause

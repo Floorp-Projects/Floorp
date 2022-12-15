@@ -17,15 +17,16 @@
 
 #include "api/rtp_packet_infos.h"
 #include "api/video/encoded_frame.h"
-#include "api/video/encoded_image.h"
 #include "api/video/video_rotation.h"
 #include "test/gmock.h"
 
-namespace webrtc::test {
+namespace webrtc {
 
 // For test printing.
 void PrintTo(const EncodedFrame& frame,
              std::ostream* os);  // no-presubmit-check TODO(webrtc:8982)
+
+namespace test {
 
 class FakeEncodedFrame : public EncodedFrame {
  public:
@@ -84,6 +85,7 @@ class FakeFrameBuilder {
   size_t size_ = 10;
 };
 
-}  // namespace webrtc::test
+}  // namespace test
+}  // namespace webrtc
 
 #endif  // TEST_FAKE_ENCODED_FRAME_H_

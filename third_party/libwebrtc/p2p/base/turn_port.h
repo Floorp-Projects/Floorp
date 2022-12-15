@@ -368,8 +368,6 @@ class TurnPort : public Port {
   // must outlive the TurnPort's lifetime.
   webrtc::TurnCustomizer* turn_customizer_ = nullptr;
 
-  const webrtc::FieldTrialsView* field_trials_;
-
   // Optional TurnLoggingId.
   // An identifier set by application that is added to TURN_ALLOCATE_REQUEST
   // and can be used to match client/backend logs.

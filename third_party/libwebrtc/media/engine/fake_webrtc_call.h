@@ -23,6 +23,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "absl/strings/string_view.h"
@@ -284,6 +285,34 @@ class FakeVideoReceiveStream final
     config_.rtp.rtcp_mode = mode;
   }
 
+  void SetFlexFecProtection(webrtc::RtpPacketSinkInterface* sink) override {
+    config_.rtp.packet_sink_ = sink;
+    config_.rtp.protected_by_flexfec = (sink != nullptr);
+  }
+
+  void SetLossNotificationEnabled(bool enabled) override {
+    config_.rtp.lntf.enabled = enabled;
+  }
+
+  void SetNackHistory(webrtc::TimeDelta history) override {
+    config_.rtp.nack.rtp_history_ms = history.ms();
+  }
+
+  void SetProtectionPayloadTypes(int red_payload_type,
+                                 int ulpfec_payload_type) override {
+    config_.rtp.red_payload_type = red_payload_type;
+    config_.rtp.ulpfec_payload_type = ulpfec_payload_type;
+  }
+
+  void SetRtcpXr(Config::Rtp::RtcpXr rtcp_xr) override {
+    config_.rtp.rtcp_xr = rtcp_xr;
+  }
+
+  void SetAssociatedPayloadTypes(std::map<int, int> associated_payload_types) {
+    config_.rtp.rtx_associated_payload_types =
+        std::move(associated_payload_types);
+  }
+
   void Start() override;
   void Stop() override;
 
@@ -322,6 +351,11 @@ class FakeFlexfecReceiveStream final : public webrtc::FlexfecReceiveStream {
     config_.rtp.transport_cc = transport_cc;
   }
   void SetRtcpMode(webrtc::RtcpMode mode) override { config_.rtcp_mode = mode; }
+
+  int payload_type() const override { return config_.payload_type; }
+  void SetPayloadType(int payload_type) override {
+    config_.payload_type = payload_type;
+  }
 
   const webrtc::FlexfecReceiveStream::Config& GetConfig() const;
 

@@ -41,7 +41,7 @@ const char* inet_ntop(int af, const void* src, char* dst, socklen_t size) {
 }
 
 int inet_pton(int af, absl::string_view src, void* dst) {
-  std::string src_str = std::string(src);
+  std::string src_str(src);
 #if defined(WEBRTC_WIN)
   return win32_inet_pton(af, src_str.c_str(), dst);
 #else

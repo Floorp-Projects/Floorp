@@ -740,7 +740,7 @@ int LibvpxVp9Encoder::InitEncode(const VideoCodec* inst,
       return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
     }
   }
-  ref_buf_.clear();
+  ref_buf_ = {};
 
   return InitAndSetControlSettings(inst);
 }
@@ -1005,6 +1005,9 @@ int LibvpxVp9Encoder::Encode(const VideoFrame& input_image,
     layer_frames_ = svc_controller_->NextFrameConfig(force_key_frame_);
     if (layer_frames_.empty()) {
       return WEBRTC_VIDEO_CODEC_ERROR;
+    }
+    if (layer_frames_.front().IsKeyframe()) {
+      force_key_frame_ = true;
     }
   }
 
@@ -1516,10 +1519,10 @@ void LibvpxVp9Encoder::FillReferenceIndices(const vpx_codec_cx_pkt& pkt,
     if (enc_layer_conf.reference_last[layer_id.spatial_layer_id]) {
       const size_t fb_idx =
           enc_layer_conf.lst_fb_idx[layer_id.spatial_layer_id];
-      RTC_DCHECK(ref_buf_.find(fb_idx) != ref_buf_.end());
+      RTC_DCHECK_LT(fb_idx, ref_buf_.size());
       if (std::find(ref_buf_list.begin(), ref_buf_list.end(),
-                    ref_buf_.at(fb_idx)) == ref_buf_list.end()) {
-        ref_buf_list.push_back(ref_buf_.at(fb_idx));
+                    ref_buf_[fb_idx]) == ref_buf_list.end()) {
+        ref_buf_list.push_back(ref_buf_[fb_idx]);
         ref_buf_flags |= 1 << fb_idx;
       }
     }
@@ -1527,10 +1530,10 @@ void LibvpxVp9Encoder::FillReferenceIndices(const vpx_codec_cx_pkt& pkt,
     if (enc_layer_conf.reference_alt_ref[layer_id.spatial_layer_id]) {
       const size_t fb_idx =
           enc_layer_conf.alt_fb_idx[layer_id.spatial_layer_id];
-      RTC_DCHECK(ref_buf_.find(fb_idx) != ref_buf_.end());
+      RTC_DCHECK_LT(fb_idx, ref_buf_.size());
       if (std::find(ref_buf_list.begin(), ref_buf_list.end(),
-                    ref_buf_.at(fb_idx)) == ref_buf_list.end()) {
-        ref_buf_list.push_back(ref_buf_.at(fb_idx));
+                    ref_buf_[fb_idx]) == ref_buf_list.end()) {
+        ref_buf_list.push_back(ref_buf_[fb_idx]);
         ref_buf_flags |= 1 << fb_idx;
       }
     }
@@ -1538,10 +1541,10 @@ void LibvpxVp9Encoder::FillReferenceIndices(const vpx_codec_cx_pkt& pkt,
     if (enc_layer_conf.reference_golden[layer_id.spatial_layer_id]) {
       const size_t fb_idx =
           enc_layer_conf.gld_fb_idx[layer_id.spatial_layer_id];
-      RTC_DCHECK(ref_buf_.find(fb_idx) != ref_buf_.end());
+      RTC_DCHECK_LT(fb_idx, ref_buf_.size());
       if (std::find(ref_buf_list.begin(), ref_buf_list.end(),
-                    ref_buf_.at(fb_idx)) == ref_buf_list.end()) {
-        ref_buf_list.push_back(ref_buf_.at(fb_idx));
+                    ref_buf_[fb_idx]) == ref_buf_list.end()) {
+        ref_buf_list.push_back(ref_buf_[fb_idx]);
         ref_buf_flags |= 1 << fb_idx;
       }
     }
@@ -1563,7 +1566,7 @@ void LibvpxVp9Encoder::FillReferenceIndices(const vpx_codec_cx_pkt& pkt,
     RTC_DCHECK_EQ(num_temporal_layers_, 1);
     // In non-SVC mode encoder doesn't provide reference list. Assume each frame
     // refers previous one, which is stored in buffer 0.
-    ref_buf_list.push_back(ref_buf_.at(0));
+    ref_buf_list.push_back(ref_buf_[0]);
   }
 
   std::vector<size_t> ref_pid_list;
@@ -1611,8 +1614,9 @@ void LibvpxVp9Encoder::UpdateReferenceBuffers(const vpx_codec_cx_pkt& pkt,
   vpx_svc_layer_id_t layer_id = {0};
   libvpx_->codec_control(encoder_, VP9E_GET_SVC_LAYER_ID, &layer_id);
 
-  RefFrameBuffer frame_buf(pic_num, layer_id.spatial_layer_id,
-                           layer_id.temporal_layer_id);
+  RefFrameBuffer frame_buf = {.pic_num = pic_num,
+                              .spatial_layer_id = layer_id.spatial_layer_id,
+                              .temporal_layer_id = layer_id.temporal_layer_id};
 
   if (is_svc_) {
     vpx_svc_ref_frame_config_t enc_layer_conf = {{0}};
@@ -1621,7 +1625,7 @@ void LibvpxVp9Encoder::UpdateReferenceBuffers(const vpx_codec_cx_pkt& pkt,
     const int update_buffer_slot =
         enc_layer_conf.update_buffer_slot[layer_id.spatial_layer_id];
 
-    for (size_t i = 0; i < kNumVp9Buffers; ++i) {
+    for (size_t i = 0; i < ref_buf_.size(); ++i) {
       if (update_buffer_slot & (1 << i)) {
         ref_buf_[i] = frame_buf;
       }
@@ -1649,7 +1653,7 @@ void LibvpxVp9Encoder::UpdateReferenceBuffers(const vpx_codec_cx_pkt& pkt,
 
 vpx_svc_ref_frame_config_t LibvpxVp9Encoder::SetReferences(
     bool is_key_pic,
-    size_t first_active_spatial_layer_id) {
+    int first_active_spatial_layer_id) {
   // kRefBufIdx, kUpdBufIdx need to be updated to support longer GOFs.
   RTC_DCHECK_LE(gof_.num_frames_in_gof, 4);
 
@@ -1671,7 +1675,7 @@ vpx_svc_ref_frame_config_t LibvpxVp9Encoder::SetReferences(
   // for temporal references plus 1 buffer for spatial reference. 7 buffers
   // in total.
 
-  for (size_t sl_idx = first_active_spatial_layer_id;
+  for (int sl_idx = first_active_spatial_layer_id;
        sl_idx < num_active_spatial_layers_; ++sl_idx) {
     const size_t curr_pic_num = is_key_pic ? 0 : pics_since_key_ + 1;
     const size_t gof_idx = curr_pic_num % gof_.num_frames_in_gof;

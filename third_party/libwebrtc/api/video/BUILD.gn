@@ -74,12 +74,15 @@ rtc_library("video_frame") {
     "../../rtc_base:timeutils",
     "../../rtc_base/memory:aligned_malloc",
     "../../rtc_base/system:rtc_export",
-    #"//third_party/libyuv",
+    "//third_party/libyuv",
   ]
-  include_dirs = [
-    "/media/libyuv",
-    "/media/libyuv/libyuv/include",
-  ]
+  if (build_with_mozilla) {
+    deps -= [ "//third_party/libyuv" ]
+    include_dirs = [
+      "/media/libyuv",
+      "/media/libyuv/libyuv/include",
+    ]
+  }
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
@@ -106,12 +109,15 @@ rtc_library("video_frame_i010") {
     "../../rtc_base:checks",
     "../../rtc_base:refcount",
     "../../rtc_base/memory:aligned_malloc",
-    #"//third_party/libyuv",
+    "//third_party/libyuv",
   ]
-  include_dirs = [
-    "/media/libyuv",
-    "/media/libyuv/libyuv/include",
-  ]
+  if (build_with_mozilla) {
+    deps -= [ "//third_party/libyuv" ]
+    include_dirs = [
+      "/media/libyuv",
+      "/media/libyuv/libyuv/include",
+    ]
+  }
 }
 
 rtc_source_set("recordable_encoded_frame") {
@@ -398,11 +404,19 @@ rtc_library("frame_buffer_unittest") {
   deps = [
     ":frame_buffer",
     "../../api/video:encoded_frame",
-    #"../../test:fake_encoded_frame",
-    #"../../test:field_trial",
-    #"../../test:scoped_key_value_config",
-    #"../../test:test_support",
+    "../../test:fake_encoded_frame",
+    "../../test:field_trial",
+    "../../test:scoped_key_value_config",
+    "../../test:test_support",
   ]
+  if (build_with_mozilla) {
+    deps -= [
+      "../../test:fake_encoded_frame",
+      "../../test:field_trial",
+      "../../test:scoped_key_value_config",
+      "../../test:test_support",
+    ]
+  }
 }
 
 if (rtc_include_tests) {

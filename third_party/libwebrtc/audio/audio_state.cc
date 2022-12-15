@@ -15,12 +15,14 @@
 #include <utility>
 #include <vector>
 
+#include "api/sequence_checker.h"
+#include "api/task_queue/task_queue_base.h"
+#include "api/units/time_delta.h"
 #include "audio/audio_receive_stream.h"
 #include "audio/audio_send_stream.h"
 #include "modules/audio_device/include/audio_device.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/thread.h"
 
 namespace webrtc {
 namespace internal {
@@ -36,9 +38,10 @@ AudioState::AudioState(const AudioState::Config& config)
 }
 
 AudioState::~AudioState() {
-  RTC_DCHECK(thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(&thread_checker_);
   RTC_DCHECK(receiving_streams_.empty());
   RTC_DCHECK(sending_streams_.empty());
+  RTC_DCHECK(!null_audio_poller_.Running());
 }
 
 AudioProcessing* AudioState::audio_processing() {
@@ -51,7 +54,7 @@ AudioTransport* AudioState::audio_transport() {
 
 void AudioState::AddReceivingStream(
     webrtc::AudioReceiveStreamInterface* stream) {
-  RTC_DCHECK(thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(&thread_checker_);
   RTC_DCHECK_EQ(0, receiving_streams_.count(stream));
   receiving_streams_.insert(stream);
   if (!config_.audio_mixer->AddSource(
@@ -75,7 +78,7 @@ void AudioState::AddReceivingStream(
 
 void AudioState::RemoveReceivingStream(
     webrtc::AudioReceiveStreamInterface* stream) {
-  RTC_DCHECK(thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(&thread_checker_);
   auto count = receiving_streams_.erase(stream);
   RTC_DCHECK_EQ(1, count);
   config_.audio_mixer->RemoveSource(
@@ -89,7 +92,7 @@ void AudioState::RemoveReceivingStream(
 void AudioState::AddSendingStream(webrtc::AudioSendStream* stream,
                                   int sample_rate_hz,
                                   size_t num_channels) {
-  RTC_DCHECK(thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(&thread_checker_);
   auto& properties = sending_streams_[stream];
   properties.sample_rate_hz = sample_rate_hz;
   properties.num_channels = num_channels;
@@ -109,7 +112,7 @@ void AudioState::AddSendingStream(webrtc::AudioSendStream* stream,
 }
 
 void AudioState::RemoveSendingStream(webrtc::AudioSendStream* stream) {
-  RTC_DCHECK(thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(&thread_checker_);
   auto count = sending_streams_.erase(stream);
   RTC_DCHECK_EQ(1, count);
   UpdateAudioTransportWithSendingStreams();
@@ -120,7 +123,7 @@ void AudioState::RemoveSendingStream(webrtc::AudioSendStream* stream) {
 
 void AudioState::SetPlayout(bool enabled) {
   RTC_LOG(LS_INFO) << "SetPlayout(" << enabled << ")";
-  RTC_DCHECK(thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(&thread_checker_);
   if (playout_enabled_ != enabled) {
     playout_enabled_ = enabled;
     if (enabled) {
@@ -137,7 +140,7 @@ void AudioState::SetPlayout(bool enabled) {
 
 void AudioState::SetRecording(bool enabled) {
   RTC_LOG(LS_INFO) << "SetRecording(" << enabled << ")";
-  RTC_DCHECK(thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(&thread_checker_);
   if (recording_enabled_ != enabled) {
     recording_enabled_ = enabled;
     if (enabled) {
@@ -173,10 +176,32 @@ void AudioState::UpdateNullAudioPollerState() {
   // Run NullAudioPoller when there are receiving streams and playout is
   // disabled.
   if (!receiving_streams_.empty() && !playout_enabled_) {
-    if (!null_audio_poller_)
-      null_audio_poller_ = std::make_unique<NullAudioPoller>(&audio_transport_);
+    if (!null_audio_poller_.Running()) {
+      AudioTransport* audio_transport = &audio_transport_;
+      null_audio_poller_ = RepeatingTaskHandle::Start(
+          TaskQueueBase::Current(), [audio_transport] {
+            static constexpr size_t kNumChannels = 1;
+            static constexpr uint32_t kSamplesPerSecond = 48'000;
+            // 10ms of samples
+            static constexpr size_t kNumSamples = kSamplesPerSecond / 100;
+
+            // Buffer to hold the audio samples.
+            int16_t buffer[kNumSamples * kNumChannels];
+
+            // Output variables from `NeedMorePlayData`.
+            size_t n_samples;
+            int64_t elapsed_time_ms;
+            int64_t ntp_time_ms;
+            audio_transport->NeedMorePlayData(
+                kNumSamples, sizeof(int16_t), kNumChannels, kSamplesPerSecond,
+                buffer, n_samples, &elapsed_time_ms, &ntp_time_ms);
+
+            // Reschedule the next poll iteration.
+            return TimeDelta::Millis(10);
+          });
+    }
   } else {
-    null_audio_poller_.reset();
+    null_audio_poller_.Stop();
   }
 }
 }  // namespace internal

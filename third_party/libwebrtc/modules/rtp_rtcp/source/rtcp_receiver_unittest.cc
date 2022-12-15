@@ -26,7 +26,6 @@
 #include "modules/rtp_rtcp/source/rtcp_packet/app.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/bye.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/compound_packet.h"
-#include "modules/rtp_rtcp/source/rtcp_packet/extended_jitter_report.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/extended_reports.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/fir.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/nack.h"
@@ -591,16 +590,6 @@ TEST(RtcpReceiverTest, GetRtt) {
 
   EXPECT_EQ(now, receiver.LastReceivedReportBlockMs());
   EXPECT_EQ(0, receiver.RTT(kSenderSsrc, nullptr, nullptr, nullptr, nullptr));
-}
-
-// Ij packets are ignored.
-TEST(RtcpReceiverTest, InjectIjWithNoItem) {
-  ReceiverMocks mocks;
-  RTCPReceiver receiver(DefaultConfiguration(&mocks), &mocks.rtp_rtcp_impl);
-  receiver.SetRemoteSSRC(kSenderSsrc);
-
-  rtcp::ExtendedJitterReport ij;
-  receiver.IncomingPacket(ij.Build());
 }
 
 // App packets are ignored.

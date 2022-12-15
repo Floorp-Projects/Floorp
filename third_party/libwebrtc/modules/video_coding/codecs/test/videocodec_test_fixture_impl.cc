@@ -29,11 +29,20 @@
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_codec.h"
 #include "api/video_codecs/video_decoder.h"
+#include "api/video_codecs/video_decoder_factory_template.h"
+#include "api/video_codecs/video_decoder_factory_template_dav1d_adapter.h"
+#include "api/video_codecs/video_decoder_factory_template_libvpx_vp8_adapter.h"
+#include "api/video_codecs/video_decoder_factory_template_libvpx_vp9_adapter.h"
+#include "api/video_codecs/video_decoder_factory_template_open_h264_adapter.h"
 #include "api/video_codecs/video_encoder_config.h"
+#include "api/video_codecs/video_encoder_factory.h"
+#include "api/video_codecs/video_encoder_factory_template.h"
+#include "api/video_codecs/video_encoder_factory_template_libaom_av1_adapter.h"
+#include "api/video_codecs/video_encoder_factory_template_libvpx_vp8_adapter.h"
+#include "api/video_codecs/video_encoder_factory_template_libvpx_vp9_adapter.h"
+#include "api/video_codecs/video_encoder_factory_template_open_h264_adapter.h"
 #include "common_video/h264/h264_common.h"
 #include "media/base/media_constants.h"
-#include "media/engine/internal_decoder_factory.h"
-#include "media/engine/internal_encoder_factory.h"
 #include "media/engine/simulcast.h"
 #include "modules/video_coding/codecs/h264/include/h264_globals.h"
 #include "modules/video_coding/codecs/vp9/svc_config.h"
@@ -157,9 +166,12 @@ SdpVideoFormat CreateSdpVideoFormat(
         {cricket::kH264FmtpProfileLevelId,
          *H264ProfileLevelIdToString(H264ProfileLevelId(
              config.h264_codec_settings.profile, H264Level::kLevel3_1))},
-        {cricket::kH264FmtpPacketizationMode, packetization_mode}};
+        {cricket::kH264FmtpPacketizationMode, packetization_mode},
+        {cricket::kH264FmtpLevelAsymmetryAllowed, "1"}};
 
     return SdpVideoFormat(config.codec_name, codec_params);
+  } else if (config.codec_settings.codecType == kVideoCodecVP9) {
+    return SdpVideoFormat(config.codec_name, {{"profile-id", "0"}});
   }
 
   return SdpVideoFormat(config.codec_name);
@@ -406,8 +418,16 @@ class VideoCodecTestFixtureImpl::CpuProcessTime final {
 };
 
 VideoCodecTestFixtureImpl::VideoCodecTestFixtureImpl(Config config)
-    : encoder_factory_(std::make_unique<InternalEncoderFactory>()),
-      decoder_factory_(std::make_unique<InternalDecoderFactory>()),
+    : encoder_factory_(std::make_unique<webrtc::VideoEncoderFactoryTemplate<
+                           webrtc::LibvpxVp8EncoderTemplateAdapter,
+                           webrtc::LibvpxVp9EncoderTemplateAdapter,
+                           webrtc::OpenH264EncoderTemplateAdapter,
+                           webrtc::LibaomAv1EncoderTemplateAdapter>>()),
+      decoder_factory_(std::make_unique<webrtc::VideoDecoderFactoryTemplate<
+                           webrtc::LibvpxVp8DecoderTemplateAdapter,
+                           webrtc::LibvpxVp9DecoderTemplateAdapter,
+                           webrtc::OpenH264DecoderTemplateAdapter,
+                           webrtc::Dav1dDecoderTemplateAdapter>>()),
       config_(config) {}
 
 VideoCodecTestFixtureImpl::VideoCodecTestFixtureImpl(
@@ -483,7 +503,7 @@ void VideoCodecTestFixtureImpl::ProcessAllFrames(
   task_queue->PostTask([this] { processor_->Finalize(); });
 
   // Wait until we know that the last frame has been sent for encode.
-  task_queue->SendTask([] {}, RTC_FROM_HERE);
+  task_queue->SendTask([] {});
 
   // Give the VideoProcessor pipeline some time to process the last frame,
   // and then release the codecs.
@@ -700,11 +720,9 @@ bool VideoCodecTestFixtureImpl::SetUpAndInitObjects(
   cpu_process_time_.reset(new CpuProcessTime(config_));
 
   bool is_codec_created = false;
-  task_queue->SendTask(
-      [this, &is_codec_created]() {
-        is_codec_created = CreateEncoderAndDecoder();
-      },
-      RTC_FROM_HERE);
+  task_queue->SendTask([this, &is_codec_created]() {
+    is_codec_created = CreateEncoderAndDecoder();
+  });
 
   if (!is_codec_created) {
     return false;
@@ -758,20 +776,17 @@ bool VideoCodecTestFixtureImpl::SetUpAndInitObjects(
             encoder_.get(), &decoders_, source_frame_reader_.get(), config_,
             &stats_, &encoded_frame_writers_,
             decoded_frame_writers_.empty() ? nullptr : &decoded_frame_writers_);
-      },
-      RTC_FROM_HERE);
+      });
   return true;
 }
 
 void VideoCodecTestFixtureImpl::ReleaseAndCloseObjects(
     TaskQueueForTest* task_queue) {
-  task_queue->SendTask(
-      [this]() {
-        processor_.reset();
-        // The VideoProcessor must be destroyed before the codecs.
-        DestroyEncoderAndDecoder();
-      },
-      RTC_FROM_HERE);
+  task_queue->SendTask([this]() {
+    processor_.reset();
+    // The VideoProcessor must be destroyed before the codecs.
+    DestroyEncoderAndDecoder();
+  });
 
   source_frame_reader_->Close();
 
@@ -790,15 +805,13 @@ std::string VideoCodecTestFixtureImpl::GetCodecName(
     TaskQueueForTest* task_queue,
     bool is_encoder) const {
   std::string codec_name;
-  task_queue->SendTask(
-      [this, is_encoder, &codec_name] {
-        if (is_encoder) {
-          codec_name = encoder_->GetEncoderInfo().implementation_name;
-        } else {
-          codec_name = decoders_.at(0)->ImplementationName();
-        }
-      },
-      RTC_FROM_HERE);
+  task_queue->SendTask([this, is_encoder, &codec_name] {
+    if (is_encoder) {
+      codec_name = encoder_->GetEncoderInfo().implementation_name;
+    } else {
+      codec_name = decoders_.at(0)->ImplementationName();
+    }
+  });
   return codec_name;
 }
 

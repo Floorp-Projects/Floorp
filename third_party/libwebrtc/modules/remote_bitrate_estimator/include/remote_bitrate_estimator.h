@@ -58,8 +58,6 @@ class RemoteBitrateEstimator : public CallStatsObserver {
   // Returns latest estimate or DataRate::Zero() if estimation is unavailable.
   virtual DataRate LatestEstimate() const = 0;
 
-  virtual void SetMinBitrate(int min_bitrate_bps) = 0;
-
   virtual TimeDelta Process() = 0;
 
  protected:

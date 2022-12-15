@@ -45,6 +45,7 @@ class RTC_EXPORT AsyncResolver : public AsyncResolverInterface {
   ~AsyncResolver() override;
 
   void Start(const SocketAddress& addr) override;
+  void Start(const SocketAddress& addr, int family) override;
   bool GetResolvedAddress(int family, SocketAddress* addr) const override;
   int GetError() const override;
   void Destroy(bool wait) override;

@@ -30,7 +30,6 @@
 #include "absl/base/attributes.h"
 #include "absl/functional/any_invocable.h"
 #include "api/function_view.h"
-#include "api/task_queue/queued_task.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/units/time_delta.h"
 #include "rtc_base/checks.h"
@@ -400,24 +399,6 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
   void PostDelayedHighPrecisionTask(absl::AnyInvocable<void() &&> task,
                                     webrtc::TimeDelta delay) override;
 
-  // Legacy TaskQueueBase methods, do not use in new code.
-  // TODO(bugs.webrtc.org/14245): Delete when all code that use rtc::Thread
-  // directly is updated to use PostTask methods above.
-  void PostTask(std::unique_ptr<webrtc::QueuedTask> task) override;
-  void PostDelayedTask(std::unique_ptr<webrtc::QueuedTask> task,
-                       uint32_t milliseconds) override;
-  void PostDelayedHighPrecisionTask(std::unique_ptr<webrtc::QueuedTask> task,
-                                    uint32_t milliseconds) override;
-
-  // Legacy helper method, do not use in new code.
-  // TODO(bugs.webrtc.org/14245): Delete when all code that use rtc::Thread
-  // directly is updated to use PostTask methods above.
-  ABSL_DEPRECATED("Pass delay as webrtc::TimeDelta type")
-  void PostDelayedTask(absl::AnyInvocable<void() &&> task,
-                       uint32_t milliseconds) {
-    PostDelayedTask(std::move(task), webrtc::TimeDelta::Millis(milliseconds));
-  }
-
   // ProcessMessages will process I/O and dispatch messages until:
   //  1) cms milliseconds have elapsed (returns true)
   //  2) Stop() is called (returns false)
@@ -541,12 +522,6 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
  private:
   static const int kSlowDispatchLoggingThreshold = 50;  // 50 ms
 
-  class QueuedTaskHandler final : public MessageHandler {
-   public:
-    QueuedTaskHandler() {}
-    void OnMessage(Message* msg) override;
-  };
-
   // Sets the per-thread allow-blocking-calls flag and returns the previous
   // value. Must be called on this thread.
   bool SetAllowBlockingCalls(bool allow);
@@ -621,8 +596,6 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
   // Only touched from the worker thread itself.
   bool blocking_calls_allowed_ = true;
 
-  // Runs webrtc::QueuedTask posted to the Thread.
-  QueuedTaskHandler queued_task_handler_;
   std::unique_ptr<TaskQueueBase::CurrentTaskQueueSetter>
       task_queue_registration_;
 

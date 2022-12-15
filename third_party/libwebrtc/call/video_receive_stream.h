@@ -108,11 +108,11 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
     // https://w3c.github.io/webrtc-stats/#dom-rtcreceivedrtpstreamstats-packetsdiscarded
     uint64_t packets_discarded = 0;
     // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-totaldecodetime
-    webrtc::TimeDelta total_decode_time = webrtc::TimeDelta::Millis(0);
+    TimeDelta total_decode_time = TimeDelta::Zero();
     // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-totalprocessingdelay
-    webrtc::TimeDelta total_processing_delay = webrtc::TimeDelta::Millis(0);
+    TimeDelta total_processing_delay = TimeDelta::Zero();
     // TODO(bugs.webrtc.org/13986): standardize
-    webrtc::TimeDelta total_assembly_time = webrtc::TimeDelta::Millis(0);
+    TimeDelta total_assembly_time = TimeDelta::Zero();
     uint32_t frames_assembled_from_multiple_packets = 0;
     // Total inter frame delay in seconds.
     // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-totalinterframedelay
@@ -302,6 +302,30 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
   virtual void GenerateKeyFrame() = 0;
 
   virtual void SetRtcpMode(RtcpMode mode) = 0;
+
+  // Sets or clears a flexfec RTP sink. This affects `rtp.packet_sink_` and
+  // `rtp.protected_by_flexfec` parts of the configuration. Must be called on
+  // the packet delivery thread.
+  // TODO(bugs.webrtc.org/11993): Packet delivery thread today means `worker
+  // thread` but will be `network thread`.
+  virtual void SetFlexFecProtection(RtpPacketSinkInterface* flexfec_sink) = 0;
+
+  // Turns on/off loss notifications. Must be called on the packet delivery
+  // thread.
+  virtual void SetLossNotificationEnabled(bool enabled) = 0;
+
+  // Modify `rtp.nack.rtp_history_ms` post construction. Setting this value
+  // to 0 disables nack.
+  // Must be called on the packet delivery thread.
+  virtual void SetNackHistory(TimeDelta history) = 0;
+
+  virtual void SetProtectionPayloadTypes(int red_payload_type,
+                                         int ulpfec_payload_type) = 0;
+
+  virtual void SetRtcpXr(Config::Rtp::RtcpXr rtcp_xr) = 0;
+
+  virtual void SetAssociatedPayloadTypes(
+      std::map<int, int> associated_payload_types) = 0;
 
  protected:
   virtual ~VideoReceiveStreamInterface() {}

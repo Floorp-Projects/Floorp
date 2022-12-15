@@ -16,6 +16,7 @@
 #include "absl/container/inlined_vector.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/sequence_number_util.h"
+#include "rtc_base/trace_event.h"
 
 namespace webrtc {
 namespace {
@@ -68,7 +69,12 @@ FrameBuffer::FrameBuffer(int max_size,
       decoded_frame_history_(max_decode_history) {}
 
 bool FrameBuffer::InsertFrame(std::unique_ptr<EncodedFrame> frame) {
+  const uint32_t ssrc =
+      frame->PacketInfos().empty() ? 0 : frame->PacketInfos()[0].ssrc();
   if (!ValidReferences(*frame)) {
+    TRACE_EVENT2("webrtc",
+                 "FrameBuffer::InsertFrame Frame dropped (Invalid references)",
+                 "remote_ssrc", ssrc, "frame_id", frame->Id());
     RTC_DLOG(LS_WARNING) << "Frame " << frame->Id()
                          << " has invalid references, dropping frame.";
     return false;
@@ -78,23 +84,35 @@ bool FrameBuffer::InsertFrame(std::unique_ptr<EncodedFrame> frame) {
     if (legacy_frame_id_jump_behavior_ && frame->is_keyframe() &&
         AheadOf(frame->Timestamp(),
                 *decoded_frame_history_.GetLastDecodedFrameTimestamp())) {
+      TRACE_EVENT2("webrtc",
+                   "FrameBuffer::InsertFrame Frames dropped (OOO + PicId jump)",
+                   "remote_ssrc", ssrc, "frame_id", frame->Id());
       RTC_DLOG(LS_WARNING)
           << "Keyframe " << frame->Id()
           << " has newer timestamp but older picture id, clearing buffer.";
       Clear();
     } else {
       // Already decoded past this frame.
+      TRACE_EVENT2("webrtc",
+                   "FrameBuffer::InsertFrame Frame dropped (Out of order)",
+                   "remote_ssrc", ssrc, "frame_id", frame->Id());
       return false;
     }
   }
 
   if (frames_.size() == max_size_) {
     if (frame->is_keyframe()) {
+      TRACE_EVENT2("webrtc",
+                   "FrameBuffer::InsertFrame Frames dropped (KF + Full buffer)",
+                   "remote_ssrc", ssrc, "frame_id", frame->Id());
       RTC_DLOG(LS_WARNING) << "Keyframe " << frame->Id()
                            << " inserted into full buffer, clearing buffer.";
       Clear();
     } else {
       // No space for this frame.
+      TRACE_EVENT2("webrtc",
+                   "FrameBuffer::InsertFrame Frame dropped (Full buffer)",
+                   "remote_ssrc", ssrc, "frame_id", frame->Id());
       return false;
     }
   }
@@ -140,12 +158,42 @@ void FrameBuffer::DropNextDecodableTemporalUnit() {
   }
 
   auto end_it = std::next(next_decodable_temporal_unit_->last_frame);
-  num_dropped_frames_ += std::count_if(
-      frames_.begin(), end_it,
-      [](const auto& f) { return f.second.encoded_frame != nullptr; });
+
+  UpdateDroppedFramesAndDiscardedPackets(frames_.begin(), end_it);
 
   frames_.erase(frames_.begin(), end_it);
   FindNextAndLastDecodableTemporalUnit();
+}
+
+void FrameBuffer::UpdateDroppedFramesAndDiscardedPackets(FrameIterator begin_it,
+                                                         FrameIterator end_it) {
+  uint32_t dropped_ssrc = 0;
+  int64_t dropped_frame_id = 0;
+  unsigned int num_discarded_packets = 0;
+  unsigned int num_dropped_frames =
+      std::count_if(begin_it, end_it, [&](const auto& f) {
+        if (f.second.encoded_frame) {
+          const auto& packetInfos = f.second.encoded_frame->PacketInfos();
+          dropped_frame_id = f.first;
+          if (!packetInfos.empty()) {
+            dropped_ssrc = packetInfos[0].ssrc();
+          }
+          num_discarded_packets += packetInfos.size();
+        }
+        return f.second.encoded_frame != nullptr;
+      });
+
+  if (num_dropped_frames > 0) {
+    TRACE_EVENT2("webrtc", "FrameBuffer Dropping Old Frames", "remote_ssrc",
+                 dropped_ssrc, "frame_id", dropped_frame_id);
+  }
+  if (num_discarded_packets > 0) {
+    TRACE_EVENT2("webrtc", "FrameBuffer Discarding Old Packets", "remote_ssrc",
+                 dropped_ssrc, "frame_id", dropped_frame_id);
+  }
+
+  num_dropped_frames_ += num_dropped_frames;
+  num_discarded_packets_ += num_discarded_packets;
 }
 
 absl::optional<int64_t> FrameBuffer::LastContinuousFrameId() const {
@@ -166,6 +214,9 @@ int FrameBuffer::GetTotalNumberOfContinuousTemporalUnits() const {
 }
 int FrameBuffer::GetTotalNumberOfDroppedFrames() const {
   return num_dropped_frames_;
+}
+int FrameBuffer::GetTotalNumberOfDiscardedPackets() const {
+  return num_discarded_packets_;
 }
 
 size_t FrameBuffer::CurrentSize() const {
@@ -269,6 +320,7 @@ void FrameBuffer::FindNextAndLastDecodableTemporalUnit() {
 }
 
 void FrameBuffer::Clear() {
+  UpdateDroppedFramesAndDiscardedPackets(frames_.begin(), frames_.end());
   frames_.clear();
   next_decodable_temporal_unit_.reset();
   decodable_temporal_units_info_.reset();

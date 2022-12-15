@@ -74,7 +74,6 @@ void ReceiveSideCongestionController::PickEstimator() {
     rbe_ = std::make_unique<RemoteBitrateEstimatorSingleStream>(
         &remb_throttler_, &clock_);
   }
-  rbe_->SetMinBitrate(min_bitrate_bps_);
 }
 
 ReceiveSideCongestionController::ReceiveSideCongestionController(
@@ -89,8 +88,7 @@ ReceiveSideCongestionController::ReceiveSideCongestionController(
                               network_state_estimator),
       rbe_(new RemoteBitrateEstimatorSingleStream(&remb_throttler_, clock)),
       using_absolute_send_time_(false),
-      packets_since_absolute_send_time_(0),
-      min_bitrate_bps_(congestion_controller::GetMinBitrateBps()) {}
+      packets_since_absolute_send_time_(0) {}
 
 void ReceiveSideCongestionController::OnReceivedPacket(
     int64_t arrival_time_ms,

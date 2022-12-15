@@ -30,12 +30,28 @@ rtc_library("inter_frame_delay") {
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
+rtc_library("frame_delay_delta_kalman_filter") {
+  sources = [
+    "frame_delay_delta_kalman_filter.cc",
+    "frame_delay_delta_kalman_filter.h",
+  ]
+  deps = [
+    "../../../api/units:data_size",
+    "../../../api/units:time_delta",
+  ]
+  visibility = [
+    ":jitter_estimator",
+    ":timing_unittests",
+  ]
+}
+
 rtc_library("jitter_estimator") {
   sources = [
     "jitter_estimator.cc",
     "jitter_estimator.h",
   ]
   deps = [
+    ":frame_delay_delta_kalman_filter",
     ":rtt_filter",
     "../../../api:field_trials_view",
     "../../../api/units:data_size",
@@ -44,7 +60,6 @@ rtc_library("jitter_estimator") {
     "../../../api/units:timestamp",
     "../../../rtc_base",
     "../../../rtc_base:safe_conversions",
-    "../../../rtc_base/experiments:jitter_upper_bound_experiment",
     "../../../system_wrappers",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
@@ -88,12 +103,14 @@ if (!build_with_mozilla) {
 rtc_library("timing_unittests") {
   testonly = true
   sources = [
+    "frame_delay_delta_kalman_filter_unittest.cc",
     "inter_frame_delay_unittest.cc",
     "jitter_estimator_unittest.cc",
     "rtt_filter_unittest.cc",
     "timing_unittest.cc",
   ]
   deps = [
+    ":frame_delay_delta_kalman_filter",
     ":inter_frame_delay",
     ":jitter_estimator",
     ":rtt_filter",
@@ -106,7 +123,6 @@ rtc_library("timing_unittests") {
     "../../../rtc_base:histogram_percentile_counter",
     "../../../rtc_base:stringutils",
     "../../../rtc_base:timeutils",
-    "../../../rtc_base/experiments:jitter_upper_bound_experiment",
     "../../../system_wrappers:system_wrappers",
     "../../../test:scoped_key_value_config",
     "../../../test:test_support",

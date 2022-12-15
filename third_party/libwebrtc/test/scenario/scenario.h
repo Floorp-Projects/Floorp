@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "absl/functional/any_invocable.h"
+#include "absl/strings/string_view.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/test/time_controller.h"
 #include "rtc_base/fake_clock.h"
@@ -43,8 +44,8 @@ class Scenario {
  public:
   Scenario();
   explicit Scenario(const testing::TestInfo* test_info);
-  explicit Scenario(std::string file_name);
-  Scenario(std::string file_name, bool real_time);
+  explicit Scenario(absl::string_view file_name);
+  Scenario(absl::string_view file_name, bool real_time);
   Scenario(std::unique_ptr<LogWriterFactoryInterface> log_writer_manager,
            bool real_time);
 
@@ -63,9 +64,9 @@ class Scenario {
   SimulationNode* CreateMutableSimulationNode(
       std::function<void(NetworkSimulationConfig*)> config_modifier);
 
-  CallClient* CreateClient(std::string name, CallClientConfig config);
+  CallClient* CreateClient(absl::string_view name, CallClientConfig config);
   CallClient* CreateClient(
-      std::string name,
+      absl::string_view name,
       std::function<void(CallClientConfig*)> config_modifier);
 
   CallClientPair* CreateRoutes(CallClient* first,
@@ -139,7 +140,7 @@ class Scenario {
                           size_t packet_size);
 
   ColumnPrinter TimePrinter();
-  StatesPrinter* CreatePrinter(std::string name,
+  StatesPrinter* CreatePrinter(absl::string_view name,
                                TimeDelta interval,
                                std::vector<ColumnPrinter> printers);
 
@@ -148,13 +149,13 @@ class Scenario {
   // Return the duration of the current session so far.
   TimeDelta TimeSinceStart();
 
-  std::unique_ptr<RtcEventLogOutput> GetLogWriter(std::string name) {
+  std::unique_ptr<RtcEventLogOutput> GetLogWriter(absl::string_view name) {
     if (!log_writer_factory_ || name.empty())
       return nullptr;
     return log_writer_factory_->Create(name);
   }
   std::unique_ptr<LogWriterFactoryInterface> GetLogWriterFactory(
-      std::string name) {
+      absl::string_view name) {
     if (!log_writer_factory_ || name.empty())
       return nullptr;
     return std::make_unique<LogWriterFactoryAddPrefix>(

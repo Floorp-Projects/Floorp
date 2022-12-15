@@ -17,7 +17,7 @@
 #include "api/video/recordable_encoded_frame.h"
 #include "api/video/test/mock_recordable_encoded_frame.h"
 #include "media/base/fake_media_engine.h"
-#include "rtc_base/location.h"
+#include "rtc_base/task_queue_for_test.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 
@@ -77,8 +77,8 @@ class VideoRtpReceiverTest : public testing::Test {
   }
 
   void SetMediaChannel(cricket::MediaChannel* media_channel) {
-    worker_thread_->Invoke<void>(
-        RTC_FROM_HERE, [&]() { receiver_->SetMediaChannel(media_channel); });
+    SendTask(worker_thread_.get(),
+             [&]() { receiver_->SetMediaChannel(media_channel); });
   }
 
   webrtc::VideoTrackSourceInterface* Source() {
@@ -178,7 +178,7 @@ TEST_F(VideoRtpReceiverTest, BroadcastsEncodedFramesWhenEnabled) {
   EXPECT_CALL(sink, OnFrame).Times(2);
   MockRecordableEncodedFrame frame;
   broadcast(frame);
-  worker_thread_->Invoke<void>(RTC_FROM_HERE, [&] { broadcast(frame); });
+  SendTask(worker_thread_.get(), [&] { broadcast(frame); });
 }
 
 TEST_F(VideoRtpReceiverTest, EnablesEncodedOutputOnChannelRestart) {

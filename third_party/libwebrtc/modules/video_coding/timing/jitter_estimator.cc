@@ -23,7 +23,6 @@
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "modules/video_coding/timing/rtt_filter.h"
-#include "rtc_base/experiments/jitter_upper_bound_experiment.h"
 #include "rtc_base/numerics/safe_conversions.h"
 #include "system_wrappers/include/clock.h"
 
@@ -38,7 +37,6 @@ static constexpr double kDefaultMaxTimestampDeviationInSigmas = 3.5;
 constexpr double kPhi = 0.97;
 constexpr double kPsi = 0.9999;
 constexpr uint32_t kAlphaCountMax = 400;
-constexpr double kThetaLow = 0.000001;
 constexpr uint32_t kNackLimit = 3;
 constexpr int32_t kNumStdDevDelayOutlier = 15;
 constexpr int32_t kNumStdDevFrameSizeOutlier = 3;
@@ -53,11 +51,6 @@ JitterEstimator::JitterEstimator(Clock* clock,
                                  const FieldTrialsView& field_trials)
     : fps_counter_(30),  // TODO(sprang): Use an estimator with limit based on
                          // time, rather than number of samples.
-      time_deviation_upper_bound_(
-          JitterUpperBoundExperiment::GetUpperBoundSigmas().value_or(
-              kDefaultMaxTimestampDeviationInSigmas)),
-      enable_reduced_delay_(
-          !field_trials.IsEnabled("WebRTC-ReducedJitterDelayKillSwitch")),
       clock_(clock) {
   Reset();
 }
@@ -66,16 +59,8 @@ JitterEstimator::~JitterEstimator() = default;
 
 // Resets the JitterEstimate.
 void JitterEstimator::Reset() {
-  theta_[0] = 1 / (512e3 / 8);
-  theta_[1] = 0;
   var_noise_ = 4.0;
 
-  theta_cov_[0][0] = 1e-4;
-  theta_cov_[1][1] = 1e2;
-  theta_cov_[0][1] = theta_cov_[1][0] = 0;
-  q_cov_[0][0] = 2.5e-10;
-  q_cov_[1][1] = 1e-10;
-  q_cov_[0][1] = q_cov_[1][0] = 0;
   avg_frame_size_ = kDefaultAvgAndMaxFrameSize;
   max_frame_size_ = kDefaultAvgAndMaxFrameSize;
   var_frame_size_ = 100;
@@ -92,6 +77,8 @@ void JitterEstimator::Reset() {
   startup_count_ = 0;
   rtt_filter_.Reset();
   fps_counter_.Reset();
+
+  kalman_filter_ = FrameDelayDeltaKalmanFilter();
 }
 
 // Updates the estimates with the new measurements.
@@ -133,15 +120,17 @@ void JitterEstimator::UpdateEstimate(TimeDelta frame_delay,
   prev_frame_size_ = frame_size;
 
   // Cap frame_delay based on the current time deviation noise.
-  TimeDelta max_time_deviation =
-      TimeDelta::Millis(time_deviation_upper_bound_ * sqrt(var_noise_) + 0.5);
+  TimeDelta max_time_deviation = TimeDelta::Millis(
+      kDefaultMaxTimestampDeviationInSigmas * sqrt(var_noise_) + 0.5);
   frame_delay.Clamp(-max_time_deviation, max_time_deviation);
 
   // Only update the Kalman filter if the sample is not considered an extreme
   // outlier. Even if it is an extreme outlier from a delay point of view, if
   // the frame size also is large the deviation is probably due to an incorrect
   // line slope.
-  double deviation = DeviationFromExpectedDelay(frame_delay, delta_frame_bytes);
+  double deviation =
+      frame_delay.ms() -
+      kalman_filter_.GetFrameDelayVariationEstimateTotal(delta_frame_bytes);
 
   if (fabs(deviation) < kNumStdDevDelayOutlier * sqrt(var_noise_) ||
       frame_size.bytes() >
@@ -158,7 +147,8 @@ void JitterEstimator::UpdateEstimate(TimeDelta frame_delay,
     // frame.
     if (delta_frame_bytes > -0.25 * max_frame_size_.bytes()) {
       // Update the Kalman filter with the new data
-      KalmanEstimateChannel(frame_delay, delta_frame_bytes);
+      kalman_filter_.PredictAndUpdate(frame_delay, delta_frame_bytes,
+                                      max_frame_size_, var_noise_);
     }
   } else {
     int nStdDev =
@@ -179,92 +169,6 @@ void JitterEstimator::FrameNacked() {
     nack_count_++;
   }
   latest_nack_ = clock_->CurrentTime();
-}
-
-// Updates Kalman estimate of the channel.
-// The caller is expected to sanity check the inputs.
-void JitterEstimator::KalmanEstimateChannel(TimeDelta frame_delay,
-                                            double delta_frame_size_bytes) {
-  double Mh[2];
-  double hMh_sigma;
-  double kalmanGain[2];
-  double measureRes;
-  double t00, t01;
-
-  // Kalman filtering
-
-  // Prediction
-  // M = M + Q
-  theta_cov_[0][0] += q_cov_[0][0];
-  theta_cov_[0][1] += q_cov_[0][1];
-  theta_cov_[1][0] += q_cov_[1][0];
-  theta_cov_[1][1] += q_cov_[1][1];
-
-  // Kalman gain
-  // K = M*h'/(sigma2n + h*M*h') = M*h'/(1 + h*M*h')
-  // h = [dFS 1]
-  // Mh = M*h'
-  // hMh_sigma = h*M*h' + R
-  Mh[0] = theta_cov_[0][0] * delta_frame_size_bytes + theta_cov_[0][1];
-  Mh[1] = theta_cov_[1][0] * delta_frame_size_bytes + theta_cov_[1][1];
-  // sigma weights measurements with a small deltaFS as noisy and
-  // measurements with large deltaFS as good
-  if (max_frame_size_ < DataSize::Bytes(1)) {
-    return;
-  }
-  double sigma = (300.0 * exp(-fabs(delta_frame_size_bytes) /
-                              (1e0 * max_frame_size_.bytes())) +
-                  1) *
-                 sqrt(var_noise_);
-  if (sigma < 1.0) {
-    sigma = 1.0;
-  }
-  hMh_sigma = delta_frame_size_bytes * Mh[0] + Mh[1] + sigma;
-  if ((hMh_sigma < 1e-9 && hMh_sigma >= 0) ||
-      (hMh_sigma > -1e-9 && hMh_sigma <= 0)) {
-    RTC_DCHECK_NOTREACHED();
-    return;
-  }
-  kalmanGain[0] = Mh[0] / hMh_sigma;
-  kalmanGain[1] = Mh[1] / hMh_sigma;
-
-  // Correction
-  // theta = theta + K*(dT - h*theta)
-  measureRes =
-      frame_delay.ms() - (delta_frame_size_bytes * theta_[0] + theta_[1]);
-  theta_[0] += kalmanGain[0] * measureRes;
-  theta_[1] += kalmanGain[1] * measureRes;
-
-  if (theta_[0] < kThetaLow) {
-    theta_[0] = kThetaLow;
-  }
-
-  // M = (I - K*h)*M
-  t00 = theta_cov_[0][0];
-  t01 = theta_cov_[0][1];
-  theta_cov_[0][0] = (1 - kalmanGain[0] * delta_frame_size_bytes) * t00 -
-                     kalmanGain[0] * theta_cov_[1][0];
-  theta_cov_[0][1] = (1 - kalmanGain[0] * delta_frame_size_bytes) * t01 -
-                     kalmanGain[0] * theta_cov_[1][1];
-  theta_cov_[1][0] = theta_cov_[1][0] * (1 - kalmanGain[1]) -
-                     kalmanGain[1] * delta_frame_size_bytes * t00;
-  theta_cov_[1][1] = theta_cov_[1][1] * (1 - kalmanGain[1]) -
-                     kalmanGain[1] * delta_frame_size_bytes * t01;
-
-  // Covariance matrix, must be positive semi-definite.
-  RTC_DCHECK(theta_cov_[0][0] + theta_cov_[1][1] >= 0 &&
-             theta_cov_[0][0] * theta_cov_[1][1] -
-                     theta_cov_[0][1] * theta_cov_[1][0] >=
-                 0 &&
-             theta_cov_[0][0] >= 0);
-}
-
-// Calculate difference in delay between a sample and the expected delay
-// estimated by the Kalman filter
-double JitterEstimator::DeviationFromExpectedDelay(
-    TimeDelta frame_delay,
-    double delta_frame_size_bytes) const {
-  return frame_delay.ms() - (theta_[0] * delta_frame_size_bytes + theta_[1]);
 }
 
 // Estimates the random jitter by calculating the variance of the sample
@@ -325,23 +229,21 @@ double JitterEstimator::NoiseThreshold() const {
 
 // Calculates the current jitter estimate from the filtered estimates.
 TimeDelta JitterEstimator::CalculateEstimate() {
-  double retMs =
-      theta_[0] * (max_frame_size_.bytes() - avg_frame_size_.bytes()) +
-      NoiseThreshold();
+  double retMs = kalman_filter_.GetFrameDelayVariationEstimateSizeBased(
+                     max_frame_size_.bytes() - avg_frame_size_.bytes()) +
+                 NoiseThreshold();
 
   TimeDelta ret = TimeDelta::Millis(retMs);
 
-  constexpr TimeDelta kMinPrevEstimate = TimeDelta::Micros(10);
+  constexpr TimeDelta kMinEstimate = TimeDelta::Millis(1);
   constexpr TimeDelta kMaxEstimate = TimeDelta::Seconds(10);
   // A very low estimate (or negative) is neglected.
-  if (ret < TimeDelta::Millis(1)) {
-    if (!prev_estimate_ || prev_estimate_ <= kMinPrevEstimate) {
-      ret = TimeDelta::Millis(1);
-    } else {
-      ret = *prev_estimate_;
-    }
-  }
-  if (ret > kMaxEstimate) {  // Sanity
+  if (ret < kMinEstimate) {
+    ret = prev_estimate_.value_or(kMinEstimate);
+    // Sanity check to make sure that no other method has set `prev_estimate_`
+    // to a value lower than `kMinEstimate`.
+    RTC_DCHECK_GE(ret, kMinEstimate);
+  } else if (ret > kMaxEstimate) {  // Sanity
     ret = kMaxEstimate;
   }
   prev_estimate_ = ret;
@@ -378,24 +280,22 @@ TimeDelta JitterEstimator::GetJitterEstimate(
     }
   }
 
-  if (enable_reduced_delay_) {
-    static const Frequency kJitterScaleLowThreshold = Frequency::Hertz(5);
-    static const Frequency kJitterScaleHighThreshold = Frequency::Hertz(10);
-    Frequency fps = GetFrameRate();
-    // Ignore jitter for very low fps streams.
-    if (fps < kJitterScaleLowThreshold) {
-      if (fps.IsZero()) {
-        return std::max(TimeDelta::Zero(), jitter);
-      }
-      return TimeDelta::Zero();
+  static const Frequency kJitterScaleLowThreshold = Frequency::Hertz(5);
+  static const Frequency kJitterScaleHighThreshold = Frequency::Hertz(10);
+  Frequency fps = GetFrameRate();
+  // Ignore jitter for very low fps streams.
+  if (fps < kJitterScaleLowThreshold) {
+    if (fps.IsZero()) {
+      return std::max(TimeDelta::Zero(), jitter);
     }
+    return TimeDelta::Zero();
+  }
 
-    // Semi-low frame rate; scale by factor linearly interpolated from 0.0 at
-    // kJitterScaleLowThreshold to 1.0 at kJitterScaleHighThreshold.
-    if (fps < kJitterScaleHighThreshold) {
-      jitter = (1.0 / (kJitterScaleHighThreshold - kJitterScaleLowThreshold)) *
-               (fps - kJitterScaleLowThreshold) * jitter;
-    }
+  // Semi-low frame rate; scale by factor linearly interpolated from 0.0 at
+  // kJitterScaleLowThreshold to 1.0 at kJitterScaleHighThreshold.
+  if (fps < kJitterScaleHighThreshold) {
+    jitter = (1.0 / (kJitterScaleHighThreshold - kJitterScaleLowThreshold)) *
+             (fps - kJitterScaleLowThreshold) * jitter;
   }
 
   return std::max(TimeDelta::Zero(), jitter);

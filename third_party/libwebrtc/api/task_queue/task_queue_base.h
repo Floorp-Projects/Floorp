@@ -14,7 +14,6 @@
 #include <utility>
 
 #include "absl/functional/any_invocable.h"
-#include "api/task_queue/queued_task.h"
 #include "api/units/time_delta.h"
 #include "rtc_base/system/rtc_export.h"
 #include "rtc_base/thread_annotations.h"
@@ -57,14 +56,7 @@ class RTC_LOCKABLE RTC_EXPORT TaskQueueBase {
   // This may vary from one implementation to the next so assumptions about
   // lifetimes of pending tasks should not be made.
   // May be called on any thread or task queue, including this task queue.
-  // TODO(bugs.webrtc.org/14245): Make pure virtual when implemented in all
-  // derived classes.
-  virtual void PostTask(absl::AnyInvocable<void() &&> task);
-
-  // Deprecated, use PostTask variant above in new code.
-  // TODO(bugs.webrtc.org/14245): Delete when all usage is updated to the
-  // function above.
-  virtual void PostTask(std::unique_ptr<QueuedTask> task);
+  virtual void PostTask(absl::AnyInvocable<void() &&> task) = 0;
 
   // Prefer PostDelayedTask() over PostDelayedHighPrecisionTask() whenever
   // possible.
@@ -89,16 +81,8 @@ class RTC_LOCKABLE RTC_EXPORT TaskQueueBase {
   // https://crbug.com/webrtc/13583 for more information.
   //
   // May be called on any thread or task queue, including this task queue.
-  // TODO(bugs.webrtc.org/14245): Make pure virtual when implemented in all
-  // derived classes.
   virtual void PostDelayedTask(absl::AnyInvocable<void() &&> task,
-                               TimeDelta delay);
-
-  // Deprecated, use PostDelayedTask variant above in new code.
-  // TODO(bugs.webrtc.org/14245): Delete when all usage is updated to the
-  // function above.
-  virtual void PostDelayedTask(std::unique_ptr<QueuedTask> task,
-                               uint32_t milliseconds);
+                               TimeDelta delay) = 0;
 
   // Prefer PostDelayedTask() over PostDelayedHighPrecisionTask() whenever
   // possible.
@@ -116,18 +100,8 @@ class RTC_LOCKABLE RTC_EXPORT TaskQueueBase {
   // battery, when the timer precision can be as poor as 15 ms.
   //
   // May be called on any thread or task queue, including this task queue.
-  // TODO(bugs.webrtc.org/14245): Make pure virtual when implemented in all
-  // derived classes.
   virtual void PostDelayedHighPrecisionTask(absl::AnyInvocable<void() &&> task,
-                                            TimeDelta delay);
-
-  // Deprecated, use `PostDelayedHighPrecisionTask` variant above in new code.
-  // TODO(bugs.webrtc.org/14245): Delete when all usage is updated to the
-  // function above.
-  virtual void PostDelayedHighPrecisionTask(std::unique_ptr<QueuedTask> task,
-                                            uint32_t milliseconds) {
-    PostDelayedTask(std::move(task), milliseconds);
-  }
+                                            TimeDelta delay) = 0;
 
   // As specified by `precision`, calls either PostDelayedTask() or
   // PostDelayedHighPrecisionTask().
@@ -140,22 +114,6 @@ class RTC_LOCKABLE RTC_EXPORT TaskQueueBase {
         break;
       case DelayPrecision::kHigh:
         PostDelayedHighPrecisionTask(std::move(task), delay);
-        break;
-    }
-  }
-
-  // Deprecated, use `PostDelayedTaskWithPrecision` variant above in new code.
-  // TODO(bugs.webrtc.org/14245): Delete when all usage is updated to the
-  // function above.
-  void PostDelayedTaskWithPrecision(DelayPrecision precision,
-                                    std::unique_ptr<QueuedTask> task,
-                                    uint32_t milliseconds) {
-    switch (precision) {
-      case DelayPrecision::kLow:
-        PostDelayedTask(std::move(task), milliseconds);
-        break;
-      case DelayPrecision::kHigh:
-        PostDelayedHighPrecisionTask(std::move(task), milliseconds);
         break;
     }
   }

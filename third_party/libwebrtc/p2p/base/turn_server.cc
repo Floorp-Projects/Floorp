@@ -10,6 +10,7 @@
 
 #include "p2p/base/turn_server.h"
 
+#include <algorithm>
 #include <memory>
 #include <tuple>  // for std::tie
 #include <utility>
@@ -19,6 +20,7 @@
 #include "absl/strings/string_view.h"
 #include "api/array_view.h"
 #include "api/packet_socket_factory.h"
+#include "api/task_queue/task_queue_base.h"
 #include "api/transport/stun.h"
 #include "p2p/base/async_stun_tcp_socket.h"
 #include "rtc_base/byte_buffer.h"
@@ -28,77 +30,33 @@
 #include "rtc_base/message_digest.h"
 #include "rtc_base/socket_adapters.h"
 #include "rtc_base/strings/string_builder.h"
-#include "rtc_base/thread.h"
 
 namespace cricket {
+namespace {
+using ::webrtc::TimeDelta;
 
 // TODO(juberti): Move this all to a future turnmessage.h
 //  static const int IPPROTO_UDP = 17;
-static const int kNonceTimeout = 60 * 60 * 1000;              // 60 minutes
-static const int kDefaultAllocationTimeout = 10 * 60 * 1000;  // 10 minutes
-static const int kPermissionTimeout = 5 * 60 * 1000;          //  5 minutes
-static const int kChannelTimeout = 10 * 60 * 1000;            // 10 minutes
+constexpr TimeDelta kNonceTimeout = TimeDelta::Minutes(60);
+constexpr TimeDelta kDefaultAllocationTimeout = TimeDelta::Minutes(10);
+constexpr TimeDelta kPermissionTimeout = TimeDelta::Minutes(5);
+constexpr TimeDelta kChannelTimeout = TimeDelta::Minutes(10);
 
-static const int kMinChannelNumber = 0x4000;
-static const int kMaxChannelNumber = 0x7FFF;
+constexpr int kMinChannelNumber = 0x4000;
+constexpr int kMaxChannelNumber = 0x7FFF;
 
-static const size_t kNonceKeySize = 16;
-static const size_t kNonceSize = 48;
+constexpr size_t kNonceKeySize = 16;
+constexpr size_t kNonceSize = 48;
 
-static const size_t TURN_CHANNEL_HEADER_SIZE = 4U;
+constexpr size_t TURN_CHANNEL_HEADER_SIZE = 4U;
 
 // TODO(mallinath) - Move these to a common place.
-inline bool IsTurnChannelData(uint16_t msg_type) {
+bool IsTurnChannelData(uint16_t msg_type) {
   // The first two bits of a channel data message are 0b01.
   return ((msg_type & 0xC000) == 0x4000);
 }
 
-// IDs used for posted messages for TurnServerAllocation.
-enum {
-  MSG_ALLOCATION_TIMEOUT,
-};
-
-// Encapsulates a TURN permission.
-// The object is created when a create permission request is received by an
-// allocation, and self-deletes when its lifetime timer expires.
-class TurnServerAllocation::Permission : public rtc::MessageHandlerAutoCleanup {
- public:
-  Permission(rtc::Thread* thread, const rtc::IPAddress& peer);
-  ~Permission() override;
-
-  const rtc::IPAddress& peer() const { return peer_; }
-  void Refresh();
-
-  sigslot::signal1<Permission*> SignalDestroyed;
-
- private:
-  void OnMessage(rtc::Message* msg) override;
-
-  rtc::Thread* thread_;
-  rtc::IPAddress peer_;
-};
-
-// Encapsulates a TURN channel binding.
-// The object is created when a channel bind request is received by an
-// allocation, and self-deletes when its lifetime timer expires.
-class TurnServerAllocation::Channel : public rtc::MessageHandlerAutoCleanup {
- public:
-  Channel(rtc::Thread* thread, int id, const rtc::SocketAddress& peer);
-  ~Channel() override;
-
-  int id() const { return id_; }
-  const rtc::SocketAddress& peer() const { return peer_; }
-  void Refresh();
-
-  sigslot::signal1<Channel*> SignalDestroyed;
-
- private:
-  void OnMessage(rtc::Message* msg) override;
-
-  rtc::Thread* thread_;
-  int id_;
-  rtc::SocketAddress peer_;
-};
+}  // namespace
 
 int GetStunSuccessResponseTypeOrZero(const StunMessage& req) {
   const int resp_type = GetStunSuccessResponseType(req.type());
@@ -117,7 +75,7 @@ static void InitErrorResponse(int code,
       STUN_ATTR_ERROR_CODE, code, std::string(reason)));
 }
 
-TurnServer::TurnServer(rtc::Thread* thread)
+TurnServer::TurnServer(webrtc::TaskQueueBase* thread)
     : thread_(thread),
       nonce_key_(rtc::CreateRandomString(kNonceKeySize)),
       auth_hook_(NULL),
@@ -449,7 +407,7 @@ bool TurnServer::ValidateNonce(absl::string_view nonce) const {
   }
 
   // Validate the timestamp.
-  return rtc::TimeMillis() - then < kNonceTimeout;
+  return TimeDelta::Millis(rtc::TimeMillis() - then) < kNonceTimeout;
 }
 
 TurnServerAllocation* TurnServer::FindAllocation(TurnServerConnection* conn) {
@@ -471,7 +429,6 @@ TurnServerAllocation* TurnServer::CreateAllocation(TurnServerConnection* conn,
   // The Allocation takes ownership of the socket.
   TurnServerAllocation* allocation =
       new TurnServerAllocation(this, thread_, *conn, external_socket, key);
-  allocation->SignalDestroyed.connect(this, &TurnServer::OnAllocationDestroyed);
   allocations_[*conn].reset(allocation);
   return allocation;
 }
@@ -539,7 +496,7 @@ void TurnServer::Send(TurnServerConnection* conn,
   conn->socket()->SendTo(buf.Data(), buf.Length(), conn->src(), options);
 }
 
-void TurnServer::OnAllocationDestroyed(TurnServerAllocation* allocation) {
+void TurnServer::DestroyAllocation(TurnServerAllocation* allocation) {
   // Removing the internal socket if the connection is not udp.
   rtc::AsyncPacketSocket* socket = allocation->conn()->socket();
   InternalSocketMap::iterator iter = server_sockets_.find(socket);
@@ -551,11 +508,7 @@ void TurnServer::OnAllocationDestroyed(TurnServerAllocation* allocation) {
     DestroyInternalSocket(socket);
   }
 
-  AllocationMap::iterator it = allocations_.find(*(allocation->conn()));
-  if (it != allocations_.end()) {
-    it->second.release();
-    allocations_.erase(it);
-  }
+  allocations_.erase(*(allocation->conn()));
 }
 
 void TurnServer::DestroyInternalSocket(rtc::AsyncPacketSocket* socket) {
@@ -599,7 +552,7 @@ std::string TurnServerConnection::ToString() const {
 }
 
 TurnServerAllocation::TurnServerAllocation(TurnServer* server,
-                                           rtc::Thread* thread,
+                                           webrtc::TaskQueueBase* thread,
                                            const TurnServerConnection& conn,
                                            rtc::AsyncPacketSocket* socket,
                                            absl::string_view key)
@@ -613,14 +566,8 @@ TurnServerAllocation::TurnServerAllocation(TurnServer* server,
 }
 
 TurnServerAllocation::~TurnServerAllocation() {
-  for (ChannelList::iterator it = channels_.begin(); it != channels_.end();
-       ++it) {
-    delete *it;
-  }
-  for (PermissionList::iterator it = perms_.begin(); it != perms_.end(); ++it) {
-    delete *it;
-  }
-  thread_->Clear(this, MSG_ALLOCATION_TIMEOUT);
+  channels_.clear();
+  perms_.clear();
   RTC_LOG(LS_INFO) << ToString() << ": Allocation destroyed";
 }
 
@@ -665,12 +612,11 @@ void TurnServerAllocation::HandleAllocateRequest(const TurnMessage* msg) {
   username_ = std::string(username_attr->string_view());
 
   // Figure out the lifetime and start the allocation timer.
-  int lifetime_secs = ComputeLifetime(*msg);
-  thread_->PostDelayed(RTC_FROM_HERE, lifetime_secs * 1000, this,
-                       MSG_ALLOCATION_TIMEOUT);
+  TimeDelta lifetime = ComputeLifetime(*msg);
+  PostDeleteSelf(lifetime);
 
-  RTC_LOG(LS_INFO) << ToString()
-                   << ": Created allocation with lifetime=" << lifetime_secs;
+  RTC_LOG(LS_INFO) << ToString() << ": Created allocation with lifetime="
+                   << lifetime.seconds();
 
   // We've already validated all the important bits; just send a response here.
   TurnMessage response(GetStunSuccessResponseTypeOrZero(*msg),
@@ -680,8 +626,8 @@ void TurnServerAllocation::HandleAllocateRequest(const TurnMessage* msg) {
       STUN_ATTR_XOR_MAPPED_ADDRESS, conn_.src());
   auto relayed_addr_attr = std::make_unique<StunXorAddressAttribute>(
       STUN_ATTR_XOR_RELAYED_ADDRESS, external_socket_->GetLocalAddress());
-  auto lifetime_attr =
-      std::make_unique<StunUInt32Attribute>(STUN_ATTR_LIFETIME, lifetime_secs);
+  auto lifetime_attr = std::make_unique<StunUInt32Attribute>(
+      STUN_ATTR_LIFETIME, lifetime.seconds());
   response.AddAttribute(std::move(mapped_addr_attr));
   response.AddAttribute(std::move(relayed_addr_attr));
   response.AddAttribute(std::move(lifetime_attr));
@@ -691,22 +637,21 @@ void TurnServerAllocation::HandleAllocateRequest(const TurnMessage* msg) {
 
 void TurnServerAllocation::HandleRefreshRequest(const TurnMessage* msg) {
   // Figure out the new lifetime.
-  int lifetime_secs = ComputeLifetime(*msg);
+  TimeDelta lifetime = ComputeLifetime(*msg);
 
   // Reset the expiration timer.
-  thread_->Clear(this, MSG_ALLOCATION_TIMEOUT);
-  thread_->PostDelayed(RTC_FROM_HERE, lifetime_secs * 1000, this,
-                       MSG_ALLOCATION_TIMEOUT);
+  safety_.reset();
+  PostDeleteSelf(lifetime);
 
   RTC_LOG(LS_INFO) << ToString()
-                   << ": Refreshed allocation, lifetime=" << lifetime_secs;
+                   << ": Refreshed allocation, lifetime=" << lifetime.seconds();
 
   // Send a success response with a LIFETIME attribute.
   TurnMessage response(GetStunSuccessResponseTypeOrZero(*msg),
                        msg->transaction_id());
 
-  auto lifetime_attr =
-      std::make_unique<StunUInt32Attribute>(STUN_ATTR_LIFETIME, lifetime_secs);
+  auto lifetime_attr = std::make_unique<StunUInt32Attribute>(
+      STUN_ATTR_LIFETIME, lifetime.seconds());
   response.AddAttribute(std::move(lifetime_attr));
 
   SendResponse(&response);
@@ -782,22 +727,24 @@ void TurnServerAllocation::HandleChannelBindRequest(const TurnMessage* msg) {
 
   // Check that this channel id isn't bound to another transport address, and
   // that this transport address isn't bound to another channel id.
-  Channel* channel1 = FindChannel(channel_id);
-  Channel* channel2 = FindChannel(peer_attr->GetAddress());
+  auto channel1 = FindChannel(channel_id);
+  auto channel2 = FindChannel(peer_attr->GetAddress());
   if (channel1 != channel2) {
     SendBadRequestResponse(msg);
     return;
   }
 
   // Add or refresh this channel.
-  if (!channel1) {
-    channel1 = new Channel(thread_, channel_id, peer_attr->GetAddress());
-    channel1->SignalDestroyed.connect(
-        this, &TurnServerAllocation::OnChannelDestroyed);
-    channels_.push_back(channel1);
+  if (channel1 == channels_.end()) {
+    channel1 = channels_.insert(
+        channels_.end(), {.id = channel_id, .peer = peer_attr->GetAddress()});
   } else {
-    channel1->Refresh();
+    channel1->pending_delete.reset();
   }
+  thread_->PostDelayedTask(
+      SafeTask(channel1->pending_delete.flag(),
+               [this, channel1] { channels_.erase(channel1); }),
+      kChannelTimeout);
 
   // Channel binds also refresh permissions.
   AddPermission(peer_attr->GetAddress().ipaddr());
@@ -814,11 +761,11 @@ void TurnServerAllocation::HandleChannelBindRequest(const TurnMessage* msg) {
 void TurnServerAllocation::HandleChannelData(const char* data, size_t size) {
   // Extract the channel number from the data.
   uint16_t channel_id = rtc::GetBE16(data);
-  Channel* channel = FindChannel(channel_id);
-  if (channel) {
+  auto channel = FindChannel(channel_id);
+  if (channel != channels_.end()) {
     // Send the data to the peer address.
     SendExternal(data + TURN_CHANNEL_HEADER_SIZE,
-                 size - TURN_CHANNEL_HEADER_SIZE, channel->peer());
+                 size - TURN_CHANNEL_HEADER_SIZE, channel->peer);
   } else {
     RTC_LOG(LS_WARNING) << ToString()
                         << ": Received channel data for invalid channel, id="
@@ -833,11 +780,11 @@ void TurnServerAllocation::OnExternalPacket(
     const rtc::SocketAddress& addr,
     const int64_t& /* packet_time_us */) {
   RTC_DCHECK(external_socket_.get() == socket);
-  Channel* channel = FindChannel(addr);
-  if (channel) {
+  auto channel = FindChannel(addr);
+  if (channel != channels_.end()) {
     // There is a channel bound to this address. Send as a channel message.
     rtc::ByteBufferWriter buf;
-    buf.WriteUInt16(channel->id());
+    buf.WriteUInt16(channel->id);
     buf.WriteUInt16(static_cast<uint16_t>(size));
     buf.WriteBytes(data, size);
     server_->Send(&conn_, buf);
@@ -857,60 +804,46 @@ void TurnServerAllocation::OnExternalPacket(
   }
 }
 
-int TurnServerAllocation::ComputeLifetime(const TurnMessage& msg) {
-  // Return the smaller of our default lifetime and the requested lifetime.
-  int lifetime = kDefaultAllocationTimeout / 1000;  // convert to seconds
-  const StunUInt32Attribute* lifetime_attr = msg.GetUInt32(STUN_ATTR_LIFETIME);
-  if (lifetime_attr && static_cast<int>(lifetime_attr->value()) < lifetime) {
-    lifetime = static_cast<int>(lifetime_attr->value());
+TimeDelta TurnServerAllocation::ComputeLifetime(const TurnMessage& msg) {
+  if (const StunUInt32Attribute* attr = msg.GetUInt32(STUN_ATTR_LIFETIME)) {
+    return std::min(TimeDelta::Seconds(static_cast<int>(attr->value())),
+                    kDefaultAllocationTimeout);
   }
-  return lifetime;
+  return kDefaultAllocationTimeout;
 }
 
 bool TurnServerAllocation::HasPermission(const rtc::IPAddress& addr) {
-  return (FindPermission(addr) != NULL);
+  return FindPermission(addr) != perms_.end();
 }
 
 void TurnServerAllocation::AddPermission(const rtc::IPAddress& addr) {
-  Permission* perm = FindPermission(addr);
-  if (!perm) {
-    perm = new Permission(thread_, addr);
-    perm->SignalDestroyed.connect(this,
-                                  &TurnServerAllocation::OnPermissionDestroyed);
-    perms_.push_back(perm);
+  auto perm = FindPermission(addr);
+  if (perm == perms_.end()) {
+    perm = perms_.insert(perms_.end(), {.peer = addr});
   } else {
-    perm->Refresh();
+    perm->pending_delete.reset();
   }
+  thread_->PostDelayedTask(SafeTask(perm->pending_delete.flag(),
+                                    [this, perm] { perms_.erase(perm); }),
+                           kPermissionTimeout);
 }
 
-TurnServerAllocation::Permission* TurnServerAllocation::FindPermission(
-    const rtc::IPAddress& addr) const {
-  for (PermissionList::const_iterator it = perms_.begin(); it != perms_.end();
-       ++it) {
-    if ((*it)->peer() == addr)
-      return *it;
-  }
-  return NULL;
+TurnServerAllocation::PermissionList::iterator
+TurnServerAllocation::FindPermission(const rtc::IPAddress& addr) {
+  return absl::c_find_if(perms_,
+                         [&](const Permission& p) { return p.peer == addr; });
 }
 
-TurnServerAllocation::Channel* TurnServerAllocation::FindChannel(
-    int channel_id) const {
-  for (ChannelList::const_iterator it = channels_.begin();
-       it != channels_.end(); ++it) {
-    if ((*it)->id() == channel_id)
-      return *it;
-  }
-  return NULL;
+TurnServerAllocation::ChannelList::iterator TurnServerAllocation::FindChannel(
+    int channel_id) {
+  return absl::c_find_if(channels_,
+                         [&](const Channel& c) { return c.id == channel_id; });
 }
 
-TurnServerAllocation::Channel* TurnServerAllocation::FindChannel(
-    const rtc::SocketAddress& addr) const {
-  for (ChannelList::const_iterator it = channels_.begin();
-       it != channels_.end(); ++it) {
-    if ((*it)->peer() == addr)
-      return *it;
-  }
-  return NULL;
+TurnServerAllocation::ChannelList::iterator TurnServerAllocation::FindChannel(
+    const rtc::SocketAddress& addr) {
+  return absl::c_find_if(channels_,
+                         [&](const Channel& c) { return c.peer == addr; });
 }
 
 void TurnServerAllocation::SendResponse(TurnMessage* msg) {
@@ -936,67 +869,13 @@ void TurnServerAllocation::SendExternal(const void* data,
   external_socket_->SendTo(data, size, peer, options);
 }
 
-void TurnServerAllocation::OnMessage(rtc::Message* msg) {
-  RTC_DCHECK(msg->message_id == MSG_ALLOCATION_TIMEOUT);
-  SignalDestroyed(this);
-  delete this;
-}
-
-void TurnServerAllocation::OnPermissionDestroyed(Permission* perm) {
-  auto it = absl::c_find(perms_, perm);
-  RTC_DCHECK(it != perms_.end());
-  perms_.erase(it);
-}
-
-void TurnServerAllocation::OnChannelDestroyed(Channel* channel) {
-  auto it = absl::c_find(channels_, channel);
-  RTC_DCHECK(it != channels_.end());
-  channels_.erase(it);
-}
-
-TurnServerAllocation::Permission::Permission(rtc::Thread* thread,
-                                             const rtc::IPAddress& peer)
-    : thread_(thread), peer_(peer) {
-  Refresh();
-}
-
-TurnServerAllocation::Permission::~Permission() {
-  thread_->Clear(this, MSG_ALLOCATION_TIMEOUT);
-}
-
-void TurnServerAllocation::Permission::Refresh() {
-  thread_->Clear(this, MSG_ALLOCATION_TIMEOUT);
-  thread_->PostDelayed(RTC_FROM_HERE, kPermissionTimeout, this,
-                       MSG_ALLOCATION_TIMEOUT);
-}
-
-void TurnServerAllocation::Permission::OnMessage(rtc::Message* msg) {
-  RTC_DCHECK(msg->message_id == MSG_ALLOCATION_TIMEOUT);
-  SignalDestroyed(this);
-  delete this;
-}
-
-TurnServerAllocation::Channel::Channel(rtc::Thread* thread,
-                                       int id,
-                                       const rtc::SocketAddress& peer)
-    : thread_(thread), id_(id), peer_(peer) {
-  Refresh();
-}
-
-TurnServerAllocation::Channel::~Channel() {
-  thread_->Clear(this, MSG_ALLOCATION_TIMEOUT);
-}
-
-void TurnServerAllocation::Channel::Refresh() {
-  thread_->Clear(this, MSG_ALLOCATION_TIMEOUT);
-  thread_->PostDelayed(RTC_FROM_HERE, kChannelTimeout, this,
-                       MSG_ALLOCATION_TIMEOUT);
-}
-
-void TurnServerAllocation::Channel::OnMessage(rtc::Message* msg) {
-  RTC_DCHECK(msg->message_id == MSG_ALLOCATION_TIMEOUT);
-  SignalDestroyed(this);
-  delete this;
+void TurnServerAllocation::PostDeleteSelf(TimeDelta delay) {
+  auto delete_self = [this] {
+    RTC_DCHECK_RUN_ON(server_->thread_);
+    server_->DestroyAllocation(this);
+  };
+  thread_->PostDelayedTask(SafeTask(safety_.flag(), std::move(delete_self)),
+                           delay);
 }
 
 }  // namespace cricket

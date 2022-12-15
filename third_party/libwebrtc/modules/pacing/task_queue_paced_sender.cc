@@ -25,12 +25,20 @@ namespace webrtc {
 
 namespace {
 
+constexpr const char* kBurstyPacerFieldTrial = "WebRTC-BurstyPacer";
+
 constexpr const char* kSlackedTaskQueuePacedSenderFieldTrial =
     "WebRTC-SlackedTaskQueuePacedSender";
 
 }  // namespace
 
 const int TaskQueuePacedSender::kNoPacketHoldback = -1;
+
+TaskQueuePacedSender::BurstyPacerFlags::BurstyPacerFlags(
+    const FieldTrialsView& field_trials)
+    : burst("burst") {
+  ParseFieldTrial({&burst}, field_trials.Lookup(kBurstyPacerFieldTrial));
+}
 
 TaskQueuePacedSender::SlackedPacerFlags::SlackedPacerFlags(
     const FieldTrialsView& field_trials)
@@ -50,6 +58,7 @@ TaskQueuePacedSender::TaskQueuePacedSender(
     TimeDelta max_hold_back_window,
     int max_hold_back_window_in_packets)
     : clock_(clock),
+      bursty_pacer_flags_(field_trials),
       slacked_pacer_flags_(field_trials),
       max_hold_back_window_(slacked_pacer_flags_.allow_low_precision
                                 ? PacingController::kMinSleepTime
@@ -67,10 +76,18 @@ TaskQueuePacedSender::TaskQueuePacedSender(
           "TaskQueuePacedSender",
           TaskQueueFactory::Priority::NORMAL)) {
   RTC_DCHECK_GE(max_hold_back_window_, PacingController::kMinSleepTime);
+  // There are multiple field trials that can affect burst. If multiple bursts
+  // are specified we pick the largest of the values.
+  absl::optional<TimeDelta> burst = bursty_pacer_flags_.burst.GetOptional();
   if (slacked_pacer_flags_.allow_low_precision &&
       slacked_pacer_flags_.send_burst_interval) {
-    pacing_controller_.SetSendBurstInterval(
-        slacked_pacer_flags_.send_burst_interval.Value());
+    TimeDelta slacked_burst = slacked_pacer_flags_.send_burst_interval.Value();
+    if (!burst.has_value() || burst.value() < slacked_burst) {
+      burst = slacked_burst;
+    }
+  }
+  if (burst.has_value()) {
+    pacing_controller_.SetSendBurstInterval(burst.value());
   }
 }
 
@@ -136,19 +153,16 @@ void TaskQueuePacedSender::SetPacingRates(DataRate pacing_rate,
 
 void TaskQueuePacedSender::EnqueuePackets(
     std::vector<std::unique_ptr<RtpPacketToSend>> packets) {
-  TRACE_EVENT0(TRACE_DISABLED_BY_DEFAULT("webrtc"),
-               "TaskQueuePacedSender::EnqueuePackets");
-  for (auto& packet : packets) {
-    RTC_UNUSED(packet);
-    TRACE_EVENT2(TRACE_DISABLED_BY_DEFAULT("webrtc"),
-                 "TaskQueuePacedSender::EnqueuePackets::Loop",
-                 "sequence_number", packet->SequenceNumber(), "rtp_timestamp",
-                 packet->Timestamp());
-  }
-
-  task_queue_.PostTask([this, packets_ = std::move(packets)]() mutable {
+  task_queue_.PostTask([this, packets = std::move(packets)]() mutable {
     RTC_DCHECK_RUN_ON(&task_queue_);
-    for (auto& packet : packets_) {
+    TRACE_EVENT0(TRACE_DISABLED_BY_DEFAULT("webrtc"),
+                 "TaskQueuePacedSender::EnqueuePackets");
+    for (auto& packet : packets) {
+      TRACE_EVENT2(TRACE_DISABLED_BY_DEFAULT("webrtc"),
+                   "TaskQueuePacedSender::EnqueuePackets::Loop",
+                   "sequence_number", packet->SequenceNumber(), "rtp_timestamp",
+                   packet->Timestamp());
+
       size_t packet_size = packet->payload_size() + packet->padding_size();
       if (include_overhead_) {
         packet_size += packet->headers_size();

@@ -24,7 +24,6 @@ rtc_library("rtp_rtcp_format") {
     "source/rtcp_packet/common_header.h",
     "source/rtcp_packet/compound_packet.h",
     "source/rtcp_packet/dlrr.h",
-    "source/rtcp_packet/extended_jitter_report.h",
     "source/rtcp_packet/extended_reports.h",
     "source/rtcp_packet/fir.h",
     "source/rtcp_packet/loss_notification.h",
@@ -64,7 +63,6 @@ rtc_library("rtp_rtcp_format") {
     "source/rtcp_packet/common_header.cc",
     "source/rtcp_packet/compound_packet.cc",
     "source/rtcp_packet/dlrr.cc",
-    "source/rtcp_packet/extended_jitter_report.cc",
     "source/rtcp_packet/extended_reports.cc",
     "source/rtcp_packet/fir.cc",
     "source/rtcp_packet/loss_notification.cc",
@@ -147,7 +145,6 @@ rtc_library("rtp_rtcp") {
     "include/flexfec_sender.h",
     "include/receive_statistics.h",
     "include/remote_ntp_time_estimator.h",
-    "include/ulpfec_receiver.h",
     "source/absolute_capture_time_interpolator.cc",
     "source/absolute_capture_time_interpolator.h",
     "source/absolute_capture_time_sender.cc",
@@ -229,8 +226,8 @@ rtc_library("rtp_rtcp") {
     "source/ulpfec_generator.h",
     "source/ulpfec_header_reader_writer.cc",
     "source/ulpfec_header_reader_writer.h",
-    "source/ulpfec_receiver_impl.cc",
-    "source/ulpfec_receiver_impl.h",
+    "source/ulpfec_receiver.cc",
+    "source/ulpfec_receiver.h",
     "source/video_fec_generator.h",
     "source/video_rtp_depacketizer.cc",
     "source/video_rtp_depacketizer.h",
@@ -263,7 +260,7 @@ rtc_library("rtp_rtcp") {
     "../../api:field_trials_view",
     "../../api:frame_transformer_interface",
     "../../api:function_view",
-    #"../../api:libjingle_peerconnection_api",
+    "../../api:libjingle_peerconnection_api",
     "../../api:rtp_headers",
     "../../api:rtp_packet_info",
     "../../api:rtp_parameters",
@@ -328,6 +325,9 @@ rtc_library("rtp_rtcp") {
     "../remote_bitrate_estimator",
     "../video_coding:codec_globals_headers",
   ]
+  if (build_with_mozilla) {
+    deps -= [ "../../api:libjingle_peerconnection_api" ]
+  }
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/base:core_headers",
@@ -540,7 +540,6 @@ if (rtc_include_tests) {
       "source/rtcp_packet/common_header_unittest.cc",
       "source/rtcp_packet/compound_packet_unittest.cc",
       "source/rtcp_packet/dlrr_unittest.cc",
-      "source/rtcp_packet/extended_jitter_report_unittest.cc",
       "source/rtcp_packet/extended_reports_unittest.cc",
       "source/rtcp_packet/fir_unittest.cc",
       "source/rtcp_packet/loss_notification_unittest.cc",

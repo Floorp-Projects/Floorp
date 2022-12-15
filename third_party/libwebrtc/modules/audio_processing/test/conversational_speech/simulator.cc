@@ -18,6 +18,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "api/array_view.h"
 #include "common_audio/include/audio_util.h"
 #include "common_audio/wav_file.h"
@@ -38,7 +39,7 @@ using conversational_speech::WavReaderInterface;
 // the near-end and far=end audio tracks.
 std::unique_ptr<std::map<std::string, SpeakerOutputFilePaths>>
 InitSpeakerOutputFilePaths(const std::set<std::string>& speaker_names,
-                           const std::string& output_path) {
+                           absl::string_view output_path) {
   // Create map.
   auto speaker_output_file_paths_map =
       std::make_unique<std::map<std::string, SpeakerOutputFilePaths>>();
@@ -174,7 +175,7 @@ namespace conversational_speech {
 
 std::unique_ptr<std::map<std::string, SpeakerOutputFilePaths>> Simulate(
     const MultiEndCall& multiend_call,
-    const std::string& output_path) {
+    absl::string_view output_path) {
   // Set output file paths and initialize wav writers.
   const auto& speaker_names = multiend_call.speaker_names();
   auto speaker_output_file_paths =

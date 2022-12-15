@@ -91,7 +91,7 @@ class WebRtcVoiceEngine final : public VoiceEngineInterface {
   // Every option that is "set" will be applied. Every option not "set" will be
   // ignored. This allows us to selectively turn on and off different options
   // easily at any time.
-  bool ApplyOptions(const AudioOptions& options);
+  void ApplyOptions(const AudioOptions& options);
 
   int CreateVoEChannel();
 

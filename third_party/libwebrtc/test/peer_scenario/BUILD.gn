@@ -52,6 +52,7 @@ if (rtc_include_tests) {
       "../../rtc_base",
       "../../rtc_base:null_socket_server",
       "../../rtc_base:stringutils",
+      "../../rtc_base:task_queue_for_test",
       "../../test:explicit_key_value_config",
       "../../test:scoped_key_value_config",
       "../logging:log_writer",

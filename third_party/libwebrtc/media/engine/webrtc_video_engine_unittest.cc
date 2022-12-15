@@ -76,6 +76,7 @@ using ::testing::Eq;
 using ::testing::Field;
 using ::testing::Gt;
 using ::testing::IsEmpty;
+using ::testing::Lt;
 using ::testing::Pair;
 using ::testing::Return;
 using ::testing::SizeIs;
@@ -1075,6 +1076,8 @@ TEST_F(WebRtcVideoEngineTest, RegisterDecodersIfSupported) {
 
   EXPECT_TRUE(
       channel->AddRecvStream(cricket::StreamParams::CreateLegacy(kSsrc)));
+  // Decoder creation happens on the decoder thread, make sure it runs.
+  time_controller_.AdvanceTime(webrtc::TimeDelta::Zero());
   ASSERT_EQ(1u, decoder_factory_->decoders().size());
 
   // Setting codecs of the same type should not reallocate the decoder.
@@ -1101,6 +1104,8 @@ TEST_F(WebRtcVideoEngineTest, RegisterH264DecoderIfSupported) {
 
   EXPECT_TRUE(
       channel->AddRecvStream(cricket::StreamParams::CreateLegacy(kSsrc)));
+  // Decoder creation happens on the decoder thread, make sure it runs.
+  time_controller_.AdvanceTime(webrtc::TimeDelta::Zero());
   ASSERT_EQ(1u, decoder_factory_->decoders().size());
 }
 
@@ -1807,68 +1812,9 @@ TEST_F(WebRtcVideoChannelBaseTest, SetSendWithoutCodecs) {
 TEST_F(WebRtcVideoChannelBaseTest, SetSendSetsTransportBufferSizes) {
   EXPECT_TRUE(SetOneCodec(DefaultCodec()));
   EXPECT_TRUE(SetSend(true));
-  EXPECT_EQ(64 * 1024, network_interface_.sendbuf_size());
-  EXPECT_EQ(256 * 1024, network_interface_.recvbuf_size());
+  EXPECT_EQ(kVideoRtpSendBufferSize, network_interface_.sendbuf_size());
+  EXPECT_EQ(kVideoRtpRecvBufferSize, network_interface_.recvbuf_size());
 }
-
-// Test that we properly set the send and recv buffer sizes when overriding
-// via field trials.
-TEST_F(WebRtcVideoChannelBaseTest, OverridesRecvBufferSize) {
-  // Set field trial to override the default recv buffer size, and then re-run
-  // setup where the interface is created and configured.
-  const int kCustomRecvBufferSize = 123456;
-  override_field_trials_ = std::make_unique<webrtc::test::ScopedKeyValueConfig>(
-      field_trials_, "WebRTC-IncreasedReceivebuffers/123456/");
-
-  ResetTest();
-
-  EXPECT_TRUE(SetOneCodec(DefaultCodec()));
-  EXPECT_TRUE(SetSend(true));
-  EXPECT_EQ(64 * 1024, network_interface_.sendbuf_size());
-  EXPECT_EQ(kCustomRecvBufferSize, network_interface_.recvbuf_size());
-}
-
-// Test that we properly set the send and recv buffer sizes when overriding
-// via field trials with suffix.
-TEST_F(WebRtcVideoChannelBaseTest, OverridesRecvBufferSizeWithSuffix) {
-  // Set field trial to override the default recv buffer size, and then re-run
-  // setup where the interface is created and configured.
-  const int kCustomRecvBufferSize = 123456;
-  override_field_trials_ = std::make_unique<webrtc::test::ScopedKeyValueConfig>(
-      field_trials_, "WebRTC-IncreasedReceivebuffers/123456_Dogfood/");
-  ResetTest();
-
-  EXPECT_TRUE(SetOneCodec(DefaultCodec()));
-  EXPECT_TRUE(SetSend(true));
-  EXPECT_EQ(64 * 1024, network_interface_.sendbuf_size());
-  EXPECT_EQ(kCustomRecvBufferSize, network_interface_.recvbuf_size());
-}
-
-class InvalidRecvBufferSizeFieldTrial
-    : public WebRtcVideoChannelBaseTest,
-      public ::testing::WithParamInterface<const char*> {};
-
-// Test that we properly set the send and recv buffer sizes when overriding
-// via field trials that don't make any sense.
-TEST_P(InvalidRecvBufferSizeFieldTrial, InvalidRecvBufferSize) {
-  // Set bogus field trial values to override the default recv buffer size, and
-  // then re-run setup where the interface is created and configured. The
-  // default value should still be used.
-  override_field_trials_ = std::make_unique<webrtc::test::ScopedKeyValueConfig>(
-      field_trials_,
-      std::string("WebRTC-IncreasedReceivebuffers/") + GetParam() + "/");
-
-  ResetTest();
-
-  EXPECT_TRUE(SetOneCodec(DefaultCodec()));
-  EXPECT_TRUE(SetSend(true));
-  EXPECT_EQ(64 * 1024, network_interface_.sendbuf_size());
-  EXPECT_EQ(256 * 1024, network_interface_.recvbuf_size());
-}
-
-INSTANTIATE_TEST_SUITE_P(All,
-                         InvalidRecvBufferSizeFieldTrial,
-                         Values("NotANumber", "-1", " ", "0"));
 
 // Test that stats work properly for a 1-1 call.
 TEST_F(WebRtcVideoChannelBaseTest, GetStats) {
@@ -3780,6 +3726,46 @@ TEST_F(Vp9SettingsTest, MaxBitrateDeterminedBySvcResolutions) {
       ElementsAre(Field(&webrtc::VideoStream::max_bitrate_bps, Eq(2000000))));
 }
 
+TEST_F(Vp9SettingsTest, Vp9SvcTargetBitrateCappedByMax) {
+  cricket::VideoSendParameters parameters;
+  parameters.codecs.push_back(GetEngineCodec("VP9"));
+  ASSERT_TRUE(channel_->SetSendParameters(parameters));
+
+  std::vector<uint32_t> ssrcs = MAKE_VECTOR(kSsrcs3);
+
+  FakeVideoSendStream* stream =
+      AddSendStream(CreateSimStreamParams("cname", ssrcs));
+
+  webrtc::VideoSendStream::Config config = stream->GetConfig().Copy();
+
+  webrtc::test::FrameForwarder frame_forwarder;
+  EXPECT_TRUE(channel_->SetVideoSend(ssrcs[0], nullptr, &frame_forwarder));
+  channel_->SetSend(true);
+
+  // Set up 3 spatial layers with 720p, which should result in a max bitrate of
+  // 2084 kbps.
+  frame_forwarder.IncomingCapturedFrame(
+      frame_source_.GetFrame(1280, 720, webrtc::VideoRotation::kVideoRotation_0,
+                             /*duration_us=*/33000));
+
+  webrtc::VideoCodecVP9 vp9_settings;
+  ASSERT_TRUE(stream->GetVp9Settings(&vp9_settings)) << "No VP9 config set.";
+
+  const size_t kNumSpatialLayers = ssrcs.size();
+  const size_t kNumTemporalLayers = 3;
+  EXPECT_EQ(vp9_settings.numberOfSpatialLayers, kNumSpatialLayers);
+  EXPECT_EQ(vp9_settings.numberOfTemporalLayers, kNumTemporalLayers);
+
+  EXPECT_TRUE(channel_->SetVideoSend(ssrcs[0], nullptr, nullptr));
+
+  // VideoStream both min and max bitrate should be lower than legacy 2.5Mbps
+  // default stream cap.
+  EXPECT_THAT(
+      stream->GetVideoStreams()[0],
+      AllOf(Field(&webrtc::VideoStream::max_bitrate_bps, Lt(2500000)),
+            Field(&webrtc::VideoStream::target_bitrate_bps, Lt(2500000))));
+}
+
 class Vp9SettingsTestWithFieldTrial
     : public Vp9SettingsTest,
       public ::testing::WithParamInterface<
@@ -4209,10 +4195,11 @@ TEST_F(WebRtcVideoChannelFlexfecRecvTest, SetDefaultRecvCodecsWithSsrc) {
 }
 
 // Test changing the configuration after a video stream has been created and
-// turn on flexfec. This will result in the video stream being recreated because
-// the flexfec stream pointer is injected to the video stream at construction.
+// turn on flexfec. This will result in video stream being reconfigured but not
+// recreated because the flexfec stream pointer will be given to the already
+// existing video stream instance.
 TEST_F(WebRtcVideoChannelFlexfecRecvTest,
-       EnablingFlexfecRecreatesVideoReceiveStream) {
+       EnablingFlexfecDoesNotRecreateVideoReceiveStream) {
   cricket::VideoRecvParameters recv_parameters;
   recv_parameters.codecs.push_back(GetEngineCodec("VP8"));
   ASSERT_TRUE(channel_->SetRecvParameters(recv_parameters));
@@ -4233,13 +4220,13 @@ TEST_F(WebRtcVideoChannelFlexfecRecvTest,
   recv_parameters.codecs.push_back(GetEngineCodec("flexfec-03"));
   ASSERT_TRUE(channel_->SetRecvParameters(recv_parameters));
 
-  // Now the count of created streams will be 3 since the video stream was
-  // recreated and a flexfec stream was created.
-  EXPECT_EQ(3, fake_call_->GetNumCreatedReceiveStreams())
-      << "Enabling FlexFEC should create FlexfecReceiveStream.";
-
+  // The count of created streams will remain 2 despite the creation of a new
+  // flexfec stream. The existing receive stream will have been reconfigured
+  // to use the new flexfec instance.
+  EXPECT_EQ(2, fake_call_->GetNumCreatedReceiveStreams())
+      << "Enabling FlexFEC should not create VideoReceiveStreamInterface (1).";
   EXPECT_EQ(1U, fake_call_->GetVideoReceiveStreams().size())
-      << "Enabling FlexFEC should not create VideoReceiveStreamInterface.";
+      << "Enabling FlexFEC should not create VideoReceiveStreamInterface (2).";
   EXPECT_EQ(1U, fake_call_->GetFlexfecReceiveStreams().size())
       << "Enabling FlexFEC should create a single FlexfecReceiveStream.";
   video_stream = video_streams.front();
@@ -4249,11 +4236,11 @@ TEST_F(WebRtcVideoChannelFlexfecRecvTest,
 }
 
 // Test changing the configuration after a video stream has been created with
-// flexfec enabled and then turn off flexfec. This will result in the video
-// stream being recreated because the flexfec stream pointer is injected to the
-// video stream at construction and that config needs to be torn down.
+// flexfec enabled and then turn off flexfec. This will not result in the video
+// stream being recreated. The flexfec stream pointer that's held by the video
+// stream will be set/cleared as dictated by the configuration change.
 TEST_F(WebRtcVideoChannelFlexfecRecvTest,
-       DisablingFlexfecRecreatesVideoReceiveStream) {
+       DisablingFlexfecDoesNotRecreateVideoReceiveStream) {
   cricket::VideoRecvParameters recv_parameters;
   recv_parameters.codecs.push_back(GetEngineCodec("VP8"));
   recv_parameters.codecs.push_back(GetEngineCodec("flexfec-03"));
@@ -4276,9 +4263,10 @@ TEST_F(WebRtcVideoChannelFlexfecRecvTest,
   recv_parameters.codecs.clear();
   recv_parameters.codecs.push_back(GetEngineCodec("VP8"));
   ASSERT_TRUE(channel_->SetRecvParameters(recv_parameters));
-  // Now the count of created streams will be 3 since the video stream had to
-  // be recreated on account of the flexfec stream being deleted.
-  EXPECT_EQ(3, fake_call_->GetNumCreatedReceiveStreams())
+  // The count of created streams should remain 2 since the video stream will
+  // have been reconfigured to not reference flexfec and not recreated on
+  // account of the flexfec stream being deleted.
+  EXPECT_EQ(2, fake_call_->GetNumCreatedReceiveStreams())
       << "Disabling FlexFEC should not recreate VideoReceiveStreamInterface.";
   EXPECT_EQ(1U, fake_call_->GetVideoReceiveStreams().size())
       << "Disabling FlexFEC should not destroy VideoReceiveStreamInterface.";
@@ -9054,6 +9042,9 @@ TEST_F(WebRtcVideoChannelBaseTest, EncoderSelectorSwitchCodec) {
 
   ASSERT_TRUE(channel_->GetSendCodec(&codec));
   EXPECT_EQ("VP9", codec.name);
+
+  // Deregister the encoder selector in case it's called during test tear-down.
+  channel_->SetEncoderSelector(kSsrc, nullptr);
 }
 
 }  // namespace cricket

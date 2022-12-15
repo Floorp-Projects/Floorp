@@ -20,8 +20,6 @@
 #include <utility>
 
 #include "absl/algorithm/container.h"
-#include "absl/container/inlined_vector.h"
-#include "absl/functional/bind_front.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "api/crypto/frame_decryptor_interface.h"
@@ -33,25 +31,19 @@
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "api/video/encoded_image.h"
-#include "api/video/frame_buffer.h"
-#include "api/video_codecs/h264_profile_level_id.h"
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_codec.h"
 #include "api/video_codecs/video_decoder_factory.h"
-#include "api/video_codecs/video_encoder.h"
 #include "call/rtp_stream_receiver_controller_interface.h"
 #include "call/rtx_receive_stream.h"
 #include "common_video/include/incoming_video_stream.h"
-#include "modules/video_coding/frame_buffer2.h"
-#include "modules/video_coding/frame_helpers.h"
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "modules/video_coding/include/video_coding_defines.h"
 #include "modules/video_coding/include/video_error_codes.h"
 #include "modules/video_coding/timing/timing.h"
 #include "modules/video_coding/utility/vp8_header_parser.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/experiments/rtt_mult_experiment.h"
-#include "rtc_base/location.h"
+#include "rtc_base/event.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/synchronization/mutex.h"
@@ -60,10 +52,8 @@
 #include "rtc_base/trace_event.h"
 #include "system_wrappers/include/clock.h"
 #include "video/call_stats2.h"
-#include "video/frame_decode_scheduler.h"
 #include "video/frame_dumping_decoder.h"
 #include "video/receive_statistics_proxy2.h"
-#include "video/video_receive_stream_timeout_tracker.h"
 
 namespace webrtc {
 
@@ -171,28 +161,18 @@ bool IsKeyFrameAndUnspecifiedResolution(const EncodedFrame& frame) {
          frame.EncodedImage()._encodedHeight == 0;
 }
 
-// TODO(https://bugs.webrtc.org/9974): Consider removing this workaround.
-// Maximum time between frames before resetting the FrameBuffer to avoid RTP
-// timestamps wraparound to affect FrameBuffer.
-constexpr TimeDelta kInactiveStreamThreshold = TimeDelta::Minutes(10);
-
 std::string OptionalDelayToLogString(const absl::optional<TimeDelta> opt) {
   return opt.has_value() ? ToLogString(*opt) : "<unset>";
 }
 
 }  // namespace
 
-TimeDelta DetermineMaxWaitForFrame(
-    const VideoReceiveStreamInterface::Config& config,
-    bool is_keyframe) {
+TimeDelta DetermineMaxWaitForFrame(TimeDelta rtp_history, bool is_keyframe) {
   // A (arbitrary) conversion factor between the remotely signalled NACK buffer
   // time (if not present defaults to 1000ms) and the maximum time we wait for a
   // remote frame. Chosen to not change existing defaults when using not
   // rtx-time.
   const int conversion_factor = 3;
-  const TimeDelta rtp_history =
-      TimeDelta::Millis(config.rtp.nack.rtp_history_ms);
-
   if (rtp_history > TimeDelta::Zero() &&
       conversion_factor * rtp_history < kMaxWaitForFrame) {
     return is_keyframe ? rtp_history : conversion_factor * rtp_history;
@@ -210,7 +190,8 @@ VideoReceiveStream2::VideoReceiveStream2(
     Clock* clock,
     std::unique_ptr<VCMTiming> timing,
     NackPeriodicProcessor* nack_periodic_processor,
-    DecodeSynchronizer* decode_sync)
+    DecodeSynchronizer* decode_sync,
+    RtcEventLog* event_log)
     : task_queue_factory_(task_queue_factory),
       transport_adapter_(config.rtcp_send_transport),
       config_(std::move(config)),
@@ -237,10 +218,15 @@ VideoReceiveStream2::VideoReceiveStream2(
                                  this,  // OnCompleteFrameCallback
                                  std::move(config_.frame_decryptor),
                                  std::move(config_.frame_transformer),
-                                 call->trials()),
+                                 call->trials(),
+                                 event_log),
       rtp_stream_sync_(call->worker_thread(), this),
-      max_wait_for_keyframe_(DetermineMaxWaitForFrame(config_, true)),
-      max_wait_for_frame_(DetermineMaxWaitForFrame(config_, false)),
+      max_wait_for_keyframe_(DetermineMaxWaitForFrame(
+          TimeDelta::Millis(config_.rtp.nack.rtp_history_ms),
+          true)),
+      max_wait_for_frame_(DetermineMaxWaitForFrame(
+          TimeDelta::Millis(config_.rtp.nack.rtp_history_ms),
+          false)),
       maximum_pre_stream_decoders_("max", kDefaultMaximumPreStreamDecoders),
       decode_sync_(decode_sync),
       decode_queue_(task_queue_factory_->CreateTaskQueue(
@@ -266,15 +252,16 @@ VideoReceiveStream2::VideoReceiveStream2(
 
   timing_->set_render_delay(TimeDelta::Millis(config_.render_delay_ms));
 
-  frame_buffer_ = FrameBufferProxy::CreateFromFieldTrial(
-      clock_, call_->worker_thread(), timing_.get(), &stats_proxy_,
-      decode_queue_.Get(), this, max_wait_for_keyframe_, max_wait_for_frame_,
-      decode_sync_, call_->trials());
+  buffer_ = VideoStreamBufferController::CreateFromFieldTrial(
+      clock_, call_->worker_thread(), timing_.get(), &stats_proxy_, this,
+      max_wait_for_keyframe_, max_wait_for_frame_, decode_sync_,
+      call_->trials());
 
   if (rtx_ssrc()) {
     rtx_receive_stream_ = std::make_unique<RtxReceiveStream>(
-        &rtp_video_stream_receiver_, config_.rtp.rtx_associated_payload_types,
-        remote_ssrc(), rtp_receive_statistics_.get());
+        &rtp_video_stream_receiver_,
+        std::move(config_.rtp.rtx_associated_payload_types), remote_ssrc(),
+        rtp_receive_statistics_.get());
   } else {
     rtp_receive_statistics_->EnableRetransmitDetection(remote_ssrc(), true);
   }
@@ -353,12 +340,12 @@ void VideoReceiveStream2::Start() {
     return;
   }
 
-  const bool protected_by_fec = config_.rtp.protected_by_flexfec ||
-                                rtp_video_stream_receiver_.IsUlpfecEnabled();
+  const bool protected_by_fec =
+      config_.rtp.protected_by_flexfec ||
+      rtp_video_stream_receiver_.ulpfec_payload_type() != -1;
 
-  if (rtp_video_stream_receiver_.IsRetransmissionsEnabled() &&
-      protected_by_fec) {
-    frame_buffer_->SetProtectionMode(kProtectionNackFEC);
+  if (config_.rtp.nack.rtp_history_ms > 0 && protected_by_fec) {
+    buffer_->SetProtectionMode(kProtectionNackFEC);
   }
 
   transport_adapter_.Enable();
@@ -371,16 +358,7 @@ void VideoReceiveStream2::Start() {
     renderer = this;
   }
 
-  int decoders_count = 0;
   for (const Decoder& decoder : config_.decoders) {
-    // Create up to maximum_pre_stream_decoders_ up front, wait the the other
-    // decoders until they are requested (i.e., we receive the corresponding
-    // payload).
-    if (decoders_count < static_cast<int>(maximum_pre_stream_decoders_)) {
-      CreateAndRegisterExternalDecoder(decoder);
-      ++decoders_count;
-    }
-
     VideoDecoder::Settings settings;
     settings.set_codec_type(
         PayloadStringToCodecType(decoder.video_format.name));
@@ -413,9 +391,21 @@ void VideoReceiveStream2::Start() {
   stats_proxy_.DecoderThreadStarting();
   decode_queue_.PostTask([this] {
     RTC_DCHECK_RUN_ON(&decode_queue_);
+    // Create up to maximum_pre_stream_decoders_ up front, wait the the other
+    // decoders until they are requested (i.e., we receive the corresponding
+    // payload).
+    int decoders_count = 0;
+    for (const Decoder& decoder : config_.decoders) {
+      if (decoders_count >= static_cast<int>(maximum_pre_stream_decoders_)) {
+        break;
+      }
+      CreateAndRegisterExternalDecoder(decoder);
+      ++decoders_count;
+    }
+
     decoder_stopped_ = false;
   });
-  frame_buffer_->StartNextDecode(true);
+  buffer_->StartNextDecode(true);
   decoder_running_ = true;
 
   {
@@ -438,7 +428,7 @@ void VideoReceiveStream2::Stop() {
   stats_proxy_.OnUniqueFramesCounted(
       rtp_video_stream_receiver_.GetUniqueFramesSeen());
 
-  frame_buffer_->StopOnWorker();
+  buffer_->Stop();
   call_stats_->DeregisterStatsObserver(this);
   if (decoder_running_) {
     rtc::Event done;
@@ -506,6 +496,81 @@ void VideoReceiveStream2::SetRtcpMode(RtcpMode mode) {
   // TODO(tommi): Stop using the config struct for the internal state.
   const_cast<RtcpMode&>(config_.rtp.rtcp_mode) = mode;
   rtp_video_stream_receiver_.SetRtcpMode(mode);
+}
+
+void VideoReceiveStream2::SetFlexFecProtection(
+    RtpPacketSinkInterface* flexfec_sink) {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  rtp_video_stream_receiver_.SetPacketSink(flexfec_sink);
+  // TODO(tommi): Stop using the config struct for the internal state.
+  const_cast<RtpPacketSinkInterface*&>(config_.rtp.packet_sink_) = flexfec_sink;
+  const_cast<bool&>(config_.rtp.protected_by_flexfec) =
+      (flexfec_sink != nullptr);
+}
+
+void VideoReceiveStream2::SetLossNotificationEnabled(bool enabled) {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  // TODO(tommi): Stop using the config struct for the internal state.
+  const_cast<bool&>(config_.rtp.lntf.enabled) = enabled;
+  rtp_video_stream_receiver_.SetLossNotificationEnabled(enabled);
+}
+
+void VideoReceiveStream2::SetNackHistory(TimeDelta history) {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  RTC_DCHECK_GE(history.ms(), 0);
+
+  if (config_.rtp.nack.rtp_history_ms == history.ms())
+    return;
+
+  // TODO(tommi): Stop using the config struct for the internal state.
+  const_cast<int&>(config_.rtp.nack.rtp_history_ms) = history.ms();
+
+  const bool protected_by_fec =
+      config_.rtp.protected_by_flexfec ||
+      rtp_video_stream_receiver_.ulpfec_payload_type() != -1;
+
+  buffer_->SetProtectionMode(history.ms() > 0 && protected_by_fec
+                                 ? kProtectionNackFEC
+                                 : kProtectionNack);
+
+  rtp_video_stream_receiver_.SetNackHistory(history);
+  TimeDelta max_wait_for_keyframe = DetermineMaxWaitForFrame(history, true);
+  TimeDelta max_wait_for_frame = DetermineMaxWaitForFrame(history, false);
+
+  max_wait_for_keyframe_ = max_wait_for_keyframe;
+  max_wait_for_frame_ = max_wait_for_frame;
+
+  buffer_->SetMaxWaits(max_wait_for_keyframe, max_wait_for_frame);
+}
+
+void VideoReceiveStream2::SetProtectionPayloadTypes(int red_payload_type,
+                                                    int ulpfec_payload_type) {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  rtp_video_stream_receiver_.SetProtectionPayloadTypes(red_payload_type,
+                                                       ulpfec_payload_type);
+}
+
+void VideoReceiveStream2::SetRtcpXr(Config::Rtp::RtcpXr rtcp_xr) {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  rtp_video_stream_receiver_.SetReferenceTimeReport(
+      rtcp_xr.receiver_reference_time_report);
+}
+
+void VideoReceiveStream2::SetAssociatedPayloadTypes(
+    std::map<int, int> associated_payload_types) {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+
+  // For setting the associated payload types after construction, we currently
+  // assume that the rtx_ssrc cannot change. In such a case we can know that
+  // if the ssrc is non-0, a `rtx_receive_stream_` instance has previously been
+  // created and configured (and is referenced by `rtx_receiver_`) and we can
+  // simply reconfigure it.
+  // If rtx_ssrc is 0 however, we ignore this call.
+  if (!rtx_ssrc())
+    return;
+
+  rtx_receive_stream_->SetAssociatedPayloadTypes(
+      std::move(associated_payload_types));
 }
 
 void VideoReceiveStream2::CreateAndRegisterExternalDecoder(
@@ -669,29 +734,15 @@ void VideoReceiveStream2::SetDepacketizerToDecoderFrameTransformer(
 }
 
 void VideoReceiveStream2::RequestKeyFrame(Timestamp now) {
-  // Running on worker_sequence_checker_.
+  RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
   // Called from RtpVideoStreamReceiver (rtp_video_stream_receiver_ is
   // ultimately responsible).
   rtp_video_stream_receiver_.RequestKeyFrame();
-  decode_queue_.PostTask([this, now]() {
-    RTC_DCHECK_RUN_ON(&decode_queue_);
-    last_keyframe_request_ = now;
-  });
+  last_keyframe_request_ = now;
 }
 
 void VideoReceiveStream2::OnCompleteFrame(std::unique_ptr<EncodedFrame> frame) {
   RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
-
-  // TODO(https://bugs.webrtc.org/9974): Consider removing this workaround.
-  // TODO(https://bugs.webrtc.org/13343): Remove this check when FrameBuffer3 is
-  // deployed. With FrameBuffer3, this case is properly handled and tested in
-  // the FrameBufferProxyTest.PausedStream unit test.
-  Timestamp time_now = clock_->CurrentTime();
-  if (last_complete_frame_time_ &&
-      time_now - *last_complete_frame_time_ > kInactiveStreamThreshold) {
-    frame_buffer_->Clear();
-  }
-  last_complete_frame_time_ = time_now;
 
   const VideoPlayoutDelay& playout_delay = frame->EncodedImage().playout_delay_;
   if (playout_delay.min_ms >= 0) {
@@ -703,7 +754,7 @@ void VideoReceiveStream2::OnCompleteFrame(std::unique_ptr<EncodedFrame> frame) {
     UpdatePlayoutDelays();
   }
 
-  auto last_continuous_pid = frame_buffer_->InsertFrame(std::move(frame));
+  auto last_continuous_pid = buffer_->InsertFrame(std::move(frame));
   if (last_continuous_pid.has_value()) {
     {
       // TODO(bugs.webrtc.org/11993): Call on the network thread.
@@ -716,7 +767,7 @@ void VideoReceiveStream2::OnCompleteFrame(std::unique_ptr<EncodedFrame> frame) {
 void VideoReceiveStream2::OnRttUpdate(int64_t avg_rtt_ms, int64_t max_rtt_ms) {
   RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
   // TODO(bugs.webrtc.org/13757): Replace with TimeDelta.
-  frame_buffer_->UpdateRtt(max_rtt_ms);
+  buffer_->UpdateRtt(max_rtt_ms);
   rtp_video_stream_receiver_.UpdateRtt(max_rtt_ms);
   stats_proxy_.OnRttUpdate(avg_rtt_ms);
 }
@@ -757,46 +808,14 @@ bool VideoReceiveStream2::SetMinimumPlayoutDelay(int delay_ms) {
   return true;
 }
 
-TimeDelta VideoReceiveStream2::GetMaxWait() const {
-  return keyframe_required_ ? max_wait_for_keyframe_ : max_wait_for_frame_;
-}
-
 void VideoReceiveStream2::OnEncodedFrame(std::unique_ptr<EncodedFrame> frame) {
-  if (!decode_queue_.IsCurrent()) {
-    decode_queue_.PostTask([this, frame = std::move(frame)]() mutable {
-      OnEncodedFrame(std::move(frame));
-    });
-    return;
-  }
-  RTC_DCHECK_RUN_ON(&decode_queue_);
-  if (decoder_stopped_)
-    return;
-  HandleEncodedFrame(std::move(frame));
-  frame_buffer_->StartNextDecode(keyframe_required_);
-}
-
-void VideoReceiveStream2::OnDecodableFrameTimeout(TimeDelta wait_time) {
-  if (!call_->worker_thread()->IsCurrent()) {
-    call_->worker_thread()->PostTask(
-        SafeTask(task_safety_.flag(),
-                 [this, wait_time] { OnDecodableFrameTimeout(wait_time); }));
-    return;
-  }
-
-  // TODO(bugs.webrtc.org/11993): PostTask to the network thread.
   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-  HandleFrameBufferTimeout(clock_->CurrentTime(), wait_time);
-
-  decode_queue_.PostTask([this] {
-    RTC_DCHECK_RUN_ON(&decode_queue_);
-    frame_buffer_->StartNextDecode(keyframe_required_);
-  });
-}
-
-void VideoReceiveStream2::HandleEncodedFrame(
-    std::unique_ptr<EncodedFrame> frame) {
-  // Running on `decode_queue_`.
   Timestamp now = clock_->CurrentTime();
+  const bool keyframe_request_is_due =
+      !last_keyframe_request_ ||
+      now >= (*last_keyframe_request_ + max_wait_for_keyframe_);
+  const bool received_frame_is_keyframe =
+      frame->FrameType() == VideoFrameType::kVideoFrameKey;
 
   // Current OnPreDecode only cares about QP for VP8.
   int qp = -1;
@@ -807,12 +826,72 @@ void VideoReceiveStream2::HandleEncodedFrame(
   }
   stats_proxy_.OnPreDecode(frame->CodecSpecific()->codecType, qp);
 
-  bool force_request_key_frame = false;
-  int64_t decoded_frame_picture_id = -1;
+  decode_queue_.PostTask([this, now, keyframe_request_is_due,
+                          received_frame_is_keyframe, frame = std::move(frame),
+                          keyframe_required = keyframe_required_]() mutable {
+    RTC_DCHECK_RUN_ON(&decode_queue_);
+    if (decoder_stopped_)
+      return;
+    DecodeFrameResult result = HandleEncodedFrameOnDecodeQueue(
+        std::move(frame), keyframe_request_is_due, keyframe_required);
 
-  const bool keyframe_request_is_due =
-      !last_keyframe_request_ ||
-      now >= (*last_keyframe_request_ + max_wait_for_keyframe_);
+    // TODO(bugs.webrtc.org/11993): Make this PostTask to the network thread.
+    call_->worker_thread()->PostTask(
+        SafeTask(task_safety_.flag(),
+                 [this, now, result = std::move(result),
+                  received_frame_is_keyframe, keyframe_request_is_due]() {
+                   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+                   keyframe_required_ = result.keyframe_required;
+
+                   if (result.decoded_frame_picture_id) {
+                     rtp_video_stream_receiver_.FrameDecoded(
+                         *result.decoded_frame_picture_id);
+                   }
+
+                   HandleKeyFrameGeneration(received_frame_is_keyframe, now,
+                                            result.force_request_key_frame,
+                                            keyframe_request_is_due);
+                   buffer_->StartNextDecode(keyframe_required_);
+                 }));
+  });
+}
+
+void VideoReceiveStream2::OnDecodableFrameTimeout(TimeDelta wait) {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  Timestamp now = clock_->CurrentTime();
+
+  absl::optional<int64_t> last_packet_ms =
+      rtp_video_stream_receiver_.LastReceivedPacketMs();
+
+  // To avoid spamming keyframe requests for a stream that is not active we
+  // check if we have received a packet within the last 5 seconds.
+  constexpr TimeDelta kInactiveDuration = TimeDelta::Seconds(5);
+  const bool stream_is_active =
+      last_packet_ms &&
+      now - Timestamp::Millis(*last_packet_ms) < kInactiveDuration;
+  if (!stream_is_active)
+    stats_proxy_.OnStreamInactive();
+
+  if (stream_is_active && !IsReceivingKeyFrame(now) &&
+      (!config_.crypto_options.sframe.require_frame_encryption ||
+       rtp_video_stream_receiver_.IsDecryptable())) {
+    RTC_LOG(LS_WARNING) << "No decodable frame in " << wait
+                        << ", requesting keyframe.";
+    RequestKeyFrame(now);
+  }
+
+  buffer_->StartNextDecode(keyframe_required_);
+}
+
+VideoReceiveStream2::DecodeFrameResult
+VideoReceiveStream2::HandleEncodedFrameOnDecodeQueue(
+    std::unique_ptr<EncodedFrame> frame,
+    bool keyframe_request_is_due,
+    bool keyframe_required) {
+  RTC_DCHECK_RUN_ON(&decode_queue_);
+
+  bool force_request_key_frame = false;
+  absl::optional<int64_t> decoded_frame_picture_id;
 
   if (!video_receiver_.IsExternalDecoderRegistered(frame->PayloadType())) {
     // Look for the decoder with this payload type.
@@ -825,47 +904,33 @@ void VideoReceiveStream2::HandleEncodedFrame(
   }
 
   int64_t frame_id = frame->Id();
-  bool received_frame_is_keyframe =
-      frame->FrameType() == VideoFrameType::kVideoFrameKey;
   int decode_result = DecodeAndMaybeDispatchEncodedFrame(std::move(frame));
   if (decode_result == WEBRTC_VIDEO_CODEC_OK ||
       decode_result == WEBRTC_VIDEO_CODEC_OK_REQUEST_KEYFRAME) {
-    keyframe_required_ = false;
+    keyframe_required = false;
     frame_decoded_ = true;
 
     decoded_frame_picture_id = frame_id;
 
     if (decode_result == WEBRTC_VIDEO_CODEC_OK_REQUEST_KEYFRAME)
       force_request_key_frame = true;
-  } else if (!frame_decoded_ || !keyframe_required_ ||
-             keyframe_request_is_due) {
-    keyframe_required_ = true;
+  } else if (!frame_decoded_ || !keyframe_required || keyframe_request_is_due) {
+    keyframe_required = true;
     // TODO(philipel): Remove this keyframe request when downstream project
     //                 has been fixed.
     force_request_key_frame = true;
   }
 
-  {
-    // TODO(bugs.webrtc.org/11993): Make this PostTask to the network thread.
-    call_->worker_thread()->PostTask(SafeTask(
-        task_safety_.flag(),
-        [this, now, received_frame_is_keyframe, force_request_key_frame,
-         decoded_frame_picture_id, keyframe_request_is_due]() {
-          RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-
-          if (decoded_frame_picture_id != -1)
-            rtp_video_stream_receiver_.FrameDecoded(decoded_frame_picture_id);
-
-          HandleKeyFrameGeneration(received_frame_is_keyframe, now,
-                                   force_request_key_frame,
-                                   keyframe_request_is_due);
-        }));
-  }
+  return DecodeFrameResult{
+      .force_request_key_frame = force_request_key_frame,
+      .decoded_frame_picture_id = std::move(decoded_frame_picture_id),
+      .keyframe_required = keyframe_required,
+  };
 }
 
 int VideoReceiveStream2::DecodeAndMaybeDispatchEncodedFrame(
     std::unique_ptr<EncodedFrame> frame) {
-  // Running on decode_queue_.
+  RTC_DCHECK_RUN_ON(&decode_queue_);
 
   // If `buffered_encoded_frames_` grows out of control (=60 queued frames),
   // maybe due to a stuck decoder, we just halt the process here and log the
@@ -923,12 +988,12 @@ int VideoReceiveStream2::DecodeAndMaybeDispatchEncodedFrame(
   return decode_result;
 }
 
-// RTC_RUN_ON(packet_sequence_checker_)
 void VideoReceiveStream2::HandleKeyFrameGeneration(
     bool received_frame_is_keyframe,
     Timestamp now,
     bool always_request_key_frame,
     bool keyframe_request_is_due) {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
   bool request_key_frame = always_request_key_frame;
 
   // Repeat sending keyframe requests if we've requested a keyframe.
@@ -952,32 +1017,8 @@ void VideoReceiveStream2::HandleKeyFrameGeneration(
   }
 }
 
-// RTC_RUN_ON(packet_sequence_checker_)
-void VideoReceiveStream2::HandleFrameBufferTimeout(Timestamp now,
-                                                   TimeDelta wait) {
-  absl::optional<int64_t> last_packet_ms =
-      rtp_video_stream_receiver_.LastReceivedPacketMs();
-
-  // To avoid spamming keyframe requests for a stream that is not active we
-  // check if we have received a packet within the last 5 seconds.
-  constexpr TimeDelta kInactiveDuraction = TimeDelta::Seconds(5);
-  const bool stream_is_active =
-      last_packet_ms &&
-      now - Timestamp::Millis(*last_packet_ms) < kInactiveDuraction;
-  if (!stream_is_active)
-    stats_proxy_.OnStreamInactive();
-
-  if (stream_is_active && !IsReceivingKeyFrame(now) &&
-      (!config_.crypto_options.sframe.require_frame_encryption ||
-       rtp_video_stream_receiver_.IsDecryptable())) {
-    RTC_LOG(LS_WARNING) << "No decodable frame in " << wait
-                        << ", requesting keyframe.";
-    RequestKeyFrame(now);
-  }
-}
-
-// RTC_RUN_ON(packet_sequence_checker_)
 bool VideoReceiveStream2::IsReceivingKeyFrame(Timestamp now) const {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
   absl::optional<int64_t> last_keyframe_packet_ms =
       rtp_video_stream_receiver_.LastReceivedKeyframePacketMs();
 
@@ -990,7 +1031,7 @@ bool VideoReceiveStream2::IsReceivingKeyFrame(Timestamp now) const {
 }
 
 void VideoReceiveStream2::UpdatePlayoutDelays() const {
-  // Running on worker_sequence_checker_.
+  RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
   const std::initializer_list<absl::optional<TimeDelta>> min_delays = {
       frame_minimum_playout_delay_, base_minimum_playout_delay_,
       syncable_minimum_playout_delay_};
@@ -1022,7 +1063,7 @@ void VideoReceiveStream2::UpdatePlayoutDelays() const {
           std::lrint(*frame_maximum_playout_delay_ * kFrameRate);
       // Subtract frames in buffer.
       max_composition_delay_in_frames =
-          std::max(max_composition_delay_in_frames - frame_buffer_->Size(), 0);
+          std::max(max_composition_delay_in_frames - buffer_->Size(), 0);
       timing_->SetMaxCompositionDelayInFrames(max_composition_delay_in_frames);
     }
   }
@@ -1045,19 +1086,26 @@ VideoReceiveStream2::SetAndGetRecordingState(RecordingState state,
   // Save old state, set the new state.
   RecordingState old_state;
 
+  absl::optional<Timestamp> last_keyframe_request;
+  {
+    // TODO(bugs.webrtc.org/11993): Post this to the network thread.
+    RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+    last_keyframe_request = last_keyframe_request_;
+    last_keyframe_request_ =
+        generate_key_frame
+            ? clock_->CurrentTime()
+            : Timestamp::Millis(state.last_keyframe_request_ms.value_or(0));
+  }
+
   decode_queue_.PostTask(
       [this, &event, &old_state, callback = std::move(state.callback),
-       generate_key_frame,
-       last_keyframe_request =
-           Timestamp::Millis(state.last_keyframe_request_ms.value_or(0))] {
+       last_keyframe_request = std::move(last_keyframe_request)] {
         RTC_DCHECK_RUN_ON(&decode_queue_);
         old_state.callback = std::move(encoded_frame_buffer_function_);
         encoded_frame_buffer_function_ = std::move(callback);
 
         old_state.last_keyframe_request_ms =
-            last_keyframe_request_.value_or(Timestamp::Zero()).ms();
-        last_keyframe_request_ =
-            generate_key_frame ? clock_->CurrentTime() : last_keyframe_request;
+            last_keyframe_request.value_or(Timestamp::Zero()).ms();
 
         event.Set();
       });

@@ -1,0 +1,2 @@
+# "empty" file in place of importing new third_party/libaom
+# to allow BUILD.gn imports to succeed.

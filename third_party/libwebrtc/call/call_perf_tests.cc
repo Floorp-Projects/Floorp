@@ -106,7 +106,7 @@ class VideoRtcpAndSyncObserver : public test::RtpRtcpObserver,
   explicit VideoRtcpAndSyncObserver(TaskQueueBase* task_queue,
                                     Clock* clock,
                                     absl::string_view test_label)
-      : test::RtpRtcpObserver(CallPerfTest::kLongTimeoutMs),
+      : test::RtpRtcpObserver(CallPerfTest::kLongTimeout),
         clock_(clock),
         test_label_(test_label),
         creation_time_ms_(clock_->TimeInMilliseconds()),
@@ -193,7 +193,7 @@ void CallPerfTest::TestAudioVideoSync(FecMode fec,
   AudioReceiveStreamInterface* audio_receive_stream;
   std::unique_ptr<DriftingClock> drifting_clock;
 
-  SendTask(RTC_FROM_HERE, task_queue(), [&]() {
+  SendTask(task_queue(), [&]() {
     metrics::Reset();
     rtc::scoped_refptr<TestAudioDeviceModule> fake_audio_device =
         TestAudioDeviceModule::Create(
@@ -307,7 +307,7 @@ void CallPerfTest::TestAudioVideoSync(FecMode fec,
   EXPECT_TRUE(observer->Wait())
       << "Timed out while waiting for audio and video to be synchronized.";
 
-  SendTask(RTC_FROM_HERE, task_queue(), [&]() {
+  SendTask(task_queue(), [&]() {
     // Clear the pointer to the receive stream since it will now be deleted.
     observer->set_receive_stream(nullptr);
 
@@ -387,7 +387,7 @@ void CallPerfTest::TestCaptureNtpTime(
                            int threshold_ms,
                            int start_time_ms,
                            int run_time_ms)
-        : EndToEndTest(kLongTimeoutMs),
+        : EndToEndTest(kLongTimeout),
           net_config_(net_config),
           clock_(Clock::GetRealTimeClock()),
           threshold_ms_(threshold_ms),
@@ -552,7 +552,7 @@ TEST_F(CallPerfTest, ReceivesCpuOveruseAndUnderuse) {
   class LoadObserver : public test::SendTest,
                        public test::FrameGeneratorCapturer::SinkWantsObserver {
    public:
-    LoadObserver() : SendTest(kLongTimeoutMs), test_phase_(TestPhase::kInit) {}
+    LoadObserver() : SendTest(kLongTimeout), test_phase_(TestPhase::kInit) {}
 
     void OnFrameGeneratorCapturerCreated(
         test::FrameGeneratorCapturer* frame_generator_capturer) override {
@@ -661,7 +661,7 @@ void CallPerfTest::TestMinTransmitBitrate(bool pad_to_min_bitrate) {
    public:
     explicit BitrateObserver(bool using_min_transmit_bitrate,
                              TaskQueueBase* task_queue)
-        : EndToEndTest(kLongTimeoutMs),
+        : EndToEndTest(kLongTimeout),
           send_stream_(nullptr),
           converged_(false),
           pad_to_min_bitrate_(using_min_transmit_bitrate),
@@ -791,7 +791,7 @@ TEST_F(CallPerfTest, MAYBE_KeepsHighBitrateWhenReconfiguringSender) {
   class BitrateObserver : public test::EndToEndTest, public test::FakeEncoder {
    public:
     explicit BitrateObserver(TaskQueueBase* task_queue)
-        : EndToEndTest(kDefaultTimeoutMs),
+        : EndToEndTest(kDefaultTimeout),
           FakeEncoder(Clock::GetRealTimeClock()),
           encoder_inits_(0),
           last_set_bitrate_kbps_(0),
@@ -867,10 +867,10 @@ TEST_F(CallPerfTest, MAYBE_KeepsHighBitrateWhenReconfiguringSender) {
     }
 
     void PerformTest() override {
-      ASSERT_TRUE(time_to_reconfigure_.Wait(kDefaultTimeoutMs))
+      ASSERT_TRUE(time_to_reconfigure_.Wait(kDefaultTimeout.ms()))
           << "Timed out before receiving an initial high bitrate.";
       frame_generator_->ChangeResolution(kDefaultWidth * 2, kDefaultHeight * 2);
-      SendTask(RTC_FROM_HERE, task_queue_, [&]() {
+      SendTask(task_queue_, [&]() {
         send_stream_->ReconfigureVideoEncoder(encoder_config_.Copy());
       });
       EXPECT_TRUE(Wait())
@@ -987,7 +987,7 @@ void CallPerfTest::TestMinAudioVideoBitrate(int test_bitrate_from,
         int64_t avg_rtt = 0;
         for (int i = 0; i < kBitrateMeasurements; i++) {
           Call::Stats call_stats;
-          SendTask(RTC_FROM_HERE, task_queue_, [this, &call_stats]() {
+          SendTask(task_queue_, [this, &call_stats]() {
             call_stats = sender_call_->GetStats();
           });
           avg_rtt += call_stats.rtt_ms;
@@ -1071,7 +1071,7 @@ void CallPerfTest::TestEncodeFramerate(VideoEncoderFactory* encoder_factory,
                       absl::string_view payload_name,
                       const std::vector<int>& max_framerates,
                       TaskQueueBase* task_queue)
-        : EndToEndTest(kDefaultTimeoutMs),
+        : EndToEndTest(kDefaultTimeout),
           clock_(Clock::GetRealTimeClock()),
           encoder_factory_(encoder_factory),
           payload_name_(payload_name),

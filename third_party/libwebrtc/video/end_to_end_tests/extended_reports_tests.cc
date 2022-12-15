@@ -63,7 +63,7 @@ class RtcpXrObserver : public test::EndToEndTest {
                  bool expect_target_bitrate,
                  bool enable_zero_target_bitrate,
                  VideoEncoderConfig::ContentType content_type)
-      : EndToEndTest(test::CallTest::kDefaultTimeoutMs),
+      : EndToEndTest(test::CallTest::kDefaultTimeout),
         enable_rrtr_(enable_rrtr),
         expect_target_bitrate_(expect_target_bitrate),
         enable_zero_target_bitrate_(enable_zero_target_bitrate),

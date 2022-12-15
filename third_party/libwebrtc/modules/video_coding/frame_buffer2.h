@@ -48,7 +48,6 @@ class FrameBuffer {
  public:
   FrameBuffer(Clock* clock,
               VCMTiming* timing,
-              VCMReceiveStatisticsCallback* stats_callback,
               const FieldTrialsView& field_trials);
 
   FrameBuffer() = delete;
@@ -143,10 +142,6 @@ class FrameBuffer {
                                         FrameMap::iterator info)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
-  void UpdateJitterDelay() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
-
-  void UpdateTimingFrameInfo() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
-
   void ClearFramesAndHistory() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // The cleaner solution would be to have the NextFrame function return a
@@ -179,7 +174,6 @@ class FrameBuffer {
   std::vector<FrameMap::iterator> frames_to_decode_ RTC_GUARDED_BY(mutex_);
   bool stopped_ RTC_GUARDED_BY(mutex_);
   VCMVideoProtection protection_mode_ RTC_GUARDED_BY(mutex_);
-  VCMReceiveStatisticsCallback* const stats_callback_;
   int64_t last_log_non_decoded_ms_ RTC_GUARDED_BY(mutex_);
 
   // rtt_mult experiment settings.

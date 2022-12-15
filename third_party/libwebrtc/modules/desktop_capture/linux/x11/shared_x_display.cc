@@ -15,6 +15,7 @@
 
 #include <algorithm>
 
+#include "absl/strings/string_view.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 
@@ -31,9 +32,9 @@ SharedXDisplay::~SharedXDisplay() {
 
 // static
 rtc::scoped_refptr<SharedXDisplay> SharedXDisplay::Create(
-    const std::string& display_name) {
-  Display* display =
-      XOpenDisplay(display_name.empty() ? NULL : display_name.c_str());
+    absl::string_view display_name) {
+  Display* display = XOpenDisplay(
+      display_name.empty() ? NULL : std::string(display_name).c_str());
   if (!display) {
     RTC_LOG(LS_ERROR) << "Unable to open display";
     return nullptr;

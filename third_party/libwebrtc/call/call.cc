@@ -1031,7 +1031,7 @@ webrtc::VideoReceiveStreamInterface* Call::CreateVideoReceiveStream(
       task_queue_factory_, this, num_cpu_cores_,
       transport_send_->packet_router(), std::move(configuration),
       call_stats_.get(), clock_, std::make_unique<VCMTiming>(clock_, trials()),
-      &nack_periodic_processor_, decode_sync_.get());
+      &nack_periodic_processor_, decode_sync_.get(), event_log_);
   // TODO(bugs.webrtc.org/11993): Set this up asynchronously on the network
   // thread.
   receive_stream->RegisterWithTransport(&video_receiver_controller_);
@@ -1339,9 +1339,9 @@ void Call::OnAllocationLimitsChanged(BitrateAllocationLimits limits) {
                                             std::memory_order_relaxed);
 }
 
-// RTC_RUN_ON(worker_thread_)
 AudioReceiveStreamImpl* Call::FindAudioStreamForSyncGroup(
     absl::string_view sync_group) {
+  RTC_DCHECK_RUN_ON(worker_thread_);
   RTC_DCHECK_RUN_ON(&receive_11993_checker_);
   if (!sync_group.empty()) {
     for (AudioReceiveStreamImpl* stream : audio_receive_streams_) {
@@ -1353,9 +1353,9 @@ AudioReceiveStreamImpl* Call::FindAudioStreamForSyncGroup(
   return nullptr;
 }
 
-// TODO(bugs.webrtc.org/11993): Expect to be called on the network thread.
-// RTC_RUN_ON(worker_thread_)
 void Call::ConfigureSync(absl::string_view sync_group) {
+  // TODO(bugs.webrtc.org/11993): Expect to be called on the network thread.
+  RTC_DCHECK_RUN_ON(worker_thread_);
   // `audio_stream` may be nullptr when clearing the audio stream for a group.
   AudioReceiveStreamImpl* audio_stream =
       FindAudioStreamForSyncGroup(sync_group);
@@ -1378,8 +1378,8 @@ void Call::ConfigureSync(absl::string_view sync_group) {
   }
 }
 
-// RTC_RUN_ON(network_thread_)
 void Call::DeliverRtcp(MediaType media_type, rtc::CopyOnWriteBuffer packet) {
+  RTC_DCHECK_RUN_ON(network_thread_);
   TRACE_EVENT0("webrtc", "Call::DeliverRtcp");
 
   // TODO(bugs.webrtc.org/11993): This DCHECK is here just to maintain the
@@ -1524,10 +1524,10 @@ void Call::OnRecoveredPacket(const uint8_t* packet, size_t length) {
   video_receiver_controller_.OnRtpPacket(parsed_packet);
 }
 
-// RTC_RUN_ON(worker_thread_)
 void Call::NotifyBweOfReceivedPacket(const RtpPacketReceived& packet,
                                      MediaType media_type,
                                      bool use_send_side_bwe) {
+  RTC_DCHECK_RUN_ON(worker_thread_);
   RTPHeader header;
   packet.GetHeader(&header);
 

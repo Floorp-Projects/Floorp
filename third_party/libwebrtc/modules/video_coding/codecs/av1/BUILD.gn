@@ -6,7 +6,7 @@
 # in the file PATENTS.  All contributing project authors may
 # be found in the AUTHORS file in the root of the source tree.
 
-#import("//third_party/libaom/options.gni")
+import("//third_party/libaom/options.gni")
 import("../../../../webrtc.gni")
 
 rtc_library("av1_svc_config") {
@@ -41,15 +41,21 @@ rtc_library("dav1d_decoder") {
     "../../../../api/video_codecs:video_codecs_api",
     "../../../../common_video",
     "../../../../rtc_base:logging",
-    #"//third_party/dav1d",
-    #"//third_party/libyuv",
+    "//third_party/dav1d",
+    "//third_party/libyuv",
   ]
-  include_dirs = [
-    "/media/libdav1d/",
-    "/media/libyuv",
-    "/media/libyuv/libyuv/include",
-    "/third_party/dav1d/include/dav1d",
-  ]
+  if (build_with_mozilla) {
+    deps -= [
+      "//third_party/dav1d",
+      "//third_party/libyuv",
+    ]
+    include_dirs = [
+      "/media/libdav1d/",
+      "/media/libyuv",
+      "/media/libyuv/libyuv/include",
+      "/third_party/dav1d/include/dav1d",
+    ]
+  }
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
@@ -69,9 +75,15 @@ rtc_library("libaom_av1_decoder") {
       "../../../../api/video:video_frame",
       "../../../../common_video",
       "../../../../rtc_base:logging",
-      #"//third_party/libaom",
-      #"//third_party/libyuv",
+      "//third_party/libaom",
+      "//third_party/libyuv",
     ]
+    if (build_with_mozilla) {
+      deps -= [
+        "//third_party/libaom",
+        "//third_party/libyuv",
+      ]
+    }
     absl_deps += [ "//third_party/abseil-cpp/absl/types:optional" ]
   } else {
     sources = [ "libaom_av1_decoder_absent.cc" ]

@@ -67,7 +67,7 @@ void MultiStreamTester::RunTest() {
       CreateBuiltinVideoBitrateAllocatorFactory();
   InternalDecoderFactory decoder_factory;
 
-  SendTask(RTC_FROM_HERE, task_queue.get(), [&]() {
+  SendTask(task_queue.get(), [&]() {
     sender_call = absl::WrapUnique(Call::Create(config));
     receiver_call = absl::WrapUnique(Call::Create(config));
     sender_transport = CreateSendTransport(task_queue.get(), sender_call.get());
@@ -129,7 +129,7 @@ void MultiStreamTester::RunTest() {
 
   Wait();
 
-  SendTask(RTC_FROM_HERE, task_queue.get(), [&]() {
+  SendTask(task_queue.get(), [&]() {
     for (size_t i = 0; i < kNumStreams; ++i) {
       frame_generators[i]->Stop();
       sender_call->DestroyVideoSendStream(send_streams[i]);

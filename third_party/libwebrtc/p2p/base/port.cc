@@ -175,7 +175,7 @@ void Port::Construct() {
     password_ = rtc::CreateRandomString(ICE_PWD_LENGTH);
   }
   network_->SignalTypeChanged.connect(this, &Port::OnNetworkTypeChanged);
-  network_cost_ = network_->GetCost(*field_trials_);
+  network_cost_ = network_->GetCost(field_trials());
 
   thread_->PostDelayed(RTC_FROM_HERE, timeout_delay_, this,
                        MSG_DESTROY_IF_DEAD);
@@ -869,7 +869,7 @@ std::string Port::ToString() const {
 // TODO(honghaiz): Make the network cost configurable from user setting.
 void Port::UpdateNetworkCost() {
   RTC_DCHECK_RUN_ON(thread_);
-  uint16_t new_cost = network_->GetCost(*field_trials_);
+  uint16_t new_cost = network_->GetCost(field_trials());
   if (network_cost_ == new_cost) {
     return;
   }

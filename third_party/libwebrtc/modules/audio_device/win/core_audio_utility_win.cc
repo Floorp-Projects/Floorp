@@ -18,6 +18,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/strings/string_view.h"
 #include "rtc_base/arraysize.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/platform_thread_types.h"
@@ -280,7 +281,7 @@ bool IsDeviceActive(IMMDevice* device) {
 
 // Retrieve an audio device specified by `device_id` or a default device
 // specified by data-flow direction and role if `device_id` is default.
-ComPtr<IMMDevice> CreateDeviceInternal(const std::string& device_id,
+ComPtr<IMMDevice> CreateDeviceInternal(absl::string_view device_id,
                                        EDataFlow data_flow,
                                        ERole role) {
   RTC_DLOG(LS_INFO) << "CreateDeviceInternal: "
@@ -745,7 +746,7 @@ std::string GetCommunicationsOutputDeviceID() {
   return device.Get() ? GetDeviceIdInternal(device.Get()) : std::string();
 }
 
-ComPtr<IMMDevice> CreateDevice(const std::string& device_id,
+ComPtr<IMMDevice> CreateDevice(absl::string_view device_id,
                                EDataFlow data_flow,
                                ERole role) {
   RTC_DLOG(LS_INFO) << "CreateDevice";
@@ -762,7 +763,7 @@ AudioDeviceName GetDeviceName(IMMDevice* device) {
   return device_name;
 }
 
-std::string GetFriendlyName(const std::string& device_id,
+std::string GetFriendlyName(absl::string_view device_id,
                             EDataFlow data_flow,
                             ERole role) {
   RTC_DLOG(LS_INFO) << "GetFriendlyName";
@@ -871,7 +872,7 @@ int NumberOfActiveSessions(IMMDevice* device) {
   return num_active;
 }
 
-ComPtr<IAudioClient> CreateClient(const std::string& device_id,
+ComPtr<IAudioClient> CreateClient(absl::string_view device_id,
                                   EDataFlow data_flow,
                                   ERole role) {
   RTC_DLOG(LS_INFO) << "CreateClient";
@@ -879,7 +880,7 @@ ComPtr<IAudioClient> CreateClient(const std::string& device_id,
   return CreateClientInternal(device.Get());
 }
 
-ComPtr<IAudioClient2> CreateClient2(const std::string& device_id,
+ComPtr<IAudioClient2> CreateClient2(absl::string_view device_id,
                                     EDataFlow data_flow,
                                     ERole role) {
   RTC_DLOG(LS_INFO) << "CreateClient2";
@@ -887,7 +888,7 @@ ComPtr<IAudioClient2> CreateClient2(const std::string& device_id,
   return CreateClient2Internal(device.Get());
 }
 
-ComPtr<IAudioClient3> CreateClient3(const std::string& device_id,
+ComPtr<IAudioClient3> CreateClient3(absl::string_view device_id,
                                     EDataFlow data_flow,
                                     ERole role) {
   RTC_DLOG(LS_INFO) << "CreateClient3";

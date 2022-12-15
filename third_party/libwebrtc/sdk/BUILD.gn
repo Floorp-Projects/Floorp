@@ -6,7 +6,7 @@
 # in the file PATENTS.  All contributing project authors may
 # be found in the AUTHORS file in the root of the source tree.
 
-#import("//third_party/libaom/options.gni")
+import("//third_party/libaom/options.gni")
 import("../webrtc.gni")
 if (is_ios) {
   import("//build/config/ios/ios_sdk.gni")

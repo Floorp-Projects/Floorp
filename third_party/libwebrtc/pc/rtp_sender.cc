@@ -467,14 +467,13 @@ AudioRtpSender::AudioRtpSender(rtc::Thread* worker_thread,
                                SetStreamsObserver* set_streams_observer)
     : RtpSenderBase(worker_thread, id, set_streams_observer),
       legacy_stats_(legacy_stats),
-      dtmf_sender_proxy_(DtmfSenderProxy::Create(
-          rtc::Thread::Current(),
-          DtmfSender::Create(rtc::Thread::Current(), this))),
+      dtmf_sender_(DtmfSender::Create(rtc::Thread::Current(), this)),
+      dtmf_sender_proxy_(
+          DtmfSenderProxy::Create(rtc::Thread::Current(), dtmf_sender_)),
       sink_adapter_(new LocalAudioSinkAdapter()) {}
 
 AudioRtpSender::~AudioRtpSender() {
-  // For DtmfSender.
-  SignalDestroyed();
+  dtmf_sender_->OnDtmfProviderDestroyed();
   Stop();
 }
 
@@ -509,10 +508,6 @@ bool AudioRtpSender::InsertDtmf(int code, int duration) {
     RTC_LOG(LS_ERROR) << "Failed to insert DTMF to channel.";
   }
   return success;
-}
-
-sigslot::signal0<>* AudioRtpSender::GetOnDestroyedSignal() {
-  return &SignalDestroyed;
 }
 
 void AudioRtpSender::OnChanged() {

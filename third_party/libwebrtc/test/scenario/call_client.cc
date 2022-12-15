@@ -334,7 +334,7 @@ uint32_t CallClient::GetNextRtxSsrc() {
 }
 
 void CallClient::SendTask(std::function<void()> task) {
-  task_queue_.SendTask(std::move(task), RTC_FROM_HERE);
+  task_queue_.SendTask(std::move(task));
 }
 
 int16_t CallClient::Bind(EmulatedEndpoint* endpoint) {
