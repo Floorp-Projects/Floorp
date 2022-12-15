@@ -8,15 +8,13 @@ import signal
 import subprocess
 import sys
 import time
+from itertools import chain
 
 import mozunit
 import pytest
-
 from mozlint.errors import LintersNotConfigured, NoValidLinter
 from mozlint.result import Issue, ResultSummary
 from mozlint.roller import LintRoller
-from itertools import chain
-
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -319,7 +317,9 @@ def test_support_files(lint, linters, filedir, monkeypatch, files):
     # Modified support files only lint entire root if --outgoing or --workdir
     # are used.
     path = os.path.join(filedir, "foobar.js")
-    lint.mock_vcs([os.path.join(filedir, "foobar.py")])
+    vcs_path = os.path.join(filedir, "foobar.py")
+
+    lint.mock_vcs([vcs_path])
     lint.roll(path)
     actual_files = sorted(chain(*jobs))
     assert actual_files == [path]
@@ -347,6 +347,34 @@ def test_support_files(lint, linters, filedir, monkeypatch, files):
     lint.roll(path, outgoing=True, workdir=True)
     actual_files = sorted(chain(*jobs))
     assert actual_files == expected_files
+
+    # Avoid linting the entire root when `--fix` is passed.
+    lint.mock_vcs([vcs_path])
+    lint.lintargs["fix"] = True
+
+    jobs = []
+    lint.roll(path, outgoing=True)
+    actual_files = sorted(chain(*jobs))
+    assert actual_files == sorted([path, vcs_path]), (
+        "`--fix` with `--outgoing` on a `support-files` change should "
+        "avoid linting the entire root."
+    )
+
+    jobs = []
+    lint.roll(path, workdir=True)
+    actual_files = sorted(chain(*jobs))
+    assert actual_files == sorted([path, vcs_path]), (
+        "`--fix` with `--workdir` on a `support-files` change should "
+        "avoid linting the entire root."
+    )
+
+    jobs = []
+    lint.roll(path, rev='draft() and keyword("dummy revset expression")')
+    actual_files = sorted(chain(*jobs))
+    assert actual_files == sorted([path, vcs_path]), (
+        "`--fix` with `--rev` on a `support-files` change should "
+        "avoid linting the entire root."
+    )
 
 
 def test_setup(lint, linters, filedir, capfd):
