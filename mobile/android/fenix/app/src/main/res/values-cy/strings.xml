@@ -66,10 +66,14 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">Ychwanegu llwybr byr i agor tabiau preifat o’ch sgrin Cartref.</string>
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Ychwanegu llwybr byr i agor tabiau preifat o’ch sgrin Cartref.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message">Agor y tab preifat nesaf gydag un tap.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Ychwanegu llwybr byr</string>
-    <!-- Text for the negative button -->
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Ychwanegu llwybr byr</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">Ychwanegu i’r sgrin Cartref</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Dim diolch</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -340,6 +344,20 @@
     <string name="reduce_cookie_banner_option">Lleihau baneri cwcis</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
     <string name="reduce_cookie_banner_summary">Mae Firefox yn ceisio gwrthod ceisiadau cwcis ar faneri cwcisyn awtomatig. Os nad oes dewis gwrthod ar gael, gall Firefox dderbyn pob cwci er mwyn cau’r faner.</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">Diffodd ar gyfer y wefan hon</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">Ymlaen ar gyfer y wefan hon</string>
+
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site">Troi Llai o Faneri Cwcis ymlaen ar %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site">Diffodd Llai o Faneri Cwcis ar %1$s?</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site">Bydd %1$s yn clirio cwcis y wefan hon ac yn adnewyddu’r dudalen. Gall clirio pob cwci eich allgofnodi neu wagio eich certiau siopa.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site">Gall %1$s geisio gwrthod ceisiadau cwcis yn awtomatig. Os nad oes dewis gwrthod ar gael, gall %2$s dderbyn pob cwci er mwyn cau’r faner.</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Yn ceisio cysylltu’n awtomatig â gwefannau gan ddefnyddio’r protocol amgryptio HTTPS am fwy o ddiogelwch.</string>
@@ -1068,8 +1086,6 @@
     <string name="share_copy_link_to_clipboard">Copïo i’r clipfwrdd</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Copïwyd i’r clipfwrdd</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">Mewngofnodi i gydweddu</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Mewngofnodi i Sync</string>
      <!-- An option from the three dot menu to sync and save data -->

@@ -66,10 +66,14 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">Aggiungi una scorciatoia per aprire schede anonime dalla schermata principale.</string>
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Aggiungi una scorciatoia per aprire schede anonime dalla schermata principale.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message">Apri la prossima scheda anonima con un solo tocco.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Agg. scorciatoia</string>
-    <!-- Text for the negative button -->
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Agg. scorciatoia</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">Agg. a schermata principale</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">No grazie</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -346,6 +350,19 @@
     <string name="reduce_cookie_banner_option">Riduci i banner per i cookie</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
     <string name="reduce_cookie_banner_summary">Firefox cerca automaticamente di rifiutare le richieste di cookie quando viene visualizzato un banner per i cookie. Se l’opzione per rifiutarli non è disponibile, Firefox potrebbe accettare tutti i cookie per chiudere il banner.</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">Disattivata per questo sito</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">Attiva per questo sito</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site">Attivare la riduzione banner per i cookie su %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site">Disattivare la riduzione banner per i cookie su %1$s?</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s eliminerà i cookie per questo sito e aggiornerà la pagina. L’eliminazione dei cookie potrebbe disconnetterti dal sito o svuotare eventuali carrelli in sospeso.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s può cercare di rifiutare automaticamente le richieste di cookie. Se l’opzione per rifiutarli non è disponibile, %2$s potrebbe accettare tutti i cookie per chiudere il banner.</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Tenta automaticamente la connessione ai siti utilizzando il protocollo di crittografia HTTPS per una maggiore sicurezza.</string>
@@ -1098,8 +1115,6 @@
     <string name="share_copy_link_to_clipboard">Copia negli appunti</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Copiato negli appunti</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">Accedi per sincronizzare</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Accedi per sincronizzare</string>
      <!-- An option from the three dot menu to sync and save data -->

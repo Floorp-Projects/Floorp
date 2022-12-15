@@ -63,10 +63,14 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">დაამატეთ მალსახმობი, პირადი ჩანართების მთავარი ეკრანიდან გახსნისთვის.</string>
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">დაამატეთ მალსახმობი, პირადი ჩანართების მთავარი ეკრანიდან გახსნისთვის.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message">გახსენით მომდევნო პირადი ჩანართი ერთი შეხებით.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">მალსახმობის დამატება</string>
-    <!-- Text for the negative button -->
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">მალსახმობის დამატება</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">მთავარ ეკრანზე დამატება</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">არა, გმადლობთ</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -98,7 +102,7 @@
     <!-- Text for the positive action button to go to Settings for auto close tabs. -->
     <string name="tab_tray_close_tabs_banner_positive_button_text">პარამეტრების გახსნა</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_close_tabs_banner_negative_button_text">გამოტოვება</string>
+    <string name="tab_tray_close_tabs_banner_negative_button_text">აცილება</string>
 
     <!-- Text for the banner message to tell users about our inactive tabs feature. -->
     <string name="tab_tray_inactive_onboarding_message">ორი კვირის მოუნახულებელი ჩანართები აქ გადმოვა.</string>
@@ -336,7 +340,20 @@
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">შეამცირეთ ფუნთუშის მოთხოვნები</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary">Firefox თავადვე შეეცდება უარყოს ფუნთუშის მოთხოვნები საიტზე ამომხტარ აბრებზე. თუ უარყოფა ვერ მოხერხდება, Firefox შეიძლება ყველა ფუნთუშის მიღებას დათანხმდეს ამომხტომი აბრის მოსაცილებლად.</string>
+    <string name="reduce_cookie_banner_summary">Firefox თავადვე შეეცდება უარყოს ფუნთუშის მოთხოვნები საიტზე ამომხტარ აბრებზე. თუ უარყოფა ვერ ხერხდება, Firefox ყველა ფუნთუშაზე თანხმობით მოიცილებს ამომხტომ აბრას.</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">გამორთ. ამ საიტზე</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">ჩართ. ამ საიტზე</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site">ჩაირთოს ფუნთუშის მოთხოვნების შემცირება საიტზე %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site">გამოირთოს ფუნთუშის მოთხოვნების შემცირება საიტზე %1$s?</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s გაასუფთავებს ამ საიტის ფუნთუშებს და განაახლებს გვერდს. ყველა ფუნთუშის წაშლით შეიძლება გამოხვიდეთ ანგარიშებიდან და დაცარიელდეს საყიდლების კალათა.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s თავადვე შეეცდება უარყოს ფუნთუშის მოთხოვნები. თუ უარყოფა ვერ ხერხდება, %2$s ყველა ფუნთუშაზე თანხმობით მოიცილებს ამომხტომ აბრას.</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">თავადვე შეეცდება დაუკავშირდეს საიტებს დაშიფრული HTTPS-ოქმით, მეტი უსაფრთხოებისთვის.</string>
@@ -1065,8 +1082,6 @@
     <string name="share_copy_link_to_clipboard">ასლის აღება</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">ასლი აღებულია</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">სინქრონიზაციაში შესვლა</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">დასინქრონებაში შესვლა</string>
      <!-- An option from the three dot menu to sync and save data -->

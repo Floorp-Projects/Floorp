@@ -70,10 +70,12 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">ਤੁਹਾਡੀ ਮੁੱਖ ਸਕਰੀਨ ਤੋਂ ਨਿੱਜੀ ਟੈਬਾਂ ਖੋਲ੍ਹਣ ਲਈ ਸ਼ਾਰਟਕੱਟ ਜੋੜੋ।</string>
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">ਤੁਹਾਡੀ ਮੁੱਖ ਸਕਰੀਨ ਤੋਂ ਨਿੱਜੀ ਟੈਬਾਂ ਖੋਲ੍ਹਣ ਲਈ ਸ਼ਾਰਟਕੱਟ ਜੋੜੋ।</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">ਸ਼ਾਰਟਕੱਟ ਜੋੜੋ</string>
-    <!-- Text for the negative button -->
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">ਸ਼ਾਰਟਕੱਟ ਜੋੜੋ</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">ਮੁੱਖ ਸਕਰੀਨ ‘ਤੇ ਜੋੜੋ</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">ਨਹੀਂ, ਧੰਨਵਾਦ</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -349,6 +351,11 @@
 
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
     <string name="reduce_cookie_banner_summary">Firefox ਆਪਣੇ-ਆਪ ਕੂਕੀਜ਼ ਬੈਨਰ ਲਈ ਕੂਕੀਜ਼ ਬੇਨਤੀਆਂ ਨੂੰ ਇਨਕਾਰ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ ਕਰਦਾ ਹੈ। ਜੇ ਇਨਕਾਰ ਕਰਨ ਦੀ ਚੋਣ ਨਹੀਂ ਮੌਜੂਦ ਹੁੰਦੀ ਤਾਂ Firefox ਬੈਨਰ ਨੂੰ ਖਾਰਜ ਕਰਨ ਵਾਸਤੇ ਸਾਰੇ ਕੂਕੀਜ਼ ਨੂੰ ਮਨਜ਼ੂਰ ਵੀ ਕਰ ਸਕਦਾ ਹੈ।</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">ਇਸ ਸਾਈਟ ਲਈ ਬੰਦ</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">ਇਸ ਸਾਈਟ ਲਈ ਚਾਲੂ</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">ਵਾਧਾ ਕੀਤੀ ਸੁਰੱਖਿਆ ਲਈ HTTPS ਇੰਕ੍ਰਿਪਸ਼ਨ ਪਰੋਟੋਕਾਲ ਵਰਤ ਕੇ ਸਾਈਟਾਂ ਨਾਲ ਕਨੈਕਟ ਕਰਨ ਦੀ ਆਪਣੇ-ਆਪ ਕੋਸ਼ਿਸ਼ ਕਰੋ।</string>
@@ -1086,8 +1093,6 @@
     <string name="share_copy_link_to_clipboard">ਕਲਿੱਪਬੋਰਡ \'ਚ ਕਾਪੀ ਕਰੋ</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">ਕਲਿੱਪਬੋਰਡ ਵਿੱਚ ਕਾਪੀ ਕੀਤਾ</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">ਸਿੰਕ ਕਰਨ ਲਈ ਸਾਈਨ ਇਨ ਕਰੋ</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">ਸਿੰਕ ਕਰਨ ਲਈ ਸਾਈਨ ਇਨ ਕਰੋ</string>
      <!-- An option from the three dot menu to sync and save data -->

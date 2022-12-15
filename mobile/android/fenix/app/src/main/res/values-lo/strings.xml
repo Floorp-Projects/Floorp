@@ -63,10 +63,14 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">ເພີ່ມທາງລັດເພື່ອເປີດແຖບສ່ວນຕົວຈາກໜ້າຈໍຫລັກຂອງທ່ານ.</string>
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">ເພີ່ມທາງລັດເພື່ອເປີດແຖບສ່ວນຕົວຈາກໜ້າຈໍຫລັກຂອງທ່ານ.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message">ເປີດໃຊ້ແຖບສ່ວນຕົວຕໍ່ໄປໃນແທັບດຽວ.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">ເພີ່ມທາງລັດ</string>
-    <!-- Text for the negative button -->
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">ເພີ່ມທາງລັດ</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">ເພີ່ມເຂົ້າໄປຫນ້າຈໍຫລັກ</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">ບໍ່, ຂອບໃຈ</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -339,6 +343,19 @@
     <string name="reduce_cookie_banner_option">ຫຼຸດປ້າຍໂຄສະນາຄຸກກີ</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
     <string name="reduce_cookie_banner_summary">Firefox ພະຍາຍາມປະຕິເສດການຮ້ອງຂໍຄຸກກີໃນປ້າຍໂຄສະນາຄຸກກີອັດຕະໂນມັດ. ຖ້າທາງເລືອກການປະຕິເສດບໍ່ສາມາດໃຊ້ໄດ້, Firefox ອາດຈະຍອມຮັບ cookies ທັງຫມົດເພື່ອປິດປ້າຍໂຄສະນາ.</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">ປິດສໍາລັບເວັບໄຊທ໌ນີ້</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">ເປິດສຳລັບເວັບໄຊນີ້</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site">ເປີດໃຊ້ການຫຼຸດປ້າຍໂຄສະນາຄຸກກີສຳລັບ %1$s ບໍ?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site">ປິດການຫຼຸດປ້າຍໂຄສະນາຄຸກກີສຳລັບ %1$s ບໍ?</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s ຈະລຶບລ້າງຄຸກກີ້ຂອງເວັບໄຊນີ້ ແລະໂຫຼດໜ້ານີ້ຄືນໃໝ່. ການລຶບລ້າງຄຸກກີ້ທັງໝົດອາດເຮັດໃຫ້ເຈົ້າອອກຈາກລະບົບ ຫຼືກະຕ່າຊື້ເຄື່ອງຫວ່າງເປົ່າ.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s ສາມາດພະຍາຍາມປະຕິເສດການຮ້ອງຂໍຄຸກກີໂດຍອັດຕະໂນມັດ. ຖ້າຕົວເລືອກການປະຕິເສດບໍ່ສາມາດໃຊ້ໄດ້, %2$s ອາດຈະຍອມຮັບ cookies ທັງໝົດເພື່ອປິດປ້າຍໂຄສະນາ.</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">ພະຍາຍາມເຊື່ອມຕໍ່ຫາເວັບໄຊໂດຍອັດຕະໂນມັດໂດຍໃຊ້ໂປຣໂຕຄໍການເຂົ້າລະຫັດ HTTPS ເພື່ອຄວາມປອດໄພທີ່ເພີ່ມຂຶ້ນ.</string>
@@ -1080,8 +1097,6 @@
     <string name="share_copy_link_to_clipboard">ສຳເນົາໃສ່ຄລິບບອດ</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">ສຳເນົາໃສ່ຄລິບບອດແລ້ວ</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">ເຂົ້າສູ່ລະບົບເພື່ອ Sync</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">ລົງຊື່ເຂົ້າໃຊ້ເພື່ອ Sync</string>
      <!-- An option from the three dot menu to sync and save data -->
