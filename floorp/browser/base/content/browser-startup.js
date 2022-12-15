@@ -89,7 +89,7 @@ userChrome.css は、ツールバーなどのブラウザーを制御する場�
 @charset "UTF-8";
 
 `);
-  
+  CustomizableUI.addWidgetToArea("undo-closed-tab", CustomizableUI.AREA_NAVBAR, -1);
   window.setTimeout(() => {
     Services.prefs.setStringPref("browser.contentblocking.category", "strict")
   }, 5000);
