@@ -211,11 +211,11 @@ class ProvidersManager {
    *   a UrlbarController instance
    */
   async startQuery(queryContext, controller = null) {
-    lazy.logger.info(`Query start ${queryContext.searchString}`);
+    lazy.logger.info(`Query start "${queryContext.searchString}"`);
 
     // Define the muxer to use.
     let muxerName = queryContext.muxer || DEFAULT_MUXER;
-    lazy.logger.info(`Using muxer ${muxerName}`);
+    lazy.logger.debug(`Using muxer ${muxerName}`);
     let muxer = this.muxers.get(muxerName);
     if (!muxer) {
       throw new Error(`Muxer with name ${muxerName} not found`);
@@ -450,7 +450,9 @@ class Query {
 
     // Start querying active providers.
     let startQuery = async provider => {
-      provider.logger.info(`Starting query for "${this.context.searchString}"`);
+      provider.logger.debug(
+        `Starting query for "${this.context.searchString}"`
+      );
       let addedResult = false;
       await provider.tryMethod("startQuery", this.context, (...args) => {
         addedResult = true;
@@ -485,7 +487,11 @@ class Query {
       );
     }
 
-    lazy.logger.info(`Queried ${queryPromises.length} providers`);
+    lazy.logger.info(
+      `Queried ${queryPromises.length} providers: ${activeProviders.map(
+        p => p.name
+      )}`
+    );
     await Promise.all(queryPromises);
 
     // All the providers are done returning results, so we can stop chunking.
@@ -512,7 +518,7 @@ class Query {
     this.canceled = true;
     this.context.deferUserSelectionProviders.clear();
     for (let provider of this.providers) {
-      provider.logger.info(
+      provider.logger.debug(
         `Canceling query for "${this.context.searchString}"`
       );
       // Mark the instance as no more valid, see start() for details.
