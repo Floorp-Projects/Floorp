@@ -17,8 +17,8 @@ mozilla::ipc::IPCResult WebGLParent::RecvInitialize(
     const webgl::InitContextDesc& desc, webgl::InitContextResult* const out) {
   mHost = HostWebGLContext::Create({nullptr, this}, desc, out);
 
-  if (!mHost && !out->error.size()) {
-    return IPC_FAIL(this, "Abnormally failed to create HostWebGLContext.");
+  if (!mHost) {
+    MOZ_ASSERT(!out->error.empty());
   }
 
   return IPC_OK();
@@ -111,26 +111,32 @@ IPCResult WebGLParent::GetFrontBufferSnapshot(
     return IPC_FAIL(aProtocol, "HostWebGLContext is not initialized.");
   }
 
-  const auto maybeSize = mHost->FrontBufferSnapshotInto({});
-  if (maybeSize) {
-    const auto& surfSize = *maybeSize;
-    const auto byteSize = 4 * surfSize.x * surfSize.y;
+  const bool ok = [&]() {
+    const auto maybeSize = mHost->FrontBufferSnapshotInto({});
+    if (maybeSize) {
+      const auto& surfSize = *maybeSize;
+      const auto byteSize = 4 * surfSize.x * surfSize.y;
 
-    auto shmem = webgl::RaiiShmem::Alloc(aProtocol, byteSize);
-    if (!shmem) {
-      NS_WARNING("Failed to alloc shmem for RecvGetFrontBufferSnapshot.");
-      return IPC_FAIL(aProtocol, "Failed to allocate shmem for result");
-    }
-    const auto range = shmem.ByteRange();
-    *ret = {surfSize, Some(shmem.Extract())};
+      auto shmem = webgl::RaiiShmem::Alloc(aProtocol, byteSize);
+      if (!shmem) {
+        NS_WARNING("Failed to alloc shmem for RecvGetFrontBufferSnapshot.");
+        return false;
+      }
+      const auto range = shmem.ByteRange();
+      *ret = {surfSize, Some(shmem.Extract())};
 
-    if (!mHost->FrontBufferSnapshotInto(Some(range))) {
-      gfxCriticalNote << "WebGLParent::RecvGetFrontBufferSnapshot: "
-                         "FrontBufferSnapshotInto(some) failed after "
-                         "FrontBufferSnapshotInto(none)";
-      // Zero means failure, as we still need to send any shmem we alloc.
-      ret->surfSize = {0, 0};
+      if (!mHost->FrontBufferSnapshotInto(Some(range))) {
+        gfxCriticalNote << "WebGLParent::RecvGetFrontBufferSnapshot: "
+                           "FrontBufferSnapshotInto(some) failed after "
+                           "FrontBufferSnapshotInto(none)";
+        return false;
+      }
     }
+    return true;
+  }();
+  if (!ok) {
+    // Zero means failure, as we still need to send any shmem we alloc.
+    ret->surfSize = {0, 0};
   }
   return IPC_OK();
 }
@@ -148,7 +154,7 @@ IPCResult WebGLParent::RecvGetBufferSubData(const GLenum target,
   auto shmem = webgl::RaiiShmem::Alloc(this, allocSize);
   if (!shmem) {
     NS_WARNING("Failed to alloc shmem for RecvGetBufferSubData.");
-    return IPC_FAIL(this, "Failed to allocate shmem for result");
+    return IPC_OK();
   }
 
   const auto shmemRange = shmem.ByteRange();
@@ -185,7 +191,7 @@ IPCResult WebGLParent::RecvReadPixels(const webgl::ReadPixelsDesc& desc,
   auto shmem = webgl::RaiiShmem::Alloc(this, allocSize);
   if (!shmem) {
     NS_WARNING("Failed to alloc shmem for RecvReadPixels.");
-    return IPC_FAIL(this, "Failed to allocate shmem for result");
+    return IPC_OK();
   }
 
   const auto range = shmem.ByteRange();
