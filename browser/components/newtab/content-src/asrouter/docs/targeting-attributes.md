@@ -30,6 +30,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [totalBookmarksCount](#totalbookmarkscount)
 * [usesFirefoxSync](#usesfirefoxsync)
 * [isFxAEnabled](#isFxAEnabled)
+* [isFxASignedIn](#isFxASignedIn)
 * [xpinstallEnabled](#xpinstallEnabled)
 * [hasPinnedTabs](#haspinnedtabs)
 * [hasAccessedFxAPanel](#hasaccessedfxapanel)
@@ -474,6 +475,16 @@ Does the user have Firefox sync enabled? The service could potentially be turned
 
 ```ts
 declare const isFxAEnabled: boolean;
+```
+
+### `isFxASignedIn`
+
+Is the user signed in to a Firefox Account?
+
+#### Definition
+
+```ts
+declare const isFxASignedIn: Promise<boolean>
 ```
 
 ### `xpinstallEnabled`

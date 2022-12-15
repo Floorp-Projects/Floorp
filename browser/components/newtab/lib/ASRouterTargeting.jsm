@@ -450,6 +450,20 @@ const TargetingGetters = {
   get isFxAEnabled() {
     return lazy.isFxAEnabled;
   },
+  get isFxASignedIn() {
+    return new Promise(resolve => {
+      if (!lazy.isFxAEnabled) {
+        resolve(false);
+      }
+      if (Services.prefs.getStringPref(FXA_USERNAME_PREF, "")) {
+        resolve(true);
+      }
+      lazy.fxAccounts
+        .getSignedInUser()
+        .then(data => resolve(!!data))
+        .catch(e => resolve(false));
+    });
+  },
   get sync() {
     return {
       desktopDevices: lazy.clientsDevicesDesktop,
