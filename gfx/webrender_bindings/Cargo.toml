@@ -15,7 +15,7 @@ gleam = "0.13.1"
 log = "0.4"
 nsstring = { path = "../../xpcom/rust/nsstring" }
 bincode = "1.0"
-uuid = { version = "1.0", features = ["v4"] }
+uuid = { version = "0.8", features = ["v4"] }
 fxhash = "0.2.1"
 thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
 swgl = { path = "../wr/swgl" }

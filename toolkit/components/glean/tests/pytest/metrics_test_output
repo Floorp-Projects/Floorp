@@ -58,7 +58,7 @@ pub mod test {
             lifetime: Lifetime::Application,
             disabled: false,
             ..Default::default()
-        }, Some(vec![::std::borrow::Cow::from("one_label"), ::std::borrow::Cow::from("two_labels")]))
+        }, Some(vec!["one_label".into(), "two_labels".into()]))
     });
 
     #[allow(non_upper_case_globals)]
@@ -106,7 +106,7 @@ pub mod test {
             lifetime: Lifetime::Application,
             disabled: false,
             ..Default::default()
-        }, Some(vec![::std::borrow::Cow::from("one_label"), ::std::borrow::Cow::from("two_labels")]))
+        }, Some(vec!["one_label".into(), "two_labels".into()]))
     });
 
     #[allow(non_upper_case_globals)]
@@ -154,7 +154,7 @@ pub mod test {
             lifetime: Lifetime::Application,
             disabled: false,
             ..Default::default()
-        }, Some(vec![::std::borrow::Cow::from("one_label"), ::std::borrow::Cow::from("two_labels")]))
+        }, Some(vec!["one_label".into(), "two_labels".into()]))
     });
 
     #[allow(non_upper_case_globals)]

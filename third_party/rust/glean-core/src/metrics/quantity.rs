@@ -2,7 +2,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::common_metric_data::CommonMetricDataInternal;
 use crate::error_recording::{record_error, test_get_num_recorded_errors, ErrorType};
 use crate::metrics::Metric;
 use crate::metrics::MetricType;
@@ -15,11 +14,11 @@ use crate::Glean;
 /// Used to store explicit non-negative integers.
 #[derive(Clone, Debug)]
 pub struct QuantityMetric {
-    meta: CommonMetricDataInternal,
+    meta: CommonMetricData,
 }
 
 impl MetricType for QuantityMetric {
-    fn meta(&self) -> &CommonMetricDataInternal {
+    fn meta(&self) -> &CommonMetricData {
         &self.meta
     }
 }
@@ -31,7 +30,7 @@ impl MetricType for QuantityMetric {
 impl QuantityMetric {
     /// Creates a new quantity metric.
     pub fn new(meta: CommonMetricData) -> Self {
-        Self { meta: meta.into() }
+        Self { meta }
     }
 
     /// Sets the value. Must be non-negative.
@@ -80,13 +79,13 @@ impl QuantityMetric {
     ) -> Option<i64> {
         let queried_ping_name = ping_name
             .into()
-            .unwrap_or_else(|| &self.meta().inner.send_in_pings[0]);
+            .unwrap_or_else(|| &self.meta().send_in_pings[0]);
 
         match StorageManager.snapshot_metric_for_test(
             glean.storage(),
             queried_ping_name,
             &self.meta.identifier(glean),
-            self.meta.inner.lifetime,
+            self.meta.lifetime,
         ) {
             Some(Metric::Quantity(i)) => Some(i),
             _ => None,

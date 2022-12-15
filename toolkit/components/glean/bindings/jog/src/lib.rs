@@ -8,7 +8,6 @@ use fog::private::{CommonMetricData, Lifetime, MemoryUnit, TimeUnit};
 #[cfg(feature = "with_gecko")]
 use nsstring::{nsACString, nsAString, nsCString};
 use serde::Deserialize;
-use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
@@ -24,7 +23,7 @@ struct ExtraMetricArgs {
     bucket_count: Option<u64>,
     histogram_type: Option<HistogramType>,
     numerators: Option<Vec<CommonMetricData>>,
-    labels: Option<Vec<Cow<'static, str>>>,
+    labels: Option<Vec<String>>,
 }
 
 /// Test-only method.

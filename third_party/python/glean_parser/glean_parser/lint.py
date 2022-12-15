@@ -488,7 +488,7 @@ def lint_metrics(
 def lint_yaml_files(
     input_filepaths: Iterable[Path],
     file=sys.stderr,
-    parser_config: Optional[Dict[str, Any]] = None,
+    parser_config: Dict[str, Any] = None,
 ) -> List:
     """
     Performs glinter YAML lint on a set of files.

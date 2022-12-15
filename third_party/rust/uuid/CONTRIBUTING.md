@@ -12,7 +12,8 @@ Thank you for your interest in contributing to the Uuid Project!
 * [Out-of-tree Contributions](#out-of-tree-contributions)
 * [Helpful Links](#helpful-links)
 
-For any questions, please make a post on [Discussions] or [users.rust-lang.org][u-r-l-o].
+For any questions, please make a post on [users.rust-lang.org][u-r-l-o], post
+on [uuid-rs mailing list] or join our [gitter] channel.
 
 > All contributors need to follow our [Code of Conduct].
 
@@ -21,9 +22,10 @@ For any questions, please make a post on [Discussions] or [users.rust-lang.org][
 # Feature Requests
 [Feature Requests]: #feature-requests
 
-The `uuid` crate is stable so features that require breaking changes can't be
-accepted. There are bound to be usability gaps that can be filled with non-breaking
-features though!
+The `uuid` crate is still in flux. All features desired may not be present. As
+such you are welcome to request for new features. Keep in mind that `uuid` is
+a general purpose library. We want to provide features that most users would
+find useful. As such not every feature may be accepted.
 
 If you have the chance, please [search existing issues], as there is a chance
 that someone has already requested your feature.
@@ -34,17 +36,8 @@ your request.
 You can request your feature by following [this link][Feature Request Link] and
 filling it in. 
 
-> We welcome pull requests for your own feature requests. Discussion should stay
-on the relevant issue to make it easier to find.
-
-## Adding new unstable dependencies
-
-If a feature introduces a new unstable dependency then it needs to be private.
-That means traits and types from the unstable library can't be visible in `uuid`'s
-own public API.
-
-To implement unstable traits, see the precedent set by the `zerocopy-unstable` feature.
-It implements a public unstable trait on `Uuid`, but uses the `uuid_unstable` cfg flag.
+> We welcome pull requests for your own feature requests, provided they have
+been discussed.
 
 [Feature Request Link]: https://github.com/uuid-rs/uuid/issues/new?template=Feature_request.md
 
@@ -87,7 +80,15 @@ source repository.
 Unless the changes are fairly minor (like documentation changes or tiny
 patches), we require PRs to relevant issues.
 
-Please open PRs against the `main` branch.
+Please open PRs against branch:
+* `master` when making non-breaking changes 
+* `breaking` when your changes alter the public API in a breaking manner
+
+If the pull request is still a work in progress, prepend`[WIP] ` in your 
+title. `WIP bot` will make sure that the PR doesn't accidentally get merged.
+
+> Uuid Project has a minimum rust version policy. Currently `uuid` should 
+compile with atleast `1.22.0`, and is enforced on our CI builds.
 
 When you feel that the PR is ready, please ping one of the maintainers so
 they can review your changes.
@@ -104,7 +105,7 @@ improvements to documentation are always welcome.
 
 We follow the documentation style guidelines as given by [RFC 1574].
 
-[RFC 1574]: https://github.com/rust-lang/rfcs/blob/main/text/1574-more-api-documentation-conventions.md#appendix-a-full-conventions-text
+[RFC 1574]: https://github.com/rust-lang/rfcs/blob/master/text/1574-more-api-documentation-conventions.md#appendix-a-full-conventions-text
 
 # Issue Triage
 [Issue Triage]: #issue-triage
@@ -118,9 +119,17 @@ You can follow [this link][lrus] to look for issues like this.
 
 [lrus]: https://github.com/uuid-rs/uuid/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-asc
 
-# Fuzzing
-We use [`cargo fuzz`] to fuzz test various parts of `uuid`. See their guide
-for more details on what fuzzing is and how to run the tests yourself.
+# Out-of-tree Contributions
+[Out-of-tree Contributions]: #out-of-tree-contributions
+
+You can contribute to Uuid in other ways:
+
+* Answer questions on [users.rust-lang.org][u-r-l-o], [uuid-rs mailing list] and/or
+[gitter] channel.
+* Find the [crates depending on `uuid`][dependent] and sending PRs to them,
+helping them keep their version of `uuid` up-to-date.
+
+[dependent]: https://crates.io/crates/uuid/reverse_dependencies
 
 # Helpful Links
 [Helpful Links]: #helpful-links
@@ -135,6 +144,6 @@ seasoned developers, some useful places to look for information are:
 [RFC 4122]: https://www.ietf.org/rfc/rfc4122.txt
 
 [u-r-l-o]: https://users.rust-lang.org
-[Discussions]: https://github.com/uuid-rs/uuid/discussions
+[uuid-rs mailing list]: https://uuid-rs.groups.io
+[gitter]: https://gitter.im/uuid-rs/Lobby
 [search existing issues]: https://github.com/uuid-rs/uuid/search?q=&type=Issues&utf8=%E2%9C%93
-[`cargo fuzz`]: https://rust-fuzz.github.io/book/cargo-fuzz.html

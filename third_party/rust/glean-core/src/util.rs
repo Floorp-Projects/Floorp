@@ -4,9 +4,9 @@
 
 use chrono::{DateTime, FixedOffset, Local};
 
-use crate::common_metric_data::CommonMetricDataInternal;
 use crate::error_recording::{record_error, ErrorType};
 use crate::metrics::TimeUnit;
+use crate::CommonMetricData;
 use crate::Glean;
 
 /// Generates a pipeline-friendly string
@@ -136,7 +136,7 @@ pub(crate) fn truncate_string_at_boundary<S: Into<String>>(value: S, length: usi
 /// A string, with at most `length` bytes.
 pub(crate) fn truncate_string_at_boundary_with_error<S: Into<String>>(
     glean: &Glean,
-    meta: &CommonMetricDataInternal,
+    meta: &CommonMetricData,
     value: S,
     length: usize,
 ) -> String {

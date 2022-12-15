@@ -4,7 +4,6 @@
 
 use std::sync::Arc;
 
-use crate::common_metric_data::CommonMetricDataInternal;
 use crate::error_recording::{test_get_num_recorded_errors, ErrorType};
 use crate::metrics::Metric;
 use crate::metrics::MetricType;
@@ -23,17 +22,17 @@ const MAX_LENGTH_VALUE: usize = 200 * 1024;
 /// Text is length-limited to `MAX_LENGTH_VALUE` bytes.
 #[derive(Clone, Debug)]
 pub struct TextMetric {
-    meta: Arc<CommonMetricDataInternal>,
+    meta: Arc<CommonMetricData>,
 }
 
 impl MetricType for TextMetric {
-    fn meta(&self) -> &CommonMetricDataInternal {
+    fn meta(&self) -> &CommonMetricData {
         &self.meta
     }
 
     fn with_name(&self, name: String) -> Self {
         let mut meta = (*self.meta).clone();
-        meta.inner.name = name;
+        meta.name = name;
         Self {
             meta: Arc::new(meta),
         }
@@ -41,7 +40,7 @@ impl MetricType for TextMetric {
 
     fn with_dynamic_label(&self, label: String) -> Self {
         let mut meta = (*self.meta).clone();
-        meta.inner.dynamic_label = Some(label);
+        meta.dynamic_label = Some(label);
         Self {
             meta: Arc::new(meta),
         }
@@ -56,7 +55,7 @@ impl TextMetric {
     /// Creates a new text metric.
     pub fn new(meta: CommonMetricData) -> Self {
         Self {
-            meta: Arc::new(meta.into()),
+            meta: Arc::new(meta),
         }
     }
 
@@ -98,13 +97,13 @@ impl TextMetric {
     ) -> Option<String> {
         let queried_ping_name = ping_name
             .into()
-            .unwrap_or_else(|| &self.meta().inner.send_in_pings[0]);
+            .unwrap_or_else(|| &self.meta().send_in_pings[0]);
 
         match StorageManager.snapshot_metric_for_test(
             glean.storage(),
             queried_ping_name,
             &self.meta.identifier(glean),
-            self.meta.inner.lifetime,
+            self.meta.lifetime,
         ) {
             Some(Metric::Text(s)) => Some(s),
             _ => None,

@@ -23,11 +23,7 @@ def test_yamls_sorted():
     to_ignore = ["metrics_yamls", "pings_yamls"]
 
     # Fetch names of all variables defined in the `metrics_index` module.
-    yaml_lists = [
-        item
-        for item in dir(metrics_index)
-        if isinstance(item, list) and not item.startswith("__")
-    ]
+    yaml_lists = [item for item in dir(metrics_index) if not item.startswith("__")]
     for name in yaml_lists:
         if name in to_ignore:
             continue

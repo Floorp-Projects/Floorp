@@ -6,7 +6,6 @@ use std::sync::Arc;
 
 use uuid::Uuid;
 
-use crate::common_metric_data::CommonMetricDataInternal;
 use crate::error_recording::{record_error, test_get_num_recorded_errors, ErrorType};
 use crate::metrics::Metric;
 use crate::metrics::MetricType;
@@ -19,11 +18,11 @@ use crate::Glean;
 /// Stores UUID v4 (randomly generated) values.
 #[derive(Clone, Debug)]
 pub struct UuidMetric {
-    meta: Arc<CommonMetricDataInternal>,
+    meta: Arc<CommonMetricData>,
 }
 
 impl MetricType for UuidMetric {
-    fn meta(&self) -> &CommonMetricDataInternal {
+    fn meta(&self) -> &CommonMetricData {
         &self.meta
     }
 }
@@ -36,7 +35,7 @@ impl UuidMetric {
     /// Creates a new UUID metric
     pub fn new(meta: CommonMetricData) -> Self {
         Self {
-            meta: Arc::new(meta.into()),
+            meta: Arc::new(meta),
         }
     }
 
@@ -60,7 +59,7 @@ impl UuidMetric {
         let value = value.into();
 
         if let Ok(uuid) = uuid::Uuid::parse_str(&value) {
-            let value = Metric::Uuid(uuid.as_hyphenated().to_string());
+            let value = Metric::Uuid(uuid.to_hyphenated().to_string());
             glean.storage().record(glean, &self.meta, &value)
         } else {
             let msg = format!("Unexpected UUID value '{}'", value);
@@ -110,13 +109,13 @@ impl UuidMetric {
     ) -> Option<Uuid> {
         let queried_ping_name = ping_name
             .into()
-            .unwrap_or_else(|| &self.meta().inner.send_in_pings[0]);
+            .unwrap_or_else(|| &self.meta().send_in_pings[0]);
 
         match StorageManager.snapshot_metric_for_test(
             glean.storage(),
             queried_ping_name,
             &self.meta.identifier(glean),
-            self.meta.inner.lifetime,
+            self.meta.lifetime,
         ) {
             Some(Metric::Uuid(uuid)) => Uuid::parse_str(&uuid).ok(),
             _ => None,

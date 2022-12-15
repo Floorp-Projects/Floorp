@@ -13,7 +13,7 @@ import json
 
 import jinja2
 from glean_parser import util
-from glean_parser.metrics import CowString, Rate
+from glean_parser.metrics import Rate
 from util import generate_metric_ids, generate_ping_ids, get_metrics
 
 from js import ID_BITS, ID_SIGNAL_BITS
@@ -85,10 +85,6 @@ def rust_datatypes_filter(value):
                     yield "]"
             elif value is None:
                 yield "None"
-            # CowString is also a 'str' but is a special case.
-            # Ensure its case is handled before str's (below).
-            elif isinstance(value, CowString):
-                yield f'::std::borrow::Cow::from("{value.inner}")'
             elif isinstance(value, str):
                 yield '"' + value + '".into()'
             elif isinstance(value, Rate):
@@ -171,15 +167,13 @@ def extra_keys(allowed_extra_keys):
     return "&[" + ", ".join(map(lambda key: '"' + key + '"', allowed_extra_keys)) + "]"
 
 
-def output_rust(objs, output_fd, ping_names_by_app_id, options={}):
+def output_rust(objs, output_fd, options={}):
     """
     Given a tree of objects, output Rust code to the file-like object `output_fd`.
 
     :param objs: A tree of objects (metrics and pings) as returned from
     `parser.parse_objects`.
     :param output_fd: Writeable file to write the output to.
-    :param ping_names_by_app_id: A map of app_ids to lists of ping names.
-                                 Used to determine which custom pings to register.
     :param options: options dictionary, presently unused.
     """
 
@@ -273,7 +267,6 @@ def output_rust(objs, output_fd, ping_names_by_app_id, options={}):
             extra_args=util.extra_args,
             events_by_id=events_by_id,
             submetric_bit=ID_BITS - ID_SIGNAL_BITS,
-            ping_names_by_app_id=ping_names_by_app_id,
         )
     )
     output_fd.write("\n")

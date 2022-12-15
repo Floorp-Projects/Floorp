@@ -3,7 +3,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use std::convert::TryFrom;
-use std::sync::atomic::{AtomicU8, Ordering};
 
 use crate::error::{Error, ErrorKind};
 use crate::metrics::labeled::validate_dynamic_label;
@@ -79,45 +78,18 @@ pub struct CommonMetricData {
     pub dynamic_label: Option<String>,
 }
 
-#[derive(Default, Debug)]
-pub struct CommonMetricDataInternal {
-    pub inner: CommonMetricData,
-    pub disabled: AtomicU8,
-}
-
-impl Clone for CommonMetricDataInternal {
-    fn clone(&self) -> Self {
-        Self {
-            inner: self.inner.clone(),
-            disabled: AtomicU8::new(self.disabled.load(Ordering::Relaxed)),
-        }
-    }
-}
-
-impl From<CommonMetricData> for CommonMetricDataInternal {
-    fn from(input_data: CommonMetricData) -> Self {
-        Self {
-            inner: input_data.clone(),
-            disabled: AtomicU8::new(u8::from(input_data.disabled)),
-        }
-    }
-}
-
-impl CommonMetricDataInternal {
+impl CommonMetricData {
     /// Creates a new metadata object.
     pub fn new<A: Into<String>, B: Into<String>, C: Into<String>>(
         category: A,
         name: B,
         ping_name: C,
-    ) -> CommonMetricDataInternal {
-        CommonMetricDataInternal {
-            inner: CommonMetricData {
-                name: name.into(),
-                category: category.into(),
-                send_in_pings: vec![ping_name.into()],
-                ..Default::default()
-            },
-            disabled: AtomicU8::new(0),
+    ) -> CommonMetricData {
+        CommonMetricData {
+            name: name.into(),
+            category: category.into(),
+            send_in_pings: vec![ping_name.into()],
+            ..Default::default()
         }
     }
 
@@ -126,10 +98,10 @@ impl CommonMetricDataInternal {
     /// If `category` is empty, it's ommitted.
     /// Otherwise, it's the combination of the metric's `category` and `name`.
     pub(crate) fn base_identifier(&self) -> String {
-        if self.inner.category.is_empty() {
-            self.inner.name.clone()
+        if self.category.is_empty() {
+            self.name.clone()
         } else {
-            format!("{}.{}", self.inner.category, self.inner.name)
+            format!("{}.{}", self.category, self.name)
         }
     }
 
@@ -140,15 +112,20 @@ impl CommonMetricDataInternal {
     pub(crate) fn identifier(&self, glean: &Glean) -> String {
         let base_identifier = self.base_identifier();
 
-        if let Some(label) = &self.inner.dynamic_label {
+        if let Some(label) = &self.dynamic_label {
             validate_dynamic_label(glean, self, &base_identifier, label)
         } else {
             base_identifier
         }
     }
 
+    /// Whether this metric should be recorded.
+    pub fn should_record(&self) -> bool {
+        !self.disabled
+    }
+
     /// The list of storages this metric should be recorded into.
     pub fn storage_names(&self) -> &[String] {
-        &self.inner.send_in_pings
+        &self.send_in_pings
     }
 }

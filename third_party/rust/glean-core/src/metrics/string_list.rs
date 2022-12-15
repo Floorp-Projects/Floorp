@@ -4,7 +4,6 @@
 
 use std::sync::Arc;
 
-use crate::common_metric_data::CommonMetricDataInternal;
 use crate::error_recording::{record_error, test_get_num_recorded_errors, ErrorType};
 use crate::metrics::Metric;
 use crate::metrics::MetricType;
@@ -23,11 +22,11 @@ const MAX_STRING_LENGTH: usize = 50;
 /// This allows appending a string value with arbitrary content to a list.
 #[derive(Clone, Debug)]
 pub struct StringListMetric {
-    meta: Arc<CommonMetricDataInternal>,
+    meta: Arc<CommonMetricData>,
 }
 
 impl MetricType for StringListMetric {
-    fn meta(&self) -> &CommonMetricDataInternal {
+    fn meta(&self) -> &CommonMetricData {
         &self.meta
     }
 }
@@ -40,7 +39,7 @@ impl StringListMetric {
     /// Creates a new string list metric.
     pub fn new(meta: CommonMetricData) -> Self {
         Self {
-            meta: Arc::new(meta.into()),
+            meta: Arc::new(meta),
         }
     }
 
@@ -153,13 +152,13 @@ impl StringListMetric {
     ) -> Option<Vec<String>> {
         let queried_ping_name = ping_name
             .into()
-            .unwrap_or_else(|| &self.meta().inner.send_in_pings[0]);
+            .unwrap_or_else(|| &self.meta().send_in_pings[0]);
 
         match StorageManager.snapshot_metric_for_test(
             glean.storage(),
             queried_ping_name,
             &self.meta.identifier(glean),
-            self.meta.inner.lifetime,
+            self.meta.lifetime,
         ) {
             Some(Metric::StringList(values)) => Some(values),
             _ => None,

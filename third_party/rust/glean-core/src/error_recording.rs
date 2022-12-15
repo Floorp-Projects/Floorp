@@ -15,7 +15,6 @@
 use std::convert::TryFrom;
 use std::fmt::Display;
 
-use crate::common_metric_data::CommonMetricDataInternal;
 use crate::error::{Error, ErrorKind};
 use crate::metrics::labeled::{combine_base_identifier_and_label, strip_label};
 use crate::metrics::CounterMetric;
@@ -28,7 +27,6 @@ use crate::Lifetime;
 /// in the platform-specific code (e.g. `ErrorType.kt`) and with the
 /// metrics in the registry files.
 // When adding a new error type ensure it's also added to `ErrorType::iter()` below.
-#[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum ErrorType {
     /// For when the value to be recorded does not match the metric-specific restrictions
@@ -89,14 +87,14 @@ impl TryFrom<i32> for ErrorType {
 }
 
 /// For a given metric, get the metric in which to record errors
-fn get_error_metric_for_metric(meta: &CommonMetricDataInternal, error: ErrorType) -> CounterMetric {
+fn get_error_metric_for_metric(meta: &CommonMetricData, error: ErrorType) -> CounterMetric {
     // Can't use meta.identifier here, since that might cause infinite recursion
     // if the label on this metric needs to report an error.
     let identifier = meta.base_identifier();
     let name = strip_label(&identifier);
 
     // Record errors in the pings the metric is in, as well as the metrics ping.
-    let mut send_in_pings = meta.inner.send_in_pings.clone();
+    let mut send_in_pings = meta.send_in_pings.clone();
     let ping_name = "metrics".to_string();
     if !send_in_pings.contains(&ping_name) {
         send_in_pings.push(ping_name);
@@ -129,7 +127,7 @@ fn get_error_metric_for_metric(meta: &CommonMetricDataInternal, error: ErrorType
 /// * `num_errors` - The number of errors of the same type to report.
 pub fn record_error<O: Into<Option<i32>>>(
     glean: &Glean,
-    meta: &CommonMetricDataInternal,
+    meta: &CommonMetricData,
     error: ErrorType,
     message: impl Display,
     num_errors: O,
@@ -157,7 +155,7 @@ pub fn record_error<O: Into<Option<i32>>>(
 /// The number of errors reported.
 pub fn test_get_num_recorded_errors(
     glean: &Glean,
-    meta: &CommonMetricDataInternal,
+    meta: &CommonMetricData,
     error: ErrorType,
 ) -> Result<i32, String> {
     let metric = get_error_metric_for_metric(meta, error);

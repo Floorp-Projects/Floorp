@@ -9,13 +9,13 @@ license = "MPL-2.0"
 [dependencies]
 bincode = "1.0"
 chrono = "0.4.10"
-glean = "52.0.0"
+glean = "51.8.2"
 inherent = "1.0.0"
 log = "0.4"
 nsstring = { path = "../../../../xpcom/rust/nsstring", optional = true }
 once_cell = "1.2.0"
 serde = { version = "1.0", features = ["derive"] }
-uuid = { version = "1.0", features = ["v4"] }
+uuid = { version = "0.8.1", features = ["v4"] }
 xpcom = { path = "../../../../xpcom/rust/xpcom", optional = true }
 thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
 mozbuild = "0.1"

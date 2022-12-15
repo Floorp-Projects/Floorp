@@ -43,7 +43,6 @@ fn cfg_new(tmpname: PathBuf) -> Configuration {
         server_endpoint: Some("invalid-test-host".into()),
         uploader: None,
         use_core_mps: false,
-        trim_data_to_registered_pings: false,
     }
 }
 

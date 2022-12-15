@@ -35,7 +35,7 @@ pub fn get_compact_symbol_table(
 ) -> Option<CompactSymbolTable> {
     let elf_file = NativeFile::parse(buffer).ok()?;
     let elf_id = get_elf_id(&elf_file)?;
-    if !breakpad_id.map_or(true, |id| id == format!("{:X}0", elf_id.as_simple())) {
+    if !breakpad_id.map_or(true, |id| id == format!("{:X}0", elf_id.to_simple_ref())) {
         return None;
     }
     return Some(CompactSymbolTable::from_map(get_symbol_map(&elf_file)));
