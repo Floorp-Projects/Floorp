@@ -9028,7 +9028,87 @@ nsresult HTMLEditor::GetInlineStyles(
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aPendingStyleCacheArray.IsEmpty());
 
-  bool useCSS = IsCSSEnabled();
+  if (!IsCSSEnabled()) {
+    // In the HTML styling mode, we should preserve the order of inline styles
+    // specified with HTML elements, then, we can keep same order as original
+    // one when we create new elements to apply the styles at new place.
+    // XXX Currently, we don't preserve all inline parents, therefore, we cannot
+    //     restore all inline elements as-is.  Perhaps, we should store all
+    //     inline elements with more details (e.g., all attributes), and store
+    //     same elements.  For example, web apps may give style as:
+    //     em {
+    //       font-style: italic;
+    //     }
+    //     em em {
+    //       font-style: normal;
+    //       font-weight: bold;
+    //     }
+    //     but we cannot restore the style as-is.
+    nsString value;
+    const bool givenElementIsEditable =
+        HTMLEditUtils::IsSimplyEditableNode(aElement);
+    auto NeedToAppend = [&](nsStaticAtom& aTagName, nsStaticAtom* aAttribute) {
+      if (mPendingStylesToApplyToNewContent->GetStyleState(
+              aTagName, aAttribute) != PendingStyleState::NotUpdated) {
+        return false;  // The style has already been changed.
+      }
+      if (aPendingStyleCacheArray.Contains(aTagName, aAttribute)) {
+        return false;  // Already preserved
+      }
+      return true;
+    };
+    for (Element* const inclusiveAncestor :
+         aElement.InclusiveAncestorsOfType<Element>()) {
+      if (HTMLEditUtils::IsBlockElement(*inclusiveAncestor) ||
+          (givenElementIsEditable &&
+           !HTMLEditUtils::IsSimplyEditableNode(*inclusiveAncestor))) {
+        break;
+      }
+      if (inclusiveAncestor->IsAnyOfHTMLElements(
+              nsGkAtoms::b, nsGkAtoms::i, nsGkAtoms::u, nsGkAtoms::s,
+              nsGkAtoms::strike, nsGkAtoms::tt, nsGkAtoms::em,
+              nsGkAtoms::strong, nsGkAtoms::dfn, nsGkAtoms::code,
+              nsGkAtoms::samp, nsGkAtoms::var, nsGkAtoms::cite, nsGkAtoms::abbr,
+              nsGkAtoms::acronym, nsGkAtoms::sub, nsGkAtoms::sup)) {
+        nsStaticAtom& tagName = const_cast<nsStaticAtom&>(
+            *inclusiveAncestor->NodeInfo()->NameAtom()->AsStatic());
+        if (NeedToAppend(tagName, nullptr)) {
+          aPendingStyleCacheArray.AppendElement(
+              PendingStyleCache(tagName, nullptr, EmptyString()));
+        }
+        continue;
+      }
+      if (inclusiveAncestor->IsHTMLElement(nsGkAtoms::font)) {
+        if (NeedToAppend(*nsGkAtoms::font, nsGkAtoms::face)) {
+          inclusiveAncestor->GetAttr(kNameSpaceID_None, nsGkAtoms::face, value);
+          if (!value.IsEmpty()) {
+            aPendingStyleCacheArray.AppendElement(
+                PendingStyleCache(*nsGkAtoms::font, nsGkAtoms::face, value));
+            value.Truncate();
+          }
+        }
+        if (NeedToAppend(*nsGkAtoms::font, nsGkAtoms::size)) {
+          inclusiveAncestor->GetAttr(kNameSpaceID_None, nsGkAtoms::size, value);
+          if (!value.IsEmpty()) {
+            aPendingStyleCacheArray.AppendElement(
+                PendingStyleCache(*nsGkAtoms::font, nsGkAtoms::size, value));
+            value.Truncate();
+          }
+        }
+        if (NeedToAppend(*nsGkAtoms::font, nsGkAtoms::color)) {
+          inclusiveAncestor->GetAttr(kNameSpaceID_None, nsGkAtoms::color,
+                                     value);
+          if (!value.IsEmpty()) {
+            aPendingStyleCacheArray.AppendElement(
+                PendingStyleCache(*nsGkAtoms::font, nsGkAtoms::color, value));
+            value.Truncate();
+          }
+        }
+        continue;
+      }
+    }
+    return NS_OK;
+  }
 
   for (nsStaticAtom* property : {nsGkAtoms::b,
                                  nsGkAtoms::i,
@@ -9067,7 +9147,7 @@ nsresult HTMLEditor::GetInlineStyles(
     nsString value;  // Don't use nsAutoString here because it requires memcpy
                      // at creating new PendingStyleCache instance.
     // Don't use CSS for <font size>, we don't support it usefully (bug 780035)
-    if (!useCSS || (property == nsGkAtoms::size)) {
+    if (property == nsGkAtoms::size) {
       isSet = HTMLEditUtils::IsInlineStyleSetByElement(aElement, style, nullptr,
                                                        &value);
     } else if (style.IsCSSEditable(aElement)) {
