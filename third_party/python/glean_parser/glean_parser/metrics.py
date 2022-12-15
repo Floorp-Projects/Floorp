@@ -60,7 +60,7 @@ class Metric:
         data_sensitivity: Optional[List[str]] = None,
         defined_in: Optional[Dict] = None,
         telemetry_mirror: Optional[str] = None,
-        _config: Optional[Dict[str, Any]] = None,
+        _config: Dict[str, Any] = None,
         _validated: bool = False,
     ):
         # Avoid cyclical import
@@ -364,30 +364,6 @@ class Jwe(Metric):
         )
 
 
-class CowString(str):
-    """
-    Wrapper class for strings that should be represented
-    as a `Cow<'static, str>` in Rust,
-    or `String` in other target languages.
-
-    This wraps `str`, so unless `CowString` is specifically
-    handled it acts (and serializes)
-    as a string.
-    """
-
-    def __init__(self, val: str):
-        self.inner: str = val
-
-    def __eq__(self, other):
-        return self.inner == other.inner
-
-    def __hash__(self):
-        return self.inner.__hash__()
-
-    def __lt__(self, other):
-        return self.inner.__lt__(other.inner)
-
-
 class Labeled(Metric):
     labeled = True
 
@@ -395,7 +371,7 @@ class Labeled(Metric):
         labels = kwargs.pop("labels", None)
         if labels is not None:
             self.ordered_labels = labels
-            self.labels = set([CowString(label) for label in labels])
+            self.labels = set(labels)
         else:
             self.ordered_labels = None
             self.labels = None

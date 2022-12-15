@@ -4,7 +4,6 @@
 
 use std::collections::HashMap;
 
-use crate::common_metric_data::CommonMetricDataInternal;
 use crate::error_recording::{record_error, test_get_num_recorded_errors, ErrorType};
 use crate::event_database::RecordedEvent;
 use crate::metrics::MetricType;
@@ -21,12 +20,12 @@ const MAX_LENGTH_EXTRA_KEY_VALUE: usize = 500;
 /// records a timestamp, the event's name and a set of custom values.
 #[derive(Clone, Debug)]
 pub struct EventMetric {
-    meta: CommonMetricDataInternal,
+    meta: CommonMetricData,
     allowed_extra_keys: Vec<String>,
 }
 
 impl MetricType for EventMetric {
-    fn meta(&self) -> &CommonMetricDataInternal {
+    fn meta(&self) -> &CommonMetricData {
         &self.meta
     }
 }
@@ -39,7 +38,7 @@ impl EventMetric {
     /// Creates a new event metric.
     pub fn new(meta: CommonMetricData, allowed_extra_keys: Vec<String>) -> Self {
         Self {
-            meta: meta.into(),
+            meta,
             allowed_extra_keys,
         }
     }
@@ -131,7 +130,7 @@ impl EventMetric {
     ) -> Option<Vec<RecordedEvent>> {
         let queried_ping_name = ping_name
             .into()
-            .unwrap_or_else(|| &self.meta().inner.send_in_pings[0]);
+            .unwrap_or_else(|| &self.meta().send_in_pings[0]);
 
         glean
             .event_storage()
@@ -156,7 +155,7 @@ impl EventMetric {
     ///
     /// * `error` - The type of error
     /// * `ping_name` - represents the optional name of the ping to retrieve the
-    ///   metric for. inner to the first value in `send_in_pings`.
+    ///   metric for. Defaults to the first value in `send_in_pings`.
     ///
     /// # Returns
     ///

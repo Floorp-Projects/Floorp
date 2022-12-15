@@ -1,4 +1,4 @@
-use crate::Uuid;
+use crate::prelude::*;
 
 impl Uuid {
     /// Creates a random UUID.
@@ -7,8 +7,7 @@ impl Uuid {
     /// as the source of random numbers. If you'd like to use a custom
     /// generator, don't use this method: generate random bytes using your
     /// custom generator and pass them to the
-    /// [`uuid::Builder::from_random_bytes`][from_random_bytes] function
-    /// instead.
+    /// [`uuid::Builder::from_bytes`][from_bytes] function instead.
     ///
     /// Note that usage of this method requires the `v4` feature of this crate
     /// to be enabled.
@@ -18,42 +17,40 @@ impl Uuid {
     /// Basic usage:
     ///
     /// ```
-    /// # use uuid::{Uuid, Version};
-    /// let uuid = Uuid::new_v4();
+    /// use uuid::Uuid;
     ///
-    /// assert_eq!(Some(Version::Random), uuid.get_version());
+    /// let uuid = Uuid::new_v4();
     /// ```
     ///
-    /// # References
-    ///
-    /// * [Version 4 UUIDs in RFC4122](https://www.rfc-editor.org/rfc/rfc4122#section-4.4)
-    ///
     /// [`getrandom`]: https://crates.io/crates/getrandom
-    /// [from_random_bytes]: struct.Builder.html#method.from_random_bytes
+    /// [from_bytes]: struct.Builder.html#method.from_bytes
     pub fn new_v4() -> Uuid {
-        crate::Builder::from_random_bytes(crate::rng::bytes()).into_uuid()
+        let mut bytes = [0u8; 16];
+        getrandom::getrandom(&mut bytes).unwrap_or_else(|err| {
+            // NB: getrandom::Error has no source; this is adequate display
+            panic!("could not retreive random bytes for uuid: {}", err)
+        });
+
+        crate::Builder::from_bytes(bytes)
+            .set_variant(Variant::RFC4122)
+            .set_version(Version::Random)
+            .build()
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::{Variant, Version};
-
-    #[cfg(target_arch = "wasm32")]
-    use wasm_bindgen_test::*;
+    use crate::prelude::*;
 
     #[test]
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
     fn test_new() {
         let uuid = Uuid::new_v4();
 
         assert_eq!(uuid.get_version(), Some(Version::Random));
-        assert_eq!(uuid.get_variant(), Variant::RFC4122);
+        assert_eq!(uuid.get_variant(), Some(Variant::RFC4122));
     }
 
     #[test]
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
     fn test_get_version() {
         let uuid = Uuid::new_v4();
 

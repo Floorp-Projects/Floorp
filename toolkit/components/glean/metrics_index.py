@@ -88,16 +88,6 @@ test_pings = [
     "toolkit/components/glean/tests/test_pings.yaml",
 ]
 
-# Map of app ids to lists of pings files for that app.
-# Necessary to ensure different apps don't store data for unsent pings.
-# Use the app id conjugation passed to initializeFOG (dotted.case).
-pings_by_app_id = {
-    "firefox.desktop": gecko_pings + firefox_desktop_pings + test_pings,
-    "firefox.desktop.background.update": gecko_pings
-    + background_update_pings
-    + test_pings,
-}
-
 # The list of all Glean pings.yaml files, relative to the top src dir.
 # ONLY TO BE MODIFIED BY FOG PEERS!
 pings_yamls = gecko_pings + firefox_desktop_pings + background_update_pings + test_pings

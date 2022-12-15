@@ -2,14 +2,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::borrow::Cow;
-
 use super::{metrics::*, CommonMetricData, Lifetime};
 
 #[derive(Debug)]
 pub struct CoreMetrics {
     pub client_id: UuidMetric,
     pub first_run_date: DatetimeMetric,
+    pub first_run_hour: DatetimeMetric,
     pub os: StringMetric,
 }
 
@@ -45,6 +44,18 @@ impl CoreMetrics {
                     dynamic_label: None,
                 },
                 TimeUnit::Day,
+            ),
+
+            first_run_hour: DatetimeMetric::new(
+                CommonMetricData {
+                    name: "first_run_hour".into(),
+                    category: "glean.validation".into(),
+                    send_in_pings: vec!["metrics".into(), "baseline".into()],
+                    lifetime: Lifetime::User,
+                    disabled: false,
+                    dynamic_label: None,
+                },
+                TimeUnit::Hour,
             ),
 
             os: StringMetric::new(CommonMetricData {
@@ -108,11 +119,11 @@ impl UploadMetrics {
                     dynamic_label: None,
                 },
                 Some(vec![
-                    Cow::from("status_code_4xx"),
-                    Cow::from("status_code_5xx"),
-                    Cow::from("status_code_unknown"),
-                    Cow::from("unrecoverable"),
-                    Cow::from("recoverable"),
+                    "status_code_4xx".into(),
+                    "status_code_5xx".into(),
+                    "status_code_unknown".into(),
+                    "unrecoverable".into(),
+                    "recoverable".into(),
                 ]),
             ),
 

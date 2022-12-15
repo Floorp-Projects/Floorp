@@ -61,22 +61,8 @@ def rust_datatypes_filter(value):
                 yield "]"
             elif value is None:
                 yield "None"
-            # `CowStr` is a `str`, so needs to be before next case
-            elif isinstance(value, metrics.CowString):
-                yield f'::std::borrow::Cow::from("{value.inner}")'
             elif isinstance(value, str):
                 yield f'"{value}".into()'
-            elif isinstance(value, metrics.Rate):
-                yield "CommonMetricData("
-                first = True
-                for arg_name in util.common_metric_args:
-                    if hasattr(value, arg_name):
-                        if not first:
-                            yield ", "
-                        yield f"{util.camelize(arg_name)} = "
-                        yield from self.iterencode(getattr(value, arg_name))
-                        first = False
-                yield ")"
             else:
                 yield from super().iterencode(value)
 
@@ -100,7 +86,7 @@ def type_name(obj):
     """
 
     if getattr(obj, "labeled", False):
-        return "LabeledMetric<{}>".format(class_name(obj.type))
+        return "LabeledMetric<Labeled{}>".format(class_name(obj.type))
     generate_enums = getattr(obj, "_generate_enums", [])  # Extra Keys? Reasons?
     if len(generate_enums):
         for name, suffix in generate_enums:

@@ -214,7 +214,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "glean-parser"
-version = "6.4.0"
+version = "6.3.0"
 description = "Parser tools for Mozilla's Glean telemetry"
 category = "main"
 optional = false
@@ -789,7 +789,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "16adc4b6292094b504000d2c7b9dd1af8103f0220be93894238b60455d9dc87b"
+content-hash = "dc8e136aed531f9926571a0f7a5c0f89597c6f58c516d889d0e655c194df8d3f"
 
 [metadata.files]
 aiohttp = [
@@ -910,8 +910,8 @@ giturlparse = [
     {file = "giturlparse-0.10.0.tar.gz", hash = "sha256:2595ab291d30717cda8474b874c9fd509f1b9802ad7f6968c36a45e4b13eb337"},
 ]
 glean-parser = [
-    {file = "glean_parser-6.4.0-py3-none-any.whl", hash = "sha256:011c187aeb655af03a24bf1970aeac685e29a8ff1cbdfe9ccbd441bca9d7005e"},
-    {file = "glean_parser-6.4.0.tar.gz", hash = "sha256:f7e53d911324710634b636a8e8f9a2d124ea874c70d29154d3fc595e56b090a3"},
+    {file = "glean_parser-6.3.0-py3-none-any.whl", hash = "sha256:b6cb6ab1247f3eb8e64427644dbdc0ef1fbf46af593225d66e24aa967dcaa23e"},
+    {file = "glean_parser-6.3.0.tar.gz", hash = "sha256:946ef3d7fe24fbbe8101964791b7ad0e609d1ee6a21a87b33f805de8577e6f40"},
 ]
 idna = [
     {file = "idna-2.10-py2.py3-none-any.whl", hash = "sha256:b97d804b1e9b523befed77c48dacec60e6dcb0b5391d57af6a65a312a90648c0"},

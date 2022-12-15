@@ -217,13 +217,7 @@ impl EnvironmentImpl {
         if fs::metadata(&path)?.is_dir() {
             path.to_mut().push(DEFAULT_DB_FILENAME);
         };
-
-        // Write to a temp file first.
-        let tmp_path = path.with_extension("tmp");
-        fs::write(&tmp_path, self.serialize()?)?;
-
-        // Atomically move that file to the database file.
-        fs::rename(tmp_path, path)?;
+        fs::write(&path, self.serialize()?)?;
         Ok(())
     }
 

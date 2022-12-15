@@ -376,7 +376,7 @@ fn collect_input_ports(input: &MidiInput, wrappers: &mut Vec<MidiPortWrapper>) {
     let ports = input.ports();
     for port in ports {
         let id = Uuid::new_v4()
-            .as_hyphenated()
+            .to_hyphenated()
             .encode_lower(&mut Uuid::encode_buffer())
             .to_owned();
         let name = input
@@ -396,7 +396,7 @@ fn collect_output_ports(output: &MidiOutput, wrappers: &mut Vec<MidiPortWrapper>
     let ports = output.ports();
     for port in ports {
         let id = Uuid::new_v4()
-            .as_hyphenated()
+            .to_hyphenated()
             .encode_lower(&mut Uuid::encode_buffer())
             .to_owned();
         let name = output

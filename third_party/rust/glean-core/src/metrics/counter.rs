@@ -4,7 +4,6 @@
 
 use std::sync::Arc;
 
-use crate::common_metric_data::CommonMetricDataInternal;
 use crate::error_recording::{record_error, test_get_num_recorded_errors, ErrorType};
 use crate::metrics::Metric;
 use crate::metrics::MetricType;
@@ -18,17 +17,17 @@ use crate::Glean;
 /// The value can only be incremented, not decremented.
 #[derive(Clone, Debug)]
 pub struct CounterMetric {
-    meta: Arc<CommonMetricDataInternal>,
+    meta: Arc<CommonMetricData>,
 }
 
 impl MetricType for CounterMetric {
-    fn meta(&self) -> &CommonMetricDataInternal {
+    fn meta(&self) -> &CommonMetricData {
         &self.meta
     }
 
     fn with_name(&self, name: String) -> Self {
         let mut meta = (*self.meta).clone();
-        meta.inner.name = name;
+        meta.name = name;
         Self {
             meta: Arc::new(meta),
         }
@@ -36,7 +35,7 @@ impl MetricType for CounterMetric {
 
     fn with_dynamic_label(&self, label: String) -> Self {
         let mut meta = (*self.meta).clone();
-        meta.inner.dynamic_label = Some(label);
+        meta.dynamic_label = Some(label);
         Self {
             meta: Arc::new(meta),
         }
@@ -51,7 +50,7 @@ impl CounterMetric {
     /// Creates a new counter metric.
     pub fn new(meta: CommonMetricData) -> Self {
         Self {
-            meta: Arc::new(meta.into()),
+            meta: Arc::new(meta),
         }
     }
 
@@ -117,13 +116,13 @@ impl CounterMetric {
     ) -> Option<i32> {
         let queried_ping_name = ping_name
             .into()
-            .unwrap_or_else(|| &self.meta().inner.send_in_pings[0]);
+            .unwrap_or_else(|| &self.meta().send_in_pings[0]);
 
         match StorageManager.snapshot_metric_for_test(
             glean.storage(),
             queried_ping_name,
             &self.meta.identifier(glean),
-            self.meta.inner.lifetime,
+            self.meta.lifetime,
         ) {
             Some(Metric::Counter(i)) => Some(i),
             _ => None,
@@ -148,7 +147,7 @@ impl CounterMetric {
     ///
     /// * `error` - The type of error
     /// * `ping_name` - represents the optional name of the ping to retrieve the
-    ///   metric for. inner to the first value in `send_in_pings`.
+    ///   metric for. Defaults to the first value in `send_in_pings`.
     ///
     /// # Returns
     ///

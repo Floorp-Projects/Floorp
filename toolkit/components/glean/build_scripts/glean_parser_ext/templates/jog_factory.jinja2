@@ -13,7 +13,6 @@ Jinja2 template is not. Please file bugs! #}
 /// It is responsible for being able to build metrics and pings described at runtime.
 /// It is generated to keep it in sync with how the runtime definitions are defined.
 
-use std::borrow::Cow;
 use std::sync::atomic::{AtomicU32, Ordering};
 use crate::private::{
     CommonMetricData,
@@ -98,7 +97,7 @@ map of argument name to argument type. I may regret this if I need it again. #}
     histogram_type: Option<HistogramType>,
     numerators: Option<Vec<CommonMetricData>>,
 {# And, don't forget the list of acceptable labels for a labeled metric. #}
-    labels: Option<Vec<Cow<'static, str>>>,
+    labels: Option<Vec<String>>,
 ) -> Result<u32, Box<dyn std::error::Error>> {
     let metric_id = NEXT_METRIC_ID.fetch_add(1, Ordering::SeqCst);
     let metric32 = match metric_type {

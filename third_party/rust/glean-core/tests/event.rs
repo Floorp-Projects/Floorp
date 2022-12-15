@@ -9,9 +9,7 @@ use std::collections::HashMap;
 use std::fs;
 
 use glean_core::metrics::*;
-use glean_core::{
-    get_timestamp_ms, test_get_num_recorded_errors, CommonMetricData, ErrorType, Lifetime,
-};
+use glean_core::{CommonMetricData, Lifetime};
 
 #[test]
 fn record_properly_records_without_optional_arguments() {
@@ -92,7 +90,7 @@ fn snapshot_returns_none_if_nothing_is_recorded_in_the_store() {
 
     assert!(glean
         .event_storage()
-        .snapshot_as_json(&glean, "store1", false)
+        .snapshot_as_json("store1", false)
         .is_none())
 }
 
@@ -116,14 +114,12 @@ fn snapshot_correctly_clears_the_stores() {
 
     metric.record_sync(&glean, 1000, HashMap::new());
 
-    let snapshot = glean
-        .event_storage()
-        .snapshot_as_json(&glean, "store1", true);
+    let snapshot = glean.event_storage().snapshot_as_json("store1", true);
     assert!(snapshot.is_some());
 
     assert!(glean
         .event_storage()
-        .snapshot_as_json(&glean, "store1", false)
+        .snapshot_as_json("store1", false)
         .is_none());
 
     let files: Vec<fs::DirEntry> = fs::read_dir(&glean.event_storage().path)
@@ -133,9 +129,7 @@ fn snapshot_correctly_clears_the_stores() {
     assert_eq!(1, files.len());
     assert_eq!("store2", files[0].file_name());
 
-    let snapshot2 = glean
-        .event_storage()
-        .snapshot_as_json(&glean, "store2", false);
+    let snapshot2 = glean.event_storage().snapshot_as_json("store2", false);
     for s in vec![snapshot, snapshot2] {
         assert!(s.is_some());
         let s = s.unwrap();
@@ -208,7 +202,7 @@ fn test_sending_of_event_ping_when_it_fills_up() {
 
     let snapshot = glean
         .event_storage()
-        .snapshot_as_json(&glean, "events", false)
+        .snapshot_as_json("events", false)
         .unwrap();
     assert_eq!(10, snapshot.as_array().unwrap().len());
     for i in 0..10 {
@@ -251,7 +245,7 @@ fn extra_keys_must_be_recorded_and_truncated_if_needed() {
 
     let snapshot = glean
         .event_storage()
-        .snapshot_as_json(&glean, "store1", false)
+        .snapshot_as_json("store1", false)
         .unwrap();
     assert_eq!(1, snapshot.as_array().unwrap().len());
     let event = &snapshot.as_array().unwrap()[0];
@@ -287,7 +281,7 @@ fn snapshot_sorts_the_timestamps() {
 
     let snapshot = glean
         .event_storage()
-        .snapshot_as_json(&glean, "store1", true)
+        .snapshot_as_json("store1", true)
         .unwrap();
 
     assert_eq!(
@@ -308,147 +302,4 @@ fn snapshot_sorts_the_timestamps() {
             .as_i64()
             .unwrap()
     );
-}
-
-#[test]
-fn ensure_custom_ping_events_dont_overflow() {
-    let (glean, _dir) = new_glean(None);
-
-    let store_name = "store-name";
-    let event_meta = CommonMetricData {
-        name: "name".into(),
-        category: "category".into(),
-        send_in_pings: vec![store_name.into()],
-        lifetime: Lifetime::Ping,
-        ..Default::default()
-    };
-    let event = EventMetric::new(event_meta.clone(), vec![]);
-
-    assert!(test_get_num_recorded_errors(
-        &glean,
-        &(event_meta.clone()).into(),
-        ErrorType::InvalidOverflow
-    )
-    .is_err());
-
-    for _ in 0..500 {
-        event.record_sync(&glean, 0, HashMap::new());
-    }
-    assert!(test_get_num_recorded_errors(
-        &glean,
-        &(event_meta.clone()).into(),
-        ErrorType::InvalidOverflow
-    )
-    .is_err());
-
-    // That should top us right up to the limit. Now for going over.
-    event.record_sync(&glean, 0, HashMap::new());
-    assert!(
-        test_get_num_recorded_errors(&glean, &event_meta.into(), ErrorType::InvalidOverflow)
-            .is_err()
-    );
-    assert_eq!(501, event.get_value(&glean, store_name).unwrap().len());
-}
-
-/// Ensure that events from multiple runs serialize properly.
-///
-/// Records an event once each in two separate sessions,
-/// ensuring they both show (and an inserted `glean.restarted` event)
-/// in the serialized result.
-#[test]
-fn ensure_custom_ping_events_from_multiple_runs_work() {
-    let (mut tempdir, _) = tempdir();
-
-    let store_name = "store-name";
-    let event = EventMetric::new(
-        CommonMetricData {
-            name: "name".into(),
-            category: "category".into(),
-            send_in_pings: vec![store_name.into()],
-            lifetime: Lifetime::Ping,
-            ..Default::default()
-        },
-        vec![],
-    );
-
-    {
-        let (glean, dir) = new_glean(Some(tempdir));
-        // We don't need a full init. Just to deal with on-disk events:
-        assert!(!glean
-            .event_storage()
-            .flush_pending_events_on_startup(&glean, false));
-        tempdir = dir;
-
-        event.record_sync(&glean, 10, HashMap::new());
-    }
-
-    {
-        let (glean, _dir) = new_glean(Some(tempdir));
-        // We don't need a full init. Just to deal with on-disk events:
-        assert!(!glean
-            .event_storage()
-            .flush_pending_events_on_startup(&glean, false));
-
-        // Gotta use get_timestamp_ms or this event won't happen "after" the injected
-        // glean.restarted event from `flush_pending_events_on_startup`.
-        event.record_sync(&glean, get_timestamp_ms(), HashMap::new());
-
-        let json = glean
-            .event_storage()
-            .snapshot_as_json(&glean, store_name, false)
-            .unwrap();
-        assert_eq!(json.as_array().unwrap().len(), 3);
-        assert_eq!(json[0]["category"], "category");
-        assert_eq!(json[0]["name"], "name");
-        assert_eq!(json[1]["category"], "glean");
-        assert_eq!(json[1]["name"], "restarted");
-        assert_eq!(json[2]["category"], "category");
-        assert_eq!(json[2]["name"], "name");
-    }
-}
-
-/// Ensure events in an unregistered, non-"events" (ie Custom) ping are trimmed on a subsequent init
-/// when we pass `true ` for `trim_data_to_registered_pings` in `on_ready_to_submit_pings`.
-#[test]
-fn event_storage_trimming() {
-    let (mut tempdir, _) = tempdir();
-
-    let store_name = "store-name";
-    let store_name_2 = "store-name-2";
-    let event = EventMetric::new(
-        CommonMetricData {
-            name: "name".into(),
-            category: "category".into(),
-            send_in_pings: vec![store_name.into(), store_name_2.into()],
-            lifetime: Lifetime::Ping,
-            ..Default::default()
-        },
-        vec![],
-    );
-    // First, record the event in the two pings.
-    // Successfully records just fine because nothing's checking on record that these pings
-    // exist and are registered.
-    {
-        let (glean, dir) = new_glean(Some(tempdir));
-        tempdir = dir;
-        event.record_sync(&glean, 10, HashMap::new());
-
-        assert_eq!(1, event.get_value(&glean, store_name).unwrap().len());
-        assert_eq!(1, event.get_value(&glean, store_name_2).unwrap().len());
-    }
-    // Second, construct (but don't init) Glean over again.
-    // Register exactly one of the two pings.
-    // Then process the part of init that does the trimming (`on_ready_to_submit_pings`).
-    // This ought to load the data from the registered ping and trim the data from the unregistered one.
-    {
-        let (mut glean, _dir) = new_glean(Some(tempdir));
-        // In Rust, pings are registered via construction.
-        // But that's done asynchronously, so we do it synchronously here:
-        glean.register_ping_type(&PingType::new(store_name.to_string(), true, false, vec![]));
-
-        glean.on_ready_to_submit_pings(true);
-
-        assert_eq!(1, event.get_value(&glean, store_name).unwrap().len());
-        assert!(event.get_value(&glean, store_name_2).is_none());
-    }
 }

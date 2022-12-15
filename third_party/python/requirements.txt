@@ -94,9 +94,9 @@ fluent.syntax==0.18.1 \
 giturlparse==0.10.0; python_version >= "3.6" \
     --hash=sha256:04ba1a3a099c3093fa8d24a422913c6a9b2c2cd22bcffc939cf72e3e98f672d7 \
     --hash=sha256:2595ab291d30717cda8474b874c9fd509f1b9802ad7f6968c36a45e4b13eb337
-glean-parser==6.4.0 \
-    --hash=sha256:011c187aeb655af03a24bf1970aeac685e29a8ff1cbdfe9ccbd441bca9d7005e \
-    --hash=sha256:f7e53d911324710634b636a8e8f9a2d124ea874c70d29154d3fc595e56b090a3
+glean-parser==6.3.0 \
+    --hash=sha256:b6cb6ab1247f3eb8e64427644dbdc0ef1fbf46af593225d66e24aa967dcaa23e \
+    --hash=sha256:946ef3d7fe24fbbe8101964791b7ad0e609d1ee6a21a87b33f805de8577e6f40
 idna-ssl==1.1.0; python_version < "3.7" and python_version >= "3.6" \
     --hash=sha256:a933e3bb13da54383f9e8f35dc4f9cb9eb9b3b78c6b36f311254d6d0d92c6c7c
 idna==2.10; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.5.0" or python_version >= "3.6" and python_full_version < "3.0.0" and python_version < "3.7" or python_version < "3.7" and python_version >= "3.6" and python_full_version >= "3.4.0" or python_version >= "3.6" and python_full_version < "3.0.0" or python_full_version >= "3.4.0" and python_version >= "3.6" \
