@@ -537,6 +537,9 @@ rebuild-complete = Rebuild has been completed.
 please-enter-filename = Please enter a file name.
 confirmed-update = Confirmed the update of "{ $leafName }".
 
+################################################################### Undo-Closed-Tab ###############################################################
+
+undo-closed-tab = Undo close Tab
 
 ################################################################### about:addons ###############################################################
 

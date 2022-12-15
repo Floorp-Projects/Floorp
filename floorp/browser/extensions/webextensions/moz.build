@@ -8,7 +8,6 @@ DIRS += [
     "fake-gesturefy",
     "translate",
     "treestyletab",
-    "undo-closed-tab",
     "official-site-ua",
     "webpanel-ua",
     "multirow-tabs",
@@ -25,6 +24,5 @@ elif CONFIG["OS_TARGET"] == "Darwin":
 # fake-gesturefy = Fake Gesturefy 
 # translate = Translate Web Pages (TWP)
 # treestyletab = Tree Style Tab by Piro (aka:TST)
-# undo-closed-tab = Ablaze
 # official-site-ua = on Ablaze site UserAgent
 # floorp-system = Floorp System Addon (Webcompat, Notificaiton, etc)

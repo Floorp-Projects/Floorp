@@ -27,6 +27,8 @@ browser.jar:
   skin/classic/browser/tabbar/tabbar_on_window_bottom.css                (designs/tabbar/tabbar_on_window_bottom.css)
   skin/classic/browser/tabbar/tabbar_on_window_bottom.js                 (designs/tabbar/tabbar_on_window_bottom.js)
 
+# Undo Closed Tab
+  skin/classic/browser/undo-closed-tab.svg                             (icons/undo-closed-tab.svg)
 # Lepton
   skin/classic/browser/lepton/photonChrome-multitab.css                     (designs/lepton/photonChrome-multitab.css)
   skin/classic/browser/lepton/photonContent-multitab.css                    (designs/lepton/photonContent-multitab.css)
