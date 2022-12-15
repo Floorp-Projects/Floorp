@@ -582,7 +582,7 @@ macro_rules! elf_dynamic_info_std_impl {
         /// Convert a virtual memory address to a file offset
         fn vm_to_offset(phdrs: &[$phdr], address: $size) -> Option<$size> {
             for ph in phdrs {
-                if address >= ph.p_vaddr {
+                if ph.p_type == crate::elf::program_header::PT_LOAD && address >= ph.p_vaddr {
                     let offset = address - ph.p_vaddr;
                     if offset < ph.p_memsz {
                         return ph.p_offset.checked_add(offset);
