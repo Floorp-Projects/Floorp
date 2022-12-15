@@ -20,7 +20,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import mozilla.components.browser.domains.autocomplete.CustomDomainsProvider
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
-import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
@@ -37,7 +36,7 @@ import org.mozilla.focus.R
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.databinding.FragmentUrlinputBinding
 import org.mozilla.focus.ext.defaultSearchEngineName
-import org.mozilla.focus.ext.isSearch
+import org.mozilla.focus.ext.hasSearchTerms
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.ext.settings
 import org.mozilla.focus.input.InputToolbarIntegration
@@ -53,7 +52,6 @@ import org.mozilla.focus.topsites.DefaultTopSitesView
 import org.mozilla.focus.topsites.TopSitesOverlay
 import org.mozilla.focus.ui.theme.FocusTheme
 import org.mozilla.focus.utils.OneShotOnPreDrawListener
-import org.mozilla.focus.utils.SearchUtils
 import org.mozilla.focus.utils.StatusBarUtils
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.utils.UrlUtils
@@ -305,7 +303,7 @@ class UrlInputFragment :
         }
 
         tab?.let { tab ->
-            binding.browserToolbar.url = if (tab.content.isSearch) {
+            binding.browserToolbar.url = if (tab.content.hasSearchTerms) {
                 tab.content.searchTerms
             } else {
                 tab.content.url
@@ -544,9 +542,12 @@ class UrlInputFragment :
 
             ViewUtils.hideKeyboard(binding.browserToolbar)
 
-            val (isUrl, url, searchTerms) = normalizeUrlAndSearchTerms(input)
-
-            openUrl(url, searchTerms)
+            val isUrl = UrlUtils.isUrl(input)
+            if (isUrl) {
+                openUrl(UrlUtils.normalize(input))
+            } else {
+                search(input)
+            }
 
             TelemetryWrapper.urlBarEvent(isUrl)
 
@@ -570,40 +571,19 @@ class UrlInputFragment :
         }
     }
 
-    private fun normalizeUrlAndSearchTerms(input: String): Triple<Boolean, String, String?> {
-        val isUrl = UrlUtils.isUrl(input)
-
-        val url = if (isUrl) {
-            UrlUtils.normalize(input)
-        } else {
-            SearchUtils.createSearchUrl(context, input)
-        }
-
-        val searchTerms = if (isUrl) {
-            null
-        } else {
-            input.trim { it <= ' ' }
-        }
-        return Triple(isUrl, url, searchTerms)
-    }
-
     private fun onSearch(
         query: String,
         isSuggestion: Boolean = false,
         alwaysSearch: Boolean = false,
     ) {
         if (alwaysSearch) {
-            val url = SearchUtils.createSearchUrl(context, query)
-            openUrl(url, query)
+            search(query)
         } else {
-            val searchTerms = if (UrlUtils.isUrl(query)) null else query
-            val searchUrl = if (searchTerms != null) {
-                SearchUtils.createSearchUrl(context, searchTerms)
+            if (UrlUtils.isUrl(query)) {
+                openUrl(UrlUtils.normalize(query))
             } else {
-                UrlUtils.normalize(query)
+                search(query)
             }
-
-            openUrl(searchUrl, searchTerms)
         }
 
         TelemetryWrapper.searchSelectEvent(isSuggestion)
@@ -612,7 +592,21 @@ class UrlInputFragment :
         BrowserSearch.searchCount["$defaultSearchEngineName.suggestion"].add()
     }
 
-    private fun openUrl(url: String, searchTerms: String?) {
+    private fun search(searchTerms: String) {
+        val tab = tab
+        if (tab != null) {
+            requireComponents.searchUseCases.defaultSearch.invoke(searchTerms, tab.id)
+            requireComponents.appStore.dispatch(AppAction.FinishEdit(tab.id))
+        } else {
+            requireComponents.searchUseCases.newPrivateTabSearch.invoke(
+                searchTerms = searchTerms,
+                private = true,
+                source = SessionState.Source.Internal.UserEntered,
+            )
+        }
+    }
+
+    private fun openUrl(url: String) {
         when (url) {
             "focus:about" -> {
                 requireComponents.appStore.dispatch(
@@ -622,38 +616,18 @@ class UrlInputFragment :
             }
         }
 
-        if (!searchTerms.isNullOrEmpty()) {
-            tab?.let {
-                requireComponents.store.dispatch(
-                    ContentAction.UpdateSearchTermsAction(
-                        it.id,
-                        searchTerms,
-                    ),
-                )
-            }
-        }
-
         val tab = tab
         if (tab != null) {
             requireComponents.sessionUseCases.loadUrl(url, tab.id)
 
             requireComponents.appStore.dispatch(AppAction.FinishEdit(tab.id))
         } else {
-            val tabId = requireComponents.tabsUseCases.addTab(
+            requireComponents.tabsUseCases.addTab(
                 url,
                 source = SessionState.Source.Internal.UserEntered,
                 selectTab = true,
                 private = true,
             )
-
-            if (!searchTerms.isNullOrEmpty()) {
-                requireComponents.store.dispatch(
-                    ContentAction.UpdateSearchTermsAction(
-                        tabId,
-                        searchTerms,
-                    ),
-                )
-            }
         }
     }
 

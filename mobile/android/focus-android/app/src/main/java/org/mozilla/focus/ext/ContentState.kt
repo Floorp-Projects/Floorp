@@ -6,7 +6,7 @@ package org.mozilla.focus.ext
 
 import mozilla.components.browser.state.state.ContentState
 
-val ContentState.isSearch: Boolean
+val ContentState.hasSearchTerms: Boolean
     get() = searchTerms.isNotEmpty()
 
 /**
