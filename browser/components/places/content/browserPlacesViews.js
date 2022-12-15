@@ -1975,7 +1975,7 @@ class PlacesToolbar extends PlacesViewBase {
 class PlacesMenu extends PlacesViewBase {
   /**
    *
-   * @param {object} aPopupShowingEvent
+   * @param {Event} aPopupShowingEvent
    *   The event associated with opening the menu.
    * @param {string} aPlace
    *   The query associated with the view on the menu.
@@ -1983,11 +1983,10 @@ class PlacesMenu extends PlacesViewBase {
    *   Options associated with the view.
    */
   constructor(aPopupShowingEvent, aPlace, aOptions = {}) {
-    aOptions.rootElt ??= aPopupShowingEvent.target; // <menupopup>
-    aOptions.viewElt ??= aOptions.rootElt.parentNode; // <menu>
+    aOptions.rootElt = aPopupShowingEvent.target; // <menupopup>
+    aOptions.viewElt = aOptions.rootElt.parentNode; // <menu>
     super(aPlace, aOptions);
 
-    this._viewElt._placesView = this;
     this._addEventListeners(
       this._rootElt,
       ["popupshowing", "popuphidden"],
@@ -2006,6 +2005,10 @@ class PlacesMenu extends PlacesViewBase {
     }
 
     this._onPopupShowing(aPopupShowingEvent);
+  }
+
+  _init() {
+    this._viewElt._placesView = this;
   }
 
   _removeChild(aChild) {
