@@ -247,30 +247,36 @@ void HTMLEditor::OnStartToHandleTopLevelEditSubAction(
       *TopLevelEditSubActionDataRef().mSelectedRange);
 
   // Remember current inline styles for deletion and normal insertion ops
-  bool cacheInlineStyles;
-  switch (aTopLevelEditSubAction) {
-    case EditSubAction::eInsertText:
-    case EditSubAction::eInsertTextComingFromIME:
-    case EditSubAction::eDeleteSelectedContent:
-      cacheInlineStyles = true;
-      break;
-    default:
-      cacheInlineStyles =
-          IsPendingStyleCachePreservingSubAction(aTopLevelEditSubAction);
-      break;
-  }
+  const bool cacheInlineStyles = [&]() {
+    switch (aTopLevelEditSubAction) {
+      case EditSubAction::eInsertText:
+      case EditSubAction::eInsertTextComingFromIME:
+      case EditSubAction::eDeleteSelectedContent:
+        return true;
+      default:
+        return IsPendingStyleCachePreservingSubAction(aTopLevelEditSubAction);
+    }
+  }();
   if (cacheInlineStyles) {
-    nsIContent* const containerContent = nsIContent::FromNodeOrNull(
-        aDirectionOfTopLevelEditSubAction == nsIEditor::eNext
-            ? TopLevelEditSubActionDataRef().mSelectedRange->mEndContainer
-            : TopLevelEditSubActionDataRef().mSelectedRange->mStartContainer);
-    if (NS_WARN_IF(!containerContent)) {
+    const RefPtr<Element> editingHost =
+        ComputeEditingHost(LimitInBodyElement::No);
+    if (NS_WARN_IF(!editingHost)) {
       aRv.Throw(NS_ERROR_FAILURE);
       return;
     }
-    if (const RefPtr<Element> element =
-            containerContent->GetAsElementOrParentElement()) {
-      nsresult rv = CacheInlineStyles(*element);
+
+    nsIContent* const startContainer =
+        HTMLEditUtils::GetContentToPreserveInlineStyles(
+            TopLevelEditSubActionDataRef()
+                .mSelectedRange->StartPoint<EditorRawDOMPoint>(),
+            *editingHost);
+    if (NS_WARN_IF(!startContainer)) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+    if (const RefPtr<Element> startContainerElement =
+            startContainer->GetAsElementOrParentElement()) {
+      nsresult rv = CacheInlineStyles(*startContainerElement);
       if (NS_FAILED(rv)) {
         NS_WARNING("HTMLEditor::CacheInlineStyles() failed");
         aRv.Throw(rv);
@@ -865,7 +871,7 @@ nsresult HTMLEditor::MaybeCreatePaddingBRElementForEmptyEditor() {
   }
   NS_WARNING_ASSERTION(
       !ignoredError.Failed(),
-      "TextEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
+      "HTMLEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
   ignoredError.SuppressException();
 
   RefPtr<Element> rootElement = GetRoot();
@@ -1474,11 +1480,30 @@ nsresult HTMLEditor::InsertLineBreakAsSubAction() {
       NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
       return insertBRElementResult.unwrapErr();
     }
-    nsresult rv =
-        insertBRElementResult.inspect().SuggestCaretPointTo(*this, {});
+    CreateElementResult unwrappedInsertBRElementResult =
+        insertBRElementResult.unwrap();
+    MOZ_ASSERT(unwrappedInsertBRElementResult.GetNewNode());
+    // Next inserting text should be inserted into styled inline elements if
+    // they have first visible thing in the new line.
+    auto pointToPutCaret = [&]() -> EditorDOMPoint {
+      WSScanResult forwardScanResult =
+          WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
+              editingHost, EditorRawDOMPoint::After(
+                               *unwrappedInsertBRElementResult.GetNewNode()));
+      if (forwardScanResult.InVisibleOrCollapsibleCharacters()) {
+        unwrappedInsertBRElementResult.IgnoreCaretPointSuggestion();
+        return forwardScanResult.Point<EditorDOMPoint>();
+      }
+      if (forwardScanResult.ReachedSpecialContent()) {
+        unwrappedInsertBRElementResult.IgnoreCaretPointSuggestion();
+        return forwardScanResult.PointAtContent<EditorDOMPoint>();
+      }
+      return unwrappedInsertBRElementResult.UnwrapCaretPoint();
+    }();
+
+    nsresult rv = CollapseSelectionTo(pointToPutCaret);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "CreateElementResult::SuggestCaretPointTo() failed");
-    MOZ_ASSERT(insertBRElementResult.inspect().GetNewNode());
     return rv;
   }
 
