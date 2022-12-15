@@ -20,9 +20,6 @@ static SVGAttrTearoffTable<SVGAnimatedTransformList,
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMSVGAnimatedTransformList,
                                                mElement)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMSVGAnimatedTransformList, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMSVGAnimatedTransformList, Release)
-
 JSObject* DOMSVGAnimatedTransformList::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return SVGAnimatedTransformList_Binding::Wrap(aCx, this, aGivenProto);

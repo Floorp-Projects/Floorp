@@ -75,8 +75,6 @@ class BFCacheNotifyLockRunnable final : public WorkerProxyToMainThreadRunnable {
 };
 
 NS_IMPL_CYCLE_COLLECTION(LockManagerChild, mOwner)
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(LockManagerChild, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(LockManagerChild, Release)
 
 void LockManagerChild::RequestLock(const LockRequest& aRequest,
                                    const LockOptions& aOptions) {

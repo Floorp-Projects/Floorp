@@ -564,8 +564,5 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(BrowsingContextGroup, mContexts,
                                       mTimerEventQueue, mWorkerEventQueue,
                                       mDocGroups)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(BrowsingContextGroup, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(BrowsingContextGroup, Release)
-
 }  // namespace dom
 }  // namespace mozilla

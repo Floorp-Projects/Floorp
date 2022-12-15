@@ -45,9 +45,6 @@ static const double radPerDegree = 2.0 * M_PI / 360.0;
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DOMMatrixReadOnly, mParent)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMMatrixReadOnly, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMMatrixReadOnly, Release)
-
 JSObject* DOMMatrixReadOnly::WrapObject(JSContext* aCx,
                                         JS::Handle<JSObject*> aGivenProto) {
   return DOMMatrixReadOnly_Binding::Wrap(aCx, this, aGivenProto);

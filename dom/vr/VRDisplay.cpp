@@ -116,8 +116,6 @@ void VRDisplay::UpdateVRDisplays(nsTArray<RefPtr<VRDisplay>>& aDisplays,
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(VRFieldOfView, mParent)
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(VRFieldOfView, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(VRFieldOfView, Release)
 
 JSObject* VRFieldOfView::WrapObject(JSContext* aCx,
                                     JS::Handle<JSObject*> aGivenProto) {
@@ -127,9 +125,6 @@ JSObject* VRFieldOfView::WrapObject(JSContext* aCx,
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WITH_JS_MEMBERS(VREyeParameters,
                                                       (mParent, mFOV),
                                                       (mOffset))
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(VREyeParameters, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(VREyeParameters, Release)
 
 VREyeParameters::VREyeParameters(nsISupports* aParent,
                                  const gfx::Point3D& aEyeTranslation,
@@ -201,9 +196,6 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(VRStageParameters)
       mSittingToStandingTransformArray)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(VRStageParameters, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(VRStageParameters, Release)
-
 void VRStageParameters::GetSittingToStandingTransform(
     JSContext* aCx, JS::MutableHandle<JSObject*> aRetval, ErrorResult& aRv) {
   if (!mSittingToStandingTransformArray) {
@@ -219,8 +211,6 @@ void VRStageParameters::GetSittingToStandingTransform(
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(VRDisplayCapabilities, mParent)
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(VRDisplayCapabilities, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(VRDisplayCapabilities, Release)
 
 JSObject* VRDisplayCapabilities::WrapObject(JSContext* aCx,
                                             JS::Handle<JSObject*> aGivenProto) {
@@ -669,9 +659,6 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(VRFrameData)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mRightProjectionMatrix)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mRightViewMatrix)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(VRFrameData, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(VRFrameData, Release)
 
 VRFrameData::VRFrameData(nsISupports* aParent)
     : mParent(aParent),

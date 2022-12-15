@@ -11,9 +11,6 @@
 #include "nsCRT.h"
 #include "mozilla/Likely.h"
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(mozEnglishWordUtils, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(mozEnglishWordUtils, Release)
-
 NS_IMPL_CYCLE_COLLECTION(mozEnglishWordUtils, mURLDetector)
 
 mozEnglishWordUtils::mozEnglishWordUtils() {

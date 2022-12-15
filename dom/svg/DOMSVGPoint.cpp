@@ -59,9 +59,6 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(DOMSVGPoint)
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMSVGPoint, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMSVGPoint, Release)
-
 JSObject* DOMSVGPoint::WrapObject(JSContext* aCx,
                                   JS::Handle<JSObject*> aGivenProto) {
   return SVGPoint_Binding::Wrap(aCx, this, aGivenProto);

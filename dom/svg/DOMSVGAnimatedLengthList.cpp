@@ -28,9 +28,6 @@ SVGAnimatedLengthListTearoffTable() {
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMSVGAnimatedLengthList,
                                                mElement)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMSVGAnimatedLengthList, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMSVGAnimatedLengthList, Release)
-
 JSObject* DOMSVGAnimatedLengthList::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return dom::SVGAnimatedLengthList_Binding::Wrap(aCx, this, aGivenProto);

@@ -2401,9 +2401,6 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(JSPurpleBuffer)
   NS_TRACE_SEGMENTED_ARRAY(mObjects, JSObject*)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(JSPurpleBuffer, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(JSPurpleBuffer, Release)
-
 class SnowWhiteKiller : public TraceCallbacks {
   struct SnowWhiteObject {
     void* mPointer;

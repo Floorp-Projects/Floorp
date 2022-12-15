@@ -14,9 +14,6 @@ namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(AudioListener, mContext)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(AudioListener, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AudioListener, Release)
-
 AudioListenerEngine::AudioListenerEngine()
     : mPosition(), mFrontVector(0., 0., -1.), mRightVector(1., 0., 0.) {}
 

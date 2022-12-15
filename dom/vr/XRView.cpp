@@ -17,9 +17,6 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WITH_JS_MEMBERS(XRView,
                                                       (mParent, mTransform),
                                                       (mJSProjectionMatrix))
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(XRView, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(XRView, Release)
-
 XRView::XRView(nsISupports* aParent, const XREye& aEye)
     : mParent(aParent),
       mEye(aEye),

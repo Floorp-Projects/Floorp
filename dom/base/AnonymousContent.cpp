@@ -19,8 +19,6 @@
 namespace mozilla::dom {
 
 // Ref counting and cycle collection
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(AnonymousContent, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AnonymousContent, Release)
 NS_IMPL_CYCLE_COLLECTION(AnonymousContent, mContentNode)
 
 AnonymousContent::AnonymousContent(already_AddRefed<Element> aContentNode)

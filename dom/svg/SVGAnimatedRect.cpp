@@ -14,9 +14,6 @@ namespace mozilla::dom {
 
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(SVGAnimatedRect, mSVGElement)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(SVGAnimatedRect, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SVGAnimatedRect, Release)
-
 SVGAnimatedRect::SVGAnimatedRect(SVGAnimatedViewBox* aVal,
                                  SVGElement* aSVGElement)
     : mVal(aVal), mSVGElement(aSVGElement) {}

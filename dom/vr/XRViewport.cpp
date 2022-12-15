@@ -9,8 +9,6 @@
 namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(XRViewport, mParent)
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(XRViewport, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(XRViewport, Release)
 
 XRViewport::XRViewport(nsISupports* aParent, const gfx::IntRect& aRect)
     : mParent(aParent), mRect(aRect) {}

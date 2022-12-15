@@ -27,9 +27,6 @@ namespace mozilla::intl {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FluentBundleIterator, mGlobal)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(FluentBundleIterator, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(FluentBundleIterator, Release)
-
 FluentBundleIterator::FluentBundleIterator(
     nsIGlobalObject* aGlobal, UniquePtr<ffi::GeckoFluentBundleIterator> aRaw)
     : mGlobal(aGlobal), mRaw(std::move(aRaw)) {}
@@ -57,9 +54,6 @@ already_AddRefed<FluentBundleIterator> FluentBundleIterator::Values() {
 /* FluentBundleAsyncIterator */
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FluentBundleAsyncIterator, mGlobal)
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(FluentBundleAsyncIterator, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(FluentBundleAsyncIterator, Release)
 
 FluentBundleAsyncIterator::FluentBundleAsyncIterator(
     nsIGlobalObject* aGlobal,
@@ -109,9 +103,6 @@ FluentBundleAsyncIterator::Values() {
 /* L10nRegistry */
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(L10nRegistry, mGlobal)
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(L10nRegistry, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(L10nRegistry, Release)
 
 L10nRegistry::L10nRegistry(nsIGlobalObject* aGlobal, bool aUseIsolating)
     : mGlobal(aGlobal),

@@ -12,9 +12,6 @@ namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PeriodicWave, mContext)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(PeriodicWave, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(PeriodicWave, Release)
-
 PeriodicWave::PeriodicWave(AudioContext* aContext, const float* aRealData,
                            const uint32_t aRealSize, const float* aImagData,
                            const uint32_t aImagSize,

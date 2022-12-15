@@ -21,8 +21,6 @@
 namespace mozilla::webgpu {
 
 NS_IMPL_CYCLE_COLLECTION(WebGPUChild)
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGPUChild, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGPUChild, Release)
 
 void WebGPUChild::JsWarning(nsIGlobalObject* aGlobal,
                             const nsACString& aMessage) {

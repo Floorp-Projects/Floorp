@@ -18,8 +18,6 @@ namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(XRInputSource, mParent, mTargetRaySpace,
                                       mGripSpace, mGamepad)
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(XRInputSource, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(XRInputSource, Release)
 
 // Follow the controller profile ids from
 // https://github.com/immersive-web/webxr-input-profiles.

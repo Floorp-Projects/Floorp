@@ -20,9 +20,6 @@ namespace mozilla::dom {
 
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(SVGRect, mParent)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(SVGRect, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SVGRect, Release)
-
 //----------------------------------------------------------------------
 // implementation:
 

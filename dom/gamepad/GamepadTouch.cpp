@@ -17,9 +17,6 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WITH_JS_MEMBERS(GamepadTouch, (mParent),
                                                       (mPosition,
                                                        mSurfaceDimensions))
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(GamepadTouch, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(GamepadTouch, Release)
-
 GamepadTouch::GamepadTouch(nsISupports* aParent)
     : mParent(aParent), mPosition(nullptr), mSurfaceDimensions(nullptr) {
   mozilla::HoldJSObjects(this);

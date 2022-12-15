@@ -53,9 +53,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(WorkerNavigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLocks)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WorkerNavigator, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WorkerNavigator, Release)
-
 WorkerNavigator::WorkerNavigator(const NavigatorProperties& aProperties,
                                  bool aOnline)
     : mProperties(aProperties), mOnline(aOnline) {}

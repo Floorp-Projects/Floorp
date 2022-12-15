@@ -11,9 +11,6 @@ using namespace mozilla::dom;
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(External, mParent)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(External, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(External, Release)
-
 JSObject* External::WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) {
   return External_Binding::Wrap(aCx, this, aGivenProto);

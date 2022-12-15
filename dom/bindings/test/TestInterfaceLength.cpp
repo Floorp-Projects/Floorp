@@ -9,9 +9,6 @@
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(TestInterfaceLength, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(TestInterfaceLength, Release)
-
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(TestInterfaceLength)
 
 JSObject* TestInterfaceLength::WrapObject(JSContext* aCx,

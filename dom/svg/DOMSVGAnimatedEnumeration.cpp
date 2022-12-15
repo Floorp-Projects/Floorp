@@ -13,9 +13,6 @@ namespace mozilla::dom {
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMSVGAnimatedEnumeration,
                                                mSVGElement)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMSVGAnimatedEnumeration, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMSVGAnimatedEnumeration, Release)
-
 JSObject* DOMSVGAnimatedEnumeration::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return SVGAnimatedEnumeration_Binding::Wrap(aCx, this, aGivenProto);

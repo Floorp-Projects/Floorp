@@ -28,9 +28,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ReportingObserver)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCallback)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(ReportingObserver, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(ReportingObserver, Release)
-
 /* static */
 already_AddRefed<ReportingObserver> ReportingObserver::Constructor(
     const GlobalObject& aGlobal, ReportingObserverCallback& aCallback,

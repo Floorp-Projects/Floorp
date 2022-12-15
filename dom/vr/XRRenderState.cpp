@@ -13,8 +13,6 @@ namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(XRRenderState, mParent, mSession,
                                       mBaseLayer, mOutputCanvas)
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(XRRenderState, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(XRRenderState, Release)
 
 XRRenderState::XRRenderState(nsISupports* aParent, XRSession* aSession)
     : mParent(aParent),

@@ -9,11 +9,6 @@
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WrapperCachedNonISupportsTestInterface,
-                                     AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WrapperCachedNonISupportsTestInterface,
-                                       Release)
-
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WrapperCachedNonISupportsTestInterface)
 
 JSObject* WrapperCachedNonISupportsTestInterface::WrapObject(

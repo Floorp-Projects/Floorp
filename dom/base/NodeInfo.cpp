@@ -138,9 +138,6 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(NodeInfo)
   return nsCCUncollectableMarker::sGeneration && tmp->CanSkip();
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(NodeInfo, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(NodeInfo, Release)
-
 void NodeInfo::GetName(nsAString& aName) const {
   mInner.mName->ToString(aName);
 }

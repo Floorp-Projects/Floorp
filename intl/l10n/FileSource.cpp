@@ -13,9 +13,6 @@ namespace mozilla::intl {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(L10nFileSource, mGlobal)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(L10nFileSource, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(L10nFileSource, Release)
-
 L10nFileSource::L10nFileSource(RefPtr<const ffi::FileSource> aRaw,
                                nsIGlobalObject* aGlobal)
     : mGlobal(aGlobal), mRaw(std::move(aRaw)) {}

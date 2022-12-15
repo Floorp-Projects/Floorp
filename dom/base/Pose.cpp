@@ -17,9 +17,6 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WITH_JS_MEMBERS(
     (mPosition, mLinearVelocity, mLinearAcceleration, mOrientation,
      mAngularVelocity, mAngularAcceleration))
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(Pose, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(Pose, Release)
-
 Pose::Pose(nsISupports* aParent)
     : mParent(aParent),
       mPosition(nullptr),

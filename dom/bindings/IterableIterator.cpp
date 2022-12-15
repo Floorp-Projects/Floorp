@@ -16,9 +16,6 @@ namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(IterableIteratorBase)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(IterableIteratorBase, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(IterableIteratorBase, Release)
-
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IterableIteratorBase)
   tmp->TraverseHelper(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END

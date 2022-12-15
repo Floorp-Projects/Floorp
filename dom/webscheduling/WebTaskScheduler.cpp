@@ -129,9 +129,6 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebTaskScheduler, mParent,
                                       mStaticPriorityTaskQueues,
                                       mDynamicPriorityTaskQueues)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebTaskScheduler, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebTaskScheduler, Release)
-
 /* static */
 already_AddRefed<WebTaskSchedulerMainThread>
 WebTaskScheduler::CreateForMainThread(nsGlobalWindowInner* aWindow) {

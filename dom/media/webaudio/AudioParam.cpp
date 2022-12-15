@@ -26,9 +26,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTING_NATIVE_ADDREF(AudioParam)
 NS_IMPL_CYCLE_COLLECTING_NATIVE_RELEASE(AudioParam)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(AudioParam, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AudioParam, Release)
-
 AudioParam::AudioParam(AudioNode* aNode, uint32_t aIndex,
                        const nsAString& aName, float aDefaultValue,
                        float aMinValue, float aMaxValue)
