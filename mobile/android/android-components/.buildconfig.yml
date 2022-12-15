@@ -3,510 +3,1281 @@ projects:
     description: Localized and customizable domain lists for auto-completion in browsers.
     path: components/browser/domains
     publish: true
+    upstream_dependencies:
+    - support-test
   browser-engine-gecko:
     description: Engine implementation based on GeckoView.
     path: components/browser/engine-gecko
     publish: true
+    upstream_dependencies:
+    - concept-engine
+    - concept-fetch
+    - service-glean
+    - support-ktx
+    - support-test
+    - support-utils
+    - tooling-fetch-tests
   browser-engine-system:
     description: Engine implementation based on the system WebView.
     path: components/browser/engine-system
     publish: true
+    upstream_dependencies:
+    - concept-engine
+    - support-ktx
+    - support-test
+    - support-utils
   browser-errorpages:
     description: Responsive browser error pages for Android apps.
     path: components/browser/errorpages
     publish: true
+    upstream_dependencies:
+    - support-ktx
+    - support-test
+    - ui-icons
   browser-icons:
     description: A component for loading and storing website icons.
     path: components/browser/icons
     publish: true
+    upstream_dependencies:
+    - browser-state
+    - concept-base
+    - concept-engine
+    - concept-fetch
+    - lib-fetch-httpurlconnection
+    - lib-fetch-okhttp
+    - support-images
+    - support-ktx
+    - support-test
   browser-menu:
     description: A customizable menu for browsers.
     path: components/browser/menu
     publish: true
+    upstream_dependencies:
+    - browser-state
+    - concept-engine
+    - concept-menu
+    - support-base
+    - support-ktx
+    - support-test
+    - ui-colors
+    - ui-icons
   browser-menu2:
     description: An immutable customizable menu for browsers.
     path: components/browser/menu2
     publish: true
+    upstream_dependencies:
+    - concept-menu
+    - support-base
+    - support-ktx
+    - support-test
+    - ui-icons
   browser-session-storage:
     description: Component for saving and restoring the browser state.
     path: components/browser/session-storage
     publish: true
+    upstream_dependencies:
+    - browser-state
+    - concept-engine
+    - feature-tabs
+    - support-ktx
+    - support-test
+    - support-test-fakes
+    - support-test-libstate
+    - support-utils
   browser-state:
     description: Component responsible for maintaining the centralized state of a
       browser engine.
     path: components/browser/state
     publish: true
+    upstream_dependencies:
+    - concept-engine
+    - concept-fetch
+    - concept-storage
+    - lib-state
+    - support-ktx
+    - support-test
+    - support-test-libstate
+    - support-utils
   browser-storage-sync:
     description: A syncable, Rust Places-backed implementation of core data storage.
     path: components/browser/storage-sync
     publish: true
+    upstream_dependencies:
+    - concept-storage
+    - concept-sync
+    - support-sync-telemetry
+    - support-test
+    - support-utils
   browser-tabstray:
     description: A tabs tray component for browsers.
     path: components/browser/tabstray
     publish: true
+    upstream_dependencies:
+    - browser-state
+    - concept-base
+    - concept-tabstray
+    - support-images
+    - support-ktx
+    - support-test
+    - ui-colors
+    - ui-icons
   browser-thumbnails:
     description: A component for loading and storing website thumbnails.
     path: components/browser/thumbnails
     publish: true
+    upstream_dependencies:
+    - browser-state
+    - concept-base
+    - concept-engine
+    - support-images
+    - support-ktx
+    - support-test
+    - support-test-libstate
   browser-toolbar:
     description: A customizable toolbar for browsers.
     path: components/browser/toolbar
     publish: true
+    upstream_dependencies:
+    - browser-menu
+    - browser-menu2
+    - concept-engine
+    - concept-menu
+    - concept-toolbar
+    - support-base
+    - support-ktx
+    - support-test
+    - ui-autocomplete
+    - ui-colors
+    - ui-icons
   compose-awesomebar:
     description: An awesomebar component showing search results matching text entered
       into the toolbar.
     path: components/compose/awesomebar
     publish: true
+    upstream_dependencies:
+    - browser-state
+    - concept-awesomebar
+    - support-base
+    - support-test
+    - support-utils
+    - ui-icons
   compose-browser-toolbar:
     description: A customizable toolbar for browsers using Jetpack Compose.
     path: components/compose/browser-toolbar
     publish: true
+    upstream_dependencies:
+    - browser-state
+    - concept-engine
+    - feature-session
+    - support-test
+    - ui-icons
   compose-cfr:
     description: A standard Contextual Feature Recommendation popup using Jetpack
       Compose.
     path: components/compose/cfr
     publish: true
+    upstream_dependencies:
+    - support-ktx
+    - support-test
+    - ui-icons
   compose-engine:
     description: A component for integrating a concept-engine implementation into
       Jetpack Compose UI.
     path: components/compose/engine
     publish: true
+    upstream_dependencies:
+    - browser-state
+    - concept-engine
+    - support-test
   compose-tabstray:
     description: A customizable tabs tray using Jetpack Compose.
     path: components/compose/tabstray
     publish: true
+    upstream_dependencies:
+    - browser-state
+    - concept-tabstray
+    - feature-tabs
+    - support-test
+    - ui-icons
   concept-awesomebar:
     description: An abstract definition of an awesomebar component.
     path: components/concept/awesomebar
     publish: true
+    upstream_dependencies:
+    - support-base
   concept-base:
     description: A component for basic interfaces needed by multiple components and
       that do not warrant a standalone component.
     path: components/concept/base
     publish: true
+    upstream_dependencies:
+    - support-test
   concept-engine:
     description: An abstract layer hiding the actual browser engine implementation.
     path: components/concept/engine
     publish: true
+    upstream_dependencies:
+    - browser-errorpages
+    - concept-fetch
+    - concept-storage
+    - support-base
+    - support-ktx
+    - support-test
+    - support-utils
   concept-fetch:
     description: An abstract definition of an HTTP client for fetching resources.
     path: components/concept/fetch
     publish: true
+    upstream_dependencies:
+    - support-test
   concept-menu:
     description: An abstract definition of a browser menu component.
     path: components/concept/menu
     publish: true
+    upstream_dependencies:
+    - support-base
+    - support-ktx
+    - support-test
   concept-push:
     description: An abstract definition of a push service component.
     path: components/concept/push
     publish: true
+    upstream_dependencies:
+    - support-base
+    - support-test
   concept-storage:
     description: An abstract definition of a browser storage layer.
     path: components/concept/storage
     publish: true
+    upstream_dependencies:
+    - support-ktx
+    - support-test
   concept-sync:
     description: An abstract definition of a browser data synchronization layer.
     path: components/concept/sync
     publish: true
+    upstream_dependencies:
+    - support-base
   concept-tabstray:
     description: An abstract definition of a tabs tray component.
     path: components/concept/tabstray
     publish: true
+    upstream_dependencies:
+    - concept-engine
+    - support-base
   concept-toolbar:
     description: An abstract definition of a toolbar component.
     path: components/concept/toolbar
     publish: true
+    upstream_dependencies:
+    - support-base
+    - support-ktx
+    - support-test
   feature-accounts:
     description: Component for tying an account manager with the tabs feature to facilitate
       auth flows.
     path: components/feature/accounts
     publish: true
+    upstream_dependencies:
+    - browser-state
+    - concept-engine
+    - feature-tabs
+    - service-firefox-accounts
+    - support-ktx
+    - support-test
+    - support-webextensions
   feature-accounts-push:
     description: Feature of use cases for FxA Account that work with push support.
     path: components/feature/accounts-push
     publish: true
+    upstream_dependencies:
+    - concept-push
+    - feature-push
+    - service-firefox-accounts
+    - support-base
+    - support-ktx
+    - support-test
   feature-addons:
     description: A feature that provides for managing add-ons.
     path: components/feature/addons
     publish: true
+    upstream_dependencies:
+    - browser-state
+    - concept-engine
+    - concept-fetch
+    - concept-menu
+    - support-base
+    - support-ktx
+    - support-test
+    - support-utils
+    - support-webextensions
+    - ui-colors
+    - ui-icons
+    - ui-widgets
   feature-app-links:
     description: Component opening URLs in other non-browser apps.
     path: components/feature/app-links
     publish: true
+    upstream_dependencies:
+    - browser-state
+    - concept-engine
+    - feature-session
+    - support-base
+    - support-ktx
+    - support-test
+    - support-test-libstate
+    - support-utils
   feature-autofill:
     description: Component adding support for Android`s Autofill framework.
     path: components/feature/autofill
     publish: true
+    upstream_dependencies:
+    - concept-fetch
+    - concept-storage
+    - lib-fetch-okhttp
+    - lib-publicsuffixlist
+    - service-digitalassetlinks
+    - support-base
+    - support-ktx
+    - support-test
+    - support-utils
   feature-awesomebar:
     description: Component connecting a concept-toolbar with a concept-awesomebar.
     path: components/feature/awesomebar
     publish: true
+    upstream_dependencies:
+    - browser-icons
+    - browser-state
+    - concept-awesomebar
+    - concept-engine
+    - concept-fetch
+    - concept-storage
+    - concept-toolbar
+    - feature-search
+    - feature-session
+    - feature-tabs
+    - lib-fetch-httpurlconnection
+    - support-ktx
+    - support-test
+    - support-utils
+    - ui-icons
   feature-containers:
     description: Feature component for working with contextual identities also known
       as containers.
     path: components/feature/containers
     publish: true
+    upstream_dependencies:
+    - browser-state
+    - support-base
+    - support-ktx
+    - support-test
+    - support-test-libstate
   feature-contextmenu:
     description: Component for displaying context menus for web content.
     path: components/feature/contextmenu
     publish: true
+    upstream_dependencies:
+    - browser-state
+    - concept-engine
+    - feature-app-links
+    - feature-search
+    - feature-tabs
+    - support-ktx
+    - support-test
+    - support-test-libstate
+    - support-utils
   feature-customtabs:
     description: Component for providing custom tabs functionality.
     path: components/feature/customtabs
     publish: true
+    upstream_dependencies:
+    - browser-menu
+    - browser-state
+    - browser-toolbar
+    - concept-engine
+    - concept-fetch
+    - concept-menu
+    - feature-intent
+    - feature-session
+    - feature-tabs
+    - service-digitalassetlinks
+    - support-base
+    - support-ktx
+    - support-test
+    - support-test-libstate
+    - support-utils
+    - ui-icons
   feature-downloads:
     description: Feature implementation for apps that want to use Android downloads
       manager.
     path: components/feature/downloads
     publish: true
+    upstream_dependencies:
+    - browser-state
+    - concept-engine
+    - concept-fetch
+    - support-base
+    - support-ktx
+    - support-test
+    - support-test-libstate
+    - support-utils
+    - ui-icons
   feature-findinpage:
     description: Feature that will subscribe to the selected session and show an UI
       for results of find in page.
     path: components/feature/findinpage
     publish: true
+    upstream_dependencies:
+    - browser-state
+    - concept-engine
+    - support-ktx
+    - support-test
+    - ui-icons
   feature-intent:
     description: Combining various feature components for intent processing.
     path: components/feature/intent
     publish: true
+    upstream_dependencies:
+    - browser-state
+    - concept-engine
+    - feature-search
+    - feature-session
+    - feature-tabs
+    - support-ktx
+    - support-test
+    - support-test-libstate
+    - support-utils
   feature-logins:
     description: Feature component for logins related features.
     path: components/feature/logins
     publish: true
+    upstream_dependencies:
+    - feature-prompts
+    - support-base
+    - support-ktx
+    - support-test
   feature-media:
     description: Feature component for website media related features.
     path: components/feature/media
     publish: true
+    upstream_dependencies:
+    - browser-state
+    - concept-engine
+    - support-base
+    - support-ktx
+    - support-test
+    - support-test-libstate
+    - support-utils
+    - ui-icons
   feature-privatemode:
     description: Features used to enhance private browsing mode.
     path: components/feature/privatemode
     publish: true
+    upstream_dependencies:
+    - browser-state
+    - concept-engine
+    - support-base
+    - support-ktx
+    - support-test
+    - support-test-libstate
+    - support-utils
   feature-prompts:
     description: Feature that will subscribe to the selected session and will handle
       all the common prompt dialogs from web content.
     path: components/feature/prompts
     publish: true
+    upstream_dependencies:
+    - browser-state
+    - concept-engine
+    - lib-state
+    - support-ktx
+    - support-test
+    - support-test-libstate
+    - support-utils
+    - ui-icons
   feature-push:
     description: Feature that implements push notifications with a supported push
       service.
     path: components/feature/push
     publish: true
+    upstream_dependencies:
+    - concept-push
+    - support-base
+    - support-test
   feature-pwa:
     description: Feature implementation for Progressive Web Apps (PWA).
     path: components/feature/pwa
     publish: true
+    upstream_dependencies:
+    - browser-icons
+    - browser-state
+    - concept-engine
+    - concept-fetch
+    - feature-customtabs
+    - feature-intent
+    - feature-session
+    - feature-tabs
+    - service-digitalassetlinks
+    - support-base
+    - support-images
+    - support-ktx
+    - support-test
+    - support-test-libstate
+    - support-utils
   feature-qr:
     description: A feature that provides functionality for scanning QR codes.
     path: components/feature/qr
     publish: true
+    upstream_dependencies:
+    - support-base
+    - support-ktx
+    - support-test
   feature-readerview:
     description: Feature implementation providing a Reader View WebExtension.
     path: components/feature/readerview
     publish: true
+    upstream_dependencies:
+    - browser-menu
+    - browser-state
+    - concept-engine
+    - support-base
+    - support-ktx
+    - support-test
+    - support-utils
+    - support-webextensions
+    - ui-icons
   feature-recentlyclosed:
     description: Feature implementation for saving and restoring recently closed tabs
     path: components/feature/recentlyclosed
     publish: true
+    upstream_dependencies:
+    - browser-session-storage
+    - browser-state
+    - concept-engine
+    - feature-session
+    - support-base
+    - support-ktx
+    - support-test
+    - support-test-libstate
   feature-search:
     description: Feature implementation connecting an engine implementation with the
       search module.
     path: components/feature/search
     publish: true
+    upstream_dependencies:
+    - browser-state
+    - concept-engine
+    - feature-tabs
+    - service-location
+    - support-base
+    - support-ktx
+    - support-test
+    - support-test-fakes
+    - support-test-libstate
+    - support-utils
+    - ui-colors
   feature-serviceworker:
     description: Feature that adds support for service workers when using GeckoEngine.
     path: components/feature/serviceworker
     publish: true
+    upstream_dependencies:
+    - browser-engine-gecko
+    - browser-state
+    - concept-engine
+    - feature-tabs
+    - support-test
   feature-session:
     description: Feature implementation connecting an engine implementation with the
       session module.
     path: components/feature/session
     publish: true
+    upstream_dependencies:
+    - browser-state
+    - concept-engine
+    - concept-storage
+    - support-ktx
+    - support-test
+    - support-test-fakes
+    - support-test-libstate
+    - support-utils
   feature-share:
     description: Feature implementation for saving and sorting recent apps used for
       sharing.
     path: components/feature/share
     publish: true
+    upstream_dependencies:
+    - support-base
+    - support-ktx
+    - support-test
   feature-sitepermissions:
     description: A feature for showing site permission request prompts.
     path: components/feature/sitepermissions
     publish: true
+    upstream_dependencies:
+    - browser-state
+    - concept-engine
+    - feature-tabs
+    - support-ktx
+    - support-test
+    - ui-icons
   feature-syncedtabs:
     description: Feature that provides access to other devices' tabs in the same account.
     path: components/feature/syncedtabs
     publish: true
+    upstream_dependencies:
+    - browser-icons
+    - browser-state
+    - browser-storage-sync
+    - concept-awesomebar
+    - concept-engine
+    - feature-session
+    - service-firefox-accounts
+    - support-base
+    - support-ktx
+    - support-test
   feature-tab-collections:
     description: Feature implementation for saving, restoring and organizing collections
       of tabs.
     path: components/feature/tab-collections
     publish: true
+    upstream_dependencies:
+    - browser-session-storage
+    - browser-state
+    - concept-engine
+    - feature-tabs
+    - support-base
+    - support-ktx
+    - support-test
+    - support-test-libstate
   feature-tabs:
     description: Feature implementation connecting a tabs tray implementation with
       the session and toolbar modules.
     path: components/feature/tabs
     publish: true
+    upstream_dependencies:
+    - browser-session-storage
+    - browser-state
+    - browser-tabstray
+    - browser-thumbnails
+    - concept-engine
+    - concept-menu
+    - concept-tabstray
+    - concept-toolbar
+    - feature-session
+    - support-ktx
+    - support-test
+    - support-test-libstate
+    - ui-icons
+    - ui-tabcounter
   feature-toolbar:
     description: Feature implementation connecting a toolbar implementation with the
       session module.
     path: components/feature/toolbar
     publish: true
+    upstream_dependencies:
+    - browser-domains
+    - browser-state
+    - concept-engine
+    - concept-storage
+    - concept-toolbar
+    - feature-session
+    - lib-publicsuffixlist
+    - support-ktx
+    - support-test
+    - support-utils
+    - ui-icons
   feature-top-sites:
     description: Feature implementation for saving and removing top sites.
     path: components/feature/top-sites
     publish: true
+    upstream_dependencies:
+    - browser-storage-sync
+    - support-base
+    - support-ktx
+    - support-test
+    - support-utils
   feature-webauthn:
     description: A feature that provides WebAuthn functionality for supported engines.
     path: components/feature/webauthn
     publish: true
+    upstream_dependencies:
+    - concept-engine
+    - support-test
   feature-webcompat:
     description: Feature that provides hotfixes for websites from Mozilla's Web Compatibility
       team
     path: components/feature/webcompat
     publish: true
+    upstream_dependencies:
+    - concept-engine
+    - support-test
+    - support-webextensions
   feature-webcompat-reporter:
     description: Feature that enables users to report site issues to Mozilla's Web
       Compatibility team.
     path: components/feature/webcompat-reporter
     publish: true
+    upstream_dependencies:
+    - concept-engine
+    - support-test
+    - support-webextensions
   feature-webnotifications:
     description: Feature component for Web Notifications.
     path: components/feature/webnotifications
     publish: true
+    upstream_dependencies:
+    - browser-icons
+    - concept-engine
+    - feature-intent
+    - feature-sitepermissions
+    - support-ktx
+    - support-test
+    - support-utils
   lib-auth:
     description: A component for various kinds of authentication mechanisms.
     path: components/lib/auth
     publish: true
+    upstream_dependencies:
+    - support-base
+    - support-test
   lib-crash:
     description: A generic crash reporter library that can report crashes to multiple
       services.
     path: components/lib/crash
     publish: true
+    upstream_dependencies:
+    - service-glean
+    - support-base
+    - support-ktx
+    - support-test
+    - support-utils
   lib-crash-sentry:
     description: A crash reporter for Sentry.io that that uses lib-crash.
     path: components/lib/crash-sentry
     publish: true
+    upstream_dependencies:
+    - lib-crash
+    - support-base
+    - support-ktx
+    - support-test
+    - support-utils
   lib-crash-sentry-legacy:
     description: A crash reporter for a hosted version of Sentry that uses lib-crash.
     path: components/lib/crash-sentry-legacy
     publish: true
+    upstream_dependencies:
+    - lib-crash
+    - support-base
+    - support-ktx
+    - support-test
+    - support-utils
   lib-dataprotect:
     description: A component using AndroidKeyStore to protect user data.
     path: components/lib/dataprotect
     publish: true
+    upstream_dependencies:
+    - support-base
+    - support-test
   lib-fetch-httpurlconnection:
     description: An implementation of lib-fetch based on HttpUrlConnection.
     path: components/lib/fetch-httpurlconnection
     publish: true
+    upstream_dependencies:
+    - concept-fetch
+    - tooling-fetch-tests
   lib-fetch-okhttp:
     description: An implementation of lib-fetch based on OkHttp.
     path: components/lib/fetch-okhttp
     publish: true
+    upstream_dependencies:
+    - concept-fetch
+    - support-test
+    - tooling-fetch-tests
   lib-jexl:
     description: 'Javascript Expression Language: Powerful context-based expression
       parser and evaluator.'
     path: components/lib/jexl
     publish: true
+    upstream_dependencies: []
   lib-publicsuffixlist:
     description: A library for reading and using the public suffix list.
     path: components/lib/publicsuffixlist
     publish: true
+    upstream_dependencies:
+    - support-test
   lib-push-firebase:
     description: An implementation of concept-push for the Firebase Message Service.
     path: components/lib/push-firebase
     publish: true
+    upstream_dependencies:
+    - concept-push
+    - support-base
+    - support-test
   lib-state:
     description: A library for maintaining application state.
     path: components/lib/state
     publish: true
+    upstream_dependencies:
+    - support-base
+    - support-ktx
+    - support-test
   samples-browser:
     description: A simple browser composed from browser components.
     path: samples/browser
     publish: false
+    upstream_dependencies:
+    - browser-domains
+    - browser-engine-system
+    - browser-icons
+    - browser-menu
+    - browser-session-storage
+    - browser-state
+    - browser-storage-sync
+    - browser-tabstray
+    - browser-thumbnails
+    - browser-toolbar
+    - compose-awesomebar
+    - concept-awesomebar
+    - concept-base
+    - concept-engine
+    - concept-fetch
+    - concept-storage
+    - concept-tabstray
+    - concept-toolbar
+    - feature-addons
+    - feature-app-links
+    - feature-autofill
+    - feature-awesomebar
+    - feature-contextmenu
+    - feature-customtabs
+    - feature-downloads
+    - feature-findinpage
+    - feature-intent
+    - feature-media
+    - feature-privatemode
+    - feature-prompts
+    - feature-pwa
+    - feature-readerview
+    - feature-search
+    - feature-session
+    - feature-sitepermissions
+    - feature-tabs
+    - feature-toolbar
+    - feature-webcompat
+    - feature-webcompat-reporter
+    - feature-webnotifications
+    - lib-crash
+    - lib-dataprotect
+    - lib-fetch-httpurlconnection
+    - lib-publicsuffixlist
+    - service-digitalassetlinks
+    - service-glean
+    - service-location
+    - service-sync-logins
+    - support-base
+    - support-ktx
+    - support-rustlog
+    - support-utils
+    - support-webextensions
+    - ui-autocomplete
+    - ui-tabcounter
   samples-compose-browser:
     description: A simple browser composed from browser components using Jetpack Compose.
     path: samples/compose-browser
     publish: false
+    upstream_dependencies:
+    - browser-engine-gecko
+    - browser-icons
+    - browser-state
+    - compose-awesomebar
+    - compose-browser-toolbar
+    - compose-engine
+    - compose-tabstray
+    - concept-awesomebar
+    - concept-engine
+    - concept-tabstray
+    - feature-awesomebar
+    - feature-search
+    - feature-session
+    - feature-tabs
+    - service-location
+    - ui-icons
   samples-crash:
     description: An app showing the integration of the lib-crash component.
     path: samples/crash
     publish: false
+    upstream_dependencies:
+    - lib-crash
+    - lib-fetch-httpurlconnection
+    - service-glean
+    - support-base
+    - support-utils
   samples-dataprotect:
     description: An app demoing how to use the Dataprotect component to load and store
       encrypted data in SharedPreferences.
     path: samples/dataprotect
     publish: false
+    upstream_dependencies:
+    - lib-dataprotect
+    - support-ktx
   samples-firefox-accounts:
     description: A simple app demoing Firefox Accounts integration.
     path: samples/firefox-accounts
     publish: false
+    upstream_dependencies:
+    - feature-qr
+    - lib-fetch-httpurlconnection
+    - service-firefox-accounts
+    - support-base
+    - support-rusthttp
+    - support-rustlog
   samples-glean:
     description: An app demoing how to use the Glean library to collect and send telemetry
       data.
     path: samples/glean
     publish: false
+    upstream_dependencies:
+    - lib-fetch-httpurlconnection
+    - samples-glean-library
+    - service-glean
+    - service-nimbus
+    - support-base
+    - support-rusthttp
+    - support-rustlog
   samples-glean-library:
     description: A third-party library used by samples-glean to demonstrate multi-library
       support for Glean.
     path: samples/glean/samples-glean-library
     publish: false
+    upstream_dependencies:
+    - service-glean
   samples-sync:
     description: A simple app demoing Firefox Sync (History, Bookmarks, etc) integration.
     path: samples/sync
     publish: false
+    upstream_dependencies:
+    - browser-storage-sync
+    - concept-storage
+    - lib-dataprotect
+    - lib-fetch-httpurlconnection
+    - service-firefox-accounts
+    - service-sync-autofill
+    - service-sync-logins
+    - support-rusthttp
+    - support-rustlog
   samples-sync-logins:
     description: A simple app demoing Firefox Sync (Logins) integration.
     path: samples/sync-logins
     publish: false
+    upstream_dependencies:
+    - concept-storage
+    - lib-dataprotect
+    - lib-fetch-httpurlconnection
+    - service-firefox-accounts
+    - service-sync-logins
+    - support-rusthttp
+    - support-rustlog
   samples-toolbar:
     description: An app demoing multiple customized toolbars using the browser-toolbar
       component.
     path: samples/toolbar
     publish: false
+    upstream_dependencies:
+    - browser-domains
+    - browser-menu
+    - browser-menu2
+    - browser-toolbar
+    - concept-engine
+    - concept-menu
+    - feature-toolbar
+    - support-ktx
+    - support-utils
+    - ui-colors
+    - ui-icons
+    - ui-tabcounter
   service-contile:
     description: A library to communicate with the Contile services API
     path: components/service/contile
     publish: true
+    upstream_dependencies:
+    - concept-fetch
+    - feature-top-sites
+    - support-base
+    - support-ktx
+    - support-test
   service-digitalassetlinks:
     description: A library for communicating with the Digital Asset Links API.
     path: components/service/digitalassetlinks
     publish: true
+    upstream_dependencies:
+    - concept-fetch
+    - support-base
+    - support-ktx
+    - support-test
+    - support-utils
   service-firefox-accounts:
     description: A library for integrating with Firefox Accounts.
     path: components/service/firefox-accounts
     publish: true
+    upstream_dependencies:
+    - concept-storage
+    - concept-sync
+    - lib-dataprotect
+    - lib-state
+    - support-base
+    - support-ktx
+    - support-sync-telemetry
+    - support-test
+    - support-test-libstate
+    - support-utils
   service-glean:
     description: A client-side telemetry SDK for collecting metrics and sending them
       to the Mozilla telemetry service
     path: components/service/glean
     publish: true
+    upstream_dependencies:
+    - concept-fetch
+    - lib-fetch-httpurlconnection
+    - lib-fetch-okhttp
+    - support-base
+    - support-ktx
+    - support-test
+    - support-utils
   service-location:
     description: A library for providing location-based services.
     path: components/service/location
     publish: true
+    upstream_dependencies:
+    - concept-fetch
+    - lib-fetch-httpurlconnection
+    - support-base
+    - support-ktx
+    - support-test
   service-nimbus:
     description: A client-side experiment SDK
     path: components/service/nimbus
     publish: true
+    upstream_dependencies:
+    - support-base
+    - support-locale
+    - support-test
   service-pocket:
     description: A library to communicate with the Pocket API
     path: components/service/pocket
     publish: true
+    upstream_dependencies:
+    - concept-fetch
+    - lib-fetch-httpurlconnection
+    - support-base
+    - support-ktx
+    - support-test
   service-sync-autofill:
     description: A library for autofilling addresses and credit cards.
     path: components/service/sync-autofill
     publish: true
+    upstream_dependencies:
+    - concept-base
+    - concept-storage
+    - concept-sync
+    - lib-dataprotect
+    - support-ktx
+    - support-test
+    - support-utils
   service-sync-logins:
     description: A library for integrating with Firefox Sync - Logins.
     path: components/service/sync-logins
     publish: true
+    upstream_dependencies:
+    - concept-storage
+    - concept-sync
+    - lib-dataprotect
+    - service-glean
+    - support-sync-telemetry
+    - support-utils
   support-android-test:
     description: A collection of helpers for testing components from instrumented
       (on device) tests.
     path: components/support/android-test
     publish: true
+    upstream_dependencies: []
   support-base:
     description: Base component containing building blocks for components.
     path: components/support/base
     publish: true
+    upstream_dependencies:
+    - concept-base
+    - support-test
   support-images:
     description: A collection of helpers for handling images such as icons and thumbnails.
     path: components/support/images
     publish: true
+    upstream_dependencies:
+    - concept-fetch
+    - support-base
+    - support-test
   support-ktx:
     description: A set of Kotlin extensions.
     path: components/support/ktx
     publish: true
+    upstream_dependencies:
+    - lib-publicsuffixlist
+    - support-base
+    - support-test
+    - support-test-fakes
+    - support-utils
   support-locale:
     description: A component to allow apps to change the system defined language by
       their custom one
     path: components/support/locale
     publish: true
+    upstream_dependencies:
+    - browser-state
+    - support-base
+    - support-test
+    - support-test-libstate
+    - support-utils
   support-rusterrors:
     description: A bridge for reporting Rust errors to Sentry/Glean
     path: components/support/rusterrors
     publish: true
+    upstream_dependencies:
+    - support-base
   support-rusthttp:
     description: A bridge allowing configuration of Rust HTTP requests without directly
       depending on the application services library
     path: components/support/rusthttp
     publish: true
+    upstream_dependencies:
+    - concept-fetch
   support-rustlog:
     description: A bridge allowing log messages from Rust code to be sent to the log
       system in support-base
     path: components/support/rustlog
     publish: true
+    upstream_dependencies:
+    - support-base
+    - support-test
   support-sync-telemetry:
     description: A collection of sync-related telemetry helper classes and ping descriptions.
     path: components/support/sync-telemetry
     publish: true
+    upstream_dependencies:
+    - service-glean
+    - support-base
+    - support-test
   support-test:
     description: A collection of helpers for testing components (local unit tests).
     path: components/support/test
     publish: true
+    upstream_dependencies:
+    - support-base
+    - support-ktx
   support-test-appservices:
     description: A component for synchronizing Application Services' unit testing
       dependencies used in Android Components.
     path: components/support/test-appservices
     publish: true
+    upstream_dependencies: []
   support-test-fakes:
     description: A collection of fake implementations for testing purposes.
     path: components/support/test-fakes
     publish: true
+    upstream_dependencies:
+    - concept-engine
   support-test-libstate:
     description: A collection of helpers for testing functionality that relies on
       the lib-state component (local unit tests).
     path: components/support/test-libstate
     publish: true
+    upstream_dependencies:
+    - lib-state
   support-utils:
     description: A collection of generic helper classes.
     path: components/support/utils
     publish: true
+    upstream_dependencies:
+    - support-base
+    - support-test
   support-webextensions:
     description: A component containing building blocks for features implemented as
       web extensions.
     path: components/support/webextensions
     publish: true
+    upstream_dependencies:
+    - browser-state
+    - concept-engine
+    - support-base
+    - support-ktx
+    - support-test
+    - support-test-libstate
   tooling-detekt:
     description: Custom Detekt rules for internal use.
     path: components/tooling/detekt
     publish: false
+    upstream_dependencies: []
   tooling-fetch-tests:
     description: Test cases for concept-fetch implementations.
     path: components/tooling/fetch-tests
     publish: false
+    upstream_dependencies:
+    - concept-fetch
   tooling-glean-gradle:
     artifact-type: jar
     description: A Gradle plugin to generate code for Glean metrics.
     path: components/tooling/glean-gradle-plugin
     publish: true
+    upstream_dependencies: []
   tooling-lint:
     description: Custom Lint checks for using and writing components.
     path: components/tooling/lint
     publish: false
+    upstream_dependencies: []
   tooling-nimbus-gradle:
     artifact-type: jar
     description: A Gradle plugin to generate code for the Nimbus Feature API.
     path: components/tooling/nimbus-gradle-plugin
     publish: true
+    upstream_dependencies: []
   ui-autocomplete:
     description: A set of components to provide autocomplete functionality.
     path: components/ui/autocomplete
     publish: true
+    upstream_dependencies:
+    - support-base
+    - support-test
+    - support-utils
   ui-colors:
     description: The standard set of Photon colors.
     path: components/ui/colors
     publish: true
+    upstream_dependencies: []
   ui-fonts:
     description: Convenience accessor for fonts used by Mozilla.
     path: components/ui/fonts
     publish: true
+    upstream_dependencies: []
   ui-icons:
     description: A collection of often used browser icons.
     path: components/ui/icons
     publish: true
+    upstream_dependencies: []
   ui-tabcounter:
     description: A tab counter for browsers.
     path: components/ui/tabcounter
     publish: true
+    upstream_dependencies:
+    - browser-menu2
+    - concept-menu
+    - support-base
+    - support-ktx
+    - support-test
+    - support-utils
+    - ui-icons
   ui-widgets:
     description: The standard set of Mozilla widgets.
     path: components/ui/widgets
     publish: true
+    upstream_dependencies:
+    - support-test
+    - ui-colors
+    - ui-icons
