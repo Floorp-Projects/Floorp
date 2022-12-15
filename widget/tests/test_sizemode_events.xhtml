@@ -120,6 +120,19 @@ async function runTest() {
     gWindow.resizeTo(gWindow.outerWidth, gWindow.outerHeight + 10);
   });
 
+  // Resizing a maximized window should change to normal sizemode.
+  info("maximize() in preparation for resize");
+  await expectSizeModeChange(gWindow.STATE_MAXIMIZED, function () {
+    gWindow.maximize();
+  });
+
+  info("Testing resizeTo() from maximized");
+  await expectSizeModeChange(gWindow.STATE_NORMAL, function () {
+    // MacOS treats windows close to the available screen size as maximized.
+    // Shrinking the window by only 10px isn't enough to change the sizemode.
+    gWindow.resizeTo(gWindow.outerWidth / 2, gWindow.outerHeight / 2);
+  });
+
   gWindow.removeEventListener("sizemodechange", sizemodeChanged);
   gWindow.close();
   SimpleTest.finish();
