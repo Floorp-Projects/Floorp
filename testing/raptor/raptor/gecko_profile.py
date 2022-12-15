@@ -237,8 +237,8 @@ class GeckoProfile(object):
 
         """
         profiles = self.collect_profiles()
+        is_extra_profiler_run, _ = self._is_extra_profiler_run()
         if len(profiles) == 0:
-            is_extra_profiler_run, _ = self._is_extra_profiler_run()
             if is_extra_profiler_run:
                 LOG.info("No profiles collected in the extra profiler run")
             else:
@@ -299,7 +299,14 @@ class GeckoProfile(object):
                 profile_path = profile_info["path"]
 
                 LOG.info("Opening profile at %s" % profile_path)
-                profile = self._open_gecko_profile(profile_path)
+                try:
+                    profile = self._open_gecko_profile(profile_path)
+                except FileNotFoundError:
+                    if is_extra_profiler_run:
+                        LOG.info("Profile not found on extra profiler run.")
+                    else:
+                        LOG.error("Profile not found.")
+                    continue
 
                 LOG.info("Symbolicating profile from %s" % profile_path)
                 symbolicated_profile = self._symbolicate_profile(
