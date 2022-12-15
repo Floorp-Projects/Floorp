@@ -350,15 +350,6 @@ class SVGElement : public SVGElementBase  // nsIContent
   void UpdateContentDeclarationBlock();
   const mozilla::DeclarationBlock* GetContentDeclarationBlock() const;
 
-  bool Autofocus() const { return GetBoolAttr(nsGkAtoms::autofocus); }
-  void SetAutofocus(bool aAutofocus, ErrorResult& aRv) {
-    if (aAutofocus) {
-      SetAttr(nsGkAtoms::autofocus, u""_ns, aRv);
-    } else {
-      UnsetAttr(nsGkAtoms::autofocus, aRv);
-    }
-  }
-
  protected:
   JSObject* WrapNode(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
 

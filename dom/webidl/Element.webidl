@@ -179,7 +179,8 @@ interface mixin HTMLOrForeignElement {
   // See bug 1389421
   // attribute DOMString nonce; // intentionally no [CEReactions]
 
-  [CEReactions, SetterThrows, Pure] attribute boolean autofocus;
+  // See bug 1575154
+  // [CEReactions] attribute boolean autofocus;
   [CEReactions, SetterThrows, Pure] attribute long tabIndex;
   [Throws, NeedsCallerType] undefined focus(optional FocusOptions options = {});
   [Throws] undefined blur();

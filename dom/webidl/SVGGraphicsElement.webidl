@@ -19,6 +19,9 @@ dictionary SVGBoundingBoxOptions {
 
 [Exposed=Window]
 interface SVGGraphicsElement : SVGElement {
+  [Pure]
+  attribute boolean autofocus;
+
   readonly attribute SVGAnimatedTransformList transform;
 
   [Deprecated="SVGNearestViewportElement",

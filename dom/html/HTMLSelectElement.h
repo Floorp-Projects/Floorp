@@ -115,6 +115,10 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
   virtual bool IsInteractiveHTMLContent() const override { return true; }
 
   // WebIdl HTMLSelectElement
+  bool Autofocus() const { return GetBoolAttr(nsGkAtoms::autofocus); }
+  void SetAutofocus(bool aVal, ErrorResult& aRv) {
+    SetHTMLBoolAttr(nsGkAtoms::autofocus, aVal, aRv);
+  }
   void GetAutocomplete(DOMString& aValue);
   void SetAutocomplete(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::autocomplete, aValue, aRv);

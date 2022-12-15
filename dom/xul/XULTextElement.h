@@ -18,7 +18,7 @@ class XULTextElement final : public nsXULElement {
 
   bool Disabled() { return GetXULBoolAttr(nsGkAtoms::disabled); }
   MOZ_CAN_RUN_SCRIPT void SetDisabled(bool aValue) {
-    SetXULBoolAttr(nsGkAtoms::disabled, aValue, mozilla::IgnoreErrors());
+    SetXULBoolAttr(nsGkAtoms::disabled, aValue);
   }
   void GetValue(DOMString& aValue) const {
     GetXULAttr(nsGkAtoms::value, aValue);
