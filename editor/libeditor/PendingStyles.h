@@ -105,8 +105,8 @@ class PendingStyleCache final {
 class MOZ_STACK_CLASS AutoPendingStyleCacheArray final
     : public AutoTArray<PendingStyleCache, 21> {
  public:
-  index_type IndexOf(const nsStaticAtom& aTag,
-                     const nsStaticAtom* aAttribute) const {
+  [[nodiscard]] index_type IndexOf(const nsStaticAtom& aTag,
+                                   const nsStaticAtom* aAttribute) const {
     for (index_type index = 0; index < Length(); ++index) {
       const PendingStyleCache& styleCache = ElementAt(index);
       if (&styleCache.TagRef() == &aTag &&
@@ -115,6 +115,11 @@ class MOZ_STACK_CLASS AutoPendingStyleCacheArray final
       }
     }
     return NoIndex;
+  }
+
+  [[nodiscard]] bool Contains(const nsStaticAtom& aTag,
+                              const nsStaticAtom* aAttribute) const {
+    return IndexOf(aTag, aAttribute) != NoIndex;
   }
 };
 
