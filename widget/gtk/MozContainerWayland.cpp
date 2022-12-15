@@ -704,6 +704,9 @@ bool moz_container_wayland_egl_window_needs_size_update(MozContainer* container,
                                                         nsIntSize aSize,
                                                         int aScale) {
   MozContainerWayland* wl_container = &container->wl_container;
+  if (!wl_container->eglwindow) {
+    return false;
+  }
   if (wl_container->buffer_scale != aScale) {
     return true;
   }
