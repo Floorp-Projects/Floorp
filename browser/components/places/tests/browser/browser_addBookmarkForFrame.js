@@ -8,6 +8,23 @@ const PAGE_URL = BASE_URL + "/framedPage.html";
 const LEFT_URL = BASE_URL + "/frameLeft.html";
 const RIGHT_URL = BASE_URL + "/frameRight.html";
 
+function activateBookmarkFrame(contentAreaContextMenu) {
+  let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+    contentAreaContextMenu,
+    "popuphidden"
+  );
+  return async function() {
+    let frameMenuItem = document.getElementById("frame");
+    let frameMenu = frameMenuItem.querySelector(":scope > menupopup");
+    let frameMenuShown = BrowserTestUtils.waitForEvent(frameMenu, "popupshown");
+    frameMenuItem.openMenu(true);
+    await frameMenuShown;
+    let bookmarkFrame = document.getElementById("context-bookmarkframe");
+    frameMenu.activateItem(bookmarkFrame);
+    await popupHiddenPromise;
+  };
+}
+
 async function withAddBookmarkForFrame(taskFn) {
   // Open a tab and wait for all the subframes to load.
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE_URL);
@@ -29,14 +46,7 @@ async function withAddBookmarkForFrame(taskFn) {
 
   await withBookmarksDialog(
     true,
-    function() {
-      let frameMenuItem = document.getElementById("frame");
-      frameMenuItem.click();
-
-      let bookmarkFrame = document.getElementById("context-bookmarkframe");
-      bookmarkFrame.click();
-      contentAreaContextMenu.hidePopup();
-    },
+    activateBookmarkFrame(contentAreaContextMenu),
     taskFn
   );
 
@@ -147,14 +157,7 @@ add_task(
 
     await withBookmarksDialog(
       false,
-      function() {
-        let frameMenuItem = document.getElementById("frame");
-        frameMenuItem.click();
-
-        let bookmarkFrame = document.getElementById("context-bookmarkframe");
-        bookmarkFrame.click();
-        contentAreaContextMenu.hidePopup();
-      },
+      activateBookmarkFrame(contentAreaContextMenu),
       async function(dialogWin) {
         let expectedGuid = await PlacesUIUtils.defaultParentGuid;
         let expectedFolder = "BookmarksToolbarFolderTitle";

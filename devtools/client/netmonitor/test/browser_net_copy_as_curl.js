@@ -195,16 +195,15 @@ async function testForPlatform(tab, monitor, testData) {
     );
 
     /* Ensure that the copy as cURL option is always visible */
-    const copyUrlParamsNode = getContextMenuItem(monitor, menuItemId);
     is(
-      !!copyUrlParamsNode,
+      !!getContextMenuItem(monitor, menuItemId),
       true,
       `The "Copy as cURL" context menu item "${menuItemId}" should not be hidden.`
     );
 
     await waitForClipboardPromise(
-      function setup() {
-        copyUrlParamsNode.click();
+      async function setup() {
+        await selectContextMenuItem(monitor, menuItemId);
       },
       function validate(result) {
         if (typeof result !== "string") {

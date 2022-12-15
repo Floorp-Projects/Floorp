@@ -75,9 +75,10 @@ add_task(async function() {
   let hiddenPromise = promisePanelElementHidden(window, overflowPanel);
   let moveToPanel = contextMenu.querySelector(".customize-context-moveToPanel");
   if (moveToPanel) {
-    moveToPanel.click();
+    contextMenu.activateItem(moveToPanel);
+  } else {
+    contextMenu.hidePopup();
   }
-  contextMenu.hidePopup();
   await hiddenContextPromise;
   await hiddenPromise;
 

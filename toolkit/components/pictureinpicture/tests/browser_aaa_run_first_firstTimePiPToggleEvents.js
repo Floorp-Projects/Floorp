@@ -175,24 +175,19 @@ async function openAndClosePipWithContextMenu(browser, videoID) {
     },
     browser
   );
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    `#${videoID}`,
-    {
-      type: "contextmenu",
-    },
-    browser
-  );
 
   await popupshown;
   let isContextMenuOpen = menu.state === "showing" || menu.state === "open";
-  Assert.equal(isContextMenuOpen, true, "Context menu is open");
+  ok(isContextMenuOpen, "Context menu is open");
 
   let domWindowOpened = BrowserTestUtils.domWindowOpenedAndLoaded(null);
 
   // clear content events
   await clearAllContentEvents();
 
-  menu.querySelector("#context-video-pictureinpicture").click();
+  let hidden = BrowserTestUtils.waitForPopupEvent(menu, "hidden");
+  menu.activateItem(menu.querySelector("#context-video-pictureinpicture"));
+  await hidden;
 
   let win = await domWindowOpened;
   ok(win, "A Picture-in-Picture window opened.");

@@ -42,10 +42,10 @@ async function checkJSONSnapshotForRow({ doc, tab, toolbox }, index, expected) {
     menu,
     items: [printToJSON],
   } = getMenuItems(toolbox);
-  printToJSON.click();
 
-  // Note that click() above doesn't close the menupopup.
-  menu.hidePopup();
+  await BrowserTestUtils.waitForPopupEvent(menu, "shown");
+
+  menu.activateItem(printToJSON);
 
   const jsonViewTab = await newTabSelected(tab);
   Assert.deepEqual(
