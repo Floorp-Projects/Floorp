@@ -27,3 +27,6 @@ fuzzy-if(Android,0-1,0-8) == tile-transform.html tile-transform-ref.html
 
 # Bug 1234077
 == truncated-framerect.html truncated-framerect-ref.html
+
+# Bug 1801397
+== one-pixel-no-image-data.html one-pixel-no-image-data-ref.html
