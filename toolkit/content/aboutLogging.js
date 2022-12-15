@@ -362,7 +362,7 @@ function init() {
   }
 }
 
-function updateLogFile() {
+function updateLogFile(file) {
   let logPath = "";
 
   // Try to get the environment variable for the log file
@@ -379,6 +379,8 @@ function updateLogFile() {
   } else if (gDashboard.getLogPath() != ".moz_log") {
     // There may be a value set by a pref.
     currentLogFile.innerText = gDashboard.getLogPath();
+  } else if (file !== undefined) {
+    currentLogFile.innerText = file;
   } else {
     try {
       let file = gDirServ.getFile("TmpD", {});
@@ -405,6 +407,8 @@ function updateLogFile() {
       };
     }
   }
+  $("#no-log-file").hidden = !!currentLogFile.innerText.length;
+  $("#current-log-file").hidden = !currentLogFile.innerText.length;
 }
 
 function updateLogModules() {
@@ -475,7 +479,7 @@ function setLogFile() {
   }
   let logFile = $("#log-file").value.trim();
   Services.prefs.setCharPref("logging.config.LOG_FILE", logFile);
-  updateLogFile();
+  updateLogFile(logFile);
 }
 
 function clearLogModules() {
