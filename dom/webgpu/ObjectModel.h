@@ -107,9 +107,7 @@ class ObjectBase : public nsWrapperCache {
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(__VA_ARGS__)                  \
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-#define GPU_IMPL_CYCLE_COLLECTION(T, ...)            \
-  NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(T, AddRef)    \
-  NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(T, Release) \
+#define GPU_IMPL_CYCLE_COLLECTION(T, ...) \
   GPU_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(T, __VA_ARGS__)
 
 template <typename T>
