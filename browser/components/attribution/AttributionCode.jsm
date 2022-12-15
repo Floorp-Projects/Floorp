@@ -116,18 +116,6 @@ var AttributionCode = {
    * @param {String} code to write.
    */
   async writeAttributionFile(code) {
-    // Writing attribution codes is only needed to support the Return-to-AMO
-    // flow. In theory, we could support this with MSIX by "writing" them to
-    // somewhere in memory, and making sure reads also read from there.
-    if (
-      AppConstants.platform === "win" &&
-      Services.sysinfo.getProperty("hasWinPackageId")
-    ) {
-      Services.console.logStringMessage(
-        "Attribution code cannot be written for MSIX builds, aborting."
-      );
-      return;
-    }
     let file = AttributionCode.attributionFile;
     await IOUtils.makeDirectory(file.parent.path);
     let bytes = new TextEncoder().encode(code);

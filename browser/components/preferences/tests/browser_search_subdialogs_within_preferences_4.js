@@ -13,13 +13,6 @@ add_task(async function() {
  * Test for searching for the "Update History" subdialog.
  */
 add_task(async function() {
-  // The updates panel is disabled in MSIX builds.
-  if (
-    AppConstants.platform === "win" &&
-    Services.sysinfo.getProperty("hasWinPackageId")
-  ) {
-    return;
-  }
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
     leaveOpen: true,
   });

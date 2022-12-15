@@ -3171,7 +3171,6 @@ toolbar#nav-bar {
                 ),
                 "xorigin": options.xOriginTests,
                 "condprof": options.conditionedProfile,
-                "msix": "WindowsApps" in options.app,
             }
         )
 
