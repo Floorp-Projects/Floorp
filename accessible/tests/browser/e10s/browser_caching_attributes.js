@@ -233,6 +233,31 @@ addAccessibleTask(
 );
 
 /**
+ * Test that there is no display attribute on image map areas.
+ */
+addAccessibleTask(
+  `
+<map name="normalMap">
+  <area id="normalArea" shape="default">
+</map>
+<img src="http://example.com/a11y/accessible/tests/mochitest/moz.png" usemap="#normalMap">
+<audio>
+  <map name="unslottedMap">
+    <area id="unslottedArea" shape="default">
+  </map>
+</audio>
+<img src="http://example.com/a11y/accessible/tests/mochitest/moz.png" usemap="#unslottedMap">
+  `,
+  async function(browser, docAcc) {
+    const normalArea = findAccessibleChildByID(docAcc, "normalArea");
+    testAbsentAttrs(normalArea, { display: "" });
+    const unslottedArea = findAccessibleChildByID(docAcc, "unslottedArea");
+    testAbsentAttrs(unslottedArea, { display: "" });
+  },
+  { topLevel: true }
+);
+
+/**
  * Test caching of the explicit-name attribute.
  */
 addAccessibleTask(

@@ -3820,6 +3820,12 @@ nsAtom* LocalAccessible::TagName() const {
 
 already_AddRefed<nsAtom> LocalAccessible::DisplayStyle() const {
   if (dom::Element* elm = Elm()) {
+    if (elm->IsHTMLElement(nsGkAtoms::area)) {
+      // This is an image map area. CSS is irrelevant here. Furthermore, we
+      // won't be able to get the computed style if the map is unslotted in a
+      // shadow host.
+      return nullptr;
+    }
     StyleInfo info(elm);
     return info.Display();
   }
