@@ -675,8 +675,8 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "download.mozilla.org", false, false, true, 14, &kPinset_mozilla_services },
   { "drive.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "dropbox.com", true, false, false, -1, &kPinset_dropbox },
-  { "dropboxstatic.com", false, true, false, -1, &kPinset_dropbox },
-  { "dropboxusercontent.com", false, true, false, -1, &kPinset_dropbox },
+  { "dropboxstatic.com", true, true, false, -1, &kPinset_dropbox },
+  { "dropboxusercontent.com", true, true, false, -1, &kPinset_dropbox },
   { "edit.yahoo.com", true, true, false, -1, &kPinset_yahoo },
   { "en-maktoob.search.yahoo.com", false, true, false, -1, &kPinset_yahoo },
   { "encrypted.google.com", true, false, false, -1, &kPinset_google_root_pems },
@@ -684,7 +684,7 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "espanol.search.yahoo.com", false, true, false, -1, &kPinset_yahoo },
   { "example.test", true, true, false, -1, &kPinset_test },
   { "exclude-subdomains.pinning.example.com", false, false, false, -1, &kPinset_mozilla_test },
-  { "facebook.com", false, false, false, -1, &kPinset_facebook },
+  { "facebook.com", true, false, false, -1, &kPinset_facebook },
   { "fi.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "fi.search.yahoo.com", false, true, false, -1, &kPinset_yahoo },
   { "firebaseio.com", true, false, false, -1, &kPinset_google_root_pems },
@@ -972,7 +972,7 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "market.android.com", true, false, false, -1, &kPinset_google_root_pems },
   { "mbasic.facebook.com", true, false, false, -1, &kPinset_facebook },
   { "meet.google.com", true, false, false, -1, &kPinset_google_root_pems },
-  { "messenger.com", false, false, false, -1, &kPinset_facebook },
+  { "messenger.com", true, false, false, -1, &kPinset_facebook },
   { "mobile.twitter.com", true, false, false, -1, &kPinset_twitterCom },
   { "mt.search.yahoo.com", false, true, false, -1, &kPinset_yahoo },
   { "mtouch.facebook.com", true, false, false, -1, &kPinset_facebook },
@@ -1095,4 +1095,4 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1679311454050000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1679570666187000);
