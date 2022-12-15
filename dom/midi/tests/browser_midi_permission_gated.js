@@ -379,6 +379,7 @@ add_task(async function testRequestMIDIAccess() {
   is(rejectionMessage, "SecurityError", "requestMIDIAccess was rejected");
 
   info("Request midi-sysex access again");
+  let denyIntervalStart = performance.now();
   rejectionMessage = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [],
@@ -398,6 +399,12 @@ add_task(async function testRequestMIDIAccess() {
     rejectionMessage,
     "SecurityError",
     "requestMIDIAccess was rejected without user prompt"
+  );
+  let denyIntervalElapsed = performance.now() - denyIntervalStart;
+  ok(
+    denyIntervalElapsed >= 3000,
+    `Rejection should be delayed by a randomized interval no less than 3 seconds (got ${denyIntervalElapsed /
+      1000} seconds)`
   );
 
   assertSitePermissionInstallTelemetryEvents(["site_warning", "cancelled"]);

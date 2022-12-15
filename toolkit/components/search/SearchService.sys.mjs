@@ -1620,7 +1620,7 @@ export class SearchService {
       let engineSettings = settings.engines.find(
         e => e.id == prevCurrentEngineId
       );
-      if (engineSettings?._loadPath?.includes("set-via-policy")) {
+      if (engineSettings?._loadPath?.startsWith("[policy]")) {
         return false;
       }
     }
@@ -2179,10 +2179,10 @@ export class SearchService {
 
       try {
         let engine;
-        if (loadPath?.includes("set-via-policy")) {
+        if (loadPath?.startsWith("[policy]")) {
           skippedEngines++;
           continue;
-        } else if (loadPath?.includes("set-via-user")) {
+        } else if (loadPath?.startsWith("[user]")) {
           engine = new lazy.UserSearchEngine({ json: engineJSON });
         } else if (engineJSON.extensionID ?? engineJSON._extensionID) {
           engine = new lazy.AddonSearchEngine({

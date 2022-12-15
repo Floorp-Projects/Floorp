@@ -638,7 +638,8 @@ var ExtensionsUI = {
       return;
     }
 
-    let uri = popup.ownerGlobal.gBrowser.currentURI;
+    let win = popup.ownerGlobal;
+    let uri = win.gBrowser.currentURI;
     let state = lazy.OriginControls.getState(policy, uri);
 
     let doc = popup.ownerDocument;
@@ -669,9 +670,10 @@ var ExtensionsUI = {
         whenClicked,
         "origin-controls-option-when-clicked"
       );
-      whenClicked.addEventListener("command", () =>
-        lazy.OriginControls.setWhenClicked(policy, uri)
-      );
+      whenClicked.addEventListener("command", async () => {
+        await lazy.OriginControls.setWhenClicked(policy, uri);
+        win.gUnifiedExtensions.updateAttention();
+      });
     }
 
     if (state.alwaysOn) {
@@ -681,9 +683,10 @@ var ExtensionsUI = {
       doc.l10n.setAttributes(alwaysOn, "origin-controls-option-always-on", {
         domain: uri.host,
       });
-      alwaysOn.addEventListener("command", () =>
-        lazy.OriginControls.setAlwaysOn(policy, uri)
-      );
+      alwaysOn.addEventListener("command", async () => {
+        await lazy.OriginControls.setAlwaysOn(policy, uri);
+        win.gUnifiedExtensions.updateAttention();
+      });
     }
 
     // Insert all before Pin to toolbar OR Manage Extension, after any

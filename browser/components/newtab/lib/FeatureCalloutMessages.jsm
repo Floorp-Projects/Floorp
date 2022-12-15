@@ -141,6 +141,7 @@ const MESSAGES = () => {
       },
       targeting: `!inMr2022Holdback && source == "firefoxview" &&
        !'browser.newtabpage.activity-stream.asrouter.providers.cfr'|preferenceIsUserSet &&
+       'browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features'|preferenceValue &&
        ${matchCurrentScreenTargeting(
          FIREFOX_VIEW_PREF,
          "FIREFOX_VIEW_SPOTLIGHT"
@@ -671,7 +672,7 @@ const MESSAGES = () => {
     },
   ];
   messages = add24HourImpressionJEXLTargeting(
-    ["FIREFOX_VIEW_COLORWAYS_REMINDER", "FIREFOX_VIEW_TAB_PICKUP_REMINDER"],
+    ["FIREFOX_VIEW_TAB_PICKUP_REMINDER"],
     "FIREFOX_VIEW",
     messages
   );

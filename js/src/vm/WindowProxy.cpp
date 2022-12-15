@@ -35,8 +35,10 @@ void js::SetWindowProxy(JSContext* cx, Handle<JSObject*> global,
   MOZ_ASSERT(IsWindowProxy(windowProxy));
 
   GlobalObject& globalObj = global->as<GlobalObject>();
-  globalObj.setWindowProxy(windowProxy);
-  globalObj.lexicalEnvironment().setWindowProxyThisObject(windowProxy);
+  if (globalObj.maybeWindowProxy() != windowProxy) {
+    globalObj.setWindowProxy(windowProxy);
+    globalObj.lexicalEnvironment().setWindowProxyThisObject(windowProxy);
+  }
 }
 
 JSObject* js::ToWindowIfWindowProxy(JSObject* obj) {

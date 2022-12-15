@@ -443,6 +443,8 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   // external type in all cases right now.
   bool isWorkerType =
       internalContentType == nsIContentPolicy::TYPE_INTERNAL_WORKER ||
+      internalContentType ==
+          nsIContentPolicy::TYPE_INTERNAL_WORKER_STATIC_MODULE ||
       internalContentType == nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER ||
       internalContentType == nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER;
   ExtContentPolicyType contentType =

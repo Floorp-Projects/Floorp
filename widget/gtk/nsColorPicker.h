@@ -65,6 +65,7 @@ class nsColorPicker final : public nsIColorPicker {
   nsString mTitle;
   nsString mColor;
   nsString mInitialColor;
+  nsTArray<nsString> mDefaultColors;
 };
 
 #endif  // nsColorPicker_h__

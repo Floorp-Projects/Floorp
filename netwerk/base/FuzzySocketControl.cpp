@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FuzzySocketControl.h"
+
+#include "FuzzySecurityInfo.h"
 #include "ipc/IPCMessageUtils.h"
 #include "nsITlsHandshakeListener.h"
 #include "sslt.h"
@@ -166,7 +168,8 @@ FuzzySocketControl::DisableEarlyData(void) { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP FuzzySocketControl::GetSecurityInfo(
     nsITransportSecurityInfo** aSecurityInfo) {
-  *aSecurityInfo = nullptr;
+  nsCOMPtr<nsITransportSecurityInfo> securityInfo(new FuzzySecurityInfo());
+  securityInfo.forget(aSecurityInfo);
   return NS_OK;
 }
 

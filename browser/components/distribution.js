@@ -16,7 +16,6 @@ const { AppConstants } = ChromeUtils.importESModule(
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-  Preferences: "resource://gre/modules/Preferences.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(
   lazy,
@@ -404,12 +403,12 @@ DistributionCustomizer.prototype = {
       return this._checkCustomizationComplete();
     }
 
-    let defaults = new lazy.Preferences({ defaultBranch: true });
+    let defaults = Services.prefs.getDefaultBranch(null);
 
     // Global really contains info we set as prefs.  They're only
     // separate because they are "special" (read: required)
 
-    defaults.set("distribution.id", distroID);
+    defaults.setStringPref("distribution.id", distroID);
 
     if (
       distroID.startsWith("yandex") ||
@@ -420,7 +419,7 @@ DistributionCustomizer.prototype = {
       return this._checkCustomizationComplete();
     }
 
-    defaults.set(
+    defaults.setStringPref(
       "distribution.version",
       this._ini.getString("Global", "version")
     );
@@ -434,64 +433,72 @@ DistributionCustomizer.prototype = {
       } else {
         partnerAbout = this._ini.getString("Global", "about");
       }
-      defaults.set("distribution.about", partnerAbout);
+      defaults.setStringPref("distribution.about", partnerAbout);
     } catch (e) {
       /* ignore bad prefs due to bug 895473 and move on */
-      Cu.reportError(e);
     }
 
-    var usedPreferences = [];
+    /* order of precedence is locale->language->default */
 
-    if (sections["Preferences-" + this._locale]) {
-      for (let key of this._ini.getKeys("Preferences-" + this._locale)) {
-        try {
-          let value = this._ini.getString("Preferences-" + this._locale, key);
-          if (value) {
-            defaults.set(key, parseValue(value));
-          }
-          usedPreferences.push(key);
-        } catch (e) {
-          /* ignore bad prefs and move on */
+    let preferences = new Map();
+
+    if (sections.Preferences) {
+      for (let key of this._ini.getKeys("Preferences")) {
+        let value = this._ini.getString("Preferences", key);
+        if (value) {
+          preferences.set(key, value);
         }
       }
     }
 
     if (sections["Preferences-" + this._language]) {
       for (let key of this._ini.getKeys("Preferences-" + this._language)) {
-        if (usedPreferences.indexOf(key) > -1) {
-          continue;
-        }
-        try {
-          let value = this._ini.getString("Preferences-" + this._language, key);
-          if (value) {
-            defaults.set(key, parseValue(value));
-          }
-          usedPreferences.push(key);
-        } catch (e) {
-          /* ignore bad prefs and move on */
+        let value = this._ini.getString("Preferences-" + this._language, key);
+        if (value) {
+          preferences.set(key, value);
+        } else {
+          // If something was set by Preferences, but it's empty in language,
+          // it should be removed.
+          preferences.delete(key);
         }
       }
     }
 
-    if (sections.Preferences) {
-      for (let key of this._ini.getKeys("Preferences")) {
-        if (usedPreferences.indexOf(key) > -1) {
-          continue;
+    if (sections["Preferences-" + this._locale]) {
+      for (let key of this._ini.getKeys("Preferences-" + this._locale)) {
+        let value = this._ini.getString("Preferences-" + this._locale, key);
+        if (value) {
+          preferences.set(key, value);
+        } else {
+          // If something was set by Preferences, but it's empty in locale,
+          // it should be removed.
+          preferences.delete(key);
         }
-        try {
-          let value = this._ini.getString("Preferences", key);
-          if (value) {
-            value = value.replace(/%LOCALE%/g, this._locale);
-            value = value.replace(/%LANGUAGE%/g, this._language);
-            if (key == "general.useragent.locale") {
-              defaults.set("intl.locale.requested", parseValue(value));
-            } else {
-              defaults.set(key, parseValue(value));
-            }
+      }
+    }
+
+    for (let [prefName, prefValue] of preferences) {
+      prefValue = prefValue.replace(/%LOCALE%/g, this._locale);
+      prefValue = prefValue.replace(/%LANGUAGE%/g, this._language);
+      prefValue = parseValue(prefValue);
+      try {
+        if (prefName == "general.useragent.locale") {
+          defaults.setStringPref("intl.locale.requested", prefValue);
+        } else {
+          switch (typeof prefValue) {
+            case "boolean":
+              defaults.setBoolPref(prefName, prefValue);
+              break;
+            case "number":
+              defaults.setIntPref(prefName, prefValue);
+              break;
+            case "string":
+              defaults.setStringPref(prefName, prefValue);
+              break;
           }
-        } catch (e) {
-          /* ignore bad prefs and move on */
         }
+      } catch (e) {
+        /* ignore bad prefs and move on */
       }
     }
 
@@ -500,7 +507,7 @@ DistributionCustomizer.prototype = {
       // so we're using an internal preference to name them correctly.
       // This is needed for search to work properly.
       try {
-        defaults.set(
+        defaults.setStringPref(
           "distribution.id",
           defaults
             .get("extensions.yasearch@yandex.ru.clids.vendor")
@@ -515,29 +522,13 @@ DistributionCustomizer.prototype = {
       Ci.nsIPrefLocalizedString
     );
 
-    var usedLocalizablePreferences = [];
+    let localizablePreferences = new Map();
 
-    if (sections["LocalizablePreferences-" + this._locale]) {
-      for (let key of this._ini.getKeys(
-        "LocalizablePreferences-" + this._locale
-      )) {
-        try {
-          let value = this._ini.getString(
-            "LocalizablePreferences-" + this._locale,
-            key
-          );
-          if (value) {
-            value = parseValue(value);
-            localizedStr.data = "data:text/plain," + key + "=" + value;
-            defaults._prefBranch.setComplexValue(
-              key,
-              Ci.nsIPrefLocalizedString,
-              localizedStr
-            );
-          }
-          usedLocalizablePreferences.push(key);
-        } catch (e) {
-          /* ignore bad prefs and move on */
+    if (sections.LocalizablePreferences) {
+      for (let key of this._ini.getKeys("LocalizablePreferences")) {
+        let value = this._ini.getString("LocalizablePreferences", key);
+        if (value) {
+          localizablePreferences.set(key, value);
         }
       }
     }
@@ -546,51 +537,51 @@ DistributionCustomizer.prototype = {
       for (let key of this._ini.getKeys(
         "LocalizablePreferences-" + this._language
       )) {
-        if (usedLocalizablePreferences.indexOf(key) > -1) {
-          continue;
-        }
-        try {
-          let value = this._ini.getString(
-            "LocalizablePreferences-" + this._language,
-            key
-          );
-          if (value) {
-            value = parseValue(value);
-            localizedStr.data = "data:text/plain," + key + "=" + value;
-            defaults._prefBranch.setComplexValue(
-              key,
-              Ci.nsIPrefLocalizedString,
-              localizedStr
-            );
-          }
-          usedLocalizablePreferences.push(key);
-        } catch (e) {
-          /* ignore bad prefs and move on */
+        let value = this._ini.getString(
+          "LocalizablePreferences-" + this._language,
+          key
+        );
+        if (value) {
+          localizablePreferences.set(key, value);
+        } else {
+          // If something was set by Preferences, but it's empty in language,
+          // it should be removed.
+          localizablePreferences.delete(key);
         }
       }
     }
 
-    if (sections.LocalizablePreferences) {
-      for (let key of this._ini.getKeys("LocalizablePreferences")) {
-        if (usedLocalizablePreferences.indexOf(key) > -1) {
-          continue;
+    if (sections["LocalizablePreferences-" + this._locale]) {
+      for (let key of this._ini.getKeys(
+        "LocalizablePreferences-" + this._locale
+      )) {
+        let value = this._ini.getString(
+          "LocalizablePreferences-" + this._locale,
+          key
+        );
+        if (value) {
+          localizablePreferences.set(key, value);
+        } else {
+          // If something was set by Preferences, but it's empty in locale,
+          // it should be removed.
+          localizablePreferences.delete(key);
         }
-        try {
-          let value = this._ini.getString("LocalizablePreferences", key);
-          if (value) {
-            value = parseValue(value);
-            value = value.replace(/%LOCALE%/g, this._locale);
-            value = value.replace(/%LANGUAGE%/g, this._language);
-            localizedStr.data = "data:text/plain," + key + "=" + value;
-            defaults._prefBranch.setComplexValue(
-              key,
-              Ci.nsIPrefLocalizedString,
-              localizedStr
-            );
-          }
-        } catch (e) {
-          /* ignore bad prefs and move on */
-        }
+      }
+    }
+
+    for (let [prefName, prefValue] of localizablePreferences) {
+      prefValue = parseValue(prefValue);
+      prefValue = prefValue.replace(/%LOCALE%/g, this._locale);
+      prefValue = prefValue.replace(/%LANGUAGE%/g, this._language);
+      localizedStr.data = "data:text/plain," + prefName + "=" + prefValue;
+      try {
+        defaults.setComplexValue(
+          prefName,
+          Ci.nsIPrefLocalizedString,
+          localizedStr
+        );
+      } catch (e) {
+        /* ignore bad prefs and move on */
       }
     }
 

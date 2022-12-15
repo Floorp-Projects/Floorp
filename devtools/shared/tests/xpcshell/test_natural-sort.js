@@ -879,9 +879,13 @@ function runTest(testArray, expected, description, caseInsensitive = false) {
   let actual = null;
 
   if (caseInsensitive) {
-    actual = testArray.sort(naturalSortCaseInsensitive);
+    actual = testArray.sort((a, b) =>
+      naturalSortCaseInsensitive(a, b, sessionString)
+    );
   } else {
-    actual = testArray.sort(naturalSortCaseSensitive);
+    actual = testArray.sort((a, b) =>
+      naturalSortCaseSensitive(a, b, sessionString)
+    );
   }
 
   compareOptions(actual, expected, description);

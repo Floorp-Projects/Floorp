@@ -1832,6 +1832,7 @@ class BootstrapScope {
         builtIn: addon.location.isBuiltin,
         isSystem: addon.location.isSystem,
         isPrivileged: addon.isPrivileged,
+        locationHidden: addon.location.hidden,
         recommendationState: addon.recommendationState,
       };
 

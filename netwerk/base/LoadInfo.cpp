@@ -1541,14 +1541,11 @@ LoadInfo::AppendRedirectHistoryEntry(nsIChannel* aChannel,
     if (referrerInfo) {
       referrer = referrerInfo->GetComputedReferrer();
     }
-  }
 
-  // ClassifierDummyChannel implements this, but not nsIHttpChannel,
-  // whereas NullHttpChannel implements nsIHttpChannel but not this, so
-  // we can't make assumptions by nesting these QIs.
-  nsCOMPtr<nsIHttpChannelInternal> intChannel(do_QueryInterface(aChannel));
-  if (intChannel) {
-    Unused << intChannel->GetRemoteAddress(remoteAddress);
+    nsCOMPtr<nsIHttpChannelInternal> intChannel(do_QueryInterface(aChannel));
+    if (intChannel) {
+      Unused << intChannel->GetRemoteAddress(remoteAddress);
+    }
   }
 
   nsCOMPtr<nsIPrincipal> truncatedPrincipal =

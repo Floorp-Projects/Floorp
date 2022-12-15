@@ -42,7 +42,10 @@ cppunit:
     tier: default
     run-on-projects:
         by-variant:
-            1proc: built-projects
+            1proc:
+                by-test-platform:
+                    .*tsan.*: []
+                    default: built-projects
             default: []
 
 gtest:
@@ -56,6 +59,7 @@ gtest:
                 by-test-platform:
                     .*android.*: built-projects
                     .*-devedition.*/.*: []  # don't run on devedition
+                    .*tsan.*: []
                     linux1804-32-qr/opt: []  # try only, shippable on m-c
                     linux1804-32-qr/debug: ['mozilla-central']  # try and m-c
                     linux1804-32-shippable-qr/opt: ['mozilla-central']  # try and m-c

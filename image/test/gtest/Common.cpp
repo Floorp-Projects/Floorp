@@ -923,7 +923,8 @@ ImageTestCase DownscaledTransparentICOWithANDMaskTestCase() {
 }
 
 ImageTestCase TruncatedSmallGIFTestCase() {
-  return ImageTestCase("green-1x1-truncated.gif", "image/gif", IntSize(1, 1));
+  return ImageTestCase("green-1x1-truncated.gif", "image/gif", IntSize(1, 1),
+                       TEST_CASE_IS_TRANSPARENT);
 }
 
 ImageTestCase LargeICOWithBMPTestCase() {

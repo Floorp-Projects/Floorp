@@ -210,10 +210,9 @@ void CSP_LogMessage(const nsAString& aMessage, const nsAString& aSourceName,
   // information contained within 'aSourceLine' can be really useful for devs.
   // E.g. 'aSourceLine' might be: 'onclick attribute on DIV element'.
   // In such cases we append 'aSourceLine' directly to the error message.
-  if (!aSourceLine.IsEmpty()) {
-    cspMsg.AppendLiteral(u" Source: ");
+  if (!aSourceLine.IsEmpty() && aLineNumber == 0) {
+    cspMsg.AppendLiteral(u"\nSource: ");
     cspMsg.Append(aSourceLine);
-    cspMsg.AppendLiteral(u".");
   }
 
   // Since we are leveraging csp errors as the category names which
@@ -305,6 +304,7 @@ CSPDirective CSP_ContentTypeToDirective(nsContentPolicyType aType) {
       return nsIContentSecurityPolicy::WEB_MANIFEST_SRC_DIRECTIVE;
 
     case nsIContentPolicy::TYPE_INTERNAL_WORKER:
+    case nsIContentPolicy::TYPE_INTERNAL_WORKER_STATIC_MODULE:
     case nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER:
     case nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER:
       return nsIContentSecurityPolicy::WORKER_SRC_DIRECTIVE;
@@ -354,6 +354,7 @@ CSPDirective CSP_ContentTypeToDirective(nsContentPolicyType aType) {
     // Fall through to error for all other directives
     // Note that we should never end up here for navigate-to
     case nsIContentPolicy::TYPE_INVALID:
+    case nsIContentPolicy::TYPE_END:
       MOZ_ASSERT(false, "Can not map nsContentPolicyType to CSPDirective");
       // Do not add default: so that compilers can catch the missing case.
   }
@@ -580,11 +581,7 @@ void nsCSPSchemeSrc::toString(nsAString& outStr) const {
 
 /* ===== nsCSPHostSrc ======================== */
 
-nsCSPHostSrc::nsCSPHostSrc(const nsAString& aHost)
-    : mHost(aHost),
-      mGeneratedFromSelfKeyword(false),
-      mIsUniqueOrigin(false),
-      mWithinFrameAncstorsDir(false) {
+nsCSPHostSrc::nsCSPHostSrc(const nsAString& aHost) : mHost(aHost) {
   ToLowerCase(mHost);
 }
 
@@ -821,11 +818,13 @@ void nsCSPHostSrc::toString(nsAString& outStr) const {
     return;
   }
 
-  // append scheme
-  outStr.Append(mScheme);
+  // append scheme if it wasn't generated from the mSelfURI
+  if (!mGeneratedScheme) {
+    outStr.Append(mScheme);
+    outStr.AppendLiteral("://");
+  }
 
   // append host
-  outStr.AppendLiteral("://");
   outStr.Append(mHost);
 
   // append port

@@ -14,8 +14,11 @@ namespace mozilla::dom {
 
 class ColorPickerParent : public PColorPickerParent {
  public:
-  ColorPickerParent(const nsString& aTitle, const nsString& aInitialColor)
-      : mTitle(aTitle), mInitialColor(aInitialColor) {}
+  ColorPickerParent(const nsString& aTitle, const nsString& aInitialColor,
+                    const nsTArray<nsString>& aDefaultColors)
+      : mTitle(aTitle),
+        mInitialColor(aInitialColor),
+        mDefaultColors(aDefaultColors.Clone()) {}
 
   virtual mozilla::ipc::IPCResult RecvOpen() override;
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
@@ -45,6 +48,7 @@ class ColorPickerParent : public PColorPickerParent {
 
   nsString mTitle;
   nsString mInitialColor;
+  nsTArray<nsString> mDefaultColors;
 };
 
 }  // namespace mozilla::dom

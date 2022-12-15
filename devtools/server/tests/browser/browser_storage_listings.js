@@ -9,6 +9,9 @@ Services.scriptloader.loadSubScript(
   this
 );
 
+const l10n = new Localization(["devtools/client/storage.ftl"], true);
+const sessionString = l10n.formatValueSync("storage-expires-session");
+
 const storeMap = {
   cookies: {
     "http://test1.example.org": [
@@ -380,22 +383,28 @@ async function testStores(commands) {
               }
               data[resourceType].dataByHost[
                 host
-              ].main = await resource.getStoreObjects(host);
+              ].main = await resource.getStoreObjects(host, null, {
+                sessionString,
+              });
               for (const name of resource.hosts[host]) {
                 const objName = JSON.parse(name).slice(0, 1);
                 data[resourceType].dataByHost[host][
                   objName
-                ] = await resource.getStoreObjects(host, [
-                  JSON.stringify(objName),
-                ]);
+                ] = await resource.getStoreObjects(
+                  host,
+                  [JSON.stringify(objName)],
+                  { sessionString }
+                );
                 data[resourceType].dataByHost[host][
                   name
-                ] = await resource.getStoreObjects(host, [name]);
+                ] = await resource.getStoreObjects(host, [name], {
+                  sessionString,
+                });
               }
             } else {
               data[resourceType].dataByHost[
                 host
-              ] = await resource.getStoreObjects(host);
+              ] = await resource.getStoreObjects(host, null, { sessionString });
             }
           }
         }

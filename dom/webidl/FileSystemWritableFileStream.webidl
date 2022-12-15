@@ -9,6 +9,7 @@ enum WriteCommandType {
   "truncate"
 };
 
+[GenerateConversionToJS]
 dictionary WriteParams {
   required WriteCommandType type;
   unsigned long long? size;

@@ -93,7 +93,7 @@ add_task(async function test_enterprise_policy_engine() {
     normal: {
       engineId: "other-policy",
       displayName: "policy",
-      loadPath: "[other]addEngineWithDetails:set-via-policy",
+      loadPath: "[policy]",
       submissionUrl: "blank:",
       verified: "verified",
     },

@@ -51,7 +51,7 @@ add_task(async function test_initialization_delayed_addon_manager() {
     normal: {
       engineId: "engine",
       displayName: "Test search engine",
-      loadPath: "[other]addEngineWithDetails:engine@search.mozilla.org",
+      loadPath: "[addon]engine@search.mozilla.org",
       submissionUrl: "https://www.google.com/search?q=",
       verified: "default",
     },

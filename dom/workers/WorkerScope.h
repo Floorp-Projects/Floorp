@@ -8,6 +8,7 @@
 #define mozilla_dom_workerscope_h__
 
 #include "js/TypeDecls.h"
+#include "js/loader/ModuleLoaderBase.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
@@ -158,7 +159,22 @@ class WorkerGlobalScopeBase : public DOMEventTargetHelper,
 
   Console* GetConsoleIfExists() const { return mConsole; }
 
+  void InitModuleLoader(JS::loader::ModuleLoaderBase* aModuleLoader) {
+    if (!mModuleLoader) {
+      mModuleLoader = aModuleLoader;
+    }
+  }
+
+  // The nullptr here is not used, but is required to make the override method
+  // have the same signature as other GetModuleLoader methods on globals.
+  JS::loader::ModuleLoaderBase* GetModuleLoader(
+      JSContext* aCx = nullptr) override {
+    return mModuleLoader;
+  };
+
   uint64_t WindowID() const;
+
+  virtual void NoteTerminating();
 
   // Usually global scope dies earlier than the WorkerPrivate, but if we see
   // it leak at least we can tell it to not carry away a dead pointer.
@@ -184,6 +200,7 @@ class WorkerGlobalScopeBase : public DOMEventTargetHelper,
 
  private:
   RefPtr<Console> mConsole;
+  RefPtr<JS::loader::ModuleLoaderBase> mModuleLoader;
   const UniquePtr<ClientSource> mClientSource;
   nsCOMPtr<nsISerialEventTarget> mSerialEventTarget;
   bool mShouldResistFingerprinting;
@@ -217,7 +234,7 @@ class WorkerGlobalScope : public WorkerGlobalScopeBase {
 
   using WorkerGlobalScopeBase::WorkerGlobalScopeBase;
 
-  void NoteTerminating();
+  void NoteTerminating() override;
 
   void NoteShuttingDown();
 

@@ -327,10 +327,14 @@ class RecentlyClosedTabsList extends HTMLElement {
   // have all the requisite information for them immediately.
   updateURLForListItem(li, targetURI) {
     li.dataset.targetURI = targetURI;
-    document.l10n.setAttributes(li, "firefoxview-tabs-list-tab-button", {
-      targetURI,
-    });
     let urlElement = li.querySelector(".closed-tab-li-url");
+    document.l10n.setAttributes(
+      urlElement,
+      "firefoxview-tabs-list-tab-button",
+      {
+        targetURI,
+      }
+    );
     if (targetURI) {
       urlElement.textContent = formatURIForDisplay(targetURI);
       urlElement.title = targetURI;

@@ -2282,7 +2282,8 @@ bool IsNewWorkerSecureContext(const WorkerPrivate* const aParent,
 
 WorkerPrivate::WorkerPrivate(
     WorkerPrivate* aParent, const nsAString& aScriptURL, bool aIsChromeWorker,
-    WorkerKind aWorkerKind, const nsAString& aWorkerName,
+    WorkerKind aWorkerKind, RequestCredentials aRequestCredentials,
+    enum WorkerType aWorkerType, const nsAString& aWorkerName,
     const nsACString& aServiceWorkerScope, WorkerLoadInfo& aLoadInfo,
     nsString&& aId, const nsID& aAgentClusterId,
     const nsILoadInfo::CrossOriginOpenerPolicy aAgentClusterOpenerPolicy)
@@ -2291,6 +2292,8 @@ WorkerPrivate::WorkerPrivate(
       mParent(aParent),
       mScriptURL(aScriptURL),
       mWorkerName(aWorkerName),
+      mCredentialsMode(aRequestCredentials),
+      mWorkerType(aWorkerType),  // If the worker runs as a script or a module
       mWorkerKind(aWorkerKind),
       mLoadInfo(std::move(aLoadInfo)),
       mDebugger(nullptr),
@@ -2526,10 +2529,22 @@ WorkerPrivate::ComputeAgentClusterIdAndCoop(WorkerPrivate* aParent,
   return {nsID::GenerateUUID(), agentClusterCoop};
 }
 
-// static
 already_AddRefed<WorkerPrivate> WorkerPrivate::Constructor(
     JSContext* aCx, const nsAString& aScriptURL, bool aIsChromeWorker,
     WorkerKind aWorkerKind, const nsAString& aWorkerName,
+    const nsACString& aServiceWorkerScope, WorkerLoadInfo* aLoadInfo,
+    ErrorResult& aRv, nsString aId) {
+  return WorkerPrivate::Constructor(
+      aCx, aScriptURL, aIsChromeWorker, aWorkerKind, RequestCredentials::Omit,
+      WorkerType::Classic, aWorkerName, aServiceWorkerScope, aLoadInfo, aRv,
+      std::move(aId));
+}
+
+// static
+already_AddRefed<WorkerPrivate> WorkerPrivate::Constructor(
+    JSContext* aCx, const nsAString& aScriptURL, bool aIsChromeWorker,
+    WorkerKind aWorkerKind, RequestCredentials aRequestCredentials,
+    enum WorkerType aWorkerType, const nsAString& aWorkerName,
     const nsACString& aServiceWorkerScope, WorkerLoadInfo* aLoadInfo,
     ErrorResult& aRv, nsString aId) {
   WorkerPrivate* parent =
@@ -2592,10 +2607,10 @@ already_AddRefed<WorkerPrivate> WorkerPrivate::Constructor(
   AgentClusterIdAndCoop idAndCoop =
       ComputeAgentClusterIdAndCoop(parent, aWorkerKind, aLoadInfo);
 
-  RefPtr<WorkerPrivate> worker =
-      new WorkerPrivate(parent, aScriptURL, aIsChromeWorker, aWorkerKind,
-                        aWorkerName, aServiceWorkerScope, *aLoadInfo,
-                        std::move(aId), idAndCoop.mId, idAndCoop.mCoop);
+  RefPtr<WorkerPrivate> worker = new WorkerPrivate(
+      parent, aScriptURL, aIsChromeWorker, aWorkerKind, aRequestCredentials,
+      aWorkerType, aWorkerName, aServiceWorkerScope, *aLoadInfo, std::move(aId),
+      idAndCoop.mId, idAndCoop.mCoop);
 
   // Gecko contexts always have an explicitly-set default locale (set by
   // XPJSRuntime::Initialize for the main thread, set by

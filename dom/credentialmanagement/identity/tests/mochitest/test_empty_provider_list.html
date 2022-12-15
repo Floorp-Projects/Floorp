@@ -8,7 +8,8 @@
   <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
   <script>
     SimpleTest.waitForExplicitFinish();
-    setupTest("empty_provider_list").then(
+    setupTest("empty_provider_list")
+      .then(
       function () {
         return navigator.credentials.get({
           identity: {

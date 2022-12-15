@@ -89,7 +89,7 @@ define(function(require, exports, module) {
     // The second item of the array can either be an object holding the attributes
     // for the element or the first child element. Therefore, all array items after the
     // first one are fetched together and split afterwards if needed.
-    let [tagName, ...attributesAndChildren] = jsonMl;
+    let [tagName, ...attributesAndChildren] = jsonMl ?? [];
 
     if (!ALLOWED_TAGS.has(tagName)) {
       tagName = "div";

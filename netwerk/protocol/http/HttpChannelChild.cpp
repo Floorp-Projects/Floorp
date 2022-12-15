@@ -61,7 +61,6 @@
 #include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
 #include "nsCORSListenerProxy.h"
-#include "ClassifierDummyChannel.h"
 #include "nsIOService.h"
 
 #include <functional>

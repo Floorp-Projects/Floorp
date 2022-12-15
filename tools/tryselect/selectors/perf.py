@@ -473,6 +473,14 @@ class PerfParser(CompareParser):
             },
         ],
         [
+            ["--single-run"],
+            {
+                "action": "store_true",
+                "default": False,
+                "help": "Run tasks without a comparison",
+            },
+        ],
+        [
             ["--variants"],
             {
                 "nargs": "*",
@@ -1111,7 +1119,7 @@ class PerfParser(CompareParser):
         return categories
 
     def perf_push_to_try(
-        selected_tasks, selected_categories, queries, try_config, dry_run
+        selected_tasks, selected_categories, queries, try_config, dry_run, single_run
     ):
         """Perf-specific push to try method.
 
@@ -1156,7 +1164,7 @@ class PerfParser(CompareParser):
 
             new_revision_treeherder = log_processor.revision
 
-            if not dry_run:
+            if not (dry_run or single_run):
                 vcs.update(compare_commit)
                 updated = True
 
@@ -1189,6 +1197,7 @@ class PerfParser(CompareParser):
         parameters=None,
         try_config=None,
         dry_run=False,
+        single_run=False,
         **kwargs,
     ):
         # Setup fzf
@@ -1223,7 +1232,12 @@ class PerfParser(CompareParser):
             return None
 
         return PerfParser.perf_push_to_try(
-            selected_tasks, selected_categories, queries, try_config, dry_run
+            selected_tasks,
+            selected_categories,
+            queries,
+            try_config,
+            dry_run,
+            single_run,
         )
 
     def run_category_checks():
@@ -1275,12 +1289,13 @@ def run(**kwargs):
         return
 
     # Provide link to perfherder for comparisons now
-    perfcompare_url = PERFHERDER_BASE_URL % revisions
-    print(
-        "\n!!!NOTE!!!\n You'll be able to find a performance comparison here "
-        "once the tests are complete (ensure you select the right "
-        "framework): %s\n" % perfcompare_url
-    )
+    if not kwargs.get("single_run", False):
+        perfcompare_url = PERFHERDER_BASE_URL % revisions
+        print(
+            "\n!!!NOTE!!!\n You'll be able to find a performance comparison here "
+            "once the tests are complete (ensure you select the right "
+            "framework): %s\n" % perfcompare_url
+        )
     print(
         "If you need any help, you can find us in the #perf-help Matrix channel:\n"
         "https://matrix.to/#/#perf-help:mozilla.org\n"

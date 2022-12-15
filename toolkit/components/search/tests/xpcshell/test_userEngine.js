@@ -48,7 +48,7 @@ add_task(async function test_user_engine() {
     normal: {
       engineId: "other-user",
       displayName: "user",
-      loadPath: "[other]addEngineWithDetails:set-via-user",
+      loadPath: "[user]",
       submissionUrl: "blank:",
       verified: "verified",
     },

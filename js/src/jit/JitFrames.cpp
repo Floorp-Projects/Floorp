@@ -1376,7 +1376,8 @@ static void TraceJitActivation(JSTracer* trc, JitActivation* activation) {
       MOZ_ASSERT(nextPC != 0);
       wasm::WasmFrameIter& wasmFrameIter = frames.asWasm();
       wasm::Instance* instance = wasmFrameIter.instance();
-      instance->trace(trc);
+      WasmInstanceObject* obj = instance->objectUnbarriered();
+      TraceManuallyBarrieredEdge(trc, &obj, "JIT frame wasm instance");
       highestByteVisitedInPrevWasmFrame = instance->traceFrame(
           trc, wasmFrameIter, nextPC, highestByteVisitedInPrevWasmFrame);
     }

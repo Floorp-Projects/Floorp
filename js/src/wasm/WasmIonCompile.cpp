@@ -3539,16 +3539,22 @@ class FunctionCompiler {
   // the instruction so as to hold it live (from the GC's point of view).
   [[nodiscard]] bool writeGcValueAtAddress(
       uint32_t lineOrBytecode, FieldType fieldType, MDefinition* keepAlive,
-      AliasSet::Flag aliasBitset, MDefinition* value, MDefinition* address) {
+      AliasSet::Flag aliasBitset, MDefinition* value, MDefinition* address,
+      bool needsTrapInfo) {
     MOZ_ASSERT(aliasBitset != 0);
     MOZ_ASSERT(keepAlive->type() == MIRType::RefOrNull);
     MOZ_ASSERT(fieldType.widenToValType().toMIRType() == value->type());
     MNarrowingOp narrowingOp = fieldStoreInfoToMIR(fieldType);
 
     if (!fieldType.isRefRepr()) {
-      auto* store = MWasmStoreFieldKA::New(alloc(), keepAlive, address,
-                                           /*offset=*/0, value, narrowingOp,
-                                           AliasSet::Store(aliasBitset));
+      MaybeTrapSiteInfo maybeTrap;
+      if (needsTrapInfo) {
+        maybeTrap.emplace(getTrapSiteInfo());
+      }
+      auto* store =
+          MWasmStoreFieldKA::New(alloc(), keepAlive, address,
+                                 /*offset=*/0, value, narrowingOp,
+                                 AliasSet::Store(aliasBitset), maybeTrap);
       if (!store) {
         return false;
       }
@@ -3563,10 +3569,10 @@ class FunctionCompiler {
     // from struct.new, the old value is always zero.  So we should synthesise
     // a suitable zero constant rather than reading it from the object.  See
     // also bug 1799999.
-    auto* prevValue =
-        MWasmLoadFieldKA::New(alloc(), keepAlive, address, /*offset=*/0,
-                              fieldType.valType().toMIRType(),
-                              MWideningOp::None, AliasSet::Load(aliasBitset));
+    auto* prevValue = MWasmLoadFieldKA::New(
+        alloc(), keepAlive, address, /*offset=*/0,
+        fieldType.valType().toMIRType(), MWideningOp::None,
+        AliasSet::Load(aliasBitset), mozilla::Some(getTrapSiteInfo()));
     if (!prevValue) {
       return false;
     }
@@ -3593,16 +3599,20 @@ class FunctionCompiler {
   [[nodiscard]] bool writeGcValueAtBasePlusOffset(
       uint32_t lineOrBytecode, FieldType fieldType, MDefinition* keepAlive,
       AliasSet::Flag aliasBitset, MDefinition* value, MDefinition* base,
-      uint32_t offset) {
+      uint32_t offset, bool needsTrapInfo) {
     MOZ_ASSERT(aliasBitset != 0);
     MOZ_ASSERT(keepAlive->type() == MIRType::RefOrNull);
     MOZ_ASSERT(fieldType.widenToValType().toMIRType() == value->type());
     MNarrowingOp narrowingOp = fieldStoreInfoToMIR(fieldType);
 
     if (!fieldType.isRefRepr()) {
-      auto* store =
-          MWasmStoreFieldKA::New(alloc(), keepAlive, base, offset, value,
-                                 narrowingOp, AliasSet::Store(aliasBitset));
+      MaybeTrapSiteInfo maybeTrap;
+      if (needsTrapInfo) {
+        maybeTrap.emplace(getTrapSiteInfo());
+      }
+      auto* store = MWasmStoreFieldKA::New(
+          alloc(), keepAlive, base, offset, value, narrowingOp,
+          AliasSet::Store(aliasBitset), maybeTrap);
       if (!store) {
         return false;
       }
@@ -3625,7 +3635,7 @@ class FunctionCompiler {
     }
 
     return writeGcValueAtAddress(lineOrBytecode, fieldType, keepAlive,
-                                 aliasBitset, value, base);
+                                 aliasBitset, value, base, needsTrapInfo);
   }
 
   // Generate a write of `value` at address `base + index * scale`, where
@@ -3656,7 +3666,7 @@ class FunctionCompiler {
     }
 
     return writeGcValueAtAddress(lineOrBytecode, fieldType, keepAlive,
-                                 aliasBitset, value, finalAddr);
+                                 aliasBitset, value, finalAddr, false);
   }
 
   // Generate a read from address `base + offset`, where `offset` is known at
@@ -3666,15 +3676,19 @@ class FunctionCompiler {
   [[nodiscard]] MDefinition* readGcValueAtBasePlusOffset(
       FieldType fieldType, FieldWideningOp fieldWideningOp,
       MDefinition* keepAlive, AliasSet::Flag aliasBitset, MDefinition* base,
-      uint32_t offset) {
+      uint32_t offset, bool needsTrapInfo) {
     MOZ_ASSERT(aliasBitset != 0);
     MOZ_ASSERT(keepAlive->type() == MIRType::RefOrNull);
     MIRType mirType;
     MWideningOp mirWideningOp;
     fieldLoadInfoToMIR(fieldType, fieldWideningOp, &mirType, &mirWideningOp);
-    auto* load =
-        MWasmLoadFieldKA::New(alloc(), keepAlive, base, offset, mirType,
-                              mirWideningOp, AliasSet::Load(aliasBitset));
+    MaybeTrapSiteInfo maybeTrap;
+    if (needsTrapInfo) {
+      maybeTrap.emplace(getTrapSiteInfo());
+    }
+    auto* load = MWasmLoadFieldKA::New(alloc(), keepAlive, base, offset,
+                                       mirType, mirWideningOp,
+                                       AliasSet::Load(aliasBitset), maybeTrap);
     if (!load) {
       return nullptr;
     }
@@ -3712,7 +3726,8 @@ class FunctionCompiler {
     fieldLoadInfoToMIR(fieldType, fieldWideningOp, &mirType, &mirWideningOp);
     auto* load = MWasmLoadFieldKA::New(alloc(), keepAlive, finalAddr,
                                        /*offset=*/0, mirType, mirWideningOp,
-                                       AliasSet::Load(aliasBitset));
+                                       AliasSet::Load(aliasBitset),
+                                       mozilla::Some(getTrapSiteInfo()));
     if (!load) {
       return nullptr;
     }
@@ -3757,18 +3772,22 @@ class FunctionCompiler {
     // whole or of the out-of-line data area.  And adjust `areaOffset`
     // accordingly.
     MDefinition* base;
+    bool needsTrapInfo;
     if (areaIsOutline) {
       auto* load = MWasmLoadField::New(
           alloc(), structObject, WasmStructObject::offsetOfOutlineData(),
           MIRType::Pointer, MWideningOp::None,
-          AliasSet::Load(AliasSet::WasmStructOutlineDataPointer));
+          AliasSet::Load(AliasSet::WasmStructOutlineDataPointer),
+          mozilla::Some(getTrapSiteInfo()));
       if (!load) {
         return false;
       }
       curBlock_->add(load);
       base = load;
+      needsTrapInfo = false;
     } else {
       base = structObject;
+      needsTrapInfo = true;
       areaOffset += WasmStructObject::offsetOfInlineData();
     }
     // The transaction is to happen at `base + areaOffset`, so to speak.
@@ -3781,7 +3800,8 @@ class FunctionCompiler {
                                        : AliasSet::WasmStructInlineDataArea;
 
     return writeGcValueAtBasePlusOffset(lineOrBytecode, fieldType, structObject,
-                                        fieldAliasSet, value, base, areaOffset);
+                                        fieldAliasSet, value, base, areaOffset,
+                                        needsTrapInfo);
   }
 
   // Helper function for EmitStructGet: given a MIR pointer to a
@@ -3802,18 +3822,22 @@ class FunctionCompiler {
     // whole or of the out-of-line data area.  And adjust `areaOffset`
     // accordingly.
     MDefinition* base;
+    bool needsTrapInfo;
     if (areaIsOutline) {
       auto* loadOOLptr = MWasmLoadField::New(
           alloc(), structObject, WasmStructObject::offsetOfOutlineData(),
           MIRType::Pointer, MWideningOp::None,
-          AliasSet::Load(AliasSet::WasmStructOutlineDataPointer));
+          AliasSet::Load(AliasSet::WasmStructOutlineDataPointer),
+          mozilla::Some(getTrapSiteInfo()));
       if (!loadOOLptr) {
         return nullptr;
       }
       curBlock_->add(loadOOLptr);
       base = loadOOLptr;
+      needsTrapInfo = false;
     } else {
       base = structObject;
+      needsTrapInfo = true;
       areaOffset += WasmStructObject::offsetOfInlineData();
     }
     // The transaction is to happen at `base + areaOffset`, so to speak.
@@ -3826,7 +3850,8 @@ class FunctionCompiler {
                                        : AliasSet::WasmStructInlineDataArea;
 
     return readGcValueAtBasePlusOffset(fieldType, wideningOp, structObject,
-                                       fieldAliasSet, base, areaOffset);
+                                       fieldAliasSet, base, areaOffset,
+                                       needsTrapInfo);
   }
 
   /********************************* WasmGC: address-arithmetic helpers ***/
@@ -3916,6 +3941,7 @@ class FunctionCompiler {
 
   // Given `arrayObject`, the address of a WasmArrayObject, generate MIR to
   // return the contents of the WasmArrayObject::numElements_ field.
+  // Adds trap site info for the null check.
   [[nodiscard]] MDefinition* getWasmArrayObjectNumElements(
       MDefinition* arrayObject) {
     MOZ_ASSERT(arrayObject->type() == MIRType::RefOrNull);
@@ -3923,7 +3949,8 @@ class FunctionCompiler {
     auto* numElements = MWasmLoadField::New(
         alloc(), arrayObject, WasmArrayObject::offsetOfNumElements(),
         MIRType::Int32, MWideningOp::None,
-        AliasSet::Load(AliasSet::WasmArrayNumElements));
+        AliasSet::Load(AliasSet::WasmArrayNumElements),
+        mozilla::Some(getTrapSiteInfo()));
     if (!numElements) {
       return nullptr;
     }
@@ -3940,7 +3967,8 @@ class FunctionCompiler {
     auto* data = MWasmLoadField::New(
         alloc(), arrayObject, WasmArrayObject::offsetOfData(),
         TargetWordMIRType(), MWideningOp::None,
-        AliasSet::Load(AliasSet::WasmArrayDataPointer));
+        AliasSet::Load(AliasSet::WasmArrayDataPointer),
+        mozilla::Some(getTrapSiteInfo()));
     if (!data) {
       return nullptr;
     }
@@ -3981,6 +4009,7 @@ class FunctionCompiler {
   // * Gets the size of the array
   // * Emits a bounds check of `index` against the array size
   // * Retrieves the OOL object pointer from the array
+  // * Includes check for null via signal handler.
   //
   // The returned value is for the OOL object pointer.
   [[nodiscard]] MDefinition* setupForArrayAccess(MDefinition* arrayObject,
@@ -3988,10 +4017,7 @@ class FunctionCompiler {
     MOZ_ASSERT(arrayObject->type() == MIRType::RefOrNull);
     MOZ_ASSERT(index->type() == MIRType::Int32);
 
-    // Check for null.
-    if (!refAsNonNull(arrayObject)) {
-      return nullptr;
-    }
+    // Check for null is done in getWasmArrayObjectNumElements.
 
     // Get the size value for the array.
     MDefinition* numElements = getWasmArrayObjectNumElements(arrayObject);
@@ -4125,8 +4151,8 @@ class FunctionCompiler {
     // Because we have the exact address to hand, use `writeGcValueAtBase`
     // rather than `writeGcValueAtBasePlusScaledIndex` to do the store.
     if (!writeGcValueAtAddress(lineOrBytecode, fillValueFieldType, arrayObject,
-                               AliasSet::WasmArrayDataArea, fillValue,
-                               ptrPhi)) {
+                               AliasSet::WasmArrayDataArea, fillValue, ptrPhi,
+                               false)) {
       return nullptr;
     }
 
@@ -4308,6 +4334,10 @@ class FunctionCompiler {
 
   // Return the current bytecode offset.
   uint32_t readBytecodeOffset() { return iter_.lastOpcodeOffset(); }
+
+  TrapSiteInfo getTrapSiteInfo() {
+    return TrapSiteInfo(wasm::BytecodeOffset(readBytecodeOffset()));
+  }
 
 #if DEBUG
   bool done() const { return iter_.done(); }
@@ -6471,10 +6501,6 @@ static bool EmitCallRef(FunctionCompiler& f) {
     return true;
   }
 
-  if (!f.refAsNonNull(callee)) {
-    return false;
-  }
-
   CallCompileState call;
   if (!EmitCallArgs(f, *funcType, args, &call)) {
     return false;
@@ -6585,10 +6611,7 @@ static bool EmitStructSet(FunctionCompiler& f) {
     return true;
   }
 
-  // Check for null
-  if (!f.refAsNonNull(structObject)) {
-    return false;
-  }
+  // Check for null is done at writeValueToStructField.
 
   // And fill in the field.
   const StructType& structType = (*f.moduleEnv().types)[typeIndex].structType();
@@ -6609,10 +6632,7 @@ static bool EmitStructGet(FunctionCompiler& f, FieldWideningOp wideningOp) {
     return true;
   }
 
-  // Check for null
-  if (!f.refAsNonNull(structObject)) {
-    return false;
-  }
+  // Check for null is done at readValueFromStructField.
 
   // And fetch the data.
   const StructType& structType = (*f.moduleEnv().types)[typeIndex].structType();
@@ -6735,7 +6755,7 @@ static bool EmitArrayNewFixed(FunctionCompiler& f) {
     if (!f.writeGcValueAtBasePlusOffset(
             lineOrBytecode, elemFieldType, arrayObject,
             AliasSet::WasmArrayDataArea, values[numElements - 1 - i], base,
-            i * elemSize)) {
+            i * elemSize, false)) {
       return false;
     }
   }
@@ -6843,10 +6863,7 @@ static bool EmitArraySet(FunctionCompiler& f) {
     return true;
   }
 
-  // Check for null
-  if (!f.refAsNonNull(arrayObject)) {
-    return false;
-  }
+  // Check for null is done at setupForArrayAccess.
 
   // Create the object null check and the array bounds check and get the OOL
   // data pointer.
@@ -6878,10 +6895,7 @@ static bool EmitArrayGet(FunctionCompiler& f, FieldWideningOp wideningOp) {
     return true;
   }
 
-  // Check for null
-  if (!f.refAsNonNull(arrayObject)) {
-    return false;
-  }
+  // Check for null is done at setupForArrayAccess.
 
   // Create the object null check and the array bounds check and get the OOL
   // data pointer.
@@ -6917,10 +6931,7 @@ static bool EmitArrayLen(FunctionCompiler& f, bool decodeIgnoredTypeIndex) {
     return true;
   }
 
-  // Check for null
-  if (!f.refAsNonNull(arrayObject)) {
-    return false;
-  }
+  // Check for null is done at getWasmArrayObjectNumElements.
 
   // Get the size value for the array
   MDefinition* numElements = f.getWasmArrayObjectNumElements(arrayObject);

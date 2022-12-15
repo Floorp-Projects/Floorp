@@ -805,7 +805,6 @@ class WebSocketConnection {
 
   onAcknowledge(aContext, aSize) {}
   onBinaryMessageAvailable(aContext, aMsg) {
-    info(`received binary ${aMsg}`);
     this._messages.push(aMsg);
     this._msgCallback();
   }

@@ -1734,6 +1734,13 @@ class ExtensionData {
     return this.addonData.builtIn || this.addonData.isSystem;
   }
 
+  get isHidden() {
+    return (
+      this.addonData.locationHidden ||
+      (this.isPrivileged && this.manifest.hidden)
+    );
+  }
+
   // Normalizes a Chrome-compatible locale code to the appropriate
   // Gecko-compatible variant. Currently, this means simply
   // replacing underscores with hyphens.

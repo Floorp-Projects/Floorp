@@ -281,9 +281,6 @@ class TabPickupList extends HTMLElement {
       a.setAttribute("tabindex", "-1");
     }
     a.addEventListener("keydown", this);
-    document.l10n.setAttributes(a, "firefoxview-tabs-list-tab-button", {
-      targetURI,
-    });
 
     const title = document.createElement("span");
     title.textContent = tab.title;
@@ -311,6 +308,9 @@ class TabPickupList extends HTMLElement {
     url.textContent = formatURIForDisplay(tab.url);
     url.title = tab.url;
     url.classList.add("synced-tab-li-url");
+    document.l10n.setAttributes(url, "firefoxview-tabs-list-tab-button", {
+      targetURI,
+    });
     device.classList.add("synced-tab-li-device");
 
     // the first list item is different from the second and third

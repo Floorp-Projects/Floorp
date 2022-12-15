@@ -436,8 +436,9 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   bool DeallocPDocAccessibleChild(PDocAccessibleChild*);
 #endif
 
-  PColorPickerChild* AllocPColorPickerChild(const nsAString& aTitle,
-                                            const nsAString& aInitialColor);
+  PColorPickerChild* AllocPColorPickerChild(
+      const nsAString& aTitle, const nsAString& aInitialColor,
+      const nsTArray<nsString>& aDefaultColors);
 
   bool DeallocPColorPickerChild(PColorPickerChild* aActor);
 

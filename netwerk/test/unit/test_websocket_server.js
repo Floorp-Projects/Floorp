@@ -68,7 +68,6 @@ async function test_h1_websocket_direct() {
   let { status } = await conn.finished();
 
   Assert.equal(status, Cr.NS_OK);
-  await wss.stop();
 }
 
 // h1 server with secure h1.1 proxy
@@ -78,6 +77,12 @@ async function test_h1_ws_with_secure_h1_proxy() {
 
   let wss = new NodeWebSocketServer();
   await wss.start();
+
+  registerCleanupFunction(async () => {
+    await wss.stop();
+    await proxy.stop();
+  });
+
   Assert.notEqual(wss.port(), null);
   await wss.registerMessageHandler((data, ws) => {
     ws.send(data);
@@ -90,13 +95,14 @@ async function test_h1_ws_with_secure_h1_proxy() {
   Assert.deepEqual(res, [msg]);
 
   await proxy.stop();
-  await wss.stop();
 }
 
 async function test_h2_websocket_direct() {
   Services.prefs.setBoolPref("network.http.http2.websockets", true);
   let wss = new NodeWebSocketHttp2Server();
   await wss.start();
+  registerCleanupFunction(async () => wss.stop());
+
   Assert.notEqual(wss.port(), null);
   await wss.registerMessageHandler((data, ws) => {
     ws.send(data);
@@ -106,7 +112,6 @@ async function test_h2_websocket_direct() {
   let [status, res] = await channelOpenPromise(url, msg);
   Assert.equal(status, Cr.NS_OK);
   Assert.deepEqual(res, [msg]);
-  await wss.stop();
 }
 
 // ws h1.1 with insecure h1.1 proxy
@@ -117,6 +122,12 @@ async function test_h1_ws_with_h1_insecure_proxy() {
 
   let wss = new NodeWebSocketServer();
   await wss.start();
+
+  registerCleanupFunction(async () => {
+    await wss.stop();
+    await proxy.stop();
+  });
+
   Assert.notEqual(wss.port(), null);
 
   await wss.registerMessageHandler((data, ws) => {
@@ -129,7 +140,6 @@ async function test_h1_ws_with_h1_insecure_proxy() {
   Assert.deepEqual(res, [msg]);
 
   await proxy.stop();
-  await wss.stop();
 }
 
 // ws h1.1 with h2 proxy
@@ -141,6 +151,12 @@ async function test_h1_ws_with_h2_proxy() {
 
   let wss = new NodeWebSocketServer();
   await wss.start();
+
+  registerCleanupFunction(async () => {
+    await wss.stop();
+    await proxy.stop();
+  });
+
   Assert.notEqual(wss.port(), null);
   await wss.registerMessageHandler((data, ws) => {
     ws.send(data);
@@ -153,7 +169,6 @@ async function test_h1_ws_with_h2_proxy() {
   Assert.deepEqual(res, [msg]);
 
   await proxy.stop();
-  await wss.stop();
 }
 
 // ws h2 with insecure h1.1 proxy
@@ -162,6 +177,11 @@ async function test_h2_ws_with_h1_insecure_proxy() {
 
   let proxy = new NodeHTTPProxyServer();
   await proxy.start();
+
+  registerCleanupFunction(async () => {
+    await wss.stop();
+    await proxy.stop();
+  });
 
   let wss = new NodeWebSocketHttp2Server();
   await wss.start();
@@ -177,7 +197,6 @@ async function test_h2_ws_with_h1_insecure_proxy() {
   Assert.deepEqual(res, [msg]);
 
   await proxy.stop();
-  await wss.stop();
 }
 
 // ws h2 with secure h1 proxy
@@ -189,6 +208,12 @@ async function test_h2_ws_with_h1_secure_proxy() {
 
   let wss = new NodeWebSocketHttp2Server();
   await wss.start();
+
+  registerCleanupFunction(async () => {
+    await wss.stop();
+    await proxy.stop();
+  });
+
   Assert.notEqual(wss.port(), null);
   await wss.registerMessageHandler((data, ws) => {
     ws.send(data);
@@ -201,7 +226,6 @@ async function test_h2_ws_with_h1_secure_proxy() {
   Assert.deepEqual(res, [msg]);
 
   await proxy.stop();
-  await wss.stop();
 }
 
 // ws h2 with secure h2 proxy
@@ -213,6 +237,12 @@ async function test_h2_ws_with_h2_proxy() {
 
   let wss = new NodeWebSocketServer();
   await wss.start(); // init port
+
+  registerCleanupFunction(async () => {
+    await wss.stop();
+    await proxy.stop();
+  });
+
   Assert.notEqual(wss.port(), null);
   await wss.registerMessageHandler((data, ws) => {
     ws.send(data);
@@ -225,7 +255,6 @@ async function test_h2_ws_with_h2_proxy() {
   Assert.deepEqual(res, [msg]);
 
   await proxy.stop();
-  await wss.stop();
 }
 
 add_task(test_h1_websocket_direct);
