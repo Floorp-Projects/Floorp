@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-12-08T10:34:34.569111'
+updated_at: '2022-12-15T10:33:04.661805'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -63,6 +63,10 @@ people:
     bmo_id: 555858
     name: Andi
     nick: andi
+  - &andrej
+    bmo_id: 692423
+    name: Andrej Glavic
+    nick: andrej
   - &aoprea
     bmo_id: 509499
     name: Andrei Oprea
@@ -213,6 +217,10 @@ people:
     bmo_id: 531139
     name: Daosheng Mu
     nick: daoshengmu
+  - &davehunt
+    bmo_id: 396948
+    name: Dave Hunt
+    nick: davehunt
   - &dbaron
     bmo_id: 3881
     name: David Baron
@@ -396,7 +404,7 @@ people:
     nick: janv
   - &jaws
     bmo_id: 409754
-    name: ''
+    name: Jared Wein
     nick: jaws
   - &jchen
     bmo_id: 281508
@@ -537,6 +545,10 @@ people:
     bmo_id: 617144
     name: Kris Wright
     nick: KrisWright
+  - &kshampur
+    bmo_id: 698141
+    name: Kash Shampur
+    nick: kshampur
   - &kvark
     bmo_id: 582393
     name: Dzmitry Malyshau
@@ -3505,24 +3517,38 @@ modules:
         - 'Testing :: Mozbase Rust'
   - machine_name: testing_performance_testing
     name: Performance Testing
-    description: 'This module encompasses all of our performance test frameworks:
-      Raptor, Talos, MozPerfTest, AWSY.'
+    description: >
+      This module encompasses all of our performance testing projects, e.g.  Raptor,  Talos,
+      MozPerfTest, AWSY, mach try perf, etc.. See our PerfDocs for more information  on
+      the owners/peers of the various components (linked below).
     includes:
       - testing/raptor/**/*
       - testing/talos/**/*
       - python/mozperftest/**/*
       - testing/awsy/**/*
+      - tools/lint/perfdocs/**/*
+      - testing/perfdocs/**/*
+      - testing/performance/**/*
+      - testing/condprofile/**/*
+      - tools/browsertime/**/*
+      - tools/tryselect/selectors/perf.py
     excludes: []
     owners:
       - *sparky
     peers:
+      - *andrej
+      - *davehunt
       - *kimberlythegeek
+      - *kshampur
     meta:
       components:
         - 'Testing :: Raptor'
         - 'Testing :: Talos'
         - 'Testing :: AWSY'
         - 'Testing :: Performance'
+        - 'Testing :: mozperftest'
+        - 'Testing :: Condprofile'
+      url: :ref:`Performance Testing`
   - machine_name: testing_reftest
     name: Reftest (+ jsreftest + crashtest)
     description: Reftest test framework
@@ -3667,5 +3693,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: 81fa57fcd5cf04d03b569dbbd02a0fb1cd269e7f
-  export: 3e6449e8e44a80d47bcd1a8e52c8dd41cf316515
+  config: f7925bf82df4257a726b414bde6cd350e72d88c8
+  export: 9328eff2d19267e2d04dd206fbf05d491b85a631
