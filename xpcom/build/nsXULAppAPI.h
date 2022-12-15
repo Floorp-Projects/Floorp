@@ -220,16 +220,6 @@ nsresult XRE_GetFileFromPath(const char* aPath, nsIFile** aResult);
 nsresult XRE_GetBinaryPath(nsIFile** aResult);
 
 /**
- * Lock a profile directory using platform-specific semantics.
- *
- * @param aDirectory  The profile directory to lock.
- * @param aLockObject An opaque lock object. The directory will remain locked
- *                    as long as the XPCOM reference is held.
- */
-nsresult XRE_LockProfileDirectory(nsIFile* aDirectory,
-                                  nsISupports** aLockObject);
-
-/**
  * Initialize libXUL for embedding purposes.
  *
  * @param aLibXULDirectory   The directory in which the libXUL shared library
@@ -297,34 +287,6 @@ nsresult XRE_AddManifestLocation(NSLocationType aType, nsIFile* aLocation);
  * which are only allowed to register skin packages.
  */
 nsresult XRE_AddJarManifestLocation(NSLocationType aType, nsIFile* aLocation);
-
-/**
- * Fire notifications to inform the toolkit about a new profile. This
- * method should be called after XRE_InitEmbedding if the embedder
- * wishes to run with a profile. Normally the embedder should call
- * XRE_LockProfileDirectory to lock the directory before calling this
- * method.
- *
- * @note There are two possibilities for selecting a profile:
- *
- * 1) Select the profile before calling XRE_InitEmbedding. The aAppDirProvider
- *    object passed to XRE_InitEmbedding should provide the
- *    NS_APP_USER_PROFILE_50_DIR key, and may also provide the following keys:
- *    - NS_APP_USER_PROFILE_LOCAL_50_DIR
- *    - NS_APP_PROFILE_DIR_STARTUP
- *    - NS_APP_PROFILE_LOCAL_DIR_STARTUP
- *    In this scenario XRE_NotifyProfile should be called immediately after
- *    XRE_InitEmbedding. Component registration information will be stored in
- *    the profile and JS components may be stored in the fastload cache.
- *
- * 2) Select a profile some time after calling XRE_InitEmbedding. In this case
- *    the embedder must install a directory service provider which provides
- *    NS_APP_USER_PROFILE_50_DIR and optionally
- *    NS_APP_USER_PROFILE_LOCAL_50_DIR. Component registration information
- *    will be stored in the application directory and JS components will not
- *    fastload.
- */
-void XRE_NotifyProfile();
 
 /**
  * Terminate embedding started with XRE_InitEmbedding or XRE_InitEmbedding2
@@ -400,10 +362,6 @@ bool XRE_IsSocketProcess();
 bool XRE_UseNativeEventProcessing();
 
 typedef void (*MainFunction)(void* aData);
-
-nsresult XRE_InitParentProcess(int aArgc, char* aArgv[],
-                               MainFunction aMainFunction,
-                               void* aMainFunctionExtraData);
 
 int XRE_RunIPDLTest(int aArgc, char* aArgv[]);
 
