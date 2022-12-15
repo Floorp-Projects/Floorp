@@ -37,150 +37,164 @@ add_setup(async function() {
 // sponsored
 add_task(async function sponsored() {
   let match_type = "firefox-suggest";
-  await doTelemetryTest({
-    index,
-    suggestion,
-    // impression-only
-    impressionOnly: {
-      scalars: {
-        [TELEMETRY_SCALARS.IMPRESSION_SPONSORED]: position,
-      },
-      event: {
-        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
-        method: "engagement",
-        object: "impression_only",
-        extra: {
-          suggestion_type,
-          match_type,
-          position: position.toString(),
-        },
-      },
-      ping: {
-        type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
-        payload: {
-          match_type,
-          position,
-          is_clicked: false,
-          improve_suggest_experience_checked: false,
-          block_id: suggestion.id,
-          advertiser: suggestion.advertiser,
-        },
-      },
-    },
-    selectables: {
-      // click
-      "urlbarView-row-inner": {
+
+  // Make sure `improve_suggest_experience_checked` is recorded correctly
+  // depending on the value of the related pref.
+  for (let improve_suggest_experience_checked of [false, true]) {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        [
+          "browser.urlbar.quicksuggest.dataCollection.enabled",
+          improve_suggest_experience_checked,
+        ],
+      ],
+    });
+    await doTelemetryTest({
+      index,
+      suggestion,
+      // impression-only
+      impressionOnly: {
         scalars: {
           [TELEMETRY_SCALARS.IMPRESSION_SPONSORED]: position,
-          [TELEMETRY_SCALARS.CLICK_SPONSORED]: position,
         },
         event: {
           category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
           method: "engagement",
-          object: "click",
+          object: "impression_only",
           extra: {
             suggestion_type,
             match_type,
             position: position.toString(),
           },
         },
-        pings: [
-          {
-            type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
-            payload: {
-              match_type,
-              position,
-              is_clicked: true,
-              improve_suggest_experience_checked: false,
-              block_id: suggestion.id,
-              advertiser: suggestion.advertiser,
-            },
-          },
-          {
-            type: CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION,
-            payload: {
-              match_type,
-              position,
-              improve_suggest_experience_checked: false,
-              block_id: suggestion.id,
-              advertiser: suggestion.advertiser,
-            },
-          },
-        ],
-      },
-      // block
-      "urlbarView-button-block": {
-        scalars: {
-          [TELEMETRY_SCALARS.IMPRESSION_SPONSORED]: position,
-          [TELEMETRY_SCALARS.BLOCK_SPONSORED]: position,
-        },
-        event: {
-          category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
-          method: "engagement",
-          object: "block",
-          extra: {
-            suggestion_type,
+        ping: {
+          type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
+          payload: {
             match_type,
-            position: position.toString(),
+            position,
+            improve_suggest_experience_checked,
+            is_clicked: false,
+            block_id: suggestion.id,
+            advertiser: suggestion.advertiser,
           },
         },
-        pings: [
-          {
-            type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
-            payload: {
-              match_type,
-              position,
-              is_clicked: false,
-              improve_suggest_experience_checked: false,
-              block_id: suggestion.id,
-              advertiser: suggestion.advertiser,
-            },
-          },
-          {
-            type: CONTEXTUAL_SERVICES_PING_TYPES.QS_BLOCK,
-            payload: {
-              match_type,
-              position,
-              improve_suggest_experience_checked: false,
-              block_id: suggestion.id,
-              advertiser: suggestion.advertiser,
-              iab_category: suggestion.iab_category,
-            },
-          },
-        ],
       },
-      // help
-      "urlbarView-button-help": {
-        scalars: {
-          [TELEMETRY_SCALARS.IMPRESSION_SPONSORED]: position,
-          [TELEMETRY_SCALARS.HELP_SPONSORED]: position,
-        },
-        event: {
-          category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
-          method: "engagement",
-          object: "help",
-          extra: {
-            suggestion_type,
-            match_type,
-            position: position.toString(),
+      selectables: {
+        // click
+        "urlbarView-row-inner": {
+          scalars: {
+            [TELEMETRY_SCALARS.IMPRESSION_SPONSORED]: position,
+            [TELEMETRY_SCALARS.CLICK_SPONSORED]: position,
           },
-        },
-        pings: [
-          {
-            type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
-            payload: {
+          event: {
+            category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
+            method: "engagement",
+            object: "click",
+            extra: {
+              suggestion_type,
               match_type,
-              position,
-              is_clicked: false,
-              improve_suggest_experience_checked: false,
-              block_id: suggestion.id,
-              advertiser: suggestion.advertiser,
+              position: position.toString(),
             },
           },
-        ],
+          pings: [
+            {
+              type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
+              payload: {
+                match_type,
+                position,
+                improve_suggest_experience_checked,
+                is_clicked: true,
+                block_id: suggestion.id,
+                advertiser: suggestion.advertiser,
+              },
+            },
+            {
+              type: CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION,
+              payload: {
+                match_type,
+                position,
+                improve_suggest_experience_checked,
+                block_id: suggestion.id,
+                advertiser: suggestion.advertiser,
+              },
+            },
+          ],
+        },
+        // block
+        "urlbarView-button-block": {
+          scalars: {
+            [TELEMETRY_SCALARS.IMPRESSION_SPONSORED]: position,
+            [TELEMETRY_SCALARS.BLOCK_SPONSORED]: position,
+          },
+          event: {
+            category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
+            method: "engagement",
+            object: "block",
+            extra: {
+              suggestion_type,
+              match_type,
+              position: position.toString(),
+            },
+          },
+          pings: [
+            {
+              type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
+              payload: {
+                match_type,
+                position,
+                improve_suggest_experience_checked,
+                is_clicked: false,
+                block_id: suggestion.id,
+                advertiser: suggestion.advertiser,
+              },
+            },
+            {
+              type: CONTEXTUAL_SERVICES_PING_TYPES.QS_BLOCK,
+              payload: {
+                match_type,
+                position,
+                improve_suggest_experience_checked,
+                block_id: suggestion.id,
+                advertiser: suggestion.advertiser,
+                iab_category: suggestion.iab_category,
+              },
+            },
+          ],
+        },
+        // help
+        "urlbarView-button-help": {
+          scalars: {
+            [TELEMETRY_SCALARS.IMPRESSION_SPONSORED]: position,
+            [TELEMETRY_SCALARS.HELP_SPONSORED]: position,
+          },
+          event: {
+            category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
+            method: "engagement",
+            object: "help",
+            extra: {
+              suggestion_type,
+              match_type,
+              position: position.toString(),
+            },
+          },
+          pings: [
+            {
+              type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
+              payload: {
+                match_type,
+                position,
+                improve_suggest_experience_checked,
+                is_clicked: false,
+                block_id: suggestion.id,
+                advertiser: suggestion.advertiser,
+              },
+            },
+          ],
+        },
       },
-    },
-  });
+    });
+    await SpecialPowers.popPrefEnv();
+  }
 });
 
 // sponsored best match
