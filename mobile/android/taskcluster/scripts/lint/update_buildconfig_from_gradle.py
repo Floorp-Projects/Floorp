@@ -6,6 +6,7 @@
 
 
 import argparse
+import json
 import logging
 import os
 import subprocess
@@ -24,6 +25,8 @@ CONFIGURATIONS_WITH_DEPENDENCIES = (
     "testImplementation",
 )
 
+_DEFAULT_GRADLE_COMMAND = ("./gradlew", "--console=plain", "--parallel")
+
 
 def _get_upstream_deps_per_gradle_project(gradle_root, existing_build_config):
     project_dependencies = defaultdict(set)
@@ -35,10 +38,10 @@ def _get_upstream_deps_per_gradle_project(gradle_root, existing_build_config):
             f"in {gradle_root}"
         )
 
-        cmd = ["./gradlew", "--console=plain", "--parallel"]
         # This is eventually going to fail if there's ever enough projects to make the
         # command line too long. If that happens, we'll need to split this list up and
         # run gradle more than once.
+        cmd = list(_DEFAULT_GRADLE_COMMAND)
         for gradle_project in sorted(gradle_projects):
             cmd.extend(
                 [f"{gradle_project}:dependencies", "--configuration", configuration]
@@ -103,14 +106,32 @@ def _set_logging_config():
     )
 
 
-def _merge_build_config(existing_build_config, upstream_deps_per_project):
+def _merge_build_config(
+    existing_build_config, upstream_deps_per_project, variants_config
+):
     updated_build_config = {
         "projects": {
             project: {"upstream_dependencies": deps}
             for project, deps in upstream_deps_per_project.items()
         }
     }
-    return merge(existing_build_config, updated_build_config)
+    updated_variant_config = {"variants": variants_config} if variants_config else {}
+    return merge(existing_build_config, updated_build_config, updated_variant_config)
+
+
+def _get_variants(gradle_root):
+    cmd = list(_DEFAULT_GRADLE_COMMAND) + ["printVariants"]
+    output_lines = subprocess.check_output(
+        cmd, universal_newlines=True, cwd=gradle_root
+    ).splitlines()
+    variants_line = [line for line in output_lines if line.startswith("variants: ")][0]
+    variants_json = variants_line.split(" ", 1)[1]
+    return json.loads(variants_json)
+
+
+def _should_print_variants(gradle_root):
+    # TODO: Support fenix
+    return gradle_root.endswith("focus-android")
 
 
 def main():
@@ -125,8 +146,12 @@ def main():
     upstream_deps_per_project = _get_upstream_deps_per_gradle_project(
         gradle_root, existing_build_config
     )
+
+    variants_config = (
+        _get_variants(gradle_root) if _should_print_variants(gradle_root) else {}
+    )
     merged_build_config = _merge_build_config(
-        existing_build_config, upstream_deps_per_project
+        existing_build_config, upstream_deps_per_project, variants_config
     )
 
     with open(build_config_file, "w") as f:
