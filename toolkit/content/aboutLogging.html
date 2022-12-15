@@ -2,48 +2,90 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-
 <!DOCTYPE html>
-
 <html>
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'">
-        <meta name="color-scheme" content="light dark">
-        <title data-l10n-id="about-logging-title"></title>
-        <link rel="stylesheet" href="chrome://global/skin/aboutNetworking.css">
-        <script src="chrome://global/content/aboutLogging.js"></script>
-        <link rel="localization"  href="toolkit/about/aboutLogging.ftl">
-    </head>
-    <body id="body">
-        <div class="main-content">
-          <div id="logging">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'">
+<meta name="color-scheme" content="light dark">
+<title data-l10n-id="about-logging-title"></title>
+<link rel="stylesheet" href="chrome://global/skin/aboutLogging.css">
+<link rel="stylesheet" href="chrome://global/skin/in-content/info-pages.css">
+<script src="chrome://global/content/aboutLogging.js"></script>
+<link rel="localization"  href="toolkit/about/aboutLogging.ftl">
+</head>
+<body id="body">
+<div class="main-content">
+  <div id="logging">
+    <h1 id="title" data-l10n-id="about-logging-page-title"></h1>
+    <div class=page-section>
+      <div hidden id=error class=info-box>
+        <div class=info-box-label data-l10n-id="about-logging-error"></div>
+        <div id=error-description></div>
+        <div data-l10n-id="about-logging-configuration-url-ignored"></div>
+      </div>
+      <div hidden id=some-elements-unavailable class=info-box>
+        <div class=info-box-label data-l10n-id="about-logging-info"></div>
+        <div data-l10n-id="about-logging-some-elements-disabled"></div>
+      </div>
+    </div>
+    <button id="toggle-logging-button" data-l10n-id="about-logging-start-logging"></button>
+    <div id=log-module-selection class=page-section>
+      <h2 data-l10n-id="about-logging-log-modules-selection"></h2>
+      <div>
+        <label for="current-log-modules" data-l10n-id="about-logging-currently-enabled-log-modules"></label>
+        <div id="current-log-modules"></div>
+        <span id="no-log-modules" data-l10n-id="about-logging-no-log-modules"></span>
+      </div>
+      <div>
+        <label for="log-modules" data-l10n-id="about-logging-new-log-modules"></label>
+        <input type="text" name="log-modules" id="log-modules" value="">
+        <button id="set-log-modules-button" data-l10n-id="about-logging-set-log-modules"></button>
+      </div>
+      <div id=preset-selector-section>
+        <label for="logging-preset-selector" data-l10n-id="about-logging-logging-preset-selector-text"></label>
+        <select name="logging-preset-selector" id=logging-preset-dropdown></select>
+        <div id="logging-preset-description"></div>
+      </div>
+    </div>
+    <div id=logging-output class=page-section>
+      <div>
+        <span hidden id="buttons-disabled" data-l10n-id="about-logging-buttons-disabled"></span>
+      </div>
+      <h2 data-l10n-id="about-logging-logging-output-selection"></h2>
+      <div id=logging-output-profiler class="radio-entry">
+        <input type="radio" id="radio-logging-profiler" name="logging-output" value="profiler" checked>
+        <label for="profiler" data-l10n-id="about-logging-logging-to-profiler"></label>
+      </div>
+      <div id=logging-output-file class="radio-entry">
+        <input type="radio" id="radio-logging-file" name="logging-output" value="file">
+        <label for="file" data-l10n-id="about-logging-logging-to-file"></label>
+        <div>
+          <span hidden id="buttons-disabled" data-l10n-id="about-logging-buttons-disabled"></span>
+        </div>
+        <div>
+          <div id="log-file-configuration">
             <div>
-              <button id="start-logging-button" data-l10n-id="about-logging-start-logging"></button>
-              <button id="stop-logging-button" data-l10n-id="about-logging-stop-logging"></button>
+              <label for="current-log-file" data-l10n-id="about-logging-current-log-file"></label>
+              <div id="current-log-file"></div>
+              <span id="no-log-file" data-l10n-id="about-logging-no-log-file"></span>
             </div>
-            <br>
-            <br>
             <div>
-              <label data-l10n-id="about-logging-current-log-file"></label>
-              <div id="current-log-file"></div><br>
+              <label for="log-file" data-l10n-id="about-logging-new-log-file"></label>
               <input type="text" name="log-file" id="log-file">
               <button id="open-log-file-button" data-l10n-id="about-logging-open-log-file-dir"></button>
               <button id="set-log-file-button" data-l10n-id="about-logging-set-log-file"></button>
             </div>
-            <div>
-              <label data-l10n-id="about-logging-current-log-modules"></label>
-              <div id="current-log-modules"></div><br>
-              <input type="text" name="log-modules" id="log-modules" value="timestamp,sync,nsHttp:5,cache2:5,nsSocketTransport:5,nsHostResolver:5">
-              <button id="set-log-modules-button" data-l10n-id="about-logging-set-log-modules"></button>
-            </div>
-            <br>
-            <br>
-
-            <p id="log-tutorial" data-l10n-id="about-logging-log-tutorial">
-              <a data-l10n-name="logging" href="https://firefox-source-docs.mozilla.org/networking/http/logging.html"></a>
-            </p>
           </div>
         </div>
-    </body>
+      </div>
+      <div>
+        <p id="log-tutorial" data-l10n-id="about-logging-log-tutorial">
+          <a data-l10n-name="logging" href="https://firefox-source-docs.mozilla.org/networking/http/logging.html"></a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
 </html>

@@ -116,6 +116,17 @@ var AttributionCode = {
    * @param {String} code to write.
    */
   async writeAttributionFile(code) {
+    // Writing attribution files is only used as part of test code, and Mac
+    // attribution, so bailing here for MSIX builds is no big deal.
+    if (
+      AppConstants.platform === "win" &&
+      Services.sysinfo.getProperty("hasWinPackageId")
+    ) {
+      Services.console.logStringMessage(
+        "Attribution code cannot be written for MSIX builds, aborting."
+      );
+      return;
+    }
     let file = AttributionCode.attributionFile;
     await IOUtils.makeDirectory(file.parent.path);
     let bytes = new TextEncoder().encode(code);

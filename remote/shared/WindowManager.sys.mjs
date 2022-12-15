@@ -242,16 +242,15 @@ class WindowManager {
   waitForInitialApplicationWindowLoaded() {
     return new lazy.TimedPromise(
       async resolve => {
-        const windowReadyTopic = lazy.AppInfo.isThunderbird
-          ? "mail-delayed-startup-finished"
-          : "browser-delayed-startup-finished";
-
         // This call includes a fallback to "mail3:pane" as well.
         const win = Services.wm.getMostRecentBrowserWindow();
 
-        const windowLoaded = lazy.waitForObserverTopic(windowReadyTopic, {
-          checkFn: subject => (win !== null ? subject == win : true),
-        });
+        const windowLoaded = lazy.waitForObserverTopic(
+          "browser-delayed-startup-finished",
+          {
+            checkFn: subject => (win !== null ? subject == win : true),
+          }
+        );
 
         // The current window has already been finished loading.
         if (win && win.document.readyState == "complete") {
