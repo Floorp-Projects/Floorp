@@ -131,33 +131,40 @@ add_task(async function search_for_password_show_passwordGroup() {
   }
   await searchCompletedPromise;
 
+  let expectedChildren = [
+    "paneGeneral",
+    "startupGroup",
+    "languagesGroup",
+    "webAppearanceGroup",
+    "colorsGroup",
+    "fontsGroup",
+    "zoomGroup",
+    "downloadsGroup",
+    "applicationsGroup",
+    "drmGroup",
+    "browsingGroup",
+    "performanceGroup",
+    "connectionGroup",
+    "generalCategory",
+    "languageAndAppearanceCategory",
+    "filesAndApplicationsCategory",
+    "performanceCategory",
+    "browsingCategory",
+    "networkProxyCategory",
+  ];
+  // Only visible for non-MSIX builds
+  if (
+    AppConstants.platform !== "win" ||
+    !Services.sysinfo.getProperty("hasWinPackageId", false)
+  ) {
+    expectedChildren.push("updatesCategory");
+    expectedChildren.push("updateApp");
+  }
   // Checks if back to generalPane
   for (let i = 0; i < mainPrefTag.childElementCount; i++) {
     let child = mainPrefTag.children[i];
-    if (
-      child.id == "paneGeneral" ||
-      child.id == "startupGroup" ||
-      child.id == "languagesGroup" ||
-      child.id == "webAppearanceGroup" ||
-      child.id == "colorsGroup" ||
-      child.id == "fontsGroup" ||
-      child.id == "zoomGroup" ||
-      child.id == "downloadsGroup" ||
-      child.id == "applicationsGroup" ||
-      child.id == "drmGroup" ||
-      child.id == "updateApp" ||
-      child.id == "browsingGroup" ||
-      child.id == "performanceGroup" ||
-      child.id == "connectionGroup" ||
-      child.id == "generalCategory" ||
-      child.id == "languageAndAppearanceCategory" ||
-      child.id == "filesAndApplicationsCategory" ||
-      child.id == "updatesCategory" ||
-      child.id == "performanceCategory" ||
-      child.id == "browsingCategory" ||
-      child.id == "networkProxyCategory"
-    ) {
-      is_element_visible(child, "Should be in general tab");
+    if (expectedChildren.includes(child.id)) {
+      is_element_visible(child, `Should be in general tab: ${child.id}`);
     } else if (child.id) {
       is_element_hidden(child, `Should not be in general tab: ${child.id}`);
     }
