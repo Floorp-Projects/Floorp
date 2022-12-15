@@ -843,7 +843,7 @@ def findTestMediaDevices(log):
         gst = gst010
     else:
         gst = gst10
-    subprocess.check_call(
+    process = mozprocess.ProcessHandler(
         [
             gst,
             "--no-fault",
@@ -855,7 +855,8 @@ def findTestMediaDevices(log):
             "device=%s" % device,
         ]
     )
-    info["video"] = name
+    process.run()
+    info["video"] = {"name": name, "process": process}
 
     # check if PulseAudio module-null-sink is loaded
     pactl = spawn.find_executable("pactl")
@@ -880,7 +881,7 @@ def findTestMediaDevices(log):
             return None
 
     # Hardcode the name since it's always the same.
-    info["audio"] = "Monitor of Null Output"
+    info["audio"] = {"name": "Monitor of Null Output"}
     return info
 
 
@@ -940,6 +941,7 @@ class MochitestDesktop(object):
         self.server = None
         self.wsserver = None
         self.websocketProcessBridge = None
+        self.gstForV4l2loopbackProcess = None
         self.sslTunnel = None
         self.manifest = None
         self.tests_by_manifest = defaultdict(list)
@@ -1397,6 +1399,14 @@ class MochitestDesktop(object):
                 self.log.info("Stopping websocket/process bridge")
             except Exception:
                 self.log.critical("Exception stopping websocket/process bridge")
+
+        if self.gstForV4l2loopbackProcess is not None:
+            try:
+                self.gstForV4l2loopbackProcess.kill()
+                self.gstForV4l2loopbackProcess.wait()
+                self.log.info("Stopping gst for v4l2loopback")
+            except Exception:
+                self.log.critical("Exception stopping gst for v4l2loopback")
 
     def copyExtraFilesToProfile(self, options):
         "Copy extra files or dirs specified on the command line to the testing profile."
@@ -2341,10 +2351,11 @@ toolbar#nav-bar {
 
         # See if we should use fake media devices.
         if options.useTestMediaDevices:
-            prefs["media.audio_loopback_dev"] = self.mediaDevices["audio"]
-            prefs["media.video_loopback_dev"] = self.mediaDevices["video"]
+            prefs["media.audio_loopback_dev"] = self.mediaDevices["audio"]["name"]
+            prefs["media.video_loopback_dev"] = self.mediaDevices["video"]["name"]
             prefs["media.cubeb.output_device"] = "Null Output"
             prefs["media.volume_scale"] = "1.0"
+            self.gstForV4l2loopbackProcess = self.mediaDevices["video"]["process"]
 
         self.profile.set_preferences(prefs)
 
