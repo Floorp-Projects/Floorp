@@ -1,59 +1,30 @@
-const { ASRouterTargeting, QueryCache } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouterTargeting.jsm"
-);
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
-);
-const { BuiltInThemes } = ChromeUtils.importESModule(
-  "resource:///modules/BuiltInThemes.sys.mjs"
-);
-const { CFRMessageProvider } = ChromeUtils.import(
-  "resource://activity-stream/lib/CFRMessageProvider.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "ShellService",
-  "resource:///modules/ShellService.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AboutNewTab: "resource:///modules/AboutNewTab.jsm",
+  AddonManager: "resource://gre/modules/AddonManager.jsm",
+  AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
+  ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.jsm",
+  AttributionCode: "resource:///modules/AttributionCode.jsm",
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  CFRMessageProvider: "resource://activity-stream/lib/CFRMessageProvider.jsm",
+  ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
+  ExperimentFakes: "resource://testing-common/NimbusTestUtils.jsm",
+  FxAccounts: "resource://gre/modules/FxAccounts.jsm",
+  HomePage: "resource:///modules/HomePage.jsm",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
+  QueryCache: "resource://activity-stream/lib/ASRouterTargeting.jsm",
+  ShellService: "resource:///modules/ShellService.jsm",
+  TargetingContext: "resource://messaging-system/targeting/Targeting.jsm",
+  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
+  TelemetrySession: "resource://gre/modules/TelemetrySession.jsm",
+});
 ChromeUtils.defineESModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
+  BuiltInThemes: "resource:///modules/BuiltInThemes.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
   ProfileAge: "resource://gre/modules/ProfileAge.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  this,
-  "TelemetryEnvironment",
-  "resource://gre/modules/TelemetryEnvironment.jsm"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "HomePage",
-  "resource:///modules/HomePage.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "AboutNewTab",
-  "resource:///modules/AboutNewTab.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExperimentAPI",
-  "resource://nimbus/ExperimentAPI.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExperimentFakes",
-  "resource://testing-common/NimbusTestUtils.jsm"
-);
 
 // ASRouterTargeting.findMatchingMessage
 add_task(async function find_matching_message() {
@@ -248,6 +219,54 @@ add_task(async function check_isFxAEnabled() {
     message,
     "should select the correct message"
   );
+});
+
+add_task(async function check_isFxASignedIn_false() {
+  await pushPrefs(
+    ["identity.fxaccounts.enabled", true],
+    ["services.sync.username", ""]
+  );
+  const sandbox = sinon.createSandbox();
+  registerCleanupFunction(async () => sandbox.restore());
+  sandbox.stub(FxAccounts.prototype, "getSignedInUser").resolves(null);
+  is(
+    await ASRouterTargeting.Environment.isFxASignedIn,
+    false,
+    "user should not appear signed in"
+  );
+
+  const message = { id: "foo", targeting: "isFxASignedIn" };
+  isnot(
+    await ASRouterTargeting.findMatchingMessage({ messages: [message] }),
+    message,
+    "should not select the message since user is not signed in"
+  );
+
+  sandbox.restore();
+});
+
+add_task(async function check_isFxASignedIn_true() {
+  await pushPrefs(
+    ["identity.fxaccounts.enabled", true],
+    ["services.sync.username", ""]
+  );
+  const sandbox = sinon.createSandbox();
+  registerCleanupFunction(async () => sandbox.restore());
+  sandbox.stub(FxAccounts.prototype, "getSignedInUser").resolves({});
+  is(
+    await ASRouterTargeting.Environment.isFxASignedIn,
+    true,
+    "user should appear signed in"
+  );
+
+  const message = { id: "foo", targeting: "isFxASignedIn" };
+  is(
+    await ASRouterTargeting.findMatchingMessage({ messages: [message] }),
+    message,
+    "should select the correct message"
+  );
+
+  sandbox.restore();
 });
 
 add_task(async function check_totalBookmarksCount() {

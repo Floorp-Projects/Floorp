@@ -123,6 +123,7 @@ describe("ASRouter", () => {
         profileAgeReset: {},
         usesFirefoxSync: false,
         isFxAEnabled: true,
+        isFxASignedIn: false,
         sync: {
           desktopDevices: 0,
           mobileDevices: 0,
