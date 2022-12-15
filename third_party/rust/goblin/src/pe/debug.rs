@@ -169,13 +169,18 @@ impl<'a> CodeviewPDB70DebugInfo<'a> {
         let mut signature: [u8; 16] = [0; 16];
         signature.copy_from_slice(bytes.gread_with(&mut offset, 16)?);
         let age: u32 = bytes.gread_with(&mut offset, scroll::LE)?;
-        let filename = &bytes[offset..offset + filename_length];
-
-        Ok(Some(CodeviewPDB70DebugInfo {
-            codeview_signature,
-            signature,
-            age,
-            filename,
-        }))
+        if let Some(filename) = bytes.get(offset..offset + filename_length) {
+            Ok(Some(CodeviewPDB70DebugInfo {
+                codeview_signature,
+                signature,
+                age,
+                filename,
+            }))
+        } else {
+            Err(error::Error::Malformed(format!(
+                "ImageDebugDirectory seems corrupted: {:?}",
+                idd
+            )))
+        }
     }
 }
