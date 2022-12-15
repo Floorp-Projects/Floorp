@@ -191,7 +191,7 @@ impl HIDDevice for Device {
         self.device_ref
     }
 
-    fn is_u2f(&self) -> bool {
+    fn is_u2f(&mut self) -> bool {
         true
     }
     fn get_shared_secret(&self) -> Option<&ECDHSecret> {

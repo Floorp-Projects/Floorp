@@ -8,7 +8,7 @@ use std::io;
 use std::os::unix::io::RawFd;
 use std::ptr;
 
-use crate::hidproto::*;
+use crate::transport::hidproto::*;
 use crate::util::from_unix_result;
 
 #[allow(non_camel_case_types)]
