@@ -184,16 +184,6 @@ perftest_youtube_link.js
 
 **Measures time to load YouTube video**
 
-perftest_android_startup.js
-===========================
-
-:owner: Performance Team
-:name: android-startup
-
-**Measures cold process view time**
-
-This test launches the appropriate android app, simulating a opening a link through VIEW intent workflow. The application is launched with the intent action android.intent.action.VIEW loading a trivially simple website. The reported metric is the time from process start to navigationStart, reported as processLaunchToNavStart
-
 perftest_android_main.js
 ========================
 
