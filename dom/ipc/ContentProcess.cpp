@@ -30,6 +30,7 @@
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/ProcessUtils.h"
 #include "mozilla/GeckoArgs.h"
+#include "nsAppStartupNotifier.h"
 
 using mozilla::ipc::IOThreadChild;
 
@@ -85,6 +86,45 @@ static void SetUpSandboxEnvironment() {
 }
 #endif
 
+static nsresult GetGREDir(nsIFile** aResult) {
+  nsCOMPtr<nsIFile> current;
+  nsresult rv = XRE_GetBinaryPath(getter_AddRefs(current));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef OS_MACOSX
+  // Walk out of [subprocess].app/Contents/MacOS to the real GRE dir
+  const int depth = 4;
+#else
+  const int depth = 1;
+#endif
+
+  for (int i = 0; i < depth; ++i) {
+    nsCOMPtr<nsIFile> parent;
+    rv = current->GetParent(getter_AddRefs(parent));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    current = parent;
+    NS_ENSURE_TRUE(current, NS_ERROR_UNEXPECTED);
+  }
+
+#ifdef OS_MACOSX
+  rv = current->SetNativeLeafName("Resources"_ns);
+  NS_ENSURE_SUCCESS(rv, rv);
+#endif
+
+  current.forget(aResult);
+
+  return NS_OK;
+}
+
+ContentProcess::ContentProcess(ProcessId aParentPid,
+                               const nsID& aMessageChannelId)
+    : ProcessChild(aParentPid, aMessageChannelId) {
+  NS_LogInit();
+}
+
+ContentProcess::~ContentProcess() { NS_LogTerm(); }
+
 bool ContentProcess::Init(int aArgc, char* aArgv[]) {
   Maybe<uint64_t> childID = geckoargs::sChildID.Get(aArgc, aArgv);
   Maybe<bool> isForBrowser = Nothing();
@@ -92,13 +132,16 @@ bool ContentProcess::Init(int aArgc, char* aArgv[]) {
       geckoargs::sParentBuildID.Get(aArgc, aArgv);
   Maybe<uint64_t> jsInitHandle;
   Maybe<uint64_t> jsInitLen = geckoargs::sJsInitLen.Get(aArgc, aArgv);
-#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-  nsCOMPtr<nsIFile> profileDir;
-#endif
 
+  nsCOMPtr<nsIFile> appDirArg;
   Maybe<const char*> appDir = geckoargs::sAppDir.Get(aArgc, aArgv);
   if (appDir.isSome()) {
-    mXREEmbed.SetAppDir(nsDependentCString(*appDir));
+    bool flag;
+    nsresult rv = XRE_GetFileFromPath(*appDir, getter_AddRefs(appDirArg));
+    if (NS_FAILED(rv) || NS_FAILED(appDirArg->Exists(&flag)) || !flag) {
+      NS_WARNING("Invalid application directory passed to content process.");
+      appDirArg = nullptr;
+    }
   }
 
   Maybe<bool> safeMode = geckoargs::sSafeMode.Get(aArgc, aArgv);
@@ -121,6 +164,7 @@ bool ContentProcess::Init(int aArgc, char* aArgv[]) {
 #endif
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+  nsCOMPtr<nsIFile> profileDir;
   bool flag;
   Maybe<const char*> profile = geckoargs::sProfile.Get(aArgc, aArgv);
   // xpcshell self-test on macOS will hit this, so check isSome() otherwise
@@ -153,7 +197,26 @@ bool ContentProcess::Init(int aArgc, char* aArgv[]) {
 
   mContent.Init(TakeInitialEndpoint(), *parentBuildID, *childID, *isForBrowser);
 
-  mXREEmbed.Start();
+  nsCOMPtr<nsIFile> greDir;
+  nsresult rv = GetGREDir(getter_AddRefs(greDir));
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  nsCOMPtr<nsIFile> xpcomAppDir = appDirArg ? appDirArg : greDir;
+
+  rv = mDirProvider.Initialize(xpcomAppDir, greDir, nullptr);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  rv = NS_InitXPCOM(nullptr, xpcomAppDir, &mDirProvider);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  nsAppStartupNotifier::NotifyObservers(APPSTARTUP_CATEGORY);
+
 #if (defined(XP_MACOSX)) && defined(MOZ_SANDBOX)
   mContent.SetProfileDir(profileDir);
 #  if defined(DEBUG)
@@ -177,6 +240,9 @@ bool ContentProcess::Init(int aArgc, char* aArgv[]) {
 
 // Note: CleanUp() never gets called in non-debug builds because we exit early
 // in ContentChild::ActorDestroy().
-void ContentProcess::CleanUp() { mXREEmbed.Stop(); }
+void ContentProcess::CleanUp() {
+  mDirProvider.DoShutdown();
+  NS_ShutdownXPCOM(nullptr);
+}
 
 }  // namespace mozilla::dom
