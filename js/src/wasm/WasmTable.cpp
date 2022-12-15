@@ -106,8 +106,7 @@ void Table::tracePrivate(JSTracer* trc) {
 
       for (uint32_t i = 0; i < length_; i++) {
         if (functions_[i].instance) {
-          WasmInstanceObject* obj = functions_[i].instance->objectUnbarriered();
-          TraceManuallyBarrieredEdge(trc, &obj, "wasm table instance");
+          functions_[i].instance->trace(trc);
         } else {
           MOZ_ASSERT(!functions_[i].code);
         }
