@@ -387,20 +387,27 @@ class nsXULElement : public nsStyledElement {
   bool GetXULBoolAttr(nsAtom* aName) const {
     return AttrValueIs(kNameSpaceID_None, aName, u"true"_ns, eCaseMatters);
   }
-  void SetXULBoolAttr(nsAtom* aName, bool aValue) {
+  void SetXULBoolAttr(nsAtom* aName, bool aValue,
+                      mozilla::ErrorResult& aError) {
     if (aValue) {
-      SetAttr(kNameSpaceID_None, aName, u"true"_ns, true);
+      SetAttr(aName, u"true"_ns, aError);
     } else {
-      UnsetAttr(kNameSpaceID_None, aName, true);
+      UnsetAttr(aName, aError);
     }
   }
 
   // WebIDL API
+  bool Autofocus() const { return BoolAttrIsTrue(nsGkAtoms::autofocus); }
+  void SetAutofocus(bool aAutofocus, ErrorResult& aRv) {
+    SetXULBoolAttr(nsGkAtoms::autofocus, aAutofocus, aRv);
+  }
   bool Hidden() const { return BoolAttrIsTrue(nsGkAtoms::hidden); }
-  void SetHidden(bool aHidden) { SetXULBoolAttr(nsGkAtoms::hidden, aHidden); }
+  void SetHidden(bool aHidden) {
+    SetXULBoolAttr(nsGkAtoms::hidden, aHidden, mozilla::IgnoreErrors());
+  }
   bool Collapsed() const { return BoolAttrIsTrue(nsGkAtoms::collapsed); }
   void SetCollapsed(bool aCollapsed) {
-    SetXULBoolAttr(nsGkAtoms::collapsed, aCollapsed);
+    SetXULBoolAttr(nsGkAtoms::collapsed, aCollapsed, mozilla::IgnoreErrors());
   }
   void GetObserves(DOMString& aValue) const {
     GetXULAttr(nsGkAtoms::observes, aValue);

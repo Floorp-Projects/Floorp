@@ -169,10 +169,6 @@ class HTMLTextAreaElement final : public TextControlElement,
   void SetAutocomplete(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::autocomplete, aValue, aRv);
   }
-  bool Autofocus() { return GetBoolAttr(nsGkAtoms::autofocus); }
-  void SetAutofocus(bool aAutoFocus, ErrorResult& aError) {
-    SetHTMLBoolAttr(nsGkAtoms::autofocus, aAutoFocus, aError);
-  }
   uint32_t Cols() { return GetUnsignedIntAttr(nsGkAtoms::cols, DEFAULT_COLS); }
   void SetCols(uint32_t aCols, ErrorResult& aError) {
     uint32_t cols = aCols ? aCols : DEFAULT_COLS;

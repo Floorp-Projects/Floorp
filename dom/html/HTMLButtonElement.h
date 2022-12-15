@@ -92,10 +92,6 @@ class HTMLButtonElement final : public nsGenericHTMLFormControlElementWithState,
   virtual bool IsDisabledForEvents(WidgetEvent* aEvent) override;
 
   // WebIDL
-  bool Autofocus() const { return GetBoolAttr(nsGkAtoms::autofocus); }
-  void SetAutofocus(bool aAutofocus, ErrorResult& aError) {
-    SetHTMLBoolAttr(nsGkAtoms::autofocus, aAutofocus, aError);
-  }
   bool Disabled() const { return GetBoolAttr(nsGkAtoms::disabled); }
   void SetDisabled(bool aDisabled, ErrorResult& aError) {
     SetHTMLBoolAttr(nsGkAtoms::disabled, aDisabled, aError);

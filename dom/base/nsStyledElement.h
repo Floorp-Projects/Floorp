@@ -50,6 +50,7 @@ class nsStyledElement : public nsStyledElementBase {
   virtual nsresult SetInlineStyleDeclaration(
       mozilla::DeclarationBlock& aDeclaration,
       mozilla::MutationClosureData& aData) override;
+  virtual nsresult BindToTree(BindContext& aContext, nsINode& aParent) override;
 
   nsICSSDeclaration* Style();
 

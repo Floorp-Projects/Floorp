@@ -273,6 +273,11 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
     return false;
   }
 
+  bool Autofocus() const { return GetBoolAttr(nsGkAtoms::autofocus); }
+  void SetAutofocus(bool aVal, ErrorResult& aRv) {
+    SetHTMLBoolAttr(nsGkAtoms::autofocus, aVal, aRv);
+  }
+
  protected:
   virtual ~nsGenericHTMLElement() = default;
 
@@ -1171,12 +1176,6 @@ class nsGenericHTMLFormControlElement : public nsGenericHTMLFormElement,
   void UpdateRequiredState(bool aIsRequired, bool aNotify);
 
   bool IsAutocapitalizeInheriting() const;
-
-  /**
-   * Returns whether this is a auto-focusable form control.
-   * @return whether this is a auto-focusable form control.
-   */
-  inline bool IsAutofocusable() const;
 
   /**
    * Save to presentation state.  The form control will determine whether it
