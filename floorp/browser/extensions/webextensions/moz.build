@@ -6,19 +6,14 @@
 
 DIRS += [
     "fake-gesturefy",
-    "translate",
+    "fake-translate",
     "treestyletab",
     "official-site-ua",
     "webpanel-ua",
     "multirow-tabs",
 ]
 
-if CONFIG["OS_TARGET"] == "Linux":
- DIRS += ["floorp-system/linux"]
-elif CONFIG["OS_TARGET"] == "WINNT":
-  DIRS += ["floorp-system/windows"]
-elif CONFIG["OS_TARGET"] == "Darwin":
-    DIRS += ["floorp-system/macOS"]
+DIRS += ["floorp-system/shared"]
 
 # multirow-tabs = Paxmod
 # fake-gesturefy = Fake Gesturefy 

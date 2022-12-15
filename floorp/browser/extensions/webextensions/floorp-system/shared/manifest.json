@@ -13,8 +13,6 @@
     "mozillaAddons",
     "about:*",
     "downloads",
-    "webRequest",
-    "webRequestBlocking",
     "<all_urls>"
   ],
   "experiment_apis": {
@@ -35,11 +33,6 @@
       }
     }
   },
-  "browser_action": {
-		"default_icon":  "icons/floorp.png",
-		"default_title": "__MSG_browserActionTitle__",
-		"browser_style":  true
-	},
   "page_action": {
     "browser_style": true,
     "default_icon": "icons/icon.png",

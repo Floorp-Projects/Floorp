@@ -46,12 +46,12 @@ jobs:
         
     - name: Prepare cross compiler ⚒
       run: |
+        sudo apt update
         sudo apt -y install gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
         rustup target add aarch64-unknown-linux-gnu
 
     - name: Create environment
       run: |
-        sudo apt update
         sudo apt install xvfb
         sudo apt install gzip gpg dpkg-dev
         export WORKDIR=`pwd`

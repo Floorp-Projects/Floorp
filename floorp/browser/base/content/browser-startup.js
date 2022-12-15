@@ -16,8 +16,8 @@ function getSystemLocale() {
     return null;
   }
 }
-
-//OS の言語設定への自動追従（この if に使用される pref は初回起動時のみ操作されます。この中にコードを書くと初回起動時のみ動作します）
+  
+  //OS の言語設定への自動追従（この if に使用される pref は初回起動時のみ操作されます。この中にコードを書くと初回起動時のみ動作します）
 if (!Services.prefs.prefHasUserValue("intl.locale.requested")) {
   const systemlocale = getSystemLocale()
   Services.prefs.setStringPref("intl.locale.requested", systemlocale)
@@ -28,9 +28,9 @@ if (!Services.prefs.prefHasUserValue("intl.locale.requested")) {
   let userChromecssPath = OS.Path.join(OS.Constants.Path.profileDir, "chrome");
   //Linux, this is generally "$HOME/.floorp/Profiles/$PROFILENAME/chrome
   //Windows, this is generally "%APPDATA%\Local\temp\%PROFILENAME%"\chrome
-
+  
   let uccpth = OS.Path.join(userChromecssPath, 'userChrome.css')
-  IOUtils.writeUTF8(uccpth, `
+  IOUtils.writeUTF8(uccpth,`
 /*************************************************************************************************************************************************************************************************************************************************************
 
 userChrome.cssは、スタイルシートであり、Floorp のユーザーインターフェースに適用され、デフォルトの Floorp のスタイルルールをオーバーライドできます。 残念ながら、userChrome.cssを使用して Floorp の機能操作を変更することはできません。
@@ -64,7 +64,7 @@ NOTE:適用に、about:config の操作は不要です。
 `);
 
   let ucconpth = OS.Path.join(userChromecssPath, 'userContent.css')
-  IOUtils.writeUTF8(ucconpth, `
+  IOUtils.writeUTF8(ucconpth,`
 /*************************************************************************************************************************************************************************************************************************************************************
  
 userContent.css は userChrome.css と同じく、chrome 特権を用いてブラウザーに対して CSS スタイルルールを指定できる特殊なCSSファイルです。
@@ -80,36 +80,42 @@ userChrome.css は、ツールバーなどのブラウザーを制御する場�
 
 }
 ***********************************
-  
+
 以上です。後の使い方はuserChrome.css と変わりません。Floorp をお楽しみください。
 
 
 ************************************************************************************************************************************************************************************************************************************************************/
 
 @charset "UTF-8";
-  
+
 `);
-  CustomizableUI.addWidgetToArea("undo-closed-tab", CustomizableUI.AREA_NAVBAR, -1);
+  
   window.setTimeout(() => {
     Services.prefs.setStringPref("browser.contentblocking.category", "strict")
   }, 5000);
 
-  async function installXPIFromURL() {
-    let url = "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi"
-    let install = await AddonManager.getInstallForURL(url);
-    install.install();
+  (async function installXPIFromURL() {
+    let url, install, installed;
 
-    url = "https://addons.mozilla.org/firefox/downloads/latest/Gesturefy/latest.xpi"
+    url = "https://addons.mozilla.org/firefox/downloads/latest/Gesturefy/latest.xpi" 
     install = await AddonManager.getInstallForURL(url);
-    install.install();
-  }
-  installXPIFromURL()
+    await install.install();
 
-  window.setTimeout(function () {
-    async function disabledefaultaddons() {
-      let addon = await AddonManager.getAddonByID("uBlock0@raymondhill.net");
-      await addon.disable();
-    }
-    disabledefaultaddons()
-  }, 40000);
+    url = "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi" 
+    install = await AddonManager.getInstallForURL(url);
+    installed = await install.install();
+    await installed.disable();
+  })();
 }
+
+(async () => {
+  if (Services.prefs.getBoolPref("floorp.extension.translate.migrateFromSystemAddonToUserAddon.ended", false)) return;
+  let addon = await AddonManager.getAddonByID("{036a55b4-5e72-4d05-a06c-cba2dfcc134a}");
+  if (addon === null || addon.version === "1.0.0") {
+    let url = "https://addons.mozilla.org/firefox/downloads/latest/traduzir-paginas-web/latest.xpi";
+    let install = await AddonManager.getInstallForURL(url);
+    let installed = await install.install();
+    await installed.reload(); // Do not show addon release note.
+  }
+  Services.prefs.setBoolPref("floorp.extension.translate.migrateFromSystemAddonToUserAddon.ended", true);
+})();
