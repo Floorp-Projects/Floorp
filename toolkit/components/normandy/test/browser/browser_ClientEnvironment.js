@@ -64,14 +64,10 @@ add_task(async function testUserId() {
 });
 
 add_task(async function testDistribution() {
-  // distribution id defaults to "default" for most builds, and
-  // "mozilla-MSIX" for MSIX builds.
+  // distribution id defaults to "default"
   is(
     ClientEnvironment.distribution,
-    AppConstants.platform === "win" &&
-      Services.sysinfo.getProperty("hasWinPackageId")
-      ? "mozilla-MSIX"
-      : "default",
+    "default",
     "distribution has a default value"
   );
 

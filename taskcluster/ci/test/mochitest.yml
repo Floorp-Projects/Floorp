@@ -190,7 +190,6 @@ mochitest-browser-chrome:
         - webrender-sw+a11y-checks
         - webrender-sw+wayland
         - socketprocess_networking
-        - msix
     run-on-projects:
         by-variant:
             webrender-sw:
@@ -211,10 +210,6 @@ mochitest-browser-chrome:
                     (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
                     default: []
             webrender-sw+wayland: []
-            msix:
-                by-test-platform:
-                    windows10-64-2004-shippable-qr/opt: built-projects
-                    default: []
             default:
                 by-test-platform:
                     android.*: []

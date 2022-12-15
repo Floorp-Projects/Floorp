@@ -24,20 +24,12 @@ add_task(async function verify_distribution_info_hides() {
   );
 
   let distroIdField = aboutDialog.document.getElementById("distributionId");
-  let distroField = aboutDialog.document.getElementById("distribution");
 
-  if (
-    AppConstants.platform === "win" &&
-    Services.sysinfo.getProperty("hasWinPackageId")
-  ) {
-    is(distroIdField.value, "mozilla-test-distribution-id - 1.0");
-    is(distroIdField.style.display, "block");
-    is(distroField.style.display, "block");
-  } else {
-    is(distroIdField.value, "");
-    isnot(distroIdField.style.display, "block");
-    isnot(distroField.style.display, "block");
-  }
+  is(distroIdField.value, "");
+  isnot(distroIdField.style.display, "block");
+
+  let distroField = aboutDialog.document.getElementById("distribution");
+  isnot(distroField.style.display, "block");
 
   aboutDialog.close();
 });
