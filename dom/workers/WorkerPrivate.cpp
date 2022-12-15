@@ -946,33 +946,40 @@ class WorkerPrivate::EventTarget final : public nsISerialEventTarget {
   mozilla::Mutex mMutex;
   WorkerPrivate* mWorkerPrivate MOZ_GUARDED_BY(mMutex);
   nsIEventTarget* mWeakNestedEventTarget;
-  nsCOMPtr<nsIEventTarget> mNestedEventTarget;
+  nsCOMPtr<nsIEventTarget> mNestedEventTarget MOZ_GUARDED_BY(mMutex);
+  bool mDisabled MOZ_GUARDED_BY(mMutex);
+  bool mShutdown MOZ_GUARDED_BY(mMutex);
 
  public:
-  explicit EventTarget(WorkerPrivate* aWorkerPrivate)
-      : mMutex("WorkerPrivate::EventTarget::mMutex"),
-        mWorkerPrivate(aWorkerPrivate),
-        mWeakNestedEventTarget(nullptr) {
-    MOZ_ASSERT(aWorkerPrivate);
-  }
-
   EventTarget(WorkerPrivate* aWorkerPrivate, nsIEventTarget* aNestedEventTarget)
       : mMutex("WorkerPrivate::EventTarget::mMutex"),
         mWorkerPrivate(aWorkerPrivate),
         mWeakNestedEventTarget(aNestedEventTarget),
-        mNestedEventTarget(aNestedEventTarget) {
+        mNestedEventTarget(aNestedEventTarget),
+        mDisabled(false),
+        mShutdown(false) {
     MOZ_ASSERT(aWorkerPrivate);
     MOZ_ASSERT(aNestedEventTarget);
   }
 
   void Disable() {
-    nsCOMPtr<nsIEventTarget> nestedEventTarget;
     {
       MutexAutoLock lock(mMutex);
 
       // Note, Disable() can be called more than once safely.
+      mDisabled = true;
+    }
+  }
+
+  void Shutdown() {
+    nsCOMPtr<nsIEventTarget> nestedEventTarget;
+    {
+      MutexAutoLock lock(mMutex);
+
       mWorkerPrivate = nullptr;
       mNestedEventTarget.swap(nestedEventTarget);
+      MOZ_ASSERT(mDisabled);
+      mShutdown = true;
     }
   }
 
@@ -4136,11 +4143,11 @@ already_AddRefed<nsISerialEventTarget> WorkerPrivate::CreateNewSyncLoop(
     queue = static_cast<ThreadEventQueue*>(mThread->EventQueue());
   }
 
-  nsCOMPtr<nsISerialEventTarget> realEventTarget = queue->PushEventQueue();
-  MOZ_ASSERT(realEventTarget);
+  nsCOMPtr<nsISerialEventTarget> nestedEventTarget = queue->PushEventQueue();
+  MOZ_ASSERT(nestedEventTarget);
 
   RefPtr<EventTarget> workerEventTarget =
-      new EventTarget(this, realEventTarget);
+      new EventTarget(this, nestedEventTarget);
 
   {
     // Modifications must be protected by mMutex in DEBUG builds, see comment
@@ -4188,61 +4195,66 @@ nsresult WorkerPrivate::RunCurrentSyncLoop() {
   loopInfo->mHasRun = true;
 #endif
 
-  while (!loopInfo->mCompleted) {
-    bool normalRunnablesPending = false;
+  {
+    SerialEventTargetGuard serialEventTargetGuard(loopInfo->mEventTarget);
 
-    // Don't block with the periodic GC timer running.
-    if (!NS_HasPendingEvents(thread)) {
-      SetGCTimerMode(IdleTimer);
-    }
+    while (!loopInfo->mCompleted) {
+      bool normalRunnablesPending = false;
 
-    // Wait for something to do.
-    {
-      MutexAutoLock lock(mMutex);
+      // Don't block with the periodic GC timer running.
+      if (!NS_HasPendingEvents(thread)) {
+        SetGCTimerMode(IdleTimer);
+      }
 
-      for (;;) {
-        while (mControlQueue.IsEmpty() && !normalRunnablesPending &&
-               !(normalRunnablesPending = NS_HasPendingEvents(thread))) {
-          WaitForWorkerEvents();
-        }
+      // Wait for something to do.
+      {
+        MutexAutoLock lock(mMutex);
 
-        auto result = ProcessAllControlRunnablesLocked();
-        if (result != ProcessAllControlRunnablesResult::Nothing) {
-          // The state of the world may have changed. Recheck it if we need to
-          // continue.
-          normalRunnablesPending =
-              result == ProcessAllControlRunnablesResult::MayContinue &&
-              NS_HasPendingEvents(thread);
+        for (;;) {
+          while (mControlQueue.IsEmpty() && !normalRunnablesPending &&
+                 !(normalRunnablesPending = NS_HasPendingEvents(thread))) {
+            WaitForWorkerEvents();
+          }
 
-          // NB: If we processed a NotifyRunnable, we might have run
-          // non-control runnables, one of which may have shut down the
-          // sync loop.
-          if (loopInfo->mCompleted) {
+          auto result = ProcessAllControlRunnablesLocked();
+          if (result != ProcessAllControlRunnablesResult::Nothing) {
+            // The state of the world may have changed. Recheck it if we need to
+            // continue.
+            normalRunnablesPending =
+                result == ProcessAllControlRunnablesResult::MayContinue &&
+                NS_HasPendingEvents(thread);
+
+            // NB: If we processed a NotifyRunnable, we might have run
+            // non-control runnables, one of which may have shut down the
+            // sync loop.
+            if (loopInfo->mCompleted) {
+              break;
+            }
+          }
+
+          // If we *didn't* run any control runnables, this should be unchanged.
+          MOZ_ASSERT(!loopInfo->mCompleted);
+
+          if (normalRunnablesPending) {
             break;
           }
         }
-
-        // If we *didn't* run any control runnables, this should be unchanged.
-        MOZ_ASSERT(!loopInfo->mCompleted);
-
-        if (normalRunnablesPending) {
-          break;
-        }
       }
-    }
 
-    if (normalRunnablesPending) {
-      // Make sure the periodic timer is running before we continue.
-      SetGCTimerMode(PeriodicTimer);
+      if (normalRunnablesPending) {
+        // Make sure the periodic timer is running before we continue.
+        SetGCTimerMode(PeriodicTimer);
 
-      MOZ_ALWAYS_TRUE(NS_ProcessNextEvent(thread, false));
+        MOZ_ALWAYS_TRUE(NS_ProcessNextEvent(thread, false));
 
-      // Now *might* be a good time to GC. Let the JS engine make the decision.
-      if (GetCurrentEventLoopGlobal()) {
-        // If GetCurrentEventLoopGlobal() is non-null, our JSContext is in a
-        // Realm, so it's safe to try to GC.
-        MOZ_ASSERT(JS::CurrentGlobalOrNull(cx));
-        JS_MaybeGC(cx);
+        // Now *might* be a good time to GC. Let the JS engine make the
+        // decision.
+        if (GetCurrentEventLoopGlobal()) {
+          // If GetCurrentEventLoopGlobal() is non-null, our JSContext is in a
+          // Realm, so it's safe to try to GC.
+          MOZ_ASSERT(JS::CurrentGlobalOrNull(cx));
+          JS_MaybeGC(cx);
+        }
       }
     }
   }
@@ -4261,6 +4273,9 @@ nsresult WorkerPrivate::DestroySyncLoop(uint32_t aLoopIndex) {
 
   // We're about to delete the loop, stash its event target and result.
   const auto& loopInfo = mSyncLoopStack[aLoopIndex];
+
+  loopInfo->mEventTarget->Shutdown();
+
   nsIEventTarget* nestedEventTarget =
       loopInfo->mEventTarget->GetWeakNestedEventTarget();
   MOZ_ASSERT(nestedEventTarget);
@@ -4876,7 +4891,8 @@ int32_t WorkerPrivate::SetTimeout(JSContext* aCx, TimeoutHandler* aHandler,
   if (insertedInfo == data->mTimeouts.Elements() &&
       !data->mRunningExpiredTimeouts) {
     if (!data->mTimer) {
-      data->mTimer = NS_NewTimer();
+      data->mTimer =
+          NS_NewTimer(GlobalScope()->EventTargetFor(TaskCategory::Timer));
       if (!data->mTimer) {
         aRv.Throw(NS_ERROR_UNEXPECTED);
         return 0;
@@ -5365,6 +5381,13 @@ void WorkerPrivate::ResetWorkerPrivateInWorkerThread() {
   mThread.swap(doomedThread);
 }
 
+SerialEventTargetGuard WorkerPrivate::GetSerialEventTargetGuard() {
+  MutexAutoLock lock(mMutex);
+
+  MOZ_ASSERT(mThread);
+  return SerialEventTargetGuard(mThread);
+}
+
 void WorkerPrivate::BeginCTypesCall() {
   AssertIsOnWorkerThread();
   auto data = mWorkerThreadAccessible.Access();
@@ -5784,12 +5807,15 @@ WorkerPrivate::EventTarget::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
 
   MutexAutoLock lock(mMutex);
 
-  if (!mWorkerPrivate) {
+  if (mDisabled) {
     NS_WARNING(
         "A runnable was posted to a worker that is already shutting "
         "down!");
     return NS_ERROR_UNEXPECTED;
   }
+
+  MOZ_ASSERT(mWorkerPrivate);
+  MOZ_ASSERT(mNestedEventTarget);
 
   if (event) {
     workerRunnable = mWorkerPrivate->MaybeWrapAsWorkerRunnable(event.forget());
@@ -5831,12 +5857,14 @@ WorkerPrivate::EventTarget::IsOnCurrentThread(bool* aIsOnCurrentThread) {
 
   MutexAutoLock lock(mMutex);
 
-  if (!mWorkerPrivate) {
+  if (mShutdown) {
     NS_WARNING("A worker's event target was used after the worker has !");
     return NS_ERROR_UNEXPECTED;
   }
 
-  *aIsOnCurrentThread = mWorkerPrivate->IsOnCurrentThread();
+  MOZ_ASSERT(mNestedEventTarget);
+
+  *aIsOnCurrentThread = mNestedEventTarget->IsOnCurrentThread();
   return NS_OK;
 }
 
@@ -5846,12 +5874,14 @@ WorkerPrivate::EventTarget::IsOnCurrentThreadInfallible() {
 
   MutexAutoLock lock(mMutex);
 
-  if (!mWorkerPrivate) {
+  if (mShutdown) {
     NS_WARNING("A worker's event target was used after the worker has !");
     return false;
   }
 
-  return mWorkerPrivate->IsOnCurrentThread();
+  MOZ_ASSERT(mNestedEventTarget);
+
+  return mNestedEventTarget->IsOnCurrentThread();
 }
 
 WorkerPrivate::AutoPushEventLoopGlobal::AutoPushEventLoopGlobal(
