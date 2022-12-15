@@ -18,10 +18,6 @@
 <script class="testbody" type="application/javascript">
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
-  const isTraditionalSplitDirection =!SpecialPowers.getBoolPref(
-    "editor.join_split_direction.compatible_with_the_other_browsers"
-  );
-
   var editor = document.getElementById("editor");
   editor.focus();
 
@@ -70,122 +66,6 @@ SimpleTest.waitForFocus(function() {
 
   is(editor.innerHTML, "befor<strike><i><b>test</b></i></strike>after",
      "#01-02-2 At typing something after Backspace after setting style, should cause inserting some nodes to apply the style");
-
-  // #01-03 Typing Enter after setting some styles should not ignore the styles.
-  editor.innerHTML = "beforeafter";
-  selection.collapse(editor.firstChild, "before".length);
-  document.execCommand("bold");
-  document.execCommand("italic");
-  document.execCommand("strikethrough");
-  synthesizeKey("KEY_Enter");
-  sendString("test");
-
-  is(editor.innerHTML, "<div>before</div><div><strike><i><b>test</b></i></strike>after</div>",
-     "#01-03-1 Typing Enter after setting style should not ignore the styles");
-
-  editor.innerHTML = "<p>beforeafter</p>";
-  selection.collapse(editor.firstChild.firstChild, "before".length);
-  document.execCommand("bold");
-  document.execCommand("italic");
-  document.execCommand("strikethrough");
-  synthesizeKey("KEY_Enter");
-  sendString("test");
-
-  is(editor.innerHTML, "<p>before</p><p><strike><i><b>test</b></i></strike>after</p>",
-     "#01-03-2 Typing Enter after setting style should not ignore the styles");
-
-  // #02-01 Replacing text with typing some text after setting some styles should work as just inserting text.
-  editor.innerHTML = "beforeselectionafter";
-  selection.collapse(editor.firstChild, "before".length);
-  selection.extend(editor.firstChild, "beforeselection".length);
-  document.execCommand("bold");
-  document.execCommand("italic");
-  document.execCommand("strikethrough");
-  sendString("test");
-
-  todo_is(
-    editor.innerHTML,
-    "before<b><i><strike>test</strike></i></b>after",
-    "#02-01 At replacing \"selection\" after setting some styles, should keep the styles at inserting text for compatibility with the other browsers"
-  );
-  is(
-    editor.innerHTML,
-    "before<strike><i><b>test</b></i></strike>after",
-    "#02-01 At replacing \"selection\" after setting some styles, should keep the styles at inserting text, but it's okay to do it with reverted order for the backward compatibility"
-  );
-
-  // #02-02 Inserting text after removing selected text after setting some styles should not keep the styles.
-  editor.innerHTML = "beforeselectionafter";
-  selection.collapse(editor.firstChild, "before".length);
-  selection.extend(editor.firstChild, "beforeselection".length);
-  document.execCommand("bold");
-  document.execCommand("italic");
-  document.execCommand("strikethrough");
-  synthesizeKey("KEY_Backspace");
-  sendString("test");
-
-  todo_is(
-    editor.innerHTML,
-    "before<b><i><strike>test</strike></i></b>after",
-    "#02-02 After removing \"selection\" after setting some styles, should preserve the style for compatibility with the other browsers"
-  );
-  if (isTraditionalSplitDirection) {
-    is(
-      editor.innerHTML,
-      "beforetestafter",
-      "#02-02 After removing \"selection\" after setting some styles, should preserve the style, but it's okay not to do it for backward compatibility"
-    );
-  } else {
-    is(
-      editor.innerHTML,
-      "before<strike><i><b>test</b></i></strike>after",
-      "#02-02 After removing \"selection\" after setting some styles, should preserve the style, but it's okay to do it with reverted order for the backward compatibility"
-    );
-  }
-
-  // #02-03 Inserting text after replacing selected text after setting some styles should keep the styles.
-  editor.innerHTML = "beforeselectionafter";
-  selection.collapse(editor.firstChild, "before".length);
-  selection.extend(editor.firstChild, "beforeselection".length);
-  document.execCommand("bold");
-  document.execCommand("italic");
-  document.execCommand("strikethrough");
-  synthesizeKey("KEY_Enter");
-  sendString("test");
-
-  todo_is(
-    editor.innerHTML,
-    "before<div><b><i><strike>test</strike></i></b>after</div>",
-    "#02-03-1 Typing Enter after setting style to selected text should keep the styles and insert text into the new paragraph"
-  );
-  if (isTraditionalSplitDirection) {
-    is(
-      editor.innerHTML,
-      "<div>before</div><div><strike><i><b>test</b></i></strike>after</div>",
-      "#02-03-1 Typing Enter after setting style to selected text should keep the styles, it's okay to create left paragraph for backward compatibility"
-    );
-  } else {
-    is(
-      editor.innerHTML,
-      "<div>before</div><div><strike><i><b>test</b></i></strike>after</div>",
-      "#02-03-1 Typing Enter after setting style to selected text should keep the styles, it's okay to create left paragraph for backward compatibility"
-    );
-  }
-
-  editor.innerHTML = "<p>beforeselectionafter</p>";
-  selection.collapse(editor.firstChild.firstChild, "before".length);
-  selection.extend(editor.firstChild.firstChild, "beforeselection".length);
-  document.execCommand("bold");
-  document.execCommand("italic");
-  document.execCommand("strikethrough");
-  synthesizeKey("KEY_Enter");
-  sendString("test");
-
-  is(
-    editor.innerHTML,
-    "<p>before</p><p><strike><i><b>test</b></i></strike>after</p>",
-    "#02-03-2 Typing Enter after setting style to selected text should keep the styles"
-  );
 
   // #03-01 Replacing in <b style="font-weight: normal;"> shouldn't cause new <b>.
   editor.innerHTML = "<b style=\"font-weight: normal;\">beforeselectionafter</b>";
