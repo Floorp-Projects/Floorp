@@ -5955,7 +5955,6 @@ void nsGlobalWindowOuter::PostMessageMozOuter(JSContext* aCx,
       scriptLocation, callerAgentClusterId);
 
   JS::CloneDataPolicy clonePolicy;
-  clonePolicy.allowErrorStackFrames();
 
   if (GetDocGroup() && callerAgentClusterId.isSome() &&
       GetDocGroup()->AgentClusterId().Equals(callerAgentClusterId.value())) {

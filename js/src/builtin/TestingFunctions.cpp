@@ -4875,30 +4875,6 @@ bool js::testingFunc_serialize(JSContext* cx, unsigned argc, Value* vp) {
       }
       clonebuf.emplace(*scope, nullptr, nullptr);
     }
-
-    if (!JS_GetProperty(cx, opts, "ErrorStackFrames", &v)) {
-      return false;
-    }
-
-    if (!v.isUndefined()) {
-      JSString* str = JS::ToString(cx, v);
-      if (!str) {
-        return false;
-      }
-      JSLinearString* poli = str->ensureLinear(cx);
-      if (!poli) {
-        return false;
-      }
-
-      if (StringEqualsLiteral(poli, "allow")) {
-        policy.allowErrorStackFrames();
-      } else if (StringEqualsLiteral(poli, "deny")) {
-        // default
-      } else {
-        JS_ReportErrorASCII(cx, "Invalid policy value for 'ErrorStackFrames'");
-        return false;
-      }
-    }
   }
 
   if (!clonebuf) {
@@ -4995,30 +4971,6 @@ static bool Deserialize(JSContext* cx, unsigned argc, Value* vp) {
       }
 
       scope = *maybeScope;
-    }
-
-    if (!JS_GetProperty(cx, opts, "ErrorStackFrames", &v)) {
-      return false;
-    }
-
-    if (!v.isUndefined()) {
-      JSString* str = JS::ToString(cx, v);
-      if (!str) {
-        return false;
-      }
-      JSLinearString* poli = str->ensureLinear(cx);
-      if (!poli) {
-        return false;
-      }
-
-      if (StringEqualsLiteral(poli, "allow")) {
-        policy.allowErrorStackFrames();
-      } else if (StringEqualsLiteral(poli, "deny")) {
-        // default
-      } else {
-        JS_ReportErrorASCII(cx, "Invalid policy value for 'ErrorStackFrames'");
-        return false;
-      }
     }
   }
 
