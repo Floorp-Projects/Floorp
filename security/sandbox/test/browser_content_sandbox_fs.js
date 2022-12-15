@@ -17,7 +17,7 @@ Services.scriptloader.loadSubScript(
 
 /*
  * This test exercises file I/O from web and file content processes using
- * nsIFile etc. methods to validate that calls that are meant to be blocked by
+ * OS.File methods to validate that calls that are meant to be blocked by
  * content sandboxing are blocked.
  */
 

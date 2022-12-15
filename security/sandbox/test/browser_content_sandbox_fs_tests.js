@@ -3,6 +3,8 @@
 /* import-globals-from browser_content_sandbox_utils.js */
 "use strict";
 
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+
 // Test if the content process can create in $HOME, this should fail
 async function createFileInHome() {
   let browser = gBrowser.selectedBrowser;
@@ -491,11 +493,18 @@ async function testFileAccessLinuxOnly() {
   // Create a file under $HOME/.config/ or $XDG_CONFIG_HOME and ensure we can
   // read it
   let fileUnderConfig = GetSubdirFile(configDir);
-  await IOUtils.writeUTF8(fileUnderConfig.path, "TEST FILE DUMMY DATA");
+  let fileUnderConfigCreated = await createFile(fileUnderConfig.path);
+  if (!fileUnderConfigCreated.ok) {
+    ok(false, `Failure to create ${fileUnderConfig.path}`);
+  }
   ok(
-    await IOUtils.exists(fileUnderConfig.path),
+    fileUnderConfigCreated,
     `File ${fileUnderConfig.path} was properly created`
   );
+  let removeFileUnderConfig = async aPath => {
+    const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+    await OS.File.remove(aPath);
+  };
 
   tests.push({
     desc: `${configDir.path}/xxx is readable (${fileUnderConfig.path})`,
@@ -504,7 +513,7 @@ async function testFileAccessLinuxOnly() {
     file: fileUnderConfig,
     minLevel: minHomeReadSandboxLevel(),
     func: readFile,
-    cleanup: aPath => IOUtils.remove(aPath),
+    cleanup: removeFileUnderConfig,
   });
 
   let configFile = GetSubdirFile(configDir);
@@ -536,30 +545,28 @@ async function testFileAccessLinuxOnly() {
 
   let populateFakeConfigMozilla = async aPath => {
     // called with configMozilla
-    await IOUtils.makeDirectory(aPath, { permissions: 0o700 });
-    await IOUtils.writeUTF8(emptyFile.path, "");
+    const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+    await OS.File.makeDir(aPath, { unixMode: OS.Constants.S_IRWXU });
+    await createFile(emptyFile.path);
     ok(
-      await IOUtils.exists(emptyFile.path),
+      await OS.File.exists(emptyFile.path),
       `Temp file ${emptyFile.path} was created`
     );
   };
 
   let unpopulateFakeConfigMozilla = async aPath => {
     // called with emptyFile
-    await IOUtils.remove(aPath);
-    ok(!(await IOUtils.exists(aPath)), `Temp file ${aPath} was removed`);
-    const parentDir = PathUtils.parent(aPath);
+    const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+    await OS.File.remove(aPath);
+    ok(!(await OS.File.exists(aPath)), `Temp file ${aPath} was removed`);
+    const parentDir = OS.Path.dirname(aPath);
     try {
-      await IOUtils.remove(parentDir, { recursive: false });
+      await OS.File.removeEmptyDir(parentDir);
     } catch (ex) {
-      if (
-        !DOMException.isInstance(ex) ||
-        ex.name !== "OperationError" ||
-        /Could not remove the non-empty directory/.test(ex.message)
-      ) {
-        // If we get here it means the directory was not empty and since we assert
-        // earlier we removed the temp file we created it means we should not
-        // worrying about removing this directory ...
+      // 39=ENOTEMPTY, if we get that there it means the directory was not
+      // empty and since we assert earlier we removed the temp file we created
+      // it means we should not worrying about removing this directory ...
+      if (ex.unixErrno !== 39) {
         throw ex;
       }
     }
@@ -639,7 +646,7 @@ async function testFileAccessLinuxSnap() {
 
   let snapFile = GetSubdirFile(snapDir);
   await createFile(snapFile.path);
-  ok(await IOUtils.exists(snapFile.path), `SNAP ${snapFile.path} was created`);
+  ok(await OS.File.exists(snapFile.path), `SNAP ${snapFile.path} was created`);
   info(`SNAP (file) ${snapFile.path} was created`);
 
   tests.push({
