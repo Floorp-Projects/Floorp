@@ -1056,3 +1056,16 @@ def set_schedules_components(config, tasks):
 
         task["schedules-component"] = sorted(schedules)
         yield task
+
+
+@transforms.add
+def enable_parallel_marking_in_tsan_tests(config, tasks):
+    """Enable parallel marking in TSAN tests"""
+    for task in tasks:
+        if "-tsan-" in task["test-platform"]:
+            extra_options = task["mozharness"].setdefault("extra-options", [])
+            extra_options.append(
+                "--setpref=javascript.options.mem.gc_parallel_marking=true"
+            )
+
+        yield task
