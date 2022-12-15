@@ -1,0 +1,47 @@
+<html>
+
+<head>
+  <title>SVG Text attributes tests</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script src="../common.js"></script>
+  <script src="../attributes.js"></script>
+  <script src="../events.js"></script>
+
+  <script>
+    function doTest() {
+      const svg = getNode("svg");
+      const defAttrs = buildDefaultTextAttrs(svg, "10pt");
+      testDefaultTextAttrs(svg, defAttrs);
+      testTextAttrs(svg, 0, {}, defAttrs, 0, 2);
+
+      const g = getNode("g");
+      testTextAttrs(g, 0, {}, defAttrs, 0, 2);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body style="font-size: 12pt">
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <svg id="svg" style="font-size: smaller">
+    <foreignobject>f1</foreignobject>
+    <g id="g">
+      <title>g</title>
+      <foreignobject>f2</foreignobject>
+    </g>
+  </svg>
+
+</body>
+</html>

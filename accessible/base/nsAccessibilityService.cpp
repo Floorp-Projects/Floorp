@@ -1204,10 +1204,17 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
       } else if (content->IsSVGElement(nsGkAtoms::text)) {
         newAcc = new HyperTextAccessibleWrap(content->AsElement(), document);
       } else if (content->IsSVGElement(nsGkAtoms::svg)) {
-        newAcc = new EnumRoleAccessible<roles::DIAGRAM>(content, document);
+        // An <svg> element could contain <foreignobject>, which contains HTML
+        // but does not normally create its own Accessible. This means that the
+        // <svg> Accessible could have TextLeafAccessible children, so it must
+        // be a HyperTextAccessible.
+        newAcc =
+            new EnumRoleHyperTextAccessible<roles::DIAGRAM>(content, document);
       } else if (content->IsSVGElement(nsGkAtoms::g) &&
                  MustSVGElementBeAccessible(content)) {
-        newAcc = new EnumRoleAccessible<roles::GROUPING>(content, document);
+        // <g> can also contain <foreignobject>.
+        newAcc =
+            new EnumRoleHyperTextAccessible<roles::GROUPING>(content, document);
       }
 
     } else if (content->IsMathMLElement()) {
