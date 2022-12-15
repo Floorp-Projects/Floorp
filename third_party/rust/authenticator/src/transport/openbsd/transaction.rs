@@ -4,28 +4,44 @@
 
 use crate::errors;
 use crate::statecallback::StateCallback;
-use crate::transport::platform::monitor::{FidoDev, Monitor};
+use crate::transport::device_selector::{
+    DeviceBuildParameters, DeviceSelector, DeviceSelectorEvent,
+};
+use crate::transport::platform::monitor::Monitor;
 use runloop::RunLoop;
+use std::sync::mpsc::Sender;
 
 pub struct Transaction {
     // Handle to the thread loop.
-    thread: Option<RunLoop>,
+    thread: RunLoop,
+    device_selector: DeviceSelector,
 }
 
 impl Transaction {
     pub fn new<F, T>(
         timeout: u64,
         callback: StateCallback<crate::Result<T>>,
+        status: Sender<crate::StatusUpdate>,
         new_device_cb: F,
     ) -> crate::Result<Self>
     where
-        F: Fn(FidoDev, &dyn Fn() -> bool) + Sync + Send + 'static,
+        F: Fn(
+                DeviceBuildParameters,
+                Sender<DeviceSelectorEvent>,
+                Sender<crate::StatusUpdate>,
+                &dyn Fn() -> bool,
+            ) + Sync
+            + Send
+            + 'static,
         T: 'static,
     {
+        let status_sender = status.clone();
+        let device_selector = DeviceSelector::run(status);
+        let selector_sender = device_selector.clone_sender();
         let thread = RunLoop::new_with_timeout(
             move |alive| {
                 // Create a new device monitor.
-                let mut monitor = Monitor::new(new_device_cb);
+                let mut monitor = Monitor::new(new_device_cb, selector_sender, status_sender);
 
                 // Start polling for new devices.
                 try_or!(monitor.run(alive), |_| callback
@@ -41,12 +57,14 @@ impl Transaction {
         .map_err(|_| errors::AuthenticatorError::Platform)?;
 
         Ok(Self {
-            thread: Some(thread),
+            thread,
+            device_selector,
         })
     }
 
     pub fn cancel(&mut self) {
-        // This must never be None.
-        self.thread.take().unwrap().cancel();
+        info!("Transaction was cancelled.");
+        self.device_selector.stop();
+        self.thread.cancel();
     }
 }

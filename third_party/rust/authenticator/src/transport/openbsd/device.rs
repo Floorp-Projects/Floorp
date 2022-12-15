@@ -3,61 +3,40 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 extern crate libc;
-
-use std::ffi::OsString;
-use std::io;
-use std::io::{Read, Result, Write};
-use std::mem;
-
 use crate::consts::{CID_BROADCAST, MAX_HID_RPT_SIZE};
-use crate::transport::platform::monitor::FidoDev;
+use crate::transport::hid::HIDDevice;
+use crate::transport::platform::monitor::WrappedOpenDevice;
+use crate::transport::{AuthenticatorInfo, ECDHSecret, FidoDevice, HIDError};
 use crate::u2ftypes::{U2FDevice, U2FDeviceInfo};
 use crate::util::{from_unix_result, io_err};
+use std::ffi::{CString, OsString};
+use std::hash::{Hash, Hasher};
+use std::io::{self, Read, Write};
+use std::mem;
+use std::os::unix::ffi::OsStrExt;
 
 #[derive(Debug)]
 pub struct Device {
     path: OsString,
     fd: libc::c_int,
+    in_rpt_size: usize,
+    out_rpt_size: usize,
     cid: [u8; 4],
-    out_len: usize,
     dev_info: Option<U2FDeviceInfo>,
+    secret: Option<ECDHSecret>,
+    authenticator_info: Option<AuthenticatorInfo>,
 }
 
 impl Device {
-    pub fn new(fido: FidoDev) -> Result<Self> {
-        debug!("device found: {:?}", fido);
-        Ok(Self {
-            path: fido.os_path,
-            fd: fido.fd,
-            cid: CID_BROADCAST,
-            out_len: 64,
-            dev_info: None,
-        })
-    }
-
-    pub fn is_u2f(&mut self) -> bool {
-        debug!("device {:?} is U2F/FIDO", self.path);
-
-        // From OpenBSD's libfido2 in 6.6-current:
-        // "OpenBSD (as of 201910) has a bug that causes it to lose
-        // track of the DATA0/DATA1 sequence toggle across uhid device
-        // open and close. This is a terrible hack to work around it."
-        match self.ping() {
-            Ok(_) => true,
-            Err(err) => {
-                debug!("device {:?} is not responding: {}", self.path, err);
-                false
-            }
-        }
-    }
-
-    fn ping(&mut self) -> Result<()> {
+    fn ping(&mut self) -> io::Result<()> {
         let capacity = 256;
 
         for _ in 0..10 {
             let mut data = vec![0u8; capacity];
 
             // Send 1 byte ping
+            // self.write_all requires Device to be mut. This can't be done at the moment,
+            // and this is a workaround anyways, so writing by hand instead.
             self.write_all(&[0, 0xff, 0xff, 0xff, 0xff, 0x81, 0, 1])?;
 
             // Wait for response
@@ -93,8 +72,18 @@ impl PartialEq for Device {
     }
 }
 
+impl Eq for Device {}
+
+impl Hash for Device {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        // The path should be the only identifying member for a device
+        // If the path is the same, its the same device
+        self.path.hash(state);
+    }
+}
+
 impl Read for Device {
-    fn read(&mut self, buf: &mut [u8]) -> Result<usize> {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         let buf_ptr = buf.as_mut_ptr() as *mut libc::c_void;
         let rv = unsafe { libc::read(self.fd, buf_ptr, buf.len()) };
         from_unix_result(rv as usize)
@@ -102,7 +91,7 @@ impl Read for Device {
 }
 
 impl Write for Device {
-    fn write(&mut self, buf: &[u8]) -> Result<usize> {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         // Always skip the first byte (report number)
         let data = &buf[1..];
         let data_ptr = data.as_ptr() as *const libc::c_void;
@@ -110,7 +99,7 @@ impl Write for Device {
         Ok(from_unix_result(rv as usize)? + 1)
     }
 
-    fn flush(&mut self) -> Result<()> {
+    fn flush(&mut self) -> io::Result<()> {
         Ok(())
     }
 }
@@ -125,11 +114,11 @@ impl U2FDevice for Device {
     }
 
     fn in_rpt_size(&self) -> usize {
-        MAX_HID_RPT_SIZE
+        self.in_rpt_size
     }
 
     fn out_rpt_size(&self) -> usize {
-        MAX_HID_RPT_SIZE
+        self.out_rpt_size
     }
 
     fn get_property(&self, _prop_name: &str) -> io::Result<String> {
@@ -146,3 +135,92 @@ impl U2FDevice for Device {
         self.dev_info = Some(dev_info);
     }
 }
+
+impl HIDDevice for Device {
+    type BuildParameters = WrappedOpenDevice;
+    type Id = OsString;
+
+    fn new(fido: WrappedOpenDevice) -> Result<Self, (HIDError, Self::Id)> {
+        debug!("device found: {:?}", fido);
+        let mut res = Self {
+            path: fido.os_path,
+            fd: fido.fd,
+            in_rpt_size: MAX_HID_RPT_SIZE,
+            out_rpt_size: MAX_HID_RPT_SIZE,
+            cid: CID_BROADCAST,
+            dev_info: None,
+            secret: None,
+            authenticator_info: None,
+        };
+        if res.is_u2f() {
+            info!("new device {:?}", res.path);
+            Ok(res)
+        } else {
+            Err((HIDError::DeviceNotSupported, res.path.clone()))
+        }
+    }
+
+    fn initialized(&self) -> bool {
+        // During successful init, the broadcast channel id gets repplaced by an actual one
+        self.cid != CID_BROADCAST
+    }
+
+    fn id(&self) -> Self::Id {
+        self.path.clone()
+    }
+
+    fn is_u2f(&mut self) -> bool {
+        debug!("device {:?} is U2F/FIDO", self.path);
+
+        // From OpenBSD's libfido2 in 6.6-current:
+        // "OpenBSD (as of 201910) has a bug that causes it to lose
+        // track of the DATA0/DATA1 sequence toggle across uhid device
+        // open and close. This is a terrible hack to work around it."
+        match self.ping() {
+            Ok(_) => true,
+            Err(err) => {
+                debug!("device {:?} is not responding: {}", self.path, err);
+                false
+            }
+        }
+    }
+
+    fn get_shared_secret(&self) -> Option<&ECDHSecret> {
+        self.secret.as_ref()
+    }
+
+    fn set_shared_secret(&mut self, secret: ECDHSecret) {
+        self.secret = Some(secret);
+    }
+
+    fn get_authenticator_info(&self) -> Option<&AuthenticatorInfo> {
+        self.authenticator_info.as_ref()
+    }
+
+    fn set_authenticator_info(&mut self, authenticator_info: AuthenticatorInfo) {
+        self.authenticator_info = Some(authenticator_info);
+    }
+
+    /// This is used for cancellation of blocking read()-requests.
+    /// With this, we can clone the Device, pass it to another thread and call "cancel()" on that.
+    fn clone_device_as_write_only(&self) -> Result<Self, HIDError> {
+        // Try to open the device.
+        // This can't really error out as we already did this conversion
+        let cstr = CString::new(self.path.as_bytes()).map_err(|_| (HIDError::DeviceError))?;
+        let fd = unsafe { libc::open(cstr.as_ptr(), libc::O_WRONLY) };
+        let fd =
+            from_unix_result(fd).map_err(|e| (HIDError::IO(Some(self.path.clone().into()), e)))?;
+        Ok(Self {
+            path: self.path.clone(),
+            fd,
+            in_rpt_size: self.in_rpt_size,
+            out_rpt_size: self.out_rpt_size,
+            cid: self.cid,
+            dev_info: self.dev_info.clone(),
+            secret: self.secret.clone(),
+            authenticator_info: self.authenticator_info.clone(),
+        })
+    }
+}
+
+impl FidoDevice for Device {}

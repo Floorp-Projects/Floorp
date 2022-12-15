@@ -3,56 +3,30 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 extern crate libc;
-
-use std::io;
-use std::io::Read;
-use std::io::Write;
-use std::mem;
-
-use crate::consts::CID_BROADCAST;
-use crate::consts::MAX_HID_RPT_SIZE;
+use crate::consts::{CID_BROADCAST, MAX_HID_RPT_SIZE};
+use crate::transport::hid::HIDDevice;
 use crate::transport::platform::fd::Fd;
+use crate::transport::platform::monitor::WrappedOpenDevice;
 use crate::transport::platform::uhid;
+use crate::transport::{AuthenticatorInfo, ECDHSecret, FidoDevice, HIDError};
 use crate::u2ftypes::{U2FDevice, U2FDeviceInfo};
 use crate::util::io_err;
+use std::ffi::OsString;
+use std::hash::{Hash, Hasher};
+use std::io::{self, Read, Write};
+use std::mem;
 
 #[derive(Debug)]
 pub struct Device {
+    path: OsString,
     fd: Fd,
     cid: [u8; 4],
     dev_info: Option<U2FDeviceInfo>,
+    secret: Option<ECDHSecret>,
+    authenticator_info: Option<AuthenticatorInfo>,
 }
 
 impl Device {
-    pub fn new(fd: Fd) -> io::Result<Self> {
-        Ok(Self {
-            fd,
-            cid: CID_BROADCAST,
-            dev_info: None,
-        })
-    }
-
-    pub fn is_u2f(&mut self) -> bool {
-        if !uhid::is_u2f_device(&self.fd) {
-            return false;
-        }
-        // This step is not strictly necessary -- NetBSD puts fido
-        // devices into raw mode automatically by default, but in
-        // principle that might change, and this serves as a test to
-        // verify that we're running on a kernel with support for raw
-        // mode at all so we don't get confused issuing writes that try
-        // to set the report descriptor rather than transfer data on
-        // the output interrupt pipe as we need.
-        match uhid::hid_set_raw(&self.fd, true) {
-            Ok(_) => (),
-            Err(_) => return false,
-        }
-        if let Err(_) = self.ping() {
-            return false;
-        }
-        true
-    }
-
     fn ping(&mut self) -> io::Result<()> {
         for i in 0..10 {
             let mut buf = vec![0u8; 1 + MAX_HID_RPT_SIZE];
@@ -101,8 +75,6 @@ impl Eq for Device {}
 
 impl Hash for Device {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        // The path should be the only identifying member for a device
-        // If the path is the same, its the same device
         self.fd.hash(state);
     }
 }
@@ -137,7 +109,7 @@ impl Write for Device {
 }
 
 impl U2FDevice for Device {
-    fn get_cid<'a>(&'a self) -> &'a [u8; 4] {
+    fn get_cid(&self) -> &[u8; 4] {
         &self.cid
     }
 
@@ -167,3 +139,89 @@ impl U2FDevice for Device {
         self.dev_info = Some(dev_info);
     }
 }
+
+impl HIDDevice for Device {
+    type BuildParameters = WrappedOpenDevice;
+    type Id = OsString;
+
+    fn new(fido: WrappedOpenDevice) -> Result<Self, (HIDError, Self::Id)> {
+        debug!("device found: {:?}", fido);
+        let mut res = Self {
+            path: fido.os_path,
+            fd: fido.fd,
+            cid: CID_BROADCAST,
+            dev_info: None,
+            secret: None,
+            authenticator_info: None,
+        };
+        if res.is_u2f() {
+            info!("new device {:?}", res.path);
+            Ok(res)
+        } else {
+            Err((HIDError::DeviceNotSupported, res.path.clone()))
+        }
+    }
+
+    fn initialized(&self) -> bool {
+        // During successful init, the broadcast channel id gets repplaced by an actual one
+        self.cid != CID_BROADCAST
+    }
+
+    fn id(&self) -> Self::Id {
+        self.path.clone()
+    }
+
+    fn is_u2f(&mut self) -> bool {
+        if !uhid::is_u2f_device(&self.fd) {
+            return false;
+        }
+        // This step is not strictly necessary -- NetBSD puts fido
+        // devices into raw mode automatically by default, but in
+        // principle that might change, and this serves as a test to
+        // verify that we're running on a kernel with support for raw
+        // mode at all so we don't get confused issuing writes that try
+        // to set the report descriptor rather than transfer data on
+        // the output interrupt pipe as we need.
+        match uhid::hid_set_raw(&self.fd, true) {
+            Ok(_) => (),
+            Err(_) => return false,
+        }
+        if let Err(_) = self.ping() {
+            return false;
+        }
+        true
+    }
+
+    fn get_shared_secret(&self) -> Option<&ECDHSecret> {
+        self.secret.as_ref()
+    }
+
+    fn set_shared_secret(&mut self, secret: ECDHSecret) {
+        self.secret = Some(secret);
+    }
+
+    fn get_authenticator_info(&self) -> Option<&AuthenticatorInfo> {
+        self.authenticator_info.as_ref()
+    }
+
+    fn set_authenticator_info(&mut self, authenticator_info: AuthenticatorInfo) {
+        self.authenticator_info = Some(authenticator_info);
+    }
+
+    /// This is used for cancellation of blocking read()-requests.
+    /// With this, we can clone the Device, pass it to another thread and call "cancel()" on that.
+    fn clone_device_as_write_only(&self) -> Result<Self, HIDError> {
+        // Try to open the device.
+        let fd = Fd::open(&self.path, libc::O_WRONLY)?;
+        Ok(Self {
+            path: self.path.clone(),
+            fd,
+            cid: self.cid,
+            dev_info: self.dev_info.clone(),
+            secret: self.secret.clone(),
+            authenticator_info: self.authenticator_info.clone(),
+        })
+    }
+}
+
+impl FidoDevice for Device {}

@@ -5,10 +5,12 @@
 extern crate libc;
 
 use std::ffi::CString;
+use std::ffi::OsStr;
+use std::hash::{Hash, Hasher};
 use std::io;
 use std::mem;
 use std::os::raw::c_int;
-use std::os::unix::io::RawFd;
+use std::os::unix::{ffi::OsStrExt, io::RawFd};
 
 #[derive(Debug)]
 pub struct Fd {
@@ -16,7 +18,7 @@ pub struct Fd {
 }
 
 impl Fd {
-    pub fn open(path: &str, flags: c_int) -> io::Result<Fd> {
+    pub fn open(path: &OsStr, flags: c_int) -> io::Result<Fd> {
         let cpath = CString::new(path.as_bytes())?;
         let rv = unsafe { libc::open(cpath.as_ptr(), flags) };
         if rv == -1 {
@@ -46,10 +48,9 @@ impl PartialEq for Fd {
     }
 }
 
+impl Eq for Fd {}
 
-impl Eq for Device {}
-
-impl Hash for Device {
+impl Hash for Fd {
     fn hash<H: Hasher>(&self, state: &mut H) {
         let mut st: libc::stat = unsafe { mem::zeroed() };
         if unsafe { libc::fstat(self.fileno, &mut st) } == -1 {

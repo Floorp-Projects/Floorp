@@ -76,7 +76,7 @@ impl HIDDevice for Device {
         unimplemented!()
     }
 
-    fn is_u2f(&self) -> bool {
+    fn is_u2f(&mut self) -> bool {
         unimplemented!()
     }
 

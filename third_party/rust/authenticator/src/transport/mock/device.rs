@@ -186,7 +186,7 @@ impl HIDDevice for Device {
         })
     }
 
-    fn is_u2f(&self) -> bool {
+    fn is_u2f(&mut self) -> bool {
         self.sender.is_some()
     }
 }

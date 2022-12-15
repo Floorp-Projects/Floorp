@@ -4,9 +4,8 @@
 
 use crate::errors;
 use crate::statecallback::StateCallback;
-use crate::transport::platform::fd::Fd;
 use crate::transport::device_selector::{
-    DeviceBuildParameters, DeviceID, DeviceSelector, DeviceSelectorEvent,
+    DeviceBuildParameters, DeviceSelector, DeviceSelectorEvent,
 };
 use crate::transport::platform::monitor::Monitor;
 use runloop::RunLoop;
@@ -28,7 +27,6 @@ impl Transaction {
     where
         F: Fn(
                 DeviceBuildParameters,
-                DeviceID,
                 Sender<DeviceSelectorEvent>,
                 Sender<crate::StatusUpdate>,
                 &dyn Fn() -> bool,
@@ -66,7 +64,7 @@ impl Transaction {
 
     pub fn cancel(&mut self) {
         info!("Transaction was cancelled.");
-        self.thread.cancel();
         self.device_selector.stop();
+        self.thread.cancel();
     }
 }
