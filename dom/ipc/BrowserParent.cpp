@@ -809,26 +809,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvMoveFocus(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BrowserParent::RecvSizeShellTo(
-    const uint32_t& aFlags, const int32_t& aWidth, const int32_t& aHeight,
-    const int32_t& aShellItemWidth, const int32_t& aShellItemHeight) {
-  NS_ENSURE_TRUE(mFrameElement, IPC_OK());
-
-  nsCOMPtr<nsIDocShell> docShell = mFrameElement->OwnerDoc()->GetDocShell();
-  NS_ENSURE_TRUE(docShell, IPC_OK());
-
-  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-  nsresult rv = docShell->GetTreeOwner(getter_AddRefs(treeOwner));
-  NS_ENSURE_SUCCESS(rv, IPC_OK());
-
-  nsCOMPtr<nsIAppWindow> appWin(do_GetInterface(treeOwner));
-  NS_ENSURE_TRUE(appWin, IPC_OK());
-  appWin->SizeShellToWithLimit(aWidth, aHeight, aShellItemWidth,
-                               aShellItemHeight);
-
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult BrowserParent::RecvDropLinks(
     nsTArray<nsString>&& aLinks) {
   nsCOMPtr<nsIBrowser> browser =

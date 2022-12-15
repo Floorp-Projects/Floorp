@@ -22,9 +22,6 @@ interface nsIBrowserChild : nsISupports
 
   [notxpcom] void sendRequestFocus(in boolean canFocus, in CallerType aCallerType);
 
-  [noscript] void remoteSizeShellTo(in int32_t width, in int32_t height,
-                                    in int32_t shellItemWidth, in int32_t shellItemHeight);
-
   void remoteDropLinks(in Array<nsIDroppedLinkItem> links);
 
   /**

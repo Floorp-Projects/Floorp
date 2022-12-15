@@ -453,16 +453,20 @@ nsDocShellTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem, int32_t aCX,
         do_QueryInterface(webBrowserChrome);
     if (browserChild) {
       // The XUL window to resize is in the parent process, but there we
-      // won't be able to get aShellItem to do the hack in
-      // AppWindow::SizeShellTo, so let's send the width and height of
-      // aShellItem too.
+      // won't be able to get the size of aShellItem. We can ask the parent
+      // process to change our size instead.
       nsCOMPtr<nsIBaseWindow> shellAsWin(do_QueryInterface(aShellItem));
       NS_ENSURE_TRUE(shellAsWin, NS_ERROR_FAILURE);
 
-      int32_t width = 0;
-      int32_t height = 0;
-      shellAsWin->GetSize(&width, &height);
-      return browserChild->RemoteSizeShellTo(aCX, aCY, width, height);
+      LayoutDeviceIntSize shellSize;
+      shellAsWin->GetSize(&shellSize.width, &shellSize.height);
+      LayoutDeviceIntSize deltaSize = LayoutDeviceIntSize(aCX, aCY) - shellSize;
+
+      LayoutDeviceIntSize currentSize;
+      GetSize(&currentSize.width, &currentSize.height);
+
+      LayoutDeviceIntSize newSize = currentSize + deltaSize;
+      return SetSize(newSize.width, newSize.height, true);
     }
     // XXX: this is weird, but we used to call a method here
     // (webBrowserChrome->SizeBrowserTo()) whose implementations all failed
