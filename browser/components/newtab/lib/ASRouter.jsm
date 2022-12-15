@@ -1188,19 +1188,41 @@ class _ASRouter {
     const { messageImpressions, groupImpressions } = this.state;
     const impressionsForMessage = messageImpressions[message.id];
 
-    return (
-      this._isBelowItemFrequencyCap(
-        message,
-        impressionsForMessage,
-        MAX_MESSAGE_LIFETIME_CAP
-      ) &&
-      message.groups.every(messageGroup =>
-        this._isBelowItemFrequencyCap(
-          this.state.groups.find(({ id }) => id === messageGroup),
-          groupImpressions[messageGroup]
-        )
-      )
+    const _belowItemFrequencyCap = this._isBelowItemFrequencyCap(
+      message,
+      impressionsForMessage,
+      MAX_MESSAGE_LIFETIME_CAP
     );
+    if (!_belowItemFrequencyCap) {
+      lazy.ASRouterPreferences.console.debug(
+        `isBelowFrequencyCaps: capped by item: `,
+        message,
+        "impressions =",
+        impressionsForMessage
+      );
+    }
+
+    const _belowGroupFrequencyCaps = message.groups.every(messageGroup => {
+      const belowThisGroupCap = this._isBelowItemFrequencyCap(
+        this.state.groups.find(({ id }) => id === messageGroup),
+        groupImpressions[messageGroup]
+      );
+
+      if (!belowThisGroupCap) {
+        lazy.ASRouterPreferences.console.debug(
+          `isBelowFrequencyCaps: ${message.id} capped by group ${messageGroup}`
+        );
+      } else {
+        lazy.ASRouterPreferences.console.debug(
+          `isBelowFrequencyCaps: ${message.id} allowed by group ${messageGroup}, groupImpressions = `,
+          groupImpressions
+        );
+      }
+
+      return belowThisGroupCap;
+    });
+
+    return _belowItemFrequencyCap && _belowGroupFrequencyCaps;
   }
 
   // Helper for isBelowFrecencyCaps - work out if the frequency cap for the given
@@ -1211,6 +1233,10 @@ class _ASRouter {
         item.frequency.lifetime &&
         impressions.length >= Math.min(item.frequency.lifetime, maxLifetimeCap)
       ) {
+        lazy.ASRouterPreferences.console.debug(
+          `${item.id} capped by lifetime (${item.frequency.lifetime})`
+        );
+
         return false;
       }
       if (item.frequency.custom) {
@@ -1219,6 +1245,9 @@ class _ASRouter {
           let { period } = setting;
           const impressionsInPeriod = impressions.filter(t => now - t < period);
           if (impressionsInPeriod.length >= setting.cap) {
+            lazy.ASRouterPreferences.console.debug(
+              `${item.id} capped by impressions (${impressionsInPeriod.length}) in period (${period}) >= ${setting.cap}`
+            );
             return false;
           }
         }
@@ -1321,6 +1350,10 @@ class _ASRouter {
   }
 
   addImpression(message) {
+    lazy.ASRouterPreferences.console.debug(
+      `entering addImpression for ${message.id}`
+    );
+
     const groupsWithFrequency = this.state.groups.filter(
       ({ frequency, id }) => frequency && message.groups.includes(id)
     );
@@ -1344,6 +1377,7 @@ class _ASRouter {
             time
           );
         }
+
         return { messageImpressions, groupImpressions };
       });
     }
@@ -1353,6 +1387,13 @@ class _ASRouter {
   // Helper for addImpression - calculate the updated impressions object for the given
   //                            item, then store it and return it
   _addImpressionForItem(state, item, impressionsString, time) {
+    lazy.ASRouterPreferences.console.debug(
+      "entered _addImpressionsForItem, item = ",
+      item,
+      " impressionsString = ",
+      impressionsString
+    );
+
     // The destructuring here is to avoid mutating existing objects in state as in redux
     // (see https://redux.js.org/recipes/structuring-reducers/prerequisite-concepts#immutable-data-management)
     const impressions = { ...state[impressionsString] };
@@ -1361,6 +1402,12 @@ class _ASRouter {
         ? [...impressions[item.id]]
         : [];
       impressions[item.id].push(time);
+      lazy.ASRouterPreferences.console.debug(
+        item.id,
+        "impression added, impressions[item.id]: ",
+        impressions[item.id]
+      );
+
       this._storage.set(impressionsString, impressions);
     }
     return impressions;
@@ -1423,8 +1470,8 @@ class _ASRouter {
       // Don't keep impressions for items that no longer exist
       if (!item || !item.frequency || !Array.isArray(impressions[id])) {
         lazy.ASRouterPreferences.console.debug(
-          "Cleaning up Impression ",
-          impressions[id]
+          "_cleanupImpressionsForItem: removing impressions for deleted or changed item: ",
+          item
         );
         lazy.ASRouterPreferences.console.trace();
         delete impressions[id];
@@ -1436,6 +1483,10 @@ class _ASRouter {
       }
       // If we don't want to store impressions older than the longest period
       if (item.frequency.custom && !item.frequency.lifetime) {
+        lazy.ASRouterPreferences.console.debug(
+          "_cleanupImpressionsForItem: removing impressions older than longest period for item: ",
+          item
+        );
         const now = Date.now();
         impressions[id] = impressions[id].filter(
           t => now - t < this.getLongestPeriod(item)
