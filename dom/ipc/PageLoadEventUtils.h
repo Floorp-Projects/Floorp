@@ -22,6 +22,11 @@ struct ParamTraits<mozilla::glean::perf::PageLoadExtra> {
     WriteParam(aWriter, aParam.loadTime);
     WriteParam(aWriter, aParam.loadType);
     WriteParam(aWriter, aParam.responseTime);
+    WriteParam(aWriter, aParam.httpVer);
+    WriteParam(aWriter, aParam.redirectCount);
+    WriteParam(aWriter, aParam.redirectTime);
+    WriteParam(aWriter, aParam.sameOriginNav);
+    WriteParam(aWriter, aParam.trrDomain);
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
@@ -29,7 +34,12 @@ struct ParamTraits<mozilla::glean::perf::PageLoadExtra> {
            ReadParam(aReader, &aResult->jsExecTime) &&
            ReadParam(aReader, &aResult->loadTime) &&
            ReadParam(aReader, &aResult->loadType) &&
-           ReadParam(aReader, &aResult->responseTime);
+           ReadParam(aReader, &aResult->responseTime) &&
+           ReadParam(aReader, &aResult->httpVer) &&
+           ReadParam(aReader, &aResult->redirectCount) &&
+           ReadParam(aReader, &aResult->redirectTime) &&
+           ReadParam(aReader, &aResult->sameOriginNav) &&
+           ReadParam(aReader, &aResult->trrDomain);
   }
 };
 
