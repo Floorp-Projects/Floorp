@@ -21,12 +21,37 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "js/Promise.h"
 #include "xpcprivate.h"
 #include "nsFrameMessageManager.h"
 #include "nsICrashReporter.h"
 
 namespace mozilla::dom {
+
+struct JSActorMessageMarker {
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("JSActorMessage");
+  }
+  static void StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter& aWriter,
+                                   const ProfilerString8View& aActorName,
+                                   const ProfilerString16View& aMessageName) {
+    aWriter.StringProperty("actor", aActorName);
+    aWriter.StringProperty("name", NS_ConvertUTF16toUTF8(aMessageName));
+  }
+  static MarkerSchema MarkerTypeDisplay() {
+    using MS = MarkerSchema;
+    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
+    schema.AddKeyLabelFormatSearchable(
+        "actor", "Actor Name", MS::Format::String, MS::Searchable::Searchable);
+    schema.AddKeyLabelFormatSearchable(
+        "name", "Message Name", MS::Format::String, MS::Searchable::Searchable);
+    schema.SetTooltipLabel("JSActor - {marker.name}");
+    schema.SetTableLabel(
+        "{marker.name} - [{marker.data.actor}] {marker.data.name}");
+    return schema;
+  }
+};
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(JSActor)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -179,6 +204,8 @@ static Maybe<ipc::StructuredCloneData> CaptureJSStack(JSContext* aCx) {
 
 void JSActor::SendAsyncMessage(JSContext* aCx, const nsAString& aMessageName,
                                JS::Handle<JS::Value> aObj, ErrorResult& aRv) {
+  profiler_add_marker("SendAsyncMessage", geckoprofiler::category::IPC, {},
+                      JSActorMessageMarker{}, mName, aMessageName);
   Maybe<ipc::StructuredCloneData> data{std::in_place};
   if (!nsFrameMessageManager::GetParamsForMessage(
           aCx, aObj, JS::UndefinedHandleValue, *data)) {
@@ -200,6 +227,8 @@ already_AddRefed<Promise> JSActor::SendQuery(JSContext* aCx,
                                              const nsAString& aMessageName,
                                              JS::Handle<JS::Value> aObj,
                                              ErrorResult& aRv) {
+  profiler_add_marker("SendQuery", geckoprofiler::category::IPC, {},
+                      JSActorMessageMarker{}, mName, aMessageName);
   Maybe<ipc::StructuredCloneData> data{std::in_place};
   if (!nsFrameMessageManager::GetParamsForMessage(
           aCx, aObj, JS::UndefinedHandleValue, *data)) {
@@ -263,6 +292,9 @@ void JSActor::ReceiveMessage(JSContext* aCx,
                              const JSActorMessageMeta& aMetadata,
                              JS::Handle<JS::Value> aData, ErrorResult& aRv) {
   MOZ_ASSERT(aMetadata.kind() == JSActorMessageKind::Message);
+  profiler_add_marker("ReceiveMessage", geckoprofiler::category::IPC, {},
+                      JSActorMessageMarker{}, mName, aMetadata.messageName());
+
   JS::Rooted<JS::Value> retval(aCx);
   CallReceiveMessage(aCx, aMetadata, aData, &retval, aRv);
 }
@@ -270,6 +302,8 @@ void JSActor::ReceiveMessage(JSContext* aCx,
 void JSActor::ReceiveQuery(JSContext* aCx, const JSActorMessageMeta& aMetadata,
                            JS::Handle<JS::Value> aData, ErrorResult& aRv) {
   MOZ_ASSERT(aMetadata.kind() == JSActorMessageKind::Query);
+  profiler_add_marker("ReceiveQuery", geckoprofiler::category::IPC, {},
+                      JSActorMessageMarker{}, mName, aMetadata.messageName());
 
   // This promise will be resolved or rejected once the listener has been
   // called. Our listener on this promise will then send the reply.
@@ -312,6 +346,9 @@ void JSActor::ReceiveQueryReply(JSContext* aCx,
     aRv.ThrowUnknownError("Received reply for non-pending query");
     return;
   }
+
+  profiler_add_marker("ReceiveQueryReply", geckoprofiler::category::IPC, {},
+                      JSActorMessageMarker{}, mName, aMetadata.messageName());
 
   Promise* promise = query->mPromise;
   JSAutoRealm ar(aCx, promise->PromiseObj());
@@ -436,6 +473,8 @@ void JSActor::QueryHandler::ResolvedCallback(JSContext* aCx,
 void JSActor::QueryHandler::SendReply(JSContext* aCx, JSActorMessageKind aKind,
                                       Maybe<ipc::StructuredCloneData>&& aData) {
   MOZ_ASSERT(mActor);
+  profiler_add_marker("SendQueryReply", geckoprofiler::category::IPC, {},
+                      JSActorMessageMarker{}, mActor->Name(), mMessageName);
 
   JSActorMessageMeta meta;
   meta.actorName() = mActor->Name();
