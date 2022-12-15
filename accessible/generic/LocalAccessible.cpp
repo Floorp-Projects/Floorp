@@ -1144,9 +1144,14 @@ already_AddRefed<AccAttributes> LocalAccessible::NativeAttributes() {
     }
   }
 
-  // Don't calculate CSS-based object attributes when no frame (i.e.
-  // the accessible is unattached from the tree).
-  if (!mContent->GetPrimaryFrame()) return attributes.forget();
+  // Don't calculate CSS-based object attributes when:
+  // 1. There is no frame (e.g. the accessible is unattached from the tree).
+  // 2. This is an image map area. CSS is irrelevant here. Furthermore, we won't
+  // be able to get the computed style if the map is unslotted in a shadow host.
+  if (!mContent->GetPrimaryFrame() ||
+      mContent->IsHTMLElement(nsGkAtoms::area)) {
+    return attributes.forget();
+  }
 
   // CSS style based object attributes.
   nsAutoString value;
