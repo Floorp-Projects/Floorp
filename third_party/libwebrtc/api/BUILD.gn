@@ -347,6 +347,7 @@ rtc_source_set("async_dns_resolver") {
   visibility = [ "*" ]
   sources = [ "async_dns_resolver.h" ]
   deps = [
+    "../rtc_base:checks",
     "../rtc_base:socket_address",
     "../rtc_base/system:rtc_export",
   ]
@@ -535,6 +536,7 @@ rtc_source_set("peer_connection_quality_test_fixture_api") {
     "../rtc_base:rtc_base",
     "../rtc_base:stringutils",
     "../rtc_base:threading",
+    "../test:fileutils",
     "audio:audio_mixer_api",
     "rtc_event_log",
     "task_queue",

@@ -53,7 +53,7 @@ TEST_F(RetransmissionEndToEndTest, ReceivesAndRetransmitsNack) {
   class NackObserver : public test::EndToEndTest {
    public:
     NackObserver()
-        : EndToEndTest(kLongTimeoutMs),
+        : EndToEndTest(kLongTimeout),
           sent_rtp_packets_(0),
           packets_left_to_drop_(0),
           nacks_left_(kNumberOfNacksToObserve) {}
@@ -133,7 +133,7 @@ TEST_F(RetransmissionEndToEndTest, ReceivesNackAndRetransmitsAudio) {
   class NackObserver : public test::EndToEndTest {
    public:
     NackObserver()
-        : EndToEndTest(kLongTimeoutMs),
+        : EndToEndTest(kLongTimeout),
           local_ssrc_(0),
           remote_ssrc_(0),
           receive_transport_(nullptr) {}
@@ -282,7 +282,7 @@ void RetransmissionEndToEndTest::ReceivesPliAndRecovers(int rtp_history_ms) {
                       public rtc::VideoSinkInterface<VideoFrame> {
    public:
     explicit PliObserver(int rtp_history_ms)
-        : EndToEndTest(kLongTimeoutMs),
+        : EndToEndTest(kLongTimeout),
           rtp_history_ms_(rtp_history_ms),
           nack_enabled_(rtp_history_ms > 0),
           highest_dropped_timestamp_(0),
@@ -372,7 +372,7 @@ void RetransmissionEndToEndTest::DecodesRetransmittedFrame(bool enable_rtx,
                                  public rtc::VideoSinkInterface<VideoFrame> {
    public:
     RetransmissionObserver(bool enable_rtx, bool enable_red)
-        : EndToEndTest(kDefaultTimeoutMs),
+        : EndToEndTest(kDefaultTimeout),
           payload_type_(GetPayloadType(false, enable_red)),
           retransmission_ssrc_(enable_rtx ? kSendRtxSsrcs[0]
                                           : kVideoSendSsrcs[0]),

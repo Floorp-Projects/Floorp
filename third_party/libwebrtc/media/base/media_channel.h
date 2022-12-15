@@ -404,6 +404,7 @@ struct MediaSenderInfo {
   // this list, the ReportBlockData::RTCPReportBlock::source_ssrc(), which is
   // the SSRC of the corresponding outbound RTP stream, is unique.
   std::vector<webrtc::ReportBlockData> report_block_datas;
+  absl::optional<bool> active;
 };
 
 struct MediaReceiverInfo {
@@ -629,10 +630,10 @@ struct VideoReceiverInfo : public MediaReceiverInfo {
   uint32_t frames_rendered = 0;
   absl::optional<uint64_t> qp_sum;
   // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-totaldecodetime
-  webrtc::TimeDelta total_decode_time = webrtc::TimeDelta::Millis(0);
+  webrtc::TimeDelta total_decode_time = webrtc::TimeDelta::Zero();
   // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-totalprocessingdelay
-  webrtc::TimeDelta total_processing_delay = webrtc::TimeDelta::Millis(0);
-  webrtc::TimeDelta total_assembly_time = webrtc::TimeDelta::Millis(0);
+  webrtc::TimeDelta total_processing_delay = webrtc::TimeDelta::Zero();
+  webrtc::TimeDelta total_assembly_time = webrtc::TimeDelta::Zero();
   uint32_t frames_assembled_from_multiple_packets = 0;
   double total_inter_frame_delay = 0;
   double total_squared_inter_frame_delay = 0;

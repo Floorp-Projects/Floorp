@@ -57,7 +57,6 @@ constexpr int64_t kLogNonDecodedIntervalMs = 5000;
 
 FrameBuffer::FrameBuffer(Clock* clock,
                          VCMTiming* timing,
-                         VCMReceiveStatisticsCallback* stats_callback,
                          const FieldTrialsView& field_trials)
     : decoded_frames_history_(kMaxFramesHistory),
       clock_(clock),
@@ -66,7 +65,6 @@ FrameBuffer::FrameBuffer(Clock* clock,
       timing_(timing),
       stopped_(false),
       protection_mode_(kProtectionNack),
-      stats_callback_(stats_callback),
       last_log_non_decoded_ms_(-kLogNonDecodedIntervalMs),
       rtt_mult_settings_(RttMultExperiment::GetRttMultValue()),
       zero_playout_delay_max_decode_queue_size_(
@@ -278,37 +276,6 @@ std::unique_ptr<EncodedFrame> FrameBuffer::GetNextFrame() {
     PropagateDecodability(frame_it->second);
     decoded_frames_history_.InsertDecoded(frame_it->first, frame->Timestamp());
 
-    // Remove decoded frame and all undecoded frames before it.
-    if (stats_callback_) {
-      unsigned int discarded_packets = 0;
-      unsigned int dropped_frames =
-          std::count_if(frames_.begin(), frame_it,
-                        [&discarded_packets](
-                            const std::pair<const int64_t, FrameInfo>& frame) {
-                          if (frame.second.frame) {
-                            discarded_packets +=
-                                frame.second.frame->PacketInfos().size();
-                          }
-                          return frame.second.frame != nullptr;
-                        });
-      if (discarded_packets > 0) {
-        const auto& pis = frame->PacketInfos();
-        TRACE_EVENT2("webrtc",
-                     "FrameBuffer::GetNextFrame Discarding Old Packets",
-                     "remote_ssrc", pis.empty() ? 0 : pis[0].ssrc(), "picture_id",
-                     frame_it->first);
-        stats_callback_->OnDiscardedPackets(discarded_packets);
-      }
-      if (dropped_frames > 0) {
-        const auto& pis = frame->PacketInfos();
-        TRACE_EVENT2("webrtc",
-                     "FrameBuffer::GetNextFrame Dropping Old Frames",
-                     "remote_ssrc", pis.empty() ? 0 : pis[0].ssrc(), "picture_id",
-                     frame_it->first);
-        stats_callback_->OnDroppedFrames(dropped_frames);
-      }
-    }
-
     frames_.erase(frames_.begin(), ++frame_it);
 
     frames_out.emplace_back(std::move(frame));
@@ -336,9 +303,6 @@ std::unique_ptr<EncodedFrame> FrameBuffer::GetNextFrame() {
     if (RttMultExperiment::RttMultEnabled())
       jitter_estimator_.FrameNacked();
   }
-
-  UpdateJitterDelay();
-  UpdateTimingFrameInfo();
 
   if (frames_out.size() == 1) {
     return std::move(frames_out[0]);
@@ -502,15 +466,6 @@ int64_t FrameBuffer::InsertFrame(std::unique_ptr<EncodedFrame> frame) {
 
   // It can happen that a frame will be reported as fully received even if a
   // lower spatial layer frame is missing.
-  if (stats_callback_ && frame->is_last_spatial_layer) {
-    TRACE_EVENT2("webrtc",
-                 "FrameBuffer::InsertFrame Frame Complete",
-                 "remote_ssrc", pis.empty() ? 0 : pis[0].ssrc(), "picture_id",
-                 frame->Id());
-    stats_callback_->OnCompleteFrame(frame->is_keyframe(), frame->size(),
-                                     frame->contentType());
-  }
-
   info->second.frame = std::move(frame);
 
   if (info->second.num_missing_continuous == 0) {
@@ -641,39 +596,8 @@ bool FrameBuffer::UpdateFrameInfoWithIncomingFrame(const EncodedFrame& frame,
   return true;
 }
 
-void FrameBuffer::UpdateJitterDelay() {
-  TRACE_EVENT0("webrtc", "FrameBuffer::UpdateJitterDelay");
-  if (!stats_callback_)
-    return;
-
-  auto timings = timing_->GetTimings();
-  if (timings.num_decoded_frames > 0) {
-    stats_callback_->OnFrameBufferTimingsUpdated(
-        timings.max_decode_duration.ms(), timings.current_delay.ms(),
-        timings.target_delay.ms(), timings.jitter_buffer_delay.ms(),
-        timings.min_playout_delay.ms(), timings.render_delay.ms());
-  }
-}
-
-void FrameBuffer::UpdateTimingFrameInfo() {
-  TRACE_EVENT0("webrtc", "FrameBuffer::UpdateTimingFrameInfo");
-  absl::optional<TimingFrameInfo> info = timing_->GetTimingFrameInfo();
-  if (info && stats_callback_)
-    stats_callback_->OnTimingFrameInfoUpdated(*info);
-}
-
 void FrameBuffer::ClearFramesAndHistory() {
   TRACE_EVENT0("webrtc", "FrameBuffer::ClearFramesAndHistory");
-  if (stats_callback_) {
-    unsigned int dropped_frames =
-        std::count_if(frames_.begin(), frames_.end(),
-                      [](const std::pair<const int64_t, FrameInfo>& frame) {
-                        return frame.second.frame != nullptr;
-                      });
-    if (dropped_frames > 0) {
-      stats_callback_->OnDroppedFrames(dropped_frames);
-    }
-  }
   frames_.clear();
   last_continuous_frame_.reset();
   frames_to_decode_.clear();

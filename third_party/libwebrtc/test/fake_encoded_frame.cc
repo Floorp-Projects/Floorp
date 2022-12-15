@@ -14,7 +14,7 @@
 
 #include "api/video/video_frame_type.h"
 
-namespace webrtc::test {
+namespace webrtc {
 
 void PrintTo(const EncodedFrame& frame,
              std::ostream* os) /* no-presubmit-check TODO(webrtc:8982) */ {
@@ -25,6 +25,8 @@ void PrintTo(const EncodedFrame& frame,
   }
   *os << "]";
 }
+
+namespace test {
 
 int64_t FakeEncodedFrame::ReceivedTime() const {
   return received_time_;
@@ -138,4 +140,5 @@ FakeFrameBuilder& FakeFrameBuilder::PacketInfos(RtpPacketInfos packet_infos) {
   return *this;
 }
 
-}  // namespace webrtc::test
+}  // namespace test
+}  // namespace webrtc

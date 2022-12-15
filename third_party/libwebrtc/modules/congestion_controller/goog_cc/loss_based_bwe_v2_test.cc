@@ -100,6 +100,23 @@ class LossBasedBweV2Test : public ::testing::TestWithParam<bool> {
     return enough_feedback;
   }
 
+  std::vector<PacketResult> CreatePacketResultsWith10pLossRate(
+      Timestamp first_packet_timestamp) {
+    std::vector<PacketResult> enough_feedback(10);
+    enough_feedback[0].sent_packet.size = DataSize::Bytes(15'000);
+    for (unsigned i = 0; i < enough_feedback.size(); ++i) {
+      enough_feedback[i].sent_packet.size = DataSize::Bytes(15'000);
+      enough_feedback[i].sent_packet.send_time =
+          first_packet_timestamp +
+          static_cast<int>(i) * kObservationDurationLowerBound;
+      enough_feedback[i].receive_time =
+          first_packet_timestamp +
+          static_cast<int>(i + 1) * kObservationDurationLowerBound;
+    }
+    enough_feedback[9].receive_time = Timestamp::PlusInfinity();
+    return enough_feedback;
+  }
+
   std::vector<PacketResult> CreatePacketResultsWith50pLossRate(
       Timestamp first_packet_timestamp) {
     std::vector<PacketResult> enough_feedback(2);
@@ -783,6 +800,117 @@ TEST_P(LossBasedBweV2Test, KeepIncreasingEstimateAfterDelayedIncreaseWindow) {
   EXPECT_GE(
       loss_based_bandwidth_estimator.GetBandwidthEstimate(delay_based_estimate),
       estimate_2);
+}
+
+TEST_P(LossBasedBweV2Test, NotIncreaseIfInherentLossLessThanAverageLoss) {
+  ExplicitKeyValueConfig key_value_config(
+      "WebRTC-Bwe-LossBasedBweV2/"
+      "Enabled:true,CandidateFactors:1.2,AckedRateCandidate:false,"
+      "ObservationWindowSize:2,"
+      "DelayBasedCandidate:true,InstantUpperBoundBwBalance:100kbps,"
+      "ObservationDurationLowerBound:200ms,"
+      "NotIncreaseIfInherentLossLessThanAverageLoss:true/");
+  LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
+  DataRate delay_based_estimate = DataRate::KilobitsPerSec(5000);
+
+  loss_based_bandwidth_estimator.SetBandwidthEstimate(
+      DataRate::KilobitsPerSec(600));
+
+  std::vector<PacketResult> enough_feedback_10p_loss_1 =
+      CreatePacketResultsWith10pLossRate(
+          /*first_packet_timestamp=*/Timestamp::Zero());
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      enough_feedback_10p_loss_1, delay_based_estimate,
+      BandwidthUsage::kBwNormal);
+
+  std::vector<PacketResult> enough_feedback_10p_loss_2 =
+      CreatePacketResultsWith10pLossRate(
+          /*first_packet_timestamp=*/Timestamp::Zero() +
+          kObservationDurationLowerBound);
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      enough_feedback_10p_loss_2, delay_based_estimate,
+      BandwidthUsage::kBwNormal);
+
+  // Do not increase the bitrate because inherent loss is less than average loss
+  EXPECT_EQ(
+      loss_based_bandwidth_estimator.GetBandwidthEstimate(delay_based_estimate),
+      DataRate::KilobitsPerSec(600));
+}
+
+TEST_P(LossBasedBweV2Test,
+       SelectHighBandwidthCandidateIfLossRateIsLessThanThreshold) {
+  ExplicitKeyValueConfig key_value_config(
+      "WebRTC-Bwe-LossBasedBweV2/"
+      "Enabled:true,CandidateFactors:1.2|0.8,AckedRateCandidate:false,"
+      "ObservationWindowSize:2,"
+      "DelayBasedCandidate:true,InstantUpperBoundBwBalance:100kbps,"
+      "ObservationDurationLowerBound:200ms,HigherBwBiasFactor:1000,"
+      "HigherLogBwBiasFactor:1000,LossThresholdOfHighBandwidthPreference:0."
+      "20/");
+  LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
+  DataRate delay_based_estimate = DataRate::KilobitsPerSec(5000);
+
+  loss_based_bandwidth_estimator.SetBandwidthEstimate(
+      DataRate::KilobitsPerSec(600));
+
+  std::vector<PacketResult> enough_feedback_10p_loss_1 =
+      CreatePacketResultsWith10pLossRate(
+          /*first_packet_timestamp=*/Timestamp::Zero());
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      enough_feedback_10p_loss_1, delay_based_estimate,
+      BandwidthUsage::kBwNormal);
+
+  std::vector<PacketResult> enough_feedback_10p_loss_2 =
+      CreatePacketResultsWith10pLossRate(
+          /*first_packet_timestamp=*/Timestamp::Zero() +
+          kObservationDurationLowerBound);
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      enough_feedback_10p_loss_2, delay_based_estimate,
+      BandwidthUsage::kBwNormal);
+
+  // Because LossThresholdOfHighBandwidthPreference is 20%, the average loss is
+  // 10%, bandwidth estimate should increase.
+  EXPECT_GT(
+      loss_based_bandwidth_estimator.GetBandwidthEstimate(delay_based_estimate),
+      DataRate::KilobitsPerSec(600));
+}
+
+TEST_P(LossBasedBweV2Test,
+       SelectLowBandwidthCandidateIfLossRateIsIsHigherThanThreshold) {
+  ExplicitKeyValueConfig key_value_config(
+      "WebRTC-Bwe-LossBasedBweV2/"
+      "Enabled:true,CandidateFactors:1.2|0.8,AckedRateCandidate:false,"
+      "ObservationWindowSize:2,"
+      "DelayBasedCandidate:true,InstantUpperBoundBwBalance:100kbps,"
+      "ObservationDurationLowerBound:200ms,HigherBwBiasFactor:1000,"
+      "HigherLogBwBiasFactor:1000,LossThresholdOfHighBandwidthPreference:0."
+      "05/");
+  LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
+  DataRate delay_based_estimate = DataRate::KilobitsPerSec(5000);
+
+  loss_based_bandwidth_estimator.SetBandwidthEstimate(
+      DataRate::KilobitsPerSec(600));
+
+  std::vector<PacketResult> enough_feedback_10p_loss_1 =
+      CreatePacketResultsWith10pLossRate(
+          /*first_packet_timestamp=*/Timestamp::Zero());
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      enough_feedback_10p_loss_1, delay_based_estimate,
+      BandwidthUsage::kBwNormal);
+
+  std::vector<PacketResult> enough_feedback_10p_loss_2 =
+      CreatePacketResultsWith10pLossRate(
+          /*first_packet_timestamp=*/Timestamp::Zero() +
+          kObservationDurationLowerBound);
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      enough_feedback_10p_loss_2, delay_based_estimate,
+      BandwidthUsage::kBwNormal);
+
+  // Because LossThresholdOfHighBandwidthPreference is 5%, the average loss is
+  // 10%, bandwidth estimate should decrease.
+  EXPECT_LT(
+      loss_based_bandwidth_estimator.GetBandwidthEstimate(delay_based_estimate),
+      DataRate::KilobitsPerSec(600));
 }
 
 INSTANTIATE_TEST_SUITE_P(LossBasedBweV2Tests,

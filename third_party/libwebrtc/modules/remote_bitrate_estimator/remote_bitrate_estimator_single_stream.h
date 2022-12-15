@@ -53,7 +53,6 @@ class RemoteBitrateEstimatorSingleStream : public RemoteBitrateEstimator {
   void OnRttUpdate(int64_t avg_rtt_ms, int64_t max_rtt_ms) override;
   void RemoveStream(uint32_t ssrc) override;
   DataRate LatestEstimate() const override;
-  void SetMinBitrate(int min_bitrate_bps) override;
 
  private:
   struct Detector;

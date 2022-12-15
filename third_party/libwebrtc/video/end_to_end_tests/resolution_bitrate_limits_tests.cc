@@ -103,7 +103,7 @@ class InitEncodeTest : public test::EndToEndTest,
   InitEncodeTest(const std::string& payload_name,
                  const std::vector<TestConfig>& configs,
                  const std::vector<Expectation>& expectations)
-      : EndToEndTest(test::CallTest::kDefaultTimeoutMs),
+      : EndToEndTest(test::CallTest::kDefaultTimeout),
         FakeEncoder(Clock::GetRealTimeClock()),
         encoder_factory_(this),
         payload_name_(payload_name),

@@ -145,14 +145,18 @@ void RunResolution(void* obj) {
 }
 
 void AsyncResolver::Start(const SocketAddress& addr) {
+  Start(addr, addr.family());
+}
+
+void AsyncResolver::Start(const SocketAddress& addr, int family) {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
   RTC_DCHECK(!destroy_called_);
   addr_ = addr;
   auto thread_function =
-      [this, addr, caller_task_queue = webrtc::TaskQueueBase::Current(),
+      [this, addr, family, caller_task_queue = webrtc::TaskQueueBase::Current(),
        state = state_] {
         std::vector<IPAddress> addresses;
-        int error = ResolveHostname(addr.hostname(), addr.family(), &addresses);
+        int error = ResolveHostname(addr.hostname(), family, &addresses);
         webrtc::MutexLock lock(&state->mutex);
         if (state->status == State::Status::kLive) {
           caller_task_queue->PostTask(

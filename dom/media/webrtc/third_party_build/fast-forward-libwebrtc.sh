@@ -108,8 +108,10 @@ echo "$MOZ_LIBWEBRTC_NEXT_BASE" >> third_party/libwebrtc/README.moz-ff-commit
 
 REBASE_HELP=$"
 The rebase operation onto $MOZ_LIBWEBRTC_NEXT_BASE has failed.  Please
-resolve all the rebase conflicts.  When the github rebase is complete,
-re-run the previous command to resume the fast-forward process.
+resolve all the rebase conflicts.  To fix this issue, you will need to
+jump to the github repo at $MOZ_LIBWEBRTC_SRC .
+When the github rebase is complete, re-run the script to resume the
+fast-forward process.
 "
 #"rebase_mozlibwebrtc_stack help for rebase failure"
 function rebase_mozlibwebrtc_stack {

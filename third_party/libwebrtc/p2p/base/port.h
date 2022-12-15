@@ -465,6 +465,8 @@ class Port : public PortInterface,
     mdns_name_registration_status_ = status;
   }
 
+  const webrtc::FieldTrialsView& field_trials() const { return *field_trials_; }
+
  private:
   void Construct();
 

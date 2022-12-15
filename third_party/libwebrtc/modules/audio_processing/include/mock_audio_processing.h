@@ -13,6 +13,7 @@
 
 #include <memory>
 
+#include "absl/strings/string_view.h"
 #include "modules/audio_processing/include/aec_dump.h"
 #include "modules/audio_processing/include/audio_processing.h"
 #include "modules/audio_processing/include/audio_processing_statistics.h"
@@ -152,7 +153,7 @@ class MockAudioProcessing : public AudioProcessing {
   MOCK_METHOD(int, recommended_stream_analog_level, (), (const, override));
   MOCK_METHOD(bool,
               CreateAndAttachAecDump,
-              (const std::string& file_name,
+              (absl::string_view file_name,
                int64_t max_log_size_bytes,
                rtc::TaskQueue* worker_queue),
               (override));

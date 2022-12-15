@@ -11,6 +11,7 @@
 #include <memory>
 
 #include "api/task_queue/task_queue_base.h"
+#include "api/units/time_delta.h"
 #include "call/call.h"
 #include "call/fake_network_pipe.h"
 #include "call/simulated_network.h"
@@ -246,8 +247,7 @@ class TransportFeedbackTester : public test::EndToEndTest {
   TransportFeedbackTester(bool feedback_enabled,
                           size_t num_video_streams,
                           size_t num_audio_streams)
-      : EndToEndTest(
-            ::webrtc::TransportFeedbackEndToEndTest::kDefaultTimeoutMs),
+      : EndToEndTest(::webrtc::TransportFeedbackEndToEndTest::kDefaultTimeout),
         feedback_enabled_(feedback_enabled),
         num_video_streams_(num_video_streams),
         num_audio_streams_(num_audio_streams),
@@ -276,11 +276,12 @@ class TransportFeedbackTester : public test::EndToEndTest {
   }
 
   void PerformTest() override {
-    const int64_t kDisabledFeedbackTimeoutMs = 5000;
+    constexpr TimeDelta kDisabledFeedbackTimeout = TimeDelta::Seconds(5);
     EXPECT_EQ(feedback_enabled_,
-              observation_complete_.Wait(feedback_enabled_
-                                             ? test::CallTest::kDefaultTimeoutMs
-                                             : kDisabledFeedbackTimeoutMs));
+              observation_complete_.Wait((feedback_enabled_
+                                              ? test::CallTest::kDefaultTimeout
+                                              : kDisabledFeedbackTimeout)
+                                             .ms()));
   }
 
   void OnCallsCreated(Call* sender_call, Call* receiver_call) override {
@@ -350,7 +351,7 @@ TEST_F(TransportFeedbackEndToEndTest,
    public:
     TransportFeedbackTester(size_t num_video_streams, size_t num_audio_streams)
         : EndToEndTest(
-              ::webrtc::TransportFeedbackEndToEndTest::kDefaultTimeoutMs),
+              ::webrtc::TransportFeedbackEndToEndTest::kDefaultTimeout),
           num_video_streams_(num_video_streams),
           num_audio_streams_(num_audio_streams),
           media_sent_(0),
@@ -438,7 +439,7 @@ TEST_F(TransportFeedbackEndToEndTest, TransportSeqNumOnAudioAndVideo) {
   class TransportSequenceNumberTest : public test::EndToEndTest {
    public:
     TransportSequenceNumberTest()
-        : EndToEndTest(kDefaultTimeoutMs),
+        : EndToEndTest(kDefaultTimeout),
           video_observed_(false),
           audio_observed_(false) {
       extensions_.Register<TransportSequenceNumber>(

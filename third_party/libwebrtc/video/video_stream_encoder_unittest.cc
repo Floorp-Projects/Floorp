@@ -604,12 +604,15 @@ class AdaptingFrameForwarder : public test::FrameForwarder {
     test::FrameForwarder::AddOrUpdateSinkLocked(sink, wants);
   }
 
+  void RequestRefreshFrame() override { ++refresh_frames_requested_; }
+
   TimeController* const time_controller_;
   cricket::VideoAdapter adapter_;
   bool adaptation_enabled_ RTC_GUARDED_BY(mutex_);
   rtc::VideoSinkWants last_wants_ RTC_GUARDED_BY(mutex_);
   absl::optional<int> last_width_;
   absl::optional<int> last_height_;
+  int refresh_frames_requested_{0};
 };
 
 // TODO(nisse): Mock only VideoStreamEncoderObserver.
@@ -743,7 +746,7 @@ class SimpleVideoStreamEncoderFactory {
   };
 
   test::ScopedKeyValueConfig field_trials_;
-  GlobalSimulatedTimeController time_controller_{Timestamp::Millis(0)};
+  GlobalSimulatedTimeController time_controller_{Timestamp::Zero()};
   std::unique_ptr<TaskQueueFactory> task_queue_factory_{
       time_controller_.CreateTaskQueueFactory()};
   std::unique_ptr<MockableSendStatisticsProxy> stats_proxy_ =
@@ -773,11 +776,11 @@ class MockFrameCadenceAdapter : public FrameCadenceAdapterInterface {
   MOCK_METHOD(void, UpdateFrameRate, (), (override));
   MOCK_METHOD(void,
               UpdateLayerQualityConvergence,
-              (int spatial_index, bool converged),
+              (size_t spatial_index, bool converged),
               (override));
   MOCK_METHOD(void,
               UpdateLayerStatus,
-              (int spatial_index, bool enabled),
+              (size_t spatial_index, bool enabled),
               (override));
   MOCK_METHOD(void, ProcessKeyFrameRequest, (), (override));
 };
@@ -2196,7 +2199,7 @@ TEST_F(VideoStreamEncoderTest,
 
   // The encoder bitrate limits for 270p should be used.
   video_source_.IncomingCapturedFrame(CreateFrame(1, 480, 270));
-  EXPECT_FALSE(WaitForFrame(1000));
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
   EXPECT_EQ(fake_encoder_.config().numberOfSimulcastStreams, kNumStreams);
   EXPECT_EQ(static_cast<uint32_t>(kEncoderLimits270p.min_bitrate_bps),
             fake_encoder_.config().simulcastStream[1].minBitrate * 1000);
@@ -2205,7 +2208,7 @@ TEST_F(VideoStreamEncoderTest,
 
   // The encoder bitrate limits for 360p should be used.
   video_source_.IncomingCapturedFrame(CreateFrame(2, 640, 360));
-  EXPECT_FALSE(WaitForFrame(1000));
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
   EXPECT_EQ(static_cast<uint32_t>(kEncoderLimits360p.min_bitrate_bps),
             fake_encoder_.config().simulcastStream[1].minBitrate * 1000);
   EXPECT_EQ(static_cast<uint32_t>(kEncoderLimits360p.max_bitrate_bps),
@@ -2214,7 +2217,7 @@ TEST_F(VideoStreamEncoderTest,
   // Resolution b/w 270p and 360p. The encoder limits for 360p should be used.
   video_source_.IncomingCapturedFrame(
       CreateFrame(3, (640 + 480) / 2, (360 + 270) / 2));
-  EXPECT_FALSE(WaitForFrame(1000));
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
   EXPECT_EQ(static_cast<uint32_t>(kEncoderLimits360p.min_bitrate_bps),
             fake_encoder_.config().simulcastStream[1].minBitrate * 1000);
   EXPECT_EQ(static_cast<uint32_t>(kEncoderLimits360p.max_bitrate_bps),
@@ -2222,7 +2225,7 @@ TEST_F(VideoStreamEncoderTest,
 
   // Resolution higher than 360p. Encoder limits should be ignored.
   video_source_.IncomingCapturedFrame(CreateFrame(4, 960, 540));
-  EXPECT_FALSE(WaitForFrame(1000));
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
   EXPECT_NE(static_cast<uint32_t>(kEncoderLimits270p.min_bitrate_bps),
             fake_encoder_.config().simulcastStream[1].minBitrate * 1000);
   EXPECT_NE(static_cast<uint32_t>(kEncoderLimits270p.max_bitrate_bps),
@@ -2234,7 +2237,7 @@ TEST_F(VideoStreamEncoderTest,
 
   // Resolution lower than 270p. The encoder limits for 270p should be used.
   video_source_.IncomingCapturedFrame(CreateFrame(5, 320, 180));
-  EXPECT_FALSE(WaitForFrame(1000));
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
   EXPECT_EQ(static_cast<uint32_t>(kEncoderLimits270p.min_bitrate_bps),
             fake_encoder_.config().simulcastStream[1].minBitrate * 1000);
   EXPECT_EQ(static_cast<uint32_t>(kEncoderLimits270p.max_bitrate_bps),
@@ -2264,7 +2267,7 @@ TEST_F(VideoStreamEncoderTest,
           EncoderInfoSettings::GetDefaultSinglecastBitrateLimitsForResolution(
               kVideoCodecVP8, 480 * 270);
   video_source_.IncomingCapturedFrame(CreateFrame(1, 480, 270));
-  EXPECT_FALSE(WaitForFrame(1000));
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
   EXPECT_EQ(fake_encoder_.config().numberOfSimulcastStreams, kNumStreams);
   EXPECT_EQ(static_cast<uint32_t>(kDefaultLimits270p->min_bitrate_bps),
             fake_encoder_.config().simulcastStream[1].minBitrate * 1000);
@@ -2277,7 +2280,7 @@ TEST_F(VideoStreamEncoderTest,
           EncoderInfoSettings::GetDefaultSinglecastBitrateLimitsForResolution(
               kVideoCodecVP8, 640 * 360);
   video_source_.IncomingCapturedFrame(CreateFrame(2, 640, 360));
-  EXPECT_FALSE(WaitForFrame(1000));
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
   EXPECT_EQ(static_cast<uint32_t>(kDefaultLimits360p->min_bitrate_bps),
             fake_encoder_.config().simulcastStream[1].minBitrate * 1000);
   EXPECT_EQ(static_cast<uint32_t>(kDefaultLimits360p->max_bitrate_bps),
@@ -2286,7 +2289,7 @@ TEST_F(VideoStreamEncoderTest,
   // Resolution b/w 270p and 360p. The default limits for 360p should be used.
   video_source_.IncomingCapturedFrame(
       CreateFrame(3, (640 + 480) / 2, (360 + 270) / 2));
-  EXPECT_FALSE(WaitForFrame(1000));
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
   EXPECT_EQ(static_cast<uint32_t>(kDefaultLimits360p->min_bitrate_bps),
             fake_encoder_.config().simulcastStream[1].minBitrate * 1000);
   EXPECT_EQ(static_cast<uint32_t>(kDefaultLimits360p->max_bitrate_bps),
@@ -2298,7 +2301,7 @@ TEST_F(VideoStreamEncoderTest,
           EncoderInfoSettings::GetDefaultSinglecastBitrateLimitsForResolution(
               kVideoCodecVP8, 960 * 540);
   video_source_.IncomingCapturedFrame(CreateFrame(4, 960, 540));
-  EXPECT_FALSE(WaitForFrame(1000));
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
   EXPECT_EQ(static_cast<uint32_t>(kDefaultLimits540p->min_bitrate_bps),
             fake_encoder_.config().simulcastStream[1].minBitrate * 1000);
   EXPECT_EQ(static_cast<uint32_t>(kDefaultLimits540p->max_bitrate_bps),
@@ -2333,7 +2336,7 @@ TEST_F(VideoStreamEncoderTest,
 
   // The encoder bitrate limits for 360p should be used.
   video_source_.IncomingCapturedFrame(CreateFrame(1, 1280, 720));
-  EXPECT_FALSE(WaitForFrame(1000));
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
   EXPECT_EQ(fake_encoder_.config().numberOfSimulcastStreams, kNumStreams);
   EXPECT_EQ(static_cast<uint32_t>(kEncoderLimits360p.min_bitrate_bps),
             fake_encoder_.config().simulcastStream[1].minBitrate * 1000);
@@ -2342,7 +2345,7 @@ TEST_F(VideoStreamEncoderTest,
 
   // The encoder bitrate limits for 270p should be used.
   video_source_.IncomingCapturedFrame(CreateFrame(2, 960, 540));
-  EXPECT_FALSE(WaitForFrame(1000));
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
   EXPECT_EQ(static_cast<uint32_t>(kEncoderLimits270p.min_bitrate_bps),
             fake_encoder_.config().simulcastStream[1].minBitrate * 1000);
   EXPECT_EQ(static_cast<uint32_t>(kEncoderLimits270p.max_bitrate_bps),
@@ -2378,7 +2381,7 @@ TEST_F(VideoStreamEncoderTest,
   // Resolution on lowest stream lower than 270p. The encoder limits not applied
   // on lowest stream, limits for 270p should not be used
   video_source_.IncomingCapturedFrame(CreateFrame(1, 1280, 720));
-  EXPECT_FALSE(WaitForFrame(1000));
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
   EXPECT_EQ(fake_encoder_.config().numberOfSimulcastStreams, kNumStreams);
   EXPECT_NE(static_cast<uint32_t>(kEncoderLimits270p.min_bitrate_bps),
             fake_encoder_.config().simulcastStream[1].minBitrate * 1000);
@@ -2413,7 +2416,7 @@ TEST_F(VideoStreamEncoderTest,
 
   // The encoder bitrate limits for 270p should be used.
   video_source_.IncomingCapturedFrame(CreateFrame(1, 480, 270));
-  EXPECT_FALSE(WaitForFrame(1000));
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
   EXPECT_EQ(fake_encoder_.config().numberOfSimulcastStreams, kNumStreams);
   EXPECT_EQ(static_cast<uint32_t>(kEncoderLimits270p.min_bitrate_bps),
             fake_encoder_.config().simulcastStream[1].minBitrate * 1000);
@@ -2422,7 +2425,7 @@ TEST_F(VideoStreamEncoderTest,
 
   // The max configured bitrate is less than the encoder limit for 360p.
   video_source_.IncomingCapturedFrame(CreateFrame(2, 640, 360));
-  EXPECT_FALSE(WaitForFrame(1000));
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
   EXPECT_EQ(static_cast<uint32_t>(kEncoderLimits360p.min_bitrate_bps),
             fake_encoder_.config().simulcastStream[1].minBitrate * 1000);
   EXPECT_EQ(static_cast<uint32_t>(kMaxBitrateBps),
@@ -5780,11 +5783,10 @@ TEST_F(VideoStreamEncoderTest,
 
   video_stream_encoder_->ConfigureEncoder(video_encoder_config.Copy(),
                                           kMaxPayloadLength);
-  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
 
   // The encoder bitrate limits for 360p should be used.
   video_source_.IncomingCapturedFrame(CreateFrame(1, 1280, 720));
-  EXPECT_FALSE(WaitForFrame(1000));
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
   EXPECT_EQ(fake_encoder_.config().numberOfSimulcastStreams, 1);
   EXPECT_EQ(fake_encoder_.config().codecType, VideoCodecType::kVideoCodecVP9);
   EXPECT_EQ(fake_encoder_.config().VP9().numberOfSpatialLayers, 2);
@@ -5798,7 +5800,7 @@ TEST_F(VideoStreamEncoderTest,
 
   // The encoder bitrate limits for 270p should be used.
   video_source_.IncomingCapturedFrame(CreateFrame(2, 960, 540));
-  EXPECT_FALSE(WaitForFrame(1000));
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
   EXPECT_EQ(fake_encoder_.config().numberOfSimulcastStreams, 1);
   EXPECT_EQ(fake_encoder_.config().codecType, VideoCodecType::kVideoCodecVP9);
   EXPECT_EQ(fake_encoder_.config().VP9().numberOfSpatialLayers, 2);
@@ -5836,14 +5838,13 @@ TEST_F(VideoStreamEncoderTest,
 
   video_stream_encoder_->ConfigureEncoder(video_encoder_config.Copy(),
                                           kMaxPayloadLength);
-  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
 
   // The default bitrate limits for 360p should be used.
   const absl::optional<VideoEncoder::ResolutionBitrateLimits> kLimits360p =
       EncoderInfoSettings::GetDefaultSinglecastBitrateLimitsForResolution(
           kVideoCodecVP9, 640 * 360);
   video_source_.IncomingCapturedFrame(CreateFrame(1, 1280, 720));
-  EXPECT_FALSE(WaitForFrame(1000));
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
   EXPECT_EQ(fake_encoder_.config().numberOfSimulcastStreams, 1);
   EXPECT_EQ(fake_encoder_.config().codecType, VideoCodecType::kVideoCodecVP9);
   EXPECT_EQ(fake_encoder_.config().VP9().numberOfSpatialLayers, 2);
@@ -5860,7 +5861,7 @@ TEST_F(VideoStreamEncoderTest,
       EncoderInfoSettings::GetDefaultSinglecastBitrateLimitsForResolution(
           kVideoCodecVP9, 480 * 270);
   video_source_.IncomingCapturedFrame(CreateFrame(2, 960, 540));
-  EXPECT_FALSE(WaitForFrame(1000));
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
   EXPECT_EQ(fake_encoder_.config().numberOfSimulcastStreams, 1);
   EXPECT_EQ(fake_encoder_.config().codecType, VideoCodecType::kVideoCodecVP9);
   EXPECT_EQ(fake_encoder_.config().VP9().numberOfSpatialLayers, 2);
@@ -5902,14 +5903,13 @@ TEST_F(VideoStreamEncoderTest, DefaultMaxAndMinBitratesNotUsedIfDisabled) {
 
   video_stream_encoder_->ConfigureEncoder(video_encoder_config.Copy(),
                                           kMaxPayloadLength);
-  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
 
   // The default bitrate limits for 360p should not be used.
   const absl::optional<VideoEncoder::ResolutionBitrateLimits> kLimits360p =
       EncoderInfoSettings::GetDefaultSinglecastBitrateLimitsForResolution(
           kVideoCodecVP9, 640 * 360);
   video_source_.IncomingCapturedFrame(CreateFrame(1, 1280, 720));
-  EXPECT_FALSE(WaitForFrame(1000));
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
   EXPECT_EQ(fake_encoder_.config().numberOfSimulcastStreams, 1);
   EXPECT_EQ(fake_encoder_.config().codecType, kVideoCodecVP9);
   EXPECT_EQ(fake_encoder_.config().VP9().numberOfSpatialLayers, 2);
@@ -5931,7 +5931,7 @@ TEST_F(VideoStreamEncoderTest, SinglecastBitrateLimitsNotUsedForOneStream) {
       EncoderInfoSettings::GetDefaultSinglecastBitrateLimitsForResolution(
           kVideoCodecVP9, 1280 * 720);
   video_source_.IncomingCapturedFrame(CreateFrame(1, 1280, 720));
-  EXPECT_FALSE(WaitForFrame(1000));
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
   EXPECT_EQ(fake_encoder_.config().numberOfSimulcastStreams, 1);
   EXPECT_EQ(fake_encoder_.config().codecType, VideoCodecType::kVideoCodecVP9);
   EXPECT_EQ(fake_encoder_.config().VP9().numberOfSpatialLayers, 1);
@@ -5974,11 +5974,10 @@ TEST_F(VideoStreamEncoderTest,
 
   video_stream_encoder_->ConfigureEncoder(video_encoder_config.Copy(),
                                           kMaxPayloadLength);
-  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
 
   // Limits not applied on lowest stream, limits for 180p should not be used.
   video_source_.IncomingCapturedFrame(CreateFrame(1, 1280, 720));
-  EXPECT_FALSE(WaitForFrame(1000));
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
   EXPECT_EQ(fake_encoder_.config().numberOfSimulcastStreams, 1);
   EXPECT_EQ(fake_encoder_.config().codecType, VideoCodecType::kVideoCodecVP9);
   EXPECT_EQ(fake_encoder_.config().VP9().numberOfSpatialLayers, 3);
@@ -8610,6 +8609,29 @@ TEST_F(VideoStreamEncoderTest,
   video_stream_encoder_->Stop();
 }
 
+TEST_F(VideoStreamEncoderTest,
+       RequestsRefreshFrameAfterEarlyDroppedNativeFrame) {
+  // Send a native frame before encoder rates have been set. The encoder is
+  // seen as paused at this time.
+  rtc::Event frame_destroyed_event;
+  video_source_.IncomingCapturedFrame(CreateFakeNativeFrame(
+      /*ntp_time_ms=*/1, &frame_destroyed_event, codec_width_, codec_height_));
+
+  // Frame should be dropped and destroyed.
+  ExpectDroppedFrame();
+  EXPECT_TRUE(frame_destroyed_event.Wait(kDefaultTimeoutMs));
+  EXPECT_EQ(video_source_.refresh_frames_requested_, 0);
+
+  // Set bitrates, unpausing the encoder and triggering a request for a refresh
+  // frame.
+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+      kTargetBitrate, kTargetBitrate, kTargetBitrate, 0, 0, 0);
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
+  EXPECT_EQ(video_source_.refresh_frames_requested_, 1);
+
+  video_stream_encoder_->Stop();
+}
+
 #endif  // !defined(WEBRTC_IOS)
 
 // Test parameters: (VideoCodecType codec, bool allow_i420_conversion)
@@ -9090,7 +9112,7 @@ TEST(VideoStreamEncoderSimpleTest, CreateDestroy) {
 
   // Lots of boiler plate.
   test::ScopedKeyValueConfig field_trials;
-  GlobalSimulatedTimeController time_controller(Timestamp::Millis(0));
+  GlobalSimulatedTimeController time_controller(Timestamp::Zero());
   auto stats_proxy = std::make_unique<MockableSendStatisticsProxy>(
       time_controller.GetClock(), VideoSendStream::Config(nullptr),
       webrtc::VideoEncoderConfig::ContentType::kRealtimeVideo, field_trials);
@@ -9148,7 +9170,7 @@ TEST(VideoStreamEncoderFrameCadenceTest, ActivatesFrameCadenceOnContentType) {
   EXPECT_CALL(*adapter_ptr, SetZeroHertzModeEnabled(Optional(Field(
                                 &FrameCadenceAdapterInterface::
                                     ZeroHertzModeParams::num_simulcast_layers,
-                                Eq(0)))));
+                                Eq(0u)))));
   VideoEncoderConfig config;
   test::FillEncoderConfiguration(kVideoCodecVP8, 1, &config);
   config.content_type = VideoEncoderConfig::ContentType::kScreen;
@@ -9160,7 +9182,7 @@ TEST(VideoStreamEncoderFrameCadenceTest, ActivatesFrameCadenceOnContentType) {
   EXPECT_CALL(*adapter_ptr, SetZeroHertzModeEnabled(Optional(Field(
                                 &FrameCadenceAdapterInterface::
                                     ZeroHertzModeParams::num_simulcast_layers,
-                                Gt(0)))));
+                                Gt(0u)))));
   PassAFrame(encoder_queue, video_stream_encoder_callback, /*ntp_time_ms=*/1);
   factory.DepleteTaskQueues();
   Mock::VerifyAndClearExpectations(adapter_ptr);

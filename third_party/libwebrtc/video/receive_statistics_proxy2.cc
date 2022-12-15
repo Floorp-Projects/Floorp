@@ -665,20 +665,6 @@ void ReceiveStatisticsProxy::OnFrameBufferTimingsUpdated(
     int jitter_buffer_ms,
     int min_playout_delay_ms,
     int render_delay_ms) {
-  // Only called on main_thread_ with FrameBuffer3
-  if (!worker_thread_->IsCurrent()) {
-    RTC_DCHECK_RUN_ON(&decode_queue_);
-    worker_thread_->PostTask(SafeTask(
-        task_safety_.flag(),
-        [max_decode_ms, current_delay_ms, target_delay_ms, jitter_buffer_ms,
-         min_playout_delay_ms, render_delay_ms, this]() {
-          OnFrameBufferTimingsUpdated(max_decode_ms, current_delay_ms,
-                                      target_delay_ms, jitter_buffer_ms,
-                                      min_playout_delay_ms, render_delay_ms);
-        }));
-    return;
-  }
-
   RTC_DCHECK_RUN_ON(&main_thread_);
   stats_.max_decode_ms = max_decode_ms;
   stats_.current_delay_ms = current_delay_ms;
@@ -701,14 +687,6 @@ void ReceiveStatisticsProxy::OnUniqueFramesCounted(int num_unique_frames) {
 
 void ReceiveStatisticsProxy::OnTimingFrameInfoUpdated(
     const TimingFrameInfo& info) {
-  // Only called on main_thread_ with FrameBuffer3
-  if (!worker_thread_->IsCurrent()) {
-    RTC_DCHECK_RUN_ON(&decode_queue_);
-    worker_thread_->PostTask(SafeTask(task_safety_.flag(), [info, this]() {
-      OnTimingFrameInfoUpdated(info);
-    }));
-    return;
-  }
   RTC_DCHECK_RUN_ON(&main_thread_);
   if (info.flags != VideoSendTiming::kInvalid) {
     int64_t now_ms = clock_->TimeInMilliseconds();
@@ -770,10 +748,10 @@ void ReceiveStatisticsProxy::OnDecodedFrame(const VideoFrame& frame,
                                             absl::optional<uint8_t> qp,
                                             TimeDelta decode_time,
                                             VideoContentType content_type) {
-  webrtc::TimeDelta processing_delay = webrtc::TimeDelta::Millis(0);
+  TimeDelta processing_delay = TimeDelta::Zero();
   webrtc::Timestamp current_time = clock_->CurrentTime();
   // TODO(bugs.webrtc.org/13984): some tests do not fill packet_infos().
-  webrtc::TimeDelta assembly_time = webrtc::TimeDelta::Millis(0);
+  TimeDelta assembly_time = TimeDelta::Zero();
   if (frame.packet_infos().size() > 0) {
     const auto [first_packet, last_packet] = std::minmax_element(
         frame.packet_infos().cbegin(), frame.packet_infos().cend(),
@@ -804,8 +782,8 @@ void ReceiveStatisticsProxy::OnDecodedFrame(
     const VideoFrameMetaData& frame_meta,
     absl::optional<uint8_t> qp,
     TimeDelta decode_time,
-    webrtc::TimeDelta processing_delay,
-    webrtc::TimeDelta assembly_time,
+    TimeDelta processing_delay,
+    TimeDelta assembly_time,
     VideoContentType content_type) {
   RTC_DCHECK_RUN_ON(&main_thread_);
 
@@ -1000,16 +978,12 @@ void ReceiveStatisticsProxy::OnDiscardedPackets(uint32_t packets_discarded) {
 }
 
 void ReceiveStatisticsProxy::OnPreDecode(VideoCodecType codec_type, int qp) {
-  RTC_DCHECK_RUN_ON(&decode_queue_);
-  worker_thread_->PostTask(
-      SafeTask(task_safety_.flag(), [codec_type, qp, this]() {
-        RTC_DCHECK_RUN_ON(&main_thread_);
-        last_codec_type_ = codec_type;
-        if (last_codec_type_ == kVideoCodecVP8 && qp != -1) {
-          qp_counters_.vp8.Add(qp);
-          qp_sample_.Add(qp);
-        }
-      }));
+  RTC_DCHECK_RUN_ON(&main_thread_);
+  last_codec_type_ = codec_type;
+  if (last_codec_type_ == kVideoCodecVP8 && qp != -1) {
+    qp_counters_.vp8.Add(qp);
+    qp_sample_.Add(qp);
+  }
 }
 
 void ReceiveStatisticsProxy::OnStreamInactive() {

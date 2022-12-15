@@ -34,7 +34,7 @@ namespace test {
 namespace {
 
 std::string Path(absl::string_view path) {
-  std::string result = std::string(path);
+  std::string result(path);
   std::replace(result.begin(), result.end(), '/', kPathDelimiter[0]);
   return result;
 }

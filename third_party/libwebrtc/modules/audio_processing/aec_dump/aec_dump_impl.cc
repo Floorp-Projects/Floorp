@@ -13,6 +13,7 @@
 #include <memory>
 #include <utility>
 
+#include "absl/strings/string_view.h"
 #include "modules/audio_processing/aec_dump/aec_dump_factory.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/event.h"
@@ -264,7 +265,7 @@ std::unique_ptr<AecDump> AecDumpFactory::Create(webrtc::FileWrapper file,
                                        worker_queue);
 }
 
-std::unique_ptr<AecDump> AecDumpFactory::Create(std::string file_name,
+std::unique_ptr<AecDump> AecDumpFactory::Create(absl::string_view file_name,
                                                 int64_t max_log_size_bytes,
                                                 rtc::TaskQueue* worker_queue) {
   return Create(FileWrapper::OpenWriteOnly(file_name), max_log_size_bytes,

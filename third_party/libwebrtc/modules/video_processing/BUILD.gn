@@ -34,18 +34,21 @@ rtc_library("video_processing") {
     "../../rtc_base:checks",
     "../../rtc_base/system:arch",
     "../../system_wrappers",
-    #"//third_party/libyuv",
+    "//third_party/libyuv",
   ]
+  if (build_with_mozilla) {
+    deps -= [ "//third_party/libyuv" ]
+    include_dirs = [
+      "/media/libyuv",
+      "/media/libyuv/libyuv/include",
+    ]
+  }
   if (build_video_processing_sse2) {
     deps += [ ":video_processing_sse2" ]
   }
   if (rtc_build_with_neon) {
     deps += [ ":video_processing_neon" ]
   }
-  include_dirs = [
-    "/media/libyuv",
-    "/media/libyuv/libyuv/include",
-  ]
 }
 
 rtc_source_set("denoiser_filter") {

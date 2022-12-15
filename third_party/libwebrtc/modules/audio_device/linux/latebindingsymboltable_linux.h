@@ -14,6 +14,7 @@
 #include <stddef.h>  // for NULL
 #include <string.h>
 
+#include "absl/strings/string_view.h"
 #include "rtc_base/checks.h"
 
 // This file provides macros for creating "symbol table" classes to simplify the
@@ -33,7 +34,7 @@ const DllHandle kInvalidDllHandle = NULL;
 #endif
 
 // These are helpers for use only by the class below.
-DllHandle InternalLoadDll(const char dll_name[]);
+DllHandle InternalLoadDll(absl::string_view);
 
 void InternalUnloadDll(DllHandle handle);
 

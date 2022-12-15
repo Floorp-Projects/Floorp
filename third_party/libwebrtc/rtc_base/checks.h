@@ -122,6 +122,13 @@ enum class CheckArgType : int8_t {
   kCheckOp,
 };
 
+// These two functions are public so they can be overridden from
+// webrtc_overrides in chromium.
+RTC_NORETURN void WriteFatalLog(const char* file,
+                                int line,
+                                absl::string_view output);
+RTC_NORETURN void WriteFatalLog(absl::string_view output);
+
 #if RTC_CHECK_MSG_ENABLED
 RTC_NORETURN RTC_EXPORT void FatalLog(const char* file,
                                       int line,

@@ -74,7 +74,7 @@ void StunRequestManager::FlushForTest(int msg_type) {
       // of canceling any outstanding tasks and prepare a new flag for
       // operations related to this call to `Send`.
       request->ResetTasksForTest();
-      request->Send(webrtc::TimeDelta::Millis(0));
+      request->Send(webrtc::TimeDelta::Zero());
     }
   }
 }

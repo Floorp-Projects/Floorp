@@ -2026,8 +2026,8 @@ void P2PTransportChannel::MaybeStopPortAllocatorSessions() {
   }
 }
 
-// RTC_RUN_ON(network_thread_)
 void P2PTransportChannel::OnSelectedConnectionDestroyed() {
+  RTC_DCHECK_RUN_ON(network_thread_);
   RTC_LOG(LS_INFO) << "Selected connection destroyed. Will choose a new one.";
   IceSwitchReason reason = IceSwitchReason::SELECTED_CONNECTION_DESTROYED;
   SwitchSelectedConnection(nullptr, reason);

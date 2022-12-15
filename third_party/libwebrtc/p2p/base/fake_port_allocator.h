@@ -22,6 +22,7 @@
 #include "p2p/base/udp_port.h"
 #include "rtc_base/memory/always_valid_pointer.h"
 #include "rtc_base/net_helpers.h"
+#include "rtc_base/task_queue_for_test.h"
 #include "rtc_base/thread.h"
 #include "test/scoped_key_value_config.h"
 
@@ -256,7 +257,7 @@ class FakePortAllocator : public cricket::PortAllocator {
       Initialize();
       return;
     }
-    network_thread_->Invoke<void>(RTC_FROM_HERE, [this] { Initialize(); });
+    SendTask(network_thread_, [this] { Initialize(); });
   }
 
   webrtc::test::ScopedKeyValueConfig field_trials_;

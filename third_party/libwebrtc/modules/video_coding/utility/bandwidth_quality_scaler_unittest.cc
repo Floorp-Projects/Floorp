@@ -106,13 +106,11 @@ class BandwidthQualityScalerTest
                   GetDefaultSinglecastBitrateLimitsWhenQpIsUntrusted());
           // Only for testing. Set first_timestamp_ in RateStatistics to 0.
           bandwidth_quality_scaler_->ReportEncodeInfo(0, 0, 0, 0);
-        },
-        RTC_FROM_HERE);
+        });
   }
 
   ~BandwidthQualityScalerTest() {
-    task_queue_.SendTask([this] { bandwidth_quality_scaler_ = nullptr; },
-                         RTC_FROM_HERE);
+    task_queue_.SendTask([this] { bandwidth_quality_scaler_ = nullptr; });
   }
 
   int GetFrameSizeBytes(
@@ -180,8 +178,7 @@ class BandwidthQualityScalerTest
                   config.actual_width, config.actual_height);
             }
           }
-        },
-        RTC_FROM_HERE);
+        });
   }
 
   test::ScopedFieldTrials scoped_field_trial_;

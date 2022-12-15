@@ -638,8 +638,7 @@ TEST(AudioSendStreamTest, DoesNotPassHigherBitrateThanMaxBitrate) {
     update.packet_loss_ratio = 0;
     update.round_trip_time = TimeDelta::Millis(50);
     update.bwe_period = TimeDelta::Millis(6000);
-    helper.worker()->SendTask([&] { send_stream->OnBitrateUpdated(update); },
-                              RTC_FROM_HERE);
+    helper.worker()->SendTask([&] { send_stream->OnBitrateUpdated(update); });
   }
 }
 
@@ -655,8 +654,7 @@ TEST(AudioSendStreamTest, SSBweTargetInRangeRespected) {
     BitrateAllocationUpdate update;
     update.target_bitrate =
         DataRate::BitsPerSec(helper.config().max_bitrate_bps - 5000);
-    helper.worker()->SendTask([&] { send_stream->OnBitrateUpdated(update); },
-                              RTC_FROM_HERE);
+    helper.worker()->SendTask([&] { send_stream->OnBitrateUpdated(update); });
   }
 }
 
@@ -672,8 +670,7 @@ TEST(AudioSendStreamTest, SSBweFieldTrialMinRespected) {
                                   Eq(DataRate::KilobitsPerSec(6)))));
     BitrateAllocationUpdate update;
     update.target_bitrate = DataRate::KilobitsPerSec(1);
-    helper.worker()->SendTask([&] { send_stream->OnBitrateUpdated(update); },
-                              RTC_FROM_HERE);
+    helper.worker()->SendTask([&] { send_stream->OnBitrateUpdated(update); });
   }
 }
 
@@ -689,8 +686,7 @@ TEST(AudioSendStreamTest, SSBweFieldTrialMaxRespected) {
                                   Eq(DataRate::KilobitsPerSec(64)))));
     BitrateAllocationUpdate update;
     update.target_bitrate = DataRate::KilobitsPerSec(128);
-    helper.worker()->SendTask([&] { send_stream->OnBitrateUpdated(update); },
-                              RTC_FROM_HERE);
+    helper.worker()->SendTask([&] { send_stream->OnBitrateUpdated(update); });
   }
 }
 
@@ -710,8 +706,7 @@ TEST(AudioSendStreamTest, SSBweWithOverhead) {
                     &BitrateAllocationUpdate::target_bitrate, Eq(bitrate))));
     BitrateAllocationUpdate update;
     update.target_bitrate = bitrate;
-    helper.worker()->SendTask([&] { send_stream->OnBitrateUpdated(update); },
-                              RTC_FROM_HERE);
+    helper.worker()->SendTask([&] { send_stream->OnBitrateUpdated(update); });
   }
 }
 
@@ -731,8 +726,7 @@ TEST(AudioSendStreamTest, SSBweWithOverheadMinRespected) {
                     &BitrateAllocationUpdate::target_bitrate, Eq(bitrate))));
     BitrateAllocationUpdate update;
     update.target_bitrate = DataRate::KilobitsPerSec(1);
-    helper.worker()->SendTask([&] { send_stream->OnBitrateUpdated(update); },
-                              RTC_FROM_HERE);
+    helper.worker()->SendTask([&] { send_stream->OnBitrateUpdated(update); });
   }
 }
 
@@ -752,8 +746,7 @@ TEST(AudioSendStreamTest, SSBweWithOverheadMaxRespected) {
                     &BitrateAllocationUpdate::target_bitrate, Eq(bitrate))));
     BitrateAllocationUpdate update;
     update.target_bitrate = DataRate::KilobitsPerSec(128);
-    helper.worker()->SendTask([&] { send_stream->OnBitrateUpdated(update); },
-                              RTC_FROM_HERE);
+    helper.worker()->SendTask([&] { send_stream->OnBitrateUpdated(update); });
   }
 }
 
@@ -771,8 +764,7 @@ TEST(AudioSendStreamTest, ProbingIntervalOnBitrateUpdated) {
     update.packet_loss_ratio = 0;
     update.round_trip_time = TimeDelta::Millis(50);
     update.bwe_period = TimeDelta::Millis(5000);
-    helper.worker()->SendTask([&] { send_stream->OnBitrateUpdated(update); },
-                              RTC_FROM_HERE);
+    helper.worker()->SendTask([&] { send_stream->OnBitrateUpdated(update); });
   }
 }
 
@@ -874,8 +866,7 @@ TEST(AudioSendStreamTest, AudioOverheadChanged) {
         DataRate::BitsPerSec(helper.config().max_bitrate_bps) +
         kMaxOverheadRate;
     EXPECT_CALL(*helper.channel_send(), OnBitrateAllocation);
-    helper.worker()->SendTask([&] { send_stream->OnBitrateUpdated(update); },
-                              RTC_FROM_HERE);
+    helper.worker()->SendTask([&] { send_stream->OnBitrateUpdated(update); });
 
     EXPECT_EQ(audio_overhead_per_packet_bytes,
               send_stream->TestOnlyGetPerPacketOverheadBytes());
@@ -883,8 +874,7 @@ TEST(AudioSendStreamTest, AudioOverheadChanged) {
     EXPECT_CALL(*helper.rtp_rtcp(), ExpectedPerPacketOverhead)
         .WillRepeatedly(Return(audio_overhead_per_packet_bytes + 20));
     EXPECT_CALL(*helper.channel_send(), OnBitrateAllocation);
-    helper.worker()->SendTask([&] { send_stream->OnBitrateUpdated(update); },
-                              RTC_FROM_HERE);
+    helper.worker()->SendTask([&] { send_stream->OnBitrateUpdated(update); });
 
     EXPECT_EQ(audio_overhead_per_packet_bytes + 20,
               send_stream->TestOnlyGetPerPacketOverheadBytes());
@@ -908,8 +898,7 @@ TEST(AudioSendStreamTest, OnAudioAndTransportOverheadChanged) {
         DataRate::BitsPerSec(helper.config().max_bitrate_bps) +
         kMaxOverheadRate;
     EXPECT_CALL(*helper.channel_send(), OnBitrateAllocation);
-    helper.worker()->SendTask([&] { send_stream->OnBitrateUpdated(update); },
-                              RTC_FROM_HERE);
+    helper.worker()->SendTask([&] { send_stream->OnBitrateUpdated(update); });
 
     EXPECT_EQ(
         transport_overhead_per_packet_bytes + audio_overhead_per_packet_bytes,

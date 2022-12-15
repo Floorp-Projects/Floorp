@@ -355,7 +355,6 @@ if (!build_with_chromium) {
         "../../../api/units:timestamp",
         "../../../rtc_base:checks",
         "../../../rtc_base:criticalsection",
-        "../../../rtc_base:location",
         "../../../rtc_base:logging",
         "../../../rtc_base:task_queue_for_test",
         "../../../rtc_base/synchronization:mutex",

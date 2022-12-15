@@ -11,14 +11,15 @@
 #ifndef MODULES_VIDEO_CODING_GENERIC_DECODER_H_
 #define MODULES_VIDEO_CODING_GENERIC_DECODER_H_
 
+#include <cstdint>
+#include <deque>
 #include <string>
+#include <utility>
 
 #include "api/field_trials_view.h"
 #include "api/sequence_checker.h"
 #include "api/video_codecs/video_decoder.h"
 #include "modules/video_coding/encoded_frame.h"
-#include "modules/video_coding/include/video_codec_interface.h"
-#include "modules/video_coding/timestamp_map.h"
 #include "modules/video_coding/timing/timing.h"
 #include "rtc_base/synchronization/mutex.h"
 
@@ -26,7 +27,26 @@ namespace webrtc {
 
 class VCMReceiveCallback;
 
-enum { kDecoderFrameMemoryLength = 30 };
+struct FrameInfo {
+  FrameInfo() = default;
+  FrameInfo(const FrameInfo&) = delete;
+  FrameInfo& operator=(const FrameInfo&) = delete;
+  FrameInfo(FrameInfo&&) = default;
+  FrameInfo& operator=(FrameInfo&&) = default;
+
+  uint32_t rtp_timestamp;
+  // This is likely not optional, but some inputs seem to sometimes be negative.
+  // TODO(bugs.webrtc.org/13756): See if this can be replaced with Timestamp
+  // once all inputs to this field use Timestamp instead of an integer.
+  absl::optional<Timestamp> render_time;
+  absl::optional<Timestamp> decode_start;
+  VideoRotation rotation;
+  VideoContentType content_type;
+  EncodedImage::Timing timing;
+  int64_t ntp_time_ms;
+  RtpPacketInfos packet_infos;
+  // ColorSpace is not stored here, as it might be modified by decoders.
+};
 
 class VCMDecodedFrameCallback : public DecodedImageCallback {
  public:
@@ -45,12 +65,14 @@ class VCMDecodedFrameCallback : public DecodedImageCallback {
 
   void OnDecoderImplementationName(const char* implementation_name);
 
-  void Map(uint32_t timestamp, const VCMFrameInformation& frameInfo);
+  void Map(FrameInfo frameInfo);
   void ClearTimestampMap();
 
  private:
+  std::pair<absl::optional<FrameInfo>, size_t> FindFrameInfo(
+      uint32_t rtp_timestamp) RTC_EXCLUSIVE_LOCKS_REQUIRED(lock_);
+
   SequenceChecker construction_thread_;
-  // Protect `_timestampMap`.
   Clock* const _clock;
   // This callback must be set before the decoder thread starts running
   // and must only be unset when external threads (e.g decoder thread)
@@ -60,7 +82,7 @@ class VCMDecodedFrameCallback : public DecodedImageCallback {
   VCMReceiveCallback* _receiveCallback = nullptr;
   VCMTiming* _timing;
   Mutex lock_;
-  VCMTimestampMap _timestampMap RTC_GUARDED_BY(lock_);
+  std::deque<FrameInfo> frame_infos_ RTC_GUARDED_BY(lock_);
   int64_t ntp_offset_;
 };
 

@@ -300,7 +300,10 @@ if (rtc_include_tests) {
       "../../../test/logging:log_writer",
       "../../remote_bitrate_estimator",
     ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/strings",
+      "//third_party/abseil-cpp/absl/types:optional",
+    ]
   }
   if (!build_with_chromium) {
     rtc_library("goog_cc_unittests") {

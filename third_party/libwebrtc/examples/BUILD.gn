@@ -693,6 +693,8 @@ if (is_linux || is_chromeos || is_win) {
       "../api:scoped_refptr",
       "../api/audio:audio_mixer_api",
       "../api/audio_codecs:audio_codecs_api",
+      "../api/task_queue:pending_task_safety_flag",
+      "../api/units:time_delta",
       "../api/video:video_frame",
       "../api/video:video_rtp_headers",
       "../api/video_codecs:video_codecs_api",

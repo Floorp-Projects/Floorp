@@ -13,7 +13,7 @@ if (is_android) {
   import("//build/config/android/rules.gni")
 }
 
-if (false) {
+if (!build_with_mozilla) {
 if (!build_with_chromium) {
   group("test") {
     testonly = true
@@ -210,15 +210,19 @@ if (!build_with_chromium) {
 }
 
 rtc_library("rtp_test_utils") {
-  #testonly = true
+  if (build_with_mozilla) {
+  sources = []
+  } else {
+  testonly = true
   sources = [
-    #"rtcp_packet_parser.cc",
-    #"rtcp_packet_parser.h",
-    #"rtp_file_reader.cc",
-    #"rtp_file_reader.h",
-    #"rtp_file_writer.cc",
-    #"rtp_file_writer.h",
+    "rtcp_packet_parser.cc",
+    "rtcp_packet_parser.h",
+    "rtp_file_reader.cc",
+    "rtp_file_reader.h",
+    "rtp_file_writer.cc",
+    "rtp_file_writer.h",
   ]
+  }
 
   deps = [
     "../api:array_view",
@@ -235,7 +239,7 @@ rtc_library("rtp_test_utils") {
   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 
-if (false) {
+if (!build_with_mozilla) {
 rtc_library("field_trial") {
   testonly = true
   visibility = [ "*" ]
@@ -981,6 +985,7 @@ rtc_library("test_common") {
     "../api/task_queue:default_task_queue_factory",
     "../api/test/video:function_video_factory",
     "../api/transport:field_trial_based_config",
+    "../api/units:time_delta",
     "../api/video:builtin_video_bitrate_allocator_factory",
     "../api/video:video_bitrate_allocator_factory",
     "../api/video:video_frame",

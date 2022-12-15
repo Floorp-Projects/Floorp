@@ -14,6 +14,7 @@
 
 #include <iostream>
 
+#include "absl/strings/string_view.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
 #include "modules/audio_processing/test/test_utils.h"
 #include "rtc_base/checks.h"
@@ -23,7 +24,7 @@ namespace webrtc {
 namespace test {
 
 std::vector<WavBasedSimulator::SimulationEventType>
-WavBasedSimulator::GetCustomEventChain(const std::string& filename) {
+WavBasedSimulator::GetCustomEventChain(absl::string_view filename) {
   std::vector<WavBasedSimulator::SimulationEventType> call_chain;
   FileWrapper file_wrapper = FileWrapper::OpenReadOnly(filename);
 

@@ -11,6 +11,7 @@
 #ifndef VIDEO_VIDEO_RECEIVE_STREAM2_H_
 #define VIDEO_VIDEO_RECEIVE_STREAM2_H_
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -25,7 +26,6 @@
 #include "call/rtp_packet_sink_interface.h"
 #include "call/syncable.h"
 #include "call/video_receive_stream.h"
-#include "modules/rtp_rtcp/include/flexfec_receiver.h"
 #include "modules/rtp_rtcp/source/source_tracker.h"
 #include "modules/video_coding/nack_requester.h"
 #include "modules/video_coding/video_receiver2.h"
@@ -33,11 +33,11 @@
 #include "rtc_base/task_queue.h"
 #include "rtc_base/thread_annotations.h"
 #include "system_wrappers/include/clock.h"
-#include "video/frame_buffer_proxy.h"
 #include "video/receive_statistics_proxy2.h"
 #include "video/rtp_streams_synchronizer2.h"
 #include "video/rtp_video_stream_receiver2.h"
 #include "video/transport_adapter.h"
+#include "video/video_stream_buffer_controller.h"
 #include "video/video_stream_decoder2.h"
 
 namespace webrtc {
@@ -102,7 +102,8 @@ class VideoReceiveStream2
                       Clock* clock,
                       std::unique_ptr<VCMTiming> timing,
                       NackPeriodicProcessor* nack_periodic_processor,
-                      DecodeSynchronizer* decode_sync);
+                      DecodeSynchronizer* decode_sync,
+                      RtcEventLog* event_log);
   // Destruction happens on the worker thread. Prior to destruction the caller
   // must ensure that a registration with the transport has been cleared. See
   // `RegisterWithTransport` for details.
@@ -146,6 +147,14 @@ class VideoReceiveStream2
   bool transport_cc() const override;
   void SetTransportCc(bool transport_cc) override;
   void SetRtcpMode(RtcpMode mode) override;
+  void SetFlexFecProtection(RtpPacketSinkInterface* flexfec_sink) override;
+  void SetLossNotificationEnabled(bool enabled) override;
+  void SetNackHistory(TimeDelta history) override;
+  void SetProtectionPayloadTypes(int red_payload_type,
+                                 int ulpfec_payload_type) override;
+  void SetRtcpXr(Config::Rtp::RtcpXr rtcp_xr) override;
+  void SetAssociatedPayloadTypes(
+      std::map<int, int> associated_payload_types) override;
 
   webrtc::VideoReceiveStreamInterface::Stats GetStats() const override;
 
@@ -187,14 +196,40 @@ class VideoReceiveStream2
   void GenerateKeyFrame() override;
 
  private:
+  // FrameSchedulingReceiver implementation.
+  // Called on packet sequence.
   void OnEncodedFrame(std::unique_ptr<EncodedFrame> frame) override;
-  void OnDecodableFrameTimeout(TimeDelta wait_time) override;
+  // Called on packet sequence.
+  void OnDecodableFrameTimeout(TimeDelta wait) override;
+
   void CreateAndRegisterExternalDecoder(const Decoder& decoder);
-  TimeDelta GetMaxWait() const RTC_RUN_ON(decode_queue_);
-  void HandleEncodedFrame(std::unique_ptr<EncodedFrame> frame)
-      RTC_RUN_ON(decode_queue_);
-  void HandleFrameBufferTimeout(Timestamp now, TimeDelta wait)
-      RTC_RUN_ON(packet_sequence_checker_);
+
+  struct DecodeFrameResult {
+    DecodeFrameResult(const DecodeFrameResult&) = delete;
+    DecodeFrameResult& operator=(const DecodeFrameResult&) = delete;
+    DecodeFrameResult(DecodeFrameResult&&) = default;
+    DecodeFrameResult& operator=(DecodeFrameResult&&) = default;
+
+    // True if the decoder returned code WEBRTC_VIDEO_CODEC_OK_REQUEST_KEYFRAME,
+    // or if the decoder failed and a keyframe is required. When true, a
+    // keyframe request should be sent even if a keyframe request was sent
+    // recently.
+    bool force_request_key_frame;
+
+    // The picture id of the frame that was decoded, or nullopt if the frame was
+    // not decoded.
+    absl::optional<int64_t> decoded_frame_picture_id;
+
+    // True if the next frame decoded must be a keyframe. This value will set
+    // the value of `keyframe_required_`, which will force the frame buffer to
+    // drop all frames that are not keyframes.
+    bool keyframe_required;
+  };
+
+  DecodeFrameResult HandleEncodedFrameOnDecodeQueue(
+      std::unique_ptr<EncodedFrame> frame,
+      bool keyframe_request_is_due,
+      bool keyframe_required) RTC_RUN_ON(decode_queue_);
   void UpdatePlayoutDelays() const
       RTC_EXCLUSIVE_LOCKS_REQUIRED(worker_sequence_checker_);
   void RequestKeyFrame(Timestamp now) RTC_RUN_ON(packet_sequence_checker_);
@@ -250,7 +285,7 @@ class VideoReceiveStream2
   // moved to the new VideoStreamDecoder.
   std::vector<std::unique_ptr<VideoDecoder>> video_decoders_;
 
-  std::unique_ptr<FrameBufferProxy> frame_buffer_;
+  std::unique_ptr<VideoStreamBufferController> buffer_;
 
   std::unique_ptr<RtpStreamReceiverInterface> media_receiver_
       RTC_GUARDED_BY(packet_sequence_checker_);
@@ -261,19 +296,17 @@ class VideoReceiveStream2
 
   // Whenever we are in an undecodable state (stream has just started or due to
   // a decoding error) we require a keyframe to restart the stream.
-  bool keyframe_required_ RTC_GUARDED_BY(decode_queue_) = true;
+  bool keyframe_required_ RTC_GUARDED_BY(packet_sequence_checker_) = true;
 
   // If we have successfully decoded any frame.
   bool frame_decoded_ RTC_GUARDED_BY(decode_queue_) = false;
 
   absl::optional<Timestamp> last_keyframe_request_
-      RTC_GUARDED_BY(decode_queue_);
-  absl::optional<Timestamp> last_complete_frame_time_
-      RTC_GUARDED_BY(worker_sequence_checker_);
+      RTC_GUARDED_BY(packet_sequence_checker_);
 
   // Keyframe request intervals are configurable through field trials.
-  const TimeDelta max_wait_for_keyframe_;
-  const TimeDelta max_wait_for_frame_;
+  TimeDelta max_wait_for_keyframe_ RTC_GUARDED_BY(packet_sequence_checker_);
+  TimeDelta max_wait_for_frame_ RTC_GUARDED_BY(packet_sequence_checker_);
 
   // All of them tries to change current min_playout_delay on `timing_` but
   // source of the change request is different in each case. Among them the

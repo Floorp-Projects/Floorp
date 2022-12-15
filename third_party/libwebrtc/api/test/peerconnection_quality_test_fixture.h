@@ -217,6 +217,57 @@ class PeerConnectionE2EQualityTestFixture {
     Spec spec_ = Spec::kNone;
   };
 
+  class VideoDumpOptions {
+   public:
+    static constexpr int kDefaultSamplingModulo = 1;
+
+    // output_directory - the output directory where stream will be dumped. The
+    // output files' names will be constructed as
+    // <stream_name>_<receiver_name>.<extension> for output dumps and
+    // <stream_name>.<extension> for input dumps. By default <extension> is
+    // "y4m".
+    // sampling_modulo - the module for the video frames to be dumped. Modulo
+    // equals X means every Xth frame will be written to the dump file. The
+    // value must be greater than 0. (Default: 1)
+    // export_frame_ids - specifies if frame ids should be exported together
+    // with content of the stream. If true, an output file with the same name as
+    // video dump and suffix ".frame_ids.txt" will be created. It will contain
+    // the frame ids in the same order as original frames in the output
+    // file with stream content. File will contain one frame id per line.
+    // (Default: false)
+    explicit VideoDumpOptions(absl::string_view output_directory,
+                              int sampling_modulo = kDefaultSamplingModulo,
+                              bool export_frame_ids = false);
+    VideoDumpOptions(absl::string_view output_directory, bool export_frame_ids);
+
+    VideoDumpOptions(const VideoDumpOptions&) = default;
+    VideoDumpOptions& operator=(const VideoDumpOptions&) = default;
+    VideoDumpOptions(VideoDumpOptions&&) = default;
+    VideoDumpOptions& operator=(VideoDumpOptions&&) = default;
+
+    std::string output_directory() const { return output_directory_; }
+    int sampling_modulo() const { return sampling_modulo_; }
+    bool export_frame_ids() const { return export_frame_ids_; }
+
+    std::string GetInputDumpFileName(absl::string_view stream_label) const;
+    // Returns file name for input frame ids dump if `export_frame_ids()` is
+    // true, absl::nullopt otherwise.
+    absl::optional<std::string> GetInputFrameIdsDumpFileName(
+        absl::string_view stream_label) const;
+    std::string GetOutputDumpFileName(absl::string_view stream_label,
+                                      absl::string_view receiver) const;
+    // Returns file name for output frame ids dump if `export_frame_ids()` is
+    // true, absl::nullopt otherwise.
+    absl::optional<std::string> GetOutputFrameIdsDumpFileName(
+        absl::string_view stream_label,
+        absl::string_view receiver) const;
+
+   private:
+    std::string output_directory_;
+    int sampling_modulo_ = 1;
+    bool export_frame_ids_ = false;
+  };
+
   // Contains properties of single video stream.
   struct VideoConfig {
     explicit VideoConfig(const VideoResolution& resolution);
@@ -267,17 +318,24 @@ class PeerConnectionE2EQualityTestFixture {
     // each RtpEncodingParameters of RtpParameters of corresponding
     // RtpSenderInterface for this video stream.
     absl::optional<int> temporal_layers_count;
-    // If specified the input stream will be also copied to specified file.
-    // It is actually one of the test's output file, which contains copy of what
-    // was captured during the test for this video stream on sender side.
-    // It is useful when generator is used as input.
+    // DEPRECATED: use input_dump_options instead. If specified the input stream
+    // will be also copied to specified file. It is actually one of the test's
+    // output file, which contains copy of what was captured during the test for
+    // this video stream on sender side. It is useful when generator is used as
+    // input.
     absl::optional<std::string> input_dump_file_name;
-    // Used only if `input_dump_file_name` is set. Specifies the module for the
-    // video frames to be dumped. Modulo equals X means every Xth frame will be
-    // written to the dump file. The value must be greater than 0.
+    // DEPRECATED: use input_dump_options instead. Used only if
+    // `input_dump_file_name` is set. Specifies the module for the video frames
+    // to be dumped. Modulo equals X means every Xth frame will be written to
+    // the dump file. The value must be greater than 0.
     int input_dump_sampling_modulo = 1;
-    // If specified this file will be used as output on the receiver side for
-    // this stream.
+    // If specified defines how input should be dumped. It is actually one of
+    // the test's output file, which contains copy of what was captured during
+    // the test for this video stream on sender side. It is useful when
+    // generator is used as input.
+    absl::optional<VideoDumpOptions> input_dump_options;
+    // DEPRECATED: use output_dump_options instead. If specified this file will
+    // be used as output on the receiver side for this stream.
     //
     // If multiple output streams will be produced by this stream (e.g. when the
     // stream represented by this `VideoConfig` is received by more than one
@@ -303,10 +361,15 @@ class PeerConnectionE2EQualityTestFixture {
     // The produced files contains what was rendered for this video stream on
     // receiver side.
     absl::optional<std::string> output_dump_file_name;
-    // Used only if `output_dump_file_name` is set. Specifies the module for the
-    // video frames to be dumped. Modulo equals X means every Xth frame will be
-    // written to the dump file. The value must be greater than 0.
+    // DEPRECATED: use output_dump_options instead. Used only if
+    // `output_dump_file_name` is set. Specifies the module for the video frames
+    // to be dumped. Modulo equals X means every Xth frame will be written to
+    // the dump file. The value must be greater than 0.
     int output_dump_sampling_modulo = 1;
+    // If specified defines how output should be dumped on the receiver side for
+    // this stream. The produced files contain what was rendered for this video
+    // stream on receiver side per each receiver.
+    absl::optional<VideoDumpOptions> output_dump_options;
     // If set to true uses fixed frame rate while dumping output video to the
     // file. `fps` will be used as frame rate.
     bool output_dump_use_fixed_framerate = false;

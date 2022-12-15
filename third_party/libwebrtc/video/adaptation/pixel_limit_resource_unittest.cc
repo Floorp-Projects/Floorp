@@ -48,7 +48,7 @@ class PixelLimitResourceTest : public ::testing::Test {
 
   void RunTaskOnTaskQueue(absl::AnyInvocable<void() &&> task) {
     task_queue_->PostTask(std::move(task));
-    time_controller_.AdvanceTime(TimeDelta::Millis(0));
+    time_controller_.AdvanceTime(TimeDelta::Zero());
   }
 
  protected:
@@ -83,7 +83,7 @@ TEST_F(PixelLimitResourceTest,
     rtc::scoped_refptr<PixelLimitResource> pixel_limit_resource =
         PixelLimitResource::Create(task_queue_.get(), &input_state_provider_);
     pixel_limit_resource->SetResourceListener(&resource_listener);
-    time_controller_.AdvanceTime(TimeDelta::Millis(0));
+    time_controller_.AdvanceTime(TimeDelta::Zero());
 
     pixel_limit_resource->SetMaxPixels(kMaxPixels);
     SetCurrentPixels(kMaxPixels + 1);
@@ -118,7 +118,7 @@ TEST_F(PixelLimitResourceTest,
     rtc::scoped_refptr<PixelLimitResource> pixel_limit_resource =
         PixelLimitResource::Create(task_queue_.get(), &input_state_provider_);
     pixel_limit_resource->SetResourceListener(&resource_listener);
-    time_controller_.AdvanceTime(TimeDelta::Millis(0));
+    time_controller_.AdvanceTime(TimeDelta::Zero());
 
     pixel_limit_resource->SetMaxPixels(kMaxPixels);
     SetCurrentPixels(kMinPixels - 1);

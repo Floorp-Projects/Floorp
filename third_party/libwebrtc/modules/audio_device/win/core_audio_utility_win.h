@@ -22,6 +22,7 @@
 
 #include <string>
 
+#include "absl/strings/string_view.h"
 #include "api/units/time_delta.h"
 #include "modules/audio_device/audio_device_name.h"
 #include "modules/audio_device/include/audio_device_defines.h"
@@ -329,7 +330,7 @@ std::string GetCommunicationsOutputDeviceID();
 // Creates an IMMDevice interface corresponding to the unique device id in
 // `device_id`, or by data-flow direction and role if `device_id` is set to
 // AudioDeviceName::kDefaultDeviceId.
-Microsoft::WRL::ComPtr<IMMDevice> CreateDevice(const std::string& device_id,
+Microsoft::WRL::ComPtr<IMMDevice> CreateDevice(absl::string_view device_id,
                                                EDataFlow data_flow,
                                                ERole role);
 
@@ -341,7 +342,7 @@ webrtc::AudioDeviceName GetDeviceName(IMMDevice* device);
 // Gets the user-friendly name of the endpoint device which is represented
 // by a unique id in `device_id`, or by data-flow direction and role if
 // `device_id` is set to AudioDeviceName::kDefaultDeviceId.
-std::string GetFriendlyName(const std::string& device_id,
+std::string GetFriendlyName(absl::string_view device_id,
                             EDataFlow data_flow,
                             ERole role);
 
@@ -378,13 +379,15 @@ int NumberOfActiveSessions(IMMDevice* device);
 
 // Creates an IAudioClient instance for a specific device or the default
 // device specified by data-flow direction and role.
-Microsoft::WRL::ComPtr<IAudioClient> CreateClient(const std::string& device_id,
+Microsoft::WRL::ComPtr<IAudioClient> CreateClient(absl::string_view device_id,
                                                   EDataFlow data_flow,
                                                   ERole role);
-Microsoft::WRL::ComPtr<IAudioClient2>
-CreateClient2(const std::string& device_id, EDataFlow data_flow, ERole role);
-Microsoft::WRL::ComPtr<IAudioClient3>
-CreateClient3(const std::string& device_id, EDataFlow data_flow, ERole role);
+Microsoft::WRL::ComPtr<IAudioClient2> CreateClient2(absl::string_view device_id,
+                                                    EDataFlow data_flow,
+                                                    ERole role);
+Microsoft::WRL::ComPtr<IAudioClient3> CreateClient3(absl::string_view device_id,
+                                                    EDataFlow data_flow,
+                                                    ERole role);
 
 // Sets the AudioCategory_Communications category. Should be called before
 // GetSharedModeMixFormat() and IsFormatSupported(). The `client` argument must

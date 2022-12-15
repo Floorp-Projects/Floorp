@@ -46,8 +46,10 @@ class VideoReceiveStreamTimeoutTracker {
   void OnEncodedFrameReleased();
   TimeDelta TimeUntilTimeout() const;
 
+  void SetTimeouts(Timeouts timeouts);
+
  private:
-  TimeDelta TimeoutForNextFrame() const {
+  TimeDelta TimeoutForNextFrame() const RTC_RUN_ON(bookkeeping_queue_) {
     return waiting_for_keyframe_ ? timeouts_.max_wait_for_keyframe
                                  : timeouts_.max_wait_for_frame;
   }
@@ -55,7 +57,7 @@ class VideoReceiveStreamTimeoutTracker {
 
   Clock* const clock_;
   TaskQueueBase* const bookkeeping_queue_;
-  const Timeouts timeouts_;
+  Timeouts timeouts_ RTC_GUARDED_BY(bookkeeping_queue_);
   const TimeoutCallback timeout_cb_;
   RepeatingTaskHandle timeout_task_;
 

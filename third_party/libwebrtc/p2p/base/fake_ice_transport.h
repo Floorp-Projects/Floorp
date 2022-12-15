@@ -24,6 +24,7 @@
 #include "api/units/time_delta.h"
 #include "p2p/base/ice_transport_internal.h"
 #include "rtc_base/copy_on_write_buffer.h"
+#include "rtc_base/task_queue_for_test.h"
 
 namespace cricket {
 using ::webrtc::SafeTask;
@@ -357,7 +358,7 @@ class FakeIceTransport : public IceTransportInternal {
   void SetNetworkRoute(absl::optional<rtc::NetworkRoute> network_route) {
     RTC_DCHECK_RUN_ON(network_thread_);
     network_route_ = network_route;
-    network_thread_->Invoke<void>(RTC_FROM_HERE, [this] {
+    SendTask(network_thread_, [this] {
       RTC_DCHECK_RUN_ON(network_thread_);
       SignalNetworkRouteChanged(network_route_);
     });

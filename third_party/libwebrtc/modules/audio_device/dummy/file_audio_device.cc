@@ -12,6 +12,7 @@
 
 #include <string.h>
 
+#include "absl/strings/string_view.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/platform_thread.h"
@@ -29,8 +30,8 @@ const size_t kPlayoutBufferSize =
 const size_t kRecordingBufferSize =
     kRecordingFixedSampleRate / 100 * kRecordingNumChannels * 2;
 
-FileAudioDevice::FileAudioDevice(const char* inputFilename,
-                                 const char* outputFilename)
+FileAudioDevice::FileAudioDevice(absl::string_view inputFilename,
+                                 absl::string_view outputFilename)
     : _ptrAudioBuffer(NULL),
       _recordingBuffer(NULL),
       _playoutBuffer(NULL),

@@ -40,6 +40,7 @@ TimeDelta VideoReceiveStreamTimeoutTracker::TimeUntilTimeout() const {
 }
 
 void VideoReceiveStreamTimeoutTracker::Start(bool waiting_for_keyframe) {
+  RTC_DCHECK_RUN_ON(bookkeeping_queue_);
   RTC_DCHECK(!timeout_task_.Running());
   waiting_for_keyframe_ = waiting_for_keyframe;
   TimeDelta timeout_delay = TimeoutForNextFrame();
@@ -55,6 +56,7 @@ void VideoReceiveStreamTimeoutTracker::Stop() {
 }
 
 void VideoReceiveStreamTimeoutTracker::SetWaitingForKeyframe() {
+  RTC_DCHECK_RUN_ON(bookkeeping_queue_);
   waiting_for_keyframe_ = true;
   TimeDelta timeout_delay = TimeoutForNextFrame();
   if (clock_->CurrentTime() + timeout_delay < timeout_) {
@@ -64,6 +66,7 @@ void VideoReceiveStreamTimeoutTracker::SetWaitingForKeyframe() {
 }
 
 void VideoReceiveStreamTimeoutTracker::OnEncodedFrameReleased() {
+  RTC_DCHECK_RUN_ON(bookkeeping_queue_);
   // If we were waiting for a keyframe, then it has just been released.
   waiting_for_keyframe_ = false;
   last_frame_ = clock_->CurrentTime();
@@ -71,6 +74,7 @@ void VideoReceiveStreamTimeoutTracker::OnEncodedFrameReleased() {
 }
 
 TimeDelta VideoReceiveStreamTimeoutTracker::HandleTimeoutTask() {
+  RTC_DCHECK_RUN_ON(bookkeeping_queue_);
   Timestamp now = clock_->CurrentTime();
   // `timeout_` is hit and we have timed out. Schedule the next timeout at
   // the timeout delay.
@@ -84,6 +88,11 @@ TimeDelta VideoReceiveStreamTimeoutTracker::HandleTimeoutTask() {
   // Otherwise, `timeout_` changed since we scheduled a timeout. Reschedule
   // a timeout check.
   return timeout_ - now;
+}
+
+void VideoReceiveStreamTimeoutTracker::SetTimeouts(Timeouts timeouts) {
+  RTC_DCHECK_RUN_ON(bookkeeping_queue_);
+  timeouts_ = timeouts;
 }
 
 }  // namespace webrtc

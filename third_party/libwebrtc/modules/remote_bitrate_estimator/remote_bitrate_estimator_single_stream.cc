@@ -249,9 +249,4 @@ AimdRateControl* RemoteBitrateEstimatorSingleStream::GetRemoteRate() {
   return remote_rate_.get();
 }
 
-void RemoteBitrateEstimatorSingleStream::SetMinBitrate(int min_bitrate_bps) {
-  MutexLock lock(&mutex_);
-  remote_rate_->SetMinBitrate(DataRate::BitsPerSec(min_bitrate_bps));
-}
-
 }  // namespace webrtc

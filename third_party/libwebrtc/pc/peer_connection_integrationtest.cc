@@ -82,13 +82,13 @@
 #include "rtc_base/firewall_socket_server.h"
 #include "rtc_base/gunit.h"
 #include "rtc_base/helpers.h"
-#include "rtc_base/location.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/ssl_certificate.h"
 #include "rtc_base/ssl_fingerprint.h"
 #include "rtc_base/ssl_identity.h"
 #include "rtc_base/ssl_stream_adapter.h"
+#include "rtc_base/task_queue_for_test.h"
 #include "rtc_base/test_certificate_verifier.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/time_utils.h"
@@ -2371,10 +2371,10 @@ TEST_P(PeerConnectionIntegrationTestWithFakeClock,
       turn_server_2_internal_address, turn_server_2_external_address);
   // Bypass permission check on received packets so media can be sent before
   // the candidate is signaled.
-  network_thread()->Invoke<void>(RTC_FROM_HERE, [turn_server_1] {
+  SendTask(network_thread(), [turn_server_1] {
     turn_server_1->set_enable_permission_checks(false);
   });
-  network_thread()->Invoke<void>(RTC_FROM_HERE, [turn_server_2] {
+  SendTask(network_thread(), [turn_server_2] {
     turn_server_2->set_enable_permission_checks(false);
   });
 

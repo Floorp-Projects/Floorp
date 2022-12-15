@@ -83,8 +83,8 @@ void AudioRtpReceiver::OnChanged() {
   }));
 }
 
-// RTC_RUN_ON(worker_thread_)
 void AudioRtpReceiver::SetOutputVolume_w(double volume) {
+  RTC_DCHECK_RUN_ON(worker_thread_);
   RTC_DCHECK_GE(volume, 0.0);
   RTC_DCHECK_LE(volume, 10.0);
 
@@ -164,8 +164,8 @@ void AudioRtpReceiver::Stop() {
   track_->internal()->set_ended();
 }
 
-// RTC_RUN_ON(&signaling_thread_checker_)
 void AudioRtpReceiver::RestartMediaChannel(absl::optional<uint32_t> ssrc) {
+  RTC_DCHECK_RUN_ON(&signaling_thread_checker_);
   bool enabled = track_->internal()->enabled();
   MediaSourceInterface::SourceState state = source_->state();
   worker_thread_->Invoke<void>(RTC_FROM_HERE, [&]() {
@@ -175,11 +175,11 @@ void AudioRtpReceiver::RestartMediaChannel(absl::optional<uint32_t> ssrc) {
   source_->SetState(MediaSourceInterface::kLive);
 }
 
-// RTC_RUN_ON(worker_thread_)
 void AudioRtpReceiver::RestartMediaChannel_w(
     absl::optional<uint32_t> ssrc,
     bool track_enabled,
     MediaSourceInterface::SourceState state) {
+  RTC_DCHECK_RUN_ON(worker_thread_);
   if (!media_channel_)
     return;  // Can't restart.
 
@@ -281,8 +281,8 @@ void AudioRtpReceiver::SetDepacketizerToDecoderFrameTransformer(
   frame_transformer_ = std::move(frame_transformer);
 }
 
-// RTC_RUN_ON(worker_thread_)
 void AudioRtpReceiver::Reconfigure(bool track_enabled) {
+  RTC_DCHECK_RUN_ON(worker_thread_);
   RTC_DCHECK(media_channel_);
 
   SetOutputVolume_w(track_enabled ? cached_volume_ : 0);

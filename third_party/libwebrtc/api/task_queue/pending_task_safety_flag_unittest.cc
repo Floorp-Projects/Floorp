@@ -85,20 +85,16 @@ TEST(PendingTaskSafetyFlagTest, PendingTaskSuccess) {
   };
 
   std::unique_ptr<Owner> owner;
-  tq1.SendTask(
-      [&owner]() {
-        owner = std::make_unique<Owner>();
-        EXPECT_FALSE(owner->stuff_done());
-      },
-      RTC_FROM_HERE);
+  tq1.SendTask([&owner]() {
+    owner = std::make_unique<Owner>();
+    EXPECT_FALSE(owner->stuff_done());
+  });
   ASSERT_TRUE(owner);
-  tq2.SendTask([&owner]() { owner->DoStuff(); }, RTC_FROM_HERE);
-  tq1.SendTask(
-      [&owner]() {
-        EXPECT_TRUE(owner->stuff_done());
-        owner.reset();
-      },
-      RTC_FROM_HERE);
+  tq2.SendTask([&owner]() { owner->DoStuff(); });
+  tq1.SendTask([&owner]() {
+    EXPECT_TRUE(owner->stuff_done());
+    owner.reset();
+  });
   ASSERT_FALSE(owner);
 }
 
@@ -129,9 +125,9 @@ TEST(PendingTaskSafetyFlagTest, PendingTaskDropped) {
 
   std::unique_ptr<Owner> owner;
   bool stuff_done = false;
-  tq1.SendTask(
-      [&owner, &stuff_done]() { owner = std::make_unique<Owner>(&stuff_done); },
-      RTC_FROM_HERE);
+  tq1.SendTask([&owner, &stuff_done]() {
+    owner = std::make_unique<Owner>(&stuff_done);
+  });
   ASSERT_TRUE(owner);
   // Queue up a task on tq1 that will execute before the 'DoStuff' task
   // can, and delete the `owner` before the 'stuff' task can execute.
@@ -142,7 +138,7 @@ TEST(PendingTaskSafetyFlagTest, PendingTaskDropped) {
   });
 
   // Queue up a DoStuff...
-  tq2.SendTask([&owner]() { owner->DoStuff(); }, RTC_FROM_HERE);
+  tq2.SendTask([&owner]() { owner->DoStuff(); });
 
   ASSERT_TRUE(owner);
   blocker.Set();
@@ -158,7 +154,7 @@ TEST(PendingTaskSafetyFlagTest, PendingTaskNotAliveInitialized) {
 
   // Create a new flag that initially not `alive`.
   auto flag = PendingTaskSafetyFlag::CreateDetachedInactive();
-  tq.SendTask([&flag]() { EXPECT_FALSE(flag->alive()); }, RTC_FROM_HERE);
+  tq.SendTask([&flag]() { EXPECT_FALSE(flag->alive()); });
 
   bool task_1_ran = false;
   bool task_2_ran = false;

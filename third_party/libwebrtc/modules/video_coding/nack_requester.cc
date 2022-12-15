@@ -71,8 +71,8 @@ void NackPeriodicProcessor::UnregisterNackModule(NackRequesterBase* module) {
     repeating_task_.Stop();
 }
 
-// RTC_RUN_ON(sequence_)
 void NackPeriodicProcessor::ProcessNackModules() {
+  RTC_DCHECK_RUN_ON(&sequence_);
   for (NackRequesterBase* module : modules_)
     module->ProcessNacks();
 }

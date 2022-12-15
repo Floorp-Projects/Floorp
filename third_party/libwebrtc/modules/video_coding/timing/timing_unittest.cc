@@ -150,10 +150,10 @@ TEST(ReceiverTimingTest, UseLowLatencyRenderer) {
   timing.set_max_playout_delay(TimeDelta::Millis(20));
   EXPECT_FALSE(timing.RenderParameters().use_low_latency_rendering);
   // True if min==0, max > 0.
-  timing.set_min_playout_delay(TimeDelta::Millis(0));
+  timing.set_min_playout_delay(TimeDelta::Zero());
   EXPECT_TRUE(timing.RenderParameters().use_low_latency_rendering);
   // True if min==max==0.
-  timing.set_max_playout_delay(TimeDelta::Millis(0));
+  timing.set_max_playout_delay(TimeDelta::Zero());
   EXPECT_TRUE(timing.RenderParameters().use_low_latency_rendering);
   // True also for max playout delay==500 ms.
   timing.set_max_playout_delay(TimeDelta::Millis(500));
@@ -314,6 +314,26 @@ TEST(ReceiverTimingTest, MaxWaitingTimeReturnsZeroIfTooManyFramesQueuedIsTrue) {
   EXPECT_EQ(timing.MaxWaitingTime(kZeroRenderTime, now_ms,
                                   /*too_many_frames_queued=*/true),
             TimeDelta::Zero());
+}
+
+TEST(ReceiverTimingTest, UpdateCurrentDelayCapsWhenOffByMicroseconds) {
+  test::ScopedKeyValueConfig field_trials;
+  SimulatedClock clock(0);
+  VCMTiming timing(&clock, field_trials);
+  timing.Reset();
+
+  // Set larger initial current delay.
+  timing.set_min_playout_delay(TimeDelta::Millis(200));
+  timing.UpdateCurrentDelay(Timestamp::Millis(900), Timestamp::Millis(1000));
+
+  // Add a few microseconds to ensure that the delta of decode time is 0 after
+  // rounding, and should reset to the target delay.
+  timing.set_min_playout_delay(TimeDelta::Millis(50));
+  Timestamp decode_time = Timestamp::Millis(1337);
+  Timestamp render_time =
+      decode_time + TimeDelta::Millis(10) + TimeDelta::Micros(37);
+  timing.UpdateCurrentDelay(render_time, decode_time);
+  EXPECT_EQ(timing.GetTimings().current_delay, timing.TargetVideoDelay());
 }
 
 }  // namespace webrtc

@@ -397,7 +397,7 @@ void VideoAnalyzer::Wait() {
   if (iteration > 0)
     printf("- Farewell, sweet Concorde!\n");
 
-  SendTask(RTC_FROM_HERE, task_queue_, [&] { stats_polling_task.Stop(); });
+  SendTask(task_queue_, [&] { stats_polling_task.Stop(); });
 
   PrintResults();
   if (graph_data_output_file_)

@@ -22,6 +22,7 @@
 #include "modules/desktop_capture/linux/wayland/egl_dmabuf.h"
 #include "modules/desktop_capture/linux/wayland/screencast_stream_utils.h"
 #include "modules/desktop_capture/screen_capture_frame_queue.h"
+#include "modules/desktop_capture/shared_desktop_frame.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/sanitizer.h"

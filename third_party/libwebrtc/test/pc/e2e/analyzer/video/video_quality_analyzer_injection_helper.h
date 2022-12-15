@@ -11,6 +11,8 @@
 #ifndef TEST_PC_E2E_ANALYZER_VIDEO_VIDEO_QUALITY_ANALYZER_INJECTION_HELPER_H_
 #define TEST_PC_E2E_ANALYZER_VIDEO_VIDEO_QUALITY_ANALYZER_INJECTION_HELPER_H_
 
+#include <stdio.h>
+
 #include <map>
 #include <memory>
 #include <string>
@@ -131,6 +133,35 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
     }
   };
 
+  class VideoFrameIdsWriter {
+   public:
+    explicit VideoFrameIdsWriter(absl::string_view file_name);
+    ~VideoFrameIdsWriter();
+
+    void WriteFrameId(uint16_t frame_id);
+
+   private:
+    const std::string file_name_;
+    FILE* output_file_;
+  };
+
+  class VideoWriter2 final : public rtc::VideoSinkInterface<VideoFrame> {
+   public:
+    VideoWriter2(test::VideoFrameWriter* video_writer,
+                 VideoFrameIdsWriter* frame_ids_writer,
+                 int sampling_modulo);
+    ~VideoWriter2() override = default;
+
+    void OnFrame(const VideoFrame& frame) override;
+
+   private:
+    test::VideoFrameWriter* const video_writer_;
+    VideoFrameIdsWriter* const frame_ids_writer_;
+    const int sampling_modulo_;
+
+    int64_t frames_counter_ = 0;
+  };
+
   test::VideoFrameWriter* MaybeCreateVideoWriter(
       absl::optional<std::string> file_name,
       const PeerConnectionE2EQualityTestFixture::VideoConfig& config);
@@ -146,6 +177,7 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
   EncodedImageDataExtractor* extractor_;
 
   std::vector<std::unique_ptr<test::VideoFrameWriter>> video_writers_;
+  std::vector<std::unique_ptr<VideoFrameIdsWriter>> frame_ids_writers_;
 
   Mutex mutex_;
   int peers_count_ RTC_GUARDED_BY(mutex_);

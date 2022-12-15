@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "api/scoped_refptr.h"
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/task_queue/task_queue_factory.h"
@@ -104,7 +105,7 @@ class AudioStreamInterface {
 class FileAudioStream : public AudioStreamInterface {
  public:
   FileAudioStream(size_t num_callbacks,
-                  const std::string& file_name,
+                  absl::string_view file_name,
                   int sample_rate)
       : file_size_in_bytes_(0), sample_rate_(sample_rate), file_pos_(0) {
     file_size_in_bytes_ = test::GetFileSize(file_name);
@@ -114,7 +115,7 @@ class FileAudioStream : public AudioStreamInterface {
     const size_t num_16bit_samples =
         test::GetFileSize(file_name) / kBytesPerSample;
     file_.reset(new int16_t[num_16bit_samples]);
-    FILE* audio_file = fopen(file_name.c_str(), "rb");
+    FILE* audio_file = fopen(std::string(file_name).c_str(), "rb");
     EXPECT_NE(audio_file, nullptr);
     size_t num_samples_read =
         fread(file_.get(), sizeof(int16_t), num_16bit_samples, audio_file);
@@ -567,7 +568,7 @@ class AudioDeviceTest : public ::testing::Test {
     return active;
   }
 
-  bool DisableTestForThisDevice(const std::string& model) {
+  bool DisableTestForThisDevice(absl::string_view model) {
     return (build_info_->GetDeviceModel() == model);
   }
 

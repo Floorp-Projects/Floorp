@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "rtc_base/system/file_wrapper.h"
 #include "test/gtest.h"
 #include "test/testsupport/file_utils.h"
@@ -49,8 +50,8 @@ class TransientFileUtilsTest : public ::testing::Test {
 
   ~TransientFileUtilsTest() override { CleanupTempFiles(); }
 
-  std::string CreateTempFilename(const std::string& dir,
-                                 const std::string& prefix) {
+  std::string CreateTempFilename(absl::string_view dir,
+                                 absl::string_view prefix) {
     std::string filename = test::TempFilename(dir, prefix);
     temp_filenames_.push_back(filename);
     return filename;
