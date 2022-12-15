@@ -631,7 +631,7 @@
                      context="placesContext"
                      onpopupshowing="if (!this.parentNode._placesView)
                                        new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.toolbarGuid}`,
-                                                      PlacesUIUtils.getViewForNode(this.parentNode.parentNode).options);">
+                                                      {extraClasses: {entry: 'subviewbutton'}});">
             <menuitem id="BMB_viewBookmarksToolbar"
                       class="subviewbutton"
                       data-l10n-id="bookmarks-tools-toolbar-visibility-menuitem"
@@ -652,7 +652,7 @@
                      context="placesContext"
                      onpopupshowing="if (!this.parentNode._placesView)
                                        new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.unfiledGuid}`,
-                                                      PlacesUIUtils.getViewForNode(this.parentNode.parentNode).options);"/>
+                                                      {extraClasses: {entry: 'subviewbutton'}});"/>
         </menu>
         <menu id="BMB_mobileBookmarks"
               class="menu-iconic bookmark-item subviewbutton"
@@ -666,7 +666,7 @@
                      context="placesContext"
                      onpopupshowing="if (!this.parentNode._placesView)
                                        new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.mobileGuid}`,
-                                                      PlacesUIUtils.getViewForNode(this.parentNode.parentNode).options);"/>
+                                                      {extraClasses: {entry: 'subviewbutton'}});"/>
         </menu>
 
         <menuseparator/>
