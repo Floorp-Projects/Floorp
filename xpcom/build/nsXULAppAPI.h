@@ -220,29 +220,6 @@ nsresult XRE_GetFileFromPath(const char* aPath, nsIFile** aResult);
 nsresult XRE_GetBinaryPath(nsIFile** aResult);
 
 /**
- * Initialize libXUL for embedding purposes.
- *
- * @param aLibXULDirectory   The directory in which the libXUL shared library
- *                           was found.
- * @param aAppDirectory      The directory in which the application components
- *                           and resources can be found. This will map to
- *                           the NS_OS_CURRENT_PROCESS_DIR directory service
- *                           key.
- * @param aAppDirProvider    A directory provider for the application. This
- *                           provider will be aggregated by a libxul provider
- *                           which will provide the base required GRE keys.
- *
- * @note This function must be called from the "main" thread.
- *
- * @note At the present time, this function may only be called once in
- * a given process. Use XRE_TermEmbedding to clean up and free
- * resources allocated by XRE_InitEmbedding.
- */
-
-nsresult XRE_InitEmbedding2(nsIFile* aLibXULDirectory, nsIFile* aAppDirectory,
-                            nsIDirectoryServiceProvider* aAppDirProvider);
-
-/**
  * Register XPCOM components found in an array of files/directories.
  * This method may be called at any time before or after XRE_main or
  * XRE_InitEmbedding.
@@ -287,11 +264,6 @@ nsresult XRE_AddManifestLocation(NSLocationType aType, nsIFile* aLocation);
  * which are only allowed to register skin packages.
  */
 nsresult XRE_AddJarManifestLocation(NSLocationType aType, nsIFile* aLocation);
-
-/**
- * Terminate embedding started with XRE_InitEmbedding or XRE_InitEmbedding2
- */
-void XRE_TermEmbedding();
 
 /**
  * Parse an INI file (application.ini or override.ini) into an existing

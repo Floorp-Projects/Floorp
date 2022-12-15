@@ -141,7 +141,6 @@ using mozilla::ipc::BrowserProcessSubThread;
 using mozilla::ipc::GeckoChildProcessHost;
 using mozilla::ipc::IOThreadChild;
 using mozilla::ipc::ProcessChild;
-using mozilla::ipc::ScopedXREEmbed;
 
 using mozilla::dom::ContentParent;
 using mozilla::dom::ContentProcess;
@@ -158,56 +157,6 @@ UniquePtr<mozilla::ipc::ProcessChild> (*gMakeIPDLUnitTestProcessChild)(
 }  // namespace mozilla::_ipdltest
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-
-static int32_t sInitCounter;
-
-nsresult XRE_InitEmbedding2(nsIFile* aLibXULDirectory, nsIFile* aAppDirectory,
-                            nsIDirectoryServiceProvider* aAppDirProvider) {
-  // Initialize some globals to make nsXREDirProvider happy
-  static char* kNullCommandLine[] = {nullptr};
-  gArgv = kNullCommandLine;
-  gArgc = 0;
-
-  NS_ENSURE_ARG(aLibXULDirectory);
-
-  if (++sInitCounter > 1)  // XXXbsmedberg is this really the right solution?
-    return NS_OK;
-
-  if (!aAppDirectory) aAppDirectory = aLibXULDirectory;
-
-  nsresult rv;
-
-  new nsXREDirProvider;  // This sets gDirServiceProvider
-  if (!gDirServiceProvider) return NS_ERROR_OUT_OF_MEMORY;
-
-  rv = gDirServiceProvider->Initialize(aAppDirectory, aLibXULDirectory,
-                                       aAppDirProvider);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = NS_InitXPCOM(nullptr, aAppDirectory, gDirServiceProvider);
-  if (NS_FAILED(rv)) return rv;
-
-  // We do not need to autoregister components here. The CheckCompatibility()
-  // bits in nsAppRunner.cpp check for an invalidation flag in
-  // compatibility.ini.
-  // If the app wants to autoregister every time (for instance, if it's debug),
-  // it can do so after we return from this function.
-
-  nsAppStartupNotifier::NotifyObservers(APPSTARTUP_CATEGORY);
-
-  return NS_OK;
-}
-
-void XRE_TermEmbedding() {
-  if (--sInitCounter != 0) return;
-
-  NS_ASSERTION(gDirServiceProvider,
-               "XRE_TermEmbedding without XRE_InitEmbedding");
-
-  gDirServiceProvider->DoShutdown();
-  NS_ShutdownXPCOM(nullptr);
-  delete gDirServiceProvider;
-}
 
 const char* XRE_GeckoProcessTypeToString(GeckoProcessType aProcessType) {
   switch (aProcessType) {
