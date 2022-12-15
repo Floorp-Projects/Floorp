@@ -67,17 +67,13 @@ struct RangeItem final {
            mStartOffset == aOther.mStartOffset &&
            mEndOffset == aOther.mEndOffset;
   }
-  EditorDOMPoint StartPoint() const {
-    return EditorDOMPoint(mStartContainer, mStartOffset);
+  template <typename EditorDOMPointType = EditorDOMPoint>
+  EditorDOMPointType StartPoint() const {
+    return EditorDOMPointType(mStartContainer, mStartOffset);
   }
-  EditorDOMPoint EndPoint() const {
-    return EditorDOMPoint(mEndContainer, mEndOffset);
-  }
-  EditorRawDOMPoint StartRawPoint() const {
-    return EditorRawDOMPoint(mStartContainer, mStartOffset);
-  }
-  EditorRawDOMPoint EndRawPoint() const {
-    return EditorRawDOMPoint(mEndContainer, mEndOffset);
+  template <typename EditorDOMPointType = EditorDOMPoint>
+  EditorDOMPointType EndPoint() const {
+    return EditorDOMPointType(mEndContainer, mEndOffset);
   }
 
   NS_INLINE_DECL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_NATIVE_REFCOUNTING(RangeItem)

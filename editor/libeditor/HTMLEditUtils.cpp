@@ -88,6 +88,11 @@ template EditorRawDOMPoint HTMLEditUtils::GetNextEditablePoint(
     InvisibleWhiteSpaces aInvisibleWhiteSpaces,
     TableBoundary aHowToTreatTableBoundary);
 
+template nsIContent* HTMLEditUtils::GetContentToPreserveInlineStyles(
+    const EditorDOMPoint& aPoint, const Element& aEditingHost);
+template nsIContent* HTMLEditUtils::GetContentToPreserveInlineStyles(
+    const EditorRawDOMPoint& aPoint, const Element& aEditingHost);
+
 template EditorDOMPoint HTMLEditUtils::GetBetterInsertionPointFor(
     const nsIContent& aContentToInsert, const EditorDOMPoint& aPointToInsert,
     const Element& aEditingHost);
@@ -1918,6 +1923,42 @@ EditAction HTMLEditUtils::GetEditActionForAlignment(
     return EditAction::eJustify;
   }
   return EditAction::eSetAlignment;
+}
+
+// static
+template <typename EditorDOMPointType>
+nsIContent* HTMLEditUtils::GetContentToPreserveInlineStyles(
+    const EditorDOMPointType& aPoint, const Element& aEditingHost) {
+  MOZ_ASSERT(aPoint.IsSetAndValid());
+  if (MOZ_UNLIKELY(!aPoint.IsInContentNode())) {
+    return nullptr;
+  }
+  // If it points middle of a text node, use it.  Otherwise, scan next visible
+  // thing and use the style of following text node if there is.
+  if (aPoint.IsInTextNode() && !aPoint.IsEndOfContainer()) {
+    return aPoint.template ContainerAs<nsIContent>();
+  }
+  for (auto point = aPoint.template To<EditorRawDOMPoint>(); point.IsSet();) {
+    WSScanResult nextVisibleThing =
+        WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(&aEditingHost, point);
+    if (nextVisibleThing.InVisibleOrCollapsibleCharacters()) {
+      return nextVisibleThing.TextPtr();
+    }
+    // Ignore empty inline container elements because it's not visible for
+    // users so that using the style will appear suddenly from point of
+    // view of users.
+    if (nextVisibleThing.ReachedSpecialContent() &&
+        nextVisibleThing.IsContentEditable() &&
+        nextVisibleThing.GetContent()->IsElement() &&
+        !nextVisibleThing.GetContent()->HasChildNodes() &&
+        HTMLEditUtils::IsContainerNode(*nextVisibleThing.ElementPtr())) {
+      point.SetAfter(nextVisibleThing.ElementPtr());
+      continue;
+    }
+    // Otherwise, we should use style of the container of the start point.
+    break;
+  }
+  return aPoint.template ContainerAs<nsIContent>();
 }
 
 template <typename EditorDOMPointType, typename EditorDOMPointTypeInput>

@@ -1226,6 +1226,15 @@ class HTMLEditUtils final {
   }
 
   /**
+   * Returns a content node whose inline styles should be preserved after
+   * deleting content in a range.  Typically, you should set aPoint to start
+   * boundary of the range to delete.
+   */
+  template <typename EditorDOMPointType>
+  static nsIContent* GetContentToPreserveInlineStyles(
+      const EditorDOMPointType& aPoint, const Element& aEditingHost);
+
+  /**
    * Get previous/next editable point from start or end of aContent.
    */
   enum class InvisibleWhiteSpaces {
