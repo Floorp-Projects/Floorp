@@ -16,6 +16,8 @@ interface HTMLButtonElement : HTMLElement {
   [HTMLConstructor] constructor();
 
   [CEReactions, SetterThrows, Pure]
+           attribute boolean autofocus;
+  [CEReactions, SetterThrows, Pure]
            attribute boolean disabled;
   [Pure]
   readonly attribute HTMLFormElement? form;

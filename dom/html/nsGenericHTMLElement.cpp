@@ -2474,6 +2474,11 @@ nsresult nsGenericHTMLFormControlElement::BindToTree(BindContext& aContext,
   nsresult rv = nsGenericHTMLFormElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (IsAutofocusable() && HasAttr(nsGkAtoms::autofocus) &&
+      aContext.AllowsAutoFocus()) {
+    aContext.OwnerDoc().SetAutoFocusElement(this);
+  }
+
   return NS_OK;
 }
 
@@ -2707,6 +2712,12 @@ bool nsGenericHTMLFormControlElement::IsAutocapitalizeInheriting() const {
   return IsInputElement(type) || IsButtonElement(type) ||
          type == FormControlType::Fieldset || type == FormControlType::Output ||
          type == FormControlType::Select || type == FormControlType::Textarea;
+}
+
+bool nsGenericHTMLFormControlElement::IsAutofocusable() const {
+  auto type = ControlType();
+  return IsInputElement(type) || IsButtonElement(type) ||
+         type == FormControlType::Textarea || type == FormControlType::Select;
 }
 
 //----------------------------------------------------------------------
