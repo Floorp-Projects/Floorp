@@ -9,6 +9,7 @@ UNIFIED_SOURCES += [
 #  '../test/test_record.cpp', # DISABLED: See bug 1314514.
 #  '../test/test_overload_callback.cpp', # DISABLED: Times out in automation.
   '../test/test_tone.cpp',
+  '../test/test_triple_buffer.cpp',
   '../test/test_utils.cpp'
 ]
 
