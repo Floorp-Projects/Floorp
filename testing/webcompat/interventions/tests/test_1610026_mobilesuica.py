@@ -1,7 +1,6 @@
 import pytest
 from helpers import Css, Text, find_element
 
-
 ADDRESS_CSS = Css("input[name=MailAddress]")
 PASSWORD_CSS = Css("input[name=Password]")
 CLOSE_BUTTON_CSS = Css("input[name=winclosebutton]")

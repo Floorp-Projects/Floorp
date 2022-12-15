@@ -1,5 +1,6 @@
-import pytest
 import time
+
+import pytest
 from helpers import Css, Text, assert_not_element, await_element, find_element
 
 URL = "https://covid.cdc.gov/covid-data-tracker/#pandemic-vulnerability-index"

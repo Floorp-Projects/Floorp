@@ -3,8 +3,8 @@ from helpers import (
     Css,
     Text,
     await_element,
-    load_page_and_wait_for_iframe,
     find_element,
+    load_page_and_wait_for_iframe,
 )
 
 # Note that we have to load this page twice, as when it is loaded the
