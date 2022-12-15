@@ -1571,7 +1571,7 @@ dependencies = [
 [[package]]
 name = "error-support"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=ba67a665dd086b1ea5f1fad638843e82bf9208b4#ba67a665dd086b1ea5f1fad638843e82bf9208b4"
+source = "git+https://github.com/mozilla/application-services?rev=51b984ecb21ba00694c3eee33364123a064a7cbb#51b984ecb21ba00694c3eee33364123a064a7cbb"
 dependencies = [
  "lazy_static",
  "log",
@@ -2710,7 +2710,7 @@ dependencies = [
 [[package]]
 name = "interrupt-support"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=ba67a665dd086b1ea5f1fad638843e82bf9208b4#ba67a665dd086b1ea5f1fad638843e82bf9208b4"
+source = "git+https://github.com/mozilla/application-services?rev=51b984ecb21ba00694c3eee33364123a064a7cbb#51b984ecb21ba00694c3eee33364123a064a7cbb"
 dependencies = [
  "lazy_static",
  "parking_lot 0.12.999",
@@ -3823,7 +3823,7 @@ dependencies = [
 [[package]]
 name = "nss_build_common"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=ba67a665dd086b1ea5f1fad638843e82bf9208b4#ba67a665dd086b1ea5f1fad638843e82bf9208b4"
+source = "git+https://github.com/mozilla/application-services?rev=51b984ecb21ba00694c3eee33364123a064a7cbb#51b984ecb21ba00694c3eee33364123a064a7cbb"
 
 [[package]]
 name = "nsstring"
@@ -5039,7 +5039,7 @@ dependencies = [
 [[package]]
 name = "sql-support"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=ba67a665dd086b1ea5f1fad638843e82bf9208b4#ba67a665dd086b1ea5f1fad638843e82bf9208b4"
+source = "git+https://github.com/mozilla/application-services?rev=51b984ecb21ba00694c3eee33364123a064a7cbb#51b984ecb21ba00694c3eee33364123a064a7cbb"
 dependencies = [
  "ffi-support",
  "interrupt-support",
@@ -5221,7 +5221,7 @@ dependencies = [
 [[package]]
 name = "sync-guid"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=ba67a665dd086b1ea5f1fad638843e82bf9208b4#ba67a665dd086b1ea5f1fad638843e82bf9208b4"
+source = "git+https://github.com/mozilla/application-services?rev=51b984ecb21ba00694c3eee33364123a064a7cbb#51b984ecb21ba00694c3eee33364123a064a7cbb"
 dependencies = [
  "base64",
  "rand 0.8.5",
@@ -5232,7 +5232,7 @@ dependencies = [
 [[package]]
 name = "sync15"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=ba67a665dd086b1ea5f1fad638843e82bf9208b4#ba67a665dd086b1ea5f1fad638843e82bf9208b4"
+source = "git+https://github.com/mozilla/application-services?rev=51b984ecb21ba00694c3eee33364123a064a7cbb#51b984ecb21ba00694c3eee33364123a064a7cbb"
 dependencies = [
  "anyhow",
  "error-support",
@@ -5262,7 +5262,7 @@ dependencies = [
 [[package]]
 name = "tabs"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=ba67a665dd086b1ea5f1fad638843e82bf9208b4#ba67a665dd086b1ea5f1fad638843e82bf9208b4"
+source = "git+https://github.com/mozilla/application-services?rev=51b984ecb21ba00694c3eee33364123a064a7cbb#51b984ecb21ba00694c3eee33364123a064a7cbb"
 dependencies = [
  "anyhow",
  "error-support",
@@ -6007,7 +6007,7 @@ checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 [[package]]
 name = "viaduct"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=ba67a665dd086b1ea5f1fad638843e82bf9208b4#ba67a665dd086b1ea5f1fad638843e82bf9208b4"
+source = "git+https://github.com/mozilla/application-services?rev=51b984ecb21ba00694c3eee33364123a064a7cbb#51b984ecb21ba00694c3eee33364123a064a7cbb"
 dependencies = [
  "ffi-support",
  "log",
@@ -6164,7 +6164,7 @@ dependencies = [
 [[package]]
 name = "webext-storage"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=ba67a665dd086b1ea5f1fad638843e82bf9208b4#ba67a665dd086b1ea5f1fad638843e82bf9208b4"
+source = "git+https://github.com/mozilla/application-services?rev=51b984ecb21ba00694c3eee33364123a064a7cbb#51b984ecb21ba00694c3eee33364123a064a7cbb"
 dependencies = [
  "error-support",
  "ffi-support",
