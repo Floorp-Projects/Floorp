@@ -28,7 +28,7 @@ class Ping:
         data_reviews: Optional[List[str]] = None,
         include_client_id: bool = False,
         send_if_empty: bool = False,
-        reasons: Dict[str, str] = None,
+        reasons: Optional[Dict[str, str]] = None,
         defined_in: Optional[Dict] = None,
         no_lint: Optional[List[str]] = None,
         _validated: bool = False,
