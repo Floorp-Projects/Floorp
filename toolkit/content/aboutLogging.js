@@ -97,6 +97,23 @@ const gLoggingSettings = {
   profilerThreads: null,
 };
 
+// When the profiler has been started, this holds the promise the
+// Services.profiler.StartProfiler returns, to ensure the profiler has
+// effectively started.
+let gProfilerPromise = null;
+
+function presets() {
+  return gLoggingPresets;
+}
+
+function settings() {
+  return gLoggingSettings;
+}
+
+function profilerPromise() {
+  return gProfilerPromise;
+}
+
 function populatePresets() {
   let dropdown = $("#logging-preset-dropdown");
   for (let presetName in gLoggingPresets) {
@@ -145,6 +162,7 @@ function updateLoggingOutputType(profilerOutputType) {
     $("#log-file-configuration").hidden = true;
   } else if (gLoggingSettings.loggingOutputType === "file") {
     $("#log-file-configuration").hidden = false;
+    $("#no-log-file").hidden = !!$("#current-log-file").innerText.length;
   }
 
   Services.prefs.setCharPref(
@@ -616,7 +634,7 @@ function startLogging() {
       CustomizableUI.dispatchToolboxEvent("customizationchange");
     }
 
-    Services.profiler.StartProfiler(
+    gProfilerPromise = Services.profiler.StartProfiler(
       entries,
       interval,
       features,
