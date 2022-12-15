@@ -29,6 +29,14 @@ XPCOMUtils.defineLazyGetter(this, "ProfilerPopupBackground", function() {
 const $ = document.querySelector.bind(document);
 const $$ = document.querySelectorAll.bind(document);
 
+function fileEnvVarPresent() {
+  return Services.env.get("MOZ_LOG_FILE") || Services.env.get("NSPR_LOG_FILE");
+}
+
+function moduleEnvVarPresent() {
+  return Services.env.get("MOZ_LOG") || Services.env.get("NSPR_LOG");
+}
+
 /**
  * All the information associated with a logging presets:
  * - `modules` is the list of log modules and option, the same that would have
@@ -72,9 +80,21 @@ const gLoggingPresets = {
 };
 
 const gLoggingSettings = {
+  // Possible values: "profiler" and "file".
   loggingOutputType: "profiler",
   running: false,
-  loggingPreset: "",
+  // If non-null, the profiler preset to use. If null, the preset selected in
+  // the dropdown is going to be used. It is also possible to use a "custom"
+  // preset and an explicit list of modules.
+  loggingPreset: null,
+  // If non-null, the profiler preset to use. If a logging preset is being used,
+  // and this is null, the profiler preset associated to the logging preset is
+  // going to be used. Otherwise, a generic profiler preset is going to be used
+  // ("firefox-platform").
+  profilerPreset: null,
+  // If non-null, the threads that will be recorded by the Firefox Profiler. If
+  // null, the threads from the profiler presets are going to be used.
+  profilerThreads: null,
 };
 
 function populatePresets() {
@@ -133,6 +153,139 @@ function updateLoggingOutputType(profilerOutputType) {
   );
 }
 
+function displayErrorMessage(error) {
+  var err = $("#error");
+  err.hidden = false;
+
+  var errorDescription = $("#error-description");
+  document.l10n.setAttributes(errorDescription, error.l10nId, {
+    k: error.key,
+    v: error.value,
+  });
+}
+
+class ParseError extends Error {
+  constructor(l10nId, key, value) {
+    super(name);
+    this.l10nId = l10nId;
+    this.key = key;
+    this.value = value;
+  }
+  name = "ParseError";
+  l10nId;
+  key;
+  value;
+}
+
+function parseURL() {
+  let options = new URL(document.location.href).searchParams;
+
+  if (!options) {
+    return;
+  }
+
+  let modulesOverriden = null,
+    outputTypeOverriden = null,
+    loggingPresetOverriden = null,
+    threadsOverriden = null,
+    profilerPresetOverriden = null;
+  try {
+    for (let [k, v] of options) {
+      switch (k) {
+        case "modules":
+        case "module":
+          modulesOverriden = v;
+          break;
+        case "output":
+        case "output-type":
+          if (v !== "profiler" && v !== "file") {
+            throw new ParseError("about-logging-invalid-output", k, v);
+          }
+          outputTypeOverriden = v;
+          break;
+        case "preset":
+        case "logging-preset":
+          if (!Object.keys(gLoggingPresets).includes(v)) {
+            throw new ParseError("about-logging-unknown-logging-preset", k, v);
+          }
+          loggingPresetOverriden = v;
+          break;
+        case "threads":
+        case "thread":
+          threadsOverriden = v;
+          break;
+        case "profiler-preset":
+          if (!Object.keys(ProfilerPopupBackground.presets).includes(v)) {
+            throw new Error(["about-logging-unknown-profiler-preset", k, v]);
+          }
+          profilerPresetOverriden = v;
+          break;
+        default:
+          throw new ParseError("about-logging-unknown-option", k, v);
+      }
+    }
+  } catch (e) {
+    displayErrorMessage(e);
+    return;
+  }
+
+  // Detect combinations that don't make sense
+  if (
+    (profilerPresetOverriden || threadsOverriden) &&
+    outputTypeOverriden == "file"
+  ) {
+    displayErrorMessage(
+      new ParseError("about-logging-file-and-profiler-override")
+    );
+    return;
+  }
+
+  // Configuration is deemed at least somewhat valid, override each setting in
+  // turn
+  let someElementsDisabled = false;
+
+  if (modulesOverriden || loggingPresetOverriden) {
+    // Don't allow changing those if set by the URL
+    let logModules = $("#log-modules");
+    var dropdown = $("#logging-preset-dropdown");
+    if (loggingPresetOverriden) {
+      dropdown.value = loggingPresetOverriden;
+      dropdown.onchange();
+    }
+    if (modulesOverriden) {
+      logModules.value = modulesOverriden;
+      dropdown.value = "custom";
+      dropdown.onchange();
+      dropdown.disabled = true;
+      someElementsDisabled = true;
+    }
+    logModules.disabled = true;
+    $("#set-log-modules-button").disabled = true;
+    $("#logging-preset-dropdown").disabled = true;
+    someElementsDisabled = true;
+    setLogModules();
+    updateLogModules();
+  }
+  if (outputTypeOverriden) {
+    $$("input[type=radio]").forEach(e => {
+      e.setAttribute("disabled", true);
+      someElementsDisabled = true;
+      e.checked = e.value == outputTypeOverriden;
+    });
+  }
+  if (loggingPresetOverriden) {
+    gLoggingSettings.loggingPreset = loggingPresetOverriden;
+  }
+  if (profilerPresetOverriden) {
+    gLoggingSettings.profilerPreset = profilerPresetOverriden;
+  }
+  if (threadsOverriden) {
+    gLoggingSettings.profilerThreads = threadsOverriden;
+  }
+
+  $("#some-elements-unavailable").hidden = !someElementsDisabled;
+}
+
 let gInited = false;
 function init() {
   if (gInited) {
@@ -142,6 +295,7 @@ function init() {
   gDashboard.enableLogging = true;
 
   populatePresets();
+  parseURL();
 
   let setLogButton = $("#set-log-file-button");
   setLogButton.addEventListener("click", setLogFile);
@@ -199,7 +353,10 @@ function init() {
 
   // If we can't set the file and the modules at runtime,
   // the start and stop buttons wouldn't really do anything.
-  if (setLogButton.disabled || setModulesButton.disabled) {
+  if (
+    (setLogButton.disabled || setModulesButton.disabled) &&
+    moduleEnvVarPresent()
+  ) {
     $("#buttons-disabled").hidden = false;
     toggleLoggingButton.disabled = true;
   }
@@ -335,8 +492,7 @@ function clearLogModules() {
 }
 
 function setLogModules() {
-  let setLogModulesButton = $("#set-log-modules-button");
-  if (setLogModulesButton.disabled) {
+  if (moduleEnvVarPresent()) {
     // The modules were set via env var, so we shouldn't try to change them.
     return;
   }
@@ -398,18 +554,49 @@ function startStopLogging() {
 function startLogging() {
   setLogModules();
   if (gLoggingSettings.loggingOutputType === "profiler") {
+    const pageContext = "aboutlogging";
+    const supportedFeatures = Services.profiler.GetFeatures();
     if (gLoggingSettings.loggingPreset != "custom") {
       // Change the preset before starting the profiler, so that the
       // underlying profiler code picks up the right configuration.
       const profilerPreset =
         gLoggingPresets[gLoggingSettings.loggingPreset].profilerPreset;
-      const supportedFeatures = Services.profiler.GetFeatures();
       ProfilerPopupBackground.changePreset(
         "aboutlogging",
         profilerPreset,
         supportedFeatures
       );
+    } else {
+      // a baseline set of threads, and possibly others, overriden by the URL
+      ProfilerPopupBackground.changePreset(
+        "aboutlogging",
+        "firefox-platform",
+        supportedFeatures
+      );
     }
+    let {
+      entries,
+      interval,
+      features,
+      threads,
+      duration,
+    } = ProfilerPopupBackground.getRecordingSettings(
+      pageContext,
+      Services.profiler.GetFeatures()
+    );
+
+    if (gLoggingSettings.profilerThreads) {
+      threads.push(...gLoggingSettings.profilerThreads.split(","));
+      // Small hack: if cubeb is being logged, it's almost always necessary (and
+      // never harmful) to enable audio callback tracing, otherwise, no log
+      // statements will be recorded from real-time threads.
+      if (gLoggingSettings.profilerThreads.includes("cubeb")) {
+        features.push("audiocallbacktracing");
+      }
+    }
+    const win = Services.wm.getMostRecentWindow("navigator:browser");
+    const windowid = win?.gBrowser?.selectedBrowser?.browsingContext?.browserId;
+
     // Force displaying the profiler button in the navbar if not preset, so
     // that there is a visual indication profiling is in progress.
     if (!ProfilerMenuButton.isInNavbar()) {
@@ -424,7 +611,15 @@ function startLogging() {
       // added.
       CustomizableUI.dispatchToolboxEvent("customizationchange");
     }
-    ProfilerPopupBackground.startProfiler("aboutlogging");
+
+    Services.profiler.StartProfiler(
+      entries,
+      interval,
+      features,
+      threads,
+      windowid,
+      duration
+    );
   } else {
     setLogFile();
   }
