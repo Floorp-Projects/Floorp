@@ -577,20 +577,6 @@ BrowserChild::SetChromeFlags(uint32_t aChromeFlags) {
 }
 
 NS_IMETHODIMP
-BrowserChild::RemoteSizeShellTo(int32_t aWidth, int32_t aHeight,
-                                int32_t aShellItemWidth,
-                                int32_t aShellItemHeight) {
-  nsCOMPtr<nsIDocShell> ourDocShell = do_GetInterface(WebNavigation());
-  nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(ourDocShell));
-  NS_ENSURE_STATE(docShellAsWin);
-
-  bool sent =
-      SendSizeShellTo(0, aWidth, aHeight, aShellItemWidth, aShellItemHeight);
-
-  return sent ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 BrowserChild::RemoteDropLinks(
     const nsTArray<RefPtr<nsIDroppedLinkItem>>& aLinks) {
   nsTArray<nsString> linksArray;

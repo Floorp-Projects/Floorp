@@ -2745,6 +2745,10 @@ NS_IMETHODIMP AppWindow::SetXULBrowserWindow(
   return NS_OK;
 }
 
+// Given the dimensions of some content area held within this XUL window, and
+// assuming that that content area will change its dimensions in linear
+// proportion to the dimensions of this XUL window, changes the size of the XUL
+// window so that the content area reaches a particular size.
 void AppWindow::SizeShellToWithLimit(int32_t aDesiredWidth,
                                      int32_t aDesiredHeight,
                                      int32_t shellItemWidth,
