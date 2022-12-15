@@ -6765,23 +6765,4 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WEAK_PTR(
 
 // -----------------------------
 
-#define _(X)                                                 \
-  NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGL##X##JS, AddRef) \
-  NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGL##X##JS, Release)
-
-_(Buffer)
-_(Framebuffer)
-_(Program)
-_(Query)
-_(Renderbuffer)
-_(Sampler)
-_(Shader)
-_(Sync)
-_(Texture)
-_(TransformFeedback)
-_(UniformLocation)
-_(VertexArray)
-
-#undef _
-
 }  // namespace mozilla

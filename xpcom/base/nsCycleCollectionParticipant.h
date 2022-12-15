@@ -857,9 +857,13 @@ T* DowncastCCParticipant(void* aPtr) {
 
 #define NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS_BODY(_class)                   \
  public:                                                                     \
-  NS_IMETHOD_(void) Root(void* n) override;                                  \
+  NS_IMETHOD_(void) Root(void* p) override {                                 \
+    static_cast<_class*>(p)->AddRef();                                       \
+  }                                                                          \
   NS_IMETHOD_(void) Unlink(void* n) override;                                \
-  NS_IMETHOD_(void) Unroot(void* n) override;                                \
+  NS_IMETHOD_(void) Unroot(void* p) override {                               \
+    static_cast<_class*>(p)->Release();                                      \
+  }                                                                          \
   NS_IMETHOD TraverseNative(void* n, nsCycleCollectionTraversalCallback& cb) \
       override;                                                              \
   NS_DECL_CYCLE_COLLECTION_CLASS_NAME_METHOD(_class)                         \
@@ -939,20 +943,6 @@ T* DowncastCCParticipant(void* aPtr) {
     }                                                                   \
   };                                                                    \
   static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
-
-#define NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(_class, _root_function) \
-  NS_IMETHODIMP_(void)                                               \
-  NS_CYCLE_COLLECTION_CLASSNAME(_class)::Root(void* p) {             \
-    _class* tmp = static_cast<_class*>(p);                           \
-    tmp->_root_function();                                           \
-  }
-
-#define NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(_class, _unroot_function) \
-  NS_IMETHODIMP_(void)                                                   \
-  NS_CYCLE_COLLECTION_CLASSNAME(_class)::Unroot(void* p) {               \
-    _class* tmp = static_cast<_class*>(p);                               \
-    tmp->_unroot_function();                                             \
-  }
 
 #define NS_IMPL_CYCLE_COLLECTION_CLASS(_class) \
   _class::NS_CYCLE_COLLECTION_INNERCLASS _class::NS_CYCLE_COLLECTION_INNERNAME;
