@@ -152,7 +152,8 @@ livesites:
         # broken: bug 1678588
         # - [fb-scroll, netwerk/test/perf/perftest_http3_facebook_scroll.js]
         - [g-image, netwerk/test/perf/perftest_http3_google_image.js]
-        - [g-search, netwerk/test/perf/perftest_http3_google_search.js]
+        # broken: bug 1799655
+        # - [g-search, netwerk/test/perf/perftest_http3_google_search.js]
         - [lq-fetch, netwerk/test/perf/perftest_http3_lucasquicfetch.js]
         # broken: bug 1695871
         # - [ytw, netwerk/test/perf/perftest_http3_youtube_watch.js]
@@ -170,7 +171,7 @@ livesites:
             # broken: bug 1678588
             # fb-scroll: [navigationTiming, pageTimings, resources, firstPaint, timeToContentfulPaint, requestsPerSecond]
             g-image: [navigationTiming, pageTimings, resources, firstPaint, timeToContentfulPaint, imagesPerSecond, imageLoadTime]
-            g-search: [navigationTiming, pageTimings, resources, firstPaint, timeToContentfulPaint]
+            # g-search: [navigationTiming, pageTimings, resources, firstPaint, timeToContentfulPaint]
             lq-fetch: [navigationTiming, pageTimings, resources, timeToContentfulPaint, resourceLoadTime, imagesLoaded, imagesMissed]
             # broken: bug 1695871
             # ytw: [navigationTiming, pageTimings, resources, firstPaint, timeToContentfulPaint, droppedFrames, decodedFrames]
@@ -184,8 +185,8 @@ livesites:
         by-perftest:
             cloudflare:
                 - --perfherder-split-by browserScripts.pageinfo.url
-            g-search:
-                - --perfherder-split-by browserScripts.pageinfo.url
+            # g-search:
+            #     - --perfherder-split-by browserScripts.pageinfo.url
             lq-fetch:
                 - --perfherder-split-by browserScripts.pageinfo.url
             default: []
@@ -202,11 +203,11 @@ livesites:
             #     - ["25s", browsertime.waitTime=25000]
             #     - ["35s", browsertime.waitTime=35000]
             #     - ["60s", browsertime.waitTime=60000]
-            g-search:
-                - ["10s", browsertime.waitTime=10000]
-                - ["25s", browsertime.waitTime=25000]
-                - ["35s", browsertime.waitTime=35000]
-                - ["60s", browsertime.waitTime=60000]
+            # g-search:
+            #     - ["10s", browsertime.waitTime=10000]
+            #     - ["25s", browsertime.waitTime=25000]
+            #     - ["35s", browsertime.waitTime=35000]
+            #     - ["60s", browsertime.waitTime=60000]
             lq-fetch:
                 - [null, "browsertime.waitTime=1000,browsertime.cycles=5"]
             # broken: bug 1695871
