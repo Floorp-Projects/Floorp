@@ -135,9 +135,8 @@ where
     pub fn new(
         id: MetricId,
         meta: CommonMetricData,
-        labels: Option<Vec<String>>,
+        labels: Option<Vec<Cow<'static, str>>>,
     ) -> LabeledMetric<T> {
-        let labels = labels.map(|l| l.into_iter().map(|s| Cow::from(s)).collect());
         let core = glean::private::LabeledMetric::new(meta, labels);
         LabeledMetric { id, core }
     }
