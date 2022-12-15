@@ -27,6 +27,12 @@ add_setup(async function() {
   AddonTestUtils.initMochitest(this);
   AddonTestUtils.hookAMTelemetryEvents();
 
+  // Once the addon is installed, a dialog is displayed as a confirmation.
+  // This could interfere with tests running after this one, so we set up a listener
+  // that will always accept post install dialogs so we don't have  to deal with them in
+  // the test.
+  alwaysAcceptAddonPostInstallDialogs();
+
   registerCleanupFunction(async () => {
     // Remove the permission.
     await SpecialPowers.removePermission("midi-sysex", {
@@ -689,6 +695,49 @@ function assertSitePermissionInstallTelemetryEvents(expectedSteps) {
 async function waitForInstallDialog(id = "addon-webext-permissions") {
   let panel = await waitForNotification(id);
   return panel.childNodes[0];
+}
+
+/**
+ * Adds an event listener that will listen for post-install dialog event and automatically
+ * close the dialogs.
+ */
+function alwaysAcceptAddonPostInstallDialogs() {
+  // Once the addon is installed, a dialog is displayed as a confirmation.
+  // This could interfere with tests running after this one, so we set up a listener
+  // that will always accept post install dialogs so we don't have  to deal with them in
+  // the test.
+  const abortController = new AbortController();
+
+  const { AppMenuNotifications } = ChromeUtils.importESModule(
+    "resource://gre/modules/AppMenuNotifications.sys.mjs"
+  );
+  info("Start listening and accept addon post-install notifications");
+  PanelUI.notificationPanel.addEventListener(
+    "popupshown",
+    async function popupshown() {
+      let notification = AppMenuNotifications.activeNotification;
+      if (!notification || notification.id !== "addon-installed") {
+        return;
+      }
+
+      let popupnotificationID = PanelUI._getPopupId(notification);
+      if (popupnotificationID) {
+        info("Accept post-install dialog");
+        let popupnotification = document.getElementById(popupnotificationID);
+        popupnotification?.button.click();
+      }
+    },
+    {
+      signal: abortController.signal,
+    }
+  );
+
+  registerCleanupFunction(async () => {
+    // Clear the listener at the end of the test file, to prevent it to stay
+    // around when the same browser instance may be running other unrelated
+    // test files.
+    abortController.abort();
+  });
 }
 
 const PROGRESS_NOTIFICATION = "addon-progress";
