@@ -49,6 +49,36 @@
         "permission should also not be set for subdomain"
       );
 
+      let onChangeCalled = 0;
+      let onChangeCalledWithSysex = 0;
+      // We expect the same states with and without sysex support.
+      const expectedChangedStates = ["denied", "granted", "prompt"];
+
+      for (let sysex of [false, true]) {
+        let result = await navigator.permissions.query({ name: "midi", sysex });
+        is(result?.state, "prompt", "expected 'prompt' permission status");
+        // Register two unique listeners that should be invoked every time we
+        // change permissions in the rest of this test case: one with sysex
+        // support, and the other one without.
+        if (sysex) {
+          result.onchange = () => {
+            is(
+              result.state,
+              expectedChangedStates[onChangeCalledWithSysex++],
+              "expected change event with sysex support"
+            );
+          };
+        } else {
+          result.onchange = () => {
+            is(
+              result.state,
+              expectedChangedStates[onChangeCalled++],
+              "expected change event"
+            );
+          };
+        }
+      }
+
       // Explicitly set the permission as blocked, and expect the
       // `requestMIDIAccess` call to be automatically rejected (not having any
       // permission set would trigger the synthetic addon install provided by
@@ -70,6 +100,13 @@
         } catch (ex) {
           ok(true, "MIDI Access Request denied by default");
         }
+
+        let result = await navigator.permissions.query({ name: "midi", sysex });
+        // We expect "denied" because that's what has been set above (with
+        // `SpecialPowers.addPermission()`). In practice, this state should
+        // never be returned since explicit rejection is handled at the add-on
+        // installation level.
+        is(result?.state, "denied", "expected 'denied' permission status");
       }
 
       // Gated permission should prompt for localhost.
@@ -105,6 +142,9 @@
         } catch (ex) {
           ok(false, "MIDI Access Request failed");
         }
+
+        let result = await navigator.permissions.query({ name: "midi", sysex });
+        is(result?.state, "granted", "expected 'granted' permission status");
       }
 
       // Gated permission should also apply to subdomains.
@@ -113,6 +153,17 @@
         let response = await waitForMessage();
         is(response, "succeeded", "MIDI Access Request allowed for subdomain");
       }
+
+      is(
+        onChangeCalled,
+        expectedChangedStates.length - 1,
+        `expected onchange listener to have been called ${expectedChangedStates.length - 1} times`
+      );
+      is(
+        onChangeCalledWithSysex,
+        expectedChangedStates.length - 1,
+        `expected onchange listener to have been called ${expectedChangedStates.length - 1} times (sysex)`
+      );
 
       // Remove the permission.
       await SpecialPowers.removePermission("midi-sysex", document);

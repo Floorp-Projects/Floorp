@@ -38,6 +38,8 @@ static const DelegateInfo sPermissionsMap[] = {
     {"persistent-storage", nullptr, DelegatePolicy::ePersistDeniedCrossOrigin},
     {"vibration", nullptr, DelegatePolicy::ePersistDeniedCrossOrigin},
     {"midi", nullptr, DelegatePolicy::eDelegateUseIframeOrigin},
+    // Like "midi" but with sysex support.
+    {"midi-sysex", nullptr, DelegatePolicy::eDelegateUseIframeOrigin},
     {"storage-access", nullptr, DelegatePolicy::eDelegateUseIframeOrigin},
     {"camera", u"camera", DelegatePolicy::eDelegateUseFeaturePolicy},
     {"microphone", u"microphone", DelegatePolicy::eDelegateUseFeaturePolicy},
