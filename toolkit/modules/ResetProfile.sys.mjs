@@ -3,11 +3,25 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
+XPCOMUtils.defineLazyGetter(lazy, "MigrationUtils", () => {
+  // MigrationUtils is currently only available in browser builds.
+  if (AppConstants.MOZ_BUILD_APP != "browser") {
+    return undefined;
+  }
+
+  try {
+    let { MigrationUtils } = ChromeUtils.importESModule(
+      "resource:///modules/MigrationUtils.sys.mjs"
+    );
+    return MigrationUtils;
+  } catch (e) {
+    console.error(`Unable to load MigrationUtils.sys.mjs: ${e}`);
+  }
+  return undefined;
 });
 
 const MOZ_APP_NAME = AppConstants.MOZ_APP_NAME;
@@ -22,8 +36,12 @@ export var ResetProfile = {
     if (Services.policies && !Services.policies.isAllowed("profileRefresh")) {
       return false;
     }
+
     // Reset is only supported if the self-migrator used for reset exists.
-    if (!lazy.MigrationUtils.migratorExists(MOZ_APP_NAME)) {
+    if (
+      !lazy.MigrationUtils ||
+      !lazy.MigrationUtils.migratorExists(MOZ_APP_NAME)
+    ) {
       return false;
     }
 
