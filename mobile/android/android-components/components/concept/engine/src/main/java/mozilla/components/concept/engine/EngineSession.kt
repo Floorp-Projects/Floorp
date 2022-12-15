@@ -53,6 +53,26 @@ abstract class EngineSession(
         fun onNavigateBack() = Unit
 
         /**
+         * Event to indicate that a url was loaded to this session.
+         */
+        fun onLoadUrl() = Unit
+
+        /**
+         * Event to indicate that the session was requested to navigate to a specified index.
+         */
+        fun onGotoHistoryIndex() = Unit
+
+        /**
+         * Event to indicate that the session was requested to render data.
+         */
+        fun onLoadData() = Unit
+
+        /**
+         * Event to indicate that the session was requested to navigate forward in history
+         */
+        fun onNavigateForward() = Unit
+
+        /**
          * Event to indicate whether or not this [EngineSession] should be [excluded] from tracking protection.
          */
         fun onExcludedOnTrackingProtectionChange(excluded: Boolean) = Unit

@@ -60,6 +60,7 @@ import mozilla.components.concept.engine.window.WindowRequest
  * @property appIntent the last received [AppIntentState].
  * @property showToolbarAsExpanded whether the dynamic toolbar should be forced as expanded.
  * @property previewImageUrl the preview image of the page (e.g. the hero image), if available.
+ * @property isSearch whether or not the last url load request is the result of a search.
  */
 data class ContentState(
     val url: String,
@@ -95,4 +96,5 @@ data class ContentState(
     val appIntent: AppIntentState? = null,
     val showToolbarAsExpanded: Boolean = false,
     val previewImageUrl: String? = null,
+    val isSearch: Boolean = false,
 )

@@ -114,6 +114,27 @@ class SystemEngineSessionTest {
     }
 
     @Test
+    fun `WHEN URL is loaded THEN URL load observer is notified`() {
+        var onLoadUrlTriggered = false
+        val engineSession = spy(SystemEngineSession(testContext))
+        val webView = mock<WebView>()
+        val settings = mock<WebSettings>()
+        whenever(webView.settings).thenReturn(settings)
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onLoadUrl() {
+                    onLoadUrlTriggered = true
+                }
+            },
+        )
+        engineSession.webView = webView
+
+        engineSession.loadUrl("http://mozilla.org")
+
+        assertTrue(onLoadUrlTriggered)
+    }
+
+    @Test
     fun loadData() {
         val engineSession = spy(SystemEngineSession(testContext))
         val webView = mock<WebView>()
@@ -133,6 +154,27 @@ class SystemEngineSessionTest {
 
         engineSession.loadData("ahr0cdovl21vemlsbgeub3jn==", "text/plain", "base64")
         verify(webView).loadData(eq("ahr0cdovl21vemlsbgeub3jn=="), eq("text/plain"), eq("base64"))
+    }
+
+    @Test
+    fun `WHEN data is loaded THEN data load observer is notified`() {
+        var onLoadDataTriggered = false
+        val engineSession = spy(SystemEngineSession(testContext))
+        val webView = mock<WebView>()
+        val settings = mock<WebSettings>()
+        whenever(webView.settings).thenReturn(settings)
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onLoadData() {
+                    onLoadDataTriggered = true
+                }
+            },
+        )
+        engineSession.webView = webView
+
+        engineSession.loadData("<html><body/></html>")
+
+        assertTrue(onLoadDataTriggered)
     }
 
     @Test
@@ -199,6 +241,50 @@ class SystemEngineSessionTest {
     }
 
     @Test
+    fun `GIVEN forward navigation is possible WHEN navigating forward THEN forward navigation observer is notified`() {
+        var observedOnNavigateForward = false
+        val engineSession = spy(SystemEngineSession(testContext))
+        val webView = mock<WebView>()
+        val settings = mock<WebSettings>()
+        whenever(webView.settings).thenReturn(settings)
+        whenever(webView.canGoForward()).thenReturn(true)
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onNavigateForward() {
+                    observedOnNavigateForward = true
+                }
+            },
+        )
+        engineSession.webView = webView
+
+        engineSession.goForward()
+
+        assertTrue(observedOnNavigateForward)
+    }
+
+    @Test
+    fun `GIVEN forward navigation is not possible WHEN navigating forward THEN forward navigation observer is not notified`() {
+        var observedOnNavigateForward = false
+        val engineSession = spy(SystemEngineSession(testContext))
+        val webView = mock<WebView>()
+        val settings = mock<WebSettings>()
+        whenever(webView.settings).thenReturn(settings)
+        whenever(webView.canGoForward()).thenReturn(false)
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onNavigateForward() {
+                    observedOnNavigateForward = true
+                }
+            },
+        )
+        engineSession.webView = webView
+
+        engineSession.goForward()
+
+        assertFalse(observedOnNavigateForward)
+    }
+
+    @Test
     fun goToHistoryIndex() {
         val engineSession = spy(SystemEngineSession(testContext))
         val webView = mock<WebView>()
@@ -213,6 +299,29 @@ class SystemEngineSessionTest {
 
         engineSession.goToHistoryIndex(0)
         verify(webView).goBackOrForward(0)
+    }
+
+    @Test
+    fun `WHEN navigating to history index THEN the observer is notified`() {
+        var onGotoHistoryIndexTriggered = false
+        val engineSession = spy(SystemEngineSession(testContext))
+        val settings = mock<WebSettings>()
+        val webView = mock<WebView>() {
+            whenever(this.settings).thenReturn(settings)
+            whenever(copyBackForwardList()).thenReturn(mock())
+        }
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onGotoHistoryIndex() {
+                    onGotoHistoryIndexTriggered = true
+                }
+            },
+        )
+        engineSession.webView = webView
+
+        engineSession.goToHistoryIndex(0)
+
+        assertTrue(onGotoHistoryIndexTriggered)
     }
 
     @Test

@@ -110,6 +110,7 @@ class GeckoEngineSession(
 
     internal var job: Job = Job()
     private var canGoBack: Boolean = false
+    private var canGoForward: Boolean = false
 
     /**
      * See [EngineSession.settings]
@@ -166,6 +167,8 @@ class GeckoEngineSession(
         flags: LoadUrlFlags,
         additionalHeaders: Map<String, String>?,
     ) {
+        notifyObservers { onLoadUrl() }
+
         val scheme = Uri.parse(url).normalizeScheme().scheme
         if (BLOCKED_SCHEMES.contains(scheme) && !shouldLoadJSSchemes(scheme, flags)) {
             logger.error("URL scheme not allowed. Aborting load.")
@@ -210,6 +213,7 @@ class GeckoEngineSession(
             "base64" -> geckoSession.load(GeckoSession.Loader().data(data.toByteArray(), mimeType))
             else -> geckoSession.load(GeckoSession.Loader().data(data, mimeType))
         }
+        notifyObservers { onLoadData() }
     }
 
     /**
@@ -304,6 +308,9 @@ class GeckoEngineSession(
      */
     override fun goForward(userInteraction: Boolean) {
         geckoSession.goForward(userInteraction)
+        if (canGoForward) {
+            notifyObservers { onNavigateForward() }
+        }
     }
 
     /**
@@ -311,6 +318,7 @@ class GeckoEngineSession(
      */
     override fun goToHistoryIndex(index: Int) {
         geckoSession.gotoHistoryIndex(index)
+        notifyObservers { onGotoHistoryIndex() }
     }
 
     /**
@@ -623,6 +631,7 @@ class GeckoEngineSession(
 
         override fun onCanGoForward(session: GeckoSession, canGoForward: Boolean) {
             notifyObservers { onNavigationStateChange(canGoForward = canGoForward) }
+            this@GeckoEngineSession.canGoForward = canGoForward
         }
 
         override fun onCanGoBack(session: GeckoSession, canGoBack: Boolean) {

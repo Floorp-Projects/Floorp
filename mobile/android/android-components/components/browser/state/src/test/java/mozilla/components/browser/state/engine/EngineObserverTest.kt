@@ -1308,26 +1308,6 @@ class EngineObserverTest {
     }
 
     @Test
-    fun `onLoadRequest clears search terms for requests triggered by redirect`() {
-        val url = "https://www.mozilla.org"
-
-        val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
-        val store = BrowserStore(
-            middleware = listOf(middleware),
-        )
-
-        val observer = EngineObserver("test-id", store)
-        observer.onLoadRequest(url = url, triggeredByRedirect = true, triggeredByWebContent = false)
-
-        store.waitUntilIdle()
-
-        middleware.assertFirstAction(ContentAction.UpdateSearchTermsAction::class) { action ->
-            assertEquals("", action.searchTerms)
-            assertEquals("test-id", action.sessionId)
-        }
-    }
-
-    @Test
     @Suppress("DEPRECATION") // Session observable is deprecated
     fun `onLoadRequest notifies session observers`() {
         val url = "https://www.mozilla.org"
@@ -1386,6 +1366,108 @@ class EngineObserverTest {
 
         middleware.assertFirstAction(ContentAction.UpdateSearchTermsAction::class) { action ->
             assertEquals("", action.searchTerms)
+            assertEquals("test-id", action.sessionId)
+        }
+    }
+
+    @Test
+    fun `WHEN navigating forward THEN search terms are cleared`() {
+        val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
+        val store = BrowserStore(
+            middleware = listOf(middleware),
+        )
+
+        val observer = EngineObserver("test-id", store)
+        observer.onNavigateForward()
+        store.waitUntilIdle()
+
+        middleware.assertFirstAction(ContentAction.UpdateSearchTermsAction::class) { action ->
+            assertEquals("", action.searchTerms)
+            assertEquals("test-id", action.sessionId)
+        }
+    }
+
+    @Test
+    fun `WHEN navigating to history index THEN search terms are cleared`() {
+        val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
+        val store = BrowserStore(
+            middleware = listOf(middleware),
+        )
+
+        val observer = EngineObserver("test-id", store)
+        observer.onGotoHistoryIndex()
+        store.waitUntilIdle()
+
+        middleware.assertFirstAction(ContentAction.UpdateSearchTermsAction::class) { action ->
+            assertEquals("", action.searchTerms)
+            assertEquals("test-id", action.sessionId)
+        }
+    }
+
+    @Test
+    fun `WHEN loading data THEN the search terms are cleared`() {
+        val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
+        val store = BrowserStore(
+            middleware = listOf(middleware),
+        )
+
+        val observer = EngineObserver("test-id", store)
+        observer.onLoadData()
+        store.waitUntilIdle()
+
+        middleware.assertFirstAction(ContentAction.UpdateSearchTermsAction::class) { action ->
+            assertEquals("", action.searchTerms)
+            assertEquals("test-id", action.sessionId)
+        }
+    }
+
+    @Test
+    fun `GIVEN a search is not performed WHEN loading the URL THEN the search terms are cleared`() {
+        val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
+        val store = BrowserStore(
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "mozilla"),
+                ),
+            ),
+            middleware = listOf(middleware),
+        )
+
+        store.dispatch(ContentAction.UpdateIsSearchAction("mozilla", false))
+        store.waitUntilIdle()
+
+        val observer = EngineObserver("test-id", store)
+        observer.onLoadUrl()
+        store.waitUntilIdle()
+
+        middleware.assertLastAction(ContentAction.UpdateSearchTermsAction::class) { action ->
+            assertEquals("", action.searchTerms)
+            assertEquals("test-id", action.sessionId)
+        }
+    }
+
+    @Test
+    fun `GIVEN a search is performed WHEN loading the URL THEN the search terms are cleared`() {
+        val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
+        val store = BrowserStore(
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "test-id"),
+                ),
+            ),
+            middleware = listOf(middleware),
+        )
+
+        store.dispatch(ContentAction.UpdateIsSearchAction("test-id", true))
+        store.waitUntilIdle()
+
+        val observer = EngineObserver("test-id", store)
+        observer.onLoadUrl()
+        store.waitUntilIdle()
+
+        middleware.assertNotDispatched(ContentAction.UpdateSearchTermsAction::class)
+        middleware.assertLastAction(ContentAction.UpdateIsSearchAction::class) { action ->
+            assertEquals(false, action.isSearch)
             assertEquals("test-id", action.sessionId)
         }
     }
