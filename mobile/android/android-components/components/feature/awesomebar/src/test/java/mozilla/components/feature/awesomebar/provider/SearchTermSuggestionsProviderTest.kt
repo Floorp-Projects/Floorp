@@ -58,6 +58,16 @@ class SearchTermSuggestionsProviderTest {
         doReturn(listOf(historyEntry)).`when`(storage).getHistoryMetadataSince(Long.MIN_VALUE)
     }
 
+    @Test(expected = IllegalArgumentException::class)
+    fun `GIVEN a too large number of suggestions WHEN constructing the provider THEN throw an exception`() {
+        SearchTermSuggestionsProvider(
+            historyStorage = mock(),
+            searchUseCase = mock(),
+            searchEngine = searchEngine,
+            maxNumberOfSuggestions = SEARCH_TERMS_MAXIMUM_ALLOWED_SUGGESTIONS_LIMIT + 1,
+        )
+    }
+
     @Test
     fun `GIVEN an empty input WHEN querying suggestions THEN return an empty list`() = runTest {
         val provider = SearchTermSuggestionsProvider(mock(), mock(), searchEngine)
@@ -113,7 +123,7 @@ class SearchTermSuggestionsProviderTest {
         assertTrue(suggestions[0].flags.isEmpty())
         assertNotNull(suggestions[0].onSuggestionClicked)
         assertNull(suggestions[0].onChipClicked)
-        assertEquals(0, suggestions[0].score)
+        assertEquals(Int.MAX_VALUE - 2, suggestions[0].score)
     }
 
     @Test
@@ -230,7 +240,9 @@ class SearchTermSuggestionsProviderTest {
 
         assertEquals(2, suggestions.size)
         assertEquals(historyEntries[2].key.searchTerm, suggestions[0].title)
+        assertEquals(Int.MAX_VALUE - 2, suggestions[0].score)
         assertEquals(historyEntries[1].key.searchTerm, suggestions[1].title)
+        assertEquals(Int.MAX_VALUE - 3, suggestions[1].score)
     }
 
     @Test

@@ -84,6 +84,9 @@ class SearchSuggestionProviderTest {
 
                 verify(useCase, never()).invoke(anyString(), any(), any())
 
+                // Chips should be shown at the top of the awesomebar suggestions
+                assertNull(suggestions.firstOrNull { it.score != Int.MAX_VALUE })
+
                 CollectionProcessor.withFactCollection { facts ->
                     suggestion.onChipClicked!!.invoke(suggestion.chips[6])
 
@@ -145,6 +148,13 @@ class SearchSuggestionProviderTest {
                 assertEquals("firefox clear cache", suggestions[10].title)
 
                 verify(useCase, never()).invoke(anyString(), any(), any())
+
+                // Search suggestions should leave room for other providers' suggestions above
+                assertNull(
+                    suggestions.firstOrNull {
+                        it.score > Int.MAX_VALUE - (SEARCH_TERMS_MAXIMUM_ALLOWED_SUGGESTIONS_LIMIT + 2)
+                    },
+                )
 
                 CollectionProcessor.withFactCollection { facts ->
                     suggestions[6].onSuggestionClicked!!.invoke()

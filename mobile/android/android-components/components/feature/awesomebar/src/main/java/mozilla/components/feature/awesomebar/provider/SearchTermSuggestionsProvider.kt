@@ -23,6 +23,18 @@ import java.util.UUID
 private const val DEFAULT_SUGGESTION_LIMIT = 2
 
 /**
+ * A too big limit but which help ensure the SearchSuggestionProvider' suggestions which should be placed
+ * below the ones from this provider will appear correctly.
+ */
+const val SEARCH_TERMS_MAXIMUM_ALLOWED_SUGGESTIONS_LIMIT: Int = 1000
+
+/**
+ * Error message if clients are requesting for a too big number of suggestions.
+ */
+private const val MAXIMUM_ALLOWED_SUGGESTIONS_LIMIT_REACHED =
+    "Cannot show more than $SEARCH_TERMS_MAXIMUM_ALLOWED_SUGGESTIONS_LIMIT suggestions."
+
+/**
  * A [AwesomeBar.SuggestionProvider] implementation that will show past searches done with the
  * specified [searchEngine] allowing to easily redo a search or continue with a lightly modified search.
  *
@@ -44,12 +56,19 @@ class SearchTermSuggestionsProvider(
     private val historyStorage: PlacesHistoryStorage,
     private val searchUseCase: SearchUseCase,
     private val searchEngine: SearchEngine?,
+    @androidx.annotation.IntRange(from = 0, to = SEARCH_TERMS_MAXIMUM_ALLOWED_SUGGESTIONS_LIMIT.toLong())
     private val maxNumberOfSuggestions: Int = DEFAULT_SUGGESTION_LIMIT,
     private val icon: Bitmap? = null,
     private val engine: Engine? = null,
     private val showEditSuggestion: Boolean = true,
     private val suggestionsHeader: String? = null,
 ) : AwesomeBar.SuggestionProvider {
+    init {
+        if (maxNumberOfSuggestions > SEARCH_TERMS_MAXIMUM_ALLOWED_SUGGESTIONS_LIMIT) {
+            throw IllegalArgumentException(MAXIMUM_ALLOWED_SUGGESTIONS_LIMIT_REACHED)
+        }
+    }
+
     override val id: String = UUID.randomUUID().toString()
 
     override fun groupTitle(): String? {
@@ -97,8 +116,8 @@ private fun Iterable<HistoryMetadata>.into(
     searchUseCase: SearchUseCase,
     showEditSuggestion: Boolean = true,
 ): List<AwesomeBar.Suggestion> {
-    return this.mapNotNull { result ->
-        val safeSearchTerm = result.key.searchTerm ?: return@mapNotNull null
+    return this.mapIndexedNotNull { index, result ->
+        val safeSearchTerm = result.key.searchTerm ?: return@mapIndexedNotNull null
 
         AwesomeBar.Suggestion(
             provider = provider,
@@ -106,6 +125,9 @@ private fun Iterable<HistoryMetadata>.into(
             title = result.key.searchTerm,
             description = null,
             editSuggestion = if (showEditSuggestion) safeSearchTerm else null,
+            // Reducing MAX_VALUE by 2: To allow SearchActionProvider to go above and
+            // still have one additional spot above available.
+            score = Int.MAX_VALUE - (index + 2),
             onSuggestionClicked = {
                 searchUseCase.invoke(safeSearchTerm)
                 emitSearchTermSuggestionClickedFact()
