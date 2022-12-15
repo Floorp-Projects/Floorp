@@ -6,8 +6,7 @@
 load(libdir + "asserts.js");
 
 function roundtrip(error) {
-  let opts = {ErrorStackFrames: "allow"};
-  return deserialize(serialize(error, [], opts), opts);
+  return deserialize(serialize(error, []));
 }
 
 // Basic
@@ -137,29 +136,4 @@ for (let constructor of constructors) {
   assertEq(cloned instanceof AggregateError, false);
   assertEq(cloned.errors, undefined);
   assertEq(cloned.hasOwnProperty('errors'), false);
-}
-
-{
-  let error = new Error();
-
-  // When serializing without stack-frames, deserialization is empty.
-  let cloned = deserialize(serialize(error, [], {ErrorStackFrames: "deny"}),
-    {ErrorStackFrames: "allow"});
-  assertEq(cloned.name, "Error");
-  assertEq(cloned.stack, "");
-
-  // Defaults to disallow.
-  cloned = deserialize(serialize(error));
-  assertEq(cloned.name, "Error");
-  assertEq(cloned.stack, "");
-
-  // Unexpected stack frames during deserialization throw.
-  assertErrorMessage(() => {
-    deserialize(serialize(error, [], {ErrorStackFrames: "allow"}),
-      {ErrorStackFrames: "deny"});
-  }, InternalError, "bad serialized structured data (disallowed 'stack' field encountered for Error object)");
-
-  // Sanity check
-  cloned = roundtrip(error);
-  assertEq(cloned.stack.length > 0, true);
 }
