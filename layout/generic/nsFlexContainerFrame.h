@@ -137,6 +137,7 @@ class nsFlexContainerFrame final : public nsContainerFrame,
   class CachedBAxisMeasurement;
   class CachedFlexItemData;
   struct SharedFlexData;
+  struct PerFragmentFlexData;
   class FlexItemIterator;
 
   // nsIFrame overrides
@@ -569,6 +570,11 @@ class nsFlexContainerFrame final : public nsContainerFrame,
    *             nscoord_MIN if the ascent hasn't been established yet. If the
    *             latter, this will be updated with an ascent derived from the
    *             first flex item (if there are any flex items).
+   * @param aFragmentData See the comment for PerFragmentFlexData.
+   *                      Note: aFragmentData is an "in/out" parameter. It is
+   *                      initialized by the data stored in our prev-in-flow's
+   *                      PerFragmentFlexData::Prop(); its fields will then be
+   *                      updated and become our PerFragmentFlexData.
    * @return nscoord the maximum block-end edge of children of this fragment in
    *                 flex container's coordinate space.
    * @return bool true if any child being reflowed is incomplete; false
@@ -578,8 +584,8 @@ class nsFlexContainerFrame final : public nsContainerFrame,
       const ReflowInput& aReflowInput, const nsSize& aContainerSize,
       const mozilla::LogicalSize& aAvailableSizeForItems,
       const mozilla::LogicalMargin& aBorderPadding,
-      const nscoord aSumOfPrevInFlowsChildrenBlockSize,
-      const FlexboxAxisTracker& aAxisTracker, FlexLayoutResult& aFlr);
+      const FlexboxAxisTracker& aAxisTracker, FlexLayoutResult& aFlr,
+      PerFragmentFlexData& aFragmentData);
 
   /**
    * Moves the given flex item's frame to the given LogicalPosition (modulo any
