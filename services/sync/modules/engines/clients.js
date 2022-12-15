@@ -253,7 +253,7 @@ ClientEngine.prototype = {
     // should be very rare, but could happen if we have yet to fetch devices,
     // or the client recently disconnected
     if (!fxaDevice) {
-      this.log.warn(
+      this._log.warn(
         "Couldn't find associated FxA device, falling back to client name"
       );
       return client.name;
