@@ -4589,7 +4589,7 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
 
   const LogicalSize availableSizeForItems =
       ComputeAvailableSizeForItems(aReflowInput, borderPadding);
-  const auto [maxBlockEndEdgeOfChildren, areChildrenComplete] =
+  const auto [maxBlockEndEdgeOfChildren, anyChildIncomplete] =
       ReflowChildren(aReflowInput, containerSize, availableSizeForItems,
                      borderPadding, sumOfChildrenBlockSize, axisTracker, flr);
 
@@ -4607,7 +4607,7 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
 
   PopulateReflowOutput(aReflowOutput, aReflowInput, aStatus, contentBoxSize,
                        borderPadding, consumedBSize, mayNeedNextInFlow,
-                       maxBlockEndEdgeOfChildren, areChildrenComplete,
+                       maxBlockEndEdgeOfChildren, anyChildIncomplete,
                        flr.mAscent, flr.mLines, axisTracker);
 
   if (wm.IsVerticalRL()) {
