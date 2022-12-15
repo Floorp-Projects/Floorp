@@ -85,6 +85,22 @@ async function runTests(browser, accDoc) {
   const cell1 = findAccessibleChildByID(accDoc, "cell1");
 
   await hitTest(browser, table, row, cell1);
+
+  info("Testing that an inaccessible child doesn't break hit testing");
+  const containerWithInaccessibleChild = findAccessibleChildByID(
+    accDoc,
+    "containerWithInaccessibleChild"
+  );
+  const containerWithInaccessibleChildP2 = findAccessibleChildByID(
+    accDoc,
+    "containerWithInaccessibleChild_p2"
+  );
+  await hitTest(
+    browser,
+    containerWithInaccessibleChild,
+    containerWithInaccessibleChildP2,
+    containerWithInaccessibleChildP2.firstChild
+  );
 }
 
 addAccessibleTask(
@@ -120,6 +136,12 @@ addAccessibleTask(
       <td id="cell2">world</td>
     </tr>
   </table>
+
+  <div id="containerWithInaccessibleChild">
+    <p>hi</p>
+    <p aria-hidden="true">hi</p>
+    <p id="containerWithInaccessibleChild_p2">bye</p>
+  </div>
   `,
   runTests,
   {
