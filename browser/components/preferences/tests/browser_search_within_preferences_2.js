@@ -161,10 +161,20 @@ add_task(async function() {
     EventUtils.sendString(query);
     await searchCompletedPromise;
 
-    is_element_visible(
-      suhElem,
-      "showUpdateHistory should be in search results"
-    );
+    if (
+      AppConstants.platform === "win" &&
+      Services.sysinfo.getProperty("hasWinPackageId")
+    ) {
+      is_element_hidden(
+        suhElem,
+        "showUpdateHistory should not be in search results"
+      );
+    } else {
+      is_element_visible(
+        suhElem,
+        "showUpdateHistory should be in search results"
+      );
+    }
   }
 
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
