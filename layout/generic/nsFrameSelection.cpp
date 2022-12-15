@@ -90,7 +90,7 @@ using namespace mozilla::dom;
 
 static LazyLogModule sFrameSelectionLog("FrameSelection");
 
-//#define DEBUG_TABLE 1
+// #define DEBUG_TABLE 1
 
 /**
  * Add cells to the selection inside of the given cells range.
@@ -131,10 +131,10 @@ static void printRange(nsRange* aDomRange);
  * nsPeekOffsetStruct
  ******************************************************************************/
 
-//#define DEBUG_SELECTION // uncomment for printf describing every collapse and
-// extend. #define DEBUG_NAVIGATION
+// #define DEBUG_SELECTION // uncomment for printf describing every collapse and
+//  extend. #define DEBUG_NAVIGATION
 
-//#define DEBUG_TABLE_SELECTION 1
+// #define DEBUG_TABLE_SELECTION 1
 
 nsPeekOffsetStruct::nsPeekOffsetStruct(
     nsSelectionAmount aAmount, nsDirection aDirection, int32_t aStartOffset,

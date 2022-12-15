@@ -225,11 +225,11 @@ static void SuspectUsingNurseryPurpleBuffer(
   ++gNurseryPurpleBufferEntryCount;
 }
 
-//#define COLLECT_TIME_DEBUG
+// #define COLLECT_TIME_DEBUG
 
 // Enable assertions that are useful for diagnosing errors in graph
 // construction.
-//#define DEBUG_CC_GRAPH
+// #define DEBUG_CC_GRAPH
 
 #define DEFAULT_SHUTDOWN_COLLECTIONS 5
 
