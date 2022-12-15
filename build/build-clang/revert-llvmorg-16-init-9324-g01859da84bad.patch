@@ -123,7 +123,7 @@ index a6c7da910121..a2d65e53810a 100644
 -    return AA.getModRefInfoMask(Loc, AAQI, IgnoreLocals);
 -  }
    ModRefInfo getModRefInfo(const Instruction *I,
-                            const Optional<MemoryLocation> &OptLoc) {
+                            const std::optional<MemoryLocation> &OptLoc) {
      return AA.getModRefInfo(I, OptLoc, AAQI);
 @@ -665,19 +641,16 @@ public:
    virtual AliasResult alias(const MemoryLocation &LocA,
