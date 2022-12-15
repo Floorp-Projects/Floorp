@@ -670,9 +670,9 @@ class BrowserFragment :
         val requestDesktop = tab.content.desktopMode
 
         val addToHomescreenDialogFragment = AddToHomescreenDialogFragment.newInstance(
-            tab.content.url,
-            tab.content.titleOrDomain,
-            tab.trackingProtection.enabled,
+            url = tab.content.url,
+            title = tab.content.titleOrDomain,
+            blockingEnabled = !tab.trackingProtection.ignoredOnTrackingProtection,
             requestDesktop = requestDesktop,
         )
 
