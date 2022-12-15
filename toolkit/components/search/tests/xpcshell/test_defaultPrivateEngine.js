@@ -56,14 +56,14 @@ add_task(async function test_defaultPrivateEngine() {
     normal: {
       engineId: "engine",
       displayName: "Test search engine",
-      loadPath: "[other]addEngineWithDetails:engine@search.mozilla.org",
+      loadPath: "[addon]engine@search.mozilla.org",
       submissionUrl: "https://www.google.com/search?q=",
       verified: "default",
     },
     private: {
       engineId: "engine-pref",
       displayName: "engine-pref",
-      loadPath: "[other]addEngineWithDetails:engine-pref@search.mozilla.org",
+      loadPath: "[addon]engine-pref@search.mozilla.org",
       submissionUrl: "https://www.google.com/search?q=",
       verified: "default",
     },
@@ -92,15 +92,14 @@ add_task(async function test_defaultPrivateEngine() {
     normal: {
       engineId: "engine",
       displayName: "Test search engine",
-      loadPath: "[other]addEngineWithDetails:engine@search.mozilla.org",
+      loadPath: "[addon]engine@search.mozilla.org",
       submissionUrl: "https://www.google.com/search?q=",
       verified: "default",
     },
     private: {
       engineId: "engine-rel-searchform-purpose",
       displayName: "engine-rel-searchform-purpose",
-      loadPath:
-        "[other]addEngineWithDetails:engine-rel-searchform-purpose@search.mozilla.org",
+      loadPath: "[addon]engine-rel-searchform-purpose@search.mozilla.org",
       submissionUrl: "https://www.google.com/search?q=&channel=sb",
       verified: "default",
     },
@@ -140,15 +139,14 @@ add_task(async function test_defaultPrivateEngine() {
     normal: {
       engineId: "engine",
       displayName: "Test search engine",
-      loadPath: "[other]addEngineWithDetails:engine@search.mozilla.org",
+      loadPath: "[addon]engine@search.mozilla.org",
       submissionUrl: "https://www.google.com/search?q=",
       verified: "default",
     },
     private: {
       engineId: "engine-chromeicon",
       displayName: "engine-chromeicon",
-      loadPath:
-        "[other]addEngineWithDetails:engine-chromeicon@search.mozilla.org",
+      loadPath: "[addon]engine-chromeicon@search.mozilla.org",
       submissionUrl: "https://www.google.com/search?q=",
       verified: "default",
     },

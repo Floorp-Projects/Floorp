@@ -283,7 +283,7 @@ export var SearchUtils = {
    *   The current settings version.
    */
   get SETTINGS_VERSION() {
-    return 7;
+    return 8;
   },
 
   /**

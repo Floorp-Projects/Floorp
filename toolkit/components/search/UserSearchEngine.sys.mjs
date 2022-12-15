@@ -28,7 +28,7 @@ export class UserSearchEngine extends SearchEngine {
    */
   constructor(options = {}) {
     super({
-      loadPath: "[other]addEngineWithDetails:set-via-user",
+      loadPath: "[user]",
     });
 
     if (options.details) {

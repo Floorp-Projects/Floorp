@@ -769,6 +769,15 @@ def test_category_expansion(
                 "Revision=revision&newProject=try&newRevision=revision\n"
             ),
         ),
+        (
+            {"single_run": True},
+            [8, 1, 1, 4],
+            2,
+            (
+                "If you need any help, you can find us in the #perf-help Matrix channel:\n"
+                "https://matrix.to/#/#perf-help:mozilla.org\n"
+            ),
+        ),
     ],
 )
 @pytest.mark.skipif(os.name == "nt", reason="fzf not installed on host")

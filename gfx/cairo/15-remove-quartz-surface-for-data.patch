@@ -1,0 +1,138 @@
+diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/cairo-quartz-surface.c
+--- a/gfx/cairo/cairo/src/cairo-quartz-surface.c
++++ b/gfx/cairo/cairo/src/cairo-quartz-surface.c
+@@ -2856,117 +2856,6 @@ cairo_quartz_surface_create (cairo_forma
+ }
+ 
+ /**
+- * cairo_quartz_surface_create_for_data
+- * @data: a pointer to a buffer supplied by the application in which
+- *     to write contents. This pointer must be suitably aligned for any
+- *     kind of variable, (for example, a pointer returned by malloc).
+- * @format: format of pixels in the surface to create
+- * @width: width of the surface, in pixels
+- * @height: height of the surface, in pixels
+- *
+- * Creates a Quartz surface backed by a CGBitmap.  The surface is
+- * created using the Device RGB (or Device Gray, for A8) color space.
+- * All Cairo operations, including those that require software
+- * rendering, will succeed on this surface.
+- *
+- * Return value: the newly created surface.
+- *
+- * Since: 1.12 [Mozilla addition]
+- **/
+-cairo_surface_t *
+-cairo_quartz_surface_create_for_data (unsigned char *data,
+-				      cairo_format_t format,
+-				      unsigned int width,
+-				      unsigned int height,
+-				      unsigned int stride)
+-{
+-    cairo_quartz_surface_t *surf;
+-    CGContextRef cgc;
+-    CGColorSpaceRef cgColorspace;
+-    CGBitmapInfo bitinfo;
+-    void *imageData = data;
+-    int bitsPerComponent;
+-    unsigned int i;
+-
+-    // verify width and height of surface
+-    if (!_cairo_quartz_verify_surface_size(width, height))
+-	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
+-
+-    if (width == 0 || height == 0) {
+-	return (cairo_surface_t*) _cairo_quartz_surface_create_internal (NULL, _cairo_content_from_format (format),
+-									 width, height);
+-    }
+-
+-    if (format == CAIRO_FORMAT_ARGB32 ||
+-	format == CAIRO_FORMAT_RGB24)
+-    {
+-	cgColorspace = CGColorSpaceCreateDeviceRGB();
+-	bitinfo = kCGBitmapByteOrder32Host;
+-	if (format == CAIRO_FORMAT_ARGB32)
+-	    bitinfo |= kCGImageAlphaPremultipliedFirst;
+-	else
+-	    bitinfo |= kCGImageAlphaNoneSkipFirst;
+-	bitsPerComponent = 8;
+-    } else if (format == CAIRO_FORMAT_A8) {
+-	cgColorspace = NULL;
+-	bitinfo = kCGImageAlphaOnly;
+-	bitsPerComponent = 8;
+-    } else if (format == CAIRO_FORMAT_A1) {
+-	/* I don't think we can usefully support this, as defined by
+-	 * cairo_format_t -- these are 1-bit pixels stored in 32-bit
+-	 * quantities.
+-	 */
+-	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
+-    } else {
+-	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
+-    }
+-
+-    cgc = CGBitmapContextCreate (imageData,
+-				 width,
+-				 height,
+-				 bitsPerComponent,
+-				 stride,
+-				 cgColorspace,
+-				 bitinfo);
+-    CGColorSpaceRelease (cgColorspace);
+-
+-    if (!cgc) {
+-	free (imageData);
+-	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+-    }
+-
+-    /* flip the Y axis */
+-    CGContextTranslateCTM (cgc, 0.0, height);
+-    CGContextScaleCTM (cgc, 1.0, -1.0);
+-
+-    surf = _cairo_quartz_surface_create_internal (cgc, _cairo_content_from_format (format),
+-						  width, height);
+-    if (surf->base.status) {
+-	CGContextRelease (cgc);
+-	free (imageData);
+-	// create_internal will have set an error
+-	return (cairo_surface_t*) surf;
+-    }
+-
+-    surf->imageData = imageData;
+-
+-    cairo_surface_t* tmpImageSurfaceEquiv =
+-      cairo_image_surface_create_for_data (imageData, format,
+-                                           width, height, stride);
+-
+-    if (cairo_surface_status (tmpImageSurfaceEquiv)) {
+-        // Tried & failed to create an imageSurfaceEquiv!
+-        cairo_surface_destroy (tmpImageSurfaceEquiv);
+-        surf->imageSurfaceEquiv = NULL;
+-    } else {
+-        surf->imageSurfaceEquiv = tmpImageSurfaceEquiv;
+-        surf->ownsData = FALSE;
+-    }
+-
+-    return (cairo_surface_t *) surf;
+-}
+-
+-/**
+  * cairo_quartz_surface_get_cg_context:
+  * @surface: the Cairo Quartz surface
+  *
+diff --git a/gfx/cairo/cairo/src/cairo-quartz.h b/gfx/cairo/cairo/src/cairo-quartz.h
+--- a/gfx/cairo/cairo/src/cairo-quartz.h
++++ b/gfx/cairo/cairo/src/cairo-quartz.h
+@@ -54,13 +54,6 @@ cairo_quartz_surface_create_for_cg_conte
+                                             unsigned int width,
+                                             unsigned int height);
+ 
+-cairo_surface_t *
+-cairo_quartz_surface_create_for_data (unsigned char *data,
+-                                      cairo_format_t format,
+-                                      unsigned int width,
+-                                      unsigned int height,
+-                                      unsigned int stride);
+-
+ cairo_public cairo_surface_t *
+ cairo_quartz_surface_create_cg_layer (cairo_surface_t *surface,
+                                       cairo_content_t content,

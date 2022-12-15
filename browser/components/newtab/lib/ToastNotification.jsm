@@ -10,6 +10,7 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
+  ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
   RemoteL10n: "resource://activity-stream/lib/RemoteL10n.jsm",
 });
 
@@ -45,6 +46,27 @@ const ToastNotification = {
     let title = await lazy.RemoteL10n.formatLocalizableText(content.title);
     let body = await lazy.RemoteL10n.formatLocalizableText(content.body);
 
+    // The only link between background task message experiment and user
+    // re-engagement via the notification is the associated "tag".  Said tag is
+    // usually controlled by the message content, but for message experiments,
+    // we want to avoid a missing tag and to ensure a deterministic tag for
+    // easier analysis, including across branches.
+    let { tag } = content;
+
+    let experimentMetadata =
+      lazy.ExperimentAPI.getExperimentMetaData({
+        featureId: "backgroundTaskMessage",
+      }) || {};
+
+    if (
+      experimentMetadata?.active &&
+      experimentMetadata?.slug &&
+      experimentMetadata?.branch?.slug
+    ) {
+      // Like `my-experiment:my-branch`.
+      tag = `${experimentMetadata?.slug}:${experimentMetadata?.branch?.slug}`;
+    }
+
     // There are two events named `IMPRESSION` the first one refers to telemetry
     // while the other refers to ASRouter impressions used for the frequency cap
     this.sendUserEventTelemetry("IMPRESSION", message, dispatch);
@@ -55,7 +77,7 @@ const ToastNotification = {
     );
     let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
     alert.init(
-      content.tag,
+      tag,
       content.image_url
         ? Services.urlFormatter.formatURL(content.image_url)
         : content.image_url,

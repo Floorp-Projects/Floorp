@@ -3282,6 +3282,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructBlockRubyFrame(
   nsContainerFrame* newFrame = blockFrame;
   nsContainerFrame* geometricParent =
       aState.GetGeometricParent(*aStyleDisplay, aParentFrame);
+  AutoFrameConstructionPageName pageNameTracker(aState, blockFrame);
   if ((aItem.mFCData->mBits & FCDATA_MAY_NEED_SCROLLFRAME) &&
       aStyleDisplay->IsScrollableOverflow()) {
     nsContainerFrame* scrollframe = nullptr;

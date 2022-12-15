@@ -19,6 +19,9 @@ const {
   startupExtension,
 } = require("resource://test/webextension-helpers.js");
 
+const l10n = new Localization(["devtools/client/storage.ftl"], true);
+const sessionString = l10n.formatValueSync("storage-expires-session");
+
 // Ignore rejection related to the storage.onChanged listener being removed while the extension context is being closed.
 const { PromiseTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/PromiseTestUtils.sys.mjs"
@@ -161,7 +164,8 @@ add_task(async function test_panel_live_updates() {
       isValueEditable: true,
     });
   }
-  data = (await extensionStorage.getStoreObjects(host)).data;
+  data = (await extensionStorage.getStoreObjects(host, null, { sessionString }))
+    .data;
   Assert.deepEqual(
     data,
     [
@@ -219,7 +223,8 @@ add_task(async function test_panel_live_updates() {
   info(
     "Confirming items edited by extension match items in extensionStorage store"
   );
-  data = (await extensionStorage.getStoreObjects(host)).data;
+  data = (await extensionStorage.getStoreObjects(host, null, { sessionString }))
+    .data;
   Assert.deepEqual(
     data,
     [
@@ -273,7 +278,8 @@ add_task(async function test_panel_live_updates() {
   info(
     "Confirming items removed by extension were removed in extensionStorage store"
   );
-  data = (await extensionStorage.getStoreObjects(host)).data;
+  data = (await extensionStorage.getStoreObjects(host, null, { sessionString }))
+    .data;
   Assert.deepEqual(
     data,
     [
@@ -799,7 +805,9 @@ add_task(
     await extension.awaitMessage("storage-local-set:done");
     await extension.awaitMessage("storage-local-onChanged");
 
-    data = (await extensionStorage.getStoreObjects(host)).data;
+    data = (
+      await extensionStorage.getStoreObjects(host, null, { sessionString })
+    ).data;
     Assert.deepEqual(
       data,
       [
@@ -965,7 +973,9 @@ add_task(
 
     await extension.awaitMessage("extension-origin");
 
-    const { data } = await extensionStorage.getStoreObjects(host);
+    const { data } = await extensionStorage.getStoreObjects(host, null, {
+      sessionString,
+    });
     Assert.deepEqual(
       data,
       [

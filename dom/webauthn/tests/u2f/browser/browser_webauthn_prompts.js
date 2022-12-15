@@ -57,7 +57,7 @@ function triggerMainPopupCommand(popup) {
   return EventUtils.synthesizeMouseAtCenter(notification.button, {});
 }
 
-let expectAbortError = expectError("Abort");
+let expectNotAllowedError = expectError("NotAllowed");
 
 function verifyAnonymizedCertificate(result) {
   let { attObj, rawId } = result;
@@ -86,7 +86,7 @@ async function test_register() {
   let active = true;
   let request = promiseWebAuthnMakeCredential(tab, "none", {})
     .then(arrivingHereIsBad)
-    .catch(expectAbortError)
+    .catch(expectNotAllowedError)
     .then(() => (active = false));
   await promiseNotification("webauthn-prompt-register");
 
@@ -107,7 +107,7 @@ async function test_sign() {
   let active = true;
   let request = promiseWebAuthnGetAssertion(tab)
     .then(arrivingHereIsBad)
-    .catch(expectAbortError)
+    .catch(expectNotAllowedError)
     .then(() => (active = false));
   await promiseNotification("webauthn-prompt-sign");
 
@@ -128,7 +128,7 @@ async function test_register_direct_cancel() {
   let active = true;
   let promise = promiseWebAuthnMakeCredential(tab, "direct", {})
     .then(arrivingHereIsBad)
-    .catch(expectAbortError)
+    .catch(expectNotAllowedError)
     .then(() => (active = false));
   await promiseNotification("webauthn-prompt-register-direct");
 
@@ -151,7 +151,7 @@ async function test_tab_switching() {
   let active = true;
   let request = promiseWebAuthnMakeCredential(tab_one, "none", {})
     .then(arrivingHereIsBad)
-    .catch(expectAbortError)
+    .catch(expectNotAllowedError)
     .then(() => (active = false));
   await promiseNotification("webauthn-prompt-register");
   is(PopupNotifications.panel.state, "open", "Doorhanger is visible");
@@ -197,7 +197,7 @@ async function test_window_switching() {
   let active = true;
   let request = promiseWebAuthnMakeCredential(tab, "none", {})
     .then(arrivingHereIsBad)
-    .catch(expectAbortError)
+    .catch(expectNotAllowedError)
     .then(() => (active = false));
   await promiseNotification("webauthn-prompt-register");
 

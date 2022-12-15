@@ -84,13 +84,6 @@ nsPrintDialogServiceX::ShowPrintDialog(mozIDOMWindowProxy* aParent, bool aHaveSe
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIPrintSettingsService> printSettingsSvc =
-      do_GetService("@mozilla.org/gfx/printsettings-service;1");
-
-  // Read the saved printer settings from prefs. (This relies on the printer name
-  // stored in settingsX to read the printer-specific prefs.)
-  printSettingsSvc->InitPrintSettingsFromPrefs(settingsX, true, nsIPrintSettings::kInitSaveAll);
-
   NSPrintInfo* printInfo = settingsX->CreateOrCopyPrintInfo(/* aWithScaling = */ true);
   if (NS_WARN_IF(!printInfo)) {
     return NS_ERROR_FAILURE;

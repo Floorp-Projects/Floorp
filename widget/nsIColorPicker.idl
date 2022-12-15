@@ -62,7 +62,7 @@ interface nsIColorPicker : nsISupports
   *                          parameter has to follow the format specified on top
   *                          of this file.
   */
-  void init(in mozIDOMWindowProxy parent, in AString title, in AString initialColor);
+  void init(in mozIDOMWindowProxy parent, in AString title, in AString initialColor, in Array<AString> defaultColors);
 
  /**
   * Opens the color dialog asynchrounously.

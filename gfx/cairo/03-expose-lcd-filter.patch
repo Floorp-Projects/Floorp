@@ -1,0 +1,164 @@
+diff --git a/gfx/cairo/cairo/src/cairo-font-options.c b/gfx/cairo/cairo/src/cairo-font-options.c
+--- a/gfx/cairo/cairo/src/cairo-font-options.c
++++ b/gfx/cairo/cairo/src/cairo-font-options.c
+@@ -412,7 +412,7 @@ cairo_font_options_get_subpixel_order (c
+ }
+ 
+ /**
+- * _cairo_font_options_set_lcd_filter:
++ * cairo_font_options_set_lcd_filter:
+  * @options: a #cairo_font_options_t
+  * @lcd_filter: the new LCD filter
+  *
+@@ -422,8 +422,8 @@ cairo_font_options_get_subpixel_order (c
+  * #cairo_lcd_filter_t for full details.
+  **/
+ void
+-_cairo_font_options_set_lcd_filter (cairo_font_options_t *options,
+-				    cairo_lcd_filter_t    lcd_filter)
++cairo_font_options_set_lcd_filter (cairo_font_options_t *options,
++				   cairo_lcd_filter_t    lcd_filter)
+ {
+     if (cairo_font_options_status (options))
+ 	return;
+@@ -432,7 +432,7 @@ void
+ }
+ 
+ /**
+- * _cairo_font_options_get_lcd_filter:
++ * cairo_font_options_get_lcd_filter:
+  * @options: a #cairo_font_options_t
+  *
+  * Gets the LCD filter for the font options object.
+@@ -441,7 +441,7 @@ void
+  * Return value: the LCD filter for the font options object
+  **/
+ cairo_lcd_filter_t
+-_cairo_font_options_get_lcd_filter (const cairo_font_options_t *options)
++cairo_font_options_get_lcd_filter (const cairo_font_options_t *options)
+ {
+     if (cairo_font_options_status ((cairo_font_options_t *) options))
+ 	return CAIRO_LCD_FILTER_DEFAULT;
+diff --git a/gfx/cairo/cairo/src/cairo-types-private.h b/gfx/cairo/cairo/src/cairo-types-private.h
+--- a/gfx/cairo/cairo/src/cairo-types-private.h
++++ b/gfx/cairo/cairo/src/cairo-types-private.h
+@@ -157,30 +157,6 @@ struct _cairo_array {
+     char *elements;
+ };
+ 
+-/**
+- * _cairo_lcd_filter:
+- * @CAIRO_LCD_FILTER_DEFAULT: Use the default LCD filter for
+- *   font backend and target device
+- * @CAIRO_LCD_FILTER_NONE: Do not perform LCD filtering
+- * @CAIRO_LCD_FILTER_INTRA_PIXEL: Intra-pixel filter
+- * @CAIRO_LCD_FILTER_FIR3: FIR filter with a 3x3 kernel
+- * @CAIRO_LCD_FILTER_FIR5: FIR filter with a 5x5 kernel
+- *
+- * The LCD filter specifies the low-pass filter applied to LCD-optimized
+- * bitmaps generated with an antialiasing mode of %CAIRO_ANTIALIAS_SUBPIXEL.
+- *
+- * Note: This API was temporarily made available in the public
+- * interface during the 1.7.x development series, but was made private
+- * before 1.8.
+- **/
+-typedef enum _cairo_lcd_filter {
+-    CAIRO_LCD_FILTER_DEFAULT,
+-    CAIRO_LCD_FILTER_NONE,
+-    CAIRO_LCD_FILTER_INTRA_PIXEL,
+-    CAIRO_LCD_FILTER_FIR3,
+-    CAIRO_LCD_FILTER_FIR5
+-} cairo_lcd_filter_t;
+-
+ typedef enum _cairo_round_glyph_positions {
+     CAIRO_ROUND_GLYPH_POS_DEFAULT,
+     CAIRO_ROUND_GLYPH_POS_ON,
+diff --git a/gfx/cairo/cairo/src/cairo-xcb-screen.c b/gfx/cairo/cairo/src/cairo-xcb-screen.c
+--- a/gfx/cairo/cairo/src/cairo-xcb-screen.c
++++ b/gfx/cairo/cairo/src/cairo-xcb-screen.c
+@@ -121,7 +121,7 @@ static void
+     cairo_font_options_set_hint_style (&screen->font_options, hint_style);
+     cairo_font_options_set_antialias (&screen->font_options, antialias);
+     cairo_font_options_set_subpixel_order (&screen->font_options, subpixel_order);
+-    _cairo_font_options_set_lcd_filter (&screen->font_options, lcd_filter);
++    cairo_font_options_set_lcd_filter (&screen->font_options, lcd_filter);
+     cairo_font_options_set_hint_metrics (&screen->font_options, CAIRO_HINT_METRICS_ON);
+ }
+ 
+diff --git a/gfx/cairo/cairo/src/cairo-xlib-screen.c b/gfx/cairo/cairo/src/cairo-xlib-screen.c
+--- a/gfx/cairo/cairo/src/cairo-xlib-screen.c
++++ b/gfx/cairo/cairo/src/cairo-xlib-screen.c
+@@ -265,7 +265,7 @@ static void
+     cairo_font_options_set_hint_style (&info->font_options, hint_style);
+     cairo_font_options_set_antialias (&info->font_options, antialias);
+     cairo_font_options_set_subpixel_order (&info->font_options, subpixel_order);
+-    _cairo_font_options_set_lcd_filter (&info->font_options, lcd_filter);
++    cairo_font_options_set_lcd_filter (&info->font_options, lcd_filter);
+     cairo_font_options_set_hint_metrics (&info->font_options, CAIRO_HINT_METRICS_ON);
+ }
+ 
+diff --git a/gfx/cairo/cairo/src/cairo.h b/gfx/cairo/cairo/src/cairo.h
+--- a/gfx/cairo/cairo/src/cairo.h
++++ b/gfx/cairo/cairo/src/cairo.h
+@@ -1365,6 +1365,30 @@ typedef enum _cairo_hint_metrics {
+ } cairo_hint_metrics_t;
+ 
+ /**
++ * _cairo_lcd_filter:
++ * @CAIRO_LCD_FILTER_DEFAULT: Use the default LCD filter for
++ *   font backend and target device
++ * @CAIRO_LCD_FILTER_NONE: Do not perform LCD filtering
++ * @CAIRO_LCD_FILTER_INTRA_PIXEL: Intra-pixel filter
++ * @CAIRO_LCD_FILTER_FIR3: FIR filter with a 3x3 kernel
++ * @CAIRO_LCD_FILTER_FIR5: FIR filter with a 5x5 kernel
++ *
++ * The LCD filter specifies the low-pass filter applied to LCD-optimized
++ * bitmaps generated with an antialiasing mode of %CAIRO_ANTIALIAS_SUBPIXEL.
++ *
++ * Note: This API was temporarily made available in the public
++ * interface during the 1.7.x development series, but was made private
++ * before 1.8.
++ **/
++typedef enum _cairo_lcd_filter {
++    CAIRO_LCD_FILTER_DEFAULT,
++    CAIRO_LCD_FILTER_NONE,
++    CAIRO_LCD_FILTER_INTRA_PIXEL,
++    CAIRO_LCD_FILTER_FIR3,
++    CAIRO_LCD_FILTER_FIR5
++} cairo_lcd_filter_t;
++
++/**
+  * cairo_font_options_t:
+  *
+  * An opaque structure holding all options that are used when
+@@ -1470,6 +1494,13 @@ cairo_get_font_options (cairo_t         
+ 			cairo_font_options_t *options);
+ 
+ cairo_public void
++cairo_font_options_set_lcd_filter (cairo_font_options_t   *options,
++                                  cairo_lcd_filter_t  lcd_filter);
++
++cairo_public cairo_lcd_filter_t
++cairo_font_options_get_lcd_filter (const cairo_font_options_t *options);
++
++cairo_public void
+ cairo_set_font_face (cairo_t *cr, cairo_font_face_t *font_face);
+ 
+ cairo_public cairo_font_face_t *
+diff --git a/gfx/cairo/cairo/src/cairoint.h b/gfx/cairo/cairo/src/cairoint.h
+--- a/gfx/cairo/cairo/src/cairoint.h
++++ b/gfx/cairo/cairo/src/cairoint.h
+@@ -891,13 +891,6 @@ cairo_private void
+ _cairo_font_options_fini (cairo_font_options_t *options);
+ 
+ cairo_private void
+-_cairo_font_options_set_lcd_filter (cairo_font_options_t   *options,
+-				   cairo_lcd_filter_t  lcd_filter);
+-
+-cairo_private cairo_lcd_filter_t
+-_cairo_font_options_get_lcd_filter (const cairo_font_options_t *options);
+-
+-cairo_private void
+ _cairo_font_options_set_round_glyph_positions (cairo_font_options_t   *options,
+ 					       cairo_round_glyph_positions_t  round);
+ 

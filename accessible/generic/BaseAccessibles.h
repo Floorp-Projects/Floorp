@@ -95,6 +95,22 @@ class EnumRoleAccessible : public AccessibleWrap {
 };
 
 /**
+ * Like EnumRoleAccessible, but with text support.
+ */
+template <a11y::role R>
+class EnumRoleHyperTextAccessible : public HyperTextAccessibleWrap {
+ public:
+  EnumRoleHyperTextAccessible(nsIContent* aContent, DocAccessible* aDoc)
+      : HyperTextAccessibleWrap(aContent, aDoc) {}
+
+  // LocalAccessible
+  virtual a11y::role NativeRole() const override { return R; }
+
+ protected:
+  virtual ~EnumRoleHyperTextAccessible() {}
+};
+
+/**
  * A wrapper accessible around native accessible to connect it with
  * crossplatform accessible tree.
  */

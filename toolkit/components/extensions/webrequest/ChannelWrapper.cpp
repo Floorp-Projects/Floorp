@@ -487,7 +487,9 @@ bool ChannelWrapper::IsServiceWorkerScript(const nsCOMPtr<nsIChannel>& chan) {
 
     // Service worker import scripts load.
     if (loadInfo->InternalContentPolicyType() ==
-        nsIContentPolicy::TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS) {
+            nsIContentPolicy::TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS ||
+        loadInfo->InternalContentPolicyType() ==
+            nsIContentPolicy::TYPE_INTERNAL_WORKER_STATIC_MODULE) {
       nsLoadFlags loadFlags = 0;
       chan->GetLoadFlags(&loadFlags);
       return loadFlags & nsIChannel::LOAD_BYPASS_SERVICE_WORKER;

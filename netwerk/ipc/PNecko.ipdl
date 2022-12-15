@@ -23,7 +23,6 @@ include protocol PSimpleChannel;
 include protocol PTransportProvider;
 include protocol PStunAddrsRequest;
 include protocol PFileChannel;
-include protocol PClassifierDummyChannel;
 include protocol PWebrtcTCPSocket;
 include protocol PSocketProcessBridge;
 include protocol PDocumentChannel;
@@ -66,7 +65,6 @@ namespace net {
   manages PTransportProvider;
   manages PAltDataOutputStream;
   manages PStunAddrsRequest;
-  manages PClassifierDummyChannel;
   manages PWebrtcTCPSocket;
   manages PDocumentChannel;
 
@@ -117,10 +115,6 @@ parent:
 #endif
   async PSimpleChannel(uint32_t channelId);
   async PFileChannel(uint32_t channelId);
-
-  async PClassifierDummyChannel(nsIURI uri, nsIURI aTopWindowURI,
-                                nsresult aTopWindowURIResult,
-                                LoadInfoArgs? loadInfo);
 
   async RequestContextLoadBegin(uint64_t rcid);
   async RequestContextAfterDOMContentLoaded(uint64_t rcid);

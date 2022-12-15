@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Delay Reject</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+
+    SpecialPowers.pushPrefEnv({ set: [
+      ["dom.security.credentialmanagement.identity.reject_delay.enabled", "true" ],
+      ["dom.security.credentialmanagement.identity.reject_delay.duration_ms", "1000" ],
+    ] })
+      .then(() => {setupTest("delay_reject")})
+      .then(
+      function () {
+        return navigator.credentials.get({
+          identity: {
+            providers: []
+          }
+        });
+      }
+    ).then((cred) => {
+      ok(false, "incorrectly got a credential");
+    }).catch((err) => {
+      ok(true, "correctly got an error");
+    }).finally(() => {
+      SimpleTest.finish();
+    })
+  </script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">This test verifies that our rejections are delayed, checking for >500ms.</div>
+<pre id="test"></pre>
+</body>
+</html>

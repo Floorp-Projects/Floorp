@@ -124,8 +124,8 @@ class nsCSPContext : public nsIContentSecurityPolicy {
       BlockedContentSource aBlockedContentSource, nsIURI* aOriginalURI,
       const nsAString& aViolatedDirective, const nsAString& aEffectiveDirective,
       uint32_t aViolatedPolicyIndex, const nsAString& aObserverSubject,
-      const nsAString& aSourceFile, const nsAString& aScriptSample,
-      uint32_t aLineNum, uint32_t aColumnNum);
+      const nsAString& aSourceFile, bool aReportSample,
+      const nsAString& aScriptSample, uint32_t aLineNum, uint32_t aColumnNum);
 
   // Hands off! Don't call this method unless you know what you
   // are doing. It's only supposed to be called from within
@@ -160,7 +160,8 @@ class nsCSPContext : public nsIContentSecurityPolicy {
   void reportInlineViolation(CSPDirective aDirective,
                              mozilla::dom::Element* aTriggeringElement,
                              nsICSPEventListener* aCSPEventListener,
-                             const nsAString& aNonce, const nsAString& aContent,
+                             const nsAString& aNonce, bool aReportSample,
+                             const nsAString& aSample,
                              const nsAString& aViolatedDirective,
                              const nsAString& aEffectiveDirective,
                              uint32_t aViolatedPolicyIndex,

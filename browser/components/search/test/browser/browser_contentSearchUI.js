@@ -6,14 +6,12 @@ const TEST_PAGE_BASENAME = "contentSearchUI.html";
 const TEST_ENGINE1 = {
   name: "searchSuggestionEngine1",
   id: "other-searchSuggestionEngine1",
-  loadPath:
-    "[other]addEngineWithDetails:searchsuggestionengine1@tests.mozilla.org",
+  loadPath: "[addon]searchsuggestionengine1@tests.mozilla.org",
 };
 const TEST_ENGINE2 = {
   name: "searchSuggestionEngine2",
   id: "other-searchSuggestionEngine2",
-  loadPath:
-    "[other]addEngineWithDetails:searchsuggestionengine2@tests.mozilla.org",
+  loadPath: "[addon]searchsuggestionengine2@tests.mozilla.org",
 };
 
 const TEST_MSG = "ContentSearchUIControllerTest";

@@ -18,7 +18,9 @@ class nsIWidget;
 
 class AsyncColorChooser : public mozilla::Runnable {
  public:
-  AsyncColorChooser(COLORREF aInitialColor, nsIWidget* aParentWidget,
+  AsyncColorChooser(COLORREF aInitialColor,
+                    const nsTArray<nsString>& aDefaultColors,
+                    nsIWidget* aParentWidget,
                     nsIColorPickerShownCallback* aCallback);
   NS_IMETHOD Run() override;
 
@@ -29,6 +31,7 @@ class AsyncColorChooser : public mozilla::Runnable {
                                     LPARAM aLParam);
 
   COLORREF mInitialColor;
+  nsTArray<nsString> mDefaultColors;
   COLORREF mColor;
   nsCOMPtr<nsIWidget> mParentWidget;
   nsCOMPtr<nsIColorPickerShownCallback> mCallback;
@@ -41,13 +44,11 @@ class nsColorPicker : public nsIColorPicker {
   nsColorPicker();
 
   NS_DECL_ISUPPORTS
-
-  NS_IMETHOD Init(mozIDOMWindowProxy* parent, const nsAString& title,
-                  const nsAString& aInitialColor) override;
-  NS_IMETHOD Open(nsIColorPickerShownCallback* aCallback) override;
+  NS_DECL_NSICOLORPICKER
 
  private:
   COLORREF mInitialColor;
+  nsTArray<nsString> mDefaultColors;
   nsCOMPtr<nsIWidget> mParentWidget;
 };
 

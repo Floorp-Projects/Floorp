@@ -821,3 +821,27 @@ index 5e800db..c875f2d 100644
 -- 
 2.37.1.1.g659da70093
 
+From 0544d02715a26a032f109984d5f70360b80f3875 Mon Sep 17 00:00:00 2001
+From: Mike Hommey <mh@glandium.org>
+Date: Wed, 14 Dec 2022 16:25:53 +0900
+Subject: [PATCH] Add missing include
+
+---
+ llvm_mode/afl-llvm-pass.so.cc | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/llvm_mode/afl-llvm-pass.so.cc b/llvm_mode/afl-llvm-pass.so.cc
+index 1483943..0a7c37a 100644
+--- a/llvm_mode/afl-llvm-pass.so.cc
++++ b/llvm_mode/afl-llvm-pass.so.cc
+@@ -39,6 +39,7 @@
+ #include <unistd.h>
+ 
+ #include "llvm/Pass.h"
++#include "llvm/ADT/None.h"
+ #include "llvm/ADT/Statistic.h"
+ #include "llvm/IR/IRBuilder.h"
+ #include "llvm/IR/Module.h"
+-- 
+2.38.1.1.g6d9df9d320
+

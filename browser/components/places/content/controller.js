@@ -1372,7 +1372,7 @@ PlacesController.prototype = {
     const [title, body, forget] = await document.l10n.formatValues([
       { id: "places-forget-about-this-site-confirmation-title" },
       {
-        id: "places-forget-about-this-site-confirmation-message",
+        id: "places-forget-about-this-site-confirmation-msg",
         args: { hostOrBaseDomain: baseDomain ?? host },
       },
       { id: "places-forget-about-this-site-forget" },

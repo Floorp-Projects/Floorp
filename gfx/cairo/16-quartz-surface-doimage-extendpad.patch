@@ -1,0 +1,12 @@
+diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/cairo-quartz-surface.c
+--- a/gfx/cairo/cairo/src/cairo-quartz-surface.c
++++ b/gfx/cairo/cairo/src/cairo-quartz-surface.c
+@@ -1315,7 +1315,7 @@ static cairo_int_status_t
+ 
+ 	srcRect = CGRectMake (0, 0, extents.width, extents.height);
+ 
+-	if (source->extend == CAIRO_EXTEND_NONE) {
++	if (source->extend == CAIRO_EXTEND_NONE || source->extend == CAIRO_EXTEND_PAD) {
+ 	    int x, y;
+ 	    if (op == CAIRO_OPERATOR_SOURCE &&
+ 		(pat_surf->content == CAIRO_CONTENT_ALPHA ||

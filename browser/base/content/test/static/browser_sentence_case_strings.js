@@ -51,10 +51,9 @@ async function* iterateSubviews(parentView) {
 
   for (let button of navButtons) {
     info("Click " + button.id);
-    let promiseViewShown = BrowserTestUtils.waitForEvent(
-      PanelUI.panel,
-      "ViewShown"
-    );
+    let panel = parentView.closest("panel");
+    let panelmultiview = parentView.closest("panelmultiview");
+    let promiseViewShown = BrowserTestUtils.waitForEvent(panel, "ViewShown");
     button.click();
     let viewShownEvent = await promiseViewShown;
 
@@ -63,7 +62,7 @@ async function* iterateSubviews(parentView) {
     info("Shown " + viewShownEvent.originalTarget.id);
     yield* iterateSubviews(viewShownEvent.originalTarget);
     promiseViewShown = BrowserTestUtils.waitForEvent(parentView, "ViewShown");
-    PanelUI.multiView.goBack();
+    panelmultiview.goBack();
     await promiseViewShown;
   }
 }
@@ -245,4 +244,36 @@ add_task(async function test_sentence_case_appmenu() {
   }
 
   await checkUpdateBanner(PanelUI.mainView);
+});
+
+/**
+ * Tests that the strings under the All Tabs panel are in sentence case.
+ */
+add_task(async function test_sentence_case_all_tabs_panel() {
+  gTabsPanel.init();
+
+  const allTabsView = document.getElementById("allTabsMenu-allTabsView");
+  let allTabsPopupShownPromise = BrowserTestUtils.waitForEvent(
+    allTabsView,
+    "ViewShown"
+  );
+  gTabsPanel.showAllTabsPanel();
+  await allTabsPopupShownPromise;
+
+  registerCleanupFunction(async () => {
+    let allTabsPopupHiddenPromise = BrowserTestUtils.waitForEvent(
+      allTabsView.panelMultiView,
+      "PanelMultiViewHidden"
+    );
+    gTabsPanel.hideAllTabsPanel();
+    await allTabsPopupHiddenPromise;
+  });
+
+  checkToolbarButtons(gTabsPanel.allTabsView);
+  checkSubheaders(gTabsPanel.allTabsView);
+
+  for await (const view of iterateSubviews(gTabsPanel.allTabsView)) {
+    checkToolbarButtons(view);
+    checkSubheaders(view);
+  }
 });

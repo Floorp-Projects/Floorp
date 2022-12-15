@@ -8238,6 +8238,17 @@ void CodeGenerator::visitWasmCallIndirectAdjunctSafepoint(
       lir->framePushedAtStackMapBase());
 }
 
+template <typename InstructionWithMaybeTrapSite>
+void EmitSignalNullCheckTrapSite(MacroAssembler& masm,
+                                 InstructionWithMaybeTrapSite* ins) {
+  if (!ins->maybeTrap()) {
+    return;
+  }
+  wasm::BytecodeOffset trapOffset(ins->maybeTrap()->offset);
+  masm.append(wasm::Trap::NullPointerDereference,
+              wasm::TrapSite(masm.currentOffset(), trapOffset));
+}
+
 void CodeGenerator::visitWasmLoadSlot(LWasmLoadSlot* ins) {
   MIRType type = ins->type();
   MWideningOp wideningOp = ins->wideningOp();
@@ -8245,6 +8256,7 @@ void CodeGenerator::visitWasmLoadSlot(LWasmLoadSlot* ins) {
   Address addr(container, ins->offset());
   AnyRegister dst = ToAnyRegister(ins->output());
 
+  EmitSignalNullCheckTrapSite(masm, ins);
   switch (type) {
     case MIRType::Int32:
       switch (wideningOp) {
@@ -8301,6 +8313,7 @@ void CodeGenerator::visitWasmStoreSlot(LWasmStoreSlot* ins) {
     MOZ_RELEASE_ASSERT(narrowingOp == MNarrowingOp::None);
   }
 
+  EmitSignalNullCheckTrapSite(masm, ins);
   switch (type) {
     case MIRType::Int32:
       switch (narrowingOp) {
@@ -8378,6 +8391,7 @@ void CodeGenerator::visitWasmLoadSlotI64(LWasmLoadSlotI64* ins) {
   Register container = ToRegister(ins->containerRef());
   Address addr(container, ins->offset());
   Register64 output = ToOutRegister64(ins);
+  EmitSignalNullCheckTrapSite(masm, ins);
   masm.load64(addr, output);
 }
 
@@ -8385,6 +8399,7 @@ void CodeGenerator::visitWasmStoreSlotI64(LWasmStoreSlotI64* ins) {
   Register container = ToRegister(ins->containerRef());
   Address addr(container, ins->offset());
   Register64 value = ToRegister64(ins->value());
+  EmitSignalNullCheckTrapSite(masm, ins);
   masm.store64(value, addr);
 }
 

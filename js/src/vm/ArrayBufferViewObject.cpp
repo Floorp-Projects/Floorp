@@ -20,31 +20,31 @@
 
 using namespace js;
 
-/*
- * This method is used to trace TypedArrayObjects and DataViewObjects. We need
- * a custom tracer to move the object's data pointer if its owner was moved and
- * stores its data inline.
- */
+// This method is used to trace TypedArrayObjects and DataViewObjects. It
+// updates the object's data pointer if it points to inline data in an object
+// that was moved.
 /* static */
-void ArrayBufferViewObject::trace(JSTracer* trc, JSObject* objArg) {
-  ArrayBufferViewObject* obj = &objArg->as<ArrayBufferViewObject>();
-  HeapSlot& bufSlot = obj->getFixedSlotRef(BUFFER_SLOT);
-  TraceEdge(trc, &bufSlot, "ArrayBufferViewObject.buffer");
+void ArrayBufferViewObject::trace(JSTracer* trc, JSObject* obj) {
+  ArrayBufferViewObject* view = &obj->as<ArrayBufferViewObject>();
 
-  // Update obj's data pointer if it moved.
-  if (bufSlot.isObject() &&
-      gc::MaybeForwardedObjectIs<ArrayBufferObject>(&bufSlot.toObject())) {
-    ArrayBufferObject& buf =
-        gc::MaybeForwardedObjectAs<ArrayBufferObject>(&bufSlot.toObject());
-    size_t offset = obj->byteOffset();
+  // Update view's data pointer if it moved.
+  if (view->hasBuffer()) {
+    JSObject* bufferObj = &view->bufferValue().toObject();
+    if (gc::MaybeForwardedObjectIs<ArrayBufferObject>(bufferObj)) {
+      auto* buffer = &gc::MaybeForwardedObjectAs<ArrayBufferObject>(bufferObj);
 
-    MOZ_ASSERT_IF(buf.dataPointer() == nullptr, offset == 0);
+      size_t offset = view->byteOffset();
+      MOZ_ASSERT_IF(!buffer->dataPointer(), offset == 0);
 
-    // The data may or may not be inline with the buffer. The buffer can only
-    // move during a compacting GC, in which case its objectMoved hook has
-    // already updated the buffer's data pointer.
-    void* data = buf.dataPointer() + offset;
-    obj->getFixedSlotRef(DATA_SLOT).unbarrieredSet(PrivateValue(data));
+      // The data may or may not be inline with the buffer. The buffer can only
+      // move during a compacting GC, in which case its objectMoved hook has
+      // already updated the buffer's data pointer.
+      void* oldData = view->dataPointerEither_();
+      void* data = buffer->dataPointer() + offset;
+      if (data != oldData) {
+        view->getFixedSlotRef(DATA_SLOT).unbarrieredSet(PrivateValue(data));
+      }
+    }
   }
 }
 

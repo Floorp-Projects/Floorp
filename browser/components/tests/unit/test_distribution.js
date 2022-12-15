@@ -211,4 +211,5 @@ add_task(async function() {
     ).data,
     "Language Set"
   );
+  Assert.equal(defaultBranch.getCharPref("intl.locale.requested"), "en-US");
 });

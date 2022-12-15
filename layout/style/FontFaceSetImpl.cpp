@@ -10,6 +10,7 @@
 #include "gfxFontSrcPrincipal.h"
 #include "gfxFontSrcURI.h"
 #include "gfxFontUtils.h"
+#include "gfxPlatformFontList.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/CSSFontFaceRule.h"
 #include "mozilla/dom/DocumentInlines.h"
@@ -21,6 +22,7 @@
 #include "mozilla/dom/FontFaceSetLoadEventBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/BasePrincipal.h"
@@ -86,16 +88,25 @@ FontFaceSetImpl::~FontFaceSetImpl() {
 }
 
 void FontFaceSetImpl::Destroy() {
-  RecursiveMutexAutoLock lock(mMutex);
+  nsTArray<FontFaceRecord> nonRuleFaces;
+  nsRefPtrHashtable<nsCStringHashKey, gfxUserFontFamily> fontFamilies;
 
-  for (const auto& key : mLoaders.Keys()) {
-    key->Cancel();
+  {
+    RecursiveMutexAutoLock lock(mMutex);
+    for (const auto& key : mLoaders.Keys()) {
+      key->Cancel();
+    }
+
+    mLoaders.Clear();
+    nonRuleFaces = std::move(mNonRuleFaces);
+    fontFamilies = std::move(mFontFamilies);
+    mOwner = nullptr;
   }
 
-  mLoaders.Clear();
-  mNonRuleFaces.Clear();
-  gfxUserFontSet::Destroy();
-  mOwner = nullptr;
+  gfxPlatformFontList* fp = gfxPlatformFontList::PlatformFontList();
+  if (fp) {
+    fp->RemoveUserFontSet(this);
+  }
 }
 
 void FontFaceSetImpl::ParseFontShorthandForMatching(
@@ -303,20 +314,20 @@ void FontFaceSetImpl::RemoveLoader(nsFontFaceLoader* aLoader) {
 
 void FontFaceSetImpl::InsertNonRuleFontFace(FontFaceImpl* aFontFace,
                                             bool& aFontSetModified) {
-  nsAtom* fontFamily = aFontFace->GetFamilyName();
-  if (!fontFamily) {
+  gfxUserFontAttributes attr;
+  if (!aFontFace->GetAttributes(attr)) {
     // If there is no family name, this rule cannot contribute a
     // usable font, so there is no point in processing it further.
     return;
   }
 
-  nsAtomCString family(fontFamily);
+  nsAutoCString family(attr.mFamilyName);
 
   // Just create a new font entry if we haven't got one already.
   if (!aFontFace->GetUserFontEntry()) {
     // XXX Should we be checking mLocalRulesUsed like InsertRuleFontFace does?
     RefPtr<gfxUserFontEntry> entry = FindOrCreateUserFontEntryFromFontFace(
-        family, aFontFace, StyleOrigin::Author);
+        aFontFace, std::move(attr), StyleOrigin::Author);
     if (!entry) {
       return;
     }
@@ -327,62 +338,49 @@ void FontFaceSetImpl::InsertNonRuleFontFace(FontFaceImpl* aFontFace,
   AddUserFontEntry(family, aFontFace->GetUserFontEntry());
 }
 
-/* static */
-already_AddRefed<gfxUserFontEntry>
-FontFaceSetImpl::FindOrCreateUserFontEntryFromFontFace(
-    FontFaceImpl* aFontFace) {
-  nsAtom* fontFamily = aFontFace->GetFamilyName();
-  if (!fontFamily) {
-    // If there is no family name, this rule cannot contribute a
-    // usable font, so there is no point in processing it further.
-    return nullptr;
-  }
+void FontFaceSetImpl::UpdateUserFontEntry(gfxUserFontEntry* aEntry,
+                                          gfxUserFontAttributes&& aAttr) {
+  MOZ_ASSERT(NS_IsMainThread());
 
-  return FindOrCreateUserFontEntryFromFontFace(nsAtomCString(fontFamily),
-                                               aFontFace, StyleOrigin::Author);
+  bool resetFamilyName = !aEntry->mFamilyName.IsEmpty() &&
+                         aEntry->mFamilyName != aAttr.mFamilyName;
+  // aFontFace already has a user font entry, so we update its attributes
+  // rather than creating a new one.
+  aEntry->UpdateAttributes(std::move(aAttr));
+  // If the family name has changed, remove the entry from its current family
+  // and clear the mFamilyName field so it can be reset when added to a new
+  // family.
+  if (resetFamilyName) {
+    RefPtr<gfxUserFontFamily> family = LookupFamily(aEntry->mFamilyName);
+    if (family) {
+      family->RemoveFontEntry(aEntry);
+    }
+    aEntry->mFamilyName.Truncate(0);
+  }
 }
 
-static WeightRange GetWeightRangeForDescriptor(
-    const Maybe<StyleComputedFontWeightRange>& aVal,
-    gfxFontEntry::RangeFlags& aRangeFlags) {
-  if (!aVal) {
-    aRangeFlags |= gfxFontEntry::RangeFlags::eAutoWeight;
-    return WeightRange(FontWeight::NORMAL);
-  }
-  return WeightRange(FontWeight::FromFloat(aVal->_0),
-                     FontWeight::FromFloat(aVal->_1));
-}
+class FontFaceSetImpl::UpdateUserFontEntryRunnable final
+    : public WorkerMainThreadRunnable {
+ public:
+  UpdateUserFontEntryRunnable(FontFaceSetImpl* aSet, gfxUserFontEntry* aEntry,
+                              gfxUserFontAttributes& aAttr)
+      : WorkerMainThreadRunnable(
+            GetCurrentThreadWorkerPrivate(),
+            "FontFaceSetImpl :: FindOrCreateUserFontEntryFromFontFace"_ns),
+        mSet(aSet),
+        mEntry(aEntry),
+        mAttr(aAttr) {}
 
-static SlantStyleRange GetStyleRangeForDescriptor(
-    const Maybe<StyleComputedFontStyleDescriptor>& aVal,
-    gfxFontEntry::RangeFlags& aRangeFlags) {
-  if (!aVal) {
-    aRangeFlags |= gfxFontEntry::RangeFlags::eAutoSlantStyle;
-    return SlantStyleRange(FontSlantStyle::NORMAL);
+  bool MainThreadRun() override {
+    mSet->UpdateUserFontEntry(mEntry, std::move(mAttr));
+    return true;
   }
-  auto& val = *aVal;
-  switch (val.tag) {
-    case StyleComputedFontStyleDescriptor::Tag::Normal:
-      return SlantStyleRange(FontSlantStyle::NORMAL);
-    case StyleComputedFontStyleDescriptor::Tag::Italic:
-      return SlantStyleRange(FontSlantStyle::ITALIC);
-    case StyleComputedFontStyleDescriptor::Tag::Oblique:
-      return SlantStyleRange(FontSlantStyle::FromFloat(val.AsOblique()._0),
-                             FontSlantStyle::FromFloat(val.AsOblique()._1));
-  }
-  MOZ_ASSERT_UNREACHABLE("How?");
-  return SlantStyleRange(FontSlantStyle::NORMAL);
-}
 
-static StretchRange GetStretchRangeForDescriptor(
-    const Maybe<StyleComputedFontStretchRange>& aVal,
-    gfxFontEntry::RangeFlags& aRangeFlags) {
-  if (!aVal) {
-    aRangeFlags |= gfxFontEntry::RangeFlags::eAutoStretch;
-    return StretchRange(FontStretch::NORMAL);
-  }
-  return StretchRange(aVal->_0, aVal->_1);
-}
+ private:
+  FontFaceSetImpl* mSet;
+  gfxUserFontEntry* mEntry;
+  gfxUserFontAttributes& mAttr;
+};
 
 // TODO(emilio): Should this take an nsAtom* aFamilyName instead?
 //
@@ -390,87 +388,19 @@ static StretchRange GetStretchRangeForDescriptor(
 /* static */
 already_AddRefed<gfxUserFontEntry>
 FontFaceSetImpl::FindOrCreateUserFontEntryFromFontFace(
-    const nsACString& aFamilyName, FontFaceImpl* aFontFace,
+    FontFaceImpl* aFontFace, gfxUserFontAttributes&& aAttr,
     StyleOrigin aOrigin) {
   FontFaceSetImpl* set = aFontFace->GetPrimaryFontFaceSet();
 
-  uint32_t languageOverride = NO_FONT_LANGUAGE_OVERRIDE;
-  StyleFontDisplay fontDisplay = StyleFontDisplay::Auto;
-  float ascentOverride = -1.0;
-  float descentOverride = -1.0;
-  float lineGapOverride = -1.0;
-  float sizeAdjust = 1.0;
-
-  gfxFontEntry::RangeFlags rangeFlags = gfxFontEntry::RangeFlags::eNoFlags;
-
-  // set up weight
-  WeightRange weight =
-      GetWeightRangeForDescriptor(aFontFace->GetFontWeight(), rangeFlags);
-
-  // set up stretch
-  StretchRange stretch =
-      GetStretchRangeForDescriptor(aFontFace->GetFontStretch(), rangeFlags);
-
-  // set up font style
-  SlantStyleRange italicStyle =
-      GetStyleRangeForDescriptor(aFontFace->GetFontStyle(), rangeFlags);
-
-  // set up font display
-  if (Maybe<StyleFontDisplay> display = aFontFace->GetFontDisplay()) {
-    fontDisplay = *display;
-  }
-
-  // set up font metrics overrides
-  if (Maybe<StylePercentage> ascent = aFontFace->GetAscentOverride()) {
-    ascentOverride = ascent->_0;
-  }
-  if (Maybe<StylePercentage> descent = aFontFace->GetDescentOverride()) {
-    descentOverride = descent->_0;
-  }
-  if (Maybe<StylePercentage> lineGap = aFontFace->GetLineGapOverride()) {
-    lineGapOverride = lineGap->_0;
-  }
-
-  // set up size-adjust scaling factor
-  if (Maybe<StylePercentage> percentage = aFontFace->GetSizeAdjust()) {
-    sizeAdjust = percentage->_0;
-  }
-
-  // set up font features
-  nsTArray<gfxFontFeature> featureSettings;
-  aFontFace->GetFontFeatureSettings(featureSettings);
-
-  // set up font variations
-  nsTArray<gfxFontVariation> variationSettings;
-  aFontFace->GetFontVariationSettings(variationSettings);
-
-  // set up font language override
-  if (Maybe<StyleFontLanguageOverride> descriptor =
-          aFontFace->GetFontLanguageOverride()) {
-    languageOverride = descriptor->_0;
-  }
-
-  // set up unicode-range
-  gfxCharacterMap* unicodeRanges = aFontFace->GetUnicodeRangeAsCharacterMap();
-
   RefPtr<gfxUserFontEntry> existingEntry = aFontFace->GetUserFontEntry();
   if (existingEntry) {
-    // aFontFace already has a user font entry, so we update its attributes
-    // rather than creating a new one.
-    existingEntry->UpdateAttributes(
-        weight, stretch, italicStyle, featureSettings, variationSettings,
-        languageOverride, unicodeRanges, fontDisplay, rangeFlags,
-        ascentOverride, descentOverride, lineGapOverride, sizeAdjust);
-    // If the family name has changed, remove the entry from its current family
-    // and clear the mFamilyName field so it can be reset when added to a new
-    // family.
-    if (!existingEntry->mFamilyName.IsEmpty() &&
-        existingEntry->mFamilyName != aFamilyName) {
-      gfxUserFontFamily* family = set->LookupFamily(existingEntry->mFamilyName);
-      if (family) {
-        family->RemoveFontEntry(existingEntry);
-      }
-      existingEntry->mFamilyName.Truncate(0);
+    if (NS_IsMainThread()) {
+      set->UpdateUserFontEntry(existingEntry, std::move(aAttr));
+    } else {
+      auto task =
+          MakeRefPtr<UpdateUserFontEntryRunnable>(set, existingEntry, aAttr);
+      IgnoredErrorResult ignoredRv;
+      task->Dispatch(Canceling, ignoredRv);
     }
     return existingEntry.forget();
   }
@@ -487,12 +417,10 @@ FontFaceSetImpl::FindOrCreateUserFontEntryFromFontFace(
     face->mSourceType = gfxFontFaceSrc::eSourceType_Buffer;
     face->mBuffer = aFontFace->TakeBufferSource();
   } else {
-    AutoTArray<StyleFontFaceSourceListComponent, 8> sourceListComponents;
-    aFontFace->GetSources(sourceListComponents);
-    size_t len = sourceListComponents.Length();
+    size_t len = aAttr.mSources.Length();
     for (size_t i = 0; i < len; ++i) {
       gfxFontFaceSrc* face = srcArray.AppendElement();
-      const auto& component = sourceListComponents[i];
+      const auto& component = aAttr.mSources[i];
       switch (component.tag) {
         case StyleFontFaceSourceListComponent::Tag::Local: {
           nsAtom* atom = component.AsLocal();
@@ -528,7 +456,7 @@ FontFaceSetImpl::FindOrCreateUserFontEntryFromFontFace(
 
           if (i + 1 < len) {
             // Check for a format hint.
-            const auto& next = sourceListComponents[i + 1];
+            const auto& next = aAttr.mSources[i + 1];
             switch (next.tag) {
               case StyleFontFaceSourceListComponent::Tag::FormatHintKeyword:
                 face->mFormatHint = next.format_hint_keyword._0;
@@ -596,7 +524,7 @@ FontFaceSetImpl::FindOrCreateUserFontEntryFromFontFace(
 
           if (i + 1 < len) {
             // Check for a set of font-technologies flags.
-            const auto& next = sourceListComponents[i + 1];
+            const auto& next = aAttr.mSources[i + 1];
             if (next.IsTechFlags()) {
               face->mTechFlags = next.AsTechFlags();
               i++;
@@ -626,12 +554,7 @@ FontFaceSetImpl::FindOrCreateUserFontEntryFromFontFace(
     return nullptr;
   }
 
-  RefPtr<gfxUserFontEntry> entry = set->FindOrCreateUserFontEntry(
-      aFamilyName, srcArray, weight, stretch, italicStyle, featureSettings,
-      variationSettings, languageOverride, unicodeRanges, fontDisplay,
-      rangeFlags, ascentOverride, descentOverride, lineGapOverride, sizeAdjust);
-
-  return entry.forget();
+  return set->FindOrCreateUserFontEntry(std::move(srcArray), std::move(aAttr));
 }
 
 nsresult FontFaceSetImpl::LogMessage(gfxUserFontEntry* aUserFontEntry,
@@ -967,20 +890,34 @@ void FontFaceSetImpl::RecordFontLoadDone(uint32_t aFontSize,
 void FontFaceSetImpl::DoRebuildUserFontSet() { MarkUserFontSetDirty(); }
 
 already_AddRefed<gfxUserFontEntry> FontFaceSetImpl::CreateUserFontEntry(
-    const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList, WeightRange aWeight,
-    StretchRange aStretch, SlantStyleRange aStyle,
-    const nsTArray<gfxFontFeature>& aFeatureSettings,
-    const nsTArray<gfxFontVariation>& aVariationSettings,
-    uint32_t aLanguageOverride, gfxCharacterMap* aUnicodeRanges,
-    StyleFontDisplay aFontDisplay, RangeFlags aRangeFlags,
-    float aAscentOverride, float aDescentOverride, float aLineGapOverride,
-    float aSizeAdjust) {
+    nsTArray<gfxFontFaceSrc>&& aFontFaceSrcList,
+    gfxUserFontAttributes&& aAttr) {
   RefPtr<gfxUserFontEntry> entry = new FontFaceImpl::Entry(
-      this, aFontFaceSrcList, aWeight, aStretch, aStyle, aFeatureSettings,
-      aVariationSettings, aLanguageOverride, aUnicodeRanges, aFontDisplay,
-      aRangeFlags, aAscentOverride, aDescentOverride, aLineGapOverride,
-      aSizeAdjust);
+      this, std::move(aFontFaceSrcList), std::move(aAttr));
   return entry.forget();
+}
+
+void FontFaceSetImpl::ForgetLocalFaces() {
+  // We cannot hold our lock at the same time as the gfxUserFontFamily lock, so
+  // we need to make a copy of the table first.
+  nsTArray<RefPtr<gfxUserFontFamily>> fontFamilies;
+  {
+    RecursiveMutexAutoLock lock(mMutex);
+    fontFamilies.SetCapacity(mFontFamilies.Count());
+    for (const auto& fam : mFontFamilies.Values()) {
+      fontFamilies.AppendElement(fam);
+    }
+  }
+
+  for (const auto& fam : fontFamilies) {
+    ForgetLocalFace(fam);
+  }
+}
+
+already_AddRefed<gfxUserFontFamily> FontFaceSetImpl::GetFamily(
+    const nsACString& aFamilyName) {
+  RecursiveMutexAutoLock lock(mMutex);
+  return gfxUserFontSet::GetFamily(aFamilyName);
 }
 
 #undef LOG_ENABLED

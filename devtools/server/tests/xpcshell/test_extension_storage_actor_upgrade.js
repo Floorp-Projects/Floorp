@@ -22,6 +22,9 @@ const {
   startupExtension,
 } = require("resource://test/webextension-helpers.js");
 
+const l10n = new Localization(["devtools/client/storage.ftl"], true);
+const sessionString = l10n.formatValueSync("storage-expires-session");
+
 // Ignore rejection related to the storage.onChanged listener being removed while the extension context is being closed.
 const { PromiseTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/PromiseTestUtils.sys.mjs"
@@ -127,7 +130,9 @@ add_task(async function test_panel_live_reload() {
     promiseStoragePanelUpdated,
   ]);
 
-  const { data } = await extensionStorage.getStoreObjects(host);
+  const { data } = await extensionStorage.getStoreObjects(host, null, {
+    sessionString,
+  });
   Assert.deepEqual(
     data,
     [

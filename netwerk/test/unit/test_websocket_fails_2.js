@@ -35,6 +35,13 @@ async function test_tls_fail_on_ws_server_over_proxy() {
 
   let wss = new NodeWebSocketServer();
   await wss.start();
+
+  registerCleanupFunction(async () => {
+    await wss.stop();
+    await proxy.stop();
+    Services.prefs.clearUserPref("network.websocket.timeout.open");
+  });
+
   Assert.notEqual(wss.port(), null);
   await wss.registerMessageHandler((data, ws) => {
     ws.send(data);
@@ -46,9 +53,5 @@ async function test_tls_fail_on_ws_server_over_proxy() {
   let [status] = await openWebSocketChannelPromise(chan, url, msg);
 
   Assert.equal(status, Cr.NS_ERROR_NET_TIMEOUT_EXTERNAL);
-
-  await proxy.stop();
-  await wss.stop();
-  Services.prefs.clearUserPref("network.websocket.timeout.open");
 }
 add_task(test_tls_fail_on_ws_server_over_proxy);
