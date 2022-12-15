@@ -106,7 +106,8 @@ void Table::tracePrivate(JSTracer* trc) {
 
       for (uint32_t i = 0; i < length_; i++) {
         if (functions_[i].instance) {
-          functions_[i].instance->trace(trc);
+          wasm::TraceInstanceEdge(trc, functions_[i].instance,
+                                  "wasm table instance");
         } else {
           MOZ_ASSERT(!functions_[i].code);
         }

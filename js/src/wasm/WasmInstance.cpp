@@ -1905,13 +1905,20 @@ void Instance::tracePrivate(JSTracer* trc) {
   }
 }
 
-void Instance::trace(JSTracer* trc) {
-  // Technically, instead of having this method, the caller could use
-  // Instance::object() to get the owning WasmInstanceObject to mark,
-  // but this method is simpler and more efficient. The trace hook of
-  // WasmInstanceObject will call Instance::tracePrivate at which point we
-  // can mark the rest of the children.
-  TraceEdge(trc, &object_, "wasm instance object");
+void js::wasm::TraceInstanceEdge(JSTracer* trc, Instance* instance,
+                                 const char* name) {
+  if (IsTracerKind(trc, JS::TracerKind::Moving)) {
+    // Compacting GC: The Instance does not move so there is nothing to do here.
+    // Reading the object from the instance below would be a data race during
+    // multi-threaded updates. Compacting GC does not rely on graph traversal
+    // to find all edges that need to be updated.
+    return;
+  }
+
+  // Instance fields are traced by the owning WasmInstanceObject's trace
+  // hook. Tracing this ensures they are traced once.
+  JSObject* object = instance->objectUnbarriered();
+  TraceManuallyBarrieredEdge(trc, &object, name);
 }
 
 uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,

@@ -222,7 +222,6 @@ class alignas(16) Instance {
             const WasmTagObjectVector& tagObjs,
             const DataSegmentVector& dataSegments,
             const ElemSegmentVector& elemSegments);
-  void trace(JSTracer* trc);
 
   // Trace any GC roots on the stack, for the frame associated with |wfi|,
   // whose next instruction to execute is |nextPC|.
@@ -482,6 +481,10 @@ bool ResultsToJSValue(JSContext* cx, ResultType type, void* registerResultLoc,
 // Report an error to `cx` and mark it as a 'trap' so that it cannot be caught
 // by wasm exception handlers.
 void ReportTrapError(JSContext* cx, unsigned errorNumber);
+
+// Instance is not a GC thing itself but contains GC thing pointers. Ensure they
+// are traced appropriately.
+void TraceInstanceEdge(JSTracer* trc, Instance* instance, const char* name);
 
 }  // namespace wasm
 }  // namespace js
