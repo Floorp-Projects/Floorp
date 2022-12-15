@@ -1105,48 +1105,39 @@ NS_IMETHODIMP AppWindow::ForceRoundedDimensions() {
     return NS_OK;
   }
 
-  int32_t availWidthCSS = 0;
-  int32_t availHeightCSS = 0;
-  int32_t contentWidthCSS = 0;
-  int32_t contentHeightCSS = 0;
-  int32_t windowWidthCSS = 0;
-  int32_t windowHeightCSS = 0;
-  double devicePerCSSPixels = UnscaledDevicePixelsPerCSSPixel().scale;
+  CSSToLayoutDeviceScale scale = UnscaledDevicePixelsPerCSSPixel();
 
-  GetAvailScreenSize(&availWidthCSS, &availHeightCSS);
+  CSSIntSize availSizeCSS;
+  GetAvailScreenSize(&availSizeCSS.width, &availSizeCSS.height);
 
   // To get correct chrome size, we have to resize the window to a proper
   // size first. So, here, we size it to its available size.
-  SetSpecifiedSize(availWidthCSS, availHeightCSS);
+  SetSpecifiedSize(availSizeCSS.width, availSizeCSS.height);
 
   // Get the current window size for calculating chrome UI size.
-  GetSize(&windowWidthCSS, &windowHeightCSS);  // device pixels
-  windowWidthCSS = NSToIntRound(windowWidthCSS / devicePerCSSPixels);
-  windowHeightCSS = NSToIntRound(windowHeightCSS / devicePerCSSPixels);
+  CSSIntSize windowSizeCSS = RoundedToInt(GetSize() / scale);
 
   // Get the content size for calculating chrome UI size.
-  GetPrimaryContentSize(&contentWidthCSS, &contentHeightCSS);
+  LayoutDeviceIntSize contentSizeDev;
+  GetPrimaryContentSize(&contentSizeDev.width, &contentSizeDev.height);
+  CSSIntSize contentSizeCSS = RoundedToInt(contentSizeDev / scale);
 
   // Calculate the chrome UI size.
-  int32_t chromeWidth = 0, chromeHeight = 0;
-  chromeWidth = windowWidthCSS - contentWidthCSS;
-  chromeHeight = windowHeightCSS - contentHeightCSS;
+  CSSIntSize chromeSizeCSS = windowSizeCSS - contentSizeCSS;
 
-  int32_t targetContentWidth = 0, targetContentHeight = 0;
-
+  CSSIntSize targetSizeCSS;
   // Here, we use the available screen dimensions as the input dimensions to
   // force the window to be rounded as the maximum available content size.
   nsContentUtils::CalcRoundedWindowSizeForResistingFingerprinting(
-      chromeWidth, chromeHeight, availWidthCSS, availHeightCSS, availWidthCSS,
-      availHeightCSS,
+      chromeSizeCSS.width, chromeSizeCSS.height, availSizeCSS.width,
+      availSizeCSS.height, availSizeCSS.width, availSizeCSS.height,
       false,  // aSetOuterWidth
       false,  // aSetOuterHeight
-      &targetContentWidth, &targetContentHeight);
+      &targetSizeCSS.width, &targetSizeCSS.height);
 
-  targetContentWidth = NSToIntRound(targetContentWidth * devicePerCSSPixels);
-  targetContentHeight = NSToIntRound(targetContentHeight * devicePerCSSPixels);
+  LayoutDeviceIntSize targetSizeDev = RoundedToInt(targetSizeCSS * scale);
 
-  SetPrimaryContentSize(targetContentWidth, targetContentHeight);
+  SetPrimaryContentSize(targetSizeDev.width, targetSizeDev.height);
 
   return NS_OK;
 }
@@ -2166,8 +2157,15 @@ nsresult AppWindow::GetPrimaryRemoteTabSize(int32_t* aWidth, int32_t* aHeight) {
   RefPtr<dom::Element> element = host->GetOwnerElement();
   NS_ENSURE_STATE(element);
 
-  *aWidth = element->ClientWidth();
-  *aHeight = element->ClientHeight();
+  CSSIntSize size(element->ClientWidth(), element->ClientHeight());
+  LayoutDeviceIntSize sizeDev =
+      RoundedToInt(size * UnscaledDevicePixelsPerCSSPixel());
+  if (aWidth) {
+    *aWidth = sizeDev.width;
+  }
+  if (aHeight) {
+    *aHeight = sizeDev.height;
+  }
   return NS_OK;
 }
 
@@ -2178,14 +2176,13 @@ nsresult AppWindow::GetPrimaryContentShellSize(int32_t* aWidth,
   nsCOMPtr<nsIBaseWindow> shellWindow(do_QueryInterface(mPrimaryContentShell));
   NS_ENSURE_STATE(shellWindow);
 
-  // We want to return CSS pixels. First, we get device pixels
-  // from the content area...
-  // And then get the device pixel scaling factor. Dividing device
-  // pixels by this scaling factor gives us CSS pixels.
-  CSSIntSize size = RoundedToInt(
-      shellWindow->GetSize() / shellWindow->UnscaledDevicePixelsPerCSSPixel());
-  *aWidth = size.width;
-  *aHeight = size.height;
+  LayoutDeviceIntSize sizeDev = shellWindow->GetSize();
+  if (aWidth) {
+    *aWidth = sizeDev.width;
+  }
+  if (aHeight) {
+    *aHeight = sizeDev.height;
+  }
   return NS_OK;
 }
 
@@ -2193,7 +2190,8 @@ NS_IMETHODIMP
 AppWindow::SetPrimaryContentSize(int32_t aWidth, int32_t aHeight) {
   if (mPrimaryBrowserParent) {
     return SetPrimaryRemoteTabSize(aWidth, aHeight);
-  } else if (mPrimaryContentShell) {
+  }
+  if (mPrimaryContentShell) {
     return SizeShellTo(mPrimaryContentShell, aWidth, aHeight);
   }
   return NS_ERROR_UNEXPECTED;
@@ -2202,12 +2200,7 @@ AppWindow::SetPrimaryContentSize(int32_t aWidth, int32_t aHeight) {
 nsresult AppWindow::SetPrimaryRemoteTabSize(int32_t aWidth, int32_t aHeight) {
   int32_t shellWidth, shellHeight;
   GetPrimaryRemoteTabSize(&shellWidth, &shellHeight);
-
-  // FIXME: This is wrong (pre-existing), the above call acounts for zoom and
-  // this one doesn't.
-  double scale = UnscaledDevicePixelsPerCSSPixel().scale;
-  SizeShellToWithLimit(aWidth, aHeight, shellWidth * scale,
-                       shellHeight * scale);
+  SizeShellToWithLimit(aWidth, aHeight, shellWidth, shellHeight);
   return NS_OK;
 }
 

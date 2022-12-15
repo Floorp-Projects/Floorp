@@ -2260,16 +2260,19 @@ static void SizeOpenedWindow(nsIDocShellTreeOwner* aTreeOwner,
     left = (LayoutDeviceCoord(devPxRect.x) / devToDesktopScale).Rounded();
     top = (LayoutDeviceCoord(devPxRect.y) / devToDesktopScale).Rounded();
 
-    int32_t contentWidth, contentHeight;  // CSS pixels.
+    LayoutDeviceIntSize contentSize;
     bool hasPrimaryContent = false;
     aTreeOwner->GetHasPrimaryContent(&hasPrimaryContent);
     if (hasPrimaryContent) {
-      aTreeOwner->GetPrimaryContentSize(&contentWidth, &contentHeight);
+      aTreeOwner->GetPrimaryContentSize(&contentSize.width,
+                                        &contentSize.height);
     } else {
-      aTreeOwner->GetRootShellSize(&contentWidth, &contentHeight);
+      aTreeOwner->GetRootShellSize(&contentSize.width, &contentSize.height);
     }
-    chromeWidth = width - contentWidth;
-    chromeHeight = height - contentHeight;
+
+    CSSIntSize contentSizeCSS = RoundedToInt(contentSize / cssToDevScale);
+    chromeWidth = width - contentSizeCSS.width;
+    chromeHeight = height - contentSizeCSS.height;
   }
 
   // Set up left/top
