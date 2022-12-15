@@ -1,18 +1,17 @@
-import tempfile
-from unittest.mock import MagicMock
 import contextlib
-import shutil
 import os
-from pathlib import Path
-import sys
+import shutil
 import subprocess
+import sys
+import tempfile
+from pathlib import Path
+from unittest.mock import MagicMock
 
-from mozperftest.metadata import Metadata
+from mozperftest import utils
 from mozperftest.environment import MachEnvironment
 from mozperftest.hooks import Hooks
-from mozperftest import utils
+from mozperftest.metadata import Metadata
 from mozperftest.script import ScriptInfo
-
 
 HERE = Path(__file__).parent
 ROOT = Path(HERE, "..", "..", "..", "..").resolve()
@@ -25,6 +24,9 @@ BT_DATA = Path(HERE, "data", "browsertime-results", "browsertime.json")
 BT_DATA_VIDEO = Path(HERE, "data", "browsertime-results-video", "browsertime.json")
 DMG = Path(HERE, "data", "firefox.dmg")
 MOZINFO = Path(HERE, "data", "mozinfo.json")
+EXAMPLE_ANDROID_STARTUP_TEST = Path(
+    EXAMPLE_TESTS_DIR, "test_perftest_android_startup.js"
+)
 
 
 @contextlib.contextmanager
