@@ -8,10 +8,10 @@ import time
 from taskgraph.transforms.task import index_builder
 
 SIGNING_ROUTE_TEMPLATES = [
-    "index.{trust_domain}.v3.{project}.{variant}.{artifact_type}.latest.{artifact_name}",
-    "index.{trust_domain}.v3.{project}.{variant}.{artifact_type}.{build_date}.revision.{head_rev}.{artifact_name}",
-    "index.{trust_domain}.v3.{project}.{variant}.{artifact_type}.{build_date}.latest.{artifact_name}",
-    "index.{trust_domain}.v3.{project}.{variant}.{artifact_type}.revision.{head_rev}.{artifact_name}",
+    "index.{trust_domain}.v3.{project}.{artifact_type}.{variant}.latest.{artifact_name}",
+    "index.{trust_domain}.v3.{project}.{artifact_type}.{variant}.{build_date}.revision.{head_rev}.{artifact_name}",
+    "index.{trust_domain}.v3.{project}.{artifact_type}.{variant}.{build_date}.latest.{artifact_name}",
+    "index.{trust_domain}.v3.{project}.{artifact_type}.{variant}.revision.{head_rev}.{artifact_name}",
 ]
 
 
