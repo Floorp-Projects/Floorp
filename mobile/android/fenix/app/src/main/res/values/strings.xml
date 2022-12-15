@@ -389,9 +389,13 @@
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Automatically attempts to connect to sites using HTTPS encryption protocol for increased security.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on">On</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">On</string>
+    <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Off</string>
+    <!-- Summary of https only preference if https only is set to on in all tabs -->
+    <string name="preferences_https_only_on_all">On in all tabs</string>
+    <!-- Summary of https only preference if https only is set to on in private tabs only -->
+    <string name="preferences_https_only_on_private">On in private tabs</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">Learn more</string>
     <!-- Option for the https only setting -->
@@ -466,6 +470,10 @@
     <string name="preferences_addons">Add-ons</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Notifications</string>
+    <!-- Summary for notification preference indicating notifications are allowed -->
+    <string name="notifications_allowed_summary">Allowed</string>
+    <!-- Summary for notification preference indicating notifications are not allowed -->
+    <string name="notifications_not_allowed_summary">Not allowed</string>
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
@@ -739,6 +747,12 @@
     <string name="close_tabs_after_one_week_summary">Close after one week</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Close after one month</string>
+    <!-- Summary for homepage preference indicating always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage_summary">Open on homepage</string>
+    <!-- Summary for homepage preference indicating always opening the last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab_summary">Open on last tab</string>
+    <!-- Summary for homepage preference indicating opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity_summary">Open on homepage after four hours</string>
 
     <!-- Inactive tabs -->
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
@@ -997,9 +1011,15 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Exceptions</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">On</string>
+    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">On</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Off</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to standard -->
+    <string name="tracking_protection_standard">Standard</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to strict -->
+    <string name="tracking_protection_strict">Strict</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to custom -->
+    <string name="tracking_protection_custom">Custom</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Allow audio and video</string>
     <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->

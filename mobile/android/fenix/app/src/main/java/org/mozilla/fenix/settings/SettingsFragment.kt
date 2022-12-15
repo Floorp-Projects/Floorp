@@ -17,6 +17,7 @@ import android.view.LayoutInflater
 import android.widget.Toast
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
+import androidx.core.app.NotificationManagerCompat
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
@@ -30,6 +31,7 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
@@ -204,14 +206,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     private fun update(shouldUpdateAccountUIState: Boolean) {
         val settings = requireContext().settings()
-
-        val trackingProtectionPreference =
-            requirePreference<Preference>(R.string.pref_key_tracking_protection_settings)
-        trackingProtectionPreference.summary = if (settings.shouldUseTrackingProtection) {
-            getString(R.string.tracking_protection_on)
-        } else {
-            getString(R.string.tracking_protection_off)
-        }
 
         val aboutPreference = requirePreference<Preference>(R.string.pref_key_about)
         val appName = getString(R.string.app_name)
@@ -490,6 +484,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
         setupAmoCollectionOverridePreference(requireContext().settings())
         setupAllowDomesticChinaFxaServerPreference()
         setupHttpsOnlyPreferences()
+        setupNotificationPreference()
+        setupSearchPreference()
+        setupHomepagePreference()
+        setupTrackingProtectionPreference()
     }
 
     /**
@@ -587,14 +585,67 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     @VisibleForTesting
+    internal fun setupNotificationPreference() {
+        with(requirePreference<Preference>(R.string.pref_key_notifications)) {
+            summary = if (NotificationManagerCompat.from(requireContext()).areNotificationsEnabled()) {
+                getString(R.string.notifications_allowed_summary)
+            } else {
+                getString(R.string.notifications_not_allowed_summary)
+            }
+        }
+    }
+
+    @VisibleForTesting
+    internal fun setupHomepagePreference() {
+        with(requirePreference<Preference>(R.string.pref_key_home)) {
+            summary = context?.let {
+                when {
+                    it.settings().alwaysOpenTheHomepageWhenOpeningTheApp ->
+                        getString(R.string.opening_screen_homepage_summary)
+                    it.settings().openHomepageAfterFourHoursOfInactivity ->
+                        getString(R.string.opening_screen_after_four_hours_of_inactivity_summary)
+                    it.settings().alwaysOpenTheLastTabWhenOpeningTheApp ->
+                        getString(R.string.opening_screen_last_tab_summary)
+                    else -> null
+                }
+            }
+        }
+    }
+
+    @VisibleForTesting
+    internal fun setupSearchPreference() {
+        with(requirePreference<Preference>(R.string.pref_key_search_settings)) {
+            summary =
+                requireContext().components.core.store.state.search.selectedOrDefaultSearchEngine?.name
+        }
+    }
+
+    @VisibleForTesting
+    internal fun setupTrackingProtectionPreference() {
+        with(requirePreference<Preference>(R.string.pref_key_tracking_protection_settings)) {
+            summary = context?.let {
+                when {
+                    !it.settings().shouldUseTrackingProtection -> getString(R.string.tracking_protection_off)
+                    it.settings().useStandardTrackingProtection -> getString(R.string.tracking_protection_standard)
+                    it.settings().useStrictTrackingProtection -> getString(R.string.tracking_protection_strict)
+                    it.settings().useCustomTrackingProtection -> getString(R.string.tracking_protection_custom)
+                    else -> null
+                }
+            }
+        }
+    }
+
+    @VisibleForTesting
     internal fun setupHttpsOnlyPreferences() {
         val httpsOnlyPreference =
             requirePreference<Preference>(R.string.pref_key_https_only_settings)
         httpsOnlyPreference.summary = context?.let {
-            if (it.settings().shouldUseHttpsOnly) {
-                getString(R.string.preferences_https_only_on)
-            } else {
-                getString(R.string.preferences_https_only_off)
+            when {
+                !it.settings().shouldUseHttpsOnly -> getString(R.string.preferences_https_only_off)
+                it.settings().shouldUseHttpsOnlyInAllTabs -> getString(R.string.preferences_https_only_on_all)
+                it.settings().shouldUseHttpsOnlyInPrivateTabsOnly ->
+                    getString(R.string.preferences_https_only_on_private)
+                else -> null
             }
         }
     }

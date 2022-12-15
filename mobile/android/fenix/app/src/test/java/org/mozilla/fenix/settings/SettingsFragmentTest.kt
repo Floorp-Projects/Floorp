@@ -4,14 +4,19 @@
 
 package org.mozilla.fenix.settings
 
+import androidx.core.app.NotificationManagerCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.preference.Preference
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.mockkStatic
 import io.mockk.unmockkObject
+import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.test.advanceUntilIdle
+import mozilla.components.browser.state.state.SearchState
+import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.concept.fetch.Client
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.test.robolectric.testContext
@@ -152,13 +157,195 @@ class SettingsFragmentTest {
     }
 
     @Test
-    fun `GIVEN the HttpsOnly is enabled THEN set the appropriate preference summary`() {
+    fun `GIVEN notifications are not allowed THEN set the appropriate summary to notification preferences`() {
+        val notificationPreference = settingsFragment.requirePreference<Preference>(
+            R.string.pref_key_notifications,
+        )
+        val summary = testContext.getString(R.string.notifications_not_allowed_summary)
+        mockkStatic(NotificationManagerCompat::class)
+        every { NotificationManagerCompat.from(any()).areNotificationsEnabled() } returns false
+        assertTrue(notificationPreference.summary.isNullOrEmpty())
+
+        settingsFragment.setupNotificationPreference()
+
+        assertEquals(summary, notificationPreference.summary)
+        unmockkStatic(NotificationManagerCompat::class)
+    }
+
+    @Test
+    fun `GIVEN notifications are allowed THEN set the appropriate summary to notification preferences`() {
+        val notificationPreference = settingsFragment.requirePreference<Preference>(
+            R.string.pref_key_notifications,
+        )
+        val summary = testContext.getString(R.string.notifications_allowed_summary)
+        mockkStatic(NotificationManagerCompat::class)
+        every { NotificationManagerCompat.from(any()).areNotificationsEnabled() } returns true
+        assertTrue(notificationPreference.summary.isNullOrEmpty())
+
+        settingsFragment.setupNotificationPreference()
+
+        assertEquals(summary, notificationPreference.summary)
+        unmockkStatic(NotificationManagerCompat::class)
+    }
+
+    @Test
+    fun `GIVEN the opening screen setting is set to homepage after four hours THEN set the appropriate summary to homepage preference`() {
+        val homepagePreference = settingsFragment.requirePreference<Preference>(
+            R.string.pref_key_home,
+        )
+        every { testContext.settings().alwaysOpenTheHomepageWhenOpeningTheApp } returns false
+        every { testContext.settings().openHomepageAfterFourHoursOfInactivity } returns true
+        every { testContext.settings().alwaysOpenTheLastTabWhenOpeningTheApp } returns false
+        assertTrue(homepagePreference.summary.isNullOrEmpty())
+        val summary =
+            testContext.getString(R.string.opening_screen_after_four_hours_of_inactivity_summary)
+
+        settingsFragment.setupHomepagePreference()
+
+        assertEquals(summary, homepagePreference.summary)
+    }
+
+    @Test
+    fun `GIVEN the opening screen setting is set to last tab THEN set the appropriate summary to homepage preference`() {
+        val homepagePreference = settingsFragment.requirePreference<Preference>(
+            R.string.pref_key_home,
+        )
+        every { testContext.settings().alwaysOpenTheHomepageWhenOpeningTheApp } returns false
+        every { testContext.settings().openHomepageAfterFourHoursOfInactivity } returns false
+        every { testContext.settings().alwaysOpenTheLastTabWhenOpeningTheApp } returns true
+        assertTrue(homepagePreference.summary.isNullOrEmpty())
+        val summary = testContext.getString(R.string.opening_screen_last_tab_summary)
+
+        settingsFragment.setupHomepagePreference()
+
+        assertEquals(summary, homepagePreference.summary)
+    }
+
+    @Test
+    fun `GIVEN the opening screen setting is set to homepage THEN set the appropriate summary to homepage preference`() {
+        val homepagePreference = settingsFragment.requirePreference<Preference>(
+            R.string.pref_key_home,
+        )
+        every { testContext.settings().alwaysOpenTheHomepageWhenOpeningTheApp } returns true
+        every { testContext.settings().openHomepageAfterFourHoursOfInactivity } returns false
+        every { testContext.settings().alwaysOpenTheLastTabWhenOpeningTheApp } returns false
+        assertTrue(homepagePreference.summary.isNullOrEmpty())
+        val summary = testContext.getString(R.string.opening_screen_homepage_summary)
+
+        settingsFragment.setupHomepagePreference()
+
+        assertEquals(summary, homepagePreference.summary)
+    }
+
+    @Test
+    fun `WHEN a custom search engine is set as default THEN it's name is set as summary for search preference`() {
+        val searchEngineName = "MySearchEngine"
+        val searchPreference = settingsFragment.requirePreference<Preference>(
+            R.string.pref_key_search_settings,
+        )
+        mockkStatic("mozilla.components.browser.state.state.SearchStateKt")
+        every { testContext.components.core.store.state.search } returns mockk(relaxed = true)
+        every { any<SearchState>().selectedOrDefaultSearchEngine } returns mockk {
+            every { name } returns searchEngineName
+        }
+        assertTrue(searchPreference.summary.isNullOrEmpty())
+
+        settingsFragment.setupSearchPreference()
+
+        assertEquals(searchEngineName, searchPreference.summary)
+    }
+
+    @Test
+    fun `GIVEN the tracking protection preference is set to custom THEN set the appropriate summary`() {
+        val trackingProtectionPreference = settingsFragment.requirePreference<Preference>(
+            R.string.pref_key_tracking_protection_settings,
+        )
+        every { testContext.settings().shouldUseTrackingProtection } returns true
+        every { testContext.settings().useStandardTrackingProtection } returns false
+        every { testContext.settings().useStrictTrackingProtection } returns false
+        every { testContext.settings().useCustomTrackingProtection } returns true
+        assertTrue(trackingProtectionPreference.summary.isNullOrEmpty())
+        val summary = testContext.getString(R.string.tracking_protection_custom)
+
+        settingsFragment.setupTrackingProtectionPreference()
+
+        assertEquals(summary, trackingProtectionPreference.summary)
+    }
+
+    @Test
+    fun `GIVEN the tracking protection preference is set to strict THEN set the appropriate summary`() {
+        val trackingProtectionPreference = settingsFragment.requirePreference<Preference>(
+            R.string.pref_key_tracking_protection_settings,
+        )
+        every { testContext.settings().shouldUseTrackingProtection } returns true
+        every { testContext.settings().useStandardTrackingProtection } returns false
+        every { testContext.settings().useStrictTrackingProtection } returns true
+        every { testContext.settings().useCustomTrackingProtection } returns false
+        assertTrue(trackingProtectionPreference.summary.isNullOrEmpty())
+        val summary = testContext.getString(R.string.tracking_protection_strict)
+
+        settingsFragment.setupTrackingProtectionPreference()
+
+        assertEquals(summary, trackingProtectionPreference.summary)
+    }
+
+    @Test
+    fun `GIVEN the tracking protection preference is set to standard THEN set the appropriate summary`() {
+        val trackingProtectionPreference = settingsFragment.requirePreference<Preference>(
+            R.string.pref_key_tracking_protection_settings,
+        )
+        every { testContext.settings().shouldUseTrackingProtection } returns true
+        every { testContext.settings().useStandardTrackingProtection } returns true
+        every { testContext.settings().useStrictTrackingProtection } returns false
+        every { testContext.settings().useCustomTrackingProtection } returns false
+        assertTrue(trackingProtectionPreference.summary.isNullOrEmpty())
+        val summary = testContext.getString(R.string.tracking_protection_standard)
+
+        settingsFragment.setupTrackingProtectionPreference()
+
+        assertEquals(summary, trackingProtectionPreference.summary)
+    }
+
+    @Test
+    fun `GIVEN the tracking protection preference is disabled THEN set the appropriate summary`() {
+        val trackingProtectionPreference = settingsFragment.requirePreference<Preference>(
+            R.string.pref_key_tracking_protection_settings,
+        )
+        every { testContext.settings().shouldUseTrackingProtection } returns false
+        assertTrue(trackingProtectionPreference.summary.isNullOrEmpty())
+        val summary = testContext.getString(R.string.tracking_protection_off)
+
+        settingsFragment.setupTrackingProtectionPreference()
+
+        assertEquals(summary, trackingProtectionPreference.summary)
+    }
+
+    @Test
+    fun `GIVEN the HttpsOnly is set to private tabs THEN set the appropriate preference summary`() {
         val httpsOnlyPreference = settingsFragment.findPreference<Preference>(
             settingsFragment.getPreferenceKey(R.string.pref_key_https_only_settings),
         )!!
         every { testContext.settings().shouldUseHttpsOnly } returns true
+        every { testContext.settings().shouldUseHttpsOnlyInPrivateTabsOnly } returns true
+        every { testContext.settings().shouldUseHttpsOnlyInAllTabs } returns false
         assertTrue(httpsOnlyPreference.summary.isNullOrEmpty())
-        val summary = testContext.getString(R.string.preferences_https_only_on)
+        val summary = testContext.getString(R.string.preferences_https_only_on_private)
+
+        settingsFragment.setupHttpsOnlyPreferences()
+
+        assertEquals(summary, httpsOnlyPreference.summary)
+    }
+
+    @Test
+    fun `GIVEN the HttpsOnly is set to all tabs THEN set the appropriate preference summary`() {
+        val httpsOnlyPreference = settingsFragment.findPreference<Preference>(
+            settingsFragment.getPreferenceKey(R.string.pref_key_https_only_settings),
+        )!!
+        every { testContext.settings().shouldUseHttpsOnly } returns true
+        every { testContext.settings().shouldUseHttpsOnlyInAllTabs } returns true
+        every { testContext.settings().shouldUseHttpsOnlyInPrivateTabsOnly } returns false
+        assertTrue(httpsOnlyPreference.summary.isNullOrEmpty())
+        val summary = testContext.getString(R.string.preferences_https_only_on_all)
 
         settingsFragment.setupHttpsOnlyPreferences()
 
