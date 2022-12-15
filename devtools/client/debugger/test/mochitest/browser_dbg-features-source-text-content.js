@@ -420,15 +420,17 @@ add_task(async function testGarbageCollectedSourceTextContent() {
  * - it first loads fine so that it shows up
  * - initDebuggerWithAbsoluteURL will first load the document before the debugger
  * - so the debugger will have to fetch the html page content via a network request
- * - the test page will return a 404 error code on the second load attempt
+ * - the test page will return a connection reset error on the second load attempt
  */
 let loadCount = 0;
 httpServer.registerPathHandler(
-  "/200-then-404-page.html",
+  "/200-then-connection-reset.html",
   (request, response) => {
     loadCount++;
     if (loadCount > 1) {
-      response.setStatusLine(request.httpVersion, 404, "Not found");
+      response.seizePower();
+      response.bodyOutPutStream.close();
+      response.finish();
       return;
     }
     response.setStatusLine(request.httpVersion, 200, "OK");
@@ -440,17 +442,17 @@ add_task(async function testFailingHtmlSource() {
 
   // initDebuggerWithAbsoluteURL will first load the document once before the debugger,
   // then the debugger will have to fetch the html page content via a network request
-  // therefore the test page will return a 404 error code on the second load attempt
+  // therefore the test page will encounter a connection reset error on the second load attempt
   const dbg = await initDebuggerWithAbsoluteURL(
-    BASE_URL + "200-then-404-page.html",
-    "200-then-404-page.html"
+    BASE_URL + "200-then-connection-reset.html",
+    "200-then-connection-reset.html"
   );
 
   // We can't select the HTML page as its source content isn't fetched
   // (waitForSelectedSource doesn't resolve)
   // Note that it is important to load the page *before* opening the page
   // so that the thread actor has to request the page content and will fail
-  const source = findSource(dbg, "200-then-404-page.html");
+  const source = findSource(dbg, "200-then-connection-reset.html");
   await dbg.actions.selectLocation(
     getContext(dbg),
     { sourceId: source.id },
