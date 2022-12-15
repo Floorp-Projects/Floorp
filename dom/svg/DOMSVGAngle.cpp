@@ -13,9 +13,6 @@ namespace mozilla::dom {
 
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMSVGAngle, mSVGElement)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMSVGAngle, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMSVGAngle, Release)
-
 DOMSVGAngle::DOMSVGAngle(SVGSVGElement* aSVGElement)
     : mSVGElement(aSVGElement), mType(AngleType::CreatedValue) {
   mVal = new SVGAnimatedOrient();

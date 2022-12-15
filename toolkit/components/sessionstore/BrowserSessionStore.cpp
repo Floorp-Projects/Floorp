@@ -37,9 +37,6 @@ static StaticAutoPtr<nsTHashMap<nsUint64HashKey, BrowserSessionStore*>>
 NS_IMPL_CYCLE_COLLECTION(BrowserSessionStore, mBrowsingContext, mFormData,
                          mScrollData)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(BrowserSessionStore, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(BrowserSessionStore, Release)
-
 /* static */
 already_AddRefed<BrowserSessionStore> BrowserSessionStore::GetOrCreate(
     CanonicalBrowsingContext* aBrowsingContext) {

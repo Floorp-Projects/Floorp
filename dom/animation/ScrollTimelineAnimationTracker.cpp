@@ -12,9 +12,6 @@ namespace mozilla {
 
 NS_IMPL_CYCLE_COLLECTION(ScrollTimelineAnimationTracker, mPendingSet, mDocument)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(ScrollTimelineAnimationTracker, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(ScrollTimelineAnimationTracker, Release)
-
 void ScrollTimelineAnimationTracker::TriggerPendingAnimations() {
   for (auto iter = mPendingSet.begin(), end = mPendingSet.end(); iter != end;
        ++iter) {

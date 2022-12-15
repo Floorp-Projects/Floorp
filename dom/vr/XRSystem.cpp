@@ -613,9 +613,6 @@ uint32_t RequestSessionRequest::GetPresentationGroup() const {
 // IsSessionSupportedRequest cycle collection
 NS_IMPL_CYCLE_COLLECTION(IsSessionSupportedRequest, mPromise)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(IsSessionSupportedRequest, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(IsSessionSupportedRequest, Release)
-
 XRSessionMode IsSessionSupportedRequest::GetSessionMode() const {
   return mSessionMode;
 }
@@ -702,8 +699,5 @@ XRRequestSessionPermissionRequest::Create(
 ////////////////////////////////////////////////////////////////////////////////
 // RequestSessionRequest cycle collection
 NS_IMPL_CYCLE_COLLECTION(RequestSessionRequest, mPromise)
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(RequestSessionRequest, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(RequestSessionRequest, Release)
 
 }  // namespace mozilla::dom

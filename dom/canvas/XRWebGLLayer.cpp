@@ -29,8 +29,6 @@ static constexpr float XR_FRAMEBUFFER_MIN_SCALE = 0.2f;
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(XRWebGLLayer, mParent, mSession, mWebGL,
                                       mFramebuffer, mLeftViewport,
                                       mRightViewport)
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(XRWebGLLayer, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(XRWebGLLayer, Release)
 
 XRWebGLLayer::XRWebGLLayer(
     nsISupports* aParent, XRSession& aSession, bool aIgnoreDepthValues,

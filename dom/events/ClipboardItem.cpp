@@ -19,8 +19,6 @@ namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION(ClipboardItem::ItemEntry, mData,
                          mPendingGetTypeRequests)
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(ClipboardItem::ItemEntry, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(ClipboardItem::ItemEntry, Release)
 
 ClipboardItem::ItemEntry::ItemEntry(const nsAString& aType,
                                     const nsACString& aFormat)
@@ -172,8 +170,6 @@ void ClipboardItem::ItemEntry::ResolvePendingGetTypePromises(Blob& aBlob) {
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ClipboardItem, mOwner, mItems)
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(ClipboardItem, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(ClipboardItem, Release)
 
 ClipboardItem::ClipboardItem(nsISupports* aOwner,
                              const dom::PresentationStyle aPresentationStyle,

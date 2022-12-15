@@ -579,8 +579,6 @@ void RangeUpdater::DidMoveNode(const nsINode& aOldParent, uint32_t aOldOffset,
  ******************************************************************************/
 
 NS_IMPL_CYCLE_COLLECTION(RangeItem, mStartContainer, mEndContainer)
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(RangeItem, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(RangeItem, Release)
 
 void RangeItem::StoreRange(const nsRange& aRange) {
   mStartContainer = aRange.GetStartContainer();

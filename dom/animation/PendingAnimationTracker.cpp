@@ -20,9 +20,6 @@ namespace mozilla {
 NS_IMPL_CYCLE_COLLECTION(PendingAnimationTracker, mPlayPendingSet,
                          mPausePendingSet, mDocument)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(PendingAnimationTracker, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(PendingAnimationTracker, Release)
-
 PendingAnimationTracker::PendingAnimationTracker(dom::Document* aDocument)
     : mDocument(aDocument) {}
 

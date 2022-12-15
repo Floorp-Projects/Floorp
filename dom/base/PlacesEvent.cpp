@@ -21,9 +21,6 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(PlacesEvent)
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(PlacesEvent, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(PlacesEvent, Release)
-
 already_AddRefed<PlacesEvent> PlacesEvent::Constructor(
     const GlobalObject& aGlobal, PlacesEventType aType, ErrorResult& rv) {
   RefPtr<PlacesEvent> event = new PlacesEvent(aType);

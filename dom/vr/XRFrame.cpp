@@ -15,8 +15,6 @@
 namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(XRFrame, mParent, mSession)
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(XRFrame, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(XRFrame, Release)
 
 XRFrame::XRFrame(nsISupports* aParent, XRSession* aXRSession)
     : mParent(aParent),

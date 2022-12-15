@@ -27,9 +27,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AnimationEventDispatcher)
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(AnimationEventDispatcher, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AnimationEventDispatcher, Release)
-
 void AnimationEventDispatcher::Disconnect() {
   if (mIsObserving) {
     MOZ_ASSERT(mPresContext && mPresContext->RefreshDriver(),

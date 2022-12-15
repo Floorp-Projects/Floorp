@@ -259,5 +259,3 @@ void SessionStoreChild::ResetSessionStore(
 
 NS_IMPL_CYCLE_COLLECTION(SessionStoreChild, mSessionStoreListener,
                          mSessionStoreChangeListener)
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(SessionStoreChild, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SessionStoreChild, Release)

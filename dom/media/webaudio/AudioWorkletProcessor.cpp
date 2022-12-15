@@ -17,9 +17,6 @@ namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(AudioWorkletProcessor, mParent, mPort)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(AudioWorkletProcessor, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AudioWorkletProcessor, Release)
-
 AudioWorkletProcessor::AudioWorkletProcessor(nsIGlobalObject* aParent,
                                              MessagePort* aPort)
     : mParent(aParent), mPort(aPort) {}

@@ -16,9 +16,6 @@ namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(SVGMatrix, mTransform)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(SVGMatrix, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SVGMatrix, Release)
-
 DOMSVGTransform* SVGMatrix::GetParentObject() const { return mTransform; }
 
 JSObject* SVGMatrix::WrapObject(JSContext* aCx,

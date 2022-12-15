@@ -22,9 +22,6 @@ using namespace mozilla::dom;
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DOMPointReadOnly, mParent)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMPointReadOnly, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMPointReadOnly, Release)
-
 already_AddRefed<DOMPointReadOnly> DOMPointReadOnly::FromPoint(
     const GlobalObject& aGlobal, const DOMPointInit& aParams) {
   RefPtr<DOMPointReadOnly> obj = new DOMPointReadOnly(

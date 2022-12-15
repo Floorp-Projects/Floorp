@@ -28,9 +28,6 @@ SVGAnimatedNumberListTearoffTable() {
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMSVGAnimatedNumberList,
                                                mElement)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMSVGAnimatedNumberList, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMSVGAnimatedNumberList, Release)
-
 JSObject* DOMSVGAnimatedNumberList::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return mozilla::dom::SVGAnimatedNumberList_Binding::Wrap(aCx, this,

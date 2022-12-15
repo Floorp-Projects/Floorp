@@ -70,9 +70,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(PendingStyles)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLastSelectionPoint)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(PendingStyles, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(PendingStyles, Release)
-
 nsresult PendingStyles::UpdateSelState(const HTMLEditor& aHTMLEditor) {
   if (!aHTMLEditor.SelectionRef().IsCollapsed()) {
     return NS_OK;

@@ -93,9 +93,6 @@ webrtc::Timestamp RTCStatsTimestampMaker::GetNowRealtime() const {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(RTCStatsReport, mParent)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(RTCStatsReport, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(RTCStatsReport, Release)
-
 RTCStatsReport::RTCStatsReport(nsPIDOMWindowInner* aParent)
     : mParent(aParent) {}
 

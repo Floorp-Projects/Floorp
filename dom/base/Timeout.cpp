@@ -41,9 +41,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Timeout)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mScriptHandler)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(Timeout, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(Timeout, Release)
-
 void Timeout::SetWhenOrTimeRemaining(const TimeStamp& aBaseTime,
                                      const TimeDuration& aDelay) {
   MOZ_DIAGNOSTIC_ASSERT(mWindow);
