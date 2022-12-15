@@ -589,6 +589,12 @@ version = "51.8.2"
 notes = "Maintained by the Glean Team at Mozilla."
 
 [[audits.glean]]
+who = "Chris H-C <chutten@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "52.0.0"
+notes = "Maintained by the Glean team at Mozilla"
+
+[[audits.glean]]
 who = "Jan-Erik Rediger <jrediger@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "50.1.2 -> 50.1.3"
@@ -658,6 +664,12 @@ who = "Chris H-C <chutten@mozilla.com>"
 criteria = "safe-to-deploy"
 version = "51.8.2"
 notes = "Maintained by the Glean Team at Mozilla."
+
+[[audits.glean-core]]
+who = "Chris H-C <chutten@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "52.0.0"
+notes = "Maintained by the Glean team at Mozilla"
 
 [[audits.glean-core]]
 who = "Jan-Erik Rediger <jrediger@mozilla.com>"
@@ -1170,6 +1182,11 @@ criteria = "safe-to-deploy"
 version = "0.18.2"
 notes = "Maintained by Jan-Erik and :krosylight."
 
+[[audits.rkv]]
+who = "Chris H-C <chutten@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.18.4"
+
 [[audits.ron]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
@@ -1622,6 +1639,11 @@ who = "Jan-Erik Rediger <jrediger@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "0.20.0 -> 0.21.0"
 notes = "Maintained by the Glean and Application Services team."
+
+[[audits.uuid]]
+who = "Gabriele Svelto <gsvelto@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.8.2 -> 1.2.2"
 
 [[audits.void]]
 who = "Bobby Holley <bobbyholley@gmail.com>"

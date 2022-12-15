@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
+use crate::common_metric_data::CommonMetricDataInternal;
 use crate::error_recording::{record_error, test_get_num_recorded_errors, ErrorType};
 use crate::histogram::{Functional, Histogram};
 use crate::metrics::time_unit::TimeUnit;
@@ -56,7 +57,7 @@ impl From<usize> for TimerId {
 /// Timing distributions are used to accumulate and store time measurement, for analyzing distributions of the timing data.
 #[derive(Clone, Debug)]
 pub struct TimingDistributionMetric {
-    meta: Arc<CommonMetricData>,
+    meta: Arc<CommonMetricDataInternal>,
     time_unit: TimeUnit,
     next_id: Arc<AtomicUsize>,
     start_times: Arc<Mutex<HashMap<TimerId, u64>>>,
@@ -80,7 +81,7 @@ pub(crate) fn snapshot(hist: &Histogram<Functional>) -> DistributionData {
 }
 
 impl MetricType for TimingDistributionMetric {
-    fn meta(&self) -> &CommonMetricData {
+    fn meta(&self) -> &CommonMetricDataInternal {
         &self.meta
     }
 }
@@ -93,7 +94,7 @@ impl TimingDistributionMetric {
     /// Creates a new timing distribution metric.
     pub fn new(meta: CommonMetricData, time_unit: TimeUnit) -> Self {
         Self {
-            meta: Arc::new(meta),
+            meta: Arc::new(meta.into()),
             time_unit,
             next_id: Arc::new(AtomicUsize::new(0)),
             start_times: Arc::new(Mutex::new(Default::default())),
@@ -426,13 +427,13 @@ impl TimingDistributionMetric {
     ) -> Option<DistributionData> {
         let queried_ping_name = ping_name
             .into()
-            .unwrap_or_else(|| &self.meta().send_in_pings[0]);
+            .unwrap_or_else(|| &self.meta().inner.send_in_pings[0]);
 
         match StorageManager.snapshot_metric_for_test(
             glean.storage(),
             queried_ping_name,
             &self.meta.identifier(glean),
-            self.meta.lifetime,
+            self.meta.inner.lifetime,
         ) {
             Some(Metric::TimingDistribution(hist)) => Some(snapshot(&hist)),
             _ => None,

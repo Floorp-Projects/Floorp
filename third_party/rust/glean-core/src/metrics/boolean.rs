@@ -4,6 +4,7 @@
 
 use std::sync::Arc;
 
+use crate::common_metric_data::CommonMetricDataInternal;
 use crate::error_recording::{test_get_num_recorded_errors, ErrorType};
 use crate::metrics::Metric;
 use crate::metrics::MetricType;
@@ -16,17 +17,17 @@ use crate::Glean;
 /// Records a simple flag.
 #[derive(Clone, Debug)]
 pub struct BooleanMetric {
-    meta: Arc<CommonMetricData>,
+    meta: Arc<CommonMetricDataInternal>,
 }
 
 impl MetricType for BooleanMetric {
-    fn meta(&self) -> &CommonMetricData {
+    fn meta(&self) -> &CommonMetricDataInternal {
         &self.meta
     }
 
     fn with_name(&self, name: String) -> Self {
         let mut meta = (*self.meta).clone();
-        meta.name = name;
+        meta.inner.name = name;
         Self {
             meta: Arc::new(meta),
         }
@@ -34,7 +35,7 @@ impl MetricType for BooleanMetric {
 
     fn with_dynamic_label(&self, label: String) -> Self {
         let mut meta = (*self.meta).clone();
-        meta.dynamic_label = Some(label);
+        meta.inner.dynamic_label = Some(label);
         Self {
             meta: Arc::new(meta),
         }
@@ -49,7 +50,7 @@ impl BooleanMetric {
     /// Creates a new boolean metric.
     pub fn new(meta: CommonMetricData) -> Self {
         Self {
-            meta: Arc::new(meta),
+            meta: Arc::new(meta.into()),
         }
     }
 
@@ -87,13 +88,13 @@ impl BooleanMetric {
     /// This doesn't clear the stored value.
     #[doc(hidden)]
     pub fn get_value(&self, glean: &Glean, ping_name: Option<&str>) -> Option<bool> {
-        let queried_ping_name = ping_name.unwrap_or_else(|| &self.meta().send_in_pings[0]);
+        let queried_ping_name = ping_name.unwrap_or_else(|| &self.meta().inner.send_in_pings[0]);
 
         match StorageManager.snapshot_metric_for_test(
             glean.storage(),
             queried_ping_name,
             &self.meta.identifier(glean),
-            self.meta.lifetime,
+            self.meta.inner.lifetime,
         ) {
             Some(Metric::Boolean(b)) => Some(b),
             _ => None,
@@ -118,7 +119,7 @@ impl BooleanMetric {
     ///
     /// * `error` - The type of error
     /// * `ping_name` - represents the optional name of the ping to retrieve the
-    ///   metric for. Defaults to the first value in `send_in_pings`.
+    ///   metric for. inner to the first value in `send_in_pings`.
     ///
     /// # Returns
     ///

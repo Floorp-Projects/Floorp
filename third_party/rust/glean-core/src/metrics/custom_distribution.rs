@@ -4,6 +4,7 @@
 
 use std::sync::Arc;
 
+use crate::common_metric_data::CommonMetricDataInternal;
 use crate::error_recording::{record_error, test_get_num_recorded_errors, ErrorType};
 use crate::histogram::{Bucketing, Histogram, HistogramType};
 use crate::metrics::{DistributionData, Metric, MetricType};
@@ -16,7 +17,7 @@ use crate::Glean;
 /// Memory distributions are used to accumulate and store memory sizes.
 #[derive(Clone, Debug)]
 pub struct CustomDistributionMetric {
-    meta: Arc<CommonMetricData>,
+    meta: Arc<CommonMetricDataInternal>,
     range_min: u64,
     range_max: u64,
     bucket_count: u64,
@@ -39,7 +40,7 @@ pub(crate) fn snapshot<B: Bucketing>(hist: &Histogram<B>) -> DistributionData {
 }
 
 impl MetricType for CustomDistributionMetric {
-    fn meta(&self) -> &CommonMetricData {
+    fn meta(&self) -> &CommonMetricDataInternal {
         &self.meta
     }
 }
@@ -58,7 +59,7 @@ impl CustomDistributionMetric {
         histogram_type: HistogramType,
     ) -> Self {
         Self {
-            meta: Arc::new(meta),
+            meta: Arc::new(meta.into()),
             range_min: range_min as u64,
             range_max: range_max as u64,
             bucket_count: bucket_count as u64,
@@ -173,13 +174,13 @@ impl CustomDistributionMetric {
     ) -> Option<DistributionData> {
         let queried_ping_name = ping_name
             .into()
-            .unwrap_or_else(|| &self.meta().send_in_pings[0]);
+            .unwrap_or_else(|| &self.meta().inner.send_in_pings[0]);
 
         match StorageManager.snapshot_metric_for_test(
             glean.storage(),
             queried_ping_name,
             &self.meta.identifier(glean),
-            self.meta.lifetime,
+            self.meta.inner.lifetime,
         ) {
             // Boxing the value, in order to return either of the possible buckets
             Some(Metric::CustomDistributionExponential(hist)) => Some(snapshot(&hist)),
@@ -206,7 +207,7 @@ impl CustomDistributionMetric {
     ///
     /// * `error` - The type of error
     /// * `ping_name` - represents the optional name of the ping to retrieve the
-    ///   metric for. Defaults to the first value in `send_in_pings`.
+    ///   metric for. inner to the first value in `send_in_pings`.
     ///
     /// # Returns
     ///

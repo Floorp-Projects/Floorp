@@ -5,6 +5,7 @@
 //! The different metric types supported by the Glean SDK to handle data.
 
 use std::collections::HashMap;
+use std::sync::atomic::Ordering;
 
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
@@ -20,6 +21,7 @@ mod experiment;
 pub(crate) mod labeled;
 mod memory_distribution;
 mod memory_unit;
+mod metrics_disabled_config;
 mod numerator;
 mod ping;
 mod quantity;
@@ -34,11 +36,11 @@ mod timing_distribution;
 mod url;
 mod uuid;
 
+use crate::common_metric_data::CommonMetricDataInternal;
 pub use crate::event_database::RecordedEvent;
 use crate::histogram::{Functional, Histogram, PrecomputedExponential, PrecomputedLinear};
 pub use crate::metrics::datetime::Datetime;
 use crate::util::get_iso_time_string;
-use crate::CommonMetricData;
 use crate::Glean;
 
 pub use self::boolean::BooleanMetric;
@@ -66,6 +68,8 @@ pub use self::url::UrlMetric;
 pub use self::uuid::UuidMetric;
 pub use crate::histogram::HistogramType;
 pub use recorded_experiment::RecordedExperiment;
+
+pub use self::metrics_disabled_config::MetricsDisabledConfig;
 
 /// A snapshot of all buckets and the accumulated sum of a distribution.
 //
@@ -142,7 +146,7 @@ pub enum Metric {
 /// A [`MetricType`] describes common behavior across all metrics.
 pub trait MetricType {
     /// Access the stored metadata
-    fn meta(&self) -> &CommonMetricData;
+    fn meta(&self) -> &CommonMetricDataInternal;
 
     /// Create a new metric from this with a new name.
     fn with_name(&self, _name: String) -> Self
@@ -165,7 +169,57 @@ pub trait MetricType {
     /// This depends on the metrics own state, as determined by its metadata,
     /// and whether upload is enabled on the Glean object.
     fn should_record(&self, glean: &Glean) -> bool {
-        glean.is_upload_enabled() && self.meta().should_record()
+        if !glean.is_upload_enabled() {
+            return false;
+        }
+
+        // Technically nothing prevents multiple calls to should_record() to run in parallel,
+        // meaning both are reading self.meta().disabled and later writing it. In between it can
+        // also read remote_settings_metrics_config, which also could be modified in between those 2 reads.
+        // This means we could write the wrong remote_settings_epoch | current_disabled value. All in all
+        // at worst we would see that metric enabled/disabled wrongly once.
+        // But since everything is tunneled through the dispatcher, this should never ever happen.
+
+        // Get the current disabled field from the metric metadata, including
+        // the encoded remote_settings epoch
+        let disabled_field = self.meta().disabled.load(Ordering::Relaxed);
+        // Grab the epoch from the upper nibble
+        let epoch = disabled_field >> 4;
+        // Get the disabled flag from the lower nibble
+        let disabled = disabled_field & 0xF;
+        // Get the current remote_settings epoch to see if we need to bother with the
+        // more expensive HashMap lookup
+        let remote_settings_epoch = glean.remote_settings_epoch.load(Ordering::Acquire);
+        if epoch == remote_settings_epoch {
+            return disabled == 0;
+        }
+        // The epoch's didn't match so we need to look up the disabled flag
+        // by the base_identifier from the in-memory HashMap
+        let metrics_disabled = &glean
+            .remote_settings_metrics_config
+            .lock()
+            .unwrap()
+            .metrics_disabled;
+        // Get the value from the remote configuration if it is there, otherwise return the default value.
+        let current_disabled = {
+            let base_id = self.meta().base_identifier();
+            let identifier = base_id
+                .split_once('/')
+                .map(|split| split.0)
+                .unwrap_or(&base_id);
+            if let Some(is_disabled) = metrics_disabled.get(identifier) {
+                u8::from(*is_disabled)
+            } else {
+                u8::from(self.meta().inner.disabled)
+            }
+        };
+
+        // Re-encode the epoch and enabled status and update the metadata
+        let new_disabled = (remote_settings_epoch << 4) | (current_disabled & 0xF);
+        self.meta().disabled.store(new_disabled, Ordering::Relaxed);
+
+        // Return a boolean indicating whether or not the metric should be recorded
+        current_disabled == 0
     }
 }
 

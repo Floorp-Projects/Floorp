@@ -40,7 +40,7 @@ serde_yaml = "0.8"
 tempfile = "3"
 unicode-segmentation = "1.9"
 url = "2.0"
-uuid = { version = "0.8", features = ["v4"] }
+uuid = { version = "1.0", features = ["v4"] }
 webdriver = { path = "../webdriver", version="0.47.0" }
 zip = { version = "0.6", default-features = false, features = ["deflate"] }
 
