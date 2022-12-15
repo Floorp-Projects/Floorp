@@ -14,7 +14,6 @@ import tempfile
 import zipfile
 
 import mozfile
-
 from logger.logger import RaptorLogger
 from mozgeckoprofiler import ProfileSymbolicator
 
@@ -113,6 +112,14 @@ class GeckoProfile(object):
             # the profile capturing pipeline if symbolication fails.
             return profile
 
+    def _is_extra_profiler_run(self):
+        topdir = self.raptor_config.get("browsertime_result_dir")
+        profiling_dir = os.path.join(topdir, "profiling")
+        is_extra_profiler_run = self.raptor_config.get(
+            "extra_profiler_run", False
+        ) and os.path.isdir(profiling_dir)
+        return is_extra_profiler_run, profiling_dir
+
     def collect_profiles(self):
         """Returns all profiles files."""
 
@@ -138,10 +145,7 @@ class GeckoProfile(object):
             # Get the browsertime.json file along with the cold/warm splits
             # if they exist from a chimera test
             results = {"main": None, "cold": None, "warm": None}
-            profiling_dir = os.path.join(topdir, "profiling")
-            is_extra_profiler_run = self.raptor_config.get(
-                "extra_profiler_run", False
-            ) and os.path.isdir(profiling_dir)
+            is_extra_profiler_run, profiling_dir = self._is_extra_profiler_run()
             result_dir = profiling_dir if is_extra_profiler_run else topdir
 
             for filename in os.listdir(result_dir):
@@ -169,10 +173,18 @@ class GeckoProfile(object):
             profile_locations = []
             if self.raptor_config.get("chimera", False):
                 if results["warm"] is None or results["cold"] is None:
-                    raise Exception(
-                        "The test ran in chimera mode but we found no cold "
-                        "and warm browsertime JSONs. Cannot symbolicate profiles."
-                    )
+                    if is_extra_profiler_run:
+                        LOG.info(
+                            "The test ran in chimera mode but we found no cold "
+                            "and warm browsertime JSONs. Cannot symbolicate profiles. "
+                            "Failing silently because this is an extra profiler run."
+                        )
+                        return []
+                    else:
+                        raise Exception(
+                            "The test ran in chimera mode but we found no cold "
+                            "and warm browsertime JSONs. Cannot symbolicate profiles."
+                        )
                 profile_locations.extend(
                     [("cold", results["cold"]), ("warm", results["warm"])]
                 )
@@ -220,7 +232,11 @@ class GeckoProfile(object):
         """
         profiles = self.collect_profiles()
         if len(profiles) == 0:
-            LOG.error("No profiles collected")
+            is_extra_profiler_run, _ = self._is_extra_profiler_run()
+            if is_extra_profiler_run:
+                LOG.info("No profiles collected in the extra profiler run")
+            else:
+                LOG.error("No profiles collected")
             return
 
         symbolicator = ProfileSymbolicator(
