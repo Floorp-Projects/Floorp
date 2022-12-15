@@ -236,14 +236,19 @@ void HeadlessWidget::Move(double aX, double aY) {
     SetSizeMode(nsSizeMode_Normal);
   }
 
+  MoveInternal(x, y);
+}
+
+void HeadlessWidget::MoveInternal(int32_t aX, int32_t aY) {
   // Since a popup window's x/y coordinates are in relation to
   // the parent, the parent might have moved so we always move a
   // popup window.
-  if (mBounds.IsEqualXY(x, y) && mWindowType != eWindowType_popup) {
+  if (mBounds.IsEqualXY(aX, aY) && mWindowType != eWindowType_popup) {
     return;
   }
 
-  mBounds.MoveTo(x, y);
+  mBounds.MoveTo(aX, aY);
+  NotifyWindowMoved(aX, aY);
 }
 
 LayoutDeviceIntPoint HeadlessWidget::WidgetToScreenOffset() {
@@ -269,8 +274,13 @@ void HeadlessWidget::SetCompositorWidgetDelegate(
 void HeadlessWidget::Resize(double aWidth, double aHeight, bool aRepaint) {
   int32_t width = NSToIntRound(aWidth);
   int32_t height = NSToIntRound(aHeight);
-  ConstrainSize(&width, &height);
-  mBounds.SizeTo(LayoutDeviceIntSize(width, height));
+  ResizeInternal(width, height, aRepaint);
+}
+
+void HeadlessWidget::ResizeInternal(int32_t aWidth, int32_t aHeight,
+                                    bool aRepaint) {
+  ConstrainSize(&aWidth, &aHeight);
+  mBounds.SizeTo(LayoutDeviceIntSize(aWidth, aHeight));
 
   if (mCompositorWidget) {
     mCompositorWidget->NotifyClientSizeChanged(
@@ -287,10 +297,8 @@ void HeadlessWidget::Resize(double aWidth, double aHeight, bool aRepaint) {
 
 void HeadlessWidget::Resize(double aX, double aY, double aWidth, double aHeight,
                             bool aRepaint) {
-  if (!mBounds.IsEqualXY(aX, aY)) {
-    NotifyWindowMoved(aX, aY);
-  }
-  return Resize(aWidth, aHeight, aRepaint);
+  MoveInternal(NSToIntRound(aX), NSToIntRound(aY));
+  Resize(aWidth, aHeight, aRepaint);
 }
 
 void HeadlessWidget::SetSizeMode(nsSizeMode aMode) {
@@ -326,8 +334,8 @@ void HeadlessWidget::ApplySizeModeSideEffects() {
 
   switch (mSizeMode) {
     case nsSizeMode_Normal: {
-      Resize(mRestoreBounds.X(), mRestoreBounds.Y(), mRestoreBounds.Width(),
-             mRestoreBounds.Height(), false);
+      MoveInternal(mRestoreBounds.X(), mRestoreBounds.Y());
+      ResizeInternal(mRestoreBounds.Width(), mRestoreBounds.Height(), false);
       break;
     }
     case nsSizeMode_Minimized:
@@ -338,7 +346,8 @@ void HeadlessWidget::ApplySizeModeSideEffects() {
         int32_t left, top, width, height;
         if (NS_SUCCEEDED(
                 screen->GetRectDisplayPix(&left, &top, &width, &height))) {
-          Resize(0, 0, width, height, true);
+          MoveInternal(0, 0);
+          ResizeInternal(width, height, true);
         }
       }
       break;

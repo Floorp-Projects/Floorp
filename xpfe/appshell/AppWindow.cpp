@@ -1370,12 +1370,15 @@ void AppWindow::SetSpecifiedSize(int32_t aSpecWidth, int32_t aSpecHeight) {
 
   mIntrinsicallySized = false;
 
-  // Convert specified values to device pixels, and resize if needed
+  // Convert specified values to device pixels, and resize
   auto newSize = RoundedToInt(CSSIntSize(aSpecWidth, aSpecHeight) *
                               UnscaledDevicePixelsPerCSSPixel());
-  if (newSize != GetSize()) {
-    SetSize(newSize.width, newSize.height, false);
-  }
+
+  // Note: Because of the asynchronous resizing on Linux we have to call
+  // SetSize even when the size doesn't appear to change. A previous call that
+  // has yet to complete can still change the size. We want the latest call to
+  // define the final size.
+  SetSize(newSize.width, newSize.height, false);
 }
 
 /* Miscellaneous persistent attributes are attributes named in the
@@ -2744,19 +2747,22 @@ void AppWindow::SizeShellToWithLimit(int32_t aDesiredWidth,
   int32_t widthDelta = aDesiredWidth - shellItemWidth;
   int32_t heightDelta = aDesiredHeight - shellItemHeight;
 
-  if (widthDelta || heightDelta) {
-    int32_t winWidth = 0;
-    int32_t winHeight = 0;
+  int32_t winWidth = 0;
+  int32_t winHeight = 0;
 
-    GetSize(&winWidth, &winHeight);
-    // There's no point in trying to make the window smaller than the
-    // desired content area size --- that's not likely to work. This whole
-    // function assumes that the outer docshell is adding some constant
-    // "border" chrome to the content area.
-    winWidth = std::max(winWidth + widthDelta, aDesiredWidth);
-    winHeight = std::max(winHeight + heightDelta, aDesiredHeight);
-    SetSize(winWidth, winHeight, true);
-  }
+  GetSize(&winWidth, &winHeight);
+  // There's no point in trying to make the window smaller than the
+  // desired content area size --- that's not likely to work. This whole
+  // function assumes that the outer docshell is adding some constant
+  // "border" chrome to the content area.
+  winWidth = std::max(winWidth + widthDelta, aDesiredWidth);
+  winHeight = std::max(winHeight + heightDelta, aDesiredHeight);
+
+  // Note: Because of the asynchronous resizing on Linux we have to call
+  // SetSize even when the size doesn't appear to change. A previous call that
+  // has yet to complete can still change the size. We want the latest call to
+  // define the final size.
+  SetSize(winWidth, winHeight, true);
 }
 
 nsresult AppWindow::GetTabCount(uint32_t* aResult) {
