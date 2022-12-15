@@ -319,8 +319,10 @@ pub mod tests {
 
         // Adding all
         add_devices(devices.iter(), &selector);
-        devices.iter().filter(|d| !d.is_u2f()).for_each(|d| {
-            send_no_token(d, &selector);
+        devices.iter_mut().for_each(|d| {
+            if !d.is_u2f() {
+                send_no_token(&d, &selector);
+            }
         });
 
         send_i_am_token(&devices[2], &selector);
@@ -359,8 +361,10 @@ pub mod tests {
         send_i_am_token(&devices[2], &selector);
         recv_status(&devices[2], &status_rx, ExpectedUpdate::DeviceAvailable);
 
-        devices.iter().filter(|d| !d.is_u2f()).for_each(|d| {
-            send_no_token(d, &selector);
+        devices.iter_mut().for_each(|d| {
+            if !d.is_u2f() {
+                send_no_token(d, &selector);
+            }
         });
 
         send_i_am_token(&devices[4], &selector);
@@ -414,8 +418,10 @@ pub mod tests {
         send_i_am_token(&devices[2], &selector);
         recv_status(&devices[2], &status_rx, ExpectedUpdate::DeviceAvailable);
 
-        devices.iter().filter(|d| !d.is_u2f()).for_each(|d| {
-            send_no_token(d, &selector);
+        devices.iter_mut().for_each(|d| {
+            if !d.is_u2f() {
+                send_no_token(d, &selector);
+            }
         });
 
         send_i_am_token(&devices[4], &selector);
@@ -477,7 +483,7 @@ pub mod tests {
         // Adding all, except the last one (we simulate that this one is not yet plugged in)
         add_devices(devices.iter(), &selector);
 
-        devices.iter().for_each(|d| {
+        devices.iter_mut().for_each(|d| {
             if d.is_u2f() {
                 send_i_am_token(d, &selector);
             } else {

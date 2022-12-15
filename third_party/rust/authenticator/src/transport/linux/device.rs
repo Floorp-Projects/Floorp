@@ -111,7 +111,7 @@ impl HIDDevice for Device {
             .open(&path)
             .map_err(|e| (HIDError::IO(Some(path.clone()), e), path.clone()))?;
         let (in_rpt_size, out_rpt_size) = hidraw::read_hid_rpt_sizes_or_defaults(fd.as_raw_fd());
-        let res = Self {
+        let mut res = Self {
             path,
             fd,
             in_rpt_size,
@@ -138,7 +138,7 @@ impl HIDDevice for Device {
         self.path.clone()
     }
 
-    fn is_u2f(&self) -> bool {
+    fn is_u2f(&mut self) -> bool {
         hidraw::is_u2f_device(self.fd.as_raw_fd())
     }
 

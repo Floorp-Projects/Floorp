@@ -9,8 +9,8 @@ use std::mem;
 use std::os::raw::c_int;
 use std::os::raw::c_uchar;
 
-use crate::hidproto::has_fido_usage;
-use crate::hidproto::ReportDescriptor;
+use crate::transport::hidproto::has_fido_usage;
+use crate::transport::hidproto::ReportDescriptor;
 use crate::transport::platform::fd::Fd;
 use crate::util::io_err;
 
