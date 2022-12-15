@@ -1026,6 +1026,9 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
                                         ScriptLoadRequest* aRequest) {
   mWorkerRef->Private()->AssertIsOnWorkerThread();
 
+  auto serialEventTargetGuard =
+      mWorkerRef->Private()->GetSerialEventTargetGuard();
+
   WorkerLoadContext* loadContext = aRequest->GetWorkerLoadContext();
 
   NS_ASSERTION(!loadContext->mChannel, "Should no longer have a channel!");
