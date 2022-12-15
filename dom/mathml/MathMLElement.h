@@ -84,6 +84,15 @@ class MathMLElement final : public MathMLElementBase,
 
   bool IsEventAttributeNameInternal(nsAtom* aName) final;
 
+  bool Autofocus() const { return GetBoolAttr(nsGkAtoms::autofocus); }
+  void SetAutofocus(bool aAutofocus, ErrorResult& aRv) {
+    if (aAutofocus) {
+      SetAttr(nsGkAtoms::autofocus, u""_ns, aRv);
+    } else {
+      UnsetAttr(nsGkAtoms::autofocus, aRv);
+    }
+  }
+
  protected:
   virtual ~MathMLElement() = default;
 
