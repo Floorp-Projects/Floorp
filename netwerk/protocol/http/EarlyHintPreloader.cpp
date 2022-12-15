@@ -324,12 +324,24 @@ nsresult EarlyHintPreloader::OpenChannel(
 
   mParentListener = new ParentChannelListener(this, nullptr, false);
 
+  PriorizeAsPreload();
+
   rv = mChannel->AsyncOpen(mParentListener);
   NS_ENSURE_SUCCESS(rv, rv);
 
   SetState(ePreloaderOpened);
 
   return NS_OK;
+}
+
+void EarlyHintPreloader::PriorizeAsPreload() {
+  nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL;
+  Unused << mChannel->GetLoadFlags(&loadFlags);
+  Unused << mChannel->SetLoadFlags(loadFlags | nsIRequest::LOAD_BACKGROUND);
+
+  if (nsCOMPtr<nsIClassOfService> cos = do_QueryInterface(mChannel)) {
+    Unused << cos->AddClassFlags(nsIClassOfService::Unblocked);
+  }
 }
 
 void EarlyHintPreloader::SetLinkHeader(const LinkHeader& aLinkHeader) {
