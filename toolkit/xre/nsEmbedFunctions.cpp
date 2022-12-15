@@ -159,17 +159,6 @@ UniquePtr<mozilla::ipc::ProcessChild> (*gMakeIPDLUnitTestProcessChild)(
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
-nsresult XRE_LockProfileDirectory(nsIFile* aDirectory,
-                                  nsISupports** aLockObject) {
-  nsCOMPtr<nsIProfileLock> lock;
-
-  nsresult rv =
-      NS_LockProfilePath(aDirectory, nullptr, nullptr, getter_AddRefs(lock));
-  if (NS_SUCCEEDED(rv)) NS_ADDREF(*aLockObject = lock);
-
-  return rv;
-}
-
 static int32_t sInitCounter;
 
 nsresult XRE_InitEmbedding2(nsIFile* aLibXULDirectory, nsIFile* aAppDirectory,
@@ -207,11 +196,6 @@ nsresult XRE_InitEmbedding2(nsIFile* aLibXULDirectory, nsIFile* aAppDirectory,
   nsAppStartupNotifier::NotifyObservers(APPSTARTUP_CATEGORY);
 
   return NS_OK;
-}
-
-void XRE_NotifyProfile() {
-  NS_ASSERTION(gDirServiceProvider, "XRE_InitEmbedding was not called!");
-  gDirServiceProvider->DoStartup();
 }
 
 void XRE_TermEmbedding() {
@@ -761,80 +745,6 @@ MessageLoop* XRE_GetIOMessageLoop() {
     return BrowserProcessSubThread::GetMessageLoop(BrowserProcessSubThread::IO);
   }
   return IOThreadChild::message_loop();
-}
-
-namespace {
-
-class MainFunctionRunnable : public Runnable {
- public:
-  NS_DECL_NSIRUNNABLE
-
-  MainFunctionRunnable(MainFunction aFunction, void* aData)
-      : mozilla::Runnable("MainFunctionRunnable"),
-        mFunction(aFunction),
-        mData(aData) {
-    NS_ASSERTION(aFunction, "Don't give me a null pointer!");
-  }
-
- private:
-  MainFunction mFunction;
-  void* mData;
-};
-
-} /* anonymous namespace */
-
-NS_IMETHODIMP
-MainFunctionRunnable::Run() {
-  mFunction(mData);
-  return NS_OK;
-}
-
-nsresult XRE_InitParentProcess(int aArgc, char* aArgv[],
-                               MainFunction aMainFunction,
-                               void* aMainFunctionData) {
-  NS_ENSURE_ARG_MIN(aArgc, 1);
-  NS_ENSURE_ARG_POINTER(aArgv);
-  NS_ENSURE_ARG_POINTER(aArgv[0]);
-
-  // Set main thread before we initialize the profiler
-  NS_SetMainThread();
-
-  mozilla::LogModule::Init(aArgc, aArgv);
-
-  AUTO_BASE_PROFILER_LABEL("XRE_InitParentProcess (around Gecko Profiler)",
-                           OTHER);
-  AUTO_PROFILER_INIT;
-  AUTO_PROFILER_LABEL("XRE_InitParentProcess", OTHER);
-
-  ScopedXREEmbed embed;
-
-  gArgc = aArgc;
-  gArgv = aArgv;
-  nsresult rv = XRE_InitCommandLine(gArgc, gArgv);
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-
-  {
-    embed.Start();
-
-    nsCOMPtr<nsIAppShell> appShell(do_GetService(kAppShellCID));
-    NS_ENSURE_TRUE(appShell, NS_ERROR_FAILURE);
-
-    if (aMainFunction) {
-      nsCOMPtr<nsIRunnable> runnable =
-          new MainFunctionRunnable(aMainFunction, aMainFunctionData);
-
-      nsresult rv = NS_DispatchToCurrentThread(runnable);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    // Do event loop
-    if (NS_FAILED(appShell->Run())) {
-      NS_WARNING("Failed to run appshell");
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  return XRE_DeinitCommandLine();
 }
 
 nsresult XRE_RunAppShell() {
