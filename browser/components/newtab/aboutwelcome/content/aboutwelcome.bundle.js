@@ -910,14 +910,15 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       totalNumberOfScreens: total
     } = this.props;
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+      id: "steps",
       className: `steps${content.progress_bar ? " progress-bar" : ""}`,
-      "data-l10n-id": "onboarding-welcome-steps-indicator2",
+      "data-l10n-id": "onboarding-welcome-steps-indicator-label",
       "data-l10n-args": JSON.stringify({
         current: currentStep,
         total: total ?? 0
       }),
-      "data-l10n-attrs": "aria-valuetext",
-      role: "meter",
+      "data-l10n-attrs": "aria-label",
+      role: "progressbar",
       "aria-valuenow": currentStep,
       "aria-valuemin": 1,
       "aria-valuemax": total
@@ -960,7 +961,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
   }
 
   render() {
-    var _this$props$appAndSys;
+    var _this$props$appAndSys, _this$props$messageId;
 
     const {
       autoAdvance,
@@ -1019,7 +1020,8 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       "data-l10n-args": JSON.stringify({
         "addon-name": this.props.addonName,
         ...((_this$props$appAndSys = this.props.appAndSystemLocaleInfo) === null || _this$props$appAndSys === void 0 ? void 0 : _this$props$appAndSys.displayNames)
-      })
+      }),
+      "aria-flowto": (_this$props$messageId = this.props.messageId) !== null && _this$props$messageId !== void 0 && _this$props$messageId.includes("FEATURE_TOUR") ? "steps" : ""
     })), content.cta_paragraph ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_CTAParagraph__WEBPACK_IMPORTED_MODULE_8__.CTAParagraph, {
       content: content.cta_paragraph,
       handleAction: this.props.handleAction

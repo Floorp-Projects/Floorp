@@ -262,14 +262,15 @@ export class ProtonScreen extends React.PureComponent {
     const { content, totalNumberOfScreens: total } = this.props;
     return (
       <div
+        id="steps"
         className={`steps${content.progress_bar ? " progress-bar" : ""}`}
-        data-l10n-id={"onboarding-welcome-steps-indicator2"}
+        data-l10n-id={"onboarding-welcome-steps-indicator-label"}
         data-l10n-args={JSON.stringify({
           current: currentStep,
           total: total ?? 0,
         })}
-        data-l10n-attrs="aria-valuetext"
-        role="meter"
+        data-l10n-attrs="aria-label"
+        role="progressbar"
         aria-valuenow={currentStep}
         aria-valuemin={1}
         aria-valuemax={total}
@@ -417,6 +418,11 @@ export class ProtonScreen extends React.PureComponent {
                       "addon-name": this.props.addonName,
                       ...this.props.appAndSystemLocaleInfo?.displayNames,
                     })}
+                    aria-flowto={
+                      this.props.messageId?.includes("FEATURE_TOUR")
+                        ? "steps"
+                        : ""
+                    }
                   />
                 </Localized>
                 {content.cta_paragraph ? (

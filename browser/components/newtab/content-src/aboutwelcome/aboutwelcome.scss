@@ -1268,7 +1268,7 @@ html {
       border-radius: 5px;
       // using border will show up in Windows High Contrast Mode to improve accessibility.
       border: 3px solid var(--in-content-button-text-color);
-      opacity: 0.25;
+      opacity: 0.35;
       box-sizing: inherit;
 
       &.current {
