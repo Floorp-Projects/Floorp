@@ -63,6 +63,54 @@ hw-a51-view-fenix:
             --output $MOZ_FETCHES_DIR/../artifacts
             testing/performance/perftest_android_view.js
 
+hw-a51-startup-fenix-cold-main-first-frame:
+    worker-type: t-bitbar-gw-perf-a51
+    description: Run android startup perftest on Fenix on a Samsung A51
+    treeherder:
+        symbol: perftest(startup-fenix-cmff)
+    platform: android-hw-a51-11-0-arm7-shippable/opt
+    attributes:
+        cron: true
+    run:
+        command: >-
+            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
+            cd $GECKO_PATH &&
+            python3 python/mozperftest/mozperftest/runner.py
+            --flavor=mobile-browser
+            --AndroidStartUp
+            testing/performance/perftest_android_startup.js
+            --browsertime-cycles=0
+            --AndroidStartUp-test-name=cold_main_first_frame
+            --perfherder
+            --hooks
+            testing/performance/hooks_android_startup.py
+            --AndroidStartUp-product=fenix
+            --AndroidStartUp-release-channel=nightly
+
+hw-a51-startup-fenix-cold-view-nav-start:
+    worker-type: t-bitbar-gw-perf-a51
+    description: Run android startup perftest on Fenix on a Samsung A51
+    treeherder:
+        symbol: perftest(startup-fenix-cvns)
+    platform: android-hw-a51-11-0-arm7-shippable/opt
+    attributes:
+        cron: true
+    run:
+        command: >-
+            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
+            cd $GECKO_PATH &&
+            python3 python/mozperftest/mozperftest/runner.py
+            --flavor=mobile-browser
+            --AndroidStartUp
+            testing/performance/perftest_android_startup.js
+            --browsertime-cycles=0
+            --AndroidStartUp-test-name=cold_view_nav_start
+            --perfherder
+            --hooks
+            testing/performance/hooks_android_startup.py
+            --AndroidStartUp-product=fenix
+            --AndroidStartUp-release-channel=nightly
+
 hw-a51-aarch64-view-fenix:
     worker-type: t-bitbar-gw-perf-a51
     description: Run VIEW perftest on Fenix on a Samsung A51
