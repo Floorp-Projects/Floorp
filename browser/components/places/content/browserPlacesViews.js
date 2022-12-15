@@ -373,7 +373,7 @@ class PlacesViewBase {
       aPopup._emptyMenuitem.setAttribute("label", label);
       aPopup._emptyMenuitem.setAttribute("disabled", true);
       aPopup._emptyMenuitem.className = "bookmark-item";
-      if (this.options?.extraClasses?.entry) {
+      if (typeof this.options.extraClasses.entry == "string") {
         aPopup._emptyMenuitem.classList.add(this.options.extraClasses.entry);
       }
     }
@@ -437,7 +437,7 @@ class PlacesViewBase {
 
         element.appendChild(popup);
         element.className = "menu-iconic bookmark-item";
-        if (this.options?.extraClasses?.entry) {
+        if (typeof this.options.extraClasses.entry == "string") {
           element.classList.add(this.options.extraClasses.entry);
         }
 
@@ -466,7 +466,7 @@ class PlacesViewBase {
     let element = this._createDOMNodeForPlacesNode(aNewChild);
 
     if (element.localName == "menuitem" || element.localName == "menu") {
-      if (this.options?.extraClasses?.entry) {
+      if (typeof this.options.extraClasses.entry == "string") {
         element.classList.add(this.options.extraClasses.entry);
       }
     }
@@ -759,9 +759,14 @@ class PlacesViewBase {
       aPopup._endOptOpenAllInTabs = document.createXULElement("menuitem");
       aPopup._endOptOpenAllInTabs.className = "openintabs-menuitem";
 
-      if (this.options?.extraClasses?.entry) {
+      if (typeof this.options.extraClasses.entry == "string") {
         aPopup._endOptOpenAllInTabs.classList.add(
           this.options.extraClasses.entry
+        );
+      }
+      if (typeof this.options.extraClasses.footer == "string") {
+        aPopup._endOptOpenAllInTabs.classList.add(
+          this.options.extraClasses.footer
         );
       }
 
@@ -1970,7 +1975,7 @@ class PlacesToolbar extends PlacesViewBase {
 class PlacesMenu extends PlacesViewBase {
   /**
    *
-   * @param {Event} aPopupShowingEvent
+   * @param {object} aPopupShowingEvent
    *   The event associated with opening the menu.
    * @param {string} aPlace
    *   The query associated with the view on the menu.
@@ -1978,10 +1983,11 @@ class PlacesMenu extends PlacesViewBase {
    *   Options associated with the view.
    */
   constructor(aPopupShowingEvent, aPlace, aOptions = {}) {
-    aOptions.rootElt = aPopupShowingEvent.target; // <menupopup>
-    aOptions.viewElt = aOptions.rootElt.parentNode; // <menu>
+    aOptions.rootElt ??= aPopupShowingEvent.target; // <menupopup>
+    aOptions.viewElt ??= aOptions.rootElt.parentNode; // <menu>
     super(aPlace, aOptions);
 
+    this._viewElt._placesView = this;
     this._addEventListeners(
       this._rootElt,
       ["popupshowing", "popuphidden"],
@@ -2000,10 +2006,6 @@ class PlacesMenu extends PlacesViewBase {
     }
 
     this._onPopupShowing(aPopupShowingEvent);
-  }
-
-  _init() {
-    this._viewElt._placesView = this;
   }
 
   _removeChild(aChild) {
@@ -2067,6 +2069,135 @@ class PlacesMenu extends PlacesViewBase {
     if (target._placesNode?.uri) {
       PlacesUIUtils.setupSpeculativeConnection(target._placesNode.uri, window);
     }
+  }
+}
+
+/**
+ *
+ */
+class PlacesPanelMenuView extends PlacesViewBase {
+  constructor(aPlace, aViewId, aRootId, aOptions = {}) {
+    aOptions.rootElt = document.getElementById(aRootId);
+    aOptions.viewElt = document.getElementById(aViewId);
+    super(aPlace, aOptions);
+
+    this._viewElt._placesView = this;
+    this.options = aOptions;
+  }
+
+  _insertNewItem(aChild, aInsertionNode, aBefore = null) {
+    this._domNodes.delete(aChild);
+
+    let type = aChild.type;
+    let button;
+    if (type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR) {
+      button = document.createXULElement("toolbarseparator");
+    } else {
+      button = document.createXULElement("toolbarbutton");
+      button.className = "bookmark-item";
+      if (typeof this.options.extraClasses.entry == "string") {
+        button.classList.add(this.options.extraClasses.entry);
+      }
+      button.setAttribute("label", aChild.title || "");
+      let icon = aChild.icon;
+      if (icon) {
+        button.setAttribute("image", icon);
+      }
+
+      if (PlacesUtils.containerTypes.includes(type)) {
+        button.setAttribute("container", "true");
+
+        if (PlacesUtils.nodeIsQuery(aChild)) {
+          button.setAttribute("query", "true");
+          if (PlacesUtils.nodeIsTagQuery(aChild)) {
+            button.setAttribute("tagContainer", "true");
+          }
+        }
+      } else if (PlacesUtils.nodeIsURI(aChild)) {
+        button.setAttribute(
+          "scheme",
+          PlacesUIUtils.guessUrlSchemeForUI(aChild.uri)
+        );
+      }
+    }
+
+    button._placesNode = aChild;
+    if (!this._domNodes.has(aChild)) {
+      this._domNodes.set(aChild, button);
+    }
+
+    aInsertionNode.insertBefore(button, aBefore);
+    return button;
+  }
+
+  nodeInserted(aParentPlacesNode, aPlacesNode, aIndex) {
+    let parentElt = this._getDOMNodeForPlacesNode(aParentPlacesNode);
+    if (parentElt != this._rootElt) {
+      return;
+    }
+
+    let children = this._rootElt.children;
+    this._insertNewItem(
+      aPlacesNode,
+      this._rootElt,
+      aIndex < children.length ? children[aIndex] : null
+    );
+  }
+
+  nodeRemoved(aParentPlacesNode, aPlacesNode, aIndex) {
+    let parentElt = this._getDOMNodeForPlacesNode(aParentPlacesNode);
+    if (parentElt != this._rootElt) {
+      return;
+    }
+
+    let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
+    this._removeChild(elt);
+  }
+
+  nodeMoved(
+    aPlacesNode,
+    aOldParentPlacesNode,
+    aOldIndex,
+    aNewParentPlacesNode,
+    aNewIndex
+  ) {
+    let parentElt = this._getDOMNodeForPlacesNode(aNewParentPlacesNode);
+    if (parentElt != this._rootElt) {
+      return;
+    }
+
+    let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
+    this._removeChild(elt);
+    this._rootElt.insertBefore(elt, this._rootElt.children[aNewIndex]);
+  }
+
+  nodeTitleChanged(aPlacesNode, aNewTitle) {
+    let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
+
+    // There's no UI representation for the root node.
+    if (elt == this._rootElt) {
+      return;
+    }
+
+    super.nodeTitleChanged(aPlacesNode, aNewTitle);
+  }
+
+  invalidateContainer(aPlacesNode) {
+    let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
+    if (elt != this._rootElt) {
+      return;
+    }
+
+    // Container is the toolbar itself.
+    while (this._rootElt.hasChildNodes()) {
+      this._rootElt.firstChild.remove();
+    }
+
+    let fragment = document.createDocumentFragment();
+    for (let i = 0; i < this._resultNode.childCount; ++i) {
+      this._insertNewItem(this._resultNode.getChild(i), fragment);
+    }
+    this._rootElt.appendChild(fragment);
   }
 }
 
@@ -2227,7 +2358,7 @@ this.PlacesPanelview = class PlacesPanelview extends PlacesViewBase {
       panelview._emptyMenuitem.setAttribute("label", label);
       panelview._emptyMenuitem.setAttribute("disabled", true);
       panelview._emptyMenuitem.className = "subviewbutton";
-      if (this.options?.extraClasses?.entry) {
+      if (typeof this.options.extraClasses.entry == "string") {
         panelview._emptyMenuitem.classList.add(this.options.extraClasses.entry);
       }
     }
