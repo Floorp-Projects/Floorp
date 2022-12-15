@@ -3,27 +3,30 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::transport::device_selector::DeviceSelectorEvent;
+use crate::transport::platform::fd::Fd;
+use runloop::RunLoop;
 use std::collections::HashMap;
+use std::error::Error;
 use std::ffi::OsString;
-use std::io;
-use std::sync::Arc;
+use std::sync::{mpsc::Sender, Arc};
 use std::thread;
 use std::time::Duration;
-use std::sync::{mpsc::Sender, Arc};
-use runloop::RunLoop;
-
-use crate::transport::platform::fd::Fd;
 
 // XXX Should use drvctl, but it doesn't do pubsub properly yet so
 // DRVGETEVENT requires write access to /dev/drvctl.  Instead, for now,
 // just poll every 500ms.
 const POLL_TIMEOUT: u64 = 500;
 
+#[derive(Debug)]
+pub struct WrappedOpenDevice {
+    pub fd: Fd,
+    pub os_path: OsString,
+}
+
 pub struct Monitor<F>
 where
     F: Fn(
-            Fd,
-            OsString,
+            WrappedOpenDevice,
             Sender<DeviceSelectorEvent>,
             Sender<crate::StatusUpdate>,
             &dyn Fn() -> bool,
@@ -38,12 +41,13 @@ where
 impl<F> Monitor<F>
 where
     F: Fn(
-            Fd,
-            OsString,
+            WrappedOpenDevice,
             Sender<DeviceSelectorEvent>,
             Sender<crate::StatusUpdate>,
             &dyn Fn() -> bool,
-        ) + Sync,
+        ) + Send
+        + Sync
+        + 'static,
 {
     pub fn new(
         new_device_cb: F,
@@ -59,40 +63,52 @@ where
     }
 
     pub fn run(&mut self, alive: &dyn Fn() -> bool) -> Result<(), Box<dyn Error>> {
+        // Loop until we're stopped by the controlling thread, or fail.
         while alive() {
             for n in 0..100 {
-                let uhidpath = format!("/dev/uhid{}", n);
+                let uhidpath = OsString::from(format!("/dev/uhid{}", n));
                 match Fd::open(&uhidpath, libc::O_RDWR | libc::O_CLOEXEC) {
                     Ok(uhid) => {
-                        self.add_device(uhid, OsString::from(&uhidpath));
+                        // The device is available if it can be opened.
+                        let _ = self
+                            .selector_sender
+                            .send(DeviceSelectorEvent::DevicesAdded(vec![uhidpath.clone()]));
+                        self.add_device(WrappedOpenDevice {
+                            fd: uhid,
+                            os_path: uhidpath,
+                        });
                     }
                     Err(ref err) => match err.raw_os_error() {
                         Some(libc::EBUSY) => continue,
                         Some(libc::ENOENT) => break,
-                        _ => self.remove_device(OsString::from(&uhidpath)),
+                        _ => self.remove_device(uhidpath),
                     },
                 }
             }
             thread::sleep(Duration::from_millis(POLL_TIMEOUT));
         }
+
+        // Remove all tracked devices.
         self.remove_all_devices();
+
         Ok(())
     }
 
-    fn add_device(&mut self, fd: Fd, path: OsString) {
+    fn add_device(&mut self, fido: WrappedOpenDevice) {
         let f = self.new_device_cb.clone();
         let selector_sender = self.selector_sender.clone();
         let status_sender = self.status_sender.clone();
-        debug!("Adding device {}", path.to_string_lossy());
+        let key = fido.os_path.clone();
+        debug!("Adding device {}", key.to_string_lossy());
 
         let runloop = RunLoop::new(move |alive| {
             if alive() {
-                f(fd.clone(), path.clone(), selector_sender, status_sender, alive);
+                f(fido, selector_sender, status_sender, alive);
             }
         });
 
         if let Ok(runloop) = runloop {
-            self.runloops.insert(path.clone(), runloop);
+            self.runloops.insert(key, runloop);
         }
     }
 

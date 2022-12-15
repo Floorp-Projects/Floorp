@@ -101,7 +101,7 @@ impl HIDDevice for Device {
             .write(true)
             .open(&path)
             .map_err(|e| (HIDError::IO(Some(path.clone().into()), e), path.clone()))?;
-        let res = Self {
+        let mut res = Self {
             path,
             file,
             cid: CID_BROADCAST,
@@ -126,7 +126,7 @@ impl HIDDevice for Device {
         self.path.clone()
     }
 
-    fn is_u2f(&self) -> bool {
+    fn is_u2f(&mut self) -> bool {
         match DeviceCapabilities::new(self.file.as_raw_handle()) {
             Ok(caps) => caps.usage() == FIDO_USAGE_U2FHID && caps.usage_page() == FIDO_USAGE_PAGE,
             _ => false,
