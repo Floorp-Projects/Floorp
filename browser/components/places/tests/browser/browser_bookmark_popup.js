@@ -437,8 +437,7 @@ add_task(async function contextmenu_new_bookmark_keypress_no_autoclose() {
         browser
       );
       await awaitPopupShown;
-      document.getElementById("context-bookmarkpage").click();
-      contextMenu.hidePopup();
+      contextMenu.activateItem(document.getElementById("context-bookmarkpage"));
       await awaitPopupHidden;
     },
     popupEditFn() {

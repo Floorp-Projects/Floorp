@@ -84,6 +84,7 @@ async function testVisibleColumnContextMenuItem(column, document, monitor) {
   );
 
   info(`Clicking context-menu item for ${column}`);
+
   EventUtils.sendMouseEvent(
     { type: "contextmenu" },
     document.querySelector("#requests-list-status-button") ||
@@ -92,10 +93,8 @@ async function testVisibleColumnContextMenuItem(column, document, monitor) {
 
   await waitForTick();
 
-  const menuItem = getContextMenuItem(
-    monitor,
-    `request-list-header-${column}-toggle`
-  );
+  const id = `request-list-header-${column}-toggle`;
+  const menuItem = getContextMenuItem(monitor, id);
 
   is(
     menuItem.getAttribute("type"),
@@ -117,7 +116,8 @@ async function testVisibleColumnContextMenuItem(column, document, monitor) {
     `#requests-list-${column}-button`,
     0
   );
-  menuItem.click();
+
+  await selectContextMenuItem(monitor, id);
 
   await onHeaderRemoved;
   await waitForTick();
@@ -146,10 +146,8 @@ async function testHiddenColumnContextMenuItem(column, document, monitor) {
 }
 
 async function toggleAndCheckColumnVisibility(column, document, monitor) {
-  const menuItem = getContextMenuItem(
-    monitor,
-    `request-list-header-${column}-toggle`
-  );
+  const id = `request-list-header-${column}-toggle`;
+  const menuItem = getContextMenuItem(monitor, id);
 
   is(
     menuItem.getAttribute("type"),
@@ -170,7 +168,8 @@ async function toggleAndCheckColumnVisibility(column, document, monitor) {
     `#requests-list-${column}-button`,
     1
   );
-  menuItem.click();
+
+  await selectContextMenuItem(monitor, id);
 
   await onHeaderAdded;
   await waitForTick();

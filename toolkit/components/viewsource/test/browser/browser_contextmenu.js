@@ -96,22 +96,20 @@ async function checkMenuItems(
       waitForClipboard(
         expectedClipboardContent,
         function() {
-          if (copyLinkExpected) {
-            gCopyLinkMenuItem.click();
-          } else {
-            gCopyEmailMenuItem.click();
-          }
+          contextMenu.activateItem(
+            copyLinkExpected ? gCopyLinkMenuItem : gCopyEmailMenuItem
+          );
         },
         resolve,
         reject
       );
     });
+  } else {
+    let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+      contextMenu,
+      "popuphidden"
+    );
+    contextMenu.hidePopup();
+    await popupHiddenPromise;
   }
-
-  let popupHiddenPromise = BrowserTestUtils.waitForEvent(
-    contextMenu,
-    "popuphidden"
-  );
-  contextMenu.hidePopup();
-  await popupHiddenPromise;
 }

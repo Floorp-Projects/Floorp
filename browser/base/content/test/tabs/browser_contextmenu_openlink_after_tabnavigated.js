@@ -38,7 +38,7 @@ add_task(async function test_contextmenu_openlink_after_tabnavigated() {
 
   info("Click the 'open link in new tab' menu item");
   let openLinkMenuItem = contextMenu.querySelector("#context-openlinkintab");
-  openLinkMenuItem.click();
+  contextMenu.activateItem(openLinkMenuItem);
 
   info("Wait for the new tab to be opened");
   const newTab = await awaitNewTabOpen;
