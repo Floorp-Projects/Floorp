@@ -195,6 +195,12 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:crossbeam_deque*::write\n"
          "race:crossbeam_deque*::read\n"
          "race:crossbeam_deque*::steal\n"
+         // Bug 1805819 - permanent
+         // No Upstream Bug Filed!
+         //
+         // False positive in libc's tzset_internal
+         // See https://crbug.com/379738 also
+         "race:tzset_internal\n"
 
 
 
