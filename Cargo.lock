@@ -2280,9 +2280,9 @@ dependencies = [
 
 [[package]]
 name = "glean"
-version = "51.8.2"
+version = "52.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43db04e51b1b7e796177e3bda4fdbeb3b649d6e429524863b1ecf699fabc7d6c"
+checksum = "f5f600281679e10615de8d2a250cee5ea24ba55d3b714c15833fc1951806ebb2"
 dependencies = [
  "chrono",
  "crossbeam-channel",
@@ -2300,9 +2300,9 @@ dependencies = [
 
 [[package]]
 name = "glean-core"
-version = "51.8.2"
+version = "52.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b223c24117a769c9d13e3d9a349187113c364f8ca2831b42651f35d0edba4a5f"
+checksum = "4357fa01f5b90c6e0fe0e39d434bf3b7394ed56f940bea4f221a2b355894fcfc"
 dependencies = [
  "android_logger",
  "bincode",
@@ -4561,9 +4561,9 @@ dependencies = [
 
 [[package]]
 name = "rkv"
-version = "0.18.2"
+version = "0.18.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c3b196786090b5b57c9bb0f4afca6ac6a5bfb6182c0161ef32f1ecade43ac47"
+checksum = "9f0ea3af1393b22f8fe25615b6fa5d13072b7b622e66acffc8b12b2baa0342b1"
 dependencies = [
  "arrayref",
  "bincode",
@@ -5986,9 +5986,9 @@ dependencies = [
 
 [[package]]
 name = "uuid"
-version = "0.8.2"
+version = "1.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc5cf98d8186244414c848017f0e2676b3fcb46807f6668a97dfe67359a3c4b7"
+checksum = "422ee0de9031b5b948b97a8fc04e3aa35230001a722ddd27943e0be31564ce4c"
 dependencies = [
  "getrandom",
  "serde",

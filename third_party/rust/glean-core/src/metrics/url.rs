@@ -4,6 +4,7 @@
 
 use std::sync::Arc;
 
+use crate::common_metric_data::CommonMetricDataInternal;
 use crate::error_recording::{record_error, test_get_num_recorded_errors, ErrorType};
 use crate::metrics::Metric;
 use crate::metrics::MetricType;
@@ -21,11 +22,11 @@ const MAX_URL_LENGTH: usize = 8192;
 /// The URL is length-limited to `MAX_URL_LENGTH` bytes.
 #[derive(Clone, Debug)]
 pub struct UrlMetric {
-    meta: Arc<CommonMetricData>,
+    meta: Arc<CommonMetricDataInternal>,
 }
 
 impl MetricType for UrlMetric {
-    fn meta(&self) -> &CommonMetricData {
+    fn meta(&self) -> &CommonMetricDataInternal {
         &self.meta
     }
 }
@@ -38,7 +39,7 @@ impl UrlMetric {
     /// Creates a new string metric.
     pub fn new(meta: CommonMetricData) -> Self {
         Self {
-            meta: Arc::new(meta),
+            meta: Arc::new(meta.into()),
         }
     }
 
@@ -112,13 +113,13 @@ impl UrlMetric {
     ) -> Option<String> {
         let queried_ping_name = ping_name
             .into()
-            .unwrap_or_else(|| &self.meta().send_in_pings[0]);
+            .unwrap_or_else(|| &self.meta().inner.send_in_pings[0]);
 
         match StorageManager.snapshot_metric_for_test(
             glean.storage(),
             queried_ping_name,
             &self.meta.identifier(glean),
-            self.meta.lifetime,
+            self.meta.inner.lifetime,
         ) {
             Some(Metric::Url(s)) => Some(s),
             _ => None,

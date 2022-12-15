@@ -14,11 +14,14 @@
 //!
 //! ## [The Glean SDK Book](https://mozilla.github.io/glean)
 
+use std::borrow::Cow;
 use std::collections::HashMap;
+use std::convert::TryFrom;
 use std::fmt;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
+use metrics::MetricsDisabledConfig;
 use once_cell::sync::{Lazy, OnceCell};
 use uuid::Uuid;
 
@@ -115,6 +118,8 @@ pub struct InternalConfiguration {
     pub app_build: String,
     /// Whether Glean should schedule "metrics" pings.
     pub use_core_mps: bool,
+    /// Whether Glean should, on init, trim its event storage to only the registered pings.
+    pub trim_data_to_registered_pings: bool,
 }
 
 /// Launches a new task on the global dispatch queue with a reference to the Glean singleton.
@@ -282,6 +287,7 @@ fn initialize_inner(
         .name("glean.init".into())
         .spawn(move || {
             let upload_enabled = cfg.upload_enabled;
+            let trim_data_to_registered_pings = cfg.trim_data_to_registered_pings;
 
             let glean = match Glean::new(cfg) {
                 Ok(glean) => glean,
@@ -359,7 +365,7 @@ fn initialize_inner(
                 }
 
                 // Deal with any pending events so we can start recording new ones
-                pings_submitted = glean.on_ready_to_submit_pings();
+                pings_submitted = glean.on_ready_to_submit_pings(trim_data_to_registered_pings);
             });
 
             {
@@ -694,6 +700,20 @@ pub fn glean_test_get_experiment_data(experiment_id: String) -> Option<RecordedE
     core::with_glean(|glean| glean.test_get_experiment_data(experiment_id.to_owned()))
 }
 
+/// Sets a remote configuration for the metrics' disabled property
+///
+/// See [`core::Glean::set_metrics_disabled_config`].
+pub fn glean_set_metrics_disabled_config(json: String) {
+    match MetricsDisabledConfig::try_from(json) {
+        Ok(cfg) => launch_with_glean(|glean| {
+            glean.set_metrics_disabled_config(cfg);
+        }),
+        Err(e) => {
+            log::error!("Error setting metrics feature config: {:?}", e);
+        }
+    }
+}
+
 /// Sets a debug view tag.
 ///
 /// When the debug view tag is set, pings are sent with a `X-Debug-ID` header with the
@@ -861,7 +881,7 @@ pub fn glean_set_test_mode(enabled: bool) {
 /// **TEST-ONLY Method**
 ///
 /// Destroy the underlying database.
-pub fn glean_test_destroy_glean(clear_stores: bool) {
+pub fn glean_test_destroy_glean(clear_stores: bool, data_path: Option<String>) {
     if was_initialize_called() {
         // Just because initialize was called doesn't mean it's done.
         join_init();
@@ -879,6 +899,12 @@ pub fn glean_test_destroy_glean(clear_stores: bool) {
 
         // Allow us to go through initialization again.
         INITIALIZE_CALLED.store(false, Ordering::SeqCst);
+    } else if clear_stores {
+        if let Some(data_path) = data_path {
+            let _ = remove_dir_all::remove_dir_all(data_path).ok();
+        } else {
+            log::warn!("Asked to clear stores before initialization, but no data path given.");
+        }
     }
 }
 
@@ -940,6 +966,20 @@ pub fn glean_enable_logging_to_fd(_fd: u64) {
 mod ffi {
     use super::*;
     uniffi_macros::include_scaffolding!("glean");
+
+    type CowString = Cow<'static, str>;
+
+    impl UniffiCustomTypeConverter for CowString {
+        type Builtin = String;
+
+        fn into_custom(val: Self::Builtin) -> uniffi::Result<Self> {
+            Ok(Cow::from(val))
+        }
+
+        fn from_custom(obj: Self) -> Self::Builtin {
+            obj.into_owned()
+        }
+    }
 }
 pub use ffi::*;
 
