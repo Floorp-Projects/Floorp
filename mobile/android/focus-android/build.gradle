@@ -40,7 +40,7 @@ buildscript {
 }
 
 plugins {
-    id "io.gitlab.arturbosch.detekt" version "1.18.0" // Variables in plugins {} aren't supported
+    id "io.gitlab.arturbosch.detekt" version "1.19.0" // Variables in plugins {} aren't supported
 }
 
 detekt {
