@@ -1211,16 +1211,9 @@ nsPoint nsMenuPopupFrame::AdjustPositionForAnchorAlign(nsRect& anchorRect,
     // around if its gets resized or the selection changed. Cache the value in
     // mPositionedOffset and use that instead for any future calculations.
     if (mIsOpenChanged || mReflowCallbackData.mIsOpenChanged) {
-      nsIFrame* selectedItemFrame = GetSelectedItemForAlignment();
-      if (selectedItemFrame) {
-        int32_t scrolly = 0;
-        nsIScrollableFrame* scrollframe = GetScrollFrame(this);
-        if (scrollframe) {
-          scrolly = scrollframe->GetScrollPosition().y;
-        }
-
-        mPositionedOffset = originalAnchorRect.height +
-                            selectedItemFrame->GetRect().y - scrolly;
+      if (nsIFrame* selectedItemFrame = GetSelectedItemForAlignment()) {
+        mPositionedOffset =
+            originalAnchorRect.height + selectedItemFrame->GetOffsetTo(this).y;
       }
     }
 
