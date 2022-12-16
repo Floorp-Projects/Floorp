@@ -93,20 +93,44 @@ Animation::~Animation() = default;
 already_AddRefed<Animation> Animation::ClonePausedAnimation(
     nsIGlobalObject* aGlobal, const Animation& aOther, AnimationEffect& aEffect,
     AnimationTimeline& aTimeline) {
-  RefPtr<Animation> animation = new Animation(aGlobal);
-  // Setup the timing.
-  animation->mTimeline = &aTimeline;
-  const Nullable<TimeDuration> timelineTime =
-      aTimeline.GetCurrentTimeAsDuration();
-  MOZ_ASSERT(!timelineTime.IsNull(), "Timeline not yet set");
-
-  const Nullable<TimeDuration> currentTime = aOther.GetCurrentTimeAsDuration();
-  animation->mHoldTime = currentTime;
-  if (!currentTime.IsNull()) {
-    animation->mPreviousCurrentTime = timelineTime;
+  // FIXME: Bug 1805950: Support printing for scroll-timeline once we resolve
+  // the spec issue.
+  if (aOther.UsingScrollTimeline()) {
+    return nullptr;
   }
 
+  RefPtr<Animation> animation = new Animation(aGlobal);
+
+  // Setup the timeline. We always use document-timeline of the new document,
+  // even if the timeline of |aOther| is null.
+  animation->mTimeline = &aTimeline;
+
+  // Setup the playback rate.
   animation->mPlaybackRate = aOther.mPlaybackRate;
+
+  // Setup the timing.
+  const Nullable<TimeDuration> currentTime = aOther.GetCurrentTimeAsDuration();
+  if (!aOther.GetTimeline()) {
+    // This simulates what we do in SetTimelineNoUpdate(). It's possible to
+    // preserve the progress if the previous timeline is a scroll-timeline.
+    // So for null timeline, it may have a progress and the non-null current
+    // time.
+    if (!currentTime.IsNull()) {
+      animation->SilentlySetCurrentTime(currentTime.Value());
+    }
+    animation->mPreviousCurrentTime = animation->GetCurrentTimeAsDuration();
+  } else {
+    animation->mHoldTime = currentTime;
+    if (!currentTime.IsNull()) {
+      // FIXME: Should we use |timelineTime| as previous current time here? It
+      // seems we should use animation->GetCurrentTimeAsDuration(), per
+      // UpdateFinishedState().
+      const Nullable<TimeDuration> timelineTime =
+          aTimeline.GetCurrentTimeAsDuration();
+      MOZ_ASSERT(!timelineTime.IsNull(), "Timeline not yet set");
+      animation->mPreviousCurrentTime = timelineTime;
+    }
+  }
 
   // Setup the effect's link to this.
   animation->mEffect = &aEffect;

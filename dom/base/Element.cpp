@@ -3800,6 +3800,9 @@ void Element::CloneAnimationsFrom(const Element& aOther) {
         RefPtr<Animation> clonedAnimation = Animation::ClonePausedAnimation(
             OwnerDoc()->GetParentObject(), *animation, *clonedEffect,
             *timeline);
+        if (!clonedAnimation) {
+          continue;
+        }
         clonedEffects->AddEffect(*clonedEffect);
       }
     }
