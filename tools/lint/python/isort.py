@@ -32,8 +32,7 @@ def default_bindir():
     # virtualenv's activate_this.py, whereas sys.executable doesn't.
     if platform.system() == "Windows":
         return os.path.join(sys.prefix, "Scripts")
-    else:
-        return os.path.join(sys.prefix, "bin")
+    return os.path.join(sys.prefix, "bin")
 
 
 def parse_issues(config, output, *, log):
