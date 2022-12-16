@@ -20,6 +20,7 @@
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 #include "nsNetCID.h"
@@ -121,6 +122,27 @@ FileSystemSyncAccessHandle::Create(
     const fs::FileSystemEntryMetadata& aMetadata) {
   RefPtr<FileSystemSyncAccessHandle> result = new FileSystemSyncAccessHandle(
       aGlobal, aManager, std::move(aActor), std::move(aStream), aMetadata);
+
+  auto autoClose = MakeScopeExit([result] {
+    MOZ_ASSERT(!result->mClosed);
+    result->mClosed = true;
+    result->mActor->SendClose();
+  });
+
+  WorkerPrivate* const workerPrivate = GetCurrentThreadWorkerPrivate();
+  MOZ_ASSERT(workerPrivate);
+
+  workerPrivate->AssertIsOnWorkerThread();
+
+  RefPtr<StrongWorkerRef> workerRef =
+      StrongWorkerRef::Create(workerPrivate, "FileSystemSyncAccessHandle",
+                              [result]() { result->Close(); });
+  QM_TRY(MOZ_TO_RESULT(workerRef));
+
+  autoClose.release();
+
+  result->mWorkerRef = std::move(workerRef);
+
   return result;
 }
 
@@ -146,7 +168,13 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(FileSystemSyncAccessHandle)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 void FileSystemSyncAccessHandle::LastRelease() {
-  Close();
+  // We can't call `FileSystemSyncAccessHandle::Close` here because it may need
+  // to keep FileSystemSyncAccessHandle object alive which isn't possible when
+  // the object is about to be deleted. There are other mechanisms which ensure
+  // that the object is correctly closed before destruction. For example the
+  // object unlinking and the worker shutdown (we get notified about it via the
+  // callback passed to `StrongWorkerRef`) are used to close the object if it
+  // hasn't been closed yet.
 
   if (mActor) {
     PFileSystemAccessHandleChild::Send__delete__(mActor);
@@ -175,6 +203,8 @@ void FileSystemSyncAccessHandle::Close() {
   if (mActor) {
     mActor->SendClose();
   }
+
+  mWorkerRef = nullptr;
 }
 
 // WebIDL Boilerplate
@@ -318,14 +348,10 @@ uint64_t FileSystemSyncAccessHandle::ReadOrWrite(
     outputStream = mStream->OutputStream();
   }
 
-  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-  MOZ_ASSERT(workerPrivate);
-
-  AutoSyncLoopHolder syncLoop(workerPrivate, Canceling);
+  AutoSyncLoopHolder syncLoop(mWorkerRef->Private(), Canceling);
 
   nsCOMPtr<nsISerialEventTarget> syncLoopTarget =
       syncLoop.GetSerialEventTarget();
-
   QM_TRY(MOZ_TO_RESULT(syncLoopTarget), [&aRv](nsresult) {
     aRv.ThrowInvalidStateError("Worker is shutting down");
     return 0;
@@ -339,14 +365,11 @@ uint64_t FileSystemSyncAccessHandle::ReadOrWrite(
                    : NS_ASYNCCOPY_VIA_READSEGMENTS,
              /* aCloseSource */ !aRead, /* aCloseSink */ aRead,
              [&totalCount](uint32_t count) { totalCount += count; },
-             [syncLoopTarget](nsresult rv) {
-               InvokeAsync(syncLoopTarget, __func__, [syncLoopTarget]() {
-                 WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-                 MOZ_ASSERT(workerPrivate);
+             [this, &syncLoopTarget](nsresult rv) {
+               InvokeAsync(syncLoopTarget, __func__, [this, &syncLoopTarget]() {
+                 mWorkerRef->Private()->AssertIsOnWorkerThread();
 
-                 workerPrivate->AssertIsOnWorkerThread();
-
-                 workerPrivate->StopSyncLoop(syncLoopTarget, NS_OK);
+                 mWorkerRef->Private()->StopSyncLoop(syncLoopTarget, NS_OK);
 
                  return BoolPromise::CreateAndResolve(true, __func__);
                });
