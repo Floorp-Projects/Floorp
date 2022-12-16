@@ -31,6 +31,7 @@
 #include "nsIScriptContext.h"
 #include "mozilla/dom/Document.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsQueryObject.h"
 #include "nsVariant.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/DataTransferBinding.h"
@@ -1136,16 +1137,22 @@ bool DataTransfer::ConvertFromVariant(nsIVariant* aVariant,
       return false;
     }
 
-    nsCOMPtr<nsIFlavorDataProvider> fdp = do_QueryInterface(data);
-    if (fdp) {
-      // For flavour data providers, use 0 as the length.
+    // For flavour data providers, use 0 as the length.
+    if (nsCOMPtr<nsIFlavorDataProvider> fdp = do_QueryInterface(data)) {
       fdp.forget(aSupports);
       *aLength = 0;
-    } else {
-      data.forget(aSupports);
-      *aLength = sizeof(nsISupports*);
+      return true;
     }
 
+    // Only use the underlying BlobImpl for transferables.
+    if (RefPtr<Blob> blob = do_QueryObject(data)) {
+      RefPtr<BlobImpl> blobImpl = blob->Impl();
+      blobImpl.forget(aSupports);
+    } else {
+      data.forget(aSupports);
+    }
+
+    *aLength = sizeof(nsISupports*);
     return true;
   }
 
