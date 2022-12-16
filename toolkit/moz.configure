@@ -2529,8 +2529,10 @@ wasm_sandboxing_config_defines()
 # ==============================================================
 
 
-def new_xulstore():
-    return False
+@depends(milestone)
+def new_xulstore(milestone):
+    if milestone.is_nightly:
+        return True
 
 
 set_config("MOZ_NEW_XULSTORE", True, when=new_xulstore)
