@@ -26,17 +26,13 @@ function genUUID() {
 }
 
 /**
- * Common setup function for banner click tests.
+ * Common setup function for cookie banner handling tests.
  */
-async function clickTestSetup() {
+async function testSetup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       // Enable debug logging.
       ["cookiebanners.listService.logLevel", "Debug"],
-      ["cookiebanners.bannerClicking.logLevel", "Debug"],
-      ["cookiebanners.bannerClicking.testing", true],
-      ["cookiebanners.bannerClicking.timeout", 500],
-      ["cookiebanners.bannerClicking.enabled", true],
     ],
   });
 
@@ -50,6 +46,38 @@ async function clickTestSetup() {
       // Restore original rules.
       Services.cookieBanners.resetRules(true);
     }
+  });
+}
+
+/**
+ * Setup function for click tests.
+ */
+async function clickTestSetup() {
+  await testSetup();
+
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      // Enable debug logging.
+      ["cookiebanners.bannerClicking.logLevel", "Debug"],
+      ["cookiebanners.bannerClicking.testing", true],
+      ["cookiebanners.bannerClicking.timeout", 500],
+      ["cookiebanners.bannerClicking.enabled", true],
+    ],
+  });
+}
+
+/**
+ * Setup function for cookie injector tests.
+ */
+async function cookieInjectorTestSetup() {
+  await testSetup();
+
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["cookiebanners.cookieInjector.enabled", true],
+      // Required to dispatch cookiebanner events.
+      ["cookiebanners.bannerClicking.enabled", true],
+    ],
   });
 }
 
@@ -264,6 +292,73 @@ function insertTestClickRules() {
 }
 
 /**
+ * Inserts cookie injection test rules for TEST_DOMAIN_A and TEST_DOMAIN_B.
+ */
+function insertTestCookieRules() {
+  info("Clearing existing rules");
+  Services.cookieBanners.resetRules(false);
+
+  info("Inserting test rules.");
+
+  let ruleA = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
+    Ci.nsICookieBannerRule
+  );
+  ruleA.domains = [TEST_DOMAIN_A, TEST_DOMAIN_C];
+
+  Services.cookieBanners.insertRule(ruleA);
+  ruleA.addCookie(
+    true,
+    `cookieConsent_${TEST_DOMAIN_A}_1`,
+    "optOut1",
+    null, // empty host to fall back to .<domain>
+    "/",
+    3600,
+    "",
+    false,
+    false,
+    false,
+    0,
+    0
+  );
+  ruleA.addCookie(
+    true,
+    `cookieConsent_${TEST_DOMAIN_A}_2`,
+    "optOut2",
+    null,
+    "/",
+    3600,
+    "",
+    false,
+    false,
+    false,
+    0,
+    0
+  );
+
+  // An opt-in cookie rule for DOMAIN_B.
+  let ruleB = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
+    Ci.nsICookieBannerRule
+  );
+  ruleB.domains = [TEST_DOMAIN_B];
+
+  Services.cookieBanners.insertRule(ruleB);
+  ruleB.addCookie(
+    false,
+    `cookieConsent_${TEST_DOMAIN_B}_1`,
+    "optIn1",
+    TEST_DOMAIN_B,
+    "/",
+    3600,
+    "UNSET",
+    false,
+    false,
+    true,
+    0,
+    0
+  );
+}
+
+/**
  * Test the Glean.cookieBannersClick.result metric.
  * @param {*} expected - Object mapping labels to counters. Omitted labels are
  * asserted to be in initial state (undefined =^ 0)
@@ -329,4 +424,171 @@ async function testClickResultTelemetry(expected, resetFOG = true) {
       Services.fog.testResetFOG();
     }
   }
+}
+
+/**
+ * Triggers a cookie banner handling feature and tests the events dispatched.
+ * @param {*} options - Test options.
+ * @param {nsICookieBannerService::Modes} options.mode - The cookie banner
+ * service mode to test with.
+ * @param {function} options.initFn - Function to call for test initialization.
+ * @param {function} options.triggerFn - Function to call to trigger the banner
+ * handling feature.
+ * @param {string} options.testURL - URL where the test will trigger the banner
+ * handling feature.
+ * @returns {Promise} Resolves when the test completes, after cookie banner
+ * events.
+ */
+async function runEventTest({ mode, initFn, triggerFn, testURL }) {
+  await SpecialPowers.pushPrefEnv({
+    set: [["cookiebanners.service.mode", mode]],
+  });
+
+  await initFn();
+
+  let expectEventDetected = mode != Ci.nsICookieBannerService.MODE_DISABLED;
+  let expectEventHandled =
+    mode == Ci.nsICookieBannerService.MODE_REJECT ||
+    mode == Ci.nsICookieBannerService.MODE_REJECT_OR_ACCEPT;
+
+  let eventObservedDetected = false;
+  let eventObservedHandled = false;
+
+  // This is a bit hacky, we use side effects caused by the checkFn we pass into
+  // waitForEvent to keep track of whether an event fired.
+  let promiseEventDetected = BrowserTestUtils.waitForEvent(
+    window,
+    "cookiebannerdetected",
+    false,
+    () => {
+      eventObservedDetected = true;
+      return true;
+    }
+  );
+  let promiseEventHandled = BrowserTestUtils.waitForEvent(
+    window,
+    "cookiebannerhandled",
+    false,
+    () => {
+      eventObservedHandled = true;
+      return true;
+    }
+  );
+
+  // If we expect any events check which one comes first.
+  let firstEventPromise;
+  if (expectEventDetected || expectEventHandled) {
+    firstEventPromise = Promise.race([
+      promiseEventHandled,
+      promiseEventDetected,
+    ]);
+  }
+
+  await triggerFn();
+
+  let eventDetected;
+  if (expectEventDetected) {
+    eventDetected = await promiseEventDetected;
+
+    is(
+      eventDetected.type,
+      "cookiebannerdetected",
+      "Should dispatch cookiebannerdetected event."
+    );
+  }
+
+  let eventHandled;
+  if (expectEventHandled) {
+    eventHandled = await promiseEventHandled;
+    is(
+      eventHandled.type,
+      "cookiebannerhandled",
+      "Should dispatch cookiebannerhandled event."
+    );
+  }
+
+  // For MODE_DISABLED this array will be empty, because we don't expect any
+  // events to be dispatched.
+  let eventsToTest = [eventDetected, eventHandled].filter(event => !!event);
+
+  for (let event of eventsToTest) {
+    info(`Testing properties of event ${event.type}`);
+
+    let { windowContext } = event.detail;
+    ok(
+      windowContext,
+      `Event ${event.type} detail should contain a WindowContext`
+    );
+
+    let browser = windowContext.browsingContext.top.embedderElement;
+    ok(
+      browser,
+      "WindowContext should have an associated top embedder element."
+    );
+    is(
+      browser.tagName,
+      "browser",
+      "The top embedder element should be a browser"
+    );
+    let chromeWin = browser.ownerGlobal;
+    is(
+      chromeWin,
+      window,
+      "The chrome window associated with the browser should match the window where the cookie banner was handled."
+    );
+    is(
+      chromeWin.gBrowser.selectedBrowser,
+      browser,
+      "The browser associated with the event should be the selected browser."
+    );
+    is(
+      browser.currentURI.spec,
+      testURL,
+      "The browser's URI spec should match the cookie banner test page."
+    );
+  }
+
+  let firstEvent = await firstEventPromise;
+  is(
+    expectEventDetected || expectEventHandled,
+    !!firstEvent,
+    "Should have observed the first event if banner clicking is enabled."
+  );
+
+  if (expectEventDetected || expectEventHandled) {
+    is(
+      firstEvent.type,
+      "cookiebannerdetected",
+      "Detected event should be dispatched first"
+    );
+  }
+
+  is(
+    eventObservedDetected,
+    expectEventDetected,
+    `Should ${
+      expectEventDetected ? "" : "not "
+    }have observed 'cookiebannerdetected' event for mode ${mode}`
+  );
+  is(
+    eventObservedHandled,
+    expectEventHandled,
+    `Should ${
+      expectEventHandled ? "" : "not "
+    }have observed 'cookiebannerhandled' event for mode ${mode}`
+  );
+
+  // Clean up pending promises by dispatching artificial cookiebanner events.
+  // Otherwise the test fails because of pending event listeners which
+  // BrowserTestUtils.waitForEvent registered.
+  for (let eventType of ["cookiebannerdetected", "cookiebannerhandled"]) {
+    let event = new CustomEvent(eventType, {
+      bubbles: true,
+      cancelable: false,
+    });
+    window.windowUtils.dispatchEventToChromeOnly(window, event);
+  }
+
+  await promiseEventDetected;
+  await promiseEventHandled;
 }
