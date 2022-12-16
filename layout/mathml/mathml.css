@@ -9,12 +9,15 @@
 
 @namespace url(http://www.w3.org/1998/Math/MathML);
 
+* {
+  writing-mode: horizontal-tb !important;
+}
+
 /**************************************************************************/
 /* <math> - outermost math element                                        */
 /**************************************************************************/
 
 math {
-  writing-mode: horizontal-tb !important;
   direction: ltr;
   unicode-bidi: embed;
   display: inline;
