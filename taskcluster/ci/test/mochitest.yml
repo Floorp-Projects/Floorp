@@ -13,6 +13,10 @@ job-defaults:
                 by-variant:
                     msix: target.installer.msix
                     default: null
+            windows10-64-2004-qr/opt:
+                by-variant:
+                    msix: target.installer.msix
+                    default: null
             default: null
     tier:
         by-variant:
@@ -214,6 +218,7 @@ mochitest-browser-chrome:
             msix:
                 by-test-platform:
                     windows10-64-2004-shippable-qr/opt: built-projects
+                    windows10-64-2004-qr/opt: built-projects
                     default: []
             default:
                 by-test-platform:
@@ -599,6 +604,7 @@ mochitest-media:
             msix:
                 by-test-platform:
                     windows10-64-2004-shippable-qr/opt: built-projects
+                    windows10-64-2004-qr/opt: ['autoland']
                     default: []
             default:
                 by-test-platform:
