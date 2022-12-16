@@ -2383,14 +2383,14 @@ dependencies = [
 name = "goblin"
 version = "0.1.99"
 dependencies = [
- "goblin 0.5.4",
+ "goblin 0.6.0",
 ]
 
 [[package]]
 name = "goblin"
-version = "0.5.4"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a7666983ed0dd8d21a6f6576ee00053ca0926fb281a5522577a4dbd0f1b54143"
+checksum = "572564d6cba7d09775202c8e7eebc4d534d5ae36578ab402fb21e182a0ac9505"
 dependencies = [
  "log",
  "plain",
@@ -5900,8 +5900,6 @@ dependencies = [
 [[package]]
 name = "uniffi_bindgen"
 version = "0.21.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d46080a4840abccf7c0cce21931dae53215cbd7dd969b5e63c486235ce91a2a"
 dependencies = [
  "anyhow",
  "askama",
@@ -5909,7 +5907,7 @@ dependencies = [
  "camino",
  "clap",
  "fs-err",
- "goblin 0.5.4",
+ "goblin 0.6.0",
  "heck",
  "once_cell",
  "paste",

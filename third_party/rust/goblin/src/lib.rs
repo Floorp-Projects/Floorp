@@ -201,6 +201,33 @@ pub mod container {
     }
 }
 
+/// Takes a reference to the first 16 bytes of the total bytes slice and convert it to an array for `peek_bytes` to use.
+/// Returns None if bytes's length is less than 16.
+#[allow(unused)]
+fn take_hint_bytes(bytes: &[u8]) -> Option<&[u8; 16]> {
+    bytes
+        .get(0..16)
+        .and_then(|hint_bytes_slice| hint_bytes_slice.try_into().ok())
+}
+
+#[derive(Debug, Default)]
+/// Information obtained from a peek `Hint`
+pub struct HintData {
+    pub is_lsb: bool,
+    pub is_64: Option<bool>,
+}
+
+#[derive(Debug)]
+/// A hint at the underlying binary format for 16 bytes of arbitrary data
+pub enum Hint {
+    Elf(HintData),
+    Mach(HintData),
+    MachFat(usize),
+    PE,
+    Archive,
+    Unknown(u64),
+}
+
 macro_rules! if_everything {
     ($($i:item)*) => ($(
         #[cfg(all(feature = "endian_fd", feature = "elf64", feature = "elf32", feature = "pe64", feature = "pe32", feature = "mach64", feature = "mach32", feature = "archive"))]
@@ -210,28 +237,9 @@ macro_rules! if_everything {
 
 if_everything! {
 
-    #[derive(Debug, Default)]
-    /// Information obtained from a peek `Hint`
-    pub struct HintData {
-        pub is_lsb: bool,
-        pub is_64: Option<bool>,
-    }
-
-    #[derive(Debug)]
-    /// A hint at the underlying binary format for 16 bytes of arbitrary data
-    pub enum Hint {
-        Elf(HintData),
-        Mach(HintData),
-        MachFat(usize),
-        PE,
-        Archive,
-        Unknown(u64),
-    }
-
     /// Peeks at `bytes`, and returns a `Hint`
     pub fn peek_bytes(bytes: &[u8; 16]) -> error::Result<Hint> {
-        use scroll::{Pread, LE, BE};
-        use crate::mach::{fat, header};
+        use scroll::{Pread, LE};
         if &bytes[0..elf::header::SELFMAG] == elf::header::ELFMAG {
             let class = bytes[elf::header::EI_CLASS];
             let is_lsb = bytes[elf::header::EI_DATA] == elf::header::ELFDATA2LSB;
@@ -248,23 +256,7 @@ if_everything! {
         } else if (&bytes[0..2]).pread_with::<u16>(0, LE)? == pe::header::DOS_MAGIC {
             Ok(Hint::PE)
         } else {
-            let (magic, maybe_ctx) = mach::parse_magic_and_ctx(bytes, 0)?;
-            match magic {
-                fat::FAT_MAGIC => {
-                    // should probably verify this is always Big Endian...
-                    let narchitectures = bytes.pread_with::<u32>(4, BE)? as usize;
-                    Ok(Hint::MachFat(narchitectures))
-                },
-                header::MH_CIGAM_64 | header::MH_CIGAM | header::MH_MAGIC_64 | header::MH_MAGIC => {
-                    if let Some(ctx) = maybe_ctx {
-                        Ok(Hint::Mach(HintData { is_lsb: ctx.le.is_little(), is_64: Some(ctx.container.is_big()) }))
-                    } else {
-                        Err(error::Error::Malformed(format!("Correct mach magic {:#x} does not have a matching parsing context!", magic)))
-                    }
-                },
-                // its something else
-                _ => Ok(Hint::Unknown(bytes.pread::<u64>(0)?))
-            }
+            mach::peek_bytes(bytes)
         }
     }
 
@@ -277,16 +269,6 @@ if_everything! {
         fd.read_exact(&mut bytes)?;
         fd.seek(SeekFrom::Start(0))?;
         peek_bytes(&bytes)
-    }
-
-    /// Takes a reference to the first 16 bytes of the total bytes slice and convert it to an array for `peek_bytes` to use.
-    /// Returns None if bytes's length is less than 16.
-    fn take_hint_bytes(bytes: &[u8]) -> Option<&[u8; 16]> {
-        use core::convert::TryInto;
-        bytes.get(0..16)
-            .and_then(|hint_bytes_slice| {
-                hint_bytes_slice.try_into().ok()
-            })
     }
 
     #[derive(Debug)]
