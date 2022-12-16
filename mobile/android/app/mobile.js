@@ -134,6 +134,7 @@ pref("browser.download.manager.addToRecentDocs", true);
 pref("browser.helperApps.deleteTempFileOnExit", false);
 
 /* password manager */
+pref("signon.firefoxRelay.feature", "not available");
 pref("signon.rememberSignons", true);
 pref("signon.expireMasterPassword", false);
 pref("signon.debug", false);

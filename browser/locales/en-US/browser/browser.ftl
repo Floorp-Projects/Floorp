@@ -950,3 +950,13 @@ refresh-blocked-redirect-label = { -brand-short-name } prevented this page from 
 refresh-blocked-allow =
     .label = Allow
     .accesskey = A
+
+## Firefox Relay integration
+
+firefox-relay-offer-why-relay = { -relay-brand-name } masks your true email address to help protect you from data breaches and spam.
+firefox-relay-offer-how-we-integrate = By continuing, you’ll be able generate new { -relay-brand-short-name } email masks directly from your { -brand-shorter-name } password manager.
+
+# Variables:
+#  $sitename (String): name of the site where user enters their Relay mask
+#  $useremail (String): user email that will receive messages
+firefox-relay-offer-what-relay-does = We’ll forward all emails from <strong>{ $sitename }</strong> to <strong>{ $useremail }</strong>.

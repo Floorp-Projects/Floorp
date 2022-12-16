@@ -12,7 +12,11 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["LoginHelper"];
+const EXPORTED_SYMBOLS = [
+  "LoginHelper",
+  "OptInFeature",
+  "ParentAutocompleteOption",
+];
 
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
@@ -25,6 +29,22 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
 });
+
+class ParentAutocompleteOption {
+  icon;
+  title;
+  subtitle;
+  fillMessageName;
+  fillMessageData;
+
+  constructor(icon, title, subtitle, fillMessageName, fillMessageData) {
+    this.icon = icon;
+    this.title = title;
+    this.subtitle = subtitle;
+    this.fillMessageName = fillMessageName;
+    this.fillMessageData = fillMessageData;
+  }
+}
 
 /**
  * A helper class to deal with CSV import rows.
@@ -1764,3 +1784,84 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () => {
 });
 
 LoginHelper.init();
+
+class OptInFeature {
+  implementation;
+  #offered;
+  #enabled;
+  #disabled;
+  #pref;
+
+  static PREF_AVAILABLE_VALUE = "available";
+  static PREF_OFFERED_VALUE = "offered";
+  static PREF_ENABLED_VALUE = "enabled";
+  static PREF_DISABLED_VALUE = "disabled";
+
+  constructor(offered, enabled, disabled, pref) {
+    this.#pref = pref;
+    this.#offered = offered;
+    this.#enabled = enabled;
+    this.#disabled = disabled;
+
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "implementationPref",
+      pref,
+      undefined,
+      (_preference, _prevValue, _newValue) => this.#updateImplementation()
+    );
+
+    this.#updateImplementation();
+  }
+
+  get #currentPrefValue() {
+    // Read pref directly instead of relying on this.implementationPref because
+    // there is an implementationPref value update lag that affects tests.
+    return Services.prefs.getStringPref(this.#pref, undefined);
+  }
+
+  get isAvailable() {
+    return [
+      OptInFeature.PREF_AVAILABLE_VALUE,
+      OptInFeature.PREF_OFFERED_VALUE,
+      OptInFeature.PREF_ENABLED_VALUE,
+      OptInFeature.PREF_DISABLED_VALUE,
+    ].includes(this.#currentPrefValue);
+  }
+
+  get isEnabled() {
+    return this.#currentPrefValue == OptInFeature.PREF_ENABLED_VALUE;
+  }
+
+  markAsOffered() {
+    this.#markAs(OptInFeature.PREF_OFFERED_VALUE);
+  }
+
+  markAsEnabled() {
+    this.#markAs(OptInFeature.PREF_ENABLED_VALUE);
+  }
+
+  markAsDisabled() {
+    this.#markAs(OptInFeature.PREF_DISABLED_VALUE);
+  }
+
+  #markAs(value) {
+    Services.prefs.setStringPref(this.#pref, value);
+  }
+
+  #updateImplementation() {
+    switch (this.implementationPref) {
+      case OptInFeature.PREF_ENABLED_VALUE:
+        this.implementation = new this.#enabled();
+        break;
+      case OptInFeature.PREF_AVAILABLE_VALUE:
+      case OptInFeature.PREF_OFFERED_VALUE:
+        this.implementation = new this.#offered();
+        break;
+      case OptInFeature.PREF_DISABLED_VALUE:
+      default:
+        this.implementation = new this.#disabled();
+        break;
+    }
+  }
+}
