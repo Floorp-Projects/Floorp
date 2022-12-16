@@ -238,14 +238,17 @@ mochitest-browser-chrome:
             windows10-32-qr/debug: 12
             default: 7
     max-run-time:
-        by-test-platform:
-            linux.*64-ccov.*/.*: 9000
-            windows10-64-2004-ccov.*/.*: 10800
-            macosx.*64-ccov.*/.*: 10800
-            linux.*64-tsan-qr/opt: 10800
-            linux.*-qr/opt: 5400
-            .*/debug: 5400
-            default: 3600
+        by-variant:
+            msix: 5400
+            default:
+                by-test-platform:
+                    linux.*64-ccov.*/.*: 9000
+                    windows10-64-2004-ccov.*/.*: 10800
+                    macosx.*64-ccov.*/.*: 10800
+                    linux.*64-tsan-qr/opt: 10800
+                    linux.*-qr/opt: 5400
+                    .*/debug: 5400
+                    default: 3600
     mozharness:
         mochitest-flavor: browser
         chunked: true
