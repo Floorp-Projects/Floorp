@@ -55,6 +55,8 @@ EXPORTS.mozilla.dom.quota += [
     "QuotaManagerImpl.h",
     "QuotaManagerService.h",
     "QuotaObject.h",
+    "RemoteQuotaObjectChild.h",
+    "RemoteQuotaObjectParent.h",
     "RemoveParen.h",
     "ResultExtensions.h",
     "ScopedLogExtraInfo.h",
@@ -88,17 +90,23 @@ UNIFIED_SOURCES += [
     "QMResult.cpp",
     "QuotaCommon.cpp",
     "QuotaManagerService.cpp",
+    "QuotaObject.cpp",
     "QuotaRequests.cpp",
     "QuotaResults.cpp",
+    "RemoteQuotaObject.cpp",
+    "RemoteQuotaObjectChild.cpp",
+    "RemoteQuotaObjectParent.cpp",
     "ScopedLogExtraInfo.cpp",
     "StorageHelpers.cpp",
     "StorageManager.cpp",
 ]
 
 IPDL_SOURCES += [
+    "IPCQuotaObject.ipdlh",
     "PQuota.ipdl",
     "PQuotaRequest.ipdl",
     "PQuotaUsageRequest.ipdl",
+    "PRemoteQuotaObject.ipdl",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")

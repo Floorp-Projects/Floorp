@@ -165,8 +165,8 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
     return IPC_OK();
   }
 
-  aResolver(FileSystemAccessHandleProperties(streamParams, accessHandleParent,
-                                             nullptr));
+  aResolver(FileSystemAccessHandleProperties(std::move(streamParams),
+                                             accessHandleParent, nullptr));
   return IPC_OK();
 }
 

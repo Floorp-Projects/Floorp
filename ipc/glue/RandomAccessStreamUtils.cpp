@@ -9,6 +9,7 @@
 #include "mozilla/NotNull.h"
 #include "mozilla/Result.h"
 #include "mozilla/ResultVariant.h"
+#include "mozilla/dom/quota/FileStreams.h"
 #include "mozilla/ipc/RandomAccessStreamParams.h"
 #include "nsFileStreams.h"
 #include "nsIRandomAccessStream.h"
@@ -44,6 +45,10 @@ DeserializeRandomAccessStream(RandomAccessStreamParams& aStreamParams) {
     case RandomAccessStreamParams::TFileRandomAccessStreamParams:
       nsFileRandomAccessStream::Create(NS_GET_IID(nsIFileRandomAccessStream),
                                        getter_AddRefs(stream));
+      break;
+
+    case RandomAccessStreamParams::TLimitingFileRandomAccessStreamParams:
+      stream = new dom::quota::FileRandomAccessStream();
       break;
 
     default:
