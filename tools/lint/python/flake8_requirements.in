@@ -1,6 +1,4 @@
 flake8==5.0.4
-flake8-isort==4.2.0
-isort==5.10.1
 zipp==0.5
 autopep8==1.7.0
 typing-extensions==3.10.0.2
