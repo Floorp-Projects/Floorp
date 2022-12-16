@@ -2,6 +2,9 @@
 fuzzy-if(cocoaWidget&&!nativeThemePref,0-7,0-2) == chrome://reftest/content/xul/css-grid-with-xul-item-1.xhtml chrome://reftest/content/xul/css-grid-with-xul-item-1-ref.xhtml
 
 == chrome://reftest/content/xul/menuitem-key.xhtml chrome://reftest/content/xul/menuitem-key-ref.xhtml
+# these random-if(Android) are due to differences between Android Native & Xul, see bug 732569
+random-if(Android) fuzzy-if(!nativeThemePref,0-2,0-8) == chrome://reftest/content/xul/menulist-shrinkwrap-1.xhtml chrome://reftest/content/xul/menulist-shrinkwrap-1-ref.xhtml
+random-if(Android) fuzzy-if(!nativeThemePref,0-2,0-8) == chrome://reftest/content/xul/menulist-shrinkwrap-2.xhtml chrome://reftest/content/xul/menulist-shrinkwrap-2-ref.xhtml
 # accesskeys are not normally displayed on Mac, so set a pref to enable them
 pref(ui.key.menuAccessKey,18) == chrome://reftest/content/xul/accesskey.xhtml chrome://reftest/content/xul/accesskey-ref.xhtml
 fuzzy-if(xulRuntime.widgetToolkit=="gtk",0-1,0-11) fuzzy-if(winWidget&&!nativeThemePref,0-1,0-1) == chrome://reftest/content/xul/tree-row-outline-1.xhtml chrome://reftest/content/xul/tree-row-outline-1-ref.xhtml # win8: bug 1254832
