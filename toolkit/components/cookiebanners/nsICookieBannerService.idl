@@ -59,9 +59,9 @@ interface nsICookieBannerService : nsISupports {
   void resetRules([optional] in boolean doImport);
 
   /**
-   * Look up all cookie rules for a given URI. Depending on the MODE_ this will
-   * return none, only reject rules or accept rules if there is no reject rule
-   * available.
+   * Look up all cookie rules for a given top-level URI. Depending on the MODE_
+   * this will return none, only reject rules or accept rules if there is no
+   * reject rule available.
    */
   Array<nsICookieRule> getCookiesForURI(in nsIURI aURI, in bool aIsPrivateBrowsing);
 
