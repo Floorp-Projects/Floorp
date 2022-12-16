@@ -5576,12 +5576,18 @@
 #endif
 
 - name: gfx.canvas.accelerated
-  type: RelaxedAtomicBool
+  type: bool
 #if defined(XP_MACOSX) || defined(XP_LINUX) && !defined(ANDROID)
   value: @IS_NIGHTLY_BUILD@
 #else
   value: false
 #endif
+  mirror: always
+
+# Whether to attempt to enable Accelerated Canvas2D regardless of blocklisting.
+- name: gfx.canvas.accelerated.force-enabled
+  type: bool
+  value: false
   mirror: always
 
 - name: gfx.canvas.accelerated.async-present

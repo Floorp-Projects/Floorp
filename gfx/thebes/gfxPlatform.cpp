@@ -924,6 +924,7 @@ void gfxPlatform::Init() {
   gPlatform->InitWebGPUConfig();
   gPlatform->InitWindowOcclusionConfig();
   gPlatform->InitBackdropFilterConfig();
+  gPlatform->InitAcceleratedCanvas2DConfig();
 
 #if defined(XP_WIN)
   // When using WebRender, we defer initialization of the D3D11 devices until
@@ -3085,6 +3086,53 @@ void gfxPlatform::InitBackdropFilterConfig() {
       BackdropFilterPrefChangeCallback,
       nsDependentCString(
           StaticPrefs::GetPrefName_layout_css_backdrop_filter_force_enabled()));
+}
+
+static void AcceleratedCanvas2DPrefChangeCallback(const char*, void*) {
+  FeatureState& feature = gfxConfig::GetFeature(Feature::ACCELERATED_CANVAS2D);
+
+  // Reset to track toggling prefs and ensure force-enable does not happen
+  // after blocklist.
+  feature.Reset();
+
+  // gfx.canvas.accelerated pref controls whether platform enables the feature,
+  // but it still allows blocklisting to override it later.
+  feature.SetDefaultFromPref(
+      StaticPrefs::GetPrefName_gfx_canvas_accelerated(), true,
+      StaticPrefs::GetPrefDefault_gfx_canvas_accelerated());
+
+  // gfx.canvas.accelerated.force-enabled overrides the blocklist.
+  if (StaticPrefs::gfx_canvas_accelerated_force_enabled()) {
+    feature.UserForceEnable("Force-enabled by pref");
+  }
+
+  // Check if blocklisted despite the default pref.
+  nsCString message;
+  nsCString failureId;
+  if (!gfxPlatform::IsGfxInfoStatusOkay(
+          nsIGfxInfo::FEATURE_ACCELERATED_CANVAS2D, &message, failureId)) {
+    feature.Disable(FeatureStatus::Blocklisted, message.get(), failureId);
+  }
+
+  gfxVars::SetUseAcceleratedCanvas2D(feature.IsEnabled());
+}
+
+void gfxPlatform::InitAcceleratedCanvas2DConfig() {
+  if (!XRE_IsParentProcess()) {
+    return;
+  }
+
+  // Decide during pref changes whether or not to enable acceleration. This
+  // allows easily toggling acceleration on and off to test performance.
+  AcceleratedCanvas2DPrefChangeCallback(nullptr, nullptr);
+
+  Preferences::RegisterCallback(
+      AcceleratedCanvas2DPrefChangeCallback,
+      nsDependentCString(StaticPrefs::GetPrefName_gfx_canvas_accelerated()));
+  Preferences::RegisterCallback(
+      AcceleratedCanvas2DPrefChangeCallback,
+      nsDependentCString(
+          StaticPrefs::GetPrefName_gfx_canvas_accelerated_force_enabled()));
 }
 
 bool gfxPlatform::CanUseHardwareVideoDecoding() {

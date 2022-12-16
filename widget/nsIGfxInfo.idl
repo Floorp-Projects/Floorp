@@ -180,8 +180,10 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_REUSE_DECODER_DEVICE = 41;
   /* Whether to allow backdrop filter, starting in 105. */
   const long FEATURE_BACKDROP_FILTER = 42;
+  /* Whether to use Accelerated Canvas2D, starting in 110. */
+  const long FEATURE_ACCELERATED_CANVAS2D = 43;
   /* the maximum feature value. */
-  const long FEATURE_MAX_VALUE = FEATURE_BACKDROP_FILTER;
+  const long FEATURE_MAX_VALUE = FEATURE_ACCELERATED_CANVAS2D;
 
   /*
    * A set of return values from GetFeatureStatus
