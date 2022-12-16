@@ -21,7 +21,7 @@ void FileSystemManagerChild::CloseAll() {
   for (const auto& item : ManagedPFileSystemAccessHandleChild()) {
     auto* child = static_cast<FileSystemAccessHandleChild*>(item);
 
-    child->MutableAccessHandlePtr()->Close();
+    child->MutableAccessHandlePtr()->CloseInternal();
   }
 
   for (const auto& item : ManagedPFileSystemWritableFileStreamChild()) {

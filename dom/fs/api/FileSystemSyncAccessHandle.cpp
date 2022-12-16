@@ -136,7 +136,7 @@ FileSystemSyncAccessHandle::Create(
 
   RefPtr<StrongWorkerRef> workerRef =
       StrongWorkerRef::Create(workerPrivate, "FileSystemSyncAccessHandle",
-                              [result]() { result->Close(); });
+                              [result]() { result->CloseInternal(); });
   QM_TRY(MOZ_TO_RESULT(workerRef));
 
   autoClose.release();
@@ -160,7 +160,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FileSystemSyncAccessHandle)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
   // Don't unlink mManager!
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-  tmp->Close();
+  tmp->CloseInternal();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(FileSystemSyncAccessHandle)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
@@ -188,7 +188,7 @@ void FileSystemSyncAccessHandle::ClearActor() {
   mActor = nullptr;
 }
 
-void FileSystemSyncAccessHandle::Close() {
+void FileSystemSyncAccessHandle::CloseInternal() {
   if (mClosed) {
     return;
   }
@@ -283,6 +283,8 @@ void FileSystemSyncAccessHandle::Flush(ErrorResult& aError) {
 
   mStream->OutputStream()->Flush();
 }
+
+void FileSystemSyncAccessHandle::Close() { CloseInternal(); }
 
 uint64_t FileSystemSyncAccessHandle::ReadOrWrite(
     const MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer,
