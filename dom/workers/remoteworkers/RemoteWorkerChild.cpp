@@ -59,6 +59,7 @@ namespace dom {
 
 using workerinternals::ChannelFromScriptURLMainThread;
 
+// TODO: Remove this ad hoc class when bug 1805830 is fixed.
 class SelfHolder {
  public:
   MOZ_IMPLICIT SelfHolder(RemoteWorkerChild* aSelf) : mSelf(aSelf) {

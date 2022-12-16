@@ -10,6 +10,10 @@ EXPORTS.mozilla.dom += [
     "FileSystemTypes.h",
 ]
 
+EXPORTS.mozilla.dom.fs += [
+    "TargetPtrHolder.h",
+]
+
 UNIFIED_SOURCES += [
     "FileSystemHelpers.cpp",
     "FileSystemLog.cpp",
