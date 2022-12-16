@@ -16,7 +16,11 @@ class FileSystemManagerChild : public PFileSystemManagerChild {
  public:
   NS_INLINE_DECL_REFCOUNTING_WITH_DESTROY(FileSystemManagerChild, Destroy())
 
-  virtual void CloseAll();
+#ifdef DEBUG
+  virtual bool AllSyncAccessHandlesClosed() const;
+#endif
+
+  virtual void CloseAllWritableFileStreams();
 
   virtual void Shutdown();
 

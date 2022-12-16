@@ -43,7 +43,13 @@ void FileSystemManager::Shutdown() {
   mShutdown.Flip();
 
   if (mBackgroundRequestHandler->FileSystemManagerChildStrongRef()) {
-    mBackgroundRequestHandler->FileSystemManagerChildStrongRef()->CloseAll();
+    // FileSystemAccessHandles prevent shutdown until they are full closed, so
+    // at this point, we should see no open FileSystemAccessHandles.
+    MOZ_ASSERT(mBackgroundRequestHandler->FileSystemManagerChildStrongRef()
+                   ->AllSyncAccessHandlesClosed());
+
+    mBackgroundRequestHandler->FileSystemManagerChildStrongRef()
+        ->CloseAllWritableFileStreams();
   }
 
   mBackgroundRequestHandler->Shutdown();
