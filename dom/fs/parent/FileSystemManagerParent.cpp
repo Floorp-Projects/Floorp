@@ -17,6 +17,7 @@
 #include "mozilla/dom/FileSystemWritableFileStreamParent.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/QMResult.h"
+#include "mozilla/dom/quota/FileStreams.h"
 #include "mozilla/dom/quota/ForwardDecls.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
@@ -145,8 +146,20 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
     }
   }
 
+  // XXX This can be enabled once the integration with quota manager is
+  // finished.
+#if 0
+  QM_TRY_UNWRAP(
+      nsCOMPtr<nsIRandomAccessStream> stream,
+      CreateFileRandomAccessStream(quota::PERSISTENCE_TYPE_DEFAULT,
+                                  mDataManager->OriginMetadataRef(),
+                                  quota::Client::FILESYSTEM, file, -1, -1,
+                                  nsIFileRandomAccessStream::DEFER_OPEN),
+      IPC_OK(), reportError);
+#else
   QM_TRY_UNWRAP(nsCOMPtr<nsIRandomAccessStream> stream,
                 NS_NewLocalFileRandomAccessStream(file), IPC_OK(), reportError);
+#endif
 
   EnsureStreamCallbacks();
 
