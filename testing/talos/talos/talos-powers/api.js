@@ -27,13 +27,10 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsISubstitutingProtocolHandler"
 );
 
-// To support the 'new TextEncoder()' call inside of 'profilerFinish()' here,
-// we have to import TextEncoder.  It's not automagically defined for us,
-// because we are in a child process, because we are an extension. See second
-// category in https://bugzilla.mozilla.org/show_bug.cgi?id=1501127#c2
+// These are not automagically defined for us because we are an extension.
 //
 // eslint-disable-next-line mozilla/reject-importGlobalProperties
-Cu.importGlobalProperties(["TextEncoder"]);
+Cu.importGlobalProperties(["IOUtils", "PathUtils"]);
 
 const Cm = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 
@@ -139,18 +136,21 @@ TalosPowersService.prototype = {
    * the profiles have been dumped. This method returns a Promise that
    * will resolve once this has occurred.
    *
+   * @param profileDir (string)
+   *        The name of the directory to write the profile in.
    * @param profileFile (string)
    *        The name of the file to write to.
    *
    * @returns Promise
    */
-  profilerFinish(profileFile) {
+  profilerFinish(profileDir, profileFile) {
+    const profilePath = PathUtils.join(profileDir, profileFile);
     return new Promise((resolve, reject) => {
       Services.profiler.Pause();
       Services.profiler.getProfileDataAsync().then(
         profile =>
-          IOUtils.writeJSON(profileFile, profile, {
-            tmpPath: `${profileFile}.tmp`,
+          IOUtils.writeJSON(profilePath, profile, {
+            tmpPath: `${profilePath}.tmp`,
           }).then(() => {
             Services.profiler.StopProfiler();
             resolve();
@@ -244,7 +244,7 @@ TalosPowersService.prototype = {
 
       case "Profiler:Finish": {
         // The test is done. Dump the profile.
-        this.profilerFinish(data.profileFile).then(() => {
+        this.profilerFinish(data.profileDir, data.profileFile).then(() => {
           mm.sendAsyncMessage(ACK_NAME, { name });
         });
         break;
