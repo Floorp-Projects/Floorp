@@ -6,12 +6,9 @@
 
 // Test that the Shutdown Terminator records durations correctly
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"
 );
-
-var { Path, File, Constants } = OS;
 
 var PATH;
 var PATH_TMP;
@@ -36,7 +33,7 @@ let DATA = [];
 
 add_task(async function init() {
   do_get_profile();
-  PATH = Path.join(Constants.Path.localProfileDir, "ShutdownDuration.json");
+  PATH = PathUtils.join(PathUtils.localProfileDir, "ShutdownDuration.json");
   PATH_TMP = PATH + ".tmp";
 
   // Initialize the terminator
@@ -52,7 +49,7 @@ var promiseShutdownDurationData = async function() {
   // Wait until PATH exists.
   // Timeout if it is never created.
   while (true) {
-    if (await OS.File.exists(PATH)) {
+    if (await IOUtils.exists(PATH)) {
       break;
     }
 
@@ -61,9 +58,7 @@ var promiseShutdownDurationData = async function() {
     await new Promise(resolve => setTimeout(resolve, 50));
   }
 
-  let raw = await OS.File.read(PATH, { encoding: "utf-8" });
-  info("Read file: " + raw);
-  return JSON.parse(raw);
+  return IOUtils.readJSON(PATH);
 };
 
 var currentPhase = 0;
@@ -99,8 +94,8 @@ add_task(async function test_record() {
   while (morePhases) {
     morePhases = await advancePhase();
 
-    await File.remove(PATH);
-    await File.remove(PATH_TMP);
+    await IOUtils.remove(PATH);
+    await IOUtils.remove(PATH_TMP);
   }
 
   Assert.equal(DATA.length, KEYS.length, "We have data for each phase");

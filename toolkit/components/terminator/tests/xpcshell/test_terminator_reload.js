@@ -5,10 +5,6 @@
 
 // Test that the Shutdown Terminator reloads durations correctly
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
-var { Path, Constants } = OS;
-
 var PATH;
 
 var HISTOGRAMS = {
@@ -27,7 +23,7 @@ var HISTOGRAMS = {
 
 add_task(async function init() {
   do_get_profile();
-  PATH = Path.join(Constants.Path.localProfileDir, "ShutdownDuration.json");
+  PATH = PathUtils.join(PathUtils.localProfileDir, "ShutdownDuration.json");
 });
 
 add_task(async function test_reload() {
@@ -48,7 +44,7 @@ add_task(async function test_reload() {
     );
   }
 
-  await OS.File.writeAtomic(PATH, JSON.stringify(data));
+  await IOUtils.writeJSON(PATH, data);
 
   const TOPIC = "shutdown-terminator-telemetry-updated";
 
