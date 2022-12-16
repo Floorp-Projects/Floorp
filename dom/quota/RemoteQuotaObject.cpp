@@ -41,6 +41,8 @@ void RemoteQuotaObject::Close() {
   MOZ_ASSERT(!mActor);
 }
 
+const nsAString& RemoteQuotaObject::Path() const { return EmptyString(); }
+
 bool RemoteQuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!mozilla::ipc::IsOnBackgroundThread());

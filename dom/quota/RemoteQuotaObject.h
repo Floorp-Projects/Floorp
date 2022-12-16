@@ -24,7 +24,7 @@ class RemoteQuotaObject final : public QuotaObject {
 
   void Close();
 
-  const nsAString& Path() const override { return EmptyString(); }
+  const nsAString& Path() const override;
 
   // This method should never be called on the main thread or the PBackground
   // thread or a DOM worker thread (It does sync IPC).

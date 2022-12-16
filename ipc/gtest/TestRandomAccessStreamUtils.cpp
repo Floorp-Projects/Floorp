@@ -105,7 +105,7 @@ TEST(RandomAccessStreamUtils, NullRandomAccessStream_MaybeSerialize)
   nsCOMPtr<nsIRandomAccessStream> stream;
 
   Maybe<RandomAccessStreamParams> streamParams =
-      SerializeRandomAccessStream(stream);
+      SerializeRandomAccessStream(stream, nullptr);
 
   ASSERT_TRUE(streamParams.isNothing());
 
@@ -139,7 +139,7 @@ TEST(RandomAccessStreamUtils, FileRandomAccessStream_Serialize)
   ASSERT_EQ(numWritten, dataSize);
 
   RandomAccessStreamParams streamParams = SerializeRandomAccessStream(
-      WrapMovingNotNullUnchecked(std::move(stream)));
+      WrapMovingNotNullUnchecked(std::move(stream)), nullptr);
 
   ASSERT_EQ(streamParams.type(),
             RandomAccessStreamParams::TFileRandomAccessStreamParams);
@@ -187,7 +187,7 @@ TEST(RandomAccessStreamUtils, FileRandomAccessStream_MaybeSerialize)
   ASSERT_EQ(numWritten, dataSize);
 
   Maybe<RandomAccessStreamParams> streamParams =
-      SerializeRandomAccessStream(stream);
+      SerializeRandomAccessStream(stream, nullptr);
 
   ASSERT_TRUE(streamParams);
   ASSERT_EQ(streamParams->type(),

@@ -7,8 +7,9 @@
 #ifndef DOM_QUOTA_QUOTAOBJECT_H_
 #define DOM_QUOTA_QUOTAOBJECT_H_
 
-#include "chrome/common/ipc_message_utils.h"
 #include "nsISupportsImpl.h"
+
+class nsIInterfaceRequestor;
 
 namespace mozilla::dom::quota {
 
@@ -39,7 +40,7 @@ class QuotaObject {
   // and only with objects which haven't been previously deserialized.
   // The serial event target where this method is called should be highly
   // available, as it will be used to process requests from the remote variant.
-  IPCQuotaObject Serialize();
+  IPCQuotaObject Serialize(nsIInterfaceRequestor* aCallbacks);
 
   // Deserialize a QuotaObject. This method works in both the child and parent.
   // The deserialized QuotaObject can only be used on the calling serial event
@@ -65,13 +66,5 @@ class QuotaObject {
 };
 
 }  // namespace mozilla::dom::quota
-
-template <>
-struct IPC::ParamTraits<mozilla::dom::quota::QuotaObject*> {
-  static void Write(IPC::MessageWriter* aWriter,
-                    mozilla::dom::quota::QuotaObject* aParam);
-  static bool Read(IPC::MessageReader* aReader,
-                   RefPtr<mozilla::dom::quota::QuotaObject>* aResult);
-};
 
 #endif  // DOM_QUOTA_QUOTAOBJECT_H_

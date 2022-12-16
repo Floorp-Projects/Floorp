@@ -901,7 +901,8 @@ nsIInputStream* nsFileRandomAccessStream::InputStream() { return this; }
 
 nsIOutputStream* nsFileRandomAccessStream::OutputStream() { return this; }
 
-RandomAccessStreamParams nsFileRandomAccessStream::Serialize() {
+RandomAccessStreamParams nsFileRandomAccessStream::Serialize(
+    nsIInterfaceRequestor* aCallbacks) {
   FileRandomAccessStreamParams params;
 
   if (NS_SUCCEEDED(DoPendingOpen())) {
