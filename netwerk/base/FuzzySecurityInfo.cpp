@@ -6,6 +6,7 @@
 
 #include "FuzzySecurityInfo.h"
 
+#include "nsIWebProgressListener.h"
 #include "nsString.h"
 
 namespace mozilla {
@@ -19,7 +20,7 @@ NS_IMPL_ISUPPORTS(FuzzySecurityInfo, nsITransportSecurityInfo)
 
 NS_IMETHODIMP
 FuzzySecurityInfo::GetSecurityState(uint32_t* state) {
-  MOZ_CRASH("Unused");
+  *state = nsIWebProgressListener::STATE_IS_SECURE;
   return NS_OK;
 }
 
