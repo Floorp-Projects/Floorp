@@ -73,6 +73,10 @@ class FileSystemDataManager
 
   void AssertIsOnIOTarget() const;
 
+  const quota::OriginMetadata& OriginMetadataRef() const {
+    return mOriginMetadata;
+  }
+
   nsISerialEventTarget* MutableBackgroundTargetPtr() const {
     return mBackgroundTarget.get();
   }
