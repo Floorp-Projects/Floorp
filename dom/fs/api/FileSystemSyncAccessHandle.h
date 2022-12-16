@@ -32,7 +32,7 @@ class StrongWorkerRef;
 class FileSystemSyncAccessHandle final : public nsISupports,
                                          public nsWrapperCache {
  public:
-  enum struct State : uint8_t { Initial = 0, Open, Closed };
+  enum struct State : uint8_t { Initial = 0, Open, Closing, Closed };
 
   static Result<RefPtr<FileSystemSyncAccessHandle>, nsresult> Create(
       nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
@@ -49,9 +49,13 @@ class FileSystemSyncAccessHandle final : public nsISupports,
 
   bool IsOpen() const;
 
+  bool IsClosing() const;
+
   bool IsClosed() const;
 
   [[nodiscard]] RefPtr<BoolPromise> BeginClose();
+
+  [[nodiscard]] RefPtr<BoolPromise> OnClose();
 
   // WebIDL Boilerplate
   nsIGlobalObject* GetParentObject() const;
@@ -102,6 +106,8 @@ class FileSystemSyncAccessHandle final : public nsISupports,
   nsCOMPtr<nsIRandomAccessStream> mStream;
 
   RefPtr<StrongWorkerRef> mWorkerRef;
+
+  MozPromiseHolder<BoolPromise> mClosePromiseHolder;
 
   const fs::FileSystemEntryMetadata mMetadata;
 
