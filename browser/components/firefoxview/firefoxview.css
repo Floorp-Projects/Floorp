@@ -372,8 +372,7 @@ button.close {
 
 @media (prefers-contrast) {
   .page-section-header {
-    color: ButtonText;
-    background-color: ButtonFace;
+    color: WindowText;
   }
   .page-section-header:focus-visible {
     box-shadow: none;
