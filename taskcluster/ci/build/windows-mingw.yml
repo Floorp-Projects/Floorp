@@ -5,7 +5,6 @@
 job-defaults:
     worker-type: b-linux-gcp
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
     run:
         using: mozharness

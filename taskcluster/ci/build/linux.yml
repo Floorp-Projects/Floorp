@@ -98,7 +98,6 @@ linux64-plain/opt:
         symbol: Bp
         tier: 1
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 5400
         env:
             PERFHERDER_EXTRA_OPTIONS: plain
@@ -139,7 +138,6 @@ linux64-hybrid/plain:
         symbol: Bp-hybrid
         tier: 1
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 5400
         env:
             PERFHERDER_EXTRA_OPTIONS: hybrid
@@ -222,7 +220,6 @@ linux64-plain-clang-trunk/opt:
         symbol: Bp-clang-trunk
         tier: 2
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 5400
         env:
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
@@ -402,7 +399,6 @@ linux64-plain/debug:
         symbol: Bp
         tier: 1
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 5400
         env:
             PERFHERDER_EXTRA_OPTIONS: plain
