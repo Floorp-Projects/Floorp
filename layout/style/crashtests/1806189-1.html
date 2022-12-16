@@ -1,0 +1,15 @@
+<ins id="a">
+<li contenteditable="true">
+<shadow id="b">
+<script>
+window.onload = function() {
+  var c = window.getSelection();
+  a.addEventListener("DOMNodeRemoved", function() {
+    document.execCommand("insertHorizontalRule", false);
+    document.execCommand("justifyCenter", false);
+  });
+  c.setPosition(b);
+  document.execCommand("insertText", false, "1");
+}
+</script>
+<option>
