@@ -117,9 +117,16 @@ FileSystemWritableFileStream::FileSystemWritableFileStream(
   auto rawFD = aFileDescriptor.ClonePlatformHandle();
   mFileDesc = PR_ImportFile(PROsfd(rawFD.release()));
 
-  mozilla::HoldJSObjects(this);
-
   LOG(("Created WritableFileStream %p for fd %p", this, mFileDesc));
+
+  // Connect with the actor directly in the constructor. This way the actor
+  // can call `FileSystemWritableFileStream::ClearActor` when we call
+  // `PFileSystemWritableFileStreamChild::Send__delete__` even when
+  // FileSystemWritableFileStream::Create fails, in which case the not yet
+  // fully constructed FileSystemWritableFileStream is being destroyed.
+  mActor->SetStream(this);
+
+  mozilla::HoldJSObjects(this);
 }
 
 FileSystemWritableFileStream::~FileSystemWritableFileStream() {
