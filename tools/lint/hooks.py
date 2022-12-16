@@ -42,7 +42,8 @@ def run_mozlint(hooktype, args):
         # don't prevent commits, just display the lint results
         run_process(cmd + ["--workdir=staged"])
         return False
-    elif "push" in hooktype:
+
+    if "push" in hooktype:
         return run_process(cmd + ["--outgoing"] + args)
 
     print("warning: '{}' is not a valid mozlint hooktype".format(hooktype))
