@@ -2705,7 +2705,7 @@ void gfxPlatform::InitWebRenderConfig() {
                                  "FEATURE_FAILURE_WR_NO_GFX_INFO"_ns);
         useVideoOverlay = false;
       } else {
-        if (status != nsIGfxInfo::FEATURE_ALLOW_ALWAYS) {
+        if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
           FeatureState& feature = gfxConfig::GetFeature(Feature::VIDEO_OVERLAY);
           feature.DisableByDefault(FeatureStatus::Blocked,
                                    "Blocklisted by gfxInfo", failureId);
