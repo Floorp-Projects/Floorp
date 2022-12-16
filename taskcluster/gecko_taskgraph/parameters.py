@@ -6,10 +6,7 @@ import logging
 import os
 
 from taskgraph.parameters import extend_parameters_schema
-from voluptuous import (
-    Any,
-    Required,
-)
+from voluptuous import Any, Required
 
 from gecko_taskgraph import GECKO
 

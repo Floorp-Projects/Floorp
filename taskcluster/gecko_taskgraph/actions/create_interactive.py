@@ -8,11 +8,10 @@ import os
 import re
 
 import taskcluster_urls
-from taskgraph.util.taskcluster import get_task_definition, get_root_url, send_email
+from taskgraph.util.taskcluster import get_root_url, get_task_definition, send_email
 
 from gecko_taskgraph.actions.registry import register_callback_action
 from gecko_taskgraph.actions.util import create_tasks, fetch_graph_and_labels
-
 
 logger = logging.getLogger(__name__)
 

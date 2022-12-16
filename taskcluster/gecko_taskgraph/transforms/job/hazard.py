@@ -7,16 +7,13 @@ Support for running hazard jobs via dedicated scripts
 
 
 from taskgraph.util.schema import Schema
-from voluptuous import Required, Optional, Any
+from voluptuous import Any, Optional, Required
 
-from gecko_taskgraph.transforms.job import (
-    run_job_using,
-    configure_taskdesc_for_run,
-)
+from gecko_taskgraph.transforms.job import configure_taskdesc_for_run, run_job_using
 from gecko_taskgraph.transforms.job.common import (
-    setup_secrets,
-    docker_worker_add_artifacts,
     add_tooltool,
+    docker_worker_add_artifacts,
+    setup_secrets,
 )
 
 haz_run_schema = Schema(

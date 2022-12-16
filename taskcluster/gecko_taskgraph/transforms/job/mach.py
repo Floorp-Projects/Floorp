@@ -6,9 +6,9 @@ Support for running mach tasks (via run-task)
 """
 
 from taskgraph.util.schema import Schema, taskref_or_string
-from voluptuous import Required, Optional, Any
+from voluptuous import Any, Optional, Required
 
-from gecko_taskgraph.transforms.job import run_job_using, configure_taskdesc_for_run
+from gecko_taskgraph.transforms.job import configure_taskdesc_for_run, run_job_using
 
 mach_schema = Schema(
     {

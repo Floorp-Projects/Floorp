@@ -6,8 +6,8 @@
 
 from __future__ import absolute_import, print_function
 
-import sys
 import json
+import sys
 
 l10n_changesets_json_path = sys.argv[1]
 with open(l10n_changesets_json_path) as f:

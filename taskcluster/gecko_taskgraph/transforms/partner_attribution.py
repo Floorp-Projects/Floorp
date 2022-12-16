@@ -6,17 +6,17 @@ Transform the partner attribution task into an actual task description.
 """
 
 
-from collections import defaultdict
 import json
 import logging
+from collections import defaultdict
 
 from taskgraph.transforms.base import TransformSequence
 
 from gecko_taskgraph.util.partners import (
     apply_partner_priority,
     check_if_partners_enabled,
-    get_partner_config_by_kind,
     generate_attribution_code,
+    get_partner_config_by_kind,
 )
 
 log = logging.getLogger(__name__)

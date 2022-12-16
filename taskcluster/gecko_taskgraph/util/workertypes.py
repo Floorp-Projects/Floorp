@@ -2,10 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from gecko_taskgraph.util.attributes import release_level as _release_level
 from mozbuild.util import memoize
 from taskgraph.util.attributes import keymatch
 from taskgraph.util.keyed_by import evaluate_keyed_by
+
+from gecko_taskgraph.util.attributes import release_level as _release_level
 
 WORKER_TYPES = {
     "gce/gecko-1-b-linux": ("docker-worker", "linux"),

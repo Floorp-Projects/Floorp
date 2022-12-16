@@ -8,7 +8,6 @@ Uses attributes from `primary-dependency`.
 
 from taskgraph.transforms.base import TransformSequence
 
-
 transforms = TransformSequence()
 
 

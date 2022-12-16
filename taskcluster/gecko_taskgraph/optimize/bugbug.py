@@ -3,18 +3,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-from fnmatch import fnmatch
 from collections import defaultdict
+from fnmatch import fnmatch
 from urllib.parse import urlsplit
 
-from taskgraph.optimize.base import register_strategy, registry, OptimizationStrategy
+from taskgraph.optimize.base import OptimizationStrategy, register_strategy, registry
 
 from gecko_taskgraph.util.bugbug import (
+    CT_HIGH,
+    CT_LOW,
+    CT_MEDIUM,
     BugbugTimeoutException,
     push_schedules,
-    CT_HIGH,
-    CT_MEDIUM,
-    CT_LOW,
 )
 from gecko_taskgraph.util.hg import get_push_data
 

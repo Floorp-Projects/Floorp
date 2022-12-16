@@ -11,14 +11,7 @@ task.
 See ``taskcluster/docs/optimization.rst`` for more information.
 """
 
-from taskgraph.optimize.base import (
-    Alias,
-    All,
-    Any,
-    Not,
-    register_strategy,
-    registry,
-)
+from taskgraph.optimize.base import Alias, All, Any, Not, register_strategy, registry
 from taskgraph.util.python_path import import_sibling_modules
 
 # Use the gecko_taskgraph version of 'skip-unless-changed' for now.

@@ -5,8 +5,8 @@
 Transform the beetmover task into an actual task description.
 """
 
-from mozrelease.balrog import generate_update_properties
 from mozilla_version.gecko import GeckoVersion
+from mozrelease.balrog import generate_update_properties
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.yaml import load_yaml
 

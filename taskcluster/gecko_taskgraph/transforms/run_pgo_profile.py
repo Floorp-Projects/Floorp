@@ -5,9 +5,9 @@
 Apply some defaults and minor modifications to the pgo jobs.
 """
 
-from taskgraph.transforms.base import TransformSequence
-
 import logging
+
+from taskgraph.transforms.base import TransformSequence
 
 logger = logging.getLogger(__name__)
 

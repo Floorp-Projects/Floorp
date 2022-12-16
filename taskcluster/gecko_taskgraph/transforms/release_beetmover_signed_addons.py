@@ -11,7 +11,7 @@ import logging
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by
 from taskgraph.util.treeherder import inherit_treeherder_from_dep
-from voluptuous import Required, Optional
+from voluptuous import Optional, Required
 
 from gecko_taskgraph.loader.single_dep import schema
 from gecko_taskgraph.transforms.beetmover import craft_release_properties

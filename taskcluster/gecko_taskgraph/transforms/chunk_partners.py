@@ -12,8 +12,8 @@ from mozbuild.chunkify import chunkify
 from taskgraph.transforms.base import TransformSequence
 
 from gecko_taskgraph.util.partners import (
-    get_repack_ids_by_platform,
     apply_partner_priority,
+    get_repack_ids_by_platform,
 )
 
 transforms = TransformSequence()

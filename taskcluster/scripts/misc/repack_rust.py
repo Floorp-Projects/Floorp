@@ -18,13 +18,12 @@ import hashlib
 import os
 import shutil
 import subprocess
-from contextlib import contextmanager
 import tarfile
 import textwrap
+from contextlib import contextmanager
 
-import requests
 import pytoml as toml
-
+import requests
 import zstandard
 
 

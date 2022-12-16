@@ -4,8 +4,8 @@
 
 
 import logging
-import requests
 
+import requests
 from taskgraph.util.taskcluster import cancel_task
 
 from .registry import register_callback_action

@@ -4,9 +4,10 @@
 
 import unittest
 from unittest import mock
-from mozunit import main
-from gecko_taskgraph.util import partials
 
+from mozunit import main
+
+from gecko_taskgraph.util import partials
 
 release_blob = {
     "fileUrls": {

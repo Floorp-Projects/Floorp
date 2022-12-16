@@ -4,10 +4,7 @@
 
 
 from .registry import register_callback_action
-from .util import (
-    create_tasks,
-    fetch_graph_and_labels,
-)
+from .util import create_tasks, fetch_graph_and_labels
 
 
 @register_callback_action(

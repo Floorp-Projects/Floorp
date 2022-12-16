@@ -8,7 +8,6 @@ taskcluster/ci/upload-generated-sources/kind.yml, into an actual task descriptio
 
 from taskgraph.transforms.base import TransformSequence
 
-
 transforms = TransformSequence()
 
 

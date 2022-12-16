@@ -3,13 +3,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import pprint
+import unittest
 
 import jsone
 import slugid
-import unittest
 from mozunit import main
-from taskgraph.util.yaml import load_yaml
 from taskgraph.util.time import current_json_time
+from taskgraph.util.yaml import load_yaml
 
 from gecko_taskgraph import GECKO
 

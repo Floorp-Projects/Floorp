@@ -4,7 +4,6 @@
 
 from taskgraph.transforms.base import TransformSequence
 
-
 # default worker types keyed by instance-size
 LINUX_WORKER_TYPES = {
     "large": "t-linux-large",

@@ -5,7 +5,6 @@
 
 import logging
 
-
 from ..target_tasks import standard_filter
 from .registry import register_callback_action
 from .util import create_tasks, fetch_graph_and_labels

@@ -8,6 +8,11 @@ import os
 import re
 from datetime import datetime, timedelta
 
+from redo import retry
+from taskgraph.parameters import Parameters
+from taskgraph.target_tasks import _target_task, get_method
+from taskgraph.util.taskcluster import find_task_id
+
 from gecko_taskgraph import GECKO, try_option_syntax
 from gecko_taskgraph.util.attributes import (
     match_run_on_hg_branches,
@@ -15,10 +20,6 @@ from gecko_taskgraph.util.attributes import (
 )
 from gecko_taskgraph.util.hg import find_hg_revision_push_info, get_hg_commit_message
 from gecko_taskgraph.util.platforms import platform_family
-from redo import retry
-from taskgraph.parameters import Parameters
-from taskgraph.target_tasks import _target_task, get_method
-from taskgraph.util.taskcluster import find_task_id
 
 # Some tasks show up in the target task set, but are possibly special cases,
 # uncommon tasks, or tasks running against limited hardware set that they

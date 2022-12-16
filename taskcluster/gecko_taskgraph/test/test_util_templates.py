@@ -4,8 +4,10 @@
 
 
 import unittest
+
 import mozunit
-from gecko_taskgraph.util.templates import merge_to, merge
+
+from gecko_taskgraph.util.templates import merge, merge_to
 
 
 class MergeTest(unittest.TestCase):

@@ -17,8 +17,8 @@ The script will only run `hg status devtools/` and check that no change is detec
 mercurial.
 """
 
-import sys
 import subprocess
+import sys
 
 overall_failure = False
 

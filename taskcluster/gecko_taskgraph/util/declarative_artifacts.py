@@ -6,10 +6,9 @@
 import re
 
 from gecko_taskgraph.util.scriptworker import (
-    generate_beetmover_upstream_artifacts,
     generate_beetmover_artifact_map,
+    generate_beetmover_upstream_artifacts,
 )
-
 
 _ARTIFACT_ID_PER_PLATFORM = {
     "android-aarch64-opt": "{package}-default-arm64-v8a",

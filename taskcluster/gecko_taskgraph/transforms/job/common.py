@@ -8,8 +8,8 @@ consistency.
 """
 
 
-from taskgraph.util.taskcluster import get_artifact_prefix
 from taskgraph.util.keyed_by import evaluate_keyed_by
+from taskgraph.util.taskcluster import get_artifact_prefix
 
 SECRET_SCOPE = "secrets:get:project/releng/{trust_domain}/{kind}/level-{level}/{secret}"
 

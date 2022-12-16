@@ -4,12 +4,10 @@
 
 
 from requests import HTTPError
-
 from taskgraph.util.taskcluster import find_task_id, get_artifact
 
 from gecko_taskgraph.util.attributes import INTEGRATION_PROJECTS, TRY_PROJECTS
 from gecko_taskgraph.util.taskcluster import state_task
-
 
 BACKSTOP_PUSH_INTERVAL = 20
 BACKSTOP_TIME_INTERVAL = 60 * 4  # minutes

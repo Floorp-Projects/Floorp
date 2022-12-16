@@ -10,10 +10,10 @@ from taskgraph.util.taskcluster import get_artifact_path
 from voluptuous import Optional
 
 from gecko_taskgraph.loader.single_dep import schema
+from gecko_taskgraph.transforms.task import task_description_schema
 from gecko_taskgraph.util.attributes import copy_attributes_from_dependent_job
 from gecko_taskgraph.util.partners import get_partner_config_by_kind
 from gecko_taskgraph.util.scriptworker import get_signing_cert_scope_per_platform
-from gecko_taskgraph.transforms.task import task_description_schema
 
 transforms = TransformSequence()
 

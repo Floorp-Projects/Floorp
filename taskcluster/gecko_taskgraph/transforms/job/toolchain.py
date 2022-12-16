@@ -8,22 +8,17 @@ Support for running toolchain-building jobs via dedicated scripts
 
 import taskgraph
 from mozbuild.shellutil import quote as shell_quote
-
 from taskgraph.util.schema import Schema, optionally_keyed_by, resolve_keyed_by
-from voluptuous import Optional, Required, Any
+from voluptuous import Any, Optional, Required
 
-from gecko_taskgraph.transforms.job import (
-    configure_taskdesc_for_run,
-    run_job_using,
-)
+from gecko_taskgraph import GECKO
+from gecko_taskgraph.transforms.job import configure_taskdesc_for_run, run_job_using
 from gecko_taskgraph.transforms.job.common import (
     docker_worker_add_artifacts,
     generic_worker_add_artifacts,
 )
-from gecko_taskgraph.util.hash import hash_paths
 from gecko_taskgraph.util.attributes import RELEASE_PROJECTS
-from gecko_taskgraph import GECKO
-
+from gecko_taskgraph.util.hash import hash_paths
 
 CACHE_TYPE = "toolchains.v3"
 

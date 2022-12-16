@@ -4,21 +4,22 @@
 
 
 import logging
-import textwrap
 import sys
+import textwrap
 
 from taskgraph.util.taskcluster import get_task_definition, rerun_task
 
+from gecko_taskgraph.util.taskcluster import state_task
+
+from .registry import register_callback_action
 from .util import (
     combine_task_graph_files,
+    create_task_from_def,
     create_tasks,
     fetch_graph_and_labels,
-    relativize_datestamps,
-    create_task_from_def,
     get_tasks_with_downstream,
+    relativize_datestamps,
 )
-from .registry import register_callback_action
-from gecko_taskgraph.util.taskcluster import state_task
 
 logger = logging.getLogger(__name__)
 

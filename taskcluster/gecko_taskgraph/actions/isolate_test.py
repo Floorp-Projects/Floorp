@@ -13,7 +13,7 @@ from taskgraph.util.parameterization import resolve_task_references
 from taskgraph.util.taskcluster import get_artifact, get_task_definition, list_artifacts
 
 from .registry import register_callback_action
-from .util import create_task_from_def, fetch_graph_and_labels, add_args_to_command
+from .util import add_args_to_command, create_task_from_def, fetch_graph_and_labels
 
 logger = logging.getLogger(__name__)
 

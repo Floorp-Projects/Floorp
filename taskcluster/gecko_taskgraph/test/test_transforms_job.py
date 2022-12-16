@@ -11,6 +11,7 @@ import os
 from copy import deepcopy
 
 import pytest
+from conftest import FakeParameters
 from mozunit import main
 from taskgraph.config import load_graph_config
 from taskgraph.transforms.base import TransformConfig
@@ -21,8 +22,6 @@ from gecko_taskgraph.transforms import job
 from gecko_taskgraph.transforms.job import run_task  # noqa: F401
 from gecko_taskgraph.transforms.job.common import add_cache
 from gecko_taskgraph.transforms.task import payload_builders
-
-from conftest import FakeParameters
 
 here = os.path.abspath(os.path.dirname(__file__))
 

@@ -4,14 +4,12 @@
 
 
 import re
-
 from itertools import combinations
 
 import pytest
-
 from mozunit import main
-from gecko_taskgraph.util import chunking
 
+from gecko_taskgraph.util import chunking
 
 pytestmark = pytest.mark.slow
 

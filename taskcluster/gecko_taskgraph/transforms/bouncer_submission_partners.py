@@ -12,10 +12,12 @@ from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
 
 from gecko_taskgraph.transforms.bouncer_submission import (
-    FTP_PLATFORMS_PER_BOUNCER_PLATFORM,
     CONFIG_PER_BOUNCER_PRODUCT as CONFIG_PER_BOUNCER_PRODUCT_VANILLA,
-    _craft_ftp_product,
+)
+from gecko_taskgraph.transforms.bouncer_submission import (
+    FTP_PLATFORMS_PER_BOUNCER_PLATFORM,
     _craft_filename_product,
+    _craft_ftp_product,
 )
 from gecko_taskgraph.util.attributes import release_level
 from gecko_taskgraph.util.partners import (

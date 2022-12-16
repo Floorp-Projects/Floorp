@@ -3,8 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from taskgraph.util.schema import Schema, optionally_keyed_by
-from voluptuous import Required, Optional, Any
-
+from voluptuous import Any, Optional, Required
 
 graph_config_schema = Schema(
     {

@@ -10,11 +10,11 @@ import os
 
 from mozpack import path
 from taskgraph.util.schema import Schema
+from voluptuous import Any, Optional, Required
 
-from gecko_taskgraph.transforms.task import taskref_or_string
 from gecko_taskgraph.transforms.job import run_job_using
 from gecko_taskgraph.transforms.job.common import add_tooltool, support_vcs_checkout
-from voluptuous import Any, Optional, Required
+from gecko_taskgraph.transforms.task import taskref_or_string
 
 run_task_schema = Schema(
     {
