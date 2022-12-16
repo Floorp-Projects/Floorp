@@ -25,6 +25,7 @@ struct FileSystemReadWriteOptions;
 class FileSystemManager;
 class MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer;
 class Promise;
+class StrongWorkerRef;
 
 class FileSystemSyncAccessHandle final : public nsISupports,
                                          public nsWrapperCache {
@@ -86,6 +87,8 @@ class FileSystemSyncAccessHandle final : public nsISupports,
   RefPtr<FileSystemAccessHandleChild> mActor;
 
   nsCOMPtr<nsIRandomAccessStream> mStream;
+
+  RefPtr<StrongWorkerRef> mWorkerRef;
 
   const fs::FileSystemEntryMetadata mMetadata;
 
