@@ -28,7 +28,7 @@ jobs:
             symbol: V-swr
             kind: build
             tier: 1
-        worker-type: b-linux-aws
+        worker-type: t-linux-metal
         worker:
             docker-image: {in-tree: valgrind-build}
             max-run-time: 72000

@@ -24,7 +24,7 @@ job-defaults:
         platform: linux64-shippable/opt
         kind: build
         tier: 2
-    worker-type: b-linux
+    worker-type: b-linux-aws
     worker:
         implementation: docker-worker
         os: linux
