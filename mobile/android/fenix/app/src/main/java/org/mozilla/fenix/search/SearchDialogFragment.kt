@@ -20,6 +20,7 @@ import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.text.style.StyleSpan
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStub
@@ -67,6 +68,7 @@ import mozilla.components.support.ktx.android.content.hasCamera
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import mozilla.components.support.ktx.android.content.res.getSpanned
 import mozilla.components.support.ktx.android.net.isHttpOrHttps
+import mozilla.components.support.ktx.android.view.findViewInHierarchy
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.kotlin.toNormalizedUrl
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
@@ -83,6 +85,7 @@ import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.databinding.FragmentSearchDialogBinding
 import org.mozilla.fenix.databinding.SearchSuggestionsHintBinding
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.getRectWithScreenLocation
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
@@ -118,6 +121,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     private val qrFeature = ViewBoundFeatureWrapper<QrFeature>()
     private val speechIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
 
+    private var isPrivateButtonClicked = false
     private var dialogHandledAction = false
     private var searchSelectorAlreadyAdded = false
     private var qrButtonAction: Toolbar.Action? = null
@@ -267,6 +271,22 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 // When displayed above home, dispatches the touch events to scrim area to the HomeFragment
                 binding.searchWrapper.background = ColorDrawable(Color.TRANSPARENT)
                 dialog?.window?.decorView?.setOnTouchListener { _, event ->
+                    when (event?.action) {
+                        MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
+                            isPrivateButtonClicked = isTouchingPrivateButton(event.x, event.y)
+                        }
+                        MotionEvent.ACTION_UP -> {
+                            if (!isTouchingPrivateButton(
+                                    event.x,
+                                    event.y,
+                                ) && !isPrivateButtonClicked
+                            ) {
+                                findNavController().popBackStack()
+                                isPrivateButtonClicked = false
+                            }
+                        }
+                        else -> isPrivateButtonClicked = false
+                    }
                     requireActivity().dispatchTouchEvent(event)
                     false
                 }
@@ -455,6 +475,13 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
             updateVoiceSearchButton()
         }
+    }
+
+    private fun isTouchingPrivateButton(x: Float, y: Float): Boolean {
+        val view = parentFragmentManager.primaryNavigationFragment?.view?.findViewInHierarchy {
+            it.id == R.id.privateBrowsingButton
+        } ?: return false
+        return view.getRectWithScreenLocation().contains(x.toInt(), y.toInt())
     }
 
     private fun hideClipboardSection() {
