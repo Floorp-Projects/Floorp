@@ -54,7 +54,7 @@ inline fun <reified T : Parcelable> Bundle.getParcelableArrayCompat(name: String
         getParcelableArray(name, clazz)
     } else {
         @Suppress("DEPRECATION")
-        getParcelableArray(name)?.toArrayOfT()
+        getParcelableArray(name)?.safeCastToArrayOfT()
     }
 }
 
@@ -62,12 +62,8 @@ inline fun <reified T : Parcelable> Bundle.getParcelableArrayCompat(name: String
  * Cast a [Parcelable] [Array] to a <T implements [Parcelable]> [Array]
  */
 @Suppress("UNCHECKED_CAST")
-inline fun <reified T : Parcelable> Array<Parcelable>.toArrayOfT(): Array<T> {
-    return if (this.isArrayOf<T>()) {
-        this as Array<T>
-    } else {
-        Array(this.size) { index ->
-            this[index] as T
-        }
-    }
+inline fun <reified T : Parcelable> Array<Parcelable>.safeCastToArrayOfT(): Array<T> {
+    return Array(this.size) { index ->
+        this[index] as? T
+    }.filterNotNull().toTypedArray()
 }
