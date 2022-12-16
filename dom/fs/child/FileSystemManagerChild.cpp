@@ -68,6 +68,8 @@ FileSystemManagerChild::AllocPFileSystemWritableFileStreamChild() {
 
     if (handle->IsOpen()) {
       promises.AppendElement(handle->BeginClose());
+    } else if (handle->IsClosing()) {
+      promises.AppendElement(handle->OnClose());
     }
   }
 

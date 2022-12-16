@@ -22,6 +22,7 @@
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRef.h"
+#include "mozilla/dom/fs/TargetPtrHolder.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 #include "nsNetCID.h"
@@ -35,15 +36,10 @@ namespace {
 const uint32_t kStreamCopyBlockSize = 1024 * 1024;
 
 nsresult AsyncCopy(nsIInputStream* aSource, nsIOutputStream* aSink,
-                   const nsAsyncCopyMode aMode, const bool aCloseSource,
-                   const bool aCloseSink,
+                   nsISerialEventTarget* aIOTarget, const nsAsyncCopyMode aMode,
+                   const bool aCloseSource, const bool aCloseSink,
                    std::function<void(uint32_t)>&& aProgressCallback,
                    std::function<void(nsresult)>&& aCompleteCallback) {
-  QM_TRY_INSPECT(const auto& ioTarget,
-                 MOZ_TO_RESULT_GET_TYPED(nsCOMPtr<nsIEventTarget>,
-                                         MOZ_SELECT_OVERLOAD(do_GetService),
-                                         NS_STREAMTRANSPORTSERVICE_CONTRACTID));
-
   struct CallbackClosure {
     CallbackClosure(std::function<void(uint32_t)>&& aProgressCallback,
                     std::function<void(nsresult)>&& aCompleteCallback) {
@@ -67,7 +63,7 @@ nsresult AsyncCopy(nsIInputStream* aSource, nsIOutputStream* aSink,
 
   QM_TRY(
       MOZ_TO_RESULT(NS_AsyncCopy(
-          aSource, aSink, ioTarget, aMode, kStreamCopyBlockSize,
+          aSource, aSink, aIOTarget, aMode, kStreamCopyBlockSize,
           [](void* aClosure, nsresult aRv) {
             auto* callbackClosure = static_cast<CallbackClosure*>(aClosure);
             (*callbackClosure->mCompleteCallbackWrapper)(aRv);
@@ -216,6 +212,12 @@ bool FileSystemSyncAccessHandle::IsOpen() const {
   return mState == State::Open;
 }
 
+bool FileSystemSyncAccessHandle::IsClosing() const {
+  MOZ_ASSERT(mState != State::Initial);
+
+  return mState == State::Closing;
+}
+
 bool FileSystemSyncAccessHandle::IsClosed() const {
   MOZ_ASSERT(mState != State::Initial);
 
@@ -225,20 +227,42 @@ bool FileSystemSyncAccessHandle::IsClosed() const {
 RefPtr<BoolPromise> FileSystemSyncAccessHandle::BeginClose() {
   MOZ_ASSERT(IsOpen());
 
-  LOG(("%p: Closing", mStream.get()));
+  mState = State::Closing;
 
-  mState = State::Closed;
+  InvokeAsync(mIOTaskQueue, __func__,
+              [selfHolder = fs::TargetPtrHolder(this)]() {
+                LOG(("%p: Closing", selfHolder->mStream.get()));
 
-  mStream->OutputStream()->Close();
-  mStream = nullptr;
+                selfHolder->mStream->OutputStream()->Close();
+                selfHolder->mStream = nullptr;
 
-  if (mActor) {
-    mActor->SendClose();
-  }
+                return BoolPromise::CreateAndResolve(true, __func__);
+              })
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [self = RefPtr(this)](const BoolPromise::ResolveOrRejectValue&) {
+               return self->mIOTaskQueue->BeginShutdown();
+             })
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [self = RefPtr(this)](const ShutdownPromise::ResolveOrRejectValue&) {
+            if (self->mActor) {
+              self->mActor->SendClose();
+            }
 
-  mWorkerRef = nullptr;
+            self->mWorkerRef = nullptr;
 
-  return BoolPromise::CreateAndResolve(true, __func__);
+            self->mState = State::Closed;
+
+            self->mClosePromiseHolder.ResolveIfExists(true, __func__);
+          });
+
+  return OnClose();
+}
+
+RefPtr<BoolPromise> FileSystemSyncAccessHandle::OnClose() {
+  MOZ_ASSERT(mState == State::Closing);
+
+  return mClosePromiseHolder.Ensure(__func__);
 }
 
 // WebIDL Boilerplate
@@ -319,7 +343,7 @@ void FileSystemSyncAccessHandle::Flush(ErrorResult& aError) {
 }
 
 void FileSystemSyncAccessHandle::Close() {
-  if (!IsOpen()) {
+  if (!(IsOpen() || IsClosing())) {
     return;
   }
 
@@ -336,7 +360,10 @@ void FileSystemSyncAccessHandle::Close() {
   MOZ_ASSERT(syncLoopTarget);
 
   InvokeAsync(syncLoopTarget, __func__, [self = RefPtr(this)]() {
-    return self->BeginClose();
+    if (self->IsOpen()) {
+      return self->BeginClose();
+    }
+    return self->OnClose();
   })->Then(syncLoopTarget, __func__, [&workerRef, &syncLoopTarget]() {
     workerRef->Private()->AssertIsOnWorkerThread();
 
@@ -422,7 +449,7 @@ uint64_t FileSystemSyncAccessHandle::ReadOrWrite(
   uint64_t totalCount = 0;
 
   QM_TRY(MOZ_TO_RESULT(AsyncCopy(
-             inputStream, outputStream,
+             inputStream, outputStream, mIOTaskQueue,
              aRead ? NS_ASYNCCOPY_VIA_WRITESEGMENTS
                    : NS_ASYNCCOPY_VIA_READSEGMENTS,
              /* aCloseSource */ !aRead, /* aCloseSink */ aRead,
