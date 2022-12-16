@@ -93,7 +93,7 @@ NS_IMETHODIMP nsWifiMonitor::StartWatching(nsIWifiListener* aListener) {
 
   if (!mThread) {
     rv = NS_NewNamedThread("Wifi Monitor", getter_AddRefs(mThread), this,
-                           GetMonitorThreadStackSize());
+                           {.stackSize = GetMonitorThreadStackSize()});
     if (NS_FAILED(rv)) {
       return rv;
     }

@@ -171,7 +171,8 @@ class nsThread : public nsIThreadInternal,
   enum MainThreadFlag { MAIN_THREAD, NOT_MAIN_THREAD };
 
   nsThread(NotNull<mozilla::SynchronizedEventQueue*> aQueue,
-           MainThreadFlag aMainThread, uint32_t aStackSize);
+           MainThreadFlag aMainThread,
+           nsIThreadManager::ThreadCreationOptions aOptions);
 
  private:
   nsThread();

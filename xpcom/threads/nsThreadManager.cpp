@@ -298,8 +298,8 @@ nsresult nsThreadManager::Init() {
   RefPtr<ThreadEventQueue> synchronizedQueue =
       new ThreadEventQueue(std::move(queue), true);
 
-  mMainThread =
-      new nsThread(WrapNotNull(synchronizedQueue), nsThread::MAIN_THREAD, 0);
+  mMainThread = new nsThread(WrapNotNull(synchronizedQueue),
+                             nsThread::MAIN_THREAD, {.stackSize = 0});
 
   nsresult rv = mMainThread->InitCurrentThread();
   if (NS_FAILED(rv)) {
@@ -458,7 +458,8 @@ nsThread* nsThreadManager::CreateCurrentThread(
     return nullptr;
   }
 
-  RefPtr<nsThread> thread = new nsThread(WrapNotNull(aQueue), aMainThread, 0);
+  RefPtr<nsThread> thread =
+      new nsThread(WrapNotNull(aQueue), aMainThread, {.stackSize = 0});
   if (!thread || NS_FAILED(thread->InitCurrentThread())) {
     return nullptr;
   }
@@ -520,8 +521,9 @@ bool nsThreadManager::IsNSThread() const {
 }
 
 NS_IMETHODIMP
-nsThreadManager::NewNamedThread(const nsACString& aName, uint32_t aStackSize,
-                                nsIThread** aResult) {
+nsThreadManager::NewNamedThread(
+    const nsACString& aName, nsIThreadManager::ThreadCreationOptions aOptions,
+    nsIThread** aResult) {
   // Note: can be called from arbitrary threads
 
   // No new threads during Shutdown
@@ -534,7 +536,7 @@ nsThreadManager::NewNamedThread(const nsACString& aName, uint32_t aStackSize,
   RefPtr<ThreadEventQueue> queue =
       new ThreadEventQueue(MakeUnique<EventQueue>());
   RefPtr<nsThread> thr =
-      new nsThread(WrapNotNull(queue), nsThread::NOT_MAIN_THREAD, aStackSize);
+      new nsThread(WrapNotNull(queue), nsThread::NOT_MAIN_THREAD, aOptions);
   nsresult rv =
       thr->Init(aName);  // Note: blocks until the new thread has been set up
   if (NS_FAILED(rv)) {

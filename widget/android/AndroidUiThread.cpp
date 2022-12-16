@@ -60,7 +60,7 @@ class AndroidUiThread : public nsThread {
   AndroidUiThread()
       : nsThread(
             MakeNotNull<ThreadEventQueue*>(MakeUnique<mozilla::EventQueue>()),
-            nsThread::NOT_MAIN_THREAD, 0) {}
+            nsThread::NOT_MAIN_THREAD, {.stackSize = 0}) {}
 
   nsresult Dispatch(already_AddRefed<nsIRunnable> aEvent,
                     uint32_t aFlags) override;
