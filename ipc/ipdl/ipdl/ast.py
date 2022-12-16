@@ -9,25 +9,18 @@ NOT_NESTED = 1
 INSIDE_SYNC_NESTED = 2
 INSIDE_CPOW_NESTED = 3
 
-NORMAL_PRIORITY = 1
-INPUT_PRIORITY = 2
-VSYNC_PRIORITY = 3
-MEDIUMHIGH_PRIORITY = 4
-CONTROL_PRIORITY = 5
-
 NESTED_ATTR_MAP = {
     "not": NOT_NESTED,
     "inside_sync": INSIDE_SYNC_NESTED,
     "inside_cpow": INSIDE_CPOW_NESTED,
 }
 
-PRIORITY_ATTR_MAP = {
-    "normal": NORMAL_PRIORITY,
-    "input": INPUT_PRIORITY,
-    "vsync": VSYNC_PRIORITY,
-    "mediumhigh": MEDIUMHIGH_PRIORITY,
-    "control": CONTROL_PRIORITY,
-}
+# Each element of this list is the IPDL source representation of a priority.
+priorityList = ["normal", "input", "vsync", "mediumhigh", "control"]
+
+priorityAttrMap = {src: idx for idx, src in enumerate(priorityList)}
+
+NORMAL_PRIORITY = priorityAttrMap["normal"]
 
 
 class Visitor:
@@ -385,10 +378,11 @@ class MessageDecl(Node):
         return NESTED_ATTR_MAP.get(self.attributes["Nested"].value, NOT_NESTED)
 
     def priority(self):
-        if "Priority" not in self.attributes:
-            return NORMAL_PRIORITY
-
-        return PRIORITY_ATTR_MAP.get(self.attributes["Priority"].value, NORMAL_PRIORITY)
+        if "Priority" in self.attributes:
+            sourcePriority = self.attributes["Priority"].value
+        else:
+            sourcePriority = "normal"
+        return priorityAttrMap.get(sourcePriority, NORMAL_PRIORITY)
 
 
 class Param(Node):
