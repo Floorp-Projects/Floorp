@@ -8,6 +8,7 @@
 #define DOM_FS_FILESYSTEMSYNCACCESSHANDLE_H_
 
 #include "mozilla/dom/PFileSystemManager.h"
+#include "mozilla/dom/quota/ForwardDecls.h"
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
@@ -47,7 +48,9 @@ class FileSystemSyncAccessHandle final : public nsISupports,
 
   bool IsOpen() const;
 
-  void CloseInternal();
+  bool IsClosed() const;
+
+  [[nodiscard]] RefPtr<BoolPromise> BeginClose();
 
   // WebIDL Boilerplate
   nsIGlobalObject* GetParentObject() const;

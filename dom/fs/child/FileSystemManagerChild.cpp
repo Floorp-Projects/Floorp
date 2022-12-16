@@ -13,20 +13,22 @@
 
 namespace mozilla::dom {
 
-void FileSystemManagerChild::CloseAll() {
-  // NOTE: getFile() creates blobs that read the data from the child;
-  // we'll need to abort any reads and resolve this call only when all
-  // blobs are closed.
-
+#ifdef DEBUG
+bool FileSystemManagerChild::AllSyncAccessHandlesClosed() const {
   for (const auto& item : ManagedPFileSystemAccessHandleChild()) {
     auto* child = static_cast<FileSystemAccessHandleChild*>(item);
     auto* handle = child->MutableAccessHandlePtr();
 
-    if (handle->IsOpen()) {
-      handle->CloseInternal();
+    if (!handle->IsClosed()) {
+      return false;
     }
   }
 
+  return true;
+}
+#endif
+
+void FileSystemManagerChild::CloseAllWritableFileStreams() {
   for (const auto& item : ManagedPFileSystemWritableFileStreamChild()) {
     auto* child = static_cast<FileSystemWritableFileStreamChild*>(item);
 
@@ -54,9 +56,29 @@ FileSystemManagerChild::AllocPFileSystemWritableFileStreamChild() {
 
 ::mozilla::ipc::IPCResult FileSystemManagerChild::RecvCloseAll(
     CloseAllResolver&& aResolver) {
-  CloseAll();
+  nsTArray<RefPtr<BoolPromise>> promises;
 
-  aResolver(NS_OK);
+  // NOTE: getFile() creates blobs that read the data from the child;
+  // we'll need to abort any reads and resolve this call only when all
+  // blobs are closed.
+
+  for (const auto& item : ManagedPFileSystemAccessHandleChild()) {
+    auto* child = static_cast<FileSystemAccessHandleChild*>(item);
+    auto* handle = child->MutableAccessHandlePtr();
+
+    if (handle->IsOpen()) {
+      promises.AppendElement(handle->BeginClose());
+    }
+  }
+
+  CloseAllWritableFileStreams();
+
+  BoolPromise::AllSettled(GetCurrentSerialEventTarget(), promises)
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [resolver = std::move(aResolver)](
+                 const BoolPromise::AllSettledPromiseType::ResolveOrRejectValue&
+                     aValues) { resolver(NS_OK); });
+
   return IPC_OK();
 }
 
