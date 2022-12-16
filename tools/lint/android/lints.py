@@ -14,6 +14,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 import mozpack.path as mozpath
+import six
 from mozlint import result
 from mozpack.files import FileFinder
 
@@ -59,7 +60,7 @@ def gradle(log, topsrcdir=None, topobjdir=None, tasks=[], extra_args=[], verbose
             + extra_args
         )
 
-        cmd = " ".join(arg for arg in cmd_args)
+        cmd = " ".join(six.moves.shlex_quote(arg) for arg in cmd_args)
         log.debug(cmd)
 
         # Gradle and mozprocess do not get along well, so we use subprocess

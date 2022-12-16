@@ -97,7 +97,7 @@ def evaluate_pref(value):
     bools = {"true": True, "false": False}
     if value in bools:
         return bools[value]
-    if value.isdigit():
+    elif value.isdigit():
         return int(value)
     return value
 

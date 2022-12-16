@@ -24,7 +24,7 @@ class YAMLLintProcess(LintProcess):
     def process_line(self, line):
         try:
             match = YAMLLINT_FORMAT_REGEX.match(line)
-            abspath, line, col, _, message, code = match.groups()
+            abspath, line, col, level, message, code = match.groups()
         except AttributeError:
             print("Unable to match yaml regex against output: {}".format(line))
             return
