@@ -42,6 +42,11 @@ enable_sancov()
     enable_sanitizer sancov "$sancov"
 }
 
+enable_sourcecov()
+{
+    enable_sanitizer sourcecov
+}
+
 enable_ubsan()
 {
     local ubsan

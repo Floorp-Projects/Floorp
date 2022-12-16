@@ -319,7 +319,7 @@ export default async function main() {
   );
 
   await scheduleMac("Mac (opt)", {collection: "opt"}, "--opt");
-  await scheduleMac("Mac Static (opt)", {collection: "opt-static"}, "--opt --static");
+  await scheduleMac("Mac Static (opt)", {collection: "opt-static"}, "--opt --static -Ddisable_libpkix=1");
   await scheduleMac("Mac (debug)", {collection: "debug"});
 
   // Must be executed after all other tasks are scheduled
@@ -542,7 +542,14 @@ async function scheduleLinux(name, overrides, args = "") {
     },
     symbol: "clang-4"
   }));
-
+  queue.scheduleTask(merge(extra_base, {
+    name: `${name} w/ clang-10`,
+    env: {
+      CC: "clang-10",
+      CCC: "clang++-10",
+    },
+    symbol: "clang-10"
+  }));
   queue.scheduleTask(merge(extra_base, {
     name: `${name} w/ gcc-4.4`,
     image: LINUX_GCC44_IMAGE,
@@ -588,33 +595,6 @@ async function scheduleLinux(name, overrides, args = "") {
       CCC: "g++-5"
     },
     symbol: "gcc-5"
-  }));
-
-  queue.scheduleTask(merge(extra_base, {
-    name: `${name} w/ gcc-6`,
-    env: {
-      CC: "gcc-6",
-      CCC: "g++-6"
-    },
-    symbol: "gcc-6"
-  }));
-
-  queue.scheduleTask(merge(extra_base, {
-    name: `${name} w/ gcc-9`,
-    env: {
-      CC: "gcc-9",
-      CCC: "g++-9"
-    },
-    symbol: "gcc-9"
-  }));
-
-  queue.scheduleTask(merge(extra_base, {
-    name: `${name} w/ gcc-10`,
-    env: {
-      CC: "gcc-10",
-      CCC: "g++-10",
-    },
-    symbol: "gcc-10"
   }));
 
   queue.scheduleTask(merge(extra_base, {

@@ -206,6 +206,9 @@ NSS_GetClientAuthData(void *arg,
                                              certUsageSSLClient,
                                              PR_FALSE, chosenNickName == NULL,
                                              pw_arg);
+        if (certList == NULL) {
+            return SECFailure;
+        }
         /* filter only the certs that meet the nickname requirements */
         if (chosenNickName) {
             rv = CERT_FilterCertListByNickname(certList, chosenNickName,
@@ -219,13 +222,10 @@ NSS_GetClientAuthData(void *arg,
         }
         if ((rv != SECSuccess) || CERT_LIST_EMPTY(certList)) {
             CERT_DestroyCertList(certList);
-            certList = NULL;
+            return SECFailure;
         }
     }
-    if (certList == NULL) {
-        /* no user certs meeting the nickname/usage requirements found */
-        return SECFailure;
-    }
+
     /* now remove any certs that can't meet the connection requirements */
     rv = ssl_FilterClientCertListBySSLSocket(ss, certList);
     if ((rv != SECSuccess) || CERT_LIST_EMPTY(certList)) {

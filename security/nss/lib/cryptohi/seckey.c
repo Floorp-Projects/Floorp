@@ -1044,14 +1044,18 @@ SECKEY_PublicKeyStrengthInBits(const SECKEYPublicKey *pubk)
 unsigned
 SECKEY_SignatureLen(const SECKEYPublicKey *pubk)
 {
-    unsigned char b0;
     unsigned size;
 
     switch (pubk->keyType) {
         case rsaKey:
         case rsaPssKey:
-            b0 = pubk->u.rsa.modulus.data[0];
-            return b0 ? pubk->u.rsa.modulus.len : pubk->u.rsa.modulus.len - 1;
+            if (pubk->u.rsa.modulus.len == 0) {
+                return 0;
+            }
+            if (pubk->u.rsa.modulus.data[0] == 0) {
+                return pubk->u.rsa.modulus.len - 1;
+            }
+            return pubk->u.rsa.modulus.len;
         case dsaKey:
             return pubk->u.dsa.params.subPrime.len * 2;
         case ecKey:

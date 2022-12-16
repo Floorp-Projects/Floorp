@@ -32,6 +32,7 @@ NSS build tool options:
     --msan           enable memory sanitizer
     --ubsan          enable undefined behavior sanitizer
                      --ubsan=bool,shift,... sets specific UB sanitizers
+    --sourcecov      enable source-based coverage sanitizer
     --fuzz           build fuzzing targets (this always enables static builds)
                      --fuzz=tls to enable TLS fuzzing mode
                      --fuzz=oss to build for OSS-Fuzz
