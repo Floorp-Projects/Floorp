@@ -43,7 +43,8 @@ class nsCookieInjector final : public nsIObserver {
   // rules.
   nsresult InjectCookiesFromRules(const nsCString& aHostPort,
                                   const nsTArray<RefPtr<nsICookieRule>>& aRules,
-                                  OriginAttributes& aOriginAttributes);
+                                  OriginAttributes& aOriginAttributes,
+                                  bool& hasInjectedCookie);
 };
 
 }  // namespace mozilla

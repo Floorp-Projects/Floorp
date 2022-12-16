@@ -241,7 +241,8 @@ class LoadInfo final : public nsILoadInfo {
       nsINode* aLoadingContext,
       nsILoadInfo::CrossOriginEmbedderPolicy aLoadingEmbedderPolicy,
       bool aIsOriginTrialCoepCredentiallessEnabledForTopLevel,
-      nsIURI* aUnstrippedURI, nsIInterceptionInfo* aInterceptionInfo);
+      nsIURI* aUnstrippedURI, nsIInterceptionInfo* aInterceptionInfo,
+      bool aHasInjectedCookieForCookieBannerHandling);
   LoadInfo(const LoadInfo& rhs);
 
   NS_IMETHOD GetRedirects(JSContext* aCx,
@@ -375,6 +376,8 @@ class LoadInfo final : public nsILoadInfo {
   nsCOMPtr<nsIURI> mUnstrippedURI;
 
   nsCOMPtr<nsIInterceptionInfo> mInterceptionInfo;
+
+  bool mHasInjectedCookieForCookieBannerHandling = false;
 };
 
 // This is exposed solely for testing purposes and should not be used outside of

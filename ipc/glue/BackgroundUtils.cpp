@@ -560,10 +560,10 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
       aLoadInfo->GetIsInThirdPartyContext(), isThirdPartyContextToTopWindow,
       aLoadInfo->GetIsFormSubmission(), aLoadInfo->GetSendCSPViolationEvents(),
       aLoadInfo->GetOriginAttributes(), redirectChainIncludingInternalRedirects,
-      redirectChain, ipcClientInfo, ipcReservedClientInfo, ipcInitialClientInfo,
-      ipcController, aLoadInfo->CorsUnsafeHeaders(),
-      aLoadInfo->GetForcePreflight(), aLoadInfo->GetIsPreflight(),
-      aLoadInfo->GetLoadTriggeredFromExternal(),
+      redirectChain, aLoadInfo->GetHasInjectedCookieForCookieBannerHandling(),
+      ipcClientInfo, ipcReservedClientInfo, ipcInitialClientInfo, ipcController,
+      aLoadInfo->CorsUnsafeHeaders(), aLoadInfo->GetForcePreflight(),
+      aLoadInfo->GetIsPreflight(), aLoadInfo->GetLoadTriggeredFromExternal(),
       aLoadInfo->GetServiceWorkerTaintingSynthesized(),
       aLoadInfo->GetDocumentHasUserInteracted(),
       aLoadInfo->GetAllowListFutureDocumentsCreatedFromThisRedirectChain(),
@@ -868,7 +868,8 @@ nsresult LoadInfoArgsToLoadInfo(
       loadInfoArgs.requestBlockingReason(), loadingContext,
       loadInfoArgs.loadingEmbedderPolicy(),
       loadInfoArgs.originTrialCoepCredentiallessEnabledForTopLevel(),
-      loadInfoArgs.unstrippedURI(), interceptionInfo);
+      loadInfoArgs.unstrippedURI(), interceptionInfo,
+      loadInfoArgs.hasInjectedCookieForCookieBannerHandling());
 
   if (loadInfoArgs.isFromProcessingFrameAttributes()) {
     loadInfo->SetIsFromProcessingFrameAttributes();
