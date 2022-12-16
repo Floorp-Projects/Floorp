@@ -45,7 +45,8 @@ namespace gfx {
   _(DMABUF_SURFACE_EXPORT, Feature, "WebGL DMABuf surface export")           \
   _(REUSE_DECODER_DEVICE, Feature, "Reuse decoder device")                   \
   _(BACKDROP_FILTER, Feature, "Backdrop filter")                             \
-  _(CANVAS_RENDERER_THREAD, Feature, "canvas renderer thread")
+  _(CANVAS_RENDERER_THREAD, Feature, "canvas renderer thread")               \
+  _(ACCELERATED_CANVAS2D, Feature, "Accelerated Canvas2D")
 /* Add new entries above this comment */
 
 enum class Feature : uint32_t {

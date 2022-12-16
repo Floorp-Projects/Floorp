@@ -12,6 +12,7 @@
 #include "mozilla/gfx/AAStroke.h"
 #include "mozilla/gfx/Blur.h"
 #include "mozilla/gfx/DrawTargetSkia.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Helpers.h"
 #include "mozilla/gfx/HelpersSkia.h"
 #include "mozilla/gfx/Logging.h"
@@ -716,7 +717,7 @@ bool DrawTargetWebgl::IsValid() const {
 
 already_AddRefed<DrawTargetWebgl> DrawTargetWebgl::Create(
     const IntSize& aSize, SurfaceFormat aFormat) {
-  if (!StaticPrefs::gfx_canvas_accelerated()) {
+  if (!gfxVars::UseAcceleratedCanvas2D()) {
     return nullptr;
   }
 

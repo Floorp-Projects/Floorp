@@ -260,6 +260,9 @@ static const char* GetPrefNameForFeature(int32_t aFeature) {
     case nsIGfxInfo::FEATURE_BACKDROP_FILTER:
       name = BLOCKLIST_PREF_BRANCH "backdrop.filter";
       break;
+    case nsIGfxInfo::FEATURE_ACCELERATED_CANVAS2D:
+      name = BLOCKLIST_PREF_BRANCH "accelerated-canvas2d";
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected nsIGfxInfo feature?!");
       break;
@@ -532,6 +535,9 @@ static int32_t BlocklistFeatureToGfxFeature(const nsAString& aFeature) {
   }
   if (aFeature.EqualsLiteral("BACKDROP_FILTER")) {
     return nsIGfxInfo::FEATURE_BACKDROP_FILTER;
+  }
+  if (aFeature.EqualsLiteral("ACCELERATED_CANVAS2D")) {
+    return nsIGfxInfo::FEATURE_ACCELERATED_CANVAS2D;
   }
 
   // If we don't recognize the feature, it may be new, and something
