@@ -448,6 +448,7 @@ ${helpers.predefined_type(
     "computed::ContainerType::Normal",
     engines="gecko",
     animation_value_type="none",
+    enabled_in="ua",
     gecko_pref="layout.css.container-queries.enabled",
     spec="https://drafts.csswg.org/css-contain-3/#container-type",
 )}
@@ -458,6 +459,7 @@ ${helpers.predefined_type(
     "computed::ContainerName::none()",
     engines="gecko",
     animation_value_type="none",
+    enabled_in="ua",
     gecko_pref="layout.css.container-queries.enabled",
     spec="https://drafts.csswg.org/css-contain-3/#container-name",
 )}
