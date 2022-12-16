@@ -13,6 +13,7 @@ from ipdl.ast import TypeSpec, UnionDecl, UsingStmt, Visitor, StringLiteral
 from ipdl.ast import ASYNC, SYNC, INTR
 from ipdl.ast import IN, OUT, INOUT
 from ipdl.ast import NOT_NESTED, INSIDE_SYNC_NESTED, INSIDE_CPOW_NESTED
+from ipdl.ast import priorityList
 import ipdl.builtin as builtin
 from ipdl.util import hash_str
 
@@ -1290,7 +1291,7 @@ class GatherDecls(TcheckVisitor):
             {
                 "Tainted": None,
                 "Compress": (None, "all"),
-                "Priority": ("normal", "input", "vsync", "mediumhigh", "control"),
+                "Priority": priorityList,
                 "Nested": ("not", "inside_sync", "inside_cpow"),
                 "LegacyIntr": None,
                 "VirtualSendImpl": None,
