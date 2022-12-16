@@ -25,15 +25,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "cookiebanners.cookieInjector.defaultExpiryRelative"
 );
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "TEST_SKIP_REMOTE_SETTINGS",
-  "cookiebanners.listService.testSkipRemoteSettings"
-);
-
 const PREF_TEST_RULES = "cookiebanners.listService.testRules";
 XPCOMUtils.defineLazyPreferenceGetter(lazy, "testRulesPref", PREF_TEST_RULES);
-
 // Name of the RemoteSettings collection containing the rules.
 const COLLECTION_NAME = "cookie-banner-rules-list";
 
@@ -107,9 +100,8 @@ class CookieBannerListService {
         lazy.logConsole.warn("Skip import nsICookieBannerService is disabled");
         return;
       }
-      if (!lazy.TEST_SKIP_REMOTE_SETTINGS) {
-        this.#importRules(rules);
-      }
+
+      this.#importRules(rules);
     } catch (error) {
       lazy.logConsole.error(
         "Error while importing cookie banner rules from RemoteSettings",
@@ -137,9 +129,6 @@ class CookieBannerListService {
    * Called for remote settings "sync" events.
    */
   onSync({ data: { created, updated, deleted } }) {
-    if (lazy.TEST_SKIP_REMOTE_SETTINGS) {
-      return;
-    }
     lazy.logConsole.debug("onSync", { created, updated, deleted });
 
     // Remove deleted rules.

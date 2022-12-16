@@ -4202,9 +4202,6 @@ pref("cookiebanners.bannerClicking.logLevel", "Error");
 // CookieBannerRule.schema.json.
 pref("cookiebanners.listService.testRules", "[]");
 
-// Still fetches rules from RemoteSettings, but discards them. Used in tests.
-pref("cookiebanners.listService.testSkipRemoteSettings", false);
-
 // The domains we will block from installing SitePermsAddons. Comma-separated
 // full domains: any subdomains of the domains listed will also be allowed.
 pref("dom.sitepermsaddon-provider.separatedBlocklistedDomains", "shopee.co.th");
