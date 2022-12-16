@@ -11,8 +11,8 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
 });
-ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 
 const { Preferences } = ChromeUtils.importESModule(
   "resource://gre/modules/Preferences.sys.mjs"
@@ -182,45 +182,26 @@ class FlushableStorageAppender extends StorageStreamAppender {
    * Returns a promise that is resolved on completion or rejected with an error.
    */
   async _copyStreamToFile(inputStream, subdirArray, outputFileName, log) {
-    // The log data could be large, so we don't want to pass it all in a single
-    // message, so use BUFFER_SIZE chunks.
-    const BUFFER_SIZE = 8192;
+    let outputDirectory = PathUtils.join(PathUtils.profileDir, ...subdirArray);
+    await IOUtils.makeDirectory(outputDirectory);
+    let fullOutputFileName = PathUtils.join(outputDirectory, outputFileName);
 
-    // get a binary stream
-    let binaryStream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
-      Ci.nsIBinaryInputStream
-    );
-    binaryStream.setInputStream(inputStream);
+    let outputStream = Cc[
+      "@mozilla.org/network/file-output-stream;1"
+    ].createInstance(Ci.nsIFileOutputStream);
 
-    let outputDirectory = lazy.OS.Path.join(
-      lazy.OS.Constants.Path.profileDir,
-      ...subdirArray
+    outputStream.init(
+      new lazy.FileUtils.File(fullOutputFileName),
+      -1,
+      -1,
+      Ci.nsIFileOutputStream.DEFER_OPEN
     );
-    await lazy.OS.File.makeDir(outputDirectory, {
-      ignoreExisting: true,
-      from: lazy.OS.Constants.Path.profileDir,
-    });
-    let fullOutputFileName = lazy.OS.Path.join(outputDirectory, outputFileName);
-    let output = await lazy.OS.File.open(fullOutputFileName, { write: true });
-    try {
-      while (true) {
-        let available = binaryStream.available();
-        if (!available) {
-          break;
-        }
-        let chunk = binaryStream.readByteArray(
-          Math.min(available, BUFFER_SIZE)
-        );
-        await output.write(new Uint8Array(chunk));
-      }
-    } finally {
-      try {
-        binaryStream.close(); // inputStream is closed by the binaryStream
-        await output.close();
-      } catch (ex) {
-        log.error("Failed to close the input stream", ex);
-      }
-    }
+
+    await new Promise(resolve =>
+      lazy.NetUtil.asyncCopy(inputStream, outputStream, () => resolve())
+    );
+
+    outputStream.close();
     log.trace("finished copy to", fullOutputFileName);
   }
 }
@@ -420,7 +401,7 @@ LogManager.prototype = {
     this._log.debug("Log cleanup threshold time: " + threshold);
 
     let shouldDelete = fileInfo => {
-      return fileInfo.lastModificationDate.getTime() < threshold;
+      return fileInfo.lastModified < threshold;
     };
     return this._deleteLogFiles(shouldDelete);
   },
@@ -440,46 +421,28 @@ LogManager.prototype = {
       "ProfD",
       this._logFileSubDirectoryEntries
     );
-    let iterator = new lazy.OS.File.DirectoryIterator(logDir.path);
+    for (const path of await IOUtils.getChildren(logDir.path)) {
+      const name = PathUtils.filename(path);
 
-    await iterator.forEach(async entry => {
-      // Note that we don't check this.logFilePrefix is in the name - we cleanup
-      // all files in this directory regardless of that prefix so old logfiles
-      // for prefixes no longer in use are still cleaned up. See bug 1279145.
-      if (
-        !entry.name.startsWith("error-") &&
-        !entry.name.startsWith("success-")
-      ) {
-        return;
+      if (!name.startsWith("error-") && !name.startsWith("success-")) {
+        continue;
       }
+
       try {
-        // need to call .stat() as the enumerator doesn't give that to us on *nix.
-        let info = await lazy.OS.File.stat(entry.path);
+        const info = await IOUtils.stat(path);
         if (!cbShouldDelete(info)) {
-          return;
+          continue;
         }
-        this._log.trace(
-          " > Cleanup removing " +
-            entry.name +
-            " (" +
-            info.lastModificationDate.getTime() +
-            ")"
-        );
-        await lazy.OS.File.remove(entry.path);
-        this._log.trace("Deleted " + entry.name);
+
+        this._log.trace(` > Cleanup removing ${name} (${info.lastModified})`);
+        await IOUtils.remove(path);
+        this._log.trace(`Deleted ${name}`);
       } catch (ex) {
         this._log.debug(
-          "Encountered error trying to clean up old log file " + entry.name,
+          `Encountered error trying to clean up old log file ${name}`,
           ex
         );
       }
-    });
-    // Wait for this to close if we need to (but it might fail if OS.File has
-    // shut down)
-    try {
-      await iterator.close();
-    } catch (e) {
-      this._log.warn("Failed to close directory iterator", e);
     }
     this._cleaningUpFileLogs = false;
     this._log.debug("Done deleting files.");
