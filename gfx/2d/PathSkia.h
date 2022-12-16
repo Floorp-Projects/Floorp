@@ -87,6 +87,8 @@ class PathSkia : public Path {
 
   const SkPath& GetPath() const { return mPath; }
 
+  Maybe<Rect> AsRect() const override;
+
  private:
   friend class DrawTargetSkia;
 

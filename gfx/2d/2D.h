@@ -1003,6 +1003,8 @@ class Path : public external::AtomicRefCounted<Path> {
 
   virtual Float ComputeLength();
 
+  virtual Maybe<Rect> AsRect() const { return Nothing(); }
+
   virtual Point ComputePointAtLength(Float aLength, Point* aTangent = nullptr);
 
  protected:

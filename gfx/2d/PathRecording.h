@@ -210,6 +210,8 @@ class PathRecording final : public Path {
     return mPath->GetStrokedBounds(aStrokeOptions, aTransform);
   }
 
+  Maybe<Rect> AsRect() const final { return mPath->AsRect(); }
+
   void StreamToSink(PathSink* aSink) const final { mPath->StreamToSink(aSink); }
 
   FillRule GetFillRule() const final { return mFillRule; }
