@@ -7,15 +7,44 @@
 #ifndef DOM_QUOTA_QUOTAOBJECT_H_
 #define DOM_QUOTA_QUOTAOBJECT_H_
 
+#include "chrome/common/ipc_message_utils.h"
 #include "nsISupportsImpl.h"
 
 namespace mozilla::dom::quota {
 
+class CanonicalQuotaObject;
+class IPCQuotaObject;
+class RemoteQuotaObject;
+
+// QuotaObject type is serializable, but only in a restricted manner. The type
+// is only safe to serialize in the parent process and only when the type
+// hasn't been previously deserialized. So the type can be serialized in the
+// parent process and deserialized in a child process or it can be serialized
+// in the parent process and deserialized in the parent process as well
+// (non-e10s mode). The same type can never be serialized/deserialized more
+// than once.
+// The deserialized type (remote variant) can only be used on the thread it was
+// deserialized on and it will stop working if the thread it was sent from is
+// shutdown (consumers should make sure that the originating thread is kept
+// alive for the necessary time).
 class QuotaObject {
  public:
-  virtual ~QuotaObject() = default;
-
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+
+  CanonicalQuotaObject* AsCanonicalQuotaObject();
+
+  RemoteQuotaObject* AsRemoteQuotaObject();
+
+  // Serialize this QuotaObject. This method works only in the parent process
+  // and only with objects which haven't been previously deserialized.
+  // The serial event target where this method is called should be highly
+  // available, as it will be used to process requests from the remote variant.
+  IPCQuotaObject Serialize();
+
+  // Deserialize a QuotaObject. This method works in both the child and parent.
+  // The deserialized QuotaObject can only be used on the calling serial event
+  // target.
+  static RefPtr<QuotaObject> Deserialize(IPCQuotaObject& aQuotaObject);
 
   virtual const nsAString& Path() const = 0;
 
@@ -26,8 +55,23 @@ class QuotaObject {
   virtual void DisableQuotaCheck() = 0;
 
   virtual void EnableQuotaCheck() = 0;
+
+ protected:
+  QuotaObject(bool aIsRemote) : mIsRemote(aIsRemote) {}
+
+  virtual ~QuotaObject() = default;
+
+  const bool mIsRemote;
 };
 
 }  // namespace mozilla::dom::quota
+
+template <>
+struct IPC::ParamTraits<mozilla::dom::quota::QuotaObject*> {
+  static void Write(IPC::MessageWriter* aWriter,
+                    mozilla::dom::quota::QuotaObject* aParam);
+  static bool Read(IPC::MessageReader* aReader,
+                   RefPtr<mozilla::dom::quota::QuotaObject>* aResult);
+};
 
 #endif  // DOM_QUOTA_QUOTAOBJECT_H_

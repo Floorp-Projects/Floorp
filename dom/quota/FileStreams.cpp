@@ -10,6 +10,7 @@
 #include "QuotaCommon.h"
 #include "QuotaManager.h"
 #include "QuotaObject.h"
+#include "RemoteQuotaObject.h"
 
 // Global includes
 #include <utility>
@@ -17,6 +18,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Result.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
+#include "mozilla/ipc/RandomAccessStreamParams.h"
 #include "nsDebug.h"
 #include "prio.h"
 
@@ -44,13 +46,22 @@ template <class FileStreamBase>
 NS_IMETHODIMP FileQuotaStream<FileStreamBase>::Close() {
   QM_TRY(MOZ_TO_RESULT(FileStreamBase::Close()));
 
-  mQuotaObject = nullptr;
+  if (mQuotaObject) {
+    if (auto* remoteQuotaObject = mQuotaObject->AsRemoteQuotaObject()) {
+      remoteQuotaObject->Close();
+    }
+
+    mQuotaObject = nullptr;
+  }
 
   return NS_OK;
 }
 
 template <class FileStreamBase>
 nsresult FileQuotaStream<FileStreamBase>::DoOpen() {
+  MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
+  MOZ_RELEASE_ASSERT(!mDeserialized);
+
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager, "Shouldn't be null!");
 
@@ -89,6 +100,56 @@ NS_IMETHODIMP FileQuotaStreamWithWrite<FileStreamBase>::Write(
   QM_TRY(MOZ_TO_RESULT(FileStreamBase::Write(aBuf, aCount, _retval)));
 
   return NS_OK;
+}
+
+mozilla::ipc::RandomAccessStreamParams FileRandomAccessStream::Serialize() {
+  MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
+  MOZ_RELEASE_ASSERT(!mDeserialized);
+  MOZ_ASSERT(mOpenParams.localFile);
+
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  RefPtr<QuotaObject> quotaObject = quotaManager->GetQuotaObject(
+      mPersistenceType, mOriginMetadata, mClientType, mOpenParams.localFile);
+  MOZ_ASSERT(quotaObject);
+
+  IPCQuotaObject ipcQuotaObject = quotaObject->Serialize();
+
+  mozilla::ipc::RandomAccessStreamParams randomAccessStreamParams =
+      nsFileRandomAccessStream::Serialize();
+
+  MOZ_ASSERT(
+      randomAccessStreamParams.type() ==
+      mozilla::ipc::RandomAccessStreamParams::TFileRandomAccessStreamParams);
+
+  mozilla::ipc::LimitingFileRandomAccessStreamParams
+      limitingFileRandomAccessStreamParams;
+  limitingFileRandomAccessStreamParams.fileRandomAccessStreamParams() =
+      std::move(randomAccessStreamParams);
+  limitingFileRandomAccessStreamParams.quotaObject() =
+      std::move(ipcQuotaObject);
+
+  return limitingFileRandomAccessStreamParams;
+}
+
+bool FileRandomAccessStream::Deserialize(
+    mozilla::ipc::RandomAccessStreamParams& aParams) {
+  MOZ_ASSERT(aParams.type() == mozilla::ipc::RandomAccessStreamParams::
+                                   TLimitingFileRandomAccessStreamParams);
+
+  auto& params = aParams.get_LimitingFileRandomAccessStreamParams();
+
+  mozilla::ipc::RandomAccessStreamParams randomAccessStreamParams(
+      std::move(params.fileRandomAccessStreamParams()));
+
+  QM_TRY(MOZ_TO_RESULT(
+             nsFileRandomAccessStream::Deserialize(randomAccessStreamParams)),
+         false);
+
+  mQuotaObject = QuotaObject::Deserialize(params.quotaObject());
+
+  return true;
 }
 
 Result<MovingNotNull<nsCOMPtr<nsIInputStream>>, nsresult> CreateFileInputStream(

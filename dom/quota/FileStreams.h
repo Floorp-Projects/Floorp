@@ -47,7 +47,15 @@ class FileQuotaStream : public FileStreamBase {
                   Client::Type aClientType)
       : mPersistenceType(aPersistenceType),
         mOriginMetadata(aOriginMetadata),
-        mClientType(aClientType) {}
+        mClientType(aClientType),
+        mDeserialized(false) {}
+
+  FileQuotaStream()
+      : mPersistenceType(PERSISTENCE_TYPE_INVALID),
+        mClientType(Client::TYPE_MAX),
+        mDeserialized(true) {}
+
+  ~FileQuotaStream() { Close(); }
 
   // nsFileStreamBase override
   virtual nsresult DoOpen() override;
@@ -56,6 +64,7 @@ class FileQuotaStream : public FileStreamBase {
   OriginMetadata mOriginMetadata;
   Client::Type mClientType;
   RefPtr<QuotaObject> mQuotaObject;
+  const bool mDeserialized;
 };
 
 template <class FileStreamBase>
@@ -71,6 +80,8 @@ class FileQuotaStreamWithWrite : public FileQuotaStream<FileStreamBase> {
                            Client::Type aClientType)
       : FileQuotaStream<FileStreamBase>(aPersistenceType, aOriginMetadata,
                                         aClientType) {}
+
+  FileQuotaStreamWithWrite() = default;
 };
 
 class FileInputStream : public FileQuotaStream<nsFileInputStream> {
@@ -103,6 +114,13 @@ class FileOutputStream : public FileQuotaStreamWithWrite<nsFileOutputStream> {
   virtual ~FileOutputStream() { Close(); }
 };
 
+// FileRandomAccessStream type is serializable, but only in a restricted
+// manner. The type is only safe to serialize in the parent process and only
+// when the type hasn't been previously deserialized. So the type can be
+// serialized in the parent process and desrialized in a child process or it
+// can be serialized in the parent process and deserialized in the parent
+// process as well (non-e10s mode). The same type can never be
+// serialized/deserialized more than once.
 class FileRandomAccessStream
     : public FileQuotaStreamWithWrite<nsFileRandomAccessStream> {
  public:
@@ -115,6 +133,19 @@ class FileRandomAccessStream
                          Client::Type aClientType)
       : FileQuotaStreamWithWrite<nsFileRandomAccessStream>(
             aPersistenceType, aOriginMetadata, aClientType) {}
+
+  FileRandomAccessStream() = default;
+
+  // nsFileRandomAccessStream override
+
+  // Serialize this FileRandomAccessStream. This method works only in the
+  // parent process and only with streams which haven't been previously
+  // deserialized.
+  mozilla::ipc::RandomAccessStreamParams Serialize() override;
+
+  // Deserialize this FileRandomAccessStream. This method works in both the
+  // child and parent.
+  bool Deserialize(mozilla::ipc::RandomAccessStreamParams& aParams) override;
 
  private:
   virtual ~FileRandomAccessStream() { Close(); }
