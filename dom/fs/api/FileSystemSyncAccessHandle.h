@@ -37,7 +37,7 @@ class FileSystemSyncAccessHandle final : public nsISupports,
   static Result<RefPtr<FileSystemSyncAccessHandle>, nsresult> Create(
       nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
       RefPtr<FileSystemAccessHandleChild> aActor,
-      nsCOMPtr<nsIRandomAccessStream> aStream,
+      mozilla::ipc::RandomAccessStreamParams&& aStreamParams,
       const fs::FileSystemEntryMetadata& aMetadata);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -81,12 +81,12 @@ class FileSystemSyncAccessHandle final : public nsISupports,
   void Close();
 
  private:
-  FileSystemSyncAccessHandle(nsIGlobalObject* aGlobal,
-                             RefPtr<FileSystemManager>& aManager,
-                             RefPtr<FileSystemAccessHandleChild> aActor,
-                             RefPtr<TaskQueue> aIOTaskQueue,
-                             nsCOMPtr<nsIRandomAccessStream> aStream,
-                             const fs::FileSystemEntryMetadata& aMetadata);
+  FileSystemSyncAccessHandle(
+      nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
+      RefPtr<FileSystemAccessHandleChild> aActor,
+      RefPtr<TaskQueue> aIOTaskQueue,
+      mozilla::ipc::RandomAccessStreamParams&& aStreamParams,
+      const fs::FileSystemEntryMetadata& aMetadata);
 
   virtual ~FileSystemSyncAccessHandle();
 
@@ -94,6 +94,8 @@ class FileSystemSyncAccessHandle final : public nsISupports,
       const MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer,
       const FileSystemReadWriteOptions& aOptions, const bool aRead,
       ErrorResult& aRv);
+
+  nsresult EnsureStream();
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
 
@@ -108,6 +110,8 @@ class FileSystemSyncAccessHandle final : public nsISupports,
   RefPtr<StrongWorkerRef> mWorkerRef;
 
   MozPromiseHolder<BoolPromise> mClosePromiseHolder;
+
+  mozilla::ipc::RandomAccessStreamParams mStreamParams;
 
   const fs::FileSystemEntryMetadata mMetadata;
 
