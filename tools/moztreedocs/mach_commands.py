@@ -172,7 +172,8 @@ def build_docs(
             "failed to generate documentation:\n"
             "%s: sphinx return code %d" % (path, status)
         )
-    print("\nGenerated documentation:\n%s" % savedir)
+    else:
+        print("\nGenerated documentation:\n%s" % savedir)
 
     if enable_fatal_warnings:
         fatal_warnings = _check_sphinx_warnings(warnings)
@@ -269,8 +270,6 @@ def _run_sphinx(docdir, savedir, config=None, fmt="html", jobs=None, verbose=Non
     # When running sphinx with sentry, it adds significant overhead
     # and makes the build generation very very very slow
     # So, disable it to generate the doc faster
-    # pylint: disable=abstract-class-instantiated
-    # See https://github.com/getsentry/sentry-python/issues/1081
     sentry_sdk.init(None)
     warn_fd, warn_path = tempfile.mkstemp()
     os.close(warn_fd)

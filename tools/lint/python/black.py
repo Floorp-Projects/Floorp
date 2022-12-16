@@ -34,8 +34,8 @@ def default_bindir():
     # virtualenv's activate_this.py, whereas sys.executable doesn't.
     if platform.system() == "Windows":
         return os.path.join(sys.prefix, "Scripts")
-
-    return os.path.join(sys.prefix, "bin")
+    else:
+        return os.path.join(sys.prefix, "bin")
 
 
 def get_black_version(binary):
@@ -135,7 +135,8 @@ def setup(root, **lintargs):
         if ["black=={}".format(version)] == versions:
             log.debug("Black is present with expected version {}".format(version))
             return 0
-        log.debug("Black is present but unexpected version {}".format(version))
+        else:
+            log.debug("Black is present but unexpected version {}".format(version))
 
     log.debug("Black needs to be installed or updated")
     virtualenv_manager = lintargs["virtualenv_manager"]

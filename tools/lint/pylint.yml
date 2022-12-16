@@ -11,13 +11,10 @@ pylint:
         - dom/websocket/
         - mozglue/
         - toolkit/components/telemetry/
-        - tools/lint/
-        - tools/moztreedocs/
     exclude:
         - dom/bindings/Codegen.py
         - security/manager/ssl/tests/unit/test_content_signing/pysign.py
         - security/ct/tests/gtest/createSTHTestData.py
-        - tools/lint/test/
     extensions: ['py']
     support-files:
         - '**/.pylint'

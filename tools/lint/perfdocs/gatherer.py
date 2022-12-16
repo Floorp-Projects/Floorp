@@ -60,9 +60,9 @@ class Gatherer(object):
         """
         if self._perfdocs_tree:
             return self._perfdocs_tree
-
-        self.fetch_perfdocs_tree()
-        return self._perfdocs_tree
+        else:
+            self.fetch_perfdocs_tree()
+            return self._perfdocs_tree
 
     def fetch_perfdocs_tree(self):
         """
