@@ -1093,6 +1093,9 @@ auto CreateAndRejectMozPromise(const char* aFunc, const RejectValueT& aRv)
 
 RefPtr<BoolPromise> CreateAndRejectBoolPromise(const char* aFunc, nsresult aRv);
 
+RefPtr<Int64Promise> CreateAndRejectInt64Promise(const char* aFunc,
+                                                 nsresult aRv);
+
 RefPtr<BoolPromise> CreateAndRejectBoolPromiseFromQMResult(const char* aFunc,
                                                            const QMResult& aRv);
 

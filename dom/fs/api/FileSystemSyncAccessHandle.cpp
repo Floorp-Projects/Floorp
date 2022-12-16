@@ -35,6 +35,9 @@ namespace {
 
 const uint32_t kStreamCopyBlockSize = 1024 * 1024;
 
+using SizePromise = Int64Promise;
+const auto CreateAndRejectSizePromise = CreateAndRejectInt64Promise;
+
 nsresult AsyncCopy(nsIInputStream* aSource, nsIOutputStream* aSink,
                    nsISerialEventTarget* aIOTarget, const nsAsyncCopyMode aMode,
                    const bool aCloseSource, const bool aCloseSink,
@@ -296,17 +299,44 @@ void FileSystemSyncAccessHandle::Truncate(uint64_t aSize, ErrorResult& aError) {
     return;
   }
 
-  auto throwAndReturn = [&aError](const nsresult rv) {
-    aError.Throw(rv);
-    return;
-  };
+  MOZ_ASSERT(mWorkerRef);
 
-  LOG(("%p: Truncate to %" PRIu64, mStream.get(), aSize));
+  AutoSyncLoopHolder syncLoop(mWorkerRef->Private(), Canceling);
 
-  QM_TRY(MOZ_TO_RESULT(mStream->Seek(nsISeekableStream::NS_SEEK_SET, aSize)),
-         throwAndReturn);
+  nsCOMPtr<nsISerialEventTarget> syncLoopTarget =
+      syncLoop.GetSerialEventTarget();
+  QM_TRY(MOZ_TO_RESULT(syncLoopTarget), [&aError](nsresult) {
+    aError.ThrowInvalidStateError("Worker is shutting down");
+  });
 
-  QM_TRY(MOZ_TO_RESULT(mStream->SetEOF()), throwAndReturn);
+  InvokeAsync(
+      mIOTaskQueue, __func__,
+      [selfHolder = fs::TargetPtrHolder(this), aSize]() {
+        LOG(("%p: Truncate to %" PRIu64, selfHolder->mStream.get(), aSize));
+
+        QM_TRY(MOZ_TO_RESULT(selfHolder->mStream->Seek(
+                   nsISeekableStream::NS_SEEK_SET, aSize)),
+               CreateAndRejectBoolPromise);
+
+        QM_TRY(MOZ_TO_RESULT(selfHolder->mStream->SetEOF()),
+               CreateAndRejectBoolPromise);
+
+        return BoolPromise::CreateAndResolve(true, __func__);
+      })
+      ->Then(syncLoopTarget, __func__,
+             [this, &syncLoopTarget](
+                 const BoolPromise::ResolveOrRejectValue& aValue) {
+               MOZ_ASSERT(mWorkerRef);
+
+               mWorkerRef->Private()->AssertIsOnWorkerThread();
+
+               mWorkerRef->Private()->StopSyncLoop(
+                   syncLoopTarget,
+                   aValue.IsResolve() ? NS_OK : aValue.RejectValue());
+             });
+
+  QM_TRY(MOZ_TO_RESULT(syncLoop.Run()),
+         [&aError](const nsresult rv) { aError.Throw(rv); });
 }
 
 uint64_t FileSystemSyncAccessHandle::GetSize(ErrorResult& aError) {
@@ -315,19 +345,59 @@ uint64_t FileSystemSyncAccessHandle::GetSize(ErrorResult& aError) {
     return 0;
   }
 
-  auto throwAndReturn = [&aError](const nsresult rv) {
+  MOZ_ASSERT(mWorkerRef);
+
+  AutoSyncLoopHolder syncLoop(mWorkerRef->Private(), Canceling);
+
+  nsCOMPtr<nsISerialEventTarget> syncLoopTarget =
+      syncLoop.GetSerialEventTarget();
+  QM_TRY(MOZ_TO_RESULT(syncLoopTarget), [&aError](nsresult) {
+    aError.ThrowInvalidStateError("Worker is shutting down");
+    return 0;
+  });
+
+  // XXX Could we somehow pass the size to `StopSyncLoop` and then get it via
+  // `QM_TRY_INSPECT(const auto& size, syncLoop.Run)` ?
+  // Could we use Result<UniquePtr<...>, nsresult> for that ?
+  int64_t size;
+
+  InvokeAsync(mIOTaskQueue, __func__,
+              [selfHolder = fs::TargetPtrHolder(this)]() {
+                nsCOMPtr<nsIFileMetadata> fileMetadata =
+                    do_QueryInterface(selfHolder->mStream);
+                MOZ_ASSERT(fileMetadata);
+
+                QM_TRY_INSPECT(
+                    const auto& size,
+                    MOZ_TO_RESULT_INVOKE_MEMBER(fileMetadata, GetSize),
+                    CreateAndRejectSizePromise);
+
+                LOG(("%p: GetSize %" PRIu64, selfHolder->mStream.get(), size));
+
+                return SizePromise::CreateAndResolve(size, __func__);
+              })
+      ->Then(syncLoopTarget, __func__,
+             [this, &syncLoopTarget,
+              &size](const Int64Promise::ResolveOrRejectValue& aValue) {
+               MOZ_ASSERT(mWorkerRef);
+
+               mWorkerRef->Private()->AssertIsOnWorkerThread();
+
+               if (aValue.IsResolve()) {
+                 size = aValue.ResolveValue();
+
+                 mWorkerRef->Private()->StopSyncLoop(syncLoopTarget, NS_OK);
+               } else {
+                 mWorkerRef->Private()->StopSyncLoop(syncLoopTarget,
+                                                     aValue.RejectValue());
+               }
+             });
+
+  QM_TRY(MOZ_TO_RESULT(syncLoop.Run()), [&aError](const nsresult rv) {
     aError.Throw(rv);
     return 0;
-  };
+  });
 
-  nsCOMPtr<nsIFileMetadata> fileMetadata = do_QueryInterface(mStream);
-  MOZ_ASSERT(fileMetadata);
-
-  QM_TRY_INSPECT(const auto& size,
-                 MOZ_TO_RESULT_INVOKE_MEMBER(fileMetadata, GetSize),
-                 throwAndReturn);
-
-  LOG(("%p: GetSize %" PRIu64, mStream.get(), size));
   return size;
 }
 
@@ -337,15 +407,48 @@ void FileSystemSyncAccessHandle::Flush(ErrorResult& aError) {
     return;
   }
 
-  LOG(("%p: Flush", mStream.get()));
+  MOZ_ASSERT(mWorkerRef);
 
-  mStream->OutputStream()->Flush();
+  AutoSyncLoopHolder syncLoop(mWorkerRef->Private(), Canceling);
+
+  nsCOMPtr<nsISerialEventTarget> syncLoopTarget =
+      syncLoop.GetSerialEventTarget();
+  QM_TRY(MOZ_TO_RESULT(syncLoopTarget), [&aError](nsresult) {
+    aError.ThrowInvalidStateError("Worker is shutting down");
+  });
+
+  InvokeAsync(mIOTaskQueue, __func__,
+              [selfHolder = fs::TargetPtrHolder(this)]() {
+                LOG(("%p: Flush", selfHolder->mStream.get()));
+
+                QM_TRY(
+                    MOZ_TO_RESULT(selfHolder->mStream->OutputStream()->Flush()),
+                    CreateAndRejectBoolPromise);
+
+                return BoolPromise::CreateAndResolve(true, __func__);
+              })
+      ->Then(syncLoopTarget, __func__,
+             [this, &syncLoopTarget](
+                 const BoolPromise::ResolveOrRejectValue& aValue) {
+               MOZ_ASSERT(mWorkerRef);
+
+               mWorkerRef->Private()->AssertIsOnWorkerThread();
+
+               mWorkerRef->Private()->StopSyncLoop(
+                   syncLoopTarget,
+                   aValue.IsResolve() ? NS_OK : aValue.RejectValue());
+             });
+
+  QM_TRY(MOZ_TO_RESULT(syncLoop.Run()),
+         [&aError](const nsresult rv) { aError.Throw(rv); });
 }
 
 void FileSystemSyncAccessHandle::Close() {
   if (!(IsOpen() || IsClosing())) {
     return;
   }
+
+  MOZ_ASSERT(mWorkerRef);
 
   // Normally mWorkerRef can be used directly for stopping the sync loop, but
   // the async close is special because mWorkerRef is cleared as part of the
@@ -365,6 +468,8 @@ void FileSystemSyncAccessHandle::Close() {
     }
     return self->OnClose();
   })->Then(syncLoopTarget, __func__, [&workerRef, &syncLoopTarget]() {
+    MOZ_ASSERT(workerRef);
+
     workerRef->Private()->AssertIsOnWorkerThread();
 
     workerRef->Private()->StopSyncLoop(syncLoopTarget, NS_OK);
@@ -381,6 +486,8 @@ uint64_t FileSystemSyncAccessHandle::ReadOrWrite(
     aRv.ThrowInvalidStateError("SyncAccessHandle is closed");
     return 0;
   }
+
+  MOZ_ASSERT(mWorkerRef);
 
   auto throwAndReturn = [&aRv](const nsresult rv) {
     aRv.Throw(rv);
@@ -456,6 +563,8 @@ uint64_t FileSystemSyncAccessHandle::ReadOrWrite(
              [&totalCount](uint32_t count) { totalCount += count; },
              [this, &syncLoopTarget](nsresult rv) {
                InvokeAsync(syncLoopTarget, __func__, [this, &syncLoopTarget]() {
+                 MOZ_ASSERT(mWorkerRef);
+
                  mWorkerRef->Private()->AssertIsOnWorkerThread();
 
                  mWorkerRef->Private()->StopSyncLoop(syncLoopTarget, NS_OK);
