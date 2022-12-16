@@ -31,6 +31,8 @@ remote.jar:
   content/shared/listeners/ConsoleAPIListener.sys.mjs (shared/listeners/ConsoleAPIListener.sys.mjs)
   content/shared/listeners/ConsoleListener.sys.mjs (shared/listeners/ConsoleListener.sys.mjs)
   content/shared/listeners/LoadListener.sys.mjs (shared/listeners/LoadListener.sys.mjs)
+  content/shared/listeners/NetworkEventRecord.sys.mjs (shared/listeners/NetworkEventRecord.sys.mjs)
+  content/shared/listeners/NetworkListener.sys.mjs (shared/listeners/NetworkListener.sys.mjs)
 
   # shared modules (messagehandler architecture)
   content/shared/messagehandler/Errors.sys.mjs (shared/messagehandler/Errors.sys.mjs)
