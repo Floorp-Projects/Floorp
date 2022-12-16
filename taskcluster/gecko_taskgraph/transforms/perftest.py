@@ -12,12 +12,7 @@ from datetime import date, timedelta
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import Schema, optionally_keyed_by, resolve_keyed_by
 from taskgraph.util.treeherder import join_symbol, split_symbol
-from voluptuous import (
-    Any,
-    Optional,
-    Extra,
-)
-
+from voluptuous import Any, Extra, Optional
 
 transforms = TransformSequence()
 

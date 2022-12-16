@@ -7,9 +7,10 @@ import json
 import os
 import unittest
 
+from mozunit import main
+
 from gecko_taskgraph import files_changed
 from gecko_taskgraph.util import hg
-from mozunit import main
 
 PARAMS = {
     "head_repository": "https://hg.mozilla.org/mozilla-central",

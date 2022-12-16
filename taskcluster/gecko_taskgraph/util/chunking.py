@@ -13,14 +13,10 @@ from abc import ABCMeta, abstractmethod
 from manifestparser import TestManifest
 from manifestparser.filters import chunk_by_runtime, tags
 from mozbuild.util import memoize
-from moztest.resolve import (
-    TEST_SUITES,
-    TestResolver,
-    TestManifestLoader,
-)
+from moztest.resolve import TEST_SUITES, TestManifestLoader, TestResolver
 
 from gecko_taskgraph import GECKO
-from gecko_taskgraph.util.bugbug import BugbugTimeoutException, CT_LOW, push_schedules
+from gecko_taskgraph.util.bugbug import CT_LOW, BugbugTimeoutException, push_schedules
 
 logger = logging.getLogger(__name__)
 here = os.path.abspath(os.path.dirname(__file__))

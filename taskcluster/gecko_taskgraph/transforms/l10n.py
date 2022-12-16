@@ -18,11 +18,7 @@ from taskgraph.util.schema import (
 )
 from taskgraph.util.taskcluster import get_artifact_prefix
 from taskgraph.util.treeherder import add_suffix
-from voluptuous import (
-    Any,
-    Optional,
-    Required,
-)
+from voluptuous import Any, Optional, Required
 
 from gecko_taskgraph.loader.multi_dep import schema
 from gecko_taskgraph.transforms.job import job_description_schema

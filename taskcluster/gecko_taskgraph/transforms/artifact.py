@@ -9,10 +9,11 @@ import os
 import sys
 
 import yaml
-from gecko_taskgraph.transforms.job.common import get_expiration
-from gecko_taskgraph.util.workertypes import worker_type_implementation
 from taskgraph.transforms.base import TransformSequence
 from yaml import YAMLError
+
+from gecko_taskgraph.transforms.job.common import get_expiration
+from gecko_taskgraph.util.workertypes import worker_type_implementation
 
 logger = logging.getLogger(__name__)
 

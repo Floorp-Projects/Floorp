@@ -3,20 +3,19 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-import os
 import json
+import os
 import shutil
-import unittest
 import tempfile
+import unittest
+from unittest.mock import patch
 
 import pytest
-from mozunit import main, MockedOpen
+from mozunit import MockedOpen, main
 from taskgraph.util.yaml import load_yaml
-from unittest.mock import patch
 
 from gecko_taskgraph import decision
 from gecko_taskgraph.parameters import register_parameters
-
 
 FAKE_GRAPH_CONFIG = {"product-dir": "browser", "taskgraph": {}}
 

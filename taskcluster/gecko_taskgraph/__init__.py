@@ -3,9 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+
 from taskgraph import config as taskgraph_config
 from taskgraph import morph as taskgraph_morph
-from taskgraph.util import taskcluster as tc_util, schema
+from taskgraph.util import schema
+from taskgraph.util import taskcluster as tc_util
 
 from gecko_taskgraph.config import graph_config_schema
 
@@ -47,11 +49,12 @@ def register(graph_config):
         graph_config: The graph configuration object.
     """
     from taskgraph import generator
-    from gecko_taskgraph.parameters import register_parameters
+
+    from gecko_taskgraph import morph  # noqa: trigger morph registration
     from gecko_taskgraph import (  # noqa: trigger target task method registration
         target_tasks,
     )
-    from gecko_taskgraph import morph  # noqa: trigger morph registration
+    from gecko_taskgraph.parameters import register_parameters
     from gecko_taskgraph.util.verify import verifications
 
     # Don't use the upstream verifications, and replace them with our own.

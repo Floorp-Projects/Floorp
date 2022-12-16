@@ -4,12 +4,11 @@
 
 
 import logging
+import subprocess
 
 import requests
-import subprocess
-from redo import retry
-
 from mozbuild.util import memoize
+from redo import retry
 
 logger = logging.getLogger(__name__)
 

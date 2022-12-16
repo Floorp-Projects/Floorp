@@ -11,6 +11,11 @@ way, and certainly anything using mozharness should use this approach.
 import json
 from textwrap import dedent
 
+from mozpack import path as mozpath
+from taskgraph.util.schema import Schema
+from voluptuous import Any, Optional, Required
+from voluptuous.validators import Match
+
 from gecko_taskgraph.transforms.job import configure_taskdesc_for_run, run_job_using
 from gecko_taskgraph.transforms.job.common import (
     docker_worker_add_artifacts,
@@ -20,10 +25,6 @@ from gecko_taskgraph.transforms.job.common import (
 )
 from gecko_taskgraph.transforms.task import get_branch_repo, get_branch_rev
 from gecko_taskgraph.util.attributes import is_try
-from mozpack import path as mozpath
-from taskgraph.util.schema import Schema
-from voluptuous import Any, Optional, Required
-from voluptuous.validators import Match
 
 mozharness_run_schema = Schema(
     {

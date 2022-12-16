@@ -13,7 +13,6 @@ from gecko_taskgraph.transforms.task import task_description_schema
 from gecko_taskgraph.util.attributes import release_level
 from gecko_taskgraph.util.scriptworker import add_scope_prefix
 
-
 push_flatpak_description_schema = Schema(
     {
         Required("name"): str,

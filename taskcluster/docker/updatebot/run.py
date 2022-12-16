@@ -10,13 +10,15 @@ import sys
 sys.path.append("/builds/worker/checkouts/gecko/third_party/python")
 sys.path.append(".")
 
-import os
-import stat
 import base64
-import signal
+import os
 import platform
-import requests
+import signal
+import stat
 import subprocess
+
+import requests
+
 import taskcluster
 
 # Bump this number when you need to cause a commit for the job to re-run: 21

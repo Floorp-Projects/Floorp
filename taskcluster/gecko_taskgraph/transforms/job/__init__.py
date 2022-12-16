@@ -15,14 +15,15 @@ import json
 import logging
 
 import mozpack.path as mozpath
-from gecko_taskgraph.transforms.cached_tasks import order_tasks
-from gecko_taskgraph.transforms.task import task_description_schema
-from gecko_taskgraph.util.workertypes import worker_type_implementation
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.python_path import import_sibling_modules
 from taskgraph.util.schema import Schema, validate_schema
 from taskgraph.util.taskcluster import get_artifact_prefix
 from voluptuous import Any, Exclusive, Extra, Optional, Required
+
+from gecko_taskgraph.transforms.cached_tasks import order_tasks
+from gecko_taskgraph.transforms.task import task_description_schema
+from gecko_taskgraph.util.workertypes import worker_type_implementation
 
 logger = logging.getLogger(__name__)
 

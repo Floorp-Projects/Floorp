@@ -10,7 +10,6 @@ import time
 
 import requests
 from mozbuild.util import memoize
-
 from taskgraph import create
 from taskgraph.util.taskcluster import requests_retry_session
 

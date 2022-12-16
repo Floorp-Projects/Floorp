@@ -10,12 +10,9 @@ from urllib.parse import urlsplit
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
 
+from gecko_taskgraph.transforms.task import get_branch_repo, get_branch_rev
 from gecko_taskgraph.util.attributes import release_level
 from gecko_taskgraph.util.scriptworker import get_release_config
-from gecko_taskgraph.transforms.task import (
-    get_branch_repo,
-    get_branch_rev,
-)
 
 transforms = TransformSequence()
 

@@ -13,6 +13,7 @@ from mozbuild.util import memoize
 from mozpack.path import match as mozpackmatch
 
 from gecko_taskgraph import files_changed
+
 from .. import GECKO
 
 logger = logging.getLogger(__name__)

@@ -13,10 +13,11 @@ actual checking.
 import os.path
 
 import pytest
-import gecko_taskgraph.util.verify
-from gecko_taskgraph.util.verify import DocPaths, verify_docs
-from gecko_taskgraph import GECKO
 from mozunit import main
+
+import gecko_taskgraph.util.verify
+from gecko_taskgraph import GECKO
+from gecko_taskgraph.util.verify import DocPaths, verify_docs
 
 FF_DOCS_BASE = os.path.join(GECKO, "taskcluster", "docs")
 EXTRA_DOCS_BASE = os.path.abspath(os.path.join(os.path.dirname(__file__), "docs"))

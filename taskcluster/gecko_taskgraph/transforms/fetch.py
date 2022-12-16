@@ -19,6 +19,7 @@ from taskgraph.util.treeherder import join_symbol
 from voluptuous import Any, Extra, Optional, Required
 
 import gecko_taskgraph
+
 from ..util.cached_tasks import add_optimization
 
 CACHE_TYPE = "content.v1"

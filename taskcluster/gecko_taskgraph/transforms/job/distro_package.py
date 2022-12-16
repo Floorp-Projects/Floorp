@@ -14,11 +14,10 @@ from taskgraph.util.schema import Schema
 from taskgraph.util.taskcluster import get_root_url
 from voluptuous import Any, Optional, Required
 
+from gecko_taskgraph import GECKO
 from gecko_taskgraph.transforms.job import run_job_using
 from gecko_taskgraph.transforms.job.common import add_artifacts
-
 from gecko_taskgraph.util.hash import hash_path
-from gecko_taskgraph import GECKO
 
 DSC_PACKAGE_RE = re.compile(".*(?=_)")
 SOURCE_PACKAGE_RE = re.compile(r".*(?=[-_]\d)")

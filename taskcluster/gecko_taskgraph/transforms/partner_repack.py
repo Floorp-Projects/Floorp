@@ -9,15 +9,14 @@ from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
 
 from gecko_taskgraph.util.attributes import release_level
-from gecko_taskgraph.util.scriptworker import get_release_config
 from gecko_taskgraph.util.partners import (
+    apply_partner_priority,
     check_if_partners_enabled,
     get_partner_config_by_kind,
     get_partner_url_config,
     get_repack_ids_by_platform,
-    apply_partner_priority,
 )
-
+from gecko_taskgraph.util.scriptworker import get_release_config
 
 transforms = TransformSequence()
 transforms.add(check_if_partners_enabled)

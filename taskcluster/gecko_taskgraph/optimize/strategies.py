@@ -9,7 +9,7 @@ from datetime import datetime
 import mozpack.path as mozpath
 from mozbuild.base import MozbuildObject
 from mozbuild.util import memoize
-from taskgraph.optimize.base import register_strategy, OptimizationStrategy
+from taskgraph.optimize.base import OptimizationStrategy, register_strategy
 from taskgraph.util.taskcluster import find_task_id
 
 from gecko_taskgraph import files_changed

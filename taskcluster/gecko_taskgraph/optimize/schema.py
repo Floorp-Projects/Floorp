@@ -4,8 +4,8 @@
 
 
 import logging
-import voluptuous
 
+import voluptuous
 from mozbuild import schedules
 
 logger = logging.getLogger(__name__)

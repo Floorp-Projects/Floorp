@@ -11,7 +11,6 @@ from taskgraph.util.schema import resolve_keyed_by
 
 from gecko_taskgraph.util.scriptworker import get_release_config
 
-
 transforms = TransformSequence()
 
 

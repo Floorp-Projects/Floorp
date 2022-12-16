@@ -13,7 +13,6 @@ from gecko_taskgraph.util.signed_artifacts import (
     generate_specifications_of_artifacts_to_sign,
 )
 
-
 transforms = TransformSequence()
 
 

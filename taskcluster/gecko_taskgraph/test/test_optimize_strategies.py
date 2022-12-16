@@ -12,14 +12,14 @@ from taskgraph.optimize.base import registry
 from taskgraph.task import Task
 
 from gecko_taskgraph.optimize import project
-from gecko_taskgraph.optimize.strategies import IndexSearch, SkipUnlessSchedules
 from gecko_taskgraph.optimize.backstop import SkipUnlessBackstop, SkipUnlessPushInterval
 from gecko_taskgraph.optimize.bugbug import (
+    FALLBACK,
     BugBugPushSchedules,
     DisperseGroups,
-    FALLBACK,
     SkipUnlessDebug,
 )
+from gecko_taskgraph.optimize.strategies import IndexSearch, SkipUnlessSchedules
 from gecko_taskgraph.util.backstop import BACKSTOP_PUSH_INTERVAL
 from gecko_taskgraph.util.bugbug import (
     BUGBUG_BASE_URL,

@@ -16,14 +16,13 @@ happen on mozilla-beta and mozilla-release.
 Additional configuration is found in the :ref:`graph config <taskgraph-graph-config>`.
 """
 import functools
+import itertools
 import json
 import os
-import itertools
 from copy import deepcopy
 from datetime import datetime
 
 import jsone
-
 from mozbuild.util import memoize
 from taskgraph.util.schema import resolve_keyed_by
 from taskgraph.util.taskcluster import get_artifact_prefix

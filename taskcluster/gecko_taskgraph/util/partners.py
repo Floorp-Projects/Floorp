@@ -6,11 +6,11 @@
 import json
 import logging
 import os
-import requests
 import xml.etree.ElementTree as ET
 from copy import deepcopy
 from urllib.parse import urlencode
 
+import requests
 import yaml
 from redo import retry
 from taskgraph.util.schema import resolve_keyed_by

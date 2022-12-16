@@ -7,12 +7,9 @@ Support for running spidermonkey jobs via dedicated scripts
 
 
 from taskgraph.util.schema import Schema
-from voluptuous import Required, Any, Optional
+from voluptuous import Any, Optional, Required
 
-from gecko_taskgraph.transforms.job import (
-    run_job_using,
-    configure_taskdesc_for_run,
-)
+from gecko_taskgraph.transforms.job import configure_taskdesc_for_run, run_job_using
 from gecko_taskgraph.transforms.job.common import (
     docker_worker_add_artifacts,
     generic_worker_add_artifacts,

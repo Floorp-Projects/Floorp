@@ -23,7 +23,6 @@ import logging
 import os
 import re
 
-
 from slugid import nice as slugid
 from taskgraph.graph import Graph
 from taskgraph.morph import register_morph

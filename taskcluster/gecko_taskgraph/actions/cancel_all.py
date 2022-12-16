@@ -11,6 +11,7 @@ import requests
 from taskgraph.util.taskcluster import CONCURRENCY, cancel_task
 
 from gecko_taskgraph.util.taskcluster import list_task_group_incomplete_task_ids
+
 from .registry import register_callback_action
 
 logger = logging.getLogger(__name__)

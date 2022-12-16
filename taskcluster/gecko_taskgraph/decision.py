@@ -15,9 +15,9 @@ import yaml
 from redo import retry
 from taskgraph import create
 from taskgraph.create import create_tasks
+
+# TODO: Let standalone taskgraph generate parameters instead of calling internals
 from taskgraph.decision import (
-    # TODO: Let standalone taskgraph generate parameters instead
-    # of calling internals
     _determine_more_accurate_base_ref,
     _determine_more_accurate_base_rev,
     _get_env_prefix,

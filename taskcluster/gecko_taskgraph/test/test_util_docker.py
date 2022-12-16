@@ -10,11 +10,11 @@ import tarfile
 import tempfile
 import unittest
 from unittest import mock
+
 import taskcluster_urls as liburls
+from mozunit import MockedOpen, main
 
 from gecko_taskgraph.util import docker
-from mozunit import main, MockedOpen
-
 
 MODE_STANDARD = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH
 

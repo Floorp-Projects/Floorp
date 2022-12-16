@@ -5,10 +5,7 @@
 
 import mozunit
 
-from gecko_taskgraph.util.bugbug import (
-    BUGBUG_BASE_URL,
-    push_schedules,
-)
+from gecko_taskgraph.util.bugbug import BUGBUG_BASE_URL, push_schedules
 
 
 def test_group_translation(responses):

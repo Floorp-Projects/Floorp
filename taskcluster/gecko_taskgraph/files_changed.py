@@ -8,11 +8,12 @@ Support for optimizing tasks based on the set of files that have changed.
 
 import logging
 import os
-
-from mozpack.path import match as mozpackmatch, join as join_path
-from mozversioncontrol import get_repository_object, InvalidRepoPath
 from subprocess import CalledProcessError
+
 from mozbuild.util import memoize
+from mozpack.path import join as join_path
+from mozpack.path import match as mozpackmatch
+from mozversioncontrol import InvalidRepoPath, get_repository_object
 
 from gecko_taskgraph import GECKO
 from gecko_taskgraph.util.hg import get_json_automationrelevance

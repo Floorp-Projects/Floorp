@@ -6,7 +6,7 @@ Transform the release-msix-push kind into an actual task description.
 """
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by, Schema
+from taskgraph.util.schema import Schema, optionally_keyed_by, resolve_keyed_by
 from voluptuous import Optional, Required
 
 from gecko_taskgraph.transforms.task import task_description_schema

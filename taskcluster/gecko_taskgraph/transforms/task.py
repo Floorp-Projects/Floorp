@@ -18,7 +18,6 @@ from copy import deepcopy
 
 import attr
 from mozbuild.util import memoize
-from taskcluster.utils import fromNow
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.keyed_by import evaluate_keyed_by
 from taskgraph.util.schema import (
@@ -29,10 +28,11 @@ from taskgraph.util.schema import (
     validate_schema,
 )
 from taskgraph.util.treeherder import split_symbol
-from voluptuous import Any, Required, Optional, Extra, Match, All, NotIn
+from voluptuous import All, Any, Extra, Match, NotIn, Optional, Required
 
 from gecko_taskgraph import GECKO, MAX_DEPENDENCIES
 from gecko_taskgraph.optimize.schema import OptimizationSchema
+from gecko_taskgraph.transforms.job.common import get_expiration
 from gecko_taskgraph.util import docker as dockerutil
 from gecko_taskgraph.util.attributes import TRUNK_PROJECTS, is_try, release_level
 from gecko_taskgraph.util.hash import hash_path
@@ -40,7 +40,7 @@ from gecko_taskgraph.util.partners import get_partners_to_be_published
 from gecko_taskgraph.util.scriptworker import BALROG_ACTIONS, get_release_config
 from gecko_taskgraph.util.signed_artifacts import get_signed_artifacts
 from gecko_taskgraph.util.workertypes import get_worker_type, worker_type_implementation
-from gecko_taskgraph.transforms.job.common import get_expiration
+from taskcluster.utils import fromNow
 
 RUN_TASK = os.path.join(GECKO, "taskcluster", "scripts", "run-task")
 

@@ -5,9 +5,9 @@
 
 import logging
 
+import redo
 import requests
 
-import redo
 from gecko_taskgraph.util.scriptworker import (
     BALROG_SCOPE_ALIAS_TO_PROJECT,
     BALROG_SERVER_SCOPES,

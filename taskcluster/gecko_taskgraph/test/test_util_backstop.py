@@ -12,10 +12,10 @@ from mozunit import main
 from taskgraph.util.taskcluster import get_artifact_url, get_index_url, get_task_url
 
 from gecko_taskgraph.util.backstop import (
-    is_backstop,
     BACKSTOP_INDEX,
     BACKSTOP_PUSH_INTERVAL,
     BACKSTOP_TIME_INTERVAL,
+    is_backstop,
 )
 
 LAST_BACKSTOP_ID = 0

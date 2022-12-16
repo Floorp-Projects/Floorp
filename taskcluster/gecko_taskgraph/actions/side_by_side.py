@@ -10,14 +10,9 @@ from functools import partial
 
 from taskgraph.util.taskcluster import get_artifact, get_task_definition
 
-from .registry import register_callback_action
-from .util import (
-    create_tasks,
-    fetch_graph_and_labels,
-    get_decision_task_id,
-    get_pushes,
-)
 from ..util.taskcluster import list_task_group_complete_tasks
+from .registry import register_callback_action
+from .util import create_tasks, fetch_graph_and_labels, get_decision_task_id, get_pushes
 
 logger = logging.getLogger(__name__)
 

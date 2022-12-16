@@ -9,26 +9,25 @@ from collections import defaultdict
 from copy import deepcopy
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.taskcluster import get_artifact_prefix
 from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by
-from voluptuous import Any, Required, Optional
+from taskgraph.util.taskcluster import get_artifact_prefix
+from voluptuous import Any, Optional, Required
 
 from gecko_taskgraph.loader.single_dep import schema
 from gecko_taskgraph.transforms.beetmover import craft_release_properties
+from gecko_taskgraph.transforms.task import task_description_schema
 from gecko_taskgraph.util.attributes import (
     copy_attributes_from_dependent_job,
     release_level,
 )
 from gecko_taskgraph.util.partners import (
-    get_partner_config_by_kind,
     apply_partner_priority,
+    get_partner_config_by_kind,
 )
 from gecko_taskgraph.util.scriptworker import (
     add_scope_prefix,
     get_beetmover_bucket_scope,
 )
-from gecko_taskgraph.transforms.task import task_description_schema
-
 
 beetmover_description_schema = schema.extend(
     {
