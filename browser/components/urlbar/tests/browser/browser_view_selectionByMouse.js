@@ -82,29 +82,28 @@ add_task(async function basic() {
         value: "test",
         window,
       });
-      await UrlbarTestUtils.promiseSearchComplete(window);
-      await BrowserTestUtils.waitForCondition(
-        () =>
-          BrowserTestUtils.is_visible(document.querySelector(mousedown)) &&
-          BrowserTestUtils.is_visible(document.querySelector(mouseup))
-      );
+      let [downElement, upElement] = await waitForElements([
+        mousedown,
+        mouseup,
+      ]);
 
-      const mousedownElement = document.querySelector(mousedown);
-      EventUtils.synthesizeMouseAtCenter(mousedownElement, {
+      EventUtils.synthesizeMouseAtCenter(downElement, {
         type: "mousedown",
       });
-      await BrowserTestUtils.waitForCondition(() =>
-        mousedownElement.hasAttribute("selected")
+      Assert.ok(
+        downElement.hasAttribute("selected"),
+        "Mousedown element should be selected after mousedown"
       );
-      Assert.ok(true, "Element should be selected");
 
-      const mouseupElement = document.querySelector(mouseup);
-      EventUtils.synthesizeMouseAtCenter(mouseupElement, { type: "mouseup" });
-
-      await BrowserTestUtils.waitForCondition(
-        () => !mousedownElement.hasAttribute("selected")
+      EventUtils.synthesizeMouseAtCenter(upElement, { type: "mouseup" });
+      Assert.ok(
+        !downElement.hasAttribute("selected"),
+        "Mousedown element should not be selected after mouseup"
       );
-      Assert.ok(true, "Selected element should be unselected");
+      Assert.ok(
+        !upElement.hasAttribute("selected"),
+        "Mouseup element should not be selected after mouseup"
+      );
 
       if (expected) {
         await BrowserTestUtils.browserLoaded(
@@ -143,29 +142,25 @@ add_task(async function outOfBrowser() {
         value: "test",
         window,
       });
-      await UrlbarTestUtils.promiseSearchComplete(window);
-      await BrowserTestUtils.waitForCondition(() =>
-        BrowserTestUtils.is_visible(document.querySelector(mousedown))
-      );
+      let [downElement] = await waitForElements([mousedown]);
 
-      const mousedownElement = document.querySelector(mousedown);
-      EventUtils.synthesizeMouseAtCenter(mousedownElement, {
+      EventUtils.synthesizeMouseAtCenter(downElement, {
         type: "mousedown",
       });
-      await BrowserTestUtils.waitForCondition(() =>
-        mousedownElement.hasAttribute("selected")
+      Assert.ok(
+        downElement.hasAttribute("selected"),
+        "Mousedown element should be selected after mousedown"
       );
-      Assert.ok(true, "Element should be selected");
 
       // Mouseup at out of browser.
       EventUtils.synthesizeMouse(document.documentElement, -1, -1, {
         type: "mouseup",
       });
 
-      await BrowserTestUtils.waitForCondition(
-        () => !mousedownElement.hasAttribute("selected")
+      Assert.ok(
+        !downElement.hasAttribute("selected"),
+        "Mousedown element should not be selected after mouseup"
       );
-      Assert.ok(true, "Selected element should be unselected");
     });
   }
 });
@@ -223,12 +218,10 @@ add_task(async function withSelectionByKeyboard() {
         value: "test",
         window,
       });
-      await UrlbarTestUtils.promiseSearchComplete(window);
-      await BrowserTestUtils.waitForCondition(
-        () =>
-          BrowserTestUtils.is_visible(document.querySelector(mousedown)) &&
-          BrowserTestUtils.is_visible(document.querySelector(mouseup))
-      );
+      let [downElement, upElement] = await waitForElements([
+        mousedown,
+        mouseup,
+      ]);
 
       if (arrowDown) {
         EventUtils.synthesizeKey(
@@ -238,42 +231,43 @@ add_task(async function withSelectionByKeyboard() {
         );
       }
 
-      await BrowserTestUtils.waitForCondition(() =>
-        document.querySelector(expected.selectedElementByKey)
+      let [selectedElementByKey] = await waitForElements([
+        expected.selectedElementByKey,
+      ]);
+      Assert.ok(
+        selectedElementByKey.hasAttribute("selected"),
+        "selectedElementByKey should be selected after arrow down"
       );
-      Assert.ok(true, "Expected element is selected");
 
-      const selectedElementByKey = document.querySelector(
-        expected.selectedElementByKey
-      );
-      EventUtils.synthesizeMouseAtCenter(document.querySelector(mousedown), {
+      EventUtils.synthesizeMouseAtCenter(downElement, {
         type: "mousedown",
       });
 
       if (
         expected.selectedElementByKey !== expected.selectedElementAfterMouseDown
       ) {
-        await BrowserTestUtils.waitForCondition(() =>
-          BrowserTestUtils.is_visible(
-            document.querySelector(expected.selectedElementAfterMouseDown)
-          )
+        let [selectedElementAfterMouseDown] = await waitForElements([
+          expected.selectedElementAfterMouseDown,
+        ]);
+        Assert.ok(
+          selectedElementAfterMouseDown.hasAttribute("selected"),
+          "selectedElementAfterMouseDown should be selected after mousedown"
         );
-        Assert.ok(true, "Selected element is changed");
         Assert.ok(
           !selectedElementByKey.hasAttribute("selected"),
-          "Selected element by key is unselected"
+          "selectedElementByKey should not be selected after mousedown"
         );
       }
 
-      EventUtils.synthesizeMouseAtCenter(document.querySelector(mouseup), {
+      EventUtils.synthesizeMouseAtCenter(upElement, {
         type: "mouseup",
       });
 
       if (expected.actionedPage) {
-        await BrowserTestUtils.waitForCondition(
-          () => !selectedElementByKey.hasAttribute("selected")
+        Assert.ok(
+          !selectedElementByKey.hasAttribute("selected"),
+          "selectedElementByKey should not be selected after page starts load"
         );
-        Assert.ok(true, "Selected element by key should be unselected");
         await BrowserTestUtils.browserLoaded(
           gBrowser.selectedBrowser,
           false,
@@ -283,7 +277,7 @@ add_task(async function withSelectionByKeyboard() {
       } else {
         Assert.ok(
           selectedElementByKey.hasAttribute("selected"),
-          "Selected element by key is still selected"
+          "selectedElementByKey should remain selected"
         );
       }
     });
@@ -321,3 +315,240 @@ add_task(async function withDnsFirstForSingleWordsPref() {
   await PlacesUtils.bookmarks.eraseEverything();
   await SpecialPowers.popPrefEnv();
 });
+
+add_task(async function buttons() {
+  let initialTabUrl = "https://example.com/initial";
+  let mainResultUrl = "https://example.com/main";
+  let mainResultHelpUrl = "https://example.com/help";
+  let otherResultUrl = "https://example.com/other";
+
+  let searchString = "test";
+
+  // Add a provider with two results: The first has buttons and the second has a
+  // URL that should or shouldn't become the input's value when the block button
+  // in the first result is clicked, depending on the test.
+  let provider = new UrlbarTestUtils.TestProvider({
+    priority: Infinity,
+    results: [
+      new UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.URL,
+        UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        {
+          url: mainResultUrl,
+          helpUrl: mainResultHelpUrl,
+          helpL10n: { id: "firefox-suggest-urlbar-learn-more" },
+          isBlockable: true,
+          blockL10n: { id: "firefox-suggest-urlbar-block" },
+        }
+      ),
+      new UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.URL,
+        UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        {
+          url: otherResultUrl,
+        }
+      ),
+    ],
+  });
+
+  // Implement the provider's `blockResult()`. Return true from it so the view
+  // removes the row after it's called.
+  let blockResultCallCount = 0;
+  provider.blockResult = () => {
+    blockResultCallCount++;
+    return true;
+  };
+
+  UrlbarProvidersManager.registerProvider(provider);
+
+  let assertBlockResultCalled = () => {
+    Assert.equal(
+      blockResultCallCount,
+      1,
+      "blockResult() should have been called once"
+    );
+    blockResultCallCount = 0;
+
+    let rowUrls = [];
+    let rows = UrlbarTestUtils.getResultsContainer(window).children;
+    for (let row of rows) {
+      rowUrls.push(row.result.payload.url);
+    }
+    Assert.ok(
+      !rowUrls.includes(mainResultUrl),
+      "The main result should not be in the view after blocking it: " +
+        JSON.stringify(rowUrls)
+    );
+  };
+
+  let testData = [
+    {
+      description: "Block button to block button",
+      mousedown: ".urlbarView-row:nth-child(1) .urlbarView-button-block",
+      afterMouseupCallback: assertBlockResultCalled,
+      expected: {
+        mousedownSelected: false,
+        topSites: {
+          pageProxyState: "valid",
+          value: initialTabUrl,
+        },
+        searchString: {
+          pageProxyState: "invalid",
+          value: searchString,
+        },
+      },
+    },
+    {
+      description: "Help button to help button",
+      mousedown: ".urlbarView-row:nth-child(1) .urlbarView-button-help",
+      expected: {
+        mousedownSelected: false,
+        url: mainResultHelpUrl,
+        newTab: true,
+      },
+    },
+    {
+      description: "Row-inner to block button",
+      mousedown: ".urlbarView-row:nth-child(1) > .urlbarView-row-inner",
+      mouseup: ".urlbarView-row:nth-child(1) .urlbarView-button-block",
+      afterMouseupCallback: assertBlockResultCalled,
+      expected: {
+        mousedownSelected: true,
+        topSites: {
+          pageProxyState: "invalid",
+          value: otherResultUrl,
+        },
+        searchString: {
+          pageProxyState: "invalid",
+          value: otherResultUrl,
+        },
+      },
+    },
+    {
+      description: "Block button to row-inner",
+      mousedown: ".urlbarView-row:nth-child(1) .urlbarView-button-block",
+      mouseup: ".urlbarView-row:nth-child(1) > .urlbarView-row-inner",
+      expected: {
+        mousedownSelected: false,
+        url: mainResultUrl,
+        newTab: false,
+      },
+    },
+  ];
+
+  for (let showTopSites of [true, false]) {
+    for (let { description, mousedown, mouseup, expected } of testData) {
+      info(`Running test with showTopSites = ${showTopSites}: ${description}`);
+      mouseup = mouseup || mousedown;
+
+      await BrowserTestUtils.withNewTab(initialTabUrl, async () => {
+        Assert.equal(
+          gURLBar.getAttribute("pageproxystate"),
+          "valid",
+          "Sanity check: pageproxystate should be valid initially"
+        );
+        Assert.equal(
+          gURLBar.value,
+          initialTabUrl,
+          "Sanity check: input.value should be the initial URL initially"
+        );
+
+        if (showTopSites) {
+          // Open the view and show top sites by performing the accel+L command.
+          await SimpleTest.promiseFocus(window);
+          let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
+          document.getElementById("Browser:OpenLocation").doCommand();
+          await searchPromise;
+        } else {
+          // Do a search.
+          await UrlbarTestUtils.promiseAutocompleteResultPopup({
+            window,
+            value: searchString,
+          });
+        }
+
+        let [downElement, upElement] = await waitForElements([
+          mousedown,
+          mouseup,
+        ]);
+
+        // Mousedown and check the selection.
+        EventUtils.synthesizeMouseAtCenter(downElement, {
+          type: "mousedown",
+        });
+        if (expected.mousedownSelected) {
+          Assert.ok(
+            downElement.hasAttribute("selected"),
+            "Mousedown element should be selected after mousedown"
+          );
+        } else {
+          Assert.ok(
+            !downElement.hasAttribute("selected"),
+            "Mousedown element should not be selected after mousedown"
+          );
+        }
+
+        let loadPromise;
+        if (expected.url) {
+          loadPromise = expected.newTab
+            ? BrowserTestUtils.waitForNewTab(gBrowser, expected.url)
+            : BrowserTestUtils.browserLoaded(
+                gBrowser.selectedBrowser,
+                null,
+                expected.url
+              );
+        }
+
+        // Mouseup and check the selection.
+        EventUtils.synthesizeMouseAtCenter(upElement, { type: "mouseup" });
+        Assert.ok(
+          !downElement.hasAttribute("selected"),
+          "Mousedown element should not be selected after mouseup"
+        );
+        Assert.ok(
+          !upElement.hasAttribute("selected"),
+          "Mouseup element should not be selected after mouseup"
+        );
+
+        // If we expect a URL to load, we're done since the view will close and
+        // the input value will be set to the URL.
+        if (loadPromise) {
+          info("Waiting for URL to load: " + expected.url);
+          let tab = await loadPromise;
+          Assert.ok(true, "Expected URL loaded");
+          if (expected.newTab) {
+            BrowserTestUtils.removeTab(tab);
+          }
+          return;
+        }
+
+        if (expected.afterMouseupCallback) {
+          await expected.afterMouseupCallback();
+        }
+
+        let state = showTopSites ? expected.topSites : expected.searchString;
+        Assert.equal(
+          gURLBar.getAttribute("pageproxystate"),
+          state.pageProxyState,
+          "pageproxystate should be as expected"
+        );
+        Assert.equal(
+          gURLBar.value,
+          state.value,
+          "input.value should be as expected"
+        );
+      });
+    }
+  }
+
+  UrlbarProvidersManager.unregisterProvider(provider);
+});
+
+async function waitForElements(selectors) {
+  let elements;
+  await BrowserTestUtils.waitForCondition(() => {
+    elements = selectors.map(s => document.querySelector(s));
+    return elements.every(e => e && BrowserTestUtils.is_visible(e));
+  }, "Waiting for elements to become visible: " + JSON.stringify(selectors));
+  return elements;
+}
