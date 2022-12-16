@@ -459,9 +459,6 @@ class MixModeBlender {
     // Create a temporary context to draw to so we can blend it back with
     // another operator.
     IntRect drawRect = ComputeClipExtsInDeviceSpace(aTransform);
-    if (drawRect.IsEmpty()) {
-      return nullptr;
-    }
 
     RefPtr<DrawTarget> targetDT =
         mSourceCtx->GetDrawTarget()->CreateSimilarDrawTarget(
