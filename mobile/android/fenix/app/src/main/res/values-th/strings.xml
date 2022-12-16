@@ -63,10 +63,12 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">เพิ่มทางลัดเพื่อเปิดแท็บส่วนตัวจากหน้าจอหลักของคุณ</string>
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">เพิ่มทางลัดเพื่อเปิดแท็บส่วนตัวจากหน้าจอหลักของคุณ</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">เพิ่มทางลัด</string>
-    <!-- Text for the negative button -->
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">เพิ่มทางลัด</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">เพิ่มไปยังหน้าจอหลัก</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">ไม่ ขอบคุณ</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -340,6 +342,11 @@
     <string name="reduce_cookie_banner_option">ลดคุกกี้แบนเนอร์</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
     <string name="reduce_cookie_banner_summary">Firefox จะพยายามปฏิเสธคำขอคุกกี้บนแบนเนอร์คุกกี้โดยอัตโนมัติ หากไม่มีตัวเลือกปฏิเสธ Firefox อาจยอมรับคุกกี้ทั้งหมดเพื่อปิดแบนเนอร์</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">ปิดสำหรับไซต์นี้</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">เปิดสำหรับไซต์นี้</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">พยายามเชื่อมต่อกับเว็บไซต์โดยใช้โปรโตคอลการเข้ารหัส HTTPS โดยอัตโนมัติเพื่อเพิ่มความปลอดภัย</string>
@@ -1068,8 +1075,6 @@
     <string name="share_copy_link_to_clipboard">คัดลอกไปยังคลิปบอร์ด</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">คัดลอกไปยังคลิปบอร์ดแล้ว</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">ลงชื่อเข้าใช้เพื่อซิงค์</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">ลงชื่อเข้าไปยัง Sync</string>
      <!-- An option from the three dot menu to sync and save data -->

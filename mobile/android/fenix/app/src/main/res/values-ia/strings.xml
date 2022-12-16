@@ -354,6 +354,12 @@
     <string name="reduce_cookie_banner_off_for_site">Disactivar pro iste sito</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Activar pro iste sito</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site">Activar le reduction de banner pro cookie pro %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site">Disactivar le reduction de banner pro cookie pro %1$s?</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s clarara le cookies de iste sito e actualisara le pagina. Clarar tote le cookies pote clauder tu connexion o vacuar tu carrettos de compras.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s pote probar automaticamente a rejectar requestas de cookies. Si un option pro rejectar non es disponibile, %2$s pote acceptar tote le cookies pro dimitter le banner.</string>
 

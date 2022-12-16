@@ -65,10 +65,14 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">Adicione um atalho na tela inicial para abrir abas privativas.</string>
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Adicione um atalho na tela inicial do dispositivo para abrir abas privativas.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message">Aba a próxima aba privativa com apenas um toque.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Adicionar atalho</string>
-    <!-- Text for the negative button -->
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Adicionar atalho</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">Adicionar à tela inicial do dispositivo</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Não, obrigado</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -342,6 +346,20 @@
     <string name="reduce_cookie_banner_option">Reduzir avisos de cookies</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
     <string name="reduce_cookie_banner_summary">O Firefox tenta rejeitar automaticamente solicitações de cookies em avisos de cookies. Se não estiver disponível uma opção de rejeição, o Firefox pode aceitar todos os cookies para descartar o aviso.</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">Desativado neste site</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">Ativado neste site</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site">Ativar redução de avisos de cookies em %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site">Desativar redução de avisos de cookies em %1$s?</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site">O %1$s irá limpar os cookies deste site e atualizar a página. Limpar todos os cookies pode encerrar a sessão de acesso no site ou esvaziar carrinhos de compras.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site">O %1$s pode tentar rejeitar solicitações de cookies automaticamente. Se não estiver disponível uma opção de rejeição, o %2$s pode aceitar todos os cookies para descartar o aviso.</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Tentar se conectar com sites usando automaticamente o protocolo de criptografia HTTPS para maior segurança.</string>
@@ -1071,8 +1089,6 @@
     <string name="share_copy_link_to_clipboard">Copiar para área de transferência</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Copiado para área de transferência</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">Entrar para sincronizar</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Entrar no Sync</string>
      <!-- An option from the three dot menu to sync and save data -->
@@ -1468,7 +1484,7 @@
     <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL copiada para área de transferência</string>
 
     <!-- Title text for the Add To Homescreen dialog -->
-    <string name="add_to_homescreen_title">Adicionar à tela inicial</string>
+    <string name="add_to_homescreen_title">Adicionar à tela inicial do dispositivo</string>
     <!-- Cancel button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_cancel">Cancelar</string>
     <!-- Add button text for the Add to Homescreen dialog -->
