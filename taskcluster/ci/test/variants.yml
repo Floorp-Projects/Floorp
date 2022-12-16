@@ -308,6 +308,8 @@ msix:
     component: "Firefox:Installer"
     expiration: "never"
     suffix: "msix"
+    when:
+        $eval: '"windows10-64" in task["test-platform"] && "opt" in task["test-platform"] && !("asan" in task["test-platform"]) && !("ccov" in task["test-platform"])'
     merge:
         mozharness:
             extra-options:
