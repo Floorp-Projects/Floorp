@@ -69,7 +69,6 @@ jobs:
             platform: osx-cross/debug
         worker-type: b-linux-gcp
         worker:
-            docker-image: {in-tree: debian11-amd64-build}
             max-run-time: 10800
             env:
                 PERFHERDER_EXTRA_OPTIONS: searchfox
@@ -109,7 +108,6 @@ jobs:
             platform: windows2012-64/debug
         worker-type: b-linux-gcp
         worker:
-            docker-image: {in-tree: debian11-amd64-build}
             max-run-time: 10800
             env:
                 PERFHERDER_EXTRA_OPTIONS: searchfox

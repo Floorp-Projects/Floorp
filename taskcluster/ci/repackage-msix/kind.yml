@@ -29,8 +29,6 @@ job-template:
     worker-type: b-linux-gcp
     # This is for fast try iteration; `repackage-shippable-l10n-msix` is the "real one".
     run-on-projects: []
-    worker:
-        docker-image: {"in-tree": "debian11-amd64-build"}
     mozharness:
         config:
             by-build-platform:

@@ -20,7 +20,6 @@ win32/debug:
         tier: 1
     worker-type: b-linux-gcp
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
@@ -75,7 +74,6 @@ win32/opt:
         tier: 1
     worker-type: b-linux-gcp
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
@@ -129,7 +127,6 @@ win32-fuzzing/debug:
         tier: 1
     worker-type: b-linux-gcp
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
             PERFHERDER_EXTRA_OPTIONS: fuzzing
@@ -188,7 +185,6 @@ win64/debug:
         tier: 1
     worker-type: b-linux-gcp
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
@@ -240,7 +236,6 @@ win64-hybrid/plain:
         tier: 1
     worker-type: b-linux-gcp
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
             PERFHERDER_EXTRA_OPTIONS: hybrid
@@ -294,7 +289,6 @@ win64-fuzzing/debug:
         tier: 1
     worker-type: b-linux-gcp
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
             PERFHERDER_EXTRA_OPTIONS: fuzzing
@@ -395,7 +389,6 @@ win64/opt:
         tier: 1
     worker-type: b-linux-gcp
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
@@ -513,7 +506,6 @@ win32-shippable/opt:
     run-on-projects: ['release']
     worker-type: b-linux-gcp
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 10800
         env:
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
@@ -571,7 +563,6 @@ win64-shippable/opt:
     run-on-projects: ['release']
     worker-type: b-linux-gcp
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 10800
         env:
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
@@ -621,7 +612,6 @@ win32-add-on-devel/opt:
         tier: 2
     worker-type: b-linux-gcp
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 10800
     run:
         actions: [get-secrets, build]
@@ -672,7 +662,6 @@ win64-add-on-devel/opt:
         tier: 2
     worker-type: b-linux-gcp
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 10800
     run:
         actions: [get-secrets, build]
@@ -723,7 +712,6 @@ win64-noopt/debug:
         tier: 2
     worker-type: b-linux-gcp
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
     run:
         actions: [get-secrets, build]
@@ -774,7 +762,6 @@ win32-noopt/debug:
         tier: 2
     worker-type: b-linux-gcp
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
     run:
         actions: [get-secrets, build]
@@ -1099,7 +1086,6 @@ win64-asan/debug:
         tier: 1
     worker-type: b-linux-gcp
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
             PERFHERDER_EXTRA_OPTIONS: "debug asan"
@@ -1154,7 +1140,6 @@ win64-asan/opt:
         tier: 1
     worker-type: b-linux-gcp
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
             PERFHERDER_EXTRA_OPTIONS: "opt asan"
@@ -1214,7 +1199,6 @@ win64-asan-reporter-shippable/opt:
         symbol: BoR
     worker-type: b-linux-gcp
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
             PERFHERDER_EXTRA_OPTIONS: "asan-reporter"
@@ -1272,7 +1256,6 @@ win64-asan-fuzzing/opt:
         symbol: Bof
     worker-type: b-linux-gcp
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
             PERFHERDER_EXTRA_OPTIONS: fuzzing-asan
@@ -1344,7 +1327,6 @@ win32-devedition/opt:
         tier: 1
     worker-type: b-linux-gcp
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 10800
         env:
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
@@ -1403,7 +1385,6 @@ win64-devedition/opt:
         tier: 1
     worker-type: b-linux-gcp
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 10800
         env:
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
@@ -1457,7 +1438,6 @@ win64-aarch64/debug:
         tier: 1
     worker-type: b-linux-gcp
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
             PERFHERDER_EXTRA_OPTIONS: aarch64
@@ -1518,7 +1498,6 @@ win64-aarch64/opt:
         tier: 1
     worker-type: b-linux-gcp
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
             PERFHERDER_EXTRA_OPTIONS: aarch64
@@ -1573,7 +1552,6 @@ win64-aarch64-eme/opt:
         tier: 1
     worker-type: b-linux-gcp
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
             PERFHERDER_EXTRA_OPTIONS: aarch64-eme
@@ -1624,7 +1602,6 @@ win64-aarch64-shippable/opt:
         tier: 1
     worker-type: b-linux-gcp
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
             PERFHERDER_EXTRA_OPTIONS: aarch64
@@ -1723,7 +1700,6 @@ win64-aarch64-shippable-no-eme/opt:
         tier: 1
     worker-type: b-linux-gcp
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
             PERFHERDER_EXTRA_OPTIONS: aarch64-no-eme
@@ -1786,7 +1762,6 @@ win64-aarch64-devedition/opt:
         tier: 1
     worker-type: b-linux-gcp
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
             MOZ_ARTIFACT_TASK: {task-reference: '<win64-aarch64-opt>'}
@@ -1884,7 +1859,6 @@ win64-aarch64-devedition-no-eme/opt:
         tier: 1
     worker-type: b-linux-gcp
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
             PERFHERDER_EXTRA_OPTIONS: aarch64-no-eme
