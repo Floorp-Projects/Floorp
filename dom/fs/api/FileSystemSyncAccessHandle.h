@@ -18,6 +18,7 @@ class nsIGlobalObject;
 namespace mozilla {
 
 class ErrorResult;
+class TaskQueue;
 
 namespace dom {
 
@@ -79,6 +80,7 @@ class FileSystemSyncAccessHandle final : public nsISupports,
   FileSystemSyncAccessHandle(nsIGlobalObject* aGlobal,
                              RefPtr<FileSystemManager>& aManager,
                              RefPtr<FileSystemAccessHandleChild> aActor,
+                             RefPtr<TaskQueue> aIOTaskQueue,
                              nsCOMPtr<nsIRandomAccessStream> aStream,
                              const fs::FileSystemEntryMetadata& aMetadata);
 
@@ -94,6 +96,8 @@ class FileSystemSyncAccessHandle final : public nsISupports,
   RefPtr<FileSystemManager> mManager;
 
   RefPtr<FileSystemAccessHandleChild> mActor;
+
+  RefPtr<TaskQueue> mIOTaskQueue;
 
   nsCOMPtr<nsIRandomAccessStream> mStream;
 
