@@ -45,7 +45,6 @@
 //! ```
 
 use anyhow::{bail, Result};
-use uniffi_meta::Checksum;
 
 use super::types::{Type, TypeIterator};
 use super::{
@@ -59,7 +58,7 @@ use super::{APIConverter, ComponentInterface};
 /// In the FFI these are represented as a byte buffer, which one side explicitly
 /// serializes the data into and the other serializes it out of. So I guess they're
 /// kind of like "pass by clone" values.
-#[derive(Debug, Clone, Checksum)]
+#[derive(Debug, Clone, Hash)]
 pub struct Record {
     pub(super) name: String,
     pub(super) fields: Vec<Field>,
@@ -110,7 +109,7 @@ impl APIConverter<Record> for weedle::DictionaryDefinition<'_> {
 }
 
 // Represents an individual field on a Record.
-#[derive(Debug, Clone, Checksum)]
+#[derive(Debug, Clone, Hash)]
 pub struct Field {
     pub(super) name: String,
     pub(super) type_: Type,
