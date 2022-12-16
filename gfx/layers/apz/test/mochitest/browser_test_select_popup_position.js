@@ -68,30 +68,42 @@ async function runPopupPositionTest(parentDocumentFileName) {
 
   const selectPopup = await openSelectPopup();
 
-  const popup_rect = selectPopup.getBoundingClientRect();
+  const popupRect = selectPopup.getBoundingClientRect();
   const popupMarginTop = parseFloat(getComputedStyle(selectPopup).marginTop);
   const popupMarginLeft = parseFloat(getComputedStyle(selectPopup).marginLeft);
 
+  info(
+    `popup rect: (${popupRect.x}, ${popupRect.y}) ${popupRect.width}x${popupRect.height}`
+  );
+  info(`popup margins: ${popupMarginTop} / ${popupMarginLeft}`);
+  info(
+    `select rect: (${selectRect.x}, ${selectRect.y}) ${selectRect.width}x${selectRect.height}`
+  );
+
   is(
-    popup_rect.left - popupMarginLeft,
+    popupRect.left - popupMarginLeft,
     selectRect.x * 2.0,
-    "select popup position should be scaled by the desktop zoom"
+    "select popup position x should be scaled by the desktop zoom"
   );
 
   // On platforms other than MaxOSX the popup menu is positioned below the
   // option element.
   if (!navigator.platform.includes("Mac")) {
     is(
-      popup_rect.top - popupMarginTop,
+      popupRect.top - popupMarginTop,
       tab.linkedBrowser.getBoundingClientRect().top +
         (selectRect.y + selectRect.height) * 2.0,
-      "select popup position should be scaled by the desktop zoom"
+      "select popup position y should be scaled by the desktop zoom"
     );
   } else {
+    // On mac it's aligned to the selected menulist option, so it should
+    // overlap the <select>, but we give it some wiggle room for
+    // paddings/margins between the labels and margins.
+    const spaceToFirstLabel = 5;
     is(
-      popup_rect.top - popupMarginTop,
+      popupRect.top - popupMarginTop + spaceToFirstLabel,
       tab.linkedBrowser.getBoundingClientRect().top + selectRect.y * 2.0,
-      "select popup position should be scaled by the desktop zoom"
+      "select popup position y should be scaled by the desktop zoom"
     );
   }
 
