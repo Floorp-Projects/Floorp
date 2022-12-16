@@ -24,19 +24,6 @@
     ],
     "functions": [
       {
-        "name": "getBranch",
-        "type": "function",
-        "description": "Get all child prefs for a branch",
-        "parameters": [
-          {
-            "name": "branchName",
-            "type": "string",
-            "description": "The branch name"
-          }
-        ],
-        "async": true
-      },
-      {
         "name": "getPref",
         "type": "function",
         "description": "Get a preference's value",
@@ -50,7 +37,90 @@
         "async": true
       },
       {
+        "name": "getCharPref",
+        "type": "function",
+        "description": "Get a preference's value",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference name"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "getStringPref",
+        "type": "function",
+        "description": "Get a preference's value",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference name"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "getIntPref",
+        "type": "function",
+        "description": "Get a preference's value",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference name"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "getFloatPref",
+        "type": "function",
+        "description": "Get a preference's value",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference name"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "getBoolPref",
+        "type": "function",
+        "description": "Get a preference's value",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference name"
+          }
+        ],
+        "async": true
+      },
+      {
         "name": "setCharPref",
+        "type": "function",
+        "description": "Set a preference's value",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference name"
+          },
+          {
+            "name": "value",
+            "type": "string",
+            "description": "The new value"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "setStringPref",
         "type": "function",
         "description": "Set a preference's value",
         "parameters": [
@@ -86,6 +156,24 @@
         "async": true
       },
       {
+        "name": "setFloatPref",
+        "type": "function",
+        "description": "Set a preference's value",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference name"
+          },
+          {
+            "name": "value",
+            "type": "number",
+            "description": "The new value"
+          }
+        ],
+        "async": true
+      },
+      {
         "name": "setBoolPref",
         "type": "function",
         "description": "Set a preference's value",
@@ -99,6 +187,265 @@
             "name": "value",
             "type": "boolean",
             "description": "The new value"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "getDefaultPref",
+        "type": "function",
+        "description": "Get a default preference's value",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference name"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "getDefaultCharPref",
+        "type": "function",
+        "description": "Get a default preference's value",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference name"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "getDefaultStringPref",
+        "type": "function",
+        "description": "Get a default preference's value",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference name"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "getDefaultIntPref",
+        "type": "function",
+        "description": "Get a default preference's value",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference name"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "getDefaultFloatPref",
+        "type": "function",
+        "description": "Get a default preference's value",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference name"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "getDefaultBoolPref",
+        "type": "function",
+        "description": "Get a default preference's value",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference name"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "setDefaultCharPref",
+        "type": "function",
+        "description": "Set a default preference's value",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference name"
+          },
+          {
+            "name": "value",
+            "type": "string",
+            "description": "The new value"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "setDefaultStringPref",
+        "type": "function",
+        "description": "Set a default preference's value",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference name"
+          },
+          {
+            "name": "value",
+            "type": "string",
+            "description": "The new value"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "setDefaultIntPref",
+        "type": "function",
+        "description": "Set a default preference's value",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference name"
+          },
+          {
+            "name": "value",
+            "type": "number",
+            "description": "The new value"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "setDefaultFloatPref",
+        "type": "function",
+        "description": "Set a default preference's value",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference name"
+          },
+          {
+            "name": "value",
+            "type": "number",
+            "description": "The new value"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "setDefaultBoolPref",
+        "type": "function",
+        "description": "Set a default preference's value",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference name"
+          },
+          {
+            "name": "value",
+            "type": "boolean",
+            "description": "The new value"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "getPrefType",
+        "type": "function",
+        "description": "Type of a preference's value",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference name"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "clearUserPref",
+        "type": "function",
+        "description": "Clear a preference's value",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference name"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "prefHasDefaultValue",
+        "type": "function",
+        "description": "Has a default preference's value",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference name"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "prefHasUserValue",
+        "type": "function",
+        "description": "Has a user preference's value",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference name"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "prefIsLocked",
+        "type": "function",
+        "description": "Locked a preference's value",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference name"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "lockPref",
+        "type": "function",
+        "description": "Lock a preference's value",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference name"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "unlockPref",
+        "type": "function",
+        "description": "Unlock a preference's value",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference name"
           }
         ],
         "async": true
