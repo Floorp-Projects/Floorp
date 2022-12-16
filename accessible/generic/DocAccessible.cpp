@@ -377,6 +377,30 @@ void DocAccessible::QueueCacheUpdate(LocalAccessible* aAcc,
   Controller()->ScheduleProcessing();
 }
 
+void DocAccessible::QueueCacheUpdateForDependentRelations(
+    LocalAccessible* aAcc) {
+  if (!mIPCDoc || !StaticPrefs::accessibility_cache_enabled_AtStartup() ||
+      !aAcc || !aAcc->Elm() || !aAcc->IsInDocument() || aAcc->IsDefunct()) {
+    return;
+  }
+  nsAutoString ID;
+  aAcc->DOMNodeID(ID);
+  if (AttrRelProviders* list = GetRelProviders(aAcc->Elm(), ID)) {
+    // We call this function when we've noticed an ID change, or when an acc
+    // is getting bound to its document. We need to ensure any existing accs
+    // that depend on this acc's ID have their rel cache entries updated.
+    for (const auto& provider : *list) {
+      LocalAccessible* relatedAcc = GetAccessible(provider->mContent);
+      if (!relatedAcc || relatedAcc->IsDefunct() ||
+          !relatedAcc->IsInDocument() ||
+          mInsertedAccessibles.Contains(relatedAcc)) {
+        continue;
+      }
+      QueueCacheUpdate(relatedAcc, CacheDomain::Relations);
+    }
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // LocalAccessible
 
@@ -829,6 +853,7 @@ void DocAccessible::AttributeChanged(dom::Element* aElement,
     RelocateARIAOwnedIfNeeded(elm);
     ARIAActiveDescendantIDMaybeMoved(accessible);
     accessible->SendCache(CacheDomain::DOMNodeID, CacheUpdateType::Update);
+    QueueCacheUpdateForDependentRelations(accessible);
   }
 
   // The activedescendant universal property redirects accessible focus events
@@ -1166,6 +1191,8 @@ void DocAccessible::BindToDocument(LocalAccessible* aAccessible,
   if (mIPCDoc) {
     mInsertedAccessibles.EnsureInserted(aAccessible);
   }
+
+  QueueCacheUpdateForDependentRelations(aAccessible);
 }
 
 void DocAccessible::UnbindFromDocument(LocalAccessible* aAccessible) {
