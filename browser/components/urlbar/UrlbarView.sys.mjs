@@ -868,6 +868,7 @@ export class UrlbarView {
   #announceTabToSearchOnSelection;
   #l10nCache;
   #mainContainer;
+  #mousedownSelectedElement;
   #openPanelInstance;
   #oneOffSearchButtons;
   #previousTabToSearchEngine;
@@ -2593,13 +2594,38 @@ export class UrlbarView {
     }
 
     this.window.top.addEventListener("mouseup", this);
-    this.#selectElement(element, { updateInput: false });
 
-    this.controller.speculativeConnect(
-      this.selectedResult,
-      this.#queryContext,
-      "mousedown"
-    );
+    // Select the element and open a speculative connection unless it's a
+    // button. Buttons are special in the two ways listed below. Some buttons
+    // may be exceptions to these two criteria, but to provide a consistent UX
+    // and avoid complexity, we apply this logic to all of them.
+    //
+    // (1) Some buttons do not close the view when clicked, like the block and
+    // menu buttons. Clicking these buttons should not have any side effects in
+    // the view or input beyond their primary purpose. For example, the block
+    // button should remove the row but it should not change the input value or
+    // page proxy state, and ideally it shouldn't change the input's selection
+    // or caret either. It probably also shouldn't change the view's selection
+    // (if the removed row isn't selected), but that may be more debatable.
+    //
+    // It may be possible to select buttons on mousedown and then clear the
+    // selection on mouseup as usual while meeting these requirements. However,
+    // it's not simple because clearing the selection has surprising side
+    // effects in the input like the ones mentioned above.
+    //
+    // (2) Most buttons don't have URLs, so there's nothing to speculatively
+    // connect to. If a button does have a URL, it's typically different from
+    // the primary URL of its related result, so it's not critical to open a
+    // speculative connection anyway.
+    if (!element.classList.contains("urlbarView-button")) {
+      this.#mousedownSelectedElement = element;
+      this.#selectElement(element, { updateInput: false });
+      this.controller.speculativeConnect(
+        this.selectedResult,
+        this.#queryContext,
+        "mousedown"
+      );
+    }
   }
 
   on_mouseup(event) {
@@ -2620,9 +2646,21 @@ export class UrlbarView {
       this.input.pickElement(element, event);
     }
 
-    // Unselect the selected element here because pickElement() may use the
-    // selected element.
-    this.#selectElement(null);
+    // If the element that was selected on mousedown is still in the view, clear
+    // the selection. Do it after calling `pickElement()` above since code that
+    // reacts to picks may assume the selected element is the picked element.
+    //
+    // If the element is no longer in the view, then it must be because its row
+    // was removed in response to the pick. If the element was not a button, we
+    // selected it on mousedown and then `onQueryResultRemoved()` selected the
+    // next row; we shouldn't unselect it here. If the element was a button,
+    // then we didn't select anything on mousedown; clearing the selection seems
+    // like it would be harmless, but it has side effects in the input we want
+    // to avoid (see `on_mousedown()`).
+    if (this.#mousedownSelectedElement?.isConnected) {
+      this.#selectElement(null);
+    }
+    this.#mousedownSelectedElement = null;
   }
 
   on_overflow(event) {
