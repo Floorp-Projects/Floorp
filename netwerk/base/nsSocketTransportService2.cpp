@@ -788,7 +788,7 @@ nsSocketTransportService::Init() {
   if (!XRE_IsContentProcess() ||
       StaticPrefs::network_allow_raw_sockets_in_content_processes_AtStartup()) {
     nsresult rv = NS_NewNamedThread("Socket Thread", getter_AddRefs(thread),
-                                    this, GetThreadStackSize());
+                                    this, {.stackSize = GetThreadStackSize()});
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     // In the child process, we just want a regular nsThread with no socket
