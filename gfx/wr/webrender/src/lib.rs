@@ -84,6 +84,7 @@ mod capture;
 mod clip;
 mod space;
 mod spatial_tree;
+mod command_buffer;
 mod composite;
 mod compositor;
 mod debug_colors;
