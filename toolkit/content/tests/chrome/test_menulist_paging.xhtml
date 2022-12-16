@@ -3,7 +3,7 @@
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 
 <window title="Menulist Tests"
-        onload="setTimeout(startTest, 0);"
+        onload="setTimeout(runTest, 0);"
         onpopupshown="menulistShown()" onpopuphidden="runTest()"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
@@ -93,8 +93,13 @@ let tests = [
   { list: "menulist4", initial: 5, scroll: 2, downs: [], ups: [] }
 ];
 
-function startTest()
-{
+let gMeasured = false;
+function measureMenuItemHeightIfNeeded() {
+  if (gMeasured) {
+    return;
+  }
+  gMeasured = true;
+
   let popup = document.getElementById("menulist-popup1");
   let menuitemHeight = popup.firstChild.getBoundingClientRect().height;
 
@@ -115,23 +120,21 @@ function startTest()
   document.getElementById("menulist-popup2").style.height = height + "px";
   document.getElementById("menulist-popup3").style.height = height + "px";
   document.getElementById("menulist-popup4").style.height = height + "px";
-
-  runTest();
 }
 
-function runTest()
-{
+function runTest() {
   if (!tests.length) {
     SimpleTest.finish();
     return;
   }
-
   test = tests.shift();
   document.getElementById(test.list).open = true;
 }
 
 function menulistShown()
 {
+  measureMenuItemHeightIfNeeded();
+
   let menulist = document.getElementById(test.list);
   is(menulist.activeChild.label, menulist.getItemAtIndex(test.initial).label, test.list + " initial selection");
 
