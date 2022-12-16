@@ -13,6 +13,12 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v110
+- Added [`GeckoSession.ContentDelegate.onCookieBannerDetected`][110.1] and [`GeckoSession.ContentDelegate.onCookieBannerHandled`][110.2]
+
+[110.1]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onCookieBannerDetected(org.mozilla.geckoview.GeckoSession)
+[110.2]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onCookieBannerHandled(org.mozilla.geckoview.GeckoSession)
+
 ## v109
 - Added [`SelectionActionDelegate.Selection.screenRect`][109.1] for fission compatible.
 - ⚠️ Deprecated [`SelectionActionDelegate.Selection.clientRect`][109.2],
@@ -1277,4 +1283,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 56b14bd2184591e39396f9cf74aeb2b5d2b09b33
+[api-version]: f9adfe0074875337d0cc6651146f1deeb7d0bc58
