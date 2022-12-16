@@ -354,7 +354,7 @@ static void ActivateResultID(
 
   if (strncmp(aResultID, KEYWORD_SEARCH_STRING, KEYWORD_SEARCH_STRING_LEN) ==
       0) {
-    const char* urlList[3] = {"unused", "--search",
+    const char* urlList[4] = {"unused", "--new-tab", "--search",
                               aSearchResult->GetSearchTerm().get()};
     commandLine = ConstructCommandLine(3, (char**)urlList, nullptr, &tmp);
   } else {
