@@ -700,12 +700,6 @@ criteria = "safe-to-deploy"
 delta = "0.1.3 -> 0.5.4"
 notes = "Several bugfixes since 2019. This version is also in use by Mozilla's crash reporting tooling, e.g. minidump-writer"
 
-[[audits.goblin]]
-who = "Gabriele Svelto <gsvelto@mozilla.com>"
-criteria = "safe-to-deploy"
-delta = "0.5.4 -> 0.6.0"
-notes = "Mostly bug fixes and some added functionality"
-
 [[audits.gpu-descriptor]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
