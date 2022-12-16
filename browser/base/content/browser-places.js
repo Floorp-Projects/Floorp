@@ -620,6 +620,7 @@ class HistoryMenu extends PlacesMenu {
   // element references before the several superclass constructors call our
   // methods which depend on these.
   _init() {
+    super._init();
     let elements = {
       undoTabMenu: "historyUndoMenu",
       hiddenTabsMenu: "hiddenTabsMenu",
@@ -742,7 +743,7 @@ class HistoryMenu extends PlacesMenu {
   }
 
   _onPopupShowing(aEvent) {
-    PlacesMenu.prototype._onPopupShowing.apply(this, arguments);
+    super._onPopupShowing(aEvent);
 
     // Don't handle events for submenus.
     if (aEvent.target != aEvent.currentTarget) {
