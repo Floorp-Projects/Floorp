@@ -11,12 +11,12 @@ RUN apt-get update \
     build-essential \
     ca-certificates \
     clang-4.0 \
+    clang-10 \
     clang \
     cmake \
     curl \
     g++-4.8-multilib \
     g++-5-multilib \
-    g++-6-multilib \
     g++-multilib \
     git \
     gyp \
@@ -42,14 +42,6 @@ RUN apt-get update \
  && add-apt-repository ppa:ubuntu-toolchain-r/test -y \ 
  && apt-get update \
  && apt-get install --no-install-recommends -y \ 
-    gcc-9 \ 
-    g++-9 \ 
-    gcc-9-multilib \
-    g++-9-multilib \ 
-    gcc-10 \
-    g++-10 \ 
-    gcc-10-multilib \
-    g++-10-multilib \
     gcc-11-multilib \
     g++-11-multilib \
  && rm -rf /var/lib/apt/lists/* \

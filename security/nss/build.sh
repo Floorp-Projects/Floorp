@@ -104,6 +104,7 @@ while [ $# -gt 0 ]; do
         --pprof) gyp_params+=(-Duse_pprof=1) ;;
         --asan) enable_sanitizer asan ;;
         --msan) enable_sanitizer msan ;;
+        --sourcecov) enable_sourcecov ;;
         --ubsan) enable_ubsan ;;
         --ubsan=?*) enable_ubsan "${1#*=}" ;;
         --fuzz) fuzz=1 ;;

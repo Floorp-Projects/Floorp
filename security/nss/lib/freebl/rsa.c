@@ -899,6 +899,9 @@ cleanup:
 static unsigned int
 rsa_modulusLen(SECItem *modulus)
 {
+    if (modulus->len == 0) {
+        return 0;
+    };
     unsigned char byteZero = modulus->data[0];
     unsigned int modLen = modulus->len - !byteZero;
     return modLen;
@@ -931,6 +934,13 @@ RSA_PublicKeyOp(RSAPublicKey *key,
     CHECK_MPI_OK(mp_init(&c));
     modLen = rsa_modulusLen(&key->modulus);
     expLen = rsa_modulusLen(&key->publicExponent);
+
+    if (modLen == 0) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        rv = SECFailure;
+        goto cleanup;
+    }
+
     /* 1.  Obtain public key (n, e) */
     if (BAD_RSA_KEY_SIZE(modLen, expLen)) {
         PORT_SetError(SEC_ERROR_INVALID_KEY);
@@ -1434,6 +1444,10 @@ rsa_PrivateKeyOp(RSAPrivateKey *key,
     }
     /* check input out of range (needs to be in range [0..n-1]) */
     modLen = rsa_modulusLen(&key->modulus);
+    if (modLen == 0) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
     offset = (key->modulus.data[0] == 0) ? 1 : 0; /* may be leading 0 */
     if (memcmp(input, key->modulus.data + offset, modLen) >= 0) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);

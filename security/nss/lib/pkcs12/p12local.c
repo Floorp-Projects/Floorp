@@ -968,15 +968,14 @@ sec_pkcs12_convert_item_to_unicode(PLArenaPool *arena, SECItem *dest,
     if (zeroTerm) {
         /* unicode adds two nulls at the end */
         if (toUnicode) {
-            if ((dest->len >= 2) &&
-                (dest->data[dest->len - 1] || dest->data[dest->len - 2])) {
+            if ((dest->len < 2) || dest->data[dest->len - 1] || dest->data[dest->len - 2]) {
                 /* we've already allocated space for these new NULLs */
                 PORT_Assert(dest->len + 2 <= bufferSize);
                 dest->len += 2;
                 dest->data[dest->len - 1] = dest->data[dest->len - 2] = 0;
             }
             /* ascii/utf-8 adds just 1 */
-        } else if ((dest->len >= 1) && dest->data[dest->len - 1]) {
+        } else if (!dest->len || dest->data[dest->len - 1]) {
             PORT_Assert(dest->len + 1 <= bufferSize);
             dest->len++;
             dest->data[dest->len - 1] = 0;
