@@ -183,8 +183,8 @@ path = "third_party/rust/mio-0.6.23"
 # duplicate crates.
 
 [patch."https://github.com/mozilla/uniffi-rs.git"]
-uniffi = "=0.21.0"
-uniffi_bindgen = "=0.21.0"
-uniffi_build = "=0.21.0"
-uniffi_macros = "=0.21.0"
+uniffi = "=0.21.1"
+uniffi_bindgen = "=0.21.1"
+uniffi_build = "=0.21.1"
+uniffi_macros = "=0.21.1"
 weedle2 = "=4.0.0"

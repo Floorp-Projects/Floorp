@@ -25,6 +25,7 @@ use std::{collections::hash_map::Entry, collections::BTreeSet, collections::Hash
 
 use anyhow::{bail, Result};
 use heck::ToUpperCamelCase;
+use uniffi_meta::Checksum;
 
 use super::ffi::FFIType;
 
@@ -36,7 +37,7 @@ pub(super) use resolver::{resolve_builtin_type, TypeResolver};
 /// Represents all the different high-level types that can be used in a component interface.
 /// At this level we identify user-defined types by name, without knowing any details
 /// of their internal structure apart from what type of thing they are (record, enum, etc).
-#[derive(Debug, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
+#[derive(Debug, Clone, Eq, PartialEq, Checksum, Ord, PartialOrd)]
 pub enum Type {
     // Primitive types.
     UInt8,
