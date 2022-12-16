@@ -263,8 +263,6 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   virtual void SuppressAnimation(bool aSuppress) override;
   virtual void HideWindowChrome(bool aShouldHide) override;
 
-  void WillEnterFullScreen(bool aFullScreen);
-  void EnteredFullScreen(bool aFullScreen, bool aNativeMode = true);
   virtual bool PrepareForFullscreenTransition(nsISupports** aData) override;
   virtual void PerformFullscreenTransition(FullscreenTransitionStage aStage, uint16_t aDuration,
                                            nsISupports* aData, nsIRunnable* aCallback) override;
@@ -364,6 +362,26 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
                             const ScrollableLayerGuid& aGuid) override;
   void StopAsyncAutoscroll(const ScrollableLayerGuid& aGuid) override;
 
+  // Class method versions of NSWindow/Delegate callbacks to help with
+  // logging and debugging.
+  void CocoaWindowWillEnterFullscreen(bool aFullscreen);
+  void CocoaWindowWillResize();
+  void CocoaWindowDidResize();
+  void CocoaSendToplevelActivateEvents();
+  void CocoaSendToplevelDeactivateEvents();
+
+  void HandleNativeFullscreenTransition(bool aFullscreen);
+  void HandleNativeFullscreenTransitionFailure(bool aFullscreen);
+
+  bool IsInFullscreenTransition() const {
+    return mFullscreenTransition.mState != FullscreenTransitionState::None;
+  }
+
+  bool IsInNativeFullscreenTransition() const {
+    return mFullscreenTransition.mState != FullscreenTransitionState::None &&
+           mFullscreenTransition.mType == FullscreenTransitionType::Native;
+  }
+
  protected:
   virtual ~nsCocoaWindow();
 
@@ -407,8 +425,63 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
                          // this is used for sibling sheet contention only
   nsSizeMode mSizeMode;
   bool mInFullScreenMode;
-  bool mInFullScreenTransition;  // true from the request to enter/exit fullscreen
-                                 // (MakeFullScreen() call) to EnteredFullScreen()
+
+  enum class FullscreenTransitionType {
+    Emulated = 0,  // Fullscreen transition where the window is
+                   // programmatically resized to fill the screen.
+                   // Sometimes called DOM fullscreen.
+    Native,        // A fullscreen transition initiated using the
+                   // either the Gecko widget fullscreen API or
+                   // in response to the user entering fullscreen
+                   // from the Mac View menu or clicking the
+                   // fullscreen button in the titlebar.
+  };
+
+  enum class FullscreenTransitionState {
+    None = 0,        // Not transitioning. The window may be in
+                     // fullscreen already or in the normal state.
+    ToFullscreen,    // Transitioning to fullscreen
+    ExitFullscreen,  // Transitioning out of fullscreen
+  };
+
+  struct FullscreenTransition {
+    FullscreenTransitionType mType = FullscreenTransitionType::Native;
+    FullscreenTransitionState mState = FullscreenTransitionState::None;
+    bool mResized = false;
+    bool mRevertOnCompletion = false;
+    bool mHideOnCompletion = false;
+
+    void Reset() {
+      mState = FullscreenTransitionState::None;
+      mResized = false;
+      mRevertOnCompletion = false;
+      mHideOnCompletion = false;
+    }
+
+    void StartEmulated(FullscreenTransitionState aToState) {
+      Reset();
+      mType = FullscreenTransitionType::Emulated;
+      mState = aToState;
+    }
+
+    void EndEmulated() { Reset(); }
+  } mFullscreenTransition;
+
+  // Cleans up our state when we start a native transition. Must be paired with
+  // a call to EndNativeFullscreenTransition().
+  void StartNativeFullscreenTransition(FullscreenTransitionState aToState) {
+    mFullscreenTransition.Reset();
+    mFullscreenTransition.mType = FullscreenTransitionType::Native;
+    mFullscreenTransition.mState = aToState;
+    mIgnoreOcclusionCount++;
+  }
+
+  // Called at the end of native transition, whether successful or not.
+  void EndNativeFullscreenTransition() {
+    mFullscreenTransition.Reset();
+    MOZ_ASSERT(mIgnoreOcclusionCount > 0);
+    mIgnoreOcclusionCount--;
+  }
 
   // Ignore occlusion events caused by displaying the temporary fullscreen
   // window during the fullscreen transition animation because only focused
@@ -419,7 +492,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   bool mFakeModal;
 
   // Whether we are currently using native fullscreen. It could be false because
-  // we are in the DOM fullscreen where we do not use the native fullscreen.
+  // we are in the emulated fullscreen where we do not use the native fullscreen.
   bool mInNativeFullScreenMode;
 
   bool mIsAnimationSuppressed;
