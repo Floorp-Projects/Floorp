@@ -2833,37 +2833,18 @@ class AutoSaveRestoreContainsBlendMode {
   }
 };
 
-static bool IsFrameOrAncestorApzAware(nsIFrame* aFrame) {
-  nsIContent* node = aFrame->GetContent();
-  if (!node) {
-    return false;
-  }
-
-  do {
-    if (node->IsNodeApzAware()) {
-      return true;
-    }
-    nsIContent* shadowRoot = node->GetShadowRoot();
-    if (shadowRoot && shadowRoot->IsNodeApzAware()) {
-      return true;
-    }
-
-    // Even if the node owning aFrame doesn't have apz-aware event listeners
-    // itself, its shadow root or display: contents ancestors (which have no
-    // frames) might, so we need to account for them too.
-  } while ((node = node->GetFlattenedTreeParent()) && node->IsElement() &&
-           node->AsElement()->IsDisplayContents());
-
-  return false;
-}
-
 static void CheckForApzAwareEventHandlers(nsDisplayListBuilder* aBuilder,
                                           nsIFrame* aFrame) {
   if (aBuilder->GetAncestorHasApzAwareEventHandler()) {
     return;
   }
 
-  if (IsFrameOrAncestorApzAware(aFrame)) {
+  nsIContent* content = aFrame->GetContent();
+  if (!content) {
+    return;
+  }
+
+  if (content->IsNodeApzAware()) {
     aBuilder->SetAncestorHasApzAwareEventHandler(true);
   }
 }
