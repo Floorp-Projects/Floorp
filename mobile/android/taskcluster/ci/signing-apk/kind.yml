@@ -44,5 +44,5 @@ task-template:
                 focus-android-test-(debug|nightly|beta)$: Bats
                 klar-.*: Bkls
         kind: build
-        platform: android-all/opt
+        platform: focus-android-all/opt
         tier: 1

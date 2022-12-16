@@ -37,7 +37,7 @@ task-defaults:
     treeherder:
         kind: build
         symbol: B
-        platform: android-all/opt
+        platform: focus-android-all/opt
         tier: 1
     worker-type: b-android
     worker:
