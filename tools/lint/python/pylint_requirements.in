@@ -1,4 +1,4 @@
-pylint==2.14.5
+pylint==2.15.8
 dill==0.3.4
 tomli==1.2.2
 typing-extensions==3.10.0.2
