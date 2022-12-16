@@ -13038,7 +13038,7 @@
 # unsafe-hashes source keyword
 - name: security.csp.unsafe-hashes.enabled
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # The script-src-attr and script-src-elem directive
