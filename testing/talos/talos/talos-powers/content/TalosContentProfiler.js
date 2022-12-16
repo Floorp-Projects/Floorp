@@ -206,8 +206,8 @@ var TalosContentProfiler;
      */
     finishTest() {
       if (initted) {
-        let profileFile = profileDir + "/" + currentTest + ".profile";
-        return sendEventAndWait("Profiler:Finish", { profileFile });
+        let profileFile = `${currentTest}.profile`;
+        return sendEventAndWait("Profiler:Finish", { profileDir, profileFile });
       }
       return Promise.resolve();
     },
@@ -223,8 +223,8 @@ var TalosContentProfiler;
      */
     finishStartupProfiling() {
       if (initted) {
-        let profileFile = profileDir + "/startup.profile";
-        return sendEventAndWait("Profiler:Finish", { profileFile });
+        let profileFile = "startup.profile";
+        return sendEventAndWait("Profiler:Finish", { profileDir, profileFile });
       }
       return Promise.resolve();
     },
