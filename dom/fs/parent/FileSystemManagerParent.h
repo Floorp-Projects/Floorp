@@ -14,6 +14,8 @@
 
 namespace mozilla::dom {
 
+class FileSystemStreamCallbacks;
+
 namespace fs::data {
 class FileSystemDataManager;
 }  // namespace fs::data
@@ -75,15 +77,19 @@ class FileSystemManagerParent : public PFileSystemManagerParent {
   virtual ~FileSystemManagerParent();
 
  private:
+  void EnsureStreamCallbacks();
+
+  void CleanupAfterClose();
+
   RefPtr<fs::data::FileSystemDataManager> mDataManager;
+
+  RefPtr<FileSystemStreamCallbacks> mStreamCallbacks;
 
   FileSystemGetHandleResponse mRootResponse;
 
   FlippedOnce<false> mRequestedAllowToClose;
 
-#ifdef DEBUG
   bool mActorDestroyed = false;
-#endif
 };
 
 }  // namespace mozilla::dom
