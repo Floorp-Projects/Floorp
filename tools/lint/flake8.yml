@@ -9,7 +9,7 @@ flake8:
         - '**/.flake8'
         - 'tools/lint/python/flake8*'
     # Rules that should result in warnings rather than errors.
-    warning-rules: ['I001', 'I003', 'I004', 'I005']
+    warning-rules: []
     type: external
     payload: python.flake8:lint
     setup: python.flake8:setup

@@ -104,19 +104,10 @@ def lint(paths, config, **lintargs):
             "--recursive",
         ]
 
-        isort_cmd = [
-            os.path.join(virtualenv_bin_path or default_bindir(), "isort"),
-        ]
-
         if config.get("exclude"):
             fix_cmd.extend(["--exclude", ",".join(config["exclude"])])
-            isort_cmd.append("--filter-files")
-            for glob in config.get("exclude"):
-                isort_cmd.extend(["--skip", glob])
 
         subprocess.call(fix_cmd + paths)
-
-        subprocess.call(isort_cmd + paths)
 
         results = run(paths, config, **lintargs)
 
