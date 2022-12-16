@@ -7,6 +7,7 @@
 #include "FileSystemManagerParent.h"
 
 #include "FileSystemDatabaseManager.h"
+#include "FileSystemStreamCallbacks.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/FileBlobImpl.h"
 #include "mozilla/dom/FileSystemAccessHandleParent.h"
@@ -147,9 +148,11 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
   QM_TRY_UNWRAP(nsCOMPtr<nsIRandomAccessStream> stream,
                 NS_NewLocalFileRandomAccessStream(file), IPC_OK(), reportError);
 
+  EnsureStreamCallbacks();
+
   RandomAccessStreamParams streamParams =
       mozilla::ipc::SerializeRandomAccessStream(
-          WrapMovingNotNullUnchecked(std::move(stream)), nullptr);
+          WrapMovingNotNullUnchecked(std::move(stream)), mStreamCallbacks);
 
   auto accessHandleParent =
       MakeRefPtr<FileSystemAccessHandleParent>(this, aRequest.entryId());
@@ -471,9 +474,33 @@ void FileSystemManagerParent::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnIOTarget();
   MOZ_ASSERT(!mActorDestroyed);
 
-#ifdef DEBUG
   mActorDestroyed = true;
-#endif
+
+  if (!mStreamCallbacks || mStreamCallbacks->HasNoRemoteQuotaObjectParents()) {
+    CleanupAfterClose();
+  }
+}
+
+void FileSystemManagerParent::EnsureStreamCallbacks() {
+  if (mStreamCallbacks) {
+    return;
+  }
+
+  mStreamCallbacks = MakeRefPtr<FileSystemStreamCallbacks>();
+
+  mStreamCallbacks->SetRemoteQuotaObjectParentCallback([self = RefPtr(this)]() {
+    if (self->mActorDestroyed) {
+      self->CleanupAfterClose();
+    }
+  });
+}
+
+void FileSystemManagerParent::CleanupAfterClose() {
+  MOZ_ASSERT(mActorDestroyed);
+  MOZ_ASSERT_IF(mStreamCallbacks,
+                mStreamCallbacks->HasNoRemoteQuotaObjectParents());
+
+  mStreamCallbacks = nullptr;
 
   InvokeAsync(mDataManager->MutableBackgroundTargetPtr(), __func__,
               [self = RefPtr<FileSystemManagerParent>(this)]() {
