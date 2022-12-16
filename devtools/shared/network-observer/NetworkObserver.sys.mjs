@@ -86,11 +86,13 @@ const HTTP_DOWNLOAD_ACTIVITIES = [
  *        This function will be called for every detected channel to decide if it
  *        should be monitored or not.
  * @param {Function(NetworkEvent): owner} options.onNetworkEvent
- *        This method is invoked once for every new network request with a single
- *        "networkEvent" argument, which is an object created by
- *        NetworkUtils:createNetworkEvent, containing initial network request
- *        information as an argument.
- *        onNetworkEvent() must return an "owner" object which holds several add*()
+ *        This method is invoked once for every new network request with two
+ *        arguments:
+ *        - {Object} networkEvent: object created by NetworkUtils:createNetworkEvent,
+ *          containing initial network request information as an argument.
+ *        - {nsIChannel} channel: the channel for which the request was detected
+ *
+ *        `onNetworkEvent()` must return an "owner" object which holds several add*()
  *        methods which are used to add further network request/response information.
  */
 export class NetworkObserver {
@@ -722,7 +724,7 @@ export class NetworkObserver {
     httpActivity.isXHR = event.isXHR;
     httpActivity.private = event.private;
     httpActivity.fromServiceWorker = fromServiceWorker;
-    httpActivity.owner = this.#onNetworkEvent(event);
+    httpActivity.owner = this.#onNetworkEvent(event, channel);
 
     // Bug 1489217 - Avoid watching for response content for blocked or in-progress requests
     // as it can't be observed and would throw if we try.
