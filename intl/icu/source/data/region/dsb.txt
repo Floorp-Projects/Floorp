@@ -310,7 +310,6 @@ dsb{
         CG{"Kongo (Republika)"}
         CI{"Słonowokósćowy pśibrjog"}
         FK{"Falklandske kupy (Malwiny)"}
-        NZ{"Aotearoa Nowoseelandska"}
         TL{"Pódzajtšny Timor"}
     }
 }

@@ -5,13 +5,13 @@ const testCases = [
         timeZone: "Europe/London",
         string: "Tue Aug 14 2018 00:00:00 GMT+0100 (BST)",
         alternativeTimeZones: ["British Summer Time"],
-        localeString: "8/14/2018, 12:00:00\u202FAM GMT+1",
+        localeString: "8/14/2018, 12:00:00 AM GMT+1",
     },
     {
         timeZone: "UTC",
         string: "Tue Aug 14 2018 00:00:00 GMT+0000 (UTC)",
         alternativeTimeZones: ["Coordinated Universal Time"],
-        localeString: "8/14/2018, 12:00:00\u202FAM UTC",
+        localeString: "8/14/2018, 12:00:00 AM UTC",
     },
 ];
 

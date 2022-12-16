@@ -294,16 +294,16 @@ ca{
                 other{"{0} gigabytes"}
             }
             kilobit{
-                dnam{"kilobits"}
+                dnam{"quilobits"}
                 gender{"masculine"}
-                one{"{0} kilobit"}
-                other{"{0} kilobits"}
+                one{"{0} quilobit"}
+                other{"{0} quilobits"}
             }
             kilobyte{
-                dnam{"kilobytes"}
+                dnam{"quilobytes"}
                 gender{"masculine"}
-                one{"{0} kilobyte"}
-                other{"{0} kilobytes"}
+                one{"{0} quilobyte"}
+                other{"{0} quilobytes"}
             }
             megabit{
                 dnam{"megabits"}
@@ -397,13 +397,6 @@ ca{
                 gender{"masculine"}
                 one{"{0} nanosegon"}
                 other{"{0} nanosegons"}
-            }
-            quarter{
-                dnam{"trimestres"}
-                gender{"masculine"}
-                one{"{0} trimestre"}
-                other{"{0} trimestres"}
-                per{"{0} per trimestre"}
             }
             second{
                 dnam{"segons"}
@@ -506,10 +499,10 @@ ca{
         }
         force{
             kilowatt-hour-per-100-kilometer{
-                dnam{"kilowatt hora per 100 quilòmetres"}
+                dnam{"kilowatt per hora per 100 quilòmetres"}
                 gender{"masculine"}
-                one{"{0} kilowatt hora per 100 quilòmetres"}
-                other{"{0} kilowatts hora per 100 quilòmetres"}
+                one{"{0} kilowatt per hora per 100 quilòmetres"}
+                other{"{0} kilowatts per hora per 100 quilòmetres"}
             }
             newton{
                 dnam{"newtons"}
@@ -564,8 +557,8 @@ ca{
                 other{"{0} punts per polzada"}
             }
             em{
-                dnam{"em tipogràfic"}
-                gender{"masculine"}
+                dnam{"em tipogràfica"}
+                gender{"feminine"}
             }
             megapixel{
                 dnam{"megapíxels"}
@@ -778,6 +771,12 @@ ca{
                 other{"{0} quilograms"}
                 per{"{0} per quilogram"}
             }
+            metric-ton{
+                dnam{"tones mètriques"}
+                gender{"feminine"}
+                one{"{0} tona mètrica"}
+                other{"{0} tones mètriques"}
+            }
             microgram{
                 dnam{"micrograms"}
                 gender{"masculine"}
@@ -821,12 +820,6 @@ ca{
                 dnam{"tones"}
                 one{"{0} tona"}
                 other{"{0} tones"}
-            }
-            tonne{
-                dnam{"tones mètriques"}
-                gender{"feminine"}
-                one{"{0} tona mètrica"}
-                other{"{0} tones mètriques"}
             }
         }
         power{
@@ -910,7 +903,7 @@ ca{
             }
             millimeter-ofhg{
                 dnam{"mil·límetres de mercuri"}
-                one{"{0} mil·límetre de mercuri"}
+                one{"mil·límetre de mercuri"}
                 other{"{0} mil·límetres de mercuri"}
             }
             pascal{
@@ -1201,15 +1194,6 @@ ca{
             }
         }
         area{
-            acre{
-                dnam{"acre"}
-            }
-            dunam{
-                dnam{"dunam"}
-            }
-            hectare{
-                dnam{"hectàrea"}
-            }
             square-meter{
                 dnam{"metres²"}
             }
@@ -1304,12 +1288,6 @@ ca{
                 one{"{0} m"}
                 other{"{0} m"}
             }
-            quarter{
-                dnam{"trim."}
-                one{"{0} trim."}
-                other{"{0} trim."}
-                per{"{0}/trim."}
-            }
             second{
                 dnam{"s"}
                 one{"{0} s"}
@@ -1336,12 +1314,6 @@ ca{
         force{
             kilowatt-hour-per-100-kilometer{
                 dnam{"kWh/100 km"}
-            }
-            newton{
-                dnam{"N"}
-            }
-            pound-force{
-                dnam{"lbf"}
             }
         }
         graphics{
@@ -1372,10 +1344,10 @@ ca{
                 dnam{"braça"}
             }
             foot{
-                dnam{"ft"}
+                dnam{"peus"}
             }
             inch{
-                dnam{"in"}
+                dnam{"polzades"}
             }
             kilometer{
                 dnam{"km"}
@@ -1384,8 +1356,8 @@ ca{
             }
             light-year{
                 dnam{"anys llum"}
-                one{"{0} a. ll."}
-                other{"{0} a. ll."}
+                one{"{0} l. y."}
+                other{"{0} l. y."}
             }
             meter{
                 dnam{"m"}
@@ -1393,7 +1365,7 @@ ca{
                 other{"{0} m"}
             }
             mile{
-                dnam{"mi"}
+                dnam{"milles"}
             }
             millimeter{
                 dnam{"mm"}
@@ -1401,13 +1373,13 @@ ca{
                 other{"{0} mm"}
             }
             parsec{
-                dnam{"parsec"}
+                dnam{"parsecs"}
             }
             point{
                 dnam{"pt"}
             }
             yard{
-                dnam{"yd"}
+                dnam{"iardes"}
             }
         }
         light{
@@ -1431,6 +1403,11 @@ ca{
                 one{"{0} kg"}
                 other{"{0} kg"}
             }
+            metric-ton{
+                dnam{"t mètriques"}
+                one{"{0} t mètr."}
+                other{"{0} t mètr."}
+            }
             ounce-troy{
                 dnam{"ozt"}
                 one{"{0} ozt"}
@@ -1440,11 +1417,6 @@ ca{
                 dnam{"t"}
                 one{"{0} t"}
                 other{"{0} t"}
-            }
-            tonne{
-                dnam{"t mètriques"}
-                one{"{0} t mètr."}
-                other{"{0} t mètr."}
             }
         }
         power{
@@ -1651,8 +1623,6 @@ ca{
             }
             permyriad{
                 dnam{"per deu mil"}
-                one{"{0} ‱"}
-                other{"{0} ‱"}
             }
         }
         consumption{
@@ -1783,19 +1753,13 @@ ca{
             month{
                 dnam{"mesos"}
                 one{"{0} mes"}
-                other{"{0} m"}
+                other{"{0} mesos"}
                 per{"{0}/m"}
             }
             nanosecond{
                 dnam{"ns"}
                 one{"{0} ns"}
                 other{"{0} ns"}
-            }
-            quarter{
-                dnam{"trim."}
-                one{"{0} trim."}
-                other{"{0} trim."}
-                per{"{0}/trim."}
             }
             second{
                 dnam{"s"}
@@ -2104,6 +2068,11 @@ ca{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
+            metric-ton{
+                dnam{"t mètriques"}
+                one{"{0} t mètr."}
+                other{"{0} t mètr."}
+            }
             microgram{
                 dnam{"μg"}
                 one{"{0} μg"}
@@ -2140,11 +2109,6 @@ ca{
                 dnam{"t"}
                 one{"{0} t"}
                 other{"{0} t"}
-            }
-            tonne{
-                dnam{"t mètriques"}
-                one{"{0} t mètr."}
-                other{"{0} t mètr."}
             }
         }
         power{

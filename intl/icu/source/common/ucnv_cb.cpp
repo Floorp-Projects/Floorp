@@ -86,7 +86,7 @@ ucnv_cbFromUWriteUChars(UConverterFromUnicodeArgs *args,
         source,
         sourceLimit,
         NULL, /* no offsets */
-        false, /* no flush */
+        FALSE, /* no flush */
         err);
 
     if(args->offsets)
@@ -141,7 +141,7 @@ ucnv_cbFromUWriteUChars(UConverterFromUnicodeArgs *args,
                          source,
                          sourceLimit,
                          NULL,
-                         false,
+                         FALSE,
                          &err2);
 
         /* We can go ahead and overwrite the  length here. We know just how

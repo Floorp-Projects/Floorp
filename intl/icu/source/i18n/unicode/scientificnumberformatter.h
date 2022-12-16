@@ -196,7 +196,7 @@ public:
             UErrorCode &status);
 
     ScientificNumberFormatter(const ScientificNumberFormatter &other);
-    ScientificNumberFormatter &operator=(const ScientificNumberFormatter &) = delete;
+    ScientificNumberFormatter &operator=(const ScientificNumberFormatter &);
 
     static void getPreExponent(
             const DecimalFormatSymbols &dfs, UnicodeString &preExponent);

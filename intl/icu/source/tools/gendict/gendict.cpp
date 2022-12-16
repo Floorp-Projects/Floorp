@@ -223,7 +223,7 @@ static const UChar CARRIAGE_RETURN_CHARACTER = 0x000D;
 static UBool readLine(UCHARBUF *f, UnicodeString &fileLine, IcuToolErrorCode &errorCode) {
     int32_t lineLength;
     const UChar *line = ucbuf_readline(f, &lineLength, errorCode);
-    if(line == NULL || errorCode.isFailure()) { return false; }
+    if(line == NULL || errorCode.isFailure()) { return FALSE; }
     // Strip trailing CR/LF, comments, and spaces.
     const UChar *comment = u_memchr(line, 0x23, lineLength);  // '#'
     if(comment != NULL) {
@@ -232,8 +232,8 @@ static UBool readLine(UCHARBUF *f, UnicodeString &fileLine, IcuToolErrorCode &er
         while(lineLength > 0 && (line[lineLength - 1] == CARRIAGE_RETURN_CHARACTER || line[lineLength - 1] == LINEFEED_CHARACTER)) { --lineLength; }
     }
     while(lineLength > 0 && u_isspace(line[lineLength - 1])) { --lineLength; }
-    fileLine.setTo(false, line, lineLength);
-    return true;
+    fileLine.setTo(FALSE, line, lineLength);
+    return TRUE;
 }
 
 //----------------------------------------------------------------------------
@@ -314,7 +314,7 @@ int  main(int argc, char **argv) {
     //  Read in the dictionary source file
     if (verbose) { printf("Opening file %s...\n", wordFileName); }
     const char *codepage = "UTF-8";
-    LocalUCHARBUFPointer f(ucbuf_open(wordFileName, &codepage, true, false, status));
+    LocalUCHARBUFPointer f(ucbuf_open(wordFileName, &codepage, TRUE, FALSE, status));
     if (status.isFailure()) {
         fprintf(stderr, "error opening input file: ICU Error \"%s\"\n", status.errorName());
         exit(status.reset());
@@ -331,13 +331,13 @@ int  main(int argc, char **argv) {
 
     UnicodeString fileLine;
     if (verbose) { puts("Adding words to dictionary..."); }
-    UBool hasValues = false;
-    UBool hasValuelessContents = false;
+    UBool hasValues = FALSE;
+    UBool hasValuelessContents = FALSE;
     int lineCount = 0;
     int wordCount = 0;
     int minlen = 255;
     int maxlen = 0;
-    UBool isOk = true;
+    UBool isOk = TRUE;
     while (readLine(f.getAlias(), fileLine, status)) {
         lineCount++;
         if (fileLine.isEmpty()) continue;
@@ -347,7 +347,7 @@ int  main(int argc, char **argv) {
         for (keyLen = 0; keyLen < fileLine.length() && !u_isspace(fileLine[keyLen]); ++keyLen) {}
         if (keyLen == 0) {
             fprintf(stderr, "Error: no word on line %i!\n", lineCount);
-            isOk = false;
+            isOk = FALSE;
             continue;
         }
         int32_t valueStart;
@@ -359,7 +359,7 @@ int  main(int argc, char **argv) {
             int32_t valueLength = fileLine.length() - valueStart;
             if (valueLength > 15) {
                 fprintf(stderr, "Error: value too long on line %i!\n", lineCount);
-                isOk = false;
+                isOk = FALSE;
                 continue;
             }
             char s[16];
@@ -368,17 +368,17 @@ int  main(int argc, char **argv) {
             unsigned long value = uprv_strtoul(s, &end, 0);
             if (end == s || *end != 0 || (int32_t)uprv_strlen(s) != valueLength || value > 0xffffffff) {
                 fprintf(stderr, "Error: value syntax error or value too large on line %i!\n", lineCount);
-                isOk = false;
+                isOk = FALSE;
                 continue;
             }
             dict.addWord(fileLine.tempSubString(0, keyLen), (int32_t)value, status);
-            hasValues = true;
+            hasValues = TRUE;
             wordCount++;
             if (keyLen < minlen) minlen = keyLen;
             if (keyLen > maxlen) maxlen = keyLen;
         } else {
             dict.addWord(fileLine.tempSubString(0, keyLen), 0, status);
-            hasValuelessContents = true;
+            hasValuelessContents = TRUE;
             wordCount++;
             if (keyLen < minlen) minlen = keyLen;
             if (keyLen > maxlen) maxlen = keyLen;

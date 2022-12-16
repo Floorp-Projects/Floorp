@@ -1202,7 +1202,7 @@ private:
     /**
      * Assignment operator. Private for now.
      */
-    Collator& operator=(const Collator& other) = delete;
+    Collator& operator=(const Collator& other);
 
     friend class CFactory;
     friend class SimpleCFactory;

@@ -618,7 +618,6 @@ lb{
     }
     Languages%short{
         en_GB{"Englesch (UK)"}
-        en_US{"Englesch (US)"}
     }
     Scripts{
         Arab{"Arabesch"}

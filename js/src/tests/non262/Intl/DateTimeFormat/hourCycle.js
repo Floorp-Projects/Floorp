@@ -53,8 +53,8 @@ for (const [key, value] of Object.entries(hourCycleToH12Map)) {
 }
 
 const expectedValuesENUS = {
-  h11: "0\u202FAM",
-  h12: "12\u202FAM",
+  h11: "0 AM",
+  h12: "12 AM",
   h23: "00",
   h24: "24"
 };

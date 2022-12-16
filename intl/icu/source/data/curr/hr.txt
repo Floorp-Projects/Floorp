@@ -376,7 +376,7 @@ hr{
             "etiopski bir",
         }
         EUR{
-            "€",
+            "EUR",
             "euro",
         }
         FIM{

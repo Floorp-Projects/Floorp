@@ -7,11 +7,11 @@ const defaultOptions = {};
 const tests = [
     {
         timeZone: "UTC",
-        result: "12:00:00\u202FPM",
+        result: "12:00:00 PM",
     },
     {
         timeZone: "America/Los_Angeles",
-        result: "4:00:00\u202FAM",
+        result: "4:00:00 AM",
     },
     {
         timeZone: "Europe/Berlin", locale: "de",
@@ -30,7 +30,7 @@ const tests = [
     },
     {
         timeZone: { toString: () => "Australia/Melbourne" }, locale: "en-AU",
-        result: "11:00:00\u202Fpm",
+        result: "11:00:00 pm",
     },
 ];
 

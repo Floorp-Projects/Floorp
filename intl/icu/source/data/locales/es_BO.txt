@@ -30,9 +30,4 @@ es_BO{
             }
         }
     }
-    fields{
-        dayperiod{
-            dn{"a. m./p. m."}
-        }
-    }
 }

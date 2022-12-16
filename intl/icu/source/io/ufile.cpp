@@ -21,18 +21,11 @@
 */
 
 #include "unicode/platform.h"
-#if U_PLATFORM == U_PF_CYGWIN && defined(__STRICT_ANSI__)
-/* GCC on cygwin (not msys2) with -std=c++11 or newer has stopped defining fileno,
-   unless gcc extensions are enabled (-std=gnu11).
-   fileno is POSIX, but is not standard ANSI C.
-   It has always been a GCC extension, which everyone used until recently.
-   https://gcc.gnu.org/bugzilla/show_bug.cgi?id=40278#c7
-
-   For cygwin/mingw, the FILE* pointer isn't opaque, so we can just use a simple macro.
-   Suggested fix from: https://github.com/gabime/spdlog/issues/1581#issuecomment-650323251
-*/
-#define _fileno(__F) ((__F)->_file)
-#define fileno(__F) _fileno(__F)
+#if defined(__GNUC__) && !defined(__clang__) && defined(__STRICT_ANSI__)
+// g++, fileno isn't defined                  if     __STRICT_ANSI__ is defined.
+// clang fails to compile the <string> header unless __STRICT_ANSI__ is defined.
+// __GNUC__ is set by both gcc and clang.
+#undef __STRICT_ANSI__
 #endif
 
 #include "locmap.h"
@@ -52,10 +45,7 @@
 #include "cmemory.h"
 
 #if U_PLATFORM_USES_ONLY_WIN32_API && !defined(fileno)
-/* We will just create an alias to Microsoft's implementation,
-   which is prefixed with _ as they deprecated non-ansi-standard POSIX function names.
-   https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/posix-fileno?view=msvc-170
-*/
+/* Windows likes to rename Unix-like functions */
 #define fileno _fileno
 #endif
 
@@ -119,7 +109,7 @@ u_finit(FILE          *f,
         const char    *locale,
         const char    *codepage)
 {
-    return finit_owner(f, locale, codepage, false);
+    return finit_owner(f, locale, codepage, FALSE);
 }
 
 U_CAPI UFILE* U_EXPORT2
@@ -127,7 +117,7 @@ u_fadopt(FILE         *f,
         const char    *locale,
         const char    *codepage)
 {
-    return finit_owner(f, locale, codepage, true);
+    return finit_owner(f, locale, codepage, TRUE);
 }
 
 U_CAPI UFILE* U_EXPORT2 /* U_CAPI ... U_EXPORT2 added by Peter Kirk 17 Nov 2001 */
@@ -142,7 +132,7 @@ u_fopen(const char    *filename,
         return 0;
     }
 
-    result = finit_owner(systemFile, locale, codepage, true);
+    result = finit_owner(systemFile, locale, codepage, TRUE);
 
     if (!result) {
         /* Something bad happened.
@@ -198,7 +188,7 @@ u_fopen_u(const UChar   *filename,
         mbstowcs_s(&retVal, wperm, UPRV_LENGTHOF(wperm), perm, _TRUNCATE);
         FILE *systemFile = _wfopen(reinterpret_cast<const wchar_t *>(filename), wperm); // may return NULL for long filename
         if (systemFile) {
-            result = finit_owner(systemFile, locale, codepage, true);
+            result = finit_owner(systemFile, locale, codepage, TRUE);
         }
         if (!result && systemFile) {
             /* Something bad happened.
@@ -253,7 +243,7 @@ u_feof(UFILE  *f)
 {
     UBool endOfBuffer;
     if (f == NULL) {
-        return true;
+        return TRUE;
     }
     endOfBuffer = (UBool)(f->str.fPos >= f->str.fLimit);
     if (f->fFile != NULL) {

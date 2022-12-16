@@ -254,7 +254,7 @@ sv{
         SV{"El Salvador"}
         SX{"Sint Maarten"}
         SY{"Syrien"}
-        SZ{"Eswatini"}
+        SZ{"Swaziland"}
         TA{"Tristan da Cunha"}
         TC{"Turks- och Caicosöarna"}
         TD{"Tchad"}
@@ -307,7 +307,7 @@ sv{
     Countries%variant{
         CD{"Demokratiska republiken Kongo"}
         CG{"Republiken Kongo"}
-        NZ{"Aotearoa Nya Zeeland"}
+        SZ{"Eswatini"}
         TL{"Timor-Leste"}
     }
 }

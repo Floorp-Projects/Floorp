@@ -649,6 +649,13 @@ private:
     // implementation
     //=======================================================================
     /**
+     * Dumps caches and performs other actions associated with a complete change
+     * in text or iteration position.
+     * @internal (private)
+     */
+    void reset(void);
+
+    /**
       * Common initialization function, used by constructors and bufferClone.
       * @internal (private)
       */

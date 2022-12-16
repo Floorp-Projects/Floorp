@@ -44,7 +44,6 @@ fi{
         am{"amhara"}
         an{"aragonia"}
         ang{"muinaisenglanti"}
-        ann{"obolo"}
         anp{"angika"}
         ar{"arabia"}
         ar_001{"yleisarabia"}
@@ -61,7 +60,6 @@ fi{
         asa{"asu"}
         ase{"amerikkalainen viittomakieli"}
         ast{"asturia"}
-        atj{"atikamekw"}
         av{"avaari"}
         avk{"kotava"}
         awa{"awadhi"}
@@ -127,22 +125,14 @@ fi{
         chr{"cherokee"}
         chy{"cheyenne"}
         ckb{"soranî"}
-        clc{"chilcotin"}
         co{"korsika"}
         cop{"kopti"}
         cps{"capiznon"}
         cr{"cree"}
-        crg{"michif"}
         crh{"krimintataari"}
-        crj{"east cree (eteläinen)"}
-        crk{"plains cree"}
-        crl{"east cree (pohjoinen)"}
-        crm{"moose cree"}
-        crr{"pamlico"}
         crs{"seychellienkreoli"}
         cs{"tšekki"}
         csb{"kašubi"}
-        csw{"swampy cree"}
         cu{"kirkkoslaavi"}
         cv{"tšuvassi"}
         cy{"kymri"}
@@ -246,7 +236,6 @@ fi{
         hai{"haida"}
         hak{"hakka-kiina"}
         haw{"havaiji"}
-        hax{"haida (eteläinen)"}
         he{"heprea"}
         hi{"hindi"}
         hif{"fidžinhindi"}
@@ -260,7 +249,6 @@ fi{
         ht{"haiti"}
         hu{"unkari"}
         hup{"hupa"}
-        hur{"halkomelem"}
         hy{"armenia"}
         hz{"herero"}
         ia{"interlingua"}
@@ -271,7 +259,6 @@ fi{
         ig{"igbo"}
         ii{"sichuanin-yi"}
         ik{"inupiaq"}
-        ikt{"Länsi-Kanadan inuktitut"}
         ilo{"iloko"}
         inh{"inguuši"}
         io{"ido"}
@@ -338,7 +325,6 @@ fi{
         kut{"kutenai"}
         kv{"komi"}
         kw{"korni"}
-        kwk{"kwakʼwala"}
         ky{"kirgiisi"}
         la{"latina"}
         lad{"ladino"}
@@ -351,7 +337,6 @@ fi{
         lg{"ganda"}
         li{"limburg"}
         lij{"liguuri"}
-        lil{"lillooet"}
         liv{"liivi"}
         lkt{"lakota"}
         lmo{"lombardi"}
@@ -361,7 +346,6 @@ fi{
         lou{"louisianankreoli"}
         loz{"lozi"}
         lrc{"pohjoisluri"}
-        lsm{"samia"}
         lt{"liettua"}
         ltg{"latgalli"}
         lu{"katanganluba"}
@@ -400,7 +384,6 @@ fi{
         mn{"mongoli"}
         mnc{"mantšu"}
         mni{"manipuri"}
-        moe{"innu-aimun"}
         moh{"mohawk"}
         mos{"mossi"}
         mr{"marathi"}
@@ -453,11 +436,6 @@ fi{
         nzi{"nzima"}
         oc{"oksitaani"}
         oj{"odžibwa"}
-        ojb{"luoteis-odžibwa"}
-        ojc{"keskiojibwa"}
-        ojs{"oji-cree"}
-        ojw{"länsi-odžibwa"}
-        oka{"okanagan"}
         om{"oromo"}
         or{"orija"}
         os{"osseetti"}
@@ -477,12 +455,10 @@ fi{
         pfl{"pfaltsi"}
         phn{"foinikia"}
         pi{"paali"}
-        pis{"pijin"}
         pl{"puola"}
         pms{"piemonte"}
         pnt{"pontoksenkreikka"}
         pon{"pohnpei"}
-        pqm{"maliseet-passamaquoddy"}
         prg{"muinaispreussi"}
         pro{"muinaisprovensaali"}
         ps{"paštu"}
@@ -544,7 +520,6 @@ fi{
         sid{"sidamo"}
         sk{"slovakki"}
         sl{"sloveeni"}
-        slh{"lushootseed (eteläinen)"}
         sli{"sleesiansaksa"}
         sly{"selayar"}
         sm{"samoa"}
@@ -564,20 +539,18 @@ fi{
         ssy{"saho"}
         st{"eteläsotho"}
         stq{"saterlandinfriisi"}
-        str{"straits-salish"}
         su{"sunda"}
         suk{"sukuma"}
         sus{"susu"}
         sux{"sumeri"}
         sv{"ruotsi"}
         sw{"swahili"}
-        sw_CD{"kongonswahili"}
+        sw_CD{"kingwana"}
         swb{"komori"}
         syc{"muinaissyyria"}
         syr{"syyria"}
         szl{"sleesia"}
         ta{"tamili"}
-        tce{"etelätutchone"}
         tcy{"tulu"}
         te{"telugu"}
         tem{"temne"}
@@ -585,9 +558,7 @@ fi{
         ter{"tereno"}
         tet{"tetum"}
         tg{"tadžikki"}
-        tgx{"tagish"}
         th{"thai"}
-        tht{"tahlta"}
         ti{"tigrinja"}
         tig{"tigre"}
         tiv{"tiv"}
@@ -602,7 +573,6 @@ fi{
         tn{"tswana"}
         to{"tonga"}
         tog{"malawintonga"}
-        tok{"toki pona"}
         tpi{"tok-pisin"}
         tr{"turkki"}
         tru{"turojo"}
@@ -611,7 +581,6 @@ fi{
         tsd{"tsakonia"}
         tsi{"tsimši"}
         tt{"tataari"}
-        ttm{"pohjoinen tutchone"}
         ttt{"tati"}
         tum{"tumbuka"}
         tvl{"tuvalu"}
@@ -684,13 +653,6 @@ fi{
         crh{"kriminturkki"}
         kl{"grönlanti"}
         lad{"juutalaisespanja"}
-    }
-    Languages%short{
-        en_GB{"englanti (Britannia)"}
-        en_US{"englanti (USA)"}
-    }
-    Languages%variant{
-        hi_Latn{"hinglish"}
     }
     Scripts{
         Adlm{"fulanin adlam-aakkosto"}

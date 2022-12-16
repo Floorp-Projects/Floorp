@@ -119,7 +119,7 @@ it{
         GB{"Regno Unito"}
         GD{"Grenada"}
         GE{"Georgia"}
-        GF{"Guyana Francese"}
+        GF{"Guyana francese"}
         GG{"Guernsey"}
         GH{"Ghana"}
         GI{"Gibilterra"}
@@ -129,7 +129,7 @@ it{
         GP{"Guadalupa"}
         GQ{"Guinea Equatoriale"}
         GR{"Grecia"}
-        GS{"Georgia del Sud e Sandwich Australi"}
+        GS{"Georgia del Sud e Sandwich australi"}
         GT{"Guatemala"}
         GU{"Guam"}
         GW{"Guinea-Bissau"}
@@ -213,7 +213,7 @@ it{
         NU{"Niue"}
         NZ{"Nuova Zelanda"}
         OM{"Oman"}
-        PA{"Panama"}
+        PA{"Panamá"}
         PE{"Perù"}
         PF{"Polinesia francese"}
         PG{"Papua Nuova Guinea"}
@@ -254,7 +254,7 @@ it{
         SV{"El Salvador"}
         SX{"Sint Maarten"}
         SY{"Siria"}
-        SZ{"eSwatini"}
+        SZ{"Swaziland"}
         TA{"Tristan da Cunha"}
         TC{"Isole Turks e Caicos"}
         TD{"Ciad"}
@@ -274,7 +274,7 @@ it{
         TZ{"Tanzania"}
         UA{"Ucraina"}
         UG{"Uganda"}
-        UM{"Isole Minori Esterne degli Stati Uniti"}
+        UM{"Altre isole americane del Pacifico"}
         UN{"Nazioni Unite"}
         US{"Stati Uniti"}
         UY{"Uruguay"}
@@ -312,9 +312,7 @@ it{
         CI{"Côte d’Ivoire"}
         CZ{"Repubblica Ceca"}
         FK{"Isole Falkland (Isole Malvine)"}
-        NZ{"Nuova Zelanda (Aotearoa)"}
         SZ{"Regno di eSwatini"}
         TL{"Timor Leste"}
-        TR{"Türkiye"}
     }
 }

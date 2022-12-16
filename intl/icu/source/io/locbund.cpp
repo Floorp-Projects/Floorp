@@ -41,7 +41,7 @@ static UBool U_CALLCONV locbund_cleanup(void) {
         unum_close(gPosixNumberFormat[style]);
         gPosixNumberFormat[style] = NULL;
     }
-    return true;
+    return TRUE;
 }
 U_CDECL_END
 

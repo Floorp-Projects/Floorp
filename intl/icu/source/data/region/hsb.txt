@@ -310,7 +310,6 @@ hsb{
         CG{"Kongo (Republika)"}
         CI{"Słonowinowy pobrjóh"}
         FK{"Falklandske kupy (Malwiny)"}
-        NZ{"Aotearoa Nowoseelandska"}
         TL{"Wuchodny Timor"}
     }
 }

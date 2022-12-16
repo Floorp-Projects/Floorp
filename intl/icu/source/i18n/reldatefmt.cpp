@@ -16,8 +16,6 @@
 
 #include <cmath>
 #include <functional>
-#include "unicode/calendar.h"
-#include "unicode/datefmt.h"
 #include "unicode/dtfmtsym.h"
 #include "unicode/ucasemap.h"
 #include "unicode/ureldatefmt.h"
@@ -186,6 +184,22 @@ const UnicodeString& RelativeDateTimeCacheData::getAbsoluteUnitString(
     return nullptr;  // No formatter found.
  }
 
+static UBool getStringWithFallback(
+        const UResourceBundle *resource,
+        const char *key,
+        UnicodeString &result,
+        UErrorCode &status) {
+    int32_t len = 0;
+    const UChar *resStr = ures_getStringByKeyWithFallback(
+        resource, key, &len, &status);
+    if (U_FAILURE(status)) {
+        return FALSE;
+    }
+    result.setTo(TRUE, resStr, len);
+    return TRUE;
+}
+
+
 static UBool getStringByIndex(
         const UResourceBundle *resource,
         int32_t idx,
@@ -195,10 +209,10 @@ static UBool getStringByIndex(
     const UChar *resStr = ures_getStringByIndex(
             resource, idx, &len, &status);
     if (U_FAILURE(status)) {
-        return false;
+        return FALSE;
     }
-    result.setTo(true, resStr, len);
-    return true;
+    result.setTo(TRUE, resStr, len);
+    return TRUE;
 }
 
 namespace {
@@ -647,61 +661,39 @@ static UBool loadUnitData(
     return U_SUCCESS(status);
 }
 
-static const int32_t cTypeBufMax = 32;
-
 static UBool getDateTimePattern(
-        Locale locale,
         const UResourceBundle *resource,
         UnicodeString &result,
         UErrorCode &status) {
-    if (U_FAILURE(status)) {
-        return false;
+    UnicodeString defaultCalendarName;
+    if (!getStringWithFallback(
+            resource,
+            "calendar/default",
+            defaultCalendarName,
+            status)) {
+        return FALSE;
     }
-    char cType[cTypeBufMax + 1];
-    Calendar::getCalendarTypeFromLocale(locale, cType, cTypeBufMax, status);
-    cType[cTypeBufMax] = 0;
-    if (U_FAILURE(status) || cType[0] == 0) {
-        status = U_ZERO_ERROR;
-        uprv_strcpy(cType, "gregorian");
-    }
-
-    LocalUResourceBundlePointer topLevel;
-    int32_t dateTimeFormatOffset = DateFormat::kMedium;
     CharString pathBuffer;
-    // Currently, for compatibility with pre-CLDR-42 data, we default to the "atTime"
-    // combining patterns. Depending on guidance in CLDR 42 spec and on DisplayOptions,
-    // we may change this.
     pathBuffer.append("calendar/", status)
-            .append(cType, status)
-            .append("/DateTimePatterns%atTime", status);
-    topLevel.adoptInstead(
+            .appendInvariantChars(defaultCalendarName, status)
+            .append("/DateTimePatterns", status);
+    LocalUResourceBundlePointer topLevel(
             ures_getByKeyWithFallback(
                     resource, pathBuffer.data(), nullptr, &status));
-    if (U_FAILURE(status) ||  ures_getSize(topLevel.getAlias()) < 4) {
-        // Fall back to standard combining patterns
-        status = U_ZERO_ERROR;
-        dateTimeFormatOffset = DateFormat::kDateTime;
-        pathBuffer.clear();
-        pathBuffer.append("calendar/", status)
-                .append(cType, status)
-                .append("/DateTimePatterns", status);
-        topLevel.adoptInstead(
-                ures_getByKeyWithFallback(
-                        resource, pathBuffer.data(), nullptr, &status));
-    }
     if (U_FAILURE(status)) {
-        return false;
+        return FALSE;
     }
-    if (dateTimeFormatOffset == DateFormat::kDateTime && ures_getSize(topLevel.getAlias()) <= DateFormat::kDateTime) {
+    int32_t size = ures_getSize(topLevel.getAlias());
+    if (size <= 8) {
         // Oops, size is too small to access the index that we want, fallback
         // to a hard-coded value.
         result = UNICODE_STRING_SIMPLE("{1} {0}");
-        return true;
+        return TRUE;
     }
-    return getStringByIndex(topLevel.getAlias(), dateTimeFormatOffset, result, status);
+    return getStringByIndex(topLevel.getAlias(), 8, result, status);
 }
 
-template<> 
+template<> U_I18N_API
 const RelativeDateTimeCacheData *LocaleCacheKey<RelativeDateTimeCacheData>::createObject(const void * /*unused*/, UErrorCode &status) const {
     const char *localeId = fLoc.getName();
     LocalUResourceBundlePointer topLevel(ures_open(nullptr, localeId, &status));
@@ -722,7 +714,7 @@ const RelativeDateTimeCacheData *LocaleCacheKey<RelativeDateTimeCacheData>::crea
         return nullptr;
     }
     UnicodeString dateTimePattern;
-    if (!getDateTimePattern(fLoc, topLevel.getAlias(), dateTimePattern, status)) {
+    if (!getDateTimePattern(topLevel.getAlias(), dateTimePattern, status)) {
         return nullptr;
     }
     result->adoptCombinedDateAndTime(
@@ -1212,9 +1204,9 @@ UBool RelativeDateTimeFormatter::checkNoAdjustForContext(UErrorCode& status) con
     // casing. The code could be written and tested if there is demand.
     if (fOptBreakIterator != nullptr) {
         status = U_UNSUPPORTED_ERROR;
-        return false;
+        return FALSE;
     }
-    return true;
+    return TRUE;
 }
 
 void RelativeDateTimeFormatter::init(

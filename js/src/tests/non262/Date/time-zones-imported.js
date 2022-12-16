@@ -497,9 +497,9 @@ inTimeZone("America/Caracas", () => {
     TimeString: "00:00:00 GMT-0400 (Venezuela Time)",
     UTCString: "Wed, 05 Dec 2007 04:00:00 GMT",
     ISOString: "2007-12-05T04:00:00.000Z",
-    LocaleString: "Wed, 12/05/2007, 12:00:00\u202FAM GMT-4",
+    LocaleString: "Wed, 12/05/2007, 12:00:00 AM GMT-4",
     LocaleDateString: "Wed, 12/05/2007",
-    LocaleTimeString: "12:00:00\u202FAM GMT-4",
+    LocaleTimeString: "12:00:00 AM GMT-4",
   });
 }
 
@@ -514,9 +514,9 @@ inTimeZone("America/Caracas", () => {
     TimeString: "00:00:00 GMT-0430 (Venezuela Time)",
     UTCString: "Wed, 12 Dec 2007 04:30:00 GMT",
     ISOString: "2007-12-12T04:30:00.000Z",
-    LocaleString: "Wed, 12/12/2007, 12:00:00\u202FAM GMT-4:30",
+    LocaleString: "Wed, 12/12/2007, 12:00:00 AM GMT-4:30",
     LocaleDateString: "Wed, 12/12/2007",
-    LocaleTimeString: "12:00:00\u202FAM GMT-4:30",
+    LocaleTimeString: "12:00:00 AM GMT-4:30",
   });
 }
 });
@@ -537,9 +537,9 @@ inTimeZone("Australia/Lord_Howe", () => {
     TimeString: "00:00:00 GMT+1030 (Lord Howe Standard Time)",
     UTCString: "Sat, 31 Jul 2010 13:30:00 GMT",
     ISOString: "2010-07-31T13:30:00.000Z",
-    LocaleString: "Sun, 08/01/2010, 12:00:00\u202FAM GMT+10:30",
+    LocaleString: "Sun, 08/01/2010, 12:00:00 AM GMT+10:30",
     LocaleDateString: "Sun, 08/01/2010",
-    LocaleTimeString: "12:00:00\u202FAM GMT+10:30",
+    LocaleTimeString: "12:00:00 AM GMT+10:30",
   });
 }
 
@@ -554,9 +554,9 @@ inTimeZone("Australia/Lord_Howe", () => {
     TimeString: "00:00:00 GMT+1100 (Lord Howe Daylight Time)",
     UTCString: "Sat, 02 Jan 2010 13:00:00 GMT",
     ISOString: "2010-01-02T13:00:00.000Z",
-    LocaleString: "Sun, 01/03/2010, 12:00:00\u202FAM GMT+11",
+    LocaleString: "Sun, 01/03/2010, 12:00:00 AM GMT+11",
     LocaleDateString: "Sun, 01/03/2010",
-    LocaleTimeString: "12:00:00\u202FAM GMT+11",
+    LocaleTimeString: "12:00:00 AM GMT+11",
   });
 }
 });
@@ -630,9 +630,9 @@ inTimeZone("Europe/London", () => {
     TimeString: "00:00:00 GMT+0100 (Greenwich Mean Time)",
     UTCString: "Wed, 31 Dec 1969 23:00:00 GMT",
     ISOString: "1969-12-31T23:00:00.000Z",
-    LocaleString: "Thu, 01/01/1970, 12:00:00\u202FAM GMT+1",
+    LocaleString: "Thu, 01/01/1970, 12:00:00 AM GMT+1",
     LocaleDateString: "Thu, 01/01/1970",
-    LocaleTimeString: "12:00:00\u202FAM GMT+1",
+    LocaleTimeString: "12:00:00 AM GMT+1",
   });
 }
 });
@@ -651,9 +651,9 @@ inTimeZone("Europe/Moscow", () => {
     TimeString: "00:00:00 GMT+0300 (Moscow Standard Time)",
     UTCString: "Wed, 31 Dec 1969 21:00:00 GMT",
     ISOString: "1969-12-31T21:00:00.000Z",
-    LocaleString: "Thu, 01/01/1970, 12:00:00\u202FAM GMT+3",
+    LocaleString: "Thu, 01/01/1970, 12:00:00 AM GMT+3",
     LocaleDateString: "Thu, 01/01/1970",
-    LocaleTimeString: "12:00:00\u202FAM GMT+3",
+    LocaleTimeString: "12:00:00 AM GMT+3",
   });
 }
 
@@ -671,9 +671,9 @@ inTimeZone("Europe/Moscow", () => {
     TimeString: "00:00:00 GMT+0400 (Moscow Summer Time)",
     UTCString: "Fri, 31 Aug 1990 20:00:00 GMT",
     ISOString: "1990-08-31T20:00:00.000Z",
-    LocaleString: "Sat, 09/01/1990, 12:00:00\u202FAM GMT+4",
+    LocaleString: "Sat, 09/01/1990, 12:00:00 AM GMT+4",
     LocaleDateString: "Sat, 09/01/1990",
-    LocaleTimeString: "12:00:00\u202FAM GMT+4",
+    LocaleTimeString: "12:00:00 AM GMT+4",
   });
 }
 
@@ -688,9 +688,9 @@ inTimeZone("Europe/Moscow", () => {
     TimeString: "00:00:00 GMT+0300 (Moscow Standard Time)",
     UTCString: "Sun, 24 Mar 1991 21:00:00 GMT",
     ISOString: "1991-03-24T21:00:00.000Z",
-    LocaleString: "Mon, 03/25/1991, 12:00:00\u202FAM GMT+3",
+    LocaleString: "Mon, 03/25/1991, 12:00:00 AM GMT+3",
     LocaleDateString: "Mon, 03/25/1991",
-    LocaleTimeString: "12:00:00\u202FAM GMT+3",
+    LocaleTimeString: "12:00:00 AM GMT+3",
   });
 }
 
@@ -705,9 +705,9 @@ inTimeZone("Europe/Moscow", () => {
     TimeString: "12:00:00 GMT+0300 (Moscow Summer Time)",
     UTCString: "Sun, 31 Mar 1991 09:00:00 GMT",
     ISOString: "1991-03-31T09:00:00.000Z",
-    LocaleString: "Sun, 03/31/1991, 12:00:00\u202FPM GMT+3",
+    LocaleString: "Sun, 03/31/1991, 12:00:00 PM GMT+3",
     LocaleDateString: "Sun, 03/31/1991",
-    LocaleTimeString: "12:00:00\u202FPM GMT+3",
+    LocaleTimeString: "12:00:00 PM GMT+3",
   });
 }
 
@@ -722,9 +722,9 @@ inTimeZone("Europe/Moscow", () => {
     TimeString: "00:00:00 GMT+0300 (Moscow Summer Time)",
     UTCString: "Fri, 27 Sep 1991 21:00:00 GMT",
     ISOString: "1991-09-27T21:00:00.000Z",
-    LocaleString: "Sat, 09/28/1991, 12:00:00\u202FAM GMT+3",
+    LocaleString: "Sat, 09/28/1991, 12:00:00 AM GMT+3",
     LocaleDateString: "Sat, 09/28/1991",
-    LocaleTimeString: "12:00:00\u202FAM GMT+3",
+    LocaleTimeString: "12:00:00 AM GMT+3",
   });
 }
 
@@ -739,9 +739,9 @@ inTimeZone("Europe/Moscow", () => {
     TimeString: "00:00:00 GMT+0200 (Moscow Standard Time)",
     UTCString: "Sun, 29 Sep 1991 22:00:00 GMT",
     ISOString: "1991-09-29T22:00:00.000Z",
-    LocaleString: "Mon, 09/30/1991, 12:00:00\u202FAM GMT+2",
+    LocaleString: "Mon, 09/30/1991, 12:00:00 AM GMT+2",
     LocaleDateString: "Mon, 09/30/1991",
-    LocaleTimeString: "12:00:00\u202FAM GMT+2",
+    LocaleTimeString: "12:00:00 AM GMT+2",
   });
 }
 
@@ -759,9 +759,9 @@ inTimeZone("Europe/Moscow", () => {
     TimeString: "00:00:00 GMT+0400 (Moscow Summer Time)",
     UTCString: "Fri, 29 Oct 2010 20:00:00 GMT",
     ISOString: "2010-10-29T20:00:00.000Z",
-    LocaleString: "Sat, 10/30/2010, 12:00:00\u202FAM GMT+4",
+    LocaleString: "Sat, 10/30/2010, 12:00:00 AM GMT+4",
     LocaleDateString: "Sat, 10/30/2010",
-    LocaleTimeString: "12:00:00\u202FAM GMT+4",
+    LocaleTimeString: "12:00:00 AM GMT+4",
   });
 }
 
@@ -776,9 +776,9 @@ inTimeZone("Europe/Moscow", () => {
     TimeString: "00:00:00 GMT+0300 (Moscow Standard Time)",
     UTCString: "Sun, 31 Oct 2010 21:00:00 GMT",
     ISOString: "2010-10-31T21:00:00.000Z",
-    LocaleString: "Mon, 11/01/2010, 12:00:00\u202FAM GMT+3",
+    LocaleString: "Mon, 11/01/2010, 12:00:00 AM GMT+3",
     LocaleDateString: "Mon, 11/01/2010",
-    LocaleTimeString: "12:00:00\u202FAM GMT+3",
+    LocaleTimeString: "12:00:00 AM GMT+3",
   });
 }
 
@@ -793,9 +793,9 @@ inTimeZone("Europe/Moscow", () => {
     TimeString: "00:00:00 GMT+0400 (Moscow Standard Time)",
     UTCString: "Sat, 29 Oct 2011 20:00:00 GMT",
     ISOString: "2011-10-29T20:00:00.000Z",
-    LocaleString: "Sun, 10/30/2011, 12:00:00\u202FAM GMT+4",
+    LocaleString: "Sun, 10/30/2011, 12:00:00 AM GMT+4",
     LocaleDateString: "Sun, 10/30/2011",
-    LocaleTimeString: "12:00:00\u202FAM GMT+4",
+    LocaleTimeString: "12:00:00 AM GMT+4",
   });
 }
 
@@ -810,9 +810,9 @@ inTimeZone("Europe/Moscow", () => {
     TimeString: "00:00:00 GMT+0400 (Moscow Standard Time)",
     UTCString: "Mon, 31 Oct 2011 20:00:00 GMT",
     ISOString: "2011-10-31T20:00:00.000Z",
-    LocaleString: "Tue, 11/01/2011, 12:00:00\u202FAM GMT+4",
+    LocaleString: "Tue, 11/01/2011, 12:00:00 AM GMT+4",
     LocaleDateString: "Tue, 11/01/2011",
-    LocaleTimeString: "12:00:00\u202FAM GMT+4",
+    LocaleTimeString: "12:00:00 AM GMT+4",
   });
 }
 
@@ -829,9 +829,9 @@ inTimeZone("Europe/Moscow", () => {
     TimeString: "00:00:00 GMT+0400 (Moscow Standard Time)",
     UTCString: "Sat, 25 Oct 2014 20:00:00 GMT",
     ISOString: "2014-10-25T20:00:00.000Z",
-    LocaleString: "Sun, 10/26/2014, 12:00:00\u202FAM GMT+4",
+    LocaleString: "Sun, 10/26/2014, 12:00:00 AM GMT+4",
     LocaleDateString: "Sun, 10/26/2014",
-    LocaleTimeString: "12:00:00\u202FAM GMT+4",
+    LocaleTimeString: "12:00:00 AM GMT+4",
   });
 }
 
@@ -846,9 +846,9 @@ inTimeZone("Europe/Moscow", () => {
     TimeString: "00:00:00 GMT+0300 (Moscow Standard Time)",
     UTCString: "Sun, 26 Oct 2014 21:00:00 GMT",
     ISOString: "2014-10-26T21:00:00.000Z",
-    LocaleString: "Mon, 10/27/2014, 12:00:00\u202FAM GMT+3",
+    LocaleString: "Mon, 10/27/2014, 12:00:00 AM GMT+3",
     LocaleDateString: "Mon, 10/27/2014",
-    LocaleTimeString: "12:00:00\u202FAM GMT+3",
+    LocaleTimeString: "12:00:00 AM GMT+3",
   });
 }
 });
@@ -869,9 +869,9 @@ inTimeZone("Pacific/Apia", () => {
     TimeString: "00:00:00 GMT-1000 (Apia Daylight Time)",
     UTCString: "Thu, 29 Dec 2011 10:00:00 GMT",
     ISOString: "2011-12-29T10:00:00.000Z",
-    LocaleString: "Thu, 12/29/2011, 12:00:00\u202FAM GMT-10",
+    LocaleString: "Thu, 12/29/2011, 12:00:00 AM GMT-10",
     LocaleDateString: "Thu, 12/29/2011",
-    LocaleTimeString: "12:00:00\u202FAM GMT-10",
+    LocaleTimeString: "12:00:00 AM GMT-10",
   });
 }
 
@@ -886,9 +886,9 @@ inTimeZone("Pacific/Apia", () => {
     TimeString: "00:00:00 GMT+1400 (Apia Daylight Time)",
     UTCString: "Fri, 30 Dec 2011 10:00:00 GMT",
     ISOString: "2011-12-30T10:00:00.000Z",
-    LocaleString: "Sat, 12/31/2011, 12:00:00\u202FAM GMT+14",
+    LocaleString: "Sat, 12/31/2011, 12:00:00 AM GMT+14",
     LocaleDateString: "Sat, 12/31/2011",
-    LocaleTimeString: "12:00:00\u202FAM GMT+14",
+    LocaleTimeString: "12:00:00 AM GMT+14",
   });
 }
 
@@ -903,9 +903,9 @@ inTimeZone("Pacific/Apia", () => {
     TimeString: "00:00:00 GMT+1300 (Apia Standard Time)",
     UTCString: "Sun, 01 Apr 2012 11:00:00 GMT",
     ISOString: "2012-04-01T11:00:00.000Z",
-    LocaleString: "Mon, 04/02/2012, 12:00:00\u202FAM GMT+13",
+    LocaleString: "Mon, 04/02/2012, 12:00:00 AM GMT+13",
     LocaleDateString: "Mon, 04/02/2012",
-    LocaleTimeString: "12:00:00\u202FAM GMT+13",
+    LocaleTimeString: "12:00:00 AM GMT+13",
   });
 }
 });
@@ -926,9 +926,9 @@ inTimeZone("Pacific/Chatham", () => {
     TimeString: "00:00:00 GMT+1245 (Chatham Standard Time)",
     UTCString: "Sat, 31 Jul 2010 11:15:00 GMT",
     ISOString: "2010-07-31T11:15:00.000Z",
-    LocaleString: "Sun, 08/01/2010, 12:00:00\u202FAM GMT+12:45",
+    LocaleString: "Sun, 08/01/2010, 12:00:00 AM GMT+12:45",
     LocaleDateString: "Sun, 08/01/2010",
-    LocaleTimeString: "12:00:00\u202FAM GMT+12:45",
+    LocaleTimeString: "12:00:00 AM GMT+12:45",
   });
 }
 
@@ -943,9 +943,9 @@ inTimeZone("Pacific/Chatham", () => {
     TimeString: "00:00:00 GMT+1345 (Chatham Daylight Time)",
     UTCString: "Sat, 02 Jan 2010 10:15:00 GMT",
     ISOString: "2010-01-02T10:15:00.000Z",
-    LocaleString: "Sun, 01/03/2010, 12:00:00\u202FAM GMT+13:45",
+    LocaleString: "Sun, 01/03/2010, 12:00:00 AM GMT+13:45",
     LocaleDateString: "Sun, 01/03/2010",
-    LocaleTimeString: "12:00:00\u202FAM GMT+13:45",
+    LocaleTimeString: "12:00:00 AM GMT+13:45",
   });
 }
 });
@@ -966,9 +966,9 @@ inTimeZone("Pacific/Kiritimati", () => {
     TimeString: "00:00:00 GMT+1400 (Line Islands Time)",
     UTCString: "Sat, 31 Jul 2010 10:00:00 GMT",
     ISOString: "2010-07-31T10:00:00.000Z",
-    LocaleString: "Sun, 08/01/2010, 12:00:00\u202FAM GMT+14",
+    LocaleString: "Sun, 08/01/2010, 12:00:00 AM GMT+14",
     LocaleDateString: "Sun, 08/01/2010",
-    LocaleTimeString: "12:00:00\u202FAM GMT+14",
+    LocaleTimeString: "12:00:00 AM GMT+14",
   });
 }
 
@@ -985,9 +985,9 @@ inTimeZone("Pacific/Kiritimati", () => {
     TimeString: "00:00:00 GMT-1040 (Line Islands Time)",
     UTCString: "Wed, 01 Jan 1975 10:40:00 GMT",
     ISOString: "1975-01-01T10:40:00.000Z",
-    LocaleString: "Wed, 01/01/1975, 12:00:00\u202FAM GMT-10:40",
+    LocaleString: "Wed, 01/01/1975, 12:00:00 AM GMT-10:40",
     LocaleDateString: "Wed, 01/01/1975",
-    LocaleTimeString: "12:00:00\u202FAM GMT-10:40",
+    LocaleTimeString: "12:00:00 AM GMT-10:40",
   });
 }
 });
@@ -1008,9 +1008,9 @@ inTimeZone("Pacific/Niue", () => {
     TimeString: "00:00:00 GMT-1120 (Niue Time)",
     UTCString: "Sun, 01 Jan 1956 11:20:00 GMT",
     ISOString: "1956-01-01T11:20:00.000Z",
-    LocaleString: "Sun, 01/01/1956, 12:00:00\u202FAM GMT-11:20",
+    LocaleString: "Sun, 01/01/1956, 12:00:00 AM GMT-11:20",
     LocaleDateString: "Sun, 01/01/1956",
-    LocaleTimeString: "12:00:00\u202FAM GMT-11:20",
+    LocaleTimeString: "12:00:00 AM GMT-11:20",
   });
 }
 });

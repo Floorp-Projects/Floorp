@@ -35,7 +35,6 @@ likelySubtags:table(nofallback){
     ahl{"ahl_Latn_ZZ"}
     aho{"aho_Ahom_IN"}
     ajg{"ajg_Latn_ZZ"}
-    ajt{"ajt_Arab_TN"}
     ak{"ak_Latn_GH"}
     akk{"akk_Xsux_IQ"}
     ala{"ala_Latn_ZZ"}
@@ -50,7 +49,7 @@ likelySubtags:table(nofallback){
     an{"an_Latn_ES"}
     anc{"anc_Latn_ZZ"}
     ank{"ank_Latn_ZZ"}
-    ann{"ann_Latn_NG"}
+    ann{"ann_Latn_ZZ"}
     any{"any_Latn_ZZ"}
     aoj{"aoj_Latn_ZZ"}
     aom{"aom_Latn_ZZ"}
@@ -959,7 +958,6 @@ likelySubtags:table(nofallback){
     nyn{"nyn_Latn_UG"}
     nzi{"nzi_Latn_GH"}
     oc{"oc_Latn_FR"}
-    oc_ES{"oc_Latn_ES"}
     ogc{"ogc_Latn_ZZ"}
     oj{"oj_Cans_CA"}
     ojs{"ojs_Cans_CA"}
@@ -1002,7 +1000,6 @@ likelySubtags:table(nofallback){
     phn{"phn_Phnx_LB"}
     pil{"pil_Latn_ZZ"}
     pip{"pip_Latn_ZZ"}
-    pis{"pis_Latn_SB"}
     pka{"pka_Brah_IN"}
     pko{"pko_Latn_KE"}
     pl{"pl_Latn_PL"}
@@ -1116,14 +1113,12 @@ likelySubtags:table(nofallback){
     sly{"sly_Latn_ID"}
     sm{"sm_Latn_WS"}
     sma{"sma_Latn_SE"}
-    smd{"smd_Latn_AO"}
     smj{"smj_Latn_SE"}
     smn{"smn_Latn_FI"}
     smp{"smp_Samr_IL"}
     smq{"smq_Latn_ZZ"}
     sms{"sms_Latn_FI"}
     sn{"sn_Latn_ZW"}
-    snb{"snb_Latn_MY"}
     snc{"snc_Latn_ZZ"}
     snk{"snk_Latn_ML"}
     snp{"snp_Latn_ZZ"}
@@ -1229,7 +1224,6 @@ likelySubtags:table(nofallback){
     to{"to_Latn_TO"}
     tof{"tof_Latn_ZZ"}
     tog{"tog_Latn_MW"}
-    tok{"tok_Latn_001"}
     toq{"toq_Latn_ZZ"}
     tpi{"tpi_Latn_PG"}
     tpm{"tpm_Latn_ZZ"}

@@ -83,6 +83,13 @@ public:
      */
     static DateTimePatternGenerator* U_EXPORT2 createInstanceNoStdPat(const Locale& uLocale, UErrorCode& status);
 
+    /**
+     * For ICU use only
+     *
+     * @internal
+     */
+    static DateTimePatternGenerator* U_EXPORT2 internalMakeInstance(const Locale& uLocale, UErrorCode& status);
+
 #endif /* U_HIDE_INTERNAL_API */
 
     /**
@@ -658,9 +665,9 @@ private:
     static void U_CALLCONV loadAllowedHourFormatsData(UErrorCode &status);
     void getAllowedHourFormats(const Locale &locale, UErrorCode &status);
 
-    struct U_HIDDEN AppendItemFormatsSink;
-    struct U_HIDDEN AppendItemNamesSink;
-    struct U_HIDDEN AvailableFormatsSink;
+    struct AppendItemFormatsSink;
+    struct AppendItemNamesSink;
+    struct AvailableFormatsSink;
 } ;// end class DateTimePatternGenerator
 
 U_NAMESPACE_END

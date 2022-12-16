@@ -11,7 +11,6 @@
 
 #include "cmemory.h"
 #include "measunit_impl.h"
-#include "unicode/locid.h"
 #include "unicode/measunit.h"
 #include "unicode/stringpiece.h"
 #include "unicode/uobject.h"
@@ -119,10 +118,9 @@ namespace units {
  */
 class U_I18N_API UnitsRouter {
   public:
-    UnitsRouter(StringPiece inputUnitIdentifier, const Locale &locale, StringPiece usage,
+    UnitsRouter(StringPiece inputUnitIdentifier, StringPiece locale, StringPiece usage,
                 UErrorCode &status);
-    UnitsRouter(const MeasureUnit &inputUnit, const Locale &locale, StringPiece usage,
-                UErrorCode &status);
+    UnitsRouter(const MeasureUnit &inputUnit, StringPiece locale, StringPiece usage, UErrorCode &status);
 
     /**
      * Performs locale and usage sensitive unit conversion.
@@ -155,7 +153,7 @@ class U_I18N_API UnitsRouter {
     static number::Precision parseSkeletonToPrecision(icu::UnicodeString precisionSkeleton,
                                                       UErrorCode &status);
 
-    void init(const MeasureUnit &inputUnit, const Locale &locale, StringPiece usage, UErrorCode &status);
+    void init(const MeasureUnit &inputUnit, StringPiece locale, StringPiece usage, UErrorCode &status);
 };
 
 } // namespace units

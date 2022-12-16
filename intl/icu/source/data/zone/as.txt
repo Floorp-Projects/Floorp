@@ -1217,9 +1217,6 @@ as{
         "Pacific:Johnston"{
             ec{"জনষ্টন"}
         }
-        "Pacific:Kanton"{
-            ec{"কেণ্টন"}
-        }
         "Pacific:Kiritimati"{
             ec{"কিৰিটিমাটি"}
         }

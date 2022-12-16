@@ -889,7 +889,7 @@ th{
             ec{"เยเรวาน"}
         }
         "Atlantic:Azores"{
-            ec{"อะโซร์ส"}
+            ec{"อาซอเรส"}
         }
         "Atlantic:Bermuda"{
             ec{"เบอร์มิวดา"}
@@ -1222,9 +1222,6 @@ th{
         }
         "Pacific:Johnston"{
             ec{"จอห์นสตัน"}
-        }
-        "Pacific:Kanton"{
-            ec{"แคนทอน"}
         }
         "Pacific:Kiritimati"{
             ec{"คิริทิมาตี"}

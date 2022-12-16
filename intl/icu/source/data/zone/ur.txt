@@ -919,7 +919,7 @@ ur{
             ec{"اسٹینلے"}
         }
         "Australia:Adelaide"{
-            ec{"ایڈیلیڈ"}
+            ec{"اڈیلائڈ"}
         }
         "Australia:Brisbane"{
             ec{"برسبین"}

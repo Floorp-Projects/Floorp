@@ -3,15 +3,8 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sv{
     collations{
-        default{"standard"}
-        search{
-            Sequence{
-                "[import und-u-co-search]"
-                "[import sv-u-co-standard]"
-            }
-            Version{"42"}
-        }
-        standard{
+        default{"reformed"}
+        reformed{
             Sequence{
                 "&D<<đ<<<Đ<<ð<<<Ð"
                 "&t<<<þ/h"
@@ -19,9 +12,16 @@ sv{
                 "&Y<<ü<<<Ü<<ű<<<Ű"
                 "&[before 1]ǀ<å<<<Å<ä<<<Ä<<æ<<<Æ<<ę<<<Ę<ö<<<Ö<<ø<<<Ø<<ő<<<Ő<<œ<<<Œ<<ô<<<Ô"
             }
-            Version{"42"}
+            Version{"41"}
         }
-        traditional{
+        search{
+            Sequence{
+                "[import und-u-co-search]"
+                "[import sv-u-co-standard]"
+            }
+            Version{"41"}
+        }
+        standard{
             Sequence{
                 "&D<<đ<<<Đ<<ð<<<Ð"
                 "&t<<<þ/h"
@@ -30,7 +30,7 @@ sv{
                 "&Y<<ü<<<Ü<<ű<<<Ű"
                 "&[before 1]ǀ<å<<<Å<ä<<<Ä<<æ<<<Æ<<ę<<<Ę<ö<<<Ö<<ø<<<Ø<<ő<<<Ő<<œ<<<Œ<<ô<<<Ô"
             }
-            Version{"42"}
+            Version{"41"}
         }
     }
 }

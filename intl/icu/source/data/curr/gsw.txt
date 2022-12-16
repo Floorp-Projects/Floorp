@@ -629,7 +629,7 @@ gsw{
         }
         MVR{
             "MVR",
-            "Malediven-Rufiyaa",
+            "Rufiyaa",
         }
         MWK{
             "MWK",
@@ -1694,8 +1694,8 @@ gsw{
             other{"Maurizius-Rupie"}
         }
         MVR{
-            one{"Malediven-Rufiyaa"}
-            other{"Malediven-Rupien"}
+            one{"Rufiyaa"}
+            other{"Rufiyaa"}
         }
         MWK{
             one{"Malawi-Kwacha"}

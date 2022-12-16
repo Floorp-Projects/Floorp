@@ -14,9 +14,4 @@ es_EC{
             }
         }
     }
-    fields{
-        dayperiod{
-            dn{"a. m./p. m."}
-        }
-    }
 }

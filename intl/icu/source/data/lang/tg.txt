@@ -33,7 +33,7 @@ tg{
         dv{"дивеҳӣ"}
         dz{"дзонгха"}
         el{"юнонӣ"}
-        en{"Англисӣ"}
+        en{"англисӣ"}
         en_AU{"англисии австралиягӣ"}
         en_CA{"англисии канадагӣ"}
         en_GB{"англисии британӣ"}
@@ -176,7 +176,6 @@ tg{
     }
     Languages%short{
         en_GB{"англисӣ (ШМ)"}
-        en_US{"англисӣ (ИМ)"}
     }
     Scripts{
         Arab{"Арабӣ"}
@@ -204,9 +203,9 @@ tg{
         }
     }
     codePatterns{
-        language{"Забон: {0}"}
-        script{"Скрипт: {0}"}
-        territory{"Минтақа: {0}"}
+        language{"{0}"}
+        script{"{0}"}
+        territory{"{0}"}
     }
     localeDisplayPattern{
         keyTypePattern{"{0}: {1}"}

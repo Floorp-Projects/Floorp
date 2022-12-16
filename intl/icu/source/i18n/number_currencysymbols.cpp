@@ -108,10 +108,6 @@ UnicodeString CurrencySymbols::getPluralName(StandardPlural::Form plural, UError
     }
 }
 
-bool CurrencySymbols::hasEmptyCurrencySymbol() const {
-    return !fCurrencySymbol.isBogus() && fCurrencySymbol.isEmpty();
-}
-
 
 CurrencyUnit
 icu::number::impl::resolveCurrency(const DecimalFormatProperties& properties, const Locale& locale,

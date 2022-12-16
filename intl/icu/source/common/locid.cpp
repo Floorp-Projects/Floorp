@@ -64,7 +64,7 @@ U_CDECL_END
 U_NAMESPACE_BEGIN
 
 static Locale   *gLocaleCache = NULL;
-static UInitOnce gLocaleCacheInitOnce {};
+static UInitOnce gLocaleCacheInitOnce = U_INITONCE_INITIALIZER;
 
 // gDefaultLocaleMutex protects all access to gDefaultLocalesHashT and gDefaultLocale.
 static UMutex gDefaultLocaleMutex;
@@ -128,7 +128,7 @@ static UBool U_CALLCONV locale_cleanup(void)
         gDefaultLocalesHashT = NULL;
     }
     gDefaultLocale = NULL;
-    return true;
+    return TRUE;
 }
 
 
@@ -171,7 +171,7 @@ Locale *locale_set_default_internal(const char *id, UErrorCode& status) {
     // Synchronize this entire function.
     Mutex lock(&gDefaultLocaleMutex);
 
-    UBool canonicalize = false;
+    UBool canonicalize = FALSE;
 
     // If given a NULL string for the locale id, grab the default
     //   name from the system.
@@ -179,7 +179,7 @@ Locale *locale_set_default_internal(const char *id, UErrorCode& status) {
     //    the current ICU default locale.)
     if (id == NULL) {
         id = uprv_getDefaultLocaleID();   // This function not thread safe? TODO: verify.
-        canonicalize = true; // always canonicalize host ID
+        canonicalize = TRUE; // always canonicalize host ID
     }
 
     CharString localeNameBuf;
@@ -212,7 +212,7 @@ Locale *locale_set_default_internal(const char *id, UErrorCode& status) {
             status = U_MEMORY_ALLOCATION_ERROR;
             return gDefaultLocale;
         }
-        newDefault->init(localeNameBuf.data(), false);
+        newDefault->init(localeNameBuf.data(), FALSE);
         uhash_put(gDefaultLocalesHashT, (char*) newDefault->getName(), newDefault, &status);
         if (U_FAILURE(status)) {
             return gDefaultLocale;
@@ -269,7 +269,7 @@ Locale::~Locale()
 Locale::Locale()
     : UObject(), fullName(fullNameBuffer), baseName(NULL)
 {
-    init(NULL, false);
+    init(NULL, FALSE);
 }
 
 /*
@@ -292,7 +292,7 @@ Locale::Locale( const   char * newLanguage,
 {
     if( (newLanguage==NULL) && (newCountry == NULL) && (newVariant == NULL) )
     {
-        init(NULL, false); /* shortcut */
+        init(NULL, FALSE); /* shortcut */
     }
     else
     {
@@ -397,7 +397,7 @@ Locale::Locale( const   char * newLanguage,
         }
         // Parse it, because for example 'language' might really be a complete
         // string.
-        init(togo.data(), false);
+        init(togo.data(), FALSE);
     }
 }
 
@@ -491,7 +491,7 @@ Locale::operator==( const   Locale& other) const
 
 namespace {
 
-UInitOnce gKnownCanonicalizedInitOnce {};
+UInitOnce gKnownCanonicalizedInitOnce = U_INITONCE_INITIALIZER;
 UHashtable *gKnownCanonicalized = nullptr;
 
 static const char* const KNOWN_CANONICALIZED[] = {
@@ -521,7 +521,7 @@ static const char* const KNOWN_CANONICALIZED[] = {
 static UBool U_CALLCONV cleanupKnownCanonicalized() {
     gKnownCanonicalizedInitOnce.reset();
     if (gKnownCanonicalized) { uhash_close(gKnownCanonicalized); }
-    return true;
+    return TRUE;
 }
 
 static void U_CALLCONV loadKnownCanonicalized(UErrorCode &status) {
@@ -682,14 +682,14 @@ private:
 
 
 const AliasData* AliasData::gSingleton = nullptr;
-UInitOnce AliasData::gInitOnce {};
+UInitOnce AliasData::gInitOnce = U_INITONCE_INITIALIZER;
 
 UBool U_CALLCONV
 AliasData::cleanup()
 {
     gInitOnce.reset();
     delete gSingleton;
-    return true;
+    return TRUE;
 }
 
 void
@@ -1817,7 +1817,7 @@ ulocimp_isCanonicalizedLocaleForTest(const char* localeName)
 /*This function initializes a Locale from a C locale ID*/
 Locale& Locale::init(const char* localeID, UBool canonicalize)
 {
-    fIsBogus = false;
+    fIsBogus = FALSE;
     /* Free our current storage */
     if ((baseName != fullName) && (baseName != fullNameBuffer)) {
         uprv_free(baseName);
@@ -2021,7 +2021,7 @@ Locale::setToBogus() {
     *language = 0;
     *script = 0;
     *country = 0;
-    fIsBogus = true;
+    fIsBogus = TRUE;
     variantBegin = 0;
 }
 
@@ -2071,7 +2071,7 @@ Locale::addLikelySubtags(UErrorCode& status) {
         return;
     }
 
-    init(maximizedLocaleID.data(), /*canonicalize=*/false);
+    init(maximizedLocaleID.data(), /*canonicalize=*/FALSE);
     if (isBogus()) {
         status = U_ILLEGAL_ARGUMENT_ERROR;
     }
@@ -2093,7 +2093,7 @@ Locale::minimizeSubtags(UErrorCode& status) {
         return;
     }
 
-    init(minimizedLocaleID.data(), /*canonicalize=*/false);
+    init(minimizedLocaleID.data(), /*canonicalize=*/FALSE);
     if (isBogus()) {
         status = U_ILLEGAL_ARGUMENT_ERROR;
     }
@@ -2112,7 +2112,7 @@ Locale::canonicalize(UErrorCode& status) {
     if (U_FAILURE(status)) {
         return;
     }
-    init(uncanonicalized.data(), /*canonicalize=*/true);
+    init(uncanonicalized.data(), /*canonicalize=*/TRUE);
     if (isBogus()) {
         status = U_ILLEGAL_ARGUMENT_ERROR;
     }
@@ -2159,7 +2159,7 @@ Locale::forLanguageTag(StringPiece tag, UErrorCode& status)
         return result;
     }
 
-    result.init(localeID.data(), /*canonicalize=*/false);
+    result.init(localeID.data(), /*canonicalize=*/FALSE);
     if (result.isBogus()) {
         status = U_ILLEGAL_ARGUMENT_ERROR;
     }
@@ -2178,7 +2178,7 @@ Locale::toLanguageTag(ByteSink& sink, UErrorCode& status) const
         return;
     }
 
-    ulocimp_toLanguageTag(fullName, sink, /*strict=*/false, &status);
+    ulocimp_toLanguageTag(fullName, sink, /*strict=*/FALSE, &status);
 }
 
 Locale U_EXPORT2
@@ -2186,7 +2186,7 @@ Locale::createFromName (const char *name)
 {
     if (name) {
         Locale l("");
-        l.init(name, false);
+        l.init(name, FALSE);
         return l;
     }
     else {
@@ -2197,7 +2197,7 @@ Locale::createFromName (const char *name)
 Locale U_EXPORT2
 Locale::createCanonical(const char* name) {
     Locale loc("");
-    loc.init(name, true);
+    loc.init(name, TRUE);
     return loc;
 }
 
@@ -2240,7 +2240,7 @@ const char* const* U_EXPORT2 Locale::getISOLanguages()
 // Set the locale's data based on a posix id.
 void Locale::setFromPOSIXID(const char *posixID)
 {
-    init(posixID, true);
+    init(posixID, TRUE);
 }
 
 const Locale & U_EXPORT2
@@ -2530,7 +2530,7 @@ Locale::createKeywords(UErrorCode &status) const
         if(assignment > variantStart) {
             CharString keywords;
             CharStringByteSink sink(&keywords);
-            ulocimp_getKeywords(variantStart+1, '@', sink, false, &status);
+            ulocimp_getKeywords(variantStart+1, '@', sink, FALSE, &status);
             if (U_SUCCESS(status) && !keywords.isEmpty()) {
                 result = new KeywordEnumeration(keywords.data(), keywords.length(), 0, status);
                 if (!result) {
@@ -2559,7 +2559,7 @@ Locale::createUnicodeKeywords(UErrorCode &status) const
         if(assignment > variantStart) {
             CharString keywords;
             CharStringByteSink sink(&keywords);
-            ulocimp_getKeywords(variantStart+1, '@', sink, false, &status);
+            ulocimp_getKeywords(variantStart+1, '@', sink, FALSE, &status);
             if (U_SUCCESS(status) && !keywords.isEmpty()) {
                 result = new UnicodeKeywordEnumeration(keywords.data(), keywords.length(), 0, status);
                 if (!result) {

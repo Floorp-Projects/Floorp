@@ -308,13 +308,13 @@ UCharsTrie::findUniqueValueFromBranch(const UChar *pos, int32_t length,
                 }
             } else {
                 uniqueValue=value;
-                haveUniqueValue=true;
+                haveUniqueValue=TRUE;
             }
         } else {
             if(!findUniqueValue(pos+value, haveUniqueValue, uniqueValue)) {
                 return NULL;
             }
-            haveUniqueValue=true;
+            haveUniqueValue=TRUE;
         }
     } while(--length>1);
     return pos+1;  // ignore the last comparison unit
@@ -330,9 +330,9 @@ UCharsTrie::findUniqueValue(const UChar *pos, UBool haveUniqueValue, int32_t &un
             }
             pos=findUniqueValueFromBranch(pos, node+1, haveUniqueValue, uniqueValue);
             if(pos==NULL) {
-                return false;
+                return FALSE;
             }
-            haveUniqueValue=true;
+            haveUniqueValue=TRUE;
             node=*pos++;
         } else if(node<kMinValueLead) {
             // linear-match node
@@ -348,14 +348,14 @@ UCharsTrie::findUniqueValue(const UChar *pos, UBool haveUniqueValue, int32_t &un
             }
             if(haveUniqueValue) {
                 if(value!=uniqueValue) {
-                    return false;
+                    return FALSE;
                 }
             } else {
                 uniqueValue=value;
-                haveUniqueValue=true;
+                haveUniqueValue=TRUE;
             }
             if(isFinal) {
-                return true;
+                return TRUE;
             }
             pos=skipNodeValue(pos, node);
             node&=kNodeTypeMask;

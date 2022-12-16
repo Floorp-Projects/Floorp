@@ -1022,7 +1022,7 @@ ps{
             ec{"کيلنينګراډ"}
         }
         "Europe:Kiev"{
-            ec{"کیف"}
+            ec{"کیو"}
         }
         "Europe:Kirov"{
             ec{"کیروف"}

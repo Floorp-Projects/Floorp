@@ -42,10 +42,10 @@ isListTextFile(const char *listname) {
         suffix=listFileSuffixes[i].suffix;
         length=listFileSuffixes[i].length;
         if((listNameEnd-listname)>length && 0==memcmp(listNameEnd-length, suffix, length)) {
-            return true;
+            return TRUE;
         }
     }
-    return false;
+    return FALSE;
 }
 
 /*
@@ -163,7 +163,7 @@ writePackageDatFile(const char *outFilename, const char *outComment, const char 
         }
         pkg = ownedPkg.getAlias();
 
-        addListPkg.adoptInstead(readList(sourcePath, addList, true, NULL));
+        addListPkg.adoptInstead(readList(sourcePath, addList, TRUE, NULL));
         if(addListPkg.isValid()) {
             pkg->addItems(*addListPkg);
         } else {

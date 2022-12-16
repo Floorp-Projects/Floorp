@@ -68,18 +68,18 @@ CollationTailoring::~CollationTailoring() {
 
 UBool
 CollationTailoring::ensureOwnedData(UErrorCode &errorCode) {
-    if(U_FAILURE(errorCode)) { return false; }
+    if(U_FAILURE(errorCode)) { return FALSE; }
     if(ownedData == NULL) {
         const Normalizer2Impl *nfcImpl = Normalizer2Factory::getNFCImpl(errorCode);
-        if(U_FAILURE(errorCode)) { return false; }
+        if(U_FAILURE(errorCode)) { return FALSE; }
         ownedData = new CollationData(*nfcImpl);
         if(ownedData == NULL) {
             errorCode = U_MEMORY_ALLOCATION_ERROR;
-            return false;
+            return FALSE;
         }
     }
     data = ownedData;
-    return true;
+    return TRUE;
 }
 
 void

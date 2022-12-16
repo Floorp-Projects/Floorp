@@ -22,5 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-
-Merge day clobber 2022-12-12
+Bug 1806042 - Revert ICU72 update due to webcompat issues.

@@ -85,16 +85,16 @@ StringTrieBuilder::build(UStringTrieBuildOption buildOption, int32_t elementsLen
 // have a common prefix of length unitIndex.
 int32_t
 StringTrieBuilder::writeNode(int32_t start, int32_t limit, int32_t unitIndex) {
-    UBool hasValue=false;
+    UBool hasValue=FALSE;
     int32_t value=0;
     int32_t type;
     if(unitIndex==getElementStringLength(start)) {
         // An intermediate or final value.
         value=getElementValue(start++);
         if(start==limit) {
-            return writeValueAndFinal(value, true);  // final-value node
+            return writeValueAndFinal(value, TRUE);  // final-value node
         }
-        hasValue=true;
+        hasValue=TRUE;
     }
     // Now all [start..limit[ strings are longer than unitIndex.
     int32_t minUnit=getElementUnit(start, unitIndex);
@@ -209,7 +209,7 @@ StringTrieBuilder::makeNode(int32_t start, int32_t limit, int32_t unitIndex, UEr
     if(U_FAILURE(errorCode)) {
         return NULL;
     }
-    UBool hasValue=false;
+    UBool hasValue=FALSE;
     int32_t value=0;
     if(unitIndex==getElementStringLength(start)) {
         // An intermediate or final value.
@@ -217,7 +217,7 @@ StringTrieBuilder::makeNode(int32_t start, int32_t limit, int32_t unitIndex, UEr
         if(start==limit) {
             return registerFinalValue(value, errorCode);
         }
-        hasValue=true;
+        hasValue=TRUE;
     }
     Node *node;
     // Now all [start..limit[ strings are longer than unitIndex.
@@ -410,7 +410,7 @@ StringTrieBuilder::FinalValueNode::operator==(const Node &other) const {
 
 void
 StringTrieBuilder::FinalValueNode::write(StringTrieBuilder &builder) {
-    offset=builder.writeValueAndFinal(value, true);
+    offset=builder.writeValueAndFinal(value, TRUE);
 }
 
 bool
@@ -448,7 +448,7 @@ StringTrieBuilder::IntermediateValueNode::markRightEdgesFirst(int32_t edgeNumber
 void
 StringTrieBuilder::IntermediateValueNode::write(StringTrieBuilder &builder) {
     next->write(builder);
-    offset=builder.writeValueAndFinal(value, false);
+    offset=builder.writeValueAndFinal(value, FALSE);
 }
 
 bool
@@ -526,7 +526,7 @@ StringTrieBuilder::ListBranchNode::write(StringTrieBuilder &builder) {
     // not jump for it at all.
     unitNumber=length-1;
     if(rightEdge==NULL) {
-        builder.writeValueAndFinal(values[unitNumber], true);
+        builder.writeValueAndFinal(values[unitNumber], TRUE);
     } else {
         rightEdge->write(builder);
     }
@@ -538,12 +538,12 @@ StringTrieBuilder::ListBranchNode::write(StringTrieBuilder &builder) {
         if(equal[unitNumber]==NULL) {
             // Write the final value for the one string ending with this unit.
             value=values[unitNumber];
-            isFinal=true;
+            isFinal=TRUE;
         } else {
             // Write the delta to the start position of the sub-node.
             U_ASSERT(equal[unitNumber]->getOffset()>0);
             value=offset-equal[unitNumber]->getOffset();
-            isFinal=false;
+            isFinal=FALSE;
         }
         builder.writeValueAndFinal(value, isFinal);
         offset=builder.write(units[unitNumber]);

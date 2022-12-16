@@ -214,14 +214,14 @@ int32_t ICU_Utility::skipWhitespace(const UnicodeString& str, int32_t& pos,
  */
 UBool ICU_Utility::parseChar(const UnicodeString& id, int32_t& pos, UChar ch) {
     int32_t start = pos;
-    skipWhitespace(id, pos, true);
+    skipWhitespace(id, pos, TRUE);
     if (pos == id.length() ||
         id.charAt(pos) != ch) {
         pos = start;
-        return false;
+        return FALSE;
     }
     ++pos;
-    return true;
+    return TRUE;
 }
 
 /**
@@ -302,7 +302,7 @@ int32_t ICU_Utility::parseAsciiInteger(const UnicodeString& str, int32_t& pos) {
 
 /**
  * Append a character to a rule that is being built up.  To flush
- * the quoteBuf to rule, make one final call with isLiteral == true.
+ * the quoteBuf to rule, make one final call with isLiteral == TRUE.
  * If there is no final character, pass in (UChar32)-1 as c.
  * @param rule the string to append the character to
  * @param c the character to append, or (UChar32)-1 if none.
@@ -428,7 +428,7 @@ void ICU_Utility::appendToRule(UnicodeString& rule,
     if (matcher != NULL) {
         UnicodeString pat;
         appendToRule(rule, matcher->toPattern(pat, escapeUnprintable),
-                     true, escapeUnprintable, quoteBuf);
+                     TRUE, escapeUnprintable, quoteBuf);
     }
 }
 

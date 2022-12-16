@@ -62,7 +62,7 @@ Normalizer2::normalizeUTF8(uint32_t /*options*/, StringPiece src, ByteSink &sink
 
 UBool
 Normalizer2::getRawDecomposition(UChar32, UnicodeString &) const {
-    return false;
+    return FALSE;
 }
 
 UChar32
@@ -142,7 +142,7 @@ class NoopNormalizer2 : public Normalizer2 {
     }
     virtual UBool
     getDecomposition(UChar32, UnicodeString &) const U_OVERRIDE {
-        return false;
+        return FALSE;
     }
     // No need to U_OVERRIDE the default getRawDecomposition().
     virtual UBool
@@ -161,9 +161,9 @@ class NoopNormalizer2 : public Normalizer2 {
     spanQuickCheckYes(const UnicodeString &s, UErrorCode &) const U_OVERRIDE {
         return s.length();
     }
-    virtual UBool hasBoundaryBefore(UChar32) const U_OVERRIDE { return true; }
-    virtual UBool hasBoundaryAfter(UChar32) const U_OVERRIDE { return true; }
-    virtual UBool isInert(UChar32) const U_OVERRIDE { return true; }
+    virtual UBool hasBoundaryBefore(UChar32) const U_OVERRIDE { return TRUE; }
+    virtual UBool hasBoundaryAfter(UChar32) const U_OVERRIDE { return TRUE; }
+    virtual UBool isInert(UChar32) const U_OVERRIDE { return TRUE; }
 };
 
 NoopNormalizer2::~NoopNormalizer2() {}
@@ -183,7 +183,7 @@ static UBool U_CALLCONV uprv_normalizer2_cleanup();
 U_CDECL_END
 
 static Normalizer2   *noopSingleton;
-static icu::UInitOnce noopInitOnce {};
+static icu::UInitOnce noopInitOnce = U_INITONCE_INITIALIZER;
 
 static void U_CALLCONV initNoopSingleton(UErrorCode &errorCode) {
     if(U_FAILURE(errorCode)) {
@@ -245,7 +245,7 @@ Norm2AllModes::createNFCInstance(UErrorCode &errorCode) {
 
 static Norm2AllModes *nfcSingleton;
 
-static icu::UInitOnce nfcInitOnce {};
+static icu::UInitOnce nfcInitOnce = U_INITONCE_INITIALIZER;
 
 static void U_CALLCONV initNFCSingleton(UErrorCode &errorCode) {
     nfcSingleton=Norm2AllModes::createNFCInstance(errorCode);
@@ -299,7 +299,7 @@ static UBool U_CALLCONV uprv_normalizer2_cleanup() {
     nfcSingleton = NULL;
     nfcInitOnce.reset(); 
 #endif
-    return true;
+    return TRUE;
 }
 
 U_CDECL_END
@@ -423,7 +423,7 @@ unorm2_normalizeSecondAndAppend(const UNormalizer2 *norm2,
     return normalizeSecondAndAppend(norm2,
                                     first, firstLength, firstCapacity,
                                     second, secondLength,
-                                    true, pErrorCode);
+                                    TRUE, pErrorCode);
 }
 
 U_CAPI int32_t U_EXPORT2
@@ -434,7 +434,7 @@ unorm2_append(const UNormalizer2 *norm2,
     return normalizeSecondAndAppend(norm2,
                                     first, firstLength, firstCapacity,
                                     second, secondLength,
-                                    false, pErrorCode);
+                                    FALSE, pErrorCode);
 }
 
 U_CAPI int32_t U_EXPORT2

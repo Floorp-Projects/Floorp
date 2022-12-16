@@ -149,7 +149,7 @@ ubidi_openSized(int32_t maxLength, int32_t maxRunCount, UErrorCode *pErrorCode) 
         return NULL;
     }
 
-    /* reset the object, all pointers NULL, all flags false, all sizes 0 */
+    /* reset the object, all pointers NULL, all flags FALSE, all sizes 0 */
     uprv_memset(pBiDi, 0, sizeof(UBiDi));
 
     /* allocate memory for arrays as requested */
@@ -160,7 +160,7 @@ ubidi_openSized(int32_t maxLength, int32_t maxRunCount, UErrorCode *pErrorCode) 
             *pErrorCode=U_MEMORY_ALLOCATION_ERROR;
         }
     } else {
-        pBiDi->mayAllocateText=true;
+        pBiDi->mayAllocateText=TRUE;
     }
 
     if(maxRunCount>0) {
@@ -171,7 +171,7 @@ ubidi_openSized(int32_t maxLength, int32_t maxRunCount, UErrorCode *pErrorCode) 
             *pErrorCode=U_MEMORY_ALLOCATION_ERROR;
         }
     } else {
-        pBiDi->mayAllocateRuns=true;
+        pBiDi->mayAllocateRuns=TRUE;
     }
 
     if(U_SUCCESS(*pErrorCode)) {
@@ -184,7 +184,7 @@ ubidi_openSized(int32_t maxLength, int32_t maxRunCount, UErrorCode *pErrorCode) 
 
 /*
  * We are allowed to allocate memory if memory==NULL or
- * mayAllocate==true for each array that we need.
+ * mayAllocate==TRUE for each array that we need.
  * We also try to grow memory as needed if we
  * allocate it.
  *
@@ -203,18 +203,18 @@ ubidi_getMemory(BidiMemoryForAllocation *bidiMem, int32_t *pSize, UBool mayAlloc
         /* we need to allocate memory */
         if(mayAllocate && (*pMemory=uprv_malloc(sizeNeeded))!=NULL) {
             *pSize=sizeNeeded;
-            return true;
+            return TRUE;
         } else {
-            return false;
+            return FALSE;
         }
     } else {
         if(sizeNeeded<=*pSize) {
             /* there is already enough memory */
-            return true;
+            return TRUE;
         }
         else if(!mayAllocate) {
             /* not enough memory, and we must not allocate */
-            return false;
+            return FALSE;
         } else {
             /* we try to grow */
             void *memory;
@@ -225,10 +225,10 @@ ubidi_getMemory(BidiMemoryForAllocation *bidiMem, int32_t *pSize, UBool mayAlloc
             if((memory=uprv_realloc(*pMemory, sizeNeeded))!=NULL) {
                 *pMemory=memory;
                 *pSize=sizeNeeded;
-                return true;
+                return TRUE;
             } else {
                 /* we failed to grow */
-                return false;
+                return FALSE;
             }
         }
     }
@@ -280,7 +280,7 @@ ubidi_isInverse(UBiDi *pBiDi) {
     if(pBiDi!=NULL) {
         return pBiDi->isInverse;
     } else {
-        return false;
+        return FALSE;
     }
 }
 
@@ -403,17 +403,17 @@ checkParaCount(UBiDi *pBiDi) {
     int32_t count=pBiDi->paraCount;
     if(pBiDi->paras==pBiDi->simpleParas) {
         if(count<=SIMPLE_PARAS_COUNT)
-            return true;
+            return TRUE;
         if(!getInitialParasMemory(pBiDi, SIMPLE_PARAS_COUNT * 2))
-            return false;
+            return FALSE;
         pBiDi->paras=pBiDi->parasMemory;
         uprv_memcpy(pBiDi->parasMemory, pBiDi->simpleParas, SIMPLE_PARAS_COUNT * sizeof(Para));
-        return true;
+        return TRUE;
     }
     if(!getInitialParasMemory(pBiDi, count * 2))
-        return false;
+        return FALSE;
     pBiDi->paras=pBiDi->parasMemory;
-    return true;
+    return TRUE;
 }
 
 /*
@@ -579,8 +579,8 @@ getDirProps(UBiDi *pBiDi) {
             }
             if(i<originalLength) {              /* B not last char in text */
                 pBiDi->paraCount++;
-                if(checkParaCount(pBiDi)==false)    /* not enough memory for a new para entry */
-                    return false;
+                if(checkParaCount(pBiDi)==FALSE)    /* not enough memory for a new para entry */
+                    return FALSE;
                 if(isDefaultLevel) {
                     pBiDi->paras[pBiDi->paraCount-1].level=defaultParaLevel;
                     state=SEEKING_STRONG_FOR_PARA;
@@ -636,7 +636,7 @@ getDirProps(UBiDi *pBiDi) {
     }
     pBiDi->flags=flags;
     pBiDi->lastArabicPos=lastArabicPos;
-    return true;
+    return TRUE;
 }
 
 /* determine the paragraph level at position index */
@@ -743,14 +743,14 @@ bracketProcessPDI(BracketData *bd) {
 }
 
 /* newly found opening bracket: create an openings entry */
-static UBool                            /* return true if success */
+static UBool                            /* return TRUE if success */
 bracketAddOpening(BracketData *bd, UChar match, int32_t position) {
     IsoRun *pLastIsoRun=&bd->isoRuns[bd->isoRunLast];
     Opening *pOpening;
     if(pLastIsoRun->limit>=bd->openingsCount) {  /* no available new entry */
         UBiDi *pBiDi=bd->pBiDi;
         if(!getInitialOpeningsMemory(pBiDi, pLastIsoRun->limit * 2))
-            return false;
+            return FALSE;
         if(bd->openings==bd->simpleOpenings)
             uprv_memcpy(pBiDi->openingsMemory, bd->simpleOpenings,
                         SIMPLE_OPENINGS_COUNT * sizeof(Opening));
@@ -764,7 +764,7 @@ bracketAddOpening(BracketData *bd, UChar match, int32_t position) {
     pOpening->contextPos=pLastIsoRun->contextPos;
     pOpening->flags=0;
     pLastIsoRun->limit++;
-    return true;
+    return TRUE;
 }
 
 /* change N0c1 to N0c2 when a preceding bracket is assigned the embedding level */
@@ -804,7 +804,7 @@ bracketProcessClosing(BracketData *bd, int32_t openIdx, int32_t position) {
     DirProp newProp;
     pOpening=&bd->openings[openIdx];
     direction=(UBiDiDirection)(pLastIsoRun->level&1);
-    stable=true;            /* assume stable until proved otherwise */
+    stable=TRUE;            /* assume stable until proved otherwise */
 
     /* The stable flag is set when brackets are paired and their
        level is resolved and cannot be changed by what will be
@@ -873,7 +873,7 @@ bracketProcessClosing(BracketData *bd, int32_t openIdx, int32_t position) {
 }
 
 /* handle strong characters, digits and candidates for closing brackets */
-static UBool                            /* return true if success */
+static UBool                            /* return TRUE if success */
 bracketProcessChar(BracketData *bd, int32_t position) {
     IsoRun *pLastIsoRun=&bd->isoRuns[bd->isoRunLast];
     DirProp *dirProps, dirProp, newProp;
@@ -912,7 +912,7 @@ bracketProcessChar(BracketData *bd, int32_t position) {
             }
             /* matching brackets are not overridden by LRO/RLO */
             bd->pBiDi->levels[bd->openings[idx].position]&=~UBIDI_LEVEL_OVERRIDE;
-            return true;
+            return TRUE;
         }
         /* We get here only if the ON character is not a matching closing
            bracket or it is a case of N0d */
@@ -927,14 +927,14 @@ bracketProcessChar(BracketData *bd, int32_t position) {
                create an opening entry for each synonym */
             if(match==0x232A) {     /* RIGHT-POINTING ANGLE BRACKET */
                 if(!bracketAddOpening(bd, 0x3009, position))
-                    return false;
+                    return FALSE;
             }
             else if(match==0x3009) {         /* RIGHT ANGLE BRACKET */
                 if(!bracketAddOpening(bd, 0x232A, position))
-                    return false;
+                    return FALSE;
             }
             if(!bracketAddOpening(bd, match, position))
-                return false;
+                return FALSE;
         }
     }
     level=bd->pBiDi->levels[position];
@@ -998,7 +998,7 @@ bracketProcessChar(BracketData *bd, int32_t position) {
             if(position>bd->openings[i].position)
                 bd->openings[i].flags|=flag;
     }
-    return true;
+    return TRUE;
 }
 
 /* perform (X1)..(X9) ------------------------------------------------------- */
@@ -2432,11 +2432,11 @@ setParaRunsOnly(UBiDi *pBiDi, const UChar *text, int32_t length,
      * than the original text. But we don't want the levels memory to be
      * reallocated shorter than the original length, since we need to restore
      * the levels as after the first call to ubidi_setpara() before returning.
-     * We will force mayAllocateText to false before the second call to
+     * We will force mayAllocateText to FALSE before the second call to
      * ubidi_setpara(), and will restore it afterwards.
      */
     saveMayAllocateText=pBiDi->mayAllocateText;
-    pBiDi->mayAllocateText=false;
+    pBiDi->mayAllocateText=FALSE;
     ubidi_setPara(pBiDi, visualText, visualLength, paraLevel, NULL, pErrorCode);
     pBiDi->mayAllocateText=saveMayAllocateText;
     ubidi_getRuns(pBiDi, pErrorCode);
@@ -2866,7 +2866,7 @@ ubidi_isOrderParagraphsLTR(UBiDi *pBiDi) {
     if(pBiDi!=NULL) {
         return pBiDi->orderParagraphsLTR;
     } else {
-        return false;
+        return FALSE;
     }
 }
 

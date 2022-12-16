@@ -1418,7 +1418,7 @@ sv{
         }
         BBD{
             one{"barbadisk dollar"}
-            other{"barbadiska dollar"}
+            other{"barbadisk dollar"}
         }
         BDT{
             one{"bangladeshisk taka"}
@@ -1462,7 +1462,7 @@ sv{
         }
         BMD{
             one{"bermudisk dollar"}
-            other{"bermudiska dollar"}
+            other{"bermudisk dollar"}
         }
         BND{
             one{"bruneisk dollar"}
@@ -1838,7 +1838,7 @@ sv{
         }
         JMD{
             one{"Jamaica-dollar"}
-            other{"jamaicanska dollar"}
+            other{"jamaicansk dollar"}
         }
         JOD{
             one{"jordansk dinar"}
@@ -1886,7 +1886,7 @@ sv{
         }
         KYD{
             one{"caymansk dollar"}
-            other{"caymanska dollar"}
+            other{"caymansk dollar"}
         }
         KZT{
             one{"kazakisk tenge"}
@@ -2202,7 +2202,7 @@ sv{
         }
         SHP{
             one{"sankthelenskt pund"}
-            other{"sankthelenska pund"}
+            other{"sankthelenskt pund"}
         }
         SIT{
             one{"slovensk tolar"}
@@ -2302,7 +2302,7 @@ sv{
         }
         TWD{
             one{"taiwanesisk dollar"}
-            other{"taiwanesiska dollar"}
+            other{"taiwanesisk dollar"}
         }
         TZS{
             one{"tanzanisk shilling"}
@@ -2326,7 +2326,7 @@ sv{
         }
         USD{
             one{"amerikansk dollar"}
-            other{"amerikanska dollar"}
+            other{"amerikansk dollar"}
         }
         USN{
             one{"US-dollar (nästa dag)"}

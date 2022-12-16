@@ -9,7 +9,6 @@ ps_PK{
         " ه ة و ؤ ی ے ي ې ۍ ئ]"
     }
     calendar{
-        default{"gregorian"}
         gregorian{
             DateTimePatterns{
                 "h:mm:ss a zzzz",

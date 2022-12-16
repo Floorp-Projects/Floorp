@@ -284,7 +284,6 @@ void MutablePatternModifier::prepareAffix(bool isPrefix) {
             fApproximately,
             fPlural,
             fPerMilleReplacesPercent,
-            false, // dropCurrencySymbols
             currentAffix);
 }
 

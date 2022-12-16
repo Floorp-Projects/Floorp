@@ -9,7 +9,6 @@ mt{
                 many{"{0}′"}
                 one{"{0}′"}
                 other{"{0}′"}
-                two{"{0}′"}
             }
         }
         concentr{
@@ -19,27 +18,24 @@ mt{
                 many{"{0} kt"}
                 one{"{0} kt"}
                 other{"{0} kt"}
-                two{"{0} kt"}
             }
         }
         consumption{
             liter-per-kilometer{
                 dnam{"L/km"}
                 few{"{0} litri kull kilometru"}
-                many{"{0}-il litru kull kilometru"}
+                many{"{0} litri kull kilometru"}
                 one{"{0} litru kull kilometru"}
-                other{"{0} litru kull kilometru"}
-                two{"{0} litri kull kilometru"}
+                other{"{0} litri kull kilometru"}
             }
         }
         digital{
             megabyte{
                 dnam{"megabytes"}
                 few{"{0} megabytes"}
-                many{"{0}-il megabyte"}
+                many{"{0} megabytes"}
                 one{"{0} megabyte"}
-                other{"{0} megabyte"}
-                two{"{0} megabytes"}
+                other{"{0} megabytes"}
             }
             terabit{
                 dnam{"terabits"}
@@ -47,7 +43,6 @@ mt{
                 many{"{0} terabits"}
                 one{"{0} terabit"}
                 other{"{0} terabits"}
-                two{"{0} terabits"}
             }
             terabyte{
                 dnam{"terabytes"}
@@ -55,17 +50,15 @@ mt{
                 many{"{0} terabytes"}
                 one{"{0} terabyte"}
                 other{"{0} terabytes"}
-                two{"{0} terabytes"}
             }
         }
         duration{
             millisecond{
                 dnam{"millisekondi"}
                 few{"{0} millisekondi"}
-                many{"{0}-il millisekonda"}
+                many{"{0} millisekondi"}
                 one{"{0} millisekonda"}
-                other{"{0} millisekonda"}
-                two{"{0} millisekondi"}
+                other{"{0} millisekondi"}
             }
         }
         light{
@@ -75,7 +68,6 @@ mt{
                 many{"{0} lx"}
                 one{"{0} lx"}
                 other{"{0} lx"}
-                two{"{0} lx"}
             }
         }
     }
@@ -87,7 +79,6 @@ mt{
                 many{"{0}ms"}
                 one{"{0}ms"}
                 other{"{0}ms"}
-                two{"{0}ms"}
             }
         }
     }
@@ -99,7 +90,6 @@ mt{
                 many{"{0} kt"}
                 one{"{0} kt"}
                 other{"{0} kt"}
-                two{"{0} kt"}
             }
         }
         consumption{
@@ -109,7 +99,6 @@ mt{
                 many{"{0} L/km"}
                 one{"{0} L/km"}
                 other{"{0} L/km"}
-                two{"{0} L/km"}
             }
         }
         digital{
@@ -118,7 +107,6 @@ mt{
                 many{"{0} Mb"}
                 one{"{0} Mb"}
                 other{"{0} Mb"}
-                two{"{0} Mb"}
             }
             megabyte{
                 dnam{"MB"}
@@ -126,7 +114,6 @@ mt{
                 many{"{0} MB"}
                 one{"{0} MB"}
                 other{"{0} MB"}
-                two{"{0} MB"}
             }
             terabit{
                 dnam{"Tb"}
@@ -134,7 +121,6 @@ mt{
                 many{"{0} Tb"}
                 one{"{0} Tb"}
                 other{"{0} Tb"}
-                two{"{0} Tb"}
             }
             terabyte{
                 dnam{"TB"}
@@ -142,7 +128,6 @@ mt{
                 many{"{0} TB"}
                 one{"{0} TB"}
                 other{"{0} TB"}
-                two{"{0} TB"}
             }
         }
         duration{
@@ -152,7 +137,6 @@ mt{
                 many{"{0} ms"}
                 one{"{0} ms"}
                 other{"{0} ms"}
-                two{"{0} ms"}
             }
         }
         light{
@@ -162,7 +146,6 @@ mt{
                 many{"{0} lx"}
                 one{"{0} lx"}
                 other{"{0} lx"}
-                two{"{0} lx"}
             }
         }
     }
