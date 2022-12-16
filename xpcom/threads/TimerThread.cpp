@@ -25,7 +25,7 @@
 using namespace mozilla;
 
 // Uncomment the following line to enable runtime stats during development.
-//#define TIMERS_RUNTIME_STATS
+// #define TIMERS_RUNTIME_STATS
 
 #ifdef TIMERS_RUNTIME_STATS
 // This class gathers durations and displays some basic stats when destroyed.
