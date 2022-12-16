@@ -149,7 +149,7 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
 
   RandomAccessStreamParams streamParams =
       mozilla::ipc::SerializeRandomAccessStream(
-          WrapMovingNotNullUnchecked(std::move(stream)));
+          WrapMovingNotNullUnchecked(std::move(stream)), nullptr);
 
   auto accessHandleParent =
       MakeRefPtr<FileSystemAccessHandleParent>(this, aRequest.entryId());

@@ -12,15 +12,17 @@
 #include "mozilla/dom/quota/FileStreams.h"
 #include "mozilla/ipc/RandomAccessStreamParams.h"
 #include "nsFileStreams.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIRandomAccessStream.h"
 
 namespace mozilla::ipc {
 
 RandomAccessStreamParams SerializeRandomAccessStream(
-    MovingNotNull<nsCOMPtr<nsIRandomAccessStream>> aStream) {
+    MovingNotNull<nsCOMPtr<nsIRandomAccessStream>> aStream,
+    nsIInterfaceRequestor* aCallbacks) {
   NotNull<nsCOMPtr<nsIRandomAccessStream>> stream = std::move(aStream);
 
-  RandomAccessStreamParams streamParams = stream->Serialize();
+  RandomAccessStreamParams streamParams = stream->Serialize(aCallbacks);
 
   MOZ_ASSERT(streamParams.type() != RandomAccessStreamParams::T__None);
 
@@ -28,13 +30,14 @@ RandomAccessStreamParams SerializeRandomAccessStream(
 }
 
 Maybe<RandomAccessStreamParams> SerializeRandomAccessStream(
-    nsCOMPtr<nsIRandomAccessStream> aStream) {
+    nsCOMPtr<nsIRandomAccessStream> aStream,
+    nsIInterfaceRequestor* aCallbacks) {
   if (!aStream) {
     return Nothing();
   }
 
   return Some(SerializeRandomAccessStream(
-      WrapMovingNotNullUnchecked(std::move(aStream))));
+      WrapMovingNotNullUnchecked(std::move(aStream)), aCallbacks));
 }
 
 Result<MovingNotNull<nsCOMPtr<nsIRandomAccessStream>>, bool>

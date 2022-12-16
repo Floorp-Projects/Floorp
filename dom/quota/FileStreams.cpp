@@ -102,7 +102,8 @@ NS_IMETHODIMP FileQuotaStreamWithWrite<FileStreamBase>::Write(
   return NS_OK;
 }
 
-mozilla::ipc::RandomAccessStreamParams FileRandomAccessStream::Serialize() {
+mozilla::ipc::RandomAccessStreamParams FileRandomAccessStream::Serialize(
+    nsIInterfaceRequestor* aCallbacks) {
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
   MOZ_RELEASE_ASSERT(!mDeserialized);
   MOZ_ASSERT(mOpenParams.localFile);
@@ -114,10 +115,10 @@ mozilla::ipc::RandomAccessStreamParams FileRandomAccessStream::Serialize() {
       mPersistenceType, mOriginMetadata, mClientType, mOpenParams.localFile);
   MOZ_ASSERT(quotaObject);
 
-  IPCQuotaObject ipcQuotaObject = quotaObject->Serialize();
+  IPCQuotaObject ipcQuotaObject = quotaObject->Serialize(aCallbacks);
 
   mozilla::ipc::RandomAccessStreamParams randomAccessStreamParams =
-      nsFileRandomAccessStream::Serialize();
+      nsFileRandomAccessStream::Serialize(aCallbacks);
 
   MOZ_ASSERT(
       randomAccessStreamParams.type() ==

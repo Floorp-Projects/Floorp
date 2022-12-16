@@ -12,6 +12,7 @@
 #include "mozilla/dom/quota/RemoteQuotaObjectChild.h"
 #include "mozilla/dom/quota/RemoteQuotaObjectParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
+#include "nsIInterfaceRequestor.h"
 #include "RemoteQuotaObject.h"
 
 namespace mozilla::dom::quota {
@@ -24,7 +25,7 @@ RemoteQuotaObject* QuotaObject::AsRemoteQuotaObject() {
   return mIsRemote ? static_cast<RemoteQuotaObject*>(this) : nullptr;
 }
 
-IPCQuotaObject QuotaObject::Serialize() {
+IPCQuotaObject QuotaObject::Serialize(nsIInterfaceRequestor* aCallbacks) {
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
   MOZ_RELEASE_ASSERT(!NS_IsMainThread());
   MOZ_RELEASE_ASSERT(!mozilla::ipc::IsOnBackgroundThread());
@@ -60,25 +61,3 @@ RefPtr<QuotaObject> QuotaObject::Deserialize(IPCQuotaObject& aQuotaObject) {
 }
 
 }  // namespace mozilla::dom::quota
-
-namespace IPC {
-
-void ParamTraits<mozilla::dom::quota::QuotaObject*>::Write(
-    MessageWriter* aWriter, mozilla::dom::quota::QuotaObject* aParam) {
-  mozilla::dom::quota::IPCQuotaObject ipcQuotaObject = aParam->Serialize();
-
-  WriteParam(aWriter, std::move(ipcQuotaObject));
-}
-
-bool ParamTraits<mozilla::dom::quota::QuotaObject*>::Read(
-    MessageReader* aReader, RefPtr<mozilla::dom::quota::QuotaObject>* aResult) {
-  mozilla::dom::quota::IPCQuotaObject ipcQuotaObject;
-  if (!ReadParam(aReader, &ipcQuotaObject)) {
-    return false;
-  }
-
-  *aResult = mozilla::dom::quota::QuotaObject::Deserialize(ipcQuotaObject);
-  return true;
-}
-
-}  // namespace IPC

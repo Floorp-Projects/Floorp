@@ -141,7 +141,8 @@ class FileRandomAccessStream
   // Serialize this FileRandomAccessStream. This method works only in the
   // parent process and only with streams which haven't been previously
   // deserialized.
-  mozilla::ipc::RandomAccessStreamParams Serialize() override;
+  mozilla::ipc::RandomAccessStreamParams Serialize(
+      nsIInterfaceRequestor* aCallbacks) override;
 
   // Deserialize this FileRandomAccessStream. This method works in both the
   // child and parent.

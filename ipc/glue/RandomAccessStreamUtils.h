@@ -10,6 +10,7 @@
 template <class T>
 class nsCOMPtr;
 
+class nsIInterfaceRequestor;
 class nsIRandomAccessStream;
 
 namespace mozilla {
@@ -29,10 +30,11 @@ class RandomAccessStreamParams;
 
 // Serialize an nsIRandomAccessStream to be sent over IPC infallibly.
 RandomAccessStreamParams SerializeRandomAccessStream(
-    MovingNotNull<nsCOMPtr<nsIRandomAccessStream>> aStream);
+    MovingNotNull<nsCOMPtr<nsIRandomAccessStream>> aStream,
+    nsIInterfaceRequestor* aCallbacks);
 
 Maybe<RandomAccessStreamParams> SerializeRandomAccessStream(
-    nsCOMPtr<nsIRandomAccessStream> aStream);
+    nsCOMPtr<nsIRandomAccessStream> aStream, nsIInterfaceRequestor* aCallbacks);
 
 // Deserialize an nsIRandomAccessStream received from an actor call.  These
 // methods work in both the child and parent.
