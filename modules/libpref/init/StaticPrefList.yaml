@@ -5578,7 +5578,7 @@
 - name: gfx.canvas.accelerated
   type: bool
 #if defined(XP_MACOSX) || defined(XP_LINUX) && !defined(ANDROID)
-  value: @IS_NIGHTLY_BUILD@
+  value: true
 #else
   value: false
 #endif
