@@ -46,3 +46,27 @@ add_task(async function testMultipleRequests() {
     "Received the expected number of network events"
   );
 });
+
+add_task(async function testOnNetworkEventArguments() {
+  await addTab(TEST_URL);
+
+  const onNetworkEvent = new Promise(resolve => {
+    const networkObserver = new NetworkObserver({
+      ignoreChannelFunction: () => false,
+      onNetworkEvent: (...args) => {
+        resolve(args);
+        return createNetworkEventOwner();
+      },
+    });
+    registerCleanupFunction(() => networkObserver.destroy());
+  });
+
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [REQUEST_URL], _url => {
+    content.wrappedJSObject.sendRequest(_url);
+  });
+
+  const args = await onNetworkEvent;
+  is(args.length, 2, "Received two arguments");
+  is(typeof args[0], "object", "First argument is an object");
+  ok(args[1] instanceof Ci.nsIChannel, "Second argument is a channel");
+});
