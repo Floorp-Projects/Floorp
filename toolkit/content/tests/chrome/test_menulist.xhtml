@@ -110,10 +110,6 @@ function testtag_menulist_UI_finish(element)
 
   test_nsIDOMXULSelectControlElement(element, "menuitem", null);
 
-  // bug 566154, the menulist width should account for vertical scrollbar
-  ok(document.getElementById("menulist-size").getBoundingClientRect().width >= 210,
-     "menulist popup width includes scrollbar width");
-
   $("menulist").open = true;
 }
 
