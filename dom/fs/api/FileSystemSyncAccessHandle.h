@@ -43,6 +43,8 @@ class FileSystemSyncAccessHandle final : public nsISupports,
 
   void ClearActor();
 
+  void CloseInternal();
+
   // WebIDL Boilerplate
   nsIGlobalObject* GetParentObject() const;
 
