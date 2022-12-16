@@ -34,10 +34,12 @@
 #include "mozilla/BaseProfilerMarkerTypes.h"
 #include "GeckoProfiler.h"
 
-namespace mozilla::layers {
+namespace mozilla {
+
+namespace layers {
 
 // defined in CompositorBridgeParent.cpp
-using LayerTreeMap = std::map<LayersId, CompositorBridgeParent::LayerTreeState>;
+typedef std::map<LayersId, CompositorBridgeParent::LayerTreeState> LayerTreeMap;
 extern LayerTreeMap sIndirectLayerTrees;
 extern StaticAutoPtr<mozilla::Monitor> sIndirectLayerTreesLock;
 void EraseLayerState(LayersId aId);
@@ -81,15 +83,9 @@ ContentCompositorBridgeParent::AllocPAPZCTreeManagerParent(
     return new APZCTreeManagerParent(aLayersId, temp, tempUpdater);
   }
 
-  // If we do not have APZ enabled, we should gracefully fail.
-  if (!state.mParent->GetOptions().UseAPZ()) {
-    return nullptr;
-  }
-
   state.mParent->AllocateAPZCTreeManagerParent(lock, aLayersId, state);
   return state.mApzcTreeManagerParent;
 }
-
 bool ContentCompositorBridgeParent::DeallocPAPZCTreeManagerParent(
     PAPZCTreeManagerParent* aActor) {
   APZCTreeManagerParent* parent = static_cast<APZCTreeManagerParent*>(aActor);
@@ -210,10 +206,12 @@ bool ContentCompositorBridgeParent::DeallocPWebRenderBridgeParent(
 mozilla::ipc::IPCResult ContentCompositorBridgeParent::RecvNotifyChildCreated(
     const LayersId& child, CompositorOptions* aOptions) {
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
-  for (auto& [id, lts] : sIndirectLayerTrees) {
-    if (lts.mParent && lts.mContentCompositorBridgeParent == this) {
-      lts.mParent->NotifyChildCreated(child);
-      *aOptions = lts.mParent->GetOptions();
+  for (LayerTreeMap::iterator it = sIndirectLayerTrees.begin();
+       it != sIndirectLayerTrees.end(); it++) {
+    CompositorBridgeParent::LayerTreeState* lts = &it->second;
+    if (lts->mParent && lts->mContentCompositorBridgeParent == this) {
+      lts->mParent->NotifyChildCreated(child);
+      *aOptions = lts->mParent->GetOptions();
       return IPC_OK();
     }
   }
@@ -456,4 +454,5 @@ void ContentCompositorBridgeParent::ObserveLayersUpdate(
   Unused << state->mParent->SendObserveLayersUpdate(aLayersId, aEpoch, aActive);
 }
 
-}  // namespace mozilla::layers
+}  // namespace layers
+}  // namespace mozilla
