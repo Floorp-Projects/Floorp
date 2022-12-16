@@ -218,6 +218,11 @@ void IMEStateManager::OnFocusMovedBetweenBrowsers(BrowserParent* aBlur,
 
 // static
 void IMEStateManager::WidgetDestroyed(nsIWidget* aWidget) {
+  MOZ_LOG(sISMLog, LogLevel::Debug,
+          ("WidgetDestroyed(aWidget=0x%p), sFocusedIMEWidget=0x%p, "
+           "sActiveInputContextWidget=0x%p, sFocusedIMEBrowserParent=0x%p",
+           aWidget, sFocusedIMEWidget, sActiveInputContextWidget,
+           sFocusedIMEBrowserParent.get()));
   if (sTextInputHandlingWidget == aWidget) {
     sTextInputHandlingWidget = nullptr;
   }
@@ -236,12 +241,21 @@ void IMEStateManager::WidgetDestroyed(nsIWidget* aWidget) {
 // static
 void IMEStateManager::WidgetOnQuit(nsIWidget* aWidget) {
   if (sFocusedIMEWidget == aWidget) {
-    // Try to do it the normal way first.
+    MOZ_LOG(
+        sISMLog, LogLevel::Debug,
+        ("WidgetOnQuit(aWidget=0x%p (available %s)), sFocusedIMEWidget=0x%p",
+         aWidget, GetBoolName(aWidget && !aWidget->Destroyed()),
+         sFocusedIMEWidget));
+    // Notify IME of blur (which is done by IMEContentObserver::Destroy
+    // automatically) when the widget still has IME focus before forgetting the
+    // focused widget because the focused widget is required to clean up native
+    // IME handler with sending blur notification.  Fortunately, the widget
+    // has not been destroyed yet here since some methods to sending blur
+    // notification won't work with destroyed widget.
+    IMEStateManager::DestroyIMEContentObserver();
+    // Finally, clean up the widget and related objects for avoiding to leak.
     IMEStateManager::WidgetDestroyed(aWidget);
   }
-  // And then in case the normal way didn't work:
-  nsCOMPtr<nsIWidget> quittingWidget(aWidget);
-  quittingWidget->NotifyIME(IMENotification(NOTIFY_IME_OF_BLUR));
 }
 
 // static
