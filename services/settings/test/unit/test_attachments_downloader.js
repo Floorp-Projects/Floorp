@@ -12,7 +12,6 @@ const { Downloader } = ChromeUtils.import(
 const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 const RECORD = {
   id: "1f3a0802-648d-11ea-bd79-876a8b69c377",
@@ -46,9 +45,7 @@ function pathFromURL(url) {
   return file.path;
 }
 
-const PROFILE_URL =
-  "file://" +
-  OS.Path.split(OS.Constants.Path.localProfileDir).components.join("/");
+const PROFILE_URL = PathUtils.toFileURI(PathUtils.localProfileDir);
 
 function run_test() {
   server = new HttpServer();
@@ -265,8 +262,8 @@ add_task(async function test_delete_removes_local_file() {
 
   Assert.ok(!(await IOUtils.exists(localFilePath)));
   // And removes parent folders.
-  const parentFolder = OS.Path.join(
-    OS.Constants.Path.localProfileDir,
+  const parentFolder = PathUtils.join(
+    PathUtils.localProfileDir,
     ...downloader.folders
   );
   Assert.ok(!(await IOUtils.exists(parentFolder)));

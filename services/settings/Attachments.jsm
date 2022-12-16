@@ -12,7 +12,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   RemoteSettingsWorker: "resource://services-settings/RemoteSettingsWorker.jsm",
   Utils: "resource://services-settings/Utils.jsm",
 });
-ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 
 class DownloadError extends Error {
   constructor(url, resp) {
@@ -304,16 +303,12 @@ class Downloader {
     const {
       attachment: { filename, size, hash },
     } = record;
-    const localFilePath = lazy.OS.Path.join(
-      lazy.OS.Constants.Path.localProfileDir,
+    const localFilePath = PathUtils.join(
+      PathUtils.localProfileDir,
       ...this.folders,
       filename
     );
-    const localFileUrl = `file://${[
-      ...lazy.OS.Path.split(lazy.OS.Constants.Path.localProfileDir).components,
-      ...this.folders,
-      filename,
-    ].join("/")}`;
+    const localFileUrl = PathUtils.toFileURI(localFilePath);
 
     await this._makeDirs();
 
@@ -404,8 +399,8 @@ class Downloader {
     const {
       attachment: { filename },
     } = record;
-    const path = lazy.OS.Path.join(
-      lazy.OS.Constants.Path.localProfileDir,
+    const path = PathUtils.join(
+      PathUtils.localProfileDir,
       ...this.folders,
       filename
     );
@@ -491,17 +486,14 @@ class Downloader {
   static _RESOURCE_BASE_URL = "resource://app/defaults";
 
   async _makeDirs() {
-    const dirPath = lazy.OS.Path.join(
-      lazy.OS.Constants.Path.localProfileDir,
-      ...this.folders
-    );
+    const dirPath = PathUtils.join(PathUtils.localProfileDir, ...this.folders);
     await IOUtils.makeDirectory(dirPath, { createAncestors: true });
   }
 
   async _rmDirs() {
     for (let i = this.folders.length; i > 0; i--) {
-      const dirPath = lazy.OS.Path.join(
-        lazy.OS.Constants.Path.localProfileDir,
+      const dirPath = PathUtils.join(
+        PathUtils.localProfileDir,
         ...this.folders.slice(0, i)
       );
       try {
