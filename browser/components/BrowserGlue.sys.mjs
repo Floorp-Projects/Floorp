@@ -4320,9 +4320,35 @@ BrowserGlue.prototype = {
     gBrowser.selectedTab = tab;
   },
 
+  async _showAboutWelcomeModal() {
+    const { gBrowser } = lazy.BrowserWindowTracker.getTopWindow();
+    const data = await lazy.NimbusFeatures.aboutwelcome.getAllVariables();
+
+    const config = {
+      type: "SHOW_SPOTLIGHT",
+      data: {
+        content: {
+          template: "multistage",
+          id: data?.id || "ABOUT_WELCOME_MODAL",
+          screens: data?.screens,
+        },
+      },
+    };
+
+    lazy.SpecialMessageActions.handleAction(config, gBrowser);
+  },
+
   async _maybeShowDefaultBrowserPrompt() {
-    // Highest priority is the upgrade dialog, which can include a "primary
+    // Highest priority is about:welcome window modal experiment
+    // Second highest priority is the upgrade dialog, which can include a "primary
     // browser" request and is limited in various ways, e.g., major upgrades.
+    if (
+      lazy.BrowserHandler.firstRunProfile &&
+      lazy.NimbusFeatures.aboutwelcome.getVariable("showModal")
+    ) {
+      this._showAboutWelcomeModal();
+      return;
+    }
     const dialogVersion = 106;
     const dialogVersionPref = "browser.startup.upgradeDialog.version";
     const dialogReason = await (async () => {

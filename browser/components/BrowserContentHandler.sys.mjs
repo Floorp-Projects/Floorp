@@ -93,6 +93,7 @@ function resolveURIInternal(aCmdLine, aArgument) {
 
 let gKiosk = false;
 let gMajorUpgrade = false;
+let gFirstRunProfile = false;
 var gFirstWindow = false;
 
 const OVERRIDE_NONE = 0;
@@ -675,6 +676,10 @@ nsBrowserContentHandler.prototype = {
         switch (override) {
           case OVERRIDE_NEW_PROFILE:
             // New profile.
+            gFirstRunProfile = true;
+            if (lazy.NimbusFeatures.aboutwelcome.getVariable("showModal")) {
+              break;
+            }
             overridePage = Services.urlFormatter.formatURLPref(
               "startup.homepage_welcome_url"
             );
@@ -859,6 +864,14 @@ nsBrowserContentHandler.prototype = {
 
   set majorUpgrade(val) {
     gMajorUpgrade = val;
+  },
+
+  get firstRunProfile() {
+    return gFirstRunProfile;
+  },
+
+  set firstRunProfile(val) {
+    gFirstRunProfile = val;
   },
 
   /* nsIContentHandler */
