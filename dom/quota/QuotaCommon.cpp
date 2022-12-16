@@ -43,6 +43,11 @@ RefPtr<BoolPromise> CreateAndRejectBoolPromise(const char* aFunc,
   return CreateAndRejectMozPromise<BoolPromise>(aFunc, aRv);
 }
 
+RefPtr<Int64Promise> CreateAndRejectInt64Promise(const char* aFunc,
+                                                 nsresult aRv) {
+  return CreateAndRejectMozPromise<Int64Promise>(aFunc, aRv);
+}
+
 RefPtr<BoolPromise> CreateAndRejectBoolPromiseFromQMResult(
     const char* aFunc, const QMResult& aRv) {
   return CreateAndRejectMozPromise<BoolPromise>(aFunc, aRv);

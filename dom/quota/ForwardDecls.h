@@ -30,6 +30,7 @@ template <typename ResolveValueT, typename RejectValueT, bool IsExclusive>
 class MozPromise;
 
 using BoolPromise = MozPromise<bool, nsresult, false>;
+using Int64Promise = MozPromise<int64_t, nsresult, false>;
 
 }  // namespace mozilla
 
