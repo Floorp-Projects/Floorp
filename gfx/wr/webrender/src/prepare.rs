@@ -12,7 +12,7 @@ use api::{BoxShadowClipMode, BorderStyle, ClipMode};
 use api::units::*;
 use euclid::Scale;
 use smallvec::SmallVec;
-use crate::batch::PrimitiveCommand;
+use crate::command_buffer::PrimitiveCommand;
 use crate::image_tiling::{self, Repetition};
 use crate::border::{get_max_scale_for_border, build_border_instances};
 use crate::clip::{ClipStore};

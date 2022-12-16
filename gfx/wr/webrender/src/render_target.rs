@@ -6,7 +6,8 @@
 use api::units::*;
 use api::{ColorF, ImageFormat, LineOrientation, BorderStyle};
 use crate::batch::{AlphaBatchBuilder, AlphaBatchContainer, BatchTextures};
-use crate::batch::{ClipBatcher, BatchBuilder, CommandBufferList};
+use crate::batch::{ClipBatcher, BatchBuilder};
+use crate::command_buffer::CommandBufferList;
 use crate::spatial_tree::SpatialTree;
 use crate::clip::ClipStore;
 use crate::frame_builder::{FrameGlobalResources};

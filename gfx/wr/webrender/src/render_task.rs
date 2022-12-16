@@ -6,8 +6,8 @@ use api::{CompositeOperator, FilterPrimitive, FilterPrimitiveInput, FilterPrimit
 use api::{LineStyle, LineOrientation, ClipMode, MixBlendMode, ColorF, ColorSpace};
 use api::MAX_RENDER_TASK_SIZE;
 use api::units::*;
-use crate::batch::CommandBufferIndex;
 use crate::clip::{ClipDataStore, ClipItemKind, ClipStore, ClipNodeRange};
+use crate::command_buffer::CommandBufferIndex;
 use crate::spatial_tree::SpatialNodeIndex;
 use crate::filterdata::SFilterData;
 use crate::frame_builder::{FrameBuilderConfig};
