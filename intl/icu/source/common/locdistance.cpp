@@ -45,13 +45,13 @@ enum {
 };
 
 LocaleDistance *gLocaleDistance = nullptr;
-UInitOnce gInitOnce {};
+UInitOnce gInitOnce = U_INITONCE_INITIALIZER;
 
 UBool U_CALLCONV cleanup() {
     delete gLocaleDistance;
     gLocaleDistance = nullptr;
     gInitOnce.reset();
-    return true;
+    return TRUE;
 }
 
 }  // namespace

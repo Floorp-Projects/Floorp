@@ -282,11 +282,6 @@ yue{
                 dnam{"奈秒"}
                 other{"{0} 奈秒"}
             }
-            quarter{
-                dnam{"季"}
-                other{"{0} 季"}
-                per{"每季 {0}"}
-            }
             second{
                 dnam{"秒"}
                 other{"{0} 秒"}
@@ -565,6 +560,10 @@ yue{
                 other{"{0} 公斤"}
                 per{"每公斤 {0}"}
             }
+            metric-ton{
+                dnam{"公噸"}
+                other{"{0} 公噸"}
+            }
             microgram{
                 dnam{"微克"}
                 other{"{0} 微克"}
@@ -598,10 +597,6 @@ yue{
             ton{
                 dnam{"英噸"}
                 other{"{0} 英噸"}
-            }
-            tonne{
-                dnam{"公噸"}
-                other{"{0} 公噸"}
             }
         }
         power{
@@ -953,11 +948,6 @@ yue{
             month{
                 dnam{"月"}
                 other{"{0} 個月"}
-            }
-            quarter{
-                dnam{"季"}
-                other{"{0} 季"}
-                per{"每季{0}"}
             }
             second{
                 dnam{"秒"}
@@ -1334,11 +1324,6 @@ yue{
                 dnam{"奈秒"}
                 other{"{0} 奈秒"}
             }
-            quarter{
-                dnam{"季"}
-                other{"{0} 季"}
-                per{"每季{0}"}
-            }
             second{
                 dnam{"秒"}
                 other{"{0} 秒"}
@@ -1617,6 +1602,10 @@ yue{
                 other{"{0} 公斤"}
                 per{"每公斤{0}"}
             }
+            metric-ton{
+                dnam{"公噸"}
+                other{"{0} 公噸"}
+            }
             microgram{
                 dnam{"微克"}
                 other{"{0} 微克"}
@@ -1650,10 +1639,6 @@ yue{
             ton{
                 dnam{"英噸"}
                 other{"{0} 英噸"}
-            }
-            tonne{
-                dnam{"公噸"}
-                other{"{0} 公噸"}
             }
         }
         power{

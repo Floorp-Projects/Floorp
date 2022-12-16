@@ -23,7 +23,6 @@
 
 #define USPREP_TYPE_NAMES_ARRAY 1
 
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -45,7 +44,7 @@ U_CDECL_BEGIN
 #include "gensprep.h"
 U_CDECL_END
 
-UBool beVerbose=false, haveCopyright=true;
+UBool beVerbose=FALSE, haveCopyright=TRUE;
 
 #define NORM_CORRECTIONS_FILE_NAME "NormalizationCorrections.txt"
 
@@ -226,7 +225,7 @@ main(int argc, char* argv[]) {
 
     /* process the file */
     uprv_strcpy(basename,inputFileName);
-    parseMappings(filename,false, &errorCode);
+    parseMappings(filename,FALSE, &errorCode);
     if(U_FAILURE(errorCode)) {
         fprintf(stderr, "Could not open file %s for reading. Error: %s \n", filename, u_errorName(errorCode));
         return errorCode;
@@ -363,12 +362,12 @@ strprepProfileLineFn(void *context,
         length = (int32_t)(fields[0][1] - s);
         if (length >= NORMALIZE_DIRECTIVE_LEN
             && uprv_strncmp(s, NORMALIZE_DIRECTIVE, NORMALIZE_DIRECTIVE_LEN) == 0) {
-            options[NORMALIZE].doesOccur = true;
+            options[NORMALIZE].doesOccur = TRUE;
             return;
         }
         else if (length >= CHECK_BIDI_DIRECTIVE_LEN
             && uprv_strncmp(s, CHECK_BIDI_DIRECTIVE, CHECK_BIDI_DIRECTIVE_LEN) == 0) {
-            options[CHECK_BIDI].doesOccur = true;
+            options[CHECK_BIDI].doesOccur = TRUE;
             return;
         }
         else {

@@ -47,7 +47,7 @@ format = new Intl.DateTimeFormat("en-us", {
   hour12: true,
   timeZone: "UTC"});
 assertParts(format, date, [
-  Hour("3"), Literal(":"), Minute("00"), Literal(":"), Second("42"), Literal("\u202F"), DayPeriod("AM"),
+  Hour("3"), Literal(":"), Minute("00"), Literal(":"), Second("42"), Literal(" "), DayPeriod("AM"),
 ]);
 
 // Just month.
@@ -89,7 +89,7 @@ format = new Intl.DateTimeFormat("en-us", {
 assertParts(format, date, [
   Weekday("Monday"), Literal(", "), Month("12"), Literal("/"), Day("17"), Literal("/"), Year("2012"),
   Literal(", "),
-  Hour("3"), Literal(":"), Minute("00"), Literal(":"), Second("42"), Literal("\u202F"), DayPeriod("AM"),
+  Hour("3"), Literal(":"), Minute("00"), Literal(":"), Second("42"), Literal(" "), DayPeriod("AM"),
 ]);
 
 if (typeof reportCompare === "function")

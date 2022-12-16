@@ -53,14 +53,14 @@ tg{
             ls{"Вақти стандартии аврупоии ғарбӣ"}
         }
         "meta:GMT"{
-            ls{"Вақти миёнаи Гринвич"}
+            ls{"Ба вақти Гринвич"}
         }
         fallbackFormat{"{1} ({0})"}
-        gmtFormat{"Вақти GMT {0}"}
-        gmtZeroFormat{"Вақти GMT"}
+        gmtFormat{"GMT{0}"}
+        gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;-HH:mm"}
-        regionFormat{"Вақти {0}"}
-        regionFormatDaylight{"Вақти рӯзонаи {0}"}
-        regionFormatStandard{"Вақти стандартии {0}"}
+        regionFormat{"{0}"}
+        regionFormatDaylight{"{0} (+1)"}
+        regionFormatStandard{"{0} (+0)"}
     }
 }

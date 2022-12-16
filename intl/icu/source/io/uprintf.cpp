@@ -41,7 +41,7 @@
 U_NAMESPACE_USE
 
 static UFILE *gStdOut = NULL;
-static UInitOnce gStdOutInitOnce {};
+static UInitOnce gStdOutInitOnce = U_INITONCE_INITIALIZER;
 
 static UBool U_CALLCONV uprintf_cleanup(void)
 {
@@ -50,7 +50,7 @@ static UBool U_CALLCONV uprintf_cleanup(void)
         gStdOut = NULL;
     }
     gStdOutInitOnce.reset();
-    return true;
+    return TRUE;
 }
 
 static void U_CALLCONV u_stdout_init() {

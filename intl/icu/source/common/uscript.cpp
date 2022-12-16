@@ -113,14 +113,14 @@ uscript_getCode(const char* nameOrAbbrOrLocale,
         return 0;
     }
 
-    triedCode = false;
+    triedCode = FALSE;
     if(uprv_strchr(nameOrAbbrOrLocale, '-')==NULL && uprv_strchr(nameOrAbbrOrLocale, '_')==NULL ){
         /* try long and abbreviated script names first */
         UScriptCode code = (UScriptCode) u_getPropertyValueEnum(UCHAR_SCRIPT, nameOrAbbrOrLocale);
         if(code!=USCRIPT_INVALID_CODE) {
             return setOneCode(code, fillIn, capacity, err);
         }
-        triedCode = true;
+        triedCode = TRUE;
     }
     internalErrorCode = U_ZERO_ERROR;
     length = getCodesFromLocale(nameOrAbbrOrLocale, fillIn, capacity, err);

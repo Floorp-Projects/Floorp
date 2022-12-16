@@ -39,7 +39,6 @@ class Normalizer2Impl;
 
 class U_I18N_API CollationBuilder : public CollationRuleParser::Sink {
 public:
-    CollationBuilder(const CollationTailoring *b, UBool icu4xMode, UErrorCode &errorCode);
     CollationBuilder(const CollationTailoring *base, UErrorCode &errorCode);
     virtual ~CollationBuilder();
 
@@ -303,7 +302,6 @@ private:
 
     CollationDataBuilder *dataBuilder;
     UBool fastLatinEnabled;
-    UBool icu4xMode;
     UnicodeSet optimizeSet;
     const char *errorReason;
 

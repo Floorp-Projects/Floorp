@@ -43,13 +43,6 @@
 #include <cstdlib>
 #include <cstring>
 
-// For pre-C++11 compatibility
-#if __cplusplus >= 201103L
-#define DOUBLE_CONVERSION_NULLPTR nullptr
-#else
-#define DOUBLE_CONVERSION_NULLPTR NULL
-#endif
-
 // ICU PATCH: Use U_ASSERT instead of <assert.h>
 #include "uassert.h"
 #ifndef DOUBLE_CONVERSION_ASSERT
@@ -261,9 +254,9 @@ inline int StrLength(const char* string) {
 template <typename T>
 class Vector {
  public:
-  Vector() : start_(DOUBLE_CONVERSION_NULLPTR), length_(0) {}
+  Vector() : start_(NULL), length_(0) {}
   Vector(T* data, int len) : start_(data), length_(len) {
-    DOUBLE_CONVERSION_ASSERT(len == 0 || (len > 0 && data != DOUBLE_CONVERSION_NULLPTR));
+    DOUBLE_CONVERSION_ASSERT(len == 0 || (len > 0 && data != NULL));
   }
 
   // Returns a vector using the same backing storage as this one,
@@ -346,7 +339,7 @@ class StringBuilder {
   void AddSubstring(const char* s, int n) {
     DOUBLE_CONVERSION_ASSERT(!is_finalized() && position_ + n < buffer_.length());
     DOUBLE_CONVERSION_ASSERT(static_cast<size_t>(n) <= strlen(s));
-    memmove(&buffer_[position_], s, static_cast<size_t>(n));
+    memmove(&buffer_[position_], s, n);
     position_ += n;
   }
 

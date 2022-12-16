@@ -317,9 +317,7 @@ class U_I18N_API PatternStringUtils {
     static void patternInfoToStringBuilder(const AffixPatternProvider& patternInfo, bool isPrefix,
                                            PatternSignType patternSignType,
                                            bool approximately,
-                                           StandardPlural::Form plural,
-                                           bool perMilleReplacesPercent,
-                                           bool dropCurrencySymbols,
+                                           StandardPlural::Form plural, bool perMilleReplacesPercent,
                                            UnicodeString& output);
 
     static PatternSignType resolveSignDisplay(UNumberSignDisplay signDisplay, Signum signum);

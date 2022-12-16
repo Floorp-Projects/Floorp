@@ -31,7 +31,7 @@ U_NAMESPACE_BEGIN
 // TimeZoneNames object cache handling
 static UMutex gTimeZoneNamesLock;
 static UHashtable *gTimeZoneNamesCache = NULL;
-static UBool gTimeZoneNamesCacheInitialized = false;
+static UBool gTimeZoneNamesCacheInitialized = FALSE;
 
 // Access count - incremented every time up to SWEEP_INTERVAL,
 // then reset to 0
@@ -62,8 +62,8 @@ static UBool U_CALLCONV timeZoneNames_cleanup(void)
         uhash_close(gTimeZoneNamesCache);
         gTimeZoneNamesCache = NULL;
     }
-    gTimeZoneNamesCacheInitialized = false;
-    return true;
+    gTimeZoneNamesCacheInitialized = FALSE;
+    return TRUE;
 }
 
 /**
@@ -139,7 +139,7 @@ TimeZoneNamesDelegate::TimeZoneNamesDelegate(const Locale& locale, UErrorCode& s
         if (U_SUCCESS(status)) {
             uhash_setKeyDeleter(gTimeZoneNamesCache, uprv_free);
             uhash_setValueDeleter(gTimeZoneNamesCache, deleteTimeZoneNamesCacheEntry);
-            gTimeZoneNamesCacheInitialized = true;
+            gTimeZoneNamesCacheInitialized = TRUE;
             ucln_i18n_registerCleanup(UCLN_I18N_TIMEZONENAMES, timeZoneNames_cleanup);
         }
     }
@@ -380,10 +380,10 @@ struct MatchInfo : UMemory {
         this->matchLength = matchLength;
         if (tzID != NULL) {
             this->id.setTo(*tzID);
-            this->isTZID = true;
+            this->isTZID = TRUE;
         } else {
             this->id.setTo(*mzID);
-            this->isTZID = false;
+            this->isTZID = FALSE;
         }
     }
 };
@@ -468,9 +468,9 @@ TimeZoneNames::MatchInfoCollection::getTimeZoneIDAt(int32_t idx, UnicodeString& 
     const MatchInfo* match = (const MatchInfo*)fMatches->elementAt(idx);
     if (match && match->isTZID) {
         tzID.setTo(match->id);
-        return true;
+        return TRUE;
     }
-    return false;
+    return FALSE;
 }
 
 UBool
@@ -479,9 +479,9 @@ TimeZoneNames::MatchInfoCollection::getMetaZoneIDAt(int32_t idx, UnicodeString& 
     const MatchInfo* match = (const MatchInfo*)fMatches->elementAt(idx);
     if (match && !match->isTZID) {
         mzID.setTo(match->id);
-        return true;
+        return TRUE;
     }
-    return false;
+    return FALSE;
 }
 
 UVector*

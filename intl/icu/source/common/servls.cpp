@@ -215,11 +215,11 @@ public:
     UBool upToDate(UErrorCode& status) const {
         if (U_SUCCESS(status)) {
             if (_timestamp == _service->getTimestamp()) {
-                return true;
+                return TRUE;
             }
             status = U_ENUM_OUT_OF_SYNC_ERROR;
         }
-        return false;
+        return FALSE;
     }
 
     virtual int32_t count(UErrorCode& status) const override {

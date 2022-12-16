@@ -58,10 +58,10 @@ RBBINode::RBBINode(NodeType t) : UMemory() {
     fInputSet     = NULL;
     fFirstPos     = 0;
     fLastPos      = 0;
-    fNullable     = false;
-    fLookAheadEnd = false;
-    fRuleRoot     = false;
-    fChainIn      = false;
+    fNullable     = FALSE;
+    fLookAheadEnd = FALSE;
+    fRuleRoot     = FALSE;
+    fChainIn      = FALSE;
     fVal          = 0;
     fPrecedence   = precZero;
 
@@ -92,7 +92,7 @@ RBBINode::RBBINode(const RBBINode &other) : UMemory(other) {
     fLastPos     = other.fLastPos;
     fNullable    = other.fNullable;
     fVal         = other.fVal;
-    fRuleRoot    = false;
+    fRuleRoot    = FALSE;
     fChainIn     = other.fChainIn;
     UErrorCode     status = U_ZERO_ERROR;
     fFirstPosSet = new UVector(status);   // TODO - get a real status from somewhere
@@ -355,11 +355,11 @@ void RBBINode::printTree(const RBBINode *node, UBool printHeading) {
         // Unconditionally dump children of all other node types.
         if (node->fType != varRef) {
             if (node->fLeftChild != NULL) {
-                printTree(node->fLeftChild, false);
+                printTree(node->fLeftChild, FALSE);
             }
             
             if (node->fRightChild != NULL) {
-                printTree(node->fRightChild, false);
+                printTree(node->fRightChild, FALSE);
             }
         }
     }

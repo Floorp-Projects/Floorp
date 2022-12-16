@@ -682,8 +682,6 @@ void gfxPlatformMac::GetCommonFallbackFonts(uint32_t aCh, Script aRunScript,
     case Script::TANGSA:
     case Script::TOTO:
     case Script::VITHKUQI:
-    case Script::KAWI:
-    case Script::NAG_MUNDARI:
       break;
   }
 

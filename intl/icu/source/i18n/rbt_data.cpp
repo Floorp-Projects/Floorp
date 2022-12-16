@@ -25,7 +25,7 @@ U_NAMESPACE_BEGIN
 
 TransliterationRuleData::TransliterationRuleData(UErrorCode& status)
  : UMemory(), ruleSet(status), variableNames(status),
-    variables(0), variablesAreOwned(true)
+    variables(0), variablesAreOwned(TRUE)
 {
     if (U_FAILURE(status)) {
         return;
@@ -37,7 +37,7 @@ TransliterationRuleData::TransliterationRuleData(UErrorCode& status)
 
 TransliterationRuleData::TransliterationRuleData(const TransliterationRuleData& other) :
     UMemory(other), ruleSet(other.ruleSet),
-    variablesAreOwned(true),
+    variablesAreOwned(TRUE),
     variablesBase(other.variablesBase),
     variablesLength(other.variablesLength)
 {

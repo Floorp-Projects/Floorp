@@ -90,7 +90,7 @@ public:
     static const UChar *skipIdentifier(const UChar *s, int32_t length);
 
 private:
-    PatternProps() = delete;  // no constructor: all static methods
+    PatternProps();  // no constructor: all static methods
 };
 
 U_NAMESPACE_END

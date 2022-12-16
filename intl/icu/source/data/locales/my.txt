@@ -21,7 +21,7 @@ my{
     }
     ExemplarCharactersIndex{"[က ခ ဂ ဃ င စ ဆ ဇ ဈ ဉ ည ဋ ဌ ဍ ဎ ဏ တ ထ ဒ ဓ န ပ ဖ ဗ ဘ မ ယ ရ လ ဝ သ ဟ ဠ အ]"}
     ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0၀ 1၁ 2၂ 3၃ 4၄ 5၅ 6၆ 7၇ 8၈ 9၉]"}
-    ExemplarCharactersPunctuation{"[\\- ‐ ‑ – — … ၊ ။ ‘ ’ “ ” ( ) \\[ \\] \\{ \\} @ * / #]"}
+    ExemplarCharactersPunctuation{"[၊ ။ ‘ ’ “ ”]"}
     MoreInformation{"?"}
     NumberElements{
         default{"mymr"}
@@ -34,7 +34,6 @@ my{
             }
             patterns{
                 accountingFormat{"¤ #,##0.00"}
-                accountingFormat%noCurrency{"#,##0.00"}
                 currencyFormat{"#,##0.00 ¤"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
@@ -43,118 +42,118 @@ my{
             patternsLong{
                 decimalFormat{
                     1000{
-                        other{"0 ထောင်"}
+                        other{"0ထောင်"}
                     }
                     10000{
-                        other{"0 သောင်း"}
+                        other{"0သောင်း"}
                     }
                     100000{
-                        other{"0 သိန်း"}
+                        other{"0သိန်း"}
                     }
                     1000000{
-                        other{"0 သန်း"}
+                        other{"0သန်း"}
                     }
                     10000000{
-                        other{"0 ကုဋေ"}
+                        other{"0ကုဋေ"}
                     }
                     100000000{
-                        other{"00 ကုဋေ"}
+                        other{"00ကုဋေ"}
                     }
                     1000000000{
-                        other{"000 ကုဋေ"}
+                        other{"ကုဋေ000"}
                     }
                     10000000000{
-                        other{"0000 ကုဋေ"}
+                        other{"ကုဋေ0000"}
                     }
                     100000000000{
-                        other{"ကုဋေ 0 သောင်း"}
+                        other{"ကုဋေ0သောင်း"}
                     }
                     1000000000000{
-                        other{"ကုဋေ 0 သိန်း"}
+                        other{"ကုဋေ0သိန်း"}
                     }
                     10000000000000{
-                        other{"ကုဋေ 0 သန်း"}
+                        other{"ကုဋေ0သန်း"}
                     }
                     100000000000000{
-                        other{"0 ကောဋိ"}
+                        other{"0ကောဋိ"}
                     }
                 }
             }
             patternsShort{
                 currencyFormat{
                     1000{
-                        other{"¤ 0 ထောင်"}
+                        other{"¤ 0ထောင်"}
                     }
                     10000{
-                        other{"¤ 0 သောင်း"}
+                        other{"¤ 0သောင်း"}
                     }
                     100000{
-                        other{"¤ 0 သိန်း"}
+                        other{"¤ 0သိန်း"}
                     }
                     1000000{
-                        other{"¤ 0 သန်း"}
+                        other{"¤ 0သန်း"}
                     }
                     10000000{
-                        other{"¤ 0 ကုဋေ"}
+                        other{"¤ 0ကုဋေ"}
                     }
                     100000000{
-                        other{"¤ 00 ကုဋေ"}
+                        other{"¤ 00ကုဋေ"}
                     }
                     1000000000{
-                        other{"¤ 000 ကုဋေ"}
+                        other{"¤ ကုဋေ000"}
                     }
                     10000000000{
-                        other{"¤ 0000 ကုဋေ"}
+                        other{"¤ ကုဋေ0000"}
                     }
                     100000000000{
-                        other{"¤ ကုဋေ 0 သောင်း"}
+                        other{"¤ ကုဋေ0သောင်း"}
                     }
                     1000000000000{
-                        other{"¤ ကုဋေ 0 သိန်း"}
+                        other{"¤ ကုဋေ0သိန်း"}
                     }
                     10000000000000{
-                        other{"¤ ကုဋေ 0 သန်း"}
+                        other{"¤ ကုဋေ0သန်း"}
                     }
                     100000000000000{
-                        other{"¤ 0 ကောဋိ"}
+                        other{"¤ 0ကောဋိ"}
                     }
                 }
                 decimalFormat{
                     1000{
-                        other{"0 ထောင်"}
+                        other{"0ထောင်"}
                     }
                     10000{
-                        other{"0 သောင်း"}
+                        other{"0သောင်း"}
                     }
                     100000{
-                        other{"0 သိန်း"}
+                        other{"0သိန်း"}
                     }
                     1000000{
-                        other{"0 သန်း"}
+                        other{"0သန်း"}
                     }
                     10000000{
-                        other{"0 ကုဋေ"}
+                        other{"0ကုဋေ"}
                     }
                     100000000{
-                        other{"00 ကုဋေ"}
+                        other{"00ကုဋေ"}
                     }
                     1000000000{
-                        other{"000 ကုဋေ"}
+                        other{"ကုဋေ000"}
                     }
                     10000000000{
-                        other{"ကုဋေ 0 ထ"}
+                        other{"ကုဋေ0ထ"}
                     }
                     100000000000{
-                        other{"ကုဋေ 0 သ"}
+                        other{"ကုဋေ0သ"}
                     }
                     1000000000000{
-                        other{"ဋေ 0 သိန်း"}
+                        other{"ဋေ0သိန်း"}
                     }
                     10000000000000{
-                        other{"ဋေ 0 သန်း"}
+                        other{"ဋေ0သန်း"}
                     }
                     100000000000000{
-                        other{"0 ကောဋိ"}
+                        other{"0ကောဋိ"}
                     }
                 }
             }
@@ -185,7 +184,6 @@ my{
         mymr{
             patterns{
                 currencyFormat{"#,##0.00 ¤"}
-                currencyFormat%noCurrency{"#,##0.00"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
@@ -216,7 +214,7 @@ my{
                 "EEEE G dd MMMM y",
                 "G dd MMMM y",
                 "G d MMM y",
-                "GGGGG d/M/y",
+                "GGGGG dd-MM-yy",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -249,14 +247,13 @@ my{
                 GyMMM{"G y MMM"}
                 GyMMMEd{"G d MMM y Eနေ့"}
                 GyMMMd{"G d MMM y"}
-                GyMd{"GGGGG y/M/d"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
                 M{"L"}
                 MEd{"d/M Eနေ့"}
                 MMM{"LLL"}
-                MMMEd{"MMM d၊ E"}
+                MMMEd{"MMM d- E"}
                 MMMMEd{"MMMM d Eနေ့"}
                 MMMMd{"MMMM d"}
                 MMMd{"MMM d"}
@@ -287,12 +284,6 @@ my{
                     B{"h:mm B – h:mm B"}
                     h{"h:mm – h:mm B"}
                     m{"h:mm – h:mm B"}
-                }
-                Gy{
-                    y{"G y – y"}
-                }
-                GyM{
-                    G{"GGGGG y/M – GGGGG y/M"}
                 }
                 H{
                     H{"HH–HH"}
@@ -407,10 +398,10 @@ my{
                 "z HH:mm:ss",
                 "H:mm:ss",
                 "H:mm",
-                "y၊ MMMM d၊ EEEE",
-                "y၊ MMMM d",
-                "y၊ MMM d",
-                "d/M/yy",
+                "y- MMMM d- EEEE",
+                "y- MMMM d",
+                "y- MMM d",
+                "dd-MM-yy",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -434,29 +425,28 @@ my{
                 Bh{"B h"}
                 Bhm{"B h:mm"}
                 Bhms{"B h:mm:ss"}
-                E{"ccc"}
+                E{"cccနေ့"}
                 EBhm{"E B h:mm"}
                 EBhms{"E B h:mm:ss"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
-                Ed{"d ရက် E"}
+                Ed{"d ရက် Eနေ့"}
                 Ehm{"E B h:mm"}
                 Ehms{"E B h:mm:ss"}
                 Gy{"G y"}
                 GyMMM{"G y MMM"}
-                GyMMMEd{"G y၊ MMM d၊ E"}
-                GyMMMd{"G y၊ MMM d"}
-                GyMd{"G y/M/d"}
+                GyMMMEd{"G y- MMM d- E"}
+                GyMMMd{"G y- MMM d"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
                 Hmsv{"v HH:mm:ss"}
                 Hmv{"v HH:mm"}
                 M{"L"}
-                MEd{"d/M၊ E"}
+                MEd{"d-M- E"}
                 MMM{"LLL"}
-                MMMEd{"MMM d၊ E"}
-                MMMMEd{"MMMM d ရက် E"}
+                MMMEd{"MMM d- E"}
+                MMMMEd{"MMMM d ရက် Eနေ့"}
                 MMMMW{
                     other{"MMMM လ W ပတ်မြောက်"}
                 }
@@ -472,12 +462,12 @@ my{
                 ms{"mm:ss"}
                 y{"y"}
                 yM{"M/y"}
-                yMEd{"d/M/y၊ E"}
+                yMEd{"d/M/y- E"}
                 yMMM{"MMM y"}
-                yMMMEd{"y၊ MMM d၊ E"}
+                yMMMEd{"y- MMM d- E"}
                 yMMMM{"y MMMM"}
-                yMMMd{"y၊ MMM d"}
-                yMd{"d/M/y"}
+                yMMMd{"y- MMM d"}
+                yMd{"dd-MM-y"}
                 yQQQ{"y QQQ"}
                 yQQQQ{"y QQQQ"}
                 yw{
@@ -543,13 +533,13 @@ my{
                         "စ",
                     }
                     short{
-                        "နွေ",
-                        "လာ",
-                        "ဂါ",
-                        "ဟူး",
-                        "တေး",
-                        "ကြာ",
-                        "နေ",
+                        "တနင်္ဂနွေ",
+                        "တနင်္လာ",
+                        "အင်္ဂါ",
+                        "ဗုဒ္ဓဟူး",
+                        "ကြာသပတေး",
+                        "သောကြာ",
+                        "စနေ",
                     }
                     wide{
                         "တနင်္ဂနွေ",
@@ -655,15 +645,15 @@ my{
                     y{"G y – y"}
                 }
                 GyM{
-                    G{"G y/M – G y/M"}
-                    M{"G y/M – y/M"}
-                    y{"G y/M – y/M"}
+                    G{"GGGGG y-MM – GGGGG y-MM"}
+                    M{"GGGGG y-MM – y-MM"}
+                    y{"GGGGG y-MM – y-MM"}
                 }
                 GyMEd{
-                    G{"G y/M/d၊ E – G y/M/d၊ E"}
-                    M{"G y/M/d၊ E – y/M/d၊ E"}
-                    d{"G y/M/d၊ E – y/M/d၊ E"}
-                    y{"G y/M/d၊ E – y/M/d၊ E"}
+                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
+                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
                 }
                 GyMMM{
                     G{"G y MMM – G y MMM"}
@@ -671,10 +661,10 @@ my{
                     y{"G y MMM – y MMM"}
                 }
                 GyMMMEd{
-                    G{"G y MMM d၊ E – G y MMM d၊ E"}
-                    M{"G y MMM d၊ E – MMM d၊ E"}
-                    d{"G y MMM d၊ E – MMM d၊ E"}
-                    y{"G y MMM d၊ E – y MMM d၊ E"}
+                    G{"G y MMM d, E – G y MMM d, E"}
+                    M{"G y MMM d, E – MMM d, E"}
+                    d{"G y MMM d, E – MMM d, E"}
+                    y{"G y MMM d, E – y MMM d, E"}
                 }
                 GyMMMd{
                     G{"G y MMM d – G y MMM d"}
@@ -683,10 +673,10 @@ my{
                     y{"G y MMM d – y MMM d"}
                 }
                 GyMd{
-                    G{"G y/M/d – G y/M/d"}
-                    M{"G y/M/d – y/M/d"}
-                    d{"G y/M/d – y/M/d"}
-                    y{"G y/M/d – y/M/d"}
+                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
+                    M{"GGGGG y-MM-dd – y-MM-dd"}
+                    d{"GGGGG y-MM-dd – y-MM-dd"}
+                    y{"GGGGG y-MM-dd – y-MM-dd"}
                 }
                 H{
                     H{"HH – HH"}
@@ -707,14 +697,14 @@ my{
                 }
                 MEd{
                     M{"d/M- EEEE – d/M- EEEE"}
-                    d{"d/M၊ EEEE – d/M၊ EEEE"}
+                    d{"d/M- EEEE – d/M- EEEE"}
                 }
                 MMM{
                     M{"MMM – MMM"}
                 }
                 MMMEd{
-                    M{"MMM d၊ E – MMM d၊ E"}
-                    d{"MMM d၊ E – MMM d၊ E"}
+                    M{"MMM d- E – MMM d- E"}
+                    d{"MMM d- E – MMM d- E"}
                 }
                 MMMd{
                     M{"MMM d – MMM d"}
@@ -754,27 +744,27 @@ my{
                     y{"M/y – M/y"}
                 }
                 yMEd{
-                    M{"d/M/y၊ EEEE – d/M/y၊ EEEE"}
-                    d{"d/M/y၊ EEEE – d/M/y၊ EEEE"}
-                    y{"d/M/y၊ EEEE – d/M/y၊ EEEE"}
+                    M{"d/M/y- EEEE – d/M/y- EEEE"}
+                    d{"d/M/y- EEEE – d/M/y- EEEE"}
+                    y{"d/M/y- EEEE – d/M/y- EEEE"}
                 }
                 yMMM{
                     M{"y MMM – MMM"}
                     y{"y MMM – y MMM"}
                 }
                 yMMMEd{
-                    M{"y၊ MMM d၊ EEEE – MMM d၊ EEEE"}
-                    d{"y၊ MMM d၊ EEEE – MMM d၊ EEEE"}
-                    y{"y၊ MMM d၊ EEEE – y၊ MMM d၊ EEEE"}
+                    M{"y- MMM d- EEEE – MMM d- EEEE"}
+                    d{"y- MMM d- EEEE – MMM d- EEEE"}
+                    y{"y- MMM d- EEEE – y- MMM d- EEEE"}
                 }
                 yMMMM{
                     M{"y MMMM – MMMM"}
                     y{"y MMMM – y MMMM"}
                 }
                 yMMMd{
-                    M{"y၊ MMM d – MMM d"}
-                    d{"y၊ MMM d – d"}
-                    y{"y၊ MMM d – y၊ MMM d"}
+                    M{"y- MMM d – MMM d"}
+                    d{"y- MMM d – d"}
+                    y{"y- MMM d – y- MMM d"}
                 }
                 yMd{
                     M{"d/M/y – d/M/y"}
@@ -1788,28 +1778,6 @@ my{
                 "[,٫︐﹐，]",
                 "[.․﹒．｡]",
             }
-        }
-    }
-    personNames{
-        foreignSpaceReplacement{" "}
-        nameOrderLocales{
-            givenFirst{
-                "und",
-                "my",
-            }
-            surnameFirst{
-                "ko",
-                "si",
-                "ta",
-                "te",
-                "vi",
-                "yue",
-                "zh",
-            }
-        }
-        namePattern{
-            sorting-long-referring-formal{"{surname-core}၊ {given} {given2} {surname-prefix}"}
-            surnameFirst-long-referring-formal{"{surname} {given} {given2} {suffix}"}
         }
     }
 }

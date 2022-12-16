@@ -92,8 +92,8 @@ private:
         int32_t length;
 
     private:
-        CEBuffer(const CEBuffer &) = delete;
-        void operator=(const CEBuffer &) = delete;
+        CEBuffer(const CEBuffer &);
+        void operator=(const CEBuffer &);
 
         MaybeStackArray<int64_t, INITIAL_CAPACITY> buffer;
     };

@@ -472,7 +472,7 @@ sl{
             ec{"Noronha"}
         }
         "America:North_Dakota:Beulah"{
-            ec{"Beulah, Severna Dakota"}
+            ec{"Beulah, North Dakota"}
         }
         "America:North_Dakota:Center"{
             ec{"Center, Severna Dakota"}
@@ -1899,7 +1899,7 @@ sl{
             ls{"Jekaterinburški standardni čas"}
         }
         "meta:Yukon"{
-            ls{"Jukonski čas"}
+            ls{"Jukonški čas"}
         }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}

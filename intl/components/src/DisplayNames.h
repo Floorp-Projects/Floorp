@@ -820,7 +820,11 @@ class DisplayNames final {
         break;
 
       case DisplayNames::Style::Narrow:
+#ifndef U_HIDE_DRAFT_API
         symbolType = UDAT_STANDALONE_NARROW_QUARTERS;
+#else
+        symbolType = UDAT_STANDALONE_SHORT_QUARTERS;
+#endif
         break;
     }
 

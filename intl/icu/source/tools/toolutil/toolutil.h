@@ -23,6 +23,13 @@
 
 #include "unicode/utypes.h"
 
+#ifndef TRUE
+#   define TRUE  1
+#endif
+#ifndef FALSE
+#   define FALSE 0
+#endif
+
 #ifdef __cplusplus
 
 #include "unicode/errorcode.h"
@@ -111,9 +118,9 @@ uprv_mkdir(const char *pathname, UErrorCode *status);
 
 #if !UCONFIG_NO_FILE_IO
 /**
- * Return true if the named item exists
+ * Return TRUE if the named item exists
  * @param file filename
- * @return true if named item (file, dir, etc) exists, false otherwise
+ * @return TRUE if named item (file, dir, etc) exists, FALSE otherwise
  */
 U_CAPI UBool U_EXPORT2
 uprv_fileExists(const char *file);

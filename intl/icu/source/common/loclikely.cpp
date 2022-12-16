@@ -201,7 +201,7 @@ createTagStringWithAlternates(
          **/
         char tagBuffer[ULOC_FULLNAME_CAPACITY];
         int32_t tagLength = 0;
-        UBool regionAppended = false;
+        UBool regionAppended = FALSE;
 
         if (langLength > 0) {
             appendTag(
@@ -209,7 +209,7 @@ createTagStringWithAlternates(
                 langLength,
                 tagBuffer,
                 &tagLength,
-                /*withSeparator=*/false);
+                /*withSeparator=*/FALSE);
         }
         else if (alternateTags == NULL) {
             /*
@@ -246,7 +246,7 @@ createTagStringWithAlternates(
                     alternateLangLength,
                     tagBuffer,
                     &tagLength,
-                    /*withSeparator=*/false);
+                    /*withSeparator=*/FALSE);
             }
         }
 
@@ -256,7 +256,7 @@ createTagStringWithAlternates(
                 scriptLength,
                 tagBuffer,
                 &tagLength,
-                /*withSeparator=*/true);
+                /*withSeparator=*/TRUE);
         }
         else if (alternateTags != NULL) {
             /*
@@ -281,7 +281,7 @@ createTagStringWithAlternates(
                     alternateScriptLength,
                     tagBuffer,
                     &tagLength,
-                    /*withSeparator=*/true);
+                    /*withSeparator=*/TRUE);
             }
         }
 
@@ -291,9 +291,9 @@ createTagStringWithAlternates(
                 regionLength,
                 tagBuffer,
                 &tagLength,
-                /*withSeparator=*/true);
+                /*withSeparator=*/TRUE);
 
-            regionAppended = true;
+            regionAppended = TRUE;
         }
         else if (alternateTags != NULL) {
             /*
@@ -317,9 +317,9 @@ createTagStringWithAlternates(
                     alternateRegionLength,
                     tagBuffer,
                     &tagLength,
-                    /*withSeparator=*/true);
+                    /*withSeparator=*/TRUE);
 
-                regionAppended = true;
+                regionAppended = TRUE;
             }
         }
 
@@ -622,7 +622,7 @@ createLikelySubtagsString(
                         likelySubtags,
                         sink,
                         err);
-            return true;
+            return TRUE;
         }
     }
 
@@ -678,7 +678,7 @@ createLikelySubtagsString(
                         likelySubtags,
                         sink,
                         err);
-            return true;
+            return TRUE;
         }
     }
 
@@ -734,7 +734,7 @@ createLikelySubtagsString(
                         likelySubtags,
                         sink,
                         err);
-            return true;
+            return TRUE;
         }
     }
 
@@ -789,11 +789,11 @@ createLikelySubtagsString(
                         likelySubtags,
                         sink,
                         err);
-            return true;
+            return TRUE;
         }
     }
 
-    return false;
+    return FALSE;
 
 error:
 
@@ -801,7 +801,7 @@ error:
         *err = U_ILLEGAL_ARGUMENT_ERROR;
     }
 
-    return false;
+    return FALSE;
 }
 
 #define CHECK_TRAILING_VARIANT_SIZE(trailing, trailingLength) UPRV_BLOCK_MACRO_BEGIN { \
@@ -836,7 +836,7 @@ _uloc_addLikelySubtags(const char* localeID,
     const char* trailing = "";
     int32_t trailingLength = 0;
     int32_t trailingIndex = 0;
-    UBool success = false;
+    UBool success = FALSE;
 
     if(U_FAILURE(*err)) {
         goto error;
@@ -901,7 +901,7 @@ error:
     if (!U_FAILURE(*err)) {
         *err = U_ILLEGAL_ARGUMENT_ERROR;
     }
-    return false;
+    return FALSE;
 }
 
 // Add likely subtags to the sink
@@ -925,7 +925,7 @@ _uloc_minimizeSubtags(const char* localeID,
     const char* trailing = "";
     int32_t trailingLength = 0;
     int32_t trailingIndex = 0;
-    UBool successGetMax = false;
+    UBool successGetMax = FALSE;
 
     if(U_FAILURE(*err)) {
         goto error;
@@ -1248,7 +1248,7 @@ _ulocimp_addLikelySubtags(const char* localeID,
     if (U_SUCCESS(*status)) {
         return _uloc_addLikelySubtags(localeBuffer.getBuffer(), sink, status);
     } else {
-        return false;
+        return FALSE;
     }
 }
 
@@ -1320,14 +1320,14 @@ uloc_isRightToLeft(const char *locale) {
         char lang[8];
         int32_t langLength = uloc_getLanguage(locale, lang, UPRV_LENGTHOF(lang), &errorCode);
         if (U_FAILURE(errorCode) || errorCode == U_STRING_NOT_TERMINATED_WARNING) {
-            return false;
+            return FALSE;
         }
         if (langLength > 0) {
             const char* langPtr = uprv_strstr(LANG_DIR_STRING, lang);
             if (langPtr != NULL) {
                 switch (langPtr[langLength]) {
-                case '-': return false;
-                case '+': return true;
+                case '-': return FALSE;
+                case '+': return TRUE;
                 default: break;  // partial match of a longer code
                 }
             }
@@ -1340,12 +1340,12 @@ uloc_isRightToLeft(const char *locale) {
             ulocimp_addLikelySubtags(locale, sink, &errorCode);
         }
         if (U_FAILURE(errorCode) || errorCode == U_STRING_NOT_TERMINATED_WARNING) {
-            return false;
+            return FALSE;
         }
         scriptLength = uloc_getScript(likely.data(), script, UPRV_LENGTHOF(script), &errorCode);
         if (U_FAILURE(errorCode) || errorCode == U_STRING_NOT_TERMINATED_WARNING ||
                 scriptLength == 0) {
-            return false;
+            return FALSE;
         }
     }
     UScriptCode scriptCode = (UScriptCode)u_getPropertyValueEnum(UCHAR_SCRIPT, script);
@@ -1392,7 +1392,7 @@ ulocimp_getRegionForSupplementalData(const char *localeID, UBool inferRegion,
         if (U_FAILURE(*status)) {
             rgLen = 0;
         } else if (rgLen == 0 && inferRegion) {
-            // no unicode_region_subtag but inferRegion true, try likely subtags
+            // no unicode_region_subtag but inferRegion TRUE, try likely subtags
             rgStatus = U_ZERO_ERROR;
             icu::CharString locBuf;
             {

@@ -14,7 +14,6 @@
 #include "unicode/bytestream.h"
 #include "unicode/currunit.h"
 #include "unicode/dcfmtsym.h"
-#include "unicode/displayoptions.h"
 #include "unicode/fieldpos.h"
 #include "unicode/formattedvalue.h"
 #include "unicode/fpositer.h"
@@ -23,7 +22,7 @@
 #include "unicode/parseerr.h"
 #include "unicode/plurrule.h"
 #include "unicode/ucurr.h"
-#include "unicode/udisplayoptions.h"
+#include "unicode/unounclass.h"
 #include "unicode/unum.h"
 #include "unicode/unumberformatter.h"
 #include "unicode/uobject.h"
@@ -2255,50 +2254,23 @@ class U_I18N_API NumberFormatterSettings {
     Derived usage(StringPiece usage) &&;
 
 #ifndef U_HIDE_DRAFT_API
-    /**
-     * Specifies the DisplayOptions. For example, UDisplayOptionsGrammaticalCase specifies
-     * the desired case for a unit formatter's output (e.g. accusative, dative, genitive).
-     *
-     * @param displayOptions
-     * @return The fluent chain.
-     * @draft ICU 72
-     */
-    Derived displayOptions(const DisplayOptions &displayOptions) const &;
-
-    /**
-     * Overload of displayOptions() for use on an rvalue reference.
-     *
-     * @param displayOptions
-     * @return The fluent chain.
-     * @draft ICU 72
-     */
-    Derived displayOptions(const DisplayOptions &displayOptions) &&;
-#endif // U_HIDE_DRAFT_API
-
 #ifndef U_HIDE_INTERNAL_API
     /**
-     * NOTE: Use `displayOptions` instead. This method was part of
-     * an internal technology preview in ICU 69, but will be removed
-     * in ICU 73, in favor of `displayOptions`
-     *
      * Specifies the desired case for a unit formatter's output (e.g.
      * accusative, dative, genitive).
      *
-     * @internal
+     * @internal ICU 69 technology preview
      */
     Derived unitDisplayCase(StringPiece unitDisplayCase) const &;
 
     /**
-     * NOTE: Use `displayOptions` instead. This method was part of
-     * an internal technology preview in ICU 69, but will be removed
-     * in ICU 73, in favor of `displayOptions`
-     *
      * Overload of unitDisplayCase() for use on an rvalue reference.
      *
-     * @internal
+     * @internal ICU 69 technology preview
      */
     Derived unitDisplayCase(StringPiece unitDisplayCase) &&;
 #endif // U_HIDE_INTERNAL_API
+#endif // U_HIDE_DRAFT_API
 
 #ifndef U_HIDE_INTERNAL_API
 
@@ -2799,13 +2771,13 @@ class U_I18N_API FormattedNumber : public UMemory, public FormattedValue {
 #ifndef U_HIDE_DRAFT_API
 
     /**
-     * Gets the noun class of the formatted output. Returns `UNDEFINED` when the noun class
+     * Gets the noun class of the formatted output. Returns `OTHER` when the noun class
      * is not supported yet.
      *
-     * @return UDisplayOptionsNounClass
-     * @draft ICU 72
+     * @return `NounClass`
+     * @draft ICU 71.
      */
-    UDisplayOptionsNounClass getNounClass(UErrorCode &status) const;
+    NounClass getNounClass(UErrorCode &status) const;
 
 #endif // U_HIDE_DRAFT_API
 
@@ -2824,6 +2796,18 @@ class U_I18N_API FormattedNumber : public UMemory, public FormattedValue {
     void getAllFieldPositionsImpl(FieldPositionIteratorHandler& fpih, UErrorCode& status) const;
 
 #endif  /* U_HIDE_INTERNAL_API */
+
+#ifndef U_HIDE_DEPRECATED_API
+
+    /**
+     * Gets the gender of the formatted output. Returns "" when the gender is
+     * unknown, or for ungendered languages.
+     *
+     * @deprecated This API is for ICU internal use only.
+     */
+    const char *getGender(UErrorCode &status) const;
+
+#endif /* U_HIDE_DEPRECATED_API */
 
   private:
     // Can't use LocalPointer because UFormattedNumberData is forward-declared

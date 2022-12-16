@@ -60,7 +60,7 @@ public:
         virtual int64_t modifyCE(int64_t ce) const = 0;
     };
 
-    CollationDataBuilder(UBool icu4xMode, UErrorCode &errorCode);
+    CollationDataBuilder(UErrorCode &errorCode);
 
     virtual ~CollationDataBuilder();
 
@@ -244,18 +244,8 @@ protected:
     UnicodeSet contextChars;
     // Serialized UCharsTrie structures for finalized contexts.
     UnicodeString contexts;
-private:
-    /**
-     * The "era" of building intermediate contexts.
-     * When the array of cached, temporary contexts overflows, then clearContexts()
-     * removes them all and invalidates the builtCE32 that used to point to built tries.
-     * See ConditionalCE32::era.
-     */
-    int32_t contextsEra = 0;
-protected:
     UnicodeSet unsafeBackwardSet;
     UBool modified;
-    UBool icu4xMode;
 
     UBool fastLatinEnabled;
     CollationFastLatinBuilder *fastLatinBuilder;

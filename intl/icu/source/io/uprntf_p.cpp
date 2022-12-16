@@ -473,7 +473,7 @@ u_printf_octal_handler(const u_printf_stream_handler  *handler,
 
     /* format the number, preserving the minimum # of digits */
     ufmt_64tou(result, &len, num, 8,
-        false, /* doesn't matter for octal */
+        FALSE, /* doesn't matter for octal */
         info->fPrecision == -1 && info->fZero ? info->fWidth : info->fPrecision);
 
     /* convert to alt form, if desired */
@@ -552,7 +552,7 @@ u_printf_pointer_handler(const u_printf_stream_handler  *handler,
     int32_t         len  = UPRINTF_BUFFER_SIZE;
 
     /* format the pointer in hex */
-    ufmt_ptou(result, &len, args[0].ptrValue, true/*, info->fPrecision*/);
+    ufmt_ptou(result, &len, args[0].ptrValue, TRUE/*, info->fPrecision*/);
 
     return handler->pad_and_justify(context, info, result, len);
 }
@@ -851,12 +851,12 @@ u_printf_scidbl_handler(const u_printf_stream_handler  *handler,
         if (significantDigits == -1) {
             significantDigits = 6;
         }
-        unum_setAttribute(format, UNUM_SIGNIFICANT_DIGITS_USED, true);
+        unum_setAttribute(format, UNUM_SIGNIFICANT_DIGITS_USED, TRUE);
         unum_setAttribute(format, UNUM_MAX_SIGNIFICANT_DIGITS, significantDigits);
         /* call the double handler */
         retVal = u_printf_double_handler(handler, context, formatBundle, &scidbl_info, args);
         unum_setAttribute(format, UNUM_MAX_SIGNIFICANT_DIGITS, maxSigDecimalDigits);
-        unum_setAttribute(format, UNUM_SIGNIFICANT_DIGITS_USED, false);
+        unum_setAttribute(format, UNUM_SIGNIFICANT_DIGITS_USED, FALSE);
     }
     return retVal;
 }
@@ -1160,11 +1160,11 @@ static ufmt_args* parseArguments(const UChar *alias, va_list ap, UErrorCode *sta
         /* skip over everything except for the type */
         while (ISMOD(*alias) || ISFLAG(*alias) || ISDIGIT(*alias) || 
             *alias == SPEC_ASTERISK || *alias == SPEC_PERIOD || *alias == SPEC_DOLLARSIGN) {
-                islonglong[pos] = false;
+                islonglong[pos] = FALSE;
                 if (ISMOD(*alias)) {
                     alias++;
                     if (*alias == MOD_LOWERL) {
-                        islonglong[pos] = true;
+                        islonglong[pos] = TRUE;
                     } 
                 } 
                 alias++;
@@ -1315,28 +1315,28 @@ u_printf_parse(const u_printf_stream_handler *streamHandler,
 
                 /* left justify */
             case FLAG_MINUS:
-                info->fLeft = true;
+                info->fLeft = TRUE;
                 break;
 
                 /* always show sign */
             case FLAG_PLUS:
-                info->fShowSign = true;
+                info->fShowSign = TRUE;
                 break;
 
                 /* use space if no sign present */
             case FLAG_SPACE:
-                info->fShowSign = true;
-                info->fSpace = true;
+                info->fShowSign = TRUE;
+                info->fSpace = TRUE;
                 break;
 
                 /* use alternate form */
             case FLAG_POUND:
-                info->fAlt = true;
+                info->fAlt = TRUE;
                 break;
 
                 /* pad with leading zeroes */
             case FLAG_ZERO:
-                info->fZero = true;
+                info->fZero = TRUE;
                 info->fPadChar = 0x0030;
                 break;
 
@@ -1454,23 +1454,23 @@ u_printf_parse(const u_printf_stream_handler *streamHandler,
 
                 /* short */
             case MOD_H:
-                info->fIsShort = true;
+                info->fIsShort = TRUE;
                 break;
 
                 /* long or long long */
             case MOD_LOWERL:
                 if(*alias == MOD_LOWERL) {
-                    info->fIsLongLong = true;
+                    info->fIsLongLong = TRUE;
                     /* skip over the next 'l' */
                     alias++;
                 }
                 else
-                    info->fIsLong = true;
+                    info->fIsLong = TRUE;
                 break;
 
                 /* long double */
             case MOD_L:
-                info->fIsLongDouble = true;
+                info->fIsLongDouble = TRUE;
                 break;
             }
         }
@@ -1492,7 +1492,7 @@ u_printf_parse(const u_printf_stream_handler *streamHandler,
             /* if it's negative, take the absolute value and set left alignment */
             if(info->fWidth < 0) {
                 info->fWidth *= -1; /* Make positive */
-                info->fLeft = true;
+                info->fLeft = TRUE;
             }
         }
 

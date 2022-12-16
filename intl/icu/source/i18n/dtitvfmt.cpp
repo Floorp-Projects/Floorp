@@ -298,7 +298,7 @@ DateIntervalFormat::format(const DateInterval* dtInterval,
     }
 
     FieldPositionOnlyHandler handler(fieldPosition);
-    handler.setAcceptFirstOnly(true);
+    handler.setAcceptFirstOnly(TRUE);
     int8_t ignore;
 
     Mutex lock(&gFormatterMutex);
@@ -351,7 +351,7 @@ DateIntervalFormat::format(Calendar& fromCalendar,
                            FieldPosition& pos,
                            UErrorCode& status) const {
     FieldPositionOnlyHandler handler(pos);
-    handler.setAcceptFirstOnly(true);
+    handler.setAcceptFirstOnly(TRUE);
     int8_t ignore;
 
     Mutex lock(&gFormatterMutex);
@@ -966,26 +966,23 @@ DateIntervalFormat::normalizeHourMetacharacters(const UnicodeString& skeleton) c
     
     UChar hourMetachar = u'\0';
     UChar dayPeriodChar = u'\0';
-    int32_t hourFieldStart = 0;
-    int32_t hourFieldLength = 0;
-    int32_t dayPeriodStart = 0;
-    int32_t dayPeriodLength = 0;
+    int32_t metacharStart = 0;
+    int32_t metacharCount = 0;
     for (int32_t i = 0; i < result.length(); i++) {
         UChar c = result[i];
         if (c == LOW_J || c == CAP_J || c == CAP_C || c == LOW_H || c == CAP_H || c == LOW_K || c == CAP_K) {
             if (hourMetachar == u'\0') {
                 hourMetachar = c;
-                hourFieldStart = i;
+                metacharStart = i;
             }
-            ++hourFieldLength;
+            ++metacharCount;
         } else if (c == LOW_A || c == LOW_B || c == CAP_B) {
             if (dayPeriodChar == u'\0') {
                 dayPeriodChar = c;
-                dayPeriodStart = i;
             }
-            ++dayPeriodLength;
+            ++metacharCount;
         } else {
-            if (hourMetachar != u'\0' && dayPeriodChar != u'\0') {
+            if (hourMetachar != u'\0') {
                 break;
             }
         }
@@ -1025,27 +1022,31 @@ DateIntervalFormat::normalizeHourMetacharacters(const UnicodeString& skeleton) c
             }
         }
         
-        UnicodeString hourAndDayPeriod(hourChar);
-        if (hourChar != CAP_H && hourChar != LOW_K) {
-            int32_t newDayPeriodLength = 0;
-            if (dayPeriodLength >= 5 || hourFieldLength >= 5) {
-                newDayPeriodLength = 5;
-            } else if (dayPeriodLength >= 3 || hourFieldLength >= 3) {
-                newDayPeriodLength = 3;
-            } else {
-                newDayPeriodLength = 1;
+        if (hourChar == CAP_H || hourChar == LOW_K) {
+            result.replace(metacharStart, metacharCount, hourChar);
+        } else {
+            UnicodeString hourAndDayPeriod(hourChar);
+            switch (metacharCount) {
+                case 1:
+                case 2:
+                default:
+                    hourAndDayPeriod.append(UnicodeString(dayPeriodChar));
+                    break;
+                case 3:
+                case 4:
+                    for (int32_t i = 0; i < 4; i++) {
+                        hourAndDayPeriod.append(dayPeriodChar);
+                    }
+                    break;
+                case 5:
+                case 6:
+                    for (int32_t i = 0; i < 5; i++) {
+                        hourAndDayPeriod.append(dayPeriodChar);
+                    }
+                    break;
             }
-            for (int32_t i = 0; i < newDayPeriodLength; i++) {
-                hourAndDayPeriod.append(dayPeriodChar);
-            }
+            result.replace(metacharStart, metacharCount, hourAndDayPeriod);
         }
-        result.replace(hourFieldStart, hourFieldLength, hourAndDayPeriod);
-        if (dayPeriodStart > hourFieldStart) {
-            // before deleting the original day period field, adjust its position in case
-            // we just changed the size of the hour field (and new day period field)
-            dayPeriodStart += hourAndDayPeriod.length() - hourFieldLength;
-        }
-        result.remove(dayPeriodStart, dayPeriodLength);
     }
     return result;
 }
@@ -1207,8 +1208,8 @@ DateIntervalFormat::getDateTimeSkeleton(const UnicodeString& skeleton,
  * @param dateSkeleton   normalized date skeleton
  * @param timeSkeleton   normalized time skeleton
  * @return               whether the resource is found for the skeleton.
- *                       true if interval pattern found for the skeleton,
- *                       false otherwise.
+ *                       TRUE if interval pattern found for the skeleton,
+ *                       FALSE otherwise.
  * @stable ICU 4.0
  */
 UBool
@@ -1420,8 +1421,8 @@ DateIntervalFormat::setIntervalPattern(UCalendarDateFields field,
  * @param extendedBestSkeleton  extended best match skeleton
  * @return                      whether the interval pattern is found
  *                              through extending skeleton or not.
- *                              true if interval pattern is found by
- *                              extending skeleton, false otherwise.
+ *                              TRUE if interval pattern is found by
+ *                              extending skeleton, FALSE otherwise.
  * @stable ICU 4.0
  */
 UBool
@@ -1495,10 +1496,10 @@ DateIntervalFormat::setIntervalPattern(UCalendarDateFields field,
             setIntervalPattern(field, pattern);
         }
         if ( extendedSkeleton && !extendedSkeleton->isEmpty() ) {
-            return true;
+            return TRUE;
         }
     }
-    return false;
+    return FALSE;
 }
 
 
@@ -1539,8 +1540,8 @@ DateIntervalFormat::splitPatternInto2Part(const UnicodeString& intervalPattern) 
         if (ch != prevCh && count > 0) {
             // check the repeativeness of pattern letter
             UBool repeated = patternRepeated[(int)(prevCh - PATTERN_CHAR_BASE)];
-            if ( repeated == false ) {
-                patternRepeated[prevCh - PATTERN_CHAR_BASE] = true;
+            if ( repeated == FALSE ) {
+                patternRepeated[prevCh - PATTERN_CHAR_BASE] = TRUE;
             } else {
                 foundRepetition = true;
                 break;
@@ -1568,8 +1569,8 @@ DateIntervalFormat::splitPatternInto2Part(const UnicodeString& intervalPattern) 
     // "dd MM" ( no repetition ),
     // "d-d"(last char repeated ), and
     // "d-d MM" ( repetition found )
-    if ( count > 0 && foundRepetition == false ) {
-        if ( patternRepeated[(int)(prevCh - PATTERN_CHAR_BASE)] == false ) {
+    if ( count > 0 && foundRepetition == FALSE ) {
+        if ( patternRepeated[(int)(prevCh - PATTERN_CHAR_BASE)] == FALSE ) {
             count = 0;
         }
     }
@@ -1683,7 +1684,7 @@ DateIntervalFormat::fieldExistsInSkeleton(UCalendarDateFields field,
                                           const UnicodeString& skeleton)
 {
     const UChar fieldChar = fgCalendarFieldToPatternLetter[field];
-    return ( (skeleton.indexOf(fieldChar) == -1)?false:true ) ;
+    return ( (skeleton.indexOf(fieldChar) == -1)?FALSE:TRUE ) ;
 }
 
 
@@ -1725,13 +1726,7 @@ DateIntervalFormat::adjustFieldWidth(const UnicodeString& inputSkeleton,
     DateIntervalInfo::parseSkeleton(inputSkeleton, inputSkeletonFieldWidth);
     DateIntervalInfo::parseSkeleton(bestMatchSkeleton, bestMatchSkeletonFieldWidth);
     if (suppressDayPeriodField) {
-        // remove the 'a' and any NBSP/NNBSP on one side of it
-        findReplaceInPattern(adjustedPtn, UnicodeString(u"\u00A0a",-1), UnicodeString());
-        findReplaceInPattern(adjustedPtn, UnicodeString(u"\u202Fa",-1), UnicodeString());
-        findReplaceInPattern(adjustedPtn, UnicodeString(u"a\u00A0",-1), UnicodeString());
-        findReplaceInPattern(adjustedPtn, UnicodeString(u"a\u202F",-1), UnicodeString());
         findReplaceInPattern(adjustedPtn, UnicodeString(LOW_A), UnicodeString());
-        // adjust interior double spaces, remove exterior whitespace
         findReplaceInPattern(adjustedPtn, UnicodeString("  "), UnicodeString(" "));
         adjustedPtn.trim();
     }

@@ -94,10 +94,10 @@ UBool RBTestData::getInfo(const DataMap *& info, UErrorCode &/*status*/) const
 {
   if(fInfo) {
     info = fInfo;
-    return true;
+    return TRUE;
   } else {
     info = NULL;
-    return false;
+    return FALSE;
   }
 }
 
@@ -115,10 +115,10 @@ UBool RBTestData::nextSettings(const DataMap *& settings, UErrorCode &status)
     }
     ures_close(data);
     settings = fCurrSettings;
-    return true;
+    return TRUE;
   } else {
     settings = NULL;
-    return false;
+    return FALSE;
   }
 }
 
@@ -134,10 +134,10 @@ UBool RBTestData::nextCase(const DataMap *& nextCase, UErrorCode &status)
     }
     ures_close(currCase);
     nextCase = fCurrCase;
-    return true;
+    return TRUE;
   } else {
     nextCase = NULL;
-    return false;
+    return FALSE;
   }
 }
 

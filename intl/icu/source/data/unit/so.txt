@@ -312,12 +312,6 @@ so{
                 one{"{0} nanoseken"}
                 other{"{0} nanoseken"}
             }
-            quarter{
-                dnam{"Rubucyo"}
-                one{"{0} rubac"}
-                other{"{0} rubac"}
-                per{"{0}/rubac"}
-            }
             second{
                 dnam{"ilbiriqsi"}
                 one{"{0} ilbiriqsi"}
@@ -591,6 +585,11 @@ so{
                 other{"{0} kiilogaraam"}
                 per{"{0} kiilogaraam"}
             }
+            metric-ton{
+                dnam{"metrik tan"}
+                one{"{0} metrik tan"}
+                other{"{0} metrik tan"}
+            }
             microgram{
                 dnam{"maykrogaraam"}
                 one{"{0} maykrogaraam"}
@@ -627,11 +626,6 @@ so{
                 dnam{"tan"}
                 one{"{0} tan"}
                 other{"{0} tan"}
-            }
-            tonne{
-                dnam{"metrik tan"}
-                one{"{0} metrik tan"}
-                other{"{0} metrik tan"}
             }
         }
         power{
@@ -978,12 +972,6 @@ so{
                 dnam{"Bil"}
                 one{"{0}b"}
                 other{"{0}b"}
-            }
-            quarter{
-                dnam{"Rubac"}
-                one{"{0} rubac"}
-                other{"{0} rubac"}
-                per{"{0}/rubac"}
             }
             second{
                 one{"{0}il"}
@@ -1366,12 +1354,6 @@ so{
                 dnam{"nanosek"}
                 one{"{0} ns"}
                 other{"{0} ns"}
-            }
-            quarter{
-                dnam{"Rubuc"}
-                one{"{0} rubac"}
-                other{"{0} rubac"}
-                per{"{0}/rubac"}
             }
             second{
                 dnam{"ilbrqsi"}

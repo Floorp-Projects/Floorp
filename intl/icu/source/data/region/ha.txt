@@ -204,7 +204,7 @@ ha{
         NC{"Kaledoniya Sabuwa"}
         NE{"Nijar"}
         NF{"Tsibirin Narfalk"}
-        NG{"Nijeriya"}
+        NG{"Najeriya"}
         NI{"Nikaraguwa"}
         NL{"Holan"}
         NO{"Norwe"}
@@ -304,7 +304,6 @@ ha{
     Countries%variant{
         CD{"Kongo (DRC)"}
         CG{"Jamhuriyar Kongo"}
-        NZ{"Aotearoa Nuzilan"}
         SZ{"Suwazilan"}
     }
 }

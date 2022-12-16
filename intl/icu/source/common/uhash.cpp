@@ -265,7 +265,7 @@ _uhash_init(UHashtable *result,
     result->valueComparator = valueComp;
     result->keyDeleter      = NULL;
     result->valueDeleter    = NULL;
-    result->allocated       = false;
+    result->allocated       = FALSE;
     _uhash_internalSetResizePolicy(result, U_GROW);
 
     _uhash_allocate(result, primeIndex, status);
@@ -294,7 +294,7 @@ _uhash_create(UHashFunction *keyHash,
     }
 
     _uhash_init(result, keyHash, keyComp, valueComp, primeIndex, status);
-    result->allocated       = true;
+    result->allocated       = TRUE;
 
     if (U_FAILURE(*status)) {
         uprv_free(result);
@@ -949,7 +949,7 @@ uhash_equals(const UHashtable* hash1, const UHashtable* hash2){
     int32_t count1, count2, pos, i;
 
     if(hash1==hash2){
-        return true;
+        return TRUE;
     }
 
     /*
@@ -967,15 +967,15 @@ uhash_equals(const UHashtable* hash1, const UHashtable* hash2){
     {
         /*
         Normally we would return an error here about incompatible hash tables,
-        but we return false instead.
+        but we return FALSE instead.
         */
-        return false;
+        return FALSE;
     }
 
     count1 = uhash_count(hash1);
     count2 = uhash_count(hash2);
     if(count1!=count2){
-        return false;
+        return FALSE;
     }
 
     pos=UHASH_FIRST;
@@ -989,11 +989,11 @@ uhash_equals(const UHashtable* hash1, const UHashtable* hash2){
          */
         const UHashElement* elem2 = _uhash_find(hash2, key1, hash2->keyHasher(key1));
         const UHashTok val2 = elem2->value;
-        if(hash1->valueComparator(val1, val2)==false){
-            return false;
+        if(hash1->valueComparator(val1, val2)==FALSE){
+            return FALSE;
         }
     }
-    return true;
+    return TRUE;
 }
 
 /********************************************************************
@@ -1005,10 +1005,10 @@ uhash_compareUChars(const UHashTok key1, const UHashTok key2) {
     const UChar *p1 = (const UChar*) key1.pointer;
     const UChar *p2 = (const UChar*) key2.pointer;
     if (p1 == p2) {
-        return true;
+        return TRUE;
     }
     if (p1 == NULL || p2 == NULL) {
-        return false;
+        return FALSE;
     }
     while (*p1 != 0 && *p1 == *p2) {
         ++p1;
@@ -1022,10 +1022,10 @@ uhash_compareChars(const UHashTok key1, const UHashTok key2) {
     const char *p1 = (const char*) key1.pointer;
     const char *p2 = (const char*) key2.pointer;
     if (p1 == p2) {
-        return true;
+        return TRUE;
     }
     if (p1 == NULL || p2 == NULL) {
-        return false;
+        return FALSE;
     }
     while (*p1 != 0 && *p1 == *p2) {
         ++p1;
@@ -1039,10 +1039,10 @@ uhash_compareIChars(const UHashTok key1, const UHashTok key2) {
     const char *p1 = (const char*) key1.pointer;
     const char *p2 = (const char*) key2.pointer;
     if (p1 == p2) {
-        return true;
+        return TRUE;
     }
     if (p1 == NULL || p2 == NULL) {
-        return false;
+        return FALSE;
     }
     while (*p1 != 0 && uprv_tolower(*p1) == uprv_tolower(*p2)) {
         ++p1;

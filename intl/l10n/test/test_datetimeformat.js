@@ -48,7 +48,7 @@ dt-style = Style formatting: { DATETIME($dateArg, dateStyle: "short", timeStyle:
   testMessage(
     "dt-bare",
     FIREFOX_RELEASE_TIMESTAMP,
-    /^The bare date is: Sep \d+, 2002, \d+:\d+:\d+\u202f(AM|PM)$/
+    /^The bare date is: Sep \d+, 2002, \d+:\d+:\d+ (AM|PM)$/
   );
   testMessage(
     "dt-month-year",
@@ -58,17 +58,17 @@ dt-style = Style formatting: { DATETIME($dateArg, dateStyle: "short", timeStyle:
   testMessage(
     "dt-bad",
     FIREFOX_RELEASE_TIMESTAMP,
-    /^This is a bad month: Sep \d+, 2002, \d+:\d+:\d+\u202f(AM|PM)$/
+    /^This is a bad month: Sep \d+, 2002, \d+:\d+:\d+ (AM|PM)$/
   );
   testMessage(
     "dt-unknown",
     FIREFOX_RELEASE_TIMESTAMP,
-    /^Unknown: Sep \d+, 2002, \d+:\d+:\d+\u202f(AM|PM)$/
+    /^Unknown: Sep \d+, 2002, \d+:\d+:\d+ (AM|PM)$/
   );
   testMessage(
     "dt-style",
     FIREFOX_RELEASE_TIMESTAMP,
-    /^Style formatting: \d+\/\d+\/\d+, \d+:\d+\u202f(AM|PM)$/
+    /^Style formatting: \d+\/\d+\/\d+, \d+:\d+ (AM|PM)$/
   );
 
 // TODO - Bug 1707728

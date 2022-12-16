@@ -133,12 +133,12 @@ void BuddhistCalendar::timeToFields(UDate theTime, UBool quick, UErrorCode& stat
  */
 static UDate     gSystemDefaultCenturyStart       = DBL_MIN;
 static int32_t   gSystemDefaultCenturyStartYear   = -1;
-static icu::UInitOnce gBCInitOnce {};
+static icu::UInitOnce gBCInitOnce = U_INITONCE_INITIALIZER;
 
 
 UBool BuddhistCalendar::haveDefaultCentury() const
 {
-    return true;
+    return TRUE;
 }
 
 static void U_CALLCONV

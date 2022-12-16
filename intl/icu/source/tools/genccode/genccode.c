@@ -48,7 +48,6 @@
 #   define ICU_ENTRY_OFFSET 0
 #endif
 
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "unicode/putil.h"
@@ -97,7 +96,7 @@ static UOption options[]={
 #define CALL_WRITEOBJECT    'o'
 extern int
 main(int argc, char* argv[]) {
-    UBool verbose = true;
+    UBool verbose = TRUE;
     char writeCode;
 
     U_MAIN_INIT_ARGS(argc, argv);
@@ -167,7 +166,7 @@ main(int argc, char* argv[]) {
             /* TODO: remove writeCode=&writeCCode; */
         }
         if (options[kOptQuiet].doesOccur) {
-            verbose = false;
+            verbose = FALSE;
         }
         while(--argc) {
             filename=getLongPathname(argv[argc]);
