@@ -134,9 +134,12 @@ FileSystemSyncAccessHandle::Create(
 
   workerPrivate->AssertIsOnWorkerThread();
 
-  RefPtr<StrongWorkerRef> workerRef =
-      StrongWorkerRef::Create(workerPrivate, "FileSystemSyncAccessHandle",
-                              [result]() { result->CloseInternal(); });
+  RefPtr<StrongWorkerRef> workerRef = StrongWorkerRef::Create(
+      workerPrivate, "FileSystemSyncAccessHandle", [result]() {
+        if (!result->IsClosed()) {
+          result->CloseInternal();
+        }
+      });
   QM_TRY(MOZ_TO_RESULT(workerRef));
 
   autoClose.release();
@@ -160,7 +163,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FileSystemSyncAccessHandle)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
   // Don't unlink mManager!
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-  tmp->CloseInternal();
+  if (!tmp->IsClosed()) {
+    tmp->CloseInternal();
+  }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(FileSystemSyncAccessHandle)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
@@ -189,9 +194,7 @@ void FileSystemSyncAccessHandle::ClearActor() {
 }
 
 void FileSystemSyncAccessHandle::CloseInternal() {
-  if (mClosed) {
-    return;
-  }
+  MOZ_ASSERT(!mClosed);
 
   LOG(("%p: Closing", mStream.get()));
 
@@ -284,7 +287,11 @@ void FileSystemSyncAccessHandle::Flush(ErrorResult& aError) {
   mStream->OutputStream()->Flush();
 }
 
-void FileSystemSyncAccessHandle::Close() { CloseInternal(); }
+void FileSystemSyncAccessHandle::Close() {
+  if (!IsClosed()) {
+    CloseInternal();
+  }
+}
 
 uint64_t FileSystemSyncAccessHandle::ReadOrWrite(
     const MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer,

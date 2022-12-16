@@ -43,6 +43,8 @@ class FileSystemSyncAccessHandle final : public nsISupports,
 
   void ClearActor();
 
+  bool IsClosed() const { return mClosed; }
+
   void CloseInternal();
 
   // WebIDL Boilerplate
