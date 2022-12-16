@@ -26,7 +26,6 @@
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
-#include "mozilla/ipc/RandomAccessStreamUtils.h"
 
 namespace mozilla::dom::fs {
 
@@ -124,16 +123,13 @@ RefPtr<FileSystemSyncAccessHandle> MakeResolution(
     RefPtr<FileSystemManager>& aManager) {
   auto& properties = aResponse.get_FileSystemAccessHandleProperties();
 
-  QM_TRY_UNWRAP(nsCOMPtr<nsIRandomAccessStream> stream,
-                DeserializeRandomAccessStream(properties.streamParams()),
-                nullptr);
-
   auto* const actor =
       static_cast<FileSystemAccessHandleChild*>(properties.accessHandleChild());
 
   QM_TRY_UNWRAP(RefPtr<FileSystemSyncAccessHandle> result,
                 FileSystemSyncAccessHandle::Create(
-                    aGlobal, aManager, actor, std::move(stream), aMetadata),
+                    aGlobal, aManager, actor,
+                    std::move(properties.streamParams()), aMetadata),
                 nullptr);
 
   return result;

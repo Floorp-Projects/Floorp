@@ -25,6 +25,7 @@
 #include "mozilla/dom/fs/TargetPtrHolder.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
+#include "mozilla/ipc/RandomAccessStreamUtils.h"
 #include "nsNetCID.h"
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
@@ -92,16 +93,16 @@ nsresult AsyncCopy(nsIInputStream* aSource, nsIOutputStream* aSink,
 FileSystemSyncAccessHandle::FileSystemSyncAccessHandle(
     nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
     RefPtr<FileSystemAccessHandleChild> aActor, RefPtr<TaskQueue> aIOTaskQueue,
-    nsCOMPtr<nsIRandomAccessStream> aStream,
+    mozilla::ipc::RandomAccessStreamParams&& aStreamParams,
     const fs::FileSystemEntryMetadata& aMetadata)
     : mGlobal(aGlobal),
       mManager(aManager),
       mActor(std::move(aActor)),
       mIOTaskQueue(std::move(aIOTaskQueue)),
-      mStream(std::move(aStream)),
+      mStreamParams(std::move(aStreamParams)),
       mMetadata(aMetadata),
       mState(State::Initial) {
-  LOG(("Created SyncAccessHandle %p for stream %p", this, mStream.get()));
+  LOG(("Created SyncAccessHandle %p", this));
 
   // Connect with the actor directly in the constructor. This way the actor
   // can call `FileSystemSyncAccessHandle::ClearActor` when we call
@@ -121,7 +122,7 @@ Result<RefPtr<FileSystemSyncAccessHandle>, nsresult>
 FileSystemSyncAccessHandle::Create(
     nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
     RefPtr<FileSystemAccessHandleChild> aActor,
-    nsCOMPtr<nsIRandomAccessStream> aStream,
+    mozilla::ipc::RandomAccessStreamParams&& aStreamParams,
     const fs::FileSystemEntryMetadata& aMetadata) {
   QM_TRY_UNWRAP(auto streamTransportService,
                 MOZ_TO_RESULT_GET_TYPED(nsCOMPtr<nsIEventTarget>,
@@ -134,7 +135,7 @@ FileSystemSyncAccessHandle::Create(
 
   RefPtr<FileSystemSyncAccessHandle> result = new FileSystemSyncAccessHandle(
       aGlobal, aManager, std::move(aActor), std::move(ioTaskQueue),
-      std::move(aStream), aMetadata);
+      std::move(aStreamParams), aMetadata);
 
   auto autoClose = MakeScopeExit([result] {
     MOZ_ASSERT(result->mState == State::Initial);
@@ -236,6 +237,9 @@ RefPtr<BoolPromise> FileSystemSyncAccessHandle::BeginClose() {
 
   InvokeAsync(mIOTaskQueue, __func__,
               [selfHolder = fs::TargetPtrHolder(this)]() {
+                QM_TRY(MOZ_TO_RESULT(selfHolder->EnsureStream()),
+                       CreateAndRejectBoolPromise);
+
                 LOG(("%p: Closing", selfHolder->mStream.get()));
 
                 selfHolder->mStream->OutputStream()->Close();
@@ -314,6 +318,9 @@ void FileSystemSyncAccessHandle::Truncate(uint64_t aSize, ErrorResult& aError) {
   InvokeAsync(
       mIOTaskQueue, __func__,
       [selfHolder = fs::TargetPtrHolder(this), aSize]() {
+        QM_TRY(MOZ_TO_RESULT(selfHolder->EnsureStream()),
+               CreateAndRejectBoolPromise);
+
         LOG(("%p: Truncate to %" PRIu64, selfHolder->mStream.get(), aSize));
 
         QM_TRY(MOZ_TO_RESULT(selfHolder->mStream->Seek(
@@ -365,6 +372,9 @@ uint64_t FileSystemSyncAccessHandle::GetSize(ErrorResult& aError) {
 
   InvokeAsync(mIOTaskQueue, __func__,
               [selfHolder = fs::TargetPtrHolder(this)]() {
+                QM_TRY(MOZ_TO_RESULT(selfHolder->EnsureStream()),
+                       CreateAndRejectSizePromise);
+
                 nsCOMPtr<nsIFileMetadata> fileMetadata =
                     do_QueryInterface(selfHolder->mStream);
                 MOZ_ASSERT(fileMetadata);
@@ -421,6 +431,9 @@ void FileSystemSyncAccessHandle::Flush(ErrorResult& aError) {
 
   InvokeAsync(mIOTaskQueue, __func__,
               [selfHolder = fs::TargetPtrHolder(this)]() {
+                QM_TRY(MOZ_TO_RESULT(selfHolder->EnsureStream()),
+                       CreateAndRejectBoolPromise);
+
                 LOG(("%p: Flush", selfHolder->mStream.get()));
 
                 QM_TRY(
@@ -535,6 +548,9 @@ uint64_t FileSystemSyncAccessHandle::ReadOrWrite(
       mIOTaskQueue, __func__,
       [selfHolder = fs::TargetPtrHolder(this), dataSpan, offset, aRead,
        &totalCount]() {
+        QM_TRY(MOZ_TO_RESULT(selfHolder->EnsureStream()),
+               CreateAndRejectBoolPromise);
+
         LOG_VERBOSE(("%p: Seeking to %" PRIu64, selfHolder->mStream.get(),
                      offset.value()));
 
@@ -594,6 +610,18 @@ uint64_t FileSystemSyncAccessHandle::ReadOrWrite(
   MOZ_ALWAYS_SUCCEEDS(syncLoop.Run());
 
   return totalCount;
+}
+
+nsresult FileSystemSyncAccessHandle::EnsureStream() {
+  if (!mStream) {
+    QM_TRY_UNWRAP(mStream, DeserializeRandomAccessStream(mStreamParams),
+                  NS_ERROR_FAILURE);
+
+    mozilla::ipc::RandomAccessStreamParams streamParams(
+        std::move(mStreamParams));
+  }
+
+  return NS_OK;
 }
 
 }  // namespace mozilla::dom
