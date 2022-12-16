@@ -56,6 +56,9 @@ class GeckoViewContent extends GeckoViewModule {
     this.window.addEventListener("pagetitlechanged", this);
     this.window.addEventListener("pageinfo", this);
 
+    this.window.addEventListener("cookiebannerdetected", this);
+    this.window.addEventListener("cookiebannerhandled", this);
+
     Services.obs.addObserver(this, "oop-frameloader-crashed");
     Services.obs.addObserver(this, "ipc:content-shutdown");
   }
@@ -80,6 +83,9 @@ class GeckoViewContent extends GeckoViewModule {
     this.window.removeEventListener("DOMWindowClose", this);
     this.window.removeEventListener("pagetitlechanged", this);
     this.window.removeEventListener("pageinfo", this);
+
+    this.window.removeEventListener("cookiebannerdetected", this);
+    this.window.removeEventListener("cookiebannerhandled", this);
 
     Services.obs.removeObserver(this, "oop-frameloader-crashed");
     Services.obs.removeObserver(this, "ipc:content-shutdown");
@@ -226,6 +232,16 @@ class GeckoViewContent extends GeckoViewModule {
             previewImageUrl: aEvent.detail.previewImageURL,
           });
         }
+        break;
+      case "cookiebannerdetected":
+        this.eventDispatcher.sendRequest({
+          type: "GeckoView:CookieBannerEvent:Detected",
+        });
+        break;
+      case "cookiebannerhandled":
+        this.eventDispatcher.sendRequest({
+          type: "GeckoView:CookieBannerEvent:Handled",
+        });
         break;
     }
   }
