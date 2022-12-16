@@ -158,6 +158,10 @@ notes = "This is a first-party crate which is entirely unrelated to the crates.i
 audit-as-crates-io = false
 notes = "This is a first-party crate, maintained by the appservices team, which is entirely unrelated to the crates.io package of the same name."
 
+[policy.uniffi_bindgen]
+audit-as-crates-io = false
+notes = "This is a first-party crate, normally vendored, but currently patched in-tree until next update."
+
 [policy.viaduct]
 audit-as-crates-io = false
 notes = "This is a first-party crate, maintained by the appservices team, which is entirely unrelated to the crates.io package of the same name."
