@@ -131,6 +131,26 @@ class CookieBannerChild extends JSWindowActorChild {
   }
 
   /**
+   * Checks whether we handled a banner for this site by injecting cookies and
+   * dispatches events.
+   * @returns {boolean} Whether we handled the banner and dispatched events.
+   */
+  #dispatchEventsForBannerHandledByInjection() {
+    if (
+      !this.docShell?.currentDocumentChannel?.loadInfo
+        ?.hasInjectedCookieForCookieBannerHandling
+    ) {
+      return false;
+    }
+    // Strictly speaking we don't actively detect a banner when we handle it by
+    // cookie injection. We still dispatch "cookiebannerdetected" in this case
+    // for consistency.
+    this.sendAsyncMessage("CookieBanner::DetectedBanner");
+    this.sendAsyncMessage("CookieBanner::HandledBanner");
+    return true;
+  }
+
+  /**
    * Handler for DOMContentLoaded events which is the entry point for cookie
    * banner handling.
    */
@@ -168,6 +188,10 @@ class CookieBannerChild extends JSWindowActorChild {
     lazy.logConsole.debug("Got rules:", rules);
     // We can stop here if we don't have a rule.
     if (!rules.length) {
+      // If the cookie injector has handled the banner and there are no click
+      // rules we still need to dispatch a "cookiebannerhandled" event.
+      this.#dispatchEventsForBannerHandledByInjection();
+
       this.#maybeSendTestMessage();
       return;
     }
@@ -186,13 +210,20 @@ class CookieBannerChild extends JSWindowActorChild {
       matchedRule,
     } = await this.handleCookieBanner();
 
+    let dispatchedEventsForCookieInjection = this.#dispatchEventsForBannerHandledByInjection();
+
+    // 1. Detected event.
     if (bannerDetected) {
       lazy.logConsole.info("Detected cookie banner.", {
         url: this.document?.location.href,
       });
-      this.sendAsyncMessage("CookieBanner::DetectedBanner");
+      // Avoid dispatching a duplicate "cookiebannerdetected" event.
+      if (!dispatchedEventsForCookieInjection) {
+        this.sendAsyncMessage("CookieBanner::DetectedBanner");
+      }
     }
 
+    // 2. Handled event.
     if (bannerHandled) {
       lazy.logConsole.info("Handled cookie banner.", {
         url: this.document?.location.href,
@@ -208,7 +239,10 @@ class CookieBannerChild extends JSWindowActorChild {
         this.#gleanBannerHandlingTimer
       );
 
-      this.sendAsyncMessage("CookieBanner::HandledBanner");
+      // Avoid dispatching a duplicate "cookiebannerhandled" event.
+      if (!dispatchedEventsForCookieInjection) {
+        this.sendAsyncMessage("CookieBanner::HandledBanner");
+      }
     } else if (!this.#isDetectOnly) {
       // Cancel the timer we didn't handle the banner.
       Glean.cookieBannersClick.handleDuration.cancel(

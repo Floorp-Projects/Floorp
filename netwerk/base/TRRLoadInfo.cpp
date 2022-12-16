@@ -779,5 +779,17 @@ TRRLoadInfo::SetUnstrippedURI(nsIURI* aURI) { return NS_ERROR_NOT_IMPLEMENTED; }
 nsIInterceptionInfo* TRRLoadInfo::InterceptionInfo() { return nullptr; }
 void TRRLoadInfo::SetInterceptionInfo(nsIInterceptionInfo* aPrincipla) {}
 
+NS_IMETHODIMP
+TRRLoadInfo::GetHasInjectedCookieForCookieBannerHandling(
+    bool* aHasInjectedCookieForCookieBannerHandling) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TRRLoadInfo::SetHasInjectedCookieForCookieBannerHandling(
+    bool aHasInjectedCookieForCookieBannerHandling) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 }  // namespace net
 }  // namespace mozilla

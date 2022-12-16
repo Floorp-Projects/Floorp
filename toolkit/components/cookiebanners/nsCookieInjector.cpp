@@ -235,13 +235,24 @@ nsresult nsCookieInjector::MaybeInjectCookies(nsIHttpChannel* aChannel,
   // bucket, for example Private Browsing Mode.
   OriginAttributes attr = loadInfo->GetOriginAttributes();
 
-  return InjectCookiesFromRules(hostPort, rules, attr);
+  bool hasInjectedCookie = false;
+
+  rv = InjectCookiesFromRules(hostPort, rules, attr, hasInjectedCookie);
+
+  if (hasInjectedCookie) {
+    MOZ_LOG(gCookieInjectorLog, LogLevel::Debug,
+            ("Setting HasInjectedCookieForCookieBannerHandling on loadInfo"));
+    loadInfo->SetHasInjectedCookieForCookieBannerHandling(true);
+  }
+
+  return rv;
 }
 
 nsresult nsCookieInjector::InjectCookiesFromRules(
     const nsCString& aHostPort, const nsTArray<RefPtr<nsICookieRule>>& aRules,
-    OriginAttributes& aOriginAttributes) {
+    OriginAttributes& aOriginAttributes, bool& aHasInjectedCookie) {
   NS_ENSURE_TRUE(aRules.Length(), NS_ERROR_FAILURE);
+  aHasInjectedCookie = false;
 
   MOZ_LOG(gCookieInjectorLog, LogLevel::Info,
           ("Injecting cookies for %s.", aHostPort.get()));
@@ -316,6 +327,8 @@ nsresult nsCookieInjector::InjectCookiesFromRules(
         c.IsSession(), c.Expiry(), &aOriginAttributes, c.SameSite(),
         static_cast<nsICookie::schemeType>(c.SchemeMap()));
     NS_ENSURE_SUCCESS(rv, rv);
+
+    aHasInjectedCookie = true;
   }
 
   return NS_OK;

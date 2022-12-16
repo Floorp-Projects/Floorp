@@ -128,6 +128,7 @@ struct LoadInfoArgs
   OriginAttributes            originAttributes;
   RedirectHistoryEntryInfo[]  redirectChainIncludingInternalRedirects;
   RedirectHistoryEntryInfo[]  redirectChain;
+  bool                        hasInjectedCookieForCookieBannerHandling;
 
   /**
    * ClientInfo structure representing the window or worker that triggered
