@@ -29,11 +29,11 @@ class Promise;
 class FileSystemSyncAccessHandle final : public nsISupports,
                                          public nsWrapperCache {
  public:
-  FileSystemSyncAccessHandle(nsIGlobalObject* aGlobal,
-                             RefPtr<FileSystemManager>& aManager,
-                             RefPtr<FileSystemAccessHandleChild> aActor,
-                             nsCOMPtr<nsIRandomAccessStream> aStream,
-                             const fs::FileSystemEntryMetadata& aMetadata);
+  static Result<RefPtr<FileSystemSyncAccessHandle>, nsresult> Create(
+      nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
+      RefPtr<FileSystemAccessHandleChild> aActor,
+      nsCOMPtr<nsIRandomAccessStream> aStream,
+      const fs::FileSystemEntryMetadata& aMetadata);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(FileSystemSyncAccessHandle)
@@ -66,6 +66,12 @@ class FileSystemSyncAccessHandle final : public nsISupports,
   void Close();
 
  private:
+  FileSystemSyncAccessHandle(nsIGlobalObject* aGlobal,
+                             RefPtr<FileSystemManager>& aManager,
+                             RefPtr<FileSystemAccessHandleChild> aActor,
+                             nsCOMPtr<nsIRandomAccessStream> aStream,
+                             const fs::FileSystemEntryMetadata& aMetadata);
+
   virtual ~FileSystemSyncAccessHandle();
 
   uint64_t ReadOrWrite(

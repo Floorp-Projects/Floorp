@@ -131,10 +131,10 @@ RefPtr<FileSystemSyncAccessHandle> MakeResolution(
   auto* const actor =
       static_cast<FileSystemAccessHandleChild*>(properties.accessHandleChild());
 
-  RefPtr<FileSystemSyncAccessHandle> result = new FileSystemSyncAccessHandle(
-      aGlobal, aManager, actor, std::move(stream), aMetadata);
-
-  actor->SetAccessHandle(result);
+  QM_TRY_UNWRAP(RefPtr<FileSystemSyncAccessHandle> result,
+                FileSystemSyncAccessHandle::Create(
+                    aGlobal, aManager, actor, std::move(stream), aMetadata),
+                nullptr);
 
   return result;
 }
@@ -154,10 +154,6 @@ RefPtr<FileSystemWritableFileStream> MakeResolution(
   RefPtr<FileSystemWritableFileStream> result =
       FileSystemWritableFileStream::Create(
           aGlobal, aManager, actor, properties.fileDescriptor(), aMetadata);
-
-  if (result) {
-    actor->SetStream(result);
-  }
 
   return result;
 }
