@@ -252,4 +252,11 @@ void PathSkia::StreamToSink(PathSink* aSink) const {
   }
 }
 
+Maybe<Rect> PathSkia::AsRect() const {
+  SkRect rect;
+  if (mPath.isRect(&rect)) {
+    return Some(SkRectToRect(rect));
+  }
+  return Nothing();
+}
 }  // namespace mozilla::gfx
