@@ -12,6 +12,8 @@
 #include <unistd.h>
 
 #include <cstdio>
+#include <fstream>
+#include <string>
 
 #include <linux/perf_event.h>
 
@@ -64,6 +66,45 @@ constexpr RaplDomain kSupportedRaplDomains[] = {
         "Consumption of the builtin-psys domain",
     }};
 
+static double GetRaplPerfEventScale(RaplEventType aEventType) {
+  std::string sysfsFileName =
+      "/sys/bus/event_source/devices/power/events/energy-";
+
+  switch (aEventType) {
+    case RaplEventType::RAPL_ENERGY_CORES:
+      sysfsFileName += "cores";
+      break;
+    case RaplEventType::RAPL_ENERGY_PKG:
+      sysfsFileName += "pkg";
+      break;
+    case RaplEventType::RAPL_ENERGY_DRAM:
+      sysfsFileName += "ram";
+      break;
+    case RaplEventType::RAPL_ENERGY_GPU:
+      sysfsFileName += "gpu";
+      break;
+    case RaplEventType::RAPL_ENERGY_PSYS:
+      sysfsFileName += "psys";
+      break;
+  }
+
+  sysfsFileName += ".scale";
+
+  std::ifstream sysfsFile(sysfsFileName);
+
+  if (!sysfsFile) {
+    return PERF_EVENT_SCALE_NANOJOULES;
+  }
+
+  double scale;
+
+  if (sysfsFile >> scale) {
+    return scale;
+  }
+
+  return PERF_EVENT_SCALE_NANOJOULES;
+}
+
 class RaplProfilerCount final : public BaseProfilerCount {
  public:
   explicit RaplProfilerCount(int aPerfEventType,
@@ -84,6 +125,9 @@ class RaplProfilerCount final : public BaseProfilerCount {
     attr.sample_period = 0;
     attr.sample_type = PERF_SAMPLE_IDENTIFIER;
     attr.inherit = 1;
+
+    mEventScale = GetRaplPerfEventScale(aPerfEventConfig);
+    RAPL_LOG("Scale for event %s: %e", mLabel, mEventScale);
 
     long fd = syscall(__NR_perf_event_open, &attr, -1, 0, -1, 0);
     if (fd < 0) {
@@ -123,8 +167,8 @@ class RaplProfilerCount final : public BaseProfilerCount {
     //
     //  - Convert the returned value to nanojoules
     //  - Convert nanojoules to picowatthour
-    double nanojoules = static_cast<double>(raplEventResult.value()) *
-                        PERF_EVENT_SCALE_NANOJOULES;
+    double nanojoules =
+        static_cast<double>(raplEventResult.value()) * mEventScale;
     double picowatthours = nanojoules / SCALE_NANOJOULES_TO_PICOWATTHOUR;
     RAPL_LOG("Sample %s { count: %lu, last-result: %lu } = %lfJ", mLabel,
              raplEventResult.value(), mLastResult, nanojoules * 1e-9);
@@ -159,6 +203,7 @@ class RaplProfilerCount final : public BaseProfilerCount {
 
   uint64_t mLastResult;
   int mPerfEventFd;
+  double mEventScale;
 };
 
 static int GetRaplPerfEventType() {
