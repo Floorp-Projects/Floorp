@@ -34,12 +34,10 @@
 #include "mozilla/BaseProfilerMarkerTypes.h"
 #include "GeckoProfiler.h"
 
-namespace mozilla {
-
-namespace layers {
+namespace mozilla::layers {
 
 // defined in CompositorBridgeParent.cpp
-typedef std::map<LayersId, CompositorBridgeParent::LayerTreeState> LayerTreeMap;
+using LayerTreeMap = std::map<LayersId, CompositorBridgeParent::LayerTreeState>;
 extern LayerTreeMap sIndirectLayerTrees;
 extern StaticAutoPtr<mozilla::Monitor> sIndirectLayerTreesLock;
 void EraseLayerState(LayersId aId);
@@ -206,12 +204,10 @@ bool ContentCompositorBridgeParent::DeallocPWebRenderBridgeParent(
 mozilla::ipc::IPCResult ContentCompositorBridgeParent::RecvNotifyChildCreated(
     const LayersId& child, CompositorOptions* aOptions) {
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
-  for (LayerTreeMap::iterator it = sIndirectLayerTrees.begin();
-       it != sIndirectLayerTrees.end(); it++) {
-    CompositorBridgeParent::LayerTreeState* lts = &it->second;
-    if (lts->mParent && lts->mContentCompositorBridgeParent == this) {
-      lts->mParent->NotifyChildCreated(child);
-      *aOptions = lts->mParent->GetOptions();
+  for (auto& [id, lts] : sIndirectLayerTrees) {
+    if (lts.mParent && lts.mContentCompositorBridgeParent == this) {
+      lts.mParent->NotifyChildCreated(child);
+      *aOptions = lts.mParent->GetOptions();
       return IPC_OK();
     }
   }
@@ -454,5 +450,4 @@ void ContentCompositorBridgeParent::ObserveLayersUpdate(
   Unused << state->mParent->SendObserveLayersUpdate(aLayersId, aEpoch, aActive);
 }
 
-}  // namespace layers
-}  // namespace mozilla
+}  // namespace mozilla::layers
