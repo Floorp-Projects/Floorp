@@ -42,6 +42,7 @@ abstract class ToolbarIntegration(
         toolbar,
         store,
         sessionId,
+        context.settings().showUnifiedSearchFeature,
         ToolbarFeature.UrlRenderConfiguration(
             context.components.publicSuffixList,
             ThemeManager.resolveAttribute(R.attr.textPrimary, context),
