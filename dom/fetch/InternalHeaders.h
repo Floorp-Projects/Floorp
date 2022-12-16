@@ -117,7 +117,7 @@ class InternalHeaders final {
 
   static already_AddRefed<InternalHeaders> CORSHeaders(
       InternalHeaders* aHeaders,
-      RequestCredentials mCredentialsMode = RequestCredentials::Omit);
+      RequestCredentials aCredentialsMode = RequestCredentials::Omit);
 
   void GetEntries(nsTArray<InternalHeaders::Entry>& aEntries) const;
 
