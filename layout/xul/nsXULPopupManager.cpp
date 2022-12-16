@@ -547,7 +547,7 @@ void nsXULPopupManager::AdjustPopupsOnWindowChange(
   }
 
   for (int32_t l = list.Length() - 1; l >= 0; l--) {
-    list[l]->SetPopupPosition(true);
+    list[l]->SetPopupPosition(nullptr, true, false);
   }
 }
 
@@ -600,7 +600,7 @@ void nsXULPopupManager::PopupMoved(nsIFrame* aFrame, nsIntPoint aPnt,
   // the specified screen coordinates.
   if (menuPopupFrame->IsAnchored() &&
       menuPopupFrame->PopupLevel() == ePopupLevelParent) {
-    menuPopupFrame->SetPopupPosition(true);
+    menuPopupFrame->SetPopupPosition(nullptr, true, false);
   } else {
     CSSPoint cssPos = LayoutDeviceIntPoint::FromUnknownPoint(aPnt) /
                       menuPopupFrame->PresContext()->CSSToDevPixelScale();
@@ -676,11 +676,11 @@ nsMenuChainItem* nsXULPopupManager::GetTopVisibleMenu() {
 
 void nsXULPopupManager::SetActiveMenuBar(nsMenuBarFrame* aMenuBar,
                                          bool aActivate) {
-  if (aActivate) {
+  if (aActivate)
     mActiveMenuBar = aMenuBar;
-  } else if (mActiveMenuBar == aMenuBar) {
+  else if (mActiveMenuBar == aMenuBar)
     mActiveMenuBar = nullptr;
-  }
+
   UpdateKeyboardListeners();
 }
 
@@ -903,7 +903,7 @@ void nsXULPopupManager::OnNativeMenuClosed() {
   RefPtr<nsXULPopupManager> kungFuDeathGrip(this);
 
   bool shouldHideChain =
-      mNativeMenuActivatedItemCloseMenuMode == Some(CloseMenuMode_Auto);
+      (mNativeMenuActivatedItemCloseMenuMode == Some(CloseMenuMode_Auto));
 
   nsCOMPtr<nsIContent> popup = mNativeMenu->Element();
   nsMenuPopupFrame* popupFrame = GetPopupFrameForContent(popup, true);

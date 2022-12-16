@@ -86,6 +86,8 @@ class nsMenuFrame final : public nsBoxFrame, public nsIReflowCallback {
   NS_DECL_FRAMEARENA_HELPERS(nsMenuFrame)
 
   NS_IMETHOD DoXULLayout(nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nsSize GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nsSize GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState) override;
 
   virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
                     nsIFrame* aPrevInFlow) override;
@@ -194,6 +196,8 @@ class nsMenuFrame final : public nsBoxFrame, public nsIReflowCallback {
   }
 #endif
 
+  static bool IsSizedToPopup(nsIContent* aContent, bool aRequireAlways);
+
   // nsIReflowCallback
   virtual bool ReflowFinished() override;
   virtual void ReflowCallbackCanceled() override;
@@ -231,9 +235,11 @@ class nsMenuFrame final : public nsBoxFrame, public nsIReflowCallback {
   void Execute(mozilla::WidgetGUIEvent* aEvent);
 
   // This method can destroy the frame
-  nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
-                            int32_t aModType) override;
+  virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                                    int32_t aModType) override;
   virtual ~nsMenuFrame() = default;
+
+  bool SizeToPopup(nsBoxLayoutState& aState, nsSize& aSize);
 
   bool ShouldBlink();
   void StartBlinking();

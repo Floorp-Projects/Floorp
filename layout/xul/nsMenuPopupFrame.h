@@ -200,9 +200,6 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   // Whether we should create a widget on Init().
   bool ShouldCreateWidgetUpfront() const;
 
-  // Whether we should expand the menu to take the size of the parent menulist.
-  bool ShouldExpandToInflowParentOrAnchor() const;
-
   // Returns true if the popup is a panel with the noautohide attribute set to
   // true. These panels do not roll up automatically.
   bool IsNoAutoHide() const;
@@ -221,13 +218,16 @@ class nsMenuPopupFrame final : public nsBoxFrame,
 
   // layout, position and display the popup as needed
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void LayoutPopup(nsBoxLayoutState& aState);
+  void LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu,
+                   bool aSizedToPopup);
 
-  // Set the position of the popup relative to the anchor content, anchored at a
+  // Set the position of the popup either relative to the anchor aAnchorFrame
+  // (or the frame for mAnchorContent if aAnchorFrame is null), anchored at a
   // rectangle, or at a specific point if a screen position is set. The popup
   // will be adjusted so that it is on screen. If aIsMove is true, then the
   // popup is being moved, and should not be flipped.
-  nsresult SetPopupPosition(bool aIsMove);
+  nsresult SetPopupPosition(nsIFrame* aAnchorFrame, bool aIsMove,
+                            bool aSizedToPopup);
 
   // called when the Enter key is pressed while the popup is open. This will
   // just pass the call down to the current menu, if any. If a current menu
@@ -254,7 +254,7 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   bool IsMouseTransparent() const;
 
   // Return true if the popup is for a menulist.
-  bool IsMenuList() const;
+  bool IsMenuList();
 
   bool IsDragSource() const { return mIsDragSource; }
   void SetIsDragSource(bool aIsDragSource) { mIsDragSource = aIsDragSource; }
@@ -571,6 +571,10 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   // we stop updating the anchor so that we can end up with a stable position.
   bool mPositionedByMoveToRect = false;
 
+  // Store SizedToPopup attribute for MoveTo call to avoid
+  // unwanted popup resize there.
+  bool mSizedToPopup = false;
+
   // If the panel prefers to "slide" rather than resize, then the arrow gets
   // positioned at this offset (along either the x or y axis, depending on
   // mPosition)
@@ -592,17 +596,21 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   FlipType mFlip;  // Whether to flip
 
   struct ReflowCallbackData {
-    ReflowCallbackData() = default;
-    void MarkPosted(bool aIsOpenChanged) {
+    ReflowCallbackData()
+        : mPosted(false), mAnchor(nullptr), mIsOpenChanged(false) {}
+    void MarkPosted(nsIFrame* aAnchor, bool aIsOpenChanged) {
       mPosted = true;
+      mAnchor = aAnchor;
       mIsOpenChanged = aIsOpenChanged;
     }
     void Clear() {
       mPosted = false;
+      mAnchor = nullptr;
       mIsOpenChanged = false;
     }
-    bool mPosted = false;
-    bool mIsOpenChanged = false;
+    bool mPosted;
+    nsIFrame* mAnchor;
+    bool mIsOpenChanged;
   };
   ReflowCallbackData mReflowCallbackData;
 
