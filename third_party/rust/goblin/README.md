@@ -26,7 +26,7 @@ Add to your `Cargo.toml`
 
 ```toml
 [dependencies]
-goblin = "0.6"
+goblin = "0.5"
 ```
 
 ### Features
@@ -110,7 +110,6 @@ In lexicographic order:
 - [@2vg]
 - [@alessandrod]
 - [@amanieu]
-- [@anfedotoff]
 - [@apalm]
 - [@burjui]
 - [@connorkuehl]
@@ -135,7 +134,6 @@ In lexicographic order:
 - [@Lichtso]
 - [@lion128]
 - [@llogiq]
-- [@lumag]
 - [@lzutao]
 - [@lzybkr]
 - [@m4b]
@@ -145,8 +143,6 @@ In lexicographic order:
 - [@mre]
 - [@Mrmaxmeier]
 - [n01e0]
-- [nathaniel-daniel]
-- [@nick96]
 - [@nico-abram]
 - [@npmccallum]
 - [@pchickey]
@@ -159,7 +155,6 @@ In lexicographic order:
 - [@skdltmxn]
 - [@sollyucko]
 - [@Swatinem]
-- [@SweetVishnya]
 - [@SquareMan]
 - [@tathanhdinh]
 - [@Techno-coder]
@@ -179,7 +174,6 @@ In lexicographic order:
 [@2vg]: https://github.com/2vg
 [@alessandrod]: https://github.com/alessandrod
 [@amanieu]: https://github.com/amanieu
-[@anfedotoff]: https://github.com/anfedotoff
 [@apalm]: https://github.com/apalm
 [@burjui]: https://github.com/burjui
 [@connorkuehl]: https://github.com/connorkuehl
@@ -204,7 +198,6 @@ In lexicographic order:
 [@Lichtso]: https://github.com/Lichtso
 [@lion128]: https://github.com/lion128
 [@llogiq]: https://github.com/llogiq
-[@lumag]: https://github.com/lumag
 [@lzutao]: https://github.com/lzutao
 [@lzybkr]: https://github.com/lzybkr
 [@m4b]: https://github.com/m4b
@@ -214,8 +207,6 @@ In lexicographic order:
 [@mre]: https://github.com/mre
 [@Mrmaxmeier]: https://github.com/Mrmaxmeier
 [n01e0]: https://github.com/n01e0
-[nathaniel-daniel]: https://github.com/nathaniel-daniel
-[@nick96]: https://github.com/nick96
 [@nico-abram]: https://github.com/nico-abram
 [@npmccallum]: https://github.com/npmccallum
 [@pchickey]: https://github.com/pchickey
@@ -228,7 +219,6 @@ In lexicographic order:
 [@skdltmxn]: https://github.com/skdltmxn
 [@sollyucko]: https://github.com/sollyucko
 [@Swatinem]: https://github.com/Swatinem
-[@SweetVishnya]: https://github.com/SweetVishnya
 [@SquareMan]: https://github.com/SquareMan
 [@tathanhdinh]: https://github.com/tathanhdinh
 [@Techno-coder]: https://github.com/Techno-coder
