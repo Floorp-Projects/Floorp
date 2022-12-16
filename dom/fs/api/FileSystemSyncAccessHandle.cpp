@@ -11,6 +11,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/FixedBufferOutputStream.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/TaskQueue.h"
 #include "mozilla/dom/FileSystemAccessHandleChild.h"
 #include "mozilla/dom/FileSystemHandleBinding.h"
 #include "mozilla/dom/FileSystemLog.h"
@@ -89,12 +90,13 @@ nsresult AsyncCopy(nsIInputStream* aSource, nsIOutputStream* aSink,
 
 FileSystemSyncAccessHandle::FileSystemSyncAccessHandle(
     nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
-    RefPtr<FileSystemAccessHandleChild> aActor,
+    RefPtr<FileSystemAccessHandleChild> aActor, RefPtr<TaskQueue> aIOTaskQueue,
     nsCOMPtr<nsIRandomAccessStream> aStream,
     const fs::FileSystemEntryMetadata& aMetadata)
     : mGlobal(aGlobal),
       mManager(aManager),
       mActor(std::move(aActor)),
+      mIOTaskQueue(std::move(aIOTaskQueue)),
       mStream(std::move(aStream)),
       mMetadata(aMetadata),
       mState(State::Initial) {
@@ -120,8 +122,18 @@ FileSystemSyncAccessHandle::Create(
     RefPtr<FileSystemAccessHandleChild> aActor,
     nsCOMPtr<nsIRandomAccessStream> aStream,
     const fs::FileSystemEntryMetadata& aMetadata) {
+  QM_TRY_UNWRAP(auto streamTransportService,
+                MOZ_TO_RESULT_GET_TYPED(nsCOMPtr<nsIEventTarget>,
+                                        MOZ_SELECT_OVERLOAD(do_GetService),
+                                        NS_STREAMTRANSPORTSERVICE_CONTRACTID));
+
+  RefPtr<TaskQueue> ioTaskQueue = TaskQueue::Create(
+      streamTransportService.forget(), "FileSystemSyncAccessHandle");
+  QM_TRY(MOZ_TO_RESULT(ioTaskQueue));
+
   RefPtr<FileSystemSyncAccessHandle> result = new FileSystemSyncAccessHandle(
-      aGlobal, aManager, std::move(aActor), std::move(aStream), aMetadata);
+      aGlobal, aManager, std::move(aActor), std::move(ioTaskQueue),
+      std::move(aStream), aMetadata);
 
   auto autoClose = MakeScopeExit([result] {
     MOZ_ASSERT(result->mState == State::Initial);
