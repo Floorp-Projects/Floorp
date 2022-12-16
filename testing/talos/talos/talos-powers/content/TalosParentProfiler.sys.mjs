@@ -145,8 +145,8 @@ export const TalosParentProfiler = {
    */
   finishTest() {
     if (this.initted) {
-      let profileFile = this.profileDir + "/" + this.currentTest + ".profile";
-      return this.TalosPowers.profilerFinish(profileFile);
+      let profileFile = `${this.currentTest}.profile`;
+      return this.TalosPowers.profilerFinish(this.profileDir, profileFile);
     }
     let msg =
       "You should not call finishTest without having first " +
@@ -166,8 +166,8 @@ export const TalosParentProfiler = {
    */
   finishStartupProfiling() {
     if (this.initted) {
-      let profileFile = this.profileDir + "/startup.profile";
-      return this.TalosPowers.profilerFinish(profileFile);
+      let profileFile = "startup.profile";
+      return this.TalosPowers.profilerFinish(this.profileDir, profileFile);
     }
     return Promise.resolve();
   },
