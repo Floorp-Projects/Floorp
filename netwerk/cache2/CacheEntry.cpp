@@ -24,6 +24,7 @@
 #include "nsISeekableStream.h"
 #include "nsISizeOf.h"
 #include "nsIURI.h"
+#include "nsNetCID.h"
 #include "nsProxyRelease.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
@@ -1887,7 +1888,10 @@ void CacheOutputCloseListener::OnOutputClosed() {
   // We need this class and to redispatch since this callback is invoked
   // under the file's lock and to do the job we need to enter the entry's
   // lock too.  That would lead to potential deadlocks.
-  NS_DispatchToCurrentThread(this);
+  nsCOMPtr<nsIEventTarget> sts =
+      do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+  MOZ_DIAGNOSTIC_ASSERT(sts);
+  MOZ_ALWAYS_SUCCEEDS(sts->Dispatch(do_AddRef(this)));
 }
 
 NS_IMETHODIMP CacheOutputCloseListener::Run() {
