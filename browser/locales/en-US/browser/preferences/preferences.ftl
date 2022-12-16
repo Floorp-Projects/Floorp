@@ -980,6 +980,9 @@ forms-breach-alerts =
     .label = Show alerts about passwords for breached websites
     .accesskey = b
 forms-breach-alerts-learn-more-link = Learn more
+relay-integration =
+    .label = Enable { -relay-brand-name } in your { -brand-short-name } password manager
+relay-integration-learn-more-link = Learn more
 
 # Checkbox which controls filling saved logins into fields automatically when they appear, in some cases without user interaction.
 forms-fill-logins-and-passwords =
