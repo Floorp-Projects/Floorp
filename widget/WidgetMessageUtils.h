@@ -8,6 +8,7 @@
 #include "ipc/EnumSerializer.h"
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/DimensionRequest.h"
+#include "mozilla/GfxMessageUtils.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/widget/ThemeChangeKind.h"
 #include "nsIWidget.h"
