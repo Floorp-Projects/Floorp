@@ -496,24 +496,6 @@ uint64_t FileSystemSyncAccessHandle::ReadOrWrite(
     return 0;
   };
 
-  // Handle seek before read ('at')
-  const auto at = [&aOptions]() -> uint64_t {
-    if (aOptions.mAt.WasPassed()) {
-      return aOptions.mAt.Value();
-    }
-    // Spec says default for at is 0 (2.6)
-    return 0;
-  }();
-
-  const auto offset = CheckedInt<int64_t>(at);
-  QM_TRY(MOZ_TO_RESULT(offset.isValid()), throwAndReturn);
-
-  LOG_VERBOSE(("%p: Seeking to %" PRIu64, mStream.get(), offset.value()));
-
-  QM_TRY(MOZ_TO_RESULT(
-             mStream->Seek(nsISeekableStream::NS_SEEK_SET, offset.value())),
-         throwAndReturn);
-
   const auto dataSpan = [&aBuffer]() {
     if (aBuffer.IsArrayBuffer()) {
       const ArrayBuffer& buffer = aBuffer.GetAsArrayBuffer();
@@ -526,25 +508,17 @@ uint64_t FileSystemSyncAccessHandle::ReadOrWrite(
     return Span{buffer.Data(), buffer.Length()};
   }();
 
-  nsCOMPtr<nsIInputStream> inputStream;
-  nsCOMPtr<nsIOutputStream> outputStream;
+  // Handle seek before read ('at')
+  const auto at = [&aOptions]() -> uint64_t {
+    if (aOptions.mAt.WasPassed()) {
+      return aOptions.mAt.Value();
+    }
+    // Spec says default for at is 0 (2.6)
+    return 0;
+  }();
 
-  if (aRead) {
-    LOG_VERBOSE(("%p: Reading %zu bytes", mStream.get(), dataSpan.Length()));
-
-    inputStream = mStream->InputStream();
-
-    outputStream = FixedBufferOutputStream::Create(AsWritableChars(dataSpan));
-  } else {
-    LOG_VERBOSE(("%p: Writing %zu bytes", mStream.get(), dataSpan.Length()));
-
-    QM_TRY(MOZ_TO_RESULT(NS_NewByteInputStream(getter_AddRefs(inputStream),
-                                               AsChars(dataSpan),
-                                               NS_ASSIGNMENT_DEPEND)),
-           throwAndReturn);
-
-    outputStream = mStream->OutputStream();
-  }
+  const auto offset = CheckedInt<int64_t>(at);
+  QM_TRY(MOZ_TO_RESULT(offset.isValid()), throwAndReturn);
 
   AutoSyncLoopHolder syncLoop(mWorkerRef->Private(), Canceling);
 
@@ -557,24 +531,65 @@ uint64_t FileSystemSyncAccessHandle::ReadOrWrite(
 
   uint64_t totalCount = 0;
 
-  QM_TRY(MOZ_TO_RESULT(AsyncCopy(
-             inputStream, outputStream, mIOTaskQueue,
-             aRead ? NS_ASYNCCOPY_VIA_WRITESEGMENTS
-                   : NS_ASYNCCOPY_VIA_READSEGMENTS,
-             /* aCloseSource */ !aRead, /* aCloseSink */ aRead,
-             [&totalCount](uint32_t count) { totalCount += count; },
-             [this, &syncLoopTarget](nsresult rv) {
-               InvokeAsync(syncLoopTarget, __func__, [this, &syncLoopTarget]() {
-                 MOZ_ASSERT(mWorkerRef);
+  InvokeAsync(
+      mIOTaskQueue, __func__,
+      [selfHolder = fs::TargetPtrHolder(this), dataSpan, offset, aRead,
+       &totalCount]() {
+        LOG_VERBOSE(("%p: Seeking to %" PRIu64, selfHolder->mStream.get(),
+                     offset.value()));
 
-                 mWorkerRef->Private()->AssertIsOnWorkerThread();
+        QM_TRY(MOZ_TO_RESULT(selfHolder->mStream->Seek(
+                   nsISeekableStream::NS_SEEK_SET, offset.value())),
+               CreateAndRejectBoolPromise);
 
-                 mWorkerRef->Private()->StopSyncLoop(syncLoopTarget, NS_OK);
+        nsCOMPtr<nsIInputStream> inputStream;
+        nsCOMPtr<nsIOutputStream> outputStream;
 
-                 return BoolPromise::CreateAndResolve(true, __func__);
-               });
-             })),
-         throwAndReturn);
+        if (aRead) {
+          LOG_VERBOSE(("%p: Reading %zu bytes", selfHolder->mStream.get(),
+                       dataSpan.Length()));
+
+          inputStream = selfHolder->mStream->InputStream();
+
+          outputStream =
+              FixedBufferOutputStream::Create(AsWritableChars(dataSpan));
+        } else {
+          LOG_VERBOSE(("%p: Writing %zu bytes", selfHolder->mStream.get(),
+                       dataSpan.Length()));
+
+          QM_TRY(MOZ_TO_RESULT(NS_NewByteInputStream(
+                     getter_AddRefs(inputStream), AsChars(dataSpan),
+                     NS_ASSIGNMENT_DEPEND)),
+                 CreateAndRejectBoolPromise);
+
+          outputStream = selfHolder->mStream->OutputStream();
+        }
+
+        auto promiseHolder = MakeUnique<MozPromiseHolder<BoolPromise>>();
+        RefPtr<BoolPromise> promise = promiseHolder->Ensure(__func__);
+
+        QM_TRY(MOZ_TO_RESULT(AsyncCopy(
+                   inputStream, outputStream, GetCurrentSerialEventTarget(),
+                   aRead ? NS_ASYNCCOPY_VIA_WRITESEGMENTS
+                         : NS_ASYNCCOPY_VIA_READSEGMENTS,
+                   /* aCloseSource */ !aRead, /* aCloseSink */ aRead,
+                   [&totalCount](uint32_t count) { totalCount += count; },
+                   [promiseHolder = std::move(promiseHolder)](nsresult rv) {
+                     promiseHolder->ResolveIfExists(true, __func__);
+                   })),
+               CreateAndRejectBoolPromise);
+
+        return promise;
+      })
+      ->Then(syncLoopTarget, __func__,
+             [this, &syncLoopTarget](
+                 const BoolPromise::ResolveOrRejectValue& aValue) {
+               MOZ_ASSERT(mWorkerRef);
+
+               mWorkerRef->Private()->AssertIsOnWorkerThread();
+
+               mWorkerRef->Private()->StopSyncLoop(syncLoopTarget, NS_OK);
+             });
 
   MOZ_ALWAYS_SUCCEEDS(syncLoop.Run());
 
