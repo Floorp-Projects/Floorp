@@ -22,7 +22,7 @@ void FileSystemManagerChild::CloseAll() {
     auto* child = static_cast<FileSystemAccessHandleChild*>(item);
     auto* handle = child->MutableAccessHandlePtr();
 
-    if (!handle->IsClosed()) {
+    if (handle->IsOpen()) {
       handle->CloseInternal();
     }
   }
