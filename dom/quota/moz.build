@@ -57,6 +57,7 @@ EXPORTS.mozilla.dom.quota += [
     "QuotaObject.h",
     "RemoteQuotaObjectChild.h",
     "RemoteQuotaObjectParent.h",
+    "RemoteQuotaObjectParentTracker.h",
     "RemoveParen.h",
     "ResultExtensions.h",
     "ScopedLogExtraInfo.h",

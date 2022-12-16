@@ -12,11 +12,12 @@
 namespace mozilla::dom::quota {
 
 class CanonicalQuotaObject;
+class RemoteQuotaObjectParentTracker;
 
 class RemoteQuotaObjectParent : public PRemoteQuotaObjectParent {
  public:
-  explicit RemoteQuotaObjectParent(
-      RefPtr<CanonicalQuotaObject> aCanonicalQuotaObject);
+  RemoteQuotaObjectParent(RefPtr<CanonicalQuotaObject> aCanonicalQuotaObject,
+                          nsCOMPtr<RemoteQuotaObjectParentTracker> aTracker);
 
   NS_INLINE_DECL_REFCOUNTING_ONEVENTTARGET(RemoteQuotaObjectParent, override)
 
@@ -29,6 +30,8 @@ class RemoteQuotaObjectParent : public PRemoteQuotaObjectParent {
   virtual ~RemoteQuotaObjectParent();
 
   RefPtr<CanonicalQuotaObject> mCanonicalQuotaObject;
+
+  nsCOMPtr<RemoteQuotaObjectParentTracker> mTracker;
 };
 
 }  // namespace mozilla::dom::quota

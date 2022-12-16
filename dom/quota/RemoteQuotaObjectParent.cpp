@@ -7,13 +7,16 @@
 #include "RemoteQuotaObjectParent.h"
 
 #include "CanonicalQuotaObject.h"
+#include "mozilla/dom/quota/RemoteQuotaObjectParentTracker.h"
 #include "mozilla/ipc/BackgroundParent.h"
 
 namespace mozilla::dom::quota {
 
 RemoteQuotaObjectParent::RemoteQuotaObjectParent(
-    RefPtr<CanonicalQuotaObject> aCanonicalQuotaObject)
-    : mCanonicalQuotaObject(std::move(aCanonicalQuotaObject)) {}
+    RefPtr<CanonicalQuotaObject> aCanonicalQuotaObject,
+    nsCOMPtr<RemoteQuotaObjectParentTracker> aTracker)
+    : mCanonicalQuotaObject(std::move(aCanonicalQuotaObject)),
+      mTracker(std::move(aTracker)) {}
 
 RemoteQuotaObjectParent::~RemoteQuotaObjectParent() { MOZ_ASSERT(!CanSend()); }
 
@@ -33,6 +36,10 @@ void RemoteQuotaObjectParent::ActorDestroy(ActorDestroyReason aWhy) {
   // If the size doesn't match, do necessary adjustments.
 
   mCanonicalQuotaObject = nullptr;
+
+  if (mTracker) {
+    mTracker->UnregisterRemoteQuotaObjectParent(WrapNotNullUnchecked(this));
+  }
 }
 
 }  // namespace mozilla::dom::quota

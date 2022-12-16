@@ -11,8 +11,10 @@
 #include "mozilla/dom/quota/PRemoteQuotaObject.h"
 #include "mozilla/dom/quota/RemoteQuotaObjectChild.h"
 #include "mozilla/dom/quota/RemoteQuotaObjectParent.h"
+#include "mozilla/dom/quota/RemoteQuotaObjectParentTracker.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "RemoteQuotaObject.h"
 
 namespace mozilla::dom::quota {
@@ -37,7 +39,15 @@ IPCQuotaObject QuotaObject::Serialize(nsIInterfaceRequestor* aCallbacks) {
   MOZ_ALWAYS_SUCCEEDS(
       PRemoteQuotaObject::CreateEndpoints(&parentEndpoint, &childEndpoint));
 
-  auto actor = MakeRefPtr<RemoteQuotaObjectParent>(AsCanonicalQuotaObject());
+  nsCOMPtr<RemoteQuotaObjectParentTracker> tracker =
+      do_GetInterface(aCallbacks);
+
+  auto actor =
+      MakeRefPtr<RemoteQuotaObjectParent>(AsCanonicalQuotaObject(), tracker);
+
+  if (tracker) {
+    tracker->RegisterRemoteQuotaObjectParent(WrapNotNull(actor));
+  }
 
   parentEndpoint.Bind(actor);
 
