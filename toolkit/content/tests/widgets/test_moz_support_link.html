@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>MozSupportLink tests</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <!-- TODO: Bug 1798404 - in-content/common.css can be removed once we have a better
+      solution for token variables for the new widgets -->
+  <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
+  <script type="module" src="chrome://global/content/elements/moz-support-link.mjs"></script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content">
+  <a
+    id="testElement"
+    is="moz-support-link"
+    data-l10n-id="test"
+    support-page="support-test"
+    >testElement</a>
+
+    <a
+    id="testElement2"
+    is="moz-support-link"
+    data-l10n-id="test2"
+    support-page="support-test"
+    utm-content="utmcontent-test"
+    >testElement2</a>
+</div>
+<pre id="test"></pre>
+<script>
+  const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+  add_task(async function test_component_declaration() {
+    let mozSupportLink = customElements.get("moz-support-link");
+    let supportUrl = mozSupportLink.SUPPORT_URL;
+
+    // Ensure all the semantics of the primary link are present
+    let supportLink = document.getElementById("testElement");
+    is(supportLink.tagName, "A", "tagName should be 'A'");
+    is(supportLink.getAttribute("is"), "moz-support-link", "Generated anchor should be a 'moz-support-link'");
+    is(supportLink.getAttribute("data-l10n-id"), "test", "data-l10n-id should be 'test'");
+    is(supportLink.getAttribute("support-page"), "support-test", "support-page should be 'support-test");
+    is(supportLink.target, "_blank", "support link should open a new window");
+    is(supportLink.href, `${supportUrl}support-test`, "href should be generated SUPPORT_URL plus support-test");
+
+    // Ensure AMO support link has the correct values
+    let supportLinkAMO = document.getElementById("testElement2");
+    is(supportLinkAMO.getAttribute("data-l10n-id"), "test2", "data-l10n-id should be 'test2'");
+    is(supportLinkAMO.getAttribute("support-page"), "support-test", "support-page should be 'support-test");
+    is(supportLinkAMO.getAttribute("utm-content"), "utmcontent-test", "utm-content should be 'utmcontent-test");
+    is(supportLinkAMO.target, "_blank", "support link should open a new window");
+    let expectedHref = `${supportUrl}support-test?utm_source=firefox-browser&utm_medium=firefox-browser&utm_content=utmcontent-test`;
+    is(supportLinkAMO.href, expectedHref, "href should be generated SUPPORT_URL");
+  });
+
+  add_task(async function test_creating_component() {
+    // Ensure created support link behaves as expected
+    let mozSupportLink = customElements.get("moz-support-link");
+    let supportUrl = mozSupportLink.SUPPORT_URL;
+    let content = document.getElementById("content");
+    let utmSupportLink = document.createElement("a", {is: "moz-support-link"});
+    utmSupportLink.id = "testElement3";
+    utmSupportLink.innerText = "testElement3";
+    document.l10n.setAttributes(utmSupportLink, "testElement3");
+    content.appendChild(utmSupportLink);
+
+    is(utmSupportLink.target, "_blank", "support link should open a new window");
+    is(utmSupportLink.href, supportUrl, "href should be the base SUPPORT_URL");
+    is(utmSupportLink.getAttribute("data-l10n-id"), "testElement3", "data-l10n-id should be 'testElement3'");
+
+    // Set href via "support-page" after creating the element
+    utmSupportLink.setAttribute("support-page", "created-page");
+    is(utmSupportLink.href, `${supportUrl}created-page`, "href should be updated after setting the 'support-page' attribute");
+
+    // Set href via "utm-content"
+    utmSupportLink.href = "";
+    utmSupportLink.setAttribute("utm-content", "created-content");
+    is(utmSupportLink.href, `${supportUrl}created-page?utm_source=firefox-browser&utm_medium=firefox-browser&utm_content=created-content`, "href should be updated after setting the 'utm-content' attribute");
+  });
+</script>
+</body>
+</html>

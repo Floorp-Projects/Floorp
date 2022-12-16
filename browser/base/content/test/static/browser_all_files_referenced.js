@@ -297,6 +297,10 @@ var whitelist = [
 
   // References to esm generated from jsm programmatically
   { file: "resource://gre/modules/LangPackMatcher.sys.mjs" },
+
+  // FIXME: Bug 1770447 - The moz-support-link component isn't in use yet.
+  // This entry will be removed as part of Bug 1804695 or Bug 1804695.
+  { file: "chrome://global/content/elements/moz-support-link.mjs" },
 ];
 
 if (AppConstants.NIGHTLY_BUILD && AppConstants.platform != "win") {
