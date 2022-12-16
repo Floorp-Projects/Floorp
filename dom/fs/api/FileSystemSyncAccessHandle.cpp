@@ -42,23 +42,25 @@ nsresult AsyncCopy(nsIInputStream* aSource, nsIOutputStream* aSink,
                    nsISerialEventTarget* aIOTarget, const nsAsyncCopyMode aMode,
                    const bool aCloseSource, const bool aCloseSink,
                    std::function<void(uint32_t)>&& aProgressCallback,
-                   std::function<void(nsresult)>&& aCompleteCallback) {
+                   MoveOnlyFunction<void(nsresult)>&& aCompleteCallback) {
   struct CallbackClosure {
     CallbackClosure(std::function<void(uint32_t)>&& aProgressCallback,
-                    std::function<void(nsresult)>&& aCompleteCallback) {
+                    MoveOnlyFunction<void(nsresult)>&& aCompleteCallback) {
       mProgressCallbackWrapper = MakeUnique<std::function<void(uint32_t)>>(
           [progressCallback = std::move(aProgressCallback)](uint32_t count) {
             progressCallback(count);
           });
 
-      mCompleteCallbackWrapper = MakeUnique<std::function<void(nsresult)>>(
-          [completeCallback = std::move(aCompleteCallback)](nsresult rv) {
-            completeCallback(rv);
+      mCompleteCallbackWrapper = MakeUnique<MoveOnlyFunction<void(nsresult)>>(
+          [completeCallback =
+               std::move(aCompleteCallback)](nsresult rv) mutable {
+            auto callback = std::move(completeCallback);
+            callback(rv);
           });
     }
 
     UniquePtr<std::function<void(uint32_t)>> mProgressCallbackWrapper;
-    UniquePtr<std::function<void(nsresult)>> mCompleteCallbackWrapper;
+    UniquePtr<MoveOnlyFunction<void(nsresult)>> mCompleteCallbackWrapper;
   };
 
   auto* callbackClosure = new CallbackClosure(std::move(aProgressCallback),
