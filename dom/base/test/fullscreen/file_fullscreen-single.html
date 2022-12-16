@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+
+Open one window, focus it and enter fullscreen, then exit fullscreen.
+
+-->
+<head>
+  <title>Simple Fullscreen Enter and Exit Test</title>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="file_fullscreen-utils.js"></script>
+</head>
+<body>
+
+<div id="fullscreen-div"><p>Fullscreen div</p></div>
+
+<script type="application/javascript">
+
+function ok(condition, msg) {
+  opener.ok(condition, "[single] " + msg);
+}
+
+function info(msg) {
+  opener.info("[single] " + msg);
+}
+
+function is(a, b, msg) {
+  opener.is(a, b, "[single] " + msg);
+}
+
+function windowResized() {
+  info(`window resized to width: ${window.innerWidth}, height: ${window.innerHeight}`);
+}
+
+async function begin() {
+  window.addEventListener('resize', windowResized);
+
+  info(`starting window width: ${window.innerWidth}, height: ${window.innerHeight}`);
+  let windowedWidth = window.innerWidth;
+  let windowedHeight = window.innerHeight;
+
+  info("requesting fullscreen");
+  let entryPromise = document.getElementById('fullscreen-div').requestFullscreen()
+  info("fullscreen requested, waiting for promise to resolve");
+
+  entryPromise.then(() => {
+    info("element.requestFullscreen() promise resolved");
+    info(`fullscreen window width: ${window.innerWidth}, height: ${window.innerHeight}`);
+    ok(document.fullscreenElement != null, "document.fullscreenElement");
+    ok(window.fullScreen, "window.fullScreen");
+    ok(windowedWidth != window.innerWidth, "window width changed");
+    ok(windowedHeight != window.innerHeight, "window height changed");
+
+    info("requesting fullscreen exit");
+    let exitPromise = document.exitFullscreen()
+    info("fullscreen exit requested, waiting for promise to resolve");
+
+    exitPromise.then(() => {
+      info("document.exitFullscreen() promise resolved");
+      info(`restored window width: ${window.innerWidth}, height: ${window.innerHeight}`);
+      ok(document.fullscreenElement == null, "!document.fullscreenElement");
+      ok(!window.fullScreen, "!window.fullScreen");
+      ok(window.innerWidth == windowedWidth, "window width restored");
+      ok(window.innerHeight == windowedHeight, "window height restored");
+      opener.nextTest();
+    });
+  });
+}
+
+</script>
+</pre>
+</body>
+</html>
