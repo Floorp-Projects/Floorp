@@ -13,8 +13,6 @@ ChromeUtils.defineESModuleGetters(modules.root, {
   browsingContext:
     "chrome://remote/content/webdriver-bidi/modules/root/browsingContext.sys.mjs",
   log: "chrome://remote/content/webdriver-bidi/modules/root/log.sys.mjs",
-  network:
-    "chrome://remote/content/webdriver-bidi/modules/root/network.sys.mjs",
   script: "chrome://remote/content/webdriver-bidi/modules/root/script.sys.mjs",
   session:
     "chrome://remote/content/webdriver-bidi/modules/root/session.sys.mjs",
