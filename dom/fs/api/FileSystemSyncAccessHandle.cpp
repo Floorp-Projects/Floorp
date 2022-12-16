@@ -97,7 +97,7 @@ FileSystemSyncAccessHandle::FileSystemSyncAccessHandle(
       mActor(std::move(aActor)),
       mStream(std::move(aStream)),
       mMetadata(aMetadata),
-      mClosed(false) {
+      mState(State::Initial) {
   LOG(("Created SyncAccessHandle %p for stream %p", this, mStream.get()));
 
   // Connect with the actor directly in the constructor. This way the actor
@@ -110,7 +110,7 @@ FileSystemSyncAccessHandle::FileSystemSyncAccessHandle(
 
 FileSystemSyncAccessHandle::~FileSystemSyncAccessHandle() {
   MOZ_ASSERT(!mActor);
-  MOZ_ASSERT(mClosed);
+  MOZ_ASSERT(mState == State::Closed);
 }
 
 // static
@@ -124,8 +124,8 @@ FileSystemSyncAccessHandle::Create(
       aGlobal, aManager, std::move(aActor), std::move(aStream), aMetadata);
 
   auto autoClose = MakeScopeExit([result] {
-    MOZ_ASSERT(!result->mClosed);
-    result->mClosed = true;
+    MOZ_ASSERT(result->mState == State::Initial);
+    result->mState = State::Closed;
     result->mActor->SendClose();
   });
 
@@ -136,7 +136,7 @@ FileSystemSyncAccessHandle::Create(
 
   RefPtr<StrongWorkerRef> workerRef = StrongWorkerRef::Create(
       workerPrivate, "FileSystemSyncAccessHandle", [result]() {
-        if (!result->IsClosed()) {
+        if (result->IsOpen()) {
           result->CloseInternal();
         }
       });
@@ -145,6 +145,7 @@ FileSystemSyncAccessHandle::Create(
   autoClose.release();
 
   result->mWorkerRef = std::move(workerRef);
+  result->mState = State::Open;
 
   return result;
 }
@@ -163,7 +164,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FileSystemSyncAccessHandle)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
   // Don't unlink mManager!
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-  if (!tmp->IsClosed()) {
+  if (tmp->IsOpen()) {
     tmp->CloseInternal();
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -193,12 +194,18 @@ void FileSystemSyncAccessHandle::ClearActor() {
   mActor = nullptr;
 }
 
+bool FileSystemSyncAccessHandle::IsOpen() const {
+  MOZ_ASSERT(mState != State::Initial);
+
+  return mState == State::Open;
+}
+
 void FileSystemSyncAccessHandle::CloseInternal() {
-  MOZ_ASSERT(!mClosed);
+  MOZ_ASSERT(IsOpen());
 
   LOG(("%p: Closing", mStream.get()));
 
-  mClosed = true;
+  mState = State::Closed;
 
   mStream->OutputStream()->Close();
   mStream = nullptr;
@@ -236,7 +243,7 @@ uint64_t FileSystemSyncAccessHandle::Write(
 }
 
 void FileSystemSyncAccessHandle::Truncate(uint64_t aSize, ErrorResult& aError) {
-  if (mClosed) {
+  if (!IsOpen()) {
     aError.ThrowInvalidStateError("SyncAccessHandle is closed");
     return;
   }
@@ -255,7 +262,7 @@ void FileSystemSyncAccessHandle::Truncate(uint64_t aSize, ErrorResult& aError) {
 }
 
 uint64_t FileSystemSyncAccessHandle::GetSize(ErrorResult& aError) {
-  if (mClosed) {
+  if (!IsOpen()) {
     aError.ThrowInvalidStateError("SyncAccessHandle is closed");
     return 0;
   }
@@ -277,7 +284,7 @@ uint64_t FileSystemSyncAccessHandle::GetSize(ErrorResult& aError) {
 }
 
 void FileSystemSyncAccessHandle::Flush(ErrorResult& aError) {
-  if (mClosed) {
+  if (!IsOpen()) {
     aError.ThrowInvalidStateError("SyncAccessHandle is closed");
     return;
   }
@@ -288,7 +295,7 @@ void FileSystemSyncAccessHandle::Flush(ErrorResult& aError) {
 }
 
 void FileSystemSyncAccessHandle::Close() {
-  if (!IsClosed()) {
+  if (IsOpen()) {
     CloseInternal();
   }
 }
@@ -297,7 +304,7 @@ uint64_t FileSystemSyncAccessHandle::ReadOrWrite(
     const MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer,
     const FileSystemReadWriteOptions& aOptions, const bool aRead,
     ErrorResult& aRv) {
-  if (mClosed) {
+  if (!IsOpen()) {
     aRv.ThrowInvalidStateError("SyncAccessHandle is closed");
     return 0;
   }

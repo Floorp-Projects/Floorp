@@ -30,6 +30,8 @@ class StrongWorkerRef;
 class FileSystemSyncAccessHandle final : public nsISupports,
                                          public nsWrapperCache {
  public:
+  enum struct State : uint8_t { Initial = 0, Open, Closed };
+
   static Result<RefPtr<FileSystemSyncAccessHandle>, nsresult> Create(
       nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
       RefPtr<FileSystemAccessHandleChild> aActor,
@@ -43,7 +45,7 @@ class FileSystemSyncAccessHandle final : public nsISupports,
 
   void ClearActor();
 
-  bool IsClosed() const { return mClosed; }
+  bool IsOpen() const;
 
   void CloseInternal();
 
@@ -96,7 +98,7 @@ class FileSystemSyncAccessHandle final : public nsISupports,
 
   const fs::FileSystemEntryMetadata mMetadata;
 
-  bool mClosed;
+  State mState;
 };
 
 }  // namespace dom
