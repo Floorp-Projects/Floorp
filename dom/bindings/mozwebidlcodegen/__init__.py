@@ -13,18 +13,14 @@ import io
 import json
 import logging
 import os
-import six
-
 from copy import deepcopy
 
+import mozpack.path as mozpath
+import six
 from mach.mixin.logging import LoggingMixin
-
 from mozbuild.makeutil import Makefile
 from mozbuild.pythonutil import iter_modules_in_path
 from mozbuild.util import FileAvoidWrite
-
-import mozpack.path as mozpath
-import buildconfig
 
 # There are various imports in this file in functions to avoid adding
 # dependencies to config.status. See bug 949875.
@@ -565,10 +561,7 @@ class WebIDLCodegenManager(LoggingMixin):
         return paths
 
     def _generate_build_files_for_webidl(self, filename):
-        from Codegen import (
-            CGBindingRoot,
-            CGEventRoot,
-        )
+        from Codegen import CGBindingRoot, CGEventRoot
 
         self.log(
             logging.INFO,

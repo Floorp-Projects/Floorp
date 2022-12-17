@@ -9,8 +9,8 @@ def WebIDLTest(parser, harness):
         """
         )
 
-        results = parser.finish()
-    except:
+        parser.finish()
+    except Exception:
         threw = True
 
     harness.ok(threw, "Should have thrown for [CEReactions] with an argument")
@@ -26,8 +26,8 @@ def WebIDLTest(parser, harness):
         """
         )
 
-        results = parser.finish()
-    except:
+        parser.finish()
+    except Exception:
         threw = True
 
     harness.ok(threw, "Should have thrown for [CEReactions] with an argument")
@@ -43,7 +43,7 @@ def WebIDLTest(parser, harness):
         """
         )
 
-        results = parser.finish()
+        parser.finish()
     except Exception as e:
         harness.ok(
             False,
@@ -63,7 +63,7 @@ def WebIDLTest(parser, harness):
         """
         )
 
-        results = parser.finish()
+        parser.finish()
     except Exception as e:
         harness.ok(
             False,
@@ -83,8 +83,8 @@ def WebIDLTest(parser, harness):
         """
         )
 
-        results = parser.finish()
-    except:
+        parser.finish()
+    except Exception:
         threw = True
 
     harness.ok(
@@ -102,8 +102,8 @@ def WebIDLTest(parser, harness):
         """
         )
 
-        results = parser.finish()
-    except:
+        parser.finish()
+    except Exception:
         threw = True
 
     harness.ok(threw, "Should have thrown for [CEReactions] used on a interface")
@@ -118,8 +118,8 @@ def WebIDLTest(parser, harness):
           };
         """
         )
-        results = parser.finish()
-    except:
+        parser.finish()
+    except Exception:
         threw = True
 
     harness.ok(threw, "Should have thrown for [CEReactions] used on a named getter")
@@ -134,8 +134,8 @@ def WebIDLTest(parser, harness):
           };
         """
         )
-        results = parser.finish()
-    except:
+        parser.finish()
+    except Exception:
         threw = True
 
     harness.ok(threw, "Should have thrown for [CEReactions] used on a legacycaller")
@@ -150,8 +150,8 @@ def WebIDLTest(parser, harness):
           };
         """
         )
-        results = parser.finish()
-    except:
+        parser.finish()
+    except Exception:
         threw = True
 
     harness.ok(threw, "Should have thrown for [CEReactions] used on a stringifier")

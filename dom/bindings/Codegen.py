@@ -2603,7 +2603,6 @@ class PropertyDefiner:
         )
         prefableWithDisablersTemplate = "  { &%s_disablers%d, &%s_specs[%d] }"
         prefableWithoutDisablersTemplate = "  { nullptr, &%s_specs[%d] }"
-        prefCacheTemplate = "&%s[%d].disablers->enabled"
 
         def switchToCondition(condition, specs):
             # Set up pointers to the new sets of specs inside prefableSpecs
@@ -3088,7 +3087,7 @@ class AttrDefiner(PropertyDefiner):
                         raise TypeError(
                             "Can't handle lenient cross-origin "
                             "readable attribute %s.%s"
-                            % (self.descriptor.name, attr.identifier.name)
+                            % (descriptor.name, attr.identifier.name)
                         )
                     if descriptor.interface.hasDescendantWithCrossOriginMembers:
                         accessor = (
@@ -10318,7 +10317,6 @@ class CGSetterCall(CGPerSignatureCall):
                     self.idlNode
                 )
             elif attr.getExtendedAttribute("Cached"):
-                args = "self"
                 clearSlot = "%s(self);\n" % MakeClearCachedValueNativeName(self.idlNode)
 
         # We have no return value
@@ -11277,7 +11275,7 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
                     "We don't support the setter of %s marked as "
                     "CrossOriginWritable because it takes a Gecko interface "
                     "as the value",
-                    attr.identifier.name,
+                    self.attr.identifier.name,
                 )
             prototypeID, _ = PrototypeIDAndDepth(self.descriptor)
             prefix = fill(
@@ -14611,7 +14609,6 @@ class CGDOMJSProxyHandler_getOwnPropDescriptor(ClassMethod):
         self.descriptor = descriptor
 
     def getBody(self):
-        indexedGetter = self.descriptor.operations["IndexedGetter"]
         indexedSetter = self.descriptor.operations["IndexedSetter"]
 
         if self.descriptor.isMaybeCrossOriginObject():
@@ -20049,12 +20046,6 @@ class CGJSImplClass(CGBindingImplClass):
                 descriptor.name,
                 parentClass,
             )
-            constructorBody = dedent(
-                """
-                // Make sure we're an nsWrapperCache already
-                MOZ_ASSERT(static_cast<nsWrapperCache*>(this));
-                """
-            )
             extradefinitions = fill(
                 """
                 NS_IMPL_CYCLE_COLLECTION_INHERITED(${ifaceName}, ${parentClass}, mImpl, mParent)
@@ -24022,14 +24013,11 @@ class CGEventClass(CGBindingImplClass):
         return retVal
 
     def define(self):
-        hasJS = False
-        if any(
-            not (
+        for m in self.membersNeedingTrace:
+            if not (
                 m.type.isAny() or m.type.isObject() or m.type.isSpiderMonkeyInterface()
-            )
-            for m in self.membersNeedingTrace
-        ):
-            raise TypeError("Unknown traceable member type %s" % m.type)
+            ):
+                raise TypeError("Unknown traceable member type %s" % m.type)
 
         if len(self.membersNeedingTrace) > 0:
             dropJS = "mozilla::DropJSObjects(this);\n"
