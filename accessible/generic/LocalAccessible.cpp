@@ -601,39 +601,26 @@ LocalAccessible* LocalAccessible::LocalChildAtPoint(
 
 nsIFrame* LocalAccessible::FindNearestAccessibleAncestorFrame() {
   nsIFrame* frame = GetFrame();
-  nsIFrame* boundingFrame = nullptr;
-
   if (IsDoc() &&
       nsCoreUtils::IsTopLevelContentDocInProcess(AsDoc()->DocumentNode())) {
     // Tab documents and OOP iframe docs won't have ancestor accessibles
-    // with frames. Instead, bound by their presshell's root frame.
-    boundingFrame = nsLayoutUtils::GetContainingBlockForClientRect(frame);
+    // with frames. Instead, bound by their own frame, which is their
+    // presshell's root frame.
+    MOZ_ASSERT(frame, "DocAccessibles should always have a frame");
+    return frame;
   }
 
   // Iterate through accessible's ancestors to find one with a frame.
   LocalAccessible* ancestor = mParent;
-  while (ancestor && !boundingFrame) {
-    if (ancestor->IsDoc()) {
-      // If we find a doc accessible, use its presshell's root frame
-      // (since doc accessibles themselves don't have frames).
-      boundingFrame = nsLayoutUtils::GetContainingBlockForClientRect(frame);
-      break;
+  while (ancestor) {
+    if (nsIFrame* boundingFrame = ancestor->GetFrame()) {
+      return boundingFrame;
     }
-
-    if ((boundingFrame = ancestor->GetFrame())) {
-      // Otherwise, if the ancestor has a frame, use that
-      break;
-    }
-
     ancestor = ancestor->LocalParent();
   }
 
-  if (!boundingFrame) {
-    MOZ_ASSERT_UNREACHABLE("No ancestor with frame?");
-    boundingFrame = nsLayoutUtils::GetContainingBlockForClientRect(frame);
-  }
-
-  return boundingFrame;
+  MOZ_ASSERT_UNREACHABLE("No ancestor with frame?");
+  return nsLayoutUtils::GetContainingBlockForClientRect(frame);
 }
 
 nsRect LocalAccessible::ParentRelativeBounds() {
