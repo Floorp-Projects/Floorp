@@ -2980,7 +2980,7 @@ pub extern "C" fn Servo_ContainerRule_QueryContainerFor(
 ) -> *const RawGeckoElement {
     read_locked_arc(rule, |rule: &ContainerRule| {
         rule.condition
-            .find_container(GeckoElement(element))
+            .find_container(GeckoElement(element), None)
             .map_or(ptr::null(), |result| result.element.0)
     })
 }
@@ -6050,15 +6050,15 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
     let parent_data = parent_element.as_ref().and_then(|e| e.borrow_data());
     let parent_style = parent_data
         .as_ref()
-        .map(|d| d.styles.primary())
-        .map(|x| &**x);
+        .map(|d| d.styles.primary());
 
-    let container_size_query = ContainerSizeQuery::for_element(element);
+    let container_size_query =
+        ContainerSizeQuery::for_element(element, pseudo.as_ref().and(parent_style));
     let mut conditions = Default::default();
     let mut context = create_context_for_animation(
         &data,
         &style,
-        parent_style,
+        parent_style.map(|x| &**x),
         /* for_smil_animation = */ false,
         &mut conditions,
         container_size_query,
@@ -6178,7 +6178,7 @@ pub extern "C" fn Servo_GetAnimationValues(
         .map(|d| d.styles.primary())
         .map(|x| &**x);
 
-    let container_size_query = ContainerSizeQuery::for_element(element);
+    let container_size_query = ContainerSizeQuery::for_element(element, None);
     let mut conditions = Default::default();
     let mut context = create_context_for_animation(
         &data,
@@ -6231,7 +6231,7 @@ pub extern "C" fn Servo_AnimationValue_Compute(
         .map(|d| d.styles.primary())
         .map(|x| &**x);
 
-    let container_size_query = ContainerSizeQuery::for_element(element);
+    let container_size_query = ContainerSizeQuery::for_element(element, None);
     let mut conditions = Default::default();
     let mut context = create_context_for_animation(
         &data,
