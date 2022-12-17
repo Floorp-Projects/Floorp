@@ -338,8 +338,7 @@ void AssertLoadingPrincipalAndClientInfoMatch(
       (aType == nsIContentPolicy::TYPE_INTERNAL_WORKER ||
        aType == nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER ||
        aType == nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER ||
-       aType == nsIContentPolicy::TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS ||
-       aType == nsIContentPolicy::TYPE_INTERNAL_WORKER_STATIC_MODULE)) {
+       aType == nsIContentPolicy::TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS)) {
     return;
   }
 

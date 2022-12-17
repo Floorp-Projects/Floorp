@@ -31,7 +31,6 @@ nsCString MapInternalContentPolicyTypeToDest(nsContentPolicyType aType) {
     case nsIContentPolicy::TYPE_SCRIPT:
       return "script"_ns;
     case nsIContentPolicy::TYPE_INTERNAL_WORKER:
-    case nsIContentPolicy::TYPE_INTERNAL_WORKER_STATIC_MODULE:
       return "worker"_ns;
     case nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER:
       return "sharedworker"_ns;
@@ -109,7 +108,6 @@ nsCString MapInternalContentPolicyTypeToDest(nsContentPolicyType aType) {
       return "empty"_ns;
     case nsIContentPolicy::TYPE_WEB_IDENTITY:
       return "webidentity"_ns;
-    case nsIContentPolicy::TYPE_END:
     case nsIContentPolicy::TYPE_INVALID:
       break;
       // Do not add default: so that compilers can catch the missing case.

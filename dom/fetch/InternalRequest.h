@@ -69,7 +69,7 @@ namespace dom {
  *                   | TYPE_STYLESHEET
  * "track"           | TYPE_INTERNAL_TRACK
  * "video"           | TYPE_INTERNAL_VIDEO
- * "worker"          | TYPE_INTERNAL_WORKER, TYPE_INTERNAL_WORKER_STATIC_MODULE
+ * "worker"          | TYPE_INTERNAL_WORKER
  * "xslt"            | TYPE_XSLT
  * ""                | Default for everything else.
  *
