@@ -484,21 +484,6 @@ class ProviderSearchTips extends UrlbarProvider {
         return;
       }
 
-      // Don't show a tip if a request is in progress, and the URI associated
-      // with the request differs from the URI that triggered the search tip.
-      // One contraint with this approach is related to Bug 1797748: SERPs
-      // that use the History API to navigate between views will call
-      // onLocationChange without a request, and thus, no originalUri is
-      // available to check against, so the search tip and search terms may
-      // show on search pages outside of the default SERP.
-      let { documentRequest } = window.gBrowser.selectedBrowser.webProgress;
-      if (
-        documentRequest instanceof Ci.nsIChannel &&
-        documentRequest.originalUri?.spec != originalUri?.spec
-      ) {
-        return;
-      }
-
       // At this point, we're showing a tip.
       this.disableTipsForCurrentSession = true;
 
