@@ -17,7 +17,6 @@ EXPORTS.mozilla.dom.workerinternals += [
     "CacheLoadHandler.h",
     "NetworkLoadHandler.h",
     "ScriptResponseHeaderProcessor.h",
-    "WorkerModuleLoader.h",
 ]
 
 UNIFIED_SOURCES += [
@@ -25,7 +24,6 @@ UNIFIED_SOURCES += [
     "NetworkLoadHandler.cpp",
     "ScriptResponseHeaderProcessor.cpp",
     "WorkerLoadContext.cpp",
-    "WorkerModuleLoader.cpp",
 ]
 
 
