@@ -965,6 +965,7 @@ impl Stylist {
         element: E,
         pseudo: &PseudoElement,
         rule_inclusion: RuleInclusion,
+        originating_element_style: &Arc<ComputedValues>,
         parent_style: &Arc<ComputedValues>,
         is_probe: bool,
         matching_fn: Option<&dyn Fn(&PseudoElement) -> bool>,
@@ -975,6 +976,7 @@ impl Stylist {
         let cascade_inputs = self.lazy_pseudo_rules(
             guards,
             element,
+            originating_element_style,
             parent_style,
             pseudo,
             is_probe,
@@ -1104,6 +1106,7 @@ impl Stylist {
         &self,
         guards: &StylesheetGuards,
         element: E,
+        originating_element_style: &Arc<ComputedValues>,
         parent_style: &Arc<ComputedValues>,
         pseudo: &PseudoElement,
         is_probe: bool,
@@ -1133,7 +1136,8 @@ impl Stylist {
         );
 
         matching_context.pseudo_element_matching_fn = matching_fn;
-        matching_context.extra_data.originating_element_style = Some(parent_style.clone());
+        matching_context.extra_data.originating_element_style =
+            Some(originating_element_style.clone());
 
         self.push_applicable_declarations(
             element,
@@ -1164,7 +1168,8 @@ impl Stylist {
                 needs_selector_flags,
             );
             matching_context.pseudo_element_matching_fn = matching_fn;
-            matching_context.extra_data.originating_element_style = Some(parent_style.clone());
+            matching_context.extra_data.originating_element_style =
+                Some(originating_element_style.clone());
 
             self.push_applicable_declarations(
                 element,
