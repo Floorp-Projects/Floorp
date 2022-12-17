@@ -100,9 +100,6 @@ addAccessibleTask(
       );
     }, "Accessible bounds have changed in the cache and match DOM bounds.");
 
-    // XXX Enable this test after resolution of bug 1792120. It will not
-    // succeed as-is due to stale relative-bounds in the cache.
-    /*
     // Adjust padding of the iframe, then verify bounds adjust properly.
     // iframes already have a border by default, so we check padding here.
     const PADDING_OFFSET = 100;
@@ -129,7 +126,6 @@ addAccessibleTask(
         TRANSLATION_OFFSET
       );
     }, "Accessible bounds have changed in the cache and match DOM bounds.");
-    */
   },
   {
     topLevel: false,

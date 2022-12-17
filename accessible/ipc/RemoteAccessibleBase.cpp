@@ -449,16 +449,15 @@ Maybe<nsRect> RemoteAccessibleBase<Derived>::RetrieveCachedBounds() const {
 }
 
 template <class Derived>
-void RemoteAccessibleBase<Derived>::ApplyCrossProcOffset(
-    nsRect& aBounds) const {
+void RemoteAccessibleBase<Derived>::ApplyCrossDocOffset(nsRect& aBounds) const {
   Accessible* parentAcc = Parent();
   if (!parentAcc || !parentAcc->IsRemote() || !parentAcc->IsOuterDoc()) {
     return;
   }
 
-  if (!IsDoc() || !AsDoc()->IsOOPIframeDoc()) {
-    // We should only apply cross-proc offsets to OOP iframe documents. If we're
-    // anything else, return early here.
+  if (!IsDoc()) {
+    // We should only apply cross-doc offsets to documents. If we're anything
+    // else, return early here.
     return;
   }
 
@@ -580,7 +579,7 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
       bounds.SetRectY(bounds.y + internalRect.y, internalRect.height);
     }
 
-    ApplyCrossProcOffset(bounds);
+    ApplyCrossDocOffset(bounds);
 
     Unused << ApplyTransform(bounds);
 
@@ -610,12 +609,12 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
           topDoc = remoteAcc->AsDoc();
         }
 
-        // We're unable to account for the document offset of remote,
-        // cross process iframes when computing parent-relative bounds.
-        // Instead we store this value separately and apply it here. This
-        // offset is cached on both in - and OOP iframes, but is only applied
-        // to OOP iframes.
-        remoteAcc->ApplyCrossProcOffset(remoteBounds);
+        // We don't account for the document offset of iframes when computing
+        // parent-relative bounds. Instead, we store this value separately on
+        // all iframes and apply it here. See the comments in
+        // LocalAccessible::BundleFieldsForCache where we set the
+        // nsGkAtoms::crossorigin attribute.
+        remoteAcc->ApplyCrossDocOffset(remoteBounds);
 
         // Apply scroll offset, if applicable. Only the contents of an
         // element are affected by its scroll offset, which is why this call
