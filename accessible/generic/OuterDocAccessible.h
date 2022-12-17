@@ -44,11 +44,9 @@ class OuterDocAccessible final : public AccessibleWrap {
    */
   void SendEmbedderAccessible(dom::BrowserBridgeChild* aBridge);
 
-  Maybe<nsMargin> GetCrossProcOffset() { return mCrossProcOffset; }
+  Maybe<nsMargin> GetCrossDocOffset() { return mCrossDocOffset; }
 
-  void SetCrossProcOffset(nsMargin aMargin) {
-    mCrossProcOffset = Some(aMargin);
-  }
+  void SetCrossDocOffset(nsMargin aMargin) { mCrossDocOffset = Some(aMargin); }
 
   // LocalAccessible
   virtual void Shutdown() override;
@@ -69,7 +67,7 @@ class OuterDocAccessible final : public AccessibleWrap {
 
  protected:
   virtual ~OuterDocAccessible() override;
-  Maybe<nsMargin> mCrossProcOffset;
+  Maybe<nsMargin> mCrossDocOffset;
 };
 
 inline OuterDocAccessible* LocalAccessible::AsOuterDoc() {

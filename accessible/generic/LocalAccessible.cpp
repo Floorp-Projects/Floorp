@@ -601,11 +601,10 @@ LocalAccessible* LocalAccessible::LocalChildAtPoint(
 
 nsIFrame* LocalAccessible::FindNearestAccessibleAncestorFrame() {
   nsIFrame* frame = GetFrame();
-  if (IsDoc() &&
-      nsCoreUtils::IsTopLevelContentDocInProcess(AsDoc()->DocumentNode())) {
-    // Tab documents and OOP iframe docs won't have ancestor accessibles
-    // with frames. Instead, bound by their own frame, which is their
-    // presshell's root frame.
+  if (IsDoc()) {
+    // We bound documents by their own frame, which is their PresShell's root
+    // frame. We cache the document offset elsewhere in BundleFieldsForCache
+    // using the nsGkAtoms::crossorigin attribute.
     MOZ_ASSERT(frame, "DocAccessibles should always have a frame");
     return frame;
   }
@@ -3287,14 +3286,17 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     if (OuterDocAccessible* doc = AsOuterDoc()) {
       if (nsIFrame* docFrame = doc->GetFrame()) {
         const nsMargin& newOffset = docFrame->GetUsedBorderAndPadding();
-        Maybe<nsMargin> currOffset = doc->GetCrossProcOffset();
+        Maybe<nsMargin> currOffset = doc->GetCrossDocOffset();
         if (!currOffset || *currOffset != newOffset) {
           // OOP iframe docs can't compute their position within their
           // cross-proc parent, so we have to manually cache that offset
-          // on the parent (outer doc) itself. We do that here.
-          // Similar to bounds, we maintain a local cache and a remote cache
-          // to avoid sending redundant updates.
-          doc->SetCrossProcOffset(newOffset);
+          // on the parent (outer doc) itself. For simplicity and consistency,
+          // we do this here for both OOP and in-process iframes. For in-process
+          // iframes, this also avoids the need to push a cache update for the
+          // embedded document when the iframe changes its padding, gets
+          // re-created, etc. Similar to bounds, we maintain a local cache and a
+          // remote cache to avoid sending redundant updates.
+          doc->SetCrossDocOffset(newOffset);
           nsTArray<int32_t> offsetArray(2);
           offsetArray.AppendElement(newOffset.Side(eSideLeft));  // X offset
           offsetArray.AppendElement(newOffset.Side(eSideTop));   // Y offset
