@@ -14,19 +14,9 @@ import tempfile
 import unittest
 
 import mozpack.path as mozpath
-
-from mozwebidlcodegen import (
-    WebIDLCodegenManager,
-    WebIDLCodegenManagerState,
-)
-
 from mozfile import NamedTemporaryFile
-
-from mozunit import (
-    MockedOpen,
-    main,
-)
-
+from mozunit import MockedOpen, main
+from mozwebidlcodegen import WebIDLCodegenManager, WebIDLCodegenManagerState
 
 OUR_DIR = mozpath.abspath(mozpath.dirname(__file__))
 TOPSRCDIR = mozpath.normpath(mozpath.join(OUR_DIR, "..", "..", "..", ".."))

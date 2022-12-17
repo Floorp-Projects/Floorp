@@ -3,11 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from __future__ import print_function
 
+import argparse
+import glob
 import os
 import sys
-import glob
-import argparse
 import traceback
+
 import WebIDL
 
 
@@ -60,7 +61,7 @@ class TestHarness(object):
         try:
             parser.parse(code)
             parser.finish()
-        except:
+        except Exception:
             threw = True
 
         self.ok(threw, "Should have thrown: %s" % msg)

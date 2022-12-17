@@ -1,6 +1,3 @@
-import WebIDL
-
-
 def WebIDLTest(parser, harness):
     threw = False
     try:
@@ -13,8 +10,8 @@ def WebIDLTest(parser, harness):
         """
         )
 
-        results = parser.finish()
-    except:
+        parser.finish()
+    except Exception:
         threw = True
 
     harness.ok(threw, "Should have thrown.")
@@ -30,8 +27,8 @@ def WebIDLTest(parser, harness):
         """
         )
 
-        results = parser.finish()
-    except:
+        parser.finish()
+    except Exception:
         threw = True
 
     harness.ok(threw, "Should have thrown.")
@@ -47,8 +44,8 @@ def WebIDLTest(parser, harness):
         """
         )
 
-        results = parser.finish()
-    except:
+        parser.finish()
+    except Exception:
         threw = True
 
     harness.ok(threw, "Should have thrown.")

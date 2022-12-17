@@ -455,7 +455,7 @@ class IDLIdentifierPlaceholder(IDLObjectWithIdentifier):
     def finish(self, scope):
         try:
             scope._lookupIdentifier(self.identifier)
-        except:
+        except Exception:
             raise WebIDLError(
                 "Unresolved type '%s'." % self.identifier, [self.location]
             )
@@ -998,7 +998,7 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
         )
         try:
             return self._lookupIdentifier(identifier)
-        except:
+        except Exception:
             return None
 
     def isIterable(self):
@@ -1829,7 +1829,7 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
 
     def isExposedConditionally(self, exclusions=[]):
         return any(
-            ((not a in exclusions) and self.getExtendedAttribute(a))
+            ((a not in exclusions) and self.getExtendedAttribute(a))
             for a in self.conditionExtendedAttributes
         )
 
@@ -1887,13 +1887,14 @@ class IDLInterface(IDLInterfaceOrNamespace):
             elif identifier == "LegacyFactoryFunction":
                 if not attr.hasValue():
                     raise WebIDLError(
-                        "LegacyFactoryFunction must either take an identifier or take a named argument list",
+                        (
+                            "LegacyFactoryFunction must either take an "
+                            "identifier or take a named argument list"
+                        ),
                         [attr.location],
                     )
 
                 args = attr.args() if attr.hasArgs() else []
-
-                retType = IDLWrapperType(self.location, self)
 
                 method = IDLConstructor(attr.location, args, attr.value())
                 method.reallyInit(self)
@@ -2615,7 +2616,7 @@ class IDLUnresolvedType(IDLType):
         obj = None
         try:
             obj = scope._lookupIdentifier(self.name)
-        except:
+        except Exception:
             raise WebIDLError("Unresolved type '%s'." % self.name, [self.location])
 
         assert obj
@@ -2631,7 +2632,6 @@ class IDLUnresolvedType(IDLType):
             assert self.name.name == obj.identifier.name
             return IDLCallbackType(self.location, obj)
 
-        name = self.name.resolve(scope, None)
         return IDLWrapperType(self.location, obj)
 
     def withExtendedAttributes(self, attrs):
@@ -3097,6 +3097,7 @@ class IDLUnionType(IDLType):
         self.name = "Or".join(typeName(type) for type in self.memberTypes)
         self.flatMemberTypes = list(self.memberTypes)
         i = 0
+        nullableType = None  # assigned in loop if nullable type in self.flatMemberTypes
         while i < len(self.flatMemberTypes):
             if self.flatMemberTypes[i].nullable():
                 if self.hasNullableType:
@@ -3159,7 +3160,8 @@ class IDLUnionType(IDLType):
         return True
 
     def isExposedInAllOf(self, exposureSet):
-        # We could have different member types in different globals.  Just make sure that each thing in exposureSet has one of our member types exposed in it.
+        # We could have different member types in different globals.
+        # Just make sure that each thing in exposureSet has one of our member types exposed in it.
         for globalName in exposureSet:
             if not any(
                 t.unroll().isExposedInAllOf(set([globalName]))
@@ -3666,9 +3668,9 @@ class IDLBuiltinType(IDLType):
         attrLocation=[],
     ):
         """
-        The mutually exclusive clamp/enforceRange/legacyNullToEmptyString/allowShared arguments are used
-        to create instances of this type with the appropriate attributes attached. Use .clamped(),
-        .rangeEnforced(), .withLegacyNullToEmptyString() and .withAllowShared().
+        The mutually exclusive clamp/enforceRange/legacyNullToEmptyString/allowShared arguments
+        are used to create instances of this type with the appropriate attributes attached. Use
+        .clamped(), .rangeEnforced(), .withLegacyNullToEmptyString() and .withAllowShared().
 
         attrLocation is an array of source locations of these attributes for error reporting.
         """
@@ -4325,7 +4327,7 @@ class IDLEmptySequenceValue(IDLObject):
             for subtype in type.unroll().flatMemberTypes:
                 try:
                     return self.coerceToType(subtype, location)
-                except:
+                except Exception:
                     pass
 
         if not type.isSequence():
@@ -4355,7 +4357,7 @@ class IDLDefaultDictionaryValue(IDLObject):
             for subtype in type.unroll().flatMemberTypes:
                 try:
                     return self.coerceToType(subtype, location)
-                except:
+                except Exception:
                     pass
 
         if not type.isDictionary():
@@ -4500,7 +4502,7 @@ class IDLInterfaceMember(IDLObjectWithIdentifier, IDLExposureMixins):
             )
         if affects not in IDLInterfaceMember.AffectsValues:
             raise WebIDLError(
-                "Invalid [Affects=%s] on attribute" % dependsOn, [self.location]
+                "Invalid [Affects=%s] on attribute" % affects, [self.location]
             )
         self.affects = affects
 
@@ -5092,7 +5094,7 @@ class IDLConst(IDLInterfaceMember):
                 locations = [self.type.location, type.location]
                 try:
                     locations.append(type.inner.location)
-                except:
+                except Exception:
                     pass
                 raise WebIDLError("Incorrect type for constant", locations)
             self.type = type
@@ -5720,7 +5722,7 @@ class IDLAttribute(IDLInterfaceMember):
                 method.addExtendedAttributes(
                     [IDLExtendedAttribute(self.location, (key,))]
                 )
-            elif not key in attributeOnlyExtAttrs:
+            elif key not in attributeOnlyExtAttrs:
                 raise WebIDLError(
                     "[%s] is currently unsupported in "
                     "stringifier attributes, please file a bug "
@@ -6247,8 +6249,10 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
 
         if self.isLegacycaller() != method.isLegacycaller():
             raise WebIDLError(
-                "Overloaded identifier %s appears with different values of the 'legacycaller' attribute"
-                % method.identifier,
+                (
+                    "Overloaded identifier %s appears with different "
+                    "values of the 'legacycaller' attribute" % method.identifier
+                ),
                 [method.location],
             )
 
@@ -6842,7 +6846,10 @@ class Tokenizer(object):
     tokens = ["INTEGER", "FLOATLITERAL", "IDENTIFIER", "STRING", "WHITESPACE", "OTHER"]
 
     def t_FLOATLITERAL(self, t):
-        r"(-?(([0-9]+\.[0-9]*|[0-9]*\.[0-9]+)([Ee][+-]?[0-9]+)?|[0-9]+[Ee][+-]?[0-9]+|Infinity))|NaN"
+        (
+            r"(-?(([0-9]+\.[0-9]*|[0-9]*\.[0-9]+)([Ee][+-]"
+            r"?[0-9]+)?|[0-9]+[Ee][+-]?[0-9]+|Infinity))|NaN"
+        )
         t.value = float(t.value)
         return t
 
@@ -6851,7 +6858,7 @@ class Tokenizer(object):
         try:
             # Can't use int(), because that doesn't handle octal properly.
             t.value = parseInt(t.value)
-        except:
+        except Exception:
             raise WebIDLError(
                 "Invalid integer literal",
                 [
@@ -7426,7 +7433,8 @@ class Parser(Tokenizer):
 
     def p_PartialInterfaceMembers(self, p):
         """
-        PartialInterfaceMembers : ExtendedAttributeList PartialInterfaceMember PartialInterfaceMembers
+        PartialInterfaceMembers : ExtendedAttributeList PartialInterfaceMember
+                                    PartialInterfaceMembers
         """
         p[0] = [p[2]]
 
@@ -7641,7 +7649,8 @@ class Parser(Tokenizer):
 
     def p_CallbackConstructorRest(self, p):
         """
-        CallbackConstructorRest : CONSTRUCTOR IDENTIFIER EQUALS Type LPAREN ArgumentList RPAREN SEMICOLON
+        CallbackConstructorRest : CONSTRUCTOR IDENTIFIER EQUALS ReturnType LPAREN ArgumentList
+                                    RPAREN SEMICOLON
         """
         identifier = IDLUnresolvedIdentifier(self.getLocation(p, 2), p[2])
         p[0] = IDLCallback(
@@ -7751,7 +7760,8 @@ class Parser(Tokenizer):
     def p_Iterable(self, p):
         """
         Iterable : ITERABLE LT TypeWithExtendedAttributes GT SEMICOLON
-                 | ITERABLE LT TypeWithExtendedAttributes COMMA TypeWithExtendedAttributes GT SEMICOLON
+                 | ITERABLE LT TypeWithExtendedAttributes COMMA TypeWithExtendedAttributes GT
+                    SEMICOLON
         """
         location = self.getLocation(p, 2)
         identifier = IDLUnresolvedIdentifier(
@@ -7769,9 +7779,12 @@ class Parser(Tokenizer):
     def p_AsyncIterable(self, p):
         """
         AsyncIterable : ASYNC ITERABLE LT TypeWithExtendedAttributes GT SEMICOLON
-                      | ASYNC ITERABLE LT TypeWithExtendedAttributes COMMA TypeWithExtendedAttributes GT SEMICOLON
-                      | ASYNC ITERABLE LT TypeWithExtendedAttributes GT LPAREN ArgumentList RPAREN SEMICOLON
-                      | ASYNC ITERABLE LT TypeWithExtendedAttributes COMMA TypeWithExtendedAttributes GT LPAREN ArgumentList RPAREN SEMICOLON
+                      | ASYNC ITERABLE LT TypeWithExtendedAttributes COMMA
+                        TypeWithExtendedAttributes GT SEMICOLON
+                      | ASYNC ITERABLE LT TypeWithExtendedAttributes GT LPAREN ArgumentList
+                        RPAREN SEMICOLON
+                      | ASYNC ITERABLE LT TypeWithExtendedAttributes COMMA
+                        TypeWithExtendedAttributes GT LPAREN ArgumentList RPAREN SEMICOLON
         """
         location = self.getLocation(p, 2)
         identifier = IDLUnresolvedIdentifier(
@@ -7816,7 +7829,8 @@ class Parser(Tokenizer):
 
     def p_Maplike(self, p):
         """
-        Maplike : ReadOnly MAPLIKE LT TypeWithExtendedAttributes COMMA TypeWithExtendedAttributes GT SEMICOLON
+        Maplike : ReadOnly MAPLIKE LT TypeWithExtendedAttributes COMMA TypeWithExtendedAttributes
+                    GT SEMICOLON
         """
         readonly = p[1]
         maplikeOrSetlikeType = p[2]
@@ -8540,7 +8554,7 @@ class Parser(Tokenizer):
                     type = IDLWrapperType(self.getLocation(p, 1), p[1])
                 p[0] = self.handleNullable(type, p[2])
                 return
-        except:
+        except Exception:
             pass
 
         type = IDLUnresolvedType(self.getLocation(p, 1), p[1])
@@ -8803,7 +8817,10 @@ class Parser(Tokenizer):
     def p_error(self, p):
         if not p:
             raise WebIDLError(
-                "Syntax Error at end of file. Possibly due to missing semicolon(;), braces(}) or both",
+                (
+                    "Syntax Error at end of file. Possibly due to "
+                    "missing semicolon(;), braces(}) or both"
+                ),
                 [self._filename],
             )
         else:
@@ -8851,9 +8868,7 @@ class Parser(Tokenizer):
         ):
             builtin = BuiltinTypes[x]
             name = builtin.name
-            typedef = IDLTypedef(
-                BuiltinLocation("<builtin type>"), scope, builtin, name
-            )
+            IDLTypedef(BuiltinLocation("<builtin type>"), scope, builtin, name)
 
     @staticmethod
     def handleNullable(type, questionMarkLocation):

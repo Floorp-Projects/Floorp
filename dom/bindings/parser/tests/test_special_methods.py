@@ -111,7 +111,7 @@ def WebIDLTest(parser, harness):
             """
         )
         parser.finish()
-    except:
+    except Exception:
         threw = True
 
     harness.ok(threw, "There are no indexed deleters")

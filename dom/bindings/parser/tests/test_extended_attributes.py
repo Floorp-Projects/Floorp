@@ -1,6 +1,3 @@
-import WebIDL
-
-
 def WebIDLTest(parser, harness):
     parser.parse(
         """
@@ -11,7 +8,7 @@ def WebIDLTest(parser, harness):
     """
     )
 
-    results = parser.finish()
+    parser.finish()
 
     parser = parser.reset()
     parser.parse(
@@ -23,7 +20,7 @@ def WebIDLTest(parser, harness):
     """
     )
 
-    results = parser.finish()
+    parser.finish()
 
     parser = parser.reset()
     parser.parse(
@@ -49,8 +46,8 @@ def WebIDLTest(parser, harness):
             };
         """
         )
-        results = parser.finish()
-    except:
+        parser.finish()
+    except Exception:
         threw = True
 
     harness.ok(threw, "[LegacyLenientThis] must take no arguments")
@@ -86,8 +83,8 @@ def WebIDLTest(parser, harness):
             };
         """
         )
-        results = parser.finish()
-    except:
+        parser.finish()
+    except Exception:
         threw = True
 
     harness.ok(threw, "[Clamp] must take no arguments")
@@ -124,8 +121,8 @@ def WebIDLTest(parser, harness):
             };
         """
         )
-        results = parser.finish()
-    except:
+        parser.finish()
+    except Exception:
         threw = True
 
     harness.ok(threw, "[EnforceRange] must take no arguments")
