@@ -163,3 +163,48 @@ addAccessibleTask(
     iframeAttrs: { style: "width: 0;" },
   }
 );
+
+/**
+ * Test document bounds after re-creating an iframe.
+ */
+addAccessibleTask(
+  `
+<ol id="ol">
+  <iframe id="iframe" src="data:text/html,"></iframe>
+</ol>
+  `,
+  async function(browser, docAcc) {
+    let iframeDoc = findAccessibleChildByID(docAcc, "iframe").firstChild;
+    ok(iframeDoc, "Got the iframe document");
+    const origX = {};
+    const origY = {};
+    iframeDoc.getBounds(origX, origY, {}, {});
+    let reordered = waitForEvent(EVENT_REORDER, docAcc);
+    await invokeContentTask(browser, [], () => {
+      // This will cause a bounds cache update to be queued for the iframe doc.
+      content.document.getElementById("iframe").width = "600";
+      // This will recreate the ol a11y subtree, including the iframe. The
+      // iframe document will be unbound briefly while this happens. We want to
+      // be sure processing the bounds cache update queued above doesn't assert
+      // while the document is unbound. The setTimeout is necessary to get the
+      // cache update to happen at the right time.
+      content.setTimeout(
+        () => (content.document.getElementById("ol").type = "i"),
+        0
+      );
+    });
+    await reordered;
+    const iframe = findAccessibleChildByID(docAcc, "iframe");
+    // We don't currently fire an event when a DocAccessible is re-bound to a new OuterDoc.
+    await BrowserTestUtils.waitForCondition(() => iframe.firstChild);
+    iframeDoc = iframe.firstChild;
+    ok(iframeDoc, "Got the iframe document after re-creation");
+    const newX = {};
+    const newY = {};
+    iframeDoc.getBounds(newX, newY, {}, {});
+    ok(
+      origX.value == newX.value && origY.value == newY.value,
+      "Iframe document x and y are same after iframe re-creation"
+    );
+  }
+);
