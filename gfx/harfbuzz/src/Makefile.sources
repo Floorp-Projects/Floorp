@@ -52,6 +52,7 @@ HB_BASE_sources = \
 	hb-map.hh \
 	hb-meta.hh \
 	hb-ms-feature-ranges.hh \
+	hb-multimap.hh \
 	hb-mutex.hh \
 	hb-null.hh \
 	hb-number.cc \
@@ -95,7 +96,10 @@ HB_BASE_sources = \
 	OT/glyf/Glyph.hh \
 	OT/glyf/GlyphHeader.hh \
 	OT/glyf/SimpleGlyph.hh \
+	OT/glyf/coord-setter.hh \
+	OT/glyf/composite-iter.hh \
 	OT/glyf/CompositeGlyph.hh \
+	OT/glyf/VarCompositeGlyph.hh \
 	OT/glyf/SubsetGlyph.hh \
 	OT/Layout/types.hh \
 	OT/Layout/Common/Coverage.hh \
