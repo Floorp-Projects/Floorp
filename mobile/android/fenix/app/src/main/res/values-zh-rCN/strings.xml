@@ -68,11 +68,13 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">添加快捷方式，即可由主屏幕直接打开隐私标签页。</string>
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">添加快捷方式，即可由主屏幕直接打开隐私标签页。</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">添加快捷方式</string>
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">添加快捷方式</string>
 
-    <!-- Text for the negative button -->
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">添加到主屏幕</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">不了，谢谢</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -350,6 +352,15 @@
     <string name="reduce_cookie_banner_option">减少 Cookie 横幅</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
     <string name="reduce_cookie_banner_summary">Firefox 会自动尝试点击 Cookie 横幅上的“拒绝”按钮。若网站未提供拒绝选项，则可能会接受所有 Cookie 以关闭横幅。</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">在该网站关闭</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">在该网站开启</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site">要为 %1$s 开启“减少 Cookie 横幅”吗？</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site">要为 %1$s 关闭“减少 Cookie 横幅”吗？</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">自动尝试使用 HTTPS 加密协议连接至网站，增强安全性。</string>
@@ -1105,8 +1116,6 @@
     <string name="share_copy_link_to_clipboard">复制到剪贴板</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">已复制到剪贴板</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">登录同步服务</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">登录同步服务</string>
      <!-- An option from the three dot menu to sync and save data -->

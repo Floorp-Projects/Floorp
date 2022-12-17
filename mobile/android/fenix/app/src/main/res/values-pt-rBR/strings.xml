@@ -1090,13 +1090,13 @@
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Copiado para área de transferência</string>
     <!-- An option from the share dialog to sign into sync -->
-    <string name="sync_sign_in">Entrar no Sync</string>
+    <string name="sync_sign_in">Entrar na conta para sincronizar</string>
      <!-- An option from the three dot menu to sync and save data -->
     <string name="sync_menu_sync_and_save_data">Sincronizar e salvar dados</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Enviar para todos os dispositivos</string>
     <!-- An option from the share dialog to reconnect to sync -->
-    <string name="sync_reconnect">Reconectar ao Sync</string>
+    <string name="sync_reconnect">Reconectar para sincronizar</string>
     <!-- Text displayed when sync is offline and cannot be accessed -->
     <string name="sync_offline">Offline</string>
     <!-- An option to connect additional devices -->
@@ -1526,7 +1526,7 @@
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">As contas que você salvar ou sincronizar no %s aparecem aqui.</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Saiba mais sobre o Sync.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Saiba mais sobre sincronização.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Exceções</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->

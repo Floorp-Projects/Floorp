@@ -66,10 +66,14 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">Ji bo ku tu ji ekrana xwe ya Destpêkê hilpekîneke veşartî vekî, kurterêyekê tevlî bike.</string>
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Ji bo ku tu ji ekrana xwe ya Destpêkê hilpekîneke veşartî vekî, kurterêyekê tevlî bike.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message">Hilpekîna din a veşartî bi destdanekê veke.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Kurterêyê tevlî bike</string>
-    <!-- Text for the negative button -->
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Kurterêyê tevlî bike</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">Tevlî ekrana destpêkê bike</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Na, spas</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -260,6 +264,9 @@
     <!-- Header text for the search selector menu -->
     <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Lêgerîna niha:</string>
 
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">Bi vê bigere:</string>
+
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">Serûpela xwe ya taybet nas bike. Tu yê li virê hilpekîn, bijare û encamên lêgerînên xwe yên dawiyê bibînî.</string>
@@ -333,6 +340,26 @@
     <string name="preferences_add_private_browsing_shortcut">Kurterêya gerîna veşartî tevlî bike</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Moda Tenê-HTTPS</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Agahdariya xurekan kêm bike</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Agahdariyên xurekan kêm bike</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Firefox bi awayekî otomatîk hewl dide ku daxwazên xurekan ên di agahdariyên xurekan de red bike. Heke vebijarka redkirinê ne berdest be, dibe ku Firefox ji bo girtina agahdariyê hemû xurekan qebûl bike.</string>
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">Ji bo vê malperê girtî ye</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">Ji bo vê malperê vekirî ye</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site">Bila ji bo %1$sê agahdariyên xurekê were vekirin?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site">Bila ji bo %1$sê agahdariyên xurekê were girtin?</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s ew ê hemû xurekên malperê paqij bike û malperê nû bike. Paqijkirina hemû xurekan dibe ku têketina te bigire û sepeta te ya danûstandinê vala bike.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s, dikare bi awayekî otomatîk daxwazên xurekan red bike. Heke vebijarka redkirinê ne berdest be,  dibe ku %2$s ji bo girtina agahdariyê hemû xurekan qebûl bike.</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Ji bo ewlekariya zêdetir hewlê bide ku bi protokola şîfrekirî ya HTTPSê bi awayekî xweber têkeve malperan.</string>
@@ -1063,8 +1090,6 @@
     <string name="share_copy_link_to_clipboard">Li panoyê kopî bike</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Li panoyê hat kopîkirin</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">Ji bo senkronîzekirinê têkevê</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Têkeve Sync’ê</string>
      <!-- An option from the three dot menu to sync and save data -->

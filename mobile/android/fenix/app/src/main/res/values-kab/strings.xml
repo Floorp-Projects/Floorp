@@ -70,6 +70,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Rnu anegzum akken ad teldiḍ iccaren usligen seg ugdil agejdan.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message">Senker iccer uslig uḍfir s yiwen usiti kan.</string>
     <!-- Text for the positive button -->
     <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Rnu anegzum</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
@@ -356,6 +358,11 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">Rmed asenqes n yiɣerracen n yinagan n tuqqna i %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">Sens asenqes n yiɣerracen n yinagan n tuqqna i %1$s?</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s ad isfeḍ inagan n tuqqna n usmel-a syen ad issesfer asebter. Asfaḍ meṛṛa n yinagan n tuqqna yezmer ad ak·am-isseḥbes tuqqna neɣ ad yenɣel tiqecwalin n tiɣtin.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s yezmer ad yeɛreḍ s wudem awurman ad yegdel issutar n yinagan n tuqqna. Ma yella ulac taxtiṛt n ugdal, %2$s yezmer ad yeqbel meṛṛa inagan n tuqqna i umdal n uɣarrac.</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Ɛreḍ ad teqqneḍ s wudem awurman ɣer yismal s useqdec n uneggaf n uwgelhen HTTPS i tɣellist ɛlayen.</string>

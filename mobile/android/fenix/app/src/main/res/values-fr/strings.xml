@@ -67,6 +67,8 @@
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Ajoutez un raccourci pour ouvrir des onglets privés depuis votre écran d’accueil.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message">Lancez le prochain onglet privé d’un seul doigt.</string>
     <!-- Text for the positive button -->
     <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Ajouter un raccourci</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
