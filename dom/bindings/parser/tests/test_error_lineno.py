@@ -14,7 +14,7 @@ interface Foo {
 interface ?"""
     try:
         parser.parse(input)
-        parser.finish()
+        results = parser.finish()
     except WebIDL.WebIDLError as e:
         threw = True
         lines = str(e).split("\n")

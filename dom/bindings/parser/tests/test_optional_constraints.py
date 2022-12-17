@@ -9,8 +9,8 @@ def WebIDLTest(parser, harness):
         """
         )
 
-        parser.finish()
-    except Exception:
+        results = parser.finish()
+    except:
         threw = True
 
     harness.ok(

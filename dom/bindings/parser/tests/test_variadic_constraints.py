@@ -8,9 +8,9 @@ def WebIDLTest(parser, harness):
             };
         """
         )
-        parser.finish()
+        results = parser.finish()
 
-    except Exception:
+    except:
         threw = True
 
     harness.ok(
@@ -28,8 +28,8 @@ def WebIDLTest(parser, harness):
             };
         """
         )
-        parser.finish()
-    except Exception:
+        results = parser.finish()
+    except:
         threw = True
 
     harness.ok(
@@ -47,9 +47,9 @@ def WebIDLTest(parser, harness):
             };
         """
         )
-        parser.finish()
+        results = parser.finish()
 
-    except Exception:
+    except:
         threw = True
 
     harness.ok(
@@ -67,8 +67,8 @@ def WebIDLTest(parser, harness):
             };
         """
         )
-        parser.finish()
-    except Exception:
+        results = parser.finish()
+    except:
         threw = True
 
     harness.ok(threw, "Should have thrown on variadic argument with default value.")

@@ -95,7 +95,7 @@ def WebIDLTest(parser, harness):
         )
 
         results = parser.finish()
-    except Exception:
+    except:
         threw = True
     harness.ok(
         threw,
@@ -118,7 +118,7 @@ def WebIDLTest(parser, harness):
         )
 
         results = parser.finish()
-    except Exception:
+    except:
         threw = True
     harness.ok(
         threw,
@@ -141,7 +141,7 @@ def WebIDLTest(parser, harness):
         )
 
         results = parser.finish()
-    except Exception:
+    except Exception as x:
         threw = True
     harness.ok(
         threw,
@@ -164,7 +164,7 @@ def WebIDLTest(parser, harness):
         )
 
         results = parser.finish()
-    except Exception:
+    except Exception as x:
         threw = True
     harness.ok(
         threw,
@@ -210,7 +210,7 @@ def WebIDLTest(parser, harness):
         )
 
         results = parser.finish()
-    except Exception:
+    except:
         threw = True
 
     harness.ok(
@@ -240,7 +240,7 @@ def WebIDLTest(parser, harness):
         )
 
         results = parser.finish()
-    except Exception:
+    except:
         threw = True
 
     harness.ok(
@@ -270,7 +270,7 @@ def WebIDLTest(parser, harness):
         )
 
         results = parser.finish()
-    except Exception:
+    except:
         threw = True
 
     harness.ok(
@@ -305,7 +305,7 @@ def WebIDLTest(parser, harness):
         )
 
         results = parser.finish()
-    except Exception:
+    except:
         threw = True
 
     harness.ok(threw, "Should have thrown for static [LegacyUnforgeable] attribute.")

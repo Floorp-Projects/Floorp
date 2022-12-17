@@ -86,8 +86,8 @@ def WebIDLTest(parser, harness):
           };
         """
         )
-        parser.finish()
-    except Exception:
+        results = parser.finish()
+    except:
         threw = True
 
     harness.ok(threw, "Should not allow a bogus default value for an enum")

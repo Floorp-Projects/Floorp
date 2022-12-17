@@ -1,4 +1,5 @@
 import WebIDL
+import traceback
 
 
 def WebIDLTest(parser, harness):
@@ -44,7 +45,7 @@ def WebIDLTest(parser, harness):
             p.parse(iface)
             p.finish()
             harness.ok(False, prefix + " - Interface passed when should've failed")
-        except WebIDL.WebIDLError:
+        except WebIDL.WebIDLError as e:
             harness.ok(True, prefix + " - Interface failed as expected")
         except Exception as e:
             harness.ok(
@@ -65,6 +66,12 @@ def WebIDLTest(parser, harness):
     setRWMembers = [
         (x, WebIDL.IDLMethod) for x in ["add", "clear", "delete"]
     ] + setROMembers
+    setROChromeMembers = [
+        (x, WebIDL.IDLMethod) for x in ["__add", "__clear", "__delete"]
+    ] + setROMembers
+    setRWChromeMembers = [
+        (x, WebIDL.IDLMethod) for x in ["__add", "__clear", "__delete"]
+    ] + setRWMembers
     mapROMembers = (
         [(x, WebIDL.IDLMethod) for x in ["get", "has"]]
         + [("__maplike", WebIDL.IDLMaplikeOrSetlike)]
@@ -74,6 +81,9 @@ def WebIDLTest(parser, harness):
     mapRWMembers = [
         (x, WebIDL.IDLMethod) for x in ["set", "clear", "delete"]
     ] + mapROMembers
+    mapRWChromeMembers = [
+        (x, WebIDL.IDLMethod) for x in ["__set", "__clear", "__delete"]
+    ] + mapRWMembers
 
     # OK, now that we've used iterableMembers to set up the above, append
     # __iterable to it for the iterable<> case.

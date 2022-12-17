@@ -1,3 +1,6 @@
+import WebIDL
+
+
 def WebIDLTest(parser, harness):
     try:
         parser.parse(
@@ -8,8 +11,8 @@ def WebIDLTest(parser, harness):
             };
             """
         )
-        parser.finish()
-    except Exception:
+        results = parser.finish()
+    except:
         threw = True
 
     harness.ok(threw, "undefined must not be used as the type of a dictionary member")
@@ -25,8 +28,8 @@ def WebIDLTest(parser, harness):
             };
             """
         )
-        parser.finish()
-    except Exception:
+        results = parser.finish()
+    except:
         threw = True
 
     harness.ok(
@@ -46,8 +49,8 @@ def WebIDLTest(parser, harness):
             };
             """
         )
-        parser.finish()
-    except Exception:
+        results = parser.finish()
+    except:
         threw = True
 
     harness.ok(
@@ -67,8 +70,8 @@ def WebIDLTest(parser, harness):
             };
             """
         )
-        parser.finish()
-    except Exception:
+        results = parser.finish()
+    except:
         threw = True
 
     harness.ok(
@@ -88,8 +91,8 @@ def WebIDLTest(parser, harness):
             };
             """
         )
-        parser.finish()
-    except Exception:
+        results = parser.finish()
+    except:
         threw = True
 
     harness.ok(
@@ -109,8 +112,8 @@ def WebIDLTest(parser, harness):
             };
             """
         )
-        parser.finish()
-    except Exception:
+        results = parser.finish()
+    except:
         threw = True
 
     harness.ok(
@@ -130,8 +133,8 @@ def WebIDLTest(parser, harness):
             };
             """
         )
-        parser.finish()
-    except Exception:
+        results = parser.finish()
+    except:
         threw = True
 
     harness.ok(
@@ -149,8 +152,8 @@ def WebIDLTest(parser, harness):
             callback Callback = undefined (undefined foo);
             """
         )
-        parser.finish()
-    except Exception:
+        results = parser.finish()
+    except:
         threw = True
 
     harness.ok(
@@ -170,8 +173,8 @@ def WebIDLTest(parser, harness):
             };
             """
         )
-        parser.finish()
-    except Exception:
+        results = parser.finish()
+    except:
         threw = True
 
     harness.ok(
@@ -192,8 +195,8 @@ def WebIDLTest(parser, harness):
             };
             """
         )
-        parser.finish()
-    except Exception:
+        results = parser.finish()
+    except:
         threw = True
 
     harness.ok(
@@ -213,8 +216,8 @@ def WebIDLTest(parser, harness):
             };
             """
         )
-        parser.finish()
-    except Exception:
+        results = parser.finish()
+    except:
         threw = True
 
     harness.ok(
@@ -233,8 +236,8 @@ def WebIDLTest(parser, harness):
             };
             """
         )
-        parser.finish()
-    except Exception:
+        results = parser.finish()
+    except:
         threw = True
 
     harness.ok(

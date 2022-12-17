@@ -1,3 +1,6 @@
+import WebIDL
+
+
 def WebIDLTest(parser, harness):
     parser.parse(
         """
@@ -10,6 +13,6 @@ def WebIDLTest(parser, harness):
     """
     )
 
-    parser.finish()
+    results = parser.finish()
 
     harness.ok(True, "TestForwardDeclared interface parsed without error.")
