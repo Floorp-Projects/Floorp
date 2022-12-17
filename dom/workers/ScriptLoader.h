@@ -8,12 +8,10 @@
 #define mozilla_dom_workers_scriptloader_h__
 
 #include "js/loader/ScriptLoadRequest.h"
-#include "js/loader/ModuleLoadRequest.h"
 #include "js/loader/ModuleLoaderBase.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerLoadContext.h"
 #include "mozilla/dom/WorkerRef.h"
-#include "mozilla/dom/workerinternals/WorkerModuleLoader.h"
 #include "mozilla/Maybe.h"
 #include "nsIContentPolicy.h"
 #include "nsStringFwd.h"
@@ -143,7 +141,6 @@ class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
   friend class CacheLoadHandler;
   friend class CacheCreator;
   friend class NetworkLoadHandler;
-  friend class WorkerModuleLoader;
 
   RefPtr<ThreadSafeWorkerRef> mWorkerRef;
   UniquePtr<SerializedStackHolder> mOriginStack;
@@ -187,11 +184,9 @@ class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
                      nsISerialEventTarget* aSyncLoopTarget,
                      WorkerScriptType aWorkerScriptType, ErrorResult& aRv);
 
-  bool CreateScriptRequests(const nsTArray<nsString>& aScriptURLs,
+  void CreateScriptRequests(const nsTArray<nsString>& aScriptURLs,
                             const mozilla::Encoding* aDocumentEncoding,
                             bool aIsMainScript);
-
-  ScriptLoadRequest* GetMainScript();
 
   already_AddRefed<ScriptLoadRequest> CreateScriptLoadRequest(
       const nsString& aScriptURL, const mozilla::Encoding* aDocumentEncoding,
@@ -205,8 +200,6 @@ class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
   nsIURI* GetBaseURI() const override;
 
   nsIURI* GetInitialBaseURI();
-
-  nsIGlobalObject* GetGlobal();
 
   void MaybeMoveToLoadedList(ScriptLoadRequest* aRequest);
 
@@ -239,13 +232,11 @@ class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
     return NS_OK;
   }
 
-  void InitModuleLoader();
-
   void TryShutdown();
 
   nsTArray<RefPtr<ThreadSafeRequestHandle>> GetLoadingList();
 
-  nsContentPolicyType GetContentPolicyType(ScriptLoadRequest* aRequest);
+  nsIGlobalObject* GetGlobal();
 
   bool EvaluateScript(JSContext* aCx, ScriptLoadRequest* aRequest);
 
