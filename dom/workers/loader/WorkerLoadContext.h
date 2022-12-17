@@ -85,10 +85,6 @@ class WorkerLoadContext : public JS::loader::LoadContextBase {
     // We are importing a script from the worker via ImportScript. This may only
     // be a Classic script.
     ImportScript,
-    // We are importing a script from the worker via a Static Import. This may
-    // only
-    // be a Module script.
-    StaticImport,
     // We have an attached debugger, and these should be treated specially and
     // not like a main script (regardless of their type). This is not part of
     // the specification.

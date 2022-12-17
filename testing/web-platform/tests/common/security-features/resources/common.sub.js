@@ -485,13 +485,9 @@ function dedicatedWorkerUrlThatFetches(url) {
       .catch((e) => postMessage(e.message));`;
 }
 
-function workerUrlThatImports(url, additionalAttributes) {
-  let csp = "";
-  if (additionalAttributes && additionalAttributes.contentSecurityPolicy) {
-    csp=`&contentSecurityPolicy=${additionalAttributes.contentSecurityPolicy}`;
-  }
+function workerUrlThatImports(url) {
   return `/common/security-features/subresource/static-import.py` +
-      `?import_url=${encodeURIComponent(url)}${csp}`;
+      `?import_url=${encodeURIComponent(url)}`;
 }
 
 function workerDataUrlThatImports(url) {
@@ -911,8 +907,8 @@ const subresourceMap = {
   },
   "worker-import": {
     path: "/common/security-features/subresource/worker.py",
-    invoker: (url, additionalAttributes) =>
-        requestViaDedicatedWorker(workerUrlThatImports(url, additionalAttributes), {type: "module"}),
+    invoker: url =>
+        requestViaDedicatedWorker(workerUrlThatImports(url), {type: "module"}),
   },
   "worker-import-data": {
     path: "/common/security-features/subresource/worker.py",
@@ -1113,10 +1109,6 @@ function invokeRequest(subresource, sourceContextList) {
         additionalAttributes[policyDelivery.key] = policyDelivery.value;
       } else if (policyDelivery.deliveryType === "rel-noref") {
         additionalAttributes["rel"] = "noreferrer";
-      } else if (policyDelivery.deliveryType === "http-rp") {
-        additionalAttributes[policyDelivery.key] = policyDelivery.value;
-      } else if (policyDelivery.deliveryType === "meta") {
-        additionalAttributes[policyDelivery.key] = policyDelivery.value;
       }
     }
 
