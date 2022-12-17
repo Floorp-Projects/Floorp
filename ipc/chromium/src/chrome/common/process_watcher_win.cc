@@ -19,7 +19,14 @@ static constexpr int kWaitInterval = 2000;
 // This is somewhat arbitrary, but based on Try run results.  When
 // changing this, be aware of toolkit.asyncshutdown.crash_timeout
 // (currently 60s), after which the parent process will be killed.
+#ifdef MOZ_CODE_COVERAGE
+// Child processes seem to take longer to shut down on ccov builds, at
+// least in the wdspec tests; ~20s has been observed, and we'll spam
+// false positives unless this is increased.
+static constexpr DWORD kShutdownWaitMs = 80000;
+#else
 static constexpr DWORD kShutdownWaitMs = 8000;
+#endif
 
 namespace {
 
