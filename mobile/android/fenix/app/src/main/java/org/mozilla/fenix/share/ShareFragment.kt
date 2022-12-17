@@ -31,6 +31,7 @@ import org.mozilla.fenix.databinding.FragmentShareBinding
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.theme.Theme
 
 class ShareFragment : AppCompatDialogFragment() {
 
@@ -122,7 +123,7 @@ class ShareFragment : AppCompatDialogFragment() {
                 isVisible = true
                 setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
                 setContent {
-                    FirefoxTheme {
+                    FirefoxTheme(theme = Theme.getTheme(allowPrivateTheme = false)) {
                         SaveToPDFItem {
                             shareInteractor.onSaveToPDF(tabId = args.sessionId)
                         }
