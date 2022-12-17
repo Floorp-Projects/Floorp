@@ -79,7 +79,16 @@ add_task(async function test_popup_styling(browser, accDoc) {
       );
 
       // Ensure popup border color was set properly
-      testBorderColor(arrowContent, POPUP_BORDER_COLOR);
+      if (AppConstants.platform == "macosx") {
+        Assert.ok(
+          arrowContentComputedStyle
+            .getPropertyValue("box-shadow")
+            .includes(`rgb(${hexToRGB(POPUP_BORDER_COLOR).join(", ")})`),
+          "Popup border color should be set"
+        );
+      } else {
+        testBorderColor(arrowContent, POPUP_BORDER_COLOR);
+      }
 
       await closeIdentityPopup();
       await extension.unload();
