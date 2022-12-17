@@ -5,12 +5,12 @@
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 
-import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   EventDispatcher: "resource://gre/modules/Messaging.sys.mjs",
+  clearTimeout: "resource://gre/modules/Timer.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -348,7 +348,7 @@ export var GeckoViewUtils = {
         if (timerId != 0) {
           // aWindow may be dead object now.
           try {
-            clearTimeout(timerId);
+            lazy.clearTimeout(timerId);
           } catch (e) {}
           timerId = 0;
         }
@@ -365,7 +365,7 @@ export var GeckoViewUtils = {
       // resized (it means on-screen-keyboard is already shown).
       // So after up to 500ms, APZ event is sent. So we need to wait for more
       // 500ms.
-      timerId = setTimeout(() => {
+      timerId = lazy.setTimeout(() => {
         // PanZoom state isn't changed. zoomToFocusedInput will return error.
         Services.obs.removeObserver(panZoomState, "PanZoom:StateChange");
         reject();
