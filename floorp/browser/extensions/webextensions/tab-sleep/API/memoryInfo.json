@@ -4,16 +4,9 @@
     "description": "Get memory info",
     "functions": [
       {
-        "name": "getBrowserUsageMemorySize",
-        "type": "function",
-        "description": "Get browser usage memory size",
-        "parameters": [],
-        "async": true
-      },
-      {
         "name": "getSystemMemorySize",
         "type": "function",
-        "description": "Get system memory size",
+        "description": "Get a preference's value",
         "parameters": [],
         "async": true
       }

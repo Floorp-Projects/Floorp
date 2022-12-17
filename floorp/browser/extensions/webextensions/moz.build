@@ -12,7 +12,7 @@ DIRS += [
     "official-site-ua",
     "webpanel-ua",
     "multirow-tabs",
-    "memory-manager",
+    "tab-sleep",
 ]
 
 if CONFIG["OS_TARGET"] == "Linux":

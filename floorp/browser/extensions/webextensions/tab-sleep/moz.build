@@ -8,12 +8,12 @@ DEFINES["MOZ_APP_VERSION"] = CONFIG["MOZ_APP_VERSION"]
 DEFINES["MOZ_APP_MAXVERSION"] = CONFIG["MOZ_APP_MAXVERSION"]
 
 
-FINAL_TARGET_FILES.features["memory-manager@floorp.ablaze.one"] += [
-    "background-script.js",
+FINAL_TARGET_FILES.features["tab-sleep@floorp.ablaze.one"] += [
+    "background.js",
     "manifest.json",
 ]
 
-FINAL_TARGET_FILES.features["memory-manager@floorp.ablaze.one"]["API"] += [
+FINAL_TARGET_FILES.features["tab-sleep@floorp.ablaze.one"]["API"] += [
     "API/aboutConfigPrefs.js",
     "API/aboutConfigPrefs.json",
     "API/memoryInfo.js",
@@ -21,4 +21,4 @@ FINAL_TARGET_FILES.features["memory-manager@floorp.ablaze.one"]["API"] += [
 ]
 
 with Files("**"):
-    BUG_COMPONENT = ("Firefox", "memory-manager@floorp.ablaze.one")
+    BUG_COMPONENT = ("Firefox", "tab-sleep@floorp.ablaze.one")
