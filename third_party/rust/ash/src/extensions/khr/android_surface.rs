@@ -21,6 +21,7 @@ impl AndroidSurface {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateAndroidSurfaceKHR.html>
+    #[inline]
     pub unsafe fn create_android_surface(
         &self,
         create_info: &vk::AndroidSurfaceCreateInfoKHR,
@@ -36,14 +37,17 @@ impl AndroidSurface {
         .result_with_success(surface)
     }
 
+    #[inline]
     pub const fn name() -> &'static CStr {
         vk::KhrAndroidSurfaceFn::name()
     }
 
+    #[inline]
     pub fn fp(&self) -> &vk::KhrAndroidSurfaceFn {
         &self.fp
     }
 
+    #[inline]
     pub fn instance(&self) -> vk::Instance {
         self.handle
     }

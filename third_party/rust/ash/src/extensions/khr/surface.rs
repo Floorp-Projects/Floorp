@@ -21,6 +21,7 @@ impl Surface {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetPhysicalDeviceSurfaceSupportKHR.html>
+    #[inline]
     pub unsafe fn get_physical_device_surface_support(
         &self,
         physical_device: vk::PhysicalDevice,
@@ -38,6 +39,7 @@ impl Surface {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetPhysicalDeviceSurfacePresentModesKHR.html>
+    #[inline]
     pub unsafe fn get_physical_device_surface_present_modes(
         &self,
         physical_device: vk::PhysicalDevice,
@@ -54,6 +56,7 @@ impl Surface {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetPhysicalDeviceSurfaceCapabilitiesKHR.html>
+    #[inline]
     pub unsafe fn get_physical_device_surface_capabilities(
         &self,
         physical_device: vk::PhysicalDevice,
@@ -69,6 +72,7 @@ impl Surface {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetPhysicalDeviceSurfaceFormatsKHR.html>
+    #[inline]
     pub unsafe fn get_physical_device_surface_formats(
         &self,
         physical_device: vk::PhysicalDevice,
@@ -80,6 +84,7 @@ impl Surface {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkDestroySurfaceKHR.html>
+    #[inline]
     pub unsafe fn destroy_surface(
         &self,
         surface: vk::SurfaceKHR,
@@ -88,14 +93,17 @@ impl Surface {
         (self.fp.destroy_surface_khr)(self.handle, surface, allocation_callbacks.as_raw_ptr());
     }
 
+    #[inline]
     pub const fn name() -> &'static CStr {
         vk::KhrSurfaceFn::name()
     }
 
+    #[inline]
     pub fn fp(&self) -> &vk::KhrSurfaceFn {
         &self.fp
     }
 
+    #[inline]
     pub fn instance(&self) -> vk::Instance {
         self.handle
     }

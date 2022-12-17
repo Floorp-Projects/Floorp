@@ -22,6 +22,7 @@ impl HeadlessSurface {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateHeadlessSurfaceEXT.html>
+    #[inline]
     pub unsafe fn create_headless_surface(
         &self,
         create_info: &vk::HeadlessSurfaceCreateInfoEXT,
@@ -37,14 +38,17 @@ impl HeadlessSurface {
         .result_with_success(surface)
     }
 
+    #[inline]
     pub const fn name() -> &'static CStr {
         vk::ExtHeadlessSurfaceFn::name()
     }
 
+    #[inline]
     pub fn fp(&self) -> &vk::ExtHeadlessSurfaceFn {
         &self.fp
     }
 
+    #[inline]
     pub fn instance(&self) -> vk::Instance {
         self.handle
     }

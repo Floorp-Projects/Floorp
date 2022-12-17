@@ -19,6 +19,7 @@ impl GetPhysicalDeviceProperties2 {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetPhysicalDeviceFeatures2KHR.html>
+    #[inline]
     pub unsafe fn get_physical_device_features2(
         &self,
         physical_device: vk::PhysicalDevice,
@@ -28,6 +29,7 @@ impl GetPhysicalDeviceProperties2 {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetPhysicalDeviceFormatProperties2KHR.html>
+    #[inline]
     pub unsafe fn get_physical_device_format_properties2(
         &self,
         physical_device: vk::PhysicalDevice,
@@ -42,6 +44,7 @@ impl GetPhysicalDeviceProperties2 {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetPhysicalDeviceImageFormatProperties2KHR.html>
+    #[inline]
     pub unsafe fn get_physical_device_image_format_properties2(
         &self,
         physical_device: vk::PhysicalDevice,
@@ -57,6 +60,7 @@ impl GetPhysicalDeviceProperties2 {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetPhysicalDeviceMemoryProperties2KHR.html>
+    #[inline]
     pub unsafe fn get_physical_device_memory_properties2(
         &self,
         physical_device: vk::PhysicalDevice,
@@ -66,6 +70,7 @@ impl GetPhysicalDeviceProperties2 {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetPhysicalDeviceProperties2KHR.html>
+    #[inline]
     pub unsafe fn get_physical_device_properties2(
         &self,
         physical_device: vk::PhysicalDevice,
@@ -75,6 +80,7 @@ impl GetPhysicalDeviceProperties2 {
     }
 
     /// Retrieve the number of elements to pass to [`get_physical_device_queue_family_properties2()`][Self::get_physical_device_queue_family_properties2()]
+    #[inline]
     pub unsafe fn get_physical_device_queue_family_properties2_len(
         &self,
         physical_device: vk::PhysicalDevice,
@@ -92,6 +98,7 @@ impl GetPhysicalDeviceProperties2 {
     ///
     /// Call [`get_physical_device_queue_family_properties2_len()`][Self::get_physical_device_queue_family_properties2_len()] to query the number of elements to pass to `out`.
     /// Be sure to [`Default::default()`]-initialize these elements and optionally set their `p_next` pointer.
+    #[inline]
     pub unsafe fn get_physical_device_queue_family_properties2(
         &self,
         physical_device: vk::PhysicalDevice,
@@ -107,6 +114,7 @@ impl GetPhysicalDeviceProperties2 {
     }
 
     /// Retrieve the number of elements to pass to [`get_physical_device_sparse_image_format_properties2()`][Self::get_physical_device_sparse_image_format_properties2()]
+    #[inline]
     pub unsafe fn get_physical_device_sparse_image_format_properties2_len(
         &self,
         physical_device: vk::PhysicalDevice,
@@ -128,6 +136,7 @@ impl GetPhysicalDeviceProperties2 {
     ///
     /// Call [`get_physical_device_sparse_image_format_properties2_len()`][Self::get_physical_device_sparse_image_format_properties2_len()] to query the number of elements to pass to `out`.
     /// Be sure to [`Default::default()`]-initialize these elements and optionally set their `p_next` pointer.
+    #[inline]
     pub unsafe fn get_physical_device_sparse_image_format_properties2(
         &self,
         physical_device: vk::PhysicalDevice,
@@ -146,10 +155,12 @@ impl GetPhysicalDeviceProperties2 {
         assert_eq!(count as usize, out.len());
     }
 
+    #[inline]
     pub const fn name() -> &'static CStr {
         vk::KhrGetPhysicalDeviceProperties2Fn::name()
     }
 
+    #[inline]
     pub fn fp(&self) -> &vk::KhrGetPhysicalDeviceProperties2Fn {
         &self.fp
     }

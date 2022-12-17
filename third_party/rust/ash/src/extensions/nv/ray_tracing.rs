@@ -20,6 +20,7 @@ impl RayTracing {
         Self { handle, fp }
     }
 
+    #[inline]
     pub unsafe fn get_properties(
         instance: &Instance,
         pdevice: vk::PhysicalDevice,
@@ -33,6 +34,7 @@ impl RayTracing {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateAccelerationStructureNV.html>
+    #[inline]
     pub unsafe fn create_acceleration_structure(
         &self,
         create_info: &vk::AccelerationStructureCreateInfoNV,
@@ -49,6 +51,7 @@ impl RayTracing {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkDestroyAccelerationStructureNV.html>
+    #[inline]
     pub unsafe fn destroy_acceleration_structure(
         &self,
         accel_struct: vk::AccelerationStructureNV,
@@ -62,6 +65,7 @@ impl RayTracing {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetAccelerationStructureMemoryRequirementsNV.html>
+    #[inline]
     pub unsafe fn get_acceleration_structure_memory_requirements(
         &self,
         info: &vk::AccelerationStructureMemoryRequirementsInfoNV,
@@ -76,6 +80,7 @@ impl RayTracing {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkBindAccelerationStructureMemoryNV.html>
+    #[inline]
     pub unsafe fn bind_acceleration_structure_memory(
         &self,
         bind_info: &[vk::BindAccelerationStructureMemoryInfoNV],
@@ -89,6 +94,7 @@ impl RayTracing {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBuildAccelerationStructureNV.html>
+    #[inline]
     pub unsafe fn cmd_build_acceleration_structure(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -115,6 +121,7 @@ impl RayTracing {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdCopyAccelerationStructureNV.html>
+    #[inline]
     pub unsafe fn cmd_copy_acceleration_structure(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -126,6 +133,7 @@ impl RayTracing {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdTraceRaysNV.html>
+    #[inline]
     pub unsafe fn cmd_trace_rays(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -164,6 +172,7 @@ impl RayTracing {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateRayTracingPipelinesNV.html>
+    #[inline]
     pub unsafe fn create_ray_tracing_pipelines(
         &self,
         pipeline_cache: vk::PipelineCache,
@@ -183,6 +192,7 @@ impl RayTracing {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetRayTracingShaderGroupHandlesNV.html>
+    #[inline]
     pub unsafe fn get_ray_tracing_shader_group_handles(
         &self,
         pipeline: vk::Pipeline,
@@ -196,12 +206,13 @@ impl RayTracing {
             first_group,
             group_count,
             data.len(),
-            data.as_mut_ptr() as *mut std::ffi::c_void,
+            data.as_mut_ptr().cast(),
         )
         .result()
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetAccelerationStructureHandleNV.html>
+    #[inline]
     pub unsafe fn get_acceleration_structure_handle(
         &self,
         accel_struct: vk::AccelerationStructureNV,
@@ -212,12 +223,13 @@ impl RayTracing {
             self.handle,
             accel_struct,
             std::mem::size_of::<u64>(),
-            handle_ptr as *mut std::ffi::c_void,
+            handle_ptr.cast(),
         )
         .result_with_success(handle)
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdWriteAccelerationStructuresPropertiesNV.html>
+    #[inline]
     pub unsafe fn cmd_write_acceleration_structures_properties(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -237,18 +249,22 @@ impl RayTracing {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCompileDeferredNV.html>
+    #[inline]
     pub unsafe fn compile_deferred(&self, pipeline: vk::Pipeline, shader: u32) -> VkResult<()> {
         (self.fp.compile_deferred_nv)(self.handle, pipeline, shader).result()
     }
 
+    #[inline]
     pub const fn name() -> &'static CStr {
         vk::NvRayTracingFn::name()
     }
 
+    #[inline]
     pub fn fp(&self) -> &vk::NvRayTracingFn {
         &self.fp
     }
 
+    #[inline]
     pub fn device(&self) -> vk::Device {
         self.handle
     }

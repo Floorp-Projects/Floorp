@@ -18,6 +18,7 @@ impl ExtendedDynamicState2 {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetPatchControlPointsEXT.html>
+    #[inline]
     pub unsafe fn cmd_set_patch_control_points(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -27,6 +28,7 @@ impl ExtendedDynamicState2 {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetRasterizerDiscardEnableEXT.html>
+    #[inline]
     pub unsafe fn cmd_set_rasterizer_discard_enable(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -39,6 +41,7 @@ impl ExtendedDynamicState2 {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetDepthBiasEnableEXT.html>
+    #[inline]
     pub unsafe fn cmd_set_depth_bias_enable(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -48,6 +51,7 @@ impl ExtendedDynamicState2 {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetLogicOpEXT.html>
+    #[inline]
     pub unsafe fn cmd_set_logic_op(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -57,6 +61,7 @@ impl ExtendedDynamicState2 {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetPrimitiveRestartEnableEXT.html>
+    #[inline]
     pub unsafe fn cmd_set_primitive_restart_enable(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -68,10 +73,12 @@ impl ExtendedDynamicState2 {
         )
     }
 
+    #[inline]
     pub const fn name() -> &'static CStr {
         vk::ExtExtendedDynamicState2Fn::name()
     }
 
+    #[inline]
     pub fn fp(&self) -> &vk::ExtExtendedDynamicState2Fn {
         &self.fp
     }

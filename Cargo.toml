@@ -138,7 +138,6 @@ autocfg = { path = "third_party/rust/autocfg" }
 # The following overrides point to dummy projects, as a temporary measure until this is resolved:
 # https://github.com/rust-lang/cargo/issues/6179
 js-sys = { path = "build/rust/dummy-web/js-sys" }
-slotmap = { path = "build/rust/dummy-web/slotmap" }
 wasm-bindgen = { path = "build/rust/dummy-web/wasm-bindgen" }
 web-sys = { path = "build/rust/dummy-web/web-sys" }
 

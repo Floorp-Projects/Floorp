@@ -21,6 +21,7 @@ impl CreateRenderPass2 {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateRenderPass2.html>
+    #[inline]
     pub unsafe fn create_render_pass2(
         &self,
         create_info: &vk::RenderPassCreateInfo2,
@@ -37,6 +38,7 @@ impl CreateRenderPass2 {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBeginRenderPass2.html>
+    #[inline]
     pub unsafe fn cmd_begin_render_pass2(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -51,6 +53,7 @@ impl CreateRenderPass2 {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdNextSubpass2.html>
+    #[inline]
     pub unsafe fn cmd_next_subpass2(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -61,6 +64,7 @@ impl CreateRenderPass2 {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdEndRenderPass2.html>
+    #[inline]
     pub unsafe fn cmd_end_render_pass2(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -69,14 +73,17 @@ impl CreateRenderPass2 {
         (self.fp.cmd_end_render_pass2_khr)(command_buffer, subpass_end_info);
     }
 
+    #[inline]
     pub const fn name() -> &'static CStr {
         vk::KhrCreateRenderpass2Fn::name()
     }
 
+    #[inline]
     pub fn fp(&self) -> &vk::KhrCreateRenderpass2Fn {
         &self.fp
     }
 
+    #[inline]
     pub fn device(&self) -> vk::Device {
         self.handle
     }

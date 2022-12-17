@@ -20,6 +20,7 @@ impl PipelineExecutableProperties {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetPipelineExecutableInternalRepresentationsKHR.html>
+    #[inline]
     pub unsafe fn get_pipeline_executable_internal_representations(
         &self,
         executable_info: &vk::PipelineExecutableInfoKHR,
@@ -35,6 +36,7 @@ impl PipelineExecutableProperties {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetPipelineExecutablePropertiesKHR.html>
+    #[inline]
     pub unsafe fn get_pipeline_executable_properties(
         &self,
         pipeline_info: &vk::PipelineInfoKHR,
@@ -50,6 +52,7 @@ impl PipelineExecutableProperties {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetPipelineExecutableStatisticsKHR.html>
+    #[inline]
     pub unsafe fn get_pipeline_executable_statistics(
         &self,
         executable_info: &vk::PipelineExecutableInfoKHR,
@@ -64,14 +67,17 @@ impl PipelineExecutableProperties {
         })
     }
 
+    #[inline]
     pub const fn name() -> &'static CStr {
         vk::KhrPipelineExecutablePropertiesFn::name()
     }
 
+    #[inline]
     pub fn fp(&self) -> &vk::KhrPipelineExecutablePropertiesFn {
         &self.fp
     }
 
+    #[inline]
     pub fn device(&self) -> vk::Device {
         self.handle
     }

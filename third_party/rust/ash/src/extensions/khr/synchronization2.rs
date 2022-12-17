@@ -18,6 +18,7 @@ impl Synchronization2 {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdPipelineBarrier2KHR.html>
+    #[inline]
     pub unsafe fn cmd_pipeline_barrier2(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -27,6 +28,7 @@ impl Synchronization2 {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdResetEvent2KHR.html>
+    #[inline]
     pub unsafe fn cmd_reset_event2(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -37,6 +39,7 @@ impl Synchronization2 {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetEvent2KHR.html>
+    #[inline]
     pub unsafe fn cmd_set_event2(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -47,6 +50,7 @@ impl Synchronization2 {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdWaitEvents2KHR.html>
+    #[inline]
     pub unsafe fn cmd_wait_events2(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -63,6 +67,7 @@ impl Synchronization2 {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdWriteTimestamp2KHR.html>
+    #[inline]
     pub unsafe fn cmd_write_timestamp2(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -74,6 +79,7 @@ impl Synchronization2 {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkQueueSubmit2KHR.html>
+    #[inline]
     pub unsafe fn queue_submit2(
         &self,
         queue: vk::Queue,
@@ -83,10 +89,12 @@ impl Synchronization2 {
         (self.fp.queue_submit2_khr)(queue, submits.len() as u32, submits.as_ptr(), fence).result()
     }
 
+    #[inline]
     pub const fn name() -> &'static CStr {
         vk::KhrSynchronization2Fn::name()
     }
 
+    #[inline]
     pub fn fp(&self) -> &vk::KhrSynchronization2Fn {
         &self.fp
     }

@@ -22,6 +22,7 @@ impl PrivateData {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreatePrivateDataSlotEXT.html>
+    #[inline]
     pub unsafe fn create_private_data_slot(
         &self,
         create_info: &vk::PrivateDataSlotCreateInfoEXT,
@@ -38,6 +39,7 @@ impl PrivateData {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkDestroyPrivateDataSlotEXT.html>
+    #[inline]
     pub unsafe fn destroy_private_data_slot(
         &self,
         private_data_slot: vk::PrivateDataSlotEXT,
@@ -51,6 +53,7 @@ impl PrivateData {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkSetPrivateDataEXT.html>
+    #[inline]
     pub unsafe fn set_private_data<T: vk::Handle>(
         &self,
         object: T,
@@ -68,6 +71,7 @@ impl PrivateData {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetPrivateDataEXT.html>
+    #[inline]
     pub unsafe fn get_private_data<T: vk::Handle>(
         &self,
         object: T,
@@ -84,14 +88,17 @@ impl PrivateData {
         data
     }
 
+    #[inline]
     pub const fn name() -> &'static CStr {
         vk::ExtPrivateDataFn::name()
     }
 
+    #[inline]
     pub fn fp(&self) -> &vk::ExtPrivateDataFn {
         &self.fp
     }
 
+    #[inline]
     pub fn device(&self) -> vk::Device {
         self.handle
     }

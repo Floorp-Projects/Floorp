@@ -18,6 +18,7 @@ impl ExtendedDynamicState {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetCullModeEXT.html>
+    #[inline]
     pub unsafe fn cmd_set_cull_mode(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -27,6 +28,7 @@ impl ExtendedDynamicState {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetFrontFaceEXT.html>
+    #[inline]
     pub unsafe fn cmd_set_front_face(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -36,6 +38,7 @@ impl ExtendedDynamicState {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetPrimitiveTopologyEXT.html>
+    #[inline]
     pub unsafe fn cmd_set_primitive_topology(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -45,6 +48,7 @@ impl ExtendedDynamicState {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetViewportWithCountEXT.html>
+    #[inline]
     pub unsafe fn cmd_set_viewport_with_count(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -58,6 +62,7 @@ impl ExtendedDynamicState {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetScissorWithCountEXT.html>
+    #[inline]
     pub unsafe fn cmd_set_scissor_with_count(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -71,6 +76,7 @@ impl ExtendedDynamicState {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBindVertexBuffers2EXT.html>
+    #[inline]
     pub unsafe fn cmd_bind_vertex_buffers2(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -105,6 +111,7 @@ impl ExtendedDynamicState {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetDepthTestEnableEXT.html>
+    #[inline]
     pub unsafe fn cmd_set_depth_test_enable(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -114,6 +121,7 @@ impl ExtendedDynamicState {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetDepthWriteEnableEXT.html>
+    #[inline]
     pub unsafe fn cmd_set_depth_write_enable(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -123,6 +131,7 @@ impl ExtendedDynamicState {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetDepthCompareOpEXT.html>
+    #[inline]
     pub unsafe fn cmd_set_depth_compare_op(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -132,6 +141,7 @@ impl ExtendedDynamicState {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetDepthBoundsTestEnableEXT.html>
+    #[inline]
     pub unsafe fn cmd_set_depth_bounds_test_enable(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -144,6 +154,7 @@ impl ExtendedDynamicState {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetStencilTestEnableEXT.html>
+    #[inline]
     pub unsafe fn cmd_set_stencil_test_enable(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -153,6 +164,7 @@ impl ExtendedDynamicState {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetStencilOpEXT.html>
+    #[inline]
     pub unsafe fn cmd_set_stencil_op(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -172,10 +184,12 @@ impl ExtendedDynamicState {
         )
     }
 
+    #[inline]
     pub const fn name() -> &'static CStr {
         vk::ExtExtendedDynamicStateFn::name()
     }
 
+    #[inline]
     pub fn fp(&self) -> &vk::ExtExtendedDynamicStateFn {
         &self.fp
     }

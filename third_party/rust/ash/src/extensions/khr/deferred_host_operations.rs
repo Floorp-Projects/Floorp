@@ -21,6 +21,7 @@ impl DeferredHostOperations {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateDeferredOperationKHR.html>
+    #[inline]
     pub unsafe fn create_deferred_operation(
         &self,
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
@@ -35,6 +36,7 @@ impl DeferredHostOperations {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkDeferredOperationJoinKHR.html>
+    #[inline]
     pub unsafe fn deferred_operation_join(
         &self,
         operation: vk::DeferredOperationKHR,
@@ -43,6 +45,7 @@ impl DeferredHostOperations {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkDestroyDeferredOperationKHR.html>
+    #[inline]
     pub unsafe fn destroy_deferred_operation(
         &self,
         operation: vk::DeferredOperationKHR,
@@ -56,6 +59,7 @@ impl DeferredHostOperations {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetDeferredOperationMaxConcurrencyKHR.html>
+    #[inline]
     pub unsafe fn get_deferred_operation_max_concurrency(
         &self,
         operation: vk::DeferredOperationKHR,
@@ -64,6 +68,7 @@ impl DeferredHostOperations {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetDeferredOperationResultKHR.html>
+    #[inline]
     pub unsafe fn get_deferred_operation_result(
         &self,
         operation: vk::DeferredOperationKHR,
@@ -71,14 +76,17 @@ impl DeferredHostOperations {
         (self.fp.get_deferred_operation_result_khr)(self.handle, operation).result()
     }
 
+    #[inline]
     pub const fn name() -> &'static CStr {
         vk::KhrDeferredHostOperationsFn::name()
     }
 
+    #[inline]
     pub fn fp(&self) -> &vk::KhrDeferredHostOperationsFn {
         &self.fp
     }
 
+    #[inline]
     pub fn device(&self) -> vk::Device {
         self.handle
     }

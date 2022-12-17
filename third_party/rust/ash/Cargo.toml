@@ -11,27 +11,43 @@
 
 [package]
 edition = "2018"
+rust-version = "1.59.0"
 name = "ash"
-version = "0.37.0+1.3.209"
-authors = ["maik klein <maikklein@googlemail.com>"]
+version = "0.37.1+1.3.235"
+authors = [
+    "Maik Klein <maikklein@googlemail.com>",
+    "Benjamin Saunders <ben.e.saunders@gmail.com>",
+    "Marijn Suijten <marijn@traverseresearch.nl>",
+]
 description = "Vulkan bindings for Rust"
 documentation = "https://docs.rs/ash"
-readme = "../README.md"
-keywords = ["vulkan", "graphic"]
-license = "MIT"
+readme = "README.md"
+keywords = [
+    "vulkan",
+    "graphic",
+]
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/MaikKlein/ash"
-[package.metadata.docs.rs]
-all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
 
 [package.metadata.release]
 no-dev-version = true
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = [
+    "--cfg",
+    "docsrs",
+]
+
 [dependencies.libloading]
 version = "0.7"
 optional = true
 
 [features]
 debug = []
-default = ["loaded", "debug"]
+default = [
+    "loaded",
+    "debug",
+]
 linked = []
 loaded = ["libloading"]

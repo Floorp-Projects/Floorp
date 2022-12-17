@@ -91,8 +91,9 @@ impl super::Adapter {
             | wgt::Features::CLEAR_TEXTURE
             | wgt::Features::TEXTURE_FORMAT_16BIT_NORM
             | wgt::Features::ADDRESS_MODE_CLAMP_TO_ZERO;
-        let mut downlevel =
-            wgt::DownlevelFlags::BASE_VERTEX | wgt::DownlevelFlags::READ_ONLY_DEPTH_STENCIL;
+        let mut downlevel = wgt::DownlevelFlags::BASE_VERTEX
+            | wgt::DownlevelFlags::READ_ONLY_DEPTH_STENCIL
+            | wgt::DownlevelFlags::UNRESTRICTED_INDEX_BUFFER;
 
         // Features from queries
         downlevel.set(
@@ -122,6 +123,7 @@ impl super::Adapter {
             features |= wgt::Features::DEPTH_CLIP_CONTROL;
             features |= wgt::Features::TIMESTAMP_QUERY;
             features |= wgt::Features::PIPELINE_STATISTICS_QUERY;
+            features |= wgt::Features::SHADER_PRIMITIVE_INDEX;
         }
 
         if feature_level >= FL10_1 {
@@ -198,6 +200,7 @@ impl super::Adapter {
             max_texture_dimension_3d,
             max_texture_array_layers: max_texture_dimension_3d,
             max_bind_groups: u32::MAX,
+            max_bindings_per_bind_group: 65535,
             max_dynamic_uniform_buffers_per_pipeline_layout: max_constant_buffers,
             max_dynamic_storage_buffers_per_pipeline_layout: 0,
             max_sampled_textures_per_shader_stage: max_sampled_textures,
