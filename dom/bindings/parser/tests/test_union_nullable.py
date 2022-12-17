@@ -9,8 +9,8 @@ def WebIDLTest(parser, harness):
         """
         )
 
-        parser.finish()
-    except Exception:
+        results = parser.finish()
+    except:
         threw = True
 
     harness.ok(threw, "Two nullable member types of a union should have thrown.")
@@ -27,8 +27,8 @@ def WebIDLTest(parser, harness):
         """
         )
 
-        parser.finish()
-    except Exception:
+        results = parser.finish()
+    except:
         threw = True
 
     harness.ok(
@@ -50,8 +50,8 @@ def WebIDLTest(parser, harness):
         """
         )
 
-        parser.finish()
-    except Exception:
+        results = parser.finish()
+    except:
         threw = True
 
     harness.ok(

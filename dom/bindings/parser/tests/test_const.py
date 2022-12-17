@@ -91,6 +91,6 @@ def WebIDLTest(parser, harness):
         """
         )
         parser.finish()
-    except Exception:
+    except:
         threw = True
     harness.ok(threw, "Nullable types are not allowed for consts.")

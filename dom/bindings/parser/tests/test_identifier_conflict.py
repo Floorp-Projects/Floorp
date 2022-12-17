@@ -1,3 +1,7 @@
+# Import the WebIDL module, so we can do isinstance checks and whatnot
+import WebIDL
+
+
 def WebIDLTest(parser, harness):
     try:
         parser.parse(
@@ -6,7 +10,7 @@ def WebIDLTest(parser, harness):
             interface Foo;
         """
         )
-        parser.finish()
+        results = parser.finish()
         harness.ok(False, "Should fail to parse")
     except Exception as e:
         harness.ok(
@@ -21,7 +25,7 @@ def WebIDLTest(parser, harness):
             enum Foo { "a" };
         """
         )
-        parser.finish()
+        results = parser.finish()
         harness.ok(False, "Should fail to parse")
     except Exception as e:
         harness.ok(
@@ -36,7 +40,7 @@ def WebIDLTest(parser, harness):
             enum Foo { "b" };
         """
         )
-        parser.finish()
+        results = parser.finish()
         harness.ok(False, "Should fail to parse")
     except Exception as e:
         harness.ok(

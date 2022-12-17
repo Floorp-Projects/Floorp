@@ -1,4 +1,7 @@
 # Import the WebIDL module, so we can do isinstance checks and whatnot
+import WebIDL
+
+
 def WebIDLTest(parser, harness):
     # Basic functionality
     parser.parse(
@@ -22,8 +25,8 @@ def WebIDLTest(parser, harness):
             };
             """
         )
-        parser.finish()
-    except Exception:
+        results = parser.finish()
+    except:
         threw = True
     harness.ok(threw, "[NewObject] attributes must depend on something")
 
@@ -37,8 +40,8 @@ def WebIDLTest(parser, harness):
             };
             """
         )
-        parser.finish()
-    except Exception:
+        results = parser.finish()
+    except:
         threw = True
     harness.ok(threw, "[NewObject] methods must depend on something")
 
@@ -52,8 +55,8 @@ def WebIDLTest(parser, harness):
             };
             """
         )
-        parser.finish()
-    except Exception:
+        results = parser.finish()
+    except:
         threw = True
     harness.ok(threw, "[NewObject] attributes must not be [Cached]")
 
@@ -67,7 +70,7 @@ def WebIDLTest(parser, harness):
             };
             """
         )
-        parser.finish()
-    except Exception:
+        results = parser.finish()
+    except:
         threw = True
     harness.ok(threw, "[NewObject] attributes must not be [StoreInSlot]")

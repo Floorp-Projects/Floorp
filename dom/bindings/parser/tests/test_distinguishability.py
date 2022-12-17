@@ -1,3 +1,6 @@
+import traceback
+
+
 def firstArgType(method):
     return method.signatures()[0][1][0].type
 
@@ -140,8 +143,8 @@ def WebIDLTest(parser, harness):
           };
         """
         )
-        parser.finish()
-    except Exception:
+        results = parser.finish()
+    except:
         threw = True
 
     harness.ok(
@@ -164,8 +167,8 @@ def WebIDLTest(parser, harness):
           };
         """
         )
-        parser.finish()
-    except Exception:
+        results = parser.finish()
+    except:
         threw = True
 
     harness.ok(threw, "Should throw when there is no distinguishing index")
@@ -243,6 +246,7 @@ def WebIDLTest(parser, harness):
     ]
     nonStrings = allBut(argTypes, strings)
     nonObjects = undefineds + primitives + strings
+    objects = allBut(argTypes, nonObjects)
     bufferSourceTypes = ["ArrayBuffer", "ArrayBufferView", "Uint8Array", "Uint16Array"]
     interfaces = [
         "Interface",
@@ -397,8 +401,8 @@ def WebIDLTest(parser, harness):
         threw = False
         try:
             parser.parse(idl)
-            parser.finish()
-        except Exception:
+            results = parser.finish()
+        except:
             threw = True
 
         if areDistinguishable(type1, type2):

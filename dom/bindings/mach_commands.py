@@ -7,7 +7,11 @@ from __future__ import absolute_import, unicode_literals
 import os
 import sys
 
-from mach.decorators import Command, CommandArgument
+from mach.decorators import (
+    CommandArgument,
+    Command,
+)
+
 from mozbuild.util import mkdir
 
 
