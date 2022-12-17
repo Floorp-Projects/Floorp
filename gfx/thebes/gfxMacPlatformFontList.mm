@@ -1483,22 +1483,40 @@ static NSString* GetRealFamilyName(NSFont* aFont) {
 // so we expect the system font to be a variable-weight face rather than requiring
 // a number of discrete faces of different weights.
 static gfxFontFamily* CreateFamilyForSystemFont(NSFont* aFont, const nsACString& aFamilyName) {
-  gfxFontFamily* familyEntry = new gfxMacFontFamily(aFamilyName, FontVisibility::Unknown);
-
-  NSString* psNameNS = [[aFont fontDescriptor] postscriptName];
-  nsAutoString nameUTF16;
-  nsAutoCString psName;
-  nsCocoaUtils::GetStringForNSString(psNameNS, nameUTF16);
-  CopyUTF16toUTF8(nameUTF16, psName);
-
-  MacOSFontEntry* fe = new MacOSFontEntry(psName, WeightRange(FontWeight::NORMAL), true, 0.0);
   MOZ_ASSERT(gfxPlatform::HasVariationFontSupport());
-  fe->SetupVariationRanges();
 
-  familyEntry->AddFontEntry(fe);
-  familyEntry->SetHasStyles(true);
+  gfxFontFamily* family = new gfxMacFontFamily(aFamilyName, FontVisibility::Unknown);
 
-  return familyEntry;
+  auto addToFamily = [&](NSFont* aNSFont) {
+    NSString* psNameNS = [[aNSFont fontDescriptor] postscriptName];
+    nsAutoString nameUTF16;
+    nsAutoCString psName;
+    nsCocoaUtils::GetStringForNSString(psNameNS, nameUTF16);
+    CopyUTF16toUTF8(nameUTF16, psName);
+
+    auto* fe = new MacOSFontEntry(psName, WeightRange(FontWeight::NORMAL), true, 0.0);
+
+    // Set the appropriate style, assuming it may not have a variation range.
+    fe->mStyleRange = SlantStyleRange(
+        ([[aNSFont fontDescriptor] symbolicTraits] & NSFontItalicTrait) ? FontSlantStyle::ITALIC
+                                                                        : FontSlantStyle::NORMAL);
+
+    // Set up weight (and width, if present) ranges.
+    fe->SetupVariationRanges();
+    family->AddFontEntry(fe);
+  };
+
+  addToFamily(aFont);
+
+  // See if there is a corresponding italic face, and add it to the family.
+  NSFont* italicFont = [sFontManager convertFont:aFont toHaveTrait:NSItalicFontMask];
+  if (italicFont != aFont) {
+    addToFamily(italicFont);
+  }
+
+  family->SetHasStyles(true);
+
+  return family;
 }
 
 // System fonts under OSX 10.11 use a combination of two families, one
