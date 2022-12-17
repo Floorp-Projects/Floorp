@@ -18,6 +18,7 @@ impl PushDescriptor {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdPushDescriptorSetKHR.html>
+    #[inline]
     pub unsafe fn cmd_push_descriptor_set(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -37,6 +38,7 @@ impl PushDescriptor {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdPushDescriptorSetWithTemplateKHR.html>
+    #[inline]
     pub unsafe fn cmd_push_descriptor_set_with_template(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -54,10 +56,12 @@ impl PushDescriptor {
         );
     }
 
+    #[inline]
     pub const fn name() -> &'static CStr {
         vk::KhrPushDescriptorFn::name()
     }
 
+    #[inline]
     pub fn fp(&self) -> &vk::KhrPushDescriptorFn {
         &self.fp
     }

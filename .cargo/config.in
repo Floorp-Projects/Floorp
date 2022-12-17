@@ -90,12 +90,12 @@ rev = "3484d3e3ebdc8931493aa5df4d7ee9360a90e76b"
 [source."https://github.com/gfx-rs/wgpu"]
 git = "https://github.com/gfx-rs/wgpu"
 replace-with = "vendored-sources"
-rev = "261069d04fc1263d8e587c18936b9db90b077abb"
+rev = "f14bee67"
 
 [source."https://github.com/gfx-rs/naga"]
 git = "https://github.com/gfx-rs/naga"
 replace-with = "vendored-sources"
-rev = "c52d9102"
+rev = "e7fc8e6"
 
 [source."https://github.com/chris-zen/coremidi.git"]
 git = "https://github.com/chris-zen/coremidi.git"

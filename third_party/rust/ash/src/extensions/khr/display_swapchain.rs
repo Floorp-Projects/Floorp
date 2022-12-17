@@ -21,31 +21,36 @@ impl DisplaySwapchain {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateSharedSwapchainsKHR.html>
+    #[inline]
     pub unsafe fn create_shared_swapchains(
         &self,
         create_infos: &[vk::SwapchainCreateInfoKHR],
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<Vec<vk::SwapchainKHR>> {
         let mut swapchains = Vec::with_capacity(create_infos.len());
-        let err_code = (self.fp.create_shared_swapchains_khr)(
+        (self.fp.create_shared_swapchains_khr)(
             self.handle,
             create_infos.len() as u32,
             create_infos.as_ptr(),
             allocation_callbacks.as_raw_ptr(),
             swapchains.as_mut_ptr(),
-        );
+        )
+        .result()?;
         swapchains.set_len(create_infos.len());
-        err_code.result_with_success(swapchains)
+        Ok(swapchains)
     }
 
+    #[inline]
     pub const fn name() -> &'static CStr {
         vk::KhrDisplaySwapchainFn::name()
     }
 
+    #[inline]
     pub fn fp(&self) -> &vk::KhrDisplaySwapchainFn {
         &self.fp
     }
 
+    #[inline]
     pub fn device(&self) -> vk::Device {
         self.handle
     }

@@ -1,20 +1,28 @@
 use std::convert::TryInto;
 #[cfg(feature = "debug")]
 use std::fmt;
+use std::mem;
 
 use crate::vk;
 pub type VkResult<T> = Result<T, vk::Result>;
 
 impl vk::Result {
+    #[inline]
     pub fn result(self) -> VkResult<()> {
         self.result_with_success(())
     }
 
+    #[inline]
     pub fn result_with_success<T>(self, v: T) -> VkResult<T> {
         match self {
             Self::SUCCESS => Ok(v),
             _ => Err(self),
         }
+    }
+
+    #[inline]
+    pub unsafe fn assume_init_on_success<T>(self, v: mem::MaybeUninit<T>) -> VkResult<T> {
+        self.result().map(move |()| v.assume_init())
     }
 }
 
@@ -41,8 +49,9 @@ where
 
         let err_code = f(&mut count, data.as_mut_ptr());
         if err_code != vk::Result::INCOMPLETE {
+            err_code.result()?;
             data.set_len(count.try_into().expect("`N` failed to convert to `usize`"));
-            break err_code.result_with_success(data);
+            break Ok(data);
         }
     }
 }

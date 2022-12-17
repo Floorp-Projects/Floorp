@@ -19,6 +19,7 @@ impl Maintenance3 {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetDescriptorSetLayoutSupportKHR.html>
+    #[inline]
     pub unsafe fn get_descriptor_set_layout_support(
         &self,
         create_info: &vk::DescriptorSetLayoutCreateInfo,
@@ -27,14 +28,17 @@ impl Maintenance3 {
         (self.fp.get_descriptor_set_layout_support_khr)(self.handle, create_info, out);
     }
 
+    #[inline]
     pub const fn name() -> &'static CStr {
         vk::KhrMaintenance3Fn::name()
     }
 
+    #[inline]
     pub fn fp(&self) -> &vk::KhrMaintenance3Fn {
         &self.fp
     }
 
+    #[inline]
     pub fn device(&self) -> vk::Device {
         self.handle
     }

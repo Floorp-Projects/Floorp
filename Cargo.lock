@@ -140,9 +140,9 @@ dependencies = [
 
 [[package]]
 name = "ash"
-version = "0.37.0+1.3.209"
+version = "0.37.1+1.3.235"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "006ca68e0f2b03f22d6fa9f2860f85aed430d257fec20f8879b2145e7c7ae1a6"
+checksum = "911015c962d56e2e4052f40182ca5462ba60a3d2ff04e827c365a0ab3d65726d"
 dependencies = [
  "libloading",
 ]
@@ -480,16 +480,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
-name = "bitflags_serde_shim"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "25c3d626f0280ec39b33a6fc5c6c1067432b4c41e94aee40ded197a6649bf025"
-dependencies = [
- "bitflags",
- "serde",
-]
-
-[[package]]
 name = "bitreader"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -731,12 +721,6 @@ name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
-
-[[package]]
-name = "cfg_aliases"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fd16c4719339c4530435d38e511904438d07cce7950afa3718a84ac36c10e89e"
 
 [[package]]
 name = "chardetng"
@@ -2334,18 +2318,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9b919933a397b79c37e33b77bb2aa3dc8eb6e165ad809e58ff75bc7db2e34574"
 
 [[package]]
-name = "glow"
-version = "0.11.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d8bd5877156a19b8ac83a29b2306fe20537429d318f3ff0a1a2119f8d9c61919"
-dependencies = [
- "js-sys",
- "slotmap",
- "wasm-bindgen",
- "web-sys",
-]
-
-[[package]]
 name = "glsl"
 version = "6.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2913,7 +2885,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8c2352bd1d0bceb871cb9d40f24360c8133c11d7486b68b5381c1dd1a32015e3"
 dependencies = [
  "libc",
- "libloading",
  "pkg-config",
 ]
 
@@ -3607,7 +3578,7 @@ checksum = "a2983372caf4480544083767bf2d27defafe32af49ab4df3a0b7fc90793a3664"
 [[package]]
 name = "naga"
 version = "0.10.0"
-source = "git+https://github.com/gfx-rs/naga?rev=c52d9102#c52d91023d43092323615fcc746162e478033f26"
+source = "git+https://github.com/gfx-rs/naga?rev=e7fc8e6#e7fc8e64f2f23397b149217ecce6e123c5aa5092"
 dependencies = [
  "bit-set",
  "bitflags",
@@ -4988,10 +4959,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "slotmap"
-version = "1.100.0"
-
-[[package]]
 name = "smallbitvec"
 version = "2.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6337,12 +6304,11 @@ dependencies = [
 [[package]]
 name = "wgpu-core"
 version = "0.14.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=261069d04fc1263d8e587c18936b9db90b077abb#261069d04fc1263d8e587c18936b9db90b077abb"
+source = "git+https://github.com/gfx-rs/wgpu?rev=f14bee67#f14bee6740b8755afa362c3be6ef4b225209871a"
 dependencies = [
  "arrayvec",
  "bit-vec",
  "bitflags",
- "cfg_aliases",
  "codespan-reporting",
  "fxhash",
  "log",
@@ -6361,7 +6327,7 @@ dependencies = [
 [[package]]
 name = "wgpu-hal"
 version = "0.14.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=261069d04fc1263d8e587c18936b9db90b077abb#261069d04fc1263d8e587c18936b9db90b077abb"
+source = "git+https://github.com/gfx-rs/wgpu?rev=f14bee67#f14bee6740b8755afa362c3be6ef4b225209871a"
 dependencies = [
  "android_system_properties",
  "arrayvec",
@@ -6373,7 +6339,6 @@ dependencies = [
  "d3d12",
  "foreign-types",
  "fxhash",
- "glow",
  "gpu-alloc",
  "gpu-descriptor",
  "js-sys",
@@ -6399,10 +6364,9 @@ dependencies = [
 [[package]]
 name = "wgpu-types"
 version = "0.14.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=261069d04fc1263d8e587c18936b9db90b077abb#261069d04fc1263d8e587c18936b9db90b077abb"
+source = "git+https://github.com/gfx-rs/wgpu?rev=f14bee67#f14bee6740b8755afa362c3be6ef4b225209871a"
 dependencies = [
  "bitflags",
- "bitflags_serde_shim",
  "serde",
 ]
 

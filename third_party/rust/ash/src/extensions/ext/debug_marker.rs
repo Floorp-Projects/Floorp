@@ -20,6 +20,7 @@ impl DebugMarker {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkDebugMarkerSetObjectNameEXT.html>
+    #[inline]
     pub unsafe fn debug_marker_set_object_name(
         &self,
         name_info: &vk::DebugMarkerObjectNameInfoEXT,
@@ -28,6 +29,7 @@ impl DebugMarker {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdDebugMarkerBeginEXT.html>
+    #[inline]
     pub unsafe fn cmd_debug_marker_begin(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -37,11 +39,13 @@ impl DebugMarker {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdDebugMarkerEndEXT.html>
+    #[inline]
     pub unsafe fn cmd_debug_marker_end(&self, command_buffer: vk::CommandBuffer) {
         (self.fp.cmd_debug_marker_end_ext)(command_buffer);
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdDebugMarkerInsertEXT.html>
+    #[inline]
     pub unsafe fn cmd_debug_marker_insert(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -50,14 +54,17 @@ impl DebugMarker {
         (self.fp.cmd_debug_marker_insert_ext)(command_buffer, marker_info);
     }
 
+    #[inline]
     pub const fn name() -> &'static CStr {
         vk::ExtDebugMarkerFn::name()
     }
 
+    #[inline]
     pub fn fp(&self) -> &vk::ExtDebugMarkerFn {
         &self.fp
     }
 
+    #[inline]
     pub fn device(&self) -> vk::Device {
         self.handle
     }

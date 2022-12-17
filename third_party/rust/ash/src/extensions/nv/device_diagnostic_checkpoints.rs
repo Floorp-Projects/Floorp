@@ -19,6 +19,7 @@ impl DeviceDiagnosticCheckpoints {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetCheckpointNV.html>
+    #[inline]
     pub unsafe fn cmd_set_checkpoint(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -28,6 +29,7 @@ impl DeviceDiagnosticCheckpoints {
     }
 
     /// Retrieve the number of elements to pass to [`get_queue_checkpoint_data()`][Self::get_queue_checkpoint_data()]
+    #[inline]
     pub unsafe fn get_queue_checkpoint_data_len(&self, queue: vk::Queue) -> usize {
         let mut count = 0;
         (self.fp.get_queue_checkpoint_data_nv)(queue, &mut count, std::ptr::null_mut());
@@ -38,6 +40,7 @@ impl DeviceDiagnosticCheckpoints {
     ///
     /// Call [`get_queue_checkpoint_data_len()`][Self::get_queue_checkpoint_data_len()] to query the number of elements to pass to `out`.
     /// Be sure to [`Default::default()`]-initialize these elements and optionally set their `p_next` pointer.
+    #[inline]
     pub unsafe fn get_queue_checkpoint_data(
         &self,
         queue: vk::Queue,
@@ -48,10 +51,12 @@ impl DeviceDiagnosticCheckpoints {
         assert_eq!(count as usize, out.len());
     }
 
+    #[inline]
     pub const fn name() -> &'static CStr {
         vk::NvDeviceDiagnosticCheckpointsFn::name()
     }
 
+    #[inline]
     pub fn fp(&self) -> &vk::NvDeviceDiagnosticCheckpointsFn {
         &self.fp
     }

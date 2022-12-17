@@ -21,6 +21,7 @@ impl IOSSurface {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateIOSSurfaceMVK.html>
+    #[inline]
     pub unsafe fn create_ios_surface(
         &self,
         create_info: &vk::IOSSurfaceCreateInfoMVK,
@@ -36,14 +37,17 @@ impl IOSSurface {
         .result_with_success(surface)
     }
 
+    #[inline]
     pub const fn name() -> &'static CStr {
         vk::MvkIosSurfaceFn::name()
     }
 
+    #[inline]
     pub fn fp(&self) -> &vk::MvkIosSurfaceFn {
         &self.fp
     }
 
+    #[inline]
     pub fn instance(&self) -> vk::Instance {
         self.handle
     }

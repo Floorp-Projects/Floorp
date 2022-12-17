@@ -29,11 +29,7 @@ impl Packed24_8 {
     }
 }
 
-// Intradoc `Self::` links refuse to resolve if `ColorComponentFlags`
-// isn't directly in scope: https://github.com/rust-lang/rust/issues/93205
-use vk::ColorComponentFlags;
-
-impl ColorComponentFlags {
+impl vk::ColorComponentFlags {
     /// Contraction of [`R`][Self::R] | [`G`][Self::G] | [`B`][Self::B] | [`A`][Self::A]
     pub const RGBA: Self = Self(Self::R.0 | Self::G.0 | Self::B.0 | Self::A.0);
 }
@@ -55,4 +51,11 @@ impl From<vk::Extent2D> for vk::Rect2D {
             extent,
         }
     }
+}
+
+/// Structures implementing this trait are layout-compatible with [`vk::BaseInStructure`] and
+/// [`vk::BaseOutStructure`]. Such structures have an `s_type` field indicating its type, which
+/// must always match the value of [`TaggedStructure::STRUCTURE_TYPE`].
+pub unsafe trait TaggedStructure {
+    const STRUCTURE_TYPE: vk::StructureType;
 }

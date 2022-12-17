@@ -20,6 +20,7 @@ impl RayTracingPipeline {
         Self { handle, fp }
     }
 
+    #[inline]
     pub unsafe fn get_properties(
         instance: &Instance,
         pdevice: vk::PhysicalDevice,
@@ -33,6 +34,7 @@ impl RayTracingPipeline {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdTraceRaysKHR.html>
+    #[inline]
     pub unsafe fn cmd_trace_rays(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -57,6 +59,7 @@ impl RayTracingPipeline {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateRayTracingPipelinesKHR.html>
+    #[inline]
     pub unsafe fn create_ray_tracing_pipelines(
         &self,
         deferred_operation: vk::DeferredOperationKHR,
@@ -78,6 +81,7 @@ impl RayTracingPipeline {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetRayTracingShaderGroupHandlesKHR.html>
+    #[inline]
     pub unsafe fn get_ray_tracing_shader_group_handles(
         &self,
         pipeline: vk::Pipeline,
@@ -86,19 +90,21 @@ impl RayTracingPipeline {
         data_size: usize,
     ) -> VkResult<Vec<u8>> {
         let mut data = Vec::<u8>::with_capacity(data_size);
-        let err_code = (self.fp.get_ray_tracing_shader_group_handles_khr)(
+        (self.fp.get_ray_tracing_shader_group_handles_khr)(
             self.handle,
             pipeline,
             first_group,
             group_count,
             data_size,
-            data.as_mut_ptr() as *mut std::ffi::c_void,
-        );
+            data.as_mut_ptr().cast(),
+        )
+        .result()?;
         data.set_len(data_size);
-        err_code.result_with_success(data)
+        Ok(data)
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetRayTracingCaptureReplayShaderGroupHandlesKHR.html>
+    #[inline]
     pub unsafe fn get_ray_tracing_capture_replay_shader_group_handles(
         &self,
         pipeline: vk::Pipeline,
@@ -106,8 +112,7 @@ impl RayTracingPipeline {
         group_count: u32,
         data_size: usize,
     ) -> VkResult<Vec<u8>> {
-        let mut data: Vec<u8> = Vec::with_capacity(data_size);
-
+        let mut data = Vec::<u8>::with_capacity(data_size);
         (self
             .fp
             .get_ray_tracing_capture_replay_shader_group_handles_khr)(
@@ -116,12 +121,17 @@ impl RayTracingPipeline {
             first_group,
             group_count,
             data_size,
-            data.as_mut_ptr() as *mut _,
+            data.as_mut_ptr().cast(),
         )
-        .result_with_success(data)
+        .result()?;
+        data.set_len(data_size);
+        Ok(data)
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdTraceRaysIndirectKHR.html>
+    ///
+    /// `indirect_device_address` is a buffer device address which is a pointer to a [`vk::TraceRaysIndirectCommandKHR`] structure containing the trace ray parameters.
+    #[inline]
     pub unsafe fn cmd_trace_rays_indirect(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -142,6 +152,7 @@ impl RayTracingPipeline {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetRayTracingShaderGroupStackSizeKHR.html>
+    #[inline]
     pub unsafe fn get_ray_tracing_shader_group_stack_size(
         &self,
         pipeline: vk::Pipeline,
@@ -157,6 +168,7 @@ impl RayTracingPipeline {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetRayTracingPipelineStackSizeKHR.html>
+    #[inline]
     pub unsafe fn cmd_set_ray_tracing_pipeline_stack_size(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -165,14 +177,17 @@ impl RayTracingPipeline {
         (self.fp.cmd_set_ray_tracing_pipeline_stack_size_khr)(command_buffer, pipeline_stack_size);
     }
 
+    #[inline]
     pub const fn name() -> &'static CStr {
         vk::KhrRayTracingPipelineFn::name()
     }
 
+    #[inline]
     pub fn fp(&self) -> &vk::KhrRayTracingPipelineFn {
         &self.fp
     }
 
+    #[inline]
     pub fn device(&self) -> vk::Device {
         self.handle
     }

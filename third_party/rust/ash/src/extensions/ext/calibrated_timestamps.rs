@@ -1,4 +1,4 @@
-use crate::prelude::{read_into_uninitialized_vector, VkResult};
+use crate::prelude::*;
 use crate::vk;
 use crate::{Entry, Instance};
 use std::ffi::CStr;
@@ -20,6 +20,7 @@ impl CalibratedTimestamps {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetPhysicalDeviceCalibrateableTimeDomainsEXT.html>
+    #[inline]
     pub unsafe fn get_physical_device_calibrateable_time_domains(
         &self,
         physical_device: vk::PhysicalDevice,
@@ -36,6 +37,7 @@ impl CalibratedTimestamps {
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetCalibratedTimestampsEXT.html>
     ///
     /// Returns a tuple containing `(timestamps, max_deviation)`
+    #[inline]
     pub unsafe fn get_calibrated_timestamps(
         &self,
         device: vk::Device,
@@ -53,14 +55,17 @@ impl CalibratedTimestamps {
         .result_with_success((timestamps, max_deviation))
     }
 
+    #[inline]
     pub const fn name() -> &'static CStr {
         vk::ExtCalibratedTimestampsFn::name()
     }
 
+    #[inline]
     pub fn fp(&self) -> &vk::ExtCalibratedTimestampsFn {
         &self.fp
     }
 
+    #[inline]
     pub fn instance(&self) -> vk::Instance {
         self.handle
     }
