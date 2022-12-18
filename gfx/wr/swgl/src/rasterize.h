@@ -899,7 +899,9 @@ static inline void draw_quad_spans(int nump, Point2D p[4], uint32_t z,
   if (flipped) swap(left, right);
   // Get pointer to color buffer and depth buffer at current Y
   P* fbuf = (P*)colortex.sample_ptr(0, int(y));
-  DepthRun* fdepth = (DepthRun*)depthtex.sample_ptr(0, int(y));
+  DepthRun* fdepth = depthtex.buf != nullptr
+                         ? (DepthRun*)depthtex.sample_ptr(0, int(y))
+                         : nullptr;
   // Loop along advancing Ys, rasterizing spans at each row
   float checkY = min(min(l1.y, r1.y), clipRect.y1);
   // Ensure we don't rasterize out edge bounds
@@ -1165,7 +1167,9 @@ static inline void draw_perspective_spans(int nump, Point3D* p,
   if (flipped) swap(left, right);
   // Get pointer to color buffer and depth buffer at current Y
   P* fbuf = (P*)colortex.sample_ptr(0, int(y));
-  DepthRun* fdepth = (DepthRun*)depthtex.sample_ptr(0, int(y));
+  DepthRun* fdepth = depthtex.buf != nullptr
+                         ? (DepthRun*)depthtex.sample_ptr(0, int(y))
+                         : nullptr;
   // Loop along advancing Ys, rasterizing spans at each row
   float checkY = min(min(l1.y, r1.y), clipRect.y1);
   // Ensure we don't rasterize out edge bounds
