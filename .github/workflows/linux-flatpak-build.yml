@@ -1,4 +1,4 @@
-name: Debian x64 Build
+name: Flatpak Build
 
 on: workflow_dispatch
 
