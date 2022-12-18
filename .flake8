@@ -79,15 +79,15 @@ exclude =
 #   - http://pep8.readthedocs.io/en/latest/intro.html#configuration
 ignore =
     # These should be triaged and either fixed or moved to the list below.
-    W504, W605, W606,
+    W605, W606,
     # These are intentionally disabled (not necessarily for good reason).
     #   F723: syntax error in type comment
     #       text contains quotes which breaks our custom JSON formatter
-    F723, E121, E123, E126, E129, E133, E226, E241, E242, E402, E704, E741, W503,
+    F723, E704, E741,
 
-    # black will generate code that breaks these. they're not PEP8 compliant though;
-    # see https://github.com/psf/black/blob/master/docs/compatible_configs.md#flake8
-    W503, E203
+    # black is already in charge of formatting, no need to start a formatter
+    # battle here
+    E1, W1, E2, W2, E3, W3, E4, W4, E5, W5
 
 per-file-ignores =
     # These paths are intentionally excluded.
