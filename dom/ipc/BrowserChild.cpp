@@ -2851,6 +2851,11 @@ void BrowserChild::InitAPZState() {
   // multiple inheritance.
   PAPZCTreeManagerChild* baseProtocol =
       cbc->SendPAPZCTreeManagerConstructor(mLayersId);
+  if (!baseProtocol) {
+    MOZ_ASSERT(false,
+               "Allocating a TreeManager should not fail with APZ enabled");
+    return;
+  }
   APZCTreeManagerChild* derivedProtocol =
       static_cast<APZCTreeManagerChild*>(baseProtocol);
 

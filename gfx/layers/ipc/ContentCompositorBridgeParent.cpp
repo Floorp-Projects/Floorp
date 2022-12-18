@@ -81,9 +81,15 @@ ContentCompositorBridgeParent::AllocPAPZCTreeManagerParent(
     return new APZCTreeManagerParent(aLayersId, temp, tempUpdater);
   }
 
+  // If we do not have APZ enabled, we should gracefully fail.
+  if (!state.mParent->GetOptions().UseAPZ()) {
+    return nullptr;
+  }
+
   state.mParent->AllocateAPZCTreeManagerParent(lock, aLayersId, state);
   return state.mApzcTreeManagerParent;
 }
+
 bool ContentCompositorBridgeParent::DeallocPAPZCTreeManagerParent(
     PAPZCTreeManagerParent* aActor) {
   APZCTreeManagerParent* parent = static_cast<APZCTreeManagerParent*>(aActor);
