@@ -64,6 +64,12 @@ browser.tabs.onUpdated.addListener(function (tabId, changeInfo) {
 
 
 (async function main() {
+    let isEnabled = await browser.aboutConfigPrefs.getPref("floorp.tabsleep.enabled");
+    browser.aboutConfigPrefs.onPrefChange.addListener(function() {
+        browser.runtime.reload();
+    }, "floorp.tabsleep.enabled");
+    if (!isEnabled) return;
+
     let isTestMode = await browser.aboutConfigPrefs.getPref("floorp.tabsleep.testmode.enabled");
     if (isTestMode) console.log("Test mode is enabled");
 
