@@ -8,61 +8,16 @@
   <CurrentIssues>
     <ID>CollapsibleIfStatements:MainActivity.kt$MainActivity$if (!isTaskRoot) { if (intent.hasCategory(Intent.CATEGORY_LAUNCHER) &amp;&amp; Intent.ACTION_MAIN == intent.action) { finish() return } }</ID>
     <ID>CollapsibleIfStatements:UrlInputFragment.kt$UrlInputFragment.&lt;no name provided&gt;$if (reverse) { if (isOverlay) { dismiss() } }</ID>
-    <ID>ConstructorParameterNaming:FocusNimbus.kt$CookieBanner$_variables: Variables = NullVariables.instance</ID>
-    <ID>ConstructorParameterNaming:FocusNimbus.kt$CookieBanner$private val _defaults: Defaults</ID>
-    <ID>ConstructorParameterNaming:FocusNimbus.kt$CookieBanner$private val _variables: Variables</ID>
-    <ID>ConstructorParameterNaming:FocusNimbus.kt$Onboarding$_variables: Variables = NullVariables.instance</ID>
-    <ID>ConstructorParameterNaming:FocusNimbus.kt$Onboarding$private val _defaults: Defaults</ID>
-    <ID>ConstructorParameterNaming:FocusNimbus.kt$Onboarding$private val _variables: Variables</ID>
     <ID>EmptyFunctionBlock:AutocompleteListFragment.kt$AutocompleteListFragment.&lt;no name provided&gt;${}</ID>
-    <ID>EmptyFunctionBlock:BiometricAuthenticationFragmentTest.kt$BiometricAuthenticationFragmentTest.&lt;no name provided&gt;${ }</ID>
     <ID>EmptyFunctionBlock:ExceptionsListFragment.kt$ExceptionsListFragment.&lt;no name provided&gt;${}</ID>
     <ID>EmptyFunctionBlock:FirstrunFragment.kt$FirstrunFragment.&lt;no name provided&gt;${}</ID>
-    <ID>FunctionOnlyReturningConstant:ExternalIntentNavigationTest.kt$ShadowPerformance$@Implementation @Suppress("Unused_Parameter") fun processIntentIfPerformanceTest(bundle: Bundle?, context: Context)</ID>
     <ID>LongParameterList:FullScreenIntegration.kt$FullScreenIntegration$( val activity: Activity, val store: BrowserStore, tabId: String?, sessionUseCases: SessionUseCases, private val settings: Settings, private val toolbarView: BrowserToolbar, private val statusBar: View, private val engineView: EngineView, )</ID>
-    <ID>MatchingDeclarationName:SettingsSearchMenuRobot.kt$SearchSettingsRobot</ID>
-    <ID>MaxLineLength:BiometricAuthenticationFragmentTest.kt$BiometricAuthenticationFragmentTest$fun</ID>
-    <ID>MaxLineLength:BrowserRobot.kt$BrowserRobot$fun verifyOpenLinksInAppsPrompt(openLinksInAppsEnabled: Boolean, link: String)</ID>
-    <ID>MaxLineLength:BrowserRobot.kt$BrowserRobot.Transition$fun</ID>
-    <ID>MaxLineLength:BrowserToolbarIntegrationTest.kt$BrowserToolbarIntegrationTest$fun</ID>
-    <ID>MaxLineLength:BrowserToolbarTest.kt$BrowserToolbarTest$assertTrue((engineView.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior is EngineViewBrowserToolbarBehavior)</ID>
-    <ID>MaxLineLength:CfrMiddlewareTest.kt$CfrMiddlewareTest$fun</ID>
-    <ID>MaxLineLength:ExternalIntentNavigationTest.kt$ExternalIntentNavigationTest$fun</ID>
-    <ID>MaxLineLength:FocusNimbus.kt$Onboarding$_defaults = Defaults(isCfrEnabled = isCfrEnabled, isEnabled = isEnabled, isPromoteSearchWidgetDialogEnabled = isPromoteSearchWidgetDialogEnabled )</ID>
-    <ID>MaxLineLength:HomeScreenScreenshots.kt$HomeScreenScreenshots$TestHelper.mDevice.findObject(UiSelector().resourceId("${TestHelper.packageName}:id/mozac_browser_toolbar_edit_url_view"))</ID>
-    <ID>MaxLineLength:HomeScreenScreenshots.kt$HomeScreenScreenshots$TestHelper.mDevice.findObject(UiSelector().resourceId("${TestHelper.packageName}:id/mozac_browser_toolbar_menu"))</ID>
-    <ID>MaxLineLength:HomeScreenScreenshots.kt$HomeScreenScreenshots$private</ID>
-    <ID>MaxLineLength:IntentUtilsTest.kt$IntentUtilsTest$fun</ID>
-    <ID>MaxLineLength:MainActivityTestRule.kt$MainActivityIntentsTestRule$open</ID>
-    <ID>MaxLineLength:MobileMetricsPingStorageTest.kt$MobileMetricsPingStorageTest$private val file = File("${(ApplicationProvider.getApplicationContext() as FocusApplication).cacheDir}/${MobileMetricsPingStorage.STORAGE_FOLDER}/${MobileMetricsPingStorage.FILE_NAME}")</ID>
-    <ID>MaxLineLength:OnboardingStorageTest.kt$OnboardingStorageTest$assertEquals(testContext.getString(OnboardingStep.ON_BOARDING_FIRST_SCREEN.prefId), prefManager.getString(testContext.getString(R.string.pref_key_onboarding_step), ""))</ID>
-    <ID>MaxLineLength:OnboardingStorageTest.kt$OnboardingStorageTest$assertEquals(testContext.getString(OnboardingStep.ON_BOARDING_SECOND_SCREEN.prefId), prefManager.getString(testContext.getString(R.string.pref_key_onboarding_step), ""))</ID>
-    <ID>MaxLineLength:OnboardingStorageTest.kt$OnboardingStorageTest$fun</ID>
-    <ID>MaxLineLength:SearchRobot.kt$private val clearSearchButton = mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_clear_view"))</ID>
-    <ID>MaxLineLength:SearchWidgetProviderTest.kt$SearchWidgetProviderTest$fun</ID>
-    <ID>MaxLineLength:SettingsPrivacyMenuRobot.kt$.</ID>
-    <ID>MaxLineLength:SettingsPrivacyMenuRobot.kt$SettingsPrivacyMenuRobot.Transition$fun</ID>
-    <ID>MaxLineLength:SitePermissionOptionsStorageTest.kt$SitePermissionOptionsStorageTest$fun</ID>
-    <ID>MaxLineLength:SitePermissionOptionsStoreTest.kt$SitePermissionOptionsStoreTest$doReturn(listOf(SitePermissionOption.AskToAllow(), SitePermissionOption.Blocked())).`when`(storage).getSitePermissionOptions(SitePermission.CAMERA)</ID>
-    <ID>MaxLineLength:SitePermissionOptionsStoreTest.kt$SitePermissionOptionsStoreTest$doReturn(testContext.getString(R.string.preference_phone_feature_camera)).`when`(storage).getSitePermissionLabel(SitePermission.CAMERA)</ID>
-    <ID>MaxLineLength:SitePermissionOptionsStoreTest.kt$SitePermissionOptionsStoreTest$fun</ID>
-    <ID>MaxLineLength:SitePermissionOptionsStoreTest.kt$SitePermissionOptionsStoreTest$verify(storage).saveCurrentSitePermissionOptionInSharePref(SitePermissionOption.Blocked(), SitePermission.CAMERA)</ID>
-    <ID>MaxLineLength:SitePermissionsFragmentTest.kt$SitePermissionsFragmentTest$fun</ID>
-    <ID>MaxLineLength:StartupPathProviderTest.kt$StartupPathProviderTest$fun</ID>
-    <ID>MaxLineLength:StartupStateProviderTest.kt$StartupStateProviderTest$fun</ID>
-    <ID>MaxLineLength:StartupTypeTelemetryTest.kt$StartupTypeTelemetryTest$fun</ID>
-    <ID>MaxLineLength:StringTest.kt$StringTest$"http://amazon.com/Mockingjay-Hunger-Games-Suzanne-Collins/dp/0545663261/ref=pd_sim_14_2?_encoding=UTF8&amp;psc=1&amp;refRID=90ZHE3V976TKBGDR9VAM"</ID>
-    <ID>MaxLineLength:StringTest.kt$StringTest$"https://www.nytimes.com/2017/08/30/world/europe/princess-diana-death-anniversary.html?hp&amp;action=click&amp;pgtype=Homepage&amp;clickSource=story-heading&amp;module=second-column-region&amp;region=top-news&amp;WT.nav=top-news"</ID>
-    <ID>MaxLineLength:StringTest.kt$StringTest$"https://www.wsj.com/articles/mexican-presidential-candidate-calls-for-nafta-talks-to-be-suspended-1504137175"</ID>
-    <ID>MaxLineLength:UriTest.kt$UriTest$assertTruncatedHost("yahoo.com", "https://de.search.yahoo.com/search?p=mozilla&amp;fr=yfp-t&amp;fp=1&amp;toggle=1&amp;cop=mss&amp;ei=UTF-8")</ID>
     <ID>MayBeConst:CrashReporterFragment.kt$CrashReporterFragment.Companion$val FRAGMENT_TAG = "crash-reporter"</ID>
     <ID>MayBeConst:IconGenerator.kt$IconGenerator.Companion$private val DEFAULT_ICON_CHAR = '?'</ID>
     <ID>MayBeConst:IconGenerator.kt$IconGenerator.Companion$private val TEXT_SIZE_DP = 36f</ID>
     <ID>MayBeConst:ManualAddSearchEnginePreference.kt$ManualAddSearchEnginePreference.Companion$private val SEARCH_ENGINE_NAME_KEY = "search-engine-name"</ID>
     <ID>MayBeConst:ManualAddSearchEnginePreference.kt$ManualAddSearchEnginePreference.Companion$private val SEARCH_QUERY_KEY = "search-query"</ID>
     <ID>MayBeConst:ManualAddSearchEnginePreference.kt$ManualAddSearchEnginePreference.Companion$private val SUPER_STATE_KEY = "super-state"</ID>
-    <ID>PrintStackTrace:TestHelper.kt$TestHelper$e</ID>
-    <ID>SpacingBetweenPackageAndImports:FocusNimbus.kt$ </ID>
     <ID>UndocumentedPublicClass:AboutFragment.kt$AboutFragment : BaseSettingsLikeFragment</ID>
     <ID>UndocumentedPublicClass:AdvancedSettingsFragment.kt$AdvancedSettingsFragment : BaseSettingsFragmentOnSharedPreferenceChangeListener</ID>
     <ID>UndocumentedPublicClass:AppAction.kt$AppAction$NavigateUp : AppAction</ID>
@@ -85,19 +40,11 @@
     <ID>UndocumentedPublicClass:Config.kt$Config</ID>
     <ID>UndocumentedPublicClass:ConnectionDetailsPanel.kt$ConnectionDetailsPanel : BottomSheetDialog</ID>
     <ID>UndocumentedPublicClass:ContextMenuCandidates.kt$ContextMenuCandidates</ID>
-    <ID>UndocumentedPublicClass:CookieBannerExceptionDetailsPanel.kt$CookieBannerExceptionDetailsPanel : BottomSheetDialog</ID>
     <ID>UndocumentedPublicClass:CookieBannerExceptionDetailsSwitch.kt$CookieBannerExceptionDetailsSwitch : ConstraintLayout</ID>
-    <ID>UndocumentedPublicClass:CookieBannerExceptionMiddleware.kt$CookieBannerExceptionMiddleware : Middleware</ID>
-    <ID>UndocumentedPublicClass:CookieBannerExceptionStore.kt$CookieBannerExceptionAction$InitCookieBannerException : CookieBannerExceptionAction</ID>
-    <ID>UndocumentedPublicClass:CookieBannerExceptionStore.kt$CookieBannerExceptionAction$ToggleCookieBannerExceptionException : CookieBannerExceptionAction</ID>
-    <ID>UndocumentedPublicClass:CookieBannerExceptionStore.kt$CookieBannerExceptionAction$UpdateCookieBannerExceptionException : CookieBannerExceptionAction</ID>
-    <ID>UndocumentedPublicClass:CookieBannerExceptionStore.kt$CookieBannerExceptionAction$UpdateCookieBannerExceptionExceptionVisibility : CookieBannerExceptionAction</ID>
-    <ID>UndocumentedPublicClass:CookieBannerExceptionStore.kt$CookieBannerExceptionStore : Store</ID>
     <ID>UndocumentedPublicClass:CookieBannerFragment.kt$CookieBannerFragment : BaseSettingsFragment</ID>
     <ID>UndocumentedPublicClass:CookieBannerOption.kt$CookieBannerOption</ID>
     <ID>UndocumentedPublicClass:CookieBannerOption.kt$CookieBannerOption$CookieBannerDisabled : CookieBannerOption</ID>
     <ID>UndocumentedPublicClass:CookieBannerOption.kt$CookieBannerOption$CookieBannerRejectAll : CookieBannerOption</ID>
-    <ID>UndocumentedPublicClass:CookieBannerOption.kt$CookieBannerOption$CookieBannerRejectOrAccept : CookieBannerOption</ID>
     <ID>UndocumentedPublicClass:CookieBannerRejectAllPreference.kt$CookieBannerRejectAllPreference : LearnMoreSwitchPreference</ID>
     <ID>UndocumentedPublicClass:CrashListActivity.kt$CrashListActivity : AbstractCrashListActivity</ID>
     <ID>UndocumentedPublicClass:CrashReporterFragment.kt$CrashReporterFragment : Fragment</ID>
@@ -105,7 +52,6 @@
     <ID>UndocumentedPublicClass:CustomTabsService.kt$CustomTabsService : AbstractCustomTabsService</ID>
     <ID>UndocumentedPublicClass:DebugFocusApplication.kt$DebugFocusApplication : FocusApplication</ID>
     <ID>UndocumentedPublicClass:DefaultBrowserPreference.kt$DefaultBrowserPreference : Preference</ID>
-    <ID>UndocumentedPublicClass:DefaultCookieBannerExceptionInteractor.kt$DefaultCookieBannerExceptionInteractor</ID>
     <ID>UndocumentedPublicClass:DefaultLanguageScreenInteractor.kt$DefaultLanguageScreenInteractor</ID>
     <ID>UndocumentedPublicClass:DefaultSitePermissionOptionsScreenInteractor.kt$DefaultSitePermissionOptionsScreenInteractor</ID>
     <ID>UndocumentedPublicClass:DownloadService.kt$DownloadService : AbstractFetchDownloadService</ID>
@@ -122,7 +68,6 @@
     <ID>UndocumentedPublicClass:FirstrunFragment.kt$FirstrunFragment : FragmentOnClickListener</ID>
     <ID>UndocumentedPublicClass:FirstrunPagerAdapter.kt$FirstrunPagerAdapter : PagerAdapter</ID>
     <ID>UndocumentedPublicClass:FocusApplication.kt$FocusApplication : LocaleAwareApplicationProviderCoroutineScope</ID>
-    <ID>UndocumentedPublicClass:FocusNimbus.kt$FocusNimbus$Features</ID>
     <ID>UndocumentedPublicClass:FocusSnackbar.kt$FocusSnackbar : BaseTransientBottomBar</ID>
     <ID>UndocumentedPublicClass:FocusSnackbarDelegate.kt$FocusSnackbarDelegate : SnackbarDelegate</ID>
     <ID>UndocumentedPublicClass:FullScreenIntegration.kt$FullScreenIntegration : LifecycleAwareFeatureUserInteractionHandler</ID>
@@ -154,7 +99,6 @@
     <ID>UndocumentedPublicClass:MainActivity.kt$MainActivity$AppOpenType</ID>
     <ID>UndocumentedPublicClass:ManualAddSearchEnginePreference.kt$ManualAddSearchEnginePreference : Preference</ID>
     <ID>UndocumentedPublicClass:ManualAddSearchEngineSettingsFragment.kt$ManualAddSearchEngineSettingsFragment : BaseSettingsFragment</ID>
-    <ID>UndocumentedPublicClass:ManufacturerCodes.kt$ManufacturerCodes</ID>
     <ID>UndocumentedPublicClass:MobileMetricsPingStorage.kt$MobileMetricsPingStorage</ID>
     <ID>UndocumentedPublicClass:MozillaPreference.kt$MozillaPreference : Preference</ID>
     <ID>UndocumentedPublicClass:MozillaSettingsFragment.kt$MozillaSettingsFragment : BaseSettingsFragment</ID>
@@ -286,11 +230,9 @@
     <ID>UndocumentedPublicFunction:BrowserMenuController.kt$BrowserMenuController$@Suppress("ComplexMethod") fun handleMenuInteraction(item: ToolbarMenu.Item)</ID>
     <ID>UndocumentedPublicFunction:BrowsersCache.kt$BrowsersCache$@Synchronized fun all(context: Context): Browsers</ID>
     <ID>UndocumentedPublicFunction:ClientWrapper.kt$ClientWrapper$@Deprecated("Non-private Client usage should be prevented") fun unwrap(): Client</ID>
-    <ID>UndocumentedPublicFunction:ContextMenuCandidates.kt$ContextMenuCandidates$@Suppress("LongParameterList") fun get( context: Context, tabsUseCases: TabsUseCases, contextMenuUseCases: ContextMenuUseCases, appLinksUseCases: AppLinksUseCases, snackBarParentView: View, snackbarDelegate: ContextMenuCandidate.SnackbarDelegate = DefaultSnackbarDelegate(), isCustomTab: Boolean, ): List&lt;ContextMenuCandidate&gt;</ID>
     <ID>UndocumentedPublicFunction:CookiesPreference.kt$CookiesPreference$fun updateSummary()</ID>
     <ID>UndocumentedPublicFunction:CrashReporterFragment.kt$CrashReporterFragment.Companion$fun create()</ID>
     <ID>UndocumentedPublicFunction:DefaultBrowserPreference.kt$DefaultBrowserPreference$fun update()</ID>
-    <ID>UndocumentedPublicFunction:DefaultCookieBannerExceptionInteractor.kt$DefaultCookieBannerExceptionInteractor$fun handleToggleCookieBannerException(isCookieBannerHandlingExceptionEnabled: Boolean)</ID>
     <ID>UndocumentedPublicFunction:DefaultLanguageScreenInteractor.kt$DefaultLanguageScreenInteractor$fun handleLanguageSelected(language: Language)</ID>
     <ID>UndocumentedPublicFunction:DefaultSitePermissionOptionsScreenInteractor.kt$DefaultSitePermissionOptionsScreenInteractor$fun handleSitePermissionOptionSelected(sitePermissionOption: SitePermissionOption)</ID>
     <ID>UndocumentedPublicFunction:EngineProvider.kt$EngineProvider$fun createClient(context: Context): Client</ID>
@@ -314,7 +256,7 @@
     <ID>UndocumentedPublicFunction:FocusTheme.kt$fun phoneDimensions()</ID>
     <ID>UndocumentedPublicFunction:FocusTheme.kt$fun tabletDimensions()</ID>
     <ID>UndocumentedPublicFunction:HomeMenu.kt$HomeMenu$fun getMenuBuilder(): BrowserMenuBuilder</ID>
-    <ID>UndocumentedPublicFunction:IconGenerator.kt$IconGenerator.Companion$/* * This method needs to be separate from generateAdaptiveLauncherIcon so that we can generate * the pre-Oreo icon to display in the Add To Home screen Dialog */ @JvmStatic fun generateLauncherIconPreOreo(context: Context, character: Char): Bitmap</ID>
+    <ID>UndocumentedPublicFunction:IconGenerator.kt$IconGenerator.Companion$@JvmStatic fun generateLauncherIconPreOreo(context: Context, character: Char): Bitmap</ID>
     <ID>UndocumentedPublicFunction:InstallFirefoxActivity.kt$InstallFirefoxActivity.Companion$fun open(context: Context)</ID>
     <ID>UndocumentedPublicFunction:InstallFirefoxActivity.kt$InstallFirefoxActivity.Companion$fun resolveAppStore(context: Context): ActivityInfo?</ID>
     <ID>UndocumentedPublicFunction:InstalledSearchEnginesSettingsFragment.kt$InstalledSearchEnginesSettingsFragment.Companion$fun newInstance()</ID>
@@ -343,7 +285,6 @@
     <ID>UndocumentedPublicFunction:MozillaSettingsFragment.kt$MozillaSettingsFragment.Companion$fun newInstance(): MozillaSettingsFragment</ID>
     <ID>UndocumentedPublicFunction:MultiselectSearchEngineListPreference.kt$MultiselectSearchEngineListPreference$fun atLeastOneEngineChecked(): Boolean</ID>
     <ID>UndocumentedPublicFunction:NimbusSetup.kt$fun getNimbusAppName(): String</ID>
-    <ID>UndocumentedPublicFunction:OnboardingController.kt$DefaultOnboardingController$@VisibleForTesting fun navigateToDefaultBrowserAppsSettings()</ID>
     <ID>UndocumentedPublicFunction:OnboardingController.kt$OnboardingController$fun handleActivityResultImplementation(activityResult: ActivityResult)</ID>
     <ID>UndocumentedPublicFunction:OnboardingController.kt$OnboardingController$fun handleFinishOnBoarding()</ID>
     <ID>UndocumentedPublicFunction:OnboardingController.kt$OnboardingController$fun handleGetStartedButtonClicked()</ID>
@@ -430,8 +371,8 @@
     <ID>UndocumentedPublicFunction:StudiesViewHolder.kt$StudiesViewHolder.SectionViewHolder$fun bindSection(section: StudiesListItem.Section)</ID>
     <ID>UndocumentedPublicFunction:StudiesViewModel.kt$StudiesViewModel$fun removeStudy(study: StudiesListItem.ActiveStudy)</ID>
     <ID>UndocumentedPublicFunction:StudiesViewModel.kt$StudiesViewModel$fun setStudiesState(state: Boolean)</ID>
-    <ID>UndocumentedPublicFunction:SupportUtils.kt$SupportUtils$// For some reason this URL has a different format than the other SUMO URLs fun getSafeBrowsingURL(): String</ID>
     <ID>UndocumentedPublicFunction:SupportUtils.kt$SupportUtils$fun getGenericSumoURLForTopic(topic: SumoTopic): String</ID>
+    <ID>UndocumentedPublicFunction:SupportUtils.kt$SupportUtils$fun getSafeBrowsingURL(): String</ID>
     <ID>UndocumentedPublicFunction:SupportUtils.kt$SupportUtils$fun openDefaultBrowserSumoPage(context: Context)</ID>
     <ID>UndocumentedPublicFunction:SupportUtils.kt$SupportUtils$fun openUrlInCustomTab(activity: FragmentActivity, destinationUrl: String)</ID>
     <ID>UndocumentedPublicFunction:TabViewHolder.kt$TabViewHolder$fun bind( tab: TabSessionState, isCurrentSession: Boolean, selectSession: (TabSessionState) -&gt; Unit, closeSession: (TabSessionState) -&gt; Unit, )</ID>
@@ -522,13 +463,8 @@
     <ID>UndocumentedPublicFunction:WhatsNewStorage.kt$WhatsNewStorage$fun getVersion(): WhatsNewVersion?</ID>
     <ID>UndocumentedPublicFunction:WhatsNewStorage.kt$WhatsNewStorage$fun setSessionCounter(sessionCount: Int)</ID>
     <ID>UndocumentedPublicFunction:WhatsNewStorage.kt$WhatsNewStorage$fun setVersion(version: WhatsNewVersion)</ID>
-    <ID>UnusedPrivateMember:DownloadRobot.kt$private val downloadNotificationText = getStringResource(R.string.mozac_feature_downloads_completed_notification_text2)</ID>
-    <ID>UnusedPrivateMember:ExternalIntentNavigationTest.kt$ShadowPerformance$bundle: Bundle?</ID>
-    <ID>UnusedPrivateMember:ExternalIntentNavigationTest.kt$ShadowPerformance$context: Context</ID>
-    <ID>UnusedPrivateMember:SettingsGeneralMenuRobot.kt$private val openWithDialogTitle = mDevice.findObject( UiSelector() .text("Open with"), )</ID>
-    <ID>UnusedPrivateMember:SettingsGeneralMenuRobot.kt$private val openWithList = mDevice.findObject( UiSelector() .resourceId("android:id/resolver_list"), )</ID>
-    <ID>UnusedPrivateMember:TelemetryMiddleware.kt$TelemetryMiddleware$ @Suppress("ComplexMethod") private fun generateOptions(customTabConfig: CustomTabConfig): List&lt;String&gt;</ID>
-    <ID>UnusedPrivateMember:WhatsNewTest.kt$WhatsNewTest$i</ID>
+    <ID>UnusedPrivateMember:TelemetryMiddleware.kt$TelemetryMiddleware$@Suppress("ComplexMethod") private fun generateOptions(customTabConfig: CustomTabConfig): List&lt;String&gt;</ID>
+    <ID>UseRequire:FactsProcessor.kt$throw IllegalArgumentException("Fact is not a context menu fact")</ID>
     <ID>UtilityClassWithPublicConstructor:AppReviewUtils.kt$AppReviewUtils</ID>
     <ID>UtilityClassWithPublicConstructor:IconGenerator.kt$IconGenerator</ID>
   </CurrentIssues>
