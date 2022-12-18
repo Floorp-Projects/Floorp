@@ -700,12 +700,6 @@ criteria = "safe-to-deploy"
 delta = "0.1.3 -> 0.5.4"
 notes = "Several bugfixes since 2019. This version is also in use by Mozilla's crash reporting tooling, e.g. minidump-writer"
 
-[[audits.goblin]]
-who = "Gabriele Svelto <gsvelto@mozilla.com>"
-criteria = "safe-to-deploy"
-delta = "0.5.4 -> 0.6.0"
-notes = "Mostly bug fixes and some added functionality"
-
 [[audits.gpu-descriptor]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
@@ -1537,12 +1531,6 @@ criteria = "safe-to-deploy"
 delta = "0.20.0 -> 0.21.0"
 notes = "Maintained by the Glean and Application Services team."
 
-[[audits.uniffi]]
-who = "Mike Hommey <mh+mozilla@glandium.org>"
-criteria = "safe-to-deploy"
-delta = "0.21.0 -> 0.21.1"
-notes = "No changes."
-
 [[audits.uniffi_bindgen]]
 who = "Travis Long <tlong@mozilla.com>"
 criteria = "safe-to-deploy"
@@ -1565,12 +1553,6 @@ who = "Jan-Erik Rediger <jrediger@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "0.20.0 -> 0.21.0"
 notes = "Maintained by the Glean and Application Services team."
-
-[[audits.uniffi_bindgen]]
-who = "Mike Hommey <mh+mozilla@glandium.org>"
-criteria = "safe-to-deploy"
-delta = "0.21.0 -> 0.21.1"
-notes = "I authored the changes in this version."
 
 [[audits.uniffi_build]]
 who = "Travis Long <tlong@mozilla.com>"
@@ -1595,18 +1577,6 @@ criteria = "safe-to-deploy"
 delta = "0.20.0 -> 0.21.0"
 notes = "Maintained by the Glean and Application Services team."
 
-[[audits.uniffi_build]]
-who = "Mike Hommey <mh+mozilla@glandium.org>"
-criteria = "safe-to-deploy"
-delta = "0.21.0 -> 0.21.1"
-notes = "No changes."
-
-[[audits.uniffi_checksum_derive]]
-who = "Mike Hommey <mh+mozilla@glandium.org>"
-criteria = "safe-to-deploy"
-version = "0.21.1"
-notes = "I authored this crate."
-
 [[audits.uniffi_macros]]
 who = "Travis Long <tlong@mozilla.com>"
 criteria = "safe-to-deploy"
@@ -1629,12 +1599,6 @@ who = "Jan-Erik Rediger <jrediger@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "0.20.0 -> 0.21.0"
 notes = "Maintained by the Glean and Application Services team."
-
-[[audits.uniffi_macros]]
-who = "Mike Hommey <mh+mozilla@glandium.org>"
-criteria = "safe-to-deploy"
-delta = "0.21.0 -> 0.21.1"
-notes = "No changes."
 
 [[audits.uniffi_meta]]
 who = "Jan-Erik Rediger <jrediger@mozilla.com>"
@@ -1652,12 +1616,6 @@ who = "Jan-Erik Rediger <jrediger@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "0.20.0 -> 0.21.0"
 notes = "Maintained by the Glean and Application Services team."
-
-[[audits.uniffi_meta]]
-who = "Mike Hommey <mh+mozilla@glandium.org>"
-criteria = "safe-to-deploy"
-delta = "0.21.0 -> 0.21.1"
-notes = "I authored the changes in this version."
 
 [[audits.void]]
 who = "Bobby Holley <bobbyholley@gmail.com>"
