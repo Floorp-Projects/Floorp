@@ -71,15 +71,21 @@ browser.tabs.onUpdated.addListener(function (tabId, changeInfo) {
     let systemMemoryGB = systemMemory / 1024 / 1024 / 1024;
     console.log(`System Memory (GB): ${systemMemoryGB}`);
 
-    let TAB_TIMEOUT_SECONDS = Math.floor(60 * (systemMemoryGB * 3));
-    try {
-        TAB_TIMEOUT_SECONDS = await browser.aboutConfigPrefs.getIntPref("floorp.tabsleep.tabTimeoutSeconds");
-    } catch (e) {
-        console.error(e);
+    let TAB_TIMEOUT_SECONDS;
+    let tabTimeoutMiliseconds;
+    async function prefHandle() {
+        TAB_TIMEOUT_SECONDS = Math.floor(60 * (systemMemoryGB * 3));
+        try {
+            let pref = await browser.aboutConfigPrefs.getIntPref("floorp.tabsleep.tabTimeoutSeconds");
+            if (pref !== 0) TAB_TIMEOUT_SECONDS = pref;
+        } catch (e) {
+            console.error(e);
+        }
+        tabTimeoutMiliseconds = TAB_TIMEOUT_SECONDS * 1000;
+        console.log(`TAB_TIMEOUT_SECONDS: ${TAB_TIMEOUT_SECONDS}`);
     }
-    console.log(`TAB_TIMEOUT_SECONDS: ${TAB_TIMEOUT_SECONDS}`);
-
-    let tabTimeoutMiliseconds = TAB_TIMEOUT_SECONDS * 1000;
+    await prefHandle();
+    browser.aboutConfigPrefs.onPrefChange.addListener(prefHandle, "floorp.tabsleep.tabTimeoutSeconds");
 
     setInterval(async function() {
         let tabs = await browser.tabs.query({
