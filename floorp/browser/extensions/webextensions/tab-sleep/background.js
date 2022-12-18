@@ -28,6 +28,7 @@ for (let EXCLUDE_URL_PATTERN of EXCLUDE_URL_PATTERNS) {
 
 
 // Monitor tab activity.
+let tabsLastActivity = {};
 function onTabsActivity(tabId) {
     if (typeof tabId !== "number") return;
     tabsLastActivity[String(tabId)] = (new Date()).getTime();
