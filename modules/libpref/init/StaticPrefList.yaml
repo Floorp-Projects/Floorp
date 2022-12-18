@@ -11221,6 +11221,12 @@
   value: false
   mirror: always
 
+# Enable `Link: rel=preconnect` in 103 Early Hint response.
+- name: network.early-hints.preconnect.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Whether to use the network process or not
 # Start a separate socket process. Performing networking on the socket process
 # is control by a sepparate pref

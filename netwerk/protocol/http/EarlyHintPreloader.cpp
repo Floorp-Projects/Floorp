@@ -190,10 +190,6 @@ void EarlyHintPreloader::MaybeCreateAndInsertPreload(
     nsIURI* aBaseURI, nsIPrincipal* aPrincipal,
     nsICookieJarSettings* aCookieJarSettings,
     const nsACString& aResponseReferrerPolicy) {
-  if (!aLinkHeader.mRel.LowerCaseEqualsASCII("preload")) {
-    return;
-  }
-
   nsAttrValue as;
   ParseAsValue(aLinkHeader.mAs, as);
 

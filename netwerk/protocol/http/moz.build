@@ -98,6 +98,7 @@ UNIFIED_SOURCES += [
     "ConnectionEntry.cpp",
     "ConnectionHandle.cpp",
     "DnsAndConnectSocket.cpp",
+    "EarlyHintPreconnect.cpp",
     "EarlyHintPreloader.cpp",
     "EarlyHintRegistrar.cpp",
     "EarlyHintsService.cpp",

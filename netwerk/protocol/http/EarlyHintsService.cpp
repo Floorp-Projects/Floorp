@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "EarlyHintsService.h"
+#include "EarlyHintPreconnect.h"
 #include "EarlyHintPreloader.h"
 #include "mozilla/PreloadHashKey.h"
 #include "mozilla/Telemetry.h"
@@ -85,9 +86,13 @@ void EarlyHintsService::EarlyHint(const nsACString& aLinkHeader,
 
   for (auto& linkHeader : linkHeaders) {
     CollectLinkTypeTelemetry(linkHeader.mRel);
-    EarlyHintPreloader::MaybeCreateAndInsertPreload(
-        mOngoingEarlyHints, linkHeader, aBaseURI, principal, cookieJarSettings,
-        aReferrerPolicy);
+    if (linkHeader.mRel.LowerCaseEqualsLiteral("preconnect")) {
+      EarlyHintPreconnect::MaybePreconnect(linkHeader, aBaseURI, principal);
+    } else if (linkHeader.mRel.LowerCaseEqualsLiteral("preload")) {
+      EarlyHintPreloader::MaybeCreateAndInsertPreload(
+          mOngoingEarlyHints, linkHeader, aBaseURI, principal,
+          cookieJarSettings, aReferrerPolicy);
+    }
   }
 }
 
