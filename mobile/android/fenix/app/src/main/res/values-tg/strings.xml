@@ -1906,6 +1906,15 @@
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">«Пӯшидани худкор» фаъол шуд</string>
 
+    <!-- Awesome bar suggestion's headers -->
+    <!-- Search suggestions title for Firefox Suggest. -->
+    <string name="firefox_suggest_header">Пешниҳоди Firefox</string>
+
+    <!-- Title for search suggestions when Google is the default search suggestion engine. -->
+    <string name="google_search_engine_suggestion_header">Ҷустуҷӯ дар «Google»</string>
+    <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
+    <string name="other_default_search_engine_suggestion_header">Ҷустуҷӯ дар «%s»</string>
+
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Пайвандҳоеро, танзим кунед, ки онҳо аз сомонаҳо, почтаи электронӣ ва паёмҳо дар браузери Firefox ба таври худкор кушода шаванд.</string>
 
@@ -1944,7 +1953,6 @@
     <string name="experiments_snackbar">Барои фиристодани маълумот дурисанҷро фаъол созед.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Гузариш ба танзимот</string>
-    <string name="firefox_suggest_header">Пешниҳоди Firefox</string>
 
     <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
     <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->

@@ -206,11 +206,11 @@
     <string name="browser_menu_open_in_fenix">%1$s ‘ਚ ਖੋਲ੍ਹੋ</string>
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="browser_menu_powered_by">%1$s ਵਲੋਂ POWERED</string>
+    <string name="browser_menu_powered_by">%1$s ਦੀ ਤਾਕਤ ਨਾਲ ਚੱਲ ਰਿਹਾ</string>
 
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="browser_menu_powered_by2">%1$s ਵਲੋਂ ਤਿਆਰ ਕੀਤਾ</string>
+    <string name="browser_menu_powered_by2">%1$s ਦੀ ਤਾਕਤ ਨਾਲ ਚੱਲ ਰਿਹਾ</string>
     <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">ਪੜ੍ਹਾਕੂ ਝਲਕ</string>
     <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
@@ -233,11 +233,11 @@
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
-    <string name="a11y_selected_locale_content_description">ਚੁਣੀ ਭਾਸ਼ਾ</string>
+    <string name="a11y_selected_locale_content_description">ਚੁਣੀ ਹੋਈ ਬੋਲੀ</string>
     <!-- Text for default locale item -->
-    <string name="default_locale_text">ਡਿਵਾਈਸ ਦੀ ਭਾਸ਼ਾ ਮੁਤਾਬਕ</string>
+    <string name="default_locale_text">ਡਿਵਾਈਸ ਦੀ ਬੋਲੀ ਮੁਤਾਬਕ ਚੱਲੋ</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
-    <string name="locale_search_hint">ਖੋਜ ਭਾਸ਼ਾ</string>
+    <string name="locale_search_hint">ਖੋਜ ਬੋਲੀ</string>
 
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
@@ -250,13 +250,13 @@
     <string name="awesomebar_clipboard_title">ਕਲਿੱਪਬੋਰਡ ਤੋਂ ਲਿੰਕ ਭਰੋ</string>
 
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
-    <string name="search_suggestions_onboarding_allow_button">ਮਨਜ਼ੂਰ</string>
+    <string name="search_suggestions_onboarding_allow_button">ਪ੍ਰਵਾਨ ਕਰੋ</string>
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_do_not_allow_button">ਇਜਾਜ਼ਤ ਨਾ ਦਿਓ</string>
     <!-- Search suggestion onboarding hint title text -->
     <string name="search_suggestions_onboarding_title">ਨਿੱਜੀ ਸ਼ੈਸ਼ਨਾਂ ਵਿੱਚ ਖੋਜ ਸੁਝਾਆਵਾਂ ਦੀ ਇਜਾਜ਼ਤ ਦੇਣੀ ਹੈ?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
-    <string name="search_suggestions_onboarding_text">%s ਤੁਹਾਡੇ ਵਲੋਂ ਸਿਰਨਾਵਾਂ ਪੱਟੀ ਵਿੱਚ ਲਿਖੀ ਹਰ ਚੀਜ਼ ਨੂੰ ਤੁਹਾਡੇ ਮੂਲ ਖੋਜ ਇੰਜਣ ਨਾਲ ਸਾਂਝਾ ਕਰੇਗਾ।</string>
+    <string name="search_suggestions_onboarding_text">ਤੁਹਾਡੇ ਵਲੋਂ ਸਿਰਨਾਵਾਂ ਪੱਟੀ ਵਿੱਚ ਲਿਖੀ ਹਰ ਚੀਜ਼ ਨੂੰ %s ਤੁਹਾਡੇ ਮੂਲ ਖੋਜ ਇੰਜਣ ਨਾਲ ਸਾਂਝਾ ਕਰੇਗਾ।</string>
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">%s ਖੋਜ</string>
@@ -398,7 +398,7 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">ਖਾਤਾ</string>
     <!-- Preference for changing where the toolbar is positioned -->
-    <string name="preferences_toolbar">ਟੂਲਬਾਰ</string>
+    <string name="preferences_toolbar">ਸੰਦ ਪੱਟੀ</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">ਥੀਮ</string>
     <!-- Preference for customizing the home screen -->
@@ -406,7 +406,7 @@
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">ਇਸ਼ਾਰੇ</string>
     <!-- Preference for settings related to visual options -->
-    <string name="preferences_customize">ਪਸੰਦੀਦਾ</string>
+    <string name="preferences_customize">ਚੁਣਿੰਦਾ ਕਰੋ</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">ਟੈਬਾਂ, ਬੁੱਕਮਾਰਕਾਂ, ਪਾਸਵਰਡਾ ਤੇ ਹੋਰਾਂ ਨੂੰ ਸਿੰਕ ਕਰਨ ਲਈ ਸਾਈਨ ਇਨ ਕਰੋ।</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -443,7 +443,7 @@
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">ਆਪੇ-ਪੂਰਨ URL</string>
     <!-- Preference for open links in third party apps -->
-    <string name="preferences_open_links_in_apps">ਲਿੰਕ ਐਪਾਂ ਵਿੱਚ ਖੋਲ੍ਹੋ</string>
+    <string name="preferences_open_links_in_apps">ਤੰਦਾਂ ਨੂੰ ਐਪਾਂ ਵਿੱਚ ਖੋਲ੍ਹੋ</string>
 
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">ਬਾਹਰੀ ਡਾਊਨਲੋਡ ਮੈਨੇਜਰ</string>
@@ -546,12 +546,12 @@
     <!-- Preference displays and allows changing current FxA device name -->
     <string name="preferences_sync_device_name">ਡਿਵਾਈਸ ਦਾ ਨਾਂ</string>
     <!-- Text shown when user enters empty device name -->
-    <string name="empty_device_name_error">ਡਿਵਾਈਸ ਦਾ ਨਾਂ ਖਾਲੀ ਨਹੀਂ ਹੋ ਸਕਦਾ ਹੈ।</string>
+    <string name="empty_device_name_error">ਡਿਵਾਈਸ ਦਾ ਨਾਂ ਖਾਲੀ ਨਹੀਂ ਹੋ ਸਕਦਾ।</string>
     <!-- Label indicating that sync is in progress -->
     <string name="sync_syncing_in_progress">…ਸਿੰਕ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ</string>
 
     <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
-    <string name="sync_failed_summary">ਸਿੰਕ ਅਸਫ਼ਲ ਹੈ। ਆਖਰੀ ਕਾਮਯਾਬ: %s</string>
+    <string name="sync_failed_summary">ਸਿੰਕ ਅਸਫ਼ਲ ਹੋਇਆ। ਪਿਛਲੀ ਕਾਮਯਾਬੀ: %s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_failed_never_synced_summary">ਸਿੰਕ ਅਸਫ਼ਲ ਹੈ। ਆਖਰੀ ਸਿੰਕ: ਕਦੇ ਵੀ ਨਹੀਂ</string>
     <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->

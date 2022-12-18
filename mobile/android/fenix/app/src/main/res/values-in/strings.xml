@@ -1907,6 +1907,15 @@
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">Tutup-otomatis diaktifkan</string>
 
+    <!-- Awesome bar suggestion's headers -->
+    <!-- Search suggestions title for Firefox Suggest. -->
+    <string name="firefox_suggest_header">Saran Firefox</string>
+
+    <!-- Title for search suggestions when Google is the default search suggestion engine. -->
+    <string name="google_search_engine_suggestion_header">Pencarian Google</string>
+    <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
+    <string name="other_default_search_engine_suggestion_header">Pencarian %s</string>
+
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Setel tautan dari situs web, surel, dan pesan untuk secara otomatis dibuka di Firefox.</string>
 
@@ -1945,7 +1954,6 @@
     <string name="experiments_snackbar">Aktifkan telemetri untuk mengirim data.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Buka pengaturan</string>
-    <string name="firefox_suggest_header">Saran Firefox</string>
 
     <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
     <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->

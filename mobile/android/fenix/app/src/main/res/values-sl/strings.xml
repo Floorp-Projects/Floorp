@@ -67,10 +67,12 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">Dodajte bližnjico za odpiranje zasebnih zavihkov z začetnega zaslona.</string>
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Dodajte bližnjico za odpiranje zasebnih zavihkov z začetnega zaslona.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Dodaj bližnjico</string>
-    <!-- Text for the negative button -->
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Dodaj bližnjico</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">Dodaj na domači zaslon</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Ne, hvala</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -1007,7 +1009,7 @@
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Meni zbirk</string>
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description2">Zbirajte stvari, ki vam kaj pomenijo.\nZdružite podobna iskanja, spletne strani in zavihke za hitrejši dostop.</string>
+    <string name="no_collections_description2">Zbirajte stvari, ki vam kaj pomenijo.\nZdružite podobna iskanja, spletna mesta in zavihke za hitrejši dostop.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Izberi zavihke</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -1070,8 +1072,6 @@
     <string name="share_copy_link_to_clipboard">Kopiraj v odložišče</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Kopirano v odložišče</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">Prijava v sinhronizacijo</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Prijava v Sync</string>
      <!-- An option from the three dot menu to sync and save data -->
@@ -1361,7 +1361,7 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_1">Spletne sledilce in sledilce družbenih omrežij</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Piškotke neobiskanih spletnih strani</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Piškotke neobiskanih spletnih mest</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">Vse piškotke tretjih strani (lahko povzroči nedelovanje spletnih strani)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
@@ -1407,13 +1407,13 @@
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Sledilna vsebina</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_tracking_content_description">Preprečuje nalaganje zunanjih oglasov, videoposnetkov in druge vsebine, ki vsebuje sledilno kodo. Lahko vpliva na delovanje nekaterih spletnih strani.</string>
+    <string name="etp_tracking_content_description">Preprečuje nalaganje zunanjih oglasov, videoposnetkov in druge vsebine, ki vsebuje sledilno kodo. Lahko vpliva na delovanje nekaterih spletnih mest.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Zaščite za to spletno mesto so VKLJUČENE</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
     <string name="etp_panel_off">Zaščite za to spletno mesto so IZKLJUČENE</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
-    <string name="enhanced_tracking_protection_exceptions">Izboljšana zaščita pred sledenjem je za te spletne strani izključena</string>
+    <string name="enhanced_tracking_protection_exceptions">Izboljšana zaščita pred sledenjem je za ta spletna mesta izključena</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate
     back from ETP details (Ex: Tracking content) -->
     <string name="etp_back_button_content_description">Krmari nazaj</string>
@@ -1896,6 +1896,10 @@
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">Samodejno zapiranje omogočeno</string>
 
+    <!-- Awesome bar suggestion's headers -->
+    <!-- Search suggestions title for Firefox Suggest. -->
+    <string name="firefox_suggest_header">Firefoxovi predlogi</string>
+
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Nastavite, naj se povezave s spletnih strani, e-pošte in sporočil samodejno odpirajo v Firefoxu.</string>
 
@@ -1934,7 +1938,6 @@
     <string name="experiments_snackbar">Za pošiljanje podatkov omogočite telemetrijo.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Pojdi v nastavitve</string>
-    <string name="firefox_suggest_header">Firefoxovi predlogi</string>
 
     <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
     <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->

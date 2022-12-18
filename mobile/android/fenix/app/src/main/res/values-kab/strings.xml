@@ -1920,6 +1920,15 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">Amdal awurman yermed</string>
 
+    <!-- Awesome bar suggestion's headers -->
+    <!-- Search suggestions title for Firefox Suggest. -->
+    <string name="firefox_suggest_header">Firefox Suggest</string>
+
+    <!-- Title for search suggestions when Google is the default search suggestion engine. -->
+    <string name="google_search_engine_suggestion_header">Anadi deg Google</string>
+    <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
+    <string name="other_default_search_engine_suggestion_header">Anadi %s</string>
+
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Sbadu iseɣwan seg yismal web, seg yimaylen d yiznan i twaledyawt s wudem awurman deg Firefox.</string>
 
@@ -1958,7 +1967,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="experiments_snackbar">Rmed tilisɣelt i tuzna n yisefka.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Ddu ɣer yiɣewwaren</string>
-    <string name="firefox_suggest_header">Firefox Suggest</string>
 
     <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
     <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->
