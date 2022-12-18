@@ -2102,7 +2102,6 @@ module.exports = {
         "toolkit/content/tests/chrome/window_browser_drop.xhtml",
         "toolkit/modules/tests/browser/browser_AsyncPrefs.js",
         "toolkit/modules/tests/browser/browser_BrowserUtils.js",
-        "toolkit/modules/tests/browser/browser_Deprecated.js",
         "toolkit/modules/tests/browser/browser_web_channel.js",
         "toolkit/modules/tests/browser/file_web_channel_iframe.html",
         "toolkit/modules/tests/chrome/test_bug544442_checkCert.xhtml",

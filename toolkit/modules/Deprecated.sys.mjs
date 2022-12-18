@@ -60,7 +60,7 @@ export var Deprecated = {
 
     // If URL is not provided, report an error.
     if (!aUrl) {
-      Cu.reportError(
+      console.error(
         "Error in Deprecated.warning: warnings must " +
           "provide a URL documenting this deprecation."
       );
@@ -77,6 +77,6 @@ export var Deprecated = {
       stringifyCallstack(aStack);
 
     // Report deprecation warning.
-    Cu.reportError(textMessage);
+    console.error(textMessage);
   },
 };
