@@ -260,11 +260,17 @@ async function loadRemoteTab(url) {
 }
 
 async function openPopup(input) {
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: input,
-    fireInputEvent: true,
+  await UrlbarTestUtils.promisePopupOpen(window, async () => {
+    EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {});
+    await BrowserTestUtils.waitForCondition(
+      () =>
+        gURLBar.inputField.ownerDocument.activeElement === gURLBar.inputField
+    );
+    for (let i = 0; i < input.length; i++) {
+      EventUtils.synthesizeKey(input.charAt(i));
+    }
   });
+  await UrlbarTestUtils.promiseSearchComplete(window);
 }
 
 async function selectRowByURL(url) {
