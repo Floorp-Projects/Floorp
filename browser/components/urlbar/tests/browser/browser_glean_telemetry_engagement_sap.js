@@ -58,6 +58,7 @@ add_task(async function sap_urlbar_addonpage() {
     BrowserTestUtils.loadURI(browser, extensionURL);
     await onLoad;
 
+    gURLBar.select();
     await openPopup("x");
     await doEnter();
 
