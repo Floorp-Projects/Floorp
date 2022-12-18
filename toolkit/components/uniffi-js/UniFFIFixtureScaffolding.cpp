@@ -19,481 +19,481 @@ using dom::UniFFIScaffoldingCallResult;
 
 // Define scaffolding functions from UniFFI
 extern "C" {
-  double geometry_4b55_gradient(RustBuffer, RustCallStatus*);
-  RustBuffer geometry_4b55_intersection(RustBuffer, RustBuffer, RustCallStatus*);
-  uint64_t arithmetic_cd72_add(uint64_t, uint64_t, RustCallStatus*);
-  uint64_t arithmetic_cd72_sub(uint64_t, uint64_t, RustCallStatus*);
-  uint64_t arithmetic_cd72_div(uint64_t, uint64_t, RustCallStatus*);
-  int8_t arithmetic_cd72_equal(uint64_t, uint64_t, RustCallStatus*);
-  void ffi_rondpoint_640b_Retourneur_object_free(void *, RustCallStatus*);
-  void * rondpoint_640b_Retourneur_new(RustCallStatus*);
-  int8_t rondpoint_640b_Retourneur_identique_i8(void *, int8_t, RustCallStatus*);
-  uint8_t rondpoint_640b_Retourneur_identique_u8(void *, uint8_t, RustCallStatus*);
-  int16_t rondpoint_640b_Retourneur_identique_i16(void *, int16_t, RustCallStatus*);
-  uint16_t rondpoint_640b_Retourneur_identique_u16(void *, uint16_t, RustCallStatus*);
-  int32_t rondpoint_640b_Retourneur_identique_i32(void *, int32_t, RustCallStatus*);
-  uint32_t rondpoint_640b_Retourneur_identique_u32(void *, uint32_t, RustCallStatus*);
-  int64_t rondpoint_640b_Retourneur_identique_i64(void *, int64_t, RustCallStatus*);
-  uint64_t rondpoint_640b_Retourneur_identique_u64(void *, uint64_t, RustCallStatus*);
-  float rondpoint_640b_Retourneur_identique_float(void *, float, RustCallStatus*);
-  double rondpoint_640b_Retourneur_identique_double(void *, double, RustCallStatus*);
-  int8_t rondpoint_640b_Retourneur_identique_boolean(void *, int8_t, RustCallStatus*);
-  RustBuffer rondpoint_640b_Retourneur_identique_string(void *, RustBuffer, RustCallStatus*);
-  RustBuffer rondpoint_640b_Retourneur_identique_nombres_signes(void *, RustBuffer, RustCallStatus*);
-  RustBuffer rondpoint_640b_Retourneur_identique_nombres(void *, RustBuffer, RustCallStatus*);
-  RustBuffer rondpoint_640b_Retourneur_identique_optionneur_dictionnaire(void *, RustBuffer, RustCallStatus*);
-  void ffi_rondpoint_640b_Stringifier_object_free(void *, RustCallStatus*);
-  void * rondpoint_640b_Stringifier_new(RustCallStatus*);
-  RustBuffer rondpoint_640b_Stringifier_well_known_string(void *, RustBuffer, RustCallStatus*);
-  RustBuffer rondpoint_640b_Stringifier_to_string_i8(void *, int8_t, RustCallStatus*);
-  RustBuffer rondpoint_640b_Stringifier_to_string_u8(void *, uint8_t, RustCallStatus*);
-  RustBuffer rondpoint_640b_Stringifier_to_string_i16(void *, int16_t, RustCallStatus*);
-  RustBuffer rondpoint_640b_Stringifier_to_string_u16(void *, uint16_t, RustCallStatus*);
-  RustBuffer rondpoint_640b_Stringifier_to_string_i32(void *, int32_t, RustCallStatus*);
-  RustBuffer rondpoint_640b_Stringifier_to_string_u32(void *, uint32_t, RustCallStatus*);
-  RustBuffer rondpoint_640b_Stringifier_to_string_i64(void *, int64_t, RustCallStatus*);
-  RustBuffer rondpoint_640b_Stringifier_to_string_u64(void *, uint64_t, RustCallStatus*);
-  RustBuffer rondpoint_640b_Stringifier_to_string_float(void *, float, RustCallStatus*);
-  RustBuffer rondpoint_640b_Stringifier_to_string_double(void *, double, RustCallStatus*);
-  RustBuffer rondpoint_640b_Stringifier_to_string_boolean(void *, int8_t, RustCallStatus*);
-  void ffi_rondpoint_640b_Optionneur_object_free(void *, RustCallStatus*);
-  void * rondpoint_640b_Optionneur_new(RustCallStatus*);
-  int8_t rondpoint_640b_Optionneur_sinon_boolean(void *, int8_t, RustCallStatus*);
-  RustBuffer rondpoint_640b_Optionneur_sinon_string(void *, RustBuffer, RustCallStatus*);
-  RustBuffer rondpoint_640b_Optionneur_sinon_sequence(void *, RustBuffer, RustCallStatus*);
-  RustBuffer rondpoint_640b_Optionneur_sinon_null(void *, RustBuffer, RustCallStatus*);
-  RustBuffer rondpoint_640b_Optionneur_sinon_zero(void *, RustBuffer, RustCallStatus*);
-  uint8_t rondpoint_640b_Optionneur_sinon_u8_dec(void *, uint8_t, RustCallStatus*);
-  int8_t rondpoint_640b_Optionneur_sinon_i8_dec(void *, int8_t, RustCallStatus*);
-  uint16_t rondpoint_640b_Optionneur_sinon_u16_dec(void *, uint16_t, RustCallStatus*);
-  int16_t rondpoint_640b_Optionneur_sinon_i16_dec(void *, int16_t, RustCallStatus*);
-  uint32_t rondpoint_640b_Optionneur_sinon_u32_dec(void *, uint32_t, RustCallStatus*);
-  int32_t rondpoint_640b_Optionneur_sinon_i32_dec(void *, int32_t, RustCallStatus*);
-  uint64_t rondpoint_640b_Optionneur_sinon_u64_dec(void *, uint64_t, RustCallStatus*);
-  int64_t rondpoint_640b_Optionneur_sinon_i64_dec(void *, int64_t, RustCallStatus*);
-  uint8_t rondpoint_640b_Optionneur_sinon_u8_hex(void *, uint8_t, RustCallStatus*);
-  int8_t rondpoint_640b_Optionneur_sinon_i8_hex(void *, int8_t, RustCallStatus*);
-  uint16_t rondpoint_640b_Optionneur_sinon_u16_hex(void *, uint16_t, RustCallStatus*);
-  int16_t rondpoint_640b_Optionneur_sinon_i16_hex(void *, int16_t, RustCallStatus*);
-  uint32_t rondpoint_640b_Optionneur_sinon_u32_hex(void *, uint32_t, RustCallStatus*);
-  int32_t rondpoint_640b_Optionneur_sinon_i32_hex(void *, int32_t, RustCallStatus*);
-  uint64_t rondpoint_640b_Optionneur_sinon_u64_hex(void *, uint64_t, RustCallStatus*);
-  int64_t rondpoint_640b_Optionneur_sinon_i64_hex(void *, int64_t, RustCallStatus*);
-  uint32_t rondpoint_640b_Optionneur_sinon_u32_oct(void *, uint32_t, RustCallStatus*);
-  float rondpoint_640b_Optionneur_sinon_f32(void *, float, RustCallStatus*);
-  double rondpoint_640b_Optionneur_sinon_f64(void *, double, RustCallStatus*);
-  RustBuffer rondpoint_640b_Optionneur_sinon_enum(void *, RustBuffer, RustCallStatus*);
-  RustBuffer rondpoint_640b_copie_dictionnaire(RustBuffer, RustCallStatus*);
-  RustBuffer rondpoint_640b_copie_enumeration(RustBuffer, RustCallStatus*);
-  RustBuffer rondpoint_640b_copie_enumerations(RustBuffer, RustCallStatus*);
-  RustBuffer rondpoint_640b_copie_carte(RustBuffer, RustCallStatus*);
-  int8_t rondpoint_640b_switcheroo(int8_t, RustCallStatus*);
-  void ffi_sprites_fec0_Sprite_object_free(void *, RustCallStatus*);
-  void * sprites_fec0_Sprite_new(RustBuffer, RustCallStatus*);
-  void * sprites_fec0_Sprite_new_relative_to(RustBuffer, RustBuffer, RustCallStatus*);
-  RustBuffer sprites_fec0_Sprite_get_position(void *, RustCallStatus*);
-  void sprites_fec0_Sprite_move_to(void *, RustBuffer, RustCallStatus*);
-  void sprites_fec0_Sprite_move_by(void *, RustBuffer, RustCallStatus*);
-  RustBuffer sprites_fec0_translate(RustBuffer, RustBuffer, RustCallStatus*);
-  void ffi_todolist_97c5_TodoList_object_free(void *, RustCallStatus*);
-  void * todolist_97c5_TodoList_new(RustCallStatus*);
-  void todolist_97c5_TodoList_add_item(void *, RustBuffer, RustCallStatus*);
-  void todolist_97c5_TodoList_add_entry(void *, RustBuffer, RustCallStatus*);
-  RustBuffer todolist_97c5_TodoList_get_entries(void *, RustCallStatus*);
-  RustBuffer todolist_97c5_TodoList_get_items(void *, RustCallStatus*);
-  void todolist_97c5_TodoList_add_entries(void *, RustBuffer, RustCallStatus*);
-  void todolist_97c5_TodoList_add_items(void *, RustBuffer, RustCallStatus*);
-  RustBuffer todolist_97c5_TodoList_get_last_entry(void *, RustCallStatus*);
-  RustBuffer todolist_97c5_TodoList_get_last(void *, RustCallStatus*);
-  RustBuffer todolist_97c5_TodoList_get_first(void *, RustCallStatus*);
-  void todolist_97c5_TodoList_clear_item(void *, RustBuffer, RustCallStatus*);
-  void todolist_97c5_TodoList_make_default(void *, RustCallStatus*);
-  RustBuffer todolist_97c5_get_default_list(RustCallStatus*);
-  void todolist_97c5_set_default_list(void *, RustCallStatus*);
-  RustBuffer todolist_97c5_create_entry_with(RustBuffer, RustCallStatus*);
-  RustBuffer custom_types_1cc4_get_custom_types_demo(RustBuffer, RustCallStatus*);
-  double external_types_ec59_gradient(RustBuffer, RustCallStatus*);
+  double geometry_1cce_gradient(RustBuffer, RustCallStatus*);
+  RustBuffer geometry_1cce_intersection(RustBuffer, RustBuffer, RustCallStatus*);
+  uint64_t arithmetic_906c_add(uint64_t, uint64_t, RustCallStatus*);
+  uint64_t arithmetic_906c_sub(uint64_t, uint64_t, RustCallStatus*);
+  uint64_t arithmetic_906c_div(uint64_t, uint64_t, RustCallStatus*);
+  int8_t arithmetic_906c_equal(uint64_t, uint64_t, RustCallStatus*);
+  void ffi_rondpoint_c6ef_Retourneur_object_free(void *, RustCallStatus*);
+  void * rondpoint_c6ef_Retourneur_new(RustCallStatus*);
+  int8_t rondpoint_c6ef_Retourneur_identique_i8(void *, int8_t, RustCallStatus*);
+  uint8_t rondpoint_c6ef_Retourneur_identique_u8(void *, uint8_t, RustCallStatus*);
+  int16_t rondpoint_c6ef_Retourneur_identique_i16(void *, int16_t, RustCallStatus*);
+  uint16_t rondpoint_c6ef_Retourneur_identique_u16(void *, uint16_t, RustCallStatus*);
+  int32_t rondpoint_c6ef_Retourneur_identique_i32(void *, int32_t, RustCallStatus*);
+  uint32_t rondpoint_c6ef_Retourneur_identique_u32(void *, uint32_t, RustCallStatus*);
+  int64_t rondpoint_c6ef_Retourneur_identique_i64(void *, int64_t, RustCallStatus*);
+  uint64_t rondpoint_c6ef_Retourneur_identique_u64(void *, uint64_t, RustCallStatus*);
+  float rondpoint_c6ef_Retourneur_identique_float(void *, float, RustCallStatus*);
+  double rondpoint_c6ef_Retourneur_identique_double(void *, double, RustCallStatus*);
+  int8_t rondpoint_c6ef_Retourneur_identique_boolean(void *, int8_t, RustCallStatus*);
+  RustBuffer rondpoint_c6ef_Retourneur_identique_string(void *, RustBuffer, RustCallStatus*);
+  RustBuffer rondpoint_c6ef_Retourneur_identique_nombres_signes(void *, RustBuffer, RustCallStatus*);
+  RustBuffer rondpoint_c6ef_Retourneur_identique_nombres(void *, RustBuffer, RustCallStatus*);
+  RustBuffer rondpoint_c6ef_Retourneur_identique_optionneur_dictionnaire(void *, RustBuffer, RustCallStatus*);
+  void ffi_rondpoint_c6ef_Stringifier_object_free(void *, RustCallStatus*);
+  void * rondpoint_c6ef_Stringifier_new(RustCallStatus*);
+  RustBuffer rondpoint_c6ef_Stringifier_well_known_string(void *, RustBuffer, RustCallStatus*);
+  RustBuffer rondpoint_c6ef_Stringifier_to_string_i8(void *, int8_t, RustCallStatus*);
+  RustBuffer rondpoint_c6ef_Stringifier_to_string_u8(void *, uint8_t, RustCallStatus*);
+  RustBuffer rondpoint_c6ef_Stringifier_to_string_i16(void *, int16_t, RustCallStatus*);
+  RustBuffer rondpoint_c6ef_Stringifier_to_string_u16(void *, uint16_t, RustCallStatus*);
+  RustBuffer rondpoint_c6ef_Stringifier_to_string_i32(void *, int32_t, RustCallStatus*);
+  RustBuffer rondpoint_c6ef_Stringifier_to_string_u32(void *, uint32_t, RustCallStatus*);
+  RustBuffer rondpoint_c6ef_Stringifier_to_string_i64(void *, int64_t, RustCallStatus*);
+  RustBuffer rondpoint_c6ef_Stringifier_to_string_u64(void *, uint64_t, RustCallStatus*);
+  RustBuffer rondpoint_c6ef_Stringifier_to_string_float(void *, float, RustCallStatus*);
+  RustBuffer rondpoint_c6ef_Stringifier_to_string_double(void *, double, RustCallStatus*);
+  RustBuffer rondpoint_c6ef_Stringifier_to_string_boolean(void *, int8_t, RustCallStatus*);
+  void ffi_rondpoint_c6ef_Optionneur_object_free(void *, RustCallStatus*);
+  void * rondpoint_c6ef_Optionneur_new(RustCallStatus*);
+  int8_t rondpoint_c6ef_Optionneur_sinon_boolean(void *, int8_t, RustCallStatus*);
+  RustBuffer rondpoint_c6ef_Optionneur_sinon_string(void *, RustBuffer, RustCallStatus*);
+  RustBuffer rondpoint_c6ef_Optionneur_sinon_sequence(void *, RustBuffer, RustCallStatus*);
+  RustBuffer rondpoint_c6ef_Optionneur_sinon_null(void *, RustBuffer, RustCallStatus*);
+  RustBuffer rondpoint_c6ef_Optionneur_sinon_zero(void *, RustBuffer, RustCallStatus*);
+  uint8_t rondpoint_c6ef_Optionneur_sinon_u8_dec(void *, uint8_t, RustCallStatus*);
+  int8_t rondpoint_c6ef_Optionneur_sinon_i8_dec(void *, int8_t, RustCallStatus*);
+  uint16_t rondpoint_c6ef_Optionneur_sinon_u16_dec(void *, uint16_t, RustCallStatus*);
+  int16_t rondpoint_c6ef_Optionneur_sinon_i16_dec(void *, int16_t, RustCallStatus*);
+  uint32_t rondpoint_c6ef_Optionneur_sinon_u32_dec(void *, uint32_t, RustCallStatus*);
+  int32_t rondpoint_c6ef_Optionneur_sinon_i32_dec(void *, int32_t, RustCallStatus*);
+  uint64_t rondpoint_c6ef_Optionneur_sinon_u64_dec(void *, uint64_t, RustCallStatus*);
+  int64_t rondpoint_c6ef_Optionneur_sinon_i64_dec(void *, int64_t, RustCallStatus*);
+  uint8_t rondpoint_c6ef_Optionneur_sinon_u8_hex(void *, uint8_t, RustCallStatus*);
+  int8_t rondpoint_c6ef_Optionneur_sinon_i8_hex(void *, int8_t, RustCallStatus*);
+  uint16_t rondpoint_c6ef_Optionneur_sinon_u16_hex(void *, uint16_t, RustCallStatus*);
+  int16_t rondpoint_c6ef_Optionneur_sinon_i16_hex(void *, int16_t, RustCallStatus*);
+  uint32_t rondpoint_c6ef_Optionneur_sinon_u32_hex(void *, uint32_t, RustCallStatus*);
+  int32_t rondpoint_c6ef_Optionneur_sinon_i32_hex(void *, int32_t, RustCallStatus*);
+  uint64_t rondpoint_c6ef_Optionneur_sinon_u64_hex(void *, uint64_t, RustCallStatus*);
+  int64_t rondpoint_c6ef_Optionneur_sinon_i64_hex(void *, int64_t, RustCallStatus*);
+  uint32_t rondpoint_c6ef_Optionneur_sinon_u32_oct(void *, uint32_t, RustCallStatus*);
+  float rondpoint_c6ef_Optionneur_sinon_f32(void *, float, RustCallStatus*);
+  double rondpoint_c6ef_Optionneur_sinon_f64(void *, double, RustCallStatus*);
+  RustBuffer rondpoint_c6ef_Optionneur_sinon_enum(void *, RustBuffer, RustCallStatus*);
+  RustBuffer rondpoint_c6ef_copie_dictionnaire(RustBuffer, RustCallStatus*);
+  RustBuffer rondpoint_c6ef_copie_enumeration(RustBuffer, RustCallStatus*);
+  RustBuffer rondpoint_c6ef_copie_enumerations(RustBuffer, RustCallStatus*);
+  RustBuffer rondpoint_c6ef_copie_carte(RustBuffer, RustCallStatus*);
+  int8_t rondpoint_c6ef_switcheroo(int8_t, RustCallStatus*);
+  void ffi_sprites_accb_Sprite_object_free(void *, RustCallStatus*);
+  void * sprites_accb_Sprite_new(RustBuffer, RustCallStatus*);
+  void * sprites_accb_Sprite_new_relative_to(RustBuffer, RustBuffer, RustCallStatus*);
+  RustBuffer sprites_accb_Sprite_get_position(void *, RustCallStatus*);
+  void sprites_accb_Sprite_move_to(void *, RustBuffer, RustCallStatus*);
+  void sprites_accb_Sprite_move_by(void *, RustBuffer, RustCallStatus*);
+  RustBuffer sprites_accb_translate(RustBuffer, RustBuffer, RustCallStatus*);
+  void ffi_todolist_aa33_TodoList_object_free(void *, RustCallStatus*);
+  void * todolist_aa33_TodoList_new(RustCallStatus*);
+  void todolist_aa33_TodoList_add_item(void *, RustBuffer, RustCallStatus*);
+  void todolist_aa33_TodoList_add_entry(void *, RustBuffer, RustCallStatus*);
+  RustBuffer todolist_aa33_TodoList_get_entries(void *, RustCallStatus*);
+  RustBuffer todolist_aa33_TodoList_get_items(void *, RustCallStatus*);
+  void todolist_aa33_TodoList_add_entries(void *, RustBuffer, RustCallStatus*);
+  void todolist_aa33_TodoList_add_items(void *, RustBuffer, RustCallStatus*);
+  RustBuffer todolist_aa33_TodoList_get_last_entry(void *, RustCallStatus*);
+  RustBuffer todolist_aa33_TodoList_get_last(void *, RustCallStatus*);
+  RustBuffer todolist_aa33_TodoList_get_first(void *, RustCallStatus*);
+  void todolist_aa33_TodoList_clear_item(void *, RustBuffer, RustCallStatus*);
+  void todolist_aa33_TodoList_make_default(void *, RustCallStatus*);
+  RustBuffer todolist_aa33_get_default_list(RustCallStatus*);
+  void todolist_aa33_set_default_list(void *, RustCallStatus*);
+  RustBuffer todolist_aa33_create_entry_with(RustBuffer, RustCallStatus*);
+  RustBuffer custom_types_8ecd_get_custom_types_demo(RustBuffer, RustCallStatus*);
+  double external_types_54cc_gradient(RustBuffer, RustCallStatus*);
 }
 
 // Define pointer types
 const static mozilla::uniffi::UniFFIPointerType kRondpointRetourneurPointerType {
   "rondpoint::Retourneur"_ns,
-  ffi_rondpoint_640b_Retourneur_object_free
+  ffi_rondpoint_c6ef_Retourneur_object_free
 };
 const static mozilla::uniffi::UniFFIPointerType kRondpointStringifierPointerType {
   "rondpoint::Stringifier"_ns,
-  ffi_rondpoint_640b_Stringifier_object_free
+  ffi_rondpoint_c6ef_Stringifier_object_free
 };
 const static mozilla::uniffi::UniFFIPointerType kRondpointOptionneurPointerType {
   "rondpoint::Optionneur"_ns,
-  ffi_rondpoint_640b_Optionneur_object_free
+  ffi_rondpoint_c6ef_Optionneur_object_free
 };
 const static mozilla::uniffi::UniFFIPointerType kSpritesSpritePointerType {
   "sprites::Sprite"_ns,
-  ffi_sprites_fec0_Sprite_object_free
+  ffi_sprites_accb_Sprite_object_free
 };
 const static mozilla::uniffi::UniFFIPointerType kTodolistTodoListPointerType {
   "todolist::TodoList"_ns,
-  ffi_todolist_97c5_TodoList_object_free
+  ffi_todolist_aa33_TodoList_object_free
 };
 
 Maybe<already_AddRefed<Promise>> UniFFIFixturesCallAsync(const GlobalObject& aGlobal, uint64_t aId, const Sequence<ScaffoldingType>& aArgs, ErrorResult& aError) {
   switch (aId) {
-    case 20: { // geometry:geometry_4b55_gradient
+    case 20: { // geometry:geometry_1cce_gradient
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<double>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(geometry_4b55_gradient, aGlobal, aArgs, "geometry_4b55_gradient: "_ns, aError));
+      return Some(CallHandler::CallAsync(geometry_1cce_gradient, aGlobal, aArgs, "geometry_1cce_gradient: "_ns, aError));
     }
-    case 21: { // geometry:geometry_4b55_intersection
+    case 21: { // geometry:geometry_1cce_intersection
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(geometry_4b55_intersection, aGlobal, aArgs, "geometry_4b55_intersection: "_ns, aError));
+      return Some(CallHandler::CallAsync(geometry_1cce_intersection, aGlobal, aArgs, "geometry_1cce_intersection: "_ns, aError));
     }
-    case 22: { // arithmetic:arithmetic_cd72_add
+    case 22: { // arithmetic:arithmetic_906c_add
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>>;
-      return Some(CallHandler::CallAsync(arithmetic_cd72_add, aGlobal, aArgs, "arithmetic_cd72_add: "_ns, aError));
+      return Some(CallHandler::CallAsync(arithmetic_906c_add, aGlobal, aArgs, "arithmetic_906c_add: "_ns, aError));
     }
-    case 23: { // arithmetic:arithmetic_cd72_sub
+    case 23: { // arithmetic:arithmetic_906c_sub
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>>;
-      return Some(CallHandler::CallAsync(arithmetic_cd72_sub, aGlobal, aArgs, "arithmetic_cd72_sub: "_ns, aError));
+      return Some(CallHandler::CallAsync(arithmetic_906c_sub, aGlobal, aArgs, "arithmetic_906c_sub: "_ns, aError));
     }
-    case 24: { // arithmetic:arithmetic_cd72_div
+    case 24: { // arithmetic:arithmetic_906c_div
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>>;
-      return Some(CallHandler::CallAsync(arithmetic_cd72_div, aGlobal, aArgs, "arithmetic_cd72_div: "_ns, aError));
+      return Some(CallHandler::CallAsync(arithmetic_906c_div, aGlobal, aArgs, "arithmetic_906c_div: "_ns, aError));
     }
-    case 25: { // arithmetic:arithmetic_cd72_equal
+    case 25: { // arithmetic:arithmetic_906c_equal
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>>;
-      return Some(CallHandler::CallAsync(arithmetic_cd72_equal, aGlobal, aArgs, "arithmetic_cd72_equal: "_ns, aError));
+      return Some(CallHandler::CallAsync(arithmetic_906c_equal, aGlobal, aArgs, "arithmetic_906c_equal: "_ns, aError));
     }
-    case 26: { // rondpoint:rondpoint_640b_Retourneur_new
+    case 26: { // rondpoint:rondpoint_c6ef_Retourneur_new
       using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Retourneur_new, aGlobal, aArgs, "rondpoint_640b_Retourneur_new: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Retourneur_new, aGlobal, aArgs, "rondpoint_c6ef_Retourneur_new: "_ns, aError));
     }
-    case 27: { // rondpoint:rondpoint_640b_Retourneur_identique_i8
+    case 27: { // rondpoint:rondpoint_c6ef_Retourneur_identique_i8
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<int8_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Retourneur_identique_i8, aGlobal, aArgs, "rondpoint_640b_Retourneur_identique_i8: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Retourneur_identique_i8, aGlobal, aArgs, "rondpoint_c6ef_Retourneur_identique_i8: "_ns, aError));
     }
-    case 28: { // rondpoint:rondpoint_640b_Retourneur_identique_u8
+    case 28: { // rondpoint:rondpoint_c6ef_Retourneur_identique_u8
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint8_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<uint8_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Retourneur_identique_u8, aGlobal, aArgs, "rondpoint_640b_Retourneur_identique_u8: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Retourneur_identique_u8, aGlobal, aArgs, "rondpoint_c6ef_Retourneur_identique_u8: "_ns, aError));
     }
-    case 29: { // rondpoint:rondpoint_640b_Retourneur_identique_i16
+    case 29: { // rondpoint:rondpoint_c6ef_Retourneur_identique_i16
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int16_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<int16_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Retourneur_identique_i16, aGlobal, aArgs, "rondpoint_640b_Retourneur_identique_i16: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Retourneur_identique_i16, aGlobal, aArgs, "rondpoint_c6ef_Retourneur_identique_i16: "_ns, aError));
     }
-    case 30: { // rondpoint:rondpoint_640b_Retourneur_identique_u16
+    case 30: { // rondpoint:rondpoint_c6ef_Retourneur_identique_u16
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint16_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<uint16_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Retourneur_identique_u16, aGlobal, aArgs, "rondpoint_640b_Retourneur_identique_u16: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Retourneur_identique_u16, aGlobal, aArgs, "rondpoint_c6ef_Retourneur_identique_u16: "_ns, aError));
     }
-    case 31: { // rondpoint:rondpoint_640b_Retourneur_identique_i32
+    case 31: { // rondpoint:rondpoint_c6ef_Retourneur_identique_i32
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int32_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<int32_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Retourneur_identique_i32, aGlobal, aArgs, "rondpoint_640b_Retourneur_identique_i32: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Retourneur_identique_i32, aGlobal, aArgs, "rondpoint_c6ef_Retourneur_identique_i32: "_ns, aError));
     }
-    case 32: { // rondpoint:rondpoint_640b_Retourneur_identique_u32
+    case 32: { // rondpoint:rondpoint_c6ef_Retourneur_identique_u32
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint32_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<uint32_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Retourneur_identique_u32, aGlobal, aArgs, "rondpoint_640b_Retourneur_identique_u32: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Retourneur_identique_u32, aGlobal, aArgs, "rondpoint_c6ef_Retourneur_identique_u32: "_ns, aError));
     }
-    case 33: { // rondpoint:rondpoint_640b_Retourneur_identique_i64
+    case 33: { // rondpoint:rondpoint_c6ef_Retourneur_identique_i64
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int64_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<int64_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Retourneur_identique_i64, aGlobal, aArgs, "rondpoint_640b_Retourneur_identique_i64: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Retourneur_identique_i64, aGlobal, aArgs, "rondpoint_c6ef_Retourneur_identique_i64: "_ns, aError));
     }
-    case 34: { // rondpoint:rondpoint_640b_Retourneur_identique_u64
+    case 34: { // rondpoint:rondpoint_c6ef_Retourneur_identique_u64
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<uint64_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Retourneur_identique_u64, aGlobal, aArgs, "rondpoint_640b_Retourneur_identique_u64: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Retourneur_identique_u64, aGlobal, aArgs, "rondpoint_c6ef_Retourneur_identique_u64: "_ns, aError));
     }
-    case 35: { // rondpoint:rondpoint_640b_Retourneur_identique_float
+    case 35: { // rondpoint:rondpoint_c6ef_Retourneur_identique_float
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<float>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<float>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Retourneur_identique_float, aGlobal, aArgs, "rondpoint_640b_Retourneur_identique_float: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Retourneur_identique_float, aGlobal, aArgs, "rondpoint_c6ef_Retourneur_identique_float: "_ns, aError));
     }
-    case 36: { // rondpoint:rondpoint_640b_Retourneur_identique_double
+    case 36: { // rondpoint:rondpoint_c6ef_Retourneur_identique_double
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<double>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<double>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Retourneur_identique_double, aGlobal, aArgs, "rondpoint_640b_Retourneur_identique_double: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Retourneur_identique_double, aGlobal, aArgs, "rondpoint_c6ef_Retourneur_identique_double: "_ns, aError));
     }
-    case 37: { // rondpoint:rondpoint_640b_Retourneur_identique_boolean
+    case 37: { // rondpoint:rondpoint_c6ef_Retourneur_identique_boolean
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<int8_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Retourneur_identique_boolean, aGlobal, aArgs, "rondpoint_640b_Retourneur_identique_boolean: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Retourneur_identique_boolean, aGlobal, aArgs, "rondpoint_c6ef_Retourneur_identique_boolean: "_ns, aError));
     }
-    case 38: { // rondpoint:rondpoint_640b_Retourneur_identique_string
+    case 38: { // rondpoint:rondpoint_c6ef_Retourneur_identique_string
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Retourneur_identique_string, aGlobal, aArgs, "rondpoint_640b_Retourneur_identique_string: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Retourneur_identique_string, aGlobal, aArgs, "rondpoint_c6ef_Retourneur_identique_string: "_ns, aError));
     }
-    case 39: { // rondpoint:rondpoint_640b_Retourneur_identique_nombres_signes
+    case 39: { // rondpoint:rondpoint_c6ef_Retourneur_identique_nombres_signes
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Retourneur_identique_nombres_signes, aGlobal, aArgs, "rondpoint_640b_Retourneur_identique_nombres_signes: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Retourneur_identique_nombres_signes, aGlobal, aArgs, "rondpoint_c6ef_Retourneur_identique_nombres_signes: "_ns, aError));
     }
-    case 40: { // rondpoint:rondpoint_640b_Retourneur_identique_nombres
+    case 40: { // rondpoint:rondpoint_c6ef_Retourneur_identique_nombres
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Retourneur_identique_nombres, aGlobal, aArgs, "rondpoint_640b_Retourneur_identique_nombres: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Retourneur_identique_nombres, aGlobal, aArgs, "rondpoint_c6ef_Retourneur_identique_nombres: "_ns, aError));
     }
-    case 41: { // rondpoint:rondpoint_640b_Retourneur_identique_optionneur_dictionnaire
+    case 41: { // rondpoint:rondpoint_c6ef_Retourneur_identique_optionneur_dictionnaire
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Retourneur_identique_optionneur_dictionnaire, aGlobal, aArgs, "rondpoint_640b_Retourneur_identique_optionneur_dictionnaire: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Retourneur_identique_optionneur_dictionnaire, aGlobal, aArgs, "rondpoint_c6ef_Retourneur_identique_optionneur_dictionnaire: "_ns, aError));
     }
-    case 42: { // rondpoint:rondpoint_640b_Stringifier_new
+    case 42: { // rondpoint:rondpoint_c6ef_Stringifier_new
       using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kRondpointStringifierPointerType>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Stringifier_new, aGlobal, aArgs, "rondpoint_640b_Stringifier_new: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Stringifier_new, aGlobal, aArgs, "rondpoint_c6ef_Stringifier_new: "_ns, aError));
     }
-    case 43: { // rondpoint:rondpoint_640b_Stringifier_well_known_string
+    case 43: { // rondpoint:rondpoint_c6ef_Stringifier_well_known_string
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Stringifier_well_known_string, aGlobal, aArgs, "rondpoint_640b_Stringifier_well_known_string: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Stringifier_well_known_string, aGlobal, aArgs, "rondpoint_c6ef_Stringifier_well_known_string: "_ns, aError));
     }
-    case 44: { // rondpoint:rondpoint_640b_Stringifier_to_string_i8
+    case 44: { // rondpoint:rondpoint_c6ef_Stringifier_to_string_i8
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<int8_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Stringifier_to_string_i8, aGlobal, aArgs, "rondpoint_640b_Stringifier_to_string_i8: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Stringifier_to_string_i8, aGlobal, aArgs, "rondpoint_c6ef_Stringifier_to_string_i8: "_ns, aError));
     }
-    case 45: { // rondpoint:rondpoint_640b_Stringifier_to_string_u8
+    case 45: { // rondpoint:rondpoint_c6ef_Stringifier_to_string_u8
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<uint8_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Stringifier_to_string_u8, aGlobal, aArgs, "rondpoint_640b_Stringifier_to_string_u8: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Stringifier_to_string_u8, aGlobal, aArgs, "rondpoint_c6ef_Stringifier_to_string_u8: "_ns, aError));
     }
-    case 46: { // rondpoint:rondpoint_640b_Stringifier_to_string_i16
+    case 46: { // rondpoint:rondpoint_c6ef_Stringifier_to_string_i16
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<int16_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Stringifier_to_string_i16, aGlobal, aArgs, "rondpoint_640b_Stringifier_to_string_i16: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Stringifier_to_string_i16, aGlobal, aArgs, "rondpoint_c6ef_Stringifier_to_string_i16: "_ns, aError));
     }
-    case 47: { // rondpoint:rondpoint_640b_Stringifier_to_string_u16
+    case 47: { // rondpoint:rondpoint_c6ef_Stringifier_to_string_u16
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<uint16_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Stringifier_to_string_u16, aGlobal, aArgs, "rondpoint_640b_Stringifier_to_string_u16: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Stringifier_to_string_u16, aGlobal, aArgs, "rondpoint_c6ef_Stringifier_to_string_u16: "_ns, aError));
     }
-    case 48: { // rondpoint:rondpoint_640b_Stringifier_to_string_i32
+    case 48: { // rondpoint:rondpoint_c6ef_Stringifier_to_string_i32
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<int32_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Stringifier_to_string_i32, aGlobal, aArgs, "rondpoint_640b_Stringifier_to_string_i32: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Stringifier_to_string_i32, aGlobal, aArgs, "rondpoint_c6ef_Stringifier_to_string_i32: "_ns, aError));
     }
-    case 49: { // rondpoint:rondpoint_640b_Stringifier_to_string_u32
+    case 49: { // rondpoint:rondpoint_c6ef_Stringifier_to_string_u32
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<uint32_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Stringifier_to_string_u32, aGlobal, aArgs, "rondpoint_640b_Stringifier_to_string_u32: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Stringifier_to_string_u32, aGlobal, aArgs, "rondpoint_c6ef_Stringifier_to_string_u32: "_ns, aError));
     }
-    case 50: { // rondpoint:rondpoint_640b_Stringifier_to_string_i64
+    case 50: { // rondpoint:rondpoint_c6ef_Stringifier_to_string_i64
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<int64_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Stringifier_to_string_i64, aGlobal, aArgs, "rondpoint_640b_Stringifier_to_string_i64: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Stringifier_to_string_i64, aGlobal, aArgs, "rondpoint_c6ef_Stringifier_to_string_i64: "_ns, aError));
     }
-    case 51: { // rondpoint:rondpoint_640b_Stringifier_to_string_u64
+    case 51: { // rondpoint:rondpoint_c6ef_Stringifier_to_string_u64
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<uint64_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Stringifier_to_string_u64, aGlobal, aArgs, "rondpoint_640b_Stringifier_to_string_u64: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Stringifier_to_string_u64, aGlobal, aArgs, "rondpoint_c6ef_Stringifier_to_string_u64: "_ns, aError));
     }
-    case 52: { // rondpoint:rondpoint_640b_Stringifier_to_string_float
+    case 52: { // rondpoint:rondpoint_c6ef_Stringifier_to_string_float
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<float>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Stringifier_to_string_float, aGlobal, aArgs, "rondpoint_640b_Stringifier_to_string_float: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Stringifier_to_string_float, aGlobal, aArgs, "rondpoint_c6ef_Stringifier_to_string_float: "_ns, aError));
     }
-    case 53: { // rondpoint:rondpoint_640b_Stringifier_to_string_double
+    case 53: { // rondpoint:rondpoint_c6ef_Stringifier_to_string_double
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<double>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Stringifier_to_string_double, aGlobal, aArgs, "rondpoint_640b_Stringifier_to_string_double: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Stringifier_to_string_double, aGlobal, aArgs, "rondpoint_c6ef_Stringifier_to_string_double: "_ns, aError));
     }
-    case 54: { // rondpoint:rondpoint_640b_Stringifier_to_string_boolean
+    case 54: { // rondpoint:rondpoint_c6ef_Stringifier_to_string_boolean
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<int8_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Stringifier_to_string_boolean, aGlobal, aArgs, "rondpoint_640b_Stringifier_to_string_boolean: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Stringifier_to_string_boolean, aGlobal, aArgs, "rondpoint_c6ef_Stringifier_to_string_boolean: "_ns, aError));
     }
-    case 55: { // rondpoint:rondpoint_640b_Optionneur_new
+    case 55: { // rondpoint:rondpoint_c6ef_Optionneur_new
       using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Optionneur_new, aGlobal, aArgs, "rondpoint_640b_Optionneur_new: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Optionneur_new, aGlobal, aArgs, "rondpoint_c6ef_Optionneur_new: "_ns, aError));
     }
-    case 56: { // rondpoint:rondpoint_640b_Optionneur_sinon_boolean
+    case 56: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_boolean
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int8_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Optionneur_sinon_boolean, aGlobal, aArgs, "rondpoint_640b_Optionneur_sinon_boolean: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Optionneur_sinon_boolean, aGlobal, aArgs, "rondpoint_c6ef_Optionneur_sinon_boolean: "_ns, aError));
     }
-    case 57: { // rondpoint:rondpoint_640b_Optionneur_sinon_string
+    case 57: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_string
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Optionneur_sinon_string, aGlobal, aArgs, "rondpoint_640b_Optionneur_sinon_string: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Optionneur_sinon_string, aGlobal, aArgs, "rondpoint_c6ef_Optionneur_sinon_string: "_ns, aError));
     }
-    case 58: { // rondpoint:rondpoint_640b_Optionneur_sinon_sequence
+    case 58: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_sequence
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Optionneur_sinon_sequence, aGlobal, aArgs, "rondpoint_640b_Optionneur_sinon_sequence: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Optionneur_sinon_sequence, aGlobal, aArgs, "rondpoint_c6ef_Optionneur_sinon_sequence: "_ns, aError));
     }
-    case 59: { // rondpoint:rondpoint_640b_Optionneur_sinon_null
+    case 59: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_null
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Optionneur_sinon_null, aGlobal, aArgs, "rondpoint_640b_Optionneur_sinon_null: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Optionneur_sinon_null, aGlobal, aArgs, "rondpoint_c6ef_Optionneur_sinon_null: "_ns, aError));
     }
-    case 60: { // rondpoint:rondpoint_640b_Optionneur_sinon_zero
+    case 60: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_zero
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Optionneur_sinon_zero, aGlobal, aArgs, "rondpoint_640b_Optionneur_sinon_zero: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Optionneur_sinon_zero, aGlobal, aArgs, "rondpoint_c6ef_Optionneur_sinon_zero: "_ns, aError));
     }
-    case 61: { // rondpoint:rondpoint_640b_Optionneur_sinon_u8_dec
+    case 61: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_u8_dec
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint8_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint8_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Optionneur_sinon_u8_dec, aGlobal, aArgs, "rondpoint_640b_Optionneur_sinon_u8_dec: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Optionneur_sinon_u8_dec, aGlobal, aArgs, "rondpoint_c6ef_Optionneur_sinon_u8_dec: "_ns, aError));
     }
-    case 62: { // rondpoint:rondpoint_640b_Optionneur_sinon_i8_dec
+    case 62: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_i8_dec
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int8_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Optionneur_sinon_i8_dec, aGlobal, aArgs, "rondpoint_640b_Optionneur_sinon_i8_dec: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Optionneur_sinon_i8_dec, aGlobal, aArgs, "rondpoint_c6ef_Optionneur_sinon_i8_dec: "_ns, aError));
     }
-    case 63: { // rondpoint:rondpoint_640b_Optionneur_sinon_u16_dec
+    case 63: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_u16_dec
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint16_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint16_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Optionneur_sinon_u16_dec, aGlobal, aArgs, "rondpoint_640b_Optionneur_sinon_u16_dec: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Optionneur_sinon_u16_dec, aGlobal, aArgs, "rondpoint_c6ef_Optionneur_sinon_u16_dec: "_ns, aError));
     }
-    case 64: { // rondpoint:rondpoint_640b_Optionneur_sinon_i16_dec
+    case 64: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_i16_dec
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int16_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int16_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Optionneur_sinon_i16_dec, aGlobal, aArgs, "rondpoint_640b_Optionneur_sinon_i16_dec: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Optionneur_sinon_i16_dec, aGlobal, aArgs, "rondpoint_c6ef_Optionneur_sinon_i16_dec: "_ns, aError));
     }
-    case 65: { // rondpoint:rondpoint_640b_Optionneur_sinon_u32_dec
+    case 65: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_u32_dec
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint32_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint32_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Optionneur_sinon_u32_dec, aGlobal, aArgs, "rondpoint_640b_Optionneur_sinon_u32_dec: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Optionneur_sinon_u32_dec, aGlobal, aArgs, "rondpoint_c6ef_Optionneur_sinon_u32_dec: "_ns, aError));
     }
-    case 66: { // rondpoint:rondpoint_640b_Optionneur_sinon_i32_dec
+    case 66: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_i32_dec
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int32_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int32_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Optionneur_sinon_i32_dec, aGlobal, aArgs, "rondpoint_640b_Optionneur_sinon_i32_dec: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Optionneur_sinon_i32_dec, aGlobal, aArgs, "rondpoint_c6ef_Optionneur_sinon_i32_dec: "_ns, aError));
     }
-    case 67: { // rondpoint:rondpoint_640b_Optionneur_sinon_u64_dec
+    case 67: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_u64_dec
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint64_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Optionneur_sinon_u64_dec, aGlobal, aArgs, "rondpoint_640b_Optionneur_sinon_u64_dec: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Optionneur_sinon_u64_dec, aGlobal, aArgs, "rondpoint_c6ef_Optionneur_sinon_u64_dec: "_ns, aError));
     }
-    case 68: { // rondpoint:rondpoint_640b_Optionneur_sinon_i64_dec
+    case 68: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_i64_dec
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int64_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int64_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Optionneur_sinon_i64_dec, aGlobal, aArgs, "rondpoint_640b_Optionneur_sinon_i64_dec: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Optionneur_sinon_i64_dec, aGlobal, aArgs, "rondpoint_c6ef_Optionneur_sinon_i64_dec: "_ns, aError));
     }
-    case 69: { // rondpoint:rondpoint_640b_Optionneur_sinon_u8_hex
+    case 69: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_u8_hex
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint8_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint8_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Optionneur_sinon_u8_hex, aGlobal, aArgs, "rondpoint_640b_Optionneur_sinon_u8_hex: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Optionneur_sinon_u8_hex, aGlobal, aArgs, "rondpoint_c6ef_Optionneur_sinon_u8_hex: "_ns, aError));
     }
-    case 70: { // rondpoint:rondpoint_640b_Optionneur_sinon_i8_hex
+    case 70: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_i8_hex
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int8_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Optionneur_sinon_i8_hex, aGlobal, aArgs, "rondpoint_640b_Optionneur_sinon_i8_hex: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Optionneur_sinon_i8_hex, aGlobal, aArgs, "rondpoint_c6ef_Optionneur_sinon_i8_hex: "_ns, aError));
     }
-    case 71: { // rondpoint:rondpoint_640b_Optionneur_sinon_u16_hex
+    case 71: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_u16_hex
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint16_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint16_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Optionneur_sinon_u16_hex, aGlobal, aArgs, "rondpoint_640b_Optionneur_sinon_u16_hex: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Optionneur_sinon_u16_hex, aGlobal, aArgs, "rondpoint_c6ef_Optionneur_sinon_u16_hex: "_ns, aError));
     }
-    case 72: { // rondpoint:rondpoint_640b_Optionneur_sinon_i16_hex
+    case 72: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_i16_hex
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int16_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int16_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Optionneur_sinon_i16_hex, aGlobal, aArgs, "rondpoint_640b_Optionneur_sinon_i16_hex: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Optionneur_sinon_i16_hex, aGlobal, aArgs, "rondpoint_c6ef_Optionneur_sinon_i16_hex: "_ns, aError));
     }
-    case 73: { // rondpoint:rondpoint_640b_Optionneur_sinon_u32_hex
+    case 73: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_u32_hex
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint32_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint32_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Optionneur_sinon_u32_hex, aGlobal, aArgs, "rondpoint_640b_Optionneur_sinon_u32_hex: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Optionneur_sinon_u32_hex, aGlobal, aArgs, "rondpoint_c6ef_Optionneur_sinon_u32_hex: "_ns, aError));
     }
-    case 74: { // rondpoint:rondpoint_640b_Optionneur_sinon_i32_hex
+    case 74: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_i32_hex
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int32_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int32_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Optionneur_sinon_i32_hex, aGlobal, aArgs, "rondpoint_640b_Optionneur_sinon_i32_hex: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Optionneur_sinon_i32_hex, aGlobal, aArgs, "rondpoint_c6ef_Optionneur_sinon_i32_hex: "_ns, aError));
     }
-    case 75: { // rondpoint:rondpoint_640b_Optionneur_sinon_u64_hex
+    case 75: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_u64_hex
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint64_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Optionneur_sinon_u64_hex, aGlobal, aArgs, "rondpoint_640b_Optionneur_sinon_u64_hex: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Optionneur_sinon_u64_hex, aGlobal, aArgs, "rondpoint_c6ef_Optionneur_sinon_u64_hex: "_ns, aError));
     }
-    case 76: { // rondpoint:rondpoint_640b_Optionneur_sinon_i64_hex
+    case 76: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_i64_hex
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int64_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int64_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Optionneur_sinon_i64_hex, aGlobal, aArgs, "rondpoint_640b_Optionneur_sinon_i64_hex: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Optionneur_sinon_i64_hex, aGlobal, aArgs, "rondpoint_c6ef_Optionneur_sinon_i64_hex: "_ns, aError));
     }
-    case 77: { // rondpoint:rondpoint_640b_Optionneur_sinon_u32_oct
+    case 77: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_u32_oct
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint32_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint32_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Optionneur_sinon_u32_oct, aGlobal, aArgs, "rondpoint_640b_Optionneur_sinon_u32_oct: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Optionneur_sinon_u32_oct, aGlobal, aArgs, "rondpoint_c6ef_Optionneur_sinon_u32_oct: "_ns, aError));
     }
-    case 78: { // rondpoint:rondpoint_640b_Optionneur_sinon_f32
+    case 78: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_f32
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<float>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<float>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Optionneur_sinon_f32, aGlobal, aArgs, "rondpoint_640b_Optionneur_sinon_f32: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Optionneur_sinon_f32, aGlobal, aArgs, "rondpoint_c6ef_Optionneur_sinon_f32: "_ns, aError));
     }
-    case 79: { // rondpoint:rondpoint_640b_Optionneur_sinon_f64
+    case 79: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_f64
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<double>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<double>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Optionneur_sinon_f64, aGlobal, aArgs, "rondpoint_640b_Optionneur_sinon_f64: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Optionneur_sinon_f64, aGlobal, aArgs, "rondpoint_c6ef_Optionneur_sinon_f64: "_ns, aError));
     }
-    case 80: { // rondpoint:rondpoint_640b_Optionneur_sinon_enum
+    case 80: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_enum
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_Optionneur_sinon_enum, aGlobal, aArgs, "rondpoint_640b_Optionneur_sinon_enum: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_Optionneur_sinon_enum, aGlobal, aArgs, "rondpoint_c6ef_Optionneur_sinon_enum: "_ns, aError));
     }
-    case 81: { // rondpoint:rondpoint_640b_copie_dictionnaire
+    case 81: { // rondpoint:rondpoint_c6ef_copie_dictionnaire
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_copie_dictionnaire, aGlobal, aArgs, "rondpoint_640b_copie_dictionnaire: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_copie_dictionnaire, aGlobal, aArgs, "rondpoint_c6ef_copie_dictionnaire: "_ns, aError));
     }
-    case 82: { // rondpoint:rondpoint_640b_copie_enumeration
+    case 82: { // rondpoint:rondpoint_c6ef_copie_enumeration
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_copie_enumeration, aGlobal, aArgs, "rondpoint_640b_copie_enumeration: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_copie_enumeration, aGlobal, aArgs, "rondpoint_c6ef_copie_enumeration: "_ns, aError));
     }
-    case 83: { // rondpoint:rondpoint_640b_copie_enumerations
+    case 83: { // rondpoint:rondpoint_c6ef_copie_enumerations
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_copie_enumerations, aGlobal, aArgs, "rondpoint_640b_copie_enumerations: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_copie_enumerations, aGlobal, aArgs, "rondpoint_c6ef_copie_enumerations: "_ns, aError));
     }
-    case 84: { // rondpoint:rondpoint_640b_copie_carte
+    case 84: { // rondpoint:rondpoint_c6ef_copie_carte
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_copie_carte, aGlobal, aArgs, "rondpoint_640b_copie_carte: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_copie_carte, aGlobal, aArgs, "rondpoint_c6ef_copie_carte: "_ns, aError));
     }
-    case 85: { // rondpoint:rondpoint_640b_switcheroo
+    case 85: { // rondpoint:rondpoint_c6ef_switcheroo
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingConverter<int8_t>>;
-      return Some(CallHandler::CallAsync(rondpoint_640b_switcheroo, aGlobal, aArgs, "rondpoint_640b_switcheroo: "_ns, aError));
+      return Some(CallHandler::CallAsync(rondpoint_c6ef_switcheroo, aGlobal, aArgs, "rondpoint_c6ef_switcheroo: "_ns, aError));
     }
-    case 86: { // sprites:sprites_fec0_Sprite_new
+    case 86: { // sprites:sprites_accb_Sprite_new
       using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kSpritesSpritePointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(sprites_fec0_Sprite_new, aGlobal, aArgs, "sprites_fec0_Sprite_new: "_ns, aError));
+      return Some(CallHandler::CallAsync(sprites_accb_Sprite_new, aGlobal, aArgs, "sprites_accb_Sprite_new: "_ns, aError));
     }
-    case 87: { // sprites:sprites_fec0_Sprite_new_relative_to
+    case 87: { // sprites:sprites_accb_Sprite_new_relative_to
       using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kSpritesSpritePointerType>, ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(sprites_fec0_Sprite_new_relative_to, aGlobal, aArgs, "sprites_fec0_Sprite_new_relative_to: "_ns, aError));
+      return Some(CallHandler::CallAsync(sprites_accb_Sprite_new_relative_to, aGlobal, aArgs, "sprites_accb_Sprite_new_relative_to: "_ns, aError));
     }
-    case 88: { // sprites:sprites_fec0_Sprite_get_position
+    case 88: { // sprites:sprites_accb_Sprite_get_position
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kSpritesSpritePointerType>>;
-      return Some(CallHandler::CallAsync(sprites_fec0_Sprite_get_position, aGlobal, aArgs, "sprites_fec0_Sprite_get_position: "_ns, aError));
+      return Some(CallHandler::CallAsync(sprites_accb_Sprite_get_position, aGlobal, aArgs, "sprites_accb_Sprite_get_position: "_ns, aError));
     }
-    case 89: { // sprites:sprites_fec0_Sprite_move_to
+    case 89: { // sprites:sprites_accb_Sprite_move_to
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kSpritesSpritePointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(sprites_fec0_Sprite_move_to, aGlobal, aArgs, "sprites_fec0_Sprite_move_to: "_ns, aError));
+      return Some(CallHandler::CallAsync(sprites_accb_Sprite_move_to, aGlobal, aArgs, "sprites_accb_Sprite_move_to: "_ns, aError));
     }
-    case 90: { // sprites:sprites_fec0_Sprite_move_by
+    case 90: { // sprites:sprites_accb_Sprite_move_by
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kSpritesSpritePointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(sprites_fec0_Sprite_move_by, aGlobal, aArgs, "sprites_fec0_Sprite_move_by: "_ns, aError));
+      return Some(CallHandler::CallAsync(sprites_accb_Sprite_move_by, aGlobal, aArgs, "sprites_accb_Sprite_move_by: "_ns, aError));
     }
-    case 91: { // sprites:sprites_fec0_translate
+    case 91: { // sprites:sprites_accb_translate
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(sprites_fec0_translate, aGlobal, aArgs, "sprites_fec0_translate: "_ns, aError));
+      return Some(CallHandler::CallAsync(sprites_accb_translate, aGlobal, aArgs, "sprites_accb_translate: "_ns, aError));
     }
-    case 92: { // todolist:todolist_97c5_TodoList_new
+    case 92: { // todolist:todolist_aa33_TodoList_new
       using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      return Some(CallHandler::CallAsync(todolist_97c5_TodoList_new, aGlobal, aArgs, "todolist_97c5_TodoList_new: "_ns, aError));
+      return Some(CallHandler::CallAsync(todolist_aa33_TodoList_new, aGlobal, aArgs, "todolist_aa33_TodoList_new: "_ns, aError));
     }
-    case 93: { // todolist:todolist_97c5_TodoList_add_item
+    case 93: { // todolist:todolist_aa33_TodoList_add_item
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(todolist_97c5_TodoList_add_item, aGlobal, aArgs, "todolist_97c5_TodoList_add_item: "_ns, aError));
+      return Some(CallHandler::CallAsync(todolist_aa33_TodoList_add_item, aGlobal, aArgs, "todolist_aa33_TodoList_add_item: "_ns, aError));
     }
-    case 94: { // todolist:todolist_97c5_TodoList_add_entry
+    case 94: { // todolist:todolist_aa33_TodoList_add_entry
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(todolist_97c5_TodoList_add_entry, aGlobal, aArgs, "todolist_97c5_TodoList_add_entry: "_ns, aError));
+      return Some(CallHandler::CallAsync(todolist_aa33_TodoList_add_entry, aGlobal, aArgs, "todolist_aa33_TodoList_add_entry: "_ns, aError));
     }
-    case 95: { // todolist:todolist_97c5_TodoList_get_entries
+    case 95: { // todolist:todolist_aa33_TodoList_get_entries
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      return Some(CallHandler::CallAsync(todolist_97c5_TodoList_get_entries, aGlobal, aArgs, "todolist_97c5_TodoList_get_entries: "_ns, aError));
+      return Some(CallHandler::CallAsync(todolist_aa33_TodoList_get_entries, aGlobal, aArgs, "todolist_aa33_TodoList_get_entries: "_ns, aError));
     }
-    case 96: { // todolist:todolist_97c5_TodoList_get_items
+    case 96: { // todolist:todolist_aa33_TodoList_get_items
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      return Some(CallHandler::CallAsync(todolist_97c5_TodoList_get_items, aGlobal, aArgs, "todolist_97c5_TodoList_get_items: "_ns, aError));
+      return Some(CallHandler::CallAsync(todolist_aa33_TodoList_get_items, aGlobal, aArgs, "todolist_aa33_TodoList_get_items: "_ns, aError));
     }
-    case 97: { // todolist:todolist_97c5_TodoList_add_entries
+    case 97: { // todolist:todolist_aa33_TodoList_add_entries
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(todolist_97c5_TodoList_add_entries, aGlobal, aArgs, "todolist_97c5_TodoList_add_entries: "_ns, aError));
+      return Some(CallHandler::CallAsync(todolist_aa33_TodoList_add_entries, aGlobal, aArgs, "todolist_aa33_TodoList_add_entries: "_ns, aError));
     }
-    case 98: { // todolist:todolist_97c5_TodoList_add_items
+    case 98: { // todolist:todolist_aa33_TodoList_add_items
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(todolist_97c5_TodoList_add_items, aGlobal, aArgs, "todolist_97c5_TodoList_add_items: "_ns, aError));
+      return Some(CallHandler::CallAsync(todolist_aa33_TodoList_add_items, aGlobal, aArgs, "todolist_aa33_TodoList_add_items: "_ns, aError));
     }
-    case 99: { // todolist:todolist_97c5_TodoList_get_last_entry
+    case 99: { // todolist:todolist_aa33_TodoList_get_last_entry
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      return Some(CallHandler::CallAsync(todolist_97c5_TodoList_get_last_entry, aGlobal, aArgs, "todolist_97c5_TodoList_get_last_entry: "_ns, aError));
+      return Some(CallHandler::CallAsync(todolist_aa33_TodoList_get_last_entry, aGlobal, aArgs, "todolist_aa33_TodoList_get_last_entry: "_ns, aError));
     }
-    case 100: { // todolist:todolist_97c5_TodoList_get_last
+    case 100: { // todolist:todolist_aa33_TodoList_get_last
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      return Some(CallHandler::CallAsync(todolist_97c5_TodoList_get_last, aGlobal, aArgs, "todolist_97c5_TodoList_get_last: "_ns, aError));
+      return Some(CallHandler::CallAsync(todolist_aa33_TodoList_get_last, aGlobal, aArgs, "todolist_aa33_TodoList_get_last: "_ns, aError));
     }
-    case 101: { // todolist:todolist_97c5_TodoList_get_first
+    case 101: { // todolist:todolist_aa33_TodoList_get_first
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      return Some(CallHandler::CallAsync(todolist_97c5_TodoList_get_first, aGlobal, aArgs, "todolist_97c5_TodoList_get_first: "_ns, aError));
+      return Some(CallHandler::CallAsync(todolist_aa33_TodoList_get_first, aGlobal, aArgs, "todolist_aa33_TodoList_get_first: "_ns, aError));
     }
-    case 102: { // todolist:todolist_97c5_TodoList_clear_item
+    case 102: { // todolist:todolist_aa33_TodoList_clear_item
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(todolist_97c5_TodoList_clear_item, aGlobal, aArgs, "todolist_97c5_TodoList_clear_item: "_ns, aError));
+      return Some(CallHandler::CallAsync(todolist_aa33_TodoList_clear_item, aGlobal, aArgs, "todolist_aa33_TodoList_clear_item: "_ns, aError));
     }
-    case 103: { // todolist:todolist_97c5_TodoList_make_default
+    case 103: { // todolist:todolist_aa33_TodoList_make_default
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      return Some(CallHandler::CallAsync(todolist_97c5_TodoList_make_default, aGlobal, aArgs, "todolist_97c5_TodoList_make_default: "_ns, aError));
+      return Some(CallHandler::CallAsync(todolist_aa33_TodoList_make_default, aGlobal, aArgs, "todolist_aa33_TodoList_make_default: "_ns, aError));
     }
-    case 104: { // todolist:todolist_97c5_get_default_list
+    case 104: { // todolist:todolist_aa33_get_default_list
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(todolist_97c5_get_default_list, aGlobal, aArgs, "todolist_97c5_get_default_list: "_ns, aError));
+      return Some(CallHandler::CallAsync(todolist_aa33_get_default_list, aGlobal, aArgs, "todolist_aa33_get_default_list: "_ns, aError));
     }
-    case 105: { // todolist:todolist_97c5_set_default_list
+    case 105: { // todolist:todolist_aa33_set_default_list
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      return Some(CallHandler::CallAsync(todolist_97c5_set_default_list, aGlobal, aArgs, "todolist_97c5_set_default_list: "_ns, aError));
+      return Some(CallHandler::CallAsync(todolist_aa33_set_default_list, aGlobal, aArgs, "todolist_aa33_set_default_list: "_ns, aError));
     }
-    case 106: { // todolist:todolist_97c5_create_entry_with
+    case 106: { // todolist:todolist_aa33_create_entry_with
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(todolist_97c5_create_entry_with, aGlobal, aArgs, "todolist_97c5_create_entry_with: "_ns, aError));
+      return Some(CallHandler::CallAsync(todolist_aa33_create_entry_with, aGlobal, aArgs, "todolist_aa33_create_entry_with: "_ns, aError));
     }
-    case 107: { // custom_types:custom_types_1cc4_get_custom_types_demo
+    case 107: { // custom_types:custom_types_8ecd_get_custom_types_demo
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(custom_types_1cc4_get_custom_types_demo, aGlobal, aArgs, "custom_types_1cc4_get_custom_types_demo: "_ns, aError));
+      return Some(CallHandler::CallAsync(custom_types_8ecd_get_custom_types_demo, aGlobal, aArgs, "custom_types_8ecd_get_custom_types_demo: "_ns, aError));
     }
-    case 108: { // external_types:external_types_ec59_gradient
+    case 108: { // external_types:external_types_54cc_gradient
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<double>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(external_types_ec59_gradient, aGlobal, aArgs, "external_types_ec59_gradient: "_ns, aError));
+      return Some(CallHandler::CallAsync(external_types_54cc_gradient, aGlobal, aArgs, "external_types_54cc_gradient: "_ns, aError));
     }
   }
   return Nothing();
@@ -501,449 +501,449 @@ Maybe<already_AddRefed<Promise>> UniFFIFixturesCallAsync(const GlobalObject& aGl
 
 bool UniFFIFixturesCallSync(const GlobalObject& aGlobal, uint64_t aId, const Sequence<ScaffoldingType>& aArgs, RootedDictionary<UniFFIScaffoldingCallResult>& aReturnValue, ErrorResult& aError) {
   switch (aId) {
-    case 20: { // geometry:geometry_4b55_gradient
+    case 20: { // geometry:geometry_1cce_gradient
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<double>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(geometry_4b55_gradient, aGlobal, aArgs, aReturnValue, "geometry_4b55_gradient: "_ns, aError);
+      CallHandler::CallSync(geometry_1cce_gradient, aGlobal, aArgs, aReturnValue, "geometry_1cce_gradient: "_ns, aError);
       return true;
     }
-    case 21: { // geometry:geometry_4b55_intersection
+    case 21: { // geometry:geometry_1cce_intersection
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(geometry_4b55_intersection, aGlobal, aArgs, aReturnValue, "geometry_4b55_intersection: "_ns, aError);
+      CallHandler::CallSync(geometry_1cce_intersection, aGlobal, aArgs, aReturnValue, "geometry_1cce_intersection: "_ns, aError);
       return true;
     }
-    case 22: { // arithmetic:arithmetic_cd72_add
+    case 22: { // arithmetic:arithmetic_906c_add
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>>;
-      CallHandler::CallSync(arithmetic_cd72_add, aGlobal, aArgs, aReturnValue, "arithmetic_cd72_add: "_ns, aError);
+      CallHandler::CallSync(arithmetic_906c_add, aGlobal, aArgs, aReturnValue, "arithmetic_906c_add: "_ns, aError);
       return true;
     }
-    case 23: { // arithmetic:arithmetic_cd72_sub
+    case 23: { // arithmetic:arithmetic_906c_sub
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>>;
-      CallHandler::CallSync(arithmetic_cd72_sub, aGlobal, aArgs, aReturnValue, "arithmetic_cd72_sub: "_ns, aError);
+      CallHandler::CallSync(arithmetic_906c_sub, aGlobal, aArgs, aReturnValue, "arithmetic_906c_sub: "_ns, aError);
       return true;
     }
-    case 24: { // arithmetic:arithmetic_cd72_div
+    case 24: { // arithmetic:arithmetic_906c_div
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>>;
-      CallHandler::CallSync(arithmetic_cd72_div, aGlobal, aArgs, aReturnValue, "arithmetic_cd72_div: "_ns, aError);
+      CallHandler::CallSync(arithmetic_906c_div, aGlobal, aArgs, aReturnValue, "arithmetic_906c_div: "_ns, aError);
       return true;
     }
-    case 25: { // arithmetic:arithmetic_cd72_equal
+    case 25: { // arithmetic:arithmetic_906c_equal
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>>;
-      CallHandler::CallSync(arithmetic_cd72_equal, aGlobal, aArgs, aReturnValue, "arithmetic_cd72_equal: "_ns, aError);
+      CallHandler::CallSync(arithmetic_906c_equal, aGlobal, aArgs, aReturnValue, "arithmetic_906c_equal: "_ns, aError);
       return true;
     }
-    case 26: { // rondpoint:rondpoint_640b_Retourneur_new
+    case 26: { // rondpoint:rondpoint_c6ef_Retourneur_new
       using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>>;
-      CallHandler::CallSync(rondpoint_640b_Retourneur_new, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Retourneur_new: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Retourneur_new, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Retourneur_new: "_ns, aError);
       return true;
     }
-    case 27: { // rondpoint:rondpoint_640b_Retourneur_identique_i8
+    case 27: { // rondpoint:rondpoint_c6ef_Retourneur_identique_i8
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<int8_t>>;
-      CallHandler::CallSync(rondpoint_640b_Retourneur_identique_i8, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Retourneur_identique_i8: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Retourneur_identique_i8, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Retourneur_identique_i8: "_ns, aError);
       return true;
     }
-    case 28: { // rondpoint:rondpoint_640b_Retourneur_identique_u8
+    case 28: { // rondpoint:rondpoint_c6ef_Retourneur_identique_u8
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint8_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<uint8_t>>;
-      CallHandler::CallSync(rondpoint_640b_Retourneur_identique_u8, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Retourneur_identique_u8: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Retourneur_identique_u8, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Retourneur_identique_u8: "_ns, aError);
       return true;
     }
-    case 29: { // rondpoint:rondpoint_640b_Retourneur_identique_i16
+    case 29: { // rondpoint:rondpoint_c6ef_Retourneur_identique_i16
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int16_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<int16_t>>;
-      CallHandler::CallSync(rondpoint_640b_Retourneur_identique_i16, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Retourneur_identique_i16: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Retourneur_identique_i16, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Retourneur_identique_i16: "_ns, aError);
       return true;
     }
-    case 30: { // rondpoint:rondpoint_640b_Retourneur_identique_u16
+    case 30: { // rondpoint:rondpoint_c6ef_Retourneur_identique_u16
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint16_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<uint16_t>>;
-      CallHandler::CallSync(rondpoint_640b_Retourneur_identique_u16, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Retourneur_identique_u16: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Retourneur_identique_u16, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Retourneur_identique_u16: "_ns, aError);
       return true;
     }
-    case 31: { // rondpoint:rondpoint_640b_Retourneur_identique_i32
+    case 31: { // rondpoint:rondpoint_c6ef_Retourneur_identique_i32
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int32_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<int32_t>>;
-      CallHandler::CallSync(rondpoint_640b_Retourneur_identique_i32, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Retourneur_identique_i32: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Retourneur_identique_i32, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Retourneur_identique_i32: "_ns, aError);
       return true;
     }
-    case 32: { // rondpoint:rondpoint_640b_Retourneur_identique_u32
+    case 32: { // rondpoint:rondpoint_c6ef_Retourneur_identique_u32
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint32_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<uint32_t>>;
-      CallHandler::CallSync(rondpoint_640b_Retourneur_identique_u32, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Retourneur_identique_u32: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Retourneur_identique_u32, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Retourneur_identique_u32: "_ns, aError);
       return true;
     }
-    case 33: { // rondpoint:rondpoint_640b_Retourneur_identique_i64
+    case 33: { // rondpoint:rondpoint_c6ef_Retourneur_identique_i64
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int64_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<int64_t>>;
-      CallHandler::CallSync(rondpoint_640b_Retourneur_identique_i64, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Retourneur_identique_i64: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Retourneur_identique_i64, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Retourneur_identique_i64: "_ns, aError);
       return true;
     }
-    case 34: { // rondpoint:rondpoint_640b_Retourneur_identique_u64
+    case 34: { // rondpoint:rondpoint_c6ef_Retourneur_identique_u64
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<uint64_t>>;
-      CallHandler::CallSync(rondpoint_640b_Retourneur_identique_u64, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Retourneur_identique_u64: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Retourneur_identique_u64, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Retourneur_identique_u64: "_ns, aError);
       return true;
     }
-    case 35: { // rondpoint:rondpoint_640b_Retourneur_identique_float
+    case 35: { // rondpoint:rondpoint_c6ef_Retourneur_identique_float
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<float>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<float>>;
-      CallHandler::CallSync(rondpoint_640b_Retourneur_identique_float, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Retourneur_identique_float: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Retourneur_identique_float, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Retourneur_identique_float: "_ns, aError);
       return true;
     }
-    case 36: { // rondpoint:rondpoint_640b_Retourneur_identique_double
+    case 36: { // rondpoint:rondpoint_c6ef_Retourneur_identique_double
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<double>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<double>>;
-      CallHandler::CallSync(rondpoint_640b_Retourneur_identique_double, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Retourneur_identique_double: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Retourneur_identique_double, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Retourneur_identique_double: "_ns, aError);
       return true;
     }
-    case 37: { // rondpoint:rondpoint_640b_Retourneur_identique_boolean
+    case 37: { // rondpoint:rondpoint_c6ef_Retourneur_identique_boolean
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<int8_t>>;
-      CallHandler::CallSync(rondpoint_640b_Retourneur_identique_boolean, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Retourneur_identique_boolean: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Retourneur_identique_boolean, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Retourneur_identique_boolean: "_ns, aError);
       return true;
     }
-    case 38: { // rondpoint:rondpoint_640b_Retourneur_identique_string
+    case 38: { // rondpoint:rondpoint_c6ef_Retourneur_identique_string
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(rondpoint_640b_Retourneur_identique_string, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Retourneur_identique_string: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Retourneur_identique_string, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Retourneur_identique_string: "_ns, aError);
       return true;
     }
-    case 39: { // rondpoint:rondpoint_640b_Retourneur_identique_nombres_signes
+    case 39: { // rondpoint:rondpoint_c6ef_Retourneur_identique_nombres_signes
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(rondpoint_640b_Retourneur_identique_nombres_signes, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Retourneur_identique_nombres_signes: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Retourneur_identique_nombres_signes, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Retourneur_identique_nombres_signes: "_ns, aError);
       return true;
     }
-    case 40: { // rondpoint:rondpoint_640b_Retourneur_identique_nombres
+    case 40: { // rondpoint:rondpoint_c6ef_Retourneur_identique_nombres
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(rondpoint_640b_Retourneur_identique_nombres, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Retourneur_identique_nombres: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Retourneur_identique_nombres, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Retourneur_identique_nombres: "_ns, aError);
       return true;
     }
-    case 41: { // rondpoint:rondpoint_640b_Retourneur_identique_optionneur_dictionnaire
+    case 41: { // rondpoint:rondpoint_c6ef_Retourneur_identique_optionneur_dictionnaire
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(rondpoint_640b_Retourneur_identique_optionneur_dictionnaire, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Retourneur_identique_optionneur_dictionnaire: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Retourneur_identique_optionneur_dictionnaire, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Retourneur_identique_optionneur_dictionnaire: "_ns, aError);
       return true;
     }
-    case 42: { // rondpoint:rondpoint_640b_Stringifier_new
+    case 42: { // rondpoint:rondpoint_c6ef_Stringifier_new
       using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kRondpointStringifierPointerType>>;
-      CallHandler::CallSync(rondpoint_640b_Stringifier_new, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Stringifier_new: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Stringifier_new, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Stringifier_new: "_ns, aError);
       return true;
     }
-    case 43: { // rondpoint:rondpoint_640b_Stringifier_well_known_string
+    case 43: { // rondpoint:rondpoint_c6ef_Stringifier_well_known_string
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(rondpoint_640b_Stringifier_well_known_string, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Stringifier_well_known_string: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Stringifier_well_known_string, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Stringifier_well_known_string: "_ns, aError);
       return true;
     }
-    case 44: { // rondpoint:rondpoint_640b_Stringifier_to_string_i8
+    case 44: { // rondpoint:rondpoint_c6ef_Stringifier_to_string_i8
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<int8_t>>;
-      CallHandler::CallSync(rondpoint_640b_Stringifier_to_string_i8, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Stringifier_to_string_i8: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Stringifier_to_string_i8, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Stringifier_to_string_i8: "_ns, aError);
       return true;
     }
-    case 45: { // rondpoint:rondpoint_640b_Stringifier_to_string_u8
+    case 45: { // rondpoint:rondpoint_c6ef_Stringifier_to_string_u8
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<uint8_t>>;
-      CallHandler::CallSync(rondpoint_640b_Stringifier_to_string_u8, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Stringifier_to_string_u8: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Stringifier_to_string_u8, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Stringifier_to_string_u8: "_ns, aError);
       return true;
     }
-    case 46: { // rondpoint:rondpoint_640b_Stringifier_to_string_i16
+    case 46: { // rondpoint:rondpoint_c6ef_Stringifier_to_string_i16
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<int16_t>>;
-      CallHandler::CallSync(rondpoint_640b_Stringifier_to_string_i16, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Stringifier_to_string_i16: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Stringifier_to_string_i16, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Stringifier_to_string_i16: "_ns, aError);
       return true;
     }
-    case 47: { // rondpoint:rondpoint_640b_Stringifier_to_string_u16
+    case 47: { // rondpoint:rondpoint_c6ef_Stringifier_to_string_u16
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<uint16_t>>;
-      CallHandler::CallSync(rondpoint_640b_Stringifier_to_string_u16, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Stringifier_to_string_u16: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Stringifier_to_string_u16, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Stringifier_to_string_u16: "_ns, aError);
       return true;
     }
-    case 48: { // rondpoint:rondpoint_640b_Stringifier_to_string_i32
+    case 48: { // rondpoint:rondpoint_c6ef_Stringifier_to_string_i32
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<int32_t>>;
-      CallHandler::CallSync(rondpoint_640b_Stringifier_to_string_i32, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Stringifier_to_string_i32: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Stringifier_to_string_i32, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Stringifier_to_string_i32: "_ns, aError);
       return true;
     }
-    case 49: { // rondpoint:rondpoint_640b_Stringifier_to_string_u32
+    case 49: { // rondpoint:rondpoint_c6ef_Stringifier_to_string_u32
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<uint32_t>>;
-      CallHandler::CallSync(rondpoint_640b_Stringifier_to_string_u32, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Stringifier_to_string_u32: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Stringifier_to_string_u32, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Stringifier_to_string_u32: "_ns, aError);
       return true;
     }
-    case 50: { // rondpoint:rondpoint_640b_Stringifier_to_string_i64
+    case 50: { // rondpoint:rondpoint_c6ef_Stringifier_to_string_i64
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<int64_t>>;
-      CallHandler::CallSync(rondpoint_640b_Stringifier_to_string_i64, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Stringifier_to_string_i64: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Stringifier_to_string_i64, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Stringifier_to_string_i64: "_ns, aError);
       return true;
     }
-    case 51: { // rondpoint:rondpoint_640b_Stringifier_to_string_u64
+    case 51: { // rondpoint:rondpoint_c6ef_Stringifier_to_string_u64
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<uint64_t>>;
-      CallHandler::CallSync(rondpoint_640b_Stringifier_to_string_u64, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Stringifier_to_string_u64: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Stringifier_to_string_u64, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Stringifier_to_string_u64: "_ns, aError);
       return true;
     }
-    case 52: { // rondpoint:rondpoint_640b_Stringifier_to_string_float
+    case 52: { // rondpoint:rondpoint_c6ef_Stringifier_to_string_float
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<float>>;
-      CallHandler::CallSync(rondpoint_640b_Stringifier_to_string_float, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Stringifier_to_string_float: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Stringifier_to_string_float, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Stringifier_to_string_float: "_ns, aError);
       return true;
     }
-    case 53: { // rondpoint:rondpoint_640b_Stringifier_to_string_double
+    case 53: { // rondpoint:rondpoint_c6ef_Stringifier_to_string_double
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<double>>;
-      CallHandler::CallSync(rondpoint_640b_Stringifier_to_string_double, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Stringifier_to_string_double: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Stringifier_to_string_double, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Stringifier_to_string_double: "_ns, aError);
       return true;
     }
-    case 54: { // rondpoint:rondpoint_640b_Stringifier_to_string_boolean
+    case 54: { // rondpoint:rondpoint_c6ef_Stringifier_to_string_boolean
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<int8_t>>;
-      CallHandler::CallSync(rondpoint_640b_Stringifier_to_string_boolean, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Stringifier_to_string_boolean: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Stringifier_to_string_boolean, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Stringifier_to_string_boolean: "_ns, aError);
       return true;
     }
-    case 55: { // rondpoint:rondpoint_640b_Optionneur_new
+    case 55: { // rondpoint:rondpoint_c6ef_Optionneur_new
       using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>>;
-      CallHandler::CallSync(rondpoint_640b_Optionneur_new, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Optionneur_new: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Optionneur_new, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Optionneur_new: "_ns, aError);
       return true;
     }
-    case 56: { // rondpoint:rondpoint_640b_Optionneur_sinon_boolean
+    case 56: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_boolean
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int8_t>>;
-      CallHandler::CallSync(rondpoint_640b_Optionneur_sinon_boolean, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Optionneur_sinon_boolean: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Optionneur_sinon_boolean, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Optionneur_sinon_boolean: "_ns, aError);
       return true;
     }
-    case 57: { // rondpoint:rondpoint_640b_Optionneur_sinon_string
+    case 57: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_string
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(rondpoint_640b_Optionneur_sinon_string, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Optionneur_sinon_string: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Optionneur_sinon_string, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Optionneur_sinon_string: "_ns, aError);
       return true;
     }
-    case 58: { // rondpoint:rondpoint_640b_Optionneur_sinon_sequence
+    case 58: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_sequence
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(rondpoint_640b_Optionneur_sinon_sequence, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Optionneur_sinon_sequence: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Optionneur_sinon_sequence, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Optionneur_sinon_sequence: "_ns, aError);
       return true;
     }
-    case 59: { // rondpoint:rondpoint_640b_Optionneur_sinon_null
+    case 59: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_null
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(rondpoint_640b_Optionneur_sinon_null, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Optionneur_sinon_null: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Optionneur_sinon_null, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Optionneur_sinon_null: "_ns, aError);
       return true;
     }
-    case 60: { // rondpoint:rondpoint_640b_Optionneur_sinon_zero
+    case 60: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_zero
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(rondpoint_640b_Optionneur_sinon_zero, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Optionneur_sinon_zero: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Optionneur_sinon_zero, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Optionneur_sinon_zero: "_ns, aError);
       return true;
     }
-    case 61: { // rondpoint:rondpoint_640b_Optionneur_sinon_u8_dec
+    case 61: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_u8_dec
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint8_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint8_t>>;
-      CallHandler::CallSync(rondpoint_640b_Optionneur_sinon_u8_dec, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Optionneur_sinon_u8_dec: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Optionneur_sinon_u8_dec, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Optionneur_sinon_u8_dec: "_ns, aError);
       return true;
     }
-    case 62: { // rondpoint:rondpoint_640b_Optionneur_sinon_i8_dec
+    case 62: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_i8_dec
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int8_t>>;
-      CallHandler::CallSync(rondpoint_640b_Optionneur_sinon_i8_dec, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Optionneur_sinon_i8_dec: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Optionneur_sinon_i8_dec, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Optionneur_sinon_i8_dec: "_ns, aError);
       return true;
     }
-    case 63: { // rondpoint:rondpoint_640b_Optionneur_sinon_u16_dec
+    case 63: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_u16_dec
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint16_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint16_t>>;
-      CallHandler::CallSync(rondpoint_640b_Optionneur_sinon_u16_dec, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Optionneur_sinon_u16_dec: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Optionneur_sinon_u16_dec, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Optionneur_sinon_u16_dec: "_ns, aError);
       return true;
     }
-    case 64: { // rondpoint:rondpoint_640b_Optionneur_sinon_i16_dec
+    case 64: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_i16_dec
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int16_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int16_t>>;
-      CallHandler::CallSync(rondpoint_640b_Optionneur_sinon_i16_dec, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Optionneur_sinon_i16_dec: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Optionneur_sinon_i16_dec, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Optionneur_sinon_i16_dec: "_ns, aError);
       return true;
     }
-    case 65: { // rondpoint:rondpoint_640b_Optionneur_sinon_u32_dec
+    case 65: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_u32_dec
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint32_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint32_t>>;
-      CallHandler::CallSync(rondpoint_640b_Optionneur_sinon_u32_dec, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Optionneur_sinon_u32_dec: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Optionneur_sinon_u32_dec, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Optionneur_sinon_u32_dec: "_ns, aError);
       return true;
     }
-    case 66: { // rondpoint:rondpoint_640b_Optionneur_sinon_i32_dec
+    case 66: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_i32_dec
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int32_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int32_t>>;
-      CallHandler::CallSync(rondpoint_640b_Optionneur_sinon_i32_dec, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Optionneur_sinon_i32_dec: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Optionneur_sinon_i32_dec, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Optionneur_sinon_i32_dec: "_ns, aError);
       return true;
     }
-    case 67: { // rondpoint:rondpoint_640b_Optionneur_sinon_u64_dec
+    case 67: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_u64_dec
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint64_t>>;
-      CallHandler::CallSync(rondpoint_640b_Optionneur_sinon_u64_dec, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Optionneur_sinon_u64_dec: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Optionneur_sinon_u64_dec, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Optionneur_sinon_u64_dec: "_ns, aError);
       return true;
     }
-    case 68: { // rondpoint:rondpoint_640b_Optionneur_sinon_i64_dec
+    case 68: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_i64_dec
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int64_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int64_t>>;
-      CallHandler::CallSync(rondpoint_640b_Optionneur_sinon_i64_dec, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Optionneur_sinon_i64_dec: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Optionneur_sinon_i64_dec, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Optionneur_sinon_i64_dec: "_ns, aError);
       return true;
     }
-    case 69: { // rondpoint:rondpoint_640b_Optionneur_sinon_u8_hex
+    case 69: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_u8_hex
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint8_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint8_t>>;
-      CallHandler::CallSync(rondpoint_640b_Optionneur_sinon_u8_hex, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Optionneur_sinon_u8_hex: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Optionneur_sinon_u8_hex, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Optionneur_sinon_u8_hex: "_ns, aError);
       return true;
     }
-    case 70: { // rondpoint:rondpoint_640b_Optionneur_sinon_i8_hex
+    case 70: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_i8_hex
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int8_t>>;
-      CallHandler::CallSync(rondpoint_640b_Optionneur_sinon_i8_hex, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Optionneur_sinon_i8_hex: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Optionneur_sinon_i8_hex, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Optionneur_sinon_i8_hex: "_ns, aError);
       return true;
     }
-    case 71: { // rondpoint:rondpoint_640b_Optionneur_sinon_u16_hex
+    case 71: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_u16_hex
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint16_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint16_t>>;
-      CallHandler::CallSync(rondpoint_640b_Optionneur_sinon_u16_hex, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Optionneur_sinon_u16_hex: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Optionneur_sinon_u16_hex, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Optionneur_sinon_u16_hex: "_ns, aError);
       return true;
     }
-    case 72: { // rondpoint:rondpoint_640b_Optionneur_sinon_i16_hex
+    case 72: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_i16_hex
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int16_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int16_t>>;
-      CallHandler::CallSync(rondpoint_640b_Optionneur_sinon_i16_hex, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Optionneur_sinon_i16_hex: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Optionneur_sinon_i16_hex, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Optionneur_sinon_i16_hex: "_ns, aError);
       return true;
     }
-    case 73: { // rondpoint:rondpoint_640b_Optionneur_sinon_u32_hex
+    case 73: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_u32_hex
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint32_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint32_t>>;
-      CallHandler::CallSync(rondpoint_640b_Optionneur_sinon_u32_hex, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Optionneur_sinon_u32_hex: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Optionneur_sinon_u32_hex, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Optionneur_sinon_u32_hex: "_ns, aError);
       return true;
     }
-    case 74: { // rondpoint:rondpoint_640b_Optionneur_sinon_i32_hex
+    case 74: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_i32_hex
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int32_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int32_t>>;
-      CallHandler::CallSync(rondpoint_640b_Optionneur_sinon_i32_hex, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Optionneur_sinon_i32_hex: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Optionneur_sinon_i32_hex, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Optionneur_sinon_i32_hex: "_ns, aError);
       return true;
     }
-    case 75: { // rondpoint:rondpoint_640b_Optionneur_sinon_u64_hex
+    case 75: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_u64_hex
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint64_t>>;
-      CallHandler::CallSync(rondpoint_640b_Optionneur_sinon_u64_hex, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Optionneur_sinon_u64_hex: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Optionneur_sinon_u64_hex, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Optionneur_sinon_u64_hex: "_ns, aError);
       return true;
     }
-    case 76: { // rondpoint:rondpoint_640b_Optionneur_sinon_i64_hex
+    case 76: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_i64_hex
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int64_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int64_t>>;
-      CallHandler::CallSync(rondpoint_640b_Optionneur_sinon_i64_hex, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Optionneur_sinon_i64_hex: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Optionneur_sinon_i64_hex, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Optionneur_sinon_i64_hex: "_ns, aError);
       return true;
     }
-    case 77: { // rondpoint:rondpoint_640b_Optionneur_sinon_u32_oct
+    case 77: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_u32_oct
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint32_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint32_t>>;
-      CallHandler::CallSync(rondpoint_640b_Optionneur_sinon_u32_oct, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Optionneur_sinon_u32_oct: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Optionneur_sinon_u32_oct, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Optionneur_sinon_u32_oct: "_ns, aError);
       return true;
     }
-    case 78: { // rondpoint:rondpoint_640b_Optionneur_sinon_f32
+    case 78: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_f32
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<float>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<float>>;
-      CallHandler::CallSync(rondpoint_640b_Optionneur_sinon_f32, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Optionneur_sinon_f32: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Optionneur_sinon_f32, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Optionneur_sinon_f32: "_ns, aError);
       return true;
     }
-    case 79: { // rondpoint:rondpoint_640b_Optionneur_sinon_f64
+    case 79: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_f64
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<double>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<double>>;
-      CallHandler::CallSync(rondpoint_640b_Optionneur_sinon_f64, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Optionneur_sinon_f64: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Optionneur_sinon_f64, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Optionneur_sinon_f64: "_ns, aError);
       return true;
     }
-    case 80: { // rondpoint:rondpoint_640b_Optionneur_sinon_enum
+    case 80: { // rondpoint:rondpoint_c6ef_Optionneur_sinon_enum
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(rondpoint_640b_Optionneur_sinon_enum, aGlobal, aArgs, aReturnValue, "rondpoint_640b_Optionneur_sinon_enum: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_Optionneur_sinon_enum, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_Optionneur_sinon_enum: "_ns, aError);
       return true;
     }
-    case 81: { // rondpoint:rondpoint_640b_copie_dictionnaire
+    case 81: { // rondpoint:rondpoint_c6ef_copie_dictionnaire
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(rondpoint_640b_copie_dictionnaire, aGlobal, aArgs, aReturnValue, "rondpoint_640b_copie_dictionnaire: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_copie_dictionnaire, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_copie_dictionnaire: "_ns, aError);
       return true;
     }
-    case 82: { // rondpoint:rondpoint_640b_copie_enumeration
+    case 82: { // rondpoint:rondpoint_c6ef_copie_enumeration
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(rondpoint_640b_copie_enumeration, aGlobal, aArgs, aReturnValue, "rondpoint_640b_copie_enumeration: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_copie_enumeration, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_copie_enumeration: "_ns, aError);
       return true;
     }
-    case 83: { // rondpoint:rondpoint_640b_copie_enumerations
+    case 83: { // rondpoint:rondpoint_c6ef_copie_enumerations
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(rondpoint_640b_copie_enumerations, aGlobal, aArgs, aReturnValue, "rondpoint_640b_copie_enumerations: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_copie_enumerations, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_copie_enumerations: "_ns, aError);
       return true;
     }
-    case 84: { // rondpoint:rondpoint_640b_copie_carte
+    case 84: { // rondpoint:rondpoint_c6ef_copie_carte
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(rondpoint_640b_copie_carte, aGlobal, aArgs, aReturnValue, "rondpoint_640b_copie_carte: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_copie_carte, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_copie_carte: "_ns, aError);
       return true;
     }
-    case 85: { // rondpoint:rondpoint_640b_switcheroo
+    case 85: { // rondpoint:rondpoint_c6ef_switcheroo
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingConverter<int8_t>>;
-      CallHandler::CallSync(rondpoint_640b_switcheroo, aGlobal, aArgs, aReturnValue, "rondpoint_640b_switcheroo: "_ns, aError);
+      CallHandler::CallSync(rondpoint_c6ef_switcheroo, aGlobal, aArgs, aReturnValue, "rondpoint_c6ef_switcheroo: "_ns, aError);
       return true;
     }
-    case 86: { // sprites:sprites_fec0_Sprite_new
+    case 86: { // sprites:sprites_accb_Sprite_new
       using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kSpritesSpritePointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(sprites_fec0_Sprite_new, aGlobal, aArgs, aReturnValue, "sprites_fec0_Sprite_new: "_ns, aError);
+      CallHandler::CallSync(sprites_accb_Sprite_new, aGlobal, aArgs, aReturnValue, "sprites_accb_Sprite_new: "_ns, aError);
       return true;
     }
-    case 87: { // sprites:sprites_fec0_Sprite_new_relative_to
+    case 87: { // sprites:sprites_accb_Sprite_new_relative_to
       using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kSpritesSpritePointerType>, ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(sprites_fec0_Sprite_new_relative_to, aGlobal, aArgs, aReturnValue, "sprites_fec0_Sprite_new_relative_to: "_ns, aError);
+      CallHandler::CallSync(sprites_accb_Sprite_new_relative_to, aGlobal, aArgs, aReturnValue, "sprites_accb_Sprite_new_relative_to: "_ns, aError);
       return true;
     }
-    case 88: { // sprites:sprites_fec0_Sprite_get_position
+    case 88: { // sprites:sprites_accb_Sprite_get_position
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kSpritesSpritePointerType>>;
-      CallHandler::CallSync(sprites_fec0_Sprite_get_position, aGlobal, aArgs, aReturnValue, "sprites_fec0_Sprite_get_position: "_ns, aError);
+      CallHandler::CallSync(sprites_accb_Sprite_get_position, aGlobal, aArgs, aReturnValue, "sprites_accb_Sprite_get_position: "_ns, aError);
       return true;
     }
-    case 89: { // sprites:sprites_fec0_Sprite_move_to
+    case 89: { // sprites:sprites_accb_Sprite_move_to
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kSpritesSpritePointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(sprites_fec0_Sprite_move_to, aGlobal, aArgs, aReturnValue, "sprites_fec0_Sprite_move_to: "_ns, aError);
+      CallHandler::CallSync(sprites_accb_Sprite_move_to, aGlobal, aArgs, aReturnValue, "sprites_accb_Sprite_move_to: "_ns, aError);
       return true;
     }
-    case 90: { // sprites:sprites_fec0_Sprite_move_by
+    case 90: { // sprites:sprites_accb_Sprite_move_by
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kSpritesSpritePointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(sprites_fec0_Sprite_move_by, aGlobal, aArgs, aReturnValue, "sprites_fec0_Sprite_move_by: "_ns, aError);
+      CallHandler::CallSync(sprites_accb_Sprite_move_by, aGlobal, aArgs, aReturnValue, "sprites_accb_Sprite_move_by: "_ns, aError);
       return true;
     }
-    case 91: { // sprites:sprites_fec0_translate
+    case 91: { // sprites:sprites_accb_translate
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(sprites_fec0_translate, aGlobal, aArgs, aReturnValue, "sprites_fec0_translate: "_ns, aError);
+      CallHandler::CallSync(sprites_accb_translate, aGlobal, aArgs, aReturnValue, "sprites_accb_translate: "_ns, aError);
       return true;
     }
-    case 92: { // todolist:todolist_97c5_TodoList_new
+    case 92: { // todolist:todolist_aa33_TodoList_new
       using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      CallHandler::CallSync(todolist_97c5_TodoList_new, aGlobal, aArgs, aReturnValue, "todolist_97c5_TodoList_new: "_ns, aError);
+      CallHandler::CallSync(todolist_aa33_TodoList_new, aGlobal, aArgs, aReturnValue, "todolist_aa33_TodoList_new: "_ns, aError);
       return true;
     }
-    case 93: { // todolist:todolist_97c5_TodoList_add_item
+    case 93: { // todolist:todolist_aa33_TodoList_add_item
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(todolist_97c5_TodoList_add_item, aGlobal, aArgs, aReturnValue, "todolist_97c5_TodoList_add_item: "_ns, aError);
+      CallHandler::CallSync(todolist_aa33_TodoList_add_item, aGlobal, aArgs, aReturnValue, "todolist_aa33_TodoList_add_item: "_ns, aError);
       return true;
     }
-    case 94: { // todolist:todolist_97c5_TodoList_add_entry
+    case 94: { // todolist:todolist_aa33_TodoList_add_entry
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(todolist_97c5_TodoList_add_entry, aGlobal, aArgs, aReturnValue, "todolist_97c5_TodoList_add_entry: "_ns, aError);
+      CallHandler::CallSync(todolist_aa33_TodoList_add_entry, aGlobal, aArgs, aReturnValue, "todolist_aa33_TodoList_add_entry: "_ns, aError);
       return true;
     }
-    case 95: { // todolist:todolist_97c5_TodoList_get_entries
+    case 95: { // todolist:todolist_aa33_TodoList_get_entries
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      CallHandler::CallSync(todolist_97c5_TodoList_get_entries, aGlobal, aArgs, aReturnValue, "todolist_97c5_TodoList_get_entries: "_ns, aError);
+      CallHandler::CallSync(todolist_aa33_TodoList_get_entries, aGlobal, aArgs, aReturnValue, "todolist_aa33_TodoList_get_entries: "_ns, aError);
       return true;
     }
-    case 96: { // todolist:todolist_97c5_TodoList_get_items
+    case 96: { // todolist:todolist_aa33_TodoList_get_items
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      CallHandler::CallSync(todolist_97c5_TodoList_get_items, aGlobal, aArgs, aReturnValue, "todolist_97c5_TodoList_get_items: "_ns, aError);
+      CallHandler::CallSync(todolist_aa33_TodoList_get_items, aGlobal, aArgs, aReturnValue, "todolist_aa33_TodoList_get_items: "_ns, aError);
       return true;
     }
-    case 97: { // todolist:todolist_97c5_TodoList_add_entries
+    case 97: { // todolist:todolist_aa33_TodoList_add_entries
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(todolist_97c5_TodoList_add_entries, aGlobal, aArgs, aReturnValue, "todolist_97c5_TodoList_add_entries: "_ns, aError);
+      CallHandler::CallSync(todolist_aa33_TodoList_add_entries, aGlobal, aArgs, aReturnValue, "todolist_aa33_TodoList_add_entries: "_ns, aError);
       return true;
     }
-    case 98: { // todolist:todolist_97c5_TodoList_add_items
+    case 98: { // todolist:todolist_aa33_TodoList_add_items
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(todolist_97c5_TodoList_add_items, aGlobal, aArgs, aReturnValue, "todolist_97c5_TodoList_add_items: "_ns, aError);
+      CallHandler::CallSync(todolist_aa33_TodoList_add_items, aGlobal, aArgs, aReturnValue, "todolist_aa33_TodoList_add_items: "_ns, aError);
       return true;
     }
-    case 99: { // todolist:todolist_97c5_TodoList_get_last_entry
+    case 99: { // todolist:todolist_aa33_TodoList_get_last_entry
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      CallHandler::CallSync(todolist_97c5_TodoList_get_last_entry, aGlobal, aArgs, aReturnValue, "todolist_97c5_TodoList_get_last_entry: "_ns, aError);
+      CallHandler::CallSync(todolist_aa33_TodoList_get_last_entry, aGlobal, aArgs, aReturnValue, "todolist_aa33_TodoList_get_last_entry: "_ns, aError);
       return true;
     }
-    case 100: { // todolist:todolist_97c5_TodoList_get_last
+    case 100: { // todolist:todolist_aa33_TodoList_get_last
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      CallHandler::CallSync(todolist_97c5_TodoList_get_last, aGlobal, aArgs, aReturnValue, "todolist_97c5_TodoList_get_last: "_ns, aError);
+      CallHandler::CallSync(todolist_aa33_TodoList_get_last, aGlobal, aArgs, aReturnValue, "todolist_aa33_TodoList_get_last: "_ns, aError);
       return true;
     }
-    case 101: { // todolist:todolist_97c5_TodoList_get_first
+    case 101: { // todolist:todolist_aa33_TodoList_get_first
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      CallHandler::CallSync(todolist_97c5_TodoList_get_first, aGlobal, aArgs, aReturnValue, "todolist_97c5_TodoList_get_first: "_ns, aError);
+      CallHandler::CallSync(todolist_aa33_TodoList_get_first, aGlobal, aArgs, aReturnValue, "todolist_aa33_TodoList_get_first: "_ns, aError);
       return true;
     }
-    case 102: { // todolist:todolist_97c5_TodoList_clear_item
+    case 102: { // todolist:todolist_aa33_TodoList_clear_item
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(todolist_97c5_TodoList_clear_item, aGlobal, aArgs, aReturnValue, "todolist_97c5_TodoList_clear_item: "_ns, aError);
+      CallHandler::CallSync(todolist_aa33_TodoList_clear_item, aGlobal, aArgs, aReturnValue, "todolist_aa33_TodoList_clear_item: "_ns, aError);
       return true;
     }
-    case 103: { // todolist:todolist_97c5_TodoList_make_default
+    case 103: { // todolist:todolist_aa33_TodoList_make_default
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      CallHandler::CallSync(todolist_97c5_TodoList_make_default, aGlobal, aArgs, aReturnValue, "todolist_97c5_TodoList_make_default: "_ns, aError);
+      CallHandler::CallSync(todolist_aa33_TodoList_make_default, aGlobal, aArgs, aReturnValue, "todolist_aa33_TodoList_make_default: "_ns, aError);
       return true;
     }
-    case 104: { // todolist:todolist_97c5_get_default_list
+    case 104: { // todolist:todolist_aa33_get_default_list
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(todolist_97c5_get_default_list, aGlobal, aArgs, aReturnValue, "todolist_97c5_get_default_list: "_ns, aError);
+      CallHandler::CallSync(todolist_aa33_get_default_list, aGlobal, aArgs, aReturnValue, "todolist_aa33_get_default_list: "_ns, aError);
       return true;
     }
-    case 105: { // todolist:todolist_97c5_set_default_list
+    case 105: { // todolist:todolist_aa33_set_default_list
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      CallHandler::CallSync(todolist_97c5_set_default_list, aGlobal, aArgs, aReturnValue, "todolist_97c5_set_default_list: "_ns, aError);
+      CallHandler::CallSync(todolist_aa33_set_default_list, aGlobal, aArgs, aReturnValue, "todolist_aa33_set_default_list: "_ns, aError);
       return true;
     }
-    case 106: { // todolist:todolist_97c5_create_entry_with
+    case 106: { // todolist:todolist_aa33_create_entry_with
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(todolist_97c5_create_entry_with, aGlobal, aArgs, aReturnValue, "todolist_97c5_create_entry_with: "_ns, aError);
+      CallHandler::CallSync(todolist_aa33_create_entry_with, aGlobal, aArgs, aReturnValue, "todolist_aa33_create_entry_with: "_ns, aError);
       return true;
     }
-    case 107: { // custom_types:custom_types_1cc4_get_custom_types_demo
+    case 107: { // custom_types:custom_types_8ecd_get_custom_types_demo
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(custom_types_1cc4_get_custom_types_demo, aGlobal, aArgs, aReturnValue, "custom_types_1cc4_get_custom_types_demo: "_ns, aError);
+      CallHandler::CallSync(custom_types_8ecd_get_custom_types_demo, aGlobal, aArgs, aReturnValue, "custom_types_8ecd_get_custom_types_demo: "_ns, aError);
       return true;
     }
-    case 108: { // external_types:external_types_ec59_gradient
+    case 108: { // external_types:external_types_54cc_gradient
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<double>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(external_types_ec59_gradient, aGlobal, aArgs, aReturnValue, "external_types_ec59_gradient: "_ns, aError);
+      CallHandler::CallSync(external_types_54cc_gradient, aGlobal, aArgs, aReturnValue, "external_types_54cc_gradient: "_ns, aError);
       return true;
     }
   }

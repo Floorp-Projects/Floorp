@@ -314,8 +314,8 @@ impl ctx::TryIntoCtx<container::Ctx> for Nlist {
         container::Ctx { container, le }: container::Ctx,
     ) -> Result<usize, Self::Error> {
         let size = match container {
-            Container::Little => bytes.pwrite_with::<Nlist32>(self.into(), 0, le)?,
-            Container::Big => bytes.pwrite_with::<Nlist64>(self.into(), 0, le)?,
+            Container::Little => (bytes.pwrite_with::<Nlist32>(self.into(), 0, le)?),
+            Container::Big => (bytes.pwrite_with::<Nlist64>(self.into(), 0, le)?),
         };
         Ok(size)
     }
