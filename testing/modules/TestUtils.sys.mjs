@@ -96,6 +96,33 @@ export var TestUtils = {
   },
 
   /**
+   * Listens for any console messages (logged via console.*) and returns them
+   * when the returned function is called.
+   *
+   * @returns {function}
+   *   Returns an async function that when called will wait for a tick, then stop
+   *   listening to any more console messages and finally will return the
+   *   messages that have been received.
+   */
+  listenForConsoleMessages() {
+    let messages = [];
+    function observe(message) {
+      messages.push(message);
+    }
+
+    ConsoleAPIStorage.addLogEventListener(
+      observe,
+      Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal)
+    );
+
+    return async () => {
+      await TestUtils.waitForTick();
+      ConsoleAPIStorage.removeLogEventListener(observe);
+      return messages;
+    };
+  },
+
+  /**
    * Waits for the specified topic to be observed.
    *
    * @param {string} topic
