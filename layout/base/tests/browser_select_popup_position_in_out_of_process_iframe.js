@@ -111,9 +111,16 @@ add_task(async function() {
     iframeBorderTop -
     newWin.mozInnerScreenY +
     parseFloat(getComputedStyle(selectPopup).marginTop);
-  // On platforms other than MaxOSX the popup menu is positioned below the
-  // option element.
-  if (!navigator.platform.includes("Mac")) {
+
+  // On platforms other than macOS the popup menu is positioned below the
+  // option element. On macOS the top is aligned to the selected item (so the
+  // first label).
+  if (navigator.platform.includes("Mac")) {
+    const offsetToSelectedItem =
+      selectPopup.querySelector("menuitem[selected]").getBoundingClientRect()
+        .top - popupRect.top;
+    expectedYPosition -= offsetToSelectedItem;
+  } else {
     expectedYPosition += selectRect.height;
   }
 
