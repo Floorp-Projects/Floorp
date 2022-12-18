@@ -215,41 +215,9 @@ impl Header {
     }
 }
 
-/// Convert machine to str representation
-pub fn machine_to_str(machine: u16) -> &'static str {
-    match machine {
-        COFF_MACHINE_UNKNOWN => "UNKNOWN",
-        COFF_MACHINE_AM33 => "AM33",
-        COFF_MACHINE_X86_64 => "X86_64",
-        COFF_MACHINE_ARM => "ARM",
-        COFF_MACHINE_ARM64 => "ARM64",
-        COFF_MACHINE_ARMNT => "ARM_NT",
-        COFF_MACHINE_EBC => "EBC",
-        COFF_MACHINE_X86 => "X86",
-        COFF_MACHINE_IA64 => "IA64",
-        COFF_MACHINE_M32R => "M32R",
-        COFF_MACHINE_MIPS16 => "MIPS_16",
-        COFF_MACHINE_MIPSFPU => "MIPS_FPU",
-        COFF_MACHINE_MIPSFPU16 => "MIPS_FPU_16",
-        COFF_MACHINE_POWERPC => "POWERPC",
-        COFF_MACHINE_POWERPCFP => "POWERCFP",
-        COFF_MACHINE_R4000 => "R4000",
-        COFF_MACHINE_RISCV32 => "RISC-V_32",
-        COFF_MACHINE_RISCV64 => "RISC-V_64",
-        COFF_MACHINE_RISCV128 => "RISC-V_128",
-        COFF_MACHINE_SH3 => "SH3",
-        COFF_MACHINE_SH3DSP => "SH3DSP",
-        COFF_MACHINE_SH4 => "SH4",
-        COFF_MACHINE_SH5 => "SH5",
-        COFF_MACHINE_THUMB => "THUMB",
-        COFF_MACHINE_WCEMIPSV2 => "WCE_MIPS_V2",
-        _ => "COFF_UNKNOWN",
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use super::{machine_to_str, Header, COFF_MACHINE_X86, DOS_MAGIC, PE_MAGIC};
+    use super::{Header, COFF_MACHINE_X86, DOS_MAGIC, PE_MAGIC};
 
     const CRSS_HEADER: [u8; 688] = [
         0x4d, 0x5a, 0x90, 0x00, 0x03, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0xff, 0xff, 0x00,
@@ -306,7 +274,6 @@ mod tests {
         assert!(header.dos_header.signature == DOS_MAGIC);
         assert!(header.signature == PE_MAGIC);
         assert!(header.coff_header.machine == COFF_MACHINE_X86);
-        assert!(machine_to_str(header.coff_header.machine) == "X86");
         println!("header: {:?}", &header);
     }
 }

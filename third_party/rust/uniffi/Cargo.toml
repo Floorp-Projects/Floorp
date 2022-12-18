@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "uniffi"
-version = "0.21.1"
+version = "0.21.0"
 authors = ["Firefox Sync Team <sync-team@mozilla.com>"]
 description = "a multi-language bindings generator for rust (runtime support code)"
 homepage = "https://mozilla.github.io/uniffi-rs"
@@ -23,6 +23,7 @@ keywords = [
 ]
 license = "MPL-2.0"
 repository = "https://github.com/mozilla/uniffi-rs"
+resolver = "2"
 
 [dependencies.anyhow]
 version = "1"
@@ -49,11 +50,11 @@ version = "1.0"
 version = "1.1.0"
 
 [dependencies.uniffi_bindgen]
-version = "=0.21.1"
+version = "=0.21.0"
 optional = true
 
 [dependencies.uniffi_macros]
-version = "=0.21.1"
+version = "=0.21.0"
 
 [dev-dependencies.trybuild]
 version = "1"
