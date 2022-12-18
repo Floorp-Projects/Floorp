@@ -1518,19 +1518,6 @@ class Preferences {
       this.onPrefChanged("showSearchSuggestionsFirst");
     }
   }
-
-  /**
-   * Return whether or not persisted search terms is enabled.
-   *
-   * @returns {boolean} true: if enabled.
-   */
-  isPersistedSearchTermsEnabled() {
-    return (
-      this.get("showSearchTermsFeatureGate") &&
-      this.get("showSearchTerms.enabled") &&
-      !this.get("browser.search.widget.inNavBar")
-    );
-  }
 }
 
 export var UrlbarPrefs = new Preferences();
