@@ -19,7 +19,7 @@
     <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
       <ul>
         <li>Strani, ki si jo želite ogledati, ni mogoče prikazati, ker ni mogoče preveriti pristnosti sprejetih podatkov.</li>
-        <li>O napaki obvestite lastnike spletne strani.</li>
+        <li>O napaki obvestite lastnike spletnega mesta.</li>
       </ul>
     ]]></string>
 
@@ -82,7 +82,7 @@
       <ul>
         <li>Spletno mesto je morda začasno nedosegljivo ali preobremenjeno. Poskusite znova
     nekoliko pozneje.</li>
-        <li>Če ne morete naložiti nobene strani, preverite nastavitve podatkovne povezave ali Wi-Fi.</li>
+        <li>Če ne morete naložiti nobenega spletnega mesta, preverite nastavitve podatkovne povezave ali Wi-Fi.</li>
       </ul>
     ]]></string>
 
@@ -127,7 +127,7 @@
     <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Brskalnik je prenehal s prenašanjem zahtevane strani. Spletno mesto preusmerja zahtevek tako, da se krog ne bi nikoli zaključil.</p>
       <ul>
         <li>Ste onemogočili ali prepovedali piškotke, ki bi jih to spletno mesto potrebovalo?</li>
-        <li>Če sprejetje piškotkov te strani ne odpravi težave, je to skoraj gotovo napaka nastavitev strežnika in nima zveze z vašo napravo.</li>
+        <li>Če sprejetje piškotkov tega spletnega mesta ne odpravi težave, je to skoraj gotovo napaka nastavitev strežnika in nima zveze z vašo napravo.</li>
       </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
@@ -243,7 +243,7 @@
     <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
       <p>Naslov navaja protokol (npr. <q>wxyz://</q>), ki ga brskalnik ne pozna, zato se ne more pravilno povezati s spletnim mestom.</p>
       <ul>
-        <li>Želite uporabiti večpredstavnost ali drugo nebesedilno storitev? Preverite morebitne dodatne programske zahteve strani.</li>
+        <li>Želite uporabiti večpredstavnost ali drugo nebesedilno storitev? Preverite morebitne dodatne programske zahteve spletnega mesta.</li>
         <li>Nekateri protokoli zahtevajo programsko opremo drugih izdelovalcev ali dodatke, preden jih lahko brskalnik uporablja.</li>
       </ul>
     ]]></string>

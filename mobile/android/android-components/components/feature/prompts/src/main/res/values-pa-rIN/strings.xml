@@ -29,9 +29,9 @@
     <!-- Positive confirmation that we should save the updated login -->
     <string name="mozac_feature_prompt_update_confirmation">ਅੱਪਡੇਟ ਕਰੋ</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_empty_password">ਪਾਸਵਰਡ ਖੇਤਰ ਖਾਲੀ ਨਹੀਂ ਹੋਣਾ ਚਾਹੀਦਾ ਹੈ</string>
+    <string name="mozac_feature_prompt_error_empty_password">ਪਾਸਵਰਡ ਖਾਨਾ ਖਾਲੀ ਨਹੀਂ ਹੋਣਾ ਚਾਹੀਦਾ</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_unknown_cause">ਲਾਗਇਨ ਸੰਭਾਲਣ ਲਈ ਅਸਮਰੱਥ</string>
+    <string name="mozac_feature_prompt_error_unknown_cause">ਲਾਗਇਨ ਸੰਭਾਲਣ ਵਿੱਚ ਅਸਮਰੱਥ ਹਾਂ</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
     <string name="mozac_feature_prompt_login_save_headline">ਇਹ ਲਾਗਇਨ ਸੰਭਾਲਣਾ ਹੈ?</string>
     <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the login. -->
@@ -40,7 +40,7 @@
     <string name="mozac_feature_prompt_login_add_username_headline">ਵਰਤੋਂਕਾਰ-ਨਾਂ ਨੂੰ ਸੰਭਾਲੇ ਪਾਸਵਰਡ ਵਿੱਚ ਜੋੜਨਾ ਹੈ?</string>
     <!-- Text for a label for the field when prompt requesting a text is shown. -->
     <!-- For more info take a look here https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt -->
-    <string name="mozac_feature_prompts_content_description_input_label">ਲਿਖਤ ਦਰਜ ਕਰਨ ਲਈ ਖੇਤਰ ਲਈ ਲੇਬਲ</string>
+    <string name="mozac_feature_prompts_content_description_input_label">ਲਿਖਣ ਵਾਲੇ ਖਾਨੇ ਵਿੱਚ ਜਾਣ ਲਈ ਲੇਬਲ</string>
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
     <string name="mozac_feature_prompts_choose_a_color">ਰੰਗ ਚੁਣੋ</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
@@ -48,11 +48,11 @@
     <!-- Text of a negative button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_deny">ਇਨਕਾਰ ਕਰੋ</string>
     <!-- Title of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
-    <string name="mozac_feature_prompt_before_unload_dialog_title">ਕੀ ਤੁਸੀਂ ਚਾਹੁੰਦੇ ਹੋ?</string>
+    <string name="mozac_feature_prompt_before_unload_dialog_title">ਕੀ ਤੁਹਾਨੂੰ ਯਕੀਨ ਹੈ?</string>
     <!-- Body text of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
     <string name="mozac_feature_prompt_before_unload_dialog_body">ਕੀ ਤੁਸੀਂ ਇਹ ਸਾਈਟ ਛੱਡਣਾ ਚਾਹੁੰਦੇ ਹੋ? ਤੁਹਾਡੇ ਵਲੋਂ ਦਿੱਤਾ ਡਾਟਾ ਸੰਭਾਲਿਆ ਨਹੀਂ ਵੀ ਗਿਆ ਹੋ ਸਕਦਾ ਹੈ</string>
     <!-- Stay button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to stay in the website. -->
-    <string name="mozac_feature_prompts_before_unload_stay">ਰਹੋ</string>
+    <string name="mozac_feature_prompts_before_unload_stay">ਇੱਥੇ ਹੀ ਰਹੋ</string>
     <!-- Leave button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to leave in the website. -->
     <string name="mozac_feature_prompts_before_unload_leave">ਛੱਡੋ</string>
     <!-- Title of the month chooser dialog. -->

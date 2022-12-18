@@ -3,7 +3,7 @@
     <!-- Description for privacy add-on permission. -->
     <string name="mozac_feature_addons_permissions_privacy_description">branje in spreminjanje nastavitev zasebnosti</string>
     <!-- Description for all_urls add-on permission. -->
-    <string name="mozac_feature_addons_permissions_all_urls_description">dostop do vaših podatkov za vse spletne strani</string>
+    <string name="mozac_feature_addons_permissions_all_urls_description">dostop do vaših podatkov za vsa spletna mesta</string>
     <!-- Description for giving an add-on access to users's data on one site. %1$s  will be replaced by the DNS host name for which a web extension is requesting access (e.g., www.mozilla.org). -->
     <string name="mozac_feature_addons_permissions_one_site_description">dostop do vaših podatkov za %1$s</string>
     <!-- Description for giving an add-on access to users's data in multiple sites in the domain %1$s. %1$s will be replaced by the DNS domain for which a web extension is requesting access (e.g., mozilla.org). -->
