@@ -329,7 +329,7 @@ function gradient(value) {
     const functionCall = () => {
         FfiConverterOptionalTypeLine.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            108, // external_types:external_types_ec59_gradient
+            108, // external_types:external_types_54cc_gradient
             FfiConverterOptionalTypeLine.lower(value),
         )
     }

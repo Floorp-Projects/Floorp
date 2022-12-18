@@ -33,25 +33,19 @@
 //! # Ok::<(), anyhow::Error>(())
 //! ```
 
+use std::hash::{Hash, Hasher};
+
 use anyhow::{bail, Result};
-use uniffi_meta::Checksum;
 
 use super::ffi::{FFIArgument, FFIFunction, FFIType};
 use super::object::Method;
 use super::types::{Type, TypeIterator};
 use super::{APIConverter, ComponentInterface};
 
-#[derive(Debug, Clone, Checksum)]
+#[derive(Debug, Clone)]
 pub struct CallbackInterface {
     pub(super) name: String,
     pub(super) methods: Vec<Method>,
-    // We don't include the FFIFunc in the hash calculation, because:
-    //  - it is entirely determined by the other fields,
-    //    so excluding it is safe.
-    //  - its `name` property includes a checksum derived from  the very
-    //    hash value we're trying to calculate here, so excluding it
-    //    avoids a weird circular depenendency in the calculation.
-    #[checksum_ignore]
     pub(super) ffi_init_callback: FFIFunction,
 }
 
@@ -91,6 +85,19 @@ impl CallbackInterface {
 
     pub fn iter_types(&self) -> TypeIterator<'_> {
         Box::new(self.methods.iter().flat_map(Method::iter_types))
+    }
+}
+
+impl Hash for CallbackInterface {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        // We don't include the FFIFunc in the hash calculation, because:
+        //  - it is entirely determined by the other fields,
+        //    so excluding it is safe.
+        //  - its `name` property includes a checksum derived from  the very
+        //    hash value we're trying to calculate here, so excluding it
+        //    avoids a weird circular depenendency in the calculation.
+        self.name.hash(state);
+        self.methods.hash(state);
     }
 }
 

@@ -132,15 +132,11 @@ impl<'a> Member<'a> {
             )?;
 
             // adjust the offset and size accordingly
-            if header.size > len {
-                *offset = header_offset + SIZEOF_HEADER + len;
-                header.size -= len;
+            *offset = header_offset + SIZEOF_HEADER + len;
+            header.size -= len;
 
-                // the name may have trailing NULs which we don't really want to keep
-                Some(name.trim_end_matches('\0'))
-            } else {
-                None
-            }
+            // the name may have trailing NULs which we don't really want to keep
+            Some(name.trim_end_matches('\0'))
         } else {
             None
         };
@@ -164,8 +160,8 @@ impl<'a> Member<'a> {
     fn bsd_filename_length(name: &str) -> Option<usize> {
         use core::str::FromStr;
 
-        if let Some(name) = name.strip_prefix("#1/") {
-            let trimmed_name = name.trim_end_matches(' ');
+        if name.len() > 3 && &name[0..3] == "#1/" {
+            let trimmed_name = &name[3..].trim_end_matches(' ');
             if let Ok(len) = usize::from_str(trimmed_name) {
                 Some(len)
             } else {
@@ -342,13 +338,8 @@ impl<'a> Index<'a> {
 
         let mut symbol_offsets = Vec::with_capacity(symbols);
         for _ in 0..symbols {
-            if let Some(symbol_offset) =
-                member_offsets.get(buffer.gread_with::<u16>(offset, scroll::LE)? as usize - 1)
-            {
-                symbol_offsets.push(*symbol_offset);
-            } else {
-                return Err(Error::BufferTooShort(members, "members"));
-            }
+            symbol_offsets
+                .push(member_offsets[buffer.gread_with::<u16>(offset, scroll::LE)? as usize - 1]);
         }
         let strtab = strtab::Strtab::parse(buffer, *offset, buffer.len() - *offset, 0x0)?;
         Ok(Index {
@@ -620,7 +611,6 @@ mod tests {
         assert_eq!(Member::bsd_filename_length("#2/1"), None);
         assert_eq!(Member::bsd_filename_length(INDEX_NAME), None);
         assert_eq!(Member::bsd_filename_length(NAME_INDEX_NAME), None);
-        assert_eq!(Member::bsd_filename_length("👺"), None);
 
         // #1/<len> should be parsed as Some(len), with or without whitespace
         assert_eq!(Member::bsd_filename_length("#1/1"), Some(1));
