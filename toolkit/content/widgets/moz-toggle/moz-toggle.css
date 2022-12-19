@@ -48,7 +48,7 @@ input[type="checkbox"].toggle-button {
   height: var(--button-height);
   width: var(--button-width);
   border-radius: var(--button-half-height);
-  background: var(--in-content-button-background);
+  background-color: var(--in-content-button-background);
   box-sizing: border-box;
 }
 
@@ -58,38 +58,41 @@ input[type="checkbox"].toggle-button:focus-visible {
 }
 
 input[type="checkbox"].toggle-button:enabled:hover {
-  background: var(--in-content-button-background-hover);
+  background-color: var(--in-content-button-background-hover);
   border-color: var(--border-color);
 }
 
 input[type="checkbox"].toggle-button:enabled:active {
-  background: var(--in-content-button-background-active);
+  background-color: var(--in-content-button-background-active);
   border-color: var(--border-color);
 }
 
 input[type="checkbox"].toggle-button:checked {
-  background: var(--in-content-primary-button-background);
-  border-color: var(--in-content-primary-button-background);
+  background-color: var(--in-content-primary-button-background);
+  border-color: transparent;
 }
 
 input[type="checkbox"].toggle-button:checked:enabled:hover {
-  background: var(--in-content-primary-button-background-hover);
-  border-color: var(--in-content-primary-button-background-hover);
+  background-color: var(--in-content-primary-button-background-hover);
+  border-color: transparent;
 }
 
-input[type="checkbox"].toggle-button:checked:enabled:active {
-  background: var(--in-content-primary-button-background-active);
-  border-color: var(--in-content-primary-button-background-active);
+input[type="checkbox"].toggle-button:checked:enabled:active,
+input[type="checkbox"].toggle-button:checked:enabled:hover:active {
+  background-color: var(--in-content-primary-button-background-active);
+  border-color: transparent;
 }
 
 input[type="checkbox"].toggle-button::before {
   display: block;
   content: "";
-  background: var(--border-color);
+  background-color: var(--border-color);
   height: var(--dot-size);
   width: var(--dot-size);
   margin: var(--dot-margin);
   border-radius: 50%;
+  outline: 1px solid transparent;
+  outline-offset: -1px;
   translate: 0;
 }
 
@@ -97,7 +100,11 @@ input[type="checkbox"].toggle-button:checked::before {
   translate: var(--dot-transform-x);
   /* TODO: Bug 1798404 - This color doesn't match the spec in dark mode. This should
   be re-visited when we're defining tokens. */
-  background: var(--in-content-box-background);
+  background-color: var(--in-content-box-background);
+}
+
+input[type="checkbox"].toggle-button:checked:not(:active, :hover:active):before {
+  outline-color: var(--in-content-box-background);
 }
 
 input[type="checkbox"].toggle-button:-moz-locale-dir(rtl)::before,
