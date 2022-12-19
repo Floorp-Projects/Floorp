@@ -284,7 +284,7 @@ class PanZoomControllerTest : BaseSessionTest() {
 
         // Touch handler with preventDefault
         value = sessionRule.waitForResult(sendDownEvent(50f, 45f))
-        assertThat("Value should match", value, equalTo(PanZoomController.INPUT_RESULT_UNHANDLED))
+        assertThat("Value should match", value, equalTo(PanZoomController.INPUT_RESULT_HANDLED_CONTENT))
 
         // Touch handler without preventDefault
         value = sessionRule.waitForResult(sendDownEvent(50f, 75f))
@@ -474,25 +474,22 @@ class PanZoomControllerTest : BaseSessionTest() {
         // For example, in iframe_98vh_no_scrollable.html, even though
         // the page does not have a scroll range, the page is "pannable"
         // because the dynamic toolbar can be hidden.
-        var entries = arrayOf(
-            Pair(ROOT_100_PERCENT_HEIGHT_HTML_PATH, false),
-            Pair(ROOT_98VH_HTML_PATH, true),
-            Pair(ROOT_100VH_HTML_PATH, true),
-            Pair(IFRAME_100_PERCENT_HEIGHT_NO_SCROLLABLE_HTML_PATH, false),
-            Pair(IFRAME_100_PERCENT_HEIGHT_SCROLLABLE_HTML_PATH, true),
-            Pair(IFRAME_98VH_SCROLLABLE_HTML_PATH, true),
-            Pair(IFRAME_98VH_NO_SCROLLABLE_HTML_PATH, true)
+        var files = arrayOf(
+            ROOT_100_PERCENT_HEIGHT_HTML_PATH,
+            ROOT_98VH_HTML_PATH,
+            ROOT_100VH_HTML_PATH,
+            IFRAME_100_PERCENT_HEIGHT_NO_SCROLLABLE_HTML_PATH,
+            IFRAME_100_PERCENT_HEIGHT_SCROLLABLE_HTML_PATH,
+            IFRAME_98VH_SCROLLABLE_HTML_PATH,
+            IFRAME_98VH_NO_SCROLLABLE_HTML_PATH
         )
-        for (entry in entries) {
-            var (file, pageIsPannable) = entry
-            var expected = if (pageIsPannable) PanZoomController.INPUT_RESULT_HANDLED_CONTENT
-            else PanZoomController.INPUT_RESULT_UNHANDLED
+        for (file in files) {
             setupDocument(file + "?event-prevent")
             var value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
             assertThat(
-                "The input result should be " + expected + " in " + file,
+                "The input result should be HANDLED_CONTENT in " + file,
                 value,
-                equalTo(expected)
+                equalTo(PanZoomController.INPUT_RESULT_HANDLED_CONTENT)
             )
 
             // Scroll to the bottom edge if it's possible.
@@ -512,9 +509,9 @@ class PanZoomControllerTest : BaseSessionTest() {
 
             value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
             assertThat(
-                "The input result should be " + expected + " in " + file,
+                "The input result should be HANDLED_CONTENT in " + file,
                 value,
-                equalTo(expected)
+                equalTo(PanZoomController.INPUT_RESULT_HANDLED_CONTENT)
             )
         }
     }

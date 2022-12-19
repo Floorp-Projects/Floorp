@@ -41,6 +41,14 @@ struct APZEventResult;
 struct APZHandledResult;
 enum class BrowserGestureResponse : bool;
 
+using InputBlockCallback = std::function<void(uint64_t aInputBlockId,
+                                              APZHandledResult aHandledResult)>;
+
+struct InputBlockCallbackInfo {
+  nsEventStatus mEagerStatus;
+  InputBlockCallback mCallback;
+};
+
 /**
  * This class stores incoming input events, associated with "input blocks",
  * until they are ready for handling.
@@ -148,10 +156,8 @@ class InputQueue {
 
   InputBlockState* GetBlockForId(uint64_t aInputBlockId);
 
-  using InputBlockCallback = std::function<void(
-      uint64_t aInputBlockId, APZHandledResult aHandledResult)>;
   void AddInputBlockCallback(uint64_t aInputBlockId,
-                             InputBlockCallback&& aCallback);
+                             InputBlockCallbackInfo&& aCallback);
 
   void SetBrowserGestureResponse(uint64_t aInputBlockId,
                                  BrowserGestureResponse aResponse);
@@ -261,7 +267,7 @@ class InputQueue {
   // Maps input block ids to callbacks that will be invoked when the input block
   // is ready for handling.
   using InputBlockCallbackMap =
-      std::unordered_map<uint64_t, InputBlockCallback>;
+      std::unordered_map<uint64_t, InputBlockCallbackInfo>;
   InputBlockCallbackMap mInputBlockCallbacks;
 };
 
