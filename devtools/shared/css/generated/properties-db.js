@@ -3154,7 +3154,6 @@ exports.CSS_PROPERTIES = {
       "outline-width",
       "outline-offset",
       "page",
-      "page-orientation",
       "padding-top",
       "padding-right",
       "padding-bottom",
@@ -9740,23 +9739,6 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
-  "page-orientation": {
-    "isInherited": false,
-    "subproperties": [
-      "page-orientation"
-    ],
-    "supports": [],
-    "values": [
-      "inherit",
-      "initial",
-      "revert",
-      "revert-layer",
-      "rotate-left",
-      "rotate-right",
-      "unset",
-      "upright"
-    ]
-  },
   "paint-order": {
     "isInherited": true,
     "subproperties": [
@@ -11985,10 +11967,6 @@ exports.PREFERENCES = [
   [
     "overflow-anchor",
     "layout.css.scroll-anchoring.enabled"
-  ],
-  [
-    "page-orientation",
-    "layout.css.page-orientation.enabled"
   ],
   [
     "scrollbar-gutter",

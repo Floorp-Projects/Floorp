@@ -242,7 +242,6 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "padding-block-start",
       "padding-inline-end",
       "padding-inline-start",
-      "page-orientation",
       "math-depth",
       "-moz-box-layout",
       "-moz-top-layer",
