@@ -22,6 +22,21 @@ addAccessibleTask(
   { topLevel: true, iframe: true, remoteIframe: true }
 );
 
+// Test translation with two children.
+addAccessibleTask(
+  `
+<div role="main" style="translate: 0 300px;">
+  <p id="p1">hello</p>
+  <p id="p2">world</p>
+</div>
+  `,
+  async function(browser, docAcc) {
+    await testBoundsWithContent(docAcc, "p1", browser);
+    await testBoundsWithContent(docAcc, "p2", browser);
+  },
+  { topLevel: true, iframe: true, remoteIframe: true }
+);
+
 // test basic rotation
 addAccessibleTask(
   `<p id="rotate">hello world</p>`,
@@ -54,6 +69,27 @@ addAccessibleTask(
 
     await waitForContentPaint(browser);
     await testBoundsWithContent(iframeDocAcc, "scale", browser);
+  },
+  { topLevel: true, iframe: true, remoteIframe: true }
+);
+
+// Test will-change: transform with no transform.
+addAccessibleTask(
+  `
+<div id="willChangeTop" style="will-change: transform;">
+  <p>hello</p>
+  <p id="willChangeTopP2">world</p>
+</div>
+<div role="group">
+  <div id="willChangeInner" style="will-change: transform;">
+    <p>hello</p>
+    <p id="willChangeInnerP2">world</p>
+  </div>
+</div>
+  `,
+  async function(browser, docAcc) {
+    await testBoundsWithContent(docAcc, "willChangeTopP2", browser);
+    await testBoundsWithContent(docAcc, "willChangeInnerP2", browser);
   },
   { topLevel: true, iframe: true, remoteIframe: true }
 );
