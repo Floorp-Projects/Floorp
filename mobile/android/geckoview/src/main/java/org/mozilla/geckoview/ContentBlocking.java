@@ -1639,6 +1639,9 @@ public class ContentBlocking {
     /** Reject cookies when possible otherwise accept the cookies. */
     public static final int COOKIE_BANNER_MODE_REJECT_OR_ACCEPT = 2;
 
+    /** Detect cookie banners but do not handle them. */
+    public static final int COOKIE_BANNER_MODE_DETECT_ONLY = 3;
+
     protected CookieBannerMode() {}
   }
 
@@ -1646,7 +1649,8 @@ public class ContentBlocking {
   @IntDef({
     CookieBannerMode.COOKIE_BANNER_MODE_DISABLED,
     CookieBannerMode.COOKIE_BANNER_MODE_REJECT,
-    CookieBannerMode.COOKIE_BANNER_MODE_REJECT_OR_ACCEPT
+    CookieBannerMode.COOKIE_BANNER_MODE_REJECT_OR_ACCEPT,
+    CookieBannerMode.COOKIE_BANNER_MODE_DETECT_ONLY
   })
   public @interface CBCookieBannerMode {}
 }
