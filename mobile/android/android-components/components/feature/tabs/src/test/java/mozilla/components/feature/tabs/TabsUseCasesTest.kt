@@ -463,6 +463,42 @@ class TabsUseCasesTest {
         assertEquals(store.state.selectedTabId, tabID)
     }
 
+    @Test
+    fun `selectOrAddTab selects already existing tab with matching url when ignoreFragment is set to true`() {
+        val tab = createTab("https://mozilla.org")
+        val otherTab = createTab("https://firefox.com")
+
+        store.dispatch(TabListAction.AddTabAction(otherTab)).joinBlocking()
+        store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
+
+        assertEquals(otherTab, store.state.selectedTab)
+        assertEquals(2, store.state.tabs.size)
+
+        val actualTabId = tabsUseCases.selectOrAddTab(url = "https://mozilla.org/#welcome", ignoreFragment = true)
+        store.waitUntilIdle()
+
+        assertEquals(2, store.state.tabs.size)
+        assertEquals(tab, store.state.selectedTab)
+        assertEquals(store.state.selectedTabId, actualTabId)
+    }
+
+    @Test
+    fun `selectOrAddTab adds new tab if no matching existing tab could be found with ignoreFragment set to true`() {
+        val tab = createTab("https://mozilla.org")
+
+        store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
+
+        assertEquals(tab.id, store.state.selectedTabId)
+        assertEquals(tab, store.state.selectedTab)
+        assertEquals(1, store.state.tabs.size)
+
+        val tabID = tabsUseCases.selectOrAddTab(url = "https://firefox.com", ignoreFragment = true)
+        store.waitUntilIdle()
+
+        assertEquals(2, store.state.tabs.size)
+        assertEquals(store.state.selectedTabId, tabID)
+    }
+
     private fun assertTabsDuplicates(tab: TabSessionState, dup: TabSessionState) {
         assertEquals(tab.content.url, dup.content.url)
         assertEquals(tab.content.private, dup.content.private)

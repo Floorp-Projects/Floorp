@@ -8,6 +8,9 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.support.base.log.logger.Logger
+import java.net.URI
+import java.net.URISyntaxException
 
 // Extension functions for querying and dissecting [BrowserState]
 
@@ -107,6 +110,23 @@ fun BrowserState.findNormalOrPrivateTabByUrl(url: String, private: Boolean): Tab
 }
 
 /**
+ * Finds and returns the tab with the given url ignoring the fragment identifier part of the url.
+ * Returns null if no matching tab could be found.
+ *
+ * @param url A mandatory url of the searched tab.
+ * @param private Whether to look for a matching private or normal tab.
+ * @return The tab with the provided url.
+ */
+fun BrowserState.findNormalOrPrivateTabByUrlIgnoringFragment(
+    url: String,
+    private: Boolean,
+): TabSessionState? {
+    return tabs.firstOrNull { tab ->
+        isSameUrlIgnoringFragment(tab.content.url, url) && tab.content.private == private
+    }
+}
+
+/**
  * Gets a list of normal or private tabs depending on the requested type.
  * @param private If true, all private tabs will be returned.
  * If false, all normal tabs will be returned.
@@ -132,3 +152,36 @@ val BrowserState.normalTabs: List<TabSessionState>
  */
 val BrowserState.allTabs: List<SessionState>
     get() = tabs + customTabs
+
+/**
+ * Returns true if the two urls are the same ignoring the fragment identifier - the string after
+ * the # in a url (eg, http://foo/bar#buzz).
+ *
+ * @param tabUrl A mandatory url of the tab.
+ * @param url A mandatory url that's being checked.
+ * @return true if the check passes, otherwise false.
+ */
+private fun isSameUrlIgnoringFragment(tabUrl: String, url: String): Boolean {
+    return try {
+        val tabUri = URI.create(tabUrl)
+        val uri = URI.create(url)
+        URI(tabUri.scheme, tabUri.authority, tabUri.path, tabUri.query, null).removeTrailingSlash() ==
+            URI(uri.scheme, uri.authority, uri.path, uri.query, null).removeTrailingSlash()
+    } catch (e: URISyntaxException) {
+        Logger.error("Unable to compare urls", e)
+        false
+    } catch (e: IllegalArgumentException) {
+        Logger.error("Unable to compare urls", e)
+        false
+    }
+}
+
+/**
+ * Removes trailing slash on the URI if present.
+ *
+ * @return String with trailing slash removed if it's the last character,
+ * otherwise the original string.
+ */
+private fun URI.removeTrailingSlash(): String {
+    return toString().trimEnd('/')
+}
