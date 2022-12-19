@@ -45,7 +45,7 @@ function recursiveSearch(aLow, aHigh, aNeedle, aHaystack, aCompare, aBias) {
 
     // The exact needle element was not found in this haystack. Determine if
     // we are in termination case (3) or (2) and return the appropriate thing.
-    if (aBias == exports.LEAST_UPPER_BOUND) {
+    if (aBias === exports.LEAST_UPPER_BOUND) {
       return aHigh < aHaystack.length ? aHigh : -1;
     }
     return mid;
@@ -87,13 +87,19 @@ exports.search = function search(aNeedle, aHaystack, aCompare, aBias) {
     return -1;
   }
 
-  let index = recursiveSearch(-1, aHaystack.length, aNeedle, aHaystack,
-                              aCompare, aBias || exports.GREATEST_LOWER_BOUND);
+  let index = recursiveSearch(
+    -1,
+    aHaystack.length,
+    aNeedle,
+    aHaystack,
+    aCompare,
+    aBias || exports.GREATEST_LOWER_BOUND
+  );
   if (index < 0) {
     return -1;
   }
 
-  // We have found either the exact element, or the next-closest element than
+  // We have found either the exact element, or the next-closest element to
   // the one we are searching for. However, there may be more than one such
   // element. Make sure we always return the smallest of these.
   while (index - 1 >= 0) {

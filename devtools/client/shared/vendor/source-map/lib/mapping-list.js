@@ -17,8 +17,11 @@ function generatedPositionAfter(mappingA, mappingB) {
   const lineB = mappingB.generatedLine;
   const columnA = mappingA.generatedColumn;
   const columnB = mappingB.generatedColumn;
-  return lineB > lineA || lineB == lineA && columnB >= columnA ||
-         util.compareByGeneratedPositionsInflated(mappingA, mappingB) <= 0;
+  return (
+    lineB > lineA ||
+    (lineB == lineA && columnB >= columnA) ||
+    util.compareByGeneratedPositionsInflated(mappingA, mappingB) <= 0
+  );
 }
 
 /**
@@ -31,7 +34,7 @@ class MappingList {
     this._array = [];
     this._sorted = true;
     // Serves as infimum
-    this._last = {generatedLine: -1, generatedColumn: 0};
+    this._last = { generatedLine: -1, generatedColumn: 0 };
   }
 
   /**

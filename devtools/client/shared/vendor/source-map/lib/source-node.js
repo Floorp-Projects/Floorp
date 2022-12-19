@@ -52,7 +52,11 @@ class SourceNode {
    * @param aRelativePath Optional. The path that relative sources in the
    *        SourceMapConsumer should be relative to.
    */
-  static fromStringWithSourceMap(aGeneratedCode, aSourceMapConsumer, aRelativePath) {
+  static fromStringWithSourceMap(
+    aGeneratedCode,
+    aSourceMapConsumer,
+    aRelativePath
+  ) {
     // The SourceNode we want to fill with the generated code
     // and the SourceMap
     const node = new SourceNode();
@@ -63,20 +67,22 @@ class SourceNode {
     // Processed fragments are accessed by calling `shiftNextLine`.
     const remainingLines = aGeneratedCode.split(REGEX_NEWLINE);
     let remainingLinesIndex = 0;
-    const shiftNextLine = function() {
+    const shiftNextLine = function () {
       const lineContents = getNextLine();
       // The last line of a file might not have a newline.
       const newLine = getNextLine() || "";
       return lineContents + newLine;
 
       function getNextLine() {
-        return remainingLinesIndex < remainingLines.length ?
-            remainingLines[remainingLinesIndex++] : undefined;
+        return remainingLinesIndex < remainingLines.length
+          ? remainingLines[remainingLinesIndex++]
+          : undefined;
       }
     };
 
     // We need to remember the position of "remainingLines"
-    let lastGeneratedLine = 1, lastGeneratedColumn = 0;
+    let lastGeneratedLine = 1,
+      lastGeneratedColumn = 0;
 
     // The generate SourceNodes we need a code range.
     // To extract it current and last mapping is used.
@@ -84,7 +90,7 @@ class SourceNode {
     let lastMapping = null;
     let nextLine;
 
-    aSourceMapConsumer.eachMapping(function(mapping) {
+    aSourceMapConsumer.eachMapping(function (mapping) {
       if (lastMapping !== null) {
         // We add the code from "lastMapping" to "mapping":
         // First check if there is a new line in between.
@@ -99,10 +105,13 @@ class SourceNode {
           // Associate the code between "lastGeneratedColumn" and
           // "mapping.generatedColumn" with "lastMapping"
           nextLine = remainingLines[remainingLinesIndex] || "";
-          const code = nextLine.substr(0, mapping.generatedColumn -
-                                        lastGeneratedColumn);
-          remainingLines[remainingLinesIndex] = nextLine.substr(mapping.generatedColumn -
-                                              lastGeneratedColumn);
+          const code = nextLine.substr(
+            0,
+            mapping.generatedColumn - lastGeneratedColumn
+          );
+          remainingLines[remainingLinesIndex] = nextLine.substr(
+            mapping.generatedColumn - lastGeneratedColumn
+          );
           lastGeneratedColumn = mapping.generatedColumn;
           addMappingWithCode(lastMapping, code);
           // No more remaining code, continue
@@ -120,7 +129,9 @@ class SourceNode {
       if (lastGeneratedColumn < mapping.generatedColumn) {
         nextLine = remainingLines[remainingLinesIndex] || "";
         node.add(nextLine.substr(0, mapping.generatedColumn));
-        remainingLines[remainingLinesIndex] = nextLine.substr(mapping.generatedColumn);
+        remainingLines[remainingLinesIndex] = nextLine.substr(
+          mapping.generatedColumn
+        );
         lastGeneratedColumn = mapping.generatedColumn;
       }
       lastMapping = mapping;
@@ -136,7 +147,7 @@ class SourceNode {
     }
 
     // Copy sourcesContent into SourceNode
-    aSourceMapConsumer.sources.forEach(function(sourceFile) {
+    aSourceMapConsumer.sources.forEach(function (sourceFile) {
       const content = aSourceMapConsumer.sourceContentFor(sourceFile);
       if (content != null) {
         if (aRelativePath != null) {
@@ -155,11 +166,15 @@ class SourceNode {
         const source = aRelativePath
           ? util.join(aRelativePath, mapping.source)
           : mapping.source;
-        node.add(new SourceNode(mapping.originalLine,
-                                mapping.originalColumn,
-                                source,
-                                code,
-                                mapping.name));
+        node.add(
+          new SourceNode(
+            mapping.originalLine,
+            mapping.originalColumn,
+            source,
+            code,
+            mapping.name
+          )
+        );
       }
     }
   }
@@ -172,7 +187,7 @@ class SourceNode {
    */
   add(aChunk) {
     if (Array.isArray(aChunk)) {
-      aChunk.forEach(function(chunk) {
+      aChunk.forEach(function (chunk) {
         this.add(chunk);
       }, this);
     } else if (aChunk[isSourceNode] || typeof aChunk === "string") {
@@ -181,7 +196,8 @@ class SourceNode {
       }
     } else {
       throw new TypeError(
-        "Expected a SourceNode, string, or an array of SourceNodes and strings. Got " + aChunk
+        "Expected a SourceNode, string, or an array of SourceNodes and strings. Got " +
+          aChunk
       );
     }
     return this;
@@ -202,7 +218,8 @@ class SourceNode {
       this.children.unshift(aChunk);
     } else {
       throw new TypeError(
-        "Expected a SourceNode, string, or an array of SourceNodes and strings. Got " + aChunk
+        "Expected a SourceNode, string, or an array of SourceNodes and strings. Got " +
+          aChunk
       );
     }
     return this;
@@ -222,10 +239,12 @@ class SourceNode {
       if (chunk[isSourceNode]) {
         chunk.walk(aFn);
       } else if (chunk !== "") {
-        aFn(chunk, { source: this.source,
-                      line: this.line,
-                      column: this.column,
-                      name: this.name });
+        aFn(chunk, {
+          source: this.source,
+          line: this.line,
+          column: this.column,
+          name: this.name,
+        });
       }
     }
   }
@@ -264,7 +283,10 @@ class SourceNode {
     if (lastChild[isSourceNode]) {
       lastChild.replaceRight(aPattern, aReplacement);
     } else if (typeof lastChild === "string") {
-      this.children[this.children.length - 1] = lastChild.replace(aPattern, aReplacement);
+      this.children[this.children.length - 1] = lastChild.replace(
+        aPattern,
+        aReplacement
+      );
     } else {
       this.children.push("".replace(aPattern, aReplacement));
     }
@@ -307,7 +329,7 @@ class SourceNode {
    */
   toString() {
     let str = "";
-    this.walk(function(chunk) {
+    this.walk(function (chunk) {
       str += chunk;
     });
     return str;
@@ -321,7 +343,7 @@ class SourceNode {
     const generated = {
       code: "",
       line: 1,
-      column: 0
+      column: 0,
     };
     const map = new SourceMapGenerator(aArgs);
     let sourceMappingActive = false;
@@ -329,26 +351,30 @@ class SourceNode {
     let lastOriginalLine = null;
     let lastOriginalColumn = null;
     let lastOriginalName = null;
-    this.walk(function(chunk, original) {
+    this.walk(function (chunk, original) {
       generated.code += chunk;
-      if (original.source !== null
-          && original.line !== null
-          && original.column !== null) {
-        if (lastOriginalSource !== original.source
-          || lastOriginalLine !== original.line
-          || lastOriginalColumn !== original.column
-          || lastOriginalName !== original.name) {
+      if (
+        original.source !== null &&
+        original.line !== null &&
+        original.column !== null
+      ) {
+        if (
+          lastOriginalSource !== original.source ||
+          lastOriginalLine !== original.line ||
+          lastOriginalColumn !== original.column ||
+          lastOriginalName !== original.name
+        ) {
           map.addMapping({
             source: original.source,
             original: {
               line: original.line,
-              column: original.column
+              column: original.column,
             },
             generated: {
               line: generated.line,
-              column: generated.column
+              column: generated.column,
             },
-            name: original.name
+            name: original.name,
           });
         }
         lastOriginalSource = original.source;
@@ -360,8 +386,8 @@ class SourceNode {
         map.addMapping({
           generated: {
             line: generated.line,
-            column: generated.column
-          }
+            column: generated.column,
+          },
         });
         lastOriginalSource = null;
         sourceMappingActive = false;
@@ -379,13 +405,13 @@ class SourceNode {
               source: original.source,
               original: {
                 line: original.line,
-                column: original.column
+                column: original.column,
               },
               generated: {
                 line: generated.line,
-                column: generated.column
+                column: generated.column,
               },
-              name: original.name
+              name: original.name,
             });
           }
         } else {
@@ -393,7 +419,7 @@ class SourceNode {
         }
       }
     });
-    this.walkSourceContents(function(sourceFile, sourceContent) {
+    this.walkSourceContents(function (sourceFile, sourceContent) {
       map.setSourceContent(sourceFile, sourceContent);
     });
 

@@ -22,7 +22,8 @@ module.exports = function wasm() {
 
   const callbackStack = [];
 
-  cachedWasm = readWasm().then(buffer => {
+  cachedWasm = readWasm()
+    .then(buffer => {
       return WebAssembly.instantiate(buffer, {
         env: {
           mapping_callback(
@@ -64,44 +65,74 @@ module.exports = function wasm() {
             callbackStack[callbackStack.length - 1](mapping);
           },
 
-          start_all_generated_locations_for() { console.time("all_generated_locations_for"); },
-          end_all_generated_locations_for() { console.timeEnd("all_generated_locations_for"); },
+          start_all_generated_locations_for() {
+            console.time("all_generated_locations_for");
+          },
+          end_all_generated_locations_for() {
+            console.timeEnd("all_generated_locations_for");
+          },
 
-          start_compute_column_spans() { console.time("compute_column_spans"); },
-          end_compute_column_spans() { console.timeEnd("compute_column_spans"); },
+          start_compute_column_spans() {
+            console.time("compute_column_spans");
+          },
+          end_compute_column_spans() {
+            console.timeEnd("compute_column_spans");
+          },
 
-          start_generated_location_for() { console.time("generated_location_for"); },
-          end_generated_location_for() { console.timeEnd("generated_location_for"); },
+          start_generated_location_for() {
+            console.time("generated_location_for");
+          },
+          end_generated_location_for() {
+            console.timeEnd("generated_location_for");
+          },
 
-          start_original_location_for() { console.time("original_location_for"); },
-          end_original_location_for() { console.timeEnd("original_location_for"); },
+          start_original_location_for() {
+            console.time("original_location_for");
+          },
+          end_original_location_for() {
+            console.timeEnd("original_location_for");
+          },
 
-          start_parse_mappings() { console.time("parse_mappings"); },
-          end_parse_mappings() { console.timeEnd("parse_mappings"); },
+          start_parse_mappings() {
+            console.time("parse_mappings");
+          },
+          end_parse_mappings() {
+            console.timeEnd("parse_mappings");
+          },
 
-          start_sort_by_generated_location() { console.time("sort_by_generated_location"); },
-          end_sort_by_generated_location() { console.timeEnd("sort_by_generated_location"); },
+          start_sort_by_generated_location() {
+            console.time("sort_by_generated_location");
+          },
+          end_sort_by_generated_location() {
+            console.timeEnd("sort_by_generated_location");
+          },
 
-          start_sort_by_original_location() { console.time("sort_by_original_location"); },
-          end_sort_by_original_location() { console.timeEnd("sort_by_original_location"); },
-        }
+          start_sort_by_original_location() {
+            console.time("sort_by_original_location");
+          },
+          end_sort_by_original_location() {
+            console.timeEnd("sort_by_original_location");
+          },
+        },
       });
-  }).then(Wasm => {
-    return {
-      exports: Wasm.instance.exports,
-      withMappingCallback: (mappingCallback, f) => {
-        callbackStack.push(mappingCallback);
-        try {
-          f();
-        } finally {
-          callbackStack.pop();
-        }
-      }
-    };
-  }).then(null, e => {
-    cachedWasm = null;
-    throw e;
-  });
+    })
+    .then(Wasm => {
+      return {
+        exports: Wasm.instance.exports,
+        withMappingCallback: (mappingCallback, f) => {
+          callbackStack.push(mappingCallback);
+          try {
+            f();
+          } finally {
+            callbackStack.pop();
+          }
+        },
+      };
+    })
+    .then(null, e => {
+      cachedWasm = null;
+      throw e;
+    });
 
   return cachedWasm;
 };
