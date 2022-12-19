@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: "Update Android-Components"
-        uses: mozilla-mobile/relbot@1.0.0
+        uses: mozilla-mobile/relbot@5.0.2
         if: github.repository == 'mozilla-mobile/fenix'
         with:
           project: fenix
