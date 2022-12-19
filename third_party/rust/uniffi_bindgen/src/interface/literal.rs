@@ -8,12 +8,13 @@
 //! which appear in places such as default arguments.
 
 use anyhow::{bail, Result};
+use uniffi_meta::Checksum;
 
 use super::types::Type;
 
 // Represents a literal value.
 // Used for e.g. default argument values.
-#[derive(Debug, Clone, Hash)]
+#[derive(Debug, Clone, Checksum)]
 pub enum Literal {
     Boolean(bool),
     String(String),
@@ -35,7 +36,7 @@ pub enum Literal {
 
 // Represent the radix of integer literal values.
 // We preserve the radix into the generated bindings for readability reasons.
-#[derive(Debug, Clone, Copy, Hash)]
+#[derive(Debug, Clone, Copy, Checksum)]
 pub enum Radix {
     Decimal = 10,
     Octal = 8,
