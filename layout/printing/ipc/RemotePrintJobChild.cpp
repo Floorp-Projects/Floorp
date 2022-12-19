@@ -102,10 +102,9 @@ NS_IMETHODIMP
 RemotePrintJobChild::OnStateChange(nsIWebProgress* aProgress,
                                    nsIRequest* aRequest, uint32_t aStateFlags,
                                    nsresult aStatus) {
-  if (!mDestroyed) {
-    Unused << SendStateChange(aStateFlags, aStatus);
-  }
-
+  // `RemotePrintJobParent` emits its own state change events based on its
+  // own progress & the actor lifecycle, so any forwarded event here would get
+  // ignored.
   return NS_OK;
 }
 
