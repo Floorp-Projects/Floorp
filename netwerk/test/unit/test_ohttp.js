@@ -3,16 +3,6 @@
 
 "use strict";
 
-function hexStringToBytes(hex) {
-  let bytes = [];
-  for (let hexByteStr of hex.split(/(..)/)) {
-    if (hexByteStr.length) {
-      bytes.push(parseInt(hexByteStr, 16));
-    }
-  }
-  return bytes;
-}
-
 function test_known_config() {
   let ohttp = Cc["@mozilla.org/network/oblivious-http;1"].getService(
     Ci.nsIObliviousHttp

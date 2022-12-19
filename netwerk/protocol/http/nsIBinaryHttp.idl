@@ -1,0 +1,40 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(f6f899cc-683a-43da-9206-0eb0c09cc758)]
+interface nsIBinaryHttpRequest : nsISupports {
+  readonly attribute ACString method;
+  readonly attribute ACString scheme;
+  readonly attribute ACString authority;
+  readonly attribute ACString path;
+  readonly attribute Array<ACString> headerNames;
+  readonly attribute Array<ACString> headerValues;
+  readonly attribute Array<octet> content;
+};
+
+[scriptable, uuid(6ca85d9c-cdc5-45d4-9adc-005abedce9c9)]
+interface nsIBinaryHttpResponse : nsISupports {
+  readonly attribute uint16_t status;
+  readonly attribute Array<ACString> headerNames;
+  readonly attribute Array<ACString> headerValues;
+  readonly attribute Array<octet> content;
+};
+
+// Implements Binary Representation of HTTP Messages (RFC 9292).
+// In normal operation, encodeRequest and decodeResponse are expected to be
+// used. For testing, decodeRequest and encodeResponse are available as well.
+// Thread safety: this interface may be used on any thread, but objects
+// returned by it are not inherently thread-safe and should only be used on the
+// threads they were created on.
+[scriptable, builtinclass, uuid(b43b3f73-8160-4ab2-9f5d-4129a9708081)]
+interface nsIBinaryHttp : nsISupports {
+  Array<octet> encodeRequest(in nsIBinaryHttpRequest request);
+  nsIBinaryHttpRequest decodeRequest(in Array<octet> request);
+
+  nsIBinaryHttpResponse decodeResponse(in Array<octet> response);
+  Array<octet> encodeResponse(in nsIBinaryHttpResponse response);
+};

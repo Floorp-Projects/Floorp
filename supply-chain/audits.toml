@@ -113,6 +113,12 @@ criteria = "safe-to-deploy"
 version = "1.1.0"
 notes = "All code written or reviewed by Josh Stone."
 
+[[audits.bhttp]]
+who = "Dana Keeler <dkeeler@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.2.3"
+notes = "Mozilla-developed package, no unsafe code or powerful imports."
+
 [[audits.bindgen]]
 who = "Emilio Cobos Álvarez <emilio@crisal.io>"
 criteria = "safe-to-deploy"
