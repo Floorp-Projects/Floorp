@@ -8317,6 +8317,22 @@
   mirror: always
   rust: true
 
+# Whether to use tight bounds for floating ::first-letter (legacy Gecko behavior)
+# or loose bounds based on overall font metrics (WebKit/Blink-like behavior)?
+# Values mean:
+#     1   legacy Gecko behavior (tight bounds)
+#     0   loose typographic bounds (similar to webkit/blink)
+#    -1   auto behavior: use loose bounds if reduced line-height (<1em) or negative
+#         block-start margin is present; otherwise use tight bounds.
+- name: layout.css.floating-first-letter.tight-glyph-bounds
+  type: int32_t
+#ifdef NIGHTLY_BUILD
+  value: -1
+#else
+  value: 1
+#endif
+  mirror: always
+
 # Is support for the font-display @font-face descriptor enabled?
 - name: layout.css.font-display.enabled
   type: RelaxedAtomicBool

@@ -52,6 +52,7 @@
 #include "nsDisplayList.h"
 #include "nsIFrame.h"
 #include "nsIMathMLFrame.h"
+#include "nsFirstLetterFrame.h"
 #include "nsPlaceholderFrame.h"
 #include "nsTextFrameUtils.h"
 #include "nsTextRunTransformations.h"
@@ -5870,13 +5871,16 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
   AddStateBits(TEXT_SELECTION_UNDERLINE_OVERFLOWED);
 }
 
+nscoord nsTextFrame::ComputeLineHeight() const {
+  return ReflowInput::CalcLineHeight(GetContent(), Style(), PresContext(),
+                                     NS_UNCONSTRAINEDSIZE,
+                                     GetFontSizeInflation());
+}
+
 gfxFloat nsTextFrame::ComputeDescentLimitForSelectionUnderline(
     nsPresContext* aPresContext, const gfxFont::Metrics& aFontMetrics) {
-  gfxFloat app = aPresContext->AppUnitsPerDevPixel();
-  nscoord lineHeightApp =
-      ReflowInput::CalcLineHeight(GetContent(), Style(), PresContext(),
-                                  NS_UNCONSTRAINEDSIZE, GetFontSizeInflation());
-  gfxFloat lineHeight = gfxFloat(lineHeightApp) / app;
+  const gfxFloat lineHeight =
+      gfxFloat(ComputeLineHeight()) / aPresContext->AppUnitsPerDevPixel();
   if (lineHeight <= aFontMetrics.maxHeight) {
     return aFontMetrics.maxDescent;
   }
@@ -9706,10 +9710,14 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
 
   // The metrics for the text go in here
   gfxTextRun::Metrics textMetrics;
-  gfxFont::BoundingBoxType boundingBoxType =
-      IsFloatingFirstLetterChild() || IsInitialLetterChild()
-          ? gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS
-          : gfxFont::LOOSE_INK_EXTENTS;
+  gfxFont::BoundingBoxType boundingBoxType = gfxFont::LOOSE_INK_EXTENTS;
+  if (IsFloatingFirstLetterChild() || IsInitialLetterChild()) {
+    if (nsFirstLetterFrame* firstLetter = do_QueryFrame(GetParent())) {
+      if (firstLetter->UseTightBounds()) {
+        boundingBoxType = gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS;
+      }
+    }
+  }
 
   int32_t limitLength = length;
   int32_t forceBreak = aLineLayout.GetForcedBreakPosition(this);
