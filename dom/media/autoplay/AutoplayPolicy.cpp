@@ -310,6 +310,9 @@ bool AutoplayPolicy::IsAllowedToPlay(const AudioContext& aContext) {
 /* static */
 DocumentAutoplayPolicy AutoplayPolicy::IsAllowedToPlay(
     const Document& aDocument) {
+  const bool isWindowAllowedToPlay =
+      IsWindowAllowedToPlay(aDocument.GetInnerWindow());
+
 #if defined(MOZ_WIDGET_ANDROID)
   if (StaticPrefs::media_geckoview_autoplay_request()) {
     nsPIDOMWindowInner* window = aDocument.GetInnerWindow();
@@ -318,18 +321,33 @@ DocumentAutoplayPolicy AutoplayPolicy::IsAllowedToPlay(
     }
 
     if (IsGVAutoplayRequestAllowed(window, RType::eINAUDIBLE)) {
-      return DocumentAutoplayPolicy::Allowed_muted;
+      return isWindowAllowedToPlay ? DocumentAutoplayPolicy::Allowed
+                                   : DocumentAutoplayPolicy::Allowed_muted;
     }
 
-    return DocumentAutoplayPolicy::Disallowed;
+    return isWindowAllowedToPlay ? DocumentAutoplayPolicy::Allowed
+                                 : DocumentAutoplayPolicy::Disallowed;
   }
 #endif
-  if (DefaultAutoplayBehaviour() == nsIAutoplay::ALLOWED ||
-      IsWindowAllowedToPlay(aDocument.GetInnerWindow())) {
+  const uint32_t sitePermission = SiteAutoplayPerm(aDocument.GetInnerWindow());
+  const uint32_t globalPermission = DefaultAutoplayBehaviour();
+
+  AUTOPLAY_LOG(
+      "IsAllowedToPlay(doc), sitePermission=%d, globalPermission=%d, "
+      "isWindowAllowed=%d",
+      sitePermission, globalPermission, isWindowAllowedToPlay);
+
+  if ((globalPermission == nsIAutoplay::ALLOWED &&
+       (sitePermission != nsIPermissionManager::DENY_ACTION &&
+        sitePermission != nsIAutoplay::BLOCKED_ALL)) ||
+      sitePermission == nsIPermissionManager::ALLOW_ACTION ||
+      isWindowAllowedToPlay) {
     return DocumentAutoplayPolicy::Allowed;
   }
 
-  if (DefaultAutoplayBehaviour() == nsIAutoplay::BLOCKED) {
+  if ((globalPermission == nsIAutoplay::BLOCKED &&
+       sitePermission != nsIAutoplay::BLOCKED_ALL) ||
+      sitePermission == nsIPermissionManager::DENY_ACTION) {
     return DocumentAutoplayPolicy::Allowed_muted;
   }
 
