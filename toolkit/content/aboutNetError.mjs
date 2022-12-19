@@ -308,7 +308,7 @@ function initPage() {
       document.getElementById("errorShortDesc").hidden = true;
 
       document.l10n.setAttributes(longDesc, "csp-xfo-blocked-long-desc", {
-        hostname: document.location.hostname ?? "", // FIXME - should this be HOST_NAME?
+        hostname: HOST_NAME,
       });
       longDesc = null;
 
