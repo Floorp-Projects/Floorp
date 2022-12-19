@@ -64,21 +64,22 @@ void StyleInfo::FormatColor(const nscolor& aValue, nsAString& aFormattedValue) {
   aFormattedValue.Append(')');
 }
 
-already_AddRefed<nsAtom> StyleInfo::TextDecorationStyleToAtom(uint8_t aValue) {
+already_AddRefed<nsAtom> StyleInfo::TextDecorationStyleToAtom(
+    StyleTextDecorationStyle aValue) {
   // TODO: When these are enum classes that rust also understands we should just
   // make an FFI call here.
   switch (aValue) {
-    case NS_STYLE_TEXT_DECORATION_STYLE_NONE:
+    case StyleTextDecorationStyle::None:
       return NS_Atomize("-moz-none");
-    case NS_STYLE_TEXT_DECORATION_STYLE_SOLID:
+    case StyleTextDecorationStyle::Solid:
       return NS_Atomize("solid");
-    case NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE:
+    case StyleTextDecorationStyle::Double:
       return NS_Atomize("double");
-    case NS_STYLE_TEXT_DECORATION_STYLE_DOTTED:
+    case StyleTextDecorationStyle::Dotted:
       return NS_Atomize("dotted");
-    case NS_STYLE_TEXT_DECORATION_STYLE_DASHED:
+    case StyleTextDecorationStyle::Dashed:
       return NS_Atomize("dashed");
-    case NS_STYLE_TEXT_DECORATION_STYLE_WAVY:
+    case StyleTextDecorationStyle::Wavy:
       return NS_Atomize("wavy");
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown decoration style");

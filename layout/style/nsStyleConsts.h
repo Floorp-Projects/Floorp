@@ -473,14 +473,15 @@ enum class StyleObjectFit : uint8_t {
 };
 
 // See nsStyleText
-#define NS_STYLE_TEXT_DECORATION_STYLE_NONE \
-  0  // not in CSS spec, mapped to -moz-none
-#define NS_STYLE_TEXT_DECORATION_STYLE_DOTTED 1
-#define NS_STYLE_TEXT_DECORATION_STYLE_DASHED 2
-#define NS_STYLE_TEXT_DECORATION_STYLE_SOLID 3
-#define NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE 4
-#define NS_STYLE_TEXT_DECORATION_STYLE_WAVY 5
-#define NS_STYLE_TEXT_DECORATION_STYLE_MAX NS_STYLE_TEXT_DECORATION_STYLE_WAVY
+enum class StyleTextDecorationStyle : uint8_t {
+  None,  // not in CSS spec, mapped to -moz-none
+  Dotted,
+  Dashed,
+  Solid,
+  Double,
+  Wavy,
+  Sentinel = Wavy
+};
 
 // See nsStyleDisplay
 enum class StyleTopLayer : uint8_t {

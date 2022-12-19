@@ -3619,12 +3619,13 @@ void nsCSSRendering::GetTableBorderSolidSegments(
 // End table border-collapsing section
 
 Rect nsCSSRendering::ExpandPaintingRectForDecorationLine(
-    nsIFrame* aFrame, const uint8_t aStyle, const Rect& aClippedRect,
-    const Float aICoordInFrame, const Float aCycleLength, bool aVertical) {
+    nsIFrame* aFrame, const StyleTextDecorationStyle aStyle,
+    const Rect& aClippedRect, const Float aICoordInFrame,
+    const Float aCycleLength, bool aVertical) {
   switch (aStyle) {
-    case NS_STYLE_TEXT_DECORATION_STYLE_DOTTED:
-    case NS_STYLE_TEXT_DECORATION_STYLE_DASHED:
-    case NS_STYLE_TEXT_DECORATION_STYLE_WAVY:
+    case StyleTextDecorationStyle::Dotted:
+    case StyleTextDecorationStyle::Dashed:
+    case StyleTextDecorationStyle::Wavy:
       break;
     default:
       NS_ERROR("Invalid style was specified");
@@ -3969,7 +3970,7 @@ static void SkipInk(nsIFrame* aFrame, DrawTarget& aDrawTarget,
 void nsCSSRendering::PaintDecorationLine(
     nsIFrame* aFrame, DrawTarget& aDrawTarget,
     const PaintDecorationLineParams& aParams) {
-  NS_ASSERTION(aParams.style != NS_STYLE_TEXT_DECORATION_STYLE_NONE,
+  NS_ASSERTION(aParams.style != StyleTextDecorationStyle::None,
                "aStyle is none");
 
   Rect rect = ToRect(GetTextDecorationRectInternal(aParams.pt, aParams));
@@ -4143,10 +4144,10 @@ void nsCSSRendering::PaintDecorationLineInternal(
   }
 
   switch (aParams.style) {
-    case NS_STYLE_TEXT_DECORATION_STYLE_SOLID:
-    case NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE:
+    case StyleTextDecorationStyle::Solid:
+    case StyleTextDecorationStyle::Double:
       break;
-    case NS_STYLE_TEXT_DECORATION_STYLE_DASHED: {
+    case StyleTextDecorationStyle::Dashed: {
       autoPopClips.PushClipRect(aRect);
       Float dashWidth = lineThickness * DOT_LENGTH * DASH_LENGTH;
       dash[0] = dashWidth;
@@ -4161,7 +4162,7 @@ void nsCSSRendering::PaintDecorationLineInternal(
       aRect.width += dashWidth;
       break;
     }
-    case NS_STYLE_TEXT_DECORATION_STYLE_DOTTED: {
+    case StyleTextDecorationStyle::Dotted: {
       autoPopClips.PushClipRect(aRect);
       Float dashWidth = lineThickness * DOT_LENGTH;
       if (lineThickness > 2.0) {
@@ -4181,7 +4182,7 @@ void nsCSSRendering::PaintDecorationLineInternal(
       aRect.width += dashWidth;
       break;
     }
-    case NS_STYLE_TEXT_DECORATION_STYLE_WAVY:
+    case StyleTextDecorationStyle::Wavy:
       autoPopClips.PushClipRect(aRect);
       if (lineThickness > 2.0) {
         drawOptions.mAntialiasMode = AntialiasMode::SUBPIXEL;
@@ -4205,9 +4206,9 @@ void nsCSSRendering::PaintDecorationLineInternal(
   }
 
   switch (aParams.style) {
-    case NS_STYLE_TEXT_DECORATION_STYLE_SOLID:
-    case NS_STYLE_TEXT_DECORATION_STYLE_DOTTED:
-    case NS_STYLE_TEXT_DECORATION_STYLE_DASHED: {
+    case StyleTextDecorationStyle::Solid:
+    case StyleTextDecorationStyle::Dotted:
+    case StyleTextDecorationStyle::Dashed: {
       Point p1 = aRect.TopLeft();
       Point p2 = aParams.vertical ? aRect.BottomLeft() : aRect.TopRight();
       if (textDrawer) {
@@ -4218,7 +4219,7 @@ void nsCSSRendering::PaintDecorationLineInternal(
       }
       return;
     }
-    case NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE: {
+    case StyleTextDecorationStyle::Double: {
       /**
        *  We are drawing double line as:
        *
@@ -4247,18 +4248,16 @@ void nsCSSRendering::PaintDecorationLineInternal(
 
       if (textDrawer) {
         textDrawer->AppendDecoration(p1a, p2a, lineThickness, aParams.vertical,
-                                     color,
-                                     NS_STYLE_TEXT_DECORATION_STYLE_SOLID);
+                                     color, StyleTextDecorationStyle::Solid);
         textDrawer->AppendDecoration(p1b, p2b, lineThickness, aParams.vertical,
-                                     color,
-                                     NS_STYLE_TEXT_DECORATION_STYLE_SOLID);
+                                     color, StyleTextDecorationStyle::Solid);
       } else {
         aDrawTarget.StrokeLine(p1a, p2a, colorPat, strokeOptions, drawOptions);
         aDrawTarget.StrokeLine(p1b, p2b, colorPat, strokeOptions, drawOptions);
       }
       return;
     }
-    case NS_STYLE_TEXT_DECORATION_STYLE_WAVY: {
+    case StyleTextDecorationStyle::Wavy: {
       /**
        *  We are drawing wavy line as:
        *
@@ -4388,7 +4387,7 @@ void nsCSSRendering::PaintDecorationLineInternal(
 
 Rect nsCSSRendering::DecorationLineToPath(
     const PaintDecorationLineParams& aParams) {
-  NS_ASSERTION(aParams.style != NS_STYLE_TEXT_DECORATION_STYLE_NONE,
+  NS_ASSERTION(aParams.style != StyleTextDecorationStyle::None,
                "aStyle is none");
 
   Rect path;  // To benefit from RVO, we return this from all return points
@@ -4405,7 +4404,7 @@ Rect nsCSSRendering::DecorationLineToPath(
     return path;
   }
 
-  if (aParams.style != NS_STYLE_TEXT_DECORATION_STYLE_SOLID) {
+  if (aParams.style != StyleTextDecorationStyle::Solid) {
     // For the moment, we support only solid text decorations.
     return path;
   }
@@ -4429,7 +4428,7 @@ Rect nsCSSRendering::DecorationLineToPath(
 nsRect nsCSSRendering::GetTextDecorationRect(
     nsPresContext* aPresContext, const DecorationRectParams& aParams) {
   NS_ASSERTION(aPresContext, "aPresContext is null");
-  NS_ASSERTION(aParams.style != NS_STYLE_TEXT_DECORATION_STYLE_NONE,
+  NS_ASSERTION(aParams.style != StyleTextDecorationStyle::None,
                "aStyle is none");
 
   gfxRect rect = GetTextDecorationRectInternal(Point(0, 0), aParams);
@@ -4444,11 +4443,12 @@ nsRect nsCSSRendering::GetTextDecorationRect(
 
 gfxRect nsCSSRendering::GetTextDecorationRectInternal(
     const Point& aPt, const DecorationRectParams& aParams) {
-  NS_ASSERTION(aParams.style <= NS_STYLE_TEXT_DECORATION_STYLE_WAVY,
+  NS_ASSERTION(aParams.style <= StyleTextDecorationStyle::Wavy,
                "Invalid aStyle value");
 
-  if (aParams.style == NS_STYLE_TEXT_DECORATION_STYLE_NONE)
+  if (aParams.style == StyleTextDecorationStyle::None) {
     return gfxRect(0, 0, 0, 0);
+  }
 
   bool canLiftUnderline = aParams.descentLimit >= 0.0;
 
@@ -4477,7 +4477,7 @@ gfxRect nsCSSRendering::GetTextDecorationRectInternal(
   gfxFloat suggestedMaxRectHeight =
       std::max(std::min(ascent, descentLimit), 1.0);
   r.height = lineThickness;
-  if (aParams.style == NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE) {
+  if (aParams.style == StyleTextDecorationStyle::Double) {
     /**
      *  We will draw double line as:
      *
@@ -4503,7 +4503,7 @@ gfxRect nsCSSRendering::GetTextDecorationRectInternal(
         r.height = std::max(suggestedMaxRectHeight, lineThickness * 2.0 + 1.0);
       }
     }
-  } else if (aParams.style == NS_STYLE_TEXT_DECORATION_STYLE_WAVY) {
+  } else if (aParams.style == StyleTextDecorationStyle::Wavy) {
     /**
      *  We will draw wavy line as:
      *

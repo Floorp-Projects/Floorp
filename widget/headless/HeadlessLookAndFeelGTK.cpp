@@ -114,10 +114,10 @@ nsresult HeadlessLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     case IntID::IMESelectedRawTextUnderlineStyle:
     case IntID::IMEConvertedTextUnderlineStyle:
     case IntID::IMESelectedConvertedTextUnderline:
-      aResult = NS_STYLE_TEXT_DECORATION_STYLE_SOLID;
+      aResult = static_cast<int32_t>(StyleTextDecorationStyle::Solid);
       break;
     case IntID::SpellCheckerUnderlineStyle:
-      aResult = NS_STYLE_TEXT_DECORATION_STYLE_DOTTED;
+      aResult = static_cast<int32_t>(StyleTextDecorationStyle::Dotted);
       break;
     case IntID::MenuBarDrag:
       aResult = 0;

@@ -509,7 +509,7 @@ specified with following prefs. The values must be string of "#rrggbb" format.
 
 Underline style can be specified with the following prefs. The values are
 integer,  0: none, 1: dotted, 2: dashed, 3: solid, 4: double, 5: wavy (The
-values same as ``NS_STYLE_TEXT_DECORATION_STYLE_*`` defined in
+values same as ``mozilla::StyleTextDecorationStyle`` defined in
 `nsStyleConsts.h <https://searchfox.org/mozilla-central/source/layout/style/nsStyleConsts.h>`__).
 
 * ``ui.IMERawInputUnderlineStyle``

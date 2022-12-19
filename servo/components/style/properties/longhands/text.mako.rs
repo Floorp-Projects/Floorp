@@ -43,6 +43,7 @@ ${helpers.single_keyword(
     "text-decoration-style",
     "solid double dotted dashed wavy -moz-none",
     engines="gecko servo-2020",
+    gecko_enum_prefix="StyleTextDecorationStyle",
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-text-decor/#propdef-text-decoration-style",
 )}

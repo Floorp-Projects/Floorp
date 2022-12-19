@@ -558,14 +558,14 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       break;
     case IntID::IMERawInputUnderlineStyle:
     case IntID::IMEConvertedTextUnderlineStyle:
-      aResult = NS_STYLE_TEXT_DECORATION_STYLE_DASHED;
+      aResult = static_cast<int32_t>(StyleTextDecorationStyle::Dashed);
       break;
     case IntID::IMESelectedRawTextUnderlineStyle:
     case IntID::IMESelectedConvertedTextUnderline:
-      aResult = NS_STYLE_TEXT_DECORATION_STYLE_NONE;
+      aResult = static_cast<int32_t>(StyleTextDecorationStyle::None);
       break;
     case IntID::SpellCheckerUnderlineStyle:
-      aResult = NS_STYLE_TEXT_DECORATION_STYLE_WAVY;
+      aResult = static_cast<int32_t>(StyleTextDecorationStyle::Wavy);
       break;
     case IntID::ScrollbarButtonAutoRepeatBehavior:
       aResult = 0;
