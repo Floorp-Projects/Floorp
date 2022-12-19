@@ -1408,21 +1408,16 @@ PlacesController.prototype = {
 
   showInFolder(aBookmarkGuid) {
     // Open containing folder in left pane/sidebar bookmark tree
-    if (
-      this._view._rootElt &&
-      this._view._rootElt.id.includes("bookmarksMenu")
-    ) {
-      // We're in the toolbar bookmarks menu
+    let documentUrl = document.documentURI.toLowerCase();
+    if (documentUrl.endsWith("browser.xhtml")) {
+      // We're in a menu or a panel.
       window.SidebarUI._show("viewBookmarksSidebar").then(() => {
         let theSidebar = document.getElementById("sidebar");
         theSidebar.contentDocument
           .getElementById("bookmarks-view")
           .selectItems([aBookmarkGuid]);
       });
-    } else if (
-      this._view.parentElement &&
-      this._view.parentElement.id.includes("Panel")
-    ) {
+    } else if (documentUrl.includes("sidebar")) {
       // We're in the sidebar - clear the search box first
       let searchBox = document.getElementById("search-box");
       searchBox.value = "";
