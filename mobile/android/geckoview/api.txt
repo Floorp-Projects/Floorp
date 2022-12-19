@@ -448,6 +448,7 @@ package org.mozilla.geckoview {
 
   public static class ContentBlocking.CookieBannerMode {
     ctor protected CookieBannerMode();
+    field public static final int COOKIE_BANNER_MODE_DETECT_ONLY = 3;
     field public static final int COOKIE_BANNER_MODE_DISABLED = 0;
     field public static final int COOKIE_BANNER_MODE_REJECT = 1;
     field public static final int COOKIE_BANNER_MODE_REJECT_OR_ACCEPT = 2;
