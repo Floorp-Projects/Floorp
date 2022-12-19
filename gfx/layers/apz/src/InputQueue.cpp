@@ -181,18 +181,24 @@ APZEventResult InputQueue::ReceiveTouchInput(
     INPQ_LOG("dropping event due to block %p being in fast motion\n",
              block.get());
     result.SetStatusAsConsumeNoDefault();
-  } else if (target && target->ArePointerEventsConsumable(block, aEvent)) {
-    if (block->UpdateSlopState(aEvent, true)) {
-      INPQ_LOG("dropping event due to block %p being in slop\n", block.get());
-      result.SetStatusAsConsumeNoDefault();
-    } else {
-      result.SetStatusAsConsumeDoDefaultWithTargetConfirmationFlags(
-          *block, aFlags, *target);
+  } else {  // handling depends on ArePointerEventsConsumable()
+    PointerEventsConsumableFlags consumableFlags;
+    if (target) {
+      consumableFlags = target->ArePointerEventsConsumable(block, aEvent);
     }
-  } else if (block->UpdateSlopState(aEvent, false)) {
-    INPQ_LOG("dropping event due to block %p being in mini-slop\n",
-             block.get());
-    result.SetStatusAsConsumeNoDefault();
+    if (consumableFlags.IsConsumable()) {
+      if (block->UpdateSlopState(aEvent, true)) {
+        INPQ_LOG("dropping event due to block %p being in slop\n", block.get());
+        result.SetStatusAsConsumeNoDefault();
+      } else {
+        result.SetStatusAsConsumeDoDefaultWithTargetConfirmationFlags(
+            *block, aFlags, *target);
+      }
+    } else if (block->UpdateSlopState(aEvent, false)) {
+      INPQ_LOG("dropping event due to block %p being in mini-slop\n",
+               block.get());
+      result.SetStatusAsConsumeNoDefault();
+    }
   }
   mQueuedInputs.AppendElement(MakeUnique<QueuedInput>(aEvent, *block));
   ProcessQueue();

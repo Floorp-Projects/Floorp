@@ -136,6 +136,18 @@ struct AncestorTransform {
   }
 };
 
+// Flags returned by AsyncPanZoomController::ArePointerEventsConsumable().
+// See the function for more details.
+struct PointerEventsConsumableFlags {
+  // The APZC has room to pan or zoom in response to the touch event.
+  bool mHasRoom = false;
+
+  // The panning or zooming is allowed by the touch-action property.
+  bool mAllowedByTouchAction = false;
+
+  bool IsConsumable() const { return mHasRoom && mAllowedByTouchAction; }
+};
+
 /**
  * Controller for all panning and zooming logic. Any time a user input is
  * detected and it must be processed in some way to affect what the user sees,
@@ -1450,11 +1462,13 @@ class AsyncPanZoomController {
   /**
    * Given an input event and the touch block it belongs to, check if the
    * event can lead to a panning/zooming behavior.
-   * This is primarily used to figure out when to dispatch the pointercancel
-   * event for the pointer events spec.
+   * This is used for logic related to the pointer events spec (figuring out
+   * when to dispatch the pointercancel event), as well as an input to the
+   * computation of the APZHandledResult for the event (used on Android to
+   * govern dynamic toolbar and pull-to-refresh behaviour).
    */
-  bool ArePointerEventsConsumable(TouchBlockState* aBlock,
-                                  const MultiTouchInput& aInput);
+  PointerEventsConsumableFlags ArePointerEventsConsumable(
+      TouchBlockState* aBlock, const MultiTouchInput& aInput);
 
   /**
    * Clear internal state relating to touch input handling.
