@@ -284,7 +284,7 @@ class SearchRobot {
     fun verifySearchEngineShortcuts(rule: ComposeTestRule, vararg searchEngines: String) {
         mDevice.findObject(
             UiSelector().resourceId("$packageName:id/awesome_bar"),
-        ).swipeUp(1)
+        ).swipeUp(3)
 
         for (searchEngine in searchEngines) {
             rule.waitForIdle()

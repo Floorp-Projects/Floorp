@@ -390,7 +390,6 @@ class SettingsSearchTest {
 
     // Expected for app language set to Arabic
     @Test
-    @Ignore("Failing after changing SearchDialog homescreen interaction. See: https://github.com/mozilla-mobile/fenix/issues/28182")
     fun verifySearchEnginesWithRTLLocale() {
         homeScreen {
         }.openThreeDotMenu {
