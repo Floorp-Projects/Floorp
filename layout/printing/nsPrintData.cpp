@@ -6,6 +6,7 @@
 
 #include "nsPrintData.h"
 
+#include "mozilla/gfx/PrintPromise.h"
 #include "nsIStringBundle.h"
 #include "nsIWidget.h"
 #include "nsPrintObject.h"
@@ -20,61 +21,12 @@ extern mozilla::LazyLogModule gPrintingLog;
 
 #define PR_PL(_p1) MOZ_LOG(gPrintingLog, mozilla::LogLevel::Debug, _p1);
 
-//---------------------------------------------------
-//-- nsPrintData Class Impl
-//---------------------------------------------------
-nsPrintData::nsPrintData(ePrintDataType aType)
-    : mType(aType), mOnStartSent(false), mIsAborted(false) {}
-
-nsPrintData::~nsPrintData() {
-  // Only Send an OnEndPrinting if we have started printing
-  if (mOnStartSent && mType != eIsPrintPreview) {
-    OnEndPrinting();
-  }
-
-  if (mPrintDC) {
-    PR_PL(("****************** End Document ************************\n"));
-    PR_PL(("\n"));
-
-    nsresult rv = NS_OK;
-    if (mType == eIsPrinting && mPrintDC->IsCurrentlyPrintingDocument()) {
-      if (!mIsAborted) {
-        rv = mPrintDC->EndDocument();
-      } else {
-        rv = mPrintDC->AbortDocument();
-      }
-      if (NS_FAILED(rv)) {
-        // XXX nsPrintData::ShowPrintErrorDialog(rv);
-      }
-    }
-  }
-}
-
-void nsPrintData::OnStartPrinting() {
-  if (!mOnStartSent) {
-    DoOnProgressChange(0, 0, true,
-                       nsIWebProgressListener::STATE_START |
-                           nsIWebProgressListener::STATE_IS_DOCUMENT |
-                           nsIWebProgressListener::STATE_IS_NETWORK);
-    mOnStartSent = true;
-  }
-}
-
-void nsPrintData::OnEndPrinting() {
-  DoOnProgressChange(100, 100, true,
-                     nsIWebProgressListener::STATE_STOP |
-                         nsIWebProgressListener::STATE_IS_DOCUMENT);
-  DoOnProgressChange(100, 100, true,
-                     nsIWebProgressListener::STATE_STOP |
-                         nsIWebProgressListener::STATE_IS_NETWORK);
-}
-
-void nsPrintData::DoOnProgressChange(int32_t aProgress, int32_t aMaxProgress,
-                                     bool aDoStartStop, int32_t aFlag) {
-  size_t numberOfListeners = mPrintProgressListeners.Length();
+static void InformListenersOfProgressChange(
+    const nsCOMArray<nsIWebProgressListener>& aListeners, int32_t aProgress,
+    int32_t aMaxProgress, bool aDoStartStop, int32_t aFlag) {
+  size_t numberOfListeners = aListeners.Length();
   for (size_t i = 0; i < numberOfListeners; ++i) {
-    nsCOMPtr<nsIWebProgressListener> listener =
-        mPrintProgressListeners.SafeElementAt(i);
+    nsCOMPtr<nsIWebProgressListener> listener = aListeners.SafeElementAt(i);
     if (NS_WARN_IF(!listener)) {
       continue;
     }
@@ -84,6 +36,81 @@ void nsPrintData::DoOnProgressChange(int32_t aProgress, int32_t aMaxProgress,
       listener->OnStateChange(nullptr, nullptr, aFlag, NS_OK);
     }
   }
+}
+
+static void InformListenersOfEndPrinting(
+    const nsCOMArray<nsIWebProgressListener>& aListeners) {
+  InformListenersOfProgressChange(
+      aListeners, 100, 100, true,
+      nsIWebProgressListener::STATE_STOP |
+          nsIWebProgressListener::STATE_IS_DOCUMENT);
+  InformListenersOfProgressChange(aListeners, 100, 100, true,
+                                  nsIWebProgressListener::STATE_STOP |
+                                      nsIWebProgressListener::STATE_IS_NETWORK);
+}
+
+//---------------------------------------------------
+//-- nsPrintData Class Impl
+//---------------------------------------------------
+nsPrintData::nsPrintData(ePrintDataType aType)
+    : mType(aType), mOnStartSent(false), mIsAborted(false) {}
+
+nsPrintData::~nsPrintData() {
+  // Two things need to be done:
+  // - Inform the listeners
+  // - End/Abort document
+  // Preview requires neither, so return early.
+  if (mType == eIsPrintPreview) {
+    return;
+  }
+
+  if (mPrintDC) {
+    PR_PL(("****************** End Document ************************\n"));
+    PR_PL(("\n"));
+    if (mPrintDC->IsCurrentlyPrintingDocument()) {
+      if (!mIsAborted) {
+        auto promise = mPrintDC->EndDocument();
+        if (mOnStartSent) {
+          promise->Then(mozilla::GetMainThreadSerialEventTarget(), __func__,
+                        [listeners = std::move(mPrintProgressListeners)](
+                            // We're in dtor, so capture listeners by move.
+                            const mozilla::gfx::PrintEndDocumentPromise::
+                                ResolveOrRejectValue&) {
+                          InformListenersOfEndPrinting(listeners);
+                        });
+        }
+        // Informing listeners asynchronously, or don't need to inform them, so
+        // return early.
+        return;
+      }
+      mPrintDC->AbortDocument();
+    }
+  }
+  if (mOnStartSent) {
+    // Synchronously notify the listeners.
+    OnEndPrinting();
+  }
+}
+
+void nsPrintData::OnStartPrinting() {
+  if (!mOnStartSent) {
+    InformListenersOfProgressChange(
+        mPrintProgressListeners, 0, 0, true,
+        nsIWebProgressListener::STATE_START |
+            nsIWebProgressListener::STATE_IS_DOCUMENT |
+            nsIWebProgressListener::STATE_IS_NETWORK);
+    mOnStartSent = true;
+  }
+}
+
+void nsPrintData::OnEndPrinting() {
+  InformListenersOfEndPrinting(mPrintProgressListeners);
+}
+
+void nsPrintData::DoOnProgressChange(int32_t aProgress, int32_t aMaxProgress,
+                                     bool aDoStartStop, int32_t aFlag) {
+  InformListenersOfProgressChange(mPrintProgressListeners, aProgress,
+                                  aMaxProgress, aDoStartStop, aFlag);
 }
 
 void nsPrintData::DoOnStatusChange(nsresult aStatus) {

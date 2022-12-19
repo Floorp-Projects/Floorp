@@ -6,6 +6,7 @@
 #include "nsDeviceContextSpecX.h"
 
 #import <Cocoa/Cocoa.h>
+#include "mozilla/gfx/PrintPromise.h"
 #include <CoreFoundation/CoreFoundation.h>
 #include <unistd.h>
 
@@ -36,6 +37,7 @@
 
 using namespace mozilla;
 using mozilla::gfx::IntSize;
+using mozilla::gfx::PrintEndDocumentPromise;
 using mozilla::gfx::PrintTarget;
 using mozilla::gfx::PrintTargetCG;
 #ifdef MOZ_ENABLE_SKIA_PDF
@@ -165,7 +167,11 @@ NS_IMETHODIMP nsDeviceContextSpecX::BeginDocument(const nsAString& aTitle,
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
-NS_IMETHODIMP nsDeviceContextSpecX::EndDocument() {
+RefPtr<PrintEndDocumentPromise> nsDeviceContextSpecX::EndDocument() {
+  return nsIDeviceContextSpec::EndDocumentPromiseFromResult(DoEndDocument(), __func__);
+}
+
+nsresult nsDeviceContextSpecX::DoEndDocument() {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
 #ifdef MOZ_ENABLE_SKIA_PDF

@@ -6,6 +6,7 @@
 #include "nsDeviceContextSpecWin.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/gfx/PrintPromise.h"
 #include "mozilla/gfx/PrintTargetPDF.h"
 #include "mozilla/gfx/PrintTargetWindows.h"
 #include "mozilla/Logging.h"
@@ -331,7 +332,12 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecWin::MakePrintTarget() {
   return nullptr;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecWin::EndDocument() {
+RefPtr<PrintEndDocumentPromise> nsDeviceContextSpecWin::EndDocument() {
+  return nsIDeviceContextSpec::EndDocumentPromiseFromResult(DoEndDocument(),
+                                                            __func__);
+}
+
+nsresult nsDeviceContextSpecWin::DoEndDocument() {
   if (mPrintSettings->GetOutputDestination() !=
           nsIPrintSettings::kOutputDestinationFile ||
       mOutputFormat != nsIPrintSettings::kOutputFormatPDF) {

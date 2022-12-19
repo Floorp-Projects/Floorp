@@ -8,6 +8,8 @@
 #include "gfxPoint.h"
 #include "nsIPrintSettings.h"
 
+using mozilla::gfx::PrintEndDocumentPromise;
+
 // We have some platform specific code here rather than in the appropriate
 // nsIDeviceContextSpec subclass. We structure the code this way so that
 // nsIDeviceContextSpecProxy gets the correct behavior without us having to
@@ -47,4 +49,12 @@ gfxPoint nsIDeviceContextSpec::GetPrintingTranslate() {
 #else
   return gfxPoint(0, 0);
 #endif
+}
+
+RefPtr<PrintEndDocumentPromise>
+nsIDeviceContextSpec::EndDocumentPromiseFromResult(nsresult aResult,
+                                                   const char* aSite) {
+  return NS_SUCCEEDED(aResult)
+             ? PrintEndDocumentPromise::CreateAndResolve(true, aSite)
+             : PrintEndDocumentPromise::CreateAndReject(aResult, aSite);
 }

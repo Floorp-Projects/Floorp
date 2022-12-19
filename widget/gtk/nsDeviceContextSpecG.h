@@ -14,6 +14,7 @@ struct JSContext;
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/gfx/PrintPromise.h"
 
 #include "nsCRT.h" /* should be <limits.h>? */
 
@@ -37,7 +38,7 @@ class nsDeviceContextSpecGTK : public nsIDeviceContextSpec {
   NS_IMETHOD BeginDocument(const nsAString& aTitle,
                            const nsAString& aPrintToFileName,
                            int32_t aStartPage, int32_t aEndPage) override;
-  NS_IMETHOD EndDocument() override;
+  RefPtr<mozilla::gfx::PrintEndDocumentPromise> EndDocument() override;
   NS_IMETHOD BeginPage() override { return NS_OK; }
   NS_IMETHOD EndPage() override { return NS_OK; }
 
@@ -51,6 +52,7 @@ class nsDeviceContextSpecGTK : public nsIDeviceContextSpec {
   nsCString mTitle;
 
  private:
+  nsresult DoEndDocument();
   void EnumeratePrinters();
   void StartPrintJob();
   static gboolean PrinterEnumerator(GtkPrinter* aPrinter, gpointer aData);

@@ -71,8 +71,13 @@ nsDeviceContextSpecAndroid::BeginDocument(const nsAString& aTitle,
   return NS_OK;
 }
 
+RefPtr<PrintEndDocumentPromise> nsDeviceContextSpecAndroid::EndDocument() {
+  return nsIDeviceContextSpec::EndDocumentPromiseFromResult(DoEndDocument(),
+                                                            __func__);
+}
+
 NS_IMETHODIMP
-nsDeviceContextSpecAndroid::EndDocument() {
+nsDeviceContextSpecAndroid::DoEndDocument() {
   if (mPrintSettings->GetOutputDestination() ==
           nsIPrintSettings::kOutputDestinationFile &&
       mTempFile) {

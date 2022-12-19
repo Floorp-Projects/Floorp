@@ -11,6 +11,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "mozilla/layout/printing/DrawEventRecorder.h"
+#include "mozilla/gfx/PrintPromise.h"
 
 class nsIFile;
 class nsIUUIDGenerator;
@@ -40,9 +41,7 @@ class nsDeviceContextSpecProxy final : public nsIDeviceContextSpec {
                            const nsAString& aPrintToFileName,
                            int32_t aStartPage, int32_t aEndPage) final;
 
-  NS_IMETHOD EndDocument() final;
-
-  NS_IMETHOD AbortDocument() final;
+  RefPtr<mozilla::gfx::PrintEndDocumentPromise> EndDocument() final;
 
   NS_IMETHOD BeginPage() final;
 
