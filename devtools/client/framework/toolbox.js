@@ -1381,10 +1381,16 @@ Toolbox.prototype = {
       return this._sourceMapLoader;
     }
     this._sourceMapLoader = require("devtools/client/shared/source-map-loader/index");
+
+    // This look counter intuitive, but as the source-map-loader module is shared across toolbox
+    // previous toolbox may not have time to clear their previous usage of it.
+    // Here we force spawning a new worker on next usage of any of its method.
+    // We should probably make SourceMapLoader be instantiable per toolbox to avoid this.
+    this._sourceMapLoader.stopSourceMapWorker();
+
     this._sourceMapLoader.on("source-map-error", message =>
       this.target.logWarningInPage(message, "source map")
     );
-    this._sourceMapLoader.startSourceMapWorker();
 
     return this._sourceMapLoader;
   },
@@ -1402,7 +1408,6 @@ Toolbox.prototype = {
     } = require("resource://devtools/client/debugger/src/workers/parser/index.js");
 
     this._parserService = new ParserDispatcher();
-    this._parserService.start();
     return this._parserService;
   },
 
