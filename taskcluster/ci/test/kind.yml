@@ -8,6 +8,7 @@ kind-dependencies:
     - build
     - build-signing
     - repackage-signing-shippable-l10n-msix
+    - repackage-signing-msix
     - repackage
     - fetch
     - toolchain
@@ -58,6 +59,10 @@ job-defaults:
             by-test-platform:
                 macosx1100.*: true
                 windows10-64-2004-shippable-qr/opt:
+                    by-variant:
+                        msix: true
+                        default: false
+                windows10-64-2004-qr/opt:
                     by-variant:
                         msix: true
                         default: false
