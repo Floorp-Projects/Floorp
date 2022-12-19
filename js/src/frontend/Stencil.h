@@ -708,17 +708,23 @@ class StencilModuleMetadata
 #endif
 
  private:
-  bool createImportEntries(JSContext* cx, CompilationAtomCache& atomCache,
-                           MutableHandle<ImportEntryVector> output) const;
-  bool createExportEntries(JSContext* cx, CompilationAtomCache& atomCache,
-                           const EntryVector& input,
-                           MutableHandle<ExportEntryVector> output) const;
+  bool createModuleRequestObjects(
+      JSContext* cx, CompilationAtomCache& atomCache,
+      MutableHandle<ModuleRequestVector> output) const;
   bool createRequestedModules(
       JSContext* cx, CompilationAtomCache& atomCache,
+      Handle<ModuleRequestVector> moduleRequests,
       MutableHandle<RequestedModuleVector> output) const;
+  bool createImportEntries(JSContext* cx, CompilationAtomCache& atomCache,
+                           Handle<ModuleRequestVector> moduleRequests,
+                           MutableHandle<ImportEntryVector> output) const;
+  bool createExportEntries(JSContext* cx, CompilationAtomCache& atomCache,
+                           Handle<ModuleRequestVector> moduleRequests,
+                           const EntryVector& input,
+                           MutableHandle<ExportEntryVector> output) const;
   ModuleRequestObject* createModuleRequestObject(
       JSContext* cx, CompilationAtomCache& atomCache,
-      MaybeModuleRequestIndex requestIndex) const;
+      const StencilModuleRequest& request) const;
 };
 
 // As an alternative to a ScopeIndex (which references a ScopeStencil), we may
