@@ -1074,7 +1074,7 @@ int nr_ice_ctx_hide_candidate(nr_ice_ctx *ctx, nr_ice_candidate *cand)
       return 1;
     }
 
-    if (ctx->flags & NR_ICE_CTX_FLAGS_HIDE_HOST_CANDIDATES) {
+    if (ctx->flags & NR_ICE_CTX_FLAGS_DISABLE_HOST_CANDIDATES) {
       if (cand->type == HOST)
         return 1;
     }

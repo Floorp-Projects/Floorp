@@ -751,7 +751,8 @@ int nr_ice_component_maybe_prune_candidate(nr_ice_ctx *ctx, nr_ice_component *co
          !nr_transport_addr_cmp(&c1->addr,&c2->addr,NR_TRANSPORT_ADDR_CMP_MODE_ALL)){
 
         if((c1->type == c2->type) ||
-           (!(ctx->flags & NR_ICE_CTX_FLAGS_HIDE_HOST_CANDIDATES) &&
+           (!(ctx->flags & NR_ICE_CTX_FLAGS_DISABLE_HOST_CANDIDATES) &&
+            !(ctx->flags & NR_ICE_CTX_FLAGS_OBFUSCATE_HOST_ADDRESSES) &&
             ((c1->type==HOST && c2->type == SERVER_REFLEXIVE) ||
              (c2->type==HOST && c1->type == SERVER_REFLEXIVE)))){
 

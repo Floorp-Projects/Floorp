@@ -414,7 +414,6 @@ class NrIceCtx {
   Config config_;
   RefPtr<TestNat> nat_;
   std::shared_ptr<NrSocketProxyConfig> proxy_config_;
-  bool obfuscate_host_addresses_;
   std::map<std::string, std::string> obfuscated_host_addresses_;
 };
 
