@@ -423,7 +423,8 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
  protected:
   void SetParent(Derived* aParent);
   Maybe<nsRect> RetrieveCachedBounds() const;
-  bool ApplyTransform(nsRect& aBounds) const;
+  bool ApplyTransform(nsRect& aCumulativeBounds,
+                      const nsRect& aParentRelativeBounds) const;
   void ApplyScrollOffset(nsRect& aBounds) const;
   void ApplyCrossDocOffset(nsRect& aBounds) const;
   LayoutDeviceIntRect BoundsWithOffset(Maybe<nsRect> aOffset) const;
