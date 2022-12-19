@@ -11,7 +11,7 @@ browser.jar:
     content/browser/tab-pickup-list.mjs
     content/browser/recently-closed-tabs.mjs
     content/browser/colorways-card.mjs
-    content/browser/FeatureCallout.sys.mjs
+    content/browser/featureCallout.mjs
     content/browser/callout-tab-pickup.svg (content/callout-tab-pickup.svg)
     content/browser/callout-colorways.svg (content/callout-colorways.svg)
     content/browser/callout-tab-pickup-dark.svg (content/callout-tab-pickup-dark.svg)
