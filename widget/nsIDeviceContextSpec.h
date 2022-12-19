@@ -9,6 +9,7 @@
 #include "gfxPoint.h"
 #include "nsISupports.h"
 #include "mozilla/StaticPrefs_print.h"
+#include "mozilla/gfx/PrintPromise.h"
 
 class nsIWidget;
 class nsIPrintSettings;
@@ -76,12 +77,14 @@ class nsIDeviceContextSpec : public nsISupports {
                            const nsAString& aPrintToFileName,
                            int32_t aStartPage, int32_t aEndPage) = 0;
 
-  NS_IMETHOD EndDocument() = 0;
-  NS_IMETHOD AbortDocument() { return EndDocument(); }
+  virtual RefPtr<mozilla::gfx::PrintEndDocumentPromise> EndDocument() = 0;
   NS_IMETHOD BeginPage() = 0;
   NS_IMETHOD EndPage() = 0;
 
  protected:
+  static RefPtr<mozilla::gfx::PrintEndDocumentPromise>
+  EndDocumentPromiseFromResult(nsresult aResult, const char* aSite);
+
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
 
 #ifdef MOZ_ENABLE_SKIA_PDF

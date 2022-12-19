@@ -270,7 +270,7 @@ nsresult nsDeviceContext::BeginDocument(const nsAString& aTitle,
   return rv;
 }
 
-nsresult nsDeviceContext::EndDocument() {
+RefPtr<PrintEndDocumentPromise> nsDeviceContext::EndDocument() {
   MOZ_DIAGNOSTIC_ASSERT(mIsCurrentlyPrintingDoc,
                         "Mismatched BeginDocument/EndDocument calls");
   MOZ_DIAGNOSTIC_ASSERT(mPrintTarget);
@@ -278,16 +278,20 @@ nsresult nsDeviceContext::EndDocument() {
   mIsCurrentlyPrintingDoc = false;
 
   if (mPrintTarget) {
-    MOZ_TRY(mPrintTarget->EndPrinting());
+    auto result = mPrintTarget->EndPrinting();
+    if (NS_FAILED(result)) {
+      return PrintEndDocumentPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
+                                                      __func__);
+    }
     mPrintTarget->Finish();
     mPrintTarget = nullptr;
   }
 
   if (mDeviceContextSpec) {
-    MOZ_TRY(mDeviceContextSpec->EndDocument());
+    return mDeviceContextSpec->EndDocument();
   }
 
-  return NS_OK;
+  return PrintEndDocumentPromise::CreateAndResolve(true, __func__);
 }
 
 nsresult nsDeviceContext::AbortDocument() {
@@ -298,7 +302,7 @@ nsresult nsDeviceContext::AbortDocument() {
   mIsCurrentlyPrintingDoc = false;
 
   if (mDeviceContextSpec) {
-    mDeviceContextSpec->EndDocument();
+    Unused << mDeviceContextSpec->EndDocument();
   }
 
   mPrintTarget = nullptr;

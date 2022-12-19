@@ -1988,11 +1988,10 @@ nsresult nsPrintJob::FinishPrintPreview() {
 
   // mPrt may be cleared during a call of nsPrintData::OnEndPrinting()
   // because that method invokes some arbitrary listeners.
+  // TODO(dshin): Does any listener attach to print preview? Doesn't seem like
+  // we call matching `OnStartPrinting()` for previews.
   RefPtr<nsPrintData> printData = mPrt;
   if (NS_FAILED(rv)) {
-    /* cleanup done, let's fire-up an error dialog to notify the user
-     * what went wrong...
-     */
     printData->OnEndPrinting();
 
     return rv;

@@ -5,6 +5,7 @@
 
 #include "nsDeviceContextSpecG.h"
 
+#include "mozilla/gfx/PrintPromise.h"
 #include "mozilla/gfx/PrintTargetPDF.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Services.h"
@@ -46,6 +47,7 @@
 using namespace mozilla;
 
 using mozilla::gfx::IntSize;
+using mozilla::gfx::PrintEndDocumentPromise;
 using mozilla::gfx::PrintTarget;
 using mozilla::gfx::PrintTargetPDF;
 
@@ -335,7 +337,12 @@ nsDeviceContextSpecGTK::BeginDocument(const nsAString& aTitle,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecGTK::EndDocument() {
+RefPtr<PrintEndDocumentPromise> nsDeviceContextSpecGTK::EndDocument() {
+  return nsIDeviceContextSpec::EndDocumentPromiseFromResult(DoEndDocument(),
+                                                            __func__);
+}
+
+nsresult nsDeviceContextSpecGTK::DoEndDocument() {
   switch (mPrintSettings->GetOutputDestination()) {
     case nsIPrintSettings::kOutputDestinationPrinter: {
       // At this point, we might have a GtkPrinter set up in nsPrintSettingsGTK,

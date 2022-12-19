@@ -207,11 +207,48 @@ static void NotifyStateChange(
   }
 }
 
+static void Cleanup(const nsCOMArray<nsIWebProgressListener>& aListeners,
+                    RefPtr<nsDeviceContext>& aAbortContext,
+                    const bool aPrintingInterrupted, const nsresult aResult) {
+  auto result = aResult;
+  if (MOZ_UNLIKELY(aPrintingInterrupted && NS_SUCCEEDED(result))) {
+    result = NS_ERROR_UNEXPECTED;
+  }
+  if (NS_FAILED(result)) {
+    NotifyStatusChange(aListeners, result);
+  }
+  if (aPrintingInterrupted && aAbortContext) {
+    // Abort any started print.
+    Unused << aAbortContext->AbortDocument();
+  }
+  // However the print went, let the listeners know that we're done.
+  NotifyStateChange(aListeners,
+                    nsIWebProgressListener::STATE_STOP |
+                        nsIWebProgressListener::STATE_IS_DOCUMENT,
+                    result);
+}
+
 mozilla::ipc::IPCResult RemotePrintJobParent::RecvFinalizePrint() {
   // EndDocument is sometimes called in the child even when BeginDocument has
   // not been called. See bug 1223332.
   if (mPrintDeviceContext) {
-    mStatus = mPrintDeviceContext->EndDocument();
+    mPrintDeviceContext->EndDocument()->Then(
+        GetMainThreadSerialEventTarget(), __func__,
+        [listeners = std::move(mPrintProgressListeners)](
+            const mozilla::gfx::PrintEndDocumentPromise::ResolveOrRejectValue&
+                aResult) {
+          // Printing isn't interrupted, so we don't need the device context
+          // here.
+          RefPtr<nsDeviceContext> empty;
+          if (aResult.IsResolve()) {
+            Cleanup(listeners, empty, /* aPrintingInterrupted = */ false,
+                    NS_OK);
+          } else {
+            Cleanup(listeners, empty, /* aPrintingInterrupted = */ false,
+                    aResult.RejectValue());
+          }
+        });
+    mStatus = NS_OK;
   }
 
   mIsDoingPrinting = false;
@@ -270,19 +307,8 @@ void RemotePrintJobParent::ActorDestroy(ActorDestroyReason aWhy) {
   if (MOZ_UNLIKELY(mIsDoingPrinting && NS_SUCCEEDED(mStatus))) {
     mStatus = NS_ERROR_UNEXPECTED;
   }
-  if (NS_FAILED(mStatus)) {
-    NotifyStatusChange(mPrintProgressListeners, mStatus);
-  }
-  if (mIsDoingPrinting && mPrintDeviceContext) {
-    // Abort any started print.
-    Unused << mPrintDeviceContext->AbortDocument();
-  }
-  // However the print went, let the listeners know that we're done.
-  NotifyStateChange(mPrintProgressListeners,
-                    nsIWebProgressListener::STATE_STOP |
-                        nsIWebProgressListener::STATE_IS_DOCUMENT,
-                    mStatus);
-
+  Cleanup(mPrintProgressListeners, mPrintDeviceContext, mIsDoingPrinting,
+          mStatus);
   // At any rate, this actor is done and cleaned up.
   mIsDoingPrinting = false;
 }
