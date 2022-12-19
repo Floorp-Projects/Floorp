@@ -214,7 +214,10 @@ windows10-64-2004-qr/debug:
 
 windows10-64-2004-qr/opt:
     build-platform: win64/opt
-    build-signing-label: build-signing-win64/opt
+    build-signing-label:
+        by-variant:
+            msix: repackage-signing-msix-win64/opt
+            default: build-signing-win64/opt
     test-sets:
         - awsy
         - desktop-screenshot-capture
