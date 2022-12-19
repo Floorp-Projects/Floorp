@@ -5,36 +5,34 @@
 /* eslint-env mozilla/browser-window */
 
 /**
- * The base view implements everything that's common to the toolbar and
- * menu views.
+ * The base view implements everything that's common to all the views.
+ * It should not be instanced directly, use a derived class instead.
  */
 class PlacesViewBase {
   /**
-   * @param {string} aPlace
+   * @param {string} placesUrl
    *   The query string associated with the view.
-   * @param {object} aOptions
-   *   Associated options for the view.
+   * @param {DOMElement} rootElt
+   *   The root element for the view.
+   * @param {DOMElement} viewElt
+   *   The view element.
    */
-  constructor(aPlace, aOptions = {}) {
-    if ("rootElt" in aOptions) {
-      this._rootElt = aOptions.rootElt;
+  constructor(placesUrl, rootElt, viewElt) {
+    this._rootElt = rootElt;
+    this._viewElt = viewElt;
+    let appendClass = this._rootElt.getAttribute("appendclasstochildren");
+    if (appendClass) {
+      this._appendClassToChildren = appendClass;
     }
-    if ("viewElt" in aOptions) {
-      this._viewElt = aOptions.viewElt;
-    }
-    this.options = aOptions;
     // Do initialization in subclass now that `this` exists.
     this._init?.();
     this._controller = new PlacesController(this);
-    this.place = aPlace;
+    this.place = placesUrl;
     this._viewElt.controllers.appendController(this._controller);
   }
 
   // The xul element that holds the entire view.
   _viewElt = null;
-  get viewElt() {
-    return this._viewElt;
-  }
 
   get associatedElement() {
     return this._viewElt;
@@ -104,21 +102,6 @@ class PlacesViewBase {
       this._resultNode = null;
       delete this._domNodes;
     }
-  }
-
-  _options = null;
-  get options() {
-    return this._options;
-  }
-  set options(val) {
-    if (!val) {
-      val = {};
-    }
-
-    if (!("extraClasses" in val)) {
-      val.extraClasses = {};
-    }
-    this._options = val;
   }
 
   /**
@@ -373,8 +356,8 @@ class PlacesViewBase {
       aPopup._emptyMenuitem.setAttribute("label", label);
       aPopup._emptyMenuitem.setAttribute("disabled", true);
       aPopup._emptyMenuitem.className = "bookmark-item";
-      if (this.options?.extraClasses?.entry) {
-        aPopup._emptyMenuitem.classList.add(this.options.extraClasses.entry);
+      if (this._appendClassToChildren) {
+        aPopup._emptyMenuitem.classList.add(this._appendClassToChildren);
       }
     }
 
@@ -437,8 +420,8 @@ class PlacesViewBase {
 
         element.appendChild(popup);
         element.className = "menu-iconic bookmark-item";
-        if (this.options?.extraClasses?.entry) {
-          element.classList.add(this.options.extraClasses.entry);
+        if (this._appendClassToChildren) {
+          element.classList.add(this._appendClassToChildren);
         }
 
         this._domNodes.set(aPlacesNode, popup);
@@ -466,8 +449,8 @@ class PlacesViewBase {
     let element = this._createDOMNodeForPlacesNode(aNewChild);
 
     if (element.localName == "menuitem" || element.localName == "menu") {
-      if (this.options?.extraClasses?.entry) {
-        element.classList.add(this.options.extraClasses.entry);
+      if (this._appendClassToChildren) {
+        element.classList.add(this._appendClassToChildren);
       }
     }
 
@@ -696,7 +679,7 @@ class PlacesViewBase {
     }
 
     return (this._isRTL =
-      document.defaultView.getComputedStyle(this.viewElt).direction == "rtl");
+      document.defaultView.getComputedStyle(this._viewElt).direction == "rtl");
   }
 
   get ownerWindow() {
@@ -735,12 +718,6 @@ class PlacesViewBase {
     }
 
     if (!hasMultipleURIs) {
-      aPopup.setAttribute("nofooterpopup", "true");
-    } else {
-      aPopup.removeAttribute("nofooterpopup");
-    }
-
-    if (!hasMultipleURIs) {
       // We don't have to show any option.
       if (aPopup._endOptOpenAllInTabs) {
         aPopup.removeChild(aPopup._endOptOpenAllInTabs);
@@ -759,10 +736,8 @@ class PlacesViewBase {
       aPopup._endOptOpenAllInTabs = document.createXULElement("menuitem");
       aPopup._endOptOpenAllInTabs.className = "openintabs-menuitem";
 
-      if (this.options?.extraClasses?.entry) {
-        aPopup._endOptOpenAllInTabs.classList.add(
-          this.options.extraClasses.entry
-        );
+      if (this._appendClassToChildren) {
+        aPopup._endOptOpenAllInTabs.classList.add(this._appendClassToChildren);
       }
 
       aPopup._endOptOpenAllInTabs.setAttribute(
@@ -783,42 +758,35 @@ class PlacesViewBase {
       return;
     }
 
-    // _startMarker is an hidden menuseparator that lives before places nodes.
+    // Places nodes are appended between _startMarker and _endMarker, that
+    // are hidden menuseparators. By default they take the whole panel...
     aPopup._startMarker = document.createXULElement("menuseparator");
     aPopup._startMarker.hidden = true;
     aPopup.insertBefore(aPopup._startMarker, aPopup.firstElementChild);
-
-    // _endMarker is a DOM node that lives after places nodes, specified with
-    // the 'insertionPoint' option or will be a hidden menuseparator.
-    let node = this.options.insertionPoint
-      ? aPopup.querySelector(this.options.insertionPoint)
-      : null;
-    if (node) {
-      aPopup._endMarker = node;
-    } else {
-      aPopup._endMarker = document.createXULElement("menuseparator");
-      aPopup._endMarker.hidden = true;
-    }
+    aPopup._endMarker = document.createXULElement("menuseparator");
+    aPopup._endMarker.hidden = true;
     aPopup.appendChild(aPopup._endMarker);
 
-    // Move the markers to the right position.
+    // ...but there can be static content before or after the places nodes, thus
+    // we move the markers to the right position, by checking for static content
+    // at the beginning of the view, and for an element with "afterplacescontent"
+    // attribute.
+    // TODO: In the future we should just use a container element.
     let firstNonStaticNodeFound = false;
-    for (let i = 0; i < aPopup.children.length; i++) {
-      let child = aPopup.children[i];
-      // Menus that have static content at the end, but are initially empty,
-      // use a special "builder" attribute to figure out where to start
-      // inserting places nodes.
-      if (child.getAttribute("builder") == "end") {
+    for (let child of aPopup.children) {
+      if (child.hasAttribute("afterplacescontent")) {
         aPopup.insertBefore(aPopup._endMarker, child);
         break;
       }
 
-      if (child._placesNode && !firstNonStaticNodeFound) {
+      // Check for the first Places node that is not a view.
+      if (child._placesNode && !child._placesView && !firstNonStaticNodeFound) {
         firstNonStaticNodeFound = true;
         aPopup.insertBefore(aPopup._startMarker, child);
       }
     }
     if (!firstNonStaticNodeFound) {
+      // Just put the start marker before the end marker.
       aPopup.insertBefore(aPopup._startMarker, aPopup._endMarker);
     }
   }
@@ -862,15 +830,12 @@ class PlacesViewBase {
 }
 
 /**
- *
+ * Toolbar View implementation.
  */
 class PlacesToolbar extends PlacesViewBase {
-  constructor(aPlace) {
+  constructor(placesUrl, rootElt, viewElt) {
     let startTime = Date.now();
-    super(aPlace, {
-      rootElt: document.getElementById("PlacesToolbarItems"),
-      viewElt: document.getElementById("PlacesToolbar"),
-    });
+    super(placesUrl, rootElt, viewElt);
     this._addEventListeners(this._dragRoot, this._cbEvents, false);
     this._addEventListeners(
       this._rootElt,
@@ -1970,17 +1935,17 @@ class PlacesToolbar extends PlacesViewBase {
 class PlacesMenu extends PlacesViewBase {
   /**
    *
-   * @param {Event} aPopupShowingEvent
+   * @param {Event} popupShowingEvent
    *   The event associated with opening the menu.
-   * @param {string} aPlace
+   * @param {string} placesUrl
    *   The query associated with the view on the menu.
-   * @param {object} aOptions
-   *   Options associated with the view.
    */
-  constructor(aPopupShowingEvent, aPlace, aOptions = {}) {
-    aOptions.rootElt = aPopupShowingEvent.target; // <menupopup>
-    aOptions.viewElt = aOptions.rootElt.parentNode; // <menu>
-    super(aPlace, aOptions);
+  constructor(popupShowingEvent, placesUrl) {
+    super(
+      placesUrl,
+      popupShowingEvent.target, // <menupopup>
+      popupShowingEvent.target.parentNode // <menu>
+    );
 
     this._addEventListeners(
       this._rootElt,
@@ -1999,7 +1964,7 @@ class PlacesMenu extends PlacesViewBase {
       }
     }
 
-    this._onPopupShowing(aPopupShowingEvent);
+    this._onPopupShowing(popupShowingEvent);
   }
 
   _init() {
@@ -2073,10 +2038,8 @@ class PlacesMenu extends PlacesViewBase {
 // This is used from CustomizableWidgets.jsm using a `window` reference,
 // so we have to expose this on the global.
 this.PlacesPanelview = class PlacesPanelview extends PlacesViewBase {
-  constructor(container, panelview, place, options = {}) {
-    options.rootElt = container;
-    options.viewElt = panelview;
-    super(place, options);
+  constructor(placeUrl, rootElt, viewElt) {
+    super(placeUrl, rootElt, viewElt);
     this._viewElt._placesView = this;
     // We're simulating a popup show, because a panelview may only be shown when
     // its containing popup is already shown.
@@ -2227,8 +2190,8 @@ this.PlacesPanelview = class PlacesPanelview extends PlacesViewBase {
       panelview._emptyMenuitem.setAttribute("label", label);
       panelview._emptyMenuitem.setAttribute("disabled", true);
       panelview._emptyMenuitem.className = "subviewbutton";
-      if (this.options?.extraClasses?.entry) {
-        panelview._emptyMenuitem.classList.add(this.options.extraClasses.entry);
+      if (this._appendClassToChildren) {
+        panelview._emptyMenuitem.classList.add(this._appendClassToChildren);
       }
     }
 

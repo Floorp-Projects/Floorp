@@ -543,15 +543,15 @@
                         class="toolbarbutton-1"
                         delegatesanchor="true"
                         collapsed="true"
-                        data-l10n-id="bookmarks-toolbar-chevron"
-                        onpopupshowing="document.getElementById('PlacesToolbar')
-                                                ._placesView._onChevronPopupShowing(event);">
+                        data-l10n-id="bookmarks-toolbar-chevron">
           <menupopup id="PlacesChevronPopup"
                       is="places-popup"
                       placespopup="true"
                       type="arrow"
                       tooltip="bhTooltip" popupsinherittooltip="true"
-                      context="placesContext"/>
+                      context="placesContext"
+                      onpopupshowing="document.getElementById('PlacesToolbar')
+                                              ._placesView._onChevronPopupShowing(event);"/>
         </toolbarbutton>
       </hbox>
     </toolbaritem>
@@ -598,6 +598,7 @@
                  is="places-popup-arrow"
                  class="cui-widget-panel cui-widget-panelview PanelUI-subView"
                  placespopup="true"
+                 appendclasstochildren="subviewbutton"
                  context="placesContext"
                  openInTabs="children"
                  side="top"
@@ -605,7 +606,8 @@
                  oncommand="BookmarksEventHandler.onCommand(event);"
                  onclick="BookmarksEventHandler.onClick(event, this.parentNode._placesView);"
                  onpopupshowing="BookmarkingUI.onPopupShowing(event);
-                                 BookmarkingUI.attachPlacesView(event, this);"
+                                 if (!this.parentNode._placesView)
+                                   new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.menuGuid}`);"
                  tooltip="bhTooltip" popupsinherittooltip="true">
         <menuitem id="BMB_viewBookmarksSidebar"
                   class="subviewbutton"
@@ -627,11 +629,10 @@
           <menupopup id="BMB_bookmarksToolbarPopup"
                      is="places-popup"
                      placespopup="true"
-                     nofooterpopup="true"
+                     appendclasstochildren="subviewbutton"
                      context="placesContext"
                      onpopupshowing="if (!this.parentNode._placesView)
-                                       new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.toolbarGuid}`,
-                                                      {extraClasses: {entry: 'subviewbutton'}});">
+                                       new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.toolbarGuid}`);">
             <menuitem id="BMB_viewBookmarksToolbar"
                       class="subviewbutton"
                       data-l10n-id="bookmarks-tools-toolbar-visibility-menuitem"
@@ -648,11 +649,10 @@
           <menupopup id="BMB_unsortedBookmarksPopup"
                      is="places-popup"
                      placespopup="true"
-                     nofooterpopup="true"
+                     appendclasstochildren="subviewbutton"
                      context="placesContext"
                      onpopupshowing="if (!this.parentNode._placesView)
-                                       new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.unfiledGuid}`,
-                                                      {extraClasses: {entry: 'subviewbutton'}});"/>
+                                       new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.unfiledGuid}`);"/>
         </menu>
         <menu id="BMB_mobileBookmarks"
               class="menu-iconic bookmark-item subviewbutton"
@@ -662,11 +662,10 @@
           <menupopup id="BMB_mobileBookmarksPopup"
                      is="places-popup"
                      placespopup="true"
-                     nofooterpopup="true"
+                     appendclasstochildren="subviewbutton"
                      context="placesContext"
                      onpopupshowing="if (!this.parentNode._placesView)
-                                       new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.mobileGuid}`,
-                                                      {extraClasses: {entry: 'subviewbutton'}});"/>
+                                       new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.mobileGuid}`);"/>
         </menu>
 
         <menuseparator/>
@@ -674,6 +673,7 @@
         <menuitem id="BMB_bookmarksShowAll"
                   class="subviewbutton"
                   data-l10n-id="bookmarks-manage-bookmarks"
+                  afterplacescontent="true"
                   command="Browser:ShowAllBookmarks"
                   key="manBookmarkKb"/>
       </menupopup>
