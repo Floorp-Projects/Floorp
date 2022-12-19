@@ -3433,7 +3433,6 @@ class nsContentUtils {
   static nsTArray<RefPtr<nsAtom>>* sUserDefinedEvents;
 
   static nsIStringBundleService* sStringBundleService;
-  static nsIStringBundle* sStringBundles[PropertiesFile_COUNT];
   class nsContentUtilsReporter;
 
   static nsIContentPolicy* sContentPolicyService;
