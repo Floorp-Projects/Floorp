@@ -10,6 +10,7 @@
 #include "nsISupports.h"
 #include "mozilla/StaticPrefs_print.h"
 #include "mozilla/gfx/PrintPromise.h"
+#include "mozilla/MoveOnlyFunction.h"
 
 class nsIWidget;
 class nsIPrintSettings;
@@ -82,6 +83,10 @@ class nsIDeviceContextSpec : public nsISupports {
   NS_IMETHOD EndPage() = 0;
 
  protected:
+  using AsyncEndDocumentFunction = mozilla::MoveOnlyFunction<nsresult()>;
+  static RefPtr<mozilla::gfx::PrintEndDocumentPromise> EndDocumentAsync(
+      const char* aCallSite, AsyncEndDocumentFunction aFunction);
+
   static RefPtr<mozilla::gfx::PrintEndDocumentPromise>
   EndDocumentPromiseFromResult(nsresult aResult, const char* aSite);
 
