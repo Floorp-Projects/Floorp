@@ -32002,6 +32002,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.containsPosition = containsPosition;
 exports.containsLocation = containsLocation;
+exports.nodeContainsPosition = nodeContainsPosition;
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -32032,6 +32033,10 @@ function containsPosition(a, b) {
 
 function containsLocation(a, b) {
   return containsPosition(a, b.start) && containsPosition(a, b.end);
+}
+
+function nodeContainsPosition(node, position) {
+  return containsPosition(node.loc, position);
 }
 
 /***/ }),
@@ -32070,6 +32075,8 @@ var _sources = __webpack_require__(687);
 
 var _findOutOfScopeLocations = _interopRequireDefault(__webpack_require__(870));
 
+var _steps = __webpack_require__(893);
+
 var _validate = __webpack_require__(895);
 
 var _mapExpression = _interopRequireDefault(__webpack_require__(896));
@@ -32097,6 +32104,7 @@ self.onmessage = (0, _workerUtils.workerHandler)({
   getSymbols: _getSymbols.getSymbols,
   getScopes: _getScopes.default,
   clearState,
+  getNextStep: _steps.getNextStep,
   hasSyntaxError: _validate.hasSyntaxError,
   mapExpression: _mapExpression.default,
   setSource: _sources.setSource
@@ -47313,8 +47321,120 @@ exports.default = _default;
 /* 890 */,
 /* 891 */,
 /* 892 */,
-/* 893 */,
-/* 894 */,
+/* 893 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getNextStep = getNextStep;
+
+var t = _interopRequireWildcard(__webpack_require__(2));
+
+var _closest = __webpack_require__(894);
+
+var _helpers = __webpack_require__(602);
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+function getNextStep(sourceId, pausedPosition) {
+  const currentExpression = getSteppableExpression(sourceId, pausedPosition);
+
+  if (!currentExpression) {
+    return null;
+  }
+
+  const currentStatement = currentExpression.find(p => {
+    return p.inList && t.isStatement(p.node);
+  });
+
+  if (!currentStatement) {
+    throw new Error("Assertion failure - this should always find at least Program");
+  }
+
+  return _getNextStep(currentStatement, sourceId, pausedPosition);
+}
+
+function getSteppableExpression(sourceId, pausedPosition) {
+  const closestPath = (0, _closest.getClosestPath)(sourceId, pausedPosition);
+
+  if (!closestPath) {
+    return null;
+  }
+
+  if ((0, _helpers.isAwaitExpression)(closestPath) || (0, _helpers.isYieldExpression)(closestPath)) {
+    return closestPath;
+  }
+
+  return closestPath.find(p => t.isAwaitExpression(p.node) || t.isYieldExpression(p.node));
+}
+
+function _getNextStep(statement, sourceId, position) {
+  const nextStatement = statement.getSibling(1);
+
+  if (nextStatement) {
+    return { ...nextStatement.node.loc.start,
+      sourceId
+    };
+  }
+
+  return null;
+}
+
+/***/ }),
+/* 894 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getClosestPath = getClosestPath;
+
+var _simplePath = _interopRequireDefault(__webpack_require__(684));
+
+var _ast = __webpack_require__(572);
+
+var _contains = __webpack_require__(700);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+function getClosestPath(sourceId, location) {
+  let closestPath = null;
+  (0, _ast.traverseAst)(sourceId, {
+    enter(node, ancestors) {
+      if ((0, _contains.nodeContainsPosition)(node, location)) {
+        const path = (0, _simplePath.default)(ancestors);
+
+        if (path && (!closestPath || path.depth > closestPath.depth)) {
+          closestPath = path;
+        }
+      }
+    }
+
+  });
+
+  if (!closestPath) {
+    throw new Error("Assertion failure - This should always fine a path");
+  }
+
+  return closestPath;
+}
+
+/***/ }),
 /* 895 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -76242,118 +76362,40 @@ exports.tokTypes = types;
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 
-function _classPrivateFieldInitSpec(obj, privateMap, value) { _checkPrivateRedeclaration(obj, privateMap); privateMap.set(obj, value); }
+function WorkerDispatcher() {
+  this.msgId = 1;
+  this.worker = null; // Map of message ids -> promise resolution functions, for dispatching worker responses
 
-function _checkPrivateRedeclaration(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
+  this.pendingCalls = new Map();
+  this._onMessage = this._onMessage.bind(this);
+}
 
-function _classPrivateFieldGet(receiver, privateMap) { var descriptor = _classExtractFieldDescriptor(receiver, privateMap, "get"); return _classApplyDescriptorGet(receiver, descriptor); }
-
-function _classApplyDescriptorGet(receiver, descriptor) { if (descriptor.get) { return descriptor.get.call(receiver); } return descriptor.value; }
-
-function _classPrivateFieldSet(receiver, privateMap, value) { var descriptor = _classExtractFieldDescriptor(receiver, privateMap, "set"); _classApplyDescriptorSet(receiver, descriptor, value); return value; }
-
-function _classExtractFieldDescriptor(receiver, privateMap, action) { if (!privateMap.has(receiver)) { throw new TypeError("attempted to " + action + " private field on non-instance"); } return privateMap.get(receiver); }
-
-function _classApplyDescriptorSet(receiver, descriptor, value) { if (descriptor.set) { descriptor.set.call(receiver, value); } else { if (!descriptor.writable) { throw new TypeError("attempted to set read only private field"); } descriptor.value = value; } }
-
-var _msgId = /*#__PURE__*/new WeakMap();
-
-var _worker = /*#__PURE__*/new WeakMap();
-
-var _pendingCalls = /*#__PURE__*/new WeakMap();
-
-var _url = /*#__PURE__*/new WeakMap();
-
-var _onMessage = /*#__PURE__*/new WeakMap();
-
-class WorkerDispatcher {
-  // Map of message ids -> promise resolution functions, for dispatching worker responses
-  constructor(url) {
-    _classPrivateFieldInitSpec(this, _msgId, {
-      writable: true,
-      value: 1
-    });
-
-    _classPrivateFieldInitSpec(this, _worker, {
-      writable: true,
-      value: null
-    });
-
-    _classPrivateFieldInitSpec(this, _pendingCalls, {
-      writable: true,
-      value: new Map()
-    });
-
-    _classPrivateFieldInitSpec(this, _url, {
-      writable: true,
-      value: ""
-    });
-
-    _classPrivateFieldInitSpec(this, _onMessage, {
-      writable: true,
-      value: ({
-        data: result
-      }) => {
-        const items = _classPrivateFieldGet(this, _pendingCalls).get(result.id);
-
-        _classPrivateFieldGet(this, _pendingCalls).delete(result.id);
-
-        if (!items) {
-          return;
-        }
-
-        if (!_classPrivateFieldGet(this, _worker)) {
-          return;
-        }
-
-        result.results.forEach((resultData, i) => {
-          const {
-            resolve,
-            reject
-          } = items[i];
-
-          if (resultData.error) {
-            const err = new Error(resultData.message);
-            err.metadata = resultData.metadata;
-            reject(err);
-          } else {
-            resolve(resultData.response);
-          }
-        });
-      }
-    });
-
-    _classPrivateFieldSet(this, _url, url);
-  }
-
-  start() {
+WorkerDispatcher.prototype = {
+  start(url) {
     // When running in debugger jest test, we don't have access to ChromeWorker
     if (typeof ChromeWorker == "function") {
-      _classPrivateFieldSet(this, _worker, new ChromeWorker(_classPrivateFieldGet(this, _url)));
+      this.worker = new ChromeWorker(url);
     } else {
-      _classPrivateFieldSet(this, _worker, new Worker(_classPrivateFieldGet(this, _url)));
+      this.worker = new Worker(url);
     }
 
-    _classPrivateFieldGet(this, _worker).onerror = err => {
-      console.error(`Error in worker ${_classPrivateFieldGet(this, _url)}`, err.message);
+    this.worker.onerror = err => {
+      console.error(`Error in worker ${url}`, err.message);
     };
 
-    _classPrivateFieldGet(this, _worker).addEventListener("message", _classPrivateFieldGet(this, _onMessage));
-  }
+    this.worker.addEventListener("message", this._onMessage);
+  },
 
   stop() {
-    if (!_classPrivateFieldGet(this, _worker)) {
+    if (!this.worker) {
       return;
     }
 
-    _classPrivateFieldGet(this, _worker).removeEventListener("message", _classPrivateFieldGet(this, _onMessage));
-
-    _classPrivateFieldGet(this, _worker).terminate();
-
-    _classPrivateFieldSet(this, _worker, null);
-
-    _classPrivateFieldGet(this, _pendingCalls).clear();
-  }
+    this.worker.removeEventListener("message", this._onMessage);
+    this.worker.terminate();
+    this.worker = null;
+    this.pendingCalls.clear();
+  },
 
   task(method, {
     queue = false
@@ -76379,34 +76421,60 @@ class WorkerDispatcher {
     };
 
     const flush = () => {
-      var _this$msgId;
-
       const items = calls.slice();
       calls.length = 0;
 
-      if (!_classPrivateFieldGet(this, _worker)) {
-        this.start();
+      if (!this.worker) {
+        return;
       }
 
-      const id = (_classPrivateFieldSet(this, _msgId, (_this$msgId = +_classPrivateFieldGet(this, _msgId)) + 1), _this$msgId);
-
-      _classPrivateFieldGet(this, _worker).postMessage({
+      const id = this.msgId++;
+      this.worker.postMessage({
         id,
         method,
         calls: items.map(item => item.args)
       });
-
-      _classPrivateFieldGet(this, _pendingCalls).set(id, items);
+      this.pendingCalls.set(id, items);
     };
 
     return (...args) => push(args);
-  }
+  },
 
   invoke(method, ...args) {
     return this.task(method)(...args);
+  },
+
+  _onMessage({
+    data: result
+  }) {
+    const items = this.pendingCalls.get(result.id);
+    this.pendingCalls.delete(result.id);
+
+    if (!items) {
+      return;
+    }
+
+    if (!this.worker) {
+      return;
+    }
+
+    result.results.forEach((resultData, i) => {
+      const {
+        resolve,
+        reject
+      } = items[i];
+
+      if (resultData.error) {
+        const err = new Error(resultData.message);
+        err.metadata = resultData.metadata;
+        reject(err);
+      } else {
+        resolve(resultData.response);
+      }
+    });
   }
 
-}
+};
 
 function workerHandler(publicInterface) {
   return function (msg) {

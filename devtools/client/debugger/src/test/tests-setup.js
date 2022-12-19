@@ -10,10 +10,16 @@ import Adapter from "enzyme-adapter-react-16";
 import { setupHelper } from "../utils/dbg";
 import { prefs } from "../utils/prefs";
 
-import { PrettyPrintDispatcher } from "../workers/pretty-print";
-import { ParserDispatcher } from "../workers/parser";
-import { SearchDispatcher } from "../workers/search";
+import {
+  start as startPrettyPrintWorker,
+  stop as stopPrettyPrintWorker,
+} from "../workers/pretty-print";
 
+import { ParserDispatcher } from "../workers/parser";
+import {
+  start as startSearchWorker,
+  stop as stopSearchWorker,
+} from "../workers/search";
 import { clearDocuments } from "../utils/editor";
 
 const rootPath = path.join(__dirname, "../../");
@@ -26,29 +32,24 @@ function formatException(reason, p) {
   console && console.log("Unhandled Rejection at:", p, "reason:", reason);
 }
 
-export const parserWorker = new ParserDispatcher(
-  path.join(rootPath, "src/workers/parser/worker.js")
-);
-export const evaluationsParser = new ParserDispatcher(
-  path.join(rootPath, "src/workers/parser/worker.js")
-);
-export const prettyPrintWorker = new PrettyPrintDispatcher(
-  path.join(rootPath, "src/workers/pretty-print/worker.js")
-);
-export const searchWorker = new SearchDispatcher(
-  path.join(rootPath, "src/workers/search/worker.js")
-);
+export const parserWorker = new ParserDispatcher();
+export const evaluationsParser = new ParserDispatcher();
 
 beforeAll(() => {
+  startPrettyPrintWorker(
+    path.join(rootPath, "src/workers/pretty-print/worker.js")
+  );
+  parserWorker.start(path.join(rootPath, "src/workers/parser/worker.js"));
+  evaluationsParser.start(path.join(rootPath, "src/workers/parser/worker.js"));
+  startSearchWorker(path.join(rootPath, "src/workers/search/worker.js"));
   process.on("unhandledRejection", formatException);
 });
 
 afterAll(() => {
+  stopPrettyPrintWorker();
   parserWorker.stop();
   evaluationsParser.stop();
-  prettyPrintWorker.stop();
-  searchWorker.stop();
-
+  stopSearchWorker();
   process.removeListener("unhandledRejection", formatException);
 });
 
@@ -57,7 +58,6 @@ afterEach(() => {});
 beforeEach(async () => {
   parserWorker.clear();
   evaluationsParser.clear();
-
   clearDocuments();
   prefs.projectDirectoryRoot = "";
   prefs.projectDirectoryRootName = "";

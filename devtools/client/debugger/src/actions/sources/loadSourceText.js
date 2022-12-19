@@ -42,13 +42,7 @@ async function loadGeneratedSource(state, sourceActor, client) {
   };
 }
 
-async function loadOriginalSource(
-  state,
-  source,
-  client,
-  sourceMaps,
-  prettyPrintWorker
-) {
+async function loadOriginalSource(state, source, client, sourceMaps) {
   if (isPretty(source)) {
     const generatedSource = getGeneratedSource(state, source);
     if (!generatedSource) {
@@ -64,7 +58,6 @@ async function loadOriginalSource(
 
     return prettyPrintSource(
       sourceMaps,
-      prettyPrintWorker,
       generatedSource,
       content,
       getSourceActorsForSource(state, generatedSource.id)
@@ -85,7 +78,7 @@ async function loadOriginalSource(
 async function loadGeneratedSourceTextPromise(
   cx,
   sourceActor,
-  { dispatch, getState, client, parserWorker }
+  { dispatch, getState, client, parser }
 ) {
   const epoch = getSourcesEpoch(getState());
 
@@ -102,7 +95,7 @@ async function loadGeneratedSourceTextPromise(
     sourceActor.actor,
     {
       state: getState(),
-      parserWorker,
+      parser,
       dispatch,
     }
   );
@@ -111,25 +104,20 @@ async function loadGeneratedSourceTextPromise(
 async function loadOriginalSourceTextPromise(
   cx,
   source,
-  { dispatch, getState, client, sourceMaps, parserWorker, prettyPrintWorker }
+  { dispatch, getState, client, sourceMaps, parser }
 ) {
   const epoch = getSourcesEpoch(getState());
+
   await dispatch({
     type: "LOAD_ORIGINAL_SOURCE_TEXT",
     sourceId: source.id,
     epoch,
-    [PROMISE]: loadOriginalSource(
-      getState(),
-      source,
-      client,
-      sourceMaps,
-      prettyPrintWorker
-    ),
+    [PROMISE]: loadOriginalSource(getState(), source, client, sourceMaps),
   });
 
   await setParserAndBreakpointsTextContent(cx, source.id, null, {
     state: getState(),
-    parserWorker,
+    parser,
     dispatch,
   });
 }
@@ -138,7 +126,7 @@ async function setParserAndBreakpointsTextContent(
   cx,
   sourceId,
   sourceActorId,
-  { dispatch, state, parserWorker }
+  { dispatch, state, parser }
 ) {
   const source = getSource(state, sourceId);
 
@@ -155,7 +143,7 @@ async function setParserAndBreakpointsTextContent(
   );
 
   if (!source.isWasm && content) {
-    parserWorker.setSource(
+    parser.setSource(
       source.id,
       isFulfilled(content)
         ? content.value

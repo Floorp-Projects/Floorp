@@ -8,6 +8,7 @@
  */
 
 import { isFulfilled } from "../utils/async-value";
+import { findSourceMatches } from "../workers/search";
 import {
   getFirstSourceActorForGeneratedSource,
   hasPrettySource,
@@ -111,7 +112,7 @@ export function searchSources(cx, query) {
 }
 
 export function searchSource(cx, source, sourceActor, query) {
-  return async ({ dispatch, getState, searchWorker }) => {
+  return async ({ dispatch, getState }) => {
     if (!source) {
       return;
     }
@@ -122,11 +123,7 @@ export function searchSource(cx, source, sourceActor, query) {
     const content = getSettledSourceTextContent(getState(), location);
     let matches = [];
     if (content && isFulfilled(content) && content.value.type === "text") {
-      matches = await searchWorker.findSourceMatches(
-        source.id,
-        content.value,
-        query
-      );
+      matches = await findSourceMatches(source.id, content.value, query);
     }
     if (!matches.length) {
       return;

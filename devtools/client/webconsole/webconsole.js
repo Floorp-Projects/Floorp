@@ -323,12 +323,6 @@ class WebConsole {
   }
 
   get parserService() {
-    // If we have a toolbox, we could reuse the parser already instantiated for the debugger.
-    // Note that we won't have a toolbox when running the Browser Console...
-    if (this.toolbox) {
-      return this.toolbox.parserService;
-    }
-
     if (this._parserService) {
       return this._parserService;
     }
@@ -338,6 +332,9 @@ class WebConsole {
     } = require("resource://devtools/client/debugger/src/workers/parser/index.js");
 
     this._parserService = new ParserDispatcher();
+    this._parserService.start(
+      "resource://devtools/client/debugger/dist/parser-worker.js"
+    );
     return this._parserService;
   }
 

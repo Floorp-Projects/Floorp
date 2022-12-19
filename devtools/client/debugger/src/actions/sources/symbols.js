@@ -14,7 +14,7 @@ async function doSetSymbols(
   cx,
   source,
   sourceActor,
-  { dispatch, getState, parserWorker }
+  { dispatch, getState, parser }
 ) {
   const sourceId = source.id;
 
@@ -26,7 +26,7 @@ async function doSetSymbols(
     sourceId,
     // sourceActor can be null for original and pretty-printed sources
     sourceActorId: sourceActor ? sourceActor.actor : null,
-    [PROMISE]: parserWorker.getSymbols(sourceId),
+    [PROMISE]: parser.getSymbols(sourceId),
   });
 }
 

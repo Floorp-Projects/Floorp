@@ -8,18 +8,28 @@ import { WorkerDispatcher } from "devtools/client/shared/worker-utils";
 const WORKER_URL =
   "resource://devtools/client/debugger/dist/pretty-print-worker.js";
 
-export class PrettyPrintDispatcher extends WorkerDispatcher {
-  constructor(jestUrl) {
-    super(jestUrl || WORKER_URL);
+let dispatcher;
+let jestWorkerUrl;
+
+export const start = jestUrl => {
+  jestWorkerUrl = jestUrl;
+};
+export const stop = () => {
+  if (dispatcher) {
+    dispatcher.stop();
+    dispatcher = null;
+  }
+};
+
+export async function prettyPrint({ text, url }) {
+  if (!dispatcher) {
+    dispatcher = new WorkerDispatcher();
+    dispatcher.start(jestWorkerUrl || WORKER_URL);
   }
 
-  #prettyPrintTask = this.task("prettyPrint");
-
-  prettyPrint({ url, text }) {
-    return this.#prettyPrintTask({
-      url,
-      indent: prefs.indentSize,
-      sourceText: text,
-    });
-  }
+  return dispatcher.invoke("prettyPrint", {
+    url,
+    indent: prefs.indentSize,
+    sourceText: text,
+  });
 }

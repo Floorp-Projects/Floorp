@@ -57,9 +57,7 @@ add_task(async function testGetOriginalURLs() {
 add_task(async function testGetGeneratedRangesForOriginal() {
   const originals = await fetchFixtureSourceMap("intermingled-sources");
 
-  const ranges = await gSourceMapLoader.getGeneratedRangesForOriginal(
-    originals[0].id
-  );
+  const ranges = await getGeneratedRangesForOriginal(originals[0].id);
 
   Assert.deepEqual(
     ranges,
@@ -122,7 +120,7 @@ add_task(async function testGetGeneratedRangesForOriginal() {
     // Note that we have to clear the source map in order to get the merged ranges,
     // otherwise we are still fetching the previous unmerged ones!
     const secondOriginals = await fetchFixtureSourceMap("intermingled-sources");
-    const mergedRanges = await gSourceMapLoader.getGeneratedRangesForOriginal(
+    const mergedRanges = await getGeneratedRangesForOriginal(
       secondOriginals[0].id,
       true
     );
@@ -154,12 +152,8 @@ add_task(async function testBaseURLErrorHandling() {
     sourceMapBaseURL: "http:://example.com/",
   };
 
-  const onError = gSourceMapLoader.once("source-map-error");
-  is(
-    await gSourceMapLoader.getOriginalURLs(source),
-    null,
-    "The error is silented..."
-  );
+  const onError = SourceMapLoader.once("source-map-error");
+  is(await getOriginalURLs(source), null, "The error is silented...");
   info("Wait for source-map-error event");
   const error = await onError;
   is(
