@@ -254,12 +254,13 @@ void nsTreeBodyFrame::DestroyFrom(nsIFrame* aDestructRoot,
     mTree->BodyDestroyed(mTopRowIndex);
   }
 
-  if (mView) {
+  if (nsCOMPtr<nsITreeView> view = std::move(mView)) {
     nsCOMPtr<nsITreeSelection> sel;
-    mView->GetSelection(getter_AddRefs(sel));
-    if (sel) sel->SetTree(nullptr);
-    mView->SetTree(nullptr);
-    mView = nullptr;
+    view->GetSelection(getter_AddRefs(sel));
+    if (sel) {
+      sel->SetTree(nullptr);
+    }
+    view->SetTree(nullptr);
   }
 
   nsLeafBoxFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
@@ -439,13 +440,19 @@ nsresult nsTreeBodyFrame::SetView(nsITreeView* aView) {
   return NS_OK;
 }
 
+already_AddRefed<nsITreeSelection> nsTreeBodyFrame::GetSelection() const {
+  nsCOMPtr<nsITreeSelection> sel;
+  if (nsCOMPtr<nsITreeView> view = GetExistingView()) {
+    view->GetSelection(getter_AddRefs(sel));
+  }
+  return sel.forget();
+}
+
 nsresult nsTreeBodyFrame::SetFocused(bool aFocused) {
   if (mFocused != aFocused) {
     mFocused = aFocused;
-    if (mView) {
-      nsCOMPtr<nsITreeSelection> sel;
-      mView->GetSelection(getter_AddRefs(sel));
-      if (sel) sel->InvalidateSelection();
+    if (nsCOMPtr<nsITreeSelection> sel = GetSelection()) {
+      sel->InvalidateSelection();
     }
   }
   return NS_OK;
@@ -477,9 +484,9 @@ Maybe<CSSIntRegion> nsTreeBodyFrame::GetSelectionRegion() {
     return Nothing();
   }
 
-  nsCOMPtr<nsITreeSelection> selection;
-  mView->GetSelection(getter_AddRefs(selection));
-  if (!selection) {
+  AutoWeakFrame wf(this);
+  nsCOMPtr<nsITreeSelection> selection = GetSelection();
+  if (!selection || !wf.IsAlive()) {
     return Nothing();
   }
 
@@ -1524,10 +1531,7 @@ nsresult nsTreeBodyFrame::RowCountChanged(int32_t aIndex, int32_t aCount) {
   AutoWeakFrame weakFrame(this);
 
   // Adjust our selection.
-  nsCOMPtr<nsITreeView> view = mView;
-  nsCOMPtr<nsITreeSelection> sel;
-  view->GetSelection(getter_AddRefs(sel));
-  if (sel) {
+  if (nsCOMPtr<nsITreeSelection> sel = GetSelection()) {
     sel->AdjustSelection(aIndex, aCount);
   }
 
@@ -1631,9 +1635,7 @@ void nsTreeBodyFrame::PrefillPropertyArray(int32_t aRowIndex,
     if (aRowIndex == mMouseOverRow)
       mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::hover);
 
-    nsCOMPtr<nsITreeSelection> selection;
-    mView->GetSelection(getter_AddRefs(selection));
-
+    nsCOMPtr<nsITreeSelection> selection = GetSelection();
     if (selection) {
       // selected
       bool isSelected;
