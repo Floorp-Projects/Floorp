@@ -25,6 +25,15 @@ const TEST_PROVIDER_INFO = [
     extraAdServersRegexps: [/^https:\/\/example\.com\/ad2?/],
   },
   {
+    telemetryId: "example-data-attributes",
+    searchPageRegexp: /^http:\/\/mochi.test:.+\/browser\/browser\/components\/search\/test\/browser\/searchTelemetryAd_dataAttributes(?:_none|_href)?.html/,
+    queryParamName: "s",
+    codeParamName: "abc",
+    taggedCodes: ["ff"],
+    adServerAttributes: ["xyz"],
+    extraAdServersRegexps: [/^https:\/\/example\.com\/ad/],
+  },
+  {
     telemetryId: "slow-page-load",
     searchPageRegexp: /^http:\/\/mochi.test:.+\/browser\/browser\/components\/search\/test\/browser\/slow_loading_page_with_ads(_on_load_event)?.html/,
     queryParamName: "s",
@@ -155,6 +164,93 @@ add_task(async function test_track_ad() {
     {
       "browser.search.content.unknown": { "example:tagged:ff": 1 },
       "browser.search.withads.unknown": { "example:tagged": 1 },
+    }
+  );
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_track_ad_on_data_attributes() {
+  Services.telemetry.clearScalars();
+  searchCounts.clear();
+
+  let url =
+    getRootDirectory(gTestPath).replace(
+      "chrome://mochitests/content",
+      "http://mochi.test:8888"
+    ) + "searchTelemetryAd_dataAttributes.html";
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    getSERPUrl(url)
+  );
+
+  await assertSearchSourcesTelemetry(
+    {},
+    {
+      "browser.search.content.unknown": {
+        "example-data-attributes:tagged:ff": 1,
+      },
+      "browser.search.withads.unknown": {
+        "example-data-attributes:tagged": 1,
+      },
+    }
+  );
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_track_ad_on_data_attributes_and_hrefs() {
+  Services.telemetry.clearScalars();
+  searchCounts.clear();
+
+  let url =
+    getRootDirectory(gTestPath).replace(
+      "chrome://mochitests/content",
+      "http://mochi.test:8888"
+    ) + "searchTelemetryAd_dataAttributes_href.html";
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    getSERPUrl(url)
+  );
+
+  await assertSearchSourcesTelemetry(
+    {},
+    {
+      "browser.search.content.unknown": {
+        "example-data-attributes:tagged:ff": 1,
+      },
+      "browser.search.withads.unknown": {
+        "example-data-attributes:tagged": 1,
+      },
+    }
+  );
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_track_no_ad_on_data_attributes_and_hrefs() {
+  Services.telemetry.clearScalars();
+  searchCounts.clear();
+
+  let url =
+    getRootDirectory(gTestPath).replace(
+      "chrome://mochitests/content",
+      "http://mochi.test:8888"
+    ) + "searchTelemetryAd_dataAttributes_none.html";
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    getSERPUrl(url)
+  );
+
+  await assertSearchSourcesTelemetry(
+    {},
+    {
+      "browser.search.content.unknown": {
+        "example-data-attributes:tagged:ff": 1,
+      },
     }
   );
 

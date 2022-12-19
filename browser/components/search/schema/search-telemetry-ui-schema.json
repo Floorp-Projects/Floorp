@@ -9,6 +9,7 @@
     "organicCodes",
     "followOnParamNames",
     "followOnCookies",
-    "extraAdServersRegexps"
+    "extraAdServersRegexps",
+    "adServerAttributes"
   ]
 }

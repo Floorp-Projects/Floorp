@@ -127,17 +127,21 @@ class SearchSERPTelemetryChild extends JSWindowActorChild {
     }
 
     let regexps = providerInfo.extraAdServersRegexps;
+    let adServerAttributes = providerInfo.adServerAttributes ?? [];
     let anchors = doc.getElementsByTagName("a");
     let hasAds = false;
     for (let anchor of anchors) {
       if (!anchor.href) {
         continue;
       }
-      for (let regexp of regexps) {
-        if (regexp.test(anchor.href)) {
-          hasAds = true;
+      for (let name of adServerAttributes) {
+        hasAds = regexps.some(regexp => regexp.test(anchor.dataset[name]));
+        if (hasAds) {
           break;
         }
+      }
+      if (!hasAds) {
+        hasAds = regexps.some(regexp => regexp.test(anchor.href));
       }
       if (hasAds) {
         break;
