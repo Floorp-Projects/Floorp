@@ -218,7 +218,13 @@ Tools related to build and release automation and configuration of release build
 
     * - Owner(s)
       -
-        | `Aki Sasaki (aki) <https://people.mozilla.org/s?query=aki>`__
+        | `Julien Cristau (jcristau) <https://people.mozilla.org/s?query=jcristau>`__
+    * - Peer(s)
+      -
+        | `Heitor Neiva (hneiva) <https://people.mozilla.org/s?query=hneiva>`__
+        | `bhearsum (bhearsum) <https://people.mozilla.org/s?query=bhearsum>`__
+    * - Owner(s) Emeritus
+      - Aki Sasaki
     * - Includes
       -
         | `tools/update-packaging/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=tools/update-packaging/\*\*/\*>`__
@@ -3066,7 +3072,7 @@ Code relating to Screenshots functionality
         | `Sam Foster (sfoster) <https://people.mozilla.org/s?query=sfoster>`__
     * - Peer(s)
       -
-        | `Jared Hirsch (jhirsch) <https://people.mozilla.org/s?query=jhirsch>`__
+        | `jhirsch <https://people.mozilla.org/s?query=jhirsch>`__
         | `Niklas Baumgardner (niklas) <https://people.mozilla.org/s?query=niklas>`__
     * - Owner(s) Emeritus
       - Emma Malysz, Ian Bicking
@@ -3290,11 +3296,14 @@ Configuration-driven script harness.
 
     * - Owner(s)
       -
-        | `Aki Sasaki (aki) <https://people.mozilla.org/s?query=aki>`__
+        | `Geoff Brown (gbrown) <https://people.mozilla.org/s?query=gbrown>`__
     * - Peer(s)
       -
-        | `Justin Wood (Callek) <https://people.mozilla.org/s?query=Callek>`__
-        | `Tom Prince (tomprince) <https://people.mozilla.org/s?query=tomprince>`__
+        | `Joel Maher (jmaher) <https://people.mozilla.org/s?query=jmaher>`__
+    * - Owner(s) Emeritus
+      - Aki Sasaki
+    * - Peer(s) Emeritus
+      - Justin Wood, Tom Prince
     * - Includes
       -
         | `testing/mozharness/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=testing/mozharness/\*\*/\*>`__
