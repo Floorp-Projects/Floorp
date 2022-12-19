@@ -14,9 +14,7 @@ add_task(async function() {
       url,
     },
     async function(browser) {
-      let popupShownPromise = BrowserTestUtils.waitForSelectPopupShown(window);
-      await BrowserTestUtils.synthesizeMouseAtCenter("select", {}, browser);
-      let popup = await popupShownPromise;
+      let popup = await openSelectPopup("click");
       is(popup.style.direction, "rtl", "Should be the right dir");
     }
   );
