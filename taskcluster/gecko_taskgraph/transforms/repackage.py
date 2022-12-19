@@ -67,7 +67,6 @@ packaging_description_schema = schema.extend(
                 "build-platform",
                 "release-type",
                 "shipping-product",
-                "project",
                 str,
             ),
             Optional("publisher-display-name"): optionally_keyed_by(
@@ -458,7 +457,6 @@ def make_job_description(config, jobs):
                         "package-format": format,
                         "release-type": config.params["release_type"],
                         "level": config.params["level"],
-                        "project": config.params["project"],
                     },
                 )
 
