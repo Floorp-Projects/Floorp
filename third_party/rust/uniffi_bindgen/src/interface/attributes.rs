@@ -15,13 +15,14 @@
 //! if we grow significantly more complicated attribute handling.
 
 use anyhow::{bail, Result};
+use uniffi_meta::Checksum;
 
 /// Represents an attribute parsed from UDL, like `[ByRef]` or `[Throws]`.
 ///
 /// This is a convenience enum for parsing UDL attributes and erroring out if we encounter
 /// any unsupported ones. These don't convert directly into parts of a `ComponentInterface`, but
 /// may influence the properties of things like functions and arguments.
-#[derive(Debug, Clone, Hash)]
+#[derive(Debug, Clone, Checksum)]
 pub(super) enum Attribute {
     ByRef,
     Enum,
@@ -119,7 +120,7 @@ where
 
 /// Attributes that can be attached to an `enum` definition in the UDL.
 /// There's only one case here: using `[Error]` to mark an enum as an error class.
-#[derive(Debug, Clone, Hash, Default)]
+#[derive(Debug, Clone, Checksum, Default)]
 pub(super) struct EnumAttributes(Vec<Attribute>);
 
 impl EnumAttributes {
@@ -155,7 +156,7 @@ impl<T: TryInto<EnumAttributes, Error = anyhow::Error>> TryFrom<Option<T>> for E
 ///
 /// This supports the `[Throws=ErrorName]` attribute for functions that
 /// can produce an error.
-#[derive(Debug, Clone, Hash, Default)]
+#[derive(Debug, Clone, Checksum, Default)]
 pub(super) struct FunctionAttributes(Vec<Attribute>);
 
 impl FunctionAttributes {
@@ -198,7 +199,7 @@ impl<T: TryInto<FunctionAttributes, Error = anyhow::Error>> TryFrom<Option<T>>
 ///
 /// This supports the `[ByRef]` attribute for arguments that should be passed
 /// by reference in the generated Rust scaffolding.
-#[derive(Debug, Clone, Hash, Default)]
+#[derive(Debug, Clone, Checksum, Default)]
 pub(super) struct ArgumentAttributes(Vec<Attribute>);
 
 impl ArgumentAttributes {
@@ -233,7 +234,7 @@ impl<T: TryInto<ArgumentAttributes, Error = anyhow::Error>> TryFrom<Option<T>>
 }
 
 /// Represents UDL attributes that might appear on an `interface` definition.
-#[derive(Debug, Clone, Hash, Default)]
+#[derive(Debug, Clone, Checksum, Default)]
 pub(super) struct InterfaceAttributes(Vec<Attribute>);
 
 impl InterfaceAttributes {
@@ -287,7 +288,7 @@ impl<T: TryInto<InterfaceAttributes, Error = anyhow::Error>> TryFrom<Option<T>>
 ///
 /// This supports the `[Throws=ErrorName]` attribute for constructors that can produce
 /// an error, and the `[Name=MethodName]` for non-default constructors.
-#[derive(Debug, Clone, Hash, Default)]
+#[derive(Debug, Clone, Checksum, Default)]
 pub(super) struct ConstructorAttributes(Vec<Attribute>);
 
 impl ConstructorAttributes {
@@ -326,7 +327,7 @@ impl TryFrom<&weedle::attribute::ExtendedAttributeList<'_>> for ConstructorAttri
 ///
 /// This supports the `[Throws=ErrorName]` attribute for methods that can produce
 /// an error, and the `[Self=ByArc]` attribute for methods that take `Arc<Self>` as receiver.
-#[derive(Debug, Clone, Hash, Default)]
+#[derive(Debug, Clone, Checksum, Default)]
 pub(super) struct MethodAttributes(Vec<Attribute>);
 
 impl MethodAttributes {
@@ -375,7 +376,7 @@ impl<T: TryInto<MethodAttributes, Error = anyhow::Error>> TryFrom<Option<T>> for
 /// Actually we only support one of these right now, `[Self=ByArc]`.
 /// We might add more in future, e.g. a `[Self=ByRef]` if there are cases
 /// where we need to force the receiver to be taken by reference.
-#[derive(Debug, Clone, Hash)]
+#[derive(Debug, Clone, Checksum)]
 pub(super) enum SelfType {
     ByArc, // Method receiver is `Arc<Self>`.
 }
@@ -398,7 +399,7 @@ impl TryFrom<&weedle::attribute::IdentifierOrString<'_>> for SelfType {
 /// Represents UDL attributes that might appear on a typedef
 ///
 /// This supports the `[External="crate_name"]` and `[Custom]` attributes for types.
-#[derive(Debug, Clone, Hash, Default)]
+#[derive(Debug, Clone, Checksum, Default)]
 pub(super) struct TypedefAttributes(Vec<Attribute>);
 
 impl TypedefAttributes {
