@@ -37,6 +37,7 @@ Preferences.addAll([
     { id: "floorp.browser.sidebar.useIconProvider", type: "string" },
     { id: "floorp.navbar.bottom", type : "bool"},
     { id: "floorp.disable.fullscreen.notification", type : "bool"},
+    { id: "floorp.tabsleep.enabled", type: "bool" },
   ]);
 
 function floorpMain(){
