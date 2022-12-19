@@ -82,11 +82,23 @@ job-template:
                                 default: FirefoxNightly
         publisher:
             by-package-format:
+                msix-store: "CN=082E9164-EE6C-4EC8-B62C-441FAE7BEFA1"
                 msix:
                     by-level:
-                        "3": "CN=Mozilla Corporation, OU=Firefox Engineering Operations, O=Mozilla Corporation, L=Mountain View, S=California, C=US"
-                        default: "CN=Mozilla Fake SPC"
-                msix-store: "CN=082E9164-EE6C-4EC8-B62C-441FAE7BEFA1"
+                        "1": "CN=Mozilla Fake SPC"
+                        "2": "CN=Mozilla Fake SPC"
+                        default:
+                            # This value needs to line up with the signing certificate
+                            # we're going to sign with. We only sign potential release
+                            # or nightly builds with proper certificates, so even on
+                            # level 3 repositories, some build types are expected to
+                            # be signed with our fake certificate.
+                            by-release-type:
+                                release-rc: "CN=Mozilla Corporation, OU=Firefox Engineering Operations, O=Mozilla Corporation, L=Mountain View, S=California, C=US"
+                                release: "CN=Mozilla Corporation, OU=Firefox Engineering Operations, O=Mozilla Corporation, L=Mountain View, S=California, C=US"
+                                beta: "CN=Mozilla Corporation, OU=Firefox Engineering Operations, O=Mozilla Corporation, L=Mountain View, S=California, C=US"
+                                esr102: "CN=Mozilla Corporation, OU=Firefox Engineering Operations, O=Mozilla Corporation, L=Mountain View, S=California, C=US"
+                                default: "CN=Mozilla Fake SPC"
         publisher-display-name:
             by-package-format:
                 msix: "Mozilla Corporation"
