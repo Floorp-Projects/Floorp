@@ -19,6 +19,7 @@
 class nsDisplayRangeFocusRing;
 
 namespace mozilla {
+class ListMutationObserver;
 class PresShell;
 namespace dom {
 class Event;
@@ -30,6 +31,9 @@ class nsRangeFrame final : public nsContainerFrame,
                            public nsIAnonymousContentCreator {
   friend nsIFrame* NS_NewRangeFrame(mozilla::PresShell* aPresShell,
                                     ComputedStyle* aStyle);
+
+  void Init(nsIContent* aContent, nsContainerFrame* aParent,
+            nsIFrame* aPrevInFlow) override;
 
   friend class nsDisplayRangeFocusRing;
 
@@ -195,6 +199,12 @@ class nsRangeFrame final : public nsContainerFrame,
    * @see nsRangeFrame::CreateAnonymousContent
    */
   nsCOMPtr<Element> mThumbDiv;
+
+  /**
+   * This mutation observer is used to invalidate paint when the @list changes,
+   * when a @list exists.
+   */
+  RefPtr<mozilla::ListMutationObserver> mListMutationObserver;
 };
 
 #endif
