@@ -101,6 +101,44 @@ add_task(async function test_search() {
   await onLoaded;
 
   info("Check the telemetries");
+  await assertHandoffResult(histogram);
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_search_private_mode() {
+  Services.telemetry.clearScalars();
+  Services.telemetry.clearEvents();
+
+  const histogram = TelemetryTestUtils.getAndClearKeyedHistogram(
+    "SEARCH_COUNTS"
+  );
+
+  info("Open private window");
+  let privateWindow = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
+  let tab = privateWindow.gBrowser.selectedTab;
+
+  info("Focus on search input in newtab content");
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    const searchInput = content.document.querySelector(".fake-editable");
+    searchInput.click();
+  });
+
+  info("Search and wait the result");
+  const onLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  EventUtils.synthesizeKey("q", {}, privateWindow);
+  EventUtils.synthesizeKey("VK_RETURN", {}, privateWindow);
+  await onLoaded;
+
+  info("Check the telemetries");
+  await assertHandoffResult(histogram);
+
+  await BrowserTestUtils.closeWindow(privateWindow);
+});
+
+async function assertHandoffResult(histogram) {
   await assertScalars([
     ["browser.engagement.navigation.urlbar_handoff", "search_enter", 1],
     ["browser.search.content.urlbar_handoff", "example:tagged:ff", 1],
@@ -118,9 +156,7 @@ add_task(async function test_search() {
     ],
     { category: "navigation", method: "search" }
   );
-
-  BrowserTestUtils.removeTab(tab);
-});
+}
 
 async function assertHistogram(histogram, expectedResults) {
   await TestUtils.waitForCondition(() => {
