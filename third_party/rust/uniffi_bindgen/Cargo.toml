@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "uniffi_bindgen"
-version = "0.21.0"
+version = "0.21.1"
 authors = ["Firefox Sync Team <sync-team@mozilla.com>"]
 description = "a multi-language bindings generator for rust (codegen and cli tooling)"
 homepage = "https://mozilla.github.io/uniffi-rs"
@@ -23,7 +23,6 @@ keywords = [
 ]
 license = "MPL-2.0"
 repository = "https://github.com/mozilla/uniffi-rs"
-resolver = "2"
 
 [[bin]]
 name = "uniffi-bindgen"
@@ -76,7 +75,7 @@ version = "1.0.80"
 version = "0.5"
 
 [dependencies.uniffi_meta]
-version = "=0.21.0"
+version = "=0.21.1"
 
 [dependencies.weedle2]
 version = "4.0.0"

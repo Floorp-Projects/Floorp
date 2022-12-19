@@ -11,10 +11,10 @@
 
 [package]
 edition = "2021"
-name = "uniffi"
+name = "uniffi_checksum_derive"
 version = "0.21.1"
 authors = ["Firefox Sync Team <sync-team@mozilla.com>"]
-description = "a multi-language bindings generator for rust (runtime support code)"
+description = "a multi-language bindings generator for rust (checksum custom derive)"
 homepage = "https://mozilla.github.io/uniffi-rs"
 documentation = "https://mozilla.github.io/uniffi-rs"
 keywords = [
@@ -24,40 +24,19 @@ keywords = [
 license = "MPL-2.0"
 repository = "https://github.com/mozilla/uniffi-rs"
 
-[dependencies.anyhow]
-version = "1"
+[lib]
+proc-macro = true
 
-[dependencies.bytes]
+[dependencies.quote]
 version = "1.0"
 
-[dependencies.camino]
-version = "1.0.8"
-
-[dependencies.cargo_metadata]
-version = "0.14"
-
-[dependencies.log]
-version = "0.4"
-
-[dependencies.once_cell]
-version = "1.12"
-
-[dependencies.paste]
+[dependencies.syn]
 version = "1.0"
-
-[dependencies.static_assertions]
-version = "1.1.0"
-
-[dependencies.uniffi_bindgen]
-version = "=0.21.1"
-optional = true
-
-[dependencies.uniffi_macros]
-version = "=0.21.1"
-
-[dev-dependencies.trybuild]
-version = "1"
+features = [
+    "derive",
+    "parsing",
+]
 
 [features]
-builtin-bindgen = ["uniffi_bindgen"]
 default = []
+nightly = []
