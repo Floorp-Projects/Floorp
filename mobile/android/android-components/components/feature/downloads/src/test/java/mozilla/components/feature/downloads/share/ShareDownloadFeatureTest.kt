@@ -141,39 +141,7 @@ class ShareDownloadFeatureTest {
         shareFeature.startSharing(shareState)
 
         verify(shareFeature).download(shareState)
-        verify(shareFeature).share(downloadedFile.canonicalPath, "contentType", null, "testUrl")
-        Unit
-    }
-
-    @Test
-    fun `startSharing() will not use a too long HTTP url as message`() = runTestOnMain {
-        val shareFeature = spy(ShareDownloadFeature(context, mock(), mock(), null))
-        val maxSizeUrl = "a".repeat(CHARACTERS_IN_SHARE_TEXT_LIMIT)
-        val tooLongUrl = maxSizeUrl + 'x'
-        val shareState = ShareInternetResourceState(url = tooLongUrl, contentType = "contentType")
-        val downloadedFile = File("filePath")
-        doReturn(downloadedFile).`when`(shareFeature).download(any())
-        shareFeature.scope = scope
-
-        shareFeature.startSharing(shareState)
-
-        verify(shareFeature).download(shareState)
-        verify(shareFeature).share(downloadedFile.canonicalPath, "contentType", null, maxSizeUrl)
-        Unit
-    }
-
-    @Test
-    fun `startSharing() will use an empty String as message for data URLs`() = runTestOnMain {
-        val shareFeature = spy(ShareDownloadFeature(context, mock(), mock(), null))
-        val shareState = ShareInternetResourceState(url = "data:image/png;base64,longstring", contentType = "contentType")
-        val downloadedFile = File("filePath")
-        doReturn(downloadedFile).`when`(shareFeature).download(any())
-        shareFeature.scope = scope
-
-        shareFeature.startSharing(shareState)
-
-        verify(shareFeature).download(shareState)
-        verify(shareFeature).share(downloadedFile.canonicalPath, "contentType", null, "")
+        verify(shareFeature).share(downloadedFile.canonicalPath, "contentType", null, null)
         Unit
     }
 
@@ -331,26 +299,5 @@ class ShareDownloadFeatureTest {
         val result = shareFeature.getFileExtension(gifHeaders, mock())
 
         assertEquals("gif", result)
-    }
-
-    @Test
-    fun `sanitizeLongUrls should return an empty string for a data url`() {
-        val shareFeature = ShareDownloadFeature(context, mock(), mock(), null)
-
-        val result = shareFeature.sanitizeLongUrls("data:image/png;base64,longstring")
-
-        assertEquals("", result)
-    }
-
-    @Test
-    fun `sanitizeLongUrls should return at most CHARACTERS_IN_SHARE_TEXT_LIMIT for HTTP urls`() {
-        val maxSizeUrl = "a".repeat(CHARACTERS_IN_SHARE_TEXT_LIMIT)
-        val tooLongUrl = maxSizeUrl + 'x'
-        val shareFeature = ShareDownloadFeature(context, mock(), mock(), null)
-
-        val result = shareFeature.sanitizeLongUrls(tooLongUrl)
-
-        assertEquals(CHARACTERS_IN_SHARE_TEXT_LIMIT, result.length)
-        assertEquals(maxSizeUrl, result)
     }
 }

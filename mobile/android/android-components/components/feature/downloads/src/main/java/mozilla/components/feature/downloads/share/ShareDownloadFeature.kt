@@ -55,12 +55,6 @@ internal const val DEFAULT_IMAGE_EXTENSION = "jpg"
 private const val OPERATION_TIMEOUT_MILLIS = 1000L
 
 /**
- * At most characters to be sent for subject / message in the share to operation.
- */
-@VisibleForTesting
-internal const val CHARACTERS_IN_SHARE_TEXT_LIMIT = 200
-
-/**
  * Subdirectory of Context.getCacheDir() where the resources to be shared are stored.
  *
  * Location must be kept in sync with the paths our FileProvider can share from.
@@ -147,7 +141,6 @@ class ShareDownloadFeature(
                 share(
                     contentType = internetResource.contentType,
                     filePath = download.canonicalPath,
-                    message = sanitizeLongUrls(internetResource.url),
                 )
             }
         }
@@ -217,22 +210,5 @@ class ShareDownloadFeature(
     internal fun cleanupCache() {
         logger.debug("Deleting previous cache of shared files")
         getCacheDirectory().listFiles()?.forEach { it.delete() }
-    }
-
-    /**
-     * Ensure url is not too long to be cumbersome from a UX standpoint.
-     *
-     * @param url to check
-     * @return new [String]
-     *   - with at most [CHARACTERS_IN_SHARE_TEXT_LIMIT] characters for HTTP URLs
-     *   - empty for data URLs
-     */
-    @VisibleForTesting
-    internal fun sanitizeLongUrls(url: String): String {
-        return if (url.startsWith("data")) {
-            ""
-        } else {
-            url.take(CHARACTERS_IN_SHARE_TEXT_LIMIT)
-        }
     }
 }
