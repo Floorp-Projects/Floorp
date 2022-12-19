@@ -1057,6 +1057,7 @@ class TelemetryEvent {
       sap = "urlbar_addonpage";
     }
 
+    // Distinguish user typed search strings from persisted search terms.
     const interaction = this.#getInteractionType(
       method,
       startEventInfo,
@@ -1136,28 +1137,35 @@ class TelemetryEvent {
     }
 
     let interaction = startEventInfo.interactionType;
-    switch (interaction) {
-      case "typed": {
-        if (searchSource === "urlbar-persisted") {
+    if (
+      (interaction === "returned" || interaction === "restarted") &&
+      this._isRefined(new Set(searchWords), this.#previousSearchWordsSet)
+    ) {
+      interaction = "refined";
+    }
+
+    if (searchSource === "urlbar-persisted") {
+      switch (interaction) {
+        case "returned": {
           interaction = "persisted_search_terms";
+          break;
         }
-        break;
-      }
-      case "restarted":
-      case "returned": {
-        if (
-          this._isRefined(new Set(searchWords), this.#previousSearchWordsSet)
-        ) {
-          interaction = "refined";
+        case "restarted":
+        case "refined": {
+          interaction = `persisted_search_terms_${interaction}`;
+          break;
         }
-        break;
       }
     }
 
-    if (method === "engagement") {
-      this.#previousSearchWordsSet = null;
-    } else if (method === "abandonment") {
+    if (
+      (method === "engagement" &&
+        lazy.UrlbarPrefs.isPersistedSearchTermsEnabled()) ||
+      method === "abandonment"
+    ) {
       this.#previousSearchWordsSet = new Set(searchWords);
+    } else if (method === "engagement") {
+      this.#previousSearchWordsSet = null;
     }
 
     return interaction;
