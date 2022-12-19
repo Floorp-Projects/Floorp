@@ -127,7 +127,7 @@ struct APZEventResult {
   }
 
   bool WillHaveDelayedResult() const {
-    return GetStatus() == nsEventStatus_eConsumeDoDefault &&
+    return GetStatus() != nsEventStatus_eConsumeNoDefault &&
            !GetHandledResult();
   }
 

@@ -56,6 +56,7 @@ struct OverscrollHandoffState;
 class FocusTarget;
 struct FlingHandoffState;
 class InputQueue;
+struct InputBlockCallbackInfo;
 class GeckoContentController;
 class HitTestingTreeNode;
 class SampleTime;
@@ -434,7 +435,7 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    * ignored until the existing callback is triggered.
    */
   void AddInputBlockCallback(uint64_t aInputBlockId,
-                             InputBlockCallback&& aCallback);
+                             InputBlockCallbackInfo&& aCallbackInfo);
 
   // Methods to help process WidgetInputEvents (or manage conversion to/from
   // InputData)
