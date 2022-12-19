@@ -8,12 +8,7 @@ const { TabProvider } = ChromeUtils.import(
   "resource://services-sync/engines/tabs.js"
 );
 
-let engine;
-
 add_task(async function setup() {
-  engine = Service.engineManager.get("tabs");
-  await engine.initialize();
-
   // Since these are xpcshell tests, we'll need to mock ui features
   TabProvider.shouldSkipWindow = mockShouldSkipWindow;
   TabProvider.getWindowEnumerator = mockGetWindowEnumerator.bind(this, [
@@ -34,7 +29,11 @@ async function prepareServer() {
 
   let collection = server.createCollection("username", "tabs");
   await generateNewKeys(Service.collectionKeys);
-  return { server, collection };
+
+  let engine = Service.engineManager.get("tabs");
+  await engine.initialize();
+
+  return { server, collection, engine };
 }
 
 async function withPatchedValue(object, name, patchedVal, fn) {
@@ -50,9 +49,9 @@ async function withPatchedValue(object, name, patchedVal, fn) {
 
 add_task(async function test_tab_quickwrite_works() {
   _("Ensure a simple quickWrite works.");
-  let { server, collection } = await prepareServer();
+  let { server, collection, engine } = await prepareServer();
   Assert.equal(collection.count(), 0, "starting with 0 tab records");
-  await engine.quickWrite();
+  Assert.ok(await engine.quickWrite());
   Assert.equal(collection.count(), 1, "tab record was written");
 
   await promiseStopServer(server);
@@ -60,7 +59,7 @@ add_task(async function test_tab_quickwrite_works() {
 
 add_task(async function test_tab_bad_status() {
   _("Ensure quickWrite silently aborts when we aren't setup correctly.");
-  let { server } = await prepareServer();
+  let { server, engine } = await prepareServer();
   // Store the original lock to reset it back after this test
   let lock = engine.lock;
   // Arrange for this test to fail if it tries to take the lock.
@@ -73,7 +72,7 @@ add_task(async function test_tab_bad_status() {
   await withPatchedValue(Service, "serverConfiguration", null, quickWrite);
 
   Services.prefs.clearUserPref("services.sync.username");
-  quickWrite();
+  await quickWrite();
   Service.status.resetSync();
   engine.lock = lock;
   await promiseStopServer(server);
@@ -81,23 +80,82 @@ add_task(async function test_tab_bad_status() {
 
 add_task(async function test_tab_quickwrite_lock() {
   _("Ensure we fail to quickWrite if the engine is locked.");
-  let { server, collection } = await prepareServer();
+  let { server, collection, engine } = await prepareServer();
 
   Assert.equal(collection.count(), 0, "starting with 0 tab records");
   engine.lock();
-  await engine.quickWrite();
+  Assert.ok(!(await engine.quickWrite()));
   Assert.equal(collection.count(), 0, "didn't sync due to being locked");
   engine.unlock();
 
   await promiseStopServer(server);
 });
 
+add_task(async function test_tab_quickwrite_keeps_old_tabs() {
+  _("Ensure we don't delete other tabs on quickWrite (bug 1801295).");
+  let { server, engine } = await prepareServer();
+
+  // need a first sync to ensure everything is setup correctly.
+  await Service.sync({ engines: ["tabs"] });
+
+  const id = "fake-guid-99";
+  let remoteRecord = encryptPayload({
+    id,
+    clientName: "not local",
+    tabs: [
+      {
+        title: "title2",
+        urlHistory: ["http://bar.com/"],
+        icon: "",
+        lastUsed: 3000,
+      },
+    ],
+  });
+
+  let collection = server.getCollection("username", "tabs");
+  collection.insert(id, remoteRecord);
+
+  await Service.sync({ engines: ["tabs"] });
+
+  // collection should now have 2 records - ours and the pretend remote one we inserted.
+  Assert.equal(collection.count(), 2, "starting with 2 tab records");
+
+  // So fxAccounts.device.recentDeviceList is not null.
+  engine.service.clientsEngine.fxAccounts.device._deviceListCache = {
+    devices: [],
+  };
+  // trick the clients engine into thinking it has a remote client with the same guid.
+  engine.service.clientsEngine._store._remoteClients = {};
+  engine.service.clientsEngine._store._remoteClients[id] = {
+    id,
+    fxaDeviceId: id,
+  };
+
+  let clients = await engine.getAllClients();
+  Assert.equal(clients.length, 1);
+
+  _("Doing a quick-write");
+  Assert.ok(await engine.quickWrite());
+
+  // Should still have our client after a quickWrite.
+  _("Grabbing clients after the quick-write");
+  clients = await engine.getAllClients();
+  Assert.equal(clients.length, 1);
+
+  engine.service.clientsEngine._store._remoteClients = {};
+
+  await promiseStopServer(server);
+});
+
 add_task(async function test_tab_lastSync() {
   _("Ensure we restore the lastSync timestamp after a quick-write.");
-  let { server, collection } = await prepareServer();
+  let { server, collection, engine } = await prepareServer();
+
+  await engine.initialize();
+  await engine.service.clientsEngine.initialize();
 
   let origLastSync = engine.lastSync;
-  await engine.quickWrite();
+  Assert.ok(await engine.quickWrite());
   Assert.equal(engine.lastSync, origLastSync);
   Assert.equal(collection.count(), 1, "successful sync");
   engine.unlock();
@@ -118,10 +176,10 @@ add_task(async function test_tab_quickWrite_telemetry() {
     };
   });
 
-  let { server, collection } = await prepareServer();
+  let { server, collection, engine } = await prepareServer();
 
   Assert.equal(collection.count(), 0, "starting with 0 tab records");
-  await engine.quickWrite();
+  Assert.ok(await engine.quickWrite());
   Assert.equal(collection.count(), 1, "tab record was written");
 
   let ping = await submitPromise;
