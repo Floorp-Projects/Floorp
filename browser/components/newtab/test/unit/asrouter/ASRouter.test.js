@@ -2057,6 +2057,65 @@ describe("ASRouter", () => {
   });
 
   describe("impressions", () => {
+    describe("#addImpression for groups", () => {
+      it("should save an impression in each group-with-frequency in a message", async () => {
+        const fooMessageImpressions = [0];
+        const aGroupImpressions = [0, 1, 2];
+        const bGroupImpressions = [3, 4, 5];
+        const cGroupImpressions = [6, 7, 8];
+
+        const message = {
+          id: "foo",
+          provider: "bar",
+          groups: ["a", "b", "c"],
+        };
+        const groups = [
+          { id: "a", frequency: { lifetime: 3 } },
+          { id: "b", frequency: { lifetime: 4 } },
+          { id: "c", frequency: { lifetime: 5 } },
+        ];
+        await Router.setState(state => {
+          // Add provider
+          const providers = [...state.providers];
+          // Add fooMessageImpressions
+          // eslint-disable-next-line no-shadow
+          const messageImpressions = Object.assign(
+            {},
+            state.messageImpressions
+          );
+          let gImpressions = {};
+          gImpressions.a = aGroupImpressions;
+          gImpressions.b = bGroupImpressions;
+          gImpressions.c = cGroupImpressions;
+          messageImpressions.foo = fooMessageImpressions;
+          return {
+            providers,
+            messageImpressions,
+            groups,
+            groupImpressions: gImpressions,
+          };
+        });
+
+        await Router.addImpression(message);
+
+        assert.deepEqual(
+          Router.state.groupImpressions.a,
+          [0, 1, 2, 0],
+          "a impressions"
+        );
+        assert.deepEqual(
+          Router.state.groupImpressions.b,
+          [3, 4, 5, 0],
+          "b impressions"
+        );
+        assert.deepEqual(
+          Router.state.groupImpressions.c,
+          [6, 7, 8, 0],
+          "c impressions"
+        );
+      });
+    });
+
     describe("#isBelowFrequencyCaps", () => {
       it("should call #_isBelowItemFrequencyCap for the message and for the provider with the correct impressions and arguments", async () => {
         sinon.spy(Router, "_isBelowItemFrequencyCap");
