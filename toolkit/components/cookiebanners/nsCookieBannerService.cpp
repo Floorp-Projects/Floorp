@@ -625,23 +625,6 @@ nsCookieBannerService::SetDomainPref(nsIURI* aTopLevelURI,
                                      const bool aIsPrivate) {
   NS_ENSURE_ARG_POINTER(aTopLevelURI);
 
-  return SetDomainPrefInternal(aTopLevelURI, aModes, aIsPrivate, false);
-}
-
-NS_IMETHODIMP
-nsCookieBannerService::SetDomainPrefAndPersistInPrivateBrowsing(
-    nsIURI* aTopLevelURI, nsICookieBannerService::Modes aModes) {
-  NS_ENSURE_ARG_POINTER(aTopLevelURI);
-
-  return SetDomainPrefInternal(aTopLevelURI, aModes, true, true);
-};
-
-NS_IMETHODIMP
-nsCookieBannerService::SetDomainPrefInternal(
-    nsIURI* aTopLevelURI, nsICookieBannerService::Modes aModes,
-    const bool aIsPrivate, const bool aPersistInPrivateBrowsing) {
-  NS_ENSURE_ARG_POINTER(aTopLevelURI);
-
   if (!mIsInitialized) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -655,8 +638,7 @@ nsCookieBannerService::SetDomainPrefInternal(
   rv = eTLDService->GetBaseDomain(aTopLevelURI, 0, baseDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mDomainPrefService->SetPref(baseDomain, aModes, aIsPrivate,
-                                   aPersistInPrivateBrowsing);
+  rv = mDomainPrefService->SetPref(baseDomain, aModes, aIsPrivate);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
