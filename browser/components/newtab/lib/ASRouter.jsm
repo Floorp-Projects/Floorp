@@ -1363,15 +1363,19 @@ class _ASRouter {
       const time = Date.now();
       return this.setState(state => {
         const messageImpressions = this._addImpressionForItem(
-          state,
+          state.messageImpressions,
           message,
           "messageImpressions",
           time
         );
-        let { groupImpressions } = this.state;
+        // Initialize this with state.groupImpressions, and then assign the
+        // newly-updated copy to it during each iteration so that
+        // all the changes get captured and either returned or passed into the
+        // _addImpressionsForItem call on the next iteration.
+        let { groupImpressions } = state;
         for (const group of groupsWithFrequency) {
           groupImpressions = this._addImpressionForItem(
-            state,
+            groupImpressions,
             group,
             "groupImpressions",
             time
@@ -1386,17 +1390,10 @@ class _ASRouter {
 
   // Helper for addImpression - calculate the updated impressions object for the given
   //                            item, then store it and return it
-  _addImpressionForItem(state, item, impressionsString, time) {
-    lazy.ASRouterPreferences.console.debug(
-      "entered _addImpressionsForItem, item = ",
-      item,
-      " impressionsString = ",
-      impressionsString
-    );
-
-    // The destructuring here is to avoid mutating existing objects in state as in redux
+  _addImpressionForItem(currentImpressions, item, impressionsString, time) {
+    // The destructuring here is to avoid mutating passed parameters
     // (see https://redux.js.org/recipes/structuring-reducers/prerequisite-concepts#immutable-data-management)
-    const impressions = { ...state[impressionsString] };
+    const impressions = { ...currentImpressions };
     if (item.frequency) {
       impressions[item.id] = impressions[item.id]
         ? [...impressions[item.id]]
