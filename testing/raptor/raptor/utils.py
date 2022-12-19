@@ -6,9 +6,10 @@
 from __future__ import absolute_import
 
 import os
-import yaml
-
+from collections.abc import Iterable
 from distutils.util import strtobool
+
+import yaml
 from logger.logger import RaptorLogger
 from mozgeckoprofiler import view_gecko_profile
 
@@ -20,6 +21,65 @@ external_tools_path = os.environ.get("EXTERNALTOOLSPATH", None)
 if external_tools_path is not None:
     # running in production via mozharness
     TOOLTOOL_PATH = os.path.join(external_tools_path, "tooltool.py")
+
+
+def flatten(data, parent_dir, sep="/"):
+    """
+    Converts a dictionary with nested entries like this
+        {
+            "dict1": {
+                "dict2": {
+                    "key1": value1,
+                    "key2": value2,
+                    ...
+                },
+                ...
+            },
+            ...
+            "dict3": {
+                "key3": value3,
+                "key4": value4,
+                ...
+            }
+            ...
+        }
+
+    to a "flattened" dictionary like this that has no nested entries:
+        {
+            "dict1-dict2-key1": value1,
+            "dict1-dict2-key2": value2,
+            ...
+            "dict3-key3": value3,
+            "dict3-key4": value4,
+            ...
+        }
+
+    :param Iterable data : json data.
+    :param tuple parent_dir: json fields.
+
+    :return dict: {subtest: value}
+    """
+    result = {}
+
+    if not data:
+        return result
+
+    if isinstance(data, list):
+        for item in data:
+            for k, v in flatten(item, parent_dir, sep=sep).items():
+                result.setdefault(k, []).extend(v)
+
+    if isinstance(data, dict):
+        for k, v in data.items():
+            current_dir = parent_dir + (k,)
+            subtest = sep.join(current_dir)
+            if isinstance(v, Iterable) and not isinstance(v, str):
+                for x, y in flatten(v, current_dir, sep=sep).items():
+                    result.setdefault(x, []).extend(y)
+            elif v or v == 0:
+                result.setdefault(subtest, []).append(v)
+
+    return result
 
 
 def transform_platform(str_to_transform, config_platform, config_processor=None):

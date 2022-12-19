@@ -574,3 +574,20 @@ browsertime-first-install:
             default: []
     tier: 2
     treeherder-symbol: Btime(welcome)
+
+browsertime-grandprix:
+    raptor:
+        apps: [firefox, chrome, chromium]
+        subtests: [grandprix]
+    description: Raptor (browsertime) grandprix benchmark test
+    max-run-time: 2700
+    run-on-projects:
+        by-app:
+            firefox:
+                by-test-platform:
+                    windows.*-32.*: []
+                    .*64.*shippable-qr/.*: [autoland, mozilla-central]
+                    default: []
+            default: []
+    tier: 3
+    treeherder-symbol: Btime(grandprix)

@@ -90,6 +90,7 @@ browsertime:
     - browsertime-youtube-playback
     - browsertime-custom
     - browsertime-first-install
+    - browsertime-grandprix
     - browsertime-responsiveness
 
 browsertime-profiling:
