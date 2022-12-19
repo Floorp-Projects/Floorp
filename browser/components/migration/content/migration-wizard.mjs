@@ -75,7 +75,7 @@ export class MigrationWizard extends HTMLElement {
       // If we're using Storybook, load the CSS from the static local file
       // system rather than chrome:// to take advantage of auto-reloading.
       fragment.querySelector("link[rel=stylesheet]").href =
-        "/migration/migration-wizard.css";
+        "./migration/migration-wizard.css";
     }
     return fragment;
   }
