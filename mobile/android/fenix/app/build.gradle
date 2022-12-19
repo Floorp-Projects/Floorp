@@ -59,7 +59,8 @@ android {
                         "\"foxyproxy@eric.h.jung\"," +
                         "\"{73a6fe31-595d-460b-a920-fcc0f8843232}\"," +
                         "\"jid1-BoFifL9Vbdl2zQ@jetpack\"," +
-                        "\"woop-NoopscooPsnSXQ@jetpack\"" +
+                        "\"woop-NoopscooPsnSXQ@jetpack\"," +
+                        "\"adnauseam@rednoise.org\"" +
                 "}"
         // This should be the base URL used to call the AMO API.
         buildConfigField "String", "AMO_SERVER_URL", "\"https://services.addons.mozilla.org\""
