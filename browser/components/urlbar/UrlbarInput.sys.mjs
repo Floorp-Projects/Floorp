@@ -769,6 +769,7 @@ export class UrlbarInput {
    *
    */
   handoff(searchString, searchEngine, newtabSessionId) {
+    this._isHandoffSession = true;
     this._handoffSession = newtabSessionId;
     if (lazy.UrlbarPrefs.get("shouldHandOffToSearchMode") && searchEngine) {
       this.search(searchString, {
@@ -2003,7 +2004,7 @@ export class UrlbarInput {
    *   The source name.
    */
   getSearchSource(event) {
-    if (this._handoffSession) {
+    if (this._isHandoffSession) {
       return "urlbar-handoff";
     }
 
@@ -3007,6 +3008,7 @@ export class UrlbarInput {
 
     this.focusedViaMousedown = false;
     this._handoffSession = undefined;
+    this._isHandoffSession = false;
     this.removeAttribute("focused");
 
     if (this._autofillPlaceholder && this.window.gBrowser.userTypedValue) {
