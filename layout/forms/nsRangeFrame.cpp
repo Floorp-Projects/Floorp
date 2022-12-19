@@ -6,6 +6,7 @@
 
 #include "nsRangeFrame.h"
 
+#include "ListMutationObserver.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/TouchEvents.h"
@@ -23,6 +24,7 @@
 #include "mozilla/dom/HTMLDataListElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLOptionElement.h"
+#include "mozilla/dom/MutationEventBinding.h"
 #include "nsPresContext.h"
 #include "nsPresContextInlines.h"
 #include "nsNodeInfoManager.h"
@@ -50,6 +52,14 @@ nsIFrame* NS_NewRangeFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
 nsRangeFrame::nsRangeFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
     : nsContainerFrame(aStyle, aPresContext, kClassID) {}
 
+void nsRangeFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
+                        nsIFrame* aPrevInFlow) {
+  nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
+  if (InputElement().HasAttr(nsGkAtoms::list_)) {
+    mListMutationObserver = new ListMutationObserver(*this);
+  }
+}
+
 nsRangeFrame::~nsRangeFrame() = default;
 
 NS_IMPL_FRAMEARENA_HELPERS(nsRangeFrame)
@@ -65,6 +75,9 @@ void nsRangeFrame::DestroyFrom(nsIFrame* aDestructRoot,
                "nsRangeFrame should not have continuations; if it does we "
                "need to call RegUnregAccessKey only for the first.");
 
+  if (mListMutationObserver) {
+    mListMutationObserver->Detach();
+  }
   aPostDestroyData.AddAnonymousContent(mTrackDiv.forget());
   aPostDestroyData.AddAnonymousContent(mProgressDiv.forget());
   aPostDestroyData.AddAnonymousContent(mThumbDiv.forget());
@@ -636,6 +649,18 @@ nsresult nsRangeFrame::AttributeChanged(int32_t aNameSpaceID,
     } else if (aAttribute == nsGkAtoms::orient) {
       PresShell()->FrameNeedsReflow(this, IntrinsicDirty::None,
                                     NS_FRAME_IS_DIRTY);
+    } else if (aAttribute == nsGkAtoms::list_) {
+      const bool isRemoval = aModType == MutationEvent_Binding::REMOVAL;
+      if (mListMutationObserver) {
+        mListMutationObserver->Detach();
+        if (isRemoval) {
+          mListMutationObserver = nullptr;
+        } else {
+          mListMutationObserver->Attach();
+        }
+      } else if (!isRemoval) {
+        mListMutationObserver = new ListMutationObserver(*this, true);
+      }
     }
   }
 
