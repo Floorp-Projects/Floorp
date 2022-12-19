@@ -723,8 +723,6 @@ class nsTextFrame : public nsIFrame {
                   DrawTarget* aDrawTarget, ReflowOutput& aMetrics,
                   nsReflowStatus& aStatus);
 
-  nscoord ComputeLineHeight() const;
-
   bool IsFloatingFirstLetterChild() const;
 
   bool IsInitialLetterChild() const;
