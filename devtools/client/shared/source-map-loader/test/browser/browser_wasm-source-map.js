@@ -109,7 +109,7 @@ add_task(async function readAndTransposeWasmMap() {
     isWasm: true,
   };
 
-  const urls = await gSourceMapLoader.getOriginalURLs(source);
+  const urls = await getOriginalURLs(source);
   Assert.deepEqual(urls, [
     {
       id: "wasm.js/originalSource-63954a1c231200652c0d99c6a69cd178",
@@ -117,7 +117,7 @@ add_task(async function readAndTransposeWasmMap() {
     },
   ]);
 
-  const { line, column } = await gSourceMapLoader.getOriginalLocation({
+  const { line, column } = await getOriginalLocation({
     sourceId: source.id,
     line: 5,
   });

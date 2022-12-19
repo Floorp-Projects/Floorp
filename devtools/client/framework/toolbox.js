@@ -198,12 +198,6 @@ loader.lazyRequireGetter(
   "resource://devtools/client/shared/thread-utils.js",
   true
 );
-loader.lazyRequireGetter(
-  this,
-  "SourceMapLoader",
-  "resource://devtools/client/shared/source-map-loader/index.js",
-  true
-);
 
 const DEVTOOLS_F12_DISABLED_PREF = "devtools.experiment.f12.shortcut_disabled";
 
@@ -1386,10 +1380,12 @@ Toolbox.prototype = {
     if (this._sourceMapLoader) {
       return this._sourceMapLoader;
     }
-    this._sourceMapLoader = new SourceMapLoader();
+    this._sourceMapLoader = require("devtools/client/shared/source-map-loader/index");
     this._sourceMapLoader.on("source-map-error", message =>
       this.target.logWarningInPage(message, "source map")
     );
+    this._sourceMapLoader.startSourceMapWorker();
+
     return this._sourceMapLoader;
   },
 
@@ -1406,6 +1402,9 @@ Toolbox.prototype = {
     } = require("resource://devtools/client/debugger/src/workers/parser/index.js");
 
     this._parserService = new ParserDispatcher();
+    this._parserService.start(
+      "resource://devtools/client/debugger/dist/parser-worker.js"
+    );
     return this._parserService;
   },
 

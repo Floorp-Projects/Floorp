@@ -25,7 +25,7 @@ const {
   getDisplayedRequestById,
 } = require("resource://devtools/client/netmonitor/src/selectors/index.js");
 
-const SearchDispatcher = require("resource://devtools/client/netmonitor/src/workers/search/index.js");
+const SearchWorker = require("resource://devtools/client/netmonitor/src/workers/search/index.js");
 
 /**
  * Global App object for Network panel. This object depends
@@ -82,7 +82,7 @@ NetMonitorApp.prototype = {
   destroy() {
     unmountComponentAtNode(this.mount);
 
-    SearchDispatcher.stop();
+    SearchWorker.stop();
 
     // Make sure to destroy the API object. It's usually destroyed
     // in the Toolbox destroy method, but we need it here for case

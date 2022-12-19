@@ -28,17 +28,13 @@ function getOutOfScopeLines(outOfScopeLocations) {
   return uniqueLines;
 }
 
-async function getInScopeLines(
-  cx,
-  location,
-  { dispatch, getState, parserWorker }
-) {
+async function getInScopeLines(cx, location, { dispatch, getState, parser }) {
   const source = getLocationSource(getState(), location);
   const sourceTextContent = getSourceTextContent(getState(), location);
 
   let locations = null;
   if (location.line && source && !source.isWasm) {
-    locations = await parserWorker.findOutOfScopeLocations(source.id, location);
+    locations = await parser.findOutOfScopeLocations(source.id, location);
   }
 
   const linesOutOfScope = getOutOfScopeLines(locations);

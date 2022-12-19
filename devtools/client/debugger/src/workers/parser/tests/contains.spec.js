@@ -2,7 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { containsPosition, containsLocation } from "../utils/contains";
+import {
+  containsPosition,
+  containsLocation,
+  nodeContainsPosition,
+} from "../utils/contains";
 
 function getTestLoc() {
   return {
@@ -60,6 +64,11 @@ function endLine(lineOffset = 0) {
 function testContains(pos, bool) {
   const loc = getTestLoc();
   expect(containsPosition(loc, pos)).toEqual(bool);
+}
+
+function testContainsPosition(pos, bool) {
+  const loc = getTestLoc();
+  expect(nodeContainsPosition({ loc }, pos)).toEqual(bool);
 }
 
 describe("containsPosition", () => {
@@ -245,6 +254,77 @@ describe("containsLocation", () => {
       locA.end.column = undefinedColumn();
       locB.end.column = undefinedColumn();
       expect(containsLocation(locA, locB)).toEqual(true);
+    });
+  });
+});
+
+describe("nodeContainsPosition", () => {
+  describe("node and position both with the column criteria", () => {
+    /* eslint-disable jest/expect-expect */
+    it("should contian position within the range", () =>
+      testContainsPosition(startPos(1, 1), true));
+
+    it("should not contian position out of the start line", () =>
+      testContainsPosition(startPos(-1, 0), false));
+
+    it("should not contian position out of the start column", () =>
+      testContainsPosition(startPos(0, -1), false));
+
+    it("should not contian position out of the end line", () =>
+      testContainsPosition(endPos(1, 0), false));
+
+    it("should not contian position out of the end column", () =>
+      testContainsPosition(endPos(0, 1), false));
+
+    it(`should contain position on the same start line and
+        within the start column`, () =>
+      testContainsPosition(startPos(0, 1), true));
+
+    it(`should contain position on the same end line and
+        within the end column`, () =>
+      testContainsPosition(endPos(0, -1), true));
+    /* eslint-enable jest/expect-expect */
+  });
+
+  describe("node without the column criterion", () => {
+    it("should contain position on the same start line", () => {
+      const loc = getTestLoc();
+      loc.start.column = undefinedColumn();
+      const pos = startPos(0, -1);
+      expect(nodeContainsPosition({ loc }, pos)).toEqual(true);
+    });
+
+    it("should contain position on the same end line", () => {
+      const loc = getTestLoc();
+      loc.end.column = undefinedColumn();
+      const pos = startPos(0, 1);
+      expect(nodeContainsPosition({ loc }, pos)).toEqual(true);
+    });
+  });
+
+  describe("position without the column criterion", () => {
+    /* eslint-disable jest/expect-expect */
+    it("should contain position on the same start line", () =>
+      testContainsPosition(startLine(), true));
+
+    it("should contain position on the same end line", () =>
+      testContainsPosition(endLine(), true));
+    /* eslint-enable jest/expect-expect */
+  });
+
+  describe("node and position both without the column criteria", () => {
+    it("should contain position on the same start line", () => {
+      const loc = getTestLoc();
+      loc.start.column = undefinedColumn();
+      const pos = startLine();
+      expect(nodeContainsPosition({ loc }, pos)).toEqual(true);
+    });
+
+    it("should contain position on the same end line", () => {
+      const loc = getTestLoc();
+      loc.end.column = undefinedColumn();
+      const pos = endLine();
+      expect(nodeContainsPosition({ loc }, pos)).toEqual(true);
     });
   });
 });

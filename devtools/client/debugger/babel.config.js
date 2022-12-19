@@ -21,7 +21,6 @@ module.exports = {
         /[/\\]node_modules[/\\]devtools-/,
         /[/\\]node_modules[/\\]react-aria-components[/\\]/,
         "../../shared",
-        "../shared/worker-utils.js",
       ],
       presets: [
         "@babel/preset-react",

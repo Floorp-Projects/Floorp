@@ -11,12 +11,7 @@ import { combineReducers } from "redux";
 import reducers from "../reducers";
 import actions from "../actions";
 import * as selectors from "../selectors";
-import {
-  searchWorker,
-  prettyPrintWorker,
-  parserWorker,
-  evaluationsParser,
-} from "../test/tests-setup";
+import { parserWorker, evaluationsParser } from "../test/tests-setup";
 import configureStore from "../actions/utils/create-store";
 import sourceQueue from "../utils/source-queue";
 import { setupCreate } from "../client/firefox/create";
@@ -43,10 +38,8 @@ function createStore(client, initialState = {}, sourceMapsMock) {
         ...args,
         client,
         sourceMaps: sourceMapsMock !== undefined ? sourceMapsMock : sourceMaps,
-        parserWorker,
+        parser: parserWorker,
         evaluationsParser,
-        prettyPrintWorker,
-        searchWorker,
       };
     },
   })(combineReducers(reducers), initialState);

@@ -11,12 +11,7 @@ import "../../../utils/editor";
 const SearchBarComponent = SearchBar.WrappedComponent;
 
 jest.mock("../../../workers/search", () => ({
-  WorkerDispatcher() {
-    return {
-      getMatches: () => Promise.resolve(["result"]),
-      clear() {},
-    };
-  },
+  getMatches: () => Promise.resolve(["result"]),
 }));
 
 jest.mock("../../../utils/editor", () => ({

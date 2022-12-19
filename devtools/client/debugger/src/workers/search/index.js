@@ -6,12 +6,33 @@ import { WorkerDispatcher } from "devtools/client/shared/worker-utils";
 
 const WORKER_URL = "resource://devtools/client/debugger/dist/search-worker.js";
 
-export class SearchDispatcher extends WorkerDispatcher {
-  constructor(jestUrl) {
-    super(jestUrl || WORKER_URL);
+let dispatcher;
+let jestWorkerUrl;
+
+function getDispatcher() {
+  if (!dispatcher) {
+    dispatcher = new WorkerDispatcher();
+    dispatcher.start(jestWorkerUrl || WORKER_URL);
   }
 
-  getMatches = this.task("getMatches");
-
-  findSourceMatches = this.task("findSourceMatches");
+  return dispatcher;
 }
+
+export const start = jestUrl => {
+  jestWorkerUrl = jestUrl;
+};
+
+export const stop = () => {
+  if (dispatcher) {
+    dispatcher.stop();
+    dispatcher = null;
+  }
+};
+
+export const getMatches = (...args) => {
+  return getDispatcher().invoke("getMatches", ...args);
+};
+
+export const findSourceMatches = (...args) => {
+  return getDispatcher().invoke("findSourceMatches", ...args);
+};

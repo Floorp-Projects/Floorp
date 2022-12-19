@@ -17,6 +17,8 @@ const L10N = new LocalizationHelper(
 const SOURCE_MAP_WORKER_URL =
   "resource://devtools/client/shared/source-map-loader/worker.js";
 
+const dispatcher = new WorkerDispatcher();
+
 const {
   originalToGeneratedId,
   generatedToOriginalId,
@@ -24,18 +26,19 @@ const {
   isOriginalId,
 } = require("resource://devtools/client/shared/source-map-loader/utils/index.js");
 
-class SourceMapLoader extends WorkerDispatcher {
-  #_applySourceMap = this.task("applySourceMap");
-  #_getOriginalURLs = this.task("getOriginalURLs");
-  #_getOriginalSourceText = this.task("getOriginalSourceText");
+const _applySourceMap = dispatcher.task("applySourceMap");
+const _getOriginalURLs = dispatcher.task("getOriginalURLs");
+const _getOriginalSourceText = dispatcher.task("getOriginalSourceText");
 
-  constructor() {
-    super(SOURCE_MAP_WORKER_URL);
-  }
+const SourceMapLoader = {
+  originalToGeneratedId,
+  generatedToOriginalId,
+  isGeneratedId,
+  isOriginalId,
 
   async getOriginalURLs(urlInfo) {
     try {
-      return await this.#_getOriginalURLs(urlInfo);
+      return await _getOriginalURLs(urlInfo);
     } catch (error) {
       const message = L10N.getFormatStr(
         "toolbox.sourceMapFailure",
@@ -43,41 +46,43 @@ class SourceMapLoader extends WorkerDispatcher {
         urlInfo.url,
         urlInfo.sourceMapURL
       );
-      this.emit("source-map-error", message);
+      SourceMapLoader.emit("source-map-error", message);
 
       // It's ok to swallow errors here, because a null
       // result just means that no source map was found.
       return null;
     }
-  }
+  },
 
-  hasOriginalURL = this.task("hasOriginalURL");
-  getOriginalRanges = this.task("getOriginalRanges");
+  hasOriginalURL: dispatcher.task("hasOriginalURL"),
+  getOriginalRanges: dispatcher.task("getOriginalRanges"),
 
-  getGeneratedRanges = this.task("getGeneratedRanges", {
+  getGeneratedRanges: dispatcher.task("getGeneratedRanges", {
     queue: true,
-  });
-  getGeneratedLocation = this.task("getGeneratedLocation", {
+  }),
+  getGeneratedLocation: dispatcher.task("getGeneratedLocation", {
     queue: true,
-  });
-  getOriginalLocation = this.task("getOriginalLocation", {
+  }),
+  getOriginalLocation: dispatcher.task("getOriginalLocation", {
     queue: true,
-  });
+  }),
 
-  getOriginalLocations = this.task("getOriginalLocations");
-  getGeneratedRangesForOriginal = this.task("getGeneratedRangesForOriginal");
-  getFileGeneratedRange = this.task("getFileGeneratedRange");
+  getOriginalLocations: dispatcher.task("getOriginalLocations"),
+  getGeneratedRangesForOriginal: dispatcher.task(
+    "getGeneratedRangesForOriginal"
+  ),
+  getFileGeneratedRange: dispatcher.task("getFileGeneratedRange"),
 
   async getOriginalSourceText(originalSourceId) {
     try {
-      return await this.#_getOriginalSourceText(originalSourceId);
+      return await _getOriginalSourceText(originalSourceId);
     } catch (error) {
       const message = L10N.getFormatStr(
         "toolbox.sourceMapSourceFailure",
         error.message,
         error.metadata ? error.metadata.url : "<unknown>"
       );
-      this.emit("source-map-error", message);
+      SourceMapLoader.emit("source-map-error", message);
 
       // Also replace the result with the error text.
       // Note that this result has to have the same form
@@ -88,29 +93,26 @@ class SourceMapLoader extends WorkerDispatcher {
         contentType: "text/plain",
       };
     }
-  }
+  },
 
-  clearSourceMaps = this.task("clearSourceMaps");
-  getOriginalStackFrames = this.task("getOriginalStackFrames");
+  clearSourceMaps: dispatcher.task("clearSourceMaps"),
+  getOriginalStackFrames: dispatcher.task("getOriginalStackFrames"),
 
   async applySourceMap(generatedId, ...rest) {
-    const rv = await this.#_applySourceMap(generatedId, ...rest);
+    const rv = await _applySourceMap(generatedId, ...rest);
 
     // Notify and ensure waiting for the SourceMapURLService to process the source map before resolving.
     // Otherwise tests start failing because of pending request made by this component.
     await this.emitAsync("source-map-applied", generatedId);
 
     return rv;
-  }
+  },
 
-  stopSourceMapWorker = this.stop.bind(this);
-}
-EventEmitter.decorate(SourceMapLoader.prototype);
-
-module.exports = {
-  SourceMapLoader,
-  originalToGeneratedId,
-  generatedToOriginalId,
-  isGeneratedId,
-  isOriginalId,
+  startSourceMapWorker: dispatcher.start.bind(
+    dispatcher,
+    SOURCE_MAP_WORKER_URL
+  ),
+  stopSourceMapWorker: dispatcher.stop.bind(dispatcher),
 };
+EventEmitter.decorate(SourceMapLoader);
+module.exports = SourceMapLoader;

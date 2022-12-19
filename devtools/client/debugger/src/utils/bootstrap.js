@@ -17,8 +17,8 @@ const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
 
-import { SearchDispatcher } from "../workers/search";
-import { PrettyPrintDispatcher } from "../workers/pretty-print";
+import * as search from "../workers/search";
+import * as prettyPrint from "../workers/pretty-print";
 import { ParserDispatcher } from "../workers/parser";
 
 import configureStore from "../actions/utils/create-store";
@@ -29,7 +29,7 @@ import { asyncStore, prefs } from "./prefs";
 import { persistTabs } from "../utils/tabs";
 const { sanitizeBreakpoints } = require("devtools/client/shared/thread-utils");
 
-let gWorkers;
+let parser;
 
 export function bootstrapStore(client, workers, panel, initialState) {
   const debugJsModules = AppConstants.DEBUG_JS_MODULES == "1";
@@ -53,18 +53,18 @@ export function bootstrapStore(client, workers, panel, initialState) {
 }
 
 export function bootstrapWorkers(panelWorkers) {
-  gWorkers = {
-    prettyPrintWorker: new PrettyPrintDispatcher(),
-    parserWorker: new ParserDispatcher(),
-    searchWorker: new SearchDispatcher(),
-  };
-  return { ...panelWorkers, ...gWorkers };
+  prettyPrint.start();
+  search.start();
+
+  parser = new ParserDispatcher();
+  parser.start();
+  return { ...panelWorkers, prettyPrint, parser, search };
 }
 
 export function teardownWorkers() {
-  gWorkers.prettyPrintWorker.stop();
-  gWorkers.parserWorker.stop();
-  gWorkers.searchWorker.stop();
+  prettyPrint.stop();
+  parser.stop();
+  search.stop();
 }
 
 /**

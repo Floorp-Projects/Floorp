@@ -35,7 +35,6 @@ add_task(async function() {
   const awaitExpression = `await new Promise(res => {
     const result = ["res", ...inPausedExpression];
     setTimeout(() => res(result), 1000);
-    console.log("awaitExpression executed");
   })`;
 
   const onAwaitResultMessage = waitForMessageByType(
@@ -51,8 +50,7 @@ add_task(async function() {
   await executeAndWaitForResultMessage(hud, `"smoke"`, `"smoke"`);
 
   // Give the engine some time to evaluate the await expression before resuming.
-  // Otherwise the awaitExpression may be evaluate while the thread is already resumed!
-  await waitForMessageByType(hud, "awaitExpression executed", ".console-api");
+  await waitForTick();
 
   // Click on the resume button to not be paused anymore.
   await resume(dbg);

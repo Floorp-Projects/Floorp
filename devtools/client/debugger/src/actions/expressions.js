@@ -71,12 +71,12 @@ export function clearExpressionError() {
 }
 
 export function updateExpression(cx, input, expression) {
-  return async ({ dispatch, getState, parserWorker }) => {
+  return async ({ dispatch, getState, parser }) => {
     if (!input) {
       return;
     }
 
-    const expressionError = await parserWorker.hasSyntaxError(input);
+    const expressionError = await parser.hasSyntaxError(input);
     dispatch({
       type: "UPDATE_EXPRESSION",
       cx,
