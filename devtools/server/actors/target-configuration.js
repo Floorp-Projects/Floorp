@@ -85,6 +85,15 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
       "browsing-context-attached"
     );
 
+    // When we perform a bfcache navigation, the current browsing context gets
+    // replaced with a browsing which was previously stored in bfcache and we
+    // should update our reference accordingly.
+    this._onBfCacheNavigation = this._onBfCacheNavigation.bind(this);
+    this.watcherActor.on(
+      "bf-cache-navigation-pageshow",
+      this._onBfCacheNavigation
+    );
+
     this._browsingContext = this.watcherActor.browserElement?.browsingContext;
   },
 
@@ -152,6 +161,12 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
       this._browsingContext.inRDMPane = true;
     }
     this._updateParentProcessConfiguration(this._getConfiguration());
+  },
+
+  _onBfCacheNavigation({ windowGlobal } = {}) {
+    if (windowGlobal) {
+      this._onBrowsingContextAttached(windowGlobal.browsingContext);
+    }
   },
 
   _getConfiguration() {
@@ -429,6 +444,10 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
     Services.obs.removeObserver(
       this._onBrowsingContextAttached,
       "browsing-context-attached"
+    );
+    this.watcherActor.off(
+      "bf-cache-navigation-pageshow",
+      this._onBfCacheNavigation
     );
     this._restoreParentProcessConfiguration();
     Actor.prototype.destroy.call(this);
