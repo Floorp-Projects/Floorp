@@ -117,7 +117,7 @@ ExportEntry::ExportEntry(Handle<JSAtom*> maybeExportName,
 
 void ExportEntry::trace(JSTracer* trc) {
   TraceNullableEdge(trc, &exportName_, "ExportEntry::exportName_");
-  TraceEdge(trc, &moduleRequest_, "ExportEntry::moduleRequest_");
+  TraceNullableEdge(trc, &moduleRequest_, "ExportEntry::moduleRequest_");
   TraceNullableEdge(trc, &importName_, "ExportEntry::importName_");
   TraceNullableEdge(trc, &localName_, "ExportEntry::localName_");
 }
@@ -1366,6 +1366,8 @@ void ModuleBuilder::finishFunctionDecls(
 ModuleRequestObject* CreateModuleRequestFromStencil(
     JSContext* cx, frontend::CompilationAtomCache& atomCache,
     const frontend::StencilModuleEntry& entry) {
+  MOZ_ASSERT(entry.specifier);
+
   Rooted<ArrayObject*> assertionArray(cx);
   uint32_t numberOfAssertions = entry.assertions.length();
   if (numberOfAssertions > 0) {
@@ -1401,11 +1403,9 @@ ModuleRequestObject* CreateModuleRequestFromStencil(
     }
   }
 
-  Rooted<JSAtom*> specifier(cx);
-  if (entry.specifier) {
-    specifier = atomCache.getExistingAtomAt(cx, entry.specifier);
-    MOZ_ASSERT(specifier);
-  }
+  Rooted<JSAtom*> specifier(cx,
+                            atomCache.getExistingAtomAt(cx, entry.specifier));
+  MOZ_ASSERT(specifier);
 
   return ModuleRequestObject::create(cx, specifier, assertionArray);
 }
@@ -1463,10 +1463,13 @@ bool CreateExportEntriesFromStencil(
       MOZ_ASSERT(exportName);
     }
 
-    Rooted<ModuleRequestObject*> moduleRequest(
-        cx, CreateModuleRequestFromStencil(cx, atomCache, entry));
-    if (!moduleRequest) {
-      return false;
+    MOZ_ASSERT_IF(!entry.assertions.empty(), entry.specifier);
+    Rooted<ModuleRequestObject*> moduleRequest(cx);
+    if (entry.specifier) {
+      moduleRequest = CreateModuleRequestFromStencil(cx, atomCache, entry);
+      if (!moduleRequest) {
+        return false;
+      }
     }
 
     Rooted<JSAtom*> localName(cx);

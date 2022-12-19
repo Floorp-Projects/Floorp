@@ -484,6 +484,9 @@ static ModuleObject* HostResolveImportedModule(
     JSContext* cx, Handle<ModuleObject*> module,
     Handle<ModuleRequestObject*> moduleRequest,
     ModuleStatus expectedMinimumStatus) {
+  MOZ_ASSERT(module);
+  MOZ_ASSERT(moduleRequest);
+
   Rooted<Value> referencingPrivate(cx, JS::GetModulePrivate(module));
   Rooted<ModuleObject*> requestedModule(cx);
   requestedModule =
