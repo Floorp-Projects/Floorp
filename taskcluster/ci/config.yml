@@ -668,7 +668,7 @@ workers:
             provisioner: '{trust-domain}-t'
             implementation: docker-worker
             os: linux
-            worker-type: misc
+            worker-type: misc-gcp
 
 
 mac-notarization:
