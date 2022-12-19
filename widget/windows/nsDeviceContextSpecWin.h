@@ -29,7 +29,7 @@ class nsDeviceContextSpecWin : public nsIDeviceContextSpec {
                            int32_t aStartPage, int32_t aEndPage) override {
     return NS_OK;
   }
-  NS_IMETHOD EndDocument() override { return NS_OK; }
+  NS_IMETHOD EndDocument() override;
   NS_IMETHOD BeginPage() override { return NS_OK; }
   NS_IMETHOD EndPage() override { return NS_OK; }
 
