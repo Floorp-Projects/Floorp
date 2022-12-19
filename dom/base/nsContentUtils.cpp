@@ -195,6 +195,7 @@
 #include "mozilla/dom/WindowContext.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/XULCommandEvent.h"
 #include "mozilla/fallible.h"
 #include "mozilla/gfx/2D.h"
@@ -426,7 +427,10 @@ nsTHashMap<nsStringHashKey, EventNameMapping>*
     nsContentUtils::sStringEventTable = nullptr;
 nsTArray<RefPtr<nsAtom>>* nsContentUtils::sUserDefinedEvents = nullptr;
 nsIStringBundleService* nsContentUtils::sStringBundleService;
-nsIStringBundle* nsContentUtils::sStringBundles[PropertiesFile_COUNT];
+
+static StaticRefPtr<nsIStringBundle>
+    sStringBundles[nsContentUtils::PropertiesFile_COUNT];
+
 nsIContentPolicy* nsContentUtils::sContentPolicyService;
 bool nsContentUtils::sTriedToGetContentPolicy = false;
 StaticRefPtr<nsIBidiKeyboard> nsContentUtils::sBidiKeyboard;
@@ -4086,28 +4090,19 @@ static const char* gPropertiesFiles[nsContentUtils::PropertiesFile_COUNT] = {
     "resource://gre/res/locale/dom/dom.properties"};
 
 /* static */
-nsresult nsContentUtils::EnsureAndLoadStringBundle(PropertiesFile aFile) {
-  MOZ_ASSERT(NS_IsMainThread(), "Should be called on main thread.");
-  nsresult rv = EnsureStringBundle(aFile);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  return nsStringBundleBase::Cast(sStringBundles[aFile])->LoadProperties();
-}
-
-/* static */
 nsresult nsContentUtils::EnsureStringBundle(PropertiesFile aFile) {
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread(),
+                        "Should not create bundles off main thread.");
   if (!sStringBundles[aFile]) {
     if (!sStringBundleService) {
       nsresult rv =
           CallGetService(NS_STRINGBUNDLE_CONTRACTID, &sStringBundleService);
       NS_ENSURE_SUCCESS(rv, rv);
     }
-    nsIStringBundle* bundle;
-    nsresult rv =
-        sStringBundleService->CreateBundle(gPropertiesFiles[aFile], &bundle);
-    NS_ENSURE_SUCCESS(rv, rv);
-    sStringBundles[aFile] = bundle;  // transfer ownership
+    RefPtr<nsIStringBundle> bundle;
+    MOZ_TRY(sStringBundleService->CreateBundle(gPropertiesFiles[aFile],
+                                               getter_AddRefs(bundle)));
+    sStringBundles[aFile] = bundle.forget();
   }
   return NS_OK;
 }
@@ -4183,10 +4178,7 @@ nsresult nsContentUtils::GetMaybeLocalizedString(PropertiesFile aFile,
 nsresult nsContentUtils::GetLocalizedString(PropertiesFile aFile,
                                             const char* aKey,
                                             nsAString& aResult) {
-  nsresult rv = EnsureStringBundle(aFile);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsIStringBundle* bundle = sStringBundles[aFile];
-  return bundle->GetStringFromName(aKey, aResult);
+  return FormatLocalizedString(aFile, aKey, {}, aResult);
 }
 
 /* static */
@@ -4198,18 +4190,71 @@ nsresult nsContentUtils::FormatMaybeLocalizedString(
       aResult);
 }
 
+class FormatLocalizedStringRunnable final : public WorkerMainThreadRunnable {
+ public:
+  FormatLocalizedStringRunnable(WorkerPrivate* aWorkerPrivate,
+                                nsContentUtils::PropertiesFile aFile,
+                                const char* aKey,
+                                const nsTArray<nsString>& aParams,
+                                nsAString& aLocalizedString)
+      : WorkerMainThreadRunnable(aWorkerPrivate,
+                                 "FormatLocalizedStringRunnable"_ns),
+        mFile(aFile),
+        mKey(aKey),
+        mParams(aParams),
+        mLocalizedString(aLocalizedString) {
+    MOZ_ASSERT(aWorkerPrivate);
+    aWorkerPrivate->AssertIsOnWorkerThread();
+  }
+
+  bool MainThreadRun() override {
+    AssertIsOnMainThread();
+
+    mResult = nsContentUtils::FormatLocalizedString(mFile, mKey, mParams,
+                                                    mLocalizedString);
+    Unused << NS_WARN_IF(NS_FAILED(mResult));
+    return true;
+  }
+
+  nsresult GetResult() const { return mResult; }
+
+ private:
+  const nsContentUtils::PropertiesFile mFile;
+  const char* mKey;
+  const nsTArray<nsString>& mParams;
+  nsresult mResult = NS_ERROR_FAILURE;
+  nsAString& mLocalizedString;
+};
+
 /* static */
 nsresult nsContentUtils::FormatLocalizedString(
     PropertiesFile aFile, const char* aKey, const nsTArray<nsString>& aParams,
     nsAString& aResult) {
-  nsresult rv = EnsureStringBundle(aFile);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsIStringBundle* bundle = sStringBundles[aFile];
+  if (!NS_IsMainThread()) {
+    // nsIStringBundle is thread-safe but its creation is not, and in particular
+    // we don't create and store nsIStringBundle objects in a thread-safe way.
+    //
+    // TODO(emilio): Maybe if we already have the right bundle created we could
+    // just call into it, but we should make sure that Shutdown() doesn't get
+    // called on the main thread when that happens which is a bit tricky to
+    // prove?
+    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+    if (NS_WARN_IF(!workerPrivate)) {
+      return NS_ERROR_UNEXPECTED;
+    }
 
+    auto runnable = MakeRefPtr<FormatLocalizedStringRunnable>(
+        workerPrivate, aFile, aKey, aParams, aResult);
+
+    runnable->Dispatch(Canceling, IgnoreErrors());
+    return runnable->GetResult();
+  }
+
+  MOZ_TRY(EnsureStringBundle(aFile));
+  nsIStringBundle* bundle = sStringBundles[aFile];
   if (aParams.IsEmpty()) {
     return bundle->GetStringFromName(aKey, aResult);
   }
-
   return bundle->FormatStringFromName(aKey, aParams, aResult);
 }
 
