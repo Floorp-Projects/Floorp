@@ -523,12 +523,13 @@ class IceTestPeer : public sigslot::has_slots<> {
         NS_SUCCEEDED(ice_ctx_->SetResolver(dns_resolver_->AllocateResolver())));
   }
 
-  void Gather(bool default_route_only = false) {
+  void Gather(bool default_route_only = false,
+              bool obfuscate_host_addresses = false) {
     nsresult res;
 
     test_utils_->sts_target()->Dispatch(
         WrapRunnableRet(&res, ice_ctx_, &NrIceCtx::StartGathering,
-                        default_route_only, false),
+                        default_route_only, obfuscate_host_addresses),
         NS_DISPATCH_SYNC);
 
     ASSERT_TRUE(NS_SUCCEEDED(res));
@@ -1419,9 +1420,11 @@ class WebRtcIceGatherTest : public StunTest {
     }
   }
 
-  void Gather(unsigned int waitTime = kDefaultTimeout) {
+  void Gather(unsigned int waitTime = kDefaultTimeout,
+              bool default_route_only = false,
+              bool obfuscate_host_addresses = false) {
     EnsurePeer();
-    peer_->Gather();
+    peer_->Gather(default_route_only, obfuscate_host_addresses);
 
     if (waitTime) {
       WaitForGather(waitTime);
@@ -2551,6 +2554,48 @@ TEST_F(WebRtcIceGatherTest, TestFakeStunServerNoNatNoHost) {
   DumpAttributes(0);
   ASSERT_FALSE(StreamHasMatchingCandidate(0, "host"));
   ASSERT_TRUE(StreamHasMatchingCandidate(0, "srflx"));
+}
+
+// Test that srflx candidate is discarded in non-NATted environment if host
+// address obfuscation is not enabled.
+TEST_F(WebRtcIceGatherTest,
+       TestSrflxCandidateDiscardedWithObfuscateHostAddressesNotEnabled) {
+  {
+    NrIceCtx::GlobalConfig config;
+    config.mTcpEnabled = false;
+    NrIceCtx::InitializeGlobals(config);
+  }
+
+  NrIceCtx::Config config;
+  peer_ = MakeUnique<IceTestPeer>("P1", test_utils_, true, config);
+  UseTestStunServer();
+  peer_->AddStream(1);
+  Gather(0, false, false);
+  WaitForGather();
+  DumpAttributes(0);
+  EXPECT_TRUE(StreamHasMatchingCandidate(0, "host"));
+  EXPECT_FALSE(StreamHasMatchingCandidate(0, "srflx"));
+}
+
+// Test that srflx candidate is generated in non-NATted environment if host
+// address obfuscation is enabled.
+TEST_F(WebRtcIceGatherTest,
+       TestSrflxCandidateGeneratedWithObfuscateHostAddressesEnabled) {
+  {
+    NrIceCtx::GlobalConfig config;
+    config.mTcpEnabled = false;
+    NrIceCtx::InitializeGlobals(config);
+  }
+
+  NrIceCtx::Config config;
+  peer_ = MakeUnique<IceTestPeer>("P1", test_utils_, true, config);
+  UseTestStunServer();
+  peer_->AddStream(1);
+  Gather(0, false, true);
+  WaitForGather();
+  DumpAttributes(0);
+  EXPECT_TRUE(StreamHasMatchingCandidate(0, "host"));
+  EXPECT_TRUE(StreamHasMatchingCandidate(0, "srflx"));
 }
 
 TEST_F(WebRtcIceGatherTest, TestStunTcpServerTrickle) {

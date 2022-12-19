@@ -269,8 +269,7 @@ NrIceCtx::NrIceCtx(const std::string& name)
       trickle_(true),
       config_(),
       nat_(nullptr),
-      proxy_config_(nullptr),
-      obfuscate_host_addresses_(false) {}
+      proxy_config_(nullptr) {}
 
 /* static */
 RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& aName) {
@@ -288,17 +287,17 @@ nsresult NrIceCtx::SetIceConfig(const Config& aConfig) {
   switch (config_.mPolicy) {
     case ICE_POLICY_RELAY:
       MOZ_MTLOG(ML_DEBUG, "SetIceConfig: relay only");
-      nr_ice_ctx_remove_flags(ctx_, NR_ICE_CTX_FLAGS_HIDE_HOST_CANDIDATES);
+      nr_ice_ctx_remove_flags(ctx_, NR_ICE_CTX_FLAGS_DISABLE_HOST_CANDIDATES);
       nr_ice_ctx_add_flags(ctx_, NR_ICE_CTX_FLAGS_RELAY_ONLY);
       break;
     case ICE_POLICY_NO_HOST:
       MOZ_MTLOG(ML_DEBUG, "SetIceConfig: no host");
-      nr_ice_ctx_add_flags(ctx_, NR_ICE_CTX_FLAGS_HIDE_HOST_CANDIDATES);
+      nr_ice_ctx_add_flags(ctx_, NR_ICE_CTX_FLAGS_DISABLE_HOST_CANDIDATES);
       nr_ice_ctx_remove_flags(ctx_, NR_ICE_CTX_FLAGS_RELAY_ONLY);
       break;
     case ICE_POLICY_ALL:
       MOZ_MTLOG(ML_DEBUG, "SetIceConfig: all");
-      nr_ice_ctx_remove_flags(ctx_, NR_ICE_CTX_FLAGS_HIDE_HOST_CANDIDATES);
+      nr_ice_ctx_remove_flags(ctx_, NR_ICE_CTX_FLAGS_DISABLE_HOST_CANDIDATES);
       nr_ice_ctx_remove_flags(ctx_, NR_ICE_CTX_FLAGS_RELAY_ONLY);
       break;
   }
@@ -478,9 +477,9 @@ void NrIceCtx::trickle_cb(void* arg, nr_ice_ctx* ice_ctx,
 
   // Format the candidate.
   char candidate_str[NR_ICE_MAX_ATTRIBUTE_SIZE];
-  int r = nr_ice_format_candidate_attribute(candidate, candidate_str,
-                                            sizeof(candidate_str),
-                                            ctx->obfuscate_host_addresses_);
+  int r = nr_ice_format_candidate_attribute(
+      candidate, candidate_str, sizeof(candidate_str),
+      (ctx->ctx()->flags & NR_ICE_CTX_FLAGS_OBFUSCATE_HOST_ADDRESSES) ? 1 : 0);
   MOZ_ASSERT(!r);
   if (r) return;
 
@@ -845,7 +844,9 @@ nsresult NrIceCtx::StartGathering(bool default_route_only,
   ASSERT_ON_THREAD(sts_target_);
   MOZ_MTLOG(ML_NOTICE, "NrIceCtx(" << name_ << "): " << __func__);
 
-  obfuscate_host_addresses_ = obfuscate_host_addresses;
+  if (obfuscate_host_addresses) {
+    nr_ice_ctx_add_flags(ctx_, NR_ICE_CTX_FLAGS_OBFUSCATE_HOST_ADDRESSES);
+  }
 
   SetCtxFlags(default_route_only);
 
@@ -1013,7 +1014,8 @@ void NrIceCtx::SetGatheringState(GatheringState state) {
 void NrIceCtx::GenerateObfuscatedAddress(nr_ice_candidate* candidate,
                                          std::string* mdns_address,
                                          std::string* actual_address) {
-  if (candidate->type == HOST && obfuscate_host_addresses_) {
+  if (candidate->type == HOST &&
+      (ctx_->flags & NR_ICE_CTX_FLAGS_OBFUSCATE_HOST_ADDRESSES)) {
     char addr[64];
     if (nr_transport_addr_get_addrstring(&candidate->addr, addr,
                                          sizeof(addr))) {
