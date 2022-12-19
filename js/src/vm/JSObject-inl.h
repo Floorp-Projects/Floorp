@@ -91,18 +91,18 @@ inline void JSObject::finalize(JS::GCContext* gcx) {
   }
 #endif
 
-  const JSClass* clasp = getClass();
-  js::NativeObject* nobj =
-      clasp->isNativeObject() ? &as<js::NativeObject>() : nullptr;
+  js::Shape* objShape = shape();
 
+  const JSClass* clasp = objShape->getObjectClass();
   if (clasp->hasFinalize()) {
     clasp->doFinalize(gcx, this);
   }
 
-  if (!nobj) {
+  if (!objShape->isNative()) {
     return;
   }
 
+  js::NativeObject* nobj = &as<js::NativeObject>();
   if (nobj->hasDynamicSlots()) {
     js::ObjectSlots* slotsHeader = nobj->getSlotsHeader();
     size_t size = js::ObjectSlots::allocSize(slotsHeader->capacity());
