@@ -25,7 +25,7 @@ function getLocalScopeLevels(originalAstScopes) {
 }
 
 export function generateInlinePreview(cx, frame) {
-  return async function({ dispatch, getState, parser, client }) {
+  return async function({ dispatch, getState, parserWorker, client }) {
     if (!frame || !features.inlinePreview) {
       return null;
     }
@@ -63,7 +63,7 @@ export function generateInlinePreview(cx, frame) {
       return null;
     }
 
-    const originalAstScopes = await parser.getScopes(selectedLocation);
+    const originalAstScopes = await parserWorker.getScopes(selectedLocation);
     validateThreadContext(getState(), cx);
     if (!originalAstScopes) {
       return null;

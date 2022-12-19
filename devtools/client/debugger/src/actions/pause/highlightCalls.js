@@ -25,7 +25,7 @@ function inHouseContainsPosition(a, b) {
 }
 
 export function highlightCalls(cx) {
-  return async function({ dispatch, getState, parser, client }) {
+  return async function({ dispatch, getState, parserWorker }) {
     if (!cx) {
       return null;
     }
@@ -41,7 +41,7 @@ export function highlightCalls(cx) {
 
     const { thread } = cx;
 
-    const originalAstScopes = await parser.getScopes(frame.location);
+    const originalAstScopes = await parserWorker.getScopes(frame.location);
     if (!originalAstScopes) {
       return null;
     }
@@ -85,7 +85,7 @@ export function highlightCalls(cx) {
 }
 
 export function unhighlightCalls(cx) {
-  return async function({ dispatch, getState, parser, client }) {
+  return async function({ dispatch, getState }) {
     const { thread } = cx;
     return dispatch({
       type: "UNHIGHLIGHT_CALLS",

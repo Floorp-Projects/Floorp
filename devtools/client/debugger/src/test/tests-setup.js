@@ -10,16 +10,10 @@ import Adapter from "enzyme-adapter-react-16";
 import { setupHelper } from "../utils/dbg";
 import { prefs } from "../utils/prefs";
 
-import {
-  setJestWorkerURL as setJestPrettyPrintWorkerURL,
-  stop as stopPrettyPrintWorker,
-} from "../workers/pretty-print";
-
+import { PrettyPrintDispatcher } from "../workers/pretty-print";
 import { ParserDispatcher } from "../workers/parser";
-import {
-  setJestWorkerURL as setJestSearchWorkerURL,
-  stop as stopSearchWorker,
-} from "../workers/search";
+import { SearchDispatcher } from "../workers/search";
+
 import { clearDocuments } from "../utils/editor";
 
 const rootPath = path.join(__dirname, "../../");
@@ -38,20 +32,23 @@ export const parserWorker = new ParserDispatcher(
 export const evaluationsParser = new ParserDispatcher(
   path.join(rootPath, "src/workers/parser/worker.js")
 );
+export const prettyPrintWorker = new PrettyPrintDispatcher(
+  path.join(rootPath, "src/workers/pretty-print/worker.js")
+);
+export const searchWorker = new SearchDispatcher(
+  path.join(rootPath, "src/workers/search/worker.js")
+);
 
 beforeAll(() => {
-  setJestPrettyPrintWorkerURL(
-    path.join(rootPath, "src/workers/pretty-print/worker.js")
-  );
-  setJestSearchWorkerURL(path.join(rootPath, "src/workers/search/worker.js"));
   process.on("unhandledRejection", formatException);
 });
 
 afterAll(() => {
-  stopPrettyPrintWorker();
   parserWorker.stop();
   evaluationsParser.stop();
-  stopSearchWorker();
+  prettyPrintWorker.stop();
+  searchWorker.stop();
+
   process.removeListener("unhandledRejection", formatException);
 });
 
@@ -60,6 +57,7 @@ afterEach(() => {});
 beforeEach(async () => {
   parserWorker.clear();
   evaluationsParser.clear();
+
   clearDocuments();
   prefs.projectDirectoryRoot = "";
   prefs.projectDirectoryRootName = "";
