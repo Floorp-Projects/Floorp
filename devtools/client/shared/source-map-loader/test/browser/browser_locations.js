@@ -13,7 +13,9 @@ add_task(async function testGetOriginalLocation() {
     line: 49,
   };
 
-  const originalLocation = await getOriginalLocation(generatedLocation);
+  const originalLocation = await gSourceMapLoader.getOriginalLocation(
+    generatedLocation
+  );
   Assert.deepEqual(
     originalLocation,
     {
@@ -25,15 +27,19 @@ add_task(async function testGetOriginalLocation() {
     "Mapped a generated location"
   );
 
-  const originalLocation2 = await getOriginalLocation(originalLocation);
+  const originalLocation2 = await gSourceMapLoader.getOriginalLocation(
+    originalLocation
+  );
   Assert.deepEqual(
     originalLocation2,
     originalLocation,
     "original location maps to itself"
   );
 
-  clearSourceMaps();
-  const originalLocation3 = await getOriginalLocation(generatedLocation);
+  gSourceMapLoader.clearSourceMaps();
+  const originalLocation3 = await gSourceMapLoader.getOriginalLocation(
+    generatedLocation
+  );
   Assert.deepEqual(
     originalLocation3,
     generatedLocation,
@@ -55,7 +61,7 @@ add_task(async function testGetGeneratedLocation() {
     id: "bundle.js/originalSource-fe2c41d3535b76c158e39ba4f3ff826a",
   };
 
-  const generatedLocation = await getGeneratedLocation(
+  const generatedLocation = await gSourceMapLoader.getGeneratedLocation(
     originalLocation,
     source
   );
@@ -70,9 +76,9 @@ add_task(async function testGetGeneratedLocation() {
   );
 
   {
-    clearSourceMaps();
+    gSourceMapLoader.clearSourceMaps();
 
-    const secondGeneratedLocation = await getGeneratedLocation(
+    const secondGeneratedLocation = await gSourceMapLoader.getGeneratedLocation(
       originalLocation,
       source
     );
@@ -101,8 +107,8 @@ add_task(async function testGetGeneratedLocation() {
       id: "if.out.js/originalSource-5ad3141023dae912c5f8833c7e03beeb",
     };
 
-    const oLoc = await getOriginalLocation(genLoc1);
-    const genLoc2 = await getGeneratedLocation(oLoc, ifSource);
+    const oLoc = await gSourceMapLoader.getOriginalLocation(genLoc1);
+    const genLoc2 = await gSourceMapLoader.getGeneratedLocation(oLoc, ifSource);
 
     Assert.deepEqual(genLoc2, genLoc1, "location mapping is symmetric");
   }
@@ -123,8 +129,8 @@ add_task(async function testGetGeneratedLocation() {
       id: "if.out.js/originalSource-5ad3141023dae912c5f8833c7e03beeb",
     };
 
-    const oLoc = await getOriginalLocation(genLoc1);
-    const genLoc2 = await getGeneratedLocation(oLoc, ifSource);
+    const oLoc = await gSourceMapLoader.getOriginalLocation(genLoc1);
+    const genLoc2 = await gSourceMapLoader.getGeneratedLocation(oLoc, ifSource);
 
     Assert.deepEqual(
       genLoc2,
