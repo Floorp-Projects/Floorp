@@ -249,6 +249,10 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecWin::MakePrintTarget() {
 
     if (mOutputFormat == nsIPrintSettings::kOutputFormatPDF) {
       nsString filename;
+      // TODO(dshin):
+      // - Does this handle bug 1659470?
+      // - Should this code path be enabled, we should use temporary files and
+      // then move the file in `EndDocument()`.
       mPrintSettings->GetToFileName(filename);
 
       nsAutoCString printFile(NS_ConvertUTF16toUTF8(filename).get());
@@ -288,18 +292,12 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecWin::MakePrintTarget() {
         mPrintSettings->GetOutputStream(getter_AddRefs(out));
         return out;
       }
-      nsAutoString filename;
-      mPrintSettings->GetToFileName(filename);
 
+      // Even if the destination may be a named path, write to a temp file -
+      // this is consistent with behaviour of `PrintTarget` on other platforms.
       nsCOMPtr<nsIFile> file;
-      nsresult rv;
-      if (!filename.IsEmpty()) {
-        file = do_CreateInstance("@mozilla.org/file/local;1");
-        rv = file->InitWithPath(filename);
-      } else {
-        rv = NS_OpenAnonymousTemporaryNsIFile(getter_AddRefs(mTempFile));
-        file = mTempFile;
-      }
+      nsresult rv = NS_OpenAnonymousTemporaryNsIFile(getter_AddRefs(mTempFile));
+      file = mTempFile;
 
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return nullptr;
@@ -331,6 +329,46 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecWin::MakePrintTarget() {
   }
 
   return nullptr;
+}
+
+NS_IMETHODIMP nsDeviceContextSpecWin::EndDocument() {
+  if (mPrintSettings->GetOutputDestination() !=
+          nsIPrintSettings::kOutputDestinationFile ||
+      mOutputFormat != nsIPrintSettings::kOutputFormatPDF) {
+    return NS_OK;
+  }
+
+#ifdef MOZ_ENABLE_SKIA_PDF
+  if (mPrintViaSkPDF) {
+    return NS_OK;
+  }
+#endif
+
+  MOZ_ASSERT(mTempFile, "No handle to temporary PDF file.");
+
+  nsAutoString targetPath;
+  mPrintSettings->GetToFileName(targetPath);
+
+  if (targetPath.IsEmpty()) {
+    return NS_OK;
+  }
+
+  // We still need to move the file to its actual destination.
+  nsCOMPtr<nsIFile> destFile;
+  MOZ_TRY(NS_NewLocalFile(targetPath, false, getter_AddRefs(destFile)));
+  nsAutoString destLeafName;
+  MOZ_TRY(destFile->GetLeafName(destLeafName));
+
+  nsCOMPtr<nsIFile> destDir;
+  MOZ_TRY(destFile->GetParent(getter_AddRefs(destDir)));
+
+  // This should be fine - Windows API calls usually prevent moving between
+  // different volumes (See Win32 API's `MOVEFILE_COPY_ALLOWED` flag), but we
+  // handle that down this call.
+  MOZ_TRY(mTempFile->MoveTo(destDir, destLeafName));
+  mTempFile = nullptr;
+
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------------------
