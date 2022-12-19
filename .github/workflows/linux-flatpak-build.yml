@@ -103,7 +103,7 @@ jobs:
         FTP_SERVER: ${{ secrets.FTP_SERVER }}     
         FTP_USERNAME: ${{ secrets.FTP_USERNAME }} 
         FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }} 
-        LOCAL_DIR: $WORKDIR/public
+        LOCAL_DIR: flatpak_build/public
         REMOTE_DIR: "/data/floorp-linux/flathub-builds"
 
 
