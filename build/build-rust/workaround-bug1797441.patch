@@ -1,0 +1,60 @@
+diff --git a/Cargo.lock b/Cargo.lock
+index dab69341..b6c864b0 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -511,10 +511,6 @@ name = "cfg-if"
+ version = "1.0.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
+-dependencies = [
+- "compiler_builtins",
+- "rustc-std-workspace-core",
+-]
+ 
+ [[package]]
+ name = "chalk-derive"
+@@ -4673,7 +4669,7 @@ version = "0.0.0"
+ dependencies = [
+  "addr2line 0.16.0",
+  "alloc",
+- "cfg-if 1.0.0",
++ "cfg-if 0.1.10",
+  "compiler_builtins",
+  "core",
+  "dlmalloc",
+@@ -4697,7 +4693,7 @@ dependencies = [
+ name = "std_detect"
+ version = "0.1.5"
+ dependencies = [
+- "cfg-if 1.0.0",
++ "cfg-if 0.1.10",
+  "compiler_builtins",
+  "libc",
+  "rustc-std-workspace-alloc",
+diff --git a/library/std/Cargo.toml b/library/std/Cargo.toml
+index bc10b12e..dad1c7ce 100644
+--- a/library/std/Cargo.toml
++++ b/library/std/Cargo.toml
+@@ -11,7 +11,7 @@ crate-type = ["dylib", "rlib"]
+ 
+ [dependencies]
+ alloc = { path = "../alloc" }
+-cfg-if = { version = "1.0", features = ['rustc-dep-of-std'] }
++cfg-if = { version = "0.1.8", features = ['rustc-dep-of-std'] }
+ panic_unwind = { path = "../panic_unwind", optional = true }
+ panic_abort = { path = "../panic_abort" }
+ core = { path = "../core" }
+Submodule library/stdarch contains modified content
+diff --git a/library/stdarch/crates/std_detect/Cargo.toml b/library/stdarch/crates/std_detect/Cargo.toml
+index 3a48256..d021cbc 100644
+--- a/library/stdarch/crates/std_detect/Cargo.toml
++++ b/library/stdarch/crates/std_detect/Cargo.toml
+@@ -22,7 +22,7 @@ maintenance = { status = "experimental" }
+ 
+ [dependencies]
+ libc = { version = "0.2", optional = true, default-features = false }
+-cfg-if = "1.0.0"
++cfg-if = "0.1"
+ 
+ # When built as part of libstd
+ core = { version = "1.0.0", optional = true, package = "rustc-std-workspace-core" }
