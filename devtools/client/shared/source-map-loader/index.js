@@ -17,7 +17,7 @@ const L10N = new LocalizationHelper(
 const SOURCE_MAP_WORKER_URL =
   "resource://devtools/client/shared/source-map-loader/worker.js";
 
-const dispatcher = new WorkerDispatcher();
+const dispatcher = new WorkerDispatcher(SOURCE_MAP_WORKER_URL);
 
 const {
   originalToGeneratedId,
@@ -108,10 +108,6 @@ const SourceMapLoader = {
     return rv;
   },
 
-  startSourceMapWorker: dispatcher.start.bind(
-    dispatcher,
-    SOURCE_MAP_WORKER_URL
-  ),
   stopSourceMapWorker: dispatcher.stop.bind(dispatcher),
 };
 EventEmitter.decorate(SourceMapLoader);

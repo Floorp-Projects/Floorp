@@ -12,14 +12,12 @@ Services.scriptloader.loadSubScript(
 const SourceMapLoader = require("resource://devtools/client/shared/source-map-loader/index.js");
 
 const {
-  startSourceMapWorker,
   getOriginalURLs,
   getOriginalLocation,
   getGeneratedLocation,
   getGeneratedRangesForOriginal,
   clearSourceMaps,
 } = SourceMapLoader;
-startSourceMapWorker();
 
 function fetchFixtureSourceMap(name) {
   clearSourceMaps();

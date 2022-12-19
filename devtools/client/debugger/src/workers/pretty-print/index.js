@@ -11,7 +11,7 @@ const WORKER_URL =
 let dispatcher;
 let jestWorkerUrl;
 
-export const start = jestUrl => {
+export const setJestWorkerURL = jestUrl => {
   jestWorkerUrl = jestUrl;
 };
 export const stop = () => {
@@ -23,8 +23,7 @@ export const stop = () => {
 
 export async function prettyPrint({ text, url }) {
   if (!dispatcher) {
-    dispatcher = new WorkerDispatcher();
-    dispatcher.start(jestWorkerUrl || WORKER_URL);
+    dispatcher = new WorkerDispatcher(jestWorkerUrl || WORKER_URL);
   }
 
   return dispatcher.invoke("prettyPrint", {

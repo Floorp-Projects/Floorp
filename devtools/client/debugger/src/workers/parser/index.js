@@ -7,8 +7,8 @@ import { WorkerDispatcher } from "devtools/client/shared/worker-utils";
 const WORKER_URL = "resource://devtools/client/debugger/dist/parser-worker.js";
 
 export class ParserDispatcher extends WorkerDispatcher {
-  start(jestUrl) {
-    return super.start(jestUrl || WORKER_URL);
+  constructor(jestUrl) {
+    super(jestUrl || WORKER_URL);
   }
 
   findOutOfScopeLocations = this.task("findOutOfScopeLocations");
