@@ -7,9 +7,10 @@
 #include "mozilla/layers/APZInputBridge.h"
 
 #include "AsyncPanZoomController.h"
-#include "InputData.h"                      // for MouseInput, etc
-#include "InputBlockState.h"                // for InputBlockState
-#include "OverscrollHandoffState.h"         // for OverscrollHandoffState
+#include "InputData.h"               // for MouseInput, etc
+#include "InputBlockState.h"         // for InputBlockState
+#include "OverscrollHandoffState.h"  // for OverscrollHandoffState
+#include "mozilla/EventForwards.h"
 #include "mozilla/dom/WheelEventBinding.h"  // for WheelEvent constants
 #include "mozilla/EventStateManager.h"      // for EventStateManager
 #include "mozilla/layers/APZThreadUtils.h"  // for AssertOnControllerThread, etc
@@ -69,10 +70,19 @@ void APZEventResult::SetStatusAsConsumeDoDefault(
                : APZHandledResult{APZHandledPlace::HandledByContent, aTarget});
 }
 
-void APZEventResult::SetStatusAsConsumeDoDefaultWithTargetConfirmationFlags(
+void APZEventResult::SetStatusForTouchEvent(
     const InputBlockState& aBlock, TargetConfirmationFlags aFlags,
+    PointerEventsConsumableFlags aConsumableFlags,
     const AsyncPanZoomController& aTarget) {
-  mStatus = nsEventStatus_eConsumeDoDefault;
+  bool consumable = aConsumableFlags.IsConsumable();
+  mStatus =
+      consumable ? nsEventStatus_eConsumeDoDefault : nsEventStatus_eIgnore;
+  if (mHandledResult && !aFlags.mDispatchToContent && !consumable) {
+    // Set result to Unhandled if we set the status to eIgnore, unless it
+    // was HandledByContent because we're over a dispatch-to-content region,
+    // in which case it should remain HandledByContent.
+    mHandledResult->mPlace = APZHandledPlace::Unhandled;
+  }
 
   if (!aTarget.IsRootContent()) {
     auto [result, rootApzc] =
@@ -93,7 +103,9 @@ void APZEventResult::SetStatusAsConsumeDoDefaultWithTargetConfirmationFlags(
       mHandledResult = aFlags.mDispatchToContent
                            ? Nothing()
                            : Some(APZHandledResult{
-                                 APZHandledPlace::HandledByRoot, rootApzc});
+                                 consumable ? APZHandledPlace::HandledByRoot
+                                            : APZHandledPlace::Unhandled,
+                                 rootApzc});
     }
   }
 }

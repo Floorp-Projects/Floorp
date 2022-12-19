@@ -24,6 +24,7 @@ class AsyncPanZoomController;
 class InputBlockState;
 struct ScrollableLayerGuid;
 struct TargetConfirmationFlags;
+struct PointerEventsConsumableFlags;
 
 enum class APZHandledPlace : uint8_t {
   Unhandled = 0,         // we know for sure that the event will not be handled
@@ -104,13 +105,12 @@ struct APZEventResult {
   // Set mStatus to nsEventStatus_eConsumeDoDefault and set mHandledResult
   // depending on |aBlock|'s target APZC.
   void SetStatusAsConsumeDoDefault(const InputBlockState& aBlock);
-  // Smilar to above two functions, but we need to use this function if it's
-  // possible that the event needs to be handled as if it's consumed by the root
-  // APZC in the case where the target APZC area is covered by dynamic toolbar
-  // so that browser apps can move the toolbar corresponding to the event.
-  void SetStatusAsConsumeDoDefaultWithTargetConfirmationFlags(
-      const InputBlockState& aBlock, TargetConfirmationFlags aFlags,
-      const AsyncPanZoomController& aTarget);
+  // Set mStatus and mHandledResult for a touch event which is not dropped
+  // altogether (i.e. the status is not eConsumeNoDefault).
+  void SetStatusForTouchEvent(const InputBlockState& aBlock,
+                              TargetConfirmationFlags aFlags,
+                              PointerEventsConsumableFlags aConsumableFlags,
+                              const AsyncPanZoomController& aTarget);
 
   // DO NOT USE THIS UpdateStatus DIRECTLY. THIS FUNCTION IS ONLY FOR
   // SERIALIZATION / DESERIALIZATION OF THIS STRUCT IN IPC.
