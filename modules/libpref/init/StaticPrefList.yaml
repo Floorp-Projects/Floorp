@@ -3000,6 +3000,12 @@
   value: false
   mirror: always
 
+# Autoplay Policy Detection https://w3c.github.io/autoplay/
+- name: dom.media.autoplay-policy-detection.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # Media Session API
 - name: dom.media.mediasession.enabled
   type: bool
