@@ -345,7 +345,7 @@
     _instantiateFeatureCalloutTour(location, panelId) {
       this._featureCalloutPanelId = panelId;
       const { FeatureCallout } = ChromeUtils.importESModule(
-        "chrome://browser/content/featureCallout.mjs"
+        "chrome://browser/content/FeatureCallout.sys.mjs"
       );
       // Note - once we have additional browser chrome messages,
       // only use PDF.js pref value when navigating to PDF viewer
