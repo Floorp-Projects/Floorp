@@ -344,3 +344,27 @@ interface mixin NavigatorLocks {
   readonly attribute LockManager locks;
 };
 Navigator includes NavigatorLocks;
+
+// https://w3c.github.io/autoplay/#autoplay-policy
+enum AutoplayPolicy {
+  "allowed",
+  "allowed-muted",
+  "disallowed"
+};
+
+enum AutoplayPolicyMediaType {
+  "mediaelement",
+  "audiocontext"
+};
+
+// https://w3c.github.io/autoplay/#autoplay-detection-methods
+partial interface Navigator {
+  [Pref="dom.media.autoplay-policy-detection.enabled"]
+  AutoplayPolicy getAutoplayPolicy(AutoplayPolicyMediaType type);
+
+  [Pref="dom.media.autoplay-policy-detection.enabled"]
+  AutoplayPolicy getAutoplayPolicy(HTMLMediaElement element);
+
+  [Pref="dom.media.autoplay-policy-detection.enabled"]
+  AutoplayPolicy getAutoplayPolicy(AudioContext context);
+};
