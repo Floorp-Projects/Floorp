@@ -364,8 +364,10 @@ def get_release_config(config):
 def get_signing_cert_scope_per_platform(build_platform, is_shippable, config):
     if "devedition" in build_platform:
         return get_devedition_signing_cert_scope(config)
-    else:
+    elif is_shippable:
         return get_signing_cert_scope(config)
+    else:
+        return add_scope_prefix(config, "signing:cert:dep-signing")
 
 
 # generate_beetmover_upstream_artifacts {{{1
