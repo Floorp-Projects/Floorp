@@ -279,4 +279,11 @@ CFURLRef GetTemporaryFolderCFURLRef() {
   return tempDir == nil ? NULL : (CFURLRef)[NSURL fileURLWithPath:tempDir isDirectory:YES];
 }
 
+CFURLRef GetProductDirectoryCFURLRef(bool aLocal) {
+  NSSearchPathDirectory folderType = aLocal ? NSCachesDirectory : NSLibraryDirectory;
+  NSFileManager* manager = [NSFileManager defaultManager];
+  return static_cast<CFURLRef>([[manager URLsForDirectory:folderType
+                                                inDomains:NSUserDomainMask] firstObject]);
+}
+
 }  // namespace CocoaFileUtils
