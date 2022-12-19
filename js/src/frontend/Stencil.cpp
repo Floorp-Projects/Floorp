@@ -3814,15 +3814,27 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
   json.endObject();
 }
 
+static void DumpModuleRequestVectorItems(
+    js::JSONPrinter& json, const StencilModuleMetadata::RequestVector& requests,
+    const CompilationStencil* stencil) {
+  for (const auto& request : requests) {
+    json.beginObject();
+    if (request.specifier) {
+      json.beginObjectProperty("specifier");
+      DumpTaggedParserAtomIndex(json, request.specifier, stencil);
+      json.endObject();
+    }
+    json.endObject();
+  }
+}
+
 static void DumpModuleEntryVectorItems(
     js::JSONPrinter& json, const StencilModuleMetadata::EntryVector& entries,
     const CompilationStencil* stencil) {
   for (const auto& entry : entries) {
     json.beginObject();
-    if (entry.specifier) {
-      json.beginObjectProperty("specifier");
-      DumpTaggedParserAtomIndex(json, entry.specifier, stencil);
-      json.endObject();
+    if (entry.moduleRequest) {
+      json.property("moduleRequest", entry.moduleRequest.value());
     }
     if (entry.localName) {
       json.beginObjectProperty("localName");
@@ -3839,6 +3851,7 @@ static void DumpModuleEntryVectorItems(
       DumpTaggedParserAtomIndex(json, entry.exportName, stencil);
       json.endObject();
     }
+    // TODO: Dump assertions.
     json.endObject();
   }
 }
@@ -3858,6 +3871,10 @@ void StencilModuleMetadata::dump(js::JSONPrinter& json,
 
 void StencilModuleMetadata::dumpFields(
     js::JSONPrinter& json, const CompilationStencil* stencil) const {
+  json.beginListProperty("moduleRequests");
+  DumpModuleRequestVectorItems(json, moduleRequests, stencil);
+  json.endList();
+
   json.beginListProperty("requestedModules");
   DumpModuleEntryVectorItems(json, requestedModules, stencil);
   json.endList();
