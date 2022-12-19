@@ -3413,8 +3413,8 @@ const char16_t JS::ubi::Concrete<JSObject>::concreteTypeName[] = u"JSObject";
 void JSObject::traceChildren(JSTracer* trc) {
   TraceCellHeaderEdge(trc, this, "shape");
 
-  const JSClass* clasp = getClass();
-  if (clasp->isNativeObject()) {
+  Shape* objShape = shape();
+  if (objShape->isNative()) {
     NativeObject* nobj = &as<NativeObject>();
 
     {
@@ -3438,6 +3438,7 @@ void JSObject::traceChildren(JSTracer* trc) {
 
   // Call the trace hook at the end so that during a moving GC the trace hook
   // will see updated fields and slots.
+  const JSClass* clasp = objShape->getObjectClass();
   if (clasp->hasTrace()) {
     clasp->doTrace(trc, this);
   }
