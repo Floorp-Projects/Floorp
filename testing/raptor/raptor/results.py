@@ -11,11 +11,13 @@ import os
 import pathlib
 import shutil
 from abc import ABCMeta, abstractmethod
+from collections.abc import Iterable
 from io import open
 
 import six
 from logger.logger import RaptorLogger
 from output import BrowsertimeOutput, RaptorOutput
+from utils import flatten
 
 LOG = RaptorLogger(component="perftest-results-handler")
 KNOWN_TEST_MODIFIERS = [
@@ -385,6 +387,9 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
         test_name,
         accept_zero_vismet,
         load_existing,
+        test_summary,
+        subtest_name_filters,
+        handle_custom_data,
     ):
         """
         Receive a json blob that contains the results direct from the browsertime tool. Parse
@@ -614,9 +619,32 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
             custom_types = raw_result["extras"][0]
             if custom_types:
                 for custom_type in custom_types:
-                    for k, v in custom_types[custom_type].items():
-                        bt_result["measurements"].setdefault(k, []).append(v)
+                    data = custom_types[custom_type]
+                    if handle_custom_data:
+                        if test_summary in ("flatten",):
+                            data = flatten(data, ())
+                        for k, v in data.items():
 
+                            def _ignore_metric(*args):
+                                if any(type(arg) not in (int, float) for arg in args):
+                                    return True
+                                return False
+
+                            # Ignore any non-numerical results
+                            if _ignore_metric(v) and _ignore_metric(*v):
+                                continue
+
+                            # Clean up the name if requested
+                            for name_filter in subtest_name_filters.split(","):
+                                k = k.replace(name_filter, "")
+
+                            if isinstance(v, Iterable):
+                                bt_result["measurements"].setdefault(k, []).extend(v)
+                            else:
+                                bt_result["measurements"].setdefault(k, []).append(v)
+                    else:
+                        for k, v in data.items():
+                            bt_result["measurements"].setdefault(k, []).append(v)
                 if self.perfstats:
                     for cycle in raw_result["geckoPerfStats"]:
                         for metric in cycle:
@@ -913,6 +941,9 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                 test["name"],
                 accept_zero_vismet,
                 self.existing_results is not None,
+                test.get("test_summary", "pageload"),
+                test.get("subtest_name_filters", ""),
+                test.get("custom_data", False) == "true",
             ):
 
                 def _new_standard_result(new_result, subtest_unit="ms"):

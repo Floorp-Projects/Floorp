@@ -773,6 +773,9 @@ class Browsertime(Perftest):
             output_timeout = BROWSERTIME_PAGELOAD_OUTPUT_TIMEOUT
             if self.benchmark:
                 output_timeout = BROWSERTIME_BENCHMARK_OUTPUT_TIMEOUT
+            elif test.get("output_timeout", None) is not None:
+                output_timeout = int(test.get("output_timeout"))
+                proc_timeout = max(proc_timeout, output_timeout)
 
             # Double the timeouts on live sites and when running with Fenix
             if self.config["live_sites"] or self.config["app"] in ("fenix",):
@@ -781,6 +784,11 @@ class Browsertime(Perftest):
                 if output_timeout is not None:
                     output_timeout *= 2
                 proc_timeout *= 2
+
+            LOG.info(
+                f"Calling browsertime with proc_timeout={proc_timeout}, "
+                f"and output_timeout={output_timeout}"
+            )
 
             proc = self.process_handler(
                 cmd, processOutputLine=_create_line_handler(), env=env

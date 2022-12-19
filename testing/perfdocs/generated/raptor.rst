@@ -5600,6 +5600,202 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **unit**: ms
    * **use live sites**: true
 
+.. dropdown:: grandprix
+   :container: + anchor-id-grandprix-c
+
+   **Owner**: PerfTest Team
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium
+   * **browser cycles**: 1
+   * **browsertime args**: --browsertime.grandprix_iterations=25
+   * **custom data**: true
+   * **expected**: pass
+   * **gecko profile entries**: 14000000
+   * **gecko profile interval**: 1
+   * **lower is better**: true
+   * **output timeout**: 2000000
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **subtest name filters**: tests/,iterations/
+   * **subtest unit**: ms
+   * **test script**: grandprix.js
+   * **test summary**: flatten
+   * **test url**: `<None>`__
+   * **type**: pageload
+   * **unit**: score
+   * **use live sites**: true
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-clang-trunk-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-grandprix-firefox-grandprix**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-grandprix-firefox-grandprix**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-grandprix-chrome-grandprix**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-grandprix-chromium-grandprix**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-grandprix-firefox-grandprix**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-grandprix-chrome-grandprix**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-grandprix-chromium-grandprix**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-grandprix-firefox-grandprix**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-grandprix-firefox-grandprix**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-grandprix-chrome-grandprix**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-grandprix-chromium-grandprix**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-grandprix-firefox-grandprix**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-grandprix-firefox-grandprix**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-grandprix-chrome-grandprix**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-grandprix-chromium-grandprix**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-grandprix-firefox-grandprix**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+
 .. dropdown:: process-switch
    :container: + anchor-id-process-switch-c
 
