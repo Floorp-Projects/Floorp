@@ -48,5 +48,8 @@
     "gecko": {
       "id": "tab-sleep@floorp.ablaze.one"
     }
+  },
+  "icons": {
+    "48": "tab-sleep.png"
   }
 }

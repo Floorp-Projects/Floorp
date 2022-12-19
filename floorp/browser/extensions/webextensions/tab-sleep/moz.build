@@ -11,6 +11,7 @@ DEFINES["MOZ_APP_MAXVERSION"] = CONFIG["MOZ_APP_MAXVERSION"]
 FINAL_TARGET_FILES.features["tab-sleep@floorp.ablaze.one"] += [
     "background.js",
     "manifest.json",
+    "tab-sleep.png",
 ]
 
 FINAL_TARGET_FILES.features["tab-sleep@floorp.ablaze.one"]["API"] += [
