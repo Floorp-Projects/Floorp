@@ -79,10 +79,6 @@ class nsFirstLetterFrame final : public nsContainerFrame {
                                            nsIFrame** aContinuation,
                                            bool aIsFluid);
 
-  // Whether to use tight glyph bounds for a floating first-letter frame,
-  // or "loose" bounds based on font metrics rather than individual glyphs.
-  bool UseTightBounds() const;
-
  protected:
   nscoord mBaseline;
 

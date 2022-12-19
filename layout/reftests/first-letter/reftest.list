@@ -70,7 +70,7 @@ random-if(gtkWidget) random-if(winWidget&&!d2d) == font-text-styles-floater.html
 == inline-height-empty.html inline-height-empty-ref.html
 == indic-clusters-1.html indic-clusters-1-ref.html
 == overflow-float-nooverflow.html overflow-float-nooverflow-ref.html
-!= overflow-float-overflow.html overflow-float-overflow-notref.html
+== overflow-float-overflow.html overflow-float-overflow-notref.html
 == overflow-inline-nooverflow.html overflow-inline-nooverflow-ref.html
 != overflow-inline-overflow.html overflow-inline-overflow-notref.html
 == overflow-inline-overflow.html overflow-inline-overflow-ref.html
