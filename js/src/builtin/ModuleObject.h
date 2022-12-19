@@ -61,6 +61,9 @@ class ModuleRequestObject : public NativeObject {
   ArrayObject* assertions() const;
 };
 
+using ModuleRequestVector =
+    GCVector<HeapPtr<ModuleRequestObject*>, 0, SystemAllocPolicy>;
+
 class ImportEntry {
   const HeapPtr<ModuleRequestObject*> moduleRequest_;
   const HeapPtr<JSAtom*> importName_;

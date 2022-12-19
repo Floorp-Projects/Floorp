@@ -1364,12 +1364,30 @@ void ModuleBuilder::finishFunctionDecls(
   metadata.functionDecls = std::move(functionDecls_);
 }
 
+bool frontend::StencilModuleMetadata::createModuleRequestObjects(
+    JSContext* cx, CompilationAtomCache& atomCache,
+    MutableHandle<ModuleRequestVector> output) const {
+  if (!output.reserve(moduleRequests.length())) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  Rooted<ModuleRequestObject*> object(cx);
+  for (const StencilModuleRequest& request : moduleRequests) {
+    object = createModuleRequestObject(cx, atomCache, request);
+    if (!object) {
+      return false;
+    }
+
+    output.infallibleEmplaceBack(object);
+  }
+
+  return true;
+}
+
 ModuleRequestObject* frontend::StencilModuleMetadata::createModuleRequestObject(
     JSContext* cx, CompilationAtomCache& atomCache,
-    MaybeModuleRequestIndex requestIndex) const {
-  const frontend::StencilModuleRequest& request =
-      moduleRequests[requestIndex.value()];
-
+    const StencilModuleRequest& request) const {
   Rooted<ArrayObject*> assertionArray(cx);
   uint32_t numberOfAssertions = request.assertions.length();
   if (numberOfAssertions > 0) {
@@ -1415,6 +1433,7 @@ ModuleRequestObject* frontend::StencilModuleMetadata::createModuleRequestObject(
 
 bool frontend::StencilModuleMetadata::createImportEntries(
     JSContext* cx, CompilationAtomCache& atomCache,
+    Handle<ModuleRequestVector> moduleRequests,
     MutableHandle<ImportEntryVector> output) const {
   if (!output.reserve(importEntries.length())) {
     ReportOutOfMemory(cx);
@@ -1422,11 +1441,9 @@ bool frontend::StencilModuleMetadata::createImportEntries(
   }
 
   for (const StencilModuleEntry& entry : importEntries) {
-    Rooted<ModuleRequestObject*> moduleRequest(
-        cx, createModuleRequestObject(cx, atomCache, entry.moduleRequest));
-    if (!moduleRequest) {
-      return false;
-    }
+    Rooted<ModuleRequestObject*> moduleRequest(cx);
+    moduleRequest = moduleRequests[entry.moduleRequest.value()].get();
+    MOZ_ASSERT(moduleRequest);
 
     Rooted<JSAtom*> localName(cx);
     if (entry.localName) {
@@ -1451,6 +1468,7 @@ bool frontend::StencilModuleMetadata::createImportEntries(
 
 bool frontend::StencilModuleMetadata::createExportEntries(
     JSContext* cx, frontend::CompilationAtomCache& atomCache,
+    Handle<ModuleRequestVector> moduleRequests,
     const frontend::StencilModuleMetadata::EntryVector& input,
     MutableHandle<ExportEntryVector> output) const {
   if (!output.reserve(input.length())) {
@@ -1467,11 +1485,8 @@ bool frontend::StencilModuleMetadata::createExportEntries(
 
     Rooted<ModuleRequestObject*> moduleRequestObject(cx);
     if (entry.moduleRequest) {
-      moduleRequestObject =
-          createModuleRequestObject(cx, atomCache, entry.moduleRequest);
-      if (!moduleRequestObject) {
-        return false;
-      }
+      moduleRequestObject = moduleRequests[entry.moduleRequest.value()].get();
+      MOZ_ASSERT(moduleRequestObject);
     }
 
     Rooted<JSAtom*> localName(cx);
@@ -1495,6 +1510,7 @@ bool frontend::StencilModuleMetadata::createExportEntries(
 
 bool frontend::StencilModuleMetadata::createRequestedModules(
     JSContext* cx, CompilationAtomCache& atomCache,
+    Handle<ModuleRequestVector> moduleRequests,
     MutableHandle<RequestedModuleVector> output) const {
   if (!output.reserve(requestedModules.length())) {
     ReportOutOfMemory(cx);
@@ -1502,11 +1518,9 @@ bool frontend::StencilModuleMetadata::createRequestedModules(
   }
 
   for (const frontend::StencilModuleEntry& entry : requestedModules) {
-    Rooted<ModuleRequestObject*> moduleRequest(
-        cx, createModuleRequestObject(cx, atomCache, entry.moduleRequest));
-    if (!moduleRequest) {
-      return false;
-    }
+    Rooted<ModuleRequestObject*> moduleRequest(cx);
+    moduleRequest = moduleRequests[entry.moduleRequest.value()].get();
+    MOZ_ASSERT(moduleRequest);
 
     MOZ_ASSERT(!entry.localName);
     MOZ_ASSERT(!entry.importName);
@@ -1523,31 +1537,39 @@ bool frontend::StencilModuleMetadata::initModule(
     JSContext* cx, FrontendContext* fc,
     frontend::CompilationAtomCache& atomCache,
     JS::Handle<ModuleObject*> module) const {
+  Rooted<ModuleRequestVector> moduleRequestsVector(cx);
+  if (!createModuleRequestObjects(cx, atomCache, &moduleRequestsVector)) {
+    return false;
+  }
+
   Rooted<RequestedModuleVector> requestedModulesVector(cx);
-  if (!createRequestedModules(cx, atomCache, &requestedModulesVector)) {
+  if (!createRequestedModules(cx, atomCache, moduleRequestsVector,
+                              &requestedModulesVector)) {
     return false;
   }
 
   Rooted<ImportEntryVector> importEntriesVector(cx);
-  if (!createImportEntries(cx, atomCache, &importEntriesVector)) {
+  if (!createImportEntries(cx, atomCache, moduleRequestsVector,
+                           &importEntriesVector)) {
     return false;
   }
 
   Rooted<ExportEntryVector> localExportEntriesVector(cx);
-  if (!createExportEntries(cx, atomCache, localExportEntries,
-                           &localExportEntriesVector)) {
+  if (!createExportEntries(cx, atomCache, moduleRequestsVector,
+                           localExportEntries, &localExportEntriesVector)) {
     return false;
   }
 
   Rooted<ExportEntryVector> indirectExportEntriesVector(cx);
-  if (!createExportEntries(cx, atomCache, indirectExportEntries,
+  if (!createExportEntries(cx, atomCache, moduleRequestsVector,
+                           indirectExportEntries,
                            &indirectExportEntriesVector)) {
     return false;
   }
 
   Rooted<ExportEntryVector> starExportEntriesVector(cx);
-  if (!createExportEntries(cx, atomCache, starExportEntries,
-                           &starExportEntriesVector)) {
+  if (!createExportEntries(cx, atomCache, moduleRequestsVector,
+                           starExportEntries, &starExportEntriesVector)) {
     return false;
   }
 
