@@ -50,31 +50,43 @@ def target_tasks_nightly(full_task_graph, parameters, graph_config):
 
 @_target_task("promote")
 def target_tasks_promote(full_task_graph, parameters, graph_config):
-    def filter(task, parameters):
-        if (
-            task.attributes.get("shipping_phase") == "promote"
-            and does_task_match_release_type(task, parameters["release_type"])
-        ):
-            return True
-
-    return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]
+    return _filter_release_promotion(
+        full_task_graph, parameters, filtered_for_candidates=[], shipping_phase="promote"
+    )
 
 
-@_target_task("ship")
-def target_tasks_ship(full_task_graph, parameters, graph_config):
+@_target_task("push")
+def target_tasks_push(full_task_graph, parameters, graph_config):
     filtered_for_candidates = target_tasks_promote(
         full_task_graph,
         parameters,
         graph_config,
     )
+    return _filter_release_promotion(
+        full_task_graph, parameters, filtered_for_candidates, shipping_phase="push"
+    )
 
+
+@_target_task("ship")
+def target_tasks_ship(full_task_graph, parameters, graph_config):
+    filtered_for_candidates = target_tasks_push(
+        full_task_graph,
+        parameters,
+        graph_config,
+    )
+    return _filter_release_promotion(
+        full_task_graph, parameters, filtered_for_candidates, shipping_phase="ship"
+    )
+
+
+def _filter_release_promotion(full_task_graph, parameters, filtered_for_candidates, shipping_phase):
     def filter(task, parameters):
         # Include promotion tasks; these will be optimized out
         if task.label in filtered_for_candidates:
             return True
 
         if (
-            task.attributes.get("shipping_phase") == "ship"
+            task.attributes.get("shipping_phase") == shipping_phase
             and does_task_match_release_type(task, parameters["release_type"])
         ):
             return True
