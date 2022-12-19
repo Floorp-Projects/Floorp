@@ -191,13 +191,16 @@ APZEventResult InputQueue::ReceiveTouchInput(
         INPQ_LOG("dropping event due to block %p being in slop\n", block.get());
         result.SetStatusAsConsumeNoDefault();
       } else {
-        result.SetStatusAsConsumeDoDefaultWithTargetConfirmationFlags(
-            *block, aFlags, *target);
+        result.SetStatusForTouchEvent(*block, aFlags, consumableFlags, *target);
       }
-    } else if (block->UpdateSlopState(aEvent, false)) {
-      INPQ_LOG("dropping event due to block %p being in mini-slop\n",
-               block.get());
-      result.SetStatusAsConsumeNoDefault();
+    } else {  // not consumable
+      if (block->UpdateSlopState(aEvent, false)) {
+        INPQ_LOG("dropping event due to block %p being in mini-slop\n",
+                 block.get());
+        result.SetStatusAsConsumeNoDefault();
+      } else {
+        result.SetStatusForTouchEvent(*block, aFlags, consumableFlags, *target);
+      }
     }
   }
   mQueuedInputs.AppendElement(MakeUnique<QueuedInput>(aEvent, *block));
