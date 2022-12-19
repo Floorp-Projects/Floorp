@@ -6,7 +6,6 @@
 
 #include "mozilla/dom/HTMLInputElement.h"
 
-#include "Units.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/BasePrincipal.h"
