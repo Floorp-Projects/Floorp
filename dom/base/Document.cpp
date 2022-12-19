@@ -16237,7 +16237,7 @@ void Document::SetDocTreeHadMedia() {
 }
 
 DocumentAutoplayPolicy Document::AutoplayPolicy() const {
-  return AutoplayPolicy::IsAllowedToPlay(*this);
+  return media::AutoplayPolicy::IsAllowedToPlay(*this);
 }
 
 void Document::MaybeAllowStorageForOpenerAfterUserInteraction() {
