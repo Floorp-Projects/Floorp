@@ -852,21 +852,10 @@ class NPZCSupport final
     });
 
     if (aReturnResult && result.GetHandledResult() != Nothing()) {
-      // FIXME: Just rely on APZ populating GetHandledResult() with Uhandled
-      // whenever GetStatus() is eIgnore.
-      if (result.GetStatus() == nsEventStatus_eIgnore) {
-        aReturnResult->Complete(java::PanZoomController::InputResultDetail::New(
-            INPUT_RESULT_UNHANDLED,
-            java::PanZoomController::SCROLLABLE_FLAG_NONE,
-            java::PanZoomController::OVERSCROLL_FLAG_NONE));
-      } else {
-        MOZ_ASSERT(result.GetStatus() == nsEventStatus_eConsumeDoDefault);
-
-        // We know conclusively that the root APZ handled this or not and
-        // don't need to do any more work.
-        aReturnResult->Complete(
-            ConvertAPZHandledResult(result.GetHandledResult().value()));
-      }
+      MOZ_ASSERT(result.GetStatus() == nsEventStatus_eConsumeDoDefault ||
+                 result.GetStatus() == nsEventStatus_eIgnore);
+      aReturnResult->Complete(
+          ConvertAPZHandledResult(result.GetHandledResult().value()));
     }
   }
 };
