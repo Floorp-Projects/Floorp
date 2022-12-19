@@ -29,9 +29,9 @@
     <!-- Positive confirmation that we should save the updated login -->
     <string name="mozac_feature_prompt_update_confirmation">ਅੱਪਡੇਟ ਕਰੋ</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_empty_password">ਪਾਸਵਰਡ ਖਾਨਾ ਖਾਲੀ ਨਹੀਂ ਹੋਣਾ ਚਾਹੀਦਾ</string>
+    <string name="mozac_feature_prompt_error_empty_password">ਪਾਸਵਰਡ ਖੇਤਰ ਖਾਲੀ ਨਹੀਂ ਹੋਣਾ ਚਾਹੀਦਾ ਹੈ</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_unknown_cause">ਲਾਗਇਨ ਸੰਭਾਲਣ ਵਿੱਚ ਅਸਮਰੱਥ ਹਾਂ</string>
+    <string name="mozac_feature_prompt_error_unknown_cause">ਲਾਗਇਨ ਸੰਭਾਲਣ ਲਈ ਅਸਮਰੱਥ</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
     <string name="mozac_feature_prompt_login_save_headline">ਇਹ ਲਾਗਇਨ ਸੰਭਾਲਣਾ ਹੈ?</string>
     <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the login. -->
@@ -48,7 +48,7 @@
     <!-- Text of a negative button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_deny">ਇਨਕਾਰ ਕਰੋ</string>
     <!-- Title of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
-    <string name="mozac_feature_prompt_before_unload_dialog_title">ਕੀ ਤੁਹਾਨੂੰ ਯਕੀਨ ਹੈ?</string>
+    <string name="mozac_feature_prompt_before_unload_dialog_title">ਕੀ ਤੁਸੀਂ ਚਾਹੁੰਦੇ ਹੋ?</string>
     <!-- Body text of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
     <string name="mozac_feature_prompt_before_unload_dialog_body">ਕੀ ਤੁਸੀਂ ਇਹ ਸਾਈਟ ਛੱਡਣਾ ਚਾਹੁੰਦੇ ਹੋ? ਤੁਹਾਡੇ ਵਲੋਂ ਦਿੱਤਾ ਡਾਟਾ ਸੰਭਾਲਿਆ ਨਹੀਂ ਵੀ ਗਿਆ ਹੋ ਸਕਦਾ ਹੈ</string>
     <!-- Stay button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to stay in the website. -->
