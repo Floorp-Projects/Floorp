@@ -250,7 +250,7 @@
     <string name="awesomebar_clipboard_title">ਕਲਿੱਪਬੋਰਡ ਤੋਂ ਲਿੰਕ ਭਰੋ</string>
 
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
-    <string name="search_suggestions_onboarding_allow_button">ਪ੍ਰਵਾਨ ਕਰੋ</string>
+    <string name="search_suggestions_onboarding_allow_button">ਮਨਜ਼ੂਰ</string>
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_do_not_allow_button">ਇਜਾਜ਼ਤ ਨਾ ਦਿਓ</string>
     <!-- Search suggestion onboarding hint title text -->
@@ -443,7 +443,7 @@
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">ਆਪੇ-ਪੂਰਨ URL</string>
     <!-- Preference for open links in third party apps -->
-    <string name="preferences_open_links_in_apps">ਤੰਦਾਂ ਨੂੰ ਐਪਾਂ ਵਿੱਚ ਖੋਲ੍ਹੋ</string>
+    <string name="preferences_open_links_in_apps">ਲਿੰਕ ਐਪਾਂ ਵਿੱਚ ਖੋਲ੍ਹੋ</string>
 
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">ਬਾਹਰੀ ਡਾਊਨਲੋਡ ਮੈਨੇਜਰ</string>
@@ -551,7 +551,7 @@
     <string name="sync_syncing_in_progress">…ਸਿੰਕ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ</string>
 
     <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
-    <string name="sync_failed_summary">ਸਿੰਕ ਅਸਫ਼ਲ ਹੋਇਆ। ਪਿਛਲੀ ਕਾਮਯਾਬੀ: %s</string>
+    <string name="sync_failed_summary">ਸਿੰਕ ਅਸਫ਼ਲ ਹੈ। ਆਖਰੀ ਕਾਮਯਾਬ: %s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_failed_never_synced_summary">ਸਿੰਕ ਅਸਫ਼ਲ ਹੈ। ਆਖਰੀ ਸਿੰਕ: ਕਦੇ ਵੀ ਨਹੀਂ</string>
     <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->

@@ -1905,6 +1905,15 @@
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">Аутоматско затварање омогућено</string>
 
+    <!-- Awesome bar suggestion's headers -->
+    <!-- Search suggestions title for Firefox Suggest. -->
+    <string name="firefox_suggest_header">Firefox предлози</string>
+
+    <!-- Title for search suggestions when Google is the default search suggestion engine. -->
+    <string name="google_search_engine_suggestion_header">Google претрага</string>
+    <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
+    <string name="other_default_search_engine_suggestion_header">%s претрага</string>
+
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Подешава самостално отварање адреса са страница, мејлова и порука унутар Firefox-a.</string>
 
@@ -1943,7 +1952,6 @@
     <string name="experiments_snackbar">Омогућите телеметрију да шаље податке.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Иди у подешавања</string>
-    <string name="firefox_suggest_header">Firefox предлози</string>
 
     <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
     <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->
