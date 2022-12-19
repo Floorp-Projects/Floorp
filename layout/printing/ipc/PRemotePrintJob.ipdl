@@ -31,10 +31,6 @@ parent:
   // the actual print.
   async FinalizePrint();
 
-  // Report a state change to listeners in the parent process.
-  async StateChange(long aStateFlags,
-                    nsresult aStatus);
-
   // Report a progress change to listeners in the parent process.
   async ProgressChange(long aCurSelfProgress,
                        long aMaxSelfProgress,

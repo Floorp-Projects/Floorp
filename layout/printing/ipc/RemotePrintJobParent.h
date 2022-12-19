@@ -44,9 +44,6 @@ class RemotePrintJobParent final : public PRemotePrintJobParent {
 
   mozilla::ipc::IPCResult RecvAbortPrint(const nsresult& aRv) final;
 
-  mozilla::ipc::IPCResult RecvStateChange(const long& aStateFlags,
-                                          const nsresult& aStatus) final;
-
   mozilla::ipc::IPCResult RecvProgressChange(
       const long& aCurSelfProgress, const long& aMaxSelfProgress,
       const long& aCurTotalProgress, const long& aMaxTotalProgress) final;
@@ -92,6 +89,7 @@ class RemotePrintJobParent final : public PRemotePrintJobParent {
   nsCOMArray<nsIWebProgressListener> mPrintProgressListeners;
   PRFileDescStream mCurrentPageStream;
   bool mIsDoingPrinting;
+  nsresult mStatus;
 };
 
 }  // namespace layout
