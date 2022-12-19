@@ -29,7 +29,7 @@ You can also start the Browser Console by launching Firefox from the command lin
 
 .. code-block::
 
-  /Applications/FirefoxAurora.app/Contents/MacOS/firefox-bin -jsconsole</pre>
+  /Applications/FirefoxAurora.app/Contents/MacOS/firefox-bin -jsconsole
 
 The Browser Console looks like this:
 
@@ -83,7 +83,7 @@ One exported symbol from ``Console.sys.mjs`` is ``console``. Below is an example
 .. code-block:: JavaScript
 
   const { console } = ChromeUtils.importESModule("resource://gre/modules/Console.sys.mjs");
-  console.log("Hello from Firefox code"); //output messages to the console</pre>
+  console.log("Hello from Firefox code"); //output messages to the console
 
 Learn more:
 
