@@ -618,9 +618,9 @@ struct nsCSSRendering {
     // UNDERLINE or OVERLINE or LINE_THROUGH.
     mozilla::StyleTextDecorationLine decoration =
         mozilla::StyleTextDecorationLine::UNDERLINE;
-    // The style of the decoration line such as
-    // NS_STYLE_TEXT_DECORATION_STYLE_*.
-    uint8_t style = NS_STYLE_TEXT_DECORATION_STYLE_NONE;
+    // The style of the decoration line
+    mozilla::StyleTextDecorationStyle style =
+        mozilla::StyleTextDecorationStyle::None;
     bool vertical = false;
     bool sidewaysLeft = false;
     gfxTextRun::Range glyphRange;
@@ -764,9 +764,6 @@ struct nsCSSRendering {
    * input:
    *     @param aFrame            the frame which needs the decoration line.
    *     @param aStyle            the style of the complex decoration line
-   *                              NS_STYLE_TEXT_DECORATION_STYLE_DOTTED or
-   *                              NS_STYLE_TEXT_DECORATION_STYLE_DASHED or
-   *                              NS_STYLE_TEXT_DECORATION_STYLE_WAVY.
    *     @param aClippedRect      the clipped rect for the decoration line.
    *                              in other words, visible area of the line.
    *     @param aICoordInFrame  the distance between inline-start edge of aFrame
@@ -774,8 +771,9 @@ struct nsCSSRendering {
    *     @param aCycleLength      the width of one cycle of the line style.
    */
   static Rect ExpandPaintingRectForDecorationLine(
-      nsIFrame* aFrame, const uint8_t aStyle, const Rect& aClippedRect,
-      const Float aICoordInFrame, const Float aCycleLength, bool aVertical);
+      nsIFrame* aFrame, const mozilla::StyleTextDecorationStyle aStyle,
+      const Rect& aClippedRect, const Float aICoordInFrame,
+      const Float aCycleLength, bool aVertical);
 };
 
 /*

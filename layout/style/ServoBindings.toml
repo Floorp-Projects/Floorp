@@ -145,6 +145,7 @@ rusty-enums = [
     "mozilla::StyleShapeRendering",
     "mozilla::StyleTextAnchor",
     "mozilla::StyleObjectFit",
+    "mozilla::StyleTextDecorationStyle",
     "mozilla::StyleTopLayer",
     "mozilla::StyleIsolation",
     "mozilla::StyleTextOrientation",

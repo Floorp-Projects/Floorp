@@ -261,7 +261,8 @@ class TextDrawTarget : public DrawTarget {
   // as the top-left corner of the rect.
   void AppendDecoration(const Point& aStart, const Point& aEnd,
                         const float aThickness, const bool aVertical,
-                        const DeviceColor& aColor, const uint8_t aStyle) {
+                        const DeviceColor& aColor,
+                        const StyleTextDecorationStyle aStyle) {
     auto pos = LayoutDevicePoint::FromUnknownPoint(aStart);
     LayoutDeviceSize size;
 
@@ -281,19 +282,19 @@ class TextDrawTarget : public DrawTarget {
                                        : wr::LineOrientation::Horizontal;
 
     switch (aStyle) {
-      case NS_STYLE_TEXT_DECORATION_STYLE_SOLID:
+      case StyleTextDecorationStyle::Solid:
         decoration.style = wr::LineStyle::Solid;
         break;
-      case NS_STYLE_TEXT_DECORATION_STYLE_DOTTED:
+      case StyleTextDecorationStyle::Dotted:
         decoration.style = wr::LineStyle::Dotted;
         break;
-      case NS_STYLE_TEXT_DECORATION_STYLE_DASHED:
+      case StyleTextDecorationStyle::Dashed:
         decoration.style = wr::LineStyle::Dashed;
         break;
       // Wavy lines should go through AppendWavyDecoration
-      case NS_STYLE_TEXT_DECORATION_STYLE_WAVY:
+      case StyleTextDecorationStyle::Wavy:
       // Double lines should be lowered to two solid lines
-      case NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE:
+      case StyleTextDecorationStyle::Double:
       default:
         MOZ_CRASH("TextDrawTarget received unsupported line style");
     }

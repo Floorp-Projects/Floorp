@@ -354,9 +354,9 @@ void nsTextBoxFrame::DrawText(gfxContext& aRenderingContext,
   nscolor overColor = 0;
   nscolor underColor = 0;
   nscolor strikeColor = 0;
-  uint8_t overStyle = 0;
-  uint8_t underStyle = 0;
-  uint8_t strikeStyle = 0;
+  auto overStyle = StyleTextDecorationStyle::None;
+  auto underStyle = StyleTextDecorationStyle::None;
+  auto strikeStyle = StyleTextDecorationStyle::None;
 
   // Begin with no decorations
   auto decorations = StyleTextDecorationLine::NONE;
@@ -384,7 +384,7 @@ void nsTextBoxFrame::DrawText(gfxContext& aRenderingContext,
       } else {
         color = styleText->mTextDecorationColor.CalcColor(*context);
       }
-      uint8_t style = styleText->mTextDecorationStyle;
+      const auto style = styleText->mTextDecorationStyle;
 
       if (StyleTextDecorationLine::UNDERLINE & decorMask &
           styleText->mTextDecorationLine) {
@@ -453,7 +453,7 @@ void nsTextBoxFrame::DrawText(gfxContext& aRenderingContext,
     fontMet->GetUnderline(offset, size);
     params.lineSize.height = presContext->AppUnitsToGfxUnits(size);
     if ((decorations & StyleTextDecorationLine::UNDERLINE) &&
-        underStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE) {
+        underStyle != StyleTextDecorationStyle::None) {
       params.color = underColor;
       params.offset = presContext->AppUnitsToGfxUnits(offset);
       params.decoration = StyleTextDecorationLine::UNDERLINE;
@@ -461,7 +461,7 @@ void nsTextBoxFrame::DrawText(gfxContext& aRenderingContext,
       nsCSSRendering::PaintDecorationLine(this, *drawTarget, params);
     }
     if ((decorations & StyleTextDecorationLine::OVERLINE) &&
-        overStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE) {
+        overStyle != StyleTextDecorationStyle::None) {
       params.color = overColor;
       params.offset = params.ascent;
       params.decoration = StyleTextDecorationLine::OVERLINE;
@@ -537,7 +537,7 @@ void nsTextBoxFrame::DrawText(gfxContext& aRenderingContext,
   // Strikeout is drawn on top of the text, per
   // http://www.w3.org/TR/CSS21/zindex.html point 7.2.1.4.1.1.
   if ((decorations & StyleTextDecorationLine::LINE_THROUGH) &&
-      strikeStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE) {
+      strikeStyle != StyleTextDecorationStyle::None) {
     fontMet->GetStrikeout(offset, size);
     params.color = strikeColor;
     params.lineSize.height = presContext->AppUnitsToGfxUnits(size);

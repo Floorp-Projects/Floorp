@@ -330,7 +330,7 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       break;
 
     case IntID::SpellCheckerUnderlineStyle:
-      aResult = NS_STYLE_TEXT_DECORATION_STYLE_WAVY;
+      aResult = reinterpret_cast<int32_t>(StyleTextDecorationStyle::Wavy);
       break;
 
     case IntID::ScrollbarButtonAutoRepeatBehavior:
