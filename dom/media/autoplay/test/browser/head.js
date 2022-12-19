@@ -103,3 +103,47 @@ function checkVideoDidPlay(browser, args) {
     content.document.body.remove(video);
   });
 }
+
+/**
+ * Create a tab that will load the given url, and define an autoplay policy
+ * check function inside the content window in that tab. This function should
+ * only be used when `dom.media.autoplay-policy-detection.enabled` is true.
+ * @param {url} url
+ *        the url which the created tab should load
+ */
+async function createTabAndSetupPolicyAssertFunc(url) {
+  let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser, url);
+  await SpecialPowers.spawn(tab.linkedBrowser, [], _ => {
+    content.video = content.document.createElement("video");
+    content.ac = new content.AudioContext();
+    content.assertAutoplayPolicy = ({
+      resultForElementType,
+      resultForElement,
+      resultForContextType,
+      resultForContext,
+    }) => {
+      is(
+        content.navigator.getAutoplayPolicy("mediaelement"),
+        resultForElementType,
+        "getAutoplayPolicy('mediaelement') returns correct value"
+      );
+      is(
+        content.navigator.getAutoplayPolicy(content.video),
+        resultForElement,
+        "getAutoplayPolicy(content.video) returns correct value"
+      );
+      // note, per spec "allowed-muted" won't be used for audio context.
+      is(
+        content.navigator.getAutoplayPolicy("audiocontext"),
+        resultForContextType,
+        "getAutoplayPolicy('audiocontext') returns correct value"
+      );
+      is(
+        content.navigator.getAutoplayPolicy(content.ac),
+        resultForContext,
+        "getAutoplayPolicy(content.ac) returns correct value"
+      );
+    };
+  });
+  return tab;
+}
