@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-12-15T10:33:04.661805'
+updated_at: '2022-12-19T13:47:32.916417'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -39,8 +39,7 @@ people:
     bmo_id: 382067
     name: Andrew Halberstadt
     nick: ahal
-  - &aki
-    bmo_id: 329611
+  - bmo_id: 329611
     name: Aki Sasaki
     nick: aki
   - &allstarschh
@@ -123,6 +122,10 @@ people:
     bmo_id: 346231
     name: Brian Hackett
     nick: bhackett1024
+  - &bhearsum
+    bmo_id: 259016
+    name: bhearsum
+    nick: bhearsum
   - &bholley
     bmo_id: 313730
     name: Bobby Holley
@@ -173,8 +176,7 @@ people:
     bmo_id: 560431
     name: Calixte Denizet
     nick: calixte
-  - &Callek
-    bmo_id: 129968
+  - bmo_id: 129968
     name: Justin Wood
     nick: Callek
   - &canova
@@ -374,6 +376,10 @@ people:
     bmo_id: 131213
     name: Hiroyuki Ikezoe
     nick: hiro
+  - &hneiva
+    bmo_id: 693369
+    name: Heitor Neiva
+    nick: hneiva
   - &hsivonen
     bmo_id: 5490
     name: Henri Sivonen
@@ -436,7 +442,7 @@ people:
     nick: jgraham
   - &jhirsch
     bmo_id: 446735
-    name: Jared Hirsch
+    name: ''
     nick: jhirsch
   - &jhlin
     bmo_id: 463180
@@ -843,8 +849,7 @@ people:
     bmo_id: 255010
     name: Timothy Nikkel
     nick: tnikkel
-  - &tomprince
-    bmo_id: 461658
+  - bmo_id: 461658
     name: Tom Prince
     nick: tomprince
   - &toshi
@@ -1063,13 +1068,17 @@ modules:
       - tools/update-packaging/**/*
       - tools/update-verify/**/*
     meta:
+      owners_emeritus:
+        - Aki Sasaki
       group: release-engineering
       url: https://wiki.mozilla.org/ReleaseEngineering
       components:
         - Release Engineering::*
     owners:
-      - *aki
-    peers: []
+      - *jcristau
+    peers:
+      - *hneiva
+      - *bhearsum
     machine_name: core_build_and_release_tools
 
   - name: 'Core: Build Config'
@@ -3422,11 +3431,15 @@ modules:
       - testing/mozharness/**/*
     excludes: []
     owners:
-      - *aki
+      - *gbrown
     peers:
-      - *Callek
-      - *tomprince
+      - *jmaher
     meta:
+      owners_emeritus:
+        - Aki Sasaki
+      peers_emeritus:
+        - Justin Wood
+        - Tom Prince
       components:
         - 'Release Engineering :: Applications: MozharnessCore'
   - machine_name: python_usage
@@ -3693,5 +3706,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: f7925bf82df4257a726b414bde6cd350e72d88c8
-  export: 9328eff2d19267e2d04dd206fbf05d491b85a631
+  config: 2e6a207c15f7ebd3e3f264737394d799da175f89
+  export: bf7d0718b73a89e66c3b54a155eac7f41c31cf19
