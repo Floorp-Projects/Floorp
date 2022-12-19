@@ -1,3 +1,34 @@
+async function openSelectPopup(
+  mode = "key",
+  selector = "select",
+  win = window
+) {
+  info("Opening select popup");
+  let popupShownPromise = BrowserTestUtils.waitForSelectPopupShown(win);
+  if (mode == "click" || mode == "mousedown") {
+    let mousePromise;
+    if (mode == "click") {
+      mousePromise = BrowserTestUtils.synthesizeMouseAtCenter(
+        selector,
+        {},
+        win.gBrowser.selectedBrowser
+      );
+    } else {
+      mousePromise = BrowserTestUtils.synthesizeMouse(
+        selector,
+        5,
+        5,
+        { type: "mousedown" },
+        win.gBrowser.selectedBrowser
+      );
+    }
+    await mousePromise;
+  } else {
+    EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true }, win);
+  }
+  return popupShownPromise;
+}
+
 function hideSelectPopup(mode = "enter", win = window) {
   let browser = win.gBrowser.selectedBrowser;
   let selectClosedPromise = SpecialPowers.spawn(browser, [], async function() {

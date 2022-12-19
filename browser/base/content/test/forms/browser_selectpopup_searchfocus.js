@@ -15,15 +15,7 @@ add_setup(async function() {
 add_task(async function test_focus_on_search_shouldnt_close_popup() {
   const pageUrl = "data:text/html," + escape(SELECT);
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
-
-  let popupShownPromise = BrowserTestUtils.waitForSelectPopupShown(window);
-
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#one",
-    { type: "mousedown" },
-    gBrowser.selectedBrowser
-  );
-  let selectPopup = await popupShownPromise;
+  let selectPopup = await openSelectPopup("mousedown");
 
   let searchInput = selectPopup.querySelector(
     ".contentSelectDropdown-searchbox"

@@ -6,12 +6,6 @@ const PAGE = `
 </select>
 `;
 
-async function openSelectPopup(browser) {
-  let popupShownPromise = BrowserTestUtils.waitForSelectPopupShown(window);
-  await BrowserTestUtils.synthesizeMouseAtCenter("select", {}, browser);
-  return popupShownPromise;
-}
-
 function promiseChangeHandlingUserInput(browser) {
   return SpecialPowers.spawn(browser, [], async function() {
     content.document.clearUserGestureActivation();
@@ -43,7 +37,7 @@ async function testHandlingUserInputOnChange(aTriggerFn) {
       url,
     },
     async function(browser) {
-      let popup = await openSelectPopup(browser);
+      let popup = await openSelectPopup("click");
       let userInputOnChange = promiseChangeHandlingUserInput(browser);
       await aTriggerFn(popup);
       let userInput = await userInputOnChange;
