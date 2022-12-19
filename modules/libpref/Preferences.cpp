@@ -4623,6 +4623,9 @@ struct Internals {
       schema.AddKeyLabelFormat("prefKind", "Kind", MS::Format::String);
       schema.AddKeyLabelFormat("prefType", "Type", MS::Format::String);
       schema.AddKeyLabelFormat("prefValue", "Value", MS::Format::String);
+      schema.SetTableLabel(
+          "{marker.data.prefName}: {marker.data.prefValue} "
+          "({marker.data.prefType})");
       return schema;
     }
 
