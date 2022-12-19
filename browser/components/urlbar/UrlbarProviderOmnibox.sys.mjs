@@ -67,11 +67,11 @@ class ProviderOmnibox extends UrlbarProvider {
    *   Whether the result was blocked.
    */
   blockResult(queryContext, result) {
-    if (result.payload.deletable) {
+    if (result.payload.isBlockable) {
       lazy.ExtensionSearchHandler.handleInputDeleted(result.payload.title);
     }
 
-    return result.payload.deletable;
+    return result.payload.isBlockable;
   }
 
   /**
@@ -179,7 +179,7 @@ class ProviderOmnibox extends UrlbarProvider {
                   queryContext.tokens[0].value,
                   UrlbarUtils.HIGHLIGHT.TYPED,
                 ],
-                deletable: suggestion.deletable,
+                isBlockable: suggestion.deletable,
                 icon: UrlbarUtils.ICON.EXTENSION,
               }
             )
