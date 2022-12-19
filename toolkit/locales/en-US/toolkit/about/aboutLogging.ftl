@@ -16,6 +16,8 @@
 
 -profiler-brand-name = Firefox Profiler
 
+##
+
 # This is the title of the page
 about-logging-title = About Logging
 about-logging-page-title = Logging manager
