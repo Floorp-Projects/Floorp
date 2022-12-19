@@ -523,9 +523,9 @@ class PanZoomControllerTest : BaseSessionTest() {
         setupDocument(TOUCH_ACTION_WHEEL_LISTENER_HTML_PATH)
         var value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
         assertThat(
-            "The input result should be UNHANDLED",
+            "The input result should be HANDLED_CONTENT",
             value,
-            equalTo(PanZoomController.INPUT_RESULT_UNHANDLED)
+            equalTo(PanZoomController.INPUT_RESULT_HANDLED_CONTENT)
         )
     }
 

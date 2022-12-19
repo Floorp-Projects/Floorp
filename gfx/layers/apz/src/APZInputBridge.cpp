@@ -74,11 +74,28 @@ void APZEventResult::SetStatusForTouchEvent(
     const InputBlockState& aBlock, TargetConfirmationFlags aFlags,
     PointerEventsConsumableFlags aConsumableFlags,
     const AsyncPanZoomController* aTarget) {
+  // Note, we need to continue setting mStatus to eIgnore in the {mHasRoom=true,
+  // mAllowedByTouchAction=false} case because this is the behaviour expected by
+  // APZEventState::ProcessTouchEvent() when it determines when to send a
+  // `pointercancel` event. TODO: Use something more descriptive than
+  // nsEventStatus for this purpose.
   bool consumable = aConsumableFlags.IsConsumable();
   mStatus =
       consumable ? nsEventStatus_eConsumeDoDefault : nsEventStatus_eIgnore;
-  if (mHandledResult && !aFlags.mDispatchToContent && !consumable) {
-    // Set result to Unhandled if we set the status to eIgnore, unless it
+
+  // If the touch event's effect is disallowed by touch-action, treat it as if
+  // a touch event listener had preventDefault()-ed it (i.e. return
+  // HandledByContent, except we can do it eagerly rather than having to wait
+  // for the listener to run).
+  if (!aConsumableFlags.mAllowedByTouchAction) {
+    mHandledResult =
+        Some(APZHandledResult{APZHandledPlace::HandledByContent, aTarget});
+    return;
+  }
+
+  if (mHandledResult && !aFlags.mDispatchToContent &&
+      !aConsumableFlags.mHasRoom) {
+    // Set result to Unhandled if we have no room to scroll, unless it
     // was HandledByContent because we're over a dispatch-to-content region,
     // in which case it should remain HandledByContent.
     mHandledResult->mPlace = APZHandledPlace::Unhandled;

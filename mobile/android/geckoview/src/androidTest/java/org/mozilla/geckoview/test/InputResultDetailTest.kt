@@ -85,25 +85,66 @@ class InputResultDetailTest : BaseSessionTest() {
     @Test
     fun testTouchAction() {
         sessionRule.display?.run { setDynamicToolbarMaxHeight(20) }
-        setupDocument(TOUCH_ACTION_HTML_PATH)
 
-        var value = sessionRule.waitForResult(sendDownEvent(50f, 20f))
-        assertResultDetail(
-            "`touch-action: auto`",
-            value,
-            PanZoomController.INPUT_RESULT_HANDLED,
-            PanZoomController.SCROLLABLE_FLAG_BOTTOM,
-            (PanZoomController.OVERSCROLL_FLAG_HORIZONTAL or PanZoomController.OVERSCROLL_FLAG_VERTICAL)
-        )
+        for (subframe in arrayOf(true, false)) {
+            for (scrollable in arrayOf(true, false)) {
+                for (event in arrayOf(true, false)) {
+                    for (touchAction in arrayOf("auto", "none", "pan-x", "pan-y")) {
+                        var url = TOUCH_ACTION_HTML_PATH + "?"
+                        if (subframe) {
+                            url += "subframe&"
+                        }
+                        if (scrollable) {
+                            url += "scrollable&"
+                        }
+                        if (event) {
+                            url += "event&"
+                        }
+                        url += ("touch-action=" + touchAction)
 
-        value = sessionRule.waitForResult(sendDownEvent(50f, 75f))
-        assertResultDetail(
-            "`touch-action: none`",
-            value,
-            PanZoomController.INPUT_RESULT_UNHANDLED,
-            PanZoomController.SCROLLABLE_FLAG_NONE,
-            PanZoomController.OVERSCROLL_FLAG_NONE
-        )
+                        setupDocument(url)
+
+                        // Since sendDownEvent() just sends a touch-down, APZ doesn't
+                        // yet know the direction, hence it allows scrolling in both
+                        // the pan-x and pan-y cases.
+                        var expectedPlace = if (touchAction == "none" || (subframe && scrollable)) {
+                            PanZoomController.INPUT_RESULT_HANDLED_CONTENT
+                        } else if (scrollable) {
+                            PanZoomController.INPUT_RESULT_HANDLED
+                        } else {
+                            PanZoomController.INPUT_RESULT_UNHANDLED
+                        }
+
+                        var expectedScrollableDirections = if (scrollable) {
+                            PanZoomController.SCROLLABLE_FLAG_BOTTOM
+                        } else {
+                            PanZoomController.SCROLLABLE_FLAG_NONE
+                        }
+
+                        // FIXME: There are a couple of bugs here:
+                        //  1. In the case where touch-action allows the scrolling, the
+                        //     overscroll directions shouldn't depend on the presence of
+                        //     an event handler, but they do.
+                        //  2. In the case where touch-action doesn't allow the scrolling,
+                        //     the overscroll directions should probably be NONE.
+                        var expectedOverscrollDirections = if (touchAction != "none" && !scrollable && event) {
+                            PanZoomController.OVERSCROLL_FLAG_NONE
+                        } else {
+                            (PanZoomController.OVERSCROLL_FLAG_HORIZONTAL or PanZoomController.OVERSCROLL_FLAG_VERTICAL)
+                        }
+
+                        var value = sessionRule.waitForResult(sendDownEvent(50f, 20f))
+                        assertResultDetail(
+                            "`subframe=$subframe, scrollable=$scrollable, event=$event, touch-action=$touchAction`",
+                            value,
+                            expectedPlace,
+                            expectedScrollableDirections,
+                            expectedOverscrollDirections
+                        )
+                    }
+                }
+            }
+        }
     }
 
     @WithDisplay(width = 100, height = 100)
