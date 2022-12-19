@@ -245,6 +245,7 @@ include = [
   "DefaultFontSizes",
   "RuleChangeKind",
   "PageName",
+  "PageOrientation",
   "PageSize",
   "DProperty",
   "ImageRendering",
