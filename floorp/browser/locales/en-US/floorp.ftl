@@ -30,6 +30,7 @@ enable-multitab =
 multirow-tabs-value = Number of Rows When Multi-row Tabs Are Enabled 
 enable-tab-sleep = 
  .label = Enable Tab Sleep
+tab-sleep-timeout-value = Grace time to sleep inactive tabs (seconds)   Auto: 0
 enable-tab-scroll-change = 
  .label = Switch Tabs by Scrolling
 enable-doble-click-block = 

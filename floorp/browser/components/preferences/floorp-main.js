@@ -112,6 +112,17 @@ if(document.getElementById("translateoption") != null){
    })
 
 
+    const TABSLEEP_TAB_TIMEOUT_SECONDS_PREF = "floorp.tabsleep.tabTimeoutSeconds";
+    let elem = document.getElementById("tabSleepTimeoutSecondsValue");
+    elem.value = Services.prefs.getIntPref(TABSLEEP_TAB_TIMEOUT_SECONDS_PREF, undefined);
+    elem.addEventListener("change", function() {
+      Services.prefs.setIntPref(TABSLEEP_TAB_TIMEOUT_SECONDS_PREF, Number(elem.value));
+    });
+    Services.prefs.addObserver(TABSLEEP_TAB_TIMEOUT_SECONDS_PREF, function() {
+      elem.value = Services.prefs.getIntPref(TABSLEEP_TAB_TIMEOUT_SECONDS_PREF, undefined);
+    });
+
+
     document.getElementById("leptonButton").addEventListener("click", function(){
       window.location.href = "about:preferences#lepton";
     }, false);
