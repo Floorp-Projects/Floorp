@@ -423,6 +423,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "bhttp"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9a561f43fe82923605345b977ebd5951126f0a1b4575e3c3d53e5954e5822de4"
+dependencies = [
+ "url",
+]
+
+[[package]]
+name = "binary_http"
+version = "0.1.0"
+dependencies = [
+ "bhttp",
+ "nserror",
+ "nsstring",
+ "thin-vec",
+ "xpcom",
+]
+
+[[package]]
 name = "bincode"
 version = "1.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2154,6 +2174,7 @@ dependencies = [
  "audioipc2-client",
  "audioipc2-server",
  "authenticator",
+ "binary_http",
  "bitsdownload",
  "bookmark_sync",
  "cascade_bloom_filter",

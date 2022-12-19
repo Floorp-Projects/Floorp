@@ -9,6 +9,7 @@ with Files("**"):
 
 XPIDL_SOURCES += [
     "nsIBackgroundChannelRegistrar.idl",
+    "nsIBinaryHttp.idl",
     "nsIEarlyHintObserver.idl",
     "nsIHttpActivityObserver.idl",
     "nsIHttpAuthenticableChannel.idl",

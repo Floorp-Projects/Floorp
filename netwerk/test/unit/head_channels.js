@@ -447,3 +447,13 @@ function promiseAsyncOpen(chan) {
     );
   });
 }
+
+function hexStringToBytes(hex) {
+  let bytes = [];
+  for (let hexByteStr of hex.split(/(..)/)) {
+    if (hexByteStr.length) {
+      bytes.push(parseInt(hexByteStr, 16));
+    }
+  }
+  return bytes;
+}

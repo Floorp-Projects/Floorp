@@ -109,6 +109,7 @@ extern crate dap_ffi;
 
 extern crate data_encoding_ffi;
 
+extern crate binary_http;
 extern crate oblivious_http;
 
 #[cfg(feature = "uniffi_fixtures")]
