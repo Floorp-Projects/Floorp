@@ -5666,10 +5666,16 @@
   value: false
   mirror: always
 
-# Whether to use aa-stroke to accelerate accelerate stroked paths.
+# Whether to use aa-stroke to accelerate stroked paths.
 - name: gfx.canvas.accelerated.aa-stroke.enabled
   type: RelaxedAtomicBool
   value: true
+  mirror: always
+
+# Draws an indicator if acceleration is used.
+- name: gfx.canvas.accelerated.debug
+  type: RelaxedAtomicBool
+  value: false
   mirror: always
 
 # 0x7fff is the maximum supported xlib surface size and is more than enough for canvases.
