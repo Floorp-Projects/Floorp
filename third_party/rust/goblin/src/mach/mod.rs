@@ -7,8 +7,8 @@ use log::debug;
 use scroll::ctx::SizeWith;
 use scroll::{Pread, BE};
 
-use crate::container;
-use crate::error;
+use crate::{archive, container};
+use crate::{error, take_hint_bytes};
 
 pub mod bind_opcodes;
 pub mod constants;
@@ -296,6 +296,15 @@ pub struct FatArchIterator<'a> {
     start: usize,
 }
 
+/// A single architecture froma multi architecture binary container
+/// ([MultiArch]).
+#[derive(Debug)]
+#[allow(clippy::large_enum_variant)]
+pub enum SingleArch<'a> {
+    MachO(MachO<'a>),
+    Archive(archive::Archive<'a>),
+}
+
 impl<'a> Iterator for FatArchIterator<'a> {
     type Item = error::Result<fat::FatArch>;
     fn next(&mut self) -> Option<Self::Item> {
@@ -313,16 +322,65 @@ impl<'a> Iterator for FatArchIterator<'a> {
     }
 }
 
-/// Iterator over every `MachO` binary contained in this `MultiArch` container
-pub struct MachOIterator<'a> {
+/// Iterator over every entry contained in this `MultiArch` container
+pub struct SingleArchIterator<'a> {
     index: usize,
     data: &'a [u8],
     narches: usize,
     start: usize,
 }
 
-impl<'a> Iterator for MachOIterator<'a> {
-    type Item = error::Result<MachO<'a>>;
+pub fn peek_bytes(bytes: &[u8; 16]) -> error::Result<crate::Hint> {
+    if &bytes[0..archive::SIZEOF_MAGIC] == archive::MAGIC {
+        Ok(crate::Hint::Archive)
+    } else {
+        let (magic, maybe_ctx) = parse_magic_and_ctx(bytes, 0)?;
+        match magic {
+            header::MH_CIGAM_64 | header::MH_CIGAM | header::MH_MAGIC_64 | header::MH_MAGIC => {
+                if let Some(ctx) = maybe_ctx {
+                    Ok(crate::Hint::Mach(crate::HintData {
+                        is_lsb: ctx.le.is_little(),
+                        is_64: Some(ctx.container.is_big()),
+                    }))
+                } else {
+                    Err(error::Error::Malformed(format!(
+                        "Correct mach magic {:#x} does not have a matching parsing context!",
+                        magic
+                    )))
+                }
+            }
+            fat::FAT_MAGIC => {
+                // should probably verify this is always Big Endian...
+                let narchitectures = bytes.pread_with::<u32>(4, BE)? as usize;
+                Ok(crate::Hint::MachFat(narchitectures))
+            }
+            _ => Ok(crate::Hint::Unknown(bytes.pread::<u64>(0)?)),
+        }
+    }
+}
+
+fn extract_multi_entry(bytes: &[u8]) -> error::Result<SingleArch> {
+    if let Some(hint_bytes) = take_hint_bytes(bytes) {
+        match peek_bytes(hint_bytes)? {
+            crate::Hint::Mach(_) => {
+                let binary = MachO::parse(bytes, 0)?;
+                Ok(SingleArch::MachO(binary))
+            }
+            crate::Hint::Archive => {
+                let archive = archive::Archive::parse(bytes)?;
+                Ok(SingleArch::Archive(archive))
+            }
+            _ => Err(error::Error::Malformed(format!(
+                "multi-arch entry must be a Mach-O binary or an archive"
+            ))),
+        }
+    } else {
+        Err(error::Error::Malformed(format!("Object is too small")))
+    }
+}
+
+impl<'a> Iterator for SingleArchIterator<'a> {
+    type Item = error::Result<SingleArch<'a>>;
     fn next(&mut self) -> Option<Self::Item> {
         if self.index >= self.narches {
             None
@@ -333,8 +391,7 @@ impl<'a> Iterator for MachOIterator<'a> {
             match self.data.pread_with::<fat::FatArch>(offset, scroll::BE) {
                 Ok(arch) => {
                     let bytes = arch.slice(self.data);
-                    let binary = MachO::parse(bytes, 0);
-                    Some(binary)
+                    Some(extract_multi_entry(bytes))
                 }
                 Err(e) => Some(Err(e.into())),
             }
@@ -343,10 +400,10 @@ impl<'a> Iterator for MachOIterator<'a> {
 }
 
 impl<'a, 'b> IntoIterator for &'b MultiArch<'a> {
-    type Item = error::Result<MachO<'a>>;
-    type IntoIter = MachOIterator<'a>;
+    type Item = error::Result<SingleArch<'a>>;
+    type IntoIter = SingleArchIterator<'a>;
     fn into_iter(self) -> Self::IntoIter {
-        MachOIterator {
+        SingleArchIterator {
             index: 0,
             data: self.data,
             narches: self.narches,
@@ -387,7 +444,7 @@ impl<'a> MultiArch<'a> {
         Ok(arches)
     }
     /// Try to get the Mach-o binary at `index`
-    pub fn get(&self, index: usize) -> error::Result<MachO<'a>> {
+    pub fn get(&self, index: usize) -> error::Result<SingleArch<'a>> {
         if index >= self.narches {
             return Err(error::Error::Malformed(format!(
                 "Requested the {}-th binary, but there are only {} architectures in this container",
@@ -397,13 +454,13 @@ impl<'a> MultiArch<'a> {
         let offset = (index * fat::SIZEOF_FAT_ARCH) + self.start;
         let arch = self.data.pread_with::<fat::FatArch>(offset, scroll::BE)?;
         let bytes = arch.slice(self.data);
-        Ok(MachO::parse(bytes, 0)?)
+        extract_multi_entry(bytes)
     }
 
     pub fn find<F: Fn(error::Result<fat::FatArch>) -> bool>(
         &'a self,
         f: F,
-    ) -> Option<error::Result<MachO<'a>>> {
+    ) -> Option<error::Result<SingleArch<'a>>> {
         for (i, arch) in self.iter_arches().enumerate() {
             if f(arch) {
                 return Some(self.get(i));
@@ -461,6 +518,69 @@ impl<'a> Mach<'a> {
                 let binary = MachO::parse(bytes, 0)?;
                 Ok(Mach::Binary(binary))
             }
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::{Mach, SingleArch};
+
+    #[test]
+    fn parse_multi_arch_of_macho_binaries() {
+        // Create via:
+        // clang -arch arm64 -shared -o /tmp/hello_world_arm hello_world.c
+        // clang -arch x86_64 -shared -o /tmp/hello_world_x86_64 hello_world.c
+        // lipo -create -output hello_world_fat_binaries /tmp/hello_world_arm /tmp/hello_world_x86_64
+        // strip hello_world_fat_binaries
+        let bytes = include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/assets/hello_world_fat_binaries"
+        ));
+        let mach = Mach::parse(bytes).expect("failed to parse input file");
+        match mach {
+            Mach::Fat(fat) => {
+                assert!(fat.into_iter().count() > 0);
+                for entry in fat.into_iter() {
+                    let entry = entry.expect("failed to read entry");
+                    match entry {
+                        SingleArch::MachO(macho) => {
+                            assert!(macho.symbols().count() > 0);
+                        }
+                        _ => panic!("expected MultiArchEntry::MachO, got {:?}", entry),
+                    }
+                }
+            }
+            Mach::Binary(_) => panic!("expected Mach::Fat, got Mach::Binary"),
+        }
+    }
+
+    #[test]
+    fn parse_multi_arch_of_archives() {
+        // Created with:
+        // clang -c -o /tmp/hello_world.o hello_world.c
+        // ar -r /tmp/hello_world.a /tmp/hello_world.o
+        // lipo -create -output hello_world_fat_archives /tmp/hello_world.a
+        // strip hello_world_fat_archives
+        let bytes = include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/assets/hello_world_fat_archives"
+        ));
+        let mach = Mach::parse(bytes).expect("failed to parse input file");
+        match mach {
+            Mach::Fat(fat) => {
+                assert!(fat.into_iter().count() > 0);
+                for entry in fat.into_iter() {
+                    let entry = entry.expect("failed to read entry");
+                    match entry {
+                        SingleArch::Archive(archive) => {
+                            assert!(!archive.members().is_empty())
+                        }
+                        _ => panic!("expected MultiArchEntry::Archive, got {:?}", entry),
+                    }
+                }
+            }
+            Mach::Binary(_) => panic!("expected Mach::Fat, got Mach::Binary"),
         }
     }
 }
