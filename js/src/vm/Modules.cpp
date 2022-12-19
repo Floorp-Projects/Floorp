@@ -40,18 +40,16 @@ using mozilla::Utf8Unit;
 
 using NameList = GCVector<JSAtom*, 0, SystemAllocPolicy>;
 
-JS_PUBLIC_API JS::SupportedAssertionsHook JS::GetSupportedAssertionsHook(
-    JSRuntime* rt) {
+JS_PUBLIC_API void JS::SetSupportedImportAssertions(
+    JSRuntime* rt, const ImportAssertionVector& assertions) {
   AssertHeapIsIdle();
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
+  MOZ_ASSERT(rt->supportedImportAssertions.ref().empty());
 
-  return rt->supportedAssertionsHook;
-}
-
-JS_PUBLIC_API void JS::SetSupportedAssertionsHook(
-    JSRuntime* rt, SupportedAssertionsHook func) {
-  AssertHeapIsIdle();
-
-  rt->supportedAssertionsHook = func;
+  AutoEnterOOMUnsafeRegion oomUnsafe;
+  if (!rt->supportedImportAssertions.ref().appendAll(assertions)) {
+    oomUnsafe.crash("SetSupportedImportAssertions");
+  }
 }
 
 JS_PUBLIC_API JS::ModuleResolveHook JS::GetModuleResolveHook(JSRuntime* rt) {
