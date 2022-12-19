@@ -19,8 +19,8 @@ import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeWithIntrinsicBounds
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.focus.R
-import org.mozilla.focus.cookiebannerexception.CookieBannerExceptionItem
-import org.mozilla.focus.cookiebannerexception.CookieBannerExceptionStore
+import org.mozilla.focus.cookiebannerreducer.CookieBannerReducerItem
+import org.mozilla.focus.cookiebannerreducer.CookieBannerReducerStore
 import org.mozilla.focus.databinding.DialogTrackingProtectionSheetBinding
 import org.mozilla.focus.engine.EngineSharedPreferencesListener.TrackerChanged
 import org.mozilla.focus.ext.components
@@ -32,7 +32,7 @@ import org.mozilla.focus.ui.theme.FocusTheme
 class TrackingProtectionPanel(
     context: Context,
     private val lifecycleOwner: LifecycleOwner,
-    private val cookieBannerExceptionStore: CookieBannerExceptionStore,
+    private val cookieBannerReducerStore: CookieBannerReducerStore,
     private val tabUrl: String,
     private val blockedTrackersCount: Int,
     private val isTrackingProtectionOn: Boolean,
@@ -86,20 +86,23 @@ class TrackingProtectionPanel(
         binding.cookieBannerException.apply {
             setContent {
                 FocusTheme {
-                    val hasException = cookieBannerExceptionStore.observeAsComposableState { state ->
-                        state.hasException
-                    }.value
-                    val shouldShowCookieBannerItem = cookieBannerExceptionStore.observeAsComposableState { state ->
-                        state.shouldShowCookieBannerItem
-                    }.value
+                    val cookieBannerExceptionStatus =
+                        cookieBannerReducerStore.observeAsComposableState { state ->
+                            state.cookieBannerReducerStatus
+                        }.value
+                    val shouldShowCookieBannerItem =
+                        cookieBannerReducerStore.observeAsComposableState { state ->
+                            state.shouldShowCookieBannerItem
+                        }.value
                     if (shouldShowCookieBannerItem == true) {
                         binding.cookieBannerException.visibility = View.VISIBLE
                     } else {
                         binding.cookieBannerException.visibility = View.GONE
                     }
-                    if (hasException != null) {
-                        CookieBannerExceptionItem(
-                            hasException = hasException,
+
+                    if (cookieBannerExceptionStatus != null) {
+                        CookieBannerReducerItem(
+                            cookieBannerReducerStatus = cookieBannerExceptionStatus,
                             preferenceOnClickListener = ::showCookieBannerExceptionsDetailsPanel.invoke(),
                         )
                     }
@@ -183,11 +186,17 @@ class TrackingProtectionPanel(
                 dismiss()
             }
             advertising.onClickListener {
-                updateTrackingProtectionPolicy(TrackerChanged.ADVERTISING.tracker, advertising.isChecked)
+                updateTrackingProtectionPolicy(
+                    TrackerChanged.ADVERTISING.tracker,
+                    advertising.isChecked,
+                )
             }
 
             analytics.onClickListener {
-                updateTrackingProtectionPolicy(TrackerChanged.ANALYTICS.tracker, analytics.isChecked)
+                updateTrackingProtectionPolicy(
+                    TrackerChanged.ANALYTICS.tracker,
+                    analytics.isChecked,
+                )
             }
 
             social.onClickListener {

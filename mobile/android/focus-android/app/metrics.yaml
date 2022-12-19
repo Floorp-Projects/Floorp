@@ -2301,6 +2301,7 @@ cookie_banner:
     metadata:
       tags:
         - Privacy&Security
+
   setting_changed:
     type: event
     description: |
@@ -2323,6 +2324,7 @@ cookie_banner:
     metadata:
       tags:
         - Privacy&Security
+
   cookie_banner_cfr_shown:
     type: event
     description: |
@@ -2339,6 +2341,7 @@ cookie_banner:
     metadata:
       tags:
         - Privacy&Security
+
   exception_added:
     type: event
     description: |
@@ -2348,6 +2351,65 @@ cookie_banner:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1797578
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/8124#issuecomment-1344449866
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+    metadata:
+      tags:
+        - Privacy&Security
+
+  report_site_domain:
+    type: url
+    description: |
+      A user can report a site domain(Ex. for https://edition.cnn.com/
+      site domain will be cnn.com) when the cookie banner reducer is not
+      working from the cookie banner details panel.
+    lifetime: ping
+    send_in_pings:
+      - cookie-banner-report-site
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1803589
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/389#pullrequestreview-1341440145
+    data_sensitivity:
+      - technical
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+    metadata:
+      tags:
+        - Privacy&Security
+
+  report_site_cancel_button:
+    type: event
+    description: |
+      The user has pressed the report site domain cancel button
+      from the cookie banner reducer details panel.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1803589
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/389#pullrequestreview-1341440145
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+    metadata:
+      tags:
+        - Privacy&Security
+
+  report_domain_site_button:
+    type: event
+    description: |
+      The user has pressed the report site domain button
+      from the cookie banner reducer details panel.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1803589
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/389#pullrequestreview-1341440145
     data_sensitivity:
       - interaction
     notification_emails:

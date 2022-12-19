@@ -135,6 +135,7 @@ class BrowserToolbarIntegration(
 
             setOnSiteSecurityClickedListener {
                 TrackingProtection.toolbarShieldClicked.add()
+                fragment.initCookieBanner()
                 fragment.showTrackingProtectionPanel()
             }
 
@@ -163,6 +164,7 @@ class BrowserToolbarIntegration(
 
         toolbar.display.setOnTrackingProtectionClickedListener {
             TrackingProtection.toolbarShieldClicked.add()
+            fragment.initCookieBanner()
             fragment.showTrackingProtectionPanel()
         }
 

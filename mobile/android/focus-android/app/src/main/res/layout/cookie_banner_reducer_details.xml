@@ -7,8 +7,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/connection_details_view"
     android:layout_width="match_parent"
-    android:padding="8dp"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:padding="8dp">
 
     <ImageView
         android:id="@+id/details_back"
@@ -46,15 +46,49 @@
         app:layout_constraintTop_toBottomOf="@id/title"
         tools:text="Details" />
 
-    <org.mozilla.focus.cookiebannerexception.CookieBannerExceptionDetailsSwitch
+    <org.mozilla.focus.cookiebannerreducer.CookieBannerExceptionDetailsSwitch
         android:id="@+id/cookie_banner_exception_details_switch"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="-19dp"
         android:layout_marginTop="16dp"
         android:minHeight="48dp"
+        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/details_back"
         app:layout_constraintTop_toBottomOf="@id/details" />
 
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/cancel_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
+        android:layout_marginTop="16dp"
+        android:text="@string/cookie_banner_exception_panel_site_is_not_supported_cancel_button"
+        android:textAllCaps="true"
+        android:visibility="gone"
+        android:gravity="center"
+        android:background="@android:color/transparent"
+        android:textSize="14sp"
+        android:textColor="@color/cookie_banner_details_panel_report_a_site_text_color"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/details_back"
+        app:layout_constraintTop_toBottomOf="@id/details" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/request_support"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:minHeight="48dp"
+        android:layout_marginTop="16dp"
+        android:text="@string/cookie_banner_exception_panel_site_is_not_supported_request_support_button"
+        android:textAllCaps="true"
+        android:gravity="center"
+        android:textSize="14sp"
+        android:background="@android:color/transparent"
+        android:textColor="@color/cookie_banner_details_panel_report_a_site_text_color"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/cancel_button"
+        app:layout_constraintTop_toBottomOf="@id/details" />
 </androidx.constraintlayout.widget.ConstraintLayout>
