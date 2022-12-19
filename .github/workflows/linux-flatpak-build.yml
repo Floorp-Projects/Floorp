@@ -93,7 +93,9 @@ jobs:
         mkdir tmp public && cd tmp
         wget https://sda1.net/storage/floorp/basefiles.tar.xz && tar -xf basefiles.tar.xz && rm basefiles.tar.xz
         tar -xjvf $WORKDIR/obj-x86_64-pc-linux-gnu/dist/floorp-$DISPVER.en-US.linux-x86_64.tar.bz2
+        ls
         tar -Jcf flatpak-$DISPVER.tar.xz * && mv flatpak-$DISPVER.tar.xz ../public && cd ..
+        ls
     
     - name: FTP-Deploy-Action
       uses: SamKirkland/FTP-Deploy-Action@2.0.0    
@@ -101,7 +103,7 @@ jobs:
         FTP_SERVER: ${{ secrets.FTP_SERVER }}     
         FTP_USERNAME: ${{ secrets.FTP_USERNAME }} 
         FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }} 
-        LOCAL_DIR: public        
+        LOCAL_DIR: $WORKDIR/public
         REMOTE_DIR: "/data/floorp-linux/flathub-builds"
 
 
