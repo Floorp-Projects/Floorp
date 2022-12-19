@@ -176,7 +176,7 @@ AudioContext::AudioContext(nsPIDOMWindowInner* aWindow, bool aIsOffline,
 
   // Note: AudioDestinationNode needs an AudioContext that must already be
   // bound to the window.
-  const bool allowedToStart = AutoplayPolicy::IsAllowedToPlay(*this);
+  const bool allowedToStart = media::AutoplayPolicy::IsAllowedToPlay(*this);
   mDestination =
       new AudioDestinationNode(this, aIsOffline, aNumberOfChannels, aLength);
   mDestination->Init();
@@ -209,7 +209,7 @@ void AudioContext::StartBlockedAudioContextIfAllowed() {
     return;
   }
 
-  const bool isAllowedToPlay = AutoplayPolicy::IsAllowedToPlay(*this);
+  const bool isAllowedToPlay = media::AutoplayPolicy::IsAllowedToPlay(*this);
   AUTOPLAY_LOG("Trying to start AudioContext %p, IsAllowedToPlay=%d", this,
                isAllowedToPlay);
 
@@ -1072,7 +1072,7 @@ already_AddRefed<Promise> AudioContext::Resume(ErrorResult& aRv) {
   mSuspendedByContent = false;
   mPendingResumePromises.AppendElement(promise);
 
-  const bool isAllowedToPlay = AutoplayPolicy::IsAllowedToPlay(*this);
+  const bool isAllowedToPlay = media::AutoplayPolicy::IsAllowedToPlay(*this);
   AUTOPLAY_LOG("Trying to resume AudioContext %p, IsAllowedToPlay=%d", this,
                isAllowedToPlay);
   if (isAllowedToPlay) {
@@ -1121,8 +1121,8 @@ void AudioContext::ResumeInternal() {
 }
 
 void AudioContext::UpdateAutoplayAssumptionStatus() {
-  if (AutoplayPolicyTelemetryUtils::WouldBeAllowedToPlayIfAutoplayDisabled(
-          *this)) {
+  if (media::AutoplayPolicyTelemetryUtils::
+          WouldBeAllowedToPlayIfAutoplayDisabled(*this)) {
     mWasEverAllowedToStart |= true;
     mWouldBeAllowedToStart = true;
   } else {
@@ -1137,8 +1137,8 @@ void AudioContext::MaybeUpdateAutoplayTelemetry() {
     return;
   }
 
-  if (AutoplayPolicyTelemetryUtils::WouldBeAllowedToPlayIfAutoplayDisabled(
-          *this) &&
+  if (media::AutoplayPolicyTelemetryUtils::
+          WouldBeAllowedToPlayIfAutoplayDisabled(*this) &&
       !mWouldBeAllowedToStart) {
     AccumulateCategorical(
         mozilla::Telemetry::LABELS_WEB_AUDIO_AUTOPLAY::AllowedAfterBlocked);

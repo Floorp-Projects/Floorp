@@ -104,7 +104,7 @@ WindowGlobalInit WindowGlobalActor::WindowInitializer(
 
   // Initialze permission fields
   fields.mAutoplayPermission =
-      AutoplayPolicy::GetSiteAutoplayPermission(init.principal());
+      media::AutoplayPolicy::GetSiteAutoplayPermission(init.principal());
   fields.mPopupPermission = PopupBlocker::GetPopupPermission(init.principal());
 
   // Initialize top level permission fields
