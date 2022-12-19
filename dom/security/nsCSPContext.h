@@ -58,6 +58,10 @@ class nsCSPContext : public nsIContentSecurityPolicy {
   // Init a CSP from a different CSP
   nsresult InitFromOther(nsCSPContext* otherContext);
 
+  // Used to suppress errors and warnings produced by the parser.
+  // Use this when doing an one-off parsing of the CSP.
+  void SuppressParserLogMessages() { mSuppressParserLogMessages = true; }
+
   /**
    * SetRequestContextWithDocument() needs to be called before the
    * innerWindowID is initialized on the document. Use this function
@@ -181,6 +185,8 @@ class nsCSPContext : public nsIContentSecurityPolicy {
   nsCOMPtr<nsILoadGroup> mCallingChannelLoadGroup;
   nsWeakPtr mLoadingContext;
   nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
+
+  bool mSuppressParserLogMessages = false;
 
   // helper members used to queue up web console messages till
   // the windowID becomes available. see flushConsoleMessages()

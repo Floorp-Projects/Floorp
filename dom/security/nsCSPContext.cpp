@@ -314,17 +314,27 @@ nsresult nsCSPContext::InitFromOther(nsCSPContext* aOtherContext) {
 
   mSkipAllowInlineStyleCheck = aOtherContext->mSkipAllowInlineStyleCheck;
 
+  // This policy was already parsed somewhere else, don't emit parsing errors.
+  mSuppressParserLogMessages = true;
   for (auto policy : aOtherContext->mPolicies) {
     nsAutoString policyStr;
     policy->toString(policyStr);
     AppendPolicy(policyStr, policy->getReportOnlyFlag(),
                  policy->getDeliveredViaMetaTagFlag());
   }
+
+  mSuppressParserLogMessages = aOtherContext->mSuppressParserLogMessages;
+
   mIPCPolicies = aOtherContext->mIPCPolicies.Clone();
   return NS_OK;
 }
 
 void nsCSPContext::EnsureIPCPoliciesRead() {
+  // Most likely the parser errors already happened before serializing
+  // the policy for IPC.
+  bool previous = mSuppressParserLogMessages;
+  mSuppressParserLogMessages = true;
+
   if (mIPCPolicies.Length() > 0) {
     nsresult rv;
     for (auto& policy : mIPCPolicies) {
@@ -334,6 +344,8 @@ void nsCSPContext::EnsureIPCPoliciesRead() {
     }
     mIPCPolicies.Clear();
   }
+
+  mSuppressParserLogMessages = previous;
 }
 
 NS_IMETHODIMP
@@ -435,7 +447,8 @@ nsCSPContext::AppendPolicy(const nsAString& aPolicyString, bool aReportOnly,
   }
 
   nsCSPPolicy* policy = nsCSPParser::parseContentSecurityPolicy(
-      aPolicyString, mSelfURI, aReportOnly, this, aDeliveredViaMetaTag);
+      aPolicyString, mSelfURI, aReportOnly, this, aDeliveredViaMetaTag,
+      mSuppressParserLogMessages);
   if (policy) {
     if (policy->hasDirective(
             nsIContentSecurityPolicy::UPGRADE_IF_INSECURE_DIRECTIVE)) {
