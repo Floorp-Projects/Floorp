@@ -255,6 +255,15 @@ void RealmPrivate::Init(HandleObject aGlobal, const SiteIdentifier& aSite) {
   }
 }
 
+// As XPCJSRuntime can live longer than when we shutdown the observer service,
+// we have our own getter to account for this.
+static nsCOMPtr<nsIObserverService> GetObserverService() {
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownFinal)) {
+    return nullptr;
+  }
+  return mozilla::services::GetObserverService();
+}
+
 static bool TryParseLocationURICandidate(
     const nsACString& uristr, RealmPrivate::LocationHint aLocationHint,
     nsIURI** aURI) {
@@ -743,7 +752,7 @@ void XPCJSRuntime::UnmarkSkippableJSHolders() {
 }
 
 void XPCJSRuntime::PrepareForForgetSkippable() {
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  nsCOMPtr<nsIObserverService> obs = xpc::GetObserverService();
   if (obs) {
     obs->NotifyObservers(nullptr, "cycle-collector-forget-skippable", nullptr);
   }
@@ -752,7 +761,7 @@ void XPCJSRuntime::PrepareForForgetSkippable() {
 void XPCJSRuntime::BeginCycleCollectionCallback(CCReason aReason) {
   nsJSContext::BeginCycleCollectionCallback(aReason);
 
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  nsCOMPtr<nsIObserverService> obs = xpc::GetObserverService();
   if (obs) {
     obs->NotifyObservers(nullptr, "cycle-collector-begin", nullptr);
   }
@@ -761,7 +770,7 @@ void XPCJSRuntime::BeginCycleCollectionCallback(CCReason aReason) {
 void XPCJSRuntime::EndCycleCollectionCallback(CycleCollectorResults& aResults) {
   nsJSContext::EndCycleCollectionCallback(aResults);
 
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  nsCOMPtr<nsIObserverService> obs = xpc::GetObserverService();
   if (obs) {
     obs->NotifyObservers(nullptr, "cycle-collector-end", nullptr);
   }
@@ -785,7 +794,7 @@ void XPCJSRuntime::GCSliceCallback(JSContext* cx, JS::GCProgress progress,
     return;
   }
 
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  nsCOMPtr<nsIObserverService> obs = xpc::GetObserverService();
   if (obs) {
     switch (progress) {
       case JS::GC_CYCLE_BEGIN:
@@ -988,7 +997,7 @@ void XPCJSRuntime::CustomOutOfMemoryCallback() {
 void XPCJSRuntime::OnLargeAllocationFailure() {
   CycleCollectedJSRuntime::SetLargeAllocationFailure(OOMState::Reporting);
 
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  nsCOMPtr<nsIObserverService> os = xpc::GetObserverService();
   if (os) {
     os->NotifyObservers(nullptr, "memory-pressure", u"heap-minimize");
   }
