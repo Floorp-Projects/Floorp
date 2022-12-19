@@ -4074,6 +4074,33 @@ static const char* kDeprecatedOperations[] = {
     nullptr};
 #undef DEPRECATED_OPERATION
 
+class GetLocalizedStringRunnable final : public WorkerMainThreadRunnable {
+ public:
+  GetLocalizedStringRunnable(WorkerPrivate* aWorkerPrivate,
+                             const nsAutoCString& aKey,
+                             nsAutoString& aLocalizedString)
+      : WorkerMainThreadRunnable(aWorkerPrivate,
+                                 "GetLocalizedStringRunnable"_ns),
+        mKey(aKey),
+        mLocalizedString(aLocalizedString) {
+    MOZ_ASSERT(aWorkerPrivate);
+    aWorkerPrivate->AssertIsOnWorkerThread();
+  }
+
+  bool MainThreadRun() override {
+    AssertIsOnMainThread();
+
+    nsresult rv = nsContentUtils::GetLocalizedString(
+        nsContentUtils::eDOM_PROPERTIES, mKey.get(), mLocalizedString);
+    Unused << NS_WARN_IF(NS_FAILED(rv));
+    return true;
+  }
+
+ private:
+  const nsAutoCString& mKey;
+  nsAutoString& mLocalizedString;
+};
+
 void ReportDeprecation(nsIGlobalObject* aGlobal, nsIURI* aURI,
                        DeprecatedOperations aOperation,
                        const nsAString& aFileName,
@@ -4098,10 +4125,33 @@ void ReportDeprecation(nsIGlobalObject* aGlobal, nsIURI* aURI,
   key.AppendASCII("Warning");
 
   nsAutoString msg;
-  rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                          key.get(), msg);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
+  if (NS_IsMainThread()) {
+    rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                            key.get(), msg);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+  } else {
+    // nsIStringBundle is thread-safe but its creation is not, and in particular
+    // nsContentUtils doesn't create and store nsIStringBundle objects in a
+    // thread-safe way. Better to call GetLocalizedString() on the main thread.
+    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+    if (!workerPrivate) {
+      return;
+    }
+
+    RefPtr<GetLocalizedStringRunnable> runnable =
+        new GetLocalizedStringRunnable(workerPrivate, key, msg);
+
+    IgnoredErrorResult ignoredRv;
+    runnable->Dispatch(Canceling, ignoredRv);
+    if (NS_WARN_IF(ignoredRv.Failed())) {
+      return;
+    }
+
+    if (msg.IsEmpty()) {
+      return;
+    }
   }
 
   RefPtr<DeprecationReportBody> body =
