@@ -667,8 +667,13 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                         raw_result["statistics"]["timings"], raptor, retval={}
                     )
 
+                # Bug 1806402 - Handle chrome cpu data properly
                 cpu_vals = raw_result.get("cpu", None)
-                if cpu_vals:
+                if (
+                    cpu_vals
+                    and self.app
+                    not in NON_FIREFOX_BROWSERS + NON_FIREFOX_BROWSERS_MOBILE
+                ):
                     bt_result["measurements"].setdefault("cpuTime", []).extend(cpu_vals)
 
                 if self.perfstats:
