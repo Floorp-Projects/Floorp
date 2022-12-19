@@ -543,6 +543,7 @@ class GeckoEngineTest {
         assertEquals(ContentBlocking.CookieBannerMode.COOKIE_BANNER_MODE_DISABLED, EngineSession.CookieBannerHandlingMode.DISABLED.mode)
         assertEquals(ContentBlocking.CookieBannerMode.COOKIE_BANNER_MODE_REJECT, EngineSession.CookieBannerHandlingMode.REJECT_ALL.mode)
         assertEquals(ContentBlocking.CookieBannerMode.COOKIE_BANNER_MODE_REJECT_OR_ACCEPT, EngineSession.CookieBannerHandlingMode.REJECT_OR_ACCEPT_ALL.mode)
+        assertEquals(ContentBlocking.CookieBannerMode.COOKIE_BANNER_MODE_DETECT_ONLY, EngineSession.CookieBannerHandlingMode.DETECT_ONLY.mode)
     }
 
     @Test
