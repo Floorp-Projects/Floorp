@@ -12,8 +12,6 @@ interface HTMLSelectElement : HTMLElement {
   [HTMLConstructor] constructor();
 
   [CEReactions, SetterThrows, Pure]
-  attribute boolean autofocus;
-  [CEReactions, SetterThrows, Pure]
   attribute DOMString autocomplete;
   [CEReactions, SetterThrows, Pure]
   attribute boolean disabled;
