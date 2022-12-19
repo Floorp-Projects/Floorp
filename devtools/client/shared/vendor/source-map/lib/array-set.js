@@ -60,7 +60,7 @@ class ArraySet {
    * @param String aStr
    */
   has(aStr) {
-      return this._set.has(aStr);
+    return this._set.has(aStr);
   }
 
   /**
@@ -71,7 +71,7 @@ class ArraySet {
   indexOf(aStr) {
     const idx = this._set.get(aStr);
     if (idx >= 0) {
-        return idx;
+      return idx;
     }
     throw new Error('"' + aStr + '" is not in the set.');
   }

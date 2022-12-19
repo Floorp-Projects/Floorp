@@ -203,9 +203,12 @@ class BasicSourceMapConsumer extends SourceMapConsumer {
       that._names = ArraySet.fromArray(names.map(String), true);
       that._sources = ArraySet.fromArray(sources, true);
 
-      that._absoluteSources = ArraySet.fromArray(that._sources.toArray().map(function(s) {
-        return util.computeSourceURL(sourceRoot, s, aSourceMapURL);
-      }), true);
+      that._absoluteSources = ArraySet.fromArray(
+        that._sources.toArray().map(function (s) {
+          return util.computeSourceURL(sourceRoot, s, aSourceMapURL);
+        }),
+        true
+      );
 
       that.sourceRoot = sourceRoot;
       that.sourcesContent = sourcesContent;
@@ -237,7 +240,11 @@ class BasicSourceMapConsumer extends SourceMapConsumer {
     }
 
     // Treat the source as map-relative overall by default.
-    const sourceAsMapRelative = util.computeSourceURL(null, aSource, this._sourceMapURL);
+    const sourceAsMapRelative = util.computeSourceURL(
+      null,
+      aSource,
+      this._sourceMapURL
+    );
     if (this._absoluteSources.has(sourceAsMapRelative)) {
       const index = this._absoluteSources.indexOf(sourceAsMapRelative);
       this._sourceLookupCache.set(aSource, index);
@@ -245,7 +252,11 @@ class BasicSourceMapConsumer extends SourceMapConsumer {
     }
 
     // Fall back to treating the source as sourceRoot-relative.
-    const sourceAsSourceRootRelative = util.computeSourceURL(this.sourceRoot, aSource, this._sourceMapURL);
+    const sourceAsSourceRootRelative = util.computeSourceURL(
+      this.sourceRoot,
+      aSource,
+      this._sourceMapURL
+    );
     if (this._absoluteSources.has(sourceAsSourceRootRelative)) {
       const index = this._absoluteSources.indexOf(sourceAsSourceRootRelative);
       this._sourceLookupCache.set(aSource, index);
@@ -291,7 +302,11 @@ class BasicSourceMapConsumer extends SourceMapConsumer {
     const size = aStr.length;
 
     const mappingsBufPtr = this._wasm.exports.allocate_mappings(size);
-    const mappingsBuf = new Uint8Array(this._wasm.exports.memory.buffer, mappingsBufPtr, size);
+    const mappingsBuf = new Uint8Array(
+      this._wasm.exports.memory.buffer,
+      mappingsBufPtr,
+      size
+    );
     for (let i = 0; i < size; i++) {
       mappingsBuf[i] = aStr.charCodeAt(i);
     }
@@ -302,10 +317,11 @@ class BasicSourceMapConsumer extends SourceMapConsumer {
       const error = this._wasm.exports.get_last_error();
       let msg = `Error parsing mappings (code ${error}): `;
 
-      // XXX: keep these error codes in sync with `fitzgen/source-map-mappings`.
+      // XXX: keep these error codes in sync with `wasm-mappings`.
       switch (error) {
         case 1:
-          msg += "the mappings contained a negative line, column, source index, or name index";
+          msg +=
+            "the mappings contained a negative line, column, source index, or name index";
           break;
         case 2:
           msg += "the mappings contained a number larger than 2**32";
@@ -348,14 +364,14 @@ class BasicSourceMapConsumer extends SourceMapConsumer {
       },
       () => {
         switch (order) {
-        case SourceMapConsumer.GENERATED_ORDER:
-          this._wasm.exports.by_generated_location(this._getMappingsPtr());
-          break;
-        case SourceMapConsumer.ORIGINAL_ORDER:
-          this._wasm.exports.by_original_location(this._getMappingsPtr());
-          break;
-        default:
-          throw new Error("Unknown order of iteration.");
+          case SourceMapConsumer.GENERATED_ORDER:
+            this._wasm.exports.by_generated_location(this._getMappingsPtr());
+            break;
+          case SourceMapConsumer.ORIGINAL_ORDER:
+            this._wasm.exports.by_original_location(this._getMappingsPtr());
+            break;
+          default:
+            throw new Error("Unknown order of iteration.");
         }
       }
     );
@@ -392,7 +408,8 @@ class BasicSourceMapConsumer extends SourceMapConsumer {
           column: m.generatedColumn,
           lastColumn,
         });
-      }, () => {
+      },
+      () => {
         this._wasm.exports.all_generated_locations_for(
           this._getMappingsPtr(),
           source,
@@ -453,7 +470,7 @@ class BasicSourceMapConsumer extends SourceMapConsumer {
   originalPositionFor(aArgs) {
     const needle = {
       generatedLine: util.getArg(aArgs, "line"),
-      generatedColumn: util.getArg(aArgs, "column")
+      generatedColumn: util.getArg(aArgs, "column"),
     };
 
     if (needle.generatedLine < 1) {
@@ -464,20 +481,27 @@ class BasicSourceMapConsumer extends SourceMapConsumer {
       throw new Error("Column numbers must be >= 0");
     }
 
-    let bias = util.getArg(aArgs, "bias", SourceMapConsumer.GREATEST_LOWER_BOUND);
+    let bias = util.getArg(
+      aArgs,
+      "bias",
+      SourceMapConsumer.GREATEST_LOWER_BOUND
+    );
     if (bias == null) {
       bias = SourceMapConsumer.GREATEST_LOWER_BOUND;
     }
 
     let mapping;
-    this._wasm.withMappingCallback(m => mapping = m, () => {
-      this._wasm.exports.original_location_for(
-        this._getMappingsPtr(),
-        needle.generatedLine - 1,
-        needle.generatedColumn,
-        bias
-      );
-    });
+    this._wasm.withMappingCallback(
+      m => (mapping = m),
+      () => {
+        this._wasm.exports.original_location_for(
+          this._getMappingsPtr(),
+          needle.generatedLine - 1,
+          needle.generatedColumn,
+          bias
+        );
+      }
+    );
 
     if (mapping) {
       if (mapping.generatedLine === needle.generatedLine) {
@@ -495,7 +519,7 @@ class BasicSourceMapConsumer extends SourceMapConsumer {
           source,
           line: util.getArg(mapping, "originalLine", null),
           column: util.getArg(mapping, "originalColumn", null),
-          name
+          name,
         };
       }
     }
@@ -504,7 +528,7 @@ class BasicSourceMapConsumer extends SourceMapConsumer {
       source: null,
       line: null,
       column: null,
-      name: null
+      name: null,
     };
   }
 
@@ -516,8 +540,12 @@ class BasicSourceMapConsumer extends SourceMapConsumer {
     if (!this.sourcesContent) {
       return false;
     }
-    return this.sourcesContent.length >= this._sources.size() &&
-      !this.sourcesContent.some(function(sc) { return sc == null; });
+    return (
+      this.sourcesContent.length >= this._sources.size() &&
+      !this.sourcesContent.some(function (sc) {
+        return sc == null;
+      })
+    );
   }
 
   /**
@@ -576,14 +604,14 @@ class BasicSourceMapConsumer extends SourceMapConsumer {
       return {
         line: null,
         column: null,
-        lastColumn: null
+        lastColumn: null,
       };
     }
 
     const needle = {
       source,
       originalLine: util.getArg(aArgs, "line"),
-      originalColumn: util.getArg(aArgs, "column")
+      originalColumn: util.getArg(aArgs, "column"),
     };
 
     if (needle.originalLine < 1) {
@@ -594,21 +622,28 @@ class BasicSourceMapConsumer extends SourceMapConsumer {
       throw new Error("Column numbers must be >= 0");
     }
 
-    let bias = util.getArg(aArgs, "bias", SourceMapConsumer.GREATEST_LOWER_BOUND);
+    let bias = util.getArg(
+      aArgs,
+      "bias",
+      SourceMapConsumer.GREATEST_LOWER_BOUND
+    );
     if (bias == null) {
       bias = SourceMapConsumer.GREATEST_LOWER_BOUND;
     }
 
     let mapping;
-    this._wasm.withMappingCallback(m => mapping = m, () => {
-      this._wasm.exports.generated_location_for(
-        this._getMappingsPtr(),
-        needle.source,
-        needle.originalLine - 1,
-        needle.originalColumn,
-        bias
-      );
-    });
+    this._wasm.withMappingCallback(
+      m => (mapping = m),
+      () => {
+        this._wasm.exports.generated_location_for(
+          this._getMappingsPtr(),
+          needle.source,
+          needle.originalLine - 1,
+          needle.originalColumn,
+          bias
+        );
+      }
+    );
 
     if (mapping) {
       if (mapping.source === needle.source) {
@@ -627,7 +662,7 @@ class BasicSourceMapConsumer extends SourceMapConsumer {
     return {
       line: null,
       column: null,
-      lastColumn: null
+      lastColumn: null,
     };
   }
 }
@@ -701,37 +736,48 @@ class IndexedSourceMapConsumer extends SourceMapConsumer {
 
       let lastOffset = {
         line: -1,
-        column: 0
+        column: 0,
       };
-      return Promise.all(sections.map(s => {
-        if (s.url) {
-          // The url field will require support for asynchronicity.
-          // See https://github.com/mozilla/source-map/issues/16
-          throw new Error("Support for url field in sections not implemented.");
-        }
-        const offset = util.getArg(s, "offset");
-        const offsetLine = util.getArg(offset, "line");
-        const offsetColumn = util.getArg(offset, "column");
+      return Promise.all(
+        sections.map(s => {
+          if (s.url) {
+            // The url field will require support for asynchronicity.
+            // See https://github.com/mozilla/source-map/issues/16
+            throw new Error(
+              "Support for url field in sections not implemented."
+            );
+          }
+          const offset = util.getArg(s, "offset");
+          const offsetLine = util.getArg(offset, "line");
+          const offsetColumn = util.getArg(offset, "column");
 
-        if (offsetLine < lastOffset.line ||
-            (offsetLine === lastOffset.line && offsetColumn < lastOffset.column)) {
-          throw new Error("Section offsets must be ordered and non-overlapping.");
-        }
-        lastOffset = offset;
+          if (
+            offsetLine < lastOffset.line ||
+            (offsetLine === lastOffset.line && offsetColumn < lastOffset.column)
+          ) {
+            throw new Error(
+              "Section offsets must be ordered and non-overlapping."
+            );
+          }
+          lastOffset = offset;
 
-        const cons = new SourceMapConsumer(util.getArg(s, "map"), aSourceMapURL);
-        return cons.then(consumer => {
-          return {
-            generatedOffset: {
-              // The offset fields are 0-based, but we use 1-based indices when
-              // encoding/decoding from VLQ.
-              generatedLine: offsetLine + 1,
-              generatedColumn: offsetColumn + 1
-            },
-            consumer
-          };
-        });
-      })).then(s => {
+          const cons = new SourceMapConsumer(
+            util.getArg(s, "map"),
+            aSourceMapURL
+          );
+          return cons.then(consumer => {
+            return {
+              generatedOffset: {
+                // The offset fields are 0-based, but we use 1-based indices when
+                // encoding/decoding from VLQ.
+                generatedLine: offsetLine + 1,
+                generatedColumn: offsetColumn + 1,
+              },
+              consumer,
+            };
+          });
+        })
+      ).then(s => {
         that._sections = s;
         return that;
       });
@@ -773,21 +819,26 @@ class IndexedSourceMapConsumer extends SourceMapConsumer {
   originalPositionFor(aArgs) {
     const needle = {
       generatedLine: util.getArg(aArgs, "line"),
-      generatedColumn: util.getArg(aArgs, "column")
+      generatedColumn: util.getArg(aArgs, "column"),
     };
 
     // Find the section containing the generated position we're trying to map
     // to an original position.
-    const sectionIndex = binarySearch.search(needle, this._sections,
-      function(aNeedle, section) {
-        const cmp = aNeedle.generatedLine - section.generatedOffset.generatedLine;
+    const sectionIndex = binarySearch.search(
+      needle,
+      this._sections,
+      function (aNeedle, section) {
+        const cmp =
+          aNeedle.generatedLine - section.generatedOffset.generatedLine;
         if (cmp) {
           return cmp;
         }
 
-        return (aNeedle.generatedColumn -
-                section.generatedOffset.generatedColumn);
-      });
+        return (
+          aNeedle.generatedColumn - section.generatedOffset.generatedColumn
+        );
+      }
+    );
     const section = this._sections[sectionIndex];
 
     if (!section) {
@@ -795,18 +846,18 @@ class IndexedSourceMapConsumer extends SourceMapConsumer {
         source: null,
         line: null,
         column: null,
-        name: null
+        name: null,
       };
     }
 
     return section.consumer.originalPositionFor({
-      line: needle.generatedLine -
-        (section.generatedOffset.generatedLine - 1),
-      column: needle.generatedColumn -
+      line: needle.generatedLine - (section.generatedOffset.generatedLine - 1),
+      column:
+        needle.generatedColumn -
         (section.generatedOffset.generatedLine === needle.generatedLine
-         ? section.generatedOffset.generatedColumn - 1
-         : 0),
-      bias: aArgs.bias
+          ? section.generatedOffset.generatedColumn - 1
+          : 0),
+      bias: aArgs.bias,
     });
   }
 
@@ -815,7 +866,7 @@ class IndexedSourceMapConsumer extends SourceMapConsumer {
    * map, false otherwise.
    */
   hasContentsOfAllSources() {
-    return this._sections.every(function(s) {
+    return this._sections.every(function (s) {
       return s.consumer.hasContentsOfAllSources();
     });
   }
@@ -905,7 +956,7 @@ class IndexedSourceMapConsumer extends SourceMapConsumer {
     return {
       line: null,
       column: null,
-      lastColumn: null
+      lastColumn: null,
     };
   }
 
@@ -919,8 +970,9 @@ class IndexedSourceMapConsumer extends SourceMapConsumer {
 
     if (!section) return [];
 
-    return section.consumer.allGeneratedPositionsFor(aArgs).map(
-      generatedPosition => {
+    return section.consumer
+      .allGeneratedPositionsFor(aArgs)
+      .map(generatedPosition => {
         const lineShift = section.generatedOffset.generatedLine - 1;
         const columnShift = section.generatedOffset.generatedColumn - 1;
 
@@ -942,42 +994,43 @@ class IndexedSourceMapConsumer extends SourceMapConsumer {
         generatedPosition.line += lineShift;
 
         return generatedPosition;
-      }
-    );
+      });
   }
 
   eachMapping(aCallback, aContext, aOrder) {
     this._sections.forEach((section, index) => {
       const nextSection =
-        index + 1 < this._sections.length
-          ? this._sections[index + 1]
-          : null;
+        index + 1 < this._sections.length ? this._sections[index + 1] : null;
       const { generatedOffset } = section;
 
       const lineShift = generatedOffset.generatedLine - 1;
       const columnShift = generatedOffset.generatedColumn - 1;
 
-      section.consumer.eachMapping(function(mapping) {
-        if (mapping.generatedLine === 1) {
-          mapping.generatedColumn += columnShift;
+      section.consumer.eachMapping(
+        function (mapping) {
+          if (mapping.generatedLine === 1) {
+            mapping.generatedColumn += columnShift;
 
-          if (typeof mapping.lastGeneratedColumn === "number") {
-            mapping.lastGeneratedColumn += columnShift;
+            if (typeof mapping.lastGeneratedColumn === "number") {
+              mapping.lastGeneratedColumn += columnShift;
+            }
           }
-        }
 
-        if (
-          mapping.lastGeneratedColumn === Infinity &&
-          nextSection &&
-          mapping.generatedLine === nextSection.generatedOffset.generatedLine
-        ) {
-          mapping.lastGeneratedColumn =
-            nextSection.generatedOffset.generatedColumn - 2;
-        }
-        mapping.generatedLine += lineShift;
+          if (
+            mapping.lastGeneratedColumn === Infinity &&
+            nextSection &&
+            mapping.generatedLine === nextSection.generatedOffset.generatedLine
+          ) {
+            mapping.lastGeneratedColumn =
+              nextSection.generatedOffset.generatedColumn - 2;
+          }
+          mapping.generatedLine += lineShift;
 
-        aCallback.call(this, mapping);
-      }, aContext, aOrder);
+          aCallback.call(this, mapping);
+        },
+        aContext,
+        aOrder
+      );
     });
   }
 
@@ -1005,7 +1058,8 @@ function _factory(aSourceMap, aSourceMapURL) {
     sourceMap = util.parseSourceMapInput(aSourceMap);
   }
 
-  const consumer = sourceMap.sections != null
+  const consumer =
+    sourceMap.sections != null
       ? new IndexedSourceMapConsumer(sourceMap, aSourceMapURL)
       : new BasicSourceMapConsumer(sourceMap, aSourceMapURL);
   return Promise.resolve(consumer);

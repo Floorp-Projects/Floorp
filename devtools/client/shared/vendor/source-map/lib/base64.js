@@ -5,12 +5,13 @@
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-const intToCharMap = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".split("");
+const intToCharMap =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".split("");
 
 /**
  * Encode an integer in the range of 0 to 63 to a single base 64 digit.
  */
-exports.encode = function(number) {
+exports.encode = function (number) {
   if (0 <= number && number < intToCharMap.length) {
     return intToCharMap[number];
   }

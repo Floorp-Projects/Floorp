@@ -67,24 +67,7 @@ const VLQ_CONTINUATION_BIT = VLQ_BASE;
  *   2 becomes 4 (100 binary), -2 becomes 5 (101 binary)
  */
 function toVLQSigned(aValue) {
-  return aValue < 0
-    ? ((-aValue) << 1) + 1
-    : (aValue << 1) + 0;
-}
-
-/**
- * Converts to a two-complement value from a value where the sign bit is
- * placed in the least significant bit.  For example, as decimals:
- *   2 (10 binary) becomes 1, 3 (11 binary) becomes -1
- *   4 (100 binary) becomes 2, 5 (101 binary) becomes -2
- */
-// eslint-disable-next-line no-unused-vars
-function fromVLQSigned(aValue) {
-  const isNegative = (aValue & 1) === 1;
-  const shifted = aValue >> 1;
-  return isNegative
-    ? -shifted
-    : shifted;
+  return aValue < 0 ? (-aValue << 1) + 1 : (aValue << 1) + 0;
 }
 
 /**

@@ -41,14 +41,14 @@ class SourceMapGenerator {
     const sourceRoot = aSourceMapConsumer.sourceRoot;
     const generator = new SourceMapGenerator({
       file: aSourceMapConsumer.file,
-      sourceRoot
+      sourceRoot,
     });
-    aSourceMapConsumer.eachMapping(function(mapping) {
+    aSourceMapConsumer.eachMapping(function (mapping) {
       const newMapping = {
         generated: {
           line: mapping.generatedLine,
-          column: mapping.generatedColumn
-        }
+          column: mapping.generatedColumn,
+        },
       };
 
       if (mapping.source != null) {
@@ -59,7 +59,7 @@ class SourceMapGenerator {
 
         newMapping.original = {
           line: mapping.originalLine,
-          column: mapping.originalColumn
+          column: mapping.originalColumn,
         };
 
         if (mapping.name != null) {
@@ -69,9 +69,9 @@ class SourceMapGenerator {
 
       generator.addMapping(newMapping);
     });
-    aSourceMapConsumer.sources.forEach(function(sourceFile) {
+    aSourceMapConsumer.sources.forEach(function (sourceFile) {
       let sourceRelative = sourceFile;
-      if (sourceRoot !== null) {
+      if (sourceRoot != null) {
         sourceRelative = util.relative(sourceRoot, sourceFile);
       }
 
@@ -124,10 +124,10 @@ class SourceMapGenerator {
     this._mappings.add({
       generatedLine: generated.line,
       generatedColumn: generated.column,
-      originalLine: original != null && original.line,
-      originalColumn: original != null && original.column,
+      originalLine: original && original.line,
+      originalColumn: original && original.column,
       source,
-      name
+      name,
     });
   }
 
@@ -180,7 +180,7 @@ class SourceMapGenerator {
       if (aSourceMapConsumer.file == null) {
         throw new Error(
           "SourceMapGenerator.prototype.applySourceMap requires either an explicit source file, " +
-          'or the source map\'s "file" property. Both were omitted.'
+            'or the source map\'s "file" property. Both were omitted.'
         );
       }
       sourceFile = aSourceMapConsumer.file;
@@ -192,18 +192,17 @@ class SourceMapGenerator {
     }
     // Applying the SourceMap can add and remove items from the sources and
     // the names array.
-    const newSources = this._mappings.toArray().length > 0
-      ? new ArraySet()
-      : this._sources;
+    const newSources =
+      this._mappings.toArray().length > 0 ? new ArraySet() : this._sources;
     const newNames = new ArraySet();
 
     // Find mappings for the "sourceFile"
-    this._mappings.unsortedForEach(function(mapping) {
+    this._mappings.unsortedForEach(function (mapping) {
       if (mapping.source === sourceFile && mapping.originalLine != null) {
         // Check if it can be mapped by the source map, then update the mapping.
         const original = aSourceMapConsumer.originalPositionFor({
           line: mapping.originalLine,
-          column: mapping.originalColumn
+          column: mapping.originalColumn,
         });
         if (original.source != null) {
           // Copy mapping
@@ -231,13 +230,12 @@ class SourceMapGenerator {
       if (name != null && !newNames.has(name)) {
         newNames.add(name);
       }
-
     }, this);
     this._sources = newSources;
     this._names = newNames;
 
     // Copy sourcesContents of applied map.
-    aSourceMapConsumer.sources.forEach(function(srcFile) {
+    aSourceMapConsumer.sources.forEach(function (srcFile) {
       const content = aSourceMapConsumer.sourceContentFor(srcFile);
       if (content != null) {
         if (aSourceMapPath != null) {
@@ -267,33 +265,53 @@ class SourceMapGenerator {
     // it is most likely a programmer error. In this case we throw a very
     // specific error message to try to guide them the right way.
     // For example: https://github.com/Polymer/polymer-bundler/pull/519
-    if (aOriginal && typeof aOriginal.line !== "number" && typeof aOriginal.column !== "number") {
-        throw new Error(
-            "original.line and original.column are not numbers -- you probably meant to omit " +
-            "the original mapping entirely and only map the generated position. If so, pass " +
-            "null for the original mapping instead of an object with empty or null values."
-        );
+    if (
+      aOriginal &&
+      typeof aOriginal.line !== "number" &&
+      typeof aOriginal.column !== "number"
+    ) {
+      throw new Error(
+        "original.line and original.column are not numbers -- you probably meant to omit " +
+          "the original mapping entirely and only map the generated position. If so, pass " +
+          "null for the original mapping instead of an object with empty or null values."
+      );
     }
 
-    if (aGenerated && "line" in aGenerated && "column" in aGenerated
-        && aGenerated.line > 0 && aGenerated.column >= 0
-        && !aOriginal && !aSource && !aName) {
+    if (
+      aGenerated &&
+      "line" in aGenerated &&
+      "column" in aGenerated &&
+      aGenerated.line > 0 &&
+      aGenerated.column >= 0 &&
+      !aOriginal &&
+      !aSource &&
+      !aName
+    ) {
       // Case 1.
-
-    } else if (aGenerated && "line" in aGenerated && "column" in aGenerated
-             && aOriginal && "line" in aOriginal && "column" in aOriginal
-             && aGenerated.line > 0 && aGenerated.column >= 0
-             && aOriginal.line > 0 && aOriginal.column >= 0
-             && aSource) {
+    } else if (
+      aGenerated &&
+      "line" in aGenerated &&
+      "column" in aGenerated &&
+      aOriginal &&
+      "line" in aOriginal &&
+      "column" in aOriginal &&
+      aGenerated.line > 0 &&
+      aGenerated.column >= 0 &&
+      aOriginal.line > 0 &&
+      aOriginal.column >= 0 &&
+      aSource
+    ) {
       // Cases 2 and 3.
-
     } else {
-      throw new Error("Invalid mapping: " + JSON.stringify({
-        generated: aGenerated,
-        source: aSource,
-        original: aOriginal,
-        name: aName
-      }));
+      throw new Error(
+        "Invalid mapping: " +
+          JSON.stringify({
+            generated: aGenerated,
+            source: aSource,
+            original: aOriginal,
+            name: aName,
+          })
+      );
     }
   }
 
@@ -326,14 +344,17 @@ class SourceMapGenerator {
           previousGeneratedLine++;
         }
       } else if (i > 0) {
-        if (!util.compareByGeneratedPositionsInflated(mapping, mappings[i - 1])) {
+        if (
+          !util.compareByGeneratedPositionsInflated(mapping, mappings[i - 1])
+        ) {
           continue;
         }
         next += ",";
       }
 
-      next += base64VLQ.encode(mapping.generatedColumn
-                                 - previousGeneratedColumn);
+      next += base64VLQ.encode(
+        mapping.generatedColumn - previousGeneratedColumn
+      );
       previousGeneratedColumn = mapping.generatedColumn;
 
       if (mapping.source != null) {
@@ -342,12 +363,14 @@ class SourceMapGenerator {
         previousSource = sourceIdx;
 
         // lines are stored 0-based in SourceMap spec version 3
-        next += base64VLQ.encode(mapping.originalLine - 1
-                                   - previousOriginalLine);
+        next += base64VLQ.encode(
+          mapping.originalLine - 1 - previousOriginalLine
+        );
         previousOriginalLine = mapping.originalLine - 1;
 
-        next += base64VLQ.encode(mapping.originalColumn
-                                   - previousOriginalColumn);
+        next += base64VLQ.encode(
+          mapping.originalColumn - previousOriginalColumn
+        );
         previousOriginalColumn = mapping.originalColumn;
 
         if (mapping.name != null) {
@@ -364,7 +387,7 @@ class SourceMapGenerator {
   }
 
   _generateSourcesContent(aSources, aSourceRoot) {
-    return aSources.map(function(source) {
+    return aSources.map(function (source) {
       if (!this._sourcesContents) {
         return null;
       }
@@ -386,7 +409,7 @@ class SourceMapGenerator {
       version: this._version,
       sources: this._sources.toArray(),
       names: this._names.toArray(),
-      mappings: this._serializeMappings()
+      mappings: this._serializeMappings(),
     };
     if (this._file != null) {
       map.file = this._file;
@@ -395,7 +418,10 @@ class SourceMapGenerator {
       map.sourceRoot = this._sourceRoot;
     }
     if (this._sourcesContents) {
-      map.sourcesContent = this._generateSourcesContent(map.sources, map.sourceRoot);
+      map.sourcesContent = this._generateSourcesContent(
+        map.sources,
+        map.sourceRoot
+      );
     }
 
     return map;
