@@ -19,6 +19,7 @@
 #include "mozilla/DisplayPortUtils.h"
 #include "mozilla/dom/CSSAnimation.h"
 #include "mozilla/dom/CSSTransition.h"
+#include "mozilla/dom/ContentVisibilityAutoStateChangeEvent.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/ElementInlines.h"
@@ -7053,12 +7054,29 @@ void nsIFrame::UpdateIsRelevantContent(
     element->SetContentRelevancy(newRelevancy);
   }
 
-  if (overallRelevancyChanged) {
-    HandleLastRememberedSize();
-    PresShell()->FrameNeedsReflow(
-        this, IntrinsicDirty::FrameAncestorsAndDescendants, NS_FRAME_IS_DIRTY);
-    InvalidateFrame();
+  if (!overallRelevancyChanged) {
+    return;
   }
+
+  HandleLastRememberedSize();
+  PresShell()->FrameNeedsReflow(
+      this, IntrinsicDirty::FrameAncestorsAndDescendants, NS_FRAME_IS_DIRTY);
+  InvalidateFrame();
+
+  ContentVisibilityAutoStateChangeEventInit init;
+  init.mSkipped = newRelevancy.isEmpty();
+  RefPtr<ContentVisibilityAutoStateChangeEvent> event =
+      ContentVisibilityAutoStateChangeEvent::Constructor(
+          element, u"contentvisibilityautostatechange"_ns, init);
+
+  // Per
+  // https://drafts.csswg.org/css-contain/#content-visibility-auto-state-changed
+  // "This event is dispatched by posting a task at the time when the state
+  // change occurs."
+  RefPtr<AsyncEventDispatcher> asyncDispatcher =
+      new AsyncEventDispatcher(element, event.get());
+  DebugOnly<nsresult> rv = asyncDispatcher->PostDOMEvent();
+  NS_ASSERTION(NS_SUCCEEDED(rv), "AsyncEventDispatcher failed to dispatch");
 }
 
 nsresult nsIFrame::CharacterDataChanged(const CharacterDataChangeInfo&) {
