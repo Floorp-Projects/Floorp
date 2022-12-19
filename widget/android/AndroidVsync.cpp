@@ -107,6 +107,7 @@ void AndroidVsync::UnregisterObserver(Observer* aObserver, ObserverType aType) {
   } else {
     impl->mRenderObservers.RemoveElement(aObserver);
   }
+  aObserver->Dispose();
   impl->UpdateObservingVsync();
 }
 
