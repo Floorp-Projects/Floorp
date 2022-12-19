@@ -72,6 +72,9 @@
     <!-- Menu item: This is the label for turning off content blocking for the current website. -->
     <string name="menu_content_blocking">攔截內容</string>
 
+    <!-- This is the subtitle content blocking toggle -->
+    <string name="menu_content_blocking_subtitle">關閉以修復某啲網站嘅問題</string>
+
     <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
      See https://github.com/mozilla-mobile/focus-android/issues/2106
       %1$s will be replaced by the app name (e.g. Firefox Focus) -->
@@ -104,10 +107,6 @@
          of 25 characters. -->
     <string name="shortcut_erase_long_label">刪除瀏覽記錄</string>
 
-
-    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
-         Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">私隱搜尋</string>
 
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">私隱同安全</string>
@@ -308,10 +307,6 @@
     <!-- Explanation text above the list of search engines-->
     <string name="preference_select_preferred_engine">揀選你鍾意嘅引擎：</string>
 
-    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
-     a user first launches the app. -->
-    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">顯示主畫面貼士</string>
-
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">加入搜尋引擎</string>
 
@@ -404,9 +399,32 @@
 
     <string name="error_hostLookup_title">搵唔到伺服器</string>
 
-    <!-- Onboarding: Title -->
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">關閉</string>
+
+    <!-- New Onboarding flow first screen title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">歡迎嚟到%1$s！</string>
+    <string name="onboarding_first_screen_title">歡迎使用 %1$s</string>
+
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">快速、私隱、簡潔。</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">開始使用</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s 同其他瀏覽器唔同</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">將 %1$s 設為預設瀏覽器，保護你嘅私隱同資料。</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">設為預設瀏覽器</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">略過</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">升級你嘅個人私隱</string>
@@ -489,6 +507,9 @@
     <!-- String to be read by the accessibility service when focusing the previous result button -->
     <string name="accessibility_previous_result">搵上一個結果</string>
 
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI -->
+    <string name="accessibility_dismiss_find_in_page">關閉頁面搜尋</string>
+
     <!-- Checkbox menu item text to request desktop site -->
     <string name="preference_performance_request_desktop_site">請求桌面版網頁</string>
 
@@ -506,6 +527,33 @@
 
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">進階</string>
+
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">網站權限</string>
+
+    <!--  Preference for cookie banner. The name of the item from settings screen and the title of the cookie banner screen. -->
+    <string name="preferences_cookie_banner">減少 Cookie 橫額</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is not disabled. -->
+    <string name="preferences_cookie_banner_summary_on">開啟</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is disabled. -->
+    <string name="preferences_cookie_banner_summary_off">關閉</string>
+
+    <!--  Title preference inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_title">減少 Cookie 橫額</string>
+
+    <!--  Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_summary">盡可能自動拒絕 Cookie 請求，讓你看到更少橫額。</string>
+
+    <!--  Checkbox Preference title inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
+    <string name="cookie_banner_further_reduce_option_title">減少更多 Cookie 橫額</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically, this is shown as part of the protections panel with the tracking protection toggle. -->--&gt;
+    <string name="cookie_banner_exception_item_title">減少 Cookie 橫額</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically, this is shown when the user enters in details after he clicks on the item from protection panel. -->
+    <string name="cookie_banner_exception_panel_switch_title">減少 Cookie 橫額</string>
 
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">自動播放</string>
@@ -543,6 +591,9 @@
     <!-- Preference summary for block autoplay audio only-->
     <string name="preference_block_autoplay_audio_only_summary">推薦嘅嘢</string>
 
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">封鎖影音</string>
+
     <!-- Preference for studies -->
     <string name="preference_studies">使用者研究</string>
 
@@ -561,19 +612,17 @@
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">生效</string>
 
+    <!-- Title of the completed section on the studies list -->
+    <string name="studies_completed">已完成</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">透過 USB/Wi-Fi 遙距除錯</string>
 
-    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     %1$s is replaced with the app name -->
-    <string moz:removedIn="103" name="biometric_auth_title">解鎖 %1$s</string>
+    <!-- Text Button for show biometric prompt -->
+    <string name="show_biometric_button_text">解鎖</string>
 
-    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string moz:removedIn="103" name="biometric_auth_description">請觸碰指紋感應器以繼續。</string>
-
-    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string moz:removedIn="103" name="biometric_auth_new_session">開一個新工作階段</string>
+    <!-- Title text for biometric prompt pop-up -->
+    <string name="biometric_prompt_title">確認您嘅指紋</string>
 
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
@@ -621,6 +670,9 @@
 
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">阻擋潛在嘅危險同欺詐網站</string>
+
+    <!-- Title of the preference to enable "HTTPS-Only" mode -->
+    <string name="preference_https_only_title">僅 HTTPS 模式</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">例外</string>
@@ -683,6 +735,13 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">移除</string>
 
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">重新命名</string>
+    <!-- Text for the dialog title for renaming a top site -->
+    <string name="rename_top_site">重新命名</string>
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">捷徑名稱</string>
+
     <!-- Theme Preferences -->
     <!-- Preference category for changing default theme to dark or light mode -->
     <string name="preferences_theme">色系</string>
@@ -700,4 +759,20 @@
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">關閉 tab</string>
 
+    <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
+    <!-- Tool Tip Title -->
+    <string name="tool_tip_title">你已經受到保護！</string>
+
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_content_description">關閉</string>
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_title">已清除瀏覽紀錄！</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
     </resources>

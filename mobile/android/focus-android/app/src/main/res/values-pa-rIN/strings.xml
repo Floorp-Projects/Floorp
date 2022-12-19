@@ -65,7 +65,7 @@
          Next to this label is a switch that allows the user to temporarily enable / disable the
          blocking of trackers for the current browsing session - for example if the current website
          doesn't work correctly with blocked content. -->
-    <string name="menu_trackers_blocked_title">ਟਰੈਕਰਾਂ \\\'ਤੇ ਪਾਬੰਦੀ ਲਗਾਈ</string>
+    <string name="menu_trackers_blocked_title">ਟਰੈਕਰਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਲਗਾਈ</string>
 
     <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
     trackers have been blocked for the currently loaded website.  -->
@@ -150,7 +150,7 @@
 <a href="%2$s">ਹੋਰ ਜਾਣੋ</a></p>]]></string>
 
     <!-- Header for the Privacy and Security settings menu -->
-    <string name="preference_privacy_and_security_header">ਨਿੱਜੀ ਤੇ ਸੁਰੱਖਿਆ</string>
+    <string name="preference_privacy_and_security_header">ਪਰਦੇਦਾਰੀ ਤੇ ਸੁਰੱਖਿਆ</string>
 
     <!-- Preference summary for settings related to privacy and security -->
     <string name="preference_privacy_and_security_summary">ਟਰੈਕਿੰਗ, ਕੂਕੀਜ਼, ਡਾਟਾ ਚੋਣਾਂ</string>
@@ -292,7 +292,7 @@
     <string name="preference_privacy_block_ads_summary">ਕੁਝ ਇਸ਼ਤਿਹਾਰ ਸਾਈਟ ਦੇ ਦੌਰੇ ਨੂੰ ਟਰੈਕ ਕਰਦੇ ਹਨ, ਭਾਵੇਂ ਤੁਸੀਂ ਇਸ਼ਤਿਹਾਰਾਂ ਤੇ ਨਹੀਂ ਕਲਿਕ ਕਰਦੇ</string>
     <string name="preference_privacy_block_analytics">ਵਿਸ਼ਲੇਸ਼ਣ ਟਰੈਕਰਾਂ ਤੇ ਪਾਬੰਦੀ ਲਗਾਓ</string>
     <string name="preference_privacy_block_analytics_summary">ਟੇਪਿੰਗ ਅਤੇ ਸਕ੍ਰੌਲਿੰਗ ਵਰਗੀਆਂ ਗਤੀਵਿਧੀਆਂ ਇਕੱਤਰ ਕਰਨ, ਵਿਸ਼ਲੇਸ਼ਣ ਕਰਨ ਅਤੇ ਮਾਪਣ ਲਈ ਵਰਤਿਆ ਜਾਂਦਾ ਹੈ</string>
-    <string name="preference_privacy_block_social">ਸਮਾਜਿਕ ਟਰੈਕਰਾਂ \'ਤੇ ਪਾਬੰਦੀ ਲਗਾਓ</string>
+    <string name="preference_privacy_block_social">ਸਮਾਜਿਕ ਟਰੈਕਰ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਓ</string>
     <string name="preference_privacy_block_social_summary">ਸਾਈਟਾਂ ਉੱਤੇ ਤੁਹਾਡੇ ਵਲੋਂ ਖੋਲ੍ਹਣ ਨੂੰ ਟਰੈਕ ਕਰਨ ਅਤੇ ਸਾਂਝਾ ਕਰਨ ਵਾਲੇ ਬਟਨਾਂ ਵਾਗੂੰ ਕੰਮ ਕਰਨ ਲਈ ਜੋੜਿਆ ਗਿਆ</string>
     <string name="preference_privacy_block_content">ਹੋਰ ਸਮੱਗਰੀ ਟਰੈਕਰਾਂ \'ਤੇ ਪਾਬੰਦੀ ਲਗਾਓ</string>
     <string name="preference_privacy_block_content_summary2">ਸਮਰੱਥ ਬਣਾਉਣ ਨਾਲ ਕੁਝ ਪੰਨੇ ਅਚਾਨਕ ਵਿਹਾਰ ਕਰ ਸਕਦੇ ਹਨ</string>
@@ -342,7 +342,7 @@
       %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_default_browser2">%1$s ਨੂੰ ਮੂਲ ਬਰਾਊਜ਼ਰ ਬਣਾਓ</string>
 
-    <string name="preference_category_mozilla">ਮੋਜ਼ੀਲਾ</string>
+    <string name="preference_category_mozilla">Mozilla</string>
     <string name="preference_mozilla_telemetry2">ਵਰਤੋਂ ਸਬੰਧੀ ਡੇਟਾ ਭੇਜੋ</string>
 
     <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
@@ -380,7 +380,7 @@
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">ਖੋਜ ਇੰਜਣ ਨੂੰ ਜੋੜੋ</string>
 
-    <string name="search_add_manually_name_hint">ਖੋਜ ਇੰਜਣ ਨਾਂਮ</string>
+    <string name="search_add_manually_name_hint">ਖੋਜ ਇੰਜਣ ਦਾ ਨਾਂ</string>
     <string name="search_add_manually_string">ਵਰਤਣ ਲਈ ਖੋਜ ਸਤਰ</string>
     <string name="search_add_manually_save">ਸੰਭਾਲੋ</string>
 
@@ -392,7 +392,7 @@
     <string name="search_add_error_empty_name">ਖੋਜ ਇੰਜਣ ਨਾਂ ਦਿਓ</string>
     <string name="search_add_error_duplicate_name">ਇੱਕ ਇੰਸਟਾਲ ਕੀਤੇ ਖੋਜ ਇੰਜਣ ਪਹਿਲਾਂ ਹੀ ਉਹ ਨਾਂ ਵਰਤ ਰਿਹਾ ਹੈ।</string>
 
-    <string name="search_add_error_empty_search">ਖੋਜ ਸਤਰ ਦਾਖਲ ਕਰੋ</string>
+    <string name="search_add_error_empty_search">ਖੋਜ ਸਤਰ ਦਿਓ</string>
 
     <string name="search_add_error_format">ਜਾਂਚ ਕਰੋ ਕਿ ਖੋਜ ਲਾਈਨ ਮਿਲਦੀ ਹੈ ਉਦਾਹਰਨ ਫਾਰਮੈਟ</string>
 
