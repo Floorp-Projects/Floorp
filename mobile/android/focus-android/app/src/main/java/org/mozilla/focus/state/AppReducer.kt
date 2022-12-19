@@ -36,11 +36,18 @@ object AppReducer : Reducer<AppState, AppAction> {
             )
             is AppAction.ShowEraseTabsCfrChange -> showEraseTabsCfrChanged(state, action)
             is AppAction.ShowStartBrowsingCfrChange -> showStartBrowsingCfrChanged(state, action)
-            is AppAction.ShowTrackingProtectionCfrChange -> showTrackingProtectionCfrChanged(state, action)
-            is AppAction.OpenSitePermissionOptionsScreen -> openSitePermissionOptionsScreen(state, action)
+            is AppAction.ShowTrackingProtectionCfrChange -> showTrackingProtectionCfrChanged(
+                state,
+                action,
+            )
+            is AppAction.OpenSitePermissionOptionsScreen -> openSitePermissionOptionsScreen(
+                state,
+                action,
+            )
             is AppAction.ShowHomeScreen -> showHomeScreen(state)
             is AppAction.ShowOnboardingSecondScreen -> showOnBoardingSecondScreen(state)
             is AppAction.ShowSearchWidgetSnackBar -> showSearchWidgetSnackBarChanged(state, action)
+            is AppAction.ShowCookieBannerCfrChange -> showCookieBannerCfrChanged(state, action)
         }
     }
 }
@@ -170,35 +177,50 @@ private fun topSitesChanged(state: AppState, action: AppAction.TopSitesChange): 
 /**
  * The rules of site permissions autoplay has changed.
  */
-private fun sitePermissionOptionChanged(state: AppState, action: AppAction.SitePermissionOptionChange): AppState {
+private fun sitePermissionOptionChanged(
+    state: AppState,
+    action: AppAction.SitePermissionOptionChange,
+): AppState {
     return state.copy(sitePermissionOptionChange = action.value)
 }
 
 /**
  * The state of secret settings has changed.
  */
-private fun secretSettingsStateChanged(state: AppState, action: AppAction.SecretSettingsStateChange): AppState {
+private fun secretSettingsStateChanged(
+    state: AppState,
+    action: AppAction.SecretSettingsStateChange,
+): AppState {
     return state.copy(secretSettingsEnabled = action.enabled)
 }
 
 /**
  * The state of erase tabs CFR changed
  */
-private fun showEraseTabsCfrChanged(state: AppState, action: AppAction.ShowEraseTabsCfrChange): AppState {
+private fun showEraseTabsCfrChanged(
+    state: AppState,
+    action: AppAction.ShowEraseTabsCfrChange,
+): AppState {
     return state.copy(showEraseTabsCfr = action.value)
 }
 
 /**
  * Update whether the start browsing CFR should be shown or not
  */
-private fun showStartBrowsingCfrChanged(state: AppState, action: AppAction.ShowStartBrowsingCfrChange): AppState {
+private fun showStartBrowsingCfrChanged(
+    state: AppState,
+    action: AppAction.ShowStartBrowsingCfrChange,
+): AppState {
     return state.copy(showStartBrowsingTabsCfr = action.value)
 }
 
 /**
  * The state of search widget snackBar changed
  */
-private fun showSearchWidgetSnackBarChanged(state: AppState, action: AppAction.ShowSearchWidgetSnackBar): AppState {
+private fun showSearchWidgetSnackBarChanged(
+    state: AppState,
+    action: AppAction.ShowSearchWidgetSnackBar,
+): AppState {
     return state.copy(showSearchWidgetSnackbar = action.value)
 }
 
@@ -210,6 +232,16 @@ private fun showTrackingProtectionCfrChanged(
     action: AppAction.ShowTrackingProtectionCfrChange,
 ): AppState {
     return state.copy(showTrackingProtectionCfrForTab = action.value)
+}
+
+/**
+ * The state of cookie banner CFR changed
+ */
+private fun showCookieBannerCfrChanged(
+    state: AppState,
+    action: AppAction.ShowCookieBannerCfrChange,
+): AppState {
+    return state.copy(showCookieBannerCfr = action.value)
 }
 
 private fun openSitePermissionOptionsScreen(

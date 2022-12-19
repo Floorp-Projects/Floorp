@@ -4,7 +4,6 @@
 package org.mozilla.focus.cookiebanner
 
 import android.os.Bundle
-import androidx.preference.CheckBoxPreference
 import org.mozilla.focus.GleanMetrics.CookieBanner
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
@@ -15,7 +14,6 @@ import org.mozilla.focus.settings.BaseSettingsFragment
 
 class CookieBannerFragment : BaseSettingsFragment() {
     private lateinit var rejectAllCookies: CookieBannerRejectAllPreference
-    private lateinit var rejectOrAcceptAllCookies: CheckBoxPreference
 
     override fun onStart() {
         super.onStart()
@@ -31,7 +29,6 @@ class CookieBannerFragment : BaseSettingsFragment() {
 
     private fun setupPreferences() {
         rejectAllCookies = requirePreference(R.string.pref_key_cookie_banner_reject_all)
-        rejectOrAcceptAllCookies = requirePreference(R.string.pref_key_cookie_banner_reject_or_accept)
     }
 
     private fun setupInitialState() {
@@ -41,13 +38,6 @@ class CookieBannerFragment : BaseSettingsFragment() {
             }
             is CookieBannerOption.CookieBannerRejectAll -> {
                 rejectAllCookies.isChecked = true
-                rejectOrAcceptAllCookies.isVisible = true
-                rejectOrAcceptAllCookies.isChecked = false
-            }
-            is CookieBannerOption.CookieBannerRejectOrAccept -> {
-                rejectAllCookies.isChecked = true
-                rejectOrAcceptAllCookies.isVisible = true
-                rejectOrAcceptAllCookies.isChecked = true
             }
         }
     }
@@ -55,26 +45,11 @@ class CookieBannerFragment : BaseSettingsFragment() {
     private fun setupOnPreferenceChangeListener() {
         rejectAllCookies.setOnPreferenceChangeListener { _, newValue ->
             val enableRejectAllCookies = newValue as Boolean
-            rejectOrAcceptAllCookies.isVisible = enableRejectAllCookies
-            val cookieBannerOption: CookieBannerOption
 
-            if (enableRejectAllCookies) {
-                cookieBannerOption = CookieBannerOption.CookieBannerRejectAll()
-            } else {
-                rejectOrAcceptAllCookies.isChecked = false
-                cookieBannerOption = CookieBannerOption.CookieBannerDisabled()
-            }
-
-            handleCookieBannerChange(cookieBannerOption)
-            true
-        }
-        rejectOrAcceptAllCookies.setOnPreferenceChangeListener { _, newValue ->
-            val enableRejectOrAcceptAllCookies = newValue as Boolean
-
-            val cookieBannerOption: CookieBannerOption = if (enableRejectOrAcceptAllCookies) {
-                CookieBannerOption.CookieBannerRejectOrAccept()
-            } else {
+            val cookieBannerOption: CookieBannerOption = if (enableRejectAllCookies) {
                 CookieBannerOption.CookieBannerRejectAll()
+            } else {
+                CookieBannerOption.CookieBannerDisabled()
             }
 
             handleCookieBannerChange(cookieBannerOption)

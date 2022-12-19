@@ -72,6 +72,7 @@ class BrowserToolbarIntegrationTest {
         whenever(fragment.resources).thenReturn(testContext.resources)
         whenever(fragment.context).thenReturn(testContext)
         whenever(fragment.view).thenReturn(fragmentView)
+        whenever(fragment.requireContext()).thenReturn(testContext)
 
         browserToolbarIntegration = spy(
             BrowserToolbarIntegration(

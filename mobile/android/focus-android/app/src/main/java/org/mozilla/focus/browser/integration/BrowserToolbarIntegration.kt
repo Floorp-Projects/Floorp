@@ -8,8 +8,12 @@ import android.graphics.Color
 import android.widget.LinearLayout
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.appcompat.widget.AppCompatEditText
 import androidx.compose.material.Text
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
@@ -36,16 +40,20 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.focus.GleanMetrics.TabCount
 import org.mozilla.focus.GleanMetrics.TrackingProtection
 import org.mozilla.focus.R
+import org.mozilla.focus.cookiebanner.CookieBannerOption
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.isCustomTab
 import org.mozilla.focus.ext.isTablet
+import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.ext.settings
 import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.menu.browser.CustomTabMenu
 import org.mozilla.focus.nimbus.FocusNimbus
 import org.mozilla.focus.state.AppAction
+import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.ui.theme.focusTypography
+import org.mozilla.focus.utils.ClickableSubstringLink
 
 @Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
 class BrowserToolbarIntegration(
@@ -75,6 +83,10 @@ class BrowserToolbarIntegration(
 
     @VisibleForTesting
     internal var trackingProtectionCfrScope: CoroutineScope? = null
+
+    @VisibleForTesting
+    internal var cookieBannerCfrScope: CoroutineScope? = null
+
     private var tabsCounterScope: CoroutineScope? = null
     private var customTabsFeature: CustomTabsToolbarFeature? = null
     private var navigationButtonsIntegration: NavigationButtonsIntegration? = null
@@ -228,6 +240,15 @@ class BrowserToolbarIntegration(
             setBrowserActionButtons()
             observeEraseCfr()
         }
+
+        if (fragment.requireContext().settings.shouldShowCookieBannerCfr &&
+            fragment.requireContext().settings.isCookieBannerEnable &&
+            fragment.requireContext().settings.getCurrentCookieBannerOptionFromSharePref() ==
+            CookieBannerOption.CookieBannerRejectAll()
+        ) {
+            observeCookieBannerCfr()
+        }
+
         observeTrackingProtectionCfr()
     }
 
@@ -284,6 +305,68 @@ class BrowserToolbarIntegration(
     }
 
     @VisibleForTesting
+    internal fun observeCookieBannerCfr() {
+        cookieBannerCfrScope = fragment.components?.appStore?.flowScoped { flow ->
+            flow.mapNotNull { state -> state.showCookieBannerCfr }
+                .ifChanged()
+                .collect { showCookieBannerCfr ->
+                    if (showCookieBannerCfr) {
+                        CFRPopup(
+                            anchor = toolbar.findViewById<AppCompatEditText>(R.id.mozac_browser_toolbar_background),
+                            properties = CFRPopupProperties(
+                                popupWidth = 256.dp,
+                                popupAlignment = CFRPopup.PopupAlignment.BODY_TO_ANCHOR_START,
+                                popupBodyColors = listOf(
+                                    ContextCompat.getColor(
+                                        fragment.requireContext(),
+                                        R.color.cfr_pop_up_shape_end_color,
+                                    ),
+                                    ContextCompat.getColor(
+                                        fragment.requireContext(),
+                                        R.color.cfr_pop_up_shape_start_color,
+                                    ),
+                                ),
+                                dismissButtonColor = ContextCompat.getColor(
+                                    fragment.requireContext(),
+                                    R.color.cardview_light_background,
+                                ),
+                                popupVerticalOffset = 0.dp,
+                                indicatorArrowStartOffset = 10.dp,
+                            ),
+                            onDismiss = { onDismissCookieBannerCfr() },
+                            text = {
+                                val textCookieBannerCfr = stringResource(
+                                    id = R.string.cfr_for_cookie_banner,
+                                    LocalContext.current.getString(R.string.onboarding_short_app_name),
+                                )
+                                ClickableSubstringLink(
+                                    text = textCookieBannerCfr,
+                                    style = focusTypography.cfrCookieBannerTextStyle,
+                                    linkTextDecoration = TextDecoration.Underline,
+                                    clickableStartIndex = textCookieBannerCfr.indexOf(
+                                        LocalContext.current.getString(
+                                            R.string.cfr_for_cookie_banner_underline_settings,
+                                        ),
+                                    ),
+                                    clickableEndIndex = textCookieBannerCfr.length,
+                                    onClick = {
+                                        fragment.requireComponents.appStore.dispatch(
+                                            AppAction.OpenSettings(Screen.Settings.Page.CookieBanner),
+                                        )
+                                        onDismissCookieBannerCfr()
+                                    },
+                                )
+                            },
+                        ).apply {
+                            show()
+                            stopObserverCookieBannerCfrChanges()
+                        }
+                    }
+                }
+        }
+    }
+
+    @VisibleForTesting
     internal fun observeTrackingProtectionCfr() {
         trackingProtectionCfrScope = fragment.components?.appStore?.flowScoped { flow ->
             flow.mapNotNull { state -> state.showTrackingProtectionCfrForTab }
@@ -329,9 +412,24 @@ class BrowserToolbarIntegration(
         }
     }
 
+    private fun onDismissCookieBannerCfr() {
+        fragment.components?.appStore?.dispatch(
+            AppAction.ShowCookieBannerCfrChange(
+                false,
+            ),
+        )
+        fragment.requireContext().settings.shouldShowCookieBannerCfr = false
+    }
+
     private fun onDismissTrackingProtectionCfr() {
         store.state.selectedTabId?.let {
-            fragment.components?.appStore?.dispatch(AppAction.ShowTrackingProtectionCfrChange(mapOf(it to false)))
+            fragment.components?.appStore?.dispatch(
+                AppAction.ShowTrackingProtectionCfrChange(
+                    mapOf(
+                        it to false,
+                    ),
+                ),
+            )
         }
         fragment.requireContext().settings.shouldShowCfrForTrackingProtection = false
         FocusNimbus.features.onboarding.recordExposure()
@@ -367,6 +465,7 @@ class BrowserToolbarIntegration(
         tabsCounterScope?.cancel()
         stopObserverEraseTabsCfrChanges()
         stopObserverTrackingProtectionCfrChanges()
+        stopObserverCookieBannerCfrChanges()
     }
 
     @VisibleForTesting
@@ -382,6 +481,11 @@ class BrowserToolbarIntegration(
     @VisibleForTesting
     internal fun stopObserverSecurityIndicatorChanges() {
         securityIndicatorScope?.cancel()
+    }
+
+    @VisibleForTesting
+    internal fun stopObserverCookieBannerCfrChanges() {
+        cookieBannerCfrScope?.cancel()
     }
 
     @VisibleForTesting

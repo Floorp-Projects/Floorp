@@ -21,6 +21,7 @@ import java.util.UUID
  * @property showEraseTabsCfr A flag which reflects the state erase tabs CFR
  * @property showStartBrowsingTabsCfr A flag which reflects the state of start browsing CFR
  * @property showSearchWidgetSnackbar A flag which reflects the state of search widget snackbar
+ * @property showCookieBannerCfr A flag witch reflects the state of cookie banner CFR
  */
 data class AppState(
     val screen: Screen,
@@ -31,6 +32,7 @@ data class AppState(
     val showSearchWidgetSnackbar: Boolean = false,
     val showTrackingProtectionCfrForTab: Map<String, Boolean> = emptyMap(),
     val showStartBrowsingTabsCfr: Boolean = false,
+    val showCookieBannerCfr: Boolean = false,
 ) : State
 
 /**

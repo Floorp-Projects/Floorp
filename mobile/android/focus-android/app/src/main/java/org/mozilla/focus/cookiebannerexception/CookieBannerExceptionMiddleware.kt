@@ -5,8 +5,12 @@
 package org.mozilla.focus.cookiebannerexception
 
 import android.content.Context
+import androidx.core.net.toUri
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.cookiehandling.CookieBannersStorage
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
@@ -55,7 +59,8 @@ class CookieBannerExceptionMiddleware(
                         cookieBannersStorage.removeException(uri, true)
                         CookieBanner.exceptionRemoved.record(NoExtras())
                     } else {
-                        cookieBannersStorage.addException(uri, true)
+                        clearSiteData()
+                        cookieBannersStorage.addPersistentExceptionInPrivateMode(uri)
                         CookieBanner.exceptionAdded.record(NoExtras())
                     }
                     context.store.dispatch(
@@ -80,5 +85,19 @@ class CookieBannerExceptionMiddleware(
     private fun shouldShowCookieBannerExceptionItem(): Boolean {
         return appContext.settings.isCookieBannerEnable &&
             appContext.settings.getCurrentCookieBannerOptionFromSharePref() != CookieBannerOption.CookieBannerDisabled()
+    }
+
+    private suspend fun clearSiteData() {
+        val host = uri.toUri().host.orEmpty()
+        val domain = appContext.components.publicSuffixList.getPublicSuffixPlusOne(host).await()
+        withContext(Dispatchers.Main) {
+            appContext.components.engine.clearData(
+                host = domain,
+                data = Engine.BrowsingData.select(
+                    Engine.BrowsingData.AUTH_SESSIONS,
+                    Engine.BrowsingData.ALL_SITE_DATA,
+                ),
+            )
+        }
     }
 }

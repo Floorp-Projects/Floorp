@@ -7,8 +7,12 @@ package org.mozilla.focus.cookiebannerexception
 import android.content.Context
 import android.view.View
 import android.widget.FrameLayout
+import androidx.core.net.toUri
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import mozilla.components.support.ktx.kotlin.toShortUrl
 import org.mozilla.focus.R
 import org.mozilla.focus.databinding.CookieBannerExceptionDetailsBinding
@@ -17,6 +21,7 @@ import org.mozilla.focus.ext.components
 class CookieBannerExceptionDetailsPanel(
     context: Context,
     cookieBannerExceptionStore: CookieBannerExceptionStore,
+    private val ioScope: CoroutineScope,
     private val tabUrl: String,
     private val goBack: () -> Unit,
     private val defaultCookieBannerInteractor: DefaultCookieBannerExceptionInteractor,
@@ -69,14 +74,22 @@ class CookieBannerExceptionDetailsPanel(
     }
 
     private fun bindTitle(hasException: Boolean) {
-        val stringID =
-            if (hasException) {
-                R.string.cookie_banner_exception_panel_title_state_on_for_site
-            } else {
-                R.string.cookie_banner_exception_panel_title_state_off_for_site
+        ioScope.launch {
+            val host = tabUrl.toUri().host.orEmpty()
+            val domain = context.components.publicSuffixList.getPublicSuffixPlusOne(host).await()
+
+            launch(Dispatchers.Main) {
+                val stringID =
+                    if (hasException) {
+                        R.string.cookie_banner_exception_panel_title_state_on_for_site
+                    } else {
+                        R.string.cookie_banner_exception_panel_title_state_off_for_site
+                    }
+                val data = domain ?: tabUrl
+                val shortUrl = data.toShortUrl(context.components.publicSuffixList)
+                binding.title.text = context.getString(stringID, shortUrl)
             }
-        val shortUrl = tabUrl.toShortUrl(context.components.publicSuffixList)
-        binding.title.text = context.getString(stringID, shortUrl)
+        }
     }
 
     private fun bindDescription(hasException: Boolean) {

@@ -911,6 +911,7 @@ class BrowserFragment :
         val cookieBannerExceptionDetailsPanel = CookieBannerExceptionDetailsPanel(
             context = requireContext(),
             cookieBannerExceptionStore = cookieBannerExceptionStore,
+            ioScope = viewLifecycleOwner.lifecycleScope + Dispatchers.IO,
             tabUrl = tab.content.url,
             goBack = { trackingProtectionPanel?.show() },
             defaultCookieBannerInteractor = defaultCookieBannerInteractor,

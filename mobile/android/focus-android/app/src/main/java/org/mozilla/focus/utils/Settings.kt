@@ -178,6 +178,20 @@ class Settings(
                 .commit()
         }
 
+    var shouldShowCookieBannerCfr: Boolean
+        get() = preferences.getBoolean(
+            getPreferenceKey(R.string.pref_cfr_visibility_for_cookie_banner),
+            true,
+        )
+        set(value) {
+            preferences.edit()
+                .putBoolean(
+                    getPreferenceKey(R.string.pref_cfr_visibility_for_cookie_banner),
+                    value,
+                )
+                .apply()
+        }
+
     var shouldShowCfrForTrackingProtection: Boolean
         get() = preferences.getBoolean(getPreferenceKey(R.string.pref_cfr_visibility_for_tracking_protection), true)
         set(value) {
@@ -466,15 +480,13 @@ class Settings(
     fun getCurrentCookieBannerOptionFromSharePref(): CookieBannerOption {
         val optionValue = preferences.getString(
             context.getString(R.string.pref_key_cookie_banner_settings),
-            context.getString(CookieBannerOption.CookieBannerDisabled().prefKeyId),
+            context.getString(CookieBannerOption.CookieBannerRejectAll().prefKeyId),
         )
         return when (optionValue) {
             context.getString(CookieBannerOption.CookieBannerDisabled().prefKeyId) ->
                 CookieBannerOption.CookieBannerDisabled()
             context.getString(CookieBannerOption.CookieBannerRejectAll().prefKeyId) ->
                 CookieBannerOption.CookieBannerRejectAll()
-            context.getString(CookieBannerOption.CookieBannerRejectOrAccept().prefKeyId) ->
-                CookieBannerOption.CookieBannerRejectOrAccept()
             else -> CookieBannerOption.CookieBannerDisabled()
         }
     }

@@ -116,4 +116,9 @@ sealed class AppAction : Action {
      * State of start browsing CFR has changed
      */
     data class ShowStartBrowsingCfrChange(val value: Boolean) : AppAction()
+
+    /**
+     * State of start Cookie Banner CFR has changed
+     */
+    data class ShowCookieBannerCfrChange(val value: Boolean) : AppAction()
 }

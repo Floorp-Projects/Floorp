@@ -40,6 +40,7 @@ data class FocusTypography(
     val onboardingFeatureDescription: TextStyle,
     val onboardingButton: TextStyle,
     val cfrTextStyle: TextStyle,
+    val cfrCookieBannerTextStyle: TextStyle,
 ) {
     val h1: TextStyle get() = materialTypography.h1
     val h2: TextStyle get() = materialTypography.h2
@@ -126,5 +127,10 @@ val focusTypography: FocusTypography
             fontSize = 16.sp,
             letterSpacing = 0.5.sp,
             lineHeight = 24.sp,
+        ),
+        cfrCookieBannerTextStyle = TextStyle(
+            fontSize = 14.sp,
+            letterSpacing = 0.25.sp,
+            lineHeight = 20.sp,
         ),
     )

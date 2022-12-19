@@ -19,13 +19,6 @@ sealed class CookieBannerOption(
         override val metricTag: String = "reject_all",
     ) : CookieBannerOption(prefKeyId = prefKeyId, mode = mode, metricTag = metricTag)
 
-    data class CookieBannerRejectOrAccept(
-        override val prefKeyId: Int = R.string.pref_key_cookie_banner_reject_or_accept,
-        override val mode: EngineSession.CookieBannerHandlingMode =
-            EngineSession.CookieBannerHandlingMode.REJECT_OR_ACCEPT_ALL,
-        override val metricTag: String = "reject_or_accept_all",
-    ) : CookieBannerOption(prefKeyId = prefKeyId, mode = mode, metricTag = metricTag)
-
     data class CookieBannerDisabled(
         override val prefKeyId: Int = R.string.pref_key_cookie_banner_disabled,
         override val mode: EngineSession.CookieBannerHandlingMode =

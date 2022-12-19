@@ -111,6 +111,7 @@
     <string name="pref_key_cookie_banner_enabled" translatable="false"><xliff:g id="preference_key">pref_key_cookie_banner_enabled</xliff:g></string>
     <string name="pref_key_cookie_banner_settings" translatable="false">pref_key_cookie_banner_settings</string>
     <string name="pref_key_cookie_banner_reject_all" translatable="false">pref_key_cookie_banner_reject_all</string>
-    <string name="pref_key_cookie_banner_reject_or_accept" translatable="false">pref_key_cookie_banner_reject_or_accept</string>
     <string name="pref_key_cookie_banner_disabled" translatable="false">pref_key_cookie_banner_disabled</string>
+    <string name="pref_cfr_visibility_for_cookie_banner" translatable="false"><xliff:g id="preference_key">pref_cfr_visibility_for_cookie_banner</xliff:g></string>
+
 </resources>
