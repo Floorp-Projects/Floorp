@@ -333,20 +333,15 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecWin::MakePrintTarget() {
 }
 
 RefPtr<PrintEndDocumentPromise> nsDeviceContextSpecWin::EndDocument() {
-  return nsIDeviceContextSpec::EndDocumentPromiseFromResult(DoEndDocument(),
-                                                            __func__);
-}
-
-nsresult nsDeviceContextSpecWin::DoEndDocument() {
   if (mPrintSettings->GetOutputDestination() !=
           nsIPrintSettings::kOutputDestinationFile ||
       mOutputFormat != nsIPrintSettings::kOutputFormatPDF) {
-    return NS_OK;
+    return PrintEndDocumentPromise::CreateAndResolve(true, __func__);
   }
 
 #ifdef MOZ_ENABLE_SKIA_PDF
   if (mPrintViaSkPDF) {
-    return NS_OK;
+    return PrintEndDocumentPromise::CreateAndResolve(true, __func__);
   }
 #endif
 
@@ -356,25 +351,32 @@ nsresult nsDeviceContextSpecWin::DoEndDocument() {
   mPrintSettings->GetToFileName(targetPath);
 
   if (targetPath.IsEmpty()) {
-    return NS_OK;
+    return PrintEndDocumentPromise::CreateAndResolve(true, __func__);
   }
 
   // We still need to move the file to its actual destination.
   nsCOMPtr<nsIFile> destFile;
-  MOZ_TRY(NS_NewLocalFile(targetPath, false, getter_AddRefs(destFile)));
-  nsAutoString destLeafName;
-  MOZ_TRY(destFile->GetLeafName(destLeafName));
+  auto rv = NS_NewLocalFile(targetPath, false, getter_AddRefs(destFile));
+  if (NS_FAILED(rv)) {
+    return PrintEndDocumentPromise::CreateAndReject(rv, __func__);
+  }
 
-  nsCOMPtr<nsIFile> destDir;
-  MOZ_TRY(destFile->GetParent(getter_AddRefs(destDir)));
+  return nsIDeviceContextSpec::EndDocumentAsync(
+      __func__,
+      [destFile = std::move(destFile),
+       tempFile = std::move(mTempFile)]() -> nsresult {
+        nsAutoString destLeafName;
+        MOZ_TRY(destFile->GetLeafName(destLeafName));
 
-  // This should be fine - Windows API calls usually prevent moving between
-  // different volumes (See Win32 API's `MOVEFILE_COPY_ALLOWED` flag), but we
-  // handle that down this call.
-  MOZ_TRY(mTempFile->MoveTo(destDir, destLeafName));
-  mTempFile = nullptr;
+        nsCOMPtr<nsIFile> destDir;
+        MOZ_TRY(destFile->GetParent(getter_AddRefs(destDir)));
 
-  return NS_OK;
+        // This should be fine - Windows API calls usually prevent moving
+        // between different volumes (See Win32 API's `MOVEFILE_COPY_ALLOWED`
+        // flag), but we handle that down this call.
+        MOZ_TRY(tempFile->MoveTo(destDir, destLeafName));
+        return NS_OK;
+      });
 }
 
 //----------------------------------------------------------------------------------

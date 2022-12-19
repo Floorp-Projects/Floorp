@@ -69,9 +69,6 @@ class nsDeviceContextSpecWin : public nsIDeviceContextSpec {
   // A temporary file to create an "anonymous" print target. See bug 1664253,
   // this should ideally not be needed.
   nsCOMPtr<nsIFile> mTempFile;
-
- private:
-  nsresult DoEndDocument();
 };
 
 //-------------------------------------------------------------------------
