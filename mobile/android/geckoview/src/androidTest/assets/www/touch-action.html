@@ -22,6 +22,26 @@ body {
 </style>
 <body>
 <div style="width: 100%; height: 50vh; touch-action: auto;"></div>
-<div style="width: 100%; height: 50vh; touch-action: none;"></div>
+<script>
+  const searchParams = new URLSearchParams(location.search);
+  let div = document.querySelector('div');
+  if (searchParams.has("subframe")) {
+    const scrolledContents = document.createElement("div");
+    scrolledContents.style.height = "100%";
+
+    div.appendChild(scrolledContents);
+    div.style.overflow = "auto";
+
+    div = scrolledContents;
+  }
+  if (searchParams.has("scrollable")) {
+    // Scrollable for dynamic toolbar purposes.
+    div.style.height = "100vh";
+  }
+  div.style.touchAction = searchParams.get("touch-action");
+  if (searchParams.has("event")) {
+    div.addEventListener("touchstart", e => {});
+  }
+</script>
 </body>
 </html>
