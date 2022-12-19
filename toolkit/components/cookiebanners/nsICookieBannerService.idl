@@ -97,6 +97,18 @@ interface nsICookieBannerService : nsISupports {
                      in boolean aIsPrivate);
 
   /**
+   * Set the domain preference of the given top-level URI. It will persist the
+   * domain preference for private browsing.
+   *
+   * WARNING: setting permanent domain preference _will_ leak data in private
+   * browsing. Only use if you understand the consequences and trade-offs. If
+   * you are unsure, |setDomainPref| is very likely what you want to use
+   * instead.
+   */
+  void setDomainPrefAndPersistInPrivateBrowsing(in nsIURI aTopLevelURI,
+                                                in nsICookieBannerService_Modes aMode);
+
+  /**
    * Remove the domain preference of the given top-level URI.
    */
   void removeDomainPref(in nsIURI aTopLevelURI, in boolean aIsPrivate);

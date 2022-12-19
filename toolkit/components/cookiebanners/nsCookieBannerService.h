@@ -81,6 +81,11 @@ class nsCookieBannerService final : public nsIObserver,
                             nsICookieBannerRule** aRule,
                             bool aReportTelemetry = false);
 
+  nsresult SetDomainPrefInternal(nsIURI* aTopLevelURI,
+                                 nsICookieBannerService::Modes aModes,
+                                 const bool aIsPrivate,
+                                 const bool aPersistInPrivateBrowsing);
+
   /**
    * Get the rule matching the provided URI.
    * @param aURI - The URI to match the rule for.
