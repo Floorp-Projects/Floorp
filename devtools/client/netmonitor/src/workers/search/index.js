@@ -11,29 +11,15 @@ const {
 const SEARCH_WORKER_URL =
   "resource://devtools/client/netmonitor/src/workers/search/worker.js";
 
-let dispatcher;
-
-function getDispatcher() {
-  if (!dispatcher) {
-    dispatcher = new WorkerDispatcher(SEARCH_WORKER_URL);
+class SearchDispatcher extends WorkerDispatcher {
+  constructor() {
+    super(SEARCH_WORKER_URL);
   }
-  return dispatcher;
+
+  // The search worker support just one task at this point,
+  // which is searching through specified resource.
+  searchInResource = this.task("searchInResource");
 }
 
-function stop() {
-  if (dispatcher) {
-    dispatcher.stop();
-    dispatcher = null;
-  }
-}
-
-// The search worker support just one task at this point,
-// which is searching through specified resource.
-function searchInResource(...args) {
-  return getDispatcher().invoke("searchInResource", ...args);
-}
-
-module.exports = {
-  stop,
-  searchInResource,
-};
+// Compared to debugger, we instantiate a singleton within the dispatcher module
+module.exports = new SearchDispatcher();

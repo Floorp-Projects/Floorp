@@ -11,7 +11,6 @@ import {
   searchSourceForHighlight,
 } from "../utils/editor";
 import { renderWasmText } from "../utils/wasm";
-import { getMatches } from "../workers/search";
 
 import {
   getSelectedSourceId,
@@ -81,7 +80,7 @@ export function updateSearchResults(cx, characterIndex, line, matches) {
 }
 
 export function searchContents(cx, query, editor, focusFirstResult = true) {
-  return async ({ getState, dispatch }) => {
+  return async ({ getState, dispatch, searchWorker }) => {
     const modifiers = getFileSearchModifiers(getState());
     const sourceTextContent = getSelectedSourceTextContent(getState());
 
@@ -110,7 +109,7 @@ export function searchContents(cx, query, editor, focusFirstResult = true) {
       text = selectedContent.value;
     }
 
-    const matches = await getMatches(query, text, modifiers);
+    const matches = await searchWorker.getMatches(query, text, modifiers);
 
     const res = find(ctx, query, true, modifiers, focusFirstResult);
     if (!res) {
