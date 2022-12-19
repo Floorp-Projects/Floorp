@@ -76,6 +76,7 @@ class nsTreeBodyFrame final : public nsLeafBoxFrame,
     nsCOMPtr<nsITreeView> view = mView;
     return view.forget();
   }
+  already_AddRefed<nsITreeSelection> GetSelection() const;
   nsresult GetView(nsITreeView** aView);
   nsresult SetView(nsITreeView* aView);
   bool GetFocused() const { return mFocused; }
