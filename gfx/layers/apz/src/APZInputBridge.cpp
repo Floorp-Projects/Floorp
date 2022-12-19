@@ -73,7 +73,7 @@ void APZEventResult::SetStatusAsConsumeDoDefault(
 void APZEventResult::SetStatusForTouchEvent(
     const InputBlockState& aBlock, TargetConfirmationFlags aFlags,
     PointerEventsConsumableFlags aConsumableFlags,
-    const AsyncPanZoomController& aTarget) {
+    const AsyncPanZoomController* aTarget) {
   bool consumable = aConsumableFlags.IsConsumable();
   mStatus =
       consumable ? nsEventStatus_eConsumeDoDefault : nsEventStatus_eIgnore;
@@ -84,10 +84,10 @@ void APZEventResult::SetStatusForTouchEvent(
     mHandledResult->mPlace = APZHandledPlace::Unhandled;
   }
 
-  if (!aTarget.IsRootContent()) {
+  if (aTarget && !aTarget->IsRootContent()) {
     auto [result, rootApzc] =
         aBlock.GetOverscrollHandoffChain()->ScrollingDownWillMoveDynamicToolbar(
-            &aTarget);
+            aTarget);
     if (result) {
       MOZ_ASSERT(rootApzc && rootApzc->IsRootContent());
       // The event is actually consumed by a non-root APZC but scroll

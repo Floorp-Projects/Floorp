@@ -191,7 +191,7 @@ APZEventResult InputQueue::ReceiveTouchInput(
         INPQ_LOG("dropping event due to block %p being in slop\n", block.get());
         result.SetStatusAsConsumeNoDefault();
       } else {
-        result.SetStatusForTouchEvent(*block, aFlags, consumableFlags, *target);
+        result.SetStatusForTouchEvent(*block, aFlags, consumableFlags, target);
       }
     } else {  // not consumable
       if (block->UpdateSlopState(aEvent, false)) {
@@ -199,7 +199,7 @@ APZEventResult InputQueue::ReceiveTouchInput(
                  block.get());
         result.SetStatusAsConsumeNoDefault();
       } else {
-        result.SetStatusForTouchEvent(*block, aFlags, consumableFlags, *target);
+        result.SetStatusForTouchEvent(*block, aFlags, consumableFlags, target);
       }
     }
   }
