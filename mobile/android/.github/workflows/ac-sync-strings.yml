@@ -19,28 +19,28 @@ jobs:
     steps:
       - name: "Discover A-C Version"
         id: ac-version-for-fenix-beta
-        uses: mozilla-mobile/ac-version-for-fenix-beta@1.2.0
+        uses: mozilla-mobile/ac-version-for-fenix-beta@1.3.0
       - name: "Checkout Main Branch"
         uses: actions/checkout@v2
         with:
           path: main
           ref: main
-      - name: "Checkout Work Branch"
+      - name: "Checkout Beta Branch"
         uses: actions/checkout@v2
         with:
-          path: work
+          path: beta
           ref: "releases_v${{ steps.ac-version-for-fenix-beta.outputs.major-ac-version }}"
       - name: "Sync Strings"
         uses: mozilla-mobile/sync-strings-action@2.0.0
         with:
           project: android-components
           src: main
-          dst: work
+          dst: beta
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          path: work
+          path: beta
           branch: automation/sync-ac-strings-${{ steps.ac-version-for-fenix-beta.outputs.major-ac-version }}
           title: "Uplift AC Strings from main to releases_v${{steps.ac-version-for-fenix-beta.outputs.major-ac-version}}"
           body: "This (automated) PR sync strings from `main` to `releases_v${{steps.ac-version-for-fenix-beta.outputs.major-ac-version}}`"
