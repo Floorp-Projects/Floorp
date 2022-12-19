@@ -52,6 +52,7 @@ include protocol PVerifySSLServerCert;
 include protocol PVsync;
 include protocol PRemoteDecoderManager;
 include protocol PWebSocketConnection;
+include protocol PWebTransport;
 
 include DOMTypes;
 include IPCBlob;
@@ -195,6 +196,15 @@ parent:
   async CreateFileSystemManagerParent(
       PrincipalInfo principalInfo,
       Endpoint<PFileSystemManagerParent> aParentEndpoint)
+      returns(nsresult rv);
+
+  /**
+   * Finish the setup of a new PWebTransport top level protocol.
+   */
+  async CreateWebTransportParent(
+      nsString aURL,
+      /* WebTransportOptions aOptions, */
+      Endpoint<PWebTransportParent> aParentEndpoint)
       returns(nsresult rv);
 
   async PVsync();
