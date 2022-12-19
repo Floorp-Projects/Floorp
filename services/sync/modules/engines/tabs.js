@@ -233,12 +233,15 @@ TabEngine.prototype = {
   // without checking what's on the server could cause data-loss for other
   // engines, but because each device exclusively owns exactly 1 tabs record
   // with a known ID, it's safe here.
+  // Returns true if we successfully synced, false otherwise (either on error
+  // or because we declined to sync for any reason.) The return value is
+  // primarily for tests.
   async quickWrite() {
     if (!this.enabled) {
       // this should be very rare, and only if tabs are disabled after the
       // timer is created.
       this._log.info("Can't do a quick-sync as tabs is disabled");
-      return;
+      return false;
     }
     // This quick-sync doesn't drive the login state correctly, so just
     // decline to sync if out status is bad
@@ -247,14 +250,14 @@ TabEngine.prototype = {
         "Can't do a quick-sync due to the service status",
         this.service.status.toString()
       );
-      return;
+      return false;
     }
     if (!this.service.serverConfiguration) {
       this._log.info("Can't do a quick sync before the first full sync");
-      return;
+      return false;
     }
     try {
-      await this._engineLock("tabs.js: quickWrite", async () => {
+      return await this._engineLock("tabs.js: quickWrite", async () => {
         // We want to restore the lastSync timestamp when complete so next sync
         // takes tabs written by other devices since our last real sync.
         // And for this POST we don't want the protections offered by
@@ -262,7 +265,7 @@ TabEngine.prototype = {
         // has moved on and we will catch back up next full sync.
         const origLastSync = await this.getLastSync();
         try {
-          await this._doQuickWrite();
+          return this._doQuickWrite();
         } finally {
           // set the lastSync to it's original value for regular sync
           await this.setLastSync(origLastSync);
@@ -275,6 +278,7 @@ TabEngine.prototype = {
       this._log.info(
         "Can't do a quick-write as another tab sync is in progress"
       );
+      return false;
     }
   },
 
@@ -317,9 +321,11 @@ TabEngine.prototype = {
       await this._uploadOutgoing();
       telemetryRecord.onEngineApplied(name, 1);
       telemetryRecord.onEngineStop(name, null);
+      return true;
     } catch (ex) {
       this._log.warn("quicksync sync failed", ex);
       telemetryRecord.onEngineStop(name, ex);
+      return false;
     } finally {
       // The top-level sync is never considered to fail here, just the engine
       telemetryRecord.finished(null);
