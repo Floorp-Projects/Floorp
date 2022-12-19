@@ -143,7 +143,6 @@ add_task(async function test_signed_in() {
     await waitForVisibleSetupStep(browser, {
       expectedVisible: "#tabpickup-steps-view2",
     });
-
     is(
       fxAccounts.device.recentDeviceList?.length,
       1,
@@ -180,6 +179,33 @@ add_task(async function test_signed_in() {
     );
   });
   await tearDown(sandbox);
+});
+
+add_task(async function test_support_links() {
+  await clearAllParentTelemetryEvents();
+  setupMocks({
+    state: UIState.STATUS_SIGNED_IN,
+    fxaDevices: [
+      {
+        id: 1,
+        name: "This Device",
+        isCurrentDevice: true,
+        type: "desktop",
+      },
+    ],
+  });
+  await withFirefoxView({ win: window }, async browser => {
+    Services.obs.notifyObservers(null, UIState.ON_UPDATE);
+    await waitForVisibleSetupStep(browser, {
+      expectedVisible: "#tabpickup-steps-view2",
+    });
+    const { document } = browser.contentWindow;
+    const container = document.getElementById("tab-pickup-container");
+    const supportLinks = Array.from(
+      container.querySelectorAll("a[href]")
+    ).filter(a => !!a.href);
+    is(supportLinks.length, 2, "Support links have non-empty hrefs");
+  });
 });
 
 add_task(async function test_2nd_desktop_connected() {
