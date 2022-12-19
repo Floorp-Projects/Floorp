@@ -239,6 +239,9 @@ class nsWindow final : public nsBaseWidget {
   virtual mozilla::ScreenIntMargin GetSafeAreaInsets() const override;
   void UpdateSafeAreaInsets(const mozilla::ScreenIntMargin& aSafeAreaInsets);
 
+  mozilla::jni::NativeWeakPtr<mozilla::widget::NPZCSupport>
+  GetNPZCSupportWeakPtr();
+
  protected:
   void BringToFront();
   nsWindow* FindTopLevel();
