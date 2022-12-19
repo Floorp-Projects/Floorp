@@ -153,7 +153,11 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
 
     // Before replacing the target browsing context, restore the configuration
     // on the previous one if they share the same browser.
-    if (this._browsingContext?.browserId === browsingContext.browserId) {
+    if (
+      this._browsingContext &&
+      this._browsingContext.browserId === browsingContext.browserId &&
+      !this._browsingContext.isDiscarded
+    ) {
       // For now this should always be true as long as we already had a browsing
       // context set, but the same logic should be used when supporting EFT on
       // toolboxes with several top level browsing contexts: when a new browsing
