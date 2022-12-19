@@ -1374,7 +1374,9 @@ void nsHtml5TreeOpExecutor::AddSpeculationCSP(const nsAString& aCSP) {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIContentSecurityPolicy> preloadCsp = mDocument->GetPreloadCsp();
   if (!preloadCsp) {
-    preloadCsp = new nsCSPContext();
+    RefPtr<nsCSPContext> csp = new nsCSPContext();
+    csp->SuppressParserLogMessages();
+    preloadCsp = csp;
     rv = preloadCsp->SetRequestContextWithDocument(mDocument);
     NS_ENSURE_SUCCESS_VOID(rv);
   }

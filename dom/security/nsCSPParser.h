@@ -53,11 +53,13 @@ class nsCSPParser {
                                                  nsIURI* aSelfURI,
                                                  bool aReportOnly,
                                                  nsCSPContext* aCSPContext,
-                                                 bool aDeliveredViaMetaTag);
+                                                 bool aDeliveredViaMetaTag,
+                                                 bool aSuppressLogMessages);
 
  private:
   nsCSPParser(policyTokens& aTokens, nsIURI* aSelfURI,
-              nsCSPContext* aCSPContext, bool aDeliveredViaMetaTag);
+              nsCSPContext* aCSPContext, bool aDeliveredViaMetaTag,
+              bool aSuppressLogMessages);
 
   ~nsCSPParser();
 
@@ -209,6 +211,7 @@ class nsCSPParser {
   nsCSPPolicy* mPolicy;
   nsCSPContext* mCSPContext;  // used for console logging
   bool mDeliveredViaMetaTag;
+  bool mSuppressLogMessages;
 };
 
 #endif /* nsCSPParser_h___ */

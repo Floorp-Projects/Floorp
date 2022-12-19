@@ -1005,6 +1005,11 @@ nsresult CheckCSPFrameAncestorPolicy(nsIChannel* aChannel,
   }
 
   RefPtr<nsCSPContext> csp = new nsCSPContext();
+  // This CSPContext is only used for checking frame-ancestors, we
+  // will parse the CSP again anyway. (Unless this blocks the load, but
+  // parser warnings aren't really important in that case)
+  csp->SuppressParserLogMessages();
+
   nsCOMPtr<nsIURI> selfURI;
   nsAutoString referrerSpec;
   if (httpChannel) {

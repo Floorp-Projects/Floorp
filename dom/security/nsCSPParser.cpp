@@ -40,7 +40,8 @@ static const uint32_t kHashSourceValidFnsLen = 3;
 /* ===== nsCSPParser ==================== */
 
 nsCSPParser::nsCSPParser(policyTokens& aTokens, nsIURI* aSelfURI,
-                         nsCSPContext* aCSPContext, bool aDeliveredViaMetaTag)
+                         nsCSPContext* aCSPContext, bool aDeliveredViaMetaTag,
+                         bool aSuppressLogMessages)
     : mCurChar(nullptr),
       mEndChar(nullptr),
       mHasHashOrNonce(false),
@@ -57,7 +58,8 @@ nsCSPParser::nsCSPParser(policyTokens& aTokens, nsIURI* aSelfURI,
       mSelfURI(aSelfURI),
       mPolicy(nullptr),
       mCSPContext(aCSPContext),
-      mDeliveredViaMetaTag(aDeliveredViaMetaTag) {
+      mDeliveredViaMetaTag(aDeliveredViaMetaTag),
+      mSuppressLogMessages(aSuppressLogMessages) {
   CSPPARSERLOG(("nsCSPParser::nsCSPParser"));
 }
 
@@ -161,6 +163,11 @@ void nsCSPParser::logWarningErrorToConsole(uint32_t aSeverityFlag,
                                            const char* aProperty,
                                            const nsTArray<nsString>& aParams) {
   CSPPARSERLOG(("nsCSPParser::logWarningErrorToConsole: %s", aProperty));
+
+  if (mSuppressLogMessages) {
+    return;
+  }
+
   // send console messages off to the context and let the context
   // deal with it (potentially messages need to be queued up)
   mCSPContext->logToConsole(aProperty, aParams,
@@ -1221,7 +1228,8 @@ nsCSPPolicy* nsCSPParser::policy() {
 
 nsCSPPolicy* nsCSPParser::parseContentSecurityPolicy(
     const nsAString& aPolicyString, nsIURI* aSelfURI, bool aReportOnly,
-    nsCSPContext* aCSPContext, bool aDeliveredViaMetaTag) {
+    nsCSPContext* aCSPContext, bool aDeliveredViaMetaTag,
+    bool aSuppressLogMessages) {
   if (CSPPARSERLOGENABLED()) {
     CSPPARSERLOG(("nsCSPParser::parseContentSecurityPolicy, policy: %s",
                   NS_ConvertUTF16toUTF8(aPolicyString).get()));
@@ -1244,7 +1252,8 @@ nsCSPPolicy* nsCSPParser::parseContentSecurityPolicy(
   nsTArray<CopyableTArray<nsString> > tokens;
   PolicyTokenizer::tokenizePolicy(aPolicyString, tokens);
 
-  nsCSPParser parser(tokens, aSelfURI, aCSPContext, aDeliveredViaMetaTag);
+  nsCSPParser parser(tokens, aSelfURI, aCSPContext, aDeliveredViaMetaTag,
+                     aSuppressLogMessages);
 
   // Start the parser to generate a new CSPPolicy using the generated tokens.
   nsCSPPolicy* policy = parser.policy();
