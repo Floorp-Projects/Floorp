@@ -4,6 +4,9 @@
 "use strict";
 
 const MONTH_YEAR = ".month-year",
+  BTN_MONTH_YEAR = "#month-year-label",
+  MONTH_YEAR_VIEW = ".month-year-view",
+  DAYS_VIEW = ".days-view",
   DAY_SELECTED = ".selection";
 const DATE_FORMAT = new Intl.DateTimeFormat("en-US", {
   year: "numeric",
@@ -30,6 +33,74 @@ async function testCalendarBtnAttribute(attr, val) {
       `Calendar button has ${attr} attribute set to ${val}`
     );
   });
+}
+
+/**
+ * Helper function to test if a submission/dismissal keyboard shortcut works
+ * on a month or a year selection spinner
+ *
+ * @param {String} key: A keyboard Event.key that will be synthesized
+ * @param {Object} document: Reference to the content document
+ *                 of the #dateTimePopupFrame
+ * @param {Number} tabs: How many times "Tab" key should be pressed
+ *                 to move a keyboard focus to a needed spinner
+ *                 (1 for month/default and 2 for year)
+ *
+ * @description Starts with the month-year toggle button being focused
+ *              on the date/datetime-local input's datepicker panel
+ */
+async function testKeyOnSpinners(key, document, tabs = 1) {
+  info(`Testing "${key}" key behavior`);
+
+  Assert.equal(
+    document.activeElement,
+    helper.getElement(BTN_MONTH_YEAR),
+    "The month-year toggle button is focused"
+  );
+
+  // Open the month-year selection panel with spinners:
+  await EventUtils.synthesizeKey(" ", {});
+
+  Assert.equal(
+    helper.getElement(BTN_MONTH_YEAR).getAttribute("aria-expanded"),
+    "true",
+    "Month-year button is expanded when the spinners are shown"
+  );
+  Assert.ok(
+    BrowserTestUtils.is_visible(helper.getElement(MONTH_YEAR_VIEW)),
+    "Month-year selection panel is visible"
+  );
+
+  // Move focus from the month-year toggle button to one of spinners:
+  await EventUtils.synthesizeKey("KEY_Tab", { repeat: tabs });
+
+  Assert.equal(
+    document.activeElement.getAttribute("role"),
+    "spinbutton",
+    "The spinner is focused"
+  );
+
+  // Confirm the spinbutton choice and close the month-year selection panel:
+  await EventUtils.synthesizeKey(key, {});
+
+  Assert.equal(
+    helper.getElement(BTN_MONTH_YEAR).getAttribute("aria-expanded"),
+    "false",
+    "Month-year button is collapsed when the spinners are hidden"
+  );
+  Assert.ok(
+    BrowserTestUtils.is_hidden(helper.getElement(MONTH_YEAR_VIEW)),
+    "Month-year selection panel is not visible"
+  );
+  Assert.equal(
+    document.activeElement,
+    helper.getElement(DAYS_VIEW).querySelector('[tabindex="0"]'),
+    "A focusable day within a calendar grid is focused"
+  );
+
+  // Return the focus to the month-year toggle button for future tests
+  // (passing a Previous button along the way):
+  await EventUtils.synthesizeKey("KEY_Tab", { repeat: 2 });
 }
 
 let helper = new DateTimeTestHelper();
@@ -474,6 +545,66 @@ add_task(async function test_datepicker_keyboard_home_end() {
     DATE_FORMAT(new Date(nextShortMonth)),
     "Page Down key updates the spinner to show the month after"
   );
+
+  await helper.tearDown();
+});
+
+/**
+ * Ensure the month-year panel of a date input handles Space and Enter appropriately.
+ */
+add_task(async function test_monthyear_close_date() {
+  info(
+    "Ensure the month-year panel of a date input handles Space and Enter appropriately."
+  );
+
+  const inputValue = "2022-11-11";
+
+  await helper.openPicker(
+    `data:text/html, <input type="date" value=${inputValue}>`
+  );
+  let pickerDoc = helper.panel.querySelector("#dateTimePopupFrame")
+    .contentDocument;
+
+  // Move focus from the selected date to the month-year toggle button:
+  await EventUtils.synthesizeKey("KEY_Tab", { repeat: 2 });
+
+  // Test a month spinner
+  await testKeyOnSpinners("KEY_Enter", pickerDoc);
+  await testKeyOnSpinners(" ", pickerDoc);
+
+  // Test a year spinner
+  await testKeyOnSpinners("KEY_Enter", pickerDoc, 2);
+  await testKeyOnSpinners(" ", pickerDoc, 2);
+
+  await helper.tearDown();
+});
+
+/**
+ * Ensure the month-year panel of a datetime-local input handles Space and Enter appropriately.
+ */
+add_task(async function test_monthyear_close_datetime() {
+  info(
+    "Ensure the month-year panel of a datetime-local input handles Space and Enter appropriately."
+  );
+
+  const inputValue = "2022-11-11T11:11";
+
+  await helper.openPicker(
+    `data:text/html, <input type="datetime-local" value=${inputValue}>`
+  );
+  let pickerDoc = helper.panel.querySelector("#dateTimePopupFrame")
+    .contentDocument;
+
+  // Move focus from the selected date to the month-year toggle button:
+  await EventUtils.synthesizeKey("KEY_Tab", { repeat: 2 });
+
+  // Test a month spinner
+  await testKeyOnSpinners("KEY_Enter", pickerDoc);
+  await testKeyOnSpinners(" ", pickerDoc);
+
+  // Test a year spinner
+  await testKeyOnSpinners("KEY_Enter", pickerDoc, 2);
+  await testKeyOnSpinners(" ", pickerDoc, 2);
 
   await helper.tearDown();
 });
