@@ -177,7 +177,7 @@ jobs:
         worker-type: b-win2012
         worker:
             chain-of-trust: true
-            max-run-time: 1200
+            max-run-time: 2400
             env:
                 UPLOAD_PATH: "artifacts"
             artifacts:
@@ -206,7 +206,7 @@ jobs:
         worker-type: b-win2012
         worker:
             chain-of-trust: true
-            max-run-time: 1200
+            max-run-time: 2400
             env:
                 UPLOAD_PATH: "artifacts"
             artifacts:
