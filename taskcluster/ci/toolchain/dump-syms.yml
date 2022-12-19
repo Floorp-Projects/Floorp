@@ -24,7 +24,7 @@ linux64-dump_syms:
         toolchain:
             - linux64-binutils
             - linux64-clang-toolchain
-            - linux64-rust-1.65
+            - linux64-rust-1.66
             - sysroot-x86_64-linux-gnu
 
 macosx64-dump_syms:
@@ -36,7 +36,7 @@ macosx64-dump_syms:
         toolchain-artifact: public/build/dump_syms.tar.zst
     fetches:
         toolchain:
-            - linux64-rust-macos-1.65
+            - linux64-rust-macos-1.66
             - linux64-clang-toolchain
             - linux64-cctools-port
             - macosx64-sdk
@@ -50,7 +50,7 @@ macosx64-aarch64-dump_syms:
         toolchain-artifact: public/build/dump_syms.tar.zst
     fetches:
         toolchain:
-            - linux64-rust-macos-1.65
+            - linux64-rust-macos-1.66
             - linux64-clang-toolchain
             - linux64-cctools-port
             - macosx64-sdk
@@ -63,5 +63,5 @@ win64-dump_syms:
         toolchain-artifact: public/build/dump_syms.tar.zst
     fetches:
         toolchain:
-            - win64-rust-1.65
+            - win64-rust-1.66
             - win64-vs2017
