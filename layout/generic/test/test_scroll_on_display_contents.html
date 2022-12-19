@@ -1,0 +1,187 @@
+<!DOCTYPE HTML>
+<html>
+  <!--
+    https://bugzilla.mozilla.org/show_bug.cgi?id=1790253
+  -->
+  <head>
+    <meta charset="utf-8">
+    <title>Test for Bug 1790253</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/paint_listener.js"></script>
+    <script src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
+    <script src="/tests/gfx/layers/apz/test/mochitest/apz_test_native_event_utils.js"></script>
+    <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  </head>
+  <body>
+    <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1790253">Mozilla Bug 1790253</a>
+    <p id="display"></p>
+    <style>
+    .container {
+      height: 200px;
+      width: 200px;
+      overflow: scroll;
+      background-color: gray;
+    }
+    </style>
+    <script>
+    SimpleTest.waitForExplicitFinish();
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      await testShadowRoot();
+      await testShadowRootInDisplayContent();
+      await testNestedShadowRoot();
+      await testDisplayContent();
+      await testNestedDisplayContent();
+
+      SimpleTest.finish();
+    });
+
+    async function testShadowRoot() {
+      // Structure:
+      // <div class="container">
+      //   #ShadowRoot - Listener
+      //     <div style="height: 300px; background: linear-gradient(#e66465, #9198e5);">
+
+      const container = document.createElement("div");
+      container.classList.add("container");
+      container.attachShadow({ mode: "open" });
+      container.shadowRoot.innerHTML = `
+        <div style="height: 300px; background: linear-gradient(#e66465, #9198e5);"></div>
+      `;
+
+      container.shadowRoot.addEventListener("wheel", e => { e.preventDefault(); });
+
+      document.body.append(container);
+      await doTest(container);
+      container.remove();
+    }
+
+    async function testShadowRootInDisplayContent() {
+      // Structure:
+      // <div class="container">
+      //   <div style="display: contents">
+      //     #ShadowRoot - Listener
+      //       <div style="display: contents">
+      //         <div style="display: contents">
+      //           <div style="height: 300px; background: linear-gradient(#e66465, #9198e5);">
+
+      const container = document.createElement("div");
+      container.classList.add("container");
+      container.innerHTML = `
+        <div style="display: contents"></div>
+      `;
+      const displayContent = container.querySelector("div");
+      displayContent.attachShadow({ mode: "open" });
+      displayContent.shadowRoot.innerHTML = `
+        <div style="display: contents">
+          <div style="display: contents">
+            <div style="height: 300px; background: linear-gradient(#e66465, #9198e5);"></div>
+          </div>
+        </div>
+      `;
+      displayContent.shadowRoot.addEventListener("wheel", e => { e.preventDefault(); });
+
+      document.body.append(container);
+      await doTest(container);
+      container.remove();
+    }
+
+    async function testNestedShadowRoot() {
+      // Structure:
+      // <div class="container">
+      //   <div style="display: contents">
+      //     #ShadowRoot - Listener
+      //       <div style="display: contents">
+      //         #ShadowRoot
+      //           <div style="display: contents">
+      //             <div style="display: contents">
+      //               <div style="height: 300px; background: linear-gradient(#e66465, #9198e5);">
+
+      const container = document.createElement("div");
+      container.classList.add("container");
+      container.innerHTML = `
+        <div style="display: contents"></div>
+      `;
+
+      const firstDisplayContent = container.querySelector("div");
+      firstDisplayContent.attachShadow({ mode: "open" });
+      firstDisplayContent.shadowRoot.innerHTML = `
+        <div style="display: contents"></div>
+      `;
+      firstDisplayContent.shadowRoot.addEventListener("wheel", e => { e.preventDefault(); });
+
+      const secondDisplayContent = firstDisplayContent.shadowRoot.querySelector("div");
+      secondDisplayContent.attachShadow({ mode: "open" });
+      firstDisplayContent.shadowRoot.innerHTML = `
+        <div style="display: contents">
+          <div style="display: contents">
+            <div style="height: 300px; background: linear-gradient(#e66465, #9198e5);"></div>
+          </div>
+        </div>
+      `;
+
+      document.body.append(container);
+      await doTest(container);
+      container.remove();
+    }
+
+    async function testDisplayContent() {
+      // Structure:
+      // <div class="container">
+      //   <div style="display: contents"> - Listener
+      //     <div style="height: 300px; background: linear-gradient(#e66465, #9198e5);">
+
+      const container = document.createElement("div");
+      container.classList.add("container");
+      container.innerHTML = `
+        <div style="display: contents">
+          <div style="height: 300px; background: linear-gradient(#e66465, #9198e5);"></div>
+        </div>
+      `;
+
+      const displayContent = container.querySelector("div");
+      displayContent.addEventListener("wheel", e => { e.preventDefault(); });
+
+      document.body.append(container);
+      await doTest(container);
+      container.remove();
+    }
+
+    async function testNestedDisplayContent() {
+      // Structure:
+      // <div class="container">
+      //   <div style="display: contents"> - Listener
+      //     <div style="display: contents">
+      //       <div style="height: 300px; background: linear-gradient(#e66465, #9198e5);">
+
+      const container = document.createElement("div");
+      container.classList.add("container");
+      container.innerHTML = `
+        <div style="display: contents">
+          <div style="display: contents">
+            <div style="height: 300px; background: linear-gradient(#e66465, #9198e5);"></div>
+          </div>
+        </div>
+      `;
+
+      const displayContent = container.querySelector("div");
+      displayContent.addEventListener("wheel", e => { e.preventDefault(); });
+
+      document.body.append(container);
+      await doTest(container);
+      container.remove();
+    }
+
+    async function doTest(target) {
+      await promiseAllPaintsDone();
+
+      const previousScroll = target.scrollTop;
+
+      await promiseMoveMouseAndScrollWheelOver(target, 1, 1, false);
+      await promiseApzFlushedRepaints();
+
+      is(previousScroll, target.scrollTop, "The target should not be scrolled");
+    }
+    </script>
+</body>
+</html>
