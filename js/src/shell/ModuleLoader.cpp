@@ -62,8 +62,11 @@ bool ModuleLoader::init(JSContext* cx, HandleString loadPath) {
   JS::SetModuleResolveHook(rt, ModuleLoader::ResolveImportedModule);
   JS::SetModuleMetadataHook(rt, ModuleLoader::GetImportMetaProperties);
   JS::SetModuleDynamicImportHook(rt, ModuleLoader::ImportModuleDynamically);
-  JS::SetSupportedAssertionsHook(rt,
-                                 ModuleLoader::GetSupportedImportAssertions);
+
+  JS::ImportAssertionVector assertions;
+  MOZ_ALWAYS_TRUE(assertions.reserve(1));
+  assertions.infallibleAppend(JS::ImportAssertion::Type);
+  JS::SetSupportedImportAssertions(rt, assertions);
 
   return true;
 }

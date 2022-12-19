@@ -1050,10 +1050,10 @@ struct JSRuntime {
   // module import and can accessed by off-thread parsing.
   mozilla::Atomic<JS::ModuleDynamicImportHook> moduleDynamicImportHook;
 
-  // A hook that implements the abstract operation
-  // HostGetSupportedImportAssertions.
+  // The supported module import assertions.
   // https://tc39.es/proposal-import-assertions/#sec-hostgetsupportedimportassertions
-  mozilla::Atomic<JS::SupportedAssertionsHook> supportedAssertionsHook;
+  js::MainThreadOrParseData<JS::ImportAssertionVector>
+      supportedImportAssertions;
 
   // Hooks called when script private references are created and destroyed.
   js::MainThreadData<JS::ScriptPrivateReferenceHook> scriptPrivateAddRefHook;

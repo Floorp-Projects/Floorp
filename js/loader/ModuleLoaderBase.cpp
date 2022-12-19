@@ -49,6 +49,8 @@ mozilla::LazyLogModule ModuleLoaderBase::gModuleLoaderBaseLog(
 
 #define LOG_ENABLED() \
   MOZ_LOG_TEST(ModuleLoaderBase::gModuleLoaderBaseLog, mozilla::LogLevel::Debug)
+
+//////////////////////////////////////////////////////////////
 // ModuleLoaderBase
 //////////////////////////////////////////////////////////////
 
@@ -75,8 +77,14 @@ void ModuleLoaderBase::EnsureModuleHooksInitialized() {
   JS::SetModuleMetadataHook(rt, HostPopulateImportMeta);
   JS::SetScriptPrivateReferenceHooks(rt, HostAddRefTopLevelScript,
                                      HostReleaseTopLevelScript);
-  JS::SetSupportedAssertionsHook(rt, HostGetSupportedImportAssertions);
   JS::SetModuleDynamicImportHook(rt, HostImportModuleDynamically);
+
+  JS::ImportAssertionVector assertions;
+  // ImportAssertionVector has inline storage for one element so this cannot
+  // fail.
+  MOZ_ALWAYS_TRUE(assertions.reserve(1));
+  assertions.infallibleAppend(JS::ImportAssertion::Type);
+  JS::SetSupportedImportAssertions(rt, assertions);
 }
 
 // 8.1.3.8.1 HostResolveImportedModule(referencingModule, moduleRequest)
@@ -314,20 +322,6 @@ bool ModuleLoaderBase::HostImportModuleDynamically(
   }
 
   loader->StartDynamicImport(request);
-  return true;
-}
-
-bool ModuleLoaderBase::HostGetSupportedImportAssertions(
-    JSContext* aCx, JS::ImportAssertionVector& aValues) {
-  MOZ_ASSERT(aValues.empty());
-
-  if (!aValues.reserve(1)) {
-    JS_ReportOutOfMemory(aCx);
-    return false;
-  }
-
-  aValues.infallibleAppend(JS::ImportAssertion::Type);
-
   return true;
 }
 

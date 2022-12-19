@@ -1571,16 +1571,6 @@ bool frontend::StencilModuleMetadata::initModule(
   return true;
 }
 
-static bool CallSupportedAssertionsHook(JSContext* cx,
-                                        JS::ImportAssertionVector& values) {
-  JS::SupportedAssertionsHook hook = cx->runtime()->supportedAssertionsHook;
-  if (!hook) {
-    return true;
-  }
-
-  return hook(cx, values);
-}
-
 bool ModuleBuilder::isAssertionSupported(JS::ImportAssertion supportedAssertion,
                                          frontend::TaggedParserAtomIndex key) {
   if (!key.isWellKnownAtomId()) {
@@ -1602,12 +1592,8 @@ bool ModuleBuilder::processAssertions(frontend::StencilModuleEntry& entry,
                                       frontend::ListNode* assertionList) {
   using namespace js::frontend;
 
-  JS::ImportAssertionVector supportedAssertions;
-
-  bool succeeded = CallSupportedAssertionsHook(cx_, supportedAssertions);
-  if (!succeeded) {
-    return false;
-  }
+  const JS::ImportAssertionVector& supportedAssertions =
+      cx_->runtime()->supportedImportAssertions;
 
   for (ParseNode* assertionItem : assertionList->contents()) {
     BinaryNode* assertion = &assertionItem->as<BinaryNode>();
@@ -2166,11 +2152,8 @@ static bool EvaluateDynamicImportOptions(
 
   // Step 10.d.iv. Let supportedAssertions be
   // !HostGetSupportedImportAssertions().
-  JS::ImportAssertionVector supportedAssertions;
-  bool succeeded = CallSupportedAssertionsHook(cx, supportedAssertions);
-  if (!succeeded) {
-    return false;
-  }
+  const JS::ImportAssertionVector& supportedAssertions =
+      cx->runtime()->supportedImportAssertions;
 
   size_t numberOfValidAssertions = 0;
 
