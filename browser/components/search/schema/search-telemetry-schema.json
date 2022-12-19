@@ -108,6 +108,14 @@
       "items": {
         "type": "string"
       }
+    },
+    "adServerAttributes": {
+      "type": "array",
+      "title": "Ad Server Attributes",
+      "description": "An array of strings that potentially match data-attribute keys of anchors.",
+      "items": {
+        "type": "string"
+      }
     }
   }
 }
