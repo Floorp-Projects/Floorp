@@ -32,8 +32,6 @@ interface HTMLInputElement : HTMLElement {
            attribute DOMString alt;
   [CEReactions, Pure, SetterThrows]
            attribute DOMString autocomplete;
-  [CEReactions, Pure, SetterThrows]
-           attribute boolean autofocus;
   [CEReactions, Pure, SetterThrows, Pref="dom.capture.enabled"]
            attribute DOMString capture;
   [CEReactions, Pure, SetterThrows]
