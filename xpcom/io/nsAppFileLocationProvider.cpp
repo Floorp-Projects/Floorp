@@ -182,14 +182,19 @@ nsresult nsAppFileLocationProvider::GetProductDirectory(nsIFile** aLocalFile,
   nsCOMPtr<nsIFile> localDir;
 
 #if defined(MOZ_WIDGET_COCOA)
+  FSRef fsRef;
+  OSType folderType =
+      aLocal ? (OSType)kCachedDataFolderType : (OSType)kDomainLibraryFolderType;
+  OSErr err = ::FSFindFolder(kUserDomain, folderType, kCreateFolder, &fsRef);
+  if (err) {
+    return NS_ERROR_FAILURE;
+  }
   NS_NewLocalFile(u""_ns, true, getter_AddRefs(localDir));
   if (!localDir) {
     return NS_ERROR_FAILURE;
   }
   nsCOMPtr<nsILocalFileMac> localDirMac(do_QueryInterface(localDir));
-
-  rv = localDirMac->InitWithCFURL(
-      CocoaFileUtils::GetProductDirectoryCFURLRef(aLocal));
+  rv = localDirMac->InitWithFSRef(&fsRef);
   if (NS_FAILED(rv)) {
     return rv;
   }
