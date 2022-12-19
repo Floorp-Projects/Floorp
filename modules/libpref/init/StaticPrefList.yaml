@@ -3705,6 +3705,13 @@
   value: false
   mirror: always
 
+# Pref that controls the Element.setHTML API idenpendetly of the sanitizer
+# API.
+- name: dom.security.setHTML.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # The Sanitizer implementation is currently being rewritten and
 # is known to be incomplete. Fuzzing and testing and this point
 # would be premature.
