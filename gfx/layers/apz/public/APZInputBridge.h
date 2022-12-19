@@ -110,7 +110,7 @@ struct APZEventResult {
   void SetStatusForTouchEvent(const InputBlockState& aBlock,
                               TargetConfirmationFlags aFlags,
                               PointerEventsConsumableFlags aConsumableFlags,
-                              const AsyncPanZoomController& aTarget);
+                              const AsyncPanZoomController* aTarget);
 
   // DO NOT USE THIS UpdateStatus DIRECTLY. THIS FUNCTION IS ONLY FOR
   // SERIALIZATION / DESERIALIZATION OF THIS STRUCT IN IPC.
