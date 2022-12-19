@@ -44,6 +44,12 @@ class TabPickupContainer extends HTMLDetailsElement {
     this.addEventListener("visibilitychange", this);
     Services.obs.addObserver(this.boundObserve, TOPIC_SETUPSTATE_CHANGED);
 
+    for (let elem of this.querySelectorAll("a[data-support-url]")) {
+      elem.href =
+        Services.urlFormatter.formatURLPref("app.support.baseURL") +
+        elem.dataset.supportUrl;
+    }
+
     // we wait until the list shows up before trying to populate it,
     // when its safe to assume the custom-element's methods will be available
     this.tabListAdded = this.promiseChildAdded();
