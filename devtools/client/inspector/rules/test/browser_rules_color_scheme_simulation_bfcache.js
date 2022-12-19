@@ -41,6 +41,43 @@ add_task(async function testBfCacheNavigationWithDevTools() {
   await toolbox.destroy();
 });
 
+add_task(async function testBfCacheNavigationAfterClosingDevTools() {
+  await addTab(TEST_URI);
+  const { inspector, toolbox } = await openRuleView();
+
+  is(await isSimulationEnabled(), false, "color scheme simulation is disabled");
+
+  const darkButton = inspector.panelDoc.querySelector(
+    "#color-scheme-simulation-dark-toggle"
+  );
+  ok(darkButton, "The dark color scheme simulation button exists");
+
+  info("Click on the dark button");
+  darkButton.click();
+  await waitFor(async () => isSimulationEnabled());
+  is(await isSimulationEnabled(), true, "color scheme simulation is enabled");
+
+  info("Navigate to a different URL");
+  await navigateTo(TEST_URI + "?someparameter");
+
+  info("Close DevTools to disable the simulation");
+  await toolbox.destroy();
+  await waitFor(async () => !(await isSimulationEnabled()));
+  is(await isSimulationEnabled(), false, "color scheme simulation is disabled");
+
+  info(
+    "Perform a bfcache navigation and check that the simulation is still disabled"
+  );
+  const awaitPageShow = BrowserTestUtils.waitForContentEvent(
+    gBrowser.selectedBrowser,
+    "pageshow"
+  );
+  gBrowser.goBack();
+  await awaitPageShow;
+
+  is(await isSimulationEnabled(), false, "color scheme simulation is disabled");
+});
+
 function isSimulationEnabled() {
   return SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     const { matches } = content.matchMedia("(prefers-color-scheme: dark)");

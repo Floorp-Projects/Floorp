@@ -151,6 +151,16 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
 
     const rdmEnabledInPreviousBrowsingContext = this._browsingContext.inRDMPane;
 
+    // Before replacing the target browsing context, restore the configuration
+    // on the previous one if they share the same browser.
+    if (this._browsingContext?.browserId === browsingContext.browserId) {
+      // For now this should always be true as long as we already had a browsing
+      // context set, but the same logic should be used when supporting EFT on
+      // toolboxes with several top level browsing contexts: when a new browsing
+      // context attaches, only reset the browsing context with the same browserId
+      this._restoreParentProcessConfiguration();
+    }
+
     // We need to store the browsing context as this.watcherActor.browserElement.browsingContext
     // can still refer to the previous browsing context at this point.
     this._browsingContext = browsingContext;
