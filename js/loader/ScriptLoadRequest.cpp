@@ -112,12 +112,6 @@ void ScriptLoadRequest::Cancel() {
   if (HasScriptLoadContext()) {
     GetScriptLoadContext()->MaybeCancelOffThreadScript();
   }
-  if (HasWorkerLoadContext()) {
-    // The back reference needs to be cleared for workers, as there is no CC.
-    // However, we don't want to remove our pointer to the worker load
-    // context as it is used to determine load failure information.
-    GetWorkerLoadContext()->mRequest = nullptr;
-  }
 }
 
 void ScriptLoadRequest::DropBytecodeCacheReferences() {
