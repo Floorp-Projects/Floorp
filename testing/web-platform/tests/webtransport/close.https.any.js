@@ -63,9 +63,7 @@ promise_test(async t => {
   const close_info = await wt.closed;
 
   assert_equals(close_info.closeCode, 11, 'code');
-  // This should be truncated to 1023 bytes!
-  const reason_truncated = 'あいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあいうえおあ';
-  assert_equals(close_info.reason, reason_truncated, 'reason');
+  assert_equals(close_info.reason, reason, 'reason');
 
   await wait(10);
   const data = await query(id);
