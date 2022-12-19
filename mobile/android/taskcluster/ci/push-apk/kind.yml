@@ -42,7 +42,7 @@ task-template:
                 '3': false
                 default: true
         product: focus-android
-    shipping-phase: promote     # APKs are sent to testing tracks
+    shipping-phase: push     # APKs are sent to testing tracks
     treeherder:
         job-symbol:
             by-build-type:
