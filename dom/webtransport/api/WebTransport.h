@@ -11,7 +11,6 @@
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
 #include "mozilla/dom/WebTransportBinding.h"
-#include "mozilla/dom/WebTransportChild.h"
 
 namespace mozilla::dom {
 
@@ -21,17 +20,10 @@ class WritableStream;
 
 class WebTransport final : public nsISupports, public nsWrapperCache {
  public:
-  explicit WebTransport(nsIGlobalObject* aGlobal);
+  explicit WebTransport(nsIGlobalObject* aGlobal) : mGlobal(aGlobal) {}
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(WebTransport)
-
-  enum class WebTransportState { CONNECTING, CONNECTED, CLOSED, FAILED };
-
-  bool Init(const GlobalObject& aGlobal, const nsAString& aUrl,
-            const WebTransportOptions& aOptions, ErrorResult& aError);
-  void ResolveWaitingConnection(WebTransportChild* aChild);
-  void RejectWaitingConnection(nsresult aRv);
 
   // WebIDL Boilerplate
   nsIGlobalObject* GetParentObject() const;
@@ -42,7 +34,7 @@ class WebTransport final : public nsISupports, public nsWrapperCache {
   // WebIDL Interface
   static already_AddRefed<WebTransport> Constructor(
       const GlobalObject& aGlobal, const nsAString& aUrl,
-      const WebTransportOptions& aOptions, ErrorResult& aRv);
+      const WebTransportOptions& aOptions);
 
   already_AddRefed<Promise> GetStats(ErrorResult& aError);
 
@@ -57,25 +49,11 @@ class WebTransport final : public nsISupports, public nsWrapperCache {
   already_AddRefed<Promise> CreateUnidirectionalStream(ErrorResult& aError);
   already_AddRefed<ReadableStream> IncomingUnidirectionalStreams();
 
-  void Shutdown() {}
-
  private:
-  ~WebTransport() {
-    // If this WebTransport was destroyed without being closed properly, make
-    // sure to clean up the channel.
-    if (mChild) {
-      mChild->Shutdown();
-    }
-  }
+  ~WebTransport() = default;
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
-  RefPtr<WebTransportChild> mChild;
-
-  // These are created in the constructor
-  RefPtr<ReadableStream> mIncomingUnidirectionalStreams;
-  RefPtr<ReadableStream> mIncomingBidirectionalStreams;
-  RefPtr<Promise> mReady;
-  WebTransportState mState;
+  //  RefPtr<WebTransportChannel> mChannel;
 };
 
 }  // namespace mozilla::dom

@@ -48,7 +48,6 @@
 #include "mozilla/dom/StorageIPC.h"
 #include "mozilla/dom/TemporaryIPCBlobParent.h"
 #include "mozilla/dom/WebAuthnTransactionParent.h"
-#include "mozilla/dom/WebTransportParent.h"
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
 #include "mozilla/dom/locks/LockManagerParent.h"
@@ -501,23 +500,6 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvCreateFileSystemManagerParent(
 
   return mozilla::dom::CreateFileSystemManagerParent(
       aPrincipalInfo, std::move(aParentEndpoint), std::move(aResolver));
-}
-
-mozilla::ipc::IPCResult BackgroundParentImpl::RecvCreateWebTransportParent(
-    const nsAString& aURL,
-    // WebTransportOptions aOptions,
-    Endpoint<PWebTransportParent>&& aParentEndpoint,
-    CreateWebTransportParentResolver&& aResolver) {
-  AssertIsInMainProcess();
-  AssertIsOnBackgroundThread();
-
-  RefPtr<mozilla::dom::WebTransportParent> webt =
-      new mozilla::dom::WebTransportParent();
-  if (!webt->Init(aURL, /*aOptions, */ std::move(aParentEndpoint),
-                  std::move(aResolver))) {
-    webt->Close();
-  }
-  return IPC_OK();
 }
 
 already_AddRefed<PIdleSchedulerParent>
