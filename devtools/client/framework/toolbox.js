@@ -1399,9 +1399,7 @@ Toolbox.prototype = {
     } = require("resource://devtools/client/debugger/src/workers/parser/index.js");
 
     this._parserService = new ParserDispatcher();
-    this._parserService.start(
-      "resource://devtools/client/debugger/dist/parser-worker.js"
-    );
+    this._parserService.start();
     return this._parserService;
   },
 
