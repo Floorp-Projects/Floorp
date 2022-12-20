@@ -37,6 +37,7 @@ if CONFIG["MOZ_BUILD_APP"] != "mobile/android":
     BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
 
 BROWSER_CHROME_MANIFESTS += ["test-helpers/browser.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test-helpers/xpcshell.ini"]
 
 MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.ini"]
 XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
