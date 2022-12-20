@@ -26,17 +26,11 @@ const PRIVATE_TEST_URI = `data:text/html;charset=utf8,<!DOCTYPE html>Test consol
 
 add_task(async function() {
   await pushPref("devtools.browserconsole.contentMessages", true);
-  const publicTab = await addTab(NON_PRIVATE_TEST_URI);
-
-  await pushPref("devtools.browsertoolbox.fission", false);
-  await testBrowserConsole(publicTab);
-
   await pushPref("devtools.browsertoolbox.fission", true);
   await pushPref("devtools.browsertoolbox.scope", "everything");
-  await testBrowserConsole(publicTab);
-});
 
-async function testBrowserConsole(publicTab) {
+  const publicTab = await addTab(NON_PRIVATE_TEST_URI);
+
   const privateWindow = await BrowserTestUtils.openNewBrowserWindow({
     private: true,
   });
@@ -167,7 +161,7 @@ async function testBrowserConsole(publicTab) {
 
   info("close the browser console again");
   await safeCloseBrowserConsole();
-}
+});
 
 function logPrivateMessages(browser) {
   SpecialPowers.spawn(browser, [], () => content.wrappedJSObject.logMessages());

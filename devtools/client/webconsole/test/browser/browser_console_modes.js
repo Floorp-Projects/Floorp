@@ -48,19 +48,6 @@ add_task(async function() {
   await pushPref("devtools.chrome.enabled", true);
   await pushPref("devtools.webconsole.input.context", true);
 
-  info("Run once with Fission enabled");
-  await checkMessages(true);
-
-  info("Run once with Fission disabled");
-  await checkMessages(false);
-});
-
-async function checkMessages(isMultiprocessBrowserConsole) {
-  await pushPref(
-    "devtools.browsertoolbox.fission",
-    isMultiprocessBrowserConsole
-  );
-
   // Open the WebConsole on the tab to check changing mode won't focus the tab
   await openNewTabAndConsole(TEST_URI);
 
@@ -70,81 +57,48 @@ async function checkMessages(isMultiprocessBrowserConsole) {
   // polluting the test.
   await setFilterState(hud, { text: FILTER_PREFIX });
 
-  // In non fission world, we don't retrieve cached messages, so we need to reload the
-  // tab to see them.
-  if (!isMultiprocessBrowserConsole) {
-    await reloadBrowser();
-  }
-
   const chromeDebugToolbar = hud.ui.document.querySelector(
     ".chrome-debug-toolbar"
   );
-  if (isMultiprocessBrowserConsole) {
-    ok(
-      !!chromeDebugToolbar,
-      "ChromeDebugToolbar is displayed when the Browser Console has fission support"
-    );
-    ok(
-      !hud.chromeWindow.document.querySelector(
-        ".webconsole-console-settings-menu-item-contentMessages"
-      ),
-      "Show content messages menu item isn't displayed when Browser Console has Fission support"
-    );
-    is(
-      hud.chromeWindow.document.title,
-      "Multiprocess Browser Console",
-      "Browser Console window has expected title"
-    );
-  } else {
-    ok(
-      !chromeDebugToolbar,
-      "ChromeDebugToolbar is not displayed when the Browser Console does not have fission support"
-    );
-    ok(
-      hud.chromeWindow.document.querySelector(
-        ".webconsole-console-settings-menu-item-contentMessages"
-      ),
-      "Show content messages menu item is displayed when Browser Console does not have Fission support"
-    );
-    is(
-      hud.chromeWindow.document.title,
-      "Browser Console",
-      "Browser Console window has expected title"
-    );
-  }
+  ok(
+    !!chromeDebugToolbar,
+    "ChromeDebugToolbar is displayed when the Browser Console has fission support"
+  );
+  ok(
+    !hud.chromeWindow.document.querySelector(
+      ".webconsole-console-settings-menu-item-contentMessages"
+    ),
+    "Show content messages menu item isn't displayed when Browser Console has Fission support"
+  );
+  is(
+    hud.chromeWindow.document.title,
+    "Multiprocess Browser Console",
+    "Browser Console window has expected title"
+  );
 
-  let evaluationContextSelectorButton;
-  if (isMultiprocessBrowserConsole) {
-    evaluationContextSelectorButton = await waitFor(() =>
-      hud.ui.outputNode.querySelector(".webconsole-evaluation-selector-button")
-    );
+  const evaluationContextSelectorButton = await waitFor(() =>
+    hud.ui.outputNode.querySelector(".webconsole-evaluation-selector-button")
+  );
 
-    info("Select the content process target");
-    const pid =
-      gBrowser.selectedTab.linkedBrowser.browsingContext.currentWindowGlobal
-        .osPid;
-    getContextSelectorItems(hud)
-      .find(item =>
-        item.querySelector(".label")?.innerText?.startsWith(`(pid ${pid})`)
-      )
-      .click();
+  info("Select the content process target");
+  const pid =
+    gBrowser.selectedTab.linkedBrowser.browsingContext.currentWindowGlobal
+      .osPid;
+  getContextSelectorItems(hud)
+    .find(item =>
+      item.querySelector(".label")?.innerText?.startsWith(`(pid ${pid})`)
+    )
+    .click();
 
-    await waitFor(() =>
-      evaluationContextSelectorButton.classList.contains("checked")
-    );
+  await waitFor(() =>
+    evaluationContextSelectorButton.classList.contains("checked")
+  );
 
-    await executeAndWaitForResultMessage(
-      hud,
-      `Cu.reportError("${FILTER_PREFIX}Content Cu.reportError");21+21`,
-      42
-    );
-  } else {
-    await SpecialPowers.spawn(
-      gBrowser.selectedTab.linkedBrowser,
-      [FILTER_PREFIX],
-      prefix => Cu.reportError(prefix + "Content Cu.reportError")
-    );
-  }
+  await executeAndWaitForResultMessage(
+    hud,
+    `Cu.reportError("${FILTER_PREFIX}Content Cu.reportError");21+21`,
+    42
+  );
 
   // Since we run the non-fission test in second, and given we don't retrieve cached messages
   // in such case, it's okay to just cause the message to appear in this function.
@@ -156,9 +110,7 @@ async function checkMessages(isMultiprocessBrowserConsole) {
   await waitFor(() => findErrorMessage(hud, "Content Cu.reportError"));
   ok(true, "reportError message from content process is displayed");
 
-  const suffix = isMultiprocessBrowserConsole
-    ? ` Object { hello: "world" }`
-    : "";
+  const suffix = ` Object { hello: "world" }`;
   const expectedMessages = [
     contentArgs.log + suffix,
     contentArgs.warn + suffix,
@@ -171,12 +123,8 @@ async function checkMessages(isMultiprocessBrowserConsole) {
     `timer ended`,
     `console.trace() ${FILTER_PREFIX}${suffix}`,
     `Assertion failed: ${FILTER_PREFIX}${suffix}`,
+    `console.table()`,
   ];
-
-  // console.table is rendered as <unavailable> in non-fission browser console.
-  if (isMultiprocessBrowserConsole) {
-    expectedMessages.push("console.table()");
-  }
 
   info("wait for all the messages to be displayed");
   await waitFor(
@@ -194,40 +142,26 @@ async function checkMessages(isMultiprocessBrowserConsole) {
   );
   ok(true, "Expected messages are displayed in the browser console");
 
-  if (isMultiprocessBrowserConsole) {
-    const tableMessage = findConsoleAPIMessage(
-      hud,
-      "console.table()",
-      ".table"
-    );
+  const tableMessage = findConsoleAPIMessage(hud, "console.table()", ".table");
 
-    const table = await waitFor(() =>
-      tableMessage.querySelector(".consoletable")
-    );
-    ok(table, "There is a table element");
-    const tableTextContent = table.textContent;
-    ok(
-      tableTextContent.includes(FILTER_PREFIX) &&
-        tableTextContent.includes(`world`) &&
-        tableTextContent.includes(`hello`),
-      "Table has expected content"
-    );
-  }
+  const table = await waitFor(() =>
+    tableMessage.querySelector(".consoletable")
+  );
+  ok(table, "There is a table element");
+  const tableTextContent = table.textContent;
+  ok(
+    tableTextContent.includes(FILTER_PREFIX) &&
+      tableTextContent.includes(`world`) &&
+      tableTextContent.includes(`hello`),
+    "Table has expected content"
+  );
 
-  if (isMultiprocessBrowserConsole) {
-    info("Set Browser Console Mode to parent process only");
-    chromeDebugToolbar
-      .querySelector(
-        `.chrome-debug-toolbar input[name="chrome-debug-mode"][value="parent-process"]`
-      )
-      .click();
-  } else {
-    info("Uncheck the Show content messages checkbox");
-    await toggleConsoleSetting(
-      hud,
-      ".webconsole-console-settings-menu-item-contentMessages"
-    );
-  }
+  info("Set Browser Console Mode to parent process only");
+  chromeDebugToolbar
+    .querySelector(
+      `.chrome-debug-toolbar input[name="chrome-debug-mode"][value="parent-process"]`
+    )
+    .click();
   info("Wait for content messages to be hidden");
   await waitFor(() => !findConsoleAPIMessage(hud, contentArgs.log));
 
@@ -238,31 +172,26 @@ async function checkMessages(isMultiprocessBrowserConsole) {
     );
   }
 
-  if (isMultiprocessBrowserConsole) {
-    is(
-      hud.chromeWindow.document.title,
-      "Parent process Browser Console",
-      "Browser Console window title was updated"
-    );
+  is(
+    hud.chromeWindow.document.title,
+    "Parent process Browser Console",
+    "Browser Console window title was updated"
+  );
 
-    ok(
-      hud.iframeWindow.document.hasFocus(),
-      "Browser Console is still focused"
-    );
+  ok(hud.iframeWindow.document.hasFocus(), "Browser Console is still focused");
 
-    await waitFor(
-      () => !evaluationContextSelectorButton.classList.contains("checked")
-    );
-    ok(true, "Changing mode did reset the context selector");
-    ok(
-      findMessageByType(hud, "21+21", ".command"),
-      "The evaluation message is still displayed"
-    );
-    ok(
-      findEvaluationResultMessage(hud, `42`),
-      "The evaluation result is still displayed"
-    );
-  }
+  await waitFor(
+    () => !evaluationContextSelectorButton.classList.contains("checked")
+  );
+  ok(true, "Changing mode did reset the context selector");
+  ok(
+    findMessageByType(hud, "21+21", ".command"),
+    "The evaluation message is still displayed"
+  );
+  ok(
+    findEvaluationResultMessage(hud, `42`),
+    "The evaluation result is still displayed"
+  );
 
   info(
     "Check that message from parent process is still visible in the Browser Console"
@@ -272,20 +201,13 @@ async function checkMessages(isMultiprocessBrowserConsole) {
     "Parent process message is still displayed"
   );
 
-  if (isMultiprocessBrowserConsole) {
-    info("Set Browser Console Mode to Multiprocess");
-    chromeDebugToolbar
-      .querySelector(
-        `.chrome-debug-toolbar input[name="chrome-debug-mode"][value="everything"]`
-      )
-      .click();
-  } else {
-    info("Check the Show content messages checkbox");
-    await toggleConsoleSetting(
-      hud,
-      ".webconsole-console-settings-menu-item-contentMessages"
-    );
-  }
+  info("Set Browser Console Mode to Multiprocess");
+  chromeDebugToolbar
+    .querySelector(
+      `.chrome-debug-toolbar input[name="chrome-debug-mode"][value="everything"]`
+    )
+    .click();
+
   info("Wait for content messages to be displayed");
   await waitFor(() =>
     expectedMessages.every(expectedMessage =>
@@ -313,23 +235,12 @@ async function checkMessages(isMultiprocessBrowserConsole) {
     "reportError message from content process is only displayed once"
   );
 
-  if (isMultiprocessBrowserConsole) {
-    is(
-      hud.chromeWindow.document.title,
-      "Multiprocess Browser Console",
-      "Browser Console window title was updated again"
-    );
-  }
+  is(
+    hud.chromeWindow.document.title,
+    "Multiprocess Browser Console",
+    "Browser Console window title was updated again"
+  );
 
   info("Clear and close the Browser Console");
   await safeCloseBrowserConsole({ clearOutput: true });
-
-  // Since we directly log the error from a SpecialPower task, we need to clear the cache
-  // from the same process, as the Browser Console does not have a connection to it when
-  // Fission is not supported.
-  if (!isMultiprocessBrowserConsole) {
-    await SpecialPowers.spawn(gBrowser.selectedTab.linkedBrowser, [], () =>
-      Services.console.reset()
-    );
-  }
-}
+});

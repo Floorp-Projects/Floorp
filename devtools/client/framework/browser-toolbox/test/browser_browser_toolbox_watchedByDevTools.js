@@ -15,10 +15,6 @@ const EXAMPLE_ORG_URI =
   "https://example.org/document-builder.sjs?headers=Cross-Origin-Opener-Policy:same-origin&html=<div id=org>org</div>";
 
 add_task(async function() {
-  const isMbtEnabled = Services.prefs.getBoolPref(
-    "devtools.browsertoolbox.fission",
-    false
-  );
   await pushPref("devtools.browsertoolbox.scope", "everything");
 
   const topWindow = Services.wm.getMostRecentWindow("navigator:browser");
@@ -55,53 +51,49 @@ add_task(async function() {
   // Open a new tab when the browser toolbox is opened
   const newTab = await addTab(EXAMPLE_COM_URI);
 
-  // Only check the flag value on tab's browsing contexts when the MultiProcess Browser Toolbox
-  // is enabled as the flag isn't set there in the Legacy Browser Toolbox
-  if (isMbtEnabled) {
-    is(
-      tabNet.linkedBrowser.browsingContext.watchedByDevTools,
-      true,
-      "watchedByDevTools is set on the .net tab browsing context after opening the browser toolbox"
-    );
-    is(
-      tabCom.linkedBrowser.browsingContext.watchedByDevTools,
-      true,
-      "watchedByDevTools is set on the .com tab browsing context after opening the browser toolbox"
-    );
+  is(
+    tabNet.linkedBrowser.browsingContext.watchedByDevTools,
+    true,
+    "watchedByDevTools is set on the .net tab browsing context after opening the browser toolbox"
+  );
+  is(
+    tabCom.linkedBrowser.browsingContext.watchedByDevTools,
+    true,
+    "watchedByDevTools is set on the .com tab browsing context after opening the browser toolbox"
+  );
 
-    info(
-      "Check that adding watchedByDevTools is set on a tab that was added when the browser toolbox was opened"
-    );
-    is(
-      newTab.linkedBrowser.browsingContext.watchedByDevTools,
-      true,
-      "watchedByDevTools is set on the newly opened tab"
-    );
+  info(
+    "Check that adding watchedByDevTools is set on a tab that was added when the browser toolbox was opened"
+  );
+  is(
+    newTab.linkedBrowser.browsingContext.watchedByDevTools,
+    true,
+    "watchedByDevTools is set on the newly opened tab"
+  );
 
-    info(
-      "Check that watchedByDevTools persist when navigating to a page that creates a new browsing context"
-    );
-    const previousBrowsingContextId = newTab.linkedBrowser.browsingContext.id;
-    const onBrowserLoaded = BrowserTestUtils.browserLoaded(
-      newTab.linkedBrowser,
-      false,
-      encodeURI(EXAMPLE_ORG_URI)
-    );
-    BrowserTestUtils.loadURI(newTab.linkedBrowser, EXAMPLE_ORG_URI);
-    await onBrowserLoaded;
+  info(
+    "Check that watchedByDevTools persist when navigating to a page that creates a new browsing context"
+  );
+  const previousBrowsingContextId = newTab.linkedBrowser.browsingContext.id;
+  const onBrowserLoaded = BrowserTestUtils.browserLoaded(
+    newTab.linkedBrowser,
+    false,
+    encodeURI(EXAMPLE_ORG_URI)
+  );
+  BrowserTestUtils.loadURI(newTab.linkedBrowser, EXAMPLE_ORG_URI);
+  await onBrowserLoaded;
 
-    isnot(
-      newTab.linkedBrowser.browsingContext.id,
-      previousBrowsingContextId,
-      "A new browsing context was created"
-    );
+  isnot(
+    newTab.linkedBrowser.browsingContext.id,
+    previousBrowsingContextId,
+    "A new browsing context was created"
+  );
 
-    is(
-      newTab.linkedBrowser.browsingContext.watchedByDevTools,
-      true,
-      "watchedByDevTools is still set after navigating the tab to a page which forces a new browsing context"
-    );
-  }
+  is(
+    newTab.linkedBrowser.browsingContext.watchedByDevTools,
+    true,
+    "watchedByDevTools is still set after navigating the tab to a page which forces a new browsing context"
+  );
 
   info("Destroying browser toolbox");
   await ToolboxTask.destroy();
