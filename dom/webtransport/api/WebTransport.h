@@ -32,6 +32,7 @@ class WebTransport final : public nsISupports, public nsWrapperCache {
             const WebTransportOptions& aOptions, ErrorResult& aError);
   void ResolveWaitingConnection(WebTransportChild* aChild);
   void RejectWaitingConnection(nsresult aRv);
+  bool ParseURL(const nsAString& aURL) const;
 
   // WebIDL Boilerplate
   nsIGlobalObject* GetParentObject() const;
