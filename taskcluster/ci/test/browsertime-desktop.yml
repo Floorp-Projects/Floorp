@@ -577,7 +577,7 @@ browsertime-first-install:
 
 browsertime-grandprix:
     raptor:
-        apps: [firefox, chrome, chromium]
+        apps: [firefox, chrome, chromium, safari]
         subtests: [grandprix]
     description: Raptor (browsertime) grandprix benchmark test
     max-run-time: 2700

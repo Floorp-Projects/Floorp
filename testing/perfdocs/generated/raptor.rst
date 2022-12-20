@@ -5606,7 +5606,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    **Owner**: PerfTest Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 1
    * **browsertime args**: --browsertime.grandprix_iterations=25
    * **custom data**: true
@@ -5707,6 +5707,11 @@ Browsertime tests that use a custom pageload test script. These use the pageload
       * - **browsertime-grandprix-firefox-grandprix**
         - ✅
         - ✅
+        - ❌
+        - ❌
+      * - **browsertime-grandprix-safari-grandprix**
+        - ❌
+        - ❌
         - ❌
         - ❌
 
