@@ -315,7 +315,7 @@ function controlFrameAt(browser, frameDepth, command) {
         break;
       }
     }
-  }).catch(console.error);
+  }).catch(Cu.reportError);
 }
 
 /**

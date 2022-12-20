@@ -154,7 +154,7 @@ Object.assign(PushServiceParent.prototype, {
           this._deliverSubscriptionError(callback, error);
         }
       )
-      .catch(console.error);
+      .catch(Cu.reportError);
   },
 
   unsubscribe(scope, principal, callback) {
@@ -169,7 +169,7 @@ Object.assign(PushServiceParent.prototype, {
           callback.onUnsubscribe(Cr.NS_ERROR_FAILURE, false);
         }
       )
-      .catch(console.error);
+      .catch(Cu.reportError);
   },
 
   getSubscription(scope, principal, callback) {
@@ -184,7 +184,7 @@ Object.assign(PushServiceParent.prototype, {
           this._deliverSubscriptionError(callback, error);
         }
       )
-      .catch(console.error);
+      .catch(Cu.reportError);
   },
 
   clearForDomain(domain, callback) {
@@ -199,7 +199,7 @@ Object.assign(PushServiceParent.prototype, {
           callback.onClear(Cr.NS_ERROR_FAILURE);
         }
       )
-      .catch(console.error);
+      .catch(Cu.reportError);
   },
 
   // nsIPushQuotaManager methods
@@ -250,7 +250,7 @@ Object.assign(PushServiceParent.prototype, {
           });
         }
       )
-      .catch(console.error);
+      .catch(Cu.reportError);
   },
 
   ensureReady() {
