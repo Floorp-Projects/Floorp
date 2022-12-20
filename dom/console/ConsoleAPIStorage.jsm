@@ -135,7 +135,7 @@ ConsoleAPIStorageService.prototype = {
     if (index != -1) {
       _logEventListeners.splice(index, 1);
     } else {
-      Cu.reportError(
+      console.error(
         "Attempted to remove a log event listener that does not exist."
       );
     }
@@ -173,7 +173,7 @@ ConsoleAPIStorageService.prototype = {
         }
       } catch (e) {
         // A failing listener should not prevent from calling other listeners.
-        Cu.reportError(e);
+        console.error(e);
       }
     }
   },

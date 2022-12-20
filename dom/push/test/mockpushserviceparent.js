@@ -18,7 +18,7 @@ function waterfall(...callbacks) {
         }),
       Promise.resolve()
     )
-    .catch(Cu.reportError);
+    .catch(console.error);
 }
 
 /**
@@ -97,7 +97,7 @@ addMessageListener("socket-teardown", function(msg) {
       sendAsyncMessage("socket-server-teardown");
     })
     .catch(error => {
-      Cu.reportError(`Error restoring service backend: ${error}`);
+      console.error(`Error restoring service backend: ${error}`);
     });
 });
 
@@ -132,7 +132,7 @@ var MockService = {
 
   handleResponse(response) {
     if (!this.resolvers.has(response.id)) {
-      Cu.reportError(`Unexpected response for request ${response.id}`);
+      console.error(`Unexpected response for request ${response.id}`);
       return;
     }
     let resolver = this.resolvers.get(response.id);
@@ -182,7 +182,7 @@ addMessageListener("service-replace", function() {
       sendAsyncMessage("service-replaced");
     })
     .catch(error => {
-      Cu.reportError(`Error replacing service: ${error}`);
+      console.error(`Error replacing service: ${error}`);
     });
 });
 
@@ -192,7 +192,7 @@ addMessageListener("service-restore", function() {
       sendAsyncMessage("service-restored");
     })
     .catch(error => {
-      Cu.reportError(`Error restoring service: ${error}`);
+      console.error(`Error restoring service: ${error}`);
     });
 });
 

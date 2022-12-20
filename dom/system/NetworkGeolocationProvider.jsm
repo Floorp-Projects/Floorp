@@ -472,7 +472,7 @@ NetworkGeolocationProvider.prototype = {
       );
     } catch (err) {
       LOG("Location request hit error: " + err.name);
-      Cu.reportError(err);
+      console.error(err);
       if (err.name == "AbortError") {
         this.onStatus(true, "xhr-timeout");
       } else {
