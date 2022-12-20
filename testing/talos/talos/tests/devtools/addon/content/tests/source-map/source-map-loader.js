@@ -12,20 +12,13 @@
 
 const { testSetup, testTeardown, runTest } = require("damp-test/tests/head");
 
-// source-map module has to be loaded via the browser loader in order to use the Worker API
-const { BrowserLoader } = ChromeUtils.import(
-  "resource://devtools/shared/loader/browser-loader.js"
-);
-const { require: browserRequire } = BrowserLoader({
-  baseURI: "resource://devtools/client/shared/",
-  window: dampWindow,
-});
-const sourceMap = browserRequire(
-  "devtools/client/shared/source-map-loader/index"
-);
+const {
+  SourceMapLoader,
+} = require("resource://devtools/client/shared/source-map-loader/index.js");
 
 module.exports = async function() {
   await testSetup("data:text/html,source-map");
+  const sourceMapLoader = new SourceMapLoader();
 
   const fakeGeneratedSource = {
     id: "fake-id",
@@ -38,14 +31,14 @@ module.exports = async function() {
 
   {
     const test = runTest(`source-map-loader.init.DAMP`);
-    await sourceMap.getOriginalURLs(fakeGeneratedSource);
+    await sourceMapLoader.getOriginalURLs(fakeGeneratedSource);
     test.done();
   }
 
   {
     const test = runTest(`source-map-loader.getOriginalLocation.DAMP`);
     for (let x = 0; x < 1000; x++) {
-      await sourceMap.getOriginalLocation({
+      await sourceMapLoader.getOriginalLocation({
         sourceId: fakeGeneratedSource.id,
         line: 10,
         column: 0,
@@ -54,7 +47,7 @@ module.exports = async function() {
     }
     test.done();
   }
-  sourceMap.clearSourceMaps();
+  sourceMapLoader.clearSourceMaps();
 
   await testTeardown();
 };
