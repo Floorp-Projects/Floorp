@@ -111,6 +111,13 @@
   outline-offset: var(--focus-outline-inset);
 }
 
+/* The selected tab should appear above the border between the tabs toolbar and
+   the navigation toolbar. */
+.tabbrowser-tab[visuallyselected=true] {
+  position: relative;
+  z-index: 2;
+}
+
 .tab-content {
   padding: 0 var(--inline-tab-padding);
   min-width: 0;
@@ -440,10 +447,6 @@
   margin-inline: 0;
 }
 
-.tab-label:is([selected], [attention]) {
-  font-weight: 600;
-}
-
 .tab-close-button {
   -moz-context-properties: fill, fill-opacity;
   margin-inline-end: calc(var(--inline-tab-padding) / -2);
@@ -504,7 +507,7 @@
   border-left: .5px solid rgba(255,255,255,.2);
   pointer-events: none;
   position: relative;
-  z-index: 2;
+  z-index: 3; /* the selected tab's z-index + 1 */
   border-bottom: .5px solid transparent;
 }
 
@@ -556,6 +559,7 @@
 #TabsToolbar #firefox-view-button[open] > .toolbarbutton-icon,
 .tab-background:is([selected], [multiselected]) {
   background-color: var(--tab-selected-bgcolor, var(--toolbar-bgcolor));
+  background-image: var(--tab-selected-bgimage, var(--toolbar-bgimage));
   background-origin: border-box;
   background-repeat: repeat-x;
 }
@@ -638,6 +642,10 @@ toolbar[brighttext] {
   margin-inline-start: 12px !important; /* .tabbrowser-tab sets margin: 0 !important; */
 }
 
+.tab-label[attention]:not([selected="true"]) {
+  font-weight: bold;
+}
+
 /* Tab drag and drop */
 
 .tab-drop-indicator {
@@ -645,7 +653,9 @@ toolbar[brighttext] {
   margin-inline-start: -12px;
   background: url(chrome://browser/skin/tabbrowser/tab-drag-indicator.svg) no-repeat center;
   position: relative;
-  z-index: 2;
+  /* The z-index needs to be big enough to trump other positioned UI pieces
+     that we want to overlay. The selected tab uses 2. */
+  z-index: 3;
 }
 
 /* Drag space */

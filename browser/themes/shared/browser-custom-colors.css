@@ -40,7 +40,7 @@
     --tab-icon-overlay-stroke: rgb(255,255,255);
     --tab-icon-overlay-fill: rgb(91,91,102);
     --toolbar-color: rgb(21,20,26);
-    --toolbar-non-lwt-bgcolor: white;
+    --toolbar-non-lwt-bgcolor: #f9f9fb;
     --toolbar-non-lwt-textcolor: rgb(21, 20, 26);
     --toolbarbutton-icon-fill: rgb(91,91,102);
     --toolbarbutton-icon-fill-attention: rgb(0,97,224);
@@ -50,11 +50,11 @@
     --urlbar-icon-fill-opacity: 0.72;
 
     --autocomplete-popup-separator-color: rgb(240,240,244);
+    --toolbar-field-border-color: transparent;
     --arrowpanel-border-color: rgb(240,240,244);
     --chrome-content-separator-color: rgb(204,204,204);
 
-    --toolbar-field-background-color: rgb(249,249,251);
-    --toolbar-field-border-color: transparent;
+    --toolbar-field-background-color: rgb(240,240,244);
     --toolbar-field-color: rgb(21,20,26);
 
     --autocomplete-popup-highlight-background: #e0e0e6;
