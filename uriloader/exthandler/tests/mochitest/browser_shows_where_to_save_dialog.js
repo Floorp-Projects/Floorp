@@ -273,7 +273,7 @@ async function setupFilePickerDirectory() {
     try {
       await IOUtils.remove(saveDir.path, { recursive: true });
     } catch (e) {
-      console.error(e);
+      Cu.reportError(e);
     }
   });
 
