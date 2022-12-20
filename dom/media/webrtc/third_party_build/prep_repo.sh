@@ -65,6 +65,20 @@ sed -i.bak -e "/^Subject: / s/^Subject: /Subject: (cherry-pick-branch-heads\/$MO
 git am *.patch # applies to branch mozpatches
 rm *.patch
 
+# write no-op files for the cherry-picked release branch commits.  For more
+# details on what this is doing, see make_upstream_revert_noop.sh.
+COMMITS=`git log -r $CHERRY_PICK_BASE..branch-heads/$MOZ_PRIOR_UPSTREAM_BRANCH_HEAD_NUM --format='%h'`
+for commit in $COMMITS; do
+
+  echo "Processing release branch commit $commit for no-op handling"
+  CHERRY_PICK_COMMIT=`git show $commit | grep "cherry picked from commit" | tr -d "()" | awk '{ print $5; }'`
+  SHORT_SHA=`git show --name-only $CHERRY_PICK_COMMIT --format='%h' | head -1`
+
+  echo "We already cherry-picked this when we vendored $commit." \
+  > ~/$SHORT_SHA.no-op-cherry-pick-msg
+
+done
+
 # grab all the moz patches and apply
 # git format-patch -k $MOZ_LIBWEBRTC_BASE..$MOZ_PRIOR_GIT_BRANCH
 git format-patch -k branch-heads/$MOZ_PRIOR_UPSTREAM_BRANCH_HEAD_NUM..$MOZ_PRIOR_GIT_BRANCH
