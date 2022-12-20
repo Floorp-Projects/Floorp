@@ -7,6 +7,7 @@
 #include "WebTransport.h"
 
 #include "nsUTF8Utils.h"
+#include "nsIURL.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PWebTransport.h"
@@ -107,7 +108,11 @@ bool WebTransport::Init(const GlobalObject& aGlobal, const nsAString& aURL,
   LOG(("Connecting WebTransport to parent for %s",
        NS_ConvertUTF16toUTF8(aURL).get()));
 
-  // XXX TODO: Parse string for validity and Throw a SyntaxError if it isn't
+  // Parse string for validity and Throw a SyntaxError if it isn't
+  if (!ParseURL(aURL)) {
+    aError.ThrowSyntaxError("Invalid WebTransport URL");
+    return false;
+  }
   // XXX and other steps in the constructor requirement (TypeError). Order is
   // important.
   // https://w3c.github.io/webtransport/#webtransport-constructor Spec 5.2
@@ -151,6 +156,28 @@ void WebTransport::RejectWaitingConnection(nsresult aRv) {
   LOG(("Rejected connection %x", (uint32_t)aRv));
 
   mReady->MaybeReject(aRv);
+}
+
+bool WebTransport::ParseURL(const nsAString& aURL) const {
+  NS_ENSURE_TRUE(!aURL.IsEmpty(), false);
+
+  // 5.4 = https://w3c.github.io/webtransport/#webtransport-constructor
+  // 5.4 #1 and #2
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  // 5.4 #3
+  if (!uri->SchemeIs("https")) {
+    return false;
+  }
+
+  // 5.4 #4 no fragments
+  bool hasRef;
+  rv = uri->GetHasRef(&hasRef);
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && !hasRef, false);
+
+  return true;
 }
 
 already_AddRefed<Promise> WebTransport::GetStats(ErrorResult& aError) {
