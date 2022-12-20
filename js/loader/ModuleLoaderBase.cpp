@@ -983,7 +983,9 @@ void ModuleLoaderBase::Shutdown() {
   MOZ_ASSERT(mFetchingModules.IsEmpty());
 
   for (const auto& entry : mFetchedModules) {
-    entry.GetData()->Shutdown();
+    if (entry.GetData()) {
+      entry.GetData()->Shutdown();
+    }
   }
 
   mFetchedModules.Clear();
