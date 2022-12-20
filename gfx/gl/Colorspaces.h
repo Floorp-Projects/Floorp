@@ -15,16 +15,12 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
-#include <cstdint>
 #include <cstdlib>
-#include <functional>
 #include <optional>
 #include <vector>
 
 #include "AutoMappable.h"
-#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Span.h"
 
 #ifdef DEBUG
 #  define ASSERT(EXPR)    \
@@ -36,9 +32,6 @@
 #else
 #  define ASSERT(EXPR) (void)(EXPR)
 #endif
-
-struct _qcms_profile;
-typedef struct _qcms_profile qcms_profile;
 
 namespace mozilla::color {
 
@@ -81,7 +74,8 @@ struct PiecewiseGammaDesc final {
         4.5,
     };
   }
-  // FYI: static constexpr auto Rec2020_10bit() { return Rec709(); }
+  static constexpr auto Rec2020_10bit() { return Rec709(); }
+
   static constexpr auto Rec2020_12bit() {
     return PiecewiseGammaDesc{
         1.0993,
@@ -296,7 +290,6 @@ struct avec final {
     return eq;
   }
 };
-using vec2 = avec<float, 2>;
 using vec3 = avec<float, 3>;
 using vec4 = avec<float, 4>;
 using ivec3 = avec<int32_t, 3>;
@@ -371,15 +364,10 @@ struct mat final {
 
   static constexpr auto Identity() {
     auto ret = mat{};
-    for (int i = 0; i < std::min(x_cols, y_rows); i++) {
-      ret.at(i, i) = 1;
-    }
-    return ret;
-  }
-  static constexpr auto Scale(const avec<float, std::min(x_cols, y_rows)>& v) {
-    auto ret = mat{};
-    for (int i = 0; i < v.N; i++) {
-      ret.at(i, i) = v[i];
+    for (int x = 0; x < x_cols; x++) {
+      for (int y = 0; y < y_rows; y++) {
+        ret.at(x, y) = (x == y ? 1 : 0);
+      }
     }
     return ret;
   }
@@ -439,30 +427,7 @@ struct mat final {
     }
     return c;
   }
-
-  // For e.g. similarity evaluation
-  friend auto operator-(const mat& a, const mat& b) {
-    mat c;
-    for (int y = 0; y < y_rows; y++) {
-      c.rows[y] = a.rows[y] - b.rows[y];
-    }
-    return c;
-  }
 };
-
-template <class M>
-inline float dotDifference(const M& a, const M& b) {
-  const auto c = a - b;
-  const auto d = c * avec<float, M::x_cols>(1);
-  const auto d2 = dot(d, d);
-  return d2;
-}
-template <class M>
-inline bool approx(const M& a, const M& b, const float eps = 0.0001) {
-  const auto errSquared = dotDifference(a, b);
-  return errSquared <= (eps * eps);
-}
-
 using mat3 = mat<3, 3>;
 using mat4 = mat<4, 4>;
 
@@ -683,294 +648,6 @@ struct ColorspaceTransform final {
       defaultSize = ivec3({31, 15, 31});  // Y, Cb, Cr
     }
     return ToLut3(defaultSize);
-  }
-};
-
-// -
-
-struct RgbTransferTables {
-  std::vector<float> r;
-  std::vector<float> g;
-  std::vector<float> b;
-};
-float GuessGamma(const std::vector<float>& vals, float exp_guess = 1.0);
-
-static constexpr auto D65 = vec2{{0.3127, 0.3290}};
-static constexpr auto D50 = vec2{{0.34567, 0.35850}};
-mat3 XyzAFromXyzB_BradfordLinear(const vec2 xyA, const vec2 xyB);
-
-// -
-
-struct ColorProfileDesc {
-  // ICC profiles are phrased as PCS-from-encoded (PCS is CIEXYZ-D50)
-  // However, all of our colorspaces are D65, so let's normalize to that,
-  // even though it's a reversible transform.
-  color::mat4 rgbFromYcbcr = color::mat4::Identity();
-  RgbTransferTables linearFromTf;
-  color::mat3 xyzd65FromLinearRgb = color::mat3::Identity();
-
-  static ColorProfileDesc From(const ColorspaceDesc&);
-  static ColorProfileDesc From(const qcms_profile&);
-};
-
-template <class C>
-inline float SampleOutByIn(const C& outByIn, const float in) {
-  MOZ_ASSERT(outByIn.size() >= 2);
-  const auto begin = outByIn.begin();
-
-  const auto in0i = size_t(floorf(in * (outByIn.size() - 1)));
-  const auto out0_itr = begin + std::min(in0i, outByIn.size() - 2);
-
-  const auto in0 = float(out0_itr - begin) / (outByIn.size() - 1);
-  const auto out0 = *out0_itr;
-  const auto d_in = float(1) / (outByIn.size() - 1);
-  const auto d_out = *(out0_itr + 1) - *out0_itr;
-
-  const auto out = out0 + (d_out / d_in) * (in - in0);
-  // printf("SampleOutByIn(%f)->%f\n", in, out);
-  return out;
-}
-
-template <class C>
-inline float SampleInByOut(const C& outByIn, const float out) {
-  MOZ_ASSERT(outByIn.size() >= 2);
-  const auto begin = outByIn.begin();
-
-  const auto out0_itr = std::lower_bound(begin + 1, outByIn.end() - 1, out) - 1;
-
-  const auto in0 = float(out0_itr - begin) / (outByIn.size() - 1);
-  const auto out0 = *out0_itr;
-  const auto d_in = float(1) / (outByIn.size() - 1);
-  const auto d_out = *(out0_itr + 1) - *out0_itr;
-
-  // printf("%f + (%f / %f) * (%f - %f)\n", in0, d_in, d_out, out, out0);
-  const auto in = in0 + (d_in / d_out) * (out - out0);
-  // printf("SampleInByOut(%f)->%f\n", out, in);
-  return in;
-}
-
-template <class C, class FnLessEqualT = std::less_equal<typename C::value_type>>
-inline bool IsMonotonic(const C& vals, const FnLessEqualT& LessEqual = {}) {
-  bool ok = true;
-  const auto begin = vals.begin();
-  for (size_t i = 1; i < vals.size(); i++) {
-    const auto itr = begin + i;
-    ok &= LessEqual(*(itr - 1), *itr);
-    // Assert(true, [&]() {
-    //     return prints("[%zu]->%f <= [%zu]->%f", i-1, *(itr-1), i, *itr);
-    // });
-  }
-  return ok;
-}
-
-template <class T, class I>
-inline std::optional<I> SeekNeq(const T& ref, const I first, const I last) {
-  const auto inc = (last - first) > 0 ? 1 : -1;
-  auto itr = first;
-  while (true) {
-    if (*itr != ref) return itr;
-    if (itr == last) return {};
-    itr += inc;
-  }
-}
-
-template <class T>
-struct TwoPoints {
-  struct {
-    T x;
-    T y;
-  } p0;
-  struct {
-    T x;
-    T y;
-  } p1;
-
-  T y(const T x) const {
-    const auto dx = p1.x - p0.x;
-    const auto dy = p1.y - p0.y;
-    return p0.y + dy / dx * (x - p0.x);
-  }
-};
-
-/// Fills `vals` with `x:[0..vals.size()-1] => line.y(x)`.
-template <class T>
-static void LinearFill(T& vals, const TwoPoints<float>& line) {
-  float x = -1;
-  for (auto& val : vals) {
-    x += 1;
-    val = line.y(x);
-  }
-}
-
-// -
-
-inline void DequantizeMonotonic(const Span<float> vals) {
-  MOZ_ASSERT(IsMonotonic(vals));
-
-  const auto first = vals.begin();
-  const auto end = vals.end();
-  if (first == end) return;
-  const auto last = end - 1;
-  if (first == last) return;
-
-  // Three monotonic cases:
-  // 1. [0,0,0,0]
-  // 2. [0,0,1,1]
-  // 3. [0,1,1,2]
-
-  const auto body_first = SeekNeq(*first, first, last);
-  if (!body_first) {
-    // E.g. [0,0,0,0]
-    return;
-  }
-
-  const auto body_last = SeekNeq(*last, last, *body_first);
-  if (!body_last) {
-    // E.g. [0,0,1,1]
-    // This isn't the most accurate, but close enough.
-    // print("#2: %s", to_str(vals).c_str());
-    LinearFill(vals, {
-                         {0, *first},
-                         {float(vals.size() - 1), *last},
-                     });
-    // print(" -> %s\n", to_str(vals).c_str());
-    return;
-  }
-
-  // E.g. [0,1,1,2]
-  //         ^^^ body
-  // => f(0.5)->0.5, f(2.5)->1.5
-  // => f(x) = f(x0) + (x-x0) * (f(x1) - f(x0)) / (x1-x0)
-  // => f(x) = f(x0) + (x-x0) * dfdx
-
-  const auto head_end = *body_first;
-  const auto head = vals.subspan(0, head_end - vals.begin());
-  const auto tail_begin = *body_last + 1;
-  const auto tail = vals.subspan(tail_begin - vals.begin());
-  // print("head tail: %s %s\n",
-  //     to_str(head).c_str(),
-  //     to_str(tail).c_str());
-
-  // const auto body = vals->subspan(head.size(), vals->size()-tail.size());
-  auto next_part_first = head_end;
-  while (next_part_first != tail_begin) {
-    const auto part_first = next_part_first;
-    // print("part_first: %f\n", *part_first);
-    next_part_first = *SeekNeq(*part_first, part_first, tail_begin);
-    // print("next_part_first: %f\n", *next_part_first);
-    const auto part =
-        Span<float>{part_first, size_t(next_part_first - part_first)};
-    // print("part: %s\n", to_str(part).c_str());
-    const auto prev_part_last = part_first - 1;
-    const auto part_last = next_part_first - 1;
-    const auto line = TwoPoints<float>{
-        {-0.5, (*prev_part_last + *part_first) / 2},
-        {part.size() - 0.5f, (*part_last + *next_part_first) / 2},
-    };
-    LinearFill(part, line);
-  }
-
-  static constexpr bool INFER_HEAD_TAIL_FROM_BODY_EDGE = false;
-  // Basically ignore contents of head and tail, and infer from edges of body.
-  // print("3: %s\n", to_str(vals).c_str());
-  if (!IsMonotonic(head, std::less<float>{})) {
-    if (!INFER_HEAD_TAIL_FROM_BODY_EDGE) {
-      LinearFill(head,
-                 {
-                     {0, *head.begin()},
-                     {head.size() - 0.5f, (*(head.end() - 1) + *head_end) / 2},
-                 });
-    } else {
-      LinearFill(head, {
-                           {head.size() + 0.0f, *head_end},
-                           {head.size() + 1.0f, *(head_end + 1)},
-                       });
-    }
-  }
-  if (!IsMonotonic(tail, std::less<float>{})) {
-    if (!INFER_HEAD_TAIL_FROM_BODY_EDGE) {
-      LinearFill(tail, {
-                           {-0.5, (*(tail_begin - 1) + *tail.begin()) / 2},
-                           {tail.size() - 1.0f, *(tail.end() - 1)},
-                       });
-    } else {
-      LinearFill(tail, {
-                           {-2.0f, *(tail_begin - 2)},
-                           {-1.0f, *(tail_begin - 1)},
-                       });
-    }
-  }
-  // print("3: %s\n", to_str(vals).c_str());
-  MOZ_ASSERT(IsMonotonic(vals, std::less<float>{}));
-
-  // Rescale, because we tend to lose range.
-  static constexpr bool RESCALE = false;
-  if (RESCALE) {
-    const auto firstv = *first;
-    const auto lastv = *last;
-    for (auto& val : vals) {
-      val = (val - firstv) / (lastv - firstv);
-    }
-  }
-  // print("4: %s\n", to_str(vals).c_str());
-}
-
-template <class In, class Out>
-static void InvertLut(const In& lut, Out* const out_invertedLut) {
-  MOZ_ASSERT(IsMonotonic(lut));
-  auto plut = &lut;
-  auto vec = std::vector<float>{};
-  if (!IsMonotonic(lut, std::less<float>{})) {
-    // print("Not strictly monotonic...\n");
-    vec.assign(lut.begin(), lut.end());
-    DequantizeMonotonic(vec);
-    plut = &vec;
-    // print("  Now strictly monotonic: %i: %s\n",
-    //   int(IsMonotonic(*plut, std::less<float>{})), to_str(*plut).c_str());
-    MOZ_ASSERT(IsMonotonic(*plut, std::less<float>{}));
-  }
-  MOZ_ASSERT(plut->size() >= 2);
-
-  auto& ret = *out_invertedLut;
-  for (size_t i_out = 0; i_out < ret.size(); i_out++) {
-    const auto f_out = i_out / float(ret.size() - 1);
-    const auto f_in = SampleInByOut(*plut, f_out);
-    ret[i_out] = f_in;
-  }
-
-  MOZ_ASSERT(IsMonotonic(ret));
-  MOZ_ASSERT(IsMonotonic(ret, std::less<float>{}));
-}
-
-// -
-
-struct ColorProfileConversionDesc {
-  // ICC profiles are phrased as PCS-from-encoded (PCS is CIEXYZ-D50)
-  color::mat4 srcRgbFromSrcYuv = color::mat4::Identity();
-  RgbTransferTables srcLinearFromSrcTf;
-  color::mat3 dstLinearFromSrcLinear = color::mat3::Identity();
-  RgbTransferTables dstTfFromDstLinear;
-
-  struct FromDesc {
-    ColorProfileDesc src;
-    ColorProfileDesc dst;
-  };
-  static ColorProfileConversionDesc From(const FromDesc&);
-
-  vec3 Apply(const vec3 src) const {
-    const auto srcRgb = vec3(srcRgbFromSrcYuv * vec4(src, 1));
-    const auto srcLinear = vec3{{
-        SampleOutByIn(srcLinearFromSrcTf.r, srcRgb.x()),
-        SampleOutByIn(srcLinearFromSrcTf.g, srcRgb.y()),
-        SampleOutByIn(srcLinearFromSrcTf.b, srcRgb.z()),
-    }};
-    const auto dstLinear = dstLinearFromSrcLinear * srcLinear;
-    const auto dstRgb = vec3{{
-        SampleOutByIn(dstTfFromDstLinear.r, dstLinear.x()),
-        SampleOutByIn(dstTfFromDstLinear.g, dstLinear.y()),
-        SampleOutByIn(dstTfFromDstLinear.b, dstLinear.z()),
-    }};
-    return dstRgb;
   }
 };
 
