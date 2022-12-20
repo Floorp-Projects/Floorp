@@ -93,7 +93,7 @@ CppUnitTests(
 )
 
 # Wasi doesn't support <signal> yet so skip this test.
-if not CONFIG["MOZ_ASAN"] and CONFIG["OS_ARCH"] != "WASI":
+if not CONFIG["MOZ_ASAN"] and not CONFIG["MOZ_TSAN"] and CONFIG["OS_ARCH"] != "WASI":
     CppUnitTests(
         [
             "TestPoisonArea",
