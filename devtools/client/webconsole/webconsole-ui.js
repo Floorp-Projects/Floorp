@@ -179,7 +179,6 @@ class WebConsoleUI {
         resourceCommand.TYPES.CONSOLE_MESSAGE,
         resourceCommand.TYPES.ERROR_MESSAGE,
         resourceCommand.TYPES.PLATFORM_MESSAGE,
-        resourceCommand.TYPES.CLONED_CONTENT_PROCESS_MESSAGE,
         resourceCommand.TYPES.DOCUMENT_EVENT,
       ],
       { onAvailable: this._onResourceAvailable }
@@ -329,7 +328,6 @@ class WebConsoleUI {
         resourceCommand.TYPES.CONSOLE_MESSAGE,
         resourceCommand.TYPES.ERROR_MESSAGE,
         resourceCommand.TYPES.PLATFORM_MESSAGE,
-        resourceCommand.TYPES.CLONED_CONTENT_PROCESS_MESSAGE,
         resourceCommand.TYPES.DOCUMENT_EVENT,
       ],
       { onAvailable: this._onResourceAvailable }
