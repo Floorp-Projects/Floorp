@@ -625,16 +625,17 @@ ipc::IPCResult WebGPUParent::RecvQueueSubmit(
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvQueueWriteAction(RawId aQueueId,
-                                                  RawId aDeviceId,
-                                                  const ipc::ByteBuf& aByteBuf,
-                                                  Shmem&& aShmem) {
+ipc::IPCResult WebGPUParent::RecvQueueWriteAction(
+    RawId aQueueId, RawId aDeviceId, const ipc::ByteBuf& aByteBuf,
+    ipc::UnsafeSharedMemoryHandle&& aShmem) {
+  auto mapping =
+      ipc::WritableSharedMemoryMapping::Open(std::move(aShmem)).value();
+
   ErrorBuffer error;
   ffi::wgpu_server_queue_write_action(mContext.get(), aQueueId,
-                                      ToFFI(&aByteBuf), aShmem.get<uint8_t>(),
-                                      aShmem.Size<uint8_t>(), error.ToFFI());
+                                      ToFFI(&aByteBuf), mapping.Bytes().data(),
+                                      mapping.Size(), error.ToFFI());
   ForwardError(aDeviceId, error);
-  DeallocShmem(aShmem);
   return IPC_OK();
 }
 

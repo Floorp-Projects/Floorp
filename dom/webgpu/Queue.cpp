@@ -85,22 +85,20 @@ void Queue::WriteBuffer(const Buffer& aBuffer, uint64_t aBufferOffset,
     return;
   }
 
-  // Shmem can't be zero sized. Work around it by allocating a non-zero shmem
-  // (it will round up to a few pages). The expectation is that since there is
-  // no point copying zero bytes, this case should be too rare to be wroth
-  // optimizing.
-  size_t allocSize = size > 0 ? size : 1;
-  ipc::Shmem shmem;
-  if (!mBridge->AllocShmem(allocSize, &shmem)) {
+  auto alloc = mozilla::ipc::UnsafeSharedMemoryHandle::CreateAndMap(size);
+  if (alloc.isNothing()) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
 
-  memcpy(shmem.get<uint8_t>(), data + aDataOffset, size);
+  auto handle = std::move(alloc.ref().first);
+  auto mapping = std::move(alloc.ref().second);
+
+  memcpy(mapping.Bytes().data(), data + aDataOffset, size);
   ipc::ByteBuf bb;
   ffi::wgpu_queue_write_buffer(aBuffer.mId, aBufferOffset, ToFFI(&bb));
   if (!mBridge->SendQueueWriteAction(mId, mParent->mId, std::move(bb),
-                                     std::move(shmem))) {
+                                     std::move(handle))) {
     MOZ_CRASH("IPC failure");
   }
 }
@@ -146,18 +144,21 @@ void Queue::WriteTexture(const dom::GPUImageCopyTexture& aDestination,
   }
   const auto size = checkedSize.value();
 
-  ipc::Shmem shmem;
-  if (!mBridge->AllocShmem(size, &shmem)) {
-    aRv.ThrowAbortError(
-        nsPrintfCString("Unable to allocate shmem of size %" PRIuPTR, size));
+  auto alloc = mozilla::ipc::UnsafeSharedMemoryHandle::CreateAndMap(size);
+  if (alloc.isNothing()) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
 
-  memcpy(shmem.get<uint8_t>(), data + aDataLayout.mOffset, size);
+  auto handle = std::move(alloc.ref().first);
+  auto mapping = std::move(alloc.ref().second);
+
+  memcpy(mapping.Bytes().data(), data + aDataLayout.mOffset, size);
+
   ipc::ByteBuf bb;
   ffi::wgpu_queue_write_texture(copyView, dataLayout, extent, ToFFI(&bb));
   if (!mBridge->SendQueueWriteAction(mId, mParent->mId, std::move(bb),
-                                     std::move(shmem))) {
+                                     std::move(handle))) {
     MOZ_CRASH("IPC failure");
   }
 }
@@ -369,14 +370,18 @@ void Queue::CopyExternalImageToTexture(
     return;
   }
 
-  ipc::Shmem shmem;
-  if (!mBridge->AllocShmem(dstByteLength.value(), &shmem)) {
+  auto alloc = mozilla::ipc::UnsafeSharedMemoryHandle::CreateAndMap(
+      dstByteLength.value());
+  if (alloc.isNothing()) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
 
+  auto handle = std::move(alloc.ref().first);
+  auto mapping = std::move(alloc.ref().second);
+
   const int32_t pixelSize = gfx::BytesPerPixel(surfaceFormat);
-  auto* dstBegin = shmem.get<uint8_t>();
+  auto* dstBegin = mapping.Bytes().data();
   const auto* srcBegin =
       map.GetData() + srcOriginX * pixelSize + srcOriginY * map.GetStride();
   const auto srcOriginPos = gl::OriginPos::TopLeft;
@@ -390,7 +395,6 @@ void Queue::CopyExternalImageToTexture(
                     dstOriginPos, dstFormat, aDestination.mPremultipliedAlpha,
                     &wasTrivial)) {
     MOZ_ASSERT_UNREACHABLE("ConvertImage failed!");
-    mBridge->DeallocShmem(shmem);
     aRv.ThrowInvalidStateError(
         nsPrintfCString("Failed to convert source to destination format "
                         "(%i/%i), please file a bug!",
@@ -404,7 +408,7 @@ void Queue::CopyExternalImageToTexture(
   ipc::ByteBuf bb;
   ffi::wgpu_queue_write_texture(copyView, dataLayout, extent, ToFFI(&bb));
   if (!mBridge->SendQueueWriteAction(mId, mParent->mId, std::move(bb),
-                                     std::move(shmem))) {
+                                     std::move(handle))) {
     MOZ_CRASH("IPC failure");
   }
 }
