@@ -723,6 +723,8 @@ class nsTextFrame : public nsIFrame {
                   DrawTarget* aDrawTarget, ReflowOutput& aMetrics,
                   nsReflowStatus& aStatus);
 
+  nscoord ComputeLineHeight() const;
+
   bool IsFloatingFirstLetterChild() const;
 
   bool IsInitialLetterChild() const;
@@ -745,8 +747,7 @@ class nsTextFrame : public nsIFrame {
    */
   void NotifyNativeAnonymousTextnodeChange(uint32_t aOldLength);
 
-  void SetInflatedFontMetrics(nsFontMetrics*);
-  nsFontMetrics* InflatedFontMetrics() const { return mFontMetrics; }
+  nsFontMetrics* InflatedFontMetrics() const;
 
   nsRect WebRenderBounds();
 
@@ -762,7 +763,7 @@ class nsTextFrame : public nsIFrame {
   friend class mozilla::nsDisplayTextGeometry;
   friend class mozilla::nsDisplayText;
 
-  RefPtr<nsFontMetrics> mFontMetrics;
+  mutable RefPtr<nsFontMetrics> mFontMetrics;
   RefPtr<gfxTextRun> mTextRun;
   nsTextFrame* mNextContinuation;
   // The key invariant here is that mContentOffset never decreases along
