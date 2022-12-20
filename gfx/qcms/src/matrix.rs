@@ -22,7 +22,7 @@
 
 #[derive(Copy, Clone, Debug, Default)]
 pub struct Matrix {
-    pub m: [[f32; 3]; 3],
+    pub m: [[f32; 3]; 3], // Three rows of three elems.
 }
 
 #[derive(Copy, Clone)]
@@ -37,6 +37,10 @@ impl Matrix {
         result.v[1] = self.m[1][0] * v.v[0] + self.m[1][1] * v.v[1] + self.m[1][2] * v.v[2];
         result.v[2] = self.m[2][0] * v.v[0] + self.m[2][1] * v.v[1] + self.m[2][2] * v.v[2];
         result
+    }
+
+    pub fn row(&self, r: usize) -> [f32; 3] {
+        self.m[r]
     }
 
     //probably reuse this computation in matrix_invert
