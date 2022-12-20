@@ -17,10 +17,6 @@
             "tracking-protections"
           ]
         },
-        "layout_title_content_variable": {
-          "description": "Select what profile specific value to show for the current layout.",
-          "type": "string"
-        },
         "bucket_id": {
           "type": "string",
           "description": "A bucket identifier for the addon. This is used in order to anonymize telemetry for history-sensitive targeting."
@@ -85,12 +81,7 @@
         "body",
         "cta_url",
         "bucket_id"
-      ],
-      "dependentSchemas": {
-        "layout": [
-          "layout_title_content_variable"
-        ]
-      }
+      ]
     },
     "template": {
       "type": "string",
