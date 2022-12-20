@@ -60,8 +60,7 @@ class gfxFT2FontBase : public gfxFont {
     return GetCachedGlyphMetrics(aGID).mAdvance;
   }
 
-  bool GetGlyphBounds(uint16_t aGID, gfxRect* aBounds,
-                      bool aTight) const override;
+  bool GetGlyphBounds(uint16_t aGID, gfxRect* aBounds, bool aTight) override;
 
   FontType GetType() const override { return FONT_TYPE_FT2; }
 
