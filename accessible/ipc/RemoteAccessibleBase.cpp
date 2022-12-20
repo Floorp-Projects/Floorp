@@ -476,7 +476,8 @@ void RemoteAccessibleBase<Derived>::ApplyCrossDocOffset(nsRect& aBounds) const {
 }
 
 template <class Derived>
-bool RemoteAccessibleBase<Derived>::ApplyTransform(nsRect& aBounds) const {
+bool RemoteAccessibleBase<Derived>::ApplyTransform(
+    nsRect& aCumulativeBounds, const nsRect& aParentRelativeBounds) const {
   // First, attempt to retrieve the transform from the cache.
   Maybe<const UniquePtr<gfx::Matrix4x4>&> maybeTransform =
       mCachedFields->GetAttribute<UniquePtr<gfx::Matrix4x4>>(
@@ -485,45 +486,21 @@ bool RemoteAccessibleBase<Derived>::ApplyTransform(nsRect& aBounds) const {
     return false;
   }
 
-  // Layout does not include translations in transform matricies for iframes.
-  // Because of that, we avoid making aBounds self-relative before transforming
-  // when working with a transform on an iframe. This is true for both in- and
-  // out-of-process iframes.
-  bool isIframe = false;
-  if (IsRemote() && IsOuterDoc()) {
-    Accessible* firstChild = FirstChild();
-    if (firstChild && firstChild->IsRemote() && firstChild->IsDoc()) {
-      const RemoteAccessible* firstChildRemote = firstChild->AsRemote();
-      if (!firstChildRemote->AsDoc()->IsTopLevel()) {
-        isIframe = true;
-      }
-    }
-  }
-
-  if (isIframe) {
-    // We want to maintain the effect of the cross-process offset on the
-    // bounds, but otherwise make the rect self-relative. To accomplish that,
-    // remove the influence of the cached bounds, if any.
-    if (Maybe<nsRect> maybeBounds = RetrieveCachedBounds()) {
-      aBounds.MoveBy(-maybeBounds.value().TopLeft());
-    }
-  } else {
-    // The transform matrix we cache is meant to operate on rects
-    // within the coordinate space of the frame to which the
-    // transform is applied (self-relative rects). We cache bounds
-    // relative to some ancestor. Remove the relative offset before
-    // transforming. The transform matrix will add it back in.
-    aBounds.MoveTo(0, 0);
-  }
+  // The transform matrix we cache is meant to operate on rects
+  // within the coordinate space of the frame to which the
+  // transform is applied (self-relative rects). We cache bounds
+  // relative to some ancestor. Remove the relative offset before
+  // transforming. The transform matrix will add it back in.
+  aCumulativeBounds.MoveBy(-aParentRelativeBounds.TopLeft());
 
   auto mtxInPixels = gfx::Matrix4x4Typed<CSSPixel, CSSPixel>::FromUnknownMatrix(
       *(*maybeTransform));
 
   // Our matrix is in CSS Pixels, so we need our rect to be in CSS
   // Pixels too. Convert before applying.
-  auto boundsInPixels = CSSRect::FromAppUnits(aBounds);
+  auto boundsInPixels = CSSRect::FromAppUnits(aCumulativeBounds);
   boundsInPixels = mtxInPixels.TransformBounds(boundsInPixels);
-  aBounds = CSSRect::ToAppUnits(boundsInPixels);
+  aCumulativeBounds = CSSRect::ToAppUnits(boundsInPixels);
 
   return true;
 }
@@ -581,7 +558,7 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
 
     ApplyCrossDocOffset(bounds);
 
-    Unused << ApplyTransform(bounds);
+    Unused << ApplyTransform(bounds, *maybeBounds);
 
     LayoutDeviceIntRect devPxBounds;
     const Accessible* acc = Parent();
@@ -626,7 +603,7 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
         // by the bounds retrieved here. This is how we build screen
         // coordinates from relative coordinates.
         bounds.MoveBy(remoteBounds.X(), remoteBounds.Y());
-        Unused << remoteAcc->ApplyTransform(bounds);
+        Unused << remoteAcc->ApplyTransform(bounds, remoteBounds);
       }
       acc = acc->Parent();
     }
