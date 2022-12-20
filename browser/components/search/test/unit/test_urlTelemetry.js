@@ -67,18 +67,6 @@ const TESTS = [
     expectedSearchCountEntry: "google:organic:none",
   },
   {
-    title: "Yahoo organic",
-    trackingUrl:
-      "https://search.yahoo.com/search?p=test&fr=yfp-t&fp=1&toggle=1&cop=mss&ei=UTF-8",
-    expectedSearchCountEntry: "yahoo:organic:none",
-  },
-  {
-    title: "Yahoo organic UK",
-    trackingUrl:
-      "https://uk.search.yahoo.com/search?p=test&fr=yfp-t&fp=1&toggle=1&cop=mss&ei=UTF-8",
-    expectedSearchCountEntry: "yahoo:organic:none",
-  },
-  {
     title: "Bing search access point",
     trackingUrl: "https://www.bing.com/search?q=test&pc=MOZI&form=MOZLBR",
     expectedSearchCountEntry: "bing:tagged:MOZI",
