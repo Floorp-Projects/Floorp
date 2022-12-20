@@ -1850,6 +1850,16 @@ public class GeckoViewActivity extends AppCompatActivity
         toolbar.setTranslationY(0f);
       }
     }
+
+    @Override
+    public void onCookieBannerDetected(final GeckoSession session) {
+      Log.d("BELL", "A cookie banner was detected on this website");
+    }
+
+    @Override
+    public void onCookieBannerHandled(final GeckoSession session) {
+      Log.d("BELL", "A cookie banner was handled on this website");
+    }
   }
 
   private class ExampleProgressDelegate implements GeckoSession.ProgressDelegate {
