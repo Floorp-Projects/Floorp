@@ -62,7 +62,7 @@ parent:
   async CommandBufferDestroy(RawId selfId);
   async RenderBundleDestroy(RawId selfId);
   async QueueSubmit(RawId selfId, RawId aDeviceId, RawId[] commandBuffers);
-  async QueueWriteAction(RawId selfId, RawId aDeviceId, ByteBuf buf, Shmem shmem);
+  async QueueWriteAction(RawId selfId, RawId aDeviceId, ByteBuf buf, UnsafeSharedMemoryHandle shmem);
 
   async BindGroupLayoutDestroy(RawId selfId);
   async PipelineLayoutDestroy(RawId selfId);

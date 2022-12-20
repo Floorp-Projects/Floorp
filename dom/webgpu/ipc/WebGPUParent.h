@@ -59,7 +59,7 @@ class WebGPUParent final : public PWebGPUParent {
                                  const nsTArray<RawId>& aCommandBuffers);
   ipc::IPCResult RecvQueueWriteAction(RawId aQueueId, RawId aDeviceId,
                                       const ipc::ByteBuf& aByteBuf,
-                                      Shmem&& aShmem);
+                                      ipc::UnsafeSharedMemoryHandle&& aShmem);
   ipc::IPCResult RecvBindGroupLayoutDestroy(RawId aBindGroupLayoutId);
   ipc::IPCResult RecvPipelineLayoutDestroy(RawId aPipelineLayoutId);
   ipc::IPCResult RecvBindGroupDestroy(RawId aBindGroupId);
