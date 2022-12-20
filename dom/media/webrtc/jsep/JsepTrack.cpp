@@ -204,11 +204,10 @@ void JsepTrack::SendTrackSetRemote(SsrcGenerator& aSsrcGenerator,
   if (mRids.empty()) {
     // Initial configuration
     for (const auto& ridAttr : rids) {
-      // The sipcc-based parser will detect this problem earlier on, but right
-      // now the rust-based parser will not. So, we do a little bit of
-      // belt-and-suspenders here.
+      // TODO: Spec might change, making a length > 16 invalid SDP.
       std::string dummy;
-      if (SdpRidAttributeList::CheckRidValidity(ridAttr.id, &dummy)) {
+      if (SdpRidAttributeList::CheckRidValidity(ridAttr.id, &dummy) &&
+          ridAttr.id.size() <= SdpRidAttributeList::kMaxRidLength) {
         mRids.push_back(ridAttr.id);
       }
     }

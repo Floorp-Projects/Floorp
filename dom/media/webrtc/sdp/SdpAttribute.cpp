@@ -979,13 +979,11 @@ bool SdpRidAttributeList::CheckRidValidity(const std::string& aRid,
     return false;
   }
 
-  if (aRid.size() > kMaxRidLength) {
-    std::ostringstream ss;
-    ss << "Rid can be at most " << kMaxRidLength
-       << " characters long (due to internal limitations)";
-    *aError = ss.str();
-    return false;
-  }
+  // TODO: Right now, if the rid is longer than kMaxRidLength, we don't treat it
+  // as a parse error, since the grammar does not have this restriction.
+  // Instead, our JSEP code ignores rids that exceed this limit. However, there
+  // is a possibility that the IETF grammar (in RFC 8852) will change the limit
+  // from 255 to 16, in which case we will need to revise this code.
 
   static const std::bitset<256> allowed = GetAllowedRidCharacters();
   for (unsigned char c : aRid) {

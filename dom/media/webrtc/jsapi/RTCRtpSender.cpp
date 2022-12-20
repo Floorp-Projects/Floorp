@@ -716,6 +716,13 @@ void RTCRtpSender::CheckAndRectifyEncodings(
         aRv.ThrowTypeError(nsCString(error));
         return;
       }
+      if (utf8Rid.size() > SdpRidAttributeList::kMaxRidLength) {
+        std::ostringstream ss;
+        ss << "Rid can be at most " << SdpRidAttributeList::kMaxRidLength
+           << " characters long (due to internal limitations)";
+        aRv.ThrowTypeError(nsCString(ss.str()));
+        return;
+      }
     }
   }
 
