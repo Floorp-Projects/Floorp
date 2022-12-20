@@ -70,6 +70,15 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"
 delta = "1.1.1 -> 1.1.3"
 
+[[audits.ash]]
+who = "Jim Blandy <jimb@red-bean.com>"
+criteria = "safe-to-deploy"
+delta = "0.37.0+1.3.209 -> 0.37.1+1.3.235"
+notes = """
+Nicolas Silva, Jim Blandy, and Teodor Tanasoaia audited ash master
+branch commits from e43e9c0c to 6bd82768 inclusive.
+"""
+
 [[audits.ashmem]]
 who = "Matthew Gregan <kinetik@flim.org>"
 criteria = "safe-to-deploy"
