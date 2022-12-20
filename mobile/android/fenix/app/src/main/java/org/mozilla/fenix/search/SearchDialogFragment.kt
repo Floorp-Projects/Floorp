@@ -53,7 +53,7 @@ import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.menu.candidate.DrawableMenuIcon
 import mozilla.components.concept.menu.candidate.TextMenuCandidate
-import mozilla.components.concept.storage.HistoryStorage
+import mozilla.components.concept.toolbar.AutocompleteProvider
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.qr.QrFeature
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
@@ -247,12 +247,16 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 engineForSpeculativeConnects,
                 { store.state.searchEngineSource.searchEngine?.type != SearchEngine.Type.APPLICATION },
             ).apply {
-                addDomainProvider(
-                    ShippedDomainsProvider().also { shippedDomainsProvider ->
-                        shippedDomainsProvider.initialize(requireContext())
-                    },
+                updateAutocompleteProviders(
+                    listOfNotNull(
+                        historyStorageProvider(),
+                        // Assume the history provider has priority 0 and set priority 1 for the domains provider
+                        // to ensure the first source checked for autocomplete suggestions is history.
+                        ShippedDomainsProvider(1).also { shippedDomainsProvider ->
+                            shippedDomainsProvider.initialize(requireContext())
+                        },
+                    ),
                 )
-                historyStorageProvider()?.also(::addHistoryStorageProvider)
             }
         }
 
@@ -659,7 +663,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         dismissAllowingStateLoss()
     }
 
-    private fun historyStorageProvider(): HistoryStorage? {
+    private fun historyStorageProvider(): AutocompleteProvider? {
         return if (requireContext().settings().shouldShowHistorySuggestions) {
             requireComponents.core.historyStorage
         } else {

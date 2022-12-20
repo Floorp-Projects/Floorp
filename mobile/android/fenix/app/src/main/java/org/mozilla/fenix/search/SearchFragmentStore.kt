@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.search
 
+import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.SearchState
@@ -136,12 +137,6 @@ fun createInitialSearchFragmentState(
     val tab = tabId?.let { components.core.store.state.findTab(it) }
     val url = tab?.content?.url.orEmpty()
 
-    val shouldShowSearchSuggestions = when (activity.browsingModeManager.mode) {
-        BrowsingMode.Normal -> settings.shouldShowSearchSuggestions
-        BrowsingMode.Private ->
-            settings.shouldShowSearchSuggestions && settings.shouldShowSearchSuggestionsInPrivate
-    }
-
     val searchEngineSource = if (searchEngine != null) {
         SearchEngineSource.Shortcut(searchEngine)
     } else {
@@ -154,7 +149,10 @@ fun createInitialSearchFragmentState(
         searchTerms = tab?.content?.searchTerms.orEmpty(),
         searchEngineSource = searchEngineSource,
         defaultEngine = null,
-        showSearchSuggestions = shouldShowSearchSuggestions,
+        showSearchSuggestions = shouldShowSearchSuggestions(
+            browsingMode = activity.browsingModeManager.mode,
+            settings = settings,
+        ),
         showSearchSuggestionsHint = false,
         showSearchShortcuts = false,
         areShortcutsAvailable = false,
@@ -184,12 +182,20 @@ sealed class SearchFragmentAction : Action {
     /**
      * Action when default search engine is selected.
      */
-    data class SearchDefaultEngineSelected(val engine: SearchEngine, val settings: Settings) : SearchFragmentAction()
+    data class SearchDefaultEngineSelected(
+        val engine: SearchEngine,
+        val browsingMode: BrowsingMode,
+        val settings: Settings,
+    ) : SearchFragmentAction()
 
     /**
      * Action when shortcut search engine is selected.
      */
-    data class SearchShortcutEngineSelected(val engine: SearchEngine, val settings: Settings) : SearchFragmentAction()
+    data class SearchShortcutEngineSelected(
+        val engine: SearchEngine,
+        val browsingMode: BrowsingMode,
+        val settings: Settings,
+    ) : SearchFragmentAction()
 
     /**
      * Action when history search engine is selected.
@@ -242,7 +248,7 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
         is SearchFragmentAction.SearchDefaultEngineSelected ->
             state.copy(
                 searchEngineSource = SearchEngineSource.Default(action.engine),
-                showSearchSuggestions = action.settings.shouldShowSearchSuggestions,
+                showSearchSuggestions = shouldShowSearchSuggestions(action.browsingMode, action.settings),
                 showSearchShortcuts = action.settings.shouldShowSearchShortcuts,
                 showClipboardSuggestions = action.settings.shouldShowClipboardSuggestions,
                 showSearchTermHistory = action.settings.showUnifiedSearchFeature &&
@@ -256,7 +262,7 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
         is SearchFragmentAction.SearchShortcutEngineSelected ->
             state.copy(
                 searchEngineSource = SearchEngineSource.Shortcut(action.engine),
-                showSearchSuggestions = true,
+                showSearchSuggestions = shouldShowSearchSuggestions(action.browsingMode, action.settings),
                 showSearchShortcuts = when (action.settings.showUnifiedSearchFeature) {
                     true -> false
                     false -> action.settings.shouldShowSearchShortcuts
@@ -355,4 +361,22 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
             )
         }
     }
+}
+
+/**
+ * Check whether search suggestions should be shown in the AwesomeBar.
+ *
+ * @param browsingMode Current browsing mode: normal or private.
+ * @param settings Persistence layer containing user option's for showing search suggestions.
+ *
+ * @return `true` if search suggestions should be shown `false` otherwise.
+ */
+@VisibleForTesting
+internal fun shouldShowSearchSuggestions(
+    browsingMode: BrowsingMode,
+    settings: Settings,
+) = when (browsingMode) {
+    BrowsingMode.Normal -> settings.shouldShowSearchSuggestions
+    BrowsingMode.Private ->
+        settings.shouldShowSearchSuggestions && settings.shouldShowSearchSuggestionsInPrivate
 }

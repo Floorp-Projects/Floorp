@@ -34,6 +34,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.UnifiedSearch
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -111,6 +112,7 @@ class SearchSelectorToolbarActionTest {
             store.dispatch(
                 SearchDefaultEngineSelected(
                     engine = testSearchEngine,
+                    browsingMode = BrowsingMode.Normal,
                     settings = mockk(relaxed = true),
                 ),
             )
@@ -141,6 +143,7 @@ class SearchSelectorToolbarActionTest {
             store.dispatch(
                 SearchDefaultEngineSelected(
                     engine = testSearchEngine,
+                    browsingMode = BrowsingMode.Private,
                     settings = mockk(relaxed = true),
                 ),
             )
@@ -169,6 +172,7 @@ class SearchSelectorToolbarActionTest {
             store.dispatch(
                 SearchDefaultEngineSelected(
                     engine = testSearchEngine,
+                    browsingMode = BrowsingMode.Private,
                     settings = mockk(relaxed = true),
                 ),
             )
@@ -185,6 +189,7 @@ class SearchSelectorToolbarActionTest {
             store.dispatch(
                 SearchDefaultEngineSelected(
                     engine = testSearchEngine,
+                    browsingMode = BrowsingMode.Normal,
                     settings = mockk(relaxed = true),
                 ),
             )

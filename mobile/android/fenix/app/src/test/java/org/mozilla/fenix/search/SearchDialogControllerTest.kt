@@ -45,6 +45,7 @@ import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.GleanMetrics.UnifiedSearch
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.Core
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -375,6 +376,8 @@ class SearchDialogControllerTest {
     @Test
     fun handleSearchShortcutEngineSelected() {
         val searchEngine: SearchEngine = mockk(relaxed = true)
+        val browsingMode = BrowsingMode.Private
+        every { activity.browsingModeManager.mode } returns browsingMode
 
         var focusToolbarInvoked = false
         createController(
@@ -384,7 +387,7 @@ class SearchDialogControllerTest {
         ).handleSearchShortcutEngineSelected(searchEngine)
 
         assertTrue(focusToolbarInvoked)
-        verify { store.dispatch(SearchFragmentAction.SearchShortcutEngineSelected(searchEngine, settings)) }
+        verify { store.dispatch(SearchFragmentAction.SearchShortcutEngineSelected(searchEngine, browsingMode, settings)) }
 
         assertNotNull(SearchShortcuts.selected.testGetValue())
         val recordedEvents = SearchShortcuts.selected.testGetValue()!!

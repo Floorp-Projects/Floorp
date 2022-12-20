@@ -8,6 +8,8 @@ import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.search.RegionState
 import mozilla.components.browser.state.search.SearchEngine
@@ -60,50 +62,54 @@ class SearchFragmentStoreTest {
         every { settings.shouldShowSearchShortcuts } returns true
         every { settings.showUnifiedSearchFeature } returns true
         every { settings.shouldShowHistorySuggestions } returns true
-
-        val expected = SearchFragmentState(
-            query = "",
-            url = "",
-            searchTerms = "",
-            searchEngineSource = SearchEngineSource.None,
-            defaultEngine = null,
-            showSearchShortcutsSetting = true,
-            showSearchSuggestions = false,
-            showSearchSuggestionsHint = false,
-            showSearchShortcuts = false,
-            areShortcutsAvailable = false,
-            showClipboardSuggestions = false,
-            showSearchTermHistory = true,
-            showHistorySuggestionsForCurrentEngine = false,
-            showAllHistorySuggestions = true,
-            showBookmarkSuggestions = false,
-            showSyncedTabsSuggestions = false,
-            showSessionSuggestions = true,
-            tabId = null,
-            pastedText = "pastedText",
-            searchAccessPoint = MetricsUtils.Source.ACTION,
-        )
-
-        assertEquals(
-            expected,
-            createInitialSearchFragmentState(
-                activity,
-                components,
+        mockkStatic("org.mozilla.fenix.search.SearchFragmentStoreKt") {
+            val expected = SearchFragmentState(
+                query = "",
+                url = "",
+                searchTerms = "",
+                searchEngineSource = SearchEngineSource.None,
+                defaultEngine = null,
+                showSearchShortcutsSetting = true,
+                showSearchSuggestions = false,
+                showSearchSuggestionsHint = false,
+                showSearchShortcuts = false,
+                areShortcutsAvailable = false,
+                showClipboardSuggestions = false,
+                showSearchTermHistory = true,
+                showHistorySuggestionsForCurrentEngine = false,
+                showAllHistorySuggestions = true,
+                showBookmarkSuggestions = false,
+                showSyncedTabsSuggestions = false,
+                showSessionSuggestions = true,
                 tabId = null,
                 pastedText = "pastedText",
                 searchAccessPoint = MetricsUtils.Source.ACTION,
-            ),
-        )
-        assertEquals(
-            expected.copy(tabId = "tabId"),
-            createInitialSearchFragmentState(
-                activity,
-                components,
-                tabId = "tabId",
-                pastedText = "pastedText",
-                searchAccessPoint = MetricsUtils.Source.ACTION,
-            ),
-        )
+            )
+
+            assertEquals(
+                expected,
+                createInitialSearchFragmentState(
+                    activity,
+                    components,
+                    tabId = null,
+                    pastedText = "pastedText",
+                    searchAccessPoint = MetricsUtils.Source.ACTION,
+                ),
+            )
+
+            assertEquals(
+                expected.copy(tabId = "tabId"),
+                createInitialSearchFragmentState(
+                    activity,
+                    components,
+                    tabId = "tabId",
+                    pastedText = "pastedText",
+                    searchAccessPoint = MetricsUtils.Source.ACTION,
+                ),
+            )
+
+            verify(exactly = 2) { shouldShowSearchSuggestions(BrowsingMode.Normal, settings) }
+        }
     }
 
     @Test
@@ -175,20 +181,31 @@ class SearchFragmentStoreTest {
         every { settings.shouldShowHistorySuggestions } returns true
         every { settings.shouldShowBookmarkSuggestions } returns false
         every { settings.shouldShowSyncedTabsSuggestions } returns false
+        every { settings.shouldShowSearchSuggestions } returns true
+        every { settings.shouldShowSearchSuggestionsInPrivate } returns true
 
-        store.dispatch(SearchFragmentAction.SearchDefaultEngineSelected(searchEngine, settings)).join()
+        mockkStatic("org.mozilla.fenix.search.SearchFragmentStoreKt") {
+            store.dispatch(
+                SearchFragmentAction.SearchDefaultEngineSelected(
+                    engine = searchEngine,
+                    browsingMode = BrowsingMode.Private,
+                    settings = settings,
+                ),
+            ).join()
 
-        assertNotSame(initialState, store.state)
-        assertEquals(SearchEngineSource.Default(searchEngine), store.state.searchEngineSource)
-        assertTrue(store.state.showSearchSuggestions)
-        assertFalse(store.state.showSearchShortcuts)
-        assertTrue(store.state.showClipboardSuggestions)
-        assertFalse(store.state.showSearchTermHistory)
-        assertFalse(store.state.showHistorySuggestionsForCurrentEngine)
-        assertTrue(store.state.showAllHistorySuggestions)
-        assertFalse(store.state.showBookmarkSuggestions)
-        assertFalse(store.state.showSyncedTabsSuggestions)
-        assertTrue(store.state.showSessionSuggestions)
+            assertNotSame(initialState, store.state)
+            assertEquals(SearchEngineSource.Default(searchEngine), store.state.searchEngineSource)
+            assertTrue(store.state.showSearchSuggestions)
+            assertFalse(store.state.showSearchShortcuts)
+            assertTrue(store.state.showClipboardSuggestions)
+            assertFalse(store.state.showSearchTermHistory)
+            assertFalse(store.state.showHistorySuggestionsForCurrentEngine)
+            assertTrue(store.state.showAllHistorySuggestions)
+            assertFalse(store.state.showBookmarkSuggestions)
+            assertFalse(store.state.showSyncedTabsSuggestions)
+            assertTrue(store.state.showSessionSuggestions)
+            verify { shouldShowSearchSuggestions(BrowsingMode.Private, settings) }
+        }
     }
 
     @Test
@@ -202,8 +219,15 @@ class SearchFragmentStoreTest {
         every { settings.shouldShowHistorySuggestions } returns true
         every { settings.shouldShowBookmarkSuggestions } returns true
         every { settings.shouldShowSyncedTabsSuggestions } returns true
+        every { settings.shouldShowSearchSuggestions } returns true
 
-        store.dispatch(SearchFragmentAction.SearchShortcutEngineSelected(searchEngine, settings)).join()
+        store.dispatch(
+            SearchFragmentAction.SearchShortcutEngineSelected(
+                engine = searchEngine,
+                browsingMode = BrowsingMode.Normal,
+                settings = settings,
+            ),
+        ).join()
 
         assertNotSame(initialState, store.state)
         assertEquals(SearchEngineSource.Shortcut(searchEngine), store.state.searchEngineSource)
@@ -231,11 +255,17 @@ class SearchFragmentStoreTest {
         every { settings.shouldShowBookmarkSuggestions } returns false
         every { settings.shouldShowSyncedTabsSuggestions } returns false
 
-        store.dispatch(SearchFragmentAction.SearchShortcutEngineSelected(searchEngine, settings)).join()
+        store.dispatch(
+            SearchFragmentAction.SearchShortcutEngineSelected(
+                engine = searchEngine,
+                browsingMode = BrowsingMode.Normal,
+                settings = settings,
+            ),
+        ).join()
 
         assertNotSame(initialState, store.state)
         assertEquals(SearchEngineSource.Shortcut(searchEngine), store.state.searchEngineSource)
-        assertTrue(store.state.showSearchSuggestions)
+        assertFalse(store.state.showSearchSuggestions)
         assertFalse(store.state.showSearchShortcuts)
         assertFalse(store.state.showClipboardSuggestions)
         assertTrue(store.state.showSearchTermHistory)
@@ -256,8 +286,16 @@ class SearchFragmentStoreTest {
         every { settings.shouldShowHistorySuggestions } returns true
         every { settings.shouldShowBookmarkSuggestions } returns false
         every { settings.shouldShowSyncedTabsSuggestions } returns true
+        every { settings.shouldShowSearchSuggestions } returns true
+        every { settings.shouldShowSearchSuggestionsInPrivate } returns true
 
-        store.dispatch(SearchFragmentAction.SearchShortcutEngineSelected(searchEngine, settings)).join()
+        store.dispatch(
+            SearchFragmentAction.SearchShortcutEngineSelected(
+                engine = searchEngine,
+                browsingMode = BrowsingMode.Private,
+                settings = settings,
+            ),
+        ).join()
 
         assertNotSame(initialState, store.state)
         assertEquals(SearchEngineSource.Shortcut(searchEngine), store.state.searchEngineSource)
@@ -547,6 +585,42 @@ class SearchFragmentStoreTest {
         store.waitUntilIdle()
 
         assertFalse(store.state.showSearchShortcuts)
+    }
+
+    @Test
+    fun `GIVEN normal browsing mode and search suggestions enabled WHEN checking if search suggestions should be shown THEN return true`() {
+        var settings: Settings = mockk {
+            every { shouldShowSearchSuggestions } returns false
+            every { shouldShowSearchSuggestionsInPrivate } returns false
+        }
+        assertFalse(shouldShowSearchSuggestions(BrowsingMode.Normal, settings))
+
+        settings = mockk {
+            every { shouldShowSearchSuggestions } returns true
+            every { shouldShowSearchSuggestionsInPrivate } returns false
+        }
+        assertTrue(shouldShowSearchSuggestions(BrowsingMode.Normal, settings))
+    }
+
+    @Test
+    fun `GIVEN private browsing mode and search suggestions enabled WHEN checking if search suggestions should be shown THEN return true`() {
+        var settings: Settings = mockk {
+            every { shouldShowSearchSuggestions } returns false
+            every { shouldShowSearchSuggestionsInPrivate } returns false
+        }
+        assertFalse(shouldShowSearchSuggestions(BrowsingMode.Private, settings))
+
+        settings = mockk {
+            every { shouldShowSearchSuggestions } returns false
+            every { shouldShowSearchSuggestionsInPrivate } returns true
+        }
+        assertFalse(shouldShowSearchSuggestions(BrowsingMode.Private, settings))
+
+        settings = mockk {
+            every { shouldShowSearchSuggestions } returns true
+            every { shouldShowSearchSuggestionsInPrivate } returns true
+        }
+        assertTrue(shouldShowSearchSuggestions(BrowsingMode.Private, settings))
     }
 
     private fun emptyDefaultState(
