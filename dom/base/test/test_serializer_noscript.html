@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for document.blockParsing</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body onload=runTest();>
+<script>
+SimpleTest.waitForExplicitFinish();
+
+function checkDoc(aDoc, aScriptState) {
+  const root = aDoc.documentElement;
+  let enc = Cu.createDocumentEncoder("text/html");
+  enc.init(
+    aDoc,
+    "text/html",
+    Ci.nsIDocumentEncoder.OutputEncodeBasicEntities |
+      Ci.nsIDocumentEncoder.OutputLFLineBreak |
+      Ci.nsIDocumentEncoder.OutputBodyOnly |
+      Ci.nsIDocumentEncoder.OutputRaw
+  );
+
+  let str = enc.encodeToString();
+
+  is(str, "<body><noscript>&lt;/noscript&gt;<img></noscript>\n</body>", "Serialization matches expectation with scripting " + aScriptState);
+}
+
+function runTest() {
+  const doc = new DOMParser().parseFromString("<body><noscript>&lt;/noscript&gt;<img></noscript>\n", "text/html");
+  checkDoc(doc, "disabled");
+  checkDoc(document.getElementsByTagName("iframe")[0].contentDocument, "enabled");
+  SimpleTest.finish();
+}
+</script>
+<iframe src="file_serializer_noscript.html"></iframe>
+</body>
+</html>
