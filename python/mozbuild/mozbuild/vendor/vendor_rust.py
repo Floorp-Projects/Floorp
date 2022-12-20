@@ -885,22 +885,6 @@ license file's hash.
             mozpath.normsep(os.path.normcase(self.topsrcdir)),
         )
 
-        # Temporary hack: sort the output to end up in the particular and
-        # peculiar way that `pytoml` sorted it, for stability across commits.
-        def recursive_sort(
-            obj: TomlItem, name: typing.Optional[str] = None
-        ) -> TomlItem:
-            if isinstance(obj, dict):
-                return {
-                    k: recursive_sort(v, k)
-                    for k, v in sorted(obj.items(), reverse=(name == "source"))
-                }
-            if isinstance(obj, list):
-                return [recursive_sort(o) for o in obj]
-            return obj
-
-        config = recursive_sort(config)
-
         # Normalize pytoml output:
         # - removing empty lines
         # - remove empty [section]
