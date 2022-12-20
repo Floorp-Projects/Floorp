@@ -365,14 +365,17 @@ class CSSEditUtils final {
       nsAtom& aProperty, const nsAString& aValue, bool aSuppressTxn = false);
 
   /**
-   * Answers true if the given aStyle on aElement has a CSS equivalence in this
-   * implementation.
+   * Answers true if the given aStyle on aElement or an element whose name is
+   * aTagName has a CSS equivalence in this implementation.
    *
+   * @param aTagName       [IN] Tag name of an element.
    * @param aElement       [IN] An element.
    * @param aStyle         [IN] The style you want to check.
    * @return               A boolean saying if the tag/attribute has a CSS
    *                       equiv.
    */
+  [[nodiscard]] static bool IsCSSEditableStyle(
+      const nsAtom& aTagName, const EditorElementStyle& aStyle);
   [[nodiscard]] static bool IsCSSEditableStyle(
       const dom::Element& aElement, const EditorElementStyle& aStyle);
 

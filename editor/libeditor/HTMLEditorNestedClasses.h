@@ -48,6 +48,13 @@ class MOZ_STACK_CLASS HTMLEditor::AutoInlineStyleSetter final
   ApplyStyleToNodeOrChildrenAndRemoveNestedSameStyle(
       HTMLEditor& aHTMLEditor, nsIContent& aContent) const;
 
+  /**
+   * Extend or shrink aRange for applying the style to the range.
+   * See comments in the definition what this does.
+   */
+  Result<EditorRawDOMRange, nsresult> ExtendOrShrinkRangeToApplyTheStyle(
+      const HTMLEditor& aHTMLEditor, const EditorDOMRange& aRange) const;
+
  private:
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CaretPoint, nsresult> ApplyStyle(
       HTMLEditor& aHTMLEditor, nsIContent& aContent) const;
@@ -70,6 +77,41 @@ class MOZ_STACK_CLASS HTMLEditor::AutoInlineStyleSetter final
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<bool, nsresult>
   ElementIsGoodContainerForTheStyle(HTMLEditor& aHTMLEditor,
                                     Element& aElement) const;
+
+  /**
+   * Return true if the node is an element node and it represents the style or
+   * sets the style (including when setting different value) with `style`
+   * attribute.
+   */
+  [[nodiscard]] bool ContentIsElementSettingTheStyle(
+      const HTMLEditor& aHTMLEditor, nsIContent& aContent) const;
+
+  /**
+   * Helper methods to shrink range to apply the style.
+   */
+  [[nodiscard]] EditorRawDOMPoint GetShrunkenRangeStart(
+      const HTMLEditor& aHTMLEditor, const EditorDOMRange& aRange,
+      const nsINode& aCommonAncestorOfRange,
+      const nsIContent* aFirstEntirelySelectedContentNodeInRange) const;
+  [[nodiscard]] EditorRawDOMPoint GetShrunkenRangeEnd(
+      const HTMLEditor& aHTMLEditor, const EditorDOMRange& aRange,
+      const nsINode& aCommonAncestorOfRange,
+      const nsIContent* aLastEntirelySelectedContentNodeInRange) const;
+
+  /**
+   * Helper methods to extend the range to apply the style.
+   */
+  [[nodiscard]] EditorRawDOMPoint
+  GetExtendedRangeStartToWrapAncestorApplyingSameStyle(
+      const HTMLEditor& aHTMLEditor,
+      const EditorRawDOMPoint& aStartPoint) const;
+  [[nodiscard]] EditorRawDOMPoint
+  GetExtendedRangeEndToWrapAncestorApplyingSameStyle(
+      const HTMLEditor& aHTMLEditor, const EditorRawDOMPoint& aEndPoint) const;
+  [[nodiscard]] EditorRawDOMRange
+  GetExtendedRangeToMinimizeTheNumberOfNewElements(
+      const HTMLEditor& aHTMLEditor, const nsINode& aCommonAncestor,
+      EditorRawDOMPoint&& aStartPoint, EditorRawDOMPoint&& aEndPoint) const;
 };
 
 }  // namespace mozilla

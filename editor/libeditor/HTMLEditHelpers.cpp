@@ -91,6 +91,10 @@ nsresult DOMSubtreeIterator::Init(nsRange& aRange) {
  * mozilla::EditorElementStyle
  *****************************************************************************/
 
+bool EditorElementStyle::IsCSSEditable(const nsStaticAtom& aTagName) const {
+  return CSSEditUtils::IsCSSEditableStyle(aTagName, *this);
+}
+
 bool EditorElementStyle::IsCSSEditable(const Element& aElement) const {
   return CSSEditUtils::IsCSSEditableStyle(aElement, *this);
 }
@@ -134,6 +138,25 @@ bool EditorInlineStyle::IsRepresentedBy(const nsIContent& aContent) const {
     return true;
   }
   return false;
+}
+
+Result<bool, nsresult> EditorInlineStyle::IsSpecifiedBy(
+    const HTMLEditor& aHTMLEditor, Element& aElement) const {
+  MOZ_ASSERT(!IsStyleToClearAllInlineStyles());
+  if (!IsCSSEditable(aElement)) {
+    return false;
+  }
+  // Special case in the CSS mode.  We should treat <u>, <s>, <strike>, <ins>
+  // and <del> specifies text-decoration (bug 1802668).
+  if (aHTMLEditor.IsCSSEnabled() &&
+      IsStyleOfTextDecoration(IgnoreSElement::No) &&
+      aElement.IsAnyOfHTMLElements(nsGkAtoms::u, nsGkAtoms::s,
+                                   nsGkAtoms::strike, nsGkAtoms::ins,
+                                   nsGkAtoms::del)) {
+    return true;
+  }
+  return CSSEditUtils::HaveSpecifiedCSSEquivalentStyles(aHTMLEditor, aElement,
+                                                        *this);
 }
 
 }  // namespace mozilla

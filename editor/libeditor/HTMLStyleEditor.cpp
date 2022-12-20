@@ -21,6 +21,7 @@
 #include "mozilla/ContentIterator.h"
 #include "mozilla/EditorForwards.h"
 #include "mozilla/mozalloc.h"
+#include "mozilla/StaticPrefs_editor.h"
 #include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBRElement.h"
@@ -257,16 +258,28 @@ nsresult HTMLEditor::SetInlinePropertiesAsSubAction(
     MOZ_ALWAYS_TRUE(selectionRanges.SaveAndTrackRanges(*this));
     for (const OwningNonNull<nsRange>& selectionRange :
          selectionRanges.Ranges()) {
-      // Adjust range to include any ancestors whose children are entirely
-      // selected
-      nsresult rv = PromoteInlineRange(*selectionRange);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("HTMLEditor::PromoteInlineRange() failed");
-        return rv;
-      }
-
-      EditorDOMRange range(selectionRange);
-      if (NS_WARN_IF(!range.IsPositioned())) {
+      const EditorDOMRange range = [&]() {
+        if (!StaticPrefs::
+                editor_inline_style_range_compatible_with_the_other_browsers()) {
+          nsresult rv = PromoteInlineRange(*selectionRange);
+          if (NS_FAILED(rv)) {
+            NS_WARNING("HTMLEditor::PromoteInlineRange() failed, but ignored");
+            return EditorDOMRange();
+          }
+          return EditorDOMRange(selectionRange);
+        }
+        Result<EditorRawDOMRange, nsresult> rangeOrError =
+            inlineStyleSetter.ExtendOrShrinkRangeToApplyTheStyle(
+                *this, EditorDOMRange(selectionRange));
+        if (MOZ_UNLIKELY(rangeOrError.isErr())) {
+          NS_WARNING(
+              "HTMLEditor::ExtendOrShrinkRangeToApplyTheStyle() failed, but "
+              "ignored");
+          return EditorDOMRange();
+        }
+        return EditorDOMRange(rangeOrError.unwrap());
+      }();
+      if (!range.IsPositioned()) {
         continue;
       }
 
@@ -304,11 +317,21 @@ nsresult HTMLEditor::SetInlinePropertiesAsSubAction(
             if (NS_WARN_IF(!node)) {
               return NS_ERROR_FAILURE;
             }
-            if (node->IsContent() &&
-                EditorUtils::IsEditableContent(*node->AsContent(),
-                                               EditorType::HTML)) {
-              arrayOfContentsAroundRange.AppendElement(*node->AsContent());
+            if (MOZ_UNLIKELY(!node->IsContent())) {
+              continue;
             }
+            // We don't need to wrap non-editable node in new inline element
+            // nor shouldn't modify `style` attribute of non-editable element.
+            if (!EditorUtils::IsEditableContent(*node->AsContent(),
+                                                EditorType::HTML)) {
+              continue;
+            }
+            // We shouldn't wrap invisible text node in new inline element.
+            if (node->IsText() &&
+                !HTMLEditUtils::IsVisibleTextNode(*node->AsText())) {
+              continue;
+            }
+            arrayOfContentsAroundRange.AppendElement(*node->AsContent());
           }
         }
       }
@@ -467,7 +490,8 @@ HTMLEditor::AutoInlineStyleSetter::ElementIsGoodContainerForTheStyle(
 
 bool HTMLEditor::AutoInlineStyleSetter::ElementIsGoodContainerToSetStyle(
     nsStyledElement& aStyledElement) const {
-  if (!HTMLEditUtils::IsContainerNode(aStyledElement)) {
+  if (!HTMLEditUtils::IsContainerNode(aStyledElement) ||
+      !EditorUtils::IsEditableContent(aStyledElement, EditorType::HTML)) {
     return false;
   }
 
@@ -1168,6 +1192,470 @@ Result<CaretPoint, nsresult> HTMLEditor::AutoInlineStyleSetter::
   }
 
   return CaretPoint(pointToPutCaret);
+}
+
+bool HTMLEditor::AutoInlineStyleSetter::ContentIsElementSettingTheStyle(
+    const HTMLEditor& aHTMLEditor, nsIContent& aContent) const {
+  Element* const element = Element::FromNode(&aContent);
+  if (!element) {
+    return false;
+  }
+  if (IsRepresentedBy(*element)) {
+    return true;
+  }
+  Result<bool, nsresult> specified = IsSpecifiedBy(aHTMLEditor, *element);
+  NS_WARNING_ASSERTION(specified.isOk(),
+                       "EditorInlineStyle::IsSpecified() failed, but ignored");
+  return specified.unwrapOr(false);
+}
+
+EditorRawDOMPoint HTMLEditor::AutoInlineStyleSetter::GetShrunkenRangeStart(
+    const HTMLEditor& aHTMLEditor, const EditorDOMRange& aRange,
+    const nsINode& aCommonAncestorOfRange,
+    const nsIContent* aFirstEntirelySelectedContentNodeInRange) const {
+  const EditorDOMPoint& startRef = aRange.StartRef();
+  // <a> cannot be nested and it should be represented with one element as far
+  // as possible.  Therefore, we don't need to shrink the range.
+  if (IsStyleOfAnchorElement()) {
+    return startRef.To<EditorRawDOMPoint>();
+  }
+  nsIContent* const nextContentOrStartContainer = [&]() {
+    // If the start boundary is at end of a node, we need to shrink the range
+    // to next content, e.g., `abc[<b>def` should be `abc<b>[def` unless the
+    // <b> is not entirely selected.
+    if (startRef.IsInContentNode() && startRef.IsEndOfContainer()) {
+      auto* const nextContentInRange = [&]() -> nsIContent* {
+        for (nsIContent* parent :
+             startRef.ContainerAs<nsIContent>()
+                 ->InclusiveAncestorsOfType<nsIContent>()) {
+          if (parent == &aCommonAncestorOfRange ||
+              !EditorUtils::IsEditableContent(*parent, EditorType::HTML) ||
+              (parent->IsElement() &&
+               (HTMLEditUtils::IsBlockElement(*parent->AsElement()) ||
+                HTMLEditUtils::IsDisplayInsideFlowRoot(
+                    *parent->AsElement())))) {
+            return nullptr;
+          }
+          if (nsIContent* nextSibling = parent->GetNextSibling()) {
+            MOZ_ASSERT(aRange.Contains(EditorRawDOMPoint(nextSibling)));
+            return nextSibling;
+          }
+        }
+        return nullptr;
+      }();
+      if (nextContentInRange &&
+          EditorUtils::IsEditableContent(*nextContentInRange,
+                                         EditorType::HTML) &&
+          !HTMLEditUtils::IsBlockElement(*nextContentInRange)) {
+        return nextContentInRange;
+      }
+    }
+    return startRef.GetContainerAs<nsIContent>();
+  }();
+  if (MOZ_UNLIKELY(!nextContentOrStartContainer)) {
+    return startRef.To<EditorRawDOMPoint>();
+  }
+  EditorRawDOMPoint startPoint =
+      nextContentOrStartContainer != startRef.ContainerAs<nsIContent>()
+          ? EditorRawDOMPoint(nextContentOrStartContainer)
+          : startRef.To<EditorRawDOMPoint>();
+  MOZ_ASSERT(startPoint.IsSet());
+  // If the start point points a content node, let's try to move it down to
+  // start of the child recursively.
+  while (nsIContent* child = startPoint.GetChild()) {
+    // We shouldn't cross editable and block boundary.
+    if (!EditorUtils::IsEditableContent(*child, EditorType::HTML) ||
+        HTMLEditUtils::IsBlockElement(*child)) {
+      break;
+    }
+    // If we reach a text node, the minimized range starts from start of it.
+    if (child->IsText()) {
+      startPoint.Set(child, 0u);
+      break;
+    }
+    // Don't shrink the range into element which applies the style to children
+    // because we want to update the element.  E.g., if we are setting
+    // background color, we want to update style attribute of an element which
+    // specifies background color with `style` attribute.
+    if (child == aFirstEntirelySelectedContentNodeInRange) {
+      break;
+    }
+    // We should not start from an atomic element such as <br>, <img>, etc.
+    if (!HTMLEditUtils::IsContainerNode(*child)) {
+      break;
+    }
+    // If the element specifies the style, we should update it.  Therefore, we
+    // need to wrap it in the range.
+    if (ContentIsElementSettingTheStyle(aHTMLEditor, *child)) {
+      break;
+    }
+    // If the child is an `<a>`, we should not shrink the range into it
+    // because user may not want to keep editing in the link except when user
+    // tries to update selection into it obviously.
+    if (child->IsHTMLElement(nsGkAtoms::a)) {
+      break;
+    }
+    startPoint.Set(child, 0u);
+  }
+  return startPoint;
+}
+
+EditorRawDOMPoint HTMLEditor::AutoInlineStyleSetter::GetShrunkenRangeEnd(
+    const HTMLEditor& aHTMLEditor, const EditorDOMRange& aRange,
+    const nsINode& aCommonAncestorOfRange,
+    const nsIContent* aLastEntirelySelectedContentNodeInRange) const {
+  const EditorDOMPoint& endRef = aRange.EndRef();
+  // <a> cannot be nested and it should be represented with one element as far
+  // as possible.  Therefore, we don't need to shrink the range.
+  if (IsStyleOfAnchorElement()) {
+    return endRef.To<EditorRawDOMPoint>();
+  }
+  nsIContent* const previousContentOrEndContainer = [&]() {
+    // If the end boundary is at start of a node, we need to shrink the range
+    // to previous content, e.g., `abc</b>]def` should be `abc]</b>def` unless
+    // the <b> is not entirely selected.
+    if (endRef.IsInContentNode() && endRef.IsStartOfContainer()) {
+      auto* const previousContentInRange = [&]() -> nsIContent* {
+        for (nsIContent* parent :
+             endRef.ContainerAs<nsIContent>()
+                 ->InclusiveAncestorsOfType<nsIContent>()) {
+          if (parent == &aCommonAncestorOfRange ||
+              !EditorUtils::IsEditableContent(*parent, EditorType::HTML) ||
+              (parent->IsElement() &&
+               (HTMLEditUtils::IsBlockElement(*parent->AsElement()) ||
+                HTMLEditUtils::IsDisplayInsideFlowRoot(
+                    *parent->AsElement())))) {
+            return nullptr;
+          }
+          if (nsIContent* previousSibling = parent->GetPreviousSibling()) {
+            MOZ_ASSERT(
+                aRange.Contains(EditorRawDOMPoint::After(*previousSibling)));
+            return previousSibling;
+          }
+        }
+        return nullptr;
+      }();
+      if (previousContentInRange &&
+          EditorUtils::IsEditableContent(*previousContentInRange,
+                                         EditorType::HTML) &&
+          !HTMLEditUtils::IsBlockElement(*previousContentInRange)) {
+        return previousContentInRange;
+      }
+    }
+    return endRef.GetContainerAs<nsIContent>();
+  }();
+  if (MOZ_UNLIKELY(!previousContentOrEndContainer)) {
+    return endRef.To<EditorRawDOMPoint>();
+  }
+  EditorRawDOMPoint endPoint =
+      previousContentOrEndContainer != endRef.ContainerAs<nsIContent>()
+          ? EditorRawDOMPoint::After(*previousContentOrEndContainer)
+          : endRef.To<EditorRawDOMPoint>();
+  MOZ_ASSERT(endPoint.IsSet());
+  // If the end point points after a content node, let's try to move it down
+  // to end of the child recursively.
+  while (nsIContent* child = endPoint.GetPreviousSiblingOfChild()) {
+    // We shouldn't cross editable and block boundary.
+    if (!EditorUtils::IsEditableContent(*child, EditorType::HTML) ||
+        HTMLEditUtils::IsBlockElement(*child)) {
+      break;
+    }
+    // If we reach a text node, the minimized range starts from start of it.
+    if (child->IsText()) {
+      endPoint.SetToEndOf(child);
+      break;
+    }
+    // Don't shrink the range into element which applies the style to children
+    // because we want to update the element.  E.g., if we are setting
+    // background color, we want to update style attribute of an element which
+    // specifies background color with `style` attribute.
+    if (child == aLastEntirelySelectedContentNodeInRange) {
+      break;
+    }
+    // We should not end in an atomic element such as <br>, <img>, etc.
+    if (!HTMLEditUtils::IsContainerNode(*child)) {
+      break;
+    }
+    // If the element specifies the style, we should update it.  Therefore, we
+    // need to wrap it in the range.
+    if (ContentIsElementSettingTheStyle(aHTMLEditor, *child)) {
+      break;
+    }
+    // If the child is an `<a>`, we should not shrink the range into it
+    // because user may not want to keep editing in the link except when user
+    // tries to update selection into it obviously.
+    if (child->IsHTMLElement(nsGkAtoms::a)) {
+      break;
+    }
+    endPoint.SetToEndOf(child);
+  }
+  return endPoint;
+}
+
+EditorRawDOMPoint HTMLEditor::AutoInlineStyleSetter::
+    GetExtendedRangeStartToWrapAncestorApplyingSameStyle(
+        const HTMLEditor& aHTMLEditor,
+        const EditorRawDOMPoint& aStartPoint) const {
+  MOZ_ASSERT(aStartPoint.IsSetAndValid());
+
+  EditorRawDOMPoint startPoint = aStartPoint;
+  if (!startPoint.IsStartOfContainer()) {
+    return startPoint;
+  }
+
+  Element* mostDistantStartParentHavingStyle = nullptr;
+  for (Element* parent :
+       startPoint.GetContainer()->InclusiveAncestorsOfType<Element>()) {
+    if (!EditorUtils::IsEditableContent(*parent, EditorType::HTML) ||
+        HTMLEditUtils::IsBlockElement(*parent) ||
+        HTMLEditUtils::IsDisplayInsideFlowRoot(*parent)) {
+      break;
+    }
+    if (ContentIsElementSettingTheStyle(aHTMLEditor, *parent)) {
+      mostDistantStartParentHavingStyle = parent;
+    }
+    if (parent->GetPreviousSibling()) {
+      break;  // The parent is not first element in its parent, stop climbing.
+    }
+  }
+  if (mostDistantStartParentHavingStyle) {
+    startPoint.Set(mostDistantStartParentHavingStyle);
+  }
+  return startPoint;
+}
+
+EditorRawDOMPoint HTMLEditor::AutoInlineStyleSetter::
+    GetExtendedRangeEndToWrapAncestorApplyingSameStyle(
+        const HTMLEditor& aHTMLEditor,
+        const EditorRawDOMPoint& aEndPoint) const {
+  MOZ_ASSERT(aEndPoint.IsSetAndValid());
+
+  EditorRawDOMPoint endPoint = aEndPoint;
+  if (!endPoint.IsEndOfContainer()) {
+    return endPoint;
+  }
+
+  Element* mostDistantEndParentHavingStyle = nullptr;
+  for (Element* parent :
+       endPoint.GetContainer()->InclusiveAncestorsOfType<Element>()) {
+    if (!EditorUtils::IsEditableContent(*parent, EditorType::HTML) ||
+        HTMLEditUtils::IsBlockElement(*parent) ||
+        HTMLEditUtils::IsDisplayInsideFlowRoot(*parent)) {
+      break;
+    }
+    if (ContentIsElementSettingTheStyle(aHTMLEditor, *parent)) {
+      mostDistantEndParentHavingStyle = parent;
+    }
+    if (parent->GetNextSibling()) {
+      break;  // The parent is not last element in its parent, stop climbing.
+    }
+  }
+  if (mostDistantEndParentHavingStyle) {
+    endPoint.SetAfter(mostDistantEndParentHavingStyle);
+  }
+  return endPoint;
+}
+
+EditorRawDOMRange HTMLEditor::AutoInlineStyleSetter::
+    GetExtendedRangeToMinimizeTheNumberOfNewElements(
+        const HTMLEditor& aHTMLEditor, const nsINode& aCommonAncestor,
+        EditorRawDOMPoint&& aStartPoint, EditorRawDOMPoint&& aEndPoint) const {
+  MOZ_ASSERT(aStartPoint.IsSet());
+  MOZ_ASSERT(aEndPoint.IsSet());
+
+  // For minimizing the number of new elements, we should extend the range as
+  // far as possible. E.g., `<span>[abc</span> <span>def]</span>` should be
+  // styled as `<b><span>abc</span> <span>def</span></b>`.
+  // Similarly, if the range crosses a block boundary, we should do same thing.
+  // I.e., `<p><span>[abc</span></p><p><span>def]</span></p>` should become
+  // `<p><b><span>abc</span></b></p><p><b><span>def</span></b></p>`.
+  if (aStartPoint.GetContainer() != aEndPoint.GetContainer()) {
+    while (aStartPoint.GetContainer() != &aCommonAncestor &&
+           aStartPoint.IsInContentNode() && aStartPoint.GetContainerParent() &&
+           aStartPoint.IsStartOfContainer()) {
+      if (!EditorUtils::IsEditableContent(
+              *aStartPoint.ContainerAs<nsIContent>(), EditorType::HTML) ||
+          (aStartPoint.ContainerAs<nsIContent>()->IsElement() &&
+           (HTMLEditUtils::IsBlockElement(
+                *aStartPoint.ContainerAs<Element>()) ||
+            HTMLEditUtils::IsDisplayInsideFlowRoot(
+                *aStartPoint.ContainerAs<Element>())))) {
+        break;
+      }
+      aStartPoint = aStartPoint.ParentPoint();
+    }
+    while (aEndPoint.GetContainer() != &aCommonAncestor &&
+           aEndPoint.IsInContentNode() && aEndPoint.GetContainerParent() &&
+           aEndPoint.IsEndOfContainer()) {
+      if (!EditorUtils::IsEditableContent(*aEndPoint.ContainerAs<nsIContent>(),
+                                          EditorType::HTML) ||
+          (aEndPoint.ContainerAs<nsIContent>()->IsElement() &&
+           (HTMLEditUtils::IsBlockElement(*aEndPoint.ContainerAs<Element>()) ||
+            HTMLEditUtils::IsDisplayInsideFlowRoot(
+                *aEndPoint.ContainerAs<Element>())))) {
+        break;
+      }
+      aEndPoint.SetAfter(aEndPoint.ContainerAs<nsIContent>());
+    }
+  }
+
+  // Additionally, if we'll set a CSS style, we want to wrap elements which
+  // should have the new style into the range to avoid creating new <span>
+  // element.
+  if (!IsRepresentableWithHTML() ||
+      (aHTMLEditor.IsCSSEnabled() && IsCSSEditable(*nsGkAtoms::span))) {
+    // First, if pointing in a text node, use parent point.
+    if (aStartPoint.IsInContentNode() && aStartPoint.IsStartOfContainer() &&
+        aStartPoint.GetContainerParentAs<nsIContent>() &&
+        EditorUtils::IsEditableContent(
+            *aStartPoint.ContainerParentAs<nsIContent>(), EditorType::HTML) &&
+        (!aStartPoint.GetContainerAs<Element>() ||
+         !HTMLEditUtils::IsContainerNode(
+             *aStartPoint.ContainerAs<nsIContent>())) &&
+        EditorUtils::IsEditableContent(*aStartPoint.ContainerAs<nsIContent>(),
+                                       EditorType::HTML)) {
+      aStartPoint = aStartPoint.ParentPoint();
+      MOZ_ASSERT(aStartPoint.IsSet());
+    }
+    if (aEndPoint.IsInContentNode() && aEndPoint.IsEndOfContainer() &&
+        aEndPoint.GetContainerParentAs<nsIContent>() &&
+        EditorUtils::IsEditableContent(
+            *aEndPoint.ContainerParentAs<nsIContent>(), EditorType::HTML) &&
+        (!aEndPoint.GetContainerAs<Element>() ||
+         !HTMLEditUtils::IsContainerNode(
+             *aEndPoint.ContainerAs<nsIContent>())) &&
+        EditorUtils::IsEditableContent(*aEndPoint.ContainerAs<nsIContent>(),
+                                       EditorType::HTML)) {
+      aEndPoint.SetAfter(aEndPoint.GetContainer());
+      MOZ_ASSERT(aEndPoint.IsSet());
+    }
+    // Then, wrap the container if it's a good element to set a CSS property.
+    if (aStartPoint.IsInContentNode() && aStartPoint.GetContainerParent() &&
+        // The point must be start of the container
+        aStartPoint.IsStartOfContainer() &&
+        // only if the pointing first child node cannot have `style` attribute
+        (!aStartPoint.GetChildAs<nsStyledElement>() ||
+         !ElementIsGoodContainerToSetStyle(
+             *aStartPoint.ChildAs<nsStyledElement>())) &&
+        // but don't cross block boundary at climbing up the tree
+        !HTMLEditUtils::IsBlockElement(
+            *aStartPoint.ContainerAs<nsIContent>()) &&
+        // and the container is a good editable element to set CSS style
+        aStartPoint.GetContainerAs<nsStyledElement>() &&
+        ElementIsGoodContainerToSetStyle(
+            *aStartPoint.ContainerAs<nsStyledElement>())) {
+      aStartPoint = aStartPoint.ParentPoint();
+      MOZ_ASSERT(aStartPoint.IsSet());
+    }
+    if (aEndPoint.IsInContentNode() && aEndPoint.GetContainerParent() &&
+        // The point must be end of the container
+        aEndPoint.IsEndOfContainer() &&
+        // only if the pointing last child node cannot have `style` attribute
+        (aEndPoint.IsStartOfContainer() ||
+         !aEndPoint.GetPreviousSiblingOfChildAs<nsStyledElement>() ||
+         !ElementIsGoodContainerToSetStyle(
+             *aEndPoint.GetPreviousSiblingOfChildAs<nsStyledElement>())) &&
+        // but don't cross block boundary at climbing up the tree
+        !HTMLEditUtils::IsBlockElement(*aEndPoint.ContainerAs<nsIContent>()) &&
+        // and the container is a good editable element to set CSS style
+        aEndPoint.GetContainerAs<nsStyledElement>() &&
+        ElementIsGoodContainerToSetStyle(
+            *aEndPoint.ContainerAs<nsStyledElement>())) {
+      aEndPoint.SetAfter(aEndPoint.GetContainer());
+      MOZ_ASSERT(aEndPoint.IsSet());
+    }
+  }
+
+  return EditorRawDOMRange(std::move(aStartPoint), std::move(aEndPoint));
+}
+
+Result<EditorRawDOMRange, nsresult>
+HTMLEditor::AutoInlineStyleSetter::ExtendOrShrinkRangeToApplyTheStyle(
+    const HTMLEditor& aHTMLEditor, const EditorDOMRange& aRange) const {
+  if (NS_WARN_IF(!aRange.IsPositioned())) {
+    return Err(NS_ERROR_FAILURE);
+  }
+
+  // For avoiding assertion hits in the utility methods, check whether the
+  // range is in same subtree, first. Even if the range crosses a subtree
+  // boundary, it's not a bug of this module.
+  nsINode* const commonAncestor = aRange.GetClosestCommonInclusiveAncestor();
+  if (NS_WARN_IF(!commonAncestor)) {
+    return Err(NS_ERROR_FAILURE);
+  }
+
+  // First, shrink the given range to minimize new style applied contents.
+  // However, we should not shrink the range into entirely selected element.
+  // E.g., if `abc[<i>def</i>]ghi`, shouldn't shrink it as
+  // `abc<i>[def]</i>ghi`.
+  ContentSubtreeIterator iter;
+  if (NS_FAILED(iter.Init(aRange.StartRef().ToRawRangeBoundary(),
+                          aRange.EndRef().ToRawRangeBoundary()))) {
+    NS_WARNING("ContentSubtreeIterator::Init() failed");
+    return Err(NS_ERROR_FAILURE);
+  }
+  nsIContent* const firstContentEntirelyInRange =
+      nsIContent::FromNodeOrNull(iter.GetCurrentNode());
+  nsIContent* const lastContentEntirelyInRange = [&]() {
+    iter.Last();
+    return nsIContent::FromNodeOrNull(iter.GetCurrentNode());
+  }();
+
+  // Compute the shrunken range boundaries.
+  EditorRawDOMPoint startPoint = GetShrunkenRangeStart(
+      aHTMLEditor, aRange, *commonAncestor, firstContentEntirelyInRange);
+  MOZ_ASSERT(startPoint.IsSet());
+  EditorRawDOMPoint endPoint = GetShrunkenRangeEnd(
+      aHTMLEditor, aRange, *commonAncestor, lastContentEntirelyInRange);
+  MOZ_ASSERT(endPoint.IsSet());
+
+  // If shrunken range is swapped, it could like this case:
+  // `abc[</span><span>]def`, starts at very end of a node and ends at
+  // very start of immediately next node.  In this case, we should use
+  // the original range instead.
+  if (MOZ_UNLIKELY(!startPoint.EqualsOrIsBefore(endPoint))) {
+    startPoint = aRange.StartRef().To<EditorRawDOMPoint>();
+    endPoint = aRange.EndRef().To<EditorRawDOMPoint>();
+  }
+
+  // Then, we may need to extend the range to wrap parent inline elements
+  // which specify same style since we need to remove same style elements to
+  // apply new value.  E.g., abc
+  //   <span style="background-color: red">
+  //     <span style="background-color: blue">[def]</span>
+  //   </span>
+  // ghi
+  // In this case, we need to wrap the other <span> element if setting
+  // background color.  Then, the inner <span> element is removed and the
+  // other <span> element's style attribute will be updated rather than
+  // inserting new <span> element.
+  startPoint = GetExtendedRangeStartToWrapAncestorApplyingSameStyle(aHTMLEditor,
+                                                                    startPoint);
+  MOZ_ASSERT(startPoint.IsSet());
+  endPoint =
+      GetExtendedRangeEndToWrapAncestorApplyingSameStyle(aHTMLEditor, endPoint);
+  MOZ_ASSERT(endPoint.IsSet());
+
+  // Finally, we need to extend the range unless the range is in an element to
+  // reduce the number of creating new elements.  E.g., if now selects
+  // `<span>[abc</span><span>def]</span>`, we should make it
+  // `<b><span>abc</span><span>def</span></b>` rather than
+  // `<span><b>abc</b></span><span><b>def</b></span>`.
+  EditorRawDOMRange finalRange =
+      GetExtendedRangeToMinimizeTheNumberOfNewElements(
+          aHTMLEditor, *commonAncestor, std::move(startPoint),
+          std::move(endPoint));
+#if 0
+  fprintf(stderr,
+          "ExtendOrShrinkRangeToApplyTheStyle:\n"
+          "  Result: {(\n    %s\n  ) - (\n    %s\n  )},\n"
+          "  Input: {(\n    %s\n  ) - (\n    %s\n  )}\n",
+          ToString(finalRange.StartRef()).c_str(),
+          ToString(finalRange.EndRef()).c_str(),
+          ToString(aRange.StartRef()).c_str(),
+          ToString(aRange.EndRef()).c_str());
+#endif
+  return finalRange;
 }
 
 Result<SplitRangeOffResult, nsresult>
