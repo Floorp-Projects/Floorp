@@ -42,6 +42,7 @@
 
 #  include "gfxWindowsPlatform.h"
 #  include "mozilla/gfx/DeviceManagerDx.h"
+#  include "mozilla/layers/D3D11ShareHandleImage.h"
 #  include "mozilla/layers/D3D11YCbCrImage.h"
 #endif
 
@@ -453,6 +454,29 @@ void ImageContainer::EnsureRecycleAllocatorForRDD(
 }
 
 #ifdef XP_WIN
+RefPtr<D3D11RecycleAllocator> ImageContainer::GetD3D11RecycleAllocator(
+    KnowsCompositor* aKnowsCompositor, gfx::SurfaceFormat aPreferredFormat) {
+  MOZ_ASSERT(aKnowsCompositor);
+
+  if (!aKnowsCompositor->SupportsD3D11()) {
+    return nullptr;
+  }
+
+  RefPtr<ID3D11Device> device = gfx::DeviceManagerDx::Get()->GetImageDevice();
+  if (!device) {
+    return nullptr;
+  }
+
+  if (mD3D11RecycleAllocator && mD3D11RecycleAllocator->mDevice == device &&
+      mD3D11RecycleAllocator->GetKnowsCompositor() == aKnowsCompositor) {
+    return mD3D11RecycleAllocator;
+  }
+
+  mD3D11RecycleAllocator =
+      new D3D11RecycleAllocator(aKnowsCompositor, device, aPreferredFormat);
+  return mD3D11RecycleAllocator;
+}
+
 D3D11YCbCrRecycleAllocator* ImageContainer::GetD3D11YCbCrRecycleAllocator(
     KnowsCompositor* aKnowsCompositor) {
   if (mD3D11YCbCrRecycleAllocator &&

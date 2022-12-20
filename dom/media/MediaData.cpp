@@ -11,6 +11,7 @@
 #include "PerformanceRecorder.h"
 #include "VideoUtils.h"
 #include "YCbCrUtils.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/KnowsCompositor.h"
 #include "mozilla/layers/SharedRGBImage.h"
@@ -19,6 +20,8 @@
 
 #ifdef XP_WIN
 #  include "mozilla/WindowsVersion.h"
+#  include "mozilla/gfx/DeviceManagerDx.h"
+#  include "mozilla/layers/D3D11ShareHandleImage.h"
 #  include "mozilla/layers/D3D11YCbCrImage.h"
 #elif XP_MACOSX
 #  include "MacIOSurfaceImage.h"
@@ -309,6 +312,24 @@ bool VideoData::SetVideoDataToImage(PlanarYCbCrImage* aVideoImage,
 }
 
 /* static */
+bool VideoData::UseUseNV12ForSoftwareDecodedVideoIfPossible(
+    layers::KnowsCompositor* aAllocator) {
+#if XP_WIN
+  if (!aAllocator) {
+    return false;
+  }
+
+  if (StaticPrefs::gfx_video_convert_i420_to_nv12_force_enabled_AtStartup() ||
+      (gfx::DeviceManagerDx::Get()->CanUseNV12() &&
+       gfx::gfxVars::UseWebRenderDCompSwVideoOverlayWin() &&
+       aAllocator->GetCompositorUseDComp())) {
+    return true;
+  }
+#endif
+  return false;
+}
+
+/* static */
 already_AddRefed<VideoData> VideoData::CreateAndCopyData(
     const VideoInfo& aInfo, ImageContainer* aContainer, int64_t aOffset,
     const TimeUnit& aTime, const TimeUnit& aDuration,
@@ -334,6 +355,20 @@ already_AddRefed<VideoData> VideoData::CreateAndCopyData(
   // Currently our decoder only knows how to output to ImageFormat::PLANAR_YCBCR
   // format.
 #if XP_WIN
+  // Copy to NV12 format D3D11ShareHandleImage when video overlay could be used
+  // with the video frame
+  if (UseUseNV12ForSoftwareDecodedVideoIfPossible(aAllocator)) {
+    PlanarYCbCrData data = ConstructPlanarYCbCrData(aInfo, aBuffer, aPicture);
+    RefPtr<layers::D3D11ShareHandleImage> d3d11Image =
+        layers::D3D11ShareHandleImage::MaybeCreateNV12ImageAndSetData(
+            aAllocator, aContainer, data);
+    if (d3d11Image) {
+      v->mImage = d3d11Image;
+      perfRecorder.Record();
+      return v.forget();
+    }
+  }
+
   // We disable this code path on Windows version earlier of Windows 8 due to
   // intermittent crashes with old drivers. See bug 1405110.
   // D3D11YCbCrImage can only handle YCbCr images using 3 non-interleaved planes

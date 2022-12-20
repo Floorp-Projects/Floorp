@@ -50,10 +50,16 @@
 #  define AV_PIX_FMT_VAAPI_VLD AV_PIX_FMT_VAAPI
 #endif
 #include "mozilla/PodOperations.h"
+#include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TaskQueue.h"
 #include "nsThreadUtils.h"
 #include "prsystem.h"
+
+#ifdef XP_WIN
+#  include "mozilla/gfx/DeviceManagerDx.h"
+#  include "mozilla/gfx/gfxVars.h"
+#endif
 
 // Forward declare from va.h
 #ifdef MOZ_WAYLAND_USE_VAAPI
@@ -627,6 +633,17 @@ int FFmpegVideoDecoder<LIBAV_VER>::GetVideoBuffer(
   if (IsHardwareAccelerated()) {
     return AVERROR(EINVAL);
   }
+
+#  if XP_WIN
+  // Disable direct decode to shmem when video overlay could be used with the
+  // video frame
+  if (VideoData::UseUseNV12ForSoftwareDecodedVideoIfPossible(mImageAllocator) &&
+      aCodecContext->width % 2 == 0 && aCodecContext->height % 2 == 0 &&
+      aCodecContext->pix_fmt == AV_PIX_FMT_YUV420P &&
+      aCodecContext->color_range != AVCOL_RANGE_JPEG) {
+    return AVERROR(EINVAL);
+  }
+#  endif
 
   if (!IsColorFormatSupportedForUsingCustomizedBuffer(aCodecContext->pix_fmt)) {
     FFMPEG_LOG("Not support color format %d", aCodecContext->pix_fmt);

@@ -2722,6 +2722,11 @@ void gfxPlatform::InitWebRenderConfig() {
     gfxVars::SetUseWebRenderDCompVideoOverlayWin(true);
   }
 
+  if (useVideoOverlay &&
+      StaticPrefs::gfx_webrender_dcomp_video_sw_overlay_win_AtStartup()) {
+    gfxVars::SetUseWebRenderDCompSwVideoOverlayWin(true);
+  }
+
   bool useHwVideoZeroCopy = false;
   if (StaticPrefs::media_wmf_zero_copy_nv12_textures_AtStartup()) {
     // XXX relax limitation to Windows 8.1

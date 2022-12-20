@@ -56,6 +56,7 @@ class KnowsCompositor;
 class NVImage;
 class MemoryOrShmem;
 #ifdef XP_WIN
+class D3D11RecycleAllocator;
 class D3D11YCbCrRecycleAllocator;
 #endif
 #ifdef XP_MACOSX
@@ -476,6 +477,8 @@ class ImageContainer final : public SupportsThreadSafeWeakPtr<ImageContainer> {
   void EnsureRecycleAllocatorForRDD(KnowsCompositor* aKnowsCompositor);
 
 #ifdef XP_WIN
+  RefPtr<D3D11RecycleAllocator> GetD3D11RecycleAllocator(
+      KnowsCompositor* aKnowsCompositor, gfx::SurfaceFormat aPreferredFormat);
   D3D11YCbCrRecycleAllocator* GetD3D11YCbCrRecycleAllocator(
       KnowsCompositor* aKnowsCompositor);
 #endif
@@ -557,6 +560,8 @@ class ImageContainer final : public SupportsThreadSafeWeakPtr<ImageContainer> {
   RefPtr<TextureClientRecycleAllocator> mRecycleAllocator;
 
 #ifdef XP_WIN
+  RefPtr<D3D11RecycleAllocator> mD3D11RecycleAllocator;
+
   RefPtr<D3D11YCbCrRecycleAllocator> mD3D11YCbCrRecycleAllocator;
 #endif
 #ifdef XP_MACOSX
