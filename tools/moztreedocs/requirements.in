@@ -20,12 +20,12 @@ jmespath==0.10.0
 jsonschema==3.2.0
 livereload==2.6.3
 Markdown==3.3.4
-MarkupSafe==1.1.1
+MarkupSafe==2.0.1
 mock==4.0.2
 myst-parser==0.16.1
 mdit-py-plugins==0.3.0
 packaging==20.4
-parsimonious==0.7.0
+parsimonious==0.10.0
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 Pygments==2.7.1
@@ -33,9 +33,9 @@ pyparsing==2.4.7
 python-dateutil==2.8.2
 python-frontmatter==0.5.0
 pytz==2020.1
-PyYAML==5.3.1
+PyYAML==5.4.1
 redo==2.0.3
-requests==2.24.0
+requests==2.28.1
 rsa==4.6
 s3transfer==0.3.3
 scandir==1.10.0
@@ -45,7 +45,7 @@ six==1.15.0
 snowballstemmer==2.0.0
 Sphinx==4.3.2
 sphinx-copybutton==0.5.0
-sphinx-js==3.0.1
+sphinx-js==3.2.1
 sphinx-markdown-tables==0.0.15
 sphinx-panels==0.6.0
 sphinx-rtd-theme==1.0.0
