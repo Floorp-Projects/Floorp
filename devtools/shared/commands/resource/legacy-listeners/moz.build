@@ -4,7 +4,6 @@
 
 DevToolsModules(
     "cache-storage.js",
-    "cloned-content-process-messages.js",
     "console-messages.js",
     "cookie.js",
     "css-changes.js",

@@ -46,8 +46,8 @@ module.exports = async function({ targetCommand, targetFront, onAvailable }) {
 
   // Forward new message events
   webConsoleFront.on("consoleAPICall", message => {
-    // Ignore console messages that are cloned from the content process (they're handled
-    // by the cloned-content-process-messages legacy listener).
+    // Ignore console messages that are cloned from the content process
+    // (they aren't relevant to toolboxes still using legacy listeners)
     if (message.clonedFromContentProcess) {
       return;
     }
