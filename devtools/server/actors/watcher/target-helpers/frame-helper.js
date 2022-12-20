@@ -275,8 +275,8 @@ module.exports = {
  *        and what BrowsingContext should be considered.
  */
 function getWatchingBrowsingContexts(watcher) {
-  // If we are watching for additional frame targets, it means that fission mode is enabled,
-  // either for a content toolbox or a BrowserToolbox via devtools.browsertoolbox.fission pref.
+  // If we are watching for additional frame targets, it means that the multiprocess or fission mode is enabled,
+  // either for a content toolbox or a BrowserToolbox via scope set to everything.
   const watchingAdditionalTargets = WatcherRegistry.isWatchingTargets(
     watcher,
     Targets.TYPES.FRAME

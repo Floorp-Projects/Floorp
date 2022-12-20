@@ -96,7 +96,7 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
     return bts && bts.isBackgroundTaskMode;
   },
 
-  _parentProcessConnect({ isBrowserToolboxFission }) {
+  _parentProcessConnect() {
     let targetActor;
     if (this.isWindowlessParent) {
       // Check if we are running on xpcshell or in background task mode.
@@ -118,9 +118,7 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
         // the BrowserToolbox and isTopLevelTarget should always be true here.
         // (It isn't the typical behavior of WindowGlobalTargetActor's base class)
         isTopLevelTarget: true,
-        sessionContext: createBrowserSessionContext({
-          isBrowserToolboxFission,
-        }),
+        sessionContext: createBrowserSessionContext(),
       });
       // this is a special field that only parent process with a browsing context
       // have, as they are the only processes at the moment that have child
@@ -168,7 +166,7 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
   /**
    * Connect the a process actor.
    */
-  async getTarget({ isBrowserToolboxFission }) {
+  async getTarget() {
     if (!DevToolsServer.allowChromeProcess) {
       return {
         error: "forbidden",
@@ -176,7 +174,7 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
       };
     }
     if (this.isParent) {
-      return this._parentProcessConnect({ isBrowserToolboxFission });
+      return this._parentProcessConnect();
     }
     // This is a remote process we are connecting to
     return this._childProcessConnect();
@@ -187,12 +185,9 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
    * already exists or will be created. It also helps knowing when they
    * are destroyed.
    */
-  getWatcher({ isBrowserToolboxFission }) {
+  getWatcher() {
     if (!this.watcher) {
-      this.watcher = new WatcherActor(
-        this.conn,
-        createBrowserSessionContext({ isBrowserToolboxFission })
-      );
+      this.watcher = new WatcherActor(this.conn, createBrowserSessionContext());
       this.manage(this.watcher);
     }
     return this.watcher;
