@@ -156,9 +156,8 @@ export class PrincipalsCollector {
         principals.set(principal.origin, principal);
       }
     });
-
-    progress.step = "total-principals:" + principals.length;
     principals = Array.from(principals.values());
+    progress.step = "total-principals:" + principals.length;
     return principals;
   }
 }
