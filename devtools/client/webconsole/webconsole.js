@@ -338,7 +338,6 @@ class WebConsole {
     } = require("resource://devtools/client/debugger/src/workers/parser/index.js");
 
     this._parserService = new ParserDispatcher();
-    this._parserService.start();
     return this._parserService;
   }
 

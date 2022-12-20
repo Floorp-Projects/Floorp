@@ -53,11 +53,7 @@ export function bootstrapStore(client, workers, panel, initialState) {
 }
 
 export function bootstrapWorkers(panelWorkers) {
-  prettyPrint.start();
-  search.start();
-
   parser = new ParserDispatcher();
-  parser.start();
   return { ...panelWorkers, prettyPrint, parser, search };
 }
 

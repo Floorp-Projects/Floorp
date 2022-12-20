@@ -9,16 +9,21 @@ class WorkerDispatcher {
   #worker = null;
   // Map of message ids -> promise resolution functions, for dispatching worker responses
   #pendingCalls = new Map();
+  #url = "";
 
-  start(url) {
+  constructor(url) {
+    this.#url = url;
+  }
+
+  start() {
     // When running in debugger jest test, we don't have access to ChromeWorker
     if (typeof ChromeWorker == "function") {
-      this.#worker = new ChromeWorker(url);
+      this.#worker = new ChromeWorker(this.#url);
     } else {
-      this.#worker = new Worker(url);
+      this.#worker = new Worker(this.#url);
     }
     this.#worker.onerror = err => {
-      console.error(`Error in worker ${url}`, err.message);
+      console.error(`Error in worker ${this.#url}`, err.message);
     };
     this.#worker.addEventListener("message", this.#onMessage);
   }
@@ -55,7 +60,7 @@ class WorkerDispatcher {
       calls.length = 0;
 
       if (!this.#worker) {
-        return;
+        this.start();
       }
 
       const id = this.#msgId++;

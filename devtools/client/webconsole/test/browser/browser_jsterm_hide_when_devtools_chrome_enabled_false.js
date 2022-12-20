@@ -54,10 +54,6 @@ add_task(async function() {
   testInputRelatedElementsAreVisibile(webConsole);
   await testObjectInspectorPropertiesAreSet(objInspector);
 
-  // Wait for the sourceMap worker target to be fully attached before closing the
-  // Browser Console, otherwise this could lead to failures as the target tries to attach
-  // while the connection is being destroyed.
-  await waitForSourceMapWorker(browserConsole);
   await closeConsole(browserTab);
   await safeCloseBrowserConsole();
 
@@ -72,10 +68,6 @@ add_task(async function() {
   await testObjectInspectorPropertiesAreSet(objInspector);
 
   info("Close webconsole and browser console");
-  // Wait for the sourceMap worker target to be fully attached before closing the
-  // Browser Console, otherwise this could lead to failures as the target tries to attach
-  // while the connection is being destroyed.
-  await waitForSourceMapWorker(browserConsole);
   await closeConsole(browserTab);
   await safeCloseBrowserConsole();
 });
@@ -166,31 +158,4 @@ async function testObjectInspectorPropertiesAreSet(objInspector) {
 
   is(name, "browser_console_hide_jsterm_test", "name is set correctly");
   is(value, "true", "value is set correctly");
-}
-
-const seenWorkerTargets = new Set();
-function waitForSourceMapWorker(hud) {
-  const { targetCommand } = hud.commands;
-
-  return new Promise(resolve => {
-    const onAvailable = ({ targetFront }) => {
-      if (
-        targetFront.url.endsWith(
-          "devtools/client/shared/source-map-loader/worker.js"
-        ) &&
-        !seenWorkerTargets.has(targetFront)
-      ) {
-        seenWorkerTargets.add(targetFront);
-        targetCommand.unwatchTargets({
-          types: [targetCommand.TYPES.WORKER],
-          onAvailable,
-        });
-        resolve();
-      }
-    };
-    targetCommand.watchTargets({
-      types: [targetCommand.TYPES.WORKER],
-      onAvailable,
-    });
-  });
 }
