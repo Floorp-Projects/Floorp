@@ -479,7 +479,7 @@ workers:
             provisioner: '{trust-domain}-{level}'
             implementation: generic-worker
             os: windows
-            worker-type: '{alias}-azure'
+            worker-type: '{alias}'
         image:
             provisioner: '{trust-domain}-{level}'
             implementation: docker-worker
