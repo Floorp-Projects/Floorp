@@ -3871,8 +3871,18 @@ class HTMLEditor final : public EditorBase,
   SetFontSizeOfFontElementChildren(nsIContent& aContent,
                                    FontSize aIncrementOrDecrement);
 
-  nsresult PromoteInlineRange(nsRange& aRange);
-  nsresult PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange& aRange);
+  /**
+   * Get extended range to select element whose all children are selected by
+   * aRange.
+   */
+  EditorRawDOMRange GetExtendedRangeWrappingEntirelySelectedElements(
+      const EditorRawDOMRange& aRange) const;
+
+  /**
+   * Get extended range to select ancestor <a name> elements.
+   */
+  EditorRawDOMRange GetExtendedRangeWrappingNamedAnchor(
+      const EditorRawDOMRange& aRange) const;
 
   // Declared in HTMLEditorNestedClasses.h and defined in HTMLStyleEditor.cpp
   class AutoInlineStyleSetter;
@@ -3912,15 +3922,6 @@ class HTMLEditor final : public EditorBase,
   MOZ_CAN_RUN_SCRIPT Result<bool, nsresult>
   IsRemovableParentStyleWithNewSpanElement(
       nsIContent& aContent, const EditorInlineStyle& aStyle) const;
-
-  /**
-   * XXX These methods seem odd and except the only caller,
-   *     `PromoteInlineRange()`, cannot use them.
-   */
-  bool IsStartOfContainerOrBeforeFirstEditableChild(
-      const EditorRawDOMPoint& aPoint) const;
-  bool IsEndOfContainerOrEqualsOrAfterLastEditableChild(
-      const EditorRawDOMPoint& aPoint) const;
 
   /**
    * HasStyleOrIdOrClassAttribute() returns true when at least one of
