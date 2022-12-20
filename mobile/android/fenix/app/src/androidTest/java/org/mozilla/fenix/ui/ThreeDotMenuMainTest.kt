@@ -87,4 +87,55 @@ class ThreeDotMenuMainTest {
             verifySettingsView()
         }
     }
+
+    // Verifies the list of items in the homescreen's 3 dot main menu in private browsing
+    @Test
+    fun privateHomeThreeDotMenuItemsTest() {
+        homeScreen {
+        }.togglePrivateBrowsingMode()
+        homeScreen {
+        }.openThreeDotMenu {
+            verifyHomeThreeDotMainMenuItems(isRequestDesktopSiteEnabled = false)
+        }.openBookmarks {
+            verifyBookmarksMenuView()
+        }.goBack {
+        }.openThreeDotMenu {
+        }.openHistory {
+            verifyHistoryMenuView()
+        }.goBack {
+        }.openThreeDotMenu {
+        }.openDownloadsManager {
+            verifyEmptyDownloadsList()
+        }.goBack {
+        }.openThreeDotMenu {
+        }.openAddonsManagerMenu {
+            verifyAddonsItems()
+        }.goBack {
+        }.openThreeDotMenu {
+        }.openSyncSignIn {
+            verifyTurnOnSyncMenu()
+        }.goBack {
+            // Desktop toggle
+        }.openThreeDotMenu {
+        }.switchDesktopSiteMode {
+        }
+        homeScreen {
+        }.openThreeDotMenu {
+            verifyDesktopSiteModeEnabled(isRequestDesktopSiteEnabled = true)
+        }.openWhatsNew {
+            verifyWhatsNewURL()
+        }.goToHomescreen {
+        }.openThreeDotMenu {
+        }.openHelp {
+            verifyHelpUrl()
+        }.goToHomescreen {
+        }.openThreeDotMenu {
+        }.openCustomizeHome {
+            verifyHomePageView()
+        }.goBack {
+        }.openThreeDotMenu {
+        }.openSettings {
+            verifySettingsView()
+        }
+    }
 }
