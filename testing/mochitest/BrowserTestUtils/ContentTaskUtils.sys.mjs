@@ -84,6 +84,7 @@ export var ContentTaskUtils = {
    *        Rejects if timeout is exceeded or condition ever throws.
    */
   async waitForCondition(condition, msg, interval = 100, maxTries = 50) {
+    let startTime = Cu.now();
     for (let tries = 0; tries < maxTries; ++tries) {
       await new Promise(resolve => setTimeout(resolve, interval));
 
@@ -92,14 +93,29 @@ export var ContentTaskUtils = {
         conditionPassed = await condition();
       } catch (e) {
         msg += ` - threw exception: ${e}`;
+        ChromeUtils.addProfilerMarker(
+          "ContentTaskUtils",
+          { startTime, category: "Test" },
+          `waitForCondition - ${msg}`
+        );
         throw msg;
       }
       if (conditionPassed) {
+        ChromeUtils.addProfilerMarker(
+          "ContentTaskUtils",
+          { startTime, category: "Test" },
+          `waitForCondition succeeded after ${tries} retries - ${msg}`
+        );
         return conditionPassed;
       }
     }
 
     msg += ` - timed out after ${maxTries} tries.`;
+    ChromeUtils.addProfilerMarker(
+      "ContentTaskUtils",
+      { startTime, category: "Test" },
+      `waitForCondition - ${msg}`
+    );
     throw msg;
   },
 
@@ -134,6 +150,7 @@ export var ContentTaskUtils = {
    */
   waitForEvent(subject, eventName, capture, checkFn, wantsUntrusted = false) {
     return new Promise((resolve, reject) => {
+      let startTime = Cu.now();
       subject.addEventListener(
         eventName,
         function listener(event) {
@@ -142,7 +159,14 @@ export var ContentTaskUtils = {
               return;
             }
             subject.removeEventListener(eventName, listener, capture);
-            setTimeout(() => resolve(event), 0);
+            setTimeout(() => {
+              ChromeUtils.addProfilerMarker(
+                "ContentTaskUtils",
+                { category: "Test", startTime },
+                "waitForEvent - " + eventName
+              );
+              resolve(event);
+            }, 0);
           } catch (ex) {
             try {
               subject.removeEventListener(eventName, listener, capture);
