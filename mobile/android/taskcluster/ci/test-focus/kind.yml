@@ -5,6 +5,7 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
+    - android_taskgraph.transforms.gradle_optimization:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
@@ -19,6 +20,12 @@ task-defaults:
         toolchain:
             - android-sdk-linux
             - android-gradle-dependencies
+    optimization:
+        skip-unless-changed: [] # Paths are dynamically added by transforms
+    run-on-tasks-for:
+        - github-pull-request
+        - github-pull-request-untrusted
+        - github-push
     run:
         pre-gradlew:
             - ["cd", "focus-android"]
