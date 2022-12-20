@@ -41,8 +41,8 @@ RefPtr<GenericNonExclusivePromise> MFMediaEngineChild::Init(
                                                        __func__);
   }
 
-  if (!IsWin8OrLater()) {
-    CLOG("Media engine can only be used after Windows8");
+  if (!IsWin10OrLater()) {
+    CLOG("Only support MF media engine playback on Windows 10+");
     return GenericNonExclusivePromise::CreateAndReject(NS_ERROR_FAILURE,
                                                        __func__);
   }
