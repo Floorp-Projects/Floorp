@@ -3427,6 +3427,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
   }
 
   if (aCacheDomain & CacheDomain::TransformMatrix) {
+    bool transformed = false;
     if (frame && frame->IsTransformed()) {
       // We need to find a frame to make our transform relative to.
       // It's important this frame have a corresponding accessible,
@@ -3436,14 +3437,22 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       // This matrix is only valid when applied to CSSPixel points/rects
       // in the coordinate space of `frame`. It also includes the translation
       // to the parent space.
-      gfx::Matrix4x4 mtx = nsLayoutUtils::GetTransformToAncestor(
-                               RelativeTo{frame}, RelativeTo{boundingFrame},
-                               nsIFrame::IN_CSS_UNITS)
-                               .GetMatrix();
-
-      UniquePtr<gfx::Matrix4x4> ptr = MakeUnique<gfx::Matrix4x4>(mtx);
-      fields->SetAttribute(nsGkAtoms::transform, std::move(ptr));
-    } else if (aUpdateType == CacheUpdateType::Update) {
+      gfx::Matrix4x4Flagged mtx = nsLayoutUtils::GetTransformToAncestor(
+          RelativeTo{frame}, RelativeTo{boundingFrame}, nsIFrame::IN_CSS_UNITS);
+      // We might get back the identity matrix. This can happen if there is no
+      // actual transform. For example, if an element has
+      // will-change: transform, nsIFrame::IsTransformed will return true, but
+      // this doesn't necessarily mean there is a transform right now.
+      // Applying the identity matrix is effectively a no-op, so there's no
+      // point caching it.
+      transformed = !mtx.IsIdentity();
+      if (transformed) {
+        UniquePtr<gfx::Matrix4x4> ptr =
+            MakeUnique<gfx::Matrix4x4>(mtx.GetMatrix());
+        fields->SetAttribute(nsGkAtoms::transform, std::move(ptr));
+      }
+    }
+    if (!transformed && aUpdateType == CacheUpdateType::Update) {
       // Otherwise, if we're bundling a transform update but this
       // frame isn't transformed (or doesn't exist), we need
       // to send a DeleteEntry() to remove any

@@ -88,6 +88,27 @@ addAccessibleTask(
 </div>
   `,
   async function(browser, docAcc) {
+    if (isCacheEnabled) {
+      // Even though willChangeTop has no transform, it has
+      // will-change: transform, which means nsIFrame::IsTransformed returns
+      // true. We don't cache identity matrices, but because there is an offset
+      // to the root frame, layout includes this in the returned transform
+      // matrix. That means we get a non-identity matrix and thus we cache it.
+      // This is why we only test the identity matrix cache optimization for
+      // willChangeInner.
+      let hasTransform;
+      try {
+        const willChangeInner = findAccessibleChildByID(
+          docAcc,
+          "willChangeInner"
+        );
+        willChangeInner.cache.getStringProperty("transform");
+        hasTransform = true;
+      } catch (e) {
+        hasTransform = false;
+      }
+      ok(!hasTransform, "willChangeInner has no cached transform");
+    }
     await testBoundsWithContent(docAcc, "willChangeTopP2", browser);
     await testBoundsWithContent(docAcc, "willChangeInnerP2", browser);
   },
