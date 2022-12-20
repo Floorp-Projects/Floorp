@@ -4,38 +4,35 @@
 
 "use strict";
 
-function WorkerDispatcher() {
-  this.msgId = 1;
-  this.worker = null;
+class WorkerDispatcher {
+  #msgId = 1;
+  #worker = null;
   // Map of message ids -> promise resolution functions, for dispatching worker responses
-  this.pendingCalls = new Map();
-  this._onMessage = this._onMessage.bind(this);
-}
+  #pendingCalls = new Map();
 
-WorkerDispatcher.prototype = {
   start(url) {
     // When running in debugger jest test, we don't have access to ChromeWorker
     if (typeof ChromeWorker == "function") {
-      this.worker = new ChromeWorker(url);
+      this.#worker = new ChromeWorker(url);
     } else {
-      this.worker = new Worker(url);
+      this.#worker = new Worker(url);
     }
-    this.worker.onerror = err => {
+    this.#worker.onerror = err => {
       console.error(`Error in worker ${url}`, err.message);
     };
-    this.worker.addEventListener("message", this._onMessage);
-  },
+    this.#worker.addEventListener("message", this.#onMessage);
+  }
 
   stop() {
-    if (!this.worker) {
+    if (!this.#worker) {
       return;
     }
 
-    this.worker.removeEventListener("message", this._onMessage);
-    this.worker.terminate();
-    this.worker = null;
-    this.pendingCalls.clear();
-  },
+    this.#worker.removeEventListener("message", this.#onMessage);
+    this.#worker.terminate();
+    this.#worker = null;
+    this.#pendingCalls.clear();
+  }
 
   task(method, { queue = false } = {}) {
     const calls = [];
@@ -57,35 +54,35 @@ WorkerDispatcher.prototype = {
       const items = calls.slice();
       calls.length = 0;
 
-      if (!this.worker) {
+      if (!this.#worker) {
         return;
       }
 
-      const id = this.msgId++;
-      this.worker.postMessage({
+      const id = this.#msgId++;
+      this.#worker.postMessage({
         id,
         method,
         calls: items.map(item => item.args),
       });
 
-      this.pendingCalls.set(id, items);
+      this.#pendingCalls.set(id, items);
     };
 
     return (...args) => push(args);
-  },
+  }
 
   invoke(method, ...args) {
     return this.task(method)(...args);
-  },
+  }
 
-  _onMessage({ data: result }) {
-    const items = this.pendingCalls.get(result.id);
-    this.pendingCalls.delete(result.id);
+  #onMessage = ({ data: result }) => {
+    const items = this.#pendingCalls.get(result.id);
+    this.#pendingCalls.delete(result.id);
     if (!items) {
       return;
     }
 
-    if (!this.worker) {
+    if (!this.#worker) {
       return;
     }
 
@@ -100,8 +97,8 @@ WorkerDispatcher.prototype = {
         resolve(resultData.response);
       }
     });
-  },
-};
+  };
+}
 
 function workerHandler(publicInterface) {
   return function(msg) {
