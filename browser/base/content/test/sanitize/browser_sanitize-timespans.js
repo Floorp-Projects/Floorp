@@ -724,6 +724,7 @@ async function onHistoryReady() {
     history: "cleared",
     formdata: "cleared",
     downloads: "cleared",
+    step: "total-principals:2",
   });
 
   await formHistoryPromise;
