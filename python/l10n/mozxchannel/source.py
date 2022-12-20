@@ -4,7 +4,7 @@
 
 from compare_locales import paths, mozpath
 from compare_locales.paths.matcher import expand
-import pytoml as toml
+import toml
 
 from .projectconfig import generate_filename
 
@@ -81,4 +81,8 @@ class HgTOMLParser(paths.TOMLParser):
             data = self.repo.cat(files=[local_path.encode("utf-8")], rev=self.rev)
         except Exception:
             raise paths.ConfigNotFound(parse_ctx.path)
-        parse_ctx.data = toml.loads(data, filename=parse_ctx.path)
+
+        try:
+            parse_ctx.data = toml.loads(data)
+        except toml.TomlDecodeError as e:
+            raise RuntimeError(f"In file '{parse_ctx.path}':\n  {e!s}") from e

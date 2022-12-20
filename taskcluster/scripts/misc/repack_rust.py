@@ -22,8 +22,8 @@ import tarfile
 import textwrap
 from contextlib import contextmanager
 
-import pytoml as toml
 import requests
+import toml
 import zstandard
 
 
@@ -345,7 +345,7 @@ def fetch_manifest(channel="stable", host=None, targets=()):
     url = "https://static.rust-lang.org/dist%s/channel-rust-%s.toml" % (prefix, channel)
     req = requests.get(url)
     req.raise_for_status()
-    manifest = toml.loads(req.content)
+    manifest = toml.loads(req.text)
     if manifest["manifest-version"] != "2":
         raise NotImplementedError(
             "Unrecognized manifest version %s." % manifest["manifest-version"]
