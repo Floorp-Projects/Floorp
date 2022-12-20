@@ -735,14 +735,14 @@ export var PushServiceHttp2 = {
           if (this._mainPushService) {
             this._mainPushService
               .updateRegistrationAndNotifyApp(aSubscriptionUri, recordNew)
-              .catch(console.error);
+              .catch(Cu.reportError);
           }
         },
         error => {
           if (this._mainPushService) {
             this._mainPushService
               .dropRegistrationAndNotifyApp(aSubscriptionUri)
-              .catch(console.error);
+              .catch(Cu.reportError);
           }
         }
       )
