@@ -695,6 +695,9 @@
     <!--  Title preference inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
     <string name="cookie_banner_reject_all_option_title">Reducción de banner de cookies</string>
 
+    <!--  Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_summary">Mira menos banners automáticamente rechazando las solicitudes de cookies, cuando sea posible.</string>
+
     <!--  Checkbox Preference title inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
     <string name="cookie_banner_further_reduce_option_title">Reducir aún más los banners de cookies</string>
 
@@ -721,6 +724,9 @@
 
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site. -->
     <string name="cookie_banner_exception_panel_title_state_off_for_site">¿Desactivar la reducción de banner de cookies para %1$s?</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
+    <string name="cookie_banner_exception_panel_description_state_on_for_site">%1$s borrará las cookies de este sitio y actualizará la página. Borrar todas las cookies puede cerrar tu sesión o vaciar los carritos de compras.</string>
 
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Reproducción automática</string>
