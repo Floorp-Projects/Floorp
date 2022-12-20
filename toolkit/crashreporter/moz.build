@@ -53,6 +53,7 @@ if CONFIG["MOZ_CRASHREPORTER"]:
             "google-breakpad/src/common",
             "google-breakpad/src/common/linux",
             "google-breakpad/src/processor",
+            "pthread_create_interposer",
         ]
 
         if CONFIG["MOZ_OXIDIZED_BREAKPAD"]:
