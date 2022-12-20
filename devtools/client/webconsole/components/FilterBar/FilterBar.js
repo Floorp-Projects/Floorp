@@ -75,7 +75,6 @@ class FilterBar extends Component {
       groupWarnings: PropTypes.bool.isRequired,
       persistLogs: PropTypes.bool.isRequired,
       eagerEvaluation: PropTypes.bool.isRequired,
-      showContentMessages: PropTypes.bool.isRequired,
       timestampsVisible: PropTypes.bool.isRequired,
       webConsoleUI: PropTypes.object.isRequired,
       autocomplete: PropTypes.bool.isRequired,
@@ -115,7 +114,6 @@ class FilterBar extends Component {
       filteredMessagesCount,
       groupWarnings,
       persistLogs,
-      showContentMessages,
       timestampsVisible,
       eagerEvaluation,
       autocomplete,
@@ -128,7 +126,6 @@ class FilterBar extends Component {
       nextProps.filter !== filter ||
       nextProps.groupWarnings !== groupWarnings ||
       nextProps.persistLogs !== persistLogs ||
-      nextProps.showContentMessages !== showContentMessages ||
       nextProps.timestampsVisible !== timestampsVisible ||
       nextProps.eagerEvaluation !== eagerEvaluation ||
       nextProps.autocomplete !== autocomplete
@@ -338,7 +335,6 @@ class FilterBar extends Component {
       eagerEvaluation,
       groupWarnings,
       persistLogs,
-      showContentMessages,
       timestampsVisible,
       webConsoleUI,
       autocomplete,
@@ -350,7 +346,6 @@ class FilterBar extends Component {
       eagerEvaluation,
       groupWarnings,
       persistLogs,
-      showContentMessages,
       timestampsVisible,
       webConsoleUI,
       autocomplete,
@@ -437,7 +432,6 @@ function mapStateToProps(state) {
     groupWarnings: prefsState.groupWarnings,
     persistLogs: uiState.persistLogs,
     eagerEvaluation: prefsState.eagerEvaluation,
-    showContentMessages: uiState.showContentMessages,
     timestampsVisible: uiState.timestampsVisible,
     autocomplete: prefsState.autocomplete,
     enableNetworkMonitoring: uiState.enableNetworkMonitoring,

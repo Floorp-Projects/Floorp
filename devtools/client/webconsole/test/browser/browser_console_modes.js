@@ -42,7 +42,6 @@ requestLongerTimeout(2);
 
 add_task(async function() {
   // Show the content messages
-  await pushPref("devtools.browserconsole.contentMessages", true);
   await pushPref("devtools.browsertoolbox.scope", "everything");
   // Show context selector
   await pushPref("devtools.chrome.enabled", true);
@@ -63,12 +62,6 @@ add_task(async function() {
   ok(
     !!chromeDebugToolbar,
     "ChromeDebugToolbar is displayed when the Browser Console has fission support"
-  );
-  ok(
-    !hud.chromeWindow.document.querySelector(
-      ".webconsole-console-settings-menu-item-contentMessages"
-    ),
-    "Show content messages menu item isn't displayed when Browser Console has Fission support"
   );
   is(
     hud.chromeWindow.document.title,
