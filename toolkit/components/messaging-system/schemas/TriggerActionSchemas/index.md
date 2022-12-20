@@ -90,19 +90,16 @@ let type = "update" | "save";
 
 ### `contentBlocking`
 
-Happens at the and of a document load and for every subsequent content blocked event.
+Happens at the and of a document load and for every subsequent content blocked event, or when the tracking DB service hits a milestone.
+
 Provides a context of the number of pages loaded in the current browsing session that can be used in targeting.
 
 Does not filter by host or patterns.
 
-The event it reports back is a flag or a combination of flags merged together by
-ANDing the various STATE_BLOCKED_* flags.
+The event it reports back is one of two things:
+ * A combination of OR-ed [nsIWebProgressListener](https://searchfox.org/mozilla-central/source/uriloader/base/nsIWebProgressListener.idl) `STATE_BLOCKED_*` flags
+ * A string constants, such as [`"ContentBlockingMilestone"`](https://searchfox.org/mozilla-central/rev/8a2d8d26e25ef70c98c6036612aad534b76b9815/toolkit/components/antitracking/TrackingDBService.jsm#327-334)
 
-```typescript
-// https://searchfox.org/mozilla-central/rev/2fcab997046ba9e068c5391dc7d8848e121d84f8/uriloader/base/nsIWebProgressListener.idl#260
-let event: ContentBlockingEventFlag;
-let pageLoad = number;
-```
 
 ### `defaultBrowserCheck`
 
