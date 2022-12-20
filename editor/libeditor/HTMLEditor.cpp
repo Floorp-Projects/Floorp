@@ -6577,14 +6577,18 @@ Element* HTMLEditor::ComputeEditingHostInternal(
     // avoiding deleting or creating unexpected elements outside the <body>.
     // However, this is incompatible with Chrome so that we should stop
     // doing this with adding safety checks more.
-    if (document->GetBodyElement() &&
-        nsContentUtils::ContentIsFlattenedTreeDescendantOf(
+    if (!document->GetBodyElement()) {
+      return nullptr;
+    }
+    if (nsContentUtils::ContentIsFlattenedTreeDescendantOf(
             aCandidiateEditingHost, document->GetBodyElement())) {
       return const_cast<Element*>(aCandidiateEditingHost);
     }
     // XXX If aContent is an editing host and has no parent node, we reach here,
     //     but returing the <body> which is not connected to aContent is odd.
-    return document->GetBodyElement();
+    return HTMLEditUtils::IsSimplyEditableNode(*document->GetBodyElement())
+               ? document->GetBodyElement()
+               : nullptr;
   };
 
   if (IsInDesignMode()) {
