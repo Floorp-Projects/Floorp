@@ -9,7 +9,6 @@ import { recordEvent } from "../../utils/telemetry";
 import { updateBreakpointsForNewPrettyPrintedSource } from "../breakpoints";
 
 import { setSymbols } from "./symbols";
-import { prettyPrint } from "../../workers/pretty-print";
 import {
   getPrettySourceURL,
   isGenerated,
@@ -38,6 +37,7 @@ function getPrettyOriginalSourceURL(generatedSource) {
 
 export async function prettyPrintSource(
   sourceMaps,
+  prettyPrintWorker,
   generatedSource,
   content,
   actors
@@ -55,7 +55,7 @@ export async function prettyPrintSource(
   }
 
   const url = getPrettyOriginalSourceURL(generatedSource);
-  const { code, mappings } = await prettyPrint({
+  const { code, mappings } = await prettyPrintWorker.prettyPrint({
     text: contentValue.value,
     url,
   });
