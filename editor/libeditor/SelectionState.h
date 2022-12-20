@@ -354,6 +354,8 @@ class MOZ_STACK_CLASS AutoTrackDOMPoint final {
     *mOffset = mRangeItem->mStartOffset;
   }
 
+  void StopTracking() { mIsTracking = false; }
+
  private:
   RangeUpdater& mRangeUpdater;
   // Allow tracking nsINode until nsNode is gone
@@ -399,7 +401,7 @@ class MOZ_STACK_CLASS AutoTrackDOMRange final {
   ~AutoTrackDOMRange() { FlushAndStopTracking(); }
 
   void FlushAndStopTracking() {
-    if (!mStartPointTracker || !mEndPointTracker) {
+    if (!mStartPointTracker && !mEndPointTracker) {
       return;
     }
     mStartPointTracker.reset();
@@ -423,6 +425,39 @@ class MOZ_STACK_CLASS AutoTrackDOMRange final {
                            mEndPoint.ToRawRangeBoundary());
       return;
     }
+  }
+
+  void StopTracking() {
+    if (mStartPointTracker) {
+      mStartPointTracker->StopTracking();
+    }
+    if (mEndPointTracker) {
+      mEndPointTracker->StopTracking();
+    }
+  }
+  void StopTrackingStartBoundary() {
+    MOZ_ASSERT(!mRangeRefPtr,
+               "StopTrackingStartBoundary() is not available when tracking "
+               "RefPtr<nsRange>");
+    MOZ_ASSERT(!mRangeOwningNonNull,
+               "StopTrackingStartBoundary() is not available when tracking "
+               "OwningNonNull<nsRange>");
+    if (!mStartPointTracker) {
+      return;
+    }
+    mStartPointTracker->StopTracking();
+  }
+  void StopTrackingEndBoundary() {
+    MOZ_ASSERT(!mRangeRefPtr,
+               "StopTrackingEndBoundary() is not available when tracking "
+               "RefPtr<nsRange>");
+    MOZ_ASSERT(!mRangeOwningNonNull,
+               "StopTrackingEndBoundary() is not available when tracking "
+               "OwningNonNull<nsRange>");
+    if (!mEndPointTracker) {
+      return;
+    }
+    mEndPointTracker->StopTracking();
   }
 
  private:
