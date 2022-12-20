@@ -929,6 +929,8 @@ export class UrlbarInput {
           break;
         }
 
+        // Keep the searchMode for telemetry since handleRevert sets it to null.
+        const searchMode = this.searchMode;
         this.handleRevert();
         let prevTab = this.window.gBrowser.selectedTab;
         let loadOpts = {
@@ -941,6 +943,7 @@ export class UrlbarInput {
         let searchString = this._lastSearchString;
         this.controller.engagementEvent.record(event, {
           searchString,
+          searchMode,
           selIndex,
           selType: "tabswitch",
           provider: result.providerName,
@@ -1053,6 +1056,8 @@ export class UrlbarInput {
           break;
         }
         url = result.payload.url;
+        // Keep the searchMode for telemetry since handleRevert sets it to null.
+        const searchMode = this.searchMode;
         // Do not revert the Urlbar if we're going to navigate. We want the URL
         // populated so we can navigate to it.
         if (!url || !result.payload.shouldNavigate) {
@@ -1062,8 +1067,8 @@ export class UrlbarInput {
           result.providerName
         );
 
-        // Keep startEventInfo since the startEventInfo state might be changed
-        // if the URL Bar loses focus on pickResult.
+        // Keep startEventInfo for telemetry since the startEventInfo state might
+        // be changed if the URL Bar loses focus on pickResult.
         const startEventInfo = this.controller.engagementEvent._startEventInfo;
         provider?.tryMethod("pickResult", result, element);
 
@@ -1072,6 +1077,7 @@ export class UrlbarInput {
           this.controller.engagementEvent.record(event, {
             selIndex,
             searchString: this._lastSearchString,
+            searchMode,
             selType: this.controller.engagementEvent.typeFromElement(element),
             provider: result.providerName,
             element,
