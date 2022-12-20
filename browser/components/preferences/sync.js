@@ -364,7 +364,7 @@ var gSyncPane = {
     document.getElementById("fxaEmailAddress").textContent = state.email;
 
     this._populateComputerName(Weave.Service.clientsEngine.localName);
-    for (let elt of document.querySelectorAll("needs-account-ready")) {
+    for (let elt of document.querySelectorAll(".needs-account-ready")) {
       elt.disabled = !syncReady;
     }
 
