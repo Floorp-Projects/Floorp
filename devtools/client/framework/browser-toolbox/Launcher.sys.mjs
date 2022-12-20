@@ -310,10 +310,6 @@ export class BrowserToolboxLauncher extends EventEmitter {
       BROWSER_TOOLBOX_WINDOW_URL,
     ];
 
-    const isBrowserToolboxFission = Services.prefs.getBoolPref(
-      "devtools.browsertoolbox.fission",
-      false
-    );
     const isInputContextEnabled = Services.prefs.getBoolPref(
       "devtools.webconsole.input.context",
       false
@@ -327,9 +323,6 @@ export class BrowserToolboxLauncher extends EventEmitter {
       // And prevent profiling any subsequent toolbox
       MOZ_BROWSER_TOOLBOX_PROFILER_STARTUP: "0",
 
-      // Will be read by the Browser Toolbox Firefox instance to update the
-      // devtools.browsertoolbox.fission pref on the Browser Toolbox profile.
-      MOZ_BROWSER_TOOLBOX_FISSION_PREF: isBrowserToolboxFission ? "1" : "0",
       MOZ_BROWSER_TOOLBOX_FORCE_MULTIPROCESS: forceMultiprocess ? "1" : "0",
       // Similar, but for the WebConsole input context dropdown.
       MOZ_BROWSER_TOOLBOX_INPUT_CONTEXT: isInputContextEnabled ? "1" : "0",

@@ -608,10 +608,7 @@ Toolbox.prototype = {
   },
 
   get isMultiProcessBrowserToolbox() {
-    return (
-      this.isBrowserToolbox &&
-      Services.prefs.getBoolPref("devtools.browsertoolbox.fission", false)
-    );
+    return this.isBrowserToolbox;
   },
 
   /**

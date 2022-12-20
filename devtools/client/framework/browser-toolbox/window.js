@@ -78,15 +78,10 @@ function hideStatusMessage() {
 var connect = async function() {
   // Initiate the connection
 
-  // MOZ_BROWSER_TOOLBOX_FISSION_PREF is set by the target Firefox instance
+  // MOZ_BROWSER_TOOLBOX_INPUT_CONTEXT is set by the target Firefox instance
   // before opening the Browser Toolbox.
-  // If "devtools.browsertoolbox.fission" is true, the variable is set to "1",
+  // If "devtools.webconsole.input.context" is true, the variable is set to "1",
   // otherwise it is set to "0".
-  Services.prefs.setBoolPref(
-    "devtools.browsertoolbox.fission",
-    Services.env.get("MOZ_BROWSER_TOOLBOX_FISSION_PREF") === "1"
-  );
-  // Similar, but for the WebConsole input context dropdown.
   Services.prefs.setBoolPref(
     "devtools.webconsole.input.context",
     Services.env.get("MOZ_BROWSER_TOOLBOX_INPUT_CONTEXT") === "1"

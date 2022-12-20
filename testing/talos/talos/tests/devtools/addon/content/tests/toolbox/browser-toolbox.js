@@ -22,7 +22,6 @@ module.exports = async function() {
     "devtools.browsertoolbox.enable-test-server",
     true
   );
-  Services.prefs.setBoolPref("devtools.browsertoolbox.fission", true);
   Services.prefs.setCharPref("devtools.browsertoolbox.scope", "everything");
   // Ensure that the test page message will be visible
   Services.prefs.setBoolPref("devtools.browserconsole.contentMessages", true);
@@ -145,7 +144,6 @@ module.exports = async function() {
   Services.prefs.clearUserPref("devtools.debugger.remote-enabled");
   Services.prefs.clearUserPref("devtools.debugger.prompt-connection");
   Services.prefs.clearUserPref("devtools.browsertoolbox.enable-test-server");
-  Services.prefs.clearUserPref("devtools.browsertoolbox.fission");
   Services.prefs.clearUserPref("devtools.browsertoolbox.panel");
   Services.prefs.clearUserPref("devtools.browserconsole.contentMessages");
   Services.prefs.clearUserPref("devtools.browsertoolbox.scope");

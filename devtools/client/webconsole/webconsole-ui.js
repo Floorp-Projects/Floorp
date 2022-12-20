@@ -25,11 +25,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
 });
-loader.lazyRequireGetter(
-  this,
-  "constants",
-  "resource://devtools/client/webconsole/constants.js"
-);
 
 loader.lazyRequireGetter(
   this,
@@ -62,9 +57,6 @@ class WebConsoleUI {
     this.isBrowserToolboxConsole =
       this.hud.commands.descriptorFront.isBrowserProcessDescriptor &&
       !this.isBrowserConsole;
-    this.fissionSupport = Services.prefs.getBoolPref(
-      constants.PREFS.FEATURES.BROWSER_TOOLBOX_FISSION
-    );
 
     this.window = this.hud.iframeWindow;
 
@@ -478,8 +470,7 @@ class WebConsoleUI {
         ((resource.resourceType === TYPES.ERROR_MESSAGE ||
           resource.resourceType === TYPES.CSS_MESSAGE) &&
           resource.pageError?.isForwardedFromContentProcess &&
-          (this.isBrowserToolboxConsole || this.isBrowserConsole) &&
-          this.fissionSupport)
+          (this.isBrowserToolboxConsole || this.isBrowserConsole))
       ) {
         continue;
       }

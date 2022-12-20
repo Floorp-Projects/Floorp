@@ -22,10 +22,12 @@ add_task(async function() {
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   info("Check debug target item of the main process");
-  const mainProcessItem = findDebugTargetByText("Main Process", document);
+  const mainProcessItem = findDebugTargetByText("Multiprocess", document);
   ok(mainProcessItem, "Debug target item of the main process should display");
   ok(
-    mainProcessItem.textContent.includes("Main Process for the target browser"),
+    mainProcessItem.textContent.includes(
+      "Main Process and Content Processes for the target browser"
+    ),
     "Debug target item of the main process should contains the description"
   );
 
