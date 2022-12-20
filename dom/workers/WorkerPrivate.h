@@ -145,9 +145,10 @@ class WorkerPrivate final
 
   static already_AddRefed<WorkerPrivate> Constructor(
       JSContext* aCx, const nsAString& aScriptURL, bool aIsChromeWorker,
-      WorkerKind aWorkerKind, const WorkerType aWorkerType,
-      const nsAString& aWorkerName, const nsACString& aServiceWorkerScope,
-      WorkerLoadInfo* aLoadInfo, ErrorResult& aRv, nsString aId = u""_ns);
+      WorkerKind aWorkerKind, RequestCredentials aRequestCredentials,
+      const WorkerType aWorkerType, const nsAString& aWorkerName,
+      const nsACString& aServiceWorkerScope, WorkerLoadInfo* aLoadInfo,
+      ErrorResult& aRv, nsString aId = u""_ns);
 
   static already_AddRefed<WorkerPrivate> Constructor(
       JSContext* aCx, const nsAString& aScriptURL, bool aIsChromeWorker,
@@ -646,6 +647,7 @@ class WorkerPrivate final
   const nsString& ScriptURL() const { return mScriptURL; }
 
   const nsString& WorkerName() const { return mWorkerName; }
+  RequestCredentials WorkerCredentials() const { return mCredentialsMode; }
   enum WorkerType WorkerType() const { return mWorkerType; }
 
   WorkerKind Kind() const { return mWorkerKind; }
@@ -1058,9 +1060,10 @@ class WorkerPrivate final
  private:
   WorkerPrivate(
       WorkerPrivate* aParent, const nsAString& aScriptURL, bool aIsChromeWorker,
-      WorkerKind aWorkerKind, enum WorkerType aWorkerType,
-      const nsAString& aWorkerName, const nsACString& aServiceWorkerScope,
-      WorkerLoadInfo& aLoadInfo, nsString&& aId, const nsID& aAgentClusterId,
+      WorkerKind aWorkerKind, RequestCredentials aRequestCredentials,
+      enum WorkerType aWorkerType, const nsAString& aWorkerName,
+      const nsACString& aServiceWorkerScope, WorkerLoadInfo& aLoadInfo,
+      nsString&& aId, const nsID& aAgentClusterId,
       const nsILoadInfo::CrossOriginOpenerPolicy aAgentClusterOpenerPolicy);
 
   ~WorkerPrivate();
@@ -1202,6 +1205,7 @@ class WorkerPrivate final
 
   // This is the worker name for shared workers and dedicated workers.
   const nsString mWorkerName;
+  const RequestCredentials mCredentialsMode;
   enum WorkerType mWorkerType;
 
   const WorkerKind mWorkerKind;
