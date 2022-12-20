@@ -23,6 +23,15 @@ urlbar:
         description: >
           How the user started the search. e.g. `typed`, `pasted` etc.
         type: string
+      search_mode:
+        description: >
+          If the urlbar is in search mode, thus restricting results to a
+          specific search engine or local source, this is set to the search mode
+          source. The possible sources are: `actions`, `bookmarks`, `history`,
+          `search_engine`, and `tabs`. If search mode is active but the source
+          did not fall into any of these categories, this will be `unknown`. If
+          search mode is not active, this will be an empty string.
+        type: string
       n_chars:
         description: Number of typed characters.
         type: quantity
@@ -47,9 +56,10 @@ urlbar:
         type: string
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1800414
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1805717
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1800414
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1800414#c2
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1805717#c4
     data_sensitivity:
       - interaction
     notification_emails:
@@ -66,6 +76,15 @@ urlbar:
       interaction:
         description: >
           How the user started the search. e.g. `typed`, `pasted` etc.
+        type: string
+      search_mode:
+        description: >
+          If the urlbar is in search mode, thus restricting results to a
+          specific search engine or local source, this is set to the search mode
+          source. The possible sources are: `actions`, `bookmarks`, `history`,
+          `search_engine`, and `tabs`. If search mode is active but the source
+          did not fall into any of these categories, this will be `unknown`. If
+          search mode is not active, this will be an empty string.
         type: string
       n_chars:
         description: Number of typed characters.
@@ -107,9 +126,10 @@ urlbar:
         type: string
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1797265
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1805717
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1797265
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1797265#c3
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1805717#c4
     data_sensitivity:
       - interaction
     notification_emails:
@@ -129,6 +149,15 @@ urlbar:
       interaction:
         description: >
           How the user started the search. e.g. `typed`, `pasted` etc.
+        type: string
+      search_mode:
+        description: >
+          If the urlbar is in search mode, thus restricting results to a
+          specific search engine or local source, this is set to the search mode
+          source. The possible sources are: `actions`, `bookmarks`, `history`,
+          `search_engine`, and `tabs`. If search mode is active but the source
+          did not fall into any of these categories, this will be `unknown`. If
+          search mode is not active, this will be an empty string.
         type: string
       n_chars:
         description: Number of typed characters.
@@ -154,9 +183,10 @@ urlbar:
         type: string
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1800579
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1805717
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1800579
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1800579#c4
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1805717#c4
     data_sensitivity:
       - interaction
     notification_emails:
