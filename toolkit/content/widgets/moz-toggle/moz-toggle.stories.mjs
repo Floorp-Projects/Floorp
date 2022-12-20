@@ -6,14 +6,19 @@ import { html, ifDefined } from "../vendor/lit.all.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "./moz-toggle.mjs";
 
-const fxToggleConfig = {
-  title: "Design System/Experiments/FxToggle",
+export default {
+  title: "Design System/Experiments/MozToggle",
+  parameters: {
+    actions: {
+      handles: ["toggle"],
+    },
+  },
 };
 
-const Template = ({ checked, disabled, label, description, ariaLabel }) => html`
+const Template = ({ pressed, disabled, label, description, ariaLabel }) => html`
   <div style="max-width: 400px">
     <moz-toggle
-      ?checked=${checked}
+      ?pressed=${pressed}
       ?disabled=${disabled}
       label=${ifDefined(label)}
       description=${ifDefined(description)}
@@ -24,7 +29,7 @@ const Template = ({ checked, disabled, label, description, ariaLabel }) => html`
 
 export const Default = Template.bind({});
 Default.args = {
-  checked: true,
+  pressed: true,
   disabled: false,
   ariaLabel: "This is the aria-label",
 };
@@ -37,7 +42,7 @@ Disabled.args = {
 
 export const WithLabel = Template.bind({});
 WithLabel.args = {
-  checked: true,
+  pressed: true,
   disabled: false,
   label: "This is the label",
 };
@@ -47,5 +52,3 @@ WithDescription.args = {
   ...WithLabel.args,
   description: "This is the description",
 };
-
-export default fxToggleConfig;

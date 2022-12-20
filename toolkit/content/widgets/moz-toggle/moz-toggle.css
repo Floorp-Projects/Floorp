@@ -13,7 +13,7 @@
   opacity: 0.4
 }
 
-input,
+button,
 label {
   grid-row: 1;
 }
@@ -27,7 +27,7 @@ p {
   grid-column: 1 / -1;
 }
 
-input[type="checkbox"].toggle-button {
+.toggle-button {
   --button-height: 16px;
   --button-half-height: 8px;
   --button-width: 32px;
@@ -40,7 +40,7 @@ input[type="checkbox"].toggle-button {
   --border-color: #8F8F9D;
 }
 
-input[type="checkbox"].toggle-button {
+.toggle-button {
   appearance: none;
   padding: 0;
   margin: 0;
@@ -52,38 +52,38 @@ input[type="checkbox"].toggle-button {
   box-sizing: border-box;
 }
 
-input[type="checkbox"].toggle-button:focus-visible {
+.toggle-button:focus-visible {
   outline: var(--in-content-focus-outline-width) solid var(--in-content-focus-outline-color);
   outline-offset: var(--in-content-focus-outline-offset);
 }
 
-input[type="checkbox"].toggle-button:enabled:hover {
+.toggle-button:enabled:hover {
   background-color: var(--in-content-button-background-hover);
   border-color: var(--border-color);
 }
 
-input[type="checkbox"].toggle-button:enabled:active {
+.toggle-button:enabled:active {
   background-color: var(--in-content-button-background-active);
   border-color: var(--border-color);
 }
 
-input[type="checkbox"].toggle-button:checked {
+.toggle-button[aria-pressed="true"] {
   background-color: var(--in-content-primary-button-background);
   border-color: transparent;
 }
 
-input[type="checkbox"].toggle-button:checked:enabled:hover {
+.toggle-button[aria-pressed="true"]:enabled:hover {
   background-color: var(--in-content-primary-button-background-hover);
   border-color: transparent;
 }
 
-input[type="checkbox"].toggle-button:checked:enabled:active,
-input[type="checkbox"].toggle-button:checked:enabled:hover:active {
+.toggle-button[aria-pressed="true"]:enabled:active,
+.toggle-button[aria-pressed="true"].toggle-button:checked:enabled:hover:active {
   background-color: var(--in-content-primary-button-background-active);
   border-color: transparent;
 }
 
-input[type="checkbox"].toggle-button::before {
+.toggle-button::before {
   display: block;
   content: "";
   background-color: var(--border-color);
@@ -96,24 +96,24 @@ input[type="checkbox"].toggle-button::before {
   translate: 0;
 }
 
-input[type="checkbox"].toggle-button:checked::before {
+.toggle-button[aria-pressed="true"]::before {
   translate: var(--dot-transform-x);
   /* TODO: Bug 1798404 - This color doesn't match the spec in dark mode. This should
   be re-visited when we're defining tokens. */
   background-color: var(--in-content-box-background);
 }
 
-input[type="checkbox"].toggle-button:checked:not(:active, :hover:active):before {
+.toggle-button[aria-pressed="true"]:not(:active, :hover:active):before {
   outline-color: var(--in-content-box-background);
 }
 
-input[type="checkbox"].toggle-button:-moz-locale-dir(rtl)::before,
-input[type="checkbox"].toggle-button:dir(rtl)::before {
+.toggle-button:-moz-locale-dir(rtl)::before,
+.toggle-button:dir(rtl)::before {
   scale: -1;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  input[type="checkbox"].toggle-button::before {
+  .toggle-button::before {
     transition: translate 100ms;
   }
 }
