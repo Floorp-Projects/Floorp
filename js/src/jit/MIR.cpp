@@ -1593,12 +1593,13 @@ WrappedFunction::WrappedFunction(JSFunction* nativeFun, uint16_t nargs,
 
 MCall* MCall::New(TempAllocator& alloc, WrappedFunction* target, size_t maxArgc,
                   size_t numActualArgs, bool construct, bool ignoresReturnValue,
-                  bool isDOMCall, DOMObjectKind objectKind) {
+                  bool isDOMCall, mozilla::Maybe<DOMObjectKind> objectKind) {
+  MOZ_ASSERT(isDOMCall == objectKind.isSome());
   MOZ_ASSERT(maxArgc >= numActualArgs);
   MCall* ins;
   if (isDOMCall) {
     MOZ_ASSERT(!construct);
-    ins = new (alloc) MCallDOMNative(target, numActualArgs, objectKind);
+    ins = new (alloc) MCallDOMNative(target, numActualArgs, *objectKind);
   } else {
     ins =
         new (alloc) MCall(target, numActualArgs, construct, ignoresReturnValue);
