@@ -52,6 +52,7 @@
 #include "nsDisplayList.h"
 #include "nsIFrame.h"
 #include "nsIMathMLFrame.h"
+#include "nsFirstLetterFrame.h"
 #include "nsPlaceholderFrame.h"
 #include "nsTextFrameUtils.h"
 #include "nsTextRunTransformations.h"
@@ -2233,16 +2234,18 @@ static gfxFontGroup* GetFontGroupForFrame(
   return fontGroup;
 }
 
+nsFontMetrics* nsTextFrame::InflatedFontMetrics() const {
+  if (!mFontMetrics) {
+    float inflation = nsLayoutUtils::FontSizeInflationFor(this);
+    mFontMetrics = nsLayoutUtils::GetFontMetricsForFrame(this, inflation);
+  }
+  return mFontMetrics;
+}
+
 static gfxFontGroup* GetInflatedFontGroupForFrame(nsTextFrame* aFrame) {
   gfxTextRun* textRun = aFrame->GetTextRun(nsTextFrame::eInflated);
   if (textRun) {
     return textRun->GetFontGroup();
-  }
-  if (!aFrame->InflatedFontMetrics()) {
-    float inflation = nsLayoutUtils::FontSizeInflationFor(aFrame);
-    RefPtr<nsFontMetrics> metrics =
-        nsLayoutUtils::GetFontMetricsForFrame(aFrame, inflation);
-    aFrame->SetInflatedFontMetrics(metrics);
   }
   return aFrame->InflatedFontMetrics()->GetThebesFontGroup();
 }
@@ -3932,13 +3935,7 @@ void nsTextFrame::PropertyProvider::SetupJustificationSpacing(
 void nsTextFrame::PropertyProvider::InitFontGroupAndFontMetrics() const {
   if (!mFontMetrics) {
     if (mWhichTextRun == nsTextFrame::eInflated) {
-      if (!mFrame->InflatedFontMetrics()) {
-        float inflation = mFrame->GetFontSizeInflation();
-        mFontMetrics = nsLayoutUtils::GetFontMetricsForFrame(mFrame, inflation);
-        mFrame->SetInflatedFontMetrics(mFontMetrics);
-      } else {
-        mFontMetrics = mFrame->InflatedFontMetrics();
-      }
+      mFontMetrics = mFrame->InflatedFontMetrics();
     } else {
       mFontMetrics = nsLayoutUtils::GetFontMetricsForFrame(mFrame, 1.0f);
     }
@@ -4921,10 +4918,6 @@ gfxTextRun* nsTextFrame::GetUninflatedTextRun() const {
   return GetProperty(UninflatedTextRunProperty());
 }
 
-void nsTextFrame::SetInflatedFontMetrics(nsFontMetrics* aFontMetrics) {
-  mFontMetrics = aFontMetrics;
-}
-
 void nsTextFrame::SetTextRun(gfxTextRun* aTextRun, TextRunType aWhichTextRun,
                              float aInflation) {
   NS_ASSERTION(aTextRun, "must have text run");
@@ -5871,13 +5864,16 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
   AddStateBits(TEXT_SELECTION_UNDERLINE_OVERFLOWED);
 }
 
+nscoord nsTextFrame::ComputeLineHeight() const {
+  return ReflowInput::CalcLineHeight(GetContent(), Style(), PresContext(),
+                                     NS_UNCONSTRAINEDSIZE,
+                                     GetFontSizeInflation());
+}
+
 gfxFloat nsTextFrame::ComputeDescentLimitForSelectionUnderline(
     nsPresContext* aPresContext, const gfxFont::Metrics& aFontMetrics) {
-  gfxFloat app = aPresContext->AppUnitsPerDevPixel();
-  nscoord lineHeightApp =
-      ReflowInput::CalcLineHeight(GetContent(), Style(), PresContext(),
-                                  NS_UNCONSTRAINEDSIZE, GetFontSizeInflation());
-  gfxFloat lineHeight = gfxFloat(lineHeightApp) / app;
+  const gfxFloat lineHeight =
+      gfxFloat(ComputeLineHeight()) / aPresContext->AppUnitsPerDevPixel();
   if (lineHeight <= aFontMetrics.maxHeight) {
     return aFontMetrics.maxDescent;
   }
@@ -9707,10 +9703,14 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
 
   // The metrics for the text go in here
   gfxTextRun::Metrics textMetrics;
-  gfxFont::BoundingBoxType boundingBoxType =
-      IsFloatingFirstLetterChild() || IsInitialLetterChild()
-          ? gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS
-          : gfxFont::LOOSE_INK_EXTENTS;
+  gfxFont::BoundingBoxType boundingBoxType = gfxFont::LOOSE_INK_EXTENTS;
+  if (IsFloatingFirstLetterChild() || IsInitialLetterChild()) {
+    if (nsFirstLetterFrame* firstLetter = do_QueryFrame(GetParent())) {
+      if (firstLetter->UseTightBounds()) {
+        boundingBoxType = gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS;
+      }
+    }
+  }
 
   int32_t limitLength = length;
   int32_t forceBreak = aLineLayout.GetForcedBreakPosition(this);
