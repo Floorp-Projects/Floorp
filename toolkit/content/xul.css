@@ -580,6 +580,11 @@ stack > *|*:not(:-moz-native-anonymous) {
 
 tabbox {
   -moz-box-orient: vertical;
+  min-height: 0;
+}
+
+tabpanels {
+  min-height: 0;
 }
 
 tabs {
