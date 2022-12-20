@@ -66,10 +66,14 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">Indítóikon hozzáadása, amely privát lapokat nyit meg a Kezdőképernyőről.</string>
+    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Indítóikon hozzáadása, amely privát lapokat nyit meg a Kezdőképernyőről.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message">Indítsa el a következő privát lapot egy koppintással.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Indítóikon hozzáadása</string>
-    <!-- Text for the negative button -->
+    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Indítóikon hozzáadása</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">Kezdőképernyőhöz adás</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Köszönöm, nem</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -343,6 +347,19 @@
     <string name="reduce_cookie_banner_option">A sütibannerek számának csökkentése</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
     <string name="reduce_cookie_banner_summary">A Firefox automatikusan megpróbálja elutasítani a sütibannereken megjelenő sütikéréseket. Ha nem áll rendelkezésre elutasítási lehetőség, akkor a Firefox minden sütit elfogadhat a banner elrejtéséhez.</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">Kikapcsolva erre az oldalra</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">Bekapcsolva erre az oldalra</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site">Bekapcsolja a sütibanner-csökkentést a következőnél: %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site">Kikapcsolja a sütibanner-csökkentést a következőnél: %1$s?</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site">A %1$s törli a webhely sütijeit, és frissíti az oldalt. Az összes süti törlésével kijelentkezhet, vagy kiürítheti a kosarait.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site">A %1$s automatikusan megpróbálhatja elutasítani a sütikéréseket. Ha nem áll rendelkezésre elutasítási lehetőség, akkor a %2$s minden sütit elfogadhat a banner elrejtéséhez.</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Automatikusan HTTPS titkosítási protokoll használatával próbál meg csatlakozni a webhelyekhez a fokozott biztonság érdekében.</string>
@@ -1076,8 +1093,6 @@
     <string name="share_copy_link_to_clipboard">Vágólapra másolás</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Vágólapra másolva</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">Jelentkezzen be a szinkronizálásba</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Jelentkezzen be a Syncbe</string>
      <!-- An option from the three dot menu to sync and save data -->
@@ -1895,6 +1910,15 @@
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">Automatikus bezárás engedélyezve</string>
 
+    <!-- Awesome bar suggestion's headers -->
+    <!-- Search suggestions title for Firefox Suggest. -->
+    <string name="firefox_suggest_header">Firefox Suggest</string>
+
+    <!-- Title for search suggestions when Google is the default search suggestion engine. -->
+    <string name="google_search_engine_suggestion_header">Google keresés</string>
+    <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
+    <string name="other_default_search_engine_suggestion_header">%s keresés</string>
+
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Állítsa be a webhelyek, e-mailek és üzenetek hivatkozásait, hogy azok automatikusan a Firefoxban nyíljanak meg.</string>
 
@@ -1933,7 +1957,6 @@
     <string name="experiments_snackbar">Engedélyezze a telemetriát az adatok küldéséhez.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Ugrás a beállításokhoz</string>
-    <string name="firefox_suggest_header">Firefox Suggest</string>
 
     <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
     <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->

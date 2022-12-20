@@ -376,7 +376,7 @@
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
     <string name="errorpage_httpsonly_message_title">Líklegast styður vefsvæðið einfaldlega ekki HTTPS.</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
-    <string name="errorpage_httpsonly_message_summary">Hins vegar er líka mögulegt að árás hafi verið gerð. Ef þú heldur áfram á vefsvæðið ættir þú ekki að setja inn neinar viðkvæmar upplýsingar. Ef þú heldur áfram verður slökkt tímabundið á HTTPS-eingöngu-ham fyrir vefsvæðið.</string>
+    <string name="errorpage_httpsonly_message_summary">Hins vegar er líka mögulegt að árás hafi verið gerð. Ef þú heldur áfram á vefsvæðið ættir þú ekki að setja inn neinar viðkvæmar upplýsingar. Ef þú heldur áfram verður slökkt tímabundið á Einungis-HTTPS-ham fyrir vefsvæðið.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Aðgengileiki</string>
     <!-- Preference to override the Firefox Account server -->
@@ -1891,6 +1891,15 @@
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">Sjálfvirk lokun virkjuð</string>
 
+    <!-- Awesome bar suggestion's headers -->
+    <!-- Search suggestions title for Firefox Suggest. -->
+    <string name="firefox_suggest_header">Firefox-tillögur</string>
+
+    <!-- Title for search suggestions when Google is the default search suggestion engine. -->
+    <string name="google_search_engine_suggestion_header">Google-leit</string>
+    <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
+    <string name="other_default_search_engine_suggestion_header">%s leit</string>
+
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Stilltu tengla frá vefsvæðum, tölvupósti og skilaboðum til að opna sjálfkrafa í Firefox.</string>
 
@@ -1929,7 +1938,6 @@
     <string name="experiments_snackbar">Virkjaðu fjarmælingar til að senda gögn.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Farðu í stillingar</string>
-    <string name="firefox_suggest_header">Firefox-tillögur</string>
 
     <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
     <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->
