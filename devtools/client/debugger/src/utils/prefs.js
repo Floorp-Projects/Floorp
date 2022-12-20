@@ -12,7 +12,6 @@ const prefsSchemaVersion = 11;
 const { pref } = Services;
 
 if (isNode()) {
-  pref("devtools.browsertoolbox.fission", false);
   pref("devtools.debugger.logging", false);
   pref("devtools.debugger.alphabetize-outline", false);
   pref("devtools.debugger.auto-pretty-print", false);
@@ -74,7 +73,6 @@ if (isNode()) {
 }
 
 export const prefs = new PrefsHelper("devtools", {
-  fission: ["Bool", "browsertoolbox.fission"],
   logging: ["Bool", "debugger.logging"],
   editorWrapping: ["Bool", "debugger.ui.editor-wrapping"],
   alphabetizeOutline: ["Bool", "debugger.alphabetize-outline"],

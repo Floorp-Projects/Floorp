@@ -529,12 +529,10 @@ class ToolboxToolbar extends Component {
       : null;
 
     // Display the toolbar in the MBT and about:debugging MBT if we have server support for it.
-    const chromeDebugToolbar =
-      toolbox.commands.targetCommand.descriptorFront
-        .isBrowserProcessDescriptor &&
-      Services.prefs.getBoolPref("devtools.browsertoolbox.fission", false)
-        ? ChromeDebugToolbar()
-        : null;
+    const chromeDebugToolbar = toolbox.commands.targetCommand.descriptorFront
+      .isBrowserProcessDescriptor
+      ? ChromeDebugToolbar()
+      : null;
 
     return LocalizationProvider(
       { bundles: fluentBundles },

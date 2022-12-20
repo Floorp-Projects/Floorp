@@ -2356,10 +2356,6 @@ pref("devtools.toolbox.tabsOrder", "");
 // always visible
 pref("devtools.toolbox.alwaysOnTop", true);
 
-// The fission pref for enabling the "Multiprocess Browser Toolbox", which will
-// make it possible to debug anything in Firefox (See Bug 1570639 for more information).
-pref("devtools.browsertoolbox.fission", true);
-
 // When the Multiprocess Browser Toolbox is enabled, you can configure the scope of it:
 // - "everything" will enable debugging absolutely everything in the browser
 //   All processes, all documents, all workers, all add-ons.

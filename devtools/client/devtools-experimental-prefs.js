@@ -19,12 +19,6 @@ const PREFERENCES = [
       "hosted from another domain, it will run in another process",
   ],
   [
-    "devtools.browsertoolbox.fission",
-    "Enable the Multiprocess Browser Toolbox and Multiprocess Browser " +
-      "Console, so that it can see and debug resources from the content " +
-      "processes at the same time as resources from the parent process",
-  ],
-  [
     "devtools.target-switching.server.enabled",
     "Enable experimental server side target switching",
   ],

@@ -42,7 +42,6 @@ class ConsoleSettings extends Component {
       eagerEvaluation: PropTypes.bool.isRequired,
       groupWarnings: PropTypes.bool.isRequired,
       persistLogs: PropTypes.bool.isRequired,
-      showContentMessages: PropTypes.bool.isRequired,
       timestampsVisible: PropTypes.bool.isRequired,
       webConsoleUI: PropTypes.object.isRequired,
       autocomplete: PropTypes.bool.isRequired,
@@ -56,7 +55,6 @@ class ConsoleSettings extends Component {
       eagerEvaluation,
       groupWarnings,
       persistLogs,
-      showContentMessages,
       timestampsVisible,
       autocomplete,
       webConsoleUI,
@@ -88,25 +86,6 @@ class ConsoleSettings extends Component {
     }
 
     if (webConsoleUI.isBrowserConsole || webConsoleUI.isBrowserToolboxConsole) {
-      // Only show the filter when the ChromeDebugToolbar is not displayed.
-      // Ultimately this should be removed and only be handled by the ChromeDebugToolbar
-      if (!webConsoleUI.fissionSupport) {
-        // Show Content Messages
-        items.push(
-          MenuItem({
-            key: "webconsole-console-settings-menu-item-content-messages",
-            checked: showContentMessages,
-            className:
-              "menu-item webconsole-console-settings-menu-item-contentMessages",
-            label: l10n.getStr("browserconsole.contentMessagesCheckbox.label"),
-            tooltip: l10n.getStr(
-              "browserconsole.contentMessagesCheckbox.tooltip"
-            ),
-            onClick: () => dispatch(actions.contentMessagesToggle()),
-          })
-        );
-      }
-
       // Enable network monitoring
       items.push(
         MenuItem({

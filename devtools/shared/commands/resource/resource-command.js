@@ -6,8 +6,6 @@
 
 const { throttle } = require("resource://devtools/shared/throttle.js");
 
-const BROWSERTOOLBOX_FISSION_ENABLED = "devtools.browsertoolbox.fission";
-
 let gLastResourceId = 0;
 
 function cacheKey(resourceType, resourceId) {
@@ -937,16 +935,6 @@ class ResourceCommand {
    * @return {Boolean} True, if the server supports this type.
    */
   hasResourceCommandSupport(resourceType) {
-    // If we're in the browser console or browser toolbox and the browser
-    // toolbox fission pref is disabled, we don't want to use watchers
-    // (even if traits on the server are enabled).
-    if (
-      this.targetCommand.descriptorFront.isBrowserProcessDescriptor &&
-      !Services.prefs.getBoolPref(BROWSERTOOLBOX_FISSION_ENABLED, false)
-    ) {
-      return false;
-    }
-
     return this.watcherFront?.traits?.resources?.[resourceType];
   }
 

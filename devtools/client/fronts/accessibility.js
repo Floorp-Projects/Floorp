@@ -16,10 +16,6 @@ const {
   simulatorSpec,
 } = require("resource://devtools/shared/specs/accessibility.js");
 const events = require("resource://devtools/shared/event-emitter.js");
-const BROWSER_TOOLBOX_FISSION_ENABLED = Services.prefs.getBoolPref(
-  "devtools.browsertoolbox.fission",
-  false
-);
 
 class AccessibleFront extends FrontClassWithSpec(accessibleSpec) {
   constructor(client, targetFront, parentFront) {
@@ -43,10 +39,6 @@ class AccessibleFront extends FrontClassWithSpec(accessibleSpec) {
   }
 
   get useChildTargetToFetchChildren() {
-    if (!BROWSER_TOOLBOX_FISSION_ENABLED && this.targetFront.isParentProcess) {
-      return false;
-    }
-
     return this._form.useChildTargetToFetchChildren;
   }
 
@@ -302,9 +294,7 @@ class AccessibleWalkerFront extends FrontClassWithSpec(accessibleWalkerSpec) {
 
   /**
    * Get the accessible object ancestry starting from the given accessible to
-   * the top level document. BROWSER_TOOLBOX_FISSION_ENABLED is false, the top
-   * level document is bound by current target's document. Otherwise, the top
-   * level document is in the top level content process.
+   * the top level document. The top level document is in the top level content process.
    * @param  {Object} accessible
    *         Accessible front to determine the ancestry for.
    *
@@ -314,11 +304,6 @@ class AccessibleWalkerFront extends FrontClassWithSpec(accessibleWalkerSpec) {
    */
   async getAncestry(accessible) {
     const ancestry = await super.getAncestry(accessible);
-
-    if (!BROWSER_TOOLBOX_FISSION_ENABLED && this.targetFront.isParentProcess) {
-      // Do not try to get the ancestry across the remote frame hierarchy.
-      return ancestry;
-    }
 
     const parentTarget = await this.targetFront.getParentTarget();
     if (!parentTarget) {

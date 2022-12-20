@@ -277,7 +277,7 @@ class App extends Component {
 
   renderChromeDebugToolbar() {
     const { webConsoleUI } = this.props;
-    if (!webConsoleUI.isBrowserConsole || !webConsoleUI.fissionSupport) {
+    if (!webConsoleUI.isBrowserConsole) {
       return null;
     }
     return ChromeDebugToolbar({

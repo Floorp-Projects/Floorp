@@ -84,7 +84,7 @@ class ProcessDescriptorFront extends DescriptorMixin(
   }
 
   get isBrowserToolboxFission() {
-    return Services.prefs.getBoolPref("devtools.browsertoolbox.fission", false);
+    return true;
   }
 
   get isParentProcessDescriptor() {

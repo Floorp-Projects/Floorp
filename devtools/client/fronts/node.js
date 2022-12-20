@@ -33,10 +33,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "devtools.browsertoolbox.scope"
 );
 
-const BROWSER_TOOLBOX_FISSION_ENABLED = Services.prefs.getBoolPref(
-  "devtools.browsertoolbox.fission",
-  false
-);
 const BROWSER_TOOLBOX_SCOPE_EVERYTHING = "everything";
 
 const HIDDEN_CLASS = "__fx-devtools-hide-shortcut__";
@@ -352,8 +348,7 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
   get useChildTargetToFetchChildren() {
     if (
       this._hasParentProcessTarget &&
-      (!BROWSER_TOOLBOX_FISSION_ENABLED ||
-        browserToolboxScope != BROWSER_TOOLBOX_SCOPE_EVERYTHING)
+      browserToolboxScope != BROWSER_TOOLBOX_SCOPE_EVERYTHING
     ) {
       return false;
     }
