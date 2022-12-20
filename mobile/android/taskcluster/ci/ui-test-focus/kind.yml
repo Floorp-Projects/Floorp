@@ -5,6 +5,7 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
+    - android_taskgraph.transforms.gradle_optimization:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
@@ -21,6 +22,8 @@ task-defaults:
         # key is arbitrary, the value corresponds to <kind name>-<build-name>
         signed-apk-debug-apk: signing-apk-focus-debug
         signed-apk-android-test: signing-apk-focus-android-test-debug
+    optimization:
+        skip-unless-changed: [] # Paths are dynamically added by transforms
     worker-type: b-android
     worker:
         docker-image: {in-tree: ui-tests}
