@@ -54,10 +54,10 @@ using dom::Element;
 
 NS_DECLARE_FRAME_PROPERTY_FRAMELIST(PopupListProperty)
 
-// This global flag indicates that a menu just opened or closed and is used
-// to ignore the mousemove and mouseup events that would fire on the menu after
-// the mousedown occurred.
-static int32_t gMenuJustOpenedOrClosed = false;
+// This global flag is used to record the timestamp when a menu was opened or
+// closed and is used to ignore the mousemove and mouseup events that would fire
+// on the menu after the mousedown occurred.
+static TimeStamp gMenuJustOpenedOrClosedTime = TimeStamp();
 
 const int32_t kBlinkDelay = 67;  // milliseconds
 
@@ -344,9 +344,9 @@ nsresult nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
   // If a menu just opened, ignore the mouseup event that might occur after a
   // the mousedown event that opened it. However, if a different mousedown
   // event occurs, just clear this flag.
-  if (gMenuJustOpenedOrClosed) {
+  if (!gMenuJustOpenedOrClosedTime.IsNull()) {
     if (aEvent->mMessage == eMouseDown) {
-      gMenuJustOpenedOrClosed = false;
+      gMenuJustOpenedOrClosedTime = TimeStamp();
     } else if (aEvent->mMessage == eMouseUp) {
       return NS_OK;
     }
@@ -444,8 +444,12 @@ nsresult nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
     }
   } else if (aEvent->mMessage == eMouseMove &&
              (onmenu || (menuParent && menuParent->IsMenuBar()))) {
-    if (gMenuJustOpenedOrClosed) {
-      gMenuJustOpenedOrClosed = false;
+    // Use a tolerance to address situations where a user might perform a
+    // "wiggly" click that is accompanied by near-simultaneous mousemove events.
+    TimeDuration tolerance = TimeDuration::FromMilliseconds(200);
+    if (!gMenuJustOpenedOrClosedTime.IsNull() &&
+        gMenuJustOpenedOrClosedTime + tolerance < TimeStamp::Now()) {
+      gMenuJustOpenedOrClosedTime = TimeStamp();
       return NS_OK;
     }
 
@@ -495,7 +499,7 @@ void nsMenuFrame::ToggleMenuState() {
 }
 
 void nsMenuFrame::PopupOpened() {
-  gMenuJustOpenedOrClosed = true;
+  gMenuJustOpenedOrClosedTime = TimeStamp::Now();
 
   AutoWeakFrame weakFrame(this);
   mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::open, u"true"_ns,
@@ -638,7 +642,7 @@ void nsMenuFrame::OpenMenu(bool aSelectFirstItem) {
 }
 
 void nsMenuFrame::CloseMenu(bool aDeselectMenu) {
-  gMenuJustOpenedOrClosed = true;
+  gMenuJustOpenedOrClosedTime = TimeStamp::Now();
 
   // Close the menu asynchronously
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
