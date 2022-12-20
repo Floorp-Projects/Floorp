@@ -76,8 +76,7 @@ class OpaqueResponseBlocker final : public nsIStreamListener {
   nsresult ValidateJavaScript(HttpBaseChannel* aChannel, nsIURI* aURI,
                               nsILoadInfo* aLoadInfo);
 
-  void ResolveAndProcessData(HttpBaseChannel* aChannel,
-                             bool aAllowed,
+  void ResolveAndProcessData(HttpBaseChannel* aChannel, bool aAllowed,
                              Maybe<ipc::Shmem>& aSharedData);
 
   void MaybeRunOnStopRequest(HttpBaseChannel* aChannel);
