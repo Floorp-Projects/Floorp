@@ -6,7 +6,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import errno
 import hashlib
-import io
 import json
 import logging
 import os
@@ -398,11 +397,8 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
                 return True
         return False
 
-    def _check_licenses(self, vendor_dir):
-        LICENSE_LINE_RE = re.compile(r'\s*license\s*=\s*"([^"]+)"')
-        LICENSE_FILE_LINE_RE = re.compile(r'\s*license[-_]file\s*=\s*"([^"]+)"')
-
-        def verify_acceptable_license(package, license):
+    def _check_licenses(self, vendor_dir: str) -> bool:
+        def verify_acceptable_license(package: str, license: str) -> bool:
             self.log(
                 logging.DEBUG, "package_license", {}, "has license {}".format(license)
             )
@@ -441,112 +437,116 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
                     return False
             return True
 
-        def check_package(package):
+        def check_package(package_name: str) -> bool:
             self.log(
                 logging.DEBUG,
                 "package_check",
                 {},
-                "Checking license for {}".format(package),
+                "Checking license for {}".format(package_name),
             )
 
-            toml_file = os.path.join(vendor_dir, package, "Cargo.toml")
+            toml_file = os.path.join(vendor_dir, package_name, "Cargo.toml")
+            with open(toml_file, encoding="utf-8") as fh:
+                toml_data = toml.load(fh)
 
-            # pytoml is not sophisticated enough to parse Cargo.toml files
-            # with [target.'cfg(...)'.dependencies sections, so we resort
-            # to scanning individual lines.
-            with io.open(toml_file, "r", encoding="utf-8") as f:
-                license_lines = [l for l in f if l.strip().startswith("license")]
-                license_matches = list(
-                    filter(
-                        lambda x: x, [LICENSE_LINE_RE.match(l) for l in license_lines]
-                    )
+            package_entry: typing.Dict[str, TomlItem] = toml_data["package"]
+            license = package_entry.get("license", None)
+            license_file = package_entry.get("license-file", None)
+
+            if license is not None and type(license) is not str:
+                self.log(
+                    logging.ERROR,
+                    "package_invalid_license_format",
+                    {},
+                    "package {} has an invalid `license` field (expected a string)".format(
+                        package_name
+                    ),
                 )
-                license_file_matches = list(
-                    filter(
-                        lambda x: x,
-                        [LICENSE_FILE_LINE_RE.match(l) for l in license_lines],
-                    )
+                return False
+
+            if license_file is not None and type(license_file) is not str:
+                self.log(
+                    logging.ERROR,
+                    "package_invalid_license_format",
+                    {},
+                    "package {} has an invalid `license-file` field (expected a string)".format(
+                        package_name
+                    ),
                 )
+                return False
 
-                # License information is optional for crates to provide, but
-                # we require it.
-                if not license_matches and not license_file_matches:
-                    self.log(
-                        logging.ERROR,
-                        "package_no_license",
-                        {},
-                        "package {} does not provide a license".format(package),
-                    )
-                    return False
+            # License information is optional for crates to provide, but
+            # we require it.
+            if not license and not license_file:
+                self.log(
+                    logging.ERROR,
+                    "package_no_license",
+                    {},
+                    "package {} does not provide a license".format(package_name),
+                )
+                return False
 
-                # The Cargo.toml spec suggests that crates should either have
-                # `license` or `license-file`, but not both.  We might as well
-                # be defensive about that, though.
-                if (
-                    len(license_matches) > 1
-                    or len(license_file_matches) > 1
-                    or license_matches
-                    and license_file_matches
-                ):
-                    self.log(
-                        logging.ERROR,
-                        "package_many_licenses",
-                        {},
-                        "package {} provides too many licenses".format(package),
-                    )
-                    return False
+            # The Cargo.toml spec suggests that crates should either have
+            # `license` or `license-file`, but not both.  We might as well
+            # be defensive about that, though.
+            if license and license_file:
+                self.log(
+                    logging.ERROR,
+                    "package_many_licenses",
+                    {},
+                    "package {} provides too many licenses".format(package_name),
+                )
+                return False
 
-                if license_matches:
-                    license = license_matches[0].group(1)
-                    if not verify_acceptable_license(package, license):
-                        return False
-                else:
-                    license_file = license_file_matches[0].group(1)
-                    self.log(
-                        logging.DEBUG,
-                        "package_license_file",
-                        {},
-                        "has license-file {}".format(license_file),
-                    )
+            if license:
+                return verify_acceptable_license(package_name, license)
 
-                    if package not in self.RUNTIME_LICENSE_FILE_PACKAGE_WHITELIST:
-                        self.log(
-                            logging.ERROR,
-                            "package_license_file_unknown",
-                            {},
-                            """Package {} has an unreviewed license file: {}.
+            # otherwise, it's a custom license in a separate file
+            assert license_file is not None
+            self.log(
+                logging.DEBUG,
+                "package_license_file",
+                {},
+                "package has license-file {}".format(license_file),
+            )
+
+            if package_name not in self.RUNTIME_LICENSE_FILE_PACKAGE_WHITELIST:
+                self.log(
+                    logging.ERROR,
+                    "package_license_file_unknown",
+                    {},
+                    """Package {} has an unreviewed license file: {}.
 
 Please request review on the provided license; if approved, the package can be added
 to the whitelist of packages whose licenses are suitable.
 """.format(
-                                package, license_file
-                            ),
-                        )
-                        return False
+                        package_name, license_file
+                    ),
+                )
+                return False
 
-                    approved_hash = self.RUNTIME_LICENSE_FILE_PACKAGE_WHITELIST[package]
-                    license_contents = open(
-                        os.path.join(vendor_dir, package, license_file), "r"
-                    ).read()
-                    current_hash = hashlib.sha256(
-                        license_contents.encode("UTF-8")
-                    ).hexdigest()
-                    if current_hash != approved_hash:
-                        self.log(
-                            logging.ERROR,
-                            "package_license_file_mismatch",
-                            {},
-                            """Package {} has changed its license file: {} (hash {}).
+            approved_hash = self.RUNTIME_LICENSE_FILE_PACKAGE_WHITELIST[package_name]
+
+            with open(
+                os.path.join(vendor_dir, package_name, license_file), "rb"
+            ) as license_buf:
+                current_hash = hashlib.sha256(license_buf.read()).hexdigest()
+
+            if current_hash != approved_hash:
+                self.log(
+                    logging.ERROR,
+                    "package_license_file_mismatch",
+                    {},
+                    """Package {} has changed its license file: {} (hash {}).
 
 Please request review on the provided license; if approved, please update the
 license file's hash.
 """.format(
-                                package, license_file, current_hash
-                            ),
-                        )
-                        return False
-
-                return True
+                        package_name, license_file, current_hash
+                    ),
+                )
+                return False
+            return True
 
         # Force all of the packages to be checked for license information
         # before reducing via `all`, so all license issues are found in a
