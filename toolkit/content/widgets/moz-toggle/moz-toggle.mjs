@@ -7,7 +7,7 @@ import { MozLitElement } from "../lit-utils.mjs";
 
 export default class MozToggle extends MozLitElement {
   static properties = {
-    checked: { type: Boolean, reflect: true },
+    pressed: { type: Boolean, reflect: true },
     disabled: { type: Boolean, reflect: true },
     label: { type: String },
     description: { type: String },
@@ -16,7 +16,7 @@ export default class MozToggle extends MozLitElement {
 
   static get queries() {
     return {
-      inputEl: "#moz-toggle-input",
+      buttonEl: "#moz-toggle-button",
       labelEl: "#moz-toggle-label",
       descriptionEl: "#moz-toggle-description",
     };
@@ -29,14 +29,14 @@ export default class MozToggle extends MozLitElement {
 
   constructor() {
     super();
-    this.checked = false;
+    this.pressed = false;
     this.disabled = false;
   }
 
-  handleChange() {
-    this.checked = this.inputEl.checked;
-    this.dispatchEvent(
-      new Event("change", {
+  handleClick() {
+    this.pressed = !this.pressed;
+    this.dispatchOnUpdateComplete(
+      new CustomEvent("toggle", {
         bubbles: true,
         composed: true,
       })
@@ -46,7 +46,7 @@ export default class MozToggle extends MozLitElement {
   labelTemplate() {
     if (this.label) {
       return html`
-        <label id="moz-toggle-label" part="label" for="moz-toggle-input">
+        <label id="moz-toggle-label" part="label" for="moz-toggle-button">
           ${this.label}
         </label>
       `;
@@ -66,25 +66,23 @@ export default class MozToggle extends MozLitElement {
   }
 
   render() {
-    const { checked, disabled, description, ariaLabel, handleChange } = this;
+    const { pressed, disabled, description, ariaLabel, handleClick } = this;
     return html`
       <link rel="stylesheet" href=${this.constructor.stylesheetUrl} />
       ${this.labelTemplate()} ${this.descriptionTemplate()}
-      <input
-        id="moz-toggle-input"
-        part="input"
-        type="checkbox"
-        role="switch"
+      <button
+        id="moz-toggle-button"
+        part="button"
+        type="button"
         class="toggle-button"
-        .checked=${checked}
         ?disabled=${disabled}
-        aria-checked=${checked}
+        aria-pressed=${pressed}
         aria-label=${ifDefined(ariaLabel ?? undefined)}
         aria-describedby=${ifDefined(
           description ? "moz-toggle-description" : undefined
         )}
-        @change=${handleChange}
-      />
+        @click=${handleClick}
+      ></button>
     `;
   }
 }
