@@ -44,6 +44,7 @@ slugid==2.0.0
 taskcluster==44.2.2
 taskcluster-taskgraph==3.5.1
 taskcluster-urls==13.0.1
+toml==0.10.2
 tqdm==4.62.3
 urllib3==1.26
 voluptuous==0.12.1
