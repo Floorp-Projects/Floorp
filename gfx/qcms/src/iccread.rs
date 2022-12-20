@@ -50,6 +50,8 @@ pub struct Profile {
     pub(crate) redColorant: XYZNumber,
     pub(crate) blueColorant: XYZNumber,
     pub(crate) greenColorant: XYZNumber,
+    // "TRC" is EOTF, e.g. gamma->linear transfer function.
+    // Because ICC profiles are phrased as decodings to the xyzd50-linear PCS.
     pub(crate) redTRC: Option<Box<curveType>>,
     pub(crate) blueTRC: Option<Box<curveType>>,
     pub(crate) greenTRC: Option<Box<curveType>>,
@@ -93,7 +95,7 @@ pub(crate) struct lutmABType {
 }
 #[derive(Clone, Debug)]
 pub(crate) enum curveType {
-    Curve(Vec<uInt16Number>),
+    Curve(Vec<uInt16Number>), // len=0 => Linear, len=1 => Gamma(v[0]), _ => lut
     /// The ICC parametricCurveType is specified in terms of s15Fixed16Number,
     /// so it's possible to use this variant to specify greater precision than
     /// any raw ICC profile could
