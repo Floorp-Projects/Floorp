@@ -3198,6 +3198,13 @@ RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
   DOMHighResTimeStamp now = mTimestampMaker.GetNow();
 
   nsTArray<dom::RTCCodecStats> codecStats = GetCodecStats(now);
+  std::set<std::string> transportIds;
+
+  if (!aSelector) {
+    // There might not be any senders/receivers if we're DataChannel only, so we
+    // don't handle the null selector case in the loop below.
+    transportIds.insert("");
+  }
 
   nsTArray<
       std::tuple<RTCRtpTransceiver*, RefPtr<RTCStatsPromise::AllPromiseType>>>
@@ -3208,19 +3215,24 @@ RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
     if (!sendSelected && !recvSelected) {
       continue;
     }
+
+    if (aSelector) {
+      transportIds.insert(transceiver->GetTransportId());
+    }
+
     nsTArray<RefPtr<RTCStatsPromise>> rtpStreamPromises;
     // Get all rtp stream stats for the given selector. Then filter away any
     // codec stat not related to the selector, and assign codec ids to the
     // stream stats.
+    // Skips the ICE stats; we do our own queries based on |transportIds| to
+    // avoid duplicates
     if (sendSelected) {
       rtpStreamPromises.AppendElements(
-          transceiver->Sender()->GetStatsInternal());
+          transceiver->Sender()->GetStatsInternal(true));
     }
     if (recvSelected) {
-      // Right now, returns two promises; one for RTP/RTCP stats, and
-      // another for ICE stats.
       rtpStreamPromises.AppendElements(
-          transceiver->Receiver()->GetStatsInternal());
+          transceiver->Receiver()->GetStatsInternal(true));
     }
     transceiverStatsPromises.AppendElement(
         std::make_tuple(transceiver.get(),
@@ -3231,17 +3243,8 @@ RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
   promises.AppendElement(RTCRtpTransceiver::ApplyCodecStats(
       std::move(codecStats), std::move(transceiverStatsPromises)));
 
-  // TODO(bug 1616937): We need to move this is RTCRtpSender, to make
-  // getStats on those objects work properly. It might be worth optimizing
-  // the null selector case, so we don't end up with bunches of copies of
-  // the same transport information in the final report.
-  if (aSelector) {
-    std::string transportId = GetTransportIdMatchingSendTrack(*aSelector);
-    if (!transportId.empty()) {
-      promises.AppendElement(mTransportHandler->GetIceStats(transportId, now));
-    }
-  } else {
-    promises.AppendElement(mTransportHandler->GetIceStats("", now));
+  for (const auto& transportId : transportIds) {
+    promises.AppendElement(mTransportHandler->GetIceStats(transportId, now));
   }
 
   promises.AppendElement(GetDataChannelStats(mDataConnection, now));

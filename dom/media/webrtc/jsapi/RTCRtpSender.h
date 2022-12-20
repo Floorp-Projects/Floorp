@@ -71,7 +71,8 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
       ErrorResult& aRv);
 
   nsPIDOMWindowInner* GetParentObject() const;
-  nsTArray<RefPtr<RTCStatsPromise>> GetStatsInternal();
+  nsTArray<RefPtr<RTCStatsPromise>> GetStatsInternal(
+      bool aSkipIceStats = false);
 
   // This would just be stream ids, except PeerConnection.jsm uses GetStreams
   // to implement the non-standard RTCPeerConnection.getLocalStreams. We might
@@ -162,6 +163,7 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
   bool mSimulcastEnvelopeSet = false;
   Maybe<RTCRtpSendParameters> mLastReturnedParameters;
   RefPtr<MediaPipelineTransmit> mPipeline;
+  RefPtr<MediaTransportHandler> mTransportHandler;
   RefPtr<RTCRtpTransceiver> mTransceiver;
   nsTArray<RefPtr<DOMMediaStream>> mStreams;
   bool mHaveSetupTransport = false;
