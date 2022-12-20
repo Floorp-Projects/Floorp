@@ -62,7 +62,7 @@ Services.obs.addObserver(function observe(subject, topic, data) {
     try {
       thread.processNextEvent(true);
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
   }
 }, "profile-change-net-teardown");
@@ -99,7 +99,7 @@ function waterfall(...callbacks) {
         }),
       Promise.resolve()
     )
-    .catch(Cu.reportError);
+    .catch(console.error);
 }
 
 /**
