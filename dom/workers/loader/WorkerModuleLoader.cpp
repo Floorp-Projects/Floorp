@@ -34,6 +34,12 @@ WorkerModuleLoader::WorkerModuleLoader(WorkerScriptLoader* aScriptLoader,
 
 already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateStaticImport(
     nsIURI* aURI, ModuleLoadRequest* aParent) {
+  // We are intentionally deviating from the specification here and using the
+  // worker's CSP rather than the document CSP. The spec otherwise requires our
+  // service worker integration to be changed, and additionally the decision
+  // here did not make sense as we are treating static imports as different from
+  // other kinds of subresources.
+  // See Discussion in https://github.com/w3c/webappsec-csp/issues/336
   Maybe<ClientInfo> clientInfo = GetGlobalObject()->GetClientInfo();
 
   RefPtr<WorkerLoadContext> loadContext =
