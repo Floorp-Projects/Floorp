@@ -29,6 +29,10 @@ class TaskGraph:
 
     def for_each_task(self, f, *args, **kwargs):
         for task_label in self.graph.visit_postorder():
+            if task_label not in self.tasks:
+                # Ideally we'd say exactly _which_ file needs its `kind-dependencies`
+                # updated, but alas, we do not have enough information to do so.
+                raise Exception(f"{task_label} not found in tasks -- it probably needs to be added to `kind-dependencies` somewhere")
             task = self.tasks[task_label]
             f(task, self, *args, **kwargs)
 
