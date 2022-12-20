@@ -77,6 +77,6 @@ chown -R worker:worker .
 chown -R worker:worker .*
 
 python3 -m pip install -U pip
-python3 -m pip install poetry
+python3 -m pip install poetry==1.2.2
 
 rm -rf /setup
