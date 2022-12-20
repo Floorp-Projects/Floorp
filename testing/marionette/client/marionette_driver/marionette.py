@@ -1619,6 +1619,8 @@ class Marionette(object):
                 wrapped[arg] = self._to_json(args[arg])
         elif type(args) == HTMLElement:
             wrapped = {WEB_ELEMENT_KEY: args.id}
+        elif type(args) == ShadowRoot:
+            wrapped = {WEB_SHADOW_ROOT_KEY: args.id}
         elif (
             isinstance(args, bool)
             or isinstance(args, six.string_types)
