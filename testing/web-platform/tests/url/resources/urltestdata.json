@@ -8140,6 +8140,21 @@
     "search": "",
     "hash": ""
   },
+  "IDNA hostnames which get mapped to 'localhost'",
+  {
+    "input": "file://loC𝐀𝐋𝐇𝐨𝐬𝐭/usr/bin",
+    "base": "about:blank",
+    "href": "file:///usr/bin",
+    "protocol": "file:",
+    "username": "",
+    "password": "",
+    "host": "",
+    "hostname": "",
+    "port": "",
+    "pathname": "/usr/bin",
+    "search": "",
+    "hash": ""
+  },
   "Empty host after the domain to ASCII",
   {
     "input": "file://\u00ad/p",
