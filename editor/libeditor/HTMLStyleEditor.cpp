@@ -20,6 +20,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/ContentIterator.h"
 #include "mozilla/EditorForwards.h"
+#include "mozilla/SelectionState.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/StaticPrefs_editor.h"
 #include "mozilla/dom/AncestorIterator.h"
@@ -1268,6 +1269,58 @@ bool HTMLEditor::AutoInlineStyleSetter::ContentIsElementSettingTheStyle(
   return specified.unwrapOr(false);
 }
 
+// static
+nsIContent* HTMLEditor::AutoInlineStyleSetter::GetNextEditableInlineContent(
+    const nsIContent& aContent, const nsINode* aLimiter) {
+  auto* const nextContentInRange = [&]() -> nsIContent* {
+    for (nsIContent* parent : aContent.InclusiveAncestorsOfType<nsIContent>()) {
+      if (parent == aLimiter ||
+          !EditorUtils::IsEditableContent(*parent, EditorType::HTML) ||
+          (parent->IsElement() &&
+           (HTMLEditUtils::IsBlockElement(*parent->AsElement()) ||
+            HTMLEditUtils::IsDisplayInsideFlowRoot(*parent->AsElement())))) {
+        return nullptr;
+      }
+      if (nsIContent* nextSibling = parent->GetNextSibling()) {
+        return nextSibling;
+      }
+    }
+    return nullptr;
+  }();
+  return nextContentInRange &&
+                 EditorUtils::IsEditableContent(*nextContentInRange,
+                                                EditorType::HTML) &&
+                 !HTMLEditUtils::IsBlockElement(*nextContentInRange)
+             ? nextContentInRange
+             : nullptr;
+}
+
+// static
+nsIContent* HTMLEditor::AutoInlineStyleSetter::GetPreviousEditableInlineContent(
+    const nsIContent& aContent, const nsINode* aLimiter) {
+  auto* const previousContentInRange = [&]() -> nsIContent* {
+    for (nsIContent* parent : aContent.InclusiveAncestorsOfType<nsIContent>()) {
+      if (parent == aLimiter ||
+          !EditorUtils::IsEditableContent(*parent, EditorType::HTML) ||
+          (parent->IsElement() &&
+           (HTMLEditUtils::IsBlockElement(*parent->AsElement()) ||
+            HTMLEditUtils::IsDisplayInsideFlowRoot(*parent->AsElement())))) {
+        return nullptr;
+      }
+      if (nsIContent* previousSibling = parent->GetPreviousSibling()) {
+        return previousSibling;
+      }
+    }
+    return nullptr;
+  }();
+  return previousContentInRange &&
+                 EditorUtils::IsEditableContent(*previousContentInRange,
+                                                EditorType::HTML) &&
+                 !HTMLEditUtils::IsBlockElement(*previousContentInRange)
+             ? previousContentInRange
+             : nullptr;
+}
+
 EditorRawDOMPoint HTMLEditor::AutoInlineStyleSetter::GetShrunkenRangeStart(
     const HTMLEditor& aHTMLEditor, const EditorDOMRange& aRange,
     const nsINode& aCommonAncestorOfRange,
@@ -1278,38 +1331,20 @@ EditorRawDOMPoint HTMLEditor::AutoInlineStyleSetter::GetShrunkenRangeStart(
   if (IsStyleOfAnchorElement()) {
     return startRef.To<EditorRawDOMPoint>();
   }
-  nsIContent* const nextContentOrStartContainer = [&]() {
-    // If the start boundary is at end of a node, we need to shrink the range
-    // to next content, e.g., `abc[<b>def` should be `abc<b>[def` unless the
-    // <b> is not entirely selected.
-    if (startRef.IsInContentNode() && startRef.IsEndOfContainer()) {
-      auto* const nextContentInRange = [&]() -> nsIContent* {
-        for (nsIContent* parent :
-             startRef.ContainerAs<nsIContent>()
-                 ->InclusiveAncestorsOfType<nsIContent>()) {
-          if (parent == &aCommonAncestorOfRange ||
-              !EditorUtils::IsEditableContent(*parent, EditorType::HTML) ||
-              (parent->IsElement() &&
-               (HTMLEditUtils::IsBlockElement(*parent->AsElement()) ||
-                HTMLEditUtils::IsDisplayInsideFlowRoot(
-                    *parent->AsElement())))) {
-            return nullptr;
-          }
-          if (nsIContent* nextSibling = parent->GetNextSibling()) {
-            MOZ_ASSERT(aRange.Contains(EditorRawDOMPoint(nextSibling)));
-            return nextSibling;
-          }
-        }
-        return nullptr;
-      }();
-      if (nextContentInRange &&
-          EditorUtils::IsEditableContent(*nextContentInRange,
-                                         EditorType::HTML) &&
-          !HTMLEditUtils::IsBlockElement(*nextContentInRange)) {
-        return nextContentInRange;
-      }
+  // If the start boundary is at end of a node, we need to shrink the range
+  // to next content, e.g., `abc[<b>def` should be `abc<b>[def` unless the
+  // <b> is not entirely selected.
+  auto* const nextContentOrStartContainer = [&]() -> nsIContent* {
+    if (!startRef.IsInContentNode()) {
+      return nullptr;
     }
-    return startRef.GetContainerAs<nsIContent>();
+    if (!startRef.IsEndOfContainer()) {
+      return startRef.ContainerAs<nsIContent>();
+    }
+    nsIContent* const nextContent =
+        AutoInlineStyleSetter::GetNextEditableInlineContent(
+            *startRef.ContainerAs<nsIContent>(), &aCommonAncestorOfRange);
+    return nextContent ? nextContent : startRef.ContainerAs<nsIContent>();
   }();
   if (MOZ_UNLIKELY(!nextContentOrStartContainer)) {
     return startRef.To<EditorRawDOMPoint>();
@@ -1369,39 +1404,20 @@ EditorRawDOMPoint HTMLEditor::AutoInlineStyleSetter::GetShrunkenRangeEnd(
   if (IsStyleOfAnchorElement()) {
     return endRef.To<EditorRawDOMPoint>();
   }
-  nsIContent* const previousContentOrEndContainer = [&]() {
-    // If the end boundary is at start of a node, we need to shrink the range
-    // to previous content, e.g., `abc</b>]def` should be `abc]</b>def` unless
-    // the <b> is not entirely selected.
-    if (endRef.IsInContentNode() && endRef.IsStartOfContainer()) {
-      auto* const previousContentInRange = [&]() -> nsIContent* {
-        for (nsIContent* parent :
-             endRef.ContainerAs<nsIContent>()
-                 ->InclusiveAncestorsOfType<nsIContent>()) {
-          if (parent == &aCommonAncestorOfRange ||
-              !EditorUtils::IsEditableContent(*parent, EditorType::HTML) ||
-              (parent->IsElement() &&
-               (HTMLEditUtils::IsBlockElement(*parent->AsElement()) ||
-                HTMLEditUtils::IsDisplayInsideFlowRoot(
-                    *parent->AsElement())))) {
-            return nullptr;
-          }
-          if (nsIContent* previousSibling = parent->GetPreviousSibling()) {
-            MOZ_ASSERT(
-                aRange.Contains(EditorRawDOMPoint::After(*previousSibling)));
-            return previousSibling;
-          }
-        }
-        return nullptr;
-      }();
-      if (previousContentInRange &&
-          EditorUtils::IsEditableContent(*previousContentInRange,
-                                         EditorType::HTML) &&
-          !HTMLEditUtils::IsBlockElement(*previousContentInRange)) {
-        return previousContentInRange;
-      }
+  // If the end boundary is at start of a node, we need to shrink the range
+  // to previous content, e.g., `abc</b>]def` should be `abc]</b>def` unless
+  // the <b> is not entirely selected.
+  auto* const previousContentOrEndContainer = [&]() -> nsIContent* {
+    if (!endRef.IsInContentNode()) {
+      return nullptr;
     }
-    return endRef.GetContainerAs<nsIContent>();
+    if (!endRef.IsStartOfContainer()) {
+      return endRef.ContainerAs<nsIContent>();
+    }
+    nsIContent* const previousContent =
+        AutoInlineStyleSetter::GetPreviousEditableInlineContent(
+            *endRef.ContainerAs<nsIContent>(), &aCommonAncestorOfRange);
+    return previousContent ? previousContent : endRef.ContainerAs<nsIContent>();
   }();
   if (MOZ_UNLIKELY(!previousContentOrEndContainer)) {
     return endRef.To<EditorRawDOMPoint>();
@@ -3027,13 +3043,12 @@ nsresult HTMLEditor::RemoveInlinePropertiesAsSubAction(
     // TODO: We should collect everything required for removing the style before
     //       touching the DOM tree.  Then, we need to save and restore the
     //       ranges only once.
-    MOZ_ALWAYS_TRUE(selectionRanges.SaveAndTrackRanges(*this));
     Maybe<AutoInlineStyleSetter> styleInverter;
     if (styleToRemove.IsInvertibleWithCSS()) {
       styleInverter.emplace(EditorInlineStyleAndValue::ToInvert(styleToRemove));
     }
-    for (const OwningNonNull<nsRange>& selectionRange :
-         selectionRanges.Ranges()) {
+    for (OwningNonNull<nsRange>& selectionRange : selectionRanges.Ranges()) {
+      AutoTrackDOMRange trackSelectionRange(RangeUpdaterRef(), &selectionRange);
       // If we're removing <a name>, we don't want to split ancestors because
       // the split fragment will keep working as named anchor.  Therefore, we
       // need to remove all <a name> elements which the selection range even
@@ -3168,7 +3183,53 @@ nsresult HTMLEditor::RemoveInlinePropertiesAsSubAction(
         }  // for-loop for arrayOfContentsAroundRange
       }
 
+      auto FlushAndStopTrackingAndShrinkSelectionRange = [&]() MOZ_CAN_RUN_SCRIPT {
+        trackSelectionRange.FlushAndStopTracking();
+        if (NS_WARN_IF(!selectionRange->IsPositioned()) ||
+            !StaticPrefs::
+                editor_inline_style_range_compatible_with_the_other_browsers()) {
+          return;
+        }
+        EditorRawDOMRange range(selectionRange);
+        nsINode* const commonAncestor =
+            range.GetClosestCommonInclusiveAncestor();
+        // Shrink range for compatibility between browsers.
+        nsIContent* const maybeNextContent =
+            range.StartRef().IsInContentNode() &&
+                    range.StartRef().IsEndOfContainer()
+                ? AutoInlineStyleSetter::GetNextEditableInlineContent(
+                      *range.StartRef().ContainerAs<nsIContent>(),
+                      commonAncestor)
+                : nullptr;
+        nsIContent* const maybePreviousContent =
+            range.EndRef().IsInContentNode() &&
+                    range.EndRef().IsStartOfContainer()
+                ? AutoInlineStyleSetter::GetPreviousEditableInlineContent(
+                      *range.EndRef().ContainerAs<nsIContent>(), commonAncestor)
+                : nullptr;
+        if (!maybeNextContent && !maybePreviousContent) {
+          return;
+        }
+        const auto startPoint =
+            maybeNextContent &&
+                    maybeNextContent != selectionRange->GetStartContainer()
+                ? HTMLEditUtils::GetDeepestEditableStartPointOf<
+                      EditorRawDOMPoint>(*maybeNextContent)
+                : range.StartRef();
+        const auto endPoint =
+            maybePreviousContent &&
+                    maybePreviousContent != selectionRange->GetEndContainer()
+                ? HTMLEditUtils::GetDeepestEditableEndPointOf<
+                      EditorRawDOMPoint>(*maybePreviousContent)
+                : range.EndRef();
+        DebugOnly<nsresult> rvIgnored = selectionRange->SetStartAndEnd(
+            startPoint.ToRawRangeBoundary(), endPoint.ToRawRangeBoundary());
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                             "nsRange::SetStartAndEnd() failed, but ignored");
+      };
+
       if (arrayOfContentsToInvertStyle.IsEmpty()) {
+        FlushAndStopTrackingAndShrinkSelectionRange();
         continue;
       }
       MOZ_ASSERT(styleToRemove.IsInvertibleWithCSS());
@@ -3204,11 +3265,11 @@ nsresult HTMLEditor::RemoveInlinePropertiesAsSubAction(
           const uint32_t startOffset =
               content == splitRange.StartRef().GetContainer()
                   ? splitRange.StartRef().Offset()
-                  : 0;
+                  : 0u;
           const uint32_t endOffset =
               content == splitRange.EndRef().GetContainer()
                   ? splitRange.EndRef().Offset()
-                  : content->Length();
+                  : textNode->TextDataLength();
           Result<SplitRangeOffFromNodeResult, nsresult>
               wrapTextInStyledElementResult =
                   styleInverter->InvertStyleIfApplied(
@@ -3270,10 +3331,15 @@ nsresult HTMLEditor::RemoveInlinePropertiesAsSubAction(
         // update selection here.
         wrapTextInStyledElementResult.inspect().IgnoreCaretPointSuggestion();
       }  // for-loop of leafTextNodes
-    }    // for-loop of selectionRanges
-    MOZ_ASSERT(selectionRanges.HasSavedRanges());
-    selectionRanges.RestoreFromSavedRanges();
-  }  // for-loop of styles
+
+      // styleInverter may have touched a part of the range.  Therefore, we
+      // cannot adjust the range without comparing DOM node position and
+      // first/last touched positions, but it may be too expensive.  I think
+      // that shrinking only the tracked range boundaries must be enough in most
+      // cases.
+      FlushAndStopTrackingAndShrinkSelectionRange();
+    }  // for-loop of selectionRanges
+  }    // for-loop of styles
 
   MOZ_ASSERT(!selectionRanges.HasSavedRanges());
   nsresult rv = selectionRanges.ApplyTo(SelectionRef());
