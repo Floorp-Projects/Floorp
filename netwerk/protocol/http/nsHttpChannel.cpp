@@ -1601,7 +1601,6 @@ nsresult nsHttpChannel::CallOnStartRequest() {
     } else if (opaqueResponse == OpaqueResponse::Sniff) {
       MOZ_DIAGNOSTIC_ASSERT(mORB);
       nsresult rv = mORB->EnsureOpaqueResponseIsAllowedAfterSniff(this);
-      MOZ_DIAGNOSTIC_ASSERT(!mORB->IsSniffing());
 
       if (NS_FAILED(rv)) {
         return rv;
