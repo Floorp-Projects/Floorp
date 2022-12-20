@@ -460,6 +460,9 @@ class VideoData : public MediaData {
   // be allocated to create the VideoData object, or it may indicate some
   // problem with the input data (e.g. negative stride).
 
+  static bool UseUseNV12ForSoftwareDecodedVideoIfPossible(
+      layers::KnowsCompositor* aAllocator);
+
   // Creates a new VideoData containing a deep copy of aBuffer. May use
   // aContainer to allocate an Image to hold the copied data.
   static already_AddRefed<VideoData> CreateAndCopyData(

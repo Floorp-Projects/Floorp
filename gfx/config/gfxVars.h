@@ -95,7 +95,8 @@ class gfxVarReceiver;
   _(UseCanvasRenderThread, bool, false)                            \
   _(AllowBackdropFilter, bool, true)                               \
   _(WebglOopAsyncPresentForceSync, bool, true)                     \
-  _(UseAcceleratedCanvas2D, bool, false)
+  _(UseAcceleratedCanvas2D, bool, false)                           \
+  _(UseWebRenderDCompSwVideoOverlayWin, bool, false)
 
 /* Add new entries above this line. */
 

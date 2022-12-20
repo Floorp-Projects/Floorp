@@ -11,6 +11,7 @@
 #include "d3d11.h"
 #include "gfxImageSurface.h"
 #include "gfxWindowsPlatform.h"
+#include "libyuv.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/layers/CompositableClient.h"
@@ -22,6 +23,102 @@ namespace mozilla {
 namespace layers {
 
 using namespace gfx;
+
+/* static */
+RefPtr<D3D11ShareHandleImage>
+D3D11ShareHandleImage::MaybeCreateNV12ImageAndSetData(
+    KnowsCompositor* aKnowsCompositor, ImageContainer* aContainer,
+    const PlanarYCbCrData& aData) {
+  MOZ_ASSERT(aKnowsCompositor);
+  MOZ_ASSERT(aContainer);
+
+  if (!aKnowsCompositor || !aContainer) {
+    return nullptr;
+  }
+
+  // Check if data could be used with NV12
+  if (aData.YPictureSize().width % 2 != 0 ||
+      aData.YPictureSize().height % 2 != 0 || aData.mYSkip != 0 ||
+      aData.mCbSkip != 0 || aData.mCrSkip != 0 ||
+      aData.mColorDepth != gfx::ColorDepth::COLOR_8 ||
+      aData.mColorRange != gfx::ColorRange::LIMITED ||
+      aData.mChromaSubsampling !=
+          gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT) {
+    return nullptr;
+  }
+
+  RefPtr<D3D11ShareHandleImage> image = new D3D11ShareHandleImage(
+      aData.YPictureSize(), aData.mPictureRect,
+      ToColorSpace2(aData.mYUVColorSpace), aData.mColorRange);
+
+  RefPtr<D3D11RecycleAllocator> allocator =
+      aContainer->GetD3D11RecycleAllocator(aKnowsCompositor,
+                                           gfx::SurfaceFormat::NV12);
+  if (!allocator) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(allocator->GetUsableSurfaceFormat() == gfx::SurfaceFormat::NV12);
+  if (allocator->GetUsableSurfaceFormat() != gfx::SurfaceFormat::NV12) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    return nullptr;
+  }
+
+  RefPtr<ID3D11Texture2D> stagingTexture =
+      allocator->GetStagingTextureNV12(aData.YPictureSize());
+  if (!stagingTexture) {
+    return nullptr;
+  }
+
+  bool ok = image->AllocateTexture(allocator, allocator->mDevice);
+  if (!ok) {
+    return nullptr;
+  }
+
+  RefPtr<TextureClient> client = image->GetTextureClient(nullptr);
+  if (!client) {
+    return nullptr;
+  }
+
+  RefPtr<ID3D11Texture2D> texture = image->GetTexture();
+  if (!texture) {
+    return nullptr;
+  }
+
+  RefPtr<ID3D11DeviceContext> context;
+  allocator->mDevice->GetImmediateContext(getter_AddRefs(context));
+  if (!context) {
+    return nullptr;
+  }
+
+  D3D11_MAP mapType = D3D11_MAP_WRITE;
+  D3D11_MAPPED_SUBRESOURCE mappedResource;
+
+  HRESULT hr = context->Map(stagingTexture, 0, mapType, 0, &mappedResource);
+  if (FAILED(hr)) {
+    gfxCriticalNoteOnce << "Mapping D3D11 staging texture failed: "
+                        << gfx::hexa(hr);
+    return nullptr;
+  }
+
+  const size_t destStride = mappedResource.RowPitch;
+  uint8_t* yDestPlaneStart = reinterpret_cast<uint8_t*>(mappedResource.pData);
+  uint8_t* uvDestPlaneStart = reinterpret_cast<uint8_t*>(mappedResource.pData) +
+                              destStride * aData.YPictureSize().height;
+  // Convert I420 to NV12,
+  libyuv::I420ToNV12(aData.mYChannel, aData.mYStride, aData.mCbChannel,
+                     aData.mCbCrStride, aData.mCrChannel, aData.mCbCrStride,
+                     yDestPlaneStart, destStride, uvDestPlaneStart, destStride,
+                     aData.YDataSize().width, aData.YDataSize().height);
+
+  context->Unmap(stagingTexture, 0);
+
+  context->CopyResource(texture, stagingTexture);
+
+  context->Flush();
+
+  return image;
+}
 
 D3D11ShareHandleImage::D3D11ShareHandleImage(const gfx::IntSize& aSize,
                                              const gfx::IntRect& aRect,
@@ -182,6 +279,37 @@ already_AddRefed<TextureClient> D3D11RecycleAllocator::CreateOrRecycleClient(
 
   RefPtr<TextureClient> textureClient = CreateOrRecycle(helper);
   return textureClient.forget();
+}
+
+RefPtr<ID3D11Texture2D> D3D11RecycleAllocator::GetStagingTextureNV12(
+    gfx::IntSize aSize) {
+  if (!mStagingTexture || mStagingTextureSize != aSize) {
+    mStagingTexture = nullptr;
+
+    D3D11_TEXTURE2D_DESC desc = {};
+    desc.Width = aSize.width;
+    desc.Height = aSize.height;
+    desc.Format = DXGI_FORMAT_NV12;
+    desc.MipLevels = 1;
+    desc.ArraySize = 1;
+    desc.Usage = D3D11_USAGE_STAGING;
+    desc.BindFlags = 0;
+    desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    desc.MiscFlags = 0;
+    desc.SampleDesc.Count = 1;
+
+    HRESULT hr = mDevice->CreateTexture2D(&desc, nullptr,
+                                          getter_AddRefs(mStagingTexture));
+    if (FAILED(hr)) {
+      gfxCriticalNoteOnce << "allocating D3D11 NV12 staging texture failed: "
+                          << gfx::hexa(hr);
+      return nullptr;
+    }
+    MOZ_ASSERT(mStagingTexture);
+    mStagingTextureSize = aSize;
+  }
+
+  return mStagingTexture;
 }
 
 }  // namespace layers
