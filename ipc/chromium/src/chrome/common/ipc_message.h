@@ -93,6 +93,11 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
     REPLY = 1,
   };
 
+  enum LazySend {
+    EAGER_SEND = 0,
+    LAZY_SEND = 1,
+  };
+
   // The hard limit of handles or file descriptors allowed in a single message.
   static constexpr size_t MAX_DESCRIPTORS_PER_MESSAGE = 32767;
 
@@ -109,7 +114,7 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
       SYNC_BIT = 0x0020,
       REPLY_BIT = 0x0040,
       REPLY_ERROR_BIT = 0x0080,
-      /* UNUSED = 0x0100, */
+      LAZY_SEND_BIT = 0x0100,
       COMPRESS_BIT = 0x0200,
       COMPRESSALL_BIT = 0x0400,
       CONSTRUCTOR_BIT = 0x0800,
@@ -122,12 +127,13 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
     explicit constexpr HeaderFlags(NestedLevel level) : mFlags(level) {}
 
     constexpr HeaderFlags(NestedLevel level, PriorityValue priority,
-                          MessageCompression compression,
+                          MessageCompression compression, LazySend lazy_send,
                           Constructor constructor, Sync sync, Reply reply)
         : mFlags(level | (priority << 2) |
                  (compression == COMPRESSION_ENABLED ? COMPRESS_BIT
                   : compression == COMPRESSION_ALL   ? COMPRESSALL_BIT
                                                      : 0) |
+                 (lazy_send == LAZY_SEND ? LAZY_SEND_BIT : 0) |
                  (constructor == CONSTRUCTOR ? CONSTRUCTOR_BIT : 0) |
                  (sync == SYNC ? SYNC_BIT : 0) |
                  (reply == REPLY ? REPLY_BIT : 0)) {}
@@ -145,6 +151,8 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
               : (mFlags & COMPRESSALL_BIT) ? COMPRESSION_ALL
                                            : COMPRESSION_NONE);
     }
+
+    bool IsLazySend() const { return (mFlags & LAZY_SEND_BIT) != 0; }
 
     bool IsConstructor() const { return (mFlags & CONSTRUCTOR_BIT) != 0; }
     bool IsSync() const { return (mFlags & SYNC_BIT) != 0; }
@@ -208,6 +216,8 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
   MessageCompression compress_type() const {
     return header()->flags.Compression();
   }
+
+  bool is_lazy_send() const { return header()->flags.IsLazySend(); }
 
   bool is_reply() const { return header()->flags.IsReply(); }
 

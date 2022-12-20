@@ -469,9 +469,13 @@ class MessageChannel : HasResultCodes {
   // depending on context.
   static bool IsAlwaysDeferred(const Message& aMsg);
 
-  // Helper for sending a message via the link. This should only be used for
-  // non-special messages that might have to be postponed.
+  // Helper for sending a message via the link. If the message is [LazySend], it
+  // will be queued, and if the message is not-[LazySend], it will flush any
+  // pending [LazySend] messages.
   void SendMessageToLink(UniquePtr<Message> aMsg) MOZ_REQUIRES(*mMonitor);
+
+  // Called to flush [LazySend] messages to the link.
+  void FlushLazySendMessages() MOZ_REQUIRES(*mMonitor);
 
   bool WasTransactionCanceled(int transaction);
   bool ShouldDeferMessage(const Message& aMsg) MOZ_REQUIRES(*mMonitor);
@@ -582,6 +586,29 @@ class MessageChannel : HasResultCodes {
     MessageChannel* MOZ_NON_OWNING_REF mChannel;
   };
 
+  class FlushLazySendMessagesRunnable final : public CancelableRunnable {
+   public:
+    explicit FlushLazySendMessagesRunnable(MessageChannel* aChannel);
+
+    NS_DECL_ISUPPORTS_INHERITED
+
+    NS_IMETHOD Run() override;
+    nsresult Cancel() override;
+
+    void PushMessage(UniquePtr<Message> aMsg);
+    nsTArray<UniquePtr<Message>> TakeMessages();
+
+   private:
+    ~FlushLazySendMessagesRunnable() = default;
+
+    // Cleared by MessageChannel before it is destroyed.
+    MessageChannel* MOZ_NON_OWNING_REF mChannel;
+
+    // LazySend messages which haven't been sent yet, but will be sent as soon
+    // as a non-LazySend message is sent, or this runnable is executed.
+    nsTArray<UniquePtr<Message>> mQueue;
+  };
+
   typedef LinkedList<RefPtr<MessageTask>> MessageQueue;
   typedef std::map<size_t, UniquePtr<UntypedCallbackHolder>> CallbackMap;
   typedef IPC::Message::msgid_t msgid_t;
@@ -622,6 +649,10 @@ class MessageChannel : HasResultCodes {
 
   // Shutdown task to close the channel before mWorkerThread goes away.
   RefPtr<WorkerTargetShutdownTask> mShutdownTask MOZ_GUARDED_BY(*mMonitor);
+
+  // Task to force sending lazy messages when mQueuedLazyMessages is non-empty.
+  RefPtr<FlushLazySendMessagesRunnable> mFlushLazySendTask
+      MOZ_GUARDED_BY(*mMonitor);
 
   // Timeout periods are broken up in two to prevent system suspension from
   // triggering an abort. This method (called by WaitForEvent with a 'did

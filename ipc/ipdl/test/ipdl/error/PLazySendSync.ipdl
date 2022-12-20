@@ -1,0 +1,6 @@
+//error: non-async message `Message' cannot specify [LazySend]
+
+sync protocol PLazySendSync {
+child:
+    [LazySend] sync Message() returns (bool ok);
+};
