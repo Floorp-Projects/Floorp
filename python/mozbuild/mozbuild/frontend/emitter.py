@@ -6,19 +6,22 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 import os
-import six
 import sys
 import time
 import traceback
+from collections import OrderedDict, defaultdict
 
-from collections import defaultdict, OrderedDict
-from mach.mixin.logging import LoggingMixin
-from mozbuild.util import memoize, OrderedDefaultDict
-
-import mozpack.path as mozpath
 import mozinfo
+import mozpack.path as mozpath
+import six
 import toml
+from mach.mixin.logging import LoggingMixin
+from mozbuild.base import ExecutionSummary
+from mozbuild.util import OrderedDefaultDict, memoize
+from mozpack.chrome.manifest import Manifest
 
+from ..testing import REFTEST_FLAVORS, TEST_MANIFESTS, SupportFilesConverter
+from .context import Context, ObjDirPath, Path, SourcePath, SubContext
 from .data import (
     BaseRustProgram,
     ChromeManifestEntry,
@@ -27,14 +30,15 @@ from .data import (
     Defines,
     DirectoryTraversal,
     Exports,
+    ExternalSharedLibrary,
+    ExternalStaticLibrary,
     FinalTargetFiles,
     FinalTargetPreprocessedFiles,
     GeneratedFile,
-    ExternalStaticLibrary,
-    ExternalSharedLibrary,
     HostDefines,
     HostLibrary,
     HostProgram,
+    HostRustLibrary,
     HostRustProgram,
     HostSharedLibrary,
     HostSimpleProgram,
@@ -50,10 +54,8 @@ from .data import (
     ObjdirFiles,
     ObjdirPreprocessedFiles,
     PerSourceFlag,
-    WebIDLCollection,
     Program,
     RustLibrary,
-    HostRustLibrary,
     RustProgram,
     RustTests,
     SandboxedWasmLibrary,
@@ -67,18 +69,11 @@ from .data import (
     VariablePassthru,
     WasmDefines,
     WasmSources,
+    WebIDLCollection,
     XPCOMComponentManifests,
     XPIDLModule,
 )
-from mozpack.chrome.manifest import Manifest
-
 from .reader import SandboxValidationError
-
-from ..testing import TEST_MANIFESTS, REFTEST_FLAVORS, SupportFilesConverter
-
-from .context import Context, SourcePath, ObjDirPath, Path, SubContext
-
-from mozbuild.base import ExecutionSummary
 
 
 class TreeMetadataEmitter(LoggingMixin):
