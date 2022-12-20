@@ -224,6 +224,16 @@ class AsyncIterableIteratorBase : public IterableIteratorBase {
   explicit AsyncIterableIteratorBase(IteratorType aIteratorType)
       : mIteratorType(aIteratorType) {}
 
+  void UnlinkHelper() override {
+    AsyncIterableIteratorBase* tmp = this;
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mOngoingPromise);
+  }
+
+  void TraverseHelper(nsCycleCollectionTraversalCallback& cb) override {
+    AsyncIterableIteratorBase* tmp = this;
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOngoingPromise);
+  }
+
  private:
   friend class binding_detail::AsyncIterableNextImpl;
   friend class binding_detail::AsyncIterableReturnImpl;
@@ -275,12 +285,16 @@ class AsyncIterableIterator : public AsyncIterableIteratorBase {
   // Since we're templated on a binding, we need to possibly CC it, but can't do
   // that through macros. So it happens here.
   void UnlinkHelper() final {
+    AsyncIterableIteratorBase::UnlinkHelper();
+
     AsyncIterableIterator<T>* tmp = this;
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mIterableObj);
     UnlinkData(tmp->mData, 0);
   }
 
-  virtual void TraverseHelper(nsCycleCollectionTraversalCallback& cb) override {
+  void TraverseHelper(nsCycleCollectionTraversalCallback& cb) final {
+    AsyncIterableIteratorBase::TraverseHelper(cb);
+
     AsyncIterableIterator<T>* tmp = this;
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIterableObj);
     TraverseData(tmp->mData, cb, 0);
