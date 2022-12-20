@@ -137,6 +137,12 @@ class BackgroundParentImpl : public PBackgroundParent {
       Endpoint<mozilla::dom::PFileSystemManagerParent>&& aParentEndpoint,
       CreateFileSystemManagerParentResolver&& aResolver) override;
 
+  mozilla::ipc::IPCResult RecvCreateWebTransportParent(
+      const nsAString& aURL,
+      // WebTransportOptions aOptions,
+      Endpoint<PWebTransportParent>&& aParentEndpoint,
+      CreateWebTransportParentResolver&& aResolver) override;
+
   already_AddRefed<PIdleSchedulerParent> AllocPIdleSchedulerParent() override;
 
   PTemporaryIPCBlobParent* AllocPTemporaryIPCBlobParent() override;
