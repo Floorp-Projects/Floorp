@@ -256,12 +256,9 @@ nsresult HTMLEditor::SetInlinePropertiesAsSubAction(
       inlineStyleSetter.Reset();
       const EditorDOMRange range = [&]() {
         if (selectionRanges.HasSavedRanges()) {
-          nsresult rv = PromoteInlineRange(*selectionRange);
-          if (NS_FAILED(rv)) {
-            NS_WARNING("HTMLEditor::PromoteInlineRange() failed, but ignored");
-            return EditorDOMRange();
-          }
-          return EditorDOMRange(selectionRange);
+          return EditorDOMRange(
+              GetExtendedRangeWrappingEntirelySelectedElements(
+                  EditorRawDOMRange(selectionRange)));
         }
         Result<EditorRawDOMRange, nsresult> rangeOrError =
             inlineStyleSetter.ExtendOrShrinkRangeToApplyTheStyle(
@@ -1801,8 +1798,10 @@ Result<SplitNodeResult, nsresult>
 HTMLEditor::SplitAncestorStyledInlineElementsAt(
     const EditorDOMPoint& aPointToSplit, const EditorInlineStyle& aStyle,
     SplitAtEdges aSplitAtEdges) {
-  if (NS_WARN_IF(!aPointToSplit.IsInContentNode())) {
-    return Err(NS_ERROR_INVALID_ARG);
+  // If the point is in a non-content node, e.g., in the document node, we
+  // should split nothing.
+  if (MOZ_UNLIKELY(!aPointToSplit.IsInContentNode())) {
+    return SplitNodeResult::NotHandled(aPointToSplit, GetSplitNodeDirection());
   }
 
   // We assume that this method is called only when we're removing style(s).
@@ -2507,152 +2506,62 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::RemoveStyleInside(
   return pointToPutCaret;
 }
 
-nsresult HTMLEditor::PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange& aRange) {
-  // We assume that <a> is not nested.
-  // XXX Shouldn't ignore the editing host.
-  if (NS_WARN_IF(!aRange.GetStartContainer()) ||
-      NS_WARN_IF(!aRange.GetEndContainer())) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  EditorRawDOMPoint newRangeStart(aRange.StartRef());
+EditorRawDOMRange HTMLEditor::GetExtendedRangeWrappingNamedAnchor(
+    const EditorRawDOMRange& aRange) const {
+  MOZ_ASSERT(aRange.StartRef().IsSet());
+  MOZ_ASSERT(aRange.EndRef().IsSet());
+
+  // FYI: We don't want to stop at ancestor block boundaries to extend the range
+  // because <a name> can have block elements with low level DOM API.  We want
+  // to remove any <a name> ancestors to remove the style.
+
+  EditorRawDOMRange newRange(aRange);
   for (Element* element :
-       aRange.GetStartContainer()->InclusiveAncestorsOfType<Element>()) {
-    if (element->IsHTMLElement(nsGkAtoms::body)) {
-      break;
-    }
+       aRange.StartRef().GetContainer()->InclusiveAncestorsOfType<Element>()) {
     if (!HTMLEditUtils::IsNamedAnchor(element)) {
       continue;
     }
-    newRangeStart.Set(element);
-    break;
+    newRange.SetStart(EditorRawDOMPoint(element));
   }
-
-  if (!newRangeStart.IsInContentNode()) {
-    NS_WARNING(
-        "HTMLEditor::PromoteRangeIfStartsOrEndsInNamedAnchor() reached root "
-        "element from start container");
-    return NS_ERROR_FAILURE;
-  }
-
-  EditorRawDOMPoint newRangeEnd(aRange.EndRef());
   for (Element* element :
-       aRange.GetEndContainer()->InclusiveAncestorsOfType<Element>()) {
-    if (element->IsHTMLElement(nsGkAtoms::body)) {
-      break;
-    }
+       aRange.EndRef().GetContainer()->InclusiveAncestorsOfType<Element>()) {
     if (!HTMLEditUtils::IsNamedAnchor(element)) {
       continue;
     }
-    newRangeEnd.SetAfter(element);
-    break;
+    newRange.SetEnd(EditorRawDOMPoint::After(*element));
   }
-
-  if (!newRangeEnd.IsInContentNode()) {
-    NS_WARNING(
-        "HTMLEditor::PromoteRangeIfStartsOrEndsInNamedAnchor() reached root "
-        "element from end container");
-    return NS_ERROR_FAILURE;
-  }
-
-  if (newRangeStart == aRange.StartRef() && newRangeEnd == aRange.EndRef()) {
-    return NS_OK;
-  }
-
-  nsresult rv = aRange.SetStartAndEnd(newRangeStart.ToRawRangeBoundary(),
-                                      newRangeEnd.ToRawRangeBoundary());
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "nsRange::SetStartAndEnd() failed");
-  return rv;
+  return newRange;
 }
 
-nsresult HTMLEditor::PromoteInlineRange(nsRange& aRange) {
-  if (NS_WARN_IF(!aRange.GetStartContainer()) ||
-      NS_WARN_IF(!aRange.GetEndContainer())) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  EditorRawDOMPoint newRangeStart(aRange.StartRef());
-  for (nsIContent* content :
-       aRange.GetStartContainer()->InclusiveAncestorsOfType<nsIContent>()) {
-    MOZ_ASSERT(newRangeStart.GetContainer() == content);
-    if (content->IsHTMLElement(nsGkAtoms::body) ||
-        !EditorUtils::IsEditableContent(*content, EditorType::HTML) ||
-        !IsStartOfContainerOrBeforeFirstEditableChild(newRangeStart)) {
+EditorRawDOMRange HTMLEditor::GetExtendedRangeWrappingEntirelySelectedElements(
+    const EditorRawDOMRange& aRange) const {
+  MOZ_ASSERT(aRange.StartRef().IsSet());
+  MOZ_ASSERT(aRange.EndRef().IsSet());
+
+  // FYI: We don't want to stop at ancestor block boundaries to extend the range
+  // because the style may come from inline parents of block elements which may
+  // occur in invalid DOM tree.  We want to split any (even invalid) ancestors
+  // at removing the styles.
+
+  EditorRawDOMRange newRange(aRange);
+  while (newRange.StartRef().IsInContentNode() &&
+         newRange.StartRef().IsStartOfContainer()) {
+    if (!EditorUtils::IsEditableContent(
+            *newRange.StartRef().ContainerAs<nsIContent>(), EditorType::HTML)) {
       break;
     }
-    newRangeStart.Set(content);
+    newRange.SetStart(newRange.StartRef().ParentPoint());
   }
-  if (!newRangeStart.IsInContentNode()) {
-    NS_WARNING(
-        "HTMLEditor::PromoteInlineRange() reached root element from start "
-        "container");
-    return NS_ERROR_FAILURE;
-  }
-
-  EditorRawDOMPoint newRangeEnd(aRange.EndRef());
-  for (nsIContent* content :
-       aRange.GetEndContainer()->InclusiveAncestorsOfType<nsIContent>()) {
-    MOZ_ASSERT(newRangeEnd.GetContainer() == content);
-    if (content->IsHTMLElement(nsGkAtoms::body) ||
-        !EditorUtils::IsEditableContent(*content, EditorType::HTML) ||
-        !IsEndOfContainerOrEqualsOrAfterLastEditableChild(newRangeEnd)) {
+  while (newRange.EndRef().IsInContentNode() &&
+         newRange.EndRef().IsEndOfContainer()) {
+    if (!EditorUtils::IsEditableContent(
+            *newRange.EndRef().ContainerAs<nsIContent>(), EditorType::HTML)) {
       break;
     }
-    newRangeEnd.SetAfter(content);
+    newRange.SetEnd(
+        EditorRawDOMPoint::After(*newRange.EndRef().ContainerAs<nsIContent>()));
   }
-  if (!newRangeEnd.IsInContentNode()) {
-    NS_WARNING(
-        "HTMLEditor::PromoteInlineRange() reached root element from end "
-        "container");
-    return NS_ERROR_FAILURE;
-  }
-
-  if (newRangeStart == aRange.StartRef() && newRangeEnd == aRange.EndRef()) {
-    return NS_OK;
-  }
-
-  nsresult rv = aRange.SetStartAndEnd(newRangeStart.ToRawRangeBoundary(),
-                                      newRangeEnd.ToRawRangeBoundary());
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "nsRange::SetStartAndEnd() failed");
-  return rv;
-}
-
-bool HTMLEditor::IsStartOfContainerOrBeforeFirstEditableChild(
-    const EditorRawDOMPoint& aPoint) const {
-  MOZ_ASSERT(aPoint.IsSet());
-
-  if (aPoint.IsStartOfContainer()) {
-    return true;
-  }
-
-  if (aPoint.IsInTextNode()) {
-    return false;
-  }
-
-  nsIContent* firstEditableChild = HTMLEditUtils::GetFirstChild(
-      *aPoint.GetContainer(), {WalkTreeOption::IgnoreNonEditableNode});
-  if (!firstEditableChild) {
-    return true;
-  }
-  return EditorRawDOMPoint(firstEditableChild).Offset() >= aPoint.Offset();
-}
-
-bool HTMLEditor::IsEndOfContainerOrEqualsOrAfterLastEditableChild(
-    const EditorRawDOMPoint& aPoint) const {
-  MOZ_ASSERT(aPoint.IsSet());
-
-  if (aPoint.IsEndOfContainer()) {
-    return true;
-  }
-
-  if (aPoint.IsInTextNode()) {
-    return false;
-  }
-
-  nsIContent* lastEditableChild = HTMLEditUtils::GetLastChild(
-      *aPoint.GetContainer(), {WalkTreeOption::IgnoreNonEditableNode});
-  if (!lastEditableChild) {
-    return true;
-  }
-  return EditorRawDOMPoint(lastEditableChild).Offset() < aPoint.Offset();
+  return newRange;
 }
 
 nsresult HTMLEditor::GetInlinePropertyBase(const EditorInlineStyle& aStyle,
@@ -3123,31 +3032,26 @@ nsresult HTMLEditor::RemoveInlinePropertiesAsSubAction(
     if (styleToRemove.IsInvertibleWithCSS()) {
       styleInverter.emplace(EditorInlineStyleAndValue::ToInvert(styleToRemove));
     }
-    for (const OwningNonNull<nsRange>& range : selectionRanges.Ranges()) {
-      if (styleToRemove.mHTMLProperty == nsGkAtoms::name) {
-        // Promote range if it starts or end in a named anchor and we want to
-        // remove named anchors
-        nsresult rv = PromoteRangeIfStartsOrEndsInNamedAnchor(*range);
-        if (NS_FAILED(rv)) {
-          NS_WARNING(
-              "HTMLEditor::PromoteRangeIfStartsOrEndsInNamedAnchor() failed");
-          return rv;
-        }
-      } else {
-        // Adjust range to include any ancestors whose children are entirely
-        // selected
-        nsresult rv = PromoteInlineRange(*range);
-        if (NS_FAILED(rv)) {
-          NS_WARNING("HTMLEditor::PromoteInlineRange() failed");
-          return rv;
-        }
+    for (const OwningNonNull<nsRange>& selectionRange :
+         selectionRanges.Ranges()) {
+      // If we're removing <a name>, we don't want to split ancestors because
+      // the split fragment will keep working as named anchor.  Therefore, we
+      // need to remove all <a name> elements which the selection range even
+      // partially contains.
+      const EditorDOMRange range(
+          styleToRemove.mHTMLProperty == nsGkAtoms::name
+              ? GetExtendedRangeWrappingNamedAnchor(
+                    EditorRawDOMRange(selectionRange))
+              : GetExtendedRangeWrappingEntirelySelectedElements(
+                    EditorRawDOMRange(selectionRange)));
+      if (NS_WARN_IF(!range.IsPositioned())) {
+        continue;
       }
 
       // Remove this style from ancestors of our range endpoints, splitting
       // them as appropriate
       Result<SplitRangeOffResult, nsresult> splitRangeOffResult =
-          SplitAncestorStyledInlineElementsAtRangeEdges(EditorDOMRange(range),
-                                                        styleToRemove);
+          SplitAncestorStyledInlineElementsAtRangeEdges(range, styleToRemove);
       if (MOZ_UNLIKELY(splitRangeOffResult.isErr())) {
         NS_WARNING(
             "HTMLEditor::SplitAncestorStyledInlineElementsAtRangeEdges() "
@@ -3560,15 +3464,12 @@ nsresult HTMLEditor::IncrementOrDecrementFontSizeAsSubAction(
   AutoRangeArray selectionRanges(SelectionRef());
   MOZ_ALWAYS_TRUE(selectionRanges.SaveAndTrackRanges(*this));
   for (const OwningNonNull<nsRange>& domRange : selectionRanges.Ranges()) {
-    // Adjust range to include any ancestors with entirely selected children
-    if (NS_FAILED(PromoteInlineRange(*domRange))) {
-      NS_WARNING("HTMLEditor::PromoteInlineRange() failed");
-      // for consistency with setting/removing inline styles, we should keep
-      // handling the other ranges.
-      continue;
-    }
-
-    EditorDOMRange range(domRange);
+    // TODO: We should stop extending the range outside ancestor blocks because
+    //       we don't need to do it for setting inline styles.  However, here is
+    //       chrome only handling path.  Therefore, we don't need to fix here
+    //       soon.
+    const EditorDOMRange range(GetExtendedRangeWrappingEntirelySelectedElements(
+        EditorRawDOMRange(domRange)));
     if (NS_WARN_IF(!range.IsPositioned())) {
       continue;
     }
