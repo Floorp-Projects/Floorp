@@ -53,6 +53,8 @@ nsCString GetUtilityActorName(const UtilityActorName aActorName) {
       return "audio-decoder-wmf"_ns;
     case UtilityActorName::MfMediaEngineCDM:
       return "mf-media-engine"_ns;
+    case UtilityActorName::JSOracle:
+      return "js-oracle"_ns;
   }
   return "unknown"_ns;
 }

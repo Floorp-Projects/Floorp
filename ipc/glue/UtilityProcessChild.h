@@ -14,6 +14,11 @@
 #include "mozilla/PRemoteDecoderManagerParent.h"
 #include "mozilla/ipc/AsyncBlockers.h"
 
+namespace mozilla::dom {
+class JSOracleChild;
+class PJSOracleChild;
+}  // namespace mozilla::dom
+
 namespace mozilla::ipc {
 
 class UtilityProcessHost;
@@ -55,6 +60,9 @@ class UtilityProcessChild final : public PUtilityProcessChild {
   mozilla::ipc::IPCResult RecvStartUtilityAudioDecoderService(
       Endpoint<PUtilityAudioDecoderParent>&& aEndpoint);
 
+  mozilla::ipc::IPCResult RecvStartJSOracleService(
+      Endpoint<dom::PJSOracleChild>&& aEndpoint);
+
   AsyncBlockers& AsyncShutdownService() { return mShutdownBlockers; }
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
@@ -71,6 +79,7 @@ class UtilityProcessChild final : public PUtilityProcessChild {
  private:
   RefPtr<ChildProfilerController> mProfilerController;
   RefPtr<UtilityAudioDecoderParent> mUtilityAudioDecoderInstance{};
+  RefPtr<dom::JSOracleChild> mJSOracleInstance{};
   AsyncBlockers mShutdownBlockers;
 };
 
