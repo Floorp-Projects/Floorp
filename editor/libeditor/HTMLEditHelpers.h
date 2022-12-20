@@ -636,6 +636,8 @@ class MOZ_STACK_CLASS SplitRangeOffFromNodeResult final : public CaretPoint {
     return ContentNodeType::FromNodeOrNull(GetRightmostContent());
   }
 
+  [[nodiscard]] bool DidSplit() const { return mLeftContent || mRightContent; }
+
   SplitRangeOffFromNodeResult() = delete;
 
   SplitRangeOffFromNodeResult(nsIContent* aLeftContent,

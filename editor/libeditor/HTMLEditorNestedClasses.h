@@ -62,6 +62,16 @@ class MOZ_STACK_CLASS HTMLEditor::AutoInlineStyleSetter final
                                                      nsIContent& aContent);
 
   /**
+   * Invert the style with creating new element or something.  This should
+   * be called only when IsInvertibleWithCSS() returns true.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  InvertStyleIfApplied(HTMLEditor& aHTMLEditor, Element& aElement);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<SplitRangeOffFromNodeResult, nsresult>
+  InvertStyleIfApplied(HTMLEditor& aHTMLEditor, Text& aTextNode,
+                       uint32_t aStartOffset, uint32_t aEndOffset);
+
+  /**
    * Extend or shrink aRange for applying the style to the range.
    * See comments in the definition what this does.
    */

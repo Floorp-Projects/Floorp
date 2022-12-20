@@ -3176,95 +3176,73 @@ nsresult HTMLEditor::RemoveInlinePropertiesAsSubAction(
       // If the style is specified in parent block and we can remove the
       // style with inserting new <span> element, we should do it.
       for (OwningNonNull<nsIContent>& content : arrayOfContentsToInvertStyle) {
-        Result<bool, nsresult> isRemovableParentStyleOrError =
-            IsRemovableParentStyleWithNewSpanElement(MOZ_KnownLive(content),
-                                                     styleToRemove);
-        if (MOZ_UNLIKELY(isRemovableParentStyleOrError.isErr())) {
-          NS_WARNING(
-              "HTMLEditor::IsRemovableParentStyleWithNewSpanElement() "
-              "failed");
-          return isRemovableParentStyleOrError.unwrapErr();
-        }
-        if (!isRemovableParentStyleOrError.unwrap()) {
-          // E.g., text-decoration cannot be override visually in children.
-          // In such cases, we can do nothing.
-          continue;
-        }
-
-        // If it's not a text node, should wrap it into a new element,
-        // move it into direct child which has same style, or specify
-        // the style to its parent.
-        if (!content->IsText()) {
+        if (Element* element = Element::FromNode(content)) {
           // XXX Do we need to call this even when data node or something?  If
           //     so, for what?
           // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
           // keep it alive.
-          Result<CaretPoint, nsresult> pointToPutCaretOrError =
-              styleInverter->ApplyStyleToNodeOrChildrenAndRemoveNestedSameStyle(
-                  *this, MOZ_KnownLive(content));
-          if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
-            if (NS_WARN_IF(pointToPutCaretOrError.unwrapErr() ==
-                           NS_ERROR_EDITOR_DESTROYED)) {
+          nsresult rv = styleInverter->InvertStyleIfApplied(
+              *this, MOZ_KnownLive(*element));
+          if (NS_FAILED(rv)) {
+            if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
               NS_WARNING(
-                  "AutoInlineStyleSetter::"
-                  "ApplyStyleToNodeOrChildrenAndRemoveNestedSameStyle() "
-                  "failed");
+                  "AutoInlineStyleSetter::InvertStyleIfApplied() failed");
               return NS_ERROR_EDITOR_DESTROYED;
             }
             NS_WARNING(
-                "AutoInlineStyleSetter::"
-                "ApplyStyleToNodeOrChildrenAndRemoveNestedSameStyle() "
-                "failed, but ignored");
-          } else {
-            // There is AutoTransactionsConserveSelection, so we don't need to
-            // update selection here.
-            pointToPutCaretOrError.unwrap().IgnoreCaretPointSuggestion();
+                "AutoInlineStyleSetter::InvertStyleIfApplied() failed, but "
+                "ignored");
           }
           continue;
         }
 
-        // If current node is a text node, we need to create `<span>` element
-        // for it to overwrite parent style.  Unfortunately, all browsers
-        // don't join text nodes when removing a style.  Therefore, there
-        // may be multiple text nodes as adjacent siblings.  That's the
-        // reason why we need to handle text nodes in this loop.
-        uint32_t startOffset = content == splitRange.StartRef().GetContainer()
-                                   ? splitRange.StartRef().Offset()
-                                   : 0;
-        uint32_t endOffset = content == splitRange.EndRef().GetContainer()
-                                 ? splitRange.EndRef().Offset()
-                                 : content->Length();
-        Result<SplitRangeOffFromNodeResult, nsresult>
-            wrapTextInStyledElementResult =
-                styleInverter->SplitTextNodeAndApplyStyleToMiddleNode(
-                    *this, MOZ_KnownLive(*content->AsText()), startOffset,
-                    endOffset);
-        if (MOZ_UNLIKELY(wrapTextInStyledElementResult.isErr())) {
-          NS_WARNING(
-              "AutoInlineStyleSetter::SplitTextNodeAndApplyStyleToMiddleNode("
-              ") failed");
-          return wrapTextInStyledElementResult.unwrapErr();
-        }
-        SplitRangeOffFromNodeResult unwrappedWrapTextInStyledElementResult =
-            wrapTextInStyledElementResult.unwrap();
-        // There is AutoTransactionsConserveSelection, so we don't need to
-        // update selection here.
-        unwrappedWrapTextInStyledElementResult.IgnoreCaretPointSuggestion();
-        // If we've split the content, let's swap content in
-        // arrayOfContentsToInvertStyle with the text node which is applied
-        // the style.
-        if (styleToRemove.IsInvertibleWithCSS()) {
-          MOZ_ASSERT(unwrappedWrapTextInStyledElementResult
-                         .GetMiddleContentAs<Text>());
-          if (Text* textNode = unwrappedWrapTextInStyledElementResult
-                                   .GetMiddleContentAs<Text>()) {
-            if (textNode != content) {
-              arrayOfContentsToInvertStyle.ReplaceElementAt(
-                  arrayOfContentsToInvertStyle.Length() - 1,
-                  OwningNonNull<nsIContent>(*textNode));
+        // Unfortunately, all browsers don't join text nodes when removing a
+        // style.  Therefore, there may be multiple text nodes as adjacent
+        // siblings.  That's the reason why we need to handle text nodes in this
+        // loop.
+        if (Text* textNode = Text::FromNode(content)) {
+          const uint32_t startOffset =
+              content == splitRange.StartRef().GetContainer()
+                  ? splitRange.StartRef().Offset()
+                  : 0;
+          const uint32_t endOffset =
+              content == splitRange.EndRef().GetContainer()
+                  ? splitRange.EndRef().Offset()
+                  : content->Length();
+          Result<SplitRangeOffFromNodeResult, nsresult>
+              wrapTextInStyledElementResult =
+                  styleInverter->InvertStyleIfApplied(
+                      *this, MOZ_KnownLive(*textNode), startOffset, endOffset);
+          if (MOZ_UNLIKELY(wrapTextInStyledElementResult.isErr())) {
+            NS_WARNING("AutoInlineStyleSetter::InvertStyleIfApplied() failed");
+            return wrapTextInStyledElementResult.unwrapErr();
+          }
+          SplitRangeOffFromNodeResult unwrappedWrapTextInStyledElementResult =
+              wrapTextInStyledElementResult.unwrap();
+          // There is AutoTransactionsConserveSelection, so we don't need to
+          // update selection here.
+          unwrappedWrapTextInStyledElementResult.IgnoreCaretPointSuggestion();
+          // If we've split the content, let's swap content in
+          // arrayOfContentsToInvertStyle with the text node which is applied
+          // the style.
+          if (unwrappedWrapTextInStyledElementResult.DidSplit() &&
+              styleToRemove.IsInvertibleWithCSS()) {
+            MOZ_ASSERT(unwrappedWrapTextInStyledElementResult
+                           .GetMiddleContentAs<Text>());
+            if (Text* styledTextNode = unwrappedWrapTextInStyledElementResult
+                                           .GetMiddleContentAs<Text>()) {
+              if (styledTextNode != content) {
+                arrayOfContentsToInvertStyle.ReplaceElementAt(
+                    arrayOfContentsToInvertStyle.Length() - 1,
+                    OwningNonNull<nsIContent>(*styledTextNode));
+              }
             }
           }
+          continue;
         }
+
+        // If the node is not an element nor a text node, it's invisible.
+        // In this case, we don't need to make it wrapped in new element.
       }
 
       // Finally, we should remove the style from all leaf text nodes if
@@ -3279,24 +3257,9 @@ nsresult HTMLEditor::RemoveInlinePropertiesAsSubAction(
         }
       }
       for (const OwningNonNull<Text>& textNode : leafTextNodes) {
-        Result<bool, nsresult> isRemovableParentStyleOrError =
-            IsRemovableParentStyleWithNewSpanElement(MOZ_KnownLive(textNode),
-                                                     styleToRemove);
-        if (isRemovableParentStyleOrError.isErr()) {
-          NS_WARNING(
-              "HTMLEditor::IsRemovableParentStyleWithNewSpanElement() "
-              "failed");
-          return isRemovableParentStyleOrError.unwrapErr();
-        }
-        if (!isRemovableParentStyleOrError.unwrap()) {
-          continue;
-        }
-        // MOZ_KnownLive because 'leafTextNodes' is guaranteed to
-        // keep it alive.
         Result<SplitRangeOffFromNodeResult, nsresult>
-            wrapTextInStyledElementResult =
-                styleInverter->SplitTextNodeAndApplyStyleToMiddleNode(
-                    *this, MOZ_KnownLive(textNode), 0, textNode->TextLength());
+            wrapTextInStyledElementResult = styleInverter->InvertStyleIfApplied(
+                *this, MOZ_KnownLive(*textNode), 0, textNode->TextLength());
         if (MOZ_UNLIKELY(wrapTextInStyledElementResult.isErr())) {
           NS_WARNING(
               "AutoInlineStyleSetter::SplitTextNodeAndApplyStyleToMiddleNode() "
@@ -3319,6 +3282,67 @@ nsresult HTMLEditor::RemoveInlinePropertiesAsSubAction(
   }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AutoRangeArray::ApplyTo() failed");
   return rv;
+}
+
+nsresult HTMLEditor::AutoInlineStyleSetter::InvertStyleIfApplied(
+    HTMLEditor& aHTMLEditor, Element& aElement) {
+  MOZ_ASSERT(IsStyleToInvert());
+
+  Result<bool, nsresult> isRemovableParentStyleOrError =
+      aHTMLEditor.IsRemovableParentStyleWithNewSpanElement(aElement, *this);
+  if (MOZ_UNLIKELY(isRemovableParentStyleOrError.isErr())) {
+    NS_WARNING("HTMLEditor::IsRemovableParentStyleWithNewSpanElement() failed");
+    return isRemovableParentStyleOrError.unwrapErr();
+  }
+  if (!isRemovableParentStyleOrError.unwrap()) {
+    // E.g., text-decoration cannot be override visually in children.
+    // In such cases, we can do nothing.
+    return NS_OK;
+  }
+
+  // Wrap it into a new element, move it into direct child which has same style,
+  // or specify the style to its parent.
+  Result<CaretPoint, nsresult> pointToPutCaretOrError =
+      ApplyStyleToNodeOrChildrenAndRemoveNestedSameStyle(aHTMLEditor, aElement);
+  if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
+    NS_WARNING(
+        "AutoInlineStyleSetter::"
+        "ApplyStyleToNodeOrChildrenAndRemoveNestedSameStyle() failed");
+    return pointToPutCaretOrError.unwrapErr();
+  }
+  // The caller must update `Selection` later so that we don't need this.
+  pointToPutCaretOrError.unwrap().IgnoreCaretPointSuggestion();
+  return NS_OK;
+}
+
+Result<SplitRangeOffFromNodeResult, nsresult>
+HTMLEditor::AutoInlineStyleSetter::InvertStyleIfApplied(HTMLEditor& aHTMLEditor,
+                                                        Text& aTextNode,
+                                                        uint32_t aStartOffset,
+                                                        uint32_t aEndOffset) {
+  MOZ_ASSERT(IsStyleToInvert());
+
+  Result<bool, nsresult> isRemovableParentStyleOrError =
+      aHTMLEditor.IsRemovableParentStyleWithNewSpanElement(aTextNode, *this);
+  if (MOZ_UNLIKELY(isRemovableParentStyleOrError.isErr())) {
+    NS_WARNING("HTMLEditor::IsRemovableParentStyleWithNewSpanElement() failed");
+    return isRemovableParentStyleOrError.propagateErr();
+  }
+  if (!isRemovableParentStyleOrError.unwrap()) {
+    // E.g., text-decoration cannot be override visually in children.
+    // In such cases, we can do nothing.
+    return SplitRangeOffFromNodeResult(nullptr, &aTextNode, nullptr);
+  }
+
+  // We need to use new `<span>` element or existing element if it's available
+  // to overwrite parent style.
+  Result<SplitRangeOffFromNodeResult, nsresult> wrapTextInStyledElementResult =
+      SplitTextNodeAndApplyStyleToMiddleNode(aHTMLEditor, aTextNode,
+                                             aStartOffset, aEndOffset);
+  NS_WARNING_ASSERTION(
+      wrapTextInStyledElementResult.isOk(),
+      "AutoInlineStyleSetter::SplitTextNodeAndApplyStyleToMiddleNode() failed");
+  return wrapTextInStyledElementResult;
 }
 
 Result<bool, nsresult> HTMLEditor::IsRemovableParentStyleWithNewSpanElement(
