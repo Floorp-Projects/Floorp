@@ -15,21 +15,6 @@ add_task(async function() {
   await pushPref("devtools.browsertoolbox.scope", "everything");
   await addTab(TEST_URI);
 
-  info("Check with devtools.browsertoolbox.fission set to false");
-  await pushPref("devtools.browsertoolbox.fission", false);
-  await testWebExtensionMessages(false);
-  await testWebExtensionMessages(true);
-
-  // ⚠️ When the pref is disabled, we only clear the cache for messages in the parent process,
-  // so all the messages that were forwarded from the content process won't be cleared.
-  // so here we open a multiprocess browser console and clear it, which will clear all the
-  // caches.
-  await pushPref("devtools.browsertoolbox.fission", true);
-  const hud = await BrowserConsoleManager.toggleBrowserConsole();
-  await clearOutput(hud);
-  await safeCloseBrowserConsole();
-
-  info("Check with devtools.browsertoolbox.fission set to true");
   await testWebExtensionMessages(false);
   await testWebExtensionMessages(true);
 });
@@ -62,25 +47,16 @@ async function testWebExtensionMessages(
   // Wait enough so any duplicated message would have the time to be rendered
   await wait(1000);
 
-  // When the pref is disabled, we're getting Console API messages via the parent process,
-  // which were forwarded from the content process. But this forwarding mechanism does not
-  // handle cached content messages (i.e. messages logged by the extension in the content
-  // process, before the console is opened)
-  if (
-    !createWebExtensionBeforeOpeningBrowserConsole ||
-    Services.prefs.getBoolPref("devtools.browsertoolbox.fission", false)
-  ) {
-    await checkUniqueMessageExists(
-      hud,
-      "content console API message",
-      ".console-api"
-    );
-    await checkUniqueMessageExists(
-      hud,
-      "background console API message",
-      ".console-api"
-    );
-  }
+  await checkUniqueMessageExists(
+    hud,
+    "content console API message",
+    ".console-api"
+  );
+  await checkUniqueMessageExists(
+    hud,
+    "background console API message",
+    ".console-api"
+  );
 
   await checkUniqueMessageExists(hud, "content error", ".error");
   await checkUniqueMessageExists(hud, "background error", ".error");

@@ -171,16 +171,6 @@ async function testObjectInspectorPropertiesAreSet(objInspector) {
 const seenWorkerTargets = new Set();
 function waitForSourceMapWorker(hud) {
   const { targetCommand } = hud.commands;
-  // If Fission is not enabled for the Browser Console (e.g. in Beta at this moment),
-  // the target list won't watch for Worker targets, and as a result we won't have issues
-  // with pending connections to the server that we're observing when attaching the target.
-  const isFissionEnabledForBrowserConsole = Services.prefs.getBoolPref(
-    "devtools.browsertoolbox.fission",
-    false
-  );
-  if (!isFissionEnabledForBrowserConsole) {
-    return Promise.resolve();
-  }
 
   return new Promise(resolve => {
     const onAvailable = ({ targetFront }) => {
