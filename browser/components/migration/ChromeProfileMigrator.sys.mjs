@@ -729,8 +729,8 @@ export class OperaProfileMigrator extends ChromeProfileMigrator {
   }
 
   _chromeUserDataPathSuffix = "Opera";
-  _keychainServiceName = "Opera Browser Safe Storage";
-  _keychainAccountName = "Opera Browser";
+  _keychainServiceName = "Opera Safe Storage";
+  _keychainAccountName = "Opera";
 
   getSourceProfiles() {
     return null;
@@ -746,8 +746,8 @@ export class OperaGXProfileMigrator extends ChromeProfileMigrator {
   }
 
   _chromeUserDataPathSuffix = "Opera GX";
-  _keychainServiceName = "Opera Browser Safe Storage";
-  _keychainAccountName = "Opera Browser";
+  _keychainServiceName = "Opera Safe Storage";
+  _keychainAccountName = "Opera";
 
   getSourceProfiles() {
     return null;
