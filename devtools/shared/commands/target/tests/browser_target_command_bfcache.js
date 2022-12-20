@@ -8,8 +8,6 @@
 const TEST_COM_URL = URL_ROOT_SSL + "simple_document.html";
 
 add_task(async function() {
-  // Enabled fission prefs
-  await pushPref("devtools.browsertoolbox.fission", true);
   // Disable the preloaded process as it gets created lazily and may interfere
   // with process count assertions
   await pushPref("dom.ipc.processPrelaunch.enabled", false);

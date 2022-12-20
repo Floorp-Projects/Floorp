@@ -292,9 +292,6 @@ async function testNavigationToPageWithExistingWorker({
 }
 
 async function setupServiceWorkerNavigationTest() {
-  // Enabled devtools.browsertoolbox.fission to listen to all target types.
-  await pushPref("devtools.browsertoolbox.fission", true);
-
   // Disable the preloaded process as it creates processes intermittently
   // which forces the emission of RDP requests we aren't correctly waiting for.
   await pushPref("dom.ipc.processPrelaunch.enabled", false);

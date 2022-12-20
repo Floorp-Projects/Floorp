@@ -16,8 +16,6 @@ const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8>console API c
 add_task(async function() {
   // Show the content messages
   await pushPref("devtools.browserconsole.contentMessages", true);
-  // Enable Fission browser console to see the logged content object
-  await pushPref("devtools.browsertoolbox.fission", true);
   await pushPref("devtools.browsertoolbox.scope", "everything");
 
   await addTab(TEST_URI);

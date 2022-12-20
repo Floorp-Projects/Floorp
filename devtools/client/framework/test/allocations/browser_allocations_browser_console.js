@@ -43,11 +43,6 @@ async function testScript() {
 }
 
 add_task(async function() {
-  // We only want to test the multiprocess browser console,
-  // even on beta and release.
-  await SpecialPowers.pushPrefEnv({
-    set: [["devtools.browsertoolbox.fission", true]],
-  });
   await SpecialPowers.pushPrefEnv({
     set: [["devtools.browsertoolbox.scope", "everything"]],
   });

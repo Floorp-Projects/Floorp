@@ -23,8 +23,6 @@ add_task(async function() {
   await pushPref("devtools.webconsole.sidebarToggle", true);
   // Show the content messages
   await pushPref("devtools.browserconsole.contentMessages", true);
-  // Enable Fission browser console to see the logged content object
-  await pushPref("devtools.browsertoolbox.fission", true);
   await pushPref("devtools.browsertoolbox.scope", "everything");
 
   await addTab(TEST_URI);

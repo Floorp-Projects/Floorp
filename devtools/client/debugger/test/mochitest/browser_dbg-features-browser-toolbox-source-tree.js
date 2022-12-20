@@ -21,7 +21,6 @@ Services.scriptloader.loadSubScript(
 // browser toolbox.
 add_task(async function testSourceTreeNamesForWebExtensions() {
   await pushPref("devtools.chrome.enabled", true);
-  await pushPref("devtools.browsertoolbox.fission", true);
   await pushPref("devtools.browsertoolbox.scope", "everything");
   const extension = await installAndStartContentScriptExtension();
 

@@ -33,9 +33,7 @@ add_task(async function() {
   info("Start the print preview for the current tab");
   document.getElementById("cmd_print").doCommand();
 
-  const ToolboxTask = await initBrowserToolboxTask({
-    enableBrowserToolboxFission: true,
-  });
+  const ToolboxTask = await initBrowserToolboxTask();
   await ToolboxTask.importFunctions({
     getNodeFront,
     getNodeFrontInFrames,

@@ -17,7 +17,6 @@ const URI_WITH_DEBUGGER_STATEMENT = `data:text/html,<!DOCTYPE html>
 add_task(async function() {
   // Show the content messages
   await pushPref("devtools.browserconsole.contentMessages", true);
-  await pushPref("devtools.browsertoolbox.fission", true);
   await pushPref("devtools.browsertoolbox.scope", "everything");
 
   info("Open the Browser Console");
