@@ -13,8 +13,6 @@ export class ParserDispatcher extends WorkerDispatcher {
 
   findOutOfScopeLocations = this.task("findOutOfScopeLocations");
 
-  getNextStep = this.task("getNextStep");
-
   getScopes = this.task("getScopes");
 
   getSymbols = this.task("getSymbols");

@@ -27,7 +27,3 @@ export function containsPosition(a, b) {
 export function containsLocation(a, b) {
   return containsPosition(a, b.start) && containsPosition(a, b.end);
 }
-
-export function nodeContainsPosition(node, position) {
-  return containsPosition(node.loc, position);
-}
