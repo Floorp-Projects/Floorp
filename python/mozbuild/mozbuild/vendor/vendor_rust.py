@@ -885,22 +885,11 @@ license file's hash.
             mozpath.normsep(os.path.normcase(self.topsrcdir)),
         )
 
-        # Normalize pytoml output:
-        # - removing empty lines
-        # - remove empty [section]
-        def toml_dump(data):
-            dump = toml.dumps(data)
-            if isinstance(data, dict):
-                for k, v in data.items():
-                    if all(isinstance(v2, dict) for v2 in v.values()):
-                        dump = dump.replace("[%s]" % k, "")
-            return dump.strip()
-
         cargo_config = os.path.join(self.topsrcdir, ".cargo", "config.in")
         with open(cargo_config, "w", encoding="utf-8", newline="\n") as fh:
             fh.write(
                 CARGO_CONFIG_TEMPLATE.format(
-                    config=toml_dump(config),
+                    config=toml.dumps(config),
                     replace_name=replace_name,
                     directory=replace["directory"],
                 )
