@@ -56,6 +56,7 @@ add_task(async function test_new_submitted_card_is_normalized() {
     let actual = savedCreditCard[key];
     Assert.equal(expected, actual, `${key} should match`);
   }
+  await removeAllRecords();
 });
 
 add_task(async function test_updated_card_is_normalized() {
@@ -110,4 +111,5 @@ add_task(async function test_updated_card_is_normalized() {
     let actual = savedCreditCard[key];
     Assert.equal(expected, actual, `${key} should match`);
   }
+  await removeAllRecords();
 });
