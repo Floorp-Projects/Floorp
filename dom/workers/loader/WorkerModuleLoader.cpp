@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "js/experimental/JSStencil.h"  // JS::Stencil, JS::CompileModuleScriptToStencil, JS::InstantiateModuleStencil
+#include "js/loader/ModuleLoadRequest.h"
+#include "mozilla/dom/WorkerLoadContext.h"
 #include "mozilla/dom/workerinternals/ScriptLoader.h"
 #include "WorkerModuleLoader.h"
 
@@ -31,7 +34,19 @@ WorkerModuleLoader::WorkerModuleLoader(WorkerScriptLoader* aScriptLoader,
 
 already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateStaticImport(
     nsIURI* aURI, ModuleLoadRequest* aParent) {
-  MOZ_CRASH("Not implemented yet");
+  Maybe<ClientInfo> clientInfo = GetGlobalObject()->GetClientInfo();
+
+  RefPtr<WorkerLoadContext> loadContext =
+      new WorkerLoadContext(WorkerLoadContext::Kind::StaticImport, clientInfo);
+  RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
+      aURI, aParent->mFetchOptions, SRIMetadata(), aParent->mURI, loadContext,
+      false, /* is top level */
+      false, /* is dynamic import */
+      this, aParent->mVisitedSet, aParent->GetRootModule());
+
+  request->mURL = request->mURI->GetSpecOrDefault();
+  request->mBaseURL = aParent->mBaseURL;
+  return request.forget();
 }
 
 already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateDynamicImport(
@@ -48,19 +63,53 @@ bool WorkerModuleLoader::CanStartLoad(ModuleLoadRequest* aRequest,
 }
 
 nsresult WorkerModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
-  return NS_ERROR_FAILURE;
+  if (!GetScriptLoader()->DispatchLoadScript(aRequest)) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
 }
 
 nsresult WorkerModuleLoader::CompileFetchedModule(
     JSContext* aCx, JS::Handle<JSObject*> aGlobal, JS::CompileOptions& aOptions,
     ModuleLoadRequest* aRequest, JS::MutableHandle<JSObject*> aModuleScript) {
-  return NS_ERROR_FAILURE;
+  RefPtr<JS::Stencil> stencil;
+  MOZ_ASSERT(aRequest->IsTextSource());
+  MaybeSourceText maybeSource;
+  nsresult rv = aRequest->GetScriptSource(aCx, &maybeSource);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  auto compile = [&](auto& source) {
+    return JS::CompileModuleScriptToStencil(aCx, aOptions, source);
+  };
+  stencil = maybeSource.mapNonEmpty(compile);
+
+  if (!stencil) {
+    return NS_ERROR_FAILURE;
+  }
+
+  JS::InstantiateOptions instantiateOptions(aOptions);
+  aModuleScript.set(
+      JS::InstantiateModuleStencil(aCx, instantiateOptions, stencil));
+  if (!aModuleScript) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
 }
 
 WorkerScriptLoader* WorkerModuleLoader::GetScriptLoader() {
   return static_cast<WorkerScriptLoader*>(mLoader.get());
 }
 
-void WorkerModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {}
+void WorkerModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {
+  if (aRequest->IsTopLevel()) {
+    AutoJSAPI jsapi;
+    if (NS_WARN_IF(!jsapi.Init(GetGlobalObject()))) {
+      return;
+    }
+    GetScriptLoader()->MaybeMoveToLoadedList(aRequest);
+    GetScriptLoader()->ProcessPendingRequests(jsapi.cx());
+  }
+}
 
 }  // namespace mozilla::dom::workerinternals::loader
