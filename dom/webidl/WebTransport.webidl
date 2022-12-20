@@ -29,7 +29,7 @@ enum WebTransportCongestionControl {
 
 dictionary WebTransportCloseInfo {
   unsigned long closeCode = 0;
-  DOMString reason = "";
+  UTF8String reason = "";
 };
 
 /* https://w3c.github.io/webtransport/#web-transport-stats */
@@ -62,6 +62,7 @@ dictionary WebTransportDatagramStats {
 
 [Exposed=(Window,Worker), SecureContext, Pref="network.webtransport.enabled"]
 interface WebTransport {
+  [Throws]
   constructor(USVString url, optional WebTransportOptions options = {});
 
   [NewObject]

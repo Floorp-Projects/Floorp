@@ -1,0 +1,26 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
+
+namespace mozilla {
+namespace dom {
+
+async protocol PWebTransport
+{
+ parent:
+  /**
+   * TODO: documentation
+   */
+  async Close(uint32_t code, nsCString reason);
+
+ child:
+
+  async CloseAll()
+      returns(nsresult rv);
+};
+
+} // namespace dom
+} // namespace mozilla
+
