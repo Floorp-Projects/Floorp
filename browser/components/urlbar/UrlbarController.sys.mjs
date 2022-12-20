@@ -957,7 +957,6 @@ class TelemetryEvent {
         searchWords,
         provider: details.provider,
         searchSource: details.searchSource,
-        searchMode: details.searchMode,
         selectedElement: details.element,
         selIndex: details.selIndex,
         selType: details.selType,
@@ -1041,7 +1040,6 @@ class TelemetryEvent {
       reason,
       searchWords,
       searchSource,
-      searchMode,
       selectedElement,
       selIndex,
       selType,
@@ -1059,17 +1057,14 @@ class TelemetryEvent {
       sap = "urlbar_addonpage";
     }
 
-    searchMode = searchMode ?? this._controller.input.searchMode;
-
     // Distinguish user typed search strings from persisted search terms.
     const interaction = this.#getInteractionType(
       method,
       startEventInfo,
       searchSource,
-      searchWords,
-      searchMode
+      searchWords
     );
-    const search_mode = this.#getSearchMode(searchMode);
+
     const currentResults = queryContext?.results ?? [];
     const numResults = currentResults.length;
     const groups = currentResults
@@ -1085,7 +1080,6 @@ class TelemetryEvent {
       eventInfo = {
         sap,
         interaction,
-        search_mode,
         n_chars: numChars,
         n_words: numWords,
         n_results: numResults,
@@ -1106,7 +1100,6 @@ class TelemetryEvent {
       eventInfo = {
         sap,
         interaction,
-        search_mode,
         n_chars: numChars,
         n_words: numWords,
         n_results: numResults,
@@ -1118,7 +1111,6 @@ class TelemetryEvent {
         reason,
         sap,
         interaction,
-        search_mode,
         n_chars: numChars,
         n_words: numWords,
         n_results: numResults,
@@ -1139,14 +1131,8 @@ class TelemetryEvent {
     }
   }
 
-  #getInteractionType(
-    method,
-    startEventInfo,
-    searchSource,
-    searchWords,
-    searchMode
-  ) {
-    if (searchMode?.entry === "topsites_newtab") {
+  #getInteractionType(method, startEventInfo, searchSource, searchWords) {
+    if (this._controller.input.searchMode?.entry === "topsites_newtab") {
       return "topsite_search";
     }
 
@@ -1183,21 +1169,6 @@ class TelemetryEvent {
     }
 
     return interaction;
-  }
-
-  #getSearchMode(searchMode) {
-    if (!searchMode) {
-      return "";
-    }
-
-    if (searchMode.engineName) {
-      return "search_engine";
-    }
-
-    const source = lazy.UrlbarUtils.LOCAL_SEARCH_MODES.find(
-      m => m.source == searchMode.source
-    )?.telemetryLabel;
-    return source ?? "unknown";
   }
 
   _parseSearchString(searchString) {

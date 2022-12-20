@@ -217,28 +217,24 @@ export var UrlbarUtils = {
         restrict: lazy.UrlbarTokenizer.RESTRICT.BOOKMARK,
         icon: "chrome://browser/skin/bookmark.svg",
         pref: "shortcuts.bookmarks",
-        telemetryLabel: "bookmarks",
       },
       {
         source: UrlbarUtils.RESULT_SOURCE.TABS,
         restrict: lazy.UrlbarTokenizer.RESTRICT.OPENPAGE,
         icon: "chrome://browser/skin/tab.svg",
         pref: "shortcuts.tabs",
-        telemetryLabel: "tabs",
       },
       {
         source: UrlbarUtils.RESULT_SOURCE.HISTORY,
         restrict: lazy.UrlbarTokenizer.RESTRICT.HISTORY,
         icon: "chrome://browser/skin/history.svg",
         pref: "shortcuts.history",
-        telemetryLabel: "history",
       },
       {
         source: UrlbarUtils.RESULT_SOURCE.ACTIONS,
         restrict: lazy.UrlbarTokenizer.RESTRICT.ACTION,
         icon: "chrome://browser/skin/quickactions.svg",
         pref: "shortcuts.quickactions",
-        telemetryLabel: "actions",
       },
     ];
   },
