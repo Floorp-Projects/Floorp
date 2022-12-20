@@ -7,6 +7,30 @@ transforms = TransformSequence()
 
 
 @transforms.add
+def add_components_optimization(config, tasks):
+    for task in tasks:
+        if _is_task_related_to_android_components(task):
+            build_type = task["attributes"]["build-type"]
+            if build_type not in ("nightly", "release"):
+                optimization = task.setdefault("optimization", {})
+                skip_unless_changed = optimization.setdefault("skip-unless-changed", [])
+                skip_unless_changed.extend([
+                    "android-components/build.gradle",
+                    "android-components/settings.gradle",
+                    "android-components/buildSrc.*",
+                    "android-components/gradle.properties",
+                    "android-components/gradle/wrapper/gradle-wrapper.properties",
+                    "android-components/plugins/dependencies/**",
+                ])
+
+        yield task
+
+
+def _is_task_related_to_android_components(task):
+    return bool(task.get("attributes", {}).get("component", ""))
+
+
+@transforms.add
 def extend_optimization_if_one_already_exists(config, tasks):
     deps_per_component = get_upstream_deps_for_all_gradle_projects()
 

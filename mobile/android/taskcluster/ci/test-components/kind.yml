@@ -54,12 +54,6 @@ task-defaults:
         max-run-time: 2400
     optimization:
         skip-unless-changed:
-            - android-components/build.gradle
-            - android-components/settings.gradle
-            - android-components/buildSrc.*
-            - android-components/gradle.properties
-            - android-components/gradle/wrapper/gradle-wrapper.properties
-            - android-components/plugins/dependencies/**
             - android-components/automation/taskcluster/androidTest/ui-test.sh
             # More paths are dynamically added by transforms
 

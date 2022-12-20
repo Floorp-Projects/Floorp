@@ -59,18 +59,6 @@ task-defaults:
             release: false
             nightly: false
             default: true
-    optimization:
-        by-build-type:
-            (nightly|release): {}
-            default:
-                skip-unless-changed:
-                    - android-components/build.gradle
-                    - android-components/settings.gradle
-                    - android-components/buildSrc.*
-                    - android-components/gradle.properties
-                    - android-components/gradle/wrapper/gradle-wrapper.properties
-                    - android-components/plugins/dependencies/**
-                    # More paths are dynamically added by transforms
     run:
         gradlew:
             by-build-type:
