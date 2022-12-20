@@ -18,12 +18,18 @@ import { getMainThread } from "../selectors";
  * @static
  */
 export function willNavigate(event) {
-  return async function({ dispatch, getState, client, sourceMaps, parser }) {
+  return async function({
+    dispatch,
+    getState,
+    client,
+    sourceMaps,
+    parserWorker,
+  }) {
     sourceQueue.clear();
     sourceMaps.clearSourceMaps();
     clearWasmStates();
     clearDocuments();
-    parser.clear();
+    parserWorker.clear();
     const thread = getMainThread(getState());
 
     dispatch({
