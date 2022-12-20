@@ -1036,20 +1036,15 @@ nsTArray<uint8_t> gfxWindowsPlatform::GetPlatformCMSOutputProfileData() {
     return result;
   }
 
-  return GetPlatformCMSOutputProfileData_Impl();
-}
+  if (!mCachedOutputColorProfile.IsEmpty()) {
+    return mCachedOutputColorProfile.Clone();
+  }
 
-nsTArray<uint8_t> gfxWindowsPlatform::GetPlatformCMSOutputProfileData_Impl() {
-  static nsTArray<uint8_t> sCached = [&] {
-    // Check override pref first:
-    nsTArray<uint8_t> prefProfileData =
-        gfxPlatform::GetPrefCMSOutputProfileData();
+  mCachedOutputColorProfile = [&] {
+    nsTArray<uint8_t> prefProfileData = GetPrefCMSOutputProfileData();
     if (!prefProfileData.IsEmpty()) {
       return prefProfileData;
     }
-
-    // -
-    // Otherwise, create a dummy DC and pull from that.
 
     HDC dc = ::GetDC(nullptr);
     if (!dc) {
@@ -1083,7 +1078,7 @@ nsTArray<uint8_t> gfxWindowsPlatform::GetPlatformCMSOutputProfileData_Impl() {
     return result;
   }();
 
-  return sCached.Clone();
+  return mCachedOutputColorProfile.Clone();
 }
 
 void gfxWindowsPlatform::GetDLLVersion(char16ptr_t aDLLPath,
