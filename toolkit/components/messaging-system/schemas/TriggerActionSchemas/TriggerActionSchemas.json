@@ -136,20 +136,11 @@
               ]
             },
             "params": {
-              "anyOf": [
-                {
-                  "type": "array",
-                  "items": {
-                    "type": "number"
-                  }
-                },
-                {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                }
-              ]
+              "type": "array",
+              "items": {
+                "type": ["string", "integer"],
+                "description": "Events that should trigger this message. String values correspond to ContentBlockingMilestone events and number values correspond to STATE_BLOCKED_* flags on nsIWebProgressListener."
+              }
             }
           },
           "required": [
