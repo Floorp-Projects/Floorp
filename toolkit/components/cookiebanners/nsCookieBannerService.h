@@ -77,9 +77,25 @@ class nsCookieBannerService final : public nsIObserver,
       const nsACString& aDomain, const bool aIsTopLevel,
       const bool aReportTelemetry, nsTArray<RefPtr<nsIClickRule>>& aRules);
 
+  nsresult GetCookieRulesForDomainInternal(
+      const nsACString& aBaseDomain, const nsICookieBannerService::Modes aMode,
+      const bool aIsTopLevel, const bool aReportTelemetry,
+      nsTArray<RefPtr<nsICookieRule>>& aCookies);
+
+  nsresult HasRuleForBrowsingContextInternal(
+      mozilla::dom::BrowsingContext* aBrowsingContext, bool& aHasClickRule,
+      bool& aHasCookieRule);
+
   nsresult GetRuleForDomain(const nsACString& aDomain, bool aIsTopLevel,
                             nsICookieBannerRule** aRule,
                             bool aReportTelemetry = false);
+
+  /**
+   * Lookup a domain pref by base domain.
+   */
+  nsresult GetDomainPrefInternal(const nsACString& aBaseDomain,
+                                 const bool aIsPrivate,
+                                 nsICookieBannerService::Modes* aModes);
 
   nsresult SetDomainPrefInternal(nsIURI* aTopLevelURI,
                                  nsICookieBannerService::Modes aModes,

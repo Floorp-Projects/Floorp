@@ -7,6 +7,7 @@
 #include "nsICookieBannerRule.idl"
 #include "nsICookieRule.idl"
 #include "nsIURI.idl"
+webidl BrowsingContext;
 
 /**
  * Service singleton which owns the cookie banner feature.
@@ -80,6 +81,13 @@ interface nsICookieBannerService : nsISupports {
    * Remove a cookie banner rule.
    */
   void removeRule(in nsICookieBannerRule aRule);
+
+  /**
+   * Computes whether we have a rule for the given browsing context or any of
+   * its children. This takes the current cookie banner service mode into
+   * consideration and whether the BC is in private browsing mode.
+   */
+  boolean hasRuleForBrowsingContextTree(in BrowsingContext aBrowsingContext);
 
   /**
    * Get the domain preference of the given top-level URI. It will return the

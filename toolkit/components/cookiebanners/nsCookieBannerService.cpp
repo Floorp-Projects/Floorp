@@ -20,6 +20,7 @@
 #include "nsCookieInjector.h"
 #include "nsCRT.h"
 #include "nsDebug.h"
+#include "nsError.h"
 #include "nsIClickRule.h"
 #include "nsICookieBannerListService.h"
 #include "nsICookieBannerRule.h"
@@ -410,6 +411,8 @@ nsCookieBannerService::GetCookiesForURI(
     return NS_OK;
   }
 
+  // TODO: use GetCookieRulesForDomainInternal instead.
+
   // MODE_REJECT: In this mode we only handle the banner if we can reject. We
   // don't care about the opt-in cookies.
   rv = rule->GetCookies(true, domain, aCookies);
@@ -590,10 +593,210 @@ nsCookieBannerService::RemoveRule(nsICookieBannerRule* aRule) {
 }
 
 NS_IMETHODIMP
+nsCookieBannerService::HasRuleForBrowsingContextTree(
+    mozilla::dom::BrowsingContext* aBrowsingContext, bool* aResult) {
+  NS_ENSURE_ARG_POINTER(aBrowsingContext);
+  NS_ENSURE_ARG_POINTER(aResult);
+  MOZ_ASSERT(XRE_IsParentProcess());
+  *aResult = false;
+
+  MOZ_LOG(gCookieBannerLog, LogLevel::Debug, ("%s", __FUNCTION__));
+
+  // Service is disabled, throw.
+  if (!mIsInitialized) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsresult rv = NS_OK;
+  // Keep track of the HasRuleForBrowsingContextInternal needed, used for
+  // logging.
+  uint32_t numChecks = 0;
+
+  // TODO: Optimization: We could avoid unecessary rule lookups by remembering
+  // which domains we already looked up rules for. This would also need to take
+  // isPBM and isTopLevel into account, because some rules only apply in certain
+  // contexts.
+  auto checkFn =
+      [&](dom::BrowsingContext* bc) -> dom::BrowsingContext::WalkFlag {
+    numChecks++;
+
+    bool hasClickRule = false;
+    bool hasCookieRule = false;
+    rv = HasRuleForBrowsingContextInternal(bc, hasClickRule, hasCookieRule);
+    // If the method failed abort the walk. We will return the stored error
+    // result when exiting the method.
+    if (NS_FAILED(rv)) {
+      return dom::BrowsingContext::WalkFlag::Stop;
+    }
+
+    *aResult = hasClickRule || hasCookieRule;
+
+    // Greedily return when we found a rule.
+    if (*aResult) {
+      return dom::BrowsingContext::WalkFlag::Stop;
+    }
+
+    return dom::BrowsingContext::WalkFlag::Next;
+  };
+
+  // Walk the BC (sub-)tree and return greedily when a rule is found for a
+  // BrowsingContext.
+  aBrowsingContext->PreOrderWalk(checkFn);
+
+  MOZ_LOG(gCookieBannerLog, LogLevel::Debug,
+          ("%s. success: %d, hasRule: %d, numChecks: %d", __FUNCTION__,
+           NS_SUCCEEDED(rv), *aResult, numChecks));
+
+  return rv;
+}
+
+nsresult nsCookieBannerService::HasRuleForBrowsingContextInternal(
+    mozilla::dom::BrowsingContext* aBrowsingContext, bool& aHasClickRule,
+    bool& aHasCookieRule) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(mIsInitialized);
+  NS_ENSURE_ARG_POINTER(aBrowsingContext);
+
+  MOZ_LOG(gCookieBannerLog, LogLevel::Debug, ("%s", __FUNCTION__));
+
+  aHasClickRule = false;
+  aHasCookieRule = false;
+
+  // First, check if our current mode is disabled. If so there is no applicable
+  // rule.
+  nsICookieBannerService::Modes mode;
+  nsresult rv = GetServiceModeForBrowsingContext(aBrowsingContext, &mode);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mode == nsICookieBannerService::MODE_DISABLED ||
+      mode == nsICookieBannerService::MODE_DETECT_ONLY) {
+    return NS_OK;
+  }
+
+  // In order to lookup rules we need to get the base domain associated with the
+  // BrowsingContext.
+
+  // 1. Get the window running in the BrowsingContext.
+  RefPtr<dom::WindowGlobalParent> windowGlobalParent =
+      aBrowsingContext->Canonical()->GetCurrentWindowGlobal();
+  NS_ENSURE_TRUE(windowGlobalParent, NS_ERROR_FAILURE);
+
+  // 2. Get the base domain from the content principal.
+  nsCOMPtr<nsIPrincipal> principal = windowGlobalParent->DocumentPrincipal();
+  NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
+
+  nsCString baseDomain;
+  rv = principal->GetBaseDomain(baseDomain);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(!baseDomain.IsEmpty(), NS_ERROR_FAILURE);
+
+  MOZ_LOG(gCookieBannerLog, LogLevel::Debug,
+          ("%s. baseDomain: %s", __FUNCTION__, baseDomain.get()));
+
+  // 3. Look up click rules by baseDomain.
+  // TODO: Optimization: We currently do two nsICookieBannerRule lookups, one
+  // for click rules and one for cookie rules.
+  nsTArray<RefPtr<nsIClickRule>> clickRules;
+  rv = GetClickRulesForDomainInternal(baseDomain, aBrowsingContext->IsTop(),
+                                      false, clickRules);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // 3.1. Check if there is a non-empty click rule for the current environment.
+  for (RefPtr<nsIClickRule>& rule : clickRules) {
+    NS_ENSURE_TRUE(rule, NS_ERROR_NULL_POINTER);
+
+    nsAutoCString optOut;
+    rv = rule->GetOptOut(optOut);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!optOut.IsEmpty()) {
+      aHasClickRule = true;
+      break;
+    }
+
+    if (mode == nsICookieBannerService::MODE_REJECT_OR_ACCEPT) {
+      nsAutoCString optIn;
+      rv = rule->GetOptIn(optIn);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (!optIn.IsEmpty()) {
+        aHasClickRule = true;
+        break;
+      }
+    }
+  }
+
+  // 4. Check for cookie rules by baseDomain.
+  nsTArray<RefPtr<nsICookieRule>> cookies;
+  rv = GetCookieRulesForDomainInternal(
+      baseDomain, mode, aBrowsingContext->IsTop(), false, cookies);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aHasCookieRule = !cookies.IsEmpty();
+
+  return NS_OK;
+}
+
+nsresult nsCookieBannerService::GetCookieRulesForDomainInternal(
+    const nsACString& aBaseDomain, const nsICookieBannerService::Modes aMode,
+    const bool aIsTopLevel, const bool aReportTelemetry,
+    nsTArray<RefPtr<nsICookieRule>>& aCookies) {
+  MOZ_ASSERT(mIsInitialized);
+  MOZ_LOG(gCookieBannerLog, LogLevel::Debug, ("%s", __FUNCTION__));
+
+  aCookies.Clear();
+
+  // No cookie rules if disabled or in detect-only mode. Cookie injection is not
+  // supported for the detect-only mode.
+  if (aMode == nsICookieBannerService::MODE_DISABLED ||
+      aMode == nsICookieBannerService::MODE_DETECT_ONLY) {
+    return NS_OK;
+  }
+
+  // Cookies should only be injected for top-level frames.
+  if (!aIsTopLevel) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsICookieBannerRule> cookieBannerRule;
+  nsresult rv =
+      GetRuleForDomain(aBaseDomain, aIsTopLevel,
+                       getter_AddRefs(cookieBannerRule), aReportTelemetry);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // No rule found.
+  if (!cookieBannerRule) {
+    return NS_OK;
+  }
+
+  // MODE_REJECT: In this mode we only handle the banner if we can reject. We
+  // don't care about the opt-in cookies.
+  rv = cookieBannerRule->GetCookies(true, aBaseDomain, aCookies);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // MODE_REJECT_OR_ACCEPT: In this mode we will try to opt-out, but if we don't
+  // have any opt-out cookies we will fallback to the opt-in cookies.
+  if (aMode == nsICookieBannerService::MODE_REJECT_OR_ACCEPT &&
+      aCookies.IsEmpty()) {
+    MOZ_LOG(gCookieBannerLog, LogLevel::Debug,
+            ("%s. Returning opt-in cookies for %s.", __FUNCTION__,
+             PromiseFlatCString(aBaseDomain).get()));
+
+    return cookieBannerRule->GetCookies(false, aBaseDomain, aCookies);
+  }
+
+  MOZ_LOG(gCookieBannerLog, LogLevel::Debug,
+          ("%s. Returning opt-out cookies for %s.", __FUNCTION__,
+           PromiseFlatCString(aBaseDomain).get()));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsCookieBannerService::GetDomainPref(nsIURI* aTopLevelURI,
                                      const bool aIsPrivate,
                                      nsICookieBannerService::Modes* aModes) {
   NS_ENSURE_ARG_POINTER(aTopLevelURI);
+  NS_ENSURE_ARG_POINTER(aModes);
 
   if (!mIsInitialized) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -608,7 +811,16 @@ nsCookieBannerService::GetDomainPref(nsIURI* aTopLevelURI,
   rv = eTLDService->GetBaseDomain(aTopLevelURI, 0, baseDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  auto pref = mDomainPrefService->GetPref(baseDomain, aIsPrivate);
+  return GetDomainPrefInternal(baseDomain, aIsPrivate, aModes);
+}
+
+nsresult nsCookieBannerService::GetDomainPrefInternal(
+    const nsACString& aBaseDomain, const bool aIsPrivate,
+    nsICookieBannerService::Modes* aModes) {
+  MOZ_ASSERT(mIsInitialized);
+  NS_ENSURE_ARG_POINTER(aModes);
+
+  auto pref = mDomainPrefService->GetPref(aBaseDomain, aIsPrivate);
 
   *aModes = nsICookieBannerService::MODE_UNSET;
 
@@ -915,6 +1127,7 @@ nsresult nsCookieBannerService::GetServiceModeForBrowsingContext(
     nsICookieBannerService::Modes* aMode) {
   MOZ_ASSERT(XRE_IsParentProcess());
   NS_ENSURE_ARG_POINTER(aBrowsingContext);
+  NS_ENSURE_ARG_POINTER(aMode);
 
   bool usePBM = false;
   nsresult rv = aBrowsingContext->GetUsePrivateBrowsing(&usePBM);
@@ -930,14 +1143,22 @@ nsresult nsCookieBannerService::GetServiceModeForBrowsingContext(
   RefPtr<dom::WindowGlobalParent> topWGP =
       aBrowsingContext->Top()->Canonical()->GetCurrentWindowGlobal();
   NS_ENSURE_TRUE(topWGP, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIURI> topURI = topWGP->GetDocumentURI();
 
-  if (mode != nsICookieBannerService::MODE_DISABLED && topURI) {
-    // Get the domain preference for the top-level uri, the domain preference
-    // takes precedence over the pref setting.
+  // Get the base domain from the content principal
+  nsCOMPtr<nsIPrincipal> principal = topWGP->DocumentPrincipal();
+  NS_ENSURE_TRUE(principal, NS_ERROR_NULL_POINTER);
+
+  nsCString baseDomain;
+  rv = principal->GetBaseDomain(baseDomain);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(!baseDomain.IsEmpty(), NS_ERROR_FAILURE);
+
+  if (mode != nsICookieBannerService::MODE_DISABLED) {
+    // Get the domain preference for the top-level baseDomain, the domain
+    // preference takes precedence over the pref setting.
 
     nsICookieBannerService::Modes domainPref;
-    nsresult rv = GetDomainPref(topURI, usePBM, &domainPref);
+    nsresult rv = GetDomainPrefInternal(baseDomain, usePBM, &domainPref);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (domainPref != nsICookieBannerService::MODE_UNSET) {
