@@ -789,7 +789,7 @@ CookieService::GetSessionCookies(nsTArray<RefPtr<nsICookie>>& aCookies) {
   mPersistentStorage->EnsureInitialized();
 
   // We expose only non-private cookies.
-  mPersistentStorage->GetCookies(aCookies);
+  mPersistentStorage->GetSessionCookies(aCookies);
 
   return NS_OK;
 }
