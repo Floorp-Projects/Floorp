@@ -47,11 +47,11 @@
     <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">Za preuzimanje datoteka potrebna je dozvola za pristup datotekama i medijima. Idi u postavke sustava Android, odaberi dozvole i odaberi &quot;Dopusti&quot;.</string>
 
     <!-- Alert dialog confirmation before cancelling downloads, this is the title   -->
-    <string name="mozac_feature_downloads_cancel_active_downloads_warning_content_title">Otkaži privatna preuzimanja?</string>
+    <string name="mozac_feature_downloads_cancel_active_downloads_warning_content_title">Prekinuti privatna preuzimanja?</string>
     <!-- Alert dialog confirmation before cancelling private downloads, this is the body. %1$s will be replaced with the name of the file. -->
-    <string name="mozac_feature_downloads_cancel_active_private_downloads_warning_content_body">Ukoliko zatvorite sve prozore privatnog pretraživanja, %1$s preuzimanje će biti otkazano. Jeste li sigurni da želite napustiti privatno pretraživanje?</string>
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_warning_content_body">Ukoliko zatvoriš sve prozore privatnog pretraživanja, prekinut će se preuzimanje datoteke %1$s. Stvarno želiš prekinuti privatno pretraživanje?</string>
     <!-- Alert dialog confirmation before cancelling downloads, this is the positive action. -->
-    <string name="mozac_feature_downloads_cancel_active_downloads_accept">Otkaži preuzimanja</string>
+    <string name="mozac_feature_downloads_cancel_active_downloads_accept">Prekini preuzimanja</string>
     <!-- Alert dialog confirmation before cancelling downloads, this is the negative action. Leaves user in Private browsing -->
     <string name="mozac_feature_downloads_cancel_active_private_downloads_deny">Ostani u privatnom pretraživanju</string>
 </resources>
