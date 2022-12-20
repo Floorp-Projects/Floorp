@@ -160,3 +160,7 @@ If you've changed the local stack by adding, removing or moving the commits arou
     $ moz-phab reorg
 
 command will compare the stack, display what will be changed and ask for permission before taking any action.
+
+.. note::
+
+    Note that reviewbot will not restart the analysis.
