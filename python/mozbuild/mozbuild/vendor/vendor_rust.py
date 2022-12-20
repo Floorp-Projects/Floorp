@@ -12,15 +12,33 @@ import logging
 import os
 import re
 import subprocess
-from collections import OrderedDict, defaultdict
+import typing
+from collections import defaultdict
 from itertools import dropwhile
 from pathlib import Path
 
 import mozpack.path as mozpath
-import pytoml
+import toml
 from looseversion import LooseVersion
 from mozboot.util import MINIMUM_RUST_VERSION
 from mozbuild.base import BuildEnvironmentNotFoundException, MozbuildObject
+
+if typing.TYPE_CHECKING:
+    import datetime
+
+# Type of a TOML value.
+TomlItem = typing.Union[
+    str,
+    typing.List["TomlItem"],
+    typing.Dict[str, "TomlItem"],
+    bool,
+    int,
+    float,
+    "datetime.datetime",
+    "datetime.date",
+    "datetime.time",
+]
+
 
 CARGO_CONFIG_TEMPLATE = """\
 # This file contains vendoring instructions for cargo.
@@ -545,7 +563,7 @@ license file's hash.
         crates = {}
         for path in Path(self.topsrcdir).glob("build/rust/**/Cargo.toml"):
             with open(path) as fh:
-                cargo_toml = pytoml.load(fh)
+                cargo_toml = toml.load(fh)
                 path = path.relative_to(self.topsrcdir)
                 package = cargo_toml["package"]
                 key = (package["name"], package["version"])
@@ -606,7 +624,7 @@ license file's hash.
             return False
 
         with open(os.path.join(self.topsrcdir, "Cargo.lock")) as fh:
-            cargo_lock = pytoml.load(fh)
+            cargo_lock = toml.load(fh)
             failed = False
             for package in cargo_lock.get("patch", {}).get("unused", []):
                 self.log(
@@ -840,8 +858,8 @@ license file's hash.
             dropwhile(lambda l: not l.startswith("["), output.splitlines())
         )
 
-        # The config is toml, parse it as such.
-        config = pytoml.loads(config)
+        # The config is toml; parse it as such.
+        config = toml.loads(config)
 
         # For each replace-with, extract their configuration and update the
         # corresponding directory to be relative to topsrcdir.
@@ -867,12 +885,16 @@ license file's hash.
             mozpath.normsep(os.path.normcase(self.topsrcdir)),
         )
 
-        # Introduce some determinism for the output.
-        def recursive_sort(obj):
+        # Temporary hack: sort the output to end up in the particular and
+        # peculiar way that `pytoml` sorted it, for stability across commits.
+        def recursive_sort(
+            obj: TomlItem, name: typing.Optional[str] = None
+        ) -> TomlItem:
             if isinstance(obj, dict):
-                return OrderedDict(
-                    sorted((k, recursive_sort(v)) for k, v in obj.items())
-                )
+                return {
+                    k: recursive_sort(v, k)
+                    for k, v in sorted(obj.items(), reverse=(name == "source"))
+                }
             if isinstance(obj, list):
                 return [recursive_sort(o) for o in obj]
             return obj
@@ -883,7 +905,7 @@ license file's hash.
         # - removing empty lines
         # - remove empty [section]
         def toml_dump(data):
-            dump = pytoml.dumps(data)
+            dump = toml.dumps(data)
             if isinstance(data, dict):
                 for k, v in data.items():
                     if all(isinstance(v2, dict) for v2 in v.values()):
