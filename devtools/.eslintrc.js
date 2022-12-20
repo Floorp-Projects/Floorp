@@ -93,7 +93,6 @@ module.exports = {
         "**/test/**/shared-head.js",
         "client/debugger/test/mochitest/code_frame-script.js",
         "client/responsive.html/browser/content.js",
-        "server/actors/webconsole/content-process-forward.js",
         "server/startup/content-process.js",
         "server/startup/frame.js",
         "shared/loader/base-loader.js",

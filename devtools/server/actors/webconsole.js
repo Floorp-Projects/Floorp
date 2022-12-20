@@ -146,12 +146,6 @@ if (isWorker) {
   );
   loader.lazyRequireGetter(
     this,
-    "ContentProcessListener",
-    "resource://devtools/server/actors/webconsole/listeners/content-process.js",
-    true
-  );
-  loader.lazyRequireGetter(
-    this,
     "DocumentEventsListener",
     "resource://devtools/server/actors/webconsole/listeners/document-events.js",
     true
@@ -747,18 +741,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
           }
           startedListeners.push(event);
           break;
-        case "ContentProcessMessages":
-          // Workers don't support this message type
-          if (isWorker) {
-            break;
-          }
-          if (!this.contentProcessListener) {
-            this.contentProcessListener = new ContentProcessListener(message =>
-              this.onConsoleAPICall(message, { clonedFromContentProcess: true })
-            );
-          }
-          startedListeners.push(event);
-          break;
         case "DocumentEvents":
           // Workers don't support this message type
           if (isWorker || isTargetActorContentProcess) {
@@ -814,7 +796,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       "NetworkActivity",
       "FileActivity",
       "ReflowActivity",
-      "ContentProcessMessages",
       "DocumentEvents",
     ];
 
@@ -860,13 +841,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
           if (this.consoleReflowListener) {
             this.consoleReflowListener.destroy();
             this.consoleReflowListener = null;
-          }
-          stoppedListeners.push(event);
-          break;
-        case "ContentProcessMessages":
-          if (this.contentProcessListener) {
-            this.contentProcessListener.destroy();
-            this.contentProcessListener = null;
           }
           stoppedListeners.push(event);
           break;
