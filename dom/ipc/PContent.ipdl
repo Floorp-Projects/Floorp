@@ -1842,7 +1842,7 @@ parent:
     // Called when a nsDocShellLoadState which was received over IPC is
     // destroyed in the content process to clean up pending state left behind
     // tracking the load state in the parent process.
-    async CleanupPendingLoadState(uint64_t aLoadIdentifier);
+    [LazySend] async CleanupPendingLoadState(uint64_t aLoadIdentifier);
 
 both:
     async ScriptError(nsString message, nsString sourceName, nsString sourceLine,
@@ -1889,7 +1889,7 @@ both:
      * new BrowsingContext has a parent window, it must be owned by the
      * embedding process, otherwise it must be owned by the opener, if set.
      */
-    async CreateBrowsingContext(uint64_t aGroupId, BrowsingContextInitializer aInit);
+    [LazySend] async CreateBrowsingContext(uint64_t aGroupId, BrowsingContextInitializer aInit);
 
     /**
      * If aDoDiscard is true, discards the passed-in BrowsingContext. If the
@@ -1919,7 +1919,7 @@ both:
     async FinalizeFocusOuter(MaybeDiscardedBrowsingContext aContext, bool aCanFocus,
                              CallerType aCallerType);
 parent:
-    async InsertNewFocusActionId(uint64_t aActionId);
+    [LazySend] async InsertNewFocusActionId(uint64_t aActionId);
     async BlurToParent(MaybeDiscardedBrowsingContext aFocusedBrowsingContext,
                       MaybeDiscardedBrowsingContext aBrowsingContextToClear,
                       MaybeDiscardedBrowsingContext aAncestorBrowsingContextToFocus,
@@ -1954,7 +1954,7 @@ both:
 child:
     // NOTE: These methods are only needed on the child, as the parent
     // WindowContext is managed using the PWindowGlobal actor's lifecycle.
-    async CreateWindowContext(WindowContextInitializer aInit);
+    [LazySend] async CreateWindowContext(WindowContextInitializer aInit);
     async DiscardWindowContext(uint64_t aContextId) returns (bool unused);
 
 parent:
