@@ -95,6 +95,10 @@
           "required": [
             "id"
           ]
+        },
+        "provider": {
+          "description": "An identifier for the provider of this message, such as \"cfr\" or \"preview\".",
+          "type": "string"
         }
       },
       "additionalProperties": true,
