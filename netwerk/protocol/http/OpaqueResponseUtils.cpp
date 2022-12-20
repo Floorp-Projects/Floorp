@@ -238,10 +238,23 @@ NS_IMETHODIMP
 OpaqueResponseBlocker::OnStartRequest(nsIRequest* aRequest) {
   LOGORB();
 
-  Unused << EnsureOpaqueResponseIsAllowedAfterSniff(aRequest);
+  if (mState == State::Sniffing) {
+    Unused << EnsureOpaqueResponseIsAllowedAfterSniff(aRequest);
+  }
 
-  nsresult rv = mNext->OnStartRequest(aRequest);
-  return NS_SUCCEEDED(mStatus) ? rv : mStatus;
+  // mState will remain State::Sniffing if we need to wait
+  // for JS validator to make a decision.
+  //
+  // When the state is Sniffing, we can't call mNext->OnStartRequest
+  // because fetch requests need the cancellation to be done
+  // before its FetchDriver::OnStartRequest is called, otherwise it'll
+  // resolve the promise regardless the decision of JS validator.
+  if (mState != State::Sniffing) {
+    nsresult rv = mNext->OnStartRequest(aRequest);
+    return NS_SUCCEEDED(mStatus) ? rv : mStatus;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -426,8 +439,10 @@ void OpaqueResponseBlocker::BlockResponse(HttpBaseChannel* aChannel,
 
 void OpaqueResponseBlocker::ResolveAndProcessData(
     HttpBaseChannel* aChannel, bool aAllowed, Maybe<ipc::Shmem>& aSharedData) {
-  if (!aAllowed) {
-    MOZ_ASSERT(mState == State::Blocked);
+  nsresult rv = OnStartRequest(aChannel);
+
+  if (!aAllowed || NS_FAILED(rv)) {
+    MOZ_ASSERT_IF(!aAllowed, mState == State::Blocked);
     MaybeRunOnStopRequest(aChannel);
     return;
   }
@@ -441,9 +456,9 @@ void OpaqueResponseBlocker::ResolveAndProcessData(
 
   const ipc::Shmem& mem = aSharedData.ref();
   nsCOMPtr<nsIInputStream> input;
-  nsresult rv = NS_NewByteInputStream(getter_AddRefs(input),
-                                      Span(mem.get<char>(), mem.Size<char>()),
-                                      NS_ASSIGNMENT_DEPEND);
+  rv = NS_NewByteInputStream(getter_AddRefs(input),
+                             Span(mem.get<char>(), mem.Size<char>()),
+                             NS_ASSIGNMENT_DEPEND);
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     BlockResponse(aChannel, rv);
