@@ -9,6 +9,5 @@ DevToolsModules(
     "console-file-activity.js",
     "console-reflow.js",
     "console-service.js",
-    "content-process.js",
     "document-events.js",
 )

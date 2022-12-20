@@ -10,7 +10,6 @@ DIRS += [
 
 DevToolsModules(
     "commands.js",
-    "content-process-forward.js",
     "eager-ecma-allowlist.js",
     "eager-function-allowlist.js",
     "eval-with-debugger.js",
