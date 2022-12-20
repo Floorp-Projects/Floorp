@@ -26,9 +26,7 @@ add_task(async function() {
   // Force observice all processes to see the content process requests
   await pushPref("devtools.browsertoolbox.scope", "everything");
 
-  const ToolboxTask = await initBrowserToolboxTask({
-    enableBrowserToolboxFission: true,
-  });
+  const ToolboxTask = await initBrowserToolboxTask();
 
   await ToolboxTask.importFunctions({
     waitUntil,

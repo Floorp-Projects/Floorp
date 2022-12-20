@@ -35,7 +35,6 @@ const IMAGE_URI = URL_ROOT_SSL + "test_image.png?" + uuid;
 add_task(async function testParentProcessRequests() {
   // The test expects the main process commands instance to receive resources
   // for content process requests.
-  await pushPref("devtools.browsertoolbox.fission", true);
   await pushPref("devtools.browsertoolbox.scope", "everything");
 
   const commands = await CommandsFactory.forMainProcess();

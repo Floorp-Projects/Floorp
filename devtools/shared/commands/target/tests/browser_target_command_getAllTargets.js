@@ -9,9 +9,6 @@ const FISSION_TEST_URL = URL_ROOT_SSL + "fission_document.html";
 const CHROME_WORKER_URL = CHROME_URL_ROOT + "test_worker.js";
 
 add_task(async function() {
-  // Enabled devtools.browsertoolbox.fission to listen to all target types.
-  await pushPref("devtools.browsertoolbox.fission", true);
-
   // Disable the preloaded process as it creates processes intermittently
   // which forces the emission of RDP requests we aren't correctly waiting for.
   await pushPref("dom.ipc.processPrelaunch.enabled", false);

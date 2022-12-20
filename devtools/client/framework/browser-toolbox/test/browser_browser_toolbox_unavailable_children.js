@@ -31,9 +31,7 @@ add_task(async function() {
   );
   tab.linkedBrowser.setAttribute("test-tab", "true");
 
-  const ToolboxTask = await initBrowserToolboxTask({
-    enableBrowserToolboxFission: true,
-  });
+  const ToolboxTask = await initBrowserToolboxTask();
 
   await ToolboxTask.importFunctions({
     waitUntil,

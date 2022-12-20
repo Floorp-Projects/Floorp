@@ -16,7 +16,6 @@ Services.scriptloader.loadSubScript(
 );
 
 add_task(async function() {
-  await pushPref("devtools.browsertoolbox.fission", true);
   await pushPref("devtools.browsertoolbox.scope", "everything");
 
   // Make sure the toolbox opens with the webconsole initially selected.

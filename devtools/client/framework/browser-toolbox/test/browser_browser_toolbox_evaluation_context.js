@@ -31,9 +31,7 @@ add_task(async function() {
     "https://example.com/document-builder.sjs?html=<html><title>Test tab</title></html>"
   );
 
-  const ToolboxTask = await initBrowserToolboxTask({
-    enableBrowserToolboxFission: true,
-  });
+  const ToolboxTask = await initBrowserToolboxTask();
 
   await ToolboxTask.importFunctions({
     waitUntil,

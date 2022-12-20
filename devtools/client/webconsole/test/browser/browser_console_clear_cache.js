@@ -11,7 +11,6 @@ const TEST_URI =
 
 add_task(async function() {
   await pushPref("devtools.browserconsole.contentMessages", true);
-  await pushPref("devtools.browsertoolbox.fission", true);
   await pushPref("devtools.browsertoolbox.scope", "everything");
 
   await addTab(TEST_URI);

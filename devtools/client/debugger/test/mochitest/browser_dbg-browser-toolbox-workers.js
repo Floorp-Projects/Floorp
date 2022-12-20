@@ -16,7 +16,6 @@ Services.scriptloader.loadSubScript(
 );
 
 add_task(async function() {
-  await pushPref("devtools.browsertoolbox.fission", true);
   await pushPref("devtools.browsertoolbox.scope", "everything");
   await pushPref("dom.serviceWorkers.enabled", true);
   await pushPref("dom.serviceWorkers.testing.enabled", true);
