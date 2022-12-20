@@ -10390,7 +10390,7 @@
 # disabled, an older forked capture module is used.
 - name: media.getusermedia.camera.macavf.enabled
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: false
   mirror: once
 
 # WebRTC prefs follow
