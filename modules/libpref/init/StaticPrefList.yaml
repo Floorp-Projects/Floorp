@@ -11113,7 +11113,11 @@
 # for "rv:11" to detect IE11.
 - name: network.http.useragent.forceRVOnly
   type: uint32_t
+#ifndef ANDROID
   value: 109
+#else
+  value: 0
+#endif
   mirror: always
 
 # Whether or not we use Windows for SSO to Microsoft sites.
