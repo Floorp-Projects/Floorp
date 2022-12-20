@@ -392,8 +392,8 @@ function makeSideeffectFreeDebugger(skipCheckingEffectfulOffsets) {
   }
 
   // The debugger only calls onNativeCall handlers on the debugger that is
-  // explicitly calling eval, so we need to add this hook on "dbg" even though
-  // the rest of our hooks work via "newDbg".
+  // explicitly calling either eval, DebuggerObject.apply or DebuggerObject.call,
+  // so we need to add this hook on "dbg" even though the rest of our hooks work via "newDbg".
   dbg.onNativeCall = (callee, reason) => {
     try {
       // Getters are never considered effectful, and setters are always effectful.

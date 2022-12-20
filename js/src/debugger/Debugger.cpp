@@ -945,7 +945,8 @@ NativeResumeMode DebugAPI::slowPathOnNativeCall(JSContext* cx,
                                                 const CallArgs& args,
                                                 CallReason reason) {
   // "onNativeCall" only works consistently in the context of an explicit eval
-  // that has set the "insideDebuggerEvaluationWithOnNativeCallHook" state
+  // (or a function call via DebuggerObject.call/apply) that has set the
+  // "insideDebuggerEvaluationWithOnNativeCallHook" state
   // on the JSContext, so we fast-path this hook to bail right away if that is
   // not currently set. If this flag is set to a _different_ debugger, the
   // standard "isHookCallAllowed" debugger logic will apply and only hooks on
