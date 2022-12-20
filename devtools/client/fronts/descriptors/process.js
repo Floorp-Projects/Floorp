@@ -83,10 +83,6 @@ class ProcessDescriptorFront extends DescriptorMixin(
     return this._isParent && !this._isWindowlessParent;
   }
 
-  get isBrowserToolboxFission() {
-    return true;
-  }
-
   get isParentProcessDescriptor() {
     return this._isParent;
   }
@@ -112,9 +108,7 @@ class ProcessDescriptorFront extends DescriptorMixin(
     this._targetFrontPromise = (async () => {
       let targetFront = null;
       try {
-        const targetForm = await super.getTarget({
-          isBrowserToolboxFission: this.isBrowserToolboxFission,
-        });
+        const targetForm = await super.getTarget();
         targetFront = await this._createProcessTargetFront(targetForm);
       } catch (e) {
         // This is likely to happen if we get a lot of events which drop previous
@@ -132,12 +126,6 @@ class ProcessDescriptorFront extends DescriptorMixin(
       return targetFront;
     })();
     return this._targetFrontPromise;
-  }
-
-  getWatcher() {
-    return super.getWatcher({
-      isBrowserToolboxFission: this.isBrowserToolboxFission,
-    });
   }
 
   destroy() {
