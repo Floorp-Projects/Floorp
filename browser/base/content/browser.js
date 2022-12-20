@@ -5483,10 +5483,7 @@ var XULBrowserWindow = {
     SaveToPocket.onLocationChange(window);
 
     let originalURI;
-    if (
-      aRequest instanceof Ci.nsIChannel &&
-      !isBlankPageURL(aRequest.originalURI.spec)
-    ) {
+    if (aRequest instanceof Ci.nsIChannel) {
       originalURI = aRequest.originalURI;
     }
 

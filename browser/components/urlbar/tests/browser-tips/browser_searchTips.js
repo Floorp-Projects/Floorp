@@ -13,6 +13,7 @@
 ChromeUtils.defineESModuleGetters(this, {
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.sys.mjs",
   ProfileAge: "resource://gre/modules/ProfileAge.sys.mjs",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProviderSearchTips:
     "resource:///modules/UrlbarProviderSearchTips.sys.mjs",
@@ -417,6 +418,91 @@ add_task(async function shortcut_buttons_with_tip() {
     "about:newtab",
     UrlbarProviderSearchTips.TIP_TYPE.ONBOARD
   );
+});
+
+// Don't show the persist search tip when the browser loads
+// a different page from the page the tip was supposed to show on.
+add_task(async function noSearchTipWhileAnotherPageLoads() {
+  await setDefaultEngine("Example");
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.showSearchTerms.featureGate", true]],
+  });
+
+  // Create a slow endpoint.
+  const SLOW_PAGE =
+    getRootDirectory(gTestPath).replace(
+      "chrome://mochitests/content",
+      "http://www.example.com"
+    ) + "slow-page.sjs";
+
+  let tab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
+    url: SEARCH_SERP_URL,
+  });
+
+  // Load a slow URI to cause an onStateChange event but
+  // not an onLocationChange event.
+  BrowserTestUtils.loadURI(tab.linkedBrowser, SLOW_PAGE);
+
+  // Wait roughly for the amount of time it would take for the
+  // persist search tip to show.
+  await new Promise(resolve =>
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    setTimeout(resolve, UrlbarProviderSearchTips.SHOW_PERSIST_TIP_DELAY_MS * 2)
+  );
+
+  // Check the search tip didn't show while the page was loading.
+  Assert.equal(
+    UrlbarPrefs.get(
+      `tipShownCount.${UrlbarProviderSearchTips.TIP_TYPE.PERSIST}`
+    ),
+    0,
+    "The shownCount pref should be 0."
+  );
+
+  Assert.equal(false, window.gURLBar.view.isOpen, "Urlbar should be closed.");
+
+  // Clean up.
+  await SpecialPowers.popPrefEnv();
+  resetSearchTipsProvider();
+  BrowserTestUtils.removeTab(tab);
+});
+
+// Show the persist search tip when the browser is still loading
+// resources from the page the tip is supposed to show on.
+add_task(async function searchTipWhilePageLoads() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.showSearchTerms.featureGate", true]],
+  });
+
+  // Create a search engine endpoint that will still
+  // be loading resources on the page load.
+  const SLOW_PAGE =
+    getRootDirectory(gTestPath).replace(
+      "chrome://mochitests/content",
+      "https://www.example.com"
+    ) + "slow-page.html";
+
+  await SearchTestUtils.installSearchExtension({
+    name: "Slow Engine",
+    search_url: SLOW_PAGE,
+    search_url_get_params: "search={searchTerms}",
+  });
+  await setDefaultEngine("Slow Engine");
+
+  let engine = Services.search.getEngineByName("Slow Engine");
+  let [expectedSearchUrl] = UrlbarUtils.getSearchQueryUrl(engine, "chocolate");
+
+  // Load a slow SERP.
+  await checkTab(
+    window,
+    expectedSearchUrl,
+    UrlbarProviderSearchTips.TIP_TYPE.PERSIST
+  );
+
+  // Clean up.
+  await SpecialPowers.popPrefEnv();
+  resetSearchTipsProvider();
 });
 
 function waitForBrowserWindowActive(win) {
