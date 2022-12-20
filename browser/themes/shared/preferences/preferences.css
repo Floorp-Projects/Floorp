@@ -387,10 +387,6 @@ checkbox {
   margin: 0;
 }
 
-.certManagerRichlistBox > richlistitem {
-  min-height: 30px !important;
-}
-
 .typeIcon,
 .actionIcon,
 .actionsMenu::part(icon) {

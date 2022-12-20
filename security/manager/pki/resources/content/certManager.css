@@ -13,3 +13,19 @@
    * box, which don't support it. */
   width: 0;
 }
+
+#certmanager {
+  /* This prevents horizontal scrollbars due to <tree> and non-XUL layout
+   * interactions */
+  padding: 0;
+}
+
+/* This matches the <tree> height from dialog.css */
+richlistbox {
+  height: 15em;
+}
+
+richlistbox,
+richlistitem {
+  min-height: 30px;
+}
