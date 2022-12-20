@@ -4,6 +4,7 @@ eslint:
     # ESLint infra handles its own path filtering, so just include cwd
     include: ['.']
     exclude: []
+    # When adding to this list, consider updating hooks_js_format.py as well.
     extensions: ['mjs', 'js', 'jsm', 'jsx', 'html', 'sjs', 'xhtml']
     support-files:
         - '**/.eslintrc.js'
