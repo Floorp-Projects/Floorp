@@ -10,7 +10,6 @@ const { ELLIPSIS } = require("resource://devtools/shared/l10n.js");
 
 add_task(async function() {
   // Show the content messages
-  await pushPref("devtools.browserconsole.contentMessages", true);
   await pushPref("devtools.browsertoolbox.scope", "everything");
 
   await addTab(TEST_URI);

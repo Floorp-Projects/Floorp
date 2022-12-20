@@ -25,7 +25,6 @@ const PRIVATE_TEST_URI = `data:text/html;charset=utf8,<!DOCTYPE html>Test consol
   </script>`;
 
 add_task(async function() {
-  await pushPref("devtools.browserconsole.contentMessages", true);
   await pushPref("devtools.browsertoolbox.scope", "everything");
 
   const publicTab = await addTab(NON_PRIVATE_TEST_URI);

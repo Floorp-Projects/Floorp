@@ -11,7 +11,6 @@ const TEST_URI =
 
 add_task(async function() {
   // Show the content messages
-  await pushPref("devtools.browserconsole.contentMessages", true);
   await pushPref("devtools.browsertoolbox.scope", "everything");
 
   // Disable the preloaded process as it creates processes intermittently

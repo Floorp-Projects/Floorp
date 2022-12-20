@@ -26,8 +26,6 @@ const {
  *   Destroy the browser toolbox and make sure it exits cleanly.
  *
  * @param {Object}:
- *        - {Boolean} enableContentMessages: pass true to log content messages
- *          in the Console.
  *        - {Function} existingProcessClose: if truth-y, connect to an existing
  *          browser toolbox process rather than launching a new one and
  *          connecting to it.  The given function is expected to return an
@@ -35,10 +33,7 @@ const {
  *          awaited in the returned `destroy()` function.  `exitCode` is
  *          asserted to be 0 (success).
  */
-async function initBrowserToolboxTask({
-  enableContentMessages,
-  existingProcessClose,
-} = {}) {
+async function initBrowserToolboxTask({ existingProcessClose } = {}) {
   if (AppConstants.ASAN) {
     ok(
       false,
@@ -100,14 +95,6 @@ async function initBrowserToolboxTask({
   const consoleFront = await target.getFront("console");
 
   ok(true, "Connected");
-
-  if (enableContentMessages) {
-    const preferenceFront = await client.mainRoot.getFront("preference");
-    await preferenceFront.setBoolPref(
-      "devtools.browserconsole.contentMessages",
-      true
-    );
-  }
 
   await importFunctions({
     info: msg => dump(msg + "\n"),
