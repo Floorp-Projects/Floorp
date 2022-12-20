@@ -5336,6 +5336,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(
 
     // TODO: Rely entirely on |aScrollMetadata.IsResolutionUpdated()| to
     //       determine which branch to take, and drop the other conditions.
+    CSSToParentLayerScale oldZoom = Metrics().GetZoom();
     if (FuzzyEqualsAdditive(
             Metrics().GetCompositionBoundsWidthIgnoringScrollbars(),
             aLayerMetrics.GetCompositionBoundsWidthIgnoringScrollbars()) &&
@@ -5368,13 +5369,21 @@ void AsyncPanZoomController::NotifyLayersUpdated(
     } else {
       // Take the new zoom as either device scale or composition width or
       // viewport size got changed (e.g. due to orientation change, or content
-      // changing the meta-viewport tag).
+      // changing the meta-viewport tag), or the main thread originated a
+      // resolution change for another reason (e.g. Ctrl+0 was pressed to
+      // reset the zoom).
       Metrics().SetZoom(aLayerMetrics.GetZoom());
       for (auto& sampledState : mSampledState) {
         sampledState.UpdateZoomProperties(aLayerMetrics);
       }
       Metrics().SetDevPixelsPerCSSPixel(
           aLayerMetrics.GetDevPixelsPerCSSPixel());
+    }
+
+    if (Metrics().GetZoom() != oldZoom) {
+      // If the zoom changed, the scroll range in CSS pixels may have changed
+      // even if the composition bounds didn't.
+      needToReclampScroll = true;
     }
 
     mExpectedGeckoMetrics.UpdateZoomFrom(aLayerMetrics);
