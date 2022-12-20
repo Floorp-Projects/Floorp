@@ -295,15 +295,15 @@ MCall* MakeCall(TempAllocator& alloc, Undef addUndefined, CallInfo& callInfo,
   MOZ_ASSERT_IF(needsThisCheck, !target);
   MOZ_ASSERT_IF(isDOMCall, target->jitInfo()->type() == JSJitInfo::Method);
 
-  DOMObjectKind objKind = DOMObjectKind::Unknown;
+  mozilla::Maybe<DOMObjectKind> objKind;
   if (isDOMCall) {
     const JSClass* clasp = callInfo.thisArg()->toGuardToClass()->getClass();
     MOZ_ASSERT(clasp->isDOMClass());
     if (clasp->isNativeObject()) {
-      objKind = DOMObjectKind::Native;
+      objKind.emplace(DOMObjectKind::Native);
     } else {
       MOZ_ASSERT(clasp->isProxyObject());
-      objKind = DOMObjectKind::Proxy;
+      objKind.emplace(DOMObjectKind::Proxy);
     }
   }
 
