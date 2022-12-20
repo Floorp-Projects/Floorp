@@ -1,3 +1,5 @@
+# Not direct dependency - only needed to fix a constraint problem
+MarkupSafe==2.0.1
 appdirs==1.4.4
 attrs==19.2.0
 blessed==1.19.1

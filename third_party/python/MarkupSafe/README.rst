@@ -26,18 +26,22 @@ Examples
 .. code-block:: pycon
 
     >>> from markupsafe import Markup, escape
+
     >>> # escape replaces special characters and wraps in Markup
-    >>> escape('<script>alert(document.cookie);</script>')
-    Markup(u'&lt;script&gt;alert(document.cookie);&lt;/script&gt;')
+    >>> escape("<script>alert(document.cookie);</script>")
+    Markup('&lt;script&gt;alert(document.cookie);&lt;/script&gt;')
+
     >>> # wrap in Markup to mark text "safe" and prevent escaping
-    >>> Markup('<strong>Hello</strong>')
+    >>> Markup("<strong>Hello</strong>")
     Markup('<strong>hello</strong>')
-    >>> escape(Markup('<strong>Hello</strong>'))
+
+    >>> escape(Markup("<strong>Hello</strong>"))
     Markup('<strong>hello</strong>')
-    >>> # Markup is a text subclass (str on Python 3, unicode on Python 2)
+
+    >>> # Markup is a str subclass
     >>> # methods and operators escape their arguments
-    >>> template = Markup("Hello <em>%s</em>")
-    >>> template % '"World"'
+    >>> template = Markup("Hello <em>{name}</em>")
+    >>> template.format(name='"World"')
     Markup('Hello <em>&#34;World&#34;</em>')
 
 
@@ -45,9 +49,9 @@ Donate
 ------
 
 The Pallets organization develops and supports MarkupSafe and other
-libraries that use it. In order to grow the community of contributors
-and users, and allow the maintainers to devote more time to the
-projects, `please donate today`_.
+popular packages. In order to grow the community of contributors and
+users, and allow the maintainers to devote more time to the projects,
+`please donate today`_.
 
 .. _please donate today: https://palletsprojects.com/donate
 
@@ -55,15 +59,11 @@ projects, `please donate today`_.
 Links
 -----
 
-*   Website: https://palletsprojects.com/p/markupsafe/
-*   Documentation: https://markupsafe.palletsprojects.com/
-*   License: `BSD-3-Clause <https://github.com/pallets/markupsafe/blob/master/LICENSE.rst>`_
-*   Releases: https://pypi.org/project/MarkupSafe/
-*   Code: https://github.com/pallets/markupsafe
-*   Issue tracker: https://github.com/pallets/markupsafe/issues
-*   Test status:
-
-    *   Linux, Mac: https://travis-ci.org/pallets/markupsafe
-    *   Windows: https://ci.appveyor.com/project/pallets/markupsafe
-
-*   Test coverage: https://codecov.io/gh/pallets/markupsafe
+-   Documentation: https://markupsafe.palletsprojects.com/
+-   Changes: https://markupsafe.palletsprojects.com/changes/
+-   PyPI Releases: https://pypi.org/project/MarkupSafe/
+-   Source Code: https://github.com/pallets/markupsafe/
+-   Issue Tracker: https://github.com/pallets/markupsafe/issues/
+-   Website: https://palletsprojects.com/p/markupsafe/
+-   Twitter: https://twitter.com/PalletsTeam
+-   Chat: https://discord.gg/pallets

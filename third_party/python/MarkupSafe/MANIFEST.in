@@ -1,8 +1,9 @@
 include CHANGES.rst
-include LICENSE.rst
-include README.rst
 include tox.ini
+include requirements/*.txt
 graft docs
 prune docs/_build
 graft tests
-global-exclude *.py[co]
+include src/markupsafe/py.typed
+include src/markupsafe/*.pyi
+global-exclude *.pyc
