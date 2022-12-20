@@ -8,3 +8,25 @@ const EXPORTED_SYMBOLS = [];
 /*
 Scripts written here are executed only once at browser startup.
 */
+
+const { Services } = ChromeUtils.import(
+    "resource://gre/modules/Services.jsm"
+);
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+
+// Check information about startup.
+let isFirstRun = false;
+let isUpdated = false;
+{
+    isFirstRun = 
+        !Boolean(Services.prefs.getStringPref("browser.startup.homepage_override.mstone", null));
+
+    let nowVersion = AppConstants.MOZ_APP_VERSION_DISPLAY;
+    let oldVersionPref = Services.prefs.getStringPref("floorp.startup.oldVersion", null);
+    if (oldVersionPref !== nowVersion && !isFirstRun) {
+        isUpdated = true;
+    }
+    Services.prefs.setStringPref("floorp.startup.oldVersion", nowVersion);
+}
