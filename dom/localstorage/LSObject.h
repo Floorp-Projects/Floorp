@@ -113,8 +113,7 @@ class LSObject final : public Storage {
 
   bool InExplicitSnapshot() const { return mInExplicitSnapshot; }
 
-  LSRequestChild* StartRequest(nsIEventTarget* aMainEventTarget,
-                               const LSRequestParams& aParams,
+  LSRequestChild* StartRequest(const LSRequestParams& aParams,
                                LSRequestChildCallback* aCallback);
 
   // Storage overrides.
