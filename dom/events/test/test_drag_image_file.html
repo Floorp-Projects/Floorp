@@ -18,6 +18,8 @@ async function runTest() {
       finalY: 20,
   }, null);
 
+  info(`DataTransfer types: ${dt.types}`);
+
   ok(dt.types.includes("Files"), "types should contains 'Files'");
   is(dt.files.length, 1, "files contains one File");
 
