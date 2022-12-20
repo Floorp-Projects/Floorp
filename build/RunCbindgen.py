@@ -9,15 +9,15 @@ import subprocess
 
 import buildconfig
 import mozpack.path as mozpath
-import pytoml
 import six
+import toml
 
 
 # Try to read the package name or otherwise assume same name as the crate path.
 def _get_crate_name(crate_path):
     try:
         with open(mozpath.join(crate_path, "Cargo.toml"), encoding="utf-8") as f:
-            return pytoml.load(f)["package"]["name"]
+            return toml.load(f)["package"]["name"]
     except Exception:
         return mozpath.basename(crate_path)
 
