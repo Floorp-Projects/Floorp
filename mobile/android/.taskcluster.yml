@@ -127,28 +127,28 @@ tasks:
                   then: ${event.action}
                   else: 'UNDEFINED'
           in:
-              $if: >
-                  tasks_for in ["action", "cron"]
-                  || (isPullRequest && pullRequestAction in ["opened", "reopened", "synchronize"])
-                  || (tasks_for == "github-push" && head_ref[:10] != "refs/tags/" && head_ref != "staging.tmp" && head_ref != "trying.tmp") && (head_ref[:8] != "mergify/")
-              then:
-                  $let:
-                      level:
-                          $if: >
-                              tasks_for in ["github-push", "action", "cron"] && repoUrl == canonicalRepo
-                          then: '3'
-                          else: '1'
+              $let:
+                  level:
+                      $if: >
+                          tasks_for in ["github-push", "action", "cron"] && repoUrl == canonicalRepo
+                      then: '3'
+                      else: '1'
 
-                      short_base_ref:
-                          $if: 'base_ref[:11] == "refs/heads/"'
-                          then: {$eval: 'base_ref[11:]'}
-                          else: ${base_ref}
+                  short_base_ref:
+                      $if: 'base_ref[:11] == "refs/heads/"'
+                      then: {$eval: 'base_ref[11:]'}
+                      else: ${base_ref}
 
-                      short_head_ref:
-                          $if: 'head_ref[:11] == "refs/heads/"'
-                          then: {$eval: 'head_ref[11:]'}
-                          else: ${head_ref}
-                  in:
+                  short_head_ref:
+                      $if: 'head_ref[:11] == "refs/heads/"'
+                      then: {$eval: 'head_ref[11:]'}
+                      else: ${head_ref}
+              in:
+                  $if: >
+                      tasks_for in ["action", "cron"]
+                      || (isPullRequest && pullRequestAction in ["opened", "reopened", "synchronize"])
+                      || (tasks_for == "github-push" && head_ref[:10] != "refs/tags/" && head_ref != "staging.tmp" && head_ref != "trying.tmp") && (head_ref[:8] != "mergify/")
+                  then:
                       $mergeDeep:
                           - $if: 'tasks_for != "action"'
                             then:
