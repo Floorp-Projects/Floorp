@@ -21,8 +21,10 @@ class ShmemCreated : public IPC::Message {
 
  public:
   ShmemCreated(int32_t routingId, id_t aIPDLId, size_t aSize)
-      : IPC::Message(routingId, SHMEM_CREATED_MESSAGE_TYPE, 0,
-                     HeaderFlags(NESTED_INSIDE_CPOW)) {
+      : IPC::Message(
+            routingId, SHMEM_CREATED_MESSAGE_TYPE, 0,
+            HeaderFlags(NESTED_INSIDE_CPOW, NORMAL_PRIORITY, COMPRESSION_NONE,
+                        LAZY_SEND, NOT_CONSTRUCTOR, ASYNC, NOT_REPLY)) {
     MOZ_RELEASE_ASSERT(aSize < std::numeric_limits<uint32_t>::max(),
                        "Tried to create Shmem with size larger than 4GB");
     IPC::MessageWriter writer(*this);
@@ -51,7 +53,10 @@ class ShmemDestroyed : public IPC::Message {
 
  public:
   ShmemDestroyed(int32_t routingId, id_t aIPDLId)
-      : IPC::Message(routingId, SHMEM_DESTROYED_MESSAGE_TYPE) {
+      : IPC::Message(
+            routingId, SHMEM_DESTROYED_MESSAGE_TYPE, 0,
+            HeaderFlags(NOT_NESTED, NORMAL_PRIORITY, COMPRESSION_NONE,
+                        LAZY_SEND, NOT_CONSTRUCTOR, ASYNC, NOT_REPLY)) {
     IPC::MessageWriter writer(*this);
     IPC::WriteParam(&writer, aIPDLId);
   }
