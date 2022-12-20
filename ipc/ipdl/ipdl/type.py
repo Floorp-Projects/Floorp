@@ -307,6 +307,7 @@ class MessageType(IPDLType):
         cdtype=None,
         compress=False,
         tainted=False,
+        lazySend=False,
     ):
         assert not (ctor and dtor)
         assert not (ctor or dtor) or cdtype is not None
@@ -323,6 +324,7 @@ class MessageType(IPDLType):
         self.cdtype = cdtype
         self.compress = compress
         self.tainted = tainted
+        self.lazySend = lazySend
 
     def isMessage(self):
         return True
@@ -1295,6 +1297,7 @@ class GatherDecls(TcheckVisitor):
                 "Nested": ("not", "inside_sync", "inside_cpow"),
                 "LegacyIntr": None,
                 "VirtualSendImpl": None,
+                "LazySend": None,
             },
         )
 
@@ -1310,6 +1313,9 @@ class GatherDecls(TcheckVisitor):
 
         if md.sendSemantics is INTR and "Nested" in md.attributes:
             self.error(loc, "intr message `%s' cannot specify [Nested]", msgname)
+
+        if md.sendSemantics is not ASYNC and "LazySend" in md.attributes:
+            self.error(loc, "non-async message `%s' cannot specify [LazySend]", msgname)
 
         isctor = False
         isdtor = False
@@ -1347,6 +1353,7 @@ class GatherDecls(TcheckVisitor):
             cdtype=cdtype,
             compress=md.attributes.get("Compress"),
             tainted="Tainted" in md.attributes,
+            lazySend="LazySend" in md.attributes,
         )
 
         # replace inparam Param nodes with proper Decls

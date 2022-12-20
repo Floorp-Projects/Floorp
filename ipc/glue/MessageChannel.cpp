@@ -33,6 +33,7 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "nsAppRunner.h"
 #include "nsContentUtils.h"
+#include "nsIDirectTaskDispatcher.h"
 #include "nsTHashMap.h"
 #include "nsDebug.h"
 #include "nsExceptionHandler.h"
@@ -635,6 +636,11 @@ void MessageChannel::Clear() {
     mChannelErrorTask = nullptr;
   }
 
+  if (mFlushLazySendTask) {
+    mFlushLazySendTask->Cancel();
+    mFlushLazySendTask = nullptr;
+  }
+
   // Free up any memory used by pending messages.
   mPending.clear();
 
@@ -782,7 +788,45 @@ bool MessageChannel::Send(UniquePtr<Message> aMsg) {
 void MessageChannel::SendMessageToLink(UniquePtr<Message> aMsg) {
   AssertWorkerThread();
   mMonitor->AssertCurrentThreadOwns();
+
+  // If the channel is not cross-process, there's no reason to be lazy, so we
+  // ignore the flag in that case.
+  if (aMsg->is_lazy_send() && mIsCrossProcess) {
+    // If this is the first lazy message in the queue and our worker thread
+    // supports direct task dispatch, dispatch a task to flush messages,
+    // ensuring we don't leave them pending forever.
+    if (!mFlushLazySendTask) {
+      if (nsCOMPtr<nsIDirectTaskDispatcher> dispatcher =
+              do_QueryInterface(mWorkerThread)) {
+        mFlushLazySendTask = new FlushLazySendMessagesRunnable(this);
+        MOZ_ALWAYS_SUCCEEDS(
+            dispatcher->DispatchDirectTask(do_AddRef(mFlushLazySendTask)));
+      }
+    }
+    if (mFlushLazySendTask) {
+      mFlushLazySendTask->PushMessage(std::move(aMsg));
+      return;
+    }
+  }
+
+  if (mFlushLazySendTask) {
+    FlushLazySendMessages();
+  }
   mLink->SendMessage(std::move(aMsg));
+}
+
+void MessageChannel::FlushLazySendMessages() {
+  AssertWorkerThread();
+  mMonitor->AssertCurrentThreadOwns();
+
+  // Clean up any SendLazyTask which might be pending.
+  auto messages = mFlushLazySendTask->TakeMessages();
+  mFlushLazySendTask = nullptr;
+
+  // Send all lazy messages, then clear the queue.
+  for (auto& msg : messages) {
+    mLink->SendMessage(std::move(msg));
+  }
 }
 
 UniquePtr<MessageChannel::UntypedCallbackHolder> MessageChannel::PopCallback(
@@ -870,7 +914,7 @@ bool MessageChannel::SendBuildIDsMatchMessage(const char* aParentBuildID) {
   }
 #endif
 
-  mLink->SendMessage(std::move(msg));
+  SendMessageToLink(std::move(msg));
   return true;
 }
 
@@ -1227,7 +1271,7 @@ bool MessageChannel::Send(UniquePtr<Message> aMsg, UniquePtr<Message>* aReply) {
     auto cancel =
         MakeUnique<CancelMessage>(CurrentNestedInsideSyncTransaction());
     CancelTransaction(CurrentNestedInsideSyncTransaction());
-    mLink->SendMessage(std::move(cancel));
+    SendMessageToLink(std::move(cancel));
   }
 
   IPC_ASSERT(aMsg->is_sync(), "can only Send() sync messages here");
@@ -1697,7 +1741,7 @@ void MessageChannel::DispatchMessage(ActorLifecycleProxy* aProxy,
             aMsg->transaction_id());
     AddProfilerMarker(*reply, MessageDirection::eSending);
 
-    mLink->SendMessage(std::move(reply));
+    SendMessageToLink(std::move(reply));
   }
 }
 
@@ -2097,7 +2141,7 @@ void MessageChannel::NotifyImpendingShutdown() {
       MakeUnique<Message>(MSG_ROUTING_NONE, IMPENDING_SHUTDOWN_MESSAGE_TYPE);
   MonitorAutoLock lock(*mMonitor);
   if (Connected()) {
-    mLink->SendMessage(std::move(msg));
+    SendMessageToLink(std::move(msg));
   }
 }
 
@@ -2128,7 +2172,7 @@ void MessageChannel::Close() {
       // already received a Goodbye from the other side (and our state is
       // ChannelClosing), there's no reason to send one.
       if (ChannelConnected == mChannelState) {
-        mLink->SendMessage(MakeUnique<GoodbyeMessage>());
+        SendMessageToLink(MakeUnique<GoodbyeMessage>());
       }
       SynchronouslyClose();
       NotifyChannelClosed(lock);
@@ -2349,7 +2393,7 @@ void MessageChannel::CancelCurrentTransaction() {
     auto cancel =
         MakeUnique<CancelMessage>(CurrentNestedInsideSyncTransaction());
     CancelTransaction(CurrentNestedInsideSyncTransaction());
-    mLink->SendMessage(std::move(cancel));
+    SendMessageToLink(std::move(cancel));
   }
 }
 
@@ -2399,6 +2443,41 @@ void MessageChannel::WorkerTargetShutdownTask::TargetShutdown() {
 void MessageChannel::WorkerTargetShutdownTask::Clear() {
   MOZ_RELEASE_ASSERT(mTarget->IsOnCurrentThread());
   mChannel = nullptr;
+}
+
+NS_IMPL_ISUPPORTS_INHERITED0(MessageChannel::FlushLazySendMessagesRunnable,
+                             CancelableRunnable)
+
+MessageChannel::FlushLazySendMessagesRunnable::FlushLazySendMessagesRunnable(
+    MessageChannel* aChannel)
+    : CancelableRunnable("MessageChannel::FlushLazyMessagesRunnable"),
+      mChannel(aChannel) {}
+
+NS_IMETHODIMP MessageChannel::FlushLazySendMessagesRunnable::Run() {
+  if (mChannel) {
+    MonitorAutoLock lock(*mChannel->mMonitor);
+    MOZ_ASSERT(mChannel->mFlushLazySendTask == this);
+    mChannel->FlushLazySendMessages();
+  }
+  return NS_OK;
+}
+
+nsresult MessageChannel::FlushLazySendMessagesRunnable::Cancel() {
+  mQueue.Clear();
+  mChannel = nullptr;
+  return NS_OK;
+}
+
+void MessageChannel::FlushLazySendMessagesRunnable::PushMessage(
+    UniquePtr<Message> aMsg) {
+  MOZ_ASSERT(mChannel);
+  mQueue.AppendElement(std::move(aMsg));
+}
+
+nsTArray<UniquePtr<IPC::Message>>
+MessageChannel::FlushLazySendMessagesRunnable::TakeMessages() {
+  mChannel = nullptr;
+  return std::move(mQueue);
 }
 
 }  // namespace ipc

@@ -1805,6 +1805,7 @@ def _generateMessageConstructor(md, segmentSize, protocol, forReply=False):
     prioEnum = cppPriorityList[md.decl.type.prio]
 
     compress = md.decl.type.compress
+    lazySend = md.decl.type.lazySend
 
     routingId = ExprVar("routingId")
 
@@ -1823,6 +1824,11 @@ def _generateMessageConstructor(md, segmentSize, protocol, forReply=False):
     else:
         assert compress.value is None
         compression = "COMPRESSION_ENABLED"
+
+    if lazySend:
+        lazySendEnum = "LAZY_SEND"
+    else:
+        lazySendEnum = "EAGER_SEND"
 
     if nested == ipdl.ast.NOT_NESTED:
         nestedEnum = "NOT_NESTED"
@@ -1861,6 +1867,7 @@ def _generateMessageConstructor(md, segmentSize, protocol, forReply=False):
             messageEnum(nestedEnum),
             messageEnum(prioEnum),
             messageEnum(compression),
+            messageEnum(lazySendEnum),
             messageEnum(ctorEnum),
             messageEnum(syncEnum),
             messageEnum(replyEnum),

@@ -491,6 +491,9 @@ IPDL messages support the following annotations:
                          while a sync message waits for a response.
 ``[Nested=inside_cpow]`` Indicates that the message can sometimes be handled
                          while a sync message waits for a response.
+``[LazySend]``           Messages with this annotation will be queued up to be
+                         sent together either immediately before a non-LazySend
+                         message, or from a direct task.
 ======================== ======================================================
 
 ``[Compress]`` provides crude protection against spamming with a flood of
@@ -511,6 +514,14 @@ vouch for their safety.  They are discussed in `Actors and Messages in C++`_.
 The ``Nested`` annotations are deeply related to the message's blocking policy
 that follows it and which was briefly discussed in `Defining Actors`_.  See
 `Nested messages`_ for details.
+
+``[LazySend]`` indicates the message doesn't need to be sent immediately, and
+can be sent later, from a direct task. Worker threads which do not support
+direct task dispatch will ignore this attribute. Messages with this annotation
+will still be delivered in-order with other messages, meaning that if a normal
+message is sent, any queued ``[LazySend]`` messages will be sent first. The
+attribute allows the transport layer to combine messages to be sent together,
+potentially reducing thread wake-ups for I/O and receiving threads.
 
 The following is a complete list of the available blocking policies.  It
 resembles the list in `Defining Actors`_:
@@ -696,6 +707,9 @@ for use in IPDL files:
                               message handler.  ``Foo`` is one of: ``normal``,
                               ``input``, ``vsync``, ``mediumhigh``, or
                               ``control``.
+``[LazySend]``                Messages with this annotation will be queued up to
+                              be sent together immediately before a non-LazySend
+                              message, or from a direct task.
 ``[ChildImpl="RemoteFoo"]``   Indicates that the child side implementation of
                               the actor is a class named ``RemoteFoo``, and the
                               definition is included by one of the
