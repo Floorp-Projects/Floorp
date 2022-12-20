@@ -328,9 +328,9 @@ struct ParamTraits<nsID> {
 
 template <>
 struct ParamTraits<nsContentPolicyType>
-    : public ContiguousEnumSerializerInclusive<
-          nsContentPolicyType, nsIContentPolicy::TYPE_INVALID,
-          nsIContentPolicy::TYPE_WEB_IDENTITY> {};
+    : public ContiguousEnumSerializer<nsContentPolicyType,
+                                      nsIContentPolicy::TYPE_INVALID,
+                                      nsIContentPolicy::TYPE_END> {};
 
 template <>
 struct ParamTraits<mozilla::TimeDuration> {
