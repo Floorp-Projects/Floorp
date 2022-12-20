@@ -28,7 +28,6 @@ SimpleTest.requestFlakyTimeout("untriaged");
 // run in an iframe, which by default will not have the allowfullscreen
 // attribute set, so full-screen won't work.
 var gTestWindows = [
-  { test: "file_fullscreen-single.html" },
   { test: "file_fullscreen-multiple.html",
     prefs: [["full-screen-api.exit-on.windowRaise", false],
             ["full-screen-api.exit-on.windowOpen", false]] },
@@ -73,7 +72,6 @@ function nextTest() {
       info("main window focused, starting next test");
       SimpleTest.executeSoon(runNextTest);
     }, {once: true});
-    info("testWindow.close()");
     testWindow.close();
   } else {
     SimpleTest.executeSoon(runNextTest);
@@ -106,6 +104,16 @@ function runNextTest() {
       waitForLoadAndPaint(testWindow, function() {
         SimpleTest.waitForFocus(function() {
           info("Were focused");
+          // For the platforms that support reporting occlusion state (e.g. Mac),
+          // we should wait until the docshell has been activated again,
+          // otherwise, the fullscreen request might be denied.
+          if (testWindow.document.hidden) {
+            info("Waiting for document to unhide");
+            waitForEvent(testWindow.document, "visibilitychange", (event) => {
+              return !testWindow.document.hidden;
+            }, testWindow.begin);
+            return;
+          }
           testWindow.begin();
         }, testWindow);
       });

@@ -4,11 +4,8 @@
 
 from __future__ import absolute_import, print_function
 
-import sys
-
 from marionette_driver.errors import InvalidArgumentException
 from marionette_harness import MarionetteTestCase
-from unittest import skipIf
 
 
 class TestWindowRect(MarionetteTestCase):
@@ -302,17 +299,6 @@ class TestWindowRect(MarionetteTestCase):
         self.assertEqual(result_size["width"], expected_size["width"])
         self.assertEqual(result_size["height"], expected_size["height"])
 
-    # marionette attempts to exit fullscreen before minimizing the window.
-    # To do this, it waits on a sizemode event, but that event is sent at
-    # the beginning of the fullscreen transition. For macOS native
-    # fullscreen, it's rejected to try to minimize the window during the
-    # transition, and there is *no* event sent at the end of transition.
-    # This puts marionette in an impossible position. So for now, we
-    # skip this test on macOS. Bug 1802192.
-    @skipIf(
-        sys.platform.startswith("darwin"),
-        "Bug 1802192 - macOS fullscreen windows can't be resized.",
-    )
     def test_resize_while_fullscreen(self):
         self.marionette.fullscreen()
         expected_size = self.marionette.set_window_rect(
