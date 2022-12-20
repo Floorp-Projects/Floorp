@@ -1989,7 +1989,7 @@ class gfxFont {
   virtual int32_t GetGlyphWidth(uint16_t aGID) { return -1; }
 
   virtual bool GetGlyphBounds(uint16_t aGID, gfxRect* aBounds,
-                              bool aTight = false) const {
+                              bool aTight = false) {
     return false;
   }
 

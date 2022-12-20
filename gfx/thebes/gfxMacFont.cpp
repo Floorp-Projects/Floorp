@@ -519,8 +519,7 @@ int32_t gfxMacFont::GetGlyphWidth(uint16_t aGID) {
   return advance.width * 0x10000;
 }
 
-bool gfxMacFont::GetGlyphBounds(uint16_t aGID, gfxRect* aBounds,
-                                bool aTight) const {
+bool gfxMacFont::GetGlyphBounds(uint16_t aGID, gfxRect* aBounds, bool aTight) {
   CGRect bb;
   if (!::CGFontGetGlyphBBoxes(mCGFont, &aGID, 1, &bb)) {
     return false;

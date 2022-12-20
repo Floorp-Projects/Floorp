@@ -492,8 +492,7 @@ int32_t gfxGDIFont::GetGlyphWidth(uint16_t aGID) {
   });
 }
 
-bool gfxGDIFont::GetGlyphBounds(uint16_t aGID, gfxRect* aBounds,
-                                bool aTight) const {
+bool gfxGDIFont::GetGlyphBounds(uint16_t aGID, gfxRect* aBounds, bool aTight) {
   DCForMetrics dc;
   AutoSelectFont fs(dc, GetHFONT());
 

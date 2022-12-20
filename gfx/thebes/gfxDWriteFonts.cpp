@@ -752,23 +752,37 @@ gfxFloat gfxDWriteFont::MeasureGlyphWidth(uint16_t aGlyph) {
 }
 
 bool gfxDWriteFont::GetGlyphBounds(uint16_t aGID, gfxRect* aBounds,
-                                   bool aTight) const {
-  DWRITE_GLYPH_METRICS m;
-  HRESULT hr = mFontFace->GetDesignGlyphMetrics(&aGID, 1, &m, FALSE);
-  if (FAILED(hr)) {
-    return false;
+                                   bool aTight) {
+  MOZ_SEH_TRY {
+    DWRITE_GLYPH_METRICS m;
+    HRESULT hr = mFontFace->GetDesignGlyphMetrics(&aGID, 1, &m, FALSE);
+    if (FAILED(hr)) {
+      return false;
+    }
+    gfxRect bounds(m.leftSideBearing, m.topSideBearing - m.verticalOriginY,
+                   m.advanceWidth - m.leftSideBearing - m.rightSideBearing,
+                   m.advanceHeight - m.topSideBearing - m.bottomSideBearing);
+    bounds.Scale(mFUnitsConvFactor);
+    // GetDesignGlyphMetrics returns 'ideal' glyph metrics, we need to pad to
+    // account for antialiasing.
+    if (!aTight && !aBounds->IsEmpty()) {
+      bounds.Inflate(1.0, 0.0);
+    }
+    *aBounds = bounds;
+    return true;
   }
-  gfxRect bounds(m.leftSideBearing, m.topSideBearing - m.verticalOriginY,
-                 m.advanceWidth - m.leftSideBearing - m.rightSideBearing,
-                 m.advanceHeight - m.topSideBearing - m.bottomSideBearing);
-  bounds.Scale(mFUnitsConvFactor);
-  // GetDesignGlyphMetrics returns 'ideal' glyph metrics, we need to pad to
-  // account for antialiasing.
-  if (!aTight && !aBounds->IsEmpty()) {
-    bounds.Inflate(1.0, 0.0);
+  MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+    // Exception (e.g. disk i/o error) occurred when DirectWrite tried to use
+    // the font resource; possibly a failing drive or similar hardware issue.
+    // Mark the font as invalid, and wipe the fontEntry's charmap so that font
+    // selection will skip it; we'll use a fallback font instead.
+    mIsValid = false;
+    GetFontEntry()->mCharacterMap = new gfxCharacterMap();
+    GetFontEntry()->mShmemCharacterMap = nullptr;
+    gfxCriticalError() << "Exception occurred measuring glyph bounds for "
+                       << GetFontEntry()->Name().get();
   }
-  *aBounds = bounds;
-  return true;
+  return false;
 }
 
 void gfxDWriteFont::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,

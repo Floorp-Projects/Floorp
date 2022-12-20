@@ -761,7 +761,7 @@ const gfxFT2FontBase::GlyphMetrics& gfxFT2FontBase::GetCachedGlyphMetrics(
 }
 
 bool gfxFT2FontBase::GetGlyphBounds(uint16_t aGID, gfxRect* aBounds,
-                                    bool aTight) const {
+                                    bool aTight) {
   IntRect bounds;
   const GlyphMetrics& metrics = GetCachedGlyphMetrics(aGID, &bounds);
   if (!metrics.HasValidBounds()) {
