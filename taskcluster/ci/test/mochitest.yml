@@ -284,7 +284,10 @@ mochitest-browser-a11y:
                     android.*: []
                     default: built-projects
     tier: default
-    max-run-time: 1800
+    max-run-time:
+        by-test-platform:
+            .*tsan.*: 2700
+            default: 1800
     mozharness:
         mochitest-flavor: browser
     instance-size: default
