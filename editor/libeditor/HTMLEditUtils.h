@@ -184,7 +184,13 @@ class HTMLEditUtils final {
    * IsDisplayOutsideInline() returns true if display-outside value is
    * "inside".  This does NOT flush the layout.
    */
-  static bool IsDisplayOutsideInline(const Element& aElement);
+  [[nodiscard]] static bool IsDisplayOutsideInline(const Element& aElement);
+
+  /**
+   * IsDisplayInsideFlowRoot() returns true if display-inline value of aElement
+   * is "flow-root".  This does NOT flush the layout.
+   */
+  [[nodiscard]] static bool IsDisplayInsideFlowRoot(const Element& aElement);
 
   /**
    * IsRemovableInlineStyleElement() returns true if aElement is an inline

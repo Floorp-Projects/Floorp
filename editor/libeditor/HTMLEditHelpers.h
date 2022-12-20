@@ -921,6 +921,7 @@ class MOZ_STACK_CLASS EditorElementStyle {
            aAttribute == nsGkAtoms::valign || aAttribute == nsGkAtoms::width;
   }
 
+  [[nodiscard]] bool IsCSSEditable(const nsStaticAtom& aTagName) const;
   [[nodiscard]] bool IsCSSEditable(const dom::Element& aElement) const;
 
   nsStaticAtom* Style() const { return mStyle; }
@@ -1021,11 +1022,26 @@ struct MOZ_STACK_CLASS EditorInlineStyle : public EditorElementStyle {
    */
   [[nodiscard]] bool IsRepresentedBy(const nsIContent& aContent) const;
 
-  explicit EditorInlineStyle(nsStaticAtom& aHTMLProperty,
+  /**
+   * Returns true if aElement has style attribute and specifies this style.
+   *
+   * TODO: Make aElement be constant, but it needs to touch CSSEditUtils a lot.
+   */
+  [[nodiscard]] Result<bool, nsresult> IsSpecifiedBy(
+      const HTMLEditor& aHTMLEditor, dom::Element& aElement) const;
+
+  explicit EditorInlineStyle(const nsStaticAtom& aHTMLProperty,
                              nsAtom* aAttribute = nullptr)
-      : mHTMLProperty(&aHTMLProperty), mAttribute(aAttribute) {}
-  EditorInlineStyle(nsStaticAtom& aHTMLProperty, RefPtr<nsAtom>&& aAttribute)
-      : mHTMLProperty(&aHTMLProperty), mAttribute(std::move(aAttribute)) {}
+      // Needs const_cast hack here because the struct users may want
+      // non-const nsStaticAtom pointer due to bug 1794954
+      : mHTMLProperty(const_cast<nsStaticAtom*>(&aHTMLProperty)),
+        mAttribute(aAttribute) {}
+  EditorInlineStyle(const nsStaticAtom& aHTMLProperty,
+                    RefPtr<nsAtom>&& aAttribute)
+      // Needs const_cast hack here because the struct users may want
+      // non-const nsStaticAtom pointer due to bug 1794954
+      : mHTMLProperty(const_cast<nsStaticAtom*>(&aHTMLProperty)),
+        mAttribute(std::move(aAttribute)) {}
 
   /**
    * Returns the instance which means remove all inline styles.
@@ -1103,6 +1119,21 @@ struct MOZ_STACK_CLASS EditorInlineStyleAndValue : public EditorInlineStyle {
 
   [[nodiscard]] bool IsStyleToInvert() const {
     return mAttributeValue.EqualsLiteral(u"-moz-editor-invert-value");
+  }
+
+  /**
+   * Returns true if this style is representable with HTML.
+   */
+  [[nodiscard]] bool IsRepresentableWithHTML() const {
+    // Use background-color in any elements
+    if (mAttribute == nsGkAtoms::bgcolor) {
+      return false;
+    }
+    // Inverting the style means that it's invertible with CSS
+    if (IsStyleToInvert()) {
+      return false;
+    }
+    return true;
   }
 
  private:

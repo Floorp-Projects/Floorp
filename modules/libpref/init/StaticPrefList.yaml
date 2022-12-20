@@ -4786,6 +4786,13 @@
   value: true
   mirror: always
 
+# Use compatible range computation when applying inline style.  This is used
+# for making it possible to backout with Normandy Pref Rollout.
+- name: editor.inline_style.range.compatible_with_the_other_browsers
+  type: bool
+  value: true
+  mirror: always
+
 # Whether use Blink/WebKit compatbile joining nodes and split a node direction.
 # false: Left node will be created (at splitting) and deleted (at joining)
 # true:  Right node will be created (at splitting) and deleted (at joinining)

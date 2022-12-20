@@ -218,6 +218,16 @@ bool HTMLEditUtils::IsDisplayOutsideInline(const Element& aElement) {
          StyleDisplayOutside::Inline;
 }
 
+bool HTMLEditUtils::IsDisplayInsideFlowRoot(const Element& aElement) {
+  RefPtr<const ComputedStyle> elementStyle =
+      nsComputedDOMStyle::GetComputedStyleNoFlush(&aElement);
+  if (!elementStyle) {
+    return false;
+  }
+  return elementStyle->StyleDisplay()->DisplayInside() ==
+         StyleDisplayInside::FlowRoot;
+}
+
 bool HTMLEditUtils::IsRemovableInlineStyleElement(Element& aElement) {
   if (!aElement.IsHTMLElement()) {
     return false;
