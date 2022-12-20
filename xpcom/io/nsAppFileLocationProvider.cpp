@@ -17,6 +17,7 @@
 #include "nsCRT.h"
 #if defined(MOZ_WIDGET_COCOA)
 #  include <Carbon/Carbon.h>
+#  include "CocoaFileUtils.h"
 #  include "nsILocalFileMac.h"
 #elif defined(XP_WIN)
 #  include <windows.h>
@@ -182,19 +183,14 @@ nsresult nsAppFileLocationProvider::GetProductDirectory(nsIFile** aLocalFile,
   nsCOMPtr<nsIFile> localDir;
 
 #if defined(MOZ_WIDGET_COCOA)
-  FSRef fsRef;
-  OSType folderType =
-      aLocal ? (OSType)kCachedDataFolderType : (OSType)kDomainLibraryFolderType;
-  OSErr err = ::FSFindFolder(kUserDomain, folderType, kCreateFolder, &fsRef);
-  if (err) {
-    return NS_ERROR_FAILURE;
-  }
   NS_NewLocalFile(u""_ns, true, getter_AddRefs(localDir));
   if (!localDir) {
     return NS_ERROR_FAILURE;
   }
   nsCOMPtr<nsILocalFileMac> localDirMac(do_QueryInterface(localDir));
-  rv = localDirMac->InitWithFSRef(&fsRef);
+
+  rv = localDirMac->InitWithCFURL(
+      CocoaFileUtils::GetProductDirectoryCFURLRef(aLocal));
   if (NS_FAILED(rv)) {
     return rv;
   }

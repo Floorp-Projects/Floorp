@@ -39,6 +39,8 @@ void CopyQuarantineReferrerUrl(const CFStringRef aFilePath,
 
 CFURLRef GetTemporaryFolderCFURLRef();
 
+CFURLRef GetProductDirectoryCFURLRef(bool aLocal);
+
 }  // namespace CocoaFileUtils
 
 #endif
