@@ -11,13 +11,13 @@ import { setupHelper } from "../utils/dbg";
 import { prefs } from "../utils/prefs";
 
 import {
-  start as startPrettyPrintWorker,
+  setJestWorkerURL as setJestPrettyPrintWorkerURL,
   stop as stopPrettyPrintWorker,
 } from "../workers/pretty-print";
 
 import { ParserDispatcher } from "../workers/parser";
 import {
-  start as startSearchWorker,
+  setJestWorkerURL as setJestSearchWorkerURL,
   stop as stopSearchWorker,
 } from "../workers/search";
 import { clearDocuments } from "../utils/editor";
@@ -32,16 +32,18 @@ function formatException(reason, p) {
   console && console.log("Unhandled Rejection at:", p, "reason:", reason);
 }
 
-export const parserWorker = new ParserDispatcher();
-export const evaluationsParser = new ParserDispatcher();
+export const parserWorker = new ParserDispatcher(
+  path.join(rootPath, "src/workers/parser/worker.js")
+);
+export const evaluationsParser = new ParserDispatcher(
+  path.join(rootPath, "src/workers/parser/worker.js")
+);
 
 beforeAll(() => {
-  startPrettyPrintWorker(
+  setJestPrettyPrintWorkerURL(
     path.join(rootPath, "src/workers/pretty-print/worker.js")
   );
-  parserWorker.start(path.join(rootPath, "src/workers/parser/worker.js"));
-  evaluationsParser.start(path.join(rootPath, "src/workers/parser/worker.js"));
-  startSearchWorker(path.join(rootPath, "src/workers/search/worker.js"));
+  setJestSearchWorkerURL(path.join(rootPath, "src/workers/search/worker.js"));
   process.on("unhandledRejection", formatException);
 });
 

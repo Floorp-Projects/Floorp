@@ -11,14 +11,13 @@ let jestWorkerUrl;
 
 function getDispatcher() {
   if (!dispatcher) {
-    dispatcher = new WorkerDispatcher();
-    dispatcher.start(jestWorkerUrl || WORKER_URL);
+    dispatcher = new WorkerDispatcher(jestWorkerUrl || WORKER_URL);
   }
 
   return dispatcher;
 }
 
-export const start = jestUrl => {
+export const setJestWorkerURL = jestUrl => {
   jestWorkerUrl = jestUrl;
 };
 

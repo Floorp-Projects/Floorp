@@ -15,8 +15,7 @@ let dispatcher;
 
 function getDispatcher() {
   if (!dispatcher) {
-    dispatcher = new WorkerDispatcher();
-    dispatcher.start(SEARCH_WORKER_URL);
+    dispatcher = new WorkerDispatcher(SEARCH_WORKER_URL);
   }
   return dispatcher;
 }
