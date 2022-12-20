@@ -207,17 +207,13 @@
 }
 
 #webRTC-preview:not([hidden]) {
-  min-width: 368px;
-  min-height: 10em;
   -moz-box-orient: vertical;
 }
 
 #webRTC-previewVideo {
   border-radius: 4px;
   border: 1px solid var(--panel-separator-color);
-  width: 368px;
-  /* If we don't set the min-width, width is ignored. */
-  min-width: 368px;
+  min-width: 0;
   min-height: 10em;
   max-height: 250px;
 }
