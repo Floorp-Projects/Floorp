@@ -2752,11 +2752,6 @@ pref("svg.context-properties.content.allowed-domains", "profile.accounts.firefox
   pref("extensions.translations.disabled", true);
 #endif
 
-// Turn on interaction measurements in Nightly only
-#ifdef NIGHTLY_BUILD
-  pref("browser.places.interactions.enabled", true);
-#endif
-
 // A set of scores for rating the relevancy of snapshots. The suffixes after the
 // last decimal are prefixed by `_score` and reference the functions called in
 // SnapshotScorer.
