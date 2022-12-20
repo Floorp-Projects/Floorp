@@ -15,10 +15,8 @@
  */
 
 :root {
-  --toolbar-non-lwt-bgcolor: -moz-dialog;
+  --toolbar-non-lwt-bgcolor: color-mix(in srgb, -moz-dialog 85%, white);
   --toolbar-non-lwt-textcolor: -moz-dialogtext;
-  --toolbar-non-lwt-bgimage: linear-gradient(rgba(255,255,255,.075), rgba(255,255,255,.075));
-  --tab-selected-non-lwt-bgimage: linear-gradient(rgba(255,255,255,.15), rgba(255,255,255,.15));
 
   --panel-separator-color: ThreeDShadow;
 
@@ -56,7 +54,6 @@
 
 .browser-toolbar:not(.titlebar-color) {
   background-color: var(--toolbar-bgcolor);
-  background-image: var(--toolbar-bgimage);
   color: var(--toolbar-color);
   appearance: none;
   border-style: none;
