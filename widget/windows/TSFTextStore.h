@@ -678,7 +678,7 @@ class TSFTextStore final : public ITextStoreACP,
     }
 
     LONG Length() const {
-      MOZ_ASSERT(mACP->acpEnd >= mACP->acpStart);
+      MOZ_ASSERT_IF(mACP.isSome(), mACP->acpEnd >= mACP->acpStart);
       return mACP.isSome() ? std::abs(mACP->acpEnd - mACP->acpStart) : 0;
     }
 
