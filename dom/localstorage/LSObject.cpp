@@ -17,6 +17,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/MacroForEach.h"
+#include "mozilla/Monitor.h"
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/RemoteLazyInputStreamThread.h"
@@ -66,6 +67,12 @@
  */
 #define FAILSAFE_CANCEL_SYNC_OP_MS 50000
 
+/**
+ * Interval with which to wake up while waiting for the sync op to complete to
+ * check ExpectingShutdown().
+ */
+#define SYNC_OP_WAKE_INTERVAL_MS 500
+
 namespace mozilla::dom {
 
 namespace {
@@ -74,30 +81,24 @@ class RequestHelper;
 
 /**
  * Main-thread helper that implements the blocking logic required by
- * LocalStorage's synchronous semantics.  StartAndReturnResponse pushes an
- * event queue which is a new event target and spins its nested event loop until
- * a result is received or an abort is necessary due to a PContent-managed sync
- * IPC message being received.  Note that because the event queue is its own
- * event target, there is no re-entrancy.  Normal main-thread runnables will not
- * get a chance to run.  See StartAndReturnResponse() for info on this choice.
+ * LocalStorage's synchronous semantics.  StartAndReturnResponse blocks on a
+ * monitor until a result is received. See StartAndReturnResponse() for info on
+ * this choice.
  *
  * The normal life-cycle of this method looks like:
  * - Main Thread: LSObject::DoRequestSynchronously creates a RequestHelper and
- *   invokes StartAndReturnResponse().  It pushes the event queue and Dispatches
- *   the RequestHelper to the RemoteLazyInputStream thread.
+ *   invokes StartAndReturnResponse().  It Dispatches the RequestHelper to the
+ *   RemoteLazyInputStream thread, and waits on mMonitor.
  * - RemoteLazyInputStream Thread: RequestHelper::Run is called, invoking
  *   Start() which invokes LSObject::StartRequest, which gets-or-creates the
- *   PBackground actor if necessary (which may dispatch a runnable to the nested
- *   event queue on the main thread), sends LSRequest constructor which is
+ *   PBackground actor if necessary, sends LSRequest constructor which is
  *   provided with a callback reference to the RequestHelper. State advances to
  *   ResponsePending.
  * - RemoteLazyInputStreamThread: LSRequestChild::Recv__delete__ is received,
- *   which invokes RequestHelepr::OnResponse, advancing the state to Finishing
- *   and dispatching RequestHelper to its own nested event target.
- * - Main Thread: RequestHelper::Run is called, invoking Finish() which advances
- *   the state to Complete and sets mWaiting to false, allowing the nested event
- *   loop being spun by StartAndReturnResponse to cease spinning and return the
- *   received response.
+ *   which invokes RequestHelepr::OnResponse, advancing the state to Complete
+ *   and notifying mMonitor.
+ * - Main Thread: The main thread wakes up after waiting on the monitor,
+ *   returning the received response.
  *
  * See LocalStorageCommon.h for high-level context and method comments for
  * low-level details.
@@ -113,17 +114,19 @@ class RequestHelper final : public Runnable, public LSRequestChildCallback {
      * Start() has been invoked on the RemoteLazyInputStream Thread and
      * LSObject::StartRequest has been invoked from there, sending an IPC
      * message to PBackground to service the request.  We stay in this state
-     * until a response is received.
+     * until a response is received or a timeout occurs.
      */
     ResponsePending,
     /**
-     * A response has been received and RequestHelper has been dispatched back
-     * to the nested event loop to call Finish().
+     * The request timed out, or failed in some fashion, and needs to be
+     * cancelled. A runnable has been dispatched to the DOM File thread to
+     * notify the parent actor, and the main thread will continue to block until
+     * we receive a reponse.
      */
-    Finishing,
+    Canceling,
     /**
-     * Finish() has been called on the main thread.  The nested event loop will
-     * terminate imminently and the received response returned to the caller of
+     * The request is complete, either successfully or due to being cancelled.
+     * The main thread can stop waiting and immediately return to the caller of
      * StartAndReturnResponse.
      */
     Complete
@@ -136,20 +139,15 @@ class RequestHelper final : public Runnable, public LSRequestChildCallback {
   // The thread the RequestHelper was created on.  This should be the main
   // thread.
   nsCOMPtr<nsIEventTarget> mOwningEventTarget;
-  // The pushed event queue that we use to spin the event loop without
-  // processing any of the events dispatched at the mOwningEventTarget (which
-  // would result in re-entrancy and violate LocalStorage semantics).
-  nsCOMPtr<nsISerialEventTarget> mNestedEventTarget;
   // The IPC actor handling the request with standard IPC allocation rules.
   // Our reference is nulled in OnResponse which corresponds to the actor's
   // __destroy__ method.
   LSRequestChild* mActor;
   const LSRequestParams mParams;
-  LSRequestResponse mResponse;
-  nsresult mResultCode;
-  State mState;
-  // Control flag for the nested event loop; once set to false, the loop ends.
-  bool mWaiting;
+  Monitor mMonitor;
+  LSRequestResponse mResponse MOZ_GUARDED_BY(mMonitor);
+  nsresult mResultCode MOZ_GUARDED_BY(mMonitor);
+  State mState MOZ_GUARDED_BY(mMonitor);
 
  public:
   RequestHelper(LSObject* aObject, const LSRequestParams& aParams)
@@ -158,9 +156,9 @@ class RequestHelper final : public Runnable, public LSRequestChildCallback {
         mOwningEventTarget(GetCurrentEventTarget()),
         mActor(nullptr),
         mParams(aParams),
+        mMonitor("dom::RequestHelper::mMonitor"),
         mResultCode(NS_OK),
-        mState(State::Initial),
-        mWaiting(true) {}
+        mState(State::Initial) {}
 
   bool IsOnOwningThread() const {
     MOZ_ASSERT(mOwningEventTarget);
@@ -179,10 +177,6 @@ class RequestHelper final : public Runnable, public LSRequestChildCallback {
 
  private:
   ~RequestHelper() = default;
-
-  nsresult Start();
-
-  void Finish();
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -438,8 +432,7 @@ nsresult LSObject::CreateForPrincipal(nsPIDOMWindowInner* aWindow,
   return NS_OK;
 }  // namespace dom
 
-LSRequestChild* LSObject::StartRequest(nsIEventTarget* aMainEventTarget,
-                                       const LSRequestParams& aParams,
+LSRequestChild* LSObject::StartRequest(const LSRequestParams& aParams,
                                        LSRequestChildCallback* aCallback) {
   AssertIsOnDOMFileThread();
 
@@ -1044,105 +1037,60 @@ void LSObject::LastRelease() {
 nsresult RequestHelper::StartAndReturnResponse(LSRequestResponse& aResponse) {
   AssertIsOnOwningThread();
 
-  // Normally, we would use the standard way of blocking the thread using
-  // a monitor.
-  // The problem is that BackgroundChild::GetOrCreateForCurrentThread()
-  // called on the RemoteLazyInputStream thread may dispatch a runnable to the
-  // main thread to finish initialization of PBackground. A monitor would block
-  // the main thread and the runnable would never get executed causing the
-  // helper to be stuck in a wait loop.
-  // However, BackgroundChild::GetOrCreateForCurrentThread() supports passing
-  // a custom main event target, so we can create a nested event target and
-  // spin the event loop. Nothing can dispatch to the nested event target
-  // except BackgroundChild::GetOrCreateForCurrentThread(), so spinning of the
-  // event loop can't fire any other events.
-  // This way the thread is synchronously blocked in a safe manner and the
-  // runnable gets executed.
-  {
-    auto thread = static_cast<nsThread*>(NS_GetCurrentThread());
-
-    const nsLocalExecutionGuard localExecution(thread->EnterLocalExecution());
-    mNestedEventTarget = localExecution.GetEventTarget();
-    MOZ_ASSERT(mNestedEventTarget);
-
-    nsCOMPtr<nsIEventTarget> domFileThread =
-        RemoteLazyInputStreamThread::GetOrCreate();
-    if (NS_WARN_IF(!domFileThread)) {
-      return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
-    }
-
-    nsresult rv;
-
-    {
-      rv = domFileThread->Dispatch(this, NS_DISPATCH_NORMAL);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      nsCOMPtr<nsITimer> timer = NS_NewTimer();
-
-      MOZ_ALWAYS_SUCCEEDS(timer->SetTarget(domFileThread));
-
-      auto cancelRequest = [](nsITimer* aTimer, void* aClosure) {
-        // The request is taking too much time. At this point we don't care
-        // about the result anymore so we can cancel the request.
-
-        // However, we don't abort the event loop spinning before the
-        // request is actually finished because that would cause races
-        // between the current thread and DOM File thread. Instead, we send
-        // the cancel message to the parent and wait for the request to
-        // finish like in the normal case when the request is successfully
-        // finished on time. OnResponse is called as the final step in both
-        // cases.
-
-        auto helper = static_cast<RequestHelper*>(aClosure);
-
-        LSRequestChild* actor = helper->mActor;
-
-        // Start() could fail or OnResponse was already called, so we need
-        // to check if actor is not null. The actor can also be in the
-        // final (finishing) state, in that case we are not allowed to send
-        // the cancel message and it wouldn't make any sense because the
-        // request is about to be destroyed anyway.
-        if (actor && !actor->Finishing()) {
-          actor->SendCancel();
-        }
-      };
-
-      MOZ_ALWAYS_SUCCEEDS(timer->InitWithNamedFuncCallback(
-          cancelRequest, this, FAILSAFE_CANCEL_SYNC_OP_MS,
-          nsITimer::TYPE_ONE_SHOT,
-          "RequestHelper::StartAndReturnResponse::SpinEventLoopTimer"));
-
-      MOZ_ALWAYS_TRUE(SpinEventLoopUntil(
-          "RequestHelper::StartAndReturnResponse"_ns,
-          [&]() {
-            if (mozilla::ipc::ProcessChild::ExpectingShutdown()) {
-              MOZ_ALWAYS_SUCCEEDS(timer->Cancel());
-              MOZ_ALWAYS_SUCCEEDS(timer->InitWithNamedFuncCallback(
-                  cancelRequest, this, 0, nsITimer::TYPE_ONE_SHOT,
-                  "RequestHelper::StartAndReturnResponse::SpinEventLoopAbort"));
-            }
-
-            return !mWaiting;
-          },
-          thread));
-
-      MOZ_ALWAYS_SUCCEEDS(timer->Cancel());
-    }
-
-    // We can touch all member variables (including mResponse, mResultCode or
-    // mState) here because the request must have been finished.
-    MOZ_ASSERT(mState == State::Complete);
-
-    // Additionally, mWaiting is only ever touched on the owning thread.
-    MOZ_ASSERT(!mWaiting);
-
-    // localExecution will be destructed when we leave this scope. We need to
-    // clear the nested event target before that happens, so we will know if
-    // something still tries to incorrectly dispatch runnables to it.
-    mNestedEventTarget = nullptr;
+  nsCOMPtr<nsIEventTarget> domFileThread =
+      RemoteLazyInputStreamThread::GetOrCreate();
+  if (NS_WARN_IF(!domFileThread)) {
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }
+
+  nsresult rv = domFileThread->Dispatch(this, NS_DISPATCH_NORMAL);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  TimeStamp deadline = TimeStamp::Now() + TimeDuration::FromMilliseconds(
+                                              FAILSAFE_CANCEL_SYNC_OP_MS);
+
+  MonitorAutoLock lock(mMonitor);
+  while (mState != State::Complete) {
+    TimeStamp now = TimeStamp::Now();
+    // If we are expecting shutdown or have passed our deadline, immediately
+    // dispatch ourselves to the DOM File thread to cancel the operation.  We
+    // don't abort until the cancellation has gone through, as otherwise we
+    // could race with the DOM File thread.
+    if (mozilla::ipc::ProcessChild::ExpectingShutdown() || now >= deadline) {
+      switch (mState) {
+        case State::Initial:
+          // The DOM File thread never even woke before ExpectingShutdown() or a
+          // timeout - skip even creating the actor and just report an error.
+          mResultCode = NS_ERROR_FAILURE;
+          mState = State::Complete;
+          continue;
+        case State::ResponsePending:
+          // The DOM File thread is currently waiting for a reply, switch to a
+          // canceling state, and notify it to cancel by dispatching a runnable.
+          mState = State::Canceling;
+          MOZ_ALWAYS_SUCCEEDS(
+              domFileThread->Dispatch(this, NS_DISPATCH_NORMAL));
+          [[fallthrough]];
+        case State::Canceling:
+          // We've cancelled the request, so just need to wait indefinitely for
+          // it to complete.
+          lock.Wait();
+          continue;
+        default:
+          MOZ_ASSERT_UNREACHABLE("unexpected state");
+      }
+    }
+
+    // Wait until either we reach out deadline or for SYNC_OP_WAIT_INTERVAL_MS.
+    lock.Wait(TimeDuration::Min(
+        TimeDuration::FromMilliseconds(SYNC_OP_WAKE_INTERVAL_MS),
+        deadline - now));
+  }
+
+  // The operation is complete, clear our reference to the LSObject.
+  mObject = nullptr;
 
   if (NS_WARN_IF(NS_FAILED(mResultCode))) {
     return mResultCode;
@@ -1152,81 +1100,67 @@ nsresult RequestHelper::StartAndReturnResponse(LSRequestResponse& aResponse) {
   return NS_OK;
 }
 
-nsresult RequestHelper::Start() {
-  AssertIsOnDOMFileThread();
-  MOZ_ASSERT(mState == State::Initial);
-
-  mState = State::ResponsePending;
-
-  LSRequestChild* actor =
-      mObject->StartRequest(mNestedEventTarget, mParams, this);
-  if (NS_WARN_IF(!actor)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  mActor = actor;
-
-  return NS_OK;
-}
-
-void RequestHelper::Finish() {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::Finishing);
-
-  mObject = nullptr;
-
-  mWaiting = false;
-
-  mState = State::Complete;
-}
-
 NS_IMPL_ISUPPORTS_INHERITED0(RequestHelper, Runnable)
 
 NS_IMETHODIMP
 RequestHelper::Run() {
-  nsresult rv;
+  AssertIsOnDOMFileThread();
+
+  MonitorAutoLock lock(mMonitor);
 
   switch (mState) {
-    case State::Initial:
-      rv = Start();
-      break;
-
-    case State::Finishing:
-      Finish();
+    case State::Initial: {
+      {
+        MonitorAutoUnlock unlock(mMonitor);
+        mActor = mObject->StartRequest(mParams, this);
+      }
+      if (NS_WARN_IF(!mActor) && mState != State::Complete) {
+        // If we fail to even create the actor, instantly fail and notify our
+        // caller of the error. Otherwise we'll notify from OnResponse as called
+        // by the actor.
+        mResultCode = NS_ERROR_FAILURE;
+        mState = State::Complete;
+        lock.Notify();
+      }
       return NS_OK;
+    }
+
+    case State::Canceling: {
+      // StartRequest() could fail or OnResponse was already called, so we need
+      // to check if actor is not null. The actor can also be in the final
+      // (finishing) state, in that case we are not allowed to send the cancel
+      // message and it wouldn't make any sense because the request is about to
+      // be destroyed anyway.
+      if (mActor && !mActor->Finishing()) {
+        mActor->SendCancel();
+      }
+      return NS_OK;
+    }
+
+    case State::Complete: {
+      // The operation was cancelled before we ran, do nothing.
+      return NS_OK;
+    }
 
     default:
       MOZ_CRASH("Bad state!");
   }
-
-  if (NS_WARN_IF(NS_FAILED(rv)) && mState != State::Finishing) {
-    if (NS_SUCCEEDED(mResultCode)) {
-      mResultCode = rv;
-    }
-
-    mState = State::Finishing;
-
-    if (IsOnOwningThread()) {
-      Finish();
-    } else {
-      MOZ_ALWAYS_SUCCEEDS(
-          mNestedEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
-    }
-  }
-
-  return NS_OK;
 }
 
 void RequestHelper::OnResponse(const LSRequestResponse& aResponse) {
   AssertIsOnDOMFileThread();
-  MOZ_ASSERT(mState == State::ResponsePending);
+
+  MonitorAutoLock lock(mMonitor);
+
+  MOZ_ASSERT(mState == State::ResponsePending || mState == State::Canceling);
 
   mActor = nullptr;
 
   mResponse = aResponse;
 
-  mState = State::Finishing;
-  MOZ_ALWAYS_SUCCEEDS(mNestedEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
+  mState = State::Complete;
+
+  lock.Notify();
 }
 
 }  // namespace mozilla::dom
