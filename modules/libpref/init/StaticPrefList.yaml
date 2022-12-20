@@ -11107,6 +11107,15 @@
   value: 0
   mirror: always
 
+# Set this pref to an integer like 99 to override the User-Agent string's
+# 'rv' bit. The value 0 means use the default Firefox version. We introduced
+# this for Firefox 110 because it turned out websites used user agent parsing
+# for "rv:11" to detect IE11.
+- name: network.http.useragent.forceRVOnly
+  type: uint32_t
+  value: 109
+  mirror: always
+
 # Whether or not we use Windows for SSO to Microsoft sites.
 - name: network.http.windows-sso.enabled
   type: RelaxedAtomicBool

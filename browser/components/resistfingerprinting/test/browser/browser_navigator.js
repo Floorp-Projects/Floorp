@@ -130,6 +130,11 @@ const CONST_VENDOR = "";
 const CONST_VENDORSUB = "";
 
 const appVersion = parseInt(Services.appinfo.version);
+const rvVersion =
+  parseInt(
+    Services.prefs.getIntPref("network.http.useragent.forceRVOnly", 0),
+    0
+  ) || appVersion;
 const spoofedVersion = AppConstants.platform == "android" ? "102" : appVersion;
 
 const LEGACY_UA_GECKO_TRAIL = "20100101";
@@ -344,7 +349,7 @@ async function testWorkerNavigator() {
 add_task(async function setupDefaultUserAgent() {
   let defaultUserAgent = `Mozilla/5.0 (${
     DEFAULT_UA_OS[AppConstants.platform]
-  }; rv:${appVersion}.0) Gecko/${
+  }; rv:${rvVersion}.0) Gecko/${
     DEFAULT_UA_GECKO_TRAIL[AppConstants.platform]
   } Firefox/${appVersion}.0`;
   expectedResults = {
@@ -380,7 +385,7 @@ add_task(async function setupRFPExemptions() {
 
   let defaultUserAgent = `Mozilla/5.0 (${
     DEFAULT_UA_OS[AppConstants.platform]
-  }; rv:${appVersion}.0) Gecko/${
+  }; rv:${rvVersion}.0) Gecko/${
     DEFAULT_UA_GECKO_TRAIL[AppConstants.platform]
   } Firefox/${appVersion}.0`;
 
