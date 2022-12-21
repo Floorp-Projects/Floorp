@@ -79,11 +79,12 @@ var GeckoViewConsole = {
         "chrome://browser/locale/browser.properties"
       );
       const args = aMessage.arguments;
-      const filename = this.abbreviateSourceURL(args[0].filename);
+      const msgDetails = args[0] ?? aMessage;
+      const filename = this.abbreviateSourceURL(msgDetails.filename);
       const functionName =
-        args[0].functionName ||
+        msgDetails.functionName ||
         bundle.GetStringFromName("stacktrace.anonymousFunction");
-      const lineNumber = args[0].lineNumber;
+      const lineNumber = msgDetails.lineNumber;
 
       let body = bundle.formatStringFromName("stacktrace.outputMessage", [
         filename,
