@@ -909,7 +909,7 @@ nsThread::HasPendingEvents(bool* aResult) {
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
-  if (mIsMainThread && !mIsInLocalExecutionMode) {
+  if (mIsMainThread) {
     *aResult = TaskController::Get()->HasMainThreadPendingTasks();
   } else {
     *aResult = mEvents->HasPendingEvent();
@@ -1075,18 +1075,6 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
   // endlessly look for an event, fail to find one, and repeat the nested
   // event loop since its state change hasn't happened yet.
   bool reallyWait = aMayWait && (mNestedEventLoopDepth > 0 || !ShuttingDown());
-
-  if (mIsInLocalExecutionMode) {
-    if (nsCOMPtr<nsIRunnable> event = mEvents->GetEvent(reallyWait)) {
-      *aResult = true;
-      LogRunnable::Run log(event);
-      event->Run();
-      event = nullptr;
-    } else {
-      *aResult = false;
-    }
-    return NS_OK;
-  }
 
   Maybe<dom::AutoNoJSAPI> noJSAPI;
 
@@ -1426,29 +1414,6 @@ NS_IMETHODIMP nsThread::HaveDirectTasks(bool* aValue) {
 nsIEventTarget* nsThread::EventTarget() { return this; }
 
 nsISerialEventTarget* nsThread::SerialEventTarget() { return this; }
-
-nsLocalExecutionRecord nsThread::EnterLocalExecution() {
-  MOZ_RELEASE_ASSERT(!mIsInLocalExecutionMode);
-  MOZ_ASSERT(IsOnCurrentThread());
-  MOZ_ASSERT(EventQueue());
-  return nsLocalExecutionRecord(*EventQueue(), mIsInLocalExecutionMode);
-}
-
-nsLocalExecutionGuard::nsLocalExecutionGuard(
-    nsLocalExecutionRecord&& aLocalExecutionRecord)
-    : mEventQueueStack(aLocalExecutionRecord.mEventQueueStack),
-      mLocalEventTarget(mEventQueueStack.PushEventQueue()),
-      mLocalExecutionFlag(aLocalExecutionRecord.mLocalExecutionFlag) {
-  MOZ_ASSERT(mLocalEventTarget);
-  MOZ_ASSERT(!mLocalExecutionFlag);
-  mLocalExecutionFlag = true;
-}
-
-nsLocalExecutionGuard::~nsLocalExecutionGuard() {
-  MOZ_ASSERT(mLocalExecutionFlag);
-  mLocalExecutionFlag = false;
-  mEventQueueStack.PopEventQueue(mLocalEventTarget);
-}
 
 NS_IMPL_ISUPPORTS(nsThreadShutdownContext, nsIThreadShutdown)
 
