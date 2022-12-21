@@ -515,14 +515,19 @@ void AutoJSAPI::ReportException() {
     if (mIsMainThread) {
       RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
 
-      // We aren't using WindowOrNull as we also want to match web extension
-      // content scripts against the related window their sandbox executes
-      // against.
-      RefPtr<nsGlobalWindowInner> inner =
-          xpc::AssociatedWindowOrNull(errorGlobal, cx());
+      RefPtr<nsGlobalWindowInner> inner = xpc::WindowOrNull(errorGlobal);
+
+      // For WebExtension content script, `WindowOrNull` method will return
+      // null, whereas we would still like to flag the exception with the
+      // related WindowGlobal the content script executed against. So we only
+      // update the `innerWindowID` and not `inner` as we don't want to dispatch
+      // exceptions caused by the content script to the webpage.
       uint64_t innerWindowID = 0;
       if (inner) {
         innerWindowID = inner->WindowID();
+      } else if (nsGlobalWindowInner* win = xpc::SandboxWindowOrNull(
+                     JS::GetNonCCWObjectGlobal(errorGlobal), cx())) {
+        innerWindowID = win->WindowID();
       }
 
       bool isChrome =

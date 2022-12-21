@@ -627,14 +627,6 @@ nsGlobalWindowInner* WindowGlobalOrNull(JSObject* aObj) {
   return WindowOrNull(glob);
 }
 
-nsGlobalWindowInner* AssociatedWindowOrNull(JSObject* aObj, JSContext* aCx) {
-  nsGlobalWindowInner* win = WindowOrNull(aObj);
-  if (win) {
-    return win;
-  }
-  return SandboxWindowOrNull(JS::GetNonCCWObjectGlobal(aObj), aCx);
-}
-
 nsGlobalWindowInner* SandboxWindowOrNull(JSObject* aObj, JSContext* aCx) {
   MOZ_ASSERT(aObj);
 
