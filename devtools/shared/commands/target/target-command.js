@@ -41,14 +41,17 @@ class TargetCommand extends EventEmitter {
    *
    * @param {DescriptorFront} descriptorFront
    *        The context to inspector identified by this descriptor.
+   * @param {WatcherFront} watcherFront
+   *        If available, a reference to the related Watcher Front.
    * @param {Object} commands
    *        The commands object with all interfaces defined from devtools/shared/commands/
    */
-  constructor({ descriptorFront, commands }) {
+  constructor({ descriptorFront, watcherFront, commands }) {
     super();
 
     this.commands = commands;
     this.descriptorFront = descriptorFront;
+    this.watcherFront = watcherFront;
     this.rootFront = descriptorFront.client.mainRoot;
 
     this.store = createStore(reducer);
@@ -99,6 +102,11 @@ class TargetCommand extends EventEmitter {
     this._onTargetAvailable = this._onTargetAvailable.bind(this);
     this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
     this._onTargetSelected = this._onTargetSelected.bind(this);
+    // Bug 1675763: Watcher actor is not available in all situations yet.
+    if (this.watcherFront) {
+      this.watcherFront.on("target-available", this._onTargetAvailable);
+      this.watcherFront.on("target-destroyed", this._onTargetDestroyed);
+    }
 
     this.legacyImplementation = {};
 
@@ -455,18 +463,6 @@ class TargetCommand extends EventEmitter {
       !this._gotFirstTopLevelTarget
     ) {
       await this._createFirstTarget();
-    }
-
-    // Cache the Watcher once for all, the first time we call `startListening()`.
-    // This `watcherFront` attribute may be then used in any function in TargetCommand or ResourceCommand after this.
-    if (!this.watcherFront) {
-      // Bug 1675763: Watcher actor is not available in all situations yet.
-      const supportsWatcher = this.descriptorFront.traits?.watcher;
-      if (supportsWatcher) {
-        this.watcherFront = await this.descriptorFront.getWatcher();
-        this.watcherFront.on("target-available", this._onTargetAvailable);
-        this.watcherFront.on("target-destroyed", this._onTargetDestroyed);
-      }
     }
 
     // If no pref are set to true, nor is listenForWorkers set to true,

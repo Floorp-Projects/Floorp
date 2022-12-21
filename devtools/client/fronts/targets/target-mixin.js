@@ -182,36 +182,6 @@ function TargetMixin(parentClass) {
     }
 
     /**
-     * Get the top level WatcherFront for this target.
-     *
-     * The targets should all ultimately be managed by a unique Watcher actor,
-     * created from the unique Descriptor actor which is passed to the Toolbox.
-     * For now, the top level target is still created by the top level Descriptor,
-     * but it is also meant to be created by the Watcher.
-     *
-     * @return {TargetMixin} the parent target.
-     */
-    getWatcherFront() {
-      // All additional frame targets are spawn by the WatcherActor and are managed by it.
-      if (this.parentFront.typeName == "watcher") {
-        return this.parentFront;
-      }
-
-      // Otherwise, for top level targets, the parent front is a Descriptor, from which we can retrieve the Watcher.
-      // TODO: top level target should also be exposed by the Watcher actor, like any target.
-      if (
-        this.parentFront.typeName.endsWith("Descriptor") &&
-        this.parentFront.traits &&
-        this.parentFront.traits.watcher
-      ) {
-        return this.parentFront.getWatcher();
-      }
-
-      // For WebExtension, the descriptor doesn't expose a watcher yet (See Bug 1675456).
-      return null;
-    }
-
-    /**
      * Get the immediate parent target for this target.
      *
      * @return {TargetMixin} the parent target.
@@ -246,9 +216,14 @@ function TargetMixin(parentClass) {
      * @return {TargetMixin} the requested target.
      */
     async getWindowGlobalTarget(browsingContextID) {
+      // Just for sanity as commands attribute is set late from TargetCommand._onTargetAvailable
+      // but ideally target front should be used before this happens.
+      if (!this.commands) {
+        return null;
+      }
       // Tab and Process Descriptors expose a Watcher, which is creating the
       // targets and should be used to fetch any.
-      const watcherFront = await this.getWatcherFront();
+      const { watcherFront } = this.commands;
       if (watcherFront) {
         // Safety check, in theory all watcher should support frames.
         if (watcherFront.traits.frame) {
