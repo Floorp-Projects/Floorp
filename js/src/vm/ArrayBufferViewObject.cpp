@@ -87,7 +87,7 @@ bool ArrayBufferViewObject::init(JSContext* cx,
   MOZ_ASSERT(byteOffset + length <= ArrayBufferObject::MaxByteLength);
 
   MOZ_ASSERT_IF(is<TypedArrayObject>(),
-                length <= TypedArrayObject::maxByteLength() / bytesPerElement);
+                length <= TypedArrayObject::MaxByteLength / bytesPerElement);
 
   // The isSharedMemory property is invariant.  Self-hosting code that
   // sets BUFFER_SLOT or the private slot (if it does) must maintain it by

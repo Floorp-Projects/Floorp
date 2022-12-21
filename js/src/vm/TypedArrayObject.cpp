@@ -429,7 +429,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
       JSContext* cx, Handle<ArrayBufferObjectMaybeShared*> buffer,
       size_t byteOffset, size_t len, HandleObject proto,
       gc::InitialHeap heap = gc::InitialHeap::DefaultHeap) {
-    MOZ_ASSERT(len <= maxByteLength() / BYTES_PER_ELEMENT);
+    MOZ_ASSERT(len <= MaxByteLength / BYTES_PER_ELEMENT);
 
     gc::AllocKind allocKind =
         buffer ? gc::GetGCObjectKind(instanceClass())
@@ -510,14 +510,14 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
 
   static TypedArrayObject* makeTypedArrayWithTemplate(
       JSContext* cx, TypedArrayObject* templateObj, int32_t len) {
-    if (len < 0 || size_t(len) > maxByteLength() / BYTES_PER_ELEMENT) {
+    if (len < 0 || size_t(len) > MaxByteLength / BYTES_PER_ELEMENT) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_BAD_ARRAY_LENGTH);
       return nullptr;
     }
 
     size_t nbytes = size_t(len) * BYTES_PER_ELEMENT;
-    MOZ_ASSERT(nbytes <= maxByteLength());
+    MOZ_ASSERT(nbytes <= MaxByteLength);
 
     bool fitsInline = nbytes <= INLINE_BUFFER_LIMIT;
 
@@ -747,7 +747,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
       len = size_t(lengthIndex);
     }
 
-    if (len > maxByteLength() / BYTES_PER_ELEMENT) {
+    if (len > MaxByteLength / BYTES_PER_ELEMENT) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_TYPED_ARRAY_CONSTRUCT_TOO_LARGE,
                                 Scalar::name(ArrayTypeID()));
@@ -869,14 +869,14 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
 
   static bool maybeCreateArrayBuffer(JSContext* cx, uint64_t count,
                                      MutableHandle<ArrayBufferObject*> buffer) {
-    if (count > maxByteLength() / BYTES_PER_ELEMENT) {
+    if (count > MaxByteLength / BYTES_PER_ELEMENT) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_BAD_ARRAY_LENGTH);
       return false;
     }
     size_t byteLength = count * BYTES_PER_ELEMENT;
 
-    MOZ_ASSERT(byteLength <= maxByteLength());
+    MOZ_ASSERT(byteLength <= MaxByteLength);
     static_assert(INLINE_BUFFER_LIMIT % BYTES_PER_ELEMENT == 0,
                   "ArrayBuffer inline storage shouldn't waste any space");
 
@@ -1309,7 +1309,7 @@ template <typename T>
     return nullptr;
   }
 
-  MOZ_ASSERT(len <= maxByteLength() / BYTES_PER_ELEMENT);
+  MOZ_ASSERT(len <= MaxByteLength / BYTES_PER_ELEMENT);
 
   // Steps 6.b.i.
   Rooted<TypedArrayObject*> obj(cx, makeInstance(cx, buffer, 0, len, proto));
@@ -1353,7 +1353,7 @@ static bool GetTemplateObjectForNative(JSContext* cx,
 
     size_t nbytes;
     if (!js::CalculateAllocSize<T>(len, &nbytes) ||
-        nbytes > TypedArrayObject::maxByteLength()) {
+        nbytes > TypedArrayObject::MaxByteLength) {
       return true;
     }
 
