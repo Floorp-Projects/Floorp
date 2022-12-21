@@ -2,6 +2,17 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this file,
    - You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
+let lazy = {};
+
+XPCOMUtils.defineLazyServiceGetter(
+  lazy,
+  "dragService",
+  "@mozilla.org/widget/dragservice;1",
+  "nsIDragService"
+);
+
 /**
  * The SubDialog resize callback.
  * @callback SubDialog~resizeCallback
@@ -163,6 +174,18 @@ SubDialog.prototype = {
       return;
     }
     this._addDialogEventListeners();
+
+    // Ensure we end any pending drag sessions:
+    try {
+      // The drag service getService call fails in puppeteer tests on Linux,
+      // so this is in a try...catch as it shouldn't stop us from opening the
+      // dialog. Bug 1806870 tracks fixing this.
+      if (lazy.dragService.getCurrentSession()) {
+        lazy.dragService.endDragSession(true);
+      }
+    } catch (ex) {
+      console.error(ex);
+    }
 
     // If the parent is chrome we also need open the dialog as chrome, otherwise
     // the openDialog call will fail.
