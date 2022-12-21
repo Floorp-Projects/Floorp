@@ -718,7 +718,6 @@ enum WebIDLUtilityActorName {
   "audioDecoder_AppleMedia",
   "audioDecoder_WMF",
   "mfMediaEngineCDM",
-  "jSOracle",
 };
 
 dictionary UtilityActorsDictionary {

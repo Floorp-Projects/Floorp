@@ -8,7 +8,6 @@
 #include "mozilla/ipc/UtilityProcessManager.h"
 #include "mozilla/ipc/UtilityProcessSandboxing.h"
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/dom/JSOracleChild.h"
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/Endpoint.h"
@@ -235,17 +234,6 @@ UtilityProcessChild::RecvStartUtilityAudioDecoderService(
   }
 
   mUtilityAudioDecoderInstance->Start(std::move(aEndpoint));
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult UtilityProcessChild::RecvStartJSOracleService(
-    Endpoint<PJSOracleChild>&& aEndpoint) {
-  mJSOracleInstance = new mozilla::dom::JSOracleChild();
-  if (!mJSOracleInstance) {
-    return IPC_FAIL(this, "Failing to create JSOracleParent");
-  }
-
-  mJSOracleInstance->Start(std::move(aEndpoint));
   return IPC_OK();
 }
 

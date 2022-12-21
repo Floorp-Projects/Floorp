@@ -18,10 +18,6 @@ namespace mozilla {
 
 class MemoryReportingProcess;
 
-namespace dom {
-class JSOracleParent;
-}
-
 namespace ipc {
 
 class UtilityProcessParent;
@@ -35,7 +31,6 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
  public:
   using StartRemoteDecodingUtilityPromise =
       MozPromise<Endpoint<PRemoteDecoderManagerChild>, nsresult, true>;
-  using JSOraclePromise = GenericNonExclusivePromise;
 
   static void Initialize();
   static void Shutdown();
@@ -53,8 +48,6 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
 
   RefPtr<StartRemoteDecodingUtilityPromise> StartProcessForRemoteMediaDecoding(
       base::ProcessId aOtherProcess, SandboxingKind aSandbox);
-
-  RefPtr<JSOraclePromise> StartJSOracle(mozilla::dom::JSOracleParent* aParent);
 
   void OnProcessUnexpectedShutdown(UtilityProcessHost* aHost);
 
