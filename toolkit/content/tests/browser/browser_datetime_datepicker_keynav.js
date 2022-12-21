@@ -608,3 +608,57 @@ add_task(async function test_monthyear_close_datetime() {
 
   await helper.tearDown();
 });
+
+/**
+ * Ensure the month-year panel of a date input can be closed with Escape key.
+ */
+add_task(async function test_monthyear_escape_date() {
+  info("Ensure the month-year panel of a date input can be closed with Esc.");
+
+  const inputValue = "2022-12-12";
+
+  await helper.openPicker(
+    `data:text/html, <input type="date" value=${inputValue}>`
+  );
+  let pickerDoc = helper.panel.querySelector("#dateTimePopupFrame")
+    .contentDocument;
+
+  // Move focus from the today's date to the month-year toggle button:
+  EventUtils.synthesizeKey("KEY_Tab", { repeat: 2 });
+
+  // Test a month spinner
+  await testKeyOnSpinners("KEY_Escape", pickerDoc);
+
+  // Test a year spinner
+  await testKeyOnSpinners("KEY_Escape", pickerDoc, 2);
+
+  await helper.tearDown();
+});
+
+/**
+ * Ensure the month-year panel of a datetime-local input can be closed with Escape key.
+ */
+add_task(async function test_monthyear_escape_datetime() {
+  info(
+    "Ensure the month-year panel of a datetime-local input can be closed with Esc."
+  );
+
+  const inputValue = "2022-12-12";
+
+  await helper.openPicker(
+    `data:text/html, <input type="date" value=${inputValue}>`
+  );
+  let pickerDoc = helper.panel.querySelector("#dateTimePopupFrame")
+    .contentDocument;
+
+  // Move focus from the today's date to the month-year toggle button:
+  EventUtils.synthesizeKey("KEY_Tab", { repeat: 2 });
+
+  // Test a month spinner
+  await testKeyOnSpinners("KEY_Escape", pickerDoc);
+
+  // Test a year spinner
+  await testKeyOnSpinners("KEY_Escape", pickerDoc, 2);
+
+  await helper.tearDown();
+});

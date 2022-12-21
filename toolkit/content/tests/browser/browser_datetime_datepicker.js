@@ -311,6 +311,8 @@ add_task(async function test_datepicker_reopen_state() {
 
   EventUtils.synthesizeKey("VK_ESCAPE", {}, window);
 
+  await helper.promisePickerClosed();
+
   Assert.equal(helper.panel.state, "closed", "Panel should be closed");
 
   // Ensures the picker opens to the month of the input value
