@@ -143,7 +143,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, FrontendContext* fc,
       stackLimit(stackLimit),
       parent(parent),
       bytecodeSection_(fc, sc->extent().lineno, sc->extent().column),
-      perScriptData_(fc, cx->frontendCollectionPool(), compilationState),
+      perScriptData_(fc, compilationState),
       errorReporter_(errorReporter),
       compilationState(compilationState),
       suppressBreakpointsAndSourceNotes(

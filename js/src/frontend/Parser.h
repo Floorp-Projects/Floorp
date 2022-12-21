@@ -202,7 +202,7 @@ class SourceParseContext : public ParseContext {
   template <typename ParseHandler, typename Unit>
   SourceParseContext(GeneralParser<ParseHandler, Unit>* prs, SharedContext* sc,
                      Directives* newDirectives)
-      : ParseContext(prs->cx_, prs->pc_, sc, prs->tokenStream,
+      : ParseContext(prs->fc_, prs->pc_, sc, prs->tokenStream,
                      prs->compilationState_, newDirectives,
                      std::is_same_v<ParseHandler, FullParseHandler>) {}
 };
@@ -242,12 +242,13 @@ class MOZ_STACK_CLASS ParserSharedBase {
  public:
   enum class Kind { Parser };
 
-  ParserSharedBase(JSContext* cx, CompilationState& compilationState,
-                   Kind kind);
+  ParserSharedBase(JSContext* cx, FrontendContext* fc,
+                   CompilationState& compilationState, Kind kind);
   ~ParserSharedBase();
 
  public:
   JSContext* const cx_;
+  FrontendContext* fc_;
 
   LifoAlloc& alloc_;
 
@@ -287,7 +288,6 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
   const bool foldConstants_ : 1;
 
  protected:
-  FrontendContext* fc_;
   JS::NativeStackLimit stackLimit_;
 
 #if DEBUG
