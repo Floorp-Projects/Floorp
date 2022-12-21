@@ -162,7 +162,7 @@ enum class IntegerSeparatorHandling : bool { None, SkipUnderscore };
  */
 template <typename CharT>
 [[nodiscard]] extern bool GetPrefixInteger(
-    JSContext* cx, const CharT* start, const CharT* end, int base,
+    const CharT* start, const CharT* end, int base,
     IntegerSeparatorHandling separatorHandling, const CharT** endp, double* dp);
 
 inline const char16_t* ToRawChars(const char16_t* units) { return units; }
@@ -181,10 +181,10 @@ inline const unsigned char* ToRawChars(const mozilla::Utf8Unit* units) {
  */
 template <typename CharT>
 [[nodiscard]] extern bool GetFullInteger(
-    JSContext* cx, const CharT* start, const CharT* end, int base,
+    const CharT* start, const CharT* end, int base,
     IntegerSeparatorHandling separatorHandling, double* dp) {
   decltype(ToRawChars(start)) realEnd;
-  if (GetPrefixInteger(cx, ToRawChars(start), ToRawChars(end), base,
+  if (GetPrefixInteger(ToRawChars(start), ToRawChars(end), base,
                        separatorHandling, &realEnd, dp)) {
     MOZ_ASSERT(end == static_cast<const void*>(realEnd));
     return true;
@@ -199,7 +199,7 @@ template <typename CharT>
  * Numeric Literals.
  */
 template <typename CharT>
-[[nodiscard]] extern bool GetDecimalInteger(JSContext* cx, const CharT* start,
+[[nodiscard]] extern bool GetDecimalInteger(const CharT* start,
                                             const CharT* end, double* dp);
 
 /*
@@ -208,8 +208,8 @@ template <typename CharT>
  * cf. ES2020, 11.8.3 Numeric Literals.
  */
 template <typename CharT>
-[[nodiscard]] extern bool GetDecimal(JSContext* cx, const CharT* start,
-                                     const CharT* end, double* dp);
+[[nodiscard]] extern bool GetDecimal(const CharT* start, const CharT* end,
+                                     double* dp);
 
 template <typename CharT>
 double CharsToNumber(const CharT* chars, size_t length);

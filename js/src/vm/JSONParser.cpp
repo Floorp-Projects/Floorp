@@ -312,8 +312,9 @@ JSONParserBase::Token JSONParser<CharT>::readNumber() {
     }
 
     double d;
-    if (!GetFullInteger(cx, digitStart.get(), current.get(), 10,
+    if (!GetFullInteger(digitStart.get(), current.get(), 10,
                         IntegerSeparatorHandling::None, &d)) {
+      ReportOutOfMemory(cx);
       return token(OOM);
     }
     return numberToken(negative ? -d : d);
