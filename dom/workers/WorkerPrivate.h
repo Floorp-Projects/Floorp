@@ -772,10 +772,6 @@ class WorkerPrivate final
     return *mLoadInfo.mPartitionedPrincipalInfo;
   }
 
-  uint32_t GetPrincipalHashValue() const {
-    return GetPrincipal()->GetHashValue();
-  }
-
   const mozilla::ipc::PrincipalInfo& GetEffectiveStoragePrincipalInfo() const;
 
   already_AddRefed<nsIChannel> ForgetWorkerChannel() {

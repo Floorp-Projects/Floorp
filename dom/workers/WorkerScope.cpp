@@ -275,15 +275,6 @@ bool WorkerGlobalScopeBase::ShouldResistFingerprinting() const {
   return mShouldResistFingerprinting;
 }
 
-bool WorkerGlobalScopeBase::IsSystemPrincipal() const {
-  return mWorkerPrivate->UsesSystemPrincipal();
-}
-
-uint32_t WorkerGlobalScopeBase::GetPrincipalHashValue() const {
-  AssertIsOnWorkerThread();
-  return mWorkerPrivate->GetPrincipalHashValue();
-}
-
 OriginTrials WorkerGlobalScopeBase::Trials() const {
   AssertIsOnWorkerThread();
   return mWorkerPrivate->Trials();

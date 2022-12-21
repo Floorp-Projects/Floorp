@@ -1672,13 +1672,6 @@ bool nsGlobalWindowOuter::ShouldResistFingerprinting() const {
       "to make an informed RFP choice, so we fall back to the global pref");
 }
 
-uint32_t nsGlobalWindowOuter::GetPrincipalHashValue() const {
-  if (mDoc) {
-    return mDoc->NodePrincipal()->GetHashValue();
-  }
-  return 0;
-}
-
 OriginTrials nsGlobalWindowOuter::Trials() const {
   return mInnerWindow ? nsGlobalWindowInner::Cast(mInnerWindow)->Trials()
                       : OriginTrials();

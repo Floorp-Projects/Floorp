@@ -1647,13 +1647,6 @@ FontFaceSet* nsGlobalWindowInner::Fonts() {
   return nullptr;
 }
 
-uint32_t nsGlobalWindowInner::GetPrincipalHashValue() const {
-  if (mDoc) {
-    return mDoc->NodePrincipal()->GetHashValue();
-  }
-  return 0;
-}
-
 mozilla::Result<mozilla::ipc::PrincipalInfo, nsresult>
 nsGlobalWindowInner::GetStorageKey() {
   MOZ_ASSERT(NS_IsMainThread());

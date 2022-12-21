@@ -120,8 +120,6 @@ class WorkerGlobalScopeBase : public DOMEventTargetHelper,
 
   bool ShouldResistFingerprinting() const final;
 
-  uint32_t GetPrincipalHashValue() const final;
-
   OriginTrials Trials() const final;
 
   StorageAccess GetStorageAccess() final;
@@ -173,8 +171,6 @@ class WorkerGlobalScopeBase : public DOMEventTargetHelper,
 
  protected:
   ~WorkerGlobalScopeBase();
-
-  bool IsSystemPrincipal() const final;
 
   CheckedUnsafePtr<WorkerPrivate> mWorkerPrivate;
 

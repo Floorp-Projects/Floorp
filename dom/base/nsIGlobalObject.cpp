@@ -394,12 +394,8 @@ mozilla::Result<bool, nsresult> nsIGlobalObject::HasEqualStorageKey(
   return mozilla::ipc::StorageKeysEqual(storageKey, aStorageKey);
 }
 
-bool nsIGlobalObject::IsSystemPrincipal() const {
-  return PrincipalOrNull()->IsSystemPrincipal();
-}
-
 RTPCallerType nsIGlobalObject::GetRTPCallerType() const {
-  if (IsSystemPrincipal()) {
+  if (PrincipalOrNull()->IsSystemPrincipal()) {
     return RTPCallerType::SystemPrincipal;
   }
 

@@ -5678,7 +5678,10 @@ uint32_t ClientWebGLContext::GetPrincipalHashValue() const {
   if (mOffscreenCanvas) {
     nsIGlobalObject* global = mOffscreenCanvas->GetOwnerGlobal();
     if (global) {
-      return global->GetPrincipalHashValue();
+      nsIPrincipal* principal = global->PrincipalOrNull();
+      if (principal) {
+        return principal->GetHashValue();
+      }
     }
   }
   return 0;
