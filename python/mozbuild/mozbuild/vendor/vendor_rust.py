@@ -99,10 +99,6 @@ TOLERATED_DUPES = {
     # expected to remove the dependency on time altogether).
     "time": 2,
     "tokio": 2,
-    # nom 6 used by plenty of things
-    # nom 7 used by askama (dep of UniFFI, dep of Glean)
-    # See https://github.com/mozilla/uniffi-rs/issues/1260
-    "nom": 2,
     # Bug 1793784 is set to remove the use of nix 0.15 shortly.
     "nix": 2,
 }
