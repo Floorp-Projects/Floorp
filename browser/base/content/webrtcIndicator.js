@@ -105,9 +105,6 @@ const WebRTCIndicator = {
     // attribute on the document to make it easier for tests to know that the
     // indicator is not visible.
     document.documentElement.setAttribute("visible", isVisible);
-    // This will hide the indicator from the Window menu on macOS when
-    // not visible.
-    document.documentElement.setAttribute("inwindowmenu", isVisible);
   },
 
   /**

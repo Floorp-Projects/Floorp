@@ -13,12 +13,11 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="webrtcIndicator"
         role="alert"
+#ifndef XP_MACOSX
         data-l10n-id="webrtc-indicator-window"
+#endif
         windowtype="Browser:WebRTCGlobalIndicator"
         onload="init(event);"
-#ifdef XP_MACOSX
-        inwindowmenu="false"
-#endif
         sizemode="normal"
         hidechrome="true"
         orient="horizontal"

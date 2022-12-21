@@ -16,9 +16,7 @@
 #ifdef MOZ_UPDATER
         onunload="onUnload(event);"
 #endif
-#ifdef XP_MACOSX
-        inwindowmenu="false"
-#else
+#ifndef XP_MACOSX
         data-l10n-id="aboutDialog-title"
 #endif
         role="dialog"
