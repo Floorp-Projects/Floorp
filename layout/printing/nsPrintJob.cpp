@@ -1287,21 +1287,6 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
 
   MOZ_TRY(aPO->mViewManager->Init(printData->mPrintDC));
 
-  aPO->mPresShell =
-      aPO->mDocument->CreatePresShell(aPO->mPresContext, aPO->mViewManager);
-  if (!aPO->mPresShell) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // If we're printing selection then remove the nonselected nodes from our
-  // cloned document.
-  if (mPrintSettings->GetPrintSelectionOnly()) {
-    // If we fail to remove the nodes then we should fail to print, because if
-    // the user was trying to print a small selection from a large document,
-    // sending the whole document to a real printer would be very frustrating.
-    MOZ_TRY(DeleteNonSelectedNodes(*aPO->mDocument));
-  }
-
   bool doReturn = false;
   bool documentIsTopLevel = false;
   nsSize adjSize;
@@ -1311,12 +1296,6 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
   if (NS_FAILED(rv) || doReturn) {
     return rv;
   }
-
-  PR_PL(("In DV::ReflowPrintObject PO: %p pS: %p (%9s) Setting w,h to %d,%d\n",
-         aPO.get(), aPO->mPresShell.get(), LoggableTypeOfPO(aPO.get()),
-         adjSize.width, adjSize.height));
-
-  aPO->mPresShell->BeginObservingDocument();
 
   // Here, we inform nsPresContext of the page size. Note that 'adjSize' is
   // *usually* the page size, but we need to check. Strictly speaking, adjSize
@@ -1342,12 +1321,40 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
       adjSize = nsSize(bounds.width * p2a, bounds.height * p2a);
     }
   }
-  aPO->mPresContext->SetVisibleArea(nsRect(nsPoint(), adjSize));
   aPO->mPresContext->SetIsRootPaginatedDocument(documentIsTopLevel);
+  aPO->mPresContext->SetVisibleArea(nsRect(nsPoint(), adjSize));
   aPO->mPresContext->SetPageScale(aPO->mZoomRatio);
   // Calculate scale factor from printer to screen
   float printDPI = float(AppUnitsPerCSSInch()) / float(p2a);
   aPO->mPresContext->SetPrintPreviewScale(mScreenDPI / printDPI);
+
+  // Do CreatePresShell() after we setup the page size, the visible area, and
+  // the flag |mIsRootPaginatedDocument|, to make sure we can resolve the
+  // correct viewport size for the print preview page when notifying the media
+  // feature values changed. See au_viewport_size_for_viewport_unit_resolution()
+  // in media_queries.rs for more details.
+  aPO->mPresShell =
+      aPO->mDocument->CreatePresShell(aPO->mPresContext, aPO->mViewManager);
+  if (!aPO->mPresShell) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // If we're printing selection then remove the nonselected nodes from our
+  // cloned document.
+  if (mPrintSettings->GetPrintSelectionOnly()) {
+    // If we fail to remove the nodes then we should fail to print, because if
+    // the user was trying to print a small selection from a large document,
+    // sending the whole document to a real printer would be very frustrating.
+    MOZ_TRY(DeleteNonSelectedNodes(*aPO->mDocument));
+  }
+
+  aPO->mPresShell->BeginObservingDocument();
+
+  PR_PL(
+      ("In DV::ReflowPrintObject PO: %p pS: %p (%9s) Setting page size w,h to "
+       "%d,%d\n",
+       aPO.get(), aPO->mPresShell.get(), LoggableTypeOfPO(aPO.get()),
+       pageSize.width, pageSize.height));
 
   if (mIsCreatingPrintPreview && documentIsTopLevel) {
     mDocViewerPrint->SetPrintPreviewPresentation(
