@@ -67,18 +67,6 @@ const TESTS = [
     expectedSearchCountEntry: "google:organic:none",
   },
   {
-    title: "Yahoo organic",
-    trackingUrl:
-      "https://search.yahoo.com/search?p=test&fr=yfp-t&fp=1&toggle=1&cop=mss&ei=UTF-8",
-    expectedSearchCountEntry: "yahoo:organic:none",
-  },
-  {
-    title: "Yahoo organic UK",
-    trackingUrl:
-      "https://uk.search.yahoo.com/search?p=test&fr=yfp-t&fp=1&toggle=1&cop=mss&ei=UTF-8",
-    expectedSearchCountEntry: "yahoo:organic:none",
-  },
-  {
     title: "Bing search access point",
     trackingUrl: "https://www.bing.com/search?q=test&pc=MOZI&form=MOZLBR",
     expectedSearchCountEntry: "bing:tagged:MOZI",
@@ -211,6 +199,22 @@ const TESTS = [
     trackingUrl:
       "https://www.baidu.com/s?ie=utf-8&f=8&rsv_bp=1&rsv_idx=1&ch=&bar=&wd=test&rn=&oq&rsv_pq=RSV_PQ_VALUE&rsv_t=RSV_T_VALUE&rqlang=cn",
     expectedSearchCountEntry: "baidu:organic:none",
+  },
+  {
+    title: "Ecosia search access point",
+    trackingUrl: "https://www.ecosia.org/search?tt=mzl&q=foo",
+    expectedSearchCountEntry: "ecosia:tagged:mzl",
+    expectedAdKey: "ecosia:tagged",
+    adUrls: ["https://www.bing.com/aclick?ld=foo"],
+    nonAdUrls: [],
+  },
+  {
+    title: "Ecosia organic",
+    trackingUrl: "https://www.ecosia.org/search?method=index&q=foo",
+    expectedSearchCountEntry: "ecosia:organic:none",
+    expectedAdKey: "ecosia:organic",
+    adUrls: ["https://www.bing.com/aclick?ld=foo"],
+    nonAdUrls: [],
   },
 ];
 
