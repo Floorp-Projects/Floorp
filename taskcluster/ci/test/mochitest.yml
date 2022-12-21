@@ -337,18 +337,11 @@ mochitest-chrome:
                     android-em-7.0-x86_64-qr/debug: built-projects
                     linux.*64-qr/debug: built-projects
                     default: []
-            1proc:
-                by-test-platform:
-                    .*-tsan-qr/opt: []
-                    default: built-projects
+            1proc: built-projects
     chunks:
         by-test-platform:
-            .*(-ccov|-qr).*/.*: 3
-            windows10-64-2004-ccov-qr/opt: 3
-            .*-asan(-qr)?/opt: 3
-            .*-tsan-qr/opt: 6
-            (linux.*64|windows.*|macosx1015-64)/debug: 3
-            default: 2
+            .*tsan.*/opt: 6
+            default: 3
     max-run-time: 3600
     mozharness:
         mochitest-flavor: chrome
