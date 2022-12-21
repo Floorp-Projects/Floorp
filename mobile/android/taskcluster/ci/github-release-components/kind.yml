@@ -20,6 +20,7 @@ group-by: build-type
 
 task-template:
     description: Create/Update Github release
+    shipping-phase: ship
     worker-type: github
     worker:
         action: release
