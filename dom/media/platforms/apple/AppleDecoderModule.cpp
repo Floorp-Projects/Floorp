@@ -116,10 +116,6 @@ media::DecodeSupportSet AppleDecoderModule::Supports(
         CanCreateHWDecoder(media::MediaCodec::VP9)) {
       return media::DecodeSupport::HardwareDecode;
     }
-    if (trackInfo.mMimeType == "video/avc" &&
-        CanCreateHWDecoder(media::MediaCodec::H264)) {
-      return media::DecodeSupport::HardwareDecode;
-    }
     return media::DecodeSupport::SoftwareDecode;
   }
   return media::DecodeSupport::Unsupported;
@@ -170,7 +166,8 @@ bool AppleDecoderModule::CanCreateHWDecoder(media::MediaCodec aCodec) {
   VideoInfo info(1920, 1080);
   bool checkSupport = false;
 
-  // HW codecs require 10.13+, with the exception of H264
+  // We must wrap the code within __builtin_available to avoid compilation
+  // warning as VTIsHardwareDecodeSupported is only available from macOS 10.13.
   if (__builtin_available(macOS 10.13, *)) {
     if (!VTIsHardwareDecodeSupported) {
       return false;
@@ -181,29 +178,22 @@ bool AppleDecoderModule::CanCreateHWDecoder(media::MediaCodec aCodec) {
         VPXDecoder::GetVPCCBox(info.mExtraData, VPXDecoder::VPXStreamInfo());
         checkSupport = VTIsHardwareDecodeSupported(kCMVideoCodecType_VP9);
         break;
-      case media::MediaCodec::H264:
-        info.mMimeType = "video/avc";
-        checkSupport = VTIsHardwareDecodeSupported(kCMVideoCodecType_H264);
-        break;
       default:
+        // Only support VP9 HW decode for time being
+        checkSupport = false;
         break;
     }
-  } else if (aCodec == media::MediaCodec::H264) {
-    // VTIsHardwareDecodeSupported function is only available on 10.13+.
-    // For earlier versions, we must check H264 support by always
-    // attempting to create a decoder.
-    info.mMimeType = "video/avc";
-    checkSupport = true;
   }
   // Attempt to create decoder
   if (checkSupport) {
     RefPtr<AppleVTDecoder> decoder =
         new AppleVTDecoder(info, nullptr, {}, nullptr);
     MediaResult rv = decoder->InitializeSession();
+    // Removed decoder->IsHardwareAccelerated check to revert logic to before
+    // H264 support was implemented -- see bug 1806391 and
+    // revision db00f7fb1e9b13cff0ca6ed4ffdbc5897fa88e38
     decoder->Shutdown();
-
-    nsAutoCString failureReason;
-    return (NS_SUCCEEDED(rv) && decoder->IsHardwareAccelerated(failureReason));
+    return NS_SUCCEEDED(rv);
   }
   return false;
 }
