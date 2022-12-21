@@ -186,3 +186,11 @@ fn test_eager_paddings() {
         [0x42, 0xff, 0x10, 0x11],
     );
 }
+
+#[test]
+fn test_try_new() {
+    assert!(EagerBuffer::<U4>::try_new(&[0; 3]).is_ok());
+    assert!(EagerBuffer::<U4>::try_new(&[0; 4]).is_err());
+    assert!(LazyBuffer::<U4>::try_new(&[0; 4]).is_ok());
+    assert!(LazyBuffer::<U4>::try_new(&[0; 5]).is_err());
+}
