@@ -21,6 +21,7 @@ import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
 import mozilla.components.support.android.test.rules.WebserverRule
 import org.junit.Assert.assertTrue
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -60,6 +61,7 @@ class SmokeTests {
         }
     }
 
+    @Ignore("Intermittent: https://bugzilla.mozilla.org/show_bug.cgi?id=1794873")
     @Test
     fun loadWebsitesInMultipleTabsTest() {
         // Disable on API21 - https://github.com/mozilla-mobile/android-components/issues/6482
