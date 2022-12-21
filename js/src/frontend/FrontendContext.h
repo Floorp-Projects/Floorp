@@ -94,6 +94,13 @@ class FrontendContext {
 
   void setCurrentJSContext(JSContext* cx);
 
+  // Returns JSContext if any.
+  //
+  // This can be used only for:
+  //   * Main-thread-specific operation, such as operating on JSAtom
+  //   * Optional operation, such as providing better error message
+  JSContext* maybeCurrentJSContext() { return maybeCx_; }
+
   enum class Warning { Suppress, Report };
 
   void convertToRuntimeError(JSContext* cx, Warning warning = Warning::Report);
