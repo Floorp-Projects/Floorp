@@ -57,8 +57,25 @@ add_task(async function testBfCacheNavigationAfterClosingDevTools() {
   await waitFor(async () => isSimulationEnabled());
   is(await isSimulationEnabled(), true, "color scheme simulation is enabled");
 
+  // Wait for the iframe target to be processed before destroying the toolbox,
+  // to avoid unhandled promise rejections.
+  // The iframe URL starts with https://example.org/document-builder.sjs
+  let onIframeProcessed;
+
+  // Do not wait for the additional target in the noeft-nofis flavor.
+  const isNoEFTNoFis = !isFissionEnabled() && !isEveryFrameTargetEnabled();
+  if (!isNoEFTNoFis) {
+    const iframeURL = "https://example.org/document-builder.sjs";
+    onIframeProcessed = waitForTargetProcessed(toolbox.commands, targetFront =>
+      targetFront.url.startsWith(iframeURL)
+    );
+  }
+
   info("Navigate to a different URL");
   await navigateTo(TEST_URI + "?someparameter");
+
+  info("Wait for the iframe target to be processed by target-command");
+  await onIframeProcessed;
 
   info("Close DevTools to disable the simulation");
   await toolbox.destroy();
