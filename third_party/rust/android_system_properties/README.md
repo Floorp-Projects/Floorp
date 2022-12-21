@@ -1,7 +1,6 @@
 # android_system_properties
 
-A minimal rust wrapper over android system properties
-
+A thin rust wrapper for Android system properties.
 
 This crate is similar to the `android-properties` crate with the exception that
 the necessary Android libc symbols are loaded dynamically instead of linked

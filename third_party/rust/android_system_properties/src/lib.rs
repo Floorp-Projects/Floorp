@@ -1,10 +1,41 @@
-//! A thin rust wrapper for Andoird system properties.
+//! A thin rust wrapper for Android system properties.
 //!
 //! This crate is similar to the `android-properties` crate with the exception that
 //! the necessary Android libc symbols are loaded dynamically instead of linked
 //! statically. In practice this means that the same binary will work with old and
 //! new versions of Android, even though the API for reading system properties changed
 //! around Android L.
+//!
+//! ## Example
+//!
+//! ```rust
+//! use android_system_properties::AndroidSystemProperties;
+//!
+//! let properties = AndroidSystemProperties::new();
+//!
+//! if let Some(value) = properties.get("persist.sys.timezone") {
+//!    println!("{}", value);
+//! }
+//! ```
+//!
+//! ## Listing and setting properties
+//!
+//! For the sake of simplicity this crate currently only contains what's needed by wgpu.
+//! The implementations for listing and setting properties can be added back if anyone needs
+//! them (let me know by filing an issue).
+//!
+//! ## License
+//!
+//! Licensed under either of
+//!
+//!  * Apache License, Version 2.0 ([LICENSE-APACHE] or <http://www.apache.org/licenses/LICENSE-2.0>)
+//!  * MIT license ([LICENSE-MIT] or <http://opensource.org/licenses/MIT>)
+//!
+//! at your option.
+//!
+//! [LICENSE-APACHE]: https://github.com/nical/android_system_properties/blob/804681c5c1c93d4fab29c1a2f47b7d808dc70fd3/LICENSE-APACHE
+//! [LICENSE-MIT]: https://github.com/nical/android_system_properties/blob/804681c5c1c93d4fab29c1a2f47b7d808dc70fd3/LICENSE-MIT
+
 use std::{
     ffi::{CStr, CString},
     os::raw::{c_char, c_int, c_void},
@@ -45,6 +76,9 @@ pub struct AndroidSystemProperties {
     read_callback_fn: Option<SystemPropertyReadCallbackFn>,
 }
 
+unsafe impl Send for AndroidSystemProperties {}
+unsafe impl Sync for AndroidSystemProperties {}
+
 impl AndroidSystemProperties {
     #[cfg(not(target_os = "android"))]
     /// Create an entry point for accessing Android properties.
@@ -60,8 +94,7 @@ impl AndroidSystemProperties {
     #[cfg(target_os = "android")]
     /// Create an entry point for accessing Android properties.
     pub fn new() -> Self {
-        let libc_name = CString::new("libc.so").unwrap();
-        let libc_so = unsafe { libc::dlopen(libc_name.as_ptr(), libc::RTLD_NOLOAD) };
+        let libc_so = unsafe { libc::dlopen(b"libc.so\0".as_ptr().cast(), libc::RTLD_NOLOAD) };
 
         let mut properties = AndroidSystemProperties {
             libc_so,
@@ -75,9 +108,8 @@ impl AndroidSystemProperties {
         }
 
 
-        unsafe fn load_fn(libc_so: *mut c_void, name: &str) -> Option<*const c_void> {
-            let cname = CString::new(name).unwrap();
-            let fn_ptr = libc::dlsym(libc_so, cname.as_ptr());
+        unsafe fn load_fn(libc_so: *mut c_void, name: &[u8]) -> Option<*const c_void> {
+            let fn_ptr = libc::dlsym(libc_so, name.as_ptr().cast());
 
             if fn_ptr.is_null() {
                 return None;
@@ -87,15 +119,15 @@ impl AndroidSystemProperties {
         }
 
         unsafe {
-            properties.read_callback_fn = load_fn(libc_so, "__system_property_read_callback")
+            properties.read_callback_fn = load_fn(libc_so, b"__system_property_read_callback\0")
                 .map(|raw| mem::transmute::<*const c_void, SystemPropertyReadCallbackFn>(raw));
 
-            properties.find_fn = load_fn(libc_so, "__system_property_find")
+            properties.find_fn = load_fn(libc_so, b"__system_property_find\0")
                 .map(|raw| mem::transmute::<*const c_void, SystemPropertyFindFn>(raw));
 
             // Fallback for old versions of Android.
             if properties.read_callback_fn.is_none() || properties.find_fn.is_none() {
-                properties.get_fn = load_fn(libc_so, "__system_property_get")
+                properties.get_fn = load_fn(libc_so, b"__system_property_get\0")
                     .map(|raw| mem::transmute::<*const c_void, SystemPropertyGetFn>(raw));
             }
         }
@@ -106,9 +138,39 @@ impl AndroidSystemProperties {
     /// Retrieve a system property.
     ///
     /// Returns None if the operation fails.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use android_system_properties::AndroidSystemProperties;
+    /// let properties = AndroidSystemProperties::new();
+    ///
+    /// if let Some(value) = properties.get("persist.sys.timezone") {
+    ///     println!("{}", value);
+    /// }
+    /// ```
     pub fn get(&self, name: &str) -> Option<String> {
-        let cname = CString::new(name).unwrap();
+        let cname = CString::new(name).ok()?;
+        self.get_from_cstr(&cname)
+    }
 
+    /// Retrieve a system property using a [`CStr`] key.
+    ///
+    /// Returns None if the operation fails.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use android_system_properties::AndroidSystemProperties;
+    /// # use std::ffi::CStr;
+    /// let properties = AndroidSystemProperties::new();
+    ///
+    /// let key = unsafe { CStr::from_bytes_with_nul_unchecked(b"persist.sys.timezone\0") };
+    /// if let Some(value) = properties.get_from_cstr(key) {
+    ///     println!("{}", value);
+    /// }
+    /// ```
+    pub fn get_from_cstr(&self, cname: &std::ffi::CStr) -> Option<String> {
         // If available, use the recommended approach to accessing properties (Android L and onward).
         if let (Some(find_fn), Some(read_callback_fn)) = (self.find_fn, self.read_callback_fn) {
             let info = unsafe { (find_fn)(cname.as_ptr()) };
@@ -153,7 +215,7 @@ impl Drop for AndroidSystemProperties {
         if !self.libc_so.is_null() {
             unsafe {
                 libc::dlclose(self.libc_so);
-            }    
+            }
         }
     }
 }
