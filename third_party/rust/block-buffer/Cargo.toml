@@ -12,14 +12,21 @@
 [package]
 edition = "2018"
 name = "block-buffer"
-version = "0.10.2"
+version = "0.10.3"
 authors = ["RustCrypto Developers"]
 description = "Buffer type for block processing of data"
 documentation = "https://docs.rs/block-buffer"
 readme = "README.md"
-keywords = ["block", "buffer"]
-categories = ["cryptography", "no-std"]
+keywords = [
+    "block",
+    "buffer",
+]
+categories = [
+    "cryptography",
+    "no-std",
+]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/RustCrypto/utils"
+
 [dependencies.generic-array]
 version = "0.14"
