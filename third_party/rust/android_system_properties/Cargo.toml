@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "android_system_properties"
-version = "0.1.4"
+version = "0.1.5"
 authors = ["Nicolas Silva <nical@fastmail.com>"]
 description = "Minimal Android system properties wrapper"
 homepage = "https://github.com/nical/android_system_properties"
