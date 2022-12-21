@@ -17,23 +17,15 @@ namespace JS::loader {
 ////////////////////////////////////////////////////////////////
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(LoadContextBase)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(LoadContextBase)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(LoadContextBase)
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(LoadContextBase)
+NS_IMPL_CYCLE_COLLECTION(LoadContextBase, mRequest)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(LoadContextBase)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRequest)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(LoadContextBase)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRequest)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-LoadContextBase::LoadContextBase(ContextKind kind)
-    : mKind(kind), mRequest(nullptr) {}
+LoadContextBase::LoadContextBase(ContextKind kind) : mKind(kind) {}
 
 void LoadContextBase::SetRequest(ScriptLoadRequest* aRequest) {
   MOZ_ASSERT(!mRequest);
