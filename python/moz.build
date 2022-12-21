@@ -27,7 +27,7 @@ with Files("mozbuild/**"):
     BUG_COMPONENT = ("Firefox Build System", "General")
 
 with Files("mozlint/**"):
-    BUG_COMPONENT = ("Firefox Build System", "Linting and Formatting")
+    BUG_COMPONENT = ("Developer Infrastructure", "Lint and Formatting")
 
 with Files("mozversioncontrol/**"):
     BUG_COMPONENT = ("Firefox Build System", "General")
