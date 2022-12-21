@@ -26,7 +26,7 @@ import { fetchScopes } from "./fetchScopes";
  * @static
  */
 export function paused(pauseInfo) {
-  return async function({ dispatch, getState, client, sourceMaps }) {
+  return async function({ dispatch, getState }) {
     const { thread, frame, why } = pauseInfo;
 
     dispatch({ type: "PAUSED", thread, why, frame });

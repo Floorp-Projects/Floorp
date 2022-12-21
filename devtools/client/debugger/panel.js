@@ -70,7 +70,7 @@ class DebuggerPanel {
       fluentBundles: fluentL10n.getBundles(),
       resourceCommand: this.toolbox.resourceCommand,
       workers: {
-        sourceMaps: this.toolbox.sourceMapLoader,
+        sourceMapLoader: this.toolbox.sourceMapLoader,
         parserWorker: this.toolbox.parserWorker,
       },
       panel: this,

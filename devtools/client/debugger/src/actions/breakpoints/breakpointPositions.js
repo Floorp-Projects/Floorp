@@ -19,12 +19,12 @@ import { makeBreakpointId } from "../../utils/breakpoint";
 import { memoizeableAction } from "../../utils/memoizableAction";
 import { fulfilled } from "../../utils/async-value";
 
-async function mapLocations(generatedLocations, { sourceMaps }) {
+async function mapLocations(generatedLocations, { sourceMapLoader }) {
   if (!generatedLocations.length) {
     return [];
   }
 
-  const originalLocations = await sourceMaps.getOriginalLocations(
+  const originalLocations = await sourceMapLoader.getOriginalLocations(
     generatedLocations
   );
 
@@ -103,7 +103,7 @@ function groupByLine(results, sourceId, line) {
 }
 
 async function _setBreakpointPositions(cx, sourceId, line, thunkArgs) {
-  const { client, dispatch, getState, sourceMaps } = thunkArgs;
+  const { client, dispatch, getState, sourceMapLoader } = thunkArgs;
   let generatedSource = getSource(getState(), sourceId);
   if (!generatedSource) {
     return;
@@ -111,7 +111,7 @@ async function _setBreakpointPositions(cx, sourceId, line, thunkArgs) {
 
   const results = {};
   if (isOriginalId(sourceId)) {
-    const ranges = await sourceMaps.getGeneratedRangesForOriginal(
+    const ranges = await sourceMapLoader.getGeneratedRangesForOriginal(
       sourceId,
       true
     );

@@ -9,13 +9,13 @@ export async function getGeneratedLocation(
   state,
   source,
   location,
-  sourceMaps
+  sourceMapLoader
 ) {
   if (!isOriginalId(location.sourceId)) {
     return location;
   }
 
-  const { line, sourceId, column } = await sourceMaps.getGeneratedLocation(
+  const { line, sourceId, column } = await sourceMapLoader.getGeneratedLocation(
     location
   );
 
@@ -32,15 +32,15 @@ export async function getGeneratedLocation(
   };
 }
 
-export async function getOriginalLocation(generatedLocation, sourceMaps) {
+export async function getOriginalLocation(generatedLocation, sourceMapLoader) {
   if (isOriginalId(generatedLocation.sourceId)) {
     return location;
   }
 
-  return sourceMaps.getOriginalLocation(generatedLocation);
+  return sourceMapLoader.getOriginalLocation(generatedLocation);
 }
 
-export async function getMappedLocation(state, sourceMaps, location) {
+export async function getMappedLocation(state, sourceMapLoader, location) {
   const source = getLocationSource(state, location);
 
   if (!source) {
@@ -52,13 +52,13 @@ export async function getMappedLocation(state, sourceMaps, location) {
       state,
       source,
       location,
-      sourceMaps
+      sourceMapLoader
     );
     return { location, generatedLocation };
   }
 
   const generatedLocation = location;
-  const originalLocation = await sourceMaps.getOriginalLocation(
+  const originalLocation = await sourceMapLoader.getOriginalLocation(
     generatedLocation
   );
 
@@ -73,7 +73,7 @@ export async function getMappedLocation(state, sourceMaps, location) {
  * If the passed location is on an original source, it gets the
  * related location in the generated source.
  */
-export async function getRelatedMapLocation(state, sourceMaps, location) {
+export async function getRelatedMapLocation(state, sourceMapLoader, location) {
   const source = getLocationSource(state, location);
 
   if (!source) {
@@ -81,8 +81,8 @@ export async function getRelatedMapLocation(state, sourceMaps, location) {
   }
 
   if (isOriginalId(location.sourceId)) {
-    return getGeneratedLocation(state, source, location, sourceMaps);
+    return getGeneratedLocation(state, source, location, sourceMapLoader);
   }
 
-  return sourceMaps.getOriginalLocation(location);
+  return sourceMapLoader.getOriginalLocation(location);
 }

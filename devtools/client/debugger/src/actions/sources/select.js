@@ -71,7 +71,7 @@ export const clearSelectedLocation = cx => ({
  * debugger.
  */
 export function selectSourceURL(cx, url, options) {
-  return async ({ dispatch, getState, sourceMaps }) => {
+  return async ({ dispatch, getState }) => {
     const source = getSourceByURL(getState(), url);
     if (!source) {
       return dispatch(setPendingSelectedLocation(cx, url, options));
@@ -122,7 +122,7 @@ export function selectSource(cx, sourceId, sourceActorId, location = {}) {
  *        were currently selecting the other source type.
  */
 export function selectLocation(cx, location, { keepContext = true } = {}) {
-  return async ({ dispatch, getState, sourceMaps, client }) => {
+  return async ({ dispatch, getState, sourceMapLoader, client }) => {
     const currentSource = getSelectedSource(getState());
 
     if (!client) {
@@ -160,7 +160,11 @@ export function selectLocation(cx, location, { keepContext = true } = {}) {
     ) {
       // getRelatedMapLocation will just convert to the related generated/original location.
       // i.e if the original location is passed, the related generated location will be returned and vice versa.
-      location = await getRelatedMapLocation(getState(), sourceMaps, location);
+      location = await getRelatedMapLocation(
+        getState(),
+        sourceMapLoader,
+        location
+      );
       source = getLocationSource(getState(), location);
     }
 
@@ -243,7 +247,7 @@ export function selectSpecificLocation(cx, location) {
  * related location in the generated source.
  */
 export function jumpToMappedLocation(cx, location) {
-  return async function({ dispatch, getState, client, sourceMaps }) {
+  return async function({ dispatch, getState, client, sourceMapLoader }) {
     if (!client) {
       return null;
     }
@@ -251,7 +255,7 @@ export function jumpToMappedLocation(cx, location) {
     // Map to either an original or a generated source location
     const pairedLocation = await getRelatedMapLocation(
       getState(),
-      sourceMaps,
+      sourceMapLoader,
       location
     );
 

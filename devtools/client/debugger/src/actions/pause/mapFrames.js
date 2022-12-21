@@ -37,24 +37,24 @@ function getSelectedFrameId(state, thread, frames) {
   return selectedFrame?.id;
 }
 
-export function updateFrameLocation(frame, sourceMaps) {
+export function updateFrameLocation(frame, sourceMapLoader) {
   if (frame.isOriginal) {
     return Promise.resolve(frame);
   }
-  return sourceMaps.getOriginalLocation(frame.location).then(loc => ({
+  return sourceMapLoader.getOriginalLocation(frame.location).then(loc => ({
     ...frame,
     location: loc,
     generatedLocation: frame.generatedLocation || frame.location,
   }));
 }
 
-function updateFrameLocations(frames, sourceMaps) {
+function updateFrameLocations(frames, sourceMapLoader) {
   if (!frames || !frames.length) {
     return Promise.resolve(frames);
   }
 
   return Promise.all(
-    frames.map(frame => updateFrameLocation(frame, sourceMaps))
+    frames.map(frame => updateFrameLocation(frame, sourceMapLoader))
   );
 }
 
@@ -70,7 +70,7 @@ function isWasmOriginalSourceFrame(frame, getState) {
   return Boolean(generatedSource?.isWasm);
 }
 
-async function expandFrames(frames, sourceMaps, getState) {
+async function expandFrames(frames, sourceMapLoader, getState) {
   const result = [];
   for (let i = 0; i < frames.length; ++i) {
     const frame = frames[i];
@@ -78,7 +78,7 @@ async function expandFrames(frames, sourceMaps, getState) {
       result.push(frame);
       continue;
     }
-    const originalFrames = await sourceMaps.getOriginalStackFrames(
+    const originalFrames = await sourceMapLoader.getOriginalStackFrames(
       frame.generatedLocation
     );
     if (!originalFrames) {
@@ -135,15 +135,15 @@ async function expandFrames(frames, sourceMaps, getState) {
  */
 export function mapFrames(cx) {
   return async function(thunkArgs) {
-    const { dispatch, getState, sourceMaps } = thunkArgs;
+    const { dispatch, getState, sourceMapLoader } = thunkArgs;
     const frames = getFrames(getState(), cx.thread);
     if (!frames) {
       return;
     }
 
-    let mappedFrames = await updateFrameLocations(frames, sourceMaps);
+    let mappedFrames = await updateFrameLocations(frames, sourceMapLoader);
 
-    mappedFrames = await expandFrames(mappedFrames, sourceMaps, getState);
+    mappedFrames = await expandFrames(mappedFrames, sourceMapLoader, getState);
 
     const selectedFrameId = getSelectedFrameId(
       getState(),

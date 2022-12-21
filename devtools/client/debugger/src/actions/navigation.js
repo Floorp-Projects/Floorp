@@ -22,11 +22,11 @@ export function willNavigate(event) {
     dispatch,
     getState,
     client,
-    sourceMaps,
+    sourceMapLoader,
     parserWorker,
   }) {
     sourceQueue.clear();
-    sourceMaps.clearSourceMaps();
+    sourceMapLoader.clearSourceMaps();
     clearWasmStates();
     clearDocuments();
     parserWorker.clear();

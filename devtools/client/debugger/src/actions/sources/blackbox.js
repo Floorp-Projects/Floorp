@@ -22,7 +22,7 @@ async function blackboxSourceActors(
   shouldBlackBox,
   ranges
 ) {
-  const { getState, client, sourceMaps } = thunkArgs;
+  const { getState, client, sourceMapLoader } = thunkArgs;
   const blackboxSources = await Promise.all(
     sources.map(async source => {
       let sourceId = source.id;
@@ -31,7 +31,7 @@ async function blackboxSourceActors(
       // (which might be a bundle including other files).
       if (isOriginalId(source.id)) {
         sourceId = originalToGeneratedId(source.id);
-        const range = await sourceMaps.getFileGeneratedRange(source.id);
+        const range = await sourceMapLoader.getFileGeneratedRange(source.id);
         ranges = [];
         if (range) {
           ranges.push(range);

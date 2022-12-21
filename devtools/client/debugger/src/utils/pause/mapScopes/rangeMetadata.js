@@ -14,9 +14,11 @@ import { filterSortedArray } from "./filtering";
 export async function loadRangeMetadata(
   location,
   originalAstScopes,
-  sourceMaps
+  sourceMapLoader
 ) {
-  const originalRanges = await sourceMaps.getOriginalRanges(location.sourceId);
+  const originalRanges = await sourceMapLoader.getOriginalRanges(
+    location.sourceId
+  );
 
   const sortedOriginalAstBindings = [];
   for (const item of originalAstScopes) {
