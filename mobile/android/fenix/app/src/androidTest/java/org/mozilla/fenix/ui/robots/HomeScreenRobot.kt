@@ -688,6 +688,7 @@ class HomeScreenRobot {
         }
 
         fun clickSaveTabsToCollectionButton(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
+            scrollToElementByText(getStringResource(R.string.no_collections_description2))
             saveTabsToCollectionButton().click()
 
             TabDrawerRobot().interact()

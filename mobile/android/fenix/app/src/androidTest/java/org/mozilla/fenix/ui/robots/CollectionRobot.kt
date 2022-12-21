@@ -23,6 +23,7 @@ import androidx.test.uiautomator.Until
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
@@ -57,7 +58,11 @@ class CollectionRobot {
     // names a collection saved from tab drawer
     fun typeCollectionNameAndSave(collectionName: String) {
         collectionNameTextField().text = collectionName
-        mDevice.findObject(UiSelector().textContains("OK")).click()
+        addCollectionButtonPanel.waitForExists(waitingTime)
+        addCollectionOkButton.also {
+            it.waitForExists(waitingTime)
+            it.click()
+        }
     }
 
     fun verifyTabsSelectedCounterText(numOfTabs: Int) {
@@ -289,3 +294,8 @@ private fun backButton() =
     mDevice.findObject(
         UiSelector().resourceId("$packageName:id/back_button"),
     )
+private val addCollectionButtonPanel =
+    itemWithResId("$packageName:id/buttonPanel")
+
+private val addCollectionOkButton =
+    itemWithResId("android:id/button1")
