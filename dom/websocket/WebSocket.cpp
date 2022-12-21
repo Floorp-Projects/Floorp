@@ -150,7 +150,8 @@ class WebSocketImpl final : public nsIInterfaceRequestor,
   bool IsTargetThread() const;
 
   nsresult Init(JSContext* aCx, nsIPrincipal* aLoadingPrincipal,
-                nsIPrincipal* aPrincipal, bool aIsServerSide,
+                nsIPrincipal* aPrincipal, const Maybe<ClientInfo>& aClientInfo,
+                nsICSPEventListener* aCSPEventListener, bool aIsServerSide,
                 const nsAString& aURL, nsTArray<nsString>& aProtocolArray,
                 const nsACString& aScriptFile, uint32_t aScriptLine,
                 uint32_t aScriptColumn);
@@ -1080,12 +1081,14 @@ class WebSocketMainThreadRunnable : public WorkerMainThreadRunnable {
 class InitRunnable final : public WebSocketMainThreadRunnable {
  public:
   InitRunnable(WorkerPrivate* aWorkerPrivate, WebSocketImpl* aImpl,
+               const Maybe<mozilla::dom::ClientInfo>& aClientInfo,
                bool aIsServerSide, const nsAString& aURL,
                nsTArray<nsString>& aProtocolArray,
                const nsACString& aScriptFile, uint32_t aScriptLine,
                uint32_t aScriptColumn)
       : WebSocketMainThreadRunnable(aWorkerPrivate, "WebSocket :: init"_ns),
         mImpl(aImpl),
+        mClientInfo(aClientInfo),
         mIsServerSide(aIsServerSide),
         mURL(aURL),
         mProtocolArray(aProtocolArray),
@@ -1115,10 +1118,10 @@ class InitRunnable final : public WebSocketMainThreadRunnable {
       return true;
     }
 
-    mErrorCode =
-        mImpl->Init(jsapi.cx(), mWorkerPrivate->GetPrincipal(),
-                    doc->NodePrincipal(), mIsServerSide, mURL, mProtocolArray,
-                    mScriptFile, mScriptLine, mScriptColumn);
+    mErrorCode = mImpl->Init(
+        jsapi.cx(), mWorkerPrivate->GetPrincipal(), doc->NodePrincipal(),
+        mClientInfo, mWorkerPrivate->CSPEventListener(), mIsServerSide, mURL,
+        mProtocolArray, mScriptFile, mScriptLine, mScriptColumn);
     return true;
   }
 
@@ -1128,7 +1131,8 @@ class InitRunnable final : public WebSocketMainThreadRunnable {
 
     mErrorCode =
         mImpl->Init(nullptr, mWorkerPrivate->GetPrincipal(),
-                    aTopLevelWorkerPrivate->GetPrincipal(), mIsServerSide, mURL,
+                    aTopLevelWorkerPrivate->GetPrincipal(), mClientInfo,
+                    mWorkerPrivate->CSPEventListener(), mIsServerSide, mURL,
                     mProtocolArray, mScriptFile, mScriptLine, mScriptColumn);
     return true;
   }
@@ -1136,6 +1140,7 @@ class InitRunnable final : public WebSocketMainThreadRunnable {
   // Raw pointer. This worker runnable runs synchronously.
   WebSocketImpl* mImpl;
 
+  Maybe<ClientInfo> mClientInfo;
   bool mIsServerSide;
   const nsAString& mURL;
   nsTArray<nsString>& mProtocolArray;
@@ -1319,8 +1324,8 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
     }
 
     aRv = webSocketImpl->Init(aGlobal.Context(), loadingPrincipal, principal,
-                              !!aTransportProvider, aUrl, protocolArray, ""_ns,
-                              0, 0);
+                              Nothing(), nullptr, !!aTransportProvider, aUrl,
+                              protocolArray, ""_ns, 0, 0);
 
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
@@ -1345,8 +1350,9 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
     }
 
     RefPtr<InitRunnable> runnable = new InitRunnable(
-        workerPrivate, webSocketImpl, !!aTransportProvider, aUrl, protocolArray,
-        nsDependentCString(file.get()), lineno, column);
+        workerPrivate, webSocketImpl,
+        workerPrivate->GlobalScope()->GetClientInfo(), !!aTransportProvider,
+        aUrl, protocolArray, nsDependentCString(file.get()), lineno, column);
     runnable->Dispatch(Canceling, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
@@ -1529,8 +1535,10 @@ void WebSocket::DisconnectFromOwner() {
 //-----------------------------------------------------------------------------
 
 nsresult WebSocketImpl::Init(JSContext* aCx, nsIPrincipal* aLoadingPrincipal,
-                             nsIPrincipal* aPrincipal, bool aIsServerSide,
-                             const nsAString& aURL,
+                             nsIPrincipal* aPrincipal,
+                             const Maybe<ClientInfo>& aClientInfo,
+                             nsICSPEventListener* aCSPEventListener,
+                             bool aIsServerSide, const nsAString& aURL,
                              nsTArray<nsString>& aProtocolArray,
                              const nsACString& aScriptFile,
                              uint32_t aScriptLine, uint32_t aScriptColumn) {
@@ -1627,7 +1635,11 @@ nsresult WebSocketImpl::Init(JSContext* aCx, nsIPrincipal* aLoadingPrincipal,
         aPrincipal,  // loading principal
         aPrincipal,  // triggering principal
         originDoc, nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
-        nsIContentPolicy::TYPE_WEBSOCKET);
+        nsIContentPolicy::TYPE_WEBSOCKET, aClientInfo);
+
+    if (aCSPEventListener) {
+      secCheckLoadInfo->SetCspEventListener(aCSPEventListener);
+    }
 
     int16_t shouldLoad = nsIContentPolicy::ACCEPT;
     rv = NS_CheckContentLoadPolicy(uri, secCheckLoadInfo, ""_ns, &shouldLoad,
