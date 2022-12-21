@@ -62,8 +62,6 @@ class WebTransportStreamProxy final : public nsIWebTransportReceiveStream,
 
  private:
   virtual ~WebTransportStreamProxy();
-  void EnsureWriter();
-  void EnsureReader();
 
   static nsresult WriteFromSegments(nsIInputStream*, void*, const char*,
                                     uint32_t offset, uint32_t count,

@@ -28,7 +28,10 @@ NS_INTERFACE_MAP_END
 
 WebTransportStreamProxy::WebTransportStreamProxy(
     Http3WebTransportStream* aStream)
-    : mWebTransportStream(aStream) {}
+    : mWebTransportStream(aStream) {
+  mWebTransportStream->GetWriterAndReader(getter_AddRefs(mWriter),
+                                          getter_AddRefs(mReader));
+}
 
 WebTransportStreamProxy::~WebTransportStreamProxy() {
   // mWebTransportStream needs to be destroyed on the socket thread.
@@ -51,11 +54,17 @@ NS_IMETHODIMP WebTransportStreamProxy::SendStopSending(uint8_t aError) {
 }
 
 NS_IMETHODIMP WebTransportStreamProxy::SendFin(void) {
+  if (!mWriter) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  mWriter->Close();
+
   if (!OnSocketThread()) {
     RefPtr<WebTransportStreamProxy> self(this);
-    return gSocketTransportService->Dispatch(
-        NS_NewRunnableFunction("WebTransportStreamProxy::SendFin",
-                               [self{std::move(self)}]() { self->SendFin(); }));
+    return gSocketTransportService->Dispatch(NS_NewRunnableFunction(
+        "WebTransportStreamProxy::SendFin",
+        [self{std::move(self)}]() { self->mWebTransportStream->SendFin(); }));
   }
 
   mWebTransportStream->SendFin();
@@ -63,11 +72,19 @@ NS_IMETHODIMP WebTransportStreamProxy::SendFin(void) {
 }
 
 NS_IMETHODIMP WebTransportStreamProxy::Reset(uint8_t aErrorCode) {
+  if (!mWriter) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  mWriter->Close();
+
   if (!OnSocketThread()) {
     RefPtr<WebTransportStreamProxy> self(this);
-    return gSocketTransportService->Dispatch(NS_NewRunnableFunction(
-        "WebTransportStreamProxy::Reset",
-        [self{std::move(self)}, error(aErrorCode)]() { self->Reset(error); }));
+    return gSocketTransportService->Dispatch(
+        NS_NewRunnableFunction("WebTransportStreamProxy::Reset",
+                               [self{std::move(self)}, error(aErrorCode)]() {
+                                 self->mWebTransportStream->Reset(error);
+                               }));
   }
 
   mWebTransportStream->Reset(aErrorCode);
@@ -177,17 +194,8 @@ NS_IMETHODIMP WebTransportStreamProxy::Available(uint64_t* aAvailable) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-void WebTransportStreamProxy::EnsureReader() {
-  if (mReader) {
-    return;
-  }
-
-  mReader = mWebTransportStream->GetReader();
-}
-
 NS_IMETHODIMP WebTransportStreamProxy::Read(char* aBuf, uint32_t aCount,
                                             uint32_t* aResult) {
-  EnsureReader();
   if (!mReader) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -213,7 +221,6 @@ NS_IMETHODIMP WebTransportStreamProxy::CloseWithStatus(nsresult aStatus) {
 NS_IMETHODIMP WebTransportStreamProxy::AsyncWait(
     nsIInputStreamCallback* aCallback, uint32_t aFlags,
     uint32_t aRequestedCount, nsIEventTarget* aEventTarget) {
-  EnsureReader();
   if (!mReader) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -231,17 +238,8 @@ NS_IMETHODIMP WebTransportStreamProxy::Flush() {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-void WebTransportStreamProxy::EnsureWriter() {
-  if (mWriter) {
-    return;
-  }
-
-  mWriter = mWebTransportStream->GetWriter();
-}
-
 NS_IMETHODIMP WebTransportStreamProxy::Write(const char* aBuf, uint32_t aCount,
                                              uint32_t* aResult) {
-  EnsureWriter();
   if (!mWriter) {
     return NS_ERROR_UNEXPECTED;
   }
