@@ -687,9 +687,14 @@ this.DateTimeBoxWidget = class {
         break;
       }
       case "Backspace": {
-        // TODO(emilio, bug 1571533): These functions should look at
-        // defaultPrevented.
+        if (aEvent.originalTarget == this.mCalendarButton) {
+          // Do not remove Calendar button
+          aEvent.preventDefault();
+          break;
+        }
         if (this.isEditable()) {
+          // TODO(emilio, bug 1571533): These functions should look at
+          // defaultPrevented.
           let targetField = aEvent.originalTarget;
           this.clearFieldValue(targetField);
           this.setInputValueFromFields();

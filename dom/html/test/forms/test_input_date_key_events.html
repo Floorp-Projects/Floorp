@@ -4,7 +4,7 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=1286182
 -->
 <head>
-  <title>Test key events for time control</title>
+  <title>Test key events for date control</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
@@ -12,6 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1286182
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1286182">Mozilla Bug 1286182</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1804669">Mozilla Bug 1804669</a>
 <p id="display"></p>
 <div id="content">
   <input id="input" type="date">
@@ -201,6 +202,30 @@ var testData = [
     keys: ["1111"],
     initialVal: "",
     expectedVal: ""
+  },
+  {
+    // Backspace key should clean a month field and map to empty .value.
+    keys: ["KEY_Backspace"],
+    initialVal: "2016-01-01",
+    expectedVal: ""
+  },
+  {
+    // Backspace key should clean a day field and map to empty .value.
+    keys: ["KEY_Tab", "KEY_Backspace"],
+    initialVal: "2016-01-01",
+    expectedVal: ""
+  },
+  {
+    // Backspace key should clean a year field and map to empty .value.
+    keys: ["KEY_Tab", "KEY_Tab", "KEY_Backspace"],
+    initialVal: "2016-01-01",
+    expectedVal: ""
+  },
+  {
+    // Backspace key on Calendar button should not change a value.
+    keys: ["KEY_Tab", "KEY_Tab", "KEY_Tab", "KEY_Backspace"],
+    initialVal: "2016-01-01",
+    expectedVal: "2016-01-01"
   },
 ];
 
