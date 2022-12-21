@@ -180,7 +180,9 @@ public:
                                   StringRef FileName,
                                   bool IsAngled,
                                   CharSourceRange FileNameRange,
-#if CLANG_VERSION_MAJOR >= 15
+#if CLANG_VERSION_MAJOR >= 16
+                                  OptionalFileEntryRef File,
+#elif CLANG_VERSION_MAJOR >= 15
                                   Optional<FileEntryRef> File,
 #else
                                   const FileEntry *File,
@@ -2088,7 +2090,9 @@ void PreprocessorHook::InclusionDirective(SourceLocation HashLoc,
                                           StringRef FileName,
                                           bool IsAngled,
                                           CharSourceRange FileNameRange,
-#if CLANG_VERSION_MAJOR >= 15
+#if CLANG_VERSION_MAJOR >= 16
+                                          OptionalFileEntryRef File,
+#elif CLANG_VERSION_MAJOR >= 15
                                           Optional<FileEntryRef> File,
 #else
                                           const FileEntry *File,
