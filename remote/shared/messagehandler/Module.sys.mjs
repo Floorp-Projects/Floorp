@@ -7,8 +7,6 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  ContextDescriptorType:
-    "chrome://remote/content/shared/messagehandler/MessageHandler.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
 });
 
@@ -27,25 +25,6 @@ export class Module {
    */
   constructor(messageHandler) {
     this.#messageHandler = messageHandler;
-  }
-
-  /**
-   * Add session data for a given module and event.
-   *
-   * @param {string} moduleName
-   *     Name of the module.
-   * @param {string} event
-   *     Name of the event.
-   */
-  addEventSessionData(moduleName, event) {
-    return this.messageHandler.addSessionData({
-      moduleName,
-      category: "event",
-      contextDescriptor: {
-        type: lazy.ContextDescriptorType.All,
-      },
-      values: [event],
-    });
   }
 
   /**
@@ -127,25 +106,6 @@ export class Module {
         `Module ${moduleName} does not support event ${event}`
       );
     }
-  }
-
-  /**
-   * Remove session data for a given module and event.
-   *
-   * @param {string} moduleName
-   *     Name of the module.
-   * @param {string} event
-   *     Name of the event.
-   */
-  removeEventSessionData(moduleName, event) {
-    return this.messageHandler.removeSessionData({
-      moduleName,
-      category: "event",
-      contextDescriptor: {
-        type: lazy.ContextDescriptorType.All,
-      },
-      values: [event],
-    });
   }
 
   /**

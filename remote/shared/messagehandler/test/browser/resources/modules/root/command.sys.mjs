@@ -57,6 +57,11 @@ class CommandModule extends Module {
     return this.#getSessionDataUpdateFromAllContexts();
   }
 
+  async testUpdateSessionData(params) {
+    await this.messageHandler.updateSessionData(params);
+    return this.#getSessionDataUpdateFromAllContexts();
+  }
+
   testRootModule() {
     return "root-value";
   }

@@ -11,6 +11,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://remote/content/shared/messagehandler/transports/FrameTransport.sys.mjs",
   SessionData:
     "chrome://remote/content/shared/messagehandler/sessiondata/SessionData.sys.mjs",
+  SessionDataMethod:
+    "chrome://remote/content/shared/messagehandler/sessiondata/SessionData.sys.mjs",
   WindowGlobalMessageHandler:
     "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.sys.mjs",
 });
@@ -81,7 +83,8 @@ export class RootMessageHandler extends MessageHandler {
    * MessageHandlers.
    */
   addSessionData(sessionData = {}) {
-    return this._updateSessionData(sessionData, { mode: "add" });
+    sessionData.method = lazy.SessionDataMethod.Add;
+    return this.updateSessionData([sessionData]);
   }
 
   /**
@@ -121,6 +124,10 @@ export class RootMessageHandler extends MessageHandler {
     }
   }
 
+  matchesContext() {
+    return true;
+  }
+
   /**
    * Remove session data items of a given module, category and
    * contextDescriptor.
@@ -130,57 +137,18 @@ export class RootMessageHandler extends MessageHandler {
    * MessageHandlers.
    */
   removeSessionData(sessionData = {}) {
-    return this._updateSessionData(sessionData, { mode: "remove" });
+    sessionData.method = lazy.SessionDataMethod.Remove;
+    return this.updateSessionData([sessionData]);
   }
 
-  async _updateSessionData(sessionData, options = {}) {
-    const { mode } = options;
-
-    // TODO: We currently only support adding or removing items separately.
-    // Supporting both will be added with transactions in Bug 1741834.
-    if (mode != "add" && mode != "remove") {
-      throw new Error(`Unsupported mode for _updateSessionData ${mode}`);
-    }
-
-    const { moduleName, category, contextDescriptor, values } = sessionData;
-    const isAdding = mode === "add";
-
-    const updateMethod = isAdding ? "addSessionData" : "removeSessionData";
-    const updatedValues = this.#sessionData[updateMethod](
-      moduleName,
-      category,
-      contextDescriptor,
-      values
-    );
-
-    if (!updatedValues.length) {
-      // Avoid unnecessary broadcast if no value was removed.
-      return;
-    }
-
-    const windowGlobalDestination = {
-      type: lazy.WindowGlobalMessageHandler.type,
-      contextDescriptor,
-    };
-
-    const rootDestination = {
-      type: RootMessageHandler.type,
-    };
-
-    for (const destination of [windowGlobalDestination, rootDestination]) {
-      // Only apply session data if the module is present for the destination.
-      if (this.supportsCommand(moduleName, "_applySessionData", destination)) {
-        await this.handleCommand({
-          moduleName,
-          commandName: "_applySessionData",
-          params: {
-            [isAdding ? "added" : "removed"]: updatedValues,
-            category,
-            contextDescriptor,
-          },
-          destination,
-        });
-      }
-    }
+  /**
+   * Update session data items of a given module, category and
+   * contextDescriptor.
+   *
+   * Forwards the call to the SessionData instance owned by this
+   * RootMessageHandler.
+   */
+  async updateSessionData(sessionData = []) {
+    await this.#sessionData.updateSessionData(sessionData);
   }
 }

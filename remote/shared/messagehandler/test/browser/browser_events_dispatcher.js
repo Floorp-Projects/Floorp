@@ -248,6 +248,165 @@ add_task(async function test_two_contexts() {
   gBrowser.removeTab(tab1);
 });
 
+/**
+ * Check that adding and removing first listener for the specific context and then
+ * for the global context works as expected.
+ */
+add_task(
+  async function test_remove_context_event_listener_and_then_global_event_listener() {
+    const tab = await addTab(
+      "https://example.com/document-builder.sjs?html=tab"
+    );
+    const browsingContext = tab.linkedBrowser.browsingContext;
+    const contextDescriptor = {
+      type: ContextDescriptorType.TopBrowsingContext,
+      id: browsingContext.browserId,
+    };
+    const contextDescriptorAll = {
+      type: ContextDescriptorType.All,
+    };
+
+    const root = createRootMessageHandler("session-id-event");
+    const monitoringEvents = await setupEventMonitoring(root);
+    await emitTestEvent(root, browsingContext, monitoringEvents);
+    is(await isSubscribed(root, browsingContext), false);
+
+    info("Add an listener for eventemitter.testEvent");
+    const events = [];
+    const onEvent = (event, data) => events.push(data.text);
+    await root.eventsDispatcher.on(
+      "eventemitter.testEvent",
+      contextDescriptor,
+      onEvent
+    );
+    is(await isSubscribed(root, browsingContext), true);
+
+    await emitTestEvent(root, browsingContext, monitoringEvents);
+    is(events.length, 1);
+
+    info(
+      "Add another listener for eventemitter.testEvent, using global context"
+    );
+    const eventsAll = [];
+    const onEventAll = (event, data) => eventsAll.push(data.text);
+    await root.eventsDispatcher.on(
+      "eventemitter.testEvent",
+      contextDescriptorAll,
+      onEventAll
+    );
+    await emitTestEvent(root, browsingContext, monitoringEvents);
+    is(eventsAll.length, 1);
+    is(events.length, 2);
+
+    info("Remove the first listener for eventemitter.testEvent");
+    await root.eventsDispatcher.off(
+      "eventemitter.testEvent",
+      contextDescriptor,
+      onEvent
+    );
+
+    info("Check that we are still subscribed to eventemitter.testEvent");
+    is(await isSubscribed(root, browsingContext), true);
+    await emitTestEvent(root, browsingContext, monitoringEvents);
+    is(eventsAll.length, 2);
+    is(events.length, 2);
+
+    await root.eventsDispatcher.off(
+      "eventemitter.testEvent",
+      contextDescriptorAll,
+      onEventAll
+    );
+    is(await isSubscribed(root, browsingContext), false);
+    await emitTestEvent(root, browsingContext, monitoringEvents);
+    is(eventsAll.length, 2);
+    is(events.length, 2);
+
+    root.destroy();
+    gBrowser.removeTab(tab);
+  }
+);
+
+/**
+ * Check that adding and removing first listener for the global context and then
+ * for the specific context works as expected.
+ */
+add_task(
+  async function test_global_event_listener_and_then_remove_context_event_listener() {
+    const tab = await addTab(
+      "https://example.com/document-builder.sjs?html=tab"
+    );
+    const browsingContext = tab.linkedBrowser.browsingContext;
+    const contextDescriptor = {
+      type: ContextDescriptorType.TopBrowsingContext,
+      id: browsingContext.browserId,
+    };
+    const contextDescriptorAll = {
+      type: ContextDescriptorType.All,
+    };
+
+    const root = createRootMessageHandler("session-id-event");
+    const monitoringEvents = await setupEventMonitoring(root);
+    await emitTestEvent(root, browsingContext, monitoringEvents);
+    is(await isSubscribed(root, browsingContext), false);
+
+    info("Add an listener for eventemitter.testEvent");
+    const events = [];
+    const onEvent = (event, data) => events.push(data.text);
+    await root.eventsDispatcher.on(
+      "eventemitter.testEvent",
+      contextDescriptor,
+      onEvent
+    );
+    is(await isSubscribed(root, browsingContext), true);
+
+    await emitTestEvent(root, browsingContext, monitoringEvents);
+    is(events.length, 1);
+
+    info(
+      "Add another listener for eventemitter.testEvent, using global context"
+    );
+    const eventsAll = [];
+    const onEventAll = (event, data) => eventsAll.push(data.text);
+    await root.eventsDispatcher.on(
+      "eventemitter.testEvent",
+      contextDescriptorAll,
+      onEventAll
+    );
+    await emitTestEvent(root, browsingContext, monitoringEvents);
+    is(eventsAll.length, 1);
+    is(events.length, 2);
+
+    info("Remove the global listener for eventemitter.testEvent");
+    await root.eventsDispatcher.off(
+      "eventemitter.testEvent",
+      contextDescriptorAll,
+      onEventAll
+    );
+
+    info(
+      "Check that we are still subscribed to eventemitter.testEvent for the specific context"
+    );
+    is(await isSubscribed(root, browsingContext), true);
+    await emitTestEvent(root, browsingContext, monitoringEvents);
+    is(eventsAll.length, 1);
+    is(events.length, 3);
+
+    await root.eventsDispatcher.off(
+      "eventemitter.testEvent",
+      contextDescriptor,
+      onEvent
+    );
+
+    is(await isSubscribed(root, browsingContext), false);
+    await emitTestEvent(root, browsingContext, monitoringEvents);
+    is(eventsAll.length, 1);
+    is(events.length, 3);
+
+    root.destroy();
+    gBrowser.removeTab(tab);
+  }
+);
+
 async function setupEventMonitoring(root) {
   const monitoringEvents = [];
   const onMonitoringEvent = (event, data) => monitoringEvents.push(data.text);

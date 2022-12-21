@@ -10,6 +10,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ContextDescriptorType:
     "chrome://remote/content/shared/messagehandler/MessageHandler.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
+  SessionDataCategory:
+    "chrome://remote/content/shared/messagehandler/sessiondata/SessionData.sys.mjs",
+  SessionDataMethod:
+    "chrome://remote/content/shared/messagehandler/sessiondata/SessionData.sys.mjs",
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
 });
 
@@ -72,31 +76,7 @@ export class EventsDispatcher {
    *     propagating the necessary session data.
    */
   async off(event, contextDescriptor, callback) {
-    const listeners = this.#listenersByEventName.get(event);
-    if (!listeners) {
-      return;
-    }
-
-    const key = this.#getContextKey(contextDescriptor);
-    if (!listeners.has(key)) {
-      return;
-    }
-
-    const { callbacks } = listeners.get(key);
-    if (callbacks.has(callback)) {
-      callbacks.delete(callback);
-      if (callbacks.size === 0) {
-        listeners.delete(key);
-        if (listeners.size === 0) {
-          this.#messageHandler.off(event, this.#onMessageHandlerEvent);
-          this.#listenersByEventName.delete(event);
-        }
-
-        await this.#messageHandler.removeSessionData(
-          this.#getSessionDataItem(event, contextDescriptor)
-        );
-      }
-    }
+    return this.update([{ event, contextDescriptor, callback, enable: false }]);
   }
 
   /**
@@ -114,23 +94,94 @@ export class EventsDispatcher {
    *     propagating the necessary session data.
    */
   async on(event, contextDescriptor, callback) {
-    if (!this.#listenersByEventName.has(event)) {
-      this.#listenersByEventName.set(event, new Map());
-      this.#messageHandler.on(event, this.#onMessageHandlerEvent);
-    }
+    return this.update([{ event, contextDescriptor, callback, enable: true }]);
+  }
 
-    const key = this.#getContextKey(contextDescriptor);
-    const listeners = this.#listenersByEventName.get(event);
-    if (listeners.has(key)) {
-      const { callbacks } = listeners.get(key);
-      callbacks.add(callback);
-    } else {
-      const callbacks = new Set([callback]);
-      listeners.set(key, { callbacks, contextDescriptor });
-      await this.#messageHandler.addSessionData(
-        this.#getSessionDataItem(event, contextDescriptor)
-      );
-    }
+  /**
+   * An object that holds information about subscription/unsubscription
+   * of an event.
+   *
+   * @typedef Subscription
+   *
+   * @param {string} event
+   *     Name of the event to subscribe/unsubscribe to.
+   * @param {ContextDescriptor} contextDescriptor
+   *     Context descriptor for this event.
+   * @param {function} callback
+   *     Event listener callback.
+   * @param {boolean} enable
+   *     True, if we need to subscribe to an event.
+   *     Otherwise false.
+   */
+
+  /**
+   * Start or stop listening to a list of events relying on SessionData
+   * and relayed by the message handler.
+   *
+   * @param {Array<Subscription>} subscriptions
+   *     The list of information to subscribe/unsubscribe to.
+   *
+   * @return {Promise}
+   *     Promise which resolves when the events fully subscribed/unsubscribed to,
+   *     including propagating the necessary session data.
+   */
+  async update(subscriptions) {
+    const sessionDataItemUpdates = [];
+    subscriptions.forEach(({ event, contextDescriptor, callback, enable }) => {
+      if (enable) {
+        // Setup listeners.
+        if (!this.#listenersByEventName.has(event)) {
+          this.#listenersByEventName.set(event, new Map());
+          this.#messageHandler.on(event, this.#onMessageHandlerEvent);
+        }
+
+        const key = this.#getContextKey(contextDescriptor);
+        const listeners = this.#listenersByEventName.get(event);
+        if (listeners.has(key)) {
+          const { callbacks } = listeners.get(key);
+          callbacks.add(callback);
+        } else {
+          const callbacks = new Set([callback]);
+          listeners.set(key, { callbacks, contextDescriptor });
+
+          sessionDataItemUpdates.push({
+            ...this.#getSessionDataItem(event, contextDescriptor),
+            method: lazy.SessionDataMethod.Add,
+          });
+        }
+      } else {
+        // Remove listeners.
+        const listeners = this.#listenersByEventName.get(event);
+        if (!listeners) {
+          return;
+        }
+
+        const key = this.#getContextKey(contextDescriptor);
+        if (!listeners.has(key)) {
+          return;
+        }
+
+        const { callbacks } = listeners.get(key);
+        if (callbacks.has(callback)) {
+          callbacks.delete(callback);
+          if (callbacks.size === 0) {
+            listeners.delete(key);
+            if (listeners.size === 0) {
+              this.#messageHandler.off(event, this.#onMessageHandlerEvent);
+              this.#listenersByEventName.delete(event);
+            }
+
+            sessionDataItemUpdates.push({
+              ...this.#getSessionDataItem(event, contextDescriptor),
+              method: lazy.SessionDataMethod.Remove,
+            });
+          }
+        }
+      }
+    });
+
+    // Update all sessionData at once.
+    await this.#messageHandler.updateSessionData(sessionDataItemUpdates);
   }
 
   #getContextKey(contextDescriptor) {
@@ -142,7 +193,7 @@ export class EventsDispatcher {
     const [moduleName] = event.split(".");
     return {
       moduleName,
-      category: "event",
+      category: lazy.SessionDataCategory.Event,
       contextDescriptor,
       values: [event],
     };

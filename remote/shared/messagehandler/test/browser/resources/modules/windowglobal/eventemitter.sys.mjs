@@ -6,10 +6,12 @@ import { Module } from "chrome://remote/content/shared/messagehandler/Module.sys
 
 class EventEmitterModule extends Module {
   #isSubscribed;
+  #subscribedEvents;
 
   constructor(messageHandler) {
     super(messageHandler);
     this.#isSubscribed = false;
+    this.#subscribedEvents = new Set();
   }
 
   destroy() {}
@@ -33,13 +35,24 @@ class EventEmitterModule extends Module {
   }
 
   _applySessionData(params) {
-    const { category, added = [], removed = [] } = params;
+    const { category } = params;
     if (category === "event") {
-      for (const event of added) {
-        this.#subscribeEvent(event);
+      const filteredSessionData = params.sessionData.filter(item =>
+        this.messageHandler.matchesContext(item.contextDescriptor)
+      );
+      for (const event of this.#subscribedEvents.values()) {
+        const hasSessionItem = filteredSessionData.some(
+          item => item.value === event
+        );
+        // If there are no session items for this context, we should unsubscribe from the event.
+        if (!hasSessionItem) {
+          this.#unsubscribeEvent(event);
+        }
       }
-      for (const event of removed) {
-        this.#unsubscribeEvent(event);
+
+      // Subscribe to all events, which have an item in SessionData
+      for (const { value } of filteredSessionData) {
+        this.#subscribeEvent(value);
       }
     }
   }
@@ -50,6 +63,7 @@ class EventEmitterModule extends Module {
         throw new Error("Already subscribed to eventemitter.testEvent");
       }
       this.#isSubscribed = true;
+      this.#subscribedEvents.add(event);
     }
   }
 
@@ -59,6 +73,7 @@ class EventEmitterModule extends Module {
         throw new Error("Not subscribed to eventemitter.testEvent");
       }
       this.#isSubscribed = false;
+      this.#subscribedEvents.delete(event);
     }
   }
 }

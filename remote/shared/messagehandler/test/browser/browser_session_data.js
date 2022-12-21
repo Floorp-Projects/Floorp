@@ -41,12 +41,15 @@ add_task(async function test_sessionData() {
   is(sessionDataSnapshot.size, 0, "session data is empty");
 
   info("Store a string value in session data");
-  sessionData.addSessionData(
-    "fakemodule",
-    "testCategory",
-    contextDescriptorAll,
-    ["value-1"]
-  );
+  sessionData.updateSessionData([
+    {
+      method: "add",
+      moduleName: "fakemodule",
+      category: "testCategory",
+      contextDescriptor: contextDescriptorAll,
+      values: ["value-1"],
+    },
+  ]);
 
   sessionDataSnapshot = await getSessionDataFromContent();
   is(sessionDataSnapshot.size, 1, "session data contains 1 session");
@@ -65,12 +68,15 @@ add_task(async function test_sessionData() {
   );
 
   info("Store a number value in session data");
-  sessionData.addSessionData(
-    "fakemodule",
-    "testCategory",
-    contextDescriptorAll,
-    [12]
-  );
+  sessionData.updateSessionData([
+    {
+      method: "add",
+      moduleName: "fakemodule",
+      category: "testCategory",
+      contextDescriptor: contextDescriptorAll,
+      values: [12],
+    },
+  ]);
   snapshot = (await getSessionDataFromContent()).get(sessionId);
   is(snapshot.length, 2);
 
@@ -84,12 +90,15 @@ add_task(async function test_sessionData() {
   );
 
   info("Store a boolean value in session data");
-  sessionData.addSessionData(
-    "fakemodule",
-    "testCategory",
-    contextDescriptorAll,
-    [true]
-  );
+  sessionData.updateSessionData([
+    {
+      method: "add",
+      moduleName: "fakemodule",
+      category: "testCategory",
+      contextDescriptor: contextDescriptorAll,
+      values: [true],
+    },
+  ]);
   snapshot = (await getSessionDataFromContent()).get(sessionId);
   is(snapshot.length, 3);
 
@@ -103,12 +112,15 @@ add_task(async function test_sessionData() {
   );
 
   info("Remove one value");
-  sessionData.removeSessionData(
-    "fakemodule",
-    "testCategory",
-    contextDescriptorAll,
-    [12]
-  );
+  sessionData.updateSessionData([
+    {
+      method: "remove",
+      moduleName: "fakemodule",
+      category: "testCategory",
+      contextDescriptor: contextDescriptorAll,
+      values: [12],
+    },
+  ]);
   snapshot = (await getSessionDataFromContent()).get(sessionId);
   is(snapshot.length, 2);
   checkSessionDataItem(
@@ -127,22 +139,28 @@ add_task(async function test_sessionData() {
   );
 
   info("Remove all values");
-  sessionData.removeSessionData(
-    "fakemodule",
-    "testCategory",
-    contextDescriptorAll,
-    ["value-1", true]
-  );
+  sessionData.updateSessionData([
+    {
+      method: "remove",
+      moduleName: "fakemodule",
+      category: "testCategory",
+      contextDescriptor: contextDescriptorAll,
+      values: ["value-1", true],
+    },
+  ]);
   snapshot = (await getSessionDataFromContent()).get(sessionId);
   is(snapshot.length, 0, "Session data is now empty");
 
   info("Add another value before destroy");
-  sessionData.addSessionData(
-    "fakemodule",
-    "testCategory",
-    contextDescriptorAll,
-    ["value-2"]
-  );
+  sessionData.updateSessionData([
+    {
+      method: "add",
+      moduleName: "fakemodule",
+      category: "testCategory",
+      contextDescriptor: contextDescriptorAll,
+      values: ["value-2"],
+    },
+  ]);
   snapshot = (await getSessionDataFromContent()).get(sessionId);
   is(snapshot.length, 1);
   checkSessionDataItem(

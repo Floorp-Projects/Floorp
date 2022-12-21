@@ -12,9 +12,40 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   RootMessageHandler:
     "chrome://remote/content/shared/messagehandler/RootMessageHandler.sys.mjs",
+  WindowGlobalMessageHandler:
+    "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
+
+/**
+ * @typedef {string} SessionDataCategory
+ **/
+
+/**
+ * Enum of session data categories.
+ *
+ * @readonly
+ * @enum {SessionDataCategory}
+ **/
+export const SessionDataCategory = {
+  Event: "event",
+};
+
+/**
+ * @typedef {string} SessionDataMethod
+ **/
+
+/**
+ * Enum of session data methods.
+ *
+ * @readonly
+ * @enum {SessionDataMethod}
+ **/
+export const SessionDataMethod = {
+  Add: "add",
+  Remove: "remove",
+};
 
 export const SESSION_DATA_SHARED_DATA_KEY = "MessageHandlerSessionData";
 
@@ -30,12 +61,26 @@ const sessionDataMap = new Map();
  * @typedef {Object} SessionDataItem
  * @property {String} moduleName
  *     The name of the module responsible for this data item.
- * @property {String} category
+ * @property {SessionDataCategory} category
  *     The category of data. The supported categories depend on the module.
  * @property {(string|number|boolean)} value
  *     Value of the session data item.
  * @property {ContextDescriptor} contextDescriptor
- *     ContextDescriptor to which this session data applies
+ *     ContextDescriptor to which this session data applies.
+ */
+
+/**
+ * @typedef SessionDataItemUpdate
+ * @property {SessionDataMethod} method
+ *     The way sessionData is updated.
+ * @property {String} moduleName
+ *     The name of the module responsible for this data item.
+ * @property {SessionDataCategory} category
+ *     The category of data. The supported categories depend on the module.
+ * @property {Array<(string|number|boolean)>} values
+ *     Values of the session data item update.
+ * @property {ContextDescriptor} contextDescriptor
+ *     ContextDescriptor to which this session data applies.
  */
 
 /**
@@ -96,53 +141,6 @@ export class SessionData {
     this._data = [];
   }
 
-  /**
-   * Add new session data items of a given module, category and
-   * contextDescriptor.
-   *
-   * A new SessionDataItem will be created for each value of the values array.
-   *
-   * If a SessionDataItem already exists for the provided value, moduleName,
-   * category and contextDescriptor, it will be skipped to avoid duplicated
-   * SessionDataItems.
-   *
-   * The data will be persisted across processes at the end of this method.
-   *
-   * @param {String} moduleName
-   *     The name of the module responsible for this data item.
-   * @param {String} category
-   *     The session data category.
-   * @param {ContextDescriptor} contextDescriptor
-   *     The contextDescriptor object defining the scope of the session data
-   *     values.
-   * @param {Array<(string|number|boolean)>} values
-   *     Array of session data item values.
-   * @return {Array<(string|number|boolean)>}
-   *     The subset of values actually added to the session data.
-   */
-  addSessionData(moduleName, category, contextDescriptor, values) {
-    const addedValues = [];
-    for (const value of values) {
-      const item = { moduleName, category, contextDescriptor, value };
-
-      const hasItem = this._data.some(_item => this._isSameItem(item, _item));
-      if (!hasItem) {
-        // This is a new data item, create it and add it to the data.
-        this._data.push(item);
-        addedValues.push(value);
-      } else {
-        lazy.logger.warn(
-          `Duplicated session data item was not added: ${JSON.stringify(item)}`
-        );
-      }
-    }
-
-    // Persist the sessionDataMap.
-    this._persist();
-
-    return addedValues;
-  }
-
   destroy() {
     // Update the sessionDataMap singleton.
     sessionDataMap.delete(this._messageHandler.sessionId);
@@ -150,6 +148,83 @@ export class SessionData {
     // Update sharedData and flush to force consistency.
     Services.ppmm.sharedData.set(SESSION_DATA_SHARED_DATA_KEY, sessionDataMap);
     Services.ppmm.sharedData.flush();
+  }
+
+  /**
+   * Update session data items of a given module, category and
+   * contextDescriptor.
+   *
+   * A SessionDataItem will be added or removed for each value of each update
+   * in the provided array.
+   *
+   * Attempting to add a duplicate SessionDataItem or to remove an unknown
+   * SessionDataItem will be silently skipped (no-op).
+   *
+   * The data will be persisted across processes at the end of this method.
+   *
+   * @param {Array<SessionDataItemUpdate>} sessionDataItemUpdates
+   *     Array of session data item updates.
+   *
+   * @return {Array<SessionDataItemUpdate>}
+   *     The subset of session data item updates which want to be applied.
+   */
+  applySessionData(sessionDataItemUpdates = []) {
+    // The subset of session data item updates, which are cleaned up from
+    // dublicates and unknown items.
+    let updates = [];
+    for (const sessionDataItemUpdate of sessionDataItemUpdates) {
+      const {
+        category,
+        contextDescriptor,
+        method,
+        moduleName,
+        values,
+      } = sessionDataItemUpdate;
+      const updatedValues = [];
+      for (const value of values) {
+        const item = { moduleName, category, contextDescriptor, value };
+
+        if (method === SessionDataMethod.Add) {
+          const hasItem = this._findIndex(item) != -1;
+
+          if (!hasItem) {
+            this._data.push(item);
+            updatedValues.push(value);
+          } else {
+            lazy.logger.warn(
+              `Duplicated session data item was not added: ${JSON.stringify(
+                item
+              )}`
+            );
+          }
+        } else {
+          const itemIndex = this._findIndex(item);
+
+          if (itemIndex != -1) {
+            // The item was found in the session data, remove it.
+            this._data.splice(itemIndex, 1);
+            updatedValues.push(value);
+          } else {
+            lazy.logger.warn(
+              `Missing session data item was not removed: ${JSON.stringify(
+                item
+              )}`
+            );
+          }
+        }
+      }
+
+      if (updatedValues.length) {
+        updates.push({
+          ...sessionDataItemUpdate,
+          values: updatedValues,
+        });
+      }
+    }
+    // Persist the sessionDataMap.
+    this._persist();
+
+    return updates;
   }
 
   /**
@@ -179,52 +254,101 @@ export class SessionData {
   }
 
   /**
-   * Remove values for the provided module, category and context.
-   * Values which don't match any existing SessionDataItem will be ignored.
+   * Update session data items of a given module, category and
+   * contextDescriptor and propagate the information
+   * via a command to existing MessageHandlers.
    *
-   * The updated sessionDataMap will be persisted across processes at the end.
-   *
-   * @param {String} moduleName
-   *     The name of the module responsible for this data item.
-   * @param {String} category
-   *     The session data category.
-   * @param {ContextDescriptor} contextDescriptor
-   *     The contextDescriptor object defining the scope of the session data
-   *     values.
-   * @param {Array<(string|number|boolean)>} values
-   *     Array of session data item values.
-   * @return {Array<(string|number|boolean)>}
-   *     The subset of values actually removed from the session data.
+   * @param {Array<SessionDataItemUpdate>} sessionDataItemUpdates
+   *     Array of session data item updates.
    */
-  removeSessionData(moduleName, category, contextDescriptor, values) {
-    const removedValues = [];
-    // Remove the provided context from the contexts Map of the provided items.
-    for (const value of values) {
-      const item = { moduleName, category, contextDescriptor, value };
+  async updateSessionData(sessionDataItemUpdates = []) {
+    const updates = this.applySessionData(sessionDataItemUpdates);
 
-      const itemIndex = this._data.findIndex(_item =>
-        this._isSameItem(item, _item)
-      );
-      if (itemIndex != -1) {
-        // The item was found in the session data, remove it.
-        this._data.splice(itemIndex, 1);
-        removedValues.push(value);
-      } else {
-        lazy.logger.warn(
-          `Missing session data item was not removed: ${JSON.stringify(item)}`
-        );
+    if (!updates.length) {
+      // Avoid unnecessary broadcast if no items were updated.
+      return;
+    }
+
+    // Create a Map with the structure moduleName -> category -> list of descriptors.
+    const structuredUpdates = new Map();
+    for (const { moduleName, category, contextDescriptor } of updates) {
+      if (!structuredUpdates.has(moduleName)) {
+        structuredUpdates.set(moduleName, new Map());
+      }
+      if (!structuredUpdates.get(moduleName).has(category)) {
+        structuredUpdates.get(moduleName).set(category, new Set());
+      }
+      const descriptors = structuredUpdates.get(moduleName).get(category);
+      // If there is at least one update for all contexts,
+      // keep only this descriptor in the list of descriptors
+      if (contextDescriptor.type === lazy.ContextDescriptorType.All) {
+        structuredUpdates
+          .get(moduleName)
+          .set(category, new Set([contextDescriptor]));
+      }
+      // Add an individual descriptor if there is no descriptor for all contexts.
+      else if (
+        descriptors.size !== 1 ||
+        Array.from(descriptors)[0]?.type !== lazy.ContextDescriptorType.All
+      ) {
+        descriptors.add(contextDescriptor);
       }
     }
 
-    // Persist the sessionDataMap.
-    this._persist();
+    const rootDestination = {
+      type: lazy.RootMessageHandler.type,
+    };
+    const sessionDataPromises = [];
 
-    return removedValues;
-  }
+    for (const [moduleName, categories] of structuredUpdates.entries()) {
+      for (const [category, contextDescriptors] of categories.entries()) {
+        // Find sessionData for the category and the moduleName.
+        const relevantSessionData = this._data.filter(
+          item => item.category == category && item.moduleName === moduleName
+        );
+        for (const contextDescriptor of contextDescriptors.values()) {
+          const windowGlobalDestination = {
+            type: lazy.WindowGlobalMessageHandler.type,
+            contextDescriptor,
+          };
 
-  updateSessionData(moduleName, category, contextDescriptor, added, removed) {
-    this.addSessionData(moduleName, category, contextDescriptor, added);
-    this.removeSessionData(moduleName, category, contextDescriptor, removed);
+          for (const destination of [
+            windowGlobalDestination,
+            rootDestination,
+          ]) {
+            // Only apply session data if the module is present for the destination.
+            if (
+              this._messageHandler.supportsCommand(
+                moduleName,
+                "_applySessionData",
+                destination
+              )
+            ) {
+              sessionDataPromises.push(
+                this._messageHandler
+                  .handleCommand({
+                    moduleName,
+                    commandName: "_applySessionData",
+                    params: {
+                      sessionData: relevantSessionData,
+                      category,
+                      contextDescriptor,
+                    },
+                    destination,
+                  })
+                  ?.catch(reason =>
+                    lazy.logger.error(
+                      `_applySessionData for module: ${moduleName} failed, reason: ${reason}`
+                    )
+                  )
+              );
+            }
+          }
+        }
+      }
+    }
+
+    await Promise.allSettled(sessionDataPromises);
   }
 
   _isSameItem(item1, item2) {
@@ -249,6 +373,10 @@ export class SessionData {
       contextDescriptor1.type === contextDescriptor2.type &&
       contextDescriptor1.id === contextDescriptor2.id
     );
+  }
+
+  _findIndex(item) {
+    return this._data.findIndex(_item => this._isSameItem(item, _item));
   }
 
   _persist() {
