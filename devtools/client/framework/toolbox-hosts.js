@@ -255,10 +255,7 @@ WindowHost.prototype = {
       // set the private flag on the DevTools host window. Otherwise switching
       // hosts between docked and window modes can fail due to incompatible
       // docshell origin attributes. See 1581093.
-      // This host is also used by the Browser Content Toolbox, in which case
-      // the owner window was passed in the host options.
-      const owner =
-        this.hostTab?.ownerGlobal || this.options?.browserContentToolboxOpener;
+      const owner = this.hostTab?.ownerGlobal;
       if (owner && lazy.PrivateBrowsingUtils.isWindowPrivate(owner)) {
         flags += ",private";
       }
