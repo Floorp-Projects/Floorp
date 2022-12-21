@@ -3180,11 +3180,11 @@ dependencies = [
 [[package]]
 name = "mapped_hyph"
 version = "0.4.3"
-source = "git+https://github.com/jfkthame/mapped_hyph.git?rev=746743227485a83123784df0c53227ab466612ed#746743227485a83123784df0c53227ab466612ed"
+source = "git+https://github.com/jfkthame/mapped_hyph.git?rev=c7651a0cffff41996ad13c44f689bd9cd2192c01#c7651a0cffff41996ad13c44f689bd9cd2192c01"
 dependencies = [
  "arrayref",
  "log",
- "memmap2 0.2.999",
+ "memmap2 0.5.7",
 ]
 
 [[package]]
