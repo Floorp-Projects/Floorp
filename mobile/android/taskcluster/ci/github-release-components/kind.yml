@@ -30,7 +30,7 @@ task-template:
                 '3': firefox-android
                 default: staging-firefox-android
         is-prerelease:
-            by-build-type:
+            by-release-type:
                 release: false
                 default: true
         release-name:

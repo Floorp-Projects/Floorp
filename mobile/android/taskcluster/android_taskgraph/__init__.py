@@ -18,6 +18,7 @@ FOCUS_DIR = os.path.join(PROJECT_DIR, "focus-android")
 extend_parameters_schema({
     Required("pull_request_number"): Any(All(int, Range(min=1)), None),
     Required("next_version"): Any(str, None),
+    Required("release_type"): str,
 })
 
 def register(graph_config):
@@ -38,3 +39,4 @@ def get_decision_parameters(graph_config, parameters):
     pr_number = os.environ.get("MOBILE_PULL_REQUEST_NUMBER", None)
     parameters["pull_request_number"] = None if pr_number is None else int(pr_number)
     parameters.setdefault("next_version", None)
+    parameters.setdefault("release_type", "")
