@@ -1684,6 +1684,11 @@ async function runTest55() {
     },
   });
 
+  requestAnimationFrame(() => setTimeout(runTest56));
+}
+
+async function runTest56() {
+  await compareFiles("printpreview_image_select.html", "printpreview_image_select_ref.html");
   finish();
 }
 
