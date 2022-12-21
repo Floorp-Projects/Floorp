@@ -251,6 +251,10 @@ class _Interactions {
    *   The document information of the page associated with the interaction.
    */
   registerNewInteraction(browser, docInfo) {
+    if (!browser) {
+      // The browser may have already gone away.
+      return;
+    }
     let interaction = this.#interactions.get(browser);
     if (interaction && interaction.url != docInfo.url) {
       this.registerEndOfInteraction(browser);
