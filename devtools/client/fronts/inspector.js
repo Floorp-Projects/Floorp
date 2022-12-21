@@ -267,13 +267,12 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
     // we are either in Fission or in the Multiprocess Browser Toolbox, so we need to
     // retrieve the walker of the WindowGlobalTarget.
     // Get the target for this remote frame element
-    const { descriptorFront } = this.targetFront;
 
     // Tab and Process Descriptors expose a Watcher, which should be used to
     // fetch the node's target.
     let target;
-    if (descriptorFront && descriptorFront.traits.watcher) {
-      const watcherFront = await descriptorFront.getWatcher();
+    const { watcherFront } = this.targetFront.commands;
+    if (watcherFront) {
       target = await watcherFront.getWindowGlobalTarget(browsingContextId);
     } else {
       // For descriptors which don't expose a watcher (e.g. WebExtension)
