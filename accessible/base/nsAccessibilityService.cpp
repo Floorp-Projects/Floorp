@@ -1230,7 +1230,7 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
                          nsGkAtoms::mpadded_, nsGkAtoms::mphantom_,
                          nsGkAtoms::maligngroup_, nsGkAtoms::malignmark_,
                          nsGkAtoms::mspace_, nsGkAtoms::semantics_)) {
-        newAcc = new HyperTextAccessible(content, document);
+        newAcc = new HyperTextAccessibleWrap(content, document);
       }
     } else if (content->IsGeneratedContentContainerForMarker()) {
       if (aContext->IsHTMLListItem()) {
@@ -1254,11 +1254,11 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
     // accessibility property. If it's interesting we need it in the
     // accessibility hierarchy so that events or other accessibles can point to
     // it, or so that it can hold a state, etc.
-    if (content->IsHTMLElement()) {
-      // Interesting HTML container which may have selectable text and/or
+    if (content->IsHTMLElement() || content->IsMathMLElement()) {
+      // Interesting HTML/MathML container which may have selectable text and/or
       // embedded objects
       newAcc = new HyperTextAccessibleWrap(content, document);
-    } else {  // XUL, SVG, MathML etc.
+    } else {  // XUL, SVG, etc.
       // Interesting generic non-HTML container
       newAcc = new AccessibleWrap(content, document);
     }
