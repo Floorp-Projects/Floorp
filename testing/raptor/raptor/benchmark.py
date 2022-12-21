@@ -9,7 +9,7 @@ import shutil
 import socket
 
 from logger.logger import RaptorLogger
-from wptserve import server, handlers
+from wptserve import handlers, server
 
 LOG = RaptorLogger(component="raptor-benchmark")
 here = os.path.abspath(os.path.dirname(__file__))

@@ -1,7 +1,6 @@
 from copy import deepcopy
 
 import pytest
-
 from support.network import http_request, websocket_request
 
 

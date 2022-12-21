@@ -6,7 +6,6 @@ from __future__ import absolute_import
 
 from setuptools import setup
 
-
 PACKAGE_NAME = "mozscreenshot"
 PACKAGE_VERSION = "1.0.0"
 

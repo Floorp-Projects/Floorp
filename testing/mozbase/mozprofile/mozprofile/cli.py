@@ -14,9 +14,9 @@ from __future__ import absolute_import, print_function
 
 import sys
 from optparse import OptionParser
+
 from .prefs import Preferences
-from .profile import FirefoxProfile
-from .profile import Profile
+from .profile import FirefoxProfile, Profile
 
 __all__ = [
     "MozProfileCLI",

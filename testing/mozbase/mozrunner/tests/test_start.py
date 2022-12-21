@@ -3,12 +3,11 @@
 from __future__ import absolute_import
 
 from time import sleep
+from unittest.mock import patch
 
 import mozunit
-from unittest.mock import patch
-from pytest import raises
-
 from mozrunner import RunnerNotStartedError
+from pytest import raises
 
 
 def test_start_process(runner):

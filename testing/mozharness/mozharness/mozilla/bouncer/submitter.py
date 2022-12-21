@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
+
 import base64
 import socket
 import sys
@@ -16,13 +17,13 @@ try:
 except ImportError:
     import http.client as httplib
 try:
-    from urllib import urlencode, quote
+    from urllib import quote, urlencode
 except ImportError:
-    from urllib.parse import urlencode, quote
+    from urllib.parse import quote, urlencode
 try:
-    from urllib2 import HTTPError, URLError, Request, urlopen
+    from urllib2 import HTTPError, Request, URLError, urlopen
 except ImportError:
-    from urllib.request import HTTPError, URLError, Request, urlopen
+    from urllib.request import HTTPError, Request, URLError, urlopen
 
 
 class BouncerSubmitterMixin(object):

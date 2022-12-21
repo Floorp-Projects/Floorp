@@ -1,5 +1,4 @@
 import pytest
-
 from tests.support.asserts import assert_success
 from tests.support.sync import Poll
 

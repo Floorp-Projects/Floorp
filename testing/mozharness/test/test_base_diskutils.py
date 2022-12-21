@@ -1,7 +1,9 @@
 from __future__ import absolute_import
-from unittest import mock
+
 import unittest
-from mozharness.base.diskutils import convert_to, DiskutilsError, DiskSize, DiskInfo
+from unittest import mock
+
+from mozharness.base.diskutils import DiskInfo, DiskSize, DiskutilsError, convert_to
 
 
 class TestDiskutils(unittest.TestCase):

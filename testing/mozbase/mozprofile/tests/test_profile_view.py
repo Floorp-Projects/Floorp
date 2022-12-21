@@ -6,12 +6,12 @@
 
 from __future__ import absolute_import
 
-import mozprofile
 import os
 import sys
-import pytest
 
+import mozprofile
 import mozunit
+import pytest
 from six import text_type
 
 here = os.path.dirname(os.path.abspath(__file__))

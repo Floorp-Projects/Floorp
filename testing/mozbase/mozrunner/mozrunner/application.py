@@ -4,18 +4,18 @@
 
 from __future__ import absolute_import
 
-import six
-from abc import ABCMeta, abstractmethod
-from distutils.spawn import find_executable
 import os
 import posixpath
+from abc import ABCMeta, abstractmethod
+from distutils.spawn import find_executable
 
+import six
 from mozdevice import ADBDeviceFactory
 from mozprofile import (
-    Profile,
     ChromeProfile,
     ChromiumProfile,
     FirefoxProfile,
+    Profile,
     ThunderbirdProfile,
 )
 

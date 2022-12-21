@@ -1,11 +1,11 @@
 from __future__ import absolute_import
+
 import gc
 import unittest
 
-
 import mozharness.base.log as log
-from mozharness.base.log import ERROR
 import mozharness.base.script as script
+from mozharness.base.log import ERROR
 from mozharness.mozilla.automation import AutomationMixin
 
 

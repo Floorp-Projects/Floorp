@@ -9,20 +9,11 @@ import logging
 import os
 import sys
 
-import six
-
-from mozbuild.base import (
-    MachCommandConditions as conditions,
-    BinaryNotFoundException,
-)
-
-from mach.decorators import (
-    CommandArgument,
-    CommandArgumentGroup,
-    Command,
-)
-
 import mozinfo
+import six
+from mach.decorators import Command, CommandArgument, CommandArgumentGroup
+from mozbuild.base import BinaryNotFoundException
+from mozbuild.base import MachCommandConditions as conditions
 
 
 def setup_awsy_argument_parser():
@@ -35,14 +26,14 @@ def setup_awsy_argument_parser():
     return parser
 
 
-from awsy import ITERATIONS, PER_TAB_PAUSE, SETTLE_WAIT_TIME, MAX_TABS
+from awsy import ITERATIONS, MAX_TABS, PER_TAB_PAUSE, SETTLE_WAIT_TIME
 
 
 def run_awsy(command_context, tests, binary=None, **kwargs):
     import json
-    from mozlog.structured import commandline
 
-    from marionette_harness.runtests import MarionetteTestRunner, MarionetteHarness
+    from marionette_harness.runtests import MarionetteHarness, MarionetteTestRunner
+    from mozlog.structured import commandline
 
     parser = setup_awsy_argument_parser()
 

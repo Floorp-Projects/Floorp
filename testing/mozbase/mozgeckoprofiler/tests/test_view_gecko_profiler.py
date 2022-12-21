@@ -2,17 +2,18 @@
 
 from __future__ import absolute_import, print_function
 
-import unittest
-import mozunit
 import io
 import os
+import re
 import shutil
 import tempfile
-import requests
 import threading
 import time
-import re
+import unittest
 from unittest import mock
+
+import mozunit
+import requests
 import six
 from mozgeckoprofiler import view_gecko_profile
 

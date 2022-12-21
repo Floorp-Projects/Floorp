@@ -8,13 +8,12 @@ from __future__ import absolute_import
 import re
 import subprocess
 from distutils.spawn import find_executable
-
-import moznetwork
-import pytest
-
 from unittest import mock
+
 import mozinfo
+import moznetwork
 import mozunit
+import pytest
 
 
 @pytest.fixture(scope="session")

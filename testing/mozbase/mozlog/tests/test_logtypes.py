@@ -5,17 +5,9 @@
 from __future__ import absolute_import
 
 import unittest
-import mozunit
 
-from mozlog.logtypes import (
-    Any,
-    Dict,
-    Int,
-    List,
-    TestList,
-    Tuple,
-    Unicode,
-)
+import mozunit
+from mozlog.logtypes import Any, Dict, Int, List, TestList, Tuple, Unicode
 
 
 class TestContainerTypes(unittest.TestCase):

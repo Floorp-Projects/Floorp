@@ -4,13 +4,11 @@
 
 from __future__ import absolute_import
 
-from collections import (
-    defaultdict,
-    OrderedDict,
-)
+from collections import OrderedDict, defaultdict
+
+import six
 
 from ..reader import LogHandler
-import six
 
 
 class SummaryHandler(LogHandler):

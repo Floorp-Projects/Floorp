@@ -7,14 +7,12 @@ from __future__ import absolute_import
 import argparse
 import io
 import os
-from six.moves import configparser
 import sys
 import zipfile
 
 import mozlog
-
 from mozversion import errors
-
+from six.moves import configparser
 
 INI_DATA_MAPPING = (("application", "App"), ("platform", "Build"))
 

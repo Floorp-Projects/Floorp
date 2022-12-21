@@ -6,11 +6,10 @@ from __future__ import absolute_import
 
 import os
 
-from six.moves.urllib.request import urlopen
-import pytest
-
 import mozhttpd
 import mozunit
+import pytest
+from six.moves.urllib.request import urlopen
 
 
 def log_requests(enabled):

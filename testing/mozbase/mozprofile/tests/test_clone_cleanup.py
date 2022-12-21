@@ -7,11 +7,10 @@
 from __future__ import absolute_import
 
 import os
-import mozfile
 
+import mozfile
 import mozunit
 import pytest
-
 from mozprofile.profile import Profile
 
 """

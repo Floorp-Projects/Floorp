@@ -5,8 +5,7 @@ import time
 
 import mozinfo
 import mozunit
-
-from mozlog.structuredlog import set_default_logger, StructuredLogger
+from mozlog.structuredlog import StructuredLogger, set_default_logger
 
 # need this so raptor imports work both from /raptor and via mach
 here = os.path.abspath(os.path.dirname(__file__))

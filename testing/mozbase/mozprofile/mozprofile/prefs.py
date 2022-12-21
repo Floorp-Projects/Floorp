@@ -8,13 +8,13 @@ user preferences
 from __future__ import absolute_import, print_function
 
 import json
-import mozfile
 import os
 import tokenize
 
-from six.moves.configparser import SafeConfigParser as ConfigParser
-from six import StringIO, string_types
+import mozfile
 import six
+from six import StringIO, string_types
+from six.moves.configparser import SafeConfigParser as ConfigParser
 
 if six.PY3:
 

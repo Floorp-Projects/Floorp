@@ -9,6 +9,7 @@ import re
 import threading
 import time
 from bisect import bisect
+
 from mozlog import get_proxy_logger
 
 LOG = get_proxy_logger("profiler")

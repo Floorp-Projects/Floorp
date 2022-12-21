@@ -7,7 +7,6 @@ import os
 import sys
 
 import mozunit
-
 import proctest
 from mozprocess import processhandler
 

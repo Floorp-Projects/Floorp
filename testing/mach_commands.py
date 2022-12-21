@@ -7,20 +7,12 @@ from __future__ import absolute_import, print_function, unicode_literals
 import argparse
 import logging
 import os
-import sys
 import subprocess
+import sys
 
-from mach.decorators import (
-    CommandArgument,
-    Command,
-    SettingsProvider,
-    SubCommand,
-)
-
-from mozbuild.base import (
-    BuildEnvironmentNotFoundException,
-    MachCommandConditions as conditions,
-)
+from mach.decorators import Command, CommandArgument, SettingsProvider, SubCommand
+from mozbuild.base import BuildEnvironmentNotFoundException
+from mozbuild.base import MachCommandConditions as conditions
 
 UNKNOWN_TEST = """
 I was unable to find tests from the given argument(s).
@@ -173,8 +165,9 @@ def addtest(
     editor=MISSING_ARG,
     **kwargs,
 ):
-    import addtest
     import io
+
+    import addtest
     from moztest.resolve import TEST_SUITES
 
     if not suite and not test:
@@ -387,7 +380,7 @@ def test(command_context, what, extra_args, **log_args):
     """
     from mozlog.commandline import setup_logging
     from mozlog.handlers import StreamHandler
-    from moztest.resolve import get_suite_definition, TestResolver, TEST_SUITES
+    from moztest.resolve import TEST_SUITES, TestResolver, get_suite_definition
 
     resolver = command_context._spawn(TestResolver)
     run_suites, run_tests = resolver.resolve_metadata(what)
@@ -508,8 +501,8 @@ def run_cppunit_test(command_context, **params):
 
     if conditions.is_android(command_context):
         from mozrunner.devices.android_device import (
-            verify_android_device,
             InstallIntent,
+            verify_android_device,
         )
 
         verify_android_device(command_context, install=InstallIntent.NO)

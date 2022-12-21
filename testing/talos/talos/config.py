@@ -9,7 +9,7 @@ import re
 import sys
 
 from mozlog.commandline import setup_logging
-from talos import utils, test
+from talos import test, utils
 from talos.cmdline import parse_args
 
 

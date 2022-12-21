@@ -1,9 +1,11 @@
 from __future__ import absolute_import
+
 import unittest
-from mozharness.mozilla.structuredlog import StructuredOutputParser
+
 from mozharness.base.log import INFO, WARNING
 from mozharness.mozilla.automation import TBPL_SUCCESS, TBPL_WARNING
 from mozharness.mozilla.mozbase import MozbaseMixin
+from mozharness.mozilla.structuredlog import StructuredOutputParser
 from mozlog.handlers.statushandler import RunSummary
 
 success_summary = RunSummary(

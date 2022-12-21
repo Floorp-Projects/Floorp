@@ -1,10 +1,11 @@
 from __future__ import absolute_import, unicode_literals
 
-import mozunit
 import os
-import pytest
 import sys
 import tempfile
+
+import mozunit
+import pytest
 import yaml
 
 # need this so raptor imports work both from /raptor and via mach

@@ -8,7 +8,6 @@ from __future__ import absolute_import, division, print_function
 
 import copy
 import json
-import mozdebug
 import os
 import pipes
 import random
@@ -20,22 +19,18 @@ import sys
 import tempfile
 import time
 import traceback
-import six
-
 from argparse import Namespace
 from collections import defaultdict, deque, namedtuple
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from functools import partial
 from multiprocessing import cpu_count
-from subprocess import Popen, PIPE, STDOUT
-from tempfile import mkdtemp, gettempdir
-from threading import (
-    Timer,
-    Thread,
-    Event,
-    current_thread,
-)
+from subprocess import PIPE, STDOUT, Popen
+from tempfile import gettempdir, mkdtemp
+from threading import Event, Thread, Timer, current_thread
+
+import mozdebug
+import six
 
 try:
     import psutil
@@ -77,13 +72,13 @@ if os.path.isdir(mozbase):
     for package in os.listdir(mozbase):
         sys.path.append(os.path.join(mozbase, package))
 
-from manifestparser import TestManifest
-from manifestparser.filters import chunk_by_slice, tags, pathprefix, failures
-from manifestparser.util import normsep
-from mozlog import commandline
 import mozcrash
 import mozfile
 import mozinfo
+from manifestparser import TestManifest
+from manifestparser.filters import chunk_by_slice, failures, pathprefix, tags
+from manifestparser.util import normsep
+from mozlog import commandline
 from mozprofile import Profile
 from mozprofile.cli import parse_preferences
 from mozrunner.utils import get_stack_fixer_function
@@ -1622,8 +1617,9 @@ class XPCShellTests(object):
         return self.conditioned_profile_copy
 
     def runSelfTest(self):
-        import selftest
         import unittest
+
+        import selftest
 
         this = self
 

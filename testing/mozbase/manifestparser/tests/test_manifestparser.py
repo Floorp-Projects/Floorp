@@ -10,11 +10,10 @@ import os
 import shutil
 import tempfile
 import unittest
-from six import StringIO
 
 import mozunit
-
 from manifestparser import ManifestParser
+from six import StringIO
 
 here = os.path.dirname(os.path.abspath(__file__))
 

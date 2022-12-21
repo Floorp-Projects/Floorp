@@ -10,14 +10,15 @@ import json
 import os
 import posixpath
 import re
+import subprocess
+
+import mozpack.path as mozpath
 import requests
 import six.moves.urllib_parse as urlparse
-import subprocess
-import mozpack.path as mozpath
-from moztest.resolve import TestResolver, TestManifestLoader
+from mozbuild.base import MachCommandConditions as conditions
+from mozbuild.base import MozbuildObject
 from mozfile import which
-
-from mozbuild.base import MozbuildObject, MachCommandConditions as conditions
+from moztest.resolve import TestManifestLoader, TestResolver
 
 REFERER = "https://wiki.developer.mozilla.org/en-US/docs/Mozilla/Test-Info"
 

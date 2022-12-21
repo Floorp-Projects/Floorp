@@ -14,9 +14,9 @@ import os
 import platform
 import re
 import sys
+from ctypes.util import find_library
 
 from .string_version import StringVersion
-from ctypes.util import find_library
 
 # keep a copy of the os module since updating globals overrides this
 _os = os
@@ -243,8 +243,9 @@ def update(new_info):
 
     if isinstance(new_info, string_types):
         # lazy import
-        import mozfile
         import json
+
+        import mozfile
 
         f = mozfile.load(new_info)
         new_info = json.loads(f.read())
@@ -288,8 +289,8 @@ def find_and_update_from_json(*dirs, **kwargs):
     """
     # First, see if we're in an objdir
     try:
-        from mozbuild.base import MozbuildObject, BuildEnvironmentNotFoundException
         from mozboot.mozconfig import MozconfigFindException
+        from mozbuild.base import BuildEnvironmentNotFoundException, MozbuildObject
 
         build = MozbuildObject.from_environment()
         json_path = _os.path.join(build.topobjdir, "mozinfo.json")

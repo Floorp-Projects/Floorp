@@ -5,12 +5,13 @@
 
 from __future__ import absolute_import, division, print_function
 
-import six
-import os
-import sys
+import glob
 import json
 import math
-import glob
+import os
+import sys
+
+import six
 
 AWSY_PATH = os.path.dirname(os.path.realpath(__file__))
 if AWSY_PATH not in sys.path:

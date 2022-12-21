@@ -12,19 +12,16 @@ import socket
 import sys
 import time
 import traceback
-
 from contextlib import contextmanager
 
 import six
 from six import reraise
 
-from . import errors
-from . import transport
+from . import errors, transport
 from .decorators import do_process_check
 from .geckoinstance import GeckoInstance
 from .keys import Keys
 from .timeout import Timeouts
-
 
 FRAME_KEY = "frame-075b-4da1-b6ba-e579c2d3230a"
 WEB_ELEMENT_KEY = "element-6066-11e4-a52e-4f735466cecf"

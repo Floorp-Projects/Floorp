@@ -18,10 +18,7 @@ from collections.abc import MutableSequence
 import six
 from six import string_types
 
-from .expression import (
-    parse,
-    ParseError,
-)
+from .expression import ParseError, parse
 from .util import normsep
 
 logger = None

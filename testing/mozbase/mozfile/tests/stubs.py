@@ -4,7 +4,6 @@ import os
 import shutil
 import tempfile
 
-
 # stub file paths
 files = [
     ("foo.txt",),

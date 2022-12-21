@@ -4,6 +4,7 @@
 
 # This is a template config file for marionette production on Windows.
 from __future__ import absolute_import
+
 import os
 import platform
 import sys

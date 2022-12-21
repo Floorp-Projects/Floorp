@@ -6,9 +6,7 @@ import os
 
 import mozunit
 import pytest
-
 from mozprofile import addons
-
 
 here = os.path.dirname(os.path.abspath(__file__))
 

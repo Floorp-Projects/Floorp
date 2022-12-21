@@ -3,9 +3,8 @@ from __future__ import absolute_import, unicode_literals
 import os
 import sys
 
-import pytest
-
 import mozunit
+import pytest
 
 # need this so the raptor unit tests can find raptor/raptor classes
 here = os.path.abspath(os.path.dirname(__file__))
@@ -13,6 +12,7 @@ raptor_dir = os.path.join(os.path.dirname(here), "raptor")
 sys.path.insert(0, raptor_dir)
 
 from argparse import ArgumentParser, Namespace
+
 from cmdline import verify_options
 
 

@@ -8,13 +8,13 @@ import argparse
 import collections
 import csv
 import os
-import six
 import sys
 from calendar import day_name
 from datetime import datetime
 
 import compare
 import numpy
+import six
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 

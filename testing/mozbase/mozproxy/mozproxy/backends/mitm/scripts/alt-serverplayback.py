@@ -18,11 +18,7 @@ from collections.abc import Hashable, Sequence
 from typing import Any, Optional
 
 import mitmproxy.types
-from mitmproxy import command, hooks
-from mitmproxy import ctx, http
-from mitmproxy import exceptions
-from mitmproxy import flow
-from mitmproxy import io
+from mitmproxy import command, ctx, exceptions, flow, hooks, http, io
 
 
 class AltServerPlayback:

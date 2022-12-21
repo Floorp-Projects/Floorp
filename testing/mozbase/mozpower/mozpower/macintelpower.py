@@ -5,8 +5,8 @@ from __future__ import absolute_import, unicode_literals
 
 import time
 
-from .powerbase import PowerBase
 from .intel_power_gadget import IntelPowerGadget, IPGResultsHandler
+from .powerbase import PowerBase
 
 
 class MacIntelPower(PowerBase):

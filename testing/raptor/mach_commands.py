@@ -19,11 +19,9 @@ import sys
 import mozfile
 from mach.decorators import Command
 from mach.util import get_state_dir
-from mozbuild.base import (
-    MozbuildObject,
-    BinaryNotFoundException,
-)
+from mozbuild.base import BinaryNotFoundException
 from mozbuild.base import MachCommandConditions as Conditions
+from mozbuild.base import MozbuildObject
 
 HERE = os.path.dirname(os.path.realpath(__file__))
 
@@ -191,8 +189,9 @@ class RaptorRunner(MozbuildObject):
 
         sys.path.insert(0, os.path.join(self.topsrcdir, "tools", "browsertime"))
         try:
-            import mach_commands as browsertime
             import platform
+
+            import mach_commands as browsertime
 
             # We don't set `browsertime_{chromedriver,geckodriver} -- those will be found by
             # browsertime in its `node_modules` directory, which is appropriate for local builds.
@@ -332,10 +331,11 @@ class RaptorRunner(MozbuildObject):
 
 def setup_node(command_context):
     """Fetch the latest node-16 binary and install it into the .mozbuild directory."""
+    import platform
+    from distutils.version import StrictVersion
+
     from mozbuild.artifact_commands import artifact_toolchain
     from mozbuild.nodeutil import find_node_executable
-    from distutils.version import StrictVersion
-    import platform
 
     print("Setting up node for browsertime...")
     state_dir = get_state_dir()
@@ -435,7 +435,7 @@ def create_parser():
 def run_raptor(command_context, **kwargs):
     # Defers this import so that a transitive dependency doesn't
     # stop |mach bootstrap| from running
-    from raptor.power import enable_charging, disable_charging
+    from raptor.power import disable_charging, enable_charging
 
     build_obj = command_context
 
@@ -445,11 +445,11 @@ def run_raptor(command_context, **kwargs):
     is_android = Conditions.is_android(build_obj) or kwargs["app"] in ANDROID_BROWSERS
 
     if is_android:
-        from mozrunner.devices.android_device import (
-            verify_android_device,
-            InstallIntent,
-        )
         from mozdevice import ADBDeviceFactory
+        from mozrunner.devices.android_device import (
+            InstallIntent,
+            verify_android_device,
+        )
 
         install = (
             InstallIntent.NO if kwargs.pop("noinstall", False) else InstallIntent.YES

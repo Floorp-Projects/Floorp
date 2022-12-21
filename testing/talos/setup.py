@@ -6,7 +6,7 @@ from __future__ import absolute_import
 
 import os
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 try:
     here = os.path.dirname(os.path.abspath(__file__))

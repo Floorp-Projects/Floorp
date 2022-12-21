@@ -3,21 +3,22 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import, division
-from looseversion import LooseVersion
+
 import json
 import math
 import os
 import pprint
 import re
 import sys
-from six.moves.urllib.parse import urljoin
 
+from looseversion import LooseVersion
 from mozilla_version.gecko import GeckoVersion
 from mozilla_version.version import VersionType
+from six.moves.urllib.parse import urljoin
 
 sys.path.insert(1, os.path.dirname(os.path.dirname(sys.path[0])))
 
-from mozharness.base.log import DEBUG, INFO, FATAL, WARNING
+from mozharness.base.log import DEBUG, FATAL, INFO, WARNING
 from mozharness.base.script import BaseScript
 
 
@@ -483,13 +484,13 @@ class UpdateVerifyConfigCreator(BaseScript):
 
     def create_config(self):
         from mozrelease.l10n import getPlatformLocales
-        from mozrelease.platforms import ftp2updatePlatforms
-        from mozrelease.update_verify import UpdateVerifyConfig
         from mozrelease.paths import (
             getCandidatesDir,
-            getReleasesDir,
             getReleaseInstallerPath,
+            getReleasesDir,
         )
+        from mozrelease.platforms import ftp2updatePlatforms
+        from mozrelease.update_verify import UpdateVerifyConfig
         from mozrelease.versions import getPrettyVersion
 
         candidates_dir = getCandidatesDir(

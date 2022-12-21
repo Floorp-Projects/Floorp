@@ -9,17 +9,18 @@
 This script manages Desktop partner repacks for beta/release builds.
 """
 from __future__ import absolute_import
+
 import os
 import sys
 
 # load modules from parent dir
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
+from mozharness.base.log import FATAL
+from mozharness.base.python import VirtualenvMixin
 from mozharness.base.script import BaseScript
 from mozharness.mozilla.automation import AutomationMixin
 from mozharness.mozilla.secrets import SecretsMixin
-from mozharness.base.python import VirtualenvMixin
-from mozharness.base.log import FATAL
 
 
 # DesktopPartnerRepacks {{{1

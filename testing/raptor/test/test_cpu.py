@@ -3,10 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from __future__ import absolute_import, division, unicode_literals
 
-
 import os
 import sys
 from unittest import mock
+
 import mozunit
 
 # need this so the raptor unit tests can find output & filter classes

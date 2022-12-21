@@ -11,7 +11,7 @@ import shutil
 import tempfile
 import time
 
-from mozdevice import ADBHost, ADBError
+from mozdevice import ADBError, ADBHost
 from six.moves.configparser import ConfigParser, RawConfigParser
 
 

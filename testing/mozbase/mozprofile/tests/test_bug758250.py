@@ -2,10 +2,10 @@
 
 from __future__ import absolute_import
 
-import mozprofile
 import os
 import shutil
 
+import mozprofile
 import mozunit
 
 here = os.path.dirname(os.path.abspath(__file__))

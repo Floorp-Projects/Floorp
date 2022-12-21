@@ -9,10 +9,10 @@ tests for mozfile.NamedTemporaryFile
 """
 from __future__ import absolute_import
 
-import mozfile
 import os
 import unittest
 
+import mozfile
 import mozunit
 import six
 

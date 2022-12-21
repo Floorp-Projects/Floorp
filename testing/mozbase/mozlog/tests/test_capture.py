@@ -1,10 +1,11 @@
 from __future__ import absolute_import, print_function
+
 import sys
 import unittest
-import mozunit
 
-from test_structured import TestHandler
+import mozunit
 from mozlog import capture, structuredlog
+from test_structured import TestHandler
 
 
 class TestCaptureIO(unittest.TestCase):

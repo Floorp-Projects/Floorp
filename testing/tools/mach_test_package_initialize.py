@@ -9,7 +9,6 @@ import os
 import sys
 import types
 
-
 SEARCH_PATHS = [
     "gtest",
     "marionette/client",
@@ -167,7 +166,6 @@ def bootstrap(test_package_root):
 
     sys.path[0:0] = [os.path.join(test_package_root, path) for path in SEARCH_PATHS]
     import mach.main
-
     from mach.main import MachCommandReference
 
     # Centralized registry of available mach commands

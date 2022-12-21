@@ -1,7 +1,6 @@
 from copy import deepcopy
 
 import pytest
-
 from tests.support.asserts import assert_error
 
 

@@ -9,7 +9,6 @@ import os
 import posixpath
 import re
 import shutil
-import six
 import sys
 import tempfile
 import traceback
@@ -18,8 +17,9 @@ import mozcrash
 import mozinfo
 import mozlog
 import moznetwork
+import six
 from mozdevice import ADBDeviceFactory, ADBError, ADBTimeoutError
-from mozprofile import Profile, DEFAULT_PORTS
+from mozprofile import DEFAULT_PORTS, Profile
 from mozprofile.cli import parse_preferences
 from mozprofile.permissions import ServerLocations
 from runtests import MochitestDesktop, update_mozinfo
@@ -27,11 +27,9 @@ from runtests import MochitestDesktop, update_mozinfo
 here = os.path.abspath(os.path.dirname(__file__))
 
 try:
-    from mozbuild.base import (
-        MozbuildObject,
-        MachCommandConditions as conditions,
-    )
     from mach.util import UserError
+    from mozbuild.base import MachCommandConditions as conditions
+    from mozbuild.base import MozbuildObject
 
     build_obj = MozbuildObject.from_environment(cwd=here)
 except ImportError:

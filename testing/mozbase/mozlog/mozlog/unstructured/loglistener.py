@@ -4,9 +4,10 @@
 
 from __future__ import absolute_import
 
-from six.moves import socketserver
 import json
 import socket
+
+from six.moves import socketserver
 
 
 class LogMessageServer(socketserver.TCPServer):

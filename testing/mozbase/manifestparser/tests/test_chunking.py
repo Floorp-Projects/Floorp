@@ -8,15 +8,10 @@ from collections import defaultdict
 from itertools import chain
 from unittest import TestCase
 
-from six.moves import range
-from six import iteritems
-
 import mozunit
-from manifestparser.filters import (
-    chunk_by_dir,
-    chunk_by_runtime,
-    chunk_by_slice,
-)
+from manifestparser.filters import chunk_by_dir, chunk_by_runtime, chunk_by_slice
+from six import iteritems
+from six.moves import range
 
 here = os.path.dirname(os.path.abspath(__file__))
 

@@ -14,17 +14,16 @@ from textwrap import dedent
 
 import mozunit
 import pytest
-from six import StringIO, ensure_text, unichr
-
-from mozlog.structuredlog import StructuredLogger
 from mozlog.formatters import (
+    GroupingFormatter,
+    HTMLFormatter,
     MachFormatter,
     TbplFormatter,
-    HTMLFormatter,
     XUnitFormatter,
-    GroupingFormatter,
 )
 from mozlog.handlers import StreamHandler
+from mozlog.structuredlog import StructuredLogger
+from six import StringIO, ensure_text, unichr
 
 FORMATS = {
     # A list of tuples consisting of (name, options, expected string).

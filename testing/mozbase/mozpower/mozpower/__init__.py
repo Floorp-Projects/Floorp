@@ -10,15 +10,8 @@ from .intel_power_gadget import (
     IPGTimeoutError,
     IPGUnknownValueTypeError,
 )
-
-from .mozpower import (
-    MissingProcessorInfoError,
-    MozPower,
-    OsCpuComboMissingError,
-)
-
+from .mozpower import MissingProcessorInfoError, MozPower, OsCpuComboMissingError
 from .powerbase import IPGExecutableMissingError, PlatformUnsupportedError
-
 
 __all__ = [
     "IPGEmptyFileError",

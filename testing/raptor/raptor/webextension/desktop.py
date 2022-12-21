@@ -9,12 +9,12 @@ from __future__ import absolute_import
 import os
 import shutil
 
+from logger.logger import RaptorLogger
 from mozpower import MozPower
 from mozrunner import runners
-
-from logger.logger import RaptorLogger
 from outputhandler import OutputHandler
 from perftest import PerftestDesktop
+
 from .base import WebExtension
 
 LOG = RaptorLogger(component="raptor-webext-desktop")

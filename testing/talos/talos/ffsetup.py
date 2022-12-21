@@ -15,13 +15,12 @@ import tempfile
 import mozfile
 import mozinfo
 import mozrunner
+import six
 from mozlog import get_proxy_logger
 from mozprofile.profile import Profile
-from talos import utils
+from talos import heavy, utils
 from talos.gecko_profile import GeckoProfile
 from talos.utils import TalosError, run_in_debug_mode
-from talos import heavy
-import six
 
 here = os.path.abspath(os.path.dirname(__file__))
 

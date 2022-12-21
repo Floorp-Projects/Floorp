@@ -4,16 +4,12 @@
 
 from __future__ import absolute_import, division
 
-from contextlib import contextmanager
 import multiprocessing
 import sys
 import time
 import warnings
-
-from collections import (
-    OrderedDict,
-    namedtuple,
-)
+from collections import OrderedDict, namedtuple
+from contextlib import contextmanager
 
 
 class PsutilStub(object):

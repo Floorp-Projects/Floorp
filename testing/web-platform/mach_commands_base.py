@@ -35,8 +35,8 @@ class WebPlatformTestsRunner(object):
         )
 
     def run(self, logger, **kwargs):
-        from wptrunner import wptrunner
         from mozbuild.base import BinaryNotFoundException
+        from wptrunner import wptrunner
 
         if kwargs["manifest_update"] is not False:
             self.update_manifest(logger)

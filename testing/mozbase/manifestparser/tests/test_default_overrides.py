@@ -10,9 +10,7 @@ import os
 import unittest
 
 import mozunit
-
-from manifestparser import ManifestParser
-from manifestparser import combine_fields
+from manifestparser import ManifestParser, combine_fields
 
 here = os.path.dirname(os.path.abspath(__file__))
 

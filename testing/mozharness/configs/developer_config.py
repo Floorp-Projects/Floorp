@@ -15,6 +15,7 @@ Using this config file should be accompanied with using
 """
 
 from __future__ import absolute_import
+
 import os
 
 LOCAL_WORKDIR = os.path.expanduser("~/.mozilla/releng")

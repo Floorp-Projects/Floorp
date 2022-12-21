@@ -5,13 +5,13 @@
 
 from __future__ import absolute_import
 
-import six
 import os
 import subprocess
 import sys
 import traceback
 from abc import ABCMeta, abstractproperty
 
+import six
 from mozlog import get_default_logger
 from mozprocess import ProcessHandler
 from six import ensure_str, string_types

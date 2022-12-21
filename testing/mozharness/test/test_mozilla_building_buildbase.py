@@ -1,12 +1,11 @@
 from __future__ import absolute_import
+
 import os
 import unittest
+
 from mozharness.base.log import LogMixin
 from mozharness.base.script import ScriptMixin
-from mozharness.mozilla.building.buildbase import (
-    get_mozconfig_path,
-    MozconfigPathError,
-)
+from mozharness.mozilla.building.buildbase import MozconfigPathError, get_mozconfig_path
 
 
 class FakeLogger(object):

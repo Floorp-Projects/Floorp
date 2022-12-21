@@ -6,13 +6,12 @@
 # ***** END LICENSE BLOCK *****
 
 from __future__ import absolute_import
+
 import copy
+import json
 import os
 import platform
-from six.moves import urllib
-import json
 import ssl
-from six.moves.urllib.parse import urlparse, ParseResult
 
 from mozharness.base.errors import BaseErrorList
 from mozharness.base.log import FATAL, WARNING
@@ -21,17 +20,18 @@ from mozharness.base.python import (
     VirtualenvMixin,
     virtualenv_config_options,
 )
-from mozharness.mozilla.automation import AutomationMixin, TBPL_WARNING
+from mozharness.lib.python.authentication import get_credentials
+from mozharness.mozilla.automation import TBPL_WARNING, AutomationMixin
 from mozharness.mozilla.structuredlog import StructuredOutputParser
-from mozharness.mozilla.testing.unittest import DesktopUnittestOutputParser
 from mozharness.mozilla.testing.try_tools import TryToolsMixin, try_config_options
+from mozharness.mozilla.testing.unittest import DesktopUnittestOutputParser
 from mozharness.mozilla.testing.verify_tools import (
     VerifyToolsMixin,
     verify_config_options,
 )
 from mozharness.mozilla.tooltool import TooltoolMixin
-
-from mozharness.lib.python.authentication import get_credentials
+from six.moves import urllib
+from six.moves.urllib.parse import ParseResult, urlparse
 
 INSTALLER_SUFFIXES = (
     ".apk",  # Android

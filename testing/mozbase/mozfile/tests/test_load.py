@@ -8,11 +8,9 @@ from __future__ import absolute_import
 
 import mozunit
 import pytest
-
+from mozfile import load
 from wptserve.handlers import handler
 from wptserve.server import WebTestHttpd
-
-from mozfile import load
 
 
 @pytest.fixture(name="httpd_url")

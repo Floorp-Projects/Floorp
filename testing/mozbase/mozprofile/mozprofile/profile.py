@@ -4,7 +4,6 @@
 
 from __future__ import absolute_import
 
-import six
 import json
 import os
 import platform
@@ -12,11 +11,12 @@ import tempfile
 import time
 import uuid
 from abc import ABCMeta, abstractmethod, abstractproperty
-from shutil import copytree
 from io import open
+from shutil import copytree
 
 import mozfile
-from six import string_types, python_2_unicode_compatible
+import six
+from six import python_2_unicode_compatible, string_types
 
 if six.PY3:
 

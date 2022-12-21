@@ -17,11 +17,9 @@ from __future__ import absolute_import
 
 import sys
 
-from . import commandline
-from . import structuredlog
-from . import unstructured
-from .structuredlog import get_default_logger, set_default_logger
+from . import commandline, structuredlog, unstructured
 from .proxy import get_proxy_logger
+from .structuredlog import get_default_logger, set_default_logger
 
 # Backwards compatibility shim for consumers that use mozlog.structured
 structured = sys.modules[__name__]

@@ -1,5 +1,4 @@
 import pytest
-
 from webdriver.bidi.client import BidiSession
 from webdriver.bidi.modules.script import ContextTarget
 

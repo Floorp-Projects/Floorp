@@ -8,15 +8,13 @@ from __future__ import absolute_import
 
 import mozunit
 import pytest
-
 from mozprofile.permissions import (
-    ServerLocations,
-    MissingPrimaryLocationError,
-    MultiplePrimaryLocationsError,
     BadPortLocationError,
     LocationsSyntaxError,
+    MissingPrimaryLocationError,
+    MultiplePrimaryLocationsError,
+    ServerLocations,
 )
-
 
 LOCATIONS = """# This is the primary location from which tests run.
 #

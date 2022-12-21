@@ -17,7 +17,6 @@ import tempfile
 import time
 
 import mozlog.structured
-
 from marionette_driver import Wait
 from marionette_driver.errors import JavascriptException, ScriptTimeoutException
 from marionette_driver.keys import Keys
@@ -27,8 +26,13 @@ AWSY_PATH = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 if AWSY_PATH not in sys.path:
     sys.path.append(AWSY_PATH)
 
-from awsy import ITERATIONS, PER_TAB_PAUSE, SETTLE_WAIT_TIME, MAX_TABS
-from awsy import process_perf_data
+from awsy import (
+    ITERATIONS,
+    MAX_TABS,
+    PER_TAB_PAUSE,
+    SETTLE_WAIT_TIME,
+    process_perf_data,
+)
 
 
 class AwsyTestCase(MarionetteTestCase):

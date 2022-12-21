@@ -4,12 +4,12 @@
 from __future__ import absolute_import
 
 import json
+import pathlib
 import tempfile
 import time
-import pathlib
 
-from mozperftest.test.browsertime import add_options
 from mozperftest.system.android import _ROOT_URL
+from mozperftest.test.browsertime import add_options
 from mozperftest.utils import (
     download_file,
     get_multi_tasks_url,

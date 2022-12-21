@@ -4,11 +4,13 @@
 from __future__ import absolute_import
 
 import json
-import tempfile
-import shutil
 import os
-from .symbolication import ProfileSymbolicator
+import shutil
+import tempfile
+
 from mozlog import get_proxy_logger
+
+from .symbolication import ProfileSymbolicator
 
 LOG = get_proxy_logger("profiler")
 

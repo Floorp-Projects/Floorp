@@ -10,9 +10,9 @@ import argparse
 import os
 import socket
 import sys
-import six
 import webbrowser
 
+import six
 from mozlog import commandline, get_proxy_logger
 from mozlog.commandline import add_logging_group
 
@@ -21,13 +21,14 @@ LOG = get_proxy_logger("profiler")
 
 if six.PY2:
     # Import for Python 2
-    from SocketServer import TCPServer
-    from SimpleHTTPServer import SimpleHTTPRequestHandler
     from urllib import quote
+
+    from SimpleHTTPServer import SimpleHTTPRequestHandler
+    from SocketServer import TCPServer
 else:
     # Import for Python 3
-    from socketserver import TCPServer
     from http.server import SimpleHTTPRequestHandler
+    from socketserver import TCPServer
     from urllib.parse import quote
 
 

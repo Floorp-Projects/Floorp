@@ -8,7 +8,7 @@ import os
 import platform
 from pathlib import Path
 
-from mozperftest.test.browsertime import add_options, add_option
+from mozperftest.test.browsertime import add_option, add_options
 
 options = [
     ("pageCompleteWaitTime", "10000"),

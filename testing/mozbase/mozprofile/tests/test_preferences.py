@@ -6,18 +6,17 @@
 
 from __future__ import absolute_import
 
-import mozfile
 import os
 import shutil
 import tempfile
 
+import mozfile
 import mozunit
 import pytest
-from wptserve import server
-
 from mozprofile.cli import MozProfileCLI
 from mozprofile.prefs import Preferences, PreferencesReadError
 from mozprofile.profile import Profile
+from wptserve import server
 
 here = os.path.dirname(os.path.abspath(__file__))
 

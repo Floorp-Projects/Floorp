@@ -10,9 +10,7 @@ import zipfile
 
 import mozunit
 import pytest
-
 from mozversion import get_version
-
 
 """test getting version information from an android .apk"""
 

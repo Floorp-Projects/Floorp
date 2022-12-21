@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 version = "0.6"
 

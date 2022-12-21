@@ -6,16 +6,16 @@
 Downloads Heavy profiles from TaskCluster.
 """
 from __future__ import absolute_import, division
+
+import datetime
+import functools
 import os
 import tarfile
-import functools
-import datetime
 from email.utils import parsedate
 
 import requests
-from requests.adapters import HTTPAdapter
 from mozlog import get_proxy_logger
-
+from requests.adapters import HTTPAdapter
 
 LOG = get_proxy_logger()
 TC_LINK = (

@@ -9,10 +9,9 @@ from __future__ import absolute_import, unicode_literals
 import os
 import zipfile
 
+import mozprofile
 import mozunit
 import pytest
-
-import mozprofile
 from addon_stubs import generate_addon
 
 here = os.path.dirname(os.path.abspath(__file__))

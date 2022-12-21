@@ -8,14 +8,11 @@ Mozilla universal manifest parser
 """
 from __future__ import absolute_import, print_function
 
-from optparse import OptionParser
 import os
 import sys
+from optparse import OptionParser
 
-from .manifestparser import (
-    convert,
-    ManifestParser,
-)
+from .manifestparser import ManifestParser, convert
 
 
 class ParserError(Exception):

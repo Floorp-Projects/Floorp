@@ -4,22 +4,22 @@
 
 from __future__ import absolute_import
 
-from telnetlib import Telnet
 import datetime
 import os
 import shutil
 import subprocess
 import tempfile
 import time
+from telnetlib import Telnet
 
 from mozdevice import ADBHost
 from mozprocess import ProcessHandler
 
+from ..errors import TimeoutException
 from .base import Device
 from .emulator_battery import EmulatorBattery
 from .emulator_geo import EmulatorGeo
 from .emulator_screen import EmulatorScreen
-from ..errors import TimeoutException
 
 
 class ArchContext(object):

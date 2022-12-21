@@ -6,7 +6,6 @@ import os
 
 import mozunit
 import pytest
-
 from conftest import fspath
 
 

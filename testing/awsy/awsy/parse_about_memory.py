@@ -10,9 +10,9 @@
 from __future__ import absolute_import, print_function
 
 import argparse
-from collections import defaultdict
 import gzip
 import json
+from collections import defaultdict
 
 # This value comes from nsIMemoryReporter.idl.
 KIND_HEAP = 1

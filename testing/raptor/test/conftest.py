@@ -3,19 +3,18 @@ from __future__ import absolute_import
 import json
 import os
 import sys
+from argparse import Namespace
 
 import pytest
-
-from argparse import Namespace
 
 # need this so the raptor unit tests can find raptor/raptor classes
 here = os.path.abspath(os.path.dirname(__file__))
 raptor_dir = os.path.join(os.path.dirname(here), "raptor")
 sys.path.insert(0, raptor_dir)
 
+from browsertime import Browsertime
 from perftest import Perftest
 from webextension import WebExtensionFirefox
-from browsertime import Browsertime
 
 
 @pytest.fixture

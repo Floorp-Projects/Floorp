@@ -12,9 +12,7 @@ import tempfile
 import unittest
 
 import mozunit
-
-from manifestparser import convert
-from manifestparser import ManifestParser
+from manifestparser import ManifestParser, convert
 
 here = os.path.dirname(os.path.abspath(__file__))
 

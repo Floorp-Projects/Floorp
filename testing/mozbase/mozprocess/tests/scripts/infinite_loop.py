@@ -1,9 +1,9 @@
 from __future__ import absolute_import
 
+import signal
+import sys
 import threading
 import time
-import sys
-import signal
 
 if "deadlock" in sys.argv:
     lock = threading.Lock()

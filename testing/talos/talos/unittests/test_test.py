@@ -2,10 +2,7 @@ from __future__ import absolute_import
 
 import mozunit
 import pytest
-
-from talos.test import Test, TsBase, ts_paint
-from talos.test import register_test
-from talos.test import test_dict
+from talos.test import Test, TsBase, register_test, test_dict, ts_paint
 
 
 class BasicTestA(Test):

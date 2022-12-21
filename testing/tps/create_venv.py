@@ -15,7 +15,6 @@ import subprocess
 import sys
 import venv
 
-
 here = os.path.dirname(os.path.abspath(__file__))
 usage_message = """
 ***********************************************************************

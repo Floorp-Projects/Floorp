@@ -7,23 +7,22 @@ from __future__ import absolute_import, print_function
 
 import copy
 import os
-import six
 import sys
 import time
 import traceback
 
 import mozinfo
 import mozversion
-from wptserve import server
-from wptserve.handlers import handler
-
-from talos import utils
+import six
+from mozgeckoprofiler import view_gecko_profile
 from mozlog import get_proxy_logger
-from talos.config import get_configs, ConfigurationError
+from talos import utils
+from talos.config import ConfigurationError, get_configs
 from talos.results import TalosResults
 from talos.ttest import TTest
 from talos.utils import TalosError, TalosRegression
-from mozgeckoprofiler import view_gecko_profile
+from wptserve import server
+from wptserve.handlers import handler
 
 # directory of this file
 here = os.path.dirname(os.path.realpath(__file__))

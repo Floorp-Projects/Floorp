@@ -3,15 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
-import random
-import os
+
 import asyncio
-from arsenic.errors import UnknownError, UnknownArsenicError
+import os
+import random
 
-
-from condprof.util import logger, get_credentials
+from arsenic.errors import UnknownArsenicError, UnknownError
 from condprof.helpers import TabSwitcher, execute_async_script, is_mobile
-
+from condprof.util import get_credentials, logger
 
 BOOKMARK_FREQUENCY = 5
 MAX_URLS = 150

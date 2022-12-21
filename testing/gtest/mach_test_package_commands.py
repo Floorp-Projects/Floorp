@@ -8,9 +8,7 @@ import os
 import sys
 from argparse import Namespace
 
-from mach.decorators import (
-    Command,
-)
+from mach.decorators import Command
 
 here = os.path.abspath(os.path.dirname(__file__))
 parser = None

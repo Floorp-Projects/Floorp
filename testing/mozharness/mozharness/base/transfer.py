@@ -8,6 +8,7 @@
 """
 
 from __future__ import absolute_import
+
 import pprint
 
 try:
@@ -15,9 +16,9 @@ try:
 except ImportError:
     from urllib.request import urlopen
 
-from mozharness.base.log import DEBUG
-
 import json
+
+from mozharness.base.log import DEBUG
 
 
 # TransferMixin {{{1

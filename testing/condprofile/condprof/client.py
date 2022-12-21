@@ -5,26 +5,25 @@
 # This module needs to stay Python 2 and 3 compatible
 #
 from __future__ import absolute_import
-import os
-import tarfile
-import functools
-import tempfile
-import shutil
-import time
 
-from mozprofile.prefs import Preferences
+import functools
+import os
+import shutil
+import tarfile
+import tempfile
+import time
 
 from condprof import check_install  # NOQA
 from condprof import progress
-from condprof.util import (
-    download_file,
-    TASK_CLUSTER,
-    logger,
-    check_exists,
-    ArchiveNotFound,
-)
 from condprof.changelog import Changelog
-
+from condprof.util import (
+    TASK_CLUSTER,
+    ArchiveNotFound,
+    check_exists,
+    download_file,
+    logger,
+)
+from mozprofile.prefs import Preferences
 
 TC_SERVICE = "https://firefox-ci-tc.services.mozilla.com"
 ROOT_URL = TC_SERVICE + "/api/index"

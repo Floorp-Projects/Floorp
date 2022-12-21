@@ -11,9 +11,9 @@ diff two profile summaries
 from __future__ import absolute_import, print_function
 
 import difflib
-import profile
 import optparse
 import os
+import profile
 import sys
 
 __all__ = ["diff", "diff_profiles"]

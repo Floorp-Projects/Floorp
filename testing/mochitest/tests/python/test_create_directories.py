@@ -4,18 +4,17 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import six
 import os
+import unittest.mock as mock
 from argparse import Namespace
 from collections import defaultdict
 from textwrap import dedent
 
-from manifestparser import TestManifest
-
 import mozunit
 import pytest
-import unittest.mock as mock
+import six
 from conftest import setup_args
+from manifestparser import TestManifest
 
 
 # Directly running runTests() is likely not working nor a good idea

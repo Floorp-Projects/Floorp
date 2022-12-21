@@ -4,23 +4,16 @@
 
 # Integrates the web-platform-tests test runner with mach.
 
-from __future__ import absolute_import, unicode_literals, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import sys
 
-from six import iteritems
-
-from mozbuild.base import (
-    MachCommandConditions as conditions,
-    MozbuildObject,
-)
-
-from mach.decorators import (
-    Command,
-)
-
+from mach.decorators import Command
 from mach_commands_base import WebPlatformTestsRunner, create_parser_wpt
+from mozbuild.base import MachCommandConditions as conditions
+from mozbuild.base import MozbuildObject
+from six import iteritems
 
 
 class WebPlatformTestsRunnerSetup(MozbuildObject):
@@ -58,9 +51,9 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
 
             # Note that this import may fail in non-firefox-for-android trees
             from mozrunner.devices.android_device import (
+                InstallIntent,
                 get_adb_path,
                 verify_android_device,
-                InstallIntent,
             )
 
             kwargs["adb_binary"] = get_adb_path(self)
@@ -237,11 +230,11 @@ class WebPlatformTestsServeRunner(MozbuildObject):
             0,
             os.path.abspath(os.path.join(os.path.dirname(__file__), "tests", "tools")),
         )
+        import logging
+
+        import manifestupdate
         from serve import serve
         from wptrunner import wptcommandline
-        import manifestupdate
-
-        import logging
 
         logger = logging.getLogger("web-platform-tests")
 
@@ -328,11 +321,11 @@ class WebPlatformTestsTestPathsRunner(MozbuildObject):
             0,
             os.path.abspath(os.path.join(os.path.dirname(__file__), "tests", "tools")),
         )
-        from wptrunner import wptcommandline
-        from manifest import testpaths
-        import manifestupdate
-
         import logging
+
+        import manifestupdate
+        from manifest import testpaths
+        from wptrunner import wptcommandline
 
         logger = logging.getLogger("web-platform-tests")
 
@@ -375,8 +368,8 @@ class WebPlatformTestsTestPathsRunner(MozbuildObject):
 
 class WebPlatformTestsFissionRegressionsRunner(MozbuildObject):
     def run(self, **kwargs):
-        import mozlog
         import fissionregressions
+        import mozlog
 
         src_root = self.topsrcdir
         obj_root = self.topobjdir
@@ -385,8 +378,8 @@ class WebPlatformTestsFissionRegressionsRunner(MozbuildObject):
         try:
             return fissionregressions.run(logger, src_root, obj_root, **kwargs)
         except Exception:
-            import traceback
             import pdb
+            import traceback
 
             traceback.print_exc()
             pdb.post_mortem()
@@ -439,6 +432,7 @@ def create_parser_fission_regressions():
 
 def create_parser_testpaths():
     import argparse
+
     from mach.util import get_state_dir
 
     parser = argparse.ArgumentParser()

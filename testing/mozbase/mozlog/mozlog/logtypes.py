@@ -5,9 +5,9 @@
 from __future__ import absolute_import
 
 import inspect
+
 import six
-from six.moves import range
-from six.moves import zip
+from six.moves import range, zip
 
 convertor_registry = {}
 missing = object()

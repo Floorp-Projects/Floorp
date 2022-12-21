@@ -1,9 +1,8 @@
 from __future__ import absolute_import
 
-import pytest
-
 import mozhttpd
 import mozunit
+import pytest
 
 
 @pytest.fixture(name="httpd")

@@ -11,7 +11,6 @@ import time
 from logger.logger import RaptorLogger
 from mozdevice import ADBError, ADBTimeoutError
 
-
 LOG = RaptorLogger(component="raptor-power")
 
 P2_PATH = "/sys/class/power_supply/battery/input_suspend"

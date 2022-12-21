@@ -25,12 +25,11 @@ from mozbuild.base import MozbuildObject
 from mozbuild.frontend.reader import BuildReader
 from mozbuild.test.common import MockConfig
 from mozfile import NamedTemporaryFile
-
 from moztest.resolve import (
+    TEST_SUITES,
     BuildBackendLoader,
     TestManifestLoader,
     TestResolver,
-    TEST_SUITES,
 )
 
 here = os.path.abspath(os.path.dirname(__file__))

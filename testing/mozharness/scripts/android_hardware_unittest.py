@@ -6,12 +6,13 @@
 # ***** END LICENSE BLOCK *****
 
 from __future__ import absolute_import
+
 import copy
 import datetime
 import json
 import os
-import sys
 import subprocess
+import sys
 
 # load modules from parent dir
 sys.path.insert(1, os.path.dirname(sys.path[0]))
@@ -21,8 +22,8 @@ from mozharness.base.script import BaseScript, PreScriptAction
 from mozharness.mozilla.automation import TBPL_RETRY
 from mozharness.mozilla.mozbase import MozbaseMixin
 from mozharness.mozilla.testing.android import AndroidMixin
-from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
 from mozharness.mozilla.testing.codecoverage import CodeCoverageMixin
+from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
 
 SUITE_DEFAULT_E10S = ["geckoview-junit", "mochitest", "reftest"]
 SUITE_NO_E10S = ["cppunittest", "gtest", "jittest"]

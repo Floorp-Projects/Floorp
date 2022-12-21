@@ -7,7 +7,6 @@ import threading
 
 import mozinfo
 
-
 if mozinfo.os == "linux":
     from talos.cmanager_linux import LinuxCounterManager as DefaultCounterManager
 elif mozinfo.os == "win":

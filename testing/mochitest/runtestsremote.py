@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
+
 import datetime
 import os
 import posixpath
@@ -14,12 +15,12 @@ import uuid
 
 sys.path.insert(0, os.path.abspath(os.path.realpath(os.path.dirname(__file__))))
 
-from runtests import MochitestDesktop, MessageLogger
-from mochitest_options import MochitestArgumentParser, build_obj
-from mozdevice import ADBDeviceFactory, ADBTimeoutError, RemoteProcessMonitor
-from mozscreenshot import dump_screen, dump_device_screen
 import mozcrash
 import mozinfo
+from mochitest_options import MochitestArgumentParser, build_obj
+from mozdevice import ADBDeviceFactory, ADBTimeoutError, RemoteProcessMonitor
+from mozscreenshot import dump_device_screen, dump_screen
+from runtests import MessageLogger, MochitestDesktop
 
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
 

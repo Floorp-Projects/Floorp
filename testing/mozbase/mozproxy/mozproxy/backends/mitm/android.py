@@ -12,7 +12,7 @@ from subprocess import PIPE
 
 import mozinfo
 from mozproxy.backends.mitm.mitm import Mitmproxy
-from mozproxy.utils import download_file_from_url, tooltool_download, LOG
+from mozproxy.utils import LOG, download_file_from_url, tooltool_download
 
 # path for mitmproxy certificate, generated auto after mitmdump is started
 # on local machine it is 'HOME', however it is different on production machines

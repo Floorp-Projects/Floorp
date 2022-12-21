@@ -7,15 +7,13 @@
 from __future__ import absolute_import
 
 import os
-import sys
 import shutil
+import sys
 
 import mozunit
 import pytest
 from moztest.selftest.fixtures import binary_fixture  # noqa: F401
-
 from mozversion import errors, get_version
-
 
 """test getting application version information from a binary path"""
 

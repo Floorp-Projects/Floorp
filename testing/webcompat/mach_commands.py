@@ -137,8 +137,8 @@ class InterventionTest(MozbuildObject):
         return path
 
     def run(self, **kwargs):
-        import runner
         import mozlog
+        import runner
 
         mozlog.commandline.setup_logging(
             "test-interventions", kwargs, {"mach": sys.stdout}

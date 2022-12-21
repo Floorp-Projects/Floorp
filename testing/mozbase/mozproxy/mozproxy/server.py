@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
+
 from mozproxy.backends.mitm.android import MitmproxyAndroid
 from mozproxy.backends.mitm.desktop import MitmproxyDesktop
 

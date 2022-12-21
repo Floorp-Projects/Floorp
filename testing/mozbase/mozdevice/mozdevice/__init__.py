@@ -156,8 +156,16 @@ any existing content.
 
 from __future__ import absolute_import
 
-from .adb import ADBError, ADBProcessError, ADBTimeoutError
-from .adb import ADBProcess, ADBCommand, ADBHost, ADBDevice, ADBDeviceFactory
+from .adb import (
+    ADBCommand,
+    ADBDevice,
+    ADBDeviceFactory,
+    ADBError,
+    ADBHost,
+    ADBProcess,
+    ADBProcessError,
+    ADBTimeoutError,
+)
 from .adb_android import ADBAndroid
 from .remote_process_monitor import RemoteProcessMonitor
 

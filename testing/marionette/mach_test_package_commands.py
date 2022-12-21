@@ -7,18 +7,15 @@ from __future__ import absolute_import
 import argparse
 import os
 import sys
-
 from functools import partial
 
-from mach.decorators import (
-    Command,
-)
+from mach.decorators import Command
 
 parser = None
 
 
 def run_marionette(context, **kwargs):
-    from marionette.runtests import MarionetteTestRunner, MarionetteHarness
+    from marionette.runtests import MarionetteHarness, MarionetteTestRunner
     from mozlog.structured import commandline
 
     args = argparse.Namespace(**kwargs)

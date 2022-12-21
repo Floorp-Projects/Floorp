@@ -3,10 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from __future__ import absolute_import, unicode_literals
 
-import platform
 import os
-import subprocess
+import platform
 import re
+import subprocess
+
 import six
 
 from .macintelpower import MacIntelPower

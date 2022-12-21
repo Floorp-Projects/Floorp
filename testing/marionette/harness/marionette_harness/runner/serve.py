@@ -15,13 +15,11 @@ import argparse
 import multiprocessing
 import os
 import sys
-
 from collections import defaultdict
 
 from six import iteritems
 
 from . import httpd
-
 
 __all__ = [
     "default_doc_root",

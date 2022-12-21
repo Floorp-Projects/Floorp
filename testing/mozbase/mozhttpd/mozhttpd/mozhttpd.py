@@ -6,29 +6,24 @@
 
 from __future__ import absolute_import, print_function
 
-
 import errno
 import logging
-import threading
+import os
 import posixpath
+import re
 import socket
 import sys
-import os
-import re
-import moznetwork
+import threading
 import time
 import traceback
+from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-from six import iteritems, ensure_binary
-from six.moves.socketserver import ThreadingMixIn
+import moznetwork
+from six import ensure_binary, iteritems
 from six.moves.BaseHTTPServer import HTTPServer
-
-from six.moves.urllib.parse import (
-    urlsplit,
-    unquote,
-)
 from six.moves.SimpleHTTPServer import SimpleHTTPRequestHandler
+from six.moves.socketserver import ThreadingMixIn
+from six.moves.urllib.parse import unquote, urlsplit
 
 
 class EasyServer(ThreadingMixIn, HTTPServer):

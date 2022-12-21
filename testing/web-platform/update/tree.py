@@ -6,7 +6,6 @@ import re
 import tempfile
 
 from wptrunner import update as wptupdate
-
 from wptrunner.update.tree import Commit, CommitMessage, get_unique_name
 
 

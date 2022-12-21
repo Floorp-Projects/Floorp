@@ -15,7 +15,6 @@ import socket
 
 import mozhttpd
 
-
 # directory of this file
 here = os.path.dirname(os.path.realpath(__file__))
 
