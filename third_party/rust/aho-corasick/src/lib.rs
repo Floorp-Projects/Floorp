@@ -275,6 +275,12 @@ impl Match {
         self.end
     }
 
+    /// The length, in bytes, of the match.
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.len
+    }
+
     /// Returns true if and only if this match is empty. That is, when
     /// `start() == end()`.
     ///

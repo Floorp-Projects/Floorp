@@ -250,8 +250,8 @@ A DFA's search code, by contrast, looks like this:
         // An Aho-Corasick DFA *never* has a missing state that requires
         // failure transitions to be followed. One byte of input advances the
         // automaton by one state. Always.
-        state_id = trie.next_state(state_id, b);
-        if fsm.is_match(state_id) {
+        state_id = dfa.next_state(state_id, b);
+        if dfa.is_match(state_id) {
           return true;
         }
       }
@@ -278,7 +278,7 @@ there are a small number of patterns.
 # More DFA tricks
 
 As described in the previous section, one of the downsides of using a DFA
-is that is uses more memory and can take longer to build. One small way of
+is that it uses more memory and can take longer to build. One small way of
 mitigating these concerns is to map the alphabet used by the automaton into
 a smaller space. Typically, the alphabet of a DFA has 256 elements in it:
 one element for each possible value that fits into a byte. However, in many
@@ -425,7 +425,7 @@ method.
 Since Aho-Corasick is an automaton, it is possible to do partial searches on
 partial parts of the haystack, and then resume that search on subsequent pieces
 of the haystack. This is useful when the haystack you're trying to search is
-not stored contiguous in memory, or if one does not want to read the entire
+not stored contiguously in memory, or if one does not want to read the entire
 haystack into memory at once.
 
 Currently, only standard semantics are supported for stream searching. This is

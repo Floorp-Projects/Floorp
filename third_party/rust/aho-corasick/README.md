@@ -9,9 +9,9 @@ Features include case insensitive matching, overlapping matches, fast searching
 via SIMD and optional full DFA construction and search & replace in streams.
 
 [![Build status](https://github.com/BurntSushi/aho-corasick/workflows/ci/badge.svg)](https://github.com/BurntSushi/aho-corasick/actions)
-[![](http://meritbadge.herokuapp.com/aho-corasick)](https://crates.io/crates/aho-corasick)
+[![crates.io](https://img.shields.io/crates/v/aho-corasick.svg)](https://crates.io/crates/aho-corasick)
 
-Dual-licensed under MIT or the [UNLICENSE](http://unlicense.org).
+Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org/).
 
 
 ### Documentation
@@ -166,6 +166,12 @@ version of Rust.
 
 In general, this crate will be conservative with respect to the minimum
 supported version of Rust.
+
+
+### FFI bindings
+
+* [G-Research/ahocorasick_rs](https://github.com/G-Research/ahocorasick_rs/)
+is a Python wrapper for this library.
 
 
 ### Future work

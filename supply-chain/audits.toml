@@ -7,6 +7,11 @@ criteria = "safe-to-deploy"
 version = "0.1.0"
 notes = "Written and maintained by Gfx team at Mozilla."
 
+[[audits.aho-corasick]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.7.18 -> 0.7.20"
+
 [[audits.alsa]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"

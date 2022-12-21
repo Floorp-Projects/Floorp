@@ -4,7 +4,7 @@ number of patterns.
 
 This sub-module provides vectorized routines for quickly finding matches of a
 small number of patterns. In general, users of this crate shouldn't need to
-interface with this module directory, as the primary
+interface with this module directly, as the primary
 [`AhoCorasick`](../struct.AhoCorasick.html)
 searcher will use these routines automatically as a prefilter when applicable.
 However, in some cases, callers may want to bypass the Aho-Corasick machinery
