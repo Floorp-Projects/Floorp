@@ -259,12 +259,6 @@ class nsIGlobalObject : public nsISupports,
   RTPCallerType GetRTPCallerType() const;
 
   /**
-   * Threadsafe way to get nsIPrincipal::GetHashValue for the associated
-   * principal.
-   */
-  virtual uint32_t GetPrincipalHashValue() const { return 0; }
-
-  /**
    * Get the module loader to use for this global, if any. By default this
    * returns null.
    */
@@ -283,8 +277,6 @@ class nsIGlobalObject : public nsISupports,
 
  protected:
   virtual ~nsIGlobalObject();
-
-  virtual bool IsSystemPrincipal() const;
 
   void StartDying() { mIsDying = true; }
 
