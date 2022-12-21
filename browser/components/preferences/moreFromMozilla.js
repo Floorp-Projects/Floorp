@@ -57,7 +57,7 @@ var gMoreFromMozillaPane = {
       pageUrl.searchParams.append(key, val);
     }
 
-    // Append region by product to utm_content and also
+    // Append region by product to utm_cotent and also
     // append '-email' when URL is opened
     // from send email link in QRCode box
     if (option) {
@@ -128,19 +128,19 @@ var gMoreFromMozillaPane = {
       products.push(vpn);
     }
 
-    if (BrowserUtils.shouldShowPromo(BrowserUtils.PromoType.RELAY)) {
-      const relay = {
-        id: "firefox-relay",
-        title_string_id: "more-from-moz-firefox-relay-title",
-        description_string_id: "more-from-moz-firefox-relay-description",
-        region: "global",
+    if (BrowserUtils.shouldShowRallyPromo()) {
+      const rally = {
+        id: "mozilla-rally",
+        title_string_id: "more-from-moz-mozilla-rally-title",
+        description_string_id: "more-from-moz-mozilla-rally-description",
+        region: "na",
         button: {
-          id: "firefoxRelay",
-          label_string_id: "more-from-moz-firefox-relay-button",
-          actionURL: "https://relay.firefox.com/",
+          id: "mozillaRally",
+          label_string_id: "more-from-moz-button-mozilla-rally-2",
+          actionURL: "https://rally.mozilla.org/",
         },
       };
-      products.push(relay);
+      products.push(rally);
     }
 
     this._productsContainer = document.getElementById(

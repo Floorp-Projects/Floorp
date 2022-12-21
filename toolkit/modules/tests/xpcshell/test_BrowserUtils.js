@@ -115,6 +115,35 @@ add_task(async function test_shouldShowVPNPromo() {
   }
 });
 
+add_task(async function test_shouldShowRallyPromo() {
+  const allowedRegion = "US";
+  const disallowedRegion = "CN";
+  const allowedLanguage = "en-US";
+  const disallowedLanguage = "fr";
+
+  // Show promo when region is US and language is en-US
+  setupRegions(allowedRegion, allowedRegion);
+  setLanguage(allowedLanguage);
+  Assert.ok(BrowserUtils.shouldShowRallyPromo());
+
+  // Don't show when home region is not US
+  setupRegions(disallowedRegion);
+  Assert.ok(!BrowserUtils.shouldShowRallyPromo());
+
+  // Don't show when langauge is not en-US, even if region is US
+  setLanguage(disallowedLanguage);
+  setupRegions(allowedRegion);
+  Assert.ok(!BrowserUtils.shouldShowRallyPromo());
+
+  // Don't show when home region is not US, even if language is en-US
+  setupRegions(disallowedRegion);
+  Assert.ok(!BrowserUtils.shouldShowRallyPromo());
+
+  // Don't show when current region is not US, even if home region is US and langague is en-US
+  setupRegions(allowedRegion, disallowedRegion);
+  Assert.ok(!BrowserUtils.shouldShowRallyPromo());
+});
+
 add_task(async function test_sendToDeviceEmailsSupported() {
   const allowedLanguage = "en-US";
   const disallowedLanguage = "ar";
@@ -181,27 +210,6 @@ add_task(async function test_shouldShowPinPromo() {
   Assert.ok(!BrowserUtils.shouldShowPromo(BrowserUtils.PromoType.PIN));
 
   Preferences.resetBranch("browser.promo.pin");
-});
-
-add_task(async function test_shouldShowRelayPromo() {
-  Assert.ok(BrowserUtils.shouldShowPromo(BrowserUtils.PromoType.RELAY));
-
-  // Don't show when there is an enterprise policy active
-  if (AppConstants.platform !== "android") {
-    // Services.policies isn't shipped on Android
-    await setupEnterprisePolicy();
-
-    Assert.ok(!BrowserUtils.shouldShowPromo(BrowserUtils.PromoType.RELAY));
-
-    // revert policy changes made earlier
-    await EnterprisePolicyTesting.setupPolicyEngineWithJson("");
-  }
-
-  // Don't show if a custom FxA instance is configured
-  Preferences.set("identity.fxaccounts.autoconfig.uri", "https://x");
-  Assert.ok(!BrowserUtils.shouldShowPromo(BrowserUtils.PromoType.RELAY));
-
-  Preferences.reset("identity.fxaccounts.autoconfig.uri");
 });
 
 add_task(function test_isShareableURL() {

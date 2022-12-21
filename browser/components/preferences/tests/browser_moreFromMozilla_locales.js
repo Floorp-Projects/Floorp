@@ -38,26 +38,14 @@ async function getPromoCards() {
   let doc = gBrowser.contentDocument;
   let vpnPromoCard = doc.getElementById("mozilla-vpn");
   let mobileCard = doc.getElementById("firefox-mobile");
-  let relayPromoCard = doc.getElementById("firefox-relay");
+  let rallyPromoCard = doc.getElementById("mozilla-rally");
 
   return {
     vpnPromoCard,
     mobileCard,
-    relayPromoCard,
+    rallyPromoCard,
   };
 }
-
-let mockFxA, unmockFxA;
-
-// The Relay promo is only shown if the default FxA instance is detected, and
-// tests override it to a dummy address, so we need to make the dummy address
-// appear like it's the default (using the actual default instance might cause a
-// remote connection, crashing the test harness).
-add_setup(async function() {
-  let { mock, unmock } = await mockDefaultFxAInstance();
-  mockFxA = mock;
-  unmockFxA = unmock;
-});
 
 add_task(async function test_VPN_promo_enabled() {
   await clearPolicies();
@@ -170,6 +158,62 @@ add_task(async function test_VPN_promo_in_illegal_current_region() {
   ok(mobileCard, "The Mobile promo is visible");
 
   setupRegions(initialHomeRegion, initialCurrentRegion); // revert changes to regions
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+add_task(
+  async function test_rally_promo_with_approved_home_region_and_language() {
+    // Only show the Rally promo when US is the region and English is the langauge
+    setupRegions("US");
+
+    let { rallyPromoCard, mobileCard } = await getPromoCards();
+
+    ok(rallyPromoCard, "The Rally promo is visible");
+    ok(mobileCard, "The Mobile promo is visible");
+
+    setupRegions(initialHomeRegion, initialCurrentRegion); // revert changes to regions
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  }
+);
+
+add_task(async function test_rally_promo_with_unapproved_home_region() {
+  setupRegions("IS");
+
+  let { rallyPromoCard, mobileCard } = await getPromoCards();
+
+  ok(!rallyPromoCard, "The Rally promo is not visible");
+  ok(mobileCard, "The Mobile promo is visible");
+
+  setupRegions(initialHomeRegion, initialCurrentRegion); // revert changes to regions
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+add_task(async function test_rally_promo_with_unapproved_current_region() {
+  setupRegions("US", "IS");
+
+  let { rallyPromoCard, mobileCard } = await getPromoCards();
+
+  ok(!rallyPromoCard, "The Rally promo is not visible");
+  ok(mobileCard, "The Mobile promo is visible");
+
+  setupRegions(initialHomeRegion, initialCurrentRegion); // revert changes to regions
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+add_task(async function test_rally_promo_with_unapproved_language() {
+  // Rally promo should be hidden in the US for languages other than English
+  setupRegions("US");
+  const initialLanguage = Services.locale.appLocaleAsBCP47;
+  setLocale("ko-KR");
+
+  let { rallyPromoCard, mobileCard } = await getPromoCards();
+
+  ok(!rallyPromoCard, "The Rally promo is not visible");
+  ok(mobileCard, "The Mobile promo is visible");
+
+  setupRegions(initialHomeRegion, initialCurrentRegion); // revert changes to regions
+  // revert changes to language
+  setLocale(initialLanguage);
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
@@ -305,27 +349,4 @@ add_task(async function test_VPN_promo_with_active_enterprise_policy() {
   setupRegions(initialHomeRegion, initialCurrentRegion); // revert changes to regions
   await clearPolicies();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
-});
-
-add_task(async function test_relay_promo_with_supported_fxa_server() {
-  await clearPolicies();
-
-  let { relayPromoCard } = await getPromoCards();
-  ok(relayPromoCard, "The Relay promo is visible");
-
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
-});
-
-add_task(async function test_relay_promo_with_unsupported_fxa_server() {
-  await clearPolicies();
-  // Set the default pref value to something other than the current value so it
-  // will appear to be user-set and treated as invalid (actually setting the
-  // pref would cause a remote connection and crash the test harness)
-  unmockFxA();
-
-  let { relayPromoCard } = await getPromoCards();
-  ok(!relayPromoCard, "The Relay promo is not visible");
-
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  mockFxA();
 });
