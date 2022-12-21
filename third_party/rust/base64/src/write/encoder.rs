@@ -223,7 +223,7 @@ impl<W: Write> Write for EncoderWriter<W> {
     /// Under non-error circumstances, this returns `Ok` with the value being the number of bytes
     /// of `input` consumed. The value may be `0`, which interacts poorly with `write_all`, which
     /// interprets `Ok(0)` as an error, despite it being allowed by the contract of `write`. See
-    /// https://github.com/rust-lang/rust/issues/56889 for more on that.
+    /// <https://github.com/rust-lang/rust/issues/56889> for more on that.
     ///
     /// If the previous call to `write` provided more (encoded) data than the delegate writer could
     /// accept in a single call to its `write`, the remaining data is buffered. As long as buffered

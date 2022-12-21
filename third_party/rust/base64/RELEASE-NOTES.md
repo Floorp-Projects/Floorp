@@ -1,3 +1,7 @@
+# 0.13.1
+
+- More precise decode buffer sizing, avoiding unnecessary allocation in `decode_config`.
+
 # 0.13.0
 
 - Config methods are const
