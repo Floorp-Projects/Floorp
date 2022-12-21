@@ -129,6 +129,9 @@ bindgen = { path = "build/rust/bindgen" }
 # Patch memoffset 0.6 to 0.7
 memoffset = { path = "build/rust/memoffset" }
 
+# Patch nom 6 to 7
+nom = { path = "build/rust/nom" }
+
 # Patch nix 0.24 to 0.25
 nix = { path = "build/rust/nix" }
 

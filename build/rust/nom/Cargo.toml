@@ -1,0 +1,15 @@
+[package]
+name = "nom"
+version = "6.99.99"
+edition = "2018"
+license = "MPL-2.0"
+
+[lib]
+path = "lib.rs"
+
+[dependencies.nom]
+version = "7"
+default-features = false
+
+[features]
+std = ["nom/std"]
