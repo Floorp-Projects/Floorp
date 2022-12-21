@@ -33,7 +33,7 @@ function canRunHugeMemoryTests() {
 
 var PageSizeInBytes = 65536;
 var MaxBytesIn32BitMemory = 0;
-if (largeArrayBufferEnabled()) {
+if (largeArrayBufferSupported()) {
     MaxBytesIn32BitMemory = 65536*PageSizeInBytes;
 } else {
     // This is an overestimate twice: first, the max byte value is divisible by

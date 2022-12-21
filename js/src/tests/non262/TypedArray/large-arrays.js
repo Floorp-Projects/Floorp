@@ -5,7 +5,7 @@
 
 const gb = 1024 * 1024 * 1024;
 
-if (largeArrayBufferEnabled()) {
+if (largeArrayBufferSupported()) {
     for (let TA of typedArrayConstructors) {
         let ta = new TA(6*gb / TA.BYTES_PER_ELEMENT);
 
