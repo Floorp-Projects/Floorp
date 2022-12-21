@@ -390,6 +390,7 @@ class SettingsSearchTest {
 
     // Expected for app language set to Arabic
     @Test
+    @Ignore("See: https://github.com/mozilla-mobile/fenix/issues/28257")
     fun verifySearchEnginesWithRTLLocale() {
         homeScreen {
         }.openThreeDotMenu {
