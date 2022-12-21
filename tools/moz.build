@@ -17,7 +17,7 @@ with Files("github-sync/**"):
     BUG_COMPONENT = ("Core", "Graphics")
 
 with Files("lint/**"):
-    BUG_COMPONENT = ("Firefox Build System", "Lint and Formatting")
+    BUG_COMPONENT = ("Developer Infrastructure", "Lint and Formatting")
 
 with Files("moztreedocs/**"):
     BUG_COMPONENT = ("Firefox Build System", "Generated Documentation")

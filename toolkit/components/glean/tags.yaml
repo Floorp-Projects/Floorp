@@ -253,6 +253,8 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
   description: The Bugzilla component which applies to this object.
 'Core :: mozglue':
   description: The Bugzilla component which applies to this object.
+'Developer Infrastructure :: Lint and Formatting':
+  description: The Bugzilla component which applies to this object.
 'DevTools :: Accessibility Tools':
   description: The Bugzilla component which applies to this object.
 'DevTools :: Console':
@@ -380,10 +382,6 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
 'Firefox Build System :: General':
   description: The Bugzilla component which applies to this object.
 'Firefox Build System :: Generated Documentation':
-  description: The Bugzilla component which applies to this object.
-'Firefox Build System :: Lint and Formatting':
-  description: The Bugzilla component which applies to this object.
-'Firefox Build System :: Linting and Formatting':
   description: The Bugzilla component which applies to this object.
 'Firefox Build System :: Mach Core':
   description: The Bugzilla component which applies to this object.
