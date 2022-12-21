@@ -105,7 +105,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     private var _binding: FragmentSearchDialogBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var interactor: SearchDialogInteractor
+    @VisibleForTesting internal lateinit var interactor: SearchDialogInteractor
     private lateinit var store: SearchDialogFragmentStore
     private lateinit var toolbarView: ToolbarView
     private lateinit var inlineAutocompleteEditText: InlineAutocompleteEditText
@@ -265,6 +265,9 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         inlineAutocompleteEditText.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
 
         requireComponents.core.engine.speculativeCreateSession(isPrivate)
+
+        // Handle the scenario in which the user selects another search engine before starting a search.
+        maybeSelectShortcutEngine(args.searchEngine)
 
         when (getPreviousDestination()?.destination?.id) {
             R.id.homeFragment -> {
@@ -474,6 +477,26 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             }
 
             updateVoiceSearchButton()
+        }
+    }
+
+    /**
+     * Check whether the search engine identified by [selectedSearchEngineId] is the default search engine
+     * and if not update the search state to reflect that a different search engine is currently selected.
+     *
+     * @param selectedSearchEngineId Id of the search engine currently selected for next searches.
+     */
+    @VisibleForTesting
+    internal fun maybeSelectShortcutEngine(selectedSearchEngineId: String?) {
+        if (selectedSearchEngineId == null) return
+
+        val searchState = requireComponents.core.store.state.search
+        searchState.searchEngines.firstOrNull {
+            it.id == selectedSearchEngineId
+        }?.let { selectedSearchEngine ->
+            if (selectedSearchEngine != searchState.selectedOrDefaultSearchEngine) {
+                interactor.onSearchShortcutEngineSelected(selectedSearchEngine)
+            }
         }
     }
 
