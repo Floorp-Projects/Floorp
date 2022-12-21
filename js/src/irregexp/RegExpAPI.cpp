@@ -184,11 +184,14 @@ static void ReportSyntaxError(TokenStreamAnyChars& ts,
                               size_t length, ...) {
   MOZ_ASSERT(line.isSome() == column.isSome());
 
-  gc::AutoSuppressGC suppressGC(ts.jsContext());
+  Maybe<gc::AutoSuppressGC> suppressGC;
+  if (JSContext* maybeCx = ts.context()->maybeCurrentJSContext()) {
+    suppressGC.emplace(maybeCx);
+  }
   uint32_t errorNumber = ErrorNumber(result.error);
 
   if (errorNumber == JSMSG_OVER_RECURSED) {
-    ReportOverRecursed(ts.jsContext());
+    ReportOverRecursed(ts.context());
     return;
   }
 
@@ -244,7 +247,7 @@ static void ReportSyntaxError(TokenStreamAnyChars& ts,
 
   // Create the windowed string, not including the potential line
   // terminator.
-  StringBuffer windowBuf(ts.jsContext(), ts.context());
+  StringBuffer windowBuf(ts.context());
   if (!windowBuf.append(windowStart, windowEnd)) {
     return;
   }
@@ -682,7 +685,7 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
             cx->isolate, &zone, wrappedPattern, flags, &data)) {
       AutoReportFrontendContext fc(cx);
       JS::CompileOptions options(cx);
-      DummyTokenStream dummyTokenStream(cx, &fc, options);
+      DummyTokenStream dummyTokenStream(&fc, options);
       ReportSyntaxError(dummyTokenStream, data, pattern);
       return false;
     }

@@ -167,7 +167,7 @@ ParserBase::ParserBase(JSContext* cx, FrontendContext* fc,
                        bool foldConstants, CompilationState& compilationState)
     : ParserSharedBase(cx, fc, compilationState,
                        ParserSharedBase::Kind::Parser),
-      anyChars(cx, fc, options, this),
+      anyChars(fc, options, this),
       ss(nullptr),
       foldConstants_(foldConstants),
       stackLimit_(stackLimit),
@@ -209,8 +209,7 @@ GeneralParser<ParseHandler, Unit>::GeneralParser(
     SyntaxParser* syntaxParser)
     : Base(cx, fc, stackLimit, options, foldConstants, compilationState,
            syntaxParser),
-      tokenStream(cx, fc, &compilationState.parserAtoms, options, units,
-                  length) {}
+      tokenStream(fc, &compilationState.parserAtoms, options, units, length) {}
 
 template <typename Unit>
 void Parser<SyntaxParseHandler, Unit>::setAwaitHandling(

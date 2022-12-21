@@ -346,7 +346,7 @@ static bool CheckPatternSyntaxSlow(JSContext* cx, Handle<JSAtom*> pattern,
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   AutoReportFrontendContext fc(cx);
   CompileOptions options(cx);
-  frontend::DummyTokenStream dummyTokenStream(cx, &fc, options);
+  frontend::DummyTokenStream dummyTokenStream(&fc, options);
   return irregexp::CheckPatternSyntax(cx, cx->stackLimitForCurrentPrincipal(),
                                       dummyTokenStream, pattern, flags);
 }

@@ -491,11 +491,10 @@ SourceCoords::LineToken SourceCoords::lineToken(uint32_t offset) const {
   return LineToken(indexFromOffset(offset), offset);
 }
 
-TokenStreamAnyChars::TokenStreamAnyChars(JSContext* cx, FrontendContext* fc,
+TokenStreamAnyChars::TokenStreamAnyChars(FrontendContext* fc,
                                          const ReadOnlyCompileOptions& options,
                                          StrictModeGetter* smg)
-    : cx(cx),
-      fc(fc),
+    : fc(fc),
       options_(options),
       strictModeGetter_(smg),
       filename_(options.filename()),
@@ -513,10 +512,12 @@ TokenStreamAnyChars::TokenStreamAnyChars(JSContext* cx, FrontendContext* fc,
 }
 
 template <typename Unit>
-TokenStreamCharsBase<Unit>::TokenStreamCharsBase(
-    JSContext* cx, FrontendContext* fc, ParserAtomsTable* parserAtoms,
-    const Unit* units, size_t length, size_t startOffset)
-    : TokenStreamCharsShared(cx, fc, parserAtoms),
+TokenStreamCharsBase<Unit>::TokenStreamCharsBase(FrontendContext* fc,
+                                                 ParserAtomsTable* parserAtoms,
+                                                 const Unit* units,
+                                                 size_t length,
+                                                 size_t startOffset)
+    : TokenStreamCharsShared(fc, parserAtoms),
       sourceUnits(units, length, startOffset) {}
 
 bool FillCharBufferFromSourceNormalizingAsciiLineBreaks(CharBuffer& charBuffer,
@@ -580,9 +581,9 @@ bool FillCharBufferFromSourceNormalizingAsciiLineBreaks(CharBuffer& charBuffer,
 
 template <typename Unit, class AnyCharsAccess>
 TokenStreamSpecific<Unit, AnyCharsAccess>::TokenStreamSpecific(
-    JSContext* cx, FrontendContext* fc, ParserAtomsTable* parserAtoms,
+    FrontendContext* fc, ParserAtomsTable* parserAtoms,
     const ReadOnlyCompileOptions& options, const Unit* units, size_t length)
-    : TokenStreamChars<Unit, AnyCharsAccess>(cx, fc, parserAtoms, units, length,
+    : TokenStreamChars<Unit, AnyCharsAccess>(fc, parserAtoms, units, length,
                                              options.scriptSourceOffset) {}
 
 bool TokenStreamAnyChars::checkOptions() {
