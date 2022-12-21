@@ -218,7 +218,6 @@ module.exports = {
         "browser/themes/BuiltInThemes.sys.mjs",
         "devtools/**",
         "dom/base/DOMRequestHelper.*",
-        "dom/console/ConsoleAPIStorage.*",
         "dom/push/PushComponents.sys.mjs",
         "dom/push/PushServiceHttp2.sys.mjs",
         "dom/push/test/mockpushserviceparent.js",
