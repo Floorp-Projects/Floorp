@@ -32,7 +32,6 @@
 #include "prcvar.h"
 #include "transport/runnable_utils.h"
 #include "WebrtcGlobalChild.h"
-#include "WebrtcGlobalInformation.h"
 
 static const char* pccLogTag = "PeerConnectionCtx";
 #ifdef LOGTAG
@@ -425,17 +424,9 @@ SharedWebrtcState* PeerConnectionCtx::GetSharedWebrtcState() const {
 
 void PeerConnectionCtx::RemovePeerConnection(const std::string& aKey) {
   MOZ_ASSERT(NS_IsMainThread());
-  auto it = mPeerConnections.find(aKey);
-  if (it != mPeerConnections.end()) {
-    if (it->second->GetFinalStats() && !it->second->LongTermStatsIsDisabled()) {
-      WebrtcGlobalInformation::StashStats(*(it->second->GetFinalStats()));
-    }
-
-    mPeerConnections.erase(it);
-
-    if (mPeerConnections.empty()) {
-      mSharedWebrtcState = nullptr;
-    }
+  size_t result = mPeerConnections.erase(aKey);
+  if (mPeerConnections.size() == 0 && result > 0) {
+    mSharedWebrtcState = nullptr;
   }
 }
 
@@ -444,7 +435,7 @@ void PeerConnectionCtx::AddPeerConnection(const std::string& aKey,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mPeerConnections.count(aKey) == 0,
              "PeerConnection with this key should not already exist");
-  if (mPeerConnections.empty()) {
+  if (mPeerConnections.size() == 0) {
     AudioState::Config audioStateConfig;
     audioStateConfig.audio_mixer = new rtc::RefCountedObject<DummyAudioMixer>();
     AudioProcessingBuilder audio_processing_builder;
@@ -495,15 +486,6 @@ void PeerConnectionCtx::ForEachPeerConnection(Function&& aFunction) const {
   MOZ_ASSERT(NS_IsMainThread());
   for (const auto& pair : mPeerConnections) {
     aFunction(pair.second);
-  }
-}
-
-void PeerConnectionCtx::ClearClosedStats() {
-  for (auto& [id, pc] : mPeerConnections) {
-    if (pc->IsClosed()) {
-      // Rare case
-      pc->DisableLongTermStats();
-    }
   }
 }
 
