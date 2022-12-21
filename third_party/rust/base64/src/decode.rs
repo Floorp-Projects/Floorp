@@ -107,7 +107,14 @@ pub fn decode<T: AsRef<[u8]>>(input: T) -> Result<Vec<u8>, DecodeError> {
 ///```
 #[cfg(any(feature = "alloc", feature = "std", test))]
 pub fn decode_config<T: AsRef<[u8]>>(input: T, config: Config) -> Result<Vec<u8>, DecodeError> {
-    let mut buffer = Vec::<u8>::with_capacity(input.as_ref().len() * 4 / 3);
+    let decoded_length_estimate = (input
+        .as_ref()
+        .len()
+        .checked_add(3)
+        .expect("decoded length calculation overflow"))
+        / 4
+        * 3;
+    let mut buffer = Vec::<u8>::with_capacity(decoded_length_estimate);
 
     decode_config_buf(input, config, &mut buffer).map(|_| buffer)
 }
@@ -867,6 +874,19 @@ mod tests {
                         decode_config(&symbols[..], STANDARD)
                     ),
                 }
+            }
+        }
+    }
+
+    #[test]
+    fn decode_config_estimation_works_for_various_lengths() {
+        for num_prefix_quads in 0..100 {
+            for suffix in &["AA", "AAA", "AAAA"] {
+                let mut prefix = "AAAA".repeat(num_prefix_quads);
+                prefix.push_str(suffix);
+                // make sure no overflow (and thus a panic) occurs
+                let res = decode_config(prefix, STANDARD);
+                assert!(res.is_ok());
             }
         }
     }
