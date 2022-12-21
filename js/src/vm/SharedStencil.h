@@ -644,6 +644,7 @@ class SharedImmutableScriptData {
 
  private:
   ImmutableScriptData* isd_ = nullptr;
+  mozilla::HashNumber hash_;
 
   // End of fields.
 
@@ -663,6 +664,11 @@ class SharedImmutableScriptData {
     isd_ = nullptr;
   }
 
+  void calculateHash() {
+    mozilla::Span<const uint8_t> immutableData = isd_->immutableData();
+    hash_ = mozilla::HashBytes(immutableData.data(), immutableData.size());
+  }
+
  public:
   // Hash over the contents of SharedImmutableScriptData and its
   // ImmutableScriptData.
@@ -678,6 +684,8 @@ class SharedImmutableScriptData {
       js_free(this);
     }
   }
+
+  mozilla::HashNumber hash() const { return hash_; }
 
   static constexpr size_t offsetOfISD() {
     return offsetof(SharedImmutableScriptData, isd_);
@@ -712,12 +720,16 @@ class SharedImmutableScriptData {
     MOZ_ASSERT(!isd_);
     isd_ = isd.release();
     isExternal = false;
+
+    calculateHash();
   }
 
   void setExternal(ImmutableScriptData* isd) {
     MOZ_ASSERT(!isd_);
     isd_ = isd;
     isExternal = true;
+
+    calculateHash();
   }
 };
 
@@ -726,10 +738,7 @@ class SharedImmutableScriptData {
 struct SharedImmutableScriptData::Hasher {
   using Lookup = RefPtr<SharedImmutableScriptData>;
 
-  static mozilla::HashNumber hash(const Lookup& l) {
-    mozilla::Span<const uint8_t> immutableData = l->isd_->immutableData();
-    return mozilla::HashBytes(immutableData.data(), immutableData.size());
-  }
+  static mozilla::HashNumber hash(const Lookup& l) { return l->hash(); }
 
   static bool match(SharedImmutableScriptData* entry, const Lookup& lookup) {
     return (entry->isd_->immutableData() == lookup->isd_->immutableData());
