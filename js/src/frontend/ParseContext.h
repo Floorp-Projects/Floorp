@@ -133,7 +133,7 @@ class ParseContext : public Nestable<ParseContext> {
     using Nestable<Scope>::enclosing;
 
     explicit inline Scope(ParserBase* parser);
-    explicit inline Scope(JSContext* cx, ParseContext* pc,
+    explicit inline Scope(FrontendContext* fc, ParseContext* pc,
                           UsedNameTracker& usedNames);
 
     void dump(ParseContext* pc, ParserBase* parser);
@@ -315,7 +315,7 @@ class ParseContext : public Nestable<ParseContext> {
   class VarScope : public Scope {
    public:
     explicit inline VarScope(ParserBase* parser);
-    explicit inline VarScope(JSContext* cx, ParseContext* pc,
+    explicit inline VarScope(FrontendContext* fc, ParseContext* pc,
                              UsedNameTracker& usedNames);
   };
 
@@ -391,7 +391,7 @@ class ParseContext : public Nestable<ParseContext> {
   bool superScopeNeedsHomeObject_;
 
  public:
-  ParseContext(JSContext* cx, ParseContext*& parent, SharedContext* sc,
+  ParseContext(FrontendContext* fc, ParseContext*& parent, SharedContext* sc,
                ErrorReporter& errorReporter, CompilationState& compilationState,
                Directives* newDirectives, bool isFull);
 

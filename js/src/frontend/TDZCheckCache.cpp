@@ -17,7 +17,7 @@ using mozilla::Some;
 
 TDZCheckCache::TDZCheckCache(BytecodeEmitter* bce)
     : Nestable<TDZCheckCache>(&bce->innermostTDZCheckCache),
-      cache_(bce->cx->frontendCollectionPool()) {}
+      cache_(bce->fc->nameCollectionPool()) {}
 
 bool TDZCheckCache::ensureCache(BytecodeEmitter* bce) {
   return cache_ || cache_.acquire(bce->fc);

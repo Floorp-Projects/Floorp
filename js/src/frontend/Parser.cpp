@@ -139,19 +139,20 @@ bool GeneralParser<ParseHandler, Unit>::mustMatchTokenInternal(
   return true;
 }
 
-ParserSharedBase::ParserSharedBase(JSContext* cx,
+ParserSharedBase::ParserSharedBase(JSContext* cx, FrontendContext* fc,
                                    CompilationState& compilationState,
                                    Kind kind)
     : cx_(cx),
+      fc_(fc),
       alloc_(compilationState.parserAllocScope.alloc()),
       compilationState_(compilationState),
       pc_(nullptr),
       usedNames_(compilationState.usedNames) {
-  cx->frontendCollectionPool().addActiveCompilation();
+  fc_->nameCollectionPool().addActiveCompilation();
 }
 
 ParserSharedBase::~ParserSharedBase() {
-  cx_->frontendCollectionPool().removeActiveCompilation();
+  fc_->nameCollectionPool().removeActiveCompilation();
 }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
@@ -164,11 +165,11 @@ ParserBase::ParserBase(JSContext* cx, FrontendContext* fc,
                        JS::NativeStackLimit stackLimit,
                        const ReadOnlyCompileOptions& options,
                        bool foldConstants, CompilationState& compilationState)
-    : ParserSharedBase(cx, compilationState, ParserSharedBase::Kind::Parser),
+    : ParserSharedBase(cx, fc, compilationState,
+                       ParserSharedBase::Kind::Parser),
       anyChars(cx, fc, options, this),
       ss(nullptr),
       foldConstants_(foldConstants),
-      fc_(fc),
       stackLimit_(stackLimit),
 #ifdef DEBUG
       checkOptionsCalled_(false),

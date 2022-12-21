@@ -534,6 +534,11 @@ bool ParseTask::init(JSContext* cx, const ReadOnlyCompileOptions& options) {
 
   runtime = cx->runtime();
 
+  if (!fc_.allocateOwnedPool()) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
   // MultiStencilsDecode doesn't support JS::InstantiationStorage.
   MOZ_ASSERT_IF(this->options.allocateInstantiationStorage,
                 kind != ParseTaskKind::MultiStencilsDecode);
@@ -630,6 +635,7 @@ void ParseTask::runTask(AutoLockHelperThreadState& lock) {
   MOZ_ASSERT(cx->tempLifoAlloc().isEmpty());
   cx->tempLifoAlloc().freeAll();
   cx->frontendCollectionPool().purge();
+  fc_.nameCollectionPool().purge();
 }
 
 void ParseTask::scheduleDelazifyTask(AutoLockHelperThreadState& lock) {
@@ -1049,6 +1055,11 @@ bool DelazifyTask::init(
     const JS::ReadOnlyCompileOptions& options,
     UniquePtr<frontend::ExtensibleCompilationStencil>&& initial) {
   using namespace js::frontend;
+
+  if (!fc_.allocateOwnedPool()) {
+    return false;
+  }
+
   if (!merger.setInitial(&fc_, std::move(initial))) {
     return false;
   }
@@ -1107,6 +1118,7 @@ void DelazifyTask::runHelperThreadTask(AutoLockHelperThreadState& lock) {
     MOZ_ASSERT(cx->tempLifoAlloc().isEmpty());
     cx->tempLifoAlloc().freeAll();
     cx->frontendCollectionPool().purge();
+    fc_.nameCollectionPool().purge();
   }
 
   // If we should continue to delazify even more functions, then re-add this

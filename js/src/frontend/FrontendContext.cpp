@@ -24,6 +24,24 @@ void* FrontendAllocator::onOutOfMemory(AllocFunction allocFunc,
   return fc_->onOutOfMemory(allocFunc, arena, nbytes, reallocPtr);
 }
 
+FrontendContext::~FrontendContext() {
+  if (ownNameCollectionPool_) {
+    MOZ_ASSERT(nameCollectionPool_);
+    js_delete(nameCollectionPool_);
+  }
+}
+
+bool FrontendContext::allocateOwnedPool() {
+  MOZ_ASSERT(!nameCollectionPool_);
+
+  nameCollectionPool_ = js_new<frontend::NameCollectionPool>();
+  if (!nameCollectionPool_) {
+    return false;
+  }
+  ownNameCollectionPool_ = true;
+  return true;
+}
+
 bool FrontendContext::hadErrors() const {
   if (maybeCx_) {
     if (maybeCx_->isExceptionPending()) {
@@ -102,7 +120,12 @@ void FrontendContext::ReportOutOfMemory() {
 
 void FrontendContext::addPendingOutOfMemory() { errors_.outOfMemory = true; }
 
-void FrontendContext::setCurrentJSContext(JSContext* cx) { maybeCx_ = cx; }
+void FrontendContext::setCurrentJSContext(JSContext* cx) {
+  MOZ_ASSERT(!nameCollectionPool_);
+
+  maybeCx_ = cx;
+  nameCollectionPool_ = &cx->frontendCollectionPool();
+}
 
 void FrontendContext::convertToRuntimeError(
     JSContext* cx, Warning warning /* = Warning::Report */) {

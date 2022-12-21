@@ -185,9 +185,10 @@ void BytecodeSection::updateDepth(BytecodeOffset target) {
   }
 }
 
-PerScriptData::PerScriptData(FrontendContext* fc, NameCollectionPool& ncp,
+PerScriptData::PerScriptData(FrontendContext* fc,
                              frontend::CompilationState& compilationState)
-    : gcThingList_(fc, compilationState), atomIndices_(ncp) {}
+    : gcThingList_(fc, compilationState),
+      atomIndices_(fc->nameCollectionPool()) {}
 
 bool PerScriptData::init(FrontendContext* fc) {
   return atomIndices_.acquire(fc);
