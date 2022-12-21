@@ -137,6 +137,7 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["shims"] += [
     "shims/live-test-shim.js",
     "shims/maxmind-geoip.js",
     "shims/microsoftLogin.js",
+    "shims/microsoftVirtualAssistant.js",
     "shims/moat.js",
     "shims/mochitest-shim-1.js",
     "shims/mochitest-shim-2.js",

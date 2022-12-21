@@ -705,6 +705,20 @@ const AVAILABLE_SHIMS = [
     onlyIfDFPIActive: true,
   },
   {
+    id: "MicrosoftVirtualAssistant",
+    platform: "all",
+    name: "Microsoft Virtual Assistant",
+    bug: "1801277",
+    contentScripts: [
+      {
+        js: "microsoftVirtualAssistant.js",
+        matches: ["*://publisher.liveperson.net/*"],
+        runAt: "document_start",
+        allFrames: true,
+      },
+    ],
+  },
+  {
     id: "History",
     platform: "all",
     name: "History.com",
