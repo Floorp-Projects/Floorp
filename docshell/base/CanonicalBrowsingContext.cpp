@@ -560,18 +560,14 @@ void CanonicalBrowsingContext::GetLoadingSessionHistoryInfoFromParent(
 
 UniquePtr<LoadingSessionHistoryInfo>
 CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
-    nsDocShellLoadState* aLoadState, nsIChannel* aChannel) {
+    nsDocShellLoadState* aLoadState, SessionHistoryEntry* existingEntry,
+    nsIChannel* aChannel) {
   RefPtr<SessionHistoryEntry> entry;
   const LoadingSessionHistoryInfo* existingLoadingInfo =
       aLoadState->GetLoadingSessionHistoryInfo();
+  MOZ_ASSERT(!existingEntry == !existingLoadingInfo);
   if (existingLoadingInfo) {
-    entry = SessionHistoryEntry::GetByLoadId(existingLoadingInfo->mLoadId);
-    MOZ_LOG(gSHLog, LogLevel::Verbose,
-            ("SHEntry::GetByLoadId(%" PRIu64 ") -> %p",
-             existingLoadingInfo->mLoadId, entry.get()));
-    if (!entry) {
-      return nullptr;
-    }
+    entry = existingEntry;
 
     // If the entry was updated, update also the LoadingSessionHistoryInfo.
     UniquePtr<LoadingSessionHistoryInfo> lshi =
@@ -608,7 +604,8 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
         LoadingSessionHistoryEntry{loadingInfo->mLoadId, entry});
   }
 
-  MOZ_ASSERT(SessionHistoryEntry::GetByLoadId(loadingInfo->mLoadId) == entry);
+  MOZ_ASSERT(SessionHistoryEntry::GetByLoadId(loadingInfo->mLoadId)->mEntry ==
+             entry);
 
   return loadingInfo;
 }
@@ -989,13 +986,15 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
   // aSessionHistoryEntryId?
 }
 
-static already_AddRefed<nsDocShellLoadState> CreateLoadInfo(
+already_AddRefed<nsDocShellLoadState> CanonicalBrowsingContext::CreateLoadInfo(
     SessionHistoryEntry* aEntry) {
   const SessionHistoryInfo& info = aEntry->Info();
   RefPtr<nsDocShellLoadState> loadState(new nsDocShellLoadState(info.GetURI()));
   info.FillLoadInfo(*loadState);
   UniquePtr<LoadingSessionHistoryInfo> loadingInfo;
   loadingInfo = MakeUnique<LoadingSessionHistoryInfo>(aEntry);
+  mLoadingEntries.AppendElement(
+      LoadingSessionHistoryEntry{loadingInfo->mLoadId, aEntry});
   loadState->SetLoadingSessionHistoryInfo(std::move(loadingInfo));
 
   return loadState.forget();
@@ -1028,10 +1027,10 @@ void CanonicalBrowsingContext::NotifyOnHistoryReload(
     aLoadState.emplace(CreateLoadInfo(loadingEntry.mEntry));
     aReloadActiveEntry.emplace(false);
     if (aForceReload) {
-      SessionHistoryEntry* entry =
+      SessionHistoryEntry::LoadingEntry* entry =
           SessionHistoryEntry::GetByLoadId(loadingEntry.mLoadId);
       if (entry) {
-        shistory->RemoveFrameEntries(entry);
+        shistory->RemoveFrameEntries(entry->mEntry);
       }
     }
   }

@@ -13,6 +13,7 @@
 #include "mozilla/LoadInfo.h"
 #include "mozilla/MozPromiseInlines.h"  // For MozPromise::FromDomPromise
 #include "mozilla/NullPrincipal.h"
+#include "mozilla/ResultVariant.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_extensions.h"
 #include "mozilla/StaticPrefs_fission.h"
@@ -525,29 +526,31 @@ bool CheckRecursiveLoad(CanonicalBrowsingContext* aLoadingContext,
 
 // Check that the load state, potentially received from a child process, appears
 // to be performing a load of the specified LoadingSessionHistoryInfo.
-// Returns a static (telemetry-safe) string naming what did not match, or
-// nullptr if it succeeds.
-static const char* ValidateHistoryLoad(
+// Returns a Result<…> containing the SessionHistoryEntry found for the
+// LoadingSessionHistoryInfo as success value if the validation succeeded, or a
+// static (telemetry-safe) string naming what did not match as a failure value
+// if the validation failed.
+static Result<SessionHistoryEntry*, const char*> ValidateHistoryLoad(
     CanonicalBrowsingContext* aLoadingContext,
     nsDocShellLoadState* aLoadState) {
   MOZ_ASSERT(SessionHistoryInParent());
   MOZ_ASSERT(aLoadState->LoadIsFromSessionHistory());
 
   if (!aLoadState->GetLoadingSessionHistoryInfo()) {
-    return "Missing LoadingSessionHistoryInfo";
+    return Err("Missing LoadingSessionHistoryInfo");
   }
 
-  const SessionHistoryInfo* snapshot =
-      SessionHistoryEntry::GetInfoSnapshotForValidationByLoadId(
-          aLoadState->GetLoadingSessionHistoryInfo()->mLoadId);
-  if (!snapshot) {
-    return "Invalid LoadId";
+  SessionHistoryEntry::LoadingEntry* loading = SessionHistoryEntry::GetByLoadId(
+      aLoadState->GetLoadingSessionHistoryInfo()->mLoadId);
+  if (!loading) {
+    return Err("Missing SessionHistoryEntry");
   }
 
+  SessionHistoryInfo* snapshot = loading->mInfoSnapshotForValidation.get();
   // History loads do not inherit principal.
   if (aLoadState->HasInternalLoadFlags(
           nsDocShell::INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL)) {
-    return "LOAD_FLAGS_INHERIT_PRINCIPAL";
+    return Err("LOAD_FLAGS_INHERIT_PRINCIPAL");
   }
 
   auto uriEq = [](nsIURI* a, nsIURI* b) -> bool {
@@ -560,34 +563,34 @@ static const char* ValidateHistoryLoad(
 
   // XXX: Needing to do all of this validation manually is kinda gross.
   if (!uriEq(snapshot->GetURI(), aLoadState->URI())) {
-    return "URI";
+    return Err("URI");
   }
   if (!uriEq(snapshot->GetOriginalURI(), aLoadState->OriginalURI())) {
-    return "OriginalURI";
+    return Err("OriginalURI");
   }
   if (!aLoadState->ResultPrincipalURIIsSome() ||
       !uriEq(snapshot->GetResultPrincipalURI(),
              aLoadState->ResultPrincipalURI())) {
-    return "ResultPrincipalURI";
+    return Err("ResultPrincipalURI");
   }
   if (!uriEq(snapshot->GetUnstrippedURI(), aLoadState->GetUnstrippedURI())) {
-    return "UnstrippedURI";
+    return Err("UnstrippedURI");
   }
   if (!principalEq(snapshot->GetTriggeringPrincipal(),
                    aLoadState->TriggeringPrincipal())) {
-    return "TriggeringPrincipal";
+    return Err("TriggeringPrincipal");
   }
   if (!principalEq(snapshot->GetPrincipalToInherit(),
                    aLoadState->PrincipalToInherit())) {
-    return "PrincipalToInherit";
+    return Err("PrincipalToInherit");
   }
   if (!principalEq(snapshot->GetPartitionedPrincipalToInherit(),
                    aLoadState->PartitionedPrincipalToInherit())) {
-    return "PartitionedPrincipalToInherit";
+    return Err("PartitionedPrincipalToInherit");
   }
 
   // Everything matches!
-  return nullptr;
+  return loading->mEntry;
 }
 
 auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
@@ -627,10 +630,13 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
   //
   // NOTE: Keep this check in-sync with the check in
   // `nsDocShellLoadState::GetEffectiveTriggeringRemoteType()`!
+  RefPtr<SessionHistoryEntry> existingEntry;
   if (SessionHistoryInParent() && aLoadState->LoadIsFromSessionHistory() &&
       aLoadState->LoadType() != LOAD_ERROR_PAGE) {
-    if (const char* mismatch =
-            ValidateHistoryLoad(loadingContext, aLoadState)) {
+    Result<SessionHistoryEntry*, const char*> result =
+        ValidateHistoryLoad(loadingContext, aLoadState);
+    if (result.isErr()) {
+      const char* mismatch = result.unwrapErr();
       LOG(
           ("DocumentLoadListener::Open with invalid loading history entry "
            "[this=%p, mismatch=%s]",
@@ -643,6 +649,21 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
 #endif
       *aRv = NS_ERROR_DOM_SECURITY_ERR;
       mParentChannelListener = nullptr;
+      return nullptr;
+    }
+
+    existingEntry = result.unwrap();
+    if (!existingEntry->IsInSessionHistory()) {
+      SessionHistoryEntry::RemoveLoadId(
+          aLoadState->GetLoadingSessionHistoryInfo()->mLoadId);
+      LOG(
+          ("DocumentLoadListener::Open with disconnected history entry "
+           "[this=%p]",
+           this));
+
+      *aRv = NS_BINDING_ABORTED;
+      mParentChannelListener = nullptr;
+      mChannel = nullptr;
       return nullptr;
     }
   }
@@ -701,14 +722,9 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
     // It's hard to know at this point whether session history will be enabled
     // in the browsing context, so we always create an entry for a load here.
     mLoadingSessionHistoryInfo =
-        documentContext->CreateLoadingSessionHistoryEntryForLoad(aLoadState,
-                                                                 mChannel);
-    if (!mLoadingSessionHistoryInfo) {
-      *aRv = NS_BINDING_ABORTED;
-      mParentChannelListener = nullptr;
-      mChannel = nullptr;
-      return nullptr;
-    }
+        documentContext->CreateLoadingSessionHistoryEntryForLoad(
+            aLoadState, existingEntry, mChannel);
+    MOZ_ASSERT(mLoadingSessionHistoryInfo);
   }
 
   nsCOMPtr<nsIURI> uriBeingLoaded;
