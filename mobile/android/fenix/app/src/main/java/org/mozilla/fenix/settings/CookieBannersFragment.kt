@@ -7,7 +7,7 @@ package org.mozilla.fenix.settings
 import android.os.Bundle
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.SwitchPreference
+import androidx.preference.SwitchPreferenceCompat
 import mozilla.components.concept.engine.EngineSession.CookieBannerHandlingMode.DISABLED
 import mozilla.components.concept.engine.EngineSession.CookieBannerHandlingMode.REJECT_OR_ACCEPT_ALL
 import mozilla.components.concept.engine.Settings
@@ -37,7 +37,7 @@ class CookieBannersFragment : PreferenceFragmentCompat() {
     }
 
     private fun setupPreferences() {
-        requirePreference<SwitchPreference>(R.string.pref_key_cookie_banner_v1).apply {
+        requirePreference<SwitchPreferenceCompat>(R.string.pref_key_cookie_banner_v1).apply {
             onPreferenceChangeListener = object : SharedPreferenceUpdater() {
                 override fun onPreferenceChange(
                     preference: Preference,
