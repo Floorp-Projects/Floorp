@@ -25,7 +25,6 @@ Step 4:
 import pathlib
 import sys
 import xml.etree.ElementTree
-
 from typing import List  # mypy!
 
 # -
