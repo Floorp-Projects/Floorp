@@ -28,6 +28,64 @@ Released YYYY-MM-DD.
 
 --------------------------------------------------------------------------------
 
+## 1.2.0
+
+Released 2022-10-20.
+
+### Added
+
+* Support custom arbitrary implementation for fields on
+  derive. [#129](https://github.com/rust-fuzz/arbitrary/pull/129)
+
+--------------------------------------------------------------------------------
+
+## 1.1.6
+
+Released 2022-09-08.
+
+### Fixed
+
+* Fixed a potential panic due to an off-by-one error in the `Arbitrary`
+  implementation for `std::ops::Bound<T>`.
+
+--------------------------------------------------------------------------------
+
+## 1.1.5
+
+Released 2022-09-20.
+
+### Added
+
+* Implemented `Arbitrary` for `std::ops::Bound<T>`.
+
+### Fixed
+
+* Fixed a bug where `Unstructured::int_in_range` could return out-of-range
+  integers when generating arbitrary signed integers.
+
+--------------------------------------------------------------------------------
+
+## 1.1.4
+
+Released 2022-08-29.
+
+### Added
+
+* Implemented `Arbitrary` for `Rc<str>` and `Arc<str>`
+
+### Changed
+
+* Allow overriding the error type in `arbitrary::Result`
+* The `Unstructured::arbitrary_loop` method will consume fewer bytes of input
+  now.
+
+### Fixed
+
+* Fixed a bug where `Unstructured::int_in_range` could return out-of-range
+  integers.
+
+--------------------------------------------------------------------------------
+
 ## 1.1.3
 
 Released 2022-06-23.
