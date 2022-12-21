@@ -267,12 +267,7 @@ void JSRuntime::destroyRuntime() {
 
   AutoNoteSingleThreadedRegion anstr;
 
-#ifdef DEBUG
-  {
-    AutoLockScriptData lock(this);
-    MOZ_ASSERT(scriptDataTable(lock).empty());
-  }
-#endif
+  releaseScriptDataTable();
 
 #if !JS_HAS_INTL_API
   FinishRuntimeNumberState(this);
@@ -286,6 +281,23 @@ void JSRuntime::destroyRuntime() {
 #ifdef DEBUG
   initialized_ = false;
 #endif
+}
+
+void JSRuntime::releaseScriptDataTable() {
+  AutoLockScriptData lock(this);
+
+  // Script data is shared across multiple runtimes and the original
+  // stencil data.  The ref count may not be 1 when:
+  //   * the script data is registered on other runtimes
+  //   * the original stencil is still alive
+
+  SharedImmutableScriptDataTable& table = scriptDataTable(lock);
+  for (SharedImmutableScriptDataTable::Enum e(table); !e.empty();
+       e.popFront()) {
+    SharedImmutableScriptData* sharedData = e.front();
+    sharedData->Release();
+    e.removeFront();
+  }
 }
 
 void JSRuntime::addTelemetry(JSMetric id, uint32_t sample) {

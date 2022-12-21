@@ -990,10 +990,9 @@ struct SharedDataContainer {
   // Returns index-th script's shared data, or nullptr if it doesn't have.
   js::SharedImmutableScriptData* get(ScriptIndex index) const;
 
-  // Add data for index-th script and share it with VM.
-  [[nodiscard]] bool addAndShare(JSContext* cx, FrontendContext* fc,
-                                 ScriptIndex index,
-                                 js::SharedImmutableScriptData* data);
+  // Add data for index-th script.
+  [[nodiscard]] bool add(ScriptIndex index,
+                         js::SharedImmutableScriptData* data);
 
   // Add data for index-th script without sharing it with VM.
   // The data should already be shared with VM.

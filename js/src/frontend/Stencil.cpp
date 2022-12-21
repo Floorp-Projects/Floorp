@@ -2960,17 +2960,13 @@ bool SharedDataContainer::convertFromSingleToMap(FrontendContext* fc) {
   return true;
 }
 
-bool SharedDataContainer::addAndShare(JSContext* cx, FrontendContext* fc,
-                                      ScriptIndex index,
-                                      js::SharedImmutableScriptData* data) {
+bool SharedDataContainer::add(ScriptIndex index,
+                              js::SharedImmutableScriptData* data) {
   MOZ_ASSERT(!isBorrow());
 
   if (isSingle()) {
     MOZ_ASSERT(index == CompilationStencil::TopLevelIndex);
     RefPtr<SharedImmutableScriptData> ref(data);
-    if (!SharedImmutableScriptData::shareScriptData(cx, fc, ref)) {
-      return false;
-    }
     setSingle(ref.forget());
     return true;
   }
@@ -2979,16 +2975,14 @@ bool SharedDataContainer::addAndShare(JSContext* cx, FrontendContext* fc,
     auto& vec = *asVector();
     // Resized by SharedDataContainer::prepareStorageFor.
     vec[index] = data;
-    return SharedImmutableScriptData::shareScriptData(cx, fc, vec[index]);
+    return true;
   }
 
   MOZ_ASSERT(isMap());
   auto& map = *asMap();
   // Reserved by SharedDataContainer::prepareStorageFor.
   map.putNewInfallible(index, data);
-  auto p = map.lookup(index);
-  MOZ_ASSERT(p);
-  return SharedImmutableScriptData::shareScriptData(cx, fc, p->value());
+  return true;
 }
 
 bool SharedDataContainer::addExtraWithoutShare(
