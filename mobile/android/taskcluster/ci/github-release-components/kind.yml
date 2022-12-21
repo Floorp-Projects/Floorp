@@ -34,9 +34,9 @@ task-template:
                 release: false
                 default: true
         release-name:
-            by-build-type:
-                release: Android-Components {version}
-                default: Android-Components fake release {version}
+            by-level:
+                '3': Android-Components {version}
+                default: Fake Android-Components {version}
     treeherder:
         kind: build
         platform: AC-android-all/opt
