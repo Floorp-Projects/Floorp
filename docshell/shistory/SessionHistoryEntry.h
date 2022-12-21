@@ -368,16 +368,6 @@ class SessionHistoryEntry : public nsISHEntry {
   NS_DECL_NSISHENTRY
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_SESSIONHISTORYENTRY_IID)
 
-  bool IsInSessionHistory() {
-    SessionHistoryEntry* entry = this;
-    while (SessionHistoryEntry* parent =
-               static_cast<SessionHistoryEntry*>(entry->mParent)) {
-      entry = parent;
-    }
-    return entry->SharedInfo()->mSHistory &&
-           entry->SharedInfo()->mSHistory->IsAlive();
-  }
-
   void ReplaceWith(const SessionHistoryEntry& aSource);
 
   const SessionHistoryInfo& Info() const { return *mInfo; }
@@ -418,18 +408,11 @@ class SessionHistoryEntry : public nsISHEntry {
 
   void SetWireframe(const Maybe<Wireframe>& aWireframe);
 
-  struct LoadingEntry {
-    // A pointer to the entry being loaded. Will be cleared by the
-    // SessionHistoryEntry destructor, at latest.
-    SessionHistoryEntry* mEntry;
-    // Snapshot of the entry's SessionHistoryInfo when the load started, to be
-    // used for validation purposes only.
-    UniquePtr<SessionHistoryInfo> mInfoSnapshotForValidation;
-  };
-
   // Get an entry based on LoadingSessionHistoryInfo's mLoadId. Parent process
   // only.
-  static LoadingEntry* GetByLoadId(uint64_t aLoadId);
+  static SessionHistoryEntry* GetByLoadId(uint64_t aLoadId);
+  static const SessionHistoryInfo* GetInfoSnapshotForValidationByLoadId(
+      uint64_t aLoadId);
   static void SetByLoadId(uint64_t aLoadId, SessionHistoryEntry* aEntry);
   static void RemoveLoadId(uint64_t aLoadId);
 
@@ -448,6 +431,15 @@ class SessionHistoryEntry : public nsISHEntry {
   bool mForInitialLoad = false;
 
   HistoryEntryCounterForBrowsingContext mBCHistoryLength;
+
+  struct LoadingEntry {
+    // A pointer to the entry being loaded. Will be cleared by the
+    // SessionHistoryEntry destructor, at latest.
+    SessionHistoryEntry* mEntry;
+    // Snapshot of the entry's SessionHistoryInfo when the load started, to be
+    // used for validation purposes only.
+    UniquePtr<SessionHistoryInfo> mInfoSnapshotForValidation;
+  };
 
   static nsTHashMap<nsUint64HashKey, LoadingEntry>* sLoadIdToEntry;
 };
