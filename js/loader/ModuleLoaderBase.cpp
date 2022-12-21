@@ -983,9 +983,7 @@ void ModuleLoaderBase::Shutdown() {
   MOZ_ASSERT(mFetchingModules.IsEmpty());
 
   for (const auto& entry : mFetchedModules) {
-    if (entry.GetData()) {
-      entry.GetData()->Shutdown();
-    }
+    entry.GetData()->Shutdown();
   }
 
   mFetchedModules.Clear();
@@ -1212,11 +1210,6 @@ nsresult ModuleLoaderBase::EvaluateModuleInContext(
   // ModuleEvaluate will usually set a pending exception if it returns false,
   // unless the user cancels execution.
   MOZ_ASSERT_IF(ok, !JS_IsExceptionPending(aCx));
-
-  // For long running scripts, the request may be cancelled abruptly.
-  if (request->IsCanceled() || !mLoader) {
-    return NS_ERROR_ABORT;
-  }
 
   if (!ok) {
     LOG(("ScriptLoadRequest (%p):   evaluation failed", aRequest));
