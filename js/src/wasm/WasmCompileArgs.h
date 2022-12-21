@@ -140,11 +140,13 @@ struct CompileArgs : ShareableBase<CompileArgs> {
 
   FeatureArgs features;
 
-  // CompileArgs has three constructors:
+  // CompileArgs has several constructors:
   //
   // - two through factory functions `build`/`buildAndReport`, which checks
   //   that flags are consistent with each other, and optionally reports any
   //   errors.
+  // - the 'buildForAsmJS' one, which uses the appropriate configuration for
+  //   legacy asm.js code.
   // - one that gives complete access to underlying fields.
   //
   // You should use the factory functions in general, unless you have a very
@@ -154,6 +156,7 @@ struct CompileArgs : ShareableBase<CompileArgs> {
   static SharedCompileArgs build(JSContext* cx, ScriptedCaller&& scriptedCaller,
                                  const FeatureOptions& options,
                                  CompileArgsError* error);
+  static SharedCompileArgs buildForAsmJS(ScriptedCaller&& scriptedCaller);
   static SharedCompileArgs buildAndReport(JSContext* cx,
                                           ScriptedCaller&& scriptedCaller,
                                           const FeatureOptions& options,
