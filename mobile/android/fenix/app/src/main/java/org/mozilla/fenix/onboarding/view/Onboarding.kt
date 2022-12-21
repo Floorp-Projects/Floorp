@@ -164,7 +164,7 @@ private fun OnboardingWelcomeBottomContent(
 @Composable
 private fun OnboardingWelcomeContent() {
     Column(
-        modifier = Modifier.padding(horizontal = 16.dp),
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Image(
@@ -195,7 +195,7 @@ private fun OnboardingWelcomeContent() {
 @Composable
 private fun OnboardingSyncSignInContent() {
     Column(
-        modifier = Modifier.padding(horizontal = 16.dp),
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Image(
