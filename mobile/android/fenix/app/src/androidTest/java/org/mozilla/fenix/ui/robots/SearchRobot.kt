@@ -282,10 +282,6 @@ class SearchRobot {
         assertTranslatedFocusedNavigationToolbar(toolbarHintString)
 
     fun verifySearchEngineShortcuts(rule: ComposeTestRule, vararg searchEngines: String) {
-        mDevice.findObject(
-            UiSelector().resourceId("$packageName:id/awesome_bar"),
-        ).swipeUp(3)
-
         for (searchEngine in searchEngines) {
             rule.waitForIdle()
             rule.onNodeWithText(searchEngine).assertIsDisplayed()
@@ -365,10 +361,7 @@ class SearchRobot {
             rule: ComposeTestRule,
             interact: SettingsSubMenuSearchRobot.() -> Unit,
         ): SettingsSubMenuSearchRobot.Transition {
-            rule.onNodeWithText("Search engine settings")
-                .assertIsDisplayed()
-                .assertHasClickAction()
-                .performClick()
+            rule.onNodeWithText("Search engine settings").performClick()
 
             SettingsSubMenuSearchRobot().interact()
             return SettingsSubMenuSearchRobot.Transition()
