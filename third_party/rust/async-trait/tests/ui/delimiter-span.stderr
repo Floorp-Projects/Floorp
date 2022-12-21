@@ -6,6 +6,8 @@ error: no rules expected the token `{`
 ...
 19 |         picky!({ 123, self });
    |                ^ no rules expected this token in macro call
+   |
+   = note: while trying to match sequence start
 
 error: no rules expected the token `{`
   --> tests/ui/delimiter-span.rs:20:16
@@ -15,3 +17,5 @@ error: no rules expected the token `{`
 ...
 20 |         picky!({ 123 });
    |                ^ no rules expected this token in macro call
+   |
+   = note: while trying to match sequence start
