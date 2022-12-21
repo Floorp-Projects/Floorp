@@ -110,7 +110,7 @@ impl BoxedKind for Box<dyn StdError + Send + Sync> {}
 impl Boxed {
     #[cold]
     pub fn new(self, error: Box<dyn StdError + Send + Sync>) -> Error {
-        let backtrace = backtrace_if_absent!(error);
+        let backtrace = backtrace_if_absent!(&*error);
         Error::from_boxed(error, backtrace)
     }
 }

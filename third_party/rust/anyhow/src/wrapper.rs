@@ -1,6 +1,9 @@
 use crate::StdError;
 use core::fmt::{self, Debug, Display};
 
+#[cfg(backtrace)]
+use std::any::Demand;
+
 #[repr(transparent)]
 pub struct MessageError<M>(pub M);
 
@@ -67,12 +70,12 @@ impl Display for BoxedError {
 
 #[cfg(feature = "std")]
 impl StdError for BoxedError {
-    #[cfg(backtrace)]
-    fn backtrace(&self) -> Option<&crate::backtrace::Backtrace> {
-        self.0.backtrace()
-    }
-
     fn source(&self) -> Option<&(dyn StdError + 'static)> {
         self.0.source()
+    }
+
+    #[cfg(backtrace)]
+    fn provide<'a>(&'a self, demand: &mut Demand<'a>) {
+        self.0.provide(demand);
     }
 }
