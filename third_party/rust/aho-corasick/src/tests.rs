@@ -337,6 +337,7 @@ const LEFTMOST_FIRST: &'static [SearchTest] = &[
         &[(0, 0, 1), (2, 7, 9),]
     ),
     t!(leftfirst330, &["a", "abab"], "abab", &[(0, 0, 1), (0, 2, 3)]),
+    t!(leftfirst400, &["amwix", "samwise", "sam"], "Zsamwix", &[(2, 1, 4)]),
 ];
 
 /// Like LEFTMOST_FIRST, but for anchored searches.
@@ -360,6 +361,7 @@ const ANCHORED_LEFTMOST_FIRST: &'static [SearchTest] = &[
         &[(0, 0, 1)]
     ),
     t!(aleftfirst330, &["a", "abab"], "abab", &[(0, 0, 1)]),
+    t!(aleftfirst400, &["wise", "samwise", "sam"], "samwix", &[(2, 0, 3)]),
 ];
 
 /// Tests for non-overlapping leftmost-longest match semantics. These tests

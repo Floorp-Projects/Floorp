@@ -267,13 +267,7 @@ impl Builder {
             }
             Some(ForceAlgorithm::RabinKarp) => (SearchKind::RabinKarp, 0),
         };
-        Some(Searcher {
-            config: self.config.clone(),
-            patterns,
-            rabinkarp,
-            search_kind,
-            minimum_len,
-        })
+        Some(Searcher { patterns, rabinkarp, search_kind, minimum_len })
     }
 
     fn build_teddy(&self, patterns: &Patterns) -> Option<Teddy> {
@@ -377,7 +371,6 @@ impl Default for Builder {
 /// ```
 #[derive(Clone, Debug)]
 pub struct Searcher {
-    config: Config,
     patterns: Patterns,
     rabinkarp: RabinKarp,
     search_kind: SearchKind,

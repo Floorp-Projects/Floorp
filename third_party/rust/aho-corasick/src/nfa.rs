@@ -65,7 +65,7 @@ pub struct NFA<S> {
     /// A set of equivalence classes in terms of bytes. We compute this while
     /// building the NFA, but don't use it in the NFA's states. Instead, we
     /// use this for building the DFA. We store it on the NFA since it's easy
-    /// to compute while visiting the the patterns.
+    /// to compute while visiting the patterns.
     byte_classes: ByteClasses,
     /// A set of states. Each state defines its own transitions, a fail
     /// transition and a set of indices corresponding to matches.
@@ -311,17 +311,6 @@ impl<S: StateID> State<S> {
 
     fn is_match(&self) -> bool {
         !self.matches.is_empty()
-    }
-
-    fn get_longest_match_len(&self) -> Option<usize> {
-        // Why is this true? Because the first match in any matching state
-        // will always correspond to the match added to it during trie
-        // construction (since when we copy matches due to failure transitions,
-        // we always append them). Therefore, it follows that the first match
-        // must always be longest since any subsequent match must be from a
-        // failure transition, and a failure transition by construction points
-        // to a proper suffix. A proper suffix is, by definition, smaller.
-        self.matches.get(0).map(|&(_, len)| len)
     }
 
     fn next_state(&self, input: u8) -> S {
@@ -649,11 +638,7 @@ impl<'a, S: StateID> Compiler<'a, S> {
         self.add_start_state_loop();
         self.add_dead_state_loop();
         if !self.builder.anchored {
-            if self.match_kind().is_leftmost() {
-                self.fill_failure_transitions_leftmost();
-            } else {
-                self.fill_failure_transitions_standard();
-            }
+            self.fill_failure_transitions();
         }
         self.close_start_state_loop();
         self.nfa.byte_classes = self.byte_classes.build();
@@ -739,7 +724,8 @@ impl<'a, S: StateID> Compiler<'a, S> {
     }
 
     /// This routine creates failure transitions according to the standard
-    /// textbook formulation of the Aho-Corasick algorithm.
+    /// textbook formulation of the Aho-Corasick algorithm, with a couple small
+    /// tweaks to support "leftmost" semantics.
     ///
     /// Building failure transitions is the most interesting part of building
     /// the Aho-Corasick automaton, because they are what allow searches to
@@ -807,11 +793,15 @@ impl<'a, S: StateID> Compiler<'a, S> {
     /// 'abcd', 'b', 'bcd' and 'cd':
     ///
     /// ```ignore
-    ///        - a - S1 - b - S2 - c - S3 - d - S4*
-    ///       /
-    ///     S0 - b - S5* - c - S6 - d - S7*
-    ///       \
-    ///        - c - S8 - d - S9*
+    ///          - a - S1 - b - S2* - c - S3 - d - S4*
+    ///         /               /         /
+    ///        /         -------   -------
+    ///       /         /         /
+    ///     S0 --- b - S5* - c - S6 - d - S7*
+    ///       \                  /
+    ///        \         --------
+    ///         \       /
+    ///          - c - S8 - d - S9*
     /// ```
     ///
     /// The failure transitions for this trie are defined from S2 to S5,
@@ -839,20 +829,50 @@ impl<'a, S: StateID> Compiler<'a, S> {
     /// We don't actually use recursion to implement this, but instead, use a
     /// breadth first search of the automaton. Our base case is the start
     /// state, whose failure transition is just a transition to itself.
-    fn fill_failure_transitions_standard(&mut self) {
+    ///
+    /// When building a leftmost automaton, we proceed as above, but only
+    /// include a subset of failure transitions. Namely, we omit any failure
+    /// transitions that appear after a match state in the trie. This is
+    /// because failure transitions always point back to a proper suffix of
+    /// what has been seen so far. Thus, following a failure transition after
+    /// a match implies looking for a match that starts after the one that has
+    /// already been seen, which is of course therefore not the leftmost match.
+    ///
+    /// N.B. I came up with this algorithm on my own, and after scouring all of
+    /// the other AC implementations I know of (Perl, Snort, many on GitHub).
+    /// I couldn't find any that implement leftmost semantics like this.
+    /// Perl of course needs leftmost-first semantics, but they implement it
+    /// with a seeming hack at *search* time instead of encoding it into the
+    /// automaton. There are also a couple Java libraries that support leftmost
+    /// longest semantics, but they do it by building a queue of matches at
+    /// search time, which is even worse than what Perl is doing. ---AG
+    fn fill_failure_transitions(&mut self) {
+        let kind = self.match_kind();
         // Initialize the queue for breadth first search with all transitions
         // out of the start state. We handle the start state specially because
         // we only want to follow non-self transitions. If we followed self
         // transitions, then this would never terminate.
         let mut queue = VecDeque::new();
         let mut seen = self.queued_set();
-        for b in AllBytesIter::new() {
-            let next = self.nfa.start().next_state(b);
-            if next != self.nfa.start_id {
-                if !seen.contains(next) {
-                    queue.push_back(next);
-                    seen.insert(next);
-                }
+        let mut it = self.nfa.iter_transitions_mut(self.nfa.start_id);
+        while let Some((_, next)) = it.next() {
+            // Skip anything we've seen before and any self-transitions on the
+            // start state.
+            if next == it.nfa().start_id || seen.contains(next) {
+                continue;
+            }
+            queue.push_back(next);
+            seen.insert(next);
+            // Under leftmost semantics, if a state immediately following
+            // the start state is a match state, then we never want to
+            // follow its failure transition since the failure transition
+            // necessarily leads back to the start state, which we never
+            // want to do for leftmost matching after a match has been
+            // found.
+            //
+            // We apply the same logic to non-start states below as well.
+            if kind.is_leftmost() && it.nfa().state(next).is_match() {
+                it.nfa().state_mut(next).fail = dead_id();
             }
         }
         while let Some(id) = queue.pop_front() {
@@ -870,6 +890,31 @@ impl<'a, S: StateID> Compiler<'a, S> {
                 queue.push_back(next);
                 seen.insert(next);
 
+                // As above for start states, under leftmost semantics, once
+                // we see a match all subsequent states should have no failure
+                // transitions because failure transitions always imply looking
+                // for a match that is a suffix of what has been seen so far
+                // (where "seen so far" corresponds to the string formed by
+                // following the transitions from the start state to the
+                // current state). Under leftmost semantics, we specifically do
+                // not want to allow this to happen because we always want to
+                // report the match found at the leftmost position.
+                //
+                // The difference between leftmost-first and leftmost-longest
+                // occurs previously while we build the trie. For
+                // leftmost-first, we simply omit any entries that would
+                // otherwise require passing through a match state.
+                //
+                // Note that for correctness, the failure transition has to be
+                // set to the dead state for ALL states following a match, not
+                // just the match state itself. However, by setting the failure
+                // transition to the dead state on all match states, the dead
+                // state will automatically propagate to all subsequent states
+                // via the failure state computation below.
+                if kind.is_leftmost() && it.nfa().state(next).is_match() {
+                    it.nfa().state_mut(next).fail = dead_id();
+                    continue;
+                }
                 let mut fail = it.nfa().state(id).fail;
                 while it.nfa().state(fail).next_state(b) == fail_id() {
                     fail = it.nfa().state(fail).fail;
@@ -887,217 +932,9 @@ impl<'a, S: StateID> Compiler<'a, S> {
             // in addition to its own. For the non-overlapping case, such
             // states only report the first match, which is never empty since
             // it isn't a start state.
-            it.nfa().copy_empty_matches(id);
-        }
-    }
-
-    /// This routine is just like fill_failure_transitions_standard, except
-    /// it adds failure transitions in a way that preserves leftmost match
-    /// semantics (for both leftmost-first and leftmost-longest).
-    ///
-    /// The algorithms are so similar that it would be possible to write it
-    /// generically. But doing so without overhead would require a bit of
-    /// ceremony, so we just copy it and add in the extra leftmost logic.
-    /// Moreover, the standard algorithm above is so simple that it feels like
-    /// a crime to disturb it.
-    ///
-    /// In effect, this proceeds just like the standard approach, but we
-    /// specifically add only a subset of all failure transitions. Namely, we
-    /// only add failure transitions that either do not occur after a match
-    /// or failure transitions that do occur after a match but preserve the
-    /// match. The comments in the implementation below should help.
-    ///
-    /// N.B. The only differences in the automaton between leftmost-first and
-    /// leftmost-longest are in trie construction. Otherwise, both have exactly
-    /// the same set of failure transitions. leftmost-longest adds everything
-    /// to the trie, where as leftmost-first skips any patterns for which there
-    /// exists a prefix of it that was added earlier.
-    ///
-    /// N.B. I came up with this algorithm on my own, and after scouring all of
-    /// the other AC implementations I know of (Perl, Snort, many on GitHub).
-    /// I couldn't find any that implement leftmost semantics like this.
-    /// Perl of course needs leftmost-first semantics, but they implement it
-    /// with a seeming hack at *search* time instead of encoding it into the
-    /// automaton. There are also a couple Java libraries that support leftmost
-    /// longest semantics, but they do it by building a queue of matches at
-    /// search time, which is even worse than what Perl is doing. ---AG
-    fn fill_failure_transitions_leftmost(&mut self) {
-        /// Represents an item in our queue of states to process.
-        ///
-        /// Fundamentally, this queue serves the same purpose as the queue
-        /// for filling failure transitions using the standard formulation.
-        /// In the leftmost case, though, we need to track a bit more
-        /// information. See comments below.
-        #[derive(Clone, Copy, Debug)]
-        struct QueuedState<S> {
-            /// The id of the state to visit.
-            id: S,
-            /// The depth at which the first match was observed in the path
-            /// to this state. Note that this corresponds to the depth at
-            /// which the beginning of the match was detected. If no match
-            /// has been seen, then this is None.
-            match_at_depth: Option<usize>,
-        }
-
-        impl<S: StateID> QueuedState<S> {
-            /// Create a queued state corresponding to the given NFA's start
-            /// state.
-            fn start(nfa: &NFA<S>) -> QueuedState<S> {
-                let match_at_depth =
-                    if nfa.start().is_match() { Some(0) } else { None };
-                QueuedState { id: nfa.start_id, match_at_depth }
+            if !kind.is_leftmost() {
+                it.nfa().copy_empty_matches(id);
             }
-
-            /// Return the next state to queue up. The given id must be a state
-            /// corresponding to a single transition from this queued state.
-            fn next_queued_state(
-                &self,
-                nfa: &NFA<S>,
-                id: S,
-            ) -> QueuedState<S> {
-                let match_at_depth = self.next_match_at_depth(nfa, id);
-                QueuedState { id, match_at_depth }
-            }
-
-            /// Return the earliest depth at which a match has occurred for
-            /// the given state. The given state must correspond to a single
-            /// transition from this queued state.
-            fn next_match_at_depth(
-                &self,
-                nfa: &NFA<S>,
-                next: S,
-            ) -> Option<usize> {
-                // This is a little tricky. If the previous state has already
-                // seen a match or if `next` isn't a match state, then nothing
-                // needs to change since a later state cannot find an earlier
-                // match.
-                match self.match_at_depth {
-                    Some(x) => return Some(x),
-                    None if nfa.state(next).is_match() => {}
-                    None => return None,
-                }
-                let depth = nfa.state(next).depth
-                    - nfa.state(next).get_longest_match_len().unwrap()
-                    + 1;
-                Some(depth)
-            }
-        }
-
-        // Initialize the queue for breadth first search with all transitions
-        // out of the start state. We handle the start state specially because
-        // we only want to follow non-self transitions. If we followed self
-        // transitions, then this would never terminate.
-        let mut queue: VecDeque<QueuedState<S>> = VecDeque::new();
-        let mut seen = self.queued_set();
-        let start = QueuedState::start(&self.nfa);
-        for b in AllBytesIter::new() {
-            let next_id = self.nfa.start().next_state(b);
-            if next_id != start.id {
-                let next = start.next_queued_state(&self.nfa, next_id);
-                if !seen.contains(next.id) {
-                    queue.push_back(next);
-                    seen.insert(next.id);
-                }
-                // If a state immediately following the start state is a match
-                // state, then we never want to follow its failure transition
-                // since the failure transition necessarily leads back to the
-                // start state, which we never want to do for leftmost matching
-                // after a match has been found.
-                //
-                // N.B. This is a special case of the more general handling
-                // found below.
-                if self.nfa.state(next_id).is_match() {
-                    self.nfa.state_mut(next_id).fail = dead_id();
-                }
-            }
-        }
-        while let Some(item) = queue.pop_front() {
-            let mut any_trans = false;
-            let mut it = self.nfa.iter_transitions_mut(item.id);
-            while let Some((b, next_id)) = it.next() {
-                any_trans = true;
-
-                // Queue up the next state.
-                let next = item.next_queued_state(it.nfa(), next_id);
-                if seen.contains(next.id) {
-                    // The only way to visit a duplicate state in a transition
-                    // list is when ASCII case insensitivity is enabled. In
-                    // this case, we want to skip it since it's redundant work.
-                    // But it would also end up duplicating matches, which
-                    // results in reporting duplicate matches in some cases.
-                    // See the 'acasei010' regression test.
-                    continue;
-                }
-                queue.push_back(next);
-                seen.insert(next.id);
-
-                // Find the failure state for next. Same as standard.
-                let mut fail = it.nfa().state(item.id).fail;
-                while it.nfa().state(fail).next_state(b) == fail_id() {
-                    fail = it.nfa().state(fail).fail;
-                }
-                fail = it.nfa().state(fail).next_state(b);
-
-                // This is the key difference from the standard formulation.
-                // Namely, if we've seen a match, then we only want a failure
-                // transition if the failure transition preserves the match
-                // we've seen. In general, this is not true of all failure
-                // transitions since they can point back to any suffix of what
-                // we've seen so far. Instead, we only want to point back to
-                // suffixes that contain any match we've seen.
-                //
-                // We achieve this by comparing the depth of the failure
-                // transition with the number of states between this state
-                // and the beginning of the earliest match detected. If the
-                // depth of the failure state is smaller than this difference,
-                // then it cannot contain the match. If it's bigger or equal
-                // to the difference, then it necessarily includes the match
-                // we've seen since all failure transitions correspond to a
-                // suffix.
-                //
-                // If we've determined that we don't want the failure
-                // transition, then we set this state's failure transition to
-                // the dead state. In other words, when a search hits this
-                // state, it will not continue and correctly stop. (N.B. A
-                // dead state is different than a fail state. A dead state
-                // MUST be preceded by a match and acts as a sentinel to search
-                // routines to terminate.)
-                //
-                // Understanding this is tricky, and it took me several days
-                // to think through this and get it right. If you want to grok
-                // it, then I'd recommend: 1) switch the implementation to
-                // always use the standard algorithm for filling in failure
-                // transitions, 2) run the test suite and 3) examine the test
-                // failures. Write out the automatons for them and try to work
-                // backwards by figuring out which failure transitions should
-                // be removed. You should arrive at the same rule used below.
-                if let Some(match_depth) = next.match_at_depth {
-                    let fail_depth = it.nfa().state(fail).depth;
-                    let next_depth = it.nfa().state(next.id).depth;
-                    if next_depth - match_depth + 1 > fail_depth {
-                        it.nfa().state_mut(next.id).fail = dead_id();
-                        continue;
-                    }
-                    assert_ne!(
-                        start.id,
-                        it.nfa().state(next.id).fail,
-                        "states that are match states or follow match \
-                         states should never have a failure transition \
-                         back to the start state in leftmost searching",
-                    );
-                }
-                it.nfa().state_mut(next.id).fail = fail;
-                it.nfa().copy_matches(fail, next.id);
-            }
-            // If there are no transitions for this state and if it's a match
-            // state, then we must set its failure transition to the dead
-            // state since we never want it to restart the search.
-            if !any_trans && it.nfa().state(item.id).is_match() {
-                it.nfa().state_mut(item.id).fail = dead_id();
-            }
-            // We don't need to copy empty matches from the start state here
-            // because that's only necessary for overlapping matches and
-            // leftmost match kinds don't support overlapping matches.
         }
     }
 
@@ -1176,7 +1013,7 @@ impl<'a, S: StateID> Compiler<'a, S> {
     fn calculate_size(&mut self) {
         let mut size = 0;
         for state in &self.nfa.states {
-            size += state.heap_bytes();
+            size += size_of::<State<S>>() + state.heap_bytes();
         }
         self.nfa.heap_bytes = size;
     }

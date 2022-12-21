@@ -68,11 +68,11 @@ use crate::Match;
 ///
 /// Every automaton has exactly one fail state, one dead state and exactly one
 /// start state. Generally, these correspond to the first, second and third
-/// states, respectively. The failure state is always treated as a sentinel.
-/// That is, no correct Aho-Corasick automaton will ever transition into the
-/// fail state. The dead state, however, can be transitioned into, but only
-/// when leftmost-first or leftmost-longest match semantics are enabled and
-/// only when at least one match has been observed.
+/// states, respectively. The dead state is always treated as a sentinel. That
+/// is, no correct Aho-Corasick automaton will ever transition into the fail
+/// state. The dead state, however, can be transitioned into, but only when
+/// leftmost-first or leftmost-longest match semantics are enabled and only
+/// when at least one match has been observed.
 ///
 /// Every automaton also has one or more match states, such that
 /// `Automaton::is_match_state(id)` returns `true` if and only if `id`
@@ -340,7 +340,7 @@ pub trait Automaton {
                     // dead states are used to stop a search.)
                     debug_assert!(
                         last_match.is_some() || self.anchored(),
-                        "failure state should only be seen after match"
+                        "dead state should only be seen after match"
                     );
                     return last_match;
                 }
@@ -455,7 +455,7 @@ pub trait Automaton {
                     // case, dead states are used to stop a search.)
                     debug_assert!(
                         last_match.is_some() || self.anchored(),
-                        "failure state should only be seen after match"
+                        "dead state should only be seen after match"
                     );
                     return last_match;
                 }

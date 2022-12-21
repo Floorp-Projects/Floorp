@@ -32,7 +32,7 @@ const NUM_BUCKETS: usize = 64;
 /// https://en.wikipedia.org/wiki/Rabin%E2%80%93Karp_algorithm
 ///
 /// But ESMAJ provides something a bit more concrete:
-/// http://www-igm.univ-mlv.fr/~lecroq/string/node5.html
+/// https://www-igm.univ-mlv.fr/~lecroq/string/node5.html
 #[derive(Clone, Debug)]
 pub struct RabinKarp {
     /// The order of patterns in each bucket is significant. Namely, they are
