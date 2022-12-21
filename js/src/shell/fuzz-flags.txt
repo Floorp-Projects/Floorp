@@ -48,7 +48,6 @@
 --spectre-mitigations=on
 --more-compartments
 --fast-warmup
---large-arraybuffers
 --no-jit-backend
 --enable-watchtower
 --disable-watchtower

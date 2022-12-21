@@ -7603,13 +7603,6 @@
     mirror: always
 #endif  // defined(ENABLE_WASM_MEMORY64)
 
-# Support for ArrayBuffers larger than 2 GB on 64-bit systems
-- name: javascript.options.large_arraybuffers
-  type: bool
-  value: true
-  mirror: always  # LoadStartupJSPrefs
-  do_not_use_directly: true
-
 # Support for pretenuring allocations based on their allocation site.
 - name: javascript.options.site_based_pretenuring
   type: bool
