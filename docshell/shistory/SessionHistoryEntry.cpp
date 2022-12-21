@@ -395,7 +395,7 @@ LoadingSessionHistoryInfo::LoadingSessionHistoryInfo(
       mLoadIsFromSessionHistory(aInfo->mLoadIsFromSessionHistory),
       mOffset(aInfo->mOffset),
       mLoadingCurrentEntry(aInfo->mLoadingCurrentEntry) {
-  MOZ_ASSERT(SessionHistoryEntry::GetByLoadId(mLoadId) == aEntry);
+  MOZ_ASSERT(SessionHistoryEntry::GetByLoadId(mLoadId)->mEntry == aEntry);
 }
 
 LoadingSessionHistoryInfo::LoadingSessionHistoryInfo(
@@ -416,29 +416,14 @@ LoadingSessionHistoryInfo::CreateLoadInfo() const {
 
 static uint32_t gEntryID;
 
-SessionHistoryEntry* SessionHistoryEntry::GetByLoadId(uint64_t aLoadId) {
+SessionHistoryEntry::LoadingEntry* SessionHistoryEntry::GetByLoadId(
+    uint64_t aLoadId) {
   MOZ_ASSERT(XRE_IsParentProcess());
   if (!sLoadIdToEntry) {
     return nullptr;
   }
 
-  if (auto entry = sLoadIdToEntry->Lookup(aLoadId)) {
-    return entry->mEntry;
-  }
-  return nullptr;
-}
-
-const SessionHistoryInfo*
-SessionHistoryEntry::GetInfoSnapshotForValidationByLoadId(uint64_t aLoadId) {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  if (!sLoadIdToEntry) {
-    return nullptr;
-  }
-
-  if (auto entry = sLoadIdToEntry->Lookup(aLoadId)) {
-    return entry->mInfoSnapshotForValidation.get();
-  }
-  return nullptr;
+  return sLoadIdToEntry->Lookup(aLoadId).DataPtrOrNull();
 }
 
 void SessionHistoryEntry::SetByLoadId(uint64_t aLoadId,
