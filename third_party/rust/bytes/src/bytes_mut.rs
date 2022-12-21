@@ -1,5 +1,5 @@
 use core::iter::{FromIterator, Iterator};
-use core::mem::{self, ManuallyDrop};
+use core::mem::{self, ManuallyDrop, MaybeUninit};
 use core::ops::{Deref, DerefMut};
 use core::ptr::{self, NonNull};
 use core::{cmp, fmt, hash, isize, slice, usize};
@@ -705,6 +705,15 @@ impl BytesMut {
                     new_cap = cmp::max(double, new_cap);
 
                     // No space - allocate more
+                    //
+                    // The length field of `Shared::vec` is not used by the `BytesMut`;
+                    // instead we use the `len` field in the `BytesMut` itself. However,
+                    // when calling `reserve`, it doesn't guarantee that data stored in
+                    // the unused capacity of the vector is copied over to the new
+                    // allocation, so we need to ensure that we don't have any data we
+                    // care about in the unused capacity before calling `reserve`.
+                    debug_assert!(off + len <= v.capacity());
+                    v.set_len(off + len);
                     v.reserve(new_cap - v.len());
 
                     // Update the info
@@ -757,11 +766,11 @@ impl BytesMut {
         self.reserve(cnt);
 
         unsafe {
-            let dst = self.uninit_slice();
+            let dst = self.spare_capacity_mut();
             // Reserved above
             debug_assert!(dst.len() >= cnt);
 
-            ptr::copy_nonoverlapping(extend.as_ptr(), dst.as_mut_ptr(), cnt);
+            ptr::copy_nonoverlapping(extend.as_ptr(), dst.as_mut_ptr().cast(), cnt);
         }
 
         unsafe {
@@ -983,13 +992,42 @@ impl BytesMut {
         self.data = invalid_ptr((pos << VEC_POS_OFFSET) | (prev & NOT_VEC_POS_MASK));
     }
 
+    /// Returns the remaining spare capacity of the buffer as a slice of `MaybeUninit<u8>`.
+    ///
+    /// The returned slice can be used to fill the buffer with data (e.g. by
+    /// reading from a file) before marking the data as initialized using the
+    /// [`set_len`] method.
+    ///
+    /// [`set_len`]: BytesMut::set_len
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bytes::BytesMut;
+    ///
+    /// // Allocate buffer big enough for 10 bytes.
+    /// let mut buf = BytesMut::with_capacity(10);
+    ///
+    /// // Fill in the first 3 elements.
+    /// let uninit = buf.spare_capacity_mut();
+    /// uninit[0].write(0);
+    /// uninit[1].write(1);
+    /// uninit[2].write(2);
+    ///
+    /// // Mark the first 3 bytes of the buffer as being initialized.
+    /// unsafe {
+    ///     buf.set_len(3);
+    /// }
+    ///
+    /// assert_eq!(&buf[..], &[0, 1, 2]);
+    /// ```
     #[inline]
-    fn uninit_slice(&mut self) -> &mut UninitSlice {
+    pub fn spare_capacity_mut(&mut self) -> &mut [MaybeUninit<u8>] {
         unsafe {
             let ptr = self.ptr.as_ptr().add(self.len);
             let len = self.cap - self.len;
 
-            UninitSlice::from_raw_parts_mut(ptr, len)
+            slice::from_raw_parts_mut(ptr.cast(), len)
         }
     }
 }
@@ -1063,7 +1101,7 @@ unsafe impl BufMut for BytesMut {
         if self.capacity() == self.len() {
             self.reserve(64);
         }
-        self.uninit_slice()
+        UninitSlice::from_slice(self.spare_capacity_mut())
     }
 
     // Specialize these methods so they can skip checking `remaining_mut`
@@ -1088,7 +1126,7 @@ unsafe impl BufMut for BytesMut {
     fn put_bytes(&mut self, val: u8, cnt: usize) {
         self.reserve(cnt);
         unsafe {
-            let dst = self.uninit_slice();
+            let dst = self.spare_capacity_mut();
             // Reserved above
             debug_assert!(dst.len() >= cnt);
 

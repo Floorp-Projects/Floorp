@@ -333,7 +333,7 @@ dependencies = [
  "audio_thread_priority",
  "bincode",
  "byteorder",
- "bytes 1.2.1",
+ "bytes 1.3.0",
  "cc",
  "crossbeam-channel",
  "cubeb",
@@ -627,9 +627,9 @@ dependencies = [
 
 [[package]]
 name = "bytes"
-version = "1.2.1"
+version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ec8a7b6a70fde80372154c65702f00a0f56f3e1c36abbc6c440484be248856db"
+checksum = "dfb24e866b15a1af2a1b663f10c6b6b8f397a84aadb828f12e5b289ec23a3a3c"
 
 [[package]]
 name = "cache-padded"
@@ -2445,7 +2445,7 @@ version = "0.3.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5ca32592cf21ac7ccab1825cd87f6c9b3d9022c44d086172ed0966bec8af30be"
 dependencies = [
- "bytes 1.2.1",
+ "bytes 1.3.0",
  "fnv",
  "futures-core",
  "futures-sink",
@@ -2490,7 +2490,7 @@ checksum = "4cff78e5788be1e0ab65b04d306b2ed5092c815ec97ec70f4ebd5aee158aa55d"
 dependencies = [
  "base64",
  "bitflags",
- "bytes 1.2.1",
+ "bytes 1.3.0",
  "headers-core",
  "http",
  "httpdate",
@@ -2543,7 +2543,7 @@ version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "75f43d41e26995c17e71ee126451dd3941010b0514a81a9d11f3b341debc2399"
 dependencies = [
- "bytes 1.2.1",
+ "bytes 1.3.0",
  "fnv",
  "itoa",
 ]
@@ -2554,7 +2554,7 @@ version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d5f38f16d184e36f2408a55281cd658ecbd3ca05cce6d6510a176eca393e26d1"
 dependencies = [
- "bytes 1.2.1",
+ "bytes 1.3.0",
  "http",
  "pin-project-lite",
 ]
@@ -2610,7 +2610,7 @@ version = "0.14.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "02c929dc5c39e335a03c405292728118860721b10190d98c2a0f0efd5baafbac"
 dependencies = [
- "bytes 1.2.1",
+ "bytes 1.3.0",
  "futures-channel",
  "futures-core",
  "futures-util",
@@ -4318,7 +4318,7 @@ version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "de5e2533f59d08fcf364fd374ebda0692a70bd6d7e66ef97f306f45c6c5d8020"
 dependencies = [
- "bytes 1.2.1",
+ "bytes 1.3.0",
  "prost-derive",
 ]
 
@@ -5407,7 +5407,7 @@ version = "1.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2af73ac49756f3f7c01172e34a23e5d0216f6c32333757c2c61feb2bbff5a5ee"
 dependencies = [
- "bytes 1.2.1",
+ "bytes 1.3.0",
  "libc",
  "memchr",
  "mio 0.8.0",
@@ -5527,7 +5527,7 @@ version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f988a1a1adc2fb21f9c12aa96441da33a1728193ae0b95d2be22dbd17fcb4e5c"
 dependencies = [
- "bytes 1.2.1",
+ "bytes 1.3.0",
  "futures-core",
  "futures-sink",
  "pin-project-lite",
@@ -5747,7 +5747,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b983553c0d1ad73547c65fa0c399aa800bee4a70ad330198e1c7a523212da5ee"
 dependencies = [
  "anyhow",
- "bytes 1.2.1",
+ "bytes 1.3.0",
  "camino",
  "cargo_metadata",
  "log",
@@ -5789,7 +5789,7 @@ name = "uniffi-example-custom-types"
 version = "0.19.6"
 dependencies = [
  "anyhow",
- "bytes 1.2.1",
+ "bytes 1.3.0",
  "serde_json",
  "uniffi",
  "uniffi_build",
@@ -6019,7 +6019,7 @@ version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3cef4e1e9114a4b7f1ac799f16ce71c14de5778500c5450ec6b7b920c55b587e"
 dependencies = [
- "bytes 1.2.1",
+ "bytes 1.3.0",
  "futures-channel",
  "futures-util",
  "headers",
@@ -6111,7 +6111,7 @@ name = "webdriver"
 version = "0.47.0"
 dependencies = [
  "base64",
- "bytes 1.2.1",
+ "bytes 1.3.0",
  "cookie",
  "http",
  "log",

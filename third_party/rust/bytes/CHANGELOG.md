@@ -1,3 +1,18 @@
+# 1.3.0 (November 20, 2022)
+
+### Added
+
+- Rename and expose `BytesMut::spare_capacity_mut` (#572)
+- Implement native-endian get and put functions for `Buf` and `BufMut` (#576)
+
+### Fixed
+
+- Don't have important data in unused capacity when calling reserve (#563)
+
+### Documented
+
+- `Bytes::new` etc should return `Self` not `Bytes` (#568)
+
 # 1.2.1 (July 30, 2022)
 
 ### Fixed
