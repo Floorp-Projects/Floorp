@@ -116,10 +116,8 @@ function verifyRedirect(channel, redirectUri, finalUrl, addonId) {
 
   if (
     isServiceWorkerScript &&
-    (channel.loadInfo?.internalContentPolicyType ===
-      Ci.nsIContentPolicy.TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS ||
-      channel.loadInfo?.internalContentPolicyType ===
-        Ci.nsIContentPolicy.TYPE_INTERNAL_WORKER_STATIC_MODULE) &&
+    channel.loadInfo?.internalContentPolicyType ===
+      Ci.nsIContentPolicy.TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS &&
     !ALLOWED_SERVICEWORKER_SCHEMES.includes(redirectUri?.scheme)
   ) {
     throw new Error(
