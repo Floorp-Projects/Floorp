@@ -318,12 +318,8 @@ export function setBreakpointOptions(cx, location, options = {}) {
   };
 }
 
-async function updateExpression(
-  evaluationsParser,
-  mappings,
-  originalExpression
-) {
-  const mapped = await evaluationsParser.mapExpression(
+async function updateExpression(parserWorker, mappings, originalExpression) {
+  const mapped = await parserWorker.mapExpression(
     originalExpression,
     mappings,
     [],
@@ -340,7 +336,7 @@ async function updateExpression(
 }
 
 function updateBreakpointSourceMapping(cx, breakpoint) {
-  return async ({ getState, dispatch, evaluationsParser }) => {
+  return async ({ getState, dispatch, parserWorker }) => {
     const options = { ...breakpoint.options };
 
     const mappedScopes = await dispatch(
@@ -353,14 +349,14 @@ function updateBreakpointSourceMapping(cx, breakpoint) {
 
     if (options.condition) {
       options.condition = await updateExpression(
-        evaluationsParser,
+        parserWorker,
         mappings,
         options.condition
       );
     }
     if (options.logValue) {
       options.logValue = await updateExpression(
-        evaluationsParser,
+        parserWorker,
         mappings,
         options.logValue
       );

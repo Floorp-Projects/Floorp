@@ -304,7 +304,7 @@ class WebConsole {
     if (expression.includes("await ")) {
       const shouldMapBindings = false;
       const shouldMapAwait = true;
-      const res = this.parserService.mapExpression(
+      const res = this.parserWorker.mapExpression(
         expression,
         null,
         null,
@@ -322,23 +322,23 @@ class WebConsole {
     return toolbox?.getPanel("jsdebugger")?.getMappedVariables();
   }
 
-  get parserService() {
+  get parserWorker() {
     // If we have a toolbox, we could reuse the parser already instantiated for the debugger.
     // Note that we won't have a toolbox when running the Browser Console...
     if (this.toolbox) {
-      return this.toolbox.parserService;
+      return this.toolbox.parserWorker;
     }
 
-    if (this._parserService) {
-      return this._parserService;
+    if (this._parserWorker) {
+      return this._parserWorker;
     }
 
     const {
       ParserDispatcher,
     } = require("resource://devtools/client/debugger/src/workers/parser/index.js");
 
-    this._parserService = new ParserDispatcher();
-    return this._parserService;
+    this._parserWorker = new ParserDispatcher();
+    return this._parserWorker;
   }
 
   /**
@@ -454,9 +454,9 @@ class WebConsole {
       this.ui.destroy();
     }
 
-    if (this._parserService) {
-      this._parserService.stop();
-      this._parserService = null;
+    if (this._parserWorker) {
+      this._parserWorker.stop();
+      this._parserWorker = null;
     }
 
     const id = Utils.supportsString(this.hudId);

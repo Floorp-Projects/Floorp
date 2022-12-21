@@ -40,7 +40,6 @@ add_task(async function() {
     "resource://devtools/client/shared/vendor/react-redux.js",
     "resource://devtools/client/shared/vendor/redux.js",
     "resource://devtools/client/shared/redux/subscriber.js",
-    "resource://devtools/client/debugger/src/workers/parser/index.js",
 
     "resource://devtools/client/shared/components/menu/MenuButton.js",
     "resource://devtools/client/shared/components/menu/MenuItem.js",

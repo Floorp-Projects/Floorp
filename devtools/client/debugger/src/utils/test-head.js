@@ -15,7 +15,6 @@ import {
   searchWorker,
   prettyPrintWorker,
   parserWorker,
-  evaluationsParser,
 } from "../test/tests-setup";
 import configureStore from "../actions/utils/create-store";
 import sourceQueue from "../utils/source-queue";
@@ -44,7 +43,6 @@ function createStore(client, initialState = {}, sourceMapsMock) {
         client,
         sourceMaps: sourceMapsMock !== undefined ? sourceMapsMock : sourceMaps,
         parserWorker,
-        evaluationsParser,
         prettyPrintWorker,
         searchWorker,
       };
