@@ -22,6 +22,10 @@ use core::ops::{
 pub struct UninitSlice([MaybeUninit<u8>]);
 
 impl UninitSlice {
+    pub(crate) fn from_slice(slice: &mut [MaybeUninit<u8>]) -> &mut UninitSlice {
+        unsafe { &mut *(slice as *mut [MaybeUninit<u8>] as *mut UninitSlice) }
+    }
+
     /// Create a `&mut UninitSlice` from a pointer and a length.
     ///
     /// # Safety
@@ -44,7 +48,7 @@ impl UninitSlice {
     pub unsafe fn from_raw_parts_mut<'a>(ptr: *mut u8, len: usize) -> &'a mut UninitSlice {
         let maybe_init: &mut [MaybeUninit<u8>] =
             core::slice::from_raw_parts_mut(ptr as *mut _, len);
-        &mut *(maybe_init as *mut [MaybeUninit<u8>] as *mut UninitSlice)
+        Self::from_slice(maybe_init)
     }
 
     /// Write a single byte at the specified offset.

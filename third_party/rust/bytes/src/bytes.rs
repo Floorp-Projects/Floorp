@@ -131,7 +131,7 @@ impl Bytes {
     /// ```
     #[inline]
     #[cfg(not(all(loom, test)))]
-    pub const fn new() -> Bytes {
+    pub const fn new() -> Self {
         // Make it a named const to work around
         // "unsizing casts are not allowed in const fn"
         const EMPTY: &[u8] = &[];
@@ -139,7 +139,7 @@ impl Bytes {
     }
 
     #[cfg(all(loom, test))]
-    pub fn new() -> Bytes {
+    pub fn new() -> Self {
         const EMPTY: &[u8] = &[];
         Bytes::from_static(EMPTY)
     }
@@ -159,7 +159,7 @@ impl Bytes {
     /// ```
     #[inline]
     #[cfg(not(all(loom, test)))]
-    pub const fn from_static(bytes: &'static [u8]) -> Bytes {
+    pub const fn from_static(bytes: &'static [u8]) -> Self {
         Bytes {
             ptr: bytes.as_ptr(),
             len: bytes.len(),
@@ -169,7 +169,7 @@ impl Bytes {
     }
 
     #[cfg(all(loom, test))]
-    pub fn from_static(bytes: &'static [u8]) -> Bytes {
+    pub fn from_static(bytes: &'static [u8]) -> Self {
         Bytes {
             ptr: bytes.as_ptr(),
             len: bytes.len(),
@@ -235,7 +235,7 @@ impl Bytes {
     ///
     /// Requires that `begin <= end` and `end <= self.len()`, otherwise slicing
     /// will panic.
-    pub fn slice(&self, range: impl RangeBounds<usize>) -> Bytes {
+    pub fn slice(&self, range: impl RangeBounds<usize>) -> Self {
         use core::ops::Bound;
 
         let len = self.len();
@@ -302,7 +302,7 @@ impl Bytes {
     ///
     /// Requires that the given `sub` slice is in fact contained within the
     /// `Bytes` buffer; otherwise this function will panic.
-    pub fn slice_ref(&self, subset: &[u8]) -> Bytes {
+    pub fn slice_ref(&self, subset: &[u8]) -> Self {
         // Empty slice and empty Bytes may have their pointers reset
         // so explicitly allow empty slice to be a subslice of any slice.
         if subset.is_empty() {
@@ -359,7 +359,7 @@ impl Bytes {
     ///
     /// Panics if `at > len`.
     #[must_use = "consider Bytes::truncate if you don't need the other half"]
-    pub fn split_off(&mut self, at: usize) -> Bytes {
+    pub fn split_off(&mut self, at: usize) -> Self {
         assert!(
             at <= self.len(),
             "split_off out of bounds: {:?} <= {:?}",
@@ -408,7 +408,7 @@ impl Bytes {
     ///
     /// Panics if `at > len`.
     #[must_use = "consider Bytes::advance if you don't need the other half"]
-    pub fn split_to(&mut self, at: usize) -> Bytes {
+    pub fn split_to(&mut self, at: usize) -> Self {
         assert!(
             at <= self.len(),
             "split_to out of bounds: {:?} <= {:?}",
