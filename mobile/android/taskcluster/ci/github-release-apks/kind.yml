@@ -28,6 +28,7 @@ task-template:
     worker-type: github
     worker:
         action: release
+        git-tag: "{focus_flavor}-{head_tag}"
         github-project:
             by-level:
                 '3': firefox-android
