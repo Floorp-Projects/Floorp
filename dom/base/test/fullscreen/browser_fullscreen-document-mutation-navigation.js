@@ -58,13 +58,16 @@ async function startTests(testFun, name) {
           // process, so it could be possible that the widget or the chrome
           // document goes into fullscreen mode again, but they should end up
           // leaving fullscreen mode again.
-          if (window.fullScreen) {
+          if (
+            window.fullScreen ||
+            document.documentElement.hasAttribute("inFullscreen")
+          ) {
             info("widget is still in fullscreen, wait again");
             await waitWidgetFullscreenEvent(window, false, true);
           }
           if (document.documentElement.hasAttribute("inDOMFullscreen")) {
             info("chrome document is still in fullscreen, wait again");
-            await waitDOMFullscreenEvent(document, false, true);
+            await waitForFullScreenObserver(document, false, true);
           }
 
           // Ensure the browser exits fullscreen state.
