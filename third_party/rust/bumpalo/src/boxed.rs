@@ -171,6 +171,24 @@ impl<'a, T> Box<'a, T> {
     pub fn pin_in(x: T, a: &'a Bump) -> Pin<Box<'a, T>> {
         Box(a.alloc(x)).into()
     }
+
+    /// Consumes the `Box`, returning the wrapped value.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bumpalo::{Bump, boxed::Box};
+    ///
+    /// let b = Bump::new();
+    ///
+    /// let hello = Box::new_in("hello".to_owned(), &b);
+    /// assert_eq!(Box::into_inner(hello), "hello");
+    /// ```
+    pub fn into_inner(b: Box<'a, T>) -> T {
+        // `Box::into_raw` returns a pointer that is properly aligned and non-null.
+        // The underlying `Bump` only frees the memory, but won't call the destructor.
+        unsafe { core::ptr::read(Box::into_raw(b)) }
+    }
 }
 
 impl<'a, T: ?Sized> Box<'a, T> {
