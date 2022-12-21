@@ -28,11 +28,9 @@
 
 :root {
   --toolbar-bgcolor: var(--toolbar-non-lwt-bgcolor);
-  --toolbar-bgimage: var(--toolbar-non-lwt-bgimage);
   --toolbar-color: var(--toolbar-non-lwt-textcolor);
   --toolbarbutton-border-radius: 4px;
 
-  --tab-selected-bgimage: var(--tab-selected-non-lwt-bgimage);
   --tabs-navbar-shadow-size: 1px;
 
   --panel-shortcut-color: inherit;
@@ -116,10 +114,8 @@
 
 :root:-moz-lwtheme {
   --toolbar-bgcolor: rgba(255,255,255,.4);
-  --toolbar-bgimage: none;
   --toolbar-color: var(--lwt-text-color, inherit);
 
-  --tab-selected-bgimage: none;
   color: var(--lwt-text-color);
 }
 
