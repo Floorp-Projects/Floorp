@@ -945,7 +945,6 @@ class WorkerPrivate::EventTarget final : public nsISerialEventTarget {
   // WorkerPrivate's mutex whenever they must both be held.
   mozilla::Mutex mMutex;
   WorkerPrivate* mWorkerPrivate MOZ_GUARDED_BY(mMutex);
-  nsIEventTarget* mWeakNestedEventTarget;
   nsCOMPtr<nsIEventTarget> mNestedEventTarget MOZ_GUARDED_BY(mMutex);
   bool mDisabled MOZ_GUARDED_BY(mMutex);
   bool mShutdown MOZ_GUARDED_BY(mMutex);
@@ -954,7 +953,6 @@ class WorkerPrivate::EventTarget final : public nsISerialEventTarget {
   EventTarget(WorkerPrivate* aWorkerPrivate, nsIEventTarget* aNestedEventTarget)
       : mMutex("WorkerPrivate::EventTarget::mMutex"),
         mWorkerPrivate(aWorkerPrivate),
-        mWeakNestedEventTarget(aNestedEventTarget),
         mNestedEventTarget(aNestedEventTarget),
         mDisabled(false),
         mShutdown(false) {
@@ -983,9 +981,16 @@ class WorkerPrivate::EventTarget final : public nsISerialEventTarget {
     }
   }
 
-  nsIEventTarget* GetWeakNestedEventTarget() const {
-    MOZ_ASSERT(mWeakNestedEventTarget);
-    return mWeakNestedEventTarget;
+  RefPtr<nsIEventTarget> GetNestedEventTarget() {
+    RefPtr<nsIEventTarget> nestedEventTarget = nullptr;
+    {
+      MutexAutoLock lock(mMutex);
+      if (mWorkerPrivate) {
+        mWorkerPrivate->AssertIsOnWorkerThread();
+        nestedEventTarget = mNestedEventTarget.get();
+      }
+    }
+    return nestedEventTarget;
   }
 
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -4274,18 +4279,20 @@ nsresult WorkerPrivate::DestroySyncLoop(uint32_t aLoopIndex) {
   // We're about to delete the loop, stash its event target and result.
   const auto& loopInfo = mSyncLoopStack[aLoopIndex];
 
-  loopInfo->mEventTarget->Shutdown();
-
-  nsIEventTarget* nestedEventTarget =
-      loopInfo->mEventTarget->GetWeakNestedEventTarget();
-  MOZ_ASSERT(nestedEventTarget);
-
   nsresult result = loopInfo->mResult;
 
   {
-    MutexAutoLock lock(mMutex);
-    static_cast<ThreadEventQueue*>(mThread->EventQueue())
-        ->PopEventQueue(nestedEventTarget);
+    RefPtr<nsIEventTarget> nestedEventTarget(
+        loopInfo->mEventTarget->GetNestedEventTarget());
+    MOZ_ASSERT(nestedEventTarget);
+
+    loopInfo->mEventTarget->Shutdown();
+
+    {
+      MutexAutoLock lock(mMutex);
+      static_cast<ThreadEventQueue*>(mThread->EventQueue())
+          ->PopEventQueue(nestedEventTarget);
+    }
   }
 
   // Are we making a 1 -> 0 transition here?
