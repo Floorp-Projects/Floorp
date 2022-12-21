@@ -40,10 +40,17 @@ task-template:
                 klar-release: false
                 default: true
         release-name:
-            by-build-type:
-                focus-beta: Focus {version}-beta
-                focus-release: Focus/Klar v{version}
-                klar-release: Focus/Klar v{version}
+            by-level:
+                "3":
+                    by-build-type:
+                        focus-beta: Focus {version}
+                        focus-release: Focus {version}
+                        klar-release: Klar {version}
+                default:
+                    by-build-type:
+                        focus-beta: Fake Focus {version}
+                        focus-release: Fake Focus {version}
+                        klar-release: Fake Klar {version}
 
     treeherder:
         job-symbol:
