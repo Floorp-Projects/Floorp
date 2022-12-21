@@ -2013,7 +2013,7 @@ static bool WasmIntrinsicI8VecMul(JSContext* cx, unsigned argc, Value* vp) {
 
 static bool LargeArrayBufferEnabled(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(ArrayBufferObject::maxBufferByteLength() >
+  args.rval().setBoolean(ArrayBufferObject::MaxByteLength >
                          ArrayBufferObject::MaxByteLengthForSmallBuffer);
   return true;
 }

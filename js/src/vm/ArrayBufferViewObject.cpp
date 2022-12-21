@@ -82,9 +82,9 @@ bool ArrayBufferViewObject::init(JSContext* cx,
   MOZ_ASSERT_IF(!buffer, byteOffset == 0);
   MOZ_ASSERT_IF(buffer, !buffer->isDetached());
 
-  MOZ_ASSERT(byteOffset <= ArrayBufferObject::maxBufferByteLength());
-  MOZ_ASSERT(length <= ArrayBufferObject::maxBufferByteLength());
-  MOZ_ASSERT(byteOffset + length <= ArrayBufferObject::maxBufferByteLength());
+  MOZ_ASSERT(byteOffset <= ArrayBufferObject::MaxByteLength);
+  MOZ_ASSERT(length <= ArrayBufferObject::MaxByteLength);
+  MOZ_ASSERT(byteOffset + length <= ArrayBufferObject::MaxByteLength);
 
   MOZ_ASSERT_IF(is<TypedArrayObject>(),
                 length <= TypedArrayObject::maxByteLength() / bytesPerElement);
@@ -312,8 +312,8 @@ JS_PUBLIC_API bool JS::IsLargeArrayBufferView(JSObject* obj) {
   return len > ArrayBufferObject::MaxByteLengthForSmallBuffer;
 #else
   // Large ArrayBuffers are not supported on 32-bit.
-  MOZ_ASSERT(ArrayBufferObject::maxBufferByteLength() ==
-             ArrayBufferObject::MaxByteLengthForSmallBuffer);
+  static_assert(ArrayBufferObject::MaxByteLength ==
+                ArrayBufferObject::MaxByteLengthForSmallBuffer);
   return false;
 #endif
 }

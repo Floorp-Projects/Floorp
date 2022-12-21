@@ -249,7 +249,7 @@ static_assert(MaxInlineMemoryFillLength < MinOffsetGuardLimit, "precondition");
 wasm::Pages wasm::MaxMemoryPages(IndexType t) {
   MOZ_ASSERT_IF(t == IndexType::I64, !IsHugeMemoryEnabled(t));
   size_t desired = MaxMemoryLimitField(t);
-  size_t actual = ArrayBufferObject::maxBufferByteLength() / PageSize;
+  constexpr size_t actual = ArrayBufferObject::MaxByteLength / PageSize;
   return wasm::Pages(std::min(desired, actual));
 }
 
@@ -262,7 +262,7 @@ size_t wasm::MaxMemoryBoundsCheckLimit(IndexType t) {
 // range of an int32_t, which means the maximum heap size as observed by wasm
 // code is one wasm page less than 2GB.
 wasm::Pages wasm::MaxMemoryPages(IndexType t) {
-  MOZ_ASSERT(ArrayBufferObject::maxBufferByteLength() >= INT32_MAX / PageSize);
+  static_assert(ArrayBufferObject::MaxByteLength >= INT32_MAX / PageSize);
   return wasm::Pages(INT32_MAX / PageSize);
 }
 

@@ -2545,8 +2545,8 @@ bool JSStructuredCloneReader::readTypedArray(uint32_t arrayType,
   }
 
   // Ensure invalid 64-bit values won't be truncated below.
-  if (nelems > ArrayBufferObject::maxBufferByteLength() ||
-      byteOffset > ArrayBufferObject::maxBufferByteLength()) {
+  if (nelems > ArrayBufferObject::MaxByteLength ||
+      byteOffset > ArrayBufferObject::MaxByteLength) {
     JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
                               JSMSG_SC_BAD_SERIALIZED_DATA,
                               "invalid typed array length or offset");
@@ -2616,8 +2616,8 @@ bool JSStructuredCloneReader::readDataView(uint64_t byteLength,
   }
 
   // Ensure invalid 64-bit values won't be truncated below.
-  if (byteLength > ArrayBufferObject::maxBufferByteLength() ||
-      byteOffset > ArrayBufferObject::maxBufferByteLength()) {
+  if (byteLength > ArrayBufferObject::MaxByteLength ||
+      byteOffset > ArrayBufferObject::MaxByteLength) {
     JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
                               JSMSG_SC_BAD_SERIALIZED_DATA,
                               "invalid DataView length or offset");
@@ -2652,9 +2652,9 @@ bool JSStructuredCloneReader::readArrayBuffer(StructuredDataType type,
     nbytes = data;
   }
 
-  // The maximum ArrayBuffer size depends on the platform and prefs, and we cast
-  // to size_t below, so we have to check this here.
-  if (nbytes > ArrayBufferObject::maxBufferByteLength()) {
+  // The maximum ArrayBuffer size depends on the platform, and we cast to size_t
+  // below, so we have to check this here.
+  if (nbytes > ArrayBufferObject::MaxByteLength) {
     JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
                               JSMSG_BAD_ARRAY_LENGTH);
     return false;
@@ -2686,9 +2686,9 @@ bool JSStructuredCloneReader::readSharedArrayBuffer(MutableHandleValue vp) {
     return in.reportTruncated();
   }
 
-  // The maximum ArrayBuffer size depends on the platform and prefs, and we cast
-  // to size_t below, so we have to check this here.
-  if (byteLength > ArrayBufferObject::maxBufferByteLength()) {
+  // The maximum ArrayBuffer size depends on the platform, and we cast to size_t
+  // below, so we have to check this here.
+  if (byteLength > ArrayBufferObject::MaxByteLength) {
     JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
                               JSMSG_BAD_ARRAY_LENGTH);
     return false;
@@ -3266,7 +3266,7 @@ bool JSStructuredCloneReader::readTransferMap() {
         return false;
       }
 
-      MOZ_RELEASE_ASSERT(extraData <= ArrayBufferObject::maxBufferByteLength());
+      MOZ_RELEASE_ASSERT(extraData <= ArrayBufferObject::MaxByteLength);
       size_t nbytes = extraData;
 
       MOZ_ASSERT(data == JS::SCTAG_TMO_ALLOC_DATA ||

@@ -101,7 +101,7 @@ bool DataViewObject::getAndCheckConstructorArgs(JSContext* cx,
                               JSMSG_OFFSET_OUT_OF_BUFFER);
     return false;
   }
-  MOZ_ASSERT(offset <= ArrayBufferObject::maxBufferByteLength());
+  MOZ_ASSERT(offset <= ArrayBufferObject::MaxByteLength);
 
   // Step 8.a
   uint64_t viewByteLength = bufferByteLength - offset;
@@ -122,7 +122,7 @@ bool DataViewObject::getAndCheckConstructorArgs(JSContext* cx,
       return false;
     }
   }
-  MOZ_ASSERT(viewByteLength <= ArrayBufferObject::maxBufferByteLength());
+  MOZ_ASSERT(viewByteLength <= ArrayBufferObject::MaxByteLength);
 
   *byteOffsetPtr = offset;
   *byteLengthPtr = viewByteLength;
