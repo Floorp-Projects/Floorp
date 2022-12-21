@@ -898,6 +898,10 @@ struct JSRuntime {
   // to JSContext remains valid. The final GC triggered here depends on this.
   void destroyRuntime();
 
+ private:
+  void releaseScriptDataTable();
+
+ public:
   bool init(JSContext* cx, uint32_t maxbytes);
 
   JSRuntime* thisFromCtor() { return this; }

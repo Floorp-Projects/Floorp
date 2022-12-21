@@ -700,7 +700,7 @@ class SharedImmutableScriptData {
   SharedImmutableScriptData& operator=(const SharedImmutableScriptData&) =
       delete;
 
-  static bool shareScriptData(JSContext* cx, FrontendContext* fc,
+  static bool shareScriptData(JSContext* cx,
                               RefPtr<SharedImmutableScriptData>& sisd);
 
   size_t immutableDataLength() const { return isd_->immutableData().Length(); }
