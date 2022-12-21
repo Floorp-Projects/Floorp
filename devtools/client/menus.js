@@ -95,14 +95,6 @@ exports.menuitems = [
     keyId: "browserToolbox",
   },
   {
-    id: "menu_browserContentToolbox",
-    l10nKey: "browserContentToolboxMenu",
-    oncommand(event) {
-      const window = event.target.ownerDocument.defaultView;
-      gDevToolsBrowser.openContentProcessToolbox(window.gBrowser);
-    },
-  },
-  {
     id: "menu_browserConsole",
     l10nKey: "browserConsoleCmd",
     oncommand() {
