@@ -4,6 +4,6 @@ error[E0716]: temporary value dropped while borrowed
 4 |     let _ = anyhow!(&String::new());
   |             ---------^^^^^^^^^^^^^-
   |             |        |
-  |             |        creates a temporary which is freed while still in use
+  |             |        creates a temporary value which is freed while still in use
   |             temporary value is freed at the end of this statement
   |             argument requires that borrow lasts for `'static`
