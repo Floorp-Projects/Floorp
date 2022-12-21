@@ -594,6 +594,8 @@ bool JS::StringIsASCII(const char* s) {
 bool JS::StringIsASCII(Span<const char> s) { return IsAscii(s); }
 
 bool StringBuffer::append(const Utf8Unit* units, size_t len) {
+  MOZ_ASSERT(maybeCx_);
+
   if (isLatin1()) {
     Latin1CharBuffer& latin1 = latin1Chars();
 
@@ -632,7 +634,7 @@ bool StringBuffer::append(const Utf8Unit* units, size_t len) {
     utf16Len++;
     return LoopDisposition::Continue;
   };
-  if (!InflateUTF8ToUTF16<OnUTF8Error::Throw>(cx_, remainingUtf8,
+  if (!InflateUTF8ToUTF16<OnUTF8Error::Throw>(maybeCx_, remainingUtf8,
                                               countInflated)) {
     return false;
   }
@@ -652,8 +654,8 @@ bool StringBuffer::append(const Utf8Unit* units, size_t len) {
     return LoopDisposition::Continue;
   };
 
-  MOZ_ALWAYS_TRUE(
-      InflateUTF8ToUTF16<OnUTF8Error::Throw>(cx_, remainingUtf8, appendUtf16));
+  MOZ_ALWAYS_TRUE(InflateUTF8ToUTF16<OnUTF8Error::Throw>(
+      maybeCx_, remainingUtf8, appendUtf16));
   MOZ_ASSERT(toFill == buf.end());
   return true;
 }
