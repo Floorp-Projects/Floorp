@@ -1296,7 +1296,8 @@ static JSObject* NewOuterWindowProxy(JSContext* cx,
 
 nsGlobalWindowOuter::nsGlobalWindowOuter(uint64_t aWindowID)
     : nsPIDOMWindowOuter(aWindowID),
-      mFullscreenHasChangedDuringProcessing(false),
+      mFullscreen(false),
+      mFullscreenMode(false),
       mForceFullScreenInWidget(false),
       mIsClosed(false),
       mInClose(false),
@@ -4246,6 +4247,15 @@ FullscreenTransitionTask::Run() {
   } else if (stage == eToggleFullscreen) {
     PROFILER_MARKER_UNTYPED("Fullscreen toggle start", DOM);
     mFullscreenChangeStartTime = TimeStamp::Now();
+    if (MOZ_UNLIKELY(mWindow->mFullscreen != mFullscreen)) {
+      // This could happen in theory if several fullscreen requests in
+      // different direction happen continuously in a short time. We
+      // need to ensure the fullscreen state matches our target here,
+      // otherwise the widget would change the window state as if we
+      // toggle for Fullscreen Mode instead of Fullscreen API.
+      NS_WARNING("The fullscreen state of the window does not match");
+      mWindow->mFullscreen = mFullscreen;
+    }
     // Toggle the fullscreen state on the widget
     if (!mWindow->SetWidgetFullscreen(FullscreenReason::ForFullscreenAPI,
                                       mFullscreen, mWidget)) {
@@ -4356,44 +4366,6 @@ static bool MakeWidgetFullscreen(nsGlobalWindowOuter* aWindow,
   return true;
 }
 
-nsresult nsGlobalWindowOuter::ProcessWidgetFullscreenRequest(
-    FullscreenReason aReason, bool aFullscreen) {
-  mInProcessFullscreenRequest.emplace(aReason, aFullscreen);
-
-  // Prevent chrome documents which are still loading from resizing
-  // the window after we set fullscreen mode.
-  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin = GetTreeOwnerWindow();
-  nsCOMPtr<nsIAppWindow> appWin(do_GetInterface(treeOwnerAsWin));
-  if (aFullscreen && appWin) {
-    appWin->SetIntrinsicallySized(false);
-  }
-
-  // Sometimes we don't want the top-level widget to actually go fullscreen:
-  // - in the B2G desktop client, we don't want the emulated screen dimensions
-  //   to appear to increase when entering fullscreen mode; we just want the
-  //   content to fill the entire client area of the emulator window.
-  // - in FxR Desktop, we don't want fullscreen to take over the monitor, but
-  //   instead we want fullscreen to fill the FxR window in the the headset.
-  if (!Preferences::GetBool("full-screen-api.ignore-widgets", false) &&
-      !mForceFullScreenInWidget) {
-    if (MakeWidgetFullscreen(this, aReason, aFullscreen)) {
-      // The rest of code for switching fullscreen is in nsGlobalWindowOuter::
-      // FinishFullscreenChange() which will be called after sizemodechange
-      // event is dispatched.
-      return NS_OK;
-    }
-  }
-
-#if defined(NIGHTLY_BUILD) && defined(XP_WIN)
-  if (FxRWindowManager::GetInstance()->IsFxRWindow(mWindowID)) {
-    mozilla::gfx::VRShMem shmem(nullptr, true /*aRequiresMutex*/);
-    shmem.SendFullscreenState(mWindowID, aFullscreen);
-  }
-#endif  // NIGHTLY_BUILD && XP_WIN
-  FinishFullscreenChange(aFullscreen);
-  return NS_OK;
-}
-
 nsresult nsGlobalWindowOuter::SetFullscreenInternal(FullscreenReason aReason,
                                                     bool aFullscreen) {
   MOZ_ASSERT(nsContentUtils::IsSafeToRunScript(),
@@ -4430,27 +4402,8 @@ nsresult nsGlobalWindowOuter::SetFullscreenInternal(FullscreenReason aReason,
   if (mDocShell->ItemType() != nsIDocShellTreeItem::typeChrome)
     return NS_ERROR_FAILURE;
 
-  // FullscreenReason::ForForceExitFullscreen can only be used with exiting
-  // fullscreen
-  MOZ_ASSERT_IF(
-      mFullscreen.isSome(),
-      mFullscreen.value() != FullscreenReason::ForForceExitFullscreen);
-
-  // If we are already in full screen mode, just return, we don't care about the
-  // reason here, because,
-  // - If we are in fullscreen mode due to browser fullscreen mode, requesting
-  //   DOM fullscreen does not change anything.
-  // - If we are in fullscreen mode due to DOM fullscreen, requesting browser
-  //   fullscreen should not change anything, either. Note that we should not
-  //   update reason to ForFullscreenMode, otherwise the subsequent DOM
-  //   fullscreen exit will be ignored and user will be confused. And ideally
-  //   this should never happen as `window.fullscreen` returns `true` for DOM
-  //   fullscreen as well.
-  if (mFullscreen.isSome() == aFullscreen) {
-    // How come we get browser fullscreen request while we are already in DOM
-    // fullscreen?
-    MOZ_ASSERT_IF(aFullscreen && aReason == FullscreenReason::ForFullscreenMode,
-                  mFullscreen.value() != FullscreenReason::ForFullscreenAPI);
+  // If we are already in full screen mode, just return.
+  if (mFullscreen == aFullscreen) {
     return NS_OK;
   }
 
@@ -4458,45 +4411,61 @@ nsresult nsGlobalWindowOuter::SetFullscreenInternal(FullscreenReason aReason,
   // consequential calls to this method, those calls will be skipped
   // at the condition above.
   if (aReason == FullscreenReason::ForFullscreenMode) {
-    if (!aFullscreen && mFullscreen &&
-        mFullscreen.value() == FullscreenReason::ForFullscreenAPI) {
+    if (!aFullscreen && !mFullscreenMode) {
       // If we are exiting fullscreen mode, but we actually didn't
-      // entered browser fullscreen mode, the fullscreen state was only for
+      // entered fullscreen mode, the fullscreen state was only for
       // the Fullscreen API. Change the reason here so that we can
       // perform transition for it.
       aReason = FullscreenReason::ForFullscreenAPI;
+    } else {
+      mFullscreenMode = aFullscreen;
     }
   } else {
     // If we are exiting from DOM fullscreen while we initially make
-    // the window fullscreen because of browser fullscreen mode, don't restore
+    // the window fullscreen because of fullscreen mode, don't restore
     // the window. But we still need to exit the DOM fullscreen state.
-    if (!aFullscreen && mFullscreen &&
-        mFullscreen.value() == FullscreenReason::ForFullscreenMode) {
-      // If there is a in-process fullscreen request, FinishDOMFullscreenChange
-      // will be called when the request is finished.
-      if (!mInProcessFullscreenRequest.isSome()) {
-        FinishDOMFullscreenChange(mDoc, false);
-      }
+    if (!aFullscreen && mFullscreenMode) {
+      FinishDOMFullscreenChange(mDoc, false);
       return NS_OK;
     }
   }
 
+  // Prevent chrome documents which are still loading from resizing
+  // the window after we set fullscreen mode.
+  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin = GetTreeOwnerWindow();
+  nsCOMPtr<nsIAppWindow> appWin(do_GetInterface(treeOwnerAsWin));
+  if (aFullscreen && appWin) {
+    appWin->SetIntrinsicallySized(false);
+  }
+
   // Set this before so if widget sends an event indicating its
   // gone full screen, the state trap above works.
-  if (aFullscreen) {
-    mFullscreen.emplace(aReason);
-  } else {
-    mFullscreen.reset();
+  mFullscreen = aFullscreen;
+
+  // Sometimes we don't want the top-level widget to actually go fullscreen:
+  // - in the B2G desktop client, we don't want the emulated screen dimensions
+  //   to appear to increase when entering fullscreen mode; we just want the
+  //   content to fill the entire client area of the emulator window.
+  // - in FxR Desktop, we don't want fullscreen to take over the monitor, but
+  //   instead we want fullscreen to fill the FxR window in the the headset.
+  if (!Preferences::GetBool("full-screen-api.ignore-widgets", false) &&
+      !mForceFullScreenInWidget) {
+    if (MakeWidgetFullscreen(this, aReason, aFullscreen)) {
+      // The rest of code for switching fullscreen is in nsGlobalWindowOuter::
+      // FinishFullscreenChange() which will be called after sizemodechange
+      // event is dispatched.
+      return NS_OK;
+    }
   }
 
-  // If we are in process of fullscreen request, only keep the latest fullscreen
-  // state, we will sync up later while the processing request is finished.
-  if (mInProcessFullscreenRequest.isSome()) {
-    mFullscreenHasChangedDuringProcessing = true;
-    return NS_OK;
+#if defined(NIGHTLY_BUILD) && defined(XP_WIN)
+  if (FxRWindowManager::GetInstance()->IsFxRWindow(mWindowID)) {
+    mozilla::gfx::VRShMem shmem(nullptr, true /*aRequiresMutex*/);
+    shmem.SendFullscreenState(mWindowID, aFullscreen);
   }
-
-  return ProcessWidgetFullscreenRequest(aReason, aFullscreen);
+#endif  // NIGHTLY_BUILD && XP_WIN
+  FinishFullscreenChange(aFullscreen);
+  return NS_OK;
 }
 
 // Support a per-window, dynamic equivalent of enabling
@@ -4538,21 +4507,6 @@ bool nsGlobalWindowOuter::SetWidgetFullscreen(FullscreenReason aReason,
 
 /* virtual */
 void nsGlobalWindowOuter::FullscreenWillChange(bool aIsFullscreen) {
-  if (!mInProcessFullscreenRequest.isSome()) {
-    // If there is no in-process fullscreen request, the fullscreen state change
-    // is triggered from the OS directly, e.g. user use built-in window button
-    // to enter/exit fullscreen on macOS.
-    MOZ_ASSERT(mFullscreen.isSome() != aIsFullscreen,
-               "FullscreenWillChange should not be notified if the fullscreen "
-               "state isn't changed");
-    mInProcessFullscreenRequest.emplace(FullscreenReason::ForFullscreenMode,
-                                        aIsFullscreen);
-    if (aIsFullscreen) {
-      mFullscreen.emplace(FullscreenReason::ForFullscreenMode);
-    } else {
-      mFullscreen.reset();
-    }
-  }
   if (aIsFullscreen) {
     DispatchCustomEvent(u"willenterfullscreen"_ns, ChromeOnlyDispatch::eYes);
   } else {
@@ -4562,23 +4516,23 @@ void nsGlobalWindowOuter::FullscreenWillChange(bool aIsFullscreen) {
 
 /* virtual */
 void nsGlobalWindowOuter::FinishFullscreenChange(bool aIsFullscreen) {
-  mozilla::Maybe<FullscreenRequest> currentInProcessRequest =
-      std::move(mInProcessFullscreenRequest);
-  if (!mFullscreenHasChangedDuringProcessing &&
-      aIsFullscreen != mFullscreen.isSome()) {
+  if (aIsFullscreen != mFullscreen) {
     NS_WARNING("Failed to toggle fullscreen state of the widget");
     // We failed to make the widget enter fullscreen.
     // Stop further changes and restore the state.
     if (!aIsFullscreen) {
-      mFullscreen.reset();
+      mFullscreen = false;
+      mFullscreenMode = false;
     } else {
 #ifndef XP_MACOSX
       MOZ_ASSERT_UNREACHABLE("Failed to exit fullscreen?");
 #endif
-      // Restore fullscreen state with FullscreenReason::ForFullscreenAPI reason
-      // in order to make subsequent DOM fullscreen exit request can exit
-      // browser fullscreen mode.
-      mFullscreen.emplace(FullscreenReason::ForFullscreenAPI);
+      mFullscreen = true;
+      // At least on macOS, we may reach here because the system fails
+      // to let us exit the system fullscreen mode. In that case, we may
+      // have already exited DOM fullscreen before, so set fullscreen
+      // mode to true here so that it has a saner state.
+      mFullscreenMode = true;
     }
     return;
   }
@@ -4587,7 +4541,7 @@ void nsGlobalWindowOuter::FinishFullscreenChange(bool aIsFullscreen) {
   // of the document before dispatching the "fullscreen" event, so
   // that the chrome can distinguish between browser fullscreen mode
   // and DOM fullscreen.
-  FinishDOMFullscreenChange(mDoc, aIsFullscreen);
+  FinishDOMFullscreenChange(mDoc, mFullscreen);
 
   // dispatch a "fullscreen" DOM event so that XUL apps can
   // respond visually if we are kicked into full screen mode
@@ -4600,24 +4554,6 @@ void nsGlobalWindowOuter::FinishFullscreenChange(bool aIsFullscreen) {
         rd->Thaw();
       }
       mChromeFields.mFullscreenPresShell = nullptr;
-    }
-  }
-
-  // If fullscreen state has changed during processing fullscreen request, we
-  // need to ensure widget matches our latest fullscreen state here.
-  if (mFullscreenHasChangedDuringProcessing) {
-    mFullscreenHasChangedDuringProcessing = false;
-    // Widget doesn't care about the reason that makes it entering/exiting
-    // fullscreen, so here we just need to ensure the fullscreen state is
-    // matched.
-    if (aIsFullscreen != mFullscreen.isSome()) {
-      // If we end up need to exit fullscreen, use the same reason that brings
-      // us into fullscreen mode, so that we will perform the same fullscreen
-      // transistion effect for exiting.
-      ProcessWidgetFullscreenRequest(
-          mFullscreen.isSome() ? mFullscreen.value()
-                               : currentInProcessRequest.value().mReason,
-          mFullscreen.isSome());
     }
   }
 }
@@ -4656,7 +4592,7 @@ void nsGlobalWindowOuter::MacFullscreenMenubarOverlapChanged(
 }
 
 bool nsGlobalWindowOuter::Fullscreen() const {
-  NS_ENSURE_TRUE(mDocShell, mFullscreen.isSome());
+  NS_ENSURE_TRUE(mDocShell, mFullscreen);
 
   // Get the fullscreen value of the root window, to always have the value
   // accurate, even when called from content.
@@ -4665,7 +4601,7 @@ bool nsGlobalWindowOuter::Fullscreen() const {
   if (rootItem == mDocShell) {
     if (!XRE_IsContentProcess()) {
       // We are the root window. Return our internal value.
-      return mFullscreen.isSome();
+      return mFullscreen;
     }
     if (nsCOMPtr<nsIWidget> widget = GetNearestWidget()) {
       // We are in content process, figure out the value from
@@ -4676,7 +4612,7 @@ bool nsGlobalWindowOuter::Fullscreen() const {
   }
 
   nsCOMPtr<nsPIDOMWindowOuter> window = rootItem->GetWindow();
-  NS_ENSURE_TRUE(window, mFullscreen.isSome());
+  NS_ENSURE_TRUE(window, mFullscreen);
 
   return nsGlobalWindowOuter::Cast(window)->Fullscreen();
 }
