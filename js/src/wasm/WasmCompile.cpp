@@ -149,6 +149,22 @@ SharedCompileArgs CompileArgs::build(JSContext* cx,
   return target;
 }
 
+SharedCompileArgs CompileArgs::buildForAsmJS(ScriptedCaller&& scriptedCaller) {
+  CompileArgs* target = js_new<CompileArgs>(std::move(scriptedCaller));
+  if (!target) {
+    return nullptr;
+  }
+
+  // AsmJS is deprecated and doesn't have mechanisms for experimental features,
+  // so we don't need to initialize the FeatureArgs. It also only targets the
+  // Ion backend and does not need WASM debug support since it is de-optimized
+  // to JS in that case.
+  target->ionEnabled = true;
+  target->debugEnabled = false;
+
+  return target;
+}
+
 SharedCompileArgs CompileArgs::buildAndReport(JSContext* cx,
                                               ScriptedCaller&& scriptedCaller,
                                               const FeatureOptions& options,
