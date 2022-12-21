@@ -2183,14 +2183,10 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
     }
 
     // The default options are fine for asm.js
-    FeatureOptions options;
-    CompileArgsError error;
     SharedCompileArgs args =
-        CompileArgs::build(cx_, std::move(scriptedCaller), options, &error);
+        CompileArgs::buildForAsmJS(std::move(scriptedCaller));
     if (!args) {
-      // EstablishPreconditions will ensure that a compiler is available by
-      // this point
-      MOZ_RELEASE_ASSERT(error == CompileArgsError::OutOfMemory);
+      ReportOutOfMemory(fc_);
       return nullptr;
     }
 
