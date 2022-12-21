@@ -121,7 +121,7 @@ class StringBuffer {
   using Latin1CharBuffer = BufferType<Latin1Char>;
   using TwoByteCharBuffer = BufferType<char16_t>;
 
-  JSContext* cx_;
+  JSContext* maybeCx_;
   FrontendContext* fc_;
   const arena_id_t& arenaId_;
 
@@ -181,11 +181,20 @@ class StringBuffer {
   JSLinearString* finishStringInternal(JSContext* cx);
 
  public:
-  explicit StringBuffer(JSContext* cx, FrontendContext* fc,
-                        const arena_id_t& arenaId = js::MallocArena)
-      : cx_(cx), fc_(fc), arenaId_(arenaId), reserved_(0) {
+  // JSContext* parameter is optional and can be omitted if the methods
+  // related to the following are not used:
+  //   * JSString
+  //   * JSAtom
+  //   * mozilla::Utf8Unit
+  StringBuffer(JSContext* maybeCx, FrontendContext* fc,
+               const arena_id_t& arenaId = js::MallocArena)
+      : maybeCx_(maybeCx), fc_(fc), arenaId_(arenaId), reserved_(0) {
     cb.construct<Latin1CharBuffer>(StringBufferAllocPolicy{fc_, arenaId_});
   }
+
+  explicit StringBuffer(FrontendContext* fc,
+                        const arena_id_t& arenaId = js::MallocArena)
+      : StringBuffer(nullptr, fc, arenaId) {}
 
   void clear() {
     if (isLatin1()) {
@@ -398,7 +407,7 @@ class JSStringBuilder : public StringBuffer {
 #ifdef DEBUG
     handled_ = true;
 #endif /* DEBUG */
-    fc_.convertToRuntimeError(cx_);
+    fc_.convertToRuntimeError(maybeCx_);
   }
 
   void ok() {
@@ -486,7 +495,9 @@ inline bool StringBuffer::appendSubstring(JSLinearString* base, size_t off,
 
 inline bool StringBuffer::appendSubstring(JSString* base, size_t off,
                                           size_t len) {
-  JSLinearString* linear = base->ensureLinear(cx_);
+  MOZ_ASSERT(maybeCx_);
+
+  JSLinearString* linear = base->ensureLinear(maybeCx_);
   if (!linear) {
     return false;
   }
@@ -495,7 +506,9 @@ inline bool StringBuffer::appendSubstring(JSString* base, size_t off,
 }
 
 inline bool StringBuffer::append(JSString* str) {
-  JSLinearString* linear = str->ensureLinear(cx_);
+  MOZ_ASSERT(maybeCx_);
+
+  JSLinearString* linear = str->ensureLinear(maybeCx_);
   if (!linear) {
     return false;
   }
