@@ -3,9 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import argparse
-from mozpack.files import FileFinder
+
 from mozpack.copier import FileCopier
 from mozpack.errors import errors
+from mozpack.files import FileFinder
 from mozpack.unify import UnifiedFinder
 
 

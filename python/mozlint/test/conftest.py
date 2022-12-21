@@ -10,7 +10,6 @@ import pytest
 
 from mozlint import LintRoller
 
-
 here = os.path.abspath(os.path.dirname(__file__))
 
 

@@ -10,17 +10,28 @@ import hashlib
 import io
 import itertools
 import os
-import unittest
-import six
 import string
 import sys
 import textwrap
+import unittest
 
 import pytest
+import six
 from mozfile.mozfile import NamedTemporaryFile
 from mozunit import main
 
 from mozbuild.util import (
+    EnumString,
+    EnumStringComparisonError,
+    HierarchicalStringList,
+    MozbuildDeletionError,
+    ReadOnlyDict,
+    StrictOrderingOnAppendList,
+    StrictOrderingOnAppendListWithAction,
+    StrictOrderingOnAppendListWithFlagsFactory,
+    TypedList,
+    TypedNamedTuple,
+    UnsortedError,
     expand_variables,
     group_unified_files,
     hash_file,
@@ -30,17 +41,6 @@ from mozbuild.util import (
     pair,
     resolve_target_to_make,
     write_indented_repr,
-    MozbuildDeletionError,
-    HierarchicalStringList,
-    EnumString,
-    EnumStringComparisonError,
-    ReadOnlyDict,
-    StrictOrderingOnAppendList,
-    StrictOrderingOnAppendListWithAction,
-    StrictOrderingOnAppendListWithFlagsFactory,
-    TypedList,
-    TypedNamedTuple,
-    UnsortedError,
 )
 
 if sys.version_info[0] == 3:

@@ -16,34 +16,32 @@ contain, you've come to the right place.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import itertools
 import operator
 import os
-
 from collections import Counter, OrderedDict
+from types import FunctionType
+
+import mozpack.path as mozpath
+import six
+
 from mozbuild.util import (
     HierarchicalStringList,
     ImmutableStrictOrderingOnAppendList,
     KeyedDefaultDict,
     List,
-    memoize,
-    memoized_property,
     ReadOnlyKeyedDefaultDict,
     StrictOrderingOnAppendList,
     StrictOrderingOnAppendListWithAction,
     StrictOrderingOnAppendListWithFlagsFactory,
     TypedList,
     TypedNamedTuple,
+    memoize,
+    memoized_property,
 )
 
 from .. import schedules
-
 from ..testing import read_manifestparser_manifest, read_reftest_manifest
-
-import mozpack.path as mozpath
-from types import FunctionType
-
-import itertools
-import six
 
 
 class ContextDerivedValue(object):

@@ -11,13 +11,14 @@ import unittest
 import mozpack.path as mozpath
 import six
 import six.moves.cPickle as pickle
+from mozpack.manifests import InstallManifest
+from mozunit import main
+
 from mozbuild.backend.recursivemake import RecursiveMakeBackend, RecursiveMakeTraversal
 from mozbuild.backend.test_manifest import TestManifestBackend
 from mozbuild.frontend.emitter import TreeMetadataEmitter
 from mozbuild.frontend.reader import BuildReader
 from mozbuild.test.backend.common import BackendTester
-from mozpack.manifests import InstallManifest
-from mozunit import main
 
 
 class TestRecursiveMakeTraversal(unittest.TestCase):

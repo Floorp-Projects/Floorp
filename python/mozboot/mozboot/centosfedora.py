@@ -4,9 +4,10 @@
 
 import subprocess
 
+from mozfile import which
+
 from mozboot.base import BaseBootstrapper
 from mozboot.linux_common import LinuxBootstrapper
-from mozfile import which
 
 
 class CentOSFedoraBootstrapper(LinuxBootstrapper, BaseBootstrapper):

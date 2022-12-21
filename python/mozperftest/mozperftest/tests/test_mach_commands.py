@@ -3,15 +3,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import mozunit
 import os
-import sys
-from unittest import mock
-import tempfile
 import shutil
+import sys
+import tempfile
 from contextlib import contextmanager
 from pathlib import Path
+from unittest import mock
 
+import mozunit
 import pytest
 from mach.registrar import Registrar
 
@@ -23,8 +23,7 @@ from mozbuild.base import MachCommandBase  # noqa
 import mozperftest.mach_commands  # noqa
 from mozperftest.environment import MachEnvironment  # noqa
 from mozperftest.tests.support import EXAMPLE_TEST, ROOT, running_on_try  # noqa
-from mozperftest.utils import temporary_env, silence  # noqa
-
+from mozperftest.utils import silence, temporary_env  # noqa
 
 ITERATION_HOOKS = Path(__file__).parent / "data" / "hooks_iteration.py"
 STATE_HOOKS = Path(__file__).parent / "data" / "hooks_state.py"
@@ -49,9 +48,8 @@ class _TestMachEnvironment(MachEnvironment):
 @contextmanager
 def _get_command(command=mozperftest.mach_commands.run_perftest):
     from mozbuild.base import MozbuildObject
-    from mozperftest.argparser import (
-        PerftestArgumentParser,
-    )
+
+    from mozperftest.argparser import PerftestArgumentParser
 
     config = MozbuildObject.from_environment()
 

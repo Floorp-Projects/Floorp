@@ -5,12 +5,14 @@
 from __future__ import absolute_import, print_function
 
 import os
-import tempfile
 import shutil
-import mozpack.path as mozpath
-import sys
 import subprocess
+import sys
+import tempfile
 from xml.dom import minidom
+
+import mozpack.path as mozpath
+
 from mozbuild.util import ensureParentDir
 
 _MSI_ARCH = {

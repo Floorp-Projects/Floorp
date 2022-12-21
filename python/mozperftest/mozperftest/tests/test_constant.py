@@ -1,4 +1,5 @@
 import mozunit
+
 from mozperftest.metrics.notebook.constant import Constant
 from mozperftest.metrics.notebook.transforms.single_json import SingleJsonRetriever
 

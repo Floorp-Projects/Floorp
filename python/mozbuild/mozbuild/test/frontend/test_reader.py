@@ -8,19 +8,13 @@ import os
 import sys
 import unittest
 
+import mozpack.path as mozpath
 from mozunit import main
 
 from mozbuild import schedules
 from mozbuild.frontend.context import BugzillaComponent
-from mozbuild.frontend.reader import (
-    BuildReaderError,
-    BuildReader,
-)
-
+from mozbuild.frontend.reader import BuildReader, BuildReaderError
 from mozbuild.test.common import MockConfig
-
-import mozpack.path as mozpath
-
 
 if sys.version_info.major == 2:
     text_type = "unicode"

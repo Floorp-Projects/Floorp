@@ -10,10 +10,9 @@ import errno
 import os
 import subprocess
 import sys
-
-from mozfile.mozfile import remove as mozfileremove
 from textwrap import TextWrapper
 
+from mozfile.mozfile import remove as mozfileremove
 
 CLOBBER_MESSAGE = "".join(
     [

@@ -4,14 +4,15 @@
 
 from __future__ import absolute_import, print_function
 
-import buildconfig
 import os
 import unittest
-from mozunit import main
-from tempfile import mkdtemp
 from shutil import rmtree
+from tempfile import mkdtemp
 
+import buildconfig
 import mozpack.path as mozpath
+from mozunit import main
+
 from mozbuild.backend.configenvironment import PartialConfigEnvironment
 
 config = {

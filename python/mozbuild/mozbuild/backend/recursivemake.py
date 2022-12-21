@@ -14,6 +14,9 @@ from operator import itemgetter
 
 import mozpack.path as mozpath
 import six
+from mozpack.manifests import InstallManifest
+from six import StringIO
+
 from mozbuild import frontend
 from mozbuild.frontend.context import (
     AbsolutePath,
@@ -23,8 +26,6 @@ from mozbuild.frontend.context import (
     SourcePath,
 )
 from mozbuild.shellutil import quote as shell_quote
-from mozpack.manifests import InstallManifest
-from six import StringIO
 
 from ..frontend.data import (
     BaseLibrary,

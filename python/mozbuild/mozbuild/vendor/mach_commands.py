@@ -4,12 +4,12 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import sys
 import logging
+import sys
 
-from mach.decorators import CommandArgument, Command, SubCommand
+from mach.decorators import Command, CommandArgument, SubCommand
 
-from mozbuild.vendor.moz_yaml import load_moz_yaml, MozYamlVerifyError
+from mozbuild.vendor.moz_yaml import MozYamlVerifyError, load_moz_yaml
 
 
 # Fun quirk of ./mach - you can specify a default argument as well as subcommands.

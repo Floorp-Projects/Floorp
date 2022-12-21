@@ -4,28 +4,29 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import unittest
-import mozunit
 import os
+import unittest
+
+import mozunit
 from mozpack.chrome.manifest import (
-    ManifestContent,
-    ManifestLocale,
-    ManifestSkin,
+    MANIFESTS_TYPES,
     Manifest,
-    ManifestResource,
-    ManifestOverride,
-    ManifestComponent,
-    ManifestContract,
-    ManifestInterfaces,
     ManifestBinaryComponent,
     ManifestCategory,
-    ManifestStyle,
+    ManifestComponent,
+    ManifestContent,
+    ManifestContract,
+    ManifestInterfaces,
+    ManifestLocale,
     ManifestOverlay,
-    MANIFESTS_TYPES,
+    ManifestOverride,
+    ManifestResource,
+    ManifestSkin,
+    ManifestStyle,
     parse_manifest,
     parse_manifest_line,
 )
-from mozpack.errors import errors, AccumulatedErrors
+from mozpack.errors import AccumulatedErrors, errors
 from test_errors import TestErrors
 
 

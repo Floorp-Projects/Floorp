@@ -5,15 +5,14 @@ import collections
 import json
 import os
 import pathlib
-import sys
 import re
 import shutil
+import sys
 from pathlib import Path
 
-from mozperftest.utils import install_package, get_output_dir, ON_TRY
-from mozperftest.test.noderunner import NodeRunner
 from mozperftest.test.browsertime.visualtools import get_dependencies, xvfb
-
+from mozperftest.test.noderunner import NodeRunner
+from mozperftest.utils import ON_TRY, get_output_dir, install_package
 
 BROWSERTIME_SRC_ROOT = Path(__file__).parent
 

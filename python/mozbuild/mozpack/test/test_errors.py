@@ -4,15 +4,12 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from mozpack.errors import (
-    errors,
-    ErrorMessage,
-    AccumulatedErrors,
-)
+import sys
 import unittest
+
 import mozunit
 import six
-import sys
+from mozpack.errors import AccumulatedErrors, ErrorMessage, errors
 
 
 class TestErrors(object):

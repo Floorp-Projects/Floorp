@@ -4,9 +4,10 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from collections import defaultdict
 import os
 import re
+from collections import defaultdict
+
 from mozbuild.configure.options import Option
 
 

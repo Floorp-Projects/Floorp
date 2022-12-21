@@ -1,10 +1,10 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-from mozperftest.metrics.common import filtered_metrics, COMMON_ARGS
-from mozperftest.layers import Layer
 import os
 
+from mozperftest.layers import Layer
+from mozperftest.metrics.common import COMMON_ARGS, filtered_metrics
 
 RESULTS_TEMPLATE = """\
 

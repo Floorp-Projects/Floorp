@@ -5,8 +5,8 @@
 from __future__ import absolute_import, print_function
 
 import os
-import subprocess
 import platform
+import subprocess
 from distutils.version import StrictVersion
 
 from mozboot.util import get_tools_dir

@@ -6,14 +6,13 @@
 from __future__ import absolute_import, print_function
 
 import os
-from tempfile import mkstemp
 import unittest
 from pathlib import Path
-
-from mozrelease.update_verify import UpdateVerifyConfig, UpdateVerifyError
+from tempfile import mkstemp
 
 import mozunit
 
+from mozrelease.update_verify import UpdateVerifyConfig, UpdateVerifyError
 
 DATA_PATH = Path(__file__).with_name("data")
 

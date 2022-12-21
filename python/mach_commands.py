@@ -7,18 +7,17 @@ from __future__ import absolute_import, print_function, unicode_literals
 import argparse
 import logging
 import os
-import tempfile
 import subprocess
+import tempfile
+from concurrent.futures import ThreadPoolExecutor, as_completed, thread
 from multiprocessing import cpu_count
 
-from concurrent.futures import ThreadPoolExecutor, as_completed, thread
-from tqdm import tqdm
-
 import mozinfo
-from mozfile import which
-from mach.decorators import CommandArgument, Command
+from mach.decorators import Command, CommandArgument
 from manifestparser import TestManifest
 from manifestparser import filters as mpf
+from mozfile import which
+from tqdm import tqdm
 
 
 @Command("python", category="devenv", description="Run Python.")

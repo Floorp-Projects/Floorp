@@ -5,10 +5,11 @@
 from __future__ import absolute_import, print_function
 
 import logging
+
+import mozpack.path as mozpath
 import yaml
 
 from mozbuild.util import memoized_property
-import mozpack.path as mozpath
 
 
 class ClangTidyConfig(object):

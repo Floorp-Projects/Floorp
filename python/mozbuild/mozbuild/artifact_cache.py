@@ -27,12 +27,13 @@ import binascii
 import hashlib
 import logging
 import os
+
+import dlmanager
+import mozpack.path as mozpath
 import six
 import six.moves.urllib.parse as urlparse
 
 from mozbuild.util import mkdir
-import mozpack.path as mozpath
-import dlmanager
 
 # Using 'DownloadManager' through the provided interface we
 # can't directly specify a 'chunk_size' for the 'Download' it manages.

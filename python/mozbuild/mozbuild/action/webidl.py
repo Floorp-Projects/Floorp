@@ -7,6 +7,7 @@ from __future__ import absolute_import, print_function
 import sys
 
 from mozwebidlcodegen import create_build_system_manager
+
 from mozbuild.action.util import log_build_task
 
 

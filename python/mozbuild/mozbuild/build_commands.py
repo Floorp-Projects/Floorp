@@ -8,13 +8,12 @@ import argparse
 import os
 import subprocess
 
-from mach.decorators import CommandArgument, Command
-
-from mozbuild.util import MOZBUILD_METRICS_PATH
-from mozbuild.mozconfig import MozconfigLoader
 import mozpack.path as mozpath
+from mach.decorators import Command, CommandArgument
 
 from mozbuild.backend import backends
+from mozbuild.mozconfig import MozconfigLoader
+from mozbuild.util import MOZBUILD_METRICS_PATH
 
 BUILD_WHAT_HELP = """
 What to build. Can be a top-level make target or a relative directory. If
@@ -288,6 +287,7 @@ def configure(
 @CommandArgument("--url", help="URL of JSON document to display")
 def resource_usage(command_context, address=None, port=None, browser=None, url=None):
     import webbrowser
+
     from mozbuild.html_build_viewer import BuildViewerServer
 
     server = BuildViewerServer(address, port)

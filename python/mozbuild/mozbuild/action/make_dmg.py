@@ -7,9 +7,10 @@ import platform
 import sys
 from pathlib import Path
 
+from mozpack import dmg
+
 from mozbuild.bootstrap import bootstrap_toolchain
 from mozbuild.repackaging.application_ini import get_application_ini_value
-from mozpack import dmg
 
 is_linux = platform.system() == "Linux"
 

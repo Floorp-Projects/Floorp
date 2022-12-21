@@ -7,8 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from textwrap import TextWrapper
 
 from mach.config import TYPE_CLASSES
-from mach.decorators import CommandArgument, Command
-
+from mach.decorators import Command, CommandArgument
 
 # Interact with settings for mach.
 

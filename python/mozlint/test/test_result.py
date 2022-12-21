@@ -4,8 +4,7 @@
 
 import mozunit
 
-from mozlint.result import Issue
-from mozlint.result import ResultSummary
+from mozlint.result import Issue, ResultSummary
 
 
 def test_issue_defaults():

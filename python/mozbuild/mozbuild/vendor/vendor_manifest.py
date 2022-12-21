@@ -17,6 +17,7 @@ import tempfile
 import mozfile
 import mozpack.path as mozpath
 import requests
+
 from mozbuild.base import MozbuildObject
 from mozbuild.vendor.rewrite_mozbuild import (
     MozBuildRewriteException,

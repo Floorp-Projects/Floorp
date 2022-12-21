@@ -3,8 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import re
-from compare_locales import mozpath
 
+from compare_locales import mozpath
 
 # The local path where we write the config files to
 TARGET_PATH = b"_configs"

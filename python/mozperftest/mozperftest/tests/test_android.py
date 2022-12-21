@@ -1,12 +1,13 @@
 #!/usr/bin/env python
-import mozunit
-import pytest
 from unittest import mock
 
-from mozperftest.tests.support import get_running_env, requests_content, temp_file
+import mozunit
+import pytest
+
 from mozperftest.environment import SYSTEM
 from mozperftest.system.android import DeviceError
 from mozperftest.system.android_perf_tuner import PerformanceTuner
+from mozperftest.tests.support import get_running_env, requests_content, temp_file
 from mozperftest.utils import silence
 
 

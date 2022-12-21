@@ -5,7 +5,6 @@ import pytest
 
 from mozrelease.versions import MozillaVersion
 
-
 ALL_VERSIONS = [  # Keep this sorted
     "3.0",
     "3.0.1",

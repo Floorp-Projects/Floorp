@@ -11,6 +11,7 @@ import buildconfig
 import mozpack.path as mozpath
 from mozpack.archive import create_tar_gz_from_files
 from mozpack.files import BaseFile
+
 from mozbuild.generated_sources import get_generated_sources
 
 

@@ -8,12 +8,11 @@ import bisect
 import gzip
 import json
 import math
-import requests
-
-from datetime import datetime, timedelta
 from collections import Counter
+from datetime import datetime, timedelta
 
 import mozpack.path as mozpath
+import requests
 
 PUSHLOG_CHUNK_SIZE = 500
 

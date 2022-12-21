@@ -231,6 +231,7 @@ def main(argv=sys.argv[1:]):
     from mach.util import get_state_dir
     from mozbuild.base import MachCommandBase, MozbuildObject
     from mozbuild.mozconfig import MozconfigLoader
+
     from mozperftest import PerftestArgumentParser, PerftestToolsArgumentParser
 
     mozconfig = SRC_ROOT / "browser" / "config" / "mozconfig"

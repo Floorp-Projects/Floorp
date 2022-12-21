@@ -6,18 +6,17 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 import os
+
 import six
-from six import StringIO
-
-from mozunit import main
-
 from common import BaseConfigureTest
-from mozbuild.configure.util import Version
-from mozbuild.util import memoize, ReadOnlyNamespace
 from mozboot.util import MINIMUM_RUST_VERSION
 from mozpack import path as mozpath
-from test_toolchain_helpers import FakeCompiler, CompilerResult, PrependFlags
+from mozunit import main
+from six import StringIO
+from test_toolchain_helpers import CompilerResult, FakeCompiler, PrependFlags
 
+from mozbuild.configure.util import Version
+from mozbuild.util import ReadOnlyNamespace, memoize
 
 DEFAULT_C99 = {"__STDC_VERSION__": "199901L"}
 

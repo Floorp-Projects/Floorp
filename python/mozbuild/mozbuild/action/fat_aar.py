@@ -7,25 +7,21 @@ Fetch and unpack architecture-specific Maven zips, verify cross-architecture
 compatibility, and ready inputs to an Android multi-architecture fat AAR build.
 """
 
-from __future__ import absolute_import, unicode_literals, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
-import six
 import sys
-
-from collections import (
-    defaultdict,
-    OrderedDict,
-)
+from collections import OrderedDict, defaultdict
 from hashlib import sha1  # We don't need a strong hash to compare inputs.
-from zipfile import ZipFile
 from io import BytesIO
+from zipfile import ZipFile
 
+import mozpack.path as mozpath
+import six
 from mozpack.copier import FileCopier
 from mozpack.files import JarFinder
 from mozpack.mozjar import JarReader
 from mozpack.packager.unpack import UnpackFinder
-import mozpack.path as mozpath
 
 
 def fat_aar(distdir, aars_paths, no_process=False, no_compatibility_check=False):

@@ -7,8 +7,8 @@ import os
 
 import buildconfig
 import mozunit
-from mozbuild.telemetry import filter_args
 
+from mozbuild.telemetry import filter_args
 
 TELEMETRY_LOAD_ERROR = """
 Error loading telemetry. mach output:

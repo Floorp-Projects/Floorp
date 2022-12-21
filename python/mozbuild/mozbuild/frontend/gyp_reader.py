@@ -12,9 +12,10 @@ import gyp
 import gyp.msvs_emulation
 import mozpack.path as mozpath
 import six
+from mozpack.files import FileFinder
+
 from mozbuild import shellutil
 from mozbuild.util import expand_variables
-from mozpack.files import FileFinder
 
 from .context import VARIABLES, ObjDirPath, SourcePath, TemplateContext
 from .sandbox import alphabetical_sorted

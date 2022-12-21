@@ -11,9 +11,8 @@ import stat
 import sys
 from collections import Counter, OrderedDict, defaultdict
 
-import six
-
 import mozpack.path as mozpath
+import six
 from mozpack.errors import errors
 from mozpack.files import BaseFile, Dest
 
@@ -575,7 +574,7 @@ class Jarrer(FileRegistry, BaseFile):
             dest = Dest(dest)
         assert isinstance(dest, Dest)
 
-        from mozpack.mozjar import JarWriter, JarReader
+        from mozpack.mozjar import JarReader, JarWriter
 
         try:
             old_jar = JarReader(fileobj=dest)

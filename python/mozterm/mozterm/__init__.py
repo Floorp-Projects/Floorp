@@ -3,4 +3,4 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from __future__ import absolute_import, unicode_literals
 
-from .terminal import Terminal, NullTerminal  # noqa
+from .terminal import NullTerminal, Terminal  # noqa

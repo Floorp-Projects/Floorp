@@ -12,6 +12,7 @@ from itertools import chain
 
 import mozunit
 import pytest
+
 from mozlint.errors import LintersNotConfigured, NoValidLinter
 from mozlint.result import Issue, ResultSummary
 from mozlint.roller import LintRoller

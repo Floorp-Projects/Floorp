@@ -4,7 +4,7 @@ import unittest
 
 import mozunit
 
-from mozbuild.preprocessor import Expression, Context
+from mozbuild.preprocessor import Context, Expression
 
 
 class TestContext(unittest.TestCase):

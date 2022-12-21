@@ -20,17 +20,15 @@ user-friendly error messages in the case of errors.
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
-import six
 import sys
 import weakref
 
-from mozbuild.util import (
-    exec_,
-    ReadOnlyDict,
-)
-from .context import Context
+import six
 from mozpack.files import FileFinder
 
+from mozbuild.util import ReadOnlyDict, exec_
+
+from .context import Context
 
 default_finder = FileFinder("/")
 

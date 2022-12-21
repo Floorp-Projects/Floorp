@@ -11,38 +11,24 @@ directory.
 
 import json
 import os
-import six
+
 import mozpack.path as mozpath
-from mozpack.packager.formats import (
-    FlatFormatter,
-    JarFormatter,
-    OmniJarFormatter,
-)
-from mozpack.packager import (
-    Component,
-    SimplePackager,
-    SimpleManifestSink,
-)
-from mozpack.files import (
-    ComposedFinder,
-    GeneratedFile,
-    ManifestFile,
-)
-from mozpack.copier import (
-    FileCopier,
-    Jarrer,
-)
-from mozpack.chrome.manifest import (
-    ManifestLocale,
-    ManifestEntryWithRelPath,
-    is_manifest,
-    ManifestChrome,
-    Manifest,
-)
-from mozpack.errors import errors
-from mozpack.mozjar import JAR_DEFLATED
-from mozpack.packager.unpack import UnpackFinder
+import six
 from createprecomplete import generate_precomplete
+from mozpack.chrome.manifest import (
+    Manifest,
+    ManifestChrome,
+    ManifestEntryWithRelPath,
+    ManifestLocale,
+    is_manifest,
+)
+from mozpack.copier import FileCopier, Jarrer
+from mozpack.errors import errors
+from mozpack.files import ComposedFinder, GeneratedFile, ManifestFile
+from mozpack.mozjar import JAR_DEFLATED
+from mozpack.packager import Component, SimpleManifestSink, SimplePackager
+from mozpack.packager.formats import FlatFormatter, JarFormatter, OmniJarFormatter
+from mozpack.packager.unpack import UnpackFinder
 
 
 class LocaleManifestFinder(object):

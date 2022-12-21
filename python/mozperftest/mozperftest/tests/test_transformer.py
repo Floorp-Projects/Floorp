@@ -1,7 +1,12 @@
 import mozunit
 import pytest
 from jsonschema import ValidationError
-from mozperftest.tests.support import get_running_env, HERE
+
+from mozperftest.metrics.exceptions import (
+    NotebookDuplicateTransformsError,
+    NotebookInvalidPathError,
+    NotebookInvalidTransformError,
+)
 from mozperftest.metrics.notebook.transformer import (
     Transformer,
     get_transformer,
@@ -11,11 +16,7 @@ from mozperftest.tests.data.perftestetl_plugin import (
     test_transformer_perftestetl_plugin_1,
     test_transformer_perftestetl_plugin_2,
 )
-from mozperftest.metrics.exceptions import (
-    NotebookInvalidTransformError,
-    NotebookInvalidPathError,
-    NotebookDuplicateTransformsError,
-)
+from mozperftest.tests.support import HERE, get_running_env
 
 _, metadata, _ = get_running_env()
 prefix = "PerftestNotebook"

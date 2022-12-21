@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function
 
 import unittest
+from collections import OrderedDict
 
 from mozunit import main
 
@@ -12,13 +13,11 @@ from mozbuild.util import (
     KeyedDefaultDict,
     List,
     OrderedDefaultDict,
-    ReadOnlyNamespace,
     ReadOnlyDefaultDict,
     ReadOnlyDict,
     ReadOnlyKeyedDefaultDict,
+    ReadOnlyNamespace,
 )
-
-from collections import OrderedDict
 
 
 class TestReadOnlyNamespace(unittest.TestCase):

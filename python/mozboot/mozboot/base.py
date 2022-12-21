@@ -9,15 +9,16 @@ import sys
 from pathlib import Path
 
 from mach.util import to_optional_path, win_to_msys_path
+from mozbuild.bootstrap import bootstrap_all_toolchains_for, bootstrap_toolchain
+from mozfile import which
+from packaging.version import Version
+
 from mozboot import rust
 from mozboot.util import (
     MINIMUM_RUST_VERSION,
     get_mach_virtualenv_binary,
     http_download_and_save,
 )
-from mozbuild.bootstrap import bootstrap_all_toolchains_for, bootstrap_toolchain
-from mozfile import which
-from packaging.version import Version
 
 NO_MERCURIAL = """
 Could not find Mercurial (hg) in the current shell's path. Try starting a new

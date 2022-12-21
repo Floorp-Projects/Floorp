@@ -7,11 +7,12 @@ from __future__ import absolute_import, print_function
 import os
 import sys
 
+import mozpack.path as mozpath
+
 from mozbuild.backend.test_manifest import TestManifestBackend
 from mozbuild.base import BuildEnvironmentNotFoundException, MozbuildObject
 from mozbuild.frontend.emitter import TreeMetadataEmitter
 from mozbuild.frontend.reader import BuildReader, EmptyConfig
-import mozpack.path as mozpath
 
 
 def gen_test_backend():

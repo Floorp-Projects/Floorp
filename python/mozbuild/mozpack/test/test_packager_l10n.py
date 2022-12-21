@@ -5,20 +5,14 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import unittest
-import six
+
 import mozunit
-from test_packager import MockFinder
-from mozpack.packager import l10n
-from mozpack.files import (
-    GeneratedFile,
-    ManifestFile,
-)
-from mozpack.chrome.manifest import (
-    Manifest,
-    ManifestLocale,
-    ManifestContent,
-)
+import six
+from mozpack.chrome.manifest import Manifest, ManifestContent, ManifestLocale
 from mozpack.copier import FileRegistry
+from mozpack.files import GeneratedFile, ManifestFile
+from mozpack.packager import l10n
+from test_packager import MockFinder
 
 
 class TestL10NRepack(unittest.TestCase):

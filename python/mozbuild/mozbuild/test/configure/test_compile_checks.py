@@ -7,15 +7,15 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 import textwrap
 import unittest
+
 import mozpack.path as mozpath
-
-from six import StringIO
-
 from buildconfig import topsrcdir
 from common import ConfigureTestSandbox
-from mozbuild.util import exec_
 from mozunit import main
+from six import StringIO
 from test_toolchain_helpers import FakeCompiler
+
+from mozbuild.util import exec_
 
 
 class BaseCompileChecks(unittest.TestCase):

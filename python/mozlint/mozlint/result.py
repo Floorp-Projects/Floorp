@@ -2,13 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import os
 from collections import defaultdict
 from itertools import chain
 from json import JSONEncoder
-import os
-import mozpack.path as mozpath
 
 import attr
+import mozpack.path as mozpath
 
 
 class ResultSummary(object):

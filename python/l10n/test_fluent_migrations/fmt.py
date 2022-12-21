@@ -1,21 +1,21 @@
 from __future__ import absolute_import, print_function
+
 import codecs
-from difflib import unified_diff
 import logging
 import os
 import re
 import shutil
 import sys
+from difflib import unified_diff
 
 import hglib
-from mach.util import get_state_dir
 import mozpack.path as mozpath
-
 from compare_locales.merge import merge_channels
-from compare_locales.paths.files import ProjectFiles
 from compare_locales.paths.configparser import TOMLParser
+from compare_locales.paths.files import ProjectFiles
 from fluent.migrate import validator
 from fluent.syntax import FluentParser, FluentSerializer
+from mach.util import get_state_dir
 
 
 def inspect_migration(path):

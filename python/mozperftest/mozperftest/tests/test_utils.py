@@ -2,31 +2,31 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import shutil
 import sys
+from datetime import date, timedelta
+from pathlib import Path
 from subprocess import CalledProcessError
+from unittest import mock
 
 import mozunit
-from unittest import mock
 import pytest
-from pathlib import Path
-import shutil
-from datetime import date, timedelta
 
+from mozperftest.tests.support import EXAMPLE_TESTS_DIR, requests_content, temp_file
 from mozperftest.utils import (
-    host_platform,
-    silence,
-    download_file,
-    install_package,
     build_test_list,
-    get_multi_tasks_url,
-    get_revision_namespace_url,
-    convert_day,
-    load_class,
     checkout_python_script,
-    get_output_dir,
+    convert_day,
     create_path,
+    download_file,
+    get_multi_tasks_url,
+    get_output_dir,
+    get_revision_namespace_url,
+    host_platform,
+    install_package,
+    load_class,
+    silence,
 )
-from mozperftest.tests.support import temp_file, requests_content, EXAMPLE_TESTS_DIR
 
 
 def test_silence():

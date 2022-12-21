@@ -6,16 +6,15 @@
 from __future__ import absolute_import, print_function
 
 import argparse
+import json
 import logging
 import mmap
-import json
 import os
 import shutil
 import struct
 import sys
 import tempfile
 import urllib.parse
-
 from pathlib import Path
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(message)s")

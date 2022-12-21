@@ -7,8 +7,8 @@ import os
 import pathlib
 from collections import OrderedDict
 
-from .transformer import Transformer, SimplePerfherderTransformer, get_transformer
 from .constant import Constant
+from .transformer import SimplePerfherderTransformer, Transformer, get_transformer
 
 
 class PerftestETL(object):

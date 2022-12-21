@@ -7,16 +7,16 @@ import pytest
 
 from mozperftest.script import (
     BadOptionTypeError,
-    ScriptInfo,
     MissingFieldError,
-    ScriptType,
     ParseError,
+    ScriptInfo,
+    ScriptType,
 )
 from mozperftest.tests.support import (
     EXAMPLE_TEST,
-    HERE,
     EXAMPLE_XPCSHELL_TEST,
     EXAMPLE_XPCSHELL_TEST2,
+    HERE,
 )
 
 

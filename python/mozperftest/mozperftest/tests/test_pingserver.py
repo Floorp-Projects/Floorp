@@ -1,13 +1,14 @@
 #!/usr/bin/env python
-import mozunit
 import json
-import requests
-from pathlib import Path
 import sys
+from pathlib import Path
 
-from mozperftest.tests.support import get_running_env
+import mozunit
+import requests
+
 from mozperftest.system.pingserver import PingServer
-from mozperftest.utils import temp_dir, ON_TRY
+from mozperftest.tests.support import get_running_env
+from mozperftest.utils import ON_TRY, temp_dir
 
 
 def test_ping_server():

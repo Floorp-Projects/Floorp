@@ -1,17 +1,18 @@
 #!/usr/bin/env python
-import mozunit
-from unittest import mock
-import os
 import json
+import os
+from unittest import mock
+
+import mozunit
 import pytest
 
-from mozperftest.tests.support import (
-    get_running_env,
-    EXAMPLE_TEST,
-    temp_file,
-    BT_DATA_VIDEO,
-)
 from mozperftest.environment import METRICS
+from mozperftest.tests.support import (
+    BT_DATA_VIDEO,
+    EXAMPLE_TEST,
+    get_running_env,
+    temp_file,
+)
 
 VM_RES = {
     "SpeedIndex": 1031,

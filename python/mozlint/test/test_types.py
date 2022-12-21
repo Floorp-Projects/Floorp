@@ -4,9 +4,9 @@
 
 import os
 
+import mozpack.path as mozpath
 import mozunit
 import pytest
-import mozpack.path as mozpath
 
 from mozlint.result import Issue, ResultSummary
 

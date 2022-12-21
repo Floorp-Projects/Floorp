@@ -1,15 +1,14 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-import platform
-import tempfile
-import subprocess
-from pathlib import Path
-import shutil
 import os
+import platform
+import shutil
+import subprocess
+import tempfile
+from pathlib import Path
 
 from mozperftest.layers import Layer
-
 
 # Add here any option that might point to a DMG file we want to extract. The key
 # is name of the option and the value, the file in the DMG we want to use for

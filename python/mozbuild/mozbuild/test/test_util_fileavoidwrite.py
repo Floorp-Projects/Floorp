@@ -6,10 +6,12 @@ from __future__ import absolute_import, print_function, unicode_literals
 """Tests for the FileAvoidWrite object."""
 
 import locale
-import pytest
 import pathlib
-from mozbuild.util import FileAvoidWrite
+
+import pytest
 from mozunit import main
+
+from mozbuild.util import FileAvoidWrite
 
 
 @pytest.fixture

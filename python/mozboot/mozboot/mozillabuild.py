@@ -9,9 +9,10 @@ import subprocess
 import sys
 from pathlib import Path
 
-from mozboot.base import BaseBootstrapper
 from mozbuild.util import mozilla_build_version
 from packaging.version import Version
+
+from mozboot.base import BaseBootstrapper
 
 
 def is_aarch64_host():

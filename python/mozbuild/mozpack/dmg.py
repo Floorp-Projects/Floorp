@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import List
 
 import mozfile
+
 from mozbuild.util import ensureParentDir
 
 is_linux = platform.system() == "Linux"

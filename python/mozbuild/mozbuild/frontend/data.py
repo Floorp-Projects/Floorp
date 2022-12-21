@@ -17,18 +17,17 @@ structures.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from mozbuild.frontend.context import ObjDirPath, SourcePath
-from mozpack.chrome.manifest import ManifestEntry
+from collections import OrderedDict, defaultdict
 
 import mozpack.path as mozpath
-from .context import FinalTargetValue
-
-from collections import defaultdict, OrderedDict
 import six
+from mozpack.chrome.manifest import ManifestEntry
 
-from ..util import group_unified_files
+from mozbuild.frontend.context import ObjDirPath, SourcePath
 
 from ..testing import all_test_flavors
+from ..util import group_unified_files
+from .context import FinalTargetValue
 
 
 class TreeMetadata(object):

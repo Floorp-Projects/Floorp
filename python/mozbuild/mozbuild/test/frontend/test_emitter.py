@@ -5,9 +5,10 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
-import six
 import unittest
 
+import mozpack.path as mozpath
+import six
 from mozunit import main
 
 from mozbuild.frontend.context import ObjDirPath, Path
@@ -47,11 +48,7 @@ from mozbuild.frontend.reader import (
     BuildReaderError,
     SandboxValidationError,
 )
-
 from mozbuild.test.common import MockConfig
-
-import mozpack.path as mozpath
-
 
 data_path = mozpath.abspath(mozpath.dirname(__file__))
 data_path = mozpath.join(data_path, "data")

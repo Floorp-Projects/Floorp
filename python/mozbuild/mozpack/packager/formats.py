@@ -4,23 +4,19 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import mozpack.path as mozpath
 from mozpack.chrome.manifest import (
     Manifest,
-    ManifestInterfaces,
-    ManifestChrome,
     ManifestBinaryComponent,
-    ManifestResource,
+    ManifestChrome,
+    ManifestInterfaces,
     ManifestMultiContent,
+    ManifestResource,
 )
+from mozpack.copier import FileRegistry, FileRegistrySubtree, Jarrer
 from mozpack.errors import errors
-from six.moves.urllib.parse import urlparse
-import mozpack.path as mozpath
 from mozpack.files import ManifestFile
-from mozpack.copier import (
-    FileRegistry,
-    FileRegistrySubtree,
-    Jarrer,
-)
+from six.moves.urllib.parse import urlparse
 
 """
 Formatters are classes receiving packaging instructions and creating the

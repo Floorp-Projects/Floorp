@@ -5,13 +5,11 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 import unittest
 
+import mozpack.path as mozpath
+from mozunit import main
 from six import StringIO
 
-import mozpack.path as mozpath
-
 from mozbuild.dotproperties import DotProperties
-
-from mozunit import main
 
 test_data_path = mozpath.abspath(mozpath.dirname(__file__))
 test_data_path = mozpath.join(test_data_path, "data")

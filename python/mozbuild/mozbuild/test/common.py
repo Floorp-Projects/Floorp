@@ -8,14 +8,11 @@ import errno
 import os
 import shutil
 
+import mozpack.path as mozpath
 from buildconfig import topsrcdir
-
 from mach.logging import LoggingManager
 
 from mozbuild.util import ReadOnlyDict
-
-import mozpack.path as mozpath
-
 
 # By including this module, tests get structured logging.
 log_manager = LoggingManager()

@@ -5,26 +5,22 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
-import unittest
 import sys
-import pytest
-
+import unittest
 from pathlib import Path
 from shutil import rmtree
+from tempfile import gettempdir, mkdtemp
 
-from tempfile import (
-    gettempdir,
-    mkdtemp,
-)
+import pytest
+from mozunit import main
 
 from mozboot.mozconfig import (
+    DEFAULT_TOPSRCDIR_PATHS,
+    DEPRECATED_HOME_PATHS,
+    DEPRECATED_TOPSRCDIR_PATHS,
     MozconfigFindException,
     find_mozconfig,
-    DEFAULT_TOPSRCDIR_PATHS,
-    DEPRECATED_TOPSRCDIR_PATHS,
-    DEPRECATED_HOME_PATHS,
 )
-from mozunit import main
 
 
 class TestFindMozconfig(unittest.TestCase):

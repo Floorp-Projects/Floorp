@@ -8,8 +8,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import codecs
 import re
-import six
 import sys
+
+import six
 
 if sys.version_info[0] == 3:
     str_type = str

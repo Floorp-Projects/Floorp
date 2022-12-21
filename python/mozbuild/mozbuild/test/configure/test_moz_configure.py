@@ -4,13 +4,10 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from mozunit import main
-from mozbuild.util import (
-    exec_,
-    memoized_property,
-    ReadOnlyNamespace,
-)
 from common import BaseConfigureTest, ConfigureTestSandbox
+from mozunit import main
+
+from mozbuild.util import ReadOnlyNamespace, exec_, memoized_property
 
 
 def sandbox_class(platform):

@@ -6,8 +6,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import re
-import six
 from collections.abc import Iterable
+
+import six
 
 
 class Makefile(object):

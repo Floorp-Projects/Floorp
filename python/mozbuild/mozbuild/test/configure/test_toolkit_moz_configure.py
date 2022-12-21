@@ -8,9 +8,10 @@ import os
 
 from buildconfig import topsrcdir
 from common import BaseConfigureTest
-from mozunit import MockedOpen, main
-from mozbuild.configure.options import InvalidOptionError
 from mozpack import path as mozpath
+from mozunit import MockedOpen, main
+
+from mozbuild.configure.options import InvalidOptionError
 
 
 class TestToolkitMozConfigure(BaseConfigureTest):

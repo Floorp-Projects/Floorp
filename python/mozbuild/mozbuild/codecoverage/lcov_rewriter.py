@@ -4,19 +4,19 @@
 
 from __future__ import absolute_import, print_function
 
-from argparse import ArgumentParser
 import json
 import os
+from argparse import ArgumentParser
 
 try:
     import urlparse
 except ImportError:
     import urllib.parse as urlparse
 
+import mozpack.path as mozpath
+from mozpack.chrome.manifest import parse_manifest
 from six import viewitems
 
-from mozpack.chrome.manifest import parse_manifest
-import mozpack.path as mozpath
 from .manifest_handler import ChromeManifestHandler
 
 

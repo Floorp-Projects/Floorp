@@ -5,12 +5,11 @@ from collections import defaultdict
 from pathlib import Path
 
 from mozperftest.metrics.exceptions import (
-    MetricsMultipleTransformsError,
     MetricsMissingResultsError,
+    MetricsMultipleTransformsError,
 )
-from mozperftest.metrics.utils import validate_intermediate_results, metric_fields
 from mozperftest.metrics.notebook import PerftestETL
-
+from mozperftest.metrics.utils import metric_fields, validate_intermediate_results
 
 COMMON_ARGS = {
     "metrics": {

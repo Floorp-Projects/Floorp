@@ -19,14 +19,13 @@ from __future__ import absolute_import, unicode_literals
 import collections
 import collections.abc
 import sys
-import six
-
+from functools import wraps
 from pathlib import Path
 from typing import List, Union
 
-from functools import wraps
-from six.moves.configparser import RawConfigParser, NoSectionError
+import six
 from six import string_types
+from six.moves.configparser import NoSectionError, RawConfigParser
 
 
 class ConfigException(Exception):

@@ -1,17 +1,16 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-import copy
 import contextlib
+import copy
 
-from mozperftest.test import pick_test
-from mozperftest.system import pick_system
-from mozperftest.metrics import pick_metrics
-from mozperftest.layers import Layers, StopRunError
-from mozperftest.utils import MachLogger
-from mozperftest.hooks import Hooks
 from mozperftest.argparser import FLAVORS
-
+from mozperftest.hooks import Hooks
+from mozperftest.layers import Layers, StopRunError
+from mozperftest.metrics import pick_metrics
+from mozperftest.system import pick_system
+from mozperftest.test import pick_test
+from mozperftest.utils import MachLogger
 
 SYSTEM, TEST, METRICS = 0, 1, 2
 

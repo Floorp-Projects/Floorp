@@ -2,11 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from mozperftest.layers import Layers
-from mozperftest.metrics.perfherder import Perfherder
 from mozperftest.metrics.consoleoutput import ConsoleOutput
 from mozperftest.metrics.notebookupload import Notebook
-from mozperftest.metrics.visualmetrics import VisualMetrics
 from mozperftest.metrics.perfboard.influx import Influx
+from mozperftest.metrics.perfherder import Perfherder
+from mozperftest.metrics.visualmetrics import VisualMetrics
 
 
 def get_layers():

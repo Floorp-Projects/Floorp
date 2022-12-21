@@ -1,16 +1,15 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-import os
-import sys
-import subprocess
-from pathlib import Path
 import json
-
-from mozterm import Terminal
-from mach.util import get_state_dir
+import os
+import subprocess
+import sys
 from distutils.spawn import find_executable
+from pathlib import Path
 
+from mach.util import get_state_dir
+from mozterm import Terminal
 
 HERE = Path(__file__).parent.resolve()
 SRC_ROOT = (HERE / ".." / ".." / ".." / "..").resolve()

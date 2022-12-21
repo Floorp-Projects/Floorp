@@ -25,6 +25,10 @@ from mach.util import (
     to_optional_str,
     win_to_msys_path,
 )
+from mozbuild.base import MozbuildObject
+from mozfile import which
+from packaging.version import Version
+
 from mozboot.archlinux import ArchlinuxBootstrapper
 from mozboot.base import MODERN_RUST_VERSION
 from mozboot.centosfedora import CentOSFedoraBootstrapper
@@ -39,9 +43,6 @@ from mozboot.osx import OSXBootstrapper, OSXBootstrapperLight
 from mozboot.solus import SolusBootstrapper
 from mozboot.void import VoidBootstrapper
 from mozboot.windows import WindowsBootstrapper
-from mozbuild.base import MozbuildObject
-from mozfile import which
-from packaging.version import Version
 
 APPLICATION_CHOICE = """
 Note on Artifact Mode:

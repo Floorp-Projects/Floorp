@@ -4,7 +4,6 @@
 
 from __future__ import absolute_import
 
-
 update_platform_map = {
     "android": ["Android_arm-eabi-gcc3"],
     "android-arm": ["Android_arm-eabi-gcc3"],

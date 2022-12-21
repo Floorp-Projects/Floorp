@@ -4,29 +4,18 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from mozpack.copier import (
-    FileCopier,
-    FileRegistry,
-    FileRegistrySubtree,
-    Jarrer,
-)
-from mozpack.files import (
-    GeneratedFile,
-    ExistingFile,
-)
-from mozpack.mozjar import JarReader
-import mozpack.path as mozpath
-import unittest
-import mozunit
 import os
-import six
 import stat
+import unittest
+
+import mozpack.path as mozpath
+import mozunit
+import six
+from mozpack.copier import FileCopier, FileRegistry, FileRegistrySubtree, Jarrer
 from mozpack.errors import ErrorMessage
-from mozpack.test.test_files import (
-    MockDest,
-    MatchTestTemplate,
-    TestWithTmpDir,
-)
+from mozpack.files import ExistingFile, GeneratedFile
+from mozpack.mozjar import JarReader
+from mozpack.test.test_files import MatchTestTemplate, MockDest, TestWithTmpDir
 
 
 class BaseTestFileRegistry(MatchTestTemplate):

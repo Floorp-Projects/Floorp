@@ -6,15 +6,13 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 
+import mozpack.path as mozpath
 from mozpack.copier import FileRegistry
 from mozpack.manifests import InstallManifest
 from mozunit import main
 
 from mozbuild.backend.fastermake import FasterMakeBackend
-
 from mozbuild.test.backend.common import BackendTester
-
-import mozpack.path as mozpath
 
 
 class TestFasterMakeBackend(BackendTester):

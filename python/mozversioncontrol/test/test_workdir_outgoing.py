@@ -10,7 +10,6 @@ import mozunit
 
 from mozversioncontrol import get_repository_object
 
-
 STEPS = {
     "hg": [
         """

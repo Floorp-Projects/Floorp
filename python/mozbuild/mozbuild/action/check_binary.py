@@ -10,13 +10,12 @@ import re
 import subprocess
 import sys
 
+import buildconfig
+from mozpack.executables import ELF, UNKNOWN, get_type
 from packaging.version import Version
 
-import buildconfig
 from mozbuild.action.util import log_build_task
 from mozbuild.util import memoize
-from mozpack.executables import get_type, ELF, UNKNOWN
-
 
 STDCXX_MAX_VERSION = Version("3.4.19")
 CXXABI_MAX_VERSION = Version("1.3.7")

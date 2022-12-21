@@ -13,12 +13,13 @@ from collections import OrderedDict, defaultdict
 
 import mozinfo
 import mozpack.path as mozpath
+import pytoml
 import six
-import toml
 from mach.mixin.logging import LoggingMixin
+from mozpack.chrome.manifest import Manifest
+
 from mozbuild.base import ExecutionSummary
 from mozbuild.util import OrderedDefaultDict, memoize
-from mozpack.chrome.manifest import Manifest
 
 from ..testing import REFTEST_FLAVORS, TEST_MANIFESTS, SupportFilesConverter
 from .context import Context, ObjDirPath, Path, SourcePath, SubContext
@@ -518,7 +519,7 @@ class TreeMetadataEmitter(LoggingMixin):
                 "No Cargo.toml file found in %s" % cargo_file, context
             )
         with open(cargo_file, "r") as f:
-            return toml.load(f), cargo_file
+            return pytoml.load(f), cargo_file
 
     def _verify_deps(
         self, context, crate_dir, crate_name, dependencies, description="Dependency"

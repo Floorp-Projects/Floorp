@@ -4,12 +4,12 @@
 
 from __future__ import absolute_import, print_function
 
-import unittest
-
 import os
 import os.path
-from tempfile import mkdtemp
+import unittest
 from shutil import rmtree
+from tempfile import mkdtemp
+
 import mozunit
 
 from mozbuild.action.buildlist import addEntriesToListFile

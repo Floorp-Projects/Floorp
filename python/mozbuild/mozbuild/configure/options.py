@@ -4,12 +4,12 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from collections import OrderedDict
 import inspect
 import os
-import six
 import sys
+from collections import OrderedDict
 
+import six
 
 HELP_OPTIONS_CATEGORY = "Help options"
 # List of whitelisted option categories. If you want to add a new category,

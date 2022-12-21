@@ -3,21 +3,21 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import, print_function
-import unittest
 
 import os
-import sys
 import os.path
+import sys
+import unittest
 from filecmp import dircmp
+from shutil import copy2, rmtree
 from tempfile import mkdtemp
-from shutil import rmtree, copy2
+from zipfile import ZipFile
+
+import mozunit
 import six
 from six import StringIO
-from zipfile import ZipFile
-import mozunit
 
 from mozbuild.jar import JarMaker
-
 
 if sys.platform == "win32":
     import ctypes

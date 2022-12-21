@@ -14,16 +14,12 @@ from pathlib import Path
 from subprocess import CompletedProcess
 from typing import List
 
-import pytest
-
 import buildconfig
 import mozunit
-from mach.site import (
-    MozSiteMetadata,
-    PythonVirtualenv,
-    activate_virtualenv,
-)
 import pkg_resources
+import pytest
+
+from mach.site import MozSiteMetadata, PythonVirtualenv, activate_virtualenv
 
 
 class ActivationContext:

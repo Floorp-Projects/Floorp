@@ -11,15 +11,11 @@ import textwrap
 import traceback
 import unittest
 
-from mozunit import (
-    main,
-    MockedOpen,
-)
+import mozpack.path as mozpath
+from mozunit import MockedOpen, main
 
 from mozbuild.configure import ConfigureError
 from mozbuild.configure.lint import LintSandbox
-
-import mozpack.path as mozpath
 
 test_data_path = mozpath.abspath(mozpath.dirname(__file__))
 test_data_path = mozpath.join(test_data_path, "data")

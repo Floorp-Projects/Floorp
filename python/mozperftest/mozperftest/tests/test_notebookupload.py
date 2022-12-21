@@ -1,12 +1,13 @@
 #!/usr/bin/env python
+from unittest import mock
+
+import mozunit
 import pytest
 
-from unittest import mock
-import mozunit
 from mozperftest.environment import METRICS
+from mozperftest.metrics.utils import metric_fields
 from mozperftest.tests.support import BT_DATA, EXAMPLE_TEST, get_running_env, temp_file
 from mozperftest.utils import silence
-from mozperftest.metrics.utils import metric_fields
 
 
 def setup_env(options):

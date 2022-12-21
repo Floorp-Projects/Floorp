@@ -6,18 +6,13 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import unittest
-
 from shutil import rmtree
-
 from tempfile import mkdtemp
-from mozfile.mozfile import NamedTemporaryFile
 
+from mozfile.mozfile import NamedTemporaryFile
 from mozunit import main
 
-from mozbuild.mozconfig import (
-    MozconfigLoadException,
-    MozconfigLoader,
-)
+from mozbuild.mozconfig import MozconfigLoader, MozconfigLoadException
 
 
 class TestMozconfigLoader(unittest.TestCase):

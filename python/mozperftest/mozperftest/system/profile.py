@@ -6,12 +6,12 @@ import shutil
 import tempfile
 from pathlib import Path
 
-from condprof.client import get_profile, ProfileNotFoundError
+from condprof.client import ProfileNotFoundError, get_profile
 from condprof.util import get_current_platform
-from mozperftest.layers import Layer
 from mozprofile import create_profile
 from mozprofile.prefs import Preferences
 
+from mozperftest.layers import Layer
 
 HERE = os.path.dirname(__file__)
 

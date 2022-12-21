@@ -15,18 +15,17 @@ from pathlib import Path
 
 import mozunit
 import pytest
-
 from mozilla_version.gecko import GeckoVersion
-from mozrelease.buglist_creator import (
-    is_excluded_change,
-    create_bugs_url,
-    is_backout_bug,
-    get_previous_tag_version,
-    get_bugs_in_changeset,
-    tag_version,
-    parse_tag_version,
-)
 
+from mozrelease.buglist_creator import (
+    create_bugs_url,
+    get_bugs_in_changeset,
+    get_previous_tag_version,
+    is_backout_bug,
+    is_excluded_change,
+    parse_tag_version,
+    tag_version,
+)
 
 DATA_PATH = Path(__file__).with_name("data")
 

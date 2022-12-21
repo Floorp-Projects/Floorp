@@ -10,23 +10,15 @@ import os
 import socket
 import subprocess
 import sys
-
-from typing import (
-    Callable,
-    List,
-    Union,
-    Optional,
-)
+from pathlib import Path
+from typing import Callable, List, Optional, Union
 
 import attr
+import mozpack.path as mozpath
+import mozversioncontrol
 import psutil
 import requests
-
-from pathlib import Path
 from packaging.version import Version
-
-import mozversioncontrol
-import mozpack.path as mozpath
 
 # Minimum recommended logical processors in system.
 PROCESSORS_THRESHOLD = 4

@@ -1,16 +1,16 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-import tempfile
 import sys
+import tempfile
 from pathlib import Path
 
 import mozlog
 from mozdevice import ADBDevice, ADBError
+
 from mozperftest.layers import Layer
 from mozperftest.system.android_perf_tuner import tune_performance
 from mozperftest.utils import download_file
-
 
 _ROOT_URL = "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
 _FENIX_NIGHTLY_BUILDS = (

@@ -12,26 +12,18 @@ import logging
 import os
 import sys
 import time
-
 from argparse import ArgumentParser
+from itertools import chain
 
 from mach.logging import LoggingManager
+
+from mozbuild.backend import backends, get_backend_class
 from mozbuild.backend.configenvironment import ConfigEnvironment
 from mozbuild.base import MachCommandConditions
 from mozbuild.frontend.emitter import TreeMetadataEmitter
 from mozbuild.frontend.reader import BuildReader
 from mozbuild.mozinfo import write_mozinfo
-from itertools import chain
-
-from mozbuild.backend import (
-    backends,
-    get_backend_class,
-)
-from mozbuild.util import (
-    FileAvoidWrite,
-    process_time,
-)
-
+from mozbuild.util import FileAvoidWrite, process_time
 
 log_manager = LoggingManager()
 

@@ -7,8 +7,9 @@ import os
 import subprocess
 import sys
 
-from mozboot.base import BaseBootstrapper
 from mozfile import which
+
+from mozboot.base import BaseBootstrapper
 
 
 def is_aarch64_host():

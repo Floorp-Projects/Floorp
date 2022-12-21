@@ -2,11 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from mozlint import result
-from mozpack.files import FileFinder
 import mozpack.path as mozpath
-
 from external import external
+from mozpack.files import FileFinder
+
+from mozlint import result
 
 
 def global_payload(config, **lintargs):

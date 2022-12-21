@@ -7,11 +7,8 @@ import os
 import mozunit
 import pytest
 
+from mozlint.errors import LinterNotFound, LinterParseError
 from mozlint.parser import Parser
-from mozlint.errors import (
-    LinterNotFound,
-    LinterParseError,
-)
 
 here = os.path.abspath(os.path.dirname(__file__))
 

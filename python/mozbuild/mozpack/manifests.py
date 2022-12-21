@@ -4,8 +4,10 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from contextlib import contextmanager
 import json
+from contextlib import contextmanager
+
+import mozpack.path as mozpath
 import six
 
 from .files import (
@@ -17,7 +19,6 @@ from .files import (
     HardlinkFile,
     PreprocessedFile,
 )
-import mozpack.path as mozpath
 
 
 # This probably belongs in a more generic module. Where?

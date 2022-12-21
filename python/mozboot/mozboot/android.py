@@ -13,12 +13,12 @@ from pathlib import Path
 from typing import Optional, Union
 
 import requests
+from tqdm import tqdm
 
 # We need the NDK version in multiple different places, and it's inconvenient
 # to pass down the NDK version to all relevant places, so we have this global
 # variable.
 from mozboot.bootstrap import MOZCONFIG_SUGGESTION_TEMPLATE
-from tqdm import tqdm
 
 NDK_VERSION = "r21d"
 CMDLINE_TOOLS_VERSION_STRING = "7.0"

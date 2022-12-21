@@ -4,10 +4,10 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import six.moves.cPickle as pickle
 import os
 
 import mozpack.path as mozpath
+import six.moves.cPickle as pickle
 from mozunit import main
 
 from mozbuild.backend.test_manifest import TestManifestBackend

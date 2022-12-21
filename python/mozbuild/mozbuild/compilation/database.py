@@ -7,22 +7,20 @@
 from __future__ import absolute_import, print_function
 
 import os
+from collections import OrderedDict, defaultdict
+
+import mozpack.path as mozpath
 
 from mozbuild.backend.common import CommonBackend
 from mozbuild.frontend.data import (
     ComputedFlags,
-    Sources,
     DirectoryTraversal,
     PerSourceFlag,
+    Sources,
     VariablePassthru,
 )
 from mozbuild.shellutil import quote as shell_quote
 from mozbuild.util import expand_variables
-import mozpack.path as mozpath
-from collections import (
-    defaultdict,
-    OrderedDict,
-)
 
 
 class CompileDBBackend(CommonBackend):

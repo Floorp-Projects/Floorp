@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 from pathlib import Path
-import pytest
 from unittest import mock
+
 import mozunit
+import pytest
+
 from mozperftest.metrics.notebook.constant import Constant
 
 

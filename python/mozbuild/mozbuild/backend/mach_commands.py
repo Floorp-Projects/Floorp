@@ -12,8 +12,9 @@ import sys
 
 import mozpack.path as mozpath
 from mach.decorators import Command, CommandArgument
-from mozbuild import build_commands
 from mozfile import which
+
+from mozbuild import build_commands
 
 
 @Command(

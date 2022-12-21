@@ -3,15 +3,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from pathlib import Path
-import mozunit
 from unittest import mock
+
+import mozunit
 import pytest
 
 from mozperftest.environment import MachEnvironment
-from mozperftest.tests.support import get_running_env, requests_content
-from mozperftest.layers import Layer
 from mozperftest.hooks import Hooks
-
+from mozperftest.layers import Layer
+from mozperftest.tests.support import get_running_env, requests_content
 
 HERE = Path(__file__).parent.resolve()
 

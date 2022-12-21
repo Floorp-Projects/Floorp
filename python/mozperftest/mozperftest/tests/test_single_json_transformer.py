@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import mozunit
+
 from mozperftest.metrics.notebook.transformer import Transformer
 from mozperftest.metrics.notebook.transforms.single_json import SingleJsonRetriever
 

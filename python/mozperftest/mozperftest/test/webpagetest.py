@@ -1,13 +1,15 @@
-from mozperftest.layers import Layer
 import json
-import requests
-import time
-from threading import Thread
-import re
-import mozperftest.utils as utils
 import pathlib
-from mozperftest.runner import HERE
+import re
+import time
 import traceback
+from threading import Thread
+
+import requests
+
+import mozperftest.utils as utils
+from mozperftest.layers import Layer
+from mozperftest.runner import HERE
 
 ACCEPTED_BROWSERS = ["Chrome", "Firefox"]
 

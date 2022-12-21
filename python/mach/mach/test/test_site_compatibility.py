@@ -9,6 +9,7 @@ from pathlib import Path
 
 import mozunit
 from buildconfig import topsrcdir
+
 from mach.requirements import MachEnvRequirements
 from mach.site import PythonVirtualenv
 

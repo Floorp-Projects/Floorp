@@ -5,10 +5,11 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import re
-import six
-from packaging.version import Version
-from mozpack.errors import errors
 from collections import OrderedDict
+
+import six
+from mozpack.errors import errors
+from packaging.version import Version
 
 
 class Flag(object):

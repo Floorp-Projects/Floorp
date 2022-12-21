@@ -1,23 +1,25 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-from argparse import ArgumentParser, Namespace
-import os
-import mozlog
 import copy
+import os
+from argparse import ArgumentParser, Namespace
+
+import mozlog
 
 here = os.path.abspath(os.path.dirname(__file__))
 try:
-    from mozbuild.base import MozbuildObject, MachCommandConditions as conditions
+    from mozbuild.base import MachCommandConditions as conditions
+    from mozbuild.base import MozbuildObject
 
     build_obj = MozbuildObject.from_environment(cwd=here)
 except Exception:
     build_obj = None
     conditions = None
 
+from mozperftest.metrics import get_layers as metrics_layers  # noqa
 from mozperftest.system import get_layers as system_layers  # noqa
 from mozperftest.test import get_layers as test_layers  # noqa
-from mozperftest.metrics import get_layers as metrics_layers  # noqa
 from mozperftest.utils import convert_day  # noqa
 
 FLAVORS = "desktop-browser", "mobile-browser", "doc", "xpcshell", "webpagetest"

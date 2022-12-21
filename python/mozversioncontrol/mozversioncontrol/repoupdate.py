@@ -4,10 +4,9 @@
 
 from __future__ import absolute_import, unicode_literals
 
+import subprocess
 from pathlib import Path
 from typing import Union
-
-import subprocess
 
 # The logic here is far from robust. Improvements are welcome.
 

@@ -5,18 +5,15 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
-import buildconfig
 import errno
 import json
 import sys
 
-from mozpack.copier import Jarrer, FileRegistry
-from mozpack.files import FileFinder, GeneratedFile
-from mozpack.manifests import (
-    InstallManifest,
-    UnreadableInstallManifest,
-)
+import buildconfig
 import mozpack.path as mozpath
+from mozpack.copier import FileRegistry, Jarrer
+from mozpack.files import FileFinder, GeneratedFile
+from mozpack.manifests import InstallManifest, UnreadableInstallManifest
 
 
 def describe_install_manifest(manifest, dest_dir):

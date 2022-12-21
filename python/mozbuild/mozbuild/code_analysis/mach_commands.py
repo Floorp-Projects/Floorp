@@ -4,39 +4,33 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import concurrent.futures
-import logging
 import json
+import logging
 import multiprocessing
 import ntpath
 import os
 import pathlib
 import posixpath
 import re
-import sys
-import subprocess
 import shutil
+import subprocess
+import sys
 import tempfile
 import xml.etree.ElementTree as ET
-import yaml
 from types import SimpleNamespace
 
+import mozpack.path as mozpath
 import six
+import yaml
+from mach.decorators import Command, CommandArgument, SubCommand
+from mach.main import Mach
+from mozversioncontrol import get_repository_object
 from six.moves import input
 
-from mach.decorators import CommandArgument, Command, SubCommand
-
-from mach.main import Mach
-
 from mozbuild import build_commands
-from mozbuild.nodeutil import find_node_executable
-
-import mozpack.path as mozpath
-
-from mozbuild.util import memoize
-
-from mozversioncontrol import get_repository_object
-
 from mozbuild.controller.clobber import Clobberer
+from mozbuild.nodeutil import find_node_executable
+from mozbuild.util import memoize
 
 
 # Function used to run clang-format on a batch of files. It is a helper function
@@ -1704,7 +1698,7 @@ def _run_clang_format_diff(
 ):
     # Run clang-format on the diff
     # Note that this will potentially miss a lot things
-    from subprocess import Popen, PIPE, check_output, CalledProcessError
+    from subprocess import PIPE, CalledProcessError, Popen, check_output
 
     diff_process = Popen(
         _get_clang_format_diff_command(command_context, commit), stdout=PIPE
@@ -1839,7 +1833,7 @@ def _run_clang_format_path(
 ):
 
     # Run clang-format on files or directories directly
-    from subprocess import check_output, CalledProcessError
+    from subprocess import CalledProcessError, check_output
 
     if output_format == "json":
         # Get replacements in xml, then process to json

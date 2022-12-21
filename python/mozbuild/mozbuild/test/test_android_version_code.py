@@ -4,8 +4,9 @@
 
 from __future__ import absolute_import, print_function
 
-from mozunit import main
 import unittest
+
+from mozunit import main
 
 from mozbuild.android_version_code import (
     android_version_code_v0,

@@ -18,7 +18,7 @@ import sys
 from unittest.mock import patch
 
 from mach.requirements import MachEnvRequirements, PthSpecifier
-from mach.site import MachSiteManager, CommandSiteManager
+from mach.site import CommandSiteManager, MachSiteManager
 
 
 def main():

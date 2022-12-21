@@ -3,15 +3,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import json
 import os
-import threading
 import socketserver
+import threading
 import time
 from pathlib import Path
 
 from mozlog import get_proxy_logger
+
 from mozperftest.layers import Layer
 from mozperftest.utils import install_package
-
 
 LOG = get_proxy_logger(component="proxy")
 HERE = os.path.dirname(__file__)

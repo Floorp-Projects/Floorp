@@ -11,6 +11,7 @@ try:
 except ImportError:
     import urllib.parse as urlparse
 
+import mozpack.path as mozpath
 from mozpack.chrome.manifest import (
     Manifest,
     ManifestChrome,
@@ -18,7 +19,6 @@ from mozpack.chrome.manifest import (
     ManifestResource,
     parse_manifest,
 )
-import mozpack.path as mozpath
 
 
 class ChromeManifestHandler(object):

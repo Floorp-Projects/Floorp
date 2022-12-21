@@ -6,8 +6,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import unittest
 
-from mozbuild.repackaging.msix import get_embedded_version
 from mozunit import main
+
+from mozbuild.repackaging.msix import get_embedded_version
 
 
 class TestMSIX(unittest.TestCase):
