@@ -5,12 +5,12 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import sys
+from pathlib import Path
 
 import pytest
-
-from mozunit import main
-from pathlib import Path
 from buildconfig import topsrcdir
+from mozunit import main
+
 import mach
 
 ALL_COMMANDS = [

@@ -4,18 +4,17 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import six
 import unittest
 
+import six
 from mozunit import main
 
 from mozbuild.frontend.context import (
     Context,
-    ContextDerivedValue,
     ContextDerivedTypedList,
     ContextDerivedTypedListWithItems,
+    ContextDerivedValue,
 )
-
 from mozbuild.util import (
     StrictOrderingOnAppendList,
     StrictOrderingOnAppendListWithFlagsFactory,

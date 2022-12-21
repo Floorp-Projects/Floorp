@@ -4,8 +4,9 @@
 
 import sys
 
-from mozboot.base import BaseBootstrapper
 from mozfile import which
+
+from mozboot.base import BaseBootstrapper
 
 
 class FreeBSDBootstrapper(BaseBootstrapper):

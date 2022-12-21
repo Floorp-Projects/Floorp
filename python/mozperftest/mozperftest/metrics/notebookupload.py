@@ -4,7 +4,7 @@
 import pathlib
 
 from mozperftest.layers import Layer
-from mozperftest.metrics.common import filtered_metrics, COMMON_ARGS
+from mozperftest.metrics.common import COMMON_ARGS, filtered_metrics
 from mozperftest.metrics.notebook import PerftestNotebook
 from mozperftest.metrics.utils import is_number
 

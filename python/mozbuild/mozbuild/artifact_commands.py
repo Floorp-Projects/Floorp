@@ -3,22 +3,22 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
+
 import argparse
 import hashlib
 import json
 import logging
 import os
 import shutil
-import six
-
 from collections import OrderedDict
 
-from mach.decorators import CommandArgument, Command, SubCommand
+import mozversioncontrol
+import six
+from mach.decorators import Command, CommandArgument, SubCommand
+
 from mozbuild.artifact_builds import JOB_CHOICES
 from mozbuild.base import MachCommandConditions as conditions
 from mozbuild.util import ensureParentDir
-import mozversioncontrol
-
 
 _COULD_NOT_FIND_ARTIFACTS_TEMPLATE = (
     "ERROR!!!!!! Could not find artifacts for a toolchain build named "
@@ -262,12 +262,14 @@ def artifact_toolchain(
     artifact_manifest=None,
 ):
     """Download, cache and install pre-built toolchains."""
-    from mozbuild.artifacts import ArtifactCache
-    from mozbuild.action.tooltool import FileRecord, open_manifest, unpack_file
-    from taskgraph.util.taskcluster import get_artifact_url
+    import time
+
     import redo
     import requests
-    import time
+    from taskgraph.util.taskcluster import get_artifact_url
+
+    from mozbuild.action.tooltool import FileRecord, open_manifest, unpack_file
+    from mozbuild.artifacts import ArtifactCache
 
     start = time.time()
     command_context._set_log_level(verbose)
@@ -374,6 +376,7 @@ def artifact_toolchain(
             )
             return 1
         from gecko_taskgraph.optimize.strategies import IndexSearch
+
         from mozbuild.toolchains import toolchain_task_definitions
 
         tasks = toolchain_task_definitions()

@@ -1,6 +1,8 @@
 import json
-import mozunit
 import pathlib
+
+import mozunit
+
 from mozperftest.metrics.notebook.constant import Constant
 from mozperftest.metrics.notebook.transformer import Transformer
 from mozperftest.metrics.notebook.transforms.single_json import SingleJsonRetriever

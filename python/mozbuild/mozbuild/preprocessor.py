@@ -26,14 +26,15 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import errno
 import io
-from optparse import OptionParser
 import os
 import re
-import six
 import sys
+from optparse import OptionParser
+
+import six
+from mozpack.path import normsep
 
 from mozbuild.makeutil import Makefile
-from mozpack.path import normsep
 
 # hack around win32 mangling our line endings
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/65443
@@ -311,7 +312,7 @@ class Preprocessor:
         self.context.update({"FILE": "", "LINE": 0, "DIRECTORY": os.path.abspath(".")})
         try:
             # Can import globally because of bootstrapping issues.
-            from buildconfig import topsrcdir, topobjdir
+            from buildconfig import topobjdir, topsrcdir
         except ImportError:
             # Allow this script to still work independently of a configured objdir.
             topsrcdir = topobjdir = None

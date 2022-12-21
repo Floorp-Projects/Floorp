@@ -5,12 +5,17 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
-import six
 import unittest
 
+import six
+from mozpack import path as mozpath
 from mozunit import main
 
 from mozbuild.frontend.context import (
+    FUNCTIONS,
+    SPECIAL_VARIABLES,
+    SUBCONTEXTS,
+    VARIABLES,
     AbsolutePath,
     Context,
     ContextDerivedTypedHierarchicalStringList,
@@ -18,17 +23,11 @@ from mozbuild.frontend.context import (
     ContextDerivedTypedListWithItems,
     ContextDerivedTypedRecord,
     Files,
-    FUNCTIONS,
     ObjDirPath,
     Path,
     SourcePath,
-    SPECIAL_VARIABLES,
-    SUBCONTEXTS,
-    VARIABLES,
 )
-
 from mozbuild.util import StrictOrderingOnAppendListWithFlagsFactory
-from mozpack import path as mozpath
 
 
 class TestContext(unittest.TestCase):

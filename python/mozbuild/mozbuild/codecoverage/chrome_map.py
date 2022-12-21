@@ -7,24 +7,25 @@ from __future__ import absolute_import, print_function
 import json
 import os
 import re
-import six
 
+import mozpack.path as mozpath
+import six
 from mach.config import ConfigSettings
 from mach.logging import LoggingManager
-from mozbuild.backend.common import CommonBackend
-from mozbuild.base import MozbuildObject
-from mozbuild.frontend.data import (
-    FinalTargetFiles,
-    FinalTargetPreprocessedFiles,
-)
-from mozbuild.frontend.data import JARManifest, ChromeManifestEntry
 from mozpack.copier import FileRegistry
 from mozpack.files import PreprocessedFile
 from mozpack.manifests import InstallManifest
-import mozpack.path as mozpath
+
+from mozbuild.backend.common import CommonBackend
+from mozbuild.base import MozbuildObject
+from mozbuild.frontend.data import (
+    ChromeManifestEntry,
+    FinalTargetFiles,
+    FinalTargetPreprocessedFiles,
+    JARManifest,
+)
 
 from .manifest_handler import ChromeManifestHandler
-
 
 _line_comment_re = re.compile('^//@line (\d+) "(.+)"$')
 

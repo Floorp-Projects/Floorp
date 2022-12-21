@@ -1,14 +1,13 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import json
 import os
 import sys
 from functools import partial
-import json
 
 from mach.decorators import Command, CommandArgument, SubCommand
 from mozbuild.base import MachCommandConditions as conditions
-
 
 _TRY_PLATFORMS = {
     "g5-browsertime": "perftest-android-hw-g5-browsertime",
@@ -56,12 +55,14 @@ def run_perftest(command_context, **kwargs):
 
     from pathlib import Path
 
+    from mozperftest.script import ParseError, ScriptInfo, ScriptType
+
     # user selection with fuzzy UI
     from mozperftest.utils import ON_TRY
-    from mozperftest.script import ScriptInfo, ScriptType, ParseError
 
     if not ON_TRY and kwargs.get("tests", []) == []:
         from moztest.resolve import TestResolver
+
         from mozperftest.fzf.fzf import select
 
         resolver = command_context._spawn(TestResolver)
@@ -188,6 +189,7 @@ def run_perftest(command_context, **kwargs):
 )
 def run_tests(command_context, **kwargs):
     from pathlib import Path
+
     from mozperftest.utils import temporary_env
 
     with temporary_env(
@@ -198,11 +200,8 @@ def run_tests(command_context, **kwargs):
 
 def _run_tests(command_context, **kwargs):
     from pathlib import Path
-    from mozperftest.utils import (
-        ON_TRY,
-        checkout_script,
-        checkout_python_script,
-    )
+
+    from mozperftest.utils import ON_TRY, checkout_python_script, checkout_script
 
     venv = command_context.virtualenv_manager
     skip_linters = kwargs.get("skip_linters", False)

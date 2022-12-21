@@ -1,21 +1,20 @@
 #!/usr/bin/env python
 # Documentation: https://firefox-source-docs.mozilla.org/taskcluster/partner-repacks.html
 
-import sys
+import json
+import logging
 import os
-import stat
-
 import re
+import stat
+import sys
+import tarfile
+import urllib.parse
+import urllib.request
+import zipfile
+from optparse import OptionParser
 from pathlib import Path
 from shutil import copy, copytree, move, rmtree, which
 from subprocess import Popen
-from optparse import OptionParser
-import urllib.request
-import urllib.parse
-import logging
-import json
-import tarfile
-import zipfile
 
 from redo import retry
 

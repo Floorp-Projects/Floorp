@@ -4,23 +4,23 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import argparse
+import json
+import os
+import subprocess
+import sys
+import tempfile
 from collections import defaultdict, deque
 from copy import deepcopy
 from pathlib import Path
 from shutil import which
-import argparse
-import json
-import os
-import six
-import subprocess
-import sys
-import tempfile
 
 import mozpack.path as mozpath
+import six
+
 from mozbuild.bootstrap import bootstrap_toolchain
 from mozbuild.frontend.sandbox import alphabetical_sorted
 from mozbuild.util import mkdir
-
 
 license_header = """# This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this

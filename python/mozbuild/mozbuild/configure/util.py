@@ -5,15 +5,16 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import codecs
+import io
 import itertools
 import locale
 import logging
-import io
 import os
-import six
 import sys
 from collections import deque
 from contextlib import contextmanager
+
+import six
 from looseversion import LooseVersion
 
 

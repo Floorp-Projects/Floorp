@@ -10,10 +10,11 @@ import os
 import shutil
 import subprocess
 from xml.sax.saxutils import quoteattr
-from .common import CommonBackend
+
+from mozbuild.base import ExecutionSummary
 
 from ..frontend.data import ComputedFlags
-from mozbuild.base import ExecutionSummary
+from .common import CommonBackend
 
 # TODO Have ./mach eclipse generate the workspace and index it:
 # /Users/bgirard/mozilla/eclipse/eclipse/eclipse/eclipse -application org.eclipse.cdt.managedbuilder.core.headlessbuild -data $PWD/workspace -importAll $PWD/eclipse

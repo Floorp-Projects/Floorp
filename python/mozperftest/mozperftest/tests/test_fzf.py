@@ -1,12 +1,13 @@
 #!/usr/bin/env python
-import mozunit
-from unittest import mock
-from pathlib import Path
 import json
+from pathlib import Path
+from unittest import mock
 
-from mozperftest.tests.support import EXAMPLE_TEST, temp_file
+import mozunit
+
 from mozperftest.fzf.fzf import select
 from mozperftest.fzf.preview import main
+from mozperftest.tests.support import EXAMPLE_TEST, temp_file
 from mozperftest.utils import silence
 
 

@@ -12,14 +12,13 @@ import shutil
 import subprocess
 import tempfile
 from contextlib import contextmanager
-
 from pathlib import Path
 
 from appdirs import user_config_dir
-import taskcluster
-
-from mach.base import FailedCommandError
 from gecko_taskgraph import GECKO
+from mach.base import FailedCommandError
+
+import taskcluster
 
 logger = logging.getLogger(__name__)
 

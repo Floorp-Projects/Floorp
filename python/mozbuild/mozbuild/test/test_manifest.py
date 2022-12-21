@@ -7,8 +7,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 import unittest
 
 import mozfile
-from mozbuild.vendor.moz_yaml import MozYamlVerifyError, load_moz_yaml
 from mozunit import main
+
+from mozbuild.vendor.moz_yaml import MozYamlVerifyError, load_moz_yaml
 
 
 class TestManifest(unittest.TestCase):

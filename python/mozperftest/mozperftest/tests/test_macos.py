@@ -1,14 +1,15 @@
 #!/usr/bin/env python
-import mozunit
-from unittest import mock
+import os
 import platform
 import subprocess
-import pytest
 from pathlib import Path
-import os
+from unittest import mock
 
-from mozperftest.tests.support import get_running_env, DMG
+import mozunit
+import pytest
+
 from mozperftest.system.macos import MacosDevice
+from mozperftest.tests.support import DMG, get_running_env
 
 
 def run_proc(*args, **kw):

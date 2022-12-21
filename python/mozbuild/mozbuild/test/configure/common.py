@@ -7,19 +7,18 @@ from __future__ import absolute_import, print_function, unicode_literals
 import copy
 import errno
 import os
-import six
 import subprocess
 import sys
 import tempfile
 import unittest
-from six import StringIO
+
+import six
+from buildconfig import topobjdir, topsrcdir
+from mozpack import path as mozpath
+from six import StringIO, string_types
 
 from mozbuild.configure import ConfigureSandbox
-from mozbuild.util import memoized_property, ReadOnlyNamespace
-from mozpack import path as mozpath
-from six import string_types
-
-from buildconfig import topobjdir, topsrcdir
+from mozbuild.util import ReadOnlyNamespace, memoized_property
 
 
 def fake_short_path(path):

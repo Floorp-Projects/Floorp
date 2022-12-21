@@ -8,12 +8,12 @@ import os
 from unittest import mock
 
 import pytest as pytest
-
 from buildconfig import topsrcdir
 from mozunit import main
+
 from mach.site import (
-    SitePackagesSource,
     PIP_NETWORK_INSTALL_RESTRICTED_VIRTUALENVS,
+    SitePackagesSource,
     resolve_requirements,
 )
 

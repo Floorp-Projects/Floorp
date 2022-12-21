@@ -6,7 +6,6 @@ from unittest import mock
 
 import mozunit
 import pytest
-
 from mozbuild.base import MachCommandBase  # noqa
 
 from mozperftest.runner import main

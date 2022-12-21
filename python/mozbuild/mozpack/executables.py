@@ -8,6 +8,7 @@ import os
 import struct
 import subprocess
 from io import BytesIO
+
 from mozpack.errors import errors
 
 MACHO_SIGNATURES = [

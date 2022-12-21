@@ -8,9 +8,11 @@ import argparse
 import os
 import re
 import sys
-from buildconfig import topsrcdir, topobjdir
-from mozbuild.backend.configenvironment import PartialConfigEnvironment
+
 import mozpack.path as mozpath
+from buildconfig import topobjdir, topsrcdir
+
+from mozbuild.backend.configenvironment import PartialConfigEnvironment
 
 
 def process_define_file(output, input):

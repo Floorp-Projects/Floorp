@@ -5,13 +5,9 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import unittest
+
 import mozunit
-from mozpack.chrome.flags import (
-    Flag,
-    StringFlag,
-    VersionFlag,
-    Flags,
-)
+from mozpack.chrome.flags import Flag, Flags, StringFlag, VersionFlag
 from mozpack.errors import ErrorMessage
 
 

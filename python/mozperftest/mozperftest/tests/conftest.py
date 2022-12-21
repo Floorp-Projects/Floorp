@@ -7,8 +7,8 @@ from unittest import mock
 import pytest
 
 from mozperftest.metrics.notebook.perftestetl import PerftestETL
-from mozperftest.tests.support import get_running_env, HERE
 from mozperftest.metrics.notebook.perftestnotebook import PerftestNotebook
+from mozperftest.tests.support import HERE, get_running_env
 from mozperftest.utils import temp_dir
 
 

@@ -1,19 +1,20 @@
 #!/usr/bin/env python
-import mozunit
 import json
-import responses
-import pytest
 import re
 import sys
 
+import mozunit
+import pytest
+import responses
+
+from mozperftest.metrics.perfboard.influx import Influx
 from mozperftest.tests.support import (
-    get_running_env,
-    EXAMPLE_TEST,
     BT_DATA,
+    EXAMPLE_TEST,
+    get_running_env,
     running_on_try,
 )
-from mozperftest.metrics.perfboard.influx import Influx
-from mozperftest.utils import temp_dir, ON_TRY
+from mozperftest.utils import ON_TRY, temp_dir
 
 
 def mocks():

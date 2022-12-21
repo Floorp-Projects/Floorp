@@ -8,9 +8,9 @@ import logging
 import time
 import unittest
 
-from mach.logging import StructuredHumanFormatter
-
 from mozunit import main
+
+from mach.logging import StructuredHumanFormatter
 
 
 class DummyLogger(logging.Logger):

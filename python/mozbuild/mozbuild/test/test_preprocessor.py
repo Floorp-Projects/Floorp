@@ -4,15 +4,13 @@
 
 from __future__ import absolute_import, print_function
 
-import unittest
-
 import os
 import shutil
-from six import StringIO
-
+import unittest
 from tempfile import mkdtemp
 
-from mozunit import main, MockedOpen
+from mozunit import MockedOpen, main
+from six import StringIO
 
 from mozbuild.preprocessor import Preprocessor
 

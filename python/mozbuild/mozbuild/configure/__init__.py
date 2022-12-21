@@ -9,34 +9,34 @@ import inspect
 import logging
 import os
 import re
-import six
-from six.moves import builtins as __builtin__
 import sys
 import types
 from collections import OrderedDict
 from contextlib import contextmanager
 from functools import wraps
+
+import mozpack.path as mozpath
+import six
+from six.moves import builtins as __builtin__
+
+from mozbuild.configure.help import HelpFormatter
 from mozbuild.configure.options import (
+    HELP_OPTIONS_CATEGORY,
     CommandLineHelper,
     ConflictingOptionError,
-    HELP_OPTIONS_CATEGORY,
     InvalidOptionError,
     Option,
     OptionValue,
 )
-from mozbuild.configure.help import HelpFormatter
-from mozbuild.configure.util import ConfigureOutputHandler, getpreferredencoding, LineIO
+from mozbuild.configure.util import ConfigureOutputHandler, LineIO, getpreferredencoding
 from mozbuild.util import (
+    ReadOnlyDict,
+    ReadOnlyNamespace,
     exec_,
     memoize,
     memoized_property,
-    ReadOnlyDict,
-    ReadOnlyNamespace,
     system_encoding,
 )
-
-import mozpack.path as mozpath
-
 
 # TRACE logging level, below (thus more verbose than) DEBUG
 TRACE = 5

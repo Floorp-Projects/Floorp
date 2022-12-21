@@ -2,8 +2,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import unittest
 
-from mozfile import NamedTemporaryFile
 import mozunit
+from mozfile import NamedTemporaryFile
 from six import StringIO
 
 from mozbuild.preprocessor import Preprocessor

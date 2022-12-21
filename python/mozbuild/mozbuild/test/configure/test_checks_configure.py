@@ -4,21 +4,20 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from six import StringIO
 import os
 import sys
 import textwrap
 import unittest
 
-from mozunit import main, MockedOpen
-
-from mozbuild.configure import ConfigureError, ConfigureSandbox
-from mozbuild.util import exec_
-from mozbuild.shellutil import quote as shell_quote
-from mozpack import path as mozpath
-
 from buildconfig import topsrcdir
 from common import ConfigureTestSandbox, ensure_exe_extension, fake_short_path
+from mozpack import path as mozpath
+from mozunit import MockedOpen, main
+from six import StringIO
+
+from mozbuild.configure import ConfigureError, ConfigureSandbox
+from mozbuild.shellutil import quote as shell_quote
+from mozbuild.util import exec_
 
 
 class TestChecksConfigure(unittest.TestCase):

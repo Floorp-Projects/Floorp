@@ -27,54 +27,46 @@ import textwrap
 import time
 import traceback
 import types
-
-from collections import (
-    defaultdict,
-    OrderedDict,
-)
+from collections import OrderedDict, defaultdict
+from concurrent.futures.process import ProcessPoolExecutor
 from io import StringIO
 from itertools import chain
 from multiprocessing import cpu_count
+
+import mozpack.path as mozpath
 import six
+from mozpack.files import FileFinder
 from six import string_types
 
+from mozbuild.backend.configenvironment import ConfigEnvironment
+from mozbuild.base import ExecutionSummary
 from mozbuild.util import (
     EmptyValue,
     HierarchicalStringList,
-    memoize,
     ReadOnlyDefaultDict,
-)
-
-from mozbuild.backend.configenvironment import ConfigEnvironment
-
-from mozpack.files import FileFinder
-import mozpack.path as mozpath
-
-from .sandbox import (
-    default_finder,
-    SandboxError,
-    SandboxExecutionError,
-    SandboxLoadError,
-    Sandbox,
+    memoize,
 )
 
 from .context import (
+    DEPRECATION_HINTS,
+    FUNCTIONS,
+    SPECIAL_VARIABLES,
+    SUBCONTEXTS,
+    VARIABLES,
     Context,
     ContextDerivedValue,
     Files,
-    FUNCTIONS,
-    VARIABLES,
-    DEPRECATION_HINTS,
     SourcePath,
-    SPECIAL_VARIABLES,
-    SUBCONTEXTS,
     SubContext,
     TemplateContext,
 )
-
-from mozbuild.base import ExecutionSummary
-from concurrent.futures.process import ProcessPoolExecutor
-
+from .sandbox import (
+    Sandbox,
+    SandboxError,
+    SandboxExecutionError,
+    SandboxLoadError,
+    default_finder,
+)
 
 if six.PY2:
     type_type = types.TypeType

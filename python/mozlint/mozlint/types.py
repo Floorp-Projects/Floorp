@@ -7,7 +7,7 @@ import re
 import sys
 from abc import ABCMeta, abstractmethod
 
-from mozlog import get_default_logger, commandline, structuredlog
+from mozlog import commandline, get_default_logger, structuredlog
 from mozlog.reader import LogHandler
 from mozpack.files import FileFinder
 

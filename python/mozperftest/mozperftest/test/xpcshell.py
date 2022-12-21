@@ -2,9 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import os
-from pathlib import Path
 from collections import defaultdict
 from distutils.dir_util import copy_tree
+from pathlib import Path
 
 from mozperftest.layers import Layer
 from mozperftest.utils import temp_dir

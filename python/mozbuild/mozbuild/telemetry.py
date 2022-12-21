@@ -2,19 +2,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import division, absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 """
 This file contains functions used for telemetry.
 """
 
-import distro
-import os
 import math
+import os
 import platform
 import sys
 
+import distro
 import mozpack.path as mozpath
+
 from .base import BuildEnvironmentNotFoundException
 
 

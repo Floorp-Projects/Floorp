@@ -6,30 +6,26 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 import os
+import sys
 import tempfile
 import textwrap
 import unittest
+
 import six
-import sys
-
-from six import StringIO
-
-from mozunit import main
-from mozpack import path as mozpath
-
-from mozbuild.configure.util import (
-    ConfigureOutputHandler,
-    getpreferredencoding,
-    LineIO,
-    Version,
-)
-
-from mozbuild.configure import ConfigureSandbox
-
-from mozbuild.util import exec_
-
 from buildconfig import topsrcdir
 from common import ConfigureTestSandbox
+from mozpack import path as mozpath
+from mozunit import main
+from six import StringIO
+
+from mozbuild.configure import ConfigureSandbox
+from mozbuild.configure.util import (
+    ConfigureOutputHandler,
+    LineIO,
+    Version,
+    getpreferredencoding,
+)
+from mozbuild.util import exec_
 
 
 class TestConfigureOutputHandler(unittest.TestCase):

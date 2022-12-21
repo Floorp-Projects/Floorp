@@ -11,21 +11,21 @@ from __future__ import absolute_import, print_function
 
 import argparse
 import os
-import six
 import sys
 
-from xpidl import jsonxpt
+import six
 from buildconfig import topsrcdir
+from mozpack import path as mozpath
+from xpidl import jsonxpt
 from xpidl.header import print_header
 from xpidl.rust import print_rust_bindings
 from xpidl.rust_macros import print_rust_macros_bindings
 from xpidl.xpidl import IDLParser
 
+from mozbuild.action.util import log_build_task
 from mozbuild.makeutil import Makefile
-from mozpack import path as mozpath
 from mozbuild.pythonutil import iter_modules_in_path
 from mozbuild.util import FileAvoidWrite
-from mozbuild.action.util import log_build_task
 
 
 def process(

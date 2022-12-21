@@ -6,7 +6,6 @@ from pathlib import Path
 
 from packaging.requirements import Requirement
 
-
 THUNDERBIRD_PYPI_ERROR = """
 Thunderbird requirements definitions cannot include PyPI packages.
 """.strip()

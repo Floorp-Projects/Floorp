@@ -4,16 +4,17 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from io import BytesIO, UnsupportedOperation
+import os
 import struct
 import zlib
-import os
-import six
-from zipfile import ZIP_STORED, ZIP_DEFLATED
 from collections import OrderedDict
-import mozpack.path as mozpath
-from mozbuild.util import ensure_bytes
+from io import BytesIO, UnsupportedOperation
+from zipfile import ZIP_DEFLATED, ZIP_STORED
 
+import mozpack.path as mozpath
+import six
+
+from mozbuild.util import ensure_bytes
 
 JAR_STORED = ZIP_STORED
 JAR_DEFLATED = ZIP_DEFLATED

@@ -7,8 +7,9 @@ import tarfile
 from pathlib import Path
 
 import mozfile
-from mozbuild.bootstrap import bootstrap_toolchain
 from mozpack.pkg import create_pkg
+
+from mozbuild.bootstrap import bootstrap_toolchain
 
 
 def repackage_pkg(infile, output):

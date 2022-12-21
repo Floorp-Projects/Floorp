@@ -7,6 +7,7 @@ from __future__ import absolute_import, print_function
 
 import os
 import re
+
 from six import string_types
 
 from .chunking import getChunk

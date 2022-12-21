@@ -9,6 +9,7 @@ import sys
 
 import mozunit
 import pytest
+
 from mozterm import NullTerminal, Terminal
 
 

@@ -2,25 +2,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from mozbuild.util import ensureParentDir
-
-from mozpack.unify import (
-    UnifiedFinder,
-    UnifiedBuildFinder,
-)
-import mozunit
-from mozpack.test.test_files import TestWithTmpDir
-from mozpack.files import FileFinder
-from mozpack.mozjar import JarWriter
-from mozpack.test.test_files import MockDest
-from io import StringIO
 import os
 import sys
-from mozpack.errors import (
-    ErrorMessage,
-    AccumulatedErrors,
-    errors,
-)
+from io import StringIO
+
+import mozunit
+from mozpack.errors import AccumulatedErrors, ErrorMessage, errors
+from mozpack.files import FileFinder
+from mozpack.mozjar import JarWriter
+from mozpack.test.test_files import MockDest, TestWithTmpDir
+from mozpack.unify import UnifiedBuildFinder, UnifiedFinder
+
+from mozbuild.util import ensureParentDir
 
 
 class TestUnified(TestWithTmpDir):

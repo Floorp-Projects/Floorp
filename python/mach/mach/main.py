@@ -17,25 +17,25 @@ import sys
 import traceback
 import uuid
 from collections.abc import Iterable
-from typing import Union, Dict, List
 from pathlib import Path
+from typing import Dict, List, Union
 
 from .base import (
     CommandContext,
+    FailedCommandError,
     MachError,
     MissingFileError,
     NoCommandError,
     UnknownCommandError,
     UnrecognizedArgumentError,
-    FailedCommandError,
 )
 from .config import ConfigSettings
 from .dispatcher import CommandAction
 from .logging import LoggingManager
 from .registrar import Registrar
-from .sentry import register_sentry, NoopErrorReporter
-from .telemetry import report_invocation_metrics, create_telemetry_from_environment
-from .util import setenv, UserError
+from .sentry import NoopErrorReporter, register_sentry
+from .telemetry import create_telemetry_from_environment, report_invocation_metrics
+from .util import UserError, setenv
 
 SUGGEST_MACH_BUSTED_TEMPLATE = r"""
 You can invoke |./mach busted| to check if this issue is already on file. If it

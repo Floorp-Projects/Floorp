@@ -2,12 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import importlib
+import shutil
 import tempfile
 from pathlib import Path
-import shutil
 
-from mozperftest.utils import download_file, MachLogger
-
+from mozperftest.utils import MachLogger, download_file
 
 _LOADED_MODULES = {}
 

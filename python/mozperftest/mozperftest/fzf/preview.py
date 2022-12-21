@@ -10,11 +10,10 @@ from within a source tree. Do not add dependencies unless they
 are in the source tree and added in SEARCH_PATHS.
 """
 import argparse
-import sys
-import json
-from pathlib import Path
 import importlib.util
-
+import json
+import sys
+from pathlib import Path
 
 HERE = Path(__file__).parent.resolve()
 SRC_ROOT = (HERE / ".." / ".." / ".." / "..").resolve()

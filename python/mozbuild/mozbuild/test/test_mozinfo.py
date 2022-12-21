@@ -7,22 +7,16 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import json
 import os
-import six
 import tempfile
 import unittest
 
+import mozunit
+import six
+from mozfile.mozfile import NamedTemporaryFile
 from six import StringIO
 
-import mozunit
-
 from mozbuild.backend.configenvironment import ConfigEnvironment
-
-from mozbuild.mozinfo import (
-    build_dict,
-    write_mozinfo,
-)
-
-from mozfile.mozfile import NamedTemporaryFile
+from mozbuild.mozinfo import build_dict, write_mozinfo
 
 
 class Base(object):

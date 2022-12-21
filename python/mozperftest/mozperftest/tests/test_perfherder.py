@@ -1,21 +1,22 @@
 #!/usr/bin/env python
 import json
-import jsonschema
 import pathlib
-import pytest
-import mozunit
 
+import jsonschema
+import mozunit
+import pytest
+
+from mozperftest.environment import METRICS
 from mozperftest.metrics.exceptions import PerfherderValidDataError
+from mozperftest.metrics.utils import metric_fields
 from mozperftest.tests.support import (
+    BT_DATA,
+    EXAMPLE_TEST,
+    HERE,
     get_running_env,
     temp_file,
-    EXAMPLE_TEST,
-    BT_DATA,
-    HERE,
 )
-from mozperftest.environment import METRICS
 from mozperftest.utils import silence, temp_dir
-from mozperftest.metrics.utils import metric_fields
 
 
 def setup_env(options):

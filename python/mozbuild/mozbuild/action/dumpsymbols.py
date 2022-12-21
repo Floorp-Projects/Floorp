@@ -5,11 +5,12 @@
 from __future__ import absolute_import, print_function
 
 import argparse
-import buildconfig
-import subprocess
-import shutil
-import sys
 import os
+import shutil
+import subprocess
+import sys
+
+import buildconfig
 
 
 def dump_symbols(target, tracking_file, count_ctors=False):

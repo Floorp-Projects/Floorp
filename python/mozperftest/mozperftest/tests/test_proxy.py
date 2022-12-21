@@ -7,6 +7,7 @@ from unittest import mock
 
 import mozunit
 import pytest
+
 from mozperftest.environment import SYSTEM
 from mozperftest.system.proxy import OutputHandler
 from mozperftest.tests.support import get_running_env

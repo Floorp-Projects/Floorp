@@ -3,17 +3,17 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
-from __future__ import absolute_import, unicode_literals, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 
-import buildconfig
 import os
 import unittest
+
+import buildconfig
+import mozpack.path as mozpath
 import mozunit
 
-from mozbuild.action.node import generate, SCRIPT_ALLOWLIST
+from mozbuild.action.node import SCRIPT_ALLOWLIST, generate
 from mozbuild.nodeutil import find_node_executable
-import mozpack.path as mozpath
-
 
 test_data_path = mozpath.abspath(mozpath.dirname(__file__))
 test_data_path = mozpath.join(test_data_path, "data", "node")

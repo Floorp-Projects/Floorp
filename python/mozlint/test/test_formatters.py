@@ -5,13 +5,12 @@
 import json
 
 import attr
-
-import mozunit
 import mozpack.path as mozpath
+import mozunit
 import pytest
 
-from mozlint.result import Issue, ResultSummary
 from mozlint import formatters
+from mozlint.result import Issue, ResultSummary
 
 NORMALISED_PATHS = {
     "abc": mozpath.normpath("a/b/c.txt"),

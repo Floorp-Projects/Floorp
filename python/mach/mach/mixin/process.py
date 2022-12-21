@@ -12,12 +12,11 @@ import signal
 import subprocess
 import sys
 from pathlib import Path
-
 from typing import Optional
+
 from mozprocess.processhandler import ProcessHandlerMixin
 
 from .logging import LoggingMixin
-
 
 # Perform detection of operating system environment. This is used by command
 # execution. We only do this once to save redundancy. Yes, this can fail module

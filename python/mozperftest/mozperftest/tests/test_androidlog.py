@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-import mozunit
-from unittest import mock
 import pathlib
+from unittest import mock
 
-from mozperftest.tests.support import get_running_env, EXAMPLE_TEST, temp_file
-from mozperftest.environment import SYSTEM, TEST, METRICS
+import mozunit
+
+from mozperftest.environment import METRICS, SYSTEM, TEST
+from mozperftest.tests.support import EXAMPLE_TEST, get_running_env, temp_file
 from mozperftest.utils import temp_dir
-
 
 HERE = pathlib.Path(__file__).parent
 LOGCAT = HERE / "data" / "logcat"

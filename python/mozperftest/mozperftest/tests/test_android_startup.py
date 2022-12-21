@@ -5,9 +5,10 @@ import time
 from datetime import date
 from unittest import mock
 
-import mozperftest.system.android_startup as android_startup
 import pytest
 import requests
+
+import mozperftest.system.android_startup as android_startup
 from mozperftest.system.android_startup import (
     AndroidStartUpInstallError,
     AndroidStartUpMatchingError,

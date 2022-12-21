@@ -9,8 +9,8 @@ import os
 import tempfile
 import unittest
 
-
 from mozunit import main
+
 import mozbuild.vendor.rewrite_mozbuild as mu
 
 SAMPLE_PIXMAN_MOZBUILD = """

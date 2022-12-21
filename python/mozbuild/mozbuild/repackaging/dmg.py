@@ -6,9 +6,10 @@ import tarfile
 from pathlib import Path
 
 import mozfile
+from mozpack.dmg import create_dmg
+
 from mozbuild.bootstrap import bootstrap_toolchain
 from mozbuild.repackaging.application_ini import get_application_ini_value
-from mozpack.dmg import create_dmg
 
 
 def repackage_dmg(infile, output):

@@ -4,22 +4,23 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import os
+import unittest
+
+import mozunit
 from mozpack.path import (
-    relpath,
-    join,
-    normpath,
-    dirname,
-    commonprefix,
+    basedir,
     basename,
+    commonprefix,
+    dirname,
+    join,
+    match,
+    normpath,
+    rebase,
+    relpath,
     split,
     splitext,
-    basedir,
-    match,
-    rebase,
 )
-import unittest
-import mozunit
-import os
 
 
 class TestPath(unittest.TestCase):

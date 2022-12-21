@@ -9,6 +9,7 @@ from io import StringIO
 
 import mozunit
 import pytest
+
 from mozterm import Terminal
 from mozterm.widgets import Footer
 

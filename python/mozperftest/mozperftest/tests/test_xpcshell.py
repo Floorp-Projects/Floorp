@@ -1,19 +1,19 @@
 import json
-from unittest import mock
 import shutil
+from unittest import mock
 
 import pytest
 
-from mozperftest.tests.support import (
-    get_running_env,
-    EXAMPLE_XPCSHELL_TEST,
-    temp_file,
-    MOZINFO,
-)
-from mozperftest.environment import TEST, SYSTEM, METRICS
-from mozperftest.test.xpcshell import XPCShellTestError, NoPerfMetricsError
 from mozperftest import utils
+from mozperftest.environment import METRICS, SYSTEM, TEST
 from mozperftest.test import xpcshell
+from mozperftest.test.xpcshell import NoPerfMetricsError, XPCShellTestError
+from mozperftest.tests.support import (
+    EXAMPLE_XPCSHELL_TEST,
+    MOZINFO,
+    get_running_env,
+    temp_file,
+)
 
 
 class XPCShellTests:

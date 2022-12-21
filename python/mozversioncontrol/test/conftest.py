@@ -4,14 +4,12 @@
 
 from __future__ import absolute_import
 
-import shutil
 import os
+import shutil
 import subprocess
-
 from pathlib import Path
 
 import pytest
-
 
 SETUP = {
     "hg": [

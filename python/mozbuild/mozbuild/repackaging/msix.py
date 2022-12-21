@@ -12,29 +12,29 @@ r"""Repackage ZIP archives (or directories) into MSIX App Packages.
 
 from __future__ import absolute_import, print_function
 
-from collections import defaultdict
 import itertools
 import logging
 import os
 import re
 import shutil
-import sys
 import subprocess
+import sys
 import time
 import urllib
+from collections import defaultdict
 
-from six.moves import shlex_quote
-
+import mozpack.path as mozpath
 from mach.util import get_state_dir
-from mozbuild.util import ensureParentDir
 from mozfile import which
 from mozpack.copier import FileCopier
 from mozpack.files import FileFinder, JarFinder
 from mozpack.manifests import InstallManifest
 from mozpack.mozjar import JarReader
 from mozpack.packager.unpack import UnpackFinder
+from six.moves import shlex_quote
+
 from mozbuild.repackaging.application_ini import get_application_ini_values
-import mozpack.path as mozpath
+from mozbuild.util import ensureParentDir
 
 
 def log_copy_result(log, elapsed, destdir, result):

@@ -1,10 +1,11 @@
 #!/usr/bin/env python
-import mozunit
 import os
 from unittest import mock
+
+import mozunit
 import pytest
 
-from mozperftest.test.browsertime.visualtools import xvfb, get_dependencies
+from mozperftest.test.browsertime.visualtools import get_dependencies, xvfb
 from mozperftest.utils import temporary_env
 
 

@@ -4,24 +4,24 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from mozpack.files import FileFinder
-from mozpack.mozjar import (
-    JarReaderError,
-    JarWriterError,
-    JarStruct,
-    JarReader,
-    JarWriter,
-    Deflater,
-    JarLog,
-)
-from collections import OrderedDict
-from mozpack.test.test_files import MockDest
+import os
 import unittest
+from collections import OrderedDict
+
+import mozpack.path as mozpath
 import mozunit
 import six
-import mozpack.path as mozpath
-import os
-
+from mozpack.files import FileFinder
+from mozpack.mozjar import (
+    Deflater,
+    JarLog,
+    JarReader,
+    JarReaderError,
+    JarStruct,
+    JarWriter,
+    JarWriterError,
+)
+from mozpack.test.test_files import MockDest
 
 test_data_path = mozpath.abspath(mozpath.dirname(__file__))
 test_data_path = mozpath.join(test_data_path, "data")

@@ -4,15 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from mozbuild.util import (
-    ensureParentDir,
-    ensure_bytes,
-)
-
-from mozpack.errors import (
-    ErrorMessage,
-    errors,
-)
+from mozpack.errors import ErrorMessage, errors
 from mozpack.files import (
     AbsoluteSymlinkFile,
     ComposedFinder,
@@ -20,19 +12,21 @@ from mozpack.files import (
     Dest,
     ExistingFile,
     ExtractedTarFile,
-    FileFinder,
     File,
+    FileFinder,
     GeneratedFile,
     HardlinkFile,
     JarFinder,
-    TarFinder,
     ManifestFile,
     MercurialFile,
     MercurialRevisionFinder,
-    MinifiedJavaScript,
     MinifiedCommentStripped,
+    MinifiedJavaScript,
     PreprocessedFile,
+    TarFinder,
 )
+
+from mozbuild.util import ensure_bytes, ensureParentDir
 
 # We don't have hglib installed everywhere.
 try:
@@ -40,28 +34,26 @@ try:
 except ImportError:
     hglib = None
 
-from mozpack.mozjar import (
-    JarReader,
-    JarWriter,
-)
-from mozpack.chrome.manifest import (
-    ManifestContent,
-    ManifestResource,
-    ManifestLocale,
-    ManifestOverride,
-)
-import unittest
-import mozfile
-import mozunit
 import os
 import platform
 import random
-import six
 import sys
 import tarfile
-import mozpack.path as mozpath
-from tempfile import mkdtemp
+import unittest
 from io import BytesIO
+from tempfile import mkdtemp
+
+import mozfile
+import mozpack.path as mozpath
+import mozunit
+import six
+from mozpack.chrome.manifest import (
+    ManifestContent,
+    ManifestLocale,
+    ManifestOverride,
+    ManifestResource,
+)
+from mozpack.mozjar import JarReader, JarWriter
 
 
 class TestWithTmpDir(unittest.TestCase):

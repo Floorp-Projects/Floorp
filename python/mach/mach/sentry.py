@@ -6,20 +6,20 @@ from __future__ import absolute_import
 
 import abc
 import re
-
 from pathlib import Path
 from threading import Thread
 
 import sentry_sdk
-from mach.util import get_state_dir
-from mach.telemetry import is_telemetry_enabled
 from mozversioncontrol import (
-    get_repository_object,
     InvalidRepoPath,
     MissingUpstreamRepo,
     MissingVCSTool,
+    get_repository_object,
 )
 from six import string_types
+
+from mach.telemetry import is_telemetry_enabled
+from mach.util import get_state_dir
 
 # https://sentry.io/organizations/mozilla/projects/mach/
 _SENTRY_DSN = (

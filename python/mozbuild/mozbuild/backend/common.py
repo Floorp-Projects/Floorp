@@ -6,49 +6,46 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import itertools
 import json
-from operator import itemgetter
 import os
-import six
-
 from collections import defaultdict
+from operator import itemgetter
 
 import mozpack.path as mozpath
+import six
+from mozpack.chrome.manifest import parse_manifest_line
 
 from mozbuild.backend.base import BuildBackend
-
 from mozbuild.frontend.context import (
+    VARIABLES,
     Context,
     ObjDirPath,
     Path,
     RenamedSourcePath,
-    VARIABLES,
 )
 from mozbuild.frontend.data import (
     BaseProgram,
     ChromeManifestEntry,
     ConfigFileSubstitution,
     Exports,
-    FinalTargetPreprocessedFiles,
     FinalTargetFiles,
+    FinalTargetPreprocessedFiles,
     GeneratedFile,
     HostLibrary,
     HostSources,
     IPDLCollection,
-    LocalizedPreprocessedFiles,
     LocalizedFiles,
+    LocalizedPreprocessedFiles,
     SandboxedWasmLibrary,
     SharedLibrary,
     Sources,
     StaticLibrary,
     UnifiedSources,
-    XPIDLModule,
-    XPCOMComponentManifests,
     WebIDLCollection,
+    XPCOMComponentManifests,
+    XPIDLModule,
 )
 from mozbuild.jar import DeprecatedJarManifest, JarManifestParser
 from mozbuild.preprocessor import Preprocessor
-from mozpack.chrome.manifest import parse_manifest_line
-
 from mozbuild.util import mkdir
 
 

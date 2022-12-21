@@ -10,9 +10,10 @@ Usage: xpccheck.py <directory> [<directory> ...]
 
 from __future__ import absolute_import, print_function
 
-import sys
 import os
+import sys
 from glob import glob
+
 import manifestparser
 
 

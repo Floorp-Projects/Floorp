@@ -2,14 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import ast
-import os
 import json
+import os
 import pathlib
 import re
 
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
-
 
 # Get the jsonschema for intermediate results
 PARENT = pathlib.Path(__file__).parent.parent

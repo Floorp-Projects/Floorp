@@ -4,14 +4,14 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from xml.dom.minidom import parse
 import os
 import unittest
+from xml.dom.minidom import parse
+
+from mozunit import main
 
 from mozbuild.backend.visualstudio import VisualStudioBackend
 from mozbuild.test.backend.common import BackendTester
-
-from mozunit import main
 
 
 class TestVisualStudioBackend(BackendTester):

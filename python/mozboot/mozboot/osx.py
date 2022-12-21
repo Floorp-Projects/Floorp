@@ -13,9 +13,10 @@ except ImportError:
     from urllib.request import urlopen
 
 from mach.util import to_optional_path, to_optional_str
-from mozboot.base import BaseBootstrapper
 from mozfile import which
 from packaging.version import Version
+
+from mozboot.base import BaseBootstrapper
 
 HOMEBREW_BOOTSTRAP = (
     "https://raw.githubusercontent.com/Homebrew/install/master/install.sh"

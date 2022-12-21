@@ -1,15 +1,16 @@
 import os
 import unittest
-import mozunit
 import xml.etree.ElementTree as ET
 
+import mozpack.path as mozpath
+import mozunit
+
 from mozbuild.action.html_fragment_preprocesor import (
+    fill_html_fragments_map,
     generate,
     get_fragment_key,
     get_html_fragments_from_file,
-    fill_html_fragments_map,
 )
-import mozpack.path as mozpath
 
 test_data_path = mozpath.abspath(mozpath.dirname(__file__))
 test_data_path = mozpath.join(test_data_path, "data", "html_fragment_preprocesor")

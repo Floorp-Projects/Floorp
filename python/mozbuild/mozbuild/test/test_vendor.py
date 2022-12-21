@@ -8,11 +8,12 @@ import os
 import shutil
 import subprocess
 import tempfile
-
-from buildconfig import topsrcdir
 from unittest.mock import Mock
-from mozbuild.vendor.vendor_python import VendorPython
+
 import mozunit
+from buildconfig import topsrcdir
+
+from mozbuild.vendor.vendor_python import VendorPython
 
 
 def test_up_to_date_vendor():

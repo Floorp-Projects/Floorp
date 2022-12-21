@@ -9,10 +9,7 @@ import subprocess
 import mozunit
 import pytest
 
-from mozversioncontrol import (
-    get_repository_object,
-    MissingVCSExtension,
-)
+from mozversioncontrol import MissingVCSExtension, get_repository_object
 
 
 def test_push_to_try(repo, monkeypatch):

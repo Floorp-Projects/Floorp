@@ -4,45 +4,36 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import errno
 import io
 import json
 import logging
-import mozpack.path as mozpath
 import multiprocessing
 import os
-import six
 import subprocess
 import sys
-import errno
 from pathlib import Path
 
+import mozpack.path as mozpath
+import six
 from mach.mixin.process import ProcessExecutionMixin
 from mozboot.mozconfig import MozconfigFindException
 from mozfile import which
 from mozversioncontrol import (
-    get_repository_from_build_config,
-    get_repository_object,
     GitRepository,
     HgRepository,
     InvalidRepoPath,
     MissingConfigureInfo,
     MissingVCSTool,
+    get_repository_from_build_config,
+    get_repository_object,
 )
 
-from .backend.configenvironment import (
-    ConfigEnvironment,
-    ConfigStatusFailure,
-)
+from .backend.configenvironment import ConfigEnvironment, ConfigStatusFailure
 from .configure import ConfigureSandbox
 from .controller.clobber import Clobberer
-from .mozconfig import (
-    MozconfigLoadException,
-    MozconfigLoader,
-)
-from .util import (
-    memoize,
-    memoized_property,
-)
+from .mozconfig import MozconfigLoader, MozconfigLoadException
+from .util import memoize, memoized_property
 
 try:
     import psutil
@@ -477,12 +468,9 @@ class MozbuildObject(ProcessExecutionMixin):
         ``vcs_check_clean`` is False. This prevents confusion due to uncommitted
         file changes not being reflected in the reader.
         """
-        from mozbuild.frontend.reader import (
-            default_finder,
-            BuildReader,
-            EmptyConfig,
-        )
         from mozpack.files import MercurialRevisionFinder
+
+        from mozbuild.frontend.reader import BuildReader, EmptyConfig, default_finder
 
         if config_mode == "build":
             config = self.config_environment
@@ -605,8 +593,8 @@ class MozbuildObject(ProcessExecutionMixin):
                     ensure_exit_code=False,
                 )
             elif sys.platform.startswith("win"):
-                from ctypes import Structure, windll, POINTER, sizeof, WINFUNCTYPE
-                from ctypes.wintypes import DWORD, HANDLE, BOOL, UINT
+                from ctypes import POINTER, WINFUNCTYPE, Structure, sizeof, windll
+                from ctypes.wintypes import BOOL, DWORD, HANDLE, UINT
 
                 class FLASHWINDOW(Structure):
                     _fields_ = [

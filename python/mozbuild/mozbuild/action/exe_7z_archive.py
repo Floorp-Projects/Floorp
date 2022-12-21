@@ -6,11 +6,13 @@ from __future__ import absolute_import, print_function
 
 import os
 import shutil
-import sys
 import subprocess
+import sys
 import tempfile
-import mozpack.path as mozpath
+
 import buildconfig
+import mozpack.path as mozpath
+
 from mozbuild.base import BuildEnvironmentNotFoundException
 
 

@@ -15,8 +15,9 @@ from pathlib import Path
 from string import Template
 
 import mozpack.path as mozpath
-from mozbuild.repackaging.application_ini import get_application_ini_values
 from mozpack.files import FileFinder
+
+from mozbuild.repackaging.application_ini import get_application_ini_values
 
 
 class NoPackageFound(Exception):

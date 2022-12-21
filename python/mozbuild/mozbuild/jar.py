@@ -15,20 +15,21 @@ import io
 import logging
 import os
 import re
-import six
-from six import BytesIO
 import sys
 from time import localtime
 
-from MozZipFile import ZipFile
-from mozbuild.preprocessor import Preprocessor
-from mozbuild.action.buildlist import addEntriesToListFile
-from mozbuild.util import ensure_bytes
-from mozpack.files import FileFinder
 import mozpack.path as mozpath
+import six
+from mozpack.files import FileFinder
+from MozZipFile import ZipFile
+from six import BytesIO
+
+from mozbuild.action.buildlist import addEntriesToListFile
+from mozbuild.preprocessor import Preprocessor
+from mozbuild.util import ensure_bytes
 
 if sys.platform == "win32":
-    from ctypes import windll, WinError
+    from ctypes import WinError, windll
 
     CreateHardLink = windll.kernel32.CreateHardLinkA
 

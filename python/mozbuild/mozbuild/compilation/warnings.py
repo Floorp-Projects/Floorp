@@ -11,11 +11,11 @@ import io
 import json
 import os
 import re
+
+import mozpack.path as mozpath
 import six
 
 from mozbuild.util import hash_file
-import mozpack.path as mozpath
-
 
 # Regular expression to strip ANSI color sequences from a string. This is
 # needed to properly analyze Clang compiler output, which may be colorized.

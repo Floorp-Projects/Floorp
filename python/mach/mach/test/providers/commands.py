@@ -6,10 +6,7 @@ from __future__ import absolute_import, unicode_literals
 
 from functools import partial
 
-from mach.decorators import (
-    CommandArgument,
-    Command,
-)
+from mach.decorators import Command, CommandArgument
 
 
 def is_foo(cls):

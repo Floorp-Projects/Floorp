@@ -9,7 +9,7 @@ import mozunit
 import pytest
 
 from mozlint import editor
-from mozlint.result import ResultSummary, Issue
+from mozlint.result import Issue, ResultSummary
 
 here = os.path.abspath(os.path.dirname(__file__))
 

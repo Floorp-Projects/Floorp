@@ -2,18 +2,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import json
-import jsonschema
 import os
 import pathlib
 import statistics
 import sys
 
-from mozperftest.utils import strtobool
-from mozperftest.layers import Layer
-from mozperftest.metrics.exceptions import PerfherderValidDataError
-from mozperftest.metrics.common import filtered_metrics, COMMON_ARGS
-from mozperftest.metrics.utils import write_json, is_number
+import jsonschema
 
+from mozperftest.layers import Layer
+from mozperftest.metrics.common import COMMON_ARGS, filtered_metrics
+from mozperftest.metrics.exceptions import PerfherderValidDataError
+from mozperftest.metrics.utils import is_number, write_json
+from mozperftest.utils import strtobool
 
 PERFHERDER_SCHEMA = pathlib.Path(
     "testing", "mozharness", "external_tools", "performance-artifact-schema.json"

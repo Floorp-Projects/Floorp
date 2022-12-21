@@ -8,12 +8,13 @@ import os
 import unittest
 
 from mozfile.mozfile import NamedTemporaryFile
-
-from mozbuild.compilation.warnings import CompilerWarning
-from mozbuild.compilation.warnings import WarningsCollector
-from mozbuild.compilation.warnings import WarningsDatabase
-
 from mozunit import main
+
+from mozbuild.compilation.warnings import (
+    CompilerWarning,
+    WarningsCollector,
+    WarningsDatabase,
+)
 
 CLANG_TESTS = [
     (

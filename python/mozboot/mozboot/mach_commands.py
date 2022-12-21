@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 from mach.decorators import Command, CommandArgument
+
 from mozboot.bootstrap import APPLICATIONS
 
 
@@ -67,10 +68,11 @@ def vcs_setup(command_context, update_only=False):
     and this command only ensures that remote repositories providing
     VCS extensions are up to date.
     """
-    import mozboot.bootstrap as bootstrap
     import mozversioncontrol
     from mach.util import to_optional_path
     from mozfile import which
+
+    import mozboot.bootstrap as bootstrap
 
     repo = mozversioncontrol.get_repository_object(command_context._mach_context.topdir)
     tool = "hg"

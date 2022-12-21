@@ -6,8 +6,9 @@ import argparse
 import sys
 from pathlib import Path
 
-from mozbuild.bootstrap import bootstrap_toolchain
 from mozpack import dmg
+
+from mozbuild.bootstrap import bootstrap_toolchain
 
 
 def _path_or_none(input: str):

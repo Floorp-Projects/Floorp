@@ -1,16 +1,15 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-from collections import defaultdict
+import io
 import re
 import textwrap
-from pathlib import Path
-from enum import Enum
-import io
 import traceback
+from collections import defaultdict
+from enum import Enum
+from pathlib import Path
 
 import esprima
-
 
 # list of metadata, each item is the name and if the field is mandatory
 METADATA = [

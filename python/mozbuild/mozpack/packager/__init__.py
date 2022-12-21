@@ -5,12 +5,13 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import codecs
-from collections import deque
 import json
 import os
 import re
+from collections import deque
+
+import mozpack.path as mozpath
 import six
-from mozpack.errors import errors
 from mozpack.chrome.manifest import (
     Manifest,
     ManifestBinaryComponent,
@@ -19,7 +20,8 @@ from mozpack.chrome.manifest import (
     is_manifest,
     parse_manifest,
 )
-import mozpack.path as mozpath
+from mozpack.errors import errors
+
 from mozbuild.preprocessor import Preprocessor
 
 

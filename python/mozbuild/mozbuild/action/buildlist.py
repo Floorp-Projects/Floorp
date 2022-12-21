@@ -10,14 +10,11 @@ Usage: buildlist.py <filename> <entry> [<entry> ...]
 from __future__ import absolute_import, print_function, unicode_literals
 
 import io
-import sys
 import os
+import sys
 
-from mozbuild.util import (
-    ensureParentDir,
-    lock_file,
-)
 from mozbuild.action.util import log_build_task
+from mozbuild.util import ensureParentDir, lock_file
 
 
 def addEntriesToListFile(listFile, entries):

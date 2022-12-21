@@ -6,15 +6,12 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import unittest
+
+import six
+from buildconfig import topobjdir, topsrcdir
 from mozunit import main
-from buildconfig import (
-    topobjdir,
-    topsrcdir,
-)
 
 from mozbuild.configure.lint import LintSandbox
-import six
-
 
 test_path = os.path.abspath(__file__)
 

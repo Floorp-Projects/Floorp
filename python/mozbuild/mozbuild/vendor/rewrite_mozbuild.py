@@ -9,7 +9,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-
 """
 Problem:
     ./mach vendor needs to be able to add or remove files from moz.build files automatically to
@@ -178,14 +177,13 @@ statistic_
     improvements.
 """
 
+import ast
+import copy
 import os
 import re
-import ast
-import sys
-import copy
 import shutil
 import subprocess
-
+import sys
 from pprint import pprint
 
 try:

@@ -5,15 +5,15 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import mozunit
-import pytest
-
 import json
-from mozrelease.util import load as yaml_load
 from pathlib import Path
 
-from mozrelease.balrog import generate_update_properties
+import mozunit
+import pytest
 from mozilla_version.gecko import GeckoVersion
+
+from mozrelease.balrog import generate_update_properties
+from mozrelease.util import load as yaml_load
 
 DATA_PATH = Path(__file__).parent.joinpath("data")
 

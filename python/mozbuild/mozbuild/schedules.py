@@ -7,7 +7,7 @@ Constants for SCHEDULES configuration in moz.build files and for
 skip-unless-schedules optimizations in task-graph generation.
 """
 
-from __future__ import absolute_import, unicode_literals, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 
 # TODO: ideally these lists could be specified in moz.build itself
 

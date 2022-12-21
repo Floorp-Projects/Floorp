@@ -4,33 +4,26 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from abc import (
-    ABCMeta,
-    abstractmethod,
-)
-
 import errno
 import io
 import itertools
 import os
-import six
 import time
-
+from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
 
+import mozpack.path as mozpath
+import six
 from mach.mixin.logging import LoggingMixin
 
-import mozpack.path as mozpath
-from ..preprocessor import Preprocessor
-from ..pythonutil import iter_modules_in_path
-from ..util import (
-    FileAvoidWrite,
-    simple_diff,
-)
+from mozbuild.base import ExecutionSummary
+
 from ..frontend.data import ContextDerived
 from ..frontend.reader import EmptyConfig
+from ..preprocessor import Preprocessor
+from ..pythonutil import iter_modules_in_path
+from ..util import FileAvoidWrite, simple_diff
 from .configenvironment import ConfigEnvironment
-from mozbuild.base import ExecutionSummary
 
 
 class BuildBackend(LoggingMixin):

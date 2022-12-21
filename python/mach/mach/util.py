@@ -7,7 +7,6 @@ from __future__ import absolute_import, unicode_literals
 import hashlib
 import os
 import sys
-
 from pathlib import Path, PurePosixPath
 from typing import Optional, Union
 

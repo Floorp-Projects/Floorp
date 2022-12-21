@@ -1,25 +1,24 @@
 import json
-from mozperftest.tests.support import (
-    get_running_env,
-    EXAMPLE_WPT_TEST,
-)
-import requests
-from unittest import mock
 import random
-import mozperftest.test.webpagetest as webpagetest
+from unittest import mock
+
 import pytest
+import requests
+
+import mozperftest.test.webpagetest as webpagetest
 from mozperftest.test.webpagetest import (
-    WPTTimeOutError,
+    ACCEPTED_STATISTICS,
+    WPT_API_EXPIRED_MESSAGE,
     WPTBrowserSelectionError,
-    WPTInvalidURLError,
-    WPTLocationSelectionError,
-    WPTInvalidStatisticsError,
     WPTDataProcessingError,
     WPTExpiredAPIKeyError,
     WPTInvalidConnectionSelection,
-    WPT_API_EXPIRED_MESSAGE,
-    ACCEPTED_STATISTICS,
+    WPTInvalidStatisticsError,
+    WPTInvalidURLError,
+    WPTLocationSelectionError,
+    WPTTimeOutError,
 )
+from mozperftest.tests.support import EXAMPLE_WPT_TEST, get_running_env
 
 WPT_METRICS = [
     "firstContentfulPaint",

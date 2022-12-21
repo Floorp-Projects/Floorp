@@ -11,10 +11,10 @@ import threading
 
 from mozdevice import ADBDevice
 from mozlog import get_proxy_logger
-from mozperftest.layers import Layer
-from mozperftest.utils import download_file, install_package, get_output_dir, ON_TRY
 from mozprocess import ProcessHandler
 
+from mozperftest.layers import Layer
+from mozperftest.utils import ON_TRY, download_file, get_output_dir, install_package
 
 LOG = get_proxy_logger(component="proxy")
 HERE = os.path.dirname(__file__)

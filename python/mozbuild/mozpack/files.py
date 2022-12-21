@@ -11,42 +11,26 @@ import inspect
 import os
 import platform
 import shutil
-import six
 import stat
 import subprocess
 import uuid
-import mozbuild.makeutil as makeutil
+from collections import OrderedDict
+from io import BytesIO
 from itertools import chain, takewhile
+from tarfile import TarFile, TarInfo
+from tempfile import NamedTemporaryFile, mkstemp
+
+import mozpack.path as mozpath
+import six
+from jsmin import JavascriptMinify
+from mozpack.chrome.manifest import ManifestEntry, ManifestInterfaces
+from mozpack.errors import ErrorMessage, errors
+from mozpack.executables import elfhack, is_executable, may_elfhack, may_strip, strip
+from mozpack.mozjar import JarReader
+
+import mozbuild.makeutil as makeutil
 from mozbuild.preprocessor import Preprocessor
 from mozbuild.util import FileAvoidWrite, ensure_unicode, memoize
-from mozpack.executables import (
-    is_executable,
-    may_strip,
-    strip,
-    may_elfhack,
-    elfhack,
-)
-from mozpack.chrome.manifest import (
-    ManifestEntry,
-    ManifestInterfaces,
-)
-from io import BytesIO
-from mozpack.errors import (
-    ErrorMessage,
-    errors,
-)
-from mozpack.mozjar import JarReader
-import mozpack.path as mozpath
-from collections import OrderedDict
-from jsmin import JavascriptMinify
-from tempfile import (
-    mkstemp,
-    NamedTemporaryFile,
-)
-from tarfile import (
-    TarFile,
-    TarInfo,
-)
 
 try:
     import hglib

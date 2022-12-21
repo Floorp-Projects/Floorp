@@ -1,24 +1,23 @@
 #!/usr/bin/env python
 import os
-import mozunit
-from unittest import mock
+import pathlib
+import random
 import shutil
 import string
-import random
-import pathlib
+from unittest import mock
 
+import mozunit
 import pytest
 
-from mozperftest.tests.support import get_running_env, EXAMPLE_TEST
-from mozperftest.environment import TEST, SYSTEM
+from mozperftest.environment import SYSTEM, TEST
 from mozperftest.test.browsertime import add_options
 from mozperftest.test.browsertime.runner import (
     NodeException,
-    matches,
     extract_browser_name,
+    matches,
 )
+from mozperftest.tests.support import EXAMPLE_TEST, get_running_env
 from mozperftest.utils import silence, temporary_env
-
 
 HERE = os.path.dirname(__file__)
 

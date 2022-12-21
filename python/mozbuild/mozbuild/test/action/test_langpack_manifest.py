@@ -10,8 +10,9 @@ import os
 import tempfile
 import unittest
 
-import mozbuild.action.langpack_manifest as langpack_manifest
 import mozunit
+
+import mozbuild.action.langpack_manifest as langpack_manifest
 
 
 class TestGenerateManifest(unittest.TestCase):

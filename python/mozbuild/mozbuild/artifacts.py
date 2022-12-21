@@ -34,7 +34,6 @@ consumers will need to arrange this themselves.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import buildconfig
 import collections
 import functools
 import glob
@@ -43,32 +42,32 @@ import operator
 import os
 import pickle
 import re
-import requests
 import shutil
-import six
 import stat
 import subprocess
 import tarfile
 import tempfile
-from urllib.parse import urlparse
 import zipfile
 from contextlib import contextmanager
 from io import BufferedReader
+from urllib.parse import urlparse
 
-import pylru
-from taskgraph.util.taskcluster import find_task_id, get_artifact_url, list_artifacts
-
-from mach.util import UserError
-
-from mozbuild.artifact_cache import ArtifactCache
-from mozbuild.artifact_builds import JOB_CHOICES
-from mozbuild.util import ensureParentDir, FileAvoidWrite, mkdir
+import buildconfig
 import mozinstall
+import mozpack.path as mozpath
+import pylru
+import requests
+import six
+from mach.util import UserError
+from mozpack import executables
 from mozpack.files import JarFinder, TarFinder
 from mozpack.mozjar import JarReader, JarWriter
 from mozpack.packager.unpack import UnpackFinder
-import mozpack.path as mozpath
-from mozpack import executables
+from taskgraph.util.taskcluster import find_task_id, get_artifact_url, list_artifacts
+
+from mozbuild.artifact_builds import JOB_CHOICES
+from mozbuild.artifact_cache import ArtifactCache
+from mozbuild.util import FileAvoidWrite, ensureParentDir, mkdir
 
 # Number of candidate pushheads to cache per parent changeset.
 NUM_PUSHHEADS_TO_QUERY_PER_PARENT = 50

@@ -22,8 +22,7 @@
 # in which the manifest file resides and it should be called
 # 'manifest.tt'
 
-from __future__ import print_function
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import base64
 import calendar
@@ -43,14 +42,11 @@ import tempfile
 import threading
 import time
 import zipfile
-from contextlib import contextmanager, closing
+from contextlib import closing, contextmanager
 from functools import wraps
-
-from io import open
-from io import BytesIO
+from io import BytesIO, open
 from random import random
-from subprocess import PIPE
-from subprocess import Popen
+from subprocess import PIPE, Popen
 
 __version__ = "1"
 
@@ -70,16 +66,16 @@ if PY3:
         str  # Silence `pyflakes` from reporting `undefined name 'unicode'` in Python 3.
     )
     import urllib.request as urllib2
-    from http.client import HTTPSConnection, HTTPConnection
-    from urllib.parse import urlparse, urljoin
-    from urllib.request import Request
+    from http.client import HTTPConnection, HTTPSConnection
     from urllib.error import HTTPError, URLError
+    from urllib.parse import urljoin, urlparse
+    from urllib.request import Request
 else:
     six_binary_type = str
     import urllib2
-    from httplib import HTTPSConnection, HTTPConnection
-    from urllib2 import Request, HTTPError, URLError
-    from urlparse import urlparse, urljoin
+    from httplib import HTTPConnection, HTTPSConnection
+    from urllib2 import HTTPError, Request, URLError
+    from urlparse import urljoin, urlparse
 
 
 log = logging.getLogger(__name__)

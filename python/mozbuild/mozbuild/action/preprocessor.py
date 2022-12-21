@@ -6,8 +6,8 @@ from __future__ import absolute_import, print_function
 
 import sys
 
-from mozbuild.preprocessor import Preprocessor
 from mozbuild.action.util import log_build_task
+from mozbuild.preprocessor import Preprocessor
 
 
 def generate(output, *args):

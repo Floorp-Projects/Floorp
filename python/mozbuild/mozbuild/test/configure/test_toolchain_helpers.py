@@ -7,17 +7,16 @@ from __future__ import absolute_import, print_function, unicode_literals
 import copy
 import re
 import unittest
-
 from fnmatch import fnmatch
-import six
-from six import StringIO
 from textwrap import dedent
 
-from mozunit import main, MockedOpen
+import six
+from mozpack import path as mozpath
+from mozunit import MockedOpen, main
+from six import StringIO
 
 from mozbuild.preprocessor import Preprocessor
 from mozbuild.util import ReadOnlyNamespace
-from mozpack import path as mozpath
 
 
 class CompilerPreprocessor(Preprocessor):

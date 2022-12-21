@@ -4,12 +4,12 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from .common import CommonBackend
-
 import mozpack.path as mozpath
 
 from mozbuild.frontend.data import GeneratedFile
 from mozbuild.shellutil import quote as shell_quote
+
+from .common import CommonBackend
 
 
 class MakeBackend(CommonBackend):

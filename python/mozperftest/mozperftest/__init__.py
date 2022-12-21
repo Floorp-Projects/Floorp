@@ -7,7 +7,7 @@ from mozperftest.argparser import (  # noqa
     PerftestArgumentParser,
     PerftestToolsArgumentParser,
 )
-from mozperftest.metadata import Metadata  # noqa
 from mozperftest.environment import MachEnvironment  # noqa
+from mozperftest.metadata import Metadata  # noqa
 
 logger = mozlog.commandline.setup_logging("mozperftest", {})

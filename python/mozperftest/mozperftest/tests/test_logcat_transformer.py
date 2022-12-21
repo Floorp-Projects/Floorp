@@ -3,8 +3,8 @@ import mozunit
 import pytest
 
 from mozperftest.metrics.exceptions import (
-    NotebookTransformOptionsError,
     NotebookTransformError,
+    NotebookTransformOptionsError,
 )
 from mozperftest.metrics.notebook.transforms.logcattime import LogCatTimeTransformer
 from mozperftest.tests.support import HERE

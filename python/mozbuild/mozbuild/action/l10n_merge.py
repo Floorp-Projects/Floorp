@@ -5,9 +5,9 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
+import os
 import shutil
 import sys
-import os
 
 from mozbuild.util import ensureParentDir
 
@@ -20,10 +20,7 @@ def main(argv):
 
     args = parser.parse_args(argv)
 
-    from compare_locales.compare import (
-        ContentComparer,
-        Observer,
-    )
+    from compare_locales.compare import ContentComparer, Observer
     from compare_locales.paths import File
 
     cc = ContentComparer([Observer()])

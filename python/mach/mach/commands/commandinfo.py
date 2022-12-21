@@ -12,9 +12,9 @@ from itertools import chain
 from pathlib import Path
 
 import attr
+from mozbuild.util import memoize
 
 from mach.decorators import Command, CommandArgument, SubCommand
-from mozbuild.util import memoize
 
 COMPLETION_TEMPLATES_DIR = Path(__file__).resolve().parent / "completion_templates"
 
