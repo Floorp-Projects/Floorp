@@ -176,8 +176,7 @@ already_AddRefed<Promise> RTCRtpReceiver::GetStats(ErrorResult& aError) {
   return promise.forget();
 }
 
-nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal(
-    bool aSkipIceStats) {
+nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
   MOZ_ASSERT(NS_IsMainThread());
   nsTArray<RefPtr<RTCStatsPromise>> promises(3);
 
@@ -515,7 +514,7 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal(
                                                         __func__);
               }));
 
-  if (!aSkipIceStats && GetJsepTransceiver().mTransport.mComponents) {
+  if (GetJsepTransceiver().mTransport.mComponents) {
     promises.AppendElement(mTransportHandler->GetIceStats(
         GetJsepTransceiver().mTransport.mTransportId,
         mPipeline->GetTimestampMaker().GetNow()));

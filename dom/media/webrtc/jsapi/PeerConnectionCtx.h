@@ -121,14 +121,17 @@ class PeerConnectionCtx {
 
   SharedWebrtcState* GetSharedWebrtcState() const;
 
+  // WebrtcGlobalInformation uses this; we put it here so we don't need to
+  // create another shutdown observer class.
+  mozilla::dom::Sequence<mozilla::dom::RTCStatsReportInternal>
+      mStatsForClosedPeerConnections;
+
   void RemovePeerConnection(const std::string& aKey);
   void AddPeerConnection(const std::string& aKey,
                          PeerConnectionImpl* aPeerConnection);
   PeerConnectionImpl* GetPeerConnection(const std::string& aKey) const;
   template <typename Function>
   void ForEachPeerConnection(Function&& aFunction) const;
-
-  void ClearClosedStats();
 
  private:
   std::map<const std::string, PeerConnectionImpl*> mPeerConnections;

@@ -56,7 +56,6 @@ RTCRtpSender::RTCRtpSender(nsPIDOMWindowInner* aWindow, PeerConnectionImpl* aPc,
     : mWindow(aWindow),
       mPc(aPc),
       mSenderTrack(aTrack),
-      mTransportHandler(aTransportHandler),
       mTransceiver(aTransceiver),
       INIT_CANONICAL(mSsrcs, Ssrcs()),
       INIT_CANONICAL(mVideoRtxSsrcs, Ssrcs()),
@@ -147,8 +146,7 @@ already_AddRefed<Promise> RTCRtpSender::GetStats(ErrorResult& aError) {
   return promise.forget();
 }
 
-nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal(
-    bool aSkipIceStats) {
+nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal() {
   MOZ_ASSERT(NS_IsMainThread());
   nsTArray<RefPtr<RTCStatsPromise>> promises(2);
   if (!mSenderTrack || !mPipeline) {
@@ -426,12 +424,6 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal(
         }
         return RTCStatsPromise::CreateAndResolve(std::move(report), __func__);
       }));
-
-  if (!aSkipIceStats && GetJsepTransceiver().mTransport.mComponents) {
-    promises.AppendElement(mTransportHandler->GetIceStats(
-        GetJsepTransceiver().mTransport.mTransportId,
-        mPipeline->GetTimestampMaker().GetNow()));
-  }
 
   return promises;
 }
