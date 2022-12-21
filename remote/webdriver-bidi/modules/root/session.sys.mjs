@@ -74,14 +74,12 @@ class SessionModule extends Module {
       });
     }
 
-    // Get all the events that have to be enabled.
-    const enabledEvents = await this.#updateEventMap(events, contextIds, true);
+    const listeners = this.#updateEventMap(events, contextIds, true);
 
     // TODO: Bug 1801284. Add subscribe priority sorting of subscribeStepEvents (step 4 to 6, and 8).
 
-    const includeGlobal = contextIds === null;
-
-    await this.#manageEventSubscriptions(enabledEvents, includeGlobal, true);
+    // Subscribe to the relevant engine-internal events.
+    await this.messageHandler.eventsDispatcher.update(listeners);
   }
 
   /**
@@ -112,23 +110,10 @@ class SessionModule extends Module {
       });
     }
 
-    await this.#updateEventMap(events, contextIds, false);
+    const listeners = this.#updateEventMap(events, contextIds, false);
 
-    const allEvents = events
-      .map(event => Array.from(this.#obtainEvents(event)))
-      .flat();
-    const includeGlobal = contextIds === null;
-
-    const topBrowsingContextIds = includeGlobal
-      ? []
-      : contextIds.map(contextId => this.#getTopBrowsingContextId(contextId));
-    // Map events to top-level context ids from which we need to unsubscribe
-    const disabledEvents = allEvents.reduce((map, eventName) => {
-      map.set(eventName, [...topBrowsingContextIds]);
-      return map;
-    }, new Map());
-
-    await this.#manageEventSubscriptions(disabledEvents, includeGlobal, false);
+    // Unsubscribe from the relevant engine-internal events.
+    await this.messageHandler.eventsDispatcher.update(listeners);
   }
 
   #assertModuleSupportsEvent(moduleName, event) {
@@ -178,54 +163,6 @@ class SessionModule extends Module {
     }
     const topContext = context.top;
     return lazy.TabManager.getIdForBrowsingContext(topContext);
-  }
-
-  /**
-   * Setup event subscription/unsubscription to a given event map.
-   *
-   * @param {Map<string, Set<string>>} events
-   *     The map between event names and context ids.
-   * @param {boolean} includeGlobal
-   *     True, if subscription/unsubscription should be setup globaly,
-   *     otherwise to a list of context.
-   * @param {boolean} enable
-   *     True, if events have to be enabled. Otherwise false.
-   */
-  async #manageEventSubscriptions(events, includeGlobal, enable) {
-    const listeners = Array.from(events.entries()).reduce(
-      (array, [eventName, contextIds]) => {
-        if (includeGlobal) {
-          array.push(
-            this.#toggleEvent(
-              eventName,
-              {
-                type: lazy.ContextDescriptorType.All,
-              },
-              this.#onMessageHandlerEvent,
-              enable
-            )
-          );
-        } else {
-          contextIds.forEach(contextId => {
-            array.push(
-              this.#toggleEvent(
-                eventName,
-                {
-                  type: lazy.ContextDescriptorType.TopBrowsingContext,
-                  id: this.#getBrowserIdForContextId(contextId),
-                },
-                this.#onMessageHandlerEvent,
-                enable
-              )
-            );
-          });
-        }
-        return array;
-      },
-      []
-    );
-
-    await Promise.allSettled(listeners);
   }
 
   /**
@@ -298,22 +235,6 @@ class SessionModule extends Module {
     this.messageHandler.emitProtocolEvent(name, event);
   };
 
-  #toggleEvent(eventName, descriptor, callback, enable) {
-    if (enable) {
-      return this.messageHandler.eventsDispatcher.on(
-        eventName,
-        descriptor,
-        callback
-      );
-    }
-
-    return this.messageHandler.eventsDispatcher.off(
-      eventName,
-      descriptor,
-      callback
-    );
-  }
-
   /**
    * Update global event state for top-level browsing contexts.
    *
@@ -326,16 +247,14 @@ class SessionModule extends Module {
    * @param {boolean} enabled
    *     True, if events have to be enabled. Otherwise false.
    *
-   * @return {Map<string, Set<string>} The map between event names and context ids.
-   *     When the events are being enabled, the context ids in the return value are those
-   *     for which the event are now enabled but were not previously.
-   *     When events are disabled, the return value is always empty.
+   * @return {Array<Subscription>} subscriptions
+   *     The list of information to subscribe/unsubscribe to.
    *
-   *  @throws {InvalidArgumentError}
+   * @throws {InvalidArgumentError}
    *     If failed unsubscribe from event from <var>requestedEventNames</var> for
    *     browsing context id from <var>browsingContextIds</var>, if present.
    */
-  async #updateEventMap(requestedEventNames, browsingContextIds, enabled) {
+  #updateEventMap(requestedEventNames, browsingContextIds, enabled) {
     const globalEventSet = new Set(this.#globalEventSet);
     const eventMap = structuredClone(this.#browsingContextIdEventMap);
 
@@ -345,6 +264,7 @@ class SessionModule extends Module {
       this.#obtainEvents(name).forEach(event => eventNames.add(event));
     });
     const enabledEvents = new Map();
+    const subscriptions = [];
 
     if (browsingContextIds === null) {
       // Subscribe or unsubscribe events for all browsing contexts.
@@ -362,22 +282,20 @@ class SessionModule extends Module {
             globalEventSet.add(eventName);
             for (const contextId of alreadyEnabledContextIds) {
               eventMap.get(contextId).delete(eventName);
+
+              // Since we're going to subscribe to all top-level
+              // browsing context ids to not have duplicate subscriptions,
+              // we have to unsubscribe from already subscribed.
+              subscriptions.push({
+                event: eventName,
+                contextDescriptor: {
+                  type: lazy.ContextDescriptorType.TopBrowsingContext,
+                  id: this.#getBrowserIdForContextId(contextId),
+                },
+                callback: this.#onMessageHandlerEvent,
+                enable: false,
+              });
             }
-            // Since we're going to subscribe to all top-level
-            // browsing context ids to not have duplicate subscriptions,
-            // we have to unsubscribe from already subscribed.
-            await Promise.allSettled(
-              Array.from(alreadyEnabledContextIds).map(contextId =>
-                this.messageHandler.eventsDispatcher.off(
-                  eventName,
-                  {
-                    type: lazy.ContextDescriptorType.TopBrowsingContext,
-                    id: this.#getBrowserIdForContextId(contextId),
-                  },
-                  this.#onMessageHandlerEvent
-                )
-              )
-            );
 
             // Get a list of all top-level browsing context ids
             // that are not contained in alreadyEnabledContextIds.
@@ -386,6 +304,15 @@ class SessionModule extends Module {
             );
 
             enabledEvents.set(eventName, newlyEnabledContextIds);
+
+            subscriptions.push({
+              event: eventName,
+              contextDescriptor: {
+                type: lazy.ContextDescriptorType.All,
+              },
+              callback: this.#onMessageHandlerEvent,
+              enable: true,
+            });
           }
         }
       } else {
@@ -393,6 +320,15 @@ class SessionModule extends Module {
         for (const eventName of eventNames) {
           if (globalEventSet.has(eventName)) {
             globalEventSet.delete(eventName);
+
+            subscriptions.push({
+              event: eventName,
+              contextDescriptor: {
+                type: lazy.ContextDescriptorType.All,
+              },
+              callback: this.#onMessageHandlerEvent,
+              enable: false,
+            });
           } else {
             throw new lazy.error.InvalidArgumentError(
               `Failed to unsubscribe from event ${eventName}`
@@ -425,10 +361,30 @@ class SessionModule extends Module {
               enabledEvents.set(eventName, new Set());
             }
             enabledEvents.get(eventName).add(contextId);
+
+            subscriptions.push({
+              event: eventName,
+              contextDescriptor: {
+                type: lazy.ContextDescriptorType.TopBrowsingContext,
+                id: this.#getBrowserIdForContextId(contextId),
+              },
+              callback: this.#onMessageHandlerEvent,
+              enable: true,
+            });
           } else if (!enabled) {
             // Unsubscribe from each event for a specific context id if the event has a subscription.
             if (target.has(eventName)) {
               target.delete(eventName);
+
+              subscriptions.push({
+                event: eventName,
+                contextDescriptor: {
+                  type: lazy.ContextDescriptorType.TopBrowsingContext,
+                  id: this.#getBrowserIdForContextId(contextId),
+                },
+                callback: this.#onMessageHandlerEvent,
+                enable: false,
+              });
             } else {
               throw new lazy.error.InvalidArgumentError(
                 `Failed to unsubscribe from event ${eventName} for context ${contextId}`
@@ -442,7 +398,7 @@ class SessionModule extends Module {
     this.#globalEventSet = globalEventSet;
     this.#browsingContextIdEventMap = eventMap;
 
-    return enabledEvents;
+    return subscriptions;
   }
 }
 

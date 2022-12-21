@@ -73,13 +73,8 @@ export class WindowGlobalMessageHandler extends MessageHandler {
     };
 
     const sessionDataPromises = sessionDataItems.map(sessionDataItem => {
-      const {
-        moduleName,
-        category,
-        contextDescriptor,
-        value,
-      } = sessionDataItem;
-      if (!this._matchesContext(contextDescriptor)) {
+      const { moduleName, category, contextDescriptor } = sessionDataItem;
+      if (!this.matchesContext(contextDescriptor)) {
         return Promise.resolve();
       }
 
@@ -94,11 +89,7 @@ export class WindowGlobalMessageHandler extends MessageHandler {
         commandName: "_applySessionData",
         params: {
           category,
-          // TODO: We might call _applySessionData several times for the same
-          // moduleName & category, but with different values. Instead we can
-          // use the fact that _applySessionData supports arrays of values,
-          // though it will make the implementation more complex.
-          added: [value],
+          sessionData: sessionDataItems,
         },
         destination,
       });
@@ -119,7 +110,7 @@ export class WindowGlobalMessageHandler extends MessageHandler {
     );
   }
 
-  _matchesContext(contextDescriptor) {
+  matchesContext(contextDescriptor) {
     return (
       contextDescriptor.type === ContextDescriptorType.All ||
       (contextDescriptor.type === ContextDescriptorType.TopBrowsingContext &&

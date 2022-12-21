@@ -7,8 +7,9 @@ import { Module } from "chrome://remote/content/shared/messagehandler/Module.sys
 class CommandModule extends Module {
   constructor(messageHandler) {
     super(messageHandler);
-    this._testCategorySessionData = [];
     this._lastSessionDataUpdate = {};
+    this._subscribedEvents = new Set();
+    this._testCategorySessionData = [];
 
     this._createdByMessageHandlerConstructor = this._isCreatedByMessageHandlerConstructor();
   }
@@ -20,8 +21,30 @@ class CommandModule extends Module {
 
   _applySessionData(params) {
     if (params.category === "testCategory") {
-      const added = params.added || [];
-      const removed = params.removed || [];
+      const added = [];
+      const removed = [];
+
+      const filteredSessionData = params.sessionData.filter(item =>
+        this.messageHandler.matchesContext(item.contextDescriptor)
+      );
+      for (const event of this._subscribedEvents.values()) {
+        const hasSessionItem = filteredSessionData.some(
+          item => item.value === event
+        );
+        // If there are no session items for this context, we should unsubscribe from the event.
+        if (!hasSessionItem) {
+          this._subscribedEvents.delete(event);
+          removed.push(event);
+        }
+      }
+
+      // Subscribe to all events, which have an item in SessionData
+      for (const { value } of filteredSessionData) {
+        if (!this._subscribedEvents.has(value)) {
+          this._subscribedEvents.add(value);
+          added.push(value);
+        }
+      }
 
       this._testCategorySessionData = this._testCategorySessionData
         .concat(added)

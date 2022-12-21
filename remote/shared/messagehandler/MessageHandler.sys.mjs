@@ -305,6 +305,16 @@ export class MessageHandler extends EventEmitter {
   }
 
   /**
+   * Check if contextDescriptor matches the context linked
+   * to this MessageHandler instance.
+   *
+   * Needs to be implemented in the sub class.
+   */
+  matchesContext(contextDescriptor) {
+    throw new Error("Not implemented");
+  }
+
+  /**
    * Check if the given command is supported in the module
    * for the destination
    *
