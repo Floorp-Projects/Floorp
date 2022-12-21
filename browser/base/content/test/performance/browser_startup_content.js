@@ -40,6 +40,10 @@ const known_scripts = {
     "resource://gre/actors/ContentMetaChild.jsm",
     "resource://gre/modules/Readerable.jsm",
 
+    // Browser front-end, the blocklist is loaded from the child.
+    "resource:///actors/InteractionsChild.sys.mjs",
+    "resource:///modules/InteractionsBlocklist.sys.mjs",
+
     // Telemetry
     "resource://gre/modules/TelemetryControllerBase.jsm", // bug 1470339
     "resource://gre/modules/TelemetryControllerContent.jsm", // bug 1470339
