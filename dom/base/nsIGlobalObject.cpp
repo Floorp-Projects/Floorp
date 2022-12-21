@@ -70,10 +70,6 @@ nsIGlobalObject::~nsIGlobalObject() {
 }
 
 nsIPrincipal* nsIGlobalObject::PrincipalOrNull() const {
-  if (!NS_IsMainThread()) {
-    return nullptr;
-  }
-
   JSObject* global = GetGlobalJSObjectPreserveColor();
   if (NS_WARN_IF(!global)) return nullptr;
 
@@ -399,9 +395,6 @@ mozilla::Result<bool, nsresult> nsIGlobalObject::HasEqualStorageKey(
 }
 
 bool nsIGlobalObject::IsSystemPrincipal() const {
-  MOZ_ASSERT(NS_IsMainThread(),
-             "Cannot ask nsIGlobalObject IsSystemPrincipal off-main-thread");
-
   return PrincipalOrNull()->IsSystemPrincipal();
 }
 

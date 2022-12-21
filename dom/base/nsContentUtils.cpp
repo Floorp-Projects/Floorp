@@ -3398,8 +3398,6 @@ nsIPrincipal* nsContentUtils::SubjectPrincipal() {
 
 // static
 nsIPrincipal* nsContentUtils::ObjectPrincipal(JSObject* aObj) {
-  MOZ_ASSERT(NS_IsMainThread());
-
 #ifdef DEBUG
   JS::AssertObjectBelongsToCurrentThread(aObj);
 #endif
