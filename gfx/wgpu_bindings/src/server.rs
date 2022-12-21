@@ -316,17 +316,10 @@ pub extern "C" fn wgpu_server_device_create_buffer(
     let utf8_label = label.map(|utf16| utf16.to_string());
     let label = utf8_label.as_ref().map(|s| Cow::from(&s[..]));
 
-    let usage = match wgt::BufferUsages::from_bits(usage) {
-        Some(usage) => usage,
-        None => {
-            error_buf.init_str(
-                "GPUBufferDescriptor's 'usage' includes invalid unimplemented bits \
-                                or unimplemented usages",
-            );
-            gfx_select!(self_id => global.create_buffer_error(buffer_id, label));
-            return;
-        }
-    };
+    // This is actually not unsafe, the bitflags crate never ended up relying on the bit
+    // patterns for safety, and the next version will replace this method with an equivalent
+    // that isn't marked unsafe.
+    let usage = unsafe { wgt::BufferUsages::from_bits_unchecked(usage) };
 
     // Don't trust the graphics driver with buffer sizes larger than our conservative max texture size.
     if size > MAX_BUFFER_SIZE {
