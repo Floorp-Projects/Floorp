@@ -95,7 +95,7 @@ impl Http3TestServer {
 
     fn new_response(&mut self, mut stream: Http3OrWebTransportStream, mut data: Vec<u8>) {
         if data.len() == 0 {
-            stream.stream_close_send().unwrap();
+            let _ = stream.stream_close_send();
             return;
         }
         match stream.send_data(&data) {
@@ -397,8 +397,16 @@ impl HttpServer for Http3TestServer {
                         self.current_connection_hash = h.finish();
                     }
                 }
-                Http3ServerEvent::PriorityUpdate { .. }
-                | Http3ServerEvent::StreamReset { .. } => {}
+                Http3ServerEvent::PriorityUpdate { .. } => {}
+                Http3ServerEvent::StreamReset {
+                    stream,
+                    error
+                } => {
+                    qtrace!(
+                        "Http3ServerEvent::StreamReset {:?} {:?}",
+                        stream,
+                        error);
+                }
                 Http3ServerEvent::StreamStopSending {
                     stream,
                     error
