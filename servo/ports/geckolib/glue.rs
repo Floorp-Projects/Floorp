@@ -6051,7 +6051,8 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
     let parent_data = parent_element.as_ref().and_then(|e| e.borrow_data());
     let parent_style = parent_data
         .as_ref()
-        .map(|d| d.styles.primary());
+        .map(|d| d.styles.primary())
+        .map(|x| &**x);
 
     let container_size_query =
         ContainerSizeQuery::for_element(element, pseudo.as_ref().and(parent_style));
@@ -6059,7 +6060,7 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
     let mut context = create_context_for_animation(
         &data,
         &style,
-        parent_style.map(|x| &**x),
+        parent_style,
         /* for_smil_animation = */ false,
         &mut conditions,
         container_size_query,
