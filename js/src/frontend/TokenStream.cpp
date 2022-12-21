@@ -2467,8 +2467,9 @@ template <typename Unit, class AnyCharsAccess>
 
     // Most numbers are pure decimal integers without fractional component
     // or exponential notation.  Handle that with optimized code.
-    if (!GetDecimalInteger(anyCharsAccess().cx, numStart,
-                           this->sourceUnits.addressOfNextCodeUnit(), &dval)) {
+    if (!GetDecimalInteger(numStart, this->sourceUnits.addressOfNextCodeUnit(),
+                           &dval)) {
+      ReportOutOfMemory(this->fc);
       return false;
     }
   } else if (unit == 'n') {
@@ -2505,8 +2506,9 @@ template <typename Unit, class AnyCharsAccess>
 
     ungetCodeUnit(unit);
 
-    if (!GetDecimal(anyCharsAccess().cx, numStart,
-                    this->sourceUnits.addressOfNextCodeUnit(), &dval)) {
+    if (!GetDecimal(numStart, this->sourceUnits.addressOfNextCodeUnit(),
+                    &dval)) {
+      ReportOutOfMemory(this->fc);
       return false;
     }
   }
@@ -3015,9 +3017,10 @@ template <typename Unit, class AnyCharsAccess>
       }
 
       double dval;
-      if (!GetFullInteger(anyCharsAccess().cx, numStart,
-                          this->sourceUnits.addressOfNextCodeUnit(), radix,
-                          IntegerSeparatorHandling::SkipUnderscore, &dval)) {
+      if (!GetFullInteger(numStart, this->sourceUnits.addressOfNextCodeUnit(),
+                          radix, IntegerSeparatorHandling::SkipUnderscore,
+                          &dval)) {
+        ReportOutOfMemory(this->fc);
         return badToken();
       }
       newNumberToken(dval, NoDecimal, start, modifier, ttp);
