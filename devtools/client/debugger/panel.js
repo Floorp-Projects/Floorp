@@ -71,7 +71,7 @@ class DebuggerPanel {
       resourceCommand: this.toolbox.resourceCommand,
       workers: {
         sourceMaps: this.toolbox.sourceMapLoader,
-        evaluationsParser: this.toolbox.parserService,
+        parserWorker: this.toolbox.parserWorker,
       },
       panel: this,
     });

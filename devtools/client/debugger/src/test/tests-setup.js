@@ -29,9 +29,6 @@ function formatException(reason, p) {
 export const parserWorker = new ParserDispatcher(
   path.join(rootPath, "src/workers/parser/worker.js")
 );
-export const evaluationsParser = new ParserDispatcher(
-  path.join(rootPath, "src/workers/parser/worker.js")
-);
 export const prettyPrintWorker = new PrettyPrintDispatcher(
   path.join(rootPath, "src/workers/pretty-print/worker.js")
 );
@@ -45,7 +42,6 @@ beforeAll(() => {
 
 afterAll(() => {
   parserWorker.stop();
-  evaluationsParser.stop();
   prettyPrintWorker.stop();
   searchWorker.stop();
 
@@ -56,7 +52,6 @@ afterEach(() => {});
 
 beforeEach(async () => {
   parserWorker.clear();
-  evaluationsParser.clear();
 
   clearDocuments();
   prefs.projectDirectoryRoot = "";

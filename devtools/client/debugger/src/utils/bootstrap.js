@@ -19,7 +19,6 @@ const { AppConstants } = ChromeUtils.importESModule(
 
 import { SearchDispatcher } from "../workers/search";
 import { PrettyPrintDispatcher } from "../workers/pretty-print";
-import { ParserDispatcher } from "../workers/parser";
 
 import configureStore from "../actions/utils/create-store";
 import reducers from "../reducers";
@@ -53,9 +52,10 @@ export function bootstrapStore(client, workers, panel, initialState) {
 }
 
 export function bootstrapWorkers(panelWorkers) {
+  // The panel worker will typically be the source map and parser workers.
+  // Both will be managed by the toolbox.
   gWorkers = {
     prettyPrintWorker: new PrettyPrintDispatcher(),
-    parserWorker: new ParserDispatcher(),
     searchWorker: new SearchDispatcher(),
   };
   return { ...panelWorkers, ...gWorkers };
@@ -63,7 +63,6 @@ export function bootstrapWorkers(panelWorkers) {
 
 export function teardownWorkers() {
   gWorkers.prettyPrintWorker.stop();
-  gWorkers.parserWorker.stop();
   gWorkers.searchWorker.stop();
 }
 
