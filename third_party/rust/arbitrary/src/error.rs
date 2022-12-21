@@ -37,4 +37,17 @@ impl error::Error for Error {}
 /// A `Result` with the error type fixed as `arbitrary::Error`.
 ///
 /// Either an `Ok(T)` or `Err(arbitrary::Error)`.
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T, E = Error> = std::result::Result<T, E>;
+
+#[cfg(test)]
+mod tests {
+    // Often people will import our custom `Result` type because 99.9% of
+    // results in a file will be `arbitrary::Result` but then have that one last
+    // 0.1% that want to have a custom error type. Don't make them prefix that
+    // 0.1% as `std::result::Result`; instead, let `arbitrary::Result` have an
+    // overridable error type.
+    #[test]
+    fn can_use_custom_error_types_with_result() -> super::Result<(), String> {
+        Ok(())
+    }
+}

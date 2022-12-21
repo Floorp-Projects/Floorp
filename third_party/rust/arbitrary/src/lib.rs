@@ -34,6 +34,7 @@ pub use unstructured::Unstructured;
 
 pub mod size_hint;
 
+use core::array;
 use core::cell::{Cell, RefCell, UnsafeCell};
 use core::iter;
 use core::mem;
@@ -47,6 +48,7 @@ use std::collections::{BTreeMap, BTreeSet, BinaryHeap, HashMap, HashSet, LinkedL
 use std::ffi::{CString, OsString};
 use std::hash::BuildHasher;
 use std::net::{Ipv4Addr, Ipv6Addr};
+use std::ops::Bound;
 use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, AtomicIsize, AtomicUsize};
@@ -138,7 +140,7 @@ pub trait Arbitrary<'a>: Sized {
     /// perhaps given to you by a fuzzer like AFL or libFuzzer. You wrap this
     /// raw data in an `Unstructured`, and then you can call `<MyType as
     /// Arbitrary>::arbitrary` to construct an arbitrary instance of `MyType`
-    /// from that unstuctured data.
+    /// from that unstructured data.
     ///
     /// Implementations may return an error if there is not enough data to
     /// construct a full instance of `Self`, or they may fill out the rest of
@@ -609,27 +611,6 @@ impl<T, const N: usize> Drop for ArrayGuard<T, N> {
     }
 }
 
-fn create_array<F, T, const N: usize>(mut cb: F) -> [T; N]
-where
-    F: FnMut(usize) -> T,
-{
-    let mut array: mem::MaybeUninit<[T; N]> = mem::MaybeUninit::uninit();
-    let array_ptr = array.as_mut_ptr();
-    let dst = array_ptr as _;
-    let mut guard: ArrayGuard<T, N> = ArrayGuard {
-        dst,
-        initialized: 0,
-    };
-    unsafe {
-        for (idx, value_ptr) in (&mut *array.as_mut_ptr()).iter_mut().enumerate() {
-            core::ptr::write(value_ptr, cb(idx));
-            guard.initialized += 1;
-        }
-        mem::forget(guard);
-        array.assume_init()
-    }
-}
-
 fn try_create_array<F, T, const N: usize>(mut cb: F) -> Result<[T; N]>
 where
     F: FnMut(usize) -> Result<T>,
@@ -642,7 +623,7 @@ where
         initialized: 0,
     };
     unsafe {
-        for (idx, value_ptr) in (&mut *array.as_mut_ptr()).iter_mut().enumerate() {
+        for (idx, value_ptr) in (*array.as_mut_ptr()).iter_mut().enumerate() {
             core::ptr::write(value_ptr, cb(idx)?);
             guard.initialized += 1;
         }
@@ -671,7 +652,7 @@ where
 
     #[inline]
     fn size_hint(d: usize) -> (usize, Option<usize>) {
-        crate::size_hint::and_all(&create_array::<_, (usize, Option<usize>), N>(|_| {
+        crate::size_hint::and_all(&array::from_fn::<_, N, _>(|_| {
             <T as Arbitrary>::size_hint(d)
         }))
     }
@@ -735,6 +716,25 @@ impl<'a, A: Arbitrary<'a> + Ord> Arbitrary<'a> for BTreeSet<A> {
     #[inline]
     fn size_hint(_depth: usize) -> (usize, Option<usize>) {
         (0, None)
+    }
+}
+
+impl<'a, A: Arbitrary<'a>> Arbitrary<'a> for Bound<A> {
+    fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self> {
+        match u.int_in_range::<u8>(0..=2)? {
+            0 => Ok(Bound::Included(A::arbitrary(u)?)),
+            1 => Ok(Bound::Excluded(A::arbitrary(u)?)),
+            2 => Ok(Bound::Unbounded),
+            _ => unreachable!(),
+        }
+    }
+
+    #[inline]
+    fn size_hint(depth: usize) -> (usize, Option<usize>) {
+        size_hint::or(
+            size_hint::and((1, Some(1)), A::size_hint(depth)),
+            (1, Some(1)),
+        )
     }
 }
 
@@ -837,7 +837,7 @@ where
 impl<'a> Arbitrary<'a> for &'a str {
     fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self> {
         let size = u.arbitrary_len::<u8>()?;
-        match str::from_utf8(&u.peek_bytes(size).unwrap()) {
+        match str::from_utf8(u.peek_bytes(size).unwrap()) {
             Ok(s) => {
                 u.bytes(size).unwrap();
                 Ok(s)
@@ -856,9 +856,7 @@ impl<'a> Arbitrary<'a> for &'a str {
 
     fn arbitrary_take_rest(u: Unstructured<'a>) -> Result<Self> {
         let bytes = u.take_rest();
-        str::from_utf8(bytes)
-            .map_err(|_| Error::IncorrectFormat)
-            .map(Into::into)
+        str::from_utf8(bytes).map_err(|_| Error::IncorrectFormat)
     }
 
     #[inline]
@@ -975,6 +973,17 @@ impl<'a, A: Arbitrary<'a>> Arbitrary<'a> for Arc<A> {
     }
 }
 
+impl<'a> Arbitrary<'a> for Arc<str> {
+    fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self> {
+        <&str as Arbitrary>::arbitrary(u).map(Into::into)
+    }
+
+    #[inline]
+    fn size_hint(depth: usize) -> (usize, Option<usize>) {
+        <&str as Arbitrary>::size_hint(depth)
+    }
+}
+
 impl<'a, A: Arbitrary<'a>> Arbitrary<'a> for Rc<A> {
     fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self> {
         Arbitrary::arbitrary(u).map(Self::new)
@@ -983,6 +992,17 @@ impl<'a, A: Arbitrary<'a>> Arbitrary<'a> for Rc<A> {
     #[inline]
     fn size_hint(depth: usize) -> (usize, Option<usize>) {
         crate::size_hint::recursion_guard(depth, <A as Arbitrary>::size_hint)
+    }
+}
+
+impl<'a> Arbitrary<'a> for Rc<str> {
+    fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self> {
+        <&str as Arbitrary>::arbitrary(u).map(Into::into)
+    }
+
+    #[inline]
+    fn size_hint(depth: usize) -> (usize, Option<usize>) {
+        <&str as Arbitrary>::size_hint(depth)
     }
 }
 
@@ -1272,3 +1292,51 @@ mod test {
         assert_eq!((1, None), <(u8, Vec<u8>) as Arbitrary>::size_hint(0));
     }
 }
+
+/// Multiple conflicting arbitrary attributes are used on the same field:
+/// ```compile_fail
+/// #[derive(::arbitrary::Arbitrary)]
+/// struct Point {
+///     #[arbitrary(value = 2)]
+///     #[arbitrary(value = 2)]
+///     x: i32,
+/// }
+/// ```
+///
+/// An unknown attribute:
+/// ```compile_fail
+/// #[derive(::arbitrary::Arbitrary)]
+/// struct Point {
+///     #[arbitrary(unknown_attr)]
+///     x: i32,
+/// }
+/// ```
+///
+/// An unknown attribute with a value:
+/// ```compile_fail
+/// #[derive(::arbitrary::Arbitrary)]
+/// struct Point {
+///     #[arbitrary(unknown_attr = 13)]
+///     x: i32,
+/// }
+/// ```
+///
+/// `value` without RHS:
+/// ```compile_fail
+/// #[derive(::arbitrary::Arbitrary)]
+/// struct Point {
+///     #[arbitrary(value)]
+///     x: i32,
+/// }
+/// ```
+///
+/// `with` without RHS:
+/// ```compile_fail
+/// #[derive(::arbitrary::Arbitrary)]
+/// struct Point {
+///     #[arbitrary(with)]
+///     x: i32,
+/// }
+/// ```
+#[cfg(all(doctest, feature = "derive"))]
+pub struct CompileFailTests;
