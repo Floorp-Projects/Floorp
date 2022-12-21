@@ -266,12 +266,6 @@ extern JS_PUBLIC_API void* StealArrayBufferContents(JSContext* cx,
                                                     Handle<JSObject*> obj);
 
 /**
- * Enable or disable support for large (>= 2 GB) ArrayBuffers on 64-bit builds.
- * Has no effect on 32-bit builds.
- */
-extern JS_PUBLIC_API void SetLargeArrayBuffersEnabled(bool enable);
-
-/**
  * Copy data from one array buffer to another.
  *
  * Both fromBuffer and toBuffer must be (possibly wrapped)

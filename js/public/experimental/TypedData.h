@@ -269,7 +269,7 @@ namespace JS {
 
 /*
  * Returns whether the passed array buffer view is 'large': its byteLength >= 2
- * GB. See also SetLargeArrayBuffersEnabled.
+ * GB.
  *
  * |obj| must pass a JS_IsArrayBufferViewObject test.
  */

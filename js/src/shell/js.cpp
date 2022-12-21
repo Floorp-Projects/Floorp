@@ -11000,10 +11000,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     }
   }
 
-  if (op.getBoolOption("no-large-arraybuffers")) {
-    JS::SetLargeArrayBuffersEnabled(false);
-  }
-
   if (op.getBoolOption("disable-bailout-loop-check")) {
     jit::JitOptions.disableBailoutLoopCheck = true;
   }
@@ -11691,9 +11687,6 @@ int main(int argc, char** argv) {
                         "(no-op) Enable class static blocks") ||
       !op.addBoolOption('\0', "enable-import-assertions",
                         "Enable import assertions") ||
-      !op.addBoolOption('\0', "no-large-arraybuffers",
-                        "Disallow creating ArrayBuffers larger than 2 GB on "
-                        "64-bit platforms") ||
       !op.addStringOption('\0', "shared-memory", "on/off",
                           "SharedArrayBuffer and Atomics "
 #if SHARED_MEMORY_DEFAULT

@@ -969,9 +969,6 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
     MOZ_RELEASE_ASSERT(disabledHugeMemory);
   }
 
-  JS::SetLargeArrayBuffersEnabled(
-      StaticPrefs::javascript_options_large_arraybuffers_DoNotUseDirectly());
-
   JS::SetSiteBasedPretenuringEnabled(
       StaticPrefs::
           javascript_options_site_based_pretenuring_DoNotUseDirectly());

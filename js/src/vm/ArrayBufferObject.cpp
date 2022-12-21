@@ -126,8 +126,6 @@ static Atomic<int32_t, mozilla::ReleaseAcquire> allocatedSinceLastTrigger(0);
 
 int32_t js::LiveMappedBufferCount() { return liveBufferCount; }
 
-bool js::ArrayBufferObject::supportLargeBuffers = true;
-
 [[nodiscard]] static bool CheckArrayBufferTooLarge(JSContext* cx,
                                                    uint64_t nbytes) {
   // Refuse to allocate too large buffers.
@@ -1954,10 +1952,6 @@ JS_PUBLIC_API void* JS::StealArrayBufferContents(JSContext* cx,
 
   AutoRealm ar(cx, unwrappedBuffer);
   return ArrayBufferObject::stealMallocedContents(cx, unwrappedBuffer);
-}
-
-JS_PUBLIC_API void JS::SetLargeArrayBuffersEnabled(bool enable) {
-  ArrayBufferObject::supportLargeBuffers = enable;
 }
 
 JS_PUBLIC_API JSObject* JS::NewMappedArrayBufferWithContents(JSContext* cx,
