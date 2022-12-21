@@ -5,11 +5,10 @@ ChromeUtils.defineModuleGetter(
   "ExtensionPreferencesManager",
   "resource://gre/modules/ExtensionPreferencesManager.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "ContextualIdentityService",
-  "resource://gre/modules/ContextualIdentityService.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  ContextualIdentityService:
+    "resource://gre/modules/ContextualIdentityService.sys.mjs",
+});
 
 const CONTAINERS_PREF = "privacy.userContext.enabled";
 

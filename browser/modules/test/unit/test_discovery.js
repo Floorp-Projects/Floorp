@@ -12,8 +12,8 @@ const { TestUtils } = ChromeUtils.importESModule(
 );
 const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
 const { Discovery } = ChromeUtils.import("resource:///modules/Discovery.jsm");
-const { ContextualIdentityService } = ChromeUtils.import(
-  "resource://gre/modules/ContextualIdentityService.jsm"
+const { ContextualIdentityService } = ChromeUtils.importESModule(
+  "resource://gre/modules/ContextualIdentityService.sys.mjs"
 );
 
 const TAAR_COOKIE_NAME = "taarId";

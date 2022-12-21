@@ -25,7 +25,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 
 // The userContextID reserved for the extension storage (its purpose is ensuring that the IndexedDB
 // storage used by the browser.storage.local API is not directly accessible from the extension code,
-// it is defined and reserved as "userContextIdInternal.webextStorageLocal" in ContextualIdentityService.jsm).
+// it is defined and reserved as "userContextIdInternal.webextStorageLocal" in ContextualIdentityService.sys.mjs).
 const WEBEXT_STORAGE_USER_CONTEXT_ID = -1 >>> 0;
 
 const IDB_NAME = "webExtensions-storage-local";

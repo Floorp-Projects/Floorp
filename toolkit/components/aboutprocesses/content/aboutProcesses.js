@@ -34,9 +34,9 @@ const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+ChromeUtils.defineESModuleGetters(this, {
   ContextualIdentityService:
-    "resource://gre/modules/ContextualIdentityService.jsm",
+    "resource://gre/modules/ContextualIdentityService.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(this, "ProfilerPopupBackground", function() {

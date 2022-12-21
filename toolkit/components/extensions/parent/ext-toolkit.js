@@ -17,11 +17,10 @@
           isDefaultCookieStoreId: false, isPrivateCookieStoreId:false,
           EventManager: false */
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "ContextualIdentityService",
-  "resource://gre/modules/ContextualIdentityService.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  ContextualIdentityService:
+    "resource://gre/modules/ContextualIdentityService.sys.mjs",
+});
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
