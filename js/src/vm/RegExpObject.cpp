@@ -207,7 +207,7 @@ RegExpObject* RegExpObject::create(JSContext* cx, Handle<JSAtom*> source,
   {
     AutoReportFrontendContext fc(cx);
     CompileOptions dummyOptions(cx);
-    frontend::DummyTokenStream dummyTokenStream(cx, &fc, dummyOptions);
+    frontend::DummyTokenStream dummyTokenStream(&fc, dummyOptions);
 
     LifoAllocScope allocScope(&cx->tempLifoAlloc());
     if (!irregexp::CheckPatternSyntax(cx, cx->stackLimitForCurrentPrincipal(),
@@ -1213,7 +1213,7 @@ JS_PUBLIC_API bool JS::CheckRegExpSyntax(JSContext* cx, const char16_t* chars,
 
   AutoReportFrontendContext fc(cx);
   CompileOptions dummyOptions(cx);
-  frontend::DummyTokenStream dummyTokenStream(cx, &fc, dummyOptions);
+  frontend::DummyTokenStream dummyTokenStream(&fc, dummyOptions);
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
 

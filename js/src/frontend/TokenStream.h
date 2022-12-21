@@ -562,8 +562,6 @@ class TokenStreamAnyChars : public TokenStreamShared {
  private:
   // Constant-at-construction fields.
 
-  JSContext* const cx;
-
   FrontendContext* const fc;
 
   /** Options used for parsing/tokenizing. */
@@ -723,7 +721,7 @@ class TokenStreamAnyChars : public TokenStreamShared {
   // End of fields.
 
  public:
-  TokenStreamAnyChars(JSContext* cx, FrontendContext* fc,
+  TokenStreamAnyChars(FrontendContext* fc,
                       const JS::ReadOnlyCompileOptions& options,
                       StrictModeGetter* smg);
 
@@ -878,7 +876,6 @@ class TokenStreamAnyChars : public TokenStreamShared {
   char16_t* sourceMapURL() { return sourceMapURL_.get(); }
 
   FrontendContext* context() const { return fc; }
-  JSContext* jsContext() const { return cx; }
 
   using LineToken = SourceCoords::LineToken;
 
@@ -1568,7 +1565,6 @@ using CharBuffer = Vector<char16_t, 32>;
 
 class TokenStreamCharsShared {
  protected:
-  JSContext* cx;
   FrontendContext* fc;
 
   /**
@@ -1582,9 +1578,9 @@ class TokenStreamCharsShared {
   ParserAtomsTable* parserAtoms;
 
  protected:
-  explicit TokenStreamCharsShared(JSContext* cx, FrontendContext* fc,
+  explicit TokenStreamCharsShared(FrontendContext* fc,
                                   ParserAtomsTable* parserAtoms)
-      : cx(cx), fc(fc), charBuffer(fc), parserAtoms(parserAtoms) {}
+      : fc(fc), charBuffer(fc), parserAtoms(parserAtoms) {}
 
   [[nodiscard]] bool copyCharBufferTo(
       UniquePtr<char16_t[], JS::FreePolicy>* destination);
@@ -1630,9 +1626,8 @@ class TokenStreamCharsBase : public TokenStreamCharsShared {
   // End of fields.
 
  protected:
-  TokenStreamCharsBase(JSContext* cx, FrontendContext* fc,
-                       ParserAtomsTable* parserAtoms, const Unit* units,
-                       size_t length, size_t startOffset);
+  TokenStreamCharsBase(FrontendContext* fc, ParserAtomsTable* parserAtoms,
+                       const Unit* units, size_t length, size_t startOffset);
 
   /**
    * Convert a non-EOF code unit returned by |getCodeUnit()| or
@@ -2488,8 +2483,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
   friend class TokenStreamPosition;
 
  public:
-  TokenStreamSpecific(JSContext* cx, FrontendContext* fc,
-                      ParserAtomsTable* parserAtoms,
+  TokenStreamSpecific(FrontendContext* fc, ParserAtomsTable* parserAtoms,
                       const JS::ReadOnlyCompileOptions& options,
                       const Unit* units, size_t length);
 
@@ -2928,19 +2922,19 @@ class MOZ_STACK_CLASS TokenStream
   using Unit = char16_t;
 
  public:
-  TokenStream(JSContext* cx, FrontendContext* fc, ParserAtomsTable* parserAtoms,
+  TokenStream(FrontendContext* fc, ParserAtomsTable* parserAtoms,
               const JS::ReadOnlyCompileOptions& options, const Unit* units,
               size_t length, StrictModeGetter* smg)
-      : TokenStreamAnyChars(cx, fc, options, smg),
+      : TokenStreamAnyChars(fc, options, smg),
         TokenStreamSpecific<Unit, TokenStreamAnyCharsAccess>(
-            cx, fc, parserAtoms, options, units, length) {}
+            fc, parserAtoms, options, units, length) {}
 };
 
 class MOZ_STACK_CLASS DummyTokenStream final : public TokenStream {
  public:
-  DummyTokenStream(JSContext* cx, FrontendContext* fc,
+  DummyTokenStream(FrontendContext* fc,
                    const JS::ReadOnlyCompileOptions& options)
-      : TokenStream(cx, fc, nullptr, options, nullptr, 0, nullptr) {}
+      : TokenStream(fc, nullptr, options, nullptr, 0, nullptr) {}
 };
 
 template <class TokenStreamSpecific>

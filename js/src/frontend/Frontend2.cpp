@@ -320,7 +320,7 @@ bool ConvertRegExpData(JSContext* cx, FrontendContext* fc,
 
     mozilla::Range<const char16_t> range(pattern.get(), length);
 
-    TokenStreamAnyChars ts(cx, fc, compilationState.input.options,
+    TokenStreamAnyChars ts(fc, compilationState.input.options,
                            /* smg = */ nullptr);
 
     // See Parser<FullParseHandler, Unit>::newRegExp.
