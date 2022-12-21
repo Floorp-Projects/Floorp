@@ -260,6 +260,7 @@ toolkit/components/certviewer/content/package-lock.json
 # Ignore Storybook generated files
 ^browser/components/storybook/node_modules/
 ^browser/components/storybook/storybook-static/
+^browser/components/storybook/.storybook/rewrites.js
 
 # Ignore jscodeshift installed by mach esmify on windows
 ^tools/esmify/jscodeshift

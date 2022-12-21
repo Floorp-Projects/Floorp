@@ -40,6 +40,11 @@ module.exports = {
       type: "asset/source",
     });
 
+    config.module.rules.push({
+      test: /\.mjs/,
+      loader: path.resolve(__dirname, "./chrome-uri-loader.js"),
+    });
+
     config.optimization = {
       splitChunks: false,
       runtimeChunk: false,
