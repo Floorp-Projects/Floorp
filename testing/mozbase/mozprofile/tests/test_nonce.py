@@ -10,7 +10,6 @@ from __future__ import absolute_import
 import os
 
 import mozunit
-
 from mozprofile.prefs import Preferences
 from mozprofile.profile import Profile
 

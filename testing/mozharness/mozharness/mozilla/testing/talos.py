@@ -9,35 +9,39 @@ run talos tests in a virtualenv
 """
 
 from __future__ import absolute_import
-import six
+
+import copy
 import io
+import json
 import multiprocessing
 import os
-import sys
 import pprint
-import copy
 import re
 import shutil
 import subprocess
-import json
+import sys
 
 import mozharness
+import six
 from mozharness.base.config import parse_config_file
 from mozharness.base.errors import PythonErrorList
-from mozharness.base.log import OutputParser, DEBUG, ERROR, CRITICAL
-from mozharness.base.log import INFO, WARNING
+from mozharness.base.log import CRITICAL, DEBUG, ERROR, INFO, WARNING, OutputParser
 from mozharness.base.python import Python3Virtualenv
-from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
 from mozharness.base.vcs.vcsbase import MercurialScript
-from mozharness.mozilla.testing.errors import TinderBoxPrintRe
-from mozharness.mozilla.automation import TBPL_SUCCESS, TBPL_WORST_LEVEL_TUPLE
-from mozharness.mozilla.automation import TBPL_RETRY, TBPL_FAILURE, TBPL_WARNING
-from mozharness.mozilla.tooltool import TooltoolMixin
+from mozharness.mozilla.automation import (
+    TBPL_FAILURE,
+    TBPL_RETRY,
+    TBPL_SUCCESS,
+    TBPL_WARNING,
+    TBPL_WORST_LEVEL_TUPLE,
+)
 from mozharness.mozilla.testing.codecoverage import (
     CodeCoverageMixin,
     code_coverage_config_options,
 )
-
+from mozharness.mozilla.testing.errors import TinderBoxPrintRe
+from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
+from mozharness.mozilla.tooltool import TooltoolMixin
 
 scripts_path = os.path.abspath(os.path.dirname(os.path.dirname(mozharness.__file__)))
 external_tools_path = os.path.join(scripts_path, "external_tools")

@@ -4,11 +4,7 @@
 
 from __future__ import absolute_import
 
-from collections import (
-    defaultdict,
-    namedtuple,
-)
-
+from collections import defaultdict, namedtuple
 
 RunSummary = namedtuple(
     "RunSummary",

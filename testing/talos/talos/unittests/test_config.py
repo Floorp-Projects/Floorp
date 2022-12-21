@@ -2,24 +2,22 @@ from __future__ import absolute_import
 
 import copy
 import os
-
 from unittest import mock
 
+import conftest
 import mozunit
 import pytest
-import conftest
-
+import six
 from talos.config import (
-    get_active_tests,
-    get_test,
-    get_config,
-    get_browser_config,
-    get_configs,
-    ConfigurationError,
     DEFAULTS,
+    ConfigurationError,
+    get_active_tests,
+    get_browser_config,
+    get_config,
+    get_configs,
+    get_test,
 )
 from talos.test import PageloaderTest
-import six
 
 ORIGINAL_DEFAULTS = copy.deepcopy(DEFAULTS)
 

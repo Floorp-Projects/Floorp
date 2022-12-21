@@ -3,20 +3,19 @@
 from __future__ import absolute_import
 
 import datetime
-from unittest import mock
-import mozunit
 import os
-import pytest
 import time
+from unittest import mock
 
+import mozunit
+import pytest
+import six
 from mozpower.intel_power_gadget import (
     IPGEmptyFileError,
     IPGMissingOutputFileError,
     IPGTimeoutError,
     IPGUnknownValueTypeError,
 )
-
-import six
 
 
 def thread_is_alive(thread):

@@ -7,7 +7,6 @@ from __future__ import absolute_import
 import argparse
 import array
 import re
-import six
 import socket
 import struct
 import subprocess
@@ -15,6 +14,7 @@ import sys
 
 import mozinfo
 import mozlog
+import six
 
 if mozinfo.isLinux:
     import fcntl

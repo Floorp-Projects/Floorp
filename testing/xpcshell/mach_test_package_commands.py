@@ -9,13 +9,9 @@ import sys
 from argparse import Namespace
 from functools import partial
 
-
 import mozlog
+from mach.decorators import Command
 from xpcshellcommandline import parser_desktop
-
-from mach.decorators import (
-    Command,
-)
 
 
 def run_xpcshell(context, **kwargs):

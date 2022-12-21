@@ -7,7 +7,7 @@ from __future__ import absolute_import
 import argparse
 import sys
 
-from .. import handlers, commandline, reader
+from .. import commandline, handlers, reader
 
 
 def get_parser(add_help=True):

@@ -10,23 +10,20 @@
 # * remove the replay packages that don't have any content in their response package
 from __future__ import absolute_import, print_function
 
-import os
-import json
 import hashlib
-from collections import defaultdict
-import time
+import json
+import os
 import signal
-
+import time
 import typing
+from collections import defaultdict
 
-from six.moves import urllib
-from mitmproxy import ctx, http
-from mitmproxy import exceptions
-from mitmproxy import io
+from mitmproxy import ctx, exceptions, http, io
 
 # PATCHING AREA  - ALLOWS HTTP/2 WITH NO CERT SNIFFING
 from mitmproxy.proxy.protocol import tls
 from mitmproxy.proxy.protocol.http2 import Http2Layer, SafeH2Connection
+from six.moves import urllib
 
 _PROTO = {}
 

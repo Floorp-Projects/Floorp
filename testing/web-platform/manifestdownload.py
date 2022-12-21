@@ -5,11 +5,12 @@
 from __future__ import absolute_import
 
 import os
-from datetime import datetime, timedelta
 import tarfile
+from datetime import datetime, timedelta
+
+import mozversioncontrol
 import requests
 import six
-import mozversioncontrol
 
 try:
     from cStringIO import StringIO as BytesIO

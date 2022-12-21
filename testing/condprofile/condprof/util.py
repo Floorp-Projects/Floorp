@@ -6,24 +6,21 @@
 #
 from __future__ import absolute_import, division, print_function
 
-import platform
-import time
-import os
-import shutil
 import contextlib
-import yaml
-from subprocess import Popen, PIPE
+import os
+import platform
+import shutil
 import sys
 import tempfile
-
-import requests
-from requests.exceptions import ConnectionError
-from requests.packages.urllib3.util.retry import Retry
+import time
+from subprocess import PIPE, Popen
 
 import mozlog
-
+import requests
+import yaml
 from condprof import progress
-
+from requests.exceptions import ConnectionError
+from requests.packages.urllib3.util.retry import Retry
 
 TASK_CLUSTER = "TASK_ID" in os.environ.keys()
 DOWNLOAD_TIMEOUT = 30

@@ -8,8 +8,7 @@ import tempfile
 import unittest
 
 import mozunit
-
-from manifestparser import TestManifest, ParseError
+from manifestparser import ParseError, TestManifest
 from manifestparser.filters import subsuite
 
 here = os.path.dirname(os.path.abspath(__file__))

@@ -14,8 +14,9 @@ author: Jordan Lund
 """
 
 from __future__ import absolute_import
-import sys
+
 import os
+import sys
 
 # load modules from parent dir
 sys.path.insert(1, os.path.dirname(sys.path[0]))

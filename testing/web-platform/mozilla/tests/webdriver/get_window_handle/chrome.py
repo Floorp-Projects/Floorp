@@ -1,5 +1,5 @@
-from tests.support.asserts import assert_success
 from support.context import using_context
+from tests.support.asserts import assert_success
 
 
 def get_window_handle(session):

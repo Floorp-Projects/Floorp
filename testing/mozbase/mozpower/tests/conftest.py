@@ -1,15 +1,15 @@
 from __future__ import absolute_import, print_function
 
-from unittest import mock
 import os
-import pytest
 import tempfile
 import time
+from unittest import mock
 
+import pytest
 from mozpower import MozPower
+from mozpower.intel_power_gadget import IntelPowerGadget, IPGResultsHandler
 from mozpower.macintelpower import MacIntelPower
 from mozpower.powerbase import PowerBase
-from mozpower.intel_power_gadget import IntelPowerGadget, IPGResultsHandler
 
 
 def os_side_effect(*args, **kwargs):

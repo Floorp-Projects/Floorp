@@ -5,17 +5,17 @@
 
 from __future__ import absolute_import
 
-import subprocess
-import time
 import bz2
 import gzip
 import os
 import signal
-import sys
 import socket
+import subprocess
+import sys
+import time
 
-from six.moves.urllib.request import urlretrieve
 from redo import retriable, retry
+from six.moves.urllib.request import urlretrieve
 
 try:
     import zstandard
@@ -28,8 +28,7 @@ except ImportError:
 
 from mozlog import get_proxy_logger
 from mozprocess import ProcessHandler
-from mozproxy import mozharness_dir, mozbase_dir
-
+from mozproxy import mozbase_dir, mozharness_dir
 
 LOG = get_proxy_logger(component="mozproxy")
 

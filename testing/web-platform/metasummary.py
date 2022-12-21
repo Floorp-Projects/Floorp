@@ -7,14 +7,13 @@ import json
 import logging
 import os
 import re
-from urllib import parse as urlparse
 from collections import defaultdict
+from urllib import parse as urlparse
 
 import manifestupdate
-
 from wptrunner import expected
-from wptrunner.wptmanifest.serializer import serialize
 from wptrunner.wptmanifest.backends import base
+from wptrunner.wptmanifest.serializer import serialize
 
 here = os.path.dirname(__file__)
 logger = logging.getLogger(__name__)

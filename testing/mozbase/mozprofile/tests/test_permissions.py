@@ -8,7 +8,6 @@ from __future__ import absolute_import
 
 import mozunit
 import pytest
-
 from mozprofile.permissions import Permissions
 
 LOCATIONS = """http://mochi.test:8888  primary,privileged

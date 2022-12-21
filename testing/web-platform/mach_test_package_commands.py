@@ -7,10 +7,8 @@ from __future__ import unicode_literals
 import os
 import sys
 
+from mach.decorators import Command
 from mach_commands_base import WebPlatformTestsRunner, create_parser_wpt
-from mach.decorators import (
-    Command,
-)
 
 
 class WebPlatformTestsRunnerSetup(object):

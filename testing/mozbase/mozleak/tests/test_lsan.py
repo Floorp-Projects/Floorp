@@ -1,7 +1,7 @@
 from __future__ import absolute_import
-import pytest
 
 import mozunit
+import pytest
 from mozleak import lsan
 
 

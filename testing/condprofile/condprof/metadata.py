@@ -4,13 +4,13 @@
 """ Manages a metadata file.
 """
 from __future__ import absolute_import
-import os
+
 import datetime
-from collections.abc import MutableMapping
 import json
+import os
+from collections.abc import MutableMapping
 
 from condprof.util import logger
-
 
 METADATA_NAME = "condprofile.json"
 

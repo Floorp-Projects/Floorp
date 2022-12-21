@@ -6,7 +6,7 @@ from __future__ import absolute_import
 
 from threading import Thread
 
-from .structuredlog import get_default_logger, StructuredLogger
+from .structuredlog import StructuredLogger, get_default_logger
 
 
 class ProxyLogger(object):

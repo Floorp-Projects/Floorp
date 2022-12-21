@@ -5,5 +5,5 @@
 
 from __future__ import absolute_import
 
-from .desktop import WebExtensionFirefox, WebExtensionDesktopChrome
 from .android import WebExtensionAndroid
+from .desktop import WebExtensionDesktopChrome, WebExtensionFirefox

@@ -9,7 +9,6 @@ import re
 import subprocess
 import sys
 
-
 here = os.path.abspath(os.path.dirname(__file__))
 
 local_requirements = {

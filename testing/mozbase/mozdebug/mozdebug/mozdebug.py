@@ -8,11 +8,12 @@ from __future__ import absolute_import, print_function
 
 import json
 import os
-import mozinfo
 import sys
 from collections import namedtuple
 from distutils.spawn import find_executable
 from subprocess import check_output
+
+import mozinfo
 
 __all__ = [
     "get_debugger_info",

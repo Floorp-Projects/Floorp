@@ -2,9 +2,10 @@
 
 from __future__ import absolute_import
 
-from unittest import mock
-import mozunit
 import time
+from unittest import mock
+
+import mozunit
 
 
 def test_macintelpower_init(macintelpower_obj):

@@ -4,9 +4,9 @@
 
 from __future__ import absolute_import
 
-import mozlog
 import time
 
+import mozlog
 import pytest
 import six
 

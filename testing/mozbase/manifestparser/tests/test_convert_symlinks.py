@@ -12,8 +12,7 @@ import tempfile
 import unittest
 
 import mozunit
-
-from manifestparser import convert, ManifestParser
+from manifestparser import ManifestParser, convert
 
 
 class TestSymlinkConversion(unittest.TestCase):

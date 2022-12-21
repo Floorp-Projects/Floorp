@@ -7,9 +7,8 @@ from __future__ import absolute_import
 import os
 import time
 
-import six
-
 import mozinfo
+import six
 
 
 class TestContext(object):

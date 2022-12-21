@@ -13,15 +13,12 @@ import shutil
 import sys
 import types
 
-from six import string_types, StringIO
+from six import StringIO, string_types
 
+from .filters import DEFAULT_FILTERS, enabled
+from .filters import exists as _exists
+from .filters import filterlist
 from .ini import read_ini
-from .filters import (
-    DEFAULT_FILTERS,
-    enabled,
-    exists as _exists,
-    filterlist,
-)
 
 __all__ = ["ManifestParser", "TestManifest", "convert"]
 

@@ -5,15 +5,15 @@ from __future__ import absolute_import
 
 import pprint
 import signal
-import six
+import subprocess
 import sys
 import time
 import traceback
-import subprocess
 from threading import Event
 
 import mozcrash
 import psutil
+import six
 from mozlog import get_proxy_logger
 from mozprocess import ProcessHandler
 from talos.utils import TalosError

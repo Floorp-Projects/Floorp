@@ -1,18 +1,19 @@
 from __future__ import absolute_import, unicode_literals
 
-import mozunit
 import os
-import requests
+import shutil
 import sys
 from unittest import mock
-import shutil
+
+import mozunit
+import requests
 
 try:
     from http.server import HTTPServer  # py3
 except ImportError:
     from BaseHTTPServer import HTTPServer  # py2
 
-from mozlog.structuredlog import set_default_logger, StructuredLogger
+from mozlog.structuredlog import StructuredLogger, set_default_logger
 from raptor.control_server import RaptorControlServer
 
 # need this so the raptor unit tests can find output & filter classes
@@ -21,7 +22,6 @@ raptor_dir = os.path.join(os.path.dirname(here), "raptor")
 sys.path.insert(0, raptor_dir)
 
 from raptor.results import RaptorResultsHandler
-
 
 set_default_logger(StructuredLogger("test_control_server"))
 

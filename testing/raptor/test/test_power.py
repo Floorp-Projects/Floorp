@@ -3,11 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from __future__ import absolute_import, unicode_literals
 
-import sys
-
 import os
-from unittest import mock
+import sys
 import tempfile
+from unittest import mock
 
 import mozunit
 

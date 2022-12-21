@@ -2,17 +2,14 @@
 
 from __future__ import absolute_import
 
-from unittest import mock
-import mozunit
-import pytest
 import subprocess
 import sys
+from unittest import mock
 
+import mozunit
+import pytest
 from mozpower import MozPower
-from mozpower.mozpower import (
-    OsCpuComboMissingError,
-    MissingProcessorInfoError,
-)
+from mozpower.mozpower import MissingProcessorInfoError, OsCpuComboMissingError
 
 
 def test_mozpower_android_init_failure():

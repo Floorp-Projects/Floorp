@@ -37,12 +37,8 @@ import zlib
 from contextlib import contextmanager
 from io import BytesIO
 
-import six
-from six import binary_type
-
-from mozprocess import ProcessHandler
-
 import mozinfo
+import six
 from mozharness.base.config import BaseConfig
 from mozharness.base.log import (
     DEBUG,
@@ -56,6 +52,8 @@ from mozharness.base.log import (
     OutputParser,
     SimpleFileLogger,
 )
+from mozprocess import ProcessHandler
+from six import binary_type
 
 try:
     import httplib
@@ -66,9 +64,9 @@ try:
 except ImportError:
     import json
 try:
-    from urllib2 import quote, urlopen, Request
+    from urllib2 import Request, quote, urlopen
 except ImportError:
-    from urllib.request import quote, urlopen, Request
+    from urllib.request import Request, quote, urlopen
 try:
     import urlparse
 except ImportError:
@@ -77,8 +75,8 @@ if os.name == "nt":
     import locale
 
     try:
-        import win32file
         import win32api
+        import win32file
 
         PYWIN32 = True
     except ImportError:

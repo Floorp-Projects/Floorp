@@ -8,7 +8,6 @@ import zipfile
 
 import mozfile
 
-
 here = os.path.dirname(os.path.abspath(__file__))
 
 # stubs is a dict of the form {'addon id': 'install manifest content'}

@@ -4,15 +4,10 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import os
 import logging
+import os
 
-from mach.decorators import (
-    Command,
-    CommandArgument,
-    CommandArgumentGroup,
-)
-
+from mach.decorators import Command, CommandArgument, CommandArgumentGroup
 from mozbuild.base import BinaryNotFoundException
 
 

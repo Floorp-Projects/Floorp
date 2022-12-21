@@ -8,9 +8,9 @@ import os
 import sys
 from collections import namedtuple
 
-from wptrunner.wptmanifest.serializer import serialize
 from wptrunner.wptmanifest.backends import base
 from wptrunner.wptmanifest.node import KeyValueNode
+from wptrunner.wptmanifest.serializer import serialize
 
 here = os.path.dirname(__file__)
 logger = logging.getLogger(__name__)

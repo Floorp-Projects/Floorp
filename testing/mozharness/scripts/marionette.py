@@ -6,6 +6,7 @@
 # ***** END LICENSE BLOCK *****
 
 from __future__ import absolute_import
+
 import copy
 import json
 import os
@@ -19,16 +20,14 @@ from mozharness.base.log import INFO
 from mozharness.base.script import PreScriptAction
 from mozharness.base.transfer import TransferMixin
 from mozharness.base.vcs.vcsbase import MercurialScript
-from mozharness.mozilla.testing.errors import LogcatErrorList
-from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
-from mozharness.mozilla.testing.unittest import TestSummaryOutputParserHelper
+from mozharness.mozilla.structuredlog import StructuredOutputParser
 from mozharness.mozilla.testing.codecoverage import (
     CodeCoverageMixin,
     code_coverage_config_options,
 )
-from mozharness.mozilla.testing.errors import HarnessErrorList
-
-from mozharness.mozilla.structuredlog import StructuredOutputParser
+from mozharness.mozilla.testing.errors import HarnessErrorList, LogcatErrorList
+from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
+from mozharness.mozilla.testing.unittest import TestSummaryOutputParserHelper
 
 
 class MarionetteTest(TestingMixin, MercurialScript, TransferMixin, CodeCoverageMixin):

@@ -7,9 +7,9 @@ from __future__ import absolute_import, print_function
 
 import os
 import re
-from talos import allowlist
-
 from collections import OrderedDict
+
+from talos import allowlist
 
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
 

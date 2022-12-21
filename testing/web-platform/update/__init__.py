@@ -16,7 +16,7 @@ imp.load_source(
     "localpaths", os.path.join(here, os.pardir, "tests", "tools", "localpaths.py")
 )
 
-from wptrunner.update import setup_logging, WPTUpdate
+from wptrunner.update import WPTUpdate, setup_logging
 from wptrunner.update.base import exit_unclean
 
 from . import updatecommandline

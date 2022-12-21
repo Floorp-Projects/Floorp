@@ -12,7 +12,6 @@ import glob
 import os
 import posixpath
 import shutil
-import six
 import sys
 import tempfile
 import time
@@ -22,6 +21,7 @@ import mozcrash
 import mozdevice
 import mozinfo
 import mozlog
+import six
 
 LOGGER_NAME = "gtest"
 log = mozlog.unstructured.getLogger(LOGGER_NAME)

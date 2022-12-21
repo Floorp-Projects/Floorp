@@ -16,10 +16,7 @@ try:
 except ImportError:
     psutil = None
 
-from mozsystemmonitor.resourcemonitor import (
-    SystemResourceMonitor,
-    SystemResourceUsage,
-)
+from mozsystemmonitor.resourcemonitor import SystemResourceMonitor, SystemResourceUsage
 
 
 @unittest.skipIf(psutil is None, "Resource monitor requires psutil.")

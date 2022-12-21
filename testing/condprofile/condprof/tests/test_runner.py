@@ -1,18 +1,17 @@
 from __future__ import absolute_import
-import os
-import unittest
-import tempfile
-import shutil
-import re
+
 import asyncio
+import os
+import re
+import shutil
 import tarfile
+import tempfile
+import unittest
 
 import responses
-
-from condprof.main import main
-from condprof.client import ROOT_URL, TC_SERVICE
 from condprof import client
-
+from condprof.client import ROOT_URL, TC_SERVICE
+from condprof.main import main
 
 client.RETRIES = 1
 client.RETRY_PAUSE = 0

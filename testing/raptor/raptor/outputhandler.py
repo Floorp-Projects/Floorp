@@ -9,7 +9,6 @@ import json
 
 from logger.logger import RaptorLogger
 
-
 LOG = RaptorLogger(component="raptor-output-handler")
 
 

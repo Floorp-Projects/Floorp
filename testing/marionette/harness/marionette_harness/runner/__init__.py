@@ -15,5 +15,4 @@ from .base import (
     TestResult,
     TestResultCollection,
 )
-
 from .mixins import WindowManagerMixin

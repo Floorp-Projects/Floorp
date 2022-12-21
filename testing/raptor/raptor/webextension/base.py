@@ -8,17 +8,18 @@ from __future__ import absolute_import, division
 
 import json
 import os
-import requests
 import time
 
+import requests
 from benchmark import Benchmark
 from cmdline import CHROMIUM_DISTROS
 from control_server import RaptorControlServer
 from gen_test_config import gen_test_config
 from logger.logger import RaptorLogger
-from memory import generate_android_memory_profile
 from perftest import Perftest
 from results import RaptorResultsHandler
+
+from memory import generate_android_memory_profile
 
 LOG = RaptorLogger(component="raptor-webext")
 

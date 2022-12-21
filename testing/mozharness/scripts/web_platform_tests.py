@@ -5,33 +5,31 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 # ***** END LICENSE BLOCK *****
 from __future__ import absolute_import
+
 import copy
 import gzip
 import json
 import os
 import sys
-
 from datetime import datetime, timedelta
 
 # load modules from parent dir
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 import mozinfo
-
 from mozharness.base.errors import BaseErrorList
+from mozharness.base.log import INFO
 from mozharness.base.script import PreScriptAction
 from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.automation import TBPL_RETRY
+from mozharness.mozilla.structuredlog import StructuredOutputParser
 from mozharness.mozilla.testing.android import AndroidMixin
-from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
 from mozharness.mozilla.testing.codecoverage import (
     CodeCoverageMixin,
     code_coverage_config_options,
 )
 from mozharness.mozilla.testing.errors import WptHarnessErrorList
-
-from mozharness.mozilla.structuredlog import StructuredOutputParser
-from mozharness.base.log import INFO
+from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
 
 
 class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):

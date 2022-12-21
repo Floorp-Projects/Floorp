@@ -9,15 +9,17 @@
     Runs a thing to see if it crashes within a set period.
 """
 from __future__ import absolute_import
+
 import os
 import sys
+
 import requests
 
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 import mozinstall
-from mozprocess import ProcessHandler
 from mozharness.base.script import BaseScript
+from mozprocess import ProcessHandler
 
 
 class DoesItCrash(BaseScript):

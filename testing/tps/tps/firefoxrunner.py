@@ -2,9 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import httplib2
 import os
 
+import httplib2
 import mozfile
 import mozinstall
 from mozprofile import Profile

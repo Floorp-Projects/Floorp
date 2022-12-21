@@ -9,7 +9,6 @@ import tempfile
 import unittest
 
 import mozunit
-
 from mozfile import tree
 
 

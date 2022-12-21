@@ -7,7 +7,6 @@ import os
 
 from logger.logger import RaptorLogger
 
-
 here = os.path.abspath(os.path.dirname(__file__))
 webext_dir = os.path.join(os.path.dirname(here), "webext", "raptor")
 LOG = RaptorLogger(component="raptor-gen-test-config")

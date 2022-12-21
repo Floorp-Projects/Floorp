@@ -8,7 +8,6 @@ import json
 import os
 
 import mozunit
-
 from mozprofile import ChromeProfile
 
 

@@ -4,12 +4,12 @@
 
 from __future__ import absolute_import
 
-import six
 import argparse
 import sys
 import traceback
 import types
 
+import six
 from mozlog import commandline, get_default_logger
 
 

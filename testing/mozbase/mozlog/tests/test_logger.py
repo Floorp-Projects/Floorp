@@ -11,10 +11,9 @@ import threading
 import time
 import unittest
 
-import mozunit
-
 import mozfile
 import mozlog.unstructured as mozlog
+import mozunit
 import six
 
 

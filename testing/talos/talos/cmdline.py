@@ -6,8 +6,8 @@ from __future__ import absolute_import, print_function
 import argparse
 import os
 
-from mozlog.commandline import add_logging_group
 import six
+from mozlog.commandline import add_logging_group
 
 
 class _StopAction(argparse.Action):

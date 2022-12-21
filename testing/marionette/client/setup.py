@@ -6,7 +6,8 @@ from __future__ import absolute_import
 
 import os
 import re
-from setuptools import setup, find_packages
+
+from setuptools import find_packages, setup
 
 THIS_DIR = os.path.dirname(os.path.realpath(__name__))
 

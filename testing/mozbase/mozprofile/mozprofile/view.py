@@ -9,10 +9,11 @@ script to view mozilla profiles
 """
 from __future__ import absolute_import, print_function
 
-import mozprofile
 import optparse
 import os
 import sys
+
+import mozprofile
 
 __all__ = ["view_profile"]
 

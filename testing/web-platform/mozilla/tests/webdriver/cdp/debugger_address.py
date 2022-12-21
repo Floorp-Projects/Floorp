@@ -1,9 +1,8 @@
 import json
 
 import pytest
-
-from tests.support.http_request import HTTPRequest
 from support.context import using_context
+from tests.support.http_request import HTTPRequest
 
 
 def test_debugger_address_not_set(session):

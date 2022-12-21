@@ -12,11 +12,9 @@ import time
 import unittest
 import warnings
 import weakref
-
 from unittest.case import SkipTest
 
 import six
-
 from marionette_driver.errors import TimeoutException, UnresponsiveInstanceException
 from mozlog import get_default_logger
 

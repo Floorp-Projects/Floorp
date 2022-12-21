@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from __future__ import absolute_import, print_function
+
 import json
 import os
 import re
@@ -9,8 +10,8 @@ import sys
 import threading
 import time
 
-from buildconfig import topsrcdir, topobjdir
 import mozunit
+from buildconfig import topobjdir, topsrcdir
 from mozprocess import ProcessHandler
 
 here = os.path.dirname(__file__)

@@ -1,5 +1,4 @@
 import pytest
-
 from support.network import get_host, http_request
 
 

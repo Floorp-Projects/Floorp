@@ -4,8 +4,9 @@
 """ Script that launches profiles creation.
 """
 from __future__ import absolute_import
-import os
+
 import argparse
+import os
 import sys
 
 # easier than setting PYTHONPATH in various platforms

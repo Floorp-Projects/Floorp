@@ -5,9 +5,10 @@
 from __future__ import absolute_import, print_function
 
 import os
-import mozinfo
-import tempfile
 import subprocess
+import tempfile
+
+import mozinfo
 from mozlog.formatters.process import strstatus
 
 

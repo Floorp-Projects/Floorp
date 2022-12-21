@@ -1,8 +1,8 @@
 from __future__ import absolute_import
+
 import os
 import shutil
 import unittest
-
 from unittest import mock
 
 import mozharness.base.script as script

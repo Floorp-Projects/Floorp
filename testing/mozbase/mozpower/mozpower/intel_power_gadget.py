@@ -5,10 +5,10 @@ from __future__ import absolute_import, division, unicode_literals
 
 import csv
 import os
-import subprocess
 import re
-import time
+import subprocess
 import threading
+import time
 
 from .mozpowerutils import get_logger
 

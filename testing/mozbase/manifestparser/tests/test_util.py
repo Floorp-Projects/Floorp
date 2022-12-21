@@ -10,10 +10,9 @@ from textwrap import dedent
 
 import mozunit
 import pytest
-from six import StringIO
-
 from manifestparser import read_ini
 from manifestparser.util import evaluate_list_from_string
+from six import StringIO
 
 
 @pytest.fixture(scope="module")

@@ -6,12 +6,14 @@
 # ***** END LICENSE BLOCK *****
 
 from __future__ import absolute_import
+
 import itertools
 import json
 import math
 import os
 import posixpath
 import sys
+
 import mozinfo
 from manifestparser import TestManifest
 

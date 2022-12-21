@@ -3,31 +3,29 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import, print_function
-import six
-from abc import ABCMeta, abstractmethod, abstractproperty
-from argparse import ArgumentParser, SUPPRESS
-from distutils.util import strtobool
-from distutils import spawn
-from itertools import chain
-from six.moves.urllib.parse import urlparse
+
 import json
 import os
-import tempfile
 import sys
+import tempfile
+from abc import ABCMeta, abstractmethod, abstractproperty
+from argparse import SUPPRESS, ArgumentParser
+from distutils import spawn
+from distutils.util import strtobool
+from itertools import chain
 
-from mozprofile import DEFAULT_PORTS
 import mozinfo
 import mozlog
 import moznetwork
-
+import six
+from mozprofile import DEFAULT_PORTS
+from six.moves.urllib.parse import urlparse
 
 here = os.path.abspath(os.path.dirname(__file__))
 
 try:
-    from mozbuild.base import (
-        MozbuildObject,
-        MachCommandConditions as conditions,
-    )
+    from mozbuild.base import MachCommandConditions as conditions
+    from mozbuild.base import MozbuildObject
 
     build_obj = MozbuildObject.from_environment(cwd=here)
 except ImportError:

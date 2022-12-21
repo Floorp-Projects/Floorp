@@ -14,9 +14,9 @@ import csv
 import json
 import os
 import re
-import six
 
-from talos import output, utils, filter
+import six
+from talos import filter, output, utils
 
 
 class TalosResults(object):

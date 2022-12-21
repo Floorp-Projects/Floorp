@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
 from __future__ import absolute_import, division, print_function
-import sys
-import subprocess
+
 import json
 import statistics
+import subprocess
+import sys
 
 proc = subprocess.Popen(["./mach", "gtest", sys.argv[1]], stdout=subprocess.PIPE)
 for line in proc.stdout:

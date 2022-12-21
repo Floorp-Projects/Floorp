@@ -5,9 +5,9 @@
 # Config file for firefox ui tests run via TaskCluster.
 
 from __future__ import absolute_import
+
 import os
 import sys
-
 
 config = {
     "virtualenv_path": "venv",

@@ -14,6 +14,7 @@
     without having to resort to task.extra or commandline base64 json hacks.
 """
 from __future__ import absolute_import
+
 import codecs
 import os
 import pprint
@@ -30,8 +31,8 @@ except ImportError:
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 from mozharness.base.errors import HgErrorList
-from mozharness.base.vcs.vcsbase import VCSScript
 from mozharness.base.log import FATAL
+from mozharness.base.vcs.vcsbase import VCSScript
 
 
 class L10nBumper(VCSScript):

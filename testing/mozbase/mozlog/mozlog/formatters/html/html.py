@@ -6,14 +6,14 @@
 from __future__ import absolute_import
 
 import base64
-from datetime import datetime
-import os
 import json
+import os
+from collections import defaultdict
+from datetime import datetime
+
+import six
 
 from .. import base
-
-from collections import defaultdict
-import six
 
 html = None
 raw = None

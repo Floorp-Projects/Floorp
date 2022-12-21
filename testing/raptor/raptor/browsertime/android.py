@@ -15,8 +15,8 @@ from logger.logger import RaptorLogger
 from mozdevice import ADBDeviceFactory
 from performance_tuning import tune_performance
 from perftest import PerftestAndroid
+from power import disable_charging, enable_charging
 
-from power import enable_charging, disable_charging
 from .base import Browsertime
 
 LOG = RaptorLogger(component="raptor-browsertime-android")

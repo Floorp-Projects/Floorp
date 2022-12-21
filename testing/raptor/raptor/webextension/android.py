@@ -19,10 +19,10 @@ from mozdevice import ADBDeviceFactory, ADBProcessError
 from performance_tuning import tune_performance
 from perftest import PerftestAndroid
 from power import (
-    init_android_power_test,
-    finish_android_power_test,
-    enable_charging,
     disable_charging,
+    enable_charging,
+    finish_android_power_test,
+    init_android_power_test,
 )
 from signal_handler import SignalHandlerException
 from utils import write_yml_file

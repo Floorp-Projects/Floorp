@@ -7,16 +7,13 @@ import errno
 import hashlib
 import imp
 import os
-import six
 import sys
 
-from six.moves import configparser
-
-from mach.util import get_state_dir
-
-from mozlog.structured import commandline
-
 import manifestdownload
+import six
+from mach.util import get_state_dir
+from mozlog.structured import commandline
+from six.moves import configparser
 from wptrunner import wptcommandline
 
 manifest = None

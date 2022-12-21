@@ -4,17 +4,16 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import six
 import os
 from argparse import Namespace
 from collections import defaultdict
 from textwrap import dedent
 
-from manifestparser import TestManifest
-
 import mozunit
 import pytest
+import six
 from conftest import setup_args
+from manifestparser import TestManifest
 
 
 @pytest.fixture

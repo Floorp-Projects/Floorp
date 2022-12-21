@@ -7,14 +7,12 @@ from __future__ import absolute_import
 import sys
 
 import mozlog
-
 from marionette_driver import __version__ as driver_version
-
 from marionette_harness import (
-    __version__,
-    BaseMarionetteTestRunner,
     BaseMarionetteArguments,
+    BaseMarionetteTestRunner,
     MarionetteTestCase,
+    __version__,
 )
 
 

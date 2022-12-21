@@ -6,16 +6,14 @@
 
 from __future__ import absolute_import
 
-import mozhttpd
 import os
 import re
 
-from six.moves.urllib.request import urlopen
-from six import ensure_str
-
-import pytest
-
+import mozhttpd
 import mozunit
+import pytest
+from six import ensure_str
+from six.moves.urllib.request import urlopen
 
 
 @pytest.fixture(name="docroot")

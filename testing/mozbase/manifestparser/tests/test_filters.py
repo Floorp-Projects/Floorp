@@ -9,17 +9,16 @@ from pprint import pprint
 import mozpack.path as mozpath
 import mozunit
 import pytest
-
 from manifestparser.filters import (
     enabled,
     fail_if,
+    failures,
     filterlist,
     pathprefix,
     run_if,
     skip_if,
     subsuite,
     tags,
-    failures,
 )
 
 here = os.path.dirname(os.path.abspath(__file__))

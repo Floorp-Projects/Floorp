@@ -8,14 +8,13 @@ import json
 import os
 from argparse import Namespace
 
-from mozbuild.base import MozbuildObject
-from mozprofile.prefs import Preferences
-from mozprofile import Profile
-from six import string_types
-
 import mozunit
 import pytest
 from conftest import setup_args
+from mozbuild.base import MozbuildObject
+from mozprofile import Profile
+from mozprofile.prefs import Preferences
+from six import string_types
 
 here = os.path.abspath(os.path.dirname(__file__))
 

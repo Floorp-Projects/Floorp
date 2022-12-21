@@ -1,18 +1,17 @@
 from __future__ import absolute_import
-import unittest
-import os
-import tempfile
-import shutil
-import responses
-import re
+
 import json
+import os
+import re
+import shutil
 import tarfile
+import tempfile
+import unittest
 
-from mozprofile.prefs import Preferences
-
-from condprof.client import get_profile, TC_SERVICE, ROOT_URL
+import responses
+from condprof.client import ROOT_URL, TC_SERVICE, get_profile
 from condprof.util import _DEFAULT_SERVER
-
+from mozprofile.prefs import Preferences
 
 PROFILE = re.compile(ROOT_URL + "/.*/.*tgz")
 PROFILE_FOR_TESTS = os.path.join(os.path.dirname(__file__), "profile")

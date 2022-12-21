@@ -1,8 +1,7 @@
 from io import BytesIO
 
-import mozunit
-
 import metamerge
+import mozunit
 
 ancestor = """
 global-new-deleted: A

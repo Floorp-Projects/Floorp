@@ -8,10 +8,11 @@
 Maintains a unique file that lists all artifacts operations.
 """
 from __future__ import absolute_import
-import os
+
 import json
-from datetime import datetime
+import os
 import sys
+from datetime import datetime
 
 
 # XXX we should do one per platform and use platform-changelog.json as a name

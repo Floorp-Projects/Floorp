@@ -12,10 +12,11 @@ import datetime
 import json
 import os
 import shutil
-import six
 import socket
 import threading
 import time
+
+import six
 
 try:
     from http import server  # py3

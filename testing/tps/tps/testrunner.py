@@ -4,17 +4,17 @@
 
 
 import json
-import yaml
 import os
 import re
 import tempfile
 import time
 import traceback
 
-from wptserve import server
 import mozinfo
-from mozprofile import Profile
 import mozversion
+import yaml
+from mozprofile import Profile
+from wptserve import server
 
 from .firefoxrunner import TPSFirefoxRunner
 from .phase import TPSTestPhase

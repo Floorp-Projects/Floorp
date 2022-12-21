@@ -2,7 +2,6 @@ import os
 from copy import deepcopy
 
 import pytest
-
 from tests.bidi.browsing_context.navigate import navigate_and_assert
 
 pytestmark = pytest.mark.asyncio

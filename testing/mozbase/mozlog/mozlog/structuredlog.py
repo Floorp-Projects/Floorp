@@ -4,29 +4,31 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from multiprocessing import current_process
-from threading import current_thread, Lock
 import json
 import sys
 import time
 import traceback
+from multiprocessing import current_process
+from threading import Lock, current_thread
+
+import six
 
 from .logtypes import (
-    Unicode,
-    TestId,
-    TestList,
+    Any,
+    Boolean,
+    Dict,
+    Int,
+    List,
+    Nullable,
     Status,
     SubStatus,
-    Dict,
-    List,
-    Int,
-    Any,
+    TestId,
+    TestList,
     Tuple,
-    Boolean,
-    Nullable,
+    Unicode,
+    convertor_registry,
+    log_action,
 )
-from .logtypes import log_action, convertor_registry
-import six
 
 """Structured Logging for recording test results.
 

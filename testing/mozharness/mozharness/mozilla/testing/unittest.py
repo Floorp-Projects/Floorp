@@ -6,13 +6,19 @@
 # ***** END LICENSE BLOCK *****
 
 from __future__ import absolute_import
-import re
-import os
 
+import os
+import re
+
+from mozharness.base.log import CRITICAL, ERROR, INFO, WARNING, OutputParser
+from mozharness.mozilla.automation import (
+    TBPL_FAILURE,
+    TBPL_RETRY,
+    TBPL_SUCCESS,
+    TBPL_WARNING,
+    TBPL_WORST_LEVEL_TUPLE,
+)
 from mozharness.mozilla.testing.errors import TinderBoxPrintRe
-from mozharness.base.log import OutputParser, WARNING, INFO, CRITICAL, ERROR
-from mozharness.mozilla.automation import TBPL_WARNING, TBPL_FAILURE, TBPL_RETRY
-from mozharness.mozilla.automation import TBPL_SUCCESS, TBPL_WORST_LEVEL_TUPLE
 
 SUITE_CATEGORIES = ["mochitest", "reftest", "xpcshell"]
 

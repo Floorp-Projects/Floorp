@@ -1,13 +1,13 @@
 from __future__ import absolute_import, print_function
 
 import gc
-from unittest import mock
 import os
 import re
 import shutil
 import tempfile
 import types
 import unittest
+from unittest import mock
 
 PYWIN32 = False
 if os.name == "nt":
@@ -21,10 +21,9 @@ if os.name == "nt":
 
 import mozharness.base.errors as errors
 import mozharness.base.log as log
-from mozharness.base.log import DEBUG, INFO, WARNING, ERROR, CRITICAL, FATAL, IGNORE
 import mozharness.base.script as script
 from mozharness.base.config import parse_config_file
-
+from mozharness.base.log import CRITICAL, DEBUG, ERROR, FATAL, IGNORE, INFO, WARNING
 
 here = os.path.dirname(os.path.abspath(__file__))
 

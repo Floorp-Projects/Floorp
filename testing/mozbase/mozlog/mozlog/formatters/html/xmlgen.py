@@ -24,8 +24,8 @@ by holger krekel, holger at merlinux eu. 2009
 
 from __future__ import absolute_import
 
-import sys
 import re
+import sys
 
 if sys.version_info >= (3, 0):
 

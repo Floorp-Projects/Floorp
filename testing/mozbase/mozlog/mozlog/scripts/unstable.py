@@ -5,11 +5,11 @@
 from __future__ import absolute_import, print_function
 
 import argparse
-from collections import defaultdict
 import json
+from collections import defaultdict
 
-from mozlog import reader
 import six
+from mozlog import reader
 
 
 class StatusHandler(reader.LogHandler):

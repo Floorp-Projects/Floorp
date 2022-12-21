@@ -7,10 +7,10 @@ This module tries to make sure we have all dependencies installed on
 all our environments.
 """
 from __future__ import absolute_import
-import sys
+
 import os
 import subprocess
-
+import sys
 
 PY3 = sys.version_info.major == 3
 TOPDIR = os.path.join(os.path.dirname(__file__), "..")

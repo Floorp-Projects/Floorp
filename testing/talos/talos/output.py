@@ -5,12 +5,10 @@
 """output formats for Talos"""
 from __future__ import absolute_import, division
 
-from talos import filter
-
 # NOTE: we have a circular dependency with output.py when we import results
 import simplejson as json
-from talos import utils
 from mozlog import get_proxy_logger
+from talos import filter, utils
 
 LOG = get_proxy_logger()
 

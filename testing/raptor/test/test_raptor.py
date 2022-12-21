@@ -6,13 +6,13 @@ import threading
 import time
 import traceback
 from unittest import mock
-import pytest
 from unittest.mock import Mock
-from six import reraise
 
 import mozunit
+import pytest
 from mozprofile import BaseProfile
 from mozrunner.errors import RunnerNotStartedError
+from six import reraise
 
 # need this so the raptor unit tests can find output & filter classes
 here = os.path.abspath(os.path.dirname(__file__))
@@ -20,13 +20,12 @@ raptor_dir = os.path.join(os.path.dirname(here), "raptor")
 sys.path.insert(0, raptor_dir)
 
 
-from browsertime import BrowsertimeDesktop, BrowsertimeAndroid
+from browsertime import BrowsertimeAndroid, BrowsertimeDesktop
 from webextension import (
-    WebExtensionFirefox,
-    WebExtensionDesktopChrome,
     WebExtensionAndroid,
+    WebExtensionDesktopChrome,
+    WebExtensionFirefox,
 )
-
 
 DEFAULT_TIMEOUT = 125
 

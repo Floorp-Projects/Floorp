@@ -16,7 +16,7 @@ try:
 except ImportError:
     import json
 
-from mozharness.base.log import INFO, WARNING, ERROR
+from mozharness.base.log import ERROR, INFO, WARNING
 
 TBPL_SUCCESS = "SUCCESS"
 TBPL_WARNING = "WARNING"

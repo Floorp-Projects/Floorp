@@ -38,21 +38,21 @@
 # NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
 # WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from __future__ import absolute_import, unicode_literals, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 
 import subprocess
 import sys
 from ctypes import (
-    cast,
-    create_unicode_buffer,
+    POINTER,
+    WINFUNCTYPE,
+    Structure,
+    WinError,
     c_ulong,
     c_void_p,
-    POINTER,
+    cast,
+    create_unicode_buffer,
     sizeof,
-    Structure,
     windll,
-    WinError,
-    WINFUNCTYPE,
 )
 from ctypes.wintypes import BOOL, BYTE, DWORD, HANDLE, LPCWSTR, LPWSTR, UINT, WORD
 

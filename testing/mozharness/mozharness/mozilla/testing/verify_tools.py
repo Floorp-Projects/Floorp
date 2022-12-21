@@ -6,9 +6,9 @@
 # ***** END LICENSE BLOCK *****
 
 from __future__ import absolute_import
+
 from mozharness.base.script import PostScriptAction
 from mozharness.mozilla.testing.per_test_base import SingleTestMixin
-
 
 verify_config_options = [
     [

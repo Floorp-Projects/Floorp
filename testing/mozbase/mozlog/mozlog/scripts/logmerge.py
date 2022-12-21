@@ -8,8 +8,9 @@ import argparse
 import json
 import os
 import sys
-from threading import current_thread
 import time
+from threading import current_thread
+
 from mozlog.reader import read
 
 

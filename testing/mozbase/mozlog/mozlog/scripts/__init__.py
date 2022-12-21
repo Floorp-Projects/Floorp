@@ -7,10 +7,11 @@
 from __future__ import absolute_import
 
 import argparse
-import unstable
+
 import format as formatlog
 import logmerge
 import six
+import unstable
 
 
 def get_parser():

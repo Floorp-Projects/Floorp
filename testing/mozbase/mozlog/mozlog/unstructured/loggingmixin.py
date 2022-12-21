@@ -4,10 +4,7 @@
 
 from __future__ import absolute_import
 
-from .logger import (
-    Logger,
-    getLogger,
-)
+from .logger import Logger, getLogger
 
 
 class LoggingMixin(object):

@@ -6,10 +6,9 @@ from __future__ import absolute_import
 
 import os
 import sys
-import yaml
 
 import mozinfo
-
+import yaml
 from marionette_driver.errors import JavascriptException, ScriptTimeoutException
 from mozproxy import get_playback
 

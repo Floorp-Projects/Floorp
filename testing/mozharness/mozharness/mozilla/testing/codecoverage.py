@@ -12,16 +12,12 @@ import posixpath
 import shutil
 import sys
 import tempfile
-import zipfile
 import uuid
+import zipfile
 
 import mozinfo
-from mozharness.base.script import (
-    PreScriptAction,
-    PostScriptAction,
-)
+from mozharness.base.script import PostScriptAction, PreScriptAction
 from mozharness.mozilla.testing.per_test_base import SingleTestMixin
-
 
 code_coverage_config_options = [
     [
