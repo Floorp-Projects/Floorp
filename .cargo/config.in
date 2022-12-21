@@ -47,7 +47,7 @@ replace-with = "vendored-sources"
 
 [source."https://github.com/jfkthame/mapped_hyph.git"]
 git = "https://github.com/jfkthame/mapped_hyph.git"
-rev = "746743227485a83123784df0c53227ab466612ed"
+rev = "c7651a0cffff41996ad13c44f689bd9cd2192c01"
 replace-with = "vendored-sources"
 
 [source."https://github.com/kinetiknz/audioipc-2"]
