@@ -2,23 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 import { Domain } from "chrome://remote/content/cdp/domains/Domain.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ContextualIdentityService:
+    "resource://gre/modules/ContextualIdentityService.sys.mjs",
   MainProcessTarget:
     "chrome://remote/content/cdp/targets/MainProcessTarget.sys.mjs",
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
   TabSession: "chrome://remote/content/cdp/sessions/TabSession.sys.mjs",
   windowManager: "chrome://remote/content/shared/WindowManager.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ContextualIdentityService:
-    "resource://gre/modules/ContextualIdentityService.jsm",
 });
 
 let browserContextIds = 1;

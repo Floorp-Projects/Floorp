@@ -82,7 +82,7 @@ const startupPhases = {
         // "resource:///modules/BrowserWindowTracker.jsm",
         "resource://gre/modules/BookmarkHTMLUtils.sys.mjs",
         "resource://gre/modules/Bookmarks.sys.mjs",
-        "resource://gre/modules/ContextualIdentityService.jsm",
+        "resource://gre/modules/ContextualIdentityService.sys.mjs",
         "resource://gre/modules/FxAccounts.jsm",
         "resource://gre/modules/FxAccountsStorage.jsm",
         "resource://gre/modules/PlacesBackups.sys.mjs",

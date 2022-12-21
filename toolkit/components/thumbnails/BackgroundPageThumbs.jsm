@@ -36,11 +36,10 @@ const TEL_CAPTURE_DONE_IMAGE_ZERO_DIMENSION = 7;
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ContextualIdentityService",
-  "resource://gre/modules/ContextualIdentityService.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  ContextualIdentityService:
+    "resource://gre/modules/ContextualIdentityService.sys.mjs",
+});
 
 const BackgroundPageThumbs = {
   /**

@@ -4,11 +4,10 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "ContextualIdentityService",
-  "resource://gre/modules/ContextualIdentityService.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  ContextualIdentityService:
+    "resource://gre/modules/ContextualIdentityService.sys.mjs",
+});
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "containersEnabled",

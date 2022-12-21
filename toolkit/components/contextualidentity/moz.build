@@ -8,7 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
 
 EXTRA_JS_MODULES += [
-    "ContextualIdentityService.jsm",
+    "ContextualIdentityService.sys.mjs",
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]

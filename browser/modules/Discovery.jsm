@@ -16,11 +16,10 @@ ChromeUtils.defineModuleGetter(
   "ClientID",
   "resource://gre/modules/ClientID.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ContextualIdentityService",
-  "resource://gre/modules/ContextualIdentityService.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  ContextualIdentityService:
+    "resource://gre/modules/ContextualIdentityService.sys.mjs",
+});
 
 const RECOMMENDATION_ENABLED = "browser.discovery.enabled";
 const TELEMETRY_ENABLED = "datareporting.healthreport.uploadEnabled";
