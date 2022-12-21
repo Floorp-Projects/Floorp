@@ -16,6 +16,12 @@ async function clearPolicies() {
   await EnterprisePolicyTesting.setupPolicyEngineWithJson("");
 }
 
+// The Relay promo is only shown if the default FxA instance is detected, and
+// tests override it to a dummy address, so we need to make the dummy address
+// appear like it's the default (using the actual default instance might cause a
+// remote connection, crashing the test harness).
+add_setup(mockDefaultFxAInstance);
+
 add_task(async function testDefaultUIWithoutTemplatePref() {
   await clearPolicies();
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
@@ -317,22 +323,22 @@ add_task(async function test_aboutpreferences_search() {
     leaveOpen: true,
   });
 
-  await runSearchInput("Rally");
+  await runSearchInput("Relay");
 
   let doc = gBrowser.contentDocument;
   let tab = gBrowser.selectedTab;
 
   let productCards = doc.querySelectorAll(".mozilla-product-item");
   Assert.equal(productCards.length, 3, "All products in the group are found");
-  let [mobile, vpn, rally] = productCards;
+  let [mobile, vpn, relay] = productCards;
   Assert.ok(BrowserTestUtils.is_hidden(mobile), "Mobile hidden");
   Assert.ok(BrowserTestUtils.is_hidden(vpn), "VPN hidden");
-  Assert.ok(BrowserTestUtils.is_visible(rally), "Rally shown");
+  Assert.ok(BrowserTestUtils.is_visible(relay), "Relay shown");
 
   BrowserTestUtils.removeTab(tab);
 });
 
-add_task(async function test_aboutpreferences_clickBtnRally() {
+add_task(async function test_aboutpreferences_clickBtnRelay() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.preferences.moreFromMozilla", true]],
   });
@@ -343,11 +349,11 @@ add_task(async function test_aboutpreferences_clickBtnRally() {
   let doc = gBrowser.contentDocument;
   let tab = gBrowser.selectedTab;
 
-  let expectedUrl = new URL("https://rally.mozilla.org");
+  let expectedUrl = new URL("https://relay.firefox.com");
   expectedUrl.searchParams.set("utm_source", "about-prefs");
   expectedUrl.searchParams.set("utm_campaign", "morefrommozilla");
   expectedUrl.searchParams.set("utm_medium", "firefox-desktop");
-  expectedUrl.searchParams.set("utm_content", "fxvt-113-a-na");
+  expectedUrl.searchParams.set("utm_content", "fxvt-113-a-global");
   expectedUrl.searchParams.set(
     "entrypoint_experiment",
     "morefrommozilla-experiment-1846"
@@ -366,8 +372,7 @@ add_task(async function test_aboutpreferences_clickBtnRally() {
       return true;
     }
   );
-  let rallyButton = doc.getElementById("simple-mozillaRally");
-  rallyButton.click();
+  doc.getElementById("simple-firefoxRelay").click();
 
   await tabOpened;
   BrowserTestUtils.removeTab(gBrowser.selectedTab);

@@ -1276,7 +1276,8 @@ richlistitem .text-link:hover {
   margin-inline-start: 4px;
 }
 
-#moreFromMozillaCategory .text-link.hidden {
+#moreFromMozillaCategory .text-link.hidden,
+#moreFromMozillaCategory .text-link[hidden] {
   display: none;
 }
 
@@ -1289,8 +1290,8 @@ richlistitem .text-link:hover {
   background-image: url("chrome://browser/skin/preferences/vpn-logo.svg");
 }
 
-#mozilla-rally {
-  background-image: url("chrome://browser/skin/preferences/rally-logo.svg");
+#firefox-relay {
+  background-image: url("chrome://browser/skin/preferences/relay-logo.svg");
 }
 
 /*
