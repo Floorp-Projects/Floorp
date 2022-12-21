@@ -616,14 +616,11 @@ mochitest-media:
             wmf-media-engine: 1
             default:
                 by-test-platform:
-                    android-em-7.*: 1
-                    windows10-64-2004.*: 1
-                    macosx.*64.*/.*: 2
-                    windows10-aarch64-qr/.*: 1
-                    windows.*32-shippable/.*: 2
-                    linux1804-64(-shippable|-devedition|-.*qr)/opt: 2
-                    linux.*64-tsan-qr/opt: 4
-                    default: 3
+                    (android|macos).*/opt: 1
+                    ^(?!.*asan).*windows10.*/opt: 1
+                    linux.*/debug: 3
+                    linux.*64-tsan-qr/opt: 5
+                    default: 2
     mozharness:
         mochitest-flavor: plain
         chunked:
