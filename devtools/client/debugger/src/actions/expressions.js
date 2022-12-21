@@ -125,7 +125,7 @@ export function evaluateExpressions(cx) {
 }
 
 function evaluateExpression(cx, expression) {
-  return async function({ dispatch, getState, client, sourceMaps }) {
+  return async function({ dispatch, getState, client }) {
     if (!expression.input) {
       console.warn("Expressions should not be empty");
       return null;
@@ -166,13 +166,7 @@ function evaluateExpression(cx, expression) {
  * and replaces all posible generated names.
  */
 export function getMappedExpression(expression) {
-  return async function({
-    dispatch,
-    getState,
-    client,
-    sourceMaps,
-    parserWorker,
-  }) {
+  return async function({ dispatch, getState, parserWorker }) {
     const thread = getCurrentThread(getState());
     const mappings = getSelectedScopeMappings(getState(), thread);
     const bindings = getSelectedFrameBindings(getState(), thread);

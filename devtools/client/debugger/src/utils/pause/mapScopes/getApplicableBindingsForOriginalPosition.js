@@ -9,10 +9,10 @@ import { mappingContains } from "./mappingContains";
 export async function originalRangeStartsInside(
   source,
   { start, end },
-  sourceMaps
+  sourceMapLoader
 ) {
-  const endPosition = await sourceMaps.getGeneratedLocation(end);
-  const startPosition = await sourceMaps.getGeneratedLocation(start);
+  const endPosition = await sourceMapLoader.getGeneratedLocation(end);
+  const startPosition = await sourceMapLoader.getGeneratedLocation(start);
 
   // If the start and end positions collapse into eachother, it means that
   // the range in the original content didn't _start_ at the start position.
@@ -27,9 +27,9 @@ export async function getApplicableBindingsForOriginalPosition(
   { start, end },
   bindingType,
   locationType,
-  sourceMaps
+  sourceMapLoader
 ) {
-  const ranges = await sourceMaps.getGeneratedRanges(start);
+  const ranges = await sourceMapLoader.getGeneratedRanges(start);
 
   const resultRanges = ranges.map(mapRange => ({
     start: {
@@ -52,8 +52,8 @@ export async function getApplicableBindingsForOriginalPosition(
   // var _mod = require("mod"); // mapped from import statement
   // var _mod2 = interop(_mod); // entirely unmapped
   if (bindingType === "import" && locationType !== "ref") {
-    const endPosition = await sourceMaps.getGeneratedLocation(end);
-    const startPosition = await sourceMaps.getGeneratedLocation(start);
+    const endPosition = await sourceMapLoader.getGeneratedLocation(end);
+    const startPosition = await sourceMapLoader.getGeneratedLocation(start);
 
     for (const range of resultRanges) {
       if (

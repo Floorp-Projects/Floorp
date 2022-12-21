@@ -12,7 +12,7 @@ import assert from "../../utils/assert";
  * @static
  */
 export function selectFrame(cx, frame) {
-  return async ({ dispatch, client, getState, sourceMaps }) => {
+  return async ({ dispatch, getState }) => {
     assert(cx.thread == frame.thread, "Thread mismatch");
 
     // Frames that aren't on-stack do not support evalling and may not

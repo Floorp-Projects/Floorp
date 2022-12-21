@@ -8,7 +8,7 @@ import { generateInlinePreview } from "./inlinePreview";
 import { PROMISE } from "../utils/middleware/promise";
 
 export function fetchScopes(cx) {
-  return async function({ dispatch, getState, client, sourceMaps }) {
+  return async function({ dispatch, getState, client }) {
     const frame = getSelectedFrame(getState(), cx.thread);
     if (!frame || getGeneratedFrameScope(getState(), frame.id)) {
       return;

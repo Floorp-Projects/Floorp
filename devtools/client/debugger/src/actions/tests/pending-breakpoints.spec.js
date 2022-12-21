@@ -42,7 +42,7 @@ import {
   waitForState,
 } from "../../utils/test-head";
 
-import sourceMaps from "devtools/client/shared/source-map-loader/index";
+import sourceMapLoader from "devtools/client/shared/source-map-loader/index";
 
 import { makePendingLocationId } from "../../utils/breakpoint";
 function mockClient(bpPos = {}) {
@@ -56,7 +56,7 @@ function mockClient(bpPos = {}) {
 
 function mockSourceMaps() {
   return {
-    ...sourceMaps,
+    ...sourceMapLoader,
     getOriginalSourceText: async id => ({
       id,
       text: "",
@@ -437,7 +437,7 @@ describe("adding sources", () => {
     const store = createStore(mockClient({ "5": [2] }), loadInitialState(), {
       getOriginalURLs: async source => [
         {
-          id: sourceMaps.generatedToOriginalId(source.id, sourceURL),
+          id: sourceMapLoader.generatedToOriginalId(source.id, sourceURL),
           url: sourceURL,
         },
       ],
@@ -454,7 +454,10 @@ describe("adding sources", () => {
       getOriginalLocations: async items =>
         items.map(item => ({
           ...item,
-          sourceId: sourceMaps.generatedToOriginalId(item.sourceId, sourceURL),
+          sourceId: sourceMapLoader.generatedToOriginalId(
+            item.sourceId,
+            sourceURL
+          ),
         })),
     });
 

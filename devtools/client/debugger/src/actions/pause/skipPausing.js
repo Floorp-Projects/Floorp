@@ -9,7 +9,7 @@ import { getSkipPausing } from "../../selectors";
  * @static
  */
 export function toggleSkipPausing() {
-  return async ({ dispatch, client, getState, sourceMaps }) => {
+  return async ({ dispatch, client, getState }) => {
     const skipPausing = !getSkipPausing(getState());
     await client.setSkipPausing(skipPausing);
     dispatch({ type: "TOGGLE_SKIP_PAUSING", skipPausing });
@@ -21,7 +21,7 @@ export function toggleSkipPausing() {
  * @static
  */
 export function setSkipPausing(skipPausing) {
-  return async ({ dispatch, client, getState, sourceMaps }) => {
+  return async ({ dispatch, client, getState }) => {
     const currentlySkipping = getSkipPausing(getState());
     if (currentlySkipping === skipPausing) {
       return;

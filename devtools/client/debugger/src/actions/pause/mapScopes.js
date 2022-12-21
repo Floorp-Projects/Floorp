@@ -86,7 +86,7 @@ export async function buildOriginalScopes(
 }
 
 export function toggleMapScopes() {
-  return async function({ dispatch, getState, client, sourceMaps }) {
+  return async function({ dispatch, getState }) {
     if (isMapScopesEnabled(getState())) {
       dispatch({ type: "TOGGLE_MAP_SCOPES", mapScopes: false });
       return;
@@ -193,11 +193,11 @@ export function getMappedScopes(cx, scopes, frame) {
 
 export function getMappedScopesForLocation(location) {
   return async function(thunkArgs) {
-    const { dispatch, getState, sourceMaps } = thunkArgs;
+    const { dispatch, getState, sourceMapLoader } = thunkArgs;
     const cx = getThreadContext(getState());
     const mappedLocation = await getMappedLocation(
       getState(),
-      sourceMaps,
+      sourceMapLoader,
       location
     );
     return dispatch(getMappedScopes(cx, null, mappedLocation));

@@ -224,7 +224,7 @@ describe("pause", () => {
         column: 0,
       };
 
-      const sourceMapsMock = {
+      const sourceMapLoaderMock = {
         getOriginalLocation: () => Promise.resolve(originalLocation),
         getOriginalLocations: async items => items,
         getOriginalSourceText: async () => ({
@@ -235,7 +235,7 @@ describe("pause", () => {
       };
 
       const client = { ...mockCommandClient };
-      const store = createStore(client, {}, sourceMapsMock);
+      const store = createStore(client, {}, sourceMapLoaderMock);
       const { dispatch, getState } = store;
       const mockPauseInfo = createPauseInfo(generatedLocation);
 
@@ -293,7 +293,7 @@ describe("pause", () => {
         },
       ];
 
-      const sourceMapsMock = {
+      const sourceMapLoaderMock = {
         getOriginalStackFrames: loc => Promise.resolve(originStackFrames),
         getOriginalLocation: () => Promise.resolve(originalLocation),
         getOriginalLocations: async items => items,
@@ -305,7 +305,7 @@ describe("pause", () => {
       };
 
       const client = { ...mockCommandClient };
-      const store = createStore(client, {}, sourceMapsMock);
+      const store = createStore(client, {}, sourceMapLoaderMock);
       const { dispatch, getState } = store;
       const mockPauseInfo = createPauseInfo(generatedLocation);
       const { frames } = mockPauseInfo;

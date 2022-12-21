@@ -46,7 +46,7 @@ async function loadOriginalSource(
   state,
   source,
   client,
-  sourceMaps,
+  sourceMapLoader,
   prettyPrintWorker
 ) {
   if (isPretty(source)) {
@@ -63,7 +63,7 @@ async function loadOriginalSource(
     );
 
     return prettyPrintSource(
-      sourceMaps,
+      sourceMapLoader,
       prettyPrintWorker,
       generatedSource,
       content,
@@ -71,7 +71,7 @@ async function loadOriginalSource(
     );
   }
 
-  const result = await sourceMaps.getOriginalSourceText(source.id);
+  const result = await sourceMapLoader.getOriginalSourceText(source.id);
   if (!result) {
     // The way we currently try to load and select a pending
     // selected location, it is possible that we will try to fetch the
@@ -111,7 +111,14 @@ async function loadGeneratedSourceTextPromise(
 async function loadOriginalSourceTextPromise(
   cx,
   source,
-  { dispatch, getState, client, sourceMaps, parserWorker, prettyPrintWorker }
+  {
+    dispatch,
+    getState,
+    client,
+    sourceMapLoader,
+    parserWorker,
+    prettyPrintWorker,
+  }
 ) {
   const epoch = getSourcesEpoch(getState());
   await dispatch({
@@ -122,7 +129,7 @@ async function loadOriginalSourceTextPromise(
       getState(),
       source,
       client,
-      sourceMaps,
+      sourceMapLoader,
       prettyPrintWorker
     ),
   });

@@ -40,7 +40,7 @@ function findExpressionMatch(state, codeMirror, tokenPos) {
 }
 
 export function updatePreview(cx, target, tokenPos, codeMirror) {
-  return ({ dispatch, getState, client, sourceMaps }) => {
+  return ({ dispatch, getState }) => {
     const cursorPos = target.getBoundingClientRect();
 
     if (
@@ -73,7 +73,7 @@ export function setPreview(
   cursorPos,
   target
 ) {
-  return async ({ dispatch, getState, client, sourceMaps }) => {
+  return async ({ dispatch, getState, client }) => {
     dispatch({ type: "START_PREVIEW" });
     const previewCount = getPreviewCount(getState());
     if (getPreview(getState())) {
