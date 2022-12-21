@@ -1957,7 +1957,7 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::getDirectives(
 }
 
 [[nodiscard]] bool TokenStreamCharsShared::copyCharBufferTo(
-    JSContext* cx, UniquePtr<char16_t[], JS::FreePolicy>* destination) {
+    UniquePtr<char16_t[], JS::FreePolicy>* destination) {
   size_t length = charBuffer.length();
 
   *destination = fc->getAllocator()->make_pod_array<char16_t>(length + 1);
@@ -2041,7 +2041,7 @@ template <typename Unit, class AnyCharsAccess>
     return true;
   }
 
-  return copyCharBufferTo(anyCharsAccess().cx, destination);
+  return copyCharBufferTo(destination);
 }
 
 template <typename Unit, class AnyCharsAccess>
