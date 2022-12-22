@@ -987,7 +987,7 @@ nsresult nsSocketTransport::ResolveHost() {
 
   mResolving = true;
 
-  uint32_t dnsFlags = 0;
+  nsIDNSService::DNSFlags dnsFlags = nsIDNSService::RESOLVE_DEFAULT_FLAGS;
   if (mConnectionFlags & nsSocketTransport::BYPASS_CACHE) {
     dnsFlags = nsIDNSService::RESOLVE_BYPASS_CACHE;
   }

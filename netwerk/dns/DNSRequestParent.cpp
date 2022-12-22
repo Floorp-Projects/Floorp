@@ -40,7 +40,7 @@ void DNSRequestHandler::DoAsyncResolve(const nsACString& hostname,
                                        const nsACString& trrServer,
                                        int32_t port, uint16_t type,
                                        const OriginAttributes& originAttributes,
-                                       uint32_t flags) {
+                                       nsIDNSService::DNSFlags flags) {
   nsresult rv;
   mFlags = flags;
   nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
@@ -64,7 +64,7 @@ void DNSRequestHandler::DoAsyncResolve(const nsACString& hostname,
 void DNSRequestHandler::OnRecvCancelDNSRequest(
     const nsCString& hostName, const nsCString& aTrrServer, const int32_t& port,
     const uint16_t& type, const OriginAttributes& originAttributes,
-    const uint32_t& flags, const nsresult& reason) {
+    const nsIDNSService::DNSFlags& flags, const nsresult& reason) {
   nsresult rv;
   nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
@@ -159,7 +159,7 @@ DNSRequestParent::DNSRequestParent(DNSRequestBase* aRequest)
 mozilla::ipc::IPCResult DNSRequestParent::RecvCancelDNSRequest(
     const nsCString& hostName, const nsCString& trrServer, const int32_t& port,
     const uint16_t& type, const OriginAttributes& originAttributes,
-    const uint32_t& flags, const nsresult& reason) {
+    const nsIDNSService::DNSFlags& flags, const nsresult& reason) {
   mDNSRequest->OnRecvCancelDNSRequest(hostName, trrServer, port, type,
                                       originAttributes, flags, reason);
   return IPC_OK();

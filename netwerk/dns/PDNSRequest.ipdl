@@ -13,6 +13,7 @@ include PDNSRequestParams;
 include "mozilla/net/NeckoMessageUtils.h";
 
 using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
+using nsIDNSService::DNSFlags from "nsIDNSService.h";
 
 namespace mozilla {
 namespace net {
@@ -28,7 +29,7 @@ both:
   // needed if the request is to be canceled.
   async CancelDNSRequest(nsCString hostName, nsCString trrServer, int32_t port,
                          uint16_t type, OriginAttributes originAttributes,
-                         uint32_t flags, nsresult reason);
+                         DNSFlags flags, nsresult reason);
   async __delete__();
 
   async LookupCompleted(DNSRequestResponse reply);

@@ -147,7 +147,7 @@ int NrIceResolver::resolve(nr_resolver_resource* resource,
   MOZ_ASSERT(allocated_resolvers_ > 0);
   ASSERT_ON_THREAD(sts_thread_);
   RefPtr<PendingResolution> pr;
-  uint32_t resolve_flags = 0;
+  nsIDNSService::DNSFlags resolve_flags = nsIDNSService::RESOLVE_DEFAULT_FLAGS;
   OriginAttributes attrs;
 
   if (resource->transport_protocol != IPPROTO_UDP &&
@@ -162,10 +162,10 @@ int NrIceResolver::resolve(nr_resolver_resource* resource,
 
   switch (resource->address_family) {
     case AF_INET:
-      resolve_flags |= nsIDNSService::RESOLVE_DISABLE_IPV6;
+      resolve_flags = nsIDNSService::RESOLVE_DISABLE_IPV6;
       break;
     case AF_INET6:
-      resolve_flags |= nsIDNSService::RESOLVE_DISABLE_IPV4;
+      resolve_flags = nsIDNSService::RESOLVE_DISABLE_IPV4;
       break;
     default:
       ABORT(R_BAD_ARGS);
