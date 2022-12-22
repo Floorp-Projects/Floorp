@@ -33,12 +33,27 @@ macro_rules! __unless_target_features {
 macro_rules! __detect_target_features {
     ($($tf:tt),+) => {{
         #[cfg(target_arch = "x86")]
-        use core::arch::x86::{__cpuid, __cpuid_count};
+        use core::arch::x86::{__cpuid, __cpuid_count, CpuidResult};
         #[cfg(target_arch = "x86_64")]
-        use core::arch::x86_64::{__cpuid, __cpuid_count};
+        use core::arch::x86_64::{__cpuid, __cpuid_count, CpuidResult};
+
+        // These wrappers are workarounds around
+        // https://github.com/rust-lang/rust/issues/101346
+        //
+        // DO NOT remove it until MSRV is bumped to a version
+        // with the issue fix (at least 1.64).
+        #[inline(never)]
+        unsafe fn cpuid(leaf: u32) -> CpuidResult {
+            __cpuid(leaf)
+        }
+
+        #[inline(never)]
+        unsafe fn cpuid_count(leaf: u32, sub_leaf: u32) -> CpuidResult {
+            __cpuid_count(leaf, sub_leaf)
+        }
 
         let cr = unsafe {
-            [__cpuid(1), __cpuid_count(7, 0)]
+            [cpuid(1), cpuid_count(7, 0)]
         };
 
         $($crate::check!(cr, $tf) & )+ true
