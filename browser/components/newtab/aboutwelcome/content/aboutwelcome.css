@@ -1285,7 +1285,6 @@ html {
   transition: none;
 }
 .onboardingContainer .steps.progress-bar .indicator {
-  width: -moz-available;
   height: 100%;
   margin-inline: 0;
   background-color: var(--checkbox-checked-bgcolor);

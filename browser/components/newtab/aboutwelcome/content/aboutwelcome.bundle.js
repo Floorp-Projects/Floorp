@@ -200,7 +200,7 @@ const MultiStageAboutWelcome = props => {
     screens
   } = props;
   const [index, setScreenIndex] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(props.startScreen);
-  const [previousOrder, setPreviousOrder] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(-1);
+  const [previousOrder, setPreviousOrder] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(props.startScreen - 1);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     const screenInitials = screens.map(({
       id
@@ -264,30 +264,31 @@ const MultiStageAboutWelcome = props => {
 
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     if (props.updateHistory) {
-      const handleIn = ({
-        state
-      }) => {
-        setTransition(props.transitions ? "in" : "");
-        setScreenIndex(Math.min(state, screens.length - 1));
-      }; // Switch to the screen tracked in state (null for initial state)
+      // Switch to the screen tracked in state (null for initial state)
       // or last screen index if a user navigates by pressing back
       // button from about:home
-
-
-      const handler = history => {
+      const handler = ({
+        state
+      }) => {
         if (transition === "out") {
           return;
         }
 
         setTransition(props.transitions ? "out" : "");
-        setTimeout(() => handleIn(history), props.transitions ? TRANSITION_OUT_TIME : 0);
+        setTimeout(() => {
+          setTransition(props.transitions ? "in" : "");
+          setScreenIndex(Math.min(state, screens.length - 1));
+        }, props.transitions ? TRANSITION_OUT_TIME : 0);
       }; // Handle page load, e.g., going back to about:welcome from about:home
 
 
-      handleIn(window.history);
+      const {
+        state
+      } = window.history;
 
-      if (window.history.state) {
-        setPreviousOrder(Math.min(window.history.state, screens.length - 1));
+      if (state) {
+        setScreenIndex(Math.min(state, screens.length - 1));
+        setPreviousOrder(Math.min(state, screens.length - 1));
       } // Watch for browser back/forward button navigation events
 
 
