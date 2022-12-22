@@ -11720,6 +11720,12 @@
   value: false
   mirror: always
 
+# The base URL of the `Learn more` button for skip reasons
+- name: network.trr_ui.skip_reason_learn_more_url
+  type: String
+  value: "https://firefox-source-docs.mozilla.org/networking/dns/trr-skip-reasons.html#"
+  mirror: never
+
 # Allow the network changed event to get sent when a network topology or setup
 # change is noticed while running.
 - name: network.notify.changed
