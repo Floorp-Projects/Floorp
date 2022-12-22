@@ -5,6 +5,7 @@
 
 #include "nsISupports.idl"
 #include "nsILoadInfo.idl"
+#include "nsIRequest.idl"
 
 %{C++
 #include "nsStringFwd.h"
@@ -281,6 +282,16 @@ interface nsIHttpChannelInternal : nsISupports
      * IP literal host.
      */
     [must_use] readonly attribute boolean isResolvedByTRR;
+
+
+    /**
+     * The effective TRR mode used to resolve this channel.
+     * This is computed by taking the value returned by nsIRequest.getTRRMode()
+     * and the state of the TRRService. If the domain is excluded from TRR
+     * or the TRRService is disabled, the effective mode would be TRR_DISABLED_MODE
+     * even if the initial mode set on the request was TRR_ONLY_MODE.
+     */
+    [must_use] readonly attribute nsIRequest_TRRMode effectiveTRRMode;
 
     /**
      * True if channel is loaded by socket process.
