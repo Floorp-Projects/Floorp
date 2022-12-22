@@ -6,6 +6,7 @@
 #include "nsISupports.idl"
 #include "nsILoadInfo.idl"
 #include "nsIRequest.idl"
+#include "nsITRRSkipReason.idl"
 
 %{C++
 #include "nsStringFwd.h"
@@ -292,6 +293,12 @@ interface nsIHttpChannelInternal : nsISupports
      * even if the initial mode set on the request was TRR_ONLY_MODE.
      */
     [must_use] readonly attribute nsIRequest_TRRMode effectiveTRRMode;
+
+    /**
+     * If the DNS request triggered by this channel didn't use TRR, this value
+     * contains the reason why that was skipped.
+     */
+    [must_use] readonly attribute nsITRRSkipReason_value trrSkipReason;
 
     /**
      * True if channel is loaded by socket process.
