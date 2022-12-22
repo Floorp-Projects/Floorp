@@ -300,15 +300,6 @@ DefaultJitOptions::DefaultJitOptions() {
   SET_DEFAULT(wasmBatchBaselineThreshold, 10000);
   SET_DEFAULT(wasmBatchIonThreshold, 1100);
 
-  // Dumps a representation of parsed regexps to stderr
-  SET_DEFAULT(traceRegExpParser, false);
-  // Dumps the calls made to the regexp assembler to stderr
-  SET_DEFAULT(traceRegExpAssembler, false);
-  // Dumps the bytecodes interpreted by the regexp engine to stderr
-  SET_DEFAULT(traceRegExpInterpreter, false);
-  // Dumps the changes made by the regexp peephole optimizer to stderr
-  SET_DEFAULT(traceRegExpPeephole, false);
-
   // Controls how much assertion checking code is emitted
   SET_DEFAULT(lessDebugCode, false);
 
@@ -321,6 +312,43 @@ DefaultJitOptions::DefaultJitOptions() {
 #ifdef WASM_CODEGEN_DEBUG
   SET_DEFAULT(enableWasmImportCallSpew, false);
   SET_DEFAULT(enableWasmFuncCallSpew, false);
+#endif
+
+  // This is used to control whether regexps tier up from interpreted to
+  // compiled. We control this with --no-native-regexp and
+  // --regexp-warmup-threshold.
+  SET_DEFAULT(regexp_tier_up, true);
+
+  // Dumps a representation of parsed regexps to stderr
+  SET_DEFAULT(trace_regexp_parser, false);
+  // Dumps the calls made to the regexp assembler to stderr
+  SET_DEFAULT(trace_regexp_assembler, false);
+  // Dumps the bytecodes interpreted by the regexp engine to stderr
+  SET_DEFAULT(trace_regexp_bytecodes, false);
+  // Dumps the changes made by the regexp peephole optimizer to stderr
+  SET_DEFAULT(trace_regexp_peephole_optimization, false);
+
+  // ***** Irregexp shim flags *****
+
+  // V8 uses this for differential fuzzing to handle stack overflows.
+  // We address the same problem in StackLimitCheck::HasOverflowed.
+  SET_DEFAULT(correctness_fuzzer_suppressions, false);
+  // Instead of using a flag for this, we provide an implementation of
+  // CanReadUnaligned in SMRegExpMacroAssembler.
+  SET_DEFAULT(enable_regexp_unaligned_accesses, false);
+  // This is used to guard an old prototype implementation of possessive
+  // quantifiers, which never got past the point of adding parser support.
+  SET_DEFAULT(regexp_possessive_quantifier, false);
+  // These affect the default level of optimization. We can still turn
+  // optimization off on a case-by-case basis in CompilePattern - for
+  // example, if a regexp is too long - so we might as well turn these
+  // flags on unconditionally.
+  SET_DEFAULT(regexp_optimization, true);
+#if MOZ_BIG_ENDIAN()
+  // peephole optimization not supported on big endian
+  SET_DEFAULT(regexp_peephole_optimization, false);
+#else
+  SET_DEFAULT(regexp_peephole_optimization, true);
 #endif
 }
 

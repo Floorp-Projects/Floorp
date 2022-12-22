@@ -580,7 +580,7 @@ enum class AssembleResult {
   RegExpMacroAssembler* masm_ptr = masm.get();
 #ifdef DEBUG
   UniquePtr<RegExpMacroAssembler> tracer_masm;
-  if (jit::JitOptions.traceRegExpAssembler) {
+  if (jit::JitOptions.trace_regexp_assembler) {
     tracer_masm = MakeUnique<RegExpMacroAssemblerTracer>(cx->isolate, masm_ptr);
     masm_ptr = tracer_masm.get();
   }
