@@ -9,16 +9,16 @@ build = "build.rs"
 edition = "2018"
 
 [features]
-default = ["freetype-lib"]
-freetype-lib = ["freetype/freetype-sys"]
+default = ["static_freetype"]
 profiler = ["tracy-rs/enable_profiler"]
-capture = ["api/serialize", "ron", "serde", "smallvec/serde", "etagere/serialization"]
-replay = ["api/deserialize", "ron", "serde", "smallvec/serde", "etagere/serialization"]
+capture = ["api/serialize", "ron", "serde", "smallvec/serde", "etagere/serialization", "glyph_rasterizer/capture"]
+replay = ["api/deserialize", "ron", "serde", "smallvec/serde", "etagere/serialization", "glyph_rasterizer/replay"]
 display_list_stats = ["api/display_list_stats"]
 serialize_program = ["serde", "webrender_build/serialize_program"]
-no_static_freetype = []
+dynamic_freetype = ["glyph_rasterizer/dynamic_freetype"]
+static_freetype = ["glyph_rasterizer/static_freetype"]
 leak_checks = []
-gecko = ["fog"]
+gecko = ["fog", "glyph_rasterizer/gecko"]
 sw_compositor = ["swgl"]
 
 [build-dependencies]
@@ -47,6 +47,7 @@ time = "0.1"
 api = { version = "0.62.0", path = "../webrender_api", package = "webrender_api" }
 webrender_build = { version = "0.0.2", path = "../webrender_build" }
 malloc_size_of = { version = "0.0.2", path = "../wr_malloc_size_of", package = "wr_malloc_size_of" }
+glyph_rasterizer = { version = "0.1.0", path = "../wr_glyph_rasterizer", package = "wr_glyph_rasterizer", default-features = false }
 svg_fmt = "0.4"
 tracy-rs = "0.1.2"
 derive_more = { version = "0.99", default-features = false, features = ["add_assign"] }
@@ -59,16 +60,3 @@ topological-sort = "0.1"
 [dev-dependencies]
 mozangle = "0.3.3"
 rand = "0.4"
-
-[target.'cfg(any(target_os = "android", all(unix, not(target_os = "macos"))))'.dependencies]
-freetype = { version = "0.7", default-features = false }
-libc = "0.2"
-
-[target.'cfg(target_os = "windows")'.dependencies]
-dwrote = "0.11"
-
-[target.'cfg(target_os = "macos")'.dependencies]
-core-foundation = "0.9.2"
-core-graphics = "0.22.3"
-core-text = { version = "19.2", default-features = false }
-objc = "0.2"

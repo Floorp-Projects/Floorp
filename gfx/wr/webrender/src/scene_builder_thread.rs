@@ -15,7 +15,7 @@ use crate::frame_builder::FrameBuilderConfig;
 use crate::scene_building::SceneBuilder;
 use crate::clip::{ClipIntern, PolygonIntern};
 use crate::filterdata::FilterDataIntern;
-use crate::glyph_rasterizer::SharedFontResources;
+use glyph_rasterizer::SharedFontResources;
 use crate::intern::{Internable, Interner, UpdateList};
 use crate::internal_types::{FastHashMap, FastHashSet};
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};

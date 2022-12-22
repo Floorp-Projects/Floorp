@@ -7,7 +7,7 @@ use crate::batch::{BatchKey, BatchKind, BrushBatchKind, BatchFeatures};
 use crate::composite::{CompositeFeatures, CompositeSurfaceFormat};
 use crate::device::{Device, Program, ShaderError};
 use euclid::default::Transform3D;
-use crate::glyph_rasterizer::GlyphFormat;
+use glyph_rasterizer::GlyphFormat;
 use crate::renderer::{
     desc,
     BlendMode, DebugFlags, RendererError, WebRenderOptions,

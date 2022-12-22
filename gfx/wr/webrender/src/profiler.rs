@@ -20,6 +20,7 @@
 //! - A '_' token to start a new row.
 
 use api::{ColorF, ColorU};
+use glyph_rasterizer::profiler::GlyphRasterizeProfiler;
 use crate::renderer::DebugRenderer;
 use crate::device::query::GpuTimer;
 use euclid::{Point2D, Rect, Size2D, vec2, default};
@@ -1689,6 +1690,24 @@ impl TransactionProfile {
         for evt in &mut self.events {
             *evt = Event::None;
         }
+    }
+}
+
+impl GlyphRasterizeProfiler for TransactionProfile {
+    fn start_time(&mut self) {
+        let id = GLYPH_RESOLVE_TIME;
+        let ns = precise_time_ns();
+        self.events[id] = Event::Start(ns);
+    }
+
+    fn end_time(&mut self) -> f64 {
+        let id = GLYPH_RESOLVE_TIME;
+        self.end_time_if_started(id).unwrap()
+    }
+
+    fn set(&mut self, value: f64) {
+        let id = RASTERIZED_GLYPHS;
+        self.set_f64(id, value);
     }
 }
 

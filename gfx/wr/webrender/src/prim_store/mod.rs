@@ -16,7 +16,7 @@ use crate::debug_item::{DebugItem, DebugMessage};
 use crate::debug_colors;
 use crate::scene_building::{CreateShadow, IsVisible};
 use crate::frame_builder::FrameBuildingState;
-use crate::glyph_rasterizer::GlyphKey;
+use glyph_rasterizer::GlyphKey;
 use crate::gpu_cache::{GpuCacheAddress, GpuCacheHandle, GpuDataRequest};
 use crate::gpu_types::{BrushFlags};
 use crate::intern;

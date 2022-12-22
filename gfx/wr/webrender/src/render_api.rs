@@ -25,7 +25,7 @@ use crate::api::{FontInstanceOptions, FontInstancePlatformOptions, FontVariation
 use crate::api::DEFAULT_TILE_SIZE;
 use crate::api::units::*;
 use crate::api_resources::ApiResources;
-use crate::glyph_rasterizer::SharedFontResources;
+use glyph_rasterizer::SharedFontResources;
 use crate::scene_builder_thread::{SceneBuilderRequest, SceneBuilderResult};
 use crate::intern::InterningMemoryReport;
 use crate::profiler::{self, TransactionProfile};

@@ -20,10 +20,10 @@ use freetype::freetype::{FT_LOAD_NO_BITMAP, FT_LOAD_NO_HINTING};
 use freetype::freetype::{FT_FACE_FLAG_SCALABLE, FT_FACE_FLAG_FIXED_SIZES};
 use freetype::freetype::{FT_FACE_FLAG_MULTIPLE_MASTERS};
 use freetype::succeeded;
-use crate::glyph_rasterizer::{FontInstance, GlyphFormat, GlyphKey};
-use crate::glyph_rasterizer::{GlyphRasterError, GlyphRasterResult, RasterizedGlyph};
-use crate::internal_types::{FastHashMap, ResourceCacheError};
-#[cfg(any(not(target_os = "android"), feature = "no_static_freetype"))]
+use crate::rasterizer::{FontInstance, GlyphFormat, GlyphKey};
+use crate::rasterizer::{GlyphRasterError, GlyphRasterResult, RasterizedGlyph};
+use crate::types::FastHashMap;
+#[cfg(any(not(target_os = "android"), feature = "dynamic_freetype"))]
 use libc::{dlsym, RTLD_DEFAULT};
 use libc::free;
 use std::{cmp, mem, ptr, slice};
@@ -72,7 +72,7 @@ pub fn unimplemented(error: FT_Error) -> bool {
 }
 
 // Use dlsym to check for symbols. If not available. just return an unimplemented error.
-#[cfg(any(not(target_os = "android"), feature = "no_static_freetype"))]
+#[cfg(any(not(target_os = "android"), feature = "dynamic_freetype"))]
 macro_rules! ft_dyn_fn {
     ($func_name:ident($($arg_name:ident:$arg_type:ty),*) -> FT_Error) => {
         #[allow(non_snake_case)]
@@ -95,7 +95,7 @@ macro_rules! ft_dyn_fn {
 }
 
 // On Android, just statically link in the symbols...
-#[cfg(all(target_os = "android", not(feature = "no_static_freetype")))]
+#[cfg(all(target_os = "android", not(feature = "dynamic_freetype")))]
 macro_rules! ft_dyn_fn {
     ($($proto:tt)+) => { extern "C" { fn $($proto)+; } }
 }
@@ -193,9 +193,6 @@ impl FontCache {
             // Ensure the library uses the default LCD filter initially.
             unsafe { FT_Library_SetLcdFilter(lib, FT_LcdFilter::FT_LCD_FILTER_DEFAULT) };
         } else {
-            // TODO(gw): Provide detailed error values.
-            // Once this panic has been here for a while with no issues we should get rid of
-            // ResourceCacheError as this was the only place that could fail previously.
             panic!("Failed to initialize FreeType - {}", result)
         }
 
@@ -378,10 +375,10 @@ impl FontContext {
         false
     }
 
-    pub fn new() -> Result<FontContext, ResourceCacheError> {
-        Ok(FontContext {
+    pub fn new() -> FontContext {
+        FontContext {
             fonts: FastHashMap::default(),
-        })
+        }
     }
 
     pub fn add_raw_font(&mut self, font_key: &FontKey, bytes: Arc<Vec<u8>>, index: u32) {
@@ -1006,7 +1003,8 @@ impl FontContext {
                 FT_Pixel_Mode::FT_PIXEL_MODE_LCD_V => {
                     while dest < row_end {
                         let (mut r, g, mut b) =
-                            unsafe { (*src, *src.offset(bitmap.pitch as isize), *src.offset((2 * bitmap.pitch) as isize)) };
+                            unsafe { (*src, *src.offset(bitmap.pitch as isize),
+                                      *src.offset((2 * bitmap.pitch) as isize)) };
                         if subpixel_bgr {
                             mem::swap(&mut r, &mut b);
                         }

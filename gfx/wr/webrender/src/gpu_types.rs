@@ -14,7 +14,7 @@ use crate::render_task::RenderTaskAddress;
 use crate::renderer::ShaderColorMode;
 use std::i32;
 use crate::util::{TransformedRectKind, MatrixHelpers};
-use crate::glyph_rasterizer::SubpixelDirection;
+use glyph_rasterizer::SubpixelDirection;
 use crate::util::{ScaleOffset, pack_as_float};
 
 // Contains type that must exactly match the same structures declared in GLSL.

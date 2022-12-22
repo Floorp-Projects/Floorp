@@ -6,7 +6,7 @@ use crate::api::{BlobImageKey, ImageDescriptor, DirtyRect, TileSize};
 use crate::api::{BlobImageHandler, AsyncBlobImageRasterizer, BlobImageData, BlobImageParams};
 use crate::api::{BlobImageRequest, BlobImageDescriptor, FontTemplate};
 use crate::api::units::*;
-use crate::glyph_rasterizer::{SharedFontResources, BaseFontInstance};
+use glyph_rasterizer::{SharedFontResources, BaseFontInstance};
 use crate::render_api::{ResourceUpdate, TransactionMsg, AddFont};
 use crate::image_tiling::*;
 use crate::profiler;
