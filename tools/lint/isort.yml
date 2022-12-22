@@ -1,7 +1,6 @@
 ---
 isort:
     description: Sort python imports
-    level: warning
     # Excludes should be added to topsrcdir/.flake8.
     exclude: []
     extensions: ['configure', 'py']
