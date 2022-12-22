@@ -9,8 +9,6 @@
 #include "MFMediaSource.h"
 #include "MFMediaEngineUtils.h"
 #include "TimeUnits.h"
-#include "mozilla/ProfilerLabels.h"
-#include "mozilla/ProfilerMarkerTypes.h"
 
 namespace mozilla {
 
@@ -281,10 +279,6 @@ void MFMediaEngineStream::ReplySampleRequestIfPossible() {
     RETURN_VOID_IF_FAILED(mMediaEventQueue->QueueEventParamUnk(
         MEEndOfStream, GUID_NULL, S_OK, nullptr));
     mEndedEvent.Notify(TrackType());
-    PROFILER_MARKER_TEXT(
-        "MFMediaEngineStream:NotifyEnd", MEDIA_PLAYBACK, {},
-        nsPrintfCString("stream=%s, id=%zu", GetDescriptionName().get(),
-                        mStreamId));
     return;
   }
 
@@ -330,14 +324,6 @@ HRESULT MFMediaEngineStream::CreateInputSample(IMFSample** aSample) {
         data->mTime.ToMicroseconds(), data->GetEndTime().ToMicroseconds(),
         data->mDuration.ToMicroseconds(), data->mKeyframe,
         mRawDataQueueForFeedingEngine.GetSize());
-  PROFILER_MARKER(
-      nsPrintfCString(
-          "pop %s (stream=%zu)",
-          TrackType() == TrackInfo::TrackType::kVideoTrack ? "video" : "audio",
-          mStreamId),
-      MEDIA_PLAYBACK, {}, MediaSampleMarker, data->mTime.ToMicroseconds(),
-      data->GetEndTime().ToMicroseconds(),
-      mRawDataQueueForFeedingEngine.GetSize());
 
   // Copy data into IMFMediaBuffer
   ComPtr<IMFMediaBuffer> buffer;
