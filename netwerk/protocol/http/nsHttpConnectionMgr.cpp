@@ -1359,6 +1359,7 @@ nsresult nsHttpConnectionMgr::TryDispatchTransaction(
         // transaction.
         trans->DisableSpdy();
         caps &= NS_HTTP_DISALLOW_SPDY;
+        trans->MakeSticky();
       } else if (wsSupp == WebSocketSupport::SUPPORTED) {
         RefPtr<nsHttpConnection> connTCP = do_QueryObject(conn);
         LOG(("TryingDispatchTransaction: websockets over Http2"));

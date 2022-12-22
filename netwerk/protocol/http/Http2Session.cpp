@@ -1710,11 +1710,7 @@ nsresult Http2Session::RecvSettings(Http2Session* self) {
           LOG3(("Peer tried to re-disable extended CONNECT"));
           return self->SessionError(PROTOCOL_ERROR);
         }
-        // trigger a queued websockets transaction -- enabled or not
-        LOG3(("Http2Sesssion::RecvSettings triggering queued websocket"));
-        RefPtr<nsHttpConnectionInfo> ci;
-        self->GetConnectionInfo(getter_AddRefs(ci));
-        gHttpHandler->ConnMgr()->ProcessPendingQ(ci);
+        self->mHasTransactionWaitingForWebsockets = true;
       } break;
 
       default:
@@ -1733,6 +1729,15 @@ nsresult Http2Session::RecvSettings(Http2Session* self) {
 
   if (!self->mProcessedWaitingWebsockets) {
     self->mProcessedWaitingWebsockets = true;
+  }
+
+  if (self->mHasTransactionWaitingForWebsockets) {
+    // trigger a queued websockets transaction -- enabled or not
+    LOG3(("Http2Sesssion::RecvSettings triggering queued websocket"));
+    RefPtr<nsHttpConnectionInfo> ci;
+    self->GetConnectionInfo(getter_AddRefs(ci));
+    gHttpHandler->ConnMgr()->ProcessPendingQ(ci);
+    self->mHasTransactionWaitingForWebsockets = false;
   }
 
   return NS_OK;
@@ -4449,6 +4454,7 @@ WebSocketSupport Http2Session::GetWebSocketSupport() {
   }
 
   if (!mProcessedWaitingWebsockets) {
+    mHasTransactionWaitingForWebsockets = true;
     return WebSocketSupport::UNSURE;
   }
 
