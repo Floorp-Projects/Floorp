@@ -17,7 +17,6 @@ namespace dom {
 class GlobalObject;
 class WebrtcGlobalStatisticsCallback;
 class WebrtcGlobalLoggingCallback;
-struct RTCStatsReportInternal;
 
 class WebrtcGlobalInformation {
  public:
@@ -43,7 +42,7 @@ class WebrtcGlobalInformation {
   static bool AecDebug(const GlobalObject& aGlobal);
   static void GetAecDebugLogDir(const GlobalObject& aGlobal, nsAString& aDir);
 
-  static void StashStats(const RTCStatsReportInternal& aReport);
+  static void StoreLongTermICEStatistics(PeerConnectionImpl& aPc);
 
  private:
   WebrtcGlobalInformation() = delete;

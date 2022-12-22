@@ -6,16 +6,7 @@
 <script>
   let test = async () => {
     let pc = new RTCPeerConnection();
-    pc.addTransceiver('audio');
-    pc.addTransceiver('video');
-    await pc.setLocalDescription();
-    await new Promise(r => {
-      pc.onicegatheringstatechange = () => {
-        if (pc.iceGatheringState == "complete") {
-          r();
-        }
-      };
-    });
+    await pc.setLocalDescription(await pc.createOffer({offerToReceiveAudio: true}));
   };
   test();
 </script>
