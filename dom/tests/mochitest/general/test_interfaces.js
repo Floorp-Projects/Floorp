@@ -1516,7 +1516,7 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "onabort", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "onabsolutedeviceorientation", insecureContext: true },
+  { name: "ondeviceorientationabsolute", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "onafterprint", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!

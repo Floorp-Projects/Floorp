@@ -122,7 +122,6 @@ typedef OfflineResourceList ApplicationCache;
                     OffscreenCanvasRenderingContext2D,
                     onbeforeinstallprompt,
                     oncancel,
-                    ondeviceorientationabsolute,
                     onmousewheel,
                     onsearch,
                     onselectionchange,
@@ -497,7 +496,7 @@ partial interface Window {
 
            attribute EventHandler ondevicemotion;
            attribute EventHandler ondeviceorientation;
-           attribute EventHandler onabsolutedeviceorientation;
+           attribute EventHandler ondeviceorientationabsolute;
            [Pref="device.sensors.proximity.enabled"]
            attribute EventHandler onuserproximity;
            [Pref="device.sensors.ambientLight.enabled"]

@@ -1918,7 +1918,7 @@ STATIC_ATOMS = [
     # orientation support
     Atom("ondevicemotion", "ondevicemotion"),
     Atom("ondeviceorientation", "ondeviceorientation"),
-    Atom("onabsolutedeviceorientation", "onabsolutedeviceorientation"),
+    Atom("ondeviceorientationabsolute", "ondeviceorientationabsolute"),
     Atom("onmozorientationchange", "onmozorientationchange"),
     Atom("onuserproximity", "onuserproximity"),
     # light sensor support
