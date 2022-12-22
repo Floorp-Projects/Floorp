@@ -669,13 +669,7 @@ export class StyleEditorUI extends EventEmitter {
 
     // onAtRulesChanged fires at-rules-changed, so call the function after
     // registering the listener in order to ensure to get at-rules-changed event.
-    let { atRules, mediaRules } = resource;
-    // @backward-compat { version 108 } "mediaRules" is only passed on older servers,
-    //                  the whole if block can be removed when 108 hits release.
-    if (mediaRules) {
-      atRules = mediaRules.map(rule => ({ ...rule, type: "media" }));
-    }
-    editor.onAtRulesChanged(atRules);
+    editor.onAtRulesChanged(resource.atRules);
 
     this.editors.push(editor);
 
@@ -1586,18 +1580,9 @@ export class StyleEditorUI extends EventEmitter {
             }
             break;
           }
-          // @backward-compat { version 108 } "media-rules-changed" is only passed on older
-          //                  servers and can be removed when 108 hits release.
           case "at-rules-changed":
-          case "matches-change":
-          case "media-rules-changed": {
-            let { atRules, mediaRules } = resource;
-            // @backward-compat { version 108 } "mediaRules" is only passed on older servers,
-            //                  the whole if block can be removed when 108 hits release.
-            if (mediaRules) {
-              atRules = mediaRules.map(rule => ({ ...rule, type: "media" }));
-            }
-            editor.onAtRulesChanged(atRules);
+          case "matches-change": {
+            editor.onAtRulesChanged(resource.atRules);
             break;
           }
         }
