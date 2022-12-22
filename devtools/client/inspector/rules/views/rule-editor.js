@@ -158,59 +158,54 @@ RuleEditor.prototype = {
               }`,
             });
 
-            // @backward-compat { version 108 } Actors from older server don't implement getQueryContainerForNode.
-            if (this.rule.domRule.traits.hasGetQueryContainerForNode) {
-              container.classList.add("has-tooltip");
+            container.classList.add("has-tooltip");
 
-              const jumpToNodeButton = createChild(container, "button", {
-                class: "open-inspector",
-                title: l10n(
-                  "rule.containerQuery.selectContainerButton.tooltip"
-                ),
-              });
+            const jumpToNodeButton = createChild(container, "button", {
+              class: "open-inspector",
+              title: l10n("rule.containerQuery.selectContainerButton.tooltip"),
+            });
 
-              let containerNodeFront;
-              const getNodeFront = async () => {
-                if (!containerNodeFront) {
-                  const res = await this.rule.domRule.getQueryContainerForNode(
-                    index,
-                    this.rule.inherited ||
-                      this.ruleView.inspector.selection.nodeFront
-                  );
-                  containerNodeFront = res.node;
-                }
-                return containerNodeFront;
-              };
-
-              jumpToNodeButton.addEventListener("click", async () => {
-                const front = await getNodeFront();
-                if (!front) {
-                  return;
-                }
-                this.ruleView.inspector.selection.setNodeFront(front);
-                await this.ruleView.inspector.highlighters.hideHighlighterType(
-                  this.ruleView.inspector.highlighters.TYPES.BOXMODEL
+            let containerNodeFront;
+            const getNodeFront = async () => {
+              if (!containerNodeFront) {
+                const res = await this.rule.domRule.getQueryContainerForNode(
+                  index,
+                  this.rule.inherited ||
+                    this.ruleView.inspector.selection.nodeFront
                 );
-              });
-              container.append(jumpToNodeButton);
+                containerNodeFront = res.node;
+              }
+              return containerNodeFront;
+            };
 
-              container.addEventListener("mouseenter", async () => {
-                const front = await getNodeFront();
-                if (!front) {
-                  return;
-                }
+            jumpToNodeButton.addEventListener("click", async () => {
+              const front = await getNodeFront();
+              if (!front) {
+                return;
+              }
+              this.ruleView.inspector.selection.setNodeFront(front);
+              await this.ruleView.inspector.highlighters.hideHighlighterType(
+                this.ruleView.inspector.highlighters.TYPES.BOXMODEL
+              );
+            });
+            container.append(jumpToNodeButton);
 
-                await this.ruleView.inspector.highlighters.showHighlighterTypeForNode(
-                  this.ruleView.inspector.highlighters.TYPES.BOXMODEL,
-                  front
-                );
-              });
-              container.addEventListener("mouseleave", async () => {
-                await this.ruleView.inspector.highlighters.hideHighlighterType(
-                  this.ruleView.inspector.highlighters.TYPES.BOXMODEL
-                );
-              });
-            }
+            container.addEventListener("mouseenter", async () => {
+              const front = await getNodeFront();
+              if (!front) {
+                return;
+              }
+
+              await this.ruleView.inspector.highlighters.showHighlighterTypeForNode(
+                this.ruleView.inspector.highlighters.TYPES.BOXMODEL,
+                front
+              );
+            });
+            container.addEventListener("mouseleave", async () => {
+              await this.ruleView.inspector.highlighters.hideHighlighterType(
+                this.ruleView.inspector.highlighters.TYPES.BOXMODEL
+              );
+            });
 
             createChild(container, "span", {
               // Add a space between the container name (or @container if there's no name)

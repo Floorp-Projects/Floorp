@@ -135,12 +135,7 @@ function getNodeInfo(node, elementStyle) {
   } else if (declaration && classList.contains("ruleview-unused-warning")) {
     type = VIEW_NODE_INACTIVE_CSS;
     value = declaration.isUsed();
-  } else if (
-    node.closest(".container-query-declaration") &&
-    // @backward-compat { version 108 } The hasGetQueryContainerForNode trait, and the
-    // check on the line below should be removed once 108 hits release
-    rule.domRule.traits.hasGetQueryContainerForNode
-  ) {
+  } else if (node.closest(".container-query-declaration")) {
     type = VIEW_NODE_CSS_QUERY_CONTAINER;
     const li = node.closest("li.container-query");
     value = {
