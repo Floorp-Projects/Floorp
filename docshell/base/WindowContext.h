@@ -205,6 +205,8 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   bool AllowJavascript() const { return GetAllowJavascript(); }
   bool CanExecuteScripts() const { return mCanExecuteScripts; }
 
+  void TransientSetHasActivePeerConnections();
+
  protected:
   WindowContext(BrowsingContext* aBrowsingContext, uint64_t aInnerWindowId,
                 uint64_t aOuterWindowId, FieldValues&& aFields);

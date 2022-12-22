@@ -533,6 +533,14 @@ bool WindowContext::CanShowPopup() {
   return !StaticPrefs::dom_disable_open_during_load();
 }
 
+void WindowContext::TransientSetHasActivePeerConnections() {
+  if (!IsTop()) {
+    return;
+  }
+
+  mFields.SetWithoutSyncing<IDX_HasActivePeerConnections>(true);
+}
+
 WindowContext::IPCInitializer WindowContext::GetIPCInitializer() {
   IPCInitializer init;
   init.mInnerWindowId = mInnerWindowId;
