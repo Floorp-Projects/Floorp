@@ -404,7 +404,7 @@ impl Device {
         };
         device
             .tempfile
-            .push(Uuid::new_v4().to_hyphenated().to_string());
+            .push(Uuid::new_v4().as_hyphenated().to_string());
 
         // check for rooted devices
         let uid_check = |id: String| id.contains("uid=0");

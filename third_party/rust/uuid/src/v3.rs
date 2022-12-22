@@ -1,5 +1,4 @@
-use crate::prelude::*;
-use md5;
+use crate::Uuid;
 
 impl Uuid {
     /// Creates a UUID using a name from a namespace, based on the MD5
@@ -15,26 +14,27 @@ impl Uuid {
     /// Note that usage of this method requires the `v3` feature of this crate
     /// to be enabled.
     ///
+    /// # Examples
+    ///
+    /// Generating a MD5 DNS UUID for `rust-lang.org`:
+    ///
+    /// ```
+    /// # use uuid::{Uuid, Version};
+    /// let uuid = Uuid::new_v3(&Uuid::NAMESPACE_DNS, b"rust-lang.org");
+    ///
+    /// assert_eq!(Some(Version::Md5), uuid.get_version());
+    /// ```
+    ///
+    /// # References
+    ///
+    /// * [Version 3 and 5 UUIDs in RFC4122](https://www.rfc-editor.org/rfc/rfc4122#section-4.3)
+    ///
     /// [`NAMESPACE_DNS`]: #associatedconstant.NAMESPACE_DNS
     /// [`NAMESPACE_OID`]: #associatedconstant.NAMESPACE_OID
     /// [`NAMESPACE_URL`]: #associatedconstant.NAMESPACE_URL
     /// [`NAMESPACE_X500`]: #associatedconstant.NAMESPACE_X500
     pub fn new_v3(namespace: &Uuid, name: &[u8]) -> Uuid {
-        let mut context = md5::Context::new();
-
-        context.consume(namespace.as_bytes());
-        context.consume(name);
-
-        let computed = context.compute();
-        let bytes = computed.into();
-
-        let mut builder = crate::Builder::from_bytes(bytes);
-
-        builder
-            .set_variant(Variant::RFC4122)
-            .set_version(Version::Md5);
-
-        builder.build()
+        crate::Builder::from_md5_bytes(crate::md5::hash(namespace.as_bytes(), name)).into_uuid()
     }
 }
 
@@ -42,7 +42,10 @@ impl Uuid {
 mod tests {
     use super::*;
 
-    use crate::std::string::ToString;
+    #[cfg(target_arch = "wasm32")]
+    use wasm_bindgen_test::*;
+
+    use crate::{std::string::ToString, Variant, Version};
 
     static FIXTURE: &'static [(&'static Uuid, &'static str, &'static str)] = &[
         (
@@ -128,19 +131,21 @@ mod tests {
     ];
 
     #[test]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
     fn test_new() {
         for &(ref ns, ref name, _) in FIXTURE {
             let uuid = Uuid::new_v3(*ns, name.as_bytes());
-            assert_eq!(uuid.get_version().unwrap(), Version::Md5);
-            assert_eq!(uuid.get_variant().unwrap(), Variant::RFC4122);
+            assert_eq!(uuid.get_version(), Some(Version::Md5));
+            assert_eq!(uuid.get_variant(), Variant::RFC4122);
         }
     }
 
     #[test]
-    fn test_to_hyphenated_string() {
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
+    fn test_hyphenated_string() {
         for &(ref ns, ref name, ref expected) in FIXTURE {
             let uuid = Uuid::new_v3(*ns, name.as_bytes());
-            assert_eq!(uuid.to_hyphenated().to_string(), *expected);
+            assert_eq!(uuid.hyphenated().to_string(), *expected);
         }
     }
 }

@@ -194,3 +194,13 @@ weedle2 = "=4.0.0"
 # https://github.com/mozilla/uniffi-rs/pull/1405
 [patch.crates-io.uniffi_bindgen]
 path = "third_party/rust/uniffi_bindgen"
+
+# Patched to use uuid 1.0 until the upgrade to glean 52 (bug 1805427)
+# (patch from https://github.com/mozilla/glean/pull/2296)
+[patch.crates-io.glean]
+path = "third_party/rust/glean"
+[patch.crates-io.glean-core]
+path = "third_party/rust/glean-core"
+# Likewise, with patch from https://github.com/mozilla/rkv/pull/232
+[patch.crates-io.rkv]
+path = "third_party/rust/rkv"

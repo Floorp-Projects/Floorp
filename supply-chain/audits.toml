@@ -1764,6 +1764,11 @@ criteria = "safe-to-deploy"
 delta = "0.21.0 -> 0.21.1"
 notes = "I authored the changes in this version."
 
+[[audits.uuid]]
+who = "Gabriele Svelto <gsvelto@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.8.2 -> 1.2.2"
+
 [[audits.void]]
 who = "Bobby Holley <bobbyholley@gmail.com>"
 criteria = "safe-to-deploy"

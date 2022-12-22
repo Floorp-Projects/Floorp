@@ -83,7 +83,7 @@ version = "0.21.0"
 version = "0.21.0"
 
 [dependencies.uuid]
-version = "0.8.1"
+version = "1.0"
 features = ["v4"]
 
 [dependencies.whatsys]
