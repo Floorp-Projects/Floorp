@@ -18,7 +18,7 @@
 
 // This is the schema version. Update it at any schema change and add a
 // corresponding migrateVxx method below.
-#define DATABASE_SCHEMA_VERSION 69
+#define DATABASE_SCHEMA_VERSION 70
 
 // Fired after Places inited.
 #define TOPIC_PLACES_INIT_COMPLETE "places-init-complete"
@@ -227,6 +227,7 @@ class Database final : public nsIObserver, public nsSupportsWeakReference {
     mozilla::Unused << EnsureConnection();
     return mMobileRootId;
   }
+  nsresult RecalculateOriginFrecencyStatsInternal();
 
  protected:
   /**
@@ -342,6 +343,7 @@ class Database final : public nsIObserver, public nsSupportsWeakReference {
   nsresult MigrateV67Up();
   nsresult MigrateV68Up();
   nsresult MigrateV69Up();
+  nsresult MigrateV70Up();
 
   void MigrateV52OriginFrecencies();
 

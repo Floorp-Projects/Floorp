@@ -1184,8 +1184,8 @@ interface nsINavHistoryService : nsISupports
   readonly attribute nsIAsyncShutdownClient connectionShutdownClient;
 
   /**
-   * Asynchronously recalculates frecency for all pages where frecency < 0, then
-   * decays frecency and inputhistory values.
+   * Asynchronously recalculates frecency for all the pages that should be
+   * recalculated, then decays frecency and inputhistory values.
    */
    void decayFrecency();
 };

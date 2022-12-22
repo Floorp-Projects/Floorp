@@ -459,13 +459,15 @@ export var PlacesTestUtils = Object.freeze({
    * @param {String} table
    *        The table name.
    */
-  async dumpTable(db, table) {
-    let columns = (await db.execute(`PRAGMA table_info('${table}')`)).map(r =>
-      r.getResultByName("name")
-    );
+  async dumpTable(db, table, columns = null) {
+    if (!columns) {
+      columns = (await db.execute(`PRAGMA table_info('${table}')`)).map(r =>
+        r.getResultByName("name")
+      );
+    }
     let results = [columns.join("\t")];
 
-    let rows = await db.execute(`SELECT * FROM ${table}`);
+    let rows = await db.execute(`SELECT ${columns.join()} FROM ${table}`);
     dump(`>> Table ${table} contains ${rows.length} rows\n`);
 
     for (let row of rows) {

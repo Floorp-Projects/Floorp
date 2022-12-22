@@ -2451,8 +2451,8 @@ async function updateFrecencies(db, limit) {
       frecency = CALCULATE_FRECENCY(id)
     WHERE id IN (
       SELECT id FROM moz_places
-      WHERE frecency < 0
-      ORDER BY frecency ASC
+      WHERE recalc_frecency = 1
+      ORDER BY frecency DESC
       LIMIT :limit
     )`,
     { limit }

@@ -921,16 +921,6 @@ var clear = async function(db) {
 
     // Remove all history.
     await db.execute("DELETE FROM moz_historyvisits");
-
-    // Invalidate frecencies for the remaining places.
-    await db.execute(`UPDATE moz_places SET frecency =
-                        (CASE
-                          WHEN url_hash BETWEEN hash("place", "prefix_lo") AND
-                                                hash("place", "prefix_hi")
-                          THEN 0
-                          ELSE -1
-                          END)
-                        WHERE frecency > 0`);
   });
 
   PlacesObservers.notifyListeners([

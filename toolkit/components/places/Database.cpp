@@ -1280,6 +1280,13 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
 
       // Firefox 104 uses schema version 69
 
+      if (currentSchemaVersion < 70) {
+        rv = MigrateV70Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 110 uses schema version 70
+
       // Schema Upgrades must add migration code here.
       // >>> IMPORTANT! <<<
       // NEVER MIX UP SYNC AND ASYNC EXECUTION IN MIGRATORS, YOU MAY LOCK THE
@@ -2589,6 +2596,73 @@ nsresult Database::MigrateV69Up() {
   }
 
   return NS_OK;
+}
+
+nsresult Database::MigrateV70Up() {
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mMainConn->CreateStatement(
+      "SELECT recalc_frecency FROM moz_places LIMIT 1 "_ns,
+      getter_AddRefs(stmt));
+  if (NS_FAILED(rv)) {
+    // Add recalc_frecency column, indicating frecency has to be recalculated.
+    rv = mMainConn->ExecuteSimpleSQL(
+        "ALTER TABLE moz_places "
+        "ADD COLUMN recalc_frecency INTEGER NOT NULL DEFAULT 0 "_ns);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // We must do the following updates regardless, for downgrade/upgrade cases.
+
+  // moz_origins frecency is, at the time of this migration, the sum of all the
+  // positive frecencies of pages linked to that origin. Frecencies that were
+  // set to negative to request recalculation are thus not accounted for, and
+  // since we're about to flip them to positive we should add them to their
+  // origin. Then we must also update origins stats.
+  // We ignore frecency = -1 because it's just an indication to recalculate
+  // frecency and not an actual frecency value that was flipped, thus it would
+  // not make sense to count it for the origin.
+  rv = mMainConn->ExecuteSimpleSQL(
+      "UPDATE moz_origins "
+      "SET frecency = frecency + abs_frecency "
+      "FROM (SELECT origin_id, ABS(frecency) AS abs_frecency FROM moz_places "
+      "WHERE frecency < -1) AS places "
+      "WHERE moz_origins.id = places.origin_id"_ns);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = RecalculateOriginFrecencyStatsInternal();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Now set recalc_frecency = 1 and positive frecency to any page having a
+  // negative frecency.
+  // Note we don't flip frecency = -1, since we skipped it above when updating
+  // origins, and it remains an acceptable value yet, until the recalculation.
+  rv = mMainConn->ExecuteSimpleSQL(
+      "UPDATE moz_places "
+      "SET recalc_frecency = 1, "
+      "    frecency = CASE WHEN frecency = -1 THEN -1 ELSE ABS(frecency) END "
+      "WHERE frecency < 0 "_ns);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult Database::RecalculateOriginFrecencyStatsInternal() {
+  return mMainConn->ExecuteSimpleSQL(nsLiteralCString(
+      "INSERT OR REPLACE INTO moz_meta(key, value) VALUES "
+      "( "
+      "'" MOZ_META_KEY_ORIGIN_FRECENCY_COUNT
+      "' , "
+      "(SELECT COUNT(*) FROM moz_origins WHERE frecency > 0) "
+      "), "
+      "( "
+      "'" MOZ_META_KEY_ORIGIN_FRECENCY_SUM
+      "', "
+      "(SELECT TOTAL(frecency) FROM moz_origins WHERE frecency > 0) "
+      "), "
+      "( "
+      "'" MOZ_META_KEY_ORIGIN_FRECENCY_SUM_OF_SQUARES
+      "' , "
+      "(SELECT TOTAL(frecency * frecency) FROM moz_origins WHERE frecency > 0) "
+      ") "));
 }
 
 nsresult Database::ConvertOldStyleQuery(nsCString& aURL) {

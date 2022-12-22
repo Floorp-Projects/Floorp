@@ -952,26 +952,25 @@ add_autofill_task(async function bookmarkAboveThreshold() {
   await cleanup();
 });
 
-// Bookmark a page and then clear history.  The bookmarked origin/URL should
-// be autofilled even though its frecency is <= 0 since the autofill threshold
-// is 0.
+// Bookmark a page and then clear history.
+// The bookmarked origin/URL should still be autofilled.
 add_autofill_task(async function zeroThreshold() {
+  const pageUrl = "http://" + url;
   await PlacesTestUtils.addBookmarkWithDetails({
-    uri: "http://" + url,
+    uri: pageUrl,
   });
 
   await PlacesUtils.history.clear();
+  await PlacesUtils.withConnectionWrapper("zeroThreshold", async db => {
+    await db.execute("UPDATE moz_places SET frecency = -1 WHERE url = :url", {
+      url: pageUrl,
+    });
+    await db.executeCached("DELETE FROM moz_updateoriginsupdate_temp");
+  });
 
-  // Make sure the place's frecency is <= 0.  (It will be reset to -1 on the
-  // history.clear() above, and then on idle it will be reset to 0.  xpcshell
-  // tests disable the idle service, so in practice it should always be -1,
-  // but in order to avoid possible intermittent failures in the future, don't
-  // assume that.)
-  let placeFrecency = await PlacesTestUtils.fieldInDB(
-    "http://" + url,
-    "frecency"
-  );
-  Assert.ok(placeFrecency <= 0);
+  // Make sure the place's frecency is -1.
+  let placeFrecency = await PlacesTestUtils.fieldInDB(pageUrl, "frecency");
+  Assert.equal(placeFrecency, -1);
 
   // Make sure the origin's frecency is 0.
   let originFrecency = await getOriginFrecency("http://", host);

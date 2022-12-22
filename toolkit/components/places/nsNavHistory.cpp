@@ -250,8 +250,8 @@ class FixAndDecayFrecencyRunnable final : public Runnable {
         "SET frecency = CALCULATE_FRECENCY(id) "
         "WHERE id IN ("
         "SELECT id FROM moz_places "
-        "WHERE frecency < 0 "
-        "ORDER BY frecency ASC "
+        "WHERE recalc_frecency = 1 "
+        "ORDER BY frecency DESC "
         "LIMIT 400"
         ")");
     NS_ENSURE_STATE(updateStmt);
@@ -259,7 +259,7 @@ class FixAndDecayFrecencyRunnable final : public Runnable {
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<mozIStorageStatement> selectStmt = mDB->GetStatement(
-        "SELECT id FROM moz_places WHERE frecency < 0 "
+        "SELECT id FROM moz_places WHERE recalc_frecency = 1 "
         "LIMIT 1");
     NS_ENSURE_STATE(selectStmt);
     bool hasResult = false;
@@ -308,7 +308,7 @@ class FixAndDecayFrecencyRunnable final : public Runnable {
     // moz_places_afterupdate_frecency_trigger still ignores these changes.
     nsCOMPtr<mozIStorageStatement> decayFrecency = mDB->GetStatement(
         "UPDATE moz_places SET frecency = ROUND(frecency * :decay_rate) "
-        "WHERE frecency > 0");
+        "WHERE frecency > 0 AND recalc_frecency = 0");
     NS_ENSURE_STATE(decayFrecency);
     nsresult rv = decayFrecency->BindDoubleByName(
         "decay_rate"_ns, static_cast<double>(mDecayRate));
@@ -607,7 +607,7 @@ nsNavHistory::RecalculateOriginFrecencyStats(nsIObserver* aCallback) {
   NS_ENSURE_STATE(target);
   nsresult rv = target->Dispatch(NS_NewRunnableFunction(
       "nsNavHistory::RecalculateOriginFrecencyStats", [self, callback] {
-        Unused << self->RecalculateOriginFrecencyStatsInternal();
+        Unused << self->mDB->RecalculateOriginFrecencyStatsInternal();
         Unused << NS_DispatchToMainThread(NS_NewRunnableFunction(
             "nsNavHistory::RecalculateOriginFrecencyStats callback",
             [callback] {
@@ -616,32 +616,6 @@ nsNavHistory::RecalculateOriginFrecencyStats(nsIObserver* aCallback) {
               }
             }));
       }));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult nsNavHistory::RecalculateOriginFrecencyStatsInternal() {
-  nsCOMPtr<mozIStorageConnection> conn(mDB->MainConn());
-  NS_ENSURE_STATE(conn);
-
-  nsresult rv = conn->ExecuteSimpleSQL(nsLiteralCString(
-      "INSERT OR REPLACE INTO moz_meta(key, value) VALUES "
-      "( "
-      "'" MOZ_META_KEY_ORIGIN_FRECENCY_COUNT
-      "' , "
-      "(SELECT COUNT(*) FROM moz_origins WHERE frecency > 0) "
-      "), "
-      "( "
-      "'" MOZ_META_KEY_ORIGIN_FRECENCY_SUM
-      "', "
-      "(SELECT TOTAL(frecency) FROM moz_origins WHERE frecency > 0) "
-      "), "
-      "( "
-      "'" MOZ_META_KEY_ORIGIN_FRECENCY_SUM_OF_SQUARES
-      "' , "
-      "(SELECT TOTAL(frecency * frecency) FROM moz_origins WHERE frecency > 0) "
-      ") "));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -2497,35 +2471,6 @@ nsresult nsNavHistory::ResultsAsList(
     NS_ENSURE_SUCCESS(rv, rv);
     aResults->AppendElement(result.forget());
   }
-  return NS_OK;
-}
-
-const int64_t UNDEFINED_URN_VALUE = -1;
-
-// Create a urn (like
-// urn:places-persist:place:group=0&group=1&sort=1&type=1,,%28local%20files%29)
-// to be used to persist the open state of this container
-nsresult CreatePlacesPersistURN(nsNavHistoryQueryResultNode* aResultNode,
-                                int64_t aValue, const nsCString& aTitle,
-                                nsCString& aURN) {
-  nsAutoCString uri;
-  nsresult rv = aResultNode->GetUri(uri);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  aURN.AssignLiteral("urn:places-persist:");
-  aURN.Append(uri);
-
-  aURN.Append(',');
-  if (aValue != UNDEFINED_URN_VALUE) aURN.AppendInt(aValue);
-
-  aURN.Append(',');
-  if (!aTitle.IsEmpty()) {
-    nsAutoCString escapedTitle;
-    bool success = NS_Escape(aTitle, escapedTitle, url_XAlphas);
-    NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
-    aURN.Append(escapedTitle);
-  }
-
   return NS_OK;
 }
 
