@@ -2441,7 +2441,7 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
     return false;
   }
 
-  if (!NameFunctions(cx, fc, stackLimit, parserAtoms(), body)) {
+  if (!NameFunctions(fc, stackLimit, parserAtoms(), body)) {
     return false;
   }
 
@@ -2516,7 +2516,7 @@ bool BytecodeEmitter::emitFunctionScript(FunctionNode* funNode) {
   }
 
   if (funbox->index() == CompilationStencil::TopLevelIndex) {
-    if (!NameFunctions(cx, fc, stackLimit, parserAtoms(), funNode)) {
+    if (!NameFunctions(fc, stackLimit, parserAtoms(), funNode)) {
       return false;
     }
   }

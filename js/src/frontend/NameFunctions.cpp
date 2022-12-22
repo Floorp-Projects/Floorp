@@ -27,7 +27,7 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
 
   static const size_t MaxParents = 100;
 
-  JSContext* cx_;
+  FrontendContext* fc_;
   ParserAtomsTable& parserAtoms_;
   TaggedParserAtomIndex prefix_;
 
@@ -66,7 +66,7 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
     /* Quote the string as needed. */
     UniqueChars source = parserAtoms_.toQuotedString(name);
     if (!source) {
-      ReportOutOfMemory(cx_);
+      ReportOutOfMemory(fc_);
       return false;
     }
     return buf_.append('[') &&
@@ -489,13 +489,13 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
     return internalVisitSpecList(pn);
   }
 
-  NameResolver(JSContext* cx, FrontendContext* fc,
-               JS::NativeStackLimit stackLimit, ParserAtomsTable& parserAtoms)
+  NameResolver(FrontendContext* fc, JS::NativeStackLimit stackLimit,
+               ParserAtomsTable& parserAtoms)
       : ParseNodeVisitor(fc, stackLimit),
-        cx_(cx),
+        fc_(fc),
         parserAtoms_(parserAtoms),
         nparents_(0),
-        buf_(cx, fc) {}
+        buf_(fc) {}
 
   /*
    * Resolve names for all anonymous functions in the given ParseNode tree.
@@ -526,9 +526,9 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
 
 } /* anonymous namespace */
 
-bool frontend::NameFunctions(JSContext* cx, FrontendContext* fc,
+bool frontend::NameFunctions(FrontendContext* fc,
                              JS::NativeStackLimit stackLimit,
                              ParserAtomsTable& parserAtoms, ParseNode* pn) {
-  NameResolver nr(cx, fc, stackLimit, parserAtoms);
+  NameResolver nr(fc, stackLimit, parserAtoms);
   return nr.visit(pn);
 }
