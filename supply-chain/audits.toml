@@ -233,6 +233,11 @@ criteria = "safe-to-deploy"
 version = "0.1.2"
 notes = "I, Henri Sivonen, wrote this crate for Gecko even though it is published via crates.io. The buffer input assumes Rust slice constraints for the start pointer. In Gecko, this is taken care of by mozilla::Span, but the C API doesn't conform to idiomatic C constraints on this point."
 
+[[audits.clang-sys]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "1.3.3 -> 1.4.0"
+
 [[audits.clap_lex]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
