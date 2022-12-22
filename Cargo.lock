@@ -1132,9 +1132,9 @@ checksum = "b365fabc795046672053e29c954733ec3b05e4be654ab130fe8f1f94d7051f35"
 
 [[package]]
 name = "cubeb"
-version = "0.10.2"
+version = "0.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c317e12df33d2b71fecaa9924706957a1833ada5e83d81fb336b33b63b9e0bdc"
+checksum = "7725c00f234bd83ebd8a5c0165a0856bb6414d9161b86cbb559250c94d8a4285"
 dependencies = [
  "cubeb-core",
 ]
