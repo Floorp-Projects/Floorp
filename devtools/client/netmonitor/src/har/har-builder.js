@@ -471,8 +471,6 @@ HarBuilder.prototype = {
     const cache = {};
 
     if (typeof cacheEntry !== "undefined") {
-      // @backward-compat { version 108 } Once version 108 hits release,
-      // remove `, "expires"` below.
       cache.expires = findKeys(cacheEntry, ["expirationTime", "expires"]);
       cache.lastFetched = findKeys(cacheEntry, ["lastFetched"]);
 
@@ -486,20 +484,12 @@ HarBuilder.prototype = {
       // har-importer.js, along with other files, use buildCacheEntry
       // initial value comes from properties without underscores.
       // this checks for both in appropriate order.
-      // @backward-compat { version 108 } Once version 108 hits release,
-      // remove `, "dataSize"` below.
-      cache._dataSize = findKeys(cacheEntry, [
-        "storageDataSize",
-        "dataSize",
-        "_dataSize",
-      ]);
+      cache._dataSize = findKeys(cacheEntry, ["storageDataSize", "_dataSize"]);
       cache._lastModified = findKeys(cacheEntry, [
         "lastModified",
         "_lastModified",
       ]);
-      // @backward-compat { version 108 } Once version 108 hits release,
-      // remove `, "device"` below.
-      cache._device = findKeys(cacheEntry, ["deviceID", "device", "_device"]);
+      cache._device = findKeys(cacheEntry, ["deviceID", "_device"]);
     }
 
     return cache;
