@@ -19,7 +19,7 @@ export const MultiStageAboutWelcome = props => {
   let { screens } = props;
 
   const [index, setScreenIndex] = useState(props.startScreen);
-  const [previousOrder, setPreviousOrder] = useState(-1);
+  const [previousOrder, setPreviousOrder] = useState(props.startScreen - 1);
   useEffect(() => {
     const screenInitials = screens
       .map(({ id }) => id?.split("_")[1]?.[0])
@@ -89,28 +89,28 @@ export const MultiStageAboutWelcome = props => {
 
   useEffect(() => {
     if (props.updateHistory) {
-      const handleIn = ({ state }) => {
-        setTransition(props.transitions ? "in" : "");
-        setScreenIndex(Math.min(state, screens.length - 1));
-      };
       // Switch to the screen tracked in state (null for initial state)
       // or last screen index if a user navigates by pressing back
       // button from about:home
-      const handler = history => {
+      const handler = ({ state }) => {
         if (transition === "out") {
           return;
         }
         setTransition(props.transitions ? "out" : "");
         setTimeout(
-          () => handleIn(history),
+          () => {
+            setTransition(props.transitions ? "in" : "");
+            setScreenIndex(Math.min(state, screens.length - 1));
+          },
           props.transitions ? TRANSITION_OUT_TIME : 0
         );
       };
 
       // Handle page load, e.g., going back to about:welcome from about:home
-      handleIn(window.history);
-      if (window.history.state) {
-        setPreviousOrder(Math.min(window.history.state, screens.length - 1));
+      const { state } = window.history;
+      if (state) {
+        setScreenIndex(Math.min(state, screens.length - 1));
+        setPreviousOrder(Math.min(state, screens.length - 1));
       }
 
       // Watch for browser back/forward button navigation events
