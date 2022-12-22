@@ -64,8 +64,12 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
     }
 
     /* Quote the string as needed. */
-    UniqueChars source = parserAtoms_.toQuotedString(cx_, name);
-    return source && buf_.append('[') &&
+    UniqueChars source = parserAtoms_.toQuotedString(name);
+    if (!source) {
+      ReportOutOfMemory(cx_);
+      return false;
+    }
+    return buf_.append('[') &&
            buf_.append(source.get(), strlen(source.get())) && buf_.append(']');
   }
 

@@ -180,15 +180,14 @@ void UsedNameTracker::rewind(RewindToken token) {
 }
 
 void ParseContext::Scope::dump(ParseContext* pc, ParserBase* parser) {
-  JSContext* cx = pc->sc()->cx_;
-
   fprintf(stdout, "ParseScope %p", this);
 
   fprintf(stdout, "\n  decls:\n");
   for (DeclaredNameMap::Range r = declared_->all(); !r.empty(); r.popFront()) {
     auto index = r.front().key();
-    UniqueChars bytes = parser->parserAtoms().toPrintableString(cx, index);
+    UniqueChars bytes = parser->parserAtoms().toPrintableString(index);
     if (!bytes) {
+      ReportOutOfMemory(pc->sc()->fc_);
       return;
     }
     DeclaredNameInfo& info = r.front().value().wrapped;

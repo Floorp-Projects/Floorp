@@ -502,8 +502,9 @@ template <class ParseHandler, typename Unit>
 void GeneralParser<ParseHandler, Unit>::reportRedeclaration(
     TaggedParserAtomIndex name, DeclarationKind prevKind, TokenPos pos,
     uint32_t prevPos) {
-  UniqueChars bytes = this->parserAtoms().toPrintableString(cx_, name);
+  UniqueChars bytes = this->parserAtoms().toPrintableString(name);
   if (!bytes) {
+    ReportOutOfMemory(this->fc_);
     return;
   }
 
@@ -563,8 +564,9 @@ bool GeneralParser<ParseHandler, Unit>::notePositionalFormalParameter(
     // In such cases, report will queue up the potential error and return
     // 'true'.
     if (pc_->sc()->strict()) {
-      UniqueChars bytes = this->parserAtoms().toPrintableString(cx_, name);
+      UniqueChars bytes = this->parserAtoms().toPrintableString(name);
       if (!bytes) {
+        ReportOutOfMemory(this->fc_);
         return false;
       }
       if (!strictModeError(JSMSG_DUPLICATE_FORMAL, bytes.get())) {
@@ -1685,8 +1687,9 @@ bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
   if (!evalSc) {
     // The unbound private names are sorted, so just grab the first one.
     UnboundPrivateName minimum = unboundPrivateNames[0];
-    UniqueChars str = this->parserAtoms().toPrintableString(cx_, minimum.atom);
+    UniqueChars str = this->parserAtoms().toPrintableString(minimum.atom);
     if (!str) {
+      ReportOutOfMemory(this->fc_);
       return false;
     }
 
@@ -1703,9 +1706,9 @@ bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
     // the scopeContext.
     if (!this->compilationState_.scopeContext
              .effectiveScopePrivateFieldCacheHas(unboundName.atom)) {
-      UniqueChars str =
-          this->parserAtoms().toPrintableString(cx_, unboundName.atom);
+      UniqueChars str = this->parserAtoms().toPrintableString(unboundName.atom);
       if (!str) {
+        ReportOutOfMemory(this->fc_);
         return false;
       }
       errorAt(unboundName.position.begin, JSMSG_MISSING_PRIVATE_DECL,
@@ -1948,9 +1951,9 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
   for (auto entry : moduleMetadata.localExportEntries) {
     DeclaredNamePtr p = modulepc.varScope().lookupDeclaredName(entry.localName);
     if (!p) {
-      UniqueChars str =
-          this->parserAtoms().toPrintableString(cx_, entry.localName);
+      UniqueChars str = this->parserAtoms().toPrintableString(entry.localName);
       if (!str) {
+        ReportOutOfMemory(this->fc_);
         return null();
       }
 
@@ -5009,8 +5012,9 @@ bool GeneralParser<ParseHandler, Unit>::assertClause(
 
     auto p = usedAssertionKeys.lookupForAdd(keyName);
     if (p) {
-      UniqueChars str = this->parserAtoms().toPrintableString(cx_, keyName);
+      UniqueChars str = this->parserAtoms().toPrintableString(keyName);
       if (!str) {
+        ReportOutOfMemory(this->fc_);
         return false;
       }
       error(JSMSG_DUPLICATE_ASSERT_KEY, str.get());
@@ -5393,8 +5397,9 @@ bool Parser<FullParseHandler, Unit>::checkExportedName(
     return true;
   }
 
-  UniqueChars str = this->parserAtoms().toPrintableString(cx_, exportName);
+  UniqueChars str = this->parserAtoms().toPrintableString(exportName);
   if (!str) {
+    ReportOutOfMemory(this->fc_);
     return false;
   }
 
@@ -8362,8 +8367,9 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
     }
     if (maybeUnboundName) {
       UniqueChars str =
-          this->parserAtoms().toPrintableString(cx_, maybeUnboundName->atom);
+          this->parserAtoms().toPrintableString(maybeUnboundName->atom);
       if (!str) {
+        ReportOutOfMemory(this->fc_);
         return null();
       }
 

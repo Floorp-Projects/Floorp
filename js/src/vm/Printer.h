@@ -67,14 +67,14 @@ class Sprinter final : public GenericPrinter {
     ~InvariantChecker() { parent->checkInvariants(); }
   };
 
-  JSContext* context;  // context executing the decompiler
+  JSContext* maybeCx;  // context executing the decompiler
 
  private:
   static const size_t DefaultSize;
 #ifdef DEBUG
   bool initialized;  // true if this is initialized, use for debug builds
 #endif
-  bool shouldReportOOM;  // whether to report OOM to the context
+  bool shouldReportOOM;  // whether to report OOM to the maybeCx
   char* base;            // malloc'd buffer address
   size_t size;           // size of buffer allocated at base
   ptrdiff_t offset;      // offset of next free char in buffer
@@ -82,7 +82,15 @@ class Sprinter final : public GenericPrinter {
   [[nodiscard]] bool realloc_(size_t newSize);
 
  public:
-  explicit Sprinter(JSContext* cx, bool shouldReportOOM = true);
+  // JSContext* parameter is optional and can be omitted if the following
+  // are not used.
+  //   * putString method with JSString
+  //   * QuoteString function with JSString
+  //   * JSONQuoteString function with JSString
+  //
+  // If JSContext* parameter is not provided, or shouldReportOOM is false,
+  // the consumer should manually report OOM on any failure.
+  explicit Sprinter(JSContext* maybeCx = nullptr, bool shouldReportOOM = true);
   ~Sprinter();
 
   // Initialize this sprinter, returns false on error.
