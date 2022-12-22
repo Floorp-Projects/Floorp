@@ -759,6 +759,14 @@ class gfxMacFontFamily final : public gfxFontFamily {
   gfxMacFontFamily(const nsACString& aName, FontVisibility aVisibility, double aSizeHint = 0.0)
       : gfxFontFamily(aName, aVisibility), mSizeHint(aSizeHint) {}
 
+  gfxMacFontFamily(const nsACString& aName, NSFont* aSystemFont)
+      : gfxFontFamily(aName, FontVisibility::Unknown), mForSystemFont(aSystemFont) {
+    // I don't think the system font instance is at much risk of being deleted,
+    // but to be on the safe side let's retain a reference until we're finished
+    // using it for lazy initialization.
+    [mForSystemFont retain];
+  }
+
   virtual ~gfxMacFontFamily() = default;
 
   void LocalizedName(nsACString& aLocalizedName) override;
@@ -767,7 +775,12 @@ class gfxMacFontFamily final : public gfxFontFamily {
       MOZ_REQUIRES(mLock) override;
 
  protected:
-  double mSizeHint;
+  double mSizeHint = 0.0;
+
+  // If non-null, this is a family representing the system UI font, and should use
+  // the given NSFont as the basis for initialization as the normal font-manager APIs
+  // based on family name won't handle it.
+  NSFont* mForSystemFont = nullptr;
 };
 
 void gfxMacFontFamily::LocalizedName(nsACString& aLocalizedName) {
@@ -816,6 +829,43 @@ void gfxMacFontFamily::FindStyleVariationsLocked(FontInfoData* aFontInfoData) {
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("gfxMacFontFamily::FindStyleVariations", LAYOUT, mName);
 
   nsAutoreleasePool localPool;
+
+  if (mForSystemFont) {
+    MOZ_ASSERT(gfxPlatform::HasVariationFontSupport());
+
+    auto addToFamily = [&](NSFont* aNSFont) MOZ_REQUIRES(mLock) {
+      NSString* psNameNS = [[aNSFont fontDescriptor] postscriptName];
+      nsAutoString nameUTF16;
+      nsAutoCString psName;
+      nsCocoaUtils::GetStringForNSString(psNameNS, nameUTF16);
+      CopyUTF16toUTF8(nameUTF16, psName);
+
+      auto* fe = new MacOSFontEntry(psName, WeightRange(FontWeight::NORMAL), true, 0.0);
+
+      // Set the appropriate style, assuming it may not have a variation range.
+      fe->mStyleRange = SlantStyleRange(
+          ([[aNSFont fontDescriptor] symbolicTraits] & NSFontItalicTrait) ? FontSlantStyle::ITALIC
+                                                                          : FontSlantStyle::NORMAL);
+
+      // Set up weight (and width, if present) ranges.
+      fe->SetupVariationRanges();
+      AddFontEntryLocked(fe);
+    };
+
+    addToFamily(mForSystemFont);
+
+    // See if there is a corresponding italic face, and add it to the family.
+    NSFont* italicFont = [sFontManager convertFont:mForSystemFont toHaveTrait:NSItalicFontMask];
+    if (italicFont != mForSystemFont) {
+      addToFamily(italicFont);
+    }
+
+    [mForSystemFont release];
+    mForSystemFont = nullptr;
+    SetHasStyles(true);
+
+    return;
+  }
 
   NSString* family = GetNSStringForString(NS_ConvertUTF8toUTF16(mName));
 
@@ -1478,47 +1528,6 @@ static NSString* GetRealFamilyName(NSFont* aFont) {
   return [familyName autorelease];
 }
 
-// Create a gfxFontFamily that corresponds to the "system" font name,
-// and populate it with the given font face. We only use this on Catalina or later,
-// so we expect the system font to be a variable-weight face rather than requiring
-// a number of discrete faces of different weights.
-static gfxFontFamily* CreateFamilyForSystemFont(NSFont* aFont, const nsACString& aFamilyName) {
-  MOZ_ASSERT(gfxPlatform::HasVariationFontSupport());
-
-  gfxFontFamily* family = new gfxMacFontFamily(aFamilyName, FontVisibility::Unknown);
-
-  auto addToFamily = [&](NSFont* aNSFont) {
-    NSString* psNameNS = [[aNSFont fontDescriptor] postscriptName];
-    nsAutoString nameUTF16;
-    nsAutoCString psName;
-    nsCocoaUtils::GetStringForNSString(psNameNS, nameUTF16);
-    CopyUTF16toUTF8(nameUTF16, psName);
-
-    auto* fe = new MacOSFontEntry(psName, WeightRange(FontWeight::NORMAL), true, 0.0);
-
-    // Set the appropriate style, assuming it may not have a variation range.
-    fe->mStyleRange = SlantStyleRange(
-        ([[aNSFont fontDescriptor] symbolicTraits] & NSFontItalicTrait) ? FontSlantStyle::ITALIC
-                                                                        : FontSlantStyle::NORMAL);
-
-    // Set up weight (and width, if present) ranges.
-    fe->SetupVariationRanges();
-    family->AddFontEntry(fe);
-  };
-
-  addToFamily(aFont);
-
-  // See if there is a corresponding italic face, and add it to the family.
-  NSFont* italicFont = [sFontManager convertFont:aFont toHaveTrait:NSItalicFontMask];
-  if (italicFont != aFont) {
-    addToFamily(italicFont);
-  }
-
-  family->SetHasStyles(true);
-
-  return family;
-}
-
 // System fonts under OSX 10.11 use a combination of two families, one
 // for text sizes and another for larger, display sizes. Each has a
 // different number of weights. There aren't efficient API's for looking
@@ -1543,7 +1552,8 @@ void gfxMacPlatformFontList::InitSystemFontNames() {
   // even if using the shared fontlist to manage "normal" fonts, because the hidden
   // system fonts may be excluded from the font list altogether.
   if (nsCocoaFeatures::OnCatalinaOrLater()) {
-    RefPtr<gfxFontFamily> fam = CreateFamilyForSystemFont(sys, mSystemTextFontFamilyName);
+    // This family will be populated based on the given NSFont.
+    RefPtr<gfxFontFamily> fam = new gfxMacFontFamily(mSystemTextFontFamilyName, sys);
     if (fam) {
       nsAutoCString key;
       GenerateFontListKey(mSystemTextFontFamilyName, key);
@@ -2043,7 +2053,7 @@ already_AddRefed<FontInfoData> gfxMacPlatformFontList::CreateFontInfoData() {
 
 gfxFontFamily* gfxMacPlatformFontList::CreateFontFamily(const nsACString& aName,
                                                         FontVisibility aVisibility) const {
-  return new gfxMacFontFamily(aName, aVisibility, 0.0);
+  return new gfxMacFontFamily(aName, aVisibility);
 }
 
 gfxFontEntry* gfxMacPlatformFontList::CreateFontEntry(fontlist::Face* aFace,
