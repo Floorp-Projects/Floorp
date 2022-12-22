@@ -20,6 +20,16 @@ async function getVideoDuration(browser, videoID) {
   });
 }
 
+async function timestampUpdated(timestampEl, expectedTimestamp) {
+  await BrowserTestUtils.waitForMutationCondition(
+    timestampEl,
+    { childList: true },
+    () => {
+      return expectedTimestamp === timestampEl.textContent;
+    }
+  );
+}
+
 function checkTimeCloseEnough(actual, expected, message) {
   let equal = Math.abs(actual - expected);
   if (equal <= 0.5) {
@@ -153,6 +163,14 @@ add_task(async function testVideoScrubber() {
         "Video current time is 0"
       );
 
+      let timestampEl = pipWin.document.getElementById("timestamp");
+      let expectedTimestamp = "0:00 / 0:08";
+
+      // Wait for the timestamp to update
+      await timestampUpdated(timestampEl, expectedTimestamp);
+      let actualTimestamp = timestampEl.textContent;
+      is(actualTimestamp, expectedTimestamp, "Timestamp reads 0:00 / 0:08");
+
       EventUtils.synthesizeKey("KEY_ArrowRight", {}, pipWin);
 
       currentTime = await getVideoCurrentTime(browser, videoID);
@@ -163,6 +181,11 @@ add_task(async function testVideoScrubber() {
         "Video current time is 5"
       );
 
+      expectedTimestamp = "0:05 / 0:08";
+      await timestampUpdated(timestampEl, expectedTimestamp);
+      actualTimestamp = timestampEl.textContent;
+      is(actualTimestamp, expectedTimestamp, "Timestamp reads 0:05 / 0:08");
+
       EventUtils.synthesizeKey("KEY_ArrowLeft", {}, pipWin);
 
       currentTime = await getVideoCurrentTime(browser, videoID);
@@ -172,6 +195,11 @@ add_task(async function testVideoScrubber() {
         expectedVideoTime,
         "Video current time is 0"
       );
+
+      expectedTimestamp = "0:00 / 0:08";
+      await timestampUpdated(timestampEl, expectedTimestamp);
+      actualTimestamp = timestampEl.textContent;
+      is(actualTimestamp, expectedTimestamp, "Timestamp reads 0:00 / 0:08");
 
       let rect = scrubber.getBoundingClientRect();
 
@@ -190,6 +218,11 @@ add_task(async function testVideoScrubber() {
         expectedVideoTime,
         "Video current time is 3.98..."
       );
+
+      expectedTimestamp = "0:04 / 0:08";
+      await timestampUpdated(timestampEl, expectedTimestamp);
+      actualTimestamp = timestampEl.textContent;
+      is(actualTimestamp, expectedTimestamp, "Timestamp reads 0:04 / 0:08");
 
       EventUtils.synthesizeMouse(
         scrubber,
