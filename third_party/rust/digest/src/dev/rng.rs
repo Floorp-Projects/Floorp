@@ -2,7 +2,7 @@
 use core::num::Wrapping;
 
 /// Initial RNG state used in tests.
-// choosen by fair dice roll. guaranteed to be random.
+// chosen by fair dice roll. guaranteed to be random.
 pub(crate) const RNG: XorShiftRng = XorShiftRng {
     x: Wrapping(0x0787_3B4A),
     y: Wrapping(0xFAAB_8FFE),
