@@ -10659,6 +10659,10 @@
 #endif
   mirror: always
 
+- name: media.video-wakelock
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
 
 #---------------------------------------------------------------------------
 # Prefs starting with "midi."
