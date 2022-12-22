@@ -6,7 +6,7 @@ use api::{ColorF, FontInstanceFlags, GlyphInstance, RasterSpace, Shadow};
 use api::units::{LayoutToWorldTransform, LayoutVector2D, RasterPixelScale, DevicePixelScale};
 use crate::scene_building::{CreateShadow, IsVisible};
 use crate::frame_builder::FrameBuildingState;
-use crate::glyph_rasterizer::{FontInstance, FontTransform, GlyphKey, FONT_SIZE_LIMIT};
+use glyph_rasterizer::{FontInstance, FontTransform, GlyphKey, FONT_SIZE_LIMIT};
 use crate::gpu_cache::GpuCache;
 use crate::intern;
 use crate::internal_types::LayoutPrimitiveInfo;

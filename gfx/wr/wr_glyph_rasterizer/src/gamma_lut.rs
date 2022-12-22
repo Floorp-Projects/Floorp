@@ -194,7 +194,6 @@ fn apply_contrast(srca: f32, contrast: f32) -> f32 {
 pub fn build_gamma_correcting_lut(table: &mut [u8; 256], src: u8, contrast: f32,
                                   src_space: LuminanceColorSpace,
                                   dst_convert: LuminanceColorSpace) {
-
     let src = src as f32 / 255.0;
     let lin_src = src_space.to_luma(src);
     // Guess at the dst. The perceptual inverse provides smaller visual

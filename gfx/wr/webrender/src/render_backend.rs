@@ -27,7 +27,7 @@ use crate::filterdata::FilterDataIntern;
 use crate::capture::CaptureConfig;
 use crate::composite::{CompositorKind, CompositeDescriptor};
 use crate::frame_builder::{FrameBuilder, FrameBuilderConfig, FrameScratchBuffer};
-use crate::glyph_rasterizer::{FontInstance};
+use glyph_rasterizer::{FontInstance};
 use crate::gpu_cache::GpuCache;
 use crate::hit_test::{HitTest, HitTester, SharedHitTester};
 use crate::intern::DataStore;

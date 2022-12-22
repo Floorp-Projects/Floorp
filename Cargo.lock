@@ -6169,25 +6169,18 @@ dependencies = [
  "bitflags",
  "build-parallel",
  "byteorder",
- "core-foundation",
- "core-graphics",
- "core-text",
  "derive_more",
- "dwrote",
  "etagere",
  "euclid",
  "fog",
- "freetype",
  "fxhash",
  "gleam",
  "glean",
  "glslopt",
  "lazy_static",
- "libc",
  "log",
  "malloc_size_of_derive",
  "num-traits",
- "objc",
  "plane-split",
  "rayon",
  "ron",
@@ -6200,6 +6193,7 @@ dependencies = [
  "tracy-rs",
  "webrender_api",
  "webrender_build",
+ "wr_glyph_rasterizer",
  "wr_malloc_size_of",
 ]
 
@@ -6437,6 +6431,32 @@ version = "0.1.0"
 source = "git+https://github.com/FirefoxGraphics/wpf-gpu-raster?rev=e07e3741d1613b1b7ddb85a1120ed4071b3d6a56#e07e3741d1613b1b7ddb85a1120ed4071b3d6a56"
 dependencies = [
  "typed-arena-nomut",
+]
+
+[[package]]
+name = "wr_glyph_rasterizer"
+version = "0.1.0"
+dependencies = [
+ "core-foundation",
+ "core-graphics",
+ "core-text",
+ "dwrote",
+ "euclid",
+ "fog",
+ "freetype",
+ "fxhash",
+ "glean",
+ "lazy_static",
+ "libc",
+ "log",
+ "malloc_size_of_derive",
+ "objc",
+ "rayon",
+ "serde",
+ "smallvec",
+ "tracy-rs",
+ "webrender_api",
+ "wr_malloc_size_of",
 ]
 
 [[package]]

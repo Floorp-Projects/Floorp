@@ -6,10 +6,10 @@ use api::{FontInstanceFlags, FontKey, FontRenderMode, FontVariation};
 use api::{ColorU, GlyphDimensions, NativeFontHandle};
 use dwrote;
 use crate::gamma_lut::{ColorLut, GammaLut};
-use crate::glyph_rasterizer::{FontInstance, FontTransform, GlyphKey};
-use crate::glyph_rasterizer::{GlyphFormat, GlyphRasterError, GlyphRasterResult, RasterizedGlyph};
-use crate::glyph_rasterizer::apply_multistrike_bold;
-use crate::internal_types::{FastHashMap, FastHashSet, ResourceCacheError};
+use crate::rasterizer::{FontInstance, FontTransform, GlyphKey};
+use crate::rasterizer::{GlyphFormat, GlyphRasterError, GlyphRasterResult, RasterizedGlyph};
+use crate::rasterizer::apply_multistrike_bold;
+use crate::types::{FastHashMap, FastHashSet};
 use std::borrow::Borrow;
 use std::collections::hash_map::Entry;
 use std::hash::{Hash, Hasher};
@@ -146,12 +146,12 @@ impl FontContext {
         true
     }
 
-    pub fn new() -> Result<FontContext, ResourceCacheError> {
-        Ok(FontContext {
+    pub fn new() -> FontContext {
+        FontContext {
             fonts: FastHashMap::default(),
             variations: FastHashMap::default(),
             gamma_luts: FastHashMap::default(),
-        })
+        }
     }
 
     fn add_font_descriptor(&mut self, font_key: &FontKey, desc: &dwrote::FontDescriptor) {

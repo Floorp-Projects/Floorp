@@ -23,9 +23,9 @@ use core_text::font_descriptor::{CTFontDescriptor, kCTFontDefaultOrientation, kC
 use core_text::font_manager;
 use euclid::default::Size2D;
 use crate::gamma_lut::{ColorLut, GammaLut};
-use crate::glyph_rasterizer::{FontInstance, FontTransform, GlyphKey};
-use crate::glyph_rasterizer::{GlyphFormat, GlyphRasterError, GlyphRasterResult, RasterizedGlyph};
-use crate::internal_types::{FastHashMap, ResourceCacheError};
+use crate::rasterizer::{FontInstance, FontTransform, GlyphKey};
+use crate::rasterizer::{GlyphFormat, GlyphRasterError, GlyphRasterResult, RasterizedGlyph};
+use crate::types::FastHashMap;
 use std::collections::hash_map::Entry;
 use std::sync::Arc;
 
@@ -236,19 +236,19 @@ impl FontContext {
         true
     }
 
-    pub fn new() -> Result<FontContext, ResourceCacheError> {
+    pub fn new() -> FontContext {
         debug!("Test for subpixel AA support: {:?}", *FONT_SMOOTHING_MODE);
 
         // Force CG to use sRGB color space to gamma correct.
         let contrast = 0.0;
         let gamma = 0.0;
 
-        Ok(FontContext {
+        FontContext {
             ct_font_descs: FastHashMap::default(),
             ct_fonts: FastHashMap::default(),
             graphics_context: GraphicsContext::new(),
             gamma_lut: GammaLut::new(contrast, gamma, gamma),
-        })
+        }
     }
 
     pub fn add_raw_font(&mut self, font_key: &FontKey, bytes: Arc<Vec<u8>>, index: u32) {

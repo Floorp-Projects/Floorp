@@ -2482,26 +2482,19 @@ dependencies = [
  "bitflags",
  "build-parallel",
  "byteorder",
- "core-foundation 0.9.2",
- "core-graphics 0.22.3",
- "core-text",
  "derive_more",
- "dwrote",
  "etagere",
  "euclid",
  "fog",
- "freetype",
  "fxhash",
  "gleam",
  "glean",
  "glslopt",
  "lazy_static",
- "libc",
  "log",
  "malloc_size_of_derive",
  "mozangle",
  "num-traits",
- "objc",
  "plane-split",
  "png",
  "rand",
@@ -2516,6 +2509,7 @@ dependencies = [
  "tracy-rs",
  "webrender_api",
  "webrender_build",
+ "wr_glyph_rasterizer",
  "wr_malloc_size_of",
 ]
 
@@ -2652,6 +2646,36 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5d129932f4644ac2396cb456385cbf9e63b5b30c6e8dc4820bdca4eb082037a5"
 dependencies = [
  "winapi",
+]
+
+[[package]]
+name = "wr_glyph_rasterizer"
+version = "0.1.0"
+dependencies = [
+ "core-foundation 0.9.2",
+ "core-graphics 0.22.3",
+ "core-text",
+ "dwrote",
+ "env_logger",
+ "euclid",
+ "fog",
+ "freetype",
+ "fxhash",
+ "gleam",
+ "glean",
+ "glutin",
+ "lazy_static",
+ "libc",
+ "log",
+ "malloc_size_of_derive",
+ "objc",
+ "rayon",
+ "serde",
+ "smallvec",
+ "tracy-rs",
+ "webrender_api",
+ "winit",
+ "wr_malloc_size_of",
 ]
 
 [[package]]

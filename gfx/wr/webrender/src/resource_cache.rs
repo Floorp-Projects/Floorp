@@ -2,13 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BlobImageRequest, RasterizedBlobImage, ImageFormat};
+use api::{BlobImageRequest, RasterizedBlobImage, ImageFormat, ImageDescriptorFlags};
 use api::{DebugFlags, FontInstanceKey, FontKey, FontTemplate, GlyphIndex};
 use api::{ExternalImageData, ExternalImageType, ExternalImageId, BlobImageResult};
 use api::{DirtyRect, GlyphDimensions, IdNamespace, DEFAULT_TILE_SIZE};
 use api::{ColorF, ImageData, ImageDescriptor, ImageKey, ImageRendering, TileSize};
 use api::{BlobImageHandler, BlobImageKey, VoidPtrToSizeFn};
 use api::units::*;
+use euclid::size2;
 use crate::{render_api::{ClearCache, AddFont, ResourceUpdate, MemoryReport}, util::WeakTable};
 use crate::image_tiling::{compute_tile_size, compute_tile_range};
 #[cfg(feature = "capture")]
@@ -19,10 +20,10 @@ use crate::capture::PlainExternalImage;
 use crate::capture::CaptureConfig;
 use crate::composite::{NativeSurfaceId, NativeSurfaceOperation, NativeTileId, NativeSurfaceOperationDetails};
 use crate::device::TextureFilter;
-use crate::glyph_cache::GlyphCache;
+use crate::glyph_cache::{GlyphCache, CachedGlyphInfo};
 use crate::glyph_cache::GlyphCacheEntry;
-use crate::glyph_rasterizer::{GLYPH_FLASHING, FontInstance, GlyphFormat, GlyphKey, GlyphRasterizer};
-use crate::glyph_rasterizer::{SharedFontResources, BaseFontInstance};
+use glyph_rasterizer::{GLYPH_FLASHING, FontInstance, GlyphFormat, GlyphKey, GlyphRasterizer, GlyphRasterJob};
+use glyph_rasterizer::{SharedFontResources, BaseFontInstance};
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::UvRectKind;
 use crate::internal_types::{
@@ -539,7 +540,7 @@ impl ResourceCache {
             ImageFormat::RGBA8,
         );
         let workers = Arc::new(ThreadPoolBuilder::new().build().unwrap());
-        let glyph_rasterizer = GlyphRasterizer::new(workers, true).unwrap();
+        let glyph_rasterizer = GlyphRasterizer::new(workers, true);
         let cached_glyphs = GlyphCache::new();
         let fonts = SharedFontResources::new(IdNamespace(0));
         let picture_textures = PictureTextures::new(
@@ -1105,12 +1106,32 @@ impl ResourceCache {
         debug_assert_eq!(self.state, State::AddResources);
 
         self.glyph_rasterizer.prepare_font(&mut font);
+        let glyph_key_cache = self.cached_glyphs.insert_glyph_key_cache_for_font(&font);
+        let texture_cache = &mut self.texture_cache;
         self.glyph_rasterizer.request_glyphs(
-            &mut self.cached_glyphs,
             font,
             glyph_keys,
-            &mut self.texture_cache,
-            gpu_cache,
+            |key| {
+                if let Some(entry) = glyph_key_cache.try_get(key) {
+                    match entry {
+                        GlyphCacheEntry::Cached(ref glyph) => {
+                            // Skip the glyph if it is already has a valid texture cache handle.
+                            if !texture_cache.request(&glyph.texture_cache_handle, gpu_cache) {
+                                return false;
+                            }
+                            // This case gets hit when we already rasterized the glyph, but the
+                            // glyph has been evicted from the texture cache. Just force it to
+                            // pending so it gets rematerialized.
+                        }
+                        // Otherwise, skip the entry if it is blank or pending.
+                        GlyphCacheEntry::Blank | GlyphCacheEntry::Pending => return false,
+                    }
+                };
+
+                glyph_key_cache.add_glyph(*key, GlyphCacheEntry::Pending);
+
+                true
+            }
         );
     }
 
@@ -1282,10 +1303,48 @@ impl ResourceCache {
         debug_assert_eq!(self.state, State::AddResources);
         self.state = State::QueryResources;
 
+        let cached_glyphs = &mut self.cached_glyphs;
+        let texture_cache = &mut self.texture_cache;
+
         self.glyph_rasterizer.resolve_glyphs(
-            &mut self.cached_glyphs,
-            &mut self.texture_cache,
-            gpu_cache,
+            |job, can_use_r8_format| {
+                let GlyphRasterJob { font, key, result } = job;
+                let glyph_key_cache = cached_glyphs.get_glyph_key_cache_for_font_mut(&*font);
+                let glyph_info = match result {
+                    Err(_) => GlyphCacheEntry::Blank,
+                    Ok(ref glyph) if glyph.width == 0 || glyph.height == 0 => {
+                        GlyphCacheEntry::Blank
+                    }
+                    Ok(glyph) => {
+                        let mut texture_cache_handle = TextureCacheHandle::invalid();
+                        texture_cache.request(&texture_cache_handle, gpu_cache);
+                        texture_cache.update(
+                            &mut texture_cache_handle,
+                            ImageDescriptor {
+                                size: size2(glyph.width, glyph.height),
+                                stride: None,
+                                format: glyph.format.image_format(can_use_r8_format),
+                                flags: ImageDescriptorFlags::empty(),
+                                offset: 0,
+                            },
+                            TextureFilter::Linear,
+                            Some(CachedImageData::Raw(Arc::new(glyph.bytes))),
+                            [glyph.left, -glyph.top, glyph.scale, 0.0],
+                            DirtyRect::All,
+                            gpu_cache,
+                            Some(glyph_key_cache.eviction_notice()),
+                            UvRectKind::Rect,
+                            Eviction::Auto,
+                            TargetShader::Text,
+                        );
+                        GlyphCacheEntry::Cached(CachedGlyphInfo {
+                            texture_cache_handle,
+                            format: glyph.format,
+                        })
+                    }
+                };
+                glyph_key_cache.insert(key, glyph_info);
+            },
             profile,
         );
 

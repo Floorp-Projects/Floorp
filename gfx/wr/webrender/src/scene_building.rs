@@ -53,7 +53,7 @@ use crate::clip::{PolygonDataHandle, ClipTreeBuilder};
 use crate::segment::EdgeAaSegmentMask;
 use crate::spatial_tree::{SceneSpatialTree, SpatialNodeContainer, SpatialNodeIndex, get_external_scroll_offset};
 use crate::frame_builder::{FrameBuilderConfig};
-use crate::glyph_rasterizer::{FontInstance, SharedFontResources};
+use glyph_rasterizer::{FontInstance, SharedFontResources};
 use crate::hit_test::HitTestingScene;
 use crate::intern::Interner;
 use crate::internal_types::{FastHashMap, LayoutPrimitiveInfo, Filter, PlaneSplitterIndex, PipelineInstanceId};

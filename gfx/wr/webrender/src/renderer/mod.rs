@@ -63,12 +63,12 @@ use crate::device::query::{GpuSampler, GpuTimer};
 use crate::device::FBOId;
 use crate::debug_item::DebugItem;
 use crate::frame_builder::Frame;
-use crate::glyph_rasterizer::GlyphFormat;
+use glyph_rasterizer::GlyphFormat;
 use crate::gpu_cache::{GpuCacheUpdate, GpuCacheUpdateList};
 use crate::gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
 use crate::gpu_types::{ScalingInstance, SvgFilterInstance, CopyInstance};
 use crate::gpu_types::{BlurInstance, ClearInstance, CompositeInstance, ZBufferId, CompositorTransform};
-use crate::internal_types::{TextureSource, ResourceCacheError, TextureCacheCategory, FrameId};
+use crate::internal_types::{TextureSource, TextureCacheCategory, FrameId};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::internal_types::DebugOutput;
 use crate::internal_types::{CacheTextureId, FastHashMap, FastHashSet, RenderedDocument, ResultMsg};
@@ -875,7 +875,6 @@ pub struct Renderer {
 pub enum RendererError {
     Shader(ShaderError),
     Thread(std::io::Error),
-    Resource(ResourceCacheError),
     MaxTextureSize,
     SoftwareRasterizer,
     OutOfMemory,
@@ -890,12 +889,6 @@ impl From<ShaderError> for RendererError {
 impl From<std::io::Error> for RendererError {
     fn from(err: std::io::Error) -> Self {
         RendererError::Thread(err)
-    }
-}
-
-impl From<ResourceCacheError> for RendererError {
-    fn from(err: ResourceCacheError) -> Self {
-        RendererError::Resource(err)
     }
 }
 

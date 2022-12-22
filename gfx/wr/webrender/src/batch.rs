@@ -8,7 +8,7 @@ use api::units::*;
 use crate::clip::{ClipNodeFlags, ClipNodeRange, ClipItemKind, ClipStore};
 use crate::command_buffer::PrimitiveCommand;
 use crate::spatial_tree::{SpatialTree, SpatialNodeIndex, CoordinateSystemId};
-use crate::glyph_rasterizer::{GlyphFormat, SubpixelDirection};
+use glyph_rasterizer::{GlyphFormat, SubpixelDirection};
 use crate::gpu_cache::{GpuBlockData, GpuCache, GpuCacheAddress};
 use crate::gpu_types::{BrushFlags, BrushInstance, PrimitiveHeaders, ZBufferId, ZBufferIdGenerator};
 use crate::gpu_types::{SplitCompositeInstance};

@@ -724,9 +724,6 @@ pub enum ResultMsg {
     ForceRedraw,
 }
 
-#[derive(Clone, Debug)]
-pub struct ResourceCacheError;
-
 /// Primitive metadata we pass around in a bunch of places
 #[derive(Copy, Clone, Debug)]
 pub struct LayoutPrimitiveInfo {
