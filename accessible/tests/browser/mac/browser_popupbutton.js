@@ -143,6 +143,7 @@ addAccessibleTask(
     events = Promise.all([
       waitForMacEvent("AXMenuClosed"),
       waitForMacEvent("AXFocusedUIElementChanged"),
+      waitForMacEvent("AXSelectedChildrenChanged"),
     ]);
     menuItem.performAction("AXPress");
     let [, newFocus] = await events;
@@ -150,6 +151,11 @@ addAccessibleTask(
       newFocus.getAttributeValue("AXRole"),
       "AXPopUpButton",
       "Newly focused element is AXPopupButton"
+    );
+    is(
+      newFocus.getAttributeValue("AXDOMIdentifier"),
+      "select",
+      "Should return focus to select"
     );
     is(
       newFocus.getAttributeValue("AXValue"),
