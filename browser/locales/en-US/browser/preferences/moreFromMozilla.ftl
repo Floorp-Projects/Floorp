@@ -16,13 +16,6 @@ more-from-moz-firefox-mobile-description = The mobile browser that puts your pri
 more-from-moz-mozilla-vpn-title = { -mozilla-vpn-brand-name }
 more-from-moz-mozilla-vpn-description = Discover an added layer of anonymous browsing and protection.
 
-# This string is specific to the product Mozilla Rally which is US only.
-more-from-moz-mozilla-rally-title = { -rally-brand-name }
-# This string is specific to the product Mozilla Rally which is US only.
-more-from-moz-mozilla-rally-description = Put your data to work for a better internet for everyone.
-# This string is specific to the product Mozilla Rally which is US only.
-more-from-moz-button-mozilla-rally-2 = Join { -rally-short-name }
-
 more-from-moz-qr-code-box-firefox-mobile-title = Download using your mobile device. Point your camera at the QR code. When a link appears, tap it.
 more-from-moz-qr-code-box-firefox-mobile-button = Send an email to your phone instead
 more-from-moz-qr-code-firefox-mobile-img =
@@ -31,3 +24,9 @@ more-from-moz-qr-code-firefox-mobile-img =
 more-from-moz-button-mozilla-vpn-2 = Get VPN
 
 more-from-moz-learn-more-link = Learn more
+
+## These strings are for the Firefox Relay card in about:preferences moreFromMozilla page
+
+more-from-moz-firefox-relay-title = { -relay-brand-name }
+more-from-moz-firefox-relay-description = Protect your inbox and your identity with free email masking.
+more-from-moz-firefox-relay-button = Get { -relay-brand-short-name }
