@@ -4,13 +4,14 @@
 
 #include "irregexp/imported/regexp-parser.h"
 
-#include "irregexp/imported/property-sequences.h"
 #include "irregexp/imported/regexp-ast.h"
 #include "irregexp/imported/regexp-macro-assembler.h"
 #include "irregexp/imported/regexp.h"
 
 #ifdef V8_INTL_SUPPORT
 #include "unicode/uniset.h"
+#include "unicode/unistr.h"
+#include "unicode/usetiter.h"
 #endif  // V8_INTL_SUPPORT
 
 namespace v8 {
@@ -25,6 +26,264 @@ enum class InClassEscapeState {
   kNotInClass,
 };
 
+// The production used to derive ClassSetOperand.
+enum class ClassSetOperandType {
+  kClassSetCharacter,
+  kClassStringDisjunction,
+  kNestedClass,
+  kCharacterClassEscape,  // \ CharacterClassEscape is a special nested class,
+                          // as we can fold it directly into another range.
+  kClassSetRange
+};
+
+class RegExpTextBuilder {
+ public:
+  using SmallRegExpTreeVector =
+      base::SmallVector<RegExpTree*, 8, ZoneAllocator<RegExpTree*>>;
+
+  RegExpTextBuilder(Zone* zone, SmallRegExpTreeVector* terms_storage,
+                    RegExpFlags flags)
+      : zone_(zone),
+        flags_(flags),
+        terms_(terms_storage),
+        text_(ZoneAllocator<RegExpTree*>{zone}) {}
+  void AddCharacter(base::uc16 character);
+  void AddUnicodeCharacter(base::uc32 character);
+  void AddEscapedUnicodeCharacter(base::uc32 character);
+  void AddAtom(RegExpTree* atom);
+  void AddTerm(RegExpTree* term);
+  void AddClassRanges(RegExpClassRanges* cc);
+  void FlushPendingSurrogate();
+  void FlushText();
+  RegExpTree* PopLastAtom();
+  RegExpTree* ToRegExp();
+
+ private:
+  static const base::uc16 kNoPendingSurrogate = 0;
+
+  void AddLeadSurrogate(base::uc16 lead_surrogate);
+  void AddTrailSurrogate(base::uc16 trail_surrogate);
+  void FlushCharacters();
+  bool NeedsDesugaringForUnicode(RegExpClassRanges* cc);
+  bool NeedsDesugaringForIgnoreCase(base::uc32 c);
+  void AddClassRangesForDesugaring(base::uc32 c);
+  bool ignore_case() const { return IsIgnoreCase(flags_); }
+  bool IsUnicodeMode() const {
+    // Either /v or /u enable UnicodeMode
+    // TODO(v8:11935): Change permalink once proposal is in stage 4.
+    // https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2418#sec-parsepattern
+    return IsUnicode(flags_) || IsUnicodeSets(flags_);
+  }
+  Zone* zone() const { return zone_; }
+
+  Zone* const zone_;
+  const RegExpFlags flags_;
+  ZoneList<base::uc16>* characters_ = nullptr;
+  base::uc16 pending_surrogate_ = kNoPendingSurrogate;
+  SmallRegExpTreeVector* terms_;
+  SmallRegExpTreeVector text_;
+};
+
+void RegExpTextBuilder::AddLeadSurrogate(base::uc16 lead_surrogate) {
+  DCHECK(unibrow::Utf16::IsLeadSurrogate(lead_surrogate));
+  FlushPendingSurrogate();
+  // Hold onto the lead surrogate, waiting for a trail surrogate to follow.
+  pending_surrogate_ = lead_surrogate;
+}
+
+void RegExpTextBuilder::AddTrailSurrogate(base::uc16 trail_surrogate) {
+  DCHECK(unibrow::Utf16::IsTrailSurrogate(trail_surrogate));
+  if (pending_surrogate_ != kNoPendingSurrogate) {
+    base::uc16 lead_surrogate = pending_surrogate_;
+    pending_surrogate_ = kNoPendingSurrogate;
+    DCHECK(unibrow::Utf16::IsLeadSurrogate(lead_surrogate));
+    base::uc32 combined =
+        unibrow::Utf16::CombineSurrogatePair(lead_surrogate, trail_surrogate);
+    if (NeedsDesugaringForIgnoreCase(combined)) {
+      AddClassRangesForDesugaring(combined);
+    } else {
+      ZoneList<base::uc16> surrogate_pair(2, zone());
+      surrogate_pair.Add(lead_surrogate, zone());
+      surrogate_pair.Add(trail_surrogate, zone());
+      RegExpAtom* atom =
+          zone()->New<RegExpAtom>(surrogate_pair.ToConstVector());
+      AddAtom(atom);
+    }
+  } else {
+    pending_surrogate_ = trail_surrogate;
+    FlushPendingSurrogate();
+  }
+}
+
+void RegExpTextBuilder::FlushPendingSurrogate() {
+  if (pending_surrogate_ != kNoPendingSurrogate) {
+    DCHECK(IsUnicodeMode());
+    base::uc32 c = pending_surrogate_;
+    pending_surrogate_ = kNoPendingSurrogate;
+    AddClassRangesForDesugaring(c);
+  }
+}
+
+void RegExpTextBuilder::FlushCharacters() {
+  FlushPendingSurrogate();
+  if (characters_ != nullptr) {
+    RegExpTree* atom = zone()->New<RegExpAtom>(characters_->ToConstVector());
+    characters_ = nullptr;
+    text_.emplace_back(atom);
+  }
+}
+
+void RegExpTextBuilder::FlushText() {
+  FlushCharacters();
+  size_t num_text = text_.size();
+  if (num_text == 0) {
+    return;
+  } else if (num_text == 1) {
+    terms_->emplace_back(text_.back());
+  } else {
+    RegExpText* text = zone()->New<RegExpText>(zone());
+    for (size_t i = 0; i < num_text; i++) {
+      text_[i]->AppendToText(text, zone());
+    }
+    terms_->emplace_back(text);
+  }
+  text_.clear();
+}
+
+void RegExpTextBuilder::AddCharacter(base::uc16 c) {
+  FlushPendingSurrogate();
+  if (NeedsDesugaringForIgnoreCase(c)) {
+    AddClassRangesForDesugaring(c);
+  } else {
+    if (characters_ == nullptr) {
+      characters_ = zone()->New<ZoneList<base::uc16>>(4, zone());
+    }
+    characters_->Add(c, zone());
+  }
+}
+
+void RegExpTextBuilder::AddUnicodeCharacter(base::uc32 c) {
+  if (c > static_cast<base::uc32>(unibrow::Utf16::kMaxNonSurrogateCharCode)) {
+    DCHECK(IsUnicodeMode());
+    AddLeadSurrogate(unibrow::Utf16::LeadSurrogate(c));
+    AddTrailSurrogate(unibrow::Utf16::TrailSurrogate(c));
+  } else if (IsUnicodeMode() && unibrow::Utf16::IsLeadSurrogate(c)) {
+    AddLeadSurrogate(c);
+  } else if (IsUnicodeMode() && unibrow::Utf16::IsTrailSurrogate(c)) {
+    AddTrailSurrogate(c);
+  } else {
+    AddCharacter(static_cast<base::uc16>(c));
+  }
+}
+
+void RegExpTextBuilder::AddEscapedUnicodeCharacter(base::uc32 character) {
+  // A lead or trail surrogate parsed via escape sequence will not
+  // pair up with any preceding lead or following trail surrogate.
+  FlushPendingSurrogate();
+  AddUnicodeCharacter(character);
+  FlushPendingSurrogate();
+}
+
+void RegExpTextBuilder::AddClassRanges(RegExpClassRanges* cr) {
+  if (NeedsDesugaringForUnicode(cr)) {
+    // With /u or /v, character class needs to be desugared, so it
+    // must be a standalone term instead of being part of a RegExpText.
+    AddTerm(cr);
+  } else {
+    AddAtom(cr);
+  }
+}
+
+void RegExpTextBuilder::AddClassRangesForDesugaring(base::uc32 c) {
+  AddTerm(zone()->New<RegExpClassRanges>(
+      zone(), CharacterRange::List(zone(), CharacterRange::Singleton(c))));
+}
+
+void RegExpTextBuilder::AddAtom(RegExpTree* atom) {
+  DCHECK(atom->IsTextElement());
+  FlushCharacters();
+  text_.emplace_back(atom);
+}
+
+void RegExpTextBuilder::AddTerm(RegExpTree* term) {
+  DCHECK(term->IsTextElement());
+  FlushText();
+  terms_->emplace_back(term);
+}
+
+bool RegExpTextBuilder::NeedsDesugaringForUnicode(RegExpClassRanges* cc) {
+  if (!IsUnicodeMode()) return false;
+  // TODO(yangguo): we could be smarter than this. Case-insensitivity does not
+  // necessarily mean that we need to desugar. It's probably nicer to have a
+  // separate pass to figure out unicode desugarings.
+  if (ignore_case()) return true;
+  ZoneList<CharacterRange>* ranges = cc->ranges(zone());
+  CharacterRange::Canonicalize(ranges);
+
+  if (cc->is_negated()) {
+    ZoneList<CharacterRange>* negated_ranges =
+        zone()->New<ZoneList<CharacterRange>>(ranges->length(), zone());
+    CharacterRange::Negate(ranges, negated_ranges, zone());
+    ranges = negated_ranges;
+  }
+
+  for (int i = ranges->length() - 1; i >= 0; i--) {
+    base::uc32 from = ranges->at(i).from();
+    base::uc32 to = ranges->at(i).to();
+    // Check for non-BMP characters.
+    if (to >= kNonBmpStart) return true;
+    // Check for lone surrogates.
+    if (from <= kTrailSurrogateEnd && to >= kLeadSurrogateStart) return true;
+  }
+  return false;
+}
+
+bool RegExpTextBuilder::NeedsDesugaringForIgnoreCase(base::uc32 c) {
+#ifdef V8_INTL_SUPPORT
+  if (IsUnicodeMode() && ignore_case()) {
+    icu::UnicodeSet set(c, c);
+    set.closeOver(USET_CASE_INSENSITIVE);
+    set.removeAllStrings();
+    return set.size() > 1;
+  }
+  // In the case where ICU is not included, we act as if the unicode flag is
+  // not set, and do not desugar.
+#endif  // V8_INTL_SUPPORT
+  return false;
+}
+
+RegExpTree* RegExpTextBuilder::PopLastAtom() {
+  FlushPendingSurrogate();
+  RegExpTree* atom;
+  if (characters_ != nullptr) {
+    base::Vector<const base::uc16> char_vector = characters_->ToConstVector();
+    int num_chars = char_vector.length();
+    if (num_chars > 1) {
+      base::Vector<const base::uc16> prefix =
+          char_vector.SubVector(0, num_chars - 1);
+      text_.emplace_back(zone()->New<RegExpAtom>(prefix));
+      char_vector = char_vector.SubVector(num_chars - 1, num_chars);
+    }
+    characters_ = nullptr;
+    atom = zone()->New<RegExpAtom>(char_vector);
+    return atom;
+  } else if (text_.size() > 0) {
+    atom = text_.back();
+    text_.pop_back();
+    return atom;
+  }
+  return nullptr;
+}
+
+RegExpTree* RegExpTextBuilder::ToRegExp() {
+  FlushText();
+  size_t num_alternatives = terms_->size();
+  if (num_alternatives == 0) return zone()->New<RegExpEmpty>();
+  if (num_alternatives == 1) return terms_->back();
+  return zone()->New<RegExpAlternative>(zone()->New<ZoneList<RegExpTree*>>(
+      base::VectorOf(terms_->begin(), terms_->size()), zone()));
+}
+
 // Accumulates RegExp atoms and assertions into lists of terms and alternatives.
 class RegExpBuilder {
  public:
@@ -32,16 +291,15 @@ class RegExpBuilder {
       : zone_(zone),
         flags_(flags),
         terms_(ZoneAllocator<RegExpTree*>{zone}),
-        text_(ZoneAllocator<RegExpTree*>{zone}),
-        alternatives_(ZoneAllocator<RegExpTree*>{zone}) {}
+        alternatives_(ZoneAllocator<RegExpTree*>{zone}),
+        text_builder_(RegExpTextBuilder{zone, &terms_, flags}) {}
   void AddCharacter(base::uc16 character);
   void AddUnicodeCharacter(base::uc32 character);
   void AddEscapedUnicodeCharacter(base::uc32 character);
   // "Adds" an empty expression. Does nothing except consume a
   // following quantifier
   void AddEmpty();
-  void AddCharacterClass(RegExpCharacterClass* cc);
-  void AddCharacterClassForDesugaring(base::uc32 c);
+  void AddClassRanges(RegExpClassRanges* cc);
   void AddAtom(RegExpTree* tree);
   void AddTerm(RegExpTree* tree);
   void AddAssertion(RegExpTree* tree);
@@ -57,40 +315,25 @@ class RegExpBuilder {
   bool dotall() const { return IsDotAll(flags_); }
 
  private:
-  static const base::uc16 kNoPendingSurrogate = 0;
-  void AddLeadSurrogate(base::uc16 lead_surrogate);
-  void AddTrailSurrogate(base::uc16 trail_surrogate);
-  void FlushPendingSurrogate();
-  void FlushCharacters();
   void FlushTerms();
-  bool NeedsDesugaringForUnicode(RegExpCharacterClass* cc);
-  bool NeedsDesugaringForIgnoreCase(base::uc32 c);
+  bool IsUnicodeMode() const {
+    // Either /v or /u enable UnicodeMode
+    // TODO(v8:11935): Change permalink once proposal is in stage 4.
+    // https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2418#sec-parsepattern
+    return IsUnicode(flags_) || IsUnicodeSets(flags_);
+  }
   Zone* zone() const { return zone_; }
-  bool unicode() const { return IsUnicode(flags_); }
+  RegExpTextBuilder& text_builder() { return text_builder_; }
 
   Zone* const zone_;
   bool pending_empty_ = false;
   const RegExpFlags flags_;
-  ZoneList<base::uc16>* characters_ = nullptr;
-  base::uc16 pending_surrogate_ = kNoPendingSurrogate;
 
   using SmallRegExpTreeVector =
       base::SmallVector<RegExpTree*, 8, ZoneAllocator<RegExpTree*>>;
   SmallRegExpTreeVector terms_;
-  SmallRegExpTreeVector text_;
   SmallRegExpTreeVector alternatives_;
-#ifdef DEBUG
-  enum {
-    ADD_NONE,
-    ADD_CHAR,
-    ADD_TERM,
-    ADD_ASSERT,
-    ADD_ATOM
-  } last_added_ = ADD_NONE;
-#define LAST(x) last_added_ = x;
-#else
-#define LAST(x)
-#endif
+  RegExpTextBuilder text_builder_;
 };
 
 enum SubexpressionType {
@@ -199,20 +442,13 @@ class RegExpParserImpl final {
 
   bool ParsePropertyClassName(ZoneVector<char>* name_1,
                               ZoneVector<char>* name_2);
-  bool AddPropertyClassRange(ZoneList<CharacterRange>* add_to, bool negate,
+  bool AddPropertyClassRange(ZoneList<CharacterRange>* add_to_range,
+                             CharacterClassStrings* add_to_strings, bool negate,
                              const ZoneVector<char>& name_1,
                              const ZoneVector<char>& name_2);
 
-  RegExpTree* ParseCharacterClass(const RegExpBuilder* state);
-
-  base::uc32 ParseOctalLiteral();
-
-  // Tries to parse the input as a back reference.  If successful it
-  // stores the result in the output parameter and returns true.  If
-  // it fails it will push back the characters read so the same characters
-  // can be reparsed.
-  bool ParseBackReferenceIndex(int* index_out);
-
+  RegExpTree* ParseClassRanges(ZoneList<CharacterRange>* ranges,
+                               bool add_unicode_case_equivalents);
   // Parse inside a class. Either add escaped class to the range, or return
   // false and pass parsed single character through |char_out|.
   void ParseClassEscape(ZoneList<CharacterRange>* ranges, Zone* zone,
@@ -222,11 +458,41 @@ class RegExpParserImpl final {
   bool TryParseCharacterClassEscape(base::uc32 next,
                                     InClassEscapeState in_class_escape_state,
                                     ZoneList<CharacterRange>* ranges,
-                                    Zone* zone,
+                                    CharacterClassStrings* strings, Zone* zone,
                                     bool add_unicode_case_equivalents);
+  RegExpTree* ParseClassStringDisjunction(ZoneList<CharacterRange>* ranges,
+                                          CharacterClassStrings* strings);
+  RegExpTree* ParseClassSetOperand(const RegExpBuilder* builder,
+                                   ClassSetOperandType* type_out);
+  RegExpTree* ParseClassSetOperand(const RegExpBuilder* builder,
+                                   ClassSetOperandType* type_out,
+                                   ZoneList<CharacterRange>* ranges,
+                                   CharacterClassStrings* strings);
+  base::uc32 ParseClassSetCharacter();
   // Parses and returns a single escaped character.
   base::uc32 ParseCharacterEscape(InClassEscapeState in_class_escape_state,
                                   bool* is_escaped_unicode_character);
+
+  RegExpTree* ParseClassUnion(const RegExpBuilder* builder, bool is_negated,
+                              RegExpTree* first_operand,
+                              ClassSetOperandType first_operand_type,
+                              ZoneList<CharacterRange>* ranges,
+                              CharacterClassStrings* strings);
+  RegExpTree* ParseClassIntersection(const RegExpBuilder* builder,
+                                     bool is_negated, RegExpTree* first_operand,
+                                     ClassSetOperandType first_operand_type);
+  RegExpTree* ParseClassSubtraction(const RegExpBuilder* builder,
+                                    bool is_negated, RegExpTree* first_operand,
+                                    ClassSetOperandType first_operand_type);
+  RegExpTree* ParseCharacterClass(const RegExpBuilder* state);
+
+  base::uc32 ParseOctalLiteral();
+
+  // Tries to parse the input as a back reference.  If successful it
+  // stores the result in the output parameter and returns true.  If
+  // it fails it will push back the characters read so the same characters
+  // can be reparsed.
+  bool ParseBackReferenceIndex(int* index_out);
 
   RegExpTree* ReportError(RegExpError error);
   void Advance();
@@ -242,9 +508,20 @@ class RegExpParserImpl final {
   int captures_started() const { return captures_started_; }
   int position() const { return next_pos_ - 1; }
   bool failed() const { return failed_; }
-  bool unicode() const { return IsUnicode(top_level_flags_) || force_unicode_; }
+  RegExpFlags flags() const { return top_level_flags_; }
+  bool IsUnicodeMode() const {
+    // Either /v or /u enable UnicodeMode
+    // TODO(v8:11935): Change permalink once proposal is in stage 4.
+    // https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2418#sec-parsepattern
+    return IsUnicode(flags()) || IsUnicodeSets(flags()) || force_unicode_;
+  }
+  bool unicode_sets() const { return IsUnicodeSets(flags()); }
+  bool ignore_case() const { return IsIgnoreCase(flags()); }
 
   static bool IsSyntaxCharacterOrSlash(base::uc32 c);
+  static bool IsClassSetSyntaxCharacter(base::uc32 c);
+  static bool IsClassSetReservedPunctuator(base::uc32 c);
+  bool IsClassSetReservedDoublePunctuator(base::uc32 c);
 
   static const base::uc32 kEndMarker = (1 << 21);
 
@@ -384,8 +661,8 @@ inline base::uc32 RegExpParserImpl<base::uc16>::ReadNext() {
   base::uc16 c0 = InputAt(position);
   base::uc32 result = c0;
   position++;
-  // Read the whole surrogate pair in case of unicode flag, if possible.
-  if (unicode() && position < input_length() &&
+  // Read the whole surrogate pair in case of unicode mode, if possible.
+  if (IsUnicodeMode() && position < input_length() &&
       unibrow::Utf16::IsLeadSurrogate(c0)) {
     base::uc16 c1 = InputAt(position);
     if (unibrow::Utf16::IsTrailSurrogate(c1)) {
@@ -410,7 +687,7 @@ template <class CharT>
 void RegExpParserImpl<CharT>::Advance() {
   if (has_next()) {
     if (GetCurrentStackPosition() < stack_limit_) {
-      if (FLAG_correctness_fuzzer_suppressions) {
+      if (v8_flags.correctness_fuzzer_suppressions) {
         FATAL("Aborting on stack overflow");
       }
       ReportError(RegExpError::kStackOverflow);
@@ -428,7 +705,7 @@ void RegExpParserImpl<CharT>::Advance() {
 
 template <class CharT>
 void RegExpParserImpl<CharT>::RewindByOneCodepoint() {
-  if (current() == kEndMarker) return;
+  if (!has_more()) return;
   // Rewinds by one code point, i.e.: two code units if `current` is outside
   // the basic multilingual plane (= composed of a lead and trail surrogate),
   // or one code unit otherwise.
@@ -450,6 +727,7 @@ void RegExpParserImpl<CharT>::Advance(int dist) {
   Advance();
 }
 
+// static
 template <class CharT>
 bool RegExpParserImpl<CharT>::IsSyntaxCharacterOrSlash(base::uc32 c) {
   switch (c) {
@@ -475,6 +753,86 @@ bool RegExpParserImpl<CharT>::IsSyntaxCharacterOrSlash(base::uc32 c) {
   return false;
 }
 
+// static
+template <class CharT>
+bool RegExpParserImpl<CharT>::IsClassSetSyntaxCharacter(base::uc32 c) {
+  switch (c) {
+    case '(':
+    case ')':
+    case '[':
+    case ']':
+    case '{':
+    case '}':
+    case '/':
+    case '-':
+    case '\\':
+    case '|':
+      return true;
+    default:
+      break;
+  }
+  return false;
+}
+
+// static
+template <class CharT>
+bool RegExpParserImpl<CharT>::IsClassSetReservedPunctuator(base::uc32 c) {
+  switch (c) {
+    case '&':
+    case '-':
+    case '!':
+    case '#':
+    case '%':
+    case ',':
+    case ':':
+    case ';':
+    case '<':
+    case '=':
+    case '>':
+    case '@':
+    case '`':
+    case '~':
+      return true;
+    default:
+      break;
+  }
+  return false;
+}
+
+template <class CharT>
+bool RegExpParserImpl<CharT>::IsClassSetReservedDoublePunctuator(base::uc32 c) {
+#define DOUBLE_PUNCTUATOR_CASE(Char) \
+  case Char:                         \
+    return Next() == Char
+
+  switch (c) {
+    DOUBLE_PUNCTUATOR_CASE('&');
+    DOUBLE_PUNCTUATOR_CASE('!');
+    DOUBLE_PUNCTUATOR_CASE('#');
+    DOUBLE_PUNCTUATOR_CASE('$');
+    DOUBLE_PUNCTUATOR_CASE('%');
+    DOUBLE_PUNCTUATOR_CASE('*');
+    DOUBLE_PUNCTUATOR_CASE('+');
+    DOUBLE_PUNCTUATOR_CASE(',');
+    DOUBLE_PUNCTUATOR_CASE('.');
+    DOUBLE_PUNCTUATOR_CASE(':');
+    DOUBLE_PUNCTUATOR_CASE(';');
+    DOUBLE_PUNCTUATOR_CASE('<');
+    DOUBLE_PUNCTUATOR_CASE('=');
+    DOUBLE_PUNCTUATOR_CASE('>');
+    DOUBLE_PUNCTUATOR_CASE('?');
+    DOUBLE_PUNCTUATOR_CASE('@');
+    DOUBLE_PUNCTUATOR_CASE('^');
+    DOUBLE_PUNCTUATOR_CASE('`');
+    DOUBLE_PUNCTUATOR_CASE('~');
+    default:
+      break;
+  }
+#undef DOUBLE_PUNCTUATOR_CASE
+
+  return false;
+}
+
 template <class CharT>
 RegExpTree* RegExpParserImpl<CharT>::ReportError(RegExpError error) {
   if (failed_) return nullptr;  // Do not overwrite any existing error.
@@ -484,6 +842,7 @@ RegExpTree* RegExpParserImpl<CharT>::ReportError(RegExpError error) {
   // Zip to the end to make sure no more input is read.
   current_ = kEndMarker;
   next_pos_ = input_length();
+  has_more_ = false;
   return nullptr;
 }
 
@@ -520,7 +879,7 @@ template <class CharT>
 RegExpTree* RegExpParserImpl<CharT>::ParseDisjunction() {
   // Used to store current state while parsing subexpressions.
   RegExpParserState initial_state(nullptr, INITIAL, RegExpLookaround::LOOKAHEAD,
-                                  0, nullptr, top_level_flags_, zone());
+                                  0, nullptr, flags(), zone());
   RegExpParserState* state = &initial_state;
   // Cache the builder in a local variable for quick access.
   RegExpBuilder* builder = initial_state.builder();
@@ -621,9 +980,9 @@ RegExpTree* RegExpParserImpl<CharT>::ParseDisjunction() {
               StandardCharacterSet::kNotLineTerminator, ranges, false, zone());
         }
 
-        RegExpCharacterClass* cc =
-            zone()->template New<RegExpCharacterClass>(zone(), ranges);
-        builder->AddCharacterClass(cc);
+        RegExpClassRanges* cc =
+            zone()->template New<RegExpClassRanges>(zone(), ranges);
+        builder->AddClassRanges(cc);
         break;
       }
       case '(': {
@@ -633,7 +992,12 @@ RegExpTree* RegExpParserImpl<CharT>::ParseDisjunction() {
       }
       case '[': {
         RegExpTree* cc = ParseCharacterClass(builder CHECK_FAILED);
-        builder->AddCharacterClass(cc->AsCharacterClass());
+        if (cc->IsClassRanges()) {
+          builder->AddClassRanges(cc->AsClassRanges());
+        } else {
+          DCHECK(cc->IsClassSetExpression());
+          builder->AddTerm(cc);
+        }
         break;
       }
       // Atom ::
@@ -683,9 +1047,9 @@ RegExpTree* RegExpParserImpl<CharT>::ParseDisjunction() {
               }
               break;
             }
-            // With /u, no identity escapes except for syntax characters
+            // With /u and /v, no identity escapes except for syntax characters
             // are allowed. Otherwise, all identity escapes are allowed.
-            if (unicode()) {
+            if (IsUnicodeMode()) {
               return ReportError(RegExpError::kInvalidEscape);
             }
             base::uc32 first_digit = Next();
@@ -698,8 +1062,8 @@ RegExpTree* RegExpParserImpl<CharT>::ParseDisjunction() {
           }
           case '0': {
             Advance();
-            if (unicode() && Next() >= '0' && Next() <= '9') {
-              // With /u, decimal escape with leading 0 are not parsed as octal.
+            if (IsUnicodeMode() && Next() >= '0' && Next() <= '9') {
+              // Decimal escape with leading 0 are not parsed as octal.
               return ReportError(RegExpError::kInvalidDecimalEscape);
             }
             base::uc32 octal = ParseOctalLiteral();
@@ -723,24 +1087,54 @@ RegExpTree* RegExpParserImpl<CharT>::ParseDisjunction() {
           case 's':
           case 'S':
           case 'w':
-          case 'W':
+          case 'W': {
+            base::uc32 next = Next();
+            ZoneList<CharacterRange>* ranges =
+                zone()->template New<ZoneList<CharacterRange>>(2, zone());
+            bool add_unicode_case_equivalents =
+                IsUnicodeMode() && ignore_case();
+            bool parsed_character_class_escape = TryParseCharacterClassEscape(
+                next, InClassEscapeState::kNotInClass, ranges, nullptr, zone(),
+                add_unicode_case_equivalents CHECK_FAILED);
+
+            if (parsed_character_class_escape) {
+              RegExpClassRanges* cc =
+                  zone()->template New<RegExpClassRanges>(zone(), ranges);
+              builder->AddClassRanges(cc);
+            } else {
+              CHECK(!IsUnicodeMode());
+              Advance(2);
+              builder->AddCharacter(next);  // IdentityEscape.
+            }
+            break;
+          }
           case 'p':
           case 'P': {
             base::uc32 next = Next();
             ZoneList<CharacterRange>* ranges =
                 zone()->template New<ZoneList<CharacterRange>>(2, zone());
-            bool add_unicode_case_equivalents =
-                unicode() && builder->ignore_case();
+            CharacterClassStrings* strings = nullptr;
+            if (unicode_sets()) {
+              strings = zone()->template New<CharacterClassStrings>(zone());
+            }
+            bool add_unicode_case_equivalents = ignore_case();
             bool parsed_character_class_escape = TryParseCharacterClassEscape(
-                next, InClassEscapeState::kNotInClass, ranges, zone(),
+                next, InClassEscapeState::kNotInClass, ranges, strings, zone(),
                 add_unicode_case_equivalents CHECK_FAILED);
 
             if (parsed_character_class_escape) {
-              RegExpCharacterClass* cc =
-                  zone()->template New<RegExpCharacterClass>(zone(), ranges);
-              builder->AddCharacterClass(cc);
+              if (unicode_sets()) {
+                RegExpClassSetOperand* op =
+                    zone()->template New<RegExpClassSetOperand>(ranges,
+                                                                strings);
+                builder->AddTerm(op);
+              } else {
+                RegExpClassRanges* cc =
+                    zone()->template New<RegExpClassRanges>(zone(), ranges);
+                builder->AddClassRanges(cc);
+              }
             } else {
-              CHECK(!unicode());
+              CHECK(!IsUnicodeMode());
               Advance(2);
               builder->AddCharacter(next);  // IdentityEscape.
             }
@@ -756,7 +1150,7 @@ RegExpTree* RegExpParserImpl<CharT>::ParseDisjunction() {
             // in all other cases.
             const bool has_named_captures =
                 HasNamedCaptures(InClassEscapeState::kNotInClass CHECK_FAILED);
-            if (unicode() || has_named_captures) {
+            if (IsUnicodeMode() || has_named_captures) {
               Advance(2);
               ParseNamedBackReference(builder, state CHECK_FAILED);
               break;
@@ -787,7 +1181,7 @@ RegExpTree* RegExpParserImpl<CharT>::ParseDisjunction() {
       }
       case '}':
       case ']':
-        if (unicode()) {
+        if (IsUnicodeMode()) {
           return ReportError(RegExpError::kLoneQuantifierBrackets);
         }
         V8_FALLTHROUGH;
@@ -826,8 +1220,8 @@ RegExpTree* RegExpParserImpl<CharT>::ParseDisjunction() {
             return ReportError(RegExpError::kRangeOutOfOrder);
           }
           break;
-        } else if (unicode()) {
-          // With /u, incomplete quantifiers are not allowed.
+        } else if (IsUnicodeMode()) {
+          // Incomplete quantifiers are not allowed.
           return ReportError(RegExpError::kIncompleteQuantifier);
         }
         continue;
@@ -838,8 +1232,8 @@ RegExpTree* RegExpParserImpl<CharT>::ParseDisjunction() {
     if (current() == '?') {
       quantifier_type = RegExpQuantifier::NON_GREEDY;
       Advance();
-    } else if (FLAG_regexp_possessive_quantifier && current() == '+') {
-      // FLAG_regexp_possessive_quantifier is a debug-only flag.
+    } else if (v8_flags.regexp_possessive_quantifier && current() == '+') {
+      // v8_flags.regexp_possessive_quantifier is a debug-only flag.
       quantifier_type = RegExpQuantifier::POSSESSIVE;
       Advance();
     }
@@ -940,7 +1334,8 @@ bool IsSpecialClassEscape(base::uc32 c) {
 // characters.
 //
 // Important: The scanner has to be in a consistent state when calling
-// ScanForCaptures, e.g. not in the middle of an escape sequence '\['.
+// ScanForCaptures, e.g. not in the middle of an escape sequence '\[' or while
+// parsing a nested class.
 template <class CharT>
 void RegExpParserImpl<CharT>::ScanForCaptures(
     InClassEscapeState in_class_escape_state) {
@@ -950,6 +1345,9 @@ void RegExpParserImpl<CharT>::ScanForCaptures(
   int capture_count = captures_started();
   // When we start inside a character class, skip everything inside the class.
   if (in_class_escape_state == InClassEscapeState::kInClass) {
+    // \k is always invalid within a class in unicode mode, thus we should never
+    // call ScanForCaptures within a class.
+    DCHECK(!IsUnicodeMode());
     int c;
     while ((c = current()) != kEndMarker) {
       Advance();
@@ -969,13 +1367,19 @@ void RegExpParserImpl<CharT>::ScanForCaptures(
         Advance();
         break;
       case '[': {
+        int class_nest_level = 0;
         int c;
         while ((c = current()) != kEndMarker) {
           Advance();
           if (c == '\\') {
             Advance();
-          } else {
-            if (c == ']') break;
+          } else if (c == '[') {
+            // With /v, '[' inside a class is treated as a nested class.
+            // Without /v, '[' is a normal character.
+            if (unicode_sets()) class_nest_level++;
+          } else if (c == ']') {
+            if (class_nest_level == 0) break;
+            class_nest_level--;
           }
         }
         break;
@@ -1032,8 +1436,9 @@ bool RegExpParserImpl<CharT>::ParseBackReferenceIndex(int* index_out) {
     }
   }
   if (value > captures_started()) {
-    if (!is_scanned_for_captures_)
+    if (!is_scanned_for_captures_) {
       ScanForCaptures(InClassEscapeState::kNotInClass);
+    }
     if (value > capture_count_) {
       Reset(start);
       return false;
@@ -1337,7 +1742,7 @@ bool RegExpParserImpl<CharT>::ParseIntervalQuantifier(int* min_out,
 
 template <class CharT>
 base::uc32 RegExpParserImpl<CharT>::ParseOctalLiteral() {
-  DCHECK(('0' <= current() && current() <= '7') || current() == kEndMarker);
+  DCHECK(('0' <= current() && current() <= '7') || !has_more());
   // For compatibility with some other browsers (not all), we parse
   // up to three octal digits with a value below 256.
   // ES#prod-annexB-LegacyOctalEscapeSequence
@@ -1378,7 +1783,7 @@ bool RegExpParserImpl<CharT>::ParseUnicodeEscape(base::uc32* value) {
   // Accept both \uxxxx and \u{xxxxxx} (if harmony unicode escapes are
   // allowed). In the latter case, the number of hex digits between { } is
   // arbitrary. \ and u have already been read.
-  if (current() == '{' && unicode()) {
+  if (current() == '{' && IsUnicodeMode()) {
     int start = position();
     Advance();
     if (ParseUnlimitedLengthHexNumber(0x10FFFF, value)) {
@@ -1392,7 +1797,7 @@ bool RegExpParserImpl<CharT>::ParseUnicodeEscape(base::uc32* value) {
   }
   // \u but no {, or \u{...} escapes not allowed.
   bool result = ParseHexEscape(4, value);
-  if (result && unicode() && unibrow::Utf16::IsLeadSurrogate(*value) &&
+  if (result && IsUnicodeMode() && unibrow::Utf16::IsLeadSurrogate(*value) &&
       current() == '\\') {
     // Attempt to read trail surrogate.
     int start = position();
@@ -1445,9 +1850,44 @@ bool IsExactPropertyValueAlias(const char* property_value_name,
   return false;
 }
 
+void ExtractStringsFromUnicodeSet(const icu::UnicodeSet& set,
+                                  CharacterClassStrings* strings,
+                                  RegExpFlags flags, Zone* zone) {
+  DCHECK(set.hasStrings());
+  DCHECK(IsUnicodeSets(flags));
+  DCHECK_NOT_NULL(strings);
+
+  RegExpTextBuilder::SmallRegExpTreeVector string_storage(
+      ZoneAllocator<RegExpTree*>{zone});
+  RegExpTextBuilder string_builder(zone, &string_storage, flags);
+  const bool needs_case_folding = IsIgnoreCase(flags);
+  icu::UnicodeSetIterator iter(set);
+  iter.skipToStrings();
+  while (iter.next()) {
+    const icu::UnicodeString& s = iter.getString();
+    const char16_t* p = s.getBuffer();
+    int32_t length = s.length();
+    ZoneList<base::uc32>* string =
+        zone->template New<ZoneList<base::uc32>>(length, zone);
+    for (int32_t i = 0; i < length;) {
+      UChar32 c;
+      U16_NEXT(p, i, length, c);
+      string_builder.AddUnicodeCharacter(c);
+      if (needs_case_folding) {
+        c = u_foldCase(c, U_FOLD_CASE_DEFAULT);
+      }
+      string->Add(c, zone);
+    }
+    strings->emplace(string->ToVector(), string_builder.ToRegExp());
+    string_storage.clear();
+  }
+}
+
 bool LookupPropertyValueName(UProperty property,
                              const char* property_value_name, bool negate,
-                             ZoneList<CharacterRange>* result, Zone* zone) {
+                             ZoneList<CharacterRange>* result_ranges,
+                             CharacterClassStrings* result_strings,
+                             RegExpFlags flags, Zone* zone) {
   UProperty property_for_lookup = property;
   if (property_for_lookup == UCHAR_SCRIPT_EXTENSIONS) {
     // For the property Script_Extensions, we have to do the property value
@@ -1471,10 +1911,15 @@ bool LookupPropertyValueName(UProperty property,
   bool success = ec == U_ZERO_ERROR && !set.isEmpty();
 
   if (success) {
+    if (set.hasStrings()) {
+      ExtractStringsFromUnicodeSet(set, result_strings, flags, zone);
+    }
+    const bool needs_case_folding = IsUnicodeSets(flags) && IsIgnoreCase(flags);
+    if (needs_case_folding) CharacterRange::UnicodeSimpleCloseOver(set);
     set.removeAllStrings();
     if (negate) set.complement();
     for (int i = 0; i < set.getRangeCount(); i++) {
-      result->Add(
+      result_ranges->Add(
           CharacterRange::Range(set.getRangeStart(i), set.getRangeEnd(i)),
           zone);
     }
@@ -1489,7 +1934,8 @@ inline bool NameEquals(const char* name, const char (&literal)[N]) {
 
 bool LookupSpecialPropertyValueName(const char* name,
                                     ZoneList<CharacterRange>* result,
-                                    bool negate, Zone* zone) {
+                                    bool negate, RegExpFlags flags,
+                                    Zone* zone) {
   if (NameEquals(name, "Any")) {
     if (negate) {
       // Leave the list of character ranges empty, since the negation of 'Any'
@@ -1503,7 +1949,7 @@ bool LookupSpecialPropertyValueName(const char* name,
                 zone);
   } else if (NameEquals(name, "Assigned")) {
     return LookupPropertyValueName(UCHAR_GENERAL_CATEGORY, "Unassigned",
-                                   !negate, result, zone);
+                                   !negate, result, nullptr, flags, zone);
   } else {
     return false;
   }
@@ -1512,7 +1958,7 @@ bool LookupSpecialPropertyValueName(const char* name,
 
 // Explicitly allowlist supported binary properties. The spec forbids supporting
 // properties outside of this set to ensure interoperability.
-bool IsSupportedBinaryProperty(UProperty property) {
+bool IsSupportedBinaryProperty(UProperty property, bool unicode_sets) {
   switch (property) {
     case UCHAR_ALPHABETIC:
     // 'Any' is not supported by ICU. See LookupSpecialPropertyValueName.
@@ -1567,6 +2013,30 @@ bool IsSupportedBinaryProperty(UProperty property) {
     case UCHAR_WHITE_SPACE:
     case UCHAR_XID_CONTINUE:
     case UCHAR_XID_START:
+      return true;
+    case UCHAR_BASIC_EMOJI:
+    case UCHAR_EMOJI_KEYCAP_SEQUENCE:
+    case UCHAR_RGI_EMOJI_MODIFIER_SEQUENCE:
+    case UCHAR_RGI_EMOJI_FLAG_SEQUENCE:
+    case UCHAR_RGI_EMOJI_TAG_SEQUENCE:
+    case UCHAR_RGI_EMOJI_ZWJ_SEQUENCE:
+    case UCHAR_RGI_EMOJI:
+      return unicode_sets;
+    default:
+      break;
+  }
+  return false;
+}
+
+bool IsBinaryPropertyOfStrings(UProperty property) {
+  switch (property) {
+    case UCHAR_BASIC_EMOJI:
+    case UCHAR_EMOJI_KEYCAP_SEQUENCE:
+    case UCHAR_RGI_EMOJI_MODIFIER_SEQUENCE:
+    case UCHAR_RGI_EMOJI_FLAG_SEQUENCE:
+    case UCHAR_RGI_EMOJI_TAG_SEQUENCE:
+    case UCHAR_RGI_EMOJI_ZWJ_SEQUENCE:
+    case UCHAR_RGI_EMOJI:
       return true;
     default:
       break;
@@ -1630,24 +2100,33 @@ bool RegExpParserImpl<CharT>::ParsePropertyClassName(ZoneVector<char>* name_1,
 
 template <class CharT>
 bool RegExpParserImpl<CharT>::AddPropertyClassRange(
-    ZoneList<CharacterRange>* add_to, bool negate,
+    ZoneList<CharacterRange>* add_to_ranges,
+    CharacterClassStrings* add_to_strings, bool negate,
     const ZoneVector<char>& name_1, const ZoneVector<char>& name_2) {
   if (name_2.empty()) {
     // First attempt to interpret as general category property value name.
     const char* name = name_1.data();
     if (LookupPropertyValueName(UCHAR_GENERAL_CATEGORY_MASK, name, negate,
-                                add_to, zone())) {
+                                add_to_ranges, add_to_strings, flags(),
+                                zone())) {
       return true;
     }
     // Interpret "Any", "ASCII", and "Assigned".
-    if (LookupSpecialPropertyValueName(name, add_to, negate, zone())) {
+    if (LookupSpecialPropertyValueName(name, add_to_ranges, negate, flags(),
+                                       zone())) {
       return true;
     }
     // Then attempt to interpret as binary property name with value name 'Y'.
     UProperty property = u_getPropertyEnum(name);
-    if (!IsSupportedBinaryProperty(property)) return false;
+    if (!IsSupportedBinaryProperty(property, unicode_sets())) return false;
     if (!IsExactPropertyAlias(name, property)) return false;
-    return LookupPropertyValueName(property, negate ? "N" : "Y", false, add_to,
+    // Negation of properties with strings is not allowed.
+    // TODO(v8:11935): Change permalink once proposal is in stage 4.
+    // See
+    // https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2418#sec-static-semantics-maycontainstrings
+    if (negate && IsBinaryPropertyOfStrings(property)) return false;
+    return LookupPropertyValueName(property, negate ? "N" : "Y", false,
+                                   add_to_ranges, add_to_strings, flags(),
                                    zone());
   } else {
     // Both property name and value name are specified. Attempt to interpret
@@ -1663,8 +2142,8 @@ bool RegExpParserImpl<CharT>::AddPropertyClassRange(
                property != UCHAR_SCRIPT_EXTENSIONS) {
       return false;
     }
-    return LookupPropertyValueName(property, value_name, negate, add_to,
-                                   zone());
+    return LookupPropertyValueName(property, value_name, negate, add_to_ranges,
+                                   add_to_strings, flags(), zone());
   }
 }
 
@@ -1678,7 +2157,8 @@ bool RegExpParserImpl<CharT>::ParsePropertyClassName(ZoneVector<char>* name_1,
 
 template <class CharT>
 bool RegExpParserImpl<CharT>::AddPropertyClassRange(
-    ZoneList<CharacterRange>* add_to, bool negate,
+    ZoneList<CharacterRange>* add_to_ranges,
+    CharacterClassStrings* add_to_strings, bool negate,
     const ZoneVector<char>& name_1, const ZoneVector<char>& name_2) {
   return false;
 }
@@ -1746,14 +2226,14 @@ base::uc32 RegExpParserImpl<CharT>::ParseCharacterEscape(
         // 0x00-0x1F.
         return controlLetter & 0x1F;
       }
-      if (unicode()) {
-        // With /u, invalid escapes are not treated as identity escapes.
+      if (IsUnicodeMode()) {
+        // With /u and /v, invalid escapes are not treated as identity escapes.
         ReportError(RegExpError::kInvalidUnicodeEscape);
         return 0;
       }
       if (in_class_escape_state == InClassEscapeState::kInClass) {
         // Inside a character class, we also accept digits and underscore as
-        // control characters, unless with /u. See Annex B:
+        // control characters, unless with /u or /v. See Annex B:
         // ES#prod-annexB-ClassControlLetter
         if ((controlLetter >= '0' && controlLetter <= '9') ||
             controlLetter == '_') {
@@ -1786,8 +2266,9 @@ base::uc32 RegExpParserImpl<CharT>::ParseCharacterEscape(
       // a back reference (and therefore either \0 or not valid according
       // to the specification) as a 1..3 digit octal character code.
       // ES#prod-annexB-LegacyOctalEscapeSequence
-      if (unicode()) {
-        // With /u, decimal escape is not interpreted as octal character code.
+      if (IsUnicodeMode()) {
+        // With /u or /v, decimal escape is not interpreted as octal character
+        // code.
         ReportError(RegExpError::kInvalidClassEscape);
         return 0;
       }
@@ -1798,8 +2279,8 @@ base::uc32 RegExpParserImpl<CharT>::ParseCharacterEscape(
       Advance();
       base::uc32 value;
       if (ParseHexEscape(2, &value)) return value;
-      if (unicode()) {
-        // With /u, invalid escapes are not treated as identity escapes.
+      if (IsUnicodeMode()) {
+        // With /u or /v, invalid escapes are not treated as identity escapes.
         ReportError(RegExpError::kInvalidEscape);
         return 0;
       }
@@ -1816,8 +2297,8 @@ base::uc32 RegExpParserImpl<CharT>::ParseCharacterEscape(
         *is_escaped_unicode_character = true;
         return value;
       }
-      if (unicode()) {
-        // With /u, invalid escapes are not treated as identity escapes.
+      if (IsUnicodeMode()) {
+        // With /u or /v, invalid escapes are not treated as identity escapes.
         ReportError(RegExpError::kInvalidUnicodeEscape);
         return 0;
       }
@@ -1834,11 +2315,19 @@ base::uc32 RegExpParserImpl<CharT>::ParseCharacterEscape(
   //
   // * With /u, no identity escapes except for syntax characters are
   //   allowed.
-  // * Without /u:
+  // * With /v, no identity escapes except for syntax characters and
+  //   ClassSetReservedPunctuators (if within a class) are allowed.
+  // * Without /u or /v:
   //   * '\c' is not an IdentityEscape.
   //   * '\k' is not an IdentityEscape when named captures exist.
   //   * Otherwise, all identity escapes are allowed.
-  if (unicode()) {
+  if (unicode_sets() && in_class_escape_state == InClassEscapeState::kInClass) {
+    if (IsClassSetReservedPunctuator(c)) {
+      Advance();
+      return c;
+    }
+  }
+  if (IsUnicodeMode()) {
     if (!IsSyntaxCharacterOrSlash(c)) {
       ReportError(RegExpError::kInvalidEscape);
       return 0;
@@ -1846,7 +2335,7 @@ base::uc32 RegExpParserImpl<CharT>::ParseCharacterEscape(
     Advance();
     return c;
   }
-  DCHECK(!unicode());
+  DCHECK(!IsUnicodeMode());
   if (c == 'c') {
     ReportError(RegExpError::kInvalidEscape);
     return 0;
@@ -1859,6 +2348,53 @@ base::uc32 RegExpParserImpl<CharT>::ParseCharacterEscape(
     return 0;
   }
   return c;
+}
+
+// TODO(v8:11935): Change permalink once proposal is in stage 4.
+// https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2418#prod-ClassRanges
+template <class CharT>
+RegExpTree* RegExpParserImpl<CharT>::ParseClassRanges(
+    ZoneList<CharacterRange>* ranges, bool add_unicode_case_equivalents) {
+  base::uc32 char_1, char_2;
+  bool is_class_1, is_class_2;
+  while (has_more() && current() != ']') {
+    ParseClassEscape(ranges, zone(), add_unicode_case_equivalents, &char_1,
+                     &is_class_1 CHECK_FAILED);
+    // ClassAtom
+    if (current() == '-') {
+      Advance();
+      if (!has_more()) {
+        // If we reach the end we break out of the loop and let the
+        // following code report an error.
+        break;
+      } else if (current() == ']') {
+        if (!is_class_1) ranges->Add(CharacterRange::Singleton(char_1), zone());
+        ranges->Add(CharacterRange::Singleton('-'), zone());
+        break;
+      }
+      ParseClassEscape(ranges, zone(), add_unicode_case_equivalents, &char_2,
+                       &is_class_2 CHECK_FAILED);
+      if (is_class_1 || is_class_2) {
+        // Either end is an escaped character class. Treat the '-' verbatim.
+        if (IsUnicodeMode()) {
+          // ES2015 21.2.2.15.1 step 1.
+          return ReportError(RegExpError::kInvalidCharacterClass);
+        }
+        if (!is_class_1) ranges->Add(CharacterRange::Singleton(char_1), zone());
+        ranges->Add(CharacterRange::Singleton('-'), zone());
+        if (!is_class_2) ranges->Add(CharacterRange::Singleton(char_2), zone());
+        continue;
+      }
+      // ES2015 21.2.2.15.1 step 6.
+      if (char_1 > char_2) {
+        return ReportError(RegExpError::kOutOfOrderCharacterClass);
+      }
+      ranges->Add(CharacterRange::Range(char_1, char_2), zone());
+    } else {
+      if (!is_class_1) ranges->Add(CharacterRange::Singleton(char_1), zone());
+    }
+  }
+  return nullptr;
 }
 
 // https://tc39.es/ecma262/#prod-ClassEscape
@@ -1883,7 +2419,7 @@ void RegExpParserImpl<CharT>::ParseClassEscape(
       Advance(2);
       return;
     case '-':
-      if (unicode()) {
+      if (IsUnicodeMode()) {
         *char_out = next;
         Advance(2);
         return;
@@ -1898,8 +2434,9 @@ void RegExpParserImpl<CharT>::ParseClassEscape(
 
   static constexpr InClassEscapeState kInClassEscape =
       InClassEscapeState::kInClass;
-  *is_class_escape = TryParseCharacterClassEscape(
-      next, kInClassEscape, ranges, zone, add_unicode_case_equivalents);
+  *is_class_escape =
+      TryParseCharacterClassEscape(next, kInClassEscape, ranges, nullptr, zone,
+                                   add_unicode_case_equivalents);
   if (*is_class_escape) return;
 
   bool dummy = false;  // Unused.
@@ -1910,8 +2447,8 @@ void RegExpParserImpl<CharT>::ParseClassEscape(
 template <class CharT>
 bool RegExpParserImpl<CharT>::TryParseCharacterClassEscape(
     base::uc32 next, InClassEscapeState in_class_escape_state,
-    ZoneList<CharacterRange>* ranges, Zone* zone,
-    bool add_unicode_case_equivalents) {
+    ZoneList<CharacterRange>* ranges, CharacterClassStrings* strings,
+    Zone* zone, bool add_unicode_case_equivalents) {
   DCHECK_EQ(current(), '\\');
   DCHECK_EQ(Next(), next);
 
@@ -1929,13 +2466,13 @@ bool RegExpParserImpl<CharT>::TryParseCharacterClassEscape(
       return true;
     case 'p':
     case 'P': {
-      if (!unicode()) return false;
+      if (!IsUnicodeMode()) return false;
       bool negate = next == 'P';
       Advance(2);
       ZoneVector<char> name_1(zone);
       ZoneVector<char> name_2(zone);
       if (!ParsePropertyClassName(&name_1, &name_2) ||
-          !AddPropertyClassRange(ranges, negate, name_1, name_2)) {
+          !AddPropertyClassRange(ranges, strings, negate, name_1, name_2)) {
         ReportError(in_class_escape_state == InClassEscapeState::kInClass
                         ? RegExpError::kInvalidClassPropertyName
                         : RegExpError::kInvalidPropertyName);
@@ -1947,6 +2484,389 @@ bool RegExpParserImpl<CharT>::TryParseCharacterClassEscape(
   }
 }
 
+namespace {
+
+// Add |string| to |ranges| if length of |string| == 1, otherwise add |string|
+// to |strings|.
+void AddClassString(ZoneList<base::uc32>* normalized_string,
+                    RegExpTree* regexp_string, ZoneList<CharacterRange>* ranges,
+                    CharacterClassStrings* strings, Zone* zone) {
+  if (normalized_string->length() == 1) {
+    ranges->Add(CharacterRange::Singleton(normalized_string->at(0)), zone);
+  } else {
+    strings->emplace(normalized_string->ToVector(), regexp_string);
+  }
+}
+
+}  // namespace
+
+// TODO(v8:11935): Change permalink once proposal is in stage 4.
+// https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2418#prod-ClassStringDisjunction
+template <class CharT>
+RegExpTree* RegExpParserImpl<CharT>::ParseClassStringDisjunction(
+    ZoneList<CharacterRange>* ranges, CharacterClassStrings* strings) {
+  DCHECK(unicode_sets());
+  DCHECK_EQ(current(), '\\');
+  DCHECK_EQ(Next(), 'q');
+  Advance(2);
+  if (current() != '{') {
+    // Identity escape of 'q' is not allowed in unicode mode.
+    return ReportError(RegExpError::kInvalidEscape);
+  }
+  Advance();
+
+  ZoneList<base::uc32>* string =
+      zone()->template New<ZoneList<base::uc32>>(4, zone());
+  RegExpTextBuilder::SmallRegExpTreeVector string_storage(
+      ZoneAllocator<RegExpTree*>{zone()});
+  RegExpTextBuilder string_builder(zone(), &string_storage, flags());
+
+  while (has_more() && current() != '}') {
+    if (current() == '|') {
+      AddClassString(string, string_builder.ToRegExp(), ranges, strings,
+                     zone());
+      string = zone()->template New<ZoneList<base::uc32>>(4, zone());
+      string_storage.clear();
+      Advance();
+    } else {
+      base::uc32 c = ParseClassSetCharacter(CHECK_FAILED);
+      if (ignore_case()) {
+#ifdef V8_INTL_SUPPORT
+        c = u_foldCase(c, U_FOLD_CASE_DEFAULT);
+#else
+        c = AsciiAlphaToLower(c);
+#endif
+      }
+      string->Add(c, zone());
+      string_builder.AddUnicodeCharacter(c);
+    }
+  }
+
+  AddClassString(string, string_builder.ToRegExp(), ranges, strings, zone());
+
+  // We don't need to handle missing closing '}' here.
+  // If the character class is correctly closed, ParseClassSetCharacter will
+  // report an error.
+  DCHECK_EQ(current(), '}');
+  Advance();
+  return nullptr;
+}
+
+// TODO(v8:11935): Change permalink once proposal is in stage 4.
+// https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2418#prod-ClassSetOperand
+// Tree returned based on type_out:
+//  * kNestedClass: RegExpClassSetExpression
+//  * For all other types: RegExpClassSetOperand
+template <class CharT>
+RegExpTree* RegExpParserImpl<CharT>::ParseClassSetOperand(
+    const RegExpBuilder* builder, ClassSetOperandType* type_out) {
+  ZoneList<CharacterRange>* ranges =
+      zone()->template New<ZoneList<CharacterRange>>(1, zone());
+  CharacterClassStrings* strings =
+      zone()->template New<CharacterClassStrings>(zone());
+  RegExpTree* tree =
+      ParseClassSetOperand(builder, type_out, ranges, strings CHECK_FAILED);
+  DCHECK_IMPLIES(*type_out != ClassSetOperandType::kNestedClass,
+                 tree == nullptr);
+  DCHECK_IMPLIES(*type_out == ClassSetOperandType::kClassSetCharacter,
+                 ranges->length() == 1);
+  DCHECK_IMPLIES(*type_out == ClassSetOperandType::kClassSetCharacter,
+                 strings->empty());
+  DCHECK_IMPLIES(*type_out == ClassSetOperandType::kNestedClass,
+                 ranges->is_empty());
+  DCHECK_IMPLIES(*type_out == ClassSetOperandType::kNestedClass,
+                 strings->empty());
+  DCHECK_IMPLIES(*type_out == ClassSetOperandType::kNestedClass,
+                 tree->IsClassSetExpression());
+  // ClassSetRange is only used within ClassSetUnion().
+  DCHECK_NE(*type_out, ClassSetOperandType::kClassSetRange);
+  // There are no restrictions for kCharacterClassEscape.
+  // CharacterClassEscape includes \p{}, which can contain ranges, strings or
+  // both and \P{}, which could contain nothing (i.e. \P{Any}).
+  if (tree == nullptr) {
+    tree = zone()->template New<RegExpClassSetOperand>(ranges, strings);
+  }
+  return tree;
+}
+
+// TODO(v8:11935): Change permalink once proposal is in stage 4.
+// https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2418#prod-ClassSetOperand
+// Based on |type_out| either a tree is returned or ranges/strings modified.
+// If a tree is returned, ranges/strings are not modified.
+// If |type_out| is kNestedClass, a tree of type RegExpClassSetExpression is
+// returned. For all other types, ranges is modified and nullptr is returned.
+template <class CharT>
+RegExpTree* RegExpParserImpl<CharT>::ParseClassSetOperand(
+    const RegExpBuilder* builder, ClassSetOperandType* type_out,
+    ZoneList<CharacterRange>* ranges, CharacterClassStrings* strings) {
+  DCHECK(unicode_sets());
+  base::uc32 c = current();
+  if (c == '\\') {
+    const base::uc32 next = Next();
+    if (next == 'q') {
+      *type_out = ClassSetOperandType::kClassStringDisjunction;
+      ParseClassStringDisjunction(ranges, strings CHECK_FAILED);
+      return nullptr;
+    }
+    static constexpr InClassEscapeState kInClassEscape =
+        InClassEscapeState::kInClass;
+    const bool add_unicode_case_equivalents = ignore_case();
+    if (TryParseCharacterClassEscape(next, kInClassEscape, ranges, strings,
+                                     zone(), add_unicode_case_equivalents)) {
+      *type_out = ClassSetOperandType::kCharacterClassEscape;
+      return nullptr;
+    }
+  }
+
+  if (c == '[') {
+    *type_out = ClassSetOperandType::kNestedClass;
+    return ParseCharacterClass(builder);
+  }
+
+  *type_out = ClassSetOperandType::kClassSetCharacter;
+  c = ParseClassSetCharacter(CHECK_FAILED);
+  ranges->Add(CharacterRange::Singleton(c), zone());
+  return nullptr;
+}
+
+template <class CharT>
+base::uc32 RegExpParserImpl<CharT>::ParseClassSetCharacter() {
+  DCHECK(unicode_sets());
+  const base::uc32 c = current();
+  if (c == '\\') {
+    const base::uc32 next = Next();
+    switch (next) {
+      case 'b':
+        Advance(2);
+        return '\b';
+      case kEndMarker:
+        ReportError(RegExpError::kEscapeAtEndOfPattern);
+        return 0;
+    }
+    static constexpr InClassEscapeState kInClassEscape =
+        InClassEscapeState::kInClass;
+
+    bool dummy = false;  // Unused.
+    return ParseCharacterEscape(kInClassEscape, &dummy);
+  }
+  if (IsClassSetSyntaxCharacter(c)) {
+    ReportError(RegExpError::kInvalidCharacterInClass);
+    return 0;
+  }
+  if (IsClassSetReservedDoublePunctuator(c)) {
+    ReportError(RegExpError::kInvalidClassSetOperation);
+    return 0;
+  }
+  Advance();
+  return c;
+}
+
+namespace {
+
+bool MayContainStrings(ClassSetOperandType type, RegExpTree* operand) {
+  switch (type) {
+    case ClassSetOperandType::kClassSetCharacter:
+    case ClassSetOperandType::kClassSetRange:
+      return false;
+    case ClassSetOperandType::kCharacterClassEscape:
+    case ClassSetOperandType::kClassStringDisjunction:
+      return operand->AsClassSetOperand()->has_strings();
+    case ClassSetOperandType::kNestedClass:
+      if (operand->IsClassRanges()) return false;
+      return operand->AsClassSetExpression()->may_contain_strings();
+  }
+}
+
+}  // namespace
+
+// TODO(v8:11935): Change permalink once proposal is in stage 4.
+// https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2418#prod-ClassUnion
+template <class CharT>
+RegExpTree* RegExpParserImpl<CharT>::ParseClassUnion(
+    const RegExpBuilder* builder, bool is_negated, RegExpTree* first_operand,
+    ClassSetOperandType first_operand_type, ZoneList<CharacterRange>* ranges,
+    CharacterClassStrings* strings) {
+  DCHECK(unicode_sets());
+  ZoneList<RegExpTree*>* operands =
+      zone()->template New<ZoneList<RegExpTree*>>(2, zone());
+  bool may_contain_strings = false;
+  // Add the lhs to operands if necessary.
+  // Either the lhs values were added to |ranges|/|strings| (in which case
+  // |first_operand| is nullptr), or the lhs was evaluated to a tree and passed
+  // as |first_operand| (in which case |ranges| and |strings| are empty).
+  if (first_operand != nullptr) {
+    may_contain_strings = MayContainStrings(first_operand_type, first_operand);
+    operands->Add(first_operand, zone());
+  }
+  ClassSetOperandType last_type = first_operand_type;
+  const bool needs_case_folding = ignore_case();
+  while (has_more() && current() != ']') {
+    if (current() == '-') {
+      // Mix of ClassSetRange and ClassSubtraction is not allowed.
+      if (Next() == '-') {
+        return ReportError(RegExpError::kInvalidClassSetOperation);
+      }
+      Advance();
+      if (!has_more()) {
+        // If we reach the end we break out of the loop and let the
+        // following code report an error.
+        break;
+      }
+      // If the lhs and rhs around '-' are both ClassSetCharacters, they
+      // represent a character range.
+      // In case one of them is not a ClassSetCharacter, it is a syntax error,
+      // as '-' can not be used unescaped within a class with /v.
+      // TODO(v8:11935): Change permalink once proposal is in stage 4.
+      // See
+      // https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2418#prod-ClassSetRange
+      if (last_type != ClassSetOperandType::kClassSetCharacter) {
+        return ReportError(RegExpError::kInvalidCharacterClass);
+      }
+      ParseClassSetOperand(builder, &last_type, ranges, strings CHECK_FAILED);
+      if (last_type != ClassSetOperandType::kClassSetCharacter) {
+        return ReportError(RegExpError::kInvalidCharacterClass);
+      }
+      // Remove the last two singleton characters added to ranges, and combine
+      // them into a range.
+      auto rhs_ranges = ranges->RemoveLast();
+      auto lhs_ranges = ranges->RemoveLast();
+      DCHECK(lhs_ranges.IsSingleton());
+      DCHECK(rhs_ranges.IsSingleton());
+      base::uc32 from = lhs_ranges.from();
+      base::uc32 to = rhs_ranges.from();
+      if (from > to) {
+        return ReportError(RegExpError::kOutOfOrderCharacterClass);
+      }
+      ranges->Add(CharacterRange::Range(from, to), zone());
+      last_type = ClassSetOperandType::kClassSetRange;
+    } else {
+      DCHECK_NE(current(), '-');
+      RegExpTree* operand = ParseClassSetOperand(builder, &last_type, ranges,
+                                                 strings CHECK_FAILED);
+      if (operand != nullptr) {
+        may_contain_strings |= MayContainStrings(last_type, operand);
+        // Add the range we started building as operand and reset the current
+        // range.
+        if (!ranges->is_empty() || !strings->empty()) {
+          if (needs_case_folding) {
+            CharacterRange::AddUnicodeCaseEquivalents(ranges, zone());
+          }
+          may_contain_strings |= !strings->empty();
+          operands->Add(
+              zone()->template New<RegExpClassSetOperand>(ranges, strings),
+              zone());
+          ranges = zone()->template New<ZoneList<CharacterRange>>(2, zone());
+          strings = zone()->template New<CharacterClassStrings>(zone());
+        }
+        operands->Add(operand, zone());
+      }
+    }
+  }
+
+  if (!has_more()) {
+    return ReportError(RegExpError::kUnterminatedCharacterClass);
+  }
+
+  // Add the range we started building as operand.
+  if (!ranges->is_empty() || !strings->empty()) {
+    if (needs_case_folding) {
+      CharacterRange::AddUnicodeCaseEquivalents(ranges, zone());
+    }
+    may_contain_strings |= !strings->empty();
+    operands->Add(zone()->template New<RegExpClassSetOperand>(ranges, strings),
+                  zone());
+  }
+
+  DCHECK_EQ(current(), ']');
+  Advance();
+
+  if (is_negated && may_contain_strings) {
+    return ReportError(RegExpError::kNegatedCharacterClassWithStrings);
+  }
+
+  return zone()->template New<RegExpClassSetExpression>(
+      RegExpClassSetExpression::OperationType::kUnion, is_negated,
+      may_contain_strings, operands);
+}
+
+// TODO(v8:11935): Change permalink once proposal is in stage 4.
+// https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2418#prod-ClassIntersection
+template <class CharT>
+RegExpTree* RegExpParserImpl<CharT>::ParseClassIntersection(
+    const RegExpBuilder* builder, bool is_negated, RegExpTree* first_operand,
+    ClassSetOperandType first_operand_type) {
+  DCHECK(unicode_sets());
+  DCHECK(current() == '&' && Next() == '&');
+  bool may_contain_strings =
+      MayContainStrings(first_operand_type, first_operand);
+  ZoneList<RegExpTree*>* operands =
+      zone()->template New<ZoneList<RegExpTree*>>(2, zone());
+  operands->Add(first_operand, zone());
+  while (has_more() && current() != ']') {
+    if (current() != '&' || Next() != '&') {
+      return ReportError(RegExpError::kInvalidClassSetOperation);
+    }
+    Advance(2);
+    // [lookahead ≠ &]
+    if (current() == '&') {
+      return ReportError(RegExpError::kInvalidCharacterInClass);
+    }
+
+    ClassSetOperandType operand_type;
+    RegExpTree* operand =
+        ParseClassSetOperand(builder, &operand_type CHECK_FAILED);
+    may_contain_strings &= MayContainStrings(operand_type, operand);
+    operands->Add(operand, zone());
+  }
+  if (!has_more()) {
+    return ReportError(RegExpError::kUnterminatedCharacterClass);
+  }
+  if (is_negated && may_contain_strings) {
+    return ReportError(RegExpError::kNegatedCharacterClassWithStrings);
+  }
+  DCHECK_EQ(current(), ']');
+  Advance();
+  return zone()->template New<RegExpClassSetExpression>(
+      RegExpClassSetExpression::OperationType::kIntersection, is_negated,
+      may_contain_strings, operands);
+}
+
+// TODO(v8:11935): Change permalink once proposal is in stage 4.
+// https://arai-a.github.io/ecma262-compare/snapshot.html?pr=2418#prod-ClassSubtraction
+template <class CharT>
+RegExpTree* RegExpParserImpl<CharT>::ParseClassSubtraction(
+    const RegExpBuilder* builder, bool is_negated, RegExpTree* first_operand,
+    ClassSetOperandType first_operand_type) {
+  DCHECK(unicode_sets());
+  DCHECK(current() == '-' && Next() == '-');
+  const bool may_contain_strings =
+      MayContainStrings(first_operand_type, first_operand);
+  if (is_negated && may_contain_strings) {
+    return ReportError(RegExpError::kNegatedCharacterClassWithStrings);
+  }
+  ZoneList<RegExpTree*>* operands =
+      zone()->template New<ZoneList<RegExpTree*>>(2, zone());
+  operands->Add(first_operand, zone());
+  while (has_more() && current() != ']') {
+    if (current() != '-' || Next() != '-') {
+      return ReportError(RegExpError::kInvalidClassSetOperation);
+    }
+    Advance(2);
+    ClassSetOperandType dummy;  // unused
+    RegExpTree* operand = ParseClassSetOperand(builder, &dummy CHECK_FAILED);
+    operands->Add(operand, zone());
+  }
+  if (!has_more()) {
+    return ReportError(RegExpError::kUnterminatedCharacterClass);
+  }
+  DCHECK_EQ(current(), ']');
+  Advance();
+  return zone()->template New<RegExpClassSetExpression>(
+      RegExpClassSetExpression::OperationType::kSubtraction, is_negated,
+      may_contain_strings, operands);
+}
+
+// https://tc39.es/ecma262/#prod-CharacterClass
 template <class CharT>
 RegExpTree* RegExpParserImpl<CharT>::ParseCharacterClass(
     const RegExpBuilder* builder) {
@@ -1959,53 +2879,57 @@ RegExpTree* RegExpParserImpl<CharT>::ParseCharacterClass(
   }
   ZoneList<CharacterRange>* ranges =
       zone()->template New<ZoneList<CharacterRange>>(2, zone());
-  bool add_unicode_case_equivalents = unicode() && builder->ignore_case();
-  while (has_more() && current() != ']') {
-    base::uc32 char_1, char_2;
-    bool is_class_1, is_class_2;
-    ParseClassEscape(ranges, zone(), add_unicode_case_equivalents, &char_1,
-                     &is_class_1 CHECK_FAILED);
-    if (current() == '-') {
-      Advance();
-      if (current() == kEndMarker) {
-        // If we reach the end we break out of the loop and let the
-        // following code report an error.
-        break;
-      } else if (current() == ']') {
-        if (!is_class_1) ranges->Add(CharacterRange::Singleton(char_1), zone());
-        ranges->Add(CharacterRange::Singleton('-'), zone());
-        break;
-      }
-      ParseClassEscape(ranges, zone(), add_unicode_case_equivalents, &char_2,
-                       &is_class_2 CHECK_FAILED);
-      if (is_class_1 || is_class_2) {
-        // Either end is an escaped character class. Treat the '-' verbatim.
-        if (unicode()) {
-          // ES2015 21.2.2.15.1 step 1.
-          return ReportError(RegExpError::kInvalidCharacterClass);
-        }
-        if (!is_class_1) ranges->Add(CharacterRange::Singleton(char_1), zone());
-        ranges->Add(CharacterRange::Singleton('-'), zone());
-        if (!is_class_2) ranges->Add(CharacterRange::Singleton(char_2), zone());
-        continue;
-      }
-      // ES2015 21.2.2.15.1 step 6.
-      if (char_1 > char_2) {
-        return ReportError(RegExpError::kOutOfOrderCharacterClass);
-      }
-      ranges->Add(CharacterRange::Range(char_1, char_2), zone());
-    } else {
-      if (!is_class_1) ranges->Add(CharacterRange::Singleton(char_1), zone());
+  if (current() == ']') {
+    Advance();
+    RegExpClassRanges::ClassRangesFlags class_ranges_flags;
+    if (is_negated) class_ranges_flags = RegExpClassRanges::NEGATED;
+    return zone()->template New<RegExpClassRanges>(zone(), ranges,
+                                                   class_ranges_flags);
+  }
+
+  if (!unicode_sets()) {
+    bool add_unicode_case_equivalents = IsUnicodeMode() && ignore_case();
+    ParseClassRanges(ranges, add_unicode_case_equivalents CHECK_FAILED);
+    if (!has_more()) {
+      return ReportError(RegExpError::kUnterminatedCharacterClass);
     }
+    DCHECK_EQ(current(), ']');
+    Advance();
+    RegExpClassRanges::ClassRangesFlags character_class_flags;
+    if (is_negated) character_class_flags = RegExpClassRanges::NEGATED;
+    return zone()->template New<RegExpClassRanges>(zone(), ranges,
+                                                   character_class_flags);
+  } else {
+    ClassSetOperandType operand_type;
+    CharacterClassStrings* strings =
+        zone()->template New<CharacterClassStrings>(zone());
+    RegExpTree* operand = ParseClassSetOperand(builder, &operand_type, ranges,
+                                               strings CHECK_FAILED);
+    switch (current()) {
+      case '-':
+        if (Next() == '-') {
+          if (operand == nullptr) {
+            operand =
+                zone()->template New<RegExpClassSetOperand>(ranges, strings);
+          }
+          return ParseClassSubtraction(builder, is_negated, operand,
+                                       operand_type);
+        }
+        // ClassSetRange is handled in ParseClassUnion().
+        break;
+      case '&':
+        if (Next() == '&') {
+          if (operand == nullptr) {
+            operand =
+                zone()->template New<RegExpClassSetOperand>(ranges, strings);
+          }
+          return ParseClassIntersection(builder, is_negated, operand,
+                                        operand_type);
+        }
+    }
+    return ParseClassUnion(builder, is_negated, operand, operand_type, ranges,
+                           strings);
   }
-  if (!has_more()) {
-    return ReportError(RegExpError::kUnterminatedCharacterClass);
-  }
-  Advance();
-  RegExpCharacterClass::CharacterClassFlags character_class_flags;
-  if (is_negated) character_class_flags = RegExpCharacterClass::NEGATED;
-  return zone()->template New<RegExpCharacterClass>(zone(), ranges,
-                                                    character_class_flags);
 }
 
 #undef CHECK_FAILED
@@ -2025,7 +2949,7 @@ bool RegExpParserImpl<CharT>::Parse(RegExpCompileData* result) {
 
   DCHECK_NOT_NULL(tree);
   DCHECK_EQ(error_, RegExpError::kNone);
-  if (FLAG_trace_regexp_parser) {
+  if (v8_flags.trace_regexp_parser) {
     StdoutStream os;
     tree->Print(os, zone());
     os << "\n";
@@ -2040,125 +2964,31 @@ bool RegExpParserImpl<CharT>::Parse(RegExpCompileData* result) {
   return true;
 }
 
-void RegExpBuilder::AddLeadSurrogate(base::uc16 lead_surrogate) {
-  DCHECK(unibrow::Utf16::IsLeadSurrogate(lead_surrogate));
-  FlushPendingSurrogate();
-  // Hold onto the lead surrogate, waiting for a trail surrogate to follow.
-  pending_surrogate_ = lead_surrogate;
-}
-
-void RegExpBuilder::AddTrailSurrogate(base::uc16 trail_surrogate) {
-  DCHECK(unibrow::Utf16::IsTrailSurrogate(trail_surrogate));
-  if (pending_surrogate_ != kNoPendingSurrogate) {
-    base::uc16 lead_surrogate = pending_surrogate_;
-    pending_surrogate_ = kNoPendingSurrogate;
-    DCHECK(unibrow::Utf16::IsLeadSurrogate(lead_surrogate));
-    base::uc32 combined =
-        unibrow::Utf16::CombineSurrogatePair(lead_surrogate, trail_surrogate);
-    if (NeedsDesugaringForIgnoreCase(combined)) {
-      AddCharacterClassForDesugaring(combined);
-    } else {
-      ZoneList<base::uc16> surrogate_pair(2, zone());
-      surrogate_pair.Add(lead_surrogate, zone());
-      surrogate_pair.Add(trail_surrogate, zone());
-      RegExpAtom* atom =
-          zone()->New<RegExpAtom>(surrogate_pair.ToConstVector());
-      AddAtom(atom);
-    }
-  } else {
-    pending_surrogate_ = trail_surrogate;
-    FlushPendingSurrogate();
-  }
-}
-
-void RegExpBuilder::FlushPendingSurrogate() {
-  if (pending_surrogate_ != kNoPendingSurrogate) {
-    DCHECK(unicode());
-    base::uc32 c = pending_surrogate_;
-    pending_surrogate_ = kNoPendingSurrogate;
-    AddCharacterClassForDesugaring(c);
-  }
-}
-
-void RegExpBuilder::FlushCharacters() {
-  FlushPendingSurrogate();
-  pending_empty_ = false;
-  if (characters_ != nullptr) {
-    RegExpTree* atom = zone()->New<RegExpAtom>(characters_->ToConstVector());
-    characters_ = nullptr;
-    text_.emplace_back(atom);
-    LAST(ADD_ATOM);
-  }
-}
-
-void RegExpBuilder::FlushText() {
-  FlushCharacters();
-  size_t num_text = text_.size();
-  if (num_text == 0) {
-    return;
-  } else if (num_text == 1) {
-    terms_.emplace_back(text_.back());
-  } else {
-    RegExpText* text = zone()->New<RegExpText>(zone());
-    for (size_t i = 0; i < num_text; i++) {
-      text_[i]->AppendToText(text, zone());
-    }
-    terms_.emplace_back(text);
-  }
-  text_.clear();
-}
+void RegExpBuilder::FlushText() { text_builder().FlushText(); }
 
 void RegExpBuilder::AddCharacter(base::uc16 c) {
-  FlushPendingSurrogate();
   pending_empty_ = false;
-  if (NeedsDesugaringForIgnoreCase(c)) {
-    AddCharacterClassForDesugaring(c);
-  } else {
-    if (characters_ == nullptr) {
-      characters_ = zone()->New<ZoneList<base::uc16>>(4, zone());
-    }
-    characters_->Add(c, zone());
-    LAST(ADD_CHAR);
-  }
+  text_builder().AddCharacter(c);
 }
 
 void RegExpBuilder::AddUnicodeCharacter(base::uc32 c) {
-  if (c > static_cast<base::uc32>(unibrow::Utf16::kMaxNonSurrogateCharCode)) {
-    DCHECK(unicode());
-    AddLeadSurrogate(unibrow::Utf16::LeadSurrogate(c));
-    AddTrailSurrogate(unibrow::Utf16::TrailSurrogate(c));
-  } else if (unicode() && unibrow::Utf16::IsLeadSurrogate(c)) {
-    AddLeadSurrogate(c);
-  } else if (unicode() && unibrow::Utf16::IsTrailSurrogate(c)) {
-    AddTrailSurrogate(c);
-  } else {
-    AddCharacter(static_cast<base::uc16>(c));
-  }
+  pending_empty_ = false;
+  text_builder().AddUnicodeCharacter(c);
 }
 
 void RegExpBuilder::AddEscapedUnicodeCharacter(base::uc32 character) {
-  // A lead or trail surrogate parsed via escape sequence will not
-  // pair up with any preceding lead or following trail surrogate.
-  FlushPendingSurrogate();
-  AddUnicodeCharacter(character);
-  FlushPendingSurrogate();
+  pending_empty_ = false;
+  text_builder().AddEscapedUnicodeCharacter(character);
 }
 
-void RegExpBuilder::AddEmpty() { pending_empty_ = true; }
-
-void RegExpBuilder::AddCharacterClass(RegExpCharacterClass* cc) {
-  if (NeedsDesugaringForUnicode(cc)) {
-    // With /u, character class needs to be desugared, so it
-    // must be a standalone term instead of being part of a RegExpText.
-    AddTerm(cc);
-  } else {
-    AddAtom(cc);
-  }
+void RegExpBuilder::AddEmpty() {
+  text_builder().FlushPendingSurrogate();
+  pending_empty_ = true;
 }
 
-void RegExpBuilder::AddCharacterClassForDesugaring(base::uc32 c) {
-  AddTerm(zone()->New<RegExpCharacterClass>(
-      zone(), CharacterRange::List(zone(), CharacterRange::Singleton(c))));
+void RegExpBuilder::AddClassRanges(RegExpClassRanges* cc) {
+  pending_empty_ = false;
+  text_builder().AddClassRanges(cc);
 }
 
 void RegExpBuilder::AddAtom(RegExpTree* term) {
@@ -2166,26 +2996,30 @@ void RegExpBuilder::AddAtom(RegExpTree* term) {
     AddEmpty();
     return;
   }
+  pending_empty_ = false;
   if (term->IsTextElement()) {
-    FlushCharacters();
-    text_.emplace_back(term);
+    text_builder().AddAtom(term);
   } else {
     FlushText();
     terms_.emplace_back(term);
   }
-  LAST(ADD_ATOM);
 }
 
 void RegExpBuilder::AddTerm(RegExpTree* term) {
-  FlushText();
-  terms_.emplace_back(term);
-  LAST(ADD_ATOM);
+  DCHECK(!term->IsEmpty());
+  pending_empty_ = false;
+  if (term->IsTextElement()) {
+    text_builder().AddTerm(term);
+  } else {
+    FlushText();
+    terms_.emplace_back(term);
+  }
 }
 
 void RegExpBuilder::AddAssertion(RegExpTree* assert) {
   FlushText();
+  pending_empty_ = false;
   terms_.emplace_back(assert);
-  LAST(ADD_ASSERT);
 }
 
 void RegExpBuilder::NewAlternative() { FlushTerms(); }
@@ -2205,48 +3039,6 @@ void RegExpBuilder::FlushTerms() {
   }
   alternatives_.emplace_back(alternative);
   terms_.clear();
-  LAST(ADD_NONE);
-}
-
-bool RegExpBuilder::NeedsDesugaringForUnicode(RegExpCharacterClass* cc) {
-  if (!unicode()) return false;
-  // TODO(yangguo): we could be smarter than this. Case-insensitivity does not
-  // necessarily mean that we need to desugar. It's probably nicer to have a
-  // separate pass to figure out unicode desugarings.
-  if (ignore_case()) return true;
-  ZoneList<CharacterRange>* ranges = cc->ranges(zone());
-  CharacterRange::Canonicalize(ranges);
-
-  if (cc->is_negated()) {
-    ZoneList<CharacterRange>* negated_ranges =
-        zone()->New<ZoneList<CharacterRange>>(ranges->length(), zone());
-    CharacterRange::Negate(ranges, negated_ranges, zone());
-    ranges = negated_ranges;
-  }
-
-  for (int i = ranges->length() - 1; i >= 0; i--) {
-    base::uc32 from = ranges->at(i).from();
-    base::uc32 to = ranges->at(i).to();
-    // Check for non-BMP characters.
-    if (to >= kNonBmpStart) return true;
-    // Check for lone surrogates.
-    if (from <= kTrailSurrogateEnd && to >= kLeadSurrogateStart) return true;
-  }
-  return false;
-}
-
-bool RegExpBuilder::NeedsDesugaringForIgnoreCase(base::uc32 c) {
-#ifdef V8_INTL_SUPPORT
-  if (unicode() && ignore_case()) {
-    icu::UnicodeSet set(c, c);
-    set.closeOver(USET_CASE_INSENSITIVE);
-    set.removeAllStrings();
-    return set.size() > 1;
-  }
-  // In the case where ICU is not included, we act as if the unicode flag is
-  // not set, and do not desugar.
-#endif  // V8_INTL_SUPPORT
-  return false;
 }
 
 RegExpTree* RegExpBuilder::ToRegExp() {
@@ -2260,38 +3052,19 @@ RegExpTree* RegExpBuilder::ToRegExp() {
 
 bool RegExpBuilder::AddQuantifierToAtom(
     int min, int max, RegExpQuantifier::QuantifierType quantifier_type) {
-  FlushPendingSurrogate();
   if (pending_empty_) {
     pending_empty_ = false;
     return true;
   }
-  RegExpTree* atom;
-  if (characters_ != nullptr) {
-    DCHECK(last_added_ == ADD_CHAR);
-    // Last atom was character.
-    base::Vector<const base::uc16> char_vector = characters_->ToConstVector();
-    int num_chars = char_vector.length();
-    if (num_chars > 1) {
-      base::Vector<const base::uc16> prefix =
-          char_vector.SubVector(0, num_chars - 1);
-      text_.emplace_back(zone()->New<RegExpAtom>(prefix));
-      char_vector = char_vector.SubVector(num_chars - 1, num_chars);
-    }
-    characters_ = nullptr;
-    atom = zone()->New<RegExpAtom>(char_vector);
-    FlushText();
-  } else if (text_.size() > 0) {
-    DCHECK(last_added_ == ADD_ATOM);
-    atom = text_.back();
-    text_.pop_back();
+  RegExpTree* atom = text_builder().PopLastAtom();
+  if (atom != nullptr) {
     FlushText();
   } else if (terms_.size() > 0) {
-    DCHECK(last_added_ == ADD_ATOM);
     atom = terms_.back();
     terms_.pop_back();
     if (atom->IsLookaround()) {
-      // With /u, lookarounds are not quantifiable.
-      if (unicode()) return false;
+      // With /u or /v, lookarounds are not quantifiable.
+      if (IsUnicodeMode()) return false;
       // Lookbehinds are not quantifiable.
       if (atom->AsLookaround()->type() == RegExpLookaround::LOOKBEHIND) {
         return false;
@@ -2299,7 +3072,6 @@ bool RegExpBuilder::AddQuantifierToAtom(
     }
     if (atom->max_match() == 0) {
       // Guaranteed to only match an empty string.
-      LAST(ADD_TERM);
       if (min == 0) {
         return true;
       }
@@ -2312,7 +3084,6 @@ bool RegExpBuilder::AddQuantifierToAtom(
   }
   terms_.emplace_back(
       zone()->New<RegExpQuantifier>(min, max, quantifier_type, atom));
-  LAST(ADD_TERM);
   return true;
 }
 
@@ -2360,8 +3131,6 @@ template bool RegExpParser::VerifyRegExpSyntax<uint8_t>(
 template bool RegExpParser::VerifyRegExpSyntax<base::uc16>(
     Zone*, uintptr_t, const base::uc16*, int, RegExpFlags, RegExpCompileData*,
     const DisallowGarbageCollection&);
-
-#undef LAST
 
 }  // namespace internal
 }  // namespace v8
