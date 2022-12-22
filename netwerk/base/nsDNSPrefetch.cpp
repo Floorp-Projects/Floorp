@@ -53,7 +53,7 @@ nsDNSPrefetch::nsDNSPrefetch(nsIURI* aURI,
   aURI->GetAsciiHost(mHostname);
 }
 
-nsresult nsDNSPrefetch::Prefetch(nsIDNSService::DNSFlags flags) {
+nsresult nsDNSPrefetch::Prefetch(uint32_t flags) {
   if (mHostname.IsEmpty()) return NS_ERROR_NOT_AVAILABLE;
 
   if (!sDNSService) return NS_ERROR_NOT_AVAILABLE;
@@ -75,16 +75,18 @@ nsresult nsDNSPrefetch::Prefetch(nsIDNSService::DNSFlags flags) {
       mOriginAttributes, getter_AddRefs(tmpOutstanding));
 }
 
-nsresult nsDNSPrefetch::PrefetchLow(nsIDNSService::DNSFlags aFlags) {
-  return Prefetch(nsIDNSService::RESOLVE_PRIORITY_LOW | aFlags);
+nsresult nsDNSPrefetch::PrefetchLow(bool refreshDNS) {
+  return Prefetch(nsIDNSService::RESOLVE_PRIORITY_LOW |
+                  (refreshDNS ? nsIDNSService::RESOLVE_BYPASS_CACHE : 0));
 }
 
-nsresult nsDNSPrefetch::PrefetchMedium(nsIDNSService::DNSFlags aFlags) {
-  return Prefetch(nsIDNSService::RESOLVE_PRIORITY_MEDIUM | aFlags);
+nsresult nsDNSPrefetch::PrefetchMedium(bool refreshDNS) {
+  return Prefetch(nsIDNSService::RESOLVE_PRIORITY_MEDIUM |
+                  (refreshDNS ? nsIDNSService::RESOLVE_BYPASS_CACHE : 0));
 }
 
-nsresult nsDNSPrefetch::PrefetchHigh(nsIDNSService::DNSFlags aFlags) {
-  return Prefetch(aFlags);
+nsresult nsDNSPrefetch::PrefetchHigh(bool refreshDNS) {
+  return Prefetch(refreshDNS ? nsIDNSService::RESOLVE_BYPASS_CACHE : 0);
 }
 
 namespace {
@@ -128,7 +130,7 @@ nsresult nsDNSPrefetch::FetchHTTPSSVC(
   }
 
   nsCOMPtr<nsIEventTarget> target = mozilla::GetCurrentEventTarget();
-  nsIDNSService::DNSFlags flags = nsIDNSService::GetFlagsFromTRRMode(mTRRMode);
+  uint32_t flags = nsIDNSService::GetFlagsFromTRRMode(mTRRMode);
   if (aRefreshDNS) {
     flags |= nsIDNSService::RESOLVE_BYPASS_CACHE;
   }

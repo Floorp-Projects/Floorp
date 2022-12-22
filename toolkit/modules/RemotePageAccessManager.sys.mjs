@@ -79,15 +79,11 @@ export let RemotePageAccessManager = {
         "Browser:ResetEnterpriseRootsPref",
         "ReportBlockingError",
         "DisplayOfflineSupportPage",
-        "OpenTRRPreferences",
       ],
       RPMCheckAlternateHostAvailable: ["*"],
       RPMAddMessageListener: ["*"],
       RPMRemoveMessageListener: ["*"],
-      RPMGetFormatURLPref: [
-        "app.support.baseURL",
-        "network.trr_ui.skip_reason_learn_more_url",
-      ],
+      RPMGetFormatURLPref: ["app.support.baseURL"],
       RPMGetBoolPref: [
         "security.certerror.hideAddException",
         "security.xfocsp.errorReporting.automatic",
@@ -97,11 +93,6 @@ export let RemotePageAccessManager = {
       RPMAddToHistogram: ["*"],
       RPMGetInnerMostURI: ["*"],
       RPMGetHttpResponseHeader: ["*"],
-      RPMIsTRROnlyFailure: ["*"],
-      RPMShowTRROnlyFailureError: ["*"],
-      RPMGetTRRSkipReason: ["*"],
-      RPMGetTRRDomain: ["*"],
-      RPMSendQuery: ["Browser:AddTRRExcludedDomain"],
     },
     "about:plugins": {
       RPMSendQuery: ["RequestPlugins"],

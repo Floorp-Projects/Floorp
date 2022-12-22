@@ -17,8 +17,6 @@
 #include "prio.h"
 #include "mozilla/net/DNS.h"
 #include "ipc/IPCMessageUtilsSpecializations.h"
-#include "nsITRRSkipReason.h"
-#include "nsIDNSService.h"
 
 namespace IPC {
 
@@ -126,45 +124,6 @@ struct ParamTraits<mozilla::net::NetAddr> {
     /* We've been tricked by some socket family we don't know about! */
     return false;
   }
-};
-
-template <>
-struct ParamTraits<nsIRequest::TRRMode> {
-  static void Write(MessageWriter* aWriter, const nsIRequest::TRRMode& aParam) {
-    WriteParam(aWriter, (uint8_t)aParam);
-  }
-  static bool Read(MessageReader* aReader, nsIRequest::TRRMode* aResult) {
-    uint8_t mode;
-    if (!ReadParam(aReader, &mode)) {
-      return false;
-    }
-    // TODO: sanity check
-    *aResult = static_cast<nsIRequest::TRRMode>(mode);
-    return true;
-  }
-};
-
-template <>
-struct ParamTraits<nsITRRSkipReason::value> {
-  static void Write(MessageWriter* aWriter,
-                    const nsITRRSkipReason::value& aParam) {
-    WriteParam(aWriter, (uint8_t)aParam);
-  }
-  static bool Read(MessageReader* aReader, nsITRRSkipReason::value* aResult) {
-    uint8_t reason;
-    if (!ReadParam(aReader, &reason)) {
-      return false;
-    }
-    // TODO: sanity check
-    *aResult = static_cast<nsITRRSkipReason::value>(reason);
-    return true;
-  }
-};
-
-template <>
-struct ParamTraits<nsIDNSService::DNSFlags>
-    : public BitFlagsEnumSerializer<
-          nsIDNSService::DNSFlags, nsIDNSService::DNSFlags::ALL_DNSFLAGS_BITS> {
 };
 
 }  // namespace IPC

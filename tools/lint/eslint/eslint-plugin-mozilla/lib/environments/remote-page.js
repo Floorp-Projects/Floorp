@@ -12,7 +12,6 @@ module.exports = {
   globals: {
     atob: false,
     btoa: false,
-    RPMAddTRRExcludedDomain: false,
     RPMGetAppBuildID: false,
     RPMGetInnerMostURI: false,
     RPMGetIntPref: false,
@@ -20,8 +19,6 @@ module.exports = {
     RPMGetBoolPref: false,
     RPMSetBoolPref: false,
     RPMGetFormatURLPref: false,
-    RPMIsTRROnlyFailure: false,
-    RPMShowTRROnlyFailureError: false,
     RPMIsWindowPrivate: false,
     RPMSendAsyncMessage: false,
     RPMSendQuery: false,
@@ -33,8 +30,5 @@ module.exports = {
     RPMGetHttpResponseHeader: false,
     RPMTryPingSecureWWWLink: false,
     RPMOpenSecureWWWLink: false,
-    RPMOpenPreferences: false,
-    RPMGetTRRSkipReason: false,
-    RPMGetTRRDomain: false,
   },
 };

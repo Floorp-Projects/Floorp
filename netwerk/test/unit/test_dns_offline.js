@@ -1,5 +1,6 @@
 "use strict";
 
+var dns = Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService);
 var ioService = Services.io;
 var prefs = Services.prefs;
 var mainThread = Services.tm.currentThread;
@@ -43,7 +44,7 @@ function run_test() {
   prefs.setBoolPref("network.proxy.allow_hijacking_localhost", true);
   ioService.offline = true;
   try {
-    Services.dns.asyncResolve(
+    dns.asyncResolve(
       "localhost",
       Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
       0,
@@ -69,7 +70,7 @@ function test2() {
 }
 
 function test2Continued() {
-  Services.dns.asyncResolve(
+  dns.asyncResolve(
     "localhost",
     Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     0,
@@ -88,7 +89,7 @@ function test3() {
 }
 
 function test3Continued() {
-  Services.dns.asyncResolve(
+  dns.asyncResolve(
     "localhost",
     Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     0,

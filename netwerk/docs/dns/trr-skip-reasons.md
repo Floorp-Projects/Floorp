@@ -1,6 +1,6 @@
 # TRRSkippedReasons
 
-These values are defined in [TRRSkippedReason.h](https://searchfox.org/mozilla-central/source/netwerk/dns/nsITRRSkipReason.idl) and are recorded on _nsHostRecord_ for each resolution.
+These values are defined in [TRRSkippedReason.h](https://searchfox.org/mozilla-central/source/netwerk/dns/TRRSkippedReason.h) and are recorded on _nsHostRecord_ for each resolution.
 We normally use them for telemetry or to determine the cause of a TRR failure.
 
 

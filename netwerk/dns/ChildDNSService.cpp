@@ -22,7 +22,6 @@
 #include "nsServiceManagerUtils.h"
 #include "prsystem.h"
 #include "DNSAdditionalInfo.h"
-#include "TRRService.h"
 
 namespace mozilla {
 namespace net {
@@ -68,9 +67,8 @@ ChildDNSService::ChildDNSService() {
 
 void ChildDNSService::GetDNSRecordHashKey(
     const nsACString& aHost, const nsACString& aTrrServer, int32_t aPort,
-    uint16_t aType, const OriginAttributes& aOriginAttributes,
-    nsIDNSService::DNSFlags aFlags, uintptr_t aListenerAddr,
-    nsACString& aHashKey) {
+    uint16_t aType, const OriginAttributes& aOriginAttributes, uint32_t aFlags,
+    uintptr_t aListenerAddr, nsACString& aHashKey) {
   aHashKey.Assign(aHost);
   aHashKey.Assign(aTrrServer);
   aHashKey.AppendInt(aPort);
@@ -85,7 +83,7 @@ void ChildDNSService::GetDNSRecordHashKey(
 }
 
 nsresult ChildDNSService::AsyncResolveInternal(
-    const nsACString& hostname, uint16_t type, nsIDNSService::DNSFlags flags,
+    const nsACString& hostname, uint16_t type, uint32_t flags,
     nsIDNSAdditionalInfo* aInfo, nsIDNSListener* listener,
     nsIEventTarget* target_, const OriginAttributes& aOriginAttributes,
     nsICancelable** result) {
@@ -158,7 +156,7 @@ nsresult ChildDNSService::AsyncResolveInternal(
 }
 
 nsresult ChildDNSService::CancelAsyncResolveInternal(
-    const nsACString& aHostname, uint16_t aType, nsIDNSService::DNSFlags aFlags,
+    const nsACString& aHostname, uint16_t aType, uint32_t aFlags,
     nsIDNSAdditionalInfo* aInfo, nsIDNSListener* aListener, nsresult aReason,
     const OriginAttributes& aOriginAttributes) {
   if (mDisablePrefetch && (aFlags & RESOLVE_SPECULATE)) {
@@ -186,8 +184,7 @@ nsresult ChildDNSService::CancelAsyncResolveInternal(
 
 NS_IMETHODIMP
 ChildDNSService::AsyncResolve(const nsACString& hostname,
-                              nsIDNSService::ResolveType aType,
-                              nsIDNSService::DNSFlags flags,
+                              nsIDNSService::ResolveType aType, uint32_t flags,
                               nsIDNSAdditionalInfo* aInfo,
                               nsIDNSListener* listener, nsIEventTarget* target_,
                               JS::Handle<JS::Value> aOriginAttributes,
@@ -206,11 +203,13 @@ ChildDNSService::AsyncResolve(const nsACString& hostname,
 }
 
 NS_IMETHODIMP
-ChildDNSService::AsyncResolveNative(
-    const nsACString& hostname, nsIDNSService::ResolveType aType,
-    nsIDNSService::DNSFlags flags, nsIDNSAdditionalInfo* aInfo,
-    nsIDNSListener* listener, nsIEventTarget* target_,
-    const OriginAttributes& aOriginAttributes, nsICancelable** result) {
+ChildDNSService::AsyncResolveNative(const nsACString& hostname,
+                                    nsIDNSService::ResolveType aType,
+                                    uint32_t flags, nsIDNSAdditionalInfo* aInfo,
+                                    nsIDNSListener* listener,
+                                    nsIEventTarget* target_,
+                                    const OriginAttributes& aOriginAttributes,
+                                    nsICancelable** result) {
   return AsyncResolveInternal(hostname, aType, flags, aInfo, listener, target_,
                               aOriginAttributes, result);
 }
@@ -226,7 +225,7 @@ ChildDNSService::NewAdditionalInfo(const nsACString& aTrrURL, int32_t aPort,
 NS_IMETHODIMP
 ChildDNSService::CancelAsyncResolve(const nsACString& aHostname,
                                     nsIDNSService::ResolveType aType,
-                                    nsIDNSService::DNSFlags aFlags,
+                                    uint32_t aFlags,
                                     nsIDNSAdditionalInfo* aInfo,
                                     nsIDNSListener* aListener, nsresult aReason,
                                     JS::Handle<JS::Value> aOriginAttributes,
@@ -246,16 +245,14 @@ ChildDNSService::CancelAsyncResolve(const nsACString& aHostname,
 NS_IMETHODIMP
 ChildDNSService::CancelAsyncResolveNative(
     const nsACString& aHostname, nsIDNSService::ResolveType aType,
-    nsIDNSService::DNSFlags aFlags, nsIDNSAdditionalInfo* aInfo,
-    nsIDNSListener* aListener, nsresult aReason,
-    const OriginAttributes& aOriginAttributes) {
+    uint32_t aFlags, nsIDNSAdditionalInfo* aInfo, nsIDNSListener* aListener,
+    nsresult aReason, const OriginAttributes& aOriginAttributes) {
   return CancelAsyncResolveInternal(aHostname, aType, aFlags, aInfo, aListener,
                                     aReason, aOriginAttributes);
 }
 
 NS_IMETHODIMP
-ChildDNSService::Resolve(const nsACString& hostname,
-                         nsIDNSService::DNSFlags flags,
+ChildDNSService::Resolve(const nsACString& hostname, uint32_t flags,
                          JS::Handle<JS::Value> aOriginAttributes,
                          JSContext* aCx, uint8_t aArgc, nsIDNSRecord** result) {
   // not planning to ever support this, since sync IPDL is evil.
@@ -263,8 +260,7 @@ ChildDNSService::Resolve(const nsACString& hostname,
 }
 
 NS_IMETHODIMP
-ChildDNSService::ResolveNative(const nsACString& hostname,
-                               nsIDNSService::DNSFlags flags,
+ChildDNSService::ResolveNative(const nsACString& hostname, uint32_t flags,
                                const OriginAttributes& aOriginAttributes,
                                nsIDNSRecord** result) {
   // not planning to ever support this, since sync IPDL is evil.
@@ -308,12 +304,6 @@ ChildDNSService::SetDetectedTrrURI(const nsACString& aURI) {
 
   mTRRServiceParent->SetDetectedTrrURI(aURI);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-ChildDNSService::GetTRRSkipReasonName(nsITRRSkipReason::value aValue,
-                                      nsACString& aName) {
-  return mozilla::net::GetTRRSkipReasonName(aValue, aName);
 }
 
 NS_IMETHODIMP
@@ -371,8 +361,7 @@ ChildDNSService::GetODoHActivated(bool* aResult) {
 
 void ChildDNSService::NotifyRequestDone(DNSRequestSender* aDnsRequest) {
   // We need the original flags and listener for the pending requests hash.
-  nsIDNSService::DNSFlags originalFlags =
-      aDnsRequest->mFlags & ~RESOLVE_OFFLINE;
+  uint32_t originalFlags = aDnsRequest->mFlags & ~RESOLVE_OFFLINE;
   uintptr_t originalListenerAddr =
       reinterpret_cast<uintptr_t>(aDnsRequest->mListener.get());
   RefPtr<DNSListenerProxy> wrapper = do_QueryObject(aDnsRequest->mListener);
@@ -473,17 +462,10 @@ ChildDNSService::Observe(nsISupports* subject, const char* topic,
 
 void ChildDNSService::SetTRRDomain(const nsACString& aTRRDomain) {
   mTRRDomain = aTRRDomain;
-  TRRService::SetProviderDomain(aTRRDomain);
 }
 
-void ChildDNSService::GetTRRDomainKey(nsACString& aTRRDomain) {
-  aTRRDomain = TRRService::ProviderKey();
-}
-
-NS_IMETHODIMP
-ChildDNSService::GetTrrDomain(nsACString& aTRRDomain) {
+void ChildDNSService::GetTRRDomain(nsACString& aTRRDomain) {
   aTRRDomain = mTRRDomain;
-  return NS_OK;
 }
 
 }  // namespace net

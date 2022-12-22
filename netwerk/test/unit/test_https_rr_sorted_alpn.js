@@ -8,6 +8,10 @@ ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 let trrServer;
 
+const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
+  Ci.nsIDNSService
+);
+
 const { TestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TestUtils.sys.mjs"
 );
@@ -24,7 +28,6 @@ add_setup(async function setup() {
   });
 
   if (mozinfo.socketprocess_networking) {
-    Services.dns; // Needed to trigger socket process.
     await TestUtils.waitForCondition(() => Services.io.socketProcessLaunched);
   }
 });
@@ -52,7 +55,7 @@ function checkResult(inRecord, noHttp2, noHttp3, result) {
 }
 
 add_task(async function testSortedAlpnH3() {
-  Services.dns.clearCache(true);
+  dns.clearCache(true);
 
   trrServer = new TRRServer();
   await trrServer.start();
@@ -80,7 +83,7 @@ add_task(async function testSortedAlpnH3() {
   });
 
   let { inRecord } = await new TRRDNSListener("test.alpn.com", {
-    type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
+    type: dns.RESOLVE_TYPE_HTTPSSVC,
   });
 
   checkResult(inRecord, false, false, {
@@ -175,7 +178,7 @@ add_task(async function testSortedAlpnH3() {
 });
 
 add_task(async function testSortedAlpnH2() {
-  Services.dns.clearCache(true);
+  dns.clearCache(true);
 
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
@@ -199,7 +202,7 @@ add_task(async function testSortedAlpnH2() {
   });
 
   let { inRecord } = await new TRRDNSListener("test.alpn_2.com", {
-    type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
+    type: dns.RESOLVE_TYPE_HTTPSSVC,
   });
 
   checkResult(inRecord, false, false, {

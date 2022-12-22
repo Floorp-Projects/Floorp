@@ -23,8 +23,6 @@ neterror-pref-reset-button = Restore default settings
 neterror-return-to-previous-page-button = Go Back
 neterror-return-to-previous-page-recommended-button = Go Back (Recommended)
 neterror-try-again-button = Try Again
-neterror-add-exception-button = Always continue for this site
-neterror-settings-button = Change DNS settings
 neterror-view-certificate-link = View Certificate
 
 ##
@@ -49,23 +47,6 @@ neterror-dns-not-found-hint-header = <strong>If you entered the right address, y
 neterror-dns-not-found-hint-try-again = Try again later
 neterror-dns-not-found-hint-check-network = Check your network connection
 neterror-dns-not-found-hint-firewall = Check that { -brand-short-name } has permission to access the web (you might be connected but behind a firewall)
-
-## TRR-only specific messages
-## Variables:
-##   $hostname (String) - Hostname of the website to which the user was trying to connect.
-##   $trrDomain (String) - Hostname of the DNS over HTTPS server that is currently in use.
-
-neterror-dns-not-found-trr-only-reason = { -brand-short-name } can’t protect your request for this site’s address through our trusted DNS resolver. Here’s why:
-neterror-dns-not-found-trr-only-attackers = If you continue, a third-party might be able to see what websites you visit or send you to an untrusted site.
-
-neterror-dns-not-found-trr-only-could-not-connect = { -brand-short-name } wasn’t able to connect to { $trrDomain }.
-neterror-dns-not-found-trr-only-timeout = The connection to { $trrDomain } took longer than expected.
-neterror-dns-not-found-trr-offline = You are not connected to the internet.
-neterror-dns-not-found-trr-unknown-host = An address for this website wasn’t found by { $trrDomain }.
-neterror-dns-not-found-trr-server-problem = There was a problem with { $trrDomain }.
-neterror-dns-not-found-trr-unknown-problem = Unexpected problem.
-
-##
 
 neterror-file-not-found-filename = Check the file name for capitalization or other typing errors.
 neterror-file-not-found-moved = Check to see if the file was moved, renamed or deleted.

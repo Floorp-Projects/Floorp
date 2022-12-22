@@ -141,7 +141,7 @@ interface nsIRequest : nsISupports
      */
     const unsigned long LOAD_DOCUMENT_NEEDS_COOKIE = 1 << 2;
 
-    cenum TRRMode : 32 {
+    cenum TRRMode : 8 {
         TRR_DEFAULT_MODE = 0,
         TRR_DISABLED_MODE = 1,
         TRR_FIRST_MODE = 2,

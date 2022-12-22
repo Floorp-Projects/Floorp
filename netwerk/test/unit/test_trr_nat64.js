@@ -7,6 +7,9 @@
 const override = Cc["@mozilla.org/network/native-dns-override;1"].getService(
   Ci.nsINativeDNSResolverOverride
 );
+const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
+  Ci.nsIDNSService
+);
 
 trr_test_setup();
 registerCleanupFunction(async () => {
@@ -61,7 +64,7 @@ add_task(async function test_add_nat64_prefix_to_trr() {
   let chan = makeChan(`https://localhost:${trrServer.port}/test?bla=some`);
   let [, resp] = await channelOpenPromise(chan);
   equal(resp, "<h1> 404 Path not found: /test?bla=some</h1>");
-  Services.dns.clearCache(true);
+  dns.clearCache(true);
   override.addIPOverride("ipv4only.arpa", "fe80::9b2b:c000:00aa");
   Services.prefs.setCharPref(
     "network.connectivity-service.nat64-prefix",

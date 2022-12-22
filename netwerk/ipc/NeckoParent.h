@@ -116,24 +116,22 @@ class NeckoParent : public PNeckoParent {
   already_AddRefed<PDNSRequestParent> AllocPDNSRequestParent(
       const nsACString& aHost, const nsACString& aTrrServer,
       const int32_t& aPort, const uint16_t& aType,
-      const OriginAttributes& aOriginAttributes,
-      const nsIDNSService::DNSFlags& aFlags);
+      const OriginAttributes& aOriginAttributes, const uint32_t& aFlags);
   virtual mozilla::ipc::IPCResult RecvPDNSRequestConstructor(
       PDNSRequestParent* actor, const nsACString& aHost,
       const nsACString& trrServer, const int32_t& aPort, const uint16_t& type,
       const OriginAttributes& aOriginAttributes,
-      const nsIDNSService::DNSFlags& flags) override;
+      const uint32_t& flags) override;
   mozilla::ipc::IPCResult RecvSpeculativeConnect(nsIURI* aURI,
                                                  nsIPrincipal* aPrincipal,
                                                  const bool& aAnonymous);
   mozilla::ipc::IPCResult RecvHTMLDNSPrefetch(
       const nsAString& hostname, const bool& isHttps,
-      const OriginAttributes& aOriginAttributes,
-      const nsIDNSService::DNSFlags& flags);
+      const OriginAttributes& aOriginAttributes, const uint32_t& flags);
   mozilla::ipc::IPCResult RecvCancelHTMLDNSPrefetch(
       const nsAString& hostname, const bool& isHttps,
-      const OriginAttributes& aOriginAttributes,
-      const nsIDNSService::DNSFlags& flags, const nsresult& reason);
+      const OriginAttributes& aOriginAttributes, const uint32_t& flags,
+      const nsresult& reason);
   PWebSocketEventListenerParent* AllocPWebSocketEventListenerParent(
       const uint64_t& aInnerWindowID);
   bool DeallocPWebSocketEventListenerParent(PWebSocketEventListenerParent*);

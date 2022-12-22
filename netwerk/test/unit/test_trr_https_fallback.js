@@ -14,6 +14,9 @@ let h3Port;
 let h3NoResponsePort;
 let trrServer;
 
+const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
+  Ci.nsIDNSService
+);
 const certOverrideService = Cc[
   "@mozilla.org/security/certoverride;1"
 ].getService(Ci.nsICertOverrideService);
@@ -57,7 +60,6 @@ add_setup(async function setup() {
   });
 
   if (mozinfo.socketprocess_networking) {
-    Services.dns; // Needed to trigger socket process.
     await TestUtils.waitForCondition(() => Services.io.socketProcessLaunched);
   }
 
@@ -394,7 +396,7 @@ add_task(async function testFallbackToTheOrigin2() {
 // Test when some records have echConfig and some not, we directly fallback to
 // the origin one.
 add_task(async function testFallbackToTheOrigin3() {
-  Services.dns.clearCache(true);
+  dns.clearCache(true);
 
   trrServer = new TRRServer();
   await trrServer.start();
@@ -711,7 +713,7 @@ add_task(async function testFastfallbackToH2() {
 add_task(async function testFailedH3Connection() {
   trrServer = new TRRServer();
   await trrServer.start();
-  Services.dns.clearCache(true);
+  dns.clearCache(true);
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
@@ -758,7 +760,7 @@ add_task(async function testFailedH3Connection() {
 add_task(async function testHttp3ExcludedList() {
   trrServer = new TRRServer();
   await trrServer.start();
-  Services.dns.clearCache(true);
+  dns.clearCache(true);
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
@@ -830,7 +832,7 @@ add_task(async function testHttp3ExcludedList() {
 add_task(async function testAllRecordsInHttp3ExcludedList() {
   trrServer = new TRRServer();
   await trrServer.start();
-  Services.dns.clearCache(true);
+  dns.clearCache(true);
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setBoolPref("network.dns.http3_echconfig.enabled", true);
   Services.prefs.setCharPref(
@@ -922,7 +924,7 @@ add_task(async function testAllRecordsInHttp3ExcludedList() {
     type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
   });
 
-  Services.dns.clearCache(true);
+  dns.clearCache(true);
   Services.prefs.setIntPref("network.http.speculative-parallel-limit", 0);
   Services.obs.notifyObservers(null, "net:prune-all-connections");
 
