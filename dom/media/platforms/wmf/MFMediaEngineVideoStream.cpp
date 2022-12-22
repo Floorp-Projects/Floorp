@@ -186,8 +186,8 @@ HRESULT MFMediaEngineVideoStream::CreateMediaType(const TrackInfo& aInfo,
 bool MFMediaEngineVideoStream::HasEnoughRawData() const {
   // If more than this much raw video is queued, we'll hold off request more
   // video.
-  static const int64_t VIDEO_VIDEO_USECS = 500000;
-  return mRawDataQueueForFeedingEngine.Duration() >= VIDEO_VIDEO_USECS;
+  return mRawDataQueueForFeedingEngine.Duration() >=
+         StaticPrefs::media_wmf_media_engine_raw_data_threshold_video();
 }
 
 bool MFMediaEngineVideoStream::IsDCompImageReady() {
