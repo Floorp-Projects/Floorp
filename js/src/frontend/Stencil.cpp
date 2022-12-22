@@ -108,8 +108,7 @@ TaggedParserAtomIndex InputName::internInto(JSContext* cx, FrontendContext* fc,
       });
 }
 
-bool InputName::isEqualTo(JSContext* cx, FrontendContext* fc,
-                          ParserAtomsTable& parserAtoms,
+bool InputName::isEqualTo(FrontendContext* fc, ParserAtomsTable& parserAtoms,
                           CompilationAtomCache& atomCache,
                           TaggedParserAtomIndex other,
                           JSAtom** otherCached) const {
@@ -118,6 +117,11 @@ bool InputName::isEqualTo(JSContext* cx, FrontendContext* fc,
         if (ptr->hash() != parserAtoms.hash(other)) {
           return false;
         }
+
+        // JSAtom variant is used only on the main thread delazification,
+        // where JSContext is always available.
+        JSContext* cx = fc->maybeCurrentJSContext();
+        MOZ_ASSERT(cx);
 
         if (!*otherCached) {
           // TODO-Stencil:
@@ -144,11 +148,10 @@ bool InputName::isEqualTo(JSContext* cx, FrontendContext* fc,
       });
 }
 
-GenericAtom::GenericAtom(JSContext* cx, FrontendContext* fc,
-                         ParserAtomsTable& parserAtoms,
+GenericAtom::GenericAtom(FrontendContext* fc, ParserAtomsTable& parserAtoms,
                          CompilationAtomCache& atomCache,
                          TaggedParserAtomIndex index)
-    : ref(EmitterName(cx, fc, parserAtoms, atomCache, index)) {
+    : ref(EmitterName(fc, parserAtoms, atomCache, index)) {
   hash = parserAtoms.hash(index);
 }
 
@@ -176,7 +179,7 @@ bool GenericAtom::operator==(const GenericAtom& other) const {
         return other.ref.match(
             [&name](const EmitterName& other) -> bool {
               // We never have multiple Emitter context at the same time.
-              MOZ_ASSERT(name.cx == other.cx);
+              MOZ_ASSERT(name.fc == other.fc);
               MOZ_ASSERT(&name.parserAtoms == &other.parserAtoms);
               MOZ_ASSERT(&name.atomCache == &other.atomCache);
               return name.index == other.index;
@@ -186,9 +189,13 @@ bool GenericAtom::operator==(const GenericAtom& other) const {
                   name.index, other.stencil, other.index);
             },
             [&name](JSAtom* other) -> bool {
+              // JSAtom variant is used only on the main thread delazification,
+              // where JSContext is always available.
+              JSContext* cx = name.fc->maybeCurrentJSContext();
+              MOZ_ASSERT(cx);
               AutoEnterOOMUnsafeRegion oomUnsafe;
               JSAtom* namePtr = name.parserAtoms.toJSAtom(
-                  name.cx, name.fc, name.index, name.atomCache);
+                  cx, name.fc, name.index, name.atomCache);
               if (!namePtr) {
                 oomUnsafe.crash("GenericAtom(EmitterName == JSAtom*)");
               }
@@ -221,9 +228,13 @@ bool GenericAtom::operator==(const GenericAtom& other) const {
       [&other](JSAtom* name) -> bool {
         return other.ref.match(
             [&name](const EmitterName& other) -> bool {
+              // JSAtom variant is used only on the main thread delazification,
+              // where JSContext is always available.
+              JSContext* cx = other.fc->maybeCurrentJSContext();
+              MOZ_ASSERT(cx);
               AutoEnterOOMUnsafeRegion oomUnsafe;
               JSAtom* otherPtr = other.parserAtoms.toJSAtom(
-                  other.cx, other.fc, other.index, other.atomCache);
+                  cx, other.fc, other.index, other.atomCache);
               if (!otherPtr) {
                 oomUnsafe.crash("GenericAtom(JSAtom* == EmitterName)");
               }
@@ -944,7 +955,7 @@ bool ScopeContext::cachePrivateFieldsForEval(JSContext* cx, FrontendContext* fc,
 }
 
 #ifdef DEBUG
-static bool NameIsOnEnvironment(JSContext* cx, FrontendContext* fc,
+static bool NameIsOnEnvironment(FrontendContext* fc,
                                 ParserAtomsTable& parserAtoms,
                                 CompilationAtomCache& atomCache,
                                 InputScope& scope, TaggedParserAtomIndex name) {
@@ -955,7 +966,7 @@ static bool NameIsOnEnvironment(JSContext* cx, FrontendContext* fc,
       // or else there is a bug in the closed-over name analysis in the
       // Parser.
       InputName binding(scope_ref, bi.name());
-      if (binding.isEqualTo(cx, fc, parserAtoms, atomCache, name, &jsname)) {
+      if (binding.isEqualTo(fc, parserAtoms, atomCache, name, &jsname)) {
         BindingLocation::Kind kind = bi.location().kind();
 
         if (bi.hasArgumentSlot()) {
@@ -967,7 +978,7 @@ static bool NameIsOnEnvironment(JSContext* cx, FrontendContext* fc,
             for (InputBindingIter bi2(bi); bi2 && bi2.hasArgumentSlot();
                  bi2++) {
               InputName binding2(scope_ref, bi2.name());
-              if (binding2.isEqualTo(cx, fc, parserAtoms, atomCache, name,
+              if (binding2.isEqualTo(fc, parserAtoms, atomCache, name,
                                      &jsname)) {
                 kind = bi2.location().kind();
               }
@@ -987,8 +998,7 @@ static bool NameIsOnEnvironment(JSContext* cx, FrontendContext* fc,
 }
 #endif
 
-NameLocation ScopeContext::searchInEnclosingScope(JSContext* cx,
-                                                  FrontendContext* fc,
+NameLocation ScopeContext::searchInEnclosingScope(FrontendContext* fc,
                                                   CompilationInput& input,
                                                   ParserAtomsTable& parserAtoms,
                                                   TaggedParserAtomIndex name) {
@@ -998,39 +1008,39 @@ NameLocation ScopeContext::searchInEnclosingScope(JSContext* cx,
 
   MOZ_ASSERT(scopeCache);
   if (scopeCacheGen != scopeCache->getCurrentGeneration()) {
-    return searchInEnclosingScopeNoCache(cx, fc, input, parserAtoms, name);
+    return searchInEnclosingScopeNoCache(fc, input, parserAtoms, name);
   }
 
 #ifdef DEBUG
   // Catch assertion failures in the NoCache variant before looking at the
   // cached content.
   NameLocation expect =
-      searchInEnclosingScopeNoCache(cx, fc, input, parserAtoms, name);
+      searchInEnclosingScopeNoCache(fc, input, parserAtoms, name);
 #endif
 
   NameLocation found =
-      searchInEnclosingScopeWithCache(cx, fc, input, parserAtoms, name);
+      searchInEnclosingScopeWithCache(fc, input, parserAtoms, name);
   MOZ_ASSERT(expect == found);
   return found;
 }
 
 NameLocation ScopeContext::searchInEnclosingScopeWithCache(
-    JSContext* cx, FrontendContext* fc, CompilationInput& input,
-    ParserAtomsTable& parserAtoms, TaggedParserAtomIndex name) {
+    FrontendContext* fc, CompilationInput& input, ParserAtomsTable& parserAtoms,
+    TaggedParserAtomIndex name) {
   MOZ_ASSERT(input.target ==
                  CompilationInput::CompilationTarget::Delazification ||
              input.target == CompilationInput::CompilationTarget::Eval);
 
   // Generic atom of the looked up name.
-  GenericAtom genName(cx, fc, parserAtoms, input.atomCache, name);
+  GenericAtom genName(fc, parserAtoms, input.atomCache, name);
   mozilla::Maybe<NameLocation> found;
 
   // Number of enclosing scope we walked over.
   uint8_t hops = 0;
 
   for (InputScopeIter si(input.enclosingScope); si; si++) {
-    MOZ_ASSERT(NameIsOnEnvironment(cx, fc, parserAtoms, input.atomCache,
-                                   si.scope(), name));
+    MOZ_ASSERT(NameIsOnEnvironment(fc, parserAtoms, input.atomCache, si.scope(),
+                                   name));
 
     // If the result happens to be in the cached content of the scope that we
     // are iterating over, then return it.
@@ -1083,8 +1093,8 @@ NameLocation ScopeContext::searchInEnclosingScopeWithCache(
 }
 
 NameLocation ScopeContext::searchInEnclosingScopeNoCache(
-    JSContext* cx, FrontendContext* fc, CompilationInput& input,
-    ParserAtomsTable& parserAtoms, TaggedParserAtomIndex name) {
+    FrontendContext* fc, CompilationInput& input, ParserAtomsTable& parserAtoms,
+    TaggedParserAtomIndex name) {
   MOZ_ASSERT(input.target ==
                  CompilationInput::CompilationTarget::Delazification ||
              input.target == CompilationInput::CompilationTarget::Eval);
@@ -1099,8 +1109,8 @@ NameLocation ScopeContext::searchInEnclosingScopeNoCache(
   uint8_t hops = 0;
 
   for (InputScopeIter si(input.enclosingScope); si; si++) {
-    MOZ_ASSERT(NameIsOnEnvironment(cx, fc, parserAtoms, input.atomCache,
-                                   si.scope(), name));
+    MOZ_ASSERT(NameIsOnEnvironment(fc, parserAtoms, input.atomCache, si.scope(),
+                                   name));
 
     bool hasEnv = si.hasSyntacticEnvironment();
     switch (si.kind()) {
@@ -1113,7 +1123,7 @@ NameLocation ScopeContext::searchInEnclosingScopeNoCache(
           si.scope().match([&](auto& scope_ref) {
             for (auto bi = InputBindingIter(scope_ref); bi; bi++) {
               InputName binding(scope_ref, bi.name());
-              if (!binding.isEqualTo(cx, fc, parserAtoms, input.atomCache, name,
+              if (!binding.isEqualTo(fc, parserAtoms, input.atomCache, name,
                                      &jsname)) {
                 continue;
               }
@@ -1153,7 +1163,7 @@ NameLocation ScopeContext::searchInEnclosingScopeNoCache(
           si.scope().match([&](auto& scope_ref) {
             for (auto bi = InputBindingIter(scope_ref); bi; bi++) {
               InputName binding(scope_ref, bi.name());
-              if (!binding.isEqualTo(cx, fc, parserAtoms, input.atomCache, name,
+              if (!binding.isEqualTo(fc, parserAtoms, input.atomCache, name,
                                      &jsname)) {
                 continue;
               }
@@ -1179,7 +1189,7 @@ NameLocation ScopeContext::searchInEnclosingScopeNoCache(
           si.scope().match([&](auto& scope_ref) {
             for (auto bi = InputBindingIter(scope_ref); bi; bi++) {
               InputName binding(scope_ref, bi.name());
-              if (!binding.isEqualTo(cx, fc, parserAtoms, input.atomCache, name,
+              if (!binding.isEqualTo(fc, parserAtoms, input.atomCache, name,
                                      &jsname)) {
                 continue;
               }
