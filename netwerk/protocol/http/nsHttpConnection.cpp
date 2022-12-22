@@ -216,7 +216,9 @@ nsresult nsHttpConnection::MoveTransactionsToSpdy(
   if (NS_FAILED(status)) {  // includes NS_ERROR_NOT_IMPLEMENTED
     MOZ_ASSERT(list.IsEmpty(), "sub transaction list not empty");
 
-    // restart transaction now that we know server supports ws over http2
+    // If this transaction is used to drive websocket, we reset it to put it in
+    // the pending queue. Once we know if the server supports websocket or not,
+    // the pending queue will be processed.
     nsHttpTransaction* trans = mTransaction->QueryHttpTransaction();
     if (trans && trans->IsWebsocketUpgrade()) {
       LOG(("nsHttpConnection resetting transaction for websocket upgrade"));

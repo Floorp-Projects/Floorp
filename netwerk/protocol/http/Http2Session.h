@@ -610,6 +610,10 @@ class Http2Session final : public ASpdySession,
                                // SETTINGS
   bool mProcessedWaitingWebsockets;  // True once we've received at least one
                                      // SETTINGS
+  // Setting this to true means there is a transaction waiting for the result of
+  // WebSocket support. We'll need to process the pending queue once we've
+  // received the settings.
+  bool mHasTransactionWaitingForWebsockets = false;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Http2Session, NS_HTTP2SESSION_IID);
