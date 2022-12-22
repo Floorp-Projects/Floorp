@@ -42,7 +42,25 @@ def create_parser_interventions():
     parser = argparse.ArgumentParser()
     parser.add_argument("--binary", help="Path to browser binary")
     parser.add_argument("--webdriver-binary", help="Path to webdriver binary")
+    parser.add_argument(
+        "--webdriver-port",
+        action="store",
+        default="4444",
+        help="Port on which to run WebDriver",
+    )
+    parser.add_argument(
+        "--webdriver-ws-port",
+        action="store",
+        default="9222",
+        help="Port on which to run WebDriver BiDi websocket",
+    )
     parser.add_argument("--bug", help="Bug to run tests for")
+    parser.add_argument(
+        "--do2fa",
+        action="store_true",
+        default=False,
+        help="Do two-factor auth live in supporting tests",
+    )
     parser.add_argument(
         "--config", help="Path to JSON file containing logins and other settings"
     )
@@ -59,8 +77,15 @@ def create_parser_interventions():
         "--interventions",
         action="store",
         default="both",
-        choices=["enabled", "disabled", "both"],
+        choices=["enabled", "disabled", "both", "none"],
         help="Enable webcompat interventions",
+    )
+    parser.add_argument(
+        "--shims",
+        action="store",
+        default="none",
+        choices=["enabled", "disabled", "both", "none"],
+        help="Enable SmartBlock shims",
     )
     commandline.add_logging_group(parser)
     return parser
@@ -149,24 +174,51 @@ class InterventionTest(MozbuildObject):
 
         self.set_default_kwargs(logger, kwargs)
 
-        interventions = (
-            ["enabled", "disabled"]
-            if kwargs["interventions"] == "both"
-            else [kwargs["interventions"]]
-        )
-
-        for interventions_setting in interventions:
-            runner.run(
-                logger,
-                os.path.join(here, "interventions"),
-                kwargs["binary"],
-                kwargs["webdriver_binary"],
-                bug=kwargs["bug"],
-                debug=kwargs["debug"],
-                interventions=interventions_setting,
-                config=kwargs["config"],
-                headless=kwargs["headless"],
+        if kwargs["interventions"] != "none":
+            interventions = (
+                ["enabled", "disabled"]
+                if kwargs["interventions"] == "both"
+                else [kwargs["interventions"]]
             )
+
+            for interventions_setting in interventions:
+                runner.run(
+                    logger,
+                    os.path.join(here, "interventions"),
+                    kwargs["binary"],
+                    kwargs["webdriver_binary"],
+                    kwargs["webdriver_port"],
+                    kwargs["webdriver_ws_port"],
+                    bug=kwargs["bug"],
+                    debug=kwargs["debug"],
+                    interventions=interventions_setting,
+                    config=kwargs["config"],
+                    headless=kwargs["headless"],
+                    do2fa=kwargs["do2fa"],
+                )
+
+        if kwargs["shims"] != "none":
+            shims = (
+                ["enabled", "disabled"]
+                if kwargs["shims"] == "both"
+                else [kwargs["shims"]]
+            )
+
+            for shims_setting in shims:
+                runner.run(
+                    logger,
+                    os.path.join(here, "shims"),
+                    kwargs["binary"],
+                    kwargs["webdriver_binary"],
+                    kwargs["webdriver_port"],
+                    kwargs["webdriver_ws_port"],
+                    bug=kwargs["bug"],
+                    debug=kwargs["debug"],
+                    shims=shims_setting,
+                    config=kwargs["config"],
+                    headless=kwargs["headless"],
+                    do2fa=kwargs["do2fa"],
+                )
 
         summary = status_handler.summarize()
         passed = (
@@ -185,5 +237,11 @@ class InterventionTest(MozbuildObject):
     virtualenv_name="webcompat",
 )
 def test_interventions(command_context, **params):
+    here = os.path.abspath(os.path.dirname(__file__))
+    command_context.virtualenv_manager.activate()
+    command_context.virtualenv_manager.install_pip_requirements(
+        os.path.join(here, "requirements.txt"),
+        require_hashes=False,
+    )
     intervention_test = command_context._spawn(InterventionTest)
     return 0 if intervention_test.run(**params) else 1

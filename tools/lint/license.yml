@@ -36,6 +36,7 @@ license:
         - mobile/android/geckoview/src/main/res/drawable/ic_generic_file.xml
         - mobile/android/geckoview_example/src/main
         - testing/webcompat/interventions/
+        - testing/webcompat/shims/
         # might not work with license
         - mobile/android/gradle/dotgradle-offline/gradle.properties
         # might not work with license

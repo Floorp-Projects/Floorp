@@ -23,13 +23,22 @@ def pytest_generate_tests(metafunc):
             if mark.name == "skip_platforms":
                 otherargs["skip_platforms"] = mark.args
 
-    if "with_interventions" in marks:
-        argvalues.append([dict({"interventions": True}, **otherargs)])
-        ids.append("with_interventions")
+    if "with_private_browsing" in marks:
+        otherargs["with_private_browsing"] = True
+    if "with_strict_etp" in marks:
+        otherargs["with_strict_etp"] = True
+    if "without_storage_partitioning" in marks:
+        otherargs["without_storage_partitioning"] = True
+    if "without_tcp " in marks:
+        otherargs["without_tcp "] = True
 
-    if "without_interventions" in marks:
-        argvalues.append([dict({"interventions": False}, **otherargs)])
-        ids.append("without_interventions")
+    if "with_shims" in marks:
+        argvalues.append([dict({"shims": True}, **otherargs)])
+        ids.append("with_shims")
+
+    if "without_shims" in marks:
+        argvalues.append([dict({"shims": False}, **otherargs)])
+        ids.append("without_shims")
 
     metafunc.parametrize(["session"], argvalues, ids=ids, indirect=True)
 
@@ -38,14 +47,17 @@ def pytest_generate_tests(metafunc):
 async def test_config(request, driver):
     params = request.node.callspec.params.get("session")
 
-    use_interventions = params.get("interventions")
-    print(f"use_interventions {use_interventions}")
-    if use_interventions is None:
+    use_shims = params.get("shims")
+    if use_shims is None:
         raise ValueError(
-            "Missing intervention marker in %s:%s"
+            "Missing shims marker in %s:%s"
             % (request.fspath, request.function.__name__)
         )
 
     return {
-        "use_interventions": use_interventions,
+        "aps": not params.get("without_storage_partitioning", False),
+        "use_pbm": params.get("with_private_browsing", False),
+        "use_shims": use_shims,
+        "use_strict_etp": params.get("with_strict_etp", False),
+        "without_tcp": params.get("without_tcp", False),
     }
