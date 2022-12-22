@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.38"
 name = "crossbeam-utils"
-version = "0.8.11"
+version = "0.8.14"
 description = "Utilities for concurrent programming"
 homepage = "https://github.com/crossbeam-rs/crossbeam/tree/master/crossbeam-utils"
 readme = "README.md"
@@ -35,10 +35,6 @@ repository = "https://github.com/crossbeam-rs/crossbeam"
 [dependencies.cfg-if]
 version = "1"
 
-[dependencies.once_cell]
-version = "1"
-optional = true
-
 [dev-dependencies.rand]
 version = "0.8"
 
@@ -48,7 +44,7 @@ version = "1"
 [features]
 default = ["std"]
 nightly = []
-std = ["once_cell"]
+std = []
 
 [target."cfg(crossbeam_loom)".dependencies.loom]
 version = "0.5"

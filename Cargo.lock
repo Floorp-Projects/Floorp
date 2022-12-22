@@ -540,7 +540,7 @@ version = "0.1.0"
 dependencies = [
  "bits_client",
  "comedy",
- "crossbeam-utils 0.8.11",
+ "crossbeam-utils 0.8.14",
  "libc",
  "log",
  "moz_task",
@@ -588,7 +588,7 @@ version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b8e3ff9db740167616e528c509b3618046fc05d337f8f3182d300f4aa977d2bb"
 dependencies = [
- "crossbeam-utils 0.8.11",
+ "crossbeam-utils 0.8.14",
  "jobserver",
  "num_cpus",
 ]
@@ -691,7 +691,7 @@ version = "0.0.1"
 dependencies = [
  "base64",
  "byteorder",
- "crossbeam-utils 0.8.11",
+ "crossbeam-utils 0.8.14",
  "cstr",
  "log",
  "moz_task",
@@ -985,7 +985,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2dd04ddaf88237dc3b8d8f9a3c1004b506b54b3313403944054d23c0870c521"
 dependencies = [
  "cfg-if 1.0.0",
- "crossbeam-utils 0.8.11",
+ "crossbeam-utils 0.8.14",
 ]
 
 [[package]]
@@ -1007,7 +1007,7 @@ checksum = "715e8152b692bba2d374b53d4875445368fdf21a94751410af607a5ac677d1fc"
 dependencies = [
  "cfg-if 1.0.0",
  "crossbeam-epoch 0.9.13",
- "crossbeam-utils 0.8.11",
+ "crossbeam-utils 0.8.14",
 ]
 
 [[package]]
@@ -1033,7 +1033,7 @@ checksum = "01a9af1f4c2ef74bb8aa1f7e19706bc72d03598c8a570bb5de72243c7a9d9d5a"
 dependencies = [
  "autocfg",
  "cfg-if 1.0.0",
- "crossbeam-utils 0.8.11",
+ "crossbeam-utils 0.8.14",
  "memoffset 0.7.1",
  "scopeguard",
 ]
@@ -1070,12 +1070,11 @@ dependencies = [
 
 [[package]]
 name = "crossbeam-utils"
-version = "0.8.11"
+version = "0.8.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "51887d4adc7b564537b15adcfb307936f8075dfcd5f00dde9a9f1d29383682bc"
+checksum = "4fb766fa798726286dbbb842f174001dab8abc7b627a1dd86e0b7222a95d929f"
 dependencies = [
  "cfg-if 1.0.0",
- "once_cell",
 ]
 
 [[package]]
@@ -2901,7 +2900,7 @@ name = "kvstore"
 version = "0.1.0"
 dependencies = [
  "atomic_refcell",
- "crossbeam-utils 0.8.11",
+ "crossbeam-utils 0.8.14",
  "cstr",
  "lazy_static",
  "libc",
@@ -4457,7 +4456,7 @@ checksum = "258bcdb5ac6dad48491bb2992db6b7cf74878b0384908af124823d118c99683f"
 dependencies = [
  "crossbeam-channel",
  "crossbeam-deque 0.8.2",
- "crossbeam-utils 0.8.11",
+ "crossbeam-utils 0.8.14",
  "num_cpus",
 ]
 
@@ -6507,7 +6506,7 @@ dependencies = [
 name = "xulstore"
 version = "0.1.0"
 dependencies = [
- "crossbeam-utils 0.8.11",
+ "crossbeam-utils 0.8.14",
  "cstr",
  "libc",
  "log",
@@ -6550,6 +6549,6 @@ checksum = "bf225bcf73bb52cbb496e70475c7bd7a3f769df699c0020f6c7bd9a96dcf0b8d"
 dependencies = [
  "byteorder",
  "crc32fast",
- "crossbeam-utils 0.8.11",
+ "crossbeam-utils 0.8.14",
  "flate2",
 ]
