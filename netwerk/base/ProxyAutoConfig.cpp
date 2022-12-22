@@ -239,7 +239,7 @@ bool ProxyAutoConfig::ResolveAddress(const nsACString& aHostName,
   // When the PAC script attempts to resolve a domain, we must make sure we
   // don't use TRR, otherwise the TRR channel might also attempt to resolve
   // a name and we'll have a deadlock.
-  uint32_t flags =
+  nsIDNSService::DNSFlags flags =
       nsIDNSService::RESOLVE_PRIORITY_MEDIUM |
       nsIDNSService::GetFlagsFromTRRMode(nsIRequest::TRR_DISABLED_MODE);
 

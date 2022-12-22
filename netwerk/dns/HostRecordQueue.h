@@ -26,7 +26,7 @@ class HostRecordQueue final {
 
   // Insert the record to mHighQ or mMediumQ or mLowQ based on the record's
   // priority.
-  void InsertRecord(nsHostRecord* aRec, uint16_t aFlags,
+  void InsertRecord(nsHostRecord* aRec, nsIDNSService::DNSFlags aFlags,
                     const MutexAutoLock& aProofOfLock);
   // Insert the record to mEvictionQ. In theory, this function should be called
   // when the record is not in any queue.
@@ -45,7 +45,7 @@ class HostRecordQueue final {
   // Remove the record from the queue that contains it.
   void MaybeRemoveFromQ(nsHostRecord* aRec, const MutexAutoLock& aProofOfLock);
   // When the record's priority changes, move the record between pending queues.
-  void MoveToAnotherPendingQ(nsHostRecord* aRec, uint16_t aFlags,
+  void MoveToAnotherPendingQ(nsHostRecord* aRec, nsIDNSService::DNSFlags aFlags,
                              const MutexAutoLock& aProofOfLock);
   // Returning the first record from one of the pending queue. When |aHighQOnly|
   // is true, returning the record from mHighQ only. When false, return the

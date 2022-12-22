@@ -181,7 +181,7 @@ void DnsAndConnectSocket::CheckProxyConfig() {
 nsresult DnsAndConnectSocket::SetupDnsFlags(ConnectionEntry* ent) {
   LOG(("DnsAndConnectSocket::SetupDnsFlags [this=%p] ", this));
 
-  uint32_t dnsFlags = 0;
+  nsIDNSService::DNSFlags dnsFlags = nsIDNSService::RESOLVE_DEFAULT_FLAGS;
   bool disableIpv6ForBackup = false;
   if (mCaps & NS_HTTP_REFRESH_DNS) {
     dnsFlags = nsIDNSService::RESOLVE_BYPASS_CACHE;

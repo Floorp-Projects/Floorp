@@ -429,7 +429,7 @@ SocketProcessChild::AllocPAltSvcTransactionChild(
 already_AddRefed<PDNSRequestChild> SocketProcessChild::AllocPDNSRequestChild(
     const nsACString& aHost, const nsACString& aTrrServer, const int32_t& aPort,
     const uint16_t& aType, const OriginAttributes& aOriginAttributes,
-    const uint32_t& aFlags) {
+    const nsIDNSService::DNSFlags& aFlags) {
   RefPtr<DNSRequestHandler> handler = new DNSRequestHandler();
   RefPtr<DNSRequestChild> actor = new DNSRequestChild(handler);
   return actor.forget();
@@ -438,7 +438,8 @@ already_AddRefed<PDNSRequestChild> SocketProcessChild::AllocPDNSRequestChild(
 mozilla::ipc::IPCResult SocketProcessChild::RecvPDNSRequestConstructor(
     PDNSRequestChild* aActor, const nsACString& aHost,
     const nsACString& aTrrServer, const int32_t& aPort, const uint16_t& aType,
-    const OriginAttributes& aOriginAttributes, const uint32_t& aFlags) {
+    const OriginAttributes& aOriginAttributes,
+    const nsIDNSService::DNSFlags& aFlags) {
   RefPtr<DNSRequestChild> actor = static_cast<DNSRequestChild*>(aActor);
   RefPtr<DNSRequestHandler> handler =
       actor->GetDNSRequest()->AsDNSRequestHandler();

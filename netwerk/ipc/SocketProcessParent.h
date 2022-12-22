@@ -56,12 +56,13 @@ class SocketProcessParent final
   already_AddRefed<PDNSRequestParent> AllocPDNSRequestParent(
       const nsACString& aHost, const nsACString& aTrrServer,
       const int32_t& port, const uint16_t& aType,
-      const OriginAttributes& aOriginAttributes, const uint32_t& aFlags);
+      const OriginAttributes& aOriginAttributes,
+      const nsIDNSService::DNSFlags& aFlags);
   virtual mozilla::ipc::IPCResult RecvPDNSRequestConstructor(
       PDNSRequestParent* actor, const nsACString& aHost,
       const nsACString& trrServer, const int32_t& port, const uint16_t& type,
       const OriginAttributes& aOriginAttributes,
-      const uint32_t& flags) override;
+      const nsIDNSService::DNSFlags& flags) override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
   bool SendRequestMemoryReport(const uint32_t& aGeneration,
