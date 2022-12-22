@@ -20,6 +20,33 @@ let getStatsReports = async (filter = "") => {
     if (filter.length) {
       is(report.pcid, filter, "pcid matches filter");
     }
+
+    // Check for duplicates
+    const checkForDuplicateId = statsArray => {
+      ok(Array.isArray(statsArray), "|statsArray| is an array");
+      const ids = new Set();
+      statsArray.forEach(stat => {
+        is(typeof stat.id, "string", "|stat.id| is a string");
+        ok(
+          !ids.has(stat.id),
+          `Id ${stat.id} should appear only once. Stat was ${JSON.stringify(
+            stat
+          )}`
+        );
+        ids.add(stat.id);
+      });
+    };
+
+    checkForDuplicateId(report.inboundRtpStreamStats);
+    checkForDuplicateId(report.outboundRtpStreamStats);
+    checkForDuplicateId(report.remoteInboundRtpStreamStats);
+    checkForDuplicateId(report.remoteOutboundRtpStreamStats);
+    checkForDuplicateId(report.rtpContributingSourceStats);
+    checkForDuplicateId(report.iceCandidatePairStats);
+    checkForDuplicateId(report.iceCandidateStats);
+    checkForDuplicateId(report.trickledIceCandidateStats);
+    checkForDuplicateId(report.dataChannelStats);
+    checkForDuplicateId(report.codecStats);
   };
 
   reports.forEach(sanityCheckReport);
@@ -143,6 +170,19 @@ add_task(async () => {
   await clearAndCheck();
   let tab = await openTabInNewProcess("single_peerconnection.html");
   await checkStatsReportCount(1);
+  await checkLoggingNonEmpty();
+  await killTabProcess(tab);
+  BrowserTestUtils.removeTab(tab);
+  await clearAndCheck();
+});
+
+add_task(async () => {
+  info(
+    "Test that we can get stats/logging for two connected PCs on a content process"
+  );
+  await clearAndCheck();
+  let tab = await openTabInNewProcess("peerconnection_connect.html");
+  await checkStatsReportCount(2);
   await checkLoggingNonEmpty();
   await killTabProcess(tab);
   BrowserTestUtils.removeTab(tab);
