@@ -36,6 +36,7 @@ class RegExpStack;
 namespace js {
 
 class VectorMatchPairs;
+class LifoAlloc;
 
 namespace frontend {
 class TokenStreamAnyChars;
@@ -50,7 +51,7 @@ void DestroyIsolate(Isolate* isolate);
 size_t IsolateSizeOfIncludingThis(Isolate* isolate,
                                   mozilla::MallocSizeOf mallocSizeOf);
 
-bool CheckPatternSyntax(JSContext* cx, JS::NativeStackLimit stackLimit,
+bool CheckPatternSyntax(js::LifoAlloc& alloc, JS::NativeStackLimit stackLimit,
                         frontend::TokenStreamAnyChars& ts,
                         const mozilla::Range<const char16_t> chars,
                         JS::RegExpFlags flags,
