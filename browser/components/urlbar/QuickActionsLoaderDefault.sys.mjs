@@ -54,6 +54,13 @@ let openAddonsUrl = url => {
   };
 };
 
+// There are various actions that will either fail or do not
+// make sense to use unless the user is viewing web content,
+// Screenshots for example cannot be taken on about: pages.
+// We may want to show these as disabled buttons, that may
+// aid discovery but may also confuse users.
+let currentPageIsWebContentFilter = () =>
+  !currentBrowser()?.currentURI.spec.startsWith("about:");
 let currentBrowser = () =>
   lazy.BrowserWindowTracker.getTopWindow()?.gBrowser.selectedBrowser;
 let currentTab = () =>
@@ -176,9 +183,7 @@ const DEFAULT_ACTIONS = {
     l10nCommands: ["quickactions-cmd-screenshot", "quickactions-screenshot3"],
     label: "quickactions-screenshot3",
     icon: "chrome://browser/skin/screenshot.svg",
-    isActive: () => {
-      return !lazy.BrowserWindowTracker.getTopWindow().gScreenshots.shouldScreenshotsButtonBeDisabled();
-    },
+    isActive: currentPageIsWebContentFilter,
     onPick: () => {
       lazy.BrowserWindowTracker.getTopWindow()
         .document.getElementById("Browser:Screenshot")

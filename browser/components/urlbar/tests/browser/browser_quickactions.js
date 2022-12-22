@@ -214,13 +214,7 @@ add_task(async function test_disabled() {
   UrlbarProviderQuickActions.removeAction("disabledaction");
 });
 
-/**
- * The first part of this test confirms that when the screenshots component is enabled
- * the screenshot quick action button will be enabled on about: pages.
- * The second part confirms that when the screenshots extension is enabled the
- * screenshot quick action button will be disbaled on about: pages.
- */
-add_task(async function test_screenshot_enabled_or_disabled() {
+add_task(async function test_screenshot_disabled() {
   let onLoaded = BrowserTestUtils.browserLoaded(
     gBrowser.selectedBrowser,
     false,
@@ -241,30 +235,6 @@ add_task(async function test_screenshot_enabled_or_disabled() {
   let screenshotButton = window.document.querySelector(
     ".urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row"
   );
-  Assert.ok(
-    !screenshotButton.hasAttribute("disabled"),
-    "Screenshot button is disabled on about pages"
-  );
-
-  await UrlbarTestUtils.promisePopupClose(window);
-  EventUtils.synthesizeKey("KEY_Escape");
-
-  await SpecialPowers.pushPrefEnv({
-    set: [["screenshots.browser.component.enabled", false]],
-  });
-
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "screenshot",
-  });
-  Assert.equal(
-    UrlbarTestUtils.getResultCount(window),
-    2,
-    "The action is displayed"
-  );
-  screenshotButton = window.document.querySelector(
-    ".urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row"
-  );
   Assert.equal(
     screenshotButton.getAttribute("disabled"),
     "disabled",
@@ -273,8 +243,6 @@ add_task(async function test_screenshot_enabled_or_disabled() {
 
   await UrlbarTestUtils.promisePopupClose(window);
   EventUtils.synthesizeKey("KEY_Escape");
-
-  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function match_in_phrase() {
