@@ -96,7 +96,7 @@ class DeferredDNSPrefetches final : public nsIWebProgressListener,
   DeferredDNSPrefetches();
 
   void Activate();
-  nsresult Add(nsIDNSService::DNSFlags flags, SupportsDNSPrefetch&, Element&);
+  nsresult Add(uint32_t flags, SupportsDNSPrefetch&, Element&);
 
   void RemoveUnboundLinks();
 
@@ -105,7 +105,7 @@ class DeferredDNSPrefetches final : public nsIWebProgressListener,
   void Flush();
 
   void SubmitQueue();
-  void SubmitQueueEntry(Element&, nsIDNSService::DNSFlags aFlags);
+  void SubmitQueueEntry(Element&, uint32_t aFlags);
 
   uint16_t mHead;
   uint16_t mTail;
@@ -119,7 +119,7 @@ class DeferredDNSPrefetches final : public nsIWebProgressListener,
   static const int sMaxDeferredMask = (sMaxDeferred - 1);
 
   struct deferred_entry {
-    nsIDNSService::DNSFlags mFlags;
+    uint32_t mFlags;
     // SupportsDNSPrefetch clears this raw pointer in Destroyed().
     Element* mElement;
   } mEntries[sMaxDeferred];
@@ -184,26 +184,25 @@ bool HTMLDNSPrefetch::IsAllowed(Document* aDocument) {
   return aDocument->IsDNSPrefetchAllowed() && aDocument->GetWindow();
 }
 
-static nsIDNSService::DNSFlags GetDNSFlagsFromElement(Element& aElement) {
+static uint32_t GetDNSFlagsFromElement(Element& aElement) {
   nsIChannel* channel = aElement.OwnerDoc()->GetChannel();
   if (!channel) {
-    return nsIDNSService::RESOLVE_DEFAULT_FLAGS;
+    return 0;
   }
   return nsIDNSService::GetFlagsFromTRRMode(channel->GetTRRMode());
 }
 
-nsIDNSService::DNSFlags HTMLDNSPrefetch::PriorityToDNSServiceFlags(
-    Priority aPriority) {
+uint32_t HTMLDNSPrefetch::PriorityToDNSServiceFlags(Priority aPriority) {
   switch (aPriority) {
     case Priority::Low:
-      return nsIDNSService::RESOLVE_PRIORITY_LOW;
+      return uint32_t(nsIDNSService::RESOLVE_PRIORITY_LOW);
     case Priority::Medium:
-      return nsIDNSService::RESOLVE_PRIORITY_MEDIUM;
+      return uint32_t(nsIDNSService::RESOLVE_PRIORITY_MEDIUM);
     case Priority::High:
-      return nsIDNSService::RESOLVE_DEFAULT_FLAGS;
+      return 0u;
   }
   MOZ_ASSERT_UNREACHABLE("Unknown priority");
-  return nsIDNSService::RESOLVE_DEFAULT_FLAGS;
+  return 0u;
 }
 
 nsresult HTMLDNSPrefetch::Prefetch(SupportsDNSPrefetch& aSupports,
@@ -220,7 +219,7 @@ nsresult HTMLDNSPrefetch::Prefetch(SupportsDNSPrefetch& aSupports,
 nsresult HTMLDNSPrefetch::Prefetch(
     const nsAString& hostname, bool isHttps,
     const OriginAttributes& aPartitionedPrincipalOriginAttributes,
-    nsIDNSService::DNSFlags flags) {
+    uint32_t flags) {
   if (IsNeckoChild()) {
     // We need to check IsEmpty() because net_IsValidHostName()
     // considers empty strings to be valid hostnames
@@ -277,7 +276,7 @@ nsresult HTMLDNSPrefetch::CancelPrefetch(SupportsDNSPrefetch& aSupports,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsIDNSService::DNSFlags flags =
+  uint32_t flags =
       GetDNSFlagsFromElement(aElement) | PriorityToDNSServiceFlags(aPriority);
 
   nsIURI* uri = aSupports.GetURIForDNSPrefetch(aElement);
@@ -302,7 +301,7 @@ nsresult HTMLDNSPrefetch::CancelPrefetch(SupportsDNSPrefetch& aSupports,
 nsresult HTMLDNSPrefetch::CancelPrefetch(
     const nsAString& hostname, bool isHttps,
     const OriginAttributes& aPartitionedPrincipalOriginAttributes,
-    nsIDNSService::DNSFlags flags, nsresult aReason) {
+    uint32_t flags, nsresult aReason) {
   // Forward this request to Necko Parent if we're a child process
   if (IsNeckoChild()) {
     // We need to check IsEmpty() because net_IsValidHostName()
@@ -410,7 +409,7 @@ void DeferredDNSPrefetches::Flush() {
   }
 }
 
-nsresult DeferredDNSPrefetches::Add(nsIDNSService::DNSFlags flags,
+nsresult DeferredDNSPrefetches::Add(uint32_t flags,
                                     SupportsDNSPrefetch& aSupports,
                                     Element& aElement) {
   // The FIFO has no lock, so it can only be accessed on main thread
@@ -461,7 +460,7 @@ void DeferredDNSPrefetches::SubmitQueue() {
 }
 
 void DeferredDNSPrefetches::SubmitQueueEntry(Element& aElement,
-                                             nsIDNSService::DNSFlags aFlags) {
+                                             uint32_t aFlags) {
   auto& supports = ToSupportsDNSPrefetch(aElement);
   supports.ClearIsInDNSPrefetch();
 

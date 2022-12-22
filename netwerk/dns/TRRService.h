@@ -82,7 +82,6 @@ class TRRService : public TRRServiceBase,
   // Returns a reference to a static string identifying the current DoH server
   // If the DoH server is not one of the built-in ones it will return "(other)"
   static const nsCString& ProviderKey();
-  static void SetProviderDomain(const nsACString& aTRRDomain);
 
   void InitTRRConnectionInfo() override;
 

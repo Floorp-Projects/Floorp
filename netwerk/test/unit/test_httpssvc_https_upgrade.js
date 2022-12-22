@@ -6,6 +6,10 @@
 
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
+const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
+  Ci.nsIDNSService
+);
+
 const certOverrideService = Cc[
   "@mozilla.org/security/certoverride;1"
 ].getService(Ci.nsICertOverrideService);
@@ -52,7 +56,6 @@ add_setup(async function setup() {
   });
 
   if (mozinfo.socketprocess_networking) {
-    Services.dns; // Needed to trigger socket process.
     await TestUtils.waitForCondition(() => Services.io.socketProcessLaunched);
   }
 
@@ -112,7 +115,7 @@ EventSinkListener.prototype.QueryInterface = ChromeUtils.generateQI([
 
 // Test if the request is upgraded to https with a HTTPSSVC record.
 add_task(async function testUseHTTPSSVCAsHSTS() {
-  Services.dns.clearCache(true);
+  dns.clearCache(true);
   // Do DNS resolution before creating the channel, so the HTTPSSVC record will
   // be resolved from the cache.
   await new TRRDNSListener("test.httpssvc.com", {
@@ -144,7 +147,7 @@ add_task(async function testUseHTTPSSVCAsHSTS() {
 // nsHttpChannel::OnHTTPSRRAvailable is called after
 // nsHttpChannel::MaybeUseHTTPSRRForUpgrade.
 add_task(async function testInvalidDNSResult() {
-  Services.dns.clearCache(true);
+  dns.clearCache(true);
 
   let httpserv = new HttpServer();
   let content = "ok";
@@ -170,7 +173,7 @@ add_task(async function testInvalidDNSResult() {
 // The same test as above, but nsHttpChannel::MaybeUseHTTPSRRForUpgrade is
 // called after nsHttpChannel::OnHTTPSRRAvailable.
 add_task(async function testInvalidDNSResult1() {
-  Services.dns.clearCache(true);
+  dns.clearCache(true);
 
   let httpserv = new HttpServer();
   let content = "ok";
@@ -199,7 +202,7 @@ add_task(async function testInvalidDNSResult1() {
         channel.suspend();
 
         new TRRDNSListener("foo.notexisted.com", {
-          type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
+          type: dns.RESOLVE_TYPE_HTTPSSVC,
           expectedSuccess: false,
         }).then(() => channel.resume());
       }
@@ -229,7 +232,7 @@ add_task(async function testLiteralIP() {
 // Test the case that an HTTPS RR is available and the server returns a 307
 // for redirecting back to http.
 add_task(async function testEndlessUpgradeDowngrade() {
-  Services.dns.clearCache(true);
+  dns.clearCache(true);
 
   let httpserv = new HttpServer();
   let content = "okok";
@@ -254,7 +257,7 @@ add_task(async function testEndlessUpgradeDowngrade() {
 });
 
 add_task(async function testHttpRequestBlocked() {
-  Services.dns.clearCache(true);
+  dns.clearCache(true);
 
   let dnsRequestObserver = {
     register() {
@@ -321,7 +324,7 @@ function createPrincipal(url) {
 // Test if the Origin header stays the same after an internal HTTPS upgrade
 // caused by HTTPS RR.
 add_task(async function testHTTPSRRUpgradeWithOriginHeader() {
-  Services.dns.clearCache(true);
+  dns.clearCache(true);
 
   const url = "http://test.httpssvc.com:80/origin_header";
   const originURL = "http://example.com";

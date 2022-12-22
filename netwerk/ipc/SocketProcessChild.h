@@ -91,13 +91,12 @@ class SocketProcessChild final : public PSocketProcessChild {
   already_AddRefed<PDNSRequestChild> AllocPDNSRequestChild(
       const nsACString& aHost, const nsACString& aTrrServer,
       const int32_t& aPort, const uint16_t& aType,
-      const OriginAttributes& aOriginAttributes,
-      const nsIDNSService::DNSFlags& aFlags);
+      const OriginAttributes& aOriginAttributes, const uint32_t& aFlags);
   mozilla::ipc::IPCResult RecvPDNSRequestConstructor(
       PDNSRequestChild* aActor, const nsACString& aHost,
       const nsACString& aTrrServer, const int32_t& aPort, const uint16_t& aType,
       const OriginAttributes& aOriginAttributes,
-      const nsIDNSService::DNSFlags& aFlags) override;
+      const uint32_t& aFlags) override;
 
   void AddDataBridgeToMap(uint64_t aChannelId,
                           BackgroundDataBridgeParent* aActor);

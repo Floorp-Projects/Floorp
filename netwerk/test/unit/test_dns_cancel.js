@@ -1,5 +1,7 @@
 "use strict";
 
+var dns = Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService);
+
 var hostname1 = "";
 var hostname2 = "";
 var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -49,7 +51,7 @@ function run_test() {
   var flags = Ci.nsIDNSService.RESOLVE_BYPASS_CACHE;
 
   // This one will be canceled with cancelAsyncResolve.
-  Services.dns.asyncResolve(
+  dns.asyncResolve(
     hostname2,
     Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     flags,
@@ -58,7 +60,7 @@ function run_test() {
     mainThread,
     defaultOriginAttributes
   );
-  Services.dns.cancelAsyncResolve(
+  dns.cancelAsyncResolve(
     hostname2,
     Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     flags,
@@ -69,7 +71,7 @@ function run_test() {
   );
 
   // This one will not be canceled.
-  requestList1NotCanceled = Services.dns.asyncResolve(
+  requestList1NotCanceled = dns.asyncResolve(
     hostname1,
     Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     flags,
@@ -80,7 +82,7 @@ function run_test() {
   );
 
   // This one will be canceled with cancel(Cr.NS_ERROR_ABORT).
-  requestList1Canceled2 = Services.dns.asyncResolve(
+  requestList1Canceled2 = dns.asyncResolve(
     hostname1,
     Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     flags,
@@ -92,7 +94,7 @@ function run_test() {
   requestList1Canceled2.cancel(Cr.NS_ERROR_ABORT);
 
   // This one will not be canceled.
-  requestList2NotCanceled = Services.dns.asyncResolve(
+  requestList2NotCanceled = dns.asyncResolve(
     hostname1,
     Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     flags,
@@ -103,7 +105,7 @@ function run_test() {
   );
 
   // This one will be canceled with cancel(Cr.NS_ERROR_ABORT).
-  requestList2Canceled = Services.dns.asyncResolve(
+  requestList2Canceled = dns.asyncResolve(
     hostname2,
     Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     flags,

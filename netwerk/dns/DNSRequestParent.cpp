@@ -40,7 +40,7 @@ void DNSRequestHandler::DoAsyncResolve(const nsACString& hostname,
                                        const nsACString& trrServer,
                                        int32_t port, uint16_t type,
                                        const OriginAttributes& originAttributes,
-                                       nsIDNSService::DNSFlags flags) {
+                                       uint32_t flags) {
   nsresult rv;
   mFlags = flags;
   nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
@@ -64,7 +64,7 @@ void DNSRequestHandler::DoAsyncResolve(const nsACString& hostname,
 void DNSRequestHandler::OnRecvCancelDNSRequest(
     const nsCString& hostName, const nsCString& aTrrServer, const int32_t& port,
     const uint16_t& type, const OriginAttributes& originAttributes,
-    const nsIDNSService::DNSFlags& flags, const nsresult& reason) {
+    const uint32_t& flags, const nsresult& reason) {
   nsresult rv;
   nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
@@ -128,7 +128,7 @@ DNSRequestHandler::OnLookupComplete(nsICancelable* request,
     bool isTRR = false;
     rec->IsTRR(&isTRR);
 
-    nsIRequest::TRRMode effectiveTRRMode = nsIRequest::TRR_DEFAULT_MODE;
+    uint32_t effectiveTRRMode = 0;
     rec->GetEffectiveTRRMode(&effectiveTRRMode);
 
     uint32_t ttl = 0;
@@ -159,7 +159,7 @@ DNSRequestParent::DNSRequestParent(DNSRequestBase* aRequest)
 mozilla::ipc::IPCResult DNSRequestParent::RecvCancelDNSRequest(
     const nsCString& hostName, const nsCString& trrServer, const int32_t& port,
     const uint16_t& type, const OriginAttributes& originAttributes,
-    const nsIDNSService::DNSFlags& flags, const nsresult& reason) {
+    const uint32_t& flags, const nsresult& reason) {
   mDNSRequest->OnRecvCancelDNSRequest(hostName, trrServer, port, type,
                                       originAttributes, flags, reason);
   return IPC_OK();

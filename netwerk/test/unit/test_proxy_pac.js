@@ -10,6 +10,9 @@ const { TestUtils } = ChromeUtils.importESModule(
 const override = Cc["@mozilla.org/network/native-dns-override;1"].getService(
   Ci.nsINativeDNSResolverOverride
 );
+const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
+  Ci.nsIDNSService
+);
 
 class ConsoleListener {
   messages = [];
@@ -108,7 +111,7 @@ add_task(async function test_bug1724345() {
   override.clearOverrides();
   override.addIPOverride("example.org", "N/A");
   override.addIPOverride("null", "127.0.0.1");
-  Services.dns.clearCache(true);
+  dns.clearCache(true);
 
   let chan = NetUtil.newChannel({
     uri: `http://example.org:1234/`,

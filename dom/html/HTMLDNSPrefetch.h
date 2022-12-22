@@ -10,7 +10,6 @@
 #include "nsCOMPtr.h"
 #include "nsIRequest.h"
 #include "nsString.h"
-#include "nsIDNSService.h"
 
 class nsITimer;
 class nsIURI;
@@ -69,16 +68,16 @@ class HTMLDNSPrefetch {
   static void ElementDestroyed(Element&, SupportsDNSPrefetch&);
 
  private:
-  static nsIDNSService::DNSFlags PriorityToDNSServiceFlags(Priority);
+  static uint32_t PriorityToDNSServiceFlags(Priority);
 
   static nsresult Prefetch(
       const nsAString& host, bool isHttps,
       const OriginAttributes& aPartitionedPrincipalOriginAttributes,
-      nsIDNSService::DNSFlags flags);
+      uint32_t flags);
   static nsresult CancelPrefetch(
       const nsAString& hostname, bool isHttps,
       const OriginAttributes& aPartitionedPrincipalOriginAttributes,
-      nsIDNSService::DNSFlags flags, nsresult aReason);
+      uint32_t flags, nsresult aReason);
 
   friend class net::NeckoParent;
 };

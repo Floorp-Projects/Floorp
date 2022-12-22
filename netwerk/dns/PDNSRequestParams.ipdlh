@@ -7,7 +7,7 @@
 
 using NetAddr from "mozilla/net/DNS.h";
 using mozilla::net::IPCTypeRecord from "mozilla/net/DNSByTypeRecord.h";
-using nsIRequest::TRRMode from "nsIRequest.h";
+
 
 namespace mozilla {
 namespace net {
@@ -23,7 +23,7 @@ struct DNSRecord
   double trrFetchDuration;
   double trrFetchDurationNetworkOnly;
   bool isTRR;
-  TRRMode effectiveTRRMode;
+  uint32_t effectiveTRRMode;
   uint32_t ttl;
 };
 

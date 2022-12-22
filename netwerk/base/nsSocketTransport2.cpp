@@ -987,7 +987,7 @@ nsresult nsSocketTransport::ResolveHost() {
 
   mResolving = true;
 
-  nsIDNSService::DNSFlags dnsFlags = nsIDNSService::RESOLVE_DEFAULT_FLAGS;
+  uint32_t dnsFlags = 0;
   if (mConnectionFlags & nsSocketTransport::BYPASS_CACHE) {
     dnsFlags = nsIDNSService::RESOLVE_BYPASS_CACHE;
   }
@@ -1723,10 +1723,10 @@ bool nsSocketTransport::RecoverFromError() {
             mNetAddr.inet6.ip.u64[1] == 0))) {
         SOCKET_LOG(("  TRR returned 0.0.0.0 and there are no other IPs"));
       } else if (trrEnabled) {
-        nsIRequest::TRRMode trrMode = nsIRequest::TRR_DEFAULT_MODE;
+        uint32_t trrMode = 0;
         mDNSRecord->GetEffectiveTRRMode(&trrMode);
         // If current trr mode is trr only, we should not retry.
-        if (trrMode != nsIRequest::TRR_ONLY_MODE) {
+        if (trrMode != 3) {
           // Drop state to closed.  This will trigger a new round of
           // DNS resolving. Bypass the cache this time since the
           // cached data came from TRR and failed already!

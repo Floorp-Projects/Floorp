@@ -36,7 +36,7 @@ class ChildDNSService final : public DNSServiceBase, public nsPIDNSService {
   void NotifyRequestDone(DNSRequestSender* aDnsRequest);
 
   void SetTRRDomain(const nsACString& aTRRDomain);
-  void GetTRRDomainKey(nsACString& aTRRDomain);
+  void GetTRRDomain(nsACString& aTRRDomain);
 
  private:
   virtual ~ChildDNSService() = default;
@@ -44,19 +44,16 @@ class ChildDNSService final : public DNSServiceBase, public nsPIDNSService {
   void MOZ_ALWAYS_INLINE GetDNSRecordHashKey(
       const nsACString& aHost, const nsACString& aTrrServer, int32_t aPort,
       uint16_t aType, const OriginAttributes& aOriginAttributes,
-      nsIDNSService::DNSFlags aFlags, uintptr_t aListenerAddr,
-      nsACString& aHashKey);
+      uint32_t aFlags, uintptr_t aListenerAddr, nsACString& aHashKey);
   nsresult AsyncResolveInternal(const nsACString& hostname, uint16_t type,
-                                nsIDNSService::DNSFlags flags,
-                                nsIDNSAdditionalInfo* aInfo,
+                                uint32_t flags, nsIDNSAdditionalInfo* aInfo,
                                 nsIDNSListener* listener,
                                 nsIEventTarget* target_,
                                 const OriginAttributes& aOriginAttributes,
                                 nsICancelable** result);
   nsresult CancelAsyncResolveInternal(
-      const nsACString& aHostname, uint16_t aType,
-      nsIDNSService::DNSFlags aFlags, nsIDNSAdditionalInfo* aInfo,
-      nsIDNSListener* aListener, nsresult aReason,
+      const nsACString& aHostname, uint16_t aType, uint32_t aFlags,
+      nsIDNSAdditionalInfo* aInfo, nsIDNSListener* aListener, nsresult aReason,
       const OriginAttributes& aOriginAttributes);
 
   bool mODoHActivated = false;

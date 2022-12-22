@@ -269,7 +269,7 @@ NS_IMETHODIMP
 NetworkConnectivityService::OnLookupComplete(nsICancelable* aRequest,
                                              nsIDNSRecord* aRecord,
                                              nsresult aStatus) {
-  ConnectivityState state = NS_SUCCEEDED(aStatus) ? OK : NOT_AVAILABLE;
+  ConnectivityState state = aRecord ? OK : NOT_AVAILABLE;
 
   if (aRequest == mDNSv4Request) {
     mDNSv4 = state;

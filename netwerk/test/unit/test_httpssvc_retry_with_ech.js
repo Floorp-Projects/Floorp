@@ -13,6 +13,9 @@ let trrServer;
 let h3Port;
 let h3EchConfig;
 
+const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
+  Ci.nsIDNSService
+);
 const certOverrideService = Cc[
   "@mozilla.org/security/certoverride;1"
 ].getService(Ci.nsICertOverrideService);
@@ -247,7 +250,7 @@ add_task(async function testEchRetry() {
   // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   await new Promise(resolve => setTimeout(resolve, 1000));
 
-  Services.dns.clearCache(true);
+  dns.clearCache(true);
 
   const ECH_CONFIG_TRUSTED_RETRY =
     "AEn+DQBFTQAgACCKB1Y5SfrGIyk27W82xPpzWTDs3q72c04xSurDWlb9CgAEAAMAA2QWZWNoLXB1YmxpYy5leGFtcGxlLmNvbQAA";
@@ -408,7 +411,7 @@ add_task(async function testH3ConnectWithECH() {
 });
 
 add_task(async function testH3ConnectWithECHRetry() {
-  Services.dns.clearCache(true);
+  dns.clearCache(true);
   Services.obs.notifyObservers(null, "net:cancel-all-connections");
   // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   await new Promise(resolve => setTimeout(resolve, 1000));
