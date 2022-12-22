@@ -1,8 +1,5 @@
 "use strict";
 
-const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
-  Ci.nsIDNSService
-);
 const override = Cc["@mozilla.org/network/native-dns-override;1"].getService(
   Ci.nsINativeDNSResolverOverride
 );
@@ -37,7 +34,7 @@ function do_test({ dnsDisabled, mustBlock, testDomain, expectedAnswer }) {
   return new Promise(resolve => {
     Services.prefs.setBoolPref("network.dns.disabled", dnsDisabled);
     try {
-      dns.asyncResolve(
+      Services.dns.asyncResolve(
         testDomain,
         Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
         0,

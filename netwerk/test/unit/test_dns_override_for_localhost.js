@@ -1,8 +1,5 @@
 "use strict";
 
-const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
-  Ci.nsIDNSService
-);
 const override = Cc["@mozilla.org/network/native-dns-override;1"].getService(
   Ci.nsINativeDNSResolverOverride
 );
@@ -54,7 +51,7 @@ DOMAINS.forEach(domain => {
     });
 
     // Verify that loopback host names are not overridden.
-    dns.asyncResolve(
+    Services.dns.asyncResolve(
       domain,
       Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
       0,
@@ -73,7 +70,7 @@ DOMAINS.forEach(domain => {
     // registered above are taken into account.
     Services.prefs.setBoolPref("network.proxy.allow_hijacking_localhost", true);
     let listener2 = new Listener();
-    dns.asyncResolve(
+    Services.dns.asyncResolve(
       domain,
       Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
       0,
@@ -89,7 +86,7 @@ DOMAINS.forEach(domain => {
     );
     Services.prefs.clearUserPref("network.proxy.allow_hijacking_localhost");
 
-    dns.clearCache(false);
+    Services.dns.clearCache(false);
     override.clearOverrides();
   });
 });

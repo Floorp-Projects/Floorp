@@ -45,13 +45,6 @@ XPCOMUtils.defineLazyServiceGetter(
 
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
-  "gDNSService",
-  "@mozilla.org/network/dns-service;1",
-  "nsIDNSService"
-);
-
-XPCOMUtils.defineLazyServiceGetter(
-  lazy,
   "handlerService",
   "@mozilla.org/uriloader/handler-service;1",
   "nsIHandlerService"
@@ -628,7 +621,7 @@ URIFixup.prototype = {
     }
 
     Services.obs.notifyObservers(null, "uri-fixup-check-dns");
-    lazy.gDNSService.asyncResolve(
+    Services.dns.asyncResolve(
       lookupName,
       Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
       0,

@@ -9,9 +9,6 @@ ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 let h2Port;
 let trrServer;
 
-const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
-  Ci.nsIDNSService
-);
 const certOverrideService = Cc[
   "@mozilla.org/security/certoverride;1"
 ].getService(Ci.nsICertOverrideService);
@@ -38,6 +35,7 @@ add_setup(async function setup() {
   });
 
   if (mozinfo.socketprocess_networking) {
+    Services.dns; // Needed to trigger socket process.
     await TestUtils.waitForCondition(() => Services.io.socketProcessLaunched);
   }
 });
@@ -175,7 +173,7 @@ function channelOpenPromise(chan, flags) {
 
 // Test if we can connect to the server with the IP hint address.
 add_task(async function testConnectionWithIPHint() {
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
@@ -263,7 +261,7 @@ add_task(async function testIPHintWithFreshDNS() {
   });
 
   let { inRecord } = await new TRRDNSListener("test.iphint.org", {
-    type: dns.RESOLVE_TYPE_HTTPSSVC,
+    type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
   });
 
   let answer = inRecord.QueryInterface(Ci.nsIDNSHTTPSSVCRecord).records;

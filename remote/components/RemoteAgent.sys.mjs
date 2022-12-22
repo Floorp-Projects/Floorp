@@ -17,13 +17,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   HttpServer: "chrome://remote/content/server/HTTPD.jsm",
 });
 
-XPCOMUtils.defineLazyServiceGetter(
-  lazy,
-  "DNSService",
-  "@mozilla.org/network/dns-service;1",
-  "nsIDNSService"
-);
-
 XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
 
 XPCOMUtils.defineLazyGetter(lazy, "activeProtocols", () => {
@@ -294,7 +287,7 @@ class RemoteAgentParentProcess {
       };
 
       try {
-        originalRequest = lazy.DNSService.asyncResolve(
+        originalRequest = Services.dns.asyncResolve(
           hostname,
           Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
           Ci.nsIDNSService.RESOLVE_BYPASS_CACHE,
