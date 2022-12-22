@@ -127,6 +127,8 @@ cenum! {
         const CXCallingConv_Unexposed = 200,
         /// Only produced by `libclang` 13.0 and later.
         const CXCallingConv_SwiftAsync = 17,
+        /// Only produced by `libclang` 15.0 and later.
+        const CXCallingConv_AArch64SVEPCS = 18,
     }
 }
 
@@ -321,6 +323,10 @@ cenum! {
         const CXCursor_OMPIteratorExpr = 151,
         /// Only produced by `libclang` 12.0 and later.
         const CXCursor_CXXAddrspaceCastExpr = 152,
+        /// Only produced by `libclang` 15.0 and later.
+        const CXCursor_ConceptSpecializationExpr = 153,
+        /// Only produced by `libclang` 15.0 and later.
+        const CXCursor_RequiresExpr = 154,
         const CXCursor_UnexposedStmt = 200,
         const CXCursor_LabelStmt = 201,
         const CXCursor_CompoundStmt = 202,
@@ -462,7 +468,32 @@ cenum! {
         const CXCursor_OMPMaskedDirective = 292,
         /// Only produced by `libclang` 13.0 and later.
         const CXCursor_OMPUnrollDirective = 293,
+        /// Only produced by `libclang` 14.0 and later.
+        const CXCursor_OMPMetaDirective = 294,
+        /// Only produced by `libclang` 14.0 and later.
+        const CXCursor_OMPGenericLoopDirective = 295,
+        /// Only produced by `libclang` 15.0 and later.
+        const CXCursor_OMPTeamsGenericLoopDirective = 296,
+        /// Only produced by `libclang` 15.0 and later.
+        const CXCursor_OMPTargetTeamsGenericLoopDirective = 297,
+        /// Only produced by `libclang` 15.0 and later.
+        const CXCursor_OMPParallelGenericLoopDirective = 298,
+        /// Only produced by `libclang` 15.0 and later.
+        const CXCursor_OMPTargetParallelGenericLoopDirective = 299,
+        /// Only produced by `libclang` 15.0 and later.
+        const CXCursor_OMPParallelMaskedDirective = 300,
+        /// Only produced by `libclang` 15.0 and later.
+        const CXCursor_OMPMaskedTaskLoopDirective = 301,
+        /// Only produced by `libclang` 15.0 and later.
+        const CXCursor_OMPMaskedTaskLoopSimdDirective = 302,
+        /// Only produced by `libclang` 15.0 and later.
+        const CXCursor_OMPParallelMaskedTaskLoopDirective = 303,
+        /// Only produced by `libclang` 15.0 and later.
+        const CXCursor_OMPParallelMaskedTaskLoopSimdDirective = 304,
+        #[cfg(not(feature="clang_15_0"))]
         const CXCursor_TranslationUnit = 300,
+        #[cfg(feature="clang_15_0")]
+        const CXCursor_TranslationUnit = 350,
         const CXCursor_UnexposedAttr = 400,
         const CXCursor_IBActionAttr = 401,
         const CXCursor_IBOutletAttr = 402,
@@ -543,6 +574,8 @@ cenum! {
         const CXCursor_StaticAssert = 602,
         /// Only produced by `libclang` 4.0 and later.
         const CXCursor_FriendDecl = 603,
+        /// Only produced by `libclang` 15.0 and later.
+        const CXCursor_ConceptDecl = 604,
         /// Only produced by `libclang` 3.7 and later.
         const CXCursor_OverloadCandidate = 700,
     }
@@ -646,6 +679,8 @@ cenum! {
         const CXIdxEntity_CXXConversionFunction = 24,
         const CXIdxEntity_CXXTypeAlias = 25,
         const CXIdxEntity_CXXInterface = 26,
+        /// Only produced by `libclang` 15.0 and later.
+        const CXIdxEntity_CXXConcept = 27,
     }
 }
 
@@ -869,6 +904,8 @@ cenum! {
         const CXType_ULongAccum = 38,
         /// Only produced by `libclang` 11.0 and later.
         const CXType_BFloat16 = 39,
+        /// Only produced by `libclang` 14.0 and later.
+        const CXType_Ibm128 = 40,
         const CXType_Complex = 100,
         const CXType_Pointer = 101,
         const CXType_BlockPointer = 102,
@@ -1007,6 +1044,8 @@ cenum! {
         const CXType_ExtVector = 176,
         /// Only produced by `libclang` 11.0 and later.
         const CXType_Atomic = 177,
+        /// Only produced by `libclang` 15.0 and later.
+        const CXType_BTFTagAttributed = 178,
     }
 }
 
@@ -2129,6 +2168,12 @@ link! {
     /// Only available on `libclang` 5.0 and later.
     #[cfg(feature = "clang_5_0")]
     pub fn clang_getTranslationUnitTargetInfo(tu: CXTranslationUnit) -> CXTargetInfo;
+    /// Only available on `libclang` 16.0 and later.
+    #[cfg(feature = "clang_16_0")]
+    pub fn clang_getUnqualifiedType(type_: CXType) -> CXType;
+    /// Only available on `libclang` 16.0 and later.
+    #[cfg(feature = "clang_16_0")]
+    pub fn clang_getNonReferenceType(type_: CXType) -> CXType;
     pub fn clang_getTypeDeclaration(type_: CXType) -> CXCursor;
     pub fn clang_getTypeKindSpelling(type_: CXTypeKind) -> CXString;
     pub fn clang_getTypeSpelling(type_: CXType) -> CXString;

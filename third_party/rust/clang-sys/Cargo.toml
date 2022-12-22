@@ -11,7 +11,7 @@
 
 [package]
 name = "clang-sys"
-version = "1.3.3"
+version = "1.4.0"
 authors = ["Kyle Mayes <kyle@mayeses.com>"]
 build = "build.rs"
 links = "clang"
@@ -20,8 +20,13 @@ documentation = "https://docs.rs/clang-sys"
 readme = "README.md"
 license = "Apache-2.0"
 repository = "https://github.com/KyleMayes/clang-sys"
+
 [package.metadata.docs.rs]
-features = ["clang_13_0", "runtime"]
+features = [
+    "clang_16_0",
+    "runtime",
+]
+
 [dependencies.glob]
 version = "0.3"
 
@@ -32,6 +37,7 @@ default-features = false
 [dependencies.libloading]
 version = "0.7"
 optional = true
+
 [build-dependencies.glob]
 version = "0.3"
 
@@ -40,6 +46,9 @@ clang_10_0 = ["clang_9_0"]
 clang_11_0 = ["clang_10_0"]
 clang_12_0 = ["clang_11_0"]
 clang_13_0 = ["clang_12_0"]
+clang_14_0 = ["clang_13_0"]
+clang_15_0 = ["clang_14_0"]
+clang_16_0 = ["clang_15_0"]
 clang_3_5 = []
 clang_3_6 = ["clang_3_5"]
 clang_3_7 = ["clang_3_6"]
