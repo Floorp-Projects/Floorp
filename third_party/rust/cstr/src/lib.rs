@@ -3,7 +3,7 @@
 //! This macro checks whether the given literal is valid for `CStr`
 //! at compile time, and returns a static reference of `CStr`.
 //!
-//! This macro can be used to to initialize constants on Rust 1.59 and above.
+//! This macro can be used to to initialize constants on Rust 1.64 and above.
 //!
 //! ## Example
 //!
@@ -37,7 +37,7 @@ struct Error(Span, &'static str);
 #[proc_macro]
 pub fn cstr(input: RawTokenStream) -> RawTokenStream {
     let tokens = match build_byte_str(input.into()) {
-        Ok(s) => quote!(unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(#s) }),
+        Ok(s) => quote!(unsafe { ::core::ffi::CStr::from_bytes_with_nul_unchecked(#s) }),
         Err(Error(span, msg)) => quote_spanned!(span => compile_error!(#msg)),
     };
     tokens.into()

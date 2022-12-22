@@ -11,24 +11,31 @@
 
 [package]
 edition = "2018"
+rust-version = "1.64"
 name = "cstr"
-version = "0.2.10"
+version = "0.2.11"
 authors = ["Xidorn Quan <me@upsuper.org>"]
 description = "Macro for building static CStr reference"
 readme = "README.md"
-keywords = ["macro", "cstr"]
+keywords = [
+    "macro",
+    "cstr",
+]
 license = "MIT"
 repository = "https://github.com/upsuper/cstr"
 
 [lib]
 proc-macro = true
+
 [dependencies.proc-macro2]
 version = "1"
 
 [dependencies.quote]
 version = "1"
+
 [dev-dependencies.trybuild]
 version = "1.0.30"
+
 [badges.travis-ci]
 branch = "master"
 repository = "upsuper/cstr"
