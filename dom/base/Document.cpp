@@ -2122,7 +2122,7 @@ void Document::AccumulatePageLoadTelemetry(
     if (resolvedByTRR) {
       RefPtr<net::ChildDNSService> dnsServiceChild =
           net::ChildDNSService::GetSingleton();
-      dnsServiceChild->GetTRRDomain(dnsKey);
+      dnsServiceChild->GetTRRDomainKey(dnsKey);
       aEventTelemetryDataOut.trrDomain = mozilla::Some(dnsKey);
     }
 
