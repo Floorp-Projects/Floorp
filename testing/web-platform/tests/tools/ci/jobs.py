@@ -122,7 +122,7 @@ def get_jobs(paths, **kwargs):
         if not rules:
             break
 
-    # Default jobs shuld run even if there were no changes
+    # Default jobs should run even if there were no changes
     if not paths:
         for job, path_re in job_path_map.items():
             if ".*" in path_re:
