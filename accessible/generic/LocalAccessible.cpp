@@ -1439,6 +1439,12 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
     // also changed. Push a cache update for Relations.
     mDoc->QueueCacheUpdate(this, CacheDomain::Relations);
   }
+
+  if (aAttribute == nsGkAtoms::slot &&
+      !mContent->GetFlattenedTreeParentNode()) {
+    // This is inside a shadow host but is no longer slotted.
+    mDoc->ContentRemoved(this);
+  }
 }
 
 void LocalAccessible::ARIAGroupPosition(int32_t* aLevel, int32_t* aSetSize,
