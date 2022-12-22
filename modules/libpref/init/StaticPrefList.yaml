@@ -10013,6 +10013,18 @@
     value: false
     mirror: always
 
+# The amount of video raw data the engine stream will queue
+-   name: media.wmf.media-engine.raw-data-threshold.video
+    type: RelaxedAtomicInt32
+    value: 500000
+    mirror: always
+
+# The amount of audio raw data the engine stream will queue
+-   name: media.wmf.media-engine.raw-data-threshold.audio
+    type: RelaxedAtomicInt32
+    value: 2000000
+    mirror: always
+
 #endif  # MOZ_WMF
 
 - name: media.decoder-doctor.testing
