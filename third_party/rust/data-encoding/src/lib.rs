@@ -353,7 +353,6 @@ fn order(msb: bool, n: usize, i: usize) -> usize {
 }
 
 fn enc(bit: usize) -> usize {
-    debug_assert!(1 <= bit && bit <= 6);
     match bit {
         1 | 2 | 4 => 1,
         3 | 6 => 3,

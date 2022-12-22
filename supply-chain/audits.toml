@@ -430,6 +430,11 @@ criteria = "safe-to-deploy"
 delta = "0.4.1 -> 0.5.0"
 notes = "The commits between 0.4.1 and 0.5.0 were all audited by Dzmitry Malyshau or myself."
 
+[[audits.data-encoding]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "2.3.2 -> 2.3.3"
+
 [[audits.derive_arbitrary]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"
