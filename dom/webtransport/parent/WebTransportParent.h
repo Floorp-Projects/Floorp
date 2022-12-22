@@ -22,9 +22,7 @@ class WebTransportParent : public PWebTransportParent {
   // XXX Threadsafe??
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebTransportParent, override)
 
-  bool Init(const nsAString& aURL, const bool& aDedicated,
-            const bool& aRequireUnreliable, const uint32_t& aCongestionControl,
-            // Sequence<WebTransportHash>* aServerCertHashes,
+  bool Init(const nsAString& aURL,  // WebTransportOptions aOptions,
             Endpoint<PWebTransportParent>&& aParentEndpoint,
             std::function<void(const nsresult&)>&& aResolver);
 
