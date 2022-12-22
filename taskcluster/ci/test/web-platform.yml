@@ -231,6 +231,7 @@ web-platform-tests-wdspec:
     chunks:
         by-test-platform:
             .*-ccov.*/.*: 4
+            .*-tsan.*/.*: 8
             default: 3
     mozharness:
         extra-options:
@@ -269,7 +270,6 @@ web-platform-tests-wdspec:
             default:
                 by-test-platform:
                     android.*: []
-                    .*-tsan.*: []
                     default: built-projects
     tier: default
     fetches:
