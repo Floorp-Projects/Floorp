@@ -218,17 +218,27 @@ const GeckoViewStorageController = {
         );
         break;
       }
+
       case "GeckoView:SetCookieBannerModeForDomain": {
+        let exceptionLabel = "SetCookieBannerModeForDomain";
         try {
           const uri = Services.io.newURI(aData.uri);
-          Services.cookieBanners.setDomainPref(
-            uri,
-            aData.mode,
-            aData.isPrivateBrowsing
-          );
+          if (aData.allowPermanentPrivateBrowsing) {
+            exceptionLabel = "setDomainPrefAndPersistInPrivateBrowsing";
+            Services.cookieBanners.setDomainPrefAndPersistInPrivateBrowsing(
+              uri,
+              aData.mode
+            );
+          } else {
+            Services.cookieBanners.setDomainPref(
+              uri,
+              aData.mode,
+              aData.isPrivateBrowsing
+            );
+          }
           aCallback.onSuccess();
         } catch (ex) {
-          debug`Failed SetCookieBannerModeForDomain ${ex}`;
+          debug`Failed ${exceptionLabel} ${ex}`;
         }
         break;
       }

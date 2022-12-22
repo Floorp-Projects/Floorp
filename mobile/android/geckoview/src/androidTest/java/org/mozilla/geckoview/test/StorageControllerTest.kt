@@ -721,6 +721,69 @@ class StorageControllerTest : BaseSessionTest() {
     }
 
     @Test
+    fun setCookieBannerModeAndPersistInPrivateBrowsingForDomain() {
+        val contentBlocking = sessionRule.runtime.settings.contentBlocking
+        contentBlocking.cookieBannerMode = COOKIE_BANNER_MODE_REJECT
+
+        val session = sessionRule.createOpenSession(
+            GeckoSessionSettings.Builder(mainSession.settings)
+                .contextId("1")
+                .usePrivateMode(true)
+                .build()
+        )
+        session.loadUri("https://example.com")
+        session.waitForPageStop()
+
+        var mode = sessionRule.waitForResult(
+            storageController.getCookieBannerModeForDomain(
+                "https://example.com",
+                true
+            )
+        )
+
+        assertThat(
+            "Cookie banner mode should match",
+            mode,
+            equalTo(COOKIE_BANNER_MODE_REJECT)
+        )
+
+        sessionRule.waitForResult(
+            storageController.setCookieBannerModeAndPersistInPrivateBrowsingForDomain(
+                "https://example.com",
+                COOKIE_BANNER_MODE_REJECT_OR_ACCEPT
+            )
+        )
+
+        mode = sessionRule.waitForResult(
+            storageController.getCookieBannerModeForDomain(
+                "https://example.com",
+                true
+            )
+        )
+
+        assertThat(
+            "Cookie banner mode should match",
+            mode,
+            equalTo(COOKIE_BANNER_MODE_REJECT_OR_ACCEPT)
+        )
+
+        session.close()
+
+        mode = sessionRule.waitForResult(
+            storageController.getCookieBannerModeForDomain(
+                "https://example.com",
+                true
+            )
+        )
+
+        assertThat(
+            "Cookie banner mode should match",
+            mode,
+            equalTo(COOKIE_BANNER_MODE_REJECT_OR_ACCEPT)
+        )
+    }
+
+    @Test
     fun getCookieBannerModeForDomain() {
         val contentBlocking = sessionRule.runtime.settings.contentBlocking
         contentBlocking.cookieBannerMode = COOKIE_BANNER_MODE_DISABLED

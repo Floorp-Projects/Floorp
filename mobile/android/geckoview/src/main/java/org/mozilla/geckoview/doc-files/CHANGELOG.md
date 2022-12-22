@@ -16,10 +16,12 @@ exclude: true
 ## v110
 - Added [`GeckoSession.ContentDelegate.onCookieBannerDetected`][110.1] and [`GeckoSession.ContentDelegate.onCookieBannerHandled`][110.2]
 - Added [`CookieBannerMode.COOKIE_BANNER_MODE_DETECT_ONLY`][110.3], for detecting cookie banners but not handle them, see ([bug 1797581]({{bugzilla}}1806188))
+- Added [`StorageController.setCookieBannerModeAndPersistInPrivateBrowsingForDomain`][110.4]  see ([bug 1804747]({{bugzilla}}1804747))
 
 [110.1]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onCookieBannerDetected(org.mozilla.geckoview.GeckoSession)
 [110.2]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onCookieBannerHandled(org.mozilla.geckoview.GeckoSession)
 [110.3]: {{javadoc_uri}}/ContentBlocking.CookieBannerMode.html#COOKIE_BANNER_MODE_DETECT_ONLY
+[110.4]: {{javadoc_uri}}/StorageController.html#setCookieBannerModeAndPersistInPrivateBrowsingForDomain(java.lang.String,int)
 
 ## v109
 - Added [`SelectionActionDelegate.Selection.screenRect`][109.1] for fission compatible.
@@ -1285,4 +1287,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 8917a7d7fede1e45221c1783649d7bfd42ef44f7
+[api-version]: f16d256a58d4208c1195d908dd851a92349c9786

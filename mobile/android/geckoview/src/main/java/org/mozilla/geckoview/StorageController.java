@@ -327,7 +327,25 @@ public final class StorageController {
     final GeckoBundle data = new GeckoBundle(3);
     data.putString("uri", uri);
     data.putInt("mode", mode);
+    data.putBoolean("allowPermanentPrivateBrowsing", false);
     data.putBoolean("isPrivateBrowsing", isPrivateBrowsing);
+    return EventDispatcher.getInstance().queryVoid("GeckoView:SetCookieBannerModeForDomain", data);
+  }
+
+  /**
+   * Set a permanent {@link ContentBlocking.CBCookieBannerMode} for the given uri in private mode.
+   *
+   * @param uri for which you want to change the {@link ContentBlocking.CBCookieBannerMode} value.
+   * @param mode A new {@link ContentBlocking.CBCookieBannerMode} for the given uri.
+   * @return A {@link GeckoResult} that will complete when the mode has been set.
+   */
+  @AnyThread
+  public @NonNull GeckoResult<Void> setCookieBannerModeAndPersistInPrivateBrowsingForDomain(
+      final @NonNull String uri, final @ContentBlocking.CBCookieBannerMode int mode) {
+    final GeckoBundle data = new GeckoBundle(3);
+    data.putString("uri", uri);
+    data.putInt("mode", mode);
+    data.putBoolean("allowPermanentPrivateBrowsing", true);
     return EventDispatcher.getInstance().queryVoid("GeckoView:SetCookieBannerModeForDomain", data);
   }
 

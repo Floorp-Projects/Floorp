@@ -1926,6 +1926,7 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public GeckoResult<List<GeckoSession.PermissionDelegate.ContentPermission>> getPermissions(@NonNull String, boolean);
     method @AnyThread @NonNull public GeckoResult<List<GeckoSession.PermissionDelegate.ContentPermission>> getPermissions(@NonNull String, @Nullable String, boolean);
     method @AnyThread @NonNull public GeckoResult<Void> removeCookieBannerModeForDomain(@NonNull String, boolean);
+    method @AnyThread @NonNull public GeckoResult<Void> setCookieBannerModeAndPersistInPrivateBrowsingForDomain(@NonNull String, int);
     method @AnyThread @NonNull public GeckoResult<Void> setCookieBannerModeForDomain(@NonNull String, int, boolean);
     method @AnyThread public void setPermission(@NonNull GeckoSession.PermissionDelegate.ContentPermission, int);
     method @AnyThread public void setPrivateBrowsingPermanentPermission(@NonNull GeckoSession.PermissionDelegate.ContentPermission, int);
