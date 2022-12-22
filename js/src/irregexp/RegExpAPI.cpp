@@ -287,27 +287,27 @@ static void ReportSyntaxError(TokenStreamAnyChars& ts,
 }
 
 template <typename CharT>
-static bool CheckPatternSyntaxImpl(JSContext* cx,
+static bool CheckPatternSyntaxImpl(js::LifoAlloc& alloc,
                                    JS::NativeStackLimit stackLimit,
                                    const CharT* input, uint32_t inputLength,
                                    JS::RegExpFlags flags,
                                    RegExpCompileData* result,
                                    JS::AutoAssertNoGC& nogc) {
-  LifoAllocScope allocScope(&cx->tempLifoAlloc());
+  LifoAllocScope allocScope(&alloc);
   Zone zone(allocScope.alloc());
 
   return RegExpParser::VerifyRegExpSyntax(&zone, stackLimit, input, inputLength,
                                           flags, result, nogc);
 }
 
-bool CheckPatternSyntax(JSContext* cx, JS::NativeStackLimit stackLimit,
+bool CheckPatternSyntax(js::LifoAlloc& alloc, JS::NativeStackLimit stackLimit,
                         TokenStreamAnyChars& ts,
                         const mozilla::Range<const char16_t> chars,
                         JS::RegExpFlags flags, mozilla::Maybe<uint32_t> line,
                         mozilla::Maybe<uint32_t> column) {
   RegExpCompileData result;
-  JS::AutoAssertNoGC nogc(cx);
-  if (!CheckPatternSyntaxImpl(cx, stackLimit, chars.begin().get(),
+  JS::AutoAssertNoGC nogc;
+  if (!CheckPatternSyntaxImpl(alloc, stackLimit, chars.begin().get(),
                               chars.length(), flags, &result, nogc)) {
     ReportSyntaxError(ts, line, column, result, chars.begin().get(),
                       chars.length());
@@ -322,15 +322,17 @@ bool CheckPatternSyntax(JSContext* cx, JS::NativeStackLimit stackLimit,
   RegExpCompileData result;
   JS::AutoAssertNoGC nogc(cx);
   if (pattern->hasLatin1Chars()) {
-    if (!CheckPatternSyntaxImpl(cx, stackLimit, pattern->latin1Chars(nogc),
-                                pattern->length(), flags, &result, nogc)) {
+    if (!CheckPatternSyntaxImpl(cx->tempLifoAlloc(), stackLimit,
+                                pattern->latin1Chars(nogc), pattern->length(),
+                                flags, &result, nogc)) {
       ReportSyntaxError(ts, result, pattern);
       return false;
     }
     return true;
   }
-  if (!CheckPatternSyntaxImpl(cx, stackLimit, pattern->twoByteChars(nogc),
-                              pattern->length(), flags, &result, nogc)) {
+  if (!CheckPatternSyntaxImpl(cx->tempLifoAlloc(), stackLimit,
+                              pattern->twoByteChars(nogc), pattern->length(),
+                              flags, &result, nogc)) {
     ReportSyntaxError(ts, result, pattern);
     return false;
   }
