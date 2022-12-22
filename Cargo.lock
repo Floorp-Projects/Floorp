@@ -1359,9 +1359,9 @@ dependencies = [
 
 [[package]]
 name = "devd-rs"
-version = "0.3.5"
+version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0c315b8fe6f26aea3091b030c28aabbdf491376ae39033978f06e468ab42360c"
+checksum = "9313f104b590510b46fc01c0a324fc76505c13871454d3c48490468d04c8d395"
 dependencies = [
  "libc",
  "nom 7.1.1",
