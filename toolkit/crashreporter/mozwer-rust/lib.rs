@@ -581,7 +581,7 @@ impl CrashReport {
         oom_allocation_size: usize,
     ) -> CrashReport {
         let uuid = Uuid::new_v4()
-            .to_hyphenated()
+            .as_hyphenated()
             .encode_lower(&mut Uuid::encode_buffer())
             .to_owned();
         let crash_reports_path = application_information.crash_reports_dir.clone();
