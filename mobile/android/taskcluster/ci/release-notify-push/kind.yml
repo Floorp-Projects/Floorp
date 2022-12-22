@@ -6,6 +6,7 @@ loader: taskgraph.loader.transform:loader
 
 transforms:
     - android_taskgraph.transforms.release_deps:transforms
+    - android_taskgraph.transforms.notify:transforms
     - taskgraph.transforms.notify:transforms
     - taskgraph.transforms.task:transforms
 
@@ -21,7 +22,11 @@ task-defaults:
     worker:
         implementation: succeed
     notifications:
-        subject: "{config[params][project]} {config[params][version]} build{config[params][build_number]} has been pushed to the closed testing track on Google Play"
+        subject: "Focus {config[params][version]}-build{config[params][build_number]} has been pushed to the closed testing track on Google Play"
+        message:
+            by-level:
+                '3': "and Android-Components {config[params][version]}-build{config[params][build_number]} have been pushed to https://maven.mozilla.org/"
+                default: "and Android-Components {config[params][version]}-build{config[params][build_number]} have been pushed to https://maven-default.stage.mozaws.net/"
         emails:
             by-level:
                 '3': ["release-signoff@mozilla.org"]
