@@ -179,8 +179,7 @@ NameLocation EmitterScope::searchAndCache(BytecodeEmitter* bce,
                    CompilationInput::CompilationTarget::Eval);
     inCurrentScript = false;
     loc = Some(bce->compilationState.scopeContext.searchInEnclosingScope(
-        bce->cx, bce->fc, bce->compilationState.input, bce->parserAtoms(),
-        name));
+        bce->fc, bce->compilationState.input, bce->parserAtoms(), name));
     if (loc->kind() == NameLocation::Kind::EnvironmentCoordinate) {
       *loc = loc->addHops(hops);
     }

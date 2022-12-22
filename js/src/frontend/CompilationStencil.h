@@ -372,9 +372,9 @@ struct InputName {
   // to nullptr, which is used to cache the JSAtom representation of the `other`
   // argument if needed. If a different `other` parameter is provided, the
   // `otherCached` argument should be reset to nullptr.
-  bool isEqualTo(JSContext* cx, FrontendContext* fc,
-                 ParserAtomsTable& parserAtoms, CompilationAtomCache& atomCache,
-                 TaggedParserAtomIndex other, JSAtom** otherCached) const;
+  bool isEqualTo(FrontendContext* fc, ParserAtomsTable& parserAtoms,
+                 CompilationAtomCache& atomCache, TaggedParserAtomIndex other,
+                 JSAtom** otherCached) const;
 
   bool isNull() const {
     return variant_.match(
@@ -493,7 +493,7 @@ struct ScopeContext {
   mozilla::Maybe<EnclosingLexicalBindingKind>
   lookupLexicalBindingInEnclosingScope(TaggedParserAtomIndex name);
 
-  NameLocation searchInEnclosingScope(JSContext* cx, FrontendContext* fc,
+  NameLocation searchInEnclosingScope(FrontendContext* fc,
                                       CompilationInput& input,
                                       ParserAtomsTable& parserAtoms,
                                       TaggedParserAtomIndex name);
@@ -507,12 +507,11 @@ struct ScopeContext {
   void computeThisEnvironment(const InputScope& enclosingScope);
   void computeInScope(const InputScope& enclosingScope);
   void cacheEnclosingScope(const InputScope& enclosingScope);
-  NameLocation searchInEnclosingScopeWithCache(JSContext* cx,
-                                               FrontendContext* fc,
+  NameLocation searchInEnclosingScopeWithCache(FrontendContext* fc,
                                                CompilationInput& input,
                                                ParserAtomsTable& parserAtoms,
                                                TaggedParserAtomIndex name);
-  NameLocation searchInEnclosingScopeNoCache(JSContext* cx, FrontendContext* fc,
+  NameLocation searchInEnclosingScopeNoCache(FrontendContext* fc,
                                              CompilationInput& input,
                                              ParserAtomsTable& parserAtoms,
                                              TaggedParserAtomIndex name);
