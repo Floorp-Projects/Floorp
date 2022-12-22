@@ -7,88 +7,42 @@
 #include "WebTransportParent.h"
 
 #include "mozilla/StaticPrefs_network.h"
-#include "mozilla/dom/WebTransportBinding.h"
 #include "mozilla/dom/WebTransportLog.h"
 #include "mozilla/ipc/BackgroundParent.h"
 
+using IPCResult = mozilla::ipc::IPCResult;
+
 namespace mozilla::dom {
 
-using IPCResult = mozilla::ipc::IPCResult;
-using CreateWebTransportPromise =
-    MozPromise<WebTransportReliabilityMode, nsresult, true>;
-using ResolveType = Tuple<const nsresult&, const uint8_t&>;
 WebTransportParent::~WebTransportParent() {
   LOG(("Destroying WebTransportParent %p", this));
 }
 
-// static
-void WebTransportParent::Create(
-    const nsAString& aURL, const bool& aDedicated,
-    const bool& aRequireUnreliable, const uint32_t& aCongestionControl,
-    // Sequence<WebTransportHash>* aServerCertHashes,
+bool WebTransportParent::Init(
+    const nsAString& aURL,
+    // WebTransportOptions aOptions,
     Endpoint<PWebTransportParent>&& aParentEndpoint,
-    std::function<void(Tuple<const nsresult&, const uint8_t&>)>&& aResolver) {
-  LOG(("Created WebTransportParent %s %s %s congestion=%s",
-       NS_ConvertUTF16toUTF8(aURL).get(),
-       aDedicated ? "Dedicated" : "AllowPooling",
-       aRequireUnreliable ? "RequireUnreliable" : "",
-       aCongestionControl ==
-               (uint32_t)dom::WebTransportCongestionControl::Throughput
-           ? "ThroughPut"
-           : (aCongestionControl ==
-                      (uint32_t)dom::WebTransportCongestionControl::Low_latency
-                  ? "Low-Latency"
-                  : "Default")));
+    std::function<void(const nsresult&)>&& aResolver) {
+  LOG(("Created WebTransportParent %p %s", this,
+       NS_ConvertUTF16toUTF8(aURL).get()));
 
   if (!StaticPrefs::network_webtransport_enabled()) {
-    aResolver(ResolveType(
-        NS_ERROR_DOM_NOT_ALLOWED_ERR,
-        static_cast<uint8_t>(WebTransportReliabilityMode::Pending)));
-    return;
+    aResolver(NS_ERROR_DOM_NOT_ALLOWED_ERR);
+    return false;
   }
 
   if (!aParentEndpoint.IsValid()) {
-    aResolver(ResolveType(
-        NS_ERROR_INVALID_ARG,
-        static_cast<uint8_t>(WebTransportReliabilityMode::Pending)));
-    return;
+    aResolver(NS_ERROR_INVALID_ARG);
+    return false;
   }
 
-  // Bind to SocketThread for IPC - connection creation/destruction must
-  // hit MainThread, but keep all other traffic on SocketThread.  Note that
-  // we must call aResolver() on this (PBackground) thread.
-  nsresult rv;
-  nsCOMPtr<nsISerialEventTarget> sts =
-      do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-  InvokeAsync(sts, __func__,
-              [parentEndpoint = std::move(aParentEndpoint)]() mutable {
-                RefPtr<WebTransportParent> parent = new WebTransportParent();
-
-                LOG(("Binding parent endpoint"));
-                if (!parentEndpoint.Bind(parent)) {
-                  return CreateWebTransportPromise::CreateAndReject(
-                      NS_ERROR_FAILURE, __func__);
-                }
-                // IPC now holds a ref to parent
-                // XXX Send connection to the server via MainThread
-                return CreateWebTransportPromise::CreateAndResolve(
-                    WebTransportReliabilityMode::Supports_unreliable, __func__);
-              })
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [aResolver](
-              const CreateWebTransportPromise::ResolveOrRejectValue& aValue) {
-            if (aValue.IsReject()) {
-              aResolver(ResolveType(
-                  aValue.RejectValue(),
-                  static_cast<uint8_t>(WebTransportReliabilityMode::Pending)));
-            } else {
-              aResolver(ResolveType(
-                  NS_OK, static_cast<uint8_t>(aValue.ResolveValue())));
-            }
-          });
+  if (!aParentEndpoint.Bind(this)) {
+    aResolver(NS_ERROR_FAILURE);
+    return false;
+  }
+  // XXX Send connection to the server
+  aResolver(NS_OK);
+  return true;
 }
 
 void WebTransportParent::ActorDestroy(ActorDestroyReason aWhy) {

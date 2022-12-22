@@ -30,8 +30,7 @@ class WebTransport final : public nsISupports, public nsWrapperCache {
 
   bool Init(const GlobalObject& aGlobal, const nsAString& aUrl,
             const WebTransportOptions& aOptions, ErrorResult& aError);
-  void ResolveWaitingConnection(WebTransportReliabilityMode aReliability,
-                                WebTransportChild* aChild);
+  void ResolveWaitingConnection(WebTransportChild* aChild);
   void RejectWaitingConnection(nsresult aRv);
   bool ParseURL(const nsAString& aURL) const;
 
@@ -63,10 +62,6 @@ class WebTransport final : public nsISupports, public nsWrapperCache {
 
  private:
   ~WebTransport() {
-    // Should be empty by this point, because we should always have run cleanup:
-    // https://w3c.github.io/webtransport/#webtransport-procedures
-    MOZ_ASSERT(mSendStreams.IsEmpty());
-    MOZ_ASSERT(mReceiveStreams.IsEmpty());
     // If this WebTransport was destroyed without being closed properly, make
     // sure to clean up the channel.
     if (mChild) {
@@ -77,24 +72,11 @@ class WebTransport final : public nsISupports, public nsWrapperCache {
   nsCOMPtr<nsIGlobalObject> mGlobal;
   RefPtr<WebTransportChild> mChild;
 
-  // Spec-defined slots:
-  // ordered sets, but we can't have duplicates, and this spec only appends.
-  // Order is visible due to
-  // https://w3c.github.io/webtransport/#webtransport-procedures step 10: "For
-  // each sendStream in sendStreams, error sendStream with error."
-  // XXX Use nsTArray.h for now, but switch to OrderHashSet/Table for release to
-  // improve remove performance (if needed)
-  nsTArray<RefPtr<WritableStream>> mSendStreams;
-  nsTArray<RefPtr<ReadableStream>> mReceiveStreams;
-
-  WebTransportState mState;
-  RefPtr<Promise> mReady;
-  WebTransportReliabilityMode mReliability;
   // These are created in the constructor
   RefPtr<ReadableStream> mIncomingUnidirectionalStreams;
   RefPtr<ReadableStream> mIncomingBidirectionalStreams;
-  RefPtr<WebTransportDatagramDuplexStream> mDatagrams;
-  RefPtr<Promise> mClosed;
+  RefPtr<Promise> mReady;
+  WebTransportState mState;
 };
 
 }  // namespace mozilla::dom
