@@ -66,7 +66,8 @@ class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
       const uint32_t aRtpTimestamp, const bool aHasLevel, const uint8_t aLevel);
 
   nsPIDOMWindowInner* GetParentObject() const;
-  nsTArray<RefPtr<RTCStatsPromise>> GetStatsInternal();
+  nsTArray<RefPtr<RTCStatsPromise>> GetStatsInternal(
+      bool aSkipIceStats = false);
 
   void Shutdown();
   void BreakCycles();
