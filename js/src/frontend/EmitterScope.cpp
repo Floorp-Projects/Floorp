@@ -284,7 +284,7 @@ void EmitterScope::dump(BytecodeEmitter* bce) {
     auto atom = r.front().key();
     UniqueChars bytes = bce->parserAtoms().toPrintableString(atom);
     if (!bytes) {
-      ReportOutOfMemory(bce->cx);
+      ReportOutOfMemory(bce->fc);
       return;
     }
     if (l.kind() != NameLocation::Kind::Dynamic) {
