@@ -445,6 +445,8 @@ inline constexpr bool IsDecimalDigit(base::uc32 c) {
   return c >= '0' && c <= '9';
 }
 
+inline constexpr int AsciiAlphaToLower(base::uc32 c) { return c | 0x20; }
+
 inline bool is_uint24(int64_t val) { return (val >> 24) == 0; }
 inline bool is_int24(int64_t val) {
   int64_t limit = int64_t(1) << 23;
@@ -1036,6 +1038,10 @@ inline bool IsIgnoreCase(RegExpFlags flags) { return flags.ignoreCase(); }
 inline bool IsMultiline(RegExpFlags flags) { return flags.multiline(); }
 inline bool IsDotAll(RegExpFlags flags) { return flags.dotAll(); }
 inline bool IsSticky(RegExpFlags flags) { return flags.sticky(); }
+
+// TODO: Support /v flag (bug 1713657)
+inline bool IsUnicodeSets(RegExpFlags flags) { return false; }
+inline bool IsEitherUnicode(RegExpFlags flags) { return flags.unicode(); }
 
 class Histogram {
  public:
