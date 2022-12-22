@@ -15,12 +15,16 @@ def run(
     path,
     browser_binary,
     webdriver_binary,
+    webdriver_port,
+    webdriver_ws_port,
     environ=None,
     bug=None,
     debug=False,
     interventions=None,
+    shims=None,
     config=None,
     headless=False,
+    do2fa=False,
 ):
     """"""
     old_environ = os.environ.copy()
@@ -53,6 +57,10 @@ def run(
                 browser_binary,
                 "--webdriver-binary",
                 webdriver_binary,
+                "--webdriver-port",
+                webdriver_port,
+                "--webdriver-ws-port",
+                webdriver_ws_port,
             ]
 
             if debug:
@@ -61,25 +69,50 @@ def run(
             if headless:
                 args.append("--headless")
 
+            if bug:
+                args.append("--bug")
+                args.append(bug)
+
+            if do2fa:
+                args.append("--do2fa")
+
             if config:
                 args.append("--config")
                 args.append(config)
 
+            if interventions is not None and shims is not None:
+                raise ValueError(
+                    "Must provide only one of interventions or shims argument"
+                )
+            elif interventions is None and shims is None:
+                raise ValueError(
+                    "Must provide either an interventions or shims argument"
+                )
+
+            name = "webcompat-interventions"
             if interventions == "enabled":
                 args.extend(["-m", "with_interventions"])
             elif interventions == "disabled":
                 args.extend(["-m", "without_interventions"])
             elif interventions is not None:
                 raise ValueError(f"Invalid value for interventions {interventions}")
+            if shims == "enabled":
+                args.extend(["-m", "with_shims"])
+                name = "smartblock-shims"
+            elif shims == "disabled":
+                args.extend(["-m", "without_shims"])
+                name = "smartblock-shims"
+            elif shims is not None:
+                raise ValueError(f"Invalid value for shims {shims}")
             else:
-                raise ValueError("Must provide interventions argument")
+                name = "smartblock-shims"
 
             if bug is not None:
                 args.extend(["-k", bug])
 
             args.append(path)
             try:
-                logger.suite_start([], name="webcompat-interventions")
+                logger.suite_start([], name=name)
                 pytest.main(args, plugins=[config_plugin, result_recorder])
             except Exception as e:
                 logger.critical(str(e))
@@ -101,13 +134,25 @@ class WDConfig:
         parser.addoption(
             "--webdriver-port",
             action="store",
-            default=4444,
+            default="4444",
             help="Port on which to run WebDriver",
+        )
+        parser.addoption(
+            "--webdriver-ws-port",
+            action="store",
+            default="9222",
+            help="Port on which to run WebDriver BiDi websocket",
         )
         parser.addoption(
             "--browser", action="store", choices=["firefox"], help="Name of the browser"
         )
         parser.addoption("--bug", action="store", help="Bug number to run tests for")
+        parser.addoption(
+            "--do2fa",
+            action="store_true",
+            default=False,
+            help="Do two-factor auth live in supporting tests",
+        )
         parser.addoption(
             "--config",
             action="store",
