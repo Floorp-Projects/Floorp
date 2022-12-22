@@ -216,6 +216,16 @@ def uninstall(install_folder):
     :param install_folder: Path of the installation folder
 
     """
+    # Uninstallation for MSIX applications is totally different than
+    # any other installs...
+    if "WindowsApps" in install_folder:
+        # At the time of writing, the package installation directory is always
+        # the package full name, so this assumption is valid (for now....).
+        packageFullName = install_folder.split("WindowsApps\\")[1].split("\\")[0]
+        cmd = f"powershell.exe Remove-AppxPackage -Package {packageFullName}"
+        subprocess.check_call(cmd)
+        return
+
     install_folder = os.path.realpath(install_folder)
     assert os.path.isdir(install_folder), (
         'installation folder "%s" exists.' % install_folder
