@@ -13,7 +13,7 @@ class TestSSLStatusAfterRestart(WindowManagerMixin, MarionetteTestCase):
         super(TestSSLStatusAfterRestart, self).setUp()
         self.marionette.set_context("chrome")
 
-        self.test_url = "https://sha512.badssl.com/"
+        self.test_url = "https://www.itisatrap.org/"
 
         # Set browser to restore previous session
         self.marionette.set_pref("browser.startup.page", 3)
