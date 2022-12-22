@@ -195,9 +195,11 @@ class nsHostRecord : public mozilla::LinkedListElement<RefPtr<nsHostRecord>>,
   // default resolver and the TRRMode encoded in the flags.
   // The mode into account if the TRR service is disabled,
   // parental controls are on, domain matches exclusion list, etc.
-  nsIRequest::TRRMode mEffectiveTRRMode = nsIRequest::TRR_DEFAULT_MODE;
+  mozilla::Atomic<nsIRequest::TRRMode> mEffectiveTRRMode{
+      nsIRequest::TRR_DEFAULT_MODE};
 
-  TRRSkippedReason mTRRSkippedReason = TRRSkippedReason::TRR_UNSET;
+  mozilla::Atomic<TRRSkippedReason> mTRRSkippedReason{
+      TRRSkippedReason::TRR_UNSET};
   TRRSkippedReason mFirstTRRSkippedReason = TRRSkippedReason::TRR_UNSET;
 
   mozilla::DataMutex<RefPtr<mozilla::net::TRRQuery>> mTRRQuery;
