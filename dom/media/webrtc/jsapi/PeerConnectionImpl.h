@@ -467,7 +467,6 @@ class PeerConnectionImpl final
   void OnSetDescriptionError();
 
   bool IsClosed() const;
-
   // called when DTLS connects; we only need this once
   nsresult OnAlpnNegotiated(bool aPrivacyRequested);
 
@@ -524,14 +523,6 @@ class PeerConnectionImpl final
 
   void SendWarningToConsole(const nsCString& aWarning);
 
-  const UniquePtr<dom::RTCStatsReportInternal>& GetFinalStats() const {
-    return mFinalStats;
-  }
-
-  void DisableLongTermStats() { mDisableLongTermStats = true; }
-
-  bool LongTermStatsIsDisabled() const { return mDisableLongTermStats; }
-
  private:
   virtual ~PeerConnectionImpl();
   PeerConnectionImpl(const PeerConnectionImpl& rhs);
@@ -548,7 +539,6 @@ class PeerConnectionImpl final
                                      uint32_t aMaxMessageSize, bool aMMSSet);
 
   nsresult CheckApiState(bool assert_ice_ready) const;
-  void StoreFinalStats(UniquePtr<dom::RTCStatsReportInternal>&& report);
   void CheckThread() const { MOZ_ASSERT(NS_IsMainThread(), "Wrong thread"); }
 
   // test-only: called from AddRIDExtension and AddRIDFilter
@@ -665,13 +655,6 @@ class PeerConnectionImpl final
   // The following are used for Telemetry:
   bool mCallTelemStarted = false;
   bool mCallTelemEnded = false;
-
-  // We _could_ make mFinalStatsQuery be an RTCStatsReportPromise, but that
-  // would require RTCStatsReportPromise to no longer be exclusive, which is
-  // a bit of a hassle, and not very performant.
-  RefPtr<GenericNonExclusivePromise> mFinalStatsQuery;
-  UniquePtr<dom::RTCStatsReportInternal> mFinalStats;
-  bool mDisableLongTermStats = false;
 
   // Start time of ICE.
   mozilla::TimeStamp mIceStartTime;
