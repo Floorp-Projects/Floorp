@@ -259,6 +259,11 @@ memory and layout, but there is no particular processing of untrusted input
 here.
 """
 
+[[audits.cookie]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-run"
+delta = "0.16.0 -> 0.16.2"
+
 [[audits.cpufeatures]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
