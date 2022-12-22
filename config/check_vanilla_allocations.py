@@ -165,6 +165,10 @@ def main():
         if "intl_components" in filename:
             continue
 
+        # Ignore use of std::string in regexp AST debug output.
+        if filename == "regexp-ast.o":
+            continue
+
         fn = m.group(2)
         if filename == "Utility.o":
             util_Utility_cpp.add(fn)

@@ -15,7 +15,6 @@ include("../js-cxxflags.mozbuild")
 CXXFLAGS += ["-Wno-error=type-limits"]
 
 UNIFIED_SOURCES += [
-    "imported/regexp-ast.cc",
     "imported/regexp-bytecode-generator.cc",
     "imported/regexp-bytecode-peephole.cc",
     "imported/regexp-bytecodes.cc",
@@ -31,6 +30,7 @@ UNIFIED_SOURCES += [
     "util/UnicodeShim.cpp",
 ]
 SOURCES += [
+    "imported/regexp-ast.cc",
     "imported/regexp-compiler.cc",  # Bug 1643693
     "RegExpNativeMacroAssembler.cpp",
 ]
