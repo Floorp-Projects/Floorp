@@ -282,8 +282,9 @@ void EmitterScope::dump(BytecodeEmitter* bce) {
     const NameLocation& l = r.front().value();
 
     auto atom = r.front().key();
-    UniqueChars bytes = bce->parserAtoms().toPrintableString(bce->cx, atom);
+    UniqueChars bytes = bce->parserAtoms().toPrintableString(atom);
     if (!bytes) {
+      ReportOutOfMemory(bce->cx);
       return;
     }
     if (l.kind() != NameLocation::Kind::Dynamic) {

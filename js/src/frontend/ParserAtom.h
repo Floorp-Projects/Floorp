@@ -775,9 +775,8 @@ class ParserAtomsTable {
                    ParserAtom::Atomize atomize) const;
   double toNumber(TaggedParserAtomIndex index) const;
   UniqueChars toNewUTF8CharsZ(JSContext* cx, TaggedParserAtomIndex index) const;
-  UniqueChars toPrintableString(JSContext* cx,
-                                TaggedParserAtomIndex index) const;
-  UniqueChars toQuotedString(JSContext* cx, TaggedParserAtomIndex index) const;
+  UniqueChars toPrintableString(TaggedParserAtomIndex index) const;
+  UniqueChars toQuotedString(TaggedParserAtomIndex index) const;
   JSAtom* toJSAtom(JSContext* cx, FrontendContext* fc,
                    TaggedParserAtomIndex index,
                    CompilationAtomCache& atomCache) const;
