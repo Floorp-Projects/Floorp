@@ -227,6 +227,11 @@ body:fullscreen #controls[showing]:hover .control-item:not(:hover),
   opacity: 0.8;
 }
 
+/* For readability, timestamp should maintain full opacity when visible */
+#controls:hover #timestamp {
+  opacity: 1;
+}
+
 #close {
   background-color: var(--close-btn-bg-color);
   background-image: url("chrome://global/skin/icons/close.svg");
@@ -480,4 +485,26 @@ input:checked + .slider:dir(rtl)::before {
 #scrubber::-moz-range-progress {
   height: 4px;
   border-radius: 10px;
+}
+
+#timestamp {
+  align-self: center;
+  color: #FFFFFF;
+  cursor: default;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Ubuntu", "Helvetica Neue", sans-serif;
+  font-size: 0.9em;
+  text-align: end;
+  user-select: none;
+  width: 16ch;
+}
+
+#timestamp::after {
+  background: unset;
+  content: unset;
+}
+
+@media (max-width: 580px), (max-height: 320px) {
+  #timestamp {
+    display: none;
+  }
 }

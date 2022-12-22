@@ -165,6 +165,11 @@ export class PictureInPictureLauncherChild extends JSWindowActorChild {
     let scrubberPosition =
       video.currentTime === 0 ? 0 : video.currentTime / video.duration;
 
+    let timestamp = PictureInPictureChild.videoWrapper.formatTimestamp(
+      video.currentTime,
+      video.duration
+    );
+
     // All other requests to toggle PiP should open a new PiP
     // window
     const videoRef = lazy.ContentDOMReference.get(video);
@@ -177,6 +182,7 @@ export class PictureInPictureLauncherChild extends JSWindowActorChild {
       ccEnabled: lazy.DISPLAY_TEXT_TRACKS_PREF,
       webVTTSubtitles: !!video.textTracks?.length,
       scrubberPosition,
+      timestamp,
     });
   }
 
@@ -1705,13 +1711,18 @@ export class PictureInPictureChild extends JSWindowActorChild {
         this.updateWebVTTTextTracksDisplay(cues);
         break;
       }
-      case "timeupdate": {
+      case "timeupdate":
+      case "durationchange": {
         let currentTime = event.target.currentTime;
         let duration = event.target.duration;
         let scrubberPosition = currentTime === 0 ? 0 : currentTime / duration;
-        this.sendAsyncMessage("PictureInPicture:SetScrubberPosition", {
-          scrubberPosition,
-        });
+        this.sendAsyncMessage(
+          "PictureInPicture:SetTimestampAndScrubberPosition",
+          {
+            scrubberPosition,
+            timestamp: this.videoWrapper.formatTimestamp(currentTime, duration),
+          }
+        );
         break;
       }
     }
@@ -2634,6 +2645,39 @@ class PictureInPictureChildVideoWrapper {
       },
       validateRetVal: retVal => retVal == null,
     });
+  }
+
+  /**
+   * Return hours, minutes, and seconds from seconds
+   * @param {Number} aSeconds
+   *  The time in seconds
+   * @returns {String} Timestamp string
+   **/
+  timeFromSeconds(aSeconds) {
+    aSeconds = isNaN(aSeconds) ? 0 : Math.round(aSeconds);
+    let seconds = Math.floor(aSeconds % 60),
+      minutes = Math.floor((aSeconds / 60) % 60),
+      hours = Math.floor(aSeconds / 3600);
+    seconds = seconds < 10 ? "0" + seconds : seconds;
+    minutes = hours > 0 && minutes < 10 ? "0" + minutes : minutes;
+    return aSeconds < 3600
+      ? `${minutes}:${seconds}`
+      : `${hours}:${minutes}:${seconds}`;
+  }
+
+  /**
+   * Format a timestamp from current time and total duration,
+   * output as a string in the form '0:00 / 0:00'
+   * @param {Number} aCurrentTime
+   *  The current time in seconds
+   * @param {Number} aDuration
+   *  The total duration in seconds
+   * @returns {String} Formatted timestamp
+   **/
+  formatTimestamp(aCurrentTime, aDuration) {
+    return `${this.timeFromSeconds(aCurrentTime)} / ${this.timeFromSeconds(
+      aDuration
+    )}`;
   }
 
   /**

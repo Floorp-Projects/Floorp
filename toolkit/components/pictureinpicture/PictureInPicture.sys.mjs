@@ -133,9 +133,10 @@ export class PictureInPictureParent extends JSWindowActorParent {
         }
         break;
       }
-      case "PictureInPicture:SetScrubberPosition": {
-        let { scrubberPosition } = aMessage.data;
+      case "PictureInPicture:SetTimestampAndScrubberPosition": {
+        let { timestamp, scrubberPosition } = aMessage.data;
         let player = PictureInPicture.getWeakPipPlayer(this);
+        player.setTimestamp(timestamp);
         player.setScrubberPosition(scrubberPosition);
         break;
       }
@@ -388,6 +389,7 @@ export var PictureInPicture = {
     this.addPiPBrowserToWeakMap(browser);
 
     win.setScrubberPosition(videoData.scrubberPosition);
+    win.setTimestamp(videoData.timestamp);
 
     Services.prefs.setBoolPref(
       "media.videocontrols.picture-in-picture.video-toggle.has-used",
