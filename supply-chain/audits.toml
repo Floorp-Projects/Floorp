@@ -356,6 +356,11 @@ who = "Matthew Gregan <kinetik@flim.org>"
 criteria = "safe-to-deploy"
 delta = "0.10.1 -> 0.10.2"
 
+[[audits.cubeb]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.10.2 -> 0.10.3"
+
 [[audits.cubeb-backend]]
 who = "Matthew Gregan <kinetik@flim.org>"
 criteria = "safe-to-deploy"
