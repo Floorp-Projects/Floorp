@@ -32,6 +32,10 @@ class GeckoCookieBannersStorage(
         setGeckoException(uri, DISABLED, privateBrowsing)
     }
 
+    override suspend fun addPersistentExceptionInPrivateMode(uri: String) {
+        setPersistentPrivateGeckoException(uri, DISABLED)
+    }
+
     override suspend fun findExceptionFor(
         uri: String,
         privateBrowsing: Boolean,
@@ -62,6 +66,17 @@ class GeckoCookieBannersStorage(
             uri,
             mode.mode,
             privateBrowsing,
+        )
+    }
+
+    @VisibleForTesting
+    internal fun setPersistentPrivateGeckoException(
+        uri: String,
+        mode: CookieBannerHandlingMode,
+    ) {
+        geckoStorage.setCookieBannerModeAndPersistInPrivateBrowsingForDomain(
+            uri,
+            mode.mode,
         )
     }
 

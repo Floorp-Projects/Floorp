@@ -21,6 +21,13 @@ interface CookieBannersStorage {
     )
 
     /**
+     * Set persistently the [CookieBannerHandlingMode.DISABLED] mode for the given [uri] in
+     * private browsing.
+     * @param uri the [uri] for the site to be updated.
+     */
+    suspend fun addPersistentExceptionInPrivateMode(uri: String)
+
+    /**
      * Find a [CookieBannerHandlingMode] that matches the given [uri] and browsing mode.
      * @param uri the [uri] to be used as filter in the search.
      * @param privateBrowsing Indicates if given [uri] should be in private browsing or not.

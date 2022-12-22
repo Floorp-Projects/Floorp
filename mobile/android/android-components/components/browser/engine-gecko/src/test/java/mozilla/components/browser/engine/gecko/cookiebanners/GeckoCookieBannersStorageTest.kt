@@ -100,4 +100,17 @@ class GeckoCookieBannersStorageTest {
 
             assertTrue(result)
         }
+
+    @Test
+    fun `GIVEN a cookie banner mode WHEN adding a persistent exception in private mode THEN add a persistent exception for the given uri in private browsing mode`() =
+        runTest {
+            val uri = "https://www.mozilla.org"
+
+            doNothing().`when`(geckoStorage)
+                .setPersistentPrivateGeckoException(uri = uri, mode = DISABLED)
+
+            geckoStorage.addPersistentExceptionInPrivateMode(uri = uri)
+
+            verify(geckoStorage).setPersistentPrivateGeckoException(uri, DISABLED)
+        }
 }

@@ -40,6 +40,9 @@ permalink: /changelog/
 * **feature-toolbar**
   * 🆕 Added a new parameter `shouldDisplaySearchTerms` to `ToolbarFeature` which allows clients to specify if the search terms should be shown instead of the URL when the toolbar is in display mode. [Bug 1805164](https://bugzilla.mozilla.org/show_bug.cgi?id=1805164)
 
+* **browser-engine-gecko**
+  * 🆕 Added `GeckoCookieBannersStorage.addPersistentExceptionInPrivateMode` to allow to add persistent cookie banner exceptions in private browsing [bug #1797605](https://bugzilla.mozilla.org/show_bug.cgi?id=1806924).
+
 # 109.0.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/v108.0.0...v109.0.0)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/v109.0.0/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
