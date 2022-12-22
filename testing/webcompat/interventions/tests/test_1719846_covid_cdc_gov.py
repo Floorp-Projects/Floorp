@@ -1,23 +1,21 @@
-import time
-
 import pytest
-from helpers import Css, Text, assert_not_element, await_element, find_element
 
 URL = "https://covid.cdc.gov/covid-data-tracker/#pandemic-vulnerability-index"
 
-TITLE_CSS = Css("#mainContent_Title")
-UNSUPPORTED_TEXT = Text("not support Firefox")
+
+IFRAME_CSS = "#pviIframe"
+UNSUPPORTED_TEXT = "not support Firefox"
 
 
+@pytest.mark.asyncio
 @pytest.mark.with_interventions
-def test_enabled(session):
-    session.get(URL)
-    time.sleep(4)
-    assert find_element(session, TITLE_CSS)
-    assert_not_element(session, UNSUPPORTED_TEXT)
+async def test_enabled(client):
+    await client.navigate(URL)
+    assert client.await_css(IFRAME_CSS)
 
 
+@pytest.mark.asyncio
 @pytest.mark.without_interventions
-def test_disabled(session):
-    session.get(URL)
-    assert await_element(session, UNSUPPORTED_TEXT)
+async def test_disabled(client):
+    await client.navigate(URL)
+    assert client.await_text(UNSUPPORTED_TEXT)

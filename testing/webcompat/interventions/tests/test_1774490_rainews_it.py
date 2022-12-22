@@ -1,5 +1,4 @@
 import pytest
-from helpers import Css, await_element
 
 URL = (
     "https://www.rainews.it/photogallery/2022/06/fotorassegna-stampa-le-prime"
@@ -7,11 +6,11 @@ URL = (
 )
 
 PICTURE_CSS = ".swiper-slide picture"
-GALLERY_CSS = Css(".swiper-wrapper")
+GALLERY_CSS = ".swiper-wrapper"
 
 
-def get_picture_width(session):
-    return session.execute_script(
+def get_picture_width(client):
+    return client.execute_script(
         f"""
         const p = document.querySelector("{PICTURE_CSS}");
         return window.getComputedStyle(p).width;
@@ -19,15 +18,17 @@ def get_picture_width(session):
     )
 
 
+@pytest.mark.asyncio
 @pytest.mark.with_interventions
-def test_enabled(session):
-    session.get(URL)
-    await_element(session, GALLERY_CSS)
-    assert "0px" != get_picture_width(session)
+async def test_enabled(client):
+    await client.navigate(URL)
+    client.await_css(GALLERY_CSS)
+    assert "0px" != get_picture_width(client)
 
 
+@pytest.mark.asyncio
 @pytest.mark.without_interventions
-def test_disabled(session):
-    session.get(URL)
-    await_element(session, GALLERY_CSS)
-    assert "0px" == get_picture_width(session)
+async def test_disabled(client):
+    await client.navigate(URL)
+    client.await_css(GALLERY_CSS)
+    assert "0px" == get_picture_width(client)

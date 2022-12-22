@@ -1,5 +1,4 @@
 import pytest
-from helpers import Css, find_element
 
 URL = (
     "https://www.saxoinvestor.fr/login/?adobe_mc="
@@ -8,20 +7,22 @@ URL = (
 
 
 @pytest.mark.skip_platforms("linux")
+@pytest.mark.asyncio
 @pytest.mark.with_interventions
-def test_enabled(session):
-    session.get(URL)
-    userid = find_element(session, Css("input#field_userid"))
-    password = find_element(session, Css("input#field_password"))
-    submit = find_element(session, Css("input#button_login"))
-    assert userid.is_displayed()
-    assert password.is_displayed()
-    assert submit.is_displayed()
+async def test_enabled(client):
+    await client.navigate(URL)
+    userid = client.find_css("input#field_userid")
+    password = client.find_css("input#field_password")
+    submit = client.find_css("input#button_login")
+    assert client.is_displayed(userid)
+    assert client.is_displayed(password)
+    assert client.is_displayed(submit)
 
 
 @pytest.mark.skip_platforms("linux")
+@pytest.mark.asyncio
 @pytest.mark.without_interventions
-def test_disabled(session):
-    session.get(URL)
-    warning = find_element(session, Css("#browser_support_section"))
-    assert warning.is_displayed()
+async def test_disabled(client):
+    await client.navigate(URL)
+    warning = client.find_css("#browser_support_section")
+    assert client.is_displayed(warning)

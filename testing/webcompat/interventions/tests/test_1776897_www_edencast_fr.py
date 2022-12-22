@@ -1,5 +1,4 @@
 import pytest
-from helpers import Css, assert_not_element, await_dom_ready, find_element
 
 # The page will asyncronously write out an <audio> element on success, but
 # will not do anything easily detectable otherwise.
@@ -11,7 +10,7 @@ from helpers import Css, assert_not_element, await_dom_ready, find_element
 
 URL = "https://www.edencast.fr/zoomcastlost-in-blindness/"
 
-AUDIO_CSS = Css("audio#podpresshtml5_1")
+AUDIO_CSS = "audio#podpresshtml5_1"
 
 SCRIPT = """
         var done = arguments[0];
@@ -42,17 +41,19 @@ SCRIPT = """
     """
 
 
+@pytest.mark.asyncio
 @pytest.mark.with_interventions
-def test_enabled(session):
-    session.get(URL)
-    await_dom_ready(session)
-    assert "html5" == session.execute_async_script(SCRIPT)
-    assert find_element(session, AUDIO_CSS)
+async def test_enabled(client):
+    await client.navigate(URL)
+    await client.dom_ready()
+    assert "html5" == client.execute_async_script(SCRIPT)
+    assert client.find_css(AUDIO_CSS)
 
 
+@pytest.mark.asyncio
 @pytest.mark.without_interventions
-def test_disabled(session):
-    session.get(URL)
-    await_dom_ready(session)
-    assert "swf" == session.execute_async_script(SCRIPT)
-    assert_not_element(session, AUDIO_CSS)
+async def test_disabled(client):
+    await client.navigate(URL)
+    await client.dom_ready()
+    assert "swf" == client.execute_async_script(SCRIPT)
+    assert not client.find_css(AUDIO_CSS)

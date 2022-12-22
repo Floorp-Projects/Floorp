@@ -1,16 +1,18 @@
 import pytest
 
 URL = "https://buskocchi.desuca.co.jp/smartPhone.html"
-SCRIPT = """return document.getElementById("map_canvas")?.clientHeight;"""
+SCRIPT = "return document.getElementById('map_canvas')?.clientHeight"
 
 
+@pytest.mark.asyncio
 @pytest.mark.with_interventions
-def test_enabled(session):
-    session.get(URL)
-    assert session.execute_script(SCRIPT)
+async def test_enabled(client):
+    await client.navigate(URL)
+    assert client.execute_script(SCRIPT)
 
 
+@pytest.mark.asyncio
 @pytest.mark.without_interventions
-def test_disabled(session):
-    session.get(URL)
-    assert session.execute_script(SCRIPT)
+async def test_disabled(client):
+    await client.navigate(URL)
+    assert client.execute_script(SCRIPT)

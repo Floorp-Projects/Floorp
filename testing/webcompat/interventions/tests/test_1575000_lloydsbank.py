@@ -1,38 +1,37 @@
 import pytest
-from helpers import Css, await_element
 
 URL = (
     "https://apply.lloydsbank.co.uk/sales-content/cwa/l/pca/index-app.html"
     "?product=classicaccountLTB#!b"
 )
 
-NO_CSS = Css("[data-selector='existingCustomer-toggle-button-no']")
-CONT_CSS = Css(
-    "[data-selector='ib-yes-continue-without-login-not-existing-customer-continue-button']"
-)
-CONT2_CSS = Css("[data-selector='beforeYouStart-continue-button']")
-RADIO_CSS = Css("[name='aboutYou-gender-radio'] + span")
+NO_CSS = "[data-selector='existingCustomer-toggle-button-no']"
+CONT_CSS = "[data-selector='ib-yes-continue-without-login-not-existing-customer-continue-button']"
+CONT2_CSS = "[data-selector='beforeYouStart-continue-button']"
+RADIO_CSS = "[name='aboutYou-gender-radio'] + span"
 
 
-def get_radio_position(session):
-    session.get(URL)
-    await_element(session, NO_CSS).click()
-    await_element(session, CONT_CSS).click()
-    await_element(session, CONT2_CSS).click()
-    await_element(session, RADIO_CSS)
-    return session.execute_script(
-        f"""
-        const r = document.querySelector("{RADIO_CSS.value}");
-        return window.getComputedStyle(r).position;
-    """
+async def get_radio_position(client):
+    await client.navigate(URL)
+    client.await_css(NO_CSS).click()
+    client.await_css(CONT_CSS).click()
+    client.await_css(CONT2_CSS).click()
+    radio = client.await_css(RADIO_CSS)
+    return client.execute_script(
+        """
+        return window.getComputedStyle(arguments[0]).position;
+    """,
+        radio,
     )
 
 
+@pytest.mark.asyncio
 @pytest.mark.with_interventions
-def test_enabled(session):
-    assert "relative" == get_radio_position(session)
+async def test_enabled(client):
+    assert "relative" == await get_radio_position(client)
 
 
+@pytest.mark.asyncio
 @pytest.mark.without_interventions
-def test_disabled(session):
-    assert "relative" != get_radio_position(session)
+async def test_disabled(client):
+    assert "relative" != await get_radio_position(client)

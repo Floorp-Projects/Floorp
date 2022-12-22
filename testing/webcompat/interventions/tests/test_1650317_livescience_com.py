@@ -1,42 +1,40 @@
 import pytest
-from helpers import Css, await_element
-from selenium.common.exceptions import TimeoutException
 
 URL = "https://www.livescience.com/"
 TEXT_TO_TEST = ".trending__link"
 
 
-def is_text_visible(session):
+async def is_text_visible(client):
     # the page does not properly load, so we just time out
     # and wait for the element we're interested in to appear
-    session.set_page_load_timeout(1)
-    try:
-        session.get(URL)
-    except TimeoutException:
-        pass
-    assert await_element(session, Css(TEXT_TO_TEST))
-    return session.execute_async_script(
-        f"""
-        const cb = arguments[0];
-        const link = document.querySelector("{TEXT_TO_TEST}");
+    await client.navigate(URL, timeout=1)
+    link = client.await_css(TEXT_TO_TEST)
+    assert client.is_displayed(link)
+    return client.execute_async_script(
+        """
+        const link = arguments[0];
+        const cb = arguments[1];
         const fullHeight = link.scrollHeight;
         const parentVisibleHeight = link.parentElement.clientHeight;
         link.style.paddingBottom = "0";
-        window.requestAnimationFrame(() => {{
+        window.requestAnimationFrame(() => {
             const bottomPaddingHeight = fullHeight - link.scrollHeight;
             cb(fullHeight - parentVisibleHeight <= bottomPaddingHeight);
-        }});
-    """
+        });
+    """,
+        link,
     )
 
 
 @pytest.mark.skip_platforms("mac")
+@pytest.mark.asyncio
 @pytest.mark.with_interventions
-def test_enabled(session):
-    assert is_text_visible(session)
+async def test_enabled(client):
+    assert await is_text_visible(client)
 
 
 @pytest.mark.skip_platforms("mac")
+@pytest.mark.asyncio
 @pytest.mark.without_interventions
-def test_disabled(session):
-    assert not is_text_visible(session)
+async def test_disabled(client):
+    assert not await is_text_visible(client)
