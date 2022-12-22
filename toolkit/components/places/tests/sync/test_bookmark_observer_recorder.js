@@ -5,14 +5,15 @@ async function promiseAllURLFrecencies() {
   let frecencies = new Map();
   let db = await PlacesUtils.promiseDBConnection();
   let rows = await db.execute(`
-    SELECT url, frecency
+    SELECT url, frecency, recalc_frecency
     FROM moz_places
     WHERE url_hash BETWEEN hash('http', 'prefix_lo') AND
                            hash('http', 'prefix_hi')`);
   for (let row of rows) {
-    let url = row.getResultByName("url");
-    let frecency = row.getResultByName("frecency");
-    frecencies.set(url, frecency);
+    frecencies.set(row.getResultByName("url"), {
+      frecency: row.getResultByName("frecency"),
+      recalc: row.getResultByName("recalc_frecency"),
+    });
   }
   return frecencies;
 }
@@ -191,7 +192,7 @@ add_task(async function test_update_frecencies() {
     let frecencies = await promiseAllURLFrecencies();
     let urlsWithFrecency = mapFilterIterator(
       frecencies.entries(),
-      ([href, frecency]) => (frecency > 0 ? href : null)
+      ([href, { frecency, recalc }]) => (recalc == 0 ? href : null)
     );
 
     // A is unchanged, and we should recalculate frecency for three more
@@ -241,7 +242,7 @@ add_task(async function test_update_frecencies() {
     let frecencies = await promiseAllURLFrecencies();
     let urlsWithoutFrecency = mapFilterIterator(
       frecencies.entries(),
-      ([href, frecency]) => (frecency <= 0 ? href : null)
+      ([href, { frecency, recalc }]) => (recalc == 1 ? href : null)
     );
     deepEqual(
       urlsWithoutFrecency,

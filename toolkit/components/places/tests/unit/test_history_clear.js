@@ -42,7 +42,7 @@ add_task(async function test_history_clear() {
   });
 
   // Add a bookmark
-  // Bookmarked page should have history cleared and frecency = -1
+  // Bookmarked page should have history cleared and frecency to be recalculated
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: "http://typed.mozilla.org/",
@@ -65,16 +65,16 @@ add_task(async function test_history_clear() {
   await promiseClearHistory;
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  // Check that frecency for not cleared items (bookmarks) has been converted
-  // to -1.
+  // Check that frecency for not cleared items (bookmarks) has been marked
+  // as to be recalculated.
   let stmt = mDBConn.createStatement(
-    "SELECT h.id FROM moz_places h WHERE h.frecency > 0 "
+    "SELECT h.id FROM moz_places h WHERE frecency <> 0 AND h.recalc_frecency = 0 "
   );
   Assert.ok(!stmt.executeStep());
   stmt.finalize();
 
   stmt = mDBConn.createStatement(
-    `SELECT h.id FROM moz_places h WHERE h.frecency < 0
+    `SELECT h.id FROM moz_places h WHERE h.recalc_frecency = 1
        AND EXISTS (SELECT id FROM moz_bookmarks WHERE fk = h.id) LIMIT 1`
   );
   Assert.ok(stmt.executeStep());

@@ -34,6 +34,7 @@
         "visit_count = visit_count + (SELECT NEW.visit_type NOT IN "         \
         "(" EXCLUDED_VISIT_TYPES                                             \
         ")), "                                                               \
+        "recalc_frecency = (frecency <> 0), "                                \
         "last_visit_date = MAX(IFNULL(last_visit_date, 0), NEW.visit_date) " \
         "WHERE id = NEW.place_id;"                                           \
         "END")
@@ -48,6 +49,7 @@
         "visit_count = visit_count - (SELECT OLD.visit_type NOT IN "    \
         "(" EXCLUDED_VISIT_TYPES                                        \
         ")), "                                                          \
+        "recalc_frecency = (frecency <> 0), "                           \
         "last_visit_date = (SELECT visit_date FROM moz_historyvisits "  \
         "WHERE place_id = OLD.place_id "                                \
         "ORDER BY visit_date DESC LIMIT 1) "                            \
@@ -220,6 +222,7 @@
         "MAX(NEW.frecency, 0) - MAX(OLD.frecency, 0)) "                   \
         "ON CONFLICT(prefix, host) DO UPDATE "                            \
         "SET frecency_delta = frecency_delta + EXCLUDED.frecency_delta; " \
+        "UPDATE moz_places SET recalc_frecency = 0 WHERE id = NEW.id; "   \
         "END ")
 // This trigger corresponds to the previous trigger.  It runs on deletes on
 // moz_updateoriginsupdate_temp -- logically, after updates to
@@ -262,7 +265,8 @@
         "AFTER DELETE ON moz_bookmarks FOR EACH ROW "                          \
         "BEGIN "                                                               \
         "UPDATE moz_places "                                                   \
-        "SET foreign_count = foreign_count - 1 "                               \
+        "SET foreign_count = foreign_count - 1, "                              \
+        "    recalc_frecency = (frecency <> 0) "                               \
         "WHERE id = OLD.fk;"                                                   \
         "END")
 
@@ -274,7 +278,8 @@
         "SELECT store_last_inserted_id('moz_bookmarks', NEW.id); "             \
         "SELECT note_sync_change() WHERE NEW.syncChangeCounter > 0; "          \
         "UPDATE moz_places "                                                   \
-        "SET foreign_count = foreign_count + 1 "                               \
+        "SET foreign_count = foreign_count + 1, "                              \
+        "    recalc_frecency = (frecency <> 0) "                               \
         "WHERE id = NEW.fk;"                                                   \
         "END")
 
@@ -286,10 +291,12 @@
         "SELECT note_sync_change() "                                           \
         "WHERE NEW.syncChangeCounter <> OLD.syncChangeCounter; "               \
         "UPDATE moz_places "                                                   \
-        "SET foreign_count = foreign_count + 1 "                               \
+        "SET foreign_count = foreign_count + 1, "                              \
+        "    recalc_frecency = (frecency <> 0) "                               \
         "WHERE OLD.fk <> NEW.fk AND id = NEW.fk;"                              \
         "UPDATE moz_places "                                                   \
-        "SET foreign_count = foreign_count - 1 "                               \
+        "SET foreign_count = foreign_count - 1, "                              \
+        "    recalc_frecency = (frecency <> 0) "                               \
         "WHERE OLD.fk <> NEW.fk AND id = OLD.fk;"                              \
         "END")
 

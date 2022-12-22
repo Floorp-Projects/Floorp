@@ -26,6 +26,7 @@
       ", preview_image_url TEXT"                       \
       ", site_name TEXT"                               \
       ", origin_id INTEGER REFERENCES moz_origins(id)" \
+      ", recalc_frecency INTEGER NOT NULL DEFAULT 0"   \
       ")")
 
 #define CREATE_MOZ_HISTORYVISITS            \
