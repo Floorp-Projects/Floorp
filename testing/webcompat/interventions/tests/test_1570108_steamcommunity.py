@@ -1,100 +1,134 @@
 import pytest
-from helpers import (
-    Css,
-    Text,
-    Xpath,
-    assert_not_element,
-    await_element,
-    await_first_element_of,
-    await_getUserMedia_call_on_click,
-    find_element,
-)
 
 URL = "https://steamcommunity.com/chat"
 
 
-USERID_CSS = Css("input[type='text'][class*='newlogindialog']")
-PASSWORD_CSS = Css("input[type='password'][class*='newlogindialog']")
-SIGNIN_CSS = Css("button[type='submit'][class*='newlogindialog']")
-GEAR_CSS = Css(".friendListButton")
-LOGIN_FAIL_XPATH = Xpath(
+USERID_CSS = "input[type='text'][class*='newlogindialog']"
+PASSWORD_CSS = "input[type='password'][class*='newlogindialog']"
+SIGNIN_CSS = "button[type='submit'][class*='newlogindialog']"
+GEAR_CSS = ".friendListButton"
+LOGIN_FAIL_XPATH = (
     "//*[contains(text(), 'try again') and " "contains(@class, 'FormError')]"
 )
-AUTH_CSS = Css("[class*='newlogindialog_ProtectingAccount']")
-RATE_TEXT = Text("too many login failures")
-VOICE_XPATH = Xpath(
+AUTH_CSS = "[class*='newlogindialog_ProtectingAccount']"
+AUTH_DIGITS_CSS = "[class*='newlogindialog_SegmentedCharacterInput'] input[type='text']"
+AUTH_RETRY_CSS = "[class*='newlogindialog_TryAgainButton']"
+AUTH_RETRY_LOADER_CSS = "[class*='newlogindialog_Loading']"
+RATE_TEXT = "too many login failures"
+VOICE_XPATH = (
     "//*[contains(text(), 'Voice') and "
     "contains(@class, 'pagedsettings_PagedSettingsDialog_PageListItem')]"
 )
-MIC_BUTTON_CSS = Css("button.LocalMicTestButton")
-UNSUPPORTED_TEXT = Text("currently unsupported in Firefox")
+MIC_BUTTON_CSS = "button.LocalMicTestButton"
+UNSUPPORTED_TEXT = "currently unsupported in Firefox"
 
 
-def load_mic_test(session, credentials):
-    session.get(URL)
+async def do_2fa(client):
+    digits = client.find_css(AUTH_DIGITS_CSS, all=True)
+    assert len(digits) > 0
 
-    userid = await_element(session, USERID_CSS)
-    password = find_element(session, PASSWORD_CSS)
-    submit = find_element(session, SIGNIN_CSS)
-    assert userid.is_displayed()
-    assert password.is_displayed()
-    assert submit.is_displayed()
+    loader = client.css(AUTH_RETRY_LOADER_CSS)
+    if client.find_element(loader):
+        client.await_element_hidden(loader)
+    for digit in digits:
+        if digit.property("value"):
+            digit.send_keys(u"\ue003")  # backspace
 
-    userid.send_keys(credentials["username"])
-    password.send_keys(credentials["password"])
-    submit.click()
+    code = input("**** Enter two-factor authentication code: ")
+    for i, digit in enumerate(code):
+        if len(digits) > i:
+            digits[i].send_keys(digit)
+
+    client.await_element(loader, timeout=10)
+    client.await_element_hidden(loader)
+
+
+async def load_mic_test(client, credentials, should_do_2fa):
+    await client.navigate(URL)
+
+    async def login():
+        userid = client.await_css(USERID_CSS)
+        password = client.find_css(PASSWORD_CSS)
+        submit = client.find_css(SIGNIN_CSS)
+        assert client.is_displayed(userid)
+        assert client.is_displayed(password)
+        assert client.is_displayed(submit)
+
+        userid.send_keys(credentials["username"])
+        password.send_keys(credentials["password"])
+        submit.click()
+
+    await login()
 
     while True:
-        [gear, fail, auth, rate] = await_first_element_of(
-            session,
-            [GEAR_CSS, LOGIN_FAIL_XPATH, AUTH_CSS, RATE_TEXT],
+        auth, retry, gear, fail, rate = client.await_first_element_of(
+            [
+                client.css(AUTH_CSS),
+                client.css(AUTH_RETRY_CSS),
+                client.css(GEAR_CSS),
+                client.xpath(LOGIN_FAIL_XPATH),
+                client.text(RATE_TEXT),
+            ],
             is_displayed=True,
             timeout=20,
         )
+
+        if retry:
+            await do_2fa(client)
+            continue
+
         if rate:
             pytest.skip(
-                "Too many Steam login attempts detected in a short time; try again later."
+                "Too many Steam login attempts in a short time; try again later."
             )
             return None
         elif auth:
-            pytest.skip("Two-factor authentication requested; disable Steam Guard.")
+            if should_do_2fa:
+                await do_2fa(client)
+                continue
+
+            pytest.skip(
+                "Two-factor authentication requested; disable Steam Guard"
+                " or run this test with --do-2fa to live-input codes"
+            )
             return None
         elif fail:
             pytest.skip("Invalid login provided.")
             return None
         else:
             break
+
     assert gear
     gear.click()
 
-    voice = await_element(session, VOICE_XPATH)
-    assert voice.is_displayed()
+    voice = client.await_xpath(VOICE_XPATH, is_displayed=True)
     voice.click()
 
-    mic_test = await_element(session, MIC_BUTTON_CSS)
-    assert mic_test.is_displayed()
-
+    mic_test = client.await_css(MIC_BUTTON_CSS, is_displayed=True)
     return mic_test
 
 
+@pytest.mark.asyncio
 @pytest.mark.with_interventions
-def test_enabled(session, credentials):
-    mic_test = load_mic_test(session, credentials)
+async def test_enabled(client, credentials, should_do_2fa):
+    mic_test = await load_mic_test(client, credentials, should_do_2fa)
     if not mic_test:
         return
 
-    await_getUserMedia_call_on_click(session, mic_test)
+    with client.assert_getUserMedia_called():
+        mic_test.click()
 
-    assert_not_element(session, UNSUPPORTED_TEXT)
+    assert not client.find_text(UNSUPPORTED_TEXT)
 
 
+@pytest.mark.asyncio
 @pytest.mark.without_interventions
-def test_disabled(session, credentials):
-    mic_test = load_mic_test(session, credentials)
+async def test_disabled(client, credentials, should_do_2fa):
+    mic_test = await load_mic_test(client, credentials, should_do_2fa)
     if not mic_test:
         return
 
     mic_test.click()
 
-    unsupported = await_element(session, UNSUPPORTED_TEXT)
-    assert unsupported.is_displayed()
+    unsupported = client.await_text(UNSUPPORTED_TEXT)
+    assert client.is_displayed(unsupported)

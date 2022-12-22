@@ -1,36 +1,34 @@
 import time
 
 import pytest
-from helpers import Css, await_element, find_element
 
 URL = "https://www.youtube.com/"
 SEARCH_TERM = "movies"
 
-SEARCH_FIELD_CSS = Css("input[type='text'][id*='search']")
-SEARCH_BUTTON_CSS = Css("#search-icon-legacy")
-FILTER_BAR_CSS = Css("#filter-menu")
+SEARCH_FIELD_CSS = "input[type='text'][id*='search']"
+SEARCH_BUTTON_CSS = "#search-icon-legacy"
+FILTER_BAR_CSS = "#filter-menu"
 PERF_NOW_CONSTANT = 11111
 
 
-def change_performance_now(session):
-    return session.execute_script(
-        f"""
-        Object.defineProperty(window.performance, "now", {{
-          value: function() {{
-            return {PERF_NOW_CONSTANT};
-          }}
-      }});
+def change_performance_now(client):
+    return client.execute_script(
+        """
+        const PERF_NOW = arguments[0];
+        Object.defineProperty(window.performance, "now", {
+          value: () => PERF_NOW,
+        }, PERF_NOW_CONSTANT);
     """
     )
 
 
-def search_for_term(session):
-    session.get(URL)
-    search = await_element(session, SEARCH_FIELD_CSS)
-    button = find_element(session, SEARCH_BUTTON_CSS)
+async def search_for_term(client):
+    await client.navigate(URL)
+    search = client.await_css(SEARCH_FIELD_CSS)
+    button = client.find_css(SEARCH_BUTTON_CSS)
 
-    assert search.is_displayed()
-    assert button.is_displayed()
+    assert client.is_displayed(search)
+    assert client.is_displayed(button)
 
     search.send_keys(SEARCH_TERM)
     time.sleep(1)
@@ -38,23 +36,25 @@ def search_for_term(session):
     time.sleep(2)
 
 
+@pytest.mark.asyncio
 @pytest.mark.with_interventions
-def test_enabled(session):
-    search_for_term(session)
-    filter_bar = await_element(session, FILTER_BAR_CSS, None, True)
+async def test_enabled(client):
+    await search_for_term(client)
+    filter_bar = client.await_css(FILTER_BAR_CSS)
 
-    session.back()
+    client.back()
 
-    assert filter_bar.is_displayed() is False
+    assert not client.is_displayed(filter_bar)
 
 
 @pytest.mark.skip(reason="results are intermittent, so skipping this test for now")
+@pytest.mark.asyncio
 @pytest.mark.without_interventions
-def test_disabled(session):
-    change_performance_now(session)
-    search_for_term(session)
+async def test_disabled(client):
+    change_performance_now(client)
+    await search_for_term(client)
 
-    session.back()
+    client.back()
 
-    filter_bar = await_element(session, FILTER_BAR_CSS)
-    assert filter_bar.is_displayed()
+    filter_bar = client.await_css(FILTER_BAR_CSS)
+    assert client.is_displayed(filter_bar)

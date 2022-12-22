@@ -1,32 +1,43 @@
 import pytest
-from helpers import Css, Text, await_first_element_of
 
 URL = "https://www.directv.com.co/"
-INCOMPATIBLE_CSS = Css(".browser-compatible.compatible.incompatible")
-BLOCKED_TEXT = Text("request was blocked by the security rules")
-DENIED_TEXT = Text("not available in your region")
+IFRAME_CSS = "#main-iframe"
+INCOMPATIBLE_CSS = ".browser-compatible.compatible.incompatible"
+BLOCKED_TEXT = "blocked by the security rules"
+DENIED_TEXT = "not available in your region"
 
 
-def check_unsupported_visibility(session, should_show):
-    session.get(URL)
+async def check_unsupported_visibility(client, should_show):
+    await client.navigate(URL)
 
-    [denied, blocked, incompatible] = await_first_element_of(
-        session, [DENIED_TEXT, BLOCKED_TEXT, INCOMPATIBLE_CSS]
+    # their region-block page sometimes wraps the content in an iframe
+    frame = client.find_css(IFRAME_CSS)
+    if frame:
+        client.switch_frame(frame)
+
+    denied, blocked, incompatible = client.await_first_element_of(
+        [
+            client.text(DENIED_TEXT),
+            client.text(BLOCKED_TEXT),
+            client.css(INCOMPATIBLE_CSS),
+        ]
     )
 
     if denied or blocked:
         pytest.skip("Region-locked, cannot test. Try using a VPN set to USA.")
         return
 
-    shown = incompatible.is_displayed()
+    shown = client.is_displayed(incompatible)
     assert (should_show and shown) or (not should_show and not shown)
 
 
+@pytest.mark.asyncio
 @pytest.mark.with_interventions
-def test_enabled(session):
-    check_unsupported_visibility(session, should_show=False)
+async def test_enabled(client):
+    await check_unsupported_visibility(client, should_show=False)
 
 
+@pytest.mark.asyncio
 @pytest.mark.without_interventions
-def test_disabled(session):
-    check_unsupported_visibility(session, should_show=True)
+async def test_disabled(client):
+    await check_unsupported_visibility(client, should_show=True)

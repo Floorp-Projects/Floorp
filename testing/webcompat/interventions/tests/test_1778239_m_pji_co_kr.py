@@ -1,19 +1,20 @@
 import pytest
-from helpers import Css, await_element
 
 URL = "https://m.pji.co.kr/"
-UNSUPPORTED_BANNER = Css("#chromAlarmView")
+UNSUPPORTED_BANNER = "#chromAlarmView"
 
 
+@pytest.mark.asyncio
 @pytest.mark.with_interventions
-def test_enabled(session):
-    session.get(URL)
-    unsupported_banner = await_element(session, UNSUPPORTED_BANNER)
-    assert unsupported_banner.is_displayed() is False
+async def test_enabled(client):
+    await client.navigate(URL)
+    unsupported_banner = client.await_css(UNSUPPORTED_BANNER)
+    assert not client.is_displayed(unsupported_banner)
 
 
+@pytest.mark.asyncio
 @pytest.mark.without_interventions
-def test_disabled(session):
-    session.get(URL)
-    unsupported_banner = await_element(session, UNSUPPORTED_BANNER)
-    assert unsupported_banner.is_displayed()
+async def test_disabled(client):
+    await client.navigate(URL)
+    unsupported_banner = client.await_css(UNSUPPORTED_BANNER)
+    assert client.is_displayed(unsupported_banner)

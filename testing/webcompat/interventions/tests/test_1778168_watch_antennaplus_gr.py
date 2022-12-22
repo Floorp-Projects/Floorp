@@ -1,5 +1,4 @@
 import pytest
-from helpers import Css, await_element
 
 URL = (
     "https://watch.antennaplus.gr/#/shows/agries_melisses/seasons/"
@@ -7,13 +6,15 @@ URL = (
 )
 
 
+@pytest.mark.asyncio
 @pytest.mark.with_interventions
-def test_enabled(session):
-    session.get(URL)
-    assert await_element(session, Css(".login-pf-page"))
+async def test_enabled(client):
+    await client.navigate(URL)
+    assert client.await_css(".login-pf-page")
 
 
+@pytest.mark.asyncio
 @pytest.mark.without_interventions
-def test_disabled(session):
-    session.get(URL)
-    assert await_element(session, Css(".ua-barrier"))
+async def test_disabled(client):
+    await client.navigate(URL)
+    assert client.await_css(".ua-barrier")

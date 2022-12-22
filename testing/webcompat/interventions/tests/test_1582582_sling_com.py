@@ -1,19 +1,24 @@
 import pytest
-from helpers import Css, assert_not_element, await_element
 
 URL = "https://watch.sling.com/"
-INCOMPATIBLE_CSS = Css("unsupported-platform")
-LOADER_CSS = Css(".loader-container")
+INCOMPATIBLE_CSS = "[class*='unsupported-browser']"
+LOADER_CSS = ".loader-container"
+VPN_TEXT = "ONLY AVAILABLE INSIDE THE US"
 
 
+@pytest.mark.asyncio
 @pytest.mark.with_interventions
-def test_enabled(session):
-    session.get(URL)
-    assert await_element(session, LOADER_CSS, timeout=20)
-    assert_not_element(session, INCOMPATIBLE_CSS)
+async def test_enabled(client):
+    await client.navigate(URL)
+    loader, vpn = client.await_first_element_of(
+        [client.css(LOADER_CSS), client.text(VPN_TEXT)], timeout=20
+    )
+    assert loader or vpn
+    assert not client.find_css(INCOMPATIBLE_CSS)
 
 
+@pytest.mark.asyncio
 @pytest.mark.without_interventions
-def test_disabled(session):
-    session.get(URL)
-    assert await_element(session, INCOMPATIBLE_CSS, timeout=20)
+async def test_disabled(client):
+    await client.navigate(URL)
+    assert client.await_css(INCOMPATIBLE_CSS, timeout=2000)
