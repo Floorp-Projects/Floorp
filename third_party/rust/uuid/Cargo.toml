@@ -3,55 +3,136 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g., crates.io) dependencies
+# to registry (e.g., crates.io) dependencies.
 #
-# If you believe there's an error in this file please file an
-# issue against the rust-lang/cargo repository. If you're
-# editing this file be aware that the upstream Cargo.toml
-# will likely look very different (and much more reasonable)
+# If you are reading this file be aware that the original Cargo.toml
+# will likely look very different (and much more reasonable).
+# See Cargo.toml.orig for the original contents.
 
 [package]
 edition = "2018"
 name = "uuid"
-version = "0.8.2"
-authors = ["Ashley Mannix<ashleymannix@live.com.au>", "Christopher Armstrong", "Dylan DPC<dylan.dpc@gmail.com>", "Hunar Roop Kahlon<hunar.roop@gmail.com>"]
-exclude = [".github/**", ".travis.yml", "appveyor.yml", "bors.toml"]
+version = "1.2.2"
+authors = [
+    "Ashley Mannix<ashleymannix@live.com.au>",
+    "Christopher Armstrong",
+    "Dylan DPC<dylan.dpc@gmail.com>",
+    "Hunar Roop Kahlon<hunar.roop@gmail.com>",
+]
+exclude = [".github/**"]
 description = "A library to generate and parse UUIDs."
 homepage = "https://github.com/uuid-rs/uuid"
 documentation = "https://docs.rs/uuid"
 readme = "README.md"
-keywords = ["guid", "unique", "uuid"]
-categories = ["data-structures", "no-std", "parser-implementations", "wasm"]
+keywords = [
+    "guid",
+    "unique",
+    "uuid",
+]
+categories = [
+    "data-structures",
+    "no-std",
+    "parser-implementations",
+    "wasm",
+]
 license = "Apache-2.0 OR MIT"
 repository = "https://github.com/uuid-rs/uuid"
+
 [package.metadata.docs.rs]
-default-target = "x86_64-pc-windows-msvc"
-features = ["guid", "serde", "slog", "v1", "v3", "v4", "v5"]
+rustc-args = [
+    "--cfg",
+    "uuid_unstable",
+]
+rustdoc-args = [
+    "--cfg",
+    "uuid_unstable",
+]
+targets = ["x86_64-unknown-linux-gnu"]
+features = [
+    "serde",
+    "arbitrary",
+    "slog",
+    "v1",
+    "v3",
+    "v4",
+    "v5",
+    "v6",
+    "v7",
+    "v8",
+]
 
 [package.metadata.playground]
-features = ["serde", "v1", "v3", "v4", "v5"]
-[dependencies.getrandom]
-version = "0.2.0"
+features = [
+    "serde",
+    "v1",
+    "v3",
+    "v4",
+    "v5",
+    "v6",
+    "v7",
+    "v8",
+]
+
+[dependencies.arbitrary]
+version = "1.1.3"
 optional = true
 
-[dependencies.md5]
-version = "0.7"
+[dependencies.atomic]
+version = "0.5"
 optional = true
+default-features = false
+package = "atomic"
+
+[dependencies.getrandom]
+version = "0.2"
+optional = true
+package = "getrandom"
+
+[dependencies.md-5]
+version = "0.10"
+optional = true
+default-features = false
+package = "md-5"
+
+[dependencies.rand]
+version = "0.8"
+optional = true
+package = "rand"
 
 [dependencies.serde]
 version = "1.0.56"
 optional = true
 default-features = false
 
-[dependencies.sha1]
-version = "0.6"
+[dependencies.sha1_smol]
+version = "1"
 optional = true
+default-features = false
+package = "sha1_smol"
 
 [dependencies.slog]
 version = "2"
 optional = true
+
+[dependencies.uuid-macro-internal]
+version = "1.2.2"
+optional = true
+package = "uuid-macro-internal"
+
+[dependencies.wasm-bindgen]
+version = "0.2"
+optional = true
+package = "wasm-bindgen"
+
+[dependencies.zerocopy]
+version = "0.6"
+optional = true
+
 [dev-dependencies.bincode]
 version = "1.0"
+
+[dev-dependencies.rustversion]
+version = "1"
 
 [dev-dependencies.serde_derive]
 version = "1.0.79"
@@ -62,21 +143,46 @@ version = "1.0"
 [dev-dependencies.serde_test]
 version = "1.0.56"
 
+[dev-dependencies.trybuild]
+version = "1.0.52"
+
 [features]
 default = ["std"]
-guid = ["winapi"]
+fast-rng = [
+    "rng",
+    "rand",
+]
+js = [
+    "wasm-bindgen",
+    "getrandom",
+    "getrandom/js",
+]
+macro-diagnostics = ["uuid-macro-internal"]
+md5 = ["md-5"]
+rng = ["getrandom"]
+sha1 = ["sha1_smol"]
 std = []
-stdweb = ["getrandom", "getrandom/js"]
-v1 = []
+v1 = ["atomic"]
 v3 = ["md5"]
-v4 = ["getrandom"]
+v4 = ["rng"]
 v5 = ["sha1"]
-wasm-bindgen = ["getrandom", "getrandom/js"]
-[target."cfg(windows)".dependencies.winapi]
+v6 = ["atomic"]
+v7 = [
+    "atomic",
+    "rng",
+]
+v8 = []
+
+[target."cfg(target_arch = \"wasm32\")".dev-dependencies.wasm-bindgen]
+version = "0.2"
+package = "wasm-bindgen"
+
+[target."cfg(target_arch = \"wasm32\")".dev-dependencies.wasm-bindgen-test]
 version = "0.3"
-optional = true
-[badges.appveyor]
-repository = "uuid-rs/uuid"
+
+[target."cfg(windows)".dev-dependencies.windows-sys]
+version = "0.42.0"
+features = ["Win32_System_Com"]
 
 [badges.is-it-maintained-issue-resolution]
 repository = "uuid-rs/uuid"
@@ -86,6 +192,3 @@ repository = "uuid-rs/uuid"
 
 [badges.maintenance]
 status = "actively-developed"
-
-[badges.travis-ci]
-repository = "uuid-rs/uuid"
