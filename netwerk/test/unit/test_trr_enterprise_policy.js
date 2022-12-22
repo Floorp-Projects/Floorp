@@ -31,6 +31,8 @@ let policies = Cc["@mozilla.org/enterprisepolicies;1"].getService(
 policies.observe(null, "policies-startup", null);
 
 add_task(async function test_enterprise_policy_locked() {
+  // Read dns.currentTrrMode to make DNS service initialized earlier.
+  info("Services.dns.currentTrrMode:" + Services.dns.currentTrrMode);
   await EnterprisePolicyTesting.setupPolicyEngineWithJson({
     policies: {
       DNSOverHTTPS: {
