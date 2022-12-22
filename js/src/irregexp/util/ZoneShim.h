@@ -109,6 +109,17 @@ class ZoneList final : public ZoneObject {
     AddAll(other, zone);
   }
 
+  ZoneList(ZoneList<T>&& other) { *this = std::move(other); }
+
+  ZoneList& operator=(ZoneList&& other) {
+    MOZ_ASSERT(!data_);
+    data_ = other.data_;
+    capacity_ = other.capacity_;
+    length_ = other.length_;
+    other.Clear();
+    return *this;
+  }
+
   // Returns a reference to the element at index i. This reference is not safe
   // to use after operations that can change the list's backing store
   // (e.g. Add).
@@ -191,9 +202,7 @@ class ZoneList final : public ZoneObject {
   // pointer type. Returns the removed element.
   inline T RemoveLast() { return Remove(length_ - 1); }
 
-  // Clears the list by freeing the storage memory. If you want to keep the
-  // memory, use Rewind(0) instead. Be aware, that even if T is a
-  // pointer type, clearing the list doesn't delete the entries.
+  // Clears the list, setting the capacity and length to 0.
   inline void Clear() {
     data_ = nullptr;
     capacity_ = 0;
