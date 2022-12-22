@@ -205,14 +205,24 @@ add_task(async function test_datepicker_keyboard_nav() {
     "Panel should be closed on Escape"
   );
 
-  // The focus should return to the input field.
-  let isFocused = await SpecialPowers.spawn(browser, [], () => {
-    return (
-      content.document.querySelector("#date") === content.document.activeElement
+  // Check the focus is returned to the Month field
+  await SpecialPowers.spawn(browser, [], async () => {
+    const input = content.document.querySelector("input");
+    const shadowRoot = SpecialPowers.wrap(input).openOrClosedShadowRoot;
+    // Separators "/" are odd children of the wrapper
+    const monthField = shadowRoot.getElementById("edit-wrapper").children[0];
+    // Testing the focus position within content:
+    Assert.equal(
+      input,
+      content.document.activeElement,
+      `The input field includes programmatic focus`
+    );
+    // Testing the focus indication within the shadow-root:
+    Assert.ok(
+      monthField.matches(":focus"),
+      `The keyboard focus was returned to the Month field`
     );
   });
-
-  Assert.ok(isFocused, "<input> should again be focused");
 
   // Move focus to the second field (the day input in en-US locale)
   BrowserTestUtils.synthesizeKey("VK_RIGHT", {}, browser);
@@ -255,6 +265,25 @@ add_task(async function test_datepicker_keyboard_nav() {
 
   await testCalendarBtnAttribute("aria-expanded", "false");
 
+  // Check the focus is returned to the Day field
+  await SpecialPowers.spawn(browser, [], async () => {
+    const input = content.document.querySelector("input");
+    const shadowRoot = SpecialPowers.wrap(input).openOrClosedShadowRoot;
+    // Separators "/" are odd children of the wrapper
+    const dayField = shadowRoot.getElementById("edit-wrapper").children[2];
+    // Testing the focus position within content:
+    Assert.equal(
+      input,
+      content.document.activeElement,
+      `The input field includes programmatic focus`
+    );
+    // Testing the focus indication within the shadow-root:
+    Assert.ok(
+      dayField.matches(":focus"),
+      `The keyboard focus was returned to the Day field`
+    );
+  });
+
   info("Test the Calendar button can toggle the picker with Enter/Space");
 
   // Move focus to the Calendar button
@@ -287,8 +316,25 @@ add_task(async function test_datepicker_keyboard_nav() {
     "closed",
     "Panel should be closed on Space from the date gridcell"
   );
-
   await testCalendarBtnAttribute("aria-expanded", "false");
+
+  // Check the focus is returned to the Calendar button
+  await SpecialPowers.spawn(browser, [], async () => {
+    const input = content.document.querySelector("input");
+    const shadowRoot = SpecialPowers.wrap(input).openOrClosedShadowRoot;
+    const calendarBtn = shadowRoot.getElementById("calendar-button");
+    // Testing the focus position within content:
+    Assert.equal(
+      input,
+      content.document.activeElement,
+      `The input field includes programmatic focus`
+    );
+    // Testing the focus indication within the shadow-root:
+    Assert.ok(
+      calendarBtn.matches(":focus"),
+      `The keyboard focus was returned to the Calendar button`
+    );
+  });
 
   // Check the Backspace on Calendar button is not doing anything
   await EventUtils.synthesizeKey("KEY_Backspace", {});
