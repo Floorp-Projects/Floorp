@@ -2497,12 +2497,7 @@ bool JSRuntime::initSelfHostingStencil(JSContext* cx,
   // Serialize the stencil to XDR.
   if (xdrWriter) {
     JS::TranscodeBuffer xdrBuffer;
-    bool succeeded = false;
-    if (!stencil->serializeStencils(cx, *input, xdrBuffer, &succeeded)) {
-      return false;
-    }
-    if (!succeeded) {
-      JS_ReportErrorASCII(cx, "Encoding failure");
+    if (!stencil->serializeStencils(cx, *input, xdrBuffer)) {
       return false;
     }
 
