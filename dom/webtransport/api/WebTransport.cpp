@@ -21,7 +21,9 @@ namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebTransport, mGlobal,
                                       mIncomingUnidirectionalStreams,
-                                      mIncomingBidirectionalStreams, mReady)
+                                      mIncomingBidirectionalStreams,
+                                      mSendStreams, mReceiveStreams, mDatagrams,
+                                      mReady, mClosed)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(WebTransport)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(WebTransport)
@@ -31,7 +33,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebTransport)
 NS_INTERFACE_MAP_END
 
 WebTransport::WebTransport(nsIGlobalObject* aGlobal)
-    : mGlobal(aGlobal), mState(WebTransportState::CONNECTING) {
+    : mGlobal(aGlobal),
+      mState(WebTransportState::CONNECTING),
+      mReliability(WebTransportReliabilityMode::Pending) {
   LOG(("Creating WebTransport %p", this));
 }
 
@@ -70,6 +74,11 @@ bool WebTransport::Init(const GlobalObject& aGlobal, const nsAString& aURL,
   using mozilla::ipc::PBackgroundChild;
 
   mReady = Promise::Create(mGlobal, aError);
+  if (NS_WARN_IF(aError.Failed())) {
+    return false;
+  }
+
+  mClosed = Promise::Create(mGlobal, aError);
   if (NS_WARN_IF(aError.Failed())) {
     return false;
   }
@@ -131,32 +140,40 @@ bool WebTransport::Init(const GlobalObject& aGlobal, const nsAString& aURL,
                                      (uint32_t)congestionControl,
                                      // XXX serverCertHashes,
                                      std::move(parentEndpoint))
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [self = RefPtr{this}, child](nsresult rv) {
-            if (NS_FAILED(rv)) {
-              self->RejectWaitingConnection(rv);
-            } else {
-              // This will process anything waiting for the connection to
-              // complete;
-              self->ResolveWaitingConnection(child);
-            }
-          },
-          [self = RefPtr<WebTransport>(this)](
-              const mozilla::ipc::ResponseRejectReason&) {
-            // This will process anything waiting for the connection to
-            // complete;
-            self->RejectWaitingConnection(NS_ERROR_FAILURE);
-          });
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [self = RefPtr{this},
+              child](PBackgroundChild::CreateWebTransportParentPromise::
+                         ResolveOrRejectValue&& aResult) {
+               // aResult is a Tuple<nsresult, uint8_t>
+               // TODO: is there a better/more-spec-compliant error in the
+               // reject case? Which begs the question, why would we get a
+               // reject?
+               nsresult rv = aResult.IsReject()
+                                 ? NS_ERROR_FAILURE
+                                 : Get<0>(aResult.ResolveValue());
+               if (NS_FAILED(rv)) {
+                 self->RejectWaitingConnection(rv);
+               } else {
+                 // This will process anything waiting for the connection to
+                 // complete;
+                 self->ResolveWaitingConnection(
+                     static_cast<WebTransportReliabilityMode>(
+                         Get<1>(aResult.ResolveValue())),
+                     child);
+               }
+             });
 
   return true;
 }
 
-void WebTransport::ResolveWaitingConnection(WebTransportChild* aChild) {
-  LOG(("Resolved Connection %p", this));
+void WebTransport::ResolveWaitingConnection(
+    WebTransportReliabilityMode aReliability, WebTransportChild* aChild) {
+  LOG(("Resolved Connection %p, reliability = %u", this,
+       (unsigned)aReliability));
   MOZ_ASSERT(mState == WebTransportState::CONNECTING);
   mChild = aChild;
   mState = WebTransportState::CONNECTED;
+  mReliability = aReliability;
 
   mReady->MaybeResolve(true);
 }
@@ -167,6 +184,9 @@ void WebTransport::RejectWaitingConnection(nsresult aRv) {
   mState = WebTransportState::FAILED;
   LOG(("Rejected connection %x", (uint32_t)aRv));
 
+  // https://w3c.github.io/webtransport/#webtransport-internal-slots
+  // "Reliability returns "pending" until a connection is established" so
+  // we leave it pending
   mReady->MaybeReject(aRv);
 }
 
@@ -199,10 +219,7 @@ already_AddRefed<Promise> WebTransport::GetStats(ErrorResult& aError) {
 
 already_AddRefed<Promise> WebTransport::Ready() { return do_AddRef(mReady); }
 
-WebTransportReliabilityMode WebTransport::Reliability() {
-  // XXX not implemented
-  return WebTransportReliabilityMode::Pending;
-}
+WebTransportReliabilityMode WebTransport::Reliability() { return mReliability; }
 
 WebTransportCongestionControl WebTransport::CongestionControl() {
   // XXX not implemented
