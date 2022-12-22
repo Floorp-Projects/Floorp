@@ -353,6 +353,7 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
   if (aGlobal) {
     if (IsPrivateBrowsing(mWindow)) {
       mPrivateWindow = true;
+      mDisableLongTermStats = true;
     }
     mWindow->AddPeerConnection();
     mActiveOnWindow = true;
@@ -2197,6 +2198,32 @@ nsresult PeerConnectionImpl::CheckApiState(bool assert_ice_ready) const {
   return NS_OK;
 }
 
+void PeerConnectionImpl::StoreFinalStats(
+    UniquePtr<RTCStatsReportInternal>&& report) {
+  using namespace Telemetry;
+
+  report->mClosed = true;
+
+  for (const auto& inboundRtpStats : report->mInboundRtpStreamStats) {
+    bool isVideo = (inboundRtpStats.mId.Value().Find(u"video") != -1);
+    if (!isVideo) {
+      continue;
+    }
+    if (inboundRtpStats.mDiscardedPackets.WasPassed() &&
+        report->mCallDurationMs.WasPassed()) {
+      double mins = report->mCallDurationMs.Value() / (1000 * 60);
+      if (mins > 0) {
+        Accumulate(
+            WEBRTC_VIDEO_DECODER_DISCARDED_PACKETS_PER_CALL_PPM,
+            uint32_t(double(inboundRtpStats.mDiscardedPackets.Value()) / mins));
+      }
+    }
+  }
+
+  // Finally, store the stats
+  mFinalStats = std::move(report);
+}
+
 NS_IMETHODIMP
 PeerConnectionImpl::Close() {
   CSFLogDebug(LOGTAG, "%s: for %s", __FUNCTION__, mHandle.c_str());
@@ -2208,16 +2235,11 @@ PeerConnectionImpl::Close() {
 
   STAMP_TIMECARD(mTimeCard, "Close");
 
-  // When ICE completes, we record a bunch of statistics that outlive the
-  // PeerConnection. This includes a call to GetStats, as well as some
-  // telemetry. We do this at the end of the call because we want to make sure
-  // we've waited for all trickle ICE candidates to come in; this can happen
-  // well after we've transitioned to connected. As a bonus, this allows us to
-  // detect race conditions where a stats dispatch happens right as the PC
-  // closes.
-  if (!mPrivateWindow) {
-    WebrtcGlobalInformation::StoreLongTermICEStatistics(*this);
-  }
+  // When ICE completes, we record some telemetry. We do this at the end of the
+  // call because we want to make sure we've waited for all trickle ICE
+  // candidates to come in; this can happen well after we've transitioned to
+  // connected. As a bonus, this allows us to detect race conditions where a
+  // stats dispatch happens right as the PC closes.
   RecordEndOfCallTelemetry();
 
   CSFLogInfo(LOGTAG,
@@ -2269,26 +2291,48 @@ PeerConnectionImpl::Close() {
   }
 
   // Clear any resources held by libwebrtc through our Call instance.
-  RefPtr<GenericPromise> promise;
+  RefPtr<GenericPromise> callDestroyPromise;
   if (mCall) {
     // Make sure the compiler does not get confused and try to acquire a
     // reference to this thread _after_ we null out mCall.
     auto callThread = mCall->mCallThread;
-    promise = InvokeAsync(callThread, __func__, [call = std::move(mCall)]() {
-      call->Destroy();
-      return GenericPromise::CreateAndResolve(
-          true, "PCImpl->WebRtcCallWrapper::Destroy");
-    });
+    callDestroyPromise =
+        InvokeAsync(callThread, __func__, [call = std::move(mCall)]() {
+          call->Destroy();
+          return GenericPromise::CreateAndResolve(
+              true, "PCImpl->WebRtcCallWrapper::Destroy");
+        });
   } else {
-    promise = GenericPromise::CreateAndResolve(true, __func__);
+    callDestroyPromise = GenericPromise::CreateAndResolve(true, __func__);
   }
 
-  // We do this after the call is destroyed, to allow things like RTCP BYE to
-  // make it out on the wire before we shut the MediaTransportHandler down.
-  // Before we can tear down the MediaTransportHandler, we also need to unhook
-  // from sigslot, which is accomplished by destroying mSignalHandler.
+  mFinalStatsQuery =
+      GetStats(nullptr, true)
+          ->Then(
+              GetMainThreadSerialEventTarget(), __func__,
+              [this, self = RefPtr<PeerConnectionImpl>(this)](
+                  UniquePtr<dom::RTCStatsReportInternal>&& aReport) mutable {
+                StoreFinalStats(std::move(aReport));
+                return GenericNonExclusivePromise::CreateAndResolve(true,
+                                                                    __func__);
+              },
+              [](nsresult aError) {
+                return GenericNonExclusivePromise::CreateAndResolve(true,
+                                                                    __func__);
+              });
+
+  // 1. Allow final stats query to complete.
+  // 2. Tear down call, if necessary. We do this before we shut down the
+  //    transport handler, so RTCP BYE can be sent.
+  // 3. Unhook from the signal handler (sigslot) for transport stuff. This must
+  //    be done before we tear down the transport handler.
+  // 4. Tear down the transport handler, and deregister from PeerConnectionCtx.
+  //    When we deregister from PeerConnectionCtx, our final stats (if any)
+  //    will be stored.
   MOZ_RELEASE_ASSERT(mSTSThread);
-  promise
+  mFinalStatsQuery
+      ->Then(GetMainThreadSerialEventTarget(), __func__,
+             [callDestroyPromise]() mutable { return callDestroyPromise; })
       ->Then(
           mSTSThread, __func__,
           [signalHandler = std::move(mSignalHandler)]() mutable {
@@ -3194,6 +3238,25 @@ nsTArray<dom::RTCCodecStats> PeerConnectionImpl::GetCodecStats(
 RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
     dom::MediaStreamTrack* aSelector, bool aInternalStats) {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (mFinalStatsQuery) {
+    // This case should be _extremely_ rare; this will basically only happen
+    // when WebrtcGlobalInformation tries to get our stats while we are tearing
+    // down.
+    return mFinalStatsQuery->Then(
+        GetMainThreadSerialEventTarget(), __func__,
+        [this, self = RefPtr<PeerConnectionImpl>(this)]() {
+          UniquePtr<dom::RTCStatsReportInternal> finalStats =
+              MakeUnique<dom::RTCStatsReportInternal>();
+          // Might not be set if this encountered some error.
+          if (mFinalStats) {
+            *finalStats = *mFinalStats;
+          }
+          return RTCStatsReportPromise::CreateAndResolve(std::move(finalStats),
+                                                         __func__);
+        });
+  }
+
   nsTArray<RefPtr<dom::RTCStatsPromise>> promises;
   DOMHighResTimeStamp now = mTimestampMaker.GetNow();
 
