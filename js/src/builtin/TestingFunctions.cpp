@@ -6510,14 +6510,7 @@ static bool CompileToStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
   JS::TranscodeBuffer xdrBytes;
   {
     frontend::BorrowingCompilationStencil borrowingStencil(*stencil);
-    bool succeeded = false;
-    if (!borrowingStencil.serializeStencils(cx, input.get(), xdrBytes,
-                                            &succeeded)) {
-      return false;
-    }
-    if (!succeeded) {
-      fc.clearAutoReport();
-      JS_ReportErrorASCII(cx, "Encoding failure");
+    if (!borrowingStencil.serializeStencils(cx, input.get(), xdrBytes)) {
       return false;
     }
   }
