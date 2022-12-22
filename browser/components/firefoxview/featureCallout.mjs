@@ -301,26 +301,53 @@ export class FeatureCallout {
       container.classList.add(className);
     };
 
+    const addValueToPixelValue = (value, pixelValue) => {
+      return `${Number(pixelValue.split("px")[0]) + value}px`;
+    };
+
+    const subtractPixelValueFromValue = (pixelValue, value) => {
+      return `${value - Number(pixelValue.split("px")[0])}px`;
+    };
+
     const overridePosition = () => {
       // We override _every_ positioner here, because we want to manually set all
       // container.style.positions in every positioner's "position" function
       // regardless of the actual arrow position
+      // Note: We override the position functions with new functions here,
+      // but they don't actually get executed until the respective position functions are called
+      // and this function is not executed unless the message has a custom position property.
+
+      // We're positioning relative to a parent element's bounds,
+      // if that parent element exists.
+
       for (const position in positioners) {
         positioners[position].position = () => {
           if (customPosition.top) {
-            container.style.top = customPosition.top;
+            container.style.top = addValueToPixelValue(
+              parentEl.getBoundingClientRect().top,
+              customPosition.top
+            );
           }
 
           if (customPosition.left) {
-            container.style.left = customPosition.left;
+            container.style.left = addValueToPixelValue(
+              parentEl.getBoundingClientRect().left,
+              customPosition.left
+            );
           }
 
           if (customPosition.right) {
-            container.style.right = customPosition.right;
+            container.style.left = subtractPixelValueFromValue(
+              customPosition.right,
+              parentEl.getBoundingClientRect().right - container.clientWidth
+            );
           }
 
           if (customPosition.bottom) {
-            container.style.bottom = customPosition.bottom;
+            container.style.top = subtractPixelValueFromValue(
+              customPosition.bottom,
+              parentEl.getBoundingClientRect().bottom - container.clientHeight
+            );
           }
         };
       }
@@ -518,8 +545,6 @@ export class FeatureCallout {
     clearPosition(container);
 
     if (customPosition) {
-      // We override the position functions with new functions here,
-      // but they don't actually get executed in the override function
       overridePosition();
     }
 
