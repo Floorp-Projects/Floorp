@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "cpufeatures"
-version = "0.2.4"
+version = "0.2.5"
 authors = ["RustCrypto Developers"]
 description = """
 Lightweight runtime CPU feature detection for x86/x86_64 and aarch64 with
