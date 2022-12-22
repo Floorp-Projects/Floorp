@@ -80,6 +80,25 @@
         }, { SECTION: [{ SECTION: [{ SECTION: [{ name: "green"} ] }] }] }, ["shadowdiv"]);
     }
 
+    async function changeSlotSingleChild() {
+      await _dynamicShadowTest("changeSlotSingleChild",
+        (container, host) => {
+          container.querySelector('.red').setAttribute('slot', 'invalid');
+        }, { SECTION: [{ SECTION: [] }] });
+    }
+
+    async function changeSlotNoShadow() {
+      await _dynamicShadowTest("changeSlotNoShadow",
+        (container, host) => {
+          // Make sure changing the slot attribute doesn't remove an element
+          // even when it remains in the flat tree.
+          container.querySelector('.red').setAttribute('slot', 'invalid');
+          // We need a reorder to know when we're done here, so remove another
+          // child.
+          container.querySelector('.green').remove();
+        }, { SECTION: [{ SECTION: [{ name: "red"} ] }] });
+    }
+
     // Dynamic mutations to both shadow root and shadow host subtrees
     // testing/web-platform/tests/css/css-scoping/shadow-assign-dynamic-001.html
     async function assignSlotDynamic() {
@@ -200,6 +219,10 @@
 
       await changeSlotNested();
 
+      await changeSlotSingleChild();
+
+      await changeSlotNoShadow();
+
       await assignSlotDynamic();
 
       await shadowFallbackDynamic_1();
@@ -295,7 +318,7 @@
     </script>
   </div>
 
-    <div id="changeSlotNested">
+  <div id="changeSlotNested">
     <template class="shadowtree outer">
       <div id="shadowdiv">
         <slot name="myslot">FAIL</slot>
@@ -325,6 +348,28 @@
             content.cloneNode(true));
       })();
     </script>
+  </div>
+
+  <div id="changeSlotSingleChild">
+    <template class="shadowtree">
+      <style>::slotted(div) { width: 100px; height: 100px }</style>
+      <slot></slot>
+    </template>
+    <section class="host">
+      <div class="red" style="background: red" aria-label="red"></div>
+    </section>
+    <script>
+      document.querySelector("#changeSlotSingleChild > .host")
+        .attachShadow({ mode: "open" })
+        .appendChild(document.querySelector("#changeSlotSingleChild > .shadowtree").content.cloneNode(true));
+    </script>
+  </div>
+
+  <div id="changeSlotNoShadow">
+    <section class="host">
+      <div class="red" style="background: red; width: 100px; height: 100px;" aria-label="red"></div>
+      <div class="green" style="background: green; width: 100px; height: 100px;" aria-label="green"></div>
+    </section>
   </div>
 
   <div id="assignSlotDynamic">
