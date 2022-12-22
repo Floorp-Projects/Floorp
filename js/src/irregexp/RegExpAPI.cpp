@@ -139,6 +139,13 @@ static uint32_t ErrorNumber(RegExpError err) {
       return JSMSG_UNTERM_CLASS;
     case RegExpError::kOutOfOrderCharacterClass:
       return JSMSG_BAD_CLASS_RANGE;
+
+    case RegExpError::kInvalidClassSetOperation:
+    case RegExpError::kInvalidCharacterInClass:
+    case RegExpError::kNegatedCharacterClassWithStrings:
+      // TODO: implement support for /v flag (bug 1713657)
+      MOZ_CRASH("Unicode sets not supported");
+
     case RegExpError::NumErrors:
       MOZ_CRASH("Unreachable");
   }
@@ -418,7 +425,8 @@ class RegExpDepthCheck final : public v8::internal::RegExpVisitor {
   LEAF_DEPTH(Assertion)
   LEAF_DEPTH(Atom)
   LEAF_DEPTH(BackReference)
-  LEAF_DEPTH(CharacterClass)
+  LEAF_DEPTH(ClassSetOperand)
+  LEAF_DEPTH(ClassRanges)
   LEAF_DEPTH(Empty)
   LEAF_DEPTH(Text)
 #undef LEAF_DEPTH
@@ -465,6 +473,21 @@ class RegExpDepthCheck final : public v8::internal::RegExpVisitor {
       return nullptr;
     }
     for (auto* child : *node->alternatives()) {
+      if (!child->Accept(this, nullptr)) {
+        return nullptr;
+      }
+    }
+    return (void*)true;
+  }
+  void* VisitClassSetExpression(v8::internal::RegExpClassSetExpression* node,
+                                void*) override {
+    uint8_t padding[FRAME_PADDING];
+    dummy_ = padding; /* Prevent padding from being optimized away.*/
+    AutoCheckRecursionLimit recursion(cx_);
+    if (!recursion.checkDontReport(cx_)) {
+      return nullptr;
+    }
+    for (auto* child : *node->operands()) {
       if (!child->Accept(this, nullptr)) {
         return nullptr;
       }
