@@ -11,12 +11,12 @@ transforms:
 
 kind-dependencies:
     - push-apk
-    - post-signing
+    - post-beetmover
 
 task-defaults:
-    name: notify-release-drivers-promote
-    description: Sends email to release-drivers telling release was promoted.
-    shipping-phase: promote
+    name: notify-release-drivers-push
+    description: Sends email to release-drivers telling release was pushed.
+    shipping-phase: push
     worker-type: succeed
     worker:
         implementation: succeed
