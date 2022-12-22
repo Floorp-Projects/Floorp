@@ -4,10 +4,6 @@
 
 "use strict";
 
-const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
-  Ci.nsIDNSService
-);
-
 trr_test_setup();
 registerCleanupFunction(async () => {
   trr_clear_prefs();
@@ -58,10 +54,10 @@ add_task(async function test_enterprise_policy_locked() {
     "example.com,example.org"
   );
   equal(Services.prefs.prefIsLocked("network.trr.excluded-domains"), true);
-  equal(dns.currentTrrMode, 2);
-  equal(dns.currentTrrURI, "https://example.com/provider");
-  dns.setDetectedTrrURI("https://autodetect.example.com/provider");
-  equal(dns.currentTrrURI, "https://example.com/provider");
+  equal(Services.dns.currentTrrMode, 2);
+  equal(Services.dns.currentTrrURI, "https://example.com/provider");
+  Services.dns.setDetectedTrrURI("https://autodetect.example.com/provider");
+  equal(Services.dns.currentTrrURI, "https://example.com/provider");
 });
 
 add_task(async function test_enterprise_policy_unlocked() {
@@ -87,9 +83,9 @@ add_task(async function test_enterprise_policy_unlocked() {
     "example.com,example.org"
   );
   equal(Services.prefs.prefIsLocked("network.trr.excluded-domains"), false);
-  equal(dns.currentTrrMode, 5);
-  equal(dns.currentTrrURI, "https://example.org/provider");
-  dns.setDetectedTrrURI("https://autodetect.example.com/provider");
-  equal(dns.currentTrrMode, 5);
-  equal(dns.currentTrrURI, "https://example.org/provider");
+  equal(Services.dns.currentTrrMode, 5);
+  equal(Services.dns.currentTrrURI, "https://example.org/provider");
+  Services.dns.setDetectedTrrURI("https://autodetect.example.com/provider");
+  equal(Services.dns.currentTrrMode, 5);
+  equal(Services.dns.currentTrrURI, "https://example.org/provider");
 });

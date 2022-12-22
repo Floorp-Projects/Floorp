@@ -8,9 +8,6 @@ ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 let h2Port;
 
-const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
-  Ci.nsIDNSService
-);
 const certOverrideService = Cc[
   "@mozilla.org/security/certoverride;1"
 ].getService(Ci.nsICertOverrideService);
@@ -35,6 +32,7 @@ add_setup(async function setup() {
   });
 
   if (mozinfo.socketprocess_networking) {
+    Services.dns; // Needed to trigger socket process.
     await TestUtils.waitForCondition(() => Services.io.socketProcessLaunched);
   }
 
@@ -69,7 +67,7 @@ add_task(async function testUseHTTPSSVCForHttpsUpgrade() {
     "network.trr.uri",
     "https://foo.example.com:" + h2Port + "/httpssvc_as_altsvc"
   );
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
 
   certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
     true
@@ -111,7 +109,7 @@ add_task(async function testUseHTTPSSVCAsHSTS() {
     "network.trr.uri",
     "https://foo.example.com:" + h2Port + "/httpssvc_as_altsvc"
   );
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
 
   certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
     true
@@ -156,7 +154,7 @@ add_task(async function testUseHTTPSSVC() {
   // Do DNS resolution before creating the channel, so the HTTPSSVC record will
   // be resolved from the cache.
   await new TRRDNSListener("test.httpssvc.com", {
-    type: dns.RESOLVE_TYPE_HTTPSSVC,
+    type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
   });
 
   // We need to skip the security check, since our test cert is signed for
@@ -218,7 +216,7 @@ add_task(async function testFallback() {
   });
 
   let { inRecord } = await new TRRDNSListener("test.fallback.com", {
-    type: dns.RESOLVE_TYPE_HTTPSSVC,
+    type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
   });
 
   let record = inRecord
