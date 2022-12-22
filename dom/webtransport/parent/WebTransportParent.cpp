@@ -19,13 +19,14 @@ WebTransportParent::~WebTransportParent() {
   LOG(("Destroying WebTransportParent %p", this));
 }
 
-bool WebTransportParent::Init(
+// static
+void WebTransportParent::Create(
     const nsAString& aURL, const bool& aDedicated,
     const bool& aRequireUnreliable, const uint32_t& aCongestionControl,
     // Sequence<WebTransportHash>* aServerCertHashes,
     Endpoint<PWebTransportParent>&& aParentEndpoint,
     std::function<void(const nsresult&)>&& aResolver) {
-  LOG(("Created WebTransportParent %p %s %s %s congestion=%s", this,
+  LOG(("Created WebTransportParent %s %s %s congestion=%s",
        NS_ConvertUTF16toUTF8(aURL).get(),
        aDedicated ? "Dedicated" : "AllowPooling",
        aRequireUnreliable ? "RequireUnreliable" : "",
@@ -39,21 +40,42 @@ bool WebTransportParent::Init(
 
   if (!StaticPrefs::network_webtransport_enabled()) {
     aResolver(NS_ERROR_DOM_NOT_ALLOWED_ERR);
-    return false;
+    return;
   }
 
   if (!aParentEndpoint.IsValid()) {
     aResolver(NS_ERROR_INVALID_ARG);
-    return false;
+    return;
   }
 
-  if (!aParentEndpoint.Bind(this)) {
-    aResolver(NS_ERROR_FAILURE);
-    return false;
-  }
-  // XXX Send connection to the server
-  aResolver(NS_OK);
-  return true;
+  // Bind to SocketThread for IPC - connection creation/destruction must
+  // hit MainThread, but keep all other traffic on SocketThread.  Note that
+  // we must call aResolver() on this (PBackground) thread.
+  nsresult rv;
+  nsCOMPtr<nsISerialEventTarget> sts =
+      do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  InvokeAsync(sts, __func__,
+              [parentEndpoint = std::move(aParentEndpoint)]() mutable {
+                RefPtr<WebTransportParent> parent = new WebTransportParent();
+
+                LOG(("Binding parent endpoint"));
+                if (!parentEndpoint.Bind(parent)) {
+                  return GenericNonExclusivePromise::CreateAndReject(
+                      NS_ERROR_FAILURE, __func__);
+                }
+                // IPC now holds a ref to parent
+                // XXX Send connection to the server via MainThread
+                return GenericNonExclusivePromise::CreateAndResolve(true,
+                                                                    __func__);
+              })
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [aResolver](
+              const GenericNonExclusivePromise::ResolveOrRejectValue& aValue) {
+            aResolver(aValue.IsResolve() ? NS_OK : aValue.RejectValue());
+          });
 }
 
 void WebTransportParent::ActorDestroy(ActorDestroyReason aWhy) {

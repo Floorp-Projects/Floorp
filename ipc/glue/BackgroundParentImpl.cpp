@@ -512,13 +512,9 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvCreateWebTransportParent(
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
 
-  RefPtr<mozilla::dom::WebTransportParent> webt =
-      new mozilla::dom::WebTransportParent();
-  if (!webt->Init(aURL, aDedicated, aRequireUnreliable, aCongestionControl,
-                  /*aServerCertHashes, */ std::move(aParentEndpoint),
-                  std::move(aResolver))) {
-    webt->Close();
-  }
+  mozilla::dom::WebTransportParent::Create(
+      aURL, aDedicated, aRequireUnreliable, aCongestionControl,
+      /*aServerCertHashes, */ std::move(aParentEndpoint), std::move(aResolver));
   return IPC_OK();
 }
 
