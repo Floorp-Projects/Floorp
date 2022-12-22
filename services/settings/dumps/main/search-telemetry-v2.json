@@ -1,6 +1,26 @@
 {
   "data": [
     {
+      "schema": 1671479978127,
+      "taggedCodes": [
+        "mzl",
+        "813cf1dd",
+        "16eeffc4"
+      ],
+      "telemetryId": "ecosia",
+      "organicCodes": [],
+      "codeParamName": "tt",
+      "queryParamName": "q",
+      "searchPageRegexp": "^https://www\\.ecosia\\.org/",
+      "filter_expression": "env.version|versionCompare(\"110.0a1\")>=0",
+      "expectedOrganicCodes": [],
+      "extraAdServersRegexps": [
+        "^https://www\\.bing\\.com/acli?c?k"
+      ],
+      "id": "9a487171-3a06-4647-8866-36250ec84f3a",
+      "last_modified": 1671565418576
+    },
+    {
       "schema": 1671122205131,
       "taggedCodes": [
         "MOZ2",
@@ -127,14 +147,6 @@
       "last_modified": 1643136933998
     },
     {
-      "schema": 1643100258578,
-      "telemetryId": "yahoo",
-      "queryParamName": "p",
-      "searchPageRegexp": "^https://(?:.*)search\\.yahoo\\.com/search",
-      "id": "0433b88a-1ddc-47b1-ab1f-9a77daeae1b7",
-      "last_modified": 1643136933992
-    },
-    {
       "schema": 1643107838909,
       "taggedCodes": [
         "monline_dg",
@@ -157,5 +169,5 @@
       "last_modified": 1643136933989
     }
   ],
-  "timestamp": 1671479978088
+  "timestamp": 1671565418576
 }
