@@ -19,7 +19,7 @@ See the [documentation](http://docs.rs/cookie) for detailed usage information.
 
 # MSRV
 
-khe minimum supported `rustc` version for cookie `0.16` is `1.53`.
+The minimum supported `rustc` version for cookie `0.16` is `1.53`.
 
 The minimum supported `rustc` version for cookie `0.15` is `1.41`.
 
