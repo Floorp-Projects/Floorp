@@ -10936,16 +10936,16 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   }
 
   if (op.getBoolOption("trace-regexp-parser")) {
-    jit::JitOptions.traceRegExpParser = true;
+    jit::JitOptions.trace_regexp_parser = true;
   }
   if (op.getBoolOption("trace-regexp-assembler")) {
-    jit::JitOptions.traceRegExpAssembler = true;
+    jit::JitOptions.trace_regexp_assembler = true;
   }
   if (op.getBoolOption("trace-regexp-interpreter")) {
-    jit::JitOptions.traceRegExpInterpreter = true;
+    jit::JitOptions.trace_regexp_bytecodes = true;
   }
   if (op.getBoolOption("trace-regexp-peephole")) {
-    jit::JitOptions.traceRegExpPeephole = true;
+    jit::JitOptions.trace_regexp_peephole_optimization = true;
   }
 
   if (op.getBoolOption("less-debug-code")) {
