@@ -7,7 +7,6 @@
 #include "WebTransportParent.h"
 
 #include "mozilla/StaticPrefs_network.h"
-#include "mozilla/dom/WebTransportBinding.h"
 #include "mozilla/dom/WebTransportLog.h"
 #include "mozilla/ipc/BackgroundParent.h"
 
@@ -20,22 +19,12 @@ WebTransportParent::~WebTransportParent() {
 }
 
 bool WebTransportParent::Init(
-    const nsAString& aURL, const bool& aDedicated,
-    const bool& aRequireUnreliable, const uint32_t& aCongestionControl,
-    // Sequence<WebTransportHash>* aServerCertHashes,
+    const nsAString& aURL,
+    // WebTransportOptions aOptions,
     Endpoint<PWebTransportParent>&& aParentEndpoint,
     std::function<void(const nsresult&)>&& aResolver) {
-  LOG(("Created WebTransportParent %p %s %s %s congestion=%s", this,
-       NS_ConvertUTF16toUTF8(aURL).get(),
-       aDedicated ? "Dedicated" : "AllowPooling",
-       aRequireUnreliable ? "RequireUnreliable" : "",
-       aCongestionControl ==
-               (uint32_t)dom::WebTransportCongestionControl::Throughput
-           ? "ThroughPut"
-           : (aCongestionControl ==
-                      (uint32_t)dom::WebTransportCongestionControl::Low_latency
-                  ? "Low-Latency"
-                  : "Default")));
+  LOG(("Created WebTransportParent %p %s", this,
+       NS_ConvertUTF16toUTF8(aURL).get()));
 
   if (!StaticPrefs::network_webtransport_enabled()) {
     aResolver(NS_ERROR_DOM_NOT_ALLOWED_ERR);
