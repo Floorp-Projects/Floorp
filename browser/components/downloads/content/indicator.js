@@ -275,7 +275,8 @@ const DownloadsIndicatorView = {
     }
     this._initialized = true;
 
-    window.addEventListener("unload", this.onWindowUnload);
+    window.addEventListener("unload", this);
+    window.addEventListener("visibilitychange", this);
     DownloadsCommon.getIndicatorData(window).addView(this);
   },
 
@@ -288,7 +289,8 @@ const DownloadsIndicatorView = {
     }
     this._initialized = false;
 
-    window.removeEventListener("unload", this.onWindowUnload);
+    window.removeEventListener("unload", this);
+    window.removeEventListener("visibilitychange", this);
     DownloadsCommon.getIndicatorData(window).removeView(this);
 
     // Reset the view properties, so that a neutral indicator is displayed if we
@@ -463,16 +465,20 @@ const DownloadsIndicatorView = {
       }
       this._percentComplete = aValue;
       this._refreshAttention();
-      if (this._progressRaf) {
-        cancelAnimationFrame(this._progressRaf);
-        delete this._progressRaf;
-      }
+      this._maybeScheduleProgressUpdate();
+    }
+  },
+
+  _maybeScheduleProgressUpdate() {
+    if (!this._progressRaf && document.visibilityState == "visible") {
       this._progressRaf = requestAnimationFrame(() => {
         // indeterminate downloads (unknown content-length) will show up as aValue = 0
         if (this._percentComplete >= 0) {
-          this.indicator.setAttribute("progress", "true");
+          if (!this.indicator.hasAttribute("progress")) {
+            this.indicator.setAttribute("progress", "true");
+          }
           // For arrow type only: Set the % complete on the pie-chart.
-          // We use a minimum of 5% to ensure something is always visible
+          // We use a minimum of 10% to ensure something is always visible
           this.indicator.style.setProperty(
             "--download-progress-pcent",
             `${Math.max(10, this._percentComplete)}%`
@@ -481,6 +487,7 @@ const DownloadsIndicatorView = {
           this.indicator.removeAttribute("progress");
           this.indicator.style.setProperty("--download-progress-pcent", "0%");
         }
+        this._progressRaf = null;
       });
     }
   },
@@ -524,10 +531,16 @@ const DownloadsIndicatorView = {
   _attention: DownloadsCommon.ATTENTION_NONE,
 
   // User interface event functions
+  handleEvent(aEvent) {
+    switch (aEvent.type) {
+      case "unload":
+        this.ensureTerminated();
+        break;
 
-  onWindowUnload() {
-    // This function is registered as an event listener, we can't use "this".
-    DownloadsIndicatorView.ensureTerminated();
+      case "visibilitychange":
+        this._maybeScheduleProgressUpdate();
+        break;
+    }
   },
 
   onCommand(aEvent) {
