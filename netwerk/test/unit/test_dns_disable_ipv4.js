@@ -5,7 +5,6 @@
 
 "use strict";
 
-var dns = Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService);
 const gOverride = Cc["@mozilla.org/network/native-dns-override;1"].getService(
   Ci.nsINativeDNSResolverOverride
 );
@@ -21,7 +20,7 @@ add_task(async function test_none() {
       QueryInterface: ChromeUtils.generateQI(["nsIDNSListener"]),
     };
 
-    dns.asyncResolve(
+    Services.dns.asyncResolve(
       "example.org",
       Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
       Ci.nsIDNSService.RESOLVE_DISABLE_IPV4,
@@ -41,7 +40,7 @@ add_task(async function test_none() {
 });
 
 add_task(async function test_some() {
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
   gOverride.addIPOverride("example.com", "1.1.1.1");
   gOverride.addIPOverride("example.org", "::1:2:3");
   let [, inRecord] = await new Promise(resolve => {
@@ -52,7 +51,7 @@ add_task(async function test_some() {
       QueryInterface: ChromeUtils.generateQI(["nsIDNSListener"]),
     };
 
-    dns.asyncResolve(
+    Services.dns.asyncResolve(
       "example.org",
       Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
       Ci.nsIDNSService.RESOLVE_DISABLE_IPV4,

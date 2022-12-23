@@ -28,10 +28,7 @@ add_test(function test_default_device_name() {
   // This is obviously tied to the implementation, but we want early warning
   // if any of these things fail.
   // We really want one of these 2 to provide a value.
-  let hostname =
-    Services.sysinfo.get("device") ||
-    Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService)
-      .myHostName;
+  let hostname = Services.sysinfo.get("device") || Services.dns.myHostName;
   _("hostname is " + hostname);
   ok(!!hostname.length);
   // the hostname should be in the default.

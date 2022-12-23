@@ -10,9 +10,6 @@
 // Immediately after the native DNS starts working, it should connect to the
 // TRR server and start working.
 
-const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
-  Ci.nsIDNSService
-);
 const override = Cc["@mozilla.org/network/native-dns-override;1"].getService(
   Ci.nsINativeDNSResolverOverride
 );
@@ -37,7 +34,7 @@ add_task(async function intermittent_dns_mode3() {
   });
   await trrServer.start();
   info(`port = ${trrServer.port}\n`);
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
   Services.prefs.setCharPref(
     "network.trr.uri",
     `https://foo.example.com:${trrServer.port}/dns-query`
@@ -83,7 +80,7 @@ add_task(async function intermittent_dns_mode2() {
   await trrServer.start();
   info(`port = ${trrServer.port}\n`);
 
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
   Services.prefs.setIntPref(
     "network.trr.mode",
     Ci.nsIDNSService.MODE_NATIVEONLY

@@ -24,9 +24,6 @@ XPCOMUtils.defineLazyGetter(this, "URL6b", function() {
   return `http://example6b.com:${httpServerIPv6.identity.primaryPort}${testpath}`;
 });
 
-const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
-  Ci.nsIDNSService
-);
 const ncs = Cc[
   "@mozilla.org/network/network-connectivity-service;1"
 ].getService(Ci.nsINetworkConnectivityService);
@@ -77,6 +74,7 @@ add_task(async function test_setup() {
   await trrServer.start();
 
   if (mozinfo.socketprocess_networking) {
+    Services.dns; // Needed to trigger socket process.
     await TestUtils.waitForCondition(() => Services.io.socketProcessLaunched);
   }
 
@@ -126,7 +124,7 @@ async function registerDoHAnswers(ipv4, ipv6) {
     });
   }
 
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
 }
 
 let StatusCounter = function() {
@@ -273,7 +271,7 @@ add_task(async function test_prefer_address_version_fail_trr3_1() {
   // Make IPv6 connectivity check fail
   await setup_connectivity(false, true);
 
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
 
   // This will succeed as we query both DNS records
   await make_request(URL6a, true, true);
@@ -305,7 +303,7 @@ add_task(async function test_prefer_address_version_fail_trr3_2() {
   // Make IPv6 connectivity check fail
   await setup_connectivity(false, true);
 
-  dns.clearCache(true);
+  Services.dns.clearCache(true);
 
   // This will succeed as we query both DNS records
   await make_request(URL6b, false, true);

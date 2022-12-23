@@ -6,17 +6,13 @@
 
 /* import-globals-from ../unit/head_trr.js */
 
-const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
-  Ci.nsIDNSService
-);
-
 let test_answer = "bXkgdm9pY2UgaXMgbXkgcGFzc3dvcmQ=";
 let test_answer_addr = "127.0.0.1";
 
 add_task(async function testTXTResolve() {
   // use the h2 server as DOH provider
   let { inRecord, inStatus } = await new TRRDNSListener("_esni.example.com", {
-    type: dns.RESOLVE_TYPE_TXT,
+    type: Ci.nsIDNSService.RESOLVE_TYPE_TXT,
   });
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
   let answer = inRecord

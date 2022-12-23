@@ -1,6 +1,5 @@
 "use strict";
 
-var dns = Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService);
 var prefs = Services.prefs;
 
 var nextTest;
@@ -24,7 +23,7 @@ function run_test() {
 
   var mainThread = Services.tm.currentThread;
   nextTest = do_test_2;
-  dns.asyncResolve(
+  Services.dns.asyncResolve(
     "local.vingtetun.org",
     Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     0,
@@ -41,7 +40,7 @@ function do_test_2() {
   var mainThread = Services.tm.currentThread;
   nextTest = testsDone;
   prefs.setCharPref("network.dns.forceResolve", "localhost");
-  dns.asyncResolve(
+  Services.dns.asyncResolve(
     "www.example.com",
     Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     0,
