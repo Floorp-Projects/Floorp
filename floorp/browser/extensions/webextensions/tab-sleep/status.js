@@ -4,7 +4,10 @@ function getData() {
             let status = message["data"]["status"];
             let keys = Object.keys(status);
             for (let key of keys) {
-                document.getElementById(key).querySelector(".value").innerText = status[key];
+                let elem = document.getElementById(key);
+                if (elem) {
+                    elem.querySelector(".value").innerText = status[key];
+                }
             }
         }
     }
