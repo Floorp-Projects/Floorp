@@ -22,10 +22,12 @@
 //! ```
 
 #![forbid(unsafe_code)]
-#![no_std]
+#![cfg_attr(not(feature = "std"), no_std)]
 
+#[cfg(feature = "with-alloc")]
 extern crate alloc;
 
+#[cfg(feature = "with-alloc")]
 pub mod deflate;
 pub mod inflate;
 mod shared;
@@ -154,7 +156,7 @@ pub enum DataFormat {
 }
 
 impl DataFormat {
-    pub(crate) fn from_window_bits(window_bits: i32) -> DataFormat {
+    pub fn from_window_bits(window_bits: i32) -> DataFormat {
         if window_bits > 0 {
             DataFormat::Zlib
         } else {
@@ -162,7 +164,7 @@ impl DataFormat {
         }
     }
 
-    pub(crate) fn to_window_bits(self) -> i32 {
+    pub fn to_window_bits(self) -> i32 {
         match self {
             DataFormat::Zlib | DataFormat::ZLibIgnoreChecksum => shared::MZ_DEFAULT_WINDOW_BITS,
             DataFormat::Raw => -shared::MZ_DEFAULT_WINDOW_BITS,
@@ -186,7 +188,7 @@ pub struct StreamResult {
 
 impl StreamResult {
     #[inline]
-    pub(crate) const fn error(error: MZError) -> StreamResult {
+    pub const fn error(error: MZError) -> StreamResult {
         StreamResult {
             bytes_consumed: 0,
             bytes_written: 0,

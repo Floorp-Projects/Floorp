@@ -1,6 +1,7 @@
 //! Extra streaming decompression functionality.
 //!
 //! As of now this is mainly intended for use to build a higher-level wrapper.
+#[cfg(feature = "with-alloc")]
 use crate::alloc::boxed::Box;
 use core::{cmp, mem};
 
@@ -115,6 +116,7 @@ impl InflateState {
     /// # Parameters
     /// `data_format`: Determines whether the compressed data is assumed to wrapped with zlib
     /// metadata.
+    #[cfg(feature = "with-alloc")]
     pub fn new_boxed(data_format: DataFormat) -> Box<InflateState> {
         let mut b: Box<InflateState> = Box::default();
         b.data_format = data_format;
@@ -136,6 +138,7 @@ impl InflateState {
     /// The decompressor does not support different window sizes. As such,
     /// any positive (>0) value will set the zlib header flag, while a negative one
     /// will not.
+    #[cfg(feature = "with-alloc")]
     pub fn new_boxed_with_window_bits(window_bits: i32) -> Box<InflateState> {
         let mut b: Box<InflateState> = Box::default();
         b.data_format = DataFormat::from_window_bits(window_bits);
