@@ -126,6 +126,22 @@ struct ParamTraits<mozilla::net::NetAddr> {
   }
 };
 
+template <>
+struct ParamTraits<nsIRequest::TRRMode> {
+  static void Write(MessageWriter* aWriter, const nsIRequest::TRRMode& aParam) {
+    WriteParam(aWriter, (uint8_t)aParam);
+  }
+  static bool Read(MessageReader* aReader, nsIRequest::TRRMode* aResult) {
+    uint8_t mode;
+    if (!ReadParam(aReader, &mode)) {
+      return false;
+    }
+    // TODO: sanity check
+    *aResult = static_cast<nsIRequest::TRRMode>(mode);
+    return true;
+  }
+};
+
 }  // namespace IPC
 
 #endif  // mozilla_net_NeckoMessageUtils_h
