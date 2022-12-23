@@ -3088,8 +3088,10 @@ void RestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags) {
   // mActiveTimer and mMostRecentRefresh time.
   presContext->RefreshDriver()->MostRecentRefresh();
 
-  // This might post new restyles, so need to do it here.
-  {
+  if (!doc->GetServoRestyleRoot()) {
+    // This might post new restyles, so need to do it here. Don't do it if we're
+    // already going to restyle tho, so that we don't potentially reflow with
+    // dirty styling.
     presContext->UpdateContainerQueryStyles();
     presContext->FinishedContainerQueryUpdate();
   }
