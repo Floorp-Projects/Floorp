@@ -102,17 +102,19 @@ browser.tabs.onUpdated.addListener(function (tabId, changeInfo) {
     browser.aboutConfigPrefs.onPrefChange.addListener(prefHandle, TAB_SLEEP_TAB_TIMEOUT_SECONDS_PREF);
 
     browser.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-        sendResponse({
-            response: "status-data",
-            data: {
-                status: {
-                    systemMemory: systemMemory,
-                    tabSleepEnabled: Boolean(isEnabled),
-                    testModeEnabled: Boolean(isTestMode),
-                    tabTimeoutSeconds: TAB_TIMEOUT_SECONDS,
+        if (request["request"] === "status-data") {
+            sendResponse({
+                response: "status-data",
+                data: {
+                    status: {
+                        systemMemory: systemMemory,
+                        tabSleepEnabled: Boolean(isEnabled),
+                        testModeEnabled: Boolean(isTestMode),
+                        tabTimeoutSeconds: TAB_TIMEOUT_SECONDS,
+                    }
                 }
-            }
-        })
+            });
+        }
     });
 
     if (!isEnabled) return;
