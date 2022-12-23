@@ -16,7 +16,7 @@ from marionette_harness import MarionetteTestCase, skip
 
 single = "data:text/html,{}".format(quote("<input type=file>"))
 multiple = "data:text/html,{}".format(quote("<input type=file multiple>"))
-def upload(url): return "data:text/html,{}".format(
+upload = lambda url: "data:text/html,{}".format(
     quote(
         """
     <form action='{}' method=post enctype='multipart/form-data'>
