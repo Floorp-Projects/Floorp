@@ -924,6 +924,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.7.0 -> 0.8.1"
 
+[[audits.headers]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-run"
+delta = "0.3.7 -> 0.3.8"
+
 [[audits.hex]]
 who = "Simon Friedberger <simon@mozilla.com>"
 criteria = "safe-to-deploy"
@@ -1525,6 +1530,11 @@ who = "Emilio Cobos Álvarez <emilio@crisal.io>"
 criteria = "safe-to-deploy"
 version = "0.1.1"
 notes = "Developed in-tree, effectively."
+
+[[audits.sha1]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-run"
+delta = "0.10.0 -> 0.10.5"
 
 [[audits.slab]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"

@@ -1,5 +1,5 @@
 use crate::{Block, BlockSizeUser, Sha1Core};
-use digest::generic_array::typenum::Unsigned;
+use digest::typenum::Unsigned;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "force-soft")] {
@@ -31,7 +31,6 @@ const BLOCK_SIZE: usize = <Sha1Core as BlockSizeUser>::BlockSize::USIZE;
 pub fn compress(state: &mut [u32; 5], blocks: &[Block<Sha1Core>]) {
     // SAFETY: GenericArray<u8, U64> and [u8; 64] have
     // exactly the same memory layout
-    #[allow(unsafe_code)]
     let blocks: &[[u8; BLOCK_SIZE]] =
         unsafe { &*(blocks as *const _ as *const [[u8; BLOCK_SIZE]]) };
     compress_inner(state, blocks);

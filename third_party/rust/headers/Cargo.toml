@@ -11,7 +11,7 @@
 
 [package]
 name = "headers"
-version = "0.3.7"
+version = "0.3.8"
 authors = ["Sean McArthur <sean@seanmonstar.com>"]
 description = "typed HTTP headers"
 homepage = "https://hyper.rs"
@@ -47,7 +47,7 @@ version = "1"
 [dependencies.mime]
 version = "0.3.14"
 
-[dependencies.sha-1]
+[dependencies.sha1]
 version = "0.10"
 
 [features]

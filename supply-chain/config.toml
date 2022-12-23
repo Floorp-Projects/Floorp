@@ -1177,7 +1177,7 @@ criteria = "safe-to-run"
 version = "0.9.2"
 criteria = "safe-to-deploy"
 
-[[exemptions.sha-1]]
+[[exemptions.sha1]]
 version = "0.10.0"
 criteria = "safe-to-run"
 
