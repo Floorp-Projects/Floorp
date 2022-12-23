@@ -44,5 +44,47 @@ ruleTester.run("no-cu-reportError", rule, {
       output: "foo().catch(console.error)",
       errors: callError(),
     },
+    // When referencing identifiers/members, try to reference them rather
+    // than stringifying:
+    {
+      code: "Cu.reportError('foo' + e)",
+      output: "console.error('foo', e)",
+      errors: callError(),
+    },
+    {
+      code: "Cu.reportError('foo' + msg.data)",
+      output: "console.error('foo', msg.data)",
+      errors: callError(),
+    },
+    // Don't touch existing concatenation of literals (usually done for
+    // wrapping reasons)
+    {
+      code: "Cu.reportError('foo' + 'bar' + 'baz')",
+      output: "console.error('foo' + 'bar' + 'baz')",
+      errors: callError(),
+    },
+    // Ensure things work when nested:
+    {
+      code: "Cu.reportError('foo' + e + 'baz')",
+      output: "console.error('foo', e, 'baz')",
+      errors: callError(),
+    },
+    // Ensure things work when nested in different places:
+    {
+      code: "Cu.reportError('foo' + e + 'quux' + 'baz')",
+      output: "console.error('foo', e, 'quux' + 'baz')",
+      errors: callError(),
+    },
+    {
+      code: "Cu.reportError('foo' + 'quux' + e + 'baz')",
+      output: "console.error('foo' + 'quux', e, 'baz')",
+      errors: callError(),
+    },
+    // Ensure things work with parens changing order of operations:
+    {
+      code: "Cu.reportError('foo' + 'quux' + (e + 'baz'))",
+      output: "console.error('foo' + 'quux' + (e + 'baz'))",
+      errors: callError(),
+    },
   ],
 });
