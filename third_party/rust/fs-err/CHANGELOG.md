@@ -1,5 +1,9 @@
 # fs-err Changelog
 
+## 2.9.0
+
+* Add wrappers for [`tokio::fs`](https://docs.rs/tokio/latest/tokio/fs/index.html) ([#40](https://github.com/andrewhickman/fs-err/pull/40)).
+
 ## 2.8.1
 
 * Fixed docs.rs build
