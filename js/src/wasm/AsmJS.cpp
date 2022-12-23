@@ -1845,11 +1845,10 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
   bool failNameOffset(uint32_t offset, const char* fmt,
                       TaggedParserAtomIndex name) {
     // This function is invoked without the caller properly rooting its locals.
-    gc::AutoSuppressGC suppress(cx_);
     if (UniqueChars bytes = parserAtoms_.toPrintableString(name)) {
       failfOffset(offset, fmt, bytes.get());
     } else {
-      ReportOutOfMemory(cx_);
+      ReportOutOfMemory(fc_);
     }
     return false;
   }
@@ -1931,7 +1930,7 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
       typeFailure(errorOffset_, errorString_.get());
     }
     if (errorOverRecursed_) {
-      ReportOverRecursed(cx_);
+      ReportOverRecursed(fc_);
     }
   }
 
@@ -7099,8 +7098,7 @@ static bool IsAsmJSCompilerAvailable(JSContext* cx) {
   return HasPlatformSupport(cx) && WasmCompilerForAsmJSAvailable(cx);
 }
 
-static bool EstablishPreconditions(JSContext* cx,
-                                   frontend::ParserBase& parser) {
+static bool EstablishPreconditions(frontend::ParserBase& parser) {
   switch (parser.options().asmJSOption) {
     case AsmJSOption::DisabledByAsmJSPref:
       return TypeFailureWarning(
@@ -7154,7 +7152,7 @@ static bool DoCompileAsmJS(JSContext* cx, FrontendContext* fc,
   *validated = false;
 
   // Various conditions disable asm.js optimizations.
-  if (!EstablishPreconditions(cx, parser)) {
+  if (!EstablishPreconditions(parser)) {
     return NoExceptionPending(fc);
   }
 
