@@ -15,6 +15,7 @@
 #include "nsICancelable.h"
 #include "nsIDNSListener.h"
 #include "nsIDNSRecord.h"
+#include "nsIDNSService.h"
 #include "nsINamed.h"
 #include "nsITransport.h"
 #include "nsWeakReference.h"
@@ -153,7 +154,7 @@ class DnsAndConnectSocket final : public nsIOutputStreamCallback,
     nsCString mHost;
     nsCOMPtr<nsICancelable> mDNSRequest;
     nsCOMPtr<nsIDNSAddrRecord> mDNSRecord;
-    uint32_t mDnsFlags = 0;
+    nsIDNSService::DNSFlags mDnsFlags = nsIDNSService::RESOLVE_DEFAULT_FLAGS;
     bool mRetryWithDifferentIPFamily = false;
     bool mResetFamilyPreference = false;
     bool mSkipDnsResolution = false;

@@ -214,7 +214,7 @@ bool SocketProcessParent::DeallocPWebrtcTCPSocketParent(
 already_AddRefed<PDNSRequestParent> SocketProcessParent::AllocPDNSRequestParent(
     const nsACString& aHost, const nsACString& aTrrServer, const int32_t& port,
     const uint16_t& aType, const OriginAttributes& aOriginAttributes,
-    const uint32_t& aFlags) {
+    const nsIDNSService::DNSFlags& aFlags) {
   RefPtr<DNSRequestHandler> handler = new DNSRequestHandler();
   RefPtr<DNSRequestParent> actor = new DNSRequestParent(handler);
   return actor.forget();
@@ -223,7 +223,8 @@ already_AddRefed<PDNSRequestParent> SocketProcessParent::AllocPDNSRequestParent(
 mozilla::ipc::IPCResult SocketProcessParent::RecvPDNSRequestConstructor(
     PDNSRequestParent* aActor, const nsACString& aHost,
     const nsACString& aTrrServer, const int32_t& port, const uint16_t& aType,
-    const OriginAttributes& aOriginAttributes, const uint32_t& aFlags) {
+    const OriginAttributes& aOriginAttributes,
+    const nsIDNSService::DNSFlags& aFlags) {
   RefPtr<DNSRequestParent> actor = static_cast<DNSRequestParent*>(aActor);
   RefPtr<DNSRequestHandler> handler =
       actor->GetDNSRequest()->AsDNSRequestHandler();

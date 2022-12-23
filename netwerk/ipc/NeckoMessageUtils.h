@@ -18,6 +18,7 @@
 #include "mozilla/net/DNS.h"
 #include "ipc/IPCMessageUtilsSpecializations.h"
 #include "nsITRRSkipReason.h"
+#include "nsIDNSService.h"
 
 namespace IPC {
 
@@ -158,6 +159,12 @@ struct ParamTraits<nsITRRSkipReason::value> {
     *aResult = static_cast<nsITRRSkipReason::value>(reason);
     return true;
   }
+};
+
+template <>
+struct ParamTraits<nsIDNSService::DNSFlags>
+    : public BitFlagsEnumSerializer<
+          nsIDNSService::DNSFlags, nsIDNSService::DNSFlags::ALL_DNSFLAGS_BITS> {
 };
 
 }  // namespace IPC
