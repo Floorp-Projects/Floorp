@@ -61,7 +61,10 @@ add_setup(async function() {
     "resource://testing-common/dom/quota/test/modules/StorageUtils.sys.mjs"
   );
 
-  const optionalPrefsToSet = [["dom.fs.enabled", true]];
+  const optionalPrefsToSet = [
+    ["dom.fs.enabled", true],
+    ["dom.fs.writable_file_stream.enabled", true],
+  ];
 
   setStoragePrefs(optionalPrefsToSet);
 
@@ -72,7 +75,10 @@ add_setup(async function() {
 
     await clearStoragesForOrigin(principal);
 
-    const optionalPrefsToClear = ["dom.fs.enabled"];
+    const optionalPrefsToClear = [
+      "dom.fs.enabled",
+      "dom.fs.writable_file_stream.enabled",
+    ];
 
     clearStoragePrefs(optionalPrefsToClear);
   });
