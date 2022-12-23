@@ -9,18 +9,11 @@ const { GeckoViewUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/GeckoViewUtils.sys.mjs"
 );
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.jsm",
+  GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.sys.mjs",
 });
 
 const { debug, warn } = GeckoViewUtils.initLogging("FilePickerDelegate");

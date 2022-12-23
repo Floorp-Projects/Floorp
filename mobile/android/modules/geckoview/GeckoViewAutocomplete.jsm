@@ -24,10 +24,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   EventDispatcher: "resource://gre/modules/Messaging.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.jsm",
+  GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "LoginInfo", () =>

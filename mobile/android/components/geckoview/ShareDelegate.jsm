@@ -9,14 +9,10 @@ const { GeckoViewUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/GeckoViewUtils.sys.mjs"
 );
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.sys.mjs",
 });
 
 const domBundle = Services.strings.createBundle(

@@ -15,9 +15,12 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   GeckoViewAutocomplete: "resource://gre/modules/GeckoViewAutocomplete.jsm",
-  GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.jsm",
   LoginEntry: "resource://gre/modules/GeckoViewAutocomplete.jsm",
 });
 
