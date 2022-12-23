@@ -546,6 +546,11 @@ criteria = "safe-to-deploy"
 version = "0.4.3"
 notes = "Uses no ambient capabilities, vetted the one instance of unsafe."
 
+[[audits.flate2]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.24 -> 1.0.25"
+
 [[audits.fluent]]
 who = "Zibi Braniecki <zibi@unicode.org>"
 criteria = "safe-to-deploy"
@@ -956,6 +961,11 @@ who = "Jim Blandy <jimb@red-bean.com>"
 criteria = "safe-to-deploy"
 delta = "0.23.1 -> 0.24.0"
 notes = "This audit treats Dzmitry Malyshau (kvark) as a trusted reviewer."
+
+[[audits.miniz_oxide]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.5.3 -> 0.6.2"
 
 [[audits.mozprofile]]
 who = "Henrik Skupin <mail@hskupin.info>"

@@ -108,7 +108,7 @@ const HUFFLEN_TABLE: usize = 2;
 pub mod inflate_flags {
     /// Should we try to parse a zlib header?
     ///
-    /// If unset, [`decompress()`] will expect an RFC1951 deflate stream.  If set, it will expect an
+    /// If unset, the function will expect an RFC1951 deflate stream.  If set, it will expect a
     /// RFC1950 zlib wrapper around the deflate stream.
     pub const TINFL_FLAG_PARSE_ZLIB_HEADER: u32 = 1;
 
@@ -1456,7 +1456,8 @@ pub fn decompress(
                 // Mask the top bits since they may contain length info.
                 l.counter &= 511;
 
-                if l.counter == 256 {
+                if l.counter
+                    == 256 {
                     // We hit the end of block symbol.
                     Action::Jump(BlockDone)
                 } else if l.counter > 285 {

@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "flate2"
-version = "1.0.24"
+version = "1.0.25"
 authors = [
     "Alex Crichton <alex@alexcrichton.com>",
     "Josh Triplett <josh@joshtriplett.org>",
@@ -56,7 +56,8 @@ optional = true
 default-features = false
 
 [dependencies.miniz_oxide]
-version = "0.5.0"
+version = "0.6.0"
+features = ["with-alloc"]
 optional = true
 default-features = false
 
@@ -90,5 +91,6 @@ zlib-ng-compat = [
 ]
 
 [target."cfg(all(target_arch = \"wasm32\", not(target_os = \"emscripten\")))".dependencies.miniz_oxide]
-version = "0.5.0"
+version = "0.6.0"
+features = ["with-alloc"]
 default-features = false
