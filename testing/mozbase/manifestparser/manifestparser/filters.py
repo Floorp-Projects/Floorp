@@ -8,8 +8,6 @@ dictionary of values, and returns a new iterable of test objects. It is
 possible to define custom filters if the built-in ones are not enough.
 """
 
-from __future__ import absolute_import, division
-
 import itertools
 import os
 from collections import defaultdict

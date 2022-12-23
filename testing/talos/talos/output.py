@@ -3,8 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 """output formats for Talos"""
-from __future__ import absolute_import, division
-
 # NOTE: we have a circular dependency with output.py when we import results
 import simplejson as json
 from mozlog import get_proxy_logger

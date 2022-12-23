@@ -10,8 +10,6 @@
 A script to check HTTP statuses of Bouncer products to be shipped.
 """
 
-from __future__ import absolute_import
-
 import os
 import sys
 

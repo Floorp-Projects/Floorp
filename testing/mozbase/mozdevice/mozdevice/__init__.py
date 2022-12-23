@@ -154,8 +154,6 @@ any existing content.
 
 """
 
-from __future__ import absolute_import
-
 from .adb import (
     ADBCommand,
     ADBDevice,

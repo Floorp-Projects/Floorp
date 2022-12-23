@@ -13,8 +13,6 @@ logging_ module and adds a few convenience methods for logging test
 results and events.
 """
 
-from __future__ import absolute_import
-
 import sys
 
 from . import commandline, structuredlog, unstructured

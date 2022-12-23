@@ -9,8 +9,6 @@ script.py, along with config.py and log.py, represents the core of
 mozharness.
 """
 
-from __future__ import absolute_import, print_function
-
 import codecs
 import datetime
 import errno

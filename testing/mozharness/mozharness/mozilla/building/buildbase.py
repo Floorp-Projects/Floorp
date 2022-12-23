@@ -10,8 +10,6 @@ provides a base class for fx desktop builds
 author: Jordan Lund
 
 """
-from __future__ import absolute_import
-
 import copy
 import json
 import os

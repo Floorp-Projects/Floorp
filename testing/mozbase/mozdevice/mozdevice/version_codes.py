@@ -7,8 +7,6 @@ VERSION CODES of the android releases.
 
 See http://developer.android.com/reference/android/os/Build.VERSION_CODES.html.
 """
-from __future__ import absolute_import
-
 # Magic version number for a current development build, which has
 # not yet turned into an official release.
 CUR_DEVELOPMENT = 10000

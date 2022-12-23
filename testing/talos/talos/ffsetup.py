@@ -5,8 +5,6 @@
 """
 Set up a browser environment before running a test.
 """
-from __future__ import absolute_import, print_function
-
 import json
 import os
 import shutil

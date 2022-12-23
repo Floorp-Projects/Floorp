@@ -22,8 +22,6 @@ https://bitbucket.org/hpk42/py/src/980c8d526463958ee7cae678a7e4e9b054f36b94/py/_
 by holger krekel, holger at merlinux eu. 2009
 """
 
-from __future__ import absolute_import
-
 import re
 import sys
 

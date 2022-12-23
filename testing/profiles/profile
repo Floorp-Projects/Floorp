@@ -12,8 +12,6 @@
 echo "mach not found, either add it to your \$PATH or run this script via ./mach python testing/profiles/profile"; exit  # noqa
 '''
 
-from __future__ import absolute_import, unicode_literals, print_function
-
 """This script can be used to:
 
     1) Show all preferences for a given suite

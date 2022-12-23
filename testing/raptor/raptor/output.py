@@ -5,8 +5,6 @@
 # some parts of this originally taken from /testing/talos/talos/output.py
 
 """output raptor test results"""
-from __future__ import absolute_import, division, print_function
-
 import copy
 import json
 import os

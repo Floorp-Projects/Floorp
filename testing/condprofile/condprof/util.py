@@ -4,8 +4,6 @@
 #
 # This module needs to stay Python 2 and 3 compatible
 #
-from __future__ import absolute_import, division, print_function
-
 import contextlib
 import os
 import platform

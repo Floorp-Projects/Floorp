@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import unittest
 
 from mozharness.base.log import INFO, WARNING

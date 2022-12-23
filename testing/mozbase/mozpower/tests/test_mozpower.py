@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-from __future__ import absolute_import
-
 import subprocess
 import sys
 from unittest import mock

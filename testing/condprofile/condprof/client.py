@@ -4,8 +4,6 @@
 #
 # This module needs to stay Python 2 and 3 compatible
 #
-from __future__ import absolute_import
-
 import functools
 import os
 import shutil

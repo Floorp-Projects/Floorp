@@ -19,8 +19,6 @@ appropriate level (please don't die on any errors; please die on any
 warning; etc.) or platform or language or whatever.
 """
 
-from __future__ import absolute_import
-
 import re
 
 from mozharness.base.log import CRITICAL, DEBUG, ERROR, WARNING

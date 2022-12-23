@@ -3,8 +3,6 @@
 Unit-Tests for moznetwork
 """
 
-from __future__ import absolute_import
-
 import re
 import subprocess
 from distutils.spawn import find_executable

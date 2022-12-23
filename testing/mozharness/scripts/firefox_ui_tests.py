@@ -6,8 +6,6 @@
 # ***** END LICENSE BLOCK *****
 
 
-from __future__ import absolute_import
-
 import copy
 import os
 import sys

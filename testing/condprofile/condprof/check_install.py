@@ -6,8 +6,6 @@
 This module tries to make sure we have all dependencies installed on
 all our environments.
 """
-from __future__ import absolute_import
-
 import os
 import subprocess
 import sys

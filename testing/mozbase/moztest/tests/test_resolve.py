@@ -3,8 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 # flake8: noqa: E501
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 try:
     import cPickle as pickle
 except ImportError:

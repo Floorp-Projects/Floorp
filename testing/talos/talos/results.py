@@ -8,8 +8,6 @@
 objects and methods for parsing and serializing Talos results
 see https://wiki.mozilla.org/Buildbot/Talos/DataFormat
 """
-from __future__ import absolute_import, print_function
-
 import csv
 import json
 import os

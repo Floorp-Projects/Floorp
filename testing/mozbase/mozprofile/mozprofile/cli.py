@@ -10,8 +10,6 @@ The profile can be modified by passing in addons to install or preferences to se
 If no profile is specified, a new profile is created and the path of the
 resulting profile is printed.
 """
-from __future__ import absolute_import, print_function
-
 import sys
 from optparse import OptionParser
 

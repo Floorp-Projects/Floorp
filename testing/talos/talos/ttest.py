@@ -11,8 +11,6 @@
      - collects info on any counters while test runs
      - waits for a 'dump' from the browser
 """
-from __future__ import absolute_import, print_function
-
 import json
 import os
 import platform

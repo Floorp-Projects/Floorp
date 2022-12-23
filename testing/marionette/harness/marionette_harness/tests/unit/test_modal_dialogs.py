@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 from marionette_driver.by import By
 from marionette_driver.expected import element_present
 from marionette_driver import errors
