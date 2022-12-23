@@ -8,8 +8,11 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   IDBHelpers: "resource://services-settings/IDBHelpers.jsm",
   Utils: "resource://services-settings/Utils.jsm",
   CommonUtils: "resource://services-common/utils.js",

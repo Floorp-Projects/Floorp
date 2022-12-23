@@ -12,19 +12,12 @@ var EXPORTED_SYMBOLS = [
   // PageActions.ACTION_ID_TRANSIENT_SEPARATOR
 ];
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
   BinarySearch: "resource://gre/modules/BinarySearch.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
 });
 
 const ACTION_ID_BOOKMARK = "bookmark";

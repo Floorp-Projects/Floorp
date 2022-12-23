@@ -12,13 +12,13 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
   Log: "resource://gre/modules/Log.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Sanitizer: "resource:///modules/Sanitizer.jsm",
-  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   Utils: "resource://services-sync/util.js",
 });
 

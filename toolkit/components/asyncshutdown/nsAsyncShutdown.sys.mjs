@@ -3,16 +3,14 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * An implementation of nsIAsyncShutdown* based on AsyncShutdown.jsm
+ * An implementation of nsIAsyncShutdown* based on AsyncShutdown.sys.mjs
  */
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AsyncShutdown",
-  "resource://gre/modules/AsyncShutdown.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
+});
 
 /**
  * Conversion between nsIPropertyBags and JS values.

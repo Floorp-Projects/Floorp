@@ -229,6 +229,7 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
 });
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
   DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.sys.mjs",
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.sys.mjs",
@@ -247,7 +248,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   HomePage: "resource:///modules/HomePage.jsm",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",

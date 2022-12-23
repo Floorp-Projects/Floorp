@@ -5,12 +5,8 @@
 "use strict";
 
 // Globals
-ChromeUtils.defineModuleGetter(
-  this,
-  "AsyncShutdown",
-  "resource://gre/modules/AsyncShutdown.jsm"
-);
 ChromeUtils.defineESModuleGetters(this, {
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
   FileTestUtils: "resource://testing-common/FileTestUtils.sys.mjs",
   JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
 });

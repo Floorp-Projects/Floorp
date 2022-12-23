@@ -14,8 +14,8 @@ const CERTDB_CONTRACTID = "@mozilla.org/security/x509certdb;1";
 const { AddonManager, AddonManagerPrivate, AMTelemetry } = ChromeUtils.import(
   "resource://gre/modules/AddonManager.jsm"
 );
-const { AsyncShutdown } = ChromeUtils.import(
-  "resource://gre/modules/AsyncShutdown.jsm"
+const { AsyncShutdown } = ChromeUtils.importESModule(
+  "resource://gre/modules/AsyncShutdown.sys.mjs"
 );
 const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs"

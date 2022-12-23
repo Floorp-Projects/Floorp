@@ -28,6 +28,7 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
   CertUtils: "resource://gre/modules/CertUtils.sys.mjs",
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
@@ -37,7 +38,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
-  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   ctypes: "resource://gre/modules/ctypes.jsm",
 });
 

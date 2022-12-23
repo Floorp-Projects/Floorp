@@ -8,8 +8,8 @@ do_get_profile();
 const { Sqlite } = ChromeUtils.importESModule(
   "resource://gre/modules/Sqlite.sys.mjs"
 );
-const { AsyncShutdown } = ChromeUtils.import(
-  "resource://gre/modules/AsyncShutdown.jsm"
+const { AsyncShutdown } = ChromeUtils.importESModule(
+  "resource://gre/modules/AsyncShutdown.sys.mjs"
 );
 
 function getConnection(dbName, extraOptions = {}) {

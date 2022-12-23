@@ -7,11 +7,8 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
 });
 
 const SUGGESTIONS = [

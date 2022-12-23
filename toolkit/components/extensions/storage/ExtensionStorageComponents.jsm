@@ -4,18 +4,11 @@
 
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
 });
 
 const EXPORTED_SYMBOLS = ["StorageSyncService"];

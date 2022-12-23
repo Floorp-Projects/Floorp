@@ -50,9 +50,10 @@ const { AppConstants } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
+  E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   ExtensionDNR: "resource://gre/modules/ExtensionDNR.sys.mjs",
   ExtensionDNRStore: "resource://gre/modules/ExtensionDNRStore.sys.mjs",
-  E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   Log: "resource://gre/modules/Log.sys.mjs",
   SITEPERMS_ADDON_TYPE:
     "resource://gre/modules/addons/siteperms-addon-utils.sys.mjs",
@@ -62,7 +63,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
   AddonSettings: "resource://gre/modules/addons/AddonSettings.jsm",
-  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.jsm",
   ExtensionPreferencesManager:
     "resource://gre/modules/ExtensionPreferencesManager.jsm",

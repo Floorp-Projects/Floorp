@@ -32,13 +32,13 @@ const { AppConstants } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonSettings: "resource://gre/modules/addons/AddonSettings.jsm",
-  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   Dictionary: "resource://gre/modules/Extension.jsm",
   Extension: "resource://gre/modules/Extension.jsm",
   ExtensionData: "resource://gre/modules/Extension.jsm",
