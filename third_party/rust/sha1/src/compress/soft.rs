@@ -201,6 +201,7 @@ fn sha1_digest_block_u32(state: &mut [u32; 5], block: &[u32; 16]) {
     let mut w1 = [block[4], block[5], block[6], block[7]];
     let mut w2 = [block[8], block[9], block[10], block[11]];
     let mut w3 = [block[12], block[13], block[14], block[15]];
+    #[allow(clippy::needless_late_init)]
     let mut w4;
 
     let mut h0 = [state[0], state[1], state[2], state[3]];
