@@ -73,9 +73,20 @@ add_task(async function readBySize({ client }) {
 add_task(async function readAfterClose({ client }) {
   const { IO } = client;
   const contents = "Lorem ipsum";
-  const { handle } = await registerFileStream(contents);
+
+  // If we omit remove: false, then by the time the registered cleanup function
+  // runs we will have deleted our temp file (in the following call to IO.close)
+  // *but* another test will have created a file with the same name (due to the
+  // way IOUtils.createUniqueFile works). That file's stream will not be closed
+  // and so we won't be able to delete it, resulting in an exception and
+  // therefore a test failure.
+  const { handle, stream } = await registerFileStream(contents, {
+    remove: false,
+  });
 
   await IO.close({ handle });
+
+  ok(!(await IOUtils.exists(stream.path)), "File should no longer exist");
 
   try {
     await IO.read({ handle });
