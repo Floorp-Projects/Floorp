@@ -3,6 +3,8 @@
 
 "use strict";
 
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+
 const { RemoteAgent } = ChromeUtils.importESModule(
   "chrome://remote/content/components/RemoteAgent.sys.mjs"
 );
@@ -11,9 +13,6 @@ const { RemoteAgentError } = ChromeUtils.importESModule(
 );
 const { TabManager } = ChromeUtils.importESModule(
   "chrome://remote/content/shared/TabManager.sys.mjs"
-);
-const { Stream } = ChromeUtils.importESModule(
-  "chrome://remote/content/cdp/StreamRegistry.sys.mjs"
 );
 
 const TIMEOUT_MULTIPLIER = SpecialPowers.isDebugBuild ? 4 : 1;
@@ -388,7 +387,7 @@ function fail(message) {
 }
 
 /**
- * Create a stream with the specified contents.
+ * Create a file with the specified contents.
  *
  * @param {string} contents
  *     Contents of the file.
@@ -398,26 +397,42 @@ function fail(message) {
  * @param {boolean=} options.remove
  *     If true, automatically remove the file after the test. Defaults to true.
  *
- * @return {Promise<Stream>}
+ * @return {Promise}
+ * @resolves {string}
+ *     Returns the final path of the created file.
  */
-async function createFileStream(contents, options = {}) {
+async function createFile(contents, options = {}) {
   let { path = null, remove = true } = options;
 
   if (!path) {
-    path = await IOUtils.createUniqueFile(
-      PathUtils.tempDir,
-      "remote-agent.txt"
-    );
+    const basePath = OS.Path.join(OS.Constants.Path.tmpDir, "remote-agent.txt");
+    const { file, path: tmpPath } = await OS.File.openUnique(basePath, {
+      humanReadable: true,
+    });
+    await file.close();
+    path = tmpPath;
   }
 
-  await IOUtils.writeUTF8(path, contents);
+  let encoder = new TextEncoder();
+  let array = encoder.encode(contents);
 
-  const stream = new Stream(path);
+  const count = await OS.File.writeAtomic(path, array, {
+    encoding: "utf-8",
+    tmpPath: path + ".tmp",
+  });
+  is(count, contents.length, "All data has been written to file");
+
+  const file = await OS.File.open(path);
+
+  // Automatically remove the file once the test has finished
   if (remove) {
-    registerCleanupFunction(() => stream.destroy());
+    registerCleanupFunction(async () => {
+      await file.close();
+      await OS.File.remove(path, { ignoreAbsent: true });
+    });
   }
 
-  return stream;
+  return { file, path };
 }
 
 async function throwScriptError(options = {}) {

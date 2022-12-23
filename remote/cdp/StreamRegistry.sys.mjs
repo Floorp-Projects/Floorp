@@ -2,59 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   UnsupportedError: "chrome://remote/content/cdp/Error.sys.mjs",
 });
 
-export class Stream {
-  #path;
-  #offset;
-  #length;
-
-  constructor(path) {
-    this.#path = path;
-    this.#offset = 0;
-    this.#length = null;
-  }
-
-  async destroy() {
-    await IOUtils.remove(this.#path);
-  }
-
-  async seek(seekTo) {
-    // To keep compatibility with Chrome clip invalid offsets
-    this.#offset = Math.max(0, Math.min(seekTo, await this.length()));
-  }
-
-  async readBytes(count) {
-    const bytes = await IOUtils.read(this.#path, {
-      offset: this.#offset,
-      maxBytes: count,
-    });
-    this.#offset += bytes.length;
-    return bytes;
-  }
-
-  async available() {
-    const length = await this.length();
-    return length - this.#offset;
-  }
-
-  async length() {
-    if (this.#length === null) {
-      const info = await IOUtils.stat(this.#path);
-      this.#length = info.size;
-    }
-
-    return this.#length;
-  }
-
-  get path() {
-    return this.#path;
-  }
-}
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+});
 
 export class StreamRegistry {
   constructor() {
@@ -63,8 +22,8 @@ export class StreamRegistry {
 
     // Register an async shutdown blocker to ensure all open IO streams are
     // closed, and remaining temporary files removed. Needs to happen before
-    // IOUtils has been shutdown.
-    IOUtils.profileBeforeChange.addBlocker(
+    // OS.File has been shutdown.
+    lazy.AsyncShutdown.profileBeforeChange.addBlocker(
       "Remote Agent: Clean-up of open streams",
       async () => {
         await this.destructor();
@@ -74,33 +33,52 @@ export class StreamRegistry {
 
   async destructor() {
     for (const stream of this.streams.values()) {
-      await stream.destroy();
+      await this._discard(stream);
     }
 
     this.streams.clear();
   }
 
+  async _discard(stream) {
+    if (stream instanceof lazy.OS.File) {
+      let fileInfo;
+
+      // Also remove the temporary file
+      try {
+        fileInfo = await stream.stat();
+
+        stream.close();
+        await lazy.OS.File.remove(fileInfo.path, { ignoreAbsent: true });
+      } catch (e) {
+        console.error(`Failed to remove ${fileInfo?.path}: ${e.message}`);
+      }
+    }
+  }
+
   /**
    * Add a new stream to the registry.
    *
-   * @param {string} path
-   *      The path to the file to use as a stream.
+   * @param {OS.File} stream
+   *      Instance of the stream to add.
    *
    * @return {string}
    *     Stream handle (uuid)
    */
   add(stream) {
-    if (!(stream instanceof Stream)) {
+    let handle;
+
+    if (stream instanceof lazy.OS.File) {
+      handle = Services.uuid
+        .generateUUID()
+        .toString()
+        .slice(1, -1);
+    } else {
       // Bug 1602731 - Implement support for blob
       throw new lazy.UnsupportedError(`Unknown stream type for ${stream}`);
     }
 
-    const handle = Services.uuid
-      .generateUUID()
-      .toString()
-      .slice(1, -1);
-
     this.streams.set(handle, stream);
+
     return handle;
   }
 
@@ -110,8 +88,8 @@ export class StreamRegistry {
    * @param {string} handle
    *      Handle of the stream to retrieve.
    *
-   * @return {Stream}
-   *      The requested stream.
+   * @return {OS.File}
+   *     Requested stream
    */
   get(handle) {
     const stream = this.streams.get(handle);
@@ -134,7 +112,7 @@ export class StreamRegistry {
    */
   async remove(handle) {
     const stream = this.get(handle);
-    await stream.destroy();
+    await this._discard(stream);
 
     return this.streams.delete(handle);
   }
