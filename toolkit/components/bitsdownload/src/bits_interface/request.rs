@@ -713,16 +713,16 @@ impl BitsRequest {
     }
 
     xpcom_method!(
-        get_trr_mode => GetTRRMode() -> u32
+        get_trr_mode => GetTRRMode() -> u8
     );
-    fn get_trr_mode(&self) -> Result<u32, nsresult> {
+    fn get_trr_mode(&self) -> Result<u8, nsresult> {
         Err(NS_ERROR_NOT_IMPLEMENTED)
     }
 
     xpcom_method!(
-        set_trr_mode => SetTRRMode(_trr_mode: u32)
+        set_trr_mode => SetTRRMode(_trr_mode: u8)
     );
-    fn set_trr_mode(&self, _trr_mode: u32) -> Result<(), nsresult> {
+    fn set_trr_mode(&self, _trr_mode: u8) -> Result<(), nsresult> {
         Err(NS_ERROR_NOT_IMPLEMENTED)
     }
 

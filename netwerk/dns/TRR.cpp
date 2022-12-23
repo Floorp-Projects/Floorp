@@ -559,8 +559,7 @@ nsresult TRR::ReceivePush(nsIHttpChannel* pushed, nsHostRecord* pushedRec) {
   // Since we don't ever call nsHostResolver::NameLookup for this record,
   // we need to copy the trr mode from the previous record
   if (hostRecord->mEffectiveTRRMode == nsIRequest::TRR_DEFAULT_MODE) {
-    hostRecord->mEffectiveTRRMode =
-        static_cast<nsIRequest::TRRMode>(pushedRec->mEffectiveTRRMode);
+    hostRecord->mEffectiveTRRMode = pushedRec->mEffectiveTRRMode;
   }
 
   rv = mHostResolver->TrrLookup_unlocked(hostRecord, this);
@@ -670,8 +669,7 @@ void TRR::SaveAdditionalRecords(
     // This is quite hacky, and should be fixed.
     hostRecord->Reset();
     hostRecord->mResolving++;
-    hostRecord->mEffectiveTRRMode =
-        static_cast<nsIRequest::TRRMode>(mRec->mEffectiveTRRMode);
+    hostRecord->mEffectiveTRRMode = mRec->mEffectiveTRRMode;
     LOG(("Completing lookup for additional: %s",
          nsCString(recordEntry.GetKey()).get()));
     (void)mHostResolver->CompleteLookup(hostRecord, NS_OK, ai, mPB,
@@ -710,8 +708,7 @@ void TRR::StoreIPHintAsDNSRecord(const struct SVCB& aSVCBRecord) {
   // to set these fields to avoid assertions in CompleteLookup.
   // This is quite hacky, and should be fixed.
   hostRecord->mResolving++;
-  hostRecord->mEffectiveTRRMode =
-      static_cast<nsIRequest::TRRMode>(mRec->mEffectiveTRRMode);
+  hostRecord->mEffectiveTRRMode = mRec->mEffectiveTRRMode;
   (void)mHostResolver->CompleteLookup(hostRecord, NS_OK, ai, mPB, mOriginSuffix,
                                       TRRSkippedReason::TRR_OK, this);
 }

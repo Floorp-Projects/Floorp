@@ -43,8 +43,8 @@ class TRRQuery : public AHostResolver {
       uint32_t aTtl, bool pb) override;
   virtual nsresult GetHostRecord(const nsACString& host,
                                  const nsACString& aTrrServer, uint16_t type,
-                                 nsIDNSService::DNSFlags flags, uint16_t af,
-                                 bool pb, const nsCString& originSuffix,
+                                 uint16_t flags, uint16_t af, bool pb,
+                                 const nsCString& originSuffix,
                                  nsHostRecord** result) override {
     if (!mHostResolver) {
       return NS_ERROR_FAILURE;

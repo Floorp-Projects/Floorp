@@ -4,6 +4,9 @@
 
 "use strict";
 
+const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
+  Ci.nsIDNSService
+);
 let trrServer;
 
 function makeChan(url) {
@@ -39,7 +42,7 @@ add_setup(async function setup() {
   let [, resp] = await channelOpenPromise(chan);
   equal(resp, "<h1> 404 Path not found: /test?bla=some</h1>");
 
-  Services.dns.clearCache(true);
+  dns.clearCache(true);
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
@@ -223,7 +226,7 @@ add_task(async function test_cname_nodata() {
   });
 
   let { inStatus } = await new TRRDNSListener("first.bar", {
-    type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
+    type: dns.RESOLVE_TYPE_HTTPSSVC,
   });
   Assert.ok(Components.isSuccessCode(inStatus), `${inStatus} should work`);
   equal(await trrServer.requestCount("first.bar", "HTTPS"), 1);

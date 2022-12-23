@@ -4,6 +4,9 @@
 
 "use strict";
 
+const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
+  Ci.nsIDNSService
+);
 const override = Cc["@mozilla.org/network/native-dns-override;1"].getService(
   Ci.nsINativeDNSResolverOverride
 );
@@ -22,7 +25,7 @@ add_task(async function checkBlocklisting() {
   await trrServer.start();
   info(`port = ${trrServer.port}\n`);
 
-  Services.dns.clearCache(true);
+  dns.clearCache(true);
   Services.prefs.setCharPref(
     "network.trr.uri",
     `https://foo.example.com:${trrServer.port}/dns-query`
@@ -40,7 +43,7 @@ add_task(async function checkBlocklisting() {
 
   // Clear the cache so that we need to consult the blocklist and not simply
   // return the cached DNS record.
-  Services.dns.clearCache(true);
+  dns.clearCache(true);
   await new TRRDNSListener("sub.top.test.com", {
     expectedAnswer: "2.2.2.2",
   });
@@ -65,7 +68,7 @@ add_task(async function checkBlocklisting() {
 
   // The blocklist should instantly expire.
   Services.prefs.setIntPref("network.trr.temp_blocklist_duration_sec", 0);
-  Services.dns.clearCache(true);
+  dns.clearCache(true);
   await new TRRDNSListener("sub.top.test.com", {
     expectedAnswer: "2.2.2.2",
   });

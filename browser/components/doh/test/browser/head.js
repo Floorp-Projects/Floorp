@@ -16,6 +16,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
+  "gDNSService",
+  "@mozilla.org/network/dns-service;1",
+  "nsIDNSService"
+);
+
+XPCOMUtils.defineLazyServiceGetter(
+  this,
   "gDNSOverride",
   "@mozilla.org/network/native-dns-override;1",
   "nsINativeDNSResolverOverride"

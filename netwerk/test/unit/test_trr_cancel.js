@@ -4,6 +4,10 @@
 
 "use strict";
 
+const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
+  Ci.nsIDNSService
+);
+
 trr_test_setup();
 registerCleanupFunction(async () => {
   trr_clear_prefs();
@@ -66,7 +70,7 @@ add_task(
     equal(await trrServer.requestCount("example.org", "A"), 1);
 
     // Now we cancel both of them
-    Services.dns.clearCache(true);
+    dns.clearCache(true);
     r1 = new TRRDNSListener("example.org", { expectedSuccess: false });
     r2 = new TRRDNSListener("example.org", { expectedSuccess: false });
     r1.cancel();
@@ -81,7 +85,7 @@ add_task(
 );
 
 add_task(async function cancel_delayed() {
-  Services.dns.clearCache(true);
+  dns.clearCache(true);
   await trrServer.registerDoHAnswers("example.com", "A", {
     answers: [
       {
@@ -104,7 +108,7 @@ add_task(async function cancel_delayed() {
 });
 
 add_task(async function cancel_after_completed() {
-  Services.dns.clearCache(true);
+  dns.clearCache(true);
   await trrServer.registerDoHAnswers("example.com", "A", {
     answers: [
       {
@@ -125,7 +129,7 @@ add_task(async function cancel_after_completed() {
 });
 
 add_task(async function clearCacheWhileResolving() {
-  Services.dns.clearCache(true);
+  dns.clearCache(true);
   await trrServer.registerDoHAnswers("example.com", "A", {
     answers: [
       {
@@ -141,7 +145,7 @@ add_task(async function clearCacheWhileResolving() {
   // Check that calling clearCache does not leave the request hanging.
   let r1 = new TRRDNSListener("example.com", { expectedAnswer: "3.3.3.3" });
   let r2 = new TRRDNSListener("example.com", { expectedAnswer: "3.3.3.3" });
-  Services.dns.clearCache(true);
+  dns.clearCache(true);
   await r1;
   await r2;
 
@@ -168,11 +172,11 @@ add_task(async function clearCacheWhileResolving() {
   let r4 = new TRRDNSListener("httpsvc.com", {
     type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
   });
-  Services.dns.clearCache(true);
+  dns.clearCache(true);
   await r3;
   await r4;
   equal(await trrServer.requestCount("httpsvc.com", "HTTPS"), 1);
-  Services.dns.clearCache(true);
+  dns.clearCache(true);
   await new TRRDNSListener("httpsvc.com", {
     type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
   });

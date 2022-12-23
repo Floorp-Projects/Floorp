@@ -18,7 +18,6 @@ XPIDL_SOURCES += [
     "nsIEffectiveTLDService.idl",
     "nsIIDNService.idl",
     "nsINativeDNSResolverOverride.idl",
-    "nsITRRSkipReason.idl",
     "nsPIDNSService.idl",
 ]
 

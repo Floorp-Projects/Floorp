@@ -5,12 +5,6 @@
 
 var EXPORTED_SYMBOLS = ["NetErrorChild"];
 
-const lazy = {};
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  AppInfo: "chrome://remote/content/shared/AppInfo.sys.mjs",
-});
-
 const { RemotePageChild } = ChromeUtils.import(
   "resource://gre/actors/RemotePageChild.jsm"
 );
@@ -28,11 +22,6 @@ class NetErrorChild extends RemotePageChild {
       "RPMRecordTelemetryEvent",
       "RPMCheckAlternateHostAvailable",
       "RPMGetHttpResponseHeader",
-      "RPMIsTRROnlyFailure",
-      "RPMShowTRROnlyFailureError",
-      "RPMOpenPreferences",
-      "RPMGetTRRSkipReason",
-      "RPMGetTRRDomain",
     ];
     this.exportFunctions(exportableFunctions);
   }
@@ -159,32 +148,5 @@ class NetErrorChild extends RemotePageChild {
     } catch (e) {}
 
     return "";
-  }
-
-  RPMIsTRROnlyFailure() {
-    // As per RPMShowTRROnlyFailureError, we will only show this in Firefox
-    let channel = this.contentWindow?.docShell?.failedChannel?.QueryInterface(
-      Ci.nsIHttpChannelInternal
-    );
-    if (!channel) {
-      return false;
-    }
-    return channel.effectiveTRRMode == Ci.nsIRequest.TRR_ONLY_MODE;
-  }
-
-  RPMShowTRROnlyFailureError() {
-    return lazy.AppInfo.isFirefox;
-  }
-
-  RPMGetTRRSkipReason() {
-    let channel = this.contentWindow?.docShell?.failedChannel?.QueryInterface(
-      Ci.nsIHttpChannelInternal
-    );
-    let value = channel?.trrSkipReason ?? Ci.nsITRRSkipReason.TRR_UNSET;
-    return Services.dns.getTRRSkipReasonName(value);
-  }
-
-  RPMGetTRRDomain() {
-    return Services.dns.trrDomain;
   }
 }

@@ -5,6 +5,8 @@
 
 "use strict";
 
+var dns = Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService);
+
 var listener = {
   onLookupComplete(inRequest, inRecord, inStatus) {
     if (inStatus != Cr.NS_OK) {
@@ -34,7 +36,7 @@ const defaultOriginAttributes = {};
 function run_test() {
   do_test_pending();
   try {
-    Services.dns.asyncResolve(
+    dns.asyncResolve(
       "example.com",
       Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
       Ci.nsIDNSService.RESOLVE_DISABLE_IPV6,

@@ -26,6 +26,9 @@ function getErrorString(nsresult) {
 
 this.dns = class extends ExtensionAPI {
   getAPI(context) {
+    const dnss = Cc["@mozilla.org/network/dns-service;1"].getService(
+      Ci.nsIDNSService
+    );
     return {
       dns: {
         resolve: function(hostname, flags) {
@@ -66,7 +69,7 @@ this.dns = class extends ExtensionAPI {
               },
             };
             try {
-              request = Services.dns.asyncResolve(
+              request = dnss.asyncResolve(
                 hostname,
                 Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
                 dnsFlags,

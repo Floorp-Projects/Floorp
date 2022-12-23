@@ -943,8 +943,7 @@ Dashboard::RequestDNSLookup(const nsACString& aHost,
   helper->mEventTarget = GetCurrentEventTarget();
   OriginAttributes attrs;
   rv = mDnsService->AsyncResolveNative(
-      aHost, nsIDNSService::RESOLVE_TYPE_DEFAULT,
-      nsIDNSService::RESOLVE_DEFAULT_FLAGS, nullptr, helper.get(),
+      aHost, nsIDNSService::RESOLVE_TYPE_DEFAULT, 0, nullptr, helper.get(),
       NS_GetCurrentThread(), attrs, getter_AddRefs(helper->mCancel));
   return rv;
 }
@@ -967,8 +966,7 @@ Dashboard::RequestDNSHTTPSRRLookup(const nsACString& aHost,
   helper->mEventTarget = GetCurrentEventTarget();
   OriginAttributes attrs;
   rv = mDnsService->AsyncResolveNative(
-      aHost, nsIDNSService::RESOLVE_TYPE_HTTPSSVC,
-      nsIDNSService::RESOLVE_DEFAULT_FLAGS, nullptr, helper.get(),
+      aHost, nsIDNSService::RESOLVE_TYPE_HTTPSSVC, 0, nullptr, helper.get(),
       NS_GetCurrentThread(), attrs, getter_AddRefs(helper->mCancel));
   return rv;
 }

@@ -54,16 +54,6 @@ constexpr nsLiteralCString kTRRDomains[] = {
     "dns.shaw.ca"_ns, // Steered clients
     // clang-format on
 };
-// static
-void TRRService::SetProviderDomain(const nsACString& aTRRDomain) {
-  sDomainIndex = 0;
-  for (size_t i = 1; i < std::size(kTRRDomains); i++) {
-    if (aTRRDomain.Equals(kTRRDomains[i])) {
-      sDomainIndex = i;
-      break;
-    }
-  }
-}
 
 // static
 const nsCString& TRRService::ProviderKey() { return kTRRDomains[sDomainIndex]; }
@@ -302,7 +292,13 @@ bool TRRService::MaybeSetPrivateURI(const nsACString& aURI) {
     nsAutoCString host;
     url->GetHost(host);
 
-    SetProviderDomain(host);
+    sDomainIndex = 0;
+    for (size_t i = 1; i < std::size(kTRRDomains); i++) {
+      if (host.Equals(kTRRDomains[i])) {
+        sDomainIndex = i;
+        break;
+      }
+    }
 
     mPrivateURI = newURI;
 
@@ -314,7 +310,7 @@ bool TRRService::MaybeSetPrivateURI(const nsACString& aURI) {
       if (!neckoParent) {
         continue;
       }
-      Unused << neckoParent->SendSetTRRDomain(host);
+      Unused << neckoParent->SendSetTRRDomain(ProviderKey());
     }
 
     AsyncCreateTRRConnectionInfo(mPrivateURI);
