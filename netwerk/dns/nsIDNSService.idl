@@ -260,6 +260,11 @@ interface nsIDNSService : nsISupports
     readonly attribute AUTF8String myHostName;
 
     /**
+     * returns the current TRR domain.
+     */
+    readonly attribute ACString trrDomain;
+
+    /**
      * Returns true when we have valid ODoHConfigs to encrypt/decrypt oblivious
      * DNS packets.
      */

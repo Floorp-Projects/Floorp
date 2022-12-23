@@ -22,6 +22,7 @@
 #include "nsServiceManagerUtils.h"
 #include "prsystem.h"
 #include "DNSAdditionalInfo.h"
+#include "TRRService.h"
 
 namespace mozilla {
 namespace net {
@@ -468,10 +469,17 @@ ChildDNSService::Observe(nsISupports* subject, const char* topic,
 
 void ChildDNSService::SetTRRDomain(const nsACString& aTRRDomain) {
   mTRRDomain = aTRRDomain;
+  TRRService::SetProviderDomain(aTRRDomain);
 }
 
-void ChildDNSService::GetTRRDomain(nsACString& aTRRDomain) {
+void ChildDNSService::GetTRRDomainKey(nsACString& aTRRDomain) {
+  aTRRDomain = TRRService::ProviderKey();
+}
+
+NS_IMETHODIMP
+ChildDNSService::GetTrrDomain(nsACString& aTRRDomain) {
   aTRRDomain = mTRRDomain;
+  return NS_OK;
 }
 
 }  // namespace net

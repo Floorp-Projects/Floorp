@@ -36,7 +36,7 @@ class ChildDNSService final : public DNSServiceBase, public nsPIDNSService {
   void NotifyRequestDone(DNSRequestSender* aDnsRequest);
 
   void SetTRRDomain(const nsACString& aTRRDomain);
-  void GetTRRDomain(nsACString& aTRRDomain);
+  void GetTRRDomainKey(nsACString& aTRRDomain);
 
  private:
   virtual ~ChildDNSService() = default;

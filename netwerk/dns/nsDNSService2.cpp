@@ -1464,6 +1464,20 @@ nsDNSService::GetCurrentTrrConfirmationState(uint32_t* aConfirmationState) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDNSService::GetTrrDomain(nsACString& aTRRDomain) {
+  nsAutoCString url;
+  if (mTrrService) {
+    mTrrService->GetURI(url);
+  }
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), url);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  return uri->GetHost(aTRRDomain);
+}
+
 size_t nsDNSService::SizeOfIncludingThis(
     mozilla::MallocSizeOf mallocSizeOf) const {
   // Measurement of the following members may be added later if DMD finds it
