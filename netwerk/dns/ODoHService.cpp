@@ -331,7 +331,7 @@ nsresult ODoHService::UpdateODoHConfigFromHTTPSRR() {
   nsCOMPtr<nsIEventTarget> target = TRRService::Get()->MainThreadOrTRRThread();
   // We'd like to bypass the DNS cache, since ODoHConfigs will be updated
   // manually by ODoHService.
-  nsIDNSService::DNSFlags flags =
+  uint32_t flags =
       nsIDNSService::RESOLVE_DISABLE_ODOH | nsIDNSService::RESOLVE_BYPASS_CACHE;
   nsCOMPtr<nsIDNSAdditionalInfo> info;
   if (port != -1) {

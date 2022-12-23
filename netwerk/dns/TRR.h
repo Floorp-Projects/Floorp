@@ -17,7 +17,7 @@
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 #include "DNSPacket.h"
-#include "nsITRRSkipReason.h"
+#include "TRRSkippedReason.h"
 
 class AHostResolver;
 class nsHostRecord;

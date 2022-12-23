@@ -145,7 +145,6 @@ add_task(async function testSimpleRequestAfterCrash() {
   info("wait socket process restart...");
   // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   await new Promise(resolve => setTimeout(resolve, 1000));
-  Services.dns; // Needed to trigger socket process.
   await TestUtils.waitForCondition(() => Services.io.socketProcessLaunched);
 
   await doTestSimpleRequest(true);

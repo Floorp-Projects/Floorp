@@ -36,7 +36,6 @@ include "mozilla/dom/PermissionMessageUtils.h";
 using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingContext.h";
 using class IPC::SerializedLoadContext from "SerializedLoadContext.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
-using nsIDNSService::DNSFlags from "nsIDNSService.h";
 [RefCounted] using class nsIInputStream from "mozilla/ipc/IPCStreamUtils.h";
 [RefCounted] using class nsIURI from "mozilla/ipc/URIUtils.h";
 [RefCounted] using class nsIPrincipal from "nsIPrincipal.h";
@@ -84,7 +83,7 @@ parent:
 
   async PDNSRequest(nsCString hostName, nsCString trrServer, int32_t port,
                     uint16_t type, OriginAttributes originAttributes,
-                    DNSFlags flags);
+                    uint32_t flags);
 
   async PDocumentChannel(MaybeDiscardedBrowsingContext browsingContext,
                          DocumentChannelCreationArgs args);
@@ -101,10 +100,10 @@ parent:
 
   async SpeculativeConnect(nsIURI uri, nsIPrincipal principal, bool anonymous);
   async HTMLDNSPrefetch(nsString hostname, bool isHttps,
-                        OriginAttributes originAttributes, DNSFlags flags);
+                        OriginAttributes originAttributes, uint32_t flags);
   async CancelHTMLDNSPrefetch(nsString hostname, bool isHttps,
                               OriginAttributes originAttributes,
-                              DNSFlags flags, nsresult reason);
+                              uint32_t flags, nsresult reason);
 
   /**
    * channelId is used to establish a connection between redirect channels in

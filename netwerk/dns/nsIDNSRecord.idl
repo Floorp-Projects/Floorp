@@ -3,8 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "nsIRequest.idl"
-#include "nsITRRSkipReason.idl"
 
 %{ C++
 namespace mozilla {
@@ -139,13 +137,7 @@ interface nsIDNSAddrRecord : nsIDNSRecord
     /**
      * The TRR mode this record is used.
      */
-    readonly attribute nsIRequest_TRRMode effectiveTRRMode;
-
-    /**
-     * If the DNS request didn't use TRR, this value
-     * contains the reason why that was skipped.
-     */
-    readonly attribute nsITRRSkipReason_value trrSkipReason;
+    readonly attribute unsigned long effectiveTRRMode;
 
     /**
      * Returns the ttl of this record.

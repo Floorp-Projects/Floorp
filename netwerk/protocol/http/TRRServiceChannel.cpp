@@ -779,12 +779,7 @@ void TRRServiceChannel::MaybeStartDNSPrefetch() {
   mDNSPrefetch =
       new nsDNSPrefetch(mURI, originAttributes, nsIRequest::GetTRRMode(), this,
                         LoadTimingEnabled());
-  nsIDNSService::DNSFlags dnsFlags = nsIDNSService::RESOLVE_DEFAULT_FLAGS;
-  if (mCaps & NS_HTTP_REFRESH_DNS) {
-    dnsFlags |= nsIDNSService::RESOLVE_BYPASS_CACHE;
-  }
-  nsresult rv = mDNSPrefetch->PrefetchHigh(dnsFlags);
-  NS_ENSURE_SUCCESS_VOID(rv);
+  mDNSPrefetch->PrefetchHigh(mCaps & NS_HTTP_REFRESH_DNS);
 }
 
 NS_IMETHODIMP

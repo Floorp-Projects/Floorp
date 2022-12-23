@@ -16,7 +16,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
 loader.lazyGetter(this, "hostname", () => {
   try {
     // On some platforms (Linux according to try), this service does not exist and fails.
-    return Services.dns.myHostName;
+    return Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService)
+      .myHostName;
   } catch (e) {
     return "";
   }

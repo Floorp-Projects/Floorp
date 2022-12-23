@@ -504,7 +504,7 @@ bool NeckoParent::DeallocPUDPSocketParent(PUDPSocketParent* actor) {
 already_AddRefed<PDNSRequestParent> NeckoParent::AllocPDNSRequestParent(
     const nsACString& aHost, const nsACString& aTrrServer, const int32_t& aPort,
     const uint16_t& aType, const OriginAttributes& aOriginAttributes,
-    const nsIDNSService::DNSFlags& aFlags) {
+    const uint32_t& aFlags) {
   RefPtr<DNSRequestHandler> handler = new DNSRequestHandler();
   RefPtr<DNSRequestParent> actor = new DNSRequestParent(handler);
   return actor.forget();
@@ -513,8 +513,7 @@ already_AddRefed<PDNSRequestParent> NeckoParent::AllocPDNSRequestParent(
 mozilla::ipc::IPCResult NeckoParent::RecvPDNSRequestConstructor(
     PDNSRequestParent* aActor, const nsACString& aHost,
     const nsACString& aTrrServer, const int32_t& aPort, const uint16_t& aType,
-    const OriginAttributes& aOriginAttributes,
-    const nsIDNSService::DNSFlags& aFlags) {
+    const OriginAttributes& aOriginAttributes, const uint32_t& aFlags) {
   RefPtr<DNSRequestParent> actor = static_cast<DNSRequestParent*>(aActor);
   RefPtr<DNSRequestHandler> handler =
       actor->GetDNSRequest()->AsDNSRequestHandler();
@@ -542,16 +541,15 @@ mozilla::ipc::IPCResult NeckoParent::RecvSpeculativeConnect(
 
 mozilla::ipc::IPCResult NeckoParent::RecvHTMLDNSPrefetch(
     const nsAString& hostname, const bool& isHttps,
-    const OriginAttributes& aOriginAttributes,
-    const nsIDNSService::DNSFlags& flags) {
+    const OriginAttributes& aOriginAttributes, const uint32_t& flags) {
   dom::HTMLDNSPrefetch::Prefetch(hostname, isHttps, aOriginAttributes, flags);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvCancelHTMLDNSPrefetch(
     const nsAString& hostname, const bool& isHttps,
-    const OriginAttributes& aOriginAttributes,
-    const nsIDNSService::DNSFlags& flags, const nsresult& reason) {
+    const OriginAttributes& aOriginAttributes, const uint32_t& flags,
+    const nsresult& reason) {
   dom::HTMLDNSPrefetch::CancelPrefetch(hostname, isHttps, aOriginAttributes,
                                        flags, reason);
   return IPC_OK();

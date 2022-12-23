@@ -4,6 +4,10 @@
 
 "use strict";
 
+const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
+  Ci.nsIDNSService
+);
+
 function setup() {
   trr_test_setup();
 }
@@ -20,7 +24,7 @@ add_task(async function checkBlocklisting() {
   await trrServer.start();
   info(`port = ${trrServer.port}\n`);
 
-  Services.dns.clearCache(true);
+  dns.clearCache(true);
   Services.prefs.setCharPref(
     "network.trr.uri",
     `https://foo.example.com:${trrServer.port}/dns-query`
@@ -40,13 +44,13 @@ add_task(async function checkBlocklisting() {
     await new TRRDNSListener(`sub${i}.blocklisted.com`, {
       expectedAnswer: "127.0.0.1",
     });
-    Services.dns.clearCache(true);
+    dns.clearCache(true);
     await new TRRDNSListener(`sub${i}.blocklisted.com`, {
       expectedAnswer: "127.0.0.1",
     });
     await new TRRDNSListener(`sub.sub${i}.blocklisted.com`, {
       expectedAnswer: "127.0.0.1",
     });
-    Services.dns.clearCache(true);
+    dns.clearCache(true);
   }
 });

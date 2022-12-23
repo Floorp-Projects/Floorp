@@ -3,6 +3,10 @@
 let h2Port;
 let prefs;
 
+const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
+  Ci.nsIDNSService
+);
+
 function setup() {
   h2Port = Services.env.get("MOZHTTP2_PORT");
   Assert.notEqual(h2Port, null);
@@ -75,7 +79,7 @@ function run_test() {
   });
 
   do_await_remote_message("clearCache").then(() => {
-    Services.dns.clearCache(true);
+    dns.clearCache(true);
     do_send_remote_message("clearCache-done");
   });
 

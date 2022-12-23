@@ -181,7 +181,7 @@ void DnsAndConnectSocket::CheckProxyConfig() {
 nsresult DnsAndConnectSocket::SetupDnsFlags(ConnectionEntry* ent) {
   LOG(("DnsAndConnectSocket::SetupDnsFlags [this=%p] ", this));
 
-  nsIDNSService::DNSFlags dnsFlags = nsIDNSService::RESOLVE_DEFAULT_FLAGS;
+  uint32_t dnsFlags = 0;
   bool disableIpv6ForBackup = false;
   if (mCaps & NS_HTTP_REFRESH_DNS) {
     dnsFlags = nsIDNSService::RESOLVE_BYPASS_CACHE;
@@ -965,10 +965,10 @@ nsresult DnsAndConnectSocket::TransportSetup::CheckConnectedResult(
     bool trrEnabled;
     mDNSRecord->IsTRR(&trrEnabled);
     if (trrEnabled) {
-      nsIRequest::TRRMode trrMode = nsIRequest::TRR_DEFAULT_MODE;
+      uint32_t trrMode = 0;
       mDNSRecord->GetEffectiveTRRMode(&trrMode);
       // If current trr mode is trr only, we should not retry.
-      if (trrMode != nsIRequest::TRR_ONLY_MODE) {
+      if (trrMode != 3) {
         // Drop state to closed.  This will trigger a new round of
         // DNS resolving. Bypass the cache this time since the
         // cached data came from TRR and failed already!

@@ -48,16 +48,12 @@ add_task(async function testProviderSteering() {
         // We need this check because this topic is observed once immediately
         // after the network change when the URI is reset, and then when the
         // provider steering heuristic runs and sets it to our uri.
-        return Services.dns.currentTrrURI == expectedURI;
+        return gDNSService.currentTrrURI == expectedURI;
       }
     );
     simulateNetworkChange();
     await trrURIChanged;
-    is(
-      Services.dns.currentTrrURI,
-      expectedURI,
-      `TRR URI set to ${expectedURI}`
-    );
+    is(gDNSService.currentTrrURI, expectedURI, `TRR URI set to ${expectedURI}`);
     await checkHeuristicsTelemetry(
       heuristicsDecision,
       "netchange",

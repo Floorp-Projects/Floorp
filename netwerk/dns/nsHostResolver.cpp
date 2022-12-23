@@ -350,10 +350,12 @@ void nsHostResolver::Shutdown() {
   }
 }
 
-nsresult nsHostResolver::GetHostRecord(
-    const nsACString& host, const nsACString& aTrrServer, uint16_t type,
-    nsIDNSService::DNSFlags flags, uint16_t af, bool pb,
-    const nsCString& originSuffix, nsHostRecord** result) {
+nsresult nsHostResolver::GetHostRecord(const nsACString& host,
+                                       const nsACString& aTrrServer,
+                                       uint16_t type, uint16_t flags,
+                                       uint16_t af, bool pb,
+                                       const nsCString& originSuffix,
+                                       nsHostRecord** result) {
   MutexAutoLock lock(mLock);
   nsHostKey key(host, aTrrServer, type, flags, af, pb, originSuffix);
 
@@ -418,7 +420,7 @@ nsresult nsHostResolver::ResolveHost(const nsACString& aHost,
                                      const nsACString& aTrrServer,
                                      int32_t aPort, uint16_t type,
                                      const OriginAttributes& aOriginAttributes,
-                                     nsIDNSService::DNSFlags flags, uint16_t af,
+                                     uint16_t flags, uint16_t af,
                                      nsResolveHostCallback* aCallback) {
   nsAutoCString host(aHost);
   NS_ENSURE_TRUE(!host.IsEmpty(), NS_ERROR_UNEXPECTED);
@@ -478,7 +480,7 @@ nsresult nsHostResolver::ResolveHost(const nsACString& aHost,
 
     bool excludedFromTRR = false;
     if (TRRService::Get() && TRRService::Get()->IsExcludedFromTRR(host)) {
-      flags |= nsIDNSService::RESOLVE_DISABLE_TRR;
+      flags |= RES_DISABLE_TRR;
       excludedFromTRR = true;
 
       if (!aTrrServer.IsEmpty()) {
@@ -679,8 +681,8 @@ already_AddRefed<nsHostRecord> nsHostResolver::FromIPLiteral(
 
 already_AddRefed<nsHostRecord> nsHostResolver::FromUnspecEntry(
     nsHostRecord* aRec, const nsACString& aHost, const nsACString& aTrrServer,
-    const nsACString& aOriginSuffix, uint16_t aType,
-    nsIDNSService::DNSFlags aFlags, uint16_t af, bool aPb, nsresult& aStatus) {
+    const nsACString& aOriginSuffix, uint16_t aType, uint16_t aFlags,
+    uint16_t af, bool aPb, nsresult& aStatus) {
   RefPtr<nsHostRecord> result = nullptr;
   // If this is an IPV4 or IPV6 specific request, check if there is
   // an AF_UNSPEC entry we can use. Otherwise, hit the resolver...
@@ -771,8 +773,8 @@ already_AddRefed<nsHostRecord> nsHostResolver::FromUnspecEntry(
 
 void nsHostResolver::DetachCallback(
     const nsACString& host, const nsACString& aTrrServer, uint16_t aType,
-    const OriginAttributes& aOriginAttributes, nsIDNSService::DNSFlags flags,
-    uint16_t af, nsResolveHostCallback* aCallback, nsresult status) {
+    const OriginAttributes& aOriginAttributes, uint16_t flags, uint16_t af,
+    nsResolveHostCallback* aCallback, nsresult status) {
   RefPtr<nsHostRecord> rec;
   RefPtr<nsResolveHostCallback> callback(aCallback);
 
@@ -1106,7 +1108,7 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec,
       return NS_ERROR_UNKNOWN_HOST;
     }
 
-    if (rec->flags & nsIDNSService::RESOLVE_DISABLE_TRR) {
+    if (rec->flags & RES_DISABLE_TRR) {
       LOG(("TRR with server and DISABLE_TRR flag. Returning error."));
       return NS_ERROR_UNKNOWN_HOST;
     }
@@ -1114,24 +1116,22 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec,
   }
 
   LOG(("NameLookup: %s effectiveTRRmode: %d flags: %X", rec->host.get(),
-       static_cast<nsIRequest::TRRMode>(rec->mEffectiveTRRMode), rec->flags));
+       rec->mEffectiveTRRMode, rec->flags));
 
-  if (rec->flags & nsIDNSService::RESOLVE_DISABLE_TRR) {
+  if (rec->flags & RES_DISABLE_TRR) {
     rec->RecordReason(TRRSkippedReason::TRR_DISABLED_FLAG);
   }
 
   bool serviceNotReady = !TRRServiceEnabledForRecord(rec);
 
   if (rec->mEffectiveTRRMode != nsIRequest::TRR_DISABLED_MODE &&
-      !((rec->flags & nsIDNSService::RESOLVE_DISABLE_TRR)) &&
-      !serviceNotReady) {
+      !((rec->flags & RES_DISABLE_TRR)) && !serviceNotReady) {
     rv = TrrLookup(rec, aLock);
   }
 
   if (rec->mEffectiveTRRMode == nsIRequest::TRR_DISABLED_MODE ||
       (rec->mEffectiveTRRMode == nsIRequest::TRR_FIRST_MODE &&
-       (rec->flags & nsIDNSService::RESOLVE_DISABLE_TRR || serviceNotReady ||
-        NS_FAILED(rv)))) {
+       (rec->flags & RES_DISABLE_TRR || serviceNotReady || NS_FAILED(rv)))) {
     if (!rec->IsAddrRecord()) {
       return rv;
     }
@@ -1558,9 +1558,7 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookupLocked(
       !rec->mResolving && sGetTtlEnabled) {
     LOG(("Issuing second async lookup for TTL for host [%s].",
          addrRec->host.get()));
-    addrRec->flags =
-        (addrRec->flags & ~nsIDNSService::RESOLVE_PRIORITY_MEDIUM) |
-        nsIDNSService::RESOLVE_PRIORITY_LOW;
+    addrRec->flags = (addrRec->flags & ~RES_PRIORITY_MEDIUM) | RES_PRIORITY_LOW;
     DebugOnly<nsresult> rv = NativeLookup(rec, aLock);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "Could not issue second async lookup for TTL.");
@@ -1646,8 +1644,8 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookupByTypeLocked(
 
 void nsHostResolver::CancelAsyncRequest(
     const nsACString& host, const nsACString& aTrrServer, uint16_t aType,
-    const OriginAttributes& aOriginAttributes, nsIDNSService::DNSFlags flags,
-    uint16_t af, nsIDNSListener* aListener, nsresult status)
+    const OriginAttributes& aOriginAttributes, uint16_t flags, uint16_t af,
+    nsIDNSListener* aListener, nsresult status)
 
 {
   MutexAutoLock lock(mLock);

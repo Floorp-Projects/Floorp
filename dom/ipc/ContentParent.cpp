@@ -3114,8 +3114,7 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
 
   xpcomInit.perfStatsMask() = PerfStats::GetCollectionMask();
 
-  nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
-  dns->GetTrrDomain(xpcomInit.trrDomain());
+  xpcomInit.trrDomain() = TRRService::ProviderKey();
 
   Unused << SendSetXPCOMProcessAttributes(
       xpcomInit, initialData, lnf, fontList, std::move(sharedUASheetHandle),
