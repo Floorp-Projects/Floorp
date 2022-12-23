@@ -1718,112 +1718,25 @@
       return true;
     },
 
-    loadOneTab(
-      aURI,
-      aReferrerInfoOrParams,
-      aCharset,
-      aPostData,
-      aLoadInBackground,
-      aAllowThirdPartyFixup
-    ) {
-      var aTriggeringPrincipal;
-      var aReferrerInfo;
-      var aFromExternal;
-      var aRelatedToCurrent;
-      var aAllowInheritPrincipal;
-      var aSkipAnimation;
-      var aForceNotRemote;
-      var aPreferredRemoteType;
-      var aUserContextId;
-      var aInitialBrowsingContextGroupId;
-      var aOriginPrincipal;
-      var aOriginStoragePrincipal;
-      var aOpenWindowInfo;
-      var aOpenerBrowser;
-      var aCreateLazyBrowser;
-      var aFocusUrlBar;
-      var aName;
-      var aCsp;
-      var aSkipLoad;
-      var aGlobalHistoryOptions;
-      var aTriggeringRemoteType;
-      if (
-        arguments.length == 2 &&
-        typeof arguments[1] == "object" &&
-        !(arguments[1] instanceof Ci.nsIURI)
-      ) {
-        let params = arguments[1];
-        aTriggeringPrincipal = params.triggeringPrincipal;
-        aReferrerInfo = params.referrerInfo;
-        aCharset = params.charset;
-        aPostData = params.postData;
-        aLoadInBackground = params.inBackground;
-        aAllowThirdPartyFixup = params.allowThirdPartyFixup;
-        aFromExternal = params.fromExternal;
-        aRelatedToCurrent = params.relatedToCurrent;
-        aAllowInheritPrincipal = !!params.allowInheritPrincipal;
-        aSkipAnimation = params.skipAnimation;
-        aForceNotRemote = params.forceNotRemote;
-        aPreferredRemoteType = params.preferredRemoteType;
-        aUserContextId = params.userContextId;
-        aInitialBrowsingContextGroupId = params.initialBrowsingContextGroupId;
-        aOriginPrincipal = params.originPrincipal;
-        aOriginStoragePrincipal = params.originStoragePrincipal;
-        aOpenWindowInfo = params.openWindowInfo;
-        aOpenerBrowser = params.openerBrowser;
-        aCreateLazyBrowser = params.createLazyBrowser;
-        aFocusUrlBar = params.focusUrlBar;
-        aName = params.name;
-        aCsp = params.csp;
-        aSkipLoad = params.skipLoad;
-        aGlobalHistoryOptions = params.globalHistoryOptions;
-        aTriggeringRemoteType = params.triggeringRemoteType;
-      }
-
+    loadOneTab(uri, params) {
       // all callers of loadOneTab need to pass a valid triggeringPrincipal.
-      if (!aTriggeringPrincipal) {
+      if (!params.triggeringPrincipal) {
         throw new Error(
           "Required argument triggeringPrincipal missing within loadOneTab"
         );
       }
 
-      var bgLoad =
-        aLoadInBackground != null
-          ? aLoadInBackground
-          : Services.prefs.getBoolPref("browser.tabs.loadInBackground");
-      var owner = bgLoad ? null : this.selectedTab;
+      params.inBackground ??= Services.prefs.getBoolPref(
+        "browser.tabs.loadInBackground"
+      );
+      params.ownerTab = params.inBackground ? null : this.selectedTab;
+      // Force boolean:
+      params.allowInheritPrincipal = !!params.allowInheritPrincipal;
 
-      var tab = this.addTab(aURI, {
-        triggeringPrincipal: aTriggeringPrincipal,
-        referrerInfo: aReferrerInfo,
-        charset: aCharset,
-        postData: aPostData,
-        ownerTab: owner,
-        allowInheritPrincipal: aAllowInheritPrincipal,
-        allowThirdPartyFixup: aAllowThirdPartyFixup,
-        fromExternal: aFromExternal,
-        relatedToCurrent: aRelatedToCurrent,
-        skipAnimation: aSkipAnimation,
-        forceNotRemote: aForceNotRemote,
-        createLazyBrowser: aCreateLazyBrowser,
-        preferredRemoteType: aPreferredRemoteType,
-        userContextId: aUserContextId,
-        originPrincipal: aOriginPrincipal,
-        originStoragePrincipal: aOriginStoragePrincipal,
-        initialBrowsingContextGroupId: aInitialBrowsingContextGroupId,
-        openWindowInfo: aOpenWindowInfo,
-        openerBrowser: aOpenerBrowser,
-        focusUrlBar: aFocusUrlBar,
-        name: aName,
-        csp: aCsp,
-        skipLoad: aSkipLoad,
-        globalHistoryOptions: aGlobalHistoryOptions,
-        triggeringRemoteType: aTriggeringRemoteType,
-      });
-      if (!bgLoad) {
+      let tab = this.addTab(uri, params);
+      if (!params.inBackground) {
         this.selectedTab = tab;
       }
-
       return tab;
     },
 
