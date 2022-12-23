@@ -9,12 +9,12 @@ import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
+import org.mozilla.fenix.helpers.Constants.defaultTopSitesList
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
@@ -214,21 +214,15 @@ class TopSitesTest {
         }
     }
 
+    // Expected for en-us defaults
     @Test
-    fun verifyDefaultTopSitesLocale_EN() {
-        // en-US defaults
-        val defaultTopSites = arrayOf(
-            "Top Articles",
-            "Wikipedia",
-            "Google",
-        )
-
+    fun verifyDefaultTopSitesList() {
         homeScreen { }.dismissOnboarding()
 
         homeScreen {
             verifyExistingTopSitesList()
-            defaultTopSites.forEach { item ->
-                verifyExistingTopSitesTabs(item)
+            defaultTopSitesList.values.forEach { value ->
+                verifyExistingTopSitesTabs(value)
             }
         }
     }
@@ -256,73 +250,6 @@ class TopSitesTest {
         }.openThreeDotMenu {
         }.openHistory {
             verifyEmptyHistoryView()
-        }
-    }
-
-    @SmokeTest
-    @Test
-    fun verifySponsoredShortcutsListTest() {
-        homeScreen {
-            var sponsoredShortcutTitle = getSponsoredShortcutTitle(2)
-            var sponsoredShortcutTitle2 = getSponsoredShortcutTitle(3)
-
-            verifyExistingSponsoredTopSitesTabs(sponsoredShortcutTitle, 2)
-            verifyExistingSponsoredTopSitesTabs(sponsoredShortcutTitle2, 3)
-        }.openThreeDotMenu {
-        }.openCustomizeHome {
-            verifySponsoredShortcutsCheckBox(true)
-            clickSponsoredShortcuts()
-            verifySponsoredShortcutsCheckBox(false)
-        }.goBack {
-            verifyNotExistingSponsoredTopSitesList()
-        }
-    }
-
-    @Test
-    fun openSponsoredShortcutTest() {
-        var sponsoredShortcutTitle = ""
-
-        homeScreen {
-            sponsoredShortcutTitle = getSponsoredShortcutTitle(2)
-        }.openSponsoredShortcut(sponsoredShortcutTitle) {
-            verifyUrl(sponsoredShortcutTitle)
-        }
-    }
-
-    @Test
-    fun openSponsoredShortcutInPrivateBrowsingTest() {
-        var sponsoredShortcutTitle = ""
-
-        homeScreen {
-            sponsoredShortcutTitle = getSponsoredShortcutTitle(2)
-        }.openContextMenuOnSponsoredShortcut(sponsoredShortcutTitle) {
-        }.openTopSiteInPrivateTab {
-            verifyUrl(sponsoredShortcutTitle)
-        }
-    }
-
-    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/25926")
-    @Test
-    fun verifySponsoredShortcutsSponsorsAndPrivacyOptionTest() {
-        var sponsoredShortcutTitle = ""
-
-        homeScreen {
-            sponsoredShortcutTitle = getSponsoredShortcutTitle(2)
-        }.openContextMenuOnSponsoredShortcut(sponsoredShortcutTitle) {
-        }.clickSponsorsAndPrivacyButton {
-            verifyUrl("support.mozilla.org/en-US/kb/sponsor-privacy")
-        }
-    }
-
-    @Test
-    fun verifySponsoredShortcutsSettingsOptionTest() {
-        var sponsoredShortcutTitle = ""
-
-        homeScreen {
-            sponsoredShortcutTitle = getSponsoredShortcutTitle(2)
-        }.openContextMenuOnSponsoredShortcut(sponsoredShortcutTitle) {
-        }.clickSponsoredShortcutsSettingsButton {
-            verifyHomePageView()
         }
     }
 }

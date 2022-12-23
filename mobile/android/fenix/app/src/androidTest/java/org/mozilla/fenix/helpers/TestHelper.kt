@@ -445,4 +445,20 @@ object TestHelper {
 
         clipBoard.setPrimaryClip(clipData)
     }
+
+    /**
+     * Returns sponsored shortcut title based on the index.
+     */
+    fun getSponsoredShortcutTitle(position: Int): String {
+        val sponsoredShortcut = mDevice.findObject(
+            UiSelector()
+                .resourceId("$packageName:id/top_site_item")
+                .index(position - 1),
+        ).getChild(
+            UiSelector()
+                .resourceId("$packageName:id/top_site_title"),
+        ).text
+
+        return sponsoredShortcut
+    }
 }

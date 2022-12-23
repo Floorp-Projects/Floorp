@@ -245,9 +245,24 @@ class HomeScreenRobot {
 
     fun verifyExistingTopSitesList() = assertExistingTopSitesList()
     fun verifyNotExistingTopSitesList(title: String) = assertNotExistingTopSitesList(title)
+    fun verifySponsoredShortcutDoesNotExist(sponsoredShortcutTitle: String, position: Int) =
+        assertFalse(
+            mDevice.findObject(
+                UiSelector()
+                    .resourceId("$packageName:id/top_site_item")
+                    .index(position - 1),
+            ).getChild(
+                UiSelector()
+                    .textContains(sponsoredShortcutTitle),
+            ).waitForExists(waitingTime),
+        )
     fun verifyNotExistingSponsoredTopSitesList() = assertSponsoredTopSitesNotDisplayed()
     fun verifyExistingTopSitesTabs(title: String) = assertExistingTopSitesTabs(title)
-    fun verifyExistingSponsoredTopSitesTabs(sponsoredShortcutTitle: String, position: Int) = assertSponsoredTopSiteIsDisplayed(sponsoredShortcutTitle, position)
+    fun verifySponsoredShortcutDetails(sponsoredShortcutTitle: String, position: Int) {
+        assertSponsoredShortcutLogoIsDisplayed(position)
+        assertSponsoredShortcutTitle(sponsoredShortcutTitle, position)
+        assertSponsoredSubtitleIsDisplayed(position)
+    }
     fun verifyTopSiteContextMenuItems() = assertTopSiteContextMenuItems()
 
     fun verifyJumpBackInSectionIsDisplayed() = assertJumpBackInSectionIsDisplayed()
@@ -432,19 +447,6 @@ class HomeScreenRobot {
                 ).waitForExists(waitingTime),
             )
         }
-    }
-
-    fun getSponsoredShortcutTitle(position: Int): String {
-        val sponsoredShortcut = mDevice.findObject(
-            UiSelector()
-                .resourceId("$packageName:id/top_site_item")
-                .index(position - 1),
-        ).getChild(
-            UiSelector()
-                .resourceId("$packageName:id/top_site_title"),
-        ).text
-
-        return sponsoredShortcut
     }
 
     fun verifyJumpBackInMessage() {
@@ -880,10 +882,17 @@ private fun assertExistingTopSitesTabs(title: String) {
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-private fun assertSponsoredTopSiteIsDisplayed(sponsoredShortcutTitle: String, position: Int) {
-    assertSponsoredShortcutTitle(sponsoredShortcutTitle, position)
-    assertSponsoredSubtitleIsDisplayed(position)
-}
+private fun assertSponsoredShortcutLogoIsDisplayed(position: Int) =
+    assertTrue(
+        mDevice.findObject(
+            UiSelector()
+                .resourceId("$packageName:id/top_site_item")
+                .index(position - 1),
+        ).getChild(
+            UiSelector()
+                .resourceId("$packageName:id/favicon_card"),
+        ).waitForExists(waitingTime),
+    )
 
 private fun assertSponsoredSubtitleIsDisplayed(position: Int) =
     assertTrue(
@@ -897,7 +906,7 @@ private fun assertSponsoredSubtitleIsDisplayed(position: Int) =
         ).waitForExists(waitingTime),
     )
 
-private fun assertSponsoredShortcutTitle(sponsoredShortcutTitle: String, position: Int) {
+private fun assertSponsoredShortcutTitle(sponsoredShortcutTitle: String, position: Int) =
     assertTrue(
         mDevice.findObject(
             UiSelector()
@@ -908,7 +917,6 @@ private fun assertSponsoredShortcutTitle(sponsoredShortcutTitle: String, positio
                 .textContains(sponsoredShortcutTitle),
         ).waitForExists(waitingTime),
     )
-}
 
 private fun assertNotExistingTopSitesList(title: String) {
     mDevice.findObject(UiSelector().text(title)).waitUntilGone(waitingTime)

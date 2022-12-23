@@ -4,6 +4,8 @@
 
 package org.mozilla.fenix.helpers
 
+import org.mozilla.fenix.helpers.TestHelper.getSponsoredShortcutTitle
+
 object Constants {
 
     // Device or AVD requires a Google Services Android OS installation
@@ -28,4 +30,18 @@ object Constants {
         "Bing" to "firefox&pc=MOZB&form=MOZMBA",
         "DuckDuckGo" to "t=fpas",
     )
+
+    val firstSponsoredShortcutTitle by lazy { getSponsoredShortcutTitle(2) }
+    val secondSponsoredShortcutTitle by lazy { getSponsoredShortcutTitle(3) }
+
+    // Expected for en-us defaults
+    val defaultTopSitesList by lazy {
+        mapOf(
+            "Google" to "Google",
+            "First sponsored shortcut" to firstSponsoredShortcutTitle,
+            "Second sponsored shortcut" to secondSponsoredShortcutTitle,
+            "Top Articles" to "Top Articles",
+            "Wikipedia" to "Wikipedia",
+        )
+    }
 }
