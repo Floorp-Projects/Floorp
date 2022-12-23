@@ -85,7 +85,7 @@ export class UrlbarInput {
             </html:div>
           </html:div>
           <menupopup class="urlbarView-result-menu">
-            <menuitem label="test" data-command="test"/>
+            <menuitem data-command="remove-from-history" data-l10n-id="urlbar-result-menu-remove-from-history"/>
           </menupopup>
           <hbox class="search-one-offs"
                 includecurrentengine="true"

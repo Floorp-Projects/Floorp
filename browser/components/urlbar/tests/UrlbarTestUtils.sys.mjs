@@ -200,6 +200,12 @@ export var UrlbarTestUtils = {
     return win.gURLBar.view.oneOffSearchButtons;
   },
 
+  getButtonForResultIndex(win, buttonName, resultIndex) {
+    return this.getRowAt(win, resultIndex).querySelector(
+      `.urlbarView-button-${buttonName}`
+    );
+  },
+
   /**
    * Returns true if the oneOffSearchButtons are visible.
    *
