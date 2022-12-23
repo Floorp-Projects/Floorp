@@ -66,7 +66,7 @@ println!("Program config: {:?}", decoded);
 [serde_json]: https://crates.io/crates/serde_json
 */
 
-#![doc(html_root_url = "https://docs.rs/fs-err/2.8.1")]
+#![doc(html_root_url = "https://docs.rs/fs-err/2.9.0")]
 #![deny(missing_debug_implementations, missing_docs)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
@@ -76,6 +76,9 @@ mod file;
 mod open_options;
 pub mod os;
 mod path;
+#[cfg(feature = "tokio")]
+#[cfg_attr(docsrs, doc(cfg(feature = "tokio")))]
+pub mod tokio;
 
 use std::fs;
 use std::io::{self, Read, Write};
