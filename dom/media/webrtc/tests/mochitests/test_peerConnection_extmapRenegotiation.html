@@ -190,6 +190,125 @@
       }
     },
 
+    // What happens when remote answer uses an extmap id, and then a remote
+    // reoffer tries to use the same id for something else?
+    async function checkAudioIdReuseOffererThenAnswerer() {
+      const pc1 = new RTCPeerConnection();
+      const pc2 = new RTCPeerConnection();
+
+      const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+      pc1.addTrack(stream.getTracks()[0]);
+      pc2.addTrack(stream.getTracks()[0]);
+
+      await connect(pc1, pc2, 32000, "Initial connection");
+
+      const reoffer = await pc2.createOffer();
+      // Change uri, but not the id, so the id now refers to foo.
+      reoffer.sdp = replaceExtUri(reoffer.sdp, "urn:ietf:params:rtp-hdrext:ssrc-audio-level", "foo");
+      info(`New reoffer: ${reoffer.sdp}`);
+      try {
+        await pc1.setRemoteDescription(reoffer);
+        ok(false, "sRD should fail when it attempts extension id remapping");
+      } catch (e) {
+        ok(true, "sRD should fail when it attempts extension id remapping");
+      }
+    },
+
+    // What happens when a remote offer uses a different extmap id than the
+    // default? Does the answerer remember the new id in reoffers?
+    async function checkAudioIdReuseOffererThenAnswerer() {
+      const pc1 = new RTCPeerConnection();
+      const pc2 = new RTCPeerConnection();
+
+      const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+      pc1.addTrack(stream.getTracks()[0]);
+      pc2.addTrack(stream.getTracks()[0]);
+
+      // Negotiate, but change id for ssrc-audio-level to something pc2 would
+      // not typically use.
+      await pc1.setLocalDescription();
+      const mungedOffer = setExtmap(pc1.localDescription.sdp, "urn:ietf:params:rtp-hdrext:ssrc-audio-level", 12);
+      await pc2.setRemoteDescription({sdp: mungedOffer, type: "offer"});
+      await pc2.setLocalDescription();
+
+      const reoffer = await pc2.createOffer();
+      is(getExtmap(reoffer.sdp, "urn:ietf:params:rtp-hdrext:ssrc-audio-level"), "12");
+    },
+
+    async function checkAudioUnnegotiatedIdReuse1() {
+      const pc1 = new RTCPeerConnection();
+      const pc2 = new RTCPeerConnection();
+
+      const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+      pc1.addTrack(stream.getTracks()[0]);
+      pc2.addTrack(stream.getTracks()[0]);
+
+      // Negotiate, but remove ssrc-audio-level from answer
+      await pc1.setLocalDescription();
+      const levelId = getExtmap(pc1.localDescription.sdp, "urn:ietf:params:rtp-hdrext:ssrc-audio-level");
+      await pc2.setRemoteDescription(pc1.localDescription);
+      await pc2.setLocalDescription();
+      const answerNoExt = setExtmap(pc2.localDescription.sdp, "urn:ietf:params:rtp-hdrext:ssrc-audio-level", undefined);
+      await pc1.setRemoteDescription({sdp: answerNoExt, type: "answer"});
+
+      // Renegotiate, and use the id that offerer used for ssrc-audio-level for
+      // something different (while making sure we don't use it twice)
+      await pc2.setLocalDescription();
+      const mungedReoffer = setExtmap(pc2.localDescription.sdp, "urn:ietf:params:rtp-hdrext:sdes:mid", levelId);
+      const twiceMungedReoffer = setExtmap(mungedReoffer, "urn:ietf:params:rtp-hdrext:ssrc-audio-level", undefined);
+      await pc1.setRemoteDescription({sdp: twiceMungedReoffer, type: "offer"});
+    },
+
+    async function checkAudioUnnegotiatedIdReuse2() {
+      const pc1 = new RTCPeerConnection();
+      const pc2 = new RTCPeerConnection();
+
+      const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+      pc1.addTrack(stream.getTracks()[0]);
+      pc2.addTrack(stream.getTracks()[0]);
+
+      // Negotiate, but remove ssrc-audio-level from offer. pc2 has never seen
+      // |levelId| in extmap yet, but internally probably wants to use that for
+      // ssrc-audio-level
+      await pc1.setLocalDescription();
+      const levelId = getExtmap(pc1.localDescription.sdp, "urn:ietf:params:rtp-hdrext:ssrc-audio-level");
+      const offerNoExt = setExtmap(pc1.localDescription.sdp, "urn:ietf:params:rtp-hdrext:ssrc-audio-level", undefined);
+      await pc2.setRemoteDescription({sdp: offerNoExt, type: "offer"});
+      await pc2.setLocalDescription();
+      await pc1.setRemoteDescription(pc2.localDescription);
+
+      // Renegotiate, but use |levelId| for something other than
+      // ssrc-audio-level. pc2 should not throw.
+      await pc1.setLocalDescription();
+      const mungedReoffer = setExtmap(pc1.localDescription.sdp, "urn:ietf:params:rtp-hdrext:sdes:mid", levelId);
+      const twiceMungedReoffer = setExtmap(mungedReoffer, "urn:ietf:params:rtp-hdrext:ssrc-audio-level", undefined);
+      await pc2.setRemoteDescription({sdp: twiceMungedReoffer, type: "offer"});
+    },
+
+    async function checkAudioUnnegotiatedIdReuse3() {
+      const pc1 = new RTCPeerConnection();
+      const pc2 = new RTCPeerConnection();
+
+      const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+      pc1.addTrack(stream.getTracks()[0]);
+      pc2.addTrack(stream.getTracks()[0]);
+
+      // Negotiate, but replace ssrc-audio-level with something pc2 won't
+      // support in offer.
+      await pc1.setLocalDescription();
+      const levelId = getExtmap(pc1.localDescription.sdp, "urn:ietf:params:rtp-hdrext:ssrc-audio-level");
+      const mungedOffer = replaceExtUri(pc1.localDescription.sdp, "urn:ietf:params:rtp-hdrext:ssrc-audio-level", "fooba");
+      await pc2.setRemoteDescription({sdp: mungedOffer, type: "offer"});
+      await pc2.setLocalDescription();
+      await pc1.setRemoteDescription(pc2.localDescription);
+
+      // Renegotiate, and use levelId for something pc2 _will_ support.
+      await pc1.setLocalDescription();
+      const mungedReoffer = setExtmap(pc1.localDescription.sdp, "urn:ietf:params:rtp-hdrext:sdes:mid", levelId);
+      const twiceMungedReoffer = setExtmap(mungedReoffer, "urn:ietf:params:rtp-hdrext:ssrc-audio-level", undefined);
+      await pc2.setRemoteDescription({sdp: twiceMungedReoffer, type: "offer"});
+    },
+
   ];
 
   runNetworkTest(async () => {
