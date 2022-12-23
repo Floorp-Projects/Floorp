@@ -329,6 +329,30 @@ class NetErrorParent extends JSWindowActorParent {
             break;
           }
         }
+        break;
+      case "Browser:AddTRRExcludedDomain":
+        let domain = message.data.hostname;
+        let excludedDomains = Services.prefs.getStringPref(
+          "network.trr.excluded-domains"
+        );
+        excludedDomains += `, ${domain}`;
+        Services.prefs.setStringPref(
+          "network.trr.excluded-domains",
+          excludedDomains
+        );
+        break;
+      case "OpenTRRPreferences":
+        let browser = this.browsingContext.top.embedderElement;
+        if (!browser) {
+          break;
+        }
+
+        let win = browser.ownerGlobal;
+        // XXX(valentin) This will be a different section
+        // when we move DNS over HTTPS settings to the privacy page
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=1610741
+        win.openPreferences("general-netsettings");
+        break;
     }
   }
 }
