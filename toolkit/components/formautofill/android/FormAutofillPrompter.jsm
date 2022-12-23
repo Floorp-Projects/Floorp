@@ -17,10 +17,13 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   CreditCard: "resource://gre/modules/GeckoViewAutocomplete.jsm",
   GeckoViewAutocomplete: "resource://gre/modules/GeckoViewAutocomplete.jsm",
-  GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.jsm",
 });
 
 // Sync with Autocomplete.SaveOption.Hint in Autocomplete.java

@@ -1190,8 +1190,6 @@
     "mobile/android/modules/geckoview/GeckoViewProgress.jsm",
   "resource://gre/modules/GeckoViewPrompt.jsm":
     "mobile/android/components/geckoview/GeckoViewPrompt.jsm",
-  "resource://gre/modules/GeckoViewPrompter.jsm":
-    "mobile/android/components/geckoview/GeckoViewPrompter.jsm",
   "resource://gre/modules/GeckoViewPush.jsm":
     "mobile/android/components/geckoview/GeckoViewPush.jsm",
   "resource://gre/modules/GeckoViewPushController.jsm":

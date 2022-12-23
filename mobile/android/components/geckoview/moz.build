@@ -38,7 +38,7 @@ EXTRA_JS_MODULES += [
     "FilePickerDelegate.jsm",
     "GeckoViewPermission.jsm",
     "GeckoViewPrompt.jsm",
-    "GeckoViewPrompter.jsm",
+    "GeckoViewPrompter.sys.mjs",
     "GeckoViewPush.jsm",
     "GeckoViewStartup.jsm",
     "LoginStorageDelegate.jsm",
