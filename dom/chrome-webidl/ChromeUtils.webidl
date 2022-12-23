@@ -395,6 +395,15 @@ partial namespace ChromeUtils {
   DOMString getClassName(object obj, optional boolean unwrap = true);
 
   /**
+   * Returns whether the object is a DOM object.
+   *
+   * if |unwrap| is true, all wrappers are unwrapped first. Unless you're
+   * specifically trying to detect whether the object is a proxy, this is
+   * probably what you want.
+   */
+  boolean isDOMObject(object obj, optional boolean unwrap = true);
+
+  /**
    * Clones the properties of the given object into a new object in the given
    * target compartment (or the caller compartment if no target is provided).
    * Property values themeselves are not cloned.
