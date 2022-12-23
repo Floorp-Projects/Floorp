@@ -8,17 +8,13 @@ import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 const { Observers } = ChromeUtils.import(
   "resource://services-common/observers.js"
 );
-const { TelemetryUtils } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryUtils.jsm"
-);
+import { TelemetryUtils } from "resource://gre/modules/TelemetryUtils.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TelemetrySend",
-  "resource://gre/modules/TelemetrySend.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  TelemetrySend: "resource://gre/modules/TelemetrySend.sys.mjs",
+});
 
 const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "TelemetryReportingPolicy::";

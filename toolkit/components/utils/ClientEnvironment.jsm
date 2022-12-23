@@ -13,15 +13,15 @@ const lazy = {};
 /* eslint-disable prettier/prettier */
 ChromeUtils.defineModuleGetter(lazy, "ShellService", "resource:///modules/ShellService.jsm");
 ChromeUtils.defineModuleGetter(lazy, "AddonManager", "resource://gre/modules/AddonManager.jsm");
-ChromeUtils.defineModuleGetter(lazy, "TelemetryArchive", "resource://gre/modules/TelemetryArchive.jsm");
-ChromeUtils.defineModuleGetter(lazy, "TelemetryController", "resource://gre/modules/TelemetryController.jsm");
-ChromeUtils.defineESModuleGetters(lazy, {
-  UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs"
-});
 ChromeUtils.defineModuleGetter(lazy, "AttributionCode", "resource:///modules/AttributionCode.jsm");
 ChromeUtils.defineModuleGetter(lazy, "WindowsVersionInfo", "resource://gre/modules/components-utils/WindowsVersionInfo.jsm");
 ChromeUtils.defineModuleGetter(lazy, "NormandyUtils", "resource://normandy/lib/NormandyUtils.jsm");
 /* eslint-enable prettier/prettier */
+ChromeUtils.defineESModuleGetters(lazy, {
+  TelemetryArchive: "resource://gre/modules/TelemetryArchive.sys.mjs",
+  TelemetryController: "resource://gre/modules/TelemetryController.sys.mjs",
+  UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
+});
 
 var EXPORTED_SYMBOLS = ["ClientEnvironmentBase"];
 

@@ -8,13 +8,10 @@ var gContentAPI;
 
 ChromeUtils.defineESModuleGetters(this, {
   ProfileAge: "resource://gre/modules/ProfileAge.sys.mjs",
-  UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryArchiveTesting:
-    "resource://testing-common/TelemetryArchiveTesting.jsm",
-  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
+    "resource://testing-common/TelemetryArchiveTesting.sys.mjs",
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
+  UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
 });
 
 function test() {

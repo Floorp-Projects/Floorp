@@ -5,8 +5,8 @@
 const { Sampling } = ChromeUtils.import(
   "resource://gre/modules/components-utils/Sampling.jsm"
 );
-const { TelemetryEnvironment } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryEnvironment.jsm"
+const { TelemetryEnvironment } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryEnvironment.sys.mjs"
 );
 const { ClientEnvironment } = ChromeUtils.import(
   "resource://normandy/lib/ClientEnvironment.jsm"

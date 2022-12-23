@@ -1,7 +1,9 @@
 /* eslint max-len: ["error", 80] */
 "use strict";
 
-const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
+const { ClientID } = ChromeUtils.importESModule(
+  "resource://gre/modules/ClientID.sys.mjs"
+);
 
 const { AddonTestUtils } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
@@ -76,7 +78,7 @@ add_task(async function clientid_enabled() {
   // which is sha256(TelemetryUtils.knownClientId).
   // This happens because at the end of the test, the pushPrefEnv from setup is
   // reverted, which resets datareporting.healthreport.uploadEnabled to false.
-  // When TelemetryController.jsm detects this, it asynchronously resets the
+  // When TelemetryController.sys.mjs detects this, it asynchronously resets the
   // ClientID to knownClientId - which may happen at the next run of the test.
   // TODO: Fix this together with bug 1537933
   //

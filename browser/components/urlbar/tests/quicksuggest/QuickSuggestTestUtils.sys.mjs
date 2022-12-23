@@ -13,12 +13,13 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
-  setTimeout: "resource://gre/modules/Timer.sys.mjs",
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -26,7 +27,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExperimentFakes: "resource://testing-common/NimbusTestUtils.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   sinon: "resource://testing-common/Sinon.jsm",
-  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
 });
 
 let gTestScope;

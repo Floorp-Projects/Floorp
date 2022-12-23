@@ -1,7 +1,7 @@
 "use strict";
 
-const { TelemetryUtils } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryUtils.jsm"
+const { TelemetryUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryUtils.sys.mjs"
 );
 const { Normandy } = ChromeUtils.import("resource://normandy/Normandy.jsm");
 const { AddonRollouts } = ChromeUtils.import(

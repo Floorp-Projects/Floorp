@@ -14,8 +14,8 @@ const TelemetryStopwatch = require("TelemetryStopwatch");
 const {
   getNthPathExcluding,
 } = require("resource://devtools/shared/platform/stack.js");
-const { TelemetryEnvironment } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryEnvironment.jsm"
+const { TelemetryEnvironment } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryEnvironment.sys.mjs"
 );
 const WeakMapMap = require("resource://devtools/client/shared/WeakMapMap.js");
 

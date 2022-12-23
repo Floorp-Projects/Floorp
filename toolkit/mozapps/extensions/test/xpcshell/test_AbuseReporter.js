@@ -6,12 +6,14 @@ const { AbuseReporter, AbuseReportError } = ChromeUtils.import(
   "resource://gre/modules/AbuseReporter.jsm"
 );
 
-const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
-const { TelemetryController } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryController.jsm"
+const { ClientID } = ChromeUtils.importESModule(
+  "resource://gre/modules/ClientID.sys.mjs"
 );
-const { TelemetryTestUtils } = ChromeUtils.import(
-  "resource://testing-common/TelemetryTestUtils.jsm"
+const { TelemetryController } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryController.sys.mjs"
+);
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 
 const APPNAME = "XPCShell";

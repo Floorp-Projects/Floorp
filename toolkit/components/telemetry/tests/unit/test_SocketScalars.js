@@ -2,8 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/
 */
 
-const { TelemetryController } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryController.jsm"
+const { TelemetryController } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryController.sys.mjs"
 );
 const { ContentTaskUtils } = ChromeUtils.importESModule(
   "resource://testing-common/ContentTaskUtils.sys.mjs"

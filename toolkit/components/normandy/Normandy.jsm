@@ -18,6 +18,10 @@ const { setTimeout } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  TelemetryUtils: "resource://gre/modules/TelemetryUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonRollouts: "resource://normandy/lib/AddonRollouts.jsm",
   AddonStudies: "resource://normandy/lib/AddonStudies.jsm",
@@ -28,7 +32,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   PreferenceRollouts: "resource://normandy/lib/PreferenceRollouts.jsm",
   RecipeRunner: "resource://normandy/lib/RecipeRunner.jsm",
   ShieldPreferences: "resource://normandy/lib/ShieldPreferences.jsm",
-  TelemetryUtils: "resource://gre/modules/TelemetryUtils.jsm",
   TelemetryEvents: "resource://normandy/lib/TelemetryEvents.jsm",
   ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
   RemoteSettingsExperimentLoader:

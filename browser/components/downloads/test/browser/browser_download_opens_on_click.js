@@ -7,8 +7,8 @@ ChromeUtils.defineESModuleGetters(this, {
   DownloadsViewUI: "resource:///modules/DownloadsViewUI.sys.mjs",
 });
 
-const { TelemetryTestUtils } = ChromeUtils.import(
-  "resource://testing-common/TelemetryTestUtils.jsm"
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 
 const { DownloadIntegration } = ChromeUtils.importESModule(

@@ -8,11 +8,9 @@
 
 const WEBCRYPTO_ALG_PROBE = "WEBCRYPTO_ALG";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "TelemetryTestUtils",
-  "resource://testing-common/TelemetryTestUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
+});
 
 add_task(async function ecdh_key() {
   let hist = TelemetryTestUtils.getAndClearHistogram(WEBCRYPTO_ALG_PROBE);

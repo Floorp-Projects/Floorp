@@ -4,16 +4,13 @@
 /* import-globals-from ../../unit/head.js */
 
 ChromeUtils.defineESModuleGetters(this, {
+  QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   RemoteSettingsClient:
     "resource:///modules/urlbar/private/RemoteSettingsClient.sys.mjs",
-  QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
   UrlbarProviderAutofill: "resource:///modules/UrlbarProviderAutofill.sys.mjs",
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
 });
 
 add_setup(async function setUpQuickSuggestXpcshellTest() {

@@ -11,6 +11,7 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   BuiltInThemes: "resource:///modules/BuiltInThemes.sys.mjs",
+  ClientID: "resource://gre/modules/ClientID.sys.mjs",
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
@@ -20,7 +21,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
   AMTelemetry: "resource://gre/modules/AddonManager.jsm",
-  ClientID: "resource://gre/modules/ClientID.jsm",
   ColorwayClosetOpener: "resource:///modules/ColorwayClosetOpener.jsm",
   ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
   ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",

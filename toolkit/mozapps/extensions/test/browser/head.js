@@ -6,8 +6,8 @@
 /* eslint no-unused-vars: ["error", {vars: "local", args: "none"}] */
 
 var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const { TelemetryTestUtils } = ChromeUtils.import(
-  "resource://testing-common/TelemetryTestUtils.jsm"
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 
 let { AddonManager, AddonManagerPrivate } = ChromeUtils.import(

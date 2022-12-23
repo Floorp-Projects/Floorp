@@ -14,9 +14,9 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  TelemetryController: "resource://gre/modules/TelemetryController.jsm",
-  TelemetryUtils: "resource://gre/modules/TelemetryUtils.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  TelemetryController: "resource://gre/modules/TelemetryController.sys.mjs",
+  TelemetryUtils: "resource://gre/modules/TelemetryUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {

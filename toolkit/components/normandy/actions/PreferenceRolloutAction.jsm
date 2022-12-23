@@ -8,11 +8,9 @@ const { BaseAction } = ChromeUtils.import(
   "resource://normandy/actions/BaseAction.jsm"
 );
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TelemetryEnvironment",
-  "resource://gre/modules/TelemetryEnvironment.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "PreferenceRollouts",

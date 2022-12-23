@@ -3,8 +3,8 @@
 const { IndexedDB } = ChromeUtils.importESModule(
   "resource://gre/modules/IndexedDB.sys.mjs"
 );
-const { TelemetryEnvironment } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryEnvironment.jsm"
+const { TelemetryEnvironment } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryEnvironment.sys.mjs"
 );
 const { AddonRollouts } = ChromeUtils.import(
   "resource://normandy/lib/AddonRollouts.jsm"

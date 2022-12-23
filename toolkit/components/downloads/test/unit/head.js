@@ -28,13 +28,13 @@ ChromeUtils.defineESModuleGetters(this, {
   MockRegistrar: "resource://testing-common/MockRegistrar.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   HttpServer: "resource://testing-common/httpd.js",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
-  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -83,7 +83,7 @@ const TEST_STORE_FILE_NAME = "test-downloads.json";
 const TEST_REFERRER_URL = "https://www.example.com/referrer.html";
 
 const TEST_DATA_SHORT = "This test string is downloaded.";
-// Generate using gzipCompressString in TelemetryController.jsm.
+// Generate using gzipCompressString in TelemetryController.sys.mjs.
 const TEST_DATA_SHORT_GZIP_ENCODED_FIRST = [
   31,
   139,

@@ -5,9 +5,7 @@
 
 import { DeferredTask } from "resource://gre/modules/DeferredTask.sys.mjs";
 
-const { TelemetryControllerBase } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryControllerBase.jsm"
-);
+import { TelemetryControllerBase } from "resource://gre/modules/TelemetryControllerBase.sys.mjs";
 
 // Delay before intializing telemetry (ms)
 const TELEMETRY_DELAY =

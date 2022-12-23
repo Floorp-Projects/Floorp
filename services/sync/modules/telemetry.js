@@ -29,6 +29,12 @@ const { Log } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  TelemetryController: "resource://gre/modules/TelemetryController.sys.mjs",
+  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
+  TelemetryUtils: "resource://gre/modules/TelemetryUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Async: "resource://services-common/async.js",
   AuthenticationError: "resource://services-sync/sync_auth.js",
@@ -38,9 +44,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   Resource: "resource://services-sync/resource.js",
   Status: "resource://services-sync/status.js",
   Svc: "resource://services-sync/util.js",
-  TelemetryController: "resource://gre/modules/TelemetryController.jsm",
-  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
-  TelemetryUtils: "resource://gre/modules/TelemetryUtils.jsm",
   Weave: "resource://services-sync/main.js",
 });
 

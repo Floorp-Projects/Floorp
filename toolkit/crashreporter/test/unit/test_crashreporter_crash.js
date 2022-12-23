@@ -64,8 +64,8 @@ add_task(async function run_test() {
       crashReporter.appendAppNotesToCrashReport("MoreJunk");
 
       // TelemetrySession setup will trigger the session annotation
-      let { TelemetryController } = ChromeUtils.import(
-        "resource://gre/modules/TelemetryController.jsm"
+      let { TelemetryController } = ChromeUtils.importESModule(
+        "resource://gre/modules/TelemetryController.sys.mjs"
       );
       TelemetryController.testSetup();
     },
@@ -120,11 +120,11 @@ add_task(async function run_test() {
       );
 
       // TelemetrySession setup will trigger the session annotation
-      let { TelemetryController } = ChromeUtils.import(
-        "resource://gre/modules/TelemetryController.jsm"
+      let { TelemetryController } = ChromeUtils.importESModule(
+        "resource://gre/modules/TelemetryController.sys.mjs"
       );
-      let { TelemetrySend } = ChromeUtils.import(
-        "resource://gre/modules/TelemetrySend.jsm"
+      let { TelemetrySend } = ChromeUtils.importESModule(
+        "resource://gre/modules/TelemetrySend.sys.mjs"
       );
       TelemetrySend.setTestModeEnabled(true);
       TelemetryController.testSetup();
@@ -164,11 +164,11 @@ add_task(async function run_test() {
       );
 
       // TelemetrySession setup will trigger the session annotation
-      let { TelemetryController } = ChromeUtils.import(
-        "resource://gre/modules/TelemetryController.jsm"
+      let { TelemetryController } = ChromeUtils.importESModule(
+        "resource://gre/modules/TelemetryController.sys.mjs"
       );
-      let { TelemetrySend } = ChromeUtils.import(
-        "resource://gre/modules/TelemetrySend.jsm"
+      let { TelemetrySend } = ChromeUtils.importESModule(
+        "resource://gre/modules/TelemetrySend.sys.mjs"
       );
       TelemetrySend.setTestModeEnabled(true);
       TelemetryController.testSetup();
@@ -199,11 +199,11 @@ add_task(async function run_test() {
       );
 
       // TelemetrySession setup will trigger the session annotation
-      let { TelemetryController } = ChromeUtils.import(
-        "resource://gre/modules/TelemetryController.jsm"
+      let { TelemetryController } = ChromeUtils.importESModule(
+        "resource://gre/modules/TelemetryController.sys.mjs"
       );
-      let { TelemetrySend } = ChromeUtils.import(
-        "resource://gre/modules/TelemetrySend.jsm"
+      let { TelemetrySend } = ChromeUtils.importESModule(
+        "resource://gre/modules/TelemetrySend.sys.mjs"
       );
       TelemetrySend.setTestModeEnabled(true);
       TelemetryController.testSetup();

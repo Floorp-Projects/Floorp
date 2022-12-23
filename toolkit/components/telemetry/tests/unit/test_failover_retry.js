@@ -4,8 +4,8 @@
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
-const { TelemetryUtils } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryUtils.jsm"
+const { TelemetryUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryUtils.sys.mjs"
 );
 
 // Enable the collection (during test) for all products so even products

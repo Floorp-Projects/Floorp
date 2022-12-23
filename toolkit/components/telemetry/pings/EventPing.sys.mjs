@@ -7,22 +7,18 @@
  * https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/data/event-ping.html
  */
 
-const { TelemetryUtils } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryUtils.jsm"
-);
+import { TelemetryUtils } from "resource://gre/modules/TelemetryUtils.sys.mjs";
+
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   Log: "resource://gre/modules/Log.sys.mjs",
+  TelemetryController: "resource://gre/modules/TelemetryController.sys.mjs",
+  TelemetrySession: "resource://gre/modules/TelemetrySession.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  TelemetrySession: "resource://gre/modules/TelemetrySession.jsm",
-  TelemetryController: "resource://gre/modules/TelemetryController.jsm",
 });
 
 const Utils = TelemetryUtils;

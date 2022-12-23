@@ -13,13 +13,16 @@ const { BaseAction } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ActionSchemas: "resource://normandy/actions/schemas/index.js",
   AddonRollouts: "resource://normandy/lib/AddonRollouts.jsm",
   NormandyAddonManager: "resource://normandy/lib/NormandyAddonManager.jsm",
   NormandyApi: "resource://normandy/lib/NormandyApi.jsm",
   NormandyUtils: "resource://normandy/lib/NormandyUtils.jsm",
-  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
   TelemetryEvents: "resource://normandy/lib/TelemetryEvents.jsm",
 });
 

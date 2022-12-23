@@ -16,6 +16,7 @@ Services.scriptloader.loadSubScript(
 
 ChromeUtils.defineESModuleGetters(this, {
   ResetProfile: "resource://gre/modules/ResetProfile.sys.mjs",
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
   UrlbarProviderInterventions:
     "resource:///modules/UrlbarProviderInterventions.sys.mjs",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
@@ -24,7 +25,6 @@ ChromeUtils.defineESModuleGetters(this, {
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   HttpServer: "resource://testing-common/httpd.js",
-  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {

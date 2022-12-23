@@ -5,17 +5,13 @@
 
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 
-const { TelemetryUtils } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryUtils.jsm"
-);
+import { TelemetryUtils } from "resource://gre/modules/TelemetryUtils.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TelemetryController",
-  "resource://gre/modules/TelemetryController.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  TelemetryController: "resource://gre/modules/TelemetryController.sys.mjs",
+});
 
 const LOGGER_NAME = "Toolkit.Telemetry";
 const PING_TYPE = "update";

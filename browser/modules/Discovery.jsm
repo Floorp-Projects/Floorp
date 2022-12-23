@@ -11,12 +11,8 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ClientID",
-  "resource://gre/modules/ClientID.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  ClientID: "resource://gre/modules/ClientID.sys.mjs",
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.sys.mjs",
 });
@@ -115,7 +111,7 @@ const DiscoveryInternal = {
 
     if (Discovery.enabled) {
       // If the client id is not cached, wait for the notification that it is
-      // cached.  This will happen shortly after startup in TelemetryController.jsm.
+      // cached.  This will happen shortly after startup in TelemetryController.sys.mjs.
       // When that happens, we'll get a pref notification for the cached id,
       // which will call update again.
       if (!lazy.gCachedClientID) {

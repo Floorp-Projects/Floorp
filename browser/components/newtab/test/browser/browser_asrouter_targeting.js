@@ -14,8 +14,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   QueryCache: "resource://activity-stream/lib/ASRouterTargeting.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
   TargetingContext: "resource://messaging-system/targeting/Targeting.jsm",
-  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
-  TelemetrySession: "resource://gre/modules/TelemetrySession.jsm",
 });
 ChromeUtils.defineESModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
@@ -24,6 +22,8 @@ ChromeUtils.defineESModuleGetters(this, {
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
   ProfileAge: "resource://gre/modules/ProfileAge.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
+  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
+  TelemetrySession: "resource://gre/modules/TelemetrySession.sys.mjs",
 });
 
 // ASRouterTargeting.findMatchingMessage

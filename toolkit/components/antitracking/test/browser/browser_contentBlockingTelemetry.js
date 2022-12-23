@@ -6,8 +6,8 @@
 
 /* import-globals-from antitracking_head.js */
 
-const { TelemetryTestUtils } = ChromeUtils.import(
-  "resource://testing-common/TelemetryTestUtils.jsm"
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 
 const LABEL_STORAGE_GRANTED = 0;

@@ -1,10 +1,8 @@
 const TELEMETRY_BASE = "notificationbar.";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "TelemetryTestUtils",
-  "resource://testing-common/TelemetryTestUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
+});
 
 add_task(async function showNotification() {
   Services.telemetry.clearScalars();

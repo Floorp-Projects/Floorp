@@ -202,7 +202,7 @@ Data-choices notification
 
 ``datareporting.policy.currentPolicyVersion``
 
-  Stores the current policy version, overrides the default value defined in TelemetryReportingPolicy.jsm.
+  Stores the current policy version, overrides the default value defined in TelemetryReportingPolicy.sys.mjs.
 
 ``datareporting.policy.minimumPolicyVersion``
 

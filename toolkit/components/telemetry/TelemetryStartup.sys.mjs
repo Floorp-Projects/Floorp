@@ -5,16 +5,10 @@
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TelemetryController",
-  "resource://gre/modules/TelemetryController.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TelemetryEnvironment",
-  "resource://gre/modules/TelemetryEnvironment.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  TelemetryController: "resource://gre/modules/TelemetryController.sys.mjs",
+  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
+});
 
 /**
  * TelemetryStartup is needed to forward the "profile-after-change" notification

@@ -4,11 +4,9 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "TelemetryTestUtils",
-  "resource://testing-common/TelemetryTestUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
+});
 
 const histogramName = "FX_NUMBER_OF_UNIQUE_SITE_ORIGINS_PER_DOCUMENT";
 const testRoot = getRootDirectory(gTestPath).replace(

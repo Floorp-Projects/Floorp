@@ -6,8 +6,8 @@
 const { BrowserUsageTelemetry } = ChromeUtils.import(
   "resource:///modules/BrowserUsageTelemetry.jsm"
 );
-const { TelemetryTestUtils } = ChromeUtils.import(
-  "resource://testing-common/TelemetryTestUtils.jsm"
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 
 const PROFILE_COUNT_SCALAR = "browser.engagement.profile_count";

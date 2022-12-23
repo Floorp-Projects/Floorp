@@ -5,20 +5,16 @@
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 import { Preferences } from "resource://gre/modules/Preferences.sys.mjs";
 
-const { TelemetryUtils } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryUtils.jsm"
-);
+import { TelemetryUtils } from "resource://gre/modules/TelemetryUtils.sys.mjs";
 
 const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "TelemetryArchive::";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TelemetryStorage",
-  "resource://gre/modules/TelemetryStorage.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  TelemetryStorage: "resource://gre/modules/TelemetryStorage.sys.mjs",
+});
 
 export var TelemetryArchive = {
   /**

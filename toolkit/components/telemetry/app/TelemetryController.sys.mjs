@@ -31,11 +31,11 @@ const isParentProcess =
 
 export var TelemetryController;
 if (isParentProcess) {
-  ({ TelemetryController } = ChromeUtils.import(
-    "resource://gre/modules/TelemetryControllerParent.jsm"
+  ({ TelemetryController } = ChromeUtils.importESModule(
+    "resource://gre/modules/TelemetryControllerParent.sys.mjs"
   ));
 } else {
-  ({ TelemetryController } = ChromeUtils.import(
-    "resource://gre/modules/TelemetryControllerContent.jsm"
+  ({ TelemetryController } = ChromeUtils.importESModule(
+    "resource://gre/modules/TelemetryControllerContent.sys.mjs"
   ));
 }

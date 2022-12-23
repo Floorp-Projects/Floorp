@@ -1,8 +1,6 @@
-ChromeUtils.defineModuleGetter(
-  this,
-  "TelemetryTestUtils",
-  "resource://testing-common/TelemetryTestUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
+});
 const { AttributionIOUtils } = ChromeUtils.import(
   "resource:///modules/AttributionCode.jsm"
 );

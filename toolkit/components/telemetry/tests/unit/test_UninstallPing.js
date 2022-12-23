@@ -3,8 +3,8 @@
  */
 "use strict";
 
-const { TelemetryStorage } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryStorage.jsm"
+const { TelemetryStorage } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryStorage.sys.mjs"
 );
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { FileUtils } = ChromeUtils.importESModule(

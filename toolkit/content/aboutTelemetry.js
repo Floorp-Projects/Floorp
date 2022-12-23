@@ -7,17 +7,17 @@
 const { BrowserUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/BrowserUtils.sys.mjs"
 );
-const { TelemetryTimestamps } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryTimestamps.jsm"
+const { TelemetryTimestamps } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryTimestamps.sys.mjs"
 );
-const { TelemetryController } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryController.jsm"
+const { TelemetryController } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryController.sys.mjs"
 );
-const { TelemetryArchive } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryArchive.jsm"
+const { TelemetryArchive } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryArchive.sys.mjs"
 );
-const { TelemetrySend } = ChromeUtils.import(
-  "resource://gre/modules/TelemetrySend.jsm"
+const { TelemetrySend } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetrySend.sys.mjs"
 );
 
 const { AppConstants } = ChromeUtils.importESModule(

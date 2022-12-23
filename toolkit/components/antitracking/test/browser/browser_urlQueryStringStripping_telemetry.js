@@ -10,8 +10,8 @@ const TEST_URI = TEST_DOMAIN + TEST_PATH + "file_stripping.html";
 const TEST_THIRD_PARTY_URI = TEST_DOMAIN_2 + TEST_PATH + "file_stripping.html";
 const TEST_REDIRECT_URI = TEST_DOMAIN + TEST_PATH + "redirect.sjs";
 
-const { TelemetryTestUtils } = ChromeUtils.import(
-  "resource://testing-common/TelemetryTestUtils.jsm"
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 
 const LABEL_NAVIGATION = 0;

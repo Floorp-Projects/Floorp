@@ -13,11 +13,9 @@ const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ClientID",
-  "resource://gre/modules/ClientID.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  ClientID: "resource://gre/modules/ClientID.sys.mjs",
+});
 
 XPCOMUtils.defineLazyGetter(lazy, "CryptoHash", () => {
   return Components.Constructor(
