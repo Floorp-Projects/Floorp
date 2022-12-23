@@ -9,8 +9,6 @@
 # a full build environment set up.
 # The basic limitation is, it doesn't even try to link and ignores
 # all related options.
-from __future__ import absolute_import, print_function
-
 import os
 import os.path
 import shutil

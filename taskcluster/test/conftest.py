@@ -1,8 +1,6 @@
 # Any copyright is dedicated to the public domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
-from __future__ import absolute_import
-
 import json
 import logging
 import os

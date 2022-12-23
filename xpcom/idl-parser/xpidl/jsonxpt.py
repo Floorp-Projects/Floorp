@@ -7,8 +7,6 @@
 
 """Generate a json XPT typelib for an IDL file"""
 
-from __future__ import absolute_import
-
 import itertools
 import json
 

@@ -9,8 +9,6 @@ The JS Shell Test Harness.
 See the adjacent README.txt for more details.
 """
 
-from __future__ import print_function
-
 import math
 import os
 import platform

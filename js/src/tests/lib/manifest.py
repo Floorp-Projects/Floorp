@@ -2,8 +2,6 @@
 #
 # This includes classes for representing and parsing JS manifests.
 
-from __future__ import print_function
-
 import io
 import os
 import posixpath

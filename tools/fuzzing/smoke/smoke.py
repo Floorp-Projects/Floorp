@@ -15,8 +15,6 @@ Everything included in this directory will be added in
 tools if you need. They will be located in `$MOZ_FETCHES_DIR` and follow the
 same directory structure than the source tree.
 """
-from __future__ import absolute_import
-
 import os
 import os.path
 import shlex

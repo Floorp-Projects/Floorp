@@ -18,8 +18,6 @@ The resulting output is:
 See README for more details.
 """
 
-from __future__ import absolute_import, print_function
-
 import sys
 from collections import defaultdict, deque
 

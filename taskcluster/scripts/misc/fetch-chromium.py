@@ -11,8 +11,6 @@ defined version) for a given platform. It then uploads the build,
 with the revision of the build stored in a REVISION file.
 """
 
-from __future__ import absolute_import, print_function
-
 import argparse
 import errno
 import os

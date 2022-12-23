@@ -4,8 +4,6 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-from __future__ import print_function
-
 import argparse
 import re
 from collections import defaultdict

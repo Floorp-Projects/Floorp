@@ -6,8 +6,6 @@
 # Generate build info files for use by other tools.
 # This script assumes it is being run in a Mozilla CI build.
 
-from __future__ import unicode_literals
-
 from argparse import ArgumentParser
 import datetime
 import buildconfig

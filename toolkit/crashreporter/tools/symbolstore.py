@@ -21,8 +21,6 @@
 #     -s <srcdir>  : Use <srcdir> as the top source directory to
 #                    generate relative filenames.
 
-from __future__ import print_function
-
 import ctypes
 import errno
 import os

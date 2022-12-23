@@ -5,8 +5,6 @@
 #
 # Unit tests for xpidl.py
 
-from __future__ import absolute_import
-
 import sys
 
 # Hack: the first entry in sys.path is the directory containing the script.

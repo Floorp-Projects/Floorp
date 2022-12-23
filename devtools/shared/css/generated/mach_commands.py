@@ -8,7 +8,6 @@ script that uses InspectorUtils to query the CSS properties used by the browser.
 This information is used to generate the properties-db.js file.
 """
 
-from __future__ import absolute_import, print_function
 import json
 import logging
 import os

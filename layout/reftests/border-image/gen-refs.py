@@ -27,8 +27,6 @@
 # Assumes there is no intrinsic size for the border-image-source, so uses
 # the size of the border image area.
 
-from __future__ import print_function, absolute_import
-
 import sys
 
 

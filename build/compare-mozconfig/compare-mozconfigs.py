@@ -5,8 +5,6 @@
 
 # originally from https://hg.mozilla.org/build/tools/file/4ab9c1a4e05b/scripts/release/compare-mozconfigs.py  # NOQA: E501
 
-from __future__ import unicode_literals
-
 import difflib
 import logging
 import os

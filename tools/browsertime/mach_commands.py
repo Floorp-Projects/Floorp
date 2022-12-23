@@ -28,8 +28,6 @@ To invoke browsertime, run
 All arguments are passed through to browsertime.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import argparse
 import collections
 import contextlib

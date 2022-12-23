@@ -6,8 +6,6 @@
 # This script runs a process and prefixes its output with.
 # Usage: run-and-prefix.py prefix command arg0 argv1...
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import os
 import subprocess
 import sys

@@ -4,8 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # Only necessary for flake8 to be happy...
-from __future__ import print_function
-
 import argparse
 import errno
 import fnmatch

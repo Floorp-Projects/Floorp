@@ -7,8 +7,6 @@
 # This script uses `fix-stacks` to post-process the entries produced by
 # MozFormatCodeAddress().
 
-from __future__ import absolute_import, print_function
-
 import atexit
 import os
 import platform

@@ -4,8 +4,6 @@
 
 # Generate update.locale, which simply contains the name of the current locale.
 
-from __future__ import unicode_literals, print_function
-
 
 def main(output, locale=None):
     assert locale is not None
