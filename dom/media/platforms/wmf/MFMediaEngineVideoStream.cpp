@@ -298,6 +298,9 @@ void MFMediaEngineVideoStream::UpdateConfig(const VideoInfo& aInfo) {
   }
 
   LOGV("Video config changed, will update stream descriptor");
+  PROFILER_MARKER_TEXT("VideoConfigChange", MEDIA_PLAYBACK, {},
+                       nsPrintfCString("stream=%s, id=%" PRIu64,
+                                       GetDescriptionName().get(), mStreamId));
   ComPtr<IMFMediaType> mediaType;
   RETURN_VOID_IF_FAILED(CreateMediaType(aInfo, mediaType.GetAddressOf()));
   RETURN_VOID_IF_FAILED(GenerateStreamDescriptor(mediaType));
