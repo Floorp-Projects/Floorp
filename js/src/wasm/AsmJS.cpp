@@ -1988,8 +1988,9 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
 
  public:
   bool init() {
-    asmJSMetadata_ = cx_->new_<AsmJSMetadata>();
+    asmJSMetadata_ = js_new<AsmJSMetadata>();
     if (!asmJSMetadata_) {
+      ReportOutOfMemory(fc_);
       return false;
     }
 
@@ -2203,8 +2204,9 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
 
     // asm.js does not have any wasm bytecode to save; view-source is
     // provided through the ScriptSource.
-    SharedBytes bytes = cx_->new_<ShareableBytes>();
+    SharedBytes bytes = js_new<ShareableBytes>();
     if (!bytes) {
+      ReportOutOfMemory(fc_);
       return nullptr;
     }
 
