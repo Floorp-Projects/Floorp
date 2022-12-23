@@ -126,7 +126,7 @@ class PrototypeDocumentContentSink final : public nsIStreamLoaderObserver,
    * If the current transcluded script is being compiled off thread, the
    * source for that script.
    */
-  char16_t* mOffThreadCompileStringBuf;
+  Utf8Unit* mOffThreadCompileStringBuf;
   size_t mOffThreadCompileStringLength;
 
   /**
