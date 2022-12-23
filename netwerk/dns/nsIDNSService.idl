@@ -4,6 +4,7 @@
 
 #include "nsISupports.idl"
 #include "nsIRequest.idl"
+#include "nsITRRSkipReason.idl"
 
 %{ C++
 #include "mozilla/BasePrincipal.h"
@@ -206,6 +207,8 @@ interface nsIDNSService : nsISupports
      * on network preferences.
      */
     void setDetectedTrrURI(in AUTF8String aURI);
+
+    ACString getTRRSkipReasonName(in nsITRRSkipReason_value value);
 
     /**
      * Notifies the DNS service that we failed to connect to this alternative

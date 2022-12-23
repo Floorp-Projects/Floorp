@@ -307,6 +307,12 @@ ChildDNSService::SetDetectedTrrURI(const nsACString& aURI) {
 }
 
 NS_IMETHODIMP
+ChildDNSService::GetTRRSkipReasonName(nsITRRSkipReason::value aValue,
+                                      nsACString& aName) {
+  return mozilla::net::GetTRRSkipReasonName(aValue, aName);
+}
+
+NS_IMETHODIMP
 ChildDNSService::GetCurrentTrrURI(nsACString& aURI) {
   if (!mTRRServiceParent) {
     return NS_ERROR_NOT_AVAILABLE;
